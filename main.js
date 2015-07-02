@@ -1,0 +1,3 @@
+requirejs([], function() {
+  alert('hello');
+});
