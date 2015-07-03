@@ -2,9 +2,10 @@
 
 define(['adapters/play.piano', 'adapters/play.celeste'], function(piano, celeste) {
 
+var ffts = {};
+
 var play = {
   audio: new AudioContext(),
-  ffts: {}
 };
 
 play.timeNow = function () {
@@ -14,7 +15,7 @@ play.timeNow = function () {
 var fadeInOut = [0, 0.309, 0.588, 0.809, 0.951, 1, 0.951, 0.809, 0.588, 0.309, 0];
 play.chorus = function (time, freq, duration) {
   var vca = play.audio.createGain();
-  _mix(vca);
+  play.mix(vca);
   vca.gain.value = 0.0;
   fadeInOut.map(function (g,i,a) {
     var f = i / a.length;
@@ -31,7 +32,7 @@ play.chorus = function (time, freq, duration) {
 
 play.lead = function (time, freq, duration) {
   var vca = play.audio.createGain();
-  _mix(vca);
+  play.mix(vca);
   vca.gain.value = 0.0;
   var vco = play.audio.createOscillator();
   vco.frequency.value = freq;
@@ -43,7 +44,7 @@ play.lead = function (time, freq, duration) {
   vco.stop(time + duration);
 };
 
-var _mix = function (node) {
+play.mix = function (node) {
   node.connect(play.reverb);
   node.connect(play.audio.destination);
 };
@@ -67,10 +68,10 @@ var _initReverb = function () {
 _initReverb();
 
 var _getFft = function (data) {
-  if (!play.ffts[data]) {
-    play.ffts[data] = play.audio.createPeriodicWave(new Float32Array(data.real), new Float32Array(data.imag));
+  if (!ffts[data]) {
+    ffts[data] = play.audio.createPeriodicWave(new Float32Array(data.real), new Float32Array(data.imag));
   }
-  return play.ffts[data];
+  return ffts[data];
 };
 
 return play;
