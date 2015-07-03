@@ -1,6 +1,6 @@
 // Adapter for audio playback
 
-define(['adapters/play.piano', 'adapters/play.celeste'], function(piano, celeste) {
+define(['play/piano', 'play/celeste'], function(piano, celeste) {
 
 var ffts = {};
 

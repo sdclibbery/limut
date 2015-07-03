@@ -1,6 +1,6 @@
 // Adapter for percussion audio
 
-define(['adapters/play', 'adapters/play'], function(play) {
+define(['play/play'], function(play) {
 
 var percussion = {};
 

@@ -1,4 +1,4 @@
-requirejs(['adapters/play', 'adapters/play.percussion', 'music/metronome'], function(play, percussion, metronome) {
+requirejs(['play/play', 'play/percussion', 'music/metronome'], function(play, percussion, metronome) {
   try { if (!AudioContext) { throw 1; } } catch(e) { document.body.innerHTML = 'Web Audio not supported in this browser!'; }
 
   setInterval(function () {
