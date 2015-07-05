@@ -5,8 +5,10 @@ define([], function () {
 var metronome = {
   bpm: 110,
   beats: [
-    { strength: 'down', subBeats: [ 0.5 ] },
-    { strength: 'up', subBeats: [ 0.5 ] }
+    [ 3, 1 ],
+    [ 2, 1 ],
+    [ 3, 1 ],
+    [ 2, 1 ],
   ],
 
   nextBeat: 0,
@@ -24,10 +26,12 @@ metronome.beatDuration = function () {
 metronome.update = function (now) {
   var events = [];
   if (now > metronome.nextBeat - 0.1) { // Call back just BEFORE the next beat to make sure that events composed ON the beat can be scheduled accurately
-    var beat = metronome.beats[metronome.nextBeatIdx];
-    beat.time = metronome.nextBeatAt();
-    beat.duration = metronome.beatDuration();
-    events.push(beat);
+    events = metronome.beats[metronome.nextBeatIdx].map(function (strength, idx, ds) {
+      var event = {};
+      event.time = metronome.nextBeatAt() + metronome.beatDuration() * (idx / ds.length);
+      event.strength = strength;
+      return event;
+    });
     metronome.nextBeat += metronome.beatDuration();
     metronome.nextBeatIdx = (metronome.nextBeatIdx + 1) % metronome.beats.length;
   }

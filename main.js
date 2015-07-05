@@ -2,7 +2,7 @@ requirejs(['play/play', 'music/metronome', 'perform/drummer'], function(play, me
   try { if (!AudioContext) { throw 1; } } catch(e) { document.body.innerHTML = 'Web Audio not supported in this browser!'; }
 
   var tick = function () {
-    metronome.update(play.timeNow()).map(drummer.beat);
+    metronome.update(play.timeNow()).map(drummer.event);
     requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);

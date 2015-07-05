@@ -4,16 +4,14 @@ define(['play/percussion'], function (percussion) {
 
 var drummer = {};
 
-drummer.beat = function (beat) {
-  if (beat.strength === 'down') {
-    percussion.kick(beat.time);
+drummer.event = function (event) {
+  if (event.strength === 3) {
+    percussion.kick(event.time);
+  } else if (event.strength === 2) {
+    percussion.snare(event.time);
+  } else if (event.strength === 1) {
+    percussion.hat(event.time);
   }
-  if (beat.strength === 'up') {
-    percussion.snare(beat.time);
-  }
-  beat.subBeats.map(function (time) {
-    percussion.hat(beat.time + time*beat.duration);
-  });
 };
 
 return drummer;
