@@ -4,7 +4,7 @@ define([], function () {
 
 var metronome = {
   bpm: 110,
-  beats: [
+  beats: [ // Each beat is an array of divisions; each division is a strength value from 0 (completely ignored division) to 3 (strongly emphasised division)
     [ 3, 1 ],
     [ 2, 1 ],
     [ 3, 1 ],
