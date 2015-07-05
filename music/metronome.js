@@ -20,12 +20,16 @@ metronome.beatDuration = function () {
   return 60 / metronome.bpm;
 };
 
-metronome.update = function (now, action) {
+metronome.listenToBeat = function (action) {
+  metronome.action = action;
+};
+
+metronome.update = function (now) {
   if (now > metronome.nextBeat - 0.1) { // Call back just BEFORE the next beat to make sure that events composed ON the beat can be scheduled accurately
     var beat = metronome.beats[metronome.nextBeatIdx];
     beat.time = metronome.nextBeatAt();
     beat.duration = metronome.beatDuration();
-    action(beat);
+    if (metronome.action) { metronome.action(beat); }
     metronome.nextBeat += metronome.beatDuration();
     metronome.nextBeatIdx = (metronome.nextBeatIdx + 1) % metronome.beats.length;
   }
