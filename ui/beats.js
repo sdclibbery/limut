@@ -14,6 +14,7 @@ beats.change = function (v) {
   metronome.beats(parse(v));
 };
 
+var lookup = { '3': 3, '2': 2, '1': 1 };
 var parse = function (v) {
   var bs = [];
   var ds = [];
@@ -22,19 +23,11 @@ var parse = function (v) {
     if (c === '\n') {
       bs.push(ds);
       ds = [];
-    } else if (c === '3') {
-      ds.push(3);
-    } else if (c === '2') {
-      ds.push(2);
-    } else if (c === '1') {
-      ds.push(1);
     } else {
-      ds.push(0);
+      ds.push(lookup[c] || 0);
     }
   }
   if (ds.length > 0) { bs.push(ds); }
-console.log('v: '+v);
-console.log('bs: '+bs);
   return bs;
 };
 
