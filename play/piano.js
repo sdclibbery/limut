@@ -1,4 +1,4 @@
-define([], function () {
+define(function (require) {
 return {
 'real': [
 0.000000,

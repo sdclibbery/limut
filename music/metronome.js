@@ -1,6 +1,6 @@
 // Music Domain
 
-define([], function () {
+define(function (require) {
 
 var metronome = {
   bpm: 110,
