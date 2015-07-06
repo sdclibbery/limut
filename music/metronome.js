@@ -22,16 +22,21 @@ metronome.beatDuration = function () {
   return 60 / bpm;
 };
 
+metronome.beats = function (bs) {
+  beats = bs;
+  nextBeatIdx = nextBeatIdx % beats.length;
+};
+
 metronome.update = function (now) {
   var events = [];
   if (now > nextBeat - 0.1) { // Call back just BEFORE the next beat to make sure that events composed ON the beat can be scheduled accurately
     events = beats[nextBeatIdx].map(function (strength, idx, ds) {
       var event = {};
-      event.time = nextBeatAt() + beatDuration() * (idx / ds.length);
+      event.time = metronome.nextBeatAt() + metronome.beatDuration() * (idx / ds.length);
       event.strength = strength;
       return event;
     });
-    nextBeat += beatDuration();
+    nextBeat += metronome.beatDuration();
     nextBeatIdx = (nextBeatIdx + 1) % beats.length;
   }
   return events;
