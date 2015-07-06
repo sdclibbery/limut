@@ -2,38 +2,37 @@
 
 define(function (require) {
 
-var metronome = {
-  bpm: 110,
-  beats: [ // Each beat is an array of divisions; each division is a strength value from 0 (completely ignored division) to 3 (strongly emphasised division)
-    [ 3, 1 ],
-    [ 2, 1 ],
-    [ 3, 1 ],
-    [ 2, 1 ],
-  ],
+var metronome = {};
 
-  nextBeat: 0,
-  nextBeatIdx: 0
-};
+var bpm = 110;
+var beats = [ // Each beat is an array of divisions; each division is a strength value from 0 (completely ignored division) to 3 (strongly emphasised division)
+  [ 3, 1 ],
+  [ 2, 1 ],
+  [ 3, 1 ],
+  [ 2, 1 ],
+];
+var nextBeat = 0;
+var nextBeatIdx = 0;
 
 metronome.nextBeatAt = function () {
-  return metronome.nextBeat;
+  return nextBeat;
 };
 
 metronome.beatDuration = function () {
-  return 60 / metronome.bpm;
+  return 60 / bpm;
 };
 
 metronome.update = function (now) {
   var events = [];
-  if (now > metronome.nextBeat - 0.1) { // Call back just BEFORE the next beat to make sure that events composed ON the beat can be scheduled accurately
-    events = metronome.beats[metronome.nextBeatIdx].map(function (strength, idx, ds) {
+  if (now > nextBeat - 0.1) { // Call back just BEFORE the next beat to make sure that events composed ON the beat can be scheduled accurately
+    events = beats[nextBeatIdx].map(function (strength, idx, ds) {
       var event = {};
-      event.time = metronome.nextBeatAt() + metronome.beatDuration() * (idx / ds.length);
+      event.time = nextBeatAt() + beatDuration() * (idx / ds.length);
       event.strength = strength;
       return event;
     });
-    metronome.nextBeat += metronome.beatDuration();
-    metronome.nextBeatIdx = (metronome.nextBeatIdx + 1) % metronome.beats.length;
+    nextBeat += beatDuration();
+    nextBeatIdx = (nextBeatIdx + 1) % beats.length;
   }
   return events;
 };
