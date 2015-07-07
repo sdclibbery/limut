@@ -1,7 +1,7 @@
 // User Interface adapter for beats
 
 define(function (require) {
-var metronome = require('music/metronome');
+var metronome = require('rhythm/metronome');
 
 var beats = {};
 

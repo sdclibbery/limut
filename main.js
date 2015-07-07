@@ -3,9 +3,9 @@ define(function(require) {
 
   var play = require('play/play');
 
-  var metronome = require('music/metronome');
-  var drummer = require('perform/drummer');
-  var beatsUI = require('ui/beats');
+  var metronome = require('rhythm/metronome');
+  var drummer = require('rhythm/drummer');
+  var beatsUI = require('rhythm/beats.ui');
 
   var tick = function () {
     metronome.update(play.timeNow()).map(drummer.event);

@@ -1,7 +1,7 @@
 // Performance Domain
 
 define(function (require) {
-var percussion = require('play/percussion');
+var percussion = require('rhythm/percussion.play');
 
 var drummer = {};
 
