@@ -13,17 +13,24 @@ metronome.nextBeatAt = function () {
   return nextBeatAt;
 };
 
-metronome.beatDuration = function () {
+metronome.bpm = function (bpm) {
+  if (bpm) { beatDuration = 60/bpm; }
+  return 60/beatDuration;
+};
+
+metronome.beatDuration = function (d) {
+  if (d) { beatDuration = d; }
   return beatDuration;
 };
 
-metronome.beatsPerMeasure = function () {
+metronome.beatsPerMeasure = function (pm) {
+  if (pm) { beatsPerMeasure = pm; }
   return beatsPerMeasure;
 };
 
 metronome.update = function (now) {
   var beat;
-  if (now > nextBeatAt - 0.1) { // Process just BEFORE the next beat to make sure that events composed ON the beat can be scheduled accurately
+  if (now > nextBeatAt - 0.05) { // Process just BEFORE the next beat to make sure that events composed ON the beat can be scheduled accurately
     beat = {
       time: nextBeatAt,
       duration: beatDuration,
