@@ -13,9 +13,14 @@ x Have perform/drummer module to play the drums
 x Metronome should publish a beat signal for others to subscribe to
 x Metronome sort out
 x Some UI for rythm spec
-* Following own advice, everything relating to beats should be together, not spread out by hex location...
-* Beats becomes Rythm module which can drive performers
-* Refactor: metronome is only tempo and time signature
+x Following own advice, everything relating to beats should be together, not spread out by hex location...
+* Split metronome
+ x Beats module which can drive any performer
+ x Metronome only does tempo and time signature
+ * Num beats per measure must come from metronome
+  * ...and for the num rows in the UI...
+ * UI for metronome
+* UI for drummer: what to play on each strength of beat
 * Harmony...
 * Voicing module
 * Chorus performer
