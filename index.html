@@ -15,6 +15,16 @@
       margin: 4px;
       padding: 4px
     }
+    th {
+      font-weight: normal;
+      font-size: 1em;
+    }
+    .toggle {
+      background: #e8e8e8;
+    }
+    .toggle[data-value="on"] {
+      background: #0000ff;
+    }
   </style>
 </head>
 <body>
@@ -35,6 +45,10 @@ x Split metronome
  x Num beats per measure must come from metronome
  x UI for metronome
 * UI for drummer: what to play on each strength of beat
+* Better wiring
+ * Beats' register with metronome
+ * drummers and uis are wired up properly
+ * UI nesting: beats ui inside drummers ui..?
 * Harmony...
 * Voicing module
 * Chorus performer
