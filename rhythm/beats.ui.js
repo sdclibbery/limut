@@ -8,7 +8,7 @@ var myBeats;
 
 var initial = '31\n21\n31\n21';
 window.beatsUIChange = function (ta) { beats.change(ta.value); };
-var html = '<p><textarea id="beats" rows="9" cols="32" oninput="beatsUIChange(this)">'+initial+'</textarea></p>';
+var html = '<div class="widget"><h5>beats</h5><textarea id="beats" rows="9" cols="32" oninput="beatsUIChange(this)">'+initial+'</textarea></div>';
 document.body.innerHTML += html;
 
 beats.change = function (v) {
