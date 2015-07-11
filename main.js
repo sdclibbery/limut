@@ -5,10 +5,15 @@ define(function(require) {
 
   var metronome = require('rhythm/metronome');
   var drummer = require('rhythm/drummer');
+  var beats = require('rhythm/beats');
   var beatsUI = require('rhythm/beats.ui');
+  beatsUI.target(beats);
 
   var tick = function () {
-    metronome.update(play.timeNow()).map(drummer.event);
+    var beat = metronome.update(play.timeNow())
+    if (beat) {
+      beats.next(beat).map(drummer.event);
+    }
     requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);

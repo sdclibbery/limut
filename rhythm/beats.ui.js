@@ -4,14 +4,20 @@ define(function (require) {
 var metronome = require('rhythm/metronome');
 
 var beats = {};
+var myBeats;
 
-var init = '31\n21\n31\n21';
+var initial = '31\n21\n31\n21';
 window.beatsUIChange = function (ta) { beats.change(ta.value); };
-var html = '<p><textarea id="beats" rows="9" cols="32" oninput="beatsUIChange(this)">'+init+'</textarea></p>';
+var html = '<p><textarea id="beats" rows="9" cols="32" oninput="beatsUIChange(this)">'+initial+'</textarea></p>';
 document.body.innerHTML += html;
 
 beats.change = function (v) {
-  metronome.beats(parse(v));
+  myBeats.strengths(parse(v));
+};
+
+beats.target = function (beatsDomain) {
+  myBeats = beatsDomain;
+  beats.change(initial);
 };
 
 var lookup = { '3': 3, '2': 2, '1': 1 };
@@ -31,6 +37,5 @@ var parse = function (v) {
   return bs;
 };
 
-beats.change(init);
 return beats;
 });
