@@ -34,7 +34,7 @@ percussion.snare = function (time) {
   vco.frequency.value = 1/duration;
   vco.connect(vca);
   vco.start(time);
-  vca.gain.linearRampToValueAtTime(0.7, time + attack);
+  vca.gain.linearRampToValueAtTime(0.5, time + attack);
   vca.gain.exponentialRampToValueAtTime(0.001, time + duration);
   vco.stop(time + duration);
 };

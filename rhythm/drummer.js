@@ -10,7 +10,6 @@ var strengthToInstruments = [ [], [], [], [] ]; // List (indexed by beat strengt
 drummer.on = function (strength, instrument) {
   drummer.off(strength, instrument);
   strengthToInstruments[strength].push(instrument);
-console.log('on '+strengthToInstruments[strength]);
 };
 
 drummer.off = function (strength, instrument) {
