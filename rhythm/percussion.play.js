@@ -6,52 +6,28 @@ var play = require('play/play');
 var percussion = {};
 
 percussion.hat = function (time) {
-  var attack = 0.03;
-  var decay = 0.07;
-  var duration = attack + decay;
-  var vca = play.audio.createGain();
-  play.mix(vca);
-  vca.gain.value = 0.0;
-  var vco = play.audio.createOscillator();
-  vco.setPeriodicWave(createNoiseTable(2048));
-  vco.frequency.value = 1/duration;
-  vco.connect(vca);
-  vco.start(time);
-  vca.gain.linearRampToValueAtTime(0.3, time + attack);
-  vca.gain.exponentialRampToValueAtTime(0.001, time + duration);
-  vco.stop(time + duration);
+  playNoise(0.03, 0.07, 2048, 0.3, time);
 };
 
 percussion.snare = function (time) {
-  var attack = 0.02;
-  var decay = 0.3;
-  var duration = attack + decay;
-  var vca = play.audio.createGain();
-  play.mix(vca);
-  vca.gain.value = 0.0;
-  var vco = play.audio.createOscillator();
-  vco.setPeriodicWave(createNoiseTable(2048));
-  vco.frequency.value = 1/duration;
-  vco.connect(vca);
-  vco.start(time);
-  vca.gain.linearRampToValueAtTime(0.5, time + attack);
-  vca.gain.exponentialRampToValueAtTime(0.001, time + duration);
-  vco.stop(time + duration);
+  playNoise(0.02, 0.3, 2048, 0.5, time);
 };
 
 percussion.kick = function (time) {
-  var attack = 0.02;
-  var decay = 0.11;
+  playNoise(0.02, 0.11, 128, 1.0, time);
+};
+
+var playNoise = function (attack, decay, fftSize, gain, time) {
   var duration = attack + decay;
   var vca = play.audio.createGain();
   play.mix(vca);
   vca.gain.value = 0.0;
   var vco = play.audio.createOscillator();
-  vco.setPeriodicWave(createNoiseTable(128));
+  vco.setPeriodicWave(createNoiseTable(fftSize));
   vco.frequency.value = 1/duration;
   vco.connect(vca);
   vco.start(time);
-  vca.gain.linearRampToValueAtTime(1.0, time + attack);
+  vca.gain.linearRampToValueAtTime(gain, time + attack);
   vca.gain.exponentialRampToValueAtTime(0.001, time + duration);
   vco.stop(time + duration);
 };
