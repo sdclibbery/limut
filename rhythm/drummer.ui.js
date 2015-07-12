@@ -14,19 +14,14 @@ markup += '</tr>';
 for (var s = 3; s > 0; s--) {
   markup += '<tr><th>'+s+'</th>';
   instruments.map(function (i) {
-    var name = 'drum-'+s+'-'+i;
-    markup += '<td><div id="'+name+'" class="toggle" data-value="off" onclick="drumChange(event.target);" >&nbsp;</div</td>';
+    markup += '<td><div class="toggle" data-strength="'+s+'" data-instrument="'+i+'" data-value="off" onclick="drumChange(event.target);" >&nbsp;</div</td>';
   });
   markup += '</tr>';
 }
 markup = '<table>'+markup+'</table>';
 window.drumChange = function (el) {
-  console.log(el);
-  console.log(el.id);
-  console.log(el.dataset.value);
   el.dataset.value = el.dataset.value === 'off' ? 'on' : 'off';
-  console.log(el.dataset.value);
-//  myDrummer.beatsPerMeasure(ta.value);
+  myDrummer[el.dataset.value](el.dataset.strength, el.dataset.instrument);
 };
 
 var html = '<div class="widget"><h5>drummer</h5>'+markup+'</div>';
