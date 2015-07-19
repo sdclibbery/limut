@@ -5,17 +5,52 @@ var play = require('play/play');
 
 var percussion = {};
 
-percussion.hat = function (time) {
-  playNoise(0.03, 0.07, 2048, 0.3, time);
+percussion.closedhat = function (time) {
+  playCymbal(0.1, 0.7, time);
+};
+
+percussion.openhat = function (time) {
+  playCymbal(1, 0.4, time);
 };
 
 percussion.snare = function (time) {
-  playNoise(0.02, 0.3, 2048, 0.5, time);
+  playNoise(0.02, 0.3, 2048, 0.7, time);
 };
 
 percussion.kick = function (time) {
   playNoise(0.02, 0.11, 128, 1.0, time);
 };
+
+var playCymbal = function (decay, gain, time) {
+  var attack = 0;
+  var duration = attack + decay;
+
+  var vca = play.audio.createGain();
+  vca.gain.value = 0;
+
+  var vco = play.audio.createOscillator();
+  vco.type = 'square';
+  vco.frequency.value = 2490;
+
+  var lfo = play.audio.createOscillator();
+  lfo.type = 'square';
+  lfo.frequency.value = 1047;
+
+  var lfoGain = play.audio.createGain();
+  lfoGain.gain.value = vco.frequency.value*10;
+
+  lfo.connect(lfoGain);
+  lfoGain.connect(vco.frequency);
+  vco.connect(vca);
+  play.mix(vca);
+
+  vco.start(time);
+  lfo.start(time);
+  vca.gain.linearRampToValueAtTime(gain, time + attack);
+  vca.gain.exponentialRampToValueAtTime(0.001, time + duration);
+  vco.stop(time + duration);
+  lfo.stop(time + duration);
+}
 
 var playNoise = function (attack, decay, fftSize, gain, time) {
   var duration = attack + decay;

@@ -5,7 +5,7 @@ var myDrummer = require('rhythm/drummer');
 
 var drummer = {};
 
-var instruments = ['kick', 'snare', 'hat'];
+var instruments = ['kick', 'snare', 'closedhat', 'openhat'];
 
 var markup = '';
 markup += '<tr><th></th>';
