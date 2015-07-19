@@ -14,11 +14,11 @@ percussion.openhat = function (time) {
 };
 
 percussion.snare = function (time) {
-  playNoise(0.02, 0.3, 2048, 0.7, time);
+  playNoise(0.02, 0.3, 2000, 2.0, time);
 };
 
 percussion.kick = function (time) {
-  playNoise(0.02, 0.11, 50, 500.0, time);
+  playNoise(0.02, 0.11, 50, 70.0, time);
 };
 
 var playCymbal = function (decay, gain, time) {
@@ -42,8 +42,7 @@ var playCymbal = function (decay, gain, time) {
   var hipass = play.audio.createBiquadFilter();
   hipass.type = 'highpass';
   hipass.frequency.value = 2640;
-  hipass.frequency.linearRampToValueAtTime(0, time+0.2);
-  hipass.frequency.linearRampToValueAtTime(2640, time+1);
+  hipass.frequency.linearRampToValueAtTime(8000, time+1);
 
   lfo.connect(lfoGain);
   lfoGain.connect(vco.frequency);
@@ -76,8 +75,7 @@ var playNoise = function (attack, decay, cutoff, gain, time) {
 
   var whiteNoise = play.audio.createBufferSource();
   whiteNoise.buffer = noiseBuffer;
-  whiteNoise.loop = true;
-  whiteNoise.start(0);
+  whiteNoise.start(time);
 
   var lowpass = play.audio.createBiquadFilter();
   lowpass.type = 'lowpass';
