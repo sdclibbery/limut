@@ -6,7 +6,7 @@ var play = require('play/play');
 var percussion = {};
 
 percussion.closedhat = function (time) {
-  playCymbal(0.1, 0.7, time);
+  playCymbal(0.07, 0.9, time);
 };
 
 percussion.openhat = function (time) {
@@ -18,7 +18,7 @@ percussion.snare = function (time) {
 };
 
 percussion.kick = function (time) {
-  playNoise(0.02, 0.11, 128, 1.0, time);
+  playNoise(0.02, 0.11, 50, 500.0, time);
 };
 
 var playCymbal = function (decay, gain, time) {
@@ -39,9 +39,16 @@ var playCymbal = function (decay, gain, time) {
   var lfoGain = play.audio.createGain();
   lfoGain.gain.value = vco.frequency.value*10;
 
+  var hipass = play.audio.createBiquadFilter();
+  hipass.type = 'highpass';
+  hipass.frequency.value = 2640;
+  hipass.frequency.linearRampToValueAtTime(0, time+0.2);
+  hipass.frequency.linearRampToValueAtTime(2640, time+1);
+
   lfo.connect(lfoGain);
   lfoGain.connect(vco.frequency);
-  vco.connect(vca);
+  vco.connect(hipass);
+  hipass.connect(vca);
   play.mix(vca);
 
   vco.start(time);
@@ -52,29 +59,36 @@ var playCymbal = function (decay, gain, time) {
   lfo.stop(time + duration);
 }
 
-var playNoise = function (attack, decay, fftSize, gain, time) {
+var noiseBuffer;
+var playNoise = function (attack, decay, cutoff, gain, time) {
+  if (!noiseBuffer) {
+    var bufferSize = 2 * play.audio.sampleRate;
+    noiseBuffer = play.audio.createBuffer(1, bufferSize, play.audio.sampleRate);
+    var output = noiseBuffer.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+    }
+  }
   var duration = attack + decay;
   var vca = play.audio.createGain();
   play.mix(vca);
   vca.gain.value = 0.0;
-  var vco = play.audio.createOscillator();
-  vco.setPeriodicWave(createNoiseTable(fftSize));
-  vco.frequency.value = 1/duration;
-  vco.connect(vca);
-  vco.start(time);
+
+  var whiteNoise = play.audio.createBufferSource();
+  whiteNoise.buffer = noiseBuffer;
+  whiteNoise.loop = true;
+  whiteNoise.start(0);
+
+  var lowpass = play.audio.createBiquadFilter();
+  lowpass.type = 'lowpass';
+  lowpass.frequency.value = cutoff;
+  lowpass.frequency.linearRampToValueAtTime(cutoff/2, time+duration);
+  whiteNoise.connect(lowpass);
+  lowpass.connect(vca);
+
   vca.gain.linearRampToValueAtTime(gain, time + attack);
   vca.gain.exponentialRampToValueAtTime(0.001, time + duration);
-  vco.stop(time + duration);
-};
-
-var createNoiseTable = function (size) {
-  var real = [0];
-  var imag = [0];
-  for (var i = 1; i < size; i++){
-    real[i] = (Math.random())*2 - 1;
-    imag[i] = (Math.random())*2 - 1;
-  }
-  return play.audio.createPeriodicWave(new Float32Array(real), new Float32Array(imag));
+  whiteNoise.stop(time + duration);
 };
 
 return percussion;
