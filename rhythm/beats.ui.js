@@ -6,7 +6,7 @@ var metronome = require('rhythm/metronome');
 var beats = {};
 var myBeats;
 
-var initial = '31\n21\n31\n21';
+var initial = 'kc\nsc\nkc\nsc';
 var markup = '<textarea id="beats" rows="9" cols="32" oninput="beatsUIChange(this)">'+initial+'</textarea>';
 window.beatsUIChange = function (ta) {
   myBeats.values(parse(ta.value));
@@ -20,7 +20,6 @@ beats.target = function (beatsDomain) {
   myBeats.values(parse(initial));
 };
 
-var lookup = { '3': 3, '2': 2, '1': 1 };
 var parse = function (v) {
   var bs = [];
   var ds = [];
@@ -30,7 +29,8 @@ var parse = function (v) {
       bs.push(ds);
       ds = [];
     } else {
-      ds.push(lookup[c] || 0);
+      var value = myBeats.lookup[c];
+      if (value) { ds.push(value); }
     }
   }
   if (ds.length > 0) { bs.push(ds); }

@@ -8,8 +8,15 @@ var values = [ // Each beat is an array of divisions; each division is a value
 ];
 var nextBeatIdx = 0;
 
-beats.values = function (ss) {
-  values = ss;
+beats.lookup = {
+  k: 'kick',
+  s: 'snare',
+  o: 'openhat',
+  c: 'closedhat'
+};
+
+beats.values = function (vs) {
+  values = vs;
   nextBeatIdx = nextBeatIdx % values.length;
 };
 
