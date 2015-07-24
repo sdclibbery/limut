@@ -6,7 +6,7 @@ var play = require('play/play');
 var percussion = {};
 
 percussion.closedhat = function (time) {
-  playCymbal(0.07, 0.9, time);
+  playCymbal(0.3, 0.5, time);
 };
 
 percussion.openhat = function (time) {
@@ -14,7 +14,7 @@ percussion.openhat = function (time) {
 };
 
 percussion.snare = function (time) {
-  playNoise(0.02, 0.3, 2000, 2.0, time);
+  playNoise(0.02, 0.3, 5000, 2.0, time);
 };
 
 percussion.kick = function (time) {
