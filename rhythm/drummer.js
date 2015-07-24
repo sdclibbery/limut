@@ -19,7 +19,7 @@ drummer.off = function (strength, instrument) {
 };
 
 drummer.event = function (event) {
-  var instruments = strengthToInstruments[event.strength];
+  var instruments = strengthToInstruments[event.value];
   instruments.map(function (instrument) {
     percussion[instrument](event.time);
   });

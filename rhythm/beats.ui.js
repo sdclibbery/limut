@@ -9,7 +9,7 @@ var myBeats;
 var initial = '31\n21\n31\n21';
 var markup = '<textarea id="beats" rows="9" cols="32" oninput="beatsUIChange(this)">'+initial+'</textarea>';
 window.beatsUIChange = function (ta) {
-  myBeats.strengths(parse(ta.value));
+  myBeats.values(parse(ta.value));
 };
 
 var html = '<div class="widget"><h5>beats</h5>'+markup+'</div>';
@@ -17,7 +17,7 @@ document.body.innerHTML += html;
 
 beats.target = function (beatsDomain) {
   myBeats = beatsDomain;
-  myBeats.strengths(parse(initial));
+  myBeats.values(parse(initial));
 };
 
 var lookup = { '3': 3, '2': 2, '1': 1 };
