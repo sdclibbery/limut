@@ -9,6 +9,10 @@ define(function(require) {
   var drummerUI = require('rhythm/drummer.ui');
   var drummer = require('rhythm/drummer');
 
+  var beats = require('rhythm/beats');
+  var beatsUI = require('rhythm/beats.ui');
+  beatsUI.target(beats);
+
   var tick = function () {
     metronome.update(play.timeNow())
     requestAnimationFrame(tick);
