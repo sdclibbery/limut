@@ -3,7 +3,6 @@
 define(function (require) {
 
 var metronome = require('rhythm/metronome');
-var drummer = require('rhythm/drummer');
 
 var beats = {};
 
@@ -12,7 +11,7 @@ var values = [ // Each beat is an array of divisions; each division is a value
 var nextBeatIdx = 0;
 
 metronome.listen(function (beat) {
-  beats.next(beat).map(drummer.event);
+  beats.next(beat).map(beats.event);
 });
 
 beats.values = function (vs) {

@@ -1,13 +1,18 @@
 // Performance Domain
 
 define(function (require) {
+
 var percussion = require('rhythm/percussion.play');
 
-var drummer = {};
+var beats = require('rhythm/beats');
+var beatsUI = require('rhythm/beats.ui');
+beatsUI.target(beats);
 
-drummer.event = function (event) {
+beats.event = function (event) {
   percussion[event.value](event.time);
 };
+
+var drummer = {};
 
 return drummer;
 });
