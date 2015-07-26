@@ -8,9 +8,14 @@ var beatDuration = 60 / 110;
 var nextBeatAt = 0;
 var nextBeatIdx = 0;
 var beatsPerMeasure = 4;
+var listeners = [];
 
 metronome.nextBeatAt = function () {
   return nextBeatAt;
+};
+
+metronome.listen = function (listener) {
+  listeners.push(listener);
 };
 
 metronome.bpm = function (bpm) {
@@ -29,9 +34,8 @@ metronome.beatsPerMeasure = function (pm) {
 };
 
 metronome.update = function (now) {
-  var beat;
   if (now > nextBeatAt - 0.05) { // Process just BEFORE the next beat to make sure that events composed ON the beat can be scheduled accurately
-    beat = {
+    var beat = {
       time: nextBeatAt,
       duration: beatDuration,
       count: nextBeatIdx+1,
@@ -41,8 +45,8 @@ metronome.update = function (now) {
     };
     nextBeatAt += beatDuration;
     nextBeatIdx = (nextBeatIdx + 1) % beatsPerMeasure;
+    listeners.map(function (listener) { listener(beat); });
   }
-  return beat;
 };
 
 return metronome;

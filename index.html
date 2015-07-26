@@ -45,16 +45,14 @@ x Split metronome
  x Num beats per measure must come from metronome
  x UI for metronome
 x UI for drummer: what to play on each strength of beat
-x Beats specifies drum instruments directly
-* Pass the values into beats
-* Compose beats UI into drummer UI
-* Better wiring
- * Beats' register with metronome
+* Beats refactor
+ x Beats specifies drum instruments directly
+ x Beats register with metronome
  * drummers and uis are wired up properly
+ * drummer must own it's beats
+ * Pass the values into beats
+ * Compose beats UI into drummer UI
  * UI nesting: beats ui inside drummers ui..?
-* More flexible UI for beats
- * Allow specifying mulitple values on a single beat/division
- * More touch friendly
 * Harmony...
 * Voicing module
 * Chorus performer
@@ -66,6 +64,9 @@ x Beats specifies drum instruments directly
 > more...
 * Support more than one measures worth of beats; eg 8 rows for 2 measures of 4/4
  * And support forcing a different number of beats into a measure for polyrythms..?
+* More flexible UI for beats
+ * More touch friendly..?
+ * Allow specifying mulitple values on a single beat/division
 * Some more percussion instruments
  x Open and closed hats
  * Clave

@@ -14,10 +14,7 @@ define(function(require) {
   var drummerUI = require('rhythm/drummer.ui');
 
   var tick = function () {
-    var beat = metronome.update(play.timeNow())
-    if (beat) {
-      beats.next(beat).map(drummer.event);
-    }
+    metronome.update(play.timeNow())
     requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);

@@ -2,18 +2,18 @@
 
 define(function (require) {
 
+var metronome = require('rhythm/metronome');
+var drummer = require('rhythm/drummer');
+
 var beats = {};
 
 var values = [ // Each beat is an array of divisions; each division is a value
 ];
 var nextBeatIdx = 0;
 
-beats.lookup = {
-  k: 'kick',
-  s: 'snare',
-  o: 'openhat',
-  c: 'closedhat'
-};
+metronome.listen(function (beat) {
+  beats.next(beat).map(drummer.event);
+});
 
 beats.values = function (vs) {
   values = vs;

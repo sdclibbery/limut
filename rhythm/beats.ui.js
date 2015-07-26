@@ -6,7 +6,14 @@ var metronome = require('rhythm/metronome');
 var beats = {};
 var myBeats;
 
+beats.lookup = {
+  k: 'kick',
+  s: 'snare',
+  o: 'openhat',
+  c: 'closedhat'
+};
 var initial = 'kc\nsc\nkc\nsc';
+
 var markup = '<textarea id="beats" rows="9" cols="32" oninput="beatsUIChange(this)">'+initial+'</textarea>';
 window.beatsUIChange = function (ta) {
   myBeats.values(parse(ta.value));
@@ -29,7 +36,7 @@ var parse = function (v) {
       bs.push(ds);
       ds = [];
     } else {
-      var value = myBeats.lookup[c];
+      var value = beats.lookup[c];
       if (value) { ds.push(value); }
     }
   }
