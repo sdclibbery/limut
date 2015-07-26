@@ -48,11 +48,11 @@ x UI for drummer: what to play on each strength of beat
 * Beats refactor
  x Beats specifies drum instruments directly
  x Beats register with metronome
- * drummers and uis are wired up properly
- * drummer must own it's beats
- * Pass the values into beats
+ x Beats is decoupled from drummer
+ * Make beats into a thing that can becreated, not a singleton
+ * drummer must own (or be given) it's beats
+ * Pass the values into beats from drummer
  * Compose beats UI into drummer UI
- * UI nesting: beats ui inside drummers ui..?
 * Harmony...
 * Voicing module
 * Chorus performer
