@@ -23,12 +23,14 @@ beats.next = function (beat) {
   var events = [];
   var valuesIdx = Math.min(nextBeatIdx % beat.beatsPerMeasure, values.length-1);
   events = values[valuesIdx].map(function (value, idx, ds) {
-    var event = {};
-    event.time = beat.time + beat.duration * (idx / ds.length);
-    event.value = value;
-    event.beat = beat;
-    return event;
-  });
+    if (value) {
+      var event = {};
+      event.time = beat.time + beat.duration * (idx / ds.length);
+      event.value = value;
+      event.beat = beat;
+      return event;
+    }
+  }).filter(function (v) { return !!v; });
   nextBeatIdx = (nextBeatIdx + 1) % beat.beatsPerMeasure;
   return events;
 };

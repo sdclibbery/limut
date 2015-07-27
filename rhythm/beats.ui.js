@@ -36,8 +36,7 @@ var parse = function (v) {
       bs.push(ds);
       ds = [];
     } else {
-      var value = beats.lookup[c];
-      if (value) { ds.push(value); }
+      ds.push(beats.lookup[c]);
     }
   }
   if (ds.length > 0) { bs.push(ds); }
