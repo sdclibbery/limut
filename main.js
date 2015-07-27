@@ -7,7 +7,7 @@ define(function(require) {
   var metronomeUI = require('rhythm/metronome.ui');
 
   var beats = require('rhythm/beats')();
-  var beatsUI = require('rhythm/beats.ui');
+  var beatsUI = require('rhythm/beats.ui')();
   beatsUI.target(beats);
 
   var drummerUI = require('rhythm/drummer.ui');
