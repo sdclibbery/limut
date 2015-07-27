@@ -2,7 +2,12 @@
 
 define(function (require) {
 var myDrummer = require('rhythm/drummer');
-var beatsUI = require('rhythm/beats.ui')();
+var beatsUI = require('rhythm/beats.ui')({
+  k: 'kick',
+  s: 'snare',
+  o: 'openhat',
+  c: 'closedhat'
+}, 'kc\nsc\nkc\nsc');
 beatsUI.target(myDrummer.beats);
 
 var drummer = {};

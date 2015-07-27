@@ -3,16 +3,9 @@
 define(function (require) {
 var metronome = require('rhythm/metronome');
 
-var make = function () {
+var make = function (values, initial) {
   var myBeats;
-  var beatsUI = {};
-  beatsUI.lookup = {
-    k: 'kick',
-    s: 'snare',
-    o: 'openhat',
-    c: 'closedhat'
-  };
-  var initial = 'kc\nsc\nkc\nsc';
+  var beatsUI = { lookup: values };
 
   var markup = '<textarea id="beats" rows="9" cols="32" oninput="beatsUIChange(this)">'+initial+'</textarea>';
   window.beatsUIChange = function (ta) {
