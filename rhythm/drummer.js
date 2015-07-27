@@ -3,13 +3,14 @@
 define(function (require) {
 
 var percussion = require('rhythm/percussion.play');
-var beats = require('rhythm/beats');
-
-beats.event = function (event) {
-  percussion[event.value](event.time);
-};
 
 var drummer = {};
+
+drummer.giveBeats = function (beats) {
+  beats.event = function (event) {
+    percussion[event.value](event.time);
+  };
+};
 
 return drummer;
 });
