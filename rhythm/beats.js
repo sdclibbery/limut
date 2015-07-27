@@ -16,10 +16,11 @@ metronome.listen(function (beat) {
 
 beats.values = function (vs) {
   values = vs;
-  nextBeatIdx = nextBeatIdx % values.length;
+  nextBeatIdx = nextBeatIdx % (values.length || 1);
 };
 
 beats.next = function (beat) {
+  if (values.length === 0) { return []; }
   var events = [];
   var valuesIdx = Math.min(nextBeatIdx % beat.beatsPerMeasure, values.length-1);
   events = values[valuesIdx].map(function (value, idx, ds) {
