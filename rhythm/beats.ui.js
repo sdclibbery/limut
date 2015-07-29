@@ -3,8 +3,10 @@
 define(function (require) {
 var metronome = require('rhythm/metronome');
 
-var make = function (values, initial) {
-  var myBeats;
+var make = function (info) {
+  var values = info.values;
+  var initial = info.initial;
+  var myBeats = info.beats;
   var beatsUI = { lookup: values };
 
   var markup = '<textarea id="beats" rows="9" cols="32" oninput="beatsUIChange(this)">'+initial+'</textarea>';
@@ -15,10 +17,7 @@ var make = function (values, initial) {
   var html = '<div class="widget"><h5>beats</h5>'+markup+'</div>';
   document.body.innerHTML += html;
 
-  beatsUI.target = function (beatsDomain) {
-    myBeats = beatsDomain;
-    myBeats.values(parse(initial, beatsUI.lookup));
-  };
+  myBeats.values(parse(initial, beatsUI.lookup));
 
   return beatsUI;
 };
