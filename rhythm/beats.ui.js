@@ -7,19 +7,16 @@ var id = 1;
 var make = function (info) {
   var values = info.values;
   var initial = info.initial;
-  var myBeats = info.beats;
+  var beats = info.beats;
   var beatsUI = { lookup: values };
 
   id++;
-  var markup = '<textarea id="beats" rows="9" cols="32" oninput="beatsUIChange'+id+'(this)">'+initial+'</textarea>';
+  beatsUI.markup = '<textarea id="beats" rows="9" cols="32" oninput="beatsUIChange'+id+'(this)">'+initial+'</textarea>';
   window['beatsUIChange'+id] = function (ta) {
-    myBeats.values(parse(ta.value, beatsUI.lookup));
+    beats.values(parse(ta.value, beatsUI.lookup));
   };
 
-  var html = '<div class="widget"><h5>beats</h5>'+markup+'</div>';
-  document.body.innerHTML += html;
-
-  myBeats.values(parse(initial, beatsUI.lookup));
+  beats.values(parse(initial, beatsUI.lookup));
 
   return beatsUI;
 };
