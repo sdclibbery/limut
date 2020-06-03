@@ -1,5 +1,3 @@
-// Adapter for percussion audio
-
 define(function (require) {
 var play = require('play/play');
 

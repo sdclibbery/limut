@@ -1,5 +1,3 @@
-// Adapter for audio playback
-
 define(function (require) {
 var piano = 'play/piano';
 var celeste = 'play/celeste';
