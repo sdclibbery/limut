@@ -7,14 +7,9 @@ var metronome = {};
 var beatDuration = 60 / 110;
 var nextBeatAt = 0;
 var count = 0;
-var listeners = [];
 
 metronome.nextBeatAt = function () {
   return nextBeatAt;
-};
-
-metronome.listen = function (listener) {
-  listeners.push(listener);
 };
 
 metronome.bpm = function (bpm) {
@@ -36,7 +31,7 @@ metronome.update = function (now) {
     };
     nextBeatAt += beatDuration;
     count += 1;
-    listeners.map(l => l(beat));
+    return beat;
   }
 };
 

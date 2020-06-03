@@ -2,6 +2,7 @@
 <head>
   <title>LiMuT</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
   <style>
     body {
       font-family: helvetica, arial;
@@ -29,9 +30,12 @@
   </style>
 </head>
 <body>
+  <div class="widget"><button id="p1" onclick="parse(this)">▶</button><textarea id="p1-t" rows="1" cols="80"></textarea></div>
 </body>
 <script data-main="main" src="require.js">
 /*
+Text input area
+Accept a line like "drums 'x-o-'" and pass it to a 'drums' module which parses it and plays it on the beat
 */
 </script>
 </html>
