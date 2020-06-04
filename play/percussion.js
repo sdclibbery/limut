@@ -10,7 +10,7 @@ percussion.openhatLoud = function (time) { playCymbal(1, 0.8, time); };
 percussion.snare = function (time) { playNoise(0.02, 0.3, 5000, 1.0, time); };
 percussion.snareLoud = function (time) { playNoise(0.02, 0.3, 5000, 2.0, time); };
 percussion.kick = function (time) { playNoise(0.02, 0.11, 50, 50.0, time); };
-percussion.kickLoud = function (time) { playNoise(0.02, 0.11, 50, 120.0, time); };
+percussion.kickLoud = function (time) { playNoise(0.02, 0.11, 50, 100.0, time); };
 
 var playCymbal = function (decay, gain, time) {
   var attack = 0;
