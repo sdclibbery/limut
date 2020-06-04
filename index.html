@@ -30,12 +30,17 @@
   </style>
 </head>
 <body>
-  <div class="widget"><button id="p1" onclick="parse(this)">▶</button><textarea id="p1-t" rows="1" cols="80"></textarea></div>
+  <div class="widget"><button id="p1" onclick="parse(this)">▶</button><input id="p1-t" /></div>
+  <div class="widget"><button id="p2" onclick="parse(this)">▶</button><input id="p2-t" /></div>
+  <div class="widget"><button id="p3" onclick="parse(this)">▶</button><input id="p3-t" /></div>
 </body>
 <script data-main="main" src="require.js">
 /*
-Text input area
-Accept a line like "drums 'x-o-'" and pass it to a 'drums' module which parses it and plays it on the beat
+x Accept a line like "drums 'x-o-'" and pass it to a 'drums' module which parses it and plays it on the beat
+Single text input area
+Ctrl enter to run/update
+dur param for drums
+dsaw synth?
 */
 </script>
 </html>

@@ -25,7 +25,6 @@ define(function(require) {
     let beat = metronome.update(play.timeNow());
     if (beat) {
       for (let player of Object.values(playerInstances)) {
-        console.log(player, beat)
         player(beat)
       }
     }
