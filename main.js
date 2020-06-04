@@ -8,17 +8,20 @@ define(function(require) {
   };
   let playerInstances = {};
 
-  window.parse = (button) => {
-    let playerId = button.id
-    let textarea = document.getElementById(playerId + '-t')
-    let parts = textarea.value.split(/(\s+)/)
-    let playerName = parts[0].trim()
-    if (playerName) {
-      let command  = parts.slice(2).join('').trim()
-      playerInstances[playerId] = players[playerName](command)
-    } else {
-      delete playerInstances[playerId]
-    }
+  window.parse = (textarea) => {
+    textarea.value.split('/n').map(l => l.trim()).filter(l => l != '').map(line => {
+      let parts = line.split(/(\s+)/).map(p => p.trim()).filter(p => p != '')
+      let playerId = parts[0].trim()
+      if (playerId) {
+        let playerName = parts[1].trim()
+        if (playerName) {
+          let command  = parts.slice(2).join('').trim()
+          playerInstances[playerId] = players[playerName](command)
+        } else {
+          delete playerInstances[playerId]
+        }
+      }
+    })
   }
 
   let tick = function () {
