@@ -12,12 +12,22 @@ define(function(require) {
     '#':'openhatLoud'
   }
 
+  let splitOnAll = (str, ch) => {
+    if (!str) { return [] }
+    return str.split(ch).map(x => x.trim()).filter(x => x!=ch)
+  }
+
+  let splitOnFirst = (str, ch) => {
+    if (!str) { return [] }
+    let parts = splitOnAll(str, ch)
+    return [parts[0], parts.slice(1).join()]
+  }
+
   return (command) => {
-    let parts = command.split(',').map(x => x.trim()).filter(x => x!=',')
-    let pattern = parts[0]
+    let [pattern, paramsStr] = splitOnFirst(command, ',')
     let beats = pattern.split('').map(x => soundMap[x])
     let params = {}
-    parts.slice(1).map(p => p.split('=')).forEach(([n,v]) => params[n] = v)
+    splitOnAll(paramsStr, ',').map(p => splitOnAll(p, '=')).forEach(([n,v]) => params[n] = v)
     return (beat) => {
       let dur = params.dur || 1
       let ticksPerBeat = 1/dur

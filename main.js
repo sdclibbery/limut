@@ -8,6 +8,13 @@ define(function(require) {
   };
   let playerInstances = {};
 
+  document.addEventListener("keydown", event => {
+    if (event.isComposing || event.keyCode === 229) { return; }
+    if (event.key == '.' && event.ctrlKey) {
+      playerInstances = {};
+    }
+  })
+
   let textarea = document.getElementById('code')
   textarea.addEventListener("keydown", event => {
     if (event.isComposing || event.keyCode === 229) { return; }
