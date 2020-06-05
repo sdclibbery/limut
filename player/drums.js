@@ -23,9 +23,13 @@ define(function(require) {
     return [parts[0], parts.slice(1).join()]
   }
 
+  let parseBeats = (pattern) => {
+    return pattern.split('').map(x => soundMap[x])
+  }
+
   return (command) => {
     let [pattern, paramsStr] = splitOnFirst(command, ',')
-    let beats = pattern.split('').map(x => soundMap[x])
+    let beats = parseBeats(pattern)
     let params = {}
     splitOnAll(paramsStr, ',').map(p => splitOnAll(p, '=')).forEach(([n,v]) => params[n] = v)
     return (beat) => {
