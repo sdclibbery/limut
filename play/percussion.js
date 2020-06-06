@@ -5,10 +5,10 @@ var percussion = {};
 
 percussion.play = (sound, time, params) => {
   switch (sound){
-    case 'x': playNoise(0.02, 0.11, 100, 50.0, time); break;
-    case 'X': playNoise(0.02, 0.11, 100, 100.0, time); break;
-    case 'o': playNoise(0.02, 0.3, 5000, 1.0, time); break;
-    case 'O': playNoise(0.02, 0.3, 5000, 2.0, time); break;
+    case 'x': playNoise(0.11, 150, 20.0, time); break;
+    case 'X': playNoise(0.11, 150, 40.0, time); break;
+    case 'o': playNoise(0.3, 5000, 1.0, time); break;
+    case 'O': playNoise(0.3, 5000, 2.0, time); break;
     case '-': playCymbal(0.3, 0.5, time); break;
     case '+': playCymbal(0.3, 1.0, time); break;
     case '=': playCymbal(1, 0.8, time); break;
@@ -54,7 +54,7 @@ var playCymbal = function (decay, gain, time) {
 }
 
 var noiseBuffer;
-var playNoise = function (attack, decay, cutoff, gain, time) {
+var playNoise = function (decay, cutoff, gain, time) {
   if (!noiseBuffer) {
     var bufferSize = 2 * play.audio.sampleRate;
     noiseBuffer = play.audio.createBuffer(1, bufferSize, play.audio.sampleRate);
@@ -63,6 +63,7 @@ var playNoise = function (attack, decay, cutoff, gain, time) {
         output[i] = Math.random() * 2 - 1;
     }
   }
+  var attack = 0.02;
   var duration = attack + decay;
   var vca = play.audio.createGain();
   play.mix(vca);
