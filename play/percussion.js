@@ -3,14 +3,18 @@ var play = require('play/play');
 
 var percussion = {};
 
-percussion.closedhat = function (time) { playCymbal(0.3, 0.5, time); };
-percussion.closedhatLoud = function (time) { playCymbal(0.3, 1.0, time); };
-percussion.openhat = function (time) { playCymbal(1, 0.4, time); };
-percussion.openhatLoud = function (time) { playCymbal(1, 0.8, time); };
-percussion.snare = function (time) { playNoise(0.02, 0.3, 5000, 1.0, time); };
-percussion.snareLoud = function (time) { playNoise(0.02, 0.3, 5000, 2.0, time); };
-percussion.kick = function (time) { playNoise(0.02, 0.11, 50, 50.0, time); };
-percussion.kickLoud = function (time) { playNoise(0.02, 0.11, 50, 100.0, time); };
+percussion.play = (sound, time, params) => {
+  switch (sound){
+    case 'x': playNoise(0.02, 0.11, 100, 50.0, time); break;
+    case 'X': playNoise(0.02, 0.11, 100, 100.0, time); break;
+    case 'o': playNoise(0.02, 0.3, 5000, 1.0, time); break;
+    case 'O': playNoise(0.02, 0.3, 5000, 2.0, time); break;
+    case '-': playCymbal(0.3, 0.5, time); break;
+    case '+': playCymbal(0.3, 1.0, time); break;
+    case '=': playCymbal(1, 0.8, time); break;
+    case '#': playCymbal(1, 0.8, time); break;
+  }
+}
 
 var playCymbal = function (decay, gain, time) {
   var attack = 0;
