@@ -1,4 +1,5 @@
 define(function(require) {
+  var parsePattern = require('player/pattern');
   var percussion = require('play/percussion');
 
   let splitOnAll = (str, ch) => {
@@ -12,22 +13,23 @@ define(function(require) {
     return [parts[0], parts.slice(1).join()]
   }
 
-  let parsePattern = (pattern, params) => {
-    return pattern.split('')
+  let parseParams = (paramsStr) => {
+    let params = {}
+    splitOnAll(paramsStr, ',')
+      .map(p => splitOnAll(p, '='))
+      .forEach(([n,v]) => params[n] = v)
+    return params
   }
 
   return (command) => {
     let [pattern, paramsStr] = splitOnFirst(command, ',')
-    let params = {}
-    splitOnAll(paramsStr, ',').map(p => splitOnAll(p, '=')).forEach(([n,v]) => params[n] = v)
-    let steps = parsePattern(pattern, params)
+    let params = parseParams(paramsStr)
+    let events = parsePattern(pattern, params)
     return (beat) => {
-      let dur = params.dur || 1
-      let ticksPerBeat = 1/dur
-      for (subCount = 0; subCount < ticksPerBeat; subCount++) {
-        let sound = steps[(beat.count*ticksPerBeat+subCount) % steps.length]
-        percussion.play(sound, beat.time + subCount*beat.duration/ticksPerBeat, params)
-      }
+      let eventsForBeat = events[beat.count % events.length]
+      eventsForBeat.forEach(event => {
+        percussion.play(event.sound, beat.time + event.time, event)
+      })
     }
   }
 });
