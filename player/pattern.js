@@ -24,5 +24,17 @@ define(function(require) {
 
   assert([], parsePattern('', {}))
 
+  assert([[{sound:'x',time:0}]], parsePattern('x', {}))
+
+  assert([[{sound:'x',time:0}],[{sound:'o',time:0}]], parsePattern('xo', {}))
+
+  //assert([[{sound:'x',time:0},{sound:'o',time:1/2}]], parsePattern('xo', {dur:1/2}))
+
+  //assert([[{sound:'x',time:0},{sound:'o',time:1/2}]], parsePattern('[xo]', {}))
+
+  //assert([[{sound:'x',time:0}],[{sound:'.',time:0}],[{sound:'o',time:0}],[{sound:'.',time:0}]], parsePattern('(xo).', {}))
+
+  //etc
+
   return parsePattern
 });
