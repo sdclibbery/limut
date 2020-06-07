@@ -10,7 +10,7 @@ define(function(require) {
       event = Object.assign({sound:sound, time:time}, params)
       events[events.length-1].push(event)
       time += dur
-      if (time >= 1) {
+      if (time >= 0.999) {
         time -= 1
         events.push([])
       }
@@ -34,7 +34,15 @@ define(function(require) {
 
   assert([[{sound:'x',time:0,dur:1/2},{sound:'o',time:1/2,dur:1/2}]], parsePattern('xo', {dur:1/2}))
 
+  assert([[{sound:'-',time:0,dur:1/2},{sound:'-',time:1/2,dur:1/2}]], parsePattern('-', {dur:1/2}))
+
   //assert([[{sound:'x',time:0},{sound:'o',time:1/2}]], parsePattern('[xo]', {}))
+
+  //assert([[{sound:'x',time:0,dur:1/2},{sound:'o',time:1/4,dur:1/2},{sound:'x',time:1/2,dur:1/2},{sound:'o',time:3/4,dur:1/2}]], parsePattern('[xo]', {dur:1/2}))
+
+  //assert([[{sound:'x',time:0},{sound:'-',time:1/3},{sound:'o',time:2/3}]], parsePattern('[x-o]', {}))
+
+  //assert([[{sound:'x',time:0},{sound:'-',time:1/2},{sound:'o',time:3/4}]], parsePattern('[x[-o]]', {}))
 
   //assert([[{sound:'x',time:0}],[{sound:'.',time:0}],[{sound:'o',time:0}],[{sound:'.',time:0}]], parsePattern('(xo).', {}))
 
