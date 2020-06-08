@@ -22,11 +22,11 @@ define(function(require) {
   }
 
   return (command) => {
-    let [pattern, paramsStr] = splitOnFirst(command, ',')
+    let [patternStr, paramsStr] = splitOnFirst(command, ',')
     let params = parseParams(paramsStr)
-    let events = parsePattern(pattern, params)
+    let pattern = parsePattern(patternStr, params)
     return (beat) => {
-      let eventsForBeat = events[beat.count % events.length]
+      let eventsForBeat = pattern(beat)
       eventsForBeat.forEach(event => {
         percussion.play(event.value, beat.time + event.time*beat.duration, event)
       })

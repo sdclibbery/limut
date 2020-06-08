@@ -3,7 +3,7 @@ define(function(require) {
   let parsePattern = (pattern, params) => {
     let steps = pattern.split('')
     let dur = eval(params.dur) || 1
-    events = [[]]
+    let events = [[]]
     let time = 0
     steps.forEach((step, idx) => {
       let value = steps[idx]
@@ -15,7 +15,10 @@ define(function(require) {
         events.push([])
       }
     })
-    return events.filter(x => x.length>0)
+    events = events.filter(x => x.length>0)
+    return ({time,duration,count}) => {
+      return events[count % events.length] || []
+    }
   }
 
   // TESTS //
@@ -26,13 +29,20 @@ define(function(require) {
     if (x !== a) { throw(`Assertion failed.\n  Expected: ${x}\n  Actual: ${a}`) }
   }
 
-  assert([], parsePattern('', {}))
+  let pattern
 
-  assert([[{value:'x',time:0}]], parsePattern('x', {}))
+  pattern = parsePattern('', {})
+  assert([], pattern({time:0,duration:10,count:0}))
+  assert([], pattern({time:10,duration:10,count:1}))
 
-  assert([[{value:'x',time:0}],[{value:'o',time:0}]], parsePattern('xo', {}))
+  pattern = parsePattern('x', {})
+  assert([{value:'x',time:0}], pattern({time:0,duration:10,count:0}))
+  assert([{value:'x',time:0}], pattern({time:10,duration:10,count:1}))
 
-  assert([[{value:'x',time:0,dur:1/2},{value:'o',time:1/2,dur:1/2}]], parsePattern('xo', {dur:1/2}))
+  pattern = parsePattern('xo', {})
+  assert([{value:'x',time:0}], pattern({time:0,duration:10,count:0}))
+  assert([{value:'o',time:0}], pattern({time:10,duration:10,count:1}))
+  assert([{value:'x',time:0}], pattern({time:20,duration:10,count:2}))
 
   //assert([[{value:'-',time:0,dur:1/2},{value:'-',time:1/2,dur:1/2}]], parsePattern('-', {dur:1/2}))
 
