@@ -28,7 +28,7 @@ define(function(require) {
     return (beat) => {
       let eventsForBeat = events[beat.count % events.length]
       eventsForBeat.forEach(event => {
-        percussion.play(event.sound, beat.time + event.time, event)
+        percussion.play(event.value, beat.time + event.time*beat.duration, event)
       })
     }
   }

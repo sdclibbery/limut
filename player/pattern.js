@@ -6,8 +6,8 @@ define(function(require) {
     events = [[]]
     let time = 0
     steps.forEach((step, idx) => {
-      let sound = steps[idx]
-      event = Object.assign({sound:sound, time:time}, params)
+      let value = steps[idx]
+      event = Object.assign({value:value, time:time}, params)
       events[events.length-1].push(event)
       time += dur
       if (time >= 0.999) {
@@ -28,23 +28,23 @@ define(function(require) {
 
   assert([], parsePattern('', {}))
 
-  assert([[{sound:'x',time:0}]], parsePattern('x', {}))
+  assert([[{value:'x',time:0}]], parsePattern('x', {}))
 
-  assert([[{sound:'x',time:0}],[{sound:'o',time:0}]], parsePattern('xo', {}))
+  assert([[{value:'x',time:0}],[{value:'o',time:0}]], parsePattern('xo', {}))
 
-  assert([[{sound:'x',time:0,dur:1/2},{sound:'o',time:1/2,dur:1/2}]], parsePattern('xo', {dur:1/2}))
+  assert([[{value:'x',time:0,dur:1/2},{value:'o',time:1/2,dur:1/2}]], parsePattern('xo', {dur:1/2}))
 
-  assert([[{sound:'-',time:0,dur:1/2},{sound:'-',time:1/2,dur:1/2}]], parsePattern('-', {dur:1/2}))
+  //assert([[{value:'-',time:0,dur:1/2},{value:'-',time:1/2,dur:1/2}]], parsePattern('-', {dur:1/2}))
 
-  //assert([[{sound:'x',time:0},{sound:'o',time:1/2}]], parsePattern('[xo]', {}))
+  //assert([[{value:'x',time:0},{value:'o',time:1/2}]], parsePattern('[xo]', {}))
 
-  //assert([[{sound:'x',time:0,dur:1/2},{sound:'o',time:1/4,dur:1/2},{sound:'x',time:1/2,dur:1/2},{sound:'o',time:3/4,dur:1/2}]], parsePattern('[xo]', {dur:1/2}))
+  //assert([[{value:'x',time:0,dur:1/2},{value:'o',time:1/4,dur:1/2},{value:'x',time:1/2,dur:1/2},{value:'o',time:3/4,dur:1/2}]], parsePattern('[xo]', {dur:1/2}))
 
-  //assert([[{sound:'x',time:0},{sound:'-',time:1/3},{sound:'o',time:2/3}]], parsePattern('[x-o]', {}))
+  //assert([[{value:'x',time:0},{value:'-',time:1/3},{value:'o',time:2/3}]], parsePattern('[x-o]', {}))
 
-  //assert([[{sound:'x',time:0},{sound:'-',time:1/2},{sound:'o',time:3/4}]], parsePattern('[x[-o]]', {}))
+  //assert([[{value:'x',time:0},{value:'-',time:1/2},{value:'o',time:3/4}]], parsePattern('[x[-o]]', {}))
 
-  //assert([[{sound:'x',time:0}],[{sound:'.',time:0}],[{sound:'o',time:0}],[{sound:'.',time:0}]], parsePattern('(xo).', {}))
+  //assert([[{value:'x',time:0}],[{value:'.',time:0}],[{value:'o',time:0}],[{value:'.',time:0}]], parsePattern('(xo).', {}))
 
   //etc
 
