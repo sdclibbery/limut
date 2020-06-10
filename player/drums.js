@@ -26,7 +26,7 @@ define(function(require) {
     let params = parseParams(paramsStr)
     let pattern = parsePattern(patternStr, params)
     return (beat) => {
-      let eventsForBeat = pattern(beat)
+      let eventsForBeat = pattern(beat.count)
       eventsForBeat.forEach(event => {
         percussion.play(event.value, beat.time + event.time*beat.duration, event)
       })
