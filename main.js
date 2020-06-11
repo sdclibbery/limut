@@ -3,8 +3,11 @@ define(function(require) {
 
   let play = require('play/play');
   let metronome = require('metronome');
+  let nullPlayer = () => (() => {})
   let players = {
-    drums: require('player/drums')
+    none: nullPlayer,
+    stop: nullPlayer,
+    drums: require('player/drums'),
   };
   let playerInstances = {};
 
