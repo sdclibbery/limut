@@ -19,7 +19,11 @@ define(function(require) {
   textarea.addEventListener("keydown", event => {
     if (event.isComposing || event.keyCode === 229) { return; }
     if ((event.keyCode == 10 || event.keyCode == 13) && event.ctrlKey) {
-      textarea.value.split('\n').map(l => l.trim()).filter(l => l != '').map(line => {
+      textarea.value.split('\n')
+      .map(l => l.trim())
+      .map(line => line.replace(/\/\/.*/, ''))
+      .filter(l => l != '')
+      .map(line => {
         let parts = line.split(/(\s+)/).map(p => p.trim()).filter(p => p != '')
         let playerId = parts[0].trim()
         if (playerId) {
