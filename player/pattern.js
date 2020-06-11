@@ -22,7 +22,7 @@ define(function(require) {
       if (events.length == 0) { return [] }
       let patternBeat = count * patternLength / events.length
       let stepIdx = Math.floor(patternBeat) % events.length
-      let time = stepIdx
+      let time = stepIdx + patternLength * Math.floor(count / patternLength)
       let eventForStepIdx = 0
       let eventsForBeat = []
       do {
@@ -82,8 +82,7 @@ define(function(require) {
   assert([{value:'-',time:2/5,dur:4/5}], pattern(2))
   assert([{value:'-',time:1/5,dur:4/5}], pattern(3))
   assert([{value:'-',time:0,dur:4/5},{value:'-',time:4/5,dur:4/5}], pattern(4))
-
-  // X.o. dur=1/2
+  assert([{value:'-',time:3/5,dur:4/5}], pattern(400000001))
 
   // Long durs
 
