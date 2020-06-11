@@ -5,38 +5,42 @@ define(function(require) {
     let dur = eval(params.dur) || 1
     let events = [[]]
     let time = 0
+    let patternLength = 0
     steps.forEach((step, idx) => {
       let value = steps[idx]
       event = Object.assign({value:value, time:time}, params)
       event.dur = dur
       events[events.length-1].push(event)
+      patternLength += dur
       time += dur
-      if (time >= 0.9999) {
-        time -= 1
+      if (time-events.length >= -0.0001) {
         events.push([])
       }
     })
     events = events.filter(x => x.length>0)
     return (count) => {
       if (events.length == 0) { return [] }
-      let stepIdx = count % events.length
-      let eventsForStepIdx = 0
+      let patternBeat = count * patternLength / events.length
+      let stepIdx = Math.floor(patternBeat) % events.length
+      let time = stepIdx
+      let eventForStepIdx = 0
       let eventsForBeat = []
-      let time = 0
-      while (time < 0.9999) {
-        let event = events[stepIdx][eventsForStepIdx]
-        eventsForBeat.push(Object.assign({}, event, {time:time}))
+      do {
+        let event = events[stepIdx][eventForStepIdx]
+        if (time > count-0.0001 && time < count+0.9999) {
+          eventsForBeat.push(Object.assign({}, event, {time:time-count}))
+        }
         time += event.dur
-        eventsForStepIdx += 1
-        if (eventsForStepIdx >= events[stepIdx].length) {
-          eventsForStepIdx = 0
+        eventForStepIdx += 1
+        if (eventForStepIdx >= events[stepIdx].length) {
+          eventForStepIdx = 0
           stepIdx += 1
           if (stepIdx >= events.length) {
             stepIdx = 0
-            eventsForStepIdx = 0
+            eventForStepIdx = 0
           }
         }
-      }
+      } while (time < count+1.0001)
       return eventsForBeat
     }
   }
@@ -72,7 +76,19 @@ define(function(require) {
   assert([{value:'-',time:0,dur:1/4},{value:'-',time:1/4,dur:1/4},{value:'-',time:2/4,dur:1/4},{value:'-',time:3/4,dur:1/4}], pattern(0))
   assert([{value:'-',time:0,dur:1/4},{value:'-',time:1/4,dur:1/4},{value:'-',time:2/4,dur:1/4},{value:'-',time:3/4,dur:1/4}], pattern(1))
 
-  //assert([[{value:'x',time:0,dur:1/2},{value:'o',time:1/2,dur:1/2}]], parsePattern('xo', {dur:'1/2'}))
+  pattern = parsePattern('-', {dur:4/5})
+  assert([{value:'-',time:0,dur:4/5},{value:'-',time:4/5,dur:4/5}], pattern(0))
+  assert([{value:'-',time:3/5,dur:4/5}], pattern(1))
+  assert([{value:'-',time:2/5,dur:4/5}], pattern(2))
+  assert([{value:'-',time:1/5,dur:4/5}], pattern(3))
+  assert([{value:'-',time:0,dur:4/5},{value:'-',time:4/5,dur:4/5}], pattern(4))
+
+  // X.o. dur=1/2
+
+  // Long durs
+
+  // polyrhythm with multiple beats
+  // polyrhythm with long pattern length
 
   //assert([[{value:'-',time:0,dur:4/5},{value:'-',time:4/5,dur:4/5}],[{value:'-',time:8/5,dur:4/5}]], parsePattern('-', {dur:'4/5'}))
 
