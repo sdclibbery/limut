@@ -48,8 +48,8 @@ define(function(require) {
   // TESTS //
 
   let assert = (expected, actual) => {
-    let x = JSON.stringify(expected)
-    let a = JSON.stringify(actual)
+    let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? v.toFixed(2) : v)
+    let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? v.toFixed(2) : v)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
 
