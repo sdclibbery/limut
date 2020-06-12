@@ -14,7 +14,7 @@ define(function(require) {
   document.addEventListener("keydown", event => {
     if (event.isComposing || event.keyCode === 229) { return; }
     if (event.key == '.' && event.ctrlKey) {
-      playerInstances = {};
+      window.stop()
     }
   })
 
@@ -22,25 +22,33 @@ define(function(require) {
   textarea.addEventListener("keydown", event => {
     if (event.isComposing || event.keyCode === 229) { return; }
     if ((event.keyCode == 10 || event.keyCode == 13) && event.ctrlKey) {
-      textarea.value.split('\n')
-      .map(l => l.trim())
-      .map(line => line.replace(/\/\/.*/, ''))
-      .filter(l => l != '')
-      .map(line => {
-        let parts = line.split(/(\s+)/).map(p => p.trim()).filter(p => p != '')
-        let playerId = parts[0].trim()
-        if (playerId) {
-          let playerName = parts[1].trim()
-          if (playerName) {
-            let command  = parts.slice(2).join('').trim()
-            playerInstances[playerId] = players[playerName](command)
-          } else {
-            delete playerInstances[playerId]
-          }
-        }
-      })
+      window.go()
     }
   });
+
+  window.stop = () => {
+    playerInstances = {};
+  }
+
+  window.go = () => {
+    textarea.value.split('\n')
+    .map(l => l.trim())
+    .map(line => line.replace(/\/\/.*/, ''))
+    .filter(l => l != '')
+    .map(line => {
+      let parts = line.split(/(\s+)/).map(p => p.trim()).filter(p => p != '')
+      let playerId = parts[0].trim()
+      if (playerId) {
+        let playerName = parts[1].trim()
+        if (playerName) {
+          let command  = parts.slice(2).join('').trim()
+          playerInstances[playerId] = players[playerName](command)
+        } else {
+          delete playerInstances[playerId]
+        }
+      }
+    })
+  }
 
   let tick = function () {
     let beat = metronome.update(play.timeNow());
