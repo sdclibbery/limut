@@ -27,10 +27,12 @@ define(function(require) {
   });
 
   window.stop = () => {
+    play.resume()
     playerInstances = {};
   }
 
   window.go = () => {
+    play.resume()
     textarea.value.split('\n')
     .map(l => l.trim())
     .map(line => line.replace(/\/\/.*/, ''))

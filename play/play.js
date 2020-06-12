@@ -8,6 +8,8 @@ var play = {
   audio: new AudioContext(),
 };
 
+play.resume = () => play.audio.resume()
+
 play.timeNow = function () {
   return play.audio.currentTime;
 };
