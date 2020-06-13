@@ -21,7 +21,7 @@
 </head>
 <body>
   <div class="widget">
-    bpm: <span id="bpm-readout">!!</span> <input id="bpm" type="range" min="60" max="200" oninput="bpmChange(this)" style="width:85%;" />
+    bpm: <span id="bpm-readout"></span> <input id="bpm" type="range" min="60" max="200" oninput="bpmChange(this)" style="width:85%;" />
   </div>
   <div class="widget">
     <p>
@@ -36,26 +36,13 @@
 <script data-main="main" src="require.js">
 /*
 x Accept a line like "drums 'x-o-'" and pass it to a 'drums' module which parses it and plays it on the beat
-x Single text input area
-x Ctrl enter to run/update
-x dur param for drums
-x ctrl+. to stop all
-x refactor pattern parsing iface
-x setup unit tests
-x pattern unit tests
-x polyrhtyhm
-x fix unit test time comparison
-x comments
-x null player for stopping
-x fix pattern eval start point
-x publish to github pages
-x buttons to play and stop all
-x script to publish changes to github pages (ie update the submodule)
+...
 x fix refusal to play on chrome
 x metronome bpm control on page - and make sure it works with patterns
 more pattern test cases
 square brackets for patterns
 round brackets for patterns
+global amp and compressor
 */
 </script>
 </html>
