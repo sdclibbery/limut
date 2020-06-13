@@ -30,9 +30,18 @@
   </style>
 </head>
 <body>
-  <button onclick="go()">▶</button>
-  <button onclick="stop()">◼</button>
-  <div class="widget"><textarea id="code" rows="20" cols="100"></textarea></div>
+  <div class="widget">
+    bpm: <input id="bpm" type="range" min="60" max="200" oninput="bpmChange(this)" style="width:85%;" />
+  </div>
+  <div class="widget">
+    <p>
+      <button onclick="go()">▶</button>
+      <button onclick="stop()">◼</button>
+    </p>
+    <p>
+      <textarea id="code" rows="20" style="width: 100%; max-width: 100%;"></textarea>
+    </p>
+  </div>
 </body>
 <script data-main="main" src="require.js">
 /*
@@ -52,8 +61,8 @@ x fix pattern eval start point
 x publish to github pages
 x buttons to play and stop all
 x script to publish changes to github pages (ie update the submodule)
-fix refusal to play on chrome
-metronome bpm control on page - and make sure it works with patterns
+x fix refusal to play on chrome
+x metronome bpm control on page - and make sure it works with patterns
 more pattern test cases
 square brackets for patterns
 round brackets for patterns

@@ -3,37 +3,47 @@ define(function(require) {
 
   let play = require('play/play');
   let metronome = require('metronome');
-  let nullPlayer = () => (() => {})
+
+  // Players
+  let nullPlayer = () => {}
   let players = {
     none: nullPlayer,
     stop: nullPlayer,
     drums: require('player/drums'),
+    bpm: (command) => metronome.bpm(parseFloat(command)),
   };
   let playerInstances = {};
 
+  // Bpm ui
+  let bpmInput = document.getElementById('bpm')
+  window.bpmChange = function (ta) {
+    metronome.bpm(ta.value);
+  };
+  window.bpmChanged = function (bpm) {
+    bpmInput.value = bpm
+  };
+
+  // Play/stop ui
+  let codeTextArea = document.getElementById('code')
   document.addEventListener("keydown", event => {
     if (event.isComposing || event.keyCode === 229) { return; }
     if (event.key == '.' && event.ctrlKey) {
       window.stop()
     }
   })
-
-  let textarea = document.getElementById('code')
-  textarea.addEventListener("keydown", event => {
+  codeTextArea.addEventListener("keydown", event => {
     if (event.isComposing || event.keyCode === 229) { return; }
     if ((event.keyCode == 10 || event.keyCode == 13) && event.ctrlKey) {
       window.go()
     }
   });
-
   window.stop = () => {
     play.resume()
     playerInstances = {};
   }
-
   window.go = () => {
     play.resume()
-    textarea.value.split('\n')
+    codeTextArea.value.split('\n')
     .map(l => l.trim())
     .map(line => line.replace(/\/\/.*/, ''))
     .filter(l => l != '')
@@ -52,11 +62,12 @@ define(function(require) {
     })
   }
 
+  // Update
   let tick = function () {
     let beat = metronome.update(play.timeNow());
     if (beat) {
       for (let player of Object.values(playerInstances)) {
-        player(beat)
+        if (typeof player === 'function') { player(beat) }
       }
     }
     requestAnimationFrame(tick);
