@@ -1,5 +1,6 @@
 define(function(require) {
 
+  let debug = false
   let parsePattern = (pattern, params) => {
     let steps = pattern.split('')
     let dur = eval(params.dur) || 1
@@ -18,20 +19,20 @@ define(function(require) {
       }
     })
     events = events.filter(x => x.length>0)
-    //console.log(pattern, dur, patternLength, events)
+    if (debug) { console.log(pattern, dur, patternLength, events) }
     return (count) => {
       if (events.length == 0) { return [] }
       let patternStartTime = patternLength * Math.floor(count / patternLength)
       let patternBeat = count * patternLength / events.length
-      let stepIdx = Math.floor(patternBeat) % events.length
+      let stepIdx = Math.max(0, Math.floor(patternBeat) % events.length-1)
       let eventForStepIdx = 0
       let eventsForBeat = []
       let time = 0
       do {
-        //console.log('idxs: ', stepIdx, eventForStepIdx)
+        if (debug) { console.log('idxs: ', stepIdx, eventForStepIdx) }
         let event = events[stepIdx][eventForStepIdx]
         time = (patternStartTime + event.time) - count
-        //console.log('pst: ', patternStartTime, ' t/c: ', time, count)
+        if (debug) { console.log('pst: ', patternStartTime, 'et: ', event.time, ' t/c: ', time, count) }
         if (time > -0.0001 && time < 0.9999) {
           eventsForBeat.push(Object.assign({}, event, {time:time}))
         }
@@ -53,8 +54,8 @@ define(function(require) {
   // TESTS //
 
   let assert = (expected, actual) => {
-    let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? v.toFixed(2) : v)
-    let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? v.toFixed(2) : v)
+    let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
+    let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
 
@@ -119,10 +120,10 @@ define(function(require) {
   assert([], pattern(4))
   assert([{value:'x',time:0,dur:2.5}], pattern(5))
 
-  // Long durs
-
-  // polyrhythm with multiple beats
-  // polyrhythm with long pattern length
+  pattern = parsePattern('=--.--', {dur:1/3})
+  assert([{value:'=',time:0,dur:1/3},{value:'-',time:1/3,dur:1/3},{value:'-',time:2/3,dur:1/3}], pattern(0))
+  assert([{value:'.',time:0,dur:1/3},{value:'-',time:1/3,dur:1/3},{value:'-',time:2/3,dur:1/3}], pattern(1))
+  assert([{value:'=',time:0,dur:1/3},{value:'-',time:1/3,dur:1/3},{value:'-',time:2/3,dur:1/3}], pattern(2))
 
   //assert([[{value:'-',time:0,dur:4/5},{value:'-',time:4/5,dur:4/5}],[{value:'-',time:8/5,dur:4/5}]], parsePattern('-', {dur:'4/5'}))
 
