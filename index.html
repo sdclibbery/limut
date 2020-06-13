@@ -7,9 +7,6 @@
     body {
       font-family: helvetica, arial;
     }
-    h5 {
-      margin: 4px;
-    }
     .widget {
       background: #f8f8f8;
       border: 2px solid #202020;
@@ -17,21 +14,14 @@
       margin: 4px;
       padding: 4px
     }
-    th {
-      font-weight: normal;
-      font-size: 1em;
-    }
-    .toggle {
-      background: #e8e8e8;
-    }
-    .toggle[data-value="on"] {
-      background: #0000ff;
+    button {
+      font-size: 2em;
     }
   </style>
 </head>
 <body>
   <div class="widget">
-    bpm: <input id="bpm" type="range" min="60" max="200" oninput="bpmChange(this)" style="width:85%;" />
+    bpm: <span id="bpm-readout">!!</span> <input id="bpm" type="range" min="60" max="200" oninput="bpmChange(this)" style="width:85%;" />
   </div>
   <div class="widget">
     <p>

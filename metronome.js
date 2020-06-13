@@ -15,7 +15,7 @@ metronome.nextBeatAt = function () {
 metronome.bpm = function (bpm) {
   if (bpm) {
     beatDuration = 60/bpm
-    window.bpmChanged(60/beatDuration)
+    if (window.bpmChanged) { window.bpmChanged(60/beatDuration) }
   }
   return 60/beatDuration;
 };

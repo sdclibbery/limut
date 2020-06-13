@@ -16,12 +16,15 @@ define(function(require) {
 
   // Bpm ui
   let bpmInput = document.getElementById('bpm')
+  let bpmReadout = document.getElementById('bpm-readout')
   window.bpmChange = function (ta) {
-    metronome.bpm(ta.value);
-  };
+    metronome.bpm(ta.value)
+  }
   window.bpmChanged = function (bpm) {
     bpmInput.value = bpm
-  };
+    bpmReadout.innerText = bpm.toFixed(1)
+  }
+  window.bpmChanged(metronome.bpm())
 
   // Play/stop ui
   let codeTextArea = document.getElementById('code')
