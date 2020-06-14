@@ -12,25 +12,22 @@ define(function (require) {
     let decay = Math.max(0.01, dur - attack)
     let gain = Math.max(0.0001, 0.2 * (eval(params.amp) || 1))
     let freq = scale.degreeToFreq(degree, eval(params.oct) || 4)
-    let detuneSemis = eval(params.detune) || 0.1
+    let detuneSemis = eval(params.detune) || 0.2
 
     let vco1 = play.audio.createOscillator();
     vco1.type = 'sawtooth';
+    vco1.frequency.value = freq
     let vco2 = play.audio.createOscillator();
     vco2.type = 'sawtooth';
+    vco2.frequency.value = freq
+    vco2.detune.value = detuneSemis*100
     let vca = play.audio.createGain();
 
     vco1.connect(vca);
     vco2.connect(vca);
     play.mix(vca);
 
-    vco1.frequency.cancelScheduledValues(time)
-    vco1.frequency.setValueAtTime(freq, time)
     vco1.start(time);
-    vco2.frequency.cancelScheduledValues(time)
-    vco2.frequency.setValueAtTime(freq, time)
-    vco2.detune.cancelScheduledValues(time)
-    vco2.detune.setValueAtTime(detuneSemis*100, time)
     vco2.start(time);
     vca.gain.cancelScheduledValues(time)
     vca.gain.setValueAtTime(0, time)
