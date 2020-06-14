@@ -6,13 +6,13 @@ var play = {
 
 play.resume = () => play.audio.resume()
 
-let vcaMainAmp = play.audio.createGain()
-vcaMainAmp.gain.value = 1
+play.vcaMainAmp = play.audio.createGain()
+play.vcaMainAmp.gain.value = 1
 play.mainAmp = (amp) => {
   if (typeof amp == 'number') {
-    vcaMainAmp.gain.value = amp
+    play.vcaMainAmp.gain.value = amp
   }
-  return vcaMainAmp.gain.value
+  return play.vcaMainAmp.gain.value
 }
 
 play.timeNow = function () {
@@ -20,7 +20,7 @@ play.timeNow = function () {
 };
 
 play.mix = function (node) {
-  node.connect(vcaMainAmp);
+  node.connect(play.vcaMainAmp);
 };
 
 var _initReverb = function () {
@@ -39,9 +39,11 @@ var _initReverb = function () {
   play.reverb.buffer = impulse;
 };
 _initReverb();
-play.reverb.connect(play.audio.destination);
-vcaMainAmp.connect(play.reverb)
-vcaMainAmp.connect(play.audio.destination)
+play.compressor = play.audio.createDynamicsCompressor()
+play.reverb.connect(play.compressor);
+play.vcaMainAmp.connect(play.reverb)
+play.vcaMainAmp.connect(play.compressor)
+play.compressor.connect(play.audio.destination)
 
 var _getFft = function (data) {
   if (!ffts[data]) {
