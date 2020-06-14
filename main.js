@@ -3,13 +3,17 @@ define(function(require) {
 
   let play = require('play/play');
   let metronome = require('metronome');
+  let standardPlayer = require('player/standard')
+  let percussion = require('play/percussion')
+  let dsaw = require('play/dsaw')
 
   // Players
   let nullPlayer = () => {}
   let players = {
     none: nullPlayer,
     stop: nullPlayer,
-    drums: require('player/drums'),
+    drums: standardPlayer(percussion.play),
+    dsaw: standardPlayer(dsaw.play),
     bpm: (command) => metronome.bpm(parseFloat(command)),
   };
   let playerInstances = {};

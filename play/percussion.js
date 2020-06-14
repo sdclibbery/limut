@@ -47,6 +47,8 @@ var playCymbal = function (decay, gain, time) {
 
   vco.start(time);
   lfo.start(time);
+  vca.gain.cancelScheduledValues(time)
+  vca.gain.setValueAtTime(0, time)
   vca.gain.linearRampToValueAtTime(gain, time + attack);
   vca.gain.exponentialRampToValueAtTime(0.001, time + duration);
   vco.stop(time + duration);
@@ -80,6 +82,8 @@ var playNoise = function (decay, cutoff, gain, time) {
   whiteNoise.connect(lowpass);
   lowpass.connect(vca);
 
+  vca.gain.cancelScheduledValues(time)
+  vca.gain.setValueAtTime(0, time)
   vca.gain.linearRampToValueAtTime(gain, time + attack);
   vca.gain.exponentialRampToValueAtTime(0.001, time + duration);
   whiteNoise.stop(time + duration);
