@@ -21,7 +21,9 @@
 </head>
 <body>
   <div class="widget">
-    bpm: <span id="bpm-readout"></span> <input id="bpm" type="range" min="60" max="200" oninput="bpmChange(this)" style="width:85%;" />
+    <h1>Global</h1>
+    <p>Mix: <span id="main-amp-readout"></span> <input id="main-amp-slider" type="range" min="0" max="200" oninput="mainAmpChange(parseFloat(this.value)/100)" style="width:85%;" /></p>
+    <p>bpm: <span id="bpm-readout"></span></p>
   </div>
   <div class="widget">
     <p>
@@ -41,15 +43,19 @@ x fix refusal to play on chrome
 x metronome bpm control on page - and make sure it works with patterns
 x more pattern test cases
 x dsaw player
-pattern test: =-------, dur=1/2
-remove bpm slider
+x remove bpm slider
 global amp and compressor
+global reverb; maybe switch to cheap reverb?
+use setValueAtTime for everything in percussion
+params for percussion
 square brackets for patterns
 round brackets for patterns
-amp param
 support time vars for params
+sus param
 lpf param
 chop param
+synth patterns
+room param (cheap reverb)
 */
 </script>
 </html>

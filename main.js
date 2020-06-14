@@ -10,25 +10,36 @@ define(function(require) {
   // Players
   let nullPlayer = () => {}
   let players = {
+    // stop
     none: nullPlayer,
     stop: nullPlayer,
+    // instruments
     drums: standardPlayer(percussion.play),
     dsaw: standardPlayer(dsaw.play),
+    // main params
     bpm: (command) => metronome.bpm(parseFloat(command)),
+    mainamp: (command) => window.mainAmpChange(parseFloat(command)),
   };
   let playerInstances = {};
 
   // Bpm ui
-  let bpmInput = document.getElementById('bpm')
   let bpmReadout = document.getElementById('bpm-readout')
-  window.bpmChange = function (ta) {
-    metronome.bpm(ta.value)
-  }
   window.bpmChanged = function (bpm) {
-    bpmInput.value = bpm
     bpmReadout.innerText = bpm.toFixed(1)
   }
   window.bpmChanged(metronome.bpm())
+
+  // Main amp AI
+  let mainAmpReadout = document.getElementById('main-amp-readout')
+  let mainAmpInput = document.getElementById('main-amp-slider')
+  window.mainAmpChange = (amp) => {
+    window.mainAmpChanged(play.mainAmp(amp))
+  }
+  window.mainAmpChanged = (mainAmp) => {
+    mainAmpReadout.innerText = mainAmp.toFixed(2)
+    mainAmpInput.value = mainAmp*100
+  }
+  window.mainAmpChanged(play.mainAmp())
 
   // Play/stop ui
   let codeTextArea = document.getElementById('code')
@@ -61,7 +72,7 @@ define(function(require) {
         let playerName = parts[1].trim()
         if (playerName) {
           let command  = parts.slice(2).join('').trim()
-          playerInstances[playerId] = players[playerName](command)
+          playerInstances[playerId] = players[playerName.toLowerCase()](command)
         } else {
           delete playerInstances[playerId]
         }

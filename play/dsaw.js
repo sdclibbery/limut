@@ -10,7 +10,7 @@ define(function (require) {
     let dur = Math.max(0.01, eval(params.dur) || 0.5)
     let attack = 0.1
     let decay = Math.max(0.01, dur - attack)
-    let gain = Math.max(0.0001, 0.3 * (eval(params.amp) || 1))
+    let gain = Math.max(0.0001, 0.2 * (eval(params.amp) || 1))
     let freq = scale.degreeToFreq(degree, eval(params.oct) || 4)
     let detuneSemis = eval(params.detune) || 0.1
 
