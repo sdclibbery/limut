@@ -1,9 +1,31 @@
 define(function(require) {
 
+  let parsePatternString = (pattern) => {
+//console.log(pattern)
+    let parsed = []
+    let idx = 0
+    let char
+    while (char = pattern.charAt(idx)) {
+      if (char == ']') {
+        return parsed
+      } else if (char == '[') {
+        let subPattern = parsePatternString(pattern.slice(idx+1))
+//console.log(pattern, idx, pattern.slice(idx+1), subPattern)
+        parsed.push(subPattern)
+        idx += subPattern.length+1
+//console.log(pattern, idx, pattern.slice(idx+1))
+      } else {
+        parsed.push(char)
+      }
+      idx += 1
+    }
+    return parsed
+  }
+
   let debug = false
   let parsePattern = (pattern, params) => {
     if (!pattern) { return () => [] }
-    let steps = pattern.split('')
+    let steps = parsePatternString(pattern)
     let dur = eval(params.dur) || 1
     let events = [[]]
     let time = 0
@@ -59,6 +81,11 @@ define(function(require) {
     let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
+
+  assert([], parsePatternString(''))
+  assert(['x','-','o'], parsePatternString('x-o'))
+  assert([['x','x']], parsePatternString('[xx]'))
+  assert(['x',['-','-'],'o',['-','-']], parsePatternString('x[--]o[--]'))
 
   let pattern
 
