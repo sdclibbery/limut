@@ -6,6 +6,10 @@ var play = {
 
 play.resume = () => play.audio.resume()
 
+play.timeNow = function () {
+  return play.audio.currentTime;
+};
+
 play.vcaMainAmp = play.audio.createGain()
 play.vcaMainAmp.gain.value = 1
 play.mainAmp = (amp) => {
@@ -15,17 +19,13 @@ play.mainAmp = (amp) => {
   return play.vcaMainAmp.gain.value
 }
 
-play.timeNow = function () {
-  return play.audio.currentTime;
-};
-
 play.mix = function (node) {
   node.connect(play.vcaMainAmp);
 };
 
 var _initReverb = function () {
   play.reverb = play.audio.createConvolver();
-  var seconds = 1;
+  var seconds = 0.5;
   var decay = 5;
   var rate = play.audio.sampleRate;
   var length = rate * seconds;
@@ -39,8 +39,17 @@ var _initReverb = function () {
   play.reverb.buffer = impulse;
 };
 _initReverb();
+play.mainReverb = (reverb) => {
+  if (typeof reverb == 'number') {
+    play.vcaReverb.gain.value = reverb
+  }
+  return play.vcaReverb.gain.value
+}
+play.vcaReverb = play.audio.createGain()
+play.vcaReverb.gain.value = 1
+play.reverb.connect(play.vcaReverb)
 play.compressor = play.audio.createDynamicsCompressor()
-play.reverb.connect(play.compressor);
+play.vcaReverb.connect(play.compressor)
 play.vcaMainAmp.connect(play.reverb)
 play.vcaMainAmp.connect(play.compressor)
 play.compressor.connect(play.audio.destination)

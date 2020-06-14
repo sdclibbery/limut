@@ -22,7 +22,8 @@
 <body>
   <div class="widget">
     <h1>Global</h1>
-    <p>MainAmp: <span id="main-amp-readout"></span> <input id="main-amp-slider" type="range" min="0" max="200" oninput="mainAmpChange(parseFloat(this.value)/100)" style="width:85%;" /></p>
+    <p>MainAmp: <span id="main-amp-readout"></span> <input id="main-amp-slider" type="range" min="0" max="200" oninput="mainAmpChange(parseFloat(this.value)/100)" style="width:80%;" /></p>
+    <p>MainReverb: <span id="main-reverb-readout"></span> <input id="main-reverb-slider" type="range" min="0" max="200" oninput="mainReverbChange(parseFloat(this.value)/100)" style="width:80%;" /></p>
     <p>bpm: <span id="bpm-readout"></span></p>
   </div>
   <div class="widget">
@@ -46,8 +47,9 @@ x dsaw player
 x remove bpm slider
 x global amp
 x global compressor
-global reverb control
-use setValueAtTime for everything in percussion
+x global reverb control
+use .value in dsaw
+try chrome debugger and check graph
 params for percussion
 square brackets for patterns
 round brackets for patterns

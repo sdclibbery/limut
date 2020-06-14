@@ -19,6 +19,7 @@ define(function(require) {
     // main params
     bpm: (command) => metronome.bpm(parseFloat(command)),
     mainamp: (command) => window.mainAmpChange(parseFloat(command)),
+    mainreverb: (command) => window.mainReverbChange(parseFloat(command)),
   };
   let playerInstances = {};
 
@@ -29,7 +30,7 @@ define(function(require) {
   }
   window.bpmChanged(metronome.bpm())
 
-  // Main amp AI
+  // Main amp UI
   let mainAmpReadout = document.getElementById('main-amp-readout')
   let mainAmpInput = document.getElementById('main-amp-slider')
   window.mainAmpChange = (amp) => {
@@ -40,6 +41,18 @@ define(function(require) {
     mainAmpInput.value = mainAmp*100
   }
   window.mainAmpChanged(play.mainAmp())
+
+  // Main reverb UI
+  let mainReverbReadout = document.getElementById('main-reverb-readout')
+  let mainReverbInput = document.getElementById('main-reverb-slider')
+  window.mainReverbChange = (reverb) => {
+    window.mainReverbChanged(play.mainReverb(reverb))
+  }
+  window.mainReverbChanged = (mainReverb) => {
+    mainReverbReadout.innerText = mainReverb.toFixed(2)
+    mainReverbInput.value = mainReverb*100
+  }
+  window.mainReverbChanged(play.mainReverb())
 
   // Play/stop ui
   let codeTextArea = document.getElementById('code')
