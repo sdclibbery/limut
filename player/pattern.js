@@ -2,6 +2,7 @@ define(function(require) {
 
   let debug = false
   let parsePattern = (pattern, params) => {
+    if (!pattern) { return () => [] }
     let steps = pattern.split('')
     let dur = eval(params.dur) || 1
     let events = [[]]

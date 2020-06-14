@@ -4,15 +4,16 @@ var play = require('play/play');
 var percussion = {};
 
 percussion.play = (sound, time, params) => {
+  let amp = parseFloat(params.amp) || 1
   switch (sound){
-    case 'x': playNoise(0.11, 150, 20.0, time); break;
-    case 'X': playNoise(0.11, 150, 40.0, time); break;
-    case 'o': playNoise(0.3, 5000, 1.0, time); break;
-    case 'O': playNoise(0.3, 5000, 2.0, time); break;
-    case '-': playCymbal(0.3, 0.5, time); break;
-    case '+': playCymbal(0.3, 1.0, time); break;
-    case '=': playCymbal(1, 0.8, time); break;
-    case '#': playCymbal(1, 0.8, time); break;
+    case 'x': playNoise(0.11, 150, 20.0*amp, time); break;
+    case 'X': playNoise(0.11, 150, 40.0*amp, time); break;
+    case 'o': playNoise(0.3, 5000, 1.0*amp, time); break;
+    case 'O': playNoise(0.3, 5000, 2.0*amp, time); break;
+    case '-': playCymbal(0.3, 0.5*amp, time); break;
+    case '+': playCymbal(0.3, 1.0*amp, time); break;
+    case '=': playCymbal(1, 0.8*amp, time); break;
+    case '#': playCymbal(1, 0.8*amp, time); break;
   }
 }
 
