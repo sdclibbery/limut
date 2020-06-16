@@ -16,11 +16,12 @@ define(function(require) {
     // instruments
     drums: standardPlayer(percussion.play),
     dsaw: standardPlayer(dsaw.play),
-    // main params
-    bpm: (command) => metronome.bpm(parseFloat(command)),
-    mainamp: (command) => window.mainAmpChange(parseFloat(command)),
-    mainreverb: (command) => window.mainReverbChange(parseFloat(command)),
   };
+  let vars = {
+    bpm: (command) => metronome.bpm(eval(command)),
+    mainamp: (command) => window.mainAmpChange(eval(command)),
+    mainreverb: (command) => window.mainReverbChange(eval(command)),
+  }
   let playerInstances = {};
 
   // Bpm ui
@@ -44,13 +45,11 @@ define(function(require) {
 
   // Main reverb UI
   let mainReverbReadout = document.getElementById('main-reverb-readout')
-  let mainReverbInput = document.getElementById('main-reverb-slider')
   window.mainReverbChange = (reverb) => {
     window.mainReverbChanged(play.mainReverb(reverb))
   }
   window.mainReverbChanged = (mainReverb) => {
     mainReverbReadout.innerText = mainReverb.toFixed(2)
-    mainReverbInput.value = mainReverb*100
   }
   window.mainReverbChanged(play.mainReverb())
 
@@ -85,7 +84,11 @@ define(function(require) {
         let playerName = parts[1].trim()
         if (playerName) {
           let command  = parts.slice(2).join('').trim()
-          playerInstances[playerId] = players[playerName.toLowerCase()](command)
+          if (playerName == '=') {
+            vars[playerId.toLowerCase()](command)
+          } else {
+            playerInstances[playerId] = players[playerName.toLowerCase()](command)
+          }
         } else {
           delete playerInstances[playerId]
         }

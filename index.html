@@ -17,14 +17,16 @@
     button {
       font-size: 2em;
     }
+    span {
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
   <div class="widget">
     <h1>Global</h1>
     <p>MainAmp: <span id="main-amp-readout"></span> <input id="main-amp-slider" type="range" min="0" max="200" oninput="mainAmpChange(parseFloat(this.value)/100)" style="width:80%;" /></p>
-    <p>MainReverb: <span id="main-reverb-readout"></span> <input id="main-reverb-slider" type="range" min="0" max="200" oninput="mainReverbChange(parseFloat(this.value)/100)" style="width:80%;" /></p>
-    <p>bpm: <span id="bpm-readout"></span></p>
+    <p>bpm: <span id="bpm-readout"></span> MainReverb: <span id="main-reverb-readout"></span></p>
   </div>
   <div class="widget">
     <p>
@@ -45,11 +47,13 @@ x params for percussion
 x square brackets for patterns
 x more pattern tests
 x lowercase for param names
-remove slider for reverb
-allow setting vars using 'bpm = 120' instead of 'x bpm 120'
+x remove slider for reverb
+x allow setting vars using 'bpm = 120' instead of 'x bpm 120'
+stop with !
+replace eval
 dur can be a pattern itself
 round brackets for patterns
-support time vars for params
+time vars for params
 sus param
 lpf param
 chop param
