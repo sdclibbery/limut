@@ -4,12 +4,12 @@ define(function (require) {
 
   let dsaw = {};
 
-  dsaw.play = (sound, time, params) => {
+  dsaw.play = (sound, beatDuration, time, params) => {
     let degree = parseInt(sound)
     if (isNaN(degree)) { return }
-    let dur = Math.max(0.01, eval(params.dur) || 0.5)
-    let attack = 0.1
-    let decay = Math.max(0.01, dur - attack)
+    let dur = Math.max(0.01, (eval(params.sus) || eval(params.dur) || 0.25) * beatDuration)
+    let attack = eval(params.attack || 0.1) * beatDuration
+    let decay = eval(params.decay || 0.2) * beatDuration
     let gain = Math.max(0.0001, 0.2 * (eval(params.amp) || 1))
     let freq = scale.degreeToFreq(degree, eval(params.oct) || 4)
     let detuneSemis = eval(params.detune) || 0.2
@@ -33,10 +33,11 @@ define(function (require) {
     vca.gain.setValueAtTime(0, time)
 
     vca.gain.linearRampToValueAtTime(gain, time + attack);
-    vca.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+    vca.gain.linearRampToValueAtTime(gain, time + dur);
+    vca.gain.linearRampToValueAtTime(0.0001, time + dur + decay);
 
-    vco1.stop(time + dur);
-    vco2.stop(time + dur);
+    vco1.stop(time + dur + decay);
+    vco2.stop(time + dur + decay);
   }
 
   return dsaw;

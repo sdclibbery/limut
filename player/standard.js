@@ -27,8 +27,7 @@ define(function(require) {
     return (beat) => {
       let eventsForBeat = pattern(beat.count)
       eventsForBeat.forEach(event => {
-        if (event.dur) { event.dur *= beat.duration }
-        play(event.value, beat.time + event.time*beat.duration, event)
+        play(event.value, beat.duration, beat.time + event.time*beat.duration, event)
       })
     }
   }
