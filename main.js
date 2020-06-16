@@ -13,6 +13,7 @@ define(function(require) {
     // stop
     none: nullPlayer,
     stop: nullPlayer,
+    '!': nullPlayer,
     // instruments
     drums: standardPlayer(percussion.play),
     dsaw: standardPlayer(dsaw.play),
