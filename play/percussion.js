@@ -6,10 +6,10 @@ var percussion = {};
 percussion.play = (params) => {
   let amp = eval(params.amp) || 1
   switch (params.sound){
-    case 'x': playNoise(0.11, 150, 0.7*amp, params.time); break;
-    case 'X': playNoise(0.11, 150, 1.0*amp, params.time); break;
-    case 'o': playNoise(0.3, 5000, 0.3*amp, params.time); break;
-    case 'O': playNoise(0.3, 5000, 0.5*amp, params.time); break;
+    case 'x': playNoise(0.11, 150, 5.0*amp, params.time); break;
+    case 'X': playNoise(0.11, 150, 16.0*amp, params.time); break;
+    case 'o': playNoise(0.3, 5000, 0.7*amp, params.time); break;
+    case 'O': playNoise(0.3, 5000, 1.5*amp, params.time); break;
     case '-': playCymbal(0.3, 0.3*amp, params.time); break;
     case '+': playCymbal(0.3, 0.6*amp, params.time); break;
     case '=': playCymbal(1, 0.6*amp, params.time); break;
