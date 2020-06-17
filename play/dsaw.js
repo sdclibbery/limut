@@ -32,7 +32,7 @@ define(function (require) {
       vco = play.audio.createOscillator()
       vco.type = 'sawtooth';
       vco.frequency.value = freq
-      vco.detune.value = lerp * detuneSemis*100
+      vco.detune.value = lerp * detuneSemis*Math.sqrt(freq)*10
       return vco
     })
     vcos.forEach(vco => vco.connect(vca))
