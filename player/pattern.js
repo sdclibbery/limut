@@ -103,6 +103,11 @@ define(function(require) {
   assert(['o',['x',['-','-'], 'x'],'o'], parsePatternString('o[x[--]x]o'))
   assert([[['-','-'],['-','-']]], parsePatternString('[[--][--]]'))
 
+  // assert(['0'], parsePatternString('0'))
+  // assert(['1'], parsePatternString('1'))
+  // assert(['-1'], parsePatternString('-1'))
+  // assert(['0','1','-1','2','-2'], parsePatternString('01-12-2'))
+
   let pattern
 
   pattern = parsePattern('', {})

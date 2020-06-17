@@ -17,6 +17,7 @@ define(function(require) {
     // instruments
     drums: standardPlayer(percussion.play),
     dsaw: standardPlayer(dsaw.play),
+    dsawbass: standardPlayer((sound, beatDuration, time, params) => { params.oct=params.oct||2; dsaw.play(sound, beatDuration, time, params) }),
   };
   let vars = {
     bpm: (command) => metronome.bpm(eval(command)),

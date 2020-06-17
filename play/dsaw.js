@@ -12,23 +12,21 @@ define(function (require) {
     let decay = eval(params.decay || 0.2) * beatDuration
     let gain = Math.max(0.0001, 0.2 * (eval(params.amp) || 1))
     let freq = scale.degreeToFreq(degree, eval(params.oct) || 4)
-    let detuneSemis = eval(params.detune) || 0.2
+    let detuneSemis = eval(params.detune) || 0.3
 
-    let vco1 = play.audio.createOscillator();
-    vco1.type = 'sawtooth';
-    vco1.frequency.value = freq
-    let vco2 = play.audio.createOscillator();
-    vco2.type = 'sawtooth';
-    vco2.frequency.value = freq
-    vco2.detune.value = detuneSemis*100
+    let vcos = [0, 0.5, 0.7, 1].map(lerp => {
+      vco = play.audio.createOscillator()
+      vco.type = 'sawtooth';
+      vco.frequency.value = freq
+      vco.detune.value = lerp * detuneSemis*100
+      return vco
+    })
     let vca = play.audio.createGain();
 
-    vco1.connect(vca);
-    vco2.connect(vca);
+    vcos.forEach(vco => vco.connect(vca))
     play.mix(vca);
 
-    vco1.start(time);
-    vco2.start(time);
+    vcos.forEach(vco => vco.start(time))
     vca.gain.cancelScheduledValues(time)
     vca.gain.setValueAtTime(0, time)
 
@@ -36,8 +34,7 @@ define(function (require) {
     vca.gain.linearRampToValueAtTime(gain, time + dur);
     vca.gain.linearRampToValueAtTime(0.0001, time + dur + decay);
 
-    vco1.stop(time + dur + decay);
-    vco2.stop(time + dur + decay);
+    vcos.forEach(vco => vco.stop(time + dur + decay))
   }
 
   return dsaw;
