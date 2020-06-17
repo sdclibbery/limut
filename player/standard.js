@@ -27,7 +27,9 @@ define(function(require) {
     return (beat) => {
       let eventsForBeat = pattern(beat.count)
       eventsForBeat.forEach(event => {
-        play(event.value, beat.duration, beat.time + event.time*beat.duration, event)
+        let eventToPlay = Object.assign({}, event, {sound: event.value, beat: beat})
+        eventToPlay.time = beat.time + event.time*beat.duration
+        play(eventToPlay)
       })
     }
   }
