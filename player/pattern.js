@@ -25,20 +25,17 @@ define(function(require) {
     return parsed
   }
 
-  let groupEvents = (steps, stepData, dur, params) => {
+  let getEvents = (steps, stepData, dur, params) => {
     steps.forEach((step, idx) => {
       let value = steps[idx]
       if (Array.isArray(value)) {
-        groupEvents(value, stepData, dur / value.length, params)
+        getEvents(value, stepData, dur / value.length, params)
       } else {
         event = Object.assign({value:value, time:stepData.time}, params)
         event.dur = dur
-        stepData.events[stepData.events.length-1].push(event)
+        stepData.events.push(event)
         stepData.time += dur
         stepData.patternLength += dur
-        if (stepData.time - stepData.events.length >= -0.0001) {
-          stepData.events.push([])
-        }
       }
     })
   }
@@ -49,39 +46,32 @@ define(function(require) {
     let dur = eval(params.dur) || 1
     let stepData = {
       time: 0,
-      events: [[]],
+      events: [],
       patternLength: 0,
     }
-    groupEvents(steps, stepData, dur, params)
+    getEvents(steps, stepData, dur, params)
     let events = stepData.events
     let patternLength = stepData.patternLength
-    events = events.filter(x => x.length>0)
     if (debug) { console.log(pattern, dur, patternLength, events) }
     return (count) => {
       if (events.length == 0) { return [] }
       let patternStartTime = patternLength * Math.floor(count / patternLength)
       let patternBeat = count * patternLength / events.length
-      let stepIdx = Math.max(0, Math.floor(patternBeat) % events.length-1)
-      let eventForStepIdx = 0
+      let stepIdx = 0
       let eventsForBeat = []
       let time = 0
       do {
-        if (debug) { console.log('idxs: ', stepIdx, eventForStepIdx) }
-        let event = events[stepIdx][eventForStepIdx]
+        if (debug) { console.log('idxs: ', stepIdx) }
+        let event = events[stepIdx]
         time = (patternStartTime + event.time) - count
         if (debug) { console.log('pst: ', patternStartTime, 'et: ', event.time, ' t/c: ', time, count) }
         if (time > -0.0001 && time < 0.9999) {
           eventsForBeat.push(Object.assign({}, event, {time:time}))
         }
-        eventForStepIdx += 1
-        if (eventForStepIdx >= events[stepIdx].length) {
-          eventForStepIdx = 0
-          stepIdx += 1
-          if (stepIdx >= events.length) {
-            stepIdx = 0
-            eventForStepIdx = 0
-            patternStartTime += patternLength
-          }
+        stepIdx += 1
+        if (stepIdx >= events.length) {
+          stepIdx = 0
+          patternStartTime += patternLength
         }
       } while (time < 1.0001)
       return eventsForBeat
@@ -194,9 +184,11 @@ define(function(require) {
   assert([{value:'x',time:0,dur:1/4},{value:'o',time:1/4,dur:1/4},{value:'.',time:1/2,dur:1/2}], pattern(0))
   assert([{value:'x',time:0,dur:1/4},{value:'o',time:1/4,dur:1/4},{value:'.',time:1/2,dur:1/2}], pattern(1))
 
-  //assert([[{value:'x',time:0}],[{value:'.',time:0}],[{value:'o',time:0}],[{value:'.',time:0}]], parsePattern('(xo).', {}))
-
-  //etc
+  pattern = parsePattern('012345', {dur:2})
+  for (let i = 0; i < 100; i++) {
+    assert([{value:''+(i%6),time:0,dur:2}], pattern(2*i))
+    assert([], pattern(2*i+1))
+  }
 
   console.log("Pattern tests complete")
 
