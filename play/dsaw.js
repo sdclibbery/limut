@@ -23,7 +23,7 @@ define(function (require) {
     let degree = parseInt(params.sound)
     if (isNaN(degree)) { return }
     let freq = scale.degreeToFreq(degree, eval(params.oct) || 4)
-    let detuneSemis = eval(params.detune) || 0.3
+    let detuneSemis = eval(params.detune) || 0.1
 
     let vca = envelope(params)
     play.mix(vca);
@@ -32,7 +32,7 @@ define(function (require) {
       vco = play.audio.createOscillator()
       vco.type = 'sawtooth';
       vco.frequency.value = freq
-      vco.detune.value = lerp * detuneSemis*Math.sqrt(freq)*10
+      vco.detune.value = lerp * detuneSemis*100
       return vco
     })
     vcos.forEach(vco => vco.connect(vca))
