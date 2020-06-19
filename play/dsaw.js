@@ -4,11 +4,11 @@ define(function (require) {
 
   let dsaw = {};
 
-  let envelope = (params) => {
+  let envelope = (params, gainBase) => {
     let dur = Math.max(0.01, (eval(params.sus) || eval(params.dur) || 0.25) * params.beat.duration)
     let attack = eval(params.attack || 0.1) * params.beat.duration
     let decay = eval(params.decay || 0.2) * params.beat.duration
-    let gain = Math.max(0.0001, 0.05 * (eval(params.amp) || 1))
+    let gain = Math.max(0.0001, gainBase * (eval(params.amp) || 1))
     let vca = play.audio.createGain();
     vca.gain.cancelScheduledValues(params.time)
     vca.gain.setValueAtTime(0, params.time)
@@ -25,7 +25,7 @@ define(function (require) {
     let freq = scale.degreeToFreq(degree, eval(params.oct) || 4)
     let detuneSemis = eval(params.detune) || 0.1
 
-    let vca = envelope(params)
+    let vca = envelope(params, 0.01)
     play.mix(vca);
 
     let vcos = [0, 0.7, 1].map(lerp => {
