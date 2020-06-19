@@ -1,10 +1,11 @@
 define(function(require) {
   try { if (!AudioContext) { throw 1; } } catch(e) { document.body.innerHTML = 'Web Audio not supported in this browser!'; return; }
 
-  let play = require('play/play');
+  let system = require('play/system');
   let metronome = require('metronome');
   let standardPlayer = require('player/standard')
   let percussion = require('play/percussion')
+//  let play = require('play/play')
   let dsaw = require('play/dsaw')
 
   // Players
@@ -16,8 +17,9 @@ define(function(require) {
     '!': nullPlayer,
     // instruments
     drums: standardPlayer(percussion.play),
-    dsaw: standardPlayer(dsaw.play),
-    dsawbass: standardPlayer(event => { event.oct=event.oct||2; event.amp=(event.amp||1)*2; event.detune=event.detune||0.25; dsaw.play(event) }),
+//    play: standardPlayer(play),
+    dsaw: standardPlayer(dsaw),
+    dsawbass: standardPlayer(event => { event.oct=event.oct||2; event.amp=(event.amp||1)*2; event.detune=event.detune||0.25; dsaw(event) }),
   };
   let vars = {
     bpm: (command) => metronome.bpm(eval(command)),
@@ -37,23 +39,23 @@ define(function(require) {
   let mainAmpReadout = document.getElementById('main-amp-readout')
   let mainAmpInput = document.getElementById('main-amp-slider')
   window.mainAmpChange = (amp) => {
-    window.mainAmpChanged(play.mainAmp(amp))
+    window.mainAmpChanged(system.mainAmp(amp))
   }
   window.mainAmpChanged = (mainAmp) => {
     mainAmpReadout.innerText = mainAmp.toFixed(2)
     mainAmpInput.value = mainAmp*100
   }
-  window.mainAmpChanged(play.mainAmp())
+  window.mainAmpChanged(system.mainAmp())
 
   // Main reverb UI
   let mainReverbReadout = document.getElementById('main-reverb-readout')
   window.mainReverbChange = (reverb) => {
-    window.mainReverbChanged(play.mainReverb(reverb))
+    window.mainReverbChanged(system.mainReverb(reverb))
   }
   window.mainReverbChanged = (mainReverb) => {
     mainReverbReadout.innerText = mainReverb.toFixed(2)
   }
-  window.mainReverbChanged(play.mainReverb())
+  window.mainReverbChanged(system.mainReverb())
 
   // Play/stop ui
   let codeTextArea = document.getElementById('code')
@@ -70,11 +72,11 @@ define(function(require) {
     }
   });
   window.stop = () => {
-    play.resume()
+    system.resume()
     playerInstances = {};
   }
   window.go = () => {
-    play.resume()
+    system.resume()
     codeTextArea.value.split('\n')
     .map(l => l.trim())
     .map(line => line.replace(/\/\/.*/, ''))
@@ -100,7 +102,7 @@ define(function(require) {
 
   // Update
   let tick = function () {
-    let beat = metronome.update(play.timeNow());
+    let beat = metronome.update(system.timeNow());
     if (beat) {
       for (let player of Object.values(playerInstances)) {
         if (typeof player === 'function') { player(beat) }

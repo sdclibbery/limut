@@ -1,5 +1,5 @@
 define(function (require) {
-var play = require('play/play');
+var system = require('play/system');
 
 var percussion = {};
 
@@ -21,21 +21,21 @@ var playCymbal = function (decay, gain, time) {
   var attack = 0;
   var duration = attack + decay;
 
-  var vca = play.audio.createGain();
+  var vca = system.audio.createGain();
   vca.gain.value = 0;
 
-  var vco = play.audio.createOscillator();
+  var vco = system.audio.createOscillator();
   vco.type = 'square';
   vco.frequency.value = 2490;
 
-  var lfo = play.audio.createOscillator();
+  var lfo = system.audio.createOscillator();
   lfo.type = 'square';
   lfo.frequency.value = 1047;
 
-  var lfoGain = play.audio.createGain();
+  var lfoGain = system.audio.createGain();
   lfoGain.gain.value = vco.frequency.value*10;
 
-  var hipass = play.audio.createBiquadFilter();
+  var hipass = system.audio.createBiquadFilter();
   hipass.type = 'highpass';
   hipass.frequency.value = 2640;
   hipass.frequency.linearRampToValueAtTime(8000, time+1);
@@ -44,7 +44,7 @@ var playCymbal = function (decay, gain, time) {
   lfoGain.connect(vco.frequency);
   vco.connect(hipass);
   hipass.connect(vca);
-  play.mix(vca);
+  system.mix(vca);
 
   vco.start(time);
   lfo.start(time);
@@ -59,8 +59,8 @@ var playCymbal = function (decay, gain, time) {
 var noiseBuffer;
 var playNoise = function (decay, cutoff, gain, time) {
   if (!noiseBuffer) {
-    var bufferSize = 2 * play.audio.sampleRate;
-    noiseBuffer = play.audio.createBuffer(1, bufferSize, play.audio.sampleRate);
+    var bufferSize = 2 * system.audio.sampleRate;
+    noiseBuffer = system.audio.createBuffer(1, bufferSize, system.audio.sampleRate);
     var output = noiseBuffer.getChannelData(0);
     for (var i = 0; i < bufferSize; i++) {
         output[i] = Math.random() * 2 - 1;
@@ -68,15 +68,15 @@ var playNoise = function (decay, cutoff, gain, time) {
   }
   var attack = 0.02;
   var duration = attack + decay;
-  var vca = play.audio.createGain();
-  play.mix(vca);
+  var vca = system.audio.createGain();
+  system.mix(vca);
   vca.gain.value = 0.0;
 
-  var whiteNoise = play.audio.createBufferSource();
+  var whiteNoise = system.audio.createBufferSource();
   whiteNoise.buffer = noiseBuffer;
   whiteNoise.start(time);
 
-  var lowpass = play.audio.createBiquadFilter();
+  var lowpass = system.audio.createBiquadFilter();
   lowpass.type = 'lowpass';
   lowpass.frequency.value = cutoff;
   lowpass.frequency.linearRampToValueAtTime(cutoff/2, time+duration);
