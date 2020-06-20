@@ -35,7 +35,7 @@ define(function (require) {
 
   return (params) => {
     let source = system.audio.createBufferSource()
-    source.buffer = getBuffer(mapping[params.sound] || nullLoadingBuffer)
+    source.buffer = mapping[params.sound] ? getBuffer(mapping[params.sound]) : nullLoadingBuffer
     source.playbackRate = params.rate || 1
 
     let vca = system.audio.createGain()
