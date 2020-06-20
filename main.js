@@ -21,7 +21,7 @@ define(function(require) {
     dsaw: standardPlayer(dsaw),
     dsawbass: standardPlayer(e => { e.oct=e.oct||2; e.amp=(e.amp||1)*2; e.detune=e.detune||0.25; dsaw(e) }),
   };
-  let playerInstances = {};
+  let playerInstances = {}
 
   let vars = {
     bpm: (command) => metronome.bpm(eval(command)),
@@ -96,6 +96,7 @@ define(function(require) {
   }
   window.go = () => {
     system.resume()
+    playerInstances = {}
     codeTextArea.value.split('\n')
     .map(l => l.trim())
     .map(line => line.replace(/\/\/.*/, ''))

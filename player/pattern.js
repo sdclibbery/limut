@@ -203,6 +203,8 @@ define(function(require) {
   assert([], pattern(5))
   assert([{value:'0',time:0,dur:1}], pattern(6))
 
+  //pattern = parsePattern('x', {dur:'[1,2]'})
+  
   console.log("Pattern tests complete")
 
   return parsePattern
