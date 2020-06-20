@@ -5,7 +5,7 @@ define(function(require) {
   let metronome = require('metronome');
   let standardPlayer = require('player/standard')
   let percussion = require('play/percussion')
-//  let play = require('play/play')
+  let play = require('play/play')
   let dsaw = require('play/dsaw')
 
   // Players
@@ -17,9 +17,9 @@ define(function(require) {
     '!': nullPlayer,
     // instruments
     drums: standardPlayer(percussion.play),
-//    play: standardPlayer(play),
+    play: standardPlayer(play),
     dsaw: standardPlayer(dsaw),
-    dsawbass: standardPlayer(event => { event.oct=event.oct||2; event.amp=(event.amp||1)*2; event.detune=event.detune||0.25; dsaw(event) }),
+    dsawbass: standardPlayer(e => { e.oct=e.oct||2; e.amp=(e.amp||1)*2; e.detune=e.detune||0.25; dsaw(e) }),
   };
   let vars = {
     bpm: (command) => metronome.bpm(eval(command)),
