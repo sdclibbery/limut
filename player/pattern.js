@@ -27,6 +27,11 @@ define(function(require) {
 
   let getEvents = (steps, stepData, durs, params) => {
     let durIdx = 0
+    let extraStepIdx = 0
+    while (durs.length > steps.length) {
+      steps.push(steps[extraStepIdx])
+      extraStepIdx + 1
+    }
     steps.forEach((step, idx) => {
       let dur = durs[durIdx]
       durIdx = (durIdx + 1) % durs.length
@@ -203,8 +208,11 @@ define(function(require) {
   assert([], pattern(5))
   assert([{value:'0',time:0,dur:1}], pattern(6))
 
-  //pattern = parsePattern('x', {dur:'[1,2]'})
-  
+  pattern = parsePattern('x', {dur:'[1,1/2,1/2]'})
+  assert([{value:'x',time:0,dur:1}], pattern(0))
+  assert([{value:'x',time:0,dur:1/2},{value:'x',time:1/2,dur:1/2}], pattern(1))
+  assert([{value:'x',time:0,dur:1}], pattern(2))
+
   console.log("Pattern tests complete")
 
   return parsePattern
