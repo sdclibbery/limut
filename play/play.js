@@ -6,6 +6,9 @@ define(function (require) {
     x: 'sample/kick_low.wav',
     O: 'sample/snare.wav',
     o: 'sample/snare_low.wav',
+    '-': 'sample/hihat_closed.wav',
+    '=': 'sample/hihat_open.wav',
+    '*': 'sample/clap.wav',
   }
 
   let buffers = {}
