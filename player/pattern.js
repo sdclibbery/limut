@@ -25,11 +25,14 @@ define(function(require) {
     return parsed
   }
 
-  let getEvents = (steps, stepData, dur, params) => {
+  let getEvents = (steps, stepData, durs, params) => {
+    let durIdx = 0
     steps.forEach((step, idx) => {
+      let dur = durs[durIdx]
+      durIdx = (durIdx + 1) % durs.length
       let value = steps[idx]
       if (Array.isArray(value)) {
-        getEvents(value, stepData, dur / value.length, params)
+        getEvents(value, stepData, [dur / value.length], params)
       } else {
         event = Object.assign({value:value, time:stepData.time}, params)
         event.dur = dur
@@ -44,6 +47,7 @@ define(function(require) {
     if (!pattern) { return () => [] }
     let steps = parsePatternString(pattern)
     let dur = eval(params.dur) || 1
+    if (!Array.isArray(dur)) { dur = [dur] }
     let stepData = {
       time: 0,
       events: [],
@@ -185,10 +189,19 @@ define(function(require) {
   assert([{value:'x',time:0,dur:1/4},{value:'o',time:1/4,dur:1/4},{value:'.',time:1/2,dur:1/2}], pattern(1))
 
   pattern = parsePattern('012345', {dur:2})
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 20; i++) {
     assert([{value:''+(i%6),time:0,dur:2}], pattern(2*i))
     assert([], pattern(2*i+1))
   }
+
+  pattern = parsePattern('0123', {dur:'[1,2]'})
+  assert([{value:'0',time:0,dur:1}], pattern(0))
+  assert([{value:'1',time:0,dur:2}], pattern(1))
+  assert([], pattern(2))
+  assert([{value:'2',time:0,dur:1}], pattern(3))
+  assert([{value:'3',time:0,dur:2}], pattern(4))
+  assert([], pattern(5))
+  assert([{value:'0',time:0,dur:1}], pattern(6))
 
   console.log("Pattern tests complete")
 

@@ -21,12 +21,31 @@ define(function(require) {
     dsaw: standardPlayer(dsaw),
     dsawbass: standardPlayer(e => { e.oct=e.oct||2; e.amp=(e.amp||1)*2; e.detune=e.detune||0.25; dsaw(e) }),
   };
+  let playerInstances = {};
+
   let vars = {
     bpm: (command) => metronome.bpm(eval(command)),
     mainamp: (command) => window.mainAmpChange(eval(command)),
     mainreverb: (command) => window.mainReverbChange(eval(command)),
   }
-  let playerInstances = {};
+
+  let parseLine = (line) => {
+    let parts = line.split(/(\s+)/).map(p => p.trim()).filter(p => p != '')
+    let playerId = parts[0].trim()
+    if (playerId) {
+      let playerName = parts[1].trim()
+      if (playerName) {
+        let command  = parts.slice(2).join('').trim()
+        if (playerName == '=') {
+          vars[playerId.toLowerCase()](command)
+        } else {
+          playerInstances[playerId] = players[playerName.toLowerCase()](command)
+        }
+      } else {
+        delete playerInstances[playerId]
+      }
+    }
+  }
 
   // Bpm ui
   let bpmReadout = document.getElementById('bpm-readout')
@@ -81,23 +100,7 @@ define(function(require) {
     .map(l => l.trim())
     .map(line => line.replace(/\/\/.*/, ''))
     .filter(l => l != '')
-    .map(line => {
-      let parts = line.split(/(\s+)/).map(p => p.trim()).filter(p => p != '')
-      let playerId = parts[0].trim()
-      if (playerId) {
-        let playerName = parts[1].trim()
-        if (playerName) {
-          let command  = parts.slice(2).join('').trim()
-          if (playerName == '=') {
-            vars[playerId.toLowerCase()](command)
-          } else {
-            playerInstances[playerId] = players[playerName.toLowerCase()](command)
-          }
-        } else {
-          delete playerInstances[playerId]
-        }
-      }
-    })
+    .map(parseLine)
   }
 
   // Update

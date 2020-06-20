@@ -14,7 +14,7 @@ define(function(require) {
 
   let parseParams = (paramsStr) => {
     let params = {}
-    splitOnAll(paramsStr, ',')
+    splitOnAll(paramsStr, ', ')
       .map(p => splitOnAll(p, '='))
       .forEach(([n,v]) => params[n.toLowerCase()] = v)
     return params
