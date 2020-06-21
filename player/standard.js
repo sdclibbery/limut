@@ -1,5 +1,6 @@
 define(function(require) {
   var parsePattern = require('player/pattern');
+  var parseParams = require('player/params');
 
   let splitOnAll = (str, ch) => {
     if (!str) { return [] }
@@ -10,14 +11,6 @@ define(function(require) {
     if (!str) { return [] }
     let parts = splitOnAll(str, ch)
     return [parts[0], parts.slice(1).join()]
-  }
-
-  let parseParams = (paramsStr) => {
-    let params = {}
-    splitOnAll(paramsStr, ', ')
-      .map(p => splitOnAll(p, '='))
-      .forEach(([n,v]) => params[n.toLowerCase()] = v)
-    return params
   }
 
   return (play) => (command) => {

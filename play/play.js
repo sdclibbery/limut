@@ -2,10 +2,10 @@ define(function (require) {
   let system = require('play/system');
 
   let mapping = {
-    X: 'sample/kick.wav',
-    x: 'sample/kick_low.wav',
-    O: 'sample/snare.wav',
-    o: 'sample/snare_low.wav',
+    'X': 'sample/kick.wav',
+    'x': 'sample/kick_low.wav',
+    'O': 'sample/snare.wav',
+    'o': 'sample/snare_low.wav',
     '-': 'sample/hihat_closed.wav',
     '=': 'sample/hihat_open.wav',
     '*': 'sample/clap.wav',
