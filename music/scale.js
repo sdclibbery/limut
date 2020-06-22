@@ -10,7 +10,7 @@ define(function (require) {
   scale.degreeToFreq = (degree, octave) => {
     let octDelta = Math.floor(degree / currentScale.length)
     let oct = octave - 4 + octDelta
-    let chromatic = currentScale[degree % currentScale.length] + oct*12
+    let chromatic = currentScale[(degree + currentScale.length*100) % currentScale.length] + oct*12
     return 261.6256 * Math.pow(2, chromatic/12)
   }
 
@@ -26,6 +26,7 @@ define(function (require) {
   assert(130.8, scale.degreeToFreq(0, 3))
   assert(523.3, scale.degreeToFreq(0, 5))
   assert(415.3, scale.degreeToFreq(5, 4))
+  assert(233.1, scale.degreeToFreq(-1, 4))
   console.log('Scale tests complete')
 
   return scale

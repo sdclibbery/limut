@@ -18,7 +18,12 @@ define(function(require) {
         parsed.push(subParsed)
         if (debug) { console.log('sp/i/ps ', subParsed, idx.v, pattern.slice(idx.v)) }
       } else {
-        parsed.push(char)
+        if (char.match(/[0-9]/i) && parsed[parsed.length-1] == '-') {
+          parsed.pop()
+          parsed.push('-'+char)
+        } else {
+          parsed.push(char)
+        }
         idx.v += 1
       }
     }
@@ -212,6 +217,14 @@ define(function(require) {
   assert([{value:'x',time:0,dur:1}], pattern(0))
   assert([{value:'x',time:0,dur:1/2},{value:'x',time:1/2,dur:1/2}], pattern(1))
   assert([{value:'x',time:0,dur:1}], pattern(2))
+
+  pattern = parsePattern('0-1-2-x1', {})
+  assert([{value:'0',time:0,dur:1}], pattern(0))
+  assert([{value:'-1',time:0,dur:1}], pattern(1))
+  assert([{value:'-2',time:0,dur:1}], pattern(2))
+  assert([{value:'-',time:0,dur:1}], pattern(3))
+  assert([{value:'x',time:0,dur:1}], pattern(4))
+  assert([{value:'1',time:0,dur:1}], pattern(5))
 
   console.log("Pattern tests complete")
 
