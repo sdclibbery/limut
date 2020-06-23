@@ -51,6 +51,7 @@ define(function(require) {
           } else {
             event[k] = v
           }
+          event.time += event.delay || 0
         }
         event.dur = dur
         stepData.events.push(event)
@@ -72,8 +73,14 @@ define(function(require) {
       patternLength: 0,
     }
     getEvents(steps, stepData, dur, params)
-    let events = stepData.events
     let patternLength = stepData.patternLength
+    let events = stepData.events
+      .map(e => {
+        if (e.time < -0.0001) {e.time += patternLength}
+        if (e.time > patternLength-0.0001) {e.time -= patternLength}
+        return e
+      })
+      .sort((a,b) => a.time-b.time)
     if (debug) { console.log(pattern, dur, patternLength, events) }
     return (count) => {
       if (events.length == 0) { return [] }
@@ -241,6 +248,19 @@ define(function(require) {
   assert([{value:'0',time:0,amp:2,dur:1}], pattern(0))
   assert([{value:'1',time:0,amp:3,dur:1}], pattern(1))
   assert([{value:'0',time:0,amp:2,dur:1}], pattern(2))
+
+  pattern = parsePattern('0', {delay:1/2})
+  assert([{value:'0',time:1/2,delay:1/2,dur:1}], pattern(0))
+
+  pattern = parsePattern('123', {delay:1})
+  assert([{value:'3',time:0,delay:1,dur:1}], pattern(0))
+  assert([{value:'1',time:0,delay:1,dur:1}], pattern(1))
+  assert([{value:'2',time:0,delay:1,dur:1}], pattern(2))
+
+  pattern = parsePattern('123', {delay:-1})
+  assert([{value:'2',time:0,delay:-1,dur:1}], pattern(0))
+  assert([{value:'3',time:0,delay:-1,dur:1}], pattern(1))
+  assert([{value:'1',time:0,delay:-1,dur:1}], pattern(2))
 
   console.log("Pattern tests complete")
 
