@@ -39,11 +39,11 @@
   </div>
   <div>
     Examples:
-    <pre>d1 play x-o-</pre>
-    <pre>bpm 140
-d1 play x[..--]</pre>
+    <pre>d1 play x-o-, dur=1/2</pre>
+    <pre>bpm = 140
+d1 play x
+d2 play [..--]</pre>
     <pre>p1 dsawbass 0246, dur=2, attack=0, decay=3, sus=1</pre>
-    <pre>p1 dsaw 02[46]4, dur=2, oct=5</pre>
   </div>
 </body>
 <script data-main="main" src="require.js">
@@ -51,13 +51,15 @@ d1 play x[..--]</pre>
 x Working big kick
 x Better low snare
 x parse params properly, not whitespace dependent
-Negative degrees
-lpf param
+x Negative degrees
+arrays for all params
+plingy synth
+aaah synth
 time vars for params
 round brackets for patterns
+lpf param
 chop param
 replace eval with custom eval
-more synths
 room param (cheap reverb)
 index pattern by beat to improve performance in finding events
 */
