@@ -40,10 +40,14 @@
   <div>
     Examples:
     <pre>d1 play x-o-, dur=1/2</pre>
+    <pre>p1 dsawbass 0246, dur=2, attack=0, decay=3, sus=1</pre>
+    <pre>Mainreverb = 10
+Ba dsawbass 004[21], dur=4, amp=1.5
+Kd play x[.x]x., dur=2
+Sn play .o, dur=2</pre>
     <pre>bpm = 140
 d1 play x
 d2 play [..--]</pre>
-    <pre>p1 dsawbass 0246, dur=2, attack=0, decay=3, sus=1</pre>
   </div>
 </body>
 <script data-main="main" src="require.js">
@@ -52,9 +56,13 @@ x Working big kick
 x Better low snare
 x parse params properly, not whitespace dependent
 x Negative degrees
-arrays for all params
+x arrays for all params
+Default decay should be proportional to dur
+?? Should pattern length be max(steps, max(all param array lengths))?
+Preload samples immediately after parsing
+SYntax to make parts of patterns repeat a set number of times
+Delay / offbeat
 plingy synth
-aaah synth
 time vars for params
 round brackets for patterns
 lpf param
@@ -62,6 +70,7 @@ chop param
 replace eval with custom eval
 room param (cheap reverb)
 index pattern by beat to improve performance in finding events
+aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
 */
 </script>
 </html>
