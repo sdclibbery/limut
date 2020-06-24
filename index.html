@@ -49,6 +49,8 @@ Sn play .o, dur=2</pre>
 d1 play x
 d2 play [..--]</pre>
   </div>
+  <pre>p1 dsawbass 0021, detune=(0.1,0.2,0.3,0.5)
+</pre>
 </body>
 <script data-main="main" src="require.js">
 /*
@@ -56,16 +58,17 @@ x Negative degrees
 x arrays for all params
 x Default decay should be proportional to dur
 x Delay / offbeat
-Round brackets for params to multiply out combinations
+x Round brackets for params to multiply out combinations
+Echo param
 More subtle envelope with decay and sus level - maybe rename decay -> release?
+lpf param
+chop param
 plingy synth
 time vars for params
 Syntax to make parts of patterns repeat a set number of times
 ?? Should pattern length be max(steps, max(all param array lengths))?
 Preload samples immediately after parsing
 round brackets for patterns
-lpf param
-chop param
 replace eval with custom eval
 room param (cheap reverb)
 index pattern by beat to improve performance in finding events

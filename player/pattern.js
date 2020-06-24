@@ -73,10 +73,13 @@ define(function(require) {
         for (let k in params) {
           let v = evalParam(params[k], stepIdx)
           event[k] = v
-          event.time += event.delay || 0
         }
         event.dur = dur
-        Array.prototype.push.apply(stepData.events, multiplyEvents(event))
+        let allEvents = multiplyEvents(event)
+        allEvents.forEach(e => {
+          e.time += e.delay || 0
+        })
+        Array.prototype.push.apply(stepData.events, allEvents)
         stepData.time += dur
         stepData.patternLength += dur
         stepIdx = stepIdx + 1
@@ -290,6 +293,10 @@ define(function(require) {
 
   pattern = parsePattern('0', {amp:'(2,3)',decay:'(4,5)'})
   assert([{value:'0',time:0,amp:2,decay:4,dur:1},{value:'0',time:0,amp:2,decay:5,dur:1},{value:'0',time:0,amp:3,decay:4,dur:1},{value:'0',time:0,amp:3,decay:5,dur:1}], pattern(0))
+
+  pattern = parsePattern('0', {delay:'(0,1/2)'})
+  assert([{value:'0',time:0,delay:0,dur:1},{value:'0',time:1/2,delay:1/2,dur:1}], pattern(0))
+  assert([{value:'0',time:0,delay:0,dur:1},{value:'0',time:1/2,delay:1/2,dur:1}], pattern(1))
 
   console.log("Pattern tests complete")
 
