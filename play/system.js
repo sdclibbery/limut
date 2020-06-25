@@ -19,8 +19,21 @@ system.mainAmp = (amp) => {
   return system.vcaMainAmp.gain.value
 }
 
-system.mix = function (node) {
-  node.connect(system.vcaMainAmp);
+let echoes = {}
+system.mix = function (node, echoDelay) {
+  node.connect(system.vcaMainAmp)
+  if (echoDelay && echoDelay > 0.0001) {
+    if (!echoes[echoDelay]) {
+      echoes[echoDelay] = system.audio.createDelay(echoDelay)
+      echoes[echoDelay].delayTime.value = echoDelay
+      let echoGain = system.audio.createGain()
+      echoGain.gain.value = 1/2
+      echoes[echoDelay].connect(echoGain)
+      echoGain.connect(echoes[echoDelay])
+      system.mix(echoGain)
+    }
+    node.connect(echoes[echoDelay])
+  }
 };
 
 var _initReverb = function () {

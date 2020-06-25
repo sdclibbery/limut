@@ -22,19 +22,6 @@ define(function (require) {
     return vca
   }
 
-  let echo = (params, source) => {
-    let delay = (eval(params.echo) || 0) * params.beat.duration
-    if (delay < 0.0001) { return }
-    let delayer = system.audio.createDelay(delay)
-    delayer.delayTime.value = delay
-    let delayGain = system.audio.createGain()
-    delayGain.gain.value = 1/2
-    source.connect(delayer)
-    delayer.connect(delayGain)
-    delayGain.connect(delayer)
-    system.mix(delayGain)
-  }
-
   return (params) => {
     let degree = parseInt(params.sound)
     if (isNaN(degree)) { return }
@@ -42,8 +29,7 @@ define(function (require) {
     let detuneSemis = eval(params.detune) || 0.1
 
     let vca = envelope(params, 0.01)
-    system.mix(vca)
-    echo(params, vca)
+    system.mix(vca, (eval(params.echo) || 0) * params.beat.duration)
 
     let vcos = [0, 0.7, 1].map(lerp => {
       vco = system.audio.createOscillator()
