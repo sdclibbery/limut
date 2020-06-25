@@ -5,7 +5,7 @@ define(function (require) {
   let envelope = (params, gainBase) => {
     let dur = Math.max(0.01, (eval(params.sus) || eval(params.dur) || 0.25))
     let attack = (eval(params.attack) || 0.09) * params.beat.duration
-    params.time -= attack
+    params.time -= Math.min(attack, 0.05)
     let decay = (eval(params.decay) || 0.08*dur) * params.beat.duration
     let sustain = ((eval(params.sus) || dur) * params.beat.duration) - decay
     let susLevel = eval(params.suslevel) || 0.8
