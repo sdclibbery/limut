@@ -6,18 +6,18 @@ var percussion = {};
 percussion.play = (params) => {
   let amp = eval(params.amp) || 1
   switch (params.sound){
-    case 'x': playNoise(0.11, 150, 10.0*amp, params.time); break;
-    case 'X': playNoise(0.11, 150, 30.0*amp, params.time); break;
-    case 'o': playNoise(0.3, 5000, 0.7*amp, params.time); break;
-    case 'O': playNoise(0.3, 5000, 1.5*amp, params.time); break;
-    case '-': playCymbal(0.3, 0.3*amp, params.time); break;
-    case '+': playCymbal(0.3, 0.6*amp, params.time); break;
-    case '=': playCymbal(1, 0.6*amp, params.time); break;
-    case '#': playCymbal(1, 0.8*amp, params.time); break;
+    case 'x': playNoise(0.11, 150, 10.0*amp, params.time, params); break;
+    case 'X': playNoise(0.11, 150, 30.0*amp, params.time, params); break;
+    case 'o': playNoise(0.3, 5000, 0.7*amp, params.time, params); break;
+    case 'O': playNoise(0.3, 5000, 1.5*amp, params.time, params); break;
+    case '-': playCymbal(0.3, 0.3*amp, params.time, params); break;
+    case '+': playCymbal(0.3, 0.6*amp, params.time, params); break;
+    case '=': playCymbal(1, 0.6*amp, params.time, params); break;
+    case '#': playCymbal(1, 0.8*amp, params.time, params); break;
   }
 }
 
-var playCymbal = function (decay, gain, time) {
+var playCymbal = function (decay, gain, time, params) {
   var attack = 0;
   var duration = attack + decay;
 
@@ -44,7 +44,7 @@ var playCymbal = function (decay, gain, time) {
   lfoGain.connect(vco.frequency);
   vco.connect(hipass);
   hipass.connect(vca);
-  system.mix(vca);
+  system.mix(vca, (eval(params.echo) || 0) * params.beat.duration);
 
   vco.start(time);
   lfo.start(time);
@@ -57,7 +57,7 @@ var playCymbal = function (decay, gain, time) {
 }
 
 var noiseBuffer;
-var playNoise = function (decay, cutoff, gain, time) {
+var playNoise = function (decay, cutoff, gain, time, params) {
   if (!noiseBuffer) {
     var bufferSize = 2 * system.audio.sampleRate;
     noiseBuffer = system.audio.createBuffer(1, bufferSize, system.audio.sampleRate);
@@ -69,7 +69,7 @@ var playNoise = function (decay, cutoff, gain, time) {
   var attack = 0.02;
   var duration = attack + decay;
   var vca = system.audio.createGain();
-  system.mix(vca);
+  system.mix(vca, (eval(params.echo) || 0) * params.beat.duration);
   vca.gain.value = 0.0;
 
   var whiteNoise = system.audio.createBufferSource();
