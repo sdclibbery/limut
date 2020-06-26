@@ -41,7 +41,7 @@ define(function (require) {
     let vca = system.audio.createGain()
     vca.gain.value = Math.max(0, 1.0 * (eval(params.amp) || 1))
     source.connect(vca)
-    system.mix(vca)
+    system.mix(vca, (eval(params.echo) || 0) * params.beat.duration)
 
     source.start(params.time)
   }
