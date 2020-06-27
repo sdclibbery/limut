@@ -45,11 +45,19 @@ define(function(require) {
     return value
   }
 
+  let parseExpression = (v) => {
+    if (typeof v == 'string') {
+      return Function('"use strict";return (' + v + ')')()
+    }
+    return v
+  }
+
   let parseParam = (state) => {
     let name = parseName(state)
     let value = parseValue(state)
     if (name) {
-      state.params[name.toLowerCase().trim()] = value.trim()
+      let v = parseExpression(value.trim())
+      state.params[name.toLowerCase().trim()] = v
       return true
     }
     return false
@@ -75,18 +83,20 @@ define(function(require) {
   }
 
   assert({}, parseParams(''))
-  assert({dur:'1'}, parseParams('dur=1'))
-  assert({dur:'1'}, parseParams('Dur=1'))
-  assert({dur:'1', oct:'4'}, parseParams('dur=1, oct=4'))
-  assert({dur:'4', oct:'5', decay:'2', attack:'2'}, parseParams('dur=4, oct=5, decay=2, attack=2'))
-  assert({dur:'1/2'}, parseParams('dur=1/2'))
-  assert({dur:'[1]'}, parseParams('dur=[1]'))
-  assert({dur:'[1,1]'}, parseParams('dur=[1,1]'))
-  assert({dur:'1', oct:'4'}, parseParams('dur=1,oct=4'))
-  assert({dur:'[1, 1]'}, parseParams('dur=[1, 1]'))
-  assert({dur:'[1, 2]', oct:'[3, 4]'}, parseParams('dur=[1, 2],oct=[3, 4]'))
-  assert({dur:'[[1,1],[[2],3]]', oct:'4'}, parseParams('dur=[[1,1],[[2],3]],oct=4'))
-  assert({dur:'([1,1],<{2},3>)', oct:'4'}, parseParams('dur=([1,1],<{2},3>),oct=4'))
+  assert({dur:1}, parseParams('dur=1'))
+  assert({dur:1}, parseParams('Dur=1'))
+  assert({dur:1, oct:4}, parseParams('dur=1, oct=4'))
+  assert({dur:4, oct:5, decay:2, attack:2}, parseParams('dur=4, oct=5, decay=2, attack=2'))
+  assert({dur:1/2}, parseParams('dur=1/2'))
+  assert({dur:[1]}, parseParams('dur=[1]'))
+  assert({dur:[1,1]}, parseParams('dur=[1,1]'))
+  assert({dur:1, oct:4}, parseParams('dur=1,oct=4'))
+  assert({dur:[1, 1]}, parseParams('dur=[1, 1]'))
+  assert({dur:[1, 2], oct:[3, 4]}, parseParams('dur=[1, 2],oct=[3, 4]'))
+  assert({dur:[[1,1],[[2],3]], oct:4}, parseParams('dur=[[1,1],[[2],3]],oct=4'))
+//  assert({dur:([1,1],<{2},3>), oct:4}, parseParams('dur=([1,1],<{2},3>),oct=4'))
+
+//  !!parse timevar into function!!
 
   console.log("Params tests complete")
 
