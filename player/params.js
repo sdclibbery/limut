@@ -47,7 +47,14 @@ define(function(require) {
 
   let parseExpression = (v) => {
     if (typeof v == 'string') {
-      return Function('"use strict";return (' + v + ')')()
+      v = v.trim()
+      if (v.charAt(0) == '(') {
+        v = v.replace('(','[').replace(')',']')
+        let vs = Function('"use strict";return (' + v + ')')()
+        return () => vs
+      } else {
+        return Function('"use strict";return (' + v + ')')()
+      }
     }
     return v
   }
@@ -91,12 +98,10 @@ define(function(require) {
   assert({dur:[1]}, parseParams('dur=[1]'))
   assert({dur:[1,1]}, parseParams('dur=[1,1]'))
   assert({dur:1, oct:4}, parseParams('dur=1,oct=4'))
-  assert({dur:[1, 1]}, parseParams('dur=[1, 1]'))
-  assert({dur:[1, 2], oct:[3, 4]}, parseParams('dur=[1, 2],oct=[3, 4]'))
+  assert({dur:[1,1]}, parseParams(' dur = [ 1 , 1 ] '))
+  assert({dur:[1,2], oct:[3, 4]}, parseParams('dur=[1, 2],oct=[3, 4]'))
   assert({dur:[[1,1],[[2],3]], oct:4}, parseParams('dur=[[1,1],[[2],3]],oct=4'))
-//  assert({dur:([1,1],<{2},3>), oct:4}, parseParams('dur=([1,1],<{2},3>),oct=4'))
-
-//  !!parse timevar into function!!
+  assert([1,2], parseParams('dur=(1,2)').dur())
 
   console.log("Params tests complete")
 

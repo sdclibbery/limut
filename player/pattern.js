@@ -31,20 +31,6 @@ define(function(require) {
     return parsed
   }
 
-  // let multiplyEvents = (event) => {
-  //   for (let k in event) {
-  //     let v = event[k]
-  //     if (Array.isArray(v)) {
-  //       return v.flatMap(x => {
-  //         let e = Object.assign({}, event)
-  //         e[k] = x
-  //         return multiplyEvents(e)
-  //       })
-  //     }
-  //   }
-  //   return [event]
-  // }
-
   let getEvents = (steps, stepData, durs, params) => {
     let stepIdx = 0
     let extraStepIdx = 0
@@ -69,6 +55,20 @@ define(function(require) {
         stepIdx = stepIdx + 1
       }
     })
+  }
+
+  let multiplyEvents = (event) => {
+    for (let k in event) {
+      let v = event[k]
+      if (Array.isArray(v)) {
+        return v.flatMap(x => {
+          let e = Object.assign({}, event)
+          e[k] = x
+          return multiplyEvents(e)
+        })
+      }
+    }
+    return [event]
   }
 
   let parsePattern = (pattern, params) => {
@@ -114,8 +114,7 @@ define(function(require) {
             }
           }
           event.time = time
-          // multiply events
-          eventsForBeat.push(event)
+          Array.prototype.push.apply(eventsForBeat, multiplyEvents(event))
         }
         stepIdx += 1
         if (stepIdx >= events.length) {
@@ -277,18 +276,18 @@ define(function(require) {
   assert([{value:'3',delay:-1,time:0,dur:1}], pattern(1))
   assert([{value:'1',delay:-1,time:0,dur:1}], pattern(2))
 
-  // pattern = parsePattern('0', {amp:'(2,3)'})
-  // assert([{value:'0',time:0,amp:2,dur:1},{value:'0',time:0,amp:3,dur:1}], pattern(0))
-  // assert([{value:'0',time:0,amp:2,dur:1},{value:'0',time:0,amp:3,dur:1}], pattern(1))
-  //
-  // pattern = parsePattern('0', {amp:'(2,3)'',dur:2,decay:1})
-  // assert([{value:'0',time:0,amp:2,dur:2,decay:1},{value:'0',time:0,amp:3,dur:2,decay:1}], pattern(0))
-  // assert([], pattern(1))
-  // assert([{value:'0',time:0,amp:2,dur:2,decay:1},{value:'0',time:0,amp:3,dur:2,decay:1}], pattern(2))
-  //
-  // pattern = parsePattern('0', {amp:'(2,3)',decay:'(4,5)'})
-  // assert([{value:'0',time:0,amp:2,decay:4,dur:1},{value:'0',time:0,amp:2,decay:5,dur:1},{value:'0',time:0,amp:3,decay:4,dur:1},{value:'0',time:0,amp:3,decay:5,dur:1}], pattern(0))
-  //
+  pattern = parsePattern('0', {amp:()=>[2,3]})
+  assert([{value:'0',time:0,amp:2,dur:1},{value:'0',time:0,amp:3,dur:1}], pattern(0))
+  assert([{value:'0',time:0,amp:2,dur:1},{value:'0',time:0,amp:3,dur:1}], pattern(1))
+
+  pattern = parsePattern('0', {amp:()=>[2,3],dur:2,decay:1})
+  assert([{value:'0',time:0,amp:2,dur:2,decay:1},{value:'0',time:0,amp:3,dur:2,decay:1}], pattern(0))
+  assert([], pattern(1))
+  assert([{value:'0',time:0,amp:2,dur:2,decay:1},{value:'0',time:0,amp:3,dur:2,decay:1}], pattern(2))
+
+  pattern = parsePattern('0', {amp:()=>[2,3],decay:()=>[4,5]})
+  assert([{value:'0',time:0,amp:2,decay:4,dur:1},{value:'0',time:0,amp:2,decay:5,dur:1},{value:'0',time:0,amp:3,decay:4,dur:1},{value:'0',time:0,amp:3,decay:5,dur:1}], pattern(0))
+
   // pattern = parsePattern('0', {delay:'(0,1/2)'})
   // assert([{value:'0',time:0,delay:0,dur:1},{value:'0',time:1/2,delay:1/2,dur:1}], pattern(0))
   // assert([{value:'0',time:0,delay:0,dur:1},{value:'0',time:1/2,delay:1/2,dur:1}], pattern(1))

@@ -6,6 +6,8 @@ define((require) => {
     }
     if (Array.isArray(value)) {
       return value[count % value.length]
+    } else if (typeof value == 'function') {
+      return value(count)
     } else {
       return value
     }
@@ -28,7 +30,8 @@ define((require) => {
   assert(2, evalParam([1,2,3], 0, 1))
   assert(3, evalParam([1,2,3], 0, 2))
   assert(1, evalParam([1,2,3], 0, 3))
-//  assert(5, evalParam(() => 5, 0, 0)())
+  assert(5, evalParam(() => 5, 0, 0))
+  assert(5, evalParam((x) => x, 0, 5))
 
   console.log('Eval param tests complete')
 
