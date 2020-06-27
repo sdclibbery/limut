@@ -1,5 +1,6 @@
 define(function (require) {
   let system = require('play/system');
+  let evalParam = require('player/eval-param')
 
   let mapping = {
     'X': 'sample/kick.wav',
@@ -39,9 +40,9 @@ define(function (require) {
     source.playbackRate = params.rate || 1
 
     let vca = system.audio.createGain()
-    vca.gain.value = Math.max(0, 1.0 * (eval(params.amp) || 1))
+    vca.gain.value = Math.max(0, 1.0 * evalParam(params.amp, 1))
     source.connect(vca)
-    system.mix(vca, (eval(params.echo) || 0) * params.beat.duration)
+    system.mix(vca, evalParam(params.echo, 0) * params.beat.duration)
 
     source.start(params.time)
   }

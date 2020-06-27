@@ -1,4 +1,5 @@
 define(function(require) {
+  let evalParamValue = require('player/eval-param');
 
   let debug = false
 
@@ -90,7 +91,7 @@ define(function(require) {
   let parsePattern = (pattern, params) => {
     if (!pattern) { return () => [] }
     let steps = parsePatternString(pattern)
-    let dur = eval(params.dur) || 1
+    let dur = evalParamValue(params.dur, 1)
     if (!Array.isArray(dur)) { dur = [dur] }
     let stepData = {
       time: 0,

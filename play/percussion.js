@@ -1,10 +1,11 @@
 define(function (require) {
 var system = require('play/system');
+let eval = require('player/eval-param')
 
 var percussion = {};
 
 percussion.play = (params) => {
-  let amp = eval(params.amp) || 1
+  let amp = eval(params.amp, 1)
   switch (params.sound){
     case 'x': playNoise(0.11, 150, 10.0*amp, params.time, params); break;
     case 'X': playNoise(0.11, 150, 30.0*amp, params.time, params); break;
@@ -44,7 +45,7 @@ var playCymbal = function (decay, gain, time, params) {
   lfoGain.connect(vco.frequency);
   vco.connect(hipass);
   hipass.connect(vca);
-  system.mix(vca, (eval(params.echo) || 0) * params.beat.duration);
+  system.mix(vca, eval(params.echo, 0) * params.beat.duration);
 
   vco.start(time);
   lfo.start(time);
@@ -69,7 +70,7 @@ var playNoise = function (decay, cutoff, gain, time, params) {
   var attack = 0.02;
   var duration = attack + decay;
   var vca = system.audio.createGain();
-  system.mix(vca, (eval(params.echo) || 0) * params.beat.duration);
+  system.mix(vca, eval(params.echo, 0) * params.beat.duration);
   vca.gain.value = 0.0;
 
   var whiteNoise = system.audio.createBufferSource();

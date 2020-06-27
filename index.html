@@ -40,17 +40,17 @@
   <div>
     Examples:
     <pre>d1 play x-o-, dur=1/2</pre>
-    <pre>p1 dsawbass 0246, dur=2, attack=0, decay=3, sus=1</pre>
+    <pre>p1 dbass 0246, dur=2, attack=0, decay=3, sus=1</pre>
     <pre>Mainreverb = 10
-Ba dsawbass 004[21], dur=4, amp=1.5
+Ba dbass 004[21], dur=4, amp=1.5
 Kd play x[.x]x., dur=2
 Sn play .o, dur=2</pre>
     <pre>bpm = 140
 d1 play x
 d2 play [..--]</pre>
   </div>
-  <pre>p1 dsawbass 0021, detune=(0.1,0.2,0.3,0.5)</pre>
-  <pre>p1 dsawbass 0021, sus=1/4, dur=2, echo=1/2</pre>
+  <pre>p1 dbass 0021, detune=(0.1,0.2,0.3,0.5)</pre>
+  <pre>p1 dbass 0021, sus=1/4, dur=2, echo=1/2</pre>
 </pre>
 <h3>vars</h3>
 <p>bpm</p>
@@ -80,21 +80,25 @@ d2 play [..--]</pre>
 x More subtle envelope with decay and sus level - maybe rename decay -> release?
 x Share echoes
 x echo for play
-Allow zero params; eg attack=0
+x Allow zero params; eg attack=0 or amp=0
+Refactor envelope and effects into own files
+More sample
+pattern char to extend duration of previous note (cf. to '.' for rest)
+param to add to degree; use () to make chords, would allow timevars
 room/mix params
 lpf param
 chop param
 shape param?
 formant param?
 vib param?
+rate param for play
 params for play synth too
-params for drums synth too - try removing reverb from drums
 plingy synth
 time vars for params
-Syntax to make parts of patterns repeat a set number of times
-?? Should pattern length be max(steps, max(all param array lengths))?
+Syntax to make parts of patterns repeat a set number of times?
+?? Should param pattern repeat be independent of main pattern repeat? Eg so you can xo, amp=[1,2,3] and it multiplies out
 Preload samples immediately after parsing
-round brackets for patterns
+round brackets for patterns - variations like foxdot, or multiply for chords?
 replace eval with custom eval
 room param (cheap reverb)
 index pattern by beat to improve performance in finding events
