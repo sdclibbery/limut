@@ -1,7 +1,8 @@
 define(function (require) {
   let system = require('play/system');
   let scale = require('music/scale');
-  let envelope = require('play/envelope');
+  let envelope = require('play/envelope')
+  let effects = require('play/effects')
   let evalParam = require('player/eval-param')
 
   return (params) => {
@@ -11,7 +12,7 @@ define(function (require) {
     let detuneSemis = evalParam(params.detune, 0.1)
 
     let vca = envelope(params, 0.01)
-    system.mix(vca, evalParam(params.echo, 0) * params.beat.duration)
+    system.mix(effects(params, vca))
 
     let vcos = [0, 0.7, 1].map(lerp => {
       vco = system.audio.createOscillator()

@@ -1,5 +1,6 @@
 define(function (require) {
 var system = require('play/system');
+let effects = require('play/effects')
 let eval = require('player/eval-param')
 
 var percussion = {};
@@ -45,7 +46,7 @@ var playCymbal = function (decay, gain, time, params) {
   lfoGain.connect(vco.frequency);
   vco.connect(hipass);
   hipass.connect(vca);
-  system.mix(vca, eval(params.echo, 0) * params.beat.duration);
+  system.mix(effects(params, vca))
 
   vco.start(time);
   lfo.start(time);
@@ -70,7 +71,7 @@ var playNoise = function (decay, cutoff, gain, time, params) {
   var attack = 0.02;
   var duration = attack + decay;
   var vca = system.audio.createGain();
-  system.mix(vca, eval(params.echo, 0) * params.beat.duration);
+  system.mix(effects(params, vca))
   vca.gain.value = 0.0;
 
   var whiteNoise = system.audio.createBufferSource();

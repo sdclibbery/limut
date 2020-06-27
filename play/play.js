@@ -1,5 +1,6 @@
 define(function (require) {
   let system = require('play/system');
+  let effects = require('play/effects')
   let evalParam = require('player/eval-param')
 
   let mapping = {
@@ -42,7 +43,7 @@ define(function (require) {
     let vca = system.audio.createGain()
     vca.gain.value = Math.max(0, 1.0 * evalParam(params.amp, 1))
     source.connect(vca)
-    system.mix(vca, evalParam(params.echo, 0) * params.beat.duration)
+    system.mix(effects(params, vca))
 
     source.start(params.time)
   }
