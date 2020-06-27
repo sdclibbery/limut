@@ -77,15 +77,10 @@ d2 play [..--]</pre>
 </body>
 <script data-main="main" src="require.js">
 /*
-x More subtle envelope with decay and sus level - maybe rename decay -> release?
-x Share echoes
-x echo for play
 x Allow zero params; eg attack=0 or amp=0
 x Refactor envelope and effects into own files
-dbass separate file; double base gain
-More sample
+x dbass separate file; double base gain
 pattern char to extend duration of previous note (cf. to '.' for rest)
-param to add to degree; use () to make chords, would allow timevars
 room/mix params
 lpf param
 chop param
@@ -93,9 +88,10 @@ shape param?
 formant param?
 vib param?
 rate param for play
-params for play synth too
+param to add to degree; use () to make chords, would allow timevars
 plingy synth
 time vars for params
+More samples
 Syntax to make parts of patterns repeat a set number of times?
 ?? Should param pattern repeat be independent of main pattern repeat? Eg so you can xo, amp=[1,2,3] and it multiplies out
 Preload samples immediately after parsing

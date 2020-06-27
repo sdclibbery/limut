@@ -7,8 +7,7 @@ define(function(require) {
   let percussion = require('play/percussion')
   let play = require('play/play')
   let dsaw = require('play/dsaw')
-
-  let def = (e, k, d) => { if (e[k]===undefined || e[k]===null) { e[k] = d } }
+  let dbass = require('play/dbass')
 
   // Players
   let nullPlayer = () => {}
@@ -21,7 +20,7 @@ define(function(require) {
     drums: standardPlayer(percussion.play),
     play: standardPlayer(play),
     dsaw: standardPlayer(dsaw),
-    dbass: standardPlayer(e => { def(e,'oct',2); def(e,'amp',1); def(e,'detune',0.25); dsaw(e) }),
+    dbass: standardPlayer(dbass),
   };
   let playerInstances = {}
 
