@@ -1,7 +1,10 @@
 define((require) => {
 
   let evalParam = (value, def) => {
-    let result = eval(value)
+    if (Array.isArray(value)) { return value }
+    if (typeof value == 'number') { return value }
+    if (typeof value == 'function') { return value }
+    let result = Function('"use strict";return (' + value + ')')()
     if (result === null || result === undefined) { return def }
     return result
   }
@@ -23,6 +26,9 @@ define((require) => {
   assert(0, evalParam(0, 1))
   assert(0, evalParam('0', 1))
   assert(0, evalParam('1-1', 1))
+  assert([1,2,3], evalParam('[1,2,3]', 0))
+  assert([1,2,3], evalParam([1,2,3], 0))
+  assert(5, evalParam(() => 5, 0)())
 
   console.log('Eval param tests complete')
 
