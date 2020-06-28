@@ -45,16 +45,42 @@ define(function(require) {
     return value
   }
 
+  let makeTimeVar = (values, durations) => {
+    if (durations === null || durations === undefined) { durations = 4 }
+    if (!Array.isArray(durations)) { durations = [durations] }
+    let steps = []
+    let length = 0
+    let step = 0
+    values.forEach(v => {
+      let dur = durations[step % durations.length]
+      steps.push({ value:v, time:length, duration:dur })
+      length += dur
+      step += 1
+    })
+    return (time) => {
+      time = time % length
+      let step = steps.filter(s => (time > s.time-0.0001)&&(time < s.time+s.duration-0.0001) )[0]
+      return step && step.value
+    }
+  }
+
   let parseExpression = (v) => {
     if (typeof v == 'string') {
       v = v.trim()
-      if (v.charAt(0) == '(') {
+      if (v == '') {
+        return undefined
+      } else if (v.charAt(0) == '(') {
         v = v.replace('(','[').replace(')',']')
         let vs = Function('"use strict";return (' + v + ')')()
         return () => vs
-      } else {
-        return Function('"use strict";return (' + v + ')')()
+      } else if (v.charAt(0) == '[') {
+        v = v.toLowerCase()
+        if (v.includes('t')) {
+          let parts = v.split('t')
+          return makeTimeVar(parseExpression(parts[0]), parseExpression(parts[1]))
+        }
       }
+      return Function('"use strict";return (' + v + ')')()
     }
     return v
   }
@@ -102,6 +128,26 @@ define(function(require) {
   assert({dur:[1,2], oct:[3, 4]}, parseParams('dur=[1, 2],oct=[3, 4]'))
   assert({dur:[[1,1],[[2],3]], oct:4}, parseParams('dur=[[1,1],[[2],3]],oct=4'))
   assert([1,2], parseParams('dur=(1,2)').dur())
+
+  let p
+  p = parseParams('add=[1,2]T1')
+  assert(1, p.add(0))
+  assert(1, p.add(1/2))
+  assert(2, p.add(1))
+  assert(2, p.add(3/2))
+  assert(1, p.add(2))
+
+  p = parseParams('add=[1,2]T')
+  assert(1, p.add(0))
+  assert(1, p.add(3.9))
+  assert(2, p.add(4))
+
+  p = parseParams('add=[1,2,3]T[1,2]')
+  assert(1, p.add(0))
+  assert(2, p.add(1))
+  assert(2, p.add(2))
+  assert(3, p.add(3))
+  assert(1, p.add(4))
 
   console.log("Params tests complete")
 

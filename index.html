@@ -40,7 +40,7 @@
   <div>
     Examples:
     <pre>d1 play x-o-, dur=1/2</pre>
-    <pre>p1 dbass 0246, dur=2, attack=0, decay=3, sus=1</pre>
+    <pre>b1 dbass 0246, dur=2, attack=0, decay=3, sus=1</pre>
     <pre>Mainreverb = 10
 Ba dbass 004[21], dur=4, amp=1.5
 Kd play x[.x]x., dur=2
@@ -49,43 +49,52 @@ Sn play .o, dur=2</pre>
 d1 play x
 d2 play [..--]</pre>
   </div>
-  <pre>p1 dbass 0021, detune=(0.1,0.2,0.3,0.5)</pre>
-  <pre>p1 dbass 0021, sus=1/4, dur=2, echo=1/2</pre>
+  <pre>b1 dbass 0021, detune=(0.1,0.2,0.3,0.5)</pre>
+  <pre>b1 dbass 0204, sus=1/4, dur=1/2, echo=3/4</pre>
+  <pre>p1 dsaw 0534, add=(0,2,4), dur=4</pre>
 </pre>
 <h3>vars</h3>
-<p>bpm</p>
-<p>mainamp</p>
-<p>mainreverb</p>
+<p><code>bpm</code> Beats per minute</p>
+<p><code>mainamp</code> Main mix amplitude control</p>
+<p><code>mainreverb</code> Main reverb amplitude control</p>
 <h3>Synths</h3>
-<p>! / stop / none</p>
-<p>play</p>
-<p>drums</p>
-<p>dsaw</p>
-<p>dbass</p>
+<p><code>! / stop / none</code> </p>
+<p><code>play</code> </p>
+<p><code>drums</code> </p>
+<p><code>dsaw</code> </p>
+<p><code>dbass</code> </p>
+<h3>Pattern syntax</h3>
+<p><code>x-o-</code> Sequence of events, each of duration <code>dur</code>, for use with <code>play</code></p>
+<p><code>x.</code> Use a dot for a rest</p>
+<p><code>0123</code> Sequence of events, each of duration <code>dur</code>, for use with tonal synths. Numbers are scale degrees</p>
+<p><code>0-1-2-3</code> Negative scale degrees allow tones below the synth root pitch</p>
+<p><code>0[123]</code> Square brackets to fit multiple events into one <code>dur</code> (triplet shown)</p>
 <h3>params</h3>
-<p>amp</p>
-<p>oct</p>
-<p>attack</p>
-<p>decay</p>
-<p>sus</p>
-<p>suslevel</p>
-<p>release</p>
-<p>dur</p>
-<p>delay</p>
-<p>echo</p>
-<p>detune</p>
+<p><code>amp</code> Player amplitude control</p>
+<p><code>oct</code> Octave</p>
+<p><code>attack</code> Attack time in beats</p>
+<p><code>decay</code> Decay time in beats</p>
+<p><code>sus</code> Sustain time in beats</p>
+<p><code>suslevel</code> Sustain amplitude control</p>
+<p><code>release</code> Release time in beats</p>
+<p><code>dur</code> Event time in beats</p>
+<p><code>delay</code> Event start time offset in beats</p>
+<p><code>echo</code> Echo time delay in beats</p>
+<p><code>detune</code> Amount of detune in semitones</p>
+<p><code>add</code> Amount to add onto event scale degree, in degrees</p>
+<h3>Param syntax</h3>
+<p><code>1</code> Single value</p>
+<p><code>[1,2]</code> Sequence of values, one per event in the pattern</p>
+<p><code>[1,2]T3</code> Timed sequence, each value lasts for 3 beats</p>
+<p><code>[1,2]T[12,4]</code> Timed sequence with one timing per value</p>
+<p><code>(1,2)</code> Combination of values, generates one event per value, all played together</p>
 </body>
 <script data-main="main" src="require.js">
 /*
-x Allow zero params; eg attack=0 or amp=0
-x Refactor envelope and effects into own files
-x dbass separate file; double base gain
-x drop eval
-x refactor to eval params at the right time in the right way
 x fix multiply params
-param to add to degree; use () to make chords, would allow timevars
+x param to add to degree; use () to make chords
 time vars for params
-fix delay param (commented tests in pattern.js)
+fix delay param problems (commented tests in pattern.js)
 pattern char to extend duration of previous note (cf. to '.' for rest)
 room/mix params - cheap shared delay based
 lpf param

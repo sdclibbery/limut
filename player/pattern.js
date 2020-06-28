@@ -110,7 +110,7 @@ define(function(require) {
         if (time > -0.0001 && time < 0.9999) {
           for (k in sourceEvent) {
             if (k != 'time' && k != 'delay' && k != 'value') {
-              event[k] = evalParam(sourceEvent[k], stepIdx, count)
+              event[k] = evalParam(sourceEvent[k], stepIdx, count+time)
             }
           }
           event.time = time
