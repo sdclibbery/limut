@@ -1,12 +1,12 @@
 define(function (require) {
   let system = require('play/system')
-  let evalParam = require('player/eval-param')
+  let param = require('player/default-param')
 
 
 
   let echoes = {}
   let echo = (params, node) => {
-    let echoDelay = evalParam(params.echo, 0) * params.beat.duration
+    let echoDelay = param(params.echo, 0) * params.beat.duration
     if (echoDelay && echoDelay > 0.0001) {
       if (!echoes[echoDelay]) {
         echoes[echoDelay] = system.audio.createDelay(echoDelay)

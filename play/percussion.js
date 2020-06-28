@@ -1,12 +1,12 @@
 define(function (require) {
 var system = require('play/system');
 let effects = require('play/effects')
-let eval = require('player/eval-param')
+let param = require('player/default-param')
 
 var percussion = {};
 
 percussion.play = (params) => {
-  let amp = eval(params.amp, 1)
+  let amp = param(params.amp, 1)
   switch (params.sound){
     case 'x': playNoise(0.11, 150, 10.0*amp, params.time, params); break;
     case 'X': playNoise(0.11, 150, 30.0*amp, params.time, params); break;

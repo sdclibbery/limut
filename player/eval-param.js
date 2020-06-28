@@ -1,13 +1,10 @@
 define((require) => {
 
-  let evalParam = (value, def, count) => {
-    if (value === null || value === undefined) {
-      value = def
-    }
+  let evalParam = (value, step, beat) => {
     if (Array.isArray(value)) {
-      return value[count % value.length]
+      return value[step % value.length]
     } else if (typeof value == 'function') {
-      return value(count)
+      return value(beat)
     } else {
       return value
     }
@@ -22,14 +19,11 @@ define((require) => {
   }
 
   assert(1, evalParam(1, 0, 0))
-  assert(0, evalParam(null, 0, 0))
-  assert(0, evalParam(undefined, 0, 0))
   assert(1/2, evalParam(1/2, 0, 0))
-  assert(0, evalParam(0, 1, 0))
   assert(1, evalParam([1,2,3], 0, 0))
-  assert(2, evalParam([1,2,3], 0, 1))
-  assert(3, evalParam([1,2,3], 0, 2))
-  assert(1, evalParam([1,2,3], 0, 3))
+  assert(2, evalParam([1,2,3], 1, 0))
+  assert(3, evalParam([1,2,3], 2, 0))
+  assert(1, evalParam([1,2,3], 3, 0))
   assert(5, evalParam(() => 5, 0, 0))
   assert(5, evalParam((x) => x, 0, 5))
 

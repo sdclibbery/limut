@@ -103,14 +103,14 @@ define(function(require) {
         let sourceEvent = events[stepIdx]
         let event = {}
         event.value = sourceEvent.value
-        event.delay = evalParam(sourceEvent.delay, undefined, count)
+        event.delay = evalParam(sourceEvent.delay, stepIdx, count)
         event.time = sourceEvent.time + (event.delay || 0)
         time = (patternStartTime + event.time) - count
         if (debug) { console.log('pst: ', patternStartTime, 'et: ', event.time, ' t/c: ', time, count) }
         if (time > -0.0001 && time < 0.9999) {
           for (k in sourceEvent) {
             if (k != 'time' && k != 'delay' && k != 'value') {
-              event[k] = evalParam(sourceEvent[k], undefined, count)
+              event[k] = evalParam(sourceEvent[k], stepIdx, count)
             }
           }
           event.time = time
@@ -288,7 +288,7 @@ define(function(require) {
   pattern = parsePattern('0', {amp:()=>[2,3],decay:()=>[4,5]})
   assert([{value:'0',time:0,amp:2,decay:4,dur:1},{value:'0',time:0,amp:2,decay:5,dur:1},{value:'0',time:0,amp:3,decay:4,dur:1},{value:'0',time:0,amp:3,decay:5,dur:1}], pattern(0))
 
-  // pattern = parsePattern('0', {delay:'(0,1/2)'})
+  // pattern = parsePattern('0', {delay:()=>[0,1/2]})
   // assert([{value:'0',time:0,delay:0,dur:1},{value:'0',time:1/2,delay:1/2,dur:1}], pattern(0))
   // assert([{value:'0',time:0,delay:0,dur:1},{value:'0',time:1/2,delay:1/2,dur:1}], pattern(1))
 
