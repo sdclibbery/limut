@@ -93,25 +93,30 @@ d2 play [..--]</pre>
 /*
 x fix multiply params
 x param to add to degree; use () to make chords
-time vars for params
-fix delay param problems (commented tests in pattern.js)
-pattern char to extend duration of previous note (cf. to '.' for rest)
-room/mix params - cheap shared delay based
+x time vars for params
+x proper array parsing
+plingy synth
+swell synth
 lpf param
 chop param
+room/mix params - cheap shared delay based
+?consider rewrite separating concerns of parsing, sequencing, and evaluation. ALl values are functions until the end
+?extract some of the playing stuff out of pattern.js?
+fix delay param problems (commented tests in pattern.js)
+pattern char to extend duration of previous note (cf. to '.' for rest)
 shape param?
 formant param?
 vib param?
-rate param for play
-plingy synth
 soprano synth - use vib effect
+rate param for play
 More samples
-sequence generators: random, tri, Dur etc
+curly brackets for patterns - variations
+pattern generators: random, tri, Dur etc
 Syntax to make parts of patterns repeat a set number of times?
 ?? Should param pattern repeat be independent of main pattern repeat? Eg so you can xo, amp=[1,2,3] and it multiplies out
 Preload samples immediately after parsing
-round brackets for patterns - variations like foxdot, or multiply for chords?
-index pattern by beat to improve performance in finding events
+round brackets for patterns - multiply for chords
+index pattern by beat to improve performance in finding events - same for timeVar evaluation
 aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
 */
 </script>

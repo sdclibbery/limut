@@ -64,33 +64,62 @@ define(function(require) {
     }
   }
 
-  let parseExpression = (v) => {
-    if (typeof v == 'string') {
-      v = v.trim()
-      if (v == '') {
-        return undefined
-      } else if (v.charAt(0) == '(') {
-        v = v.replace('(','[').replace(')',']')
-        let vs = Function('"use strict";return (' + v + ')')()
-        return () => vs
-      } else if (v.charAt(0) == '[') {
-        v = v.toLowerCase()
-        if (v.includes('t')) {
-          let parts = v.split('t')
-          return makeTimeVar(parseExpression(parts[0]), parseExpression(parts[1]))
+  let parseArray = (state) => {
+    let result = []
+    let char
+    let value = ''
+    while (char = state.str.charAt(state.idx)) {
+      if (brackets[char]) {
+        if (state.bracketStack.length > 0) { value = value+char }
+        state.bracketStack.push(brackets[char])
+        state.idx += 1
+      } else if (char == state.bracketStack[state.bracketStack.length-1]) {
+        state.bracketStack.pop()
+        if (state.bracketStack.length > 0) {
+          value = value+char
+        } else {
+          let v = parseExpression(value)
+          if (v !== undefined && v !== null) { result.push(v) }
         }
+        state.idx += 1
+      } else if (char == ',' && state.bracketStack.length == 1) {
+        result.push(parseExpression(value))
+        value = ''
+        state.idx += 1
+      } else {
+        value += char
+        state.idx += 1
       }
-      return Function('"use strict";return (' + v + ')')()
     }
-    return v
+    return result
+  }
+
+  let parseExpression = (v) => {
+    v = v.trim()
+    if (v == '') {
+      return undefined
+    } else if (v.charAt(0) == '(') {
+      v = v.replace('(','[').replace(')',']')
+      let arrayState = { str:v, idx:0, bracketStack: [], }
+      return () => parseArray(arrayState)
+    } else if (v.charAt(0) == '[') {
+      v = v.toLowerCase()
+      if (v.includes('t')) {
+        let parts = v.split('t')
+        return makeTimeVar(parseExpression(parts[0]), parseExpression(parts[1]))
+      } else {
+        let arrayState = { str:v, idx:0, bracketStack: [], }
+        return parseArray(arrayState)
+      }
+    }
+    return Function('"use strict";return (' + v + ')')()
   }
 
   let parseParam = (state) => {
     let name = parseName(state)
     let value = parseValue(state)
     if (name) {
-      let v = parseExpression(value.trim())
-      state.params[name.toLowerCase().trim()] = v
+      state.params[name.toLowerCase().trim()] = parseExpression(value.trim())
       return true
     }
     return false
@@ -121,6 +150,7 @@ define(function(require) {
   assert({dur:1, oct:4}, parseParams('dur=1, oct=4'))
   assert({dur:4, oct:5, decay:2, attack:2}, parseParams('dur=4, oct=5, decay=2, attack=2'))
   assert({dur:1/2}, parseParams('dur=1/2'))
+  assert({dur:[]}, parseParams('dur=[]'))
   assert({dur:[1]}, parseParams('dur=[1]'))
   assert({dur:[1,1]}, parseParams('dur=[1,1]'))
   assert({dur:1, oct:4}, parseParams('dur=1,oct=4'))
@@ -130,6 +160,10 @@ define(function(require) {
   assert([1,2], parseParams('dur=(1,2)').dur())
 
   let p
+  p = parseParams('dur=[1,(2,3)]')
+  assert(1, p.dur[0])
+  assert([2,3], p.dur[1]())
+
   p = parseParams('add=[1,2]T1')
   assert(1, p.add(0))
   assert(1, p.add(1/2))
@@ -148,6 +182,10 @@ define(function(require) {
   assert(2, p.add(2))
   assert(3, p.add(3))
   assert(1, p.add(4))
+
+  p = parseParams('add=[(0,2),(1,3)]T')
+  assert([0,2], p.add(0)())
+  assert([1,3], p.add(4)())
 
   console.log("Params tests complete")
 
