@@ -1,7 +1,7 @@
 define(function (require) {
   let system = require('play/system');
   let scale = require('music/scale');
-  let envelope = require('play/envelope')
+  let envelope = require('play/full-envelope')
   let effects = require('play/effects')
   let param = require('player/default-param')
 

@@ -8,6 +8,7 @@ define(function(require) {
   let play = require('play/play')
   let dsaw = require('play/dsaw')
   let dbass = require('play/dbass')
+  let ping = require('play/ping')
 
   // Players
   let nullPlayer = () => {}
@@ -21,6 +22,7 @@ define(function(require) {
     play: standardPlayer(play),
     dsaw: standardPlayer(dsaw),
     dbass: standardPlayer(dbass),
+    ping: standardPlayer(ping),
   };
   let playerInstances = {}
 
