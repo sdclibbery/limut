@@ -101,7 +101,8 @@ define(function(require) {
     } else if (v.charAt(0) == '(') {
       v = v.replace('(','[').replace(')',']')
       let arrayState = { str:v, idx:0, bracketStack: [], }
-      return () => parseArray(arrayState)
+      let array = parseArray(arrayState)
+      return () => array
     } else if (v.charAt(0) == '[') {
       v = v.toLowerCase()
       if (v.includes('t')) {
@@ -157,9 +158,12 @@ define(function(require) {
   assert({dur:[1,1]}, parseParams(' dur = [ 1 , 1 ] '))
   assert({dur:[1,2], oct:[3, 4]}, parseParams('dur=[1, 2],oct=[3, 4]'))
   assert({dur:[[1,1],[[2],3]], oct:4}, parseParams('dur=[[1,1],[[2],3]],oct=4'))
-  assert([1,2], parseParams('dur=(1,2)').dur())
 
   let p
+  p = parseParams('dur=(1,2)')
+  assert([1,2], p.dur(0))
+  assert([1,2], p.dur(1))
+
   p = parseParams('dur=[1,(2,3)]')
   assert(1, p.dur[0])
   assert([2,3], p.dur[1]())

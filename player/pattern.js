@@ -122,6 +122,7 @@ define(function(require) {
           patternStartTime += patternLength
         }
       } while (time < 1.0001)
+console.log(eventsForBeat)
       return eventsForBeat
     }
   }
