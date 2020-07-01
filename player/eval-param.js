@@ -2,9 +2,13 @@ define((require) => {
 
   let evalParam = (value, step, beat) => {
     if (Array.isArray(value)) {
-      return value[step % value.length]
+      let v = value[step % value.length]
+      if (typeof v == 'function') { return evalParam(v, step, beat) }
+      return v
     } else if (typeof value == 'function') {
-      return value(beat)
+      let v = value(beat)
+      if (Array.isArray(v)) { return v }
+      return evalParam(v, step, beat)
     } else {
       return value
     }
@@ -26,6 +30,8 @@ define((require) => {
   assert(1, evalParam([1,2,3], 3, 0))
   assert(5, evalParam(() => 5, 0, 0))
   assert(5, evalParam((x) => x, 0, 5))
+  assert([1,2], evalParam([()=>[1,2]], 0, 0))
+  assert([3,4], evalParam([()=>[1,2],()=>[3,4]], 1, 0))
 
   console.log('Eval param tests complete')
 

@@ -168,6 +168,10 @@ define(function(require) {
   assert(1, p.dur[0])
   assert([2,3], p.dur[1]())
 
+  p = parseParams('dur=[(1,2),(3,4)]')
+  assert([1,2], p.dur[0]())
+  assert([3,4], p.dur[1]())
+
   p = parseParams('add=[1,2]T1')
   assert(1, p.add(0))
   assert(1, p.add(1/2))

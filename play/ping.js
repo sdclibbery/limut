@@ -11,7 +11,7 @@ define(function (require) {
     let freq = scale.degreeToFreq(degree, param(params.oct, 5))
     let detuneSemis = param(params.detune, 0.25)
 
-    let vca = envelope(params, 0.1)
+    let vca = envelope(params, 0.025)
     system.mix(effects(params, vca))
 
     let vcos = [0].map(lerp => {
