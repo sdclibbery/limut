@@ -1,5 +1,7 @@
 define(function(require) {
 
+  let vars = require('vars')
+
   let brackets = {
     '[': ']',
     '(': ')',
@@ -74,9 +76,64 @@ define(function(require) {
         let arrayState = { str:v, idx:0, bracketStack: [], }
         return parseArray(arrayState)
       }
+    } else if (v.toLowerCase().startsWith('vars.')) {
+      v = v.toLowerCase().replace('vars.', '')
+      return vars[v]
     }
     return Function('"use strict";return (' + v + ')')()
   }
 
-    return parseExpression
+  // TESTS //
+
+  let assert = (expected, actual) => {
+    let x = JSON.stringify(expected)
+    let a = JSON.stringify(actual)
+    if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
+  }
+
+  assert(1, parseExpression('1'))
+  assert([1,2], parseExpression('[1,2]'))
+  assert([1,[2,3]], parseExpression('[1,[2,3]]'))
+  assert([1,[2,3]], parseExpression(' [ 1 , [ 2  , 3 ] ] '))
+
+  let p
+  p = parseExpression('(1,2)')
+  assert([1,2], p(0))
+  assert([1,2], p(1))
+
+  p = parseExpression('[1,(2,3)]')
+  assert(1, p[0])
+  assert([2,3], p[1]())
+
+  p = parseExpression('[1,2]T1')
+  assert(1, p(0))
+  assert(1, p(1/2))
+  assert(2, p(1))
+  assert(2, p(3/2))
+  assert(1, p(2))
+
+  p = parseExpression('[1,2]T')
+  assert(1, p(0))
+  assert(1, p(3.9))
+  assert(2, p(4))
+
+  p = parseExpression('[1,2,3]T[1,2]')
+  assert(1, p(0))
+  assert(2, p(1))
+  assert(2, p(2))
+  assert(3, p(3))
+  assert(1, p(4))
+
+  p = parseExpression('[(0,2),(1,3)]T')
+  assert([0,2], p(0)())
+  assert([1,3], p(4)())
+
+  vars.foo = 'bar'
+  p = parseExpression('vars.foo')
+  assert('bar', p)
+  vars.foo = undefined
+
+  console.log('Parse expression tests complete')
+
+  return parseExpression
 })

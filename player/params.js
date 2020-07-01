@@ -89,42 +89,6 @@ define(function(require) {
   assert({dur:[1,2], oct:[3, 4]}, parseParams('dur=[1, 2],oct=[3, 4]'))
   assert({dur:[[1,1],[[2],3]], oct:4}, parseParams('dur=[[1,1],[[2],3]],oct=4'))
 
-  let p
-  p = parseParams('dur=(1,2)')
-  assert([1,2], p.dur(0))
-  assert([1,2], p.dur(1))
-
-  p = parseParams('dur=[1,(2,3)]')
-  assert(1, p.dur[0])
-  assert([2,3], p.dur[1]())
-
-  p = parseParams('dur=[(1,2),(3,4)]')
-  assert([1,2], p.dur[0]())
-  assert([3,4], p.dur[1]())
-
-  p = parseParams('add=[1,2]T1')
-  assert(1, p.add(0))
-  assert(1, p.add(1/2))
-  assert(2, p.add(1))
-  assert(2, p.add(3/2))
-  assert(1, p.add(2))
-
-  p = parseParams('add=[1,2]T')
-  assert(1, p.add(0))
-  assert(1, p.add(3.9))
-  assert(2, p.add(4))
-
-  p = parseParams('add=[1,2,3]T[1,2]')
-  assert(1, p.add(0))
-  assert(2, p.add(1))
-  assert(2, p.add(2))
-  assert(3, p.add(3))
-  assert(1, p.add(4))
-
-  p = parseParams('add=[(0,2),(1,3)]T')
-  assert([0,2], p.add(0)())
-  assert([1,3], p.add(4)())
-
   console.log("Params tests complete")
 
   return parseParams

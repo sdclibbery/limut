@@ -5,6 +5,7 @@ define(function(require) {
   let metronome = require('metronome');
   let standardPlayer = require('player/standard')
   let parseExpression = require('player/parse-expression')
+  let vars = require('vars')
   let percussion = require('play/percussion')
   let play = require('play/play')
   let dsaw = require('play/dsaw')
@@ -27,7 +28,7 @@ define(function(require) {
   };
   let playerInstances = {}
 
-  let vars = {
+  let mainVars = {
     bpm: (command) => metronome.bpm(eval(command)),
     mainamp: (command) => window.mainAmpChange(eval(command)),
     mainreverb: (command) => window.mainReverbChange(eval(command)),
@@ -35,12 +36,12 @@ define(function(require) {
 
   let parseLine = (line) => {
     line = line.trim()
-    if (line.startsWith('vars.')) {
+    if (line.toLowerCase().startsWith('vars.')) {
       let [k,v] = line.split('=').map(p => p.trim()).filter(p => p != '')
-      k = k.replace('vars.', '')
+      k = k.toLowerCase().replace('vars.', '')
       v = parseExpression(v)
-      if (typeof vars[k] == 'function') {
-        vars[k](v)
+      if (typeof mainVars[k] == 'function') {
+        mainVars[k](v)
       } else {
         vars[k] = v
       }
