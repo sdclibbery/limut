@@ -53,16 +53,17 @@ d2 play [..--]</pre>
   <pre>b1 dbass 0204, sus=1/4, dur=1/2, echo=3/4</pre>
   <pre>p1 dsaw 0534, add=(0,2,4), dur=4</pre>
 </pre>
-<h3>vars</h3>
-<p><code>bpm</code> Beats per minute</p>
-<p><code>mainamp</code> Main mix amplitude control</p>
-<p><code>mainreverb</code> Main reverb amplitude control</p>
+<h3>predefined vars</h3>
+<p><code>vars.bpm</code> Beats per minute</p>
+<p><code>vars.mainamp</code> Main mix amplitude control</p>
+<p><code>vars.mainreverb</code> Main reverb amplitude control</p>
 <h3>Synths</h3>
 <p><code>! / stop / none</code> </p>
 <p><code>play</code> </p>
 <p><code>drums</code> </p>
 <p><code>dsaw</code> </p>
 <p><code>dbass</code> </p>
+<p><code>ping</code> </p>
 <h3>Pattern syntax</h3>
 <p><code>x-o-</code> Sequence of events, each of duration <code>dur</code>, for use with <code>play</code></p>
 <p><code>x.</code> Use a dot for a rest</p>
@@ -82,6 +83,8 @@ d2 play [..--]</pre>
 <p><code>echo</code> Echo time delay in beats</p>
 <p><code>detune</code> Amount of detune in semitones</p>
 <p><code>add</code> Amount to add onto event scale degree, in degrees</p>
+<p><code>lpf</code> Low pass filter frequency</p>
+<p><code>lpr</code> Low pass filter resonance</p>
 <h3>Param syntax</h3>
 <p><code>1</code> Single value</p>
 <p><code>[1,2]</code> Sequence of values, one per event in the pattern</p>
@@ -91,17 +94,13 @@ d2 play [..--]</pre>
 </body>
 <script data-main="main" src="require.js">
 /*
-x proper array parsing
-x fix broken multiply params
-x plingy synth
-x tests for array of chords
 x Tests for failing var of chords
 x lpf param
-Must stop ringing lpf when stop audio...
-swell synth
 vars
+linear and 's' time vars
+random timevar gens for params
+swell synth
 chop param
-room/mix params - cheap shared delay based
 ?consider rewrite separating concerns of parsing, sequencing, and evaluation. ALl values are functions until the end
 ?extract some of the playing stuff out of pattern.js?
 fix delay param problems (commented tests in pattern.js)
@@ -109,6 +108,7 @@ pattern char to extend duration of previous note (cf. to '.' for rest)
 shape param?
 formant param?
 vib param?
+room/mix params - cheap shared delay based
 soprano synth - use vib effect
 rate param for play
 More samples

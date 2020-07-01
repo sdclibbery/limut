@@ -25,7 +25,7 @@ define(function (require) {
     let lpf = system.audio.createBiquadFilter()
     lpf.type = 'lpf'
     lpf.frequency.value = cutoff
-    lpf.Q.value = param(params.lpr, 10)
+    lpf.Q.value = Math.min(param(params.lpr, 1), 10)
     node.connect(lpf)
     return lpf
   }

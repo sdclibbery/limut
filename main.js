@@ -4,6 +4,7 @@ define(function(require) {
   let system = require('play/system');
   let metronome = require('metronome');
   let standardPlayer = require('player/standard')
+  let parseExpression = require('player/parse-expression')
   let percussion = require('play/percussion')
   let play = require('play/play')
   let dsaw = require('play/dsaw')
@@ -33,17 +34,25 @@ define(function(require) {
   }
 
   let parseLine = (line) => {
+    line = line.trim()
+    if (line.startsWith('vars.')) {
+      let [k,v] = line.split('=').map(p => p.trim()).filter(p => p != '')
+      k = k.replace('vars.', '')
+      v = parseExpression(v)
+      if (typeof vars[k] == 'function') {
+        vars[k](v)
+      } else {
+        vars[k] = v
+      }
+      return
+    }
     let parts = line.split(/(\s+)/).map(p => p.trim()).filter(p => p != '')
     let playerId = parts[0].trim()
     if (playerId) {
       let playerName = parts[1].trim()
       if (playerName) {
         let command  = parts.slice(2).join('').trim()
-        if (playerName == '=') {
-          vars[playerId.toLowerCase()](command)
-        } else {
-          playerInstances[playerId] = players[playerName.toLowerCase()](command)
-        }
+        playerInstances[playerId] = players[playerName.toLowerCase()](command)
       } else {
         delete playerInstances[playerId]
       }
