@@ -11,19 +11,16 @@ define(function (require) {
     let freq = scale.degreeToFreq(degree, param(params.oct, 5))
     let detuneSemis = param(params.detune, 0.25)
 
-    let vca = envelope(params, 0.025)
+    let vca = envelope(params, 0.02)
     system.mix(effects(params, vca))
 
-    let vcos = [0].map(lerp => {
-      vco = system.audio.createOscillator()
-      vco.type = 'square';
-      vco.frequency.value = freq
-      vco.detune.value = lerp * detuneSemis*100
-      return vco
-    })
-    vcos.forEach(vco => vco.connect(vca))
-    vcos.forEach(vco => vco.start(params.time))
-    vcos.forEach(vco => vco.stop(params.endTime))
+    let vco = system.audio.createOscillator()
+    vco.type = 'sine';
+    vco.frequency.value = freq
+    vco.detune.value = detuneSemis*100
+    vco.connect(vca)
+    vco.start(params.time)
+    vco.stop(params.endTime)
   }
 
 
