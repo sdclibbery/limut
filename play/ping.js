@@ -22,3 +22,4 @@ define(function (require) {
     vco.start(params.time)
     vco.stop(params.endTime)
   }
+})
