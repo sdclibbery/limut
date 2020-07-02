@@ -23,15 +23,27 @@ define(function (require) {
     let cutoff = param(params.lpf, 0)
     if (!cutoff) { return node }
     let lpf = system.audio.createBiquadFilter()
-    lpf.type = 'lpf'
+    lpf.type = 'lowpass'
     lpf.frequency.value = cutoff
     lpf.Q.value = Math.min(param(params.lpr, 1), 10)
     node.connect(lpf)
     return lpf
   }
 
+  let hpf = (params, node) => {
+    let cutoff = param(params.hpf, 0)
+    if (!cutoff) { return node }
+    let hpf = system.audio.createBiquadFilter()
+    hpf.type = 'highpass'
+    hpf.frequency.value = cutoff
+    hpf.Q.value = Math.min(param(params.hpr, 1), 10)
+    node.connect(hpf)
+    return hpf
+  }
+
   return (params, node) => {
     node = lpf(params, node)
+    node = hpf(params, node)
     node = echo(params, node)
     return node
   }

@@ -85,6 +85,8 @@ d2 play [..--]</pre>
 <p><code>add</code> Amount to add onto event scale degree, in degrees</p>
 <p><code>lpf</code> Low pass filter frequency</p>
 <p><code>lpr</code> Low pass filter resonance</p>
+<p><code>hpf</code> High pass filter frequency</p>
+<p><code>hpr</code> High pass filter resonance</p>
 <h3>Param syntax</h3>
 <p><code>1</code> Single value</p>
 <p><code>[1,2]</code> Sequence of values, one per event in the pattern</p>
@@ -94,30 +96,30 @@ d2 play [..--]</pre>
 </body>
 <script data-main="main" src="require.js">
 /*
-x Tests for failing var of chords
-x lpf param
 x vars
-evaluate predefined vars; eg allow bpm=[80,120]
+x hpf effect
+chop effect
+vib param
+More samples - all foxdot samples
+expressions allow math; + - / * %
 linear and 's' time vars
 random timevar gens for params
 swell synth
-chop param
 ?consider rewrite separating concerns of parsing, sequencing, and evaluation. ALl values are functions until the end
 ?extract some of the playing stuff out of pattern.js?
 fix delay param problems (commented tests in pattern.js)
 pattern char to extend duration of previous note (cf. to '.' for rest)
 shape param?
 formant param?
-vib param?
 room/mix params - cheap shared delay based
 soprano synth - use vib effect
 rate param for play
-More samples
 curly brackets for patterns - variations
 pattern generators: random, tri, Dur etc
 Syntax to make parts of patterns repeat a set number of times?
 ?? Should param pattern repeat be independent of main pattern repeat? Eg so you can xo, amp=[1,2,3] and it multiplies out
 Preload samples immediately after parsing
+evaluate predefined vars; eg allow bpm=[80,120]
 round brackets for patterns - multiply for chords
 index pattern by beat to improve performance in finding events - same for timeVar evaluation
 aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
