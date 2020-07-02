@@ -39,6 +39,7 @@ define(function (require) {
     let source = system.audio.createBufferSource()
     source.buffer = mapping[params.sound] ? getBuffer(mapping[params.sound]) : nullLoadingBuffer
     source.playbackRate = params.rate || 1
+    params.endTime = params.time + param(params.dur, 0.25)*params.beat.duration
 
     let vca = system.audio.createGain()
     vca.gain.value = Math.max(0, 1.0 * param(params.amp, 1))

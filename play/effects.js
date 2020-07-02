@@ -41,7 +41,23 @@ define(function (require) {
     return hpf
   }
 
+  let chop = (params, node) => {
+    let chops = param(params.chop, 0)
+    if (!chops) { return node }
+    lfo = system.audio.createOscillator()
+    lfo.type = 'square';
+    lfo.frequency.value = chops / params.beat.duration
+    let gain = system.audio.createGain()
+    gain.gain.setValueAtTime(1, params.time)
+    lfo.connect(gain.gain)
+    lfo.start(params.time)
+    lfo.stop(params.endTime)
+    node.connect(gain)
+    return gain
+  }
+
   return (params, node) => {
+    node = chop(params, node)
     node = lpf(params, node)
     node = hpf(params, node)
     node = echo(params, node)
