@@ -66,7 +66,11 @@ define(function(require) {
       v = v.replace('(','[').replace(')',']')
       let arrayState = { str:v, idx:0, bracketStack: [], }
       let array = parseArray(arrayState)
-      return () => array
+      if (array.length == 1) {
+        return array[0]
+      } else {
+        return () => array
+      }
     } else if (v.charAt(0) == '[') {
       v = v.toLowerCase()
       if (v.includes('t')) {
@@ -100,6 +104,7 @@ define(function(require) {
   assert([1,2], parseExpression('[1,2]'))
   assert([1,[2,3]], parseExpression('[1,[2,3]]'))
   assert([1,[2,3]], parseExpression(' [ 1 , [ 2  , 3 ] ] '))
+  assert(1, parseExpression('(1)'))
 
   let p
   p = parseExpression('(1,2)')
