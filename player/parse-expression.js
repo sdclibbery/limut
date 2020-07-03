@@ -58,7 +58,7 @@ define(function(require) {
     return result
   }
 
-  let parseExpression = (v) => {
+  let parseValue = (v) => {
     v = v.trim()
     if (v == '') {
       return undefined
@@ -78,9 +78,14 @@ define(function(require) {
       }
     } else if (v.toLowerCase().startsWith('vars.')) {
       v = v.toLowerCase().replace('vars.', '')
-      return vars[v]
+      return () => vars[v]
     }
     return Function('"use strict";return (' + v + ')')()
+  }
+
+  let parseExpression = (v) => {
+    // First find operators to split expression into values, then parse values, then reassemble as functions
+    return parseValue(v)
   }
 
   // TESTS //
@@ -130,8 +135,28 @@ define(function(require) {
 
   vars.foo = 'bar'
   p = parseExpression('vars.foo')
-  assert('bar', p)
+  vars.foo = 'baz'
+  assert('baz', p())
   vars.foo = undefined
+
+  vars.foo = 2
+  p = parseExpression('[1,vars.foo]')
+  vars.foo = 3
+  assert(1, p[0])
+  assert(3, p[1]())
+  vars.foo = undefined
+
+  // p = parseExpression('1+1')
+  // assert(2, p(0))
+  // assert(2, p(1))
+
+  // p = parseExpression(' [ 1 , 2 ] + 3 ')
+  // assert(4, p(0)())
+  // assert(5, p(1)())
+  // assert(4, p(2)())
+
+  // (1,2)+3 [1,2]+(3,4) [1,2]t1+3 [1,2]t1+(3,4) [(1,2)]+3 [1,2]+[3,4] (1,2)+(3,4) [1,2]+vars.foo
+  // [8,9]%7 (8,9)%7
 
   console.log('Parse expression tests complete')
 
