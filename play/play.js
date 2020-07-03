@@ -56,9 +56,6 @@ define(function (require) {
           buffers[url] = buf
         }, console.error)
       }
-      request.onerror = () => {
-        buffers[url] = nullBuffer
-      }
       request.send()
       return null
     }

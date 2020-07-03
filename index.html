@@ -66,8 +66,8 @@ main dsaw 0, dur=8, add=vars.ch, detune=(0,0.1,0.3), chop=[0,2,3]t32, amp=0.5
 <p><code>vars.mainreverb</code> Main reverb amplitude control</p>
 <h3>Synths</h3>
 <p><code>! / stop / none</code> </p>
-<p><code>play</code> </p>
-<p><code>drums</code> </p>
+<p><code>play</code> Play samples. Use letters, symbols and digits 1-4 in the pattern to choose the sample</p>
+<p><code>drums</code> Basic drum synth; accepts XxOo-= characters in the pattern</p>
 <p><code>dsaw</code> </p>
 <p><code>dbass</code> </p>
 <p><code>ping</code> </p>
@@ -97,32 +97,35 @@ main dsaw 0, dur=8, add=vars.ch, detune=(0,0.1,0.3), chop=[0,2,3]t32, amp=0.5
 <p><code>chop</code> Chop the signal into a number of parts per beat</p>
 <h3>Param syntax</h3>
 <p><code>1</code> Single value</p>
+<p><code>(1,2)</code> Multiple values, all played together</p>
 <p><code>[1,2]</code> Sequence of values, one per event in the pattern</p>
 <p><code>[1,2]T3</code> Timed sequence, each value lasts for 3 beats</p>
 <p><code>[1,2]T[12,4]</code> Timed sequence with one timing per value</p>
-<p><code>(1,2)</code> Combination of values, generates one event per value, all played together</p>
 </body>
 <script data-main="main" src="require.js">
 /*
 x vars
 x hpf effect
 x chop effect
-More samples - add all foxdot samples and sample param
-Sample param
-expressions allow math; + - / * %
+x More samples - add all foxdot samples and sample param
+operators for expressions + - / * %
 round brackets for chords in patterns
 random timevar gens for params: {9} {0..9} {0.1..9} {0,1,3,4}
+<> for 'in sequence on each repeat' in patterns
 linear and 's' time vars
+random timevar gens for patterns: {o-:}
 swell synth
 allow dur to be tvar
 ?consider rewrite separating concerns of parsing, sequencing, and evaluation. ALl values are functions until the end
 ?extract some of the playing stuff out of pattern.js?
 fix delay param problems (commented tests in pattern.js)
 pattern char to extend duration of previous note (cf. to '.' for rest)
+<> for 'in sequence on each repeat' in params
 vib param
+room/mix params - cheap shared delay based
 shape param?
 formant param?
-room/mix params - cheap shared delay based
+Sample param
 soprano synth - use vib effect
 rate param for play
 curly brackets for patterns - variations
