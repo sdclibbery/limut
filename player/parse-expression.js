@@ -44,37 +44,19 @@ define(function(require) {
     }
   }
 
-  let brackets = {
-    '[': ']',
-    '(': ')',
-    '{': '}',
-    '<': '>',
-  }
   let array = (state) => {
     let result = []
     let char
-    let value = ''
     while (char = state.str.charAt(state.idx)) {
-      if (brackets[char]) {
-        if (state.bracketStack.length > 0) { value = value+char }
-        state.bracketStack.push(brackets[char])
+      if (char == '[') {
         state.idx += 1
-      } else if (char == state.bracketStack[state.bracketStack.length-1]) {
-        state.bracketStack.pop()
-        if (state.bracketStack.length > 0) {
-          value = value+char
-        } else {
-          let v = expression(state)
-          if (v !== undefined && v !== null) { result.push(v) }
-        }
-        state.idx += 1
-      } else if (char == ',' && state.bracketStack.length == 1) {
         result.push(expression(state))
-        value = ''
+      } else if (char == ',') {
         state.idx += 1
-      } else {
-        value += char
+        result.push(expression(state))
+      } else if (char == ']') {
         state.idx += 1
+        break
       }
     }
     return result
@@ -82,6 +64,7 @@ define(function(require) {
 
   let number = (state) => {
     let value = ''
+    let char
     while (char = state.str.charAt(state.idx)) {
       if (char == '') { break }
       if ((char >= '0' && char <= '9') || char == '.' || char == '-' || char == 'e') {
@@ -96,10 +79,14 @@ define(function(require) {
 
   let expression = (state) => {
     let lhs
+    let char
     while (char = state.str.charAt(state.idx)) {
       if (char == '') { break }
-      if (char == ' ' || char == '\t' || char == '\n' || char == '\r') { idx += 1; continue }
-      // array
+      if (char == ' ' || char == '\t' || char == '\n' || char == '\r') { state.idx += 1; continue }
+      if (char == '[') {
+        lhs = array(state)
+        continue
+      }
       // vars
       if ((char >= '0' && char <= '9') || char == '.' || char == '-') {
         lhs = number(state)
@@ -165,8 +152,8 @@ define(function(require) {
   assert(-1, parseExpression('-1'))
   assert(1e9, parseExpression('1e9'))
   assert([1,2], parseExpression('[1,2]'))
-  // assert([1,[2,3]], parseExpression('[1,[2,3]]'))
-  // assert([1,[2,3]], parseExpression(' [ 1 , [ 2  , 3 ] ] '))
+  assert([1,[2,3]], parseExpression('[1,[2,3]]'))
+  assert([1,[2,3]], parseExpression(' [ 1 , [ 2  , 3 ] ] '))
   // assert(1, parseExpression('(1)'))
   //
   // let p
