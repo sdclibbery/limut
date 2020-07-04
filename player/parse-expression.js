@@ -3,7 +3,7 @@ define(function(require) {
   let vars = require('vars')
   let evalParam = require('player/eval-param')
 
-  let makeTimeVar = (values, durations) => {
+  let timeVar = (values, durations) => {
     if (durations === null || durations === undefined) { durations = 4 }
     if (!Array.isArray(durations)) { durations = [durations] }
     let steps = []
@@ -61,6 +61,7 @@ define(function(require) {
       }
       break
     }
+    if (value == '') { return undefined }
     return parseFloat(value)
   }
 
@@ -72,7 +73,18 @@ define(function(require) {
       if (char == ' ' || char == '\t' || char == '\n' || char == '\r') { state.idx += 1; continue }
       // array
       if (char == '[') {
-        lhs = array(state, '[', ']')
+        let vs = array(state, '[', ']')
+        if (state.str.charAt(state.idx) == 't') {
+          state.idx += 1
+          let n = number(state)
+          if (n !== undefined) {
+            lhs = timeVar(vs, n)
+          } else {
+            lhs = timeVar(vs, 4)
+          }
+        } else {
+          lhs = vs
+        }
         continue
       }
       // tuple
@@ -87,8 +99,9 @@ define(function(require) {
       }
       // vars
       // number
-      if ((char >= '0' && char <= '9') || char == '.' || char == '-') {
-        lhs = number(state)
+      let n = number(state)
+      if (n !== undefined) {
+        lhs = n
         continue
       }
       // operator
@@ -115,19 +128,6 @@ define(function(require) {
       bracketStack: [],
     }
     return expression(state)
-
-    // } else if (v.charAt(0) == '[') {
-    //   if (v.includes('t')) {
-    //     let parts = v.split('t')
-    //     return makeTimeVar(parseExpression(parts[0]), parseExpression(parts[1]))
-    //   } else {
-    //     let arrayState = { str:v, idx:0, bracketStack: [], }
-    //     return parseArray(arrayState)
-    //   }
-    // } else if (v.startsWith('vars.')) {
-    //   v = v.replace('vars.', '')
-    //   return () => vars[v]
-    // }
   }
 
   // TESTS //
@@ -160,18 +160,18 @@ define(function(require) {
 
   assert(6, parseExpression('1+2+3'))
 
-  // p = parseExpression('[1,2]T1')
-  // assert(1, p(0))
-  // assert(1, p(1/2))
-  // assert(2, p(1))
-  // assert(2, p(3/2))
-  // assert(1, p(2))
-  //
-  // p = parseExpression('[1,2]T')
-  // assert(1, p(0))
-  // assert(1, p(3.9))
-  // assert(2, p(4))
-  //
+  p = parseExpression('[1,2]T1')
+  assert(1, p(0))
+  assert(1, p(1/2))
+  assert(2, p(1))
+  assert(2, p(3/2))
+  assert(1, p(2))
+
+  p = parseExpression('[1,2]T')
+  assert(1, p(0))
+  assert(1, p(3.9))
+  assert(2, p(4))
+
   // p = parseExpression('[1,2,3]T[1,2]')
   // assert(1, p(0))
   // assert(2, p(1))
