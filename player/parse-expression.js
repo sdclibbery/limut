@@ -1,6 +1,7 @@
 define(function(require) {
 
   let vars = require('vars')
+  let evalParam = require('player/eval-param')
 
   let brackets = {
     '[': ']',
@@ -58,10 +59,28 @@ define(function(require) {
     return result
   }
 
-  let parseValue = (v) => {
+  let evalAdd = (vs, v,s,b) => {
+    vs = vs.map(x => evalParam(x, v,s,b))
+    let literal = vs.filter(x => typeof(x) == 'number').reduce((a,c) => a+c, 0)
+    let arrays = vs.filter(x => Array.isArray(x))
+    if (arrays.length == 0) { return literal }
+    let len = arrays.reduce((a,c) => Math.max(a,c.length), 0)
+    let result = []
+    for (let i = 0; i < len; i++) {
+      let sum = arrays.map(a => a[i % a.length]).reduce((a,c) => a+c, 0)
+      result.push(sum + literal)
+    }
+    return result
+  }
+
+  let parseExpression = (v) => {
     v = v.trim()
     if (v == '') {
       return undefined
+    } else if (v.includes('+')) {
+      let vs = v.split('+')
+      vs = vs.map(x => parseExpression(x))
+      return (v,s,b) => evalAdd(vs, v,s,b)
     } else if (v.charAt(0) == '(') {
       v = v.replace('(','[').replace(')',']')
       let arrayState = { str:v, idx:0, bracketStack: [], }
@@ -85,11 +104,6 @@ define(function(require) {
       return () => vars[v]
     }
     return Function('"use strict";return (' + v + ')')()
-  }
-
-  let parseExpression = (v) => {
-    // First find operators to split expression into values, then parse values, then reassemble as functions
-    return parseValue(v)
   }
 
   // TESTS //
@@ -151,17 +165,47 @@ define(function(require) {
   assert(3, p[1]())
   vars.foo = undefined
 
-  // p = parseExpression('1+1')
-  // assert(2, p(0))
-  // assert(2, p(1))
+  p = parseExpression('1+1')
+  assert(2, p(0))
+  assert(2, p(1))
 
-  // p = parseExpression(' [ 1 , 2 ] + 3 ')
-  // assert(4, p(0)())
-  // assert(5, p(1)())
-  // assert(4, p(2)())
+  p = parseExpression(' [ 1 , 2 ] + 3 ')
+  assert(4, p(0))
+  assert(5, p(1))
+  assert(4, p(2))
 
-  // (1,2)+3 [1,2]+(3,4) [1,2]t1+3 [1,2]t1+(3,4) [(1,2)]+3 [1,2]+[3,4] (1,2)+(3,4) [1,2]+vars.foo
-  // [8,9]%7 (8,9)%7
+  p = parseExpression('[1,2]+[3,4] ')
+  assert(4, p(0))
+  assert(6, p(1))
+  assert(4, p(2))
+
+  p = parseExpression('[1,2,3]+[4,5] ')
+  assert(5, p(0))
+  assert(7, p(1))
+  assert(7, p(2))
+  assert(6, p(3))
+
+  p = parseExpression('[1,2]t1+3 ')
+  assert(4, p(0,0))
+  assert(5, p(0,1))
+  assert(4, p(0,2))
+
+  p = parseExpression('[1,2]t1+(3,4) ')
+  assert([4,5], p(0,0))
+  assert([5,6], p(0,1))
+  assert([4,5], p(0,2))
+
+  assert([4,5], parseExpression('(1,2)+3')())
+  assert([8,9], parseExpression('(1,2)+3+4 ')())
+  assert([4,6], parseExpression('(1,2)+(3,4) ')())
+  assert([5,7,7], parseExpression('(1,2,3)+(4,5) ')())
+  assert(3, parseExpression('(1)+2')())
+  // assert(3, parseExpression('(1+2)')())
+  // assert(6, parseExpression('(1+2)+3')())
+
+  // [1,2]+(3,4) [(1,2)]+3 [1,2]+vars.foo 1+[2,3]+4+[5,6]t1+(7,8) ([1,2]+(3,4))
+  // [8,9]%7 (8,9)%7 [1,2]t1%7 (1+2)%3 1+(2%3)
+  // [1,2]*2 (1,2)*2 [1,2]t1*2
 
   console.log('Parse expression tests complete')
 
