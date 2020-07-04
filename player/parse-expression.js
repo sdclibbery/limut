@@ -3,14 +3,13 @@ define(function(require) {
   let vars = require('vars')
   let evalParam = require('player/eval-param')
 
-  let timeVar = (values, durations) => {
-    if (durations === null || durations === undefined) { durations = 4 }
-    if (!Array.isArray(durations)) { durations = [durations] }
+  let timeVar = (vs, ds) => {
+    if (!Array.isArray(ds)) { ds = [ds] }
     let steps = []
     let length = 0
     let step = 0
-    values.forEach(v => {
-      let dur = durations[step % durations.length]
+    vs.forEach(v => {
+      let dur = ds[step % ds.length]
       steps.push({ value:v, time:length, duration:dur })
       length += dur
       step += 1
@@ -27,7 +26,7 @@ define(function(require) {
       return op(l, r)
     }
     alert('ToDo: Write me!')
-    // return function that evals then divides
+    // return function that evals then applies op, handling arrays
   }
 
   let array = (state, open, close) => {
@@ -40,7 +39,8 @@ define(function(require) {
         if (v !== undefined) { result.push(v) }
       } else if (char == ',') {
         state.idx += 1
-        result.push(expression(state))
+        let v = expression(state)
+        result.push(v)
       } else if (char == close) {
         state.idx += 1
         break
@@ -81,8 +81,8 @@ define(function(require) {
             lhs = timeVar(vs, n)
           } else {
             if (state.str.charAt(state.idx) == '[') {
-              state.idx += 1
-              lhs = timeVar(vs, array(state, '[', ']'))
+              let ds = array(state, '[', ']')
+              lhs = timeVar(vs, ds)
             } else {
               lhs = timeVar(vs, 4)
             }
@@ -94,7 +94,7 @@ define(function(require) {
       }
       // tuple
       if (char == '(') {
-        v = array(state, '(', ')')
+        let v = array(state, '(', ')')
         if (v.length == 1) {
           lhs = v[0]
         } else {
@@ -184,10 +184,14 @@ define(function(require) {
   assert(3, p(3))
   assert(1, p(4))
 
-  // p = parseExpression('[(0,2),(1,3)]T')
-  // assert([0,2], p(0)())
-  // assert([1,3], p(4)())
-  //
+  p = parseExpression('[(0,2),(1,3)]')
+  assert([0,2], p[0]())
+  assert([1,3], p[1]())
+
+  p = parseExpression('[(0,2),(1,3)]T')
+  assert([0,2], p(0)())
+  assert([1,3], p(4)())
+
   // vars.foo = 'bar'
   // p = parseExpression('vars.foo')
   // vars.foo = 'baz'
