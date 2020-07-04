@@ -33,7 +33,7 @@ define(function (require) {
     if (char == '.' || char == ' ') {
       return null
     } else if (symbols[char]) {
-      return "sample/_/"+symbols[char]+"/01.wav"
+      return "sample/symbol/"+symbols[char]+"/01.wav"
     } else {
       let subdir = char.toUpperCase()==char ? "upper" : "lower"
       return "sample/"+char.toLowerCase()+"/"+subdir+"/01.wav"
