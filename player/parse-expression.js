@@ -80,7 +80,12 @@ define(function(require) {
           if (n !== undefined) {
             lhs = timeVar(vs, n)
           } else {
-            lhs = timeVar(vs, 4)
+            if (state.str.charAt(state.idx) == '[') {
+              state.idx += 1
+              lhs = timeVar(vs, array(state, '[', ']'))
+            } else {
+              lhs = timeVar(vs, 4)
+            }
           }
         } else {
           lhs = vs
@@ -172,13 +177,13 @@ define(function(require) {
   assert(1, p(3.9))
   assert(2, p(4))
 
-  // p = parseExpression('[1,2,3]T[1,2]')
-  // assert(1, p(0))
-  // assert(2, p(1))
-  // assert(2, p(2))
-  // assert(3, p(3))
-  // assert(1, p(4))
-  //
+  p = parseExpression('[1,2,3]T[1,2]')
+  assert(1, p(0))
+  assert(2, p(1))
+  assert(2, p(2))
+  assert(3, p(3))
+  assert(1, p(4))
+
   // p = parseExpression('[(0,2),(1,3)]T')
   // assert([0,2], p(0)())
   // assert([1,3], p(4)())
