@@ -49,6 +49,22 @@ define(function(require) {
     return result
   }
 
+  let varLookup = (state) => {
+    if (state.str.substring(state.idx, state.idx+5) !== 'vars.') { return undefined }
+    state.idx += 5
+    let key = ''
+    let char
+    while (char = state.str.charAt(state.idx)) {
+      if ((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || (char == '_')) {
+        key += char
+        state.idx += 1
+        continue
+      }
+      break
+    }
+    return () => vars[key]
+  }
+
   let number = (state) => {
     let value = ''
     let char
@@ -103,6 +119,9 @@ define(function(require) {
         continue
       }
       // vars
+      if (char == 'v') {
+        lhs = varLookup(state)
+      }
       // number
       let n = number(state)
       if (n !== undefined) {
@@ -192,19 +211,19 @@ define(function(require) {
   assert([0,2], p(0)())
   assert([1,3], p(4)())
 
-  // vars.foo = 'bar'
-  // p = parseExpression('vars.foo')
-  // vars.foo = 'baz'
-  // assert('baz', p())
-  // vars.foo = undefined
-  //
-  // vars.foo = 2
-  // p = parseExpression('[1,vars.foo]')
-  // vars.foo = 3
-  // assert(1, p[0])
-  // assert(3, p[1]())
-  // vars.foo = undefined
-  //
+  vars.foo = 'bar'
+  p = parseExpression('vars.foo')
+  vars.foo = 'baz'
+  assert('baz', p())
+  vars.foo = undefined
+
+  vars.foo = 2
+  p = parseExpression('[1,vars.foo]')
+  vars.foo = 3
+  assert(1, p[0])
+  assert(3, p[1]())
+  vars.foo = undefined
+
   // p = parseExpression('[1,2]+[3,4] ')
   // assert(4, p(0))
   // assert(6, p(1))
@@ -226,15 +245,15 @@ define(function(require) {
   // assert([5,6], p(0,1))
   // assert([4,5], p(0,2))
   //
-  // p = parseExpression('vars.foo + (0,2)')
-  // vars.foo = parseExpression('[1,2]t1')
-  // assert([1,3], p(0,0))
-  // vars.foo = undefined
-  //
   // p = parseExpression(' [ 1 , 2 ] + 3 ')
   // assert(4, p(0))
   // assert(5, p(1))
   // assert(4, p(2))
+  //
+  // p = parseExpression('vars.foo + (0,2)')
+  // vars.foo = parseExpression('[1,2]t1')
+  // assert([1,3], p(0))
+  // vars.foo = undefined
   //
   // assert([4,5], parseExpression('(1,2)+3')())
   // assert([8,9], parseExpression('(1,2)+3+4 ')())
