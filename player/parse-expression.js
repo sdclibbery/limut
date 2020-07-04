@@ -111,7 +111,7 @@ define(function(require) {
     return Function('"use strict";return (' + v + ')')()
     // gut this, and set it up with a state and a char-by-char parse
      // discard whitespace
-     // if first char is bracket, then parse array, then maybe look for 't' and parse rhs
+     // if first char is bracket, then parse array (must recursive preserving state), then maybe look for 't' and parse rhs
      // if first char is 'v' then parse vars
      // if first char is digit or '-' or ., parse number
      // then, if not at end of string, look for operators and parse rhs expression
@@ -206,6 +206,11 @@ define(function(require) {
   assert([4,5], p(0,0))
   assert([5,6], p(0,1))
   assert([4,5], p(0,2))
+
+  p = parseExpression('vars.foo + (0,2)')
+  vars.foo = parseExpression('[1,2]t1')
+  assert([1,3], p(0,0))
+  vars.foo = undefined
 
   assert(6, parseExpression('1+2+3')())
   assert([4,5], parseExpression('(1,2)+3')())
