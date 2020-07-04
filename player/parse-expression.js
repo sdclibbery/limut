@@ -3,11 +3,26 @@ define(function(require) {
   let vars = require('vars')
   let evalParam = require('player/eval-param')
 
-  let brackets = {
-    '[': ']',
-    '(': ')',
-    '{': '}',
-    '<': '>',
+  let evalAdd = (l, r, v,s,b) => {
+    l = evalParam(l, v,s,b)
+    r = evalParam(r, v,s,b)
+    if (typeof l == 'number') {
+      if (typeof r == 'number') {
+        return l+r
+      } else {
+        return r.map(x => x+l)
+      }
+    } else {
+      if (typeof r == 'number') {
+        return l.map(x => x+r)
+      } else {
+        let result = []
+        for (let i = 0; i < Math.max(l.length, r.length); i++) {
+          result.push(l[i % l.length] + r[i % r.length])
+        }
+        return result
+      }
+    }
   }
 
   let makeTimeVar = (values, durations) => {
@@ -29,6 +44,12 @@ define(function(require) {
     }
   }
 
+  let brackets = {
+    '[': ']',
+    '(': ')',
+    '{': '}',
+    '<': '>',
+  }
   let parseArray = (state) => {
     let result = []
     let char
@@ -59,30 +80,8 @@ define(function(require) {
     return result
   }
 
-  let evalAdd = (l, r, v,s,b) => {
-    l = evalParam(l, v,s,b)
-    r = evalParam(r, v,s,b)
-    if (typeof l == 'number') {
-      if (typeof r == 'number') {
-        return l+r
-      } else {
-        return r.map(x => x+l)
-      }
-    } else {
-      if (typeof r == 'number') {
-        return l.map(x => x+r)
-      } else {
-        let result = []
-        for (let i = 0; i < Math.max(l.length, r.length); i++) {
-          result.push(l[i % l.length] + r[i % r.length])
-        }
-        return result
-      }
-    }
-  }
-
   let parseExpression = (v) => {
-    v = v.trim()
+    v = v.trim().toLowerCase()
     if (v == '') {
       return undefined
     } else if (v.includes('+')) {
@@ -98,7 +97,6 @@ define(function(require) {
         return () => array
       }
     } else if (v.charAt(0) == '[') {
-      v = v.toLowerCase()
       if (v.includes('t')) {
         let parts = v.split('t')
         return makeTimeVar(parseExpression(parts[0]), parseExpression(parts[1]))
@@ -106,11 +104,18 @@ define(function(require) {
         let arrayState = { str:v, idx:0, bracketStack: [], }
         return parseArray(arrayState)
       }
-    } else if (v.toLowerCase().startsWith('vars.')) {
-      v = v.toLowerCase().replace('vars.', '')
+    } else if (v.startsWith('vars.')) {
+      v = v.replace('vars.', '')
       return () => vars[v]
     }
     return Function('"use strict";return (' + v + ')')()
+    // gut this, and set it up with a state and a char-by-char parse
+     // discard whitespace
+     // if first char is bracket, then parse array, then maybe look for 't' and parse rhs
+     // if first char is 'v' then parse vars
+     // if first char is digit or '-' or ., parse number
+     // then, if not at end of string, look for operators and parse rhs expression
+     // fold constants with operators (so '1/2' -> 0.5)
   }
 
   // TESTS //
