@@ -3,28 +3,6 @@ define(function(require) {
   let vars = require('vars')
   let evalParam = require('player/eval-param')
 
-  let evalAdd = (l, r, v,s,b) => {
-    l = evalParam(l, v,s,b)
-    r = evalParam(r, v,s,b)
-    if (typeof l == 'number') {
-      if (typeof r == 'number') {
-        return l+r
-      } else {
-        return r.map(x => x+l)
-      }
-    } else {
-      if (typeof r == 'number') {
-        return l.map(x => x+r)
-      } else {
-        let result = []
-        for (let i = 0; i < Math.max(l.length, r.length); i++) {
-          result.push(l[i % l.length] + r[i % r.length])
-        }
-        return result
-      }
-    }
-  }
-
   let makeTimeVar = (values, durations) => {
     if (durations === null || durations === undefined) { durations = 4 }
     if (!Array.isArray(durations)) { durations = [durations] }
@@ -44,13 +22,22 @@ define(function(require) {
     }
   }
 
+  let operator = (op, l, r) => {
+    if (typeof l == 'number' && typeof (r) == 'number') {
+      return op(l, r)
+    }
+    alert('ToDo: Write me!')
+    // return function that evals then divides
+  }
+
   let array = (state) => {
     let result = []
     let char
     while (char = state.str.charAt(state.idx)) {
       if (char == '[') {
         state.idx += 1
-        result.push(expression(state))
+        let v = expression(state)
+        if (v !== undefined) { result.push(v) }
       } else if (char == ',') {
         state.idx += 1
         result.push(expression(state))
@@ -92,7 +79,12 @@ define(function(require) {
         lhs = number(state)
         continue
       }
-      // operator
+      // operators
+      if (char == '/') {
+        state.idx += 1
+        let rhs  = expression(state)
+        return operator((l,r)=>l/r, lhs, rhs)
+      }
       break
     }
     return lhs
