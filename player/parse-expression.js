@@ -30,18 +30,18 @@ define(function(require) {
     // return function that evals then divides
   }
 
-  let array = (state) => {
+  let array = (state, open, close) => {
     let result = []
     let char
     while (char = state.str.charAt(state.idx)) {
-      if (char == '[') {
+      if (char == open) {
         state.idx += 1
         let v = expression(state)
         if (v !== undefined) { result.push(v) }
       } else if (char == ',') {
         state.idx += 1
         result.push(expression(state))
-      } else if (char == ']') {
+      } else if (char == close) {
         state.idx += 1
         break
       }
@@ -70,20 +70,37 @@ define(function(require) {
     while (char = state.str.charAt(state.idx)) {
       if (char == '') { break }
       if (char == ' ' || char == '\t' || char == '\n' || char == '\r') { state.idx += 1; continue }
+      // array
       if (char == '[') {
-        lhs = array(state)
+        lhs = array(state, '[', ']')
+        continue
+      }
+      // tuple
+      if (char == '(') {
+        v = array(state, '(', ')')
+        if (v.length == 1) {
+          lhs = v[0]
+        } else {
+          lhs = () => v
+        }
         continue
       }
       // vars
+      // number
       if ((char >= '0' && char <= '9') || char == '.' || char == '-') {
         lhs = number(state)
         continue
       }
-      // operators
+      // operator
       if (char == '/') {
         state.idx += 1
         let rhs  = expression(state)
         return operator((l,r)=>l/r, lhs, rhs)
+      }
+      if (char == '+') {
+        state.idx += 1
+        let rhs  = expression(state)
+        return operator((l,r)=>l+r, lhs, rhs)
       }
       break
     }
@@ -99,21 +116,6 @@ define(function(require) {
     }
     return expression(state)
 
-    // v = v.trim().toLowerCase()
-    // if (v == '') {
-    //   return undefined
-    // } else if (v.includes('+')) {
-    //   let [l,r] = v.split(/\+(.+)/)
-    //   return (v,s,b) => evalAdd(parseExpression(l), parseExpression(r), v,s,b)
-    // } else if (v.charAt(0) == '(') {
-    //   v = v.replace('(','[').replace(')',']')
-    //   let arrayState = { str:v, idx:0, bracketStack: [], }
-    //   let array = parseArray(arrayState)
-    //   if (array.length == 1) {
-    //     return array[0]
-    //   } else {
-    //     return () => array
-    //   }
     // } else if (v.charAt(0) == '[') {
     //   if (v.includes('t')) {
     //     let parts = v.split('t')
@@ -126,7 +128,6 @@ define(function(require) {
     //   v = v.replace('vars.', '')
     //   return () => vars[v]
     // }
-    // return Function('"use strict";return (' + v + ')')()
   }
 
   // TESTS //
@@ -146,17 +147,19 @@ define(function(require) {
   assert([1,2], parseExpression('[1,2]'))
   assert([1,[2,3]], parseExpression('[1,[2,3]]'))
   assert([1,[2,3]], parseExpression(' [ 1 , [ 2  , 3 ] ] '))
-  // assert(1, parseExpression('(1)'))
-  //
-  // let p
-  // p = parseExpression('(1,2)')
-  // assert([1,2], p(0))
-  // assert([1,2], p(1))
-  //
-  // p = parseExpression('[1,(2,3)]')
-  // assert(1, p[0])
-  // assert([2,3], p[1]())
-  //
+  assert(1, parseExpression('(1)'))
+
+  let p
+  p = parseExpression('(1,2)')
+  assert([1,2], p(0))
+  assert([1,2], p(1))
+
+  p = parseExpression('[1,(2,3)]')
+  assert(1, p[0])
+  assert([2,3], p[1]())
+
+  assert(6, parseExpression('1+2+3'))
+
   // p = parseExpression('[1,2]T1')
   // assert(1, p(0))
   // assert(1, p(1/2))
@@ -193,15 +196,6 @@ define(function(require) {
   // assert(3, p[1]())
   // vars.foo = undefined
   //
-  // p = parseExpression('1+1')
-  // assert(2, p(0))
-  // assert(2, p(1))
-  //
-  // p = parseExpression(' [ 1 , 2 ] + 3 ')
-  // assert(4, p(0))
-  // assert(5, p(1))
-  // assert(4, p(2))
-  //
   // p = parseExpression('[1,2]+[3,4] ')
   // assert(4, p(0))
   // assert(6, p(1))
@@ -228,7 +222,11 @@ define(function(require) {
   // assert([1,3], p(0,0))
   // vars.foo = undefined
   //
-  // assert(6, parseExpression('1+2+3')())
+  // p = parseExpression(' [ 1 , 2 ] + 3 ')
+  // assert(4, p(0))
+  // assert(5, p(1))
+  // assert(4, p(2))
+  //
   // assert([4,5], parseExpression('(1,2)+3')())
   // assert([8,9], parseExpression('(1,2)+3+4 ')())
   // assert([4,6], parseExpression('(1,2)+(3,4) ')())
