@@ -59,18 +59,26 @@ define(function(require) {
     return result
   }
 
-  let evalAdd = (vs, v,s,b) => {
-    vs = vs.map(x => evalParam(x, v,s,b))
-    let literal = vs.filter(x => typeof(x) == 'number').reduce((a,c) => a+c, 0)
-    let arrays = vs.filter(x => Array.isArray(x))
-    if (arrays.length == 0) { return literal }
-    let len = arrays.reduce((a,c) => Math.max(a,c.length), 0)
-    let result = []
-    for (let i = 0; i < len; i++) {
-      let sum = arrays.map(a => a[i % a.length]).reduce((a,c) => a+c, 0)
-      result.push(sum + literal)
+  let evalAdd = (l, r, v,s,b) => {
+    l = evalParam(l, v,s,b)
+    r = evalParam(r, v,s,b)
+    if (typeof l == 'number') {
+      if (typeof r == 'number') {
+        return l+r
+      } else {
+        return r.map(x => x+l)
+      }
+    } else {
+      if (typeof r == 'number') {
+        return l.map(x => x+r)
+      } else {
+        let result = []
+        for (let i = 0; i < Math.max(l.length, r.length); i++) {
+          result.push(l[i % l.length] + r[i % r.length])
+        }
+        return result
+      }
     }
-    return result
   }
 
   let parseExpression = (v) => {
@@ -78,9 +86,8 @@ define(function(require) {
     if (v == '') {
       return undefined
     } else if (v.includes('+')) {
-      let vs = v.split('+')
-      vs = vs.map(x => parseExpression(x))
-      return (v,s,b) => evalAdd(vs, v,s,b)
+      let [l,r] = v.split(/\+(.+)/)
+      return (v,s,b) => evalAdd(parseExpression(l), parseExpression(r), v,s,b)
     } else if (v.charAt(0) == '(') {
       v = v.replace('(','[').replace(')',']')
       let arrayState = { str:v, idx:0, bracketStack: [], }
@@ -195,6 +202,7 @@ define(function(require) {
   assert([5,6], p(0,1))
   assert([4,5], p(0,2))
 
+  assert(6, parseExpression('1+2+3')())
   assert([4,5], parseExpression('(1,2)+3')())
   assert([8,9], parseExpression('(1,2)+3+4 ')())
   assert([4,6], parseExpression('(1,2)+(3,4) ')())
@@ -204,8 +212,6 @@ define(function(require) {
   // assert(6, parseExpression('(1+2)+3')())
 
   // [1,2]+(3,4) [(1,2)]+3 [1,2]+vars.foo 1+[2,3]+4+[5,6]t1+(7,8) ([1,2]+(3,4))
-  // [8,9]%7 (8,9)%7 [1,2]t1%7 (1+2)%3 1+(2%3)
-  // [1,2]*2 (1,2)*2 [1,2]t1*2
 
   console.log('Parse expression tests complete')
 
