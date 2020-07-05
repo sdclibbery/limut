@@ -119,13 +119,17 @@ Bass dbass 0, dur=8, attack=2, release=4, lpf=[300,1000,3000,1000]t8
 <p><code>[1,2]T[12,4]</code> Timed sequence with one timing per value</p>
 <p><code>+</code> Add values together; eg [2,3]+4 is equivalent to [6,7]</p>
 <p><code>/</code> Divide values; eg 1/2</p>
+<p><code>*</code> Multiply values; eg lpf=[1,2,3]*1000</p>
+<p><code>%</code> Take remainder; eg (0,4,7,9)%7 is equivalent to (0,4,0,2)</p>
+<p><code>{0:9}</code> Select a different random integer every time, between 0 and 9</p>
 </div>
 </body>
 <script data-main="main" src="require.js">
 /*
 x display beat count
 x swell synth
-random timevar gens for params: {9} {0..9} {0.1..9} {0,1,3,4}
+x license and readme
+random timevar gens for params: {9} {:9} {0:9} {0.1:9} {0,1,3,4}
 linear and 's' time vars
 <> for 'in sequence on each repeat' in patterns and params
 ^ operator: concat arrays

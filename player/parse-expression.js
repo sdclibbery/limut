@@ -55,7 +55,7 @@ define(function(require) {
     }
   }
 
-  let array = (state, open, close) => {
+  let array = (state, open, close, seperator) => {
     let result = []
     let char
     while (char = state.str.charAt(state.idx)) {
@@ -63,7 +63,7 @@ define(function(require) {
         state.idx += 1
         let v = expression(state)
         if (v !== undefined) { result.push(v) }
-      } else if (char == ',') {
+      } else if (char == seperator) {
         state.idx += 1
         let v = expression(state)
         result.push(v)
@@ -122,7 +122,7 @@ define(function(require) {
       if (char == ' ' || char == '\t' || char == '\n' || char == '\r') { state.idx += 1; continue }
       // array
       if (char == '[') {
-        let vs = array(state, '[', ']')
+        let vs = array(state, '[', ']', ',')
         if (state.str.charAt(state.idx) == 't') {
           state.idx += 1
           let n = number(state)
@@ -130,7 +130,7 @@ define(function(require) {
             lhs = timeVar(vs, n)
           } else {
             if (state.str.charAt(state.idx) == '[') {
-              let ds = array(state, '[', ']')
+              let ds = array(state, '[', ']', ',')
               lhs = timeVar(vs, ds)
             } else {
               lhs = timeVar(vs, 4)
@@ -143,11 +143,26 @@ define(function(require) {
       }
       // tuple
       if (char == '(') {
-        let v = array(state, '(', ')')
+        let v = array(state, '(', ')', ',')
         if (v.length == 1) {
           lhs = v[0]
         } else {
           lhs = (s,b) => v.map(x => evalParam(x,s,b))
+        }
+        continue
+      }
+      // random
+      if (char == '{') {
+        let v = array(state, '{', '}', ':')
+        if (debugParse) { console.log('random', v, state) }
+        if (v.length == 2) {
+          let lo = v[0]
+          let hi = v[1]
+          lhs = (s,b) => {
+            let elo = evalParam(lo,s,b)
+            let ehi = evalParam(hi,s,b)
+            return elo+Math.floor(Math.random()*(ehi-elo+0.9999))
+          }
         }
         continue
       }
@@ -209,6 +224,9 @@ define(function(require) {
     let x = JSON.stringify(expected)
     let a = JSON.stringify(actual)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
+  }
+  let assertIn = (lo, hi, actual) => {
+    if (actual < lo-0.0001 || actual > hi+0.0001) { console.trace(`Assertion failed.\n>>Expected ${lo} - ${hi}\n>>Actual: ${actual}`) }
   }
 
   assert(1, parseExpression('1'))
@@ -372,6 +390,12 @@ define(function(require) {
   assert([1,0], parseExpression('(5,6)%2')(0,0))
   assert(2, parseExpression('[5,6]%3')(0,0))
   assert(0, parseExpression('[5,6]%3')(1,1))
+
+  p = parseExpression('{0:9}')
+  for (let i = 0; i<20; i+=1) {
+    assertIn(0, 9, p())
+    assert(true, Number.isInteger(p()))
+  }
 
   console.log('Parse expression tests complete')
 
