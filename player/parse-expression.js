@@ -37,8 +37,19 @@ define(function(require) {
       if (typeof(el) == 'number') {
         if (typeof(er) == 'number') {
           return op(el,er)
+        } else {
+          return er.map(x => op(x,el))
         }
-      }
+      } else {
+        if (typeof r == 'number') {
+          return el.map(x => op(x,er))
+        } else {
+          let result = []
+          for (let i = 0; i < Math.max(el.length, er.length); i++) {
+            result.push(el[i % el.length] + er[i % er.length])
+          }
+          return result
+        }      }
     }
   }
 
@@ -293,14 +304,15 @@ define(function(require) {
   assert(9, p(0,3))
   vars.foo = undefined
 
-  // assert([4,5], parseExpression('(1,2)+3')())
-  // assert([8,9], parseExpression('(1,2)+3+4 ')())
-  // assert([4,6], parseExpression('(1,2)+(3,4) ')())
-  // assert([5,7,7], parseExpression('(1,2,3)+(4,5) ')())
-  // assert(3, parseExpression('(1)+2')())
-  // assert(3, parseExpression('(1+2)')())
-  // assert(6, parseExpression('(1+2)+3')())
-  //
+  assert([4,5], parseExpression('(1,2)+3')())
+  assert([4,5], parseExpression('3+(1,2)')())
+  assert([8,9], parseExpression('(1,2)+3+4 ')())
+  assert([4,6], parseExpression('(1,2)+(3,4) ')())
+  assert([5,7,7], parseExpression('(1,2,3)+(4,5) ')())
+  assert(3, parseExpression('(1)+2'))
+  assert(3, parseExpression('(1+2)'))
+  assert(6, parseExpression('(1+2)+3'))
+
   // p = parseExpression('[1,2]t1+(3,4) ')
   // assert([4,5], p(0,0))
   // assert([5,6], p(0,1))
