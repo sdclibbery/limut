@@ -181,6 +181,12 @@ define(function(require) {
         if (debugParse) { console.log('operator/', lhs, rhs, state) }
         return operator((l,r)=>l/r, lhs, rhs)
       }
+      if (char == '%') {
+        state.idx += 1
+        let rhs  = expression(state)
+        if (debugParse) { console.log('operator%', lhs, rhs, state) }
+        return operator((l,r)=>l%r, lhs, rhs)
+      }
       break
     }
     return lhs
@@ -361,6 +367,11 @@ define(function(require) {
   assert([2,4], parseExpression('(1,2)*2')(0,0))
   assert(100, parseExpression('[1,2]*100')(0,0))
   assert(200, parseExpression('[1,2]*100')(1,1))
+
+  assert(1, parseExpression('3%2'))
+  assert([1,0], parseExpression('(5,6)%2')(0,0))
+  assert(2, parseExpression('[5,6]%3')(0,0))
+  assert(0, parseExpression('[5,6]%3')(1,1))
 
   console.log('Parse expression tests complete')
 
