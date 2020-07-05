@@ -313,15 +313,15 @@ define(function(require) {
   assert(3, parseExpression('(1+2)'))
   assert(6, parseExpression('(1+2)+3'))
 
-  // p = parseExpression('[1,2]t1+(3,4) ')
-  // assert([4,5], p(0,0))
-  // assert([5,6], p(0,1))
-  // assert([4,5], p(0,2))
-  //
-  // p = parseExpression('vars.foo + (0,2)')
-  // vars.foo = parseExpression('[1,2]t1')
-  // assert([1,3], p(0,0))
-  // vars.foo = undefined
+  p = parseExpression('[1,2]t1+(3,4) ')
+  assert([4,5], p(0,0))
+  assert([5,6], p(0,1))
+  assert([4,5], p(0,2))
+
+  p = parseExpression('vars.foo + (0,2)')
+  vars.foo = parseExpression('[1,2]t1')
+  assert([1,3], p(0,0))
+  vars.foo = undefined
 
   // [1,2]+(3,4) [(1,2)]+3 [1,2]+vars.foo 1+[2,3]+4+[5,6]t1+(7,8) ([1,2]+(3,4))
 
