@@ -40,7 +40,7 @@ define(function(require) {
         if (typeof(er) == 'number') {
           return op(el,er)
         } else {
-          return er.map(x => op(x,el))
+          return er.map(x => op(el,x))
         }
       } else {
         if (typeof er == 'number') {
@@ -48,7 +48,7 @@ define(function(require) {
         } else {
           let result = []
           for (let i = 0; i < Math.max(el.length, er.length); i++) {
-            result.push(el[i % el.length] + er[i % er.length])
+            result.push(op(el[i % el.length], er[i % er.length]))
           }
           return result
         }      }
@@ -163,17 +163,23 @@ define(function(require) {
         continue
       }
       // operator
-      if (char == '/') {
-        state.idx += 1
-        let rhs  = expression(state)
-        if (debugParse) { console.log('operator/', lhs, rhs, state) }
-        return operator((l,r)=>l/r, lhs, rhs)
-      }
       if (char == '+') {
         state.idx += 1
         let rhs  = expression(state)
         if (debugParse) { console.log('operator+', lhs, rhs, state) }
         return operator((l,r)=>l+r, lhs, rhs)
+      }
+      if (char == '*') {
+        state.idx += 1
+        let rhs  = expression(state)
+        if (debugParse) { console.log('operator*', lhs, rhs, state) }
+        return operator((l,r)=>l*r, lhs, rhs)
+      }
+      if (char == '/') {
+        state.idx += 1
+        let rhs  = expression(state)
+        if (debugParse) { console.log('operator/', lhs, rhs, state) }
+        return operator((l,r)=>l/r, lhs, rhs)
       }
       break
     }
@@ -331,8 +337,30 @@ define(function(require) {
   assert([2,4], p(1,1))
   vars.foo = undefined
 
-  // [1,2]+(3,4) [(1,2)]+3 [1,2]+vars.foo 1+[2,3]+4+[5,6]t1+(7,8) ([1,2]+(3,4))
-  // tests for / operator
+  p = parseExpression('[1,2]+(3,4) ')
+  assert([4,5], p(0,0))
+  assert([5,6], p(1,1))
+  assert([4,5], p(2,2))
+
+  assert([4,5], parseExpression('[(1,2)]+3')(0,0))
+
+  // [1,2]+vars.foo 1+[2,3]+4+[5,6]t1+(7,8) ([1,2]+(3,4))
+
+  assert(1/2, parseExpression('1/2'))
+  assert(1/2, parseExpression('(1/2)'))
+  assert([1,2], parseExpression('(2,4)/2')(0,0))
+  assert(1, parseExpression('[2,4]/2')(0,0))
+  assert(2, parseExpression('[2,4]/2')(1,1))
+
+  assert(4, parseExpression('2+4/2'))
+  assert(3, parseExpression('(2+4)/2'))
+  // assert(4, parseExpression('4/2+2'))
+  assert(1, parseExpression('4/(2+2)'))
+
+  assert(4, parseExpression('2*2'))
+  assert([2,4], parseExpression('(1,2)*2')(0,0))
+  assert(100, parseExpression('[1,2]*100')(0,0))
+  assert(200, parseExpression('[1,2]*100')(1,1))
 
   console.log('Parse expression tests complete')
 
