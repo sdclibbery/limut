@@ -12,6 +12,7 @@ define(function(require) {
   let dsaw = require('play/dsaw')
   let dbass = require('play/dbass')
   let ping = require('play/ping')
+  let swell = require('play/swell')
 
   // Players
   let nullPlayer = () => {}
@@ -26,6 +27,7 @@ define(function(require) {
     dsaw: standardPlayer(dsaw),
     dbass: standardPlayer(dbass),
     ping: standardPlayer(ping),
+    swell: standardPlayer(swell),
   };
   let playerInstances = {}
 
@@ -119,9 +121,11 @@ define(function(require) {
   }
 
   // Update
+  let beatReadout = document.getElementById('beat-readout')
   let tick = function () {
     let beat = metronome.update(system.timeNow());
     if (beat) {
+      beatReadout.innerText = beat.count
       for (let player of Object.values(playerInstances)) {
         if (typeof player === 'function') { player(beat) }
       }

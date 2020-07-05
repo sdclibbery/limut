@@ -35,7 +35,7 @@
   <div class="widget">
     <h1>Global</h1>
     <p>MainAmp: <span id="main-amp-readout"></span> <input id="main-amp-slider" type="range" min="0" max="200" oninput="mainAmpChange(parseFloat(this.value)/100)" style="width:80%;" /></p>
-    <p>bpm: <span id="bpm-readout"></span> MainReverb: <span id="main-reverb-readout"></span></p>
+    <p>bpm: <span id="bpm-readout"></span> beat: <span id="beat-readout"></span> MainReverb: <span id="main-reverb-readout"></span></p>
   </div>
   <div class="widget">
     <p>
@@ -85,6 +85,7 @@ Bass dbass 0, dur=8, attack=2, release=4, lpf=[300,1000,3000,1000]t8
 <p><code>dsaw</code> </p>
 <p><code>dbass</code> </p>
 <p><code>ping</code> </p>
+<p><code>swell</code> </p>
 <h3>Pattern syntax</h3>
 <p><code>x-o-</code> Sequence of events, each of duration <code>dur</code>, for use with <code>play</code></p>
 <p><code>x.</code> Use a dot for a rest</p>
@@ -122,23 +123,18 @@ Bass dbass 0, dur=8, attack=2, release=4, lpf=[300,1000,3000,1000]t8
 </body>
 <script data-main="main" src="require.js">
 /*
-x + operator: add values together
-x  do a proper parse to fix next UT
-x Strict mode for all code
-x / operator
-x * operator
-% operator: mod values into range
-^ operator: concat arrays
-- operator: subtract numbers
-display beat count
-? when evaluating time var, can it accept a decimal time? Do we pass event time rather than beat time?
+x display beat count
+x swell synth
 random timevar gens for params: {9} {0..9} {0.1..9} {0,1,3,4}
 linear and 's' time vars
-pattern char to extend duration of previous note (cf. to '.' for rest)
 <> for 'in sequence on each repeat' in patterns and params
+^ operator: concat arrays
+- operator: subtract numbers
+? when evaluating time var, can it accept a decimal time? Do we pass event time rather than beat time?
+operator precedence
+pattern char to extend duration of previous note (cf. to '.' for rest)
 ? What do nested [] mean in params?
 random timevar gens for patterns: {o-:}
-swell synth
 vib param
 allow dur to be tvar
 ?extract some of the playing stuff out of pattern.js?

@@ -70,7 +70,7 @@ define(function (require) {
     params.endTime = params.time + param(params.dur, 0.25)*params.beat.duration
 
     let vca = system.audio.createGain()
-    vca.gain.value = Math.max(0, 0.5 * param(params.amp, 1))
+    vca.gain.value = Math.max(0, 0.2 * param(params.amp, 1))
     source.connect(vca)
     system.mix(effects(params, vca))
 
