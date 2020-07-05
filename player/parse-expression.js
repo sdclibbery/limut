@@ -155,11 +155,17 @@ define(function(require) {
       if (char == '{') {
         let v = array(state, '{', '}', ':')
         if (debugParse) { console.log('random', v, state) }
-        if (v.length == 2) {
+        if (v.length == 1) {
+          let hi = v[0]
+          lhs = (s,b) => {
+            let ehi = evalParam(hi,s,b)
+            return Math.floor(Math.random()*(ehi+0.9999))
+          }
+        } else if (v.length == 2) {
           let lo = v[0]
           let hi = v[1]
           lhs = (s,b) => {
-            let elo = evalParam(lo,s,b)
+            let elo = evalParam(lo,s,b) || 0
             let ehi = evalParam(hi,s,b)
             return elo+Math.floor(Math.random()*(ehi-elo+0.9999))
           }
@@ -392,6 +398,28 @@ define(function(require) {
   assert(0, parseExpression('[5,6]%3')(1,1))
 
   p = parseExpression('{0:9}')
+  for (let i = 0; i<20; i+=1) {
+    assertIn(0, 9, p())
+    assert(true, Number.isInteger(p()))
+  }
+
+  p = parseExpression('{[0,10]:[9,19]}')
+  for (let i = 0; i<20; i+=1) {
+    assertIn(0, 9, p(0,0))
+    assert(true, Number.isInteger(p(0,0)))
+  }
+  for (let i = 0; i<20; i+=1) {
+    assertIn(10, 19, p(1,1))
+    assert(true, Number.isInteger(p(1,1)))
+  }
+
+  p = parseExpression('{:9}')
+  for (let i = 0; i<20; i+=1) {
+    assertIn(0, 9, p())
+    assert(true, Number.isInteger(p()))
+  }
+
+  p = parseExpression('{9}')
   for (let i = 0; i<20; i+=1) {
     assertIn(0, 9, p())
     assert(true, Number.isInteger(p()))
