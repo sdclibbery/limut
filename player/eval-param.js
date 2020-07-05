@@ -6,7 +6,7 @@ define((require) => {
       if (typeof v == 'function') { return evalParam(v, step, beat) }
       return v
     } else if (typeof value == 'function') {
-      let v = value(beat)
+      let v = value(step, beat)
       if (Array.isArray(v)) { return v }
       return evalParam(v, step, beat)
     } else {
@@ -29,7 +29,7 @@ define((require) => {
   assert(3, evalParam([1,2,3], 2, 0))
   assert(1, evalParam([1,2,3], 3, 0))
   assert(5, evalParam(() => 5, 0, 0))
-  assert(5, evalParam((x) => x, 0, 5))
+  assert(5, evalParam((x,y) => y, 0, 5))
   assert([1,2], evalParam([()=>[1,2]], 0, 0))
   assert([3,4], evalParam([()=>[1,2],()=>[3,4]], 1, 0))
 

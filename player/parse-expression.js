@@ -3,6 +3,9 @@ define(function(require) {
   let vars = require('vars')
   let evalParam = require('player/eval-param')
 
+  let debugParse = false
+  let debugEval = false
+
   let timeVar = (vs, ds) => {
     if (!Array.isArray(ds)) { ds = [ds] }
     let steps = []
@@ -14,9 +17,11 @@ define(function(require) {
       length += dur
       step += 1
     })
-    return (time) => {
-      time = time % length
-      let step = steps.filter(s => (time > s.time-0.0001)&&(time < s.time+s.duration-0.0001) )[0]
+    if (debugParse) { console.log('timeVar', steps) }
+    return (s,b) => {
+      b = b % length
+      let step = steps.filter(s => (b > s.time-0.0001)&&(b < s.time+s.duration-0.0001) )[0]
+      if (debugEval) { console.log('eval timeVar', steps, 'b:', b, 'step:', step) }
       return step && step.value
     }
   }
@@ -28,6 +33,7 @@ define(function(require) {
     return (s,b) => {
       let el = evalParam(l, s,b)
       let er = evalParam(r, s,b)
+      if (debugEval) { console.log('eval operator', 'l:',l,'r:',r, 'el:',el,'er:',er, 's:',s,'b:',b) }
       if (typeof(el) == 'number') {
         if (typeof(er) == 'number') {
           return op(el,er)
@@ -53,6 +59,7 @@ define(function(require) {
         break
       }
     }
+    if (debugParse) { console.log('array', result, state) }
     return result
   }
 
@@ -69,7 +76,11 @@ define(function(require) {
       }
       break
     }
-    return () => vars[key]
+    if (debugParse) { console.log('varLookup', key, state) }
+    return (s,b) => {
+      if (debugEval) { console.log('eval varLookup', 'key:',key, 'val:',vars[key], 's:',s,'b:',b) }
+      return evalParam(vars[key] ,s,b)
+    }
   }
 
   let number = (state) => {
@@ -85,10 +96,12 @@ define(function(require) {
       break
     }
     if (value == '') { return undefined }
+    if (debugParse) { console.log('number', value, state) }
     return parseFloat(value)
   }
 
   let expression = (state) => {
+    if (debugParse) { console.log('expression', state) }
     let lhs
     let char
     while (char = state.str.charAt(state.idx)) {
@@ -128,6 +141,7 @@ define(function(require) {
       // vars
       if (char == 'v') {
         lhs = varLookup(state)
+        continue
       }
       // number
       let n = number(state)
@@ -139,11 +153,13 @@ define(function(require) {
       if (char == '/') {
         state.idx += 1
         let rhs  = expression(state)
+        if (debugParse) { console.log('operator/', lhs, rhs, state) }
         return operator((l,r)=>l/r, lhs, rhs)
       }
       if (char == '+') {
         state.idx += 1
         let rhs  = expression(state)
+        if (debugParse) { console.log('operator+', lhs, rhs, state) }
         return operator((l,r)=>l+r, lhs, rhs)
       }
       break
@@ -152,6 +168,7 @@ define(function(require) {
   }
 
   let parseExpression = (v) => {
+    if (debugParse) { console.log('*** parseExpression', v) }
     v = v.trim().toLowerCase()
     let state = {
       str: v,
@@ -182,41 +199,41 @@ define(function(require) {
 
   let p
   p = parseExpression('(1,2)')
-  assert([1,2], p(0))
-  assert([1,2], p(1))
+  assert([1,2], p(0,0))
+  assert([1,2], p(1,1))
 
   p = parseExpression('[1,(2,3)]')
   assert(1, p[0])
-  assert([2,3], p[1]())
+  assert([2,3], p[1](0,0))
 
   assert(6, parseExpression('1+2+3'))
 
   p = parseExpression('[1,2]T1')
-  assert(1, p(0))
-  assert(1, p(1/2))
-  assert(2, p(1))
-  assert(2, p(3/2))
-  assert(1, p(2))
+  assert(1, p(0,0))
+  assert(1, p(0,1/2))
+  assert(2, p(0,1))
+  assert(2, p(0,3/2))
+  assert(1, p(0,2))
 
   p = parseExpression('[1,2]T')
-  assert(1, p(0))
-  assert(1, p(3.9))
-  assert(2, p(4))
+  assert(1, p(0,0))
+  assert(1, p(0,3.9))
+  assert(2, p(0,4))
 
   p = parseExpression('[1,2,3]T[1,2]')
-  assert(1, p(0))
-  assert(2, p(1))
-  assert(2, p(2))
-  assert(3, p(3))
-  assert(1, p(4))
+  assert(1, p(0,0))
+  assert(2, p(0,1))
+  assert(2, p(0,2))
+  assert(3, p(0,3))
+  assert(1, p(0,4))
 
   p = parseExpression('[(0,2),(1,3)]')
   assert([0,2], p[0]())
   assert([1,3], p[1]())
 
   p = parseExpression('[(0,2),(1,3)]T')
-  assert([0,2], p(0)())
-  assert([1,3], p(4)())
+  assert([0,2], p(0,0)())
+  assert([1,3], p(4,4)())
 
   vars.foo = 'bar'
   p = parseExpression('vars.foo')
@@ -232,36 +249,50 @@ define(function(require) {
   vars.foo = undefined
 
   p = parseExpression('[1,2]+[3,4] ')
-  assert(4, p(0))
-  assert(6, p(1))
-  assert(4, p(2))
+  assert(4, p(0,0))
+  assert(6, p(1,1))
+  assert(4, p(2,2))
 
-  // p = parseExpression('[1,2,3]+[4,5] ')
-  // assert(5, p(0))
-  // assert(7, p(1))
-  // assert(7, p(2))
-  // assert(6, p(3))
-  //
-  // p = parseExpression('[1,2]t1+3 ')
-  // assert(4, p(0,0))
-  // assert(5, p(0,1))
-  // assert(4, p(0,2))
-  //
-  // p = parseExpression('[1,2]t1+(3,4) ')
-  // assert([4,5], p(0,0))
-  // assert([5,6], p(0,1))
-  // assert([4,5], p(0,2))
-  //
-  // p = parseExpression(' [ 1 , 2 ] + 3 ')
-  // assert(4, p(0))
-  // assert(5, p(1))
-  // assert(4, p(2))
-  //
-  // p = parseExpression('vars.foo + (0,2)')
-  // vars.foo = parseExpression('[1,2]t1')
-  // assert([1,3], p(0))
-  // vars.foo = undefined
-  //
+  p = parseExpression(' [ 1 , 2 ] + 3 ')
+  assert(4, p(0,0))
+  assert(5, p(1,1))
+  assert(4, p(2,2))
+
+  p = parseExpression('1+[2,3]')
+  assert(3, p(0,0))
+  assert(4, p(1,1))
+  assert(3, p(2,2))
+
+  p = parseExpression('[1,2,3]+[4,5] ')
+  assert(5, p(0,0))
+  assert(7, p(1,1))
+  assert(7, p(2,2))
+  assert(6, p(3,3))
+
+  p = parseExpression('[1,2]t1+3 ')
+  assert(4, p(0,0))
+  assert(5, p(0,1))
+  assert(4, p(0,2))
+
+  p = parseExpression('3+[1,2]t1 ')
+  assert(4, p(0,0))
+  assert(5, p(0,1))
+  assert(4, p(0,2))
+
+  p = parseExpression('[1,2]t1+[3,4]t1')
+  assert(4, p(0,0))
+  assert(6, p(0,1))
+  assert(4, p(0,2))
+
+  p = parseExpression('2+vars.foo+2')
+  vars.foo = parseExpression('[1,2]t1')
+  assert(5, p(0,0))
+  assert(6, p(0,1))
+  assert(5, p(0,2))
+  vars.foo = parseExpression('5')
+  assert(9, p(0,3))
+  vars.foo = undefined
+
   // assert([4,5], parseExpression('(1,2)+3')())
   // assert([8,9], parseExpression('(1,2)+3+4 ')())
   // assert([4,6], parseExpression('(1,2)+(3,4) ')())
@@ -269,6 +300,16 @@ define(function(require) {
   // assert(3, parseExpression('(1)+2')())
   // assert(3, parseExpression('(1+2)')())
   // assert(6, parseExpression('(1+2)+3')())
+  //
+  // p = parseExpression('[1,2]t1+(3,4) ')
+  // assert([4,5], p(0,0))
+  // assert([5,6], p(0,1))
+  // assert([4,5], p(0,2))
+  //
+  // p = parseExpression('vars.foo + (0,2)')
+  // vars.foo = parseExpression('[1,2]t1')
+  // assert([1,3], p(0,0))
+  // vars.foo = undefined
 
   // [1,2]+(3,4) [(1,2)]+3 [1,2]+vars.foo 1+[2,3]+4+[5,6]t1+(7,8) ([1,2]+(3,4))
 

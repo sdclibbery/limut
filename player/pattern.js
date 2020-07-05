@@ -297,13 +297,13 @@ define(function(require) {
   // assert([{value:'0',time:0,delay:0,dur:1},{value:'0',time:1/2,delay:1/2,dur:1}], pattern(0))
   // assert([{value:'0',time:0,delay:0,dur:1},{value:'0',time:1/2,delay:1/2,dur:1}], pattern(1))
 
-  pattern = parsePattern('0', {amp:(x)=>x%3})
+  pattern = parsePattern('0', {amp:(_,x)=>x%3})
   assert([{value:'0',time:0,amp:0,dur:1}], pattern(0))
   assert([{value:'0',time:0,amp:1,dur:1}], pattern(1))
   assert([{value:'0',time:0,amp:2,dur:1}], pattern(2))
   assert([{value:'0',time:0,amp:0,dur:1}], pattern(3))
 
-  pattern = parsePattern('0', {amp:(x)=>[0,1]})
+  pattern = parsePattern('0', {amp:(_,x)=>[0,1]})
   assert([{value:'0',time:0,amp:0,dur:1},{value:'0',time:0,amp:1,dur:1}], pattern(0))
   assert([{value:'0',time:0,amp:0,dur:1},{value:'0',time:0,amp:1,dur:1}], pattern(1))
 
