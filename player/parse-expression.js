@@ -6,6 +6,7 @@ define(function(require) {
 
   let debugParse = false
   let debugEval = false
+  if (debugEval) { let original = evalParam; evalParam = (v,s,b) => { console.log('eval',v,s,b); return original(v,s,b)} }
 
   let timeVar = (vs, ds) => {
     if (!Array.isArray(ds)) { ds = [ds] }
@@ -146,7 +147,7 @@ define(function(require) {
         if (v.length == 1) {
           lhs = v[0]
         } else {
-          lhs = () => v
+          lhs = (s,b) => v.map(x => evalParam(x,s,b))
         }
         continue
       }
@@ -180,7 +181,7 @@ define(function(require) {
   }
 
   let parseExpression = (v) => {
-    if (debugParse) { console.log('*** parseExpression', v) }
+    if (debugParse || debugEval) { console.log('*** parseExpression', v) }
     v = v.trim().toLowerCase()
     let state = {
       str: v,
@@ -322,6 +323,12 @@ define(function(require) {
   p = parseExpression('vars.foo + (0,2)')
   vars.foo = parseExpression('[1,2]t1')
   assert([1,3], p(0,0))
+  vars.foo = undefined
+
+  p = parseExpression('(vars.foo,[3,4]t1)')
+  vars.foo = parseExpression('[1,2]t1')
+  assert([1,3], p(0,0))
+  assert([2,4], p(1,1))
   vars.foo = undefined
 
   // [1,2]+(3,4) [(1,2)]+3 [1,2]+vars.foo 1+[2,3]+4+[5,6]t1+(7,8) ([1,2]+(3,4))
