@@ -1,3 +1,4 @@
+'use strict';
 define(function(require) {
   let evalParam = require('player/eval-param')
 
@@ -108,7 +109,7 @@ define(function(require) {
         time = (patternStartTime + event.time) - count
         if (debug) { console.log('pst: ', patternStartTime, 'et: ', event.time, ' t/c: ', time, count) }
         if (time > -0.0001 && time < 0.9999) {
-          for (k in sourceEvent) {
+          for (let k in sourceEvent) {
             if (k != 'time' && k != 'delay' && k != 'value') {
               event[k] = evalParam(sourceEvent[k], stepIdx, count+time)
             }

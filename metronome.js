@@ -1,5 +1,4 @@
-// Music Domain
-
+'use strict';
 define(function (require) {
 
 var metronome = {};

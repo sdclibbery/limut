@@ -1,3 +1,4 @@
+'use strict';
 define(function (require) {
   let system = require('play/system');
   let effects = require('play/effects')
@@ -65,11 +66,11 @@ define(function (require) {
   return (params) => {
     let source = system.audio.createBufferSource()
     source.buffer = getBuffer(getUrl(params.sound))
-    source.playbackRate = params.rate || 1
+    source.playbackRate.value = params.rate || 1
     params.endTime = params.time + param(params.dur, 0.25)*params.beat.duration
 
     let vca = system.audio.createGain()
-    vca.gain.value = Math.max(0, 1.0 * param(params.amp, 1))
+    vca.gain.value = Math.max(0, 0.5 * param(params.amp, 1))
     source.connect(vca)
     system.mix(effects(params, vca))
 

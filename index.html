@@ -109,6 +109,7 @@ Bass dbass 0, dur=8, attack=2, release=4, lpf=[300,1000,3000,1000]t8
 <p><code>hpf</code> High pass filter frequency</p>
 <p><code>hpr</code> High pass filter resonance</p>
 <p><code>chop</code> Chop the signal into a number of parts per beat</p>
+<p><code>rate</code> Playback rate for 'play' samples</p>
 <h3>Param syntax</h3>
 <p><code>1</code> Single value</p>
 <p><code>(1,2)</code> Multiple values, all played together</p>
@@ -121,14 +122,14 @@ Bass dbass 0, dur=8, attack=2, release=4, lpf=[300,1000,3000,1000]t8
 /*
 x More samples - add all foxdot samples and sample param
 x github won't serve from underscore?
-+ operator: add values together
- do a proper parse to fix next UT
+x + operator: add values together
+x  do a proper parse to fix next UT
+x Strict mode for all code
+/ operator: repeat arrays, divide numbers
+* operator: repeat arrays, multiply numbers
+- operator: repeat arrays, subtract numbers
 % operator: mod values into range
 ^ operator: concat arrays
-* operator: repeat arrays, multiply numbers
-/ operator: repeat arrays, divide numbers
-- operator: repeat arrays, subtract numbers
-Strict mode for all code
 ? when evaluating time var, can it accept a decimal time? Do we pass event time rather than beat time?
 round brackets for chords in patterns
 random timevar gens for params: {9} {0..9} {0.1..9} {0,1,3,4}

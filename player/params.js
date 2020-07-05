@@ -1,3 +1,4 @@
+'use strict';
 define(function(require) {
   let parseExpression = require('player/parse-expression')
 

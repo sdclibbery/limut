@@ -1,3 +1,4 @@
+'use strict';
 define(function(require) {
   try { if (!AudioContext) { throw 1; } } catch(e) { document.body.innerHTML = 'Web Audio not supported in this browser!'; return; }
 

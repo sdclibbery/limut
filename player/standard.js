@@ -1,3 +1,4 @@
+'use strict';
 define(function(require) {
   var parsePattern = require('player/pattern');
   var parseParams = require('player/params');

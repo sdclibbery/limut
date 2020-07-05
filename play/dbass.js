@@ -1,3 +1,4 @@
+'use strict';
 define(function (require) {
   let system = require('play/system');
   let scale = require('music/scale');
@@ -15,7 +16,7 @@ define(function (require) {
     system.mix(effects(params, vca))
 
     let vcos = [0, 0.7, 1].map(lerp => {
-      vco = system.audio.createOscillator()
+      let vco = system.audio.createOscillator()
       vco.type = 'sawtooth';
       vco.frequency.value = freq
       vco.detune.value = lerp * detuneSemis*100

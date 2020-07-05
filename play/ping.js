@@ -1,3 +1,4 @@
+'use strict';
 define(function (require) {
   let system = require('play/system');
   let scale = require('music/scale');

@@ -1,3 +1,4 @@
+'use strict';
 define(function (require) {
 var system = require('play/system');
 let effects = require('play/effects')
