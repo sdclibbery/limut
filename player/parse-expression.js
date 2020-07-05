@@ -332,6 +332,7 @@ define(function(require) {
   vars.foo = undefined
 
   // [1,2]+(3,4) [(1,2)]+3 [1,2]+vars.foo 1+[2,3]+4+[5,6]t1+(7,8) ([1,2]+(3,4))
+  // tests for / operator
 
   console.log('Parse expression tests complete')
 
