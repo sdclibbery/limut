@@ -45,7 +45,7 @@ define(function (require) {
   let chop = (params, node) => {
     let chops = param(params.chop, 0)
     if (!chops) { return node }
-    lfo = system.audio.createOscillator()
+    let lfo = system.audio.createOscillator()
     lfo.type = 'square';
     lfo.frequency.value = chops / params.beat.duration
     let gain = system.audio.createGain()

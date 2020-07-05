@@ -21,10 +21,10 @@ define(function(require) {
     })
     if (debugParse) { console.log('timeVar', steps) }
     return (s,b) => {
-      b = b % length
-      let step = steps.filter(s => (b > s.time-0.0001)&&(b < s.time+s.duration-0.0001) )[0]
+      b = (b+0.0001) % length
+      let step = steps.filter(st => (b > st.time-0.0001)&&(b < st.time+st.duration-0.0001) )[0]
       if (debugEval) { console.log('eval timeVar', steps, 'b:', b, 'step:', step) }
-      return step && step.value
+      return (step !== undefined) && step.value
     }
   }
 
@@ -43,7 +43,7 @@ define(function(require) {
           return er.map(x => op(x,el))
         }
       } else {
-        if (typeof r == 'number') {
+        if (typeof er == 'number') {
           return el.map(x => op(x,er))
         } else {
           let result = []
