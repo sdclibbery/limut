@@ -25,8 +25,15 @@ define(function(require) {
     if (typeof l == 'number' && typeof (r) == 'number') {
       return op(l, r)
     }
-    alert('ToDo: Write me!')
-    // return function that evals then applies op, handling arrays
+    return (s,b) => {
+      let el = evalParam(l, s,b)
+      let er = evalParam(r, s,b)
+      if (typeof(el) == 'number') {
+        if (typeof(er) == 'number') {
+          return op(el,er)
+        }
+      }
+    }
   }
 
   let array = (state, open, close) => {
@@ -224,11 +231,11 @@ define(function(require) {
   assert(3, p[1]())
   vars.foo = undefined
 
-  // p = parseExpression('[1,2]+[3,4] ')
-  // assert(4, p(0))
-  // assert(6, p(1))
-  // assert(4, p(2))
-  //
+  p = parseExpression('[1,2]+[3,4] ')
+  assert(4, p(0))
+  assert(6, p(1))
+  assert(4, p(2))
+
   // p = parseExpression('[1,2,3]+[4,5] ')
   // assert(5, p(0))
   // assert(7, p(1))
