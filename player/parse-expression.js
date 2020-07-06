@@ -96,6 +96,33 @@ define(function(require) {
     }
   }
 
+  let evalRandom = (lo, hi) => {
+    if (!Number.isInteger(lo) || !Number.isInteger(hi)) {
+      return lo + Math.random() * (hi-lo)
+    } else {
+      return lo + Math.floor(Math.random() * (hi-lo+0.9999))
+    }
+  }
+  let random = (state) => {
+    let v = array(state, '{', '}', ':')
+    if (debugParse) { console.log('random', v, state) }
+    if (v.length == 1) {
+      let hi = v[0]
+      return (s,b) => {
+        let ehi = evalParam(hi,s,b)
+        return evalRandom(0, ehi)
+      }
+    } else if (v.length == 2) {
+      let lo = v[0]
+      let hi = v[1]
+      return (s,b) => {
+        let elo = evalParam(lo,s,b) || 0
+        let ehi = evalParam(hi,s,b)
+        return evalRandom(elo, ehi)
+      }
+    }
+  }
+
   let number = (state) => {
     let value = ''
     let char
@@ -153,23 +180,7 @@ define(function(require) {
       }
       // random
       if (char == '{') {
-        let v = array(state, '{', '}', ':')
-        if (debugParse) { console.log('random', v, state) }
-        if (v.length == 1) {
-          let hi = v[0]
-          lhs = (s,b) => {
-            let ehi = evalParam(hi,s,b)
-            return Math.floor(Math.random()*(ehi+0.9999))
-          }
-        } else if (v.length == 2) {
-          let lo = v[0]
-          let hi = v[1]
-          lhs = (s,b) => {
-            let elo = evalParam(lo,s,b) || 0
-            let ehi = evalParam(hi,s,b)
-            return elo+Math.floor(Math.random()*(ehi-elo+0.9999))
-          }
-        }
+        lhs = random(state)
         continue
       }
       // vars
@@ -423,6 +434,12 @@ define(function(require) {
   for (let i = 0; i<20; i+=1) {
     assertIn(0, 9, p())
     assert(true, Number.isInteger(p()))
+  }
+
+  p = parseExpression('{0.1:9}')
+  for (let i = 0; i<20; i+=1) {
+    assertIn(0, 9, p())
+    assert(false, Number.isInteger(p()))
   }
 
   console.log('Parse expression tests complete')

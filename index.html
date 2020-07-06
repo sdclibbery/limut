@@ -121,7 +121,10 @@ Bass dbass 0, dur=8, attack=2, release=4, lpf=[300,1000,3000,1000]t8
 <p><code>/</code> Divide values; eg 1/2</p>
 <p><code>*</code> Multiply values; eg lpf=[1,2,3]*1000</p>
 <p><code>%</code> Take remainder; eg (0,4,7,9)%7 is equivalent to (0,4,0,2)</p>
+<p><code>{9}</code> Select a different random integer every time, between 0 and 9</p>
+<p><code>{:9}</code> Select a different random integer every time, between 0 and 9</p>
 <p><code>{0:9}</code> Select a different random integer every time, between 0 and 9</p>
+<p><code>{0.1:9}</code> Select a different random floating point value every time, between 0.1 and 9</p>
 </div>
 </body>
 <script data-main="main" src="require.js">
