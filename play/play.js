@@ -30,14 +30,14 @@ define(function (require) {
     "4": "4",
   }
 
-  let getUrl = (char) => {
+  let getUrl = (char, sample) => {
     if (char == '.' || char == ' ') {
       return null
     } else if (symbols[char]) {
-      return "sample/symbol/"+symbols[char]+"/01.wav"
+      return "sample/symbol/"+symbols[char]+"/0"+sample+".wav"
     } else {
       let subdir = char.toUpperCase()==char ? "upper" : "lower"
-      return "sample/"+char.toLowerCase()+"/"+subdir+"/01.wav"
+      return "sample/"+char.toLowerCase()+"/"+subdir+"/0"+sample+".wav"
     }
   }
 
@@ -65,7 +65,7 @@ define(function (require) {
 
   return (params) => {
     let source = system.audio.createBufferSource()
-    source.buffer = getBuffer(getUrl(params.sound))
+    source.buffer = getBuffer(getUrl(params.sound, param(params.sample, 1)))
     source.playbackRate.value = params.rate || 1
     params.endTime = params.time + param(params.dur, 0.25)*params.beat.duration
 
