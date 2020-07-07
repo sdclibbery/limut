@@ -4,7 +4,7 @@ define(function(require) {
   let vars = require('vars')
   let evalParam = require('player/eval-param')
 
-  let debugParse = false
+  let debugParse = true
   let debugEval = false
   if (debugEval) { let original = evalParam; evalParam = (v,s,b) => { console.log('eval',v,s,b); return original(v,s,b)} }
 
@@ -126,9 +126,17 @@ define(function(require) {
   let number = (state) => {
     let value = ''
     let char
+    let sign = true
     while (char = state.str.charAt(state.idx)) {
       if (char == '') { break }
-      if ((char >= '0' && char <= '9') || char == '.' || char == '-' || char == 'e') {
+      if (sign && char == '-') {
+        sign = false
+        value += char
+        state.idx += 1
+        continue
+      }
+      if ((char >= '0' && char <= '9') || char == '.' || char == 'e') {
+        sign = false
         value += char
         state.idx += 1
         continue
@@ -142,7 +150,7 @@ define(function(require) {
 
   let expression = (state) => {
     if (debugParse) { console.log('expression', state) }
-    let lhs
+    let lhs = undefined
     let char
     while (char = state.str.charAt(state.idx)) {
       if (char == '') { break }
@@ -188,36 +196,44 @@ define(function(require) {
         lhs = varLookup(state)
         continue
       }
+      // operator
+      if (lhs !== undefined) {
+        if (char == '+') {
+          state.idx += 1
+          let rhs  = expression(state)
+          if (debugParse) { console.log('operator+', lhs, rhs, state) }
+          return operator((l,r)=>l+r, lhs, rhs)
+        }
+        if (char == '-') {
+          state.idx += 1
+          let rhs  = expression(state)
+          if (debugParse) { console.log('operator-', lhs, rhs, state) }
+          return operator((l,r)=>l-r, lhs, rhs)
+        }
+        if (char == '*') {
+          state.idx += 1
+          let rhs  = expression(state)
+          if (debugParse) { console.log('operator*', lhs, rhs, state) }
+          return operator((l,r)=>l*r, lhs, rhs)
+        }
+        if (char == '/') {
+          state.idx += 1
+          let rhs  = expression(state)
+          if (debugParse) { console.log('operator/', lhs, rhs, state) }
+          return operator((l,r)=>l/r, lhs, rhs)
+        }
+        if (char == '%') {
+          state.idx += 1
+          let rhs  = expression(state)
+          if (debugParse) { console.log('operator%', lhs, rhs, state) }
+          return operator((l,r)=>l%r, lhs, rhs)
+        }
+      }
       // number
       let n = number(state)
       if (n !== undefined) {
         lhs = n
         continue
-      }
-      // operator
-      if (char == '+') {
-        state.idx += 1
-        let rhs  = expression(state)
-        if (debugParse) { console.log('operator+', lhs, rhs, state) }
-        return operator((l,r)=>l+r, lhs, rhs)
-      }
-      if (char == '*') {
-        state.idx += 1
-        let rhs  = expression(state)
-        if (debugParse) { console.log('operator*', lhs, rhs, state) }
-        return operator((l,r)=>l*r, lhs, rhs)
-      }
-      if (char == '/') {
-        state.idx += 1
-        let rhs  = expression(state)
-        if (debugParse) { console.log('operator/', lhs, rhs, state) }
-        return operator((l,r)=>l/r, lhs, rhs)
-      }
-      if (char == '%') {
-        state.idx += 1
-        let rhs  = expression(state)
-        if (debugParse) { console.log('operator%', lhs, rhs, state) }
-        return operator((l,r)=>l%r, lhs, rhs)
       }
       break
     }
@@ -441,6 +457,8 @@ define(function(require) {
     assertIn(0, 9, p())
     assert(false, Number.isInteger(p()))
   }
+
+  assert(1, parseExpression('2-1'))
 
   console.log('Parse expression tests complete')
 

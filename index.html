@@ -118,6 +118,7 @@ d2 play [..--]</pre>
 <p><code>[1,2]T3</code> Timed sequence, each value lasts for 3 beats</p>
 <p><code>[1,2]T[12,4]</code> Timed sequence with one timing per value</p>
 <p><code>+</code> Add values together; eg [2,3]+4 is equivalent to [6,7]</p>
+<p><code>-</code> Subtract values; eg [2,3]-1 is equivalent to [1,2]</p>
 <p><code>/</code> Divide values; eg 1/2</p>
 <p><code>*</code> Multiply values; eg lpf=[1,2,3]*1000</p>
 <p><code>%</code> Take remainder; eg (0,4,7,9)%7 is equivalent to (0,4,0,2)</p>
@@ -133,14 +134,18 @@ x fix/curate examples
 x sample param
 x scale
 x more scales
-bar indicators and counters
+x bar indicators and counters
+x - operator: subtract numbers
+Pre for bar indicators
+rename vars and/or syntax
+some standard vars eg drop14_2=[1,0]t[14,2] etc
+swap default dur to 1/2? at least for play?
 drive
 room/mix params - cheap shared delay based - https://itnext.io/algorithmic-reverb-and-web-audio-api-e1ccec94621a
  - try doing feedback on the convolver???
 shape param
 vib
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
-rename vars and/or syntax
 sliders
 pan
 hpf
@@ -154,7 +159,7 @@ round brackets for chords in patterns
 linear and 's' time vars
 <> for 'in sequence on each repeat' in patterns and params
 ^ operator: concat arrays
-- operator: subtract numbers
+console and proper error reporting
 ? when evaluating time var, can it accept a decimal time? Do we pass event time rather than beat time?
 operator precedence
 pattern char to extend duration of previous note (cf. to '.' for rest)
