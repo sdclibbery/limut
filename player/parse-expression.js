@@ -77,12 +77,10 @@ define(function(require) {
   }
 
   let varLookup = (state) => {
-    if (state.str.substring(state.idx, state.idx+5) !== 'vars.') { return undefined }
-    state.idx += 5
     let key = ''
     let char
     while (char = state.str.charAt(state.idx)) {
-      if ((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || (char == '_')) {
+      if ((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || (char == '_') || (char == '.')) {
         key += char
         state.idx += 1
         continue
@@ -90,6 +88,7 @@ define(function(require) {
       break
     }
     if (debugParse) { console.log('varLookup', key, state) }
+    if (!key) { return }
     return (s,b) => {
       if (debugEval) { console.log('eval varLookup', 'key:',key, 'val:',vars[key], 's:',s,'b:',b) }
       return evalParam(vars[key] ,s,b)
@@ -191,11 +190,6 @@ define(function(require) {
         lhs = random(state)
         continue
       }
-      // vars
-      if (char == 'v') {
-        lhs = varLookup(state)
-        continue
-      }
       // operator
       if (lhs !== undefined) {
         if (char == '+') {
@@ -233,6 +227,14 @@ define(function(require) {
       let n = number(state)
       if (n !== undefined) {
         lhs = n
+        if (debugParse) { console.log('number', lhs, state) }
+        continue
+      }
+      // vars
+      let v = varLookup(state)
+      if (v !== undefined) {
+        lhs = v
+        if (debugParse) { console.log('var', lhs, state) }
         continue
       }
       break
@@ -312,13 +314,18 @@ define(function(require) {
   assert([1,3], p(4,4)())
 
   vars.foo = 'bar'
-  p = parseExpression('vars.foo')
+  p = parseExpression('foo')
   vars.foo = 'baz'
   assert('baz', p())
   vars.foo = undefined
 
+  vars['foo.woo'] = 'bar'
+  p = parseExpression('foo.woo')
+  assert('bar', p())
+  vars['foo.woo'] = undefined
+
   vars.foo = 2
-  p = parseExpression('[1,vars.foo]')
+  p = parseExpression('[1,foo]')
   vars.foo = 3
   assert(1, p[0])
   assert(3, p[1]())
@@ -360,7 +367,7 @@ define(function(require) {
   assert(6, p(0,1))
   assert(4, p(0,2))
 
-  p = parseExpression('2+vars.foo+2')
+  p = parseExpression('2+foo+2')
   vars.foo = parseExpression('[1,2]t1')
   assert(5, p(0,0))
   assert(6, p(0,1))
@@ -383,12 +390,12 @@ define(function(require) {
   assert([5,6], p(0,1))
   assert([4,5], p(0,2))
 
-  p = parseExpression('vars.foo + (0,2)')
+  p = parseExpression('foo + (0,2)')
   vars.foo = parseExpression('[1,2]t1')
   assert([1,3], p(0,0))
   vars.foo = undefined
 
-  p = parseExpression('(vars.foo,[3,4]t1)')
+  p = parseExpression('(foo,[3,4]t1)')
   vars.foo = parseExpression('[1,2]t1')
   assert([1,3], p(0,0))
   assert([2,4], p(1,1))

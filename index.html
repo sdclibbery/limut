@@ -38,8 +38,8 @@
 <body>
   <div class="widget">
     <h1>Global</h1>
-    <p>MainAmp: <span id="main-amp-readout"></span> <input id="main-amp-slider" type="range" min="0" max="200" oninput="mainAmpChange(parseFloat(this.value)/100)" style="width:80%;" /></p>
-    <p>MainReverb: <span id="main-reverb-readout"></span> Scale: <span id="scale-readout"></span></p>
+    <p>main.amp: <span id="main-amp-readout"></span> <input id="main-amp-slider" type="range" min="0" max="200" oninput="mainAmpChange(parseFloat(this.value)/100)" style="width:80%;" /></p>
+    <p>main.reverb: <span id="main-reverb-readout"></span> Scale: <span id="scale-readout"></span></p>
     <p>bpm: <span id="bpm-readout"></span> beat: <span class="beat-readout" id="beat-readout"></span> <span class="beat-readout" id="beat3-readout"></span> <span class="beat-readout" id="beat4-readout"></span> <span class="beat-readout" id="beat16-readout"></span> <span class="beat-readout" id="beat32-readout"></span></p>
   </div>
   <div class="widget">
@@ -56,28 +56,28 @@ Examples:
 <pre>d1 play x-o-, dur=1/2</pre>
 <pre>p1 dsaw 0534, add=(0,2,4), dur=4</pre>
 <pre>Ba dbass 0, add={0:2}*2, lpf={3:12}*100, dur=1/4, attack=0</pre>
-<pre>vars.ch = [0,2,-2,3]t8
-p1 dbass 0-100, dur=1, chop=[2,2.5,3]t1, add=vars.ch, echo=(1/17,1/23)
+<pre>chords = [0,2,-2,3]t8
+p1 dbass 0-100, dur=1, chop=[2,2.5,3]t1, add=chords, echo=(1/17,1/23)
 k play X, lpf=800
 s play .*
 hh play -, echo=1/4, amp=2
-arp ping 04794697, dur=1/4, echo=3/8, add=vars.ch, lpf=[10000,1000]t[24,8]
-main dsaw 0, dur=8, add=vars.ch, detune=(0,0.1,0.3), chop=[0,2,3]t32, amp=0.5</pre>
+arp ping 04794697, dur=1/4, echo=3/8, add=chords, lpf=[10000,1000]t[24,8]
+main dsaw 0, dur=8, add=chords, detune=(0,0.1,0.3), chop=[0,2,3]t32, amp=0.5</pre>
 <pre>Perc play lstig, dur=[1,3,2], amp=0.2, echo=1/8
 Amb ping 0[21]., dur=4, release=8, detune=[(0,0.3,0.7,1.3),(0,0.5,0.9,1.4)]t4
 Bass dbass 0, dur=8, attack=2, release=4, lpf=[300,1000,3000,1000]t8</pre>
-<pre>vars.Mainreverb = 10
+<pre>Main.reverb = 10
 Ba dbass 004[21], dur=4, amp=1.5
 Kd play x[.x]x., dur=2
 Sn play .o, dur=2</pre>
-<pre>vars.bpm = 140
+<pre>bpm = 140
 d1 play x
 d2 play [..--]</pre>
 <h3>predefined vars</h3>
-<p><code>vars.bpm</code> Beats per minute</p>
-<p><code>vars.mainamp</code> Main mix amplitude control</p>
-<p><code>vars.mainreverb</code> Main reverb amplitude control</p>
-<p><code>vars.scale</code> Scale eg minor, major, chromatic, majorpentatonic, lydian etc etc</p>
+<p><code>bpm</code> Beats per minute</p>
+<p><code>main.amp</code> Main mix amplitude control</p>
+<p><code>main.reverb</code> Main reverb amplitude control</p>
+<p><code>scale</code> Scale eg minor, major, chromatic, majorpentatonic, lydian etc etc</p>
 <h3>Synths</h3>
 <p><code>! / stop / none</code> </p>
 <p><code>play</code> Play samples. Use letters, symbols and digits 1-4 in the pattern to choose the sample</p>
@@ -137,8 +137,8 @@ x scale
 x more scales
 x bar indicators and counters
 x - operator: subtract numbers
-Pre for bar indicators
-rename vars and/or syntax
+x Pre for bar indicators
+x rename vars and/or syntax
 some standard vars eg drop14_2=[1,0]t[14,2] etc
 swap default dur to 1/2? at least for play?
 drive

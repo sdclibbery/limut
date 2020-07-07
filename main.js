@@ -35,15 +35,15 @@ define(function(require) {
   let mainVars = {
     bpm: (command) => metronome.bpm(eval(parseExpression(command))),
     scale: (command) => window.scaleChange(command.toLowerCase()),
-    mainamp: (command) => window.mainAmpChange(eval(parseExpression(command))),
-    mainreverb: (command) => window.mainReverbChange(eval(parseExpression(command))),
+    'main.amp': (command) => window.mainAmpChange(eval(parseExpression(command))),
+    'main.reverb': (command) => window.mainReverbChange(eval(parseExpression(command))),
   }
 
   let parseLine = (line) => {
     line = line.trim()
-    if (line.toLowerCase().startsWith('vars.')) {
-      let [k,v] = line.split('=').map(p => p.trim()).filter(p => p != '')
-      k = k.toLowerCase().replace('vars.', '')
+    let [k,v] = line.split('=').map(p => p.trim()).filter(p => p != '')
+    k = k.toLowerCase()
+    if (k.match(/^[a-z][a-z0-9_\.]*$/)) {
       if (typeof mainVars[k] == 'function') {
         mainVars[k](v)
       } else {
