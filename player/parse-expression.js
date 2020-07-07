@@ -4,7 +4,7 @@ define(function(require) {
   let vars = require('vars')
   let evalParam = require('player/eval-param')
 
-  let debugParse = true
+  let debugParse = false
   let debugEval = false
   if (debugEval) { let original = evalParam; evalParam = (v,s,b) => { console.log('eval',v,s,b); return original(v,s,b)} }
 

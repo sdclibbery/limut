@@ -22,6 +22,7 @@
     }
     span.beat-readout {
       font-weight: normal;
+      font-family: courier, mono;
     }
     .info {
       width: 100%;
@@ -39,7 +40,7 @@
     <h1>Global</h1>
     <p>MainAmp: <span id="main-amp-readout"></span> <input id="main-amp-slider" type="range" min="0" max="200" oninput="mainAmpChange(parseFloat(this.value)/100)" style="width:80%;" /></p>
     <p>MainReverb: <span id="main-reverb-readout"></span> Scale: <span id="scale-readout"></span></p>
-    <p>bpm: <span id="bpm-readout"></span> beat: <span id="beat-readout"></span> <span class="beat-readout" id="beat3-readout"></span>/3 <span class="beat-readout" id="beat4-readout"></span>/4 <span class="beat-readout" id="beat12-readout"></span>/12 <span class="beat-readout" id="beat16-readout"></span>/16 <span class="beat-readout" id="beat32-readout"></span>/32</p>
+    <p>bpm: <span id="bpm-readout"></span> beat: <span class="beat-readout" id="beat-readout"></span> <span class="beat-readout" id="beat3-readout"></span> <span class="beat-readout" id="beat4-readout"></span> <span class="beat-readout" id="beat16-readout"></span> <span class="beat-readout" id="beat32-readout"></span></p>
   </div>
   <div class="widget">
     <p>
