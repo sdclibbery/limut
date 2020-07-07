@@ -1,13 +1,89 @@
+'use strict';
 define(function (require) {
-  let scale = {}
 
   let scales = {
-    minor: [0,2,3,5,7,8,10],
-    major: [0,2,4,5,7,9,11],
+    chromatic       :[0,1,2,3,4,5,6,7,8,9,10,11],
+
+    major           :[0,2,4,5,7,9,11],
+    majorpentatonic :[0,2,4,7,9],
+
+    minor           :[0,2,3,5,7,8,10],
+    aeolian         :[0,2,3,5,7,8,10],
+    minorpentatonic :[0,3,5,7,10],
+
+    mixolydian      :[0,2,4,5,7,9,10],
+
+    melodicminor    :[0,2,3,5,7,9,11],
+    melodicmajor    :[0,2,4,5,7,8,11],
+
+    harmonicminor   :[0,2,3,5,7,8,11],
+    harmonicmajor   :[0,2,4,5,7,8,11],
+
+    dorian          :[0,2,3,5,7,9,10],
+    dorian2         :[0,1,3,5,6,8,9,11],
+    diminished      :[0,1,3,4,6,7,9,10],
+
+    egyptian        :[0,2,5,7,10],
+    yu              :[0,3,5,7,10],
+    zhi             :[0,2,5,7,9],
+    phrygian        :[0,1,3,5,7,8,10],
+    prometheus      :[0,2,4,6,11],
+    indian          :[0,4,5,7,10],
+
+    locrian         :[0,1,3,5,6,8,10],
+    locrianmajor    :[0,2,4,5,6,8,10],
+
+    lydian          :[0,2,4,6,7,9,11],
+    lydianminor     :[0,2,4,6,7,8,10],
+
+    hungarianminor  :[ 0, 2, 3, 6, 7, 8, 11 ],
+    romanianminor   :[ 0, 2, 3, 6, 7, 9, 10 ],
+    chinese         :[ 0, 4, 6, 7, 11 ],
+
+    wholetone       :[ 0, 2, 4, 6, 8, 10 ],
+
+    // Half-Whole Diminished Scale - halfWhole
+    halfwhole       :[ 0, 1, 3, 4, 6, 7, 9, 10 ],
+    // Whole-Half Diminished Scale - wholeHalf
+    wholehalf       :[ 0, 2, 3, 5, 6, 8, 9, 11 ],
+
+    // Bebop Scales ###
+    bebopmaj        :[ 0, 2, 4, 5, 7, 8, 9, 11 ],
+    bebopdorian     :[ 0, 2, 3, 4, 5, 9, 10 ],
+    bebopdom        :[ 0, 2, 4, 5, 7, 9, 10, 11 ],
+    bebopmelmin     :[ 0, 2, 3, 5, 7, 8, 9, 11 ],
+    blues           :[ 0, 3, 5, 6, 7, 10 ],
+
+    // Modes of the Melodic Minor Scale ###
+    // First mode - Min/Maj chord
+    minmaj         :[ 0, 2, 3, 5, 7, 9, 11 ],
+    // Second mode - (x)susb9
+    susb9          :[ 0, 1, 3, 5, 7, 9, 10 ],
+    // Third Mode - Lydian Augmented, (x)Maj7#5
+    lydianaug      :[ 0, 2, 4, 6, 8, 9, 11 ],
+    // Fourth Mode - Lydian Dominant, (x)7#11
+    lydiandom      :[ 0, 2, 4, 6, 7, 9, 10 ],
+    // Fifth Mode - seldom used, but it's IMinMaj/V
+    melmin5th      :[ 0, 2, 4, 5, 7, 8, 10 ],
+    // Sixth Mode - half-diminished (aka Locrian #2), (x)half-diminished
+    halfdim      :[ 0, 2, 3, 5, 6, 8, 10 ],
+    // Seventh Mode - altered (diminished whole-tone), (x)7alt
+    altered      :[ 0, 1, 3, 4, 6, 8, 10 ],
   }
-  let currentScale = scales.minor
+  let scale = {
+    scales: scales,
+    current: 'minor',
+  }
+
+  scale.set = (s) => {
+    if (scales[s]) {
+      scale.current = s
+    }
+    return scale.current
+  }
 
   scale.degreeToFreq = (degree, octave) => {
+    let currentScale = scales[scale.current]
     let octDelta = Math.floor(degree / currentScale.length)
     let oct = octave - 4 + octDelta
     let chromatic = currentScale[(degree + currentScale.length*100) % currentScale.length] + oct*12
@@ -27,6 +103,12 @@ define(function (require) {
   assert(523.3, scale.degreeToFreq(0, 5))
   assert(415.3, scale.degreeToFreq(5, 4))
   assert(233.1, scale.degreeToFreq(-1, 4))
+
+  scale.current = 'chromatic'
+  assert(261.6, scale.degreeToFreq(0, 4))
+  assert(415.3, scale.degreeToFreq(8, 4))
+  scale.current = 'minor'
+
   console.log('Scale tests complete')
 
   return scale

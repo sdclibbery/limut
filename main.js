@@ -4,6 +4,7 @@ define(function(require) {
 
   let system = require('play/system');
   let metronome = require('metronome');
+  let scale = require('music/scale');
   let standardPlayer = require('player/standard')
   let parseExpression = require('player/parse-expression')
   let vars = require('vars')
@@ -32,9 +33,10 @@ define(function(require) {
   let playerInstances = {}
 
   let mainVars = {
-    bpm: (command) => metronome.bpm(eval(command)),
-    mainamp: (command) => window.mainAmpChange(eval(command)),
-    mainreverb: (command) => window.mainReverbChange(eval(command)),
+    bpm: (command) => metronome.bpm(eval(parseExpression(command))),
+    scale: (command) => window.scaleChange(command.toLowerCase()),
+    mainamp: (command) => window.mainAmpChange(eval(parseExpression(command))),
+    mainreverb: (command) => window.mainReverbChange(eval(parseExpression(command))),
   }
 
   let parseLine = (line) => {
@@ -42,10 +44,10 @@ define(function(require) {
     if (line.toLowerCase().startsWith('vars.')) {
       let [k,v] = line.split('=').map(p => p.trim()).filter(p => p != '')
       k = k.toLowerCase().replace('vars.', '')
-      v = parseExpression(v)
       if (typeof mainVars[k] == 'function') {
         mainVars[k](v)
       } else {
+        v = parseExpression(v)
         vars[k] = v
       }
       return
@@ -91,6 +93,16 @@ define(function(require) {
     mainReverbReadout.innerText = mainReverb.toFixed(2)
   }
   window.mainReverbChanged(system.mainReverb())
+
+  // Scale ui
+  let scaleReadout = document.getElementById('scale-readout')
+  window.scaleChange = function (s) {
+    window.scaleChanged(scale.set(s))
+  }
+  window.scaleChanged = function (s) {
+    scaleReadout.innerText = s
+  }
+  window.scaleChanged(scale.current)
 
   // Play/stop ui
   let codeTextArea = document.getElementById('code')

@@ -35,7 +35,8 @@
   <div class="widget">
     <h1>Global</h1>
     <p>MainAmp: <span id="main-amp-readout"></span> <input id="main-amp-slider" type="range" min="0" max="200" oninput="mainAmpChange(parseFloat(this.value)/100)" style="width:80%;" /></p>
-    <p>bpm: <span id="bpm-readout"></span> beat: <span id="beat-readout"></span> MainReverb: <span id="main-reverb-readout"></span></p>
+    <p>MainReverb: <span id="main-reverb-readout"></span> Scale: <span id="scale-readout"></span></p>
+    <p>bpm: <span id="bpm-readout"></span> beat: <span id="beat-readout"></span></p>
   </div>
   <div class="widget">
     <p>
@@ -72,6 +73,7 @@ d2 play [..--]</pre>
 <p><code>vars.bpm</code> Beats per minute</p>
 <p><code>vars.mainamp</code> Main mix amplitude control</p>
 <p><code>vars.mainreverb</code> Main reverb amplitude control</p>
+<p><code>vars.scale</code> Scale eg minor, major, chromatic, majorpentatonic, lydian etc etc</p>
 <h3>Synths</h3>
 <p><code>! / stop / none</code> </p>
 <p><code>play</code> Play samples. Use letters, symbols and digits 1-4 in the pattern to choose the sample</p>
@@ -124,23 +126,26 @@ d2 play [..--]</pre>
 </body>
 <script data-main="main" src="require.js">
 /*
-x license and readme
-x random timevar gens for params: {9} {:9} {0:9} {0.1:9}
 x fix/curate examples
-sample param
-scale
+x sample param
+x scale
+x more scales
 drive
+room/mix params - cheap shared delay based - https://itnext.io/algorithmic-reverb-and-web-audio-api-e1ccec94621a
+ - try doing feedback on the convolver???
 shape param
 vib
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
+rename vars and/or syntax
+sliders
 pan
 hpf
 bpf
 root
 formant
+scale
 piano synth  https://abbernie.github.io/tune/  https://www.npmjs.com/package/@tonejs/piano
 klank synth
-room/mix params - cheap shared delay based - https://itnext.io/algorithmic-reverb-and-web-audio-api-e1ccec94621a
 round brackets for chords in patterns
 linear and 's' time vars
 <> for 'in sequence on each repeat' in patterns and params
