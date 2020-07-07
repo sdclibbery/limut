@@ -134,10 +134,20 @@ define(function(require) {
 
   // Update
   let beatReadout = document.getElementById('beat-readout')
+  let beat3Readout = document.getElementById('beat3-readout')
+  let beat4Readout = document.getElementById('beat4-readout')
+  let beat12Readout = document.getElementById('beat12-readout')
+  let beat16Readout = document.getElementById('beat16-readout')
+  let beat32Readout = document.getElementById('beat32-readout')
   let tick = function () {
     let beat = metronome.update(system.timeNow());
     if (beat) {
       beatReadout.innerText = beat.count
+      beat3Readout.innerText = beat.count % 3
+      beat4Readout.innerText = beat.count % 4
+      beat12Readout.innerText = beat.count % 12
+      beat16Readout.innerText = beat.count % 16
+      beat32Readout.innerText = beat.count % 32
       for (let player of Object.values(playerInstances)) {
         if (typeof player === 'function') { player(beat) }
       }
