@@ -14,10 +14,10 @@ define(function(require) {
     return [parts[0], parts.slice(1).join()]
   }
 
-  return (play) => (command) => {
+  return (play, defaultDur) => (command) => {
     let [patternStr, paramsStr] = splitOnFirst(command, ',')
     let params = parseParams(paramsStr)
-    let pattern = parsePattern(patternStr, params)
+    let pattern = parsePattern(patternStr, params, defaultDur)
     return (beat) => {
       let eventsForBeat = pattern(beat.count)
       eventsForBeat.forEach(event => {

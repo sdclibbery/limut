@@ -1,6 +1,7 @@
 'use strict';
 define(function(require) {
   let evalParam = require('player/eval-param')
+  let param = require('player/default-param')
 
   let debug = false
 
@@ -72,10 +73,10 @@ define(function(require) {
     return [event]
   }
 
-  let parsePattern = (pattern, params) => {
+  let parsePattern = (pattern, params, defaultDur) => {
     if (!pattern) { return () => [] }
     let steps = parsePatternString(pattern)
-    let dur = params.dur || 1
+    let dur = param(param(params.dur, defaultDur), 1)
     if (!Array.isArray(dur)) { dur = [dur] }
     let stepData = {
       time: 0,

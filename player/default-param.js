@@ -2,7 +2,7 @@
 define((require) => {
 
   let evalParam = (value, def) => {
-    if (value === null || value === undefined || isNaN(value)) {
+    if (value === null || value === undefined || (typeof(value) == 'number' && isNaN(value))) {
       value = def
     }
     return value

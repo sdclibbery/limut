@@ -23,8 +23,8 @@ define(function(require) {
     stop: nullPlayer,
     '!': nullPlayer,
     // instruments
-    drums: standardPlayer(percussion.play),
-    play: standardPlayer(play),
+    drums: standardPlayer(percussion.play, 1/2),
+    play: standardPlayer(play, 1/2),
     dsaw: standardPlayer(dsaw),
     dbass: standardPlayer(dbass),
     ping: standardPlayer(ping),
