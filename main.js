@@ -39,6 +39,7 @@ define(function(require) {
     'main.reverb': (command) => window.mainReverbChange(eval(parseExpression(command))),
   }
 
+
   let parseLine = (line) => {
     line = line.trim()
     let [k,v] = line.split('=').map(p => p.trim()).filter(p => p != '')
@@ -142,10 +143,10 @@ define(function(require) {
     let beat = metronome.update(system.timeNow());
     if (beat) {
       beatReadout.innerText = beat.count
-      beat3Readout.innerText = beat.count % 3 + '/3'
-      beat4Readout.innerText = beat.count % 4 + '/4'
-      beat16Readout.innerText = beat.count % 16 + '/16'
-      beat32Readout.innerText = beat.count % 32 + '/32'
+      beat3Readout.innerText = (beat.count%3 + 1) + '/3'
+      beat4Readout.innerText = (beat.count%4 + 1) + '/4'
+      beat16Readout.innerText = (beat.count%16 + 1) + '/16'
+      beat32Readout.innerText = (beat.count%32 + 1) + '/32'
       for (let player of Object.values(playerInstances)) {
         if (typeof player === 'function') { player(beat) }
       }

@@ -1,8 +1,7 @@
 'use strict';
 define(function(require) {
-  let system = require('play/system')
-
-  let vars = {}
+  let vars = {
+  }
 
   return vars
 })
