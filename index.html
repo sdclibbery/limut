@@ -55,7 +55,7 @@
 Examples:
 <pre>d1 play x-o-</pre>
 <pre>p1 dsaw 0534, add=(0,2,4), dur=4</pre>
-<pre>Ba dbass 0, add={0:2}*2, lpf={3:12}*100, dur=1/4, attack=0</pre>
+<pre>Ba dbass 0, add={0:2}*2, lpf={3:12}*100, dur=1/4, att=0</pre>
 <pre>chords = [0,2,-2,3]t8
 p1 dbass 0-100, dur=1, chop=[2,2.5,3]t1, add=chords, echo=(1/17,1/23)
 k play X., lpf=800
@@ -65,7 +65,7 @@ arp ping 04794697, dur=1/4, echo=3/8, add=chords, lpf=[10000,1000]t[24,8]
 main dsaw 0, dur=8, add=chords, detune=(0,0.1,0.3), chop=[0,2,3]t32, amp=0.5</pre>
 <pre>Perc play lstig, dur=[1,3,2], amp=0.2, echo=1/8
 Amb ping 0[21]., dur=4, release=8, detune=[(0,0.3,0.7,1.3),(0,0.5,0.9,1.4)]t4
-Bass dbass 0, dur=8, attack=2, release=4, lpf=[300,1000,3000,1000]t8</pre>
+Bass dbass 0, dur=8, att=2, rel=4, lpf=[300,1000,3000,1000]t8</pre>
 <pre>Main.reverb = 10
 Ba dbass 004[21], dur=4, amp=1.5
 Kd play x[.x]x., dur=2
@@ -96,11 +96,11 @@ d2 play .[--]</pre>
 <h3>params</h3>
 <p><code>amp</code> Player amplitude control</p>
 <p><code>oct</code> Octave</p>
-<p><code>attack</code> Attack time in beats</p>
+<p><code>att</code> Attack time in beats</p>
 <p><code>decay</code> Decay time in beats</p>
 <p><code>sus</code> Sustain time in beats</p>
 <p><code>suslevel</code> Sustain amplitude control</p>
-<p><code>release</code> Release time in beats</p>
+<p><code>rel</code> Release time in beats</p>
 <p><code>dur</code> Event time in beats</p>
 <p><code>delay</code> Event start time offset in beats</p>
 <p><code>echo</code> Echo time delay in beats</p>
@@ -134,6 +134,7 @@ d2 play .[--]</pre>
 /*
 x swap default dur to 1/2 for play (and document)
 x pattern char '_' to extend duration of previous note (cf. to '.' for rest)
+shorten param names: attack, release
 linear and 's' time vars
 shape param
 room/mix params - cheap shared delay based - https://itnext.io/algorithmic-reverb-and-web-audio-api-e1ccec94621a
