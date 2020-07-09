@@ -46,15 +46,19 @@ define(function(require) {
       if (Array.isArray(value)) {
         getEvents(value, stepData, [dur / value.length], params)
       } else {
-        event = {value:value, time:stepData.time}
-        for (let k in params) {
-          event[k] = params[k]
+        if (value == '_') {
+          stepData.events[stepData.events.length-1].dur += dur
+        } else {
+          event = {value:value, time:stepData.time}
+          for (let k in params) {
+            event[k] = params[k]
+          }
+          event.dur = dur
+          stepData.events.push(event)
+          stepIdx = stepIdx + 1
         }
-        event.dur = dur
-        stepData.events.push(event)
         stepData.time += dur
         stepData.patternLength += dur
-        stepIdx = stepIdx + 1
       }
     })
   }
@@ -308,6 +312,16 @@ define(function(require) {
   pattern = parsePattern('0', {amp:(_,x)=>[0,1]})
   assert([{value:'0',time:0,amp:0,dur:1},{value:'0',time:0,amp:1,dur:1}], pattern(0))
   assert([{value:'0',time:0,amp:0,dur:1},{value:'0',time:0,amp:1,dur:1}], pattern(1))
+
+  pattern = parsePattern('0_', {})
+  assert([{value:'0',time:0,dur:2}], pattern(0))
+  assert([], pattern(1))
+  assert([{value:'0',time:0,dur:2}], pattern(2))
+
+  pattern = parsePattern('0[_1]', {})
+  assert([{value:'0',time:0,dur:1.5}], pattern(0))
+  assert([{value:'1',time:1/2,dur:1/2}], pattern(1))
+  assert([{value:'0',time:0,dur:1.5}], pattern(2))
 
   console.log("Pattern tests complete")
 

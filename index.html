@@ -88,9 +88,10 @@ d2 play .[--]</pre>
 <p><code>swell</code> </p>
 <h3>Pattern syntax</h3>
 <p><code>x-o-</code> Sequence of events, each of duration <code>dur</code>, for use with <code>play</code></p>
-<p><code>x.</code> Use a dot for a rest</p>
 <p><code>0123</code> Sequence of events, each of duration <code>dur</code>, for use with tonal synths. Numbers are scale degrees</p>
 <p><code>0-1-2-3</code> Negative scale degrees allow tones below the synth root pitch</p>
+<p><code>x.</code> Use a dot for a rest</p>
+<p><code>0_[_1]</code> Use underscore to extend the previous note duration</p>
 <p><code>0[123]</code> Square brackets to fit multiple events into one <code>dur</code> (triplet shown)</p>
 <h3>params</h3>
 <p><code>amp</code> Player amplitude control</p>
@@ -131,17 +132,18 @@ d2 play .[--]</pre>
 </body>
 <script data-main="main" src="require.js">
 /*
-x Pre for bar indicators
-x rename vars and/or syntax
-swap default dur to 1/2 for play (and document)
-pattern char to extend duration of previous note (cf. to '.' for rest)
-drive param
-Report the gain reduction from the compressor, maybe even have a longer term feedback based on it?
+x swap default dur to 1/2 for play (and document)
+x pattern char '_' to extend duration of previous note (cf. to '.' for rest)
+linear and 's' time vars
+shape param
 room/mix params - cheap shared delay based - https://itnext.io/algorithmic-reverb-and-web-audio-api-e1ccec94621a
- - try doing feedback on the convolver???
+ - try doing feedback on a short convolver???
+piano synth  https://abbernie.github.io/tune/  https://www.npmjs.com/package/@tonejs/piano
+console and proper error reporting
+better musicality: extending patterns like every/sometimes/offadd/stutter etc
 vib
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
-shape param
+drive param
 sliders
 pan
 hpf
@@ -149,14 +151,12 @@ bpf
 root
 formant
 scale
-piano synth  https://abbernie.github.io/tune/  https://www.npmjs.com/package/@tonejs/piano
 klank synth
 slide param
 round brackets for chords in patterns
-linear and 's' time vars
+Report the gain reduction from the compressor, maybe even have a longer term feedback based on it?
 <> for 'in sequence on each repeat' in patterns and params
 ^ operator: concat arrays
-console and proper error reporting
 ? when evaluating time var, can it accept a decimal time? Do we pass event time rather than beat time?
 operator precedence
 ? What do nested [] mean in params?
