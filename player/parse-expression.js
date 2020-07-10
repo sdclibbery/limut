@@ -2,6 +2,7 @@
 define(function(require) {
 
   let vars = require('vars')
+  let param = require('player/default-param')
   let evalParam = require('player/eval-param')
 
   let debugParse = false
@@ -55,7 +56,7 @@ define(function(require) {
     }
   }
 
-  let array = (state, open, close, seperator) => {
+  let doArray = (state, open, close, seperator) => {
     let result = []
     let char
     while (char = state.str.charAt(state.idx)) {
@@ -66,14 +67,47 @@ define(function(require) {
       } else if (char == seperator) {
         state.idx += 1
         let v = expression(state)
-        result.push(v)
+        if (v !== undefined) { result.push(v) }
       } else if (char == close) {
         state.idx += 1
         break
+      } else {
+        return undefined
       }
     }
-    if (debugParse) { console.log('array', result, state) }
+    if (debugParse) { console.log('doArray', result, state) }
     return result
+  }
+  let array = (state, open, close) => {
+    let tryState = Object.assign({}, state)
+    let commaArray = doArray(tryState, open, close, ',')
+    if (commaArray != undefined) {
+      Object.assign(state, tryState)
+      commaArray.seperator = ','
+      if (debugParse) { console.log('array', commaArray.seperator, commaArray, state) }
+      return commaArray
+    }
+    let colonArray = doArray(state, open, close, ':')
+    if (colonArray == undefined) { return [] }
+    colonArray.seperator = ':'
+    if (debugParse) { console.log('array', colonArray.seperator, colonArray, state) }
+    return colonArray
+  }
+  let expandColon = (vs) => {
+    if (vs.seperator == ':') {
+      let lo = 0
+      let hi = 1
+      if (vs.length == 1) {
+        hi = vs[0]
+      } else if (vs.length == 2) {
+        lo = vs[0]
+        hi = vs[1]
+      }
+      if (Number.isInteger(lo) && Number.isInteger(hi)) {
+        return [...Array(hi-lo+1).keys()].map(x => x+lo)
+      }
+    }
+    return vs
   }
 
   let varLookup = (state) => {
@@ -95,31 +129,18 @@ define(function(require) {
     }
   }
 
-  let evalRandom = (lo, hi) => {
+  let evalRandomRanged = (lo, hi) => {
+    if (debugEval) { console.log('eval evalRandomRanged', lo, hi) }
     if (!Number.isInteger(lo) || !Number.isInteger(hi)) {
       return lo + Math.random() * (hi-lo)
     } else {
       return lo + Math.floor(Math.random() * (hi-lo+0.9999))
     }
   }
-  let random = (state) => {
-    let v = array(state, '{', '}', ':')
-    if (debugParse) { console.log('random', v, state) }
-    if (v.length == 1) {
-      let hi = v[0]
-      return (s,b) => {
-        let ehi = evalParam(hi,s,b)
-        return evalRandom(0, ehi)
-      }
-    } else if (v.length == 2) {
-      let lo = v[0]
-      let hi = v[1]
-      return (s,b) => {
-        let elo = evalParam(lo,s,b) || 0
-        let ehi = evalParam(hi,s,b)
-        return evalRandom(elo, ehi)
-      }
-    }
+  let evalRandomSet = (vs, s,b) => {
+    let idx = Math.floor(Math.random()*vs.length-0.0001)
+    if (debugEval) { console.log('eval evalRandomRanged', vs.length, idx, s,b) }
+    return evalParam(vs[idx], s,b)
   }
 
   let number = (state) => {
@@ -156,38 +177,52 @@ define(function(require) {
       if (char == ' ' || char == '\t' || char == '\n' || char == '\r') { state.idx += 1; continue }
       // array
       if (char == '[') {
-        let vs = array(state, '[', ']', ',')
+        let vs = array(state, '[', ']')
         if (state.str.charAt(state.idx) == 't') {
           state.idx += 1
+          vs = expandColon(vs)
           let n = number(state)
           if (n !== undefined) {
+            if (debugParse) { console.log('array t', vs, n) }
             lhs = timeVar(vs, n)
           } else {
             if (state.str.charAt(state.idx) == '[') {
-              let ds = array(state, '[', ']', ',')
+              let ds = array(state, '[', ']')
+              ds = expandColon(ds)
+              if (debugParse) { console.log('array t', vs, ds) }
               lhs = timeVar(vs, ds)
             } else {
+              if (debugParse) { console.log('array t', vs, '4') }
               lhs = timeVar(vs, 4)
             }
           }
+        } else if (state.str.charAt(state.idx) == 'r') {
+          state.idx += 1
+          if (vs.seperator == ':') {
+            let lo = param(vs[0], 0)
+            let hi = param(vs[1], 1)
+            if (debugParse) { console.log('array r:', vs, lo, hi) }
+            lhs = (s,b) => evalRandomRanged(evalParam(lo,s,b), evalParam(hi,s,b))
+          } else {
+            if (debugParse) { console.log('array r,', vs) }
+            lhs = (s,b) => evalRandomSet(vs, s,b)
+          }
         } else {
+          vs = expandColon(vs)
+          if (debugParse) { console.log('array', vs) }
           lhs = vs
         }
         continue
       }
       // tuple
       if (char == '(') {
-        let v = array(state, '(', ')', ',')
+        let v = array(state, '(', ')')
+        v = expandColon(v)
         if (v.length == 1) {
           lhs = v[0]
         } else {
           lhs = (s,b) => v.map(x => evalParam(x,s,b))
         }
-        continue
-      }
-      // random
-      if (char == '{') {
-        lhs = random(state)
         continue
       }
       // operator
@@ -249,6 +284,7 @@ define(function(require) {
       str: v,
       idx: 0,
       bracketStack: [],
+      recirc: 0
     }
     return expression(state)
   }
@@ -263,6 +299,9 @@ define(function(require) {
   let assertIn = (lo, hi, actual) => {
     if (actual < lo-0.0001 || actual > hi+0.0001) { console.trace(`Assertion failed.\n>>Expected ${lo} - ${hi}\n>>Actual: ${actual}`) }
   }
+  let assertOneOf = (vs, actual) => {
+    if (!vs.includes(actual)) { console.trace(`Assertion failed.\n>>Expected one of ${vs}\n>>Actual: ${actual}`) }
+  }
 
   assert(1, parseExpression('1'))
   assert(123, parseExpression('123'))
@@ -274,6 +313,9 @@ define(function(require) {
   assert([1,[2,3]], parseExpression('[1,[2,3]]'))
   assert([1,[2,3]], parseExpression(' [ 1 , [ 2  , 3 ] ] '))
   assert(1, parseExpression('(1)'))
+  assert([0,1,2,3], parseExpression('[:3]'))
+  assert([2,3], parseExpression('[2:3]'))
+  assert([2.25,3.5], parseExpression('[2.25:3.5]'))
 
   let p
   p = parseExpression('(1,2)')
@@ -431,13 +473,19 @@ define(function(require) {
   assert(2, parseExpression('[5,6]%3')(0,0))
   assert(0, parseExpression('[5,6]%3')(1,1))
 
-  p = parseExpression('{0:9}')
+  p = parseExpression('[1,5,7]r')
+  for (let i = 0; i<20; i+=1) {
+    assertOneOf([1,5,7], p())
+    assert(true, Number.isInteger(p()))
+  }
+
+  p = parseExpression('[0:9]r')
   for (let i = 0; i<20; i+=1) {
     assertIn(0, 9, p())
     assert(true, Number.isInteger(p()))
   }
 
-  p = parseExpression('{[0,10]:[9,19]}')
+  p = parseExpression('[[0,10]:[9,19]]r')
   for (let i = 0; i<20; i+=1) {
     assertIn(0, 9, p(0,0))
     assert(true, Number.isInteger(p(0,0)))
@@ -447,19 +495,18 @@ define(function(require) {
     assert(true, Number.isInteger(p(1,1)))
   }
 
-  p = parseExpression('{:9}')
+  p = parseExpression('[:9]r')
   for (let i = 0; i<20; i+=1) {
     assertIn(0, 9, p())
     assert(true, Number.isInteger(p()))
   }
 
-  p = parseExpression('{9}')
+  p = parseExpression('[9]r')
   for (let i = 0; i<20; i+=1) {
-    assertIn(0, 9, p())
-    assert(true, Number.isInteger(p()))
+    assert(9, p())
   }
 
-  p = parseExpression('{0.1:9}')
+  p = parseExpression('[0.1:9]r')
   for (let i = 0; i<20; i+=1) {
     assertIn(0, 9, p())
     assert(false, Number.isInteger(p()))
