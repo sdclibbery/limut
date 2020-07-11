@@ -124,6 +124,8 @@ d2 play .[--]</pre>
 <p><code>[1,2]t[12,4]</code> Timed sequence with one timing per value</p>
 <p><code>[1,2]l3</code> Timed linear interpolated sequence, each value takes 3 beats to change into the next</p>
 <p><code>[1,2]l[14,2]</code> Timed linear interpolated sequence, one timing per value</p>
+<p><code>[1,2]s3</code> Timed smooth interpolated sequence, each value takes 3 beats to change into the next, using an 's' shaped eas in/out curve</p>
+<p><code>[1,2]s[14,2]</code> Timed 's' interpolated sequence, one timing per value</p>
 <p><code>[1,4,7]r</code> Select a different value every time, chosen randomly from the numbers 1, 4 and 7</p>
 <p><code>[:9]r</code> Select a different random integer every time, between 0 and 9</p>
 <p><code>[0:9]r</code> Select a different random integer every time, between 0 and 9</p>
@@ -137,14 +139,8 @@ d2 play .[--]</pre>
 </body>
 <script data-main="main" src="require.js">
 /*
-x swap default dur to 1/2 for play (and document)
-x pattern char '_' to extend duration of previous note (cf. to '.' for rest)
-x shorten param names: attack, release
-x support [:] syntax with arrays
-x change random syntax to []
 x linear time vars
-s time vars
- documentation/examples!
+x s time vars
 shape param
 room/mix params - cheap shared delay based - https://itnext.io/algorithmic-reverb-and-web-audio-api-e1ccec94621a
  - try doing feedback on a short convolver???

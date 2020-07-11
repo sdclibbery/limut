@@ -53,6 +53,23 @@ define(function(require) {
       if (debugEval) { console.log('eval linear timeVar FAILED', steps, 'b:', b) }
     }
   }
+  let sTimeVar = (vs, ds) => {
+    let steps = timeVarSteps(vs, ds)
+    return (s,b) => {
+      b = b % steps.totalDuration
+      for (let idx = 0; idx < steps.length; idx++) {
+        let pre = steps[idx]
+        if (isInTimeVarStep(pre, b)) {
+          let post = steps[(idx+1) % steps.length]
+          let lerp = (b - pre.time) / pre.duration
+          if (debugEval) { console.log('eval s timeVar', steps, 'b:', b, 'pre:', pre, 'post:', post, 'lerp:', lerp) }
+          lerp = lerp*lerp*(3 - 2*lerp) // bezier ease in/out
+          return (1-lerp)*pre.value + lerp*post.value
+        }
+      }
+      if (debugEval) { console.log('eval s timeVar FAILED', steps, 'b:', b) }
+    }
+  }
 
   let operator = (op, l, r) => {
     if (typeof l == 'number' && typeof (r) == 'number') {
@@ -226,8 +243,13 @@ define(function(require) {
         } else if (state.str.charAt(state.idx) == 'l') {
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
-          if (debugParse) { console.log('array t', vs, ds) }
+          if (debugParse) { console.log('array l', vs, ds) }
           lhs = linearTimeVar(vs, ds)
+        } else if (state.str.charAt(state.idx) == 's') {
+          state.idx += 1
+          let ds = numberOrArrayOrFour(state)
+          if (debugParse) { console.log('array s', vs, ds) }
+          lhs = sTimeVar(vs, ds)
         } else if (state.str.charAt(state.idx) == 'r') {
           state.idx += 1
           if (vs.seperator == ':') {
@@ -560,6 +582,17 @@ define(function(require) {
   assert(2, p(2,2))
   assert(1, p(3,3))
   assert(0, p(4,4))
+
+  p = parseExpression('[0,1]s1')
+  assert(0, p(0,0))
+  assertIn(0.1, 0.4, p(1/4,1/4))
+  assert(1/2, p(1/2,1/2))
+  assertIn(0.6, 0.9, p(3/4,3/4))
+  assert(1, p(1,1))
+  assertIn(0.6, 0.9, p(5/4,5/4))
+  assert(1/2, p(3/2,3/2))
+  assertIn(0.1, 0.4, p(7/4,7/4))
+  assert(0, p(2,2))
 
   console.log('Parse expression tests complete')
 
