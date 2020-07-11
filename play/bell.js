@@ -21,6 +21,15 @@ define(function (require) {
     vca.gain.value = gain
     return vca
   }
+  let fmOp = (freq, detune,  params) => {
+    let vco = system.audio.createOscillator()
+    vco.type = 'sine';
+    vco.frequency.value = freq
+    vco.detune.value = detune
+    vco.start(params.time)
+    vco.stop(params.endTime)
+    return vco
+  }
   return (params) => {
     let degree = parseInt(params.sound) + param(params.add, 0)
     if (isNaN(degree)) { return }
@@ -30,42 +39,23 @@ define(function (require) {
     let vca = envelope(params, 0.01)
     system.mix(effects(params, vca))
 
-    let vco4 = system.audio.createOscillator()
-    vco4.type = 'sine';
-    vco4.frequency.value = freq*21.98/3.14
+    let vco4 = fmOp(freq*21.98/3.14, 0, params)
     vco4.connect(vca)
-    vco4.start(params.time)
-    vco4.stop(params.endTime)
 
-    let vco3 = system.audio.createOscillator()
-    vco3.type = 'sine';
-    vco3.frequency.value = freq*10.38/3.14
-    vco3.detune.value = 1
+    let vco3 = fmOp(freq*10.38/3.14, 1, params)
     let vco3_4gain = flatEnv(700)
     vco3.connect(vco3_4gain)
     vco3_4gain.connect(vco4.detune)
-    vco3.start(params.time)
-    vco3.stop(params.endTime)
 
-    let vco2 = system.audio.createOscillator()
-    vco2.type = 'sine';
-    vco2.frequency.value = freq
-    vco2.detune.value = 3
+    let vco2 = fmOp(freq, 3, params)
     let vco2_4gain = simpleEnv(150, params, 0, 0.7)
     vco2.connect(vco2_4gain)
     vco2_4gain.connect(vco4.detune)
-    vco2.start(params.time)
-    vco2.stop(params.endTime)
 
-    let vco1 = system.audio.createOscillator()
-    vco1.type = 'sine';
-    vco1.frequency.value = freq*19.03/3.14
-    vco1.detune.value = 1
+    let vco1 = fmOp(freq*19.03/3.14, 1, params)
     let vco1_4gain = simpleEnv(10000, params, 0, 0.3)
     vco1.connect(vco1_4gain)
     vco1_4gain.connect(vco1.detune)
     vco1_4gain.connect(vco4.detune)
-    vco1.start(params.time)
-    vco1.stop(params.endTime)
   }
 });
