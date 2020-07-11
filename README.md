@@ -1,3 +1,7 @@
+# Try it
+
+Try it at https://sdclibbery.github.io/limut/
+
 # Samples
 
 Limut's audio files have been copied from FoxDot (https://github.com/Qirky/FoxDot), where they were obtained from a number of sources. Here's a list of thanks for the unknowing creators of FoxDot's sample archive.

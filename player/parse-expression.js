@@ -9,7 +9,7 @@ define(function(require) {
   let debugEval = false
   if (debugEval) { let original = evalParam; evalParam = (v,s,b) => { console.log('eval',v,s,b); return original(v,s,b)} }
 
-  let timeVar = (vs, ds) => {
+  let timeVarSteps = (vs, ds) => {
     if (!Array.isArray(ds)) { ds = [ds] }
     let steps = []
     let length = 0
@@ -20,12 +20,37 @@ define(function(require) {
       length += dur
       step += 1
     })
-    if (debugParse) { console.log('timeVar', steps) }
+    steps.totalDuration = length
+    if (debugParse) { console.log('timeVar steps', steps) }
+    return steps
+  }
+  let isInTimeVarStep  = (st, b, l) => {
+    return (b > st.time-0.0001)&&(b < st.time+st.duration-0.0001)
+  }
+  let timeVar = (vs, ds) => {
+    if (Array.isArray(ds)) { ds = expandColon(ds) }
+    let steps = timeVarSteps(vs, ds)
     return (s,b) => {
-      b = (b+0.0001) % length
-      let step = steps.filter(st => (b > st.time-0.0001)&&(b < st.time+st.duration-0.0001) )[0]
+      b = (b+0.0001) % steps.totalDuration
+      let step = steps.filter(st => isInTimeVarStep(st, b) )[0]
       if (debugEval) { console.log('eval timeVar', steps, 'b:', b, 'step:', step) }
       return (step !== undefined) && step.value
+    }
+  }
+  let linearTimeVar = (vs, ds) => {
+    let steps = timeVarSteps(vs, ds)
+    return (s,b) => {
+      b = b % steps.totalDuration
+      for (let idx = 0; idx < steps.length; idx++) {
+        let pre = steps[idx]
+        if (isInTimeVarStep(pre, b)) {
+          let post = steps[(idx+1) % steps.length]
+          let lerp = (b - pre.time) / pre.duration
+          if (debugEval) { console.log('eval linear timeVar', steps, 'b:', b, 'pre:', pre, 'post:', post, 'lerp:', lerp) }
+          return (1-lerp)*pre.value + lerp*post.value
+        }
+      }
+      if (debugEval) { console.log('eval linear timeVar FAILED', steps, 'b:', b) }
     }
   }
 
@@ -110,6 +135,20 @@ define(function(require) {
     return vs
   }
 
+  let numberOrArrayOrFour = (state) => {
+    let n = number(state)
+    if (n !== undefined) {
+      return n
+    } else {
+      if (state.str.charAt(state.idx) == '[') {
+        let ds = array(state, '[', ']')
+        return ds
+      } else {
+        return 4
+      }
+    }
+  }
+
   let varLookup = (state) => {
     let key = ''
     let char
@@ -181,21 +220,14 @@ define(function(require) {
         if (state.str.charAt(state.idx) == 't') {
           state.idx += 1
           vs = expandColon(vs)
-          let n = number(state)
-          if (n !== undefined) {
-            if (debugParse) { console.log('array t', vs, n) }
-            lhs = timeVar(vs, n)
-          } else {
-            if (state.str.charAt(state.idx) == '[') {
-              let ds = array(state, '[', ']')
-              ds = expandColon(ds)
-              if (debugParse) { console.log('array t', vs, ds) }
-              lhs = timeVar(vs, ds)
-            } else {
-              if (debugParse) { console.log('array t', vs, '4') }
-              lhs = timeVar(vs, 4)
-            }
-          }
+          let ds = numberOrArrayOrFour(state)
+          if (debugParse) { console.log('array t', vs, ds) }
+          lhs = timeVar(vs, ds)
+        } else if (state.str.charAt(state.idx) == 'l') {
+          state.idx += 1
+          let ds = numberOrArrayOrFour(state)
+          if (debugParse) { console.log('array t', vs, ds) }
+          lhs = linearTimeVar(vs, ds)
         } else if (state.str.charAt(state.idx) == 'r') {
           state.idx += 1
           if (vs.seperator == ':') {
@@ -340,7 +372,7 @@ define(function(require) {
   assert(1, p(0,3.9))
   assert(2, p(0,4))
 
-  p = parseExpression('[1,2,3]T[1,2]')
+  p = parseExpression('[1,2,3]t[1,2]')
   assert(1, p(0,0))
   assert(2, p(0,1))
   assert(2, p(0,2))
@@ -513,6 +545,21 @@ define(function(require) {
   }
 
   assert(1, parseExpression('2-1'))
+
+  p = parseExpression('[0,2]l2')
+  assert(0, p(0,0))
+  assert(1/2, p(1/2,1/2))
+  assert(1, p(1,1))
+  assert(2, p(2,2))
+  assert(1, p(3,3))
+  assert(0, p(4,4))
+
+  p = parseExpression('[0:2]l2')
+  assert(0, p(0,0))
+  assert(1, p(1,1))
+  assert(2, p(2,2))
+  assert(1, p(3,3))
+  assert(0, p(4,4))
 
   console.log('Parse expression tests complete')
 
