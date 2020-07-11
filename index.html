@@ -89,6 +89,7 @@ d2 play .[--]</pre>
 <p><code>dbass</code> </p>
 <p><code>ping</code> </p>
 <p><code>swell</code> </p>
+<p><code>bell</code> </p>
 <h3>Pattern syntax</h3>
 <p><code>x-o-</code> Sequence of events, each of duration <code>dur</code>, for use with <code>play</code></p>
 <p><code>0123</code> Sequence of events, each of duration <code>dur</code>, for use with tonal synths. Numbers are scale degrees</p>
@@ -141,11 +142,25 @@ d2 play .[--]</pre>
 /*
 x linear time vars
 x s time vars
+FM bell synth - https://www.youtube.com/watch?v=CdPa6VLi4GQ
+ M(1)(feedback 5) -> C(2) -> C(4) then also M(3) -> C(4)
+ Op DxRatio Detune
+  1  19.03   01   high hammer + partials
+  2  03.14   03   hammer + fundamental
+  3  10.38   01   mid harmonic
+  4  21.98   00   loudest partial
+ Setup order: 4,3,2,1
+! Detune param for bell
+FM glockenspiel / aluminium bars - https://youtu.be/CdPa6VLi4GQ?t=191
+FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
+FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
+FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
 shape param
 room/mix params - cheap shared delay based - https://itnext.io/algorithmic-reverb-and-web-audio-api-e1ccec94621a
  - try doing feedback on a short convolver???
 piano synth  https://abbernie.github.io/tune/  https://www.npmjs.com/package/@tonejs/piano
 console and proper error reporting
+<> for 'in sequence on each repeat' in patterns and params
 better musicality: extending patterns like every/sometimes/offadd/stutter etc
 vib
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
@@ -157,11 +172,10 @@ bpf
 root
 formant
 scale
-klank synth
 slide param
+seeded random: takes repeat length and optional seed
 round brackets for chords in patterns
 Report the gain reduction from the compressor, maybe even have a longer term feedback based on it?
-<> for 'in sequence on each repeat' in patterns and params
 ^ operator: concat arrays
 ? when evaluating time var, can it accept a decimal time? Do we pass event time rather than beat time?
 operator precedence

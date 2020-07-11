@@ -14,6 +14,7 @@ define(function(require) {
   let dbass = require('play/dbass')
   let ping = require('play/ping')
   let swell = require('play/swell')
+  let bell = require('play/bell')
 
   // Players
   let nullPlayer = () => {}
@@ -29,6 +30,7 @@ define(function(require) {
     dbass: standardPlayer(dbass),
     ping: standardPlayer(ping),
     swell: standardPlayer(swell),
+    bell: standardPlayer(bell),
   };
   let playerInstances = {}
 
