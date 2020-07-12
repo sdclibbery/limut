@@ -20,14 +20,14 @@ define(function (require) {
     op4.connect(vca)
 
     let op3 = fm.op(freq*10.38/3.14, params)
-    fm.connect(op3, op4, fm.flatEnv(param(window.bell3, 702)))
+    fm.connect(op3, op4, fm.flatEnv(702*freq/260))
 
     let op2 = fm.op(freq*3.14/3.14, params)
-    fm.connect(op2, op4, envelope(params, param(window.bell2, 386)))
+    fm.connect(op2, op4, envelope(params, 386*freq/260))
 
     let op1 = fm.op(freq*19.03/3.14, params, 'square')
-    fm.connect(op1, op2, fm.simpleEnv(param(window.bell1, 300), params, 0, 1))
-    //    fm.connect(op1, op1, fm.flatEnv(param(window.bell1fb, 2))) // feedback doesnt work in webaudio?
+    fm.connect(op1, op2, fm.simpleEnv(300*freq/260, params, 0, 1))
+    //    fm.connect(op1, op1, fm.flatEnv(200)) // feedback doesnt work in webaudio?
 
     // frequencies from https://www.youtube.com/watch?v=CdPa6VLi4GQ
   }
