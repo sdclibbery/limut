@@ -8,7 +8,7 @@ define(function (require) {
   let param = require('player/default-param')
 
   return (params) => {
-    params.sus = param(params.sus, 2)
+    if (params.dur !== undefined && params.dur < 2) { params.dur = 2 }
     let degree = parseInt(params.sound) + param(params.add, 0)
     if (isNaN(degree)) { return }
     let freq = scale.degreeToFreq(degree, param(params.oct, 4))

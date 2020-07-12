@@ -15,6 +15,7 @@ define(function(require) {
   let ping = require('play/ping')
   let swell = require('play/swell')
   let bell = require('play/bell')
+  let glock = require('play/glock')
 
   // Players
   let nullPlayer = () => {}
@@ -31,6 +32,7 @@ define(function(require) {
     ping: standardPlayer(ping),
     swell: standardPlayer(swell),
     bell: standardPlayer(bell),
+    glock: standardPlayer(glock),
   };
   let playerInstances = {}
 
