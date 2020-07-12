@@ -26,7 +26,7 @@ define(function (require) {
     op2.connect(vca)
 
     let op1 = fm.op(freq*5, params, 'square')
-    fm.connect(op1, op2, fm.simpleEnv(param(window.glock1, 3000), params, 0, 0.5))
+    fm.connect(op1, op2, fm.simpleEnv(3000*freq/261.6, params, 0, 0.5))
 
     // frequencies from element433 https://youtu.be/CdPa6VLi4GQ?t=191
   }
