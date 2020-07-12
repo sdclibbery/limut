@@ -90,6 +90,7 @@ d2 play .[--]</pre>
 <p><code>ping</code> </p>
 <p><code>swell</code> </p>
 <p><code>bell</code> </p>
+<p><code>glock</code> </p>
 <h3>Pattern syntax</h3>
 <p><code>x-o-</code> Sequence of events, each of duration <code>dur</code>, for use with <code>play</code></p>
 <p><code>0123</code> Sequence of events, each of duration <code>dur</code>, for use with tonal synths. Numbers are scale degrees</p>
@@ -140,46 +141,44 @@ d2 play .[--]</pre>
 </body>
 <script data-main="main" src="require.js">
 /*
-x linear time vars
-x s time vars
 x FM bell synth - https://www.youtube.com/watch?v=CdPa6VLi4GQ
-FM glockenspiel / aluminium bars - https://youtu.be/CdPa6VLi4GQ?t=191
-FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
-FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
-FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
-shape param
+x FM glockenspiel / aluminium bars - https://youtu.be/CdPa6VLi4GQ?t=191
+standard drop tvars
+piano synth  https://abbernie.github.io/tune/  https://www.npmjs.com/package/@tonejs/piano
+vib param
+soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
 room/mix params - cheap shared delay based - https://itnext.io/algorithmic-reverb-and-web-audio-api-e1ccec94621a
  - try doing feedback on a short convolver???
-piano synth  https://abbernie.github.io/tune/  https://www.npmjs.com/package/@tonejs/piano
-console and proper error reporting
+round brackets for chords in patterns
 <> for 'in sequence on each repeat' in patterns and params
+console and proper error reporting
 better musicality: extending patterns like every/sometimes/offadd/stutter etc
-vib
-soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
+shape param
 drive param
 sliders
-pan
 hpf
 bpf
+slide param
 root
 formant
+pan
 scale
-slide param
+FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
 seeded random: takes repeat length and optional seed
-round brackets for chords in patterns
 Report the gain reduction from the compressor, maybe even have a longer term feedback based on it?
 ^ operator: concat arrays
 ? when evaluating time var, can it accept a decimal time? Do we pass event time rather than beat time?
 operator precedence
 ? What do nested [] mean in params?
+FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
+FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 allow dur to be tvar
 ?extract some of the playing stuff out of pattern.js?
 Syntax to make parts of patterns repeat a set number of times?
 ?? Should param pattern repeat be independent of main pattern repeat? Eg so you can xo, amp=[1,2,3] and it multiplies out
+fix delay param problems (commented tests in pattern.js)
 index pattern by beat to improve performance in finding events - same for timeVar evaluation
 random timevar gens for patterns: {o-:}
-param random can be from a list of values: {0,1,3,4}
-fix delay param problems (commented tests in pattern.js)
 pattern generators: tri, Dur, walk etc?
 Preload samples immediately after parsing
 evaluate predefined vars; eg allow bpm=[80,120]

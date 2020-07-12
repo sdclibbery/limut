@@ -8,6 +8,7 @@ define(function (require) {
   let param = require('player/default-param')
 
   return (params) => {
+    params.sus = param(params.sus, 2)
     let degree = parseInt(params.sound) + param(params.add, 0)
     if (isNaN(degree)) { return }
     let freq = scale.degreeToFreq(degree, param(params.oct, 4))
@@ -24,8 +25,10 @@ define(function (require) {
     let op2 = fm.op(freq*3.14/3.14, params)
     fm.connect(op2, op4, envelope(params, param(window.bell2, 386)))
 
-    let op1 = fm.op(freq*19.03/3.14, params, 'sawtooth')
+    let op1 = fm.op(freq*19.03/3.14, params, 'square')
     fm.connect(op1, op2, fm.simpleEnv(param(window.bell1, 300), params, 0, 1))
-    //    fm.connect(op1, op1, fm.flatEnv(param(window.bell1fb, 2))) // feedback doesnt work?
+    //    fm.connect(op1, op1, fm.flatEnv(param(window.bell1fb, 2))) // feedback doesnt work in webaudio?
+
+    // frequencies from https://www.youtube.com/watch?v=CdPa6VLi4GQ
   }
 });
