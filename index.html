@@ -85,6 +85,7 @@ d2 play .[--]</pre>
 <p><code>main.amp</code> Main mix amplitude control</p>
 <p><code>main.reverb</code> Main reverb amplitude control</p>
 <p><code>scale</code> Scale eg minor, major, chromatic, majorpentatonic, lydian etc etc</p>
+<p><code>drop6.2</code> Predefined time var: equivalent to <code>[1,0]t[6.2]</code>. These are all the predefined drops: drop6.2, drop7.1, drop12.4, drop14.2, drop15.1, drop24.8, drop28.4, drop30.2, drop31.1, drop56.8, drop60.4, drop62.2, drop63.1</p>
 <h3>Synths</h3>
 <p><code>! / stop / none</code> </p>
 <p><code>play</code> Play samples. Use letters, symbols and digits 1-4 in the pattern to choose the sample. Note duration defaults to 1/2.</p>
@@ -146,7 +147,7 @@ d2 play .[--]</pre>
 <script data-main="main" src="require.js">
 /*
 x Fm timbre Vs pitch fix - To avoid this change in the spectrum, the Modulator amplitude must increase proportionally — it must double — to keep ß constant
-standard drop tvars
+x standard drop tvars
 piano synth  https://abbernie.github.io/tune/  https://www.npmjs.com/package/@tonejs/piano
 vib param
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
