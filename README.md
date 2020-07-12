@@ -4,6 +4,8 @@ Try it at https://sdclibbery.github.io/limut/
 
 # Samples
 
+Piano sounds: https://archive.org/details/SalamanderGrandPianoV3
+
 Limut's audio files have been copied from FoxDot (https://github.com/Qirky/FoxDot), where they were obtained from a number of sources. Here's a list of thanks for the unknowing creators of FoxDot's sample archive.
 
     Legowelt Sample Kits
