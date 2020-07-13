@@ -47,6 +47,14 @@ define(function (require) {
     }
   }
 
+  let samples = {
+    C1: 261.6256/8,
+    C2: 261.6256/4,
+    C3: 261.6256/2,
+    C4: 261.6256,
+    C5: 261.6256*2,
+    C6: 261.6256*4,
+  }
   return (params) => {
     let degree = parseInt(params.sound) + param(params.add, 0)
     if (isNaN(degree)) { return }
@@ -57,9 +65,18 @@ define(function (require) {
     vca.gain.value = Math.max(0, 0.2 * param(params.amp, 1))
     system.mix(effects(params, vca))
 
-    let rate = freq/130.81
-    playBuffer(params, getNoteUrl('C3'), rate, vca)
-    getBuffer(getHarmonicsUrl('C3'))
-    playBuffer(params, getHarmonicsUrl('C3'), rate, vca, params.endTime)
+    let sample
+    let diff = Infinity
+    Object.keys(samples).forEach(s => {
+      let newDiff = Math.abs(freq - samples[s])
+      if (newDiff < diff) {
+        sample = s
+        diff = newDiff
+      }
+    })
+    let rate = freq/samples[sample]
+    playBuffer(params, getNoteUrl(sample), rate, vca)
+    getBuffer(getHarmonicsUrl(sample))
+    playBuffer(params, getHarmonicsUrl(sample), rate, vca, params.endTime)
   }
 });
