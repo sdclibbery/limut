@@ -86,14 +86,13 @@ define(function (require) {
     params.endTime = params.time + param(params.dur, 0.25)*params.beat.duration
 
     let vca = system.audio.createGain()
-    vca.gain.value = Math.max(0, 0.2 * param(params.amp, 1))
+    vca.gain.value = Math.max(0, 0.3 * param(params.amp, 1))
     system.mix(effects(params, vca))
 
     let sample = findNearestSample(freq)
     getBuffer(getNoteUrl(sample))
     sample = findNearestLoadedSample(sample)
     let rate = freq/samples[sample]
-console.log(sample)
     playBuffer(params, getNoteUrl(sample), rate, vca)
     getBuffer(getHarmonicsUrl(sample))
     playBuffer(params, getHarmonicsUrl(sample), rate, vca, params.endTime)
