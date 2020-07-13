@@ -47,6 +47,28 @@ define(function (require) {
     }
   }
 
+  let isLoaded = (sample) => {
+    let buf = buffers[getNoteUrl(sample)]
+    return !!buf && buf !== nullBuffer
+  }
+  let findNearestSample = (freq, loadedOnly) => {
+    let sample
+    let diff = Infinity
+    Object.keys(samples).forEach(s => {
+      if (loadedOnly && !isLoaded(s)) { return }
+      let newDiff = Math.abs(freq - samples[s])
+      if (newDiff < diff) {
+        sample = s
+        diff = newDiff
+      }
+    })
+    return sample
+  }
+  let findNearestLoadedSample = (sample) => {
+    let loadedSample = findNearestSample(samples[sample], true)
+    return loadedSample || sample
+  }
+
   let samples = {
     C1: 261.6256/8,
     C2: 261.6256/4,
@@ -65,15 +87,9 @@ define(function (require) {
     vca.gain.value = Math.max(0, 0.2 * param(params.amp, 1))
     system.mix(effects(params, vca))
 
-    let sample
-    let diff = Infinity
-    Object.keys(samples).forEach(s => {
-      let newDiff = Math.abs(freq - samples[s])
-      if (newDiff < diff) {
-        sample = s
-        diff = newDiff
-      }
-    })
+    let sample = findNearestSample(freq)
+    getBuffer(getNoteUrl(sample))
+    sample = findNearestLoadedSample(sample)
     let rate = freq/samples[sample]
     playBuffer(params, getNoteUrl(sample), rate, vca)
     getBuffer(getHarmonicsUrl(sample))
