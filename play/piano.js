@@ -72,8 +72,10 @@ define(function (require) {
   let samples = {
     C1: 261.6256/8,
     C2: 261.6256/4,
+    Fs2: 92.49861,
     C3: 261.6256/2,
     C4: 261.6256,
+    Fs4: 369.9944,
     C5: 261.6256*2,
     C6: 261.6256*4,
   }
@@ -91,6 +93,7 @@ define(function (require) {
     getBuffer(getNoteUrl(sample))
     sample = findNearestLoadedSample(sample)
     let rate = freq/samples[sample]
+console.log(sample)
     playBuffer(params, getNoteUrl(sample), rate, vca)
     getBuffer(getHarmonicsUrl(sample))
     playBuffer(params, getHarmonicsUrl(sample), rate, vca, params.endTime)
