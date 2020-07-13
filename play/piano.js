@@ -9,7 +9,7 @@ define(function (require) {
     return 'sample/salamander/'+note+'v8.mp3'
   }
   let getHarmonicsUrl = (note) => {
-    return 'sample/salamander/harmL'+note+'.mp3'
+    return 'sample/salamander/harmS'+note+'.mp3'
   }
 
   let buffers = {}
@@ -34,13 +34,17 @@ define(function (require) {
     return buffer
   }
 
-  let playBuffer = (params, url, rate, vca) => {
+  let playBuffer = (params, url, rate, vca, timeOverride) => {
     let source = system.audio.createBufferSource()
     source.buffer = getBuffer(url)
     source.playbackRate.value = rate
     source.connect(vca)
-    source.start(params.time)
-    source.stop(params.endTime)
+    if (timeOverride !== undefined) {
+      source.start(timeOverride)
+    } else {
+      source.start(params.time)
+      source.stop(params.endTime)
+    }
   }
 
   return (params) => {
@@ -55,6 +59,7 @@ define(function (require) {
 
     let rate = freq/130.81
     playBuffer(params, getNoteUrl('C3'), rate, vca)
-    playBuffer(params, getHarmonicsUrl('C3'), rate, vca)
+    getBuffer(getHarmonicsUrl('C3'))
+    playBuffer(params, getHarmonicsUrl('C3'), rate, vca, params.endTime)
   }
 });
