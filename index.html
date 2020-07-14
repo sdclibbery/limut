@@ -73,6 +73,10 @@ gl glock 024797.., dur=1/4, add=chords</pre>
 <pre>Perc play lstig, dur=[1,3,2], amp=0.2, echo=1/8
 Amb ping 0[21]., dur=4, release=8, detune=[(0,0.3,0.7,1.3),(0,0.5,0.9,1.4)]t4
 Bass dbass 0, dur=8, att=2, rel=4, lpf=lpf=100*[3,30]l16</pre>
+<pre>Prog=[2,5,4,0]t8
+Ba piano 0__2, add=prog, amp=4, Oct=2
+Ch piano 0, dur=8, Sus=12, add=(prog+(0,2,4))%7, amp=2, Oct=3
+Le piano 0_.[.0]2343, amp=3, add=prog, Oct=4</pre>
 <pre>Main.reverb = 10
 Ba dbass 004[21], dur=4, amp=1.5
 Kd play x[.x]x., dur=2
@@ -151,17 +155,21 @@ x  envelope to not stop abruptly - check if the tone piano does anything special
 x  more samples from other octaves: play nearest
 x   replace ones that haven't loaded yet with next nearest
 x  strategically add more samples
- fix release pop
- randomness in harmonics etc?
+x fix release pop
 pads
 room/mix params - cheap shared delay based - https://itnext.io/algorithmic-reverb-and-web-audio-api-e1ccec94621a
-- try doing feedback on a short convolver???
+ - try doing feedback on a short convolver???
+live coding controls
+ ? Run only cursor/selected code?
+ ? Solo? Group controls?
+ ? Comment in/out?
+ ? Sliders?
 vib param
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
-round brackets for chords in patterns
 <> for 'in sequence on each repeat' in patterns and params
 console and proper error reporting
 better musicality: extending patterns like every/sometimes/offadd/stutter etc
+round brackets for chords in patterns
 shape param
 drive param
 sliders

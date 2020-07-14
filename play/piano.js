@@ -83,10 +83,16 @@ define(function (require) {
     let degree = parseInt(params.sound) + param(params.add, 0)
     if (isNaN(degree)) { return }
     let freq = scale.degreeToFreq(degree, param(params.oct, 4))
-    params.endTime = params.time + param(params.dur, 0.25)*params.beat.duration
+    let dur = Math.max(0.01, param(params.sus, param(params.dur, 0.25)))
+    params.endTime = params.time + dur*params.beat.duration
 
     let vca = system.audio.createGain()
-    vca.gain.value = Math.max(0, 0.3 * param(params.amp, 1))
+    let gain = Math.max(0, 0.3 * param(params.amp, 1))
+    vca.gain.cancelScheduledValues(params.time)
+    vca.gain.setValueAtTime(gain, params.time)
+    vca.gain.linearRampToValueAtTime(gain, params.endTime-0.01)
+    vca.gain.linearRampToValueAtTime(0, params.endTime)
+    vca.gain.linearRampToValueAtTime(gain, params.endTime+0.01)
     system.mix(effects(params, vca))
 
     let sample = findNearestSample(freq)
