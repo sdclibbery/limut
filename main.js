@@ -84,7 +84,9 @@ define(function(require) {
       let playerName = parts[1].trim()
       if (playerName) {
         let command  = parts.slice(2).join('').trim()
-        playerInstances[playerId] = players[playerName.toLowerCase()](command)
+        let player = players[playerName.toLowerCase()]
+        if (!player) { throw 'Player '+playerName+' not found' }
+        playerInstances[playerId] = player(command)
       } else {
         delete playerInstances[playerId]
       }
@@ -130,6 +132,14 @@ define(function(require) {
   }
   window.scaleChanged(scale.current)
 
+  // console ui
+  let console = document.getElementById('console')
+  let consoleOut = (str) => {
+    console.value += '\n'+str
+    console.scrollTop = console.scrollHeight
+  }
+  consoleOut('\n> Welcome to Limut')
+
   // Play/stop ui
   let codeTextArea = document.getElementById('code')
   document.addEventListener("keydown", event => {
@@ -152,10 +162,16 @@ define(function(require) {
     system.resume()
     playerInstances = {}
     codeTextArea.value.split('\n')
-    .map(l => l.trim())
-    .map(line => line.replace(/\/\/.*/, ''))
-    .filter(l => l != '')
-    .map(parseLine)
+    .map((l,i) => {return{line:l.trim(), num:i}})
+    .map(({line,num}) => {return{line:line.replace(/\/\/.*/, ''),num:num}})
+    .filter(({line}) => line != '')
+    .map(({line,num}) => {
+      try {
+        parseLine(line)
+      } catch (e) {
+        consoleOut('Parse Error on line '+num+': ' + e)
+      }
+    })
   }
 
   // Update
@@ -173,7 +189,13 @@ define(function(require) {
       beat16Readout.innerText = (beat.count%16 + 1) + '/16'
       beat32Readout.innerText = (beat.count%32 + 1) + '/32'
       for (let player of Object.values(playerInstances)) {
-        if (typeof player === 'function') { player(beat) }
+        if (typeof player === 'function') {
+          try {
+            player(beat)
+          } catch (e) {
+            consoleOut('Error: ' + e)
+          }
+        }
       }
     }
     requestAnimationFrame(tick);
