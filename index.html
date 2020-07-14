@@ -6,15 +6,30 @@
   <style>
     body {
       font-family: helvetica, arial;
+      background: #e0e0e0;
+      color: #303030;
     }
     .widget {
-      background: #f8f8f8;
+      background: #303030;
+      color: #d0d0d0;
       border: 2px solid #202020;
       border-radius: 6px;
       margin: 4px;
       padding: 4px
     }
+    textarea {
+      background: #404040;
+      color: #e0e0e0;
+      width: 100%;
+      max-width: 100%;
+      font-size:1.2em;
+    }
+    textarea#console {
+      background: #202020;
+      color: #c0c0c0;
+    }
     button {
+      background: #808080;
       font-size: 2em;
     }
     span {
@@ -37,7 +52,7 @@
 </head>
 <body>
   <div class="widget">
-    <h1>Global</h1>
+    <h3>Limut</h3>
     <p>main.amp: <span id="main-amp-readout"></span> <input id="main-amp-slider" type="range" min="0" max="200" oninput="mainAmpChange(parseFloat(this.value)/100)" style="width:80%;" /></p>
     <p>main.reverb: <span id="main-reverb-readout"></span> Scale: <span id="scale-readout"></span></p>
     <p>bpm: <span id="bpm-readout"> : </span> beat: <span class="beat-readout" id="beat-readout"></span> : <span class="beat-readout" id="beat3-readout"></span> <span class="beat-readout" id="beat4-readout"></span> <span class="beat-readout" id="beat16-readout"></span> <span class="beat-readout" id="beat32-readout"></span></p>
@@ -48,7 +63,8 @@
       <button onclick="stop()">◼</button>
     </p>
     <p>
-      <textarea id="code" rows="20" style="width: 100%; max-width: 100%; font-size:1.2em;"></textarea>
+      <textarea id="code" rows="15"></textarea>
+      <textarea id="console" rows="7">&gt; Welcome to Limut</textarea>
     </p>
   </div>
 <div class="info">
@@ -154,11 +170,11 @@ d2 play .[--]</pre>
 /*
 ==== audio ====
 techno pad
-strings pad
 room/mix params - cheap shared delay based - https://itnext.io/algorithmic-reverb-and-web-audio-api-e1ccec94621a
  - try doing feedback on a short convolver???
 vib param
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
+strings pad
 shape param
 drive param
 hpf
@@ -172,14 +188,14 @@ FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
 FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ==== non-audio ====
-fix [1,2]T1/4
+console and proper error handling and reporting
 live coding controls
- ? Run only cursor/selected code?
  ? Comment in/out?
  ? Solo? Group controls?
+ ? Run only cursor/selected code?
  ? Sliders?
 <> for 'in sequence on each repeat' in patterns and params
-console and proper error reporting
+fix [1,2]T1/4 , also [1,2]T(1/4)
 better musicality: extending patterns like every/sometimes/offadd/stutter etc
 round brackets for chords in patterns
 sliders

@@ -594,6 +594,11 @@ define(function(require) {
   assertIn(0.1, 0.4, p(7/4,7/4))
   assert(0, p(2,2))
 
+  p = parseExpression('[1,2]T0.5')
+  assert(1, p(0,0))
+  assert(2, p(1/2,1/2))
+  assert(1, p(1,1))
+
   console.log('Parse expression tests complete')
 
   return parseExpression
