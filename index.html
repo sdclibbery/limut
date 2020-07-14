@@ -152,27 +152,15 @@ d2 play .[--]</pre>
 </body>
 <script data-main="main" src="require.js">
 /*
-x  strategically add more samples
-x fix release pop
-x ethereal pad
+==== audio ====
 techno pad
 strings pad
 room/mix params - cheap shared delay based - https://itnext.io/algorithmic-reverb-and-web-audio-api-e1ccec94621a
  - try doing feedback on a short convolver???
-live coding controls
- ? Run only cursor/selected code?
- ? Solo? Group controls?
- ? Comment in/out?
- ? Sliders?
 vib param
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
-<> for 'in sequence on each repeat' in patterns and params
-console and proper error reporting
-better musicality: extending patterns like every/sometimes/offadd/stutter etc
-round brackets for chords in patterns
 shape param
 drive param
-sliders
 hpf
 bpf
 slide param
@@ -181,14 +169,27 @@ formant
 pan
 scale
 FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
+FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
+FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
+==== non-audio ====
+half'n'half drops
+fix [1,2]T1/4
+live coding controls
+ ? Run only cursor/selected code?
+ ? Solo? Group controls?
+ ? Comment in/out?
+ ? Sliders?
+<> for 'in sequence on each repeat' in patterns and params
+console and proper error reporting
+better musicality: extending patterns like every/sometimes/offadd/stutter etc
+round brackets for chords in patterns
+sliders
 seeded random: takes repeat length and optional seed
 Report the gain reduction from the compressor, maybe even have a longer term feedback based on it?
 ^ operator: concat arrays
 ? when evaluating time var, can it accept a decimal time? Do we pass event time rather than beat time?
 operator precedence
 ? What do nested [] mean in params?
-FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
-FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 allow dur to be tvar
 ?extract some of the playing stuff out of pattern.js?
 Syntax to make parts of patterns repeat a set number of times?

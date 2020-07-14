@@ -72,7 +72,7 @@ define(function (require) {
   }
   let scale = {
     scales: scales,
-    current: 'minor',
+    current: 'major',
   }
 
   scale.set = (s) => {
@@ -98,16 +98,18 @@ define(function (require) {
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
 
+  scale.current = 'major'
   assert(261.6, scale.degreeToFreq(0, 4))
   assert(130.8, scale.degreeToFreq(0, 3))
   assert(523.3, scale.degreeToFreq(0, 5))
-  assert(415.3, scale.degreeToFreq(5, 4))
-  assert(233.1, scale.degreeToFreq(-1, 4))
+  assert(440.0, scale.degreeToFreq(5, 4))
+  assert(246.9, scale.degreeToFreq(-1, 4))
 
   scale.current = 'chromatic'
   assert(261.6, scale.degreeToFreq(0, 4))
   assert(415.3, scale.degreeToFreq(8, 4))
-  scale.current = 'minor'
+
+  scale.current = 'major'
 
   console.log('Scale tests complete')
 
