@@ -17,7 +17,7 @@ define(function (require) {
 
     let vcos = [0, 0.2].map(lerp => {
       let vco = system.audio.createOscillator()
-      vco.type = 'triangle';
+      vco.type = 'sine';
       vco.frequency.value = freq
       vco.detune.value = lerp * detuneSemis*100
       return vco

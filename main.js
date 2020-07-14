@@ -17,6 +17,7 @@ define(function(require) {
   let bell = require('play/bell')
   let glock = require('play/glock')
   let piano = require('play/piano')
+  let ethereal = require('play/ethereal')
 
   // Players
   let nullPlayer = () => {}
@@ -35,6 +36,7 @@ define(function(require) {
     bell: standardPlayer(bell),
     glock: standardPlayer(glock),
     piano: standardPlayer(piano),
+    ethereal: standardPlayer(ethereal),
   };
   let playerInstances = {}
 

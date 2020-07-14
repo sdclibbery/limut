@@ -94,12 +94,14 @@ d2 play .[--]</pre>
 <p><code>! / stop / none</code> </p>
 <p><code>play</code> Play samples. Use letters, symbols and digits 1-4 in the pattern to choose the sample. Note duration defaults to 1/2.</p>
 <p><code>drums</code> Basic drum synth; accepts XxOo-= characters in the pattern. Note duration defaults to 1/2.</p>
-<p><code>dsaw</code> </p>
-<p><code>dbass</code> </p>
-<p><code>ping</code> </p>
-<p><code>swell</code> </p>
-<p><code>bell</code> </p>
-<p><code>glock</code> </p>
+<p><code>dsaw</code> Detuned saw pad</p>
+<p><code>dbass</code> Detuned saw bass</p>
+<p><code>ping</code> Sine ping</p>
+<p><code>swell</code> Swell pad</p>
+<p><code>bell</code> FM generated bell</p>
+<p><code>glock</code> FM generated glockenspiel</p>
+<p><code>piano</code> Fairly realistic sampled piano</p>
+<p><code>ethereal</code> Ethereal pad</p>
 <h3>Pattern syntax</h3>
 <p><code>x-o-</code> Sequence of events, each of duration <code>dur</code>, for use with <code>play</code></p>
 <p><code>0123</code> Sequence of events, each of duration <code>dur</code>, for use with tonal synths. Numbers are scale degrees</p>
@@ -150,13 +152,11 @@ d2 play .[--]</pre>
 </body>
 <script data-main="main" src="require.js">
 /*
-x piano synth  https://archive.org/details/SalamanderGrandPianoV3  https://github.com/tambien/Piano
-x  envelope to not stop abruptly - check if the tone piano does anything special here
-x  more samples from other octaves: play nearest
-x   replace ones that haven't loaded yet with next nearest
 x  strategically add more samples
 x fix release pop
-pads
+ethereal pad
+techno pad
+strings pad
 room/mix params - cheap shared delay based - https://itnext.io/algorithmic-reverb-and-web-audio-api-e1ccec94621a
  - try doing feedback on a short convolver???
 live coding controls
