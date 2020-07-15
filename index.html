@@ -94,6 +94,7 @@ Ba piano 0__2, add=prog, amp=4, Oct=2
 Ch piano 0, dur=8, Sus=12, add=(prog+(0,2,4))%7, amp=2, Oct=3
 Le piano 0_.[.0]2343, amp=3, add=prog, Oct=4</pre>
 <pre>Main.reverb = 10
+scale=minor
 Ba dbass 004[21], dur=4, amp=1.5
 Kd play x[.x]x., dur=2
 Sn play .o, dur=2</pre>
@@ -169,11 +170,11 @@ d2 play .[--]</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-techno pad
 room/mix params - cheap shared delay based - https://itnext.io/algorithmic-reverb-and-web-audio-api-e1ccec94621a
  - try doing feedback on a short convolver???
 vib param
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
+techno pad - detuned sine - with delay? - OR: PWM changing
 strings pad
 shape param
 drive param
@@ -188,10 +189,6 @@ FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
 FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ==== non-audio ====
-x console and error reporting
-x nice error for player name not found
-nice error for parse errors
-nice error for play errors
 live coding controls
  ? Comment in/out?
  ? Solo? Group controls?

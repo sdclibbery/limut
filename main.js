@@ -82,10 +82,12 @@ define(function(require) {
     let playerId = parts[0].trim()
     if (playerId) {
       let playerName = parts[1].trim()
+      if (!playerName) { throw 'Missing player name' }
       if (playerName) {
         let command  = parts.slice(2).join('').trim()
+        if (!command) { throw 'Player "'+playerName+'" Missing params' }
         let player = players[playerName.toLowerCase()]
-        if (!player) { throw 'Player '+playerName+' not found' }
+        if (!player) { throw 'Player "'+playerName+'" not found' }
         playerInstances[playerId] = player(command)
       } else {
         delete playerInstances[playerId]
@@ -168,8 +170,10 @@ define(function(require) {
     .map(({line,num}) => {
       try {
         parseLine(line)
+        consoleOut('>'+line)
       } catch (e) {
-        consoleOut('Parse Error on line '+num+': ' + e)
+        let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
+        consoleOut('Error on line '+(num+1)+': ' + e + st)
       }
     })
   }
@@ -188,12 +192,14 @@ define(function(require) {
       beat4Readout.innerText = (beat.count%4 + 1) + '/4'
       beat16Readout.innerText = (beat.count%16 + 1) + '/16'
       beat32Readout.innerText = (beat.count%32 + 1) + '/32'
-      for (let player of Object.values(playerInstances)) {
+      for (let playerName of Object.keys(playerInstances)) {
+        let player = playerInstances[playerName]
         if (typeof player === 'function') {
           try {
             player(beat)
           } catch (e) {
-            consoleOut('Error: ' + e)
+            let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
+            consoleOut('Run Error from player '+playerName+': ' + e + st)
           }
         }
       }
