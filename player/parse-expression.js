@@ -199,10 +199,11 @@ define(function(require) {
     return evalParam(vs[idx], s,b)
   }
 
-  let number = (state) => {
+  let numberValue = (state) => {
     let value = ''
     let char
     let sign = true
+    let fraction = false
     while (char = state.str.charAt(state.idx)) {
       if (char == '') { break }
       if (sign && char == '-') {
@@ -220,8 +221,22 @@ define(function(require) {
       break
     }
     if (value == '') { return undefined }
-    if (debugParse) { console.log('number', value, state) }
     return parseFloat(value)
+  }
+  let number = (state) => {
+    let numerator = numberValue(state)
+    if (numerator === undefined) { return undefined }
+    let denominator = 1
+    if (state.str.charAt(state.idx) == '/') {
+      state.idx += 1
+      denominator = numberValue(state)
+      if (denominator === undefined) {
+        state.idx -= 1
+        denominator = 1
+      }
+    }
+    if (debugParse) { console.log('number', numerator/denominator, state) }
+    return numerator/denominator
   }
 
   let expression = (state) => {
@@ -514,8 +529,13 @@ define(function(require) {
 
   assert(4, parseExpression('2+4/2'))
   assert(3, parseExpression('(2+4)/2'))
-  // assert(4, parseExpression('4/2+2'))
+  assert(4, parseExpression('4/2+2'))
   assert(1, parseExpression('4/(2+2)'))
+
+  assert(10, parseExpression('2+4*2'))
+  assert(12, parseExpression('(2+4)*2'))
+//  assert(10, parseExpression('4*2+2'))
+  assert(16, parseExpression('4*(2+2)'))
 
   assert(4, parseExpression('2*2'))
   assert([2,4], parseExpression('(1,2)*2')(0,0))
@@ -595,6 +615,11 @@ define(function(require) {
   assert(0, p(2,2))
 
   p = parseExpression('[1,2]T0.5')
+  assert(1, p(0,0))
+  assert(2, p(1/2,1/2))
+  assert(1, p(1,1))
+
+  p = parseExpression('[1,2]T1/2')
   assert(1, p(0,0))
   assert(2, p(1/2,1/2))
   assert(1, p(1,1))
