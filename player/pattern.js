@@ -20,13 +20,19 @@ define(function(require) {
         let subParsed = parsePatternString(pattern, idx, ']')
         parsed.push(subParsed)
         if (debug) { console.log('sp/i/ps ', subParsed, idx.v, pattern.slice(idx.v)) }
-      } else {
-        if (char.match(/[0-9]/i) && parsed[parsed.length-1] == '-') {
+      } else if (char == '(') {
+        idx.v += 1
+        if (debug) { console.log('i/ps ', idx.v, pattern.slice(idx.v)) }
+        let subParsed = parsePatternString(pattern, idx, ')')
+        subParsed.together = true
+        parsed.push(subParsed)
+        if (debug) { console.log('sp/i/ps ', subParsed, idx.v, pattern.slice(idx.v)) }
+      } else if (char.match(/[0-9]/i) && parsed[parsed.length-1] == '-') {
           parsed.pop()
           parsed.push('-'+char)
-        } else {
-          parsed.push(char)
-        }
+          idx.v += 1
+      } else {
+        parsed.push(char)
         idx.v += 1
       }
     }
@@ -43,7 +49,7 @@ define(function(require) {
     steps.forEach((step, idx) => {
       let dur = durs[stepIdx % durs.length]
       let value = steps[idx]
-      if (Array.isArray(value)) {
+      if (Array.isArray(value) && !value.together) {
         getEvents(value, stepData, [dur / value.length], params)
       } else {
         if (value == '_') {
@@ -113,7 +119,7 @@ define(function(require) {
         event.time = sourceEvent.time + (event.delay || 0)
         time = (patternStartTime + event.time) - count
         if (debug) { console.log('pst: ', patternStartTime, 'et: ', event.time, ' t/c: ', time, count) }
-        if (time > -0.0001 && time < 0.9999) {
+        if (event.value !== '.' && time > -0.0001 && time < 0.9999) {
           for (let k in sourceEvent) {
             if (k != 'time' && k != 'delay' && k != 'value') {
               event[k] = evalParam(sourceEvent[k], stepIdx, count+time)
@@ -146,6 +152,8 @@ define(function(require) {
   assert(['x',['-','-'],'o',['-','-']], parsePatternString('x[--]o[--]'))
   assert(['o',['x',['-','-'], 'x'],'o'], parsePatternString('o[x[--]x]o'))
   assert([[['-','-'],['-','-']]], parsePatternString('[[--][--]]'))
+  assert([['x','o']], parsePatternString('(xo)'))
+  assert(true, parsePatternString('(xo)')[0].together)
 
   let pattern
 
@@ -210,7 +218,7 @@ define(function(require) {
 
   pattern = parsePattern('=--.--', {dur:1/3})
   assert([{value:'=',time:0,dur:1/3},{value:'-',time:1/3,dur:1/3},{value:'-',time:2/3,dur:1/3}], pattern(0))
-  assert([{value:'.',time:0,dur:1/3},{value:'-',time:1/3,dur:1/3},{value:'-',time:2/3,dur:1/3}], pattern(1))
+  assert([{value:'-',time:1/3,dur:1/3},{value:'-',time:2/3,dur:1/3}], pattern(1))
   assert([{value:'=',time:0,dur:1/3},{value:'-',time:1/3,dur:1/3},{value:'-',time:2/3,dur:1/3}], pattern(2))
 
   pattern = parsePattern('[xo]', {})
@@ -230,8 +238,8 @@ define(function(require) {
   assert([{value:'x',time:0,dur:1/4},{value:'o',time:1/4,dur:1/4},{value:'x',time:1/2,dur:1/4},{value:'o',time:3/4,dur:1/4}], pattern(2))
 
   pattern = parsePattern('[xo].', {dur:1/2})
-  assert([{value:'x',time:0,dur:1/4},{value:'o',time:1/4,dur:1/4},{value:'.',time:1/2,dur:1/2}], pattern(0))
-  assert([{value:'x',time:0,dur:1/4},{value:'o',time:1/4,dur:1/4},{value:'.',time:1/2,dur:1/2}], pattern(1))
+  assert([{value:'x',time:0,dur:1/4},{value:'o',time:1/4,dur:1/4}], pattern(0))
+  assert([{value:'x',time:0,dur:1/4},{value:'o',time:1/4,dur:1/4}], pattern(1))
 
   pattern = parsePattern('012345', {dur:2})
   for (let i = 0; i < 20; i++) {
@@ -322,6 +330,14 @@ define(function(require) {
   assert([{value:'0',time:0,dur:1.5}], pattern(0))
   assert([{value:'1',time:1/2,dur:1/2}], pattern(1))
   assert([{value:'0',time:0,dur:1.5}], pattern(2))
+
+  pattern = parsePattern('(xo)', {})
+  assert([{value:'x',time:0,dur:1},{value:'o',time:0,dur:1}], pattern(0))
+  assert([{value:'x',time:0,dur:1},{value:'o',time:0,dur:1}], pattern(1))
+
+  pattern = parsePattern('[.(24)]_', {})
+  assert([{value:'2',time:0.5,dur:1.5},{value:'4',time:0.5,dur:1.5}], pattern(0))
+  assert([], pattern(1))
 
   console.log("Pattern tests complete")
 

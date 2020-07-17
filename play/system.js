@@ -55,12 +55,5 @@ system.vcaMainAmp.connect(system.reverb)
 system.vcaMainAmp.connect(system.compressor)
 system.compressor.connect(system.audio.destination)
 
-var _getFft = function (data) {
-  if (!ffts[data]) {
-    ffts[data] = system.audio.createPeriodicWave(new Float32Array(data.real), new Float32Array(data.imag));
-  }
-  return ffts[data];
-};
-
 return system;
 });
