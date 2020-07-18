@@ -2,8 +2,58 @@
 define(function(require) {
   let debug = false
 
-  let pattern = (state, time, step, durs, endChar) => {
-    if (debug) { console.log('pattern', state, durs) }
+  let step = (state) => {
+    let events = []
+    let dur = state.durs[state.step % state.durs.length]
+    let char = state.str.charAt(state.idx)
+    // subdivision
+    if (char == '[') {
+      state.idx += 1
+      let subState = Object.assign({}, state)
+      subState.time = 0
+      let sub = pattern(subState, ']')
+      state.idx = subState.idx
+      if (sub.length === 0) { return events }
+      sub.events.forEach(e => {
+        if (debug) { console.log('subdivision', state, 'e', e, 'sub.length', sub.length) }
+        events.push({
+          value: e.value,
+          time: state.time + e.time*dur/sub.length,
+          dur: e.dur*dur/sub.length,
+        })
+      })
+      state.step += 1
+      state.time += dur
+      return events
+    }
+    // rest
+    if (char == '.') {
+      state.idx += 1
+      if (debug) { console.log('rest', state) }
+      state.time += dur
+      state.step += 1
+      return events
+    }
+    // actual event
+    let nextChar = state.str.charAt(state.idx+1)
+    if (char == '-' && nextChar >= '0' && nextChar <= '9') {
+      char = '-'+nextChar
+      state.idx += 1
+    }
+    state.idx += 1
+    if (debug) { console.log('event', state, 'value:', char, 'time:', state.time, 'dur:', dur) }
+    events.push({
+      value: char,
+      time: state.time,
+      dur: dur,
+    })
+    state.time += dur
+    state.step += 1
+    return events
+  }
+
+  let pattern = (state, endChar) => {
+    if (debug) { console.log('pattern', state, endChar) }
     let events = []
     let length = 0
     let char
@@ -13,49 +63,10 @@ define(function(require) {
         state.idx += 1
         break
       }
-      let dur = durs[step % durs.length]
-      // subdivision
-      if (char == '[') {
-        state.idx += 1
-        let sub = pattern(state, 0, step, [dur], ']')
-        if (sub.length === 0) { continue }
-        if (debug) { console.log('subdivision', state, 'sub', sub) }
-        sub.events.forEach(e => {
-          events.push({
-            value: e.value,
-            time: time + e.time*dur/sub.length,
-            dur: e.dur*dur/sub.length,
-          })
-        })
-        time += dur
-        step += 1
-        continue
-      }
-      // rest
-      if (char == '.') {
-        state.idx += 1
-        if (debug) { console.log('rest', state) }
-        time += dur
-        step += 1
-        continue
-      }
-      // actual event
-      let nextChar = state.str.charAt(state.idx+1)
-      if (char == '-' && nextChar >= '0' && nextChar <= '9') {
-        char = '-'+nextChar
-        state.idx += 1
-      }
-      state.idx += 1
-      if (debug) { console.log('event', state, 'value:', char, 'time:', time, 'dur:', dur) }
-      events.push({
-        value: char,
-        time: time,
-        dur: dur,
-      })
-      time += dur
-      step += 1
+      let stepEvents = step(state)
+      events = events.concat(stepEvents)
     }
-    return { events: events, length: time }
+    return { events: events, length: state.time }
   }
 
   let foldContinuations = (events) => {
@@ -72,14 +83,18 @@ define(function(require) {
     return result
   }
 
-  let parsePattern = (patternStr, dur) => {
-    if (debug) { console.log('*** parsePattern', patternStr, dur) }
-    if (!Array.isArray(dur)) { dur = [dur] }
+  let parsePattern = (patternStr, durs) => {
+    if (debug) { console.log('*** parsePattern', patternStr, durs) }
+    if (!Array.isArray(durs)) { durs = [durs] }
     let state = {
       str: patternStr.trim(),
       idx: 0,
+      time: 0,
+      step: 0,
+      durs: durs,
     }
-    let result = pattern(state, 0, 0, dur)
+    let result = pattern(state)
+    if (debug) { console.log('result', result) }
     let events = result.events
       .map(e => {
         if (e.time < -0.0001) {e.time += result.length}
@@ -89,11 +104,11 @@ define(function(require) {
       .sort((a,b) => a.time-b.time)
     if (result.length > 0) {
       let extraStepIdx = 0
-      let durLength = dur.reduce((l,r)=>l+r, 0)
+      let durLength = durs.reduce((l,r)=>l+r, 0)
       while (durLength > result.length) {
         let newEvent = Object.assign({}, events[extraStepIdx])
         newEvent.time = result.length
-        newEvent.dur = dur[events.length % dur.length]
+        newEvent.dur = durs[events.length % durs.length]
         events.push(newEvent)
         result.length += newEvent.dur
         extraStepIdx + 1
