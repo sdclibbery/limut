@@ -244,8 +244,8 @@ define(function(require) {
     let lhs = undefined
     let char
     while (char = state.str.charAt(state.idx)) {
-      if (char == '') { break }
-      if (char == ' ' || char == '\t' || char == '\n' || char == '\r') { state.idx += 1; continue }
+      if (char === '') { break }
+      if (char === ' ' || char === '\t' || char === '\n' || char === '\r') { state.idx += 1; continue }
       // array
       if (char == '[') {
         let vs = array(state, '[', ']')
@@ -352,8 +352,6 @@ define(function(require) {
     let state = {
       str: v,
       idx: 0,
-      bracketStack: [],
-      recirc: 0
     }
     return expression(state)
   }

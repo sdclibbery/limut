@@ -2,72 +2,9 @@
 define(function(require) {
   let evalParam = require('player/eval-param')
   let param = require('player/default-param')
+  let parsePatternString = require('player/parse-pattern')
 
   let debug = false
-
-  let parsePatternString = (pattern, idx, endChar) => {
-    if (!idx) { idx = {v:0} }
-    let parsed = []
-    let char
-    while (char = pattern.charAt(idx.v)) {
-      if (debug) { console.log('p/c/i ', pattern, char, idx.v) }
-      if (char === endChar) {
-        idx.v += 1
-        return parsed
-      } else if (char == '[') {
-        idx.v += 1
-        if (debug) { console.log('i/ps ', idx.v, pattern.slice(idx.v)) }
-        let subParsed = parsePatternString(pattern, idx, ']')
-        parsed.push(subParsed)
-        if (debug) { console.log('sp/i/ps ', subParsed, idx.v, pattern.slice(idx.v)) }
-      } else if (char == '(') {
-        idx.v += 1
-        if (debug) { console.log('i/ps ', idx.v, pattern.slice(idx.v)) }
-        let subParsed = parsePatternString(pattern, idx, ')')
-        subParsed.together = true
-        parsed.push(subParsed)
-        if (debug) { console.log('sp/i/ps ', subParsed, idx.v, pattern.slice(idx.v)) }
-      } else if (char.match(/[0-9]/i) && parsed[parsed.length-1] == '-') {
-          parsed.pop()
-          parsed.push('-'+char)
-          idx.v += 1
-      } else {
-        parsed.push(char)
-        idx.v += 1
-      }
-    }
-    return parsed
-  }
-
-  let getEvents = (steps, stepData, durs, params) => {
-    let stepIdx = 0
-    let extraStepIdx = 0
-    while (durs.length > steps.length) {
-      steps.push(steps[extraStepIdx])
-      extraStepIdx + 1
-    }
-    steps.forEach((step, idx) => {
-      let dur = durs[stepIdx % durs.length]
-      let value = steps[idx]
-      if (Array.isArray(value) && !value.together) {
-        getEvents(value, stepData, [dur / value.length], params)
-      } else {
-        if (value == '_') {
-          stepData.events[stepData.events.length-1].dur += dur
-        } else {
-          event = {value:value, time:stepData.time}
-          for (let k in params) {
-            event[k] = params[k]
-          }
-          event.dur = dur
-          stepData.events.push(event)
-          stepIdx = stepIdx + 1
-        }
-        stepData.time += dur
-        stepData.patternLength += dur
-      }
-    })
-  }
 
   let multiplyEvents = (event) => {
     for (let k in event) {
@@ -84,48 +21,37 @@ define(function(require) {
   }
 
   let parsePattern = (pattern, params, defaultDur) => {
+    if (debug) { console.log('*** pattern ', pattern) }
     if (!pattern) { return () => [] }
-    let steps = parsePatternString(pattern)
     let dur = param(param(params.dur, defaultDur), 1)
-    if (!Array.isArray(dur)) { dur = [dur] }
-    let stepData = {
-      time: 0,
-      events: [],
-      patternLength: 0,
-    }
-    getEvents(steps, stepData, dur, params)
-    let patternLength = stepData.patternLength
-    let events = stepData.events
-      .map(e => {
-        if (e.time < -0.0001) {e.time += patternLength}
-        if (e.time > patternLength-0.0001) {e.time -= patternLength}
-        return e
-      })
-      .sort((a,b) => a.time-b.time)
-    if (debug) { console.log(pattern, dur, patternLength, events) }
+    let result = parsePatternString(pattern, dur)
+    let patternLength = result.length
+    let events = result.events
+    if (debug) { console.log('events:', events, 'patternLength:', patternLength) }
     return (count) => {
       if (events.length == 0) { return [] }
       let patternStartTime = patternLength * Math.floor(count / patternLength)
       let patternBeat = count * patternLength / events.length
+      if (debug) { console.log('play patternLength:', patternLength, 'patternStartTime:', patternStartTime, 'patternBeat: ', patternBeat) }
       let stepIdx = 0
       let eventsForBeat = []
       let time = 0
       do {
-        if (debug) { console.log('idxs: ', stepIdx) }
         let sourceEvent = events[stepIdx]
         let event = {}
         event.value = sourceEvent.value
-        event.delay = evalParam(sourceEvent.delay, stepIdx, count)
+        event.delay = evalParam(params.delay, stepIdx, count)
         event.time = sourceEvent.time + (event.delay || 0)
         time = (patternStartTime + event.time) - count
-        if (debug) { console.log('pst: ', patternStartTime, 'et: ', event.time, ' t/c: ', time, count) }
         if (event.value !== '.' && time > -0.0001 && time < 0.9999) {
-          for (let k in sourceEvent) {
+          for (let k in params) {
             if (k != 'time' && k != 'delay' && k != 'value') {
-              event[k] = evalParam(sourceEvent[k], stepIdx, count+time)
+              event[k] = evalParam(params[k], stepIdx, count+time)
             }
           }
+          event.dur = sourceEvent.dur
           event.time = time
+          if (debug) { console.log('play event:', event, 'stepIdx: ', stepIdx) }
           Array.prototype.push.apply(eventsForBeat, multiplyEvents(event))
         }
         stepIdx += 1
@@ -145,15 +71,6 @@ define(function(require) {
     let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
-
-  assert([], parsePatternString(''))
-  assert(['x','-','o'], parsePatternString('x-o'))
-  assert([['x','x']], parsePatternString('[xx]'))
-  assert(['x',['-','-'],'o',['-','-']], parsePatternString('x[--]o[--]'))
-  assert(['o',['x',['-','-'], 'x'],'o'], parsePatternString('o[x[--]x]o'))
-  assert([[['-','-'],['-','-']]], parsePatternString('[[--][--]]'))
-  assert([['x','o']], parsePatternString('(xo)'))
-  assert(true, parsePatternString('(xo)')[0].together)
 
   let pattern
 
@@ -335,9 +252,23 @@ define(function(require) {
   assert([{value:'x',time:0,dur:1},{value:'o',time:0,dur:1}], pattern(0))
   assert([{value:'x',time:0,dur:1},{value:'o',time:0,dur:1}], pattern(1))
 
+  pattern = parsePattern('(01)_', {})
+  assert([{value:'0',time:0,dur:2},{value:'1',time:0,dur:2}], pattern(0))
+  assert([], pattern(1))
+
   pattern = parsePattern('[.(24)]_', {})
   assert([{value:'2',time:0.5,dur:1.5},{value:'4',time:0.5,dur:1.5}], pattern(0))
   assert([], pattern(1))
+
+  pattern = parsePattern('x(o[--])', {})
+  assert([{value:'x',time:0,dur:1}], pattern(0))
+  assert([{value:'o',time:0,dur:1},{value:'-',time:0,dur:0.5},{value:'-',time:0.5,dur:0.5}], pattern(1))
+  assert([{value:'x',time:0,dur:1}], pattern(2))
+
+  pattern = parsePattern('x([--]o)', {})
+  assert([{value:'x',time:0,dur:1}], pattern(0))
+  assert([{value:'o',time:0,dur:1},{value:'-',time:0,dur:0.5},{value:'-',time:0.5,dur:0.5}], pattern(1))
+  assert([{value:'x',time:0,dur:1}], pattern(2))
 
   console.log("Pattern tests complete")
 
