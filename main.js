@@ -178,13 +178,21 @@ define(function(require) {
     })
   }
 
+  let to255 = (x) => Math.min(Math.max(Math.floor(x*256), 0), 255)
+  let compressorColor = (reduction) => {
+    let c = Math.abs(reduction)/3
+    return `rgb(${to255(Math.sin(c*1.57))},${to255(Math.cos(c*1.57))},0)`
+  }
+
   // Update
+  let compressorReadout = document.getElementById('compressor-readout')
   let beatReadout = document.getElementById('beat-readout')
   let beat3Readout = document.getElementById('beat3-readout')
   let beat4Readout = document.getElementById('beat4-readout')
   let beat16Readout = document.getElementById('beat16-readout')
   let beat32Readout = document.getElementById('beat32-readout')
   let tick = function () {
+    compressorReadout.style.backgroundColor = compressorColor(system.compressorReduction())
     let beat = metronome.update(system.timeNow());
     if (beat) {
       beatReadout.innerText = beat.count

@@ -20,6 +20,11 @@ system.mainAmp = (amp) => {
   return system.vcaMainAmp.gain.value
 }
 
+system.compressorReduction = () => {
+  if (!system.compressor) { return 0 }
+  return system.compressor.reduction
+}
+
 system.mix = function (node) {
   node.connect(system.vcaMainAmp)
 }
