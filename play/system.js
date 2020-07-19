@@ -11,13 +11,14 @@ system.timeNow = function () {
   return system.audio.currentTime;
 };
 
+let globalBaseGain = 0.5
 system.vcaMainAmp = system.audio.createGain()
-system.vcaMainAmp.gain.value = 1
+system.vcaMainAmp.gain.value = globalBaseGain
 system.mainAmp = (amp) => {
   if (typeof amp == 'number') {
-    system.vcaMainAmp.gain.value = amp
+    system.vcaMainAmp.gain.value = amp*globalBaseGain
   }
-  return system.vcaMainAmp.gain.value
+  return system.vcaMainAmp.gain.value/globalBaseGain
 }
 
 system.compressorReduction = () => {
