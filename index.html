@@ -167,6 +167,7 @@ d2 play .[--]</pre>
 <p><code>chop</code> Chop the signal into a number of parts per beat</p>
 <p><code>rate</code> Playback rate for 'play' samples</p>
 <p><code>sample</code> Sample set choice for 'play' samples</p>
+<p><code>room</code> reverb room size 0-1</p>
 <h3>Param syntax</h3>
 <p><code>1</code> Single value</p>
 <p><code>(1,2)</code> Multiple values, all played together</p>
@@ -192,16 +193,14 @@ d2 play .[--]</pre>
 /*
 ==== audio ====
 room/mix params - cheap shared delay based - https://itnext.io/algorithmic-reverb-and-web-audio-api-e1ccec94621a
- - try doing feedback on a short convolver???
-Experiment with reusing audio nodes instead of recreating to defeat glitchiness
+ try using for main reverb
+shape param
+drive param
 vib param
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
 detuned sine pad
 techno pad - detuned sine - with delay? - OR: PWM changing (also prophet...)
 strings pad
-shape param
-drive param
-hpf
 bpf
 slide param
 root
@@ -214,6 +213,10 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ==== non-audio ====
 <> for 'in sequence on each repeat' in patterns
 <> for 'in sequence on each repeat' in params
+Beat lag display
+Experiment with reusing audio nodes instead of recreating to defeat glitchiness
+Scale param to set scale for just one player
+Support 'penta' and 'pentatonic' as scale names
 Solo param - when any player is solod, then any other player thats not solod does not play
 Can specify params on separate lines and on grouped players
 fade in/out now (linvar once)

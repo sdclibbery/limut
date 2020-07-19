@@ -2,6 +2,7 @@
 define(function (require) {
   let system = require('play/system')
   let param = require('player/default-param')
+  let freeverb = require('play/freeverb')
 
   let echoes = {}
   let echo = (params, node) => {
@@ -18,7 +19,18 @@ define(function (require) {
     }
     node.connect(echoes[echoDelay])
     return node
-  };
+  }
+
+  let reverbs = {}
+  let reverb = (params, node) => {
+    let room = param(params.room, 0)
+    if (!room || room < 0.01) { return node }
+    if (!reverbs[room]) {
+      reverbs[room] = freeverb(room)
+    }
+    node.connect(reverbs[room])
+    return node
+  }
 
   let lpf = (params, node) => {
     let cutoff = param(params.lpf, 0)
@@ -61,6 +73,7 @@ define(function (require) {
     node = chop(params, node)
     node = lpf(params, node)
     node = hpf(params, node)
+    node = reverb(params, node)
     node = echo(params, node)
     return node
   }
