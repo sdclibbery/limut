@@ -22,16 +22,18 @@ define(function(require) {
           dur: e.dur*dur/sub.length,
         })
       })
-      state.step += 1
-      state.time += dur
+      return events
+    }
+    // together
+    if (char == '(') {
+      state.idx += 1
+      events = events.concat(together(state, dur, ')'))
       return events
     }
     // rest
     if (char == '.') {
       state.idx += 1
       if (debug) { console.log('rest', state) }
-      state.time += dur
-      state.step += 1
       return events
     }
     // actual event
@@ -47,8 +49,23 @@ define(function(require) {
       time: state.time,
       dur: dur,
     })
-    state.time += dur
-    state.step += 1
+    return events
+  }
+
+  let together = (state, dur, endChar) => {
+    if (debug) { console.log('together', state, dur, endChar) }
+    let events = []
+    let char
+    while (char = state.str.charAt(state.idx)) {
+      if (char === '') { break }
+      if (char === endChar) {
+        state.idx += 1
+        break
+      }
+      let stepEvents = step(state)
+      events = events.concat(stepEvents)
+    }
+    if (debug) { console.log('together events', state, events) }
     return events
   }
 
@@ -65,6 +82,9 @@ define(function(require) {
       }
       let stepEvents = step(state)
       events = events.concat(stepEvents)
+      let dur = state.durs[state.step % state.durs.length]
+      state.time += dur
+      state.step += 1
     }
     return { events: events, length: state.time }
   }
@@ -131,7 +151,7 @@ define(function(require) {
   }
 
   assert(0, [], parsePattern('', 1))
-  assert(0, [], parsePattern('[]', 1))
+  assert(1, [], parsePattern('[]', 1))
 
   assert(1, [
     {value:'x',time:0, dur:1},
@@ -218,8 +238,8 @@ define(function(require) {
 
   assert(1, [
     {value:'x',time:0, dur:1},
-    {value:'x',time:0, dur:1},
-  ], parsePattern('(xx)', 1))
+    {value:'o',time:0, dur:1},
+  ], parsePattern('(xo)', 1))
 
   assert(2, [
     {value:'0',time:0, dur:2},
@@ -235,8 +255,8 @@ define(function(require) {
 
   assert(2, [
     {value:'x',time:0, dur:1},
-    {value:'o',time:1, dur:1},
     {value:'-',time:1, dur:1/2},
+    {value:'o',time:1, dur:1},
     {value:'-',time:3/2, dur:1/2},
   ], parsePattern('x([--]o)', 1))
 

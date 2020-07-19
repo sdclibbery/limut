@@ -267,7 +267,7 @@ define(function(require) {
 
   pattern = parsePattern('x([--]o)', {})
   assert([{value:'x',time:0,dur:1}], pattern(0))
-  assert([{value:'o',time:0,dur:1},{value:'-',time:0,dur:0.5},{value:'-',time:0.5,dur:0.5}], pattern(1))
+  assert([{value:'-',time:0,dur:0.5},{value:'o',time:0,dur:1},{value:'-',time:0.5,dur:0.5}], pattern(1))
   assert([{value:'x',time:0,dur:1}], pattern(2))
 
   console.log("Pattern tests complete")
