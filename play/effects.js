@@ -69,8 +69,24 @@ define(function (require) {
     return gain
   }
 
+  let driveCurve = new Float32Array(2)
+  driveCurve[0] = -1
+  driveCurve[1] = 1
+  let drive = (params, node) => {
+    let amount = param(params.drive, 0)
+    if (!amount) { return node }
+    let shaper = system.audio.createWaveShaper()
+    shaper.curve = driveCurve
+    shaper.oversample = 'none'
+    let gainIn = system.audio.createGain()
+    gainIn.gain.value = 1 + Math.pow(10, Math.min(amount, 1)*10)
+    node.connect(gainIn)
+    return gainIn
+  }
+
   return (params, node) => {
     node = chop(params, node)
+    node = drive(params, node)
     node = lpf(params, node)
     node = hpf(params, node)
     node = reverb(params, node)

@@ -11,7 +11,7 @@ system.timeNow = function () {
   return system.audio.currentTime;
 };
 
-let globalBaseGain = 0.5
+let globalBaseGain = 0.7
 system.vcaMainAmp = system.audio.createGain()
 system.vcaMainAmp.gain.value = globalBaseGain
 system.mainAmp = (amp) => {
