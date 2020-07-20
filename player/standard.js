@@ -23,7 +23,9 @@ define(function(require) {
       eventsForBeat.forEach(event => {
         let eventToPlay = Object.assign({}, event, {sound: event.value, beat: beat})
         eventToPlay.time = beat.time + event.time*beat.duration
-        play(eventToPlay)
+        if (eventToPlay.amp === undefined || eventToPlay.amp > 0) {
+          play(eventToPlay)
+        }
       })
     }
   }

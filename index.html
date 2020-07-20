@@ -192,7 +192,6 @@ d2 play .[--]</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-drive param
 envelope should come after most effects
 bitcrush param
 try using freeverb for main reverb??
@@ -212,10 +211,10 @@ FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
 FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ==== non-audio ====
-DOnt play sound at all if amp <= 0
 <> for 'in sequence on each repeat' in patterns
 <> for 'in sequence on each repeat' in params
 Beat lag display
+Preload samples immediately after parsing
 Experiment with reusing audio nodes instead of recreating to defeat glitchiness
 Scale param to set scale for just one player
 Support 'penta' and 'pentatonic' as scale names
@@ -243,7 +242,6 @@ fix delay param problems (commented tests in pattern.js)
 index pattern by beat to improve performance in finding events - same for timeVar evaluation
 random timevar gens for patterns: {o-:}
 pattern generators: tri, Dur, walk etc?
-Preload samples immediately after parsing
 evaluate predefined vars; eg allow bpm=[80,120]
 */
 </script>
