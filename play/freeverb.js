@@ -21,7 +21,7 @@ define(function (require) {
     output.frequency.value = dampening
 
     var feedback = system.audio.createGain()
-    feedback.gain.value = Math.min(resonance, 0.99)
+    feedback.gain.value = resonance
 
     node.connect(output)
     output.connect(feedback)
@@ -32,6 +32,7 @@ define(function (require) {
 
   return (room) => {
     let dampening = 3000
+    let resonance = 0.7 + 0.28 * Math.max(Math.min(room, 1), 0)
 
     var node = system.audio.createGain()
     node.channelCountMode = 'explicit'
@@ -79,7 +80,7 @@ define(function (require) {
     allpassFiltersR[allpassFiltersR.length - 1].connect(merger, 0, 1)
 
     for (var c = 0; c < combFilterTunings.length; c++) {
-      var lfpf = lowpassCombFilter(dampening, combFilterTunings[c], room)
+      var lfpf = lowpassCombFilter(dampening, combFilterTunings[c], resonance)
       if (c < combFilterTunings.length / 2) {
         splitter.connect(lfpf, 0)
         lfpf.connect(allpassFiltersL[0])
