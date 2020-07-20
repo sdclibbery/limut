@@ -113,11 +113,10 @@ Bass dbass 0, dur=8, att=2, rel=4, lpf=lpf=100*[3,30]l16</pre>
 Ba piano 0__2, add=prog, amp=4, Oct=2
 Ch piano 0, dur=8, Sus=12, add=(prog+(0,2,4))%7, amp=2, Oct=3
 Le piano 0_.[.0]2343, amp=3, add=prog, Oct=4</pre>
-<pre>Main.reverb = 10
-scale=minor
-Ba dbass 004[21], dur=4, amp=1.5
-Kd play x[.x]x., dur=2
-Sn play .o, dur=2</pre>
+<pre>scale=minor
+Ba dbass 0.4[21], dur=4, amp=1.5, room=1, oct=2+3*drop16.16
+Kd play x[.x]x., dur=2, room=1
+Sn play .o, dur=2, room=1</pre>
 <pre>bpm = 140
 d1 play x.
 d2 play .[--]</pre>
@@ -192,10 +191,9 @@ d2 play .[--]</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-room/mix params - cheap shared delay based - https://itnext.io/algorithmic-reverb-and-web-audio-api-e1ccec94621a
- try using for main reverb
 shape param
 drive param
+try using freeverb for main reverb??
 vib param
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
 detuned sine pad

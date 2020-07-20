@@ -9,7 +9,7 @@ define(function (require) {
   var allpassFilterFrequencies = [225, 556, 441, 341]
 
   let lowpassCombFilter = (dampening, delayTime, resonance) => {
-    var node = system.audio.createDelay(1)
+    var node = system.audio.createDelay(delayTime)
     node.delayTime.value = delayTime
 
     var output = system.audio.createBiquadFilter()
@@ -44,7 +44,7 @@ define(function (require) {
     highpass.frequency.value = 200
 
     var wet = system.audio.createGain()
-    wet.gain.value = 1
+    wet.gain.value = 0.3
 
     node.connect(wet)
     wet.connect(splitter)
