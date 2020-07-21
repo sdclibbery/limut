@@ -301,6 +301,16 @@ define(function(require) {
   assert([{value:'1',time:1, dur:1}], p.events[1].value(0))
   assert([{value:'2',time:1, dur:1}], p.events[1].value(3))
 
+  p = parsePattern('0<123><45>', 1/3)
+  assert(1, p.length)
+  assert({value:'0',time:0, dur:1/3}, p.events[0])
+  assert([{value:'1',time:1/3, dur:1/3}], p.events[1].value(0))
+  assert([{value:'4',time:2/3, dur:1/3}], p.events[2].value(0))
+  assert([{value:'2',time:1/3, dur:1/3}], p.events[1].value(1))
+  assert([{value:'5',time:2/3, dur:1/3}], p.events[2].value(1))
+  assert([{value:'3',time:1/3, dur:1/3}], p.events[1].value(2))
+  assert([{value:'4',time:2/3, dur:1/3}], p.events[2].value(2))
+
   // 0<123><12>
   // 0<1<23>>
   // 0[1<23>]
