@@ -33,32 +33,35 @@ define(function(require) {
       let patternStartTime = patternLength * Math.floor(count / patternLength)
       let patternBeat = count * patternLength / events.length
       if (debug) { console.log('play patternLength:', patternLength, 'patternStartTime:', patternStartTime, 'patternBeat: ', patternBeat) }
-      let stepIdx = 0
+      let idx = 0
       let eventsForBeat = []
       let time = 0
       do {
-        let sourceEvent = events[stepIdx]
-        let event = {}
-        event.value = sourceEvent.value
-        event.delay = evalParam(params.delay, stepIdx, count)
-        event.time = sourceEvent.time + (event.delay || 0)
-        time = (patternStartTime + event.time) - count
-        if (event.value !== '.' && time > -0.0001 && time < 0.9999) {
-          for (let k in params) {
-            if (k != 'time' && k != 'delay' && k != 'value') {
-              event[k] = evalParam(params[k], stepIdx, count+time)
+        let e = events[idx]
+        let es = (typeof(e.value) == 'function') ? e.value(Math.floor(count/patternLength)) : [e]
+        es.forEach(sourceEvent => {
+          let event = {}
+          event.value = sourceEvent.value
+          event.delay = evalParam(params.delay, idx, count)
+          event.time = sourceEvent.time + (event.delay || 0)
+          time = (patternStartTime + event.time) - count
+          if (event.value !== '.' && time > -0.0001 && time < 0.9999) {
+            for (let k in params) {
+              if (k != 'time' && k != 'delay' && k != 'value') {
+                event[k] = evalParam(params[k], idx, count+time)
+              }
             }
+            event.dur = sourceEvent.dur
+            event.time = time
+            if (debug) { console.log('play event:', event, 'idx: ', idx) }
+            Array.prototype.push.apply(eventsForBeat, multiplyEvents(event))
           }
-          event.dur = sourceEvent.dur
-          event.time = time
-          if (debug) { console.log('play event:', event, 'stepIdx: ', stepIdx) }
-          Array.prototype.push.apply(eventsForBeat, multiplyEvents(event))
-        }
-        stepIdx += 1
-        if (stepIdx >= events.length) {
-          stepIdx = 0
-          patternStartTime += patternLength
-        }
+          idx += 1
+          if (idx >= events.length) {
+            idx = 0
+            patternStartTime += patternLength
+          }
+        })
       } while (time < 1.0001)
       return eventsForBeat
     }
@@ -269,6 +272,17 @@ define(function(require) {
   assert([{value:'x',time:0,dur:1}], pattern(0))
   assert([{value:'-',time:0,dur:0.5},{value:'o',time:0,dur:1},{value:'-',time:0.5,dur:0.5}], pattern(1))
   assert([{value:'x',time:0,dur:1}], pattern(2))
+
+  pattern = parsePattern('<01>', {})
+  assert([{value:'0',time:0,dur:1}], pattern(0))
+  assert([{value:'1',time:0,dur:1}], pattern(1))
+  assert([{value:'0',time:0,dur:1}], pattern(2))
+
+  pattern = parsePattern('<01><345>', {dur:1/2})
+  assert([{value:'0',time:0,dur:1/2},{value:'3',time:1/2,dur:1/2}], pattern(0))
+  assert([{value:'1',time:0,dur:1/2},{value:'4',time:1/2,dur:1/2}], pattern(1))
+  assert([{value:'0',time:0,dur:1/2},{value:'5',time:1/2,dur:1/2}], pattern(2))
+  assert([{value:'1',time:0,dur:1/2},{value:'3',time:1/2,dur:1/2}], pattern(3))
 
   console.log("Pattern tests complete")
 

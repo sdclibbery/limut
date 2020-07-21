@@ -27,7 +27,22 @@ define(function(require) {
     // together
     if (char == '(') {
       state.idx += 1
-      events = events.concat(together(state, dur, ')'))
+      let tog = array(state, dur, ')')
+      if (debug) { console.log('together', tog) }
+      events = events.concat(tog)
+      return events
+    }
+    // sequence
+    if (char == '<') {
+      state.idx += 1
+      let seq = array(state, dur, '>').map(v => (Array.isArray(v) ? v : [v]))
+      if (seq.length == 0) { seq = [[]] }
+      if (debug) { console.log('sequence', seq) }
+      events.push({
+        value: (r) => seq[r % seq.length],
+        time: state.time,
+        dur: dur,
+      })
       return events
     }
     // rest
@@ -52,8 +67,8 @@ define(function(require) {
     return events
   }
 
-  let together = (state, dur, endChar) => {
-    if (debug) { console.log('together', state, dur, endChar) }
+  let array = (state, dur, endChar) => {
+    if (debug) { console.log('array', endChar, state, 'dur', dur) }
     let events = []
     let char
     while (char = state.str.charAt(state.idx)) {
@@ -65,7 +80,6 @@ define(function(require) {
       let stepEvents = step(state)
       events = events.concat(stepEvents)
     }
-    if (debug) { console.log('together events', state, events) }
     return events
   }
 
@@ -115,13 +129,11 @@ define(function(require) {
     }
     let result = pattern(state)
     if (debug) { console.log('result', result) }
-    let events = result.events
-      .map(e => {
-        if (e.time < -0.0001) {e.time += result.length}
-        if (e.time > result.length-0.0001) {e.time -= result.length}
-        return e
-      })
-      .sort((a,b) => a.time-b.time)
+    let events = result.events.map(e => {
+      if (e.time < -0.0001) {e.time += result.length}
+      if (e.time > result.length-0.0001) {e.time -= result.length}
+      return e
+    }).sort((a,b) => a.time-b.time)
     if (result.length > 0) {
       let extraStepIdx = 0
       let durLength = durs.reduce((l,r)=>l+r, 0)
@@ -143,123 +155,159 @@ define(function(require) {
 
   // TESTS //
 
-  let assert = (expectedLength, expectedValues, actual) => {
+  let assertPattern = (expectedLength, expectedValues, actual) => {
     if (expectedLength !== actual.length) { console.trace(`Assertion failed.\n>>Expected length:\n  ${expectedLength}\n>>Actual:\n  ${actual.length}`) }
     let x = JSON.stringify(expectedValues, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
     let a = JSON.stringify(actual.events, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
+  let assert = (expected, actual) => {
+    let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
+    let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
+    if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
+  }
 
-  assert(0, [], parsePattern('', 1))
-  assert(1, [], parsePattern('[]', 1))
+  assertPattern(0, [], parsePattern('', 1))
+  assertPattern(1, [], parsePattern('[]', 1))
 
-  assert(1, [
+  assertPattern(1, [
     {value:'x',time:0, dur:1},
   ], parsePattern('x', 1))
 
-  assert(2, [
+  assertPattern(2, [
     {value:'x',time:0, dur:1},
     {value:'o',time:1, dur:1},
   ], parsePattern('xo', 1))
 
-  assert(5, [
+  assertPattern(5, [
     {value:'x',time:0, dur:2},
     {value:'o',time:2, dur:3},
   ], parsePattern('xo', [2,3]))
 
-  assert(7, [
+  assertPattern(7, [
     {value:'0',time:0, dur:2},
     {value:'-1',time:2, dur:3},
     {value:'1',time:5, dur:2},
   ], parsePattern('0-11', [2,3]))
 
-  assert(3, [
+  assertPattern(3, [
     {value:'x',time:0, dur:1},
     {value:'-',time:1, dur:1},
     {value:'o',time:2, dur:1},
   ], parsePattern('x-o', 1))
 
-  assert(1/2, [
+  assertPattern(1/2, [
     {value:'x',time:0, dur:1/2},
   ], parsePattern('x', 1/2))
 
-  assert(2, [
+  assertPattern(2, [
     {value:'x',time:0, dur:2},
   ], parsePattern('x', 2))
 
-  assert(2, [
+  assertPattern(2, [
     {value:'x',time:1, dur:1},
   ], parsePattern('.x', 1))
 
-  assert(2, [
+  assertPattern(2, [
     {value:'x',time:0, dur:1},
   ], parsePattern('x.', 1))
 
-  assert(1, [
+  assertPattern(1, [
     {value:'x',time:0, dur:1/2},
     {value:'o',time:1/2, dur:1/2},
   ], parsePattern('[xo]', 1))
 
-  assert(1, [
+  assertPattern(1, [
     {value:'x',time:0, dur:1/4},
     {value:'o',time:1/4, dur:1/4},
   ], parsePattern('[xo].', 1/2))
 
-  assert(1, [
+  assertPattern(1, [
     {value:'0',time:0, dur:1/2},
     {value:'1',time:1/2, dur:1/4},
     {value:'2',time:3/4, dur:1/4},
   ], parsePattern('[0[12]]', 1))
 
-  assert(2, [
+  assertPattern(2, [
     {value:'0',time:0, dur:2},
   ], parsePattern('0_', 1))
 
-  assert(3, [
+  assertPattern(3, [
     {value:'0',time:0, dur:3/2},
     {value:'1',time:3/2, dur:3/2},
   ], parsePattern('0[_1]_', 1))
 
-  assert(2, [
+  assertPattern(2, [
     {value:'0',time:0, dur:2},
   ], parsePattern('[0_]_', 1))
 
-  assert(2, [
+  assertPattern(2, [
     {value:'x',time:0, dur:1},
     {value:'x',time:1, dur:1/2},
     {value:'x',time:3/2, dur:1/2},
   ], parsePattern('x', [1,1/2,1/2]))
 
-  assert(2, [
+  assertPattern(2, [
     {value:'x',time:0, dur:1},
     {value:'o',time:1, dur:1/2},
     {value:'x',time:3/2, dur:1/2},
   ], parsePattern('xo', [1,1/2,1/2]))
 
-  assert(1, [
+  assertPattern(1, [
     {value:'x',time:0, dur:1},
     {value:'o',time:0, dur:1},
   ], parsePattern('(xo)', 1))
 
-  assert(2, [
+  assertPattern(2, [
     {value:'0',time:0, dur:2},
     {value:'1',time:0, dur:2},
   ], parsePattern('(01)_', 1))
 
-  assert(2, [
+  assertPattern(2, [
     {value:'x',time:0, dur:1},
     {value:'o',time:1, dur:1},
     {value:'-',time:1, dur:1/2},
     {value:'-',time:3/2, dur:1/2},
   ], parsePattern('x(o[--])', 1))
 
-  assert(2, [
+  assertPattern(2, [
     {value:'x',time:0, dur:1},
     {value:'-',time:1, dur:1/2},
     {value:'o',time:1, dur:1},
     {value:'-',time:3/2, dur:1/2},
   ], parsePattern('x([--]o)', 1))
 
+  let p
+
+  p = parsePattern('<>', 1)
+  assert(1, p.length)
+  assert([], p.events[0].value(0))
+  assert([], p.events[0].value(1))
+
+  p = parsePattern('<0>', 1)
+  assert(1, p.length)
+  assert([{value:'0',time:0, dur:1}], p.events[0].value(0))
+  assert([{value:'0',time:0, dur:1}], p.events[0].value(1))
+
+  p = parsePattern('0<1>', 1)
+  assert(2, p.length)
+  assert({value:'0',time:0, dur:1}, p.events[0])
+  assert([{value:'1',time:1, dur:1}], p.events[1].value(0))
+  assert([{value:'1',time:1, dur:1}], p.events[1].value(1))
+
+  p = parsePattern('0<12>', 1)
+  assert(2, p.length)
+  assert({value:'0',time:0, dur:1}, p.events[0])
+  assert([{value:'1',time:1, dur:1}], p.events[1].value(0))
+  assert([{value:'2',time:1, dur:1}], p.events[1].value(3))
+
+  // 0<123><12>
+  // 0<1<23>>
+  // 0[1<23>]
+  // 0<1[23]>
+  // 0(1<23>)
+  // 0<1(23)>
+  // 0<[1(23)]>
   console.log("Parse pattern tests complete")
 
   return parsePattern
