@@ -60,6 +60,10 @@ define(function(require) {
     if (char == '.') {
       state.idx += 1
       if (debug) { console.log('rest', state) }
+      events.push({
+        time: state.time,
+        dur: dur,
+      })
       return events
     }
     // actual event
@@ -216,11 +220,13 @@ define(function(require) {
   ], parsePattern('x', 2))
 
   assertPattern(2, [
+    {time:0,dur:1},
     {value:'x',time:1, dur:1},
   ], parsePattern('.x', 1))
 
   assertPattern(2, [
     {value:'x',time:0, dur:1},
+    {time:1,dur:1},
   ], parsePattern('x.', 1))
 
   assertPattern(1, [
@@ -231,6 +237,7 @@ define(function(require) {
   assertPattern(1, [
     {value:'x',time:0, dur:1/4},
     {value:'o',time:1/4, dur:1/4},
+    {time:1/2,dur:1/2},
   ], parsePattern('[xo].', 1/2))
 
   assertPattern(1, [
@@ -344,7 +351,12 @@ define(function(require) {
   assert([{value:'4',time:0, dur:1}], p.events[0].value(7))
   assert([{value:'1',time:0, dur:1}], p.events[0].value(8))
 
-  // <0.>
+  p = parsePattern('<0.>', 1)
+  assert(1, p.length)
+  assert([{value:'0',time:0, dur:1}], p.events[0].value(0))
+  assert([{time:0,dur:1}], p.events[0].value(1))
+  assert([{value:'0',time:0, dur:1}], p.events[0].value(2))
+
   // <1[23]>
   // [1<23>]
   // (1<23>)

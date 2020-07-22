@@ -63,7 +63,7 @@ define(function(require) {
           }
         })
       } while (time < 1.0001)
-      return eventsForBeat
+      return eventsForBeat.filter(({value}) => value !== undefined)
     }
   }
 
