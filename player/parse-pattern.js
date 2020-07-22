@@ -332,16 +332,27 @@ define(function(require) {
   assert([{value:'4',time:0, dur:1}], p.events[0].value(5))
   assert([{value:'1',time:0, dur:1}], p.events[0].value(6))
 
-  // 0<1<2<34>>>
+  p = parsePattern('<1<2<34>>>', 1)
+  assert(1, p.length)
+  assert([{value:'1',time:0, dur:1}], p.events[0].value(0))
+  assert([{value:'2',time:0, dur:1}], p.events[0].value(1))
+  assert([{value:'1',time:0, dur:1}], p.events[0].value(2))
+  assert([{value:'3',time:0, dur:1}], p.events[0].value(3))
+  assert([{value:'1',time:0, dur:1}], p.events[0].value(4))
+  assert([{value:'2',time:0, dur:1}], p.events[0].value(5))
+  assert([{value:'1',time:0, dur:1}], p.events[0].value(6))
+  assert([{value:'4',time:0, dur:1}], p.events[0].value(7))
+  assert([{value:'1',time:0, dur:1}], p.events[0].value(8))
+
   // <0.>
-  // 0<1[23]>
-  // 0[1<23>]
-  // 0(1<23>)
-  // 0<1(23)>
-  // 0<[1(23)]>
-  // 0<1<.3>>_
-  // 0<1[.3]>_
-  // 0<.(12)>_
+  // <1[23]>
+  // [1<23>]
+  // (1<23>)
+  // <1(23)>
+  // <[1(23)]>
+  // <1<.3>>_
+  // <1[.3]>_
+  // <.(12)>_
   // (0<1[2<3[45]>]>)
   console.log("Parse pattern tests complete")
 
