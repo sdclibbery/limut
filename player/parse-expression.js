@@ -366,6 +366,12 @@ define(function(require) {
   let assertIn = (lo, hi, actual) => {
     if (actual < lo-0.0001 || actual > hi+0.0001) { console.trace(`Assertion failed.\n>>Expected ${lo} - ${hi}\n>>Actual: ${actual}`) }
   }
+  let assertInteger = (v) => {
+    if (!Number.isInteger(v)) { console.trace(`Assertion failed.\n>>Expected ${v} to be an Integer`) }
+  }
+  let assertNotInteger = (v) => {
+    if (Number.isInteger(v)) { console.trace(`Assertion failed.\n>>Expected ${v} not to be an Integer`) }
+  }
   let assertOneOf = (vs, actual) => {
     if (!vs.includes(actual)) { console.trace(`Assertion failed.\n>>Expected one of ${vs}\n>>Actual: ${actual}`) }
   }
@@ -548,29 +554,29 @@ define(function(require) {
   p = parseExpression('[1,5,7]r')
   for (let i = 0; i<20; i+=1) {
     assertOneOf([1,5,7], p())
-    assert(true, Number.isInteger(p()))
+    assertInteger(p()), 'p():'+p()
   }
 
   p = parseExpression('[0:9]r')
   for (let i = 0; i<20; i+=1) {
     assertIn(0, 9, p())
-    assert(true, Number.isInteger(p()))
+    assertInteger(p())
   }
 
   p = parseExpression('[[0,10]:[9,19]]r')
   for (let i = 0; i<20; i+=1) {
     assertIn(0, 9, p(0,0))
-    assert(true, Number.isInteger(p(0,0)))
+    assertInteger(p(0,0))
   }
   for (let i = 0; i<20; i+=1) {
     assertIn(10, 19, p(1,1))
-    assert(true, Number.isInteger(p(1,1)))
+    assertInteger(p(1,1))
   }
 
   p = parseExpression('[:9]r')
   for (let i = 0; i<20; i+=1) {
     assertIn(0, 9, p())
-    assert(true, Number.isInteger(p()))
+    assertInteger(p())
   }
 
   p = parseExpression('[9]r')
@@ -581,7 +587,7 @@ define(function(require) {
   p = parseExpression('[0.1:9]r')
   for (let i = 0; i<20; i+=1) {
     assertIn(0, 9, p())
-    assert(false, Number.isInteger(p()))
+    assertNotInteger(p())
   }
 
   assert(1, parseExpression('2-1'))

@@ -2,6 +2,17 @@
 define(function(require) {
   let debug = false
 
+  let evalSequence = (seq, r) => {
+    let v = seq[r % seq.length]
+    return v.flatMap(({value,time,dur}) => {
+      let v = value
+      if (typeof(v) == 'function') {
+        return v(Math.floor(r / seq.length))
+      }
+      return [{value:v, time:time, dur:dur}]
+    })
+  }
+
   let step = (state) => {
     let events = []
     let dur = state.durs[state.step % state.durs.length]
@@ -39,7 +50,7 @@ define(function(require) {
       if (seq.length == 0) { seq = [[]] }
       if (debug) { console.log('sequence', seq) }
       events.push({
-        value: (r) => seq[r % seq.length],
+        value: r => evalSequence(seq, r),
         time: state.time,
         dur: dur,
       })
@@ -311,13 +322,27 @@ define(function(require) {
   assert([{value:'3',time:1/3, dur:1/3}], p.events[1].value(2))
   assert([{value:'4',time:2/3, dur:1/3}], p.events[2].value(2))
 
-  // 0<123><12>
-  // 0<1<23>>
-  // 0[1<23>]
+  p = parsePattern('<1<23>4>', 1)
+  assert(1, p.length)
+  assert([{value:'1',time:0, dur:1}], p.events[0].value(0))
+  assert([{value:'2',time:0, dur:1}], p.events[0].value(1))
+  assert([{value:'4',time:0, dur:1}], p.events[0].value(2))
+  assert([{value:'1',time:0, dur:1}], p.events[0].value(3))
+  assert([{value:'3',time:0, dur:1}], p.events[0].value(4))
+  assert([{value:'4',time:0, dur:1}], p.events[0].value(5))
+  assert([{value:'1',time:0, dur:1}], p.events[0].value(6))
+
+  // 0<1<2<34>>>
+  // <0.>
   // 0<1[23]>
+  // 0[1<23>]
   // 0(1<23>)
   // 0<1(23)>
   // 0<[1(23)]>
+  // 0<1<.3>>_
+  // 0<1[.3]>_
+  // 0<.(12)>_
+  // (0<1[2<3[45]>]>)
   console.log("Parse pattern tests complete")
 
   return parsePattern
