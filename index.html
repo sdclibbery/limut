@@ -15,7 +15,8 @@
       border: 2px solid #202020;
       border-radius: 6px;
       margin: 4px;
-      padding: 4px
+      padding: 4px;
+      font-size: 1.15em;
     }
     textarea {
       background: #283038;
@@ -47,12 +48,16 @@
       width: 100%;
       max-width: 100%;
       overflow-x: auto;
+      font-size: 0.8em;
     }
     #compressor-readout {
       display: inline-block;
       width: 1em;
       height: 1em;
       background-color: #808080;
+    }
+    p {
+      font-size: 0.75em;
     }
   </style>
 </head>
@@ -188,22 +193,100 @@ d2 play .[--]</pre>
 <p><code>/</code> Divide values; eg 1/2</p>
 <p><code>*</code> Multiply values; eg lpf=[1,2,3]*1000</p>
 <p><code>%</code> Take remainder; eg (0,4,7,9)%7 is equivalent to (0,4,0,2)</p>
+<h3>Play samples</h3>
+<p>
+<code>a</code> Gameboy hihat<br/>
+<code>A</code> Gameboy kick drum<br/>
+<code>b</code> Noisy beep<br/>
+<code>B</code> Short saw<br/>
+<code>c</code> Voice/string<br/>
+<code>C</code> Choral<br/>
+<code>d</code> Woodblock<br/>
+<code>D</code> Dirty snare<br/>
+<code>e</code> Electronic Cowbell<br/>
+<code>E</code> Ringing percussion<br/>
+<code>f</code> Pops<br/>
+<code>F</code> Trumpet stabs<br/>
+<code>g</code> Ominous<br/>
+<code>G</code> Ambient stabs<br/>
+<code>h</code> Finger snaps<br/>
+<code>H</code> Clap<br/>
+<code>i</code> Jungle snare<br/>
+<code>I</code> Rock snare<br/>
+<code>j</code> Whines<br/>
+<code>J</code> Ambient stabs<br/>
+<code>k</code> Wood shaker<br/>
+<code>K</code> Percussive hits<br/>
+<code>l</code> Robot noise<br/>
+<code>L</code> Noisy percussive hits<br/>
+<code>m</code> 808 toms<br/>
+<code>M</code> Acoustic toms<br/>
+<code>n</code> Noise<br/>
+<code>N</code> Gameboy SFX<br/>
+<code>o</code> Snare drum<br/>
+<code>O</code> Heavy snare<br/>
+<code>p</code> Tabla<br/>
+<code>P</code> Tabla long<br/>
+<code>q</code> Ambient stabs<br/>
+<code>Q</code> Electronic stabs<br/>
+<code>r</code> Metal<br/>
+<code>R</code> Metallic<br/>
+<code>s</code> Shaker<br/>
+<code>S</code> Tamborine<br/>
+<code>t</code> Rimshot<br/>
+<code>T</code> Cowbell<br/>
+<code>u</code> Soft snare<br/>
+<code>U</code> Misc. Fx<br/>
+<code>v</code> Soft kick<br/>
+<code>V</code> Hard kick<br/>
+<code>w</code> Dub hits<br/>
+<code>W</code> Distorted<br/>
+<code>x</code> Bass drum<br/>
+<code>X</code> Heavy kick<br/>
+<code>y</code> Percussive hits<br/>
+<code>Y</code> High buzz<br/>
+<code>z</code> Scratch<br/>
+<code>Z</code> Loud stabs<br/>
+<code>-</code> Hi hat closed<br/>
+<code>|</code> Hangdrum<br/>
+<code>=</code> Hi hat open<br/>
+<code>/</code> Reverse sounds<br/>
+<code>*</code> Clap<br/>
+<code>\</code> Lazer<br/>
+<code>~</code> Ride cymbal<br/>
+<code>%</code> Noise bursts<br/>
+<code>^</code> 'Donk'<br/>
+<code>$</code> Beatbox<br/>
+<code>#</code> Crash<br/>
+<code>!</code> Yeah!<br/>
+<code>+</code> Clicks<br/>
+<code>&amp;</code> Chime<br/>
+<code>@</code> Gameboy noise<br/>
+<code>:</code> Hi-hats<br/>
+<code>1</code> Vocals (One)<br/>
+<code>2</code> Vocals (Two)<br/>
+<code>3</code> Vocals (Three)<br/>
+<code>4</code> Vocals (Four)<br/>
+</p>
 </div>
 </body>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
+bpf
+try using stepped waveshaper without gain for drive??
+room blows up on some browsers above 0.5
+drive blows up on some browsers above ??
 envelope should come after most effects?
+detuned sine pad
+root main var
 bitcrush param
 try using freeverb for main reverb??
 vib param
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
-detuned sine pad
-techno pad - detuned sine - with delay? - OR: PWM changing (also prophet...)
+Try a PWM prophet synth (and maybe techno pad too)
 strings pad
-bpf
 slide param
-root
 formant
 pan
 scale
@@ -212,11 +295,11 @@ FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
 FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ==== non-audio ====
-put sample descriptions into docs
 <> for 'in sequence on each repeat' in patterns
  all tests / all cases
-<> for 'in sequence on each repeat' in params
+Put sample descriptions into docs
 Change param random syntax to {}
+<> for 'in sequence on each repeat' in params
 {} for random in patterns
 Beat lag display
 Preload samples immediately after parsing

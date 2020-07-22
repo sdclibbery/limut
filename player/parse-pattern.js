@@ -365,6 +365,7 @@ define(function(require) {
   // <1<.3>>_
   // <1[.3]>_
   // <.(12)>_
+  // 0<1_>
   // (0<1[2<3[45]>]>)
   console.log("Parse pattern tests complete")
 
