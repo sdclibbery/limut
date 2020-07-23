@@ -392,7 +392,10 @@ define(function(require) {
   assert([{value:'1',time:0, dur:1}], p.events[0].value({time:0,dur:1},0))
   assert([{value:'2',time:0, dur:1},{value:'3',time:0, dur:1}], p.events[0].value({time:0,dur:1},1))
 
-  // <[1(23)]>
+  p = parsePattern('<[1(23)]>', 1)
+  assert(1, p.length)
+  assert([{value:'1',time:0, dur:1/2},{value:'2',time:1/2, dur:1/2},{value:'3',time:1/2, dur:1/2}], p.events[0].value({time:0,dur:1},0))
+
   // <1<.3>>_
   // <1[.3]>_
   // <.(12)>_
