@@ -16,14 +16,13 @@
       border-radius: 6px;
       margin: 4px;
       padding: 4px;
-      font-size: 1.15em;
+      font-size: 1.1em;
     }
     textarea {
       background: #283038;
       color: #e0e0e0;
       width: 100%;
       max-width: 100%;
-      font-size:1.2em;
     }
     textarea#console {
       background: #202830;
@@ -57,7 +56,7 @@
       background-color: #808080;
     }
     p {
-      font-size: 0.75em;
+      font-size: 0.9em;
     }
   </style>
 </head>
@@ -298,17 +297,19 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 <> for 'in sequence on each repeat' in patterns
  all tests / all cases
 Change param random syntax to {}
-<> for 'in sequence on each repeat' in params
 {} for random in patterns
-Beat lag display
-Preload samples immediately after parsing
-GC or LRU or quantisation for echoes and freeverbs
-Experiment with reusing audio nodes instead of recreating to defeat glitchiness
+Solo param - when any player is solod, then any other player thats not solod does not play
+fade in/out now (linvar once)
 Scale param to set scale for just one player
 Support 'penta' and 'pentatonic' as scale names
-Solo param - when any player is solod, then any other player thats not solod does not play
+Preload samples immediately after parsing
+rests in params
+Beat lag display
+<> for 'in sequence on each repeat' in params
+GC or LRU or quantisation for echoes and freeverbs
+Experiment with reusing audio nodes instead of recreating to defeat glitchiness
 Can specify params on separate lines and on grouped players
-fade in/out now (linvar once)
+dur=[3,3,2]\4
 timevar once only
 live coding controls
  ? Comment in/out?
@@ -331,6 +332,8 @@ index pattern by beat to improve performance in finding events - same for timeVa
 random timevar gens for patterns: {o-:}
 pattern generators: tri, Dur, walk etc?
 evaluate predefined vars; eg allow bpm=[80,120]
+==== video ====
+https://www.shadertoy.com/view/Xd2Bzw
 */
 </script>
 </html>

@@ -2,23 +2,26 @@
 define(function(require) {
   let debug = false
 
-  let evalSequence = (seq, r) => {
+  let evalSequence = (seq, e, r) => {
     let v = seq[r % seq.length]
-    if (debug) { console.log('evalSequence', r, v) }
+    if (debug) { console.log('evalSequence', e, r, v) }
+    let parentTime = e.time
+    let parentDur = e.dur
     return v.flatMap(({value,time,dur}) => {
       let v = value
       if (typeof(v) == 'function') {
-        return v(Math.floor(r / seq.length))
+        return v(e, Math.floor(r / seq.length))
       }
-      return [{value:v, time:time, dur:dur}]
+      return [{value:v, time:parentTime+time*parentDur, dur:dur*parentDur}]
     })
   }
 
   let step = (state) => {
     let events = []
     let dur = state.durs[state.step % state.durs.length]
+    let time = state.time
     let char = state.str.charAt(state.idx)
-    // subdivision
+    // subpattern
     if (char == '[') {
       state.idx += 1
       let subState = Object.assign({}, state)
@@ -27,10 +30,10 @@ define(function(require) {
       state.idx = subState.idx
       if (sub.length === 0) { return events }
       sub.events.forEach(e => {
-        if (debug) { console.log('subdivision', state, 'e', e, 'sub.length', sub.length) }
+        if (debug) { console.log('subpattern', state, 'e', e, 'sub.length', sub.length) }
         events.push({
           value: e.value,
-          time: state.time + e.time*dur/sub.length,
+          time: time + e.time*dur/sub.length,
           dur: e.dur*dur/sub.length,
         })
       })
@@ -39,7 +42,7 @@ define(function(require) {
     // together
     if (char == '(') {
       state.idx += 1
-      let tog = array(state, dur, ')')
+      let tog = array(state, ')')
       if (debug) { console.log('together', tog) }
       events = events.concat(tog)
       return events
@@ -47,12 +50,16 @@ define(function(require) {
     // sequence
     if (char == '<') {
       state.idx += 1
-      let seq = array(state, dur, '>', true)
+      let subState = Object.assign({}, state)
+      subState.time = 0
+      subState.durs = [1]
+      let seq = array(subState, '>', true)
+      state.idx = subState.idx
       if (seq.length == 0) { seq = [[]] }
       if (debug) { console.log('sequence', seq) }
       events.push({
-        value: r => evalSequence(seq, r),
-        time: state.time,
+        value: (e,r) => evalSequence(seq, e, r),
+        time: time,
         dur: dur,
       })
       return events
@@ -62,29 +69,29 @@ define(function(require) {
       state.idx += 1
       if (debug) { console.log('rest', state) }
       events.push({
-        time: state.time,
+        time: time,
         dur: dur,
       })
       return events
     }
-    // actual event
+    // literal event
     let nextChar = state.str.charAt(state.idx+1)
     if (char == '-' && nextChar >= '0' && nextChar <= '9') {
       char = '-'+nextChar
       state.idx += 1
     }
     state.idx += 1
-    if (debug) { console.log('event', state, 'value:', char, 'time:', state.time, 'dur:', dur) }
+    if (debug) { console.log('event', state, 'value:', char, 'time:', time, 'dur:', dur) }
     events.push({
       value: char,
-      time: state.time,
+      time: time,
       dur: dur,
     })
     return events
   }
 
-  let array = (state, dur, endChar, push) => {
-    if (debug) { console.log('array', endChar, state, 'dur', dur) }
+  let array = (state, endChar, push) => {
+    if (debug) { console.log('array', endChar, state) }
     let events = []
     let char
     while (char = state.str.charAt(state.idx)) {
@@ -304,71 +311,76 @@ define(function(require) {
 
   p = parsePattern('<>', 1)
   assert(1, p.length)
-  assert([], p.events[0].value(0))
-  assert([], p.events[0].value(1))
+  assert([], p.events[0].value({time:1,dur:1},0))
+  assert([], p.events[0].value({time:1,dur:1},1))
 
   p = parsePattern('<0>', 1)
   assert(1, p.length)
-  assert([{value:'0',time:0, dur:1}], p.events[0].value(0))
-  assert([{value:'0',time:0, dur:1}], p.events[0].value(1))
+  assert([{value:'0',time:0, dur:1}], p.events[0].value({time:0,dur:1},0))
+  assert([{value:'0',time:0, dur:1}], p.events[0].value({time:0,dur:1},1))
 
   p = parsePattern('0<1>', 1)
   assert(2, p.length)
   assert({value:'0',time:0, dur:1}, p.events[0])
-  assert([{value:'1',time:1, dur:1}], p.events[1].value(0))
-  assert([{value:'1',time:1, dur:1}], p.events[1].value(1))
+  assert([{value:'1',time:1, dur:1}], p.events[1].value({time:1,dur:1},0))
+  assert([{value:'1',time:1, dur:1}], p.events[1].value({time:1,dur:1},1))
 
   p = parsePattern('0<12>', 1)
   assert(2, p.length)
   assert({value:'0',time:0, dur:1}, p.events[0])
-  assert([{value:'1',time:1, dur:1}], p.events[1].value(0))
-  assert([{value:'2',time:1, dur:1}], p.events[1].value(3))
+  assert([{value:'1',time:1, dur:1}], p.events[1].value({time:1,dur:1},0))
+  assert([{value:'2',time:1, dur:1}], p.events[1].value({time:1,dur:1},3))
 
   p = parsePattern('0<123><45>', 1/3)
   assert(1, p.length)
   assert({value:'0',time:0, dur:1/3}, p.events[0])
-  assert([{value:'1',time:1/3, dur:1/3}], p.events[1].value(0))
-  assert([{value:'4',time:2/3, dur:1/3}], p.events[2].value(0))
-  assert([{value:'2',time:1/3, dur:1/3}], p.events[1].value(1))
-  assert([{value:'5',time:2/3, dur:1/3}], p.events[2].value(1))
-  assert([{value:'3',time:1/3, dur:1/3}], p.events[1].value(2))
-  assert([{value:'4',time:2/3, dur:1/3}], p.events[2].value(2))
+  assert([{value:'1',time:1/3, dur:1/3}], p.events[1].value({time:1/3,dur:1/3},0))
+  assert([{value:'4',time:2/3, dur:1/3}], p.events[2].value({time:2/3,dur:1/3},0))
+  assert([{value:'2',time:1/3, dur:1/3}], p.events[1].value({time:1/3,dur:1/3},1))
+  assert([{value:'5',time:2/3, dur:1/3}], p.events[2].value({time:2/3,dur:1/3},1))
+  assert([{value:'3',time:1/3, dur:1/3}], p.events[1].value({time:1/3,dur:1/3},2))
+  assert([{value:'4',time:2/3, dur:1/3}], p.events[2].value({time:2/3,dur:1/3},2))
 
   p = parsePattern('<1<23>4>', 1)
   assert(1, p.length)
-  assert([{value:'1',time:0, dur:1}], p.events[0].value(0))
-  assert([{value:'2',time:0, dur:1}], p.events[0].value(1))
-  assert([{value:'4',time:0, dur:1}], p.events[0].value(2))
-  assert([{value:'1',time:0, dur:1}], p.events[0].value(3))
-  assert([{value:'3',time:0, dur:1}], p.events[0].value(4))
-  assert([{value:'4',time:0, dur:1}], p.events[0].value(5))
-  assert([{value:'1',time:0, dur:1}], p.events[0].value(6))
+  assert([{value:'1',time:0, dur:1}], p.events[0].value({time:0,dur:1},0))
+  assert([{value:'2',time:0, dur:1}], p.events[0].value({time:0,dur:1},1))
+  assert([{value:'4',time:0, dur:1}], p.events[0].value({time:0,dur:1},2))
+  assert([{value:'1',time:0, dur:1}], p.events[0].value({time:0,dur:1},3))
+  assert([{value:'3',time:0, dur:1}], p.events[0].value({time:0,dur:1},4))
+  assert([{value:'4',time:0, dur:1}], p.events[0].value({time:0,dur:1},5))
+  assert([{value:'1',time:0, dur:1}], p.events[0].value({time:0,dur:1},6))
 
   p = parsePattern('<1<2<34>>>', 1)
   assert(1, p.length)
-  assert([{value:'1',time:0, dur:1}], p.events[0].value(0))
-  assert([{value:'2',time:0, dur:1}], p.events[0].value(1))
-  assert([{value:'1',time:0, dur:1}], p.events[0].value(2))
-  assert([{value:'3',time:0, dur:1}], p.events[0].value(3))
-  assert([{value:'1',time:0, dur:1}], p.events[0].value(4))
-  assert([{value:'2',time:0, dur:1}], p.events[0].value(5))
-  assert([{value:'1',time:0, dur:1}], p.events[0].value(6))
-  assert([{value:'4',time:0, dur:1}], p.events[0].value(7))
-  assert([{value:'1',time:0, dur:1}], p.events[0].value(8))
+  assert([{value:'1',time:0, dur:1}], p.events[0].value({time:0,dur:1},0))
+  assert([{value:'2',time:0, dur:1}], p.events[0].value({time:0,dur:1},1))
+  assert([{value:'1',time:0, dur:1}], p.events[0].value({time:0,dur:1},2))
+  assert([{value:'3',time:0, dur:1}], p.events[0].value({time:0,dur:1},3))
+  assert([{value:'1',time:0, dur:1}], p.events[0].value({time:0,dur:1},4))
+  assert([{value:'2',time:0, dur:1}], p.events[0].value({time:0,dur:1},5))
+  assert([{value:'1',time:0, dur:1}], p.events[0].value({time:0,dur:1},6))
+  assert([{value:'4',time:0, dur:1}], p.events[0].value({time:0,dur:1},7))
+  assert([{value:'1',time:0, dur:1}], p.events[0].value({time:0,dur:1},8))
 
   p = parsePattern('<0.>', 1)
   assert(1, p.length)
-  assert([{value:'0',time:0, dur:1}], p.events[0].value(0))
-  assert([{time:0,dur:1}], p.events[0].value(1))
-  assert([{value:'0',time:0, dur:1}], p.events[0].value(2))
+  assert([{value:'0',time:0, dur:1}], p.events[0].value({time:0,dur:1},0))
+  assert([{time:0,dur:1}], p.events[0].value({time:0,dur:1},1))
+  assert([{value:'0',time:0, dur:1}], p.events[0].value({time:0,dur:1},2))
 
   p = parsePattern('<1[23]>', 1)
   assert(1, p.length)
-  assert([{value:'1',time:0, dur:1}], p.events[0].value(0))
-  assert([{value:'2',time:0, dur:1/2},{value:'3',time:1/2, dur:1/2}], p.events[0].value(1))
-  assert([{value:'1',time:0, dur:1}], p.events[0].value(2))
+  assert([{value:'1',time:0, dur:1}], p.events[0].value({time:0,dur:1},0))
+  assert([{value:'2',time:0, dur:1/2},{value:'3',time:1/2, dur:1/2}], p.events[0].value({time:0,dur:1},1))
+  assert([{value:'1',time:0, dur:1}], p.events[0].value({time:0,dur:1},2))
 
-  // [1<23>]
+  p = parsePattern('[1<23>]', 1)
+  assert(1, p.length)
+  assert({value:'1',time:0, dur:1/2}, p.events[0])
+  assert([{value:'2',time:1/2, dur:1/2}], p.events[1].value({time:0.5,dur:0.5},0))
+  assert([{value:'3',time:1/2, dur:1/2}], p.events[1].value({time:0.5,dur:0.5},1))
+
   // (1<23>)
   // <1(23)>
   // <[1(23)]>

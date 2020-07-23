@@ -38,7 +38,7 @@ define(function(require) {
       let time = 0
       do {
         let e = events[idx]
-        let es = (typeof(e.value) == 'function') ? e.value(Math.floor(count/patternLength)) : [e]
+        let es = (typeof(e.value) == 'function') ? e.value(e, Math.floor(count/patternLength)) : [e]
         es.forEach(sourceEvent => {
           let event = {}
           event.value = sourceEvent.value
