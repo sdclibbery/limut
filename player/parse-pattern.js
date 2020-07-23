@@ -4,6 +4,7 @@ define(function(require) {
 
   let evalSequence = (seq, r) => {
     let v = seq[r % seq.length]
+    if (debug) { console.log('evalSequence', r, v) }
     return v.flatMap(({value,time,dur}) => {
       let v = value
       if (typeof(v) == 'function') {
@@ -46,7 +47,7 @@ define(function(require) {
     // sequence
     if (char == '<') {
       state.idx += 1
-      let seq = array(state, dur, '>').map(v => (Array.isArray(v) ? v : [v]))
+      let seq = array(state, dur, '>', true)
       if (seq.length == 0) { seq = [[]] }
       if (debug) { console.log('sequence', seq) }
       events.push({
@@ -82,7 +83,7 @@ define(function(require) {
     return events
   }
 
-  let array = (state, dur, endChar) => {
+  let array = (state, dur, endChar, push) => {
     if (debug) { console.log('array', endChar, state, 'dur', dur) }
     let events = []
     let char
@@ -93,7 +94,11 @@ define(function(require) {
         break
       }
       let stepEvents = step(state)
-      events = events.concat(stepEvents)
+      if (push) {
+        events.push(stepEvents)
+      } else {
+        events = events.concat(stepEvents)
+      }
     }
     return events
   }
@@ -357,7 +362,12 @@ define(function(require) {
   assert([{time:0,dur:1}], p.events[0].value(1))
   assert([{value:'0',time:0, dur:1}], p.events[0].value(2))
 
-  // <1[23]>
+  p = parsePattern('<1[23]>', 1)
+  assert(1, p.length)
+  assert([{value:'1',time:0, dur:1}], p.events[0].value(0))
+  assert([{value:'2',time:0, dur:1/2},{value:'3',time:1/2, dur:1/2}], p.events[0].value(1))
+  assert([{value:'1',time:0, dur:1}], p.events[0].value(2))
+
   // [1<23>]
   // (1<23>)
   // <1(23)>

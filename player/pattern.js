@@ -56,12 +56,12 @@ define(function(require) {
             if (debug) { console.log('play event:', event, 'idx: ', idx) }
             Array.prototype.push.apply(eventsForBeat, multiplyEvents(event))
           }
-          idx += 1
-          if (idx >= events.length) {
-            idx = 0
-            patternStartTime += patternLength
-          }
         })
+        idx += 1
+        if (idx >= events.length) {
+          idx = 0
+          patternStartTime += patternLength
+        }
       } while (time < 1.0001)
       return eventsForBeat.filter(({value}) => value !== undefined)
     }
@@ -283,6 +283,11 @@ define(function(require) {
   assert([{value:'1',time:0,dur:1/2},{value:'4',time:1/2,dur:1/2}], pattern(1))
   assert([{value:'0',time:0,dur:1/2},{value:'5',time:1/2,dur:1/2}], pattern(2))
   assert([{value:'1',time:0,dur:1/2},{value:'3',time:1/2,dur:1/2}], pattern(3))
+
+  pattern = parsePattern('<1[23]>', {})
+  assert([{value:'1',time:0,dur:1}], pattern(0))
+  assert([{value:'2',time:0,dur:1/2},{value:'3',time:1/2,dur:1/2}], pattern(1))
+  assert([{value:'1',time:0,dur:1}], pattern(2))
 
   console.log("Pattern tests complete")
 
