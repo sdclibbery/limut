@@ -6,72 +6,71 @@ let system = {
   gl: null,
   cw: 1,
   ch: 1,
+  queued: [],
+  active: [],
 }
 
-system.frameStart = (t, gl, cw, ch) => {
-  this.time = t
-  if (!this.gl) {
-    this.gl = gl
-  }
-  this.cw = cw
-  this.ch = ch
+system.add = (startTime, v) => {
+  system.queued.push({t:startTime, v:v})
+}
 
-  this.gl.clearColor(0.1, 0.15, 0.2, 1)
-  this.gl.enable(this.gl.DEPTH_TEST)
-  this.gl.depthFunc(this.gl.LEQUAL)
-  this.gl.clear(this.gl.COLOR_BUFFER_BIT|this.gl.DEPTH_BUFFER_BIT)
+system.frameStart = (time, gl, cw, ch) => {
+  system.time = time
+  if (!system.gl) {
+    system.gl = gl
+  }
+  system.cw = cw
+  system.ch = ch
+
+  system.gl.clearColor(0.125, 0.15, 0.1875, 1)
+  system.gl.enable(system.gl.DEPTH_TEST)
+  system.gl.depthFunc(system.gl.LEQUAL)
+  system.gl.clear(system.gl.COLOR_BUFFER_BIT|system.gl.DEPTH_BUFFER_BIT)
+
+  let state = {time: time}
+  let newlyActive = system.queued.filter(({t,v}) => time >= t).map(({t,v}) => v)
+  system.active = system.active.concat(newlyActive)
+  system.queued = system.queued.filter(({t,v}) => time < t)
+  system.active = system.active.filter(v => v(state))
 }
 
 system.xFromCanvas = (x) => {
-  return (x*2 - this.cw) / this.ch
+  return (x*2 - system.cw) / system.ch
 }
 system.yFromCanvas = (y) => {
-  return 1 - y*2/this.ch
+  return 1 - y*2/system.ch
 }
 system.toX = (x) => {
-  return x * this.ch / this.cw
+  return x * system.ch / system.cw
 }
 
-system.squareVtxs = (x, y, size) => {
-  let hs = size/2
-  let l = this.toX(x - hs)
-  let r = this.toX(x + hs)
-  let b = y - hs
-  let t = y + hs
+system.fullscreenVtxs = () => {
+  let l = -0.5
+  let r = 0.5
+  let t = -0.5
+  let b = 0.5
   return {
-    vtx: new Float32Array([
-      l, t,
-      r, t,
-      l, b,
-      l, b,
-      r, t,
-      r, b]),
-    tex: new Float32Array([
-      0.0, 0.0,
-      1.0, 0.0,
-      0.0, 1.0,
-      0.0, 1.0,
-      1.0, 0.0,
-      1.0, 1.0
-    ])}
+    vtx: new Float32Array([l,t, r,t, l,b, l,b, r,t, r,b]),
+    tex: new Float32Array([0,0, 1,0, 0,1, 0,1, 1,0, 1,1])
+  }
 }
 
 system.createIndexBuffer = (indexes) => {
-  let buffer = this.gl.createBuffer()
-  this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffer)
-  this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, indexes, this.gl.STATIC_DRAW)
+  let buffer = system.gl.createBuffer()
+  system.gl.bindBuffer(system.gl.ELEMENT_ARRAY_BUFFER, buffer)
+  system.gl.bufferData(system.gl.ELEMENT_ARRAY_BUFFER, indexes, system.gl.STATIC_DRAW)
   return buffer
 }
 
 system.loadVertexAttrib = (buffer, attr, data, stride) => {
-  this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer)
-  this.gl.bufferData(this.gl.ARRAY_BUFFER, data, this.gl.STATIC_DRAW)
-  this.gl.enableVertexAttribArray(attr)
-  this.gl.vertexAttribPointer(attr, stride, this.gl.FLOAT, false, 0, 0)
+  system.gl.bindBuffer(system.gl.ARRAY_BUFFER, buffer)
+  system.gl.bufferData(system.gl.ARRAY_BUFFER, data, system.gl.STATIC_DRAW)
+  system.gl.enableVertexAttribArray(attr)
+  system.gl.vertexAttribPointer(attr, stride, system.gl.FLOAT, false, 0, 0)
 }
 
 system.loadShader = function(shaderSource, shaderType) {
-  let gl = this.gl
+  let gl = system.gl
   let shader = gl.createShader(shaderType)
 
   gl.shaderSource(shader, shaderSource)
@@ -88,7 +87,7 @@ system.loadShader = function(shaderSource, shaderType) {
 }
 
 system.loadProgram = function(shaders, opt_attribs, opt_locations) {
-  let gl = this.gl
+  let gl = system.gl
   let program = gl.createProgram()
   for (let ii = 0; ii < shaders.length; ++ii) {
     gl.attachShader(program, shaders[ii])

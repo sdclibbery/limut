@@ -9,6 +9,7 @@ define(function(require) {
   let standardPlayer = require('player/standard')
   let parseExpression = require('player/parse-expression')
   let vars = require('vars')
+  let kaleidoscope = require('draw/kaleidoscope')
   let percussion = require('play/percussion')
   let play = require('play/play')
   let dsaw = require('play/dsaw')
@@ -27,6 +28,8 @@ define(function(require) {
     none: nullPlayer,
     stop: nullPlayer,
     '!': nullPlayer,
+    // visualisations
+    kaleidoscope: standardPlayer(kaleidoscope),
     // instruments
     drums: standardPlayer(percussion.play, 1/2),
     play: standardPlayer(play, 1/2),
@@ -206,7 +209,8 @@ define(function(require) {
   let beat32Readout = document.getElementById('beat32-readout')
   let tick = (t) => {
     compressorReadout.style.backgroundColor = compressorColor(system.compressorReduction())
-    let beat = metronome.update(system.timeNow())
+    let now = system.timeNow()
+    let beat = metronome.update(now)
     if (beat) {
       beatReadout.innerText = beat.count
       beat3Readout.innerText = (beat.count%3 + 1) + '/3'
@@ -227,7 +231,7 @@ define(function(require) {
     }
     if (ctxGl) {
       try {
-        drawSystem.frameStart(t, ctxGl, canvas.width, canvas.height)
+        drawSystem.frameStart(now, ctxGl, canvas.width, canvas.height)
       } catch (e) {
         let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
         consoleOut('Run Error from drawing: ' + e + st)

@@ -1,28 +1,33 @@
-'use strict';
+'use strict'
 define(function (require) {
 
-var metronome = {};
+var metronome = {}
 
-var beatDuration = 60 / 110;
-var nextBeatAt = 0;
-var count = 0;
+var beatDuration = 60 / 110
+var lastBeatAt = 0
+var count = 0
+var nextBeatAt = 0
+
+metronome.beatTime = (now) => {
+  return count + (now - lastBeatAt) / (nextBeatAt - lastBeatAt)
+}
 
 metronome.nextBeatAt = function () {
-  return nextBeatAt;
-};
+  return nextBeatAt
+}
 
 metronome.bpm = function (bpm) {
   if (bpm) {
     beatDuration = 60/bpm
     if (window.bpmChanged) { window.bpmChanged(60/beatDuration) }
   }
-  return 60/beatDuration;
-};
+  return 60/beatDuration
+}
 
 metronome.beatDuration = function (d) {
   if (d) { beatDuration = d; }
-  return beatDuration;
-};
+  return beatDuration
+}
 
 metronome.update = function (now) {
   if (now > nextBeatAt - 0.1) { // Process just BEFORE the next beat to make sure that events composed ON the beat can be scheduled accurately
@@ -30,12 +35,13 @@ metronome.update = function (now) {
       time: nextBeatAt,
       duration: beatDuration,
       count: count+1,
-    };
-    nextBeatAt += beatDuration;
-    count += 1;
-    return beat;
+    }
+    lastBeatAt = nextBeatAt
+    nextBeatAt += beatDuration
+    count += 1
+    return beat
   }
-};
+}
 
-return metronome;
-});
+return metronome
+})
