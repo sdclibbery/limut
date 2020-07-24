@@ -45,10 +45,10 @@ system.toX = (x) => {
 }
 
 system.fullscreenVtxs = () => {
-  let l = -0.5
-  let r = 0.5
-  let t = -0.5
-  let b = 0.5
+  let l = -1
+  let r = 1
+  let t = -1
+  let b = 1
   return {
     vtx: new Float32Array([l,t, r,t, l,b, l,b, r,t, r,b]),
     tex: new Float32Array([0,0, 1,0, 0,1, 0,1, 1,0, 1,1])
@@ -78,8 +78,9 @@ system.loadShader = function(shaderSource, shaderType) {
 
   let compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS)
   if (!compiled) {
-    throw("*** Error compiling shader :" + gl.getShaderInfoLog(shader) + "\nSource: " + shaderSource)
+    console.error("*** Error compiling shader :" + gl.getShaderInfoLog(shader) + "\nSource: " + shaderSource)
     gl.deleteShader(shader)
+    throw('Shader compilation failure ' + shaderType)
     return null
   }
 
