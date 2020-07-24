@@ -6,11 +6,19 @@
   <style>
     body {
       font-family: helvetica, arial;
-      background: #e0e0e0;
-      color: #202830;
+      background: #202830;
+      color: #d0d0d0;
+      text-shadow: #000 0px 0px 1px;
+    }
+    .fullscreen {
+      position:fixed;
+      top:0%;
+      left:0%;
+      width:100%;
+      height:100%;
+      z-index: -1;
     }
     .widget {
-      background: #304050;
       color: #d0d0d0;
       border: 2px solid #202020;
       border-radius: 6px;
@@ -19,13 +27,13 @@
       font-size: 1.1em;
     }
     textarea {
-      background: #283038;
       color: #e0e0e0;
       width: 100%;
       max-width: 100%;
+      background: transparent;
+      text-shadow: #000 0px 0px 1px;
     }
     textarea#console {
-      background: #202830;
       color: #c0c0c0;
     }
     button {
@@ -47,7 +55,6 @@
       width: 100%;
       max-width: 100%;
       overflow-x: auto;
-      font-size: 0.8em;
     }
     #compressor-readout {
       display: inline-block;
@@ -56,11 +63,11 @@
       background-color: #808080;
     }
     p {
-      font-size: 0.9em;
     }
   </style>
 </head>
 <body>
+  <canvas id="canvas" class="fullscreen" style="width:100%; height:100%;"></canvas>
   <div class="widget">
     <h3>Limut</h3>
     <p>
@@ -334,7 +341,9 @@ random timevar gens for patterns: {o-:}
 pattern generators: tri, Dur, walk etc?
 evaluate predefined vars; eg allow bpm=[80,120]
 ==== video ====
-https://www.shadertoy.com/view/Xd2Bzw
+basic setup and rendering
+proper time from metronome
+kaleidoscope synth: https://www.shadertoy.com/view/Xd2Bzw
 */
 </script>
 </html>

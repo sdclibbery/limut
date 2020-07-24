@@ -1,10 +1,11 @@
-'use strict';
+'use strict'
 define(function(require) {
   try { if (!AudioContext) { throw 1; } } catch(e) { document.body.innerHTML = 'Web Audio not supported in this browser!'; return; }
 
-  let system = require('play/system');
-  let metronome = require('metronome');
-  let scale = require('music/scale');
+  let system = require('play/system')
+  let drawSystem = require('draw/system')
+  let metronome = require('metronome')
+  let scale = require('music/scale')
   let standardPlayer = require('player/standard')
   let parseExpression = require('player/parse-expression')
   let vars = require('vars')
@@ -37,7 +38,7 @@ define(function(require) {
     glock: standardPlayer(glock),
     piano: standardPlayer(piano),
     ethereal: standardPlayer(ethereal),
-  };
+  }
   let playerInstances = {}
 
   let mainVars = {
@@ -135,10 +136,10 @@ define(function(require) {
   window.scaleChanged(scale.current)
 
   // console ui
-  let console = document.getElementById('console')
+  let cons = document.getElementById('console')
   let consoleOut = (str) => {
-    console.value += '\n'+str
-    console.scrollTop = console.scrollHeight
+    cons.value += '\n'+str
+    cons.scrollTop = cons.scrollHeight
   }
   consoleOut('\n> Welcome to Limut')
 
@@ -155,10 +156,10 @@ define(function(require) {
     if ((event.keyCode == 10 || event.keyCode == 13) && event.ctrlKey) {
       window.go()
     }
-  });
+  })
   window.stop = () => {
     system.resume()
-    playerInstances = {};
+    playerInstances = {}
   }
   window.go = () => {
     system.resume()
@@ -184,6 +185,18 @@ define(function(require) {
     return `rgb(${to255(Math.sin(c*1.57))},${to255(Math.cos(c*1.57))},0)`
   }
 
+  // webgl canvas
+  var canvas = document.getElementById("canvas")
+  let onResize = () => {
+    canvas.width = window.innerWidth
+    canvas.height = window.innerHeight
+  }
+  window.addEventListener('resize', onResize, false)
+  onResize()
+  let ctxGl = canvas.getContext("webgl")
+  if (!ctxGl) { ctxGl = canvas.getContext("experimental-webgl") }
+  if (!ctxGl) { console.error('WebGL not supported!') }
+
   // Update
   let compressorReadout = document.getElementById('compressor-readout')
   let beatReadout = document.getElementById('beat-readout')
@@ -191,9 +204,9 @@ define(function(require) {
   let beat4Readout = document.getElementById('beat4-readout')
   let beat16Readout = document.getElementById('beat16-readout')
   let beat32Readout = document.getElementById('beat32-readout')
-  let tick = function () {
+  let tick = (t) => {
     compressorReadout.style.backgroundColor = compressorColor(system.compressorReduction())
-    let beat = metronome.update(system.timeNow());
+    let beat = metronome.update(system.timeNow())
     if (beat) {
       beatReadout.innerText = beat.count
       beat3Readout.innerText = (beat.count%3 + 1) + '/3'
@@ -212,7 +225,15 @@ define(function(require) {
         }
       }
     }
-    requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
-});
+    if (ctxGl) {
+      try {
+        drawSystem.frameStart(t, ctxGl, canvas.width, canvas.height)
+      } catch (e) {
+        let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
+        consoleOut('Run Error from drawing: ' + e + st)
+      }
+    }
+    requestAnimationFrame(tick)
+  }
+  requestAnimationFrame(tick)
+})
