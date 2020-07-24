@@ -129,8 +129,9 @@ Ba dbass 0.4[21], dur=4, amp=1.5, room=1
 Kd play x[.x]x., dur=2, room=1
 Sn play .o, dur=2, room=1</pre>
 <pre>bpm = 140
-d1 play x.
-d2 play .[--]</pre>
+d1 play (vx)., room=0.3
+d2 play .[::], room=0.3
+ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <h3>predefined vars</h3>
 <p><code>bpm</code> Beats per minute</p>
 <p><code>main.amp</code> Main mix amplitude control</p>
@@ -341,12 +342,13 @@ random timevar gens for patterns: {o-:}
 pattern generators: tri, Dur, walk etc?
 evaluate predefined vars; eg allow bpm=[80,120]
 ==== video ====
-aspect ratio
 icky looking edges around textarea boxes etc
 better text edge visibility
-not resizing to fullscreen
+not resizing when window size changes
+docs
 more params
 particle synth
+ability to respond to or follow audio synths
 */
 </script>
 </html>

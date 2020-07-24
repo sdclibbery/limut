@@ -18,7 +18,7 @@ define(function (require) {
   uniform float eventTime;
   void main() {
       float f = fract(time);
-      vec2 p = tex*2. - 1.;
+      vec2 p = tex;
       p += p * sin(dot(p, p)*20.-time) * .04;
       vec4 c = vec4(0.);
       for (float i = .5 ; i < 8. ; i++) {
