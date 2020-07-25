@@ -22,6 +22,7 @@ system.frameStart = (time, gl, cw, ch) => {
   system.cw = cw
   system.ch = ch
 
+  system.gl.viewport(0,0,cw,ch)
   system.gl.clearColor(0.125, 0.15, 0.1875, 1)
   system.gl.enable(system.gl.DEPTH_TEST)
   system.gl.depthFunc(system.gl.LEQUAL)
