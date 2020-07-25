@@ -196,7 +196,8 @@ define(function(require) {
   }
   window.addEventListener('resize', onResize, false)
   onResize()
-  let ctxGl = canvas.getContext("webgl")
+  let ctxGl = canvas.getContext("webgl2")
+  if (!ctxGl) { ctxGl = canvas.getContext("webgl") }
   if (!ctxGl) { ctxGl = canvas.getContext("experimental-webgl") }
   if (!ctxGl) { console.error('WebGL not supported!') }
 

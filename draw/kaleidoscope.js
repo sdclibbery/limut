@@ -16,16 +16,20 @@ define(function (require) {
   varying vec2 tex;
   uniform float time;
   uniform float eventTime;
+  uniform float value;
   void main() {
-      float f = fract(time);
-      vec2 p = tex;
-      p += p * sin(dot(p, p)*20.-time) * .04;
-      vec4 c = vec4(0.);
-      for (float i = .5 ; i < 8. ; i++) {
-        p = abs(2.*fract(p-.5)-1.) * mat2(cos(.01*time*i*i + .78*vec4(1,7,3,1))),
-        c += exp(-abs(p.y)*5.) * (cos(vec4(2,3,1,0)*i)*.5+.5);
-      }
-      c.gb *= .5;
+    float av = abs(value);
+    float t = time+value;
+    float f = fract(t);
+    vec2 p = tex;
+    p += p * sin(dot(p, p)*20.-t) * .04;
+    vec4 c = vec4(0.);
+    for (float i = 0.5 ; i < 8.0 ; i++) {
+      p = abs(2.*fract(p-.5)-1.) * mat2(cos(.01*t*i*i + .78*vec4(1,7,3.+av,1))),
+      c += exp(-abs(p.y)*5.) * (cos(vec4(2,3.+value,1,0)*i)*.5+.5);
+    }
+    c.gb *= .5;
+    //if (value < 0.0) { c.rgba = c.bgra }
     gl_FragColor = c * vec4(1.-sqrt(eventTime));
   }`
 
@@ -36,9 +40,13 @@ define(function (require) {
   let texAttr
   let timeUnif
   let eventTimeUnif
+  let valueUnif
   return (params) => {
     let startTime = params.time
     let endTime = params.time + param(params.sus, param(params.dur, 1)) * params.beat.duration
+    let value = parseInt(param(params.value, '0'))
+    let rate = param(params.rate, 1)
+    if (Number.isNaN(value)) { value = param(params.value, '0').charCodeAt(0) - 32 }
     if (!program) {
       program = system.loadProgram([
         system.loadShader(vtxShader, system.gl.VERTEX_SHADER),
@@ -50,6 +58,7 @@ define(function (require) {
       texAttr = system.gl.getAttribLocation(program, "texIn")
       timeUnif = system.gl.getUniformLocation(program, "time")
       eventTimeUnif = system.gl.getUniformLocation(program, "eventTime")
+      valueUnif = system.gl.getUniformLocation(program, "value")
     }
     system.add(startTime, (state) => {
       let eventTime = ((state.time-startTime)/(endTime-startTime))
@@ -57,8 +66,9 @@ define(function (require) {
       let vtxData = system.fullscreenVtxs()
       system.loadVertexAttrib(posBuf, posAttr, vtxData.vtx, 2)
       system.loadVertexAttrib(texBuf, texAttr, vtxData.tex, 2)
-      system.gl.uniform1f(timeUnif, state.time, 1);
+      system.gl.uniform1f(timeUnif, state.time*rate, 1);
       system.gl.uniform1f(eventTimeUnif, eventTime, 1);
+      system.gl.uniform1f(valueUnif, value, 1);
       system.gl.enable(system.gl.BLEND)
       system.gl.blendFunc(system.gl.ONE, system.gl.ONE_MINUS_SRC_ALPHA)
       system.gl.drawArrays(system.gl.TRIANGLES, 0, 6)
