@@ -30,6 +30,7 @@ define(function(require) {
     '!': nullPlayer,
     // visualisations
     kaleidoscope: standardPlayer(kaleidoscope),
+    kal: standardPlayer(kaleidoscope),
     // instruments
     drums: standardPlayer(percussion.play, 1/2),
     play: standardPlayer(play, 1/2),
@@ -204,7 +205,6 @@ define(function(require) {
   // Update
   let compressorReadout = document.getElementById('compressor-readout')
   let beatReadout = document.getElementById('beat-readout')
-  let beat3Readout = document.getElementById('beat3-readout')
   let beat4Readout = document.getElementById('beat4-readout')
   let beat16Readout = document.getElementById('beat16-readout')
   let beat32Readout = document.getElementById('beat32-readout')
@@ -214,7 +214,6 @@ define(function(require) {
     let beat = metronome.update(now)
     if (beat) {
       beatReadout.innerText = beat.count
-      beat3Readout.innerText = (beat.count%3 + 1) + '/3'
       beat4Readout.innerText = (beat.count%4 + 1) + '/4'
       beat16Readout.innerText = (beat.count%16 + 1) + '/16'
       beat32Readout.innerText = (beat.count%32 + 1) + '/32'

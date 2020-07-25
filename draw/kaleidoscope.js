@@ -17,6 +17,7 @@ define(function (require) {
   uniform float time;
   uniform float eventTime;
   uniform float value;
+  uniform float amp;
   void main() {
     float av = abs(value);
     float t = time+value;
@@ -29,8 +30,7 @@ define(function (require) {
       c += exp(-abs(p.y)*5.) * (cos(vec4(2,3.+value,1,0)*i)*.5+.5);
     }
     c.gb *= .5;
-    //if (value < 0.0) { c.rgba = c.bgra }
-    gl_FragColor = c * vec4(1.-sqrt(eventTime));
+    gl_FragColor = c * vec4(amp * (1.0-sqrt(eventTime)));
   }`
 
   let program
@@ -41,7 +41,10 @@ define(function (require) {
   let timeUnif
   let eventTimeUnif
   let valueUnif
+  let ampUnif
   return (params) => {
+    let amp = param(params.amp, 1)
+    if (amp < 0.001) { return }
     let startTime = params.time
     let endTime = params.time + param(params.sus, param(params.dur, 1)) * params.beat.duration
     let value = parseInt(param(params.value, '0'))
@@ -59,6 +62,7 @@ define(function (require) {
       timeUnif = system.gl.getUniformLocation(program, "time")
       eventTimeUnif = system.gl.getUniformLocation(program, "eventTime")
       valueUnif = system.gl.getUniformLocation(program, "value")
+      ampUnif = system.gl.getUniformLocation(program, "amp")
     }
     system.add(startTime, (state) => {
       let eventTime = ((state.time-startTime)/(endTime-startTime))
@@ -69,6 +73,7 @@ define(function (require) {
       system.gl.uniform1f(timeUnif, state.time*rate, 1);
       system.gl.uniform1f(eventTimeUnif, eventTime, 1);
       system.gl.uniform1f(valueUnif, value, 1);
+      system.gl.uniform1f(ampUnif, amp, 1);
       system.gl.enable(system.gl.BLEND)
       system.gl.blendFunc(system.gl.ONE, system.gl.ONE_MINUS_SRC_ALPHA)
       system.gl.drawArrays(system.gl.TRIANGLES, 0, 6)
