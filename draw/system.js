@@ -50,10 +50,15 @@ system.fullscreenVtxs = () => {
   let r = 1
   let t = -1
   let b = 1
-  let ar = system.cw / system.ch
+  let har = system.cw / system.ch
+  let ihar = 1
+  if (har > 2 || har < 1/2) {
+    har = Math.sqrt(har)
+    ihar = 1/har
+  }
   return {
     vtx: new Float32Array([l,t, r,t, l,b, l,b, r,t, r,b]),
-    tex: new Float32Array([-ar,-1, ar,-1, -ar,1, -ar,1, ar,-1, ar,1])
+    tex: new Float32Array([-har,-ihar, har,-ihar, -har,ihar, -har,ihar, har,-ihar, har,ihar])
   }
 }
 
