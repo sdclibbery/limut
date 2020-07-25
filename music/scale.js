@@ -78,6 +78,8 @@ define(function (require) {
   scale.set = (s) => {
     if (scales[s]) {
       scale.current = s
+    } else {
+      throw 'Invalid scale '+s
     }
     return scale.current
   }
