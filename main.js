@@ -9,10 +9,12 @@ define(function(require) {
   let parseExpression = require('player/parse-expression')
   let vars = require('vars')
   let players = require('player/players')
-
   let standardPlayer = require('player/standard')
+
   let kaleidoscope = require('draw/kaleidoscope')
   let clouds = require('draw/clouds')
+  let swirl = require('draw/swirl')
+
   let percussion = require('play/percussion')
   let play = require('play/play')
   let dsaw = require('play/dsaw')
@@ -41,6 +43,7 @@ define(function(require) {
     kaleidoscope: makePlayerFactory(kaleidoscope),
     kal: makePlayerFactory(kaleidoscope),
     clouds: makePlayerFactory(clouds),
+    swirl: makePlayerFactory(swirl),
     // instruments
     drums: makePlayerFactory(percussion.play, 1/2),
     play: makePlayerFactory(play, 1/2),
@@ -206,8 +209,7 @@ define(function(require) {
   }
   window.addEventListener('resize', onResize, false)
   onResize()
-  let ctxGl = canvas.getContext("webgl2")
-  if (!ctxGl) { ctxGl = canvas.getContext("webgl") }
+  let ctxGl = canvas.getContext("webgl")
   if (!ctxGl) { ctxGl = canvas.getContext("experimental-webgl") }
   if (!ctxGl) { console.error('WebGL not supported!') }
 

@@ -18,6 +18,7 @@ system.frameStart = (time, gl, cw, ch) => {
   system.time = time
   if (!system.gl) {
     system.gl = gl
+    system.gl.getExtension('OES_standard_derivatives')
   }
   system.cw = cw
   system.ch = ch

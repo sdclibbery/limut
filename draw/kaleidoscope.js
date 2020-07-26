@@ -8,7 +8,7 @@ define(function (require) {
   precision mediump float;
   varying vec2 fragCoord;
   uniform float iTime;
-  uniform float eventTime;
+  uniform float brightness;
   uniform float value;
   uniform float amp;
   void main() {
@@ -23,7 +23,7 @@ define(function (require) {
       c += exp(-abs(p.y)*5.) * (cos(vec4(2,3.+value,1,0)*i)*.5+.5);
     }
     c.gb *= .5;
-    gl_FragColor = c * vec4(amp * (1.0-sqrt(eventTime)));
+    gl_FragColor = c * amp * brightness;
   }`
 
   return (params) => {

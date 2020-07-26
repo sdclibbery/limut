@@ -39,6 +39,7 @@ define(function (require) {
     let value = parseInt(param(params.value, '0'))
     if (Number.isNaN(value)) { value = param(params.value, '0').charCodeAt(0) - 32 }
     let rate = param(params.rate, 1)
+    let envelope = (et) => 1 - Math.sqrt(et)*param(params.fade, 1)
 
     if (!programs[fragmentShader]) {
       let program = system.loadProgram([
@@ -52,7 +53,7 @@ define(function (require) {
         fragCoordBuf: system.gl.createBuffer(),
         fragCoordAttr: system.gl.getAttribLocation(program, "fragCoordIn"),
         timeUnif: system.gl.getUniformLocation(program, "iTime"),
-        eventTimeUnif: system.gl.getUniformLocation(program, "eventTime"),
+        brightnessUnif: system.gl.getUniformLocation(program, "brightness"),
         valueUnif: system.gl.getUniformLocation(program, "value"),
         ampUnif: system.gl.getUniformLocation(program, "amp"),
       }
@@ -60,12 +61,13 @@ define(function (require) {
     let s = programs[fragmentShader]
     return state => {
       let eventTime = ((state.time-startTime)/(endTime-startTime))
+      let brightness = envelope(eventTime)
       let vtxData = tiledQuad()
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
       system.loadVertexAttrib(s.fragCoordBuf, s.fragCoordAttr, vtxData.tex, 2)
       system.gl.useProgram(s.program)
       system.gl.uniform1f(s.timeUnif, state.time*rate, 1);
-      system.gl.uniform1f(s.eventTimeUnif, eventTime, 1);
+      system.gl.uniform1f(s.brightnessUnif, brightness, 1);
       system.gl.uniform1f(s.valueUnif, value, 1);
       system.gl.uniform1f(s.ampUnif, amp, 1);
       system.gl.disable(system.gl.BLEND)

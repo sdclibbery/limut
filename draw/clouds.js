@@ -8,7 +8,7 @@ define(function (require) {
   precision mediump float;
   varying vec2 fragCoord;
   uniform float iTime;
-  uniform float eventTime;
+  uniform float brightness;
   uniform float value;
   uniform float amp;
 
@@ -127,7 +127,7 @@ define(function (require) {
 
       vec3 result = mix(skycolour, clamp(skytint * skycolour + cloudcolour, 0.0, 1.0), clamp(f + c, 0.0, 1.0));
 
-  	gl_FragColor = vec4( result, 1.0 );
+  	gl_FragColor = vec4( result, 1.0 )*brightness;
   }`
 
   return (params) => {
