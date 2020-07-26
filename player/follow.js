@@ -4,7 +4,7 @@ define(function(require) {
 
   return (playerName, params) => {
     return (beat) => {
-      let p = players.instances[playerName]
+      let p = players.instances[playerName.toLowerCase()]
       if (p === undefined) { throw 'Follow player not found: '+playerName }
       let events = p.getEventsForBeat(beat)
       return events.map(event => Object.assign({}, event, params))
