@@ -187,7 +187,8 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>ethereal</code> Ethereal pad</p>
 <h3>Visual Synths</h3>
 <p><code>! / stop / none</code> </p>
-<p><code>kaleidoscope / kal</code> display a changing kaleidoscopic pattern, responding to time, pattern, rate etc params].</p>
+<p><code>kaleidoscope / kal</code> display a changing kaleidoscopic pattern, responding to time, pattern, rate etc params.</p>
+<p><code>clouds</code> display a moving clouds</p>
 <h3>params</h3>
 <p><code>amp</code> Player amplitude control</p>
 <p><code>oct</code> Octave</p>
@@ -312,19 +313,25 @@ FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
 FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ==== video ====
-particle synth
-distinction between fullscreen and not shaders; only run one fullscreen per frame, and dont blend?
- ? What about tiling? maybe tile multiple fullscreens instead of pick one?
- Either way, draw fullscreens first
-refactor so you can drop shadertoy shader 'straight' in
+pull out common code for tileable shaders
+system knows which synths are tileable and tiles them if multiepl are active together (to save fillrate)
+spray particle synth
 more params
 draw frame lag indicator
+can't see caret over light colours
 star synth https://www.shadertoy.com/view/4dXGR4
+swirl synth https://www.shadertoy.com/view/4dX3Rn
 fireball synth https://www.shadertoy.com/view/lsf3RH
+furry synth https://www.shadertoy.com/view/4dlGDN
+bubbles synth https://www.shadertoy.com/view/4dl3zn
+lightning synth
+electric synth https://www.shadertoy.com/view/ldlXRS
+scaly shader https://www.shadertoy.com/view/MdSXzz
 ==== non-audio ====
+Pattern can be follow other player, call it's function then add own params in
+console scrollbar doesnt work
 <> for 'in sequence on each repeat' in patterns
  all tests / all cases
-Pattern can be follow other player, call it's function then add own params in
 Change param random syntax to {}
 {} for random in patterns
 Solo param - when any player is solod, then any other player thats not solod does not play

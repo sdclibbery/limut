@@ -10,6 +10,7 @@ define(function(require) {
   let parseExpression = require('player/parse-expression')
   let vars = require('vars')
   let kaleidoscope = require('draw/kaleidoscope')
+  let clouds = require('draw/clouds')
   let percussion = require('play/percussion')
   let play = require('play/play')
   let dsaw = require('play/dsaw')
@@ -31,6 +32,7 @@ define(function(require) {
     // visualisations
     kaleidoscope: standardPlayer(kaleidoscope),
     kal: standardPlayer(kaleidoscope),
+    clouds: standardPlayer(clouds),
     // instruments
     drums: standardPlayer(percussion.play, 1/2),
     play: standardPlayer(play, 1/2),

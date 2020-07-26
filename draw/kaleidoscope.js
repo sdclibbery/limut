@@ -5,24 +5,25 @@ define(function (require) {
 
   let vtxShader = `//
   attribute vec2 posIn;
-  attribute vec2 texIn;
-  varying vec2 tex;
+  attribute vec2 fragCoordIn;
+  varying vec2 fragCoord;
   void main() {
     gl_Position = vec4(posIn, 0, 1);
-    tex = texIn;
+    fragCoord = fragCoordIn;
   }`
+
   let frgShader = `// from https://www.shadertoy.com/view/Xd2Bzw
   precision mediump float;
-  varying vec2 tex;
-  uniform float time;
+  varying vec2 fragCoord;
+  uniform float iTime;
   uniform float eventTime;
   uniform float value;
   uniform float amp;
   void main() {
     float av = abs(value);
-    float t = time+value;
+    float t = iTime+value;
     float f = fract(t);
-    vec2 p = tex;
+    vec2 p = fragCoord;
     p += p * sin(dot(p, p)*20.-t) * .04;
     vec4 c = vec4(0.);
     for (float i = 0.5 ; i < 8.0 ; i++) {
@@ -36,8 +37,8 @@ define(function (require) {
   let program
   let posBuf
   let posAttr
-  let texBuf
-  let texAttr
+  let fragCoordBuf
+  let fragCoordAttr
   let timeUnif
   let eventTimeUnif
   let valueUnif
@@ -57,9 +58,9 @@ define(function (require) {
       ])
       posBuf = system.gl.createBuffer()
       posAttr = system.gl.getAttribLocation(program, "posIn")
-      texBuf = system.gl.createBuffer()
-      texAttr = system.gl.getAttribLocation(program, "texIn")
-      timeUnif = system.gl.getUniformLocation(program, "time")
+      fragCoordBuf = system.gl.createBuffer()
+      fragCoordAttr = system.gl.getAttribLocation(program, "fragCoordIn")
+      timeUnif = system.gl.getUniformLocation(program, "iTime")
       eventTimeUnif = system.gl.getUniformLocation(program, "eventTime")
       valueUnif = system.gl.getUniformLocation(program, "value")
       ampUnif = system.gl.getUniformLocation(program, "amp")
@@ -69,7 +70,7 @@ define(function (require) {
       system.gl.useProgram(program)
       let vtxData = system.fullscreenVtxs()
       system.loadVertexAttrib(posBuf, posAttr, vtxData.vtx, 2)
-      system.loadVertexAttrib(texBuf, texAttr, vtxData.tex, 2)
+      system.loadVertexAttrib(fragCoordBuf, fragCoordAttr, vtxData.tex, 2)
       system.gl.uniform1f(timeUnif, state.time*rate, 1);
       system.gl.uniform1f(eventTimeUnif, eventTime, 1);
       system.gl.uniform1f(valueUnif, value, 1);
