@@ -2,6 +2,7 @@
 define(function(require) {
   var parsePattern = require('player/pattern');
   var parseParams = require('player/params');
+  var followPlayer = require('player/follow');
 
   let splitOnAll = (str, ch) => {
     if (!str) { return [] }
@@ -14,18 +15,17 @@ define(function(require) {
     return [parts[0], parts.slice(1).join()]
   }
 
-  return (play, defaultDur) => (command) => {
-    let [patternStr, paramsStr] = splitOnFirst(command, ',')
+  return (command, defaultDur) => {
+    let [patternStr, paramsStr] = splitOnFirst(command, ',').map(s => s.trim())
     let params = parseParams(paramsStr)
+    if (patternStr.startsWith('>>')) { return followPlayer(patternStr.slice(2).trim(), params) }
     let pattern = parsePattern(patternStr, params, defaultDur)
     return (beat) => {
       let eventsForBeat = pattern(beat.count)
-      eventsForBeat.forEach(event => {
+      return eventsForBeat.map(event => {
         let eventToPlay = Object.assign({}, event, {sound: event.value, beat: beat})
         eventToPlay.time = beat.time + event.time*beat.duration
-        if (eventToPlay.amp === undefined || eventToPlay.amp > 0) {
-          play(eventToPlay)
-        }
+        return eventToPlay
       })
     }
   }

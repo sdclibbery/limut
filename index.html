@@ -154,6 +154,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>0[123]</code> Square brackets to fit multiple events into one <code>dur</code> (triplet shown)</p>
 <p><code>0(135)</code> Round brackets to play multiple events together (i.e. a chord)</p>
 <p><code>0&lt;12&gt;</code> Angle brackets to play events in sequence as the pattern repeats. Eg <code>0&lt;12&gt;</code> is exactly equivalent to <code>0102</code></p>
+<p><code>&gt;&gt; p1</code> Use &gt;&gt; to follow another player (named 'p1' in the example) pattern</p>
 <h3>Param syntax</h3>
 <p><code>1</code> Single value</p>
 <p><code>(1,2)</code> Multiple values, all played together</p>
@@ -313,21 +314,21 @@ FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
 FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ==== video ====
-system knows which synths are tileable and tiles them if multiepl are active together (to save fillrate)
-spray particle synth
-more params
+param control of having a brightness envelope
+system knows which synths are tileable and tiles them
+some control of how tiling is arranged
 draw frame lag indicator
 can't see caret over light colours
 star synth https://www.shadertoy.com/view/4dXGR4
-swirl synth https://www.shadertoy.com/view/4dX3Rn
-fireball synth https://www.shadertoy.com/view/lsf3RH
+fireball sprite synth https://www.shadertoy.com/view/lsf3RH
+spray particle synth
 furry synth https://www.shadertoy.com/view/4dlGDN
 bubbles synth https://www.shadertoy.com/view/4dl3zn
-lightning synth
+lightning sprite synth
 electric synth https://www.shadertoy.com/view/ldlXRS
 scaly shader https://www.shadertoy.com/view/MdSXzz
+swirl synth https://www.shadertoy.com/view/4dX3Rn
 ==== non-audio ====
-Pattern can be follow other player, call it's function then add own params in
 console scrollbar doesnt work
 <> for 'in sequence on each repeat' in patterns
  all tests / all cases

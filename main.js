@@ -6,9 +6,11 @@ define(function(require) {
   let drawSystem = require('draw/system')
   let metronome = require('metronome')
   let scale = require('music/scale')
-  let standardPlayer = require('player/standard')
   let parseExpression = require('player/parse-expression')
   let vars = require('vars')
+  let players = require('player/players')
+
+  let standardPlayer = require('player/standard')
   let kaleidoscope = require('draw/kaleidoscope')
   let clouds = require('draw/clouds')
   let percussion = require('play/percussion')
@@ -22,30 +24,35 @@ define(function(require) {
   let piano = require('play/piano')
   let ethereal = require('play/ethereal')
 
-  // Players
   let nullPlayer = () => {}
-  let players = {
+  let makePlayerFactory = (play, defaultDur) => (command) => {
+    let doPlay = (es) => es.filter(e => e.amp === undefined || e.amp > 0).map(e => play(e))
+    return {
+      play: doPlay,
+      getEventsForBeat: standardPlayer(command, defaultDur),
+    }
+  }
+  let playerTypes = {
     // stop
     none: nullPlayer,
     stop: nullPlayer,
     '!': nullPlayer,
     // visualisations
-    kaleidoscope: standardPlayer(kaleidoscope),
-    kal: standardPlayer(kaleidoscope),
-    clouds: standardPlayer(clouds),
+    kaleidoscope: makePlayerFactory(kaleidoscope),
+    kal: makePlayerFactory(kaleidoscope),
+    clouds: makePlayerFactory(clouds),
     // instruments
-    drums: standardPlayer(percussion.play, 1/2),
-    play: standardPlayer(play, 1/2),
-    dsaw: standardPlayer(dsaw),
-    dbass: standardPlayer(dbass),
-    ping: standardPlayer(ping),
-    swell: standardPlayer(swell),
-    bell: standardPlayer(bell),
-    glock: standardPlayer(glock),
-    piano: standardPlayer(piano),
-    ethereal: standardPlayer(ethereal),
+    drums: makePlayerFactory(percussion.play, 1/2),
+    play: makePlayerFactory(play, 1/2),
+    dsaw: makePlayerFactory(dsaw),
+    dbass: makePlayerFactory(dbass),
+    ping: makePlayerFactory(ping),
+    swell: makePlayerFactory(swell),
+    bell: makePlayerFactory(bell),
+    glock: makePlayerFactory(glock),
+    piano: makePlayerFactory(piano),
+    ethereal: makePlayerFactory(ethereal),
   }
-  let playerInstances = {}
 
   let mainVars = {
     bpm: (command) => metronome.bpm(eval(parseExpression(command))),
@@ -93,11 +100,11 @@ define(function(require) {
       if (playerName) {
         let command  = parts.slice(2).join('').trim()
         if (!command) { throw 'Player "'+playerName+'" Missing params' }
-        let player = players[playerName.toLowerCase()]
+        let player = playerTypes[playerName.toLowerCase()]
         if (!player) { throw 'Player "'+playerName+'" not found' }
-        playerInstances[playerId] = player(command)
+        players.instances[playerId] = player(command)
       } else {
-        delete playerInstances[playerId]
+        delete players.instances[playerId]
       }
     }
   }
@@ -165,11 +172,11 @@ define(function(require) {
   })
   window.stop = () => {
     system.resume()
-    playerInstances = {}
+    players.instances = {}
   }
   window.go = () => {
     system.resume()
-    playerInstances = {}
+    players.instances = {}
     codeTextArea.value.split('\n')
     .map((l,i) => {return{line:l.trim(), num:i}})
     .map(({line,num}) => {return{line:line.replace(/\/\/.*/, ''),num:num}})
@@ -219,11 +226,11 @@ define(function(require) {
       beat4Readout.innerText = (beat.count%4 + 1) + '/4'
       beat16Readout.innerText = (beat.count%16 + 1) + '/16'
       beat32Readout.innerText = (beat.count%32 + 1) + '/32'
-      for (let playerName of Object.keys(playerInstances)) {
-        let player = playerInstances[playerName]
-        if (typeof player === 'function') {
+      for (let playerName of Object.keys(players.instances)) {
+        let player = players.instances[playerName]
+        if (player !== undefined) {
           try {
-            player(beat)
+            player.play(player.getEventsForBeat(beat))
           } catch (e) {
             let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
             consoleOut('Run Error from player '+playerName+': ' + e + st)
