@@ -32,7 +32,7 @@ define(function (require) {
   let programs = {}
 
   return (fragmentShader, params) => {
-    let amp = param(params.amp, 1)
+    let amp = Math.min(param(params.amp, 1), 2)
     if (amp < 0.001) { return }
     let startTime = params.time
     let endTime = params.time + param(params.sus, param(params.dur, 1)) * params.beat.duration

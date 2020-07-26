@@ -154,7 +154,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>0[123]</code> Square brackets to fit multiple events into one <code>dur</code> (triplet shown)</p>
 <p><code>0(135)</code> Round brackets to play multiple events together (i.e. a chord)</p>
 <p><code>0&lt;12&gt;</code> Angle brackets to play events in sequence as the pattern repeats. Eg <code>0&lt;12&gt;</code> is exactly equivalent to <code>0102</code></p>
-<p><code>&gt;&gt; p1</code> Use &gt;&gt; to follow another player (named 'p1' in the example) pattern</p>
+<p><code>follow p1</code> Use <code>follow</code> to follow another player (named 'p1' in the example) pattern</p>
 <h3>Param syntax</h3>
 <p><code>1</code> Single value</p>
 <p><code>(1,2)</code> Multiple values, all played together</p>
@@ -314,11 +314,9 @@ FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
 FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ==== video ====
-Limit amp for tileable
-follow syntax
+param control of having a brightness envelope
 Bubbles sprites
 Tile fullscreen, fullscreen+stripe, stripes, tiles
-param control of having a brightness envelope
 system knows which synths are tileable and tiles them
 some control of how tiling is arranged
 draw frame lag indicator

@@ -18,7 +18,7 @@ define(function(require) {
   return (command, defaultDur) => {
     let [patternStr, paramsStr] = splitOnFirst(command, ',').map(s => s.trim())
     let params = parseParams(paramsStr)
-    if (patternStr.startsWith('>>')) { return followPlayer(patternStr.slice(2).trim(), params) }
+    if (patternStr.startsWith('follow')) { return followPlayer(patternStr.slice(6).trim(), params) }
     let pattern = parsePattern(patternStr, params, defaultDur)
     return (beat) => {
       let eventsForBeat = pattern(beat.count)
