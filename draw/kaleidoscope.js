@@ -1,16 +1,8 @@
 'use strict';
 define(function (require) {
   let system = require('draw/system')
+  let tileable = require('draw/tileable')
   let param = require('player/default-param')
-
-  let vtxShader = `//
-  attribute vec2 posIn;
-  attribute vec2 fragCoordIn;
-  varying vec2 fragCoord;
-  void main() {
-    gl_Position = vec4(posIn, 0, 1);
-    fragCoord = fragCoordIn;
-  }`
 
   let frgShader = `// from https://www.shadertoy.com/view/Xd2Bzw
   precision mediump float;
@@ -34,51 +26,7 @@ define(function (require) {
     gl_FragColor = c * vec4(amp * (1.0-sqrt(eventTime)));
   }`
 
-  let program
-  let posBuf
-  let posAttr
-  let fragCoordBuf
-  let fragCoordAttr
-  let timeUnif
-  let eventTimeUnif
-  let valueUnif
-  let ampUnif
   return (params) => {
-    let amp = param(params.amp, 1)
-    if (amp < 0.001) { return }
-    let startTime = params.time
-    let endTime = params.time + param(params.sus, param(params.dur, 1)) * params.beat.duration
-    let value = parseInt(param(params.value, '0'))
-    let rate = param(params.rate, 1)
-    if (Number.isNaN(value)) { value = param(params.value, '0').charCodeAt(0) - 32 }
-    if (!program) {
-      program = system.loadProgram([
-        system.loadShader(vtxShader, system.gl.VERTEX_SHADER),
-        system.loadShader(frgShader, system.gl.FRAGMENT_SHADER)
-      ])
-      posBuf = system.gl.createBuffer()
-      posAttr = system.gl.getAttribLocation(program, "posIn")
-      fragCoordBuf = system.gl.createBuffer()
-      fragCoordAttr = system.gl.getAttribLocation(program, "fragCoordIn")
-      timeUnif = system.gl.getUniformLocation(program, "iTime")
-      eventTimeUnif = system.gl.getUniformLocation(program, "eventTime")
-      valueUnif = system.gl.getUniformLocation(program, "value")
-      ampUnif = system.gl.getUniformLocation(program, "amp")
-    }
-    system.add(startTime, (state) => {
-      let eventTime = ((state.time-startTime)/(endTime-startTime))
-      system.gl.useProgram(program)
-      let vtxData = system.fullscreenVtxs()
-      system.loadVertexAttrib(posBuf, posAttr, vtxData.vtx, 2)
-      system.loadVertexAttrib(fragCoordBuf, fragCoordAttr, vtxData.tex, 2)
-      system.gl.uniform1f(timeUnif, state.time*rate, 1);
-      system.gl.uniform1f(eventTimeUnif, eventTime, 1);
-      system.gl.uniform1f(valueUnif, value, 1);
-      system.gl.uniform1f(ampUnif, amp, 1);
-      system.gl.enable(system.gl.BLEND)
-      system.gl.blendFunc(system.gl.ONE, system.gl.ONE_MINUS_SRC_ALPHA)
-      system.gl.drawArrays(system.gl.TRIANGLES, 0, 6)
-      return state.time < endTime
-    })
+    system.add(params.time, tileable(frgShader, params))
   }
 })
