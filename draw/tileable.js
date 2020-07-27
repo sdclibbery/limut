@@ -12,11 +12,11 @@ define(function (require) {
     fragCoord = fragCoordIn;
   }`
 
-  let tiledQuad = () => {
-    let l = -1
-    let r = 1
-    let t = -1
-    let b = 1
+  let tiledQuad = (state) => {
+    let l = -1 + state.tile.x*2
+    let r = l + state.tile.w*2
+    let t = -1 + state.tile.y*2
+    let b = t + state.tile.h*2
     let har = system.cw / system.ch
     let ihar = 1
     if (har > 2 || har < 1/2) {
@@ -39,7 +39,7 @@ define(function (require) {
     let value = parseInt(param(params.value, '0'))
     if (Number.isNaN(value)) { value = param(params.value, '0').charCodeAt(0) - 32 }
     let rate = param(params.rate, 1)
-    let envelope = (et) => 1 - Math.sqrt(et)*param(params.fade, 1)
+    let envelope = (et) => 1 - (et*et)*param(params.fade, 1)
 
     if (!programs[fragmentShader]) {
       let program = system.loadProgram([
@@ -62,7 +62,7 @@ define(function (require) {
     return state => {
       let eventTime = ((state.time-startTime)/(endTime-startTime))
       let brightness = envelope(eventTime)
-      let vtxData = tiledQuad()
+      let vtxData = tiledQuad(state)
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
       system.loadVertexAttrib(s.fragCoordBuf, s.fragCoordAttr, vtxData.tex, 2)
       system.gl.useProgram(s.program)
@@ -70,9 +70,10 @@ define(function (require) {
       system.gl.uniform1f(s.brightnessUnif, brightness, 1);
       system.gl.uniform1f(s.valueUnif, value, 1);
       system.gl.uniform1f(s.ampUnif, amp, 1);
-      system.gl.disable(system.gl.BLEND)
+      system.gl.enable(system.gl.BLEND)
+      system.gl.blendFunc(system.gl.ONE, system.gl.ONE_MINUS_SRC_ALPHA);
       system.gl.drawArrays(system.gl.TRIANGLES, 0, 6)
-      return state.time < endTime
+      return state.time < endTime-state.dt-0.0001
     }
   }
 })
