@@ -15,7 +15,7 @@ define(function (require) {
     float av = abs(value);
     float t = iTime+value;
     float f = fract(t);
-    vec2 p = fragCoord;
+    vec2 p = fragCoord*0.5;
     p += p * sin(dot(p, p)*20.-t) * .04;
     vec4 c = vec4(0.);
     for (float i = 0.5 ; i < 8.0 ; i++) {
