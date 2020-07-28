@@ -11,9 +11,6 @@ define(function(require) {
   let players = require('player/players')
   let standardPlayer = require('player/standard')
 
-  let kaleidoscope = require('draw/kaleidoscope')
-  let clouds = require('draw/clouds')
-  let swirl = require('draw/swirl')
   let tile = require('draw/tile')
 
   let percussion = require('play/percussion')
@@ -41,10 +38,6 @@ define(function(require) {
     stop: nullPlayer,
     '!': nullPlayer,
     // visualisations
-    kaleidoscope: makePlayerFactory(kaleidoscope),
-    kal: makePlayerFactory(kaleidoscope),
-    clouds: makePlayerFactory(clouds),
-    swirl: makePlayerFactory(swirl),
     tile: makePlayerFactory(tile),
     // instruments
     drums: makePlayerFactory(percussion.play, 1/2),

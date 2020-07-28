@@ -188,10 +188,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>ethereal</code> Ethereal pad</p>
 <h3>Visual Synths</h3>
 <p><code>! / stop / none</code> </p>
-<p><code>kaleidoscope / kal</code> display a changing kaleidoscopic pattern, responding to time, pattern, rate etc params.</p>
-<p><code>clouds</code> display a moving clouds</p>
-<p><code>swirl</code> display swirling psychedelic patterns</p>
-<p><code>tile</code> display a shader on a static tile onscreen</p>
+<p><code>tile</code> display a shader on a static tile</p>
 <h3>params</h3>
 <p><code>amp</code> Player amplitude control</p>
 <p><code>oct</code> Octave</p>
@@ -291,6 +288,12 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <code>4</code> Vocals (Four)<br/>
 </p>
 <h3>Visual shaders</h3>
+Default shader: kaleidoscope
+<code>x</code> psychedelic swirl<br/>
+<code>g</code> clouds<br/>
+<code>j</code> clouds<br/>
+<code>v</code> psychedelic swirl<br/>
+<code>&amp;</code> psychedelic swirl<br/>
 <p>
 </div>
 </body>
@@ -321,15 +324,15 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ==== video ====
 Tile synth. Tile fixed in place
- First shader values
- How to specify tile coords as param? what syntax? {x:0,y:0,w:1,h:1} with predefined tile.tl/m/h1/v1/df1/db1
-  docs
- Ditch old synths kal/swirl/clouds
  value still comes from value, but theres a value param to override the pattern
   docs
  shader param to override the pattern - specify as either values char or shader name
   docs
-Fade synth. fixed and fade out
+ bright param
+  docs
+ How to specify tile coords as param? what syntax? {x:0,y:0,w:1,h:1} with predefined tile.tl/m/h1/v1/df1/db1
+  docs
+Fade synth. like tile but fade out
 Slide synth. Slide across the screen
 Float synth. Float up from the bottom of the screen
 Pop synth. Pop out of (the middle of) the screenclean black borders around tiles

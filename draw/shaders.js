@@ -17,9 +17,9 @@ define(function (require) {
 
   let nameFromValue = {
     'x': 'swirl',
-    'v': 'swirl',
     'g': 'clouds',
     'j': 'clouds',
+    'v': 'swirl',
     '&': 'swirl',
   }
 
