@@ -239,6 +239,59 @@ define(function(require) {
     return numerator/denominator
   }
 
+  let eatWhitespace = (state) => {
+    let char
+    while (char = state.str.charAt(state.idx)) {
+      if (char === ' ' || char === '\t' || char === '\n' || char === '\r') { state.idx += 1; continue }
+      break
+    }
+  }
+  let identifier = (state) => {
+    let char
+    let result = ''
+    while (char = state.str.charAt(state.idx)) {
+      if ((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || char === '_') {
+        result += char
+        state.idx += 1
+        continue
+      }
+      break
+    }
+    return result
+  }
+  let parseMapEntry = (state) => {
+    eatWhitespace(state)
+    let k = identifier(state)
+    if (k === '') { return }
+    eatWhitespace(state)
+    if (state.str.charAt(state.idx) !== ':') { return }
+    state.idx += 1
+    eatWhitespace(state)
+    let v = expression(state)
+    eatWhitespace(state)
+    if (debugParse) { console.log('map entry', k, v, state) }
+    return {k:k,v:v}
+  }
+  let parseMap = (state) => {
+    let result = {}
+    let char
+    while (char = state.str.charAt(state.idx)) {
+      if (char === ' ' || char === '\t' || char === '\n' || char === '\r') { state.idx += 1; continue }
+      if (char == '{' || char == ',') {
+        state.idx += 1
+        let e = parseMapEntry(state)
+        if (e) { result[e.k] = e.v }
+      } else if (char == '}') {
+        state.idx += 1
+        break
+      } else {
+        return undefined
+      }
+    }
+    if (debugParse) { console.log('map', result, state) }
+    return result
+  }
+
   let expression = (state) => {
     if (debugParse) { console.log('expression', state) }
     let lhs = undefined
@@ -292,6 +345,11 @@ define(function(require) {
         } else {
           lhs = (s,b) => v.map(x => evalParam(x,s,b))
         }
+        continue
+      }
+      // map
+      if (char == '{') {
+        lhs = parseMap(state)
         continue
       }
       // operator
@@ -627,6 +685,18 @@ define(function(require) {
   assert(1, p(0,0))
   assert(2, p(1/2,1/2))
   assert(1, p(1,1))
+
+  assert({x:0}, parseExpression('{x:0}'))
+  assert({x:0}, parseExpression(' { x : 0 } '))
+  assert({x:0}, parseExpression('{X:0}'))
+  assert({x:1,y:2}, parseExpression('{x:1,y:2}'))
+  assert({x:1/2}, parseExpression('{x:1/2}'))
+  assert({x:2}, parseExpression('{x:1+1}'))
+
+  p = parseExpression('{x:[1,2]}')
+  assert(1, p.x[0])
+  assert(2, p.x[1])
+  assert(undefined, p.x[2])
 
   console.log('Parse expression tests complete')
 

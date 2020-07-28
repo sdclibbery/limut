@@ -5,10 +5,10 @@ define(function (require) {
   let param = require('player/default-param')
 
   let tiledQuad = (tile) => {
-    let l = -1 + tile[0]*2
-    let r = l + tile[2]*2
-    let t = -1 + tile[1]*2
-    let b = t + tile[3]*2
+    let l = -1 + tile.x*2
+    let r = l + tile.w*2
+    let t = -1 + tile.y*2
+    let b = t + tile.h*2
     let har = system.cw / system.ch
     let ihar = 1
     if (har > 2 || har < 1/2) {
@@ -25,7 +25,7 @@ define(function (require) {
     let amp = Math.min(param(params.amp, 1), 2)
     if (amp < 0.001) { return }
     let startTime = params.time
-    let tile = param(params.tile, [Math.random()/2,Math.random()/2,1/2,1/2])
+    let tile = param(params.tile, {x:Math.random()/2,y:Math.random()/2,w:1/2,h:1/2})
     let endTime = params.time + param(params.sus, param(params.dur, 1)) * params.beat.duration
     let rate = param(params.rate, 1)
     let value = parseInt(param(params.value, '0'))

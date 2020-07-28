@@ -324,12 +324,10 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ==== video ====
 Tile synth. Tile fixed in place
- shader param to override the pattern - specify as either values char or shader name
-  docs
- bright param
-  docs
- How to specify tile coords as param? what syntax? {x:0,y:0,w:1,h:1} with predefined tile.tl/m/h1/v1/df1/db1
-  docs
+ predefined tile.tl/m/h1/v1/df1/db1
+ docs for tile param and predefined
+shader param override - specify as either values char or shader name
+ docs
 Fade synth. like tile but fade out
 Slide synth. Slide across the screen
 Float synth. Float up from the bottom of the screen
@@ -348,23 +346,22 @@ scaly shader https://www.shadertoy.com/view/MdSXzz
 swirl shader https://www.shadertoy.com/view/4dX3Rn
 lightning synth
 ==== non-audio ====
-follow failing to find anything
+follow failing to find anything; only on android/mac??
+<> for 'in sequence on each repeat' in patterns
+ all tests / all cases
 examples and doc sections should concertina
 value param to override the pattern
  docs
-<> for 'in sequence on each repeat' in patterns
- all tests / all cases
-Change param random syntax to {}
-{} for random in patterns
 Beat lag display
 <> for 'in sequence on each repeat' in params
-console scrollbar doesnt work
+console scrollbar doesnt work?
 Solo param - when any player is solod, then any other player thats not solod does not play
 fade in/out now (linvar once)
 Scale param to set scale for just one player
 Support 'penta' and 'pentatonic' as scale names
 Preload samples immediately after parsing
 rests in params
+random in patterns: what syntax??
 GC or LRU or quantisation for echoes and freeverbs
 Experiment with reusing audio nodes instead of recreating to defeat glitchiness
 Can specify params on separate lines and on grouped players

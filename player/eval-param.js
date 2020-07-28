@@ -10,6 +10,12 @@ define((require) => {
       let v = value(step, beat)
       if (Array.isArray(v)) { return v }
       return evalParam(v, step, beat)
+    } else if (typeof value == 'object') {
+      let result = {}
+      for (let k in value) {
+        result[k] = evalParam(value[k], step, beat)
+      }
+      return result
     } else {
       return value
     }
@@ -33,6 +39,8 @@ define((require) => {
   assert(5, evalParam((x,y) => y, 0, 5))
   assert([1,2], evalParam([()=>[1,2]], 0, 0))
   assert([3,4], evalParam([()=>[1,2],()=>[3,4]], 1, 0))
+  assert({x:1}, evalParam({x:[1,2]}, 0, 0))
+  assert({x:2}, evalParam({x:[1,2]}, 1, 1))
 
   console.log('Eval param tests complete')
 
