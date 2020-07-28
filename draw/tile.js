@@ -28,17 +28,14 @@ define(function (require) {
     let tile = param(params.tile, [Math.random()/2,Math.random()/2,1/2,1/2])
     let endTime = params.time + param(params.sus, param(params.dur, 1)) * params.beat.duration
     let rate = param(params.rate, 1)
-    let envelope = (et) => 1 - (et*et)*param(params.fade, 1)
-
-    // FIXME!!!
-    let value = 0 // FIXME!!!
-    // FIXME!!!
+    let value = parseInt(param(params.value, '0'))
+    if (Number.isNaN(value)) { value = param(params.value, '0').charCodeAt(0) - 32 }
 
     let s = shaders(params)
     if (!s) { return () => {} }
     return state => {
       let eventTime = ((state.time-startTime)/(endTime-startTime))
-      let brightness = envelope(eventTime)
+      let brightness = 1 - (eventTime*eventTime)*param(params.fade, 1)
       let vtxData = tiledQuad(tile)
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
       system.loadVertexAttrib(s.fragCoordBuf, s.fragCoordAttr, vtxData.tex, 2)
