@@ -25,7 +25,13 @@ define(function (require) {
     let amp = Math.min(param(params.amp, 1), 2)
     if (amp < 0.001) { return }
     let startTime = params.time
-    let tile = param(params.tile, {x:Math.random()/2,y:Math.random()/2,w:1/2,h:1/2})
+    let ts = param(params.tile, {})
+    let tile = {
+      x: param(ts.x, Math.random()/2),
+      y: param(ts.y, Math.random()/2),
+      w: param(ts.w, 1/2),
+      h: param(ts.h, 1/2),
+    }
     let endTime = params.time + param(params.sus, param(params.dur, 1)) * params.beat.duration
     let rate = param(params.rate, 1)
     let value = parseInt(param(params.value, '0'))
