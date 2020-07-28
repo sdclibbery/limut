@@ -191,6 +191,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>kaleidoscope / kal</code> display a changing kaleidoscopic pattern, responding to time, pattern, rate etc params.</p>
 <p><code>clouds</code> display a moving clouds</p>
 <p><code>swirl</code> display swirling psychedelic patterns</p>
+<p><code>tile</code> display a shader on a static tile onscreen</p>
 <h3>params</h3>
 <p><code>amp</code> Player amplitude control</p>
 <p><code>oct</code> Octave</p>
@@ -289,6 +290,8 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <code>3</code> Vocals (Three)<br/>
 <code>4</code> Vocals (Four)<br/>
 </p>
+<h3>Visual shaders</h3>
+<p>
 </div>
 </body>
 <script data-main="main" src="require.js">
@@ -299,6 +302,7 @@ try using stepped waveshaper without gain for drive??
 room blows up on some browsers above 0.5
 drive blows up on some browsers above ??
 envelope should come after most effects?
+echoey space synth
 detuned sine pad
 root main var
 bitcrush param
@@ -316,37 +320,49 @@ FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
 FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ==== video ====
-fix glitches
-tile param to override auto tiling
-clean black borders around tiles
-? col param to specify one or more colours that must be used by synths
-system knows which synths are tileable and tiles them
-Bubbles sprites
+Tile synth. Tile fixed in place
+ docs
+ How to specify tile coords as param? what syntax? {x:0,y:0,w:1,h:1} with predefined tile.tl/m/h1/v1/df1/db1
+  docs
+ Ditch old synths kal/swirl/clouds
+ value still comes from value, but theres a value param to override the pattern
+  docs
+ shader param to override the pattern - specify as either values char or shader name
+  docs
+Fade synth. fixed and fade out
+Slide synth. Slide across the screen
+Float synth. Float up from the bottom of the screen
+Pop synth. Pop out of (the middle of) the screenclean black borders around tiles
+? col param to specify one or more colours that must be used by shaders
+shape param: rect/roundedrect/ellipse/star/etc
+Add param not working for Vis, eg Vis swirl 0, add=ch
 draw frame lag indicator
 can't see caret over light colours
-star synth https://www.shadertoy.com/view/4dXGR4
-fireball sprite synth https://www.shadertoy.com/view/lsf3RH
-spray particle synth
-furry synth https://www.shadertoy.com/view/4dlGDN
-bubbles synth https://www.shadertoy.com/view/4dl3zn
-lightning sprite synth
-electric synth https://www.shadertoy.com/view/ldlXRS
+fireball shader https://www.shadertoy.com/view/lsf3RH
+star shader https://www.shadertoy.com/view/4dXGR4
+furry shader https://www.shadertoy.com/view/4dlGDN
+bubbles shader https://www.shadertoy.com/view/4dl3zn
+electric shader https://www.shadertoy.com/view/ldlXRS
 scaly shader https://www.shadertoy.com/view/MdSXzz
-swirl synth https://www.shadertoy.com/view/4dX3Rn
+swirl shader https://www.shadertoy.com/view/4dX3Rn
+lightning synth
 ==== non-audio ====
-console scrollbar doesnt work
+follow failing to find anything
+examples and doc sections should concertina
+followbeat, like follow but sets value to 0 on every event
 <> for 'in sequence on each repeat' in patterns
  all tests / all cases
 Change param random syntax to {}
 {} for random in patterns
+Beat lag display
+<> for 'in sequence on each repeat' in params
+console scrollbar doesnt work
 Solo param - when any player is solod, then any other player thats not solod does not play
 fade in/out now (linvar once)
 Scale param to set scale for just one player
 Support 'penta' and 'pentatonic' as scale names
 Preload samples immediately after parsing
 rests in params
-Beat lag display
-<> for 'in sequence on each repeat' in params
 GC or LRU or quantisation for echoes and freeverbs
 Experiment with reusing audio nodes instead of recreating to defeat glitchiness
 Can specify params on separate lines and on grouped players

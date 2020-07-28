@@ -14,14 +14,6 @@ system.add = (startTime, v) => {
   system.queued.push({t:startTime, v:v})
 }
 
-let tileArrangements = [
-  [],
-  [{x:0, y:0, w:1, h:1}],
-  [{x:0, y:0, w:1, h:1},{x:1/4, y:1/4, w:1/2, h:1/2}],
-  [{x:0, y:0, w:1, h:1},{x:0, y:0, w:1/2, h:1/2},{x:1/2, y:1/2, w:1/2, h:1/2}],
-  [{x:0, y:0, w:1/2, h:1/2},{x:1/2, y:0, w:1/2, h:1/2},{x:0, y:1/2, w:1/2, h:1/2},{x:1/2, y:1/2, w:1/2, h:1/2}],
-  [{x:0, y:0, w:1/2, h:1/2},{x:1/2, y:0, w:1/2, h:1/2},{x:0, y:1/2, w:1/2, h:1/2},{x:1/2, y:1/2, w:1/2, h:1/2},{x:1/4, y:1/4, w:1/2, h:1/2}],
-]
 system.frameStart = (time, gl, cw, ch) => {
   system.time = time
   let dt = system.time - system.lastTime
@@ -43,18 +35,8 @@ system.frameStart = (time, gl, cw, ch) => {
   system.active = system.active.concat(newlyActive)
   system.queued = system.queued.filter(v => !newlyActive.includes(v))
 
-  let count = system.active.length
-  let arrangement = tileArrangements[count]
   let state = {time: time, dt: dt}
-  system.active = system.active.filter(({v}, idx) => {
-    if (arrangement) {
-      state.tile = arrangement[idx]
-    } else {
-      state.tile = {x:1/idx, w:1/count, y:0, h:1}
-    }
-    let keep = v(state)
-    return keep
-  })
+  system.active = system.active.filter(({v}, idx) => v(state))
 }
 
 system.xFromCanvas = (x) => {
