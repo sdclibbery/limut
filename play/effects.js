@@ -69,19 +69,26 @@ define(function (require) {
     return gain
   }
 
-  let driveCurve = new Float32Array(2)
-  driveCurve[0] = -1
-  driveCurve[1] = 1
   let drive = (params, node) => {
     let amount = param(params.drive, 0)
     if (!amount) { return node }
     let shaper = system.audio.createWaveShaper()
+    let count = 500
+    let driveCurve = new Float32Array(2*count+1)
+    driveCurve[count] = 0
+    for (let i = 1; i < count+1; i++) {
+      let x = i/count
+      let y
+      if (i%3 == 0) { y = x }
+      if (i%3 == 1) { y = x-amount*x }
+      if (i%3 == 2) { y = x-amount*x/2 }
+      driveCurve[count-i] = -y
+      driveCurve[count+i] = y
+    }
     shaper.curve = driveCurve
     shaper.oversample = 'none'
-    let gainIn = system.audio.createGain()
-    gainIn.gain.value = 1 + Math.pow(10, Math.min(amount, 1)*10)
-    node.connect(gainIn)
-    return gainIn
+    node.connect(shaper)
+    return shaper
   }
 
   return (params, node) => {
