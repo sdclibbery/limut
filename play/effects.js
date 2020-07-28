@@ -23,7 +23,7 @@ define(function (require) {
 
   let reverbs = {}
   let reverb = (params, node) => {
-    let room = param(params.room, 0)
+    let room = param(params.room, 0)*0.7
     if (!room || room < 0.01) { return node }
     if (!reverbs[room]) {
       reverbs[room] = freeverb(room)
