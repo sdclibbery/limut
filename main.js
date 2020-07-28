@@ -2,6 +2,7 @@
 define(function(require) {
   try { if (!AudioContext) { throw 1; } } catch(e) { document.body.innerHTML = 'Web Audio not supported in this browser!'; return; }
 
+  require('predefined-vars')
   let system = require('play/system')
   let drawSystem = require('draw/system')
   let metronome = require('metronome')
@@ -58,24 +59,6 @@ define(function(require) {
     'main.amp': (command) => window.mainAmpChange(eval(parseExpression(command))),
     'main.reverb': (command) => window.mainReverbChange(eval(parseExpression(command))),
   }
-
-  vars['drop4.4'] = parseExpression('[1,0]t[4,4]')
-  vars['drop6.2'] = parseExpression('[1,0]t[6,2]')
-  vars['drop7.1'] = parseExpression('[1,0]t[7,1]')
-  vars['drop8.8'] = parseExpression('[1,0]t[8,8]')
-  vars['drop12.4'] = parseExpression('[1,0]t[12,4]')
-  vars['drop14.2'] = parseExpression('[1,0]t[14,2]')
-  vars['drop15.1'] = parseExpression('[1,0]t[15,1]')
-  vars['drop16.16'] = parseExpression('[1,0]t[16,16]')
-  vars['drop24.8'] = parseExpression('[1,0]t[24,8]')
-  vars['drop28.4'] = parseExpression('[1,0]t[28,4]')
-  vars['drop30.2'] = parseExpression('[1,0]t[30,2]')
-  vars['drop31.1'] = parseExpression('[1,0]t[31,1]')
-  vars['drop32.32'] = parseExpression('[1,0]t[32,32]')
-  vars['drop56.8'] = parseExpression('[1,0]t[56,8]')
-  vars['drop60.4'] = parseExpression('[1,0]t[60,4]')
-  vars['drop62.2'] = parseExpression('[1,0]t[62,2]')
-  vars['drop63.1'] = parseExpression('[1,0]t[63,1]')
 
   let parseLine = (line) => {
     line = line.trim()
