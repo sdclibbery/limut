@@ -4,15 +4,6 @@ define(function (require) {
   let shaders = require('draw/shaders')
   let param = require('player/default-param')
 
-  let vtxShader = `//
-  attribute vec2 posIn;
-  attribute vec2 fragCoordIn;
-  varying vec2 fragCoord;
-  void main() {
-    gl_Position = vec4(posIn, 0, 1);
-    fragCoord = fragCoordIn;
-  }`
-
   let tiledQuad = (tile) => {
     let l = -1 + tile[0]*2
     let r = l + tile[2]*2
@@ -30,8 +21,6 @@ define(function (require) {
     }
   }
 
-  let renderData
-
   let create = (params) => {
     let amp = Math.min(param(params.amp, 1), 2)
     if (amp < 0.001) { return }
@@ -45,34 +34,19 @@ define(function (require) {
     let value = 0 // FIXME!!!
     // FIXME!!!
 
-    let fragmentShader = shaders(params)
-    if (!fragmentShader) { return }
-    if (!renderData) {
-      let program = system.loadProgram([system.loadShader(vtxShader, system.gl.VERTEX_SHADER), fragmentShader])
-      renderData = {
-        program: program,
-        posBuf: system.gl.createBuffer(),
-        posAttr: system.gl.getAttribLocation(program, "posIn"),
-        fragCoordBuf: system.gl.createBuffer(),
-        fragCoordAttr: system.gl.getAttribLocation(program, "fragCoordIn"),
-        timeUnif: system.gl.getUniformLocation(program, "iTime"),
-        brightnessUnif: system.gl.getUniformLocation(program, "brightness"),
-        valueUnif: system.gl.getUniformLocation(program, "value"),
-        ampUnif: system.gl.getUniformLocation(program, "amp"),
-      }
-    }
-    let r = renderData
+    let s = shaders(params)
+    if (!s) { return () => {} }
     return state => {
       let eventTime = ((state.time-startTime)/(endTime-startTime))
       let brightness = envelope(eventTime)
       let vtxData = tiledQuad(tile)
-      system.loadVertexAttrib(r.posBuf, r.posAttr, vtxData.vtx, 2)
-      system.loadVertexAttrib(r.fragCoordBuf, r.fragCoordAttr, vtxData.tex, 2)
-      system.gl.useProgram(r.program)
-      system.gl.uniform1f(r.timeUnif, state.time*rate, 1);
-      system.gl.uniform1f(r.brightnessUnif, brightness, 1);
-      system.gl.uniform1f(r.valueUnif, value, 1);
-      system.gl.uniform1f(r.ampUnif, amp, 1);
+      system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
+      system.loadVertexAttrib(s.fragCoordBuf, s.fragCoordAttr, vtxData.tex, 2)
+      system.gl.useProgram(s.program)
+      system.gl.uniform1f(s.timeUnif, state.time*rate, 1);
+      system.gl.uniform1f(s.brightnessUnif, brightness, 1);
+      system.gl.uniform1f(s.valueUnif, value, 1);
+      system.gl.uniform1f(s.ampUnif, amp, 1);
       system.gl.enable(system.gl.BLEND)
       system.gl.blendFunc(system.gl.ONE, system.gl.ONE_MINUS_SRC_ALPHA);
       system.gl.drawArrays(system.gl.TRIANGLES, 0, 6)
@@ -81,8 +55,6 @@ define(function (require) {
   }
 
   return (params) => {
-    let vis = create(params)
-    if (!vis) { return }
-    system.add(params.time, vis)
+    system.add(params.time, create(params))
   }
 })
