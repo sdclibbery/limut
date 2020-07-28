@@ -65,6 +65,9 @@
       width: 100%;
       max-width: 100%;
     }
+    .closed {
+      display: none;
+    }
     pre {
       width: 100%;
       max-width: 100%;
@@ -83,7 +86,7 @@
 <body>
   <canvas id="canvas" class="fullscreen" style="width:100%; height:100%;"></canvas>
   <div class="widget">
-    <h3>Limut</h3>
+    <h5>Limut</h5>
     <p>
       main.amp: <span id="main-amp-readout"></span>
       <input id="main-amp-slider" type="range" min="0" max="200" oninput="mainAmpChange(parseFloat(this.value)/100)" style="width:80%;" />
@@ -112,7 +115,8 @@
     </p>
   </div>
 <div class="info">
-Examples:
+<h5 onclick="toggleAccordion('accordion-examples')">▶ Examples</h5>
+<div id="accordion-examples" class="closed">
 <pre>d1 play x-o-</pre>
 <pre>p1 dsaw 0534, add=(0,2,4), dur=4</pre>
 <pre>Ba dbass 0, dur=1/4, add=[0:2]r*2, lpf=[3:12]r*100, lpr=8, att=0</pre>
@@ -145,14 +149,18 @@ Sn play .o, dur=2, room=1</pre>
 d1 play (vx)., room=0.3
 d2 play .[::], room=0.3
 ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
-<h3>predefined vars</h3>
+</div>
+<h5 onclick="toggleAccordion('accordion-predefined-vars')">▶ Predefined Vars</h5>
+<div id="accordion-predefined-vars" class="closed">
 <p><code>bpm</code> Beats per minute</p>
 <p><code>main.amp</code> Main mix amplitude control</p>
 <p><code>main.reverb</code> Main reverb amplitude control</p>
 <p><code>scale</code> Scale eg minor, major, chromatic, majorpentatonic, lydian etc etc</p>
 <p><code>drop6_2</code> Predefined time var: equivalent to <code>[1,0]t[6.2]</code>. These are all the predefined drops: drop6_2, drop7_1, drop12_4, drop14_2, drop15_1, drop24_8, drop28_4, drop30_2, drop31_1, drop56_8, drop60_4, drop62_2, drop63_1</p>
 <p><code>tile_full</code> Predefined tile map to cover the full screen: equivalent to <code>{x:0,y:0,w:1,h:1}</code>. Other predefined tiles: tile_tl/tr/bl/br/m, tile_h1/2/3/4/5, tile_v1/2/3/4/5</p>
-<h3>Pattern syntax</h3>
+</div>
+<h5 onclick="toggleAccordion('accordion-pattern-syntax')">▶ Pattern Syntax</h5>
+<div id="accordion-pattern-syntax" class="closed">
 <p><code>x-o-</code> Sequence of events, each of duration <code>dur</code>, for use with <code>play</code></p>
 <p><code>0123</code> Sequence of events, each of duration <code>dur</code>, for use with tonal synths. Numbers are scale degrees</p>
 <p><code>0-1-2-3</code> Negative scale degrees allow tones below the synth root pitch</p>
@@ -162,7 +170,9 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>0(135)</code> Round brackets to play multiple events together (i.e. a chord)</p>
 <p><code>0&lt;12&gt;</code> Angle brackets to play events in sequence as the pattern repeats. Eg <code>0&lt;12&gt;</code> is exactly equivalent to <code>0102</code></p>
 <p><code>follow p1</code> Use <code>follow</code> to follow another player (named 'p1' in the example) pattern</p>
-<h3>Param syntax</h3>
+</div>
+<h5 onclick="toggleAccordion('accordion-param-syntax')">▶ Param Syntax</h5>
+<div id="accordion-param-syntax" class="closed">
 <p><code>1</code> Single value</p>
 <p><code>(1,2)</code> Multiple values, all played together</p>
 <p><code>[1,2]</code> Sequence of values, one per event in the pattern</p>
@@ -182,7 +192,9 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>*</code> Multiply values; eg lpf=[1,2,3]*1000</p>
 <p><code>%</code> Take remainder; eg (0,4,7,9)%7 is equivalent to (0,4,0,2)</p>
 <p><code>{x:0,y:1}</code> Map, containing keys and values</p>
-<h3>Audio Synths</h3>
+</div>
+<h5 onclick="toggleAccordion('accordion-audio-synths')">▶ Audio Synths</h5>
+<div id="accordion-audio-synths" class="closed">
 <p><code>! / stop / none</code> </p>
 <p><code>play</code> Play samples. Use letters, symbols and digits 1-4 in the pattern to choose the sample (see below for full list). Note duration defaults to 1/2.</p>
 <p><code>drums</code> Basic drum synth; accepts XxOo-= characters in the pattern. Note duration defaults to 1/2.</p>
@@ -194,12 +206,16 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>glock</code> FM generated glockenspiel</p>
 <p><code>piano</code> Sampled piano</p>
 <p><code>ethereal</code> Ethereal pad</p>
-<h3>Visual Synths</h3>
+</div>
+<h5 onclick="toggleAccordion('accordion-visual-synths')">▶ Visual Synths</h5>
+<div id="accordion-visual-synths" class="closed">
 <p><code>! / stop / none</code> </p>
 <p><code>tile</code> display a shader on a static tile</p>
-<h3>params</h3>
+</div>
+<h5 onclick="toggleAccordion('accordion-params')">▶ Params</h5>
+<div id="accordion-params" class="closed">
 <p><code>amp</code> Player amplitude control</p>
-<p><code>oct</code> Octave</p>
+<p><code>oct</code> Octid="accordion-predefined" ave</p>
 <p><code>att</code> Attack time in beats</p>
 <p><code>decay</code> Decay time in beats</p>
 <p><code>sus</code> Sustain time in beats</p>
@@ -220,7 +236,9 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>room</code> reverb room size 0-1</p>
 <p><code>drive</code> overdrive level 0-1</p>
 <p><code>fade</code> brightness fade for visual synths</p>
-<h3>Play samples</h3>
+</div>
+<h5 onclick="toggleAccordion('accordion-play-samples')">▶ Play Samples</h5>
+<div id="accordion-play-samples" class="closed">
 <p>
 <code>a</code> Gameboy hihat<br/>
 <code>A</code> Gameboy kick drum<br/>
@@ -295,7 +313,9 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <code>3</code> Vocals (Three)<br/>
 <code>4</code> Vocals (Four)<br/>
 </p>
-<h3>Visual shaders</h3>
+</div>
+<h5 onclick="toggleAccordion('accordion-visual-shaders')">▶ Visual Shaders</h5>
+<div id="accordion-visual-shaders" class="closed">
 Default shader: kaleidoscope
 <code>x</code> psychedelic swirl<br/>
 <code>g</code> clouds<br/>
@@ -303,6 +323,7 @@ Default shader: kaleidoscope
 <code>v</code> psychedelic swirl<br/>
 <code>&amp;</code> psychedelic swirl<br/>
 <p>
+</div>
 </div>
 </body>
 <script data-main="main" src="require.js">

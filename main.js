@@ -90,6 +90,11 @@ define(function(require) {
     }
   }
 
+  // accordions
+  window.toggleAccordion = (id) => {
+    document.getElementById(id).classList.toggle('closed')
+  }
+
   // Bpm ui
   let bpmReadout = document.getElementById('bpm-readout')
   window.bpmChanged = function (bpm) {
