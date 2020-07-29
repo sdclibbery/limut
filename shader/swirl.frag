@@ -6,6 +6,8 @@ uniform float iTime;
 uniform float brightness;
 uniform float value;
 uniform float amp;
+uniform vec4 fore;
+uniform vec4 back;
 
 // Created by inigo quilez - iq/2013
 // License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.

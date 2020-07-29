@@ -36,6 +36,8 @@ define(function (require) {
     let rate = param(params.rate, 1)
     let value = parseInt(param(params.value, '0'))
     if (Number.isNaN(value)) { value = param(params.value, '0').charCodeAt(0) - 32 }
+    let fore = [1,1,1,1]
+    let back = [0.2,0.2,1,1]
 
     let s = shaders(params)
     if (!s) { return () => {} }
@@ -50,6 +52,8 @@ define(function (require) {
       system.gl.uniform1f(s.brightnessUnif, brightness, 1);
       system.gl.uniform1f(s.valueUnif, value, 1);
       system.gl.uniform1f(s.ampUnif, amp, 1);
+      system.gl.uniform4fv(s.foreUnif, fore, 1);
+      system.gl.uniform4fv(s.backUnif, back, 1);
       system.gl.enable(system.gl.BLEND)
       system.gl.blendFunc(system.gl.ONE, system.gl.ONE_MINUS_SRC_ALPHA);
       system.gl.drawArrays(system.gl.TRIANGLES, 0, 6)

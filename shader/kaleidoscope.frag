@@ -6,6 +6,8 @@ uniform float iTime;
 uniform float brightness;
 uniform float value;
 uniform float amp;
+uniform vec4 fore;
+uniform vec4 back;
 
 void main() {
   float av = abs(value);

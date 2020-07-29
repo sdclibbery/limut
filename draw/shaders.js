@@ -65,6 +65,8 @@ define(function (require) {
       shader.brightnessUnif = system.gl.getUniformLocation(program, "brightness")
       shader.valueUnif = system.gl.getUniformLocation(program, "value")
       shader.ampUnif = system.gl.getUniformLocation(program, "amp")
+      shader.foreUnif = system.gl.getUniformLocation(program, "fore")
+      shader.backUnif = system.gl.getUniformLocation(program, "back")
     }
     return shader
   }
