@@ -27,10 +27,10 @@ define(function (require) {
     let startTime = params.time
     let ts = param(params.tile, {})
     let tile = {
-      x: param(ts.x, Math.random()/2),
-      y: param(ts.y, Math.random()/2),
-      w: param(ts.w, 1/2),
-      h: param(ts.h, 1/2),
+      x: param(ts.x, Math.floor(Math.random()*4)/4),
+      y: param(ts.y, Math.floor(Math.random()*4)/4),
+      w: param(ts.w, 1/4),
+      h: param(ts.h, 1/4),
     }
     let endTime = params.time + param(params.sus, param(params.dur, 1)) * params.beat.duration
     let rate = param(params.rate, 1)
