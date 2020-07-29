@@ -110,7 +110,7 @@ void main () {
     vec3 skycolour1 = back.rgb;
     vec3 skycolour2 = 0.2 + 0.8*back.rgb;
     vec4 skycolour = vec4(mix(skycolour2, skycolour1, p.y), back.a);
-    vec4 cloudcolour = fore.rgba * clamp((clouddark + cloudlight*c), 0.0, 1.0);
+    vec4 cloudcolour = vec4(fore.rgb * clamp((clouddark + cloudlight*c), 0.0, 1.0), fore.a);
 
     f = amp + cloudalpha*f*r;
 

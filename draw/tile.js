@@ -21,6 +21,8 @@ define(function (require) {
     }
   }
 
+  let colour = ({r,g,b,a}, d) => [param(r, d.r), param(g, d.g), param(b, d.b), param(a, d.a)]
+
   let create = (params) => {
     let amp = Math.min(param(params.amp, 1), 2)
     if (amp < 0.001) { return }
@@ -36,10 +38,10 @@ define(function (require) {
     let rate = param(params.rate, 1)
     let value = parseInt(param(params.value, '0'))
     if (Number.isNaN(value)) { value = param(params.value, '0').charCodeAt(0) - 32 }
-    let fore = [1,1,1,1]
-    let back = [0.2,0.2,1,1]
-
     let s = shaders(params)
+    let fore = colour(param(params.fore, {}), {r:1,g:1,b:1,a:1})
+    let back = colour(param(params.back, {}), {r:0,g:0,b:1,a:1})
+
     if (!s) { return () => {} }
     return state => {
       let eventTime = ((state.time-startTime)/(endTime-startTime))
