@@ -74,7 +74,7 @@ define(function(require) {
       return
     }
     let parts = line.split(/(\s+)/).map(p => p.trim()).filter(p => p != '')
-    let playerId = parts[0].trim()
+    let playerId = parts[0].trim().toLowerCase()
     if (playerId) {
       let playerName = parts[1].trim()
       if (!playerName) { throw 'Missing player name' }
