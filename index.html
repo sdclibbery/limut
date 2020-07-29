@@ -317,11 +317,11 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <h5 onclick="toggleAccordion('accordion-visual-shaders')">▶ Visual Shaders</h5>
 <div id="accordion-visual-shaders" class="closed">
 Default shader: kaleidoscope
-<code>x</code> psychedelic swirl<br/>
+<code>x</code> swirl<br/>
 <code>g</code> clouds<br/>
 <code>j</code> clouds<br/>
-<code>v</code> psychedelic swirl<br/>
-<code>&amp;</code> psychedelic swirl<br/>
+<code>v</code> swirl<br/>
+<code>&amp;</code> swirl<br/>
 <p>
 </div>
 </div>
@@ -349,19 +349,22 @@ FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
 FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ==== video ====
-shader param override - specify as either values char or shader name - docs
+shader param not selecting from array correctly???
+Random tile positions from grid not free
 colour params to provide back/fore ground colours for the shader to use
+Simple shader as basic case; block colors, simple shapes/movement
+Add param not working for Vis, eg Vis swirl 0, add=ch?
 Float synth. Float up from the bottom of the screen
 Pop synth. Pop out of (the middle of) the screenclean black borders around tiles
 Slide synth. Slide across the screen
 shape param: rect/roundedrect/ellipse/star/etc
-Add param not working for Vis, eg Vis swirl 0, add=ch
+effects/filters etc
 draw frame lag indicator
-can't see caret over light colours
-fireball shader https://www.shadertoy.com/view/lsf3RH
+fireball shader https://www.shadertoy.com/view/lsf3RH - use transparent background
 star shader https://www.shadertoy.com/view/4dXGR4
 furry shader https://www.shadertoy.com/view/4dlGDN
 bubbles shader https://www.shadertoy.com/view/4dl3zn
+gem tunnel shader https://www.shadertoy.com/view/ld3Szs
 electric shader https://www.shadertoy.com/view/ldlXRS
 scaly shader https://www.shadertoy.com/view/MdSXzz
 swirl shader https://www.shadertoy.com/view/4dX3Rn
@@ -379,15 +382,13 @@ Fractal tiling: https://www.shadertoy.com/view/Ml2GWy
 Cell flow: https://www.shadertoy.com/view/MlsGWX
 Plasma: https://www.shadertoy.com/view/MdXGDH
 ==== non-audio ====
-follow failing to find anything; only on android/mac??
+follow case issue: K play x...  /  V tile follow k
 <> for 'in sequence on each repeat' in patterns
  all tests / all cases
-examples and doc sections should concertina
 value param to override the pattern
  docs
 Beat lag display
 <> for 'in sequence on each repeat' in params
-console scrollbar doesnt work?
 Solo param - when any player is solod, then any other player thats not solod does not play
 fade in/out now (linvar once)
 Scale param to set scale for just one player

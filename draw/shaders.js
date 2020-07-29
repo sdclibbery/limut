@@ -23,7 +23,10 @@ define(function (require) {
     '&': 'swirl',
   }
 
-  let getUrl = (value) => {
+  let getUrl = (value, override) => {
+    if (override !== undefined) {
+      return "shader/"+override+".frag"
+    }
     if (value == '.' || value == ' ') {
       return
     } else {
@@ -33,7 +36,7 @@ define(function (require) {
   }
 
   return (params) => {
-    let url = getUrl(param(params.value, '0'))
+    let url = getUrl(param(params.value, '0'), params.shader)
     if (url === undefined) { return }
     if (shaders[url] === undefined) {
       let request = new XMLHttpRequest()

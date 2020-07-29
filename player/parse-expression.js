@@ -292,6 +292,21 @@ define(function(require) {
     return result
   }
 
+  let parseString = (state) => {
+    let result = ''
+    let char
+    while (char = state.str.charAt(state.idx)) {
+      if (char == '\'') {
+        state.idx += 1
+        break
+      }
+      result += char
+      state.idx += 1
+    }
+    if (debugParse) { console.log('string', result, state) }
+    return result
+  }
+
   let expression = (state) => {
     if (debugParse) { console.log('expression', state) }
     let lhs = undefined
@@ -390,6 +405,12 @@ define(function(require) {
       if (n !== undefined) {
         lhs = n
         if (debugParse) { console.log('number', lhs, state) }
+        continue
+      }
+      // string
+      if (char == '\'') {
+        state.idx += 1
+        lhs = parseString(state)
         continue
       }
       // vars
@@ -697,6 +718,9 @@ define(function(require) {
   assert(1, p.x[0])
   assert(2, p.x[1])
   assert(undefined, p.x[2])
+
+  assert('a', parseExpression("'a'"))
+  assert(' a b c ', parseExpression("' a B c '"))
 
   console.log('Parse expression tests complete')
 

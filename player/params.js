@@ -89,6 +89,7 @@ define(function(require) {
   assert({dur:[1,1]}, parseParams(' dur = [ 1 , 1 ] '))
   assert({dur:[1,2], oct:[3, 4]}, parseParams('dur=[1, 2],oct=[3, 4]'))
   assert({dur:[[1,1],[[2],3]], oct:4}, parseParams('dur=[[1,1],[[2],3]],oct=4'))
+  assert({t:['a','b']}, parseParams("t=['a','b']"))
 
   console.log("Params tests complete")
 

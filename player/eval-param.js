@@ -41,6 +41,9 @@ define((require) => {
   assert([3,4], evalParam([()=>[1,2],()=>[3,4]], 1, 0))
   assert({x:1}, evalParam({x:[1,2]}, 0, 0))
   assert({x:2}, evalParam({x:[1,2]}, 1, 1))
+  assert('a', evalParam('a', 0, 0))
+  assert('a', evalParam(['a','b'], 0, 0))
+  assert('b', evalParam(['a','b'], 1, 1))
 
   console.log('Eval param tests complete')
 
