@@ -4,11 +4,11 @@ define(function (require) {
   let shaders = require('draw/shaders')
   let param = require('player/default-param')
 
-  let verts = (tile) => {
-    let l = -1 + tile.x*2
-    let r = l + tile.w*2
-    let t = -1 + tile.y*2
-    let b = t + tile.h*2
+  let verts = (loc) => {
+    let l = -1 + loc.x*2
+    let r = l + loc.w*2
+    let t = -1 + loc.y*2
+    let b = t + loc.h*2
     let har = system.cw / system.ch
     let ihar = 1
     if (har > 2 || har < 1/2) {
@@ -27,12 +27,12 @@ define(function (require) {
     let amp = Math.min(param(params.amp, 1), 2)
     if (amp < 0.001) { return }
     let startTime = params.time
-    let ts = param(params.tile, {})
-    let tile = {
-      x: param(ts.x, Math.floor(Math.random()*4)/4),
-      y: param(ts.y, Math.floor(Math.random()*4)/4),
-      w: param(ts.w, 1/4),
-      h: param(ts.h, 1/4),
+    let l = param(params.loc, {})
+    let loc = {
+      x: param(l.x, Math.floor(Math.random()*4)/4),
+      y: param(l.y, Math.floor(Math.random()*4)/4),
+      w: param(l.w, 1/4),
+      h: param(l.h, 1/4),
     }
     let endTime = params.time + param(params.sus, param(params.dur, 1)) * params.beat.duration
     let rate = param(params.rate, 1)
@@ -46,7 +46,7 @@ define(function (require) {
     return state => {
       let eventTime = ((state.time-startTime)/(endTime-startTime))
       let brightness = 1 - (eventTime*eventTime)*param(params.fade, 1)
-      let vtxData = verts(tile)
+      let vtxData = verts(loc)
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
       system.loadVertexAttrib(s.fragCoordBuf, s.fragCoordAttr, vtxData.tex, 2)
       system.gl.useProgram(s.program)
