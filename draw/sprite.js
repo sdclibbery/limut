@@ -56,8 +56,12 @@ define(function (require) {
       system.gl.uniform1f(s.ampUnif, amp, 1);
       system.gl.uniform4fv(s.foreUnif, fore, 1);
       system.gl.uniform4fv(s.backUnif, back, 1);
-      system.gl.enable(system.gl.BLEND)
-      system.gl.blendFunc(system.gl.ONE, system.gl.ONE_MINUS_SRC_ALPHA);
+      if (fore[3] >= 0.9999 && back[3] >= 0.9999) {
+        system.gl.disable(system.gl.BLEND)
+      } else {
+        system.gl.enable(system.gl.BLEND)
+        system.gl.blendFunc(system.gl.ONE, system.gl.ONE_MINUS_SRC_ALPHA);
+      }
       system.gl.drawArrays(system.gl.TRIANGLES, 0, 6)
       return state.time < endTime-state.dt-0.0001
     }
