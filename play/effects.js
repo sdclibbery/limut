@@ -54,6 +54,17 @@ define(function (require) {
     return hpf
   }
 
+  let bpf = (params, node) => {
+    let cutoff = param(params.bpf, 0)
+    if (!cutoff) { return node }
+    let bpf = system.audio.createBiquadFilter()
+    bpf.type = 'bandpass'
+    bpf.frequency.value = cutoff
+    bpf.Q.value = Math.min(param(params.bpr, 1), 10)
+    node.connect(bpf)
+    return bpf
+  }
+
   let chop = (params, node) => {
     let chops = param(params.chop, 0)
     if (!chops) { return node }
@@ -96,6 +107,7 @@ define(function (require) {
     node = drive(params, node)
     node = lpf(params, node)
     node = hpf(params, node)
+    node = bpf(params, node)
     node = reverb(params, node)
     node = echo(params, node)
     return node
