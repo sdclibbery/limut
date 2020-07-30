@@ -40,7 +40,7 @@ define(function(require) {
     '!': nullPlayer,
     // visualisations
     clouds: makePlayerFactory(sprite('clouds', {r:1,g:1,b:1,a:1}, {r:0.15,g:0.2,b:1,a:1})),
-    kal: makePlayerFactory(sprite('kaleidoscope', {r:1,g:0.2,b:0.2,a:1}, {r:0.2,g:0.2,b:1,a:1})),
+    kal: makePlayerFactory(sprite('kaleidoscope', {r:1,g:0.7,b:0.3,a:1}, {r:0,g:0.05,b:0.2,a:1})),
     swirl: makePlayerFactory(sprite('swirl', {r:1,g:0.5,b:0,a:1}, {r:0,g:0.5,b:1,a:1})),
     // instruments
     drums: makePlayerFactory(percussion.play, 1/2),
