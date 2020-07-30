@@ -24,7 +24,7 @@ define(function (require) {
   let colour = ({r,g,b,a}, d) => [param(r, d.r), param(g, d.g), param(b, d.b), param(a, d.a)]
 
   let create = (shader, defFore, defBack, params) => {
-    let amp = Math.min(param(params.amp, 1), 2)
+    let amp = Math.min(param(params.amp, 1), 5)
     if (amp < 0.001) { return }
     let startTime = params.time
     let l = param(params.loc, {})

@@ -632,8 +632,9 @@ define(function(require) {
 
   p = parseExpression('[1,5,7]r')
   for (let i = 0; i<20; i+=1) {
-    assertOneOf([1,5,7], p())
-    assertInteger(p()), 'p():'+p()
+    let v = p()
+    assertOneOf([1,5,7], v)
+    assertInteger(v, 'v:'+v)
   }
 
   p = parseExpression('[0:9]r')
