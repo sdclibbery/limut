@@ -210,7 +210,9 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <h5 onclick="toggleAccordion('accordion-visual-synths')">▶ Visual Synths</h5>
 <div id="accordion-visual-synths" class="closed">
 <p><code>! / stop / none</code> </p>
-<p><code>tile</code> display a shader on a static tile</p>
+<p><code>clouds</code> show moving clouds</p>
+<p><code>kal</code> show a changing kaleidoscope pattern</p>
+<p><code>swirl</code> show a psychedelic swirl</p>
 </div>
 <h5 onclick="toggleAccordion('accordion-params')">▶ Params</h5>
 <div id="accordion-params" class="closed">
@@ -351,14 +353,16 @@ FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
 FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ==== visual ====
-how to default colours? should have good defaults per shader?
+tile -> pos, size
+Default colours
 kaleidoscope uses col1&2, amp, value
 swirl uses col1&2, amp, value
 Simple shader as basic case; block colors, simple shapes/movement
 Add param not working for Vis, eg Vis swirl 0, add=ch?
-Float synth. Float up from the bottom of the screen
-Pop synth. Pop out of (the middle of) the screenclean black borders around tiles
-Slide synth. Slide across the screen
+lines synth
+text synth
+image synth
+video synth
 shape param: rect/roundedrect/ellipse/star/etc
 effects/filters etc
 draw frame lag indicator
@@ -383,7 +387,7 @@ Colour tunnel: https://www.shadertoy.com/view/XdSGzR
 Fractal tiling: https://www.shadertoy.com/view/Ml2GWy
 Cell flow: https://www.shadertoy.com/view/MlsGWX
 Plasma: https://www.shadertoy.com/view/MdXGDH
-==== non-audio ====
+==== other ====
 <> for 'in sequence on each repeat' in patterns
  all tests / all cases
 value param to override the pattern

@@ -12,7 +12,7 @@ define(function(require) {
   let players = require('player/players')
   let standardPlayer = require('player/standard')
 
-  let tile = require('draw/tile')
+  let sprite = require('draw/sprite')
 
   let percussion = require('play/percussion')
   let play = require('play/play')
@@ -39,7 +39,9 @@ define(function(require) {
     stop: nullPlayer,
     '!': nullPlayer,
     // visualisations
-    tile: makePlayerFactory(tile),
+    clouds: makePlayerFactory(sprite('clouds', {r:1,g:1,b:1,a:1}, {r:0.15,g:0.2,b:1,a:1})),
+    kal: makePlayerFactory(sprite('kaleidoscope', {r:1,g:0.2,b:0.2,a:1}, {r:0.2,g:0.2,b:1,a:1})),
+    swirl: makePlayerFactory(sprite('swirl', {r:1,g:0.5,b:0,a:1}, {r:0,g:0.5,b:1,a:1})),
     // instruments
     drums: makePlayerFactory(percussion.play, 1/2),
     play: makePlayerFactory(play, 1/2),

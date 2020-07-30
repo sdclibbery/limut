@@ -23,20 +23,12 @@ define(function (require) {
     '&': 'swirl',
   }
 
-  let getUrl = (value, override) => {
-    if (override !== undefined) {
-      return "shader/"+override+".frag"
-    }
-    if (value == '.' || value == ' ') {
-      return
-    } else {
-      let shader = nameFromValue[value.toLowerCase()] || 'kaleidoscope'
-      return "shader/"+shader+".frag"
-    }
+  let getUrl = (shaderName) => {
+    return "shader/"+shaderName+".frag"
   }
 
-  return (params) => {
-    let url = getUrl(param(params.value, '0'), params.shader)
+  return (shaderName) => {
+    let url = getUrl(shaderName)
     if (url === undefined) { return }
     if (shaders[url] === undefined) {
       let request = new XMLHttpRequest()

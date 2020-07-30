@@ -4,7 +4,7 @@ define(function (require) {
   let shaders = require('draw/shaders')
   let param = require('player/default-param')
 
-  let tiledQuad = (tile) => {
+  let verts = (tile) => {
     let l = -1 + tile.x*2
     let r = l + tile.w*2
     let t = -1 + tile.y*2
@@ -23,7 +23,7 @@ define(function (require) {
 
   let colour = ({r,g,b,a}, d) => [param(r, d.r), param(g, d.g), param(b, d.b), param(a, d.a)]
 
-  let create = (params) => {
+  let create = (shader, defFore, defBack, params) => {
     let amp = Math.min(param(params.amp, 1), 2)
     if (amp < 0.001) { return }
     let startTime = params.time
@@ -38,15 +38,15 @@ define(function (require) {
     let rate = param(params.rate, 1)
     let value = parseInt(param(params.value, '0'))
     if (Number.isNaN(value)) { value = param(params.value, '0').charCodeAt(0) - 32 }
-    let s = shaders(params)
-    let fore = colour(param(params.fore, {}), {r:1,g:1,b:1,a:1})
-    let back = colour(param(params.back, {}), {r:0,g:0,b:1,a:1})
+    let s = shaders(shader)
+    let fore = colour(param(params.fore, {}), defFore)
+    let back = colour(param(params.back, {}), defBack)
 
     if (!s) { return () => {} }
     return state => {
       let eventTime = ((state.time-startTime)/(endTime-startTime))
       let brightness = 1 - (eventTime*eventTime)*param(params.fade, 1)
-      let vtxData = tiledQuad(tile)
+      let vtxData = verts(tile)
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
       system.loadVertexAttrib(s.fragCoordBuf, s.fragCoordAttr, vtxData.tex, 2)
       system.gl.useProgram(s.program)
@@ -63,7 +63,7 @@ define(function (require) {
     }
   }
 
-  return (params) => {
-    system.add(params.time, create(params))
+  return (shader, defFore, defBack) => (params) => {
+    system.add(params.time, create(shader, defFore, defBack, params))
   }
 })
