@@ -356,13 +356,17 @@ FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
 FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ==== visual ====
-Quick syntax for hardcoding colours
-vignette param
+#ffffffff and #ffff syntax for hardcoding colours
 Add param not working for Vis, eg Vis swirl 0, add=ch?
-Make eg kaleidoscope pulse with the beat?
-effects/filters etc
-draw frame lag indicator
 redo swirl without extension
+postprocess effects
+ vignette
+ monochrome
+ make additive
+ gamma
+ drive (noisemap)
+Make eg shader pulses in time with the beat? iTime counts up 1 per beat?
+draw frame lag indicator
 electric shader https://www.shadertoy.com/view/ldlXRS
 star shader https://www.shadertoy.com/view/4dXGR4
 power sphere https://www.shadertoy.com/view/MtGSzh
@@ -394,6 +398,7 @@ Cell flow: https://www.shadertoy.com/view/MlsGWX
 Plasma: https://www.shadertoy.com/view/MdXGDH
 ==== other ====
 handle non integer degree values
+Scale param to set scale for just one player
 <> for 'in sequence on each repeat' in patterns
  all tests / all cases
 value param to override the pattern
@@ -402,7 +407,6 @@ Beat lag display
 <> for 'in sequence on each repeat' in params
 Solo param - when any player is solod, then any other player thats not solod does not play
 fade in/out now (linvar once)
-Scale param to set scale for just one player
 Support 'penta' and 'pentatonic' as scale names
 Preload samples immediately after parsing
 rests in params
