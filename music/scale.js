@@ -87,6 +87,8 @@ define(function (require) {
   }
 
   scale.degreeToFreq = (degree, octave, scaleOverride) => {
+    degree = Math.floor(degree)
+    octave = Math.floor(octave)
     let currentScale = scales[scaleOverride || scale.current]
     let octDelta = Math.floor(degree / currentScale.length)
     let oct = octave - 4 + octDelta
@@ -103,6 +105,7 @@ define(function (require) {
   }
 
   assert(261.6, scale.degreeToFreq(0, 4, 'major'))
+  assert(261.6, scale.degreeToFreq(0.5, 4.5, 'major'))
   assert(130.8, scale.degreeToFreq(0, 3, 'major'))
   assert(523.3, scale.degreeToFreq(0, 5, 'major'))
   assert(440.0, scale.degreeToFreq(5, 4, 'major'))
