@@ -307,6 +307,35 @@ define(function(require) {
     return result
   }
 
+  let parseColour = (state) => {
+    let str = ''
+    let char
+    while (char = state.str.charAt(state.idx)) {
+      if ((char >= '0' && char <= '9') || (char >= 'a' && char <= 'f')) {
+        str += char
+        state.idx += 1
+        continue
+      }
+      break
+    }
+    let result = {}
+    if (str.length == 4) {
+      let hex1 = (c) => parseInt(c,16)*0x11/255
+      result.r = hex1(str.substr(0,1))
+      result.g = hex1(str.substr(1,1))
+      result.b = hex1(str.substr(2,1))
+      result.a = hex1(str.substr(3,1))
+    } else if (str.length == 8) {
+      let hex2 = (c) => parseInt(c,16)/255
+      result.r = hex2(str.substr(0,2))
+      result.g = hex2(str.substr(2,2))
+      result.b = hex2(str.substr(4,2))
+      result.a = hex2(str.substr(6,2))
+    }
+    if (debugParse) { console.log('colour', result, state) }
+    return result
+  }
+
   let expression = (state) => {
     if (debugParse) { console.log('expression', state) }
     let lhs = undefined
@@ -411,6 +440,12 @@ define(function(require) {
       if (char == '\'') {
         state.idx += 1
         lhs = parseString(state)
+        continue
+      }
+      // colour
+      if (char == '#') {
+        state.idx += 1
+        lhs = parseColour(state)
         continue
       }
       // vars
@@ -722,6 +757,9 @@ define(function(require) {
 
   assert('a', parseExpression("'a'"))
   assert(' a b c ', parseExpression("' a B c '"))
+
+  assert({r:0,g:0.26666666666666666,b:0.5333333333333333,a:1}, parseExpression("#048f"))
+  assert({r:0,g:0.25098039215686274,b:0.03137254901960784,a:1}, parseExpression("#004008ff"))
 
   console.log('Parse expression tests complete')
 

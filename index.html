@@ -234,8 +234,8 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>drive</code> overdrive level 0-1</p>
 <p><code>fade</code> brightness fade for visual synths</p>
 <p><code>loc</code> position and size for visual synths; eg {x:0,y:0,w:1/2,h:1/2}</p>
-<p><code>fore</code> foreground colour for visual synths; eg {r:0,g:1,b:0,a:1}</p>
-<p><code>back</code> background colour for visual synths; eg {r:0,g:1,b:0,a:1}</p>
+<p><code>fore</code> foreground colour for visual synths; eg {r:0,g:1,b:0,a:1} or #fa0f</p>
+<p><code>back</code> background colour for visual synths; eg {r:0,g:1,b:0,a:1} or #00ff</p>
 </div>
 <h5 onclick="toggleAccordion('accordion-predefined-vars')">▶ Predefined Vars</h5>
 <div id="accordion-predefined-vars" class="closed">
@@ -339,6 +339,7 @@ Default shader: kaleidoscope
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
+apply compressor before freeverb to prevent feedback on some platforms
 echoey space synth
 detuned sine pad
 root main var
@@ -357,9 +358,8 @@ FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
 FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ==== visual ====
-#ffffffff and #ffff syntax for hardcoding colours
-Add param not working for Vis, eg Vis swirl 0, add=ch?
 redo swirl without extension
+blob shader: https://www.shadertoy.com/view/4tGfzm   default transparent back
 postprocess effects
  vignette
  monochrome
@@ -398,8 +398,10 @@ Fractal tiling: https://www.shadertoy.com/view/Ml2GWy
 Cell flow: https://www.shadertoy.com/view/MlsGWX
 Plasma: https://www.shadertoy.com/view/MdXGDH
 ==== other ====
+Darker console text
 handle non integer degree values
 Scale param to set scale for just one player
+Add param not working for follows
 <> for 'in sequence on each repeat' in patterns
  all tests / all cases
 value param to override the pattern
