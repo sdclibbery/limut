@@ -5,12 +5,11 @@ define(function (require) {
   let envelope = require('play/pad-envelope')
   let effects = require('play/effects')
   let param = require('player/default-param')
-  let fm = require('play/fm')
 
   return (params) => {
     let degree = parseInt(params.sound) + param(params.add, 0)
     if (isNaN(degree)) { return }
-    let freq = scale.degreeToFreq(degree, param(params.oct, 4))
+    let freq = scale.degreeToFreq(degree, param(params.oct, 4), params.scale)
     let detuneSemis = param(params.detune, 0.1)
 
     let vca = envelope(params, 0.01)

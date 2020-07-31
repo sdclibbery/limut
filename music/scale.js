@@ -6,6 +6,8 @@ define(function (require) {
 
     major           :[0,2,4,5,7,9,11],
     majorpentatonic :[0,2,4,7,9],
+    pentatonic      :[0,2,4,7,9],
+    penta           :[0,2,4,7,9],
 
     minor           :[0,2,3,5,7,8,10],
     aeolian         :[0,2,3,5,7,8,10],
@@ -84,8 +86,8 @@ define(function (require) {
     return scale.current
   }
 
-  scale.degreeToFreq = (degree, octave) => {
-    let currentScale = scales[scale.current]
+  scale.degreeToFreq = (degree, octave, scaleOverride) => {
+    let currentScale = scales[scaleOverride || scale.current]
     let octDelta = Math.floor(degree / currentScale.length)
     let oct = octave - 4 + octDelta
     let chromatic = currentScale[(degree + currentScale.length*100) % currentScale.length] + oct*12
@@ -100,18 +102,14 @@ define(function (require) {
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
 
-  scale.current = 'major'
-  assert(261.6, scale.degreeToFreq(0, 4))
-  assert(130.8, scale.degreeToFreq(0, 3))
-  assert(523.3, scale.degreeToFreq(0, 5))
-  assert(440.0, scale.degreeToFreq(5, 4))
-  assert(246.9, scale.degreeToFreq(-1, 4))
+  assert(261.6, scale.degreeToFreq(0, 4, 'major'))
+  assert(130.8, scale.degreeToFreq(0, 3, 'major'))
+  assert(523.3, scale.degreeToFreq(0, 5, 'major'))
+  assert(440.0, scale.degreeToFreq(5, 4, 'major'))
+  assert(246.9, scale.degreeToFreq(-1, 4, 'major'))
 
-  scale.current = 'chromatic'
-  assert(261.6, scale.degreeToFreq(0, 4))
-  assert(415.3, scale.degreeToFreq(8, 4))
-
-  scale.current = 'major'
+  assert(261.6, scale.degreeToFreq(0, 4, 'chromatic'))
+  assert(415.3, scale.degreeToFreq(8, 4, 'chromatic'))
 
   console.log('Scale tests complete')
 

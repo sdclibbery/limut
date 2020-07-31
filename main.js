@@ -17,6 +17,7 @@ define(function(require) {
   let percussion = require('play/percussion')
   let play = require('play/play')
   let dsaw = require('play/dsaw')
+  let dsine = require('play/dsine')
   let dbass = require('play/dbass')
   let ping = require('play/ping')
   let swell = require('play/swell')
@@ -47,6 +48,7 @@ define(function(require) {
     drums: makePlayerFactory(percussion.play, 1/2),
     play: makePlayerFactory(play, 1/2),
     dsaw: makePlayerFactory(dsaw),
+    dsine: makePlayerFactory(dsine),
     dbass: makePlayerFactory(dbass),
     ping: makePlayerFactory(ping),
     swell: makePlayerFactory(swell),
