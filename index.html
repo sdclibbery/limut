@@ -150,15 +150,6 @@ d1 play (vx)., room=0.3
 d2 play .[::], room=0.3
 ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 </div>
-<h5 onclick="toggleAccordion('accordion-predefined-vars')">▶ Predefined Vars</h5>
-<div id="accordion-predefined-vars" class="closed">
-<p><code>bpm</code> Beats per minute</p>
-<p><code>main.amp</code> Main mix amplitude control</p>
-<p><code>main.reverb</code> Main reverb amplitude control</p>
-<p><code>scale</code> Scale eg minor, major, chromatic, majorpentatonic, lydian etc etc</p>
-<p><code>drop6_2</code> Predefined time var: equivalent to <code>[1,0]t[6.2]</code>. These are all the predefined drops: drop6_2, drop7_1, drop12_4, drop14_2, drop15_1, drop24_8, drop28_4, drop30_2, drop31_1, drop56_8, drop60_4, drop62_2, drop63_1</p>
-<p><code>tile_full</code> Predefined loc param map to cover the full screen: equivalent to <code>{x:0,y:0,w:1,h:1}</code>. Other predefined locations: tile_tl/tr/bl/br/m, tile_h1/2/3/4/5, tile_v1/2/3/4/5</p>
-</div>
 <h5 onclick="toggleAccordion('accordion-pattern-syntax')">▶ Pattern Syntax</h5>
 <div id="accordion-pattern-syntax" class="closed">
 <p><code>x-o-</code> Sequence of events, each of duration <code>dur</code>, for use with <code>play</code></p>
@@ -245,6 +236,16 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>loc</code> position and size for visual synths; eg {x:0,y:0,w:1/2,h:1/2}</p>
 <p><code>fore</code> foreground colour for visual synths; eg {r:0,g:1,b:0,a:1}</p>
 <p><code>back</code> background colour for visual synths; eg {r:0,g:1,b:0,a:1}</p>
+</div>
+<h5 onclick="toggleAccordion('accordion-predefined-vars')">▶ Predefined Vars</h5>
+<div id="accordion-predefined-vars" class="closed">
+<p><code>bpm</code> Beats per minute</p>
+<p><code>main.amp</code> Main mix amplitude control</p>
+<p><code>main.reverb</code> Main reverb amplitude control</p>
+<p><code>scale</code> Scale eg minor, major, chromatic, majorpentatonic, lydian etc etc</p>
+<p><code>drop6_2</code> Predefined time var: equivalent to <code>[1,0]t[6.2]</code>. These are all the predefined drops: drop6_2, drop7_1, drop12_4, drop14_2, drop15_1, drop24_8, drop28_4, drop30_2, drop31_1, drop56_8, drop60_4, drop62_2, drop63_1</p>
+<p><code>tile_full</code> Predefined loc param map to cover the full screen: equivalent to <code>{x:0,y:0,w:1,h:1}</code>. Other predefined locations: tile_tl/tr/bl/br/m, tile_h1/2/3/4/5, tile_v1/2/3/4/5</p>
+<p><code>transparent</code> Predefined colour. Others: black, darkgray, gray, lightgray, white, red, orange, yellow, green, blue, indigo, violet, neonpink, neongreen</p>
 </div>
 <h5 onclick="toggleAccordion('accordion-play-samples')">▶ Play Samples</h5>
 <div id="accordion-play-samples" class="closed">
