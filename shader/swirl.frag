@@ -46,4 +46,5 @@ void main() {
 
   vec4 col = mix(fore, back, pow(1.-f, (value > 10.0) ? value/10.0 : (value+2.)/5.));
   gl_FragColor = col*brightness*col.a;
+	if (gl_FragColor.a < 0.01) discard;
 }

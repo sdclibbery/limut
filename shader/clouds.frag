@@ -118,4 +118,5 @@ void main () {
     result.rgb *= result.a;
 
     gl_FragColor = result*brightness*result.a;
+    if (gl_FragColor.a < 0.01) discard;
 }

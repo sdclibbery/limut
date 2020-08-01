@@ -23,4 +23,5 @@ void main() {
   }
   c.rgba *= .45;
   gl_FragColor = c * brightness * c.a;
+  if (gl_FragColor.a < 0.01) discard;
 }
