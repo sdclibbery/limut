@@ -63,7 +63,7 @@ define(function (require) {
         system.gl.blendFunc(system.gl.ONE, system.gl.ONE_MINUS_SRC_ALPHA);
       }
       system.gl.drawArrays(system.gl.TRIANGLES, 0, 6)
-      return state.time < endTime-state.dt-0.0001
+      return state.time <= endTime-state.dt+0.01
     }
   }
 
