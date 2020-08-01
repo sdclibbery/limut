@@ -50,7 +50,7 @@ define(function (require) {
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
       system.loadVertexAttrib(s.fragCoordBuf, s.fragCoordAttr, vtxData.tex, 2)
       system.gl.useProgram(s.program)
-      system.gl.uniform1f(s.timeUnif, state.time*rate, 1);
+      system.gl.uniform1f(s.timeUnif, state.count*rate, 1);
       system.gl.uniform1f(s.brightnessUnif, brightness, 1);
       system.gl.uniform1f(s.valueUnif, value, 1);
       system.gl.uniform1f(s.ampUnif, amp, 1);

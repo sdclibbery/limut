@@ -14,7 +14,7 @@ system.add = (startTime, v) => {
   system.queued.push({t:startTime, v:v})
 }
 
-system.frameStart = (time, gl, cw, ch) => {
+system.frameStart = (time, count, gl, cw, ch) => {
   system.time = time
   let dt = system.time - system.lastTime
   system.lastTime = time
@@ -35,7 +35,7 @@ system.frameStart = (time, gl, cw, ch) => {
   system.active = system.active.concat(newlyActive)
   system.queued = system.queued.filter(v => !newlyActive.includes(v))
 
-  let state = {time: time, dt: dt}
+  let state = {count: count, time: time, dt: dt}
   system.active = system.active.filter(({v}, idx) => v(state))
 }
 

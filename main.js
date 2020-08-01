@@ -231,7 +231,7 @@ define(function(require) {
     }
     if (ctxGl) {
       try {
-        drawSystem.frameStart(now, ctxGl, canvas.width, canvas.height)
+        drawSystem.frameStart(now, metronome.beatTime(now), ctxGl, canvas.width, canvas.height)
       } catch (e) {
         let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
         consoleOut('Run Error from drawing: ' + e + st)
