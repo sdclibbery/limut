@@ -1,5 +1,4 @@
-// derived from https://www.shadertoy.com/view/4dlGDN
-#extension GL_OES_standard_derivatives : enable
+// derived from https://www.shadertoy.com/view/MdXGDH
 precision mediump float;
 varying vec2 fragCoord;
 uniform float iTime;
@@ -9,70 +8,42 @@ uniform float amp;
 uniform vec4 fore;
 uniform vec4 back;
 
-// Created by inigo quilez - iq/2013
-// License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
-
-float hash( float n )
-{
-    return fract(sin(n)*43758.5453);
+float hash( vec2 p ) {
+	  float h = dot(p,vec2(127.1,311.7));
+    return -1.0 + 2.0*fract(sin(h)*43758.5453123);
 }
 
-float noise( in vec2 x )
-{
-    vec2 p = floor(x);
-    vec2 f = fract(x);
-    f = f*f*(3.0-2.0*f);
-    float n = p.x + p.y*57.0;
-    return mix(mix( hash(n+  0.0), hash(n+  1.0),f.x),
-               mix( hash(n+ 57.0), hash(n+ 58.0),f.x),f.y);
+float noise( in vec2 p ) {
+    vec2 i = floor( p );
+    vec2 f = fract( p );
+	  vec2 u = f*f*(3.0-2.0*f);
+    return mix( mix( hash( i + vec2(0.0,0.0) ),
+                     hash( i + vec2(1.0,0.0) ), u.x),
+                mix( hash( i + vec2(0.0,1.0) ),
+                     hash( i + vec2(1.0,1.0) ), u.x), u.y);
 }
 
-vec2 map( vec2 p, in float offset )
-{
-  p.x += 0.1*sin( iTime + 2.0*p.y ) ;
-  p.y += 0.1*sin( iTime + 2.0*p.x ) ;
-
-  float a = noise(p*1.5*(1.+value) + sin(0.1*iTime))*6.2831;
-  a -= offset;
-  return vec2( cos(a), sin(a) );
+const mat2 m = mat2( 0.80,  0.60, -0.60,  0.80 );
+float fbm( vec2 p ) {
+    float f = 0.0;
+    f += 0.5000*noise( p ); p = m*p*2.02;
+    f += 0.2500*noise( p ); p = m*p*2.03;
+    f += 0.1250*noise( p ); p = m*p*2.01;
+    f += 0.0625*noise( p );
+    return f/0.9375;
 }
 
-vec2 rotate(vec2 v, float a) {
-  float s = sin(a);
-  float c = cos(a);
-  mat2 m = mat2(c, -s, s, c);
-  return m * v;
+vec2 fbm2( in vec2 p ) {
+    return vec2( fbm(p.xy), fbm(p.yx) );
 }
 
-void main()
-{
-  vec2 uv = fragCoord.xy*2.0;
-  vec2 p = (uv+1.0)*0.5;
+const float PI = 3.14159265;
+void main() {
+  vec2 uv = fragCoord;
 
-  float offset = iTime*2.0 + fragCoord.x;
+  uv += (amp+0.2)*4.0*fbm2(uv + fbm2(uv.yx+vec2(0, iTime*0.2)));
+  float f = abs(sin(uv.x)*sin(uv.y));
 
-  float acc = 0.0;
-  vec4  col = vec4(0.0);
-  for( int i=0; i<8; i++ )
-  {
-    vec2 dir = map( uv, offset );
-
-    float h = float(i)/16.0;
-    float w = 4.0*h*(1.0-h);
-
-    vec3 ttt = vec3(rotate(uv, value),w);
-    ttt *= mix( vec3(0.6,0.7,0.7), vec3(1.0,0.95,0.9), 0.5 - 0.5*dot( reflect(vec3(dir,0.0), vec3(1.0,0.0,0.0)).xy, vec2(0.707) ) );
-    col += vec4(w*ttt,0.0);
-    acc += w;
-
-    uv += 0.008*dir;
-  }
-  col /= acc;
-
-  float gg = dot( col, vec4(0.333) );
-  vec3 nor = normalize( vec3( dFdx(gg), 0.5, dFdy(gg) ) );
-  vec2 di = map( uv, offset )*1.5;
-  col = clamp(mix(back, fore, amp*dot(nor,vec3(di,0.0))), 0.0, 1.0);
-
+  vec4 col = mix(fore, back, pow(1.-f, (value > 10.0) ? value/10.0 : (value+2.)/5.));
   gl_FragColor = col*brightness*col.a;
 }
