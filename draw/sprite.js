@@ -45,7 +45,7 @@ define(function (require) {
     if (!s) { return () => {} }
     return state => {
       let eventTime = ((state.time-startTime)/(endTime-startTime))
-      let brightness = 1 - (eventTime*eventTime)*param(params.fade, 1)
+      let brightness = 1 - (eventTime*eventTime)*param(params.fade, 0)
       let vtxData = verts(loc)
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
       system.loadVertexAttrib(s.fragCoordBuf, s.fragCoordAttr, vtxData.tex, 2)
