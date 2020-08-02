@@ -150,21 +150,23 @@ define(function(require) {
 
   // Play/stop ui
   let codeTextArea = document.getElementById('code')
+  let ctrlCode = (event, keys) => {
+    if (event.isComposing || event.keyCode === 229) { return false }
+    return (event.ctrlKey && (keys.includes(event.keyCode) || keys.includes(event.key)))
+  }
   document.addEventListener("keydown", event => {
-    if (event.isComposing || event.keyCode === 229) { return; }
-    if (event.key == '.' && event.ctrlKey) {
-      window.stop()
-    }
+    if (ctrlCode(event, ['.'])) { window.stop() }
   })
   codeTextArea.addEventListener("keydown", event => {
-    if (event.isComposing || event.keyCode === 229) { return; }
-    if ((event.keyCode == 10 || event.keyCode == 13) && event.ctrlKey) {
-      window.go()
-    }
+    if (ctrlCode(event, [10, 13])) { window.go() }
+  })
+  codeTextArea.addEventListener("keydown", event => {
+    if (ctrlCode(event, ['/'])) { window.comment() }
   })
   window.stop = () => {
     system.resume()
     players.instances = {}
+    consoleOut('\n> Stop all players')
   }
   window.go = () => {
     system.resume()
@@ -182,6 +184,22 @@ define(function(require) {
         consoleOut('Error on line '+(num+1)+': ' + e + st)
       }
     })
+  }
+  window.comment = () => {
+    let selStart = codeTextArea.selectionStart
+    let selEnd = codeTextArea.selectionEnd
+    let selDir = codeTextArea.selectionDirection
+    let code = codeTextArea.value
+    let lineStart = codeTextArea.value.lastIndexOf('\n', selStart - 1) + 1
+    if (code.slice(lineStart, lineStart+3) == '// ') {
+      codeTextArea.value = code.slice(0, lineStart) + code.slice(lineStart + 3)
+      codeTextArea.focus()
+      codeTextArea.setSelectionRange(selStart - 3, selEnd - 3, selDir)
+    } else {
+      codeTextArea.value = code.slice(0, lineStart) + "// " + code.slice(lineStart)
+      codeTextArea.focus()
+      codeTextArea.setSelectionRange(selStart + 3, selEnd + 3, selDir)
+    }
   }
 
   let to255 = (x) => Math.min(Math.max(Math.floor(x*256), 0), 255)

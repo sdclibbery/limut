@@ -106,8 +106,9 @@
   </div>
   <div class="widget">
     <p>
-      <button onclick="go()">▶</button>
-      <button onclick="stop()">◼</button>
+      <button onclick="go()" title="Run the code Ctrl-Enter">▶</button>
+      <button onclick="stop()" title="Stop all players Ctrl-.">◼</button>
+      <button onclick="comment()" title="Toggle comment for line Ctrl-/">//</button>
     </p>
     <p>
       <textarea id="code" rows="15"></textarea>
@@ -247,7 +248,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>scale</code> Scale eg minor, major, chromatic, majorpentatonic, lydian etc etc</p>
 <p><code>drop6_2</code> Predefined time var: equivalent to <code>[1,0]t[6.2]</code>. These are all the predefined drops: drop6_2, drop7_1, drop12_4, drop14_2, drop15_1, drop24_8, drop28_4, drop30_2, drop31_1, drop56_8, drop60_4, drop62_2, drop63_1</p>
 <p><code>tile_full</code> Predefined loc param map to cover the full screen: equivalent to <code>{x:0,y:0,w:1,h:1}</code>. Other predefined locations: tile_tl/tr/bl/br/m, tile_h1/2/3/4/5, tile_v1/2/3/4/5</p>
-<p><code>transparent</code> Predefined colour. Others: black, darkgray, gray, lightgray, white, red, orange, yellow, green, blue, indigo, violet, neonpink, neongreen, rainbow</p>
+<p><code>transparent</code> Predefined colour. Others: black, darkgray, gray, lightgray, white, red, orange, yellow, green, blue, indigo, violet, neonpink, neongreen, rainbow, random</p>
 </div>
 <h5 onclick="toggleAccordion('accordion-play-samples')">▶ Play Samples</h5>
 <div id="accordion-play-samples" class="closed">
@@ -341,25 +342,28 @@ Default shader: kaleidoscope
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-echoey space synth
-root main var
-bitcrush param
-try using freeverb for main reverb??
 vib param
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
-Try a PWM prophet synth (and maybe techno pad too)
+echoey space synth
 strings pad
 slide param
 formant
+pluck synth?
+root main var
+bitcrush param
+try using freeverb for main reverb??
+Try a PWM prophet synth (and maybe techno pad too)
 pan
 scale
 Normal bass synth
 FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
 FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
+====
 ==== visual ====
 Make shaders pulse in time with the beat? Or new shader for pulse?
 Nixie digits: https://www.shadertoy.com/view/4dc3zr
+better lines synth https://www.shadertoy.com/view/wd3SDH
 postprocess effects
  vignette
  monochrome
@@ -368,6 +372,7 @@ postprocess effects
  drive (noisemap)
 image synth
 video synth
+synthwave driving shader https://www.shadertoy.com/view/tsScRK
 plant wind https://www.shadertoy.com/view/4lf3Rj
 forge shader based on: https://www.shadertoy.com/view/llK3Dy
 draw frame lag indicator
@@ -378,7 +383,6 @@ Fractal: https://www.shadertoy.com/view/MlGfDG
 Galaxy: https://www.shadertoy.com/view/llSGR1
 electric shader https://www.shadertoy.com/view/ldlXRS
 Sparkles shader
-better lines synth
 text synth
 fireball shader https://www.shadertoy.com/view/lsf3RH
 furry shader https://www.shadertoy.com/view/4dlGDN
@@ -396,14 +400,15 @@ Mechanical: https://www.shadertoy.com/view/XslXW2
 Colour tunnel: https://www.shadertoy.com/view/XdSGzR
 Fractal tiling: https://www.shadertoy.com/view/Ml2GWy
 Cell flow: https://www.shadertoy.com/view/MlsGWX
+====
 ==== other ====
-dont take oct param from follow? what about effect params?
-Solo param - when any player is solod, then any other player thats not solod does not play
+"on 4 " syntax to execute a line on the next beat count
 Can specify params on separate lines and on grouped players
-fade in/out now (linvar once)
+Solo param - when any player is solod, then any other player thats not solod does not play
+fade syntax
 dur=[3,3,2]\4
-<> for 'in sequence on each repeat' in patterns
- all tests / all cases
+dont take oct param from follow? what about effect params?
+finish off: <> for 'in sequence on each repeat' in patterns
 value param to override the pattern
 Beat lag display
 <> for 'in sequence on each repeat' in params
@@ -412,12 +417,6 @@ rests in params
 random in patterns: what syntax??
 GC or LRU or quantisation for echoes and freeverbs
 Experiment with reusing audio nodes instead of recreating to defeat glitchiness
-timevar once only
-live coding controls
- ? Comment in/out?
- ? Solo? Group controls?
- ? Run only cursor/selected code?
- ? Sliders?
 better musicality: extending patterns like every/sometimes/offadd/stutter etc
 sliders
 seeded random: takes repeat length and optional seed
