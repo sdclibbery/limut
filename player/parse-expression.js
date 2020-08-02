@@ -461,6 +461,7 @@ define(function(require) {
   }
 
   let parseExpression = (v) => {
+    if (v == '' || v == undefined) { return }
     if (debugParse || debugEval) { console.log('*** parseExpression', v) }
     v = v.trim().toLowerCase()
     let state = {
@@ -490,6 +491,8 @@ define(function(require) {
     if (!vs.includes(actual)) { console.trace(`Assertion failed.\n>>Expected one of ${vs}\n>>Actual: ${actual}`) }
   }
 
+  assert(undefined, parseExpression())
+  assert(undefined, parseExpression(''))
   assert(1, parseExpression('1'))
   assert(123, parseExpression('123'))
   assert(1.1, parseExpression('1.1'))

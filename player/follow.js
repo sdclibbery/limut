@@ -68,7 +68,7 @@ define(function(require) {
   assert([{idx:0, count:0, value:'1', add:6}], combineEvents([{idx:0, count:0, value:'1', add:2}], {add:() => 4}));
   assert([{idx:0, count:0, value:'1', add:5},{idx:0, count:0, value:'1', add:6}], combineEvents([{idx:0, count:0, value:'1', add:2}], {add:()=>[3,4]}));
 
-  console.log('follow player tests complete')
+  console.log('Follow player tests complete')
 
   return followPlayer;
 });
