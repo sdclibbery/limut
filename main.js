@@ -7,7 +7,6 @@ define(function(require) {
   let drawSystem = require('draw/system')
   let metronome = require('metronome')
   let scale = require('music/scale')
-  let vars = require('vars')
   let parseLine = require('parse-line')
   let players = require('player/players')
 

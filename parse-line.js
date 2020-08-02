@@ -4,6 +4,7 @@ define((require) => {
   let parseExpression = require('player/parse-expression')
   let standardPlayer = require('player/standard')
   let metronome = require('metronome')
+  let vars = require('vars')
 
   let sprite = require('draw/sprite')
   let percussion = require('play/percussion')
