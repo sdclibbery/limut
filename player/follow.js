@@ -17,16 +17,16 @@ define(function(require) {
     return [event]
   }
 
-  let combineEvents = (events, params) => {
+  let combineEvents = (events, overrideParams) => {
     return events.flatMap(sourceEvent => {
       let event = Object.assign({}, sourceEvent)
-      for (let k in params) {
+      for (let k in overrideParams) {
         if (k != 'time' && k != 'delay' && k != 'value' && k != 'add') {
-          event[k] = evalParam(params[k], sourceEvent.idx, sourceEvent.count)
+          event[k] = evalParam(overrideParams[k], sourceEvent.idx, sourceEvent.count)
         }
       }
-      if (params.add) {
-        let add = evalParam(params.add, sourceEvent.idx, sourceEvent.count)
+      if (overrideParams.add) {
+        let add = evalParam(overrideParams.add, sourceEvent.idx, sourceEvent.count)
         if (event.add == undefined) {
           event.add = add
         } else {
@@ -47,6 +47,7 @@ define(function(require) {
       let p = players.instances[playerName.toLowerCase()]
       if (p === undefined) { throw 'Follow player not found: '+playerName }
       let events = p.getEventsForBeat(beat)
+      events.forEach(e => delete e.oct)
       return combineEvents(events, params)
     }
   }
