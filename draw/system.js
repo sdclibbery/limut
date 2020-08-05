@@ -1,5 +1,6 @@
 'use strict'
 define((require) => {
+let audioSystem = require('play/system')
 
 let system = {
   time: 0,
@@ -25,6 +26,8 @@ system.frameStart = (time, count, gl, cw, ch) => {
   system.cw = cw
   system.ch = ch
 
+  let spectrum = audioSystem.spectrum()
+
   system.gl.viewport(0,0,cw,ch)
   system.gl.clearColor(0.125, 0.15, 0.1875, 1)
   system.gl.enable(system.gl.DEPTH_TEST)
@@ -35,7 +38,7 @@ system.frameStart = (time, count, gl, cw, ch) => {
   system.active = system.active.concat(newlyActive)
   system.queued = system.queued.filter(v => !newlyActive.includes(v))
 
-  let state = {count: count, time: time, dt: dt}
+  let state = {count: count, time: time, dt: dt, spectrum:spectrum}
   system.active = system.active.filter(({v}, idx) => v(state))
 }
 

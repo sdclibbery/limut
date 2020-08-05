@@ -34,6 +34,7 @@ define((require) => {
     swirl: makePlayerFactory(sprite('swirl', {r:0.9,g:0.9,b:0.9,a:1}, {r:0.1,g:0.1,b:0.3,a:1})),
     lines: makePlayerFactory(sprite('lines', {r:0.9,g:0.9,b:0.9,a:1}, {r:0,g:0,b:0,a:0})),
     blob: makePlayerFactory(sprite('blob', {r:0.8,g:0.8,b:0.8,a:1}, {r:0,g:0,b:0,a:0})),
+    meter: makePlayerFactory(sprite('meter', {r:0.8,g:0.8,b:0.8,a:1}, {r:0.1,g:0.1,b:0.1,a:1})),
     // instruments
     drums: makePlayerFactory(percussion.play, 1/2),
     play: makePlayerFactory(play, 1/2),

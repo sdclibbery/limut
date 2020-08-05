@@ -26,6 +26,24 @@ system.compressorReduction = () => {
   return system.compressor.reduction
 }
 
+system.analyser = system.audio.createAnalyser()
+system.analyser.fftSize = 512
+system.analyser.smoothingTimeConstant = 0.4
+let analyserBufferLength = system.analyser.frequencyBinCount
+let analyserData = new Uint8Array(analyserBufferLength)
+let chunk = (data, reducer, init) => {
+  return data.reduce((a,b) => reducer(a,b), init) / 255
+}
+system.spectrum = () => {
+  system.analyser.getByteFrequencyData(analyserData)
+  return [
+    chunk(analyserData.slice(0,4), Math.min, 1e6),
+    chunk(analyserData.slice(4,8), Math.min, 1e6),
+    chunk(analyserData.slice(8,12), (a,b)=>a+b, 0)/4,
+    chunk(analyserData.slice(12), Math.max,0),
+  ]
+}
+
 system.mix = function (node) {
   node.connect(system.vcaMainAmp)
 }
@@ -60,6 +78,7 @@ system.vcaReverb.connect(system.compressor)
 system.vcaMainAmp.connect(system.reverb)
 system.vcaMainAmp.connect(system.compressor)
 system.compressor.connect(system.audio.destination)
+system.compressor.connect(system.analyser)
 
 return system;
 });

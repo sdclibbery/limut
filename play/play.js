@@ -64,9 +64,10 @@ define(function (require) {
   }
 
   return (params) => {
+    let rate = param(params.rate, 1)
     let source = system.audio.createBufferSource()
     source.buffer = getBuffer(getUrl(params.sound, param(params.sample, 1)))
-    source.playbackRate.value = params.rate || 1
+    source.playbackRate.value = rate
     params.endTime = params.time + param(params.dur, 0.1)*params.beat.duration
 
     let vca = system.audio.createGain()

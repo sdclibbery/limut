@@ -56,6 +56,7 @@ define(function (require) {
       system.gl.uniform1f(s.ampUnif, amp, 1);
       system.gl.uniform4fv(s.foreUnif, fore, 1);
       system.gl.uniform4fv(s.backUnif, back, 1);
+      system.gl.uniform4fv(s.spectrumUnif, state.spectrum, 1);
       if (fore[3] >= 0.9999 && back[3] >= 0.9999) {
         system.gl.disable(system.gl.BLEND)
       } else {

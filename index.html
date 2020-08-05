@@ -353,6 +353,7 @@ root main var
 bitcrush param
 try using freeverb for main reverb??
 Try a PWM prophet synth (and maybe techno pad too)
+support -ve rate for reverse playback
 pan
 scale
 Normal bass synth
@@ -361,7 +362,10 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+Analyser get 4 freq values into shader and use it for pulsing stuff
 Z order param
+Operators act on colours; eg {r:1}*1/2
+preprocess effects: perspective, scroll, pixelate
 Make shaders pulse in time with the beat? Or new shader for pulse?
 Drop canvas to half res if gl frame rate is low?
 Nixie digits: https://www.shadertoy.com/view/4dc3zr
@@ -404,16 +408,18 @@ Fractal tiling: https://www.shadertoy.com/view/Ml2GWy
 Cell flow: https://www.shadertoy.com/view/MlsGWX
 ====
 ==== other ====
-dont take oct param from follow? what about effect params?
 Can specify params seperate from players
  extract param overriding logic from follow player to param-overrides module
  need behaviours for params; eg add adds, amp modulates, time/delay etc are ignored
  Syntax to add overrides: 'set bass amp=0, chop=2'
 Can specify params for groups of players
-Can specify params for all players except group
-"on 4 " syntax to execute a line on the next beat count
-dur=[3,3,2]\4
+Wildcard player matching for groups
+Can specify params for all players except those in group
 finish off: <> for 'in sequence on each repeat' in patterns
+"on 4 " syntax to execute a line on the next beat count
+"on 28 of 32 " syntax
+"every 4 " / "every 28 of 32 "
+dur=[3,3,2]\4
 value param to override the pattern
 Beat lag display
 <> for 'in sequence on each repeat' in params
