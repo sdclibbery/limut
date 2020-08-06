@@ -28,7 +28,7 @@ system.compressorReduction = () => {
 
 system.analyser = system.audio.createAnalyser()
 system.analyser.fftSize = 512
-system.analyser.smoothingTimeConstant = 0.4
+system.analyser.smoothingTimeConstant = 0.6
 let analyserBufferLength = system.analyser.frequencyBinCount
 let analyserData = new Uint8Array(analyserBufferLength)
 let chunk = (data, reducer, init) => {

@@ -7,6 +7,7 @@ uniform float value;
 uniform float amp;
 uniform vec4 fore;
 uniform vec4 back;
+uniform vec4 spectrum;
 
 float hash( vec2 p ) {
 	  float h = dot(p,vec2(127.1,311.7));
@@ -44,7 +45,7 @@ void main() {
   uv += (amp+0.2)*4.0*fbm2(uv + fbm2(uv.yx+vec2(0, iTime*0.2)));
   float f = abs(sin(uv.x)*sin(uv.y));
 
-  vec4 col = mix(fore, back, pow(1.-f, (value > 10.0) ? value/10.0 : (value+2.)/5.));
+  vec4 col = mix(fore, back, pow(1.-f, (dot(spectrum,spectrum) + 0.5)*((value > 10.0) ? value/10.0 : (value+2.)/5.)));
   gl_FragColor = col*brightness*col.a;
 	if (gl_FragColor.a < 0.01) discard;
 }
