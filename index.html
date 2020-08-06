@@ -247,7 +247,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>main.reverb</code> Main reverb amplitude control</p>
 <p><code>scale</code> Scale eg minor, major, chromatic, majorpentatonic, lydian etc etc</p>
 <p><code>drop6_2</code> Predefined time var: equivalent to <code>[1,0]t[6.2]</code>. These are all the predefined drops: drop6_2, drop7_1, drop12_4, drop14_2, drop15_1, drop24_8, drop28_4, drop30_2, drop31_1, drop56_8, drop60_4, drop62_2, drop63_1</p>
-<p><code>tile_full</code> Predefined loc param map to cover the full screen: equivalent to <code>{x:0,y:0,w:1,h:1}</code>. Other predefined locations: tile_tl/tr/bl/br/m, tile_h1/2/3/4/5, tile_v1/2/3/4/5</p>
+<p><code>tile_full</code> Predefined loc param map to cover the full screen: equivalent to <code>{x:0,y:0,w:1,h:1}</code>. Other predefined locations: tile_tl/tr/bl/br/m, tile_h1/2/3/4/5, tile_v1/2/3/4/5, tile_random, tile_rand, fullscreen</p>
 <p><code>transparent</code> Predefined colour. Others: black, darkgray, gray, lightgray, white, red, orange, yellow, green, blue, indigo, violet, neonpink, neongreen, rainbow, random</p>
 </div>
 <h5 onclick="toggleAccordion('accordion-play-samples')">▶ Play Samples</h5>
@@ -342,6 +342,7 @@ Default shader: kaleidoscope
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
+phaser with lfo param
 vib param
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
 echoey space synth
@@ -362,14 +363,8 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-Analyser get 4 freq values into shader and use it for pulsing stuff
-Z order param
-Operators act on colours; eg {r:1}*1/2
+Use spectrum in more shaders
 preprocess effects: perspective, scroll, pixelate
-Make shaders pulse in time with the beat? Or new shader for pulse?
-Drop canvas to half res if gl frame rate is low?
-Nixie digits: https://www.shadertoy.com/view/4dc3zr
-better lines synth https://www.shadertoy.com/view/wd3SDH
 postprocess effects
  vignette
  monochrome
@@ -377,6 +372,11 @@ postprocess effects
  gamma
  drive (noisemap)
 image synth
+Z order param
+Operators act on colours; eg {r:1}*1/2 also rainbow*{a:0.5} also #234f-darkgray
+Drop canvas to half res if gl frame rate is low?
+Nixie digits: https://www.shadertoy.com/view/4dc3zr
+better lines synth https://www.shadertoy.com/view/wd3SDH
 video synth
 synthwave driving shader https://www.shadertoy.com/view/tsScRK
 plant wind https://www.shadertoy.com/view/4lf3Rj

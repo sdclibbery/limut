@@ -27,13 +27,7 @@ define(function (require) {
     let amp = Math.min(param(params.amp, 1), 5)
     if (amp < 0.001) { return }
     let startTime = params.time
-    let l = param(params.loc, {})
-    let loc = {
-      x: param(l.x, Math.floor(Math.random()*4)/4),
-      y: param(l.y, Math.floor(Math.random()*4)/4),
-      w: param(l.w, 1/4),
-      h: param(l.h, 1/4),
-    }
+    let loc = param(params.loc, {x:0,y:0,w:1,h:1})
     let endTime = params.time + param(params.sus, param(params.dur, 1)) * params.beat.duration
     let rate = param(params.rate, 1)
     let value = parseInt(param(params.value, '0'))

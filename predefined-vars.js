@@ -21,6 +21,7 @@ define(function(require) {
   vars['drop62_2'] = parseExpression('[1,0]t[62,2]')
   vars['drop63_1'] = parseExpression('[1,0]t[63,1]')
 
+  vars['fullscreen'] = parseExpression('{x:0,y:0,w:1,h:1}')
   vars['tile_full'] = parseExpression('{x:0,y:0,w:1,h:1}')
   vars['tile_tl'] = parseExpression('{x:0,y:0,w:1/2,h:1/2}')
   vars['tile_tr'] = parseExpression('{x:1/2,y:0,w:1/2,h:1/2}')
@@ -37,6 +38,8 @@ define(function(require) {
   vars['tile_v3'] = parseExpression('{x:2/5,y:0,w:1/5,h:1}')
   vars['tile_v4'] = parseExpression('{x:3/5,y:0,w:1/5,h:1}')
   vars['tile_v5'] = parseExpression('{x:4/5,y:0,w:1/5,h:1}')
+  vars['tile_random'] = parseExpression('{x:[0,1/4,2/4,3/4]r,y:[0,1/4,2/4,3/4]r,w:1/4,h:1/4}')
+  vars['tile_rand'] = parseExpression('{x:[0,1/4,2/4,3/4]r,y:[0,1/4,2/4,3/4]r,w:1/4,h:1/4}')
 
   vars['transparent'] = parseExpression('{r:0,g:0,b:0,a:0}')
   vars['black'] = parseExpression('{r:0,g:0,b:0,a:1}')
