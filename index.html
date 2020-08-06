@@ -236,6 +236,8 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>drive</code> overdrive level 0-1</p>
 <p><code>scale</code> override scale for this player; set to a string eg <code>'penta'</code></p>
 <p><code>fade</code> brightness fade for visual synths</p>
+<p><code>pulse</code> extent to which the audio signal affects the value passed to visual synths</p>
+<p><code>sway</code> extent to which the audio signal affects the time passed to visual synths</p>
 <p><code>loc</code> position and size for visual synths; eg {x:0,y:0,w:1/2,h:1/2}</p>
 <p><code>fore</code> foreground colour for visual synths; eg {r:0,g:1,b:0,a:1} or #fa0f</p>
 <p><code>back</code> background colour for visual synths; eg {r:0,g:1,b:0,a:1} or #00ff</p>
@@ -363,8 +365,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-Use spectrum in more shaders
-Param to ignore or override spectrum value?
+velocity
 preprocess effects: perspective, scroll, pixelate
 postprocess effects
  vignette

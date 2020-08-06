@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 define(function (require) {
   let system = require('draw/system')
   let shaders = require('draw/shaders')
@@ -35,27 +35,30 @@ define(function (require) {
     let s = shaders(shader)
     let fore = colour(param(params.fore, {}), defFore)
     let back = colour(param(params.back, {}), defBack)
+    let pulse = param(params.pulse, 0)
+    let sway = param(params.sway, 0)
 
     if (!s) { return () => {} }
     return state => {
       let eventTime = ((state.time-startTime)/(endTime-startTime))
       let brightness = 1 - (eventTime*eventTime)*param(params.fade, 0)
       let vtxData = verts(loc)
+      let spec = state.spectrum[0]*state.spectrum[0] + state.spectrum[3]*state.spectrum[3]
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
       system.loadVertexAttrib(s.fragCoordBuf, s.fragCoordAttr, vtxData.tex, 2)
       system.gl.useProgram(s.program)
-      system.gl.uniform1f(s.timeUnif, state.count*rate, 1);
-      system.gl.uniform1f(s.brightnessUnif, brightness, 1);
-      system.gl.uniform1f(s.valueUnif, value, 1);
-      system.gl.uniform1f(s.ampUnif, amp, 1);
-      system.gl.uniform4fv(s.foreUnif, fore, 1);
-      system.gl.uniform4fv(s.backUnif, back, 1);
-      system.gl.uniform4fv(s.spectrumUnif, state.spectrum, 1);
+      system.gl.uniform1f(s.timeUnif, state.count*rate + sway*spec, 1)
+      system.gl.uniform1f(s.brightnessUnif, brightness, 1)
+      system.gl.uniform1f(s.valueUnif, value + pulse*spec, 1)
+      system.gl.uniform1f(s.ampUnif, amp + pulse*spec*0.5, 1)
+      system.gl.uniform4fv(s.foreUnif, fore, 1)
+      system.gl.uniform4fv(s.backUnif, back, 1)
+      system.gl.uniform4fv(s.spectrumUnif, state.spectrum, 1)
       if (fore[3] >= 0.9999 && back[3] >= 0.9999) {
         system.gl.disable(system.gl.BLEND)
       } else {
         system.gl.enable(system.gl.BLEND)
-        system.gl.blendFunc(system.gl.ONE, system.gl.ONE_MINUS_SRC_ALPHA);
+        system.gl.blendFunc(system.gl.ONE, system.gl.ONE_MINUS_SRC_ALPHA)
       }
       system.gl.drawArrays(system.gl.TRIANGLES, 0, 6)
       return state.time <= endTime-state.dt+0.01

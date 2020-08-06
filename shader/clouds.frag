@@ -1,5 +1,5 @@
 // from https://www.shadertoy.com/view/4tdSWr
-precision mediump float;
+precision highp float;
 varying vec2 fragCoord;
 uniform float iTime;
 uniform float brightness;
