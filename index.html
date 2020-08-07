@@ -366,13 +366,13 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
 velocity
-preprocess effects: perspective, scroll, pixelate
 postprocess effects
  vignette
  monochrome
  make additive
  gamma
  drive (noisemap)
+preprocess effects: perspective, scroll, pixelate
 image synth
 Z order param
 Operators act on colours; eg {r:1}*1/2 also rainbow*{a:0.5} also #234f-darkgray
@@ -418,6 +418,7 @@ Can specify params for groups of players
 Wildcard player matching for groups
 Can specify params for all players except those in group
 finish off: <> for 'in sequence on each repeat' in patterns
+multiline commands
 "on 4 " syntax to execute a line on the next beat count
 "on 28 of 32 " syntax
 "every 4 " / "every 28 of 32 "
