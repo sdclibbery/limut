@@ -83,6 +83,11 @@ define(function(require) {
     consoleOut('\n> Stop all players')
   }
   window.go = () => {
+    let selStart = codeTextArea.selectionStart
+    let selEnd = codeTextArea.selectionEnd
+    let selDir = codeTextArea.selectionDirection
+    codeTextArea.focus()
+    codeTextArea.setSelectionRange(0, 1e10)
     system.resume()
     players.instances = {}
     codeTextArea.value.split('\n')
@@ -98,6 +103,7 @@ define(function(require) {
         consoleOut('Error on line '+(num+1)+': ' + e + st)
       }
     })
+    setTimeout(() => codeTextArea.setSelectionRange(selStart, selEnd, selDir), 100)
   }
   window.comment = () => {
     let selStart = codeTextArea.selectionStart

@@ -146,6 +146,11 @@ Le piano 0_.[.0]2343, amp=3, add=prog, Oct=4</pre>
 Ba dbass 0.4[21], dur=4, amp=1.5, room=1
 Kd play x[.x]x., dur=2, room=1
 Sn play .o, dur=2, room=1</pre>
+<pre>V lines 0, pulse=3
+Scale=phrygian
+Kd play X.:X.:X., Sample=2
+HH play [--], amp=2
+Db dbass .0_..0_1, drive=1, lpf=700</pre>
 <pre>bpm = 140
 d1 play (vx)., room=0.3
 d2 play .[::], room=0.3
@@ -344,7 +349,10 @@ Default shader: kaleidoscope
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
+hihats too quiet
+ethereal chords break up, especially with release/overlap
 phaser with lfo param
+root main var
 vib param
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
 echoey space synth
@@ -352,7 +360,7 @@ strings pad
 slide param
 formant
 pluck synth?
-root main var
+timpani sample?
 bitcrush param
 try using freeverb for main reverb??
 Try a PWM prophet synth (and maybe techno pad too)
@@ -365,6 +373,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+fix transparent fore on lines
 velocity
 postprocess effects
  vignette
@@ -372,13 +381,14 @@ postprocess effects
  make additive
  gamma
  drive (noisemap)
+ dither
+ threshold
 preprocess effects: perspective, scroll, pixelate
 image synth
 Z order param
 Operators act on colours; eg {r:1}*1/2 also rainbow*{a:0.5} also #234f-darkgray
 Drop canvas to half res if gl frame rate is low?
 Nixie digits: https://www.shadertoy.com/view/4dc3zr
-better lines synth https://www.shadertoy.com/view/wd3SDH
 video synth
 synthwave driving shader https://www.shadertoy.com/view/tsScRK
 plant wind https://www.shadertoy.com/view/4lf3Rj
