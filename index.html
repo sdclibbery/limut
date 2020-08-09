@@ -11,8 +11,6 @@
       text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
       scrollbar-width: thin;
       scrollbar-color: #b0b0b080 #50505080;
-      transform: scale(1.3);
-      transform-origin: 0 0;
     }
     .fullscreen {
       position:fixed;
@@ -33,10 +31,11 @@
     .widget p {
       margin: 0px;
     }
-    .widget h5 {
+    .widget h3 {
       margin: 0px;
     }
     textarea {
+      font-size: 1.5em;
       color: #e0e0e0;
       width: 100%;
       max-width: 100%;
@@ -94,7 +93,7 @@
 <body>
   <canvas id="canvas" class="fullscreen" style="width:100%; height:100%;"></canvas>
   <div class="widget">
-    <h5>Limut</h5>
+    <h3>Limut</h3>
     <p>
       main.amp: <span id="main-amp-readout"></span>
       <input id="main-amp-slider" type="range" min="0" max="200" oninput="mainAmpChange(parseFloat(this.value)/100)" style="width:80%;" />
@@ -359,8 +358,8 @@ Default shader: kaleidoscope
 /*
 ==== audio ====
 hihats too quiet
-ethereal chords break up, especially with release/overlap
 phaser with lfo param
+ethereal chords break up, especially with release/overlap
 root main var
 vib param
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
@@ -383,9 +382,11 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
 streetlight shader    https://www.shadertoy.com/view/4sSGDG
+  value and amp
+Operators act on colours; eg {r:1}*1/2 also rainbow*{a:0.5} also #234f-darkgray
+pre/postprocess framework
 lattice shader   https://www.shadertoy.com/view/4dsGD7
 fix transparent fore on lines
-Operators act on colours; eg {r:1}*1/2 also rainbow*{a:0.5} also #234f-darkgray
 velocity
 postprocess effects
  vignette
@@ -397,6 +398,7 @@ postprocess effects
  threshold
 preprocess effects: perspective, scroll, pixelate
 image synth
+shadertoy synth
 Z order param
 Drop canvas to half res if gl frame rate is low?
 Nixie digits: https://www.shadertoy.com/view/4dc3zr
