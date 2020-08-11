@@ -8,8 +8,6 @@ uniform float amp;
 uniform vec4 fore;
 uniform vec4 back;
 
-#define LOOP_BODY p = pos;tof = time + i*0.5;p = vec3(p.x*sin(tof) + p.z*cos(tof),p.y, p.x*cos(tof) - p.z*sin(tof));tof*=1.3*i;p += vec3(4.,0.,0.);	p = vec3(p.x*sin(tof) + p.z*cos(tof),p.y,p.x*cos(tof) - p.z*sin(tof));	h = Hit(box(p, vec3(.4,20.,.2)),i); 	totalHit = hitUnion(h,totalHit);	i+=1.;
-
 struct Ray
 {
 	vec3 org;
@@ -44,7 +42,6 @@ float box(vec3 pos, vec3 dims)
 
 Hit hitUnion(Hit h1, Hit h2)
 {
-	//return h1.dist < h2.dist ? h1 : h2; // this stopped working at some point?
     if (h1.dist < h2.dist){
         return h1;
     }
@@ -55,7 +52,7 @@ Hit scene(vec3 pos)
 {
 	Hit totalHit;
 	totalHit.dist = 9000.;
-	/*for (float i = 0.; i < 5.; i+=1.)
+	for (float i = 0.; i < 5.; i+=1.)
 	{
 		vec3 p = pos;
 		float tof = time + i*0.5;
@@ -69,19 +66,9 @@ Hit scene(vec3 pos)
 					   p.y,
 					   p.x*cos(tof) - p.z*sin(tof));
 		
-		Hit h = Hit(box(p, vec3(.4,20.,.2)),i);
+		Hit h = Hit(box(p, vec3(.4*(value*0.1+1.),20.,.2)),i);
 		totalHit = hitUnion(h,totalHit);
-	}*/
-	float i = 0.;
-	Hit h;
-	vec3 p;
-	float tof;
-	// Unrolling the loop seems to make it work on my windows machine
-	LOOP_BODY //each loop iteration evaluates a box distance function
-	LOOP_BODY	
-	LOOP_BODY	
-	LOOP_BODY	
-	LOOP_BODY
+	}
 	return totalHit;
 }
 
@@ -97,6 +84,7 @@ Hit raymarch(Ray ray)
 		curHit = scene(pos);
 		hit.dist += curHit.dist;
 		glowAmt += clamp(pow(curHit.dist+0.1, -8.),0.,0.15)*glows(curHit.index);
+		if (hit.dist > 21.) { break; }
 	}
 	hit.index = curHit.index;
 	hit.index = curHit.dist < 0.01 ? hit.index : -1.;
@@ -131,9 +119,8 @@ vec4 render(Ray ray)
 		float ao = 1.;
 		col = diff*col*ao + pow(spec,10.)*vec4(1.)*ao + fore*1.9*glows(hit.index);
 		col*= clamp(1. - hit.dist*0.03,0.,1.);
-		
 	}
-	col += clamp(glowAmt*0.4,0.,1.)*fore;
+	col += clamp(glowAmt*0.4*(amp+0.1),0.,1.)*fore;
 	return col;
 }
 
@@ -153,7 +140,7 @@ Ray createRay(vec3 center, vec3 lookAt, vec3 up, vec2 uv, float fov, float aspec
 
 void main()
 {	
-	vec2 uv = fragCoord.xy+0.5;
+	vec2 uv = fragCoord.xy*0.7+vec2(0.5, 1.0);
 	glowAmt = 0.;
 	time = iTime + uv.y*(0.17 + .14*clamp(sin(iTime*1.2)*2.,-1.,1.));
 	vec3 cameraPos = vec3(6.,3.,-6.);

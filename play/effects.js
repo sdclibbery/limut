@@ -102,12 +102,47 @@ define(function (require) {
     return shaper
   }
 
+  let phaser = (params, node) => {
+    let lfoPeriod = param(params.phaser, 0)
+    if (lfoPeriod == 0) { return node }
+
+    let lfo = system.audio.createOscillator()
+    lfo.frequency.value = params.beat.duration / lfoPeriod
+    lfo.start(params.time)
+
+    let lfoGain = system.audio.createGain()
+    lfoGain.gain.value = 1200
+    lfo.connect(lfoGain)
+
+    let mix = system.audio.createGain()
+    mix.gain.value = 1/2
+    node.connect(mix)
+
+    let makeAllPass = (freq) => {
+      let ap = system.audio.createBiquadFilter()
+      ap.type='allpass'
+      ap.Q.value = 0.125
+      ap.frequency.value = freq
+      lfoGain.connect(ap.detune)
+      return ap
+    }
+
+    node
+      .connect(makeAllPass(100))
+      .connect(makeAllPass(200))
+      .connect(makeAllPass(400))
+      .connect(makeAllPass(800))
+      .connect(mix)
+    return mix
+  }
+
   return (params, node) => {
     node = chop(params, node)
     node = drive(params, node)
     node = lpf(params, node)
     node = hpf(params, node)
     node = bpf(params, node)
+    node = phaser(params, node)
     node = reverb(params, node)
     node = echo(params, node)
     return node

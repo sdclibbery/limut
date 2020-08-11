@@ -44,7 +44,7 @@ void main() {
   uv += (amp+0.2)*4.0*fbm2(uv + fbm2(uv.yx+vec2(0, iTime*0.2)));
   float f = abs(sin(uv.x)*sin(uv.y));
 
-  vec4 col = mix(fore, back, pow(1.-f, (value > 10.0) ? value/10.0 : (value+2.)/5.));
+  vec4 col = mix(fore, back, pow(1.-f, value);
   gl_FragColor = col*brightness*col.a;
 	if (gl_FragColor.a < 0.01) discard;
 }

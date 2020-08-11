@@ -36,7 +36,7 @@ float scene(vec3 p) {
       vec3 c = sin(iTime * speed) * range + vec3(0., 1., 10.);
       vec3 dis = c - p;
       float x = dot(dis, dis);
-      den += (1.0 + (value>10.?value/6.:value)/20.0) * 4.0 / x;
+      den += (1.0 + value/20.0) * 4.0 / x;
     }
     //return     pow(den, .25) - 2.;
     if (den < 0.333) return 2.;

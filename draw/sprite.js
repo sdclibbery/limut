@@ -31,6 +31,7 @@ define(function (require) {
     let endTime = params.time + param(params.sus, param(params.dur, 1)) * params.beat.duration
     let rate = param(params.rate, 1)
     let value = parseInt(param(params.value, '0'))
+    if (value > 10) { value = value/5 }
     if (Number.isNaN(value)) { value = param(params.value, '0').charCodeAt(0) - 32 }
     let s = shaders(shader)
     let fore = colour(param(params.fore, {}), defFore)

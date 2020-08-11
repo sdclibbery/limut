@@ -52,7 +52,7 @@ void main () {
     vec2 p = fragCoord.xy / iResolution.xy;
     vec2 uv = p*vec2(iResolution.x/iResolution.y,1.0);
     float time = iTime * speed;
-    float q = fbm(uv * cloudscale * 0.5 * (value<10.0?value:value/3.0));
+    float q = fbm(uv * cloudscale * 0.5 * value);
 
     //ridged noise shape
     float r = 0.0;
