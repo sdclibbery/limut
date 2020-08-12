@@ -4,6 +4,7 @@ define(function(require) {
   let vars = require('vars')
   let param = require('player/default-param')
   let evalParam = require('player/eval-param')
+  let operator = require('player/eval-operator')
 
   let debugParse = false
   let debugEval = false
@@ -68,33 +69,6 @@ define(function(require) {
         }
       }
       if (debugEval) { console.log('eval s timeVar FAILED', steps, 'b:', b) }
-    }
-  }
-
-  let operator = (op, l, r) => {
-    if (typeof l == 'number' && typeof (r) == 'number') {
-      return op(l, r)
-    }
-    return (s,b) => {
-      let el = evalParam(l, s,b)
-      let er = evalParam(r, s,b)
-      if (debugEval) { console.log('eval operator', 'l:',l,'r:',r, 'el:',el,'er:',er, 's:',s,'b:',b) }
-      if (typeof(el) == 'number') {
-        if (typeof(er) == 'number') {
-          return op(el,er)
-        } else {
-          return er.map(x => op(el,x))
-        }
-      } else {
-        if (typeof er == 'number') {
-          return el.map(x => op(x,er))
-        } else {
-          let result = []
-          for (let i = 0; i < Math.max(el.length, er.length); i++) {
-            result.push(op(el[i % el.length], er[i % er.length]))
-          }
-          return result
-        }      }
     }
   }
 
@@ -763,6 +737,8 @@ define(function(require) {
 
   assert({r:0,g:0.26666666666666666,b:0.5333333333333333,a:1}, parseExpression("#048f"))
   assert({r:0,g:0.25098039215686274,b:0.03137254901960784,a:1}, parseExpression("#004008ff"))
+
+  assert({r:2}, parseExpression("{r:1}*2")(0,0))
 
   console.log('Parse expression tests complete')
 
