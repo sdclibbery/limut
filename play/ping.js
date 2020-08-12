@@ -12,7 +12,7 @@ define(function (require) {
     let freq = scale.degreeToFreq(degree, param(params.oct, 5), params.scale)
     let detuneSemis = param(params.detune, 0.25)
 
-    let vca = envelope(params, 0.02)
+    let vca = envelope(params, 0.04)
     system.mix(effects(params, vca))
 
     let vco = system.audio.createOscillator()

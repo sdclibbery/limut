@@ -11,7 +11,7 @@ system.timeNow = function () {
   return system.audio.currentTime;
 };
 
-let globalBaseGain = 1
+let globalBaseGain = 2
 system.vcaMainAmp = system.audio.createGain()
 system.vcaMainAmp.gain.value = globalBaseGain
 system.mainAmp = (amp) => {
@@ -73,10 +73,17 @@ system.mainReverb = (reverb) => {
 system.vcaReverb = system.audio.createGain()
 system.vcaReverb.gain.value = 1
 system.reverb.connect(system.vcaReverb)
+
 system.compressor = system.audio.createDynamicsCompressor()
-system.vcaReverb.connect(system.compressor)
-system.vcaMainAmp.connect(system.reverb)
+system.compressor.ratio.value = 12
+system.compressor.threshold.value = -5
+system.compressor.release.value = 0.25
+system.compressor.attack.value = 0
+system.compressor.knee.value = 10
+
 system.vcaMainAmp.connect(system.compressor)
+system.vcaMainAmp.connect(system.reverb)
+system.vcaReverb.connect(system.compressor)
 system.compressor.connect(system.audio.destination)
 system.compressor.connect(system.analyser)
 

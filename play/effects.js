@@ -109,6 +109,7 @@ define(function (require) {
     let lfo = system.audio.createOscillator()
     lfo.frequency.value = 1 / (params.beat.duration * lfoPeriod)
     lfo.start(params.time)
+    lfo.stop(params.endTime)
 
     let lfoGain = system.audio.createGain()
     lfoGain.gain.value = 1200

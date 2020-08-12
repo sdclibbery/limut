@@ -7,7 +7,7 @@ let param = require('player/default-param')
 var percussion = {};
 
 percussion.play = (params) => {
-  let amp = param(params.amp, 1)
+  let amp = param(params.amp, 1)*2
   switch (params.sound){
     case 'x': playNoise(0.11, 150, 10.0*amp, params.time, params); break;
     case 'X': playNoise(0.11, 150, 30.0*amp, params.time, params); break;
