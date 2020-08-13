@@ -36,6 +36,16 @@ define(function(require) {
         return objectMap(el, (v)=>applyOperator(op,v,er))
       } else if (Array.isArray(er)) {
         return objectMap(el, (v)=>applyOperator(op,v,er))
+      } else if (typeof er == 'object') {
+        let result = {}
+        for (let k in el) {
+          let erv = er[k]
+          result[k] = (erv !== undefined) ? applyOperator(op,el[k],erv) : el[k]
+        }
+        for (let k in er) {
+          if (result[k] === undefined) { result[k] = er[k] }
+        }
+        return result
       }
     }
   }
@@ -84,9 +94,10 @@ define(function(require) {
   assert({r:6}, operator(mul, [1,2], {r:3})(1,1))
   assert({r:[2,3]}, operator(mul, {r:1}, fn([2,3]))(0,0))
   assert({r:[3,6]}, operator(mul, {r:fn([1,2])}, 3)(0,0))
+  assert({r:3}, operator(add, {r:1}, {r:2})(0,0))
+  assert({r:1,g:6,b:4}, operator(mul, {r:1,g:2}, {g:3,b:4})(0,0))
 
-  // {r:1}+{r:2}
-  // {r:1,g:2}*{g:3,b:4}
+  // fill out all 9 combinations
 
   console.log('eval operator tests complete')
 
