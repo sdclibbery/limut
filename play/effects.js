@@ -104,11 +104,11 @@ define(function (require) {
   }
 
   let phaser = (params, node) => {
-    let lfoPeriod = param(params.phaser, 0)
-    if (lfoPeriod == 0) { return node }
+    let lfoFreq = param(params.phaser, 0)
+    if (lfoFreq == 0) { return node }
 
     let lfo = system.audio.createOscillator()
-    lfo.frequency.value = 1 / (params.beat.duration * lfoPeriod)
+    lfo.frequency.value = lfoFreq / params.beat.duration
     lfo.start(params.time)
     lfo.stop(params.endTime)
 

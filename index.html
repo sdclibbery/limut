@@ -129,7 +129,7 @@
 <pre>d1 play x-o-</pre>
 <pre>p1 dsaw 0534, add=(0,2,4), dur=4</pre>
 <pre>Ba dbass 0, dur=1/4, add=[0:2]r*2, lpf=[3:12]r*100, lpr=8, att=0</pre>
-<pre>d dsaw 4[32]<01>__.., phaser=2, rel=2, amp=3</pre>
+<pre>d dsaw 4[32]<01>__.., phaser=1/2, rel=2, amp=3</pre>
 <pre>ARP dsaw 02479742, dur=1/4, lpf=100*[3,30]l6.8, lpr=8, Oct=(3,5), echo=3/8, att=0
 Bass dbass -2210, dur=4, Oct=(2,3)
 </pre>
@@ -250,7 +250,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>room</code> reverb room size 0-1</p>
 <p><code>drive</code> overdrive level 0-1</p>
 <p><code>scale</code> override scale for this player; set to a string eg <code>'penta'</code></p>
-<p><code>phaser</code> LFO period for phaser effect, in beats</p>
+<p><code>phaser</code> LFO frequency for phaser effect, in phase sweep cycles per beat</p>
 <p><code>fade</code> brightness fade for visual synths</p>
 <p><code>pulse</code> extent to which the audio signal affects the value passed to visual synths</p>
 <p><code>sway</code> extent to which the audio signal affects the time passed to visual synths</p>
