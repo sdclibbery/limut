@@ -30,6 +30,8 @@ define(function(require) {
           result.push(op(el[i % el.length], er[i % er.length]))
         }
         return result
+      } else if (typeof er == 'object') {
+        return objectMap(er, (v)=>applyOperator(op,el,v))
       }
     } else if (typeof el == 'object') {
       if (typeof(er) == 'number') {
@@ -96,8 +98,7 @@ define(function(require) {
   assert({r:[3,6]}, operator(mul, {r:fn([1,2])}, 3)(0,0))
   assert({r:3}, operator(add, {r:1}, {r:2})(0,0))
   assert({r:1,g:6,b:4}, operator(mul, {r:1,g:2}, {g:3,b:4})(0,0))
-
-  // fill out all 9 combinations
+  assert({r:[3,6]}, operator(mul, fn([1,2]), {r:3})(0,0))
 
   console.log('eval operator tests complete')
 
