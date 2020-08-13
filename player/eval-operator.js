@@ -83,7 +83,7 @@ define(function(require) {
   assert({r:3}, operator(mul, [1,2], {r:3})(0,0))
   assert({r:6}, operator(mul, [1,2], {r:3})(1,1))
   assert({r:[2,3]}, operator(mul, {r:1}, fn([2,3]))(0,0))
-  //assert({r:[3,6]}, operator(mul, {r:fn([1,2])}, 3)(0,0))
+  assert({r:[3,6]}, operator(mul, {r:fn([1,2])}, 3)(0,0))
 
   // {r:1}+{r:2}
   // {r:1,g:2}*{g:3,b:4}
