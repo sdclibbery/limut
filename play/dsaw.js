@@ -13,7 +13,8 @@ define(function (require) {
     let detuneSemis = param(params.detune, 0.1)
 
     let vca = envelope(params, 0.02)
-    system.mix(effects(params, vca))
+    let out = effects(params, vca)
+    system.mix(out)
 
     let vcos = [0, 0.7, 1].map(lerp => {
       let vco = system.audio.createOscillator()
@@ -25,5 +26,6 @@ define(function (require) {
     vcos.forEach(vco => vco.connect(vca))
     vcos.forEach(vco => vco.start(params.time))
     vcos.forEach(vco => vco.stop(params.endTime))
+    system.disconnect(params, vcos.concat(vca,out))
   }
 });

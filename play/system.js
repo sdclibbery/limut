@@ -48,6 +48,12 @@ system.mix = function (node) {
   node.connect(system.vcaMainAmp)
 }
 
+system.disconnect = (params, nodes) => {
+  setTimeout(() => {
+    nodes.forEach(n => n.disconnect())
+  }, 100+(params.endTime - params.beat.now)*1000)
+}
+
 var _initReverb = function () {
   system.reverb = system.audio.createConvolver();
   var seconds = 0.5;

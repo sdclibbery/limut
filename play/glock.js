@@ -14,7 +14,8 @@ define(function (require) {
     let freq = scale.degreeToFreq(degree, param(params.oct, 4), params.scale)
 
     let vca = envelope(params, 0.02)
-    system.mix(effects(params, vca))
+    let out = effects(params, vca)
+    system.mix(out)
 
     let op4 = fm.op(freq, params)
     op4.connect(vca)
@@ -28,6 +29,7 @@ define(function (require) {
     let op1 = fm.op(freq*5, params, 'square')
     fm.connect(op1, op2, fm.simpleEnv(3000*freq/261.6, params, 0, 0.5))
 
+    system.disconnect(params, [op1,op2,op3,op4,vca,out])
     // frequencies from element433 https://youtu.be/CdPa6VLi4GQ?t=191
   }
 });

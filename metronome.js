@@ -32,6 +32,7 @@ metronome.beatDuration = function (d) {
 metronome.update = function (now) {
   if (now > nextBeatAt - 0.1) { // Process just BEFORE the next beat to make sure that events composed ON the beat can be scheduled accurately
     var beat = {
+      now: now,
       time: nextBeatAt,
       duration: beatDuration,
       count: count+1,

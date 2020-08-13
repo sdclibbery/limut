@@ -77,6 +77,7 @@ define(function (require) {
     lfo.start(params.time)
     lfo.stop(params.endTime)
     node.connect(gain)
+    system.disconnect(params, [gain,lfo])
     return gain
   }
 
@@ -119,12 +120,14 @@ define(function (require) {
     mix.gain.value = 1/2
     node.connect(mix)
 
+    let aps = []
     let makeAllPass = (freq) => {
       let ap = system.audio.createBiquadFilter()
       ap.type='allpass'
       ap.Q.value = 0.125
       ap.frequency.value = freq
       lfoGain.connect(ap.detune)
+      aps.push(ap)
       return ap
     }
 
@@ -134,6 +137,7 @@ define(function (require) {
       .connect(makeAllPass(400))
       .connect(makeAllPass(800))
       .connect(mix)
+    system.disconnect(params, aps.concat([node,lfo,mix,lfoGain]))
     return mix
   }
 

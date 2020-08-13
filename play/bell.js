@@ -14,7 +14,8 @@ define(function (require) {
     let freq = scale.degreeToFreq(degree, param(params.oct, 4), params.scale)
 
     let vca = envelope(params, 0.03)
-    system.mix(effects(params, vca))
+    let out = effects(params, vca)
+    system.mix(out)
 
     let op4 = fm.op(freq*21.98/3.14, params)
     op4.connect(vca)
@@ -29,6 +30,7 @@ define(function (require) {
     fm.connect(op1, op2, fm.simpleEnv(300*freq/261.6, params, 0, 1))
     //    fm.connect(op1, op1, fm.flatEnv(200)) // feedback doesnt work in webaudio?
 
+    system.disconnect(params, [op1,op2,op3,op4,vca,out])
     // frequencies from https://www.youtube.com/watch?v=CdPa6VLi4GQ
   }
 });

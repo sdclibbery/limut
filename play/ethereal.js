@@ -14,7 +14,8 @@ define(function (require) {
     let detuneSemis = param(params.detune, 0.1)
 
     let vca = envelope(params, 0.018)
-    system.mix(effects(params, vca))
+    let out = effects(params, vca)
+    system.mix(out)
 
     let op4 = fm.op(freq, params)
     op4.connect(vca)
@@ -27,5 +28,7 @@ define(function (require) {
 
     let op1 = fm.op(freq*1.01, params, 'triangle')
     fm.connect(op1, op4, fm.flatEnv(200*freq/261.6))
+
+    system.disconnect(params, [op1,op2,op3,op4,vca,out])
   }
 });
