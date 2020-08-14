@@ -9,11 +9,13 @@ uniform float amp;
 uniform vec4 fore;
 uniform vec4 back;
 
+#insert common-processors
+
 void main() {
   float av = abs(value);
   float t = iTime;
   float f = fract(t);
-  vec2 p = fragCoord*0.5;
+  vec2 p = preprocess(fragCoord)*0.5;
   p += p * sin(dot(p, p)*20.-t) * .04;
   vec4 c = vec4(0.);
   for (float i = 0.5 ; i < 8.0 ; i++) {
@@ -22,6 +24,6 @@ void main() {
     c += fore*dc.a*0.3 + back*(1.0-dc.a)*0.3 + vec4(dc.rgb*0.4*amp, 0);
   }
   c.rgba *= .45;
-  gl_FragColor = c * brightness * c.a;
+  gl_FragColor = postprocess(c * brightness * c.a);
   if (gl_FragColor.a < 0.01) discard;
 }

@@ -8,6 +8,8 @@ uniform float amp;
 uniform vec4 fore;
 uniform vec4 back;
 
+#insert common-processors
+
 const vec2 iResolution = vec2(1,1);
 const float cloudscale = 1.1;
 const float speed = 0.03;
@@ -49,7 +51,7 @@ float fbm(vec2 n) {
 // -----------------------------------------------
 
 void main () {
-    vec2 p = fragCoord.xy / iResolution.xy;
+    vec2 p = preprocess(fragCoord.xy) / iResolution.xy;
     vec2 uv = p*vec2(iResolution.x/iResolution.y,1.0);
     float time = iTime * speed;
     float q = fbm(uv * cloudscale * 0.5 * value);
@@ -117,6 +119,6 @@ void main () {
     vec4 result = mix(skycolour, clamp(skytint * skycolour + cloudcolour, 0.0, 1.0), clamp(f + c, 0.0, 1.0));
     result.rgb *= result.a;
 
-    gl_FragColor = result*brightness*result.a;
+    gl_FragColor = postprocess(result*brightness*result.a);
     if (gl_FragColor.a < 0.01) discard;
 }

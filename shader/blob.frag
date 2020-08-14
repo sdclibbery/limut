@@ -7,6 +7,8 @@ uniform float amp;
 uniform vec4 fore;
 uniform vec4 back;
 
+#insert common-processors
+
 #define MAXITERS 30
 #define LENFACTOR 2.5
 #define MINDIST 0.04
@@ -53,7 +55,7 @@ vec3 sceneNormal(vec3 p) {
 
 void main()
 {
-	  vec2 uv = fragCoord;
+	  vec2 uv = preprocess(fragCoord);
     vec3 ray = normalize(vec3(uv, 1.));
     vec3 cam = vec3(0., 1., -0.3);
 
@@ -75,6 +77,6 @@ void main()
       col = back;
     }
 
-    gl_FragColor = col * brightness * col.a;
+    gl_FragColor = postprocess(col * brightness * col.a);
     if (gl_FragColor.a < 0.01) discard;
 }

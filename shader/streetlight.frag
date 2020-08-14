@@ -8,6 +8,8 @@ uniform float amp;
 uniform vec4 fore;
 uniform vec4 back;
 
+#insert common-processors
+
 struct Ray
 {
 	vec3 org;
@@ -140,7 +142,7 @@ Ray createRay(vec3 center, vec3 lookAt, vec3 up, vec2 uv, float fov, float aspec
 
 void main()
 {	
-	vec2 uv = fragCoord.xy*0.7+vec2(0.5, 1.0);
+	vec2 uv = preprocess(fragCoord.xy)*0.7+vec2(0.5, 1.0);
 	glowAmt = 0.;
 	time = iTime + uv.y*(0.17 + .14*clamp(sin(iTime*1.2)*2.,-1.,1.));
 	vec3 cameraPos = vec3(6.,3.,-6.);
@@ -150,6 +152,6 @@ void main()
 	Ray ray = createRay(cameraPos, lookAt, up, uv, 90., aspect);
 	vec4 col = render(ray);
 
-	gl_FragColor = col*brightness*col.a;
+	gl_FragColor = postprocess(col*brightness*col.a);
 	if (gl_FragColor.a < 0.01) discard;
 }

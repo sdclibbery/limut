@@ -1,7 +1,6 @@
 'use strict';
 define(function (require) {
   let system = require('draw/system')
-  let param = require('player/default-param')
 
   let vtxShader = `//
   attribute vec2 posIn;
@@ -13,15 +12,16 @@ define(function (require) {
   }`
   let vtxCompiled
 
-  let shaders = {}
-
-  let nameFromValue = {
-    'x': 'swirl',
-    'g': 'clouds',
-    'j': 'clouds',
-    'v': 'swirl',
-    '&': 'swirl',
+  let commonProcessors = (`
+  vec2 preprocess( vec2 coord ) {
+    return coord;
   }
+  vec4 postprocess( vec4 col ) {
+    return col;
+  }
+  `)//.replace('\n','    ').replace('\r','')
+
+  let shaders = {}
 
   let getUrl = (shaderName) => {
     return "shader/"+shaderName+".frag"
@@ -34,7 +34,8 @@ define(function (require) {
       let request = new XMLHttpRequest()
       request.open('GET', url, true)
       request.onload = () => {
-        shaders[url] = {fragSource: request.response}
+        let source = request.response.replace('#insert common-processors', commonProcessors)
+        shaders[url] = {fragSource: source}
       }
       request.send()
     }

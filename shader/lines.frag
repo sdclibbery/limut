@@ -8,9 +8,11 @@ uniform float amp;
 uniform vec4 fore;
 uniform vec4 back;
 
+#insert common-processors
+
 void main()
 {
-  vec2 uv = 0.5-fragCoord*0.4;
+  vec2 uv = 0.5-preprocess(fragCoord)*0.4;
 
   float time=iTime*20.0;
  	float ot1=5.0;
@@ -42,6 +44,6 @@ void main()
 	}
 
 	vec4 col = mix(back, fore, f);
-	gl_FragColor = col*brightness*col.a;
+	gl_FragColor = postprocess(col*brightness*col.a);
 	if (gl_FragColor.a < 0.01) discard;
 }
