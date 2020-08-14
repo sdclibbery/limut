@@ -360,10 +360,8 @@ Default shader: kaleidoscope
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
+Experiment with gain boost after compressor
 hihats too quiet
-ethereal chords break up, especially with release/overlap
- phaser causes glitches too??
- related to controlling audio params with oscillators? thats what the above have in common??
 root main var
 vib param
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
@@ -385,10 +383,9 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-tile_bl is in top right!
-grid synth
 pre/postprocess framework
 preprocess effects: perspective, scroll, pixelate
+grid synth
 image synth
 video synth
 postprocess effects
@@ -396,6 +393,7 @@ postprocess effects
  monochrome
  make additive
  gamma
+ outline
  drive (noisemap)
  dither
  threshold
@@ -436,8 +434,9 @@ Fractal tiling: https://www.shadertoy.com/view/Ml2GWy
 Cell flow: https://www.shadertoy.com/view/MlsGWX
 ====
 ==== other ====
-keep buttons at top for mobile
 full set of latency indicators: audio, events, gpu
+keep buttons at top for mobile
+operator precedence
 better editor:  https://github.com/antonmedv/codejar#getting-started   https://github.com/kazzkiq/CodeFlask
 finish off: <> for 'in sequence on each repeat' in patterns
 Can specify params seperate from players
@@ -465,7 +464,6 @@ sliders that appear in the code as vars
 seeded random: takes repeat length and optional seed
 ^ operator: concat arrays
 ? when evaluating time var, can it accept a decimal time? Do we pass event time rather than beat time?
-operator precedence
 ? What do nested [] mean in params?
 allow dur to be tvar
 ?extract some of the playing stuff out of pattern.js?

@@ -7,8 +7,8 @@ define(function (require) {
   let verts = (loc) => {
     let l = -1 + loc.x*2
     let r = l + loc.w*2
-    let t = -1 + loc.y*2
-    let b = t + loc.h*2
+    let t = 1 - loc.y*2
+    let b = t - loc.h*2
     let har = system.cw / system.ch
     let ihar = 1
     if (har > 2 || har < 1/2) {
@@ -17,7 +17,7 @@ define(function (require) {
     }
     return {
       vtx: new Float32Array([l,t, r,t, l,b, l,b, r,t, r,b]),
-      tex: new Float32Array([-har,-ihar, har,-ihar, -har,ihar, -har,ihar, har,-ihar, har,ihar])
+      tex: new Float32Array([-har,ihar, har,ihar, -har,-ihar, -har,-ihar, har,ihar, har,-ihar])
     }
   }
 
