@@ -119,6 +119,5 @@ void main () {
     vec4 result = mix(skycolour, clamp(skytint * skycolour + cloudcolour, 0.0, 1.0), clamp(f + c, 0.0, 1.0));
     result.rgb *= result.a;
 
-    gl_FragColor = postprocess(result*brightness*result.a);
-    if (gl_FragColor.a < 0.01) discard;
+    postprocess(result);
 }

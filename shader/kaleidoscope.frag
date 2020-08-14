@@ -24,6 +24,5 @@ void main() {
     c += fore*dc.a*0.3 + back*(1.0-dc.a)*0.3 + vec4(dc.rgb*0.4*amp, 0);
   }
   c.rgba *= .45;
-  gl_FragColor = postprocess(c * brightness * c.a);
-  if (gl_FragColor.a < 0.01) discard;
+    postprocess(c);
 }

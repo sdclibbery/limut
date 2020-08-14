@@ -23,6 +23,5 @@ void main() {
 	if (uv.x > 0.05 && uv.x < 0.45 && uv.y < barHeight(spectrum.z)) { col = vec4(fore.rgb*(0.7+0.6*uv.y), fore.a); }
 	if (uv.x > 0.55 && uv.x < 0.95 && uv.y < barHeight(spectrum.w)) { col = vec4(fore.rgb*(0.7+0.6*uv.y), fore.a); }
 
-  gl_FragColor = postprocess(col*brightness*col.a);
-	if (gl_FragColor.a < 0.01) discard;
+    postprocess(col);
 }

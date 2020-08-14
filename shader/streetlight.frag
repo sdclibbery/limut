@@ -152,6 +152,5 @@ void main()
 	Ray ray = createRay(cameraPos, lookAt, up, uv, 90., aspect);
 	vec4 col = render(ray);
 
-	gl_FragColor = postprocess(col*brightness*col.a);
-	if (gl_FragColor.a < 0.01) discard;
+    postprocess(col);
 }

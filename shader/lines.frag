@@ -44,6 +44,5 @@ void main()
 	}
 
 	vec4 col = mix(back, fore, f);
-	gl_FragColor = postprocess(col*brightness*col.a);
-	if (gl_FragColor.a < 0.01) discard;
+    postprocess(col);
 }

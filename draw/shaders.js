@@ -16,8 +16,9 @@ define(function (require) {
   vec2 preprocess( vec2 coord ) {
     return coord;
   }
-  vec4 postprocess( vec4 col ) {
-    return col;
+  void postprocess( vec4 col ) {
+    gl_FragColor = col*brightness*col.a;
+    if (gl_FragColor.a < 0.01) discard;
   }
   `)//.replace('\n','    ').replace('\r','')
 
