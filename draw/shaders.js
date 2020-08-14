@@ -20,7 +20,7 @@ define(function (require) {
     gl_FragColor = col*brightness*col.a;
     if (gl_FragColor.a < 0.01) discard;
   }
-  `)//.replace('\n','    ').replace('\r','')
+  `).replace(/\n/g,' ')
 
   let shaders = {}
 

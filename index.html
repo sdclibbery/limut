@@ -226,18 +226,21 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 </div>
 <h5 onclick="toggleAccordion('accordion-params')">▶ Params</h5>
 <div id="accordion-params" class="closed">
+<h6>Event</h6>
+<p><code>dur</code> Event time in beats</p>
+<p><code>delay</code> Event start time offset in beats</p>
 <p><code>amp</code> Player amplitude control</p>
-<p><code>oct</code> Octid="accordion-predefined" ave</p>
 <p><code>att</code> Attack time in beats</p>
 <p><code>decay</code> Decay time in beats</p>
 <p><code>sus</code> Sustain time in beats</p>
 <p><code>suslevel</code> Sustain amplitude control</p>
 <p><code>rel</code> Release time in beats</p>
-<p><code>dur</code> Event time in beats</p>
-<p><code>delay</code> Event start time offset in beats</p>
+<p><code>rate</code> Playback rate for 'play' samples, animation rate for visuals</p>
+<h6>Audio</h6>
+<p><code>add</code> Amount to add onto event scale degree, in degrees</p>
+<p><code>oct</code> Octave</p>
 <p><code>echo</code> Echo time delay in beats</p>
 <p><code>detune</code> Amount of detune in semitones</p>
-<p><code>add</code> Amount to add onto event scale degree, in degrees</p>
 <p><code>lpf</code> Low pass filter frequency</p>
 <p><code>lpr</code> Low pass filter resonance</p>
 <p><code>hpf</code> High pass filter frequency</p>
@@ -245,12 +248,12 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>bpf</code> Band pass filter frequency</p>
 <p><code>bpr</code> Band pass filter resonance</p>
 <p><code>chop</code> Chop the signal into a number of parts per beat</p>
-<p><code>rate</code> Playback rate for 'play' samples</p>
 <p><code>sample</code> Sample set choice for 'play' samples</p>
 <p><code>room</code> reverb room size 0-1</p>
 <p><code>drive</code> overdrive level 0-1</p>
 <p><code>scale</code> override scale for this player; set to a string eg <code>'penta'</code></p>
 <p><code>phaser</code> LFO frequency for phaser effect, in phase sweep cycles per beat</p>
+<h6>Visual</h6>
 <p><code>fade</code> brightness fade for visual synths</p>
 <p><code>pulse</code> extent to which the audio signal affects the value passed to visual synths</p>
 <p><code>sway</code> extent to which the audio signal affects the time passed to visual synths</p>
@@ -383,8 +386,8 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-pre/postprocess: put all inserted code on one line and verify line numbers in error reports
-preprocess effects: perspective, scroll, pixelate
+preprocess effects: perspective, scroll, pixelate, zoom
+maybe fore/back become a postprocess effect, and not setting them allows the shader to use whatever its original colours are?
 grid synth
 image synth
 video synth
