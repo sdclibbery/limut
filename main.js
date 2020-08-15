@@ -151,6 +151,7 @@ define(function(require) {
   let beat4Readout = document.getElementById('beat4-readout')
   let beat16Readout = document.getElementById('beat16-readout')
   let beat32Readout = document.getElementById('beat32-readout')
+  let caret = document.querySelector('.caret')
   let eventLatency = 0
   let tick = (t) => {
     let now = system.timeNow()
@@ -186,8 +187,8 @@ define(function(require) {
     audioReadout.style.backgroundColor = readoutColor(system.latency(), 0, 0.1)
     visualReadout.style.backgroundColor = readoutColor(drawSystem.latency(), 0.02, 0.1)
     let caretPos = cursor.cursorPosition()
-    document.querySelector('.caret').style.left = caretPos.left
-    document.querySelector('.caret').style.top = caretPos.top
+    caret.style.left = caretPos.left
+    caret.style.top = caretPos.top
     requestAnimationFrame(tick)
   }
   requestAnimationFrame(tick)

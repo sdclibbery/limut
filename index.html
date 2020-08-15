@@ -46,22 +46,22 @@
       font-weight: 400;
       min-height: 240px;
       tab-size: 2;
-      font-size: 1.5em;
       color: #e0e0e0;
-      width: 100%;
-      max-width: 100%;
+      width: 100% - 35px;
+      max-width: 100% - 35px;
       background: transparent;
       border-radius: 4px;
       border-style: solid;
       border-color: #60606080;
       text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
-      caret-color: #80b0ff;
+      caret-color: #00000000;
     }
     .caret {
       position: absolute;
-      width: 10px;
-      height: 40px;
+      width: 0.15em;
+      height: 1.1em;
       background: #ff00ff;
+      box-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
     }
     textarea {
       font-size: 1.5em;
@@ -121,6 +121,7 @@
   </style>
 </head>
 <body>
+  <div class="caret"></div>
   <canvas id="canvas" class="fullscreen" style="width:100%; height:100%;"></canvas>
   <div class="widget">
     <h3>Limut</h3>
@@ -151,7 +152,6 @@
   </div>
   <div class="widget">
     <div class="editor"></div>
-    <div class="caret"></div>
     <textarea id="console" rows="7"></textarea>
   </div>
 <div class="info">
@@ -471,6 +471,7 @@ Cell flow: https://www.shadertoy.com/view/MlsGWX
 ====
 ==== other ====
 codejar show strong caret
+dont newline when ctrl-click to run code
 remember last code on page refresh
   jar.updateCode(localStorage.getItem("code"))
   jar.onUpdate(code => {

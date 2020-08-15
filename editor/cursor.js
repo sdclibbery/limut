@@ -17,7 +17,7 @@ let cursorPosition = function (toStart) {
     r.insertNode(cursor)
 
     const {x, y, height} = cursor.getBoundingClientRect()
-    const top = (window.scrollY + y + height) + "px"
+    const top = (window.scrollY + y) + "px"
     const left = (window.scrollX + x) + "px"
     cursor.parentNode.removeChild(cursor)
 
