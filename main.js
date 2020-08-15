@@ -4,6 +4,7 @@ define(function(require) {
 
   require('predefined-vars')
   let CodeJar = require('editor/codejar')
+  let withLineNumbers = require('editor/linenumbers')
   let system = require('play/system')
   let drawSystem = require('draw/system')
   let metronome = require('metronome')
@@ -63,11 +64,12 @@ define(function(require) {
   }
   consoleOut('\n> Welcome to Limut')
 
-  // CodeJar editor test
-  let editor = CodeJar(document.querySelector('.editor'), (editor) => editor.innerHTML=editor.textContent)
+  // CodeJar editor
+  let editor = document.querySelector('.editor')
+  let highlight = (editor) => editor.innerHTML=editor.textContent
+  let codejarEditor = CodeJar(editor, withLineNumbers(highlight))
 
   // Play/stop/comment ui
-  let codeTextArea = document.getElementById('code')
   let ctrlCode = (event, keys) => {
     if (event.isComposing || event.keyCode === 229) { return false }
     return (event.ctrlKey && (keys.includes(event.keyCode) || keys.includes(event.key)))
@@ -75,10 +77,10 @@ define(function(require) {
   document.addEventListener("keydown", event => {
     if (ctrlCode(event, ['.'])) { window.stop() }
   })
-  codeTextArea.addEventListener("keydown", event => {
+  editor.addEventListener("keydown", event => {
     if (ctrlCode(event, [10, 13])) { window.go() }
   })
-  codeTextArea.addEventListener("keydown", event => {
+  editor.addEventListener("keydown", event => {
     if (ctrlCode(event, ['/'])) { window.comment() }
   })
   window.stop = () => {
@@ -87,14 +89,9 @@ define(function(require) {
     consoleOut('\n> Stop all players')
   }
   window.go = () => {
-    let selStart = codeTextArea.selectionStart
-    let selEnd = codeTextArea.selectionEnd
-    let selDir = codeTextArea.selectionDirection
-    codeTextArea.focus()
-    codeTextArea.setSelectionRange(0, 1e10)
     system.resume()
     players.instances = {}
-    codeTextArea.value.split('\n')
+    codejarEditor.toString().split('\n')
     .map((l,i) => {return{line:l.trim(), num:i}})
     .map(({line,num}) => {return{line:line.replace(/\/\/.*/, ''),num:num}})
     .filter(({line}) => line != '')
@@ -107,22 +104,21 @@ define(function(require) {
         consoleOut('Error on line '+(num+1)+': ' + e + st)
       }
     })
-    setTimeout(() => codeTextArea.setSelectionRange(selStart, selEnd, selDir), 100)
   }
   window.comment = () => {
-    let selStart = codeTextArea.selectionStart
-    let selEnd = codeTextArea.selectionEnd
-    let selDir = codeTextArea.selectionDirection
-    let code = codeTextArea.value
-    let lineStart = codeTextArea.value.lastIndexOf('\n', selStart - 1) + 1
+    let selStart = editor.selectionStart
+    let selEnd = editor.selectionEnd
+    let selDir = editor.selectionDirection
+    let code = editor.value
+    let lineStart = editor.value.lastIndexOf('\n', selStart - 1) + 1
     if (code.slice(lineStart, lineStart+3) == '// ') {
-      codeTextArea.value = code.slice(0, lineStart) + code.slice(lineStart + 3)
-      codeTextArea.focus()
-      codeTextArea.setSelectionRange(selStart - 3, selEnd - 3, selDir)
+      editor.value = code.slice(0, lineStart) + code.slice(lineStart + 3)
+      editor.focus()
+      editor.setSelectionRange(selStart - 3, selEnd - 3, selDir)
     } else {
-      codeTextArea.value = code.slice(0, lineStart) + "// " + code.slice(lineStart)
-      codeTextArea.focus()
-      codeTextArea.setSelectionRange(selStart + 3, selEnd + 3, selDir)
+      editor.value = code.slice(0, lineStart) + "// " + code.slice(lineStart)
+      editor.focus()
+      editor.setSelectionRange(selStart + 3, selEnd + 3, selDir)
     }
   }
 

@@ -145,7 +145,6 @@
   </div>
   <div class="widget">
     <div class="editor"></div>
-    <textarea id="code" rows="15"></textarea>
     <textarea id="console" rows="7"></textarea>
   </div>
 <div class="info">
@@ -464,8 +463,16 @@ Fractal tiling: https://www.shadertoy.com/view/Ml2GWy
 Cell flow: https://www.shadertoy.com/view/MlsGWX
 ====
 ==== other ====
+codejar show strong caret
+remember last code on page refresh
+  jar.updateCode(localStorage.getItem("code"))
+  jar.onUpdate(code => {
+    localStorage.setItem("code", code)
+  })
+fix codejar line numbers with cursor pos etc
+codejar comment toggle
+codejar highlight when run
 operator precedence
-better editor:  https://github.com/antonmedv/codejar#getting-started   https://github.com/kazzkiq/CodeFlask
 finish off: <> for 'in sequence on each repeat' in patterns
 Can specify params seperate from players
  extract param overriding logic from follow player to param-overrides module
