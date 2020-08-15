@@ -69,6 +69,10 @@ define(function(require) {
   let editor = document.querySelector('.editor')
   let highlight = (editor) => editor.innerHTML=editor.textContent
   let codejarEditor = CodeJar(editor, withLineNumbers(highlight))
+  codejarEditor.updateCode(localStorage.getItem("limut-code"))
+  codejarEditor.onUpdate(code => {
+    localStorage.setItem("limut-code", code)
+  })
 
   // Play/stop/comment ui
   let ctrlCode = (event, keys) => {
