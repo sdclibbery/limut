@@ -3,17 +3,17 @@ define((require) => {
   let standardPlayer = require('player/standard')
 
   let sprite = require('draw/sprite')
-  let percussion = require('play/percussion')
-  let play = require('play/play')
-  let dsaw = require('play/dsaw')
-  let dsine = require('play/dsine')
-  let dbass = require('play/dbass')
-  let ping = require('play/ping')
-  let swell = require('play/swell')
-  let bell = require('play/bell')
-  let glock = require('play/glock')
-  let piano = require('play/piano')
-  let ethereal = require('play/ethereal')
+  let percussion = require('play/synth/percussion')
+  let play = require('play/synth/play')
+  let dsaw = require('play/synth/dsaw')
+  let dsine = require('play/synth/dsine')
+  let dbass = require('play/synth/dbass')
+  let ping = require('play/synth/ping')
+  let swell = require('play/synth/swell')
+  let bell = require('play/synth/bell')
+  let glock = require('play/synth/glock')
+  let piano = require('play/synth/piano')
+  let ethereal = require('play/synth/ethereal')
 
   let nullPlayer = () => {}
   let makePlayerFactory = (play, defaultDur) => (command) => {
