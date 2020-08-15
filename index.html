@@ -90,7 +90,7 @@
       max-width: 100%;
       overflow-x: auto;
     }
-    #compressor-readout {
+    .meter {
       display: inline-block;
       width: 1em;
       height: 1em;
@@ -108,8 +108,8 @@
     </p>
     <p>
       main.reverb: <span id="main-reverb-readout"></span>
-      Compression: <span id="compressor-readout"> </span>
       Scale: <span id="scale-readout"></span>
+      Compression: <span id="compressor-readout", class="meter"> </span>
     </p>
     <p>
       bpm: <span id="bpm-readout"> : </span>
@@ -123,7 +123,10 @@
     <button onclick="go()" title="Run the code Ctrl-Enter">▶</button>
     <button onclick="stop()" title="Stop all players Ctrl-.">◼</button>
     <button onclick="comment()" title="Toggle comment for line Ctrl-/">//</button>
-</div>
+    Events: <span id="events-readout", class="meter"> </span>
+    Audio: <span id="audio-readout", class="meter"> </span>
+    Visual: <span id="visual-readout", class="meter"> </span>
+  </div>
   <div class="widget">
     <textarea id="code" rows="15"></textarea>
     <textarea id="console" rows="7"></textarea>
@@ -442,8 +445,6 @@ Fractal tiling: https://www.shadertoy.com/view/Ml2GWy
 Cell flow: https://www.shadertoy.com/view/MlsGWX
 ====
 ==== other ====
-full set of latency indicators: audio, events, gpu
-keep buttons at top for mobile
 operator precedence
 better editor:  https://github.com/antonmedv/codejar#getting-started   https://github.com/kazzkiq/CodeFlask
 finish off: <> for 'in sequence on each repeat' in patterns

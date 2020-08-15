@@ -17,7 +17,7 @@ system.add = (startTime, v) => {
 
 system.frameStart = (time, count, gl, cw, ch) => {
   system.time = time
-  let dt = system.time - system.lastTime
+  system.dt = system.time - system.lastTime
   system.lastTime = time
   if (!system.gl) {
     system.gl = gl
@@ -38,8 +38,12 @@ system.frameStart = (time, count, gl, cw, ch) => {
   system.active = system.active.concat(newlyActive)
   system.queued = system.queued.filter(v => !newlyActive.includes(v))
 
-  let state = {count: count, time: time, dt: dt, spectrum:spectrum}
+  let state = {count: count, time: time, dt: system.dt, spectrum:spectrum}
   system.active = system.active.filter(({v}, idx) => v(state))
+}
+
+system.latency = () => {
+  return system.dt
 }
 
 system.xFromCanvas = (x) => {

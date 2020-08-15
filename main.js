@@ -124,8 +124,8 @@ define(function(require) {
 
   // indicator helpers
   let to255 = (x) => Math.min(Math.max(Math.floor(x*256), 0), 255)
-  let compressorColor = (reduction) => {
-    let c = Math.abs(reduction)/3
+  let readoutColor = (x, lo, hi) => {
+    let c = (Math.abs(x)-lo)/(hi-lo)
     return `rgb(${to255(Math.sin(c*1.57))},${to255(Math.cos(c*1.57))},0)`
   }
 
@@ -143,12 +143,15 @@ define(function(require) {
 
   // Update
   let compressorReadout = document.getElementById('compressor-readout')
+  let eventsReadout = document.getElementById('events-readout')
+  let audioReadout = document.getElementById('audio-readout')
+  let visualReadout = document.getElementById('visual-readout')
   let beatReadout = document.getElementById('beat-readout')
   let beat4Readout = document.getElementById('beat4-readout')
   let beat16Readout = document.getElementById('beat16-readout')
   let beat32Readout = document.getElementById('beat32-readout')
+  let eventLatency = 0
   let tick = (t) => {
-    compressorReadout.style.backgroundColor = compressorColor(system.compressorReduction())
     let now = system.timeNow()
     let beat = metronome.update(now)
     if (beat) {
@@ -167,6 +170,7 @@ define(function(require) {
           }
         }
       }
+      eventLatency = system.timeNow() - now
     }
     if (ctxGl) {
       try {
@@ -176,6 +180,10 @@ define(function(require) {
         consoleOut('Run Error from drawing: ' + e + st)
       }
     }
+    compressorReadout.style.backgroundColor = readoutColor(system.compressorReduction(), 0, 1)
+    eventsReadout.style.backgroundColor = readoutColor(eventLatency, 0, metronome.advance())
+    audioReadout.style.backgroundColor = readoutColor(system.latency(), 0, 0.1)
+    visualReadout.style.backgroundColor = readoutColor(drawSystem.latency(), 0.02, 0.1)
     requestAnimationFrame(tick)
   }
   requestAnimationFrame(tick)
