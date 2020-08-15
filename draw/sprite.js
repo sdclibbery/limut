@@ -22,6 +22,7 @@ define(function (require) {
   }
 
   let colour = ({r,g,b,a}, d) => [param(r, d.r), param(g, d.g), param(b, d.b), param(a, d.a)]
+  let vec = ({x,y}, d) => [param(x, d.x), param(y, d.y)]
 
   let create = (shader, defFore, defBack, params) => {
     let amp = Math.min(param(params.amp, 1), 5)
@@ -38,6 +39,8 @@ define(function (require) {
     let back = colour(param(params.back, {}), defBack)
     let pulse = param(params.pulse, 0)
     let sway = param(params.sway, 0)
+    let scroll = vec(param(params.scroll, {}), {x:0,y:0})
+    let zoom = vec(param(params.zoom, {}), {x:1,y:1})
     let pixellate = param(params.pixellate, 0)
     let perspective = param(params.perspective, 0)
 
@@ -57,6 +60,8 @@ define(function (require) {
       system.gl.uniform4fv(s.foreUnif, fore, 1)
       system.gl.uniform4fv(s.backUnif, back, 1)
       system.gl.uniform4fv(s.spectrumUnif, state.spectrum, 1)
+      system.gl.uniform2fv(s.scrollUnif, scroll, 1)
+      system.gl.uniform2fv(s.zoomUnif, zoom, 1)
       system.gl.uniform1f(s.pixellateUnif, pixellate, 1)
       system.gl.uniform1f(s.perspectiveUnif, perspective, 1)
       if (fore[3] >= 0.9999 && back[3] >= 0.9999) {

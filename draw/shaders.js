@@ -13,9 +13,12 @@ define(function (require) {
   let vtxCompiled
 
   let commonProcessors = (`
-  uniform float pixellate;
+  uniform vec2 scroll;
+  uniform vec2 zoom;
   uniform float perspective;
+  uniform float pixellate;
   vec2 preprocess( vec2 coord ) {
+    coord = (coord + scroll) / zoom;
     if (perspective != 0.) { coord.x *= perspective/(coord.y+perspective); }
     if (pixellate != 0.) { coord = floor(coord*pixellate)/pixellate; }
     return coord;
@@ -66,6 +69,8 @@ define(function (require) {
       shader.foreUnif = system.gl.getUniformLocation(program, "fore")
       shader.backUnif = system.gl.getUniformLocation(program, "back")
       shader.spectrumUnif = system.gl.getUniformLocation(program, "spectrum")
+      shader.scrollUnif = system.gl.getUniformLocation(program, "scroll")
+      shader.zoomUnif = system.gl.getUniformLocation(program, "zoom")
       shader.pixellateUnif = system.gl.getUniformLocation(program, "pixellate")
       shader.perspectiveUnif = system.gl.getUniformLocation(program, "perspective")
     }
