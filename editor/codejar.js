@@ -28,6 +28,14 @@ let CodeJar = function (editor, highlight, opt) {
 
   highlight(editor)
 
+  let debounce = function(cb, wait) {
+    let timeout = 0
+    return (...args) => {
+      clearTimeout(timeout)
+      timeout = window.setTimeout(() => cb(...args), wait)
+    }
+  }
+
   const debounceHighlight = debounce(() => {
     const pos = save()
     highlight(editor)
@@ -365,14 +373,6 @@ let CodeJar = function (editor, highlight, opt) {
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;")
     document.execCommand("insertHTML", false, text)
-  }
-
-  let debounce = function(cb, wait) {
-    let timeout = 0
-    return (...args) => {
-      clearTimeout(timeout)
-      timeout = window.setTimeout(() => cb(...args), wait)
-    }
   }
 
   let findPadding = function(text) {

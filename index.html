@@ -41,6 +41,22 @@
     .widget h3 {
       margin: 0px;
     }
+    .editor {
+      font-family:'Courier New', Courier, monospace;
+      font-weight: 400;
+      min-height: 240px;
+      tab-size: 2;
+      font-size: 1.5em;
+      color: #e0e0e0;
+      width: 100%;
+      max-width: 100%;
+      background: transparent;
+      border-radius: 4px;
+      border-style: solid;
+      border-color: #60606080;
+      text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+      caret-color: #80b0ff;
+    }
     textarea {
       font-size: 1.5em;
       color: #e0e0e0;
@@ -128,6 +144,7 @@
     Visual: <span id="visual-readout", class="meter"> </span>
   </div>
   <div class="widget">
+    <div class="editor"></div>
     <textarea id="code" rows="15"></textarea>
     <textarea id="console" rows="7"></textarea>
   </div>

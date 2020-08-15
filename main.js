@@ -3,6 +3,7 @@ define(function(require) {
   try { if (!AudioContext) { throw 1; } } catch(e) { document.body.innerHTML = 'Web Audio not supported in this browser!'; return; }
 
   require('predefined-vars')
+  let CodeJar = require('editor/codejar')
   let system = require('play/system')
   let drawSystem = require('draw/system')
   let metronome = require('metronome')
@@ -61,6 +62,9 @@ define(function(require) {
     cons.scrollTop = cons.scrollHeight
   }
   consoleOut('\n> Welcome to Limut')
+
+  // CodeJar editor test
+  let editor = CodeJar(document.querySelector('.editor'), (editor) => editor.innerHTML=editor.textContent)
 
   // Play/stop/comment ui
   let codeTextArea = document.getElementById('code')
