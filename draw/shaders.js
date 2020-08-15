@@ -14,7 +14,9 @@ define(function (require) {
 
   let commonProcessors = (`
   uniform float pixellate;
+  uniform float perspective;
   vec2 preprocess( vec2 coord ) {
+    if (perspective != 0.) { coord.x *= perspective/(coord.y+perspective); }
     if (pixellate != 0.) { coord = floor(coord*pixellate)/pixellate; }
     return coord;
   }
@@ -65,6 +67,7 @@ define(function (require) {
       shader.backUnif = system.gl.getUniformLocation(program, "back")
       shader.spectrumUnif = system.gl.getUniformLocation(program, "spectrum")
       shader.pixellateUnif = system.gl.getUniformLocation(program, "pixellate")
+      shader.perspectiveUnif = system.gl.getUniformLocation(program, "perspective")
     }
     return shader
   }

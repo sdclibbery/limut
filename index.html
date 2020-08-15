@@ -269,6 +269,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>fore</code> foreground colour for visual synths; eg {r:0,g:1,b:0,a:1} or #fa0f</p>
 <p><code>back</code> background colour for visual synths; eg {r:0,g:1,b:0,a:1} or #00ff</p>
 <p><code>pixellate</code> number of pixels to pixellate to in each direction, or 0 to disable pixellation</p>
+<p><code>perspective</code> perspective warp to apply to shader (negative to invert), or 0 to disable</p>
 </div>
 <h5 onclick="toggleAccordion('accordion-predefined-vars')">▶ Predefined Vars</h5>
 <div id="accordion-predefined-vars" class="closed">
@@ -372,7 +373,7 @@ Default shader: kaleidoscope
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-hihats too quiet
+hihats too quiet; X doesn't work
 root main var
 vib param
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
@@ -394,7 +395,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-preprocess effects: perspective, scroll, zoom
+preprocess effects: scroll, zoom
 maybe fore/back become a postprocess effect, and not setting them allows the shader to use whatever its original colours are?
 grid synth
 image synth
@@ -405,7 +406,7 @@ postprocess effects
  make additive
  gamma
  outline
- drive (noisemap)
+ noise
  dither
  threshold
 fix transparent fore on lines
