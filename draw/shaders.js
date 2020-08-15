@@ -13,7 +13,9 @@ define(function (require) {
   let vtxCompiled
 
   let commonProcessors = (`
+  uniform float pixellate;
   vec2 preprocess( vec2 coord ) {
+    if (pixellate != 0.) { coord = floor(coord*pixellate)/pixellate; }
     return coord;
   }
   void postprocess( vec4 col ) {
@@ -62,6 +64,7 @@ define(function (require) {
       shader.foreUnif = system.gl.getUniformLocation(program, "fore")
       shader.backUnif = system.gl.getUniformLocation(program, "back")
       shader.spectrumUnif = system.gl.getUniformLocation(program, "spectrum")
+      shader.pixellateUnif = system.gl.getUniformLocation(program, "pixellate")
     }
     return shader
   }

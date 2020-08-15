@@ -38,6 +38,7 @@ define(function (require) {
     let back = colour(param(params.back, {}), defBack)
     let pulse = param(params.pulse, 0)
     let sway = param(params.sway, 0)
+    let pixellate = param(params.pixellate, 0)
 
     if (!s) { return () => {} }
     return state => {
@@ -55,6 +56,7 @@ define(function (require) {
       system.gl.uniform4fv(s.foreUnif, fore, 1)
       system.gl.uniform4fv(s.backUnif, back, 1)
       system.gl.uniform4fv(s.spectrumUnif, state.spectrum, 1)
+      system.gl.uniform1f(s.pixellateUnif, pixellate, 1)
       if (fore[3] >= 0.9999 && back[3] >= 0.9999) {
         system.gl.disable(system.gl.BLEND)
       } else {
