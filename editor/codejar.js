@@ -204,7 +204,7 @@ let CodeJar = function (editor, highlight, opt) {
   }
 
   let handleNewLine = function(event) {
-    if (event.key === "Enter") {
+    if (event.key === "Enter" && !event.ctrlKey) {
       const before = beforeCursor()
       const after = afterCursor()
 

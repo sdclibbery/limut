@@ -79,7 +79,10 @@ define(function(require) {
     if (ctrlCode(event, ['.'])) { window.stop() }
   })
   editor.addEventListener("keydown", event => {
-    if (ctrlCode(event, [10, 13])) { window.go() }
+    if (ctrlCode(event, [10, 13])) {
+      event.preventDefault()
+      window.go()
+    }
   })
   editor.addEventListener("keydown", event => {
     if (ctrlCode(event, ['/'])) { window.comment() }

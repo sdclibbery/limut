@@ -58,9 +58,10 @@
     }
     .caret {
       position: absolute;
-      width: 0.15em;
+      z-index: 9;
+      width: 0.12em;
       height: 1.1em;
-      background: #ff00ff;
+      background: #80a0ff;
       box-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
     }
     textarea {
@@ -470,8 +471,6 @@ Fractal tiling: https://www.shadertoy.com/view/Ml2GWy
 Cell flow: https://www.shadertoy.com/view/MlsGWX
 ====
 ==== other ====
-codejar show strong caret
-dont newline when ctrl-click to run code
 remember last code on page refresh
   jar.updateCode(localStorage.getItem("code"))
   jar.onUpdate(code => {
