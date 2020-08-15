@@ -5,6 +5,7 @@ define(function(require) {
   require('predefined-vars')
   let CodeJar = require('editor/codejar')
   let withLineNumbers = require('editor/linenumbers')
+  let cursor = require('editor/cursor')
   let system = require('play/system')
   let drawSystem = require('draw/system')
   let metronome = require('metronome')
@@ -184,6 +185,9 @@ define(function(require) {
     eventsReadout.style.backgroundColor = readoutColor(eventLatency, 0, metronome.advance())
     audioReadout.style.backgroundColor = readoutColor(system.latency(), 0, 0.1)
     visualReadout.style.backgroundColor = readoutColor(drawSystem.latency(), 0.02, 0.1)
+    let caretPos = cursor.cursorPosition()
+    document.querySelector('.caret').style.left = caretPos.left
+    document.querySelector('.caret').style.top = caretPos.top
     requestAnimationFrame(tick)
   }
   requestAnimationFrame(tick)

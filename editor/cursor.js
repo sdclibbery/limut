@@ -13,7 +13,7 @@ let cursorPosition = function (toStart) {
     cursor.textContent = "|"
 
     const r = s.getRangeAt(0).cloneRange()
-    r.collapse((toStart===undefined)?true:toStart)
+    r.collapse(toStart)
     r.insertNode(cursor)
 
     const {x, y, height} = cursor.getBoundingClientRect()
@@ -23,7 +23,7 @@ let cursorPosition = function (toStart) {
 
     return {top, left}
   }
-  return undefined
+  return {}
 }
 
 /**
