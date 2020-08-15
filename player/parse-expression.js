@@ -168,7 +168,7 @@ define(function(require) {
     }
   }
   let evalRandomSet = (vs, s,b) => {
-    let idx = Math.floor(Math.random()*vs.length-0.0001)
+    let idx = Math.floor(Math.random()*vs.length*0.9999)
     if (debugEval) { console.log('eval evalRandomRanged', vs.length, idx, s,b) }
     return evalParam(vs[idx], s,b)
   }

@@ -11,15 +11,18 @@ system.timeNow = function () {
   return system.audio.currentTime;
 };
 
-let globalBaseGain = 2
+let globalBaseGain = 10
 system.vcaMainAmp = system.audio.createGain()
 system.vcaMainAmp.gain.value = globalBaseGain
+system.mainAmpValue = 1
 system.mainAmp = (amp) => {
   if (typeof amp == 'number') {
-    system.vcaMainAmp.gain.value = amp*globalBaseGain
+    system.vcaMainAmp.gain.value = Math.pow(amp, 2)*globalBaseGain
+    system.mainAmpValue = amp
   }
-  return system.vcaMainAmp.gain.value/globalBaseGain
+  return system.mainAmpValue
 }
+system.vcaPreAmp = system.audio.createGain()
 
 system.compressorReduction = () => {
   if (!system.compressor) { return 0 }
@@ -45,7 +48,7 @@ system.spectrum = () => {
 }
 
 system.mix = function (node) {
-  node.connect(system.vcaMainAmp)
+  node.connect(system.vcaPreAmp)
 }
 
 system.disconnect = (params, nodes) => {
@@ -81,17 +84,18 @@ system.vcaReverb.gain.value = 1
 system.reverb.connect(system.vcaReverb)
 
 system.compressor = system.audio.createDynamicsCompressor()
-system.compressor.ratio.value = 12
-system.compressor.threshold.value = -5
+system.compressor.ratio.value = 7
+system.compressor.threshold.value = -3
 system.compressor.release.value = 0.25
 system.compressor.attack.value = 0
 system.compressor.knee.value = 10
 
-system.vcaMainAmp.connect(system.compressor)
-system.vcaMainAmp.connect(system.reverb)
+system.vcaPreAmp.connect(system.compressor)
+system.vcaPreAmp.connect(system.reverb)
 system.vcaReverb.connect(system.compressor)
-system.compressor.connect(system.audio.destination)
+system.compressor.connect(system.vcaMainAmp)
 system.compressor.connect(system.analyser)
+system.vcaMainAmp.connect(system.audio.destination)
 
 return system;
 });
