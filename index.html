@@ -20,6 +20,13 @@
       height:100%;
       z-index: -1;
     }
+    .fixed-top {
+      position: sticky;
+      top: 0;
+      left: 0;
+      z-index: 999;
+      width: 100%;
+    }
     .widget {
       color: #d0d0d0;
       border: 2px solid #202020;
@@ -112,16 +119,14 @@
       <span class="beat-readout" id="beat32-readout"></span>
     </p>
   </div>
+  <div class="widget fixed-top">
+    <button onclick="go()" title="Run the code Ctrl-Enter">▶</button>
+    <button onclick="stop()" title="Stop all players Ctrl-.">◼</button>
+    <button onclick="comment()" title="Toggle comment for line Ctrl-/">//</button>
+</div>
   <div class="widget">
-    <p>
-      <button onclick="go()" title="Run the code Ctrl-Enter">▶</button>
-      <button onclick="stop()" title="Stop all players Ctrl-.">◼</button>
-      <button onclick="comment()" title="Toggle comment for line Ctrl-/">//</button>
-    </p>
-    <p>
-      <textarea id="code" rows="15"></textarea>
-      <textarea id="console" rows="7"></textarea>
-    </p>
+    <textarea id="code" rows="15"></textarea>
+    <textarea id="console" rows="7"></textarea>
   </div>
 <div class="info">
 <h5 onclick="toggleAccordion('accordion-examples')">▶ Examples</h5>
