@@ -70,10 +70,10 @@ define(function(require) {
   let highlightLine = (l) => {
     let cs = l.split('//')
     let comment = cs.slice(1).join('//')
-    if (comment.length) { comment = '<span class="hl-comment">//'+comment+'</span>' }
+    if (comment.length) { comment = '<span class="hl-comment hl">//'+comment+'</span>' }
     let line = cs[0]
-      .replace(/(\w+)(\s*=\s*)([^\s]+)/g, '<span class="hl-param">$1</span>$2<span class="hl-expression">$3</span>')
-      .replace(/(\s*)(\w+)(\s+)(\w+)(\s+)([^,]+)/g, '$1<span class="hl-playerid">$2</span>$3<span class="hl-playertype">$4</span>$5<span class="hl-pattern">$6</span>')
+      .replace(/(\w+)(\s*=\s*)([^\s]+)/g, '<span class="hl-param hl">$1</span>$2<span class="hl-expression hl">$3</span>')
+      .replace(/(\s*)(\w+)(\s+)(\w+)(\s+)([^,]+)/g, '$1<span class="hl-playerid hl">$2</span>$3<span class="hl-playertype hl">$4</span>$5<span class="hl-pattern hl">$6</span>')
       return line + comment
   }
   let highlight = (editor) => {
@@ -111,6 +111,13 @@ define(function(require) {
     players.instances = {}
     consoleOut('\n> Stop all players')
   }
+  const stylesheet = document.styleSheets[0]
+  let hlClass
+  for(let i = 0; i < stylesheet.cssRules.length; i++) {
+    if(stylesheet.cssRules[i].selectorText === '.hl') {
+      hlClass = stylesheet.cssRules[i]
+    }
+  }
   window.go = () => {
     system.resume()
     players.instances = {}
@@ -127,6 +134,8 @@ define(function(require) {
         consoleOut('Error on line '+(num+1)+': ' + e + st)
       }
     })
+    hlClass.style.background = '#4060d0'
+    setTimeout(() => hlClass.style.background = '', 100)
   }
   window.comment = () => {
      codejarEditor.toggleComment()
