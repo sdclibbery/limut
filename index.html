@@ -45,6 +45,7 @@
       font-family:'Courier New', Courier, monospace;
       font-weight: 400;
       min-height: 240px;
+      overflow-wrap: break-word;
       padding: 4px;
       tab-size: 2;
       color: #e0e0e0;
@@ -54,7 +55,6 @@
       border-radius: 4px;
       border-style: solid;
       border-color: #60606080;
-      text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
       caret-color: #00000000;
     }
     .caret {
@@ -90,7 +90,11 @@
     .hl-pattern {
       color: #e0a0ff;
     }
-    .hl {}
+    .hl {
+      border-radius: 3px;
+      padding-right: 4px;
+      background-color: #00000040;
+    }
     textarea {
       font-size: 1.5em;
       color: #e0e0e0;
@@ -498,9 +502,8 @@ Fractal tiling: https://www.shadertoy.com/view/Ml2GWy
 Cell flow: https://www.shadertoy.com/view/MlsGWX
 ====
 ==== other ====
-<> broken
-disable word wrap but handle line numbering
-call callback after toggle comment
+arrow keys sometimes jump
+highlight by matching known words rather than syntax?
 ? button to clear code
 operator precedence
 finish off: <> for 'in sequence on each repeat' in patterns

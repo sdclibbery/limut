@@ -3,6 +3,7 @@ define(function (require) {
 // CodeJar editor from https://github.com/antonmedv/codejar
 
 let CodeJar = function (editor, highlight, opt) {
+  highlight = highlight || (()=>0)
   const options = {
     tab: "\t",
     indentOn: /{$/,
@@ -353,6 +354,7 @@ let CodeJar = function (editor, highlight, opt) {
     highlight(editor)
     restore(pos)
     recordHistory()
+    if (callback) callback(toString())
   }
 
 
