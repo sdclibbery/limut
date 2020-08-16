@@ -78,6 +78,11 @@ define(function(require) {
   }
   let highlight = (editor) => {
     let formatted = editor.textContent
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;")
       .split('\n')
       .map(l => highlightLine(l))
       .join('\n')
