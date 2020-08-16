@@ -334,6 +334,27 @@ let CodeJar = function (editor, highlight, opt) {
     restore({start: pos.end + text.length, end: pos.end + text.length})
   }
 
+  let toggleComment = function() {
+    const comment = '//'
+    recordHistory()
+    const pos = save()
+    const before = beforeCursor()
+    const lineStart = findLineStart(before)
+    let code = toString()
+    if (code.slice(lineStart, lineStart+comment.length) == comment) {
+      editor.textContent = code.slice(0, lineStart) + code.slice(lineStart + comment.length)
+      pos.start -= comment.length
+      pos.end -= comment.length
+    } else {
+      editor.textContent = code.slice(0, lineStart) + comment + code.slice(lineStart)
+      pos.start += comment.length
+      pos.end += comment.length
+    }
+    highlight(editor)
+    restore(pos)
+    recordHistory()
+  }
+
 
   let visit = function(editor, visitor) {
     const queue = []
@@ -375,11 +396,16 @@ let CodeJar = function (editor, highlight, opt) {
     document.execCommand("insertHTML", false, text)
   }
 
-  let findPadding = function(text) {
+  let findLineStart = function(text) {
     // Find beginning of previous line.
     let i = text.length - 1
     while (i >= 0 && text[i] !== "\n") i--
     i++
+    return i
+  }
+
+  let findPadding = function(text) {
+    let i = findLineStart(text)
     // Find padding of the line.
     let j = i
     while (j < text.length && /[ \t]/.test(text[j])) j++
@@ -405,6 +431,7 @@ let CodeJar = function (editor, highlight, opt) {
     onUpdate(cb) {
       callback = cb
     },
+    toggleComment,
     toString,
     destroy() {
       for (let [type, fn] of listeners) {

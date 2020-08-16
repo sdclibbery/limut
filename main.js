@@ -114,20 +114,7 @@ define(function(require) {
     })
   }
   window.comment = () => {
-    let selStart = editor.selectionStart
-    let selEnd = editor.selectionEnd
-    let selDir = editor.selectionDirection
-    let code = editor.value
-    let lineStart = editor.value.lastIndexOf('\n', selStart - 1) + 1
-    if (code.slice(lineStart, lineStart+3) == '// ') {
-      editor.value = code.slice(0, lineStart) + code.slice(lineStart + 3)
-      editor.focus()
-      editor.setSelectionRange(selStart - 3, selEnd - 3, selDir)
-    } else {
-      editor.value = code.slice(0, lineStart) + "// " + code.slice(lineStart)
-      editor.focus()
-      editor.setSelectionRange(selStart + 3, selEnd + 3, selDir)
-    }
+     codejarEditor.toggleComment()
   }
 
   // indicator helpers
