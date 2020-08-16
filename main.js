@@ -67,7 +67,22 @@ define(function(require) {
 
   // CodeJar editor
   let editor = document.querySelector('.editor')
-  let highlight = (editor) => editor.innerHTML=editor.textContent
+  let highlightLine = (l) => {
+    let cs = l.split('//')
+    let comment = cs.slice(1).join('//')
+    if (comment.length) { comment = '<span class="hl-comment">//'+comment+'</span>' }
+    let line = cs[0]
+      .replace(/(\w+)(\s*=\s*)([^\s]+)/g, '<span class="hl-param">$1</span>$2<span class="hl-expression">$3</span>')
+      .replace(/(\s*)(\w+)(\s+)(\w+)(\s+)([^,]+)/g, '$1<span class="hl-playerid">$2</span>$3<span class="hl-playertype">$4</span>$5<span class="hl-pattern">$6</span>')
+      return line + comment
+  }
+  let highlight = (editor) => {
+    let formatted = editor.textContent
+      .split('\n')
+      .map(l => highlightLine(l))
+      .join('\n')
+    editor.innerHTML = formatted
+  }
   let codejarEditor = CodeJar(editor, withLineNumbers(highlight))
   codejarEditor.updateCode(localStorage.getItem("limut-code"))
   codejarEditor.onUpdate(code => {
