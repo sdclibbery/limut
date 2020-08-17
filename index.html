@@ -41,21 +41,6 @@
     .widget h3 {
       margin: 0px;
     }
-    .caret {
-      position: absolute;
-      z-index: 9;
-      width: 0.12em;
-      height: 1.1em;
-      background: #80a0ffff;
-      box-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
-      animation: caret-blink 1s infinite;
-    }
-    @keyframes caret-blink {
-		  0%		{ opacity: 0.5; }
-		  40%		{ opacity: 0.5; }
-		  50%		{ opacity: 1.0; }
-		  90%		{ opacity: 1.0; }
-    }
     textarea {
       font-size: 1.5em;
       color: #e0e0e0;
@@ -114,7 +99,6 @@
   </style>
 </head>
 <body>
-  <div class="caret"></div>
   <canvas id="canvas" class="fullscreen" style="width:100%; height:100%;"></canvas>
   <div class="widget">
     <h3>Limut</h3>
