@@ -41,22 +41,6 @@
     .widget h3 {
       margin: 0px;
     }
-    .editor {
-      font-family:'Courier New', Courier, monospace;
-      font-weight: 400;
-      min-height: 240px;
-      overflow-wrap: break-word;
-      padding: 4px;
-      tab-size: 2;
-      color: #e0e0e0;
-      width: 100% - 35px;
-      max-width: 100% - 35px;
-      background: transparent;
-      border-radius: 4px;
-      border-style: solid;
-      border-color: #60606080;
-      caret-color: #00000000;
-    }
     .caret {
       position: absolute;
       z-index: 9;
@@ -71,29 +55,6 @@
 		  40%		{ opacity: 0.5; }
 		  50%		{ opacity: 1.0; }
 		  90%		{ opacity: 1.0; }
-    }
-    .hl-comment {
-      color: #a0a0a0;
-      opacity: 0.4;
-    }
-    .hl-param {
-      color: #c0c0ff;
-    }
-    .hl-expression {
-    }
-    .hl-playerid {
-      color: #e0ffe0;
-    }
-    .hl-playertype {
-      color: #ffe0e0;
-    }
-    .hl-pattern {
-      color: #e0a0ff;
-    }
-    .hl {
-      border-radius: 3px;
-      padding-right: 4px;
-      background-color: #00000040;
     }
     textarea {
       font-size: 1.5em;
@@ -183,7 +144,7 @@
     Visual: <span id="visual-readout", class="meter"> </span>
   </div>
   <div class="widget">
-    <div class="editor"></div>
+    <textarea id="code" rows="15"></textarea>
     <textarea id="console" rows="7"></textarea>
   </div>
 <div class="info">
@@ -452,6 +413,14 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+fix perspective
+ bx = dx.ez/dz + ex
+ by = dy.ez/dz + ey
+ d cam to point
+ e display surface position
+ * reverse projection:
+ dx/dz = (bx-ex)/ez
+ dy/dz = (by-ey)/ez
 maybe fore/back become a postprocess effect, and not setting them allows the shader to use whatever its original colours are?
 grid synth
 image synth
@@ -502,7 +471,9 @@ Fractal tiling: https://www.shadertoy.com/view/Ml2GWy
 Cell flow: https://www.shadertoy.com/view/MlsGWX
 ====
 ==== other ====
-arrow keys sometimes jump or stick
+go back to old editor but keep strong cursor
+Event latency should be music or tempo latency
+'fullscreen' mode
 operator precedence
 finish off: <> for 'in sequence on each repeat' in patterns
 Can specify params seperate from players

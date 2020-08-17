@@ -3,9 +3,6 @@ define(function(require) {
   try { if (!AudioContext) { throw 1; } } catch(e) { document.body.innerHTML = 'Web Audio not supported in this browser!'; return; }
 
   require('predefined-vars')
-  let CodeJar = require('editor/codejar')
-  let withLineNumbers = require('editor/linenumbers')
-  let cursor = require('editor/cursor')
   let system = require('play/system')
   let drawSystem = require('draw/system')
   let metronome = require('metronome')
@@ -65,36 +62,8 @@ define(function(require) {
   }
   consoleOut('\n> Welcome to Limut')
 
-  // CodeJar editor
-  let editor = document.querySelector('.editor')
-  let highlightLine = (l) => {
-    let cs = l.split('//')
-    let comment = cs.slice(1).join('//')
-    if (comment.length) { comment = '<span class="hl-comment">//'+comment+'</span>' }
-    let line = cs[0]
-      .replace(/(\w+)(\s*=\s*)([^\s]+)/g, '<span class="hl-param">$1</span>$2<span class="hl-expression">$3</span>')
-      .replace(/(\s*)(\w+)(\s+)(\w+)(\s+)([^,]+)/g, '$1<span class="hl-playerid">$2</span>$3<span class="hl-playertype">$4</span>$5<span class="hl-pattern">$6</span>')
-      return '<span class="hl">'+line + comment+'</span>'
-  }
-  let highlight = (editor) => {
-    let formatted = editor.textContent
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;")
-      .split('\n')
-      .map(l => highlightLine(l))
-      .join('\n')
-    editor.innerHTML = formatted
-  }
-  let codejarEditor = CodeJar(editor, highlight)//withLineNumbers(highlight))
-  codejarEditor.updateCode(localStorage.getItem("limut-code"))
-  codejarEditor.onUpdate(code => {
-    localStorage.setItem("limut-code", code)
-  })
-
   // Play/stop/comment ui
+  let codeTextArea = document.getElementById('code')
   let ctrlCode = (event, keys) => {
     if (event.isComposing || event.keyCode === 229) { return false }
     return (event.ctrlKey && (keys.includes(event.keyCode) || keys.includes(event.key)))
@@ -102,13 +71,10 @@ define(function(require) {
   document.addEventListener("keydown", event => {
     if (ctrlCode(event, ['.'])) { window.stop() }
   })
-  editor.addEventListener("keydown", event => {
-    if (ctrlCode(event, [10, 13])) {
-      event.preventDefault()
-      window.go()
-    }
+  codeTextArea.addEventListener("keydown", event => {
+    if (ctrlCode(event, [10, 13])) { window.go() }
   })
-  editor.addEventListener("keydown", event => {
+  codeTextArea.addEventListener("keydown", event => {
     if (ctrlCode(event, ['/'])) { window.comment() }
   })
   window.stop = () => {
@@ -116,17 +82,15 @@ define(function(require) {
     players.instances = {}
     consoleOut('\n> Stop all players')
   }
-  const stylesheet = document.styleSheets[0]
-  let hlClass
-  for(let i = 0; i < stylesheet.cssRules.length; i++) {
-    if(stylesheet.cssRules[i].selectorText === '.hl') {
-      hlClass = stylesheet.cssRules[i]
-    }
-  }
   window.go = () => {
+    let selStart = codeTextArea.selectionStart
+    let selEnd = codeTextArea.selectionEnd
+    let selDir = codeTextArea.selectionDirection
+    codeTextArea.focus()
+    codeTextArea.setSelectionRange(0, 1e10)
     system.resume()
     players.instances = {}
-    codejarEditor.toString().split('\n')
+    codeTextArea.value.split('\n')
     .map((l,i) => {return{line:l.trim(), num:i}})
     .map(({line,num}) => {return{line:line.replace(/\/\/.*/, ''),num:num}})
     .filter(({line}) => line != '')
@@ -139,12 +103,25 @@ define(function(require) {
         consoleOut('Error on line '+(num+1)+': ' + e + st)
       }
     })
-    hlClass.style.backgroundColor = '#4060d0ff'
-    setTimeout(() => hlClass.style.background = '#00000040', 100)
+    setTimeout(() => codeTextArea.setSelectionRange(selStart, selEnd, selDir), 100)
   }
   window.comment = () => {
-     codejarEditor.toggleComment()
+    let selStart = codeTextArea.selectionStart
+    let selEnd = codeTextArea.selectionEnd
+    let selDir = codeTextArea.selectionDirection
+    let code = codeTextArea.value
+    let lineStart = codeTextArea.value.lastIndexOf('\n', selStart - 1) + 1
+    if (code.slice(lineStart, lineStart+3) == '//') {
+      codeTextArea.value = code.slice(0, lineStart) + code.slice(lineStart + 2)
+      codeTextArea.focus()
+      codeTextArea.setSelectionRange(selStart - 2, selEnd - 2, selDir)
+    } else {
+      codeTextArea.value = code.slice(0, lineStart) + "//" + code.slice(lineStart)
+      codeTextArea.focus()
+      codeTextArea.setSelectionRange(selStart + 2, selEnd + 2, selDir)
+    }
   }
+
 
   // indicator helpers
   let to255 = (x) => Math.min(Math.max(Math.floor(x*256), 0), 255)
@@ -209,9 +186,6 @@ define(function(require) {
     eventsReadout.style.backgroundColor = readoutColor(eventLatency, 0, metronome.advance())
     audioReadout.style.backgroundColor = readoutColor(system.latency(), 0, 0.1)
     visualReadout.style.backgroundColor = readoutColor(drawSystem.latency(), 0.02, 0.1)
-    let caretPos = cursor.cursorPosition()
-    caret.style.left = caretPos.left
-    caret.style.top = caretPos.top
     requestAnimationFrame(tick)
   }
   requestAnimationFrame(tick)
