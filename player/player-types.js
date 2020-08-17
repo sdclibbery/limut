@@ -36,7 +36,7 @@ define((require) => {
     blob: makePlayerFactory(sprite('blob', {r:0.8,g:0.8,b:0.8,a:1}, {r:0,g:0,b:0,a:0})),
     meter: makePlayerFactory(sprite('meter', {r:0.9,g:0.0,b:0.9,a:1}, {r:0.1,g:0.1,b:0.1,a:1})),
     streetlight: makePlayerFactory(sprite('streetlight', {r:0.3,g:0.5,b:1.0,a:1}, {r:0.0,g:0.0,b:0.0,a:1})),
-    grid: makePlayerFactory(sprite('grid', {r:1.0,g:0.1,b:0.1,a:1}, {r:0.1,g:0.1,b:0.1,a:1})),
+    grid: makePlayerFactory(sprite('grid', {r:1.0,g:0.2,b:0.1,a:1}, {r:0.1,g:0.1,b:0.1,a:1})),
     // instruments
     drums: makePlayerFactory(percussion.play, 1/2),
     play: makePlayerFactory(play, 1/2),

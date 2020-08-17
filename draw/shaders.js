@@ -19,7 +19,17 @@ define(function (require) {
   uniform float pixellate;
   vec2 preprocess( vec2 coord ) {
     coord = (coord + scroll) / zoom;
-    if (perspective != 0.) { coord.x *= perspective/(coord.y+perspective); }
+    if (perspective != 0.) {
+      const float sz = 1.0;
+      const float pz = 1.0;
+      vec2 s = coord / sz;
+      float p = (s.y*sin(perspective*0.68) + cos(perspective*0.68));
+      vec2 uv = vec2(
+        s.x*pz/p,
+        s.y*pz/p
+      );
+      coord = uv;
+    }
     if (pixellate != 0.) { coord = floor(coord*pixellate)/pixellate; }
     return coord;
   }
