@@ -18,7 +18,6 @@ define(function (require) {
   uniform float perspective;
   uniform float pixellate;
   vec2 preprocess( vec2 coord ) {
-    coord = (coord + scroll) / zoom;
     if (perspective != 0.) {
       const float sz = 1.0;
       const float pz = 1.0;
@@ -30,6 +29,7 @@ define(function (require) {
       );
       coord = uv;
     }
+    coord = (coord + scroll) / zoom;
     if (pixellate != 0.) { coord = floor(coord*pixellate)/pixellate; }
     return coord;
   }

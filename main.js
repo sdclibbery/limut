@@ -111,7 +111,7 @@ define(function(require) {
     let selDir = codeTextArea.selectionDirection
     let code = codeTextArea.value
     let lineStart = codeTextArea.value.lastIndexOf('\n', selStart - 1) + 1
-    if (code.slice(lineStart, lineStart+3) == '//') {
+    if (code.slice(lineStart, lineStart+2) == '//') {
       codeTextArea.value = code.slice(0, lineStart) + code.slice(lineStart + 2)
       codeTextArea.focus()
       codeTextArea.setSelectionRange(selStart - 2, selEnd - 2, selDir)
