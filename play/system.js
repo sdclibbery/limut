@@ -27,6 +27,7 @@ system.mainAmp = (amp) => {
   return system.mainAmpValue
 }
 system.vcaPreAmp = system.audio.createGain()
+system.vcaPreAmp.gain.value = 0.5
 
 system.compressorReduction = () => {
   if (!system.compressor) { return 0 }
@@ -88,10 +89,10 @@ system.vcaReverb.gain.value = 1
 system.reverb.connect(system.vcaReverb)
 
 system.compressor = system.audio.createDynamicsCompressor()
-system.compressor.ratio.value = 7
-system.compressor.threshold.value = -3
+system.compressor.ratio.value = 10
+system.compressor.threshold.value = -10
 system.compressor.release.value = 0.25
-system.compressor.attack.value = 0
+system.compressor.attack.value = 0.003
 system.compressor.knee.value = 10
 
 system.vcaPreAmp.connect(system.compressor)
