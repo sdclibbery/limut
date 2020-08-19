@@ -63,7 +63,12 @@ define(function(require) {
   consoleOut('\n> Welcome to Limut')
 
   // Play/stop/comment ui
-  let codeTextArea = document.getElementById('code')
+  let editorDiv = document.getElementById('code')
+  let editor = CodeMirror(editorDiv, {
+    lineNumbers: true
+  })
+  editor.setValue(localStorage.getItem('limut-code'))
+  editor.on('change', () => localStorage.setItem('limut-code', editor.getValue()))
   let ctrlCode = (event, keys) => {
     if (event.isComposing || event.keyCode === 229) { return false }
     return (event.ctrlKey && (keys.includes(event.keyCode) || keys.includes(event.key)))
@@ -71,10 +76,10 @@ define(function(require) {
   document.addEventListener("keydown", event => {
     if (ctrlCode(event, ['.'])) { window.stop() }
   })
-  codeTextArea.addEventListener("keydown", event => {
+  editorDiv.addEventListener("keydown", event => {
     if (ctrlCode(event, [10, 13])) { window.go() }
   })
-  codeTextArea.addEventListener("keydown", event => {
+  editorDiv.addEventListener("keydown", event => {
     if (ctrlCode(event, ['/'])) { window.comment() }
   })
   window.stop = () => {
@@ -83,14 +88,9 @@ define(function(require) {
     consoleOut('\n> Stop all players')
   }
   window.go = () => {
-    let selStart = codeTextArea.selectionStart
-    let selEnd = codeTextArea.selectionEnd
-    let selDir = codeTextArea.selectionDirection
-    codeTextArea.focus()
-    codeTextArea.setSelectionRange(0, 1e10)
     system.resume()
     players.instances = {}
-    codeTextArea.value.split('\n')
+    editor.getValue().split('\n')
     .map((l,i) => {return{line:l.trim(), num:i}})
     .map(({line,num}) => {return{line:line.replace(/\/\/.*/, ''),num:num}})
     .filter(({line}) => line != '')
@@ -103,23 +103,11 @@ define(function(require) {
         consoleOut('Error on line '+(num+1)+': ' + e + st)
       }
     })
-    setTimeout(() => codeTextArea.setSelectionRange(selStart, selEnd, selDir), 100)
+    editor.execCommand('selectAll')
+    setTimeout(() => editor.execCommand('undoSelection'), 100)
   }
   window.comment = () => {
-    let selStart = codeTextArea.selectionStart
-    let selEnd = codeTextArea.selectionEnd
-    let selDir = codeTextArea.selectionDirection
-    let code = codeTextArea.value
-    let lineStart = codeTextArea.value.lastIndexOf('\n', selStart - 1) + 1
-    if (code.slice(lineStart, lineStart+2) == '//') {
-      codeTextArea.value = code.slice(0, lineStart) + code.slice(lineStart + 2)
-      codeTextArea.focus()
-      codeTextArea.setSelectionRange(selStart - 2, selEnd - 2, selDir)
-    } else {
-      codeTextArea.value = code.slice(0, lineStart) + "//" + code.slice(lineStart)
-      codeTextArea.focus()
-      codeTextArea.setSelectionRange(selStart + 2, selEnd + 2, selDir)
-    }
+    editor.toggleComment()
   }
 
 

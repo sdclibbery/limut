@@ -97,6 +97,10 @@
       background-color: #808080;
     }
   </style>
+  <link rel="stylesheet" href="codemirror/codemirror.css">
+  <script src="codemirror/codemirror.js"></script>
+  <script src="codemirror/mode.js"></script>
+  <script src="codemirror/comment.js"></script>
 </head>
 <body>
   <canvas id="canvas" class="fullscreen" style="width:100%; height:100%;"></canvas>
@@ -128,7 +132,7 @@
     Visual: <span id="visual-readout", class="meter"> </span>
   </div>
   <div class="widget">
-    <textarea id="code" rows="15"></textarea>
+    <div id="code"></div>
     <textarea id="console" rows="7"></textarea>
   </div>
 <div class="info">
@@ -447,6 +451,7 @@ Fractal tiling: https://www.shadertoy.com/view/Ml2GWy
 Cell flow: https://www.shadertoy.com/view/MlsGWX
 ====
 ==== other ====
+flash selection on go
 Event latency should be music or tempo latency
 'fullscreen' mode
 operator precedence
