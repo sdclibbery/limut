@@ -27,33 +27,36 @@ define(function (require) {
     v = (typeof v === 'number') ? {x:v,y:v} : v
     return [param(v.x, d.x), param(v.y, d.y)]
   }
+  let rect = (v, d) => {
+    return {x:param(v.x, d.x), y:param(v.y, d.y), w:param(v.w, d.w), h:param(v.h, d.h)}
+  }
 
   let create = (shader, defFore, defBack, params) => {
     let amp = Math.min(param(params.amp, 1), 5)
     if (amp < 0.001) { return }
     let startTime = params.time
-    let loc = param(params.loc, {x:0,y:0,w:1,h:1})
     let endTime = params.time + param(params.sus, param(params.dur, 1)) * params.beat.duration
     let rate = param(params.rate, 1)
     let value = parseInt(param(params.value, '0'))
     if (value > 10) { value = value/5 }
     if (Number.isNaN(value)) { value = param(params.value, '0').charCodeAt(0) - 32 }
     let s = shaders(shader)
-    let fore = colour(param(params.fore, {}), defFore)
-    let back = colour(param(params.back, {}), defBack)
     let pulse = param(params.pulse, 0)
     let sway = param(params.sway, 0)
-    let zoom = vec(param(params.zoom, {}), {x:1,y:1})
     let pixellate = param(params.pixellate, 0)
-    let perspective = param(params.perspective, 0)
 
     if (!s) { return () => {} }
     return state => {
       let eventTime = ((state.time-startTime)/(endTime-startTime))
       let brightness = 1 - (eventTime*eventTime)*param(params.fade, 0)
-      let vtxData = verts(loc)
       let spec = state.spectrum[0]*state.spectrum[0] + state.spectrum[3]*state.spectrum[3]
+      let loc = rect(param(evalParam(params.loc, params.idx, state.count), {}), {x:0,y:0,w:1,h:1})
       let scroll = vec(param(evalParam(params.scroll, params.idx, state.count), {}), {x:0,y:0})
+      let zoom = vec(param(evalParam(params.zoom, params.idx, state.count), {}), {x:1,y:1})
+      let perspective = param(evalParam(params.perspective, params.idx, state.count), 0)
+      let fore = colour(param(evalParam(params.fore, params.idx, state.count), {}), defFore)
+      let back = colour(param(evalParam(params.back, params.idx, state.count), {}), defBack)
+      let vtxData = verts(loc)
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
       system.loadVertexAttrib(s.fragCoordBuf, s.fragCoordAttr, vtxData.tex, 2)
       system.gl.useProgram(s.program)

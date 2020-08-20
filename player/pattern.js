@@ -21,7 +21,7 @@ define(function(require) {
   }
 
   let evalPerFrame = {
-    scroll:true,
+    scroll:true, zoom:true, loc:true, fore:true, back:true, perspective:true
   }
 
   let parsePattern = (pattern, params, defaultDur) => {
