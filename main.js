@@ -65,7 +65,9 @@ define(function(require) {
   // Play/stop/comment ui
   let editorDiv = document.getElementById('code')
   let editor = CodeMirror(editorDiv, {
-    lineNumbers: true
+    lineNumbers: true,
+    lineWrapping: true,
+    tabSize: 2,
   })
   editor.setValue(localStorage.getItem('limut-code'))
   editor.on('change', () => localStorage.setItem('limut-code', editor.getValue()))
