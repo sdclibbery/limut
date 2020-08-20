@@ -285,6 +285,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <h5 onclick="toggleAccordion('accordion-predefined-vars')">▶ Predefined Vars</h5>
 <div id="accordion-predefined-vars" class="closed">
 <p><code>bpm</code> Beats per minute</p>
+<p><code>time</code> Time, counted in beats (including fractions of a beat)</p>
 <p><code>main.amp</code> Main mix amplitude control</p>
 <p><code>main.reverb</code> Main reverb amplitude control</p>
 <p><code>scale</code> Scale eg minor, major, chromatic, majorpentatonic, lydian etc etc</p>
@@ -406,10 +407,8 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-List of params to evaluate per frame: scroll, zoom, loc, fore, back, perspective, ???
-allow using time and pulse in per-frame evaluation; eg scroll={x:3*time}
+allow using pulse in per-frame evaluatio
 maybe fore/back become a postprocess effect, and not setting them allows the shader to use whatever its original colours are?
-vx/vy for scroll and zoom
 Sprites duration should include rel? Or not??
 postprocess effects
  vignette

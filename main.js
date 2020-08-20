@@ -9,6 +9,7 @@ define(function(require) {
   let scale = require('music/scale')
   let parseLine = require('parse-line')
   let players = require('player/players')
+  let vars = require('vars')
 
   // accordions
   window.toggleAccordion = (id) => {
@@ -146,6 +147,8 @@ define(function(require) {
   let tick = (t) => {
     let now = system.timeNow()
     let beat = metronome.update(now)
+    let beatTime = metronome.beatTime(now)
+    vars.time = beatTime
     if (beat) {
       beatReadout.innerText = beat.count
       beat4Readout.innerText = (beat.count%4 + 1) + '/4'
@@ -166,7 +169,7 @@ define(function(require) {
     }
     if (ctxGl) {
       try {
-        drawSystem.frameStart(now, metronome.beatTime(now), ctxGl, canvas.width, canvas.height)
+        drawSystem.frameStart(now, beatTime, ctxGl, canvas.width, canvas.height)
       } catch (e) {
         let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
         consoleOut('Run Error from drawing: ' + e + st)
