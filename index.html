@@ -41,6 +41,11 @@
     .widget h3 {
       margin: 0px;
     }
+    #code {
+      height: 350px;
+      margin-bottom: 8px;
+      max-width: 100%;
+    }
     textarea {
       font-size: 1.5em;
       color: #e0e0e0;
@@ -133,7 +138,7 @@
   </div>
   <div class="widget">
     <div id="code"></div>
-    <textarea id="console" rows="7"></textarea>
+    <textarea id="console" rows="5"></textarea>
   </div>
 <div class="info">
 <h5 onclick="toggleAccordion('accordion-examples')">▶ Examples</h5>
@@ -401,6 +406,8 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+can set some visual params per frame
+ eg scroll={x:[0:1]l8}   maybe even   scroll={x:3*time}
 maybe fore/back become a postprocess effect, and not setting them allows the shader to use whatever its original colours are?
 vx/vy for scroll and zoom
 image synth
@@ -451,9 +458,6 @@ Fractal tiling: https://www.shadertoy.com/view/Ml2GWy
 Cell flow: https://www.shadertoy.com/view/MlsGWX
 ====
 ==== other ====
-Event latency should be music or tempo latency
-'fullscreen' mode
-operator precedence
 finish off: <> for 'in sequence on each repeat' in patterns
 Can specify params seperate from players
  extract param overriding logic from follow player to param-overrides module
@@ -462,6 +466,9 @@ Can specify params seperate from players
 Can specify params for groups of players
 Wildcard player matching for groups
 Can specify params for all players except those in group
+Event latency should be music or tempo latency
+'fullscreen' mode
+operator precedence
 multiline commands
 "on 4 " syntax to execute a line on the next beat count
 "on 28 of 32 " syntax
