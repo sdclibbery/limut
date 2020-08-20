@@ -73,7 +73,7 @@ define(function(require) {
   editor.on('change', () => localStorage.setItem('limut-code', editor.getValue()))
   let ctrlCode = (event, keys) => {
     if (event.isComposing || event.keyCode === 229) { return false }
-    return (event.ctrlKey && (keys.includes(event.keyCode) || keys.includes(event.key)))
+    return ((event.ctrlKey || event.metaKey) && (keys.includes(event.keyCode) || keys.includes(event.key)))
   }
   document.addEventListener("keydown", event => {
     if (ctrlCode(event, ['.'])) { window.stop() }

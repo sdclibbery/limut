@@ -406,8 +406,9 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-can set some visual params per frame
- eg scroll={x:[0:1]l8}   maybe even   scroll={x:3*time}
+Sprites ignore long durations when following?
+List of params to evaluate per frame: scroll, zoom, perspective, ???
+allow using time and pulse in per-frame evaluation; eg scroll={x:3*time}
 maybe fore/back become a postprocess effect, and not setting them allows the shader to use whatever its original colours are?
 vx/vy for scroll and zoom
 image synth
@@ -458,6 +459,7 @@ Fractal tiling: https://www.shadertoy.com/view/Ml2GWy
 Cell flow: https://www.shadertoy.com/view/MlsGWX
 ====
 ==== other ====
+Use cmd key on Mac not Ctrl
 finish off: <> for 'in sequence on each repeat' in patterns
 Can specify params seperate from players
  extract param overriding logic from follow player to param-overrides module
