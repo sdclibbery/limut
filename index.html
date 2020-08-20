@@ -406,13 +406,11 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-Sprites ignore long durations when following?
-List of params to evaluate per frame: scroll, zoom, perspective, ???
+List of params to evaluate per frame: scroll, zoom, loc, fore, back, perspective, ???
 allow using time and pulse in per-frame evaluation; eg scroll={x:3*time}
 maybe fore/back become a postprocess effect, and not setting them allows the shader to use whatever its original colours are?
 vx/vy for scroll and zoom
-image synth
-video synth
+Sprites duration should include rel? Or not??
 postprocess effects
  vignette
  monochrome
@@ -422,6 +420,8 @@ postprocess effects
  noise
  dither
  threshold
+image synth
+video synth
 fix transparent fore on lines
 velocity
 shadertoy synth
@@ -459,7 +459,6 @@ Fractal tiling: https://www.shadertoy.com/view/Ml2GWy
 Cell flow: https://www.shadertoy.com/view/MlsGWX
 ====
 ==== other ====
-Use cmd key on Mac not Ctrl
 finish off: <> for 'in sequence on each repeat' in patterns
 Can specify params seperate from players
  extract param overriding logic from follow player to param-overrides module

@@ -3,6 +3,7 @@ define(function (require) {
   let system = require('draw/system')
   let shaders = require('draw/shaders')
   let param = require('player/default-param')
+  let evalParam = require('player/eval-param')
 
   let verts = (loc) => {
     let l = -1 + loc.x*2
@@ -42,7 +43,6 @@ define(function (require) {
     let back = colour(param(params.back, {}), defBack)
     let pulse = param(params.pulse, 0)
     let sway = param(params.sway, 0)
-    let scroll = vec(param(params.scroll, {}), {x:0,y:0})
     let zoom = vec(param(params.zoom, {}), {x:1,y:1})
     let pixellate = param(params.pixellate, 0)
     let perspective = param(params.perspective, 0)
@@ -53,6 +53,7 @@ define(function (require) {
       let brightness = 1 - (eventTime*eventTime)*param(params.fade, 0)
       let vtxData = verts(loc)
       let spec = state.spectrum[0]*state.spectrum[0] + state.spectrum[3]*state.spectrum[3]
+      let scroll = vec(param(evalParam(params.scroll, params.idx, state.count), {}), {x:0,y:0})
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
       system.loadVertexAttrib(s.fragCoordBuf, s.fragCoordAttr, vtxData.tex, 2)
       system.gl.useProgram(s.program)

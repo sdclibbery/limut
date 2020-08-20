@@ -20,6 +20,10 @@ define(function(require) {
     return [event]
   }
 
+  let evalPerFrame = {
+    scroll:true,
+  }
+
   let parsePattern = (pattern, params, defaultDur) => {
     if (debug) { console.log('*** pattern ', pattern) }
     if (!pattern) { return () => [] }
@@ -48,7 +52,7 @@ define(function(require) {
           if (event.value !== '.' && time > -0.0001 && time < 0.9999) {
             for (let k in params) {
               if (k != 'time' && k != 'delay' && k != 'value') {
-                event[k] = evalParam(params[k], idx, count+time)
+                event[k] = evalPerFrame[k] ? params[k] : evalParam(params[k], idx, count+time)
               }
             }
             event.dur = sourceEvent.dur
@@ -290,6 +294,8 @@ define(function(require) {
   assert([{value:'1',time:0,dur:1,idx:0,count:0}], pattern(0))
   assert([{value:'2',time:0,dur:1/2,idx:0,count:1},{value:'3',time:1/2,dur:1/2,idx:0,count:3/2}], pattern(1))
   assert([{value:'1',time:0,dur:1,idx:0,count:2}], pattern(2))
+
+  assert(1, parsePattern('0', {scroll:()=>1})(0)[0].scroll())
 
   console.log("Pattern tests complete")
 
