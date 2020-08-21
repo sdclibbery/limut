@@ -148,6 +148,9 @@ define(function(require) {
     let now = system.timeNow()
     let beat = metronome.update(now)
     let beatTime = metronome.beatTime(now)
+    let spectrum = system.spectrum()
+    let pulse = spectrum[0]*spectrum[0] + spectrum[3]*spectrum[3]
+    vars.pulse = pulse
     vars.time = beatTime
     if (beat) {
       beatReadout.innerText = beat.count
@@ -169,7 +172,7 @@ define(function(require) {
     }
     if (ctxGl) {
       try {
-        drawSystem.frameStart(now, beatTime, ctxGl, canvas.width, canvas.height)
+        drawSystem.frameStart(now, beatTime, ctxGl, canvas.width, canvas.height, spectrum, pulse)
       } catch (e) {
         let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
         consoleOut('Run Error from drawing: ' + e + st)

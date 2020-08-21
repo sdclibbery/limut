@@ -49,7 +49,6 @@ define(function (require) {
     return state => {
       let eventTime = ((state.time-startTime)/(endTime-startTime))
       let brightness = 1 - (eventTime*eventTime)*param(params.fade, 0)
-      let spec = state.spectrum[0]*state.spectrum[0] + state.spectrum[3]*state.spectrum[3]
       let loc = rect(param(evalParam(params.loc, params.idx, state.count), {}), {x:0,y:0,w:1,h:1})
       let scroll = vec(param(evalParam(params.scroll, params.idx, state.count), {}), {x:0,y:0})
       let zoom = vec(param(evalParam(params.zoom, params.idx, state.count), {}), {x:1,y:1})
@@ -60,10 +59,10 @@ define(function (require) {
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
       system.loadVertexAttrib(s.fragCoordBuf, s.fragCoordAttr, vtxData.tex, 2)
       system.gl.useProgram(s.program)
-      system.gl.uniform1f(s.timeUnif, state.count*rate + sway*spec, 1)
+      system.gl.uniform1f(s.timeUnif, state.count*rate + sway*state.pulse, 1)
       system.gl.uniform1f(s.brightnessUnif, brightness, 1)
-      system.gl.uniform1f(s.valueUnif, value + pulse*spec, 1)
-      system.gl.uniform1f(s.ampUnif, amp + pulse*spec*0.5, 1)
+      system.gl.uniform1f(s.valueUnif, value + pulse*state.pulse, 1)
+      system.gl.uniform1f(s.ampUnif, amp + pulse*state.pulse*0.5, 1)
       system.gl.uniform4fv(s.foreUnif, fore, 1)
       system.gl.uniform4fv(s.backUnif, back, 1)
       system.gl.uniform4fv(s.spectrumUnif, state.spectrum, 1)

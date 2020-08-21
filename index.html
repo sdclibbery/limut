@@ -286,6 +286,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <div id="accordion-predefined-vars" class="closed">
 <p><code>bpm</code> Beats per minute</p>
 <p><code>time</code> Time, counted in beats (including fractions of a beat)</p>
+<p><code>pulse</code> The current musical pulse; like a VU meter</p>
 <p><code>main.amp</code> Main mix amplitude control</p>
 <p><code>main.reverb</code> Main reverb amplitude control</p>
 <p><code>scale</code> Scale eg minor, major, chromatic, majorpentatonic, lydian etc etc</p>
@@ -407,18 +408,10 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-allow using pulse in per-frame evaluatio
+additive param
+pixellate per frame
 maybe fore/back become a postprocess effect, and not setting them allows the shader to use whatever its original colours are?
 Sprites duration should include rel? Or not??
-postprocess effects
- vignette
- monochrome
- make additive
- gamma
- outline
- noise
- dither
- threshold
 image synth
 video synth
 fix transparent fore on lines
@@ -426,6 +419,7 @@ velocity
 shadertoy synth
 Z order param
 Drop canvas to half res if gl frame rate is low?
+Raindrops: https://www.shadertoy.com/view/tlVGWK
 Nixie digits: https://www.shadertoy.com/view/4dc3zr
 synthwave driving shader https://www.shadertoy.com/view/tsScRK
 plant wind https://www.shadertoy.com/view/4lf3Rj
@@ -438,6 +432,14 @@ Fractal: https://www.shadertoy.com/view/MlGfDG
 Galaxy: https://www.shadertoy.com/view/llSGR1
 electric shader https://www.shadertoy.com/view/ldlXRS
 lattice shader   https://www.shadertoy.com/view/4dsGD7
+postprocess effects
+ vignette
+ monochrome
+ gamma
+ outline
+ noise
+ dither
+ threshold
 Sparkles shader
 text synth
 fireball shader https://www.shadertoy.com/view/lsf3RH
@@ -458,6 +460,8 @@ Fractal tiling: https://www.shadertoy.com/view/Ml2GWy
 Cell flow: https://www.shadertoy.com/view/MlsGWX
 ====
 ==== other ====
+On mobile, most recently typed text disappears when run
+syntax for 'change from A to B by the next multiple of X' - but how not to repeat this if rerun?
 finish off: <> for 'in sequence on each repeat' in patterns
 Can specify params seperate from players
  extract param overriding logic from follow player to param-overrides module
