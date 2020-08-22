@@ -17,6 +17,7 @@ define(function (require) {
   uniform vec2 zoom;
   uniform float perspective;
   uniform float pixellate;
+  uniform float additive;
   vec2 preprocess( vec2 coord ) {
     if (perspective != 0.) {
       const float sz = 1.0;
@@ -34,8 +35,9 @@ define(function (require) {
     return coord;
   }
   void postprocess( vec4 col ) {
-    gl_FragColor = col*brightness*col.a;
-    if (gl_FragColor.a < 0.01) discard;
+    gl_FragColor.rgb = col.rgb*brightness*mix(col.a, 1.0, additive);
+    gl_FragColor.a = mix(col.a, 0.0, additive);
+    if (length(gl_FragColor) < 0.01) discard;
   }
   `).replace(/\n/g,' ')
 
@@ -83,6 +85,7 @@ define(function (require) {
       shader.zoomUnif = system.gl.getUniformLocation(program, "zoom")
       shader.pixellateUnif = system.gl.getUniformLocation(program, "pixellate")
       shader.perspectiveUnif = system.gl.getUniformLocation(program, "perspective")
+      shader.additiveUnif = system.gl.getUniformLocation(program, "additive")
     }
     return shader
   }

@@ -43,6 +43,7 @@ define(function (require) {
     let s = shaders(shader)
     let pulse = param(params.pulse, 0)
     let sway = param(params.sway, 0)
+    let additive = param(params.additive, 0)
     let pixellate = param(params.pixellate, 0)
 
     if (!s) { return () => {} }
@@ -70,7 +71,8 @@ define(function (require) {
       system.gl.uniform2fv(s.zoomUnif, zoom, 1)
       system.gl.uniform1f(s.pixellateUnif, pixellate, 1)
       system.gl.uniform1f(s.perspectiveUnif, perspective, 1)
-      if (fore[3] >= 0.9999 && back[3] >= 0.9999) {
+      system.gl.uniform1f(s.additiveUnif, additive, 1)
+      if (fore[3] >= 0.9999 && back[3] >= 0.9999 && additive == 0) {
         system.gl.disable(system.gl.BLEND)
       } else {
         system.gl.enable(system.gl.BLEND)
