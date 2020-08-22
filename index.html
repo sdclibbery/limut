@@ -275,12 +275,13 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>pulse</code> extent to which the audio signal affects the value passed to visual synths</p>
 <p><code>sway</code> extent to which the audio signal affects the time passed to visual synths</p>
 <p><code>loc</code> position and size for visual synths; eg {x:0,y:0,w:1/2,h:1/2}</p>
+<p><code>scroll</code> scroll the shader; default: {x:0,y:0}</p>
+<p><code>zoom</code> zoom the shader; default: {x:1,y:1}</p>
 <p><code>fore</code> foreground colour for visual synths; eg {r:0,g:1,b:0,a:1} or #fa0f</p>
 <p><code>back</code> background colour for visual synths; eg {r:0,g:1,b:0,a:1} or #00ff</p>
 <p><code>pixellate</code> number of pixels to pixellate to in each direction, or 0 to disable pixellation</p>
 <p><code>perspective</code> perspective warp to apply to shader (negative to invert), or 0 to disable</p>
-<p><code>scroll</code> scroll the shader; default: {x:0,y:0}</p>
-<p><code>zoom</code> zoom the shader; default: {x:1,y:1}</p>
+<p><code>additive</code> add this shaders output to those beneath instead of blending</p>
 </div>
 <h5 onclick="toggleAccordion('accordion-predefined-vars')">▶ Predefined Vars</h5>
 <div id="accordion-predefined-vars" class="closed">
@@ -460,6 +461,7 @@ Fractal tiling: https://www.shadertoy.com/view/Ml2GWy
 Cell flow: https://www.shadertoy.com/view/MlsGWX
 ====
 ==== other ====
+scale param does not work
 On mobile, most recently typed text disappears when run
 syntax for 'change from A to B by the next multiple of X' - but how not to repeat this if rerun?
 finish off: <> for 'in sequence on each repeat' in patterns

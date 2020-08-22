@@ -1,5 +1,6 @@
 'use strict';
 define(function (require) {
+  let vars = require('vars')
 
   let scales = {
     chromatic       :[0,1,2,3,4,5,6,7,8,9,10,11],
@@ -72,6 +73,7 @@ define(function (require) {
     // Seventh Mode - altered (diminished whole-tone), (x)7alt
     altered      :[ 0, 1, 3, 4, 6, 8, 10 ],
   }
+  Object.keys(scales).forEach(k => vars[k]=k)
   let scale = {
     scales: scales,
     current: 'major',
