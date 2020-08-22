@@ -5,6 +5,7 @@ define(function (require) {
   let scale = require('music/scale');
   let envelope = require('play/no-sus-envelope')
   let effects = require('play/effects')
+  let pitchEffects = require('play/pitch-effects')
   let param = require('player/default-param')
 
   return (params) => {
@@ -18,12 +19,15 @@ define(function (require) {
     system.mix(out)
 
     let op4 = fm.op(freq, params)
+    pitchEffects(params).connect(op4.detune)
     op4.connect(vca)
 
     let op3 = fm.op(freq*14, params)
+    pitchEffects(params).connect(op3.detune)
     op3.connect(vca)
 
     let op2 = fm.op(freq, params)
+    pitchEffects(params).connect(op2.detune)
     op2.connect(vca)
 
     let op1 = fm.op(freq*5, params, 'square')

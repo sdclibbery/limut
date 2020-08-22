@@ -4,6 +4,7 @@ define(function (require) {
   let scale = require('music/scale');
   let envelope = require('play/pad-envelope')
   let effects = require('play/effects')
+  let pitchEffects = require('play/pitch-effects')
   let param = require('player/default-param')
 
   return (params) => {
@@ -16,10 +17,12 @@ define(function (require) {
     let out = effects(params, vca)
     system.mix(out)
 
+    let pitch = pitchEffects(params)
     let vcos = [0, 0.2].map(lerp => {
       let vco = system.audio.createOscillator()
       vco.type = 'triangle';
       vco.frequency.value = freq * Math.pow(2, lerp * detuneSemis/12)
+      pitch.connect(vco.detune)
       return vco
     })
     vcos.forEach(vco => vco.connect(vca))

@@ -4,6 +4,7 @@ define(function (require) {
   let scale = require('music/scale');
   let envelope = require('play/no-sus-envelope')
   let effects = require('play/effects')
+  let pitchEffects = require('play/pitch-effects')
   let param = require('player/default-param')
 
   return (params) => {
@@ -17,6 +18,7 @@ define(function (require) {
     let vco = system.audio.createOscillator()
     vco.type = 'sine'
     vco.frequency.value = freq
+    pitchEffects(params).connect(vco.detune)
     vco.connect(vca)
     vco.start(params.time)
     vco.stop(params.endTime)

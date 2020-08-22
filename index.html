@@ -269,6 +269,9 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>drive</code> overdrive level 0-1</p>
 <p><code>scale</code> override scale for this player; set to a string eg <code>'penta'</code></p>
 <p><code>phaser</code> LFO frequency for phaser effect, in phase sweep cycles per beat</p>
+<p><code>vib</code> vibrato frequency in cycles per beat</p>
+<p><code>vibdepth</code> vibrato depth in demitones (default 0.4)</p>
+<p><code>vibdelay</code> delay before vibrato starts in beats (default 1)</p>
 <h6>Visual</h6>
 <p><code>fade</code> brightness fade for visual synths</p>
 <p><code>pulse</code> extent to which the audio signal affects the value passed to visual synths</p>
@@ -386,7 +389,6 @@ Default shader: kaleidoscope
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-vib param - with ramp up
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
 strings pad - triangle?? vib?
 'X' doesn't work on mobile
