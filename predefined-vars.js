@@ -58,6 +58,7 @@ define(function(require) {
   vars['blue'] = parseExpression('{r:0,g:0.6,b:1,a:1}')
   vars['indigo'] = parseExpression('{r:0,g:0,b:0.8,a:1}')
   vars['violet'] = parseExpression('{r:0.4,g:0,b:0.8,a:1}')
+  vars['purple'] = parseExpression('{r:0.6,g:0,b:0.8,a:1}')
   vars['neonpink'] = parseExpression('{r:1,g:0,b:1,a:1}')
   vars['neongreen'] = parseExpression('{r:0,g:0.7,b:1,a:1}')
   vars['rainbow'] = parseExpression('{r:[0.8,0,0]l6,g:[0,0.7,0]l6,b:[0,0,1]l6,a:1}')
