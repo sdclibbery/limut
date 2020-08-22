@@ -19,8 +19,7 @@ define(function (require) {
     let vcos = [0, 0.7, 1].map(lerp => {
       let vco = system.audio.createOscillator()
       vco.type = 'sawtooth';
-      vco.frequency.value = freq
-      vco.detune.value = lerp * detuneSemis*100
+      vco.frequency.value = freq * Math.pow(2, lerp * detuneSemis/12)
       return vco
     })
     vcos.forEach(vco => vco.connect(vca))
