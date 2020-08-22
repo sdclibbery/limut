@@ -220,7 +220,6 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <div id="accordion-audio-synths" class="closed">
 <p><code>! / stop / none</code> </p>
 <p><code>play</code> Play samples. Use letters, symbols and digits 1-4 in the pattern to choose the sample (see below for full list). Note duration defaults to 1/2.</p>
-<p><code>drums</code> Basic drum synth; accepts XxOo-= characters in the pattern. Note duration defaults to 1/2.</p>
 <p><code>dsaw</code> Detuned saw pad</p>
 <p><code>dbass</code> Detuned saw bass</p>
 <p><code>ping</code> Sine ping</p>
@@ -387,12 +386,12 @@ Default shader: kaleidoscope
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-hihats too quiet; X doesn't work
-root main var
-vib param
+vib param - with ramp up
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
+strings pad - triangle?? vib?
+'X' doesn't work on mobile
+root main var
 echoey space synth
-strings pad
 slide param
 formant
 pluck synth?
@@ -461,8 +460,11 @@ Fractal tiling: https://www.shadertoy.com/view/Ml2GWy
 Cell flow: https://www.shadertoy.com/view/MlsGWX
 ====
 ==== other ====
-scale param does not work
-On mobile, most recently typed text disappears when run
+Precedence issue: []t1/4 vs []t1*4 :-|
+ ? ONLY / should be treated as part of a number?
+'fullscreen' mode
+On mobile, most recently typed text disappears when run??
+operator precedence ?? would also be awesome if '1+2 * 3' was 9, but '1+2*3' was 7??
 syntax for 'change from A to B by the next multiple of X' - but how not to repeat this if rerun?
 finish off: <> for 'in sequence on each repeat' in patterns
 Can specify params seperate from players
@@ -473,8 +475,6 @@ Can specify params for groups of players
 Wildcard player matching for groups
 Can specify params for all players except those in group
 Event latency should be music or tempo latency
-'fullscreen' mode
-operator precedence
 multiline commands
 "on 4 " syntax to execute a line on the next beat count
 "on 28 of 32 " syntax

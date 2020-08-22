@@ -10,15 +10,13 @@ define(function (require) {
     let degree = parseInt(params.sound) + param(params.add, 0)
     if (isNaN(degree)) { return }
     let freq = scale.degreeToFreq(degree, param(params.oct, 5), params.scale)
-    let detuneSemis = param(params.detune, 0.25)
 
     let vca = envelope(params, 0.04)
     system.mix(effects(params, vca))
 
     let vco = system.audio.createOscillator()
-    vco.type = 'sine';
+    vco.type = 'sine'
     vco.frequency.value = freq
-    vco.detune.value = detuneSemis*100
     vco.connect(vca)
     vco.start(params.time)
     vco.stop(params.endTime)

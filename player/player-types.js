@@ -3,7 +3,6 @@ define((require) => {
   let standardPlayer = require('player/standard')
 
   let sprite = require('draw/sprite')
-  let percussion = require('play/synth/percussion')
   let play = require('play/synth/play')
   let dsaw = require('play/synth/dsaw')
   let dsine = require('play/synth/dsine')
@@ -38,7 +37,7 @@ define((require) => {
     streetlight: makePlayerFactory(sprite('streetlight', {r:0.3,g:0.5,b:1.0,a:1}, {r:0.0,g:0.0,b:0.0,a:1})),
     grid: makePlayerFactory(sprite('grid', {r:1.0,g:0.2,b:0.1,a:1}, {r:0.0,g:0.0,b:0.0,a:1})),
     // instruments
-    drums: makePlayerFactory(percussion.play, 1/2),
+    drums: makePlayerFactory(play, 1/2),
     play: makePlayerFactory(play, 1/2),
     dsaw: makePlayerFactory(dsaw),
     dsine: makePlayerFactory(dsine),

@@ -11,7 +11,6 @@ define(function (require) {
     let degree = parseInt(params.sound) + param(params.add, 0)
     if (isNaN(degree)) { return }
     let freq = scale.degreeToFreq(degree, param(params.oct, 5), params.scale)
-    let detuneSemis = param(params.detune, 0.1)
 
     let vca = envelope(params, 0.018)
     let out = effects(params, vca)
