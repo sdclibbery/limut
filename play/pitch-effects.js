@@ -5,7 +5,7 @@ define(function (require) {
 
   return (params) => {
     let vib = param(params.vib, 0)
-    if (!vib) { return }
+    if (!vib) { return {connect:()=>{}} }
     let vibdepth = param(params.vibdepth, 0.4)
     let vibdelay = param(params.vibdelay, 1)
     let lfo = system.audio.createOscillator()
