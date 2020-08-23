@@ -10,6 +10,8 @@ Documentation (what there is of it) is available in the page itself, underneath 
 
 Try it at https://sdclibbery.github.io/limut/
 
+Please report problems / bugs / suggestions etc as github issues at https://github.com/sdclibbery/limut/issues
+
 # Development
 
 Run locally by firing up `./server.sh` and connecting a browser to http://localhost:8000/ . The unit tests run automatically on page load; view output in the browser console.
