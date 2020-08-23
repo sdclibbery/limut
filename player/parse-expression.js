@@ -740,6 +740,18 @@ define(function(require) {
 
   assert({r:2}, parseExpression("{r:1}*2")(0,0))
 
+  p = parseExpression("[1,2]t2/2")
+  assert(1, p(0,0))
+  assert(2, p(1,1))
+  assert(1, p(2,2))
+
+  p = parseExpression("[1,2]t2*2")
+  assert(2, p(0,0))
+  assert(2, p(1,1))
+  assert(4, p(2,2))
+  assert(4, p(3,3))
+  assert(2, p(4,4))
+
   console.log('Parse expression tests complete')
 
   return parseExpression
