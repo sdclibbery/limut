@@ -1,6 +1,6 @@
 # Limut
 
-Live coding music and visuals in the browser. Inspired by FoxDot with a desire to make it more accessible by running in any modern browser with no installation. Approach to visuals inspired by Crash Servers `video` player.
+Live coding music and visuals in the browser. Inspired by FoxDot with a desire to make it more accessible by running in any modern browser with no installation. Approach to visuals inspired by Crash Server's `video` player.
 
 # Documentation
 
