@@ -1,3 +1,11 @@
+# Limut
+
+Live coding music and visuals in the browser. Inspired by FoxDot with a desire to make it more accessible by running in any modern browser with no installation. Approach to visuals inspired by Crash Servers `video` player.
+
+# Documentation
+
+Documentation (what there is of it) is available in the page itself, underneath the console.
+
 # Try it
 
 Try it at https://sdclibbery.github.io/limut/
