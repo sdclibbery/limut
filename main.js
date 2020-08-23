@@ -81,6 +81,7 @@ define(function(require) {
     lineNumbers: true,
     lineWrapping: true,
     tabSize: 2,
+    inputStyle: "textarea",
   })
   editor.setValue(localStorage.getItem('limut-code') || '')
   editor.on('change', () => localStorage.setItem('limut-code', editor.getValue()))
@@ -119,8 +120,8 @@ define(function(require) {
         consoleOut('Error on line '+(num+1)+': ' + e + st)
       }
     })
-    // editor.execCommand('selectAll')
-    // setTimeout(() => editor.execCommand('undoSelection'), 100)
+    editor.execCommand('selectAll')
+    setTimeout(() => editor.execCommand('undoSelection'), 100)
   }
   window.comment = () => {
     editor.toggleComment()
