@@ -4,6 +4,10 @@ Try it at https://sdclibbery.github.io/limut/
 
 # Samples
 
+Run locally by firing up `./server.sh` and connecting a browser to http://localhost:8000/ . The unit tests run automatically on page load; view output in the browser console.
+
+# Samples
+
 Piano sounds: https://archive.org/details/SalamanderGrandPianoV3
 
 Limut's audio files have been copied from FoxDot (https://github.com/Qirky/FoxDot), where they were obtained from a number of sources. Here's a list of thanks for the unknowing creators of FoxDot's sample archive.
