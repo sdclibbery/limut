@@ -2,6 +2,7 @@
 define(function(require) {
   try { if (!AudioContext) { throw 1; } } catch(e) { document.body.innerHTML = 'Web Audio not supported in this browser!'; return; }
 
+  require('polyfills')
   require('predefined-vars')
   let system = require('play/system')
   let drawSystem = require('draw/system')
@@ -14,6 +15,17 @@ define(function(require) {
   // accordions
   window.toggleAccordion = (id) => {
     document.getElementById(id).classList.toggle('closed')
+  }
+
+  // fullscreen
+  window.fullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.body.requestFullscreen();
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen(); 
+      }
+    }
   }
 
   // Bpm ui

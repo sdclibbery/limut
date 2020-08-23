@@ -71,10 +71,11 @@
       width:1.5em;
       height:1.5em;
       background: #80808080;
-      font-size: 1.5em;
+      font-size: 1.3em;
       border-radius: 4px;
       border-style: solid;
       border-color: #d0d0d080;
+      padding: 0;
     }
     span {
       font-weight: bold;
@@ -101,6 +102,10 @@
       height: 1em;
       background-color: #808080;
     }
+    :fullscreen { display: flex; flex-flow: column; }
+    :fullscreen > * > h3 { font-size: 1em; }
+    :fullscreen > #code { flex: 1; max-height: calc(100% - 265px); }
+    :fullscreen > .info { display: none; }
   </style>
   <link rel="stylesheet" href="codemirror/codemirror.css">
   <script src="codemirror/codemirror.js"></script>
@@ -132,14 +137,14 @@
     <button onclick="go()" title="Run the code Ctrl-Enter">▶</button>
     <button onclick="stop()" title="Stop all players Ctrl-.">◼</button>
     <button onclick="comment()" title="Toggle comment for line Ctrl-/">//</button>
+    <button onclick="fullscreen()" title="Toggle fullscreen">⛶</button>
     Events: <span id="events-readout", class="meter"> </span>
     Audio: <span id="audio-readout", class="meter"> </span>
     Visual: <span id="visual-readout", class="meter"> </span>
   </div>
-  <div class="widget">
-    <div id="code"></div>
-    <textarea id="console" rows="5"></textarea>
-  </div>
+  <div id="code" class="widget"></div>
+  <textarea id="console" class="widget" rows="5"></textarea>
+</div>
 <div class="info">
 <h5 onclick="toggleAccordion('accordion-examples')">▶ Examples</h5>
 <div id="accordion-examples" class="closed">
@@ -393,6 +398,7 @@ pan param
 'X' doesn't work on mobile
 root main var
 echoey space synth
+ ethereal vib=3, att=0, sus=2, rel=2, phaser=1/4, echo=(3/1,4/1), oct=5
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
 strings pad - triangle?? vib?
 slide param
@@ -411,30 +417,15 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-tweak grid back color to actual black - and others
-pixellate per frame
 maybe fore/back become a postprocess effect, and not setting them allows the shader to use whatever its original colours are?
-Sprites duration should include rel? Or not??
+shadertoy synth
 image synth
 video synth
 fix transparent fore on lines
-velocity
-shadertoy synth
 Z order param
+pixellate per frame
+Sprites duration should include rel? Or not??
 Drop canvas to half res if gl frame rate is low?
-Raindrops: https://www.shadertoy.com/view/tlVGWK
-Nixie digits: https://www.shadertoy.com/view/4dc3zr
-synthwave driving shader https://www.shadertoy.com/view/tsScRK
-plant wind https://www.shadertoy.com/view/4lf3Rj
-forge shader based on: https://www.shadertoy.com/view/llK3Dy
-draw frame lag indicator
-star shader https://www.shadertoy.com/view/4dXGR4
-power sphere https://www.shadertoy.com/view/MtGSzh
-plasma ball https://www.shadertoy.com/view/XsjXRm
-Fractal: https://www.shadertoy.com/view/MlGfDG
-Galaxy: https://www.shadertoy.com/view/llSGR1
-electric shader https://www.shadertoy.com/view/ldlXRS
-lattice shader   https://www.shadertoy.com/view/4dsGD7
 postprocess effects
  vignette
  monochrome
@@ -445,28 +436,12 @@ postprocess effects
  threshold
 Sparkles shader
 text synth
-fireball shader https://www.shadertoy.com/view/lsf3RH
-furry shader https://www.shadertoy.com/view/4dlGDN
-bubbles shader https://www.shadertoy.com/view/4dl3zn
-gem tunnel shader https://www.shadertoy.com/view/ld3Szs
-scaly shader https://www.shadertoy.com/view/MdSXzz
-swirl shader https://www.shadertoy.com/view/4dX3Rn
-lightning synth
-Fractal zoom: https://www.shadertoy.com/view/XtlGR2
-Space: https://www.shadertoy.com/view/lslSDS
-3d supershape: https://www.shadertoy.com/view/4llGWM
-Spiral flow: https://www.shadertoy.com/view/MdlXRS (needs noise texture :-( )
-Fractal https://www.shadertoy.com/view/lslGWr
-Mechanical: https://www.shadertoy.com/view/XslXW2
-Colour tunnel: https://www.shadertoy.com/view/XdSGzR
-Fractal tiling: https://www.shadertoy.com/view/Ml2GWy
-Cell flow: https://www.shadertoy.com/view/MlsGWX
 ====
 ==== other ====
 Precedence issue: []t1/4 vs []t1*4 :-|
  ? ONLY / should be treated as part of a number?
-'fullscreen' mode
-On mobile, most recently typed text disappears when run??
+Editor problems on mobile, most recently typed text disappears when run??
+Should be able to [red,blue]t8
 operator precedence ?? would also be awesome if '1+2 * 3' was 9, but '1+2*3' was 7??
 syntax for 'change from A to B by the next multiple of X' - but how not to repeat this if rerun?
 finish off: <> for 'in sequence on each repeat' in patterns
@@ -483,6 +458,7 @@ multiline commands
 "on 28 of 32 " syntax
 "every 4 " / "every 28 of 32 "
 dur=[3,3,2]\4
+evaluate predefined vars; eg allow bpm=[80,120]
 value param to override the pattern
 Beat lag display
 <> for 'in sequence on each repeat' in params
@@ -505,7 +481,36 @@ fix delay param problems (commented tests in pattern.js)
 index pattern by beat to improve performance in finding events - same for timeVar evaluation
 random timevar gens for patterns: {o-:}
 pattern generators: tri, Dur, walk etc?
-evaluate predefined vars; eg allow bpm=[80,120]
+===
+===== Interesting shadertoys
+Raindrops: https://www.shadertoy.com/view/tlVGWK
+Nixie digits: https://www.shadertoy.com/view/4dc3zr
+synthwave driving shader https://www.shadertoy.com/view/tsScRK
+plant wind https://www.shadertoy.com/view/4lf3Rj
+forge shader based on: https://www.shadertoy.com/view/llK3Dy
+star shader https://www.shadertoy.com/view/4dXGR4
+power sphere https://www.shadertoy.com/view/MtGSzh
+plasma ball https://www.shadertoy.com/view/XsjXRm
+Fractal: https://www.shadertoy.com/view/MlGfDG
+Galaxy: https://www.shadertoy.com/view/llSGR1
+electric shader https://www.shadertoy.com/view/ldlXRS
+lattice shader   https://www.shadertoy.com/view/4dsGD7
+fireball shader https://www.shadertoy.com/view/lsf3RH
+furry shader https://www.shadertoy.com/view/4dlGDN
+bubbles shader https://www.shadertoy.com/view/4dl3zn
+gem tunnel shader https://www.shadertoy.com/view/ld3Szs
+scaly shader https://www.shadertoy.com/view/MdSXzz
+swirl shader https://www.shadertoy.com/view/4dX3Rn
+lightning synth
+Fractal zoom: https://www.shadertoy.com/view/XtlGR2
+Space: https://www.shadertoy.com/view/lslSDS
+3d supershape: https://www.shadertoy.com/view/4llGWM
+Spiral flow: https://www.shadertoy.com/view/MdlXRS (needs noise texture :-( )
+Fractal https://www.shadertoy.com/view/lslGWr
+Mechanical: https://www.shadertoy.com/view/XslXW2
+Colour tunnel: https://www.shadertoy.com/view/XdSGzR
+Fractal tiling: https://www.shadertoy.com/view/Ml2GWy
+Cell flow: https://www.shadertoy.com/view/MlsGWX
 */
 </script>
 </html>
