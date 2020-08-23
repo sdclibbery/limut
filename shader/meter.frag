@@ -1,11 +1,5 @@
 precision highp float;
 varying vec2 fragCoord;
-uniform float iTime;
-uniform float brightness;
-uniform float value;
-uniform float amp;
-uniform vec4 fore;
-uniform vec4 back;
 uniform vec4 spectrum;
 
 #insert common-processors
@@ -17,11 +11,12 @@ float barHeight (float v) {
 void main() {
   vec2 uv = preprocess(fragCoord);
 
-	vec4 col = back;
-	if (uv.x > -0.95 && uv.x < -0.55 && uv.y < barHeight(spectrum.x)) { col = vec4(fore.rgb*(0.7+0.6*uv.y), fore.a); }
-	if (uv.x > -0.45 && uv.x < -0.05 && uv.y < barHeight(spectrum.y)) { col = vec4(fore.rgb*(0.7+0.6*uv.y), fore.a); }
-	if (uv.x > 0.05 && uv.x < 0.45 && uv.y < barHeight(spectrum.z)) { col = vec4(fore.rgb*(0.7+0.6*uv.y), fore.a); }
-	if (uv.x > 0.55 && uv.x < 0.95 && uv.y < barHeight(spectrum.w)) { col = vec4(fore.rgb*(0.7+0.6*uv.y), fore.a); }
+	float f = 0.0;
+	if (uv.x > -0.95 && uv.x < -0.55 && uv.y < barHeight(spectrum.x)) { f = 1.0; }
+	if (uv.x > -0.45 && uv.x < -0.05 && uv.y < barHeight(spectrum.y)) { f = 1.0; }
+	if (uv.x > 0.05 && uv.x < 0.45 && uv.y < barHeight(spectrum.z)) { f = 1.0; }
+	if (uv.x > 0.55 && uv.x < 0.95 && uv.y < barHeight(spectrum.w)) { f = 1.0; }
+	vec4 col = vec4(vec3(1.)*f*(0.7+0.6*uv.y), 1.0);
 
-    postprocess(col);
+    postprocess(col, f);
 }

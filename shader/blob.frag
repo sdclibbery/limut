@@ -1,11 +1,8 @@
 precision highp float;
 varying vec2 fragCoord;
 uniform float iTime;
-uniform float brightness;
 uniform float value;
 uniform float amp;
-uniform vec4 fore;
-uniform vec4 back;
 
 #insert common-processors
 
@@ -71,11 +68,11 @@ void main()
     if (dist < MINDIST) {
 	    vec3 n = sceneNormal(pos);
       float spec = pow(clamp(dot(normalize(vec3(0.,1.,-1.)), reflect(normalize(pos), n)), 0., 1.), 20.0);
-    	col.rgb = fore.rgb * 0.5 * (n.y + 1.) + vec3(spec*0.5);
-      col.a = fore.a;
+    	col.rgb = 0.5 * (n.y + 1.) + vec3(spec*0.5);
+      col.a = 1.;
     } else {
-      col = back;
+      col = vec4(1.);
     }
 
-    postprocess(col);
+    postprocess(col, dist < MINDIST ? 1. : 0.);
 }

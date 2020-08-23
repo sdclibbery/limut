@@ -2,11 +2,8 @@
 precision mediump float;
 varying vec2 fragCoord;
 uniform float iTime;
-uniform float brightness;
 uniform float value;
 uniform float amp;
-uniform vec4 fore;
-uniform vec4 back;
 
 #insert common-processors
 
@@ -41,8 +38,8 @@ void main()
     amnt = smoothstep(0.1, 0.5+uv.y*10.0/(1.+abs(value)), amnt)*5.5;
 	  alpha=(10.0-i)/5.0;
 	  f += amnt*alpha/5.0;
+	  cbuff += vec4(amnt*alpha*0.3, amnt*0.3*alpha , amnt*uv.y*alpha,0) ;
 	}
 
-	vec4 col = mix(back, fore, f);
-    postprocess(col);
+  postprocess(vec4(cbuff.rgb, 1.0), f);
 }

@@ -2,11 +2,8 @@
 precision highp float;
 varying vec2 fragCoord;
 uniform float iTime;
-uniform float brightness;
 uniform float value;
 uniform float amp;
-uniform vec4 fore;
-uniform vec4 back;
 
 #insert common-processors
 
@@ -107,23 +104,23 @@ vec4 render(Ray ray)
 {
 	Hit hit = raymarch(ray);
 	vec3 pos = ray.org + hit.dist*ray.dir;
-	vec4 col = back;
+	vec3 col = vec3(0.);
 	if (hit.index != -1.)
 	{
 		vec3 nor = calcNormal(pos);
 		vec3 l = normalize(vec3(3.,0.,0.) - pos);
-		col = fore;
+		col = vec3(.3,.5,.7);
 		
 		float diff = clamp(dot(nor,l),0.,1.);
 		vec3 r = normalize(2.*dot(nor,l)*nor-l);
 		vec3 v = normalize(ray.org-pos);
 		float spec = clamp(dot(v,r),0.,1.);
 		float ao = 1.;
-		col = diff*col*ao + pow(spec,10.)*vec4(1.)*ao + fore*1.9*glows(hit.index);
+		col = diff*col*ao + pow(spec,10.)*vec3(1.)*ao + vec3(0.5,0.7,1.)*1.9*glows(hit.index);
 		col*= clamp(1. - hit.dist*0.03,0.,1.);
 	}
-	col += clamp(glowAmt*0.4*(amp+0.1),0.,1.)*fore;
-	return col;
+	col += clamp(glowAmt*0.4,0.,1.)*vec3(.3,.5,.7);
+	return vec4(col, glowAmt);
 }
 
 Ray createRay(vec3 center, vec3 lookAt, vec3 up, vec2 uv, float fov, float aspect)
@@ -151,6 +148,7 @@ void main()
 	float aspect = 1.0;
 	Ray ray = createRay(cameraPos, lookAt, up, uv, 90., aspect);
 	vec4 col = render(ray);
-
-    postprocess(col);
+	float f = col.a;
+	col.a = 1.0;
+  postprocess(col, f);
 }

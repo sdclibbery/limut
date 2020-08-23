@@ -2,11 +2,8 @@
 precision highp float;
 varying vec2 fragCoord;
 uniform float iTime;
-uniform float brightness;
 uniform float value;
 uniform float amp;
-uniform vec4 fore;
-uniform vec4 back;
 
 #insert common-processors
 
@@ -41,11 +38,12 @@ vec2 fbm2( in vec2 p ) {
 
 const float PI = 3.14159265;
 void main() {
-  vec2 uv = preprocess(fragCoord);
+  vec2 uv = preprocess(fragCoord)/2.0;
 
-  uv += (amp+0.2)*4.0*fbm2(uv + fbm2(uv.yx+vec2(0, iTime*0.2)));
+  vec2 n = fbm2(uv + fbm2(uv.yx+vec2(0, iTime*0.2)));
+  uv += (amp+0.2)*8.0*n;
   float f = abs(sin(uv.x)*sin(uv.y));
-
-  vec4 col = mix(fore, back, pow(1.-f, (value > 10.0) ? value/10.0 : (value+2.)/5.));
-  postprocess(col);
+  f = pow(1.-f, (value > 10.0) ? value/10.0 : (value+2.)/5.);
+  vec4 col = vec4(abs(n)*1.3, f, 1.0);
+  postprocess(col, f);
 }

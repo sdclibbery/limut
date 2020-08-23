@@ -2,11 +2,8 @@
 precision highp float;
 varying vec2 fragCoord;
 uniform float iTime;
-uniform float brightness;
 uniform float value;
 uniform float amp;
-uniform vec4 fore;
-uniform vec4 back;
 
 #insert common-processors
 
@@ -17,6 +14,8 @@ const float clouddark = 0.5;
 const float cloudlight = 0.3;
 const float cloudalpha = 8.0;
 const float skytint = 0.5;
+const vec3 skycolour1 = vec3(0.2, 0.4, 0.6);
+const vec3 skycolour2 = vec3(0.4, 0.7, 1.0);
 
 const mat2 m = mat2( 1.6,  1.2, -1.2,  1.6 );
 
@@ -109,15 +108,12 @@ void main () {
 
     c += c1;
 
-    vec3 skycolour1 = back.rgb;
-    vec3 skycolour2 = 0.2 + 0.8*back.rgb;
-    vec4 skycolour = vec4(mix(skycolour2, skycolour1, p.y), back.a);
-    vec4 cloudcolour = vec4(fore.rgb * clamp((clouddark + cloudlight*c), 0.0, 1.0), fore.a);
+    vec4 skycolour = vec4(mix(skycolour2, skycolour1, p.y), 1.0);
+    vec4 cloudcolour = vec4(vec3(1.1, 1.1, 0.9) * clamp((clouddark + cloudlight*c), 0.0, 1.0), 1.0);
 
     f = amp + cloudalpha*f*r;
 
     vec4 result = mix(skycolour, clamp(skytint * skycolour + cloudcolour, 0.0, 1.0), clamp(f + c, 0.0, 1.0));
-    result.rgb *= result.a;
 
-    postprocess(result);
+    postprocess(result, clamp(f + c, 0.0, 1.0));
 }

@@ -93,7 +93,6 @@ define(function(require) {
     if (ctrlCode(event, ['.', 190])) { window.stop() }
   })
   editorDiv.addEventListener("keydown", event => {
-  console.log(event)
     if (ctrlCode(event, [10, 13])) { window.go() }
   })
   editorDiv.addEventListener("keydown", event => {
