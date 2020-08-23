@@ -2,7 +2,7 @@
 
 Try it at https://sdclibbery.github.io/limut/
 
-# Samples
+# Development
 
 Run locally by firing up `./server.sh` and connecting a browser to http://localhost:8000/ . The unit tests run automatically on page load; view output in the browser console.
 
