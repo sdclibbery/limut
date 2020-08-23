@@ -10,7 +10,7 @@ Documentation (what there is of it) is available in the page itself, underneath 
 
 Try it at https://sdclibbery.github.io/limut/
 
-Please report problems / bugs / suggestions etc as github issues at https://github.com/sdclibbery/limut/issues
+Please report problems / bugs / browser issues etc as github issues at https://github.com/sdclibbery/limut/issues
 
 # Development
 
