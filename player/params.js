@@ -51,7 +51,9 @@ define(function(require) {
     let name = parseName(state)
     let value = parseValue(state)
     if (name) {
+      if (name.includes('//')) { return false }
       state.params[name.toLowerCase().trim()] = parseExpression(value.trim())
+      if (value.trim().endsWith('//')) { return false }
       return true
     }
     return false
@@ -90,6 +92,14 @@ define(function(require) {
   assert({dur:[1,2], oct:[3, 4]}, parseParams('dur=[1, 2],oct=[3, 4]'))
   assert({dur:[[1,1],[[2],3]], oct:4}, parseParams('dur=[[1,1],[[2],3]],oct=4'))
   assert({t:['a','b']}, parseParams("t=['a','b']"))
+  assert({s:'abc'}, parseParams("s='abc'"))
+  assert({s:'http://a.com/Bc.mp3'}, parseParams("s='http://a.com/Bc.mp3'"))
+  assert({}, parseParams("//s='abc'"))
+  assert({}, parseParams("s//='abc'"))
+  assert({}, parseParams("s=//'abc'"))
+  assert({a:1}, parseParams("a=1,//s='abc'"))
+  assert({a:1}, parseParams("a=1//,s='abc'"))
+  assert({a:1}, parseParams("a=1, //s='abc'"))
 
   console.log("Params tests complete")
 

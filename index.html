@@ -220,6 +220,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>*</code> Multiply values; eg lpf=[1,2,3]*1000</p>
 <p><code>%</code> Take remainder; eg (0,4,7,9)%7 is equivalent to (0,4,0,2)</p>
 <p><code>{x:0,y:1}</code> Map, containing keys and values</p>
+<p><code>'abc'</code> String value</p>
 </div>
 <h5 onclick="toggleAccordion('accordion-audio-synths')">▶ Audio Synths</h5>
 <div id="accordion-audio-synths" class="closed">
@@ -269,7 +270,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>bpf</code> Band pass filter frequency</p>
 <p><code>bpr</code> Band pass filter resonance</p>
 <p><code>chop</code> Chop the signal into a number of parts per beat</p>
-<p><code>sample</code> Sample set choice for 'play' samples</p>
+<p><code>sample</code> Works with the 'play' synth to choose the sample. Number: sample set choice. String: url of online audio file to play (note: server must support cross origin requests for the file)</p>
 <p><code>room</code> reverb room size 0-1</p>
 <p><code>drive</code> overdrive level 0-1</p>
 <p><code>scale</code> override scale for this player; set to a string eg <code>'penta'</code></p>
@@ -383,6 +384,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
+slide param
 pan param
 'X' doesn't work on mobile
 root main var
@@ -390,7 +392,6 @@ echoey space synth
  ethereal vib=3, att=0, sus=2, rel=2, phaser=1/4, echo=(3/1,4/1), oct=5
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
 strings pad - triangle?? vib?
-slide param
 formant
 pluck synth?
 timpani sample?

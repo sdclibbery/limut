@@ -3,7 +3,6 @@ define((require) => {
   let players = require('player/players')
   let playerTypes = require('player/player-types')
   let parseExpression = require('player/parse-expression')
-  let standardPlayer = require('player/standard')
   let metronome = require('metronome')
   let vars = require('vars')
 
@@ -17,6 +16,7 @@ define((require) => {
   let parseLine = (line) => {
     line = line.trim()
     if (!line) { return }
+    if (line.startsWith('//')) { return }
     let [k,v] = line.split('=').map(p => p.trim()).filter(p => p != '')
     k = k.toLowerCase()
     if (k.match(/^[a-z][a-z0-9_\.]*$/) && !!v) {
@@ -63,6 +63,31 @@ define((require) => {
 
   parseLine('foo=1+1')
   assert(2, vars.foo)
+  delete vars.foo
+
+  parseLine('//foo=1+1')
+  assert(undefined, vars.foo)
+
+  parseLine('// foo=1+1')
+  assert(undefined, vars.foo)
+
+  parseLine('  //foo=1+1  ')
+  assert(undefined, vars.foo)
+
+  parseLine('foo=1//+1')
+  assert(1, vars.foo)
+  delete vars.foo
+
+  parseLine('foo=1 // +1')
+  assert(1, vars.foo)
+  delete vars.foo
+
+  parseLine("foo='http://a.com/Bc.mp3'")
+  assert('http://a.com/Bc.mp3', vars.foo)
+  delete vars.foo
+
+  parseLine("foo='http://a.com/Bc.mp3'// BLAH")
+  assert('http://a.com/Bc.mp3', vars.foo)
   delete vars.foo
 
   parseLine(' \tfoo = 1 + 2 ')

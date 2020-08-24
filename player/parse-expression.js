@@ -155,7 +155,7 @@ define(function(require) {
     if (!key) { return }
     return (s,b) => {
       if (debugEval) { console.log('eval varLookup', 'key:',key, 'val:',vars[key], 's:',s,'b:',b) }
-      return evalParam(vars[key] ,s,b)
+      return evalParam(vars[key.toLowerCase()] ,s,b)
     }
   }
 
@@ -223,7 +223,7 @@ define(function(require) {
   let identifier = (state) => {
     let char
     let result = ''
-    while (char = state.str.charAt(state.idx)) {
+    while (char = state.str.charAt(state.idx).toLowerCase()) {
       if ((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || char === '_') {
         result += char
         state.idx += 1
@@ -284,7 +284,7 @@ define(function(require) {
   let parseColour = (state) => {
     let str = ''
     let char
-    while (char = state.str.charAt(state.idx)) {
+    while (char = state.str.charAt(state.idx).toLowerCase()) {
       if ((char >= '0' && char <= '9') || (char >= 'a' && char <= 'f')) {
         str += char
         state.idx += 1
@@ -317,26 +317,31 @@ define(function(require) {
     while (char = state.str.charAt(state.idx)) {
       if (char === '') { break }
       if (char === ' ' || char === '\t' || char === '\n' || char === '\r') { state.idx += 1; continue }
+      if (char === '/' && state.str.charAt(state.idx+1) === '/') {
+        // comment
+        state.idx = state.str.length
+        break
+      }
       // array
       if (char == '[') {
         let vs = array(state, '[', ']')
-        if (state.str.charAt(state.idx) == 't') {
+        if (state.str.charAt(state.idx).toLowerCase() == 't') {
           state.idx += 1
           vs = expandColon(vs)
           let ds = numberOrArrayOrFour(state)
           if (debugParse) { console.log('array t', vs, ds) }
           lhs = timeVar(vs, ds)
-        } else if (state.str.charAt(state.idx) == 'l') {
+        } else if (state.str.charAt(state.idx).toLowerCase() == 'l') {
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
           if (debugParse) { console.log('array l', vs, ds) }
           lhs = linearTimeVar(vs, ds)
-        } else if (state.str.charAt(state.idx) == 's') {
+        } else if (state.str.charAt(state.idx).toLowerCase() == 's') {
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
           if (debugParse) { console.log('array s', vs, ds) }
           lhs = sTimeVar(vs, ds)
-        } else if (state.str.charAt(state.idx) == 'r') {
+        } else if (state.str.charAt(state.idx).toLowerCase() == 'r') {
           state.idx += 1
           if (vs.seperator == ':') {
             let lo = param(vs[0], 0)
@@ -437,7 +442,7 @@ define(function(require) {
   let parseExpression = (v) => {
     if (v == '' || v == undefined) { return }
     if (debugParse || debugEval) { console.log('*** parseExpression', v) }
-    v = v.trim().toLowerCase()
+    v = v.trim()
     let state = {
       str: v,
       idx: 0,
@@ -733,7 +738,7 @@ define(function(require) {
   assert(undefined, p.x[2])
 
   assert('a', parseExpression("'a'"))
-  assert(' a b c ', parseExpression("' a B c '"))
+  assert(' a B c ', parseExpression("' a B c '"))
 
   assert({r:0,g:0.26666666666666666,b:0.5333333333333333,a:1}, parseExpression("#048f"))
   assert({r:0,g:0.25098039215686274,b:0.03137254901960784,a:1}, parseExpression("#004008ff"))
@@ -751,6 +756,11 @@ define(function(require) {
   assert(4, p(2,2))
   assert(4, p(3,3))
   assert(2, p(4,4))
+
+  assert('http://a.com/Bc.mp3', parseExpression("'http://a.com/Bc.mp3'"))
+
+  assert(2, parseExpression("[1]+1")(0,0))
+  assert([1], parseExpression("[1]//+1"))
 
   console.log('Parse expression tests complete')
 

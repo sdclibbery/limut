@@ -108,7 +108,6 @@ define(function(require) {
     players.instances = {}
     editor.getValue().split('\n')
     .map((l,i) => {return{line:l.trim(), num:i}})
-    .map(({line,num}) => {return{line:line.replace(/\/\/.*/, ''),num:num}})
     .filter(({line}) => line != '')
     .map(({line,num}) => {
       try {
