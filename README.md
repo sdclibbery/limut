@@ -29,3 +29,7 @@ Limut's audio files have been copied from FoxDot (https://github.com/Qirky/FoxDo
     Other samples have come from the Dirt Sample Engine which is part of the TidalCycles live coding language created by Yaxu - another huge amount of thanks.
 
 If you feel I've used a sample where I shouldn't have, please get in touch!
+
+# Shaders
+
+Many of the shaders are based on ones from https://www.shadertoy.com/
