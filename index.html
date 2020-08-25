@@ -166,17 +166,17 @@ main dsaw 0, dur=8, add=chords, detune=(0,0.1,0.3), chop=[0,2,3]t32, amp=0.5</pr
 chords=[0,2,4,3]t[16,8,4,4]
 be bell 0[.......2], dur=8, add=chords
 gl glock 024797.., dur=1/4, add=chords</pre>
-<pre>Perc play lstig, dur=[1,3,2], amp=0.2, echo=1/8
-Amb ping 0[21]., dur=4, release=8, detune=[(0,0.3,0.7,1.3),(0,0.5,0.9,1.4)]t4
+<pre>Perc play lstig, dur=[1,3,2], amp=0.5, echo=1/8
+Amb dsine 0[21]., dur=4, release=8, detune=[(0,0.3,0.5,0.9),(0,0.5,0.7,1.1)]t4
 Bass dbass 0, dur=8, att=2, rel=4, lpf=lpf=100*[3,30]l16</pre>
 <pre>Prog=[2,5,4,0]t8
 Ba piano 0__2, add=prog, amp=4, Oct=2
 Ch piano 0, dur=8, Sus=12, add=(prog+(0,2,4))%7, amp=2, Oct=3
 Le piano 0_.[.0]2343, amp=3, add=prog, Oct=4</pre>
 <pre>scale=minor
-Ba dbass 0.4[21], dur=4, amp=1.5, room=1
-Kd play x[.x]x., dur=2, room=1
-Sn play .o, dur=2, room=1</pre>
+Ba dbass 0.4[21], dur=4, amp=1.5, room=0.7
+Kd play x[.x]x., dur=2, room=0.7
+Sn play .o, dur=2, room=0.7</pre>
 <pre>V lines 0, pulse=3
 Scale=phrygian
 Kd play X.:X.:X., Sample=2
@@ -384,10 +384,11 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-slide param
 pan param
+Try a PWM prophet synth (and maybe techno pad too)
 'X' doesn't work on mobile
 root main var
+slide param
 echoey space synth
  ethereal vib=3, att=0, sus=2, rel=2, phaser=1/4, echo=(3/1,4/1), oct=5
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
@@ -396,8 +397,6 @@ formant
 pluck synth?
 timpani sample?
 bitcrush param
-try using freeverb for main reverb??
-Try a PWM prophet synth (and maybe techno pad too)
 support -ve rate for reverse playback
 pan
 scale
@@ -408,6 +407,10 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
 shadertoy synth
+ load from API; eg: https://www.shadertoy.com/api/v1/shaders/MdXyzX?key=rdHKM4
+  Shader.renderpass[0].code
+ must mention that uses "Shadertoy.com API".
+pass search term to shadertoy synth and use top result
 image synth
 video synth
 fix transparent fore on lines
@@ -427,6 +430,10 @@ Sparkles shader
 text synth
 ====
 ==== other ====
+Minor example room ->0.7
+Amb example ping->dsine
+use CodeMirror 'extraKeys'
+clipboard popup not working on mobile?
 finish off: <> for 'in sequence on each repeat' in patterns
 operator precedence
 Can specify params seperate from players

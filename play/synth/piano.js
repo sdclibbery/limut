@@ -87,7 +87,7 @@ define(function (require) {
     params.endTime = params.time + dur*params.beat.duration
 
     let vca = system.audio.createGain()
-    let gain = Math.max(0, 0.5 * param(params.amp, 1))
+    let gain = Math.max(0, 0.35 * param(params.amp, 1))
     vca.gain.cancelScheduledValues(params.time)
     vca.gain.setValueAtTime(gain, params.time)
     vca.gain.linearRampToValueAtTime(gain, params.endTime-0.01)
