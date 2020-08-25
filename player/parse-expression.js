@@ -619,8 +619,6 @@ define(function(require) {
 
   assert([4,5], parseExpression('[(1,2)]+3')(0,0))
 
-  // [1,2]+vars.foo 1+[2,3]+4+[5,6]t1+(7,8) ([1,2]+(3,4))
-
   assert(1/2, parseExpression('1/2'))
   assert(1/2, parseExpression('(1/2)'))
   assert([1,2], parseExpression('(2,4)/2')(0,0))

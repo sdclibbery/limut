@@ -5,14 +5,14 @@ define(function(require) {
   let evalSequence = (seq, e, r) => {
     let v = seq[r % seq.length]
     if (debug) { console.log('evalSequence', e, r, v) }
-    let parentTime = e.time
-    let parentDur = e.dur
     return v.flatMap(({value,time,dur}) => {
-      let v = value
-      if (typeof(v) == 'function') {
-        return v(e, Math.floor(r / seq.length))
+      let event = {time:e.time+time*e.dur, dur:dur*e.dur}
+      if (typeof(value) == 'function') {
+        if (debug) { console.log('evalSequence func', event, r/seq.length) }
+        return value(event, Math.floor(r / seq.length))
       }
-      return [{value:v, time:parentTime+time*parentDur, dur:dur*parentDur}]
+      if (debug) { console.log('evalSequence val', value, event) }
+      return [{value:value, time:event.time, dur:event.dur}]
     })
   }
 
@@ -29,8 +29,8 @@ define(function(require) {
       let sub = pattern(subState, ']')
       state.idx = subState.idx
       if (sub.length === 0) { return events }
+      if (debug) { console.log('subpattern', state, 'sub.events', sub.events) }
       sub.events.forEach(e => {
-        if (debug) { console.log('subpattern', state, 'e', e, 'sub.length', sub.length) }
         events.push({
           value: e.value,
           time: time + e.time*dur/sub.length,
@@ -403,12 +403,12 @@ define(function(require) {
   assert([{value:'1',time:0, dur:2}], p.events[0].value({time:0,dur:2},2))
   assert([{value:'3',time:0, dur:2}], p.events[0].value({time:0,dur:2},3))
 
-  // p = parsePattern('<1[2<34>]>', 1)
-  // assert(1, p.length)
-  // assert([{value:'1',time:0, dur:1}], p.events[0].value({time:0,dur:1},0))
-  // assert([{value:'2',time:0, dur:1/2},{value:'3',time:1/2, dur:1/2}], p.events[0].value({time:0,dur:1},1))
-  // assert([{value:'1',time:0, dur:1}], p.events[0].value({time:0,dur:1},2))
-  // assert([{value:'2',time:0, dur:1/2},{value:'4',time:1/2, dur:1/2}], p.events[0].value({time:0,dur:1},3))
+  p = parsePattern('<1[2<34>]>', 1)
+  assert(1, p.length)
+  assert([{value:'1',time:0, dur:1}], p.events[0].value({time:0,dur:1},0))
+  assert([{value:'2',time:0, dur:1/2},{value:'3',time:1/2, dur:1/2}], p.events[0].value({time:0,dur:1},1))
+  assert([{value:'1',time:0, dur:1}], p.events[0].value({time:0,dur:1},2))
+  assert([{value:'2',time:0, dur:1/2},{value:'4',time:1/2, dur:1/2}], p.events[0].value({time:0,dur:1},3))
 
   // p = parsePattern('[1<2[34]>]', 1)
   // assert(1, p.length)
