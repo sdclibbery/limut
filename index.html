@@ -190,6 +190,17 @@ d1 play (vx)., room=0.3
 d2 play .[::], room=0.3
 ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 </div>
+<h5 onclick="toggleAccordion('accordion-basic-syntax')">▶ Basic Syntax</h5>
+<div id="accordion-basic-syntax" class="closed">
+<p>Note: limut is case insensitive; <code>piano</code>, <code>Piano</code>, and <code>PIANO</code> are all treated the same; <code>[1:4]t4</code> is the same as <code>[1:4]T4</code> etc.</p>
+<p>Basic structure of a line of limut code, defining a player:</p>
+<p><code>id synth pattern, params // comment</code></p>
+<p><code>id</code> Identifier for the player, so it can be referred to from other players etc.</p>
+<p><code>synth</code> Name of the audio or visual synth to use; eg <code>piano</code></p>
+<p><code>pattern</code> Pattern of notes to play. Specifies the notes or sounds to play, and when to play them</p>
+<p><code>params</code> Comma separated list of params that affect how the player plays</p>
+<p><code>comment</code> Anything after <code>//</code> on a line is ignored</p>
+</div>
 <h5 onclick="toggleAccordion('accordion-pattern-syntax')">▶ Pattern Syntax</h5>
 <div id="accordion-pattern-syntax" class="closed">
 <p><code>x-o-</code> Sequence of events, each of duration <code>dur</code>, for use with <code>play</code></p>
@@ -389,8 +400,6 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-synth to play a web sample with pitch as an instrument
- docs (synth and params)
 pan param
 Try a PWM prophet synth (and maybe techno pad too)
 'X' doesn't work on mobile
