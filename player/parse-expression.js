@@ -143,7 +143,7 @@ define(function(require) {
   let varLookup = (state) => {
     let key = ''
     let char
-    while (char = state.str.charAt(state.idx)) {
+    while (char = state.str.charAt(state.idx).toLowerCase()) {
       if ((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || (char == '_') || (char == '.')) {
         key += char
         state.idx += 1
@@ -155,7 +155,7 @@ define(function(require) {
     if (!key) { return }
     return (s,b) => {
       if (debugEval) { console.log('eval varLookup', 'key:',key, 'val:',vars[key], 's:',s,'b:',b) }
-      return evalParam(vars[key.toLowerCase()] ,s,b)
+      return evalParam(vars[key] ,s,b)
     }
   }
 
@@ -534,6 +534,11 @@ define(function(require) {
   p = parseExpression('foo.woo')
   assert('bar', p())
   vars['foo.woo'] = undefined
+
+  vars['foo'] = 'bar'
+  p = parseExpression('FoO')
+  assert('bar', p())
+  vars['foo'] = undefined
 
   vars.foo = 2
   p = parseExpression('[1,foo]')
