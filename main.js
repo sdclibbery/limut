@@ -147,7 +147,7 @@ define(function(require) {
 
   // Update
   let compressorReadout = document.getElementById('compressor-readout')
-  let eventsReadout = document.getElementById('events-readout')
+  let beatLatencyReadout = document.getElementById('beat-latency-readout')
   let audioReadout = document.getElementById('audio-readout')
   let visualReadout = document.getElementById('visual-readout')
   let beatReadout = document.getElementById('beat-readout')
@@ -155,7 +155,7 @@ define(function(require) {
   let beat16Readout = document.getElementById('beat16-readout')
   let beat32Readout = document.getElementById('beat32-readout')
   let lastBeat = 0 
-  let eventLatency = 0
+  let beatLatency = 0
   let tick = (t) => {
     let now = system.timeNow()
     let beat = metronome.update(now)
@@ -180,7 +180,7 @@ define(function(require) {
           }
         }
       }
-      eventLatency = ((now - lastBeat) / beat.duration) - 1
+      beatLatency = ((now - lastBeat) / beat.duration) - 1
       lastBeat = now
     }
     if (ctxGl) {
@@ -192,7 +192,7 @@ define(function(require) {
       }
     }
     compressorReadout.style.backgroundColor = readoutColor(system.compressorReduction(), 0, 1)
-    eventsReadout.style.backgroundColor = readoutColor(eventLatency, 0, metronome.advance())
+    beatLatencyReadout.style.backgroundColor = readoutColor(beatLatency, 0, metronome.advance())
     audioReadout.style.backgroundColor = readoutColor(system.latency(), 0, 0.1)
     visualReadout.style.backgroundColor = readoutColor(drawSystem.latency(), 0.02, 0.1)
     requestAnimationFrame(tick)
