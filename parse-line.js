@@ -104,8 +104,9 @@ define((require) => {
   assert(undefined, players.instances.p.getEventsForBeat({count:0})[0].amp)
   delete players.instances.p
 
-  parseLine('p play xo//, amp=2')
+  parseLine('p play 0//, amp=2')
   assert(undefined, players.instances.p.getEventsForBeat({count:0})[0].amp)
+  assert('0', players.instances.p.getEventsForBeat({count:1})[0].value)
   delete players.instances.p
 
   assertThrows('Missing player name', ()=>parseLine('p'))
