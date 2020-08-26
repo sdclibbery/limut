@@ -18,6 +18,7 @@ define(function(require) {
   return (command, defaultDur) => {
     let [patternStr, paramsStr] = splitOnFirst(command, ',').map(s => s.trim())
     let params = parseParams(paramsStr)
+    if (patternStr.endsWith('//')) { params = '' } // all params commented out
     if (patternStr.startsWith('follow')) { return followPlayer(patternStr.slice(6).trim(), params) }
     let pattern = parsePattern(patternStr, params, defaultDur)
     return (beat) => {

@@ -94,9 +94,18 @@ define((require) => {
   assert(3, vars.foo)
   delete vars.foo
 
-  parseLine('p play xo')
+  parseLine('p play xo, amp=2')
   assert('function', typeof players.instances.p.getEventsForBeat)
   assert('function', typeof players.instances.p.play)
+  assert(2, players.instances.p.getEventsForBeat({count:0})[0].amp)
+  delete players.instances.p
+
+  parseLine('p play xo,// amp=2')
+  assert(undefined, players.instances.p.getEventsForBeat({count:0})[0].amp)
+  delete players.instances.p
+
+  parseLine('p play xo//, amp=2')
+  assert(undefined, players.instances.p.getEventsForBeat({count:0})[0].amp)
   delete players.instances.p
 
   assertThrows('Missing player name', ()=>parseLine('p'))

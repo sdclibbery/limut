@@ -767,5 +767,9 @@ define(function(require) {
 
   console.log('Parse expression tests complete')
 
+  p = parseExpression("[#f00f,#00ff]t1")
+  assert({r:1,g:0,b:0,a:1}, p(0,0))
+  assert({r:0,g:0,b:1,a:1}, p(1,1))
+
   return parseExpression
 })
