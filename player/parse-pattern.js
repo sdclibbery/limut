@@ -410,18 +410,19 @@ define(function(require) {
   assert([{value:'1',time:0, dur:1}], p.events[0].value({time:0,dur:1},2))
   assert([{value:'2',time:0, dur:1/2},{value:'4',time:1/2, dur:1/2}], p.events[0].value({time:0,dur:1},3))
 
-  // p = parsePattern('[1<2[34]>]', 1)
-  // assert(1, p.length)
-  // assert([{value:'1',time:0, dur:1}], p.events[1].value({time:0,dur:1},0))
-  // assert([{value:'2',time:0, dur:1/2},{value:'3',time:1/2, dur:1/2}], p.events[1].value({time:0,dur:1},1))
+  p = parsePattern('[1<2[34]>]', 1)
+  assert(1, p.length)
+  assert({value:'1',time:0, dur:1/2}, p.events[0])
+  assert([{value:'2',time:1/2, dur:1/2}], p.events[1].value({time:1/2,dur:1/2},0))
+  assert([{value:'3',time:1/2, dur:1/4},{value:'4',time:3/4, dur:1/4}], p.events[1].value({time:1/2,dur:1/2},1))
 
-  // p = parsePattern('(0<1[2<3[45]>]>)', 1)
-  // assert(1, p.length)
-  // assert({value:'0',time:0, dur:1}, p.events[0])
-  // assert([{value:'1',time:0, dur:1}], p.events[1].value({time:0,dur:1},0))
-  // assert([{value:'2',time:0, dur:1/2},{value:'3',time:1/2, dur:1/2}], p.events[1].value({time:0,dur:1},1))
-  // assert([{value:'1',time:0, dur:1}], p.events[1].value({time:0,dur:1},2))
-  // assert([{value:'2',time:0, dur:1/2},{value:'4',time:1/2, dur:1/4},{value:'5',time:3/4, dur:1/4}], p.events[1].value({time:0,dur:1},3))
+  p = parsePattern('(0<1[2<3[45]>]>)', 1)
+  assert(1, p.length)
+  assert({value:'0',time:0, dur:1}, p.events[0])
+  assert([{value:'1',time:0, dur:1}], p.events[1].value({time:0,dur:1},0))
+  assert([{value:'2',time:0, dur:1/2},{value:'3',time:1/2, dur:1/2}], p.events[1].value({time:0,dur:1},1))
+  assert([{value:'1',time:0, dur:1}], p.events[1].value({time:0,dur:1},2))
+  assert([{value:'2',time:0, dur:1/2},{value:'4',time:1/2, dur:1/4},{value:'5',time:3/4, dur:1/4}], p.events[1].value({time:0,dur:1},3))
 
   // <1[.3]>_
   // <.(12)>_
