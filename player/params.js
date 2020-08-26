@@ -49,11 +49,12 @@ define(function(require) {
 
   let parseParam = (state) => {
     let name = parseName(state)
-    let value = parseValue(state)
+    let value = parseValue(state).trim()
     if (name) {
       if (name.includes('//')) { return false }
-      state.params[name.toLowerCase().trim()] = parseExpression(value.trim())
-      if (value.trim().endsWith('//')) { return false }
+      let commented
+      state.params[name.toLowerCase().trim()] = parseExpression(value, () => commented=true)
+      if (commented) { return false }
       return true
     }
     return false
@@ -100,6 +101,12 @@ define(function(require) {
   assert({a:1}, parseParams("a=1,//s='abc'"))
   assert({a:1}, parseParams("a=1//,s='abc'"))
   assert({a:1}, parseParams("a=1, //s='abc'"))
+  assert({a:1}, parseParams("a=1, //s='abc'"))
+  assert({dur:1}, parseParams("dur=1// amp=0.1, rate=10"))
+  assert({dur:1}, parseParams("dur=1//, amp=0.1, rate=10"))
+  assert({dur:1}, parseParams("dur=1//1, amp=0.1, rate=10"))
+  assert({dur:1}, parseParams("dur=1,// amp=0.1, rate=10"))
+  assert({str:['http://'], amp:0.1, rate:10}, parseParams("str=['http://'], amp=0.1, rate=10"))
 
   console.log("Params tests complete")
 

@@ -320,6 +320,7 @@ define(function(require) {
       if (char === '/' && state.str.charAt(state.idx+1) === '/') {
         // comment
         state.idx = state.str.length
+        state.commented = true
         break
       }
       // array
@@ -439,7 +440,7 @@ define(function(require) {
     return lhs
   }
 
-  let parseExpression = (v) => {
+  let parseExpression = (v, commented) => {
     if (v == '' || v == undefined) { return }
     if (debugParse || debugEval) { console.log('*** parseExpression', v) }
     v = v.trim()
@@ -447,7 +448,9 @@ define(function(require) {
       str: v,
       idx: 0,
     }
-    return expression(state)
+    let result =  expression(state)
+    if (commented && state.commented) { commented() }
+    return result
   }
 
   // TESTS //
