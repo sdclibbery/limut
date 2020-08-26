@@ -154,7 +154,7 @@ define(function(require) {
   let beat4Readout = document.getElementById('beat4-readout')
   let beat16Readout = document.getElementById('beat16-readout')
   let beat32Readout = document.getElementById('beat32-readout')
-  let caret = document.querySelector('.caret')
+  let lastBeat = 0 
   let eventLatency = 0
   let tick = (t) => {
     let now = system.timeNow()
@@ -180,7 +180,8 @@ define(function(require) {
           }
         }
       }
-      eventLatency = system.timeNow() - now
+      eventLatency = ((now - lastBeat) / beat.duration) - 1
+      lastBeat = now
     }
     if (ctxGl) {
       try {
