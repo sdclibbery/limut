@@ -4,6 +4,7 @@ define((require) => {
 
   let sprite = require('draw/sprite')
   let play = require('play/synth/play')
+  let sample = require('play/synth/sample')
   let dsaw = require('play/synth/dsaw')
   let dsine = require('play/synth/dsine')
   let dbass = require('play/synth/dbass')
@@ -39,6 +40,7 @@ define((require) => {
     // instruments
     drums: makePlayerFactory(play, 1/2),
     play: makePlayerFactory(play, 1/2),
+    sample: makePlayerFactory(sample),
     dsaw: makePlayerFactory(dsaw),
     dsine: makePlayerFactory(dsine),
     dbass: makePlayerFactory(dbass),

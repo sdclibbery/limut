@@ -229,6 +229,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <div id="accordion-audio-synths" class="closed">
 <p><code>! / stop / none</code> </p>
 <p><code>play</code> Play samples. Use letters, symbols and digits 1-4 in the pattern to choose the sample (see below for full list). Note duration defaults to 1/2.</p>
+<p><code>sample</code> Pitched sample player. Use the 'sample' and 'samplepitch' params, and then use it as a piched synth</p>
 <p><code>dsaw</code> Detuned saw pad</p>
 <p><code>dbass</code> Detuned saw bass</p>
 <p><code>ping</code> Sine ping</p>
@@ -273,7 +274,8 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>bpf</code> Band pass filter frequency</p>
 <p><code>bpr</code> Band pass filter resonance</p>
 <p><code>chop</code> Chop the signal into a number of parts per beat</p>
-<p><code>sample</code> Works with the 'play' synth to choose the sample. Number: sample set choice. String: url of online audio file to play (note: server must support cross origin requests for the file)</p>
+<p><code>sample</code> With 'play' synth: number: choose which sample set to use. With 'sample' synth: string: url of online audio file to play (note: server must support cross origin requests for the file)</p>
+<p><code>samplepitch</code> For the 'sample' synth, use this to specify the original pitch of 'sample' in Hz (eg '261.6' for C4)</p>
 <p><code>room</code> reverb room size 0-1</p>
 <p><code>drive</code> overdrive level 0-1</p>
 <p><code>scale</code> override scale for this player; set to a string eg <code>'penta'</code></p>
@@ -388,6 +390,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 /*
 ==== audio ====
 synth to play a web sample with pitch as an instrument
+ docs (synth and params)
 pan param
 Try a PWM prophet synth (and maybe techno pad too)
 'X' doesn't work on mobile
