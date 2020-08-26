@@ -1,6 +1,7 @@
 'use strict';
 define(function (require) {
   let system = require('play/system');
+  let {getBuffer, isLoaded} = require('play/samples')
   let effects = require('play/effects')
   let param = require('player/default-param')
   let scale = require('music/scale');
@@ -10,28 +11,6 @@ define(function (require) {
   }
   let getHarmonicsUrl = (note) => {
     return 'sample/salamander/harmS'+note+'.mp3'
-  }
-
-  let buffers = {}
-  let nullBuffer = system.audio.createBuffer(2, 100, 22050);
-
-  let getBuffer = (url) => {
-    let buffer = buffers[url]
-    if (buffer == nullBuffer) { return null }
-    if (!buffer) {
-      buffers[url] = nullBuffer
-      let request = new XMLHttpRequest()
-      request.open('GET', url, true)
-      request.responseType = 'arraybuffer'
-      request.onload = () => {
-        system.audio.decodeAudioData(request.response, (buf) => {
-          buffers[url] = buf
-        }, console.error)
-      }
-      request.send()
-      return null
-    }
-    return buffer
   }
 
   let playBuffer = (params, url, rate, vca, timeOverride) => {
@@ -47,15 +26,11 @@ define(function (require) {
     }
   }
 
-  let isLoaded = (sample) => {
-    let buf = buffers[getNoteUrl(sample)]
-    return !!buf && buf !== nullBuffer
-  }
   let findNearestSample = (freq, loadedOnly) => {
     let sample
     let diff = Infinity
     Object.keys(samples).forEach(s => {
-      if (loadedOnly && !isLoaded(s)) { return }
+      if (loadedOnly && !isLoaded(getNoteUrl(s))) { return }
       let newDiff = Math.abs(freq - samples[s])
       if (newDiff < diff) {
         sample = s

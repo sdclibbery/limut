@@ -1,6 +1,7 @@
 'use strict';
 define(function (require) {
   let system = require('play/system');
+  let {getBuffer} = require('play/samples')
   let effects = require('play/effects')
   let param = require('player/default-param')
 
@@ -41,28 +42,6 @@ define(function (require) {
       let subdir = char.toUpperCase()==char ? "upper" : "lower"
       return "sample/"+char.toLowerCase()+"/"+subdir+"/0"+sample+".wav"
     }
-  }
-
-  let buffers = {}
-  let nullBuffer = system.audio.createBuffer(2, 100, 22050);
-
-  let getBuffer = (url) => {
-    let buffer = buffers[url]
-    if (buffer == nullBuffer) { return null }
-    if (!buffer) {
-      buffers[url] = nullBuffer
-      let request = new XMLHttpRequest()
-      request.open('GET', url, true)
-      request.responseType = 'arraybuffer'
-      request.onload = () => {
-        system.audio.decodeAudioData(request.response, (buf) => {
-          buffers[url] = buf
-        }, console.error)
-      }
-      request.send()
-      return null
-    }
-    return buffer
   }
 
   return (params) => {

@@ -424,7 +424,11 @@ define(function(require) {
   assert([{value:'1',time:0, dur:1}], p.events[1].value({time:0,dur:1},2))
   assert([{value:'2',time:0, dur:1/2},{value:'4',time:1/2, dur:1/4},{value:'5',time:3/4, dur:1/4}], p.events[1].value({time:0,dur:1},3))
 
-  // <1[.3]>_
+  // p = parsePattern('<1[.3]>_', 1)
+  // assert(2, p.length)
+  // assert([{value:'1',time:0, dur:2}], p.events[0].value({time:0,dur:1},0))
+  // assert([{value:'3',time:1/2, dur:3/2}], p.events[0].value({time:0,dur:1},1))
+
   // <.(12)>_
   // 0<1_>
   console.log("Parse pattern tests complete")
