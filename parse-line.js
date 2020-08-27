@@ -109,6 +109,11 @@ define((require) => {
   assert('0', players.instances.p.getEventsForBeat({count:1})[0].value)
   delete players.instances.p
 
+  parseLine('p play 0, window//, amp=2')
+  assert(undefined, players.instances.p.getEventsForBeat({count:0})[0].amp)
+  assert(1, players.instances.p.getEventsForBeat({count:0})[0].window)
+  delete players.instances.p
+
   assertThrows('Missing player name', ()=>parseLine('p'))
   assertThrows('Missing pattern/params', ()=>parseLine('p play'))
   assertThrows('Player "INVALID" not found', ()=>parseLine('p INVALID xo'))

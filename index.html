@@ -426,6 +426,12 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ==== visual ====
 vignette effect
 image synth
+shadertoy synth
+ load from API; eg: https://www.shadertoy.com/api/v1/shaders/MdXyzX?key=rdHKM4
+  Shader.renderpass[0].code
+ must mention that uses "Shadertoy.com API".
+? Synths defined earlier in source code always appear behind later ones, irrespective of the timing when they fire
+Z order param
 postprocess effects
  monochrome
  gamma
@@ -433,22 +439,14 @@ postprocess effects
  noise
  dither
  threshold
-shadertoy synth
- load from API; eg: https://www.shadertoy.com/api/v1/shaders/MdXyzX?key=rdHKM4
-  Shader.renderpass[0].code
- must mention that uses "Shadertoy.com API".
-pass search term to shadertoy synth and use top result?
+can pass search term to shadertoy synth and use top result?
 video synth (use video element to load video file; don't try and target eg youtube)
 text synth
-fix transparent fore on lines
-? Synths defined earlier in source code always appear behind later ones, irrespective of the timing when they fire
-Z order param
 pixellate per frame
 Sprites duration should include rel? Or not??
 Drop canvas to half res if gl frame rate is low?
 ====
 ==== other ====
-window//, sway=0.5  fails to get window param
 operator + allows string concatenation
 should multiply out 'chords' in objects eg loc={x:(0,1,2,3), y:(0,1,2,3), w:1,h:1}/4
 Can specify params separate from players

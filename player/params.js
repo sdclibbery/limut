@@ -61,9 +61,13 @@ define(function(require) {
     } else {
       value = parseValue(state).trim()
     }
-    if (name) {
-      if (name.includes('//')) { return false }
-      let commented
+    let commented
+    if (name.includes('//')) {
+      name = name.replace(/\/\/.*/, '')
+      value = '1'
+      commented = true
+    }
+    if (name.trim()) {
       state.params[name.toLowerCase().trim()] = parseExpression(value, () => commented=true)
       if (commented) { return false }
       return true
@@ -107,7 +111,7 @@ define(function(require) {
   assert({s:'abc'}, parseParams("s='abc'"))
   assert({s:'http://a.com/Bc.mp3'}, parseParams("s='http://a.com/Bc.mp3'"))
   assert({}, parseParams("//s='abc'"))
-  assert({}, parseParams("s//='abc'"))
+  assert({s:1}, parseParams("s//='abc'"))
   assert({}, parseParams("s=//'abc'"))
   assert({a:1}, parseParams("a=1,//s='abc'"))
   assert({a:1}, parseParams("a=1//,s='abc'"))
@@ -122,6 +126,7 @@ define(function(require) {
   assert({amp:3,window:1,rate:2}, parseParams("amp=3, window, rate=2"))
   assert({amp:3,window:1}, parseParams("amp=3, window"))
   assert({window:1,rate:2}, parseParams("window, rate=2"))
+  assert({window:1}, parseParams("window//, rate=2"))
 
   console.log("Params tests complete")
 
