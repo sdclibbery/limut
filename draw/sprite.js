@@ -5,7 +5,7 @@ define(function (require) {
   let param = require('player/default-param')
   let evalParam = require('player/eval-param')
 
-  let verts = (loc) => {
+  let verts = (loc, window) => {
     let l = -1 + loc.x*2
     let r = l + loc.w*2
     let t = 1 - loc.y*2
@@ -16,9 +16,19 @@ define(function (require) {
       har = Math.sqrt(har)
       ihar = 1/har
     }
+    let u = -har
+    let v = ihar
+    let w = har
+    let x = -ihar
+    if (window) {
+      u = har*l
+      v = ihar*t
+      w = har*r
+      x = ihar*b
+    }
     return {
       vtx: new Float32Array([l,t, r,t, l,b, l,b, r,t, r,b]),
-      tex: new Float32Array([-har,ihar, har,ihar, -har,-ihar, -har,-ihar, har,ihar, har,-ihar])
+      tex: new Float32Array([u,v, w,v, u,x, u,x, w,v, w,x])
     }
   }
 
@@ -56,7 +66,7 @@ define(function (require) {
       let perspective = param(evalParam(params.perspective, params.idx, state.count), 0)
       let fore = colour(param(evalParam(params.fore, params.idx, state.count), {}), defFore)
       let back = colour(param(evalParam(params.back, params.idx, state.count), {}), defBack)
-      let vtxData = verts(loc)
+      let vtxData = verts(loc, param(params.window, false))
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
       system.loadVertexAttrib(s.fragCoordBuf, s.fragCoordAttr, vtxData.tex, 2)
       system.gl.useProgram(s.program)

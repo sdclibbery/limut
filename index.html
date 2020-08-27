@@ -299,6 +299,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>pulse</code> extent to which the audio signal affects the value passed to visual synths</p>
 <p><code>sway</code> extent to which the audio signal affects the time passed to visual synths</p>
 <p><code>loc</code> position and size for visual synths; eg {x:0,y:0,w:1/2,h:1/2}</p>
+<p><code>window</code> display the only part of the shader image appropriate to the location of the tile on the screen. This way, a tile moved around the screen will act like a window onto the overall shader image.</p>
 <p><code>scroll</code> scroll the shader; default: {x:0,y:0}</p>
 <p><code>zoom</code> zoom the shader; default: {x:1,y:1}</p>
 <p><code>fore</code> foreground colour for visual synths; eg {r:0,g:1,b:0,a:1} or #fa0f</p>
@@ -422,12 +423,20 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+vignette effect
+image synth
+postprocess effects
+ monochrome
+ gamma
+ outline
+ noise
+ dither
+ threshold
 shadertoy synth
  load from API; eg: https://www.shadertoy.com/api/v1/shaders/MdXyzX?key=rdHKM4
   Shader.renderpass[0].code
  must mention that uses "Shadertoy.com API".
-pass search term to shadertoy synth and use top result
-image synth
+pass search term to shadertoy synth and use top result?
 video synth (use video element to load video file; don't try and target eg youtube)
 text synth
 fix transparent fore on lines
@@ -436,17 +445,14 @@ Z order param
 pixellate per frame
 Sprites duration should include rel? Or not??
 Drop canvas to half res if gl frame rate is low?
-postprocess effects
- vignette
- monochrome
- gamma
- outline
- noise
- dither
- threshold
 ====
 ==== other ====
-Can specify params seperate from players
+random for x beats syntax [0:4]r1
+ use for tile and colour random
+ docs
+window//, sway=0.5  fails to get window param
+operator + allows string concatenation
+Can specify params separate from players
  extract param overriding logic from follow player to param-overrides module
  need behaviours for params; eg add adds, amp modulates, time/delay etc are ignored
  Syntax to add overrides: 'set bass amp=0, chop=2'
@@ -455,22 +461,23 @@ Wildcard player matching for groups
 Can specify params for all players except those in group
 syntax for 'change from A to B by the next multiple of X' - but how not to repeat this if rerun?
 finish off: <> for 'in sequence on each repeat' in patterns
-_ extends all notes properly, even across brackets (eg <1[.3]>_ etc)
 multiline commands
 "on 4 " syntax to execute a line on the next beat count
 "on 28 of 32 " syntax
 "every 4 " / "every 28 of 32 "
 dur=[3,3,2]\4
+dur=[1:4]r
 operator precedence
+Syntax to make parts of patterns repeat a set number of times
+_ extends all notes properly, even across brackets (eg <1[.3]>_ etc)
 evaluate predefined vars; eg allow bpm=[80,120]
-value param to override the pattern
+value param to override the pattern value
 Should be able to [red:blue]l8
 <> for 'in sequence on each repeat' in params
 Preload samples immediately after parsing
 rests in params
 random in patterns: what syntax??
 GC or LRU or quantisation for echoes and freeverbs
-Experiment with reusing audio nodes instead of recreating to defeat glitchiness
 better musicality: extending patterns like every/sometimes/offadd/stutter etc
 sliders that appear in the code as vars
 seeded random: takes repeat length and optional seed
@@ -478,12 +485,9 @@ seeded random: takes repeat length and optional seed
 ? when evaluating time var, can it accept a decimal time? Do we pass event time rather than beat time?
 ? What do nested [] mean in params?
 allow dur to be tvar
-?extract some of the playing stuff out of pattern.js?
-Syntax to make parts of patterns repeat a set number of times?
 ?? Should param pattern repeat be independent of main pattern repeat? Eg so you can xo, amp=[1,2,3] and it multiplies out
 fix delay param problems (commented tests in pattern.js)
 index pattern by beat to improve performance in finding events - same for timeVar evaluation
-random timevar gens for patterns: {o-:}
 pattern generators: tri, Dur, walk etc?
 ===
 ===== Interesting shadertoys

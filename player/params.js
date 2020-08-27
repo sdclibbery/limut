@@ -5,8 +5,13 @@ define(function(require) {
   let parseName = (state) => {
     let name = ''
     let char
+    state.valueless = false
     while (char = state.str.charAt(state.idx)) {
       if (char == '=') {
+        state.idx += 1
+        return name
+      } else if (char == ',') {
+        state.valueless = true
         state.idx += 1
         return name
       } else {
@@ -14,7 +19,8 @@ define(function(require) {
         state.idx += 1
       }
     }
-    return null
+    state.valueless = true
+    return name
   }
 
   let brackets = {
@@ -49,7 +55,12 @@ define(function(require) {
 
   let parseParam = (state) => {
     let name = parseName(state)
-    let value = parseValue(state).trim()
+    let value
+    if (state.valueless) {
+      value = '1'
+    } else {
+      value = parseValue(state).trim()
+    }
     if (name) {
       if (name.includes('//')) { return false }
       let commented
@@ -107,6 +118,10 @@ define(function(require) {
   assert({dur:1}, parseParams("dur=1//1, amp=0.1, rate=10"))
   assert({dur:1}, parseParams("dur=1,// amp=0.1, rate=10"))
   assert({str:['http://'], amp:0.1, rate:10}, parseParams("str=['http://'], amp=0.1, rate=10"))
+  assert({window:1}, parseParams("window"))
+  assert({amp:3,window:1,rate:2}, parseParams("amp=3, window, rate=2"))
+  assert({amp:3,window:1}, parseParams("amp=3, window"))
+  assert({window:1,rate:2}, parseParams("window, rate=2"))
 
   console.log("Params tests complete")
 
