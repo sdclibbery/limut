@@ -151,7 +151,7 @@ define(function(require) {
   let audioReadout = document.getElementById('audio-readout')
   let visualReadout = document.getElementById('visual-readout')
   let beatReadout = document.getElementById('beat-readout')
-  let beat4Readout = document.getElementById('beat4-readout')
+  let beat12Readout = document.getElementById('beat12-readout')
   let beat16Readout = document.getElementById('beat16-readout')
   let beat32Readout = document.getElementById('beat32-readout')
   let lastBeat = 0 
@@ -166,7 +166,7 @@ define(function(require) {
     vars.time = beatTime
     if (beat) {
       beatReadout.innerText = beat.count
-      beat4Readout.innerText = (beat.count%4 + 1) + '/4'
+      beat12Readout.innerText = (beat.count%12 + 1) + '/12'
       beat16Readout.innerText = (beat.count%16 + 1) + '/16'
       beat32Readout.innerText = (beat.count%32 + 1) + '/32'
       for (let playerName of Object.keys(players.instances)) {
