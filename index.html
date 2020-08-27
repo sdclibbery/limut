@@ -228,6 +228,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>[:9]r</code> Select a different random integer every time, between 0 and 9</p>
 <p><code>[0:9]r</code> Select a different random integer every time, between 0 and 9</p>
 <p><code>[0.1:9]r</code> Select a different random floating point value every time, between 0.1 and 9</p>
+<p><code>[1,2]r4</code> Select a different value every 4 beats, chosen randomly from the numbers 1, 2</p>
 <p><code>+</code> Add values together; eg [2,3]+4 is equivalent to [6,7]</p>
 <p><code>-</code> Subtract values; eg [2,3]-1 is equivalent to [1,2]</p>
 <p><code>/</code> Divide values; eg 1/2</p>
@@ -449,9 +450,9 @@ Drop canvas to half res if gl frame rate is low?
 ==== other ====
 random for x beats syntax [0:4]r1
  use for tile and colour random
- docs
 window//, sway=0.5  fails to get window param
 operator + allows string concatenation
+should multiply out 'chords' in objects eg loc={x:(0,1,2,3), y:(0,1,2,3), w:1,h:1}/4
 Can specify params separate from players
  extract param overriding logic from follow player to param-overrides module
  need behaviours for params; eg add adds, amp modulates, time/delay etc are ignored

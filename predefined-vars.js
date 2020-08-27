@@ -40,8 +40,8 @@ define(function(require) {
   vars['tile_v2'] = parseExpression('{x:1/4,y:0,w:1/4,h:1}')
   vars['tile_v3'] = parseExpression('{x:2/4,y:0,w:1/4,h:1}')
   vars['tile_v4'] = parseExpression('{x:3/4,y:0,w:1/4,h:1}')
-  vars['tile_random'] = parseExpression('{x:[0,1/4,2/4,3/4]r,y:[0,1/4,2/4,3/4]r,w:1/4,h:1/4}')
-  vars['tile_rand'] = parseExpression('{x:[0,1/4,2/4,3/4]r,y:[0,1/4,2/4,3/4]r,w:1/4,h:1/4}')
+  vars['tile_random'] = parseExpression('{x:[0,1/4,2/4,3/4]r1,y:[0,1/4,2/4,3/4]r1,w:1/4,h:1/4}')
+  vars['tile_rand'] = parseExpression('{x:[0,1/4,2/4,3/4]r1,y:[0,1/4,2/4,3/4]r1,w:1/4,h:1/4}')
 
   vars['transparent'] = parseExpression('{r:0,g:0,b:0,a:0}')
   vars['black'] = parseExpression('{r:0,g:0,b:0,a:1}')
@@ -60,5 +60,5 @@ define(function(require) {
   vars['neonpink'] = parseExpression('{r:1,g:0,b:1,a:1}')
   vars['neongreen'] = parseExpression('{r:0,g:0.7,b:1,a:1}')
   vars['rainbow'] = parseExpression('{r:[0.8,0,0]l6,g:[0,0.7,0]l6,b:[0,0,1]l6,a:1}')
-  vars['random'] = parseExpression('{r:[0:0.8]r,g:[0:0.7]r,b:[0.1:0.9]r,a:1}')
+  vars['random'] = parseExpression('{r:[0:0.8]r1,g:[0:0.7]r1,b:[0.1:0.9]r1,a:1}')
 })

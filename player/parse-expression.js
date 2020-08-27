@@ -172,6 +172,16 @@ define(function(require) {
     if (debugEval) { console.log('eval evalRandomRanged', vs.length, idx, s,b) }
     return evalParam(vs[idx], s,b)
   }
+  let periodicRandom = (getter, period) => {
+    let lastBeat, lastValue
+    return (s,b) => {
+      if (lastValue === undefined || period === undefined || b >= lastBeat+period-0.0001) {
+        lastBeat = b
+        lastValue = getter(s,b)
+      }
+      return lastValue
+    }
+  }
 
   let numberValue = (state) => {
     let value = ''
@@ -344,15 +354,18 @@ define(function(require) {
           lhs = sTimeVar(vs, ds)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'r') {
           state.idx += 1
+          let period = number(state)
+          let rand
           if (vs.seperator == ':') {
             let lo = param(vs[0], 0)
             let hi = param(vs[1], 1)
             if (debugParse) { console.log('array r:', vs, lo, hi) }
-            lhs = (s,b) => evalRandomRanged(evalParam(lo,s,b), evalParam(hi,s,b))
+            rand = (s,b) => evalRandomRanged(evalParam(lo,s,b), evalParam(hi,s,b))
           } else {
             if (debugParse) { console.log('array r,', vs) }
-            lhs = (s,b) => evalRandomSet(vs, s,b)
+            rand = (s,b) => evalRandomSet(vs, s,b)
           }
+          lhs = periodicRandom(rand, period)
         } else {
           vs = expandColon(vs)
           if (debugParse) { console.log('array', vs) }
@@ -773,6 +786,12 @@ define(function(require) {
   p = parseExpression("[#f00f,#00ff]t1")
   assert({r:1,g:0,b:0,a:1}, p(0,0))
   assert({r:0,g:0,b:1,a:1}, p(1,1))
+
+  p = parseExpression('[1,2]r1')
+  let v0 = p(0,0)
+  for (let i = 0; i<20; i+=1) { assert(v0, p(0,0)) }
+  let v1 = p(1,1)
+  for (let i = 0; i<20; i+=1) { assert(v1, p(1,1)) }
 
   return parseExpression
 })
