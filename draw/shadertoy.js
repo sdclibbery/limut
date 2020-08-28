@@ -1,6 +1,7 @@
 'use strict';
 define(function (require) {
   let system = require('draw/system')
+  let param = require('player/default-param')
 
   let vtxShader = `//
   attribute vec2 posIn;
@@ -12,7 +13,7 @@ define(function (require) {
   }`
   let vtxCompiled
 
-  let commonProcessors = (`
+  let commonProcessors = `
     uniform vec2 scroll;
     uniform vec2 zoom;
     uniform float perspective;
@@ -43,23 +44,35 @@ define(function (require) {
     gl_FragColor.a = mix(col.a, 0.0, additive);
     if (length(gl_FragColor) < 0.01) discard;
   }
-  `).replace(/\n/g,' ')
+  `
 
+  let pre = `precision highp float; vec2 iResolution = vec2(1.,1.); vec4 iMouse = vec4(0.); uniform float iTime;`
+
+  let post = `
+  varying vec2 fragCoord;
+  uniform float value;
+  uniform float amp;
+  void main() {
+    vec4 fragColor;
+    vec2 uv = preprocess(fragCoord)/2.0;
+    mainImage( fragColor, uv );
+    postprocess(fragColor, 1.0);
+  }
+  `
   let shaders = {}
 
-  let getUrl = (shaderName) => {
-    return "shader/"+shaderName+".frag"
+  let getUrl = (id) => {
+    return "https://www.shadertoy.com/api/v1/shaders/"+id+"?key=rdHKM4"
   }
 
-  return (shaderName) => {
-    let url = getUrl(shaderName)
-    if (url === undefined) { return }
+  return (params) => {
+    let url = getUrl(param(params.id, 'MsGczV'))
     if (shaders[url] === undefined) {
-      shaders[url] = {}
       let request = new XMLHttpRequest()
       request.open('GET', url, true)
       request.onload = () => {
-        let source = request.response.replace('#insert common-processors', commonProcessors)
+        let code = JSON.parse(request.response).Shader.renderpass[0].code
+        let source = pre + code + commonProcessors + post
         shaders[url] = {fragSource: source}
       }
       request.send()

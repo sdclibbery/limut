@@ -402,6 +402,12 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
+? Should disconnect vibrato nodes?
+Try drive from here: https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
+Pluck/guitar synths
+ https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
+ https://github.com/ronkot/ks-guitar-synth/blob/master/src/js/guitar-string.js
+ https://github.com/mohayonao/pluck-string-node/blob/master/index.js
 pan param
 Try a PWM prophet synth (and maybe techno pad too)
 'X' doesn't work on mobile
@@ -424,12 +430,16 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+shadertoy synth
+ extract commonprocessor and vtxshader out to shared file
+ correct fragCoords and iResolution
+ iMouse: feed value and amp in here??
+ must mention that uses "Shadertoy.com API"
+ foreback; color key back on black??
+ handle shader not found eg MsGczV
+ docs
 vignette effect
 image synth
-shadertoy synth
- load from API; eg: https://www.shadertoy.com/api/v1/shaders/MdXyzX?key=rdHKM4
-  Shader.renderpass[0].code
- must mention that uses "Shadertoy.com API".
 ? Synths defined earlier in source code always appear behind later ones, irrespective of the timing when they fire
 Z order param
 postprocess effects
@@ -440,6 +450,7 @@ postprocess effects
  dither
  threshold
 can pass search term to shadertoy synth and use top result?
+shadertoy synth supports textures and multiple channels
 video synth (use video element to load video file; don't try and target eg youtube)
 text synth
 pixellate per frame

@@ -41,23 +41,27 @@ define(function (require) {
     return {x:param(v.x, d.x), y:param(v.y, d.y), w:param(v.w, d.w), h:param(v.h, d.h)}
   }
 
-  let create = (shader, defFore, defBack, params) => {
+  let play = (shader, defFore, defBack, params) => {
     let amp = Math.min(param(params.amp, 1), 5)
     if (amp < 0.001) { return }
+    let s
+    if (typeof shader === 'function') {
+      s = shader(params)
+    } else {
+      s = shaders(shader)
+    }
+    if (!s) { return () => {} }
     let startTime = params.time
     let endTime = params.time + param(params.sus, param(params.dur, 1)) * params.beat.duration
     let rate = param(params.rate, 1)
     let value = parseInt(param(params.value, '0'))
     if (value > 10) { value = value/5 }
     if (Number.isNaN(value)) { value = param(params.value, '0').charCodeAt(0) - 32 }
-    let s = shaders(shader)
     let pulse = param(params.pulse, 0)
     let sway = param(params.sway, 0)
     let additive = param(params.additive, 0)
     let pixellate = param(params.pixellate, 0)
-
-    if (!s) { return () => {} }
-    return state => {
+    return state => { // per frame
       let eventTime = ((state.time-startTime)/(endTime-startTime))
       let brightness = 1 - (eventTime*eventTime)*param(params.fade, 0)
       let loc = rect(param(evalParam(params.loc, params.idx, state.count), {}), {x:0,y:0,w:1,h:1})
@@ -94,6 +98,6 @@ define(function (require) {
   }
 
   return (shader, defFore, defBack) => (params) => {
-    system.add(params.time, create(shader, defFore, defBack, params))
+    system.add(params.time, play(shader, defFore, defBack, params))
   }
 })
