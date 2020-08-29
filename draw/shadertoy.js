@@ -51,11 +51,17 @@ define(function (require) {
       if (!vtxCompiled) {
         vtxCompiled = system.loadShader(common.vtxShader, system.gl.VERTEX_SHADER)
       }
-      let program = system.loadProgram([
-        vtxCompiled,
-        system.loadShader(shader.fragSource, system.gl.FRAGMENT_SHADER)
-      ])
-      shader.program = program
+      let program
+      try {
+        program = system.loadProgram([
+          vtxCompiled,
+          system.loadShader(shader.fragSource, system.gl.FRAGMENT_SHADER)
+        ])
+      } catch (e) {
+        shader.program = null
+        throw e
+      }
+      shader.program = program || null
       shader.posBuf = system.gl.createBuffer()
       shader.posAttr = system.gl.getAttribLocation(program, "posIn")
       shader.fragCoordBuf = system.gl.createBuffer()

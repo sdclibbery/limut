@@ -118,7 +118,7 @@
 <body>
   <canvas id="canvas" class="fullscreen" style="width:100%; height:100%;"></canvas>
   <div class="widget">
-    <h3>Limut</h3>
+    <h3>Limut live coding</h3>
     <p>
       main.amp: <span id="main-amp-readout"></span>
       <input id="main-amp-slider" type="range" min="0" max="200" oninput="mainAmpChange(parseFloat(this.value)/100)" style="width:80%;" />
@@ -261,6 +261,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>lines</code> Twisting lines</p>
 <p><code>blob</code> Morphing 3D blob</p>
 <p><code>streetlight</code> Looking up at the passing streetlights on a night drive</p>
+<p><code>shadertoy</code> Display a shadertoy synth. Use the <code>id</code> param to specify which shader. At present, shaders that use textures, sound or multiple channels will not work.</p>
 </div>
 <h5 onclick="toggleAccordion('accordion-params')">▶ Params</h5>
 <div id="accordion-params" class="closed">
@@ -308,6 +309,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>pixellate</code> number of pixels to pixellate to in each direction, or 0 to disable pixellation</p>
 <p><code>perspective</code> perspective warp to apply to shader (negative to invert), or 0 to disable</p>
 <p><code>additive</code> add this shaders output to those beneath instead of blending</p>
+<p><code>id</code> Shadertoy id for <code>shadertoy</code> synth. This is the id at the end of the URL when viewing a shadertoy shader; default is <code>Mss3Wf</code>.</p>
 </div>
 <h5 onclick="toggleAccordion('accordion-predefined-vars')">▶ Predefined Vars</h5>
 <div id="accordion-predefined-vars" class="closed">
@@ -430,8 +432,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-shadertoy synth
- docs
+rename all limut shader uniforms to avoid conflicts with shadertoy; eg tsScRK
 vignette effect
 image synth
 ? Synths defined earlier in source code always appear behind later ones, irrespective of the timing when they fire
@@ -493,33 +494,39 @@ index pattern by beat to improve performance in finding events - same for timeVa
 pattern generators: tri, Dur, walk etc?
 ===
 ===== Interesting shadertoys
+-- working
+Nixie digits: 4dc3zr
+swirl shader 4dX3Rn
+scaly shader MdSXzz
+bubbles shader 4dl3zn
+Fractal: MlGfDG
+Fractal zoom: XtlGR2
+Fractal tiling: Ml2GWy
+Star tunnel: MdlXWr
+glitchy space patrol: ltlGD8
+vector field: MdcyRs
+--
+dusty nebula: lslyRn
+--
 Raindrops: https://www.shadertoy.com/view/tlVGWK
-Nixie digits: https://www.shadertoy.com/view/4dc3zr
 synthwave driving shader https://www.shadertoy.com/view/tsScRK
 plant wind https://www.shadertoy.com/view/4lf3Rj
 forge shader based on: https://www.shadertoy.com/view/llK3Dy
 star shader https://www.shadertoy.com/view/4dXGR4
 power sphere https://www.shadertoy.com/view/MtGSzh
 plasma ball https://www.shadertoy.com/view/XsjXRm
-Fractal: https://www.shadertoy.com/view/MlGfDG
 Galaxy: https://www.shadertoy.com/view/llSGR1
 electric shader https://www.shadertoy.com/view/ldlXRS
 lattice shader   https://www.shadertoy.com/view/4dsGD7
 fireball shader https://www.shadertoy.com/view/lsf3RH
 furry shader https://www.shadertoy.com/view/4dlGDN
-bubbles shader https://www.shadertoy.com/view/4dl3zn
 gem tunnel shader https://www.shadertoy.com/view/ld3Szs
-scaly shader https://www.shadertoy.com/view/MdSXzz
-swirl shader https://www.shadertoy.com/view/4dX3Rn
-lightning synth
-Fractal zoom: https://www.shadertoy.com/view/XtlGR2
 Space: https://www.shadertoy.com/view/lslSDS
 3d supershape: https://www.shadertoy.com/view/4llGWM
 Spiral flow: https://www.shadertoy.com/view/MdlXRS (needs noise texture :-( )
 Fractal https://www.shadertoy.com/view/lslGWr
 Mechanical: https://www.shadertoy.com/view/XslXW2
 Colour tunnel: https://www.shadertoy.com/view/XdSGzR
-Fractal tiling: https://www.shadertoy.com/view/Ml2GWy
 Cell flow: https://www.shadertoy.com/view/MlsGWX
 */
 </script>
