@@ -1,8 +1,8 @@
 precision highp float;
 varying vec2 fragCoord;
 uniform float iTime;
-uniform float value;
-uniform float amp;
+uniform float l_value;
+uniform float l_amp;
 
 #insert common-processors
 
@@ -30,12 +30,12 @@ float scene(vec3 p) {
     float den = 0.;
     for (float i = .0; i < 5.; ++i) {
       vec3 speed = 2.0 * rand3(i*2.);
-      vec3 range = rand3(i*10.) * 5. * amp;
+      vec3 range = rand3(i*10.) * 5. * l_amp;
       range.xy *= 1.5;
       vec3 c = sin(iTime * speed) * range + vec3(0., 1., 10.);
       vec3 dis = c - p;
       float x = dot(dis, dis);
-      den += (1.0 + value/20.0) * 4.0 / x;
+      den += (1.0 + l_value/20.0) * 4.0 / x;
     }
     //return     pow(den, .25) - 2.;
     if (den < 0.333) return 2.;

@@ -2,8 +2,7 @@
 precision highp float;
 varying vec2 fragCoord;
 uniform float iTime;
-uniform float value;
-uniform float amp;
+uniform float l_value;
 
 #insert common-processors
 
@@ -65,7 +64,7 @@ Hit scene(vec3 pos)
 					   p.y,
 					   p.x*cos(tof) - p.z*sin(tof));
 		
-		Hit h = Hit(box(p, vec3(.4*(value*0.1+1.),20.,.2)),i);
+		Hit h = Hit(box(p, vec3(.4*(l_value*0.1+1.),20.,.2)),i);
 		totalHit = hitUnion(h,totalHit);
 	}
 	return totalHit;

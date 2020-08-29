@@ -2,8 +2,8 @@
 precision highp float;
 varying vec2 fragCoord;
 uniform float iTime;
-uniform float value;
-uniform float amp;
+uniform float l_value;
+uniform float l_amp;
 
 #insert common-processors
 
@@ -53,7 +53,7 @@ void main () {
     vec2 p = preprocess(fragCoord.xy) / iResolution.xy;
     vec2 uv = p*vec2(iResolution.x/iResolution.y,1.0);
     float time = iTime * speed;
-    float q = fbm(uv * cloudscale * 0.5 * value);
+    float q = fbm(uv * cloudscale * 0.5 * l_value);
 
     //ridged noise shape
     float r = 0.0;
@@ -111,7 +111,7 @@ void main () {
     vec4 skycolour = vec4(mix(skycolour2, skycolour1, p.y), 1.0);
     vec4 cloudcolour = vec4(vec3(1.1, 1.1, 0.9) * clamp((clouddark + cloudlight*c), 0.0, 1.0), 1.0);
 
-    f = amp + cloudalpha*f*r;
+    f = l_amp + cloudalpha*f*r;
 
     vec4 result = mix(skycolour, clamp(skytint * skycolour + cloudcolour, 0.0, 1.0), clamp(f + c, 0.0, 1.0));
 

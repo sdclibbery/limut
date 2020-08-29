@@ -2,8 +2,8 @@
 precision highp float;
 varying vec2 fragCoord;
 uniform float iTime;
-uniform float value;
-uniform float amp;
+uniform float l_value;
+uniform float l_amp;
 
 #insert common-processors
 
@@ -41,9 +41,9 @@ void main() {
   vec2 uv = preprocess(fragCoord)/2.0;
 
   vec2 n = fbm2(uv + fbm2(uv.yx+vec2(0, iTime*0.2)));
-  uv += (amp+0.2)*8.0*n;
+  uv += (l_amp+0.2)*8.0*n;
   float f = abs(sin(uv.x)*sin(uv.y));
-  f = pow(1.-f, (value > 10.0) ? value/10.0 : (value+2.)/5.);
+  f = pow(1.-f, (l_value > 10.0) ? l_value/10.0 : (l_value+2.)/5.);
   vec4 col = vec4(abs(n)*1.3, f, 1.0);
   postprocess(col, f);
 }

@@ -2,8 +2,8 @@
 precision mediump float;
 varying vec2 fragCoord;
 uniform float iTime;
-uniform float value;
-uniform float amp;
+uniform float l_value;
+uniform float l_amp;
 
 #insert common-processors
 
@@ -24,7 +24,7 @@ void main()
 	float alpha;
 	vec4 cbuff = vec4(0.0);
 	float f = 0.0;
-	float sinAmp = sqrt(amp)*1.3;
+	float sinAmp = sqrt(l_amp)*1.3;
 
 	for(float i=0.0; i<10.0;i++){
 		ip=i-2.0;
@@ -35,7 +35,7 @@ void main()
 	  nd/=5.0;
 	  nd+=0.5;
 	  amnt = 1.0/abs(nd-uv.y)*0.01;
-    amnt = smoothstep(0.1, 0.5+uv.y*10.0/(1.+abs(value)), amnt)*5.5;
+    amnt = smoothstep(0.1, 0.5+uv.y*10.0/(1.+abs(l_value)), amnt)*5.5;
 	  alpha=(10.0-i)/5.0;
 	  f += amnt*alpha/5.0;
 	  cbuff += vec4(amnt*alpha*0.3, amnt*0.3*alpha , amnt*uv.y*alpha,0) ;
