@@ -4,17 +4,17 @@ define(function (require) {
   let param = require('player/default-param')
   let common = require('draw/shadercommon')
 
-  let pre = `precision highp float; vec2 iResolution = vec2(1.,1.); vec4 iMouse = vec4(0.); uniform float iTime;`
+  let pre = `precision highp float; varying vec2 fragCoord; uniform float value; uniform float amp; vec2 iResolution = vec2(100.,100.); vec4 iMouse = vec4(0.); uniform float iTime;
+  #define HW_PERFORMANCE 0
+  `
 
   let post = `
-  varying vec2 fragCoord;
-  uniform float value;
-  uniform float amp;
   void main() {
     vec4 fragColor;
-    vec2 uv = preprocess(fragCoord)/2.0;
+    vec2 uv = (preprocess(fragCoord)+1.0)*50.0;
     mainImage( fragColor, uv );
-    postprocess(fragColor, 1.0);
+    float foreback = length(fragColor.rgb) < 0.01 ? 0.0 : 1.0;
+    postprocess(fragColor, foreback);
   }`
 
   let vtxCompiled
@@ -25,12 +25,15 @@ define(function (require) {
   }
 
   return (params) => {
-    let url = getUrl(param(params.id, 'MsGczV'))
+    let url = getUrl(param(params.id, 'Mss3Wf'))
     if (shaders[url] === undefined) {
+      shaders[url] = {}
       let request = new XMLHttpRequest()
       request.open('GET', url, true)
       request.onload = () => {
-        let code = JSON.parse(request.response).Shader.renderpass[0].code
+        let json = JSON.parse(request.response)
+        if (json.Error) { throw `Shadertoy load error: ${json.Error} on ${url}` }
+        let code = json.Shader.renderpass[0].code
         let source = pre + code + common.commonProcessors + post
         shaders[url] = {fragSource: source}
       }

@@ -32,4 +32,4 @@ If you feel I've used a sample where I shouldn't have, please get in touch!
 
 # Shaders
 
-Many of the shaders are based on ones from https://www.shadertoy.com/
+Many shaders are based on ones from https://www.shadertoy.com/ , and the shadertoy synth uses the Shadertoy.com API to load shaders directly from shadertoy.
