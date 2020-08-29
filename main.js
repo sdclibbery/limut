@@ -11,6 +11,7 @@ define(function(require) {
   let parseLine = require('parse-line')
   let players = require('player/players')
   let vars = require('vars')
+  let consoleOut = require('console')
 
   // accordions
   window.toggleAccordion = (id) => {
@@ -66,14 +67,6 @@ define(function(require) {
     scaleReadout.innerText = s
   }
   window.scaleChanged(scale.current)
-
-  // console ui
-  let cons = document.getElementById('console')
-  let consoleOut = (str) => {
-    cons.value += '\n'+str
-    cons.scrollTop = cons.scrollHeight
-  }
-  consoleOut('\n> Welcome to Limut')
 
   // Play/stop/comment ui
   let editorDiv = document.getElementById('code')

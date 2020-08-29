@@ -3,6 +3,7 @@ define(function (require) {
   let system = require('draw/system')
   let param = require('player/default-param')
   let common = require('draw/shadercommon')
+  let consoleOut = require('console')
 
   let pre = `precision highp float; varying vec2 fragCoord; uniform float value; uniform float amp; vec2 iResolution = vec2(100.,100.); vec4 iMouse = vec4(0.); uniform float iTime;
   #define HW_PERFORMANCE 0
@@ -25,14 +26,19 @@ define(function (require) {
   }
 
   return (params) => {
-    let url = getUrl(param(params.id, 'Mss3Wf'))
+    let id = param(params.id, 'Mss3Wf')
+    let url = getUrl(id)
     if (shaders[url] === undefined) {
       shaders[url] = {}
       let request = new XMLHttpRequest()
       request.open('GET', url, true)
       request.onload = () => {
         let json = JSON.parse(request.response)
-        if (json.Error) { throw `Shadertoy load error: ${json.Error} on ${url}` }
+        if (json.Error) {
+          let msg = `Shadertoy load error: ${json.Error} for ${id}`
+          consoleOut(msg)
+          throw msg
+        }
         let code = json.Shader.renderpass[0].code
         let source = pre + code + common.commonProcessors + post
         shaders[url] = {fragSource: source}
@@ -45,7 +51,7 @@ define(function (require) {
       if (!vtxCompiled) {
         vtxCompiled = system.loadShader(common.vtxShader, system.gl.VERTEX_SHADER)
       }
-      let program =  system.loadProgram([
+      let program = system.loadProgram([
         vtxCompiled,
         system.loadShader(shader.fragSource, system.gl.FRAGMENT_SHADER)
       ])
