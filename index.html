@@ -261,7 +261,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>lines</code> Twisting lines</p>
 <p><code>blob</code> Morphing 3D blob</p>
 <p><code>streetlight</code> Looking up at the passing streetlights on a night drive</p>
-<p><code>shadertoy</code> Display a shadertoy synth. Use the <code>id</code> param to specify which shader. At present, shaders that use textures, sound or multiple channels will not work.</p>
+<p><code>shadertoy</code> Display a shadertoy synth. Use the <code>id</code> param to specify which shader. Only shaders published with the 'public+api' option are available, others will give error 'Shader not found'. At present, shaders that use textures or multiple channels will also not work.</p>
 </div>
 <h5 onclick="toggleAccordion('accordion-params')">▶ Params</h5>
 <div id="accordion-params" class="closed">
@@ -404,7 +404,6 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-? Should disconnect vibrato nodes?
 AudioWorkloet noise gen
 Try drive from here: https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
 Pluck/guitar synths
@@ -435,8 +434,9 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-vignette effect
+shadertoy synth supports textures
 image synth
+vignette effect
 ? Synths defined earlier in source code always appear behind later ones, irrespective of the timing when they fire
 Z order param
 postprocess effects
@@ -447,7 +447,7 @@ postprocess effects
  dither
  threshold
 can pass search term to shadertoy synth and use top result?
-shadertoy synth supports textures and multiple channels
+shadertoy synth multiple channels
 video synth (use video element to load video file; don't try and target eg youtube)
 text synth
 pixellate per frame
@@ -504,29 +504,32 @@ bubbles shader 4dl3zn
 Fractal: MlGfDG
 Fractal zoom: XtlGR2
 Fractal tiling: Ml2GWy
+3d supershape: 4llGWM
 glitchy space patrol: ltlGD8
 vector field: MdcyRs
 Star tunnel: MdlXWr
 dusty nebula: lslyRn
---
+-- needs textures
+synthwave driving shader tsScRK
+power sphere MtGSzh
+furry shader 4dlGDN
+gem tunnel shader ld3Szs
+-- needs channels
+forge shader based on: llK3Dy
+-- extensions
+Mechanical: XslXW2
+-- shader not found (not published with 'public+api' option)
 Raindrops: https://www.shadertoy.com/view/tlVGWK
-synthwave driving shader https://www.shadertoy.com/view/tsScRK
 plant wind https://www.shadertoy.com/view/4lf3Rj
-forge shader based on: https://www.shadertoy.com/view/llK3Dy
 star shader https://www.shadertoy.com/view/4dXGR4
-power sphere https://www.shadertoy.com/view/MtGSzh
 plasma ball https://www.shadertoy.com/view/XsjXRm
 Galaxy: https://www.shadertoy.com/view/llSGR1
 electric shader https://www.shadertoy.com/view/ldlXRS
 lattice shader   https://www.shadertoy.com/view/4dsGD7
 fireball shader https://www.shadertoy.com/view/lsf3RH
-furry shader https://www.shadertoy.com/view/4dlGDN
-gem tunnel shader https://www.shadertoy.com/view/ld3Szs
 Space: https://www.shadertoy.com/view/lslSDS
-3d supershape: https://www.shadertoy.com/view/4llGWM
-Spiral flow: https://www.shadertoy.com/view/MdlXRS (needs noise texture :-( )
+Spiral flow: https://www.shadertoy.com/view/MdlXRS
 Fractal https://www.shadertoy.com/view/lslGWr
-Mechanical: https://www.shadertoy.com/view/XslXW2
 Colour tunnel: https://www.shadertoy.com/view/XdSGzR
 Cell flow: https://www.shadertoy.com/view/MlsGWX
 */
