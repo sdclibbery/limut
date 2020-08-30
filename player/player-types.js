@@ -15,6 +15,7 @@ define((require) => {
   let glock = require('play/synth/glock')
   let piano = require('play/synth/piano')
   let ethereal = require('play/synth/ethereal')
+  let noise = require('play/synth/noise')
 
   let nullPlayer = () => {}
   let makePlayerFactory = (play, defaultDur) => (command) => {
@@ -52,6 +53,7 @@ define((require) => {
     glock: makePlayerFactory(glock),
     piano: makePlayerFactory(piano),
     ethereal: makePlayerFactory(ethereal),
+    noise: makePlayerFactory(noise),
   }
 
   return playerTypes
