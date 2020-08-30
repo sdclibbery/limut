@@ -17,6 +17,7 @@ define(function (require) {
     lfo.connect(vca)
     lfo.start(params.time)
     lfo.stop(params.endTime)
+    system.disconnect(params, [lfo,vca])
     return vca
   }
 
