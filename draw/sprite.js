@@ -4,6 +4,7 @@ define(function (require) {
   let shaders = require('draw/shaders')
   let param = require('player/default-param')
   let evalParam = require('player/eval-param')
+  let texture = require('draw/texture')
 
   let verts = (loc, window) => {
     let l = -1 + loc.x*2
@@ -61,6 +62,7 @@ define(function (require) {
     let sway = param(params.sway, 0)
     let additive = param(params.additive, 0)
     let pixellate = param(params.pixellate, 0)
+    let url = param(params.url, 'favicon-32x32.png')
     return state => { // per frame
       let eventTime = ((state.time-startTime)/(endTime-startTime))
       let brightness = 1 - (eventTime*eventTime)*param(params.fade, 0)
@@ -86,6 +88,15 @@ define(function (require) {
       system.gl.uniform1f(s.pixellateUnif, pixellate, 1)
       system.gl.uniform1f(s.perspectiveUnif, perspective, 1)
       system.gl.uniform1f(s.additiveUnif, additive, 1)
+      if (s.textureUnif) {
+        s.textureUnif.forEach((tu,i) => {
+          system.gl.activeTexture(system.gl['TEXTURE'+i])
+          system.gl.bindTexture(system.gl.TEXTURE_2D, texture(url))
+          system.gl.uniform1i(tu, i)
+          system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_S, system.gl.CLAMP_TO_EDGE)
+          system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_T, system.gl.CLAMP_TO_EDGE)
+          system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_MIN_FILTER, system.gl.LINEAR)        })
+      }
       if (fore[3] >= 0.9999 && back[3] >= 0.9999 && additive == 0) {
         system.gl.disable(system.gl.BLEND)
       } else {
