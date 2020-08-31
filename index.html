@@ -405,6 +405,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
+lpf/hpf/bpf either 60fps or slide
 Try drive from here: https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
 Pluck/guitar synths
  https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
@@ -414,8 +415,9 @@ Pluck/guitar synths
 root main var
 AudioWorklet FM operator supporting feedback with webassembly
 AudioWorklet freeverb with webaseembly
+AudioWorklet pulse synth
+AudioWorklet PWM prophet synth (and maybe techno pad too)
 pan param
-Try a PWM prophet synth (and maybe techno pad too)
 slide param
 echoey space synth
  ethereal vib=3, att=0, sus=2, rel=2, phaser=1/4, echo=(3,4), oct=5
