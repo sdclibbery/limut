@@ -10,13 +10,20 @@ define(function (require) {
   uniform float l_value;
   uniform float l_amp;
   uniform sampler2D l_image;
+  uniform vec2 l_extents;
   ${common.commonProcessors}
   void main() {
-    vec2 uv = preprocess(fragCoord);
+    vec2 uv = fragCoord;
+    float ar = l_extents.x / l_extents.y;
+    if (ar > 1.0) { uv.x /= ar; } else { uv.y *= ar; }
     uv.y = -uv.y;
+    uv = preprocess(uv);
     uv = (uv / 2.0) + 0.5;
-    vec4 c = texture2D(l_image, uv);
-    postprocess(c, c.a);
+    vec4 c = texture2D(l_image, fract(uv));
+    float foreback = c.a;
+    c.a = 1.0;
+    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) { foreback = 0.0; }
+    postprocess(c, foreback);
   }
   `
 
@@ -56,6 +63,7 @@ define(function (require) {
       shader.perspectiveUnif = system.gl.getUniformLocation(program, "l_perspective")
       shader.additiveUnif = system.gl.getUniformLocation(program, "l_additive")
       shader.textureUnif = [system.gl.getUniformLocation(program, 'l_image')]
+      shader.extentsUnif = system.gl.getUniformLocation(program, "l_extents")
     }
     return shader
   }

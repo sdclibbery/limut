@@ -41,7 +41,7 @@ define((require) => {
     streetlight: makePlayerFactory(sprite('streetlight', {r:1,g:1,b:1,a:1}, {r:0.0,g:0.0,b:0.0,a:1})),
     grid: makePlayerFactory(sprite('grid', {r:1.0,g:0.2,b:0.1,a:1}, {r:0.0,g:0.0,b:0.0,a:1})),
     shadertoy: makePlayerFactory(sprite(shadertoy, {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:1},)),
-    image: makePlayerFactory(sprite(image, {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:1},)),
+    image: makePlayerFactory(sprite(image, {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:0},)),
     // instruments
     drums: makePlayerFactory(play, 1/2),
     play: makePlayerFactory(play, 1/2),

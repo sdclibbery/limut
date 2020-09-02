@@ -263,6 +263,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>blob</code> Morphing 3D blob</p>
 <p><code>streetlight</code> Looking up at the passing streetlights on a night drive</p>
 <p><code>shadertoy</code> Display a shadertoy synth. Use the <code>id</code> param to specify which shader. Only shaders published with the 'public+api' option are available, others will give error 'Shader not found'. At present, shaders that use textures or multiple channels will also not work.</p>
+<p><code>image</code> Display an online image. Use the <code>url</code> param to specify the image url. The image must be served using CORS. by default the image <code>back</code> is transparent.</p>
 </div>
 <h5 onclick="toggleAccordion('accordion-params')">▶ Params</h5>
 <div id="accordion-params" class="closed">
@@ -436,14 +437,8 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-image synth
- border/edges: ? pass image size to shader and set background color
-  https://upload.wikimedia.org/wikipedia/commons/4/4b/Amoebidium_parasiticum.jpg
- transparent pixels should be used for back color not actually transparent
-  https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/SNice.svg/1200px-SNice.svg.png
- docs
-shadertoy synth supports textures - MtGSzh
-vignette effect
+video synth (use video element to load video file; don't try and target eg youtube)
+vignette effect - vignette to 0-1 in UVs to support images?
 ? Synths defined earlier in source code always appear behind later ones, irrespective of the timing when they fire
 Z order param
 postprocess effects
@@ -453,9 +448,9 @@ postprocess effects
  noise
  dither
  threshold
-can pass search term to shadertoy synth and use top result?
+shadertoy synth supports textures - MtGSzh
+ NO CORS!! https://www.shadertoy.com/media/a/f735bee5b64ef98879dc618b016ecf7939a5756040c2cde21ccb15e69a6e1cfb.png
 shadertoy synth multiple channels
-video synth (use video element to load video file; don't try and target eg youtube)
 text synth
 pixellate per frame
 Sprites duration should include rel? Or not??
@@ -516,6 +511,12 @@ glitchy space patrol: ltlGD8
 vector field: MdcyRs
 Star tunnel: MdlXWr
 dusty nebula: lslyRn
+smoke lights: MdyGzR
+laser show: MdjyzG
+smoke laser: 3lSGDK
+nebula smoke: 4ltSRS
+disco tunnel: XstfzB
+disco balls: lllXWr
 -- needs textures
 synthwave driving shader tsScRK
 power sphere MtGSzh

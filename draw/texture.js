@@ -14,12 +14,14 @@ define(function (require) {
       system.gl.texImage2D(system.gl.TEXTURE_2D, 0, system.gl.RGBA, 1, 1, 0, system.gl.RGBA, system.gl.UNSIGNED_BYTE, defaultPixel)
       const image = new Image()
       image.onload = () => {
+        texture.width = image.width
+        texture.height = image.height
         system.gl.bindTexture(system.gl.TEXTURE_2D, texture.tex)
         system.gl.texImage2D(system.gl.TEXTURE_2D, 0, system.gl.RGBA, system.gl.RGBA, system.gl.UNSIGNED_BYTE, image)
       }
       image.crossOrigin = "anonymous"
       image.src = url
     }
-    return textures[url].tex
+    return textures[url]
   }
 })
