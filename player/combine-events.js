@@ -30,7 +30,6 @@ define(function(require) {
   let overrideOp = (original,override) => override
   let ignoreOp = (original,override) => original
   let addOp = (original,override) => applyOp((l,r)=>l+r, original, override)
-  let mulOp = (original,override) => applyOp((l,r)=>l*r, original, override)
   let paramOp = {
     time: ignoreOp,
     delay: ignoreOp,
@@ -60,6 +59,7 @@ define(function(require) {
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
   let ev = ps => Object.assign({idx:0, count:0, value:'1'}, ps)
+  let c
 
   assert([ev()], combineEvents([ev()], {}))
   assert([ev()], combineEvents([ev()], {value:'9', delay:8, time:7}))
@@ -70,7 +70,7 @@ define(function(require) {
   assert([ev({add:6})], combineEvents([ev({add:2})], {add:() => 4}))
   assert([ev({add:5}),ev({add:6})], combineEvents([ev({add:2})], {add:()=>[3,4]}))
   
-  let c = combineEvents([ev()], {zoom:parseExpression('[2:4]l2')})
+  c = combineEvents([ev()], {zoom:parseExpression('[2:4]l2')})
   assert(2, c[0].zoom(0,0))
   assert(3, c[0].zoom(1,1))
 
