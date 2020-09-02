@@ -1,6 +1,7 @@
 'use strict';
 define(function(require) {
   let evalParam = require('player/eval-param')
+  let evalPerFrame = require('player/eval-per-frame')
   let param = require('player/default-param')
   let parsePatternString = require('player/parse-pattern')
 
@@ -18,10 +19,6 @@ define(function(require) {
       }
     }
     return [event]
-  }
-
-  let evalPerFrame = {
-    scroll:true, zoom:true, loc:true, fore:true, back:true, perspective:true
   }
 
   let parsePattern = (pattern, params, defaultDur) => {
