@@ -12,9 +12,11 @@ define(function(require) {
     )
   }
 
+  let isPrimitive = v => (typeof v == 'number' || typeof v == 'string')
+
   let applyOperator = (op, el, er) => {
-    if (typeof(el) == 'number') {
-      if (typeof(er) == 'number') {
+    if (isPrimitive(el)) {
+      if (isPrimitive(er)) {
         return op(el,er)
       } else if (Array.isArray(er)) {
         return er.map(x => op(el,x))
@@ -22,7 +24,7 @@ define(function(require) {
         return objectMap(er, (v)=>op(el,v))
       }
     } else if (Array.isArray(el)) {
-      if (typeof er == 'number') {
+      if (isPrimitive(er)) {
         return el.map(x => op(x,er))
       } else if (Array.isArray(er)) {
         let result = []
@@ -34,7 +36,7 @@ define(function(require) {
         return objectMap(er, (v)=>applyOperator(op,el,v))
       }
     } else if (typeof el == 'object') {
-      if (typeof(er) == 'number') {
+      if (isPrimitive(er)) {
         return objectMap(el, (v)=>applyOperator(op,v,er))
       } else if (Array.isArray(er)) {
         return objectMap(el, (v)=>applyOperator(op,v,er))
@@ -99,6 +101,11 @@ define(function(require) {
   assert({r:3}, operator(add, {r:1}, {r:2})(0,0))
   assert({r:1,g:6,b:4}, operator(mul, {r:1,g:2}, {g:3,b:4})(0,0))
   assert({r:[3,6]}, operator(mul, fn([1,2]), {r:3})(0,0))
+  assert('ab', operator(add, 'a', 'b')(0,0))
+  assert('ab', operator(add, 'a', ['b','c'])(0,0))
+  assert('ac', operator(add, 'a', ['b','c'])(1,1))
+  assert(['ab','ac'], operator(add, 'a', fn(['b','c']))(0,0))
+  assert(['ac','bc'], operator(add, fn(['a','b']),'c')(0,0))
 
   console.log('eval operator tests complete')
 

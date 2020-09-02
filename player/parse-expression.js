@@ -793,5 +793,7 @@ define(function(require) {
   let v1 = p(1,1)
   for (let i = 0; i<20; i+=1) { assert(v1, p(1,1)) }
 
+  assert('ab', parseExpression("'a'+'b'")(0,0))
+
   return parseExpression
 })
