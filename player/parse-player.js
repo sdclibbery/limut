@@ -1,6 +1,19 @@
 'use strict'
 define((require) => {
   let playerTypes = require('player/player-types')
+  var parseParams = require('player/params');
+  var followPlayer = require('player/follow');
+
+  let splitOnAll = (str, ch) => {
+    if (!str) { return [] }
+    return str.split(ch).map(x => x.trim()).filter(x => x!=ch)
+  }
+
+  let splitOnFirst = (str, ch) => {
+    if (!str) { return [] }
+    let parts = splitOnAll(str, ch)
+    return [parts[0], parts.slice(1).join()]
+  }
 
   let parsePlayer = (line) => {
     let parts = line.split(/(\s+)/).map(p => p.trim()).filter(p => p != '')
@@ -11,11 +24,23 @@ define((require) => {
       if (playerType) {
         let command  = parts.slice(2).join('').trim()
         if (!command) { throw 'Player "'+playerType+'" Missing pattern/params' }
+        let [patternStr, paramsStr] = splitOnFirst(command, ',').map(s => s.trim())
+        // All params commented out?
+        if (patternStr.endsWith('//')) {
+          paramsStr = ''
+          patternStr = patternStr.slice(0, -2)
+        }
+        // Create player
         let playerFactory = playerTypes[playerType.toLowerCase()]
         if (!playerFactory) { throw 'Player "'+playerType+'" not found' }
-        let player = playerFactory(command)
+        let player = playerFactory(patternStr, paramsStr)
         player.id = playerId
         player.type = playerType
+        // Follow player
+        if (patternStr.startsWith('follow')) {
+          let params = parseParams(paramsStr)
+          player.getEventsForBeat = followPlayer(patternStr.slice(6).trim(), params)
+        }
         return player
       }
     }

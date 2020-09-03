@@ -19,11 +19,11 @@ define((require) => {
   let noise = require('play/synth/noise')
 
   let nullPlayer = () => {}
-  let makePlayerFactory = (play, defaultDur) => (command) => {
+  let makePlayerFactory = (play, defaultDur) => (patternStr, paramsStr) => {
     let doPlay = (es) => es.filter(e => e.amp === undefined || e.amp > 0).map(e => play(e))
     return {
       play: doPlay,
-      getEventsForBeat: standardPlayer(command, defaultDur),
+      getEventsForBeat: standardPlayer(patternStr, paramsStr, defaultDur),
     }
   }
   let playerTypes = {

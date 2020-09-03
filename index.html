@@ -458,9 +458,8 @@ Drop canvas to half res if gl frame rate is low?
 ====
 ==== other ====
 Refactors
- Follow should be parsed by parse-player
  Keep the bits of a player separate, so getting events is one thing, playing is another, all brought together by a parser
- Also applying overrides is another responsibility
+  Also applying overrides is another responsibility
 Syntax to add param overrides: 'set bass amp=1/2, chop=2'
  apply overrides when playing
  handle multiple instances of statements, re add
