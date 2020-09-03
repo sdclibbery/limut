@@ -22,15 +22,18 @@ define(function(require) {
       params = ''
       patternStr = patternStr.slice(0, -2)
     }
-    if (patternStr.startsWith('follow')) { return followPlayer(patternStr.slice(6).trim(), params) }
+    if (patternStr.startsWith('follow')) {
+      return followPlayer(patternStr.slice(6).trim(), params)
+    }
     let pattern = parsePattern(patternStr, params, defaultDur)
     return (beat) => {
       let eventsForBeat = pattern(beat.count)
-      return eventsForBeat.map(event => {
+      let events = eventsForBeat.map(event => {
         let eventToPlay = Object.assign({}, event, {sound: event.value, beat: beat})
         eventToPlay.time = beat.time + event.time*beat.duration
         return eventToPlay
       })
+      return events
     }
   }
 });

@@ -2,6 +2,7 @@
 define((require) => {
   let players = require('player/players')
   let playerTypes = require('player/player-types')
+  var parseParams = require('player/params');
   let parseExpression = require('player/parse-expression')
   let metronome = require('metronome')
   let vars = require('vars')
@@ -29,6 +30,13 @@ define((require) => {
       return
     }
     let parts = line.split(/(\s+)/).map(p => p.trim()).filter(p => p != '')
+    if (parts[0] == 'set') {
+      let playerId = parts[1].toLowerCase()
+      if (!playerId) { throw 'Missing player id' }
+      let params  = parts.slice(2).join('').trim()
+      players.overrides[playerId] = parseParams(params)
+      return
+    }
     let playerId = parts[0].toLowerCase()
     if (playerId) {
       let playerName = parts[1]
@@ -117,6 +125,10 @@ define((require) => {
   assertThrows('Missing player name', ()=>parseLine('p'))
   assertThrows('Missing pattern/params', ()=>parseLine('p play'))
   assertThrows('Player "INVALID" not found', ()=>parseLine('p INVALID xo'))
+
+  parseLine('set p amp=2')
+  assert(2, players.overrides.p.amp)
+  delete players.overrides.p
 
   console.log('Parse line tests complete')
 

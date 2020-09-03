@@ -99,6 +99,7 @@ define(function(require) {
   window.go = () => {
     system.resume()
     players.instances = {}
+    players.overrides = {}
     editor.getValue().split('\n')
     .map((l,i) => {return{line:l.trim(), num:i}})
     .filter(({line}) => line != '')
