@@ -41,7 +41,10 @@ define((require) => {
       return
     }
     // Define a player
-    parsePlayer(line)
+    let player = parsePlayer(line)
+    if (player) {
+      players.instances[player.id] = player
+    }
   }
 
   // TESTS //
@@ -112,10 +115,6 @@ define((require) => {
   assert(undefined, players.instances.p.getEventsForBeat({count:0})[0].amp)
   assert(1, players.instances.p.getEventsForBeat({count:0})[0].window)
   delete players.instances.p
-
-  assertThrows('Missing player name', ()=>parseLine('p'))
-  assertThrows('Missing pattern/params', ()=>parseLine('p play'))
-  assertThrows('Player "INVALID" not found', ()=>parseLine('p INVALID xo'))
 
   parseLine('set p amp=2')
   assert(2, players.overrides.p.amp)

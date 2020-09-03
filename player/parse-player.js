@@ -1,22 +1,22 @@
 'use strict'
 define((require) => {
-  let players = require('player/players')
   let playerTypes = require('player/player-types')
 
   let parsePlayer = (line) => {
     let parts = line.split(/(\s+)/).map(p => p.trim()).filter(p => p != '')
     let playerId = parts[0].toLowerCase()
     if (playerId) {
-      let playerName = parts[1]
-      if (!playerName) { throw 'Missing player name' }
-      if (playerName) {
+      let playerType = parts[1]
+      if (!playerType) { throw 'Missing player type' }
+      if (playerType) {
         let command  = parts.slice(2).join('').trim()
-        if (!command) { throw 'Player "'+playerName+'" Missing pattern/params' }
-        let player = playerTypes[playerName.toLowerCase()]
-        if (!player) { throw 'Player "'+playerName+'" not found' }
-        players.instances[playerId] = player(command)
-      } else {
-        delete players.instances[playerId]
+        if (!command) { throw 'Player "'+playerType+'" Missing pattern/params' }
+        let playerFactory = playerTypes[playerType.toLowerCase()]
+        if (!playerFactory) { throw 'Player "'+playerType+'" not found' }
+        let player = playerFactory(command)
+        player.id = playerId
+        player.type = playerType
+        return player
       }
     }
   }
@@ -34,28 +34,26 @@ define((require) => {
     catch (e) { if (e.includes(expected)) {got=true} else {console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: ${e}`)} }
     finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
   }
+  let p
 
-  parsePlayer('p play xo, amp=2')
-  assert('function', typeof players.instances.p.getEventsForBeat)
-  assert('function', typeof players.instances.p.play)
-  assert(2, players.instances.p.getEventsForBeat({count:0})[0].amp)
-  delete players.instances.p
+  p = parsePlayer('p play xo, amp=2')
+  assert('p', p.id)
+  assert('function', typeof p.getEventsForBeat)
+  assert('function', typeof p.play)
+  assert(2, p.getEventsForBeat({count:0})[0].amp)
+  
+  p = parsePlayer('p play xo,// amp=2')
+  assert(undefined, p.getEventsForBeat({count:0})[0].amp)
 
-  parsePlayer('p play xo,// amp=2')
-  assert(undefined, players.instances.p.getEventsForBeat({count:0})[0].amp)
-  delete players.instances.p
+  p = parsePlayer('p play 0//, amp=2')
+  assert(undefined, p.getEventsForBeat({count:0})[0].amp)
+  assert('0', p.getEventsForBeat({count:1})[0].value)
 
-  parsePlayer('p play 0//, amp=2')
-  assert(undefined, players.instances.p.getEventsForBeat({count:0})[0].amp)
-  assert('0', players.instances.p.getEventsForBeat({count:1})[0].value)
-  delete players.instances.p
+  p = parsePlayer('p play 0, window//, amp=2')
+  assert(undefined, p.getEventsForBeat({count:0})[0].amp)
+  assert(1, p.getEventsForBeat({count:0})[0].window)
 
-  parsePlayer('p play 0, window//, amp=2')
-  assert(undefined, players.instances.p.getEventsForBeat({count:0})[0].amp)
-  assert(1, players.instances.p.getEventsForBeat({count:0})[0].window)
-  delete players.instances.p
-
-  assertThrows('Missing player name', ()=>parsePlayer('p'))
+  assertThrows('Missing player type', ()=>parsePlayer('p'))
   assertThrows('Missing pattern/params', ()=>parsePlayer('p play'))
   assertThrows('Player "INVALID" not found', ()=>parsePlayer('p INVALID xo'))
 
