@@ -2,7 +2,8 @@
 define((require) => {
   let players = require('player/players')
   let playerTypes = require('player/player-types')
-  var parseParams = require('player/params');
+  var parsePlayer = require('player/parse-player')
+  var parseParams = require('player/params')
   let parseExpression = require('player/parse-expression')
   let metronome = require('metronome')
   let vars = require('vars')
@@ -18,6 +19,7 @@ define((require) => {
     line = line.trim()
     if (!line) { return }
     if (line.startsWith('//')) { return }
+    // Setting global vars
     let [k,v] = line.split('=').map(p => p.trim()).filter(p => p != '')
     k = k.toLowerCase()
     if (k.match(/^[a-z][a-z0-9_\.]*$/) && !!v) {
@@ -29,6 +31,7 @@ define((require) => {
       }
       return
     }
+    // Set (override) params for a player
     let parts = line.split(/(\s+)/).map(p => p.trim()).filter(p => p != '')
     if (parts[0] == 'set') {
       let playerId = parts[1].toLowerCase()
@@ -37,20 +40,8 @@ define((require) => {
       players.overrides[playerId] = parseParams(params)
       return
     }
-    let playerId = parts[0].toLowerCase()
-    if (playerId) {
-      let playerName = parts[1]
-      if (!playerName) { throw 'Missing player name' }
-      if (playerName) {
-        let command  = parts.slice(2).join('').trim()
-        if (!command) { throw 'Player "'+playerName+'" Missing pattern/params' }
-        let player = playerTypes[playerName.toLowerCase()]
-        if (!player) { throw 'Player "'+playerName+'" not found' }
-        players.instances[playerId] = player(command)
-      } else {
-        delete players.instances[playerId]
-      }
-    }
+    // Define a player
+    parsePlayer(line)
   }
 
   // TESTS //

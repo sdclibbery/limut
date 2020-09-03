@@ -459,6 +459,7 @@ Drop canvas to half res if gl frame rate is low?
 ==== other ====
 Refactors
  Extract player parsing to player/parse-player module
+ Parse player returns a player object rather than having side effects; keep side effects in parse-line
  Follow should be parsed by parse-line
  Keep the bits of a player separate, so getting events is one thing, playing is another, and there's also the type and Id, all brought together by a parser
  Also applying overrides is another responsibility
