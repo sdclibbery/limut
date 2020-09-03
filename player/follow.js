@@ -1,7 +1,7 @@
 'use strict';
 define(function(require) {
   let players = require('player/players')
-  let combineEvents = require('player/combine-events')
+  let overrideParams = require('player/override-params')
 
   let followPlayer = (playerName, params) => {
     return (beat) => {
@@ -9,7 +9,7 @@ define(function(require) {
       if (p === undefined) { throw 'Follow player not found: '+playerName }
       let events = p.getEventsForBeat(beat)
       events.forEach(e => delete e.oct)
-      return combineEvents(events, params)
+      return overrideParams(events, params)
     }
   }
 

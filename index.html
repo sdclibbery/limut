@@ -458,7 +458,7 @@ Drop canvas to half res if gl frame rate is low?
 ====
 ==== other ====
 Refactors
- Rename combine events
+ Extract player parsing to player/parse-player module
  Follow should be parsed by parse-line
  Keep the bits of a player separate, so getting events is one thing, playing is another, and there's also the type and Id, all brought together by a parser
  Also applying overrides is another responsibility
@@ -470,6 +470,7 @@ Syntax to add param overrides: 'set bass amp=1/2, chop=2'
 Can specify params for groups of players 'set [bass,kd] amp=0'
 Wildcard player matching for groups 'set d? amp=0'  'set p* amp=0'
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
+Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way??
 dur=[3,3,2]\4
 syntax for 'change from A to B by the next multiple of X' - but how not to repeat this if rerun?
 want to be able to have old random behaviour: choose random once per event not once per frame or once per time interval - use for tile_random
@@ -480,7 +481,6 @@ finish off: <> for 'in sequence on each repeat' in patterns
 multiline commands
 dur=[1:4]r
 operator precedence
-Can modify params; eg 'set bass amp += 1/2'
 should multiply out 'chords' in objects eg loc={x:(0,1,2,3), y:(0,1,2,3), w:1,h:1}/4
 Syntax to make parts of patterns repeat a set number of times
 _ extends all notes properly, even across brackets (eg <1[.3]>_ etc)
