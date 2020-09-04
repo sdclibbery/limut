@@ -458,8 +458,7 @@ Drop canvas to half res if gl frame rate is low?
 ====
 ==== other ====
 Refactors
- Keep the bits of a player separate, so getting events is one thing, playing is another, all brought together by a parser
-  Also applying overrides is another responsibility
+ getEventsForBeat should apply overrides
 Syntax to add param overrides: 'set bass amp=1/2, chop=2'
  apply overrides when playing
  handle multiple instances of statements, re add

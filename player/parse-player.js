@@ -2,6 +2,7 @@
 define((require) => {
   let playerTypes = require('player/player-types')
   var parseParams = require('player/params');
+  let standardPlayer = require('player/standard')
   var followPlayer = require('player/follow');
 
   let splitOnAll = (str, ch) => {
@@ -28,18 +29,25 @@ define((require) => {
         // All params commented out?
         if (patternStr.endsWith('//')) {
           paramsStr = ''
-          patternStr = patternStr.slice(0, -2)
+          patternStr = patternStr.slice(0, -2).trim()
         }
         // Create player
         let playerFactory = playerTypes[playerType.toLowerCase()]
         if (!playerFactory) { throw 'Player "'+playerType+'" not found' }
-        let player = playerFactory(patternStr, paramsStr)
-        player.id = playerId
-        player.type = playerType
+        let play = (es) => es.filter(e => e.amp === undefined || e.amp > 0).map(e => playerFactory.play(e))
+        let player = {
+          play: play,
+          id: playerId,
+          type: playerType,
+        }
         // Follow player
         if (patternStr.startsWith('follow')) {
           let params = parseParams(paramsStr)
           player.getEventsForBeat = followPlayer(patternStr.slice(6).trim(), params)
+        } else if (playerFactory.stopped) {
+          player.getEventsForBeat = () => []
+        } else {
+          player.getEventsForBeat = standardPlayer(patternStr, paramsStr, playerFactory.defaultDur)
         }
         return player
       }
