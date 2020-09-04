@@ -21,9 +21,11 @@ define(function(require) {
   // fullscreen
   window.fullscreen = () => {
     if (!document.fullscreenElement) {
+      consoleOut('> Fullscreen')
       document.body.requestFullscreen();
     } else {
       if (document.exitFullscreen) {
+        consoleOut('> Exit fullscreen')
         document.exitFullscreen(); 
       }
     }
@@ -94,19 +96,19 @@ define(function(require) {
   window.stop = () => {
     system.resume()
     players.instances = {}
-    consoleOut('\n> Stop all players')
+    consoleOut('> Stop all players')
   }
   window.go = () => {
     system.resume()
     players.instances = {}
     players.overrides = {}
+    consoleOut('> Update code')
     editor.getValue().split('\n')
     .map((l,i) => {return{line:l.trim(), num:i}})
     .filter(({line}) => line != '')
     .map(({line,num}) => {
       try {
         parseLine(line)
-        consoleOut('>'+line)
       } catch (e) {
         let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
         consoleOut('Error on line '+(num+1)+': ' + e + st)
