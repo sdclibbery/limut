@@ -216,6 +216,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <h5 onclick="toggleAccordion('accordion-param-syntax')">▶ Param Syntax</h5>
 <div id="accordion-param-syntax" class="closed">
 <p><code>1</code> Single value</p>
+<p><code></code> No value: set param to <code>1</code>. Eg <code>monochrome</code> is the same as <code>monochrome=1</code></p>
 <p><code>(1,2)</code> Multiple values, all played together</p>
 <p><code>[1,2]</code> Sequence of values, one per event in the pattern</p>
 <p><code>[1,2]t3</code> Timed sequence, each value lasts for 3 beats</p>
@@ -311,6 +312,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>pixellate</code> number of pixels to pixellate to in each direction, or 0 to disable pixellation</p>
 <p><code>perspective</code> perspective warp to apply to shader (negative to invert), or 0 to disable</p>
 <p><code>additive</code> add this shaders output to those beneath instead of blending</p>
+<p><code>monochrome</code> make the shader output monochrome; 0 for normal, 1 for monochrome</p>
 <p><code>id</code> Shadertoy id for <code>shadertoy</code> synth. This is the id at the end of the URL when viewing a shadertoy shader; default is <code>Mss3Wf</code>.</p>
 </div>
 <h5 onclick="toggleAccordion('accordion-predefined-vars')">▶ Predefined Vars</h5>
@@ -441,13 +443,11 @@ video synth (use video element to load video file; don't try and target eg youtu
 vignette effect - vignette to 0-1 in UVs to support images?
 ? Synths defined earlier in source code always appear behind later ones, irrespective of the timing when they fire
 Z order param
-postprocess effects
- monochrome
- gamma
- outline
- noise
- dither
- threshold
+gamma
+outline
+noise
+dither
+threshold
 shadertoy synth supports textures - MtGSzh
  NO CORS!! https://www.shadertoy.com/media/a/f735bee5b64ef98879dc618b016ecf7939a5756040c2cde21ccb15e69a6e1cfb.png
 shadertoy synth multiple channels

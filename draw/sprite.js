@@ -66,6 +66,7 @@ define(function (require) {
     return state => { // per frame
       let eventTime = ((state.time-startTime)/(endTime-startTime))
       let brightness = 1 - (eventTime*eventTime)*param(params.fade, 0)
+      let monochrome = param(evalParam(params.monochrome, params.idx, state.count), 0)
       let loc = rect(param(evalParam(params.loc, params.idx, state.count), {}), {x:0,y:0,w:1,h:1})
       let scroll = vec(param(evalParam(params.scroll, params.idx, state.count), {}), {x:0,y:0})
       let zoom = vec(param(evalParam(params.zoom, params.idx, state.count), {}), {x:1,y:1})
@@ -78,6 +79,7 @@ define(function (require) {
       system.gl.useProgram(s.program)
       system.gl.uniform1f(s.timeUnif, state.count*rate + sway*state.pulse, 1)
       system.gl.uniform1f(s.brightnessUnif, brightness, 1)
+      system.gl.uniform1f(s.monochromeUnif, monochrome, 1)
       system.gl.uniform1f(s.valueUnif, value + pulse*state.pulse, 1)
       system.gl.uniform1f(s.ampUnif, amp + pulse*state.pulse*0.5, 1)
       system.gl.uniform4fv(s.foreUnif, fore, 1)
