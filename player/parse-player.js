@@ -1,9 +1,11 @@
 'use strict'
 define((require) => {
   let playerTypes = require('player/player-types')
-  var parseParams = require('player/params');
+  var parseParams = require('player/params')
+  var overrideParams = require('player/override-params')
+  var players = require('player/players')
   let standardPlayer = require('player/standard')
-  var followPlayer = require('player/follow');
+  var followPlayer = require('player/follow')
 
   let splitOnAll = (str, ch) => {
     if (!str) { return [] }
@@ -40,14 +42,21 @@ define((require) => {
           id: playerId,
           type: playerType,
         }
-        // Follow player
+        let getEventsForBeat
         if (patternStr.startsWith('follow')) {
+          // Follow player
           let params = parseParams(paramsStr)
-          player.getEventsForBeat = followPlayer(patternStr.slice(6).trim(), params)
+          getEventsForBeat = followPlayer(patternStr.slice(6).trim(), params)
         } else if (playerFactory.stopped) {
-          player.getEventsForBeat = () => []
+          getEventsForBeat = () => []
         } else {
-          player.getEventsForBeat = standardPlayer(patternStr, paramsStr, playerFactory.defaultDur)
+          getEventsForBeat = standardPlayer(patternStr, paramsStr, playerFactory.defaultDur)
+        }
+        // override event params
+        player.getEventsForBeat = (beat) => {
+          let events = getEventsForBeat(beat)
+          let overrides = players.overrides[player.id] || {}
+          return overrideParams(events, overrides)
         }
         return player
       }

@@ -37,7 +37,7 @@ define(function(require) {
     add: addOp,
   }
 
-  let combineEvents = (events, overrideParams) => {
+  let overrideParams = (events, overrideParams) => {
     return events.flatMap(sourceEvent => {
       let event = Object.assign({}, sourceEvent)
       for (let k in overrideParams) {
@@ -61,20 +61,20 @@ define(function(require) {
   let ev = ps => Object.assign({idx:0, count:0, value:'1'}, ps)
   let c
 
-  assert([ev()], combineEvents([ev()], {}))
-  assert([ev()], combineEvents([ev()], {value:'9', delay:8, time:7}))
-  assert([ev({oct:3}),ev({oct:4})], combineEvents([ev()], {oct:()=>[3,4]}))
-  assert([ev({add:2})], combineEvents([ev({add:2})], {}))
-  assert([ev({add:3})], combineEvents([ev()], {add:3}))
-  assert([ev({add:5})], combineEvents([ev({add:2})], {add:3}))
-  assert([ev({add:6})], combineEvents([ev({add:2})], {add:() => 4}))
-  assert([ev({add:5}),ev({add:6})], combineEvents([ev({add:2})], {add:()=>[3,4]}))
+  assert([ev()], overrideParams([ev()], {}))
+  assert([ev()], overrideParams([ev()], {value:'9', delay:8, time:7}))
+  assert([ev({oct:3}),ev({oct:4})], overrideParams([ev()], {oct:()=>[3,4]}))
+  assert([ev({add:2})], overrideParams([ev({add:2})], {}))
+  assert([ev({add:3})], overrideParams([ev()], {add:3}))
+  assert([ev({add:5})], overrideParams([ev({add:2})], {add:3}))
+  assert([ev({add:6})], overrideParams([ev({add:2})], {add:() => 4}))
+  assert([ev({add:5}),ev({add:6})], overrideParams([ev({add:2})], {add:()=>[3,4]}))
   
-  c = combineEvents([ev()], {zoom:parseExpression('[2:4]l2')})
+  c = overrideParams([ev()], {zoom:parseExpression('[2:4]l2')})
   assert(2, c[0].zoom(0,0))
   assert(3, c[0].zoom(1,1))
 
   console.log('Combine events tests complete')
 
-  return combineEvents
+  return overrideParams
 });
