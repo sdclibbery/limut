@@ -1,7 +1,7 @@
 'use strict';
 define(function(require) {
   let players = require('player/players')
-  let overrideParams = require('player/override-params')
+  let overrideParams = require('player/override-params').overrideEventParams
 
   let followPlayer = (playerName, params) => {
     return (beat) => {

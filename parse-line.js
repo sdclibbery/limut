@@ -1,10 +1,10 @@
 'use strict'
 define((require) => {
   let players = require('player/players')
-  let playerTypes = require('player/player-types')
   var parsePlayer = require('player/parse-player')
   var parseParams = require('player/params')
   let parseExpression = require('player/parse-expression')
+  let overrideParams = require('player/override-params').overrideParams
   let metronome = require('metronome')
   let vars = require('vars')
 
@@ -37,7 +37,7 @@ define((require) => {
       let playerId = parts[1].toLowerCase()
       if (!playerId) { throw 'Missing player id' }
       let params  = parts.slice(2).join('').trim()
-      players.overrides[playerId] = parseParams(params)
+      players.overrides[playerId] = overrideParams(players.overrides[playerId] || {}, parseParams(params))
       return
     }
     // Define a player
@@ -118,6 +118,22 @@ define((require) => {
 
   parseLine('set p amp=2')
   assert(2, players.overrides.p.amp)
+  delete players.overrides.p
+
+  parseLine('set p amp=2')
+  parseLine('set p amp=3')
+  assert(3, players.overrides.p.amp)
+  delete players.overrides.p
+
+  parseLine('set p amp=2')
+  parseLine('set p lpf=300')
+  assert(2, players.overrides.p.amp)
+  assert(300, players.overrides.p.lpf)
+  delete players.overrides.p
+
+  parseLine('set p add=2')
+  parseLine('set p add=3')
+  assert(5, players.overrides.p.add)
   delete players.overrides.p
 
   console.log('Parse line tests complete')

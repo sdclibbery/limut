@@ -37,14 +37,23 @@ define(function(require) {
     add: addOp,
   }
 
-  let overrideParams = (events, overrideParams) => {
+  let overrideParams = (params, overrides) => {
+    let result = Object.assign({}, params)
+    for (let k in overrides) {
+      let op = paramOp[k]
+      if (!op) { op = overrideOp }
+      result[k] = op(result[k], overrides[k])
+    }
+    return result
+}
+
+  let overrideEventParams = (events, overrides) => {
     return events.flatMap(sourceEvent => {
-      let event = Object.assign({}, sourceEvent)
-      for (let k in overrideParams) {
-        let op = paramOp[k]
-        if (!op) { op = overrideOp }
-        let v = op(event[k], overrideParams[k])
-        event[k] = evalPerFrame[k] ? v : evalParam(v, sourceEvent.idx, sourceEvent.count)
+      let event = overrideParams(sourceEvent, overrides)
+      for (let k in overrides) {
+        if (!evalPerFrame[k]) {
+          event[k] = evalParam(event[k], sourceEvent.idx, sourceEvent.count)
+        }
       }
       return multiplyEvents(event)
     })
@@ -61,20 +70,23 @@ define(function(require) {
   let ev = ps => Object.assign({idx:0, count:0, value:'1'}, ps)
   let c
 
-  assert([ev()], overrideParams([ev()], {}))
-  assert([ev()], overrideParams([ev()], {value:'9', delay:8, time:7}))
-  assert([ev({oct:3}),ev({oct:4})], overrideParams([ev()], {oct:()=>[3,4]}))
-  assert([ev({add:2})], overrideParams([ev({add:2})], {}))
-  assert([ev({add:3})], overrideParams([ev()], {add:3}))
-  assert([ev({add:5})], overrideParams([ev({add:2})], {add:3}))
-  assert([ev({add:6})], overrideParams([ev({add:2})], {add:() => 4}))
-  assert([ev({add:5}),ev({add:6})], overrideParams([ev({add:2})], {add:()=>[3,4]}))
+  assert([ev()], overrideEventParams([ev()], {}))
+  assert([ev()], overrideEventParams([ev()], {value:'9', delay:8, time:7}))
+  assert([ev({oct:3}),ev({oct:4})], overrideEventParams([ev()], {oct:()=>[3,4]}))
+  assert([ev({add:2})], overrideEventParams([ev({add:2})], {}))
+  assert([ev({add:3})], overrideEventParams([ev()], {add:3}))
+  assert([ev({add:5})], overrideEventParams([ev({add:2})], {add:3}))
+  assert([ev({add:6})], overrideEventParams([ev({add:2})], {add:() => 4}))
+  assert([ev({add:5}),ev({add:6})], overrideEventParams([ev({add:2})], {add:()=>[3,4]}))
   
-  c = overrideParams([ev()], {zoom:parseExpression('[2:4]l2')})
+  c = overrideEventParams([ev()], {zoom:parseExpression('[2:4]l2')})
   assert(2, c[0].zoom(0,0))
   assert(3, c[0].zoom(1,1))
 
   console.log('Combine events tests complete')
 
-  return overrideParams
+  return {
+    overrideEventParams: overrideEventParams,
+    overrideParams: overrideParams,
+  }
 });

@@ -2,7 +2,7 @@
 define((require) => {
   let playerTypes = require('player/player-types')
   var parseParams = require('player/params')
-  var overrideParams = require('player/override-params')
+  var overrideParams = require('player/override-params').overrideEventParams
   var players = require('player/players')
   let standardPlayer = require('player/standard')
   var followPlayer = require('player/follow')
