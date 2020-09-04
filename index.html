@@ -102,7 +102,7 @@
       height: 1em;
       background-color: #808080;
     }
-    .info h5 {
+    .info h4 {
       cursor: pointer;
     }
     :fullscreen { display: flex; flex-flow: column; }
@@ -149,7 +149,7 @@
   <textarea id="console" class="widget" rows="5"></textarea>
 </div>
 <div class="info">
-<h5 onclick="toggleAccordion('accordion-examples')">▶ Examples</h5>
+<h4 onclick="toggleAccordion('accordion-examples')">▶ Examples</h4>
 <div id="accordion-examples" class="closed">
 <pre>d1 play x-o-</pre>
 <pre>p1 dsaw 0534, add=(0,2,4), dur=4</pre>
@@ -190,18 +190,26 @@ d1 play (vx)., room=0.3
 d2 play .[::], room=0.3
 ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 </div>
-<h5 onclick="toggleAccordion('accordion-basic-syntax')">▶ Basic Syntax</h5>
+<h4 onclick="toggleAccordion('accordion-basic-syntax')">▶ Basic Syntax</h4>
 <div id="accordion-basic-syntax" class="closed">
 <p>Note: limut is case insensitive; <code>piano</code>, <code>Piano</code>, and <code>PIANO</code> are all treated the same; <code>[1:4]t4</code> is the same as <code>[1:4]T4</code> etc.</p>
-<p>Basic structure of a line of limut code, defining a player:</p>
+<h5>Defining a player</h5>
 <p><code>id synth pattern, params // comment</code></p>
 <p><code>id</code> Identifier for the player, so it can be referred to from other players etc.</p>
 <p><code>synth</code> Name of the audio or visual synth to use; eg <code>piano</code></p>
 <p><code>pattern</code> Pattern of notes to play. Specifies the notes or sounds to play, and when to play them</p>
-<p><code>params</code> Comma separated list of params that affect how the player plays</p>
+<p><code>params</code> Comma separated list of params (eg <code>amp=1/2</code>) that affect how the player plays; see 'Value Syntax' and 'Params' sections below</p>
 <p><code>comment</code> Anything after <code>//</code> on a line is ignored</p>
+<h5>Overriding player params:</h5>
+<p><code>set id params</code></p>
+<p><code>id</code> Player identifier; the override params will be apllied to this player</p>
+<p><code>params</code> Comma separated list of params (eg <code>amp=1/2</code>) that affect how the player plays; see 'Value Syntax' and 'Params' sections below</p>
+<h5>Setting global vars:</h5>
+<p><code>var = value</code></p>
+<p><code>var</code> variable to set; either a predefined var (see 'Predefined Vars' section below) or a user defined var which can be referenced from params on any player(s)</p>
+<p><code>value</code> expression value to set; see 'Value Syntax'</p>
 </div>
-<h5 onclick="toggleAccordion('accordion-pattern-syntax')">▶ Pattern Syntax</h5>
+<h4 onclick="toggleAccordion('accordion-pattern-syntax')">▶ Pattern Syntax</h4>
 <div id="accordion-pattern-syntax" class="closed">
 <p><code>x-o-</code> Sequence of events, each of duration <code>dur</code>, for use with <code>play</code></p>
 <p><code>0123</code> Sequence of events, each of duration <code>dur</code>, for use with tonal synths. Numbers are scale degrees</p>
@@ -213,7 +221,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>0&lt;12&gt;</code> Angle brackets to play events in sequence as the pattern repeats. Eg <code>0&lt;12&gt;</code> is exactly equivalent to <code>0102</code></p>
 <p><code>follow p1</code> Use <code>follow</code> to follow another player (named 'p1' in the example) pattern</p>
 </div>
-<h5 onclick="toggleAccordion('accordion-param-syntax')">▶ Param Syntax</h5>
+<h4 onclick="toggleAccordion('accordion-param-syntax')">▶ Value Syntax</h4>
 <div id="accordion-param-syntax" class="closed">
 <p><code>1</code> Single value</p>
 <p><code></code> No value: set param to <code>1</code>. Eg <code>monochrome</code> is the same as <code>monochrome=1</code></p>
@@ -238,7 +246,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>{x:0,y:1}</code> Map, containing keys and values</p>
 <p><code>'abc'</code> String value</p>
 </div>
-<h5 onclick="toggleAccordion('accordion-audio-synths')">▶ Audio Synths</h5>
+<h4 onclick="toggleAccordion('accordion-audio-synths')">▶ Audio Synths</h4>
 <div id="accordion-audio-synths" class="closed">
 <p><code>! / stop / none</code> </p>
 <p><code>play</code> Play samples. Use letters, symbols and digits 1-4 in the pattern to choose the sample (see below for full list). Note duration defaults to 1/2.</p>
@@ -254,7 +262,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>dsine</code> Detuned sine pad</p>
 <p><code>noise</code> Noise pad. Note pattern value is not used; white noise is produced for all values.</p>
 </div>
-<h5 onclick="toggleAccordion('accordion-visual-synths')">▶ Visual Synths</h5>
+<h4 onclick="toggleAccordion('accordion-visual-synths')">▶ Visual Synths</h4>
 <div id="accordion-visual-synths" class="closed">
 <p><code>! / stop / none</code> </p>
 <p><code>clouds</code> Moving clouds</p>
@@ -266,7 +274,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>shadertoy</code> Display a shadertoy synth. Use the <code>id</code> param to specify which shader. Only shaders published with the 'public+api' option are available, others will give error 'Shader not found'. At present, shaders that use textures or multiple channels will also not work.</p>
 <p><code>image</code> Display an online image. Use the <code>url</code> param to specify the image url. The image must be served using CORS. by default the image <code>back</code> is transparent.</p>
 </div>
-<h5 onclick="toggleAccordion('accordion-params')">▶ Params</h5>
+<h4 onclick="toggleAccordion('accordion-params')">▶ Params</h4>
 <div id="accordion-params" class="closed">
 <h6>Event</h6>
 <p><code>dur</code> Event time in beats</p>
@@ -315,7 +323,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>monochrome</code> make the shader output monochrome; 0 for normal, 1 for monochrome</p>
 <p><code>id</code> Shadertoy id for <code>shadertoy</code> synth. This is the id at the end of the URL when viewing a shadertoy shader; default is <code>Mss3Wf</code>.</p>
 </div>
-<h5 onclick="toggleAccordion('accordion-predefined-vars')">▶ Predefined Vars</h5>
+<h4 onclick="toggleAccordion('accordion-predefined-vars')">▶ Predefined Vars</h4>
 <div id="accordion-predefined-vars" class="closed">
 <p><code>bpm</code> Beats per minute</p>
 <p><code>time</code> Time, counted in beats (including fractions of a beat)</p>
@@ -327,7 +335,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>tile_full</code> Predefined loc param map to cover the full screen: equivalent to <code>{x:0,y:0,w:1,h:1}</code>. Other predefined locations: tile_tl/tr/bl/br/m, tile_h1/2/3/4/5, tile_v1/2/3/4/5, tile_random, tile_rand, fullscreen</p>
 <p><code>transparent</code> Predefined colour. Others: black, darkgray, gray, lightgray, white, red, orange, yellow, green, blue, indigo, violet, neonpink, neongreen, rainbow, random</p>
 </div>
-<h5 onclick="toggleAccordion('accordion-play-samples')">▶ Play Samples</h5>
+<h4 onclick="toggleAccordion('accordion-play-samples')">▶ Play Samples</h4>
 <div id="accordion-play-samples" class="closed">
 <p>
 <code>a</code> Gameboy hihat<br/>
@@ -458,8 +466,6 @@ Drop canvas to half res if gl frame rate is low?
 ====
 ==== other ====
 Syntax to add param overrides: 'set bass amp=1/2, chop=2'
- handle multiple instances sets, re add
- docs
  syntax highlighting: 'set' as first token on a line
 Can specify params for groups of players 'set [bass,kd] amp=0'
 Wildcard player matching for groups 'set d? amp=0'  'set p* amp=0'
