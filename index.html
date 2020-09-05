@@ -202,7 +202,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>comment</code> Anything after <code>//</code> on a line is ignored</p>
 <h5>Overriding player params:</h5>
 <p><code>set id params</code></p>
-<p><code>id</code> Player identifier; the override params will be apllied to this player</p>
+<p><code>id</code> Player identifier; the override params will be apllied to this player. Can also be a list of multiple players to apply the params to; eg <code>set [kd,sd] amp=0</code></p>
 <p><code>params</code> Comma separated list of params (eg <code>amp=1/2</code>) that affect how the player plays; see 'Value Syntax' and 'Params' sections below</p>
 <h5>Setting global vars:</h5>
 <p><code>var = value</code></p>
@@ -463,7 +463,6 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-Can specify params for groups of players 'set [bass,kd] amp=0'
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way??
 syntax for 'change from A to B by the next multiple of X' - but how not to repeat this if rerun?
