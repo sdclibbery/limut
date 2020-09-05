@@ -15,6 +15,47 @@ define((require) => {
     'main.reverb': (command) => window.mainReverbChange(eval(parseExpression(command))),
   }
 
+  let identifier = (state) => {
+    let char
+    let result = ''
+    while (char = state.str.charAt(state.idx).toLowerCase()) {
+      if ((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || char === '_') {
+        result += char
+        state.idx += 1
+        continue
+      }
+      break
+    }
+    return result
+  }
+  let eatWhitespace = (state) => {
+    let char
+    while (char = state.str.charAt(state.idx)) {
+      if (char === ' ' || char === '\t' || char === '\n' || char === '\r') { state.idx += 1; continue }
+      break
+    }
+  }
+  let parsePlayerIds = (state) => {
+    let result = []
+    let char
+    while (char = state.str.charAt(state.idx)) {
+      eatWhitespace(state)
+      if (char == '[' || char == ',') {
+        state.idx += 1
+        eatWhitespace(state)
+        let v = identifier(state)
+        if (v !== undefined) { result.push(v) }
+        eatWhitespace(state)
+      } else if (char == ']') {
+        state.idx += 1
+        break
+      } else {
+        return undefined
+      }
+    }
+    return result
+  }
+
   let parseLine = (line) => {
     line = line.trim()
     if (!line) { return }
@@ -32,12 +73,18 @@ define((require) => {
       return
     }
     // Set (override) params for a player
-    let parts = line.split(/(\s+)/).map(p => p.trim()).filter(p => p != '')
-    if (parts[0] == 'set') {
-      let playerId = parts[1].toLowerCase()
-      if (!playerId) { throw 'Missing player id' }
-      let params  = parts.slice(2).join('').trim()
-      players.overrides[playerId] = overrideParams(players.overrides[playerId] || {}, parseParams(params))
+    if (line.startsWith('set ')) {
+      let state = { str: line.slice(4).trim(), idx: 0 }
+      let playerIds
+      if (state.str[0] == '[') {
+        playerIds = parsePlayerIds(state).map(id=>id.trim())
+      } else {
+        playerIds = [identifier(state)]
+      }
+      let params = parseParams(state.str.slice(state.idx).trim())
+      playerIds.forEach(playerId => {
+        players.overrides[playerId] = overrideParams(players.overrides[playerId] || {}, params)
+      })
       return
     }
     // Define a player
@@ -135,6 +182,12 @@ define((require) => {
   parseLine('set p add=3')
   assert(5, players.overrides.p.add)
   delete players.overrides.p
+
+  parseLine(' set [ p , q ] amp = 2 ')
+  assert(2, players.overrides.p.amp)
+  assert(2, players.overrides.q.amp)
+  delete players.overrides.p
+  delete players.overrides.q
 
   console.log('Parse line tests complete')
 
