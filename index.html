@@ -308,7 +308,8 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>vibdepth</code> vibrato depth in demitones (default 0.4)</p>
 <p><code>vibdelay</code> delay before vibrato starts in beats (default 1)</p>
 <h6>Visual</h6>
-<p><code>fade</code> brightness fade for visual synths</p>
+<p><code>zorder</code> order in which to draw visual synths; defaults to the 1/1000th of the source code line number for the player, so that visuals draw strictly in the order they appear in the source code; however, this param can be used to override this and force specific visuals to the front or rear of the draw order.</p>
+<p><code>fade</code> brightness/transparent fadeout</p>
 <p><code>pulse</code> extent to which the audio signal affects the value passed to visual synths</p>
 <p><code>sway</code> extent to which the audio signal affects the time passed to visual synths</p>
 <p><code>loc</code> position and size for visual synths; eg {x:0,y:0,w:1/2,h:1/2}</p>
@@ -449,9 +450,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-Z order param
- defaults to source code line number (div 1000?) 
- docs
+flicker of double draw when using additive?
 video synth (use video element to load video file; don't try and target eg youtube)
 vignette effect - vignette to 0-1 in UVs to support images?
 Start image download on parse not on first use

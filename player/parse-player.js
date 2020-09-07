@@ -18,7 +18,7 @@ define((require) => {
     return [parts[0], parts.slice(1).join()]
   }
 
-  let parsePlayer = (line) => {
+  let parsePlayer = (line, linenum) => {
     let parts = line.split(/(\s+)/).map(p => p.trim()).filter(p => p != '')
     let playerId = parts[0].toLowerCase()
     if (playerId) {
@@ -55,6 +55,7 @@ define((require) => {
         // override event params
         player.getEventsForBeat = (beat) => {
           let events = getEventsForBeat(beat)
+          events.forEach(e => e.linenum = linenum)
           let overrides = players.overrides[player.id] || {}
           return overrideParams(events, overrides)
         }

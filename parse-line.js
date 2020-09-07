@@ -56,7 +56,7 @@ define((require) => {
     return result
   }
 
-  let parseLine = (line) => {
+  let parseLine = (line, linenum) => {
     line = line.trim()
     if (!line) { return }
     if (line.startsWith('//')) { return }
@@ -88,7 +88,7 @@ define((require) => {
       return
     }
     // Define a player
-    let player = parsePlayer(line)
+    let player = parsePlayer(line, linenum)
     if (player) {
       players.instances[player.id] = player
     }

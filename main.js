@@ -108,7 +108,7 @@ define(function(require) {
     .filter(({line}) => line != '')
     .map(({line,num}) => {
       try {
-        parseLine(line)
+        parseLine(line, num)
       } catch (e) {
         let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
         consoleOut('Error on line '+(num+1)+': ' + e + st)

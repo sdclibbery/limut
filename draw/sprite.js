@@ -116,7 +116,7 @@ define(function (require) {
   }
 
   return (shader, defFore, defBack) => (params) => {
-    let zorder = param(params.zorder, 0)
+    let zorder = param(params.zorder, param(params.linenum, 0)/1000)
     system.add(params.time, play(shader, defFore, defBack, params), zorder)
   }
 })
