@@ -10,8 +10,8 @@ let system = {
   active: [],
 }
 
-system.add = (startTime, v) => {
-  system.queued.push({t:startTime, v:v})
+system.add = (startTime, render, zorder) => {
+  system.queued.push({t:startTime, render:render, zorder:zorder})
 }
 
 system.frameStart = (time, count, gl, cw, ch, spectrum, pulse) => {
@@ -36,7 +36,9 @@ system.frameStart = (time, count, gl, cw, ch, spectrum, pulse) => {
   system.queued = system.queued.filter(v => !newlyActive.includes(v))
 
   let state = {count: count, time: time, dt: system.dt, spectrum:spectrum, pulse:pulse}
-  system.active = system.active.filter(({v}, idx) => v(state))
+  system.active = system.active
+    .sort((l,r) => l.zorder > r.zorder)
+    .filter(({render}, idx) => render(state))
 }
 
 system.latency = () => {

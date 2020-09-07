@@ -416,8 +416,10 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-AudioWorklet pulse synth
-AudioWorklet PWM prophet synth (and maybe techno pad too)
+AudioWorklet pulse oscillator - bandwidth limited??
+Pulse synth
+AudioWorklet PWM oscillator - bandwidth limited??
+Prophet synth (and maybe techno pad too)
 Try drive from here: https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
 Pluck/guitar synths
  https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
@@ -435,7 +437,7 @@ soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio
 strings pad - triangle?? vib?
 lpf/hpf/bpf either 60fps or slide
 formant
-pluck synth?
+vowel?
 timpani sample?
 bitcrush param
 support -ve rate for reverse playback
@@ -447,10 +449,11 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+Z order param
+ defaults to source code line number (div 1000?) 
+ docs
 video synth (use video element to load video file; don't try and target eg youtube)
 vignette effect - vignette to 0-1 in UVs to support images?
-? Synths defined earlier in source code always appear behind later ones, irrespective of the timing when they fire
- ? And/or Z order param
 Start image download on parse not on first use
 text synth
 gamma
@@ -463,8 +466,8 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way??
+Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 syntax for 'change from A to B by the next multiple of X' - but how not to repeat this if rerun?
 want to be able to have old random behaviour: choose random once per event not once per frame or once per time interval - use for tile_random
 dur=[3,3,2]\4
@@ -564,6 +567,12 @@ Spiral flow: https://www.shadertoy.com/view/MdlXRS
 Fractal https://www.shadertoy.com/view/lslGWr
 Colour tunnel: https://www.shadertoy.com/view/XdSGzR
 Cell flow: https://www.shadertoy.com/view/MlsGWX
+=== Images
+icon='https://upload.wikimedia.org/wikipedia/commons/0/04/Radiation_diamond.svg'
+drums='https://upload.wikimedia.org/wikipedia/commons/0/0b/Radioactive_keeper_drums.JPG'
+sign='https://upload.wikimedia.org/wikipedia/commons/7/7d/Trinity_007.jpg'
+spider='https://upload.wikimedia.org/wikipedia/commons/2/26/Jumping_Spider.jpg'
+cleanup='https://upload.wikimedia.org/wikipedia/commons/4/40/IAEA_02790019_%285613119300%29.jpg'
 */
 </script>
 </html>
