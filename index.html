@@ -417,10 +417,9 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-AudioWorklet pulse oscillator - bandwidth limited??
-Pulse synth
-AudioWorklet PWM oscillator - bandwidth limited??
-Prophet synth (and maybe techno pad too)
+PWM synth
+ https://github.com/skratchdot/web-audio-api-v2-issue-7/blob/master/public/pulse-oscillator.js
+Prophet synth (and maybe techno pad too) with LFO pulse width
 Try drive from here: https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
 Pluck/guitar synths
  https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
@@ -450,6 +449,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+sparkle synth; each event is a sparkle onscreen
 flicker of double draw when using additive?
 video synth (use video element to load video file; don't try and target eg youtube)
 vignette effect - vignette to 0-1 in UVs to support images?
@@ -465,10 +465,12 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+? Should be able to specify sample frequency for []s?
+want to be able to have old random behaviour: choose random once per event not once per frame or once per time interval - use for tile_random
+ ? []r should be once only, not per call?
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way??
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 syntax for 'change from A to B by the next multiple of X' - but how not to repeat this if rerun?
-want to be able to have old random behaviour: choose random once per event not once per frame or once per time interval - use for tile_random
 dur=[3,3,2]\4
 finish off: <> for 'in sequence on each repeat' in patterns
 "on 4 " / "on 28 of 32 " syntax to execute a line on the next beat count - but how not to repeat this if rerun?
@@ -543,6 +545,11 @@ nebula smoke: 4ltSRS
 disco tunnel: XstfzB
 disco balls: lllXWr
 sky swoop: lldSWN
+Flux core: ltlSWf
+candy core: 4sVXDz
+core engine: Wsc3W4
+warp core: 4lGXzG
+80s synthwave: 4t33D2
 -- needs textures
 synthwave driving shader tsScRK
 power sphere MtGSzh
