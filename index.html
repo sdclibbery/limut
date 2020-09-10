@@ -261,6 +261,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>ethereal</code> Ethereal pad</p>
 <p><code>dsine</code> Detuned sine pad</p>
 <p><code>noise</code> Noise pad. Note pattern value is not used; white noise is produced for all values.</p>
+<p><code>prophet</code> Prophet style detuned pulse with lfo controlled pulse-width</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-visual-synths')">▶ Visual Synths</h4>
 <div id="accordion-visual-synths" class="closed">
@@ -307,6 +308,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>vib</code> vibrato frequency in cycles per beat</p>
 <p><code>vibdepth</code> vibrato depth in demitones (default 0.4)</p>
 <p><code>vibdelay</code> delay before vibrato starts in beats (default 1)</p>
+<p><code>lfo</code> lfo frequency in cycles per beat for synths that use an lfo</p>
 <h6>Visual</h6>
 <p><code>zorder</code> order in which to draw visual synths; defaults to the 1/1000th of the source code line number for the player, so that visuals draw strictly in the order they appear in the source code; however, this param can be used to override this and force specific visuals to the front or rear of the draw order.</p>
 <p><code>fade</code> brightness/transparent fadeout</p>
@@ -417,9 +419,6 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-Prophet synth with LFO pulse width
- add default lpf at 2000Hz
- docs (prophet & lfo)
 PWM techno pad??
 Try drive from here: https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
 Pluck/guitar synths

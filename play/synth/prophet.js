@@ -15,6 +15,8 @@ define(function (require) {
     let detuneSemis = param(params.detune, 0.1)
     let lfo = param(params.lfo, 1/4)
 
+    params.lpf = Math.min(param(params.lpf, 2000), 2000)
+
     let vca = envelope(params, 0.02)
     system.mix(effects(params, vca))
 
