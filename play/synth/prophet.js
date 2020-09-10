@@ -1,0 +1,46 @@
+'use strict';
+define(function (require) {
+  let system = require('play/system')
+  require('play/pwm')
+  let scale = require('music/scale')
+  let envelope = require('play/full-envelope')
+  let effects = require('play/effects')
+  let pitchEffects = require('play/pitch-effects')
+  let param = require('player/default-param')
+
+  return (params) => {
+    let degree = parseInt(params.sound) + param(params.add, 0)
+    if (isNaN(degree)) { return }
+    let freq = scale.degreeToFreq(degree, param(params.oct, 3), params.scale)
+    let detuneSemis = param(params.detune, 0.1)
+    let lfo = param(params.lfo, 1/4)
+
+    let vca = envelope(params, 0.02)
+    system.mix(effects(params, vca))
+
+    let lfoOsc = system.audio.createOscillator()
+    lfoOsc.type = 'triangle'
+    lfoOsc.frequency.value = lfo / params.beat.duration
+    let lfoGain = system.audio.createGain()
+    lfoGain.gain.value = 0.49
+    lfoOsc.connect(lfoGain)
+    system.audio.createConstantSource().connect(lfoGain)
+    lfoOsc.start(params.time)
+    lfoOsc.stop(params.endTime)
+
+    let pitch = pitchEffects(params)
+    let vcos = [0, 0.1].map(detune => {
+      let vco = new AudioWorkletNode(system.audio, "pwm-oscillator")
+      vco.parameters.get('frequency').value = freq * Math.pow(2, detune * detuneSemis/12)
+      lfoGain.connect(vco.parameters.get('pulseWidth'))
+      pitch.connect(vco.detune)
+      vco.connect(vca)
+      vco.parameters.get('start').setValueAtTime(0, system.audio.currentTime)
+      vco.parameters.get('start').setValueAtTime(1, params.time)
+      vco.parameters.get('stop').setValueAtTime(0, system.audio.currentTime)
+      vco.parameters.get('stop').setValueAtTime(1, params.endTime)
+      return vco
+    })
+    system.disconnect(params, vcos.concat(vca,lfoOsc,lfoGain))
+  }
+});

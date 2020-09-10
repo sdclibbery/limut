@@ -13,8 +13,8 @@ define(function (require) {
     let release = param(params.rel, 0.1*dur) * params.beat.duration
     let gain = Math.max(0.0001, gainBase * param(params.amp, 1))
     let vca = system.audio.createGain();
-    vca.gain.cancelScheduledValues(params.time)
-    vca.gain.setValueAtTime(0, params.time)
+    vca.gain.cancelScheduledValues(system.audio.currentTime)
+    vca.gain.setValueAtTime(0, system.audio.currentTime)
     vca.gain.linearRampToValueAtTime(gain, params.time + attack)
     vca.gain.linearRampToValueAtTime(gain*susLevel, params.time + attack+decay)
     vca.gain.linearRampToValueAtTime(gain*susLevel*0.8, params.time + attack+decay+sustain)

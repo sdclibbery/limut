@@ -17,8 +17,8 @@ define(function (require) {
     let sus = dur*params.beat.duration - attack
     let gain = Math.max(0.0001, gainBase * param(params.amp, 1))
     let vca = system.audio.createGain()
-    vca.gain.cancelScheduledValues(params.time)
-    vca.gain.setValueAtTime(0, params.time)
+    vca.gain.cancelScheduledValues(system.audio.currentTime)
+    vca.gain.setValueAtTime(0, system.audio.currentTime)
     vca.gain.setValueCurveAtTime(fade(0, gain), params.time, attack)
     vca.gain.linearRampToValueAtTime(gain, params.time + attack+sus)
     vca.gain.setValueCurveAtTime(fade(gain, 0), params.time + attack+sus, release)
