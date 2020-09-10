@@ -450,6 +450,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+colours can be defined using hsl/hsv instead of rgb
 sparkle synth; each event is a sparkle onscreen
 flicker of double draw when using additive?
 video synth (use video element to load video file; don't try and target eg youtube)
@@ -466,7 +467,9 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-? Should be able to specify sample frequency for []s?
+can access most recent event params from players in expressions
+add a 'pulse' property, either set by the envelope, or actually from audio, which can be used to cleanly sync visuals to audio
+? Should be able to specify sampling frequency for []s?
 want to be able to have old random behaviour: choose random once per event not once per frame or once per time interval - use for tile_random
  ? []r should be once only, not per call?
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way??
