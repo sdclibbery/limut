@@ -36,7 +36,14 @@ define((require) => {
         // Create player
         let playerFactory = playerTypes[playerType.toLowerCase()]
         if (!playerFactory) { throw 'Player "'+playerType+'" not found' }
-        let play = (es) => es.filter(e => e.amp === undefined || e.amp > 0).map(e => playerFactory.play(e))
+        let play = (es) => {
+          return es
+            .filter(e => e.amp === undefined || e.amp > 0)
+            .map(e => {
+              playerFactory.play(e)
+              player.lastEvent = e
+            })
+        }
         let player = {
           play: play,
           id: playerId,
@@ -84,6 +91,10 @@ define((require) => {
   assert('function', typeof p.getEventsForBeat)
   assert('function', typeof p.play)
   assert(2, p.getEventsForBeat({count:0})[0].amp)
+
+  p = parsePlayer('p none 0, amp=2')
+  p.play([{amp:2}])
+  assert(2, p.lastEvent.amp)
   
   p = parsePlayer('p play xo,// amp=2')
   assert(undefined, p.getEventsForBeat({count:0})[0].amp)

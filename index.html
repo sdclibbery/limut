@@ -468,7 +468,9 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 can access most recent event params from players in expressions
-add a 'pulse' property, either set by the envelope, or actually from audio, which can be used to cleanly sync visuals to audio
+ when evaluating expression vars, look up player event values first if theres a '.' present 
+ docs
+add a 'pulse' player event value, either set by the envelope, or actually from audio, which can be used to cleanly sync visuals to audio
 ? Should be able to specify sampling frequency for []s?
 want to be able to have old random behaviour: choose random once per event not once per frame or once per time interval - use for tile_random
  ? []r should be once only, not per call?
