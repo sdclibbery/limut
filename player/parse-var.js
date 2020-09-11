@@ -2,6 +2,7 @@
 define(function(require) {
   let evalParam = require('player/eval-param')
   let vars = require('vars')
+  let players = require('player/players')
 
   let varLookup = (state) => {
     let key = ''
@@ -16,7 +17,15 @@ define(function(require) {
     }
     if (!key) { return }
     return (s,b) => {
-      return evalParam(vars[key] ,s,b)
+      let [playerId, param] = key.split('.')
+      let player = players.instances[playerId]
+      let v
+      if (player && param) {
+        v = player.lastEvent[param]
+      } else {
+        v = vars[key]
+      }
+      return evalParam(v,s,b)
     }
   }
 
@@ -46,6 +55,11 @@ define(function(require) {
   p = varLookup({str:'FoO',idx:0})
   assert('bar', p())
   vars['foo'] = undefined
+
+  players.instances.p1 = {lastEvent:{foo:2}}
+  p = varLookup({str:'p1.foo',idx:0})
+  assert(2, p())
+  delete players.instances.p1
 
   console.log('Parse var tests complete')
 

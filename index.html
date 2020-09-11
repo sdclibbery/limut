@@ -420,6 +420,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 /*
 ==== audio ====
 Try using an lpf right by the oscillator in prophet and see if its better or worse than using the standard effects lpf
+Chorus effect
 PWM techno pad??
 Try drive from here: https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
 Pluck/guitar synths
@@ -468,9 +469,11 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 can access most recent event params from players in expressions
- when evaluating expression vars, look up player event values first if theres a '.' present 
+ play synth will need to set endTime, preferably based on sample length and rate
  docs
-add a 'pulse' player event value, either set by the envelope, or actually from audio, which can be used to cleanly sync visuals to audio
+add a 'pulse' player event value, which can be used to cleanly sync visuals to audio from specific players
+ zero when not playing, some approximate envelope when a sound is playing
+New param to offset time in shaders to allow doing sway 'manually'
 ? Should be able to specify sampling frequency for []s?
 want to be able to have old random behaviour: choose random once per event not once per frame or once per time interval - use for tile_random
  ? []r should be once only, not per call?
