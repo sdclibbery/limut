@@ -1,10 +1,9 @@
 'use strict';
 define(function(require) {
-
-  let vars = require('vars')
   let param = require('player/default-param')
   let evalParam = require('player/eval-param')
   let operator = require('player/eval-operator')
+  let varLookup = require('player/parse-var')
 
   let debugParse = false
   let debugEval = false
@@ -137,25 +136,6 @@ define(function(require) {
       } else {
         return 4
       }
-    }
-  }
-
-  let varLookup = (state) => {
-    let key = ''
-    let char
-    while (char = state.str.charAt(state.idx).toLowerCase()) {
-      if ((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || (char == '_') || (char == '.')) {
-        key += char
-        state.idx += 1
-        continue
-      }
-      break
-    }
-    if (debugParse) { console.log('varLookup', key, state) }
-    if (!key) { return }
-    return (s,b) => {
-      if (debugEval) { console.log('eval varLookup', 'key:',key, 'val:',vars[key], 's:',s,'b:',b) }
-      return evalParam(vars[key] ,s,b)
     }
   }
 
@@ -468,6 +448,8 @@ define(function(require) {
 
   // TESTS //
 
+  let vars = require('vars')
+  
   let assert = (expected, actual) => {
     let x = JSON.stringify(expected)
     let a = JSON.stringify(actual)
