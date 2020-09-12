@@ -18,10 +18,15 @@ define(function(require) {
     if (!key) { return }
     return (s,b) => {
       let [playerId, param] = key.split('.')
-      let player = players.instances[playerId]
       let v
-      if (player && param) {
-        v = player.lastEvent[param]
+      if (param) {
+        let player = players.instances[playerId]
+        if (player) {
+          v = player.lastEvent ? player.lastEvent[param] : 0
+        } else {
+          v = vars[key]
+          if (v === undefined) { v = 0 } // If not found as a var, assume its for a currently unavailable player and default to zero
+        }
       } else {
         v = vars[key]
       }
@@ -60,6 +65,9 @@ define(function(require) {
   p = varLookup({str:'p1.foo',idx:0})
   assert(2, p())
   delete players.instances.p1
+
+  p = varLookup({str:'p1.foo',idx:0})
+  assert(0, p())
 
   console.log('Parse var tests complete')
 

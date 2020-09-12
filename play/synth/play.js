@@ -49,7 +49,7 @@ define(function (require) {
     let source = system.audio.createBufferSource()
     source.buffer = getBuffer(getUrl(params.sound, param(params.sample, 1)))
     source.playbackRate.value = rate
-    params.endTime = params.time + param(params.dur, 0.1)*params.beat.duration
+    params.endTime = params.time + (source.buffer ? source.buffer.duration : 0.1)
 
     let vca = system.audio.createGain()
     vca.gain.value = Math.max(0, 0.2 * param(params.amp, 1))

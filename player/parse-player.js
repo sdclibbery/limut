@@ -41,6 +41,22 @@ define((require) => {
             .filter(e => e.amp === undefined || e.amp > 0)
             .map(e => {
               playerFactory.play(e)
+              let pulse = (s,b) => {
+                let t = e.beat.time + (b-e.beat.beatTime)*e.beat.duration
+                if (t<e.time || t>e.endTime) { return 0 }
+                let l = e.endTime - e.time
+                let x = (t - e.time) / l
+                let v = x < 1/5 ? x*5 : 1-(x*6/5-1/5)
+                return Math.pow(v, 1/2)
+              }
+              if (player.lastCount !== e.beat.count) {
+                player.pulses = []
+                player.lastCount = e.beat.count
+              }
+              player.pulses.push(pulse)
+              e.pulse = (s,b) => {
+                return player.pulses.map(p => p(s,b)).reduce((a,b)=>Math.max(a,b), 0)
+              }
               player.lastEvent = e
             })
         }
@@ -93,7 +109,7 @@ define((require) => {
   assert(2, p.getEventsForBeat({count:0})[0].amp)
 
   p = parsePlayer('p none 0, amp=2')
-  p.play([{amp:2}])
+  p.play([{amp:2, beat:{beatTime:0, count:0}}])
   assert(2, p.lastEvent.amp)
   
   p = parsePlayer('p play xo,// amp=2')

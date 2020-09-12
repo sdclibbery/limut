@@ -221,9 +221,9 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>0&lt;12&gt;</code> Angle brackets to play events in sequence as the pattern repeats. Eg <code>0&lt;12&gt;</code> is exactly equivalent to <code>0102</code></p>
 <p><code>follow p1</code> Use <code>follow</code> to follow another player (named 'p1' in the example) pattern</p>
 </div>
-<h4 onclick="toggleAccordion('accordion-param-syntax')">▶ Value Syntax</h4>
-<div id="accordion-param-syntax" class="closed">
-<p><code>1</code> Single value</p>
+<h4 onclick="toggleAccordion('accordion-value-syntax')">▶ Value Syntax</h4>
+<div id="accordion-value-syntax" class="closed">
+<p><code>1</code> Single, constant value</p>
 <p><code></code> No value: set param to <code>1</code>. Eg <code>monochrome</code> is the same as <code>monochrome=1</code></p>
 <p><code>(1,2)</code> Multiple values, all played together</p>
 <p><code>[1,2]</code> Sequence of values, one per event in the pattern</p>
@@ -245,6 +245,8 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>%</code> Take remainder; eg (0,4,7,9)%7 is equivalent to (0,4,0,2)</p>
 <p><code>{x:0,y:1}</code> Map, containing keys and values</p>
 <p><code>'abc'</code> String value</p>
+<p><code>foo</code> Lookup a global var named <code>foo</code>.</p>
+<p><code>p1.amp</code> Lookup the value of param <code>amp</code> from player <code>p1</code>. Uses the param from the most recently played event on that player. Can additionally use a <code>pulse</code> param on the player, which pulses from 0 to 1 as events play on that player.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-audio-synths')">▶ Audio Synths</h4>
 <div id="accordion-audio-synths" class="closed">
@@ -468,12 +470,6 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-can access most recent event params from players in expressions
- docs
-add a 'pulse' player event value, which can be used to cleanly sync visuals to audio from specific players
- zero when not playing, some approximate envelope when a sound is playing
- play synth will need to set endTime, preferably based on sample length and rate
- docs
 New param to offset time in shaders to allow doing sway 'manually'
 ? Should be able to specify sampling frequency for []s?
 want to be able to have old random behaviour: choose random once per event not once per frame or once per time interval - use for tile_random
