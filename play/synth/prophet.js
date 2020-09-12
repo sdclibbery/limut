@@ -35,7 +35,7 @@ define(function (require) {
       let vco = new AudioWorkletNode(system.audio, "pwm-oscillator")
       vco.parameters.get('frequency').value = freq * Math.pow(2, detune * detuneSemis/12)
       lfoGain.connect(vco.parameters.get('pulseWidth'))
-      pitch.connect(vco.detune)
+      pitch.connect(vco.parameters.get('detune'))
       vco.connect(vca)
       vco.parameters.get('start').setValueAtTime(0, system.audio.currentTime)
       vco.parameters.get('start').setValueAtTime(1, params.time)

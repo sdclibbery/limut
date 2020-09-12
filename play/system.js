@@ -27,7 +27,7 @@ system.mainAmp = (amp) => {
   return system.mainAmpValue
 }
 system.vcaPreAmp = system.audio.createGain()
-system.vcaPreAmp.gain.value = 0.5
+system.vcaPreAmp.gain.value = 0.4
 
 system.compressorReduction = () => {
   if (!system.compressor) { return 0 }
