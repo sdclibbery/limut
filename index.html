@@ -421,7 +421,6 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-lpf/hpf/bpf either 60fps or slide
 Chorus effect
 PWM techno pad??
 Try drive from here: https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
@@ -455,7 +454,6 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 sparkle synth; each event is a sparkle onscreen
  and/or, loc=sparkle somehow?
 colours can be defined using hsl/hsv instead of rgb
-flicker of double draw, visible when using additive?
 video synth (use video element to load video file; don't try and target eg youtube)
 vignette effect - vignette to 0-1 in UVs to support images?
 Start image download on parse not on first use
@@ -470,9 +468,17 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-? Should be able to specify sampling frequency for []s? - and everything; eg for p1.pulse etc
- want to be able to have old random behaviour: choose random once per event not once per frame or once per time interval - use for tile_random
- ? []r should be once only, not per call?
+Should be able to specify sampling frequency on everything
+ Start by making lpf a per frame param and see how it goes
+ ? How to specify syntax? How to apply to eg p1.pulse and time as well as [0:1]
+  `fore=red*pulse@t4` `lpf=time@e` `scroll=[0:2]l@f` `[1,2]`is same as`[1,2]@s`
+ ? What sampling frequencies do we want? @e every event, @s every pattern step, @t4 every x beats, @f every frame
+ ? How to represent within the parsed data? Wrap value in a memoisation func to handle it?
+ ? How to know when to actual eval the value?
+  ? Can this all be wrapped into evalParam? Or even defaultParam???
+  ? Actually sample everything every frame then? How slow would that be?
+ Need to call versions of evalParam at both event creation and per frame
+ Also, for audio params might want to set interpolation: linear or none?
 player lastEvent should really be current event and should be from whatever event is current at that point in the beat
 apply overridden delay for follow player: allow canons
 New param to offset time in shaders to allow doing sway 'manually'

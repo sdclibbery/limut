@@ -31,7 +31,7 @@ system.frameStart = (time, count, gl, cw, ch, spectrum, pulse) => {
   system.gl.depthFunc(system.gl.LEQUAL)
   system.gl.clear(system.gl.COLOR_BUFFER_BIT|system.gl.DEPTH_BUFFER_BIT)
 
-  let newlyActive = system.queued.filter(({t,v}) => time >= t-0.01)
+  let newlyActive = system.queued.filter(({t,v}) => time > t)
   system.active = system.active.concat(newlyActive)
   system.queued = system.queued.filter(v => !newlyActive.includes(v))
 

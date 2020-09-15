@@ -64,6 +64,7 @@ define(function (require) {
     let pixellate = param(params.pixellate, 0)
     let url = param(params.url, 'favicon-32x32.png')
     return state => { // per frame
+      if (state.time > endTime) { return false }
       let eventTime = ((state.time-startTime)/(endTime-startTime))
       let brightness = 1 - (eventTime*eventTime)*param(params.fade, 0)
       let monochrome = param(evalParam(params.monochrome, params.idx, state.count), 0)
@@ -111,7 +112,7 @@ define(function (require) {
         system.gl.blendFunc(system.gl.ONE, system.gl.ONE_MINUS_SRC_ALPHA)
       }
       system.gl.drawArrays(system.gl.TRIANGLES, 0, 6)
-      return state.time <= endTime-state.dt+0.01
+      return true
     }
   }
 
