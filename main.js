@@ -77,6 +77,7 @@ define(function(require) {
     lineWrapping: true,
     tabSize: 2,
     inputStyle: "textarea",
+    smartIndent: false,
   })
   editor.setValue(localStorage.getItem('limut-code') || '')
   editor.on('change', () => localStorage.setItem('limut-code', editor.getValue()))
@@ -120,7 +121,6 @@ define(function(require) {
   window.comment = () => {
     editor.toggleComment()
   }
-
 
   // indicator helpers
   let to255 = (x) => Math.min(Math.max(Math.floor(x*256), 0), 255)
