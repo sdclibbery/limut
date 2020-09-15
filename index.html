@@ -421,7 +421,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-Try using an lpf right by the oscillator in prophet and see if its better or worse than using the standard effects lpf
+lpf/hpf/bpf either 60fps or slide
 Chorus effect
 PWM techno pad??
 Try drive from here: https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
@@ -439,7 +439,6 @@ echoey space synth
  ethereal vib=3, att=0, sus=2, rel=2, phaser=1/4, echo=(3,4), oct=5
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
 strings pad - triangle?? vib?
-lpf/hpf/bpf either 60fps or slide
 formant
 vowel?
 timpani sample?
@@ -453,8 +452,9 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-colours can be defined using hsl/hsv instead of rgb
 sparkle synth; each event is a sparkle onscreen
+ and/or, loc=sparkle somehow?
+colours can be defined using hsl/hsv instead of rgb
 flicker of double draw when using additive?
 video synth (use video element to load video file; don't try and target eg youtube)
 vignette effect - vignette to 0-1 in UVs to support images?
@@ -470,10 +470,13 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-New param to offset time in shaders to allow doing sway 'manually'
-? Should be able to specify sampling frequency for []s?
-want to be able to have old random behaviour: choose random once per event not once per frame or once per time interval - use for tile_random
+stop editor autotabbing
+? Should be able to specify sampling frequency for []s? - and everything; eg for p1.pulse etc
+ want to be able to have old random behaviour: choose random once per event not once per frame or once per time interval - use for tile_random
  ? []r should be once only, not per call?
+player lastEvent should really be current event and should be from whatever event is current at that point in the beat
+make delay work for follow player: allow canons
+New param to offset time in shaders to allow doing sway 'manually'
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way??
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 syntax for 'change from A to B by the next multiple of X' - but how not to repeat this if rerun?

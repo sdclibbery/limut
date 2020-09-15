@@ -15,8 +15,6 @@ define(function (require) {
     let detuneSemis = param(params.detune, 0.1)
     let lfo = param(params.lfo, 1/4)
 
-    params.lpf = Math.min(param(params.lpf, 2000), 2000)
-
     let vca = envelope(params, 0.02)
     system.mix(effects(params, vca))
 
@@ -30,19 +28,26 @@ define(function (require) {
     lfoOsc.start(params.time)
     lfoOsc.stop(params.endTime)
 
+    let lpf = system.audio.createBiquadFilter()
+    lpf.type = 'lowpass'
+    lpf.frequency.setValueAtTime(6000, params.time)
+    lpf.frequency.linearRampToValueAtTime(freq*2, params.endTime)
+    lpf.Q.value = 0.4
+    lpf.connect(vca)
+
     let pitch = pitchEffects(params)
     let vcos = [0, 0.1].map(detune => {
       let vco = new AudioWorkletNode(system.audio, "pwm-oscillator")
       vco.parameters.get('frequency').value = freq * Math.pow(2, detune * detuneSemis/12)
       lfoGain.connect(vco.parameters.get('pulseWidth'))
       pitch.connect(vco.parameters.get('detune'))
-      vco.connect(vca)
+      vco.connect(lpf)
       vco.parameters.get('start').setValueAtTime(0, system.audio.currentTime)
       vco.parameters.get('start').setValueAtTime(1, params.time)
       vco.parameters.get('stop').setValueAtTime(0, system.audio.currentTime)
       vco.parameters.get('stop').setValueAtTime(1, params.endTime)
       return vco
     })
-    system.disconnect(params, vcos.concat(vca,lfoOsc,lfoGain))
+    system.disconnect(params, vcos.concat(vca,lfoOsc,lfoGain, lpf))
   }
 });
