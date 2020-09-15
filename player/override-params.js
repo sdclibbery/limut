@@ -35,6 +35,7 @@ define(function(require) {
     delay: ignoreOp,
     value: ignoreOp,
     add: addOp,
+    delay: addOp,
   }
 
   let overrideParams = (params, overrides) => {
