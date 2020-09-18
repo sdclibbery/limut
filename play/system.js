@@ -3,13 +3,29 @@ define(function (require) {
 
 var system = {
   audio: new AudioContext(),
-};
+  queued: [],
+  active: [],
+}
+
+system.add = (startTime, update) => {
+  system.queued.push({t:startTime, update:update})
+}
+
+system.frame = (time, count) => {
+  let newlyActive = system.queued.filter(({t,v}) => time > t)
+  system.active = system.active.concat(newlyActive)
+  system.queued = system.queued.filter(v => !newlyActive.includes(v))
+
+  let state = {count: count, time: time}
+  system.active = system.active
+    .filter(({update}, idx) => update(state))
+}
 
 system.resume = () => system.audio.resume()
 
 system.timeNow = function () {
   return system.audio.currentTime;
-};
+}
 
 system.latency = () => {
   return system.audio.outputLatency 

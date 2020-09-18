@@ -179,6 +179,12 @@ define(function(require) {
       beatLatency = ((now - lastBeat) / beat.duration) - 1
       lastBeat = now
     }
+    try {
+      system.frame(now, beatTime)
+    } catch (e) {
+      let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
+      consoleOut('Run Error from audio updating: ' + e + st)
+    }
     if (ctxGl) {
       try {
         drawSystem.frameStart(now, beatTime, ctxGl, canvas.width, canvas.height, spectrum, pulse)

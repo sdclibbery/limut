@@ -2,6 +2,7 @@
 define(function (require) {
   let system = require('play/system')
   let param = require('player/default-param')
+  let evalParam = require('player/eval-param')
   let freeverb = require('play/freeverb')
 
   let echoes = {}
@@ -33,11 +34,16 @@ define(function (require) {
   }
 
   let lpf = (params, node) => {
-    let cutoff = param(params.lpf, 0)
-    if (!cutoff) { return node }
+    if (!param(params.lpf, 0)) { return node }
     let lpf = system.audio.createBiquadFilter()
     lpf.type = 'lowpass'
-    lpf.frequency.value = cutoff
+
+    system.add(params.time, state => {
+      if (state.time > params.endTime) { return false }
+      lpf.frequency.value = evalParam(params.lpf, params.idx, state.count)
+      return true
+    })
+
     lpf.Q.value = Math.min(param(params.lpr, 1), 10)
     node.connect(lpf)
     return lpf
