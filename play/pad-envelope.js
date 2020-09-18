@@ -14,7 +14,7 @@ define(function (require) {
     let dur = Math.max(0.01, param(params.sus, param(params.dur, 0.25)))
     let attack = param(params.att, dur/2) * params.beat.duration
     let release = param(params.rel, dur/2) * params.beat.duration
-    let sus = dur*params.beat.duration - attack
+    let sus = Math.max(dur*params.beat.duration - attack, 0)
     let gain = Math.max(0.0001, gainBase * param(params.amp, 1))
     let vca = system.audio.createGain()
     vca.gain.cancelScheduledValues(system.audio.currentTime)

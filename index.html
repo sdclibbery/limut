@@ -421,6 +421,8 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
+Envelope param to override choice of envelope type
+'add' param for play synth?
 Chorus effect
 PWM techno pad??
 Try drive from here: https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
@@ -451,6 +453,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+Main.amp should also fade visuals?
 sparkle synth; each event is a sparkle onscreen
  and/or, loc=sparkle somehow?
 colours can be defined using hsl/hsv instead of rgb
@@ -468,6 +471,16 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+Plan
+ Store the event for each event that hasnt completed yet
+  Can use these for proper p1.amp etc values too
+ On each event, have a list of per-frame callback functions that update audio params; eg by setting AudioParams
+  These are added by each thing that uses the param, and only if that param is supposed to be updated every frame
+  Every frame, for each event for each player, call the functions to update the params
+ Param functions specify whether they should be evaluated per frame or not with a field on the function object
+ If they are per-frame, then the evalParam called in the player pattern that assembles the events does nothing
+  But a new evalParam is called in the per-frame callback
+ A syntax specifies whether a given value is supposed to be evaluated per frame; @f
 Should be able to specify sampling frequency on everything
  Start by making lpf a per frame param and see how it goes
  ? How to specify syntax? How to apply to eg p1.pulse and time as well as [0:1]
