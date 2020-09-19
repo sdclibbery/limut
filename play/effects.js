@@ -2,7 +2,7 @@
 define(function (require) {
   let system = require('play/system')
   let param = require('player/default-param')
-  let evalParam = require('player/eval-param')
+  let evalParam = require('player/eval-param').evalParamFrame
   let freeverb = require('play/freeverb')
 
   let echoes = {}

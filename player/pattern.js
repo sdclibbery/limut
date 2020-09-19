@@ -1,7 +1,6 @@
 'use strict';
 define(function(require) {
-  let evalParam = require('player/eval-param')
-  let evalPerFrame = require('player/eval-per-frame')
+  let evalParam = require('player/eval-param').evalParamEvent
   let param = require('player/default-param')
   let parsePatternString = require('player/parse-pattern')
 
@@ -49,7 +48,7 @@ define(function(require) {
           if (event.value !== '.' && time > -0.0001 && time < 0.9999) {
             for (let k in params) {
               if (k != 'time' && k != 'delay' && k != 'value') {
-                event[k] = evalPerFrame[k] ? params[k] : evalParam(params[k], idx, count+time)
+                event[k] = evalParam(params[k], idx, count+time)
               }
             }
             event.dur = sourceEvent.dur
@@ -292,7 +291,9 @@ define(function(require) {
   assert([{value:'2',time:0,dur:1/2,idx:0,count:1},{value:'3',time:1/2,dur:1/2,idx:0,count:3/2}], pattern(1))
   assert([{value:'1',time:0,dur:1,idx:0,count:2}], pattern(2))
 
-  assert(1, parsePattern('0', {scroll:()=>1})(0)[0].scroll())
+  let evalPerFrame = ()=>1
+  evalPerFrame.interval = 'frame'
+  assert(1, parsePattern('0', {scroll:evalPerFrame})(0)[0].scroll())
 
   console.log("Pattern tests complete")
 

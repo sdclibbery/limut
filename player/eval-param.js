@@ -26,7 +26,7 @@ define((require) => {
   }
 
   let evalParamEvent = (value, step, beat) => {
-    if (value.interval === 'frame') { return value }
+    if (value !== undefined && value.interval === 'frame') { return value }
     return evalParamNow(value, step, beat)
   }
 
@@ -38,6 +38,7 @@ define((require) => {
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
 
+  assert(undefined, evalParamEvent(undefined, 0, 0))
   assert(1, evalParamEvent(1, 0, 0))
   assert(1/2, evalParamEvent(1/2, 0, 0))
   assert(1, evalParamEvent([1,2,3], 0, 0))
@@ -62,10 +63,9 @@ define((require) => {
 
   console.log('Eval param tests complete')
 
-  return evalParamFrame
-  // return {
-  //   evalParamEvent:evalParamEvent,
-  //   evalParamFrame:evalParamFrame,
-  // }
+  return {
+    evalParamEvent:evalParamEvent,
+    evalParamFrame:evalParamFrame,
+  }
 
 })

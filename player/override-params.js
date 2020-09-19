@@ -1,8 +1,7 @@
 'use strict';
 define(function(require) {
   let operator = require('player/eval-operator')
-  let evalParam = require('player/eval-param')
-  let evalPerFrame = require('player/eval-per-frame')
+  let evalParam = require('player/eval-param').evalParamEvent
 
   let multiplyEvents = (event) => {
     for (let k in event) {
@@ -51,9 +50,7 @@ define(function(require) {
     return events.flatMap(sourceEvent => {
       let event = overrideParams(sourceEvent, overrides)
       for (let k in overrides) {
-        if (!evalPerFrame[k]) {
-          event[k] = evalParam(event[k], sourceEvent.idx, sourceEvent.count)
-        }
+        event[k] = evalParam(event[k], sourceEvent.idx, sourceEvent.count)
       }
       return multiplyEvents(event)
     })

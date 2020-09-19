@@ -1,6 +1,6 @@
 'use strict';
 define(function(require) {
-  let evalParam = require('player/eval-param')
+  let evalParam = require('player/eval-param').evalParamEvent
   let vars = require('vars')
   let players = require('player/players')
 

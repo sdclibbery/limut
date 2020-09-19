@@ -1,6 +1,6 @@
 'use strict';
 define(function(require) {
-  let evalParam = require('player/eval-param')
+  let evalParam = require('player/eval-param').evalParamFrame
 
   let debug = false
 

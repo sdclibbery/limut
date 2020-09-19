@@ -1,7 +1,7 @@
 'use strict';
 define(function(require) {
   let param = require('player/default-param')
-  let evalParam = require('player/eval-param')
+  let evalParam = require('player/eval-param').evalParamFrame
   let operator = require('player/eval-operator')
   let varLookup = require('player/parse-var')
 
@@ -795,6 +795,7 @@ define(function(require) {
   assert('ab', parseExpression("'a'+'b'")(0,0))
 
   assert(undefined, parseExpression("[0,1]r").interval)
+  assert(undefined, parseExpression("[0:1]r").interval)
   assert('frame', parseExpression("[0,1]r4").interval)
   assert('frame', parseExpression("[0,1]r@f").interval)
   assert('frame', parseExpression("[0,1]r @f").interval)

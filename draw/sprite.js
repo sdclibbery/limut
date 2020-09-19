@@ -3,7 +3,7 @@ define(function (require) {
   let system = require('draw/system')
   let shaders = require('draw/shaders')
   let param = require('player/default-param')
-  let evalParam = require('player/eval-param')
+  let evalParam = require('player/eval-param').evalParamFrame
   let texture = require('draw/texture')
 
   let verts = (loc, window) => {
