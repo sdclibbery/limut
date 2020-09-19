@@ -58,12 +58,14 @@ define(function(require) {
     if (typeof l == 'number' && typeof (r) == 'number') {
       return op(l, r)
     }
-    return (s,b) => {
+    let result = (s,b) => {
       let el = evalParam(l, s,b)
       let er = evalParam(r, s,b)
       if (debug) { console.log('eval operator', 'l:',l,'r:',r, 'el:',el,'er:',er, 's:',s,'b:',b) }
       return applyOperator(op, el, er)
     }
+    result.interval = l.interval || r.interval
+    return result
   }
 
   // TESTS //
@@ -78,6 +80,9 @@ define(function(require) {
   let mul = (a,b)=>a*b
   let div = (a,b)=>a/b
   let fn = (x)=>()=>x
+
+  let perFrame = ()=>1
+  perFrame.interval = 'frame'
 
   assert(3, operator(add, 1, 2))
   assert(8, operator(mul, 2, 4))
@@ -106,6 +111,10 @@ define(function(require) {
   assert('ac', operator(add, 'a', ['b','c'])(1,1))
   assert(['ab','ac'], operator(add, 'a', fn(['b','c']))(0,0))
   assert(['ac','bc'], operator(add, fn(['a','b']),'c')(0,0))
+  assert(undefined, operator(add, fn(1), 2).interval)
+  assert('frame', operator(add, perFrame, 2).interval)
+  assert('frame', operator(add, 1, perFrame).interval)
+  assert('frame', operator(add, perFrame, perFrame).interval)
 
   console.log('eval operator tests complete')
 
