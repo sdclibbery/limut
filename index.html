@@ -247,6 +247,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>'abc'</code> String value</p>
 <p><code>foo</code> Lookup a global var named <code>foo</code>.</p>
 <p><code>p1.amp</code> Lookup the value of param <code>amp</code> from player <code>p1</code>. Uses the param from the most recently played event on that player. Can additionally use a <code>pulse</code> param on the player, which pulses from 0 to 1 as events play on that player.</p>
+<p><code>@f</code> Use <code>@f</code> immediately after a value to evaluate it per frame (60 times a second). For example <code>lpf=[300:3000]l8@f</code> will update the lpf cutoff frequency continuously, while <code>lpf=[300:3000]l8</code> will be evaluated only once for each event played.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-audio-synths')">▶ Audio Synths</h4>
 <div id="accordion-audio-synths" class="closed">
@@ -472,7 +473,6 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Better per frame param support
- Docs for @f
  var lookup should be 'frame'; what about player??
  interval should spread through operators, (), and {}
  Use for more audio params; bpf, hpf, amp, add, ......
