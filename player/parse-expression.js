@@ -280,6 +280,10 @@ define(function(require) {
         state.idx += 1
         result = 'frame'
         if (debugParse) { console.log('interval', result, state) }
+      } else if (state.str.charAt(state.idx) == 'e') {
+        state.idx += 1
+        result = 'event'
+        if (debugParse) { console.log('interval', result, state) }
       }
     }
     return result
@@ -336,19 +340,22 @@ define(function(require) {
           let ds = numberOrArrayOrFour(state)
           if (debugParse) { console.log('array t', vs, ds) }
           lhs = timeVar(vs, ds)
-          lhs.interval = 'frame'
+          let interval = parseInterval(state)
+          lhs.interval = interval || 'frame'
         } else if (state.str.charAt(state.idx).toLowerCase() == 'l') {
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
           if (debugParse) { console.log('array l', vs, ds) }
           lhs = linearTimeVar(vs, ds)
-          lhs.interval = 'frame'
+          let interval = parseInterval(state)
+          lhs.interval = interval || 'frame'
         } else if (state.str.charAt(state.idx).toLowerCase() == 's') {
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
           if (debugParse) { console.log('array s', vs, ds) }
           lhs = sTimeVar(vs, ds)
-          lhs.interval = 'frame'
+          let interval = parseInterval(state)
+          lhs.interval = interval || 'frame'
         } else if (state.str.charAt(state.idx).toLowerCase() == 'r') {
           state.idx += 1
           let period = number(state)
@@ -369,6 +376,7 @@ define(function(require) {
           vs = expandColon(vs)
           if (debugParse) { console.log('array', vs) }
           lhs = vs
+          lhs.interval = parseInterval(state)
         }
         continue
       }
@@ -799,18 +807,23 @@ define(function(require) {
   assert('frame', parseExpression("[0,1]r4").interval)
   assert('frame', parseExpression("[0,1]r@f").interval)
   assert('frame', parseExpression("[0,1]r @f").interval)
+  assert('event', parseExpression("[0,1]r@e").interval)
+  assert('event', parseExpression("[0:1]r@e").interval)
 
   assert(undefined, parseExpression("[0,1]").interval)
   assert('frame', parseExpression("[0,1]t4").interval)
   assert('frame', parseExpression("[0,1]t4@f").interval)
+  assert('event', parseExpression("[0,1]@e").interval)
+  assert('event', parseExpression("[0,1]t@e").interval)
+  assert('event', parseExpression("[0,1]t4@e").interval)
 
-  assert(undefined, parseExpression("[0,1]").interval)
   assert('frame', parseExpression("[0,1]l4").interval)
   assert('frame', parseExpression("[0,1]l4@f").interval)
+  assert('event', parseExpression("[0,1]l4@e").interval)
 
-  assert(undefined, parseExpression("[0,1]").interval)
   assert('frame', parseExpression("[0,1]s4").interval)
   assert('frame', parseExpression("[0,1]s4@f").interval)
+  assert('event', parseExpression("[0,1]s4@e").interval)
 
   console.log('Parse expression tests complete')
 

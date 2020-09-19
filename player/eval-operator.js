@@ -64,7 +64,7 @@ define(function(require) {
       if (debug) { console.log('eval operator', 'l:',l,'r:',r, 'el:',el,'er:',er, 's:',s,'b:',b) }
       return applyOperator(op, el, er)
     }
-    result.interval = l.interval || r.interval
+    result.interval = l.interval == 'frame' ? 'frame' : (r.interval == 'frame' ? 'frame' : (l.interval || r.interval))
     return result
   }
 
@@ -83,6 +83,8 @@ define(function(require) {
 
   let perFrame = ()=>1
   perFrame.interval = 'frame'
+  let perEvent = ()=>1
+  perEvent.interval = 'event'
 
   assert(3, operator(add, 1, 2))
   assert(8, operator(mul, 2, 4))
@@ -115,6 +117,11 @@ define(function(require) {
   assert('frame', operator(add, perFrame, 2).interval)
   assert('frame', operator(add, 1, perFrame).interval)
   assert('frame', operator(add, perFrame, perFrame).interval)
+  assert('event', operator(add, perEvent, 2).interval)
+  assert('event', operator(add, 1, perEvent).interval)
+  assert('event', operator(add, perEvent, perEvent).interval)
+  assert('frame', operator(add, perEvent, perFrame).interval)
+  assert('frame', operator(add, perFrame, perEvent).interval)
 
   console.log('eval operator tests complete')
 
