@@ -271,6 +271,20 @@ define(function(require) {
     return result
   }
 
+  let parseInterval = (state) => {
+    eatWhitespace(state)
+    let result
+    if (state.str.charAt(state.idx) == '@') {
+      state.idx += 1
+      if (state.str.charAt(state.idx) == 'f') {
+        state.idx += 1
+        result = 'frame'
+        if (debugParse) { console.log('interval', result, state) }
+      }
+    }
+    return result
+  }
+
   let parseColour = (state) => {
     let str = ''
     let char
@@ -313,7 +327,7 @@ define(function(require) {
         state.commented = true
         break
       }
-      // array
+      // array / time var / random
       if (char == '[') {
         let vs = array(state, '[', ']')
         if (state.str.charAt(state.idx).toLowerCase() == 't') {
@@ -322,19 +336,23 @@ define(function(require) {
           let ds = numberOrArrayOrFour(state)
           if (debugParse) { console.log('array t', vs, ds) }
           lhs = timeVar(vs, ds)
+          lhs.interval = 'frame'
         } else if (state.str.charAt(state.idx).toLowerCase() == 'l') {
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
           if (debugParse) { console.log('array l', vs, ds) }
           lhs = linearTimeVar(vs, ds)
+          lhs.interval = 'frame'
         } else if (state.str.charAt(state.idx).toLowerCase() == 's') {
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
           if (debugParse) { console.log('array s', vs, ds) }
           lhs = sTimeVar(vs, ds)
+          lhs.interval = 'frame'
         } else if (state.str.charAt(state.idx).toLowerCase() == 'r') {
           state.idx += 1
           let period = number(state)
+          let interval = parseInterval(state)
           let rand
           if (vs.seperator == ':') {
             let lo = param(vs[0], 0)
@@ -346,6 +364,7 @@ define(function(require) {
             rand = (s,b) => evalRandomSet(vs, s,b)
           }
           lhs = periodicRandom(rand, period)
+          lhs.interval = interval ? interval : (period ? 'frame' : undefined)
         } else {
           vs = expandColon(vs)
           if (debugParse) { console.log('array', vs) }
@@ -763,8 +782,6 @@ define(function(require) {
   assert(2, parseExpression("[1]+1")(0,0))
   assert([1], parseExpression("[1]//+1"))
 
-  console.log('Parse expression tests complete')
-
   p = parseExpression("[#f00f,#00ff]t1")
   assert({r:1,g:0,b:0,a:1}, p(0,0))
   assert({r:0,g:0,b:1,a:1}, p(1,1))
@@ -776,6 +793,25 @@ define(function(require) {
   for (let i = 0; i<20; i+=1) { assert(v1, p(1,1)) }
 
   assert('ab', parseExpression("'a'+'b'")(0,0))
+
+  assert(undefined, parseExpression("[0,1]r").interval)
+  assert('frame', parseExpression("[0,1]r4").interval)
+  assert('frame', parseExpression("[0,1]r@f").interval)
+  assert('frame', parseExpression("[0,1]r @f").interval)
+
+  assert(undefined, parseExpression("[0,1]").interval)
+  assert('frame', parseExpression("[0,1]t4").interval)
+  assert('frame', parseExpression("[0,1]t4@f").interval)
+
+  assert(undefined, parseExpression("[0,1]").interval)
+  assert('frame', parseExpression("[0,1]l4").interval)
+  assert('frame', parseExpression("[0,1]l4@f").interval)
+
+  assert(undefined, parseExpression("[0,1]").interval)
+  assert('frame', parseExpression("[0,1]s4").interval)
+  assert('frame', parseExpression("[0,1]s4@f").interval)
+
+  console.log('Parse expression tests complete')
 
   return parseExpression
 })

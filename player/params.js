@@ -127,6 +127,9 @@ define(function(require) {
   assert({amp:3,window:1}, parseParams("amp=3, window"))
   assert({window:1,rate:2}, parseParams("window, rate=2"))
   assert({window:1}, parseParams("window//, rate=2"))
+  assert(undefined, parseParams("fore=[0,1]r").fore.interval)
+  assert('frame', parseParams("fore=[0,1]r4").fore.interval)
+  assert('frame', parseParams("fore=[0,1]r@f").fore.interval)
 
   console.log("Params tests complete")
 
