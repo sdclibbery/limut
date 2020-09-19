@@ -33,17 +33,23 @@ define(function (require) {
     return node
   }
 
+  let evalPerFrameParam = (audioParam, params, param) =>{
+    if (typeof params[param] == 'number') {
+      audioParam.value = params[param]
+    } else {
+      system.add(params.time, state => {
+        if (state.time > params.endTime) { return false }
+        audioParam.value = evalParam(params[param], params.idx, state.count)
+        return true
+      })
+    }
+  }
+
   let lpf = (params, node) => {
     if (!param(params.lpf, 0)) { return node }
     let lpf = system.audio.createBiquadFilter()
     lpf.type = 'lowpass'
-
-    system.add(params.time, state => {
-      if (state.time > params.endTime) { return false }
-      lpf.frequency.value = evalParam(params.lpf, params.idx, state.count)
-      return true
-    })
-
+    evalPerFrameParam(lpf.frequency, params, 'lpf')
     lpf.Q.value = Math.min(param(params.lpr, 1), 10)
     node.connect(lpf)
     return lpf

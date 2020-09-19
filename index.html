@@ -475,12 +475,14 @@ Better per frame param support
  Docs for @f
  var lookup should be 'frame'; what about player??
  interval should spread through operators, (), and {}
- Use for more audio params; bpf, hpf, add, ......
+ Use for more audio params; bpf, hpf, amp, add, ......
  Use @e to force evaluation to per event; eg for [1,2]l@e
+ Need per event value rising from 0 to 1 through event; could actually define envelopes on amp param then...
 player lastEvent should really be current event and should be from whatever event is current at that point in the beat
  Store the event for each event that hasnt completed yet
    Can use these for proper p1.amp etc values too
 apply overridden delay for follow player: allow canons
+[]n syntax for perlin noise; ie for continuous noise as opposed to random
 Allow pattern operators, repeat, concat (including with follow???)
 New param to offset time in shaders to allow doing sway 'manually'
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way??
