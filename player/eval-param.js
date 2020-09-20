@@ -76,6 +76,11 @@ define((require) => {
   assert(3, evalParamEvent(()=>[0,perFrameValue], 0, 0)[1](0,0))
   assert('frame', evalParamEvent(()=>[0,perFrameValue], 0, 0)[1].interval)
 
+  assert({a:4}, evalParamFrame({a:perEventValue}, 0, 0))
+  assert({a:3}, evalParamFrame({a:perFrameValue}, 0, 0))
+  assert({a:4}, evalParamEvent({a:perEventValue}, 0, 0))
+  assert('frame', evalParamEvent({a:perFrameValue}, 0, 0).a.interval)
+
   console.log('Eval param tests complete')
 
   return {
