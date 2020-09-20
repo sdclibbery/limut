@@ -477,6 +477,7 @@ shadertoy synth multiple channels
 per frame support
  all params be evaluated per event, and if they result in arrays, used as such, otherwise the default
   UTs
+  ??Is this going to break stuff; eg (0,[1:2]l8@f) will not actually be per frame anymore?
  TESTING
 add should be per frame, also amp; audio and visual
 Need per event value rising from 0 to 1 through event; could actually define envelopes on amp param then...

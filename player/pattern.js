@@ -300,6 +300,11 @@ define(function(require) {
   evalPerFrame.interval = 'frame'
   assert(1, parsePattern('0', {scroll:evalPerFrame})(0)[0].scroll())
 
+  let perFrameTuple = ()=>[1,2]
+  perFrameTuple.interval = 'frame'
+  pattern = parsePattern('0', {lpf:perFrameTuple})
+  assert([{value:'0',time:0,lpf:1,dur:1,idx:0,count:0},{value:'0',time:0,lpf:2,dur:1,idx:0,count:0}], pattern(0))
+
   console.log("Pattern tests complete")
 
   return parsePattern
