@@ -2,12 +2,12 @@
 define(function (require) {
   let system = require('play/system')
   let param = require('player/default-param')
-  let evalParam = require('player/eval-param').evalParamFrame
+  let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
   let freeverb = require('play/freeverb')
 
   let echoes = {}
   let echo = (params, node) => {
-    let echoDelay = param(params.echo, 0) * params.beat.duration
+    let echoDelay = evalPerEvent(params, 'echo', 0) * params.beat.duration
     if (!echoDelay || echoDelay < 0.0001) { return node }
     if (!echoes[echoDelay]) {
       echoes[echoDelay] = system.audio.createDelay(echoDelay)
@@ -24,7 +24,7 @@ define(function (require) {
 
   let reverbs = {}
   let reverb = (params, node) => {
-    let room = param(params.room, 0)*0.7
+    let room = evalPerEvent(params, 'room', 0)*0.7
     if (!room || room < 0.01) { return node }
     if (!reverbs[room]) {
       reverbs[room] = freeverb(room)
@@ -33,52 +33,38 @@ define(function (require) {
     return node
   }
 
-  let evalPerFrameParam = (audioParam, params, param) =>{
-    if (typeof params[param] == 'number') {
-      audioParam.value = params[param]
-    } else {
-      system.add(params.time, state => {
-        if (state.time > params.endTime) { return false }
-        audioParam.value = evalParam(params[param], params.idx, state.count)
-        return true
-      })
-    }
-  }
-
   let lpf = (params, node) => {
     if (!param(params.lpf, 0)) { return node }
     let lpf = system.audio.createBiquadFilter()
     lpf.type = 'lowpass'
-    evalPerFrameParam(lpf.frequency, params, 'lpf')
-    lpf.Q.value = Math.min(param(params.lpr, 1), 10)
+    evalPerFrame(lpf.frequency, params, 'lpf')
+    evalPerFrame(lpf.Q, params, 'lpr', 1)
     node.connect(lpf)
     return lpf
   }
 
   let hpf = (params, node) => {
-    let cutoff = param(params.hpf, 0)
-    if (!cutoff) { return node }
+    if (!param(params.hpf, 0)) { return node }
     let hpf = system.audio.createBiquadFilter()
     hpf.type = 'highpass'
-    hpf.frequency.value = cutoff
-    hpf.Q.value = Math.min(param(params.hpr, 1), 10)
+    evalPerFrame(hpf.frequency, params, 'hpf')
+    evalPerFrame(hpf.Q, params, 'hpr', 1)
     node.connect(hpf)
     return hpf
   }
 
   let bpf = (params, node) => {
-    let cutoff = param(params.bpf, 0)
-    if (!cutoff) { return node }
+    if (!param(params.bpf, 0)) { return node }
     let bpf = system.audio.createBiquadFilter()
     bpf.type = 'bandpass'
-    bpf.frequency.value = cutoff
-    bpf.Q.value = Math.min(param(params.bpr, 1), 10)
+    evalPerFrame(bpf.frequency, params, 'bpf')
+    evalPerFrame(bpf.Q, params, 'bpr', 1)
     node.connect(bpf)
     return bpf
   }
 
   let chop = (params, node) => {
-    let chops = param(params.chop, 0)
+    let chops = evalPerEvent(params, 'chop', 0)
     if (!chops) { return node }
     let lfo = system.audio.createOscillator()
     lfo.type = 'square';
@@ -94,7 +80,7 @@ define(function (require) {
   }
 
   let drive = (params, node) => {
-    let amount = param(params.drive, 0)
+    let amount = evalPerEvent(params, 'drive', 0)
     if (!amount) { return node }
     let shaper = system.audio.createWaveShaper()
     let count = 500
@@ -116,7 +102,7 @@ define(function (require) {
   }
 
   let phaser = (params, node) => {
-    let lfoFreq = param(params.phaser, 0)
+    let lfoFreq = evalPerEvent(params, 'phaser', 0)
     if (lfoFreq == 0) { return node }
 
     let lfo = system.audio.createOscillator()
@@ -136,7 +122,7 @@ define(function (require) {
     let makeAllPass = (freq) => {
       let ap = system.audio.createBiquadFilter()
       ap.type='allpass'
-      ap.Q.value = 0.125
+      ap.Q = 0.125
       ap.frequency.value = freq
       lfoGain.connect(ap.detune)
       aps.push(ap)
