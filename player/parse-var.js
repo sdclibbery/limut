@@ -15,7 +15,7 @@ define(function(require) {
       break
     }
     if (!key) { return }
-    return (s,b) => {
+    let result = (s,b) => {
       let [playerId, param] = key.split('.')
       let v
       if (param) {
@@ -31,6 +31,8 @@ define(function(require) {
       }
       return v
     }
+    result.interval = 'frame'
+    return result
   }
 
   // TESTS
@@ -48,6 +50,7 @@ define(function(require) {
   assert(3, state.idx)
   vars.foo = 'baz'
   assert('baz', p())
+  assert('frame', p.interval)
   vars.foo = undefined
 
   vars['foo.woo'] = 'bar'
