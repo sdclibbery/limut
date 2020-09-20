@@ -6,6 +6,13 @@ define(function (require) {
   let evalParam = require('player/eval-param').evalParamFrame
   let texture = require('draw/texture')
 
+  let evalParamFrame = (params, p, def, count) =>{
+    return evalParam(param(params[p], def), params.idx, count)
+  }
+  let evalParamEvent = (params, p, def) =>{
+    return evalParam(param(params[p], def), params.idx, params.beat.count)
+  }
+
   let verts = (loc, window) => {
     let l = -1 + loc.x*2
     let r = l + loc.w*2
@@ -43,7 +50,7 @@ define(function (require) {
   }
 
   let play = (shader, defFore, defBack, params) => {
-    let amp = Math.min(param(params.amp, 1), 5)
+    let amp = Math.min(evalParamEvent(params, 'amp', 1), 5)
     if (amp < 0.001) { return }
     let s
     if (typeof shader === 'function') {
@@ -53,28 +60,30 @@ define(function (require) {
     }
     if (!s) { return () => {} }
     let startTime = params.time
-    let endTime = params.time + param(params.sus, param(params.dur, 1)) * params.beat.duration
-    let rate = param(params.rate, 1)
-    let value = parseInt(param(params.value, '0'))
+    let endTime = params.time + evalParamEvent(params, 'sus', evalParamEvent(params, 'dur', 1)) * params.beat.duration
+    let rate = evalParamEvent(params, 'rate', 1)
+    let value = parseInt(evalParamEvent(params, 'value', '0'))
     if (value > 10) { value = value/5 }
-    if (Number.isNaN(value)) { value = param(params.value, '0').charCodeAt(0) - 32 }
-    let pulse = param(params.pulse, 0)
-    let sway = param(params.sway, 0)
-    let additive = param(params.additive, 0)
-    let pixellate = param(params.pixellate, 0)
-    let url = param(params.url, 'favicon-32x32.png')
+    if (Number.isNaN(value)) { value = evalParamEvent(params, 'value', '0').charCodeAt(0) - 32 }
+    let pulse = evalParamEvent(params, 'pulse', 0)
+    let sway = evalParamEvent(params, 'sway', 0)
+    let additive = evalParamEvent(params, 'additive', 0)
+    let pixellate = evalParamEvent(params, 'pixellate', 0)
+    let url = evalParamEvent(params, 'url', 'favicon-32x32.png')
+    let window = evalParamEvent(params, 'window', false)
+    let fade = evalParamEvent(params, 'fade', 0)
     return state => { // per frame
       if (state.time > endTime) { return false }
       let eventTime = ((state.time-startTime)/(endTime-startTime))
-      let brightness = 1 - (eventTime*eventTime)*param(params.fade, 0)
-      let monochrome = param(evalParam(params.monochrome, params.idx, state.count), 0)
-      let loc = rect(param(evalParam(params.loc, params.idx, state.count), {}), {x:0,y:0,w:1,h:1})
-      let scroll = vec(param(evalParam(params.scroll, params.idx, state.count), {}), {x:0,y:0})
-      let zoom = vec(param(evalParam(params.zoom, params.idx, state.count), {}), {x:1,y:1})
-      let perspective = param(evalParam(params.perspective, params.idx, state.count), 0)
-      let fore = colour(param(evalParam(params.fore, params.idx, state.count), {}), defFore)
-      let back = colour(param(evalParam(params.back, params.idx, state.count), {}), defBack)
-      let vtxData = verts(loc, param(params.window, false))
+      let brightness = 1 - (eventTime*eventTime)*fade
+      let monochrome = evalParamFrame(params, 'monochrome', 0, state.count)
+      let loc = rect(evalParamFrame(params, 'loc', {}, state.count), {x:0,y:0,w:1,h:1})
+      let scroll = vec(evalParamFrame(params, 'scroll', {}, state.count), {x:0,y:0})
+      let zoom = vec(evalParamFrame(params, 'zoom', {}, state.count), {x:1,y:1})
+      let perspective = evalParamFrame(params, 'perspective', 0, state.count)
+      let fore = colour(evalParamFrame(params, 'fore', {}, state.count), defFore)
+      let back = colour(evalParamFrame(params, 'back', {}, state.count), defBack)
+      let vtxData = verts(loc, window)
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
       system.loadVertexAttrib(s.fragCoordBuf, s.fragCoordAttr, vtxData.tex, 2)
       system.gl.useProgram(s.program)

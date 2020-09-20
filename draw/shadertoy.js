@@ -5,6 +5,10 @@ define(function (require) {
   let common = require('draw/shadercommon')
   let consoleOut = require('console')
 
+  let evalPerEventParam = (params, p, def) =>{
+    return evalParam(param(params[p], def), params.idx, params.beat.count)
+  }
+
   let pre = `precision highp float; varying vec2 fragCoord; uniform float l_value; uniform float l_amp; vec2 iResolution = vec2(100.,100.); vec4 iMouse = vec4(0.); uniform float iTime;
   #define HW_PERFORMANCE 0
   `
@@ -26,7 +30,7 @@ define(function (require) {
   }
 
   return (params) => {
-    let id = param(params.id, 'Mss3Wf')
+    let id = evalPerEventParam(params, 'id', 'Mss3Wf')
     let url = getUrl(id)
     if (shaders[url] === undefined) {
       shaders[url] = {}

@@ -19,7 +19,7 @@ define(function (require) {
     }
   }
 
-  let evalPerEventParam = (params, p, def) =>{
+  let evalPerEventParam = (params, p, def) => {
     return evalParam(param(params[p], def), params.idx, params.beat.count)
   }
 
