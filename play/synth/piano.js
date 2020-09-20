@@ -3,7 +3,7 @@ define(function (require) {
   let system = require('play/system');
   let {getBuffer, isLoaded} = require('play/samples')
   let effects = require('play/effects')
-  let param = require('player/default-param')
+  let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
   let scale = require('music/scale');
 
   let getNoteUrl = (note) => {
@@ -55,14 +55,14 @@ define(function (require) {
     C6: 261.6256*4,
   }
   return (params) => {
-    let degree = parseInt(params.sound) + param(params.add, 0)
+    let degree = parseInt(params.sound) + evalPerEvent(params, 'add', 0)
     if (isNaN(degree)) { return }
-    let freq = scale.degreeToFreq(degree, param(params.oct, 4), params.scale)
-    let dur = Math.max(0.01, param(params.sus, param(params.dur, 0.25)))
+    let freq = scale.degreeToFreq(degree, evalPerEvent(params, 'oct', 4), params.scale)
+    let dur = Math.max(0.01, evalPerEvent(params, 'sus', evalPerEvent(params, 'dur', 0.25)))
     params.endTime = params.time + dur*params.beat.duration
 
     let vca = system.audio.createGain()
-    let gain = Math.max(0, 0.25 * param(params.amp, 1))
+    let gain = Math.max(0, 0.25 * evalPerEvent(params, 'amp', 1))
     vca.gain.cancelScheduledValues(params.time)
     vca.gain.setValueAtTime(gain, params.time)
     vca.gain.linearRampToValueAtTime(gain, params.endTime-0.01)

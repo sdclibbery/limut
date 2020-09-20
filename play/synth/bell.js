@@ -6,13 +6,13 @@ define(function (require) {
   let envelope = require('play/no-sus-envelope')
   let effects = require('play/effects')
   let pitchEffects = require('play/pitch-effects')
-  let param = require('player/default-param')
+  let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
 
   return (params) => {
     if (params.dur !== undefined && params.dur < 2) { params.dur = 2 }
-    let degree = parseInt(params.sound) + param(params.add, 0)
+    let degree = parseInt(params.sound) + evalPerEvent(params, 'add', 0)
     if (isNaN(degree)) { return }
-    let freq = scale.degreeToFreq(degree, param(params.oct, 4), params.scale)
+    let freq = scale.degreeToFreq(degree, evalPerEvent(params, 'oct', 4), params.scale)
 
     let vca = envelope(params, 0.03)
     let out = effects(params, vca)

@@ -5,13 +5,13 @@ define(function (require) {
   let envelope = require('play/pad-envelope')
   let effects = require('play/effects')
   let pitchEffects = require('play/pitch-effects')
-  let param = require('player/default-param')
+  let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
   let fm = require('play/fm')
 
   return (params) => {
-    let degree = parseInt(params.sound) + param(params.add, 0)
+    let degree = parseInt(params.sound) + evalPerEvent(params, 'add', 0)
     if (isNaN(degree)) { return }
-    let freq = scale.degreeToFreq(degree, param(params.oct, 5), params.scale)
+    let freq = scale.degreeToFreq(degree, evalPerEvent(params, 'oct', 5), params.scale)
 
     let vca = envelope(params, 0.018)
     let out = effects(params, vca)

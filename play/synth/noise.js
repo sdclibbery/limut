@@ -3,7 +3,6 @@ define(function (require) {
   let system = require('play/system');
   let envelope = require('play/pad-envelope')
   let effects = require('play/effects')
-  let param = require('player/default-param')
 
   let processorCode = `
     class NoiseProcessor extends AudioWorkletProcessor {
