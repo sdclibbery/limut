@@ -387,7 +387,7 @@ define(function(require) {
         if (v.length == 1) {
           lhs = v[0]
         } else {
-          lhs = (s,b) => v.map(x => evalParam(x,s,b))
+          lhs = (s,b) => v
         }
         continue
       }
@@ -638,8 +638,10 @@ define(function(require) {
 
   p = parseExpression('(foo,[3,4]t1)')
   vars.foo = parseExpression('[1,2]t1')
-  assert([1,3], p(0,0))
-  assert([2,4], p(1,1))
+  assert(1, p(0,0)[0](0,0)(0,0))
+  assert(3, p(0,0)[1](0,0))
+  assert(2, p(1,1)[0](1,1)(1,1))
+  assert(4, p(1,1)[1](1,1))
   vars.foo = undefined
 
   p = parseExpression('[1,2]+(3,4) ')
@@ -824,6 +826,11 @@ define(function(require) {
   assert('frame', parseExpression("[0,1]s4").interval)
   assert('frame', parseExpression("[0,1]s4@f").interval)
   assert('event', parseExpression("[0,1]s4@e").interval)
+
+  assert(undefined, parseExpression("(0,1)").interval)
+  assert(undefined, parseExpression("(0,[0:1]r@f)").interval)
+  assert(undefined, parseExpression("(0,[0:1]r@f)")(0,0)[0].interval)
+  assert('frame', parseExpression("(0,[0:1]r@f)")(0,0)[1].interval)
 
   console.log('Parse expression tests complete')
 

@@ -474,10 +474,12 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Better per frame param support
- interval should spread through () and {}, and []?
- var lookup should be 'frame'; what about player??
- Use for more audio params; bpf, hpf, amp, add, ......
+ interval should spread through {}
+ interval should spread through []
+ var lookup should be per frame; what about player??
+ Use for more audio params; bpf, hpf, amp, add, value......
  Need per event value rising from 0 to 1 through event; could actually define envelopes on amp param then...
+ Amp/value per frame for visuala
 player lastEvent should really be current event and should be from whatever event is current at that point in the beat
  Store the event for each event that hasnt completed yet
    Can use these for proper p1.amp etc values too

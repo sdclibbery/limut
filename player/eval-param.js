@@ -1,19 +1,21 @@
 'use strict';
 define((require) => {
 
-  let evalParamNow = (value, step, beat) => {
+  let evalParamNow = (evalParam, value, step, beat) => {
     if (Array.isArray(value)) {
       let v = value[step % value.length]
-      if (typeof v == 'function') { return evalParamNow(v, step, beat) }
+      if (typeof v == 'function') { return evalParam(v, step, beat) }
       return v
     } else if (typeof value == 'function') {
       let v = value(step, beat)
-      if (Array.isArray(v)) { return v }
-      return evalParamNow(v, step, beat)
+      if (Array.isArray(v)) {
+        return v.map(e => evalParam(e, step, beat))
+      }
+      return evalParam(v, step, beat)
     } else if (typeof value == 'object') {
       let result = {}
       for (let k in value) {
-        result[k] = evalParamNow(value[k], step, beat)
+        result[k] = evalParam(value[k], step, beat)
       }
       return result
     } else {
@@ -22,12 +24,12 @@ define((require) => {
   }
 
   let evalParamFrame = (value, step, beat) => {
-    return evalParamNow(value, step, beat)
+    return evalParamNow(evalParamFrame, value, step, beat)
   }
 
   let evalParamEvent = (value, step, beat) => {
-    if (value !== undefined && value.interval === 'frame') { return value }
-    return evalParamNow(value, step, beat)
+    if (!!value && value.interval === 'frame') { return value }
+    return evalParamNow(evalParamEvent, value, step, beat)
   }
 
   // TESTS //
@@ -66,6 +68,13 @@ define((require) => {
   assert(1, evalParamFrame(1, 0, 0))
   assert(4, evalParamEvent(perEventValue, 0, 0))
   assert(4, evalParamFrame(perEventValue, 0, 0))
+
+  assert([0,4], evalParamEvent(()=>[0,perEventValue], 0, 0))
+  assert([0,4], evalParamFrame(()=>[0,perEventValue], 0, 0))
+  assert([0,3], evalParamFrame(()=>[0,perFrameValue], 0, 0))
+  assert(0, evalParamEvent(()=>[0,perFrameValue], 0, 0)[0])
+  assert(3, evalParamEvent(()=>[0,perFrameValue], 0, 0)[1](0,0))
+  assert('frame', evalParamEvent(()=>[0,perFrameValue], 0, 0)[1].interval)
 
   console.log('Eval param tests complete')
 
