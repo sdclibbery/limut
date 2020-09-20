@@ -1,16 +1,16 @@
 'use strict';
 define(function (require) {
   let system = require('play/system');
-  let param = require('player/default-param')
+  let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
 
   return (params, gainBase) => {
-    let dur = Math.max(0.01, param(params.sus, param(params.dur, 0.25)))
-    let attack = param(params.att, 0.09) * params.beat.duration
+    let dur = Math.max(0.01, evalPerEvent(params, 'sus', evalPerEvent(params, 'dur', 0.25)))
+    let attack = evalPerEvent(params, 'att', 0.09) * params.beat.duration
     params.time -= Math.min(attack, 0.05)
-    let decay = param(params.decay, 0.08*dur) * params.beat.duration
-    let susLevel = param(params.suslevel, 0.8)
-    let release = param(param(params.rel, params.sus), dur) * params.beat.duration
-    let gain = Math.max(0.0001, gainBase * param(params.amp, 1))
+    let decay = evalPerEvent(params, 'decay', 0.08*dur) * params.beat.duration
+    let susLevel = evalPerEvent(params, 'suslevel', 0.8)
+    let release = evalPerEvent(params, 'rel', params.sus||dur) * params.beat.duration
+    let gain = Math.max(0.0001, gainBase * evalPerEvent(params, 'amp', 1))
     let vca = system.audio.createGain();
     vca.gain.cancelScheduledValues(system.audio.currentTime)
     vca.gain.setValueAtTime(0, system.audio.currentTime)
