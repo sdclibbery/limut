@@ -68,7 +68,6 @@ define(function (require) {
     let pulse = evalParamEvent(params, 'pulse', 0)
     let sway = evalParamEvent(params, 'sway', 0)
     let additive = evalParamEvent(params, 'additive', 0)
-    let pixellate = evalParamEvent(params, 'pixellate', 0)
     let url = evalParamEvent(params, 'url', 'favicon-32x32.png')
     let window = evalParamEvent(params, 'window', false)
     let fade = evalParamEvent(params, 'fade', 0)
@@ -77,6 +76,7 @@ define(function (require) {
       let eventTime = ((state.time-startTime)/(endTime-startTime))
       let brightness = 1 - (eventTime*eventTime)*fade
       let monochrome = evalParamFrame(params, 'monochrome', 0, state.count)
+      let pixellate = evalParamFrame(params, 'pixellate', 0, state.count)
       let loc = rect(evalParamFrame(params, 'loc', {}, state.count), {x:0,y:0,w:1,h:1})
       let scroll = vec(evalParamFrame(params, 'scroll', {}, state.count), {x:0,y:0})
       let zoom = vec(evalParamFrame(params, 'zoom', {}, state.count), {x:1,y:1})
