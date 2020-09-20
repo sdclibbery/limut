@@ -122,7 +122,7 @@ define(function (require) {
     let makeAllPass = (freq) => {
       let ap = system.audio.createBiquadFilter()
       ap.type='allpass'
-      ap.Q = 0.125
+      ap.Q.value = 0.125
       ap.frequency.value = freq
       lfoGain.connect(ap.detune)
       aps.push(ap)
