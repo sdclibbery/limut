@@ -76,7 +76,7 @@ define(function(require) {
   assert([ev({add:6})], overrideEventParams([ev({add:2})], {add:() => 4}))
   assert([ev({add:5}),ev({add:6})], overrideEventParams([ev({add:2})], {add:()=>[3,4]}))
   
-  c = overrideEventParams([ev()], {zoom:parseExpression('[2:4]l2')})
+  c = overrideEventParams([ev()], {zoom:parseExpression('[2:4]l2@f')})
   assert(2, c[0].zoom(0,0))
   assert(3, c[0].zoom(1,1))
 

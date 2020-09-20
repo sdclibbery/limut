@@ -341,21 +341,21 @@ define(function(require) {
           if (debugParse) { console.log('array t', vs, ds) }
           lhs = timeVar(vs, ds)
           let interval = parseInterval(state)
-          lhs.interval = interval || 'frame'
+          lhs.interval = interval || 'event'
         } else if (state.str.charAt(state.idx).toLowerCase() == 'l') {
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
           if (debugParse) { console.log('array l', vs, ds) }
           lhs = linearTimeVar(vs, ds)
           let interval = parseInterval(state)
-          lhs.interval = interval || 'frame'
+          lhs.interval = interval || 'event'
         } else if (state.str.charAt(state.idx).toLowerCase() == 's') {
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
           if (debugParse) { console.log('array s', vs, ds) }
           lhs = sTimeVar(vs, ds)
           let interval = parseInterval(state)
-          lhs.interval = interval || 'frame'
+          lhs.interval = interval || 'event'
         } else if (state.str.charAt(state.idx).toLowerCase() == 'r') {
           state.idx += 1
           let period = number(state)
@@ -371,7 +371,7 @@ define(function(require) {
             rand = (s,b) => evalRandomSet(vs, s,b)
           }
           lhs = periodicRandom(rand, period)
-          lhs.interval = interval ? interval : (period ? 'frame' : undefined)
+          lhs.interval = interval || 'event'
         } else {
           vs = expandColon(vs)
           if (debugParse) { console.log('array', vs) }
@@ -388,6 +388,7 @@ define(function(require) {
           lhs = v[0]
         } else {
           lhs = (s,b) => v
+          lhs.interval = 'event'
         }
         continue
       }
@@ -804,33 +805,39 @@ define(function(require) {
 
   assert('ab', parseExpression("'a'+'b'")(0,0))
 
-  assert(undefined, parseExpression("[0,1]r").interval)
-  assert(undefined, parseExpression("[0:1]r").interval)
-  assert('frame', parseExpression("[0,1]r4").interval)
+  assert('event', parseExpression("[0,1]r").interval)
+  assert('event', parseExpression("[0:1]r").interval)
+  assert('event', parseExpression("[0,1]r4").interval)
   assert('frame', parseExpression("[0,1]r@f").interval)
   assert('frame', parseExpression("[0,1]r @f").interval)
   assert('event', parseExpression("[0,1]r@e").interval)
   assert('event', parseExpression("[0:1]r@e").interval)
 
   assert(undefined, parseExpression("[0,1]").interval)
-  assert('frame', parseExpression("[0,1]t4").interval)
+  assert('event', parseExpression("[0,1]t4").interval)
   assert('frame', parseExpression("[0,1]t4@f").interval)
   assert('event', parseExpression("[0,1]@e").interval)
   assert('event', parseExpression("[0,1]t@e").interval)
   assert('event', parseExpression("[0,1]t4@e").interval)
 
-  assert('frame', parseExpression("[0,1]l4").interval)
+  assert('event', parseExpression("[0,1]l4").interval)
   assert('frame', parseExpression("[0,1]l4@f").interval)
   assert('event', parseExpression("[0,1]l4@e").interval)
 
-  assert('frame', parseExpression("[0,1]s4").interval)
+  assert('event', parseExpression("[0,1]s4").interval)
   assert('frame', parseExpression("[0,1]s4@f").interval)
   assert('event', parseExpression("[0,1]s4@e").interval)
 
-  assert(undefined, parseExpression("(0,1)").interval)
-  assert(undefined, parseExpression("(0,[0:1]r@f)").interval)
+  assert('event', parseExpression("(0,1)").interval)
+  assert('event', parseExpression("(0,[0:1]r@f)").interval)
   assert(undefined, parseExpression("(0,[0:1]r@f)")(0,0)[0].interval)
   assert('frame', parseExpression("(0,[0:1]r@f)")(0,0)[1].interval)
+
+  p = parseExpression('foo')
+  vars.foo = parseExpression('[(0,1),(2,3)]t1')
+  assert([0,1], p(0,0)(0,0)(0,0))
+  assert([2,3], p(1,1)(1,1)(1,1))
+  vars.foo = undefined
 
   console.log('Parse expression tests complete')
 
