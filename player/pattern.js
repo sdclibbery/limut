@@ -1,6 +1,6 @@
 'use strict';
 define(function(require) {
-  let evalParam = require('player/eval-param').evalParamEvent
+  let {evalParamEvent,evalParamFrame} = require('player/eval-param')
   let param = require('player/default-param')
   let parsePatternString = require('player/parse-pattern')
 
@@ -42,13 +42,18 @@ define(function(require) {
         es.forEach(sourceEvent => {
           let event = {}
           event.value = sourceEvent.value
-          event.delay = evalParam(params.delay, idx, count)
+          event.delay = evalParamEvent(params.delay, idx, count)
           event.time = sourceEvent.time + (event.delay || 0)
           time = (patternStartTime + event.time) - count
           if (event.value !== '.' && time > -0.0001 && time < 0.9999) {
             for (let k in params) {
               if (k != 'time' && k != 'delay' && k != 'value') {
-                event[k] = evalParam(params[k], idx, count+time)
+                let v = evalParamFrame(params[k], idx, count)
+                if (Array.isArray(v)) { // If its an array, it must be handled per event
+                  event[k] = v
+                } else {
+                  event[k] = evalParamEvent(params[k], idx, count)
+                }
               }
             }
             event.dur = sourceEvent.dur
