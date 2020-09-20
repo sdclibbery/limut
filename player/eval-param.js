@@ -1,7 +1,7 @@
 'use strict';
 define((require) => {
 
-  let evalParamNow = (evalParam, value, step, beat) => {
+  let evalParamNow = (evalParam, value, step, beat, stopAtTuple) => {
     if (Array.isArray(value)) {
       let v = value[step % value.length]
       if (typeof v == 'function') { return evalParam(v, step, beat) }
@@ -9,6 +9,7 @@ define((require) => {
     } else if (typeof value == 'function') {
       let v = value(step, beat)
       if (Array.isArray(v)) {
+        if (stopAtTuple) { return v }
         return v.map(e => evalParam(e, step, beat))
       }
       return evalParam(v, step, beat)
@@ -30,6 +31,10 @@ define((require) => {
   let evalParamEvent = (value, step, beat) => {
     if (!!value && value.interval === 'frame') { return value }
     return evalParamNow(evalParamEvent, value, step, beat)
+  }
+
+  let evalParamToTuple = (value, step, beat) => {
+    return evalParamNow(evalParamToTuple, value, step, beat, true)
   }
 
   // TESTS //
@@ -81,11 +86,17 @@ define((require) => {
   assert({a:4}, evalParamEvent({a:perEventValue}, 0, 0))
   assert('frame', evalParamEvent({a:perFrameValue}, 0, 0).a.interval)
 
+  assert([1,2], evalParamToTuple(()=>[1,2], 0, 0))
+  assert([1,2], evalParamToTuple([()=>[1,2]], 0, 0))
+  assert(2, evalParamToTuple(()=>[()=>2], 0, 0)[0]())
+  assert(2, evalParamToTuple([()=>[()=>2]], 0, 0)[0]())
+
   console.log('Eval param tests complete')
 
   return {
     evalParamEvent:evalParamEvent,
     evalParamFrame:evalParamFrame,
+    evalParamToTuple: evalParamToTuple,
   }
 
 })

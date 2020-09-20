@@ -1,6 +1,6 @@
 'use strict';
 define(function(require) {
-  let {evalParamEvent,evalParamFrame} = require('player/eval-param')
+  let {evalParamEvent,evalParamToTuple} = require('player/eval-param')
   let param = require('player/default-param')
   let parsePatternString = require('player/parse-pattern')
 
@@ -48,8 +48,8 @@ define(function(require) {
           if (event.value !== '.' && time > -0.0001 && time < 0.9999) {
             for (let k in params) {
               if (k != 'time' && k != 'delay' && k != 'value') {
-                let v = evalParamFrame(params[k], idx, count)
-                if (Array.isArray(v)) { // If its an array, it must be handled per event
+                let v = evalParamToTuple(params[k], idx, count)
+                if (Array.isArray(v)) { // If its a tuple, it must be handled per event
                   event[k] = v
                 } else {
                   event[k] = evalParamEvent(params[k], idx, count)
@@ -304,6 +304,11 @@ define(function(require) {
   perFrameTuple.interval = 'frame'
   pattern = parsePattern('0', {lpf:perFrameTuple})
   assert([{value:'0',time:0,lpf:1,dur:1,idx:0,count:0},{value:'0',time:0,lpf:2,dur:1,idx:0,count:0}], pattern(0))
+
+  let tupleWrappingPerFrame = ()=>[10,evalPerFrame]
+  pattern = parsePattern('0', {lpf:tupleWrappingPerFrame})
+  assert({value:'0',time:0,lpf:10,dur:1,idx:0,count:0}, pattern(0)[0])
+  assert('function', typeof pattern(0)[1].lpf)
 
   console.log("Pattern tests complete")
 
