@@ -2,6 +2,7 @@
 define(function (require) {
   let system = require('draw/system')
   let param = require('player/default-param')
+  let evalParam = require('player/eval-param').evalParamFrame
   let common = require('draw/shadercommon')
   let consoleOut = require('console')
 
