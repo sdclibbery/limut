@@ -9,7 +9,7 @@ define((require) => {
     } else if (typeof value == 'function') {
       let v = value(step, beat)
       if (Array.isArray(v)) {
-        if (stopAtTuple) { return v }
+        if (stopAtTuple) { return v.map(x=>evalParamEvent(x, step, beat)) }
         return v.map(e => evalParam(e, step, beat))
       }
       return evalParam(v, step, beat)
@@ -88,8 +88,10 @@ define((require) => {
 
   assert([1,2], evalParamToTuple(()=>[1,2], 0, 0))
   assert([1,2], evalParamToTuple([()=>[1,2]], 0, 0))
-  assert(2, evalParamToTuple(()=>[()=>2], 0, 0)[0]())
-  assert(2, evalParamToTuple([()=>[()=>2]], 0, 0)[0]())
+  assert(2, evalParamToTuple(()=>[()=>2], 0, 0)[0])
+  assert(2, evalParamToTuple([()=>[()=>2]], 0, 0)[0])
+  assert('frame', evalParamToTuple(()=>[perFrameValue], 0, 0)[0].interval)
+  assert(4, evalParamToTuple(()=>[perEventValue], 0, 0)[0])
 
   console.log('Eval param tests complete')
 

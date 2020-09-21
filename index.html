@@ -475,10 +475,11 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 per frame support
- Check (0,[1:2]l8@e) works
  TESTING
 add should be per frame, also amp; audio and visual
 Need per event value rising from 0 to 1 through event; could actually define envelopes on amp param then...
+ ! Actually, how about [0,1,2]e which would interpolate between values through the event?
+  Or some variation on this anyway...
 player lastEvent should really be current event and should be from whatever event is current at that point in the beat
  Store the event for each event that hasnt completed yet
    Can use these for proper p1.amp etc values too
