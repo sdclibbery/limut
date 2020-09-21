@@ -11,7 +11,7 @@ define(function (require) {
       // single value; no need for callback
       audioParam.value = params[p]
     } else {
-      audioParam.value = evalParam(params[p], params.idx, params.beat.count)
+      audioParam.value = evalParam(params[p], params.idx, params.count)
       system.add(params.time, state => {
         if (state.time > params.endTime) { return false }
         let v = evalParam(params[p], params.idx, state.count)
@@ -24,7 +24,7 @@ define(function (require) {
   }
 
   let evalPerEventParam = (params, p, def) => {
-    return evalParam(param(params[p], def), params.idx, params.beat.count)
+    return evalParam(param(params[p], def), params.idx, params.count)
   }
 
   return {

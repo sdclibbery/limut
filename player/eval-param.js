@@ -4,7 +4,9 @@ define((require) => {
   let evalParamNow = (evalParam, value, step, beat, stopAtTuple) => {
     if (Array.isArray(value)) {
       let v = value[step % value.length]
-      if (typeof v == 'function') { return evalParam(v, step, beat) }
+      if (typeof v == 'function') {
+        return evalParam(v, step, beat)
+      }
       return v
     } else if (typeof value == 'function') {
       let v = value(step, beat)
