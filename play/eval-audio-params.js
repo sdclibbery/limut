@@ -11,9 +11,13 @@ define(function (require) {
       // single value; no need for callback
       audioParam.value = params[p]
     } else {
+      audioParam.value = evalParam(params[p], params.idx, params.beat.count)
       system.add(params.time, state => {
         if (state.time > params.endTime) { return false }
-        audioParam.value = evalParam(params[p], params.idx, state.count)
+        let v = evalParam(params[p], params.idx, state.count)
+        try {
+          audioParam.value = v
+        } catch (e) { throw `Failed setting audio param ${p} to ${v}` }
         return true
       })
     }
