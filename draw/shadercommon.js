@@ -34,7 +34,7 @@ define(function (require) {
       coord = uv;
     }
     coord = (coord + l_scroll) / l_zoom;
-    if (l_pixellate != 0.) { coord = floor(coord*l_pixellate)/l_pixellate; }
+    if (l_pixellate != 0.) { coord = floor((coord+(0.5/l_pixellate))*l_pixellate)/l_pixellate; }
     return coord;
   }
   void postprocess( vec4 col, float foreBack ) {
