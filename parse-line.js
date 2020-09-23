@@ -7,13 +7,7 @@ define((require) => {
   let overrideParams = require('player/override-params').overrideParams
   let metronome = require('metronome')
   let vars = require('vars')
-
-  let mainVars = {
-    bpm: (command) => metronome.bpm(eval(parseExpression(command))),
-    scale: (command) => window.scaleChange(command.toLowerCase()),
-    'main.amp': (command) => window.mainAmpChange(eval(parseExpression(command))),
-    'main.reverb': (command) => window.mainReverbChange(eval(parseExpression(command))),
-  }
+  let mainVars = require('main-vars')
 
   let identifier = (state) => {
     let char
@@ -65,7 +59,7 @@ define((require) => {
     k = k.toLowerCase()
     if (k.match(/^[a-z][a-z0-9_\.]*$/) && !!v) {
       if (typeof mainVars[k] == 'function') {
-        mainVars[k](v)
+        mainVars[k](parseExpression(v))
       } else {
         v = parseExpression(v)
         vars[k] = v

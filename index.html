@@ -424,7 +424,6 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-See if a little knee helps glitches when amps pushed too far, without compromising normal quality
 Audio amp should be evalled per frame
 Audio add should be evalled per frame and non integer
 Envelope param to override choice of envelope type
@@ -434,6 +433,7 @@ Chorus effect
 Nice gentle pads
 FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
 'X' doesn't work on mobile
+Preload samples immediately after parsing
 PWM techno pad??
 Try drive from here: https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
 Pluck/guitar synths
@@ -461,11 +461,11 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-Visual add should be per frame and non integer
-Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
 sparkle synth; each event is a sparkle onscreen
  and/or, loc=sparkle somehow?
 colours can be defined using hsl/hsv instead of rgb - or better a perceptually uniform space
+Visual add, should be per frame and non integer
+Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
 video synth (use video element to load video file; don't try and target eg youtube)
 vignette effect - vignette to 0-1 in UVs to support images?
 Start image download on parse not on first use
@@ -479,42 +479,46 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-Allow pattern operators, repeat, concat (including with follow???)
+evaluate main vars; eg allow bpm=[80,120]
+ eval using proper eval method
+ store as object not just function
+ eval per frame
+pattern concat "xo + vi"
+pattern repeat "xo * 3" higher precedence than concat
+pattern support brackets "( xo + vi ) * 3"
 apply overridden delay for follow player: allow canons
 []n syntax for perlin noise; ie for continuous noise as opposed to random
+[0,1,2]e[0,.1,1] which would interpolate between values through the event time
 player lastEvent should really be current event and should be from whatever event is current at that point in the beat
  Store the event for each event that hasnt completed yet
    Can use these for proper p1.amp etc values too
-[0,1,2]e[0,.1,1] which would interpolate between values through the event time
 New param to offset time in shaders to allow doing sway 'manually'
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way??
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
+array index operator, so you can "ch=[(0,2,4)]" then "add=ch[0]"
 dur=[3,3,2]\4
+dur=[1:4]r
 finish off: <> for 'in sequence on each repeat' in patterns
 "on 4 " / "on 28 of 32 " syntax to execute a line on the next beat count - but how not to repeat this if rerun?
 "every 4 " / "every 28 of 32 "
 "until next 16 set [bass,kd] amp=0" ? - but how not to repeat this if rerun?
 "by next 16 set bass amp=0" - lerps to the new value - but how not to repeat this if rerun?
 multiline commands
-dur=[1:4]r
 Wildcard player matching for groups 'set d? amp=0'  'set p* amp=0'
 operator precedence
-should multiply out 'chords' in objects eg loc={x:(0,1,2,3), y:(0,1,2,3), w:1,h:1}/4
-Syntax to make parts of patterns repeat a set number of times
-_ extends all notes properly, even across brackets (eg <1[.3]>_ etc)
-evaluate predefined vars; eg allow bpm=[80,120]
-value param to override the pattern value
+GC or LRU or quantisation for echoes and freeverbs
 Should be able to [red:blue]l8
+should multiply out 'chords' in objects eg loc={x:(0,1,2,3), y:(0,1,2,3), w:1,h:1}/4
+_ extends all notes properly, even across brackets (eg <1[.3]>_ etc)
+value param to override the pattern value
 <> for 'in sequence on each repeat' in params
-Preload samples immediately after parsing
 rests in params
 random in patterns: what syntax??
-GC or LRU or quantisation for echoes and freeverbs
-better musicality: extending patterns like every/sometimes/offadd/stutter etc
+extending patterns like every/sometimes/offadd/stutter etc
 sliders that appear in the code as vars
+popup keyboard triggered by pattern eg "p piano keyboard"
 seeded random: takes repeat length and optional seed
 ^ operator: concat arrays
-? when evaluating time var, can it accept a decimal time? Do we pass event time rather than beat time?
 ? What do nested [] mean in params?
 allow dur to be tvar
 ?? Should param pattern repeat be independent of main pattern repeat? Eg so you can xo, amp=[1,2,3] and it multiplies out
