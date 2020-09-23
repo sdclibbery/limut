@@ -29,7 +29,9 @@ define(function(require) {
   let mainAmpReadout = document.getElementById('main-amp-readout')
   let mainAmpInput = document.getElementById('main-amp-slider')
   window.mainAmpChange = (amp) => {
-    window.mainAmpChanged(system.mainAmp(amp))
+    let newAmp = system.mainAmp(amp)
+    window.mainAmpChanged(newAmp)
+    canvas.style.opacity = Math.min(Math.max(newAmp, 0), 1)
   }
   window.mainAmpChanged = (mainAmp) => {
     mainAmpReadout.innerText = mainAmp.toFixed(2)

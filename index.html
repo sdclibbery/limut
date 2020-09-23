@@ -427,8 +427,9 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 See if a little knee helps glitches when amps pushed too far, without compromising normal quality
 Audio amp should be evalled per frame
 Audio add should be evalled per frame and non integer
-AudioWorklet freeverb with webaseembly
 Envelope param to override choice of envelope type
+ Constant envelope type to allow specifying per frame envelope with amp?
+AudioWorklet freeverb with webaseembly
 Chorus effect
 Nice gentle pads
 FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
@@ -462,7 +463,6 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ==== visual ====
 Visual add should be per frame and non integer
 Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
-Main.amp should also fade visuals? - could just fade canvas transparency??
 sparkle synth; each event is a sparkle onscreen
  and/or, loc=sparkle somehow?
 colours can be defined using hsl/hsv instead of rgb - or better a perceptually uniform space
