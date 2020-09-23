@@ -18,19 +18,6 @@ define(function(require) {
     document.getElementById(id).classList.toggle('closed')
   }
 
-  // fullscreen
-  window.fullscreen = () => {
-    if (!document.fullscreenElement) {
-      consoleOut('> Fullscreen')
-      document.body.requestFullscreen();
-    } else {
-      if (document.exitFullscreen) {
-        consoleOut('> Exit fullscreen')
-        document.exitFullscreen(); 
-      }
-    }
-  }
-
   // Bpm ui
   let bpmReadout = document.getElementById('bpm-readout')
   window.bpmChanged = function (bpm) {
@@ -129,6 +116,19 @@ define(function(require) {
     return `rgb(${to255(Math.sin(c*1.57))},${to255(Math.cos(c*1.57))},0)`
   }
 
+  // fullscreen
+  window.fullscreen = () => {
+    if (!document.fullscreenElement) {
+      consoleOut('> Fullscreen')
+      document.body.requestFullscreen();
+    } else {
+      if (document.exitFullscreen) {
+        consoleOut('> Exit fullscreen')
+        document.exitFullscreen(); 
+      }
+    }
+  }
+
   // webgl canvas
   var canvas = document.getElementById("canvas")
   let onResize = () => {
@@ -187,7 +187,8 @@ define(function(require) {
     }
     if (ctxGl) {
       try {
-        drawSystem.frameStart(now, beatTime, ctxGl, canvas.width, canvas.height, spectrum, pulse)
+        let visualsActive = drawSystem.frameStart(now, beatTime, ctxGl, canvas.width, canvas.height, spectrum, pulse)
+        canvas.style.display = visualsActive ? 'block' : 'none'
       } catch (e) {
         let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
         consoleOut('Run Error from drawing: ' + e + st)

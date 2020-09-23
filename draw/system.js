@@ -20,14 +20,14 @@ system.frameStart = (time, count, gl, cw, ch, spectrum, pulse) => {
   system.lastTime = time
   system.cw = cw
   system.ch = ch
-  if (system.queued.length === 0 && system.active.length === 0) { return }
+  if (system.queued.length === 0 && system.active.length === 0) { return false }
 
   if (!system.gl) {
     system.gl = gl
     system.gl.getExtension('OES_standard_derivatives')
   }
   system.gl.viewport(0,0,cw,ch)
-  system.gl.clearColor(0.125, 0.15, 0.1875, 1)
+  system.gl.clearColor(0,0,0, 1)
   system.gl.enable(system.gl.DEPTH_TEST)
   system.gl.depthFunc(system.gl.LEQUAL)
   system.gl.clear(system.gl.COLOR_BUFFER_BIT|system.gl.DEPTH_BUFFER_BIT)
@@ -40,6 +40,7 @@ system.frameStart = (time, count, gl, cw, ch, spectrum, pulse) => {
   system.active = system.active
     .sort((l,r) => l.zorder > r.zorder)
     .filter(({render}, idx) => render(state))
+  return true
 }
 
 system.latency = () => {
