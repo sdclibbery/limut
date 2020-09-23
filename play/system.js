@@ -31,7 +31,7 @@ system.latency = () => {
   return system.audio.outputLatency 
 }
 
-let globalBaseGain = 7
+let globalBaseGain = 28
 system.vcaMainAmp = system.audio.createGain()
 system.vcaMainAmp.gain.value = globalBaseGain
 system.mainAmpValue = 1
