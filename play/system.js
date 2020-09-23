@@ -106,10 +106,10 @@ system.reverb.connect(system.vcaReverb)
 
 system.compressor = system.audio.createDynamicsCompressor()
 system.compressor.ratio.value = 10
-system.compressor.threshold.value = -10
+system.compressor.threshold.value = -1
 system.compressor.release.value = 0.25
 system.compressor.attack.value = 0.003
-system.compressor.knee.value = 10
+system.compressor.knee.value = 0
 
 system.vcaPreAmp.connect(system.compressor)
 system.vcaPreAmp.connect(system.reverb)
