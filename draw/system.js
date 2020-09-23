@@ -18,13 +18,14 @@ system.frameStart = (time, count, gl, cw, ch, spectrum, pulse) => {
   system.time = time
   system.dt = system.time - system.lastTime
   system.lastTime = time
+  system.cw = cw
+  system.ch = ch
+  if (system.queued.length === 0 && system.active.length === 0) { return }
+
   if (!system.gl) {
     system.gl = gl
     system.gl.getExtension('OES_standard_derivatives')
   }
-  system.cw = cw
-  system.ch = ch
-
   system.gl.viewport(0,0,cw,ch)
   system.gl.clearColor(0.125, 0.15, 0.1875, 1)
   system.gl.enable(system.gl.DEPTH_TEST)
