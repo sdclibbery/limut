@@ -50,8 +50,6 @@ define(function (require) {
   }
 
   let play = (shader, defFore, defBack, params) => {
-    let amp = Math.min(evalParamEvent(params, 'amp', 1), 5)
-    if (amp < 0.001) { return }
     let s
     if (typeof shader === 'function') {
       s = shader(params)
@@ -73,6 +71,7 @@ define(function (require) {
     let fade = evalParamEvent(params, 'fade', 0)
     return state => { // per frame
       if (state.time > endTime) { return false }
+      let amp = Math.min(evalParamFrame(params, 'amp', 1, state.count), 5)
       let eventTime = ((state.time-startTime)/(endTime-startTime))
       let brightness = 1 - (eventTime*eventTime)*fade
       let monochrome = evalParamFrame(params, 'monochrome', 0, state.count)

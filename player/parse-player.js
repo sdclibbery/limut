@@ -38,7 +38,7 @@ define((require) => {
         if (!playerFactory) { throw 'Player "'+playerType+'" not found' }
         let play = (es) => {
           return es
-            .filter(e => e.amp === undefined || e.amp > 0 || typeof e.amp === 'function')
+            .filter(e => e.amp === undefined || typeof e.amp === 'function' || e.amp > 0)
             .map(e => {
               playerFactory.play(e)
               let pulse = (s,b) => {
