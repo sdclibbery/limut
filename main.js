@@ -11,6 +11,7 @@ define(function(require) {
   let parseLine = require('parse-line')
   let players = require('player/players')
   let vars = require('vars')
+  let mainVars = require('main-vars')
   let consoleOut = require('console')
 
   // accordions
@@ -181,6 +182,7 @@ define(function(require) {
       beatLatency = ((now - lastBeat) / beat.duration) - 1
       lastBeat = now
     }
+    mainVars.update(Math.floor(beatTime), beatTime)
     try {
       system.frame(now, beatTime)
     } catch (e) {

@@ -5,7 +5,6 @@ define((require) => {
   var parseParams = require('player/params')
   let parseExpression = require('player/parse-expression')
   let overrideParams = require('player/override-params').overrideParams
-  let metronome = require('metronome')
   let vars = require('vars')
   let mainVars = require('main-vars')
 
@@ -58,8 +57,8 @@ define((require) => {
     let [k,v] = line.split('=').map(p => p.trim()).filter(p => p != '')
     k = k.toLowerCase()
     if (k.match(/^[a-z][a-z0-9_\.]*$/) && !!v) {
-      if (typeof mainVars[k] == 'function') {
-        mainVars[k](parseExpression(v))
+      if (mainVars.exists(k)) {
+        mainVars.set(k, parseExpression(v))
       } else {
         v = parseExpression(v)
         vars[k] = v
