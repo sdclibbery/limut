@@ -116,7 +116,7 @@
   <script src="codemirror/comment.js"></script>
 </head>
 <body>
-  <canvas id="canvas" class="fullscreen" style="width:100%; height:100%; background: #000f"></canvas>
+  <canvas id="canvas" class="fullscreen" style="width:100%; height:100%; background: #000f; display:none"></canvas>
   <div class="widget">
     <h3>Limut live coding</h3>
     <p>
@@ -460,9 +460,9 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
 Visual amp should be per frame
 Visual add should be per frame
+Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
 Main.amp should also fade visuals?
 sparkle synth; each event is a sparkle onscreen
  and/or, loc=sparkle somehow?
