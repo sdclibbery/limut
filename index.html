@@ -424,6 +424,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
+Need to decrease volume for mobile
 Audio amp should be evalled per frame
 Audio add should be evalled per frame and non integer
 Envelope param to override choice of envelope type
@@ -461,6 +462,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+Webcam synth
 sparkle synth; each event is a sparkle onscreen
  and/or, loc=sparkle somehow?
 colours can be defined using hsl/hsv instead of rgb - or better a perceptually uniform space
@@ -479,6 +481,7 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+Should reset main vars on code reload for consistency
 pattern concat "xo + vi"
 pattern repeat "xo * 3" higher precedence than concat
 pattern support brackets "( xo + vi ) * 3"
