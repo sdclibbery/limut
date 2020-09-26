@@ -332,12 +332,12 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 </div>
 <h4 onclick="toggleAccordion('accordion-predefined-vars')">▶ Predefined Vars</h4>
 <div id="accordion-predefined-vars" class="closed">
-<p><code>bpm</code> Beats per minute</p>
+<p><code>bpm</code> Beats per minute. Value resets unless set every time the code is updated.</p>
 <p><code>time</code> Time, counted in beats (including fractions of a beat)</p>
 <p><code>pulse</code> The current musical pulse; like a VU meter</p>
-<p><code>main.amp</code> Main mix amplitude control</p>
-<p><code>main.reverb</code> Main reverb amplitude control</p>
-<p><code>scale</code> Scale eg minor, major, chromatic, majorpentatonic, lydian etc etc</p>
+<p><code>main.amp</code> Main mix amplitude control. Value resets unless set every time the code is updated.</p>
+<p><code>main.reverb</code> Main reverb amplitude control. Value resets unless set every time the code is updated.</p>
+<p><code>scale</code> Scale eg minor, major, chromatic, majorpentatonic, lydian etc etc. Value resets unless set every time the code is updated.</p>
 <p><code>drop6_2</code> Predefined time var: equivalent to <code>[1,0]t[6.2]</code>. These are all the predefined drops: drop6_2, drop7_1, drop12_4, drop14_2, drop15_1, drop24_8, drop28_4, drop30_2, drop31_1, drop56_8, drop60_4, drop62_2, drop63_1</p>
 <p><code>tile_full</code> Predefined loc param map to cover the full screen: equivalent to <code>{x:0,y:0,w:1,h:1}</code>. Other predefined locations: tile_tl/tr/bl/br/m, tile_h1/2/3/4/5, tile_v1/2/3/4/5, tile_random, tile_rand, fullscreen</p>
 <p><code>transparent</code> Predefined colour. Others: black, darkgray, gray, lightgray, white, red, orange, yellow, green, blue, indigo, violet, neonpink, neongreen, rainbow, random</p>
@@ -480,7 +480,6 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 .pulse not following correctly eg during Line
-Should reset main vars on code reload for consistency
 [0,1,2]e[0,.1,1] which would interpolate between values through the event time
 pattern concat "xo + vi"
 pattern repeat "xo * 3" higher precedence than concat

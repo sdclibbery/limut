@@ -4,10 +4,16 @@ define((require) => {
   let evalParam = require('player/eval-param').evalParamFrame
 
   let mainVars = {
-    bpm: { setter: (v) => metronome.bpm(v) },
-    scale: { setter: (v) => window.scaleChange(v.toLowerCase()) },
-    'main.amp': { setter: (v) => window.mainAmpChange(v) },
-    'main.reverb': { setter: (v) => window.mainReverbChange(v) },
+    bpm: { setter: (v) => metronome.bpm(v), default:110 },
+    scale: { setter: (v) => window.scaleChange(v.toLowerCase()), default:'major' },
+    'main.amp': { setter: (v) => window.mainAmpChange(v), default:1 },
+    'main.reverb': { setter: (v) => window.mainReverbChange(v), default:1 },
+  }
+
+  let reset = () => {
+    for (let k in mainVars) {
+      mainVars[k].setter(mainVars[k].default)
+    }
   }
 
   let exists = (name) => {
@@ -36,5 +42,6 @@ define((require) => {
     exists: exists,
     set: set,
     update: update,
+    reset: reset,
   }
 })
