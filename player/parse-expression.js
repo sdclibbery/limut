@@ -244,7 +244,10 @@ define(function(require) {
       if (char == '{' || char == ',') {
         state.idx += 1
         let e = parseMapEntry(state)
-        if (e) { result[e.k] = e.v }
+        if (e) {
+          result[e.k] = e.v
+          if (e.v.interval && !result.interval) { result.interval = e.v.interval }
+        }
       } else if (char == '}') {
         state.idx += 1
         break
@@ -395,6 +398,7 @@ define(function(require) {
       // map
       if (char == '{') {
         lhs = parseMap(state)
+        lhs.interval = lhs.interval || parseInterval(state)
         continue
       }
       // operator
@@ -453,6 +457,7 @@ define(function(require) {
       let v = varLookup(state)
       if (v !== undefined) {
         lhs = v
+        lhs.interval = parseInterval(state) || 'frame'
         if (debugParse) { console.log('var', lhs, state) }
         continue
       }
@@ -554,7 +559,7 @@ define(function(require) {
   p = parseExpression('foo')
   vars.foo = 'baz'
   assert('baz', p())
-  vars.foo = undefined
+  delete vars.foo
 
   vars['foo.woo'] = 'bar'
   p = parseExpression('foo.woo')
@@ -571,7 +576,7 @@ define(function(require) {
   vars.foo = 3
   assert(1, p[0])
   assert(3, p[1]())
-  vars.foo = undefined
+  delete vars.foo
 
   p = parseExpression('[1,2]+[3,4] ')
   assert(4, p(0,0))
@@ -616,7 +621,7 @@ define(function(require) {
   assert(5, p(0,2))
   vars.foo = parseExpression('5')
   assert(9, p(0,3))
-  vars.foo = undefined
+  delete vars.foo
 
   assert([4,5], parseExpression('(1,2)+3')())
   assert([4,5], parseExpression('3+(1,2)')())
@@ -635,7 +640,7 @@ define(function(require) {
   p = parseExpression('foo + (0,2)')
   vars.foo = parseExpression('[1,2]t1')
   assert([1,3], p(0,0))
-  vars.foo = undefined
+  delete vars.foo
 
   p = parseExpression('(foo,[3,4]t1)')
   vars.foo = parseExpression('[1,2]t1')
@@ -643,7 +648,7 @@ define(function(require) {
   assert(3, p(0,0)[1](0,0))
   assert(2, p(1,1)[0](1,1)(1,1))
   assert(4, p(1,1)[1](1,1))
-  vars.foo = undefined
+  delete vars.foo
 
   p = parseExpression('[1,2]+(3,4) ')
   assert([4,5], p(0,0))
@@ -837,7 +842,28 @@ define(function(require) {
   vars.foo = parseExpression('[(0,1),(2,3)]t1')
   assert([0,1], p(0,0)(0,0)(0,0))
   assert([2,3], p(1,1)(1,1)(1,1))
-  vars.foo = undefined
+  delete vars.foo
+
+  assert(undefined, parseExpression("{a:0}").interval)
+  assert('event', parseExpression("{a:0}@e").interval)
+  assert('frame', parseExpression("{a:0}@f").interval)
+  assert('event', parseExpression("{a:[0,1]l@e}").interval)
+  assert('frame', parseExpression("{a:[0,1]l@f}").interval)
+
+  p = parseExpression('foo')
+  vars.foo = parseExpression('0')
+  assert('frame', p.interval)
+  delete vars.foo
+
+  p = parseExpression('foo@e')
+  vars.foo = parseExpression('0')
+  assert('event', p.interval)
+  delete vars.foo
+
+  p = parseExpression('foo@f')
+  vars.foo = parseExpression('0')
+  assert('frame', p.interval)
+  delete vars.foo
 
   console.log('Parse expression tests complete')
 

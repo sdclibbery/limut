@@ -59,6 +59,6 @@ define(function(require) {
   vars['purple'] = parseExpression('{r:0.6,g:0,b:0.8,a:1}')
   vars['neonpink'] = parseExpression('{r:1,g:0,b:1,a:1}')
   vars['neongreen'] = parseExpression('{r:0,g:0.7,b:1,a:1}')
-  vars['rainbow'] = parseExpression('{r:[0.8,0,0]l6,g:[0,0.7,0]l6,b:[0,0,1]l6,a:1}')
+  vars['rainbow'] = parseExpression('{r:[0.8,0,0]l6@f,g:[0,0.7,0]l6@f,b:[0,0,1]l6@f,a:1}')
   vars['random'] = parseExpression('{r:[0:0.8]r1,g:[0:0.7]r1,b:[0.1:0.9]r1,a:1}')
 })

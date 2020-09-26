@@ -31,7 +31,6 @@ define(function(require) {
       }
       return v
     }
-    result.interval = 'frame'
     return result
   }
 
@@ -50,7 +49,6 @@ define(function(require) {
   assert(3, state.idx)
   vars.foo = 'baz'
   assert('baz', p())
-  assert('frame', p.interval)
   vars.foo = undefined
 
   vars['foo.woo'] = 'bar'

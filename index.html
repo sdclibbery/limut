@@ -424,28 +424,26 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-Need to decrease volume for mobile
 Audio amp should be evalled per frame
 Audio add should be evalled per frame and non integer
-Envelope param to override choice of envelope type
- Constant envelope type to allow specifying per frame envelope with amp?
 AudioWorklet freeverb with webaseembly
 Chorus effect
-Nice gentle pads
-FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
-'X' doesn't work on mobile
-Preload samples immediately after parsing
-PWM techno pad??
+root main var
+pan param
 Try drive from here: https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
 Pluck/guitar synths
  https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
  https://github.com/ronkot/ks-guitar-synth/blob/master/src/js/guitar-string.js
  https://github.com/mohayonao/pluck-string-node/blob/master/index.js
+Envelope param to override choice of envelope type
+ Constant envelope type to allow specifying per frame envelope with amp?
+Nice gentle pads
+FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
+'X' doesn't work on mobile
+Preload samples immediately after parsing
+PWM techno pad??
 'add' param for play synth?
-root main var
 AudioWorklet FM operator supporting feedback with webassembly
-pan param
-slide param
 echoey space synth
  ethereal vib=3, att=0, sus=2, rel=2, phaser=1/4, echo=(3,4), oct=5
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
@@ -481,13 +479,14 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+.pulse not following correctly eg during Line
 Should reset main vars on code reload for consistency
+[0,1,2]e[0,.1,1] which would interpolate between values through the event time
 pattern concat "xo + vi"
 pattern repeat "xo * 3" higher precedence than concat
 pattern support brackets "( xo + vi ) * 3"
 apply overridden delay for follow player: allow canons
 []n syntax for perlin noise; ie for continuous noise as opposed to random
-[0,1,2]e[0,.1,1] which would interpolate between values through the event time
 player lastEvent should really be current event and should be from whatever event is current at that point in the beat
  Store the event for each event that hasnt completed yet
    Can use these for proper p1.amp etc values too
