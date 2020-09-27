@@ -10,7 +10,7 @@ define(function (require) {
     let decay = evalPerEvent(params, 'decay', 0.08*dur) * params.beat.duration
     let susLevel = evalPerEvent(params, 'suslevel', 0.8)
     let release = evalPerEvent(params, 'rel', params.sus||dur) * params.beat.duration
-    let gain = Math.max(0.0001, gainBase * evalPerEvent(params, 'amp', 1))
+    let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     let vca = system.audio.createGain();
     vca.gain.cancelScheduledValues(system.audio.currentTime)
     vca.gain.setValueAtTime(0, system.audio.currentTime)

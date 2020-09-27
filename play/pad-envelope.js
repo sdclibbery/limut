@@ -15,7 +15,7 @@ define(function (require) {
     let attack = evalPerEvent(params, 'att', dur/2) * params.beat.duration
     let release = evalPerEvent(params, 'rel', dur/2) * params.beat.duration
     let sus = Math.max(dur*params.beat.duration - attack, 0)
-    let gain = Math.max(0.0001, gainBase * evalPerEvent(params, 'amp', 1))
+    let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     let vca = system.audio.createGain()
     vca.gain.cancelScheduledValues(system.audio.currentTime)
     vca.gain.setValueAtTime(0, system.audio.currentTime)
