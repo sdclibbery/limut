@@ -52,7 +52,7 @@ define(function (require) {
     params.endTime = params.time + (source.buffer ? source.buffer.duration : 0.1)
 
     let vca = system.audio.createGain()
-    vca.gain.value = Math.max(0, 0.2 * evalPerEvent(params, 'amp', 1))
+    vca.gain.value = Math.max(0, 0.2 * (typeof params.amp === 'number' ? params.amp : 1))
     source.connect(vca)
     system.mix(effects(params, vca))
 

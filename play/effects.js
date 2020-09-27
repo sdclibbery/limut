@@ -33,6 +33,14 @@ define(function (require) {
     return node
   }
 
+  let perFrameAmp = (params, node) => {
+    if (typeof params.amp !== 'function') { return node } // No per frame control required
+    let vca = system.audio.createGain()
+    evalPerFrame(vca.gain, params, 'amp', 1)
+    node.connect(vca)
+    return vca
+  }
+
   let lpf = (params, node) => {
     if (!param(params.lpf, 0)) { return node }
     let lpf = system.audio.createBiquadFilter()
@@ -140,6 +148,7 @@ define(function (require) {
   }
 
   return (params, node) => {
+    node = perFrameAmp(params, node)
     node = chop(params, node)
     node = drive(params, node)
     node = lpf(params, node)
