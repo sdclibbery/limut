@@ -44,6 +44,21 @@ define(function(require) {
         lhs = vs
         continue
       }
+      // operator
+      if (lhs !== undefined) {
+        if (char == '/') {
+          state.idx += 1
+          let rhs = expression(state)
+          // console.log('operator/', lhs, rhs, state)
+          return lhs.map(v => v/rhs)
+        }
+        if (char == '*') {
+          state.idx += 1
+          let rhs = expression(state)
+          // console.log('operator*', lhs, rhs, state)
+          return lhs.map(v => v*rhs)
+        }
+      }
       // number
       let n = number(state)
       if (n !== undefined) {
@@ -83,6 +98,9 @@ define(function(require) {
   assert([], parseDur('[]'))
   assert([1], parseDur('[1]'))
   assert([1/2], parseDur('[1/2]'))
+  assert([1,2], parseDur('[1,2]'))
+  assert([3/4,3/4,1/2], parseDur('[3,3,2]/4'))
+  assert([12,12,8], parseDur('[3,3,2]*4'))
 
   console.log("Parse dur tests complete")
 
