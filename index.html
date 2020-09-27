@@ -480,8 +480,10 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-dur=[3,3,2]\4
-dur=[1:4]r
+parse dur
+ extract common number parsing code
+ dur=[3,3,2]\4
+ dur=[1:4]r
 [0,1,2]e[0,.1,1] which would interpolate between values through the event time
 pattern concat "xo + vi"
 pattern repeat "xo * 3" higher precedence than concat

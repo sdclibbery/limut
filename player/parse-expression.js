@@ -2,6 +2,7 @@
 define(function(require) {
   let param = require('player/default-param')
   let evalParam = require('player/eval-param').evalParamFrame
+  let number = require('player/parse-number')
   let operator = require('player/eval-operator')
   let varLookup = require('player/parse-var')
 
@@ -157,46 +158,6 @@ define(function(require) {
       }
       return lastValue
     }
-  }
-
-  let numberValue = (state) => {
-    let value = ''
-    let char
-    let sign = true
-    let fraction = false
-    while (char = state.str.charAt(state.idx)) {
-      if (char == '') { break }
-      if (sign && char == '-') {
-        sign = false
-        value += char
-        state.idx += 1
-        continue
-      }
-      if ((char >= '0' && char <= '9') || char == '.' || char == 'e') {
-        sign = false
-        value += char
-        state.idx += 1
-        continue
-      }
-      break
-    }
-    if (value == '') { return undefined }
-    return parseFloat(value)
-  }
-  let number = (state) => {
-    let numerator = numberValue(state)
-    if (numerator === undefined) { return undefined }
-    let denominator = 1
-    if (state.str.charAt(state.idx) == '/') {
-      state.idx += 1
-      denominator = numberValue(state)
-      if (denominator === undefined) {
-        state.idx -= 1
-        denominator = 1
-      }
-    }
-    // console.log('number', numerator/denominator, state)
-    return numerator/denominator
   }
 
   let eatWhitespace = (state) => {
@@ -470,7 +431,7 @@ define(function(require) {
       str: v,
       idx: 0,
     }
-    let result =  expression(state)
+    let result = expression(state)
     if (commented && state.commented) { commented() }
     return result
   }

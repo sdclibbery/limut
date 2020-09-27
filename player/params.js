@@ -1,6 +1,7 @@
 'use strict';
 define(function(require) {
   let parseExpression = require('player/parse-expression')
+  let parseDur = require('player/parse-dur')
 
   let parseName = (state) => {
     let name = ''
@@ -68,7 +69,13 @@ define(function(require) {
       commented = true
     }
     if (name.trim()) {
-      state.params[name.toLowerCase().trim()] = parseExpression(value, () => commented=true)
+      let v
+      if (name.toLowerCase() === 'dur') {
+        v = parseDur(value, () => commented=true)
+      } else {
+        v = parseExpression(value, () => commented=true)
+      }
+      state.params[name.toLowerCase().trim()] = v
       if (commented) { return false }
       return true
     }

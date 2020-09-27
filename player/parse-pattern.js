@@ -145,7 +145,9 @@ define(function(require) {
 
   let parsePattern = (patternStr, durs) => {
     // console.log('*** parsePattern', patternStr, durs)
-    if (!Array.isArray(durs)) { durs = [durs] }
+    if (typeof durs == 'number') {
+      durs = [durs]
+    }
     let state = {
       str: patternStr.trim(),
       idx: 0,
@@ -430,6 +432,7 @@ define(function(require) {
 
   // <.(12)>_
   // 0<1_>
+
   console.log("Parse pattern tests complete")
 
   return parsePattern
