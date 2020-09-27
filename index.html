@@ -425,10 +425,14 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 /*
 ==== audio ====
 Audio amp should be evalled per frame
+ testing
+ apply to all envelopes
+ extract helper and apply to all synths - move into effects?? 
+Allow non integer note values
 Audio add should be evalled per frame and non integer
+root main var
 AudioWorklet freeverb with webaseembly
 Chorus effect
-root main var
 pan param
 Try drive from here: https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
 Pluck/guitar synths
@@ -479,7 +483,10 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-.pulse not following correctly eg during Line
+Remove debug logs from parseExpression etc
+dur=[3,3,2]\4
+dur=[1:4]r
+UI amp slider should be separate to main.amp
 [0,1,2]e[0,.1,1] which would interpolate between values through the event time
 pattern concat "xo + vi"
 pattern repeat "xo * 3" higher precedence than concat
@@ -493,8 +500,6 @@ New param to offset time in shaders to allow doing sway 'manually'
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way??
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 array index operator, so you can "ch=[(0,2,4)]" then "add=ch[0]"
-dur=[3,3,2]\4
-dur=[1:4]r
 finish off: <> for 'in sequence on each repeat' in patterns
 "on 4 " / "on 28 of 32 " syntax to execute a line on the next beat count - but how not to repeat this if rerun?
 "every 4 " / "every 28 of 32 "

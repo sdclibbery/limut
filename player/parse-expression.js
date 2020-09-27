@@ -24,8 +24,8 @@ define(function(require) {
     if (debugParse) { console.log('timeVar steps', steps) }
     return steps
   }
-  let isInTimeVarStep  = (st, b, l) => {
-    return (b > st.time-0.0001)&&(b < st.time+st.duration-0.0001)
+  let isInTimeVarStep  = (st, b) => {
+    return (b > st.time-0.0001)&&(b < st.time+st.duration+0.0001)
   }
   let timeVar = (vs, ds) => {
     if (Array.isArray(ds)) { ds = expandColon(ds) }
@@ -46,11 +46,11 @@ define(function(require) {
         if (isInTimeVarStep(pre, b)) {
           let post = steps[(idx+1) % steps.length]
           let lerp = (b - pre.time) / pre.duration
-          if (debugEval) { console.log('eval linear timeVar', steps, 'b:', b, 'pre:', pre, 'post:', post, 'lerp:', lerp) }
+          // console.log('eval linear timeVar', steps, 'b:', b, 'pre:', pre, 'post:', post, 'lerp:', lerp)
           return (1-lerp)*pre.value + lerp*post.value
         }
       }
-      if (debugEval) { console.log('eval linear timeVar FAILED', steps, 'b:', b) }
+      // console.log('eval linear timeVar FAILED', steps, 'b:', b)
     }
   }
   let sTimeVar = (vs, ds) => {
@@ -488,6 +488,9 @@ define(function(require) {
     let a = JSON.stringify(actual)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
+  let assertApprox = (expected, actual) => {
+    if (actual < expected-0.0001 || actual > expected+0.0001) { console.trace(`Assertion failed.\n>>Expected ${lo} - ${hi}\n>>Actual: ${actual}`) }
+  }
   let assertIn = (lo, hi, actual) => {
     if (actual < lo-0.0001 || actual > hi+0.0001) { console.trace(`Assertion failed.\n>>Expected ${lo} - ${hi}\n>>Actual: ${actual}`) }
   }
@@ -864,6 +867,10 @@ define(function(require) {
   vars.foo = parseExpression('0')
   assert('frame', p.interval)
   delete vars.foo
+
+  assertApprox(0, parseExpression("[0,1]l0.1@f")(0,0))
+  assertApprox(1, parseExpression("[0,1]l0.1@f")(0,0.1))
+  assertApprox(0, parseExpression("[0,1]l0.1@f")(0,1))
 
   console.log('Parse expression tests complete')
 

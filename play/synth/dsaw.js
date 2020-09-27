@@ -7,6 +7,14 @@ define(function (require) {
   let pitchEffects = require('play/pitch-effects')
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
 
+  let perFrameAmp = (params, node) => {
+    if (typeof params.amp !== 'function') { return node } // No per frame control required
+    let vca = system.audio.createGain()
+    evalPerFrame(vca.gain, params, 'amp', 1)
+    node.connect(vca)
+    return vca
+  }
+
   return (params) => {
     let degree = parseInt(params.sound) + evalPerEvent(params, 'add', 0)
     if (isNaN(degree)) { return }
@@ -14,7 +22,7 @@ define(function (require) {
     let detuneSemis = evalPerEvent(params, 'detune', 0.1)
 
     let vca = envelope(params, 0.02)
-    let out = effects(params, vca)
+    let out = effects(params, perFrameAmp(params, vca))
     system.mix(out)
 
     let pitch = pitchEffects(params)
