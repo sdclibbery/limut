@@ -4,8 +4,6 @@ define(function(require) {
   let param = require('player/default-param')
   let parsePatternString = require('player/parse-pattern')
 
-  let debug = false
-
   let multiplyEvents = (event) => {
     for (let k in event) {
       let v = event[k]
@@ -21,18 +19,18 @@ define(function(require) {
   }
 
   let parsePattern = (pattern, params, defaultDur) => {
-    if (debug) { console.log('*** pattern ', pattern) }
+    // console.log('*** pattern ', pattern)
     if (!pattern) { return () => [] }
     let dur = param(param(params.dur, defaultDur), 1)
     let result = parsePatternString(pattern, dur)
     let patternLength = result.length
     let events = result.events
-    if (debug) { console.log('events:', events, 'patternLength:', patternLength) }
+    // console.log('events:', events, 'patternLength:', patternLength)
     return (count) => {
       if (events.length == 0) { return [] }
       let patternStartTime = patternLength * Math.floor(count / patternLength)
       let patternBeat = count * patternLength / events.length
-      if (debug) { console.log('play patternLength:', patternLength, 'patternStartTime:', patternStartTime, 'patternBeat: ', patternBeat) }
+      // console.log('play patternLength:', patternLength, 'patternStartTime:', patternStartTime, 'patternBeat: ', patternBeat)
       let idx = 0
       let eventsForBeat = []
       let time = 0
@@ -60,7 +58,7 @@ define(function(require) {
                 }
               }
             }
-            if (debug) { console.log('play event:', event) }
+            // console.log('play event:', event)
             Array.prototype.push.apply(eventsForBeat, multiplyEvents(event))
           }
         })

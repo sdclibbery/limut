@@ -5,10 +5,6 @@ define(function(require) {
   let operator = require('player/eval-operator')
   let varLookup = require('player/parse-var')
 
-  let debugParse = false
-  let debugEval = false
-  if (debugEval) { let original = evalParam; evalParam = (v,s,b) => { console.log('eval',v,s,b); return original(v,s,b)} }
-
   let timeVarSteps = (vs, ds) => {
     if (!Array.isArray(ds)) { ds = [ds] }
     let steps = []
@@ -21,7 +17,7 @@ define(function(require) {
       step += 1
     })
     steps.totalDuration = length
-    if (debugParse) { console.log('timeVar steps', steps) }
+    // console.log('timeVar steps', steps)
     return steps
   }
   let isInTimeVarStep  = (st, b) => {
@@ -33,7 +29,7 @@ define(function(require) {
     return (s,b) => {
       b = (b+0.0001) % steps.totalDuration
       let step = steps.filter(st => isInTimeVarStep(st, b) )[0]
-      if (debugEval) { console.log('eval timeVar', steps, 'b:', b, 'step:', step) }
+      // console.log('eval timeVar', steps, 'b:', b, 'step:', step)
       return (step !== undefined) && step.value
     }
   }
@@ -62,12 +58,12 @@ define(function(require) {
         if (isInTimeVarStep(pre, b)) {
           let post = steps[(idx+1) % steps.length]
           let lerp = (b - pre.time) / pre.duration
-          if (debugEval) { console.log('eval s timeVar', steps, 'b:', b, 'pre:', pre, 'post:', post, 'lerp:', lerp) }
+          // console.log('eval s timeVar', steps, 'b:', b, 'pre:', pre, 'post:', post, 'lerp:', lerp)
           lerp = lerp*lerp*(3 - 2*lerp) // bezier ease in/out
           return (1-lerp)*pre.value + lerp*post.value
         }
       }
-      if (debugEval) { console.log('eval s timeVar FAILED', steps, 'b:', b) }
+      // console.log('eval s timeVar FAILED', steps, 'b:', b)
     }
   }
 
@@ -90,7 +86,7 @@ define(function(require) {
         return undefined
       }
     }
-    if (debugParse) { console.log('doArray', result, state) }
+    // console.log('doArray', result, state)
     return result
   }
   let array = (state, open, close) => {
@@ -99,13 +95,13 @@ define(function(require) {
     if (commaArray != undefined) {
       Object.assign(state, tryState)
       commaArray.seperator = ','
-      if (debugParse) { console.log('array', commaArray.seperator, commaArray, state) }
+      // console.log('array', commaArray.seperator, commaArray, state)
       return commaArray
     }
     let colonArray = doArray(state, open, close, ':')
     if (colonArray == undefined) { return [] }
     colonArray.seperator = ':'
-    if (debugParse) { console.log('array', colonArray.seperator, colonArray, state) }
+    // console.log('array', colonArray.seperator, colonArray, state)
     return colonArray
   }
   let expandColon = (vs) => {
@@ -140,7 +136,7 @@ define(function(require) {
   }
 
   let evalRandomRanged = (lo, hi) => {
-    if (debugEval) { console.log('eval evalRandomRanged', lo, hi) }
+    // console.log('eval evalRandomRanged', lo, hi)
     if (!Number.isInteger(lo) || !Number.isInteger(hi)) {
       return lo + Math.random() * (hi-lo)
     } else {
@@ -149,7 +145,7 @@ define(function(require) {
   }
   let evalRandomSet = (vs, s,b) => {
     let idx = Math.floor(Math.random()*vs.length*0.9999)
-    if (debugEval) { console.log('eval evalRandomRanged', vs.length, idx, s,b) }
+    // console.log('eval evalRandomRanged', vs.length, idx, s,b)
     return evalParam(vs[idx], s,b)
   }
   let periodicRandom = (getter, period) => {
@@ -199,7 +195,7 @@ define(function(require) {
         denominator = 1
       }
     }
-    if (debugParse) { console.log('number', numerator/denominator, state) }
+    // console.log('number', numerator/denominator, state)
     return numerator/denominator
   }
 
@@ -233,7 +229,7 @@ define(function(require) {
     eatWhitespace(state)
     let v = expression(state)
     eatWhitespace(state)
-    if (debugParse) { console.log('map entry', k, v, state) }
+    // console.log('map entry', k, v, state)
     return {k:k,v:v}
   }
   let parseMap = (state) => {
@@ -255,7 +251,7 @@ define(function(require) {
         return undefined
       }
     }
-    if (debugParse) { console.log('map', result, state) }
+    // console.log('map', result, state)
     return result
   }
 
@@ -270,7 +266,7 @@ define(function(require) {
       result += char
       state.idx += 1
     }
-    if (debugParse) { console.log('string', result, state) }
+    // console.log('string', result, state)
     return result
   }
 
@@ -282,11 +278,11 @@ define(function(require) {
       if (state.str.charAt(state.idx) == 'f') {
         state.idx += 1
         result = 'frame'
-        if (debugParse) { console.log('interval', result, state) }
+        // console.log('interval', result, state)
       } else if (state.str.charAt(state.idx) == 'e') {
         state.idx += 1
         result = 'event'
-        if (debugParse) { console.log('interval', result, state) }
+        // console.log('interval', result, state)
       }
     }
     return result
@@ -317,12 +313,12 @@ define(function(require) {
       result.b = hex2(str.substr(4,2))
       result.a = hex2(str.substr(6,2))
     }
-    if (debugParse) { console.log('colour', result, state) }
+    // console.log('colour', result, state)
     return result
   }
 
   let expression = (state) => {
-    if (debugParse) { console.log('expression', state) }
+    // console.log('expression', state)
     let lhs = undefined
     let char
     while (char = state.str.charAt(state.idx)) {
@@ -341,21 +337,21 @@ define(function(require) {
           state.idx += 1
           vs = expandColon(vs)
           let ds = numberOrArrayOrFour(state)
-          if (debugParse) { console.log('array t', vs, ds) }
+          // console.log('array t', vs, ds)
           lhs = timeVar(vs, ds)
           let interval = parseInterval(state)
           lhs.interval = interval || 'event'
         } else if (state.str.charAt(state.idx).toLowerCase() == 'l') {
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
-          if (debugParse) { console.log('array l', vs, ds) }
+          // console.log('array l', vs, ds)
           lhs = linearTimeVar(vs, ds)
           let interval = parseInterval(state)
           lhs.interval = interval || 'event'
         } else if (state.str.charAt(state.idx).toLowerCase() == 's') {
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
-          if (debugParse) { console.log('array s', vs, ds) }
+          // console.log('array s', vs, ds)
           lhs = sTimeVar(vs, ds)
           let interval = parseInterval(state)
           lhs.interval = interval || 'event'
@@ -367,17 +363,17 @@ define(function(require) {
           if (vs.seperator == ':') {
             let lo = param(vs[0], 0)
             let hi = param(vs[1], 1)
-            if (debugParse) { console.log('array r:', vs, lo, hi) }
+            // console.log('array r:', vs, lo, hi)
             rand = (s,b) => evalRandomRanged(evalParam(lo,s,b), evalParam(hi,s,b))
           } else {
-            if (debugParse) { console.log('array r,', vs) }
+            // console.log('array r,', vs)
             rand = (s,b) => evalRandomSet(vs, s,b)
           }
           lhs = periodicRandom(rand, period)
           lhs.interval = interval || 'event'
         } else {
           vs = expandColon(vs)
-          if (debugParse) { console.log('array', vs) }
+          // console.log('array', vs)
           lhs = vs
           lhs.interval = parseInterval(state)
         }
@@ -406,31 +402,31 @@ define(function(require) {
         if (char == '+') {
           state.idx += 1
           let rhs  = expression(state)
-          if (debugParse) { console.log('operator+', lhs, rhs, state) }
+          // console.log('operator+', lhs, rhs, state)
           return operator((l,r)=>l+r, lhs, rhs)
         }
         if (char == '-') {
           state.idx += 1
           let rhs  = expression(state)
-          if (debugParse) { console.log('operator-', lhs, rhs, state) }
+          // console.log('operator-', lhs, rhs, state)
           return operator((l,r)=>l-r, lhs, rhs)
         }
         if (char == '*') {
           state.idx += 1
           let rhs  = expression(state)
-          if (debugParse) { console.log('operator*', lhs, rhs, state) }
+          // console.log('operator*', lhs, rhs, state)
           return operator((l,r)=>l*r, lhs, rhs)
         }
         if (char == '/') {
           state.idx += 1
           let rhs  = expression(state)
-          if (debugParse) { console.log('operator/', lhs, rhs, state) }
+          // console.log('operator/', lhs, rhs, state)
           return operator((l,r)=>l/r, lhs, rhs)
         }
         if (char == '%') {
           state.idx += 1
           let rhs  = expression(state)
-          if (debugParse) { console.log('operator%', lhs, rhs, state) }
+          // console.log('operator%', lhs, rhs, state)
           return operator((l,r)=>l%r, lhs, rhs)
         }
       }
@@ -438,7 +434,7 @@ define(function(require) {
       let n = number(state)
       if (n !== undefined) {
         lhs = n
-        if (debugParse) { console.log('number', lhs, state) }
+        // console.log('number', lhs, state)
         continue
       }
       // string
@@ -458,7 +454,7 @@ define(function(require) {
       if (v !== undefined) {
         lhs = v
         lhs.interval = parseInterval(state) || 'frame'
-        if (debugParse) { console.log('var', lhs, state) }
+        // console.log('var', lhs, state)
         continue
       }
       break
@@ -468,7 +464,7 @@ define(function(require) {
 
   let parseExpression = (v, commented) => {
     if (v == '' || v == undefined) { return }
-    if (debugParse || debugEval) { console.log('*** parseExpression', v) }
+    // console.log('*** parseExpression', v)
     v = v.trim()
     let state = {
       str: v,

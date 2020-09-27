@@ -1,17 +1,16 @@
 'use strict';
 define(function(require) {
-  let debug = false
 
   let evalSequence = (seq, e, r) => {
     let v = seq[r % seq.length]
-    if (debug) { console.log('evalSequence', e, r, v) }
+    // console.log('evalSequence', e, r, v)
     return v.flatMap(({value,time,dur}) => {
       let event = {time:e.time+time*e.dur, dur:dur*e.dur}
       if (typeof(value) == 'function') {
-        if (debug) { console.log('evalSequence func', event, r/seq.length) }
+        // console.log('evalSequence func', event, r/seq.length)
         return value(event, Math.floor(r / seq.length))
       }
-      if (debug) { console.log('evalSequence val', value, event) }
+      // console.log('evalSequence val', value, event)
       return [{value:value, time:event.time, dur:event.dur}]
     })
   }
@@ -29,7 +28,7 @@ define(function(require) {
       let sub = pattern(subState, ']')
       state.idx = subState.idx
       if (sub.length === 0) { return events }
-      if (debug) { console.log('subpattern', state, 'sub.events', sub.events) }
+      // console.log('subpattern', state, 'sub.events', sub.events)
       sub.events.forEach(e => {
         events.push({
           value: e.value,
@@ -43,7 +42,7 @@ define(function(require) {
     if (char == '(') {
       state.idx += 1
       let tog = array(state, ')')
-      if (debug) { console.log('together', tog) }
+      // console.log('together', tog)
       events = events.concat(tog)
       return events
     }
@@ -56,7 +55,7 @@ define(function(require) {
       let seq = array(subState, '>', true)
       state.idx = subState.idx
       if (seq.length == 0) { seq = [[]] }
-      if (debug) { console.log('sequence', seq) }
+      // console.log('sequence', seq)
       events.push({
         value: (e,r) => evalSequence(seq, e, r),
         time: time,
@@ -67,7 +66,7 @@ define(function(require) {
     // rest
     if (char == '.') {
       state.idx += 1
-      if (debug) { console.log('rest', state) }
+      // console.log('rest', state)
       events.push({
         time: time,
         dur: dur,
@@ -81,7 +80,7 @@ define(function(require) {
       state.idx += 1
     }
     state.idx += 1
-    if (debug) { console.log('event', state, 'value:', char, 'time:', time, 'dur:', dur) }
+    // console.log('event', state, 'value:', char, 'time:', time, 'dur:', dur)
     events.push({
       value: char,
       time: time,
@@ -91,7 +90,7 @@ define(function(require) {
   }
 
   let array = (state, endChar, push) => {
-    if (debug) { console.log('array', endChar, state) }
+    // console.log('array', endChar, state)
     let events = []
     let char
     while (char = state.str.charAt(state.idx)) {
@@ -111,7 +110,7 @@ define(function(require) {
   }
 
   let pattern = (state, endChar) => {
-    if (debug) { console.log('pattern', state, endChar) }
+    // console.log('pattern', state, endChar)
     let events = []
     let length = 0
     let char
@@ -135,7 +134,7 @@ define(function(require) {
     events.forEach(event => {
       if (event.value === '_') {
         let lastTime = result[result.length-1].time
-        if (debug) { console.log('continuation', event, 'lastTime', lastTime) }
+        // console.log('continuation', event, 'lastTime', lastTime)
         result.filter(e => e.time == lastTime).forEach(e => e.dur += event.dur)
       } else {
         result.push(event)
@@ -145,7 +144,7 @@ define(function(require) {
   }
 
   let parsePattern = (patternStr, durs) => {
-    if (debug) { console.log('*** parsePattern', patternStr, durs) }
+    // console.log('*** parsePattern', patternStr, durs)
     if (!Array.isArray(durs)) { durs = [durs] }
     let state = {
       str: patternStr.trim(),
@@ -155,7 +154,7 @@ define(function(require) {
       durs: durs,
     }
     let result = pattern(state)
-    if (debug) { console.log('result', result) }
+    // console.log('result', result)
     let events = result.events.map(e => {
       if (e.time < -0.0001) {e.time += result.length}
       if (e.time > result.length-0.0001) {e.time -= result.length}

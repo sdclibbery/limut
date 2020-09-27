@@ -2,8 +2,6 @@
 define(function(require) {
   let evalParam = require('player/eval-param').evalParamFrame
 
-  let debug = false
-
   let objectMap = (obj, fn) => {
     return Object.fromEntries(
       Object.entries(obj).map(
@@ -61,7 +59,7 @@ define(function(require) {
     let result = (s,b) => {
       let el = evalParam(l, s,b)
       let er = evalParam(r, s,b)
-      if (debug) { console.log('eval operator', 'l:',l,'r:',r, 'el:',el,'er:',er, 's:',s,'b:',b) }
+      // console.log('eval operator', 'l:',l,'r:',r, 'el:',el,'er:',er, 's:',s,'b:',b)
       return applyOperator(op, el, er)
     }
     result.interval = l.interval == 'frame' ? 'frame' : (r.interval == 'frame' ? 'frame' : (l.interval || r.interval))
