@@ -424,8 +424,8 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-Allow non integer note values
 Audio add should be evalled per frame
+Allow non integer note values
 root main var
 AudioWorklet freeverb with webaseembly
 Chorus effect
@@ -463,6 +463,7 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 Webcam synth
 sparkle synth; each event is a sparkle onscreen
  and/or, loc=sparkle somehow?
+ also fireflies synth
 colours can be defined using hsl/hsv instead of rgb - or better a perceptually uniform space
 Visual add, should be per frame and non integer
 Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
@@ -479,6 +480,7 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+[]n syntax for perlin noise; ie for continuous noise as opposed to random
 [0,1,2]e[0,.1,1] which would interpolate between values through the event time
 pattern concat "xo + vi"
 pattern repeat "xo * 3" higher precedence than concat
@@ -487,7 +489,6 @@ apply overridden delay for follow player: allow canons
 player lastEvent should really be current event and should be from whatever event is current at that point in the beat
  Store the event for each event that hasnt completed yet
    Can use these for proper p1.amp etc values too
-[]n syntax for perlin noise; ie for continuous noise as opposed to random
 dur=[1,2,3,4]r
 New param to offset time in shaders to allow doing sway 'manually'
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way??

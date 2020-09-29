@@ -46,7 +46,7 @@ define(function (require) {
     let lpf = system.audio.createBiquadFilter()
     lpf.type = 'lowpass'
     evalPerFrame(lpf.frequency, params, 'lpf')
-    evalPerFrame(lpf.Q, params, 'lpr', 1)
+    evalPerFrame(lpf.Q, params, 'lpr', 5)
     node.connect(lpf)
     return lpf
   }
@@ -56,7 +56,7 @@ define(function (require) {
     let hpf = system.audio.createBiquadFilter()
     hpf.type = 'highpass'
     evalPerFrame(hpf.frequency, params, 'hpf')
-    evalPerFrame(hpf.Q, params, 'hpr', 1)
+    evalPerFrame(hpf.Q, params, 'hpr', 5)
     node.connect(hpf)
     return hpf
   }
@@ -66,7 +66,7 @@ define(function (require) {
     let bpf = system.audio.createBiquadFilter()
     bpf.type = 'bandpass'
     evalPerFrame(bpf.frequency, params, 'bpf')
-    evalPerFrame(bpf.Q, params, 'bpr', 1)
+    evalPerFrame(bpf.Q, params, 'bpr', 5)
     node.connect(bpf)
     return bpf
   }
