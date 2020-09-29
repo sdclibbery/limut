@@ -282,7 +282,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <h4 onclick="toggleAccordion('accordion-params')">▶ Params</h4>
 <div id="accordion-params" class="closed">
 <h6>Event</h6>
-<p><code>dur</code> Event time in beats</p>
+<p><code>dur</code> Event time in beats. Can only use a basic value syntax including numbers, arrays [], * and /.</p>
 <p><code>delay</code> Event start time offset in beats</p>
 <p><code>amp</code> Player amplitude control</p>
 <p><code>att</code> Attack time in beats</p>
@@ -424,7 +424,6 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-UI amp slider should be separate to main.amp
 Allow non integer note values
 Audio add should be evalled per frame
 root main var
@@ -485,10 +484,10 @@ pattern concat "xo + vi"
 pattern repeat "xo * 3" higher precedence than concat
 pattern support brackets "( xo + vi ) * 3"
 apply overridden delay for follow player: allow canons
-[]n syntax for perlin noise; ie for continuous noise as opposed to random
 player lastEvent should really be current event and should be from whatever event is current at that point in the beat
  Store the event for each event that hasnt completed yet
    Can use these for proper p1.amp etc values too
+[]n syntax for perlin noise; ie for continuous noise as opposed to random
 dur=[1,2,3,4]r
 New param to offset time in shaders to allow doing sway 'manually'
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way??

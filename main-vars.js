@@ -2,11 +2,12 @@
 define((require) => {
   let metronome = require('metronome')
   let evalParam = require('player/eval-param').evalParamFrame
+  let system = require('play/system')
 
   let mainVars = {
     bpm: { setter: (v) => metronome.bpm(v), default:110 },
     scale: { setter: (v) => window.scaleChange(v.toLowerCase()), default:'major' },
-    'main.amp': { setter: (v) => window.mainAmpChange(v), default:1 },
+    'main.amp': { setter: (v) => system.mainAmp(v), default:1 },
     'main.reverb': { setter: (v) => window.mainReverbChange(v), default:1 },
   }
 

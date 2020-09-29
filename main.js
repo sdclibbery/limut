@@ -30,15 +30,15 @@ define(function(require) {
   let mainAmpReadout = document.getElementById('main-amp-readout')
   let mainAmpInput = document.getElementById('main-amp-slider')
   window.mainAmpChange = (amp) => {
-    let newAmp = system.mainAmp(amp)
+    let newAmp = system.mainAmpUi(amp)
     window.mainAmpChanged(newAmp)
     canvas.style.opacity = Math.min(Math.max(newAmp, 0), 1)
   }
-  window.mainAmpChanged = (mainAmp) => {
-    mainAmpReadout.innerText = mainAmp.toFixed(2)
-    mainAmpInput.value = mainAmp*100
+  window.mainAmpChanged = () => {
+    mainAmpReadout.innerText = system.mainAmp().toFixed(2)
+    mainAmpInput.value = system.mainAmpUi()*100
   }
-  window.mainAmpChanged(system.mainAmp())
+  window.mainAmpChanged()
 
   // Main reverb UI
   let mainReverbReadout = document.getElementById('main-reverb-readout')

@@ -35,12 +35,20 @@ let globalBaseGain = 15
 system.vcaMainAmp = system.audio.createGain()
 system.vcaMainAmp.gain.value = globalBaseGain
 system.mainAmpValue = 1
+system.mainAmpUiValue = 1
 system.mainAmp = (amp) => {
   if (typeof amp == 'number') {
-    system.vcaMainAmp.gain.value = Math.pow(amp, 2)*globalBaseGain
     system.mainAmpValue = amp
+    system.vcaMainAmp.gain.value = Math.pow(system.mainAmpUiValue, 2)*system.mainAmpValue*globalBaseGain
   }
   return system.mainAmpValue
+}
+system.mainAmpUi = (amp) => {
+  if (typeof amp == 'number') {
+    system.mainAmpUiValue = amp
+    system.vcaMainAmp.gain.value = Math.pow(system.mainAmpUiValue, 2)*system.mainAmpValue*globalBaseGain
+  }
+  return system.mainAmpUiValue
 }
 system.vcaPreAmp = system.audio.createGain()
 system.vcaPreAmp.gain.value = 0.4
