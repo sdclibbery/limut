@@ -480,25 +480,25 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-[]n syntax for perlin noise; ie for continuous noise as opposed to random
-[0,1,2]e[0,.1,1] which would interpolate between values through the event time
-pattern concat "xo + vi"
-pattern repeat "xo * 3" higher precedence than concat
-pattern support brackets "( xo + vi ) * 3"
-apply overridden delay for follow player: allow canons
-player lastEvent should really be current event and should be from whatever event is current at that point in the beat
- Store the event for each event that hasnt completed yet
-   Can use these for proper p1.amp etc values too
-dur=[1,2,3,4]r
-New param to offset time in shaders to allow doing sway 'manually'
+Possible bug: Can applying overrides stop @f behaviour?
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way??
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
-array index operator, so you can "ch=[(0,2,4)]" then "add=ch[0]"
-finish off: <> for 'in sequence on each repeat' in patterns
-"on 4 " / "on 28 of 32 " syntax to execute a line on the next beat count - but how not to repeat this if rerun?
+[]n syntax for perlin noise; ie for continuous noise as opposed to random
+[0,1,2]e[0,.1,1] which would interpolate between values through the event time
+extending patterns like every/sometimes/offadd/stutter etc
+"on next 4 " / "on next 28 of 32 " syntax to execute a line on the next beat count
+  - but how not to repeat this if rerun? replace now/next in source with actual count?
 "every 4 " / "every 28 of 32 "
 "until next 16 set [bass,kd] amp=0" ? - but how not to repeat this if rerun?
 "by next 16 set bass amp=0" - lerps to the new value - but how not to repeat this if rerun?
+pattern concat "xo + vi"
+pattern repeat "xo * 3" higher precedence than concat
+pattern support brackets "( xo + vi ) * 3"
+dur=[1,2,3,4]r
+apply overridden delay for follow player: allow canons
+New param to offset time in shaders to allow doing sway 'manually'
+array index operator, so you can "ch=[(0,2,4)]" then "add=ch[0]"
+finish off: <> for 'in sequence on each repeat' in patterns
 multiline commands
 Wildcard player matching for groups 'set d? amp=0'  'set p* amp=0'
 operator precedence
@@ -510,7 +510,6 @@ value param to override the pattern value
 <> for 'in sequence on each repeat' in params
 rests in params
 random in patterns: what syntax??
-extending patterns like every/sometimes/offadd/stutter etc
 sliders that appear in the code as vars
 popup keyboard triggered by pattern eg "p piano keyboard"
 seeded random: takes repeat length and optional seed

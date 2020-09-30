@@ -42,7 +42,7 @@ define((require) => {
             .map(e => {
               playerFactory.play(e)
               let pulse = (s,b) => {
-                let t = e.beat.time + (b-e.beat.beatTime)*e.beat.duration
+                let t = e.beat.time + (b-e.beat.count)*e.beat.duration
                 if (t<e.time || t>e.endTime) { return 0 }
                 let l = e.endTime - e.time
                 let x = (t - e.time) / l
@@ -50,20 +50,26 @@ define((require) => {
                 return Math.pow(v, 1/2)
               }
               if (player.lastCount !== e.beat.count) {
-                player.pulses = []
+                player.events = []
                 player.lastCount = e.beat.count
               }
-              player.pulses.push(pulse)
-              e.pulse = (s,b) => {
-                return player.pulses.map(p => p(s,b)).reduce((a,b)=>Math.max(a,b), 0)
-              }
-              player.lastEvent = e
+              e.pulse = pulse
+              player.events.push(e)
             })
         }
         let player = {
           play: play,
           id: playerId,
           type: playerType,
+        }
+        player.currentEvent = (s,b) => {
+          let es = player.events
+          if (!es) { return {pulse:()=>0} }
+          es = es.filter(e => {
+            let t = e.beat.time + (b-e.beat.count)*e.beat.duration
+            return (t > e.time-0.0001) && (t < e.endTime)
+          })
+          return es.length>0 ? es[0] : {pulse:()=>0}
         }
         let getEventsForBeat
         if (patternStr.startsWith('follow')) {
@@ -101,6 +107,10 @@ define((require) => {
     finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
   }
   let p
+  playerTypes.test = { play: (e) => {
+    e.endTime = e.time + e.dur
+    return {}
+  } }
 
   p = parsePlayer('p play xo, amp=2')
   assert('p', p.id)
@@ -108,9 +118,16 @@ define((require) => {
   assert('function', typeof p.play)
   assert(2, p.getEventsForBeat({count:0})[0].amp)
 
-  p = parsePlayer('p none 0, amp=2')
-  p.play([{amp:2, beat:{beatTime:0, count:0}}])
-  assert(2, p.lastEvent.amp)
+  p = parsePlayer('p test xo, dur=1/2')
+  p.play(p.getEventsForBeat({time:0, count:0, duration:1}))
+  assert('x', p.currentEvent(0,0).value)
+  assert('o', p.currentEvent(0,1/2).value)
+  assert(0, p.currentEvent(0,0).pulse(0,0))
+  assert(0.77, p.currentEvent(0,0).pulse(0,1/4))
+
+  p = parsePlayer('p test 0, amp=2')
+  p.play(p.getEventsForBeat({time:0, count:0, duration:1}))
+  assert(2, p.currentEvent(0,0).amp)
   
   p = parsePlayer('p play xo,// amp=2')
   assert(undefined, p.getEventsForBeat({count:0})[0].amp)

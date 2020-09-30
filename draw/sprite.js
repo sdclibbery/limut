@@ -59,6 +59,7 @@ define(function (require) {
     if (!s) { return () => {} }
     let startTime = params.time
     let endTime = params.time + evalParamEvent(params, 'sus', evalParamEvent(params, 'dur', 1)) * params.beat.duration
+    params.endTime = endTime
     let rate = evalParamEvent(params, 'rate', 1)
     let value = parseInt(evalParamEvent(params, 'value', '0'))
     if (value > 10) { value = value/5 }
