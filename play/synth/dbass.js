@@ -2,7 +2,7 @@
 define(function (require) {
   let system = require('play/system');
   let scale = require('music/scale');
-  let envelope = require('play/full-envelope')
+  let envelope = require('play/envelopes')
   let effects = require('play/effects')
   let pitchEffects = require('play/pitch-effects')
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
@@ -13,7 +13,7 @@ define(function (require) {
     let freq = scale.degreeToFreq(degree, evalPerEvent(params, 'oct', 2), evalPerEvent(params, 'scale'))
     let detuneSemis = evalPerEvent(params, 'detune', 0.25)
 
-    let vca = envelope(params, 0.03)
+    let vca = envelope(params, 0.03, 'full')
     let out = effects(params, vca)
     system.mix(out)
 

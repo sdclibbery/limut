@@ -1,7 +1,7 @@
 'use strict';
 define(function (require) {
   let system = require('play/system');
-  let envelope = require('play/pad-envelope')
+  let envelope = require('play/envelopes')
   let effects = require('play/effects')
 
   let processorCode = `
@@ -34,7 +34,7 @@ define(function (require) {
   system.audio.audioWorklet.addModule("data:text/javascript;charset=utf-8,"+encodeURIComponent(processorCode))
 
   return (params) => {
-    let vca = envelope(params, 0.1)
+    let vca = envelope(params, 0.1, 'pad')
     let out = effects(params, vca)
     system.mix(out)
 

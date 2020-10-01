@@ -5,7 +5,7 @@ define(function (require) {
   let effects = require('play/effects')
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
   let scale = require('music/scale');
-  let envelope = require('play/no-sus-envelope')
+  let envelope = require('play/envelopes')
 
   return (params) => {
     let degree = parseInt(params.sound) + evalPerEvent(params, 'add', 0)
@@ -17,7 +17,7 @@ define(function (require) {
     source.playbackRate.value = freq / samplePitch
     params.endTime = params.time + evalPerEvent(params, 'dur', 0.1)*params.beat.duration
 
-    let vca = envelope(params, 0.25)
+    let vca = envelope(params, 0.25, 'full')
     source.connect(vca)
     system.mix(effects(params, vca))
 

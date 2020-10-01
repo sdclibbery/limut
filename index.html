@@ -424,6 +424,9 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
+Envelope param to override choice of envelope type
+ Docs
+ Also constant envelope type to allow specifying per frame envelope with amp?
 Audio add should be evalled per frame
 Allow non integer note values
 root main var
@@ -435,8 +438,6 @@ Pluck/guitar synths
  https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
  https://github.com/ronkot/ks-guitar-synth/blob/master/src/js/guitar-string.js
  https://github.com/mohayonao/pluck-string-node/blob/master/index.js
-Envelope param to override choice of envelope type
- Constant envelope type to allow specifying per frame envelope with amp?
 Nice gentle pads
 FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
 'X' doesn't work on mobile
@@ -481,10 +482,11 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Possible bug: Can applying overrides stop @f behaviour?
+[0,1,2]e[0,.1,1] which would interpolate between values through the event time
+ - or should it just start from event start time, but still be in beats? or should that be another syntax again?
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way??
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 []n syntax for perlin noise; ie for continuous noise as opposed to random
-[0,1,2]e[0,.1,1] which would interpolate between values through the event time
 extending patterns like every/sometimes/offadd/stutter etc
 "on next 4 " / "on next 28 of 32 " syntax to execute a line on the next beat count
   - but how not to repeat this if rerun? replace now/next in source with actual count?

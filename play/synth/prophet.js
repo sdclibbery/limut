@@ -3,7 +3,7 @@ define(function (require) {
   let system = require('play/system')
   require('play/pwm')
   let scale = require('music/scale')
-  let envelope = require('play/full-envelope')
+  let envelope = require('play/envelopes')
   let effects = require('play/effects')
   let pitchEffects = require('play/pitch-effects')
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
@@ -15,7 +15,7 @@ define(function (require) {
     let detuneSemis = evalPerEvent(params, 'detune', 0.1)
     let lfo = evalPerEvent(params, 'lfo', 1/4)
 
-    let vca = envelope(params, 0.02)
+    let vca = envelope(params, 0.02, 'full')
     system.mix(effects(params, vca))
 
     let lfoOsc = system.audio.createOscillator()
