@@ -31,6 +31,8 @@ define(function(require) {
       }
       return v
     }
+    let v = result(0,0)
+    result.interval = v && v.interval
     return result
   }
 
@@ -49,7 +51,7 @@ define(function(require) {
   assert(3, state.idx)
   vars.foo = 'baz'
   assert('baz', p())
-  vars.foo = undefined
+  delete vars.foo
 
   vars['foo.woo'] = 'bar'
   p = varLookup({str:'foo.woo',idx:0})
@@ -59,7 +61,7 @@ define(function(require) {
   vars['foo'] = 'bar'
   p = varLookup({str:'FoO',idx:0})
   assert('bar', p())
-  vars['foo'] = undefined
+  delete vars.foo
 
   players.instances.p1 = { currentEvent:(s,b)=>{ return {foo:b}} }
   p = varLookup({str:'p1.foo',idx:0})
@@ -69,6 +71,11 @@ define(function(require) {
 
   p = varLookup({str:'p1.foo',idx:0})
   assert(0, p())
+
+  vars['foo'] = {interval:'event'}
+  p = varLookup({str:'foo',idx:0})
+  assert('event', p.interval)
+  delete vars.foo
 
   console.log('Parse var tests complete')
 

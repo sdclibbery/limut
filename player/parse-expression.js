@@ -414,7 +414,7 @@ define(function(require) {
       let v = varLookup(state)
       if (v !== undefined) {
         lhs = v
-        lhs.interval = parseInterval(state) || 'frame'
+        lhs.interval = parseInterval(state) || v.interval || 'frame'
         // console.log('var', lhs, state)
         continue
       }
