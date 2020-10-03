@@ -293,7 +293,8 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>rate</code> Playback rate for 'play' samples, animation rate for visuals</p>
 <h6>Audio</h6>
 <p><code>add</code> Amount to add onto event scale degree, in degrees</p>
-<p><code>oct</code> Octave</p>
+<p><code>oct</code> Octave; middle C is in octave 4</p>
+<p><code>envelope</code> Specify the envelope type to use: 'full' (ADSR), 'simple' (AD), 'pad' (uses a sine roll on/off so consecutive notes maintain constant volume)</p>
 <p><code>echo</code> Echo time delay in beats</p>
 <p><code>detune</code> Amount of detune in semitones</p>
 <p><code>lpf</code> Low pass filter frequency</p>
@@ -424,12 +425,12 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-Envelope param to override choice of envelope type
- Docs
- Also constant envelope type to allow specifying per frame envelope with amp?
+Error: Run Error from player dsf: NotSupportedError: AudioParam.linearRampToValueAtTime: Can't add events during a curve event
+ padEnvelope@https://sdclibbery.github.io/limut/play/envelopes.js:62:14
 Audio add should be evalled per frame
 Allow non integer note values
 root main var
+Constant envelope type to allow specifying per frame envelope with amp?
 AudioWorklet freeverb with webaseembly
 Chorus effect
 pan param
@@ -482,6 +483,7 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Possible bug: Can applying overrides stop @f behaviour?
+Various errors when using player.params
 [0,1,2]e[0,.1,1] which would interpolate between values through the event time
  - or should it just start from event start time, but still be in beats? or should that be another syntax again?
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way??
