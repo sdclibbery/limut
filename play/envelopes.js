@@ -50,10 +50,10 @@ define(function (require) {
   }
 
   let padEnvelope = (params, gainBase) => {
-    let dur = Math.max(0.01, evalPerEvent(params, 'sus', evalPerEvent(params, 'dur', 0.25)))
-    let attack = evalPerEvent(params, 'att', dur/2) * params.beat.duration
-    let release = evalPerEvent(params, 'rel', dur/2) * params.beat.duration
-    let sus = Math.max(dur*params.beat.duration - attack, 0)
+    let dur = Math.max(evalPerEvent(params, 'sus', evalPerEvent(params, 'dur', 0.25)), 0.01)
+    let attack = Math.max(evalPerEvent(params, 'att', dur/2) * params.beat.duration, 0.001)
+    let release = Math.max(evalPerEvent(params, 'rel', dur/2) * params.beat.duration, 0.001)
+    let sus = Math.max(dur*params.beat.duration - attack, 0.001)
     let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     let vca = system.audio.createGain()
     vca.gain.cancelScheduledValues(system.audio.currentTime)

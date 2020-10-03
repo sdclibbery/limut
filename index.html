@@ -425,10 +425,8 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-Error: Run Error from player dsf: NotSupportedError: AudioParam.linearRampToValueAtTime: Can't add events during a curve event
- padEnvelope@https://sdclibbery.github.io/limut/play/envelopes.js:62:14
-Audio add should be evalled per frame
-Allow non integer note values
+Audio add should be evalled per frame and allow non int
+ OR? new param for non integer semitone add? or both? or both but 'to integer' is a function/cast/whatever?
 root main var
 Constant envelope type to allow specifying per frame envelope with amp?
 AudioWorklet freeverb with webaseembly
