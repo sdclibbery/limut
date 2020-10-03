@@ -49,7 +49,7 @@ define(function (require) {
     return {x:param(v.x, d.x), y:param(v.y, d.y), w:param(v.w, d.w), h:param(v.h, d.h)}
   }
 
-  let play = (shader, defFore, defBack, params) => {
+  let play = (shader, defFore, defBack, params, defParams) => {
     let s
     if (typeof shader === 'function') {
       s = shader(params)
@@ -66,10 +66,10 @@ define(function (require) {
     if (Number.isNaN(value)) { value = evalParamEvent(params, 'value', '0').charCodeAt(0) - 32 }
     let pulse = evalParamEvent(params, 'pulse', 0)
     let sway = evalParamEvent(params, 'sway', 0)
-    let additive = evalParamEvent(params, 'additive', 0)
+    let additive = evalParamEvent(params, 'additive', defParams.additive || 0)
     let url = evalParamEvent(params, 'url', 'favicon-32x32.png')
     let window = evalParamEvent(params, 'window', false)
-    let fade = evalParamEvent(params, 'fade', 0)
+    let fade = evalParamEvent(params, 'fade', defParams.fade || 0)
     return state => { // per frame
       if (state.time > endTime) { return false }
       let amp = Math.min(evalParamFrame(params, 'amp', 1, state.count), 5)
@@ -125,8 +125,8 @@ define(function (require) {
     }
   }
 
-  return (shader, defFore, defBack) => (params) => {
+  return (shader, defFore, defBack, defParams) => (params) => {
     let zorder = param(params.zorder, param(params.linenum, 0)/1000)
-    system.add(params.time, play(shader, defFore, defBack, params), zorder)
+    system.add(params.time, play(shader, defFore, defBack, params, defParams || {}), zorder)
   }
 })

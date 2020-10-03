@@ -276,6 +276,8 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>lines</code> Twisting lines</p>
 <p><code>blob</code> Morphing 3D blob</p>
 <p><code>streetlight</code> Looking up at the passing streetlights on a night drive</p>
+<p><code>grid</code> Square grid</p>
+<p><code>glow</code> Additive glow for lights, sparks etc</p>
 <p><code>shadertoy</code> Display a shadertoy synth. Use the <code>id</code> param to specify which shader. Only shaders published with the 'public+api' option are available, others will give error 'Shader not found'. At present, shaders that use textures or multiple channels will also not work.</p>
 <p><code>image</code> Display an online image. Use the <code>url</code> param to specify the image url. The image must be served using CORS. by default the image <code>back</code> is transparent.</p>
 </div>
@@ -340,8 +342,14 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>main.reverb</code> Main reverb amplitude control. Value resets unless set every time the code is updated.</p>
 <p><code>scale</code> Scale eg minor, major, chromatic, majorpentatonic, lydian etc etc. Value resets unless set every time the code is updated.</p>
 <p><code>drop6_2</code> Predefined time var: equivalent to <code>[1,0]t[6.2]</code>. These are all the predefined drops: drop6_2, drop7_1, drop12_4, drop14_2, drop15_1, drop24_8, drop28_4, drop30_2, drop31_1, drop56_8, drop60_4, drop62_2, drop63_1</p>
-<p><code>tile_full</code> Predefined loc param map to cover the full screen: equivalent to <code>{x:0,y:0,w:1,h:1}</code>. Other predefined locations: tile_tl/tr/bl/br/m, tile_h1/2/3/4/5, tile_v1/2/3/4/5, tile_random, tile_rand, fullscreen</p>
-<p><code>transparent</code> Predefined colour. Others: black, darkgray, gray, lightgray, white, red, orange, yellow, green, blue, indigo, violet, neonpink, neongreen, rainbow, random</p>
+<p><code>tile_full</code> Predefined loc param map to cover the full screen: equivalent to <code>{x:0,y:0,w:1,h:1}</code>. Other predefined locations: tile_tl/tr/bl/br/m, tile_h1/2/3/4/5, tile_v1/2/3/4/5</p>
+<p><code>fullscreen</code> Tile covering the full screen</p>
+<p><code>tile_random</code> Tile in a random location</p>
+<p><code>tile_rand</code> Tile in a random location</p>
+<p><code>sparkle</code> Tile in a random location</p>
+<p><code>transparent</code> Predefined colour. Others: black, darkgray, gray, lightgray, white, red, orange, yellow, green, blue, indigo, violet, neonpink, neongreen</p>
+<p><code>random</code> Random colour</p>
+<p><code>rainbow</code> Colour changing through the rainbow</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-play-samples')">▶ Play Samples</h4>
 <div id="accordion-play-samples" class="closed">
@@ -460,10 +468,12 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-Webcam synth
 sparkle synth; each event is a sparkle onscreen
- and/or, loc=sparkle somehow?
- also fireflies synth
+ spark predefined var for location and size
+  Docs
+ firefly predefined var to move with noise
+  Docs
+Webcam synth
 colours can be defined using hsl/hsv instead of rgb - or better a perceptually uniform space
 Visual add, should be per frame and non integer
 Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
@@ -480,10 +490,12 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-Possible bug: Can applying overrides stop @f behaviour?
-Various errors when using player.params
+@e doesnt work for (predefined) vars that are evaluated per frame; eg loc=tile_random
+ ??!! Should (predefined) vars actually be more like macros rather than expressions?
 [0,1,2]e[0,.1,1] which would interpolate between values through the event time
  - or should it just start from event start time, but still be in beats? or should that be another syntax again?
+Possible bug: Can applying overrides stop @f behaviour?
+Various errors when using player.params
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way??
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 []n syntax for perlin noise; ie for continuous noise as opposed to random
