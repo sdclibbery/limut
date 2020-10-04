@@ -4,7 +4,7 @@ define(function(require) {
 
   let expression = (state) => {
     // console.log('expression', state)
-    let result = {}
+    let result = {eval:'constant', type:'undefined'}
     let char
     while (char = state.str.charAt(state.idx)) {
       if (char === '') { break }
@@ -18,19 +18,17 @@ define(function(require) {
       // number
       let n = number(state)
       if (n !== undefined) {
-        result.value = n
-        result.eval = 'constant'
+        result = {value: n, eval: 'constant', type: 'number' }
         // console.log('number', result, state)
         continue
       }
       break
     }
-    if (!result.eval && typeof result.value !== 'function') { result.eval = 'constant' }
     return result
   }
   
   let parseExpression = (v, commented) => {
-    if (v == '' || v == undefined) { return {eval:'constant'} }
+    if (v == '' || v == undefined) { return {eval:'constant',type:'undefined'} }
     // console.log('*** parseExpression', v)
     v = v.trim()
     let state = {
@@ -55,15 +53,15 @@ define(function(require) {
     assert(true, commented)
   }
 
-  assert({eval:'constant'}, parseExpression())
-  assert({eval:'constant'}, parseExpression(''))
-  assertCommented({eval:'constant'}, '//')
+  assert({eval:'constant',type:'undefined'}, parseExpression())
+  assert({eval:'constant',type:'undefined'}, parseExpression(''))
+  assertCommented({eval:'constant',type:'undefined'}, '//')
 
-  assert({value:1, eval:'constant'}, parseExpression('1'))
-  assert({value:-1.1, eval:'constant'}, parseExpression('-1.1'))
-  assert({value:0.5, eval:'constant'}, parseExpression('1/2'))
-  assertCommented({eval:'constant'}, '//1')
-  assertCommented({value:1, eval:'constant'}, '1//')
+  assert({value:1, eval:'constant',type:'number'}, parseExpression('1'))
+  assert({value:-1.1, eval:'constant',type:'number'}, parseExpression('-1.1'))
+  assert({value:0.5, eval:'constant',type:'number'}, parseExpression('1/2'))
+  assertCommented({eval:'constant',type:'undefined'}, '//1')
+  assertCommented({value:1, eval:'constant',type:'number'}, '1//')
 
   console.log('Parse expression tests complete')
 

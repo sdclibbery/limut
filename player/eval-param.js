@@ -1,5 +1,6 @@
 'use strict';
 define((require) => {
+  require('player/expression/eval')
 
   let evalParamNow = (evalParam, value, step, beat, stopAtTuple) => {
     if (Array.isArray(value)) {
@@ -95,7 +96,7 @@ define((require) => {
   assert('frame', evalParamToTuple(()=>[perFrameValue], 0, 0)[0].interval)
   assert(4, evalParamToTuple(()=>[perEventValue], 0, 0)[0])
 
-  console.log('Eval param tests complete')
+  console.log('Eval param (old) tests complete')
 
   return {
     evalParamEvent:evalParamEvent,
