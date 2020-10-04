@@ -468,11 +468,10 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-sparkle synth; each event is a sparkle onscreen
- spark predefined var for location and size
-  Docs
- firefly predefined var to move with noise
-  Docs
+spark predefined var for location and size
+ Waiting on ability to mix @e and @f values...
+firefly predefined var to move with noise
+improve sparkle shader: value should change size of spikes
 Webcam synth
 colours can be defined using hsl/hsv instead of rgb - or better a perceptually uniform space
 Visual add, should be per frame and non integer
@@ -490,13 +489,15 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+Cannot mix @e and @f properly; eg '[0:1]r@e+[0:1]l@f'
+ Will have to completely rewrite event parsing? To produce an eval-tree, copied into each event, parts of which can be replaced by constants on event creation
+[]n syntax for perlin noise; ie for continuous noise as opposed to random
 [0,1,2]e[0,.1,1] which would interpolate between values through the event time
  - or should it just start from event start time, but still be in beats? or should that be another syntax again?
 Possible bug: Can applying overrides stop @f behaviour?
 Various errors when using player.params
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way??
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
-[]n syntax for perlin noise; ie for continuous noise as opposed to random
 extending patterns like every/sometimes/offadd/stutter etc
 "on next 4 " / "on next 28 of 32 " syntax to execute a line on the next beat count
   - but how not to repeat this if rerun? replace now/next in source with actual count?
