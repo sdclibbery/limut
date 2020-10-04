@@ -26,11 +26,32 @@ define(function(require) {
     return result
   }
 
+  let flattenOperators = (ops, e) => {
+    if (e.type.startsWith('operator')) {
+      flattenOperators(ops, e.lhs)
+      ops.push(e.type.slice(-1))
+      flattenOperators(ops, e.rhs)
+    } else {
+      ops.push(e)
+    }
+  }
+  let opPrecedence = {'%':1,'/':1,'*':1,'-':2,'+':2,}
   let parseOperators = (ops) => {
+    if (ops.length < 3) { return ops[0] }
+    let pivot = -1
+    let p = 0
+    for (let i=1; i < ops.length; i+=2) {
+      let opP = opPrecedence[ops[i]]
+      if (opP && opP > p) {
+        p = opP
+        pivot = i
+      }
+    }
+    if (pivot < 0) { return ops[0] }
     return {
-      type: 'operator'+ops[1],
-      lhs:ops[0],
-      rhs:ops[2],
+      type: 'operator'+ops[pivot],
+      lhs:parseOperators(ops.slice(0, pivot)),
+      rhs:parseOperators(ops.slice(pivot+1)),
     }
   }
 
@@ -55,7 +76,7 @@ define(function(require) {
           operatorList.push(expr)
           expr = {eval:'constant', type:'undefined'}
           operatorList.push(char)
-          operatorList.push(expression(state))
+          flattenOperators(operatorList, expression(state))
           continue
         }
       }
@@ -100,6 +121,7 @@ define(function(require) {
   }
 
   let num = (n,ev) => {return {value:n, eval:ev||'constant',type:'number'}}
+  let op = (op,l,r) => {return {type:'operator'+op, lhs:l, rhs:r}}
 
   assert({eval:'constant',type:'undefined'}, parseExpression())
   assert({eval:'constant',type:'undefined'}, parseExpression(''))
@@ -113,14 +135,19 @@ define(function(require) {
   assertCommented({eval:'constant',type:'undefined'}, '//1')
   assertCommented(num(1), '1//')
 
-  assert({type:'operator+',lhs:num(1),rhs:num(2)}, parseExpression('1+2'))
-  assert({type:'operator+',lhs:num(1,'event'),rhs:num(2,'frame')}, parseExpression('1@e+2@f'))
-  assert({type:'operator+',lhs:num(1),rhs:num(2)}, parseExpression(' 1 + 2 '))
-  assert({type:'operator+',lhs:num(-0.5),rhs:num(1.5)}, parseExpression('-1/2+1.5'))
-  assert({type:'operator*',lhs:num(1),rhs:num(2)}, parseExpression('1*2'))
-  assert({type:'operator/',lhs:num(1),rhs:num(2)}, parseExpression('1 / 2'))
-  assert({type:'operator-',lhs:num(1),rhs:num(2)}, parseExpression('1-2'))
-  assert({type:'operator%',lhs:num(1),rhs:num(2)}, parseExpression('1%2'))
+  assert(op('+',num(1),num(2)), parseExpression('1+2'))
+  assert(op('+',num(1,'event'),num(2,'frame')), parseExpression('1@e+2@f'))
+  assert(op('+',num(1),num(2)), parseExpression(' 1 + 2 '))
+  assert(op('+',num(-0.5),num(1.5)), parseExpression('-1/2+1.5'))
+  assert(op('*',num(1),num(2)), parseExpression('1*2'))
+  assert(op('/',num(1),num(2)), parseExpression('1 / 2'))
+  assert(op('-',num(1),num(2)), parseExpression('1-2'))
+  assert(op('%',num(1),num(2)), parseExpression('1%2'))
+
+  assert(op('+',num(1),op('+',num(2),num(3))), parseExpression('1+2+3'))
+  assert(op('+',num(1),op('*',num(2),num(3))), parseExpression('1+2*3'))
+  assert(op('+',op('*',num(1),num(2)),num(3)), parseExpression('1*2+3'))
+  assert(op('+',op('*',num(1),num(2)),op('+',op('*',num(3),num(4)),num(5))), parseExpression('1*2+3*4+5'))
 
   console.log('Parse expression tests complete')
 
