@@ -1,0 +1,71 @@
+'use strict';
+define(function(require) {
+  let number = require('player/parse-number')
+
+  let expression = (state) => {
+    // console.log('expression', state)
+    let result = {}
+    let char
+    while (char = state.str.charAt(state.idx)) {
+      if (char === '') { break }
+      if (char === ' ' || char === '\t' || char === '\n' || char === '\r') { state.idx += 1; continue }
+      if (char === '/' && state.str.charAt(state.idx+1) === '/') {
+        // comment
+        state.idx = state.str.length
+        state.commented = true
+        break
+      }
+      // number
+      let n = number(state)
+      if (n !== undefined) {
+        result.value = n
+        result.eval = 'constant'
+        // console.log('number', result, state)
+        continue
+      }
+      break
+    }
+    if (!result.eval && typeof result.value !== 'function') { result.eval = 'constant' }
+    return result
+  }
+  
+  let parseExpression = (v, commented) => {
+    if (v == '' || v == undefined) { return {eval:'constant'} }
+    // console.log('*** parseExpression', v)
+    v = v.trim()
+    let state = {
+      str: v,
+      idx: 0,
+    }
+    let result = expression(state)
+    if (commented && state.commented) { commented() }
+    return result
+  }
+
+  // TESTS //
+
+  let assert = (expected, actual) => {
+    let x = JSON.stringify(expected)
+    let a = JSON.stringify(actual)
+    if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
+  }
+  let assertCommented = (expected, str) => {
+    let commented = false
+    assert(expected, parseExpression(str, ()=>commented=true))
+    assert(true, commented)
+  }
+
+  assert({eval:'constant'}, parseExpression())
+  assert({eval:'constant'}, parseExpression(''))
+  assertCommented({eval:'constant'}, '//')
+
+  assert({value:1, eval:'constant'}, parseExpression('1'))
+  assert({value:-1.1, eval:'constant'}, parseExpression('-1.1'))
+  assert({value:0.5, eval:'constant'}, parseExpression('1/2'))
+  assertCommented({eval:'constant'}, '//1')
+  assertCommented({value:1, eval:'constant'}, '1//')
+
+  console.log('Parse expression tests complete')
+
+  return parseExpression
+})

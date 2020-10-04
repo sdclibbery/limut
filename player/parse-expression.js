@@ -6,6 +6,8 @@ define(function(require) {
   let operator = require('player/eval-operator')
   let varLookup = require('player/parse-var')
 
+  require('player/expression/parse')
+
   let timeVarSteps = (vs, ds) => {
     if (!Array.isArray(ds)) { ds = [ds] }
     let steps = []
@@ -829,7 +831,7 @@ define(function(require) {
   assertApprox(1, parseExpression("[0,1]l0.1@f")(0,0.1))
   assertApprox(0, parseExpression("[0,1]l0.1@f")(0,1))
 
-  console.log('Parse expression tests complete')
+  console.log('Parse expression (old) tests complete')
 
   return parseExpression
 })
