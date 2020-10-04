@@ -63,6 +63,7 @@ define(function(require) {
       let n = number(state)
       if (n !== undefined) {
         expr = {value: n, eval: 'constant', type: 'number' }
+        expr.eval = parseEval(state) || expr.eval
         continue
       }
       break
@@ -70,7 +71,6 @@ define(function(require) {
     if (operatorList.length > 0) {
       expr = parseOperators(operatorList)
     }
-    expr.eval = parseEval(state) || expr.eval
     return expr
   }
   
@@ -99,7 +99,7 @@ define(function(require) {
     assert(true, commented)
   }
 
-  let num = (n) => {return {value:n, eval:'constant',type:'number'}}
+  let num = (n,ev) => {return {value:n, eval:ev||'constant',type:'number'}}
 
   assert({eval:'constant',type:'undefined'}, parseExpression())
   assert({eval:'constant',type:'undefined'}, parseExpression(''))
@@ -108,12 +108,13 @@ define(function(require) {
   assert(num(1), parseExpression('1'))
   assert(num(-1.1), parseExpression('-1.1'))
   assert(num(0.5), parseExpression('1/2'))
-  assert({value:1, eval:'event',type:'number'}, parseExpression('1@e'))
-  assert({value:1, eval:'frame',type:'number'}, parseExpression('1@f'))
+  assert(num(1, 'event'), parseExpression('1@e'))
+  assert(num(1, 'frame'), parseExpression('1@f'))
   assertCommented({eval:'constant',type:'undefined'}, '//1')
   assertCommented(num(1), '1//')
 
   assert({type:'operator+',lhs:num(1),rhs:num(2)}, parseExpression('1+2'))
+  assert({type:'operator+',lhs:num(1,'event'),rhs:num(2,'frame')}, parseExpression('1@e+2@f'))
   assert({type:'operator+',lhs:num(1),rhs:num(2)}, parseExpression(' 1 + 2 '))
   assert({type:'operator+',lhs:num(-0.5),rhs:num(1.5)}, parseExpression('-1/2+1.5'))
   assert({type:'operator*',lhs:num(1),rhs:num(2)}, parseExpression('1*2'))
