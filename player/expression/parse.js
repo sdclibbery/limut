@@ -49,7 +49,7 @@ define(function(require) {
       }
       // operator
       if (expr.type !== 'undefined') {
-        if (['+','-','*','/'].includes(char)) {
+        if (['+','-','*','/','%'].includes(char)) {
           state.idx += 1
           eatWhitespace(state)
           operatorList.push(expr)
@@ -120,6 +120,7 @@ define(function(require) {
   assert({type:'operator*',lhs:num(1),rhs:num(2)}, parseExpression('1*2'))
   assert({type:'operator/',lhs:num(1),rhs:num(2)}, parseExpression('1 / 2'))
   assert({type:'operator-',lhs:num(1),rhs:num(2)}, parseExpression('1-2'))
+  assert({type:'operator%',lhs:num(1),rhs:num(2)}, parseExpression('1%2'))
 
   console.log('Parse expression tests complete')
 
