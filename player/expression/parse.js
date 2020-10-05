@@ -2,6 +2,7 @@
 define(function(require) {
   let number = require('player/parse-number')
   let operators = require('player/expression/operators')
+  let {constant, event, frame} = require('player/expression/eval-intervals')
 
   let eatWhitespace = (state) => {
     let char
@@ -18,17 +19,17 @@ define(function(require) {
       state.idx += 1
       if (state.str.charAt(state.idx) == 'f') {
         state.idx += 1
-        result = 'frame'
+        result = frame
       } else if (state.str.charAt(state.idx) == 'e') {
         state.idx += 1
-        result = 'event'
+        result = event
       }
     }
     return result
   }
 
   let expression = (state) => {
-    let expr = {eval:'constant', type:'undefined'}
+    let expr = {eval:constant, type:'undefined'}
     let operatorList = []
     let char
     while (char = state.str.charAt(state.idx)) {
@@ -46,7 +47,7 @@ define(function(require) {
           state.idx += 1
           eatWhitespace(state)
           operatorList.push(expr)
-          expr = {eval:'constant', type:'undefined'}
+          expr = {eval:constant, type:'undefined'}
           operatorList.push(char)
           operators.flatten(operatorList, expression(state))
           continue
@@ -55,7 +56,7 @@ define(function(require) {
       // number
       let n = number(state)
       if (n !== undefined) {
-        expr = {value: n, eval: 'constant', type: 'number' }
+        expr = {value: n, eval: constant, type: 'number' }
         parseEval(state)
         continue
       }
@@ -68,7 +69,7 @@ define(function(require) {
   }
   
   let parseExpression = (v, commented) => {
-    if (v == '' || v == undefined) { return {eval:'constant',type:'undefined'} }
+    if (v == '' || v == undefined) { return {eval:constant,type:'undefined'} }
     v = v.trim()
     let state = {
       str: v,
@@ -92,12 +93,12 @@ define(function(require) {
     assert(true, commented)
   }
 
-  let num = (n) => {return {value:n, eval:'constant',type:'number'}}
+  let num = (n) => {return {value:n, eval:constant,type:'number'}}
   let op = (op,l,r) => {return {type:'operator'+op, lhs:l, rhs:r}}
 
-  assert({eval:'constant',type:'undefined'}, parseExpression())
-  assert({eval:'constant',type:'undefined'}, parseExpression(''))
-  assertCommented({eval:'constant',type:'undefined'}, '//')
+  assert({eval:constant,type:'undefined'}, parseExpression())
+  assert({eval:constant,type:'undefined'}, parseExpression(''))
+  assertCommented({eval:constant,type:'undefined'}, '//')
 
   assert(num(1), parseExpression('1'))
   assert(num(-1.1), parseExpression('-1.1'))
@@ -106,7 +107,7 @@ define(function(require) {
   assert(num(1e9), parseExpression('1e9'))
   assert(num(1), parseExpression('1@e'))
   assert(num(1), parseExpression('1@f'))
-  assertCommented({eval:'constant',type:'undefined'}, '//1')
+  assertCommented({eval:constant,type:'undefined'}, '//1')
   assertCommented(num(1), '1//')
 
   assert(op('+',num(1),num(2)), parseExpression('1+2'))

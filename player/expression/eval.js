@@ -1,10 +1,11 @@
 'use strict';
 define(function(require) {
   let operators = require('player/expression/operators')
+  let {constant, event, frame} = require('player/expression/eval-intervals')
 
   let evalConstants = (e) => {
     let result
-    result = operators.eval(e, evalConstants)
+    result = operators.eval(e, evalConstants, constant)
     if (result) { return result }
     return e
   }
@@ -25,7 +26,7 @@ define(function(require) {
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
 
-  let num = (n,ev) => {return {value:n, eval:ev||'constant',type:'number'}}
+  let num = (n,ev) => {return {value:n, eval:ev||constant,type:'number'}}
   let op = (op,l,r) => {return {type:'operator'+op, lhs:l, rhs:r}}
 
   assert(num(1), evalConstants(num(1)))
