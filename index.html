@@ -490,6 +490,8 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Rewrite
+ extract operator code (parse and eval) to a module
+ module to manage eval intervals; specifically allowing comparison '<=event' etc
  event and frame eval operators
  parse brackets
 Cannot mix @e and @f properly; eg '[0:1]r@e+[0:1]l@f'

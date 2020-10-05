@@ -9,15 +9,21 @@ define(function(require) {
     'operator%': (l,r)=>l%r,
   }
 
-  let evalConstants = (e) => {
+  let opEval = (e, recurse) => {
     let op = ops[e.type]
     if (op) {
-      let lhs = evalConstants(e.lhs)
-      let rhs = evalConstants(e.rhs)
+      let lhs = recurse(e.lhs)
+      let rhs = recurse(e.rhs)
       if (lhs.eval == 'constant' && rhs.eval == 'constant') {
         return {value:op(lhs.value,rhs.value),eval:'constant',type:'number'}
       }
     }
+  }
+
+  let evalConstants = (e) => {
+    let result
+    result = opEval(e, evalConstants)
+    if (result) { return result }
     return e
   }
 
