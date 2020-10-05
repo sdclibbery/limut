@@ -1,28 +1,10 @@
 'use strict';
 define(function(require) {
-
-  let ops = {
-    'operator+': (l,r)=>l+r,
-    'operator-': (l,r)=>l-r,
-    'operator*': (l,r)=>l*r,
-    'operator/': (l,r)=>l/r,
-    'operator%': (l,r)=>l%r,
-  }
-
-  let opEval = (e, recurse) => {
-    let op = ops[e.type]
-    if (op) {
-      let lhs = recurse(e.lhs)
-      let rhs = recurse(e.rhs)
-      if (lhs.eval == 'constant' && rhs.eval == 'constant') {
-        return {value:op(lhs.value,rhs.value),eval:'constant',type:'number'}
-      }
-    }
-  }
+  let operators = require('player/expression/operators')
 
   let evalConstants = (e) => {
     let result
-    result = opEval(e, evalConstants)
+    result = operators.eval(e, evalConstants)
     if (result) { return result }
     return e
   }

@@ -1,6 +1,7 @@
 'use strict';
 define(function(require) {
   let number = require('player/parse-number')
+  let operators = require('player/expression/operators')
 
   let eatWhitespace = (state) => {
     let char
@@ -26,35 +27,6 @@ define(function(require) {
     return result
   }
 
-  let flattenOperators = (ops, e) => {
-    if (e.type.startsWith('operator')) {
-      flattenOperators(ops, e.lhs)
-      ops.push(e.type.slice(-1))
-      flattenOperators(ops, e.rhs)
-    } else {
-      ops.push(e)
-    }
-  }
-  let opPrecedence = {'%':1,'/':1,'*':1,'-':2,'+':2,}
-  let parseOperators = (ops) => {
-    if (ops.length < 3) { return ops[0] }
-    let pivot = -1
-    let p = 0
-    for (let i=1; i < ops.length; i+=2) {
-      let opP = opPrecedence[ops[i]]
-      if (opP && opP > p) {
-        p = opP
-        pivot = i
-      }
-    }
-    if (pivot < 0) { return ops[0] }
-    return {
-      type: 'operator'+ops[pivot],
-      lhs:parseOperators(ops.slice(0, pivot)),
-      rhs:parseOperators(ops.slice(pivot+1)),
-    }
-  }
-
   let expression = (state) => {
     let expr = {eval:'constant', type:'undefined'}
     let operatorList = []
@@ -70,13 +42,13 @@ define(function(require) {
       }
       // operator
       if (expr.type !== 'undefined') {
-        if (['+','-','*','/','%'].includes(char)) {
+        if (operators.list.includes(char)) {
           state.idx += 1
           eatWhitespace(state)
           operatorList.push(expr)
           expr = {eval:'constant', type:'undefined'}
           operatorList.push(char)
-          flattenOperators(operatorList, expression(state))
+          operators.flatten(operatorList, expression(state))
           continue
         }
       }
@@ -90,7 +62,7 @@ define(function(require) {
       break
     }
     if (operatorList.length > 0) {
-      expr = parseOperators(operatorList)
+      expr = operators.precedence(operatorList)
     }
     return expr
   }
