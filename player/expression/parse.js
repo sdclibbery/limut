@@ -84,7 +84,7 @@ define(function(require) {
       let n = number(state)
       if (n !== undefined) {
         expr = {value: n, eval: 'constant', type: 'number' }
-        expr.eval = parseEval(state) || expr.eval
+        parseEval(state)
         continue
       }
       break
@@ -120,7 +120,7 @@ define(function(require) {
     assert(true, commented)
   }
 
-  let num = (n,ev) => {return {value:n, eval:ev||'constant',type:'number'}}
+  let num = (n) => {return {value:n, eval:'constant',type:'number'}}
   let op = (op,l,r) => {return {type:'operator'+op, lhs:l, rhs:r}}
 
   assert({eval:'constant',type:'undefined'}, parseExpression())
@@ -132,13 +132,13 @@ define(function(require) {
   assert(num(0.5), parseExpression('1/2'))
   assert(num(0.123), parseExpression('.123'))
   assert(num(1e9), parseExpression('1e9'))
-  assert(num(1, 'event'), parseExpression('1@e'))
-  assert(num(1, 'frame'), parseExpression('1@f'))
+  assert(num(1), parseExpression('1@e'))
+  assert(num(1), parseExpression('1@f'))
   assertCommented({eval:'constant',type:'undefined'}, '//1')
   assertCommented(num(1), '1//')
 
   assert(op('+',num(1),num(2)), parseExpression('1+2'))
-  assert(op('+',num(1,'event'),num(2,'frame')), parseExpression('1@e+2@f'))
+  assert(op('+',num(1),num(2)), parseExpression('1@e+2@f'))
   assert(op('+',num(1),num(2)), parseExpression(' 1 + 2 '))
   assert(op('+',num(-0.5),num(1.5)), parseExpression('-1/2+1.5'))
   assert(op('*',num(1),num(2)), parseExpression('1*2'))
