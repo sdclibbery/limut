@@ -130,6 +130,8 @@ define(function(require) {
   assert(num(1), parseExpression('1'))
   assert(num(-1.1), parseExpression('-1.1'))
   assert(num(0.5), parseExpression('1/2'))
+  assert(num(0.123), parseExpression('.123'))
+  assert(num(1e9), parseExpression('1e9'))
   assert(num(1, 'event'), parseExpression('1@e'))
   assert(num(1, 'frame'), parseExpression('1@f'))
   assertCommented({eval:'constant',type:'undefined'}, '//1')
