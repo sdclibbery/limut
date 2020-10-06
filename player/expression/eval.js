@@ -13,7 +13,7 @@ define(function(require) {
 
   let evalEvent = (e, s,b) => {
     let result
-    result = operators.eval(e, evalEvent, event)
+    result = operators.eval(e, evalEvent, event,s,b)
     if (result) { return result }
     result = timevars.eval(e, evalEvent, event, s,b)
     if (result) { return result }
@@ -22,7 +22,9 @@ define(function(require) {
 
   let evalFrame = (e, b) => {
     let result
-    result = operators.eval(e, evalFrame, frame)
+    result = operators.eval(e, evalFrame, frame, undefined,b)
+    if (result) { return result }
+    result = timevars.eval(e, evalFrame, frame, undefined,b)
     if (result) { return result }
     return e
   }
@@ -57,11 +59,13 @@ define(function(require) {
   assert(num(19), evalConstants(op('+',op('*',num(1),num(2)),op('+',op('*',num(3),num(4)),num(5)))))
 
   assert(timevar([step(num(1),0,1),step(num(2),1,1)]), evalConstants(timevar([step(num(1),0,1),step(num(2),1,1)])))
+  assert(timevar([step(num(1),0,1),step(num(2),1,1)],frame), evalEvent(timevar([step(num(1),0,1),step(num(2),1,1)],frame), undefined, 0))
   assert(num(1), evalEvent(timevar([step(num(1),0,1),step(num(2),1,1)]), undefined, 0))
   assert(num(1), evalEvent(timevar([step(num(1),0,1),step(num(2),1,1)]), undefined, 0.5))
   assert(num(2), evalEvent(timevar([step(num(1),0,1),step(num(2),1,1)]), undefined, 1))
   assert(num(1), evalEvent(timevar([step(num(1),0,1),step(num(2),1,1)]), undefined, 2))
- // !! evalFrame
+  assert(num(1), evalFrame(timevar([step(num(1),0,1),step(num(2),1,1)]), undefined, 0))
+  assert(num(1), evalFrame(timevar([step(num(1),0,1),step(num(2),1,1)],frame), undefined, 0))
 
   console.log('Eval expression tests complete')
 

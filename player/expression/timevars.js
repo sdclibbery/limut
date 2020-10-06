@@ -24,7 +24,7 @@ define(function(require) {
   let timeVar = (steps, s,b) => {
     b = (b+0.0001) % steps.totalDuration
     let step = steps.filter(st => isInTimeVarStep(st, b) )[0]
-    return (step !== undefined) && step.value
+    return (step == undefined) ? steps[0].value : step.value
   }
 
   let evaluate = (e, evalExpression, maxInterval, s,b) => {
