@@ -490,10 +490,12 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Rewrite
- event and frame eval operators
- parse brackets
-Cannot mix @e and @f properly; eg '[0:1]r@e+[0:1]l@f'
- Will have to completely rewrite event parsing? To produce an eval-tree, copied into each event, parts of which can be replaced by constants on event creation
+ []t1 next
+  eval
+ setup toggle to actually use new expression parser/eval, and try it live
+ tuple
+ ... more types
+Check: Cannot mix @e and @f properly; eg '[0:1]r@e+[0:1]l@f'
 []n syntax for perlin noise; ie for continuous noise as opposed to random
 [0,1,2]e[0,.1,1] which would interpolate between values through the event time
  - or should it just start from event start time, but still be in beats? or should that be another syntax again?

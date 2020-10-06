@@ -123,7 +123,6 @@ define(function(require) {
     }
     return vs
   }
-
   let numberOrArrayOrFour = (state) => {
     let n = number(state)
     if (n !== undefined) {

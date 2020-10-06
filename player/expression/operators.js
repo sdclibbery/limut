@@ -37,9 +37,9 @@ define(function(require) {
     }
     if (pivot < 0) { return ops[0] }
     return {
-      type: 'operator'+ops[pivot],
       lhs:precedenceTree(ops.slice(0, pivot)),
       rhs:precedenceTree(ops.slice(pivot+1)),
+      type: 'operator'+ops[pivot],
     }
   }
 

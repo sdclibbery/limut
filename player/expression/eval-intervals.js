@@ -6,9 +6,9 @@ define(function(require) {
   }
 
   return {
-    constant: 0,
-    event: 1,
-    frame: 2,
+    constant: '0-constant',
+    event: '1-event',
+    frame: '2-frame',
     intervalLte: lte,
   }
 })

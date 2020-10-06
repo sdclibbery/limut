@@ -2,6 +2,7 @@
 define(function(require) {
   let number = require('player/parse-number')
   let operators = require('player/expression/operators')
+  let {array,expandColon,numberOrArrayOrFour} = require('player/expression/parse-arrays')
   let {constant, event, frame} = require('player/expression/eval-intervals')
 
   let eatWhitespace = (state) => {
@@ -33,13 +34,28 @@ define(function(require) {
     let operatorList = []
     let char
     while (char = state.str.charAt(state.idx)) {
+      // whitespace
       if (char === '') { break }
       if (char === ' ' || char === '\t' || char === '\n' || char === '\r') { state.idx += 1; continue }
+      // comment
       if (char === '/' && state.str.charAt(state.idx+1) === '/') {
-        // comment
         state.idx = state.str.length
         state.commented = true
         break
+      }
+      // array / time var / random
+      if (char == '[') {
+        let vs = array(state, '[', ']', expression)
+        if (state.str.charAt(state.idx).toLowerCase() == 't') {
+          state.idx += 1
+          expr = {
+            values: expandColon(vs),
+            durations: numberOrArrayOrFour(state),
+            eval: parseEval(state) || event,
+            type: 'timevar',
+          }
+          }
+        continue
       }
       // operator
       if (expr.type !== 'undefined') {
@@ -94,7 +110,7 @@ define(function(require) {
   }
 
   let num = (n) => {return {value:n, eval:constant,type:'number'}}
-  let op = (op,l,r) => {return {type:'operator'+op, lhs:l, rhs:r}}
+  let op = (op,l,r) => {return {lhs:l, rhs:r, type:'operator'+op}}
 
   assert({eval:constant,type:'undefined'}, parseExpression())
   assert({eval:constant,type:'undefined'}, parseExpression(''))
@@ -123,6 +139,8 @@ define(function(require) {
   assert(op('+',num(1),op('*',num(2),num(3))), parseExpression('1+2*3'))
   assert(op('+',op('*',num(1),num(2)),num(3)), parseExpression('1*2+3'))
   assert(op('+',op('*',num(1),num(2)),op('+',op('*',num(3),num(4)),num(5))), parseExpression('1*2+3*4+5'))
+
+  assert({values:[num(1),num(2)],durations:1,eval:event,type:'timevar'}, parseExpression('[1,2]t1'))
 
   console.log('Parse expression tests complete')
 
