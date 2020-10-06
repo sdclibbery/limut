@@ -4,6 +4,7 @@ define(function(require) {
 
   let timeVarSteps = (vs, ds) => {
     if (!Array.isArray(ds)) { ds = [ds] }
+    ds = ds.map(d => (typeof d =='number') ? d : d.value || 4)
     let steps = []
     let length = 0
     let step = 0

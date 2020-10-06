@@ -5,28 +5,20 @@ define(function(require) {
   let {constant, event, frame} = require('player/expression/eval-intervals')
 
   let evalConstants = (e) => {
-    let result
-    result = operators.eval(e, evalConstants, constant)
-    if (result) { return result }
-    return e
+    return operators.eval(e, evalConstants, constant)
+      || e
   }
 
   let evalEvent = (e, s,b) => {
-    let result
-    result = operators.eval(e, evalEvent, event,s,b)
-    if (result) { return result }
-    result = timevars.eval(e, evalEvent, event, s,b)
-    if (result) { return result }
-    return e
+    return operators.eval(e, evalEvent, event,s,b)
+      || timevars.eval(e, evalEvent, event, s,b)
+      || e
   }
 
   let evalFrame = (e, b) => {
-    let result
-    result = operators.eval(e, evalFrame, frame, undefined,b)
-    if (result) { return result }
-    result = timevars.eval(e, evalFrame, frame, undefined,b)
-    if (result) { return result }
-    return e
+    return operators.eval(e, evalFrame, frame, undefined,b)
+      || timevars.eval(e, evalFrame, frame, undefined,b)
+      || e
   }
 
   // TESTS //
@@ -37,10 +29,15 @@ define(function(require) {
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
 
+  let none = {eval:constant,type:'undefined'}
   let num = (n,ev) => {return {value:n, eval:ev||constant,type:'number'}}
   let op = (op,l,r) => {return {lhs:l, rhs:r, type:'operator'+op}}
   let step = (v,t,d) => {return {value:v, time:t, duration:d}}
   let timevar = (ss,ev) => {ss.totalDuration=ss.reduce((a,b)=>a+b.duration,0); return {steps:ss, eval:ev||event, type:'timevar'}}
+
+  assert(none, evalConstants(none))
+  assert(none, evalEvent(none))
+  assert(none, evalFrame(none))
 
   assert(num(1), evalConstants(num(1)))
   assert(num(1), evalEvent(num(1)))
@@ -66,6 +63,7 @@ define(function(require) {
   assert(num(1), evalEvent(timevar([step(num(1),0,1),step(num(2),1,1)]), undefined, 2))
   assert(num(1), evalFrame(timevar([step(num(1),0,1),step(num(2),1,1)]), undefined, 0))
   assert(num(1), evalFrame(timevar([step(num(1),0,1),step(num(2),1,1)],frame), undefined, 0))
+  assert(none, evalFrame(timevar([step(none,0,4)]), undefined, 0))
 
   console.log('Eval expression tests complete')
 

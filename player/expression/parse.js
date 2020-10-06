@@ -50,7 +50,7 @@ define(function(require) {
         if (state.str.charAt(state.idx).toLowerCase() == 't') {
           state.idx += 1
           expr = {
-            steps: timeVarSteps(expandColon(vs), numberOrArrayOrFour(state)),
+            steps: timeVarSteps(expandColon(vs), numberOrArrayOrFour(state, expression)),
             eval: parseEvalInterval(state) || event,
             type: 'timevar',
           }
@@ -109,12 +109,15 @@ define(function(require) {
     assert(true, commented)
   }
 
+  let none = {eval:constant,type:'undefined'}
   let num = (n) => {return {value:n, eval:constant,type:'number'}}
   let op = (op,l,r) => {return {lhs:l, rhs:r, type:'operator'+op}}
+  let step = (v,t,d) => {return {value:v, time:t, duration:d}}
+  let timevar = (ss,ev) => {ss.totalDuration=ss.reduce((a,b)=>a+b.duration,0); return {steps:ss, eval:ev||event, type:'timevar'}}
 
-  assert({eval:constant,type:'undefined'}, parseExpression())
-  assert({eval:constant,type:'undefined'}, parseExpression(''))
-  assertCommented({eval:constant,type:'undefined'}, '//')
+  assert(none, parseExpression())
+  assert(none, parseExpression(''))
+  assertCommented(none, '//')
 
   assert(num(1), parseExpression('1'))
   assert(num(-1.1), parseExpression('-1.1'))
@@ -123,7 +126,7 @@ define(function(require) {
   assert(num(1e9), parseExpression('1e9'))
   assert(num(1), parseExpression('1@e'))
   assert(num(1), parseExpression('1@f'))
-  assertCommented({eval:constant,type:'undefined'}, '//1')
+  assertCommented(none, '//1')
   assertCommented(num(1), '1//')
 
   assert(op('+',num(1),num(2)), parseExpression('1+2'))
@@ -140,7 +143,13 @@ define(function(require) {
   assert(op('+',op('*',num(1),num(2)),num(3)), parseExpression('1*2+3'))
   assert(op('+',op('*',num(1),num(2)),op('+',op('*',num(3),num(4)),num(5))), parseExpression('1*2+3*4+5'))
 
-  assert({steps:[{value:num(1),time:0,duration:1},{value:num(2),time:1,duration:1}],eval:event,type:'timevar'}, parseExpression('[1,2]t1'))
+  assert(timevar([step(none,0,4)]), parseExpression('[]t'))
+  assert(timevar([step(none,0,4)]), parseExpression('[]t[]'))
+  assert(timevar([step(num(1),0,4)]), parseExpression('[1]t'))
+  assert(timevar([step(num(1),0,4),step(num(2),4,4)]), parseExpression('[1,2]t'))
+  assert(timevar([step(num(1),0,3),step(num(2),3,3)]), parseExpression('[1,2]t3'))
+  assert(timevar([step(num(1),0,3),step(num(2),3,4)]), parseExpression('[1,2]t[3,4]'))
+  assert(timevar([step(num(1),0,4),step(num(2),4,4)]), parseExpression('[1,2]t[]'))
 
   console.log('Parse expression tests complete')
 

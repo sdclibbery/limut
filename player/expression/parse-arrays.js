@@ -55,13 +55,13 @@ define(function(require) {
     return vs
   }
 
-  let numberOrArrayOrFour = (state) => {
+  let numberOrArrayOrFour = (state, expressionParser) => {
     let n = number(state)
     if (n !== undefined) {
       return n
     } else {
       if (state.str.charAt(state.idx) == '[') {
-        let ds = array(state, '[', ']')
+        let ds = array(state, '[', ']', expressionParser)
         return ds
       } else {
         return 4
