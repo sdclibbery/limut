@@ -492,8 +492,10 @@ shadertoy synth multiple channels
 Rewrite
  []t1 next
   eval
+ if interval not explicit, set from values before using default
  setup toggle to actually use new expression parser/eval, and try it live
  tuple
+ unary minus operator
  ... more types
 Check: Cannot mix @e and @f properly; eg '[0:1]r@e+[0:1]l@f'
 []n syntax for perlin noise; ie for continuous noise as opposed to random

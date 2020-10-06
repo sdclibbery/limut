@@ -2,6 +2,7 @@
 define(function(require) {
   let number = require('player/parse-number')
   let operators = require('player/expression/operators')
+  let {timeVarSteps} = require('player/expression/timevars')
   let {array,expandColon,numberOrArrayOrFour} = require('player/expression/parse-arrays')
   let {constant, event, frame} = require('player/expression/eval-intervals')
 
@@ -13,7 +14,7 @@ define(function(require) {
     }
   }
 
-  let parseEval = (state) => {
+  let parseEvalInterval = (state) => {
     eatWhitespace(state)
     let result
     if (state.str.charAt(state.idx) == '@') {
@@ -49,9 +50,8 @@ define(function(require) {
         if (state.str.charAt(state.idx).toLowerCase() == 't') {
           state.idx += 1
           expr = {
-            values: expandColon(vs),
-            durations: numberOrArrayOrFour(state),
-            eval: parseEval(state) || event,
+            steps: timeVarSteps(expandColon(vs), numberOrArrayOrFour(state)),
+            eval: parseEvalInterval(state) || event,
             type: 'timevar',
           }
           }
@@ -73,7 +73,7 @@ define(function(require) {
       let n = number(state)
       if (n !== undefined) {
         expr = {value: n, eval: constant, type: 'number' }
-        parseEval(state)
+        parseEvalInterval(state)
         continue
       }
       break
@@ -140,7 +140,7 @@ define(function(require) {
   assert(op('+',op('*',num(1),num(2)),num(3)), parseExpression('1*2+3'))
   assert(op('+',op('*',num(1),num(2)),op('+',op('*',num(3),num(4)),num(5))), parseExpression('1*2+3*4+5'))
 
-  assert({values:[num(1),num(2)],durations:1,eval:event,type:'timevar'}, parseExpression('[1,2]t1'))
+  assert({steps:[{value:num(1),time:0,duration:1},{value:num(2),time:1,duration:1}],eval:event,type:'timevar'}, parseExpression('[1,2]t1'))
 
   console.log('Parse expression tests complete')
 

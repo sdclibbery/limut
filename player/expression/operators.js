@@ -45,12 +45,11 @@ define(function(require) {
 
   let evaluate = (e, evalExpression, maxInterval) => {
     let op = ops[e.type]
-    if (op) {
-      let lhs = evalExpression(e.lhs)
-      let rhs = evalExpression(e.rhs)
-      if (intervalLte(lhs.eval, maxInterval) && intervalLte(rhs.eval, maxInterval)) {
-        return {value:op(lhs.value,rhs.value), eval:maxInterval, type:'number'}
-      }
+    if (!op) { return }
+    let lhs = evalExpression(e.lhs)
+    let rhs = evalExpression(e.rhs)
+    if (intervalLte(lhs.eval, maxInterval) && intervalLte(rhs.eval, maxInterval)) {
+      return {value:op(lhs.value,rhs.value), eval:maxInterval, type:'number'}
     }
   }
 
