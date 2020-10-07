@@ -4,7 +4,7 @@ define(function(require) {
   let operators = require('player/expression/operators')
   let {timeVarSteps} = require('player/expression/timevars')
   let {array,expandColon,numberOrArrayOrFour} = require('player/expression/parse-arrays')
-  let {constant, event, frame} = require('player/expression/eval-intervals')
+  let {constant, event, frame, intervalMax} = require('player/expression/eval-intervals')
 
   let eatWhitespace = (state) => {
     let char
@@ -49,9 +49,10 @@ define(function(require) {
         let vs = array(state, '[', ']', expression)
         if (state.str.charAt(state.idx).toLowerCase() == 't') {
           state.idx += 1
+          vs = expandColon(vs)
           expr = {
-            steps: timeVarSteps(expandColon(vs), numberOrArrayOrFour(state, expression)),
-            eval: parseEvalInterval(state) || event,
+            steps: timeVarSteps(vs, numberOrArrayOrFour(state, expression)),
+            eval: parseEvalInterval(state) || intervalMax(vs.map(v=>v.eval), event),
             type: 'timevar',
           }
           }
@@ -153,6 +154,7 @@ define(function(require) {
 
   assert(timevar([step(op('+',num(1),num(2)),0,4)]), parseExpression('[1+2]t'))
   assert(timevar([step(timevar([step(num(1),0,3),step(num(2),3,3)]),0,4)]), parseExpression('[[1,2]t3]t4'))
+  assert(frame, parseExpression('[[1]t1@f]t').eval)
   //assert(timevar([step(op('+',num(1),num(2)),0,4)]), parseExpression('[1]t[1+2]'))
 
   console.log('Parse expression tests complete')

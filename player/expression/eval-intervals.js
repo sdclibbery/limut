@@ -8,8 +8,8 @@ define(function(require) {
     intervalLte: (l,r) => l<=r,
   }
 
-  intervals.intervalMax = (es) => {
-    return es.reduce((a,e) => (e>a)?e:a, intervals.constant)
+  intervals.intervalMax = (es, ...more) => {
+    return es.concat(more).reduce((a,e) => (e>a)?e:a, intervals.constant)
   }
 
   return intervals
