@@ -35,6 +35,8 @@ define(function(require) {
   let step = (v,t,d) => {return {value:v, time:t, duration:d}}
   let timevar = (ss,ev) => {ss.totalDuration=ss.reduce((a,b)=>a+b.duration,0); return {steps:ss, eval:ev||event, type:'timevar'}}
 
+  let parseExpression = require('player/expression/parse')
+
   assert(none, evalConstants(none))
   assert(none, evalEvent(none))
   assert(none, evalFrame(none))
@@ -52,10 +54,9 @@ define(function(require) {
   assert(num(3), evalEvent(op('+',num(1),num(2))))
   assert(num(3), evalFrame(op('+',num(1),num(2))))
 
-  assert(num(6), evalConstants(op('+',num(1),op('+',num(2),num(3)))))
-  assert(num(19), evalConstants(op('+',op('*',num(1),num(2)),op('+',op('*',num(3),num(4)),num(5)))))
+  assert(num(6), evalConstants(parseExpression('1+2+3')))
+  assert(num(19), evalConstants(parseExpression('1*2+3*4+5')))
 
-  // Basic timevar
   assert(timevar([step(num(1),0,1),step(num(2),1,1)]), evalConstants(timevar([step(num(1),0,1),step(num(2),1,1)])))
   assert(timevar([step(num(1),0,1),step(num(2),1,1)],frame), evalEvent(timevar([step(num(1),0,1),step(num(2),1,1)],frame), 0, undefined))
   assert(num(1), evalEvent(timevar([step(num(1),0,1),step(num(2),1,1)]), 0, undefined))
@@ -66,17 +67,16 @@ define(function(require) {
   assert(num(1), evalFrame(timevar([step(num(1),0,1),step(num(2),1,1)],frame), 0))
   assert(none, evalFrame(timevar([step(none,0,4)]), 0))
 
-  // timevars nested with other values 
-  assert(num(3), evalEvent(timevar([step(op('+',num(1),num(2)),0,4)]), 0, undefined))
-  assert(num(1), evalEvent(timevar([step(timevar([step(num(1),0,1),step(num(2),1,1)]),0,4),step(num(3),4,4)]), 0, undefined))
-  assert(num(2), evalEvent(timevar([step(timevar([step(num(1),0,1),step(num(2),1,1)]),0,4),step(num(3),4,4)]), 1, undefined))
-  assert(num(1), evalEvent(timevar([step(timevar([step(num(1),0,1),step(num(2),1,1)]),0,4),step(num(3),4,4)]), 2, undefined))
-  assert(num(2), evalEvent(timevar([step(timevar([step(num(1),0,1),step(num(2),1,1)]),0,4),step(num(3),4,4)]), 3, undefined))
-  assert(num(3), evalEvent(timevar([step(timevar([step(num(1),0,1),step(num(2),1,1)]),0,4),step(num(3),4,4)]), 4, undefined))
-  assert(num(1), evalEvent(timevar([step(timevar([step(num(1),0,1),step(num(2),1,1)]),0,4),step(num(3),4,4)]), 8, undefined))
-  assert(num(4), evalEvent(op('+',timevar([step(num(1),0,1),step(num(2),1,1)]),num(3)), 0, undefined))
-  assert(num(5), evalEvent(op('+',timevar([step(num(1),0,1),step(num(2),1,1)]),num(3)), 1, undefined))
-  assert(op('+',timevar([step(num(1),0,1),step(num(2),1,1)],frame),num(3)), evalEvent(op('+',timevar([step(num(1),0,1),step(num(2),1,1)],frame),num(3)), 1, undefined))
+  assert(num(3), evalEvent(parseExpression('[1+2]t'), 0, undefined))
+  assert(num(1), evalEvent(parseExpression('[[1,2]t1,3]t'), 0, undefined))
+  assert(num(2), evalEvent(parseExpression('[[1,2]t1,3]t'), 1, undefined))
+  assert(num(1), evalEvent(parseExpression('[[1,2]t1,3]t'), 2, undefined))
+  assert(num(2), evalEvent(parseExpression('[[1,2]t1,3]t'), 3, undefined))
+  assert(num(3), evalEvent(parseExpression('[[1,2]t1,3]t'), 4, undefined))
+  assert(num(1), evalEvent(parseExpression('[[1,2]t1,3]t'), 8, undefined))
+  assert(num(4), evalEvent(parseExpression('[1,2]t1+3'), 0, undefined))
+  assert(num(5), evalEvent(parseExpression('[1,2]t1+3'), 1, undefined))
+  assert(parseExpression('[1,2]t1@f+3'), evalEvent(parseExpression('[1,2]t1@f+3'), 0, undefined))
 
   console.log('Eval expression tests complete')
 
