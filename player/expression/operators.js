@@ -36,9 +36,12 @@ define(function(require) {
       }
     }
     if (pivot < 0) { return ops[0] }
+    let lhs = precedenceTree(ops.slice(0, pivot))
+    let rhs = precedenceTree(ops.slice(pivot+1))
     return {
-      lhs:precedenceTree(ops.slice(0, pivot)),
-      rhs:precedenceTree(ops.slice(pivot+1)),
+      lhs: lhs,
+      rhs: rhs,
+      eval: intervalMax([lhs.eval, rhs.eval]),
       type: 'operator'+ops[pivot],
     }
   }

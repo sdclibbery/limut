@@ -2,20 +2,23 @@
 define(function(require) {
   let operators = require('player/expression/operators')
   let timevars = require('player/expression/timevars')
-  let {constant, event, frame} = require('player/expression/eval-intervals')
+  let {constant, event, frame, intervalLte} = require('player/expression/eval-intervals')
 
   let evalConstants = (e) => {
+    if (!intervalLte(e.eval, constant)) { e }
     return operators.eval(e, evalConstants, constant)
       || e
   }
 
   let evalEvent = (e, b,s) => {
+    if (!intervalLte(e.eval, event)) { e }
     return operators.eval(e, evalEvent, event, b,s)
       || timevars.eval(e, evalEvent, event, b,s)
       || e
   }
 
   let evalFrame = (e, b) => {
+    if (!intervalLte(e.eval, frame)) { e }
     return operators.eval(e, evalFrame, frame, b)
       || timevars.eval(e, evalFrame, frame, b)
       || e
@@ -31,7 +34,7 @@ define(function(require) {
 
   let none = {eval:constant,type:'undefined'}
   let num = (n,ev) => {return {value:n, eval:ev||constant,type:'number'}}
-  let op = (op,l,r) => {return {lhs:l, rhs:r, type:'operator'+op}}
+  let op = (op,l,r,ev) => {return {lhs:l, rhs:r, eval:ev||constant, type:'operator'+op}}
   let step = (v,t,d) => {return {value:v, time:t, duration:d}}
   let timevar = (ss,ev) => {ss.totalDuration=ss.reduce((a,b)=>a+b.duration,0); return {steps:ss, eval:ev||event, type:'timevar'}}
 

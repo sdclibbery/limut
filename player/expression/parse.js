@@ -112,7 +112,7 @@ define(function(require) {
 
   let none = {eval:constant,type:'undefined'}
   let num = (n) => {return {value:n, eval:constant,type:'number'}}
-  let op = (op,l,r) => {return {lhs:l, rhs:r, type:'operator'+op}}
+  let op = (op,l,r,ev) => {return {lhs:l, rhs:r, eval:ev||constant, type:'operator'+op}}
   let step = (v,t,d) => {return {value:v, time:t, duration:d}}
   let timevar = (ss,ev) => {ss.totalDuration=ss.reduce((a,b)=>a+b.duration,0); return {steps:ss, eval:ev||event, type:'timevar'}}
 
@@ -132,6 +132,7 @@ define(function(require) {
 
   assert(op('+',num(1),num(2)), parseExpression('1+2'))
   assert(op('+',num(1),num(2)), parseExpression('1@e+2@f'))
+  assert(op('+',num(1),num(2)), parseExpression('1@e+2'))
   assert(op('+',num(1),num(2)), parseExpression(' 1 + 2 '))
   assert(op('+',num(-0.5),num(1.5)), parseExpression('-1/2+1.5'))
   assert(op('*',num(1),num(2)), parseExpression('1*2'))
