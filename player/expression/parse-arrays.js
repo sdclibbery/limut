@@ -1,6 +1,7 @@
 'use strict';
 define(function(require) {
   let number = require('player/parse-number')
+  let {constant} = require('player/expression/eval-intervals')
 
   let doArray = (state, open, close, seperator, expression) => {
     let result = []
@@ -43,13 +44,13 @@ define(function(require) {
       let lo = 0
       let hi = 1
       if (vs.length == 1) {
-        hi = vs[0]
+        hi = vs[0].value
       } else if (vs.length == 2) {
-        lo = vs[0]
-        hi = vs[1]
+        lo = vs[0].value
+        hi = vs[1].value
       }
       if (Number.isInteger(lo) && Number.isInteger(hi)) {
-        return [...Array(hi-lo+1).keys()].map(x => x+lo)
+        return [...Array(hi-lo+1).keys()].map(x => {return {value:x+lo,eval:constant,type:'number'}})
       }
     }
     return vs
