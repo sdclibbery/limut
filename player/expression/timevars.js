@@ -28,11 +28,8 @@ define(function(require) {
     return (step == undefined) ? steps[0].value : step.value
   }
 
-  let evaluate = (e, evalExpression, maxInterval, b,s) => {
-    if (e.type !== 'timevar') { return }
-    if (intervalLte(e.eval, maxInterval)) {
-      return evalExpression(timeVar(e.steps, b,s), b,s)
-    }
+  let evaluate = (e, evalExpression, b,s) => {
+    return evalExpression(timeVar(e.steps, b,s), b,s)
   }
 
   return {

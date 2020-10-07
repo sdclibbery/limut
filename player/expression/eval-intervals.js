@@ -6,6 +6,7 @@ define(function(require) {
     event: '1-event',
     frame: '2-frame',
     intervalLte: (l,r) => l<=r,
+    intervalGt: (l,r) => l>r,
   }
 
   intervals.intervalMax = (es, ...more) => {

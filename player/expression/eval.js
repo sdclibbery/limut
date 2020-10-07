@@ -2,26 +2,27 @@
 define(function(require) {
   let operators = require('player/expression/operators')
   let timevars = require('player/expression/timevars')
-  let {constant, event, frame, intervalLte} = require('player/expression/eval-intervals')
+  let {constant, event, frame, intervalGt} = require('player/expression/eval-intervals')
+
+  let doEval = (e, evalRecurse, maxInterval, b,s) => {
+    if (intervalGt(e.eval, maxInterval)) { return e }
+    if (e.type.startsWith('operator')) { return operators.eval(e, evalRecurse, b,s) }
+    switch (e.type) {
+      case 'timevar': return timevars.eval(e, evalRecurse, b,s)
+      default: return e
+    }
+  }
 
   let evalConstants = (e) => {
-    if (!intervalLte(e.eval, constant)) { e }
-    return operators.eval(e, evalConstants, constant)
-      || e
+    return doEval(e, evalConstants, constant)
   }
 
   let evalEvent = (e, b,s) => {
-    if (!intervalLte(e.eval, event)) { e }
-    return operators.eval(e, evalEvent, event, b,s)
-      || timevars.eval(e, evalEvent, event, b,s)
-      || e
+    return doEval(e, evalEvent, event, b,s)
   }
 
   let evalFrame = (e, b) => {
-    if (!intervalLte(e.eval, frame)) { e }
-    return operators.eval(e, evalFrame, frame, b)
-      || timevars.eval(e, evalFrame, frame, b)
-      || e
+    return doEval(e, evalFrame, frame, b)
   }
 
   // TESTS //
