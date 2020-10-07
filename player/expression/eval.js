@@ -90,6 +90,10 @@ define(function(require) {
   assert(num(4), evalEvent(parseExpression('[1,2]t1+3'), 0, undefined))
   assert(num(5), evalEvent(parseExpression('[1,2]t1+3'), 1, undefined))
   assert(parseExpression('[1,2]t1@f+3'), evalEvent(parseExpression('[1,2]t1@f+3'), 0, undefined))
+  assert(num(2), evalEvent(parseExpression('[2:4]t1'), 0, undefined))
+  assert(num(3), evalEvent(parseExpression('[2:4]t1'), 1, undefined))
+  assert(num(4), evalEvent(parseExpression('[2:4]t1'), 2, undefined))
+  assert(num(2), evalEvent(parseExpression('[2:4]t1'), 3, undefined))
 
   console.log('Eval expression tests complete')
 

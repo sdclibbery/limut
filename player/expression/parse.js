@@ -155,6 +155,8 @@ define(function(require) {
   assert(timevar([step(none,0,4)]), parseExpression('[]t[,1]'))
   assert(timevar([step(num(1),0,4),step(num(2),4,4)]), parseExpression('[1,2]t'))
   assert(timevar([step(num(1),0,3),step(num(2),3,3)]), parseExpression('[1,2]t3'))
+  assert(timevar([step(num(1),0,0.5)]), parseExpression('[1]t1/2'))
+  assert(timevar([step(num(1),0,0.5)]), parseExpression('[1]t[1/2]'))
   assert(timevar([step(num(1),0,3),step(num(2),3,4)]), parseExpression('[1,2]t[3,4]'))
   assert(timevar([step(num(1),0,4),step(num(2),4,4)]), parseExpression('[1,2]t[]'))
   assert(timevar([step(num(1),0,4),step(num(2),4,4)]), parseExpression('[1:2]t'))
