@@ -1,14 +1,16 @@
 'use strict';
 define(function(require) {
 
-  let lte = (l,r) => {
-    return l <= r
-  }
-
-  return {
+  let intervals = {
     constant: '0-constant',
     event: '1-event',
     frame: '2-frame',
-    intervalLte: lte,
+    intervalLte: (l,r) => l<=r,
   }
+
+  intervals.intervalMax = (es) => {
+    return es.reduce((a,e) => (e>a)?e:a, intervals.constant)
+  }
+
+  return intervals
 })

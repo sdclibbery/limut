@@ -9,15 +9,15 @@ define(function(require) {
       || e
   }
 
-  let evalEvent = (e, s,b) => {
-    return operators.eval(e, evalEvent, event,s,b)
-      || timevars.eval(e, evalEvent, event, s,b)
+  let evalEvent = (e, b,s) => {
+    return operators.eval(e, evalEvent, event, b,s)
+      || timevars.eval(e, evalEvent, event, b,s)
       || e
   }
 
   let evalFrame = (e, b) => {
-    return operators.eval(e, evalFrame, frame, undefined,b)
-      || timevars.eval(e, evalFrame, frame, undefined,b)
+    return operators.eval(e, evalFrame, frame, b)
+      || timevars.eval(e, evalFrame, frame, b)
       || e
   }
 
@@ -49,21 +49,34 @@ define(function(require) {
   assert(num(1/2), evalConstants(op('/',num(1),num(2))))
   assert(num(1), evalConstants(op('%',num(3),num(2))))
 
-  assert({value:3,eval:event,type:'number'}, evalEvent(op('+',num(1),num(2))))
-  assert({value:3,eval:frame,type:'number'}, evalFrame(op('+',num(1),num(2))))
+  assert(num(3), evalEvent(op('+',num(1),num(2))))
+  assert(num(3), evalFrame(op('+',num(1),num(2))))
 
   assert(num(6), evalConstants(op('+',num(1),op('+',num(2),num(3)))))
   assert(num(19), evalConstants(op('+',op('*',num(1),num(2)),op('+',op('*',num(3),num(4)),num(5)))))
 
+  // Basic timevar
   assert(timevar([step(num(1),0,1),step(num(2),1,1)]), evalConstants(timevar([step(num(1),0,1),step(num(2),1,1)])))
-  assert(timevar([step(num(1),0,1),step(num(2),1,1)],frame), evalEvent(timevar([step(num(1),0,1),step(num(2),1,1)],frame), undefined, 0))
-  assert(num(1), evalEvent(timevar([step(num(1),0,1),step(num(2),1,1)]), undefined, 0))
-  assert(num(1), evalEvent(timevar([step(num(1),0,1),step(num(2),1,1)]), undefined, 0.5))
-  assert(num(2), evalEvent(timevar([step(num(1),0,1),step(num(2),1,1)]), undefined, 1))
-  assert(num(1), evalEvent(timevar([step(num(1),0,1),step(num(2),1,1)]), undefined, 2))
-  assert(num(1), evalFrame(timevar([step(num(1),0,1),step(num(2),1,1)]), undefined, 0))
-  assert(num(1), evalFrame(timevar([step(num(1),0,1),step(num(2),1,1)],frame), undefined, 0))
-  assert(none, evalFrame(timevar([step(none,0,4)]), undefined, 0))
+  assert(timevar([step(num(1),0,1),step(num(2),1,1)],frame), evalEvent(timevar([step(num(1),0,1),step(num(2),1,1)],frame), 0, undefined))
+  assert(num(1), evalEvent(timevar([step(num(1),0,1),step(num(2),1,1)]), 0, undefined))
+  assert(num(1), evalEvent(timevar([step(num(1),0,1),step(num(2),1,1)]), 0.5, undefined))
+  assert(num(2), evalEvent(timevar([step(num(1),0,1),step(num(2),1,1)]), 1, undefined))
+  assert(num(1), evalEvent(timevar([step(num(1),0,1),step(num(2),1,1)]), 2, undefined))
+  assert(num(1), evalFrame(timevar([step(num(1),0,1),step(num(2),1,1)]), 0))
+  assert(num(1), evalFrame(timevar([step(num(1),0,1),step(num(2),1,1)],frame), 0))
+  assert(none, evalFrame(timevar([step(none,0,4)]), 0))
+
+  // timevars nested with other values 
+  assert(num(3), evalEvent(timevar([step(op('+',num(1),num(2)),0,4)]), 0, undefined))
+  assert(num(1), evalEvent(timevar([step(timevar([step(num(1),0,1),step(num(2),1,1)]),0,4),step(num(3),4,4)]), 0, undefined))
+  assert(num(2), evalEvent(timevar([step(timevar([step(num(1),0,1),step(num(2),1,1)]),0,4),step(num(3),4,4)]), 1, undefined))
+  assert(num(1), evalEvent(timevar([step(timevar([step(num(1),0,1),step(num(2),1,1)]),0,4),step(num(3),4,4)]), 2, undefined))
+  assert(num(2), evalEvent(timevar([step(timevar([step(num(1),0,1),step(num(2),1,1)]),0,4),step(num(3),4,4)]), 3, undefined))
+  assert(num(3), evalEvent(timevar([step(timevar([step(num(1),0,1),step(num(2),1,1)]),0,4),step(num(3),4,4)]), 4, undefined))
+  assert(num(1), evalEvent(timevar([step(timevar([step(num(1),0,1),step(num(2),1,1)]),0,4),step(num(3),4,4)]), 8, undefined))
+  assert(num(4), evalEvent(op('+',timevar([step(num(1),0,1),step(num(2),1,1)]),num(3)), 0, undefined))
+  assert(num(5), evalEvent(op('+',timevar([step(num(1),0,1),step(num(2),1,1)]),num(3)), 1, undefined))
+  assert(op('+',timevar([step(num(1),0,1),step(num(2),1,1)],frame),num(3)), evalEvent(op('+',timevar([step(num(1),0,1),step(num(2),1,1)],frame),num(3)), 1, undefined))
 
   console.log('Eval expression tests complete')
 

@@ -151,6 +151,10 @@ define(function(require) {
   assert(timevar([step(num(1),0,3),step(num(2),3,4)]), parseExpression('[1,2]t[3,4]'))
   assert(timevar([step(num(1),0,4),step(num(2),4,4)]), parseExpression('[1,2]t[]'))
 
+  assert(timevar([step(op('+',num(1),num(2)),0,4)]), parseExpression('[1+2]t'))
+  assert(timevar([step(timevar([step(num(1),0,3),step(num(2),3,3)]),0,4)]), parseExpression('[[1,2]t3]t4'))
+  //assert(timevar([step(op('+',num(1),num(2)),0,4)]), parseExpression('[1]t[1+2]'))
+
   console.log('Parse expression tests complete')
 
   return parseExpression

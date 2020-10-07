@@ -22,16 +22,16 @@ define(function(require) {
     return (b > st.time-0.0001)&&(b < st.time+st.duration+0.0001)
   }
 
-  let timeVar = (steps, s,b) => {
+  let timeVar = (steps, b) => {
     b = (b+0.0001) % steps.totalDuration
     let step = steps.filter(st => isInTimeVarStep(st, b) )[0]
     return (step == undefined) ? steps[0].value : step.value
   }
 
-  let evaluate = (e, evalExpression, maxInterval, s,b) => {
+  let evaluate = (e, evalExpression, maxInterval, b,s) => {
     if (e.type !== 'timevar') { return }
     if (intervalLte(e.eval, maxInterval)) {
-      return evalExpression(timeVar(e.steps, s,b))
+      return evalExpression(timeVar(e.steps, b,s), b,s)
     }
   }
 

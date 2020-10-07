@@ -1,6 +1,6 @@
 'use strict';
 define(function(require) {
-  let {intervalLte} = require('player/expression/eval-intervals')
+  let {intervalLte, intervalMax} = require('player/expression/eval-intervals')
 
   let ops = {
     'operator+': (l,r)=>l+r,
@@ -43,13 +43,13 @@ define(function(require) {
     }
   }
 
-  let evaluate = (e, evalExpression, maxInterval, s,b) => {
+  let evaluate = (e, evalExpression, maxInterval, b,s) => {
     let op = ops[e.type]
     if (!op) { return }
-    let lhs = evalExpression(e.lhs, s,b)
-    let rhs = evalExpression(e.rhs, s,b)
+    let lhs = evalExpression(e.lhs, b,s)
+    let rhs = evalExpression(e.rhs, b,s)
     if (intervalLte(lhs.eval, maxInterval) && intervalLte(rhs.eval, maxInterval)) {
-      return {value:op(lhs.value,rhs.value), eval:maxInterval, type:'number'}
+      return {value:op(lhs.value,rhs.value), eval:intervalMax([lhs.eval, rhs.eval]), type:'number'}
     }
   }
 
