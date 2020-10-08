@@ -41,7 +41,7 @@ define((require) => {
             .filter(e => e.amp === undefined || typeof e.amp === 'function' || e.amp > 0)
             .map(e => {
               playerFactory.play(e)
-              let pulse = (s,b) => {
+              let pulse = (ev,b) => {
                 let t = e.beat.time + (b-e.beat.count)*e.beat.duration
                 if (t<e.time || t>e.endTime) { return 0 }
                 let l = e.endTime - e.time
@@ -62,7 +62,7 @@ define((require) => {
           id: playerId,
           type: playerType,
         }
-        player.currentEvent = (s,b) => {
+        player.currentEvent = (ev,b) => {
           let es = player.events
           if (!es) { return {pulse:()=>0} }
           es = es.filter(e => {

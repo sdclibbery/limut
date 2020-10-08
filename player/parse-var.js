@@ -15,13 +15,13 @@ define(function(require) {
       break
     }
     if (!key) { return }
-    let result = (s,b) => {
+    let result = (event,b) => {
       let [playerId, param] = key.split('.')
       let v
       if (param) {
         let player = players.instances[playerId]
         if (player) {
-          v = player.currentEvent ? player.currentEvent(s,b)[param] : 0
+          v = player.currentEvent ? player.currentEvent(event,b)[param] : 0
         } else {
           v = vars[key]
           if (v === undefined) { v = 0 } // If not found as a var, assume its for a currently unavailable player and default to zero
@@ -63,10 +63,10 @@ define(function(require) {
   assert('bar', p())
   delete vars.foo
 
-  players.instances.p1 = { currentEvent:(s,b)=>{ return {foo:b}} }
+  players.instances.p1 = { currentEvent:(e,b)=>{ return {foo:b}} }
   p = varLookup({str:'p1.foo',idx:0})
-  assert(0, p(0,0))
-  assert(2, p(0,2))
+  assert(0, p({},0))
+  assert(2, p({},2))
   delete players.instances.p1
 
   p = varLookup({str:'p1.foo',idx:0})

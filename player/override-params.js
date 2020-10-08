@@ -77,8 +77,8 @@ define(function(require) {
   assert([ev({add:5}),ev({add:6})], overrideEventParams([ev({add:2})], {add:()=>[3,4]}))
   
   c = overrideEventParams([ev()], {zoom:parseExpression('[2:4]l2@f')})
-  assert(2, c[0].zoom(0,0))
-  assert(3, c[0].zoom(1,1))
+  assert(2, c[0].zoom(ev(),0))
+  assert(3, c[0].zoom(ev({idx:1}),1))
 
   console.log('Combine events tests complete')
 

@@ -489,11 +489,10 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-Rewrite
- feature branch that uses new expressions
- tuple
- ... more types
-Check: Cannot mix @e and @f properly; eg '[0:1]r@e+[0:1]l@f'
+Cannot mix @e and @f properly; eg '[0:1]r@e+[0:1]l@f'
+ Refactor s,b to event,b
+ Can then use event to evaluate @e expressions at per-frame time
+operator precedence - parse list of operators, then build a tree in precedence order
 unary minus operator
 []n syntax for perlin noise; ie for continuous noise as opposed to random
 [0,1,2]e[0,.1,1] which would interpolate between values through the event time
@@ -518,7 +517,6 @@ array index operator, so you can "ch=[(0,2,4)]" then "add=ch[0]"
 finish off: <> for 'in sequence on each repeat' in patterns
 multiline commands
 Wildcard player matching for groups 'set d? amp=0'  'set p* amp=0'
-operator precedence
 GC or LRU or quantisation for echoes and freeverbs
 Should be able to [red:blue]l8
 should multiply out 'chords' in objects eg loc={x:(0,1,2,3), y:(0,1,2,3), w:1,h:1}/4
