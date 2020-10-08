@@ -100,6 +100,8 @@ define(function(require) {
     let a = JSON.stringify(actual)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
+  let {evalParamEvent,evalParamFrame} = require('player/eval-param')
+  let ev = (i,c) => {return{idx:i,count:c}}
 
   assert({}, parseParams(''))
   assert({dur:1}, parseParams('dur=1'))
@@ -137,6 +139,17 @@ define(function(require) {
   assert('event', parseParams("fore=[0,1]r").fore.interval)
   assert('event', parseParams("fore=[0,1]r4").fore.interval)
   assert('frame', parseParams("fore=[0,1]r@f").fore.interval)
+
+  // let exp = parseParams("amp=[0,1]t4@e+[2:3]l1@f").amp
+  // assert('function', typeof evalParamEvent(exp, ev(0,0), 0))
+  // assert(2, evalParamFrame(exp, ev(0,0), 0))
+  // assert(3, evalParamFrame(exp, ev(0,0), 1))
+  // assert(2, evalParamFrame(exp, ev(0,0), 2))
+  // assert(3, evalParamFrame(exp, ev(0,0), 3))
+  // assert(2, evalParamFrame(exp, ev(0,0), 4))
+  // assert(3, evalParamFrame(exp, ev(0,0), 5))
+  // assert(3, evalParamFrame(exp, ev(4,4), 4))
+  // assert(4, evalParamFrame(exp, ev(4,4), 5))
 
   console.log("Params tests complete")
 

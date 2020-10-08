@@ -460,7 +460,7 @@ define(function(require) {
     if (!vs.includes(actual)) { console.trace(`Assertion failed.\n>>Expected one of ${vs}\n>>Actual: ${actual}`) }
   }
 
-  let ev = i => {return{idx:i}}
+  let ev = (i,c) => {return{idx:i,count:c}}
 
   assert(undefined, parseExpression())
   assert(undefined, parseExpression(''))

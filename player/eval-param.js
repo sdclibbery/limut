@@ -46,7 +46,7 @@ define((require) => {
     let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
-  let ev = i => {return{idx:i}}
+  let ev = (i,c) => {return{idx:i,count:c}}
 
   assert(undefined, evalParamEvent(undefined, ev(0), 0))
   assert(1, evalParamEvent(1, ev(0), 0))

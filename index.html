@@ -489,8 +489,9 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-Cannot mix @e and @f properly; eg '[0:1]r@e+[0:1]l@f'
- Refactor s,b to event,b
+Cannot mix @e and @f properly; eg '[0,1]t1@e+[0:1]l2@f'
+ timevars need to use 'event.count' instead of 'b' when interval is event
+  what else? random, what else?
  Can then use event to evaluate @e expressions at per-frame time
 operator precedence - parse list of operators, then build a tree in precedence order
 unary minus operator
@@ -502,6 +503,7 @@ Various errors when using player.params
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way??
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 extending patterns like every/sometimes/offadd/stutter etc
+pattern values in vars, and then use in multiple players, and also invert, retrograde etc
 "on next 4 " / "on next 28 of 32 " syntax to execute a line on the next beat count
   - but how not to repeat this if rerun? replace now/next in source with actual count?
 "every 4 " / "every 28 of 32 "

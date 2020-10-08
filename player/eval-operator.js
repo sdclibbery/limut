@@ -56,9 +56,9 @@ define(function(require) {
     if (typeof l == 'number' && typeof (r) == 'number') {
       return op(l, r)
     }
-    let result = (s,b) => {
-      let el = evalParam(l, s,b)
-      let er = evalParam(r, s,b)
+    let result = (event,b) => {
+      let el = evalParam(l, event,b)
+      let er = evalParam(r, event,b)
       // console.log('eval operator', 'l:',l,'r:',r, 'el:',el,'er:',er, 's:',s,'b:',b)
       return applyOperator(op, el, er)
     }
@@ -74,16 +74,16 @@ define(function(require) {
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
 
-  let ev = i => {return{idx:i}}
+  let ev = (i,c) => {return{idx:i,count:c}}
 
   let add = (a,b)=>a+b
   let mul = (a,b)=>a*b
   let div = (a,b)=>a/b
   let fn = (x)=>()=>x
 
-  let perFrame = ()=>1
+  let perFrame = ({},b)=>b
   perFrame.interval = 'frame'
-  let perEvent = ()=>1
+  let perEvent = ({count},b)=>count
   perEvent.interval = 'event'
 
   assert(3, operator(add, 1, 2))
@@ -122,6 +122,13 @@ define(function(require) {
   assert('event', operator(add, perEvent, perEvent).interval)
   assert('frame', operator(add, perEvent, perFrame).interval)
   assert('frame', operator(add, perFrame, perEvent).interval)
+
+  assert(10, operator(add, perEvent, perEvent)(ev(0,5), 0))
+  assert(0, operator(add, perEvent, perEvent)(ev(0,0), 5))
+  assert(10, operator(add, perFrame, perFrame)(ev(0,0), 5))
+  assert(0, operator(add, perFrame, perFrame)(ev(0,5), 0))
+  assert(3, operator(add, perEvent, perFrame)(ev(0,3), 0))
+  assert(4, operator(add, perEvent, perFrame)(ev(0,0), 4))
 
   console.log('eval operator tests complete')
 
