@@ -490,10 +490,12 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Cannot mix @e and @f properly; eg '[0,1]t1@e+[0:1]l2@f'
- timevars need to use 'event.count' instead of 'b' when interval is event
-  what else? random, what else?
- Can then use event to evaluate @e expressions at per-frame time
+ !!! Need to update all uses of evalParamEvent/Frame; especially in audio and visual synths!
+ ?? Does var lookup need to switch to e.count for @e?
+ ?? Anything else need to switch to e.count for @e?
 operator precedence - parse list of operators, then build a tree in precedence order
+Do things inside timevars get evalled properly? Eg [1,[2,3]t1@e]t4@f
+can [0:1]r pick from the reals rather than [0,1]?
 unary minus operator
 []n syntax for perlin noise; ie for continuous noise as opposed to random
 [0,1,2]e[0,.1,1] which would interpolate between values through the event time
