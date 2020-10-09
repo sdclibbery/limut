@@ -433,6 +433,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
+echotime param
 Audio add should be evalled per frame and allow non int
  OR? new param for non integer semitone add? or both? or both but 'to integer' is a function/cast/whatever?
 root main var
@@ -489,19 +490,23 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-Cannot mix @e and @f properly; eg '[0,1]t1@e+[0:1]l2@f'
+Cannot mix @e and @f properly; eg '[0,1]r@e+[0:1]l2@f'
+ need something clever to allow [...]r@e to be evalled per frame but still return one value per object  
  !!! Need to update all uses of evalParamEvent/Frame; especially in audio and visual synths!
+  Test that it works; create 'spark' and 'drop' predefined vars
  ?? Does var lookup need to switch to e.count for @e?
  ?? Anything else need to switch to e.count for @e?
+ Can all evalParams in sprite now be per frame, and let the param itself sort it out?? same for eval-audio-params?
 operator precedence - parse list of operators, then build a tree in precedence order
-Do things inside timevars get evalled properly? Eg [1,[2,3]t1@e]t4@f
-can [0:1]r pick from the reals rather than [0,1]?
-unary minus operator
-[]n syntax for perlin noise; ie for continuous noise as opposed to random
+Do things inside timevars get evalled properly? Eg [1,[2,3]t2@e]t1@f
+can [0:1]r pick from the reals rather than [0,1] please?
 [0,1,2]e[0,.1,1] which would interpolate between values through the event time
+long delay times dont work?
+[]n syntax for perlin noise; ie for continuous noise as opposed to random
  - or should it just start from event start time, but still be in beats? or should that be another syntax again?
+unary minus operator; eg '-time'
 Possible bug: Can applying overrides stop @f behaviour?
-Various errors when using player.params
+apply overridden delay for follow player: allow canons
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way??
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 extending patterns like every/sometimes/offadd/stutter etc
@@ -515,7 +520,6 @@ pattern concat "xo + vi"
 pattern repeat "xo * 3" higher precedence than concat
 pattern support brackets "( xo + vi ) * 3"
 dur=[1,2,3,4]r
-apply overridden delay for follow player: allow canons
 New param to offset time in shaders to allow doing sway 'manually'
 array index operator, so you can "ch=[(0,2,4)]" then "add=ch[0]"
 finish off: <> for 'in sequence on each repeat' in patterns

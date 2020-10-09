@@ -10,7 +10,7 @@ define(function(require) {
   let scale = require('music/scale')
   let parseLine = require('parse-line')
   let players = require('player/players')
-    let mainVars = require('main-vars')
+  let mainVars = require('main-vars')
   let vars = require('vars')
   let consoleOut = require('console')
 

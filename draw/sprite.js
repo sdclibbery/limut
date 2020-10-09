@@ -7,10 +7,10 @@ define(function (require) {
   let texture = require('draw/texture')
 
   let evalParamFrame = (params, p, def, count) =>{
-    return evalParam(param(params[p], def), params.idx, count)
+    return evalParam(param(params[p], def), params, count)
   }
   let evalParamEvent = (params, p, def) =>{
-    return evalParam(param(params[p], def), params.idx, params.beat.count)
+    return evalParam(param(params[p], def), params, params.beat.count)
   }
 
   let verts = (loc, window) => {

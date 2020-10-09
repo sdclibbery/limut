@@ -34,7 +34,7 @@ define((require) => {
     for (let k in mainVars) {
       let v = mainVars[k]
       if (v.value) {
-        mainVars[k].setter(evalParam(v.value, step, beat))
+        mainVars[k].setter(evalParam(v.value, {idx:step,count:beat}, beat))
       }
     }
   }

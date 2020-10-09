@@ -162,6 +162,15 @@ define(function(require) {
       return lastValue
     }
   }
+  let random = (getter) => {
+    let events = new WeakMap()
+    return (e,b) => {
+      if (!events.has(e)) {
+        events.set(e, getter(e,b))
+      }
+      return events.get(e)
+    }
+  }
 
   let eatWhitespace = (state) => {
     let char
@@ -333,7 +342,11 @@ define(function(require) {
             // console.log('array r,', vs)
             rand = (e,b) => evalRandomSet(vs, e,b)
           }
-          lhs = periodicRandom(rand, period, interval)
+          if (period) {
+            lhs = periodicRandom(rand, period, interval)
+          } else {
+            lhs = random(rand)
+          }
           lhs.interval = interval
         } else {
           vs = expandColon(vs)
@@ -859,6 +872,12 @@ define(function(require) {
   r = p(ev(0,0),0)
   for (let i=0; i<20; i++) { assert(r, p(ev(0,0),0)) }
   assertNotEqual(r, p(ev(0,0),1))
+
+  let testEvent = ev(0,0)
+  p = parseExpression("[0.01:1]r@e")
+  r = p(testEvent,0)
+  for (let i=0; i<20; i++) { assert(r, p(testEvent,i/10)) }
+  assertNotEqual(r, p(ev(0,0),0))
 
   console.log('Parse expression (old) tests complete')
 
