@@ -22,11 +22,11 @@ define((require) => {
   }
 
   let set = (name, value) => {
-    if (typeof value == "number") {
+    if (typeof value == "function") {
+      mainVars[name].value = value
+    } else {
       mainVars[name].setter(value)
       delete mainVars[name].value
-    } else {
-      mainVars[name].value = value
     }
   }
 
