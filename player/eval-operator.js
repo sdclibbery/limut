@@ -55,13 +55,15 @@ define(function(require) {
     if (typeof l == 'number' && typeof (r) == 'number') {
       return op(l, r)
     }
-    let result = (event,b,evalRecurse) => {
+    let evalOp = (event,b,evalRecurse) => {
       let el = evalRecurse(l, event,b,evalRecurse)
       let er = evalRecurse(r, event,b,evalRecurse)
-      return applyOperator(op, el, er)
+      let result = applyOperator(op, el, er)
+      if (result === undefined) { return operator(op, el, er) }
+      return result
     }
-    result.interval = l.interval == 'frame' ? 'frame' : (r.interval == 'frame' ? 'frame' : (l.interval || r.interval))
-    return result
+    evalOp.interval = l.interval == 'frame' ? 'frame' : (r.interval == 'frame' ? 'frame' : (l.interval || r.interval))
+    return evalOp
   }
 
   // TESTS //
