@@ -317,6 +317,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>vibdelay</code> delay before vibrato starts in beats (default 1)</p>
 <p><code>lfo</code> lfo frequency in cycles per beat for synths that use an lfo</p>
 <h6>Visual</h6>
+<p><code>add</code> Amount to add onto pattern value</p>
 <p><code>zorder</code> order in which to draw visual synths; defaults to the 1/1000th of the source code line number for the player, so that visuals draw strictly in the order they appear in the source code; however, this param can be used to override this and force specific visuals to the front or rear of the draw order.</p>
 <p><code>fade</code> brightness/transparent fadeout</p>
 <p><code>pulse</code> extent to which the audio signal affects the value passed to visual synths</p>
@@ -434,6 +435,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 /*
 ==== audio ====
 echotime param
+ Docs!
 Audio add should be evalled per frame and allow non int
  OR? new param for non integer semitone add? or both? or both but 'to integer' is a function/cast/whatever?
 root main var
@@ -469,9 +471,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-Visual add, should be per frame and non integer
-firefly predefined var to move with noise
-improve sparkle shader: value should change size of spikes
+improve sparkle shader: value should change size of spikes but not core
 Webcam synth
 colours can be defined using hsl/hsv instead of rgb - or better a perceptually uniform space
 Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
@@ -488,18 +488,21 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+commenting out in patterns doesnt work eg 'pi ping 0 //(024)(035)'
 [0,1,2]e[0,.1,1] which would interpolate between values through the event time
+ or should it just start from event start time, but still be in beats? or should that be another syntax again?
+ or should it be []te, []le, []se etc?
  Allows spark and drop predefined vars
 Do things inside timevars get evalled properly? Eg [1,[2,3]t2@e]t1@f
+[]n syntax for perlin noise; ie for continuous noise as opposed to random
+ firefly predefined var to move with noise
+Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way?? Should be available for follow players too
 can [0:1]r pick from the reals rather than [0,1] please?
 long delay times dont work?
-[]n syntax for perlin noise; ie for continuous noise as opposed to random
- - or should it just start from event start time, but still be in beats? or should that be another syntax again?
 Rename @f to @c for continuous
 unary minus operator; eg '-time'
 Possible bug: Can applying overrides stop @f behaviour?
 apply overridden delay for follow player: allow canons
-Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way??
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 extending patterns like every/sometimes/offadd/stutter etc
 pattern values in vars, and then use in multiple players, and also invert, retrograde etc

@@ -9,16 +9,18 @@ define(function (require) {
   let echo = (params, node) => {
     let echoDelay = evalPerEvent(params, 'echo', 0) * params.beat.duration
     if (!echoDelay || echoDelay < 0.0001) { return node }
-    if (!echoes[echoDelay]) {
-      echoes[echoDelay] = system.audio.createDelay(echoDelay)
-      echoes[echoDelay].delayTime.value = echoDelay
+    let echoFeedback = Math.min(evalPerEvent(params, 'echofeedback', 0.5), 0.9)
+    let key = echoDelay + 'f' + echoFeedback
+    if (!echoes[key]) {
+      echoes[key] = system.audio.createDelay(echoDelay)
+      echoes[key].delayTime.value = echoDelay
       let echoGain = system.audio.createGain()
-      echoGain.gain.value = 1/2
-      echoes[echoDelay].connect(echoGain)
-      echoGain.connect(echoes[echoDelay])
+      echoGain.gain.value = echoFeedback
+      echoes[key].connect(echoGain)
+      echoGain.connect(echoes[key])
       system.mix(echoGain)
     }
-    node.connect(echoes[echoDelay])
+    node.connect(echoes[key])
     return node
   }
 
