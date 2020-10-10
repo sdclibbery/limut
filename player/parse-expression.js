@@ -3,7 +3,7 @@ define(function(require) {
   let param = require('player/default-param')
   let evalParam = require('player/eval-param').evalParamFrame
   let number = require('player/parse-number')
-  let operator = require('player/eval-operator')
+  let operatorTree = require('player/parse-operator')
   let varLookup = require('player/parse-var')
 
   let timeVarSteps = (vs, ds) => {
@@ -291,8 +291,8 @@ define(function(require) {
   }
 
   let expression = (state) => {
-    // console.log('expression', state)
-    let lhs = undefined
+    let result
+    let operatorList = []
     let char
     while (char = state.str.charAt(state.idx)) {
       if (char === '') { break }
@@ -306,29 +306,26 @@ define(function(require) {
       // array / time var / random
       if (char == '[') {
         let vs = array(state, '[', ']')
-        if (state.str.charAt(state.idx).toLowerCase() == 't') {
+        if (state.str.charAt(state.idx).toLowerCase() == 't') { // timevar; values per time interval
           state.idx += 1
           vs = expandColon(vs)
           let ds = numberOrArrayOrFour(state)
-          // console.log('array t', vs, ds)
           let interval = parseInterval(state) || 'event'
-          lhs = timeVar(vs, ds, interval)
-          lhs.interval = interval
-        } else if (state.str.charAt(state.idx).toLowerCase() == 'l') {
+          result = timeVar(vs, ds, interval)
+          result.interval = interval
+        } else if (state.str.charAt(state.idx).toLowerCase() == 'l') { // linearly interpolated timevar
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
-          // console.log('array l', vs, ds)
           let interval = parseInterval(state) || 'event'
-          lhs = linearTimeVar(vs, ds, interval)
-          lhs.interval = interval
-        } else if (state.str.charAt(state.idx).toLowerCase() == 's') {
+          result = linearTimeVar(vs, ds, interval)
+          result.interval = interval
+        } else if (state.str.charAt(state.idx).toLowerCase() == 's') { // smoothstep interpolated timevar
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
-          // console.log('array s', vs, ds)
           let interval = parseInterval(state) || 'event'
-          lhs = sTimeVar(vs, ds, interval)
-          lhs.interval = interval
-        } else if (state.str.charAt(state.idx).toLowerCase() == 'r') {
+          result = sTimeVar(vs, ds, interval)
+          result.interval = interval
+        } else if (state.str.charAt(state.idx).toLowerCase() == 'r') { // random
           state.idx += 1
           let period = number(state)
           let interval = parseInterval(state) || 'event'
@@ -336,23 +333,20 @@ define(function(require) {
           if (vs.seperator == ':') {
             let lo = param(vs[0], 0)
             let hi = param(vs[1], 1)
-            // console.log('array r:', vs, lo, hi)
             rand = (e,b) => evalRandomRanged(evalParam(lo,e,b), evalParam(hi,e,b))
           } else {
-            // console.log('array r,', vs)
             rand = (e,b) => evalRandomSet(vs, e,b)
           }
           if (period) {
-            lhs = periodicRandom(rand, period, interval)
+            result = periodicRandom(rand, period, interval)
           } else {
-            lhs = random(rand)
+            result = random(rand)
           }
-          lhs.interval = interval
-        } else {
+          result.interval = interval
+        } else { // Basic array: one value per pattern step
           vs = expandColon(vs)
-          // console.log('array', vs)
-          lhs = vs
-          lhs.interval = parseInterval(state)
+          result = vs
+          result.interval = parseInterval(state)
         }
         continue
       }
@@ -361,87 +355,65 @@ define(function(require) {
         let v = array(state, '(', ')')
         v = expandColon(v)
         if (v.length == 1) {
-          lhs = v[0]
+          result = v[0]
         } else {
-          lhs = (e,b) => v
-          lhs.interval = 'event'
+          result = (e,b) => v
+          result.interval = 'event'
         }
         continue
       }
       // map
       if (char == '{') {
-        lhs = parseMap(state)
-        lhs.interval = lhs.interval || parseInterval(state)
+        result = parseMap(state)
+        result.interval = result.interval || parseInterval(state)
         continue
       }
       // operator
-      if (lhs !== undefined) {
-        if (char == '+') {
+      if (result !== undefined) {
+        if (['+','-','*','/','%'].includes(char)) {
           state.idx += 1
-          let rhs  = expression(state)
-          // console.log('operator+', lhs, rhs, state)
-          return operator((l,r)=>l+r, lhs, rhs)
-        }
-        if (char == '-') {
-          state.idx += 1
-          let rhs  = expression(state)
-          // console.log('operator-', lhs, rhs, state)
-          return operator((l,r)=>l-r, lhs, rhs)
-        }
-        if (char == '*') {
-          state.idx += 1
-          let rhs  = expression(state)
-          // console.log('operator*', lhs, rhs, state)
-          return operator((l,r)=>l*r, lhs, rhs)
-        }
-        if (char == '/') {
-          state.idx += 1
-          let rhs  = expression(state)
-          // console.log('operator/', lhs, rhs, state)
-          return operator((l,r)=>l/r, lhs, rhs)
-        }
-        if (char == '%') {
-          state.idx += 1
-          let rhs  = expression(state)
-          // console.log('operator%', lhs, rhs, state)
-          return operator((l,r)=>l%r, lhs, rhs)
+          operatorList.push(result)
+          result = undefined
+          operatorList.push(char)
+          continue
         }
       }
       // number
       let n = number(state)
       if (n !== undefined) {
-        lhs = n
-        // console.log('number', lhs, state)
+        result = n
         continue
       }
       // string
       if (char == '\'') {
         state.idx += 1
-        lhs = parseString(state)
+        result = parseString(state)
         continue
       }
       // colour
       if (char == '#') {
         state.idx += 1
-        lhs = parseColour(state)
+        result = parseColour(state)
         continue
       }
       // vars
       let v = varLookup(state)
       if (v !== undefined) {
-        lhs = v
-        lhs.interval = parseInterval(state) || v.interval || 'frame'
-        // console.log('var', lhs, state)
+        result = v
+        result.interval = parseInterval(state) || v.interval || 'frame'
         continue
       }
       break
     }
-    return lhs
+    if (operatorList.length > 0) {
+      operatorList.push(result)
+      result = operatorTree(operatorList)
+    }
+    return result
   }
 
   let parseExpression = (v, commented) => {
     if (v == '' || v == undefined) { return }
-    // console.log('*** parseExpression', v)
     v = v.trim()
     let state = {
       str: v,
@@ -507,6 +479,7 @@ define(function(require) {
   assert(1, p[0])
   assert([2,3], p[1](0,0))
 
+  assert(3, parseExpression('1+2'))
   assert(6, parseExpression('1+2+3'))
 
   p = parseExpression('[1,2]T1@f')
@@ -651,8 +624,11 @@ define(function(require) {
 
   assert(10, parseExpression('2+4*2'))
   assert(12, parseExpression('(2+4)*2'))
-//  assert(10, parseExpression('4*2+2'))
   assert(16, parseExpression('4*(2+2)'))
+  assert(10, parseExpression('4*2+2'))
+  assert(33, parseExpression('1+2*3+4*5+6'))
+  assert(77, parseExpression('1+2*(3+4)*5+6'))
+  assert(157, parseExpression('1+(2*3+4*5)*6'))
 
   assert(4, parseExpression('2*2'))
   assert([2,4], parseExpression('(1,2)*2')(ev(0),0))
