@@ -1,6 +1,5 @@
 'use strict';
 define(function(require) {
-  let evalParam = require('player/eval-param').evalParamFrame
 
   let objectMap = (obj, fn) => {
     return Object.fromEntries(
@@ -56,10 +55,9 @@ define(function(require) {
     if (typeof l == 'number' && typeof (r) == 'number') {
       return op(l, r)
     }
-    let result = (event,b) => {
-      let el = evalParam(l, event,b)
-      let er = evalParam(r, event,b)
-      // console.log('eval operator', 'l:',l,'r:',r, 'el:',el,'er:',er, 's:',s,'b:',b)
+    let result = (event,b,evalRecurse) => {
+      let el = evalRecurse(l, event,b,evalRecurse)
+      let er = evalRecurse(r, event,b,evalRecurse)
       return applyOperator(op, el, er)
     }
     result.interval = l.interval == 'frame' ? 'frame' : (r.interval == 'frame' ? 'frame' : (l.interval || r.interval))
@@ -73,6 +71,7 @@ define(function(require) {
     let a = JSON.stringify(actual)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
+  let evalParam = require('player/eval-param').evalParamFrame
 
   let ev = (i,c) => {return{idx:i,count:c}}
 
@@ -88,31 +87,31 @@ define(function(require) {
 
   assert(3, operator(add, 1, 2))
   assert(8, operator(mul, 2, 4))
-  assert([4,5], operator(add, fn([1,2]), 3)(ev(0),0))
-  assert([3,4], operator(add, 1, fn([2,3]))(ev(0),0))
-  assert([3,8], operator(mul, fn([1,2]), fn([3,4]))(ev(0),0))
-  assert([2,3], operator(mul, fn([1]), fn([2,3]))(ev(0),0))
-  assert({r:2}, operator(mul, {r:1}, 2)(ev(0),0))
-  assert({r:2}, operator(mul, 2, {r:1})(ev(0),0))
-  assert({r:4,g:5}, operator(add, {r:1,g:2}, 3)(ev(0),0))
-  assert({r:1}, operator(div, {r:[2,4]}, 2)(ev(0),0))
-  assert({r:2}, operator(div, {r:[2,4]}, 2)(ev(1),1))
-  assert({r:3}, operator(mul, {r:[1,2]}, [3,4])(ev(0),0))
-  assert({r:8}, operator(mul, {r:[1,2]}, [3,4])(ev(1),1))
-  assert({r:2}, operator(mul, {r:1}, [2,3])(ev(0),0))
-  assert({r:3}, operator(mul, {r:1}, [2,3])(ev(1),1))
-  assert({r:3}, operator(mul, [1,2], {r:3})(ev(0),0))
-  assert({r:6}, operator(mul, [1,2], {r:3})(ev(1),1))
-  assert({r:[2,3]}, operator(mul, {r:1}, fn([2,3]))(ev(0),0))
-  assert({r:[3,6]}, operator(mul, {r:fn([1,2])}, 3)(ev(0),0))
-  assert({r:3}, operator(add, {r:1}, {r:2})(ev(0),0))
-  assert({r:1,g:6,b:4}, operator(mul, {r:1,g:2}, {g:3,b:4})(ev(0),0))
-  assert({r:[3,6]}, operator(mul, fn([1,2]), {r:3})(ev(0),0))
-  assert('ab', operator(add, 'a', 'b')(ev(0),0))
-  assert('ab', operator(add, 'a', ['b','c'])(ev(0),0))
-  assert('ac', operator(add, 'a', ['b','c'])(ev(1),1))
-  assert(['ab','ac'], operator(add, 'a', fn(['b','c']))(ev(0),0))
-  assert(['ac','bc'], operator(add, fn(['a','b']),'c')(ev(0),0))
+  assert([4,5], operator(add, fn([1,2]), 3)(ev(0),0,evalParam))
+  assert([3,4], operator(add, 1, fn([2,3]))(ev(0),0,evalParam))
+  assert([3,8], operator(mul, fn([1,2]), fn([3,4]))(ev(0),0,evalParam))
+  assert([2,3], operator(mul, fn([1]), fn([2,3]))(ev(0),0,evalParam))
+  assert({r:2}, operator(mul, {r:1}, 2)(ev(0),0,evalParam))
+  assert({r:2}, operator(mul, 2, {r:1})(ev(0),0,evalParam))
+  assert({r:4,g:5}, operator(add, {r:1,g:2}, 3)(ev(0),0,evalParam))
+  assert({r:1}, operator(div, {r:[2,4]}, 2)(ev(0),0,evalParam))
+  assert({r:2}, operator(div, {r:[2,4]}, 2)(ev(1),1,evalParam))
+  assert({r:3}, operator(mul, {r:[1,2]}, [3,4])(ev(0),0,evalParam))
+  assert({r:8}, operator(mul, {r:[1,2]}, [3,4])(ev(1),1,evalParam))
+  assert({r:2}, operator(mul, {r:1}, [2,3])(ev(0),0,evalParam))
+  assert({r:3}, operator(mul, {r:1}, [2,3])(ev(1),1,evalParam))
+  assert({r:3}, operator(mul, [1,2], {r:3})(ev(0),0,evalParam))
+  assert({r:6}, operator(mul, [1,2], {r:3})(ev(1),1,evalParam))
+  assert({r:[2,3]}, operator(mul, {r:1}, fn([2,3]))(ev(0),0,evalParam))
+  assert({r:[3,6]}, operator(mul, {r:fn([1,2])}, 3)(ev(0),0,evalParam))
+  assert({r:3}, operator(add, {r:1}, {r:2})(ev(0),0,evalParam))
+  assert({r:1,g:6,b:4}, operator(mul, {r:1,g:2}, {g:3,b:4})(ev(0),0,evalParam))
+  assert({r:[3,6]}, operator(mul, fn([1,2]), {r:3})(ev(0),0,evalParam))
+  assert('ab', operator(add, 'a', 'b')(ev(0),0,evalParam))
+  assert('ab', operator(add, 'a', ['b','c'])(ev(0),0,evalParam))
+  assert('ac', operator(add, 'a', ['b','c'])(ev(1),1,evalParam))
+  assert(['ab','ac'], operator(add, 'a', fn(['b','c']))(ev(0),0,evalParam))
+  assert(['ac','bc'], operator(add, fn(['a','b']),'c')(ev(0),0,evalParam))
   assert(undefined, operator(add, fn(1), 2).interval)
   assert('frame', operator(add, perFrame, 2).interval)
   assert('frame', operator(add, 1, perFrame).interval)
@@ -123,12 +122,12 @@ define(function(require) {
   assert('frame', operator(add, perEvent, perFrame).interval)
   assert('frame', operator(add, perFrame, perEvent).interval)
 
-  assert(10, operator(add, perEvent, perEvent)(ev(0,5), 0))
-  assert(0, operator(add, perEvent, perEvent)(ev(0,0), 5))
-  assert(10, operator(add, perFrame, perFrame)(ev(0,0), 5))
-  assert(0, operator(add, perFrame, perFrame)(ev(0,5), 0))
-  assert(3, operator(add, perEvent, perFrame)(ev(0,3), 0))
-  assert(4, operator(add, perEvent, perFrame)(ev(0,0), 4))
+  assert(10, operator(add, perEvent, perEvent)(ev(0,5), 0, evalParam))
+  assert(0, operator(add, perEvent, perEvent)(ev(0,0), 5, evalParam))
+  assert(10, operator(add, perFrame, perFrame)(ev(0,0), 5, evalParam))
+  assert(0, operator(add, perFrame, perFrame)(ev(0,5), 0, evalParam))
+  assert(3, operator(add, perEvent, perFrame)(ev(0,3), 0, evalParam))
+  assert(4, operator(add, perEvent, perFrame)(ev(0,0), 4, evalParam))
 
   console.log('eval operator tests complete')
 

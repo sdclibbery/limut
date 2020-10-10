@@ -5,20 +5,20 @@ define((require) => {
     if (Array.isArray(value)) {
       let v = value[event.idx % value.length]
       if (typeof v == 'function') {
-        return evalRecurse(v, event, beat)
+        return evalRecurse(v, event, beat, evalRecurse)
       }
       return v
     } else if (typeof value == 'function') {
-      let v = value(event, beat)
+      let v = value(event, beat, evalRecurse)
       if (Array.isArray(v)) {
-        if (stopAtTuple) { return v.map(x=>evalParamEvent(x, event, beat)) }
-        return v.map(e => evalRecurse(e, event, beat))
+        if (stopAtTuple) { return v.map(x=>evalParamEvent(x, event, beat, evalParamEvent)) }
+        return v.map(e => evalRecurse(e, event, beat, evalRecurse))
       }
       return evalRecurse(v, event, beat)
     } else if (typeof value == 'object') {
       let result = {}
       for (let k in value) {
-        result[k] = evalRecurse(value[k], event, beat)
+        result[k] = evalRecurse(value[k], event, beat, evalRecurse)
       }
       return result
     } else {
