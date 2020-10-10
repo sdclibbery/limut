@@ -9,7 +9,7 @@ define(function (require) {
   let echo = (params, node) => {
     let echoDelay = evalPerEvent(params, 'echo', 0) * params.beat.duration
     if (!echoDelay || echoDelay < 0.0001) { return node }
-    let echoFeedback = Math.min(evalPerEvent(params, 'echofeedback', 0.5), 0.9)
+    let echoFeedback = Math.min(evalPerEvent(params, 'echogain', 0.5), 0.9)
     let key = echoDelay + 'f' + echoFeedback
     if (!echoes[key]) {
       echoes[key] = system.audio.createDelay(echoDelay)

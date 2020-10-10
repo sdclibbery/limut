@@ -298,6 +298,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>oct</code> Octave; middle C is in octave 4</p>
 <p><code>envelope</code> Specify the envelope type to use: 'full' (ADSR), 'simple' (AD), 'pad' (uses a sine roll on/off so consecutive notes maintain constant volume)</p>
 <p><code>echo</code> Echo time delay in beats</p>
+<p><code>echogain</code> Echo feedback gain, 0 to 1, default 0.5. Higher value means the echo persists for longer.</p>
 <p><code>detune</code> Amount of detune in semitones</p>
 <p><code>lpf</code> Low pass filter frequency</p>
 <p><code>lpr</code> Low pass filter resonance</p>
@@ -434,8 +435,6 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-echotime param
- Docs!
 Audio add should be evalled per frame and allow non int
  OR? new param for non integer semitone add? or both? or both but 'to integer' is a function/cast/whatever?
 root main var
@@ -489,6 +488,7 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 commenting out in patterns doesnt work eg 'pi ping 0 //(024)(035)'
+issue where get a blast of major when updating code??
 [0,1,2]e[0,.1,1] which would interpolate between values through the event time
  or should it just start from event start time, but still be in beats? or should that be another syntax again?
  or should it be []te, []le, []se etc?
