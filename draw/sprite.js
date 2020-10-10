@@ -73,6 +73,7 @@ define(function (require) {
     return state => { // per frame
       if (state.time > endTime) { return false }
       let amp = Math.min(evalParamFrame(params, 'amp', 1, state.count), 5)
+      let add = Math.min(evalParamFrame(params, 'add', 1, state.count), 0)
       let eventTime = ((state.time-startTime)/(endTime-startTime))
       let brightness = 1 - (eventTime*eventTime)*fade
       let monochrome = evalParamFrame(params, 'monochrome', 0, state.count)
@@ -90,7 +91,7 @@ define(function (require) {
       system.gl.uniform1f(s.timeUnif, state.count*rate + sway*state.pulse, 1)
       system.gl.uniform1f(s.brightnessUnif, brightness, 1)
       system.gl.uniform1f(s.monochromeUnif, monochrome, 1)
-      system.gl.uniform1f(s.valueUnif, value + pulse*state.pulse, 1)
+      system.gl.uniform1f(s.valueUnif, value+add + pulse*state.pulse, 1)
       system.gl.uniform1f(s.ampUnif, amp + pulse*state.pulse*0.5, 1)
       system.gl.uniform4fv(s.foreUnif, fore, 1)
       system.gl.uniform4fv(s.backUnif, back, 1)
