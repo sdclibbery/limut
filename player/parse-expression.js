@@ -68,7 +68,9 @@ define(function(require) {
   }
   let eventTimeVar = (vs) => {
     return (e,b, evalRecurse) => {
-      let eventFraction = (b - e.count) / e.dur
+      if (!e.countToTime) { return }
+      let eventFraction = (e.countToTime(b) - e.time) / (e.endTime - e.time)
+      eventFraction = eventFraction || 0
       let numSteps = vs.length-1
       let preIdx = Math.min(Math.max(Math.floor(eventFraction * numSteps), 0), numSteps)
       let postIdx = Math.min(preIdx + 1, numSteps)
@@ -914,12 +916,14 @@ define(function(require) {
   for (let i=0; i<20; i++) { assert(r, p(testEvent,i/10,evalParamFrame)) }
   assertNotEqual(r, p(ev(0,0),0,evalParamFrame))
 
+  let e
   p = parseExpression("[0:1]e")
-  assert(0, p(ev(0,7,1),6, evalParamFrame))
-  assert(0, p(ev(0,7,1),7, evalParamFrame))
-  assert(0.5, p(ev(0,7,1),7.5, evalParamFrame))
-  assert(1, p(ev(0,7,1),8, evalParamFrame))
-  assert(1, p(ev(0,7,1),9, evalParamFrame))
+  e = { idx:0, count:7, countToTime:b=>b, time:7, endTime:8 }
+  assert(0, p(e,6, evalParamFrame))
+  assert(0, p(e,7, evalParamFrame))
+  assert(0.5, p(e,7.5, evalParamFrame))
+  assert(1, p(e,8, evalParamFrame))
+  assert(1, p(e,9, evalParamFrame))
 
   console.log('Parse expression (old) tests complete')
 

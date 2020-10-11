@@ -52,6 +52,7 @@ define(function(require) {
   }
 
   let operator = (op, l, r) => {
+    if (l === undefined || r === undefined) { return }
     if (typeof l == 'number' && typeof (r) == 'number') {
       return op(l, r)
     }

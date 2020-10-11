@@ -42,7 +42,7 @@ define((require) => {
             .map(e => {
               playerFactory.play(e)
               let pulse = (ev,b) => {
-                let t = e.beat.time + (b-e.beat.count)*e.beat.duration
+                let t = e.countToTime(b)
                 if (t<e.time || t>e.endTime) { return 0 }
                 let l = e.endTime - e.time
                 let x = (t - e.time) / l
@@ -53,6 +53,7 @@ define((require) => {
                 player.events = []
                 player.lastCount = e.beat.count
               }
+              e.countToTime = (count) => e.beat.time + (count-e.beat.count)*e.beat.duration
               e.pulse = pulse
               player.events.push(e)
             })
@@ -66,7 +67,7 @@ define((require) => {
           let es = player.events
           if (!es) { return {pulse:()=>0} }
           es = es.filter(e => {
-            let t = e.beat.time + (b-e.beat.count)*e.beat.duration
+            let t = e.countToTime(b)
             return (t > e.time-0.0001) && (t < e.endTime)
           })
           return es.length>0 ? es[0] : {pulse:()=>0}

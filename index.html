@@ -232,7 +232,8 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>[1,2]l3</code> Timed linear interpolated sequence, each value takes 3 beats to change into the next</p>
 <p><code>[1,2]l[14,2]</code> Timed linear interpolated sequence, one timing per value</p>
 <p><code>[1,2]s3</code> Timed smooth interpolated sequence, each value takes 3 beats to change into the next, using an 's' shaped eas in/out curve</p>
-<p><code>[1,2]s[14,2]</code> Timed 's' interpolated sequence, one timing per value</p>
+<p><code>[1,2]s[14,2]</code> Timed smooth interpolated sequence, one timing per value</p>
+<p><code>[1,2]e</code> Timed sequence, each value is evenly spaced from beginning to end of the current event</p>
 <p><code>[1,4,7]r</code> Select a different value every time, chosen randomly from the numbers 1, 4 and 7</p>
 <p><code>[:9]r</code> Select a different random integer every time, between 0 and 9</p>
 <p><code>[0:9]r</code> Select a different random integer every time, between 0 and 9</p>
@@ -470,6 +471,9 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+drop predefined var
+ docs
+spark predefined var
 improve sparkle shader: value should change size of spikes but not core
 Webcam synth
 colours can be defined using hsl/hsv instead of rgb - or better a perceptually uniform space
@@ -487,13 +491,11 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-[0,1,2]e[0,.1,1] which would interpolate between values through the event time
- Should convert to times from count/dur really
 ? Can lerp between per event vals? eg [1,[2,3]t1@e]l1@f Same for []s and []e? What about []r?
-[]te, []le, []se etc syntax to start from event start time
- Allows spark and drop predefined vars
 []n syntax for perlin noise; ie for continuous noise as opposed to random
  firefly predefined var to move with noise
+[]te, []le, []se etc syntax to start from event start time
+Support [0,1,2]e[0,.1,1] syntax
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way?? Should be available for follow players too
 commenting out in patterns doesnt work eg 'pi ping 0 //(024)(035)'
 can [0:1]r pick from the reals rather than [0,1] please?
