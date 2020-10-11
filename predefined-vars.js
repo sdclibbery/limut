@@ -43,6 +43,7 @@ define(function(require) {
   vars['tile_random'] = parseExpression('{x:[0:3/4]r@e,y:[0:3/4]r@e,w:1/4,h:1/4}')
   vars['tile_rand'] = parseExpression('{x:[0:3/4]r@e,y:[0:3/4]r@e,w:1/4,h:1/4}')
   vars['sparkle'] = parseExpression('{x:[0:5/6]r@e,y:[0:5/6]r@e,w:1/6,h:1/6}')
+  vars['droplet'] = parseExpression('{w:1/8,h:1/8,x:[0:7/8]r,y:[-0.1:0.1]r+[0:1]e}')
 
   vars['transparent'] = parseExpression('{r:0,g:0,b:0,a:0}')
   vars['black'] = parseExpression('{r:0,g:0,b:0,a:1}')
