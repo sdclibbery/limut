@@ -40,10 +40,10 @@ define(function(require) {
       if (interval !== 'frame') { count = e.count }
       count = count % steps.totalDuration
       for (let idx = 0; idx < steps.length; idx++) {
-        let pre = steps[idx]
+        let pre = evalRecurse(steps[idx], e,b)
         if (isInTimeVarStep(pre, count)) {
           let post = evalRecurse(steps[(idx+1) % steps.length], e,b)
-          let lerp = evalRecurse((count - pre.time) / pre.duration, e,b)
+          let lerp = (count - pre.time) / pre.duration
           return (1-lerp)*pre.value + lerp*post.value
         }
       }
