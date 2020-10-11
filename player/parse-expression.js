@@ -66,6 +66,18 @@ define(function(require) {
       }
     }
   }
+  let eventTimeVar = (vs) => {
+    return (e,b, evalRecurse) => {
+      let eventFraction = (b - e.count) / e.dur
+      let numSteps = vs.length-1
+      let preIdx = Math.min(Math.max(Math.floor(eventFraction * numSteps), 0), numSteps)
+      let postIdx = Math.min(preIdx + 1, numSteps)
+      let pre = evalRecurse(vs[preIdx], e,b, evalRecurse)
+      let post = evalRecurse(vs[postIdx], e,b, evalRecurse)
+      let lerp = Math.min(Math.max((eventFraction - preIdx/numSteps)*numSteps, 0), 1)
+      return (1-lerp)*pre + lerp*post
+    }
+  }
 
   let doArray = (state, open, close, seperator) => {
     let result = []
@@ -339,6 +351,10 @@ define(function(require) {
             result = random(rand)
           }
           result.interval = interval
+        } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
+          state.idx += 1
+          result = eventTimeVar(vs)
+          result.interval = 'frame'
         } else { // Basic array: one value per pattern step
           vs = expandColon(vs)
           result = vs
@@ -449,7 +465,7 @@ define(function(require) {
   }
 
   let {evalParamFrame,evalParamEvent} = require('player/eval-param')
-  let ev = (i,c) => {return{idx:i,count:c}}
+  let ev = (i,c,d) => {return{idx:i,count:c,dur:d}}
 
   assert(undefined, parseExpression())
   assert(undefined, parseExpression(''))
@@ -897,6 +913,13 @@ define(function(require) {
   r = p(testEvent,0,evalParamFrame)
   for (let i=0; i<20; i++) { assert(r, p(testEvent,i/10,evalParamFrame)) }
   assertNotEqual(r, p(ev(0,0),0,evalParamFrame))
+
+  p = parseExpression("[0:1]e")
+  assert(0, p(ev(0,7,1),6, evalParamFrame))
+  assert(0, p(ev(0,7,1),7, evalParamFrame))
+  assert(0.5, p(ev(0,7,1),7.5, evalParamFrame))
+  assert(1, p(ev(0,7,1),8, evalParamFrame))
+  assert(1, p(ev(0,7,1),9, evalParamFrame))
 
   console.log('Parse expression (old) tests complete')
 

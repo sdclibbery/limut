@@ -487,10 +487,10 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-issue where get a blast of major when updating code??
 [0,1,2]e[0,.1,1] which would interpolate between values through the event time
- or should it just start from event start time, but still be in beats? or should that be another syntax again?
- or should it be []te, []le, []se etc?
+ Should convert to times from count/dur really
+? Can lerp between per event vals? eg [1,[2,3]t1@e]l1@f Same for []s and []e? What about []r?
+[]te, []le, []se etc syntax to start from event start time
  Allows spark and drop predefined vars
 []n syntax for perlin noise; ie for continuous noise as opposed to random
  firefly predefined var to move with noise
