@@ -4,6 +4,7 @@ define(function(require) {
   let number = require('player/parse-number')
   let operatorTree = require('player/parse-operator')
   let {timeVar, linearTimeVar, smoothTimeVar, eventTimeVar} = require('player/eval-timevars')
+  let {evalRandomRanged, evalRandomSet, periodicRandom, random} = require('player/eval-randoms')
   let varLookup = require('player/parse-var')
 
   let doArray = (state, open, close, seperator) => {
@@ -25,7 +26,6 @@ define(function(require) {
         return undefined
       }
     }
-    // console.log('doArray', result, state)
     return result
   }
   let array = (state, open, close) => {
@@ -34,13 +34,11 @@ define(function(require) {
     if (commaArray != undefined) {
       Object.assign(state, tryState)
       commaArray.seperator = ','
-      // console.log('array', commaArray.seperator, commaArray, state)
       return commaArray
     }
     let colonArray = doArray(state, open, close, ':')
     if (colonArray == undefined) { return [] }
     colonArray.seperator = ':'
-    // console.log('array', colonArray.seperator, colonArray, state)
     return colonArray
   }
   let expandColon = (vs) => {
@@ -70,38 +68,6 @@ define(function(require) {
       } else {
         return 4
       }
-    }
-  }
-
-  let evalRandomRanged = (lo, hi) => {
-    if (!Number.isInteger(lo) || !Number.isInteger(hi)) {
-      return lo + Math.random() * (hi-lo)
-    } else {
-      return lo + Math.floor(Math.random() * (hi-lo+0.9999))
-    }
-  }
-  let evalRandomSet = (vs, e,b, evalRecurse) => {
-    let idx = Math.floor(Math.random()*vs.length*0.9999)
-    return evalRecurse(vs[idx], e,b)
-  }
-  let periodicRandom = (getter, period, interval) => {
-    let lastBeat, lastValue
-    return (e,b,evalRecurse) => {
-      let count = (interval !== 'frame') ? b = e.count : b
-      if (lastValue === undefined || period === undefined || count >= lastBeat+period-0.0001) {
-        lastBeat = count
-        lastValue = getter(e,b,evalRecurse)
-      }
-      return lastValue
-    }
-  }
-  let random = (getter) => {
-    let events = new WeakMap()
-    return (e,b,evalRecurse) => {
-      if (!events.has(e)) {
-        events.set(e, getter(e,b,evalRecurse))
-      }
-      return events.get(e)
     }
   }
 
@@ -135,7 +101,6 @@ define(function(require) {
     eatWhitespace(state)
     let v = expression(state)
     eatWhitespace(state)
-    // console.log('map entry', k, v, state)
     return {k:k,v:v}
   }
   let parseMap = (state) => {
@@ -157,7 +122,6 @@ define(function(require) {
         return undefined
       }
     }
-    // console.log('map', result, state)
     return result
   }
 
@@ -172,7 +136,6 @@ define(function(require) {
       result += char
       state.idx += 1
     }
-    // console.log('string', result, state)
     return result
   }
 
@@ -184,11 +147,9 @@ define(function(require) {
       if (state.str.charAt(state.idx) == 'f') {
         state.idx += 1
         result = 'frame'
-        // console.log('interval', result, state)
       } else if (state.str.charAt(state.idx) == 'e') {
         state.idx += 1
         result = 'event'
-        // console.log('interval', result, state)
       }
     }
     return result
@@ -219,7 +180,6 @@ define(function(require) {
       result.b = hex2(str.substr(4,2))
       result.a = hex2(str.substr(6,2))
     }
-    // console.log('colour', result, state)
     return result
   }
 
