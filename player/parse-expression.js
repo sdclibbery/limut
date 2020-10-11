@@ -3,83 +3,8 @@ define(function(require) {
   let param = require('player/default-param')
   let number = require('player/parse-number')
   let operatorTree = require('player/parse-operator')
+  let {timeVar, linearTimeVar, smoothTimeVar, eventTimeVar} = require('player/eval-timevars')
   let varLookup = require('player/parse-var')
-
-  let timeVarSteps = (vs, ds) => {
-    if (!Array.isArray(ds)) { ds = [ds] }
-    let steps = []
-    let length = 0
-    let step = 0
-    vs.forEach(v => {
-      let dur = ds[step % ds.length]
-      steps.push({ value:v, time:length, duration:dur })
-      length += dur
-      step += 1
-    })
-    steps.totalDuration = length
-    return steps
-  }
-  let isInTimeVarStep  = (st, b) => {
-    return (b > st.time-0.00001)&&(b < st.time+st.duration+0.00001)
-  }
-  let timeVar = (vs, ds, interval) => {
-    if (Array.isArray(ds)) { ds = expandColon(ds) }
-    let steps = timeVarSteps(vs, ds)
-    return (e,b, evalRecurse) => {
-      let count = b
-      if (interval !== 'frame') { count = e.count }
-      count = (count+0.0001) % steps.totalDuration
-      let step = steps.filter(st => isInTimeVarStep(st, count) )[0]
-      return (step !== undefined) && evalRecurse(step.value, e,b)
-    }
-  }
-  let linearTimeVar = (vs, ds, interval) => {
-    let steps = timeVarSteps(vs, ds)
-    return (e,b, evalRecurse) => {
-      let count = b
-      if (interval !== 'frame') { count = e.count }
-      count = count % steps.totalDuration
-      for (let idx = 0; idx < steps.length; idx++) {
-        let pre = evalRecurse(steps[idx], e,b)
-        if (isInTimeVarStep(pre, count)) {
-          let post = evalRecurse(steps[(idx+1) % steps.length], e,b)
-          let lerp = (count - pre.time) / pre.duration
-          return (1-lerp)*pre.value + lerp*post.value
-        }
-      }
-    }
-  }
-  let sTimeVar = (vs, ds, interval) => {
-    let steps = timeVarSteps(vs, ds)
-    return (e,b, evalRecurse) => {
-      let count = b
-      if (interval !== 'frame') { count = e.count }
-      count = count % steps.totalDuration
-      for (let idx = 0; idx < steps.length; idx++) {
-        let pre = evalRecurse(steps[idx], e,b)
-        if (isInTimeVarStep(pre, count)) {
-          let post = evalRecurse(steps[(idx+1) % steps.length], e,b)
-          let lerp = (count - pre.time) / pre.duration
-          lerp = lerp*lerp*(3 - 2*lerp) // bezier ease in/out
-          return (1-lerp)*pre.value + lerp*post.value
-        }
-      }
-    }
-  }
-  let eventTimeVar = (vs) => {
-    return (e,b, evalRecurse) => {
-      if (!e.countToTime) { return }
-      let eventFraction = (e.countToTime(b) - e.time) / (e.endTime - e.time)
-      eventFraction = eventFraction || 0
-      let numSteps = vs.length-1
-      let preIdx = Math.min(Math.max(Math.floor(eventFraction * numSteps), 0), numSteps)
-      let postIdx = Math.min(preIdx + 1, numSteps)
-      let pre = evalRecurse(vs[preIdx], e,b, evalRecurse)
-      let post = evalRecurse(vs[postIdx], e,b, evalRecurse)
-      let lerp = Math.min(Math.max((eventFraction - preIdx/numSteps)*numSteps, 0), 1)
-      return (1-lerp)*pre + lerp*post
-    }
-  }
 
   let doArray = (state, open, close, seperator) => {
     let result = []
@@ -149,7 +74,6 @@ define(function(require) {
   }
 
   let evalRandomRanged = (lo, hi) => {
-    // console.log('eval evalRandomRanged', lo, hi)
     if (!Number.isInteger(lo) || !Number.isInteger(hi)) {
       return lo + Math.random() * (hi-lo)
     } else {
@@ -158,7 +82,6 @@ define(function(require) {
   }
   let evalRandomSet = (vs, e,b, evalRecurse) => {
     let idx = Math.floor(Math.random()*vs.length*0.9999)
-    // console.log('eval evalRandomRanged', vs.length, idx, s,b)
     return evalRecurse(vs[idx], e,b)
   }
   let periodicRandom = (getter, period, interval) => {
@@ -320,6 +243,7 @@ define(function(require) {
           state.idx += 1
           vs = expandColon(vs)
           let ds = numberOrArrayOrFour(state)
+          if (Array.isArray(ds)) { ds = expandColon(ds) }
           let interval = parseInterval(state) || 'event'
           result = timeVar(vs, ds, interval)
           result.interval = interval
@@ -333,7 +257,7 @@ define(function(require) {
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
           let interval = parseInterval(state) || 'event'
-          result = sTimeVar(vs, ds, interval)
+          result = smoothTimeVar(vs, ds, interval)
           result.interval = interval
         } else if (state.str.charAt(state.idx).toLowerCase() == 'r') { // random
           state.idx += 1
