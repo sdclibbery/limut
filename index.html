@@ -349,8 +349,10 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>fullscreen</code> Tile covering the full screen</p>
 <p><code>tile_random</code> Tile in a random location</p>
 <p><code>tile_rand</code> Tile in a random location</p>
-<p><code>sparkle</code> Tile in a random location</p>
-<p><code>droplet</code> Tile in a random location, then falling down the screen</p>
+<p><code>sparkle</code> Small tile in a random location</p>
+<p><code>droplet</code> Small tile in a random location, then falling down the screen</p>
+<p><code>spark</code> Small tile flying outwards</p>
+<p><code>gravity</code> Accelrating motion downwards. Best combined with other values; eg <code>spark+gravity</code></p>
 <p><code>transparent</code> Predefined colour. Others: black, darkgray, gray, lightgray, white, red, orange, yellow, green, blue, indigo, violet, neonpink, neongreen</p>
 <p><code>random</code> Random colour</p>
 <p><code>rainbow</code> Colour changing through the rainbow</p>
@@ -472,7 +474,6 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-spark predefined var
 improve sparkle shader: value should change size of spikes but not core
 Webcam synth
 colours can be defined using hsl/hsv instead of rgb - or better a perceptually uniform space
@@ -491,9 +492,10 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 ? Can lerp between per event vals? eg [1,[2,3]t1@e]l1@f Same for []s and []e? What about []r?
+should be able to override var interval? eg fore=rainbow@e
 []n syntax for perlin noise; ie for continuous noise as opposed to random
  firefly predefined var to move with noise
-[]te, []le, []se etc syntax to start from event start time
+[]te, []le, []se etc syntax to start from event start time?
 Support [0,1,2]e[0,.1,1] syntax
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way?? Should be available for follow players too
 commenting out in patterns doesnt work eg 'pi ping 0 //(024)(035)'
