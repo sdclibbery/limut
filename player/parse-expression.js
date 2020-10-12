@@ -4,7 +4,7 @@ define(function(require) {
   let number = require('player/parse-number')
   let operatorTree = require('player/parse-operator')
   let {timeVar, linearTimeVar, smoothTimeVar, eventTimeVar} = require('player/eval-timevars')
-  let {evalRandomRanged, evalRandomSet, periodicRandom, random} = require('player/eval-randoms')
+  let {evalRandomRanged, evalRandomSet, periodicRandom, random, simpleNoise} = require('player/eval-randoms')
   let varLookup = require('player/parse-var')
 
   let doArray = (state, open, close, seperator) => {
@@ -236,6 +236,11 @@ define(function(require) {
           } else {
             result = random(rand)
           }
+          result.interval = interval
+        } else if (state.str.charAt(state.idx).toLowerCase() == 'n') { // simple noise
+          state.idx += 1
+          let interval = parseInterval(state) || 'frame'
+          result = simpleNoise(vs, interval)
           result.interval = interval
         } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
           state.idx += 1
