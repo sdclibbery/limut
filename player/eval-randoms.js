@@ -39,15 +39,16 @@ define(function(require) {
   let hash = (n) => {
     n += 213.43254
     n *= n
-    return ((n*n*n*n)%951.135664)/951.135664
+    let r = ((n*n*n*n)%951.135664)/951.135664
+    return r
   }
   let bnoise = (x) => {
       let i = Math.trunc(x)
       let f = x%1
-      let s = Math.sign((x/2.0)%1-0.5)
       let k = hash(i)
-      return s*f*(f-1.0)*((16.0*k-4.0)*f*(f-1.0)-1.0)
-  }
+      let r = f*(f-1.0)*((16.0*k-4.0)*f*(f-1.0)-1.0)
+      return r
+    }
   let simpleNoise = (vs, interval) => {
     let paramSeed = Math.random()*10000
     return (e,b, evalRecurse) => {
@@ -58,12 +59,15 @@ define(function(require) {
           bnoise(count*1)*4
           +bnoise(count*2)*2
           +bnoise(count*4)*1
-        )*3/14
+        )/6
+      if (vs.separator === ':' && vs.length === 2) {
+        let lo = vs[0]
+        let hi = vs[1]
+        result = lo + result*(hi-lo)
+      }
       return result
     }
   }
-
-  console.log('Random tests complete')
 
   return {
     evalRandomRanged: evalRandomRanged,

@@ -474,12 +474,14 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+change coordinate system so 0,0 is in centre
+rotate param
 improve sparkle shader: value should change size of spikes but not core
 Webcam synth
+vignette effect - vignette to 0-1 in UVs to support images?
 colours can be defined using hsl/hsv instead of rgb - or better a perceptually uniform space
 Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
 video synth (use video element to load video file; don't try and target eg youtube)
-vignette effect - vignette to 0-1 in UVs to support images?
 Start image download on parse not on first use
 text synth
 gamma
@@ -492,20 +494,24 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 []n syntax for perlin noise; ie for continuous noise as opposed to random
+ tests: within range -1:1
  [0:2]n range values
  []n2 timescale
+ eval values
  firefly predefined var to move with noise
  docs
+Rename @f to @c for continuous?
 should be able to override var interval? eg fore=rainbow@e
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way?? Should be available for follow players too
 []te, []le, []se etc syntax to start from event start time?
 Support [0,1,2]e[0,.1,1] syntax
 commenting out in patterns doesnt work eg 'pi ping 0 //(024)(035)'
 long delay times dont work?
-Rename @f to @c for continuous
 unary minus operator; eg '-time'
+[]w for random walk?
 Possible bug: Can applying overrides stop @f behaviour?
 apply overridden delay for follow player: allow canons
+?[1,3,5]n syntax to smoothly transition between randomly chosen values or should be [1,3,5]rs?
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 extending patterns like every/sometimes/offadd/stutter etc
 pattern values in vars, and then use in multiple players, and also invert, retrograde etc

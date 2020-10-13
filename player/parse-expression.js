@@ -7,7 +7,7 @@ define(function(require) {
   let {evalRandomRanged, evalRandomSet, periodicRandom, random, simpleNoise} = require('player/eval-randoms')
   let varLookup = require('player/parse-var')
 
-  let doArray = (state, open, close, seperator) => {
+  let doArray = (state, open, close, separator) => {
     let result = []
     let char
     while (char = state.str.charAt(state.idx)) {
@@ -15,7 +15,7 @@ define(function(require) {
         state.idx += 1
         let v = expression(state)
         if (v !== undefined) { result.push(v) }
-      } else if (char == seperator) {
+      } else if (char == separator) {
         state.idx += 1
         let v = expression(state)
         if (v !== undefined) { result.push(v) }
@@ -33,16 +33,16 @@ define(function(require) {
     let commaArray = doArray(tryState, open, close, ',')
     if (commaArray != undefined) {
       Object.assign(state, tryState)
-      commaArray.seperator = ','
+      commaArray.separator = ','
       return commaArray
     }
     let colonArray = doArray(state, open, close, ':')
     if (colonArray == undefined) { return [] }
-    colonArray.seperator = ':'
+    colonArray.separator = ':'
     return colonArray
   }
   let expandColon = (vs) => {
-    if (vs.seperator == ':') {
+    if (vs.separator == ':') {
       let lo = 0
       let hi = 1
       if (vs.length == 1) {
@@ -224,7 +224,7 @@ define(function(require) {
           let period = number(state)
           let interval = parseInterval(state) || 'event'
           let rand
-          if (vs.seperator == ':') {
+          if (vs.separator == ':') {
             let lo = param(vs[0], 0)
             let hi = param(vs[1], 1)
             rand = (e,b,evalRecurse) => evalRandomRanged(evalRecurse(lo,e,b,evalRecurse), evalRecurse(hi,e,b.evalRecurse))
@@ -814,7 +814,32 @@ define(function(require) {
   assert(1, p(e,8, evalParamFrame))
   assert(1, p(e,9, evalParamFrame))
 
-  console.log('Parse expression (old) tests complete')
+  let last
+  p = parseExpression("[]n")
+  e = ev(0,0)
+  last = undefined
+  for (let b= 0; b<1; b+=0.01) {
+    let current = p(e,b,evalParamFrame)
+    if (last === undefined) { last = current-0.01 }
+    assertIn(0, 1, current)
+    assertNotEqual(last, current)
+    assertIn(last-0.1, last+0.1, current)
+    last = current
+  }
+
+  p = parseExpression("[-1/8:5/8]n")
+  e = ev(0,0)
+  last = undefined
+  for (let b= 0; b<1; b+=0.01) {
+    let current = p(e,b,evalParamFrame)
+    if (last === undefined) { last = current-0.01 }
+    assertIn(-1/8,5/8, current)
+    assertNotEqual(last, current)
+    assertIn(last-0.05, last+0.05, current)
+    last = current
+  }
+
+  console.log('Parse expression tests complete')
 
   return parseExpression
 })

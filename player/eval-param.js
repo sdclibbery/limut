@@ -96,7 +96,7 @@ define((require) => {
   assert('frame', evalParamToTuple(()=>[perFrameValue], ev(0), 0)[0].interval)
   assert(4, evalParamToTuple(()=>[perEventValue], ev(0), 0)[0])
 
-  console.log('Eval param (old) tests complete')
+  console.log('Eval param tests complete')
 
   return {
     evalParamEvent:evalParamEvent,
