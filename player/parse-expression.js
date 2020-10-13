@@ -814,7 +814,7 @@ define(function(require) {
   assert(1, p(e,8, evalParamFrame))
   assert(1, p(e,9, evalParamFrame))
 
-  let last
+  let last, min, max
   p = parseExpression("[]n")
   e = ev(0,0)
   last = undefined
@@ -826,6 +826,15 @@ define(function(require) {
     assertIn(last-0.1, last+0.1, current)
     last = current
   }
+  min=1
+  max=-1
+  for (let b= 0; b<20000; b+=0.1) {
+    let current = p(e,b,evalParamFrame)
+    min = Math.min(min, current)
+    max = Math.max(max, current)
+  }
+  assertIn(0, 0.1, min)
+  assertIn(0.9, 1, max)
 
   p = parseExpression("[-1/8:5/8]n")
   e = ev(0,0)
@@ -838,6 +847,15 @@ define(function(require) {
     assertIn(last-0.05, last+0.05, current)
     last = current
   }
+  min=1
+  max=-1
+  for (let b= 0; b<20; b+=0.1) {
+    let current = p(e,b,evalParamFrame)
+    min = Math.min(min, current)
+    max = Math.max(max, current)
+  }
+  assertIn(-1/8, 0, min)
+  assertIn(4/8, 5/8, max)
 
   console.log('Parse expression tests complete')
 

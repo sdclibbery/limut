@@ -56,10 +56,9 @@ define(function(require) {
       let count = (interval !== 'frame') ? e.count : b
       count += e._noiseSeed + paramSeed
       let result = (
-          bnoise(count*1)*4
-          +bnoise(count*2)*2
-          +bnoise(count*4)*1
-        )/6
+          bnoise(count*1)*2
+          +(1-bnoise(count*2.3))*1
+        )/3
       if (vs.separator === ':' && vs.length === 2) {
         let lo = vs[0]
         let hi = vs[1]
