@@ -828,7 +828,7 @@ define(function(require) {
   }
   min=1
   max=-1
-  for (let b= 0; b<20000; b+=0.1) {
+  for (let b= 0; b<200; b+=0.2) {
     let current = p(e,b,evalParamFrame)
     min = Math.min(min, current)
     max = Math.max(max, current)
@@ -847,15 +847,6 @@ define(function(require) {
     assertIn(last-0.05, last+0.05, current)
     last = current
   }
-  min=1
-  max=-1
-  for (let b= 0; b<20; b+=0.1) {
-    let current = p(e,b,evalParamFrame)
-    min = Math.min(min, current)
-    max = Math.max(max, current)
-  }
-  assertIn(-1/8, 0, min)
-  assertIn(4/8, 5/8, max)
 
   console.log('Parse expression tests complete')
 
