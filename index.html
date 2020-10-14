@@ -354,6 +354,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>droplet</code> Small tile in a random location, then falling down the screen</p>
 <p><code>spark</code> Small tile flying outwards</p>
 <p><code>gravity</code> Accelrating motion downwards. Best combined with other values; eg <code>spark+gravity</code></p>
+<p><code>firefly</code> Random motion like a flying insect</p>
 <p><code>transparent</code> Predefined colour. Others: black, darkgray, gray, lightgray, white, red, orange, yellow, green, blue, indigo, violet, neonpink, neongreen</p>
 <p><code>random</code> Random colour</p>
 <p><code>rainbow</code> Colour changing through the rainbow</p>
@@ -440,7 +441,6 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-Make compressor indicator more sensitive
 Audio add should be evalled per frame and allow non int
  OR? new param for non integer semitone add? or both? or both but 'to integer' is a function/cast/whatever?
 root main var
@@ -477,9 +477,10 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
 change coordinate system so 0,0 is in centre??
- - fullscreen is w:2 etc
- + scale from centre of screen
- + movement offsets can be from 0,0
+ sprite
+ predefined vars
+ test all shaders
+ docs
 rotate param
 improve sparkle shader: value should change size of spikes but not core
 Webcam synth
@@ -498,9 +499,9 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-[]n2 timescale
- What is using the scroll event? https://developer.mozilla.org/docs/Mozilla/Performance/ScrollLinkedEffects
 Rename @f to @c for continuous?
+[]n2 timescale
+What is using the scroll event? https://developer.mozilla.org/docs/Mozilla/Performance/ScrollLinkedEffects
 should be able to override var interval? eg fore=rainbow@e
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way?? Should be available for follow players too
 []te, []le, []se etc syntax to start from event start time?
