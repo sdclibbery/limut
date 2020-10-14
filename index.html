@@ -325,7 +325,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <p><code>fade</code> brightness/transparent fadeout</p>
 <p><code>pulse</code> extent to which the audio signal affects the value passed to visual synths</p>
 <p><code>sway</code> extent to which the audio signal affects the time passed to visual synths</p>
-<p><code>loc</code> position and size for visual synths; eg {x:0,y:0,w:1/2,h:1/2}</p>
+<p><code>loc</code> position and size for visual synths; eg {x:0,y:0,w:1,h:1}. The visual coordinate system runs from (-1,-1) in the bottom left of the screen to (1,1) in the top right.</p>
 <p><code>window</code> display the only part of the shader image appropriate to the location of the tile on the screen. This way, a tile moved around the screen will act like a window onto the overall shader image.</p>
 <p><code>scroll</code> scroll the shader; default: {x:0,y:0}</p>
 <p><code>zoom</code> zoom the shader; default: {x:1,y:1}</p>
@@ -476,11 +476,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-change coordinate system so 0,0 is in centre??
- sprite
- predefined vars
- test all shaders
- docs
+y:[0.8:1.2]r-[0:2]e   - broken!
 rotate param
 improve sparkle shader: value should change size of spikes but not core
 Webcam synth
