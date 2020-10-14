@@ -51,7 +51,7 @@ define(function(require) {
         lo = vs[0]
         hi = vs[1]
       }
-      if (Number.isInteger(lo) && Number.isInteger(hi)) {
+      if (Number.isInteger(lo) && Number.isInteger(hi) && hi>lo && hi-lo < 20) {
         return [...Array(hi-lo+1).keys()].map(x => x+lo)
       }
     }
@@ -813,6 +813,17 @@ define(function(require) {
   assert(0.5, p(e,7.5, evalParamFrame))
   assert(1, p(e,8, evalParamFrame))
   assert(1, p(e,9, evalParamFrame))
+
+  assert(1, parseExpression("[1,0]t1")(ev(0,0),0,evalParamFrame))
+  assert(0, parseExpression("[1,0]t1")(ev(1,1),1,evalParamFrame))
+  assert(1, parseExpression("[1,0]l1")(ev(0,0),0,evalParamFrame))
+  assert(0, parseExpression("[1,0]l1")(ev(1,1),1,evalParamFrame))
+
+  p = parseExpression("[1000:100]e")
+  e = { idx:0, count:7, countToTime:b=>b, time:7, endTime:8 }
+  r = evalParamEvent(p,e,7)
+  assert('function', typeof(r))
+  assert(550, evalParamFrame(r,e,7.5))
 
   let last, min, max
   p = parseExpression("[]n")

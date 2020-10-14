@@ -439,6 +439,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
+Make compressor indicator more sensitive
 Audio add should be evalled per frame and allow non int
  OR? new param for non integer semitone add? or both? or both but 'to integer' is a function/cast/whatever?
 root main var
@@ -496,11 +497,14 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+lpf=[1000:100]e bug
 []n syntax for perlin noise; ie for continuous noise as opposed to random
+ put third octave back on a 1-
  []n2 timescale
  eval values
  firefly predefined var to move with noise
  docs
+What is using the scroll event? https://developer.mozilla.org/docs/Mozilla/Performance/ScrollLinkedEffects
 Rename @f to @c for continuous?
 should be able to override var interval? eg fore=rainbow@e
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way?? Should be available for follow players too
