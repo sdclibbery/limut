@@ -59,9 +59,10 @@ define(function(require) {
           bnoise(count*1)*2
           +(1-bnoise(count*2.3))*1
         )/3
-      if (vs.separator === ':' && vs.length === 2) {
-        let lo = vs[0]
-        let hi = vs[1]
+      let evs = vs.map(v => evalRecurse(v, e,b, evalRecurse))
+      if (vs.separator === ':' && evs.length === 2) {
+        let lo = evs[0]
+        let hi = evs[1]
         result = lo + result*(hi-lo)
       }
       return result

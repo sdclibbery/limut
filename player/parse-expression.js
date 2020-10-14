@@ -340,15 +340,22 @@ define(function(require) {
     if (actual === expected) { console.trace(`Assertion failed.\n>>Expected ${expected}\n to be different than actual: ${actual}`) }
   }
   let assertApprox = (expected, actual) => {
+    assertNumber(actual)
     if (actual < expected-0.0001 || actual > expected+0.0001) { console.trace(`Assertion failed.\n>>Expected ${expected}\n>>Actual: ${actual}`) }
   }
+  let assertNumber = (v) => {
+    if (typeof v !== 'number') { console.trace(`Assertion failed.\n>>Expected ${v} to be a number but was ${typeof v}`) }
+  }
   let assertIn = (lo, hi, actual) => {
+    assertNumber(actual)
     if (actual < lo-0.0001 || actual > hi+0.0001) { console.trace(`Assertion failed.\n>>Expected ${lo} - ${hi}\n>>Actual: ${actual}`) }
   }
   let assertInteger = (v) => {
+    assertNumber(v)
     if (!Number.isInteger(v)) { console.trace(`Assertion failed.\n>>Expected ${v} to be an Integer`) }
   }
   let assertNotInteger = (v) => {
+    assertNumber(v)
     if (Number.isInteger(v)) { console.trace(`Assertion failed.\n>>Expected ${v} not to be an Integer`) }
   }
   let assertOneOf = (vs, actual) => {
@@ -858,6 +865,10 @@ define(function(require) {
     assertIn(last-0.05, last+0.05, current)
     last = current
   }
+
+  p = parseExpression("[[1,5]t1:[2,6]t1]n")
+  assertIn(1, 2, p(ev(0,0),0,evalParamFrame))
+  assertIn(5, 6, p(ev(1,1),1,evalParamFrame))
 
   console.log('Parse expression tests complete')
 
