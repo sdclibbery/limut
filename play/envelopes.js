@@ -66,7 +66,7 @@ define(function (require) {
   }
 
   return (params, gainbase, defaultEnvelope) => {
-    let envelope = param(params.envelope, defaultEnvelope)
+    let envelope = evalPerEvent(params, "envelope", defaultEnvelope)
     switch (envelope) {
       case 'full': return fullEnvelope(params, gainbase)
       case 'simple': return simpleEnvelope(params, gainbase)

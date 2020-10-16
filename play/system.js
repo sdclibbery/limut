@@ -31,7 +31,7 @@ system.latency = () => {
   return system.audio.outputLatency 
 }
 
-let globalBaseGain = 12
+let globalBaseGain = 1.7
 system.vcaMainAmp = system.audio.createGain()
 system.vcaMainAmp.gain.value = globalBaseGain
 system.mainAmpValue = 1
@@ -51,10 +51,11 @@ system.mainAmpUi = (amp) => {
   return system.mainAmpUiValue
 }
 system.vcaPreAmp = system.audio.createGain()
-system.vcaPreAmp.gain.value = 0.3
+system.vcaPreAmp.gain.value = 1
 
 system.compressorReduction = () => {
   if (!system.compressor) { return 0 }
+console.log(system.compressor.reduction)
   return system.compressor.reduction
 }
 

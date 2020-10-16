@@ -199,7 +199,7 @@ define(function(require) {
         consoleOut('Run Error from drawing: ' + e + st)
       }
     }
-    compressorReadout.style.backgroundColor = readoutColor(system.compressorReduction(), 0, 0.1)
+    compressorReadout.style.backgroundColor = readoutColor(system.compressorReduction(), 0, -0.1)
     beatLatencyReadout.style.backgroundColor = readoutColor(beatLatency, 0, metronome.advance())
     audioReadout.style.backgroundColor = readoutColor(system.latency(), 0, 0.1)
     visualReadout.style.backgroundColor = readoutColor(drawSystem.latency(), 0.02, 0.1)
