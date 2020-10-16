@@ -189,6 +189,14 @@ Db dbass .0_..0_1, drive=1, lpf=700</pre>
 d1 play (vx)., room=0.3
 d2 play .[::], room=0.3
 ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
+<pre>bpm=145
+scale=minor
+kd play (xv):, lpf=1000
+hh play -, dur=1/4, amp=[0.2:1.2]n
+kk play ::[::][::][::]::., lpf=[600:900]l40, rate=[0.8:1.2]n
+ba dbass 0, dur=1/4, att=0, lpf=[1000:100]e, hpf=[0:500]n
+pi ping [010], add=[-5:5]l18/4, amp=[0:[0:1]t96]n, echo=1/2, oct=6, scale=minorpentatonic
+pad dsaw 034, sus=3, att=1, amp=[0:1]s64, room=0.5, lpf=[1000:3000]s16, oct=3, add=[1,0]t64</pre>
 </div>
 <h4 onclick="toggleAccordion('accordion-basic-syntax')">▶ Basic Syntax</h4>
 <div id="accordion-basic-syntax" class="closed">
@@ -441,6 +449,8 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
+Compression :-(
+Envelope=pad not working
 Audio add should be evalled per frame and allow non int
  OR? new param for non integer semitone add? or both? or both but 'to integer' is a function/cast/whatever?
 root main var
@@ -448,6 +458,7 @@ Constant envelope type to allow specifying per frame envelope with amp?
 AudioWorklet freeverb with webaseembly
 Chorus effect
 pan param
+Drive should be per frame
 Try drive from here: https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
 Pluck/guitar synths
  https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
@@ -476,7 +487,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-y:[0.8:1.2]r-[0:2]e   - broken!
+x,y should be in CENTRE of sprite..??
 rotate param
 improve sparkle shader: value should change size of spikes but not core
 Webcam synth
@@ -495,6 +506,7 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+[1:1]r-[0:2]e   - broken!
 Rename @f to @c for continuous?
 []n2 timescale
 What is using the scroll event? https://developer.mozilla.org/docs/Mozilla/Performance/ScrollLinkedEffects

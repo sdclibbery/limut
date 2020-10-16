@@ -1,12 +1,12 @@
 'use strict'
 define((require) => {
   let metronome = require('metronome')
-  let evalParam = require('player/eval-param').evalParamFrame
+  let {evalParamEvent, evalParamFrame} = require('player/eval-param')
   let system = require('play/system')
 
   let mainVars = {
     bpm: { setter: (v) => metronome.bpm(v), default:110 },
-    scale: { setter: (v) => window.scaleChange(v.toLowerCase()), default:'major' },
+    scale: { setter: (v) => { if (typeof v === 'string') { window.scaleChange(v.toLowerCase()) } }, default:'major' },
     'main.amp': { setter: (v) => system.mainAmp(v), default:1 },
     'main.reverb': { setter: (v) => window.mainReverbChange(v), default:1 },
   }
@@ -22,19 +22,16 @@ define((require) => {
   }
 
   let set = (name, value) => {
-    if (typeof value == "function") {
-      mainVars[name].value = value
-    } else {
-      mainVars[name].setter(value)
-      delete mainVars[name].value
-    }
+    let beat = metronome.beatTime(system.timeNow())
+    mainVars[name].value = evalParamEvent(value, {idx:beat,count:beat}, beat)
+    mainVars[name].setter(evalParamFrame(mainVars[name].value, {idx:beat,count:beat}, beat))
   }
 
   let update = (step, beat) => {
     for (let k in mainVars) {
       let v = mainVars[k]
       if (v.value) {
-        mainVars[k].setter(evalParam(v.value, {idx:step,count:beat}, beat))
+        mainVars[k].setter(evalParamFrame(v.value, {idx:step,count:beat}, beat))
       }
     }
   }
