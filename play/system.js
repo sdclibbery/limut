@@ -55,7 +55,6 @@ system.vcaPreAmp.gain.value = 1
 
 system.compressorReduction = () => {
   if (!system.compressor) { return 0 }
-console.log(system.compressor.reduction)
   return system.compressor.reduction
 }
 
