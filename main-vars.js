@@ -13,6 +13,7 @@ define((require) => {
 
   let reset = () => {
     for (let k in mainVars) {
+      mainVars[k].value = undefined
       mainVars[k].setter(mainVars[k].default)
     }
   }
@@ -29,9 +30,9 @@ define((require) => {
 
   let update = (step, beat) => {
     for (let k in mainVars) {
-      let v = mainVars[k]
-      if (v.value) {
-        mainVars[k].setter(evalParamFrame(v.value, {idx:step,count:beat}, beat))
+      let v = mainVars[k].value
+      if (v) {
+        mainVars[k].setter(evalParamFrame(v, {idx:step,count:beat}, beat))
       }
     }
   }

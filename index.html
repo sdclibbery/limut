@@ -196,7 +196,7 @@ hh play -, dur=1/4, amp=[0.2:1.2]n
 kk play ::[::][::][::]::., lpf=[600:900]l40, rate=[0.8:1.2]n
 ba dbass 0, dur=1/4, att=0, lpf=[1000:100]e, hpf=[0:500]n
 pi ping [010], add=[-5:5]l18/4, amp=[0:[0:1]t96]n, echo=1/2, oct=6, scale=minorpentatonic
-pad dsaw 034, sus=3, att=1, amp=[0:1]s64, room=0.5, lpf=[1000:3000]s16, oct=3, add=[1,0]t64</pre>
+pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]s32@f, oct=3, add=[1,0]t64</pre>
 </div>
 <h4 onclick="toggleAccordion('accordion-basic-syntax')">▶ Basic Syntax</h4>
 <div id="accordion-basic-syntax" class="closed">
@@ -247,7 +247,7 @@ pad dsaw 034, sus=3, att=1, amp=[0:1]s64, room=0.5, lpf=[1000:3000]s16, oct=3, a
 <p><code>[0:9]r</code> Select a different random integer every time, between 0 and 9</p>
 <p><code>[0.1:9]r</code> Select a different random floating point value every time, between 0.1 and 9</p>
 <p><code>[1,2]r4</code> Select a different value every 4 beats, chosen randomly from the numbers 1, 2</p>
-<p><code>[1,2]n</code> Smoothly varying noise, moving between 1 and 2</p>
+<p><code>[1:2]n</code> Smoothly varying noise, moving between 1 and 2</p>
 <p><code>+</code> Add values together; eg [2,3]+4 is equivalent to [6,7]</p>
 <p><code>-</code> Subtract values; eg [2,3]-1 is equivalent to [1,2]</p>
 <p><code>/</code> Divide values; eg 1/2</p>
@@ -449,8 +449,6 @@ pad dsaw 034, sus=3, att=1, amp=[0:1]s64, room=0.5, lpf=[1000:3000]s16, oct=3, a
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-Compression :-(
-Envelope=pad not working
 Audio add should be evalled per frame and allow non int
  OR? new param for non integer semitone add? or both? or both but 'to integer' is a function/cast/whatever?
 root main var
@@ -506,8 +504,10 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-Run tests only on loclhost
+Not resetting main vars properly when cleared
+Run tests only on localhost
  Readme
+Does scale=[major, minor] work?
 [1:1]r-[0:2]e   - broken!
 Rename @f to @c for continuous?
 []n2 timescale
