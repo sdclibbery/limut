@@ -870,6 +870,12 @@ define(function(require) {
   assertIn(1, 2, p(ev(0,0),0,evalParamFrame))
   assertIn(5, 6, p(ev(1,1),1,evalParamFrame))
 
+  p = parseExpression("[1:1]r-[0:2]e")
+  e = { idx:0, count:7, countToTime:b=>b, time:7, endTime:8 }
+  assert(1, evalParamFrame(p,e,7))
+  assert(0, evalParamFrame(p,e,7.5))
+  assert(-1, evalParamFrame(p,e,8))
+
   console.log('Parse expression tests complete')
 
   return parseExpression
