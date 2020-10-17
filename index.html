@@ -291,9 +291,8 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>shadertoy</code> Display a shadertoy synth. Use the <code>id</code> param to specify which shader. Only shaders published with the 'public+api' option are available, others will give error 'Shader not found'. At present, shaders that use textures or multiple channels will also not work.</p>
 <p><code>image</code> Display an online image. Use the <code>url</code> param to specify the image url. The image must be served using CORS. by default the image <code>back</code> is transparent.</p>
 </div>
-<h4 onclick="toggleAccordion('accordion-params')">▶ Params</h4>
-<div id="accordion-params" class="closed">
-<h6>Event</h6>
+<h4 onclick="toggleAccordion('accordion-event-params')">▶ Common Event Params</h4>
+<div id="accordion-event-params" class="closed">
 <p><code>dur</code> Event time in beats. Can only use a basic value syntax including numbers, arrays [], * and /.</p>
 <p><code>delay</code> Event start time offset in beats</p>
 <p><code>amp</code> Player amplitude control</p>
@@ -303,7 +302,9 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>suslevel</code> Sustain amplitude control</p>
 <p><code>rel</code> Release time in beats</p>
 <p><code>rate</code> Playback rate for 'play' samples, animation rate for visuals</p>
-<h6>Audio</h6>
+</div>
+<h4 onclick="toggleAccordion('accordion-audio-params')">▶ Audio Params</h4>
+<div id="accordion-audio-params" class="closed">
 <p><code>add</code> Amount to add onto event scale degree, in degrees</p>
 <p><code>oct</code> Octave; middle C is in octave 4</p>
 <p><code>envelope</code> Specify the envelope type to use: 'full' (ADSR), 'simple' (AD), 'pad' (uses a sine roll on/off so consecutive notes maintain constant volume)</p>
@@ -327,18 +328,20 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>vibdepth</code> vibrato depth in demitones (default 0.4)</p>
 <p><code>vibdelay</code> delay before vibrato starts in beats (default 1)</p>
 <p><code>lfo</code> lfo frequency in cycles per beat for synths that use an lfo</p>
-<h6>Visual</h6>
+</div>
+<h4 onclick="toggleAccordion('accordion-visual-params')">▶ Visual Params</h4>
+<div id="accordion-visual-params" class="closed">
 <p><code>add</code> Amount to add onto pattern value</p>
 <p><code>zorder</code> order in which to draw visual synths; defaults to the 1/1000th of the source code line number for the player, so that visuals draw strictly in the order they appear in the source code; however, this param can be used to override this and force specific visuals to the front or rear of the draw order.</p>
 <p><code>fade</code> brightness/transparent fadeout</p>
 <p><code>pulse</code> extent to which the audio signal affects the value passed to visual synths</p>
 <p><code>sway</code> extent to which the audio signal affects the time passed to visual synths</p>
-<p><code>loc</code> position and size for visual synths; eg {x:0,y:0,w:1,h:1}. The visual coordinate system runs from (-1,-1) in the bottom left of the screen to (1,1) in the top right.</p>
+<p><code>loc</code> position and size. The visual coordinate system runs from (-1,-1) in the bottom left of the screen to (1,1) in the top right. x and y define the centre of the visual, and w and h are the full width and height; eg <code>{x:0,y:0,w:2,h:2}</code> covers the full screen.</p>
 <p><code>window</code> display the only part of the shader image appropriate to the location of the tile on the screen. This way, a tile moved around the screen will act like a window onto the overall shader image.</p>
-<p><code>scroll</code> scroll the shader; default: {x:0,y:0}</p>
-<p><code>zoom</code> zoom the shader; default: {x:1,y:1}</p>
-<p><code>fore</code> foreground colour for visual synths; eg {r:0,g:1,b:0,a:1} or #fa0f</p>
-<p><code>back</code> background colour for visual synths; eg {r:0,g:1,b:0,a:1} or #00ff</p>
+<p><code>scroll</code> scroll the shader; default: <code>{x:0,y:0}</code></p>
+<p><code>zoom</code> zoom the shader; default: <code>{x:1,y:1}</code></p>
+<p><code>fore</code> foreground colour; eg <code>{r:0,g:1,b:0,a:1}</code> for green or <code>#fa0f</code> for orange.</p>
+<p><code>back</code> background colour; eg <code>{r:0,g:1,b:0,a:1}</code> for green or <code>#00ff</code> for orange.</p>
 <p><code>pixellate</code> number of pixels to pixellate to in each direction, or 0 to disable pixellation</p>
 <p><code>perspective</code> perspective warp to apply to shader (negative to invert), or 0 to disable</p>
 <p><code>additive</code> add this shaders output to those beneath instead of blending</p>
@@ -485,7 +488,6 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-x,y should be in CENTRE of sprite..??
 rotate param
 improve sparkle shader: value should change size of spikes but not core
 Webcam synth
@@ -504,6 +506,7 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+!!! vars not working?? image shader url anyway...
 Rename @f to @c for continuous?
 []n2 timescale
 Run tests only on localhost

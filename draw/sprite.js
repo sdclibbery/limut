@@ -14,9 +14,9 @@ define(function (require) {
   }
 
   let verts = (loc, window) => {
-    let l = loc.x
+    let l = loc.x - loc.w/2
     let r = l + loc.w
-    let t = loc.y
+    let t = loc.y - loc.h/2
     let b = t + loc.h
     let har = system.cw / system.ch
     let ihar = 1
@@ -78,7 +78,7 @@ define(function (require) {
       let brightness = 1 - (eventTime*eventTime)*fade
       let monochrome = evalParamFrame(params, 'monochrome', 0, state.count)
       let pixellate = evalParamFrame(params, 'pixellate', 0, state.count)
-      let loc = rect(evalParamFrame(params, 'loc', {}, state.count), {x:-1,y:-1,w:2,h:2})
+      let loc = rect(evalParamFrame(params, 'loc', {}, state.count), {x:0,y:0,w:2,h:2})
       let scroll = vec(evalParamFrame(params, 'scroll', {}, state.count), {x:0,y:0})
       let zoom = vec(evalParamFrame(params, 'zoom', {}, state.count), {x:1,y:1})
       let perspective = evalParamFrame(params, 'perspective', 0, state.count)
