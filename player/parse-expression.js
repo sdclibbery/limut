@@ -328,6 +328,7 @@ define(function(require) {
   }
 
   // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
   let vars = require('vars')
   
@@ -877,6 +878,7 @@ define(function(require) {
   assert(-1, evalParamFrame(p,e,8))
 
   console.log('Parse expression tests complete')
-
+  }
+  
   return parseExpression
 })

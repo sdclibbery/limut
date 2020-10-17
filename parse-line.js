@@ -88,6 +88,7 @@ define((require) => {
   }
 
   // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
   let assert = (expected, actual) => {
     let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
@@ -183,6 +184,7 @@ define((require) => {
   delete players.overrides.q
 
   console.log('Parse line tests complete')
-
+  }
+  
   return parseLine
 })

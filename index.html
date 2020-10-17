@@ -256,8 +256,8 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>'abc'</code> String value</p>
 <p><code>foo</code> Lookup a global var named <code>foo</code>.</p>
 <p><code>p1.amp</code> Lookup the value of param <code>amp</code> from player <code>p1</code>. Uses the param from the most recently played event on that player. Can additionally use a <code>pulse</code> param on the player, which pulses from 0 to 1 as events play on that player.</p>
-<p><code>@f</code> Use <code>@f</code> immediately after a value to evaluate it per frame (60 times a second). For example <code>lpf=[300:3000]l8@f</code> will update the lpf cutoff frequency continuously, while <code>lpf=[300:3000]l8</code> will be evaluated only once for each event played.</p>
-<p><code>@e</code> Use <code>@e</code> immediately after a value to evaluate only once per event.</p>
+<p><code>@f</code> Place <code>@f</code> immediately after a value to evaluate it per frame (60 times a second). For example <code>lpf=[300:3000]l8@f</code> will update the lpf cutoff frequency continuously, while <code>lpf=[300:3000]l8</code> will be evaluated only once for each event played.</p>
+<p><code>@e</code> Place <code>@e</code> immediately after a value to evaluate only once per event.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-audio-synths')">▶ Audio Synths</h4>
 <div id="accordion-audio-synths" class="closed">
@@ -487,10 +487,10 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-rotate param
-improve sparkle shader: value should change size of spikes but not core
-Webcam synth
 vignette effect - vignette to 0-1 in UVs to support images?
+Webcam synth
+improve sparkle shader: value should change size of spikes but not core
+rotate param
 colours can be defined using hsl/hsv instead of rgb - or better a perceptually uniform space
 Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
 video synth (use video element to load video file; don't try and target eg youtube)
@@ -505,13 +505,13 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-!!! vars not working?? image shader url anyway...
-Rename @f to @c for continuous?
-[]n2 timescale
-Run tests only on localhost
+Run tests only on 'test' url param
  Readme
+Can choose to use simple textarea editor; maybe on a url param?
+[]n2 timescale
 Does scale=[major, minor] work?
 What is using the scroll event? https://developer.mozilla.org/docs/Mozilla/Performance/ScrollLinkedEffects
+Possible bug: Can applying overrides stop @f behaviour?
 should be able to override var interval? eg fore=rainbow@e
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way?? Should be available for follow players too
 []te, []le, []se etc syntax to start from event start time?
@@ -520,7 +520,8 @@ commenting out in patterns doesnt work eg 'pi ping 0 //(024)(035)'
 long delay times dont work?
 unary minus operator; eg '-time'
 []w for random walk?
-Possible bug: Can applying overrides stop @f behaviour?
+delete all code then hit run: code comes back into editor!
+Can support double quotes for strings??
 apply overridden delay for follow player: allow canons
 ?[1,3,5]n syntax to smoothly transition between randomly chosen values or should be [1,3,5]rs?
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'

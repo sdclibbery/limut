@@ -42,6 +42,7 @@ define(function(require) {
   }
 
   // TESTS
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
   let assert = (expected, actual) => {
     let x = JSON.stringify(expected)
@@ -56,6 +57,7 @@ define(function(require) {
   assert(undefined, number({str:'-a',idx:0}))
   
   console.log('Parse number tests complete')
-
+  }
+  
   return number
 })

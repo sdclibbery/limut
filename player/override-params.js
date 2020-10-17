@@ -57,6 +57,7 @@ define(function(require) {
   }
 
   // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
   let parseExpression = require('player/parse-expression')
   let assert = (expected, actual) => {
@@ -80,7 +81,8 @@ define(function(require) {
   assert(2, c[0].zoom(ev(),0,evalParam))
   assert(3, c[0].zoom(ev({idx:1}),1,evalParam))
 
-  console.log('Combine events tests complete')
+  console.log('Override params tests complete')
+  }
 
   return {
     overrideEventParams: overrideEventParams,

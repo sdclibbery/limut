@@ -68,6 +68,7 @@ define(function(require) {
   }
 
   // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
   let assert = (expected, actual) => {
     let x = JSON.stringify(expected)
@@ -133,6 +134,7 @@ define(function(require) {
   assert(4, operator(add, perEvent, perFrame)(ev(0,0), 4, evalParam))
 
   console.log('eval operator tests complete')
-
+  }
+  
   return operator
 })

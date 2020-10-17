@@ -95,6 +95,7 @@ define((require) => {
   }
 
   // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
   let assert = (expected, actual) => {
     let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
@@ -146,6 +147,7 @@ define((require) => {
   assertThrows('Player "INVALID" not found', ()=>parsePlayer('p INVALID xo'))
 
   console.log('Parse player tests complete')
-
+  }
+  
   return parsePlayer
 })

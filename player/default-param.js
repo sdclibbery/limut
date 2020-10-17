@@ -9,6 +9,7 @@ define((require) => {
   }
 
   // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
   let assert = (expected, actual) => {
     let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
@@ -23,6 +24,7 @@ define((require) => {
   assert(0, evalParam(0, 1))
 
   console.log('Default param tests complete')
+  }
 
   return evalParam
 })

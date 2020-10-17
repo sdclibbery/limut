@@ -182,6 +182,7 @@ define(function(require) {
   }
 
   // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
   let assertPattern = (expectedLength, expectedValues, actual) => {
     if (expectedLength !== actual.length) { console.trace(`Assertion failed.\n>>Expected length:\n  ${expectedLength}\n>>Actual:\n  ${actual.length}`) }
@@ -434,6 +435,7 @@ define(function(require) {
   // 0<1_>
 
   console.log("Parse pattern tests complete")
-
+  }
+  
   return parsePattern
 });

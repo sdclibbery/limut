@@ -94,6 +94,7 @@ define(function(require) {
   }
 
   // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
   let assert = (expected, actual) => {
     let x = JSON.stringify(expected)
@@ -152,6 +153,7 @@ define(function(require) {
   assert(4, evalParamFrame(exp, ev(4,4), 5))
 
   console.log("Params tests complete")
-
+  }
+  
   return parseParams
 });

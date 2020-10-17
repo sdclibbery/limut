@@ -37,6 +37,7 @@ define(function(require) {
   }
 
   // TESTS
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
   let assert = (expected, actual) => {
     let x = JSON.stringify(expected)
@@ -78,6 +79,7 @@ define(function(require) {
   delete vars.foo
 
   console.log('Parse var tests complete')
-
+  }
+  
   return varLookup
 })

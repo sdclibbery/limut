@@ -85,6 +85,7 @@ define(function(require) {
   }
 
   // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
   let assert = (expected, actual) => {
     let x = JSON.stringify(expected)
@@ -103,6 +104,7 @@ define(function(require) {
   assert([12,12,8], parseDur('[3,3,2]*4'))
 
   console.log("Parse dur tests complete")
-
+  }
+  
   return parseDur
 });

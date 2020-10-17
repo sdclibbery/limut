@@ -68,6 +68,7 @@ define(function(require) {
   }
 
   // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
   let assert = (expected, actual) => {
     let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
@@ -304,6 +305,7 @@ define(function(require) {
   assert('function', typeof pattern(0)[1].lpf)
 
   console.log("Pattern tests complete")
-
+  }
+  
   return parsePattern
 });

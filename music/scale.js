@@ -99,7 +99,7 @@ define(function (require) {
   }
 
   // TESTS //
-
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
   let assert = (expected, actual) => {
     let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(1) : v)
     let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(1) : v)
@@ -117,6 +117,7 @@ define(function (require) {
   assert(415.3, scale.degreeToFreq(8, 4, 'chromatic'))
 
   console.log('Scale tests complete')
+  }
 
   return scale
 });
