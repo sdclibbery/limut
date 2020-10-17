@@ -3,7 +3,7 @@ define((require) => {
 
   let evalParamNow = (evalRecurse, value, event, beat, stopAtTuple) => {
     if (Array.isArray(value)) {
-      let v = value[event.idx % value.length]
+      let v = value[Math.floor(event.idx) % value.length]
       if (typeof v == 'function') {
         return evalRecurse(v, event, beat, evalRecurse)
       }
@@ -53,6 +53,7 @@ define((require) => {
   assert(1, evalParamEvent(1, ev(0), 0))
   assert(1/2, evalParamEvent(1/2, ev(0), 0))
   assert(1, evalParamEvent([1,2,3], ev(0), 0))
+  assert(1, evalParamEvent([1,2,3], ev(0.5), 0))
   assert(2, evalParamEvent([1,2,3], ev(1), 0))
   assert(3, evalParamEvent([1,2,3], ev(2), 0))
   assert(1, evalParamEvent([1,2,3], ev(3), 0))

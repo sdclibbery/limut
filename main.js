@@ -117,6 +117,7 @@ define(function(require) {
       beat12Readout.innerText = (beat.count%12 + 1) + '/12'
       beat16Readout.innerText = (beat.count%16 + 1) + '/16'
       beat32Readout.innerText = (beat.count%32 + 1) + '/32'
+      mainVars.update(Math.floor(beatTime), beatTime)
       for (let playerName of Object.keys(players.instances)) {
         let player = players.instances[playerName]
         if (player !== undefined) {
@@ -130,7 +131,6 @@ define(function(require) {
       }
       beatLatency = ((now - lastBeat) / beat.duration) - 1
       lastBeat = now
-      mainVars.update(Math.floor(beatTime), beatTime)
     }
     try {
       system.frame(now, beatTime)

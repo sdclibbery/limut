@@ -24,15 +24,16 @@ define((require) => {
 
   let set = (name, value) => {
     let beat = metronome.beatTime(system.timeNow())
-    mainVars[name].value = evalParamEvent(value, {idx:beat,count:beat}, beat)
+    mainVars[name].value = value
     mainVars[name].setter(evalParamFrame(mainVars[name].value, {idx:beat,count:beat}, beat))
   }
 
   let update = (step, beat) => {
     for (let k in mainVars) {
-      let v = mainVars[k].value
-      if (v) {
-        mainVars[k].setter(evalParamFrame(v, {idx:step,count:beat}, beat))
+      let value = mainVars[k].value
+      if (value) {
+        let v = evalParamFrame(value, {idx:step,count:beat}, beat)
+        mainVars[k].setter(v)
       }
     }
   }
