@@ -4,7 +4,6 @@ define(function(require) {
 
   require('polyfills')
   require('predefined-vars')
-  require('editor')
   let system = require('play/system')
   let drawSystem = require('draw/system')
   let metronome = require('metronome')
@@ -13,6 +12,8 @@ define(function(require) {
   let mainVars = require('main-vars')
   let vars = require('vars')
   let consoleOut = require('console')
+  require('editor-textarea')
+  require('editor-codemirror')
 
   // accordions
   window.toggleAccordion = (id) => {

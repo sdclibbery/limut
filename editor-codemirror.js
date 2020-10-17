@@ -1,12 +1,15 @@
 'use strict'
 define(function(require) {
+  if ((new URLSearchParams(window.location.search)).get('textarea') !== null) { return }
+
   let parseLine = require('parse-line')
   let system = require('play/system')
   let players = require('player/players')
   let mainVars = require('main-vars')
   let consoleOut = require('console')
 
-  let editorDiv = document.getElementById('code')
+  let editorDiv = document.getElementById('code-codemirror')
+  editorDiv.style.display = 'block'
   let editor = CodeMirror(editorDiv, {
     lineNumbers: true,
     lineWrapping: true,

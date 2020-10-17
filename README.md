@@ -12,6 +12,10 @@ Try it at https://sdclibbery.github.io/limut/
 
 Please report problems / bugs / browser issues etc as github issues at https://github.com/sdclibbery/limut/issues
 
+# Code Editor
+
+Limut uses the CodeMirror editor by default (https://codemirror.net). This provides syntax coloring. However, on some devices (eg mobile) a better experience may result from using a basic textarea editor; this can be enabled by using the `?textarea` url parameter.
+
 # Development
 
 Run locally by firing up `./server.sh` and connecting a browser to http://localhost:8000/?test . The unit tests run on page load when the `?test` url parameter is present; view output in the browser console.

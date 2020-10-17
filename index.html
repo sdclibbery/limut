@@ -41,7 +41,7 @@
     .widget h3 {
       margin: 0px;
     }
-    #code {
+    .code {
       height: 350px;
       margin-bottom: 8px;
       max-width: 100%;
@@ -145,7 +145,8 @@
     Audio: <span id="audio-readout", class="meter"> </span>
     Visual: <span id="visual-readout", class="meter"> </span>
   </div>
-  <div id="code" class="widget"></div>
+  <div id="code-codemirror" class="widget code" style="display:none;"></div>
+  <textarea id="code-textarea" class="widget code" rows="15" style="display:none;"></textarea>
   <textarea id="console" class="widget" rows="5"></textarea>
 </div>
 <div class="info">
@@ -505,7 +506,6 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-Can choose to use simple textarea editor; maybe on a url param?
 []n2 timescale
 Does scale=[major, minor] work?
 What is using the scroll event? https://developer.mozilla.org/docs/Mozilla/Performance/ScrollLinkedEffects
