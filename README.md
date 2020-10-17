@@ -14,7 +14,7 @@ Please report problems / bugs / browser issues etc as github issues at https://g
 
 # Development
 
-Run locally by firing up `./server.sh` and connecting a browser to http://localhost:8000/ . The unit tests run automatically on page load; view output in the browser console.
+Run locally by firing up `./server.sh` and connecting a browser to http://localhost:8000/?test . The unit tests run on page load when the `?test` url parameter is present; view output in the browser console.
 
 # Samples
 
