@@ -240,13 +240,14 @@ define(function(require) {
         } else if (state.str.charAt(state.idx).toLowerCase() == 'n') { // simple noise
           state.idx += 1
           let period = number(state)
+          if (period === undefined) { period = 1 }
           let interval = parseInterval(state) || 'frame'
           result = simpleNoise(vs, period, interval)
           result.interval = interval
         } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
           state.idx += 1
           result = eventTimeVar(vs)
-          result.interval = 'frame'
+          result.interval = parseInterval(state) || 'frame'
         } else { // Basic array: one value per pattern step
           vs = expandColon(vs)
           result = vs
@@ -304,7 +305,7 @@ define(function(require) {
       let v = varLookup(state)
       if (v !== undefined) {
         result = v
-        result.interval = parseInterval(state) || v.interval || 'frame'
+        result.interval = parseInterval(state) || 'frame'
         continue
       }
       break

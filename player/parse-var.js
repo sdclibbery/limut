@@ -31,8 +31,6 @@ define(function(require) {
       }
       return v
     }
-    let v = result(0,0)
-    result.interval = v && v.interval
     return result
   }
 
@@ -72,11 +70,6 @@ define(function(require) {
 
   p = varLookup({str:'p1.foo',idx:0})
   assert(0, p())
-
-  vars['foo'] = {interval:'event'}
-  p = varLookup({str:'foo',idx:0})
-  assert('event', p.interval)
-  delete vars.foo
 
   console.log('Parse var tests complete')
   }
