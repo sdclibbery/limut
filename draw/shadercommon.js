@@ -14,6 +14,7 @@ define(function (require) {
   let commonProcessors = `
     uniform vec2 l_scroll;
     uniform vec2 l_zoom;
+    uniform float l_rotate;
     uniform float l_perspective;
     uniform float l_pixellate;
     uniform float l_additive;
@@ -33,7 +34,14 @@ define(function (require) {
       );
       coord = uv;
     }
-    coord = (coord + l_scroll) / l_zoom;
+    coord = coord / l_zoom;
+
+    float s = sin(l_rotate);
+    float c = cos(l_rotate);
+    mat2 rot = mat2(c, -s, s, c);
+    coord = rot * coord;
+
+    coord = coord + l_scroll;
     if (l_pixellate != 0.) { coord = floor((coord+(0.5/l_pixellate))*l_pixellate)/l_pixellate; }
     return coord;
   }
@@ -57,6 +65,7 @@ define(function (require) {
     shader.backUnif = system.gl.getUniformLocation(program, "l_back")
     shader.scrollUnif = system.gl.getUniformLocation(program, "l_scroll")
     shader.zoomUnif = system.gl.getUniformLocation(program, "l_zoom")
+    shader.rotateUnif = system.gl.getUniformLocation(program, "l_rotate")
     shader.pixellateUnif = system.gl.getUniformLocation(program, "l_pixellate")
     shader.perspectiveUnif = system.gl.getUniformLocation(program, "l_perspective")
     shader.additiveUnif = system.gl.getUniformLocation(program, "l_additive")

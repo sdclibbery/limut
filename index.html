@@ -341,6 +341,7 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>window</code> display the only part of the shader image appropriate to the location of the tile on the screen. This way, a tile moved around the screen will act like a window onto the overall shader image.</p>
 <p><code>scroll</code> scroll the shader; default: <code>{x:0,y:0}</code></p>
 <p><code>zoom</code> zoom the shader; default: <code>{x:1,y:1}</code></p>
+<p><code>rotate</code> rotate the shader; angle in full rotations so 1/2 is 180 degrees; default: <code>0</code></p>
 <p><code>fore</code> foreground colour; eg <code>{r:0,g:1,b:0,a:1}</code> for green or <code>#fa0f</code> for orange.</p>
 <p><code>back</code> background colour; eg <code>{r:0,g:1,b:0,a:1}</code> for green or <code>#00ff</code> for orange.</p>
 <p><code>pixellate</code> number of pixels to pixellate to in each direction, or 0 to disable pixellation</p>
@@ -490,10 +491,9 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-vignette effect - vignette to 0-1 in UVs to support images?
 Webcam synth
 improve sparkle shader: value should change size of spikes but not core
-rotate param
+vignette effect - vignette to 0-1 in UVs to support images?
 colours can be defined using hsl/hsv instead of rgb - or better a perceptually uniform space
 Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
 video synth (use video element to load video file; don't try and target eg youtube)
@@ -510,19 +510,18 @@ shadertoy synth multiple channels
 ==== other ====
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way?? Should be available for follow players too
 if do amp=p1.amp, and p1 doesn't explicitly set its amp, you get zeroes...
+long delay times dont work?
+unary minus operator; eg '-time'
 []te, []le, []se etc syntax to start from event start time?
 Support [0,1,2]e[0,.1,1] syntax
 commenting out in patterns doesnt work eg 'pi ping 0 //(024)(035)'
-long delay times dont work?
-unary minus operator; eg '-time'
+?[1,3,5]n syntax to smoothly transition between randomly chosen values or should be [1,3,5]rs?
 []w for random walk?
+extending patterns like every/sometimes/offadd/stutter etc
 delete all code then hit run: code comes back into editor!
 Can support double quotes for strings??
 apply overridden delay for follow player: allow canons
-?[1,3,5]n syntax to smoothly transition between randomly chosen values or should be [1,3,5]rs?
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
-extending patterns like every/sometimes/offadd/stutter etc
-pattern values in vars, and then use in multiple players, and also invert, retrograde etc
 "on next 4 " / "on next 28 of 32 " syntax to execute a line on the next beat count
   - but how not to repeat this if rerun? replace now/next in source with actual count?
 "every 4 " / "every 28 of 32 "
@@ -531,6 +530,7 @@ pattern values in vars, and then use in multiple players, and also invert, retro
 pattern concat "xo + vi"
 pattern repeat "xo * 3" higher precedence than concat
 pattern support brackets "( xo + vi ) * 3"
+pattern values in vars, and then use in multiple players, and also invert, retrograde etc
 dur=[1,2,3,4]r
 New param to offset time in shaders to allow doing sway 'manually'
 array index operator, so you can "ch=[(0,2,4)]" then "add=ch[0]"
