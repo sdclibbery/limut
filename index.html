@@ -248,6 +248,7 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>[0.1:9]r</code> Select a different random floating point value every time, between 0.1 and 9</p>
 <p><code>[1,2]r4</code> Select a different value every 4 beats, chosen randomly from the numbers 1, 2</p>
 <p><code>[1:2]n</code> Smoothly varying noise, moving between 1 and 2</p>
+<p><code>[1:2]n4</code> Smoothly varying noise, moving between 1 and 2, taking 4 beats to progress from one value to another</p>
 <p><code>+</code> Add values together; eg [2,3]+4 is equivalent to [6,7]</p>
 <p><code>-</code> Subtract values; eg [2,3]-1 is equivalent to [1,2]</p>
 <p><code>/</code> Divide values; eg 1/2</p>
@@ -455,10 +456,11 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 Audio add should be evalled per frame and allow non int
  OR? new param for non integer semitone add? or both? or both but 'to integer' is a function/cast/whatever?
 root main var
+root param
+pan param
 Constant envelope type to allow specifying per frame envelope with amp?
 AudioWorklet freeverb with webaseembly
 Chorus effect
-pan param
 Drive should be per frame
 Try drive from here: https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
 Pluck/guitar synths
@@ -506,9 +508,8 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-[]n2 timescale
-What is using the scroll event? https://developer.mozilla.org/docs/Mozilla/Performance/ScrollLinkedEffects
 Possible bug: Can applying overrides stop @f behaviour?
+What is using the scroll event? https://developer.mozilla.org/docs/Mozilla/Performance/ScrollLinkedEffects
 should be able to override var interval? eg fore=rainbow@e
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way?? Should be available for follow players too
 []te, []le, []se etc syntax to start from event start time?

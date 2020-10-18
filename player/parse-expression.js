@@ -239,8 +239,9 @@ define(function(require) {
           result.interval = interval
         } else if (state.str.charAt(state.idx).toLowerCase() == 'n') { // simple noise
           state.idx += 1
+          let period = number(state)
           let interval = parseInterval(state) || 'frame'
-          result = simpleNoise(vs, interval)
+          result = simpleNoise(vs, period, interval)
           result.interval = interval
         } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
           state.idx += 1
@@ -866,6 +867,8 @@ define(function(require) {
     assertIn(last-0.05, last+0.05, current)
     last = current
   }
+
+  assertIn(3/8,5/8, parseExpression("[3/8:5/8]n4")(ev(0,0),0,evalParamFrame))
 
   p = parseExpression("[[1,5]t1:[2,6]t1]n")
   assertIn(1, 2, p(ev(0,0),0,evalParamFrame))

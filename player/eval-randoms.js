@@ -49,15 +49,15 @@ define(function(require) {
       let r = f*(f-1.0)*((16.0*k-4.0)*f*(f-1.0)-1.0)
       return r
     }
-  let simpleNoise = (vs, interval) => {
+  let simpleNoise = (vs, period, interval) => {
     let paramSeed = Math.random()*10000
     return (e,b, evalRecurse) => {
       if (e._noiseSeed === undefined) { e._noiseSeed = Math.random()*10000 }
       let count = (interval !== 'frame') ? e.count : b
       count += e._noiseSeed + paramSeed
       let result = (
-          bnoise(count*1)*2
-          +(1-bnoise(count*2.3))*1
+          bnoise(count*1/period)*2
+          +(1-bnoise(count*2.3/period))*1
         )/3
       let evs = vs.map(v => evalRecurse(v, e,b, evalRecurse))
       if (vs.separator === ':' && evs.length === 2) {
