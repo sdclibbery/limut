@@ -454,8 +454,10 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-Audio add should be evalled per frame and allow non int
- OR? new param for non integer semitone add? or both? or both but 'to integer' is a function/cast/whatever?
+addc param, chromatic non-int pitch add through pitch-effects
+ test with vib
+ docs
+speech synth: https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis
 root main var
 root param
 pan param
