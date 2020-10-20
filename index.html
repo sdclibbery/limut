@@ -306,7 +306,8 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 </div>
 <h4 onclick="toggleAccordion('accordion-audio-params')">▶ Audio Params</h4>
 <div id="accordion-audio-params" class="closed">
-<p><code>add</code> Amount to add onto event scale degree, in degrees</p>
+<p><code>add</code> Amount to add onto event scale degree, in degrees. Evaluated per event only.</p>
+<p><code>addc</code> Amount to add onto event pitch, in semitones. Evaluated per frame, and accepts fractional values, so <code>addc=[0:12]e</code> will slide the note from the starting pitch smoothly up a whole octave over the course of the note.</p>
 <p><code>oct</code> Octave; middle C is in octave 4</p>
 <p><code>envelope</code> Specify the envelope type to use: 'full' (ADSR), 'simple' (AD), 'pad' (uses a sine roll on/off so consecutive notes maintain constant volume)</p>
 <p><code>echo</code> Echo time delay in beats</p>
@@ -454,9 +455,6 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-addc param, chromatic non-int pitch add through pitch-effects
- test with vib
- docs
 speech synth: https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis
 root main var
 root param

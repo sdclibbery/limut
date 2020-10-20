@@ -4,7 +4,8 @@ define(function (require) {
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
 
   return (params) => {
-    let vca
+    let vcaVib
+    let vcaAddc
     if (params.vib !== undefined) {
       let vib = evalPerEvent(params, 'vib', 0)
       let vibdepth = evalPerEvent(params, 'vibdepth', 0.4)
@@ -12,29 +13,30 @@ define(function (require) {
       let lfo = system.audio.createOscillator()
       lfo.type = 'sine'
       lfo.frequency.value = vib / params.beat.duration
-      vca = system.audio.createGain()
-      vca.gain.setValueAtTime(0, params.time)
-      vca.gain.linearRampToValueAtTime(vibdepth*100, params.time + vibdelay*params.beat.duration)
-      lfo.connect(vca)
+      vcaVib = system.audio.createGain()
+      vcaVib.gain.setValueAtTime(0, params.time)
+      vcaVib.gain.linearRampToValueAtTime(vibdepth*100, params.time + vibdelay*params.beat.duration)
+      lfo.connect(vcaVib)
       lfo.start(params.time)
       lfo.stop(params.endTime)
-      system.disconnect(params, [lfo,vca])
+      system.disconnect(params, [lfo,vcaVib])
     }
     if (params.addc !== undefined) {
       let cents = system.audio.createConstantSource()
       cents.offset.value = 100
-      let vcaAddcCents = system.audio.createGain()
-      evalPerFrame(vcaAddcCents.gain, params, 'addc', 0)
-      cents.connect(vcaAddcCents)
+      vcaAddc = system.audio.createGain()
+      evalPerFrame(vcaAddc.gain, params, 'addc', 0)
+      cents.connect(vcaAddc)
       cents.start()
-      if (vca) {
-        vcaAddcCents.connect(vca)
-      } else {
-        vca = vcaAddcCents
-      }
-      system.disconnect(params, [cents, vcaAddcCents])
+      system.disconnect(params, [cents, vcaAddc])
     }
-    return vca || {connect:()=>{}} 
+    if (vcaVib && vcaAddc) {
+      let vca = system.audio.createGain()
+      vcaVib.connect(vca)
+      vcaAddc.connect(vca)
+      return vca
+    }
+    return vcaVib || vcaAddc || {connect:()=>{}} 
   }
 
 })
