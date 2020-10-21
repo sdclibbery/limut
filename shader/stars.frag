@@ -29,7 +29,7 @@ void main() {
     float star = length(r1)/1000.0;
     float glow = smoothstep(0.0,200.0,(1.0/distance(uv, pPos+.015)))*l_amp;
     star = max(star,glow);
-    f += star*(sin(iTime*10.0*(l_value+1.0)+i)+1.0);
+    f += star*(sin(iTime*12.0+i)+1.0);
   }
   f = pow(f, 2.0);
 
