@@ -103,6 +103,7 @@ define(function (require) {
       system.gl.uniform1f(s.pixellateUnif, pixellate, 1)
       system.gl.uniform1f(s.perspectiveUnif, perspective, 1)
       system.gl.uniform1f(s.additiveUnif, additive, 1)
+      system.gl.uniform1f(s.eventTimeUnif, eventTime, 1)
       if (s.textureUnif) {
         s.textureUnif.forEach((tu,i) => {
           let t = texture(url)

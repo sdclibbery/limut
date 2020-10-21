@@ -77,6 +77,7 @@ define(function (require) {
     shader.spectrumUnif = system.gl.getUniformLocation(program, "l_spectrum")
     shader.textureUnif = [system.gl.getUniformLocation(program, 'l_image')]
     shader.extentsUnif = system.gl.getUniformLocation(program, "l_extents")
+    shader.eventTimeUnif = system.gl.getUniformLocation(program, "l_eventTime")
 }
 
   return {
