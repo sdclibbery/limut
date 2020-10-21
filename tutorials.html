@@ -1,0 +1,104 @@
+<html>
+<head>
+  <title>LiMuT Tutorials</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <style>
+    body {
+      font-family: helvetica, arial;
+      background: #202830;
+      color: #d0d0d0;
+      scrollbar-width: thin;
+      scrollbar-color: #b0b0b080 #50505080;
+      margin-left: 100px;
+      margin-right: 100px;
+    }
+    button {
+      background: #80808080;
+      border-width: 1px;
+      padding: 0px 2px 0px 2px;
+    }
+    button:hover {
+      background: #70707080;
+      border-width: 1px;
+      padding: 0px 2px 0px 2px;
+    }
+    .limut-button {
+      width:1.5em;
+      height:1.5em;
+      background: #80808080;
+      font-size: 1.3em;
+      border-radius: 4px;
+      border-style: solid;
+      border-color: #d0d0d080;
+      padding: 0;
+    }
+    code {
+      padding: 5px;
+      background: #283038;
+    }
+  </style>
+</head>
+<body>
+  <h1>Limut Tutorials</h1>
+
+  <h2>About these tutorials</h2>
+  <p>
+    Limut is a live coding system, where you can create music and visuals live by writing code.
+    These tutorials are designed to provide a gentle introduction to the concepts and syntax of limut.
+  </p>
+  <p>Use them by <a href="index.html" target="_blank">opening Limut in a separate tab</a>, and then copying the code snippets in. Always experiment with the snippets! Change numbers, combine multiple snippets and generally play around. Its the best way to learn.</p>
+  <p>
+    Under the main Limut console are various sections of documentation on Limut syntax, synths and params. They are there to be used at any time as a reference and for ideas.
+    The first section of documentation contains examples ready to be copied into the Limut code editor, played, and modified.
+  </p>
+  <p>Further examples of live coding with Limut can be found on YouTube; <a href="https://www.youtube.com/playlist?list=PLcNsl0wkXgHmJHGVCMKeWVhOSOrg7GGtx" target="_blank">for example here</a>. By following along as the code is built up, you can understand new concepts and pick up ideas.</p>
+
+  <h2>Live coding</h2>
+  <p>Lets get started; copy the following code, and paste it into the main code window in a <a href="index.html" target="_blank">Limut window</a>.</p>
+  <p><code id="livecoding-1">p dbass 0024</code><button onclick="copyToClipboard('livecoding-1')" title="Copy to clipboard">🗐</button></p>
+  <p>
+    Then, hit the play button that looks like this: <button class="limut-button">▶</button>. You should hear a bass riff start to play.
+    To stop the music hit the stop button: <button class="limut-button">◼</button>.
+    You can also use keyboard shortcuts; Ctrl-Enter to play and Ctrl-. to stop.
+  </p>
+  <p>
+    Unlike some live coding systems, in Limut pressing play runs all the code in the editor, and nothing persists apart from the code that is run.
+    This means you can stop a player by deleting it or commenting it out and then hitting play. Try it now; place a <code>//</code> comment at the beginning of the line, either by typing or hitting the 'toggle comment' button <button class="limut-button">//</button>. Then hit play, and the bass will stop.
+  </p>
+  <p>The fullscreen button <button class="limut-button">⛶</button> will make Limut go fullscreen.</p>
+
+  <h3>To be continued...</h3>
+  <hr/>
+  <p>Please report bugs, problems, issues and suggestions on <a href="https://github.com/issues" target="_blank">https://github.com/issues</a></p>
+</body>
+<script>
+function copyToClipboard (id) {
+  navigator.clipboard.writeText(document.getElementById(id).innerText)
+} 
+/*
+===
+===== Tutorials
+Players; player syntax
+Audio synth, patterns, duration
+Play synth, patterns
+Audio synths and params amp, add
+Visual synths and params
+Durations and pattern modifiers _, [], <>
+Predefined vars
+Time vars, []t, []l, []s, []e
+Randoms []r, []n
+User vars
+Chord sequences
+Drops and fills
+Echo, chop
+Filters lpf, hpf, bpf
+Loc, fore/back
+Scroll, zoom, perspective, pixellate
+Image, shadertoy, sample synths
+Vibrato, phaser
+Per event and per frame evaluation
+Addc
+*/
+</script>
+</html>
