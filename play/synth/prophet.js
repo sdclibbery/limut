@@ -24,7 +24,6 @@ define(function (require) {
     let lfoGain = system.audio.createGain()
     lfoGain.gain.value = 0.49
     lfoOsc.connect(lfoGain)
-    system.audio.createConstantSource().connect(lfoGain)
     lfoOsc.start(params.time)
     lfoOsc.stop(params.endTime)
 

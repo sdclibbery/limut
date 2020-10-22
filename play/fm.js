@@ -12,12 +12,14 @@ define(function (require) {
     vca.gain.setValueAtTime(0, params.time)
     vca.gain.linearRampToValueAtTime(gain, params.time + attack)
     vca.gain.linearRampToValueAtTime(0, params.time + attack+release)
+    system.disconnect(params, [vca])
     return vca
   }
 
-  fm.flatEnv = (gain) => {
+  fm.flatEnv = (params, gain) => {
     let vca = system.audio.createGain();
     vca.gain.value = gain
+    system.disconnect(params, [vca])
     return vca
   }
 

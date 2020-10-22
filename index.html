@@ -456,7 +456,6 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-speech synth: https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis
 root main var
 root param
 pan param
@@ -476,6 +475,7 @@ Preload samples immediately after parsing
 PWM techno pad??
 'add' param for play synth?
 AudioWorklet FM operator supporting feedback with webassembly
+speech synth
 echoey space synth
  ethereal vib=3, att=0, sus=2, rel=2, phaser=1/4, echo=(3,4), oct=5
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
@@ -513,6 +513,7 @@ shadertoy synth multiple channels
 !!! type errors in sprite:
   ps ethereal 7654, dur=4, rel=4, addc=1.5*[-1:1]n2*[-1:1]n1, oct=5
   vff glow follow ps, loc=sparkle+firefly, fore=#888f+ps.addc*#0800
+All lerps should use operator eval, so allow [red, green]n etc
 Tutorials
  ? Can automate the copy to clipboard paraphernalia?
  Link on this page
@@ -521,6 +522,7 @@ Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used thi
 if do amp=p1.amp, and p1 doesn't explicitly set its amp, you get zeroes...
 long delay times dont work?
 unary minus operator; eg '-time'
+Allow variable durations eg [0:1]l(3+[1:2]t4) etc
 []te, []le, []se etc syntax to start from event start time?
 Support [0,1,2]e[0,.1,1] syntax
 commenting out in patterns doesnt work eg 'pi ping 0 //(024)(035)'
