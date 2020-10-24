@@ -456,9 +456,10 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
+pan param
 root main var
 root param
-pan param
+Sample synth can take play sample values, and also has start/end params
 Constant envelope type to allow specifying per frame envelope with amp?
 AudioWorklet freeverb with webaseembly
 Chorus effect
@@ -492,9 +493,8 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-flare synth - fizzling sparking flare
+improve sparkle shader: value should change appearance more
 Webcam synth
-improve sparkle shader: value should change size of spikes but not core
 vignette effect - vignette to 0-1 in UVs to support images?
 colours can be defined using hsl/hsv instead of rgb - or better a perceptually uniform space
 Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
@@ -510,6 +510,7 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+much more sensitive beat lag indicator
 !!! type errors in sprite:
   ps ethereal 7654, dur=4, rel=4, addc=1.5*[-1:1]n2*[-1:1]n1, oct=5
   vff glow follow ps, loc=sparkle+firefly, fore=#888f+ps.addc*#0800
