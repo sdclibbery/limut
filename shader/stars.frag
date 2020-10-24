@@ -22,7 +22,8 @@ void main() {
   float invparticles = 1.0/particles;
   for( float i=0.0; i<particles; i+=1.0 ) {
     seed += i+tan(seed);
-    vec2 tPos = (vec2(cos(seed*(l_value*0.1+1.0)),sin(seed)))*i*invparticles;
+    float theta = seed*(l_value*0.1+1.0);
+    vec2 tPos = (vec2(cos(theta),sin(theta)))*0.6*mix(i*invparticles, 1.0, mod(l_value, 20.0)/10.0);
     vec2 pPos = vec2(tPos.x * timecycle, tPos.y * timecycle);
       
     vec4 r1 = vec4(vec2(step(pPos,uv)), 1.0-vec2(step(pPos,uv)));
