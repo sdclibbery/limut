@@ -27,7 +27,11 @@ define(function (require) {
   }
 
   let evalPerEventParam = (params, p, def) => {
-    return evalParam(param(params[p], def), params, params.count)
+    let v = params[p]
+    if (typeof v !== 'number' && !v) { return def }
+    v =  evalParam(v, params, params.count)
+    if (typeof v !== 'number' && !v) { return def }
+    return v
   }
 
   return {

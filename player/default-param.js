@@ -2,9 +2,7 @@
 define((require) => {
 
   let evalParam = (value, def) => {
-    if (value === null || value === undefined || (typeof(value) == 'number' && isNaN(value))) {
-      value = def
-    }
+    if (typeof value !== 'number' && !value) { return def }
     return value
   }
 
@@ -22,6 +20,7 @@ define((require) => {
   assert(0, evalParam(undefined, 0))
   assert(1/2, evalParam(1/2, 0))
   assert(0, evalParam(0, 1))
+  assert(0, evalParam("", 0))
 
   console.log('Default param tests complete')
   }
