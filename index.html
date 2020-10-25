@@ -510,6 +510,8 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+delay should allow 'chords' (0,1)
+multiline commands
 All lerps should use operator eval, so allow [red, green]n etc
 Tutorials
  ? Can automate the copy to clipboard paraphernalia?
@@ -517,7 +519,6 @@ Tutorials
  Link on README
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way?? Should be available for follow players too
 if do amp=p1.amp, and p1 doesn't explicitly set its amp, you get zeroes...
-long delay times dont work?
 unary minus operator; eg '-time'
 Allow variable durations eg [0:1]l(3+[1:2]t4) etc
 []te, []le, []se etc syntax to start from event start time?
@@ -543,7 +544,6 @@ dur=[1,2,3,4]r
 New param to offset time in shaders to allow doing sway 'manually'
 array index operator, so you can "ch=[(0,2,4)]" then "add=ch[0]"
 finish off: <> for 'in sequence on each repeat' in patterns
-multiline commands
 Wildcard player matching for groups 'set d? amp=0'  'set p* amp=0'
 GC or LRU or quantisation for echoes and freeverbs
 Should be able to [red:blue]l8
