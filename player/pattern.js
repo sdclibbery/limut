@@ -35,29 +35,33 @@ define(function(require) {
         let e = events[idx]
         let es = (typeof(e.value) == 'function') ? e.value(e, Math.floor(count/patternLength)) : [e]
         es.forEach(sourceEvent => {
-          let event = {}
-          event.value = sourceEvent.value
-          event.idx = idx
-          event.delay = evalParamEvent(params.delay, event, count)
-          event.time = sourceEvent.time + (event.delay || 0)
-          time = (patternStartTime + event.time) - count
-          baseTime = time - (event.delay || 0)
-          event.dur = sourceEvent.dur
-          event.time = time
-          event.count = count+time
-          if (event.value !== '.' && baseTime > -0.0001 && baseTime < 0.9999) {
-            for (let k in params) {
-              if (k != 'time' && k != 'delay' && k != 'value' && k != 'dur') {
-                let v = evalParamToTuple(params[k], event, event.count)
-                if (Array.isArray(v)) { // If its a tuple, it must be handled per event
-                  event[k] = v
-                } else {
-                  event[k] = evalParamEvent(params[k], event, event.count)
+          let delay = evalParamEvent(params.delay, event, count)
+          let delays = Array.isArray(delay) ? delay : [delay]
+          delays.forEach(d => {
+            let event = {}
+            event.value = sourceEvent.value
+            event.idx = idx
+            event.delay = d
+            event.time = sourceEvent.time + (event.delay || 0)
+            time = (patternStartTime + event.time) - count
+            baseTime = time - (event.delay || 0)
+            event.dur = sourceEvent.dur
+            event.time = time
+            event.count = count+time
+            if (event.value !== '.' && baseTime > -0.0001 && baseTime < 0.9999) {
+              for (let k in params) {
+                if (k != 'time' && k != 'delay' && k != 'value' && k != 'dur') {
+                  let v = evalParamToTuple(params[k], event, event.count)
+                  if (Array.isArray(v)) { // If its a tuple, it must be handled per event
+                    event[k] = v
+                  } else {
+                    event[k] = evalParamEvent(params[k], event, event.count)
+                  }
                 }
               }
+              Array.prototype.push.apply(eventsForBeat, multiplyEvents(event))
             }
-            Array.prototype.push.apply(eventsForBeat, multiplyEvents(event))
-          }
+          })
         })
         idx += 1
         if (idx >= events.length) {
@@ -231,9 +235,9 @@ define(function(require) {
   pattern = parsePattern('0', {amp:()=>[2,3],decay:()=>[4,5]})
   assert([{value:'0',idx:0,time:0,dur:1,count:0,amp:2,decay:4},{value:'0',idx:0,time:0,dur:1,count:0,amp:2,decay:5},{value:'0',idx:0,time:0,dur:1,count:0,amp:3,decay:4},{value:'0',idx:0,time:0,dur:1,count:0,amp:3,decay:5}], pattern(0))
 
-  // pattern = parsePattern('0', {delay:()=>[0,1/2]})
-  // assert([{value:'0',idx:0,time:0,delay:0,dur:1,count:0},{value:'0',idx:0,time:1/2,delay:1/2,dur:1,count:1/2}], pattern(0))
-  // assert([{value:'0',idx:0,time:0,delay:0,dur:1,count:1},{value:'0',idx:0,time:1/2,delay:1/2,dur:1,count:3/2}], pattern(1))
+  pattern = parsePattern('0', {delay:()=>[0,1/2]})
+  assert([{value:'0',idx:0,delay:0,time:0,dur:1,count:0},{value:'0',idx:0,delay:1/2,time:1/2,dur:1,count:1/2}], pattern(0))
+  assert([{value:'0',idx:0,delay:0,time:0,dur:1,count:1},{value:'0',idx:0,delay:1/2,time:1/2,dur:1,count:3/2}], pattern(1))
 
   pattern = parsePattern('0', {amp:(_,x)=>x%3})
   assert([{value:'0',idx:0,time:0,dur:1,count:0,amp:0}], pattern(0))
