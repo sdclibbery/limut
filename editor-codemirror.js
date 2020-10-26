@@ -54,8 +54,10 @@ define(function(require) {
         consoleOut('Error on line '+(num+1)+': ' + e + st)
       }
     })
-    editor.execCommand('selectAll')
-    setTimeout(() => editor.execCommand('undoSelection'), 100)
+    if (editor.getValue().trim() !== '') {
+      editor.execCommand('selectAll')
+      setTimeout(() => editor.execCommand('undoSelection'), 100)
+      }
   }
   window.comment = () => {
     editor.toggleComment()
