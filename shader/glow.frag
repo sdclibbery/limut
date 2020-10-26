@@ -10,10 +10,10 @@ uniform float l_amp;
 void main() {
   vec2 pos = preprocess(fragCoord);
 
-  float theta = atan(pos.y, pos.x)/3.14159;
+  float theta = iTime/6.0 + atan(pos.y, pos.x)/3.14159;
   float r = length(pos);
 
-  float spike = abs(fract(theta*0.5*abs(6.0+mod(l_value,10.0)))-0.5)*2.0;
+  float spike = abs(fract(theta*0.5*(6.0+mod(l_value,10.0)))-0.5)*2.0;
   spike = pow(spike, r*r*10.0)/(1.0+r*0.5);
 
   float glow = 0.2 / r * (l_amp/2.0 + 0.5);
