@@ -24,7 +24,8 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
   var keywords = function(){
     function kw(type) {return {type: type, style: "keyword"};}
     return {
-      "set": kw("set"), "follow": kw("follow"),
+      "set": kw("set"),
+      "follow": kw("follow"),
     };
   }();
 
@@ -76,14 +77,6 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
     } else if (ch == "@" && stream.match(/[ef]/)) {
       return ret("meta", "meta");
     } else if (isOperatorChar.test(ch)) {
-      // if (ch != ">" || !state.lexical || state.lexical.type != ">") {
-      //   if (stream.eat("=")) {
-      //     if (ch == "!" || ch == "=") stream.eat("=")
-      //   } else if (/[<>*+\-]/.test(ch)) {
-      //     stream.eat(ch)
-      //     if (ch == ">") stream.eat(ch)
-      //   }
-      // }
       return ret("operator", "operator", stream.current());
     } else if (wordRE.test(ch)) {
       stream.eatWhile(wordRE);
@@ -94,9 +87,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
           return ret(kw.type, kw.style, word)
         }
       }
-      if (stream.match(/\s*\=/)) {
-        return ret("keyword", "keyword");
-      }
+      return ret("keyword", "keyword");
     }
   }
 

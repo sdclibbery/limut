@@ -15,13 +15,15 @@ define(function(require) {
       break
     }
     if (!key) { return }
+    let [playerId, param] = key.split('.')
     let result = (event,b) => {
-      let [playerId, param] = key.split('.')
       let v
       if (param) {
         let player = players.instances[playerId]
         if (player) {
           v = player.currentEvent ? player.currentEvent(event,b)[param] : 0
+        } else if (playerId === 'this') {
+          v = event[param]
         } else {
           v = vars[key]
           if (v === undefined) { v = 0 } // If not found as a var, assume its for a currently unavailable player and default to zero
@@ -49,17 +51,17 @@ define(function(require) {
   p = varLookup(state)
   assert(3, state.idx)
   vars.foo = 'baz'
-  assert('baz', p())
+  assert('baz', p({}))
   delete vars.foo
 
   vars['foo.woo'] = 'bar'
   p = varLookup({str:'foo.woo',idx:0})
-  assert('bar', p())
+  assert('bar', p({}))
   vars['foo.woo'] = undefined
 
   vars['foo'] = 'bar'
   p = varLookup({str:'FoO',idx:0})
-  assert('bar', p())
+  assert('bar', p({}))
   delete vars.foo
 
   players.instances.p1 = { currentEvent:(e,b)=>{ return {foo:b}} }
@@ -69,7 +71,10 @@ define(function(require) {
   delete players.instances.p1
 
   p = varLookup({str:'p1.foo',idx:0})
-  assert(0, p())
+  assert(0, p({}))
+
+  p = varLookup({str:'this.foo',idx:0})
+  assert(1, p({foo:1}))
 
   console.log('Parse var tests complete')
   }

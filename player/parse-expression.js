@@ -426,24 +426,24 @@ define(function(require) {
   vars.foo = 'bar'
   p = parseExpression('foo')
   vars.foo = 'baz'
-  assert('baz', p())
+  assert('baz', p({}))
   delete vars.foo
 
   vars['foo.woo'] = 'bar'
   p = parseExpression('foo.woo')
-  assert('bar', p())
+  assert('bar', p({}))
   vars['foo.woo'] = undefined
 
   vars['foo'] = 'bar'
   p = parseExpression('FoO')
-  assert('bar', p())
+  assert('bar', p({}))
   vars['foo'] = undefined
 
   vars.foo = 2
   p = parseExpression('[1,foo]')
   vars.foo = 3
   assert(1, p[0])
-  assert(3, p[1]())
+  assert(3, p[1]({}))
   delete vars.foo
 
   p = parseExpression('[1,2]+[3,4] ')
@@ -757,8 +757,8 @@ define(function(require) {
 
   p = parseExpression('foo')
   vars.foo = parseExpression('[(0,1),(2,3)]t1')
-  assert([0,1], p()(ev(0,0),0,evalParamFrame))
-  assert([2,3], p()(ev(1,1),1,evalParamFrame))
+  assert([0,1], p({})(ev(0,0),0,evalParamFrame))
+  assert([2,3], p({})(ev(1,1),1,evalParamFrame))
   delete vars.foo
 
   assert(undefined, parseExpression("{a:0}").interval)
