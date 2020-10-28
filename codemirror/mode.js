@@ -23,9 +23,6 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
 
   var keywords = function(){
     function kw(type) {return {type: type, style: "keyword"};}
-    var A = kw("keyword a"), B = kw("keyword b"), C = kw("keyword c"), D = kw("keyword d");
-    var operator = kw("operator"), atom = {type: "atom", style: "atom"};
-
     return {
       "set": kw("set"), "follow": kw("follow"),
     };
@@ -58,56 +55,35 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
     if (ch == '"' || ch == "'") {
       state.tokenize = tokenString(ch);
       return state.tokenize(stream, state);
-    } else if (ch == "." && stream.match(/^\d[\d_]*(?:[eE][+\-]?[\d_]+)?/)) {
+    } else if ((ch == "." || ch == "-") && stream.match(/^\d[\d_]*(?:[eE][+\-]?[\d_]+)?(\/[\d]+)?/)) {
       return ret("number", "number");
-    } else if (ch == "." && stream.match("..")) {
-      return ret("spread", "meta");
-    } else if (/[\[\]{}\(\),;\:\.]/.test(ch)) {
-      return ret(ch);
-    } else if (ch == "=" && stream.eat(">")) {
-      return ret("=>", "operator");
-    } else if (ch == "0" && stream.match(/^(?:x[\dA-Fa-f_]+|o[0-7_]+|b[01_]+)n?/)) {
-      return ret("number", "number");
+    } else if (ch == ']') {
+      stream.match(/[tslenr]?/);
+      return ret("bracket","bracket");
+    } else if (/[\[\]{}\(\)\<\>]/.test(ch)) {
+      return ret("bracket","bracket");
     } else if (/\d/.test(ch)) {
-      stream.match(/^[\d_]*(?:n|(?:\.[\d_]*)?(?:[eE][+\-]?[\d_]+)?)?/);
+      stream.match(/^[\d_]*(?:n|(?:\.[\d_]*)?(?:[eE][+\-]?[\d_]+)?)?(\/[\d]+)?/);
       return ret("number", "number");
     } else if (ch == "/") {
-      if (stream.eat("*")) {
-        state.tokenize = tokenComment;
-        return tokenComment(stream, state);
-      } else if (stream.eat("/")) {
+      if (stream.eat("/")) {
         stream.skipToEnd();
         return ret("comment", "comment");
-      } else if (expressionAllowed(stream, state, 1)) {
-        readRegexp(stream);
-        stream.match(/^\b(([gimyus])(?![gimyus]*\2))+\b/);
-        return ret("regexp", "string-2");
       } else {
         stream.eat("=");
         return ret("operator", "operator", stream.current());
       }
-    } else if (ch == "`") {
-      state.tokenize = tokenQuasi;
-      return tokenQuasi(stream, state);
-    } else if (ch == "#" && stream.peek() == "!") {
-      stream.skipToEnd();
+    } else if (ch == "@" && stream.match(/[ef]/)) {
       return ret("meta", "meta");
-    } else if (ch == "#" && stream.eatWhile(wordRE)) {
-      return ret("variable", "property")
-    } else if (ch == "<" && stream.match("!--") ||
-               (ch == "-" && stream.match("->") && !/\S/.test(stream.string.slice(0, stream.start)))) {
-      stream.skipToEnd()
-      return ret("comment", "comment")
     } else if (isOperatorChar.test(ch)) {
-      if (ch != ">" || !state.lexical || state.lexical.type != ">") {
-        if (stream.eat("=")) {
-          if (ch == "!" || ch == "=") stream.eat("=")
-        } else if (/[<>*+\-]/.test(ch)) {
-          stream.eat(ch)
-          if (ch == ">") stream.eat(ch)
-        }
-      }
-      if (ch == "?" && stream.eat(".")) return ret(".")
+      // if (ch != ">" || !state.lexical || state.lexical.type != ">") {
+      //   if (stream.eat("=")) {
+      //     if (ch == "!" || ch == "=") stream.eat("=")
+      //   } else if (/[<>*+\-]/.test(ch)) {
+      //     stream.eat(ch)
+      //     if (ch == ">") stream.eat(ch)
+      //   }
+      // }
       return ret("operator", "operator", stream.current());
     } else if (wordRE.test(ch)) {
       stream.eatWhile(wordRE);
@@ -117,10 +93,10 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
           var kw = keywords[word]
           return ret(kw.type, kw.style, word)
         }
-        if (word == "async" && stream.match(/^(\s|\/\*.*?\*\/)*[\[\(\w]/, false))
-          return ret("async", "keyword", word)
       }
-      return ret("variable", "variable", word)
+      if (stream.match(/\s*\=/)) {
+        return ret("keyword", "keyword");
+      }
     }
   }
 

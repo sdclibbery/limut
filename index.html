@@ -191,12 +191,13 @@ d2 play .[::], room=0.3
 ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 <pre>bpm=145
 scale=minor
+v streetlight 0
 kd play (xv):, lpf=1000
 hh play -, dur=1/4, amp=[0.2:1.2]n
 kk play ::[::][::][::]::., lpf=[600:900]l40, rate=[0.8:1.2]n
 ba dbass 0, dur=1/4, att=0, lpf=[1000:100]e, hpf=[0:500]n
 pi ping [010], add=[-5:5]l18/4, amp=[0:[0:1]t96]n, echo=1/2, oct=6, scale=minorpentatonic
-pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]s32@f, oct=3, add=[1,0]t64</pre>
+pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]s32@f, oct=3, addc=[2,2,0,0]s[62,4,62,0]@f</pre>
 </div>
 <h4 onclick="toggleAccordion('accordion-basic-syntax')">▶ Basic Syntax</h4>
 <div id="accordion-basic-syntax" class="closed">
