@@ -20,9 +20,12 @@ define(function (require) {
     source.connect(vca)
     if (timeOverride !== undefined) {
       source.start(timeOverride)
+      source.start(timeOverride+1)
+      system.disconnectAt(timeOverride+1, [source])
     } else {
       source.start(params.time)
       source.stop(params.endTime)
+      system.disconnect(params, [source])
     }
   }
 
@@ -77,5 +80,6 @@ define(function (require) {
     playBuffer(params, getNoteUrl(sample), rate, vca)
     getBuffer(getHarmonicsUrl(sample))
     playBuffer(params, getHarmonicsUrl(sample), rate, vca, params.endTime)
+    system.disconnect(params, [vca])
   }
 });

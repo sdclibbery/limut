@@ -189,6 +189,10 @@ Db dbass .0_..0_1, drive=1, lpf=700</pre>
 d1 play (vx)., room=0.3
 d2 play .[::], room=0.3
 ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
+<pre>bpm=65
+pad dsaw (024)(025)(035)(026), envelope=pad, dur=4, lpf=[600:3000]s21, oct=3, amp=[1.2:2.0]s70
+padf ethereal follow pad, oct=4
+pi ping 0, dur=[3,3,2]/20, amp=[]n*[2.0:0]s96, oct=[3,4,5,6]t1/4, add=[0,5,3,4]t4+[0,[1:3]n32,4,[6:10]n37]r, sus=2, addc=[-.15:.15]n</pre>
 <pre>bpm=145
 scale=minor
 v streetlight 0
@@ -513,6 +517,8 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+chrome visuals glitch after a while
+syntax coloring: colour for patterns
 apply overridden delay for follow player: allow canons
 multiline commands
 All lerps should use operator eval, so allow [red, green]n etc

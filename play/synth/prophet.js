@@ -47,6 +47,6 @@ define(function (require) {
       vco.parameters.get('stop').setValueAtTime(1, params.endTime)
       return vco
     })
-    system.disconnect(params, vcos.concat(vca,lfoOsc,lfoGain, lpf))
+    system.disconnect(params, vcos.concat(vca,lfoOsc,lfoGain,lpf))
   }
 });

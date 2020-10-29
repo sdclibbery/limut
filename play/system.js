@@ -83,7 +83,13 @@ system.mix = function (node) {
 system.disconnect = (params, nodes) => {
   setTimeout(() => {
     nodes.forEach(n => n.disconnect())
-  }, 100+(params.endTime - params.beat.now)*1000)
+  }, 100+(params.endTime - system.audio.currentTime)*1000)
+}
+
+system.disconnectAt = (time, nodes) => {
+  setTimeout(() => {
+    nodes.forEach(n => n.disconnect())
+  }, 100+(time - system.audio.currentTime)*1000)
 }
 
 var _initReverb = function () {

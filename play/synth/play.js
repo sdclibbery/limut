@@ -55,7 +55,8 @@ define(function (require) {
     vca.gain.value = Math.max(0, 0.18 * (typeof params.amp === 'number' ? params.amp : 1))
     source.connect(vca)
     system.mix(effects(params, vca))
-
     source.start(params.time)
+    source.stop(params.endTime)
+    system.disconnect(params, [source, vca])
   }
 });

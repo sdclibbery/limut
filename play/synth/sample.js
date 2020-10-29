@@ -23,5 +23,6 @@ define(function (require) {
 
     source.start(params.time)
     source.stop(params.endTime)
+    system.disconnect(params, [source, vca])
   }
 });

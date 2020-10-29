@@ -22,5 +22,6 @@ define(function (require) {
     vco.connect(vca)
     vco.start(params.time)
     vco.stop(params.endTime)
+    system.disconnect(params, [vco, vca])
   }
 })
