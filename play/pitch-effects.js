@@ -35,6 +35,7 @@ define(function (require) {
       let vca = system.audio.createGain()
       vcaVib.connect(vca)
       vcaAddc.connect(vca)
+      system.disconnect(params, [vca])
       return vca
     }
     return vcaVib || vcaAddc || {connect:()=>{}} 

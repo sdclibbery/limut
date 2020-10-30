@@ -40,6 +40,7 @@ define(function (require) {
     let vca = system.audio.createGain()
     evalPerFrame(vca.gain, params, 'amp', 1)
     node.connect(vca)
+    system.disconnect(params, [vca,node])
     return vca
   }
 
@@ -50,6 +51,7 @@ define(function (require) {
     evalPerFrame(lpf.frequency, params, 'lpf')
     evalPerFrame(lpf.Q, params, 'lpr', 5)
     node.connect(lpf)
+    system.disconnect(params, [lpf,node])
     return lpf
   }
 
@@ -60,6 +62,7 @@ define(function (require) {
     evalPerFrame(hpf.frequency, params, 'hpf')
     evalPerFrame(hpf.Q, params, 'hpr', 5)
     node.connect(hpf)
+    system.disconnect(params, [hpf,node])
     return hpf
   }
 
@@ -70,6 +73,7 @@ define(function (require) {
     evalPerFrame(bpf.frequency, params, 'bpf')
     evalPerFrame(bpf.Q, params, 'bpr', 5)
     node.connect(bpf)
+    system.disconnect(params, [bpf,node])
     return bpf
   }
 
@@ -85,7 +89,7 @@ define(function (require) {
     lfo.start(params.time)
     lfo.stop(params.endTime)
     node.connect(gain)
-    system.disconnect(params, [gain,lfo])
+    system.disconnect(params, [gain,lfo,node])
     return gain
   }
 
@@ -108,6 +112,7 @@ define(function (require) {
     shaper.curve = driveCurve
     shaper.oversample = 'none'
     node.connect(shaper)
+    system.disconnect(params, [shaper,node])
     return shaper
   }
 
