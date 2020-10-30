@@ -28,6 +28,7 @@ define(function (require) {
       evalPerFrame(vcaAddc.gain, params, 'addc', 0)
       cents.connect(vcaAddc)
       cents.start()
+      cents.stop(params.endTime)
       system.disconnect(params, [cents, vcaAddc])
     }
     if (vcaVib && vcaAddc) {
