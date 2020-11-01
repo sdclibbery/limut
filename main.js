@@ -28,7 +28,6 @@ define(function(require) {
   window.bpmChanged(metronome.bpm())
 
   // Main amp UI
-  let mainAmpReadout = document.getElementById('main-amp-readout')
   let mainAmpInput = document.getElementById('main-amp-slider')
   window.mainAmpChange = (amp) => {
     let newAmp = system.mainAmpUi(amp)
@@ -36,29 +35,22 @@ define(function(require) {
     canvas.style.opacity = Math.min(Math.max(newAmp, 0), 1)
   }
   window.mainAmpChanged = () => {
-    mainAmpReadout.innerText = system.mainAmp().toFixed(2)
     mainAmpInput.value = system.mainAmpUi()*100
   }
   window.mainAmpChanged()
 
   // Main reverb UI
-  let mainReverbReadout = document.getElementById('main-reverb-readout')
   window.mainReverbChange = (reverb) => {
     window.mainReverbChanged(system.mainReverb(reverb))
   }
-  window.mainReverbChanged = (mainReverb) => {
-    mainReverbReadout.innerText = mainReverb.toFixed(2)
-  }
+  window.mainReverbChanged = (mainReverb) => {}
   window.mainReverbChanged(system.mainReverb())
 
   // Scale ui
-  let scaleReadout = document.getElementById('scale-readout')
   window.scaleChange = function (s) {
     window.scaleChanged(scale.set(s))
   }
-  window.scaleChanged = function (s) {
-    scaleReadout.innerText = s
-  }
+  window.scaleChanged = function (s) {}
   window.scaleChanged(scale.current)
 
   // indicator helpers
@@ -96,7 +88,6 @@ define(function(require) {
   // Update
   let compressorReadout = document.getElementById('compressor-readout')
   let beatLatencyReadout = document.getElementById('beat-latency-readout')
-  let audioReadout = document.getElementById('audio-readout')
   let visualReadout = document.getElementById('visual-readout')
   let beatReadout = document.getElementById('beat-readout')
   let beat12Readout = document.getElementById('beat12-readout')
@@ -150,7 +141,6 @@ define(function(require) {
     }
     compressorReadout.style.backgroundColor = readoutColor(system.compressorReduction(), 0, -0.1)
     beatLatencyReadout.style.backgroundColor = readoutColor(beatLatency, 0, metronome.advance())
-    audioReadout.style.backgroundColor = readoutColor(system.latency(), 0, 0.01)
     visualReadout.style.backgroundColor = readoutColor(drawSystem.latency(), 0.02, 0.1)
     requestAnimationFrame(tick)
   }

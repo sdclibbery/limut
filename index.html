@@ -42,7 +42,7 @@
       margin: 0px;
     }
     .code {
-      height: 350px;
+      height: 400px;
       margin-bottom: 8px;
       max-width: 100%;
     }
@@ -107,7 +107,7 @@
     }
     :fullscreen { display: flex; flex-flow: column; }
     :fullscreen > * > h3 { font-size: 1em; }
-    :fullscreen > #code { flex: 1; max-height: calc(100% - 265px); }
+    :fullscreen > .code { flex: 1; max-height: calc(100% + 100px); }
     :fullscreen > .info { display: none; }
   </style>
   <link rel="stylesheet" href="codemirror/codemirror.css">
@@ -120,13 +120,7 @@
   <div class="widget">
     <h3>Limut live coding</h3>
     <p>
-      main.amp: <span id="main-amp-readout"></span>
-      <input id="main-amp-slider" type="range" min="0" max="200" oninput="mainAmpChange(parseFloat(this.value)/100)" style="width:80%;" />
-    </p>
-    <p>
-      main.reverb: <span id="main-reverb-readout"></span>
-      Scale: <span id="scale-readout"></span>
-      Compression: <span id="compressor-readout", class="meter"> </span>
+      <input id="main-amp-slider" type="range" min="0" max="200" oninput="mainAmpChange(parseFloat(this.value)/100)" style="width:100%;" />
     </p>
     <p>
       bpm: <span id="bpm-readout"> : </span>
@@ -142,8 +136,8 @@
     <button onclick="comment()" title="Toggle comment for line Ctrl-/">//</button>
     <button onclick="fullscreen()" title="Toggle fullscreen">⛶</button>
     Beat: <span id="beat-latency-readout", class="meter"> </span>
-    Audio: <span id="audio-readout", class="meter"> </span>
     Visual: <span id="visual-readout", class="meter"> </span>
+    Compression: <span id="compressor-readout", class="meter"> </span>
   </div>
   <div id="code-codemirror" class="widget code" style="display:none;"></div>
   <textarea id="code-textarea" class="widget code" rows="15" style="display:none;"></textarea>
@@ -462,8 +456,8 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-?? Make echo and reverb special, so they are per player, and a tuple of echoes are all added together onto the player so the record multiply
 Try one echo per event, and only share the reverbs
+ ?? Make echo and reverb special, so they are per player, and a tuple of echoes are all added together onto the player so the record multiply
 pan param
 root main var
 root param
@@ -504,7 +498,7 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ==== visual ====
 Webcam synth
 vignette effect - vignette to 0-1 in UVs to support images?
-colours can be defined using hsl/hsv instead of rgb - or better a perceptually uniform space
+colours can be defined using hsl/hsv instead of rgb - or better still a perceptually uniform space
 Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
 video synth (use video element to load video file; don't try and target eg youtube)
 Start image download on parse not on first use
@@ -518,10 +512,10 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-[]r should be same as [0.0:1]r same for l s t e too
-chrome visuals glitch after a while
-syntax coloring: colour for patterns
 apply overridden delay for follow player: allow canons
+chrome visuals glitch after a while: sprites disappear on the next beat
+[]r should be same as [0.0:1]r same for l s t e too
+syntax coloring: colour for patterns
 multiline commands
 All lerps should use operator eval, so allow [red, green]n etc
 Tutorials
