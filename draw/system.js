@@ -38,7 +38,7 @@ system.frameStart = (time, count, gl, cw, ch, spectrum, pulse) => {
 
   let state = {count: count, time: time, dt: system.dt, spectrum:spectrum, pulse:pulse}
   system.active = system.active
-    .sort((l,r) => l.zorder > r.zorder)
+    .sort((l,r) => l.zorder - r.zorder)
     .filter(({render}, idx) => render(state))
   return true
 }
