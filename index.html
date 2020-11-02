@@ -456,13 +456,14 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
+Look into improving quality of samples playing at slow rates?
 ? Make echo and reverb special
  so they are per player, and a tuple of echoes are all added together onto the player so they multiply
 pan param
 root main var
 root param
 Pulse synth, uses pwm param
-Sample synth can take play sample values, and also has start/end params
+Sample synth can take play sample values, and also has start param (use sus to get end)
 Constant envelope type to allow specifying per frame envelope with amp?
 AudioWorklet freeverb with webaseembly
 Chorus effect
@@ -496,8 +497,16 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+Rewrite to WebGl2 to enable OpenGL ES 3.0?
+Bitwise ops shader where every value is a different pattern - ! Needs opengl ES3 for bitwise operations
+ https://www.shadertoy.com/view/ttscRN
+ https://www.shadertoy.com/view/lttyRj
+ docs
+per frame, fractional addc param for visual synths
+time param for visuals
 Webcam synth
 vignette effect - vignette to 0-1 in UVs to support images?
+Consider pushing data of each event into a texture so a shader could display all events, eg as 2D patterns or voxels
 colours can be defined using hsl/hsv instead of rgb - or better still a perceptually uniform space
 Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
 video synth (use video element to load video file; don't try and target eg youtube)
@@ -512,6 +521,8 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+wow predefined var: [-0.3:0.3]n2
+make sure vars evaluate only once; eg this should be harmonious: ch=[0:4]r
 apply overridden delay for follow player: allow canons
 []r should be same as [0.0:1]r same for l s t e too
 syntax coloring: colour for patterns
