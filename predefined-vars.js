@@ -71,4 +71,6 @@ define(function(require) {
   vars['full'] = 'full'
   vars['simple'] = 'simple'
   vars['pad'] = 'pad'
+
+  vars['wow'] = parseExpression('[-0.3:0.3]n2')
 })

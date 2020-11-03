@@ -290,6 +290,7 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>grid</code> Square grid</p>
 <p><code>glow</code> Additive glow for lights, sparks etc</p>
 <p><code>stars</code> Exploding stars for fireworks etc</p>
+<p><code>bits</code> Bitwise operations giving fractal patterns</p>
 <p><code>shadertoy</code> Display a shadertoy synth. Use the <code>id</code> param to specify which shader. Only shaders published with the 'public+api' option are available, others will give error 'Shader not found'. At present, shaders that use textures or multiple channels will also not work.</p>
 <p><code>image</code> Display an online image. Use the <code>url</code> param to specify the image url. The image must be served using CORS. by default the image <code>back</code> is transparent.</p>
 </div>
@@ -373,6 +374,8 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>transparent</code> Predefined colour. Others: black, darkgray, gray, lightgray, white, red, orange, yellow, green, blue, indigo, violet, neonpink, neongreen</p>
 <p><code>random</code> Random colour</p>
 <p><code>rainbow</code> Colour changing through the rainbow</p>
+<p><code>pad</code> Envelope types eg <code>envelope=pad</code>; also <code>full</code> and <code>simple</code></p>
+<p><code>wow</code> Randomly but smoothly varying signal, good for simulating analog 'wow' pitch distortion; eg <code>addc=wow</code></p>
 </div>
 <h4 onclick="toggleAccordion('accordion-play-samples')">▶ Play Samples</h4>
 <div id="accordion-play-samples" class="closed">
@@ -497,10 +500,6 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-Bitwise ops shader where every value is a different pattern - ! Needs opengl ES3 for bitwise operations
- https://www.shadertoy.com/view/ttscRN
- https://www.shadertoy.com/view/lttyRj
- docs
 per frame, fractional addc param for visual synths
 time param for visuals
 Webcam synth
@@ -520,8 +519,7 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-wow predefined var: [-0.3:0.3]n2
-make sure vars evaluate only once; eg this should be harmonious: ch=[0:4]r
+make sure vars evaluate only once; eg this should be harmonious: ch=[0:4]r ...
 apply overridden delay for follow player: allow canons
 []r should be same as [0.0:1]r same for l s t e too
 syntax coloring: colour for patterns
