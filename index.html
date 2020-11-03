@@ -500,12 +500,12 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+colours can be defined using hsl/hsv instead of rgb - or better still a perceptually uniform space
 per frame, fractional addc param for visual synths
 time param for visuals
 Webcam synth
 vignette effect - vignette to 0-1 in UVs to support images?
 Consider pushing data of each event into a texture so a shader could display all events, eg as 2D patterns or voxels
-colours can be defined using hsl/hsv instead of rgb - or better still a perceptually uniform space
 Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
 video synth (use video element to load video file; don't try and target eg youtube)
 Start image download on parse not on first use
@@ -519,7 +519,8 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-make sure vars evaluate only once; eg this should be harmonious: ch=[0:4]r ...
+piano errors
+make sure vars evaluate only once; eg this should be harmonious: ch=[0:4]r ... also getting random size with w/h same
 apply overridden delay for follow player: allow canons
 []r should be same as [0.0:1]r same for l s t e too
 syntax coloring: colour for patterns

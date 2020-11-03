@@ -20,7 +20,7 @@ define(function (require) {
     source.connect(vca)
     if (timeOverride !== undefined) {
       source.start(timeOverride)
-      source.start(timeOverride+1)
+      source.stop(timeOverride+1)
       system.disconnectAt(timeOverride+1, [source])
     } else {
       source.start(params.time)
