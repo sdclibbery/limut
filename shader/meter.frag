@@ -1,5 +1,6 @@
+#version 300 es
 precision highp float;
-varying vec2 fragCoord;
+in vec2 fragCoord;
 uniform vec4 l_spectrum;
 
 #insert common-processors

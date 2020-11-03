@@ -10,7 +10,8 @@ define(function (require) {
     return evalParam(param(params[p], def), params, params.beat.count)
   }
 
-  let pre = `precision highp float; varying vec2 fragCoord; uniform float l_value; uniform float l_amp; vec2 iResolution = vec2(100.,100.); vec4 iMouse = vec4(0.); uniform float iTime;
+  let pre = `#version 300 es
+  precision highp float; in vec2 fragCoord; uniform float l_value; uniform float l_amp; vec2 iResolution = vec2(100.,100.); vec4 iMouse = vec4(0.); uniform float iTime;
   #define HW_PERFORMANCE 0
   `
 

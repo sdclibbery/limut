@@ -17,7 +17,7 @@ define(function (require) {
         texture.width = image.width
         texture.height = image.height
         system.gl.bindTexture(system.gl.TEXTURE_2D, texture.tex)
-        system.gl.texImage2D(system.gl.TEXTURE_2D, 0, system.gl.RGBA, system.gl.RGBA, system.gl.UNSIGNED_BYTE, image)
+        system.gl.texImage2D(system.gl.TEXTURE_2D, 0, system.gl.RGBA, texture.width, texture.height, 0, system.gl.RGBA, system.gl.UNSIGNED_BYTE, image)
       }
       image.crossOrigin = "anonymous"
       image.src = url

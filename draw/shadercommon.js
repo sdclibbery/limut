@@ -2,16 +2,17 @@
 define(function (require) {
   let system = require('draw/system')
 
-  let vtxShader = `//
-  attribute vec2 posIn;
-  attribute vec2 fragCoordIn;
-  varying vec2 fragCoord;
+  let vtxShader = `#version 300 es
+  in vec2 posIn;
+  in vec2 fragCoordIn;
+  out vec2 fragCoord;
   void main() {
     gl_Position = vec4(posIn, 0, 1);
     fragCoord = fragCoordIn;
   }`
 
   let commonProcessors = `
+    out vec4 fragColor;
     uniform vec2 l_scroll;
     uniform vec2 l_zoom;
     uniform float l_rotate;
@@ -49,9 +50,9 @@ define(function (require) {
     vec3 mono = vec3(0.21*col.r + 0.71*col.g + 0.07*col.b);
     col.rgb = mix(col.rgb, mono, l_monochrome);
     col *= mix(l_back, l_fore, foreBack);
-    gl_FragColor.rgb = col.rgb*l_brightness*mix(col.a, 1.0, l_additive);
-    gl_FragColor.a = mix(col.a, 0.0, l_additive);
-    if (length(gl_FragColor) < 0.01) discard;
+    fragColor.rgb = col.rgb*l_brightness*mix(col.a, 1.0, l_additive);
+    fragColor.a = mix(col.a, 0.0, l_additive);
+    if (length(fragColor) < 0.01) discard;
   }
   `
 

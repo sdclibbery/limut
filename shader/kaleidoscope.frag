@@ -1,7 +1,8 @@
+#version 300 es
 // from https://www.shadertoy.com/view/Xd2Bzw
 precision mediump float;
 
-varying vec2 fragCoord;
+in vec2 fragCoord;
 uniform float iTime;
 uniform float l_value;
 uniform float l_amp;

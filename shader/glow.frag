@@ -1,6 +1,7 @@
+#version 300 es
 precision mediump float;
 
-varying vec2 fragCoord;
+in vec2 fragCoord;
 uniform float iTime;
 uniform float l_value;
 uniform float l_amp;

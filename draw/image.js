@@ -3,9 +3,9 @@ define(function (require) {
   let system = require('draw/system')
   let common = require('draw/shadercommon')
 
-  let fragSource = `
+  let fragSource = `#version 300 es
   precision highp float;
-  varying vec2 fragCoord;
+  in vec2 fragCoord;
   uniform float iTime;
   uniform float l_value;
   uniform float l_amp;
@@ -19,7 +19,7 @@ define(function (require) {
     uv.y = -uv.y;
     uv = preprocess(uv);
     uv = (uv / 2.0) + 0.5;
-    vec4 c = texture2D(l_image, fract(uv));
+    vec4 c = texture(l_image, fract(uv));
     float foreback = c.a;
     c.a = 1.0;
     if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) { foreback = 0.0; }
