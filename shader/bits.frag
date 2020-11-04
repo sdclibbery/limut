@@ -10,17 +10,17 @@ uniform float l_amp;
 
 void main() {
   vec2 uv = preprocess(fragCoord)*l_amp;
-  ivec2 iuv = ivec2(uv*256.0);
+  ivec2 iuv = abs(ivec2(uv*256.0));
 
   int type = abs(int(l_value))%3;
-  int power = abs(int(l_value/3.0))%3;
-  int skew = int(l_value*uv.x);
   int i;
-  if (type == 0) i = iuv.x & iuv.y ^ skew;
-  if (type == 1) i = iuv.x | iuv.y ^ skew;
-  if (type == 2) i = iuv.x ^ iuv.y ^ skew;
-  if (power == 1) i = i*i*i*i;
+  if (type == 0) i = iuv.x | iuv.y;
+  if (type == 1) i = iuv.x & iuv.y;
+  if (type == 2) i = iuv.x ^ iuv.y;
+  i = int(pow(float(i), 1.0+l_value/100.0));
 
-  float f = fract((float(i)+iTime*60.0) / 256.0);
+  float f = fract((float(i)-iTime*256.0) / 256.0);
+  f = pow(f, 1.0/l_amp);
+
   postprocess(vec4(1.), f);
 }

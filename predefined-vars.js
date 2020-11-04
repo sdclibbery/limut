@@ -3,6 +3,8 @@ define(function(require) {
   let parseExpression = require('player/parse-expression')
   let vars = require('vars')
 
+  vars['rnd'] = parseExpression('[0.001:1]r')
+
   vars['drop4_4'] = parseExpression('[1,0]t[4,4]')
   vars['drop6_2'] = parseExpression('[1,0]t[6,2]')
   vars['drop7_1'] = parseExpression('[1,0]t[7,1]')
@@ -43,7 +45,7 @@ define(function(require) {
   vars['tile_random'] = parseExpression('{x:[-7/8:7/8]r,y:[-7/8:7/8]r,w:1/2,h:1/2}')
   vars['tile_rand'] = parseExpression('{x:[-7/8:7/8]r,y:[-7/8:7/8]r,w:1/2,h:1/2}')
   vars['sparkle'] = parseExpression('{x:[-5/6:5/6]r@e,y:[-5/6:5/6]r@e,w:1/3,h:1/3}')
-  vars['fireworks'] = parseExpression('{x:[-5/6:5/6]r@e,y:[-5/6:5/6]r@e,w:[1/2:1]r@e,h:[1/2:1]r@e}')
+  vars['fireworks'] = parseExpression('{x:[-5/6:5/6]r@e,y:[-5/6:5/6]r@e,w:0.5*(1+rnd@e),h:0.5*(1+rnd@e)}')
   vars['droplet'] = parseExpression('{w:1/4,h:1/4,x:[-15/16:15/16]r,y:[0.8:1.2]r-[0:2]e}')
   vars['spark'] = parseExpression('{w:1/8,h:1/8, x:[0,[-1.01:1]r]e, y:[0,[-1.01:1]r]e}')
   vars['gravity'] = parseExpression('{y:[0:-3/2]e*[0:3/2]e}')
