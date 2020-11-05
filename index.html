@@ -241,6 +241,7 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>[1,2]s3</code> Timed smooth interpolated sequence, each value takes 3 beats to change into the next, using an 's' shaped eas in/out curve</p>
 <p><code>[1,2]s[14,2]</code> Timed smooth interpolated sequence, one timing per value</p>
 <p><code>[1,2]e</code> Timed sequence, each value is evenly spaced from beginning to end of the current event</p>
+<p><code>[]r</code> Select a different value every time, chosen randomly between 0 and 1</p>
 <p><code>[1,4,7]r</code> Select a different value every time, chosen randomly from the numbers 1, 4 and 7</p>
 <p><code>[:9]r</code> Select a different random integer every time, between 0 and 9</p>
 <p><code>[0:9]r</code> Select a different random integer every time, between 0 and 9</p>
@@ -521,7 +522,6 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-[]r should be same as [0.0:1]r same for l s t e too
 multiline commands
 apply overridden delay for follow player: allow canons
 All lerps should use operator eval, so allow [red, green]n etc

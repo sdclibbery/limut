@@ -3,7 +3,7 @@ define(function(require) {
   let parseExpression = require('player/parse-expression')
   let vars = require('vars')
 
-  vars['rnd'] = parseExpression('[0.001:1]r')
+  vars['rnd'] = parseExpression('[]r')
 
   vars['drop4_4'] = parseExpression('[1,0]t[4,4]')
   vars['drop6_2'] = parseExpression('[1,0]t[6,2]')
