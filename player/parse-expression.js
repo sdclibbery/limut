@@ -224,7 +224,9 @@ define(function(require) {
           let period = number(state)
           let interval = parseInterval(state) || 'event'
           let rand
-          if (vs.separator == ':') {
+          if (vs.length == 0) {
+            rand = (e,b,evalRecurse) => evalRandomRanged(0.000001, 1)
+          } else if (vs.separator == ':') {
             let lo = param(vs[0], 0)
             let hi = param(vs[1], 1)
             rand = (e,b,evalRecurse) => evalRandomRanged(evalRecurse(lo,e,b,evalRecurse), evalRecurse(hi,e,b.evalRecurse))
@@ -880,6 +882,9 @@ define(function(require) {
   assert(1, evalParamFrame(p,e,7))
   assert(0, evalParamFrame(p,e,7.5))
   assert(-1, evalParamFrame(p,e,8))
+
+  p = parseExpression("[]r")
+  for (let i=0; i<20; i++) { assertIn(0,1, p(ev(0,0),0,evalParamFrame)) }
 
   console.log('Parse expression tests complete')
   }
