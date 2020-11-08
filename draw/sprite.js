@@ -93,6 +93,13 @@ define(function (require) {
       let rotate = evalParamFrame(params, 'rotate', 0, state.count) * Math.PI*2
       let fore = colour(evalParamFrame(params, 'fore', {}, state.count), defFore)
       let back = colour(evalParamFrame(params, 'back', {}, state.count), defBack)
+      let mid
+      if (params.mid === undefined) {
+        mid = []
+        for (let i=0; i<4; i++) { mid[i] = (fore[i]+back[i])/2 }
+      } else {
+        mid = colour(evalParamFrame(params, 'mid', {}, state.count), {r:0,g:0,b:0,a:1})
+      }
       let vtxData = verts(loc, window)
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
       system.loadVertexAttrib(s.fragCoordBuf, s.fragCoordAttr, vtxData.tex, 2)
@@ -103,6 +110,7 @@ define(function (require) {
       system.gl.uniform1f(s.valueUnif, value+add + pulse*state.pulse)
       system.gl.uniform1f(s.ampUnif, amp + pulse*state.pulse*0.5)
       system.gl.uniform4fv(s.foreUnif, fore)
+      system.gl.uniform4fv(s.midUnif, mid)
       system.gl.uniform4fv(s.backUnif, back)
       system.gl.uniform4fv(s.spectrumUnif, state.spectrum)
       system.gl.uniform2fv(s.scrollUnif, scroll)

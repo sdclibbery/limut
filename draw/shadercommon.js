@@ -20,6 +20,7 @@ define(function (require) {
     uniform float l_pixellate;
     uniform float l_additive;
     uniform vec4 l_fore;
+    uniform vec4 l_mid;
     uniform vec4 l_back;
     uniform float l_monochrome;
     uniform float l_brightness;
@@ -49,7 +50,10 @@ define(function (require) {
   void postprocess( vec4 col, float foreBack ) {
     vec3 mono = vec3(0.21*col.r + 0.71*col.g + 0.07*col.b);
     col.rgb = mix(col.rgb, mono, l_monochrome);
-    col *= mix(l_back, l_fore, foreBack);
+    float b = min(foreBack > 0.5 ? 0.0 : 1.0-2.0*foreBack, 1.0);
+    float m = max(foreBack < 0.5 ? 2.0*foreBack : 2.0*(1.0-foreBack), 0.0);
+    float f = min(foreBack < 0.5 ? 0.0 : 2.0*foreBack-1.0, 1.0);
+    col *= l_back*b + l_mid*m + l_fore*f;
     fragColor.rgb = col.rgb*l_brightness*mix(col.a, 1.0, l_additive);
     fragColor.a = mix(col.a, 0.0, l_additive);
     if (length(fragColor) < 0.01) discard;
@@ -63,6 +67,7 @@ define(function (require) {
     shader.fragCoordBuf = system.gl.createBuffer()
     shader.fragCoordAttr = system.gl.getAttribLocation(program, "fragCoordIn")
     shader.foreUnif = system.gl.getUniformLocation(program, "l_fore")
+    shader.midUnif = system.gl.getUniformLocation(program, "l_mid")
     shader.backUnif = system.gl.getUniformLocation(program, "l_back")
     shader.scrollUnif = system.gl.getUniformLocation(program, "l_scroll")
     shader.zoomUnif = system.gl.getUniformLocation(program, "l_zoom")
