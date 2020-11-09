@@ -34,7 +34,9 @@ define(function (require) {
   let getUrl = (char, sample) => {
     if (typeof sample == 'string') {
       return sample
-    } else if (char == '.' || char == ' ') {
+    }
+    sample = Math.floor(sample)
+    if (char == '.' || char == ' ') {
       return null
     } else if (symbols[char]) {
       return "sample/symbol/"+symbols[char]+"/0"+sample+".wav"

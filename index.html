@@ -503,7 +503,8 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-negative pixellate puts a border around each pixel
+negative pixellate puts a border around each pixel?
+Pull ripple Tex coord effect out of kal and into common
 Tunnel shader where values are different texture effects on the tunnel, and or tunnel shapes, maybe amp is twistiness?
 Change colour space to HSL or a perceptually uniform space - but need to handle lerps for hue given it loops round thr back
 per frame, fractional addc param for visual synths
@@ -525,12 +526,12 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 [:] is always float, never int; so [0:4]r is float not int
- ?should oct/add etc round instead of floor?
  docs
 multiline commands
 apply overridden delay for follow player: allow canons
 All lerps should use operator eval, so allow [red, green]n etc
 how to enable random chord same for all players: ch=[0:4]r ..?
+ ? could [0:4]r1 be made to do it?
 syntax coloring: colour for patterns
 Tutorials
  ? Can automate the copy to clipboard paraphernalia?
