@@ -503,14 +503,17 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-negative pixellate puts a border around each pixel?
+tunnel effect
+ warps the shader into a tunnel
+ darkens in the distance
+ docs
 Pull ripple Tex coord effect out of kal and into common
-Tunnel shader where values are different texture effects on the tunnel, and or tunnel shapes, maybe amp is twistiness?
+vignette effect - vignette to 0-1 in UVs to support images?
+ when pixellate too, each pixel gets its own vignette
 Change colour space to HSL or a perceptually uniform space - but need to handle lerps for hue given it loops round thr back
 per frame, fractional addc param for visual synths
 time param for visuals
 Webcam synth
-vignette effect - vignette to 0-1 in UVs to support images?
 Consider pushing data of each event into a texture so a shader could display all events, eg as 2D patterns or voxels
 Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
 video synth (use video element to load video file; don't try and target eg youtube)

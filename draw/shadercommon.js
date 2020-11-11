@@ -17,6 +17,7 @@ define(function (require) {
     uniform vec2 l_zoom;
     uniform float l_rotate;
     uniform float l_perspective;
+    uniform float l_tunnel;
     uniform float l_pixellate;
     uniform float l_additive;
     uniform vec4 l_fore;
@@ -24,12 +25,24 @@ define(function (require) {
     uniform vec4 l_back;
     uniform float l_monochrome;
     uniform float l_brightness;
+    vec2 origCoord;
     vec2 preprocess( vec2 coord ) {
+    origCoord = coord;
     if (l_perspective != 0.) {
       const float sz = 1.0;
       const float pz = 1.0;
       vec2 s = coord / sz;
-      float p = (s.y*sin(l_perspective*0.68) + cos(l_perspective*0.68));
+      float p = (origCoord.y*sin(l_perspective*0.68) + cos(l_perspective*0.68));
+      vec2 uv = vec2(
+        s.x*pz/p,
+        s.y*pz/p
+      );
+      coord = uv;
+    }
+    if (l_tunnel != 0.) {
+      const float pz = 7.0;
+      vec2 s = coord/10.0;
+      float p = (length(origCoord)*sin(l_tunnel*1.45) + cos(l_tunnel*1.45));
       vec2 uv = vec2(
         s.x*pz/p,
         s.y*pz/p
@@ -37,17 +50,21 @@ define(function (require) {
       coord = uv;
     }
     coord = coord / l_zoom;
-
-    float s = sin(l_rotate);
-    float c = cos(l_rotate);
-    mat2 rot = mat2(c, -s, s, c);
-    coord = rot * coord;
-
+    if (l_rotate != 0.) {
+      float s = sin(l_rotate);
+      float c = cos(l_rotate);
+      mat2 rot = mat2(c, -s, s, c);
+      coord = rot * coord;
+    }
     coord = coord + l_scroll;
     if (l_pixellate != 0.) { coord = floor((coord+(0.5/l_pixellate))*l_pixellate)/l_pixellate; }
     return coord;
   }
   void postprocess( vec4 col, float foreBack ) {
+    if (l_tunnel != 0.) {
+      float t = pow(length(origCoord),0.15)*2.0 - l_tunnel;
+      col.rgb *= max(min(t,1.),0.);
+    }
     vec3 mono = vec3(0.21*col.r + 0.71*col.g + 0.07*col.b);
     col.rgb = mix(col.rgb, mono, l_monochrome);
     float b = min(foreBack > 0.5 ? 0.0 : 1.0-2.0*foreBack, 1.0);
@@ -73,6 +90,7 @@ define(function (require) {
     shader.zoomUnif = system.gl.getUniformLocation(program, "l_zoom")
     shader.rotateUnif = system.gl.getUniformLocation(program, "l_rotate")
     shader.pixellateUnif = system.gl.getUniformLocation(program, "l_pixellate")
+    shader.tunnelUnif = system.gl.getUniformLocation(program, "l_tunnel")
     shader.perspectiveUnif = system.gl.getUniformLocation(program, "l_perspective")
     shader.additiveUnif = system.gl.getUniformLocation(program, "l_additive")
     shader.timeUnif = system.gl.getUniformLocation(program, "iTime")

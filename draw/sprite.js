@@ -90,6 +90,7 @@ define(function (require) {
       let scroll = vec(evalParamFrame(params, 'scroll', {}, state.count), {x:0,y:0})
       let zoom = vec(evalParamFrame(params, 'zoom', {}, state.count), {x:1,y:1})
       let perspective = evalParamFrame(params, 'perspective', 0, state.count)
+      let tunnel = evalParamFrame(params, 'tunnel', 0, state.count)
       let rotate = evalParamFrame(params, 'rotate', 0, state.count) * Math.PI*2
       let fore = colour(evalParamFrame(params, 'fore', {}, state.count), defFore)
       let back = colour(evalParamFrame(params, 'back', {}, state.count), defBack)
@@ -117,6 +118,7 @@ define(function (require) {
       system.gl.uniform2fv(s.zoomUnif, zoom)
       system.gl.uniform1f(s.rotateUnif, rotate)
       system.gl.uniform1f(s.pixellateUnif, pixellate)
+      system.gl.uniform1f(s.tunnelUnif, tunnel)
       system.gl.uniform1f(s.perspectiveUnif, perspective)
       system.gl.uniform1f(s.additiveUnif, additive)
       system.gl.uniform1f(s.eventTimeUnif, eventTime)
