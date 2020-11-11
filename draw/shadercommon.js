@@ -40,14 +40,9 @@ define(function (require) {
       coord = uv;
     }
     if (l_tunnel != 0.) {
-      const float pz = 7.0;
-      vec2 s = coord/10.0;
-      float p = (length(origCoord)*sin(l_tunnel*1.45) + cos(l_tunnel*1.45));
-      vec2 uv = vec2(
-        s.x*pz/p,
-        s.y*pz/p
-      );
-      coord = uv;
+      float r = 2.0/(length(coord)*2.0 + 1.0) - 1.0;
+      float theta = atan(coord.x, coord.y)/6.28;
+      coord = mix(coord, vec2(r*0.5, theta), l_tunnel);
     }
     coord = coord / l_zoom;
     if (l_rotate != 0.) {
@@ -62,7 +57,7 @@ define(function (require) {
   }
   void postprocess( vec4 col, float foreBack ) {
     if (l_tunnel != 0.) {
-      float t = pow(length(origCoord),0.15)*2.0 - l_tunnel;
+      float t = pow(length(origCoord),0.2)*2.0 - l_tunnel;
       col.rgb *= max(min(t,1.),0.);
     }
     vec3 mono = vec3(0.21*col.r + 0.71*col.g + 0.07*col.b);

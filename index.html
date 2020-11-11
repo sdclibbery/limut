@@ -187,6 +187,7 @@ ba dbass 0[.0][_0][_0], att=0, room=0.3</pre>
 pad dsaw (024)(025)(035)(026), envelope=pad, dur=4, lpf=[600:3000]s21, oct=3, amp=[1.2:2.0]s70
 padf ethereal follow pad, oct=4
 pi ping 0, dur=[3,3,2]/20, amp=[]n*[2.0:0]s96, oct=[3,4,5,6]t1/4, add=[0,5,3,4]t4+[0,[1:3]n32,4,[6:10]n37]r, sus=2, addc=[-.15:.15]n</pre>
+<pre>v kal 0, tunnel, scroll={x:time/8}, monochrome, fore=rainbow, mid=white</pre>
 <pre>bpm=145
 scale=minor
 v streetlight 0
@@ -351,6 +352,7 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>back</code> background colour; eg <code>{r:0,g:1,b:0,a:1}</code> for green or <code>#00ff</code> for orange.</p>
 <p><code>pixellate</code> number of pixels to pixellate to in each direction, or 0 to disable pixellation</p>
 <p><code>perspective</code> perspective warp to apply to shader (negative to invert), or 0 to disable</p>
+<p><code>tunnel</code> tunnel warp to apply to shader, or 0 to disable. Applies a slitscan type warp, where scrolling in the x direction will scroll the original shader through the tunnel.</p>
 <p><code>additive</code> add this shaders output to those beneath instead of blending</p>
 <p><code>monochrome</code> make the shader output monochrome; 0 for normal, 1 for monochrome</p>
 <p><code>id</code> Shadertoy id for <code>shadertoy</code> synth. This is the id at the end of the URL when viewing a shadertoy shader; default is <code>Mss3Wf</code>.</p>
@@ -503,10 +505,6 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-tunnel effect
- warps the shader into a tunnel
- darkens in the distance
- docs
 Pull ripple Tex coord effect out of kal and into common
 vignette effect - vignette to 0-1 in UVs to support images?
  when pixellate too, each pixel gets its own vignette
