@@ -57,8 +57,8 @@ define(function (require) {
   }
   void postprocess( vec4 col, float foreBack ) {
     if (l_tunnel != 0.) {
-      float t = pow(length(origCoord),0.2)*2.0 - l_tunnel;
-      col.rgb *= max(min(t,1.),0.);
+      float t = length(origCoord);
+      col.rgb *= mix(1.,min(t,1.),l_tunnel);
     }
     vec3 mono = vec3(0.21*col.r + 0.71*col.g + 0.07*col.b);
     col.rgb = mix(col.rgb, mono, l_monochrome);

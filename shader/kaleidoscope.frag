@@ -14,7 +14,6 @@ void main() {
   float t = iTime/2.;
   float f = fract(t);
   vec2 p = preprocess(fragCoord)*0.25;
-  //p += p * sin(dot(p, p)*20.-t) * .04;
   vec4 c = vec4(0.);
   vec4 dc;
   for (float i = 0.5 ; i < 8.0 ; i++) {
