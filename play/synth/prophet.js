@@ -41,12 +41,11 @@ define(function (require) {
       lfoGain.connect(vco.parameters.get('pulseWidth'))
       pitch.connect(vco.parameters.get('detune'))
       vco.connect(lpf)
-      vco.parameters.get('start').setValueAtTime(0, system.audio.currentTime)
       vco.parameters.get('start').setValueAtTime(1, params.time)
       vco.parameters.get('stop').setValueAtTime(0, system.audio.currentTime)
       vco.parameters.get('stop').setValueAtTime(1, params.endTime)
       return vco
     })
-    system.disconnect(params, vcos.concat(vca,lfoOsc,lfoGain,lpf))
+   system.disconnect(params, vcos.concat(vca,lfoOsc,lfoGain,lpf))
   }
 });

@@ -40,7 +40,6 @@ define(function (require) {
 
     let noise = new AudioWorkletNode(system.audio, "noise-processor")
     noise.connect(vca)
-    noise.parameters.get('start').setValueAtTime(0, system.audio.currentTime)
     noise.parameters.get('start').setValueAtTime(1, params.time)
     noise.parameters.get('stop').setValueAtTime(0, system.audio.currentTime)
     noise.parameters.get('stop').setValueAtTime(1, params.endTime)

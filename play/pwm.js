@@ -159,7 +159,7 @@ class PwmOscillator extends AudioWorkletProcessor {
         this.inc();
       }
     });
-    return parameters.stop[0]<0.5
+    return parameters.stop[parameters.stop.length-1]<0.5
   }
 }
 registerProcessor('pwm-oscillator', PwmOscillator);
