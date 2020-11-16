@@ -12,21 +12,22 @@ define(function (require) {
   }`
 
   let commonProcessors = `
-    out vec4 fragColor;
-    uniform vec2 l_scroll;
-    uniform vec2 l_zoom;
-    uniform float l_rotate;
-    uniform float l_perspective;
-    uniform float l_tunnel;
-    uniform float l_pixellate;
-    uniform float l_additive;
-    uniform vec4 l_fore;
-    uniform vec4 l_mid;
-    uniform vec4 l_back;
-    uniform float l_monochrome;
-    uniform float l_brightness;
-    vec2 origCoord;
-    vec2 preprocess( vec2 coord ) {
+  out vec4 fragColor;
+  uniform vec2 l_scroll;
+  uniform vec2 l_zoom;
+  uniform float l_rotate;
+  uniform float l_perspective;
+  uniform float l_tunnel;
+  uniform float l_pixellate;
+  uniform float l_additive;
+  uniform vec4 l_fore;
+  uniform vec4 l_mid;
+  uniform vec4 l_back;
+  uniform float l_monochrome;
+  uniform float l_brightness;
+  uniform float l_vignette;
+  vec2 origCoord;
+  vec2 preprocess( vec2 coord ) {
     origCoord = coord;
     if (l_perspective != 0.) {
       const float sz = 1.0;
@@ -56,6 +57,14 @@ define(function (require) {
     return coord;
   }
   void postprocess( vec4 col, float foreBack ) {
+    if (l_vignette != 0.) {
+      float p = 4.0/l_vignette;
+      const float cutoff = 0.9;
+      float d = pow(pow(abs(origCoord.x),p)+pow(abs(origCoord.y),p), 1.0/p);
+      float vignette = d < cutoff ? 1.0 : max(pow(1.0-(d-cutoff)/(1.0-cutoff),1.0),0.0);
+      col.a *= vignette;
+      col.rgb *= mix(1.0, vignette, l_additive);
+    }
     if (l_tunnel != 0.) {
       float t = length(origCoord);
       col.rgb *= mix(1.,min(t,1.),l_tunnel);
@@ -91,6 +100,7 @@ define(function (require) {
     shader.timeUnif = system.gl.getUniformLocation(program, "iTime")
     shader.brightnessUnif = system.gl.getUniformLocation(program, "l_brightness")
     shader.monochromeUnif = system.gl.getUniformLocation(program, "l_monochrome")
+    shader.vignetteUnif = system.gl.getUniformLocation(program, "l_vignette")
     shader.valueUnif = system.gl.getUniformLocation(program, "l_value")
     shader.ampUnif = system.gl.getUniformLocation(program, "l_amp")
     shader.spectrumUnif = system.gl.getUniformLocation(program, "l_spectrum")

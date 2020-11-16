@@ -44,7 +44,7 @@ define(function (require) {
     }
     return {
       vtx: new Float32Array([l,t, r,t, l,b, l,b, r,t, r,b]),
-      tex: new Float32Array([u,v, w,v, u,x, u,x, w,v, w,x])
+      tex: new Float32Array([u,v, w,v, u,x, u,x, w,v, w,x]),
     }
   }
 
@@ -86,6 +86,7 @@ define(function (require) {
       let brightness = 1 - (eventTime*eventTime)*fade
       let monochrome = evalParamFrame(params, 'monochrome', 0, state.count)
       let pixellate = evalParamFrame(params, 'pixellate', 0, state.count)
+      let vignette = evalParamFrame(params, 'vignette', 0, state.count)
       let loc = rect(evalParamFrame(params, 'loc', {}, state.count), {x:0,y:0,w:2,h:2})
       let scroll = vec(evalParamFrame(params, 'scroll', {}, state.count), {x:0,y:0})
       let zoom = vec(evalParamFrame(params, 'zoom', {}, state.count), {x:1,y:1})
@@ -108,6 +109,7 @@ define(function (require) {
       system.gl.uniform1f(s.timeUnif, state.count*rate + sway*state.pulse)
       system.gl.uniform1f(s.brightnessUnif, brightness)
       system.gl.uniform1f(s.monochromeUnif, monochrome)
+      system.gl.uniform1f(s.vignetteUnif, vignette)
       system.gl.uniform1f(s.valueUnif, value+add + pulse*state.pulse)
       system.gl.uniform1f(s.ampUnif, amp + pulse*state.pulse*0.5)
       system.gl.uniform4fv(s.foreUnif, fore)
@@ -136,7 +138,7 @@ define(function (require) {
           }
         })
       }
-      if (fore[3] >= 0.9999 && back[3] >= 0.9999 && additive == 0) {
+      if (fore[3] >= 0.9999 && back[3] >= 0.9999 && additive == 0 && vignette == 0) {
         system.gl.disable(system.gl.BLEND)
       } else {
         system.gl.enable(system.gl.BLEND)

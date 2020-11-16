@@ -355,6 +355,7 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>tunnel</code> tunnel warp to apply to shader, or 0 to disable. Applies a slitscan type warp, where scrolling in the x direction will scroll the original shader through the tunnel.</p>
 <p><code>additive</code> add this shaders output to those beneath instead of blending</p>
 <p><code>monochrome</code> make the shader output monochrome; 0 for normal, 1 for monochrome</p>
+<p><code>vignette</code> fade out the visual around the edges. The value controls the shape.</p>
 <p><code>id</code> Shadertoy id for <code>shadertoy</code> synth. This is the id at the end of the URL when viewing a shadertoy shader; default is <code>Mss3Wf</code>.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-predefined-vars')">▶ Predefined Vars</h4>
@@ -505,14 +506,14 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-vignette effect - vignette to 0-1 in UVs to support images?
- when pixellate too, each pixel gets its own vignette
+per frame, fractional addc param for visual synths
+when pixellate too, each pixel gets its own vignette
 Change colour space to HSL or a perceptually uniform space
  But need to handle lerps for hue given it loops round thr back
  Maybe choice of colour spaces, including oil and black body as well??
-per frame, fractional addc param for visual synths
 time param for visuals
 Webcam synth
+make vignette work with window
 Consider pushing data of each event into a texture so a shader could display all events, eg as 2D patterns or voxels
 Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
 video synth (use video element to load video file; don't try and target eg youtube)
