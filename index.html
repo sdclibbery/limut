@@ -464,15 +464,16 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
+FM soft/hollow pads
 Allow setting main reverb room size
-Look into improving quality of samples playing at slow rates?
-? Make echo and reverb special
- so they are per player, and a tuple of echoes are all added together onto the player so they multiply
 pan param
 root main var
 root param
-Pulse synth, uses pwm param
 Sample synth can take play sample values, and also has start param (use sus to get end)
+Look into improving quality of samples playing at slow rates?
+? Make echo and reverb special
+ so they are per player, and a tuple of echoes are all added together onto the player so they multiply
+Pulse synth, uses pwm param
 Constant envelope type to allow specifying per frame envelope with amp?
 AudioWorklet freeverb with webaseembly
 Chorus effect
@@ -506,18 +507,20 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+Vignette bug: outside border on Chrome/Mac
+Simple gradient shader, maybe value changes shape of gradient?
+Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
 Change colour space to HSL or a perceptually uniform space
  But need to handle lerps for hue given it loops round thr back
  Maybe choice of colour spaces, including oil and black body as well??
 time param for visuals
 Webcam synth
-make vignette work with window
 Consider pushing data of each event into a texture so a shader could display all events, eg as 2D patterns or voxels
-Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
 video synth (use video element to load video file; don't try and target eg youtube)
 Start image download on parse not on first use
 text synth
 gamma
+make vignette work with window
 noise/film grain
 pixellate per frame
 Sprites duration should include rel? Or not??

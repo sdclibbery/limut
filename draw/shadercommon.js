@@ -63,7 +63,7 @@ define(function (require) {
       float p = 4.0/l_vignette;
       const float cutoff = 0.9;
       float d = pow(pow(abs(coord.x),p)+pow(abs(coord.y),p), 1.0/p);
-      float vignette = d < cutoff ? 1.0 : max(pow(1.0-(d-cutoff)/(1.0-cutoff),1.0),0.0);
+      float vignette = d < cutoff ? 1.0 : max(1.0-(d-cutoff)/(1.0-cutoff),0.0);
       col.a *= vignette;
       col.rgb *= mix(1.0, vignette, l_additive);
     }
