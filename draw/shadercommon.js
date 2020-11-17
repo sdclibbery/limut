@@ -29,6 +29,7 @@ define(function (require) {
   vec2 origCoord;
   vec2 preprocess( vec2 coord ) {
     origCoord = coord;
+    if (l_pixellate != 0.) { coord = floor((coord+(0.5/l_pixellate))*l_pixellate)/l_pixellate; }
     if (l_perspective != 0.) {
       const float sz = 1.0;
       const float pz = 1.0;
@@ -53,14 +54,15 @@ define(function (require) {
       coord = rot * coord;
     }
     coord = coord + l_scroll;
-    if (l_pixellate != 0.) { coord = floor((coord+(0.5/l_pixellate))*l_pixellate)/l_pixellate; }
     return coord;
   }
   void postprocess( vec4 col, float foreBack ) {
     if (l_vignette != 0.) {
+      vec2 coord = origCoord;
+      if (l_pixellate != 0.) { coord = mod((coord+(0.5/l_pixellate))*l_pixellate, 1.0)*2.0-1.0; }
       float p = 4.0/l_vignette;
       const float cutoff = 0.9;
-      float d = pow(pow(abs(origCoord.x),p)+pow(abs(origCoord.y),p), 1.0/p);
+      float d = pow(pow(abs(coord.x),p)+pow(abs(coord.y),p), 1.0/p);
       float vignette = d < cutoff ? 1.0 : max(pow(1.0-(d-cutoff)/(1.0-cutoff),1.0),0.0);
       col.a *= vignette;
       col.rgb *= mix(1.0, vignette, l_additive);

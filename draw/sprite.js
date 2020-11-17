@@ -81,7 +81,7 @@ define(function (require) {
     return state => { // per frame
       if (state.time > endTime) { return false }
       let amp = Math.min(evalParamFrame(params, 'amp', 1, state.count), 5)
-      let add = Math.min(evalParamFrame(params, 'add', 1, state.count), 0)
+      let add = evalParamFrame(params, 'add', 1, state.count)
       let eventTime = ((state.time-startTime)/(endTime-startTime))
       let brightness = 1 - (eventTime*eventTime)*fade
       let monochrome = evalParamFrame(params, 'monochrome', 0, state.count)
