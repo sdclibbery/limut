@@ -28,10 +28,11 @@ define(function (require) {
   let reverb = (params, node) => {
     let room = evalPerEvent(params, 'room', 0)*0.7
     if (!room || room < 0.01) { return node }
-    if (!reverbs[room]) {
-      reverbs[room] = freeverb(room)
+    let quantisedRoom = Math.round(room*20)/20
+    if (!reverbs[quantisedRoom]) {
+      reverbs[quantisedRoom] = freeverb(quantisedRoom)
     }
-    node.connect(reverbs[room])
+    node.connect(reverbs[quantisedRoom])
     return node
   }
 
