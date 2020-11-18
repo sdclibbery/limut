@@ -7,15 +7,17 @@ define(function (require) {
 
   let echoes = {}
   let echo = (params, node) => {
-    let echoDelay = evalPerEvent(params, 'echo', 0) * params.beat.duration
+    let echoDelay = evalPerEvent(params, 'echo', 0)
     if (!echoDelay || echoDelay < 0.0001) { return node }
-    let echoFeedback = Math.min(evalPerEvent(params, 'echogain', 0.5), 0.9)
-    let key = echoDelay + 'f' + echoFeedback
+    let echoFeedback = Math.min(evalPerEvent(params, 'echofeedback', 0.5), 0.95)
+    let quantisedEcho = (Math.round(echoDelay*16)/16) * params.beat.duration
+    let quantisedEchoFeedback = Math.round(echoFeedback*20)/20
+    let key = quantisedEcho + 'f' + quantisedEchoFeedback
     if (!echoes[key]) {
-      echoes[key] = system.audio.createDelay(echoDelay)
-      echoes[key].delayTime.value = echoDelay
+      echoes[key] = system.audio.createDelay(quantisedEcho)
+      echoes[key].delayTime.value = quantisedEcho
       let echoGain = system.audio.createGain()
-      echoGain.gain.value = echoFeedback
+      echoGain.gain.value = quantisedEchoFeedback
       echoes[key].connect(echoGain)
       echoGain.connect(echoes[key])
       system.mix(echoGain)
