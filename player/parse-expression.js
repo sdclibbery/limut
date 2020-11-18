@@ -612,23 +612,23 @@ define(function(require) {
   p = parseExpression('[0:9]r')
   for (let i = 0; i<20; i+=1) {
     assertIn(0, 9, p(ev(0,0),0,evalParamFrame))
-    assertInteger(p(ev(0,0),0,evalParamFrame))
+    assertNotInteger(p(ev(0,0),0,evalParamFrame))
   }
 
   p = parseExpression('[[0,10]:[9,19]]r')
   for (let i = 0; i<20; i+=1) {
     assertIn(0, 9, p(ev(0),0,evalParamFrame))
-    assertInteger(p(ev(0),0,evalParamFrame))
+    assertNotInteger(p(ev(0),0,evalParamFrame))
   }
   for (let i = 0; i<20; i+=1) {
     assertIn(10, 19, p(ev(1),1,evalParamFrame))
-    assertInteger(p(ev(1),1,evalParamFrame))
+    assertNotInteger(p(ev(1),1,evalParamFrame))
   }
 
   p = parseExpression('[:9]r')
   for (let i = 0; i<20; i+=1) {
     assertIn(0, 9, p(ev(0,0),0,evalParamFrame))
-    assertInteger(p(ev(0,0),0,evalParamFrame))
+    assertNotInteger(p(ev(0,0),0,evalParamFrame))
   }
 
   p = parseExpression('[9]r')
@@ -638,7 +638,7 @@ define(function(require) {
 
   p = parseExpression('[0.1:9]r')
   for (let i = 0; i<20; i+=1) {
-    assertIn(0, 9, p(ev(0,0),0,evalParamFrame))
+    assertIn(0.1, 9, p(ev(0,0),0,evalParamFrame))
     assertNotInteger(p(ev(0,0),0,evalParamFrame))
   }
 
@@ -796,23 +796,23 @@ define(function(require) {
   assert(1, parseExpression("[0,1]s1@f")(ev(0,0),1,evalParamFrame))
 
   let r
-  p = parseExpression("[0.01:1]r1")
+  p = parseExpression("[0:1]r1")
   r = p(ev(0,0),0,evalParamFrame)
   for (let i=0; i<20; i++) { assert(r, p(ev(0,0),0,evalParamFrame)) }
   assertNotEqual(r, p(ev(0,1),0,evalParamFrame))
 
-  p = parseExpression("[0.01:1]r1@e")
+  p = parseExpression("[0:1]r1@e")
   r = p(ev(0,0),0,evalParamFrame)
   for (let i=0; i<20; i++) { assert(r, p(ev(0,0),0,evalParamFrame)) }
   assertNotEqual(r, p(ev(0,1),0,evalParamFrame))
 
-  p = parseExpression("[0.01:1]r1@f")
+  p = parseExpression("[0:1]r1@f")
   r = p(ev(0,0),0,evalParamFrame)
   for (let i=0; i<20; i++) { assert(r, p(ev(0,0),0,evalParamFrame)) }
   assertNotEqual(r, p(ev(0,0),1,evalParamFrame))
 
   let testEvent = ev(0,0,evalParamFrame)
-  p = parseExpression("[0.01:1]r@e")
+  p = parseExpression("[0:1]r@e")
   r = p(testEvent,0,evalParamFrame)
   for (let i=0; i<20; i++) { assert(r, p(testEvent,i/10,evalParamFrame)) }
   assertNotEqual(r, p(ev(0,0),0,evalParamFrame))

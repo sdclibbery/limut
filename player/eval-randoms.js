@@ -2,11 +2,7 @@
 define(function(require) {
 
   let evalRandomRanged = (lo, hi) => {
-    if (!Number.isInteger(lo) || !Number.isInteger(hi)) {
-      return lo + Math.random() * (hi-lo)
-    } else {
-      return lo + Math.floor(Math.random() * (hi-lo+0.9999))
-    }
+    return lo + Math.random() * (hi-lo)
   }
 
   let evalRandomSet = (vs, e,b, evalRecurse) => {
