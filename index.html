@@ -292,6 +292,7 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>glow</code> Additive glow for lights, sparks etc</p>
 <p><code>stars</code> Exploding stars for fireworks etc</p>
 <p><code>bits</code> Bitwise operations giving fractal patterns</p>
+<p><code>gradient</code> Simple gradient in the y direction</p>
 <p><code>shadertoy</code> Display a shadertoy synth. Use the <code>id</code> param to specify which shader. Only shaders published with the 'public+api' option are available, others will give error 'Shader not found'. At present, shaders that use textures or multiple channels will also not work.</p>
 <p><code>image</code> Display an online image. Use the <code>url</code> param to specify the image url. The image must be served using CORS. by default the image <code>back</code> is transparent.</p>
 </div>
@@ -463,8 +464,6 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-quantisation for echoes and reverbs
-GC for echoes and reverbs
 FM soft/hollow pads
 Allow setting main reverb room size
 pan param
@@ -488,6 +487,7 @@ Nice gentle pads
 FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
 'X' doesn't work on mobile
 Preload samples immediately after parsing
+GC for echoes and reverbs and allow finer quantisation
 PWM techno pad??
 'add' param for play synth?
 AudioWorklet FM operator supporting feedback with webassembly
@@ -508,8 +508,6 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-Vignette bug: outside border on Chrome/Mac
-Simple gradient shader, maybe value changes shape of gradient?
 Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
 Change colour space to HSL or a perceptually uniform space
  But need to handle lerps for hue given it loops round thr back
@@ -530,9 +528,7 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-[:] is always float, never int; so [0:4]r is float not int
- docs
-maybe []i for int random?
+value param to override the pattern value
 multiline commands
 apply overridden delay for follow player: allow canons
 All lerps should use operator eval, so allow [red, green]n etc
@@ -565,6 +561,7 @@ pattern repeat "xo * 3" higher precedence than concat
 pattern support brackets "( xo + vi ) * 3"
 pattern values in vars, and then use in multiple players, and also invert, retrograde etc
 dur=[1,2,3,4]r
+maybe []i for int random?
 New param to offset time in shaders to allow doing sway 'manually'
 array index operator, so you can "ch=[(0,2,4)]" then "add=ch[0]"
 finish off: <> for 'in sequence on each repeat' in patterns
@@ -572,7 +569,6 @@ Wildcard player matching for groups 'set d? amp=0'  'set p* amp=0'
 Should be able to [red:blue]l8
 should multiply out 'chords' in objects eg loc={x:(0,1,2,3), y:(0,1,2,3), w:1,h:1}/4
 _ extends all notes properly, even across brackets (eg <1[.3]>_ etc)
-value param to override the pattern value
 <> for 'in sequence on each repeat' in params
 rests in params
 random in patterns: what syntax??

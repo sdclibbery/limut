@@ -35,6 +35,7 @@ define((require) => {
     glow: { play: sprite('glow', {r:1.0,g:0.8,b:0.6,a:1}, {r:0.5,g:0.4,b:0.3,a:0}, {additive:1,fade:1}) },
     stars: { play: sprite('stars', {r:1.0,g:0.8,b:0.6,a:1}, {r:0.3,g:0.2,b:0.1,a:0}, {additive:1,fade:1}) },
     bits: { play: sprite('bits', {r:1.0,g:1.0,b:1.0,a:1}, {r:0.1,g:0.1,b:0.1,a:1}) },
+    gradient: { play: sprite('gradient', {r:1.0,g:1.0,b:1.0,a:1}, {r:0.1,g:0.1,b:0.1,a:1}) },
     shadertoy: { play: sprite(shadertoy, {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:1},) },
     image: { play: sprite(image, {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:0},) },
     // instruments
