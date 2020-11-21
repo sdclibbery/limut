@@ -48,9 +48,8 @@ define(function(require) {
   let simpleNoise = (vs, period, interval) => {
     let paramSeed = Math.random()*10000
     return (e,b, evalRecurse) => {
-      if (e._noiseSeed === undefined) { e._noiseSeed = Math.random()*10000 }
       let count = (interval !== 'frame') ? e.count : b
-      count += e._noiseSeed + paramSeed
+      count += paramSeed
       let result = (
           bnoise(count*1/period)*2
           +(1-bnoise(count*2.3/period))*1

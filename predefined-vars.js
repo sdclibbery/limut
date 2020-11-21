@@ -49,7 +49,7 @@ define(function(require) {
   vars['droplet'] = parseExpression('{w:1/4,h:1/4,x:[-15/16:15/16]r,y:[0.8:1.2]r-[0:2]e}')
   vars['spark'] = parseExpression('{w:1/8,h:1/8, x:[0,[-1.01:1]r]e, y:[0,[-1.01:1]r]e}')
   vars['gravity'] = parseExpression('{y:[0:-3/2]e*[0:3/2]e}')
-  vars['firefly'] = parseExpression('{x:[-1/4:1/4]n, y:[-1/4:1/4]n}')
+  vars['firefly'] = parseExpression('{x:[-1/4:1/4]n@f*[-1:1]r@e, y:[-1/4:1/4]n@f*[-1:1]r@e}')
 
   vars['transparent'] = parseExpression('{r:0,g:0,b:0,a:0}')
   vars['black'] = parseExpression('{r:0,g:0,b:0,a:1}')
