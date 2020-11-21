@@ -138,7 +138,7 @@ define(function (require) {
           }
         })
       }
-      if (fore[3] >= 0.9999 && back[3] >= 0.9999 && additive == 0 && vignette == 0) {
+      if (fore[3] >= 0.9999 && back[3] >= 0.9999 && mid[3] >= 0.9999 && additive == 0 && vignette == 0) {
         system.gl.disable(system.gl.BLEND)
       } else {
         system.gl.enable(system.gl.BLEND)
