@@ -16,6 +16,7 @@ define(function (require) {
   uniform vec2 l_scroll;
   uniform vec2 l_zoom;
   uniform float l_rotate;
+  uniform float l_mirror;
   uniform float l_perspective;
   uniform float l_tunnel;
   uniform float l_pixellate;
@@ -45,6 +46,16 @@ define(function (require) {
       float r = 2.0/(length(coord)*2.0 + 1.0) - 1.0;
       float theta = atan(coord.x, coord.y)/6.28;
       coord = mix(coord, vec2(r*0.5, theta), l_tunnel);
+    }
+    if (l_mirror != 0.) {
+      float r = length(coord);
+      float theta = atan(coord.y, coord.x);
+      float n = l_mirror;
+      bool flip = mod(floor(2.*n*theta/6.283), 2.) < 1.0;
+      theta = fract(n*theta/6.283)/n;
+      if (!flip) { theta = 1./n - theta; }
+      theta *= 6.283;
+      coord = vec2(cos(theta), sin(theta))*r;
     }
     coord = coord / l_zoom;
     if (l_rotate != 0.) {
@@ -95,6 +106,7 @@ define(function (require) {
     shader.scrollUnif = system.gl.getUniformLocation(program, "l_scroll")
     shader.zoomUnif = system.gl.getUniformLocation(program, "l_zoom")
     shader.rotateUnif = system.gl.getUniformLocation(program, "l_rotate")
+    shader.mirrorUnif = system.gl.getUniformLocation(program, "l_mirror")
     shader.pixellateUnif = system.gl.getUniformLocation(program, "l_pixellate")
     shader.tunnelUnif = system.gl.getUniformLocation(program, "l_tunnel")
     shader.perspectiveUnif = system.gl.getUniformLocation(program, "l_perspective")

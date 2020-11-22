@@ -93,6 +93,7 @@ define(function (require) {
       let perspective = evalParamFrame(params, 'perspective', 0, state.count)
       let tunnel = evalParamFrame(params, 'tunnel', 0, state.count)
       let rotate = evalParamFrame(params, 'rotate', 0, state.count) * Math.PI*2
+      let mirror = evalParamFrame(params, 'mirror', 0, state.count)
       let fore = colour(evalParamFrame(params, 'fore', {}, state.count), defFore)
       let back = colour(evalParamFrame(params, 'back', {}, state.count), defBack)
       let mid
@@ -119,6 +120,7 @@ define(function (require) {
       system.gl.uniform2fv(s.scrollUnif, scroll)
       system.gl.uniform2fv(s.zoomUnif, zoom)
       system.gl.uniform1f(s.rotateUnif, rotate)
+      system.gl.uniform1f(s.mirrorUnif, mirror)
       system.gl.uniform1f(s.pixellateUnif, pixellate)
       system.gl.uniform1f(s.tunnelUnif, tunnel)
       system.gl.uniform1f(s.perspectiveUnif, perspective)

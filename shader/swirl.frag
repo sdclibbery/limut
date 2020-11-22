@@ -41,7 +41,7 @@ const float PI = 3.14159265;
 void main() {
   vec2 uv = preprocess(fragCoord)/2.0;
 
-  vec2 n = fbm2(uv + fbm2(uv.yx+vec2(0, iTime*0.2)));
+  vec2 n = fbm2(uv + fbm2(uv.yx+vec2(0, -iTime*0.2)));
   uv += (l_amp+0.2)*8.0*n;
   float f = abs(sin(uv.x)*sin(uv.y));
   f = pow(1.-f, (l_value > 10.0) ? l_value/10.0 : (l_value+2.)/5.);
