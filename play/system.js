@@ -1,8 +1,9 @@
 'use strict';
 define(function (require) {
 
+var webAudio = window.AudioContext || window.webkitAudioContext
 var system = {
-  audio: new AudioContext(),
+  audio: new webAudio(),
   queued: [],
   active: [],
 }

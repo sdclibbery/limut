@@ -1,7 +1,5 @@
 'use strict'
 define(function(require) {
-  try { if (!AudioContext) { throw 1; } } catch(e) { document.body.innerHTML = 'Web Audio not supported in this browser!'; return; }
-
   require('polyfills')
   require('predefined-vars')
   let system = require('play/system')
