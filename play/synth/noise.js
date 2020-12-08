@@ -1,5 +1,7 @@
 'use strict';
 define(function (require) {
+  if (!AudioWorkletNode) { return ()=>{} }
+
   let system = require('play/system');
   let envelope = require('play/envelopes')
   let effects = require('play/effects')

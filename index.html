@@ -466,9 +466,12 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
+still getting set audio blah errors
 Prophet leaking
-DSquare synth
+Is play rate per frame?
 FM soft/hollow pads
+FM plucks
+DSquare synth?
 Allow setting main reverb room size
 pan param
 root main var
@@ -512,14 +515,16 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-Add rotate to loc
-Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
-Spiral pre distortion?
+Webcam synth
 Change colour space to HSL or a perceptually uniform space
  But need to handle lerps for hue given it loops round thr back
  Maybe choice of colour spaces, including oil and black body as well??
+vmirror
+Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
+Spiral or noise or shimmer pre distortion?
+Add rotate to loc
+ Handle: aspect ratio, off centre x/y, window
 time param for visuals
-Webcam synth
 Consider pushing data of each event into a texture so a shader could display all events, eg as 2D patterns or voxels
 video synth (use video element to load video file; don't try and target eg youtube)
 Start image download on parse not on first use
@@ -534,10 +539,16 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+safari: AudioWorklets not supported
+unary minus operator; eg '-time'
+Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way?? Should be available for follow players too
+if do amp=p1.amp, and p1 doesn't explicitly set its amp, you get zeroes...
 apply overridden delay for follow player: allow canons
  refactor delay application to happen once in 'play' method
-All lerps should use operator eval, so allow [red, green]n etc
 multiline commands
+Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
+Wildcard player matching for groups 'set d? amp=0'  'set p* amp=0'
+All lerps should use operator eval, so allow [red, green]n etc
 can set seed for noise
  use to fix firefly properly
 can set seed for random
@@ -549,9 +560,6 @@ Tutorials
  ? Can automate the copy to clipboard paraphernalia?
  Link on this page
  Link on README
-Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way?? Should be available for follow players too
-if do amp=p1.amp, and p1 doesn't explicitly set its amp, you get zeroes...
-unary minus operator; eg '-time'
 Allow variable durations eg [0:1]l(3+[1:2]t4) etc
 []te, []le, []se etc syntax to start from event start time?
 Support [0,1,2]e[0,.1,1] syntax
@@ -560,7 +568,6 @@ commenting out in patterns doesnt work eg 'pi ping 0 //(024)(035)'
 []w for random walk?
 extending patterns like every/sometimes/offadd/stutter etc
 Can support double quotes for strings??
-Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 "on next 4 " / "on next 28 of 32 " syntax to execute a line on the next beat count
   - but how not to repeat this if rerun? replace now/next in source with actual count?
 "every 4 " / "every 28 of 32 "
@@ -575,7 +582,6 @@ maybe []i for int random?
 New param to offset time in shaders to allow doing sway 'manually'
 array index operator, so you can "ch=[(0,2,4)]" then "add=ch[0]"
 finish off: <> for 'in sequence on each repeat' in patterns
-Wildcard player matching for groups 'set d? amp=0'  'set p* amp=0'
 Should be able to [red:blue]l8
 should multiply out 'chords' in objects eg loc={x:(0,1,2,3), y:(0,1,2,3), w:1,h:1}/4
 _ extends all notes properly, even across brackets (eg <1[.3]>_ etc)

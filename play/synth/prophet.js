@@ -1,5 +1,7 @@
 'use strict';
 define(function (require) {
+  if (!AudioWorkletNode) { return ()=>{} }
+
   let system = require('play/system')
   require('play/pwm')
   let scale = require('music/scale')
