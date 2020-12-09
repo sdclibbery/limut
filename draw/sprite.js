@@ -128,12 +128,13 @@ define(function (require) {
       system.gl.uniform1f(s.eventTimeUnif, eventTime)
       if (s.textureUnif) {
         s.textureUnif.forEach((tu,i) => {
-          let t = texture(url)
+          let t = s.texture || texture(url)
+          if (t.update) { t.update(state) }
           system.gl.activeTexture(system.gl['TEXTURE'+i])
           system.gl.bindTexture(system.gl.TEXTURE_2D, t.tex)
           system.gl.uniform1i(tu, i)
-          system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_S, system.gl.CLAMP_TO_EDGE)
-          system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_T, system.gl.CLAMP_TO_EDGE)
+         system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_S, system.gl.CLAMP_TO_EDGE)
+         system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_T, system.gl.CLAMP_TO_EDGE)
           system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_MIN_FILTER, system.gl.LINEAR)
           if (s.extentsUnif && t.width && t.height) {
             system.gl.uniform2fv(s.extentsUnif, [t.width, t.height])

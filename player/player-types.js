@@ -3,6 +3,7 @@ define((require) => {
   let sprite = require('draw/sprite')
   let shadertoy = require('draw/shadertoy')
   let image = require('draw/image')
+  let webcam = require('draw/webcam')
   let play = require('play/synth/play')
   let sample = require('play/synth/sample')
   let dsaw = require('play/synth/dsaw')
@@ -38,6 +39,7 @@ define((require) => {
     gradient: { play: sprite('gradient', {r:1.0,g:1.0,b:1.0,a:1}, {r:0.1,g:0.1,b:0.1,a:1}) },
     shadertoy: { play: sprite(shadertoy, {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:1},) },
     image: { play: sprite(image, {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:0},) },
+    webcam: { play: sprite(webcam, {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:0},) },
     // instruments
     drums: { play: play, defaultDur: 1/2 },
     play: { play: play, defaultDur: 1/2 },
