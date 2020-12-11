@@ -1,5 +1,7 @@
 'use strict';
 define(function (require) {
+  if (!window.AudioWorkletNode) { return ()=>{} }
+
   let system = require('play/system')
 
  /* From  https://github.com/skratchdot/web-audio-api-v2-issue-7/blob/master/public/pulse-oscillator.js */

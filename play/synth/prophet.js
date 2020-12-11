@@ -1,6 +1,6 @@
 'use strict';
 define(function (require) {
-  if (!AudioWorkletNode) { return ()=>{} }
+  if (!window.AudioWorkletNode) { return ()=>{} }
 
   let system = require('play/system')
   require('play/pwm')

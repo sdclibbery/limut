@@ -467,8 +467,12 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
+Need window. also need guard on pwm.js
 still getting set audio blah errors
+ Run Error from player eth: NotSupportedError: Failed to execute 'setValueCurveAtTime' on 'AudioParam': setValueCurveAtTime(..., 520.3636363636402, 0.2727272727272727) overlaps setValueAtTime(0, 520.3649886621315)
+ eth ethereal (024), oct=(3,4), chop=4, echo=3/4, add=[0,1,2,3]t4, lpf=[200:2000]n2@f, lpr=20
 Prophet leaking
+generic fm synth to allow fm synth design
 Is play rate per frame?
 FM soft/hollow pads
 FM plucks
