@@ -14,8 +14,9 @@ define(function (require) {
     let release = param(params.rel, 0.1*dur) * params.beat.duration
     let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     let vca = system.audio.createGain();
-    vca.gain.cancelScheduledValues(system.audio.currentTime)
-    vca.gain.setValueAtTime(0, system.audio.currentTime)
+    vca.gain.cancelScheduledValues(0)
+    vca.gain.setValueAtTime(0, 0)
+    vca.gain.setValueAtTime(0, params.time)
     vca.gain.linearRampToValueAtTime(gain, params.time + attack)
     vca.gain.linearRampToValueAtTime(gain*susLevel, params.time + attack+decay)
     vca.gain.linearRampToValueAtTime(gain*susLevel*0.8, params.time + attack+decay+sustain)
@@ -33,8 +34,9 @@ define(function (require) {
     let release = evalPerEvent(params, 'rel', params.sus||dur) * params.beat.duration
     let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     let vca = system.audio.createGain();
-    vca.gain.cancelScheduledValues(system.audio.currentTime)
-    vca.gain.setValueAtTime(0, system.audio.currentTime)
+    vca.gain.cancelScheduledValues(0)
+    vca.gain.setValueAtTime(0, 0)
+    vca.gain.setValueAtTime(0, params.time)
     vca.gain.linearRampToValueAtTime(gain, params.time + attack)
     vca.gain.linearRampToValueAtTime(gain*susLevel, params.time + attack+decay)
     vca.gain.linearRampToValueAtTime(0, params.time + attack+decay+release)
