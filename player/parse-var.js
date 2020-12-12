@@ -21,7 +21,8 @@ define(function(require) {
       if (param) {
         let player = players.instances[playerId]
         if (player) {
-          v = player.currentEvent ? player.currentEvent(event,b)[param] : 0
+          let ce = player.currentEvent ? player.currentEvent(event,b) : undefined
+          v = (ce ? ce[param] : 0) || 0
         } else if (playerId === 'this') {
           v = event[param]
         } else {
