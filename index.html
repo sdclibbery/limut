@@ -467,7 +467,8 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-Prophet leaking
+c lower 01 missing?
+Prophet very heavy; is it doing excess setup for every note or anything?
 generic fm synth to allow fm synth design
 Is play rate per frame?
 FM soft/hollow pads
@@ -516,6 +517,15 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+Visuals are causing the frame glitching!!
+ Its only the beat time that goes slow, not visuals, so its not the per frame update causing trouble
+ Stopping all the audio players makes no difference
+ It takes time to build up to being bad, then it clears by itself
+ If no webgl going, it does not happen
+ If do not play visuals, but do do webgl clear then still same
+ if webgl1 same
+ if no clear ... maybe better, maybe not :-/
+ what does beat actually measure?? Lag in the AudioContext timer
 Change colour space to HSL or a perceptually uniform space
  But need to handle lerps for hue given it loops round thr back
  Maybe choice of colour spaces, including oil and black body as well??
