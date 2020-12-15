@@ -17,6 +17,7 @@ define((require) => {
   let ethereal = require('play/synth/ethereal')
   let noise = require('play/synth/noise')
   let prophet = require('play/synth/prophet')
+  let dsquare = require('play/synth/dsquare')
 
   let nullPlayer = { play: () => {}, stopped: true }
   let playerTypes = {
@@ -55,6 +56,7 @@ define((require) => {
     ethereal: { play: ethereal },
     noise: { play: noise },
     prophet: { play: prophet },
+    dsquare: { play: dsquare },
   }
 
   return playerTypes
