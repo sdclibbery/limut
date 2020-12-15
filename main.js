@@ -18,13 +18,6 @@ define(function(require) {
     document.getElementById(id).classList.toggle('closed')
   }
 
-  // Bpm ui
-  let bpmReadout = document.getElementById('bpm-readout')
-  window.bpmChanged = function (bpm) {
-    bpmReadout.innerText = bpm.toFixed(1)
-  }
-  window.bpmChanged(metronome.bpm())
-
   // Main amp UI
   let mainAmpInput = document.getElementById('main-amp-slider')
   window.mainAmpChange = (amp) => {

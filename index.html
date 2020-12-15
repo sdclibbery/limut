@@ -123,8 +123,7 @@
       <input id="main-amp-slider" type="range" min="0" max="200" oninput="mainAmpChange(parseFloat(this.value)/100)" style="width:100%;" />
     </p>
     <p>
-      bpm: <span id="bpm-readout"> : </span>
-      beat: <span class="beat-readout" id="beat-readout"></span> :
+      Beat: <span class="beat-readout" id="beat-readout"></span> :
       <span class="beat-readout" id="beat12-readout"></span>
       <span class="beat-readout" id="beat16-readout"></span>
       <span class="beat-readout" id="beat32-readout"></span>
@@ -135,7 +134,7 @@
     <button onclick="stop()" title="Stop all players Ctrl-.">◼</button>
     <button onclick="comment()" title="Toggle comment for line Ctrl-/">//</button>
     <button onclick="fullscreen()" title="Toggle fullscreen">⛶</button>
-    Beat: <span id="beat-latency-readout", class="meter"> </span>
+    Audio: <span id="beat-latency-readout", class="meter"> </span>
     Visual: <span id="visual-readout", class="meter"> </span>
     Compression: <span id="compressor-readout", class="meter"> </span>
   </div>
@@ -197,6 +196,13 @@ kk play ::[::][::][::]::., lpf=[600:900]l40, rate=[0.8:1.2]n
 ba dbass 0, dur=1/4, att=0, lpf=[1000:100]e, hpf=[0:500]n
 pi ping [010], add=[-5:5]l18/4, amp=[0:[0:1]t96]n, echo=1/2, oct=6, scale=minorpentatonic
 pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]s32@f, oct=3, addc=[2,2,0,0]s[62,4,62,0]@f</pre>
+</div>
+<h4 onclick="toggleAccordion('accordion-indicators')">▶ Indicators</h4>
+<div id="accordion-indicators" class="closed">
+  <p><b>Beat</b> Current audio system beat count, followed by beat counts out of 12, 16 and 32 beats (useful for synchronising changes to various size musical bars and progressions)</p>
+  <p><b>Audio</b> Audio lag; green when the browser audio system is keeping up; turns red when the system is struggling, which may lead to audio glitching</p>
+  <p><b>Visual</b> Visual lag; green when the framerate is keeping up to 60 fps; turns red when the system is struggling, which may lead to visual glitching</p>
+  <p><b>Compression</b> Audio compression: turns red when the Limut compressor is active, implying the combined audio sources are too loud. Note there may be another, separate compressor in the browser and/or operating system. The Volume slider and <code>main.amp</code> control follow <i>after</i> this compressor.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-basic-syntax')">▶ Basic Syntax</h4>
 <div id="accordion-basic-syntax" class="closed">
@@ -268,7 +274,8 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>! / stop / none</code> </p>
 <p><code>play</code> Play samples. Use letters, symbols and digits 1-4 in the pattern to choose the sample (see below for full list). Note duration defaults to 1/2.</p>
 <p><code>sample</code> Pitched sample player. Use the 'sample' and 'samplepitch' params, and then use it as a piched synth</p>
-<p><code>dsaw</code> Detuned saw pad</p>
+<p><code>dsaw</code> Detuned saw</p>
+<p><code>dsquare</code> Detuned square</p>
 <p><code>dbass</code> Detuned saw bass</p>
 <p><code>ping</code> Sine ping</p>
 <p><code>swell</code> Swell pad</p>
@@ -548,7 +555,6 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-docs for latency indicators
 unary minus operator; eg '-time'
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way?? Should be available for follow players too
 if do amp=p1.amp, and p1 doesn't explicitly set its amp, you get zeroes...
