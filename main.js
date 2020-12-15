@@ -54,7 +54,11 @@ define(function(require) {
   // indicator helpers
   let to255 = (x) => Math.min(Math.max(Math.floor(x*256), 0), 255)
   let readoutColor = (x, lo, hi) => {
-    let c = (Math.abs(x)-lo)/(hi-lo)
+    let c = Math.max((Math.abs(x)-lo)/(hi-lo), 0)
+    if (c > 1) {
+      c = c-1
+      return `rgb(255,0,${to255(Math.cos(c*1.57))})`
+    }
     return `rgb(${to255(Math.sin(c*1.57))},${to255(Math.cos(c*1.57))},0)`
   }
 
@@ -137,7 +141,7 @@ define(function(require) {
       }
     }
     compressorReadout.style.backgroundColor = readoutColor(system.compressorReduction(), 0, -0.1)
-    beatLatencyReadout.style.backgroundColor = readoutColor(beatLatency, 0, metronome.advance())
+    beatLatencyReadout.style.backgroundColor = readoutColor(beatLatency, 0, 0.05)
     visualReadout.style.backgroundColor = readoutColor(drawSystem.latency(), 0.02, 0.1)
     requestAnimationFrame(tick)
   }
