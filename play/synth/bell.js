@@ -26,7 +26,7 @@ define(function (require) {
     fm.connect(op3, op4, fm.flatEnv(params, 702*freq/261.6))
 
     let op2 = fm.op(freq*3.14/3.14, params)
-    fm.connect(op2, op4, envelope(params, 386*freq/261.6))
+    fm.connect(op2, op4, envelope(params, 386*freq/261.6, 'simple'))
 
     let op1 = fm.op(freq*19.03/3.14, params, 'square')
     fm.connect(op1, op2, fm.simpleEnv(300*freq/261.6, params, 0, 1))
