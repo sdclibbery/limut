@@ -73,15 +73,44 @@ let verts = (loc, window) => {
     return vtxData
   }
 
-  let colour = ({r,g,b,a}, d) => [param(r, d.r), param(g, d.g), param(b, d.b), param(a, d.a)]
-  let vec = (v, d) => {
-    v = (typeof v === 'number') ? {x:v,y:v} : v
-    return [param(v.x, d.x), param(v.y, d.y)]
+  let cachedObjects = {}
+  let co = (n) => {
+    if (cachedObjects[n] === undefined) { cachedObjects[n] = {} }
+    return cachedObjects[n]
   }
-  let rect = (v, d) => {
-    return {x:param(v.x, d.x), y:param(v.y, d.y), w:param(v.w, d.w), h:param(v.h, d.h)}
+  let ca = (n) => {
+    if (cachedObjects[n] === undefined) { cachedObjects[n] = [] }
+    return cachedObjects[n]
+  }
+  let colour = ({r,g,b,a}, d, name) => {
+    let ar = ca(name)
+    ar[0] = param(r, d.r)
+    ar[1] = param(g, d.g)
+    ar[2] = param(b, d.b)
+    ar[3] = param(a, d.a)
+    return ar
+  }
+  let vec = (v, d, name) => {
+    let a = ca(name)
+    if (typeof v === 'number') {
+      a[0] = v
+      a[1] = v
+    } else {
+      a[0] = param(v.x, d.x)
+      a[1] = param(v.y, d.y)
+    }
+    return a
+  }
+  let rect = (v, d, name) => {
+    let o = co(name)
+    o.x = param(v.x, d.x)
+    o.y = param(v.y, d.y)
+    o.w = param(v.w, d.w)
+    o.h = param(v.h, d.h)
+    return o
   }
 
+  const blankObj = {}
   let play = (shader, defFore, defBack, params, defParams) => {
     let s
     if (typeof shader === 'function') {
@@ -112,21 +141,21 @@ let verts = (loc, window) => {
       let monochrome = evalParamFrame(params, 'monochrome', 0, state.count)
       let pixellate = evalParamFrame(params, 'pixellate', 0, state.count)
       let vignette = evalParamFrame(params, 'vignette', 0, state.count)
-      let loc = rect(evalParamFrame(params, 'loc', {}, state.count), {x:0,y:0,w:2,h:2})
-      let scroll = vec(evalParamFrame(params, 'scroll', {}, state.count), {x:0,y:0})
-      let zoom = vec(evalParamFrame(params, 'zoom', {}, state.count), {x:1,y:1})
+      let loc = rect(evalParamFrame(params, 'loc', blankObj, state.count), {x:0,y:0,w:2,h:2}, 'loc')
+      let scroll = vec(evalParamFrame(params, 'scroll', blankObj, state.count), {x:0,y:0}, 'scroll')
+      let zoom = vec(evalParamFrame(params, 'zoom', blankObj, state.count), {x:1,y:1}, 'zoom')
       let perspective = evalParamFrame(params, 'perspective', 0, state.count)
       let tunnel = evalParamFrame(params, 'tunnel', 0, state.count)
       let rotate = evalParamFrame(params, 'rotate', 0, state.count) * Math.PI*2
       let mirror = evalParamFrame(params, 'mirror', 0, state.count)
-      let fore = colour(evalParamFrame(params, 'fore', {}, state.count), defFore)
-      let back = colour(evalParamFrame(params, 'back', {}, state.count), defBack)
+      let fore = colour(evalParamFrame(params, 'fore', blankObj, state.count), defFore, 'fore')
+      let back = colour(evalParamFrame(params, 'back', blankObj, state.count), defBack, 'back')
       let mid
       if (params.mid === undefined) {
-        mid = []
+        mid = ca('mid')
         for (let i=0; i<4; i++) { mid[i] = (fore[i]+back[i])/2 }
       } else {
-        mid = colour(evalParamFrame(params, 'mid', {}, state.count), {r:0,g:0,b:0,a:1})
+        mid = colour(evalParamFrame(params, 'mid', blankObj, state.count), {r:0,g:0,b:0,a:1}, 'mid')
       }
       let vtxData = verts(loc, window)
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)

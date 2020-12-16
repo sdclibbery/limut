@@ -24,11 +24,11 @@ define(function(require) {
       if (isPrimitive(er)) {
         return el.map(x => op(x,er))
       } else if (Array.isArray(er)) {
-        let result = []
+        let resultArr = []
         for (let i = 0; i < Math.max(el.length, er.length); i++) {
-          result.push(op(el[i % el.length], er[i % er.length]))
+          resultArr.push(op(el[i % el.length], er[i % er.length]))
         }
-        return result
+        return resultArr
       } else if (typeof er == 'object') {
         return objectMap(er, (v)=>applyOperator(op,el,v))
       }
@@ -38,15 +38,15 @@ define(function(require) {
       } else if (Array.isArray(er)) {
         return objectMap(el, (v)=>applyOperator(op,v,er))
       } else if (typeof er == 'object') {
-        let result = {}
+        let resultObj = {}
         for (let k in el) {
           let erv = er[k]
-          result[k] = (erv !== undefined) ? applyOperator(op,el[k],erv) : el[k]
+          resultObj[k] = (erv !== undefined) ? applyOperator(op,el[k],erv) : el[k]
         }
         for (let k in er) {
-          if (result[k] === undefined) { result[k] = er[k] }
+          if (resultObj[k] === undefined) { resultObj[k] = er[k] }
         }
-        return result
+        return resultObj
       }
     }
   }
