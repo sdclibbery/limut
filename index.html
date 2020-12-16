@@ -474,16 +474,15 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-What happens to echoes/reverbs when bpm changes?
-DSquare synth?
 generic fm synth to allow fm synth design
-Is play rate per frame?
 FM soft/hollow pads
 FM plucks
-Allow setting main reverb room size
 pan param
 root main var
 root param
+GC for echoes and reverbs and allow finer quantisation; will fix 'leaks' on bpm change
+Is play rate per frame?
+Allow setting main reverb room size
 Sample synth can take play sample values, and also has start param (use sus to get end)
 Look into improving quality of samples playing at slow rates?
 ? Make echo and reverb special
@@ -502,7 +501,6 @@ Nice gentle pads
 FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
 'X' doesn't work on mobile
 Preload samples immediately after parsing
-GC for echoes and reverbs and allow finer quantisation
 PWM techno pad??
 'add' param for play synth?
 AudioWorklet FM operator supporting feedback with webassembly

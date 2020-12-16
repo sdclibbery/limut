@@ -21,7 +21,11 @@ define(function (require) {
     return v
   }
 
-  let verts = (loc, window) => {
+let vtxData = {
+  vtx: new Float32Array(12),
+  tex: new Float32Array(12),
+}
+let verts = (loc, window) => {
     let l = loc.x - loc.w/2
     let r = l + loc.w
     let t = loc.y - loc.h/2
@@ -42,10 +46,31 @@ define(function (require) {
       w = har*r
       x = ihar*b
     }
-    return {
-      vtx: new Float32Array([l,t, r,t, l,b, l,b, r,t, r,b]),
-      tex: new Float32Array([u,v, w,v, u,x, u,x, w,v, w,x]),
-    }
+    vtxData.vtx[0] = l
+    vtxData.vtx[1] = t
+    vtxData.vtx[2] = r
+    vtxData.vtx[3] = t
+    vtxData.vtx[4] = l
+    vtxData.vtx[5] = b
+    vtxData.vtx[6] = l
+    vtxData.vtx[7] = b
+    vtxData.vtx[8] = r
+    vtxData.vtx[9] = t
+    vtxData.vtx[10] = r
+    vtxData.vtx[11] = b
+    vtxData.tex[0] = u
+    vtxData.tex[1] = v
+    vtxData.tex[2] = w
+    vtxData.tex[3] = v
+    vtxData.tex[4] = u
+    vtxData.tex[5] = x
+    vtxData.tex[6] = u
+    vtxData.tex[7] = x
+    vtxData.tex[8] = w
+    vtxData.tex[9] = v
+    vtxData.tex[10] = w
+    vtxData.tex[11] = x
+    return vtxData
   }
 
   let colour = ({r,g,b,a}, d) => [param(r, d.r), param(g, d.g), param(b, d.b), param(a, d.a)]

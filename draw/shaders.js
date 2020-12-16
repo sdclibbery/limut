@@ -25,7 +25,7 @@ define(function (require) {
       request.send()
     }
     let shader = shaders[url]
-    if (shader === undefined || shader.fragSource === undefined) { return }
+    if (shader === undefined || shader.fragSource === undefined || shader.program === null) { return }
     if (shader.program === undefined && shader.fragSource !== undefined) {
       if (!vtxCompiled) {
         vtxCompiled = system.loadShader(common.vtxShader, system.gl.VERTEX_SHADER)
