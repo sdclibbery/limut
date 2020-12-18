@@ -522,8 +522,8 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
 Avoid all per-frame object allocation
- eval-param: cache an __evaluated object/array in the object/array itself to avoid repeated reallocation
- Do something similar for operator eval
+ Cache return array in operator eval
+ TEST!!
 Change colour space to HSL or a perceptually uniform space
  But need to handle lerps for hue given it loops round thr back
  Maybe choice of colour spaces, including oil and black body as well??

@@ -2,11 +2,13 @@
 define(function(require) {
 
   let objectMap = (obj, fn) => {
-    return Object.fromEntries(
-      Object.entries(obj).map(
-        ([k, v], i) => [k, fn(v, k, i)]
-      )
-    )
+    obj.__evaluated = obj.__evaluated || {}
+    for (let k in obj) {
+      if (k !== '__evaluated') {
+        obj.__evaluated[k] = fn(obj[k])
+      }
+    }
+    return obj.__evaluated
   }
 
   let isPrimitive = v => (typeof v == 'number' || typeof v == 'string')
@@ -30,23 +32,27 @@ define(function(require) {
         }
         return resultArr
       } else if (typeof er == 'object') {
-        return objectMap(er, (v)=>applyOperator(op,el,v))
+        return objectMap(er, (v) => applyOperator(op,el,v))
       }
     } else if (typeof el == 'object') {
       if (isPrimitive(er)) {
-        return objectMap(el, (v)=>applyOperator(op,v,er))
+        return objectMap(el, (v) => applyOperator(op,v,er))
       } else if (Array.isArray(er)) {
-        return objectMap(el, (v)=>applyOperator(op,v,er))
+        return objectMap(el, (v) => applyOperator(op,v,er))
       } else if (typeof er == 'object') {
-        let resultObj = {}
+        el.__evaluated = el.__evaluated || {}
         for (let k in el) {
-          let erv = er[k]
-          resultObj[k] = (erv !== undefined) ? applyOperator(op,el[k],erv) : el[k]
+          if (k !== '__evaluated') {
+            let erv = er[k]
+            el.__evaluated[k] = (erv !== undefined) ? applyOperator(op,el[k],erv) : el[k]
+          }
         }
         for (let k in er) {
-          if (resultObj[k] === undefined) { resultObj[k] = er[k] }
+          if (k !== '__evaluated') {
+            if (el.__evaluated[k] === undefined) { el.__evaluated[k] = er[k] }
+          }
         }
-        return resultObj
+        return el.__evaluated
       }
     }
   }
