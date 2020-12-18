@@ -522,15 +522,8 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
 Avoid all per-frame object allocation
-Visuals are causing the frame glitching!?
- Its only the beat time that goes slow, not visuals, so its not the per frame update causing trouble
- Stopping all the audio players makes no difference
- It takes time to build up to being bad, then it clears by itself
- If no webgl going, it does not happen
- If do not play visuals, but do do webgl clear then still same
- if webgl1 same
- if no clear ... maybe better, maybe not :-/
- what does beat actually measure?? Lag in the AudioContext timer
+ eval-param: cache an __evaluated object/array in the object/array itself to avoid repeated reallocation
+ Do something similar for operator eval
 Change colour space to HSL or a perceptually uniform space
  But need to handle lerps for hue given it loops round thr back
  Maybe choice of colour spaces, including oil and black body as well??

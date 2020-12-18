@@ -11,16 +11,22 @@ define((require) => {
     } else if (typeof value == 'function') {
       let v = value(event, beat, evalRecurse)
       if (Array.isArray(v)) {
-        if (stopAtTuple) { return v.map(x=>evalParamEvent(x, event, beat, evalParamEvent)) }
-        return v.map(e => evalRecurse(e, event, beat, evalRecurse))
+        let recurse = stopAtTuple ? evalParamEvent : evalRecurse
+        v.__evaluated = v.__evaluated || []
+        for (let i = 0; i<v.length; i++) {
+          v.__evaluated[i] = recurse(v[i], event, beat, recurse)
+        }
+        return v.__evaluated
       }
       return evalRecurse(v, event, beat)
     } else if (typeof value == 'object') {
-      let result = {}
+      value.__evaluated = value.__evaluated || {}
       for (let k in value) {
-        result[k] = evalRecurse(value[k], event, beat, evalRecurse)
+        if (k !== '__evaluated') {
+          value.__evaluated[k] = evalRecurse(value[k], event, beat, evalRecurse)
+        }
       }
-      return result
+      return value.__evaluated
     } else {
       return value
     }
