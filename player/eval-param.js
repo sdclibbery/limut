@@ -12,7 +12,7 @@ define((require) => {
       let v = value(event, beat, evalRecurse)
       if (Array.isArray(v)) {
         let recurse = stopAtTuple ? evalParamEvent : evalRecurse
-        v.__evaluated = v.__evaluated || []
+        v.__evaluated = v.__evaluated || [] // cache result object to avoid creating per-frame garbage
         for (let i = 0; i<v.length; i++) {
           v.__evaluated[i] = recurse(v[i], event, beat, recurse)
         }
@@ -20,7 +20,7 @@ define((require) => {
       }
       return evalRecurse(v, event, beat)
     } else if (typeof value == 'object') {
-      value.__evaluated = value.__evaluated || {}
+      value.__evaluated = value.__evaluated || {} // cache result object to avoid creating per-frame garbage
       for (let k in value) {
         if (k !== '__evaluated') {
           value.__evaluated[k] = evalRecurse(value[k], event, beat, evalRecurse)

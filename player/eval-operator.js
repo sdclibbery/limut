@@ -2,13 +2,20 @@
 define(function(require) {
 
   let objectMap = (obj, fn) => {
-    obj.__evaluated = obj.__evaluated || {}
+    obj.__evaluated = obj.__evaluated || {} // cache result object to avoid creating per-frame garbage
     for (let k in obj) {
       if (k !== '__evaluated') {
         obj.__evaluated[k] = fn(obj[k])
       }
     }
     return obj.__evaluated
+  }
+  let arrayMap = (arr, fn) => {
+    arr.__evaluated = arr.__evaluated || [] // cache result object to avoid creating per-frame garbage
+    for (let i = 0; i < arr.length; i++) {
+      arr.__evaluated[i] = fn(arr[i])
+    }
+    return arr.__evaluated
   }
 
   let isPrimitive = v => (typeof v == 'number' || typeof v == 'string')
@@ -18,19 +25,19 @@ define(function(require) {
       if (isPrimitive(er)) {
         return op(el,er)
       } else if (Array.isArray(er)) {
-        return er.map(x => op(el,x))
+        return arrayMap(er, (x) => op(el,x))
       } else if (typeof er == 'object') {
         return objectMap(er, (v)=>op(el,v))
       }
     } else if (Array.isArray(el)) {
       if (isPrimitive(er)) {
-        return el.map(x => op(x,er))
+        return arrayMap(el, x => op(x,er))
       } else if (Array.isArray(er)) {
-        let resultArr = []
+        el.__evaluated = el.__evaluated || [] // cache result object to avoid creating per-frame garbage
         for (let i = 0; i < Math.max(el.length, er.length); i++) {
-          resultArr.push(op(el[i % el.length], er[i % er.length]))
+          el.__evaluated.push(op(el[i % el.length], er[i % er.length]))
         }
-        return resultArr
+        return el.__evaluated
       } else if (typeof er == 'object') {
         return objectMap(er, (v) => applyOperator(op,el,v))
       }
@@ -40,7 +47,7 @@ define(function(require) {
       } else if (Array.isArray(er)) {
         return objectMap(el, (v) => applyOperator(op,v,er))
       } else if (typeof er == 'object') {
-        el.__evaluated = el.__evaluated || {}
+        el.__evaluated = el.__evaluated || {} // cache result object to avoid creating per-frame garbage
         for (let k in el) {
           if (k !== '__evaluated') {
             let erv = er[k]
