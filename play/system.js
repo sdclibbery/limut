@@ -1,5 +1,7 @@
 'use strict';
 define(function (require) {
+let {move, filterInPlace} = require('array-in-place')
+
 
 var webAudio = window.AudioContext || window.webkitAudioContext
 var system = {
@@ -12,14 +14,12 @@ system.add = (startTime, update) => {
   system.queued.push({t:startTime, update:update})
 }
 
+let state = {}
 system.frame = (time, count) => {
-  let newlyActive = system.queued.filter(({t,v}) => time > t)
-  system.active = system.active.concat(newlyActive)
-  system.queued = system.queued.filter(v => !newlyActive.includes(v))
-
-  let state = {count: count, time: time}
-  system.active = system.active
-    .filter(({update}, idx) => update(state))
+  move(system.queued, system.active, ({t}) => time > t)
+  state.count = count
+  state.time = time
+  filterInPlace(system.active, ({update}) => update(state))
 }
 
 system.resume = () => system.audio.resume()
