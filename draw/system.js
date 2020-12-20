@@ -1,5 +1,6 @@
 'use strict'
 define((require) => {
+let {move, filterInPlace} = require('array-in-place')
 
 let system = {
   time: 0,
@@ -14,6 +15,7 @@ system.add = (startTime, render, zorder) => {
   system.queued.push({t:startTime, render:render, zorder:zorder})
 }
 
+let state = {}
 system.frameStart = (time, count, gl, cw, ch, spectrum, pulse) => {
   system.time = time
   system.dt = system.time - system.lastTime
@@ -32,14 +34,15 @@ system.frameStart = (time, count, gl, cw, ch, spectrum, pulse) => {
   system.gl.depthFunc(system.gl.LEQUAL)
   system.gl.clear(system.gl.COLOR_BUFFER_BIT|system.gl.DEPTH_BUFFER_BIT)
 
-  let newlyActive = system.queued.filter(({t,v}) => time > t)
-  system.active = system.active.concat(newlyActive)
-  system.queued = system.queued.filter(v => !newlyActive.includes(v))
+  move(system.queued, system.active, ({t}) => time > t)
+  state.count = count
+  state.time = time
+  state.dt = system.dt
+  state.spectrum = spectrum
+  state.pulse = pulse
+  system.active.sort((l,r) => l.zorder - r.zorder)
+  filterInPlace(system.active, ({render}) => render(state))
 
-  let state = {count: count, time: time, dt: system.dt, spectrum:spectrum, pulse:pulse}
-  system.active = system.active
-    .sort((l,r) => l.zorder - r.zorder)
-    .filter(({render}, idx) => render(state))
   return true
 }
 
