@@ -90,6 +90,7 @@ define(function(require) {
   let lastBeatTime = 0 
   let beatLatency = 0
   let lastVisualsActive
+  let tickCount = 0
   let tick = (t) => {
     let now = system.timeNow()
     let beat = metronome.update(now)
@@ -129,7 +130,6 @@ define(function(require) {
       try {
         let visualsActive = drawSystem.frameStart(now, beatTime, ctxGl, canvas.width, canvas.height, spectrum, pulse)
         if (visualsActive !== lastVisualsActive) {
-console.log(visualsActive, lastVisualsActive)
           canvas.style.display = visualsActive ? 'block' : 'none'
         }
         lastVisualsActive = visualsActive
@@ -138,9 +138,12 @@ console.log(visualsActive, lastVisualsActive)
         consoleOut('Run Error from drawing: ' + e + st)
       }
     }
-    compressorReadout.style.backgroundColor = readoutColor(system.compressorReduction(), 0, -0.1)
-    beatLatencyReadout.style.backgroundColor = readoutColor(beatLatency, 0, 0.05)
-    visualReadout.style.backgroundColor = readoutColor(drawSystem.latency(), 0.02, 0.1)
+    tickCount++
+    if (!!beat || tickCount % 20 == 0) {
+      compressorReadout.style.backgroundColor = readoutColor(system.compressorReduction(), 0, -0.1)
+      beatLatencyReadout.style.backgroundColor = readoutColor(beatLatency, 0, 0.05)
+      visualReadout.style.backgroundColor = readoutColor(drawSystem.latency(), 0.02, 0.1)
+      }
     requestAnimationFrame(tick)
   }
   requestAnimationFrame(tick)
