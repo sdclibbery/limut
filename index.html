@@ -375,6 +375,7 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>pulse</code> The current musical pulse; like a VU meter</p>
 <p><code>main.amp</code> Main mix amplitude control. Value resets unless set every time the code is updated.</p>
 <p><code>main.reverb</code> Main reverb amplitude control. Value resets unless set every time the code is updated.</p>
+<p><code>main.clear</code> Main visual buffer clear control. Set to zero to disable clear. This may not have any visual effect on most browsers. Value resets unless set every time the code is updated.</p>
 <p><code>scale</code> Scale eg minor, major, chromatic, majorpentatonic, lydian etc etc. Value resets unless set every time the code is updated.</p>
 <p><code>drop6_2</code> Predefined time var: equivalent to <code>[1,0]t[6.2]</code>. These are all the predefined drops: drop6_2, drop7_1, drop12_4, drop14_2, drop15_1, drop24_8, drop28_4, drop30_2, drop31_1, drop56_8, drop60_4, drop62_2, drop63_1</p>
 <p><code>tile_full</code> Predefined loc param map to cover the full screen: equivalent to <code>{x:0,y:0,w:1,h:1}</code>. Other predefined locations: tile_tl/tr/bl/br/m, tile_h1/2/3/4/5, tile_v1/2/3/4/5</p>
@@ -521,7 +522,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-main.clear
+Check image.shadertoy, webcam etc etc for per frame alloc
 Change colour space to HSL or a perceptually uniform space
  But need to handle lerps for hue given it loops round thr back
  Maybe choice of colour spaces, including oil and black body as well??
@@ -545,9 +546,6 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-main: update readouts less often
-main: tick/tock request animation frame
-Check image.shadertoy, webcam etc etc for per frame alloc
 Think we need to minimise/reduce per beat allocation too; audit all code :-/
 unary minus operator; eg '-time'
 ? rl, rt (==r), rs (==n); el (==e), es, et ?

@@ -9,6 +9,11 @@ let system = {
   ch: 1,
   queued: [],
   active: [],
+  clear: 1,
+}
+
+system.setClear = (v) => {
+  system.clear = v
 }
 
 system.add = (startTime, render, zorder) => {
@@ -29,10 +34,13 @@ system.frameStart = (time, count, gl, cw, ch, spectrum, pulse) => {
   if (system.queued.length === 0 && system.active.length === 0) { return false }
 
   system.gl.viewport(0,0,cw,ch)
-  system.gl.clearColor(0,0,0, 1)
   system.gl.enable(system.gl.DEPTH_TEST)
   system.gl.depthFunc(system.gl.LEQUAL)
-  system.gl.clear(system.gl.COLOR_BUFFER_BIT|system.gl.DEPTH_BUFFER_BIT)
+
+  if (system.clear !== 0) {
+    system.gl.clearColor(0,0,0, 1)
+    system.gl.clear(system.gl.COLOR_BUFFER_BIT|system.gl.DEPTH_BUFFER_BIT)
+  }
 
   move(system.queued, system.active, ({t}) => time > t)
   state.count = count

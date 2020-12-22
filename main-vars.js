@@ -3,12 +3,14 @@ define((require) => {
   let metronome = require('metronome')
   let {evalParamEvent, evalParamFrame} = require('player/eval-param')
   let system = require('play/system')
+  let drawSystem = require('draw/system')
 
   let mainVars = {
     bpm: { setter: (v) => metronome.bpm(v), default:110 },
     scale: { setter: (v) => { if (typeof v === 'string') { window.scaleChange(v.toLowerCase()) } }, default:'major' },
     'main.amp': { setter: (v) => system.mainAmp(v), default:1 },
     'main.reverb': { setter: (v) => window.mainReverbChange(v), default:1 },
+    'main.clear': { setter: (v) => drawSystem.setClear(v), default:1 },
   }
 
   let reset = () => {
