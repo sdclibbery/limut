@@ -89,6 +89,7 @@ define(function(require) {
   let beat32Readout = document.getElementById('beat32-readout')
   let lastBeatTime = 0 
   let beatLatency = 0
+  let lastVisualsActive
   let tick = (t) => {
     let now = system.timeNow()
     let beat = metronome.update(now)
@@ -127,7 +128,11 @@ define(function(require) {
     if (ctxGl) {
       try {
         let visualsActive = drawSystem.frameStart(now, beatTime, ctxGl, canvas.width, canvas.height, spectrum, pulse)
-        canvas.style.display = visualsActive ? 'block' : 'none'
+        if (visualsActive !== lastVisualsActive) {
+console.log(visualsActive, lastVisualsActive)
+          canvas.style.display = visualsActive ? 'block' : 'none'
+        }
+        lastVisualsActive = visualsActive
       } catch (e) {
         let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
         consoleOut('Run Error from drawing: ' + e + st)
