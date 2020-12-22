@@ -111,6 +111,10 @@ let verts = (loc, window) => {
   }
 
   const blankObj = {}
+  let defLoc = {x:0,y:0,w:2,h:2}
+  let defScroll = {x:0,y:0}
+  let defZoom = {x:1,y:1}
+  let defMid = {r:0,g:0,b:0,a:1}
   let play = (shader, defFore, defBack, params, defParams) => {
     let s
     if (typeof shader === 'function') {
@@ -141,9 +145,9 @@ let verts = (loc, window) => {
       let monochrome = evalParamFrame(params, 'monochrome', 0, state.count)
       let pixellate = evalParamFrame(params, 'pixellate', 0, state.count)
       let vignette = evalParamFrame(params, 'vignette', 0, state.count)
-      let loc = rect(evalParamFrame(params, 'loc', blankObj, state.count), {x:0,y:0,w:2,h:2}, 'loc')
-      let scroll = vec(evalParamFrame(params, 'scroll', blankObj, state.count), {x:0,y:0}, 'scroll')
-      let zoom = vec(evalParamFrame(params, 'zoom', blankObj, state.count), {x:1,y:1}, 'zoom')
+      let loc = rect(evalParamFrame(params, 'loc', blankObj, state.count), defLoc, 'loc')
+      let scroll = vec(evalParamFrame(params, 'scroll', blankObj, state.count), defScroll, 'scroll')
+      let zoom = vec(evalParamFrame(params, 'zoom', blankObj, state.count), defZoom, 'zoom')
       let perspective = evalParamFrame(params, 'perspective', 0, state.count)
       let tunnel = evalParamFrame(params, 'tunnel', 0, state.count)
       let rotate = evalParamFrame(params, 'rotate', 0, state.count) * Math.PI*2
@@ -155,7 +159,7 @@ let verts = (loc, window) => {
         mid = ca('mid')
         for (let i=0; i<4; i++) { mid[i] = (fore[i]+back[i])/2 }
       } else {
-        mid = colour(evalParamFrame(params, 'mid', blankObj, state.count), {r:0,g:0,b:0,a:1}, 'mid')
+        mid = colour(evalParamFrame(params, 'mid', blankObj, state.count), defMid, 'mid')
       }
       let vtxData = verts(loc, window)
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
@@ -191,7 +195,10 @@ let verts = (loc, window) => {
          system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_T, system.gl.CLAMP_TO_EDGE)
           system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_MIN_FILTER, system.gl.LINEAR)
           if (s.extentsUnif && t.width && t.height) {
-            system.gl.uniform2fv(s.extentsUnif, [t.width, t.height])
+            let extents = ca('extents')
+            extents[0] = t.width
+            extents[1] = t.height
+            system.gl.uniform2fv(s.extentsUnif, extents)
           }
         })
       }

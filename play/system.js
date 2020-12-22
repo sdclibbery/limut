@@ -67,14 +67,14 @@ let analyserData = new Uint8Array(analyserBufferLength)
 let chunk = (data, reducer, init) => {
   return data.reduce((a,b) => reducer(a,b), init) / 255
 }
+let spec = []
 system.spectrum = () => {
   system.analyser.getByteFrequencyData(analyserData)
-  return [
-    chunk(analyserData.slice(0,4), Math.min, 1e6),
-    chunk(analyserData.slice(4,8), Math.min, 1e6),
-    chunk(analyserData.slice(8,12), (a,b)=>a+b, 0)/4,
-    chunk(analyserData.slice(12), Math.max,0),
-  ]
+  spec[0] = chunk(analyserData.slice(0,4), Math.min, 1e6)
+  spec[1] = chunk(analyserData.slice(4,8), Math.min, 1e6)
+  spec[2] = chunk(analyserData.slice(8,12), (a,b)=>a+b, 0)/4
+  spec[3] = chunk(analyserData.slice(12), Math.max,0)
+  return spec
 }
 
 system.mix = function (node) {

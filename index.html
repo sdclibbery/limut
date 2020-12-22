@@ -521,10 +521,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-Avoid all per-frame object allocation
- metronome?
- Cache vertex/index buffers between frames?
- TEST!!
+main.clear
 Change colour space to HSL or a perceptually uniform space
  But need to handle lerps for hue given it loops round thr back
  Maybe choice of colour spaces, including oil and black body as well??
@@ -548,7 +545,14 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+main: system.spectrum per frame alloc
+main: canvas.style.display = visualsActive ? 'block' : 'none'  - only on change
+main: update readouts less often
+main: tick/tock request animation frame
+Check image.shadertoy, webcam etc etc for per frame alloc
+Think we need to minimise/reduce per beat allocation too; audit all code :-/
 unary minus operator; eg '-time'
+? rl, rt (==r), rs (==n); el (==e), es, et ?
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way?? Should be available for follow players too
 if do amp=p1.amp, and p1 doesn't explicitly set its amp, you get zeroes...
 apply overridden delay for follow player: allow canons
