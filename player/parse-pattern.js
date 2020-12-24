@@ -25,6 +25,7 @@ define(function(require) {
       state.idx += 1
       let subState = Object.assign({}, state)
       subState.time = 0
+      subState.durs = [dur]
       let sub = pattern(subState, ']')
       state.idx = subState.idx
       if (sub.length === 0) { return events }
@@ -34,6 +35,7 @@ define(function(require) {
           value: e.value,
           time: time + e.time*dur/sub.length,
           dur: e.dur*dur/sub.length,
+          step: state.step,
         })
       })
       return events
@@ -60,6 +62,7 @@ define(function(require) {
         value: (e,r) => evalSequence(seq, e, r),
         time: time,
         dur: dur,
+        step: state.step,
       })
       return events
     }
@@ -70,6 +73,7 @@ define(function(require) {
       events.push({
         time: time,
         dur: dur,
+        step: state.step,
       })
       return events
     }
@@ -85,6 +89,7 @@ define(function(require) {
       value: char,
       time: time,
       dur: dur,
+      step: state.step,
     })
     return events
   }
@@ -112,7 +117,6 @@ define(function(require) {
   let pattern = (state, endChar) => {
     // console.log('pattern', state, endChar)
     let events = []
-    let length = 0
     let char
     while (char = state.str.charAt(state.idx)) {
       if (char === '') { break }
@@ -145,38 +149,58 @@ define(function(require) {
 
   let parsePattern = (patternStr, durs) => {
     // console.log('*** parsePattern', patternStr, durs)
-    if (typeof durs == 'number') {
-      durs = [durs]
-    }
     let state = {
       str: patternStr.trim(),
       idx: 0,
       time: 0,
       step: 0,
-      durs: durs,
+      durs: [1], // parse step-by-step; only apply durs after
     }
     let result = pattern(state)
     // console.log('result', result)
-    let events = result.events.map(e => {
+    result.events = result.events.map(e => {
       if (e.time < -0.0001) {e.time += result.length}
       if (e.time > result.length-0.0001) {e.time -= result.length}
       return e
     }).sort((a,b) => a.time-b.time)
-    if (result.length > 0) {
-      let extraStepIdx = 0
-      let durLength = durs.reduce((l,r)=>l+r, 0)
-      while (durLength > result.length) {
-        let newEvent = Object.assign({}, events[extraStepIdx])
-        newEvent.time = result.length
-        newEvent.dur = durs[events.length % durs.length]
-        events.push(newEvent)
-        result.length += newEvent.dur
-        extraStepIdx + 1
+
+    if (typeof durs == 'number') {
+      durs = [durs]
+    }
+    let events = []
+    let patternCount = result.events.length
+    let dursCount = durs.length
+    let stepTime = 0
+    if (patternCount > 0 && dursCount > 0) {
+      let patternLength = result.length
+      let step = 0
+      let patternIdx = 0
+      let dursIdx = 0
+      while (step < Math.max(dursCount, patternLength)) { // loop over events in entire pattern
+        let stepDur = durs[dursIdx]
+        let currentStep = result.events[patternIdx].step
+        while (result.events[patternIdx].step == currentStep) { // loop over events in step
+          let event = result.events[patternIdx]
+          events.push({
+            value:event.value,
+            time:stepTime + (event.time-event.step)*stepDur,
+            dur:event.dur*stepDur,
+          })
+          patternIdx++
+          if (patternIdx >= patternCount) {
+            patternIdx -= patternCount
+            break
+          }
+        }
+        stepTime += stepDur
+        step++
+        dursIdx = (dursIdx + 1) % dursCount
       }
     }
+
     events = foldContinuations(events)
     return {
-      length: result.length,
+      length: stepTime,
       events: events,
     }
   }
@@ -197,7 +221,7 @@ define(function(require) {
   }
 
   assertPattern(0, [], parsePattern('', 1))
-  assertPattern(1, [], parsePattern('[]', 1))
+  assertPattern(0, [], parsePattern('[]', 1))
 
   assertPattern(1, [
     {value:'x',time:0, dur:1},
@@ -285,10 +309,24 @@ define(function(require) {
     {value:'x',time:3/2, dur:1/2},
   ], parsePattern('xo', [1,1/2,1/2]))
 
+  assertPattern(3, [
+    {value:'x',time:0, dur:1/2},
+    {value:'o',time:1/2, dur:1/2},
+    {value:'x',time:1, dur:1},
+    {value:'o',time:2, dur:1},
+  ], parsePattern('[xo]', [1,2]))
+
   assertPattern(1, [
     {value:'x',time:0, dur:1},
     {value:'o',time:0, dur:1},
   ], parsePattern('(xo)', 1))
+
+  assertPattern(3, [
+    {value:'x',time:0, dur:1},
+    {value:'o',time:0, dur:1},
+    {value:'x',time:1, dur:2},
+    {value:'o',time:1, dur:2},
+  ], parsePattern('(xo)', [1,2]))
 
   assertPattern(2, [
     {value:'0',time:0, dur:2},

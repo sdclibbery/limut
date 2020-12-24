@@ -311,6 +311,29 @@ define(function(require) {
   assert({value:'0',idx:0,time:0,dur:1,count:0,lpf:10}, pattern(0)[0])
   assert('function', typeof pattern(0)[1].lpf)
 
+  pattern = parsePattern('0', {dur:[1,2]})
+  assert([{value:'0',idx:0,time:0,dur:1,count:0}], pattern(0))
+  assert([{value:'0',idx:1,time:0,dur:2,count:1}], pattern(1))
+  assert([], pattern(2))
+  assert([{value:'0',idx:0,time:0,dur:1,count:3}], pattern(3))
+
+  pattern = parsePattern('(01)', {dur:1})
+  assert([{value:'0',idx:0,time:0,dur:1,count:0},{value:'1',idx:1,time:0,dur:1,count:0}], pattern(0))
+  assert([{value:'0',idx:0,time:0,dur:1,count:1},{value:'1',idx:1,time:0,dur:1,count:1}], pattern(1))
+  assert([{value:'0',idx:0,time:0,dur:1,count:2},{value:'1',idx:1,time:0,dur:1,count:2}], pattern(2))
+  assert([{value:'0',idx:0,time:0,dur:1,count:3},{value:'1',idx:1,time:0,dur:1,count:3}], pattern(3))
+
+  pattern = parsePattern('(01)', {dur:[1,2]})
+  assert([{value:'0',idx:0,time:0,dur:1,count:0},{value:'1',idx:1,time:0,dur:1,count:0}], pattern(0))
+  assert([{value:'0',idx:2,time:0,dur:2,count:1},{value:'1',idx:3,time:0,dur:2,count:1}], pattern(1))
+  assert([], pattern(2))
+  assert([{value:'0',idx:0,time:0,dur:1,count:3},{value:'1',idx:1,time:0,dur:1,count:3}], pattern(3))
+
+  pattern = parsePattern('1(23)4', {dur:[1,1/2,1]})
+  assert([{value:'1',idx:0,time:0,dur:1,count:0}], pattern(0))
+  assert([{value:'2',idx:1,time:0,dur:0.5,count:1},{value:'3',idx:2,time:0,dur:0.5,count:1},{value:'4',idx:3,time:0.5,dur:1,count:1.5}], pattern(1))
+  assert([{value:'1',idx:0,time:0.5,dur:1,count:2.5}], pattern(2))
+
   console.log("Pattern tests complete")
   }
   
