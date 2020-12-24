@@ -17,7 +17,7 @@ define(function(require) {
 
   let step = (state) => {
     let events = []
-    let dur = state.durs[state.step % state.durs.length]
+    let dur = state.dur
     let time = state.time
     let char = state.str.charAt(state.idx)
     // subpattern
@@ -25,7 +25,7 @@ define(function(require) {
       state.idx += 1
       let subState = Object.assign({}, state)
       subState.time = 0
-      subState.durs = [dur]
+      subState.dur = dur
       let sub = pattern(subState, ']')
       state.idx = subState.idx
       if (sub.length === 0) { return events }
@@ -53,7 +53,7 @@ define(function(require) {
       state.idx += 1
       let subState = Object.assign({}, state)
       subState.time = 0
-      subState.durs = [1]
+      subState.dur = 1
       let seq = array(subState, '>', true)
       state.idx = subState.idx
       if (seq.length == 0) { seq = [[]] }
@@ -126,8 +126,7 @@ define(function(require) {
       }
       let stepEvents = step(state)
       events = events.concat(stepEvents)
-      let dur = state.durs[state.step % state.durs.length]
-      state.time += dur
+      state.time += state.dur
       state.step += 1
     }
     return { events: events, length: state.time }
@@ -154,7 +153,7 @@ define(function(require) {
       idx: 0,
       time: 0,
       step: 0,
-      durs: [1], // parse step-by-step; only apply durs after
+      dur: 1, // parse step-by-step; only apply durs after
     }
     let result = pattern(state)
     // console.log('result', result)
