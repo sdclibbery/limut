@@ -55,9 +55,9 @@ define(function(require) {
           +(1-bnoise(count*2.3/period))*1
         )/3
       let evs = vs.map(v => evalRecurse(v, e,b, evalRecurse))
-      if (vs.separator === ':' && evs.length === 2) {
+      if (evs.length >= 2) {
         let lo = evs[0]
-        let hi = evs[1]
+        let hi = evs[evs.length-1]
         result = lo + result*(hi-lo)
       }
       return result

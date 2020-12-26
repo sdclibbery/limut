@@ -213,8 +213,9 @@ let verts = (loc, window) => {
     }
   }
 
+  let emptyObject = {}
   return (shader, defFore, defBack, defParams) => (params) => {
     let zorder = param(params.zorder, param(params.linenum, 0)/1000)
-    system.add(params.time, play(shader, defFore, defBack, params, defParams || {}), zorder)
+    system.add(params.time, play(shader, defFore, defBack, params, defParams || emptyObject), zorder)
   }
 })
