@@ -18,6 +18,7 @@ define((require) => {
   let noise = require('play/synth/noise')
   let prophet = require('play/synth/prophet')
   let dsquare = require('play/synth/dsquare')
+  let fmbass = require('play/synth/fmbass')
   let fm = require('play/synth/fm')
 
   let nullPlayer = { play: () => {}, stopped: true }
@@ -58,6 +59,7 @@ define((require) => {
     noise: { play: noise },
     prophet: { play: prophet },
     dsquare: { play: dsquare },
+    fmbass: { play: fmbass },
     fm: { play: fm },
   }
 

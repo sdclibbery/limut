@@ -475,12 +475,13 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-FM bass
- test fm 070604_[21], att=0, dur=1/2, echo=0, oct=oc, amp=3, op1target='out', op1ratio=1, op2target=1, op2ratio=1/2, op2depth=1024, op2att=0, op2rel=4, op3target=1, op3ratio=1, op3depth=768, op3att=0, op3rel=1/2, op4target=1, op4ratio=2, op4depth=768, op4att=0, op4rel=4
-FM soft/hollow pads
- test fm (024), dur=4, oct=4, add=[0,1]t8, amp=1, envelope=pad, rel=4, op1target='out', op1ratio=1, op2target=1, op2ratio=4, op2depth=768, op3target=1, op3ratio=7, op3depth=512, op4target=1, op4ratio=6, op4depth=256
-FM pluck
+fmbass
+ test fm 070604_[21], att=0, dur=1/2, echo=0, oct=oc, amp=3, op1target='out', op1ratio=1, op2target=1, op2ratio=1/2, op2depth=1024, op2att=0, op2rel=4, op3target=1, op3ratio=1, op3depth=768, op3att=0, op3rel=3/4, op4target=1, op4ratio=2, op4depth=768, op4att=0, op4rel=4
+soft
+ testpad fm (024), dur=4, oct=4, add=ch, amp=2, envelope=pad, rel=4, op1target='out', op1ratio=1, op2target=1, op2ratio=4, op2depth=64, op3target=2, op3ratio=11, op3depth=1024, op4target=3, op4ratio=7.324, op4depth=1024
+fmpluck
  test fm 070604_[21], att=0, dur=1/2, echo=0, oct=4, amp=1, op1target='out', op1ratio=1, op2target=1, op2ratio=1, op2depth=1024, op2att=0, op2rel=8, op3target=1, op3ratio=2, op3depth=768, op3att=0, op3rel=8, op4target=1, op4ratio=3, op4depth=3072, op4att=0, op4rel=1/4, op4wave='sawtooth'
+fm glass sound?
 pan param
 root main var
 root param
@@ -525,6 +526,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+Support echo for visuals? Additive? Move down? ?
 Check image.shadertoy, webcam etc etc for per frame alloc
 Change colour space to HSL or a perceptually uniform space
  But need to handle lerps for hue given it loops round thr back
