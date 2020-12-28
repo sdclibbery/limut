@@ -475,13 +475,16 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-generic fm synth to allow fm synth design
+FM bass
+ test fm 070604_[21], att=0, dur=1/2, echo=0, oct=oc, amp=3, op1target='out', op1ratio=1, op2target=1, op2ratio=1/2, op2depth=1024, op2att=0, op2rel=4, op3target=1, op3ratio=1, op3depth=768, op3att=0, op3rel=1/2, op4target=1, op4ratio=2, op4depth=768, op4att=0, op4rel=4
 FM soft/hollow pads
-FM plucks
+ test fm (024), dur=4, oct=4, add=[0,1]t8, amp=1, envelope=pad, rel=4, op1target='out', op1ratio=1, op2target=1, op2ratio=4, op2depth=768, op3target=1, op3ratio=7, op3depth=512, op4target=1, op4ratio=6, op4depth=256
+FM pluck
+ test fm 070604_[21], att=0, dur=1/2, echo=0, oct=4, amp=1, op1target='out', op1ratio=1, op2target=1, op2ratio=1, op2depth=1024, op2att=0, op2rel=8, op3target=1, op3ratio=2, op3depth=768, op3att=0, op3rel=8, op4target=1, op4ratio=3, op4depth=3072, op4att=0, op4rel=1/4, op4wave='sawtooth'
 pan param
 root main var
 root param
-GC for echoes and reverbs and allow finer quantisation; will fix 'leaks' on bpm change
+GC for echoes and reverbs and allow finer quantisation; fix 'leaks' on bpm change
 Is play rate per frame?
 Allow setting main reverb room size
 Sample synth can take play sample values, and also has start param (use sus to get end)

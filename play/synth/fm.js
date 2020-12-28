@@ -9,7 +9,6 @@ define(function (require) {
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
 
   return (params) => {
-    if (params.dur !== undefined && params.dur < 2) { params.dur = 2 }
     let degree = parseInt(params.sound) + evalPerEvent(params, 'add', 0)
     if (isNaN(degree)) { return }
     let freq = scale.degreeToFreq(degree, evalPerEvent(params, 'oct', 4), evalPerEvent(params, 'scale'))
@@ -24,7 +23,7 @@ define(function (require) {
       let wave = evalPerEvent(params, 'op'+idx+'wave', 'sine')
       return {
         target: target,
-        depth: evalPerEvent(params, 'op'+idx+'depth', 1000),
+        depth: evalPerEvent(params, 'op'+idx+'depth', 1024),
         att: evalPerEvent(params, 'op'+idx+'att', undefined),
         rel: evalPerEvent(params, 'op'+idx+'rel', 1),
         ratio: ratio,
@@ -38,7 +37,13 @@ define(function (require) {
       if (!target || (target !== 'out' && ops[target].op === undefined)) return
       pitchEffects(params).connect(op.detune)
       if (target === 'out') {
-        op.connect(vca)
+        if (att === undefined) {
+          op.connect(vca)
+        } else {
+          env = fm.simpleEnv(depth/1024, params, att, rel)
+          op.connect(env)
+          env.connect(vca)
+        }
       } else {
         if (att === undefined) {
           env = fm.flatEnv(params, depth*freq/261.6)
