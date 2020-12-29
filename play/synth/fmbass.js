@@ -13,7 +13,7 @@ define(function (require) {
     if (isNaN(degree)) { return }
     let freq = scale.degreeToFreq(degree, evalPerEvent(params, 'oct', 2), evalPerEvent(params, 'scale'))
 
-    let vca = envelope(params, 0.02, 'full')
+    let vca = envelope(params, 0.06, 'full')
     let out = effects(params, vca)
     system.mix(out)
 

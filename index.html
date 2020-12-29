@@ -277,6 +277,7 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>dsaw</code> Detuned saw</p>
 <p><code>dsquare</code> Detuned square</p>
 <p><code>dbass</code> Detuned saw bass</p>
+<p><code>fmbass</code> Funky FM bass</p>
 <p><code>ping</code> Sine ping</p>
 <p><code>swell</code> Swell pad</p>
 <p><code>bell</code> FM generated bell</p>
@@ -475,16 +476,14 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-fmbass
- test fm 070604_[21], att=0, dur=1/2, echo=0, oct=oc, amp=3, op1target='out', op1ratio=1, op2target=1, op2ratio=1/2, op2depth=1024, op2att=0, op2rel=4, op3target=1, op3ratio=1, op3depth=768, op3att=0, op3rel=3/4, op4target=1, op4ratio=2, op4depth=768, op4att=0, op4rel=4
-soft
- testpad fm (024), dur=4, oct=4, add=ch, amp=2, envelope=pad, rel=4, op1target='out', op1ratio=1, op2target=1, op2ratio=4, op2depth=64, op3target=2, op3ratio=11, op3depth=1024, op4target=3, op4ratio=7.324, op4depth=1024
-fmpluck
- test fm 070604_[21], att=0, dur=1/2, echo=0, oct=4, amp=1, op1target='out', op1ratio=1, op2target=1, op2ratio=1, op2depth=1024, op2att=0, op2rel=8, op3target=1, op3ratio=2, op3depth=768, op3att=0, op3rel=8, op4target=1, op4ratio=3, op4depth=3072, op4att=0, op4rel=1/4, op4wave='sawtooth'
-fm glass sound?
 pan param
 root main var
 root param
+crackling on per frame amp change? eg testbass fmbass 0[7_.0], dur=4, oct=(1,2), amp=[2,1,0,0]s1/16@f
+use rounded square wave for chop to avoid clicks? eg b fmbass [7_.0]0, dur=4, chop=2
+fmpluck
+ test fm 070604_[21], att=0, dur=1/2, echo=0, oct=4, amp=1, op1target='out', op1ratio=1, op2target=1, op2ratio=1, op2depth=1024, op2att=0, op2rel=8, op3target=1, op3ratio=2, op3depth=768, op3att=0, op3rel=8, op4target=1, op4ratio=3, op4depth=3072, op4att=0, op4rel=1/4, op4wave='sawtooth'
+fm glass sound?
 GC for echoes and reverbs and allow finer quantisation; fix 'leaks' on bpm change
 Is play rate per frame?
 Allow setting main reverb room size
@@ -526,12 +525,12 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-Support echo for visuals? Additive? Move down? ?
+Support echo for visuals? Additive but dimmed, time turned back? Move down??
 Check image.shadertoy, webcam etc etc for per frame alloc
 Change colour space to HSL or a perceptually uniform space
  But need to handle lerps for hue given it loops round thr back
  Maybe choice of colour spaces, including oil and black body as well??
-vmirror
+vmirror?
 Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
 Spiral or noise or shimmer pre distortion?
 Add rotate to loc
@@ -551,38 +550,21 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-Think we need to minimise/reduce per beat allocation too; audit all code :-/
 unary minus operator; eg '-time'
+multiline commands
+Think we need to minimise/reduce per beat allocation too; audit all code :-/
 ? rl, rt (==r), rs (==n); el (==e), es, et ?
+ ?[1,3,5]n syntax to smoothly transition between randomly chosen values or should be [1,3,5]rs?
+ []w for random walk?
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way?? Should be available for follow players too
-if do amp=p1.amp, and p1 doesn't explicitly set its amp, you get zeroes...
 apply overridden delay for follow player: allow canons
  refactor delay application to happen once in 'play' method
-multiline commands
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 Wildcard player matching for groups 'set d? amp=0'  'set p* amp=0'
-All lerps should use operator eval, so allow [red, green]n etc
-can set seed for noise
- use to fix firefly properly
-can set seed for random
-value param to override the pattern value
-?[1,3,5]n syntax to smoothly transition between randomly chosen values or should be [1,3,5]rs?
-pattern "(01)": idx should be 0 for both events, surely?
- event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
-how to enable random chord same for all players: ch=[0:4]r ..?
- ? could [0:4]r1 be made to do it?
-syntax coloring: colour for patterns
 Tutorials
  ? Can automate the copy to clipboard paraphernalia?
  Link on this page
  Link on README
-Allow variable durations eg [0:1]l(3+[1:2]t4) etc
-[]te, []le, []se etc syntax to start from event start time?
-Support [0,1,2]e[0,.1,1] syntax
-commenting out in patterns doesnt work eg 'pi ping 0 //(024)(035)'
-[]w for random walk?
-extending patterns like every/sometimes/offadd/stutter etc
-Can support double quotes for strings??
 "on next 4 " / "on next 28 of 32 " syntax to execute a line on the next beat count
   - but how not to repeat this if rerun? replace now/next in source with actual count?
 "every 4 " / "every 28 of 32 "
@@ -592,6 +574,23 @@ pattern concat "xo + vi"
 pattern repeat "xo * 3" higher precedence than concat
 pattern support brackets "( xo + vi ) * 3"
 pattern values in vars, and then use in multiple players, and also invert, retrograde etc
+All lerps should use operator eval, so allow [red, green]n etc
+can set seed for noise
+ use to fix firefly properly
+can set seed for random
+if do amp=p1.amp, and p1 doesn't explicitly set its amp, you get zeroes...
+value param to override the pattern value
+pattern "(01)": idx should be 0 for both events, surely?
+ event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
+how to enable random chord same for all players: ch=[0:4]r ..?
+ ? could [0:4]r1 be made to do it?
+syntax coloring: colour for patterns
+Allow variable durations eg [0:1]l(3+[1:2]t4) etc
+[]te, []le, []se etc syntax to start from event start time?
+Support [0,1,2]e[0,.1,1] syntax
+commenting out in patterns doesnt work eg 'pi ping 0 //(024)(035)'
+extending patterns like every/sometimes/offadd/stutter etc
+Can support double quotes for strings??
 dur=[1,2,3,4]r
 maybe []i for int random?
 New param to offset time in shaders to allow doing sway 'manually'
