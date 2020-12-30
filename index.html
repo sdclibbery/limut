@@ -258,6 +258,7 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>[1:2]n4</code> Smoothly varying noise, moving between 1 and 2, taking 4 beats to progress from one value to another</p>
 <p><code>+</code> Add values together; eg [2,3]+4 is equivalent to [6,7]</p>
 <p><code>-</code> Subtract values; eg [2,3]-1 is equivalent to [1,2]</p>
+<p><code>-</code> Unary minus operator; eg <code>-[1,2]</code> is equivalent to <code>[-1,-2]</code></p>
 <p><code>/</code> Divide values; eg 1/2</p>
 <p><code>*</code> Multiply values; eg lpf=[1,2,3]*1000</p>
 <p><code>%</code> Take remainder; eg (0,4,7,9)%7 is equivalent to (0,4,0,2)</p>
@@ -550,7 +551,6 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-unary minus operator; eg '-time'
 multiline commands
 Think we need to minimise/reduce per beat allocation too; audit all code :-/
 ? rl, rt (==r), rs (==n); el (==e), es, et ?

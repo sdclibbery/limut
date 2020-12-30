@@ -285,6 +285,15 @@ define(function(require) {
           continue
         }
       }
+      // unary minus operator
+let digitChar = (char) => (char >= '0' && char <= '9') || char == '.' || char == 'e'
+      if (char === '-' && !digitChar(state.str.charAt(state.idx+1)) ) {
+        state.idx += 1
+        operatorList.push(-1)
+        result = undefined
+        operatorList.push('*')
+        continue
+      }
       // number
       let n = number(state)
       if (n !== undefined) {
@@ -447,6 +456,15 @@ define(function(require) {
   assert(1, p[0])
   assert(3, p[1]({}))
   delete vars.foo
+
+  p = parseExpression('-[1,2] ')
+  assert(-1, p(ev(0),0, evalParamFrame))
+  assert(-2, p(ev(1),1, evalParamFrame))
+
+  p = parseExpression('-(1,2) ')
+  assert([-1,-2], p(ev(1),1, evalParamFrame))
+
+  assert(-1, parseExpression('-(1)'))
 
   p = parseExpression('[1,2]+[3,4] ')
   assert(4, p(ev(0),0, evalParamFrame))
