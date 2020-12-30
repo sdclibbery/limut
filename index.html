@@ -344,6 +344,7 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>vibdepth</code> vibrato depth in demitones (default 0.4)</p>
 <p><code>vibdelay</code> delay before vibrato starts in beats (default 1)</p>
 <p><code>lfo</code> lfo frequency in cycles per beat for synths that use an lfo</p>
+<p><code>pan</code> pan from -1 (left) to 1 (right). default: 0</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-visual-params')">▶ Visual Params</h4>
 <div id="accordion-visual-params" class="closed">
@@ -476,7 +477,6 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-pan param
 root main var
 root param
 crackling on per frame amp change? eg testbass fmbass 0[7_.0], dur=4, oct=(1,2), amp=[2,1,0,0]s1/16@f

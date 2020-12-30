@@ -157,6 +157,15 @@ define(function (require) {
     return mix
   }
 
+  let pan = (params, node) => {
+    if (!param(params.pan, 0)) { return node }
+    let pan = system.audio.createStereoPanner()
+    evalPerFrame(pan.pan, params, 'pan')
+    node.connect(pan)
+    system.disconnect(params, [pan,node])
+    return pan
+  }
+
   return (params, node) => {
     node = perFrameAmp(params, node)
     node = chop(params, node)
@@ -165,6 +174,7 @@ define(function (require) {
     node = hpf(params, node)
     node = bpf(params, node)
     node = phaser(params, node)
+    node = pan(params, node)
     node = reverb(params, node)
     node = echo(params, node)
     return node

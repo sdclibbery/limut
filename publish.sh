@@ -1,3 +1,4 @@
+#!/usr/bin/sh
 
 git push
 cd ../sdclibbery.github.io
