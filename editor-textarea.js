@@ -2,11 +2,10 @@
 define(function(require) {
   if ((new URLSearchParams(window.location.search)).get('textarea') === null) { return }
 
-  let parseLine = require('parse-line')
   let system = require('play/system')
   let players = require('player/players')
-  let mainVars = require('main-vars')
   let consoleOut = require('console')
+  let updateCode = require('update-code')
 
   let codeTextArea = document.getElementById('code-textarea')
   codeTextArea.style.display = 'block'
@@ -36,23 +35,7 @@ define(function(require) {
     let selDir = codeTextArea.selectionDirection
     codeTextArea.focus()
     codeTextArea.setSelectionRange(0, 1e10)
-    system.resume()
-    players.instances = {}
-    mainVars.reset()
-    players.overrides = {}
-    codeTextArea.value.split('\n')
-    .map((l,i) => {return{line:l.trim(), num:i}})
-    .map(({line,num}) => {return{line:line.replace(/\/\/.*/, ''),num:num}})
-    .filter(({line}) => line != '')
-    .map(({line,num}) => {
-      try {
-        parseLine(line)
-        consoleOut('>'+line)
-      } catch (e) {
-        let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
-        consoleOut('Error on line '+(num+1)+': ' + e + st)
-      }
-    })
+    updateCode(codeTextArea.value)
     setTimeout(() => codeTextArea.setSelectionRange(selStart, selEnd, selDir), 100)
   }
   window.comment = () => {

@@ -2,10 +2,9 @@
 define(function(require) {
   if ((new URLSearchParams(window.location.search)).get('textarea') !== null) { return }
 
-  let parseLine = require('parse-line')
   let system = require('play/system')
   let players = require('player/players')
-  let mainVars = require('main-vars')
+  let updateCode = require('update-code')
   let consoleOut = require('console')
 
   let editorDiv = document.getElementById('code-codemirror')
@@ -38,22 +37,7 @@ define(function(require) {
     consoleOut('> Stop all players')
   }
   window.go = () => {
-    system.resume()
-    players.instances = {}
-    mainVars.reset()
-    players.overrides = {}
-    consoleOut('> Update code')
-    editor.getValue().split('\n')
-    .map((l,i) => {return{line:l.trim(), num:i}})
-    .filter(({line}) => line != '')
-    .map(({line,num}) => {
-      try {
-        parseLine(line, num)
-      } catch (e) {
-        let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
-        consoleOut('Error on line '+(num+1)+': ' + e + st)
-      }
-    })
+    updateCode(editor.getValue())
     if (editor.getValue().trim() !== '') {
       editor.execCommand('selectAll')
       setTimeout(() => editor.execCommand('undoSelection'), 100)
