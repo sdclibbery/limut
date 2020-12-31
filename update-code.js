@@ -13,6 +13,10 @@ define((require) => {
     for (let i = 0; i<lines.length; i++) {
       try {
         let line = lines[i]
+        while ((i+1)<lines.length && line.endsWith(' \\')) {
+          line = line.slice(0, -2) + ' ' + lines[i+1]
+          i++
+        }
         parseLine(line, i)
       } catch (e) {
         let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
@@ -65,28 +69,39 @@ define((require) => {
     assertOverrides('set p amp=2', 'p', {amp:2})
     assertOverrides('set p foo=2, bar=4', 'p', {foo:2,bar:4})
 
-    //test for backslash with no preceding space
-    // assertOverrides('set \\\np foo=2,bar=4', 'p', {foo:2,bar:4})
-    // assertOverrides('set p  \\\nfoo=2,bar=4', 'p', {foo:2,bar:4})
-    // assertOverrides('set p foo \\\n=2,bar=4', 'p', {foo:2,bar:4})
-    // assertOverrides('set p foo= \\\n2,bar=4', 'p', {foo:2,bar:4})
-    // assertOverrides('set p foo=2 \\\n,bar=4', 'p', {foo:2,bar:4})
-    // assertOverrides('set p foo=2, \\\nbar=4', 'p', {foo:2,bar:4})
-    // assertOverrides('set p foo=2,bar \\\n=4', 'p', {foo:2,bar:4})
-    // assertOverrides('set p foo=2,bar= \\\n4', 'p', {foo:2,bar:4})
+    assertOverrides('set \\\np foo=2,bar=4', 'p', {foo:2,bar:4})
+    assertOverrides('set p  \\\nfoo=2,bar=4', 'p', {foo:2,bar:4})
+    assertOverrides('set p foo \\\n=2,bar=4', 'p', {foo:2,bar:4})
+    assertOverrides('set p foo= \\\n2,bar=4', 'p', {foo:2,bar:4})
+    assertOverrides('set p foo=2 \\\n,bar=4', 'p', {foo:2,bar:4})
+    assertOverrides('set p foo=2, \\\nbar=4', 'p', {foo:2,bar:4})
+    assertOverrides('set p foo=2,bar \\\n=4', 'p', {foo:2,bar:4})
+    assertOverrides('set p foo=2,bar= \\\n4', 'p', {foo:2,bar:4})
   
-    // assertOverrides(' set  \\\n p foo = 2 , bar = 4 ', 'p', {foo:2,bar:4})
-    // assertOverrides(' set p  \\\n foo = 2 , bar = 4 ', 'p', {foo:2,bar:4})
-    // assertOverrides(' set p foo  \\\n = 2 , bar = 4 ', 'p', {foo:2,bar:4})
-    // assertOverrides(' set p foo =  \\\n 2 , bar = 4 ', 'p', {foo:2,bar:4})
-    // assertOverrides(' set p foo = 2  \\\n , bar = 4 ', 'p', {foo:2,bar:4})
-    // assertOverrides(' set p foo = 2 ,  \\\n bar = 4 ', 'p', {foo:2,bar:4})
-    // assertOverrides(' set p foo = 2 , bar  \\\n = 4 ', 'p', {foo:2,bar:4})
-    // assertOverrides(' set p foo = 2 , bar =  \\\n 4 ', 'p', {foo:2,bar:4})
+    assertOverrides(' set  \\\n p foo = 2 , bar = 4 ', 'p', {foo:2,bar:4})
+    assertOverrides(' set p  \\\n foo = 2 , bar = 4 ', 'p', {foo:2,bar:4})
+    assertOverrides(' set p foo  \\\n = 2 , bar = 4 ', 'p', {foo:2,bar:4})
+    assertOverrides(' set p foo =  \\\n 2 , bar = 4 ', 'p', {foo:2,bar:4})
+    assertOverrides(' set p foo = 2  \\\n , bar = 4 ', 'p', {foo:2,bar:4})
+    assertOverrides(' set p foo = 2 ,  \\\n bar = 4 ', 'p', {foo:2,bar:4})
+    assertOverrides(' set p foo = 2 , bar  \\\n = 4 ', 'p', {foo:2,bar:4})
+    assertOverrides(' set p foo = 2 , bar =  \\\n 4 ', 'p', {foo:2,bar:4})
 
-    // more tests with actual player syntax, and mixtures of player/set/var syntaxes
+    assertOverrides('set p foo=2,\\\nbar=4', 'p', {foo:2,bar:undefined})
+    assert(4, vars.bar)
+    delete vars.bar
 
-    console.log('Update code tests complete')
+    assertOverrides('set p foo=2, \\ HELLO\nbar=4', 'p', {foo:2,bar:undefined})
+    assert(4, vars.bar)
+    delete vars.bar
+
+//    assertOverrides('set p // hello! \\\nfoo=2,bar=4', 'p', {foo:2,bar:4})
+// !!! tricky; // should only comment out on its own line...
+
+//    assertOverrides('set p foo=2,bar=\'FOO \\\n\'', 'p', {foo:2,bar:'FOO'})
+// !!! tricky; should not add a space into a string split over multiple lines...
+
+  console.log('Update code tests complete')
   }
 
   return updateCode
