@@ -6,18 +6,19 @@ define((require) => {
   let mainVars = require('main-vars')
   let consoleOut = require('console')
 
-  let parseCode = (code) =>{
-    code.split('\n')
-      .map((l,i) => {return{line:l.trim(), num:i}})
-      .filter(({line}) => line != '')
-      .map(({line,num}) => {
-        try {
-          parseLine(line, num)
-        } catch (e) {
-          let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
-          consoleOut('Error on line '+(num+1)+': ' + e + st)
-        }
-      })
+  let parseCode = (code) => {
+    let lines = code.split('\n')
+      .map(l => l.trim())
+      .filter(l => l!='')
+    for (let i = 0; i<lines.length; i++) {
+      try {
+        let line = lines[i]
+        parseLine(line, i)
+      } catch (e) {
+        let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
+        consoleOut('Error on line '+(i+1)+': ' + e + st)
+      }
+    }
   }
 
   let updateCode = (code) => {
@@ -62,8 +63,29 @@ define((require) => {
     assertVars(' \n//yo \nfoo=1+1 \n \n \n\n bar = 2 + 2 \n ', {foo:2,bar:4})
 
     assertOverrides('set p amp=2', 'p', {amp:2})
-    assertOverrides('set p foo=2,bar=4', 'p', {foo:2,bar:4})
+    assertOverrides('set p foo=2, bar=4', 'p', {foo:2,bar:4})
+
+    //test for backslash with no preceding space
+    // assertOverrides('set \\\np foo=2,bar=4', 'p', {foo:2,bar:4})
+    // assertOverrides('set p  \\\nfoo=2,bar=4', 'p', {foo:2,bar:4})
+    // assertOverrides('set p foo \\\n=2,bar=4', 'p', {foo:2,bar:4})
+    // assertOverrides('set p foo= \\\n2,bar=4', 'p', {foo:2,bar:4})
+    // assertOverrides('set p foo=2 \\\n,bar=4', 'p', {foo:2,bar:4})
+    // assertOverrides('set p foo=2, \\\nbar=4', 'p', {foo:2,bar:4})
+    // assertOverrides('set p foo=2,bar \\\n=4', 'p', {foo:2,bar:4})
+    // assertOverrides('set p foo=2,bar= \\\n4', 'p', {foo:2,bar:4})
   
+    // assertOverrides(' set  \\\n p foo = 2 , bar = 4 ', 'p', {foo:2,bar:4})
+    // assertOverrides(' set p  \\\n foo = 2 , bar = 4 ', 'p', {foo:2,bar:4})
+    // assertOverrides(' set p foo  \\\n = 2 , bar = 4 ', 'p', {foo:2,bar:4})
+    // assertOverrides(' set p foo =  \\\n 2 , bar = 4 ', 'p', {foo:2,bar:4})
+    // assertOverrides(' set p foo = 2  \\\n , bar = 4 ', 'p', {foo:2,bar:4})
+    // assertOverrides(' set p foo = 2 ,  \\\n bar = 4 ', 'p', {foo:2,bar:4})
+    // assertOverrides(' set p foo = 2 , bar  \\\n = 4 ', 'p', {foo:2,bar:4})
+    // assertOverrides(' set p foo = 2 , bar =  \\\n 4 ', 'p', {foo:2,bar:4})
+
+    // more tests with actual player syntax, and mixtures of player/set/var syntaxes
+
     console.log('Update code tests complete')
   }
 

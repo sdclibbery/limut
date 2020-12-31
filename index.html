@@ -553,7 +553,15 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-multiline commands
+multiline commands: HOW?
+ 1. Try to parse along with following line. X will parse var sets into preceding players then
+ 2. If it wont parse as the beginning of a valid command, then include into preceding X a var set DOES parse as a valid command
+ 3. Include indented lines into previous command ? Yuck
+ 4. Require all lines to be terminated (eg with ';') X Yuck and breaking syntax change
+ 5. Require all param lists to be enclosed in brackets X Yuck and breaking syntax change
+ 6. Enclose param lists in curly brackets to make them multiline; otherwise they are single line ? Ish
+ 7. Require 'set' syntax for setting vars (eg 'set ch=') X yuck and breaking
+ 8. Require a line continuation character (eg '\') to include following line into this / OK, but a bit manual
 Think we need to minimise/reduce per beat allocation too; audit all code :-/
 ? rl, rt (==r), rs (==n); el (==e), es, et ?
  ?[1,3,5]n syntax to smoothly transition between randomly chosen values or should be [1,3,5]rs?
