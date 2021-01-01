@@ -53,7 +53,9 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
   }
   function tokenBase(stream, state) {
     var ch = stream.next();
-    if (ch == '"' || ch == "'") {
+    if (ch == '\\') {
+      return ret("linecont","linecont");
+    } else if (ch == '"' || ch == "'") {
       state.tokenize = tokenString(ch);
       return state.tokenize(stream, state);
     } else if ((ch == "." || ch == "-") && stream.match(/^\d[\d_]*(?:[eE][+\-]?[\d_]+)?(\/[\d]+)?/)) {

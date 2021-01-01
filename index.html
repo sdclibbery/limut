@@ -209,6 +209,7 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p>Limut is case insensitive; <code>piano</code>, <code>Piano</code>, and <code>PIANO</code> are all treated the same; <code>[1:4]t4</code> is the same as <code>[1:4]T4</code> etc.</p>
 <p>Comments: Anything after <code>//</code> on a line is ignored</p>
 <p>Also, commands (eg defining a player) cannot be split over multiple lines; there must not be line breaks within a command.</p>
+<p>Lines: Each command must be on a single line with no line breaks, unless "<code> \</code>" is used at the end of a line to continue the command onto the next line.</p>
 <h5>Defining a player</h5>
 <p>Basic structure: <code>id synth pattern, params</code></p>
 <p><code>id</code> Identifier for the player, so it can be referred to from other players etc.</p>
@@ -478,11 +479,11 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-chopwave
 root main var
 root param
 crackling on per frame amp change? eg testbass fmbass 0[7_.0], dur=4, oct=(1,2), amp=[2,1,0,0]s1/16@f
-use rounded square wave for chop to avoid clicks? eg b fmbass [7_.0]0, dur=4, chop=2
+chopwave
+change fm to put each operator params into an object
 fmpluck
  test fm 070604_[21], att=0, dur=1/2, echo=0, oct=4, amp=1, op1target='out', op1ratio=1, op2target=1, op2ratio=1, op2depth=1024, op2att=0, op2rel=8, op3target=1, op3ratio=2, op3depth=768, op3att=0, op3rel=8, op4target=1, op4ratio=3, op4depth=3072, op4att=0, op4rel=1/4, op4wave='sawtooth'
 fm glass sound?
@@ -553,10 +554,6 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-multiline commands
- Require a line continuation character (eg '\') to include following line into this
- Syntax highlight
- Docs!
 Think we need to minimise/reduce per beat allocation too; audit all code :-/
 ? rl, rt (==r), rs (==n); el (==e), es, et ?
  ?[1,3,5]n syntax to smoothly transition between randomly chosen values or should be [1,3,5]rs?
