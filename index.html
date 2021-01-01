@@ -289,6 +289,7 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>dsine</code> Detuned sine pad</p>
 <p><code>noise</code> Noise pad. Note pattern value is not used; white noise is produced for all values.</p>
 <p><code>prophet</code> Prophet style detuned pulse with lfo controlled pulse-width</p>
+<p><code>glass</code> fm glass synth with a chiming sound</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-visual-synths')">▶ Visual Synths</h4>
 <div id="accordion-visual-synths" class="closed">
@@ -479,12 +480,6 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-fm glass pad
-test fm 0_4_(35)_21, dur=1, echo=0, oct=5, amp=3, att=0, rel=1, \
-  op1={target:'out', ratio:1}, \
-  op2={target:1, ratio:3.53, depth:512, att:0, rel:2}, \
-  op3={target:'out', ratio:2.011, att:0, rel:4}, \
-  op4={target:3, ratio:3.493, depth:512, att:0, rel:2}, \
 fm shimmer pad
 ?portamento
 root main var

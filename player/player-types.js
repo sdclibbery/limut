@@ -20,6 +20,7 @@ define((require) => {
   let dsquare = require('play/synth/dsquare')
   let fmbass = require('play/synth/fmbass')
   let fm = require('play/synth/fm')
+  let glass = require('play/synth/glass')
 
   let nullPlayer = { play: () => {}, stopped: true }
   let playerTypes = {
@@ -61,6 +62,7 @@ define((require) => {
     dsquare: { play: dsquare },
     fmbass: { play: fmbass },
     fm: { play: fm },
+    glass: { play: glass },
   }
 
   return playerTypes
