@@ -18,14 +18,15 @@ define(function (require) {
     system.mix(out)
 
     let ops = [1,2,3,4,5,6].map(idx => {
-      let target = evalPerEvent(params, 'op'+idx+'target', undefined)
-      let ratio = evalPerEvent(params, 'op'+idx+'ratio', 1)
-      let wave = evalPerEvent(params, 'op'+idx+'wave', 'sine')
+      let op = evalPerEvent(params, 'op'+idx, {})
+      let target = evalPerEvent(op, 'target', undefined)
+      let ratio = evalPerEvent(op, 'ratio', 1)
+      let wave = evalPerEvent(op, 'wave', 'sine')
       return {
         target: target,
-        depth: evalPerEvent(params, 'op'+idx+'depth', 1024),
-        att: evalPerEvent(params, 'op'+idx+'att', undefined),
-        rel: evalPerEvent(params, 'op'+idx+'rel', 1),
+        depth: evalPerEvent(op, 'depth', 1024),
+        att: evalPerEvent(op, 'att', undefined),
+        rel: evalPerEvent(op, 'rel', 1),
         ratio: ratio,
         op: (!!target) ? fm.op(freq*ratio, params, wave) : undefined,
         idx: idx,

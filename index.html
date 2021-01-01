@@ -479,11 +479,18 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
+fm glass pad
+test fm 0_4_(35)_21, dur=1, echo=0, oct=5, amp=3, att=0, rel=1, \
+  op1={target:'out', ratio:1}, \
+  op2={target:1, ratio:3.53, depth:512, att:0, rel:2}, \
+  op3={target:'out', ratio:2.011, att:0, rel:4}, \
+  op4={target:3, ratio:3.493, depth:512, att:0, rel:2}, \
+fm shimmer pad
+?portamento
 root main var
 root param
 crackling on per frame amp change? eg testbass fmbass 0[7_.0], dur=4, oct=(1,2), amp=[2,1,0,0]s1/16@f
 chopwave
-change fm to put each operator params into an object
 fmpluck
  test fm 070604_[21], att=0, dur=1/2, echo=0, oct=4, amp=1, op1target='out', op1ratio=1, op2target=1, op2ratio=1, op2depth=1024, op2att=0, op2rel=8, op3target=1, op3ratio=2, op3depth=768, op3att=0, op3rel=8, op4target=1, op4ratio=3, op4depth=3072, op4att=0, op4rel=1/4, op4wave='sawtooth'
 fm glass sound?
