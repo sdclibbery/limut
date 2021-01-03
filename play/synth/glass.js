@@ -15,7 +15,7 @@ define(function (require) {
 
     if (params.att === undefined) { params.att = 0 }
     if (params.rel === undefined) { params.rel = params.dur }
-    let vca = envelope(params, 0.04, 'full')
+    let vca = envelope(params, 0.02, 'full')
     let out = effects(params, vca)
     system.mix(out)
 

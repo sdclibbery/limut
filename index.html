@@ -480,7 +480,6 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <script data-main="main" src="require.js">
 /*
 ==== audio ====
-fm shimmer pad
 ?portamento
 root main var
 root param
@@ -674,6 +673,14 @@ drums='https://upload.wikimedia.org/wikipedia/commons/0/0b/Radioactive_keeper_dr
 sign='https://upload.wikimedia.org/wikipedia/commons/7/7d/Trinity_007.jpg'
 spider='https://upload.wikimedia.org/wikipedia/commons/2/26/Jumping_Spider.jpg'
 cleanup='https://upload.wikimedia.org/wikipedia/commons/4/40/IAEA_02790019_%285613119300%29.jpg'
+---
+test fm 020406[79]5, oct=5, att=1/16, \
+  op1={target:'out',ratio:1}, \
+  op2={target:1, 		ratio:1, depth:128, att:0, rel:8}, \
+  op3={target:'out',ratio:2, depth:512, att:0, rel:2}, \
+  op4={target:3,    ratio:2.02, depth:256, att:1/4, rel:2}, \
+  op5={target:'out',ratio:1, depth:512, att:1/16, rel:1/4}, \
+  op6={target:5,    ratio:1, depth:1024, att:0, rel:1/4},
 */
 </script>
 </html>
