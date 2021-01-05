@@ -60,7 +60,7 @@ system.compressorReduction = () => {
 }
 
 system.analyser = system.audio.createAnalyser()
-system.analyser.fftSize = 512
+system.analyser.fftSize = 1024
 system.analyser.smoothingTimeConstant = 0.6
 let analyserBufferLength = system.analyser.frequencyBinCount
 let analyserData = new Uint8Array(analyserBufferLength)
@@ -75,6 +75,11 @@ system.spectrum = () => {
   spec[2] = chunk(analyserData.slice(8,12), (a,b)=>a+b, 0)/4
   spec[3] = chunk(analyserData.slice(12), Math.max,0)
   return spec
+}
+system.scope = () => {
+  let data = new Float32Array(system.analyser.fftSize)
+  system.analyser.getFloatTimeDomainData(data)
+  return data
 }
 
 system.mix = function (node) {

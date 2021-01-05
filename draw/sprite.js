@@ -191,9 +191,15 @@ let verts = (loc, window) => {
           system.gl.activeTexture(system.gl['TEXTURE'+i])
           system.gl.bindTexture(system.gl.TEXTURE_2D, t.tex)
           system.gl.uniform1i(tu, i)
-         system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_S, system.gl.CLAMP_TO_EDGE)
-         system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_T, system.gl.CLAMP_TO_EDGE)
+          system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_S, system.gl.CLAMP_TO_EDGE)
+          system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_T, system.gl.CLAMP_TO_EDGE)
           system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_MIN_FILTER, system.gl.LINEAR)
+
+          system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_MIN_FILTER, system.gl.NEAREST);
+          system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_MAG_FILTER, system.gl.NEAREST);
+          system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_S, system.gl.CLAMP_TO_EDGE);
+          system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_T, system.gl.CLAMP_TO_EDGE);
+          
           if (s.extentsUnif && t.width && t.height) {
             let extents = ca('extents')
             extents[0] = t.width
