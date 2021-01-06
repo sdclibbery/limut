@@ -194,18 +194,13 @@ let verts = (loc, window) => {
           system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_S, system.gl.CLAMP_TO_EDGE)
           system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_T, system.gl.CLAMP_TO_EDGE)
           system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_MIN_FILTER, system.gl.LINEAR)
-
-          system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_MIN_FILTER, system.gl.NEAREST);
-          system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_MAG_FILTER, system.gl.NEAREST);
-          system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_S, system.gl.CLAMP_TO_EDGE);
-          system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_T, system.gl.CLAMP_TO_EDGE);
-          
           if (s.extentsUnif && t.width && t.height) {
             let extents = ca('extents')
             extents[0] = t.width
             extents[1] = t.height
             system.gl.uniform2fv(s.extentsUnif, extents)
           }
+          if (t.params) { t.params() }
         })
       }
       if (fore[3] >= 0.9999 && back[3] >= 0.9999 && mid[3] >= 0.9999 && additive == 0 && vignette == 0) {

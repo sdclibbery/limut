@@ -19,6 +19,13 @@ define(function (require) {
   }
   `
 
+  let findZeroCrossing = (data) => {
+    let last = data[0]
+    let idx = 0
+    while (idx < data.length && Math.sign(last) == Math.sign(data[idx])) { idx++ }
+    data.copyWithin(0, idx)
+  }
+
   let texture
   let lastUpdateTime
   let getScopeTexture = () => {
@@ -30,8 +37,15 @@ define(function (require) {
       lastUpdateTime = state.time
       system.gl.bindTexture(system.gl.TEXTURE_2D, texture.tex)
       let data = playSystem.scope()
+      findZeroCrossing(data)
       system.gl.texImage2D(system.gl.TEXTURE_2D, 0, system.gl.R32F, data.length, 1,
         0, system.gl.RED, system.gl.FLOAT, data)
+    }
+    texture.params = () => {
+      system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_MIN_FILTER, system.gl.NEAREST);
+      system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_MAG_FILTER, system.gl.NEAREST);
+      system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_S, system.gl.CLAMP_TO_EDGE);
+      system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_T, system.gl.CLAMP_TO_EDGE);
     }
     return texture
   }
