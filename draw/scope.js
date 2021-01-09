@@ -20,9 +20,9 @@ define(function (require) {
   `
 
   let findZeroCrossing = (data) => {
-    let last = data[0]
     let idx = 0
-    while (idx < data.length && Math.sign(last) == Math.sign(data[idx])) { idx++ }
+    while (idx < data.length && Math.sign(data[idx]) > 0) { idx++ }
+    while (idx < data.length && Math.sign(data[idx]) < 0) { idx++ }
     data.copyWithin(0, idx)
   }
 
