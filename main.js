@@ -91,6 +91,7 @@ define(function(require) {
   let beatLatency = 0
   let lastVisualsActive
   let tickCount = 0
+  let visualPauseCount = 0
   let tick = (t) => {
     let now = system.timeNow()
     let beat = metronome.update(now)
@@ -119,6 +120,14 @@ define(function(require) {
       let timeNow = (new Date()).getTime() / 1000
       beatLatency = ((timeNow - lastBeatTime) / beat.duration) - 1
       lastBeatTime = timeNow
+      if (beatLatency > 0.05 && beat.count > 2) {
+        let inc = Math.min(beatLatency*80, 8)
+        visualPauseCount += inc
+        visualPauseCount = Math.min(visualPauseCount, 30)
+        console.log(`slow beatLatency ${beatLatency} at ${beat.count}; pausing visuals for ${visualPauseCount} beats`)
+      } else if (visualPauseCount > 0) {
+        visualPauseCount -= 1
+      }
     }
     try {
       system.frame(now, beatTime)
@@ -126,7 +135,7 @@ define(function(require) {
       let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
       consoleOut('Run Error from audio updating: ' + e + st)
     }
-    if (ctxGl) {
+    if (ctxGl && visualPauseCount <= 0) {
       try {
         let visualsActive = drawSystem.frameStart(now, beatTime, ctxGl, canvas.width, canvas.height, spectrum, pulse)
         if (visualsActive !== lastVisualsActive) {
