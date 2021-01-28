@@ -120,8 +120,8 @@ define(function(require) {
       let timeNow = (new Date()).getTime() / 1000
       beatLatency = ((timeNow - lastBeatTime) / beat.duration) - 1
       lastBeatTime = timeNow
-      if (beatLatency > 0.05 && beat.count > 2) {
-        let inc = Math.min(beatLatency*80, 8)
+      if (beatLatency > 0.02 && beat.count > 2) {
+        let inc = Math.min(beatLatency*100, 8)
         visualPauseCount += inc
         visualPauseCount = Math.min(visualPauseCount, 30)
         console.log(`slow beatLatency ${beatLatency} at ${beat.count}; pausing visuals for ${visualPauseCount} beats`)
