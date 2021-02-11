@@ -479,9 +479,11 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 </body>
 <script data-main="main" src="require.js">
 /*
-==== audio ====
+====
 ==== audio ====
 root main var
+should be able to use sus to gate play sounds
+Is it possible to control rate per frame?
 root param
 reverb param allowing to use a convolution reverb with specified duration (at users own risk :-)
 aaa vocal synth
@@ -560,6 +562,7 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+Can't override dur from set command
 glitching test case:
  p dsaw 0, dur=1/256, sus=1, lpf=[1000:2000]l5@f, amp=1/8
  v swirl 0, rate=5, fore=rainbow_fast

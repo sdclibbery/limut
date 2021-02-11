@@ -77,6 +77,7 @@ define(function (require) {
   let scale = {
     scales: scales,
     current: 'major',
+    root: 0,
   }
 
   scale.set = (s) => {
@@ -88,13 +89,18 @@ define(function (require) {
     return scale.current
   }
 
+  scale.setRoot = (r) => {
+    scale.root = r
+    return scale.root
+  }
+
   scale.degreeToFreq = (degree, octave, scaleOverride) => {
     degree = Math.floor(degree)
     octave = Math.floor(octave)
     let currentScale = scales[scaleOverride || scale.current]
     let octDelta = Math.floor(degree / currentScale.length)
     let oct = octave - 4 + octDelta
-    let chromatic = currentScale[(degree + currentScale.length*100) % currentScale.length] + oct*12
+    let chromatic = currentScale[(degree + currentScale.length*100) % currentScale.length] + oct*12 + scale.root
     return 261.6256 * Math.pow(2, chromatic/12)
   }
 

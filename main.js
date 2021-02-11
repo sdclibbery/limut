@@ -30,20 +30,6 @@ define(function(require) {
   }
   window.mainAmpChanged()
 
-  // Main reverb UI
-  window.mainReverbChange = (reverb) => {
-    window.mainReverbChanged(system.mainReverb(reverb))
-  }
-  window.mainReverbChanged = (mainReverb) => {}
-  window.mainReverbChanged(system.mainReverb())
-
-  // Scale ui
-  window.scaleChange = function (s) {
-    window.scaleChanged(scale.set(s))
-  }
-  window.scaleChanged = function (s) {}
-  window.scaleChanged(scale.current)
-
   // indicator helpers
   let to255 = (x) => Math.min(Math.max(Math.floor(x*256), 0), 255)
   let readoutColor = (x, lo, hi) => {
@@ -135,7 +121,8 @@ define(function(require) {
       let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
       consoleOut('Run Error from audio updating: ' + e + st)
     }
-    if (ctxGl && visualPauseCount <= 0) {
+    tickCount++
+    if (ctxGl && (visualPauseCount <= 0 || tickCount%10 == 0)) {
       try {
         let visualsActive = drawSystem.frameStart(now, beatTime, ctxGl, canvas.width, canvas.height, spectrum, pulse)
         if (visualsActive !== lastVisualsActive) {
@@ -147,7 +134,6 @@ define(function(require) {
         consoleOut('Run Error from drawing: ' + e + st)
       }
     }
-    tickCount++
     if (!!beat || tickCount % 20 == 0) {
       compressorReadout.style.backgroundColor = readoutColor(system.compressorReduction(), 0, -0.1)
       beatLatencyReadout.style.backgroundColor = readoutColor(beatLatency, 0, 0.05)
