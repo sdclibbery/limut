@@ -66,6 +66,7 @@ define(function(require) {
   if (!ctxGl) { console.error('WebGL2 not supported!') }
 
   // Update
+  let noslowdown = (new URLSearchParams(window.location.search)).get('noslowdown') !== null
   let compressorReadout = document.getElementById('compressor-readout')
   let beatLatencyReadout = document.getElementById('beat-latency-readout')
   let visualReadout = document.getElementById('visual-readout')
@@ -122,7 +123,7 @@ define(function(require) {
       consoleOut('Run Error from audio updating: ' + e + st)
     }
     tickCount++
-    if (ctxGl && (visualPauseCount <= 0 || tickCount%10 == 0)) {
+    if (ctxGl && (visualPauseCount <= 0 || tickCount%10 == 0 || noslowdown)) {
       try {
         let visualsActive = drawSystem.frameStart(now, beatTime, ctxGl, canvas.width, canvas.height, spectrum, pulse)
         if (visualsActive !== lastVisualsActive) {
