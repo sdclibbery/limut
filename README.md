@@ -12,6 +12,10 @@ Try it at https://sdclibbery.github.io/limut/
 
 Please report problems / bugs / browser issues etc as github issues at https://github.com/sdclibbery/limut/issues
 
+# Electron app
+
+Limut can be run as a website, or packaged into a desktop web app. With npm installed, run `npm install` to install electron, and then `npm start` to run the electron app. There are no prepackaged versions available at present.
+
 # Code Editor
 
 Limut uses the CodeMirror editor by default (https://codemirror.net). This provides syntax coloring. However, on some devices (eg mobile) a better experience may result from using a basic textarea editor; this can be enabled by using the `?textarea` url parameter.

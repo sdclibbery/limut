@@ -1,0 +1,12 @@
+{
+  "name": "limut",
+  "version": "0.1.0",
+  "main": "electron-main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^11.3.0"
+  }
+}
