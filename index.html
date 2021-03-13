@@ -478,19 +478,23 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 </div>
 <p>Please report bugs, problems, issues and suggestions on <a href="https://github.com/sdclibbery/limut/issues" target="_blank">https://github.com/sdclibbery/limut/issues</a></p>
 </body>
+<script src="supercollider/osc.min.js" type="text/javascript"></script>
 <script data-main="main" src="require.js">
 /*
-==== WebAudio replacement possibilities
-Tone.js ? How free of WebAudio is this actually?
-Supercollider wasm ? Performance?? https://github.com/Sciss/supercollider/blob/wasm/README_WASM.md
-Supercollider nodejs ? Won't work on web
-!! Switch to a branch and try using wasm supercollider...
-
-    /mnt/c/Users/sdcli/Documents/GitHub/emsdk
-    /mnt/c/Users/sdcli/Documents/GitHub/emsdk/node/14.15.5_64bit/bin
-    /mnt/c/Users/sdcli/Documents/GitHub/emsdk/upstream/emscripten
-
-
+==== Wasm Supercollider experiment
+Get a couple of better synthdefs
+Envelope and free sound after use
+L/H/BPF effects
+Echo and reverb effects
+Per frame update
+Performance?
+Solved glitching???
+Play synth
+Other effects
+Pitch effects
+Piano
+Spectrum
+Scope
 ====
 ==== audio ====
 should be able to use sus to gate play sounds
@@ -732,4 +736,5 @@ test fm 020406[79]5, oct=5, att=1/16, \
   op6={target:5,    ratio:1, depth:1024, att:0, rel:1/4},
 */
 </script>
+<script async type="text/javascript" src="supercollider/scsynth.js"></script>
 </html>
