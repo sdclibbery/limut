@@ -4,6 +4,12 @@ const {app, BrowserWindow} = require('electron')
   
   function createWindow () {
     win = new BrowserWindow({width: 1280, height: 800})
-    win.loadURL(`file://${__dirname}/index.html`);
+    win.maximize()
+    if (app.commandLine.hasSwitch('dev')) {
+      win.toggleDevTools()
+      win.loadURL(`file://${__dirname}/index.html?test`)
+    } else {
+      win.loadURL(`file://${__dirname}/index.html`)
+    }
   }  
   app.on('ready', createWindow)

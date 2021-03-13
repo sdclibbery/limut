@@ -3,6 +3,7 @@ define(function (require) {
   if (!window.AudioWorkletNode) { return ()=>{} }
 
   let system = require('play/system');
+  if (!system.audio) { return ()=>{} }
   let envelope = require('play/envelopes')
   let effects = require('play/effects')
 

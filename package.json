@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "main": "electron-main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dev": "electron . --dev"
   },
   "dependencies": {},
   "devDependencies": {

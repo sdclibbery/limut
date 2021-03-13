@@ -1,6 +1,7 @@
 'use strict';
 define(function (require) {
   let system = require('play/system');
+  if (!system.audio) { return ()=>{} } // ???
 
   let buffers = {}
   let nullBuffer = system.audio.createBuffer(2, 100, 22050);
