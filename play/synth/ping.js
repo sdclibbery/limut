@@ -2,11 +2,21 @@
 define(function (require) {
   let system = require('play/system');
   let scale = require('music/scale');
-  // let envelope = require('play/envelopes')
+  let envelope = require('play/envelopes')
   // let effects = require('play/effects')
   // let pitchEffects = require('play/pitch-effects')
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
 
+  let env = (params, gainBase) => {
+    let dur = Math.max(0.01, evalPerEvent(params, 'sus', evalPerEvent(params, 'dur', 0.25)))
+    let attack = evalPerEvent(params, 'att', 0.09) * params.beat.duration
+    params.time -= Math.min(attack, 0.05)
+    let decay = evalPerEvent(params, 'decay', 0.08*dur) * params.beat.duration
+    let release = evalPerEvent(params, 'rel', params.sus||dur) * params.beat.duration
+    let amp = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
+    params.endTime = params.time + attack+decay+release
+    return amp
+  }
   const synthDef = Uint8Array.from(
     // SynthDef("ping", {|amp=1, freq=440|
     //   var sn = SinOsc.ar(freq) * amp;
@@ -18,13 +28,13 @@ define(function (require) {
     let degree = parseInt(params.sound) + evalPerEvent(params, 'add', 0)
     if (isNaN(degree)) { return }
     let freq = scale.degreeToFreq(degree, evalPerEvent(params, 'oct', 5), evalPerEvent(params, 'scale'))
-    let amp = (params.amp || 1) * 0.1
+    let amp = env(params, 0.1)
 
     if (synthDef.done === undefined) {
       system.sc.sendOSC_t('/d_recv', 'b', synthDef)
       synthDef.done = true
     }
-    system.sc.sendOSC_t('/g_freeAll', 'i', 0)
-    system.sc.sendOSC_t('/s_new', 'siiisfsf', 'ping', 1000, 1, 0, 'amp', amp, 'freq', freq)
+    let id = system.sc.play(params.time, 'ping', amp, freq)
+    system.sc.free(params.endTime, id)
   }
 })

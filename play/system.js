@@ -24,6 +24,21 @@ system.sc.sendOSC_t = (name, tags, ...args) => {
   if (typeof rcv == 'function') rcv(57120, data)
 }
 
+system.sc.nodeId = 0
+system.sc.play = (time, synthDef, amp, freq) => {
+  system.sc.nodeId++
+  let id = system.sc.nodeId
+  setTimeout(() => {
+    system.sc.sendOSC_t('/s_new', 'siiisfsf', synthDef, id, 1, 0, 'amp', amp, 'freq', freq)
+  }, (time - system.timeNow())*1000)
+  return id
+}
+system.sc.free = (time, id) => {
+  setTimeout(() => {
+    system.sc.sendOSC_t('/n_free', 'i', id)
+  }, (time - system.timeNow() + 0.01)*1000)
+}
+
 system.add = (startTime, update) => {
   system.queued.push({t:startTime, update:update})
 }
@@ -88,18 +103,6 @@ system.scope = () => {
 system.mix = function (node) {
     // ???
   }
-
-system.disconnect = (params, nodes) => {
-  setTimeout(() => {
-    // ???
-  }, 100+(params.endTime - system.audio.currentTime)*1000)
-}
-
-system.disconnectAt = (time, nodes) => {
-  setTimeout(() => {
-    // ???
-  }, 100+(time - system.audio.currentTime)*1000)
-}
 
 system.mainReverb = (reverb) => {
   if (typeof reverb == 'number') {
