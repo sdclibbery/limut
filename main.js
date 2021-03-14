@@ -101,6 +101,7 @@ define(function(require) {
           } catch (e) {
             let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
             consoleOut('Run Error from player '+playerName+': ' + e + st)
+            console.error(e)
           }
         }
       }

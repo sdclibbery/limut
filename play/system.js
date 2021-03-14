@@ -14,29 +14,40 @@ system.sc.print = (t) => console.log('SuperCollider: ', t)
 system.sc.printErr = (t) => console.error('SuperCollider error: ', t)
 system.sc.setStatus = (t) => console.log('SuperCollider status: ', t)
 
-system.sc.sendOSC_t = (name, tags, ...args) => {
+system.sc.oscMsg = (name, tags, ...args) => {
   for (let i = 0; i < args.length; i++) {
     args[i] = { type: tags[i], value: args[i] }
   }
-  let data  = osc.writePacket({ address: name, args: args }, { metadata: true })
+  return { address: name, args: args }
+}
+system.sc.sendOSC = (data) => {
   let ep    = system.sc.oscDriver[57110]
   let rcv   = ep ? ep['receive'] : undefined
   if (typeof rcv == 'function') rcv(57120, data)
 }
-
-system.sc.nodeId = 0
-system.sc.play = (time, synthDef, amp, freq) => {
+system.sc.nodeId = 1000
+system.sc.nextId = () => {
   system.sc.nodeId++
-  let id = system.sc.nodeId
-  setTimeout(() => {
-    system.sc.sendOSC_t('/s_new', 'siiisfsf', synthDef, id, 1, 0, 'amp', amp, 'freq', freq)
-  }, (time - system.timeNow())*1000)
+  return system.sc.nodeId
+}
+system.sc.dumpTree = () => {
+  system.sc.sendOSC(osc.writePacket(system.sc.oscMsg('/g_dumpTree', 'ii',0,0)))
+}
+
+system.sc.addSynthDef = (synthDefBin) => {
+  system.sc.sendOSC(osc.writePacket(system.sc.oscMsg('/d_recv', 'b', synthDefBin)))
+}
+system.sc.play = (synthDef, freq) => {
+  system.sc.bundle = []
+  system.sc.bundleGroup = system.sc.nextId()
+  system.sc.bundle.push(system.sc.oscMsg('g_new', 'iii', system.sc.bundleGroup, 0, 0))
+  let id = system.sc.nextId()
+  system.sc.bundle.push(system.sc.oscMsg('s_new', 'siiisf', synthDef, id, 0, system.sc.bundleGroup, 'freq', freq))
   return id
 }
-system.sc.free = (time, id) => {
-  setTimeout(() => {
-    system.sc.sendOSC_t('/n_free', 'i', id)
-  }, (time - system.timeNow() + 0.01)*1000)
+system.sc.commit = (time) => {
+  let bundleTime = time - system.timeNow()
+  system.sc.sendOSC(osc.writeBundle({timeTag: osc.timeTag(bundleTime), packets: system.sc.bundle}))
 }
 
 system.add = (startTime, update) => {
