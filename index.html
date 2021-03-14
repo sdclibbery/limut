@@ -482,19 +482,28 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <script data-main="main" src="require.js">
 /*
 ==== Wasm Supercollider experiment
-Envelope
+Bundles for scheduling
+ Create bundle
+ Add messages into bundle instead of live
+ Freeing synths with another bundle
+Auto-free??
+Envelope and amp (remove amp from ping synth)
+Dsaw - use [] array for detunes?
 L/H/BPF effects
 Echo and reverb effects
 Per frame update
 Performance?
 Solved glitching???
-Proper scheduling
 Play synth
 Other effects
 Pitch effects
 Piano
 Spectrum
 Scope
+SC docs
+ Commands: https://github.com/supercollider/supercollider/blob/608bb981162c2c26f0a32c09d82557b29774a32e/server/scsynth/SC_MiscCmds.cpp
+ Bundles: https://doc.sccode.org/Guides/Bundled-Messages.html
+ Synths and chaining: https://doc.sccode.org/Classes/Synth.html
 ====
 ==== audio ====
 should be able to use sus to gate play sounds

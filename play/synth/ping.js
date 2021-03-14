@@ -29,11 +29,13 @@ define(function (require) {
     if (isNaN(degree)) { return }
     let freq = scale.degreeToFreq(degree, evalPerEvent(params, 'oct', 5), evalPerEvent(params, 'scale'))
     let amp = env(params, 0.1)
+    // envelope(params, 0.04, 'simple')
 
     if (synthDef.done === undefined) {
       system.sc.sendOSC_t('/d_recv', 'b', synthDef)
       synthDef.done = true
     }
+
     let id = system.sc.play(params.time, 'ping', amp, freq)
     system.sc.free(params.endTime, id)
   }
