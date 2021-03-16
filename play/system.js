@@ -26,28 +26,44 @@ system.sc.sendOSC = (data) => {
   if (typeof rcv == 'function') rcv(57120, data)
 }
 system.sc.nodeId = 1000
-system.sc.nextId = () => {
+system.sc.nextNode = () => {
   system.sc.nodeId++
   return system.sc.nodeId
+}
+system.sc.busId = 10
+system.sc.nextBus = () => {
+  system.sc.busId++
+  if (system.sc.busId >= 999) {
+    system.sc.busId = 10
+  }
+  return system.sc.busId
 }
 system.sc.dumpTree = () => {
   system.sc.sendOSC(osc.writePacket(system.sc.oscMsg('/g_dumpTree', 'ii',0,0)))
 }
+system.sc.dumpOSC = () => {
+  system.sc.sendOSC(osc.writePacket(system.sc.oscMsg('/dumpOSC', 'i',1)))
+}
 
 system.sc.addSynthDef = (synthDefBin) => {
-  system.sc.sendOSC(osc.writePacket(system.sc.oscMsg('/d_recv', 'b', synthDefBin)))
+  if (synthDefBin.done === undefined) {
+    system.sc.sendOSC(osc.writePacket(system.sc.oscMsg('/d_recv', 'b', synthDefBin)))
+    synthDefBin.done = true
+  }
 }
 system.sc.play = (synthDef, freq) => {
   system.sc.bundle = []
-  system.sc.bundleGroup = system.sc.nextId()
-  system.sc.bundle.push(system.sc.oscMsg('g_new', 'iii', system.sc.bundleGroup, 0, 0))
-  let id = system.sc.nextId()
-  system.sc.bundle.push(system.sc.oscMsg('s_new', 'siiisf', synthDef, id, 0, system.sc.bundleGroup, 'freq', freq))
+  system.sc.bundleGroup = system.sc.nextNode()
+  system.sc.bus = system.sc.nextBus()
+  system.sc.bundle.push(system.sc.oscMsg('/g_new', 'iii', system.sc.bundleGroup, 0, 0))
+  let id = system.sc.nextNode()
+  system.sc.bundle.push(system.sc.oscMsg('/s_new', 'siiisisf', synthDef, id, 0, system.sc.bundleGroup, 'bus', system.sc.bus, 'freq', freq))
   return id
 }
 system.sc.commit = (time) => {
-  let bundleTime = time - system.timeNow()
-  system.sc.sendOSC(osc.writeBundle({timeTag: osc.timeTag(bundleTime), packets: system.sc.bundle}))
+  let bundleTime = Math.max(time - system.timeNow(), 0)
+  let tt = osc.timeTag(bundleTime)
+  system.sc.sendOSC(osc.writeBundle({timeTag: tt, packets: system.sc.bundle}))
 }
 
 system.add = (startTime, update) => {
