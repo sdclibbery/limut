@@ -4,6 +4,13 @@ SynthDef("ping", {|bus=10,freq=440|
 	Out.ar(bus, SinOsc.ar(freq));
 }).add.asBytes.postcs();
 
+SynthDef("dsaw", {|bus=10,freq=440,detune=0.1|
+	var sig = Saw.ar(freq * (2 ** (0.0 * detune/12)))
+	        + Saw.ar(freq * (2 ** (0.7 * detune/12)))
+	        + Saw.ar(freq * (2 ** (1.0 * detune/12)));
+	Out.ar(bus, sig);
+}).add.asBytes.postcs();
+
 SynthDef("simple-env", { |bus=10,amp=0.1,att=0.5,rel=1|
 	ReplaceOut.ar(bus, In.ar(bus, 2) * EnvGen.kr(Env.perc(att, rel, amp, -2), doneAction: Done.freeGroup));
 }).add.asBytes.postcs();
@@ -13,7 +20,7 @@ SynthDef("mix-down", { |bus=10,out=0| Out.ar(0, In.ar(bus, 2)); }).add.asBytes.p
 s.makeBundle(0.5, {
 	var b = Bus.audio(s);
 	var g = Group.new(0,0);
-	var s = Synth("ping",["bus",b,"freq",440], g);
+	var s = Synth("dsaw",["bus",b,"freq",440], g);
 	var e = Synth.after(s,"simple-env",["bus",b,"att":0.1,"amp":0.2,"rel":2], g);
 	Synth.after(e,"mix-down",["bus",b,"out":0], g);
 });

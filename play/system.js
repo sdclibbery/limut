@@ -56,13 +56,13 @@ system.sc.addSynthDef = (synthDefBin) => {
     synthDefBin.done = true
   }
 }
-system.sc.play = (synthDef, freq) => {
+system.sc.play = (synthDef, freq, detuneSemis) => {
   system.sc.bundle = []
   system.sc.bundleGroup = system.sc.nextNode()
   system.sc.bus = system.sc.nextBus()
   system.sc.bundle.push(system.sc.oscMsg('/g_new', 'iii', system.sc.bundleGroup, 0, 0))
   let id = system.sc.nextNode()
-  system.sc.bundle.push(system.sc.oscMsg('/s_new', 'siiisisf', synthDef, id, 0, system.sc.bundleGroup, 'bus', system.sc.bus, 'freq', freq))
+  system.sc.bundle.push(system.sc.oscMsg('/s_new', 'siiisisfsf', synthDef, id, 0, system.sc.bundleGroup, 'bus', system.sc.bus, 'freq', freq, 'detune', detuneSemis||0))
   return id
 }
 system.sc.commit = (lastNode, time) => {
