@@ -44,6 +44,11 @@ system.sc.dumpTree = () => {
 system.sc.dumpOSC = () => {
   system.sc.sendOSC(osc.writePacket(system.sc.oscMsg('/dumpOSC', 'i',1)))
 }
+const synthDefMixDown = Uint8Array.from(
+  // SynthDef("mix-down", { |bus=10,out=0| Out.ar(0, In.ar(bus, 2)); }).add.asBytes.postcs();
+  [ 83, 67, 103, 102, 0, 0, 0, 2, 0, 1, 8, 109, 105, 120, 45, 100, 111, 119, 110, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 65, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 98, 117, 115, 0, 0, 0, 0, 3, 111, 117, 116, 0, 0, 0, 1, 0, 0, 0, 3, 7, 67, 111, 110, 116, 114, 111, 108, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 1, 1, 2, 73, 110, 2, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 3, 79, 117, 116, 2, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0 ]
+  )
+
 
 system.sc.addSynthDef = (synthDefBin) => {
   if (synthDefBin.done === undefined) {
@@ -60,7 +65,9 @@ system.sc.play = (synthDef, freq) => {
   system.sc.bundle.push(system.sc.oscMsg('/s_new', 'siiisisf', synthDef, id, 0, system.sc.bundleGroup, 'bus', system.sc.bus, 'freq', freq))
   return id
 }
-system.sc.commit = (time) => {
+system.sc.commit = (lastNode, time) => {
+  system.sc.addSynthDef(synthDefMixDown)
+  system.sc.bundle.push(system.sc.oscMsg('/s_new', 'siiisisi', 'mix-down', system.sc.nextNode(), 3, lastNode, 'bus', system.sc.bus, 'out', 0))
   let bundleTime = Math.max(time - system.timeNow(), 0)
   let tt = osc.timeTag(bundleTime)
   system.sc.sendOSC(osc.writeBundle({timeTag: tt, packets: system.sc.bundle}))

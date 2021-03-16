@@ -4,15 +4,18 @@ SynthDef("ping", {|bus=10,freq=440|
 	Out.ar(bus, SinOsc.ar(freq));
 }).add.asBytes.postcs();
 
-SynthDef("simpleEnv", { |bus=10,amp=0.1, att=0.5, rel=1|
-	Out.ar(0, In.ar(bus, 2) * EnvGen.kr(Env.perc(att, rel, amp, -2), doneAction: Done.freeGroup));
+SynthDef("simple-env", { |bus=10,amp=0.1,att=0.5,rel=1|
+	ReplaceOut.ar(bus, In.ar(bus, 2) * EnvGen.kr(Env.perc(att, rel, amp, -2), doneAction: Done.freeGroup));
 }).add.asBytes.postcs();
+
+SynthDef("mix-down", { |bus=10,out=0| Out.ar(0, In.ar(bus, 2)); }).add.asBytes.postcs();
 
 s.makeBundle(0.5, {
 	var b = Bus.audio(s);
 	var g = Group.new(0,0);
 	var s = Synth("ping",["bus",b,"freq",440], g);
-	Synth.after(s,"simpleEnv",["bus",b,"att":0.1,"amp":0.2,"rel":2], g);
+	var e = Synth.after(s,"simple-env",["bus",b,"att":0.1,"amp":0.2,"rel":2], g);
+	Synth.after(e,"mix-down",["bus",b,"out":0], g);
 });
 
 s.dumpOSC;
