@@ -3,8 +3,8 @@ define(function (require) {
   let system = require('play/system');
   let scale = require('music/scale');
   let envelope = require('play/envelopes')
-  // let effects = require('play/effects')
-  // let pitchEffects = require('play/pitch-effects')
+  let effects = require('play/effects')
+  let pitchEffects = require('play/pitch-effects')
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
 
   const synthDef = Uint8Array.from(

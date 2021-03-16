@@ -25,7 +25,7 @@ define(function (require) {
     system.sc.addSynthDef(synthDef)
     let play = system.sc.play('dsaw', freq, detuneSemis)
     let env = system.sc.nextNode()
-    system.sc.bundle.push(envelope(env, play, params, 0.1, 'simple'))
+    system.sc.bundle.push(envelope(env, play, params, 0.1, 'full'))
     system.sc.commit(env, params.time)
   }
 });
