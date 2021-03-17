@@ -11,22 +11,27 @@ SynthDef("dsaw", {|bus=10,freq=440,detune=0.1|
 	Out.ar(bus, sig);
 }).add.asBytes.postcs();
 
+SynthDef("lpf", {|bus=10,freq=440,q=10|
+	ReplaceOut.ar(bus, RLPF.ar(In.ar(bus, 2), freq, q));
+}).add.asBytes.postcs();
+
 SynthDef("simple-env", { |bus=10,amp=0.1,att=0.1,rel=1|
 	ReplaceOut.ar(bus, In.ar(bus, 2) * EnvGen.kr(Env.perc(att, rel, amp, -2), doneAction: Done.freeGroup));
 }).add.asBytes.postcs();
 
 SynthDef("full-env", { |bus=10,amp=0.1,att=0.1,dec=0.1,sus=0.5,suslevel=0.8,rel=0.1|
-	var env = Env([0, amp, amp*suslevel, amp*suslevel, 0], [0, att, att+dec, att+dec+sus, att+dec+sus+rel], -2);
+	var env = Env([0, amp, amp*suslevel, amp*suslevel, 0], [att, dec, sus, rel], 0);
 	ReplaceOut.ar(bus, In.ar(bus, 2) * EnvGen.kr(env, doneAction: Done.freeGroup));
 }).add.asBytes.postcs();
 
 SynthDef("mix-down", { |bus=10,out=0| Out.ar(0, In.ar(bus, 2)); }).add.asBytes.postcs();
 
-s.makeBundle(0.5, {
+s.makeBundle(0.2, {
 	var b = Bus.audio(s);
 	var g = Group.new(0,0);
 	var s = Synth("dsaw",["bus",b,"freq",440], g);
-	var e = Synth.after(s,"full-env",["bus",b,"amp":0.2], g);
+	var l = Synth("lpf", ["bus",b,"freq",1500.rand,"q",20], g);
+	var e = Synth.after(l,"full-env",["bus",b,"amp":0.2,"rel":1], g);
 	Synth.after(e,"mix-down",["bus",b,"out":0], g);
 });
 

@@ -19,7 +19,9 @@ define(function (require) {
     let amp = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     params.endTime = params.time + attack+decay+release
     system.sc.addSynthDef(synthDefSimpleEnv)
-    return system.sc.oscMsg('/s_new', 'siiisisfsfsf', 'simple-env', env, 3, lastNode, 'bus', system.sc.bus, 'amp', amp, 'att', attack, 'rel', release)
+    return system.sc.oscMsg('/s_new', 'siiisisfsfsf', 'simple-env', env, 3, lastNode,
+      'bus', system.sc.bus, 'amp', amp, 'att', attack, 'rel', release
+    )
   }
 
   const synthDefFullEnv = Uint8Array.from(
@@ -40,8 +42,8 @@ define(function (require) {
     let amp = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     params.endTime = params.time + attack+decay+sustain+release
     system.sc.addSynthDef(synthDefFullEnv)
-    return system.sc.oscMsg('/s_new', 'siiisisfsfsfsfsfsf', 'full-env', env, 3, lastNode, 'bus', system.sc.bus,
-      'amp', amp, 'att', attack, 'dec', decay, 'sus', sustain, 'suslevel', susLevel, 'rel', release
+    return system.sc.oscMsg('/s_new', 'siiisisfsfsfsfsfsf', 'full-env', env, 3, lastNode,
+      'bus', system.sc.bus, 'amp', amp, 'att', attack, 'dec', decay, 'sus', sustain, 'suslevel', susLevel, 'rel', release
     )
   }
   

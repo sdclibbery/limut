@@ -47,14 +47,21 @@ define(function (require) {
     return vca
   }
 
+  const synthDefLpf = Uint8Array.from(
+    // SynthDef("lpf", {|bus=10,freq=440,q=10|
+    //   ReplaceOut.ar(bus, RLPF.ar(In.ar(bus, 2), freq, 1/q));
+    // }).add.asBytes.postcs();
+    [ 83, 67, 103, 102, 0, 0, 0, 2, 0, 1, 3, 108, 112, 102, 0, 0, 0, 1, 63, -128, 0, 0, 0, 0, 0, 3, 65, 32, 0, 0, 67, -36, 0, 0, 65, 32, 0, 0, 0, 0, 0, 3, 3, 98, 117, 115, 0, 0, 0, 0, 4, 102, 114, 101, 113, 0, 0, 0, 1, 1, 113, 0, 0, 0, 2, 0, 0, 0, 6, 7, 67, 111, 110, 116, 114, 111, 108, 1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 1, 1, 1, 2, 73, 110, 2, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 12, 66, 105, 110, 97, 114, 121, 79, 112, 85, 71, 101, 110, 1, 0, 0, 0, 2, 0, 0, 0, 1, 0, 4, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 4, 82, 76, 80, 70, 2, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 0, 2, 4, 82, 76, 80, 70, 2, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 0, 2, 10, 82, 101, 112, 108, 97, 99, 101, 79, 117, 116, 2, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0 ]
+  )
   let lpf = (params, node) => {
     if (!param(params.lpf, 0)) { return node }
-    let lpf = system.audio.createBiquadFilter()
-    lpf.type = 'lowpass'
-    evalPerFrame(lpf.frequency, params, 'lpf')
-    evalPerFrame(lpf.Q, params, 'lpr', 5)
-    node.connect(lpf)
-    system.disconnect(params, [lpf,node])
+    system.sc.addSynthDef(synthDefLpf)
+    let lpf = system.sc.nextNode()
+    system.sc.bundle.push(system.sc.oscMsg('/s_new', 'siiisisfsf', 'lpf', lpf, 3, node,
+    'bus', system.sc.bus, 'freq', evalPerEvent(params, 'lpf', 500), 'q', evalPerEvent(params, 'lpr', 10)
+    ))
+    // evalPerFrame(lpf.frequency, params, 'lpf')
+    // evalPerFrame(lpf.Q, params, 'lpr', 10)
     return lpf
   }
 
