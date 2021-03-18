@@ -72,6 +72,9 @@ system.sc.commit = (lastNode, time) => {
   let tt = osc.timeTag(bundleTime)
   system.sc.sendOSC(osc.writeBundle({timeTag: tt, packets: system.sc.bundle}))
 }
+system.sc.setSynthValue = (node, p, v) => {
+ system.sc.sendOSC(osc.writePacket(system.sc.oscMsg('/n_set', 'isf', node, p, v)))
+}
 
 system.add = (startTime, update) => {
   system.queued.push({t:startTime, update:update})

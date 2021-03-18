@@ -58,10 +58,8 @@ define(function (require) {
     system.sc.addSynthDef(synthDefLpf)
     let lpf = system.sc.nextNode()
     system.sc.bundle.push(system.sc.oscMsg('/s_new', 'siiisisfsf', 'lpf', lpf, 3, node,
-    'bus', system.sc.bus, 'freq', evalPerEvent(params, 'lpf', 500), 'q', evalPerEvent(params, 'lpr', 10)
+      'bus', system.sc.bus, 'freq', evalPerFrame(lpf, params, 'lpf', 'freq', 500), 'q', evalPerFrame(lpf, params, 'lpr', 'q', 10)
     ))
-    // evalPerFrame(lpf.frequency, params, 'lpf')
-    // evalPerFrame(lpf.Q, params, 'lpr', 10)
     return lpf
   }
 

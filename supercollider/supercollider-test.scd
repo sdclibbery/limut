@@ -12,7 +12,7 @@ SynthDef("dsaw", {|bus=10,freq=440,detune=0.1|
 }).add.asBytes.postcs();
 
 SynthDef("lpf", {|bus=10,freq=440,q=10|
-	ReplaceOut.ar(bus, RLPF.ar(In.ar(bus, 2), freq, q));
+	ReplaceOut.ar(bus, RLPF.ar(In.ar(bus, 2), freq, 1/q));
 }).add.asBytes.postcs();
 
 SynthDef("simple-env", { |bus=10,amp=0.1,att=0.1,rel=1|
@@ -29,11 +29,12 @@ SynthDef("mix-down", { |bus=10,out=0| Out.ar(0, In.ar(bus, 2)); }).add.asBytes.p
 s.makeBundle(0.2, {
 	var b = Bus.audio(s);
 	var g = Group.new(0,0);
-	var s = Synth("dsaw",["bus",b,"freq",440], g);
-	var l = Synth("lpf", ["bus",b,"freq",1500.rand,"q",20], g);
+	var sy = Synth("dsaw",["bus",b,"freq",440], g);
+	var l = Synth("lpf", ["bus",b,"freq",500+1000.rand,"q",10], g);
 	var e = Synth.after(l,"full-env",["bus",b,"amp":0.2,"rel":1], g);
 	Synth.after(e,"mix-down",["bus",b,"out":0], g);
 });
+sy.set('freq', 100);
 
 s.dumpOSC;
 
