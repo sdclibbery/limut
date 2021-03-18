@@ -25,15 +25,18 @@ system.sc.sendOSC = (data) => {
   let rcv   = ep ? ep['receive'] : undefined
   if (typeof rcv == 'function') rcv(57120, data)
 }
-system.sc.nodeId = 1000
+system.sc.nodeId = 100
 system.sc.nextNode = () => {
   system.sc.nodeId++
+  if (system.sc.nodeId >= 3999) {
+    system.sc.nodeId = 100
+  }
   return system.sc.nodeId
 }
 system.sc.busId = 10
 system.sc.nextBus = () => {
   system.sc.busId++
-  if (system.sc.busId >= 999) {
+  if (system.sc.busId >= 7999) {
     system.sc.busId = 10
   }
   return system.sc.busId
@@ -92,6 +95,8 @@ let booted = false
 system.resume = () => {
   if (!booted) {
     //["-u", "57110", "-D", "0", "-i", "0", "-o", "2"]
+    system.sc['arguments']['-n'] = 4096
+    system.sc['arguments']['-b'] = 8192
     console.log('Supercollider booting with ', system.sc['arguments'])
     system.sc.callMain(system.sc['arguments'])
     booted = true
