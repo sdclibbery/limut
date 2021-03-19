@@ -26,20 +26,28 @@ SynthDef("full-env", { |bus=10,amp=0.1,att=0.1,dec=0.1,sus=0.5,suslevel=0.8,rel=
 
 SynthDef("mix-down", { |bus=10,out=0| Out.ar(0, In.ar(bus, 2)); }).add.asBytes.postcs();
 
+SynthDef("echo", {|bus=10,echo=0.2,echotime=4|
+	ReplaceOut.ar(bus, CombN.ar(In.ar(bus, 2), echo, echo, echotime));
+}).add.asBytes.postcs();
+
 s.makeBundle(0.2, {
-	var b = Bus.audio(s);
-	var g = Group.new(0,0);
-	var sy = Synth("dsaw",["bus",b,"freq",440], g);
-	var l = Synth("lpf", ["bus",b,"freq",500+1000.rand,"q",10], g);
-	var e = Synth.after(l,"full-env",["bus",b,"amp":0.2,"rel":1], g);
+	b = Bus.audio(s);
+	g = Group.new(0,0);
+	n = Synth("dsaw",["bus",b,"freq",440], g);
+	l = Synth.after(n,"lpf", ["bus",b,"freq",500+1000.rand,"q",10], g);
+	d = Synth.after(l,"echo",["bus",b,"echo":0.3,"echotime":4], g);
+	e = Synth.after(d,"full-env",["bus",b,"amp":0.3,"rel":1], g);
 	Synth.after(e,"mix-down",["bus",b,"out":0], g);
 });
-sy.set('freq', 100);
 
 s.dumpOSC;
 
 s.queryAllNodes;
 
+
+
+
+{ CombN.ar(Decay.ar(Dust.ar(1,0.5), 0.2, WhiteNoise.ar), 0.2, 0.2, 3) }.play;
 
 
 
