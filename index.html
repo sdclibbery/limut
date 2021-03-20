@@ -328,7 +328,7 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>oct</code> Octave; middle C is in octave 4</p>
 <p><code>envelope</code> Specify the envelope type to use: 'full' (ADSR), 'simple' (AD), 'pad' (uses a sine roll on/off so consecutive notes maintain constant volume)</p>
 <p><code>echo</code> Echo time delay in beats</p>
-<p><code>echofeedback</code> Echo feedback gain, 0 to 1, default 0.5. Higher value means the echo persists for longer.</p>
+<p><code>echotime</code> Time before echoes fully die out in beats. Defaults to 8 times the echo delay.</p>
 <p><code>detune</code> Amount of detune in semitones</p>
 <p><code>lpf</code> Low pass filter frequency</p>
 <p><code>lpr</code> Low pass filter resonance</p>
@@ -482,19 +482,18 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <script data-main="main" src="require.js">
 /*
 ==== Wasm Supercollider experiment
-Try connecting to an externa; scsynth for comparison
-Audio stops after a while
+Audio stops after a while??
 Run in firefox??
-Main reverb and amp
 Per frame addc
 Play synth
 (Pitch)Effects for ping synth
 Room effect
-Performance?
- Solved glitching???
 Other effects
 Other Pitch effects
+Performance?
+ Solved glitching???
 All Other synths
+Main reverb and amp
 Piano
 Spectrum
 Scope
