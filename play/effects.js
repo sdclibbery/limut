@@ -5,24 +5,35 @@ define(function (require) {
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
   let freeverb = require('play/freeverb')
 
+  const synthDefEcho = Uint8Array.from(
+    // SynthDef("echo", {|bus=10,out=0,echo=0.2,echotime=4|
+    //   Out.ar(out, CombN.ar(In.ar(bus, 2), echo, echo, echotime));
+    // }).add.asBytes.postcs();
+    [ 83, 67, 103, 102, 0, 0, 0, 2, 0, 1, 4, 101, 99, 104, 111, 0, 0, 0, 0, 0, 0, 0, 4, 65, 32, 0, 0, 0, 0, 0, 0, 62, 76, -52, -51, 64, -128, 0, 0, 0, 0, 0, 4, 3, 98, 117, 115, 0, 0, 0, 0, 3, 111, 117, 116, 0, 0, 0, 1, 4, 101, 99, 104, 111, 0, 0, 0, 2, 8, 101, 99, 104, 111, 116, 105, 109, 101, 0, 0, 0, 3, 0, 0, 0, 5, 7, 67, 111, 110, 116, 114, 111, 108, 1, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 1, 1, 1, 1, 2, 73, 110, 2, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 5, 67, 111, 109, 98, 78, 2, 0, 0, 0, 4, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3, 2, 5, 67, 111, 109, 98, 78, 2, 0, 0, 0, 4, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3, 2, 3, 79, 117, 116, 2, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0 ]
+  )
   let echoes = {}
   let echo = (params, node) => {
     let echoDelay = evalPerEvent(params, 'echo', 0)
     if (!echoDelay || echoDelay < 0.0001) { return node }
-    let echoFeedback = Math.min(evalPerEvent(params, 'echofeedback', 0.5), 0.95)
+    let echoTime = evalPerEvent(params, 'echotime', 8*echoDelay)
     let quantisedEcho = (Math.round(echoDelay*16)/16) * params.beat.duration
-    let quantisedEchoFeedback = Math.round(echoFeedback*20)/20
-    let key = quantisedEcho + 'f' + quantisedEchoFeedback
+    let quantisedEchoTime = Math.round(echoTime*10)/10 * params.beat.duration
+    let key = quantisedEcho + 'f' + quantisedEchoTime
     if (!echoes[key]) {
-      echoes[key] = system.audio.createDelay(quantisedEcho)
-      echoes[key].delayTime.value = quantisedEcho
-      let echoGain = system.audio.createGain()
-      echoGain.gain.value = quantisedEchoFeedback
-      echoes[key].connect(echoGain)
-      echoGain.connect(echoes[key])
-      system.mix(echoGain)
+      // Create echo and bus if needed
+      echoes[key] = {
+        bus: system.sc.nextEffectBus(),
+        node: system.sc.nextEffectNode(),
+      }
+      system.sc.addSynthDef(synthDefEcho)
+      system.sc.bundle.push(system.sc.oscMsg('/s_new', 'siiisisisfsf', 'echo', echoes[key].node, 0, 0,
+        'bus', echoes[key].bus, 'out', 0, 'echo', quantisedEcho, 'echotime', quantisedEchoTime)
+      )
     }
-    node.connect(echoes[key])
+    // Mix this note down to echo bus 
+    system.sc.bundle.push(system.sc.oscMsg('/s_new', 'siiisisisf', 'mix-down', system.sc.nextNode(), 3, node,
+      'bus', system.sc.bus, 'out', echoes[key].bus, 'amp', 0.75)
+    )
     return node
   }
 
@@ -180,8 +191,8 @@ define(function (require) {
     node = bpf(params, node)
     node = phaser(params, node)
     node = pan(params, node)
-    node = reverb(params, node)
     node = echo(params, node)
+    node = reverb(params, node)
     return node
   }
 })

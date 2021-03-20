@@ -24,25 +24,28 @@ SynthDef("full-env", { |bus=10,amp=0.1,att=0.1,dec=0.1,sus=0.5,suslevel=0.8,rel=
 	ReplaceOut.ar(bus, In.ar(bus, 2) * EnvGen.kr(env, doneAction: Done.freeGroup));
 }).add.asBytes.postcs();
 
-SynthDef("mix-down", { |bus=10,out=0| Out.ar(0, In.ar(bus, 2)); }).add.asBytes.postcs();
+SynthDef("mix-down", { |bus=10,out=0,amp=1| Out.ar(out, In.ar(bus, 2)*amp); }).add.asBytes.postcs();
 
-SynthDef("echo", {|bus=10,echo=0.2,echotime=4|
-	ReplaceOut.ar(bus, CombN.ar(In.ar(bus, 2), echo, echo, echotime));
+SynthDef("echo", {|bus=10,out=0,echo=0.2,echotime=4|
+	Out.ar(out, CombN.ar(In.ar(bus, 2), echo, echo, echotime));
 }).add.asBytes.postcs();
+
+~eb = Bus.audio(s);
+Synth("echo",["bus",~eb,"out",0,"echo":1,"echotime":5]);
+
+s.dumpOSC;
+s.queryAllNodes;
+
 
 s.makeBundle(0.2, {
 	b = Bus.audio(s);
 	g = Group.new(0,0);
 	n = Synth("dsaw",["bus",b,"freq",440], g);
 	l = Synth.after(n,"lpf", ["bus",b,"freq",500+1000.rand,"q",10], g);
-	d = Synth.after(l,"echo",["bus",b,"echo":0.3,"echotime":4], g);
-	e = Synth.after(d,"full-env",["bus",b,"amp":0.3,"rel":1], g);
-	Synth.after(e,"mix-down",["bus",b,"out":0], g);
+	e = Synth.after(l,"full-env",["bus",b,"amp":0.2], g);
+	m = Synth.after(e,"mix-down",["bus",b,"out":0,"amp",1], g); // dry mixdown
+	Synth.after(m,"mix-down",["bus",b,"out":~eb,"amp",1], g); // mixdown to echo
 });
-
-s.dumpOSC;
-
-s.queryAllNodes;
 
 
 
