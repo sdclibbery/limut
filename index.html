@@ -482,6 +482,7 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 /*
 ====
 ==== audio ====
+drive and distortion effects should be BEFORE envelope
 should be able to use sus to gate play sounds
 Is it possible to control rate per frame?
 root param
@@ -563,23 +564,18 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-Can't override dur from set command
-glitching test case:
-p dsaw 0, dur=1/170, sus=1, lpf=[1000:2000]l5@f, amp=1/8
-v swirl 0, rate=5, fore=rainbow_fast
-Think we need to minimise/reduce per beat allocation too; audit all code :-/
-Cannot set dur with set command
 () blocks per frame eval? eg []n*(1,2) ??
+Pattern event modifiers: sharp/flat/quiet/loud/short/long
 Need an additional eval interval; eg @i for 'per instance', so for each individual 'note' instance (each call to play)
  Useful for providing variation between (1,2,3,4) multiplied out sub-events without having to go full-on per frame, expecially for eg []r
-? rl, rt (==r), rs (==n); el (==e), es, et ?
- ?[1,3,5]n syntax to smoothly transition between randomly chosen values or should be [1,3,5]rs?
- []w for random walk?
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way?? Should be available for follow players too
 apply overridden delay for follow player: allow canons
  refactor delay application to happen once in 'play' method
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 Wildcard player matching for groups 'set d? amp=0'  'set p* amp=0'
+? rl, rt (==r), rs (==n); el (==e), es, et ?
+ ?[1,3,5]n syntax to smoothly transition between randomly chosen values or should be [1,3,5]rs?
+ []w for random walk?
 multiline command fix: // should only comment out that one line
 Tutorials
  ? Can automate the copy to clipboard paraphernalia?
@@ -595,6 +591,7 @@ pattern repeat "xo * 3" higher precedence than concat
 pattern support brackets "( xo + vi ) * 3"
 pattern values in vars, and then use in multiple players, and also invert, retrograde etc
 All lerps should use operator eval, so allow [red, green]n etc
+Can't override dur from set command
 multiline command fix: do not insert ' ' into split strings
 can set seed for noise
  use to fix firefly properly
@@ -633,6 +630,12 @@ allow dur to be tvar
 fix delay param problems (commented tests in pattern.js)
 index pattern by beat to improve performance in finding events - same for timeVar evaluation
 pattern generators: tri, Dur, walk etc?
+==
+==== Glitching
+glitching test case:
+p dsaw 0, dur=1/170, sus=1, lpf=[1000:2000]l5@f, amp=1/8
+v swirl 0, rate=5, fore=rainbow_fast
+Think we need to minimise/reduce per beat allocation too; audit all code :-/
 ===
 ===== Interesting shadertoys
 -- working
