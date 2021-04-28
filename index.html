@@ -482,12 +482,23 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 /*
 ====
 ==== audio ====
-drive and distortion effects should be BEFORE envelope
+drive/distortion/krush/bits etc effects should be BEFORE envelope; maybe wrap multiple into a single waveshaper?
+ setup on all synths
+  normalise amplitudes by mixing multioscs into a new gain
+ setup some actual effects
+  noisify
+  distort
+  move drive??
+  krush
+  bits
+  shape
+ docs
+save frequency onto event as this.freq
 should be able to use sus to gate play sounds
 Is it possible to control rate per frame?
 root param
 reverb param allowing to use a convolution reverb with specified duration (at users own risk :-)
-aaa vocal synth
+pulse synth + formant/vowel effects for vocal aaa/ooo effects
 ?portamento
 crackling on per frame amp change? eg testbass fmbass 0[7_.0], dur=4, oct=(1,2), amp=[2,1,0,0]s1/16@f
  chopwave
@@ -534,6 +545,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+special colours; hue/oil/blackbody; spatially varying
 Disco glowing geometric shapes shader
 Julia set shader
 Starfield shader
@@ -546,7 +558,7 @@ Change colour space to HSL or a perceptually uniform space
  Maybe choice of colour spaces, including oil and black body as well??
 vmirror?
 Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
-Some form of anti aliasing for grid shader in perspective distance
+Some form of anti aliasing for grid shader in perspective distance?
 Add rotate to loc
  Handle: aspect ratio, off centre x/y, window
 time param for visuals
@@ -564,7 +576,12 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-() blocks per frame eval? eg []n*(1,2) ??
+Player values are lost on code reload; eg dur=32,trigger=1 then trigger is lost on code reload...
+Text editor on mobile keeps deleting contents after play
+() blocks per frame eval? eg: v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
+ // v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
+() inside {} doesnt work; eg: v glow 0, loc={x:[0:1]l2@f, y:(0,1/2), w:0.1, h:0.1}
+addc=[0,[0,24]e]r doesn't work :-/
 Pattern event modifiers: sharp/flat/quiet/loud/short/long
 Need an additional eval interval; eg @i for 'per instance', so for each individual 'note' instance (each call to play)
  Useful for providing variation between (1,2,3,4) multiplied out sub-events without having to go full-on per frame, expecially for eg []r
