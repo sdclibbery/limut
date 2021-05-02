@@ -342,6 +342,7 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>room</code> reverb room size 0-1</p>
 <p><code>drive</code> overdrive level 0-1</p>
 <p><code>noisify</code> noisify: distort the signal into noise</p>
+<p><code>bits</code> bit crush effect; value is number of bits. 1 bit is very distorted p to (eg) 32 bits is relatively clean. 0 disables the effect.</p>
 <p><code>scale</code> override scale for this player; set to a string eg <code>'penta'</code></p>
 <p><code>phaser</code> LFO frequency for phaser effect, in phase sweep cycles per beat</p>
 <p><code>vib</code> vibrato frequency in cycles per beat</p>
@@ -483,11 +484,6 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 /*
 ====
 ==== audio ====
-drive/distortion/krush/bits etc effects should be BEFORE envelope; maybe wrap multiple into a single waveshaper?
- setup some actual effects
-  krush/bits
-  shape?
- docs
 save frequency onto event as this.freq
 should be able to use sus to gate play sounds
 Is it possible to control rate per frame?
