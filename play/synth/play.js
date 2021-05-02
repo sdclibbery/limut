@@ -3,6 +3,7 @@ define(function (require) {
   let system = require('play/system');
   let {getBuffer} = require('play/samples')
   let effects = require('play/effects')
+  let waveEffects = require('play/wave-effects')
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
 
   let symbols = {
@@ -55,7 +56,7 @@ define(function (require) {
 
     let vca = system.audio.createGain()
     vca.gain.value = Math.max(0, 0.18 * (typeof params.amp === 'number' ? params.amp : 1))
-    source.connect(vca)
+    waveEffects(params, source).connect(vca)
     system.mix(effects(params, vca))
     source.start(params.time)
     source.stop(params.endTime)

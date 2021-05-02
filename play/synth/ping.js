@@ -5,6 +5,7 @@ define(function (require) {
   let envelope = require('play/envelopes')
   let effects = require('play/effects')
   let pitchEffects = require('play/pitch-effects')
+  let waveEffects = require('play/wave-effects')
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
 
   return (params) => {
@@ -19,7 +20,7 @@ define(function (require) {
     vco.type = 'sine'
     vco.frequency.value = freq
     pitchEffects(params).connect(vco.detune)
-    vco.connect(vca)
+    waveEffects(params, vco).connect(vca)
     vco.start(params.time)
     vco.stop(params.endTime)
     system.disconnect(params, [vco, vca])

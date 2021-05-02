@@ -5,6 +5,7 @@ define(function (require) {
   let envelope = require('play/envelopes')
   let effects = require('play/effects')
   let pitchEffects = require('play/pitch-effects')
+  let waveEffects = require('play/wave-effects')
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
 
   return (params) => {
@@ -13,7 +14,7 @@ define(function (require) {
     let freq = scale.degreeToFreq(degree, evalPerEvent(params, 'oct', 4), evalPerEvent(params, 'scale'))
     let detuneSemis = evalPerEvent(params, 'detune', 0.1)
 
-    let vca = envelope(params, 0.03, 'pad')
+    let vca = envelope(params, 0.06, 'pad')
     let out = effects(params, vca)
     system.mix(out)
 
@@ -25,9 +26,12 @@ define(function (require) {
       pitch.connect(vco.detune)
       return vco
     })
-    vcos.forEach(vco => vco.connect(vca))
+    let multiosc = system.audio.createGain()
+    multiosc.gain.value = 1/vcos.length
+    waveEffects(params, multiosc).connect(vca)
+    vcos.forEach(vco => vco.connect(multiosc))
     vcos.forEach(vco => vco.start(params.time))
     vcos.forEach(vco => vco.stop(params.endTime))
-    system.disconnect(params, vcos.concat(vca,out))
+    system.disconnect(params, vcos.concat(vca,out,multiosc))
   }
 });

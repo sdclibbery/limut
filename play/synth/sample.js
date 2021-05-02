@@ -5,6 +5,7 @@ define(function (require) {
   let effects = require('play/effects')
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
   let scale = require('music/scale');
+  let waveEffects = require('play/wave-effects')
   let envelope = require('play/envelopes')
 
   return (params) => {
@@ -18,7 +19,7 @@ define(function (require) {
     params.endTime = params.time + evalPerEvent(params, 'dur', 0.1)*params.beat.duration
 
     let vca = envelope(params, 0.25, 'full')
-    source.connect(vca)
+    waveEffects(params, source).connect(vca)
     system.mix(effects(params, vca))
 
     source.start(params.time)
