@@ -177,7 +177,7 @@ Sn play .o, dur=2, room=0.7</pre>
 Scale=phrygian
 Kd play X.:X.:X., Sample=2
 HH play [--], amp=2
-Db dbass .0_..0_1, drive=1, lpf=700</pre>
+Db dbass .0_..0_1, drive=1, lpf=[1200,200]e, lpr=15</pre>
 <pre>bpm = 140
 d1 play (vx)., room=0.3
 d2 play .[::], room=0.3
@@ -485,12 +485,8 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 ==== audio ====
 drive/distortion/krush/bits etc effects should be BEFORE envelope; maybe wrap multiple into a single waveshaper?
  setup some actual effects
-  noisify - getting a volume decrease?
-  distort - tanh?
-  krush
-  bits
-  shape
-  move drive??
+  krush/bits
+  shape?
  docs
 save frequency onto event as this.freq
 should be able to use sus to gate play sounds

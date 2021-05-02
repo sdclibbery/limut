@@ -32,6 +32,7 @@ define(function (require) {
 
   return (params, node) => {
     node = shapeEffect(params, 'noisify', node, 500, noisify)
+    node = shapeEffect(params, 'drive', node, 256, (x, a) => Math.atan(x*a*100)/4)
     return node
   }
 })

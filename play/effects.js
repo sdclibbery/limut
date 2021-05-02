@@ -96,29 +96,6 @@ define(function (require) {
     return gain
   }
 
-  let drive = (params, node) => {
-    let amount = evalPerEvent(params, 'drive', 0)
-    if (!amount) { return node }
-    let shaper = system.audio.createWaveShaper()
-    let count = 500
-    let driveCurve = new Float32Array(2*count+1)
-    driveCurve[count] = 0
-    for (let i = 1; i < count+1; i++) {
-      let x = i/count
-      let y
-      if (i%3 == 0) { y = x }
-      if (i%3 == 1) { y = x-amount*x }
-      if (i%3 == 2) { y = x-amount*x/2 }
-      driveCurve[count-i] = -y
-      driveCurve[count+i] = y
-    }
-    shaper.curve = driveCurve
-    shaper.oversample = 'none'
-    node.connect(shaper)
-    system.disconnect(params, [shaper,node])
-    return shaper
-  }
-
   let phaser = (params, node) => {
     let lfoFreq = evalPerEvent(params, 'phaser', 0)
     if (lfoFreq == 0) { return node }
@@ -169,7 +146,6 @@ define(function (require) {
   return (params, node) => {
     node = perFrameAmp(params, node)
     node = chop(params, node)
-    node = drive(params, node)
     node = lpf(params, node)
     node = hpf(params, node)
     node = bpf(params, node)
