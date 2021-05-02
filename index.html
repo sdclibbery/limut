@@ -537,6 +537,15 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
 special colours; hue/oil/blackbody; spatially varying
+ Oil: col = 0.5+0.5*vec4(sin(foreBack*17.0), sin(foreBack*18.5), sin(foreBack*20.0), 1.0);
+ Hue: col = 0.5+0.5*vec4(sin((foreBack+0.333)*6.2832), sin((foreBack+0.667)*6.2832), sin(foreBack*6.2832), 1.0);
+ BlackBody:     float T = 15.0+max(min(foreBack, 1.0), 0.0)*100.0;
+    col = vec4(
+      min(max(1.288*pow(T-60.0, -0.1332047592), 0.0), 1.0),
+      min(max((T<66.0) ? (0.389*log(T-10.0) - 0.629) : (1.125*pow(T-60.0, -0.0755148492)), 0.0), 1.0),
+      min(max(0.541*log(T-10.0) - 1.192, 0.0), 1.0),
+      1.0
+    );
 Disco glowing geometric shapes shader
 Julia set shader
 Starfield shader
