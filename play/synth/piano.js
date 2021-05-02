@@ -3,6 +3,7 @@ define(function (require) {
   let system = require('play/system');
   let {getBuffer, isLoaded} = require('play/samples')
   let effects = require('play/effects')
+  let waveEffects = require('play/wave-effects')
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
   let scale = require('music/scale');
 
@@ -17,7 +18,7 @@ define(function (require) {
     let source = system.audio.createBufferSource()
     source.buffer = getBuffer(url)
     source.playbackRate.value = rate
-    source.connect(vca)
+    waveEffects(params, source).connect(vca)
     if (timeOverride !== undefined) {
       source.start(timeOverride)
       source.stop(timeOverride+1)

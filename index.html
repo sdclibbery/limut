@@ -485,6 +485,7 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 drive/distortion/krush/bits etc effects should be BEFORE envelope; maybe wrap multiple into a single waveshaper?
  setup on all synths
   normalise amplitudes by mixing multioscs into a new gain
+  GLASS mixes two ops into vca; need to handle??
  setup some actual effects
   noisify - volume decrease?
   distort
@@ -576,13 +577,13 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+Pattern event modifiers (only used after numerics - same as '_'): sharp-#/flat-b/quiet-v/loud-^/short--/long-+
 Player values are lost on code reload; eg dur=32,trigger=1 then trigger is lost on code reload...
 Text editor on mobile keeps deleting contents after play
 () blocks per frame eval? eg: v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
  // v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
 () inside {} doesnt work; eg: v glow 0, loc={x:[0:1]l2@f, y:(0,1/2), w:0.1, h:0.1}
 addc=[0,[0,24]e]r doesn't work :-/
-Pattern event modifiers: sharp/flat/quiet/loud/short/long
 Need an additional eval interval; eg @i for 'per instance', so for each individual 'note' instance (each call to play)
  Useful for providing variation between (1,2,3,4) multiplied out sub-events without having to go full-on per frame, expecially for eg []r
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way?? Should be available for follow players too

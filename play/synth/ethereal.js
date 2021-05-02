@@ -5,6 +5,7 @@ define(function (require) {
   let envelope = require('play/envelopes')
   let effects = require('play/effects')
   let pitchEffects = require('play/pitch-effects')
+  let waveEffects = require('play/wave-effects')
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
   let fm = require('play/fm')
 
@@ -19,7 +20,7 @@ define(function (require) {
 
     let op4 = fm.op(freq, params)
     pitchEffects(params).connect(op4.detune)
-    op4.connect(vca)
+    waveEffects(params, op4).connect(vca)
 
     let op3 = fm.op(freq*7, params, 'triangle')
     fm.connect(op3, op4, fm.flatEnv(params, 300*freq/261.6))
