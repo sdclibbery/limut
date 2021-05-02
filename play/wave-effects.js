@@ -25,8 +25,8 @@ define(function (require) {
   let noisify = (x, amount, i) => {
     let y
     if (i%3 == 0) { y = x }
-    if (i%3 == 1) { y = x-amount*2*x }
-    if (i%3 == 2) { y = x-amount*2*x/2 }
+    if (i%3 == 1) { y = x-amount*4*x }
+    if (i%3 == 2) { y = x+amount*4*x }
     return y
   }
 
