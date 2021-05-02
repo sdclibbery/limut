@@ -3,19 +3,15 @@ define(function (require) {
   let system = require('play/system')
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
 
-  let noisify = (params, node) => {
-    let amount = evalPerEvent(params, 'noisify', 0)
+  let shapeEffect = (params, effect, node, count, shape) => {
+    let amount = evalPerEvent(params, effect, 0)
     if (!amount) { return node }
     let shaper = system.audio.createWaveShaper()
-    let count = 500
     let noisifyCurve = new Float32Array(2*count+1)
     noisifyCurve[count] = 0
     for (let i = 1; i < count+1; i++) {
       let x = i/count
-      let y
-      if (i%3 == 0) { y = x }
-      if (i%3 == 1) { y = x-amount*2*x }
-      if (i%3 == 2) { y = x-amount*2*x/2 }
+      let y = shape(x, amount, i)
       noisifyCurve[count-i] = -y
       noisifyCurve[count+i] = y
     }
@@ -26,8 +22,16 @@ define(function (require) {
     return shaper
   }
 
+  let noisify = (x, amount, i) => {
+    let y
+    if (i%3 == 0) { y = x }
+    if (i%3 == 1) { y = x-amount*2*x }
+    if (i%3 == 2) { y = x-amount*2*x/2 }
+    return y
+  }
+
   return (params, node) => {
-    node = noisify(params, node)
+    node = shapeEffect(params, 'noisify', node, 500, noisify)
     return node
   }
 })
