@@ -88,6 +88,10 @@ define(function (require) {
     float m = max(foreBack < 0.5 ? 2.0*foreBack : 2.0*(1.0-foreBack), 0.0);
     float f = min(foreBack < 0.5 ? 0.0 : 2.0*foreBack-1.0, 1.0);
     col *= l_back*b + l_mid*m + l_fore*f;
+
+    float fb = foreBack*0.8+length(origCoord);
+    col = 0.5+0.5*vec4(sin((fb+0.333)*6.2832), sin((fb+0.667)*6.2832), sin(fb*6.2832), 1.0);
+
     fragColor.rgb = col.rgb*l_brightness*mix(col.a, 1.0, l_additive);
     fragColor.a = mix(col.a, 0.0, l_additive);
     if (length(fragColor) < 0.01) discard;

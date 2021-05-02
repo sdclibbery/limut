@@ -537,31 +537,22 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
 special colours; hue/oil/blackbody; spatially varying
- Oil: col = 0.5+0.5*vec4(sin(foreBack*17.0), sin(foreBack*18.5), sin(foreBack*20.0), 1.0);
- Hue: col = 0.5+0.5*vec4(sin((foreBack+0.333)*6.2832), sin((foreBack+0.667)*6.2832), sin(foreBack*6.2832), 1.0);
- BlackBody:     float T = 15.0+max(min(foreBack, 1.0), 0.0)*100.0;
-    col = vec4(
-      min(max(1.288*pow(T-60.0, -0.1332047592), 0.0), 1.0),
-      min(max((T<66.0) ? (0.389*log(T-10.0) - 0.629) : (1.125*pow(T-60.0, -0.0755148492)), 0.0), 1.0),
-      min(max(0.541*log(T-10.0) - 1.192, 0.0), 1.0),
-      1.0
-    );
+ Oil: float fb = foreBack+length(origCoord)/3.0; col = 0.5+0.5*vec4(sin(fb*17.0), sin(fb*18.5), sin(fb*20.0), 1.0);
+ Hue: float fb = foreBack*0.8+length(origCoord); col = 0.5+0.5*vec4(sin((fb+0.333)*6.2832), sin((fb+0.667)*6.2832), sin(fb*6.2832), 1.0);
+ !! Not sure this is worth it as it stands. Really want to be able to write a mini tone mapping shader instead...
+  Maybe these do work as 'palette=hue' 'palette=fore-mid-back'(default) 'palette=oil' 'palette={some custom shader...}'
+time param for visuals
 Disco glowing geometric shapes shader
 Julia set shader
 Starfield shader
 Spiral or noise or shimmer pre distortion?
-Can define colours that vary with screen position?
 Support echo for visuals? Additive but dimmed, time turned back? Move down??
 Check image.shadertoy, webcam etc etc for per frame alloc
-Change colour space to HSL or a perceptually uniform space
- But need to handle lerps for hue given it loops round thr back
- Maybe choice of colour spaces, including oil and black body as well??
 vmirror?
 Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
 Some form of anti aliasing for grid shader in perspective distance?
 Add rotate to loc
  Handle: aspect ratio, off centre x/y, window
-time param for visuals
 Consider pushing data of each event into a texture so a shader could display all events, eg as 2D patterns or voxels
 video synth (use video element to load video file; don't try and target eg youtube)
 Start image download on parse not on first use
