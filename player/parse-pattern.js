@@ -478,13 +478,25 @@ define(function(require) {
   assert(1, p.length)
   assert({value:'0',time:0,dur:1,sharp:1}, p.events[0])
 
-  // '0#'
-  // '0#1'
-  // '1#2#'
-  // '-1#'
-  // '0#_'
-  // '#'
-  // 'a#'
+  p = parsePattern('0#1', 1)
+  assert(2, p.length)
+  assert({value:'0',time:0,dur:1,sharp:1}, p.events[0])
+  assert({value:'1',time:1,dur:1}, p.events[1])
+
+  p = parsePattern('1#2#', 1)
+  assert(2, p.length)
+  assert({value:'1',time:0,dur:1,sharp:1}, p.events[0])
+  assert({value:'2',time:1,dur:1, sharp:1}, p.events[1])
+
+  assert({value:'-1',time:0,dur:1,sharp:1}, parsePattern('-1#', 1).events[0])
+  assert({value:'0',time:0,dur:2,sharp:1}, parsePattern('0#_', 1).events[0])
+  assert({value:'#',time:0,dur:1}, parsePattern('#', 1).events[0])
+
+  p = parsePattern('a#', 1)
+  assert(2, p.length)
+  assert({value:'a',time:0,dur:1}, p.events[0])
+  assert({value:'#',time:1,dur:1}, p.events[1])
+
   // '<0#>'
   // '[0#]'
   // '(0#)'
