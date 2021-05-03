@@ -6,6 +6,7 @@ define(function (require) {
 
   let fullEnvelope = (params, gainBase) => {
     let dur = Math.max(0.01, param(params.sus, param(params.dur, 0.25)))
+    dur *= evalPerEvent(params, "long", 1)
     let attack = param(params.att, 0.09) * params.beat.duration
     params.time -= Math.min(attack, 0.05)
     let decay = param(params.decay, 0.08*dur) * params.beat.duration
@@ -27,6 +28,7 @@ define(function (require) {
 
   let simpleEnvelope = (params, gainBase) => {
     let dur = Math.max(0.01, evalPerEvent(params, 'sus', evalPerEvent(params, 'dur', 0.25)))
+    dur *= evalPerEvent(params, "long", 1)
     let attack = evalPerEvent(params, 'att', 0.09) * params.beat.duration
     params.time -= Math.min(attack, 0.05)
     let decay = evalPerEvent(params, 'decay', 0.08*dur) * params.beat.duration
@@ -53,6 +55,7 @@ define(function (require) {
 
   let padEnvelope = (params, gainBase) => {
     let dur = Math.max(evalPerEvent(params, 'sus', evalPerEvent(params, 'dur', 0.25)), 0.01)
+    dur *= evalPerEvent(params, "long", 1)
     let attack = Math.max(evalPerEvent(params, 'att', dur/2) * params.beat.duration, 0.001)
     let release = Math.max(evalPerEvent(params, 'rel', dur/2) * params.beat.duration, 0.001)
     let sus = Math.max(dur*params.beat.duration - attack, 0.001)
