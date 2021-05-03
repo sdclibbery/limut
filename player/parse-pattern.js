@@ -4,14 +4,14 @@ define(function(require) {
   let evalSequence = (seq, e, r) => {
     let v = seq[r % seq.length]
     // console.log('evalSequence', e, r, v)
-    return v.flatMap(({value,time,dur}) => {
-      let event = {time:e.time+time*e.dur, dur:dur*e.dur}
+    return v.flatMap(({value,time,dur,sharp}) => {
+      let event = {time:e.time+time*e.dur, dur:dur*e.dur, sharp:sharp}
       if (typeof(value) == 'function') {
         // console.log('evalSequence func', event, r/seq.length)
         return value(event, Math.floor(r / seq.length))
       }
       // console.log('evalSequence val', value, event)
-      return [{value:value, time:event.time, dur:event.dur}]
+      return [{value:value, time:event.time, dur:event.dur, sharp:event.sharp}]
     })
   }
 
@@ -497,9 +497,11 @@ define(function(require) {
   assert({value:'a',time:0,dur:1}, p.events[0])
   assert({value:'#',time:1,dur:1}, p.events[1])
 
-  // '<0#>'
-  // '[0#]'
-  // '(0#)'
+  assert([{value:'0',time:0,dur:1,sharp:1}], parsePattern('<0#>', 1).events[0].value({time:0,dur:1},0))
+
+  assertPattern(1, [{value:'0',time:0,dur:1,sharp:1}], parsePattern('[0#]', 1))
+  assertPattern(1, [{value:'0',time:0,dur:1,sharp:1}], parsePattern('(0#)', 1))
+
   // '0b'
   // 'ab'
 
