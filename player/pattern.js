@@ -337,8 +337,9 @@ define(function(require) {
 
   pattern = parsePattern('0#', {dur:1})
   assert([{value:'0',idx:0,time:0,dur:1,count:0,sharp:1}], pattern(0))
-  // pattern = parsePattern('0b', {dur:1})
-  // assert([{value:'0',idx:0,time:0,dur:1,count:0,sharp:-1}], pattern(0))
+
+  pattern = parsePattern('0b', {dur:1})
+  assert([{value:'0',idx:0,time:0,dur:1,count:0,sharp:-1}], pattern(0))
 
   console.log("Pattern tests complete")
   }

@@ -86,12 +86,19 @@ define(function(require) {
       state.idx += 1
     }
     state.idx += 1
+    // Modifiers
     if (!Number.isNaN(parseInt(char))) {
       let nextChar = state.str.charAt(state.idx)
-      if (nextChar === '#') {
-        sharp = 1
-        state.idx += 1
-      }
+      switch (nextChar) {
+        case '#':
+          sharp = 1
+          state.idx += 1
+          break
+        case 'b':
+          sharp = -1
+          state.idx += 1
+          break
+        }
     }
     // console.log('event', state, 'value:', char, 'time:', time, 'dur:', dur)
     events.push({
@@ -502,8 +509,7 @@ define(function(require) {
   assertPattern(1, [{value:'0',time:0,dur:1,sharp:1}], parsePattern('[0#]', 1))
   assertPattern(1, [{value:'0',time:0,dur:1,sharp:1}], parsePattern('(0#)', 1))
 
-  // '0b'
-  // 'ab'
+  assert({value:'0',time:0,dur:1,sharp:-1}, parsePattern('0b', 1).events[0])
 
 
   // p = parsePattern('<1[.3]>_', 1)
