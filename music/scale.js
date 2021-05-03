@@ -112,15 +112,16 @@ define(function (require) {
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
 
-  assert(261.6, scale.degreeToFreq(0, 4, 'major'))
-  assert(261.6, scale.degreeToFreq(0.5, 4.5, 'major'))
-  assert(130.8, scale.degreeToFreq(0, 3, 'major'))
-  assert(523.3, scale.degreeToFreq(0, 5, 'major'))
-  assert(440.0, scale.degreeToFreq(5, 4, 'major'))
-  assert(246.9, scale.degreeToFreq(-1, 4, 'major'))
+  assert(261.6, scale.degreeToFreq(0, 4, 'major', 0))
+  assert(261.6, scale.degreeToFreq(0.5, 4.5, 'major', 0))
+  assert(130.8, scale.degreeToFreq(0, 3, 'major', 0))
+  assert(523.3, scale.degreeToFreq(0, 5, 'major', 0))
+  assert(440.0, scale.degreeToFreq(5, 4, 'major', 0))
+  assert(246.9, scale.degreeToFreq(-1, 4, 'major', 0))
+  assert(246.9, scale.degreeToFreq(0, 4, 'major', -1))
 
-  assert(261.6, scale.degreeToFreq(0, 4, 'chromatic'))
-  assert(415.3, scale.degreeToFreq(8, 4, 'chromatic'))
+  assert(261.6, scale.degreeToFreq(0, 4, 'chromatic', 0))
+  assert(415.3, scale.degreeToFreq(8, 4, 'chromatic', 0))
 
   console.log('Scale tests complete')
   }

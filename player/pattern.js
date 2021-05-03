@@ -48,6 +48,7 @@ define(function(require) {
             event.dur = sourceEvent.dur
             event.time = time
             event.count = count+time
+            event.sharp = sourceEvent.sharp
             if (event.value !== '.' && baseTime > -0.0001 && baseTime < 0.9999) {
               for (let k in params) {
                 if (k != 'time' && k != 'delay' && k != 'value' && k != 'dur') {
@@ -333,6 +334,11 @@ define(function(require) {
   assert([{value:'1',idx:0,time:0,dur:1,count:0}], pattern(0))
   assert([{value:'2',idx:1,time:0,dur:0.5,count:1},{value:'3',idx:2,time:0,dur:0.5,count:1},{value:'4',idx:3,time:0.5,dur:1,count:1.5}], pattern(1))
   assert([{value:'1',idx:0,time:0.5,dur:1,count:2.5}], pattern(2))
+
+  pattern = parsePattern('0#', {dur:1})
+  assert([{value:'0',idx:0,time:0,dur:1,count:0,sharp:1}], pattern(0))
+
+  // '0b'
 
   console.log("Pattern tests complete")
   }

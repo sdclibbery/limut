@@ -20,6 +20,7 @@ define(function(require) {
     let dur = state.dur
     let time = state.time
     let char = state.str.charAt(state.idx)
+    let sharp
     // subpattern
     if (char == '[') {
       state.idx += 1
@@ -36,6 +37,7 @@ define(function(require) {
           time: time + e.time*dur/sub.length,
           dur: e.dur*dur/sub.length,
           step: state.step,
+          sharp: e.sharp,
         })
       })
       return events
@@ -84,12 +86,20 @@ define(function(require) {
       state.idx += 1
     }
     state.idx += 1
+    if (!Number.isNaN(parseInt(char))) {
+      let nextChar = state.str.charAt(state.idx)
+      if (nextChar === '#') {
+        sharp = 1
+        state.idx += 1
+      }
+    }
     // console.log('event', state, 'value:', char, 'time:', time, 'dur:', dur)
     events.push({
       value: char,
       time: time,
       dur: dur,
       step: state.step,
+      sharp: sharp,
     })
     return events
   }
@@ -184,6 +194,7 @@ define(function(require) {
             value:event.value,
             time:stepTime + (event.time-event.step)*stepDur,
             dur:event.dur*stepDur,
+            sharp:event.sharp,
           })
           patternIdx++
           if (patternIdx >= patternCount) {
@@ -462,6 +473,24 @@ define(function(require) {
   assert([{value:'2',time:0, dur:1/2},{value:'3',time:1/2, dur:1/2}], p.events[1].value({time:0,dur:1},1))
   assert([{value:'1',time:0, dur:1}], p.events[1].value({time:0,dur:1},2))
   assert([{value:'2',time:0, dur:1/2},{value:'4',time:1/2, dur:1/4},{value:'5',time:3/4, dur:1/4}], p.events[1].value({time:0,dur:1},3))
+
+  p = parsePattern('0#', 1)
+  assert(1, p.length)
+  assert({value:'0',time:0,dur:1,sharp:1}, p.events[0])
+
+  // '0#'
+  // '0#1'
+  // '1#2#'
+  // '-1#'
+  // '0#_'
+  // '#'
+  // 'a#'
+  // '<0#>'
+  // '[0#]'
+  // '(0#)'
+  // '0b'
+  // 'ab'
+
 
   // p = parsePattern('<1[.3]>_', 1)
   // assert(2, p.length)
