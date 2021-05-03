@@ -94,13 +94,13 @@ define(function (require) {
     return scale.root
   }
 
-  scale.degreeToFreq = (degree, octave, scaleOverride) => {
+  scale.degreeToFreq = (degree, octave, scaleOverride, sharp) => {
     degree = Math.floor(degree)
     octave = Math.floor(octave)
     let currentScale = scales[scaleOverride || scale.current]
     let octDelta = Math.floor(degree / currentScale.length)
     let oct = octave - 4 + octDelta
-    let chromatic = currentScale[(degree + currentScale.length*100) % currentScale.length] + oct*12 + scale.root
+    let chromatic = currentScale[(degree + currentScale.length*100) % currentScale.length] + oct*12 + scale.root + sharp
     return 261.6256 * Math.pow(2, chromatic/12)
   }
 

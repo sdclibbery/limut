@@ -11,7 +11,7 @@ define(function (require) {
   return (params) => {
     let degree = parseInt(params.sound) + evalPerEvent(params, 'add', 0)
     if (isNaN(degree)) { return }
-    let freq = scale.degreeToFreq(degree, evalPerEvent(params, 'oct', 5), evalPerEvent(params, 'scale'))
+    let freq = scale.degreeToFreq(degree, evalPerEvent(params, 'oct', 5), evalPerEvent(params, 'scale'), evalPerEvent(params, 'sharp', 0))
 
     let vca = envelope(params, 0.04, 'simple')
     system.mix(effects(params, vca))

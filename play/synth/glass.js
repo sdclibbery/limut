@@ -12,7 +12,7 @@ define(function (require) {
   return (params) => {
     let degree = parseInt(params.sound) + evalPerEvent(params, 'add', 0)
     if (isNaN(degree)) { return }
-    let freq = scale.degreeToFreq(degree, evalPerEvent(params, 'oct', 5), evalPerEvent(params, 'scale'))
+    let freq = scale.degreeToFreq(degree, evalPerEvent(params, 'oct', 5), evalPerEvent(params, 'scale'), evalPerEvent(params, 'sharp', 0))
 
     if (params.att === undefined) { params.att = 0 }
     if (params.rel === undefined) { params.rel = params.dur }
