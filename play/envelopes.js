@@ -68,6 +68,7 @@ define(function (require) {
   }
 
   return (params, gainbase, defaultEnvelope) => {
+    gainbase *= evalPerEvent(params, "loud", 1)
     let envelope = evalPerEvent(params, "envelope", defaultEnvelope)
     switch (envelope) {
       case 'full': return fullEnvelope(params, gainbase)
