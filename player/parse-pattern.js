@@ -4,14 +4,14 @@ define(function(require) {
   let evalSequence = (seq, e, r) => {
     let v = seq[r % seq.length]
     // console.log('evalSequence', e, r, v)
-    return v.flatMap(({value,time,dur,sharp}) => {
-      let event = {time:e.time+time*e.dur, dur:dur*e.dur, sharp:sharp}
+    return v.flatMap(({value,time,dur,sharp,loud}) => {
+      let event = {time:e.time+time*e.dur, dur:dur*e.dur, sharp:sharp, loud:loud}
       if (typeof(value) == 'function') {
         // console.log('evalSequence func', event, r/seq.length)
         return value(event, Math.floor(r / seq.length))
       }
       // console.log('evalSequence val', value, event)
-      return [{value:value, time:event.time, dur:event.dur, sharp:event.sharp}]
+      return [{value:value, time:event.time, dur:event.dur, sharp:event.sharp, loud:event.loud}]
     })
   }
 
@@ -21,6 +21,7 @@ define(function(require) {
     let time = state.time
     let char = state.str.charAt(state.idx)
     let sharp
+    let loud
     // subpattern
     if (char == '[') {
       state.idx += 1
@@ -38,6 +39,7 @@ define(function(require) {
           dur: e.dur*dur/sub.length,
           step: state.step,
           sharp: e.sharp,
+          loud: e.loud,
         })
       })
       return events
@@ -98,7 +100,15 @@ define(function(require) {
           sharp = -1
           state.idx += 1
           break
-        }
+        case '^':
+          loud = 2
+          state.idx += 1
+          break
+        case 'v':
+          loud = 0.5
+          state.idx += 1
+          break
+      }
     }
     // console.log('event', state, 'value:', char, 'time:', time, 'dur:', dur)
     events.push({
@@ -107,6 +117,7 @@ define(function(require) {
       dur: dur,
       step: state.step,
       sharp: sharp,
+      loud: loud,
     })
     return events
   }
@@ -202,6 +213,7 @@ define(function(require) {
             time:stepTime + (event.time-event.step)*stepDur,
             dur:event.dur*stepDur,
             sharp:event.sharp,
+            loud:event.loud,
           })
           patternIdx++
           if (patternIdx >= patternCount) {
@@ -511,6 +523,46 @@ define(function(require) {
 
   assert({value:'0',time:0,dur:1,sharp:-1}, parsePattern('0b', 1).events[0])
 
+  p = parsePattern('0^', 1)
+  assert(1, p.length)
+  assert({value:'0',time:0,dur:1,loud:2}, p.events[0])
+
+  p = parsePattern('0^1', 1)
+  assert(2, p.length)
+  assert({value:'0',time:0,dur:1,loud:2}, p.events[0])
+  assert({value:'1',time:1,dur:1}, p.events[1])
+
+  p = parsePattern('1^2^', 1)
+  assert(2, p.length)
+  assert({value:'1',time:0,dur:1,loud:2}, p.events[0])
+  assert({value:'2',time:1,dur:1, loud:2}, p.events[1])
+
+  assert({value:'-1',time:0,dur:1,loud:2}, parsePattern('-1^', 1).events[0])
+  assert({value:'0',time:0,dur:2,loud:2}, parsePattern('0^_', 1).events[0])
+  assert({value:'^',time:0,dur:1}, parsePattern('^', 1).events[0])
+
+  p = parsePattern('a^', 1)
+  assert(2, p.length)
+  assert({value:'a',time:0,dur:1}, p.events[0])
+  assert({value:'^',time:1,dur:1}, p.events[1])
+
+  assert([{value:'0',time:0,dur:1,loud:2}], parsePattern('<0^>', 1).events[0].value({time:0,dur:1},0))
+
+  assertPattern(1, [{value:'0',time:0,dur:1,loud:2}], parsePattern('[0^]', 1))
+  assertPattern(1, [{value:'0',time:0,dur:1,loud:2}], parsePattern('(0^)', 1))
+
+  assert({value:'0',time:0,dur:1,loud:0.5}, parsePattern('0v', 1).events[0])
+
+
+// short--/long-+
+// 0+
+// 0+1
+// 1+2+
+// a+
+// <0+>
+// [0+]
+// (0+)
+// 0-
 
   // p = parsePattern('<1[.3]>_', 1)
   // assert(2, p.length)
