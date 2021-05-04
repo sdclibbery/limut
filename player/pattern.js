@@ -50,6 +50,7 @@ define(function(require) {
             event.count = count+time
             event.sharp = sourceEvent.sharp
             event.loud = sourceEvent.loud
+            event.long = sourceEvent.long
             if (event.value !== '.' && baseTime > -0.0001 && baseTime < 0.9999) {
               for (let k in params) {
                 if (k != 'time' && k != 'delay' && k != 'value' && k != 'dur') {
@@ -347,6 +348,12 @@ define(function(require) {
 
   pattern = parsePattern('0v', {dur:1})
   assert([{value:'0',idx:0,time:0,dur:1,count:0,loud:1/2}], pattern(0))
+
+  pattern = parsePattern('0=', {dur:1})
+  assert([{value:'0',idx:0,time:0,dur:1,count:0,long:2}], pattern(0))
+
+  pattern = parsePattern('0!', {dur:1})
+  assert([{value:'0',idx:0,time:0,dur:1,count:0,long:1/2}], pattern(0))
 
   console.log("Pattern tests complete")
   }
