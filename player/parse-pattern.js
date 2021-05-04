@@ -92,33 +92,20 @@ define(function(require) {
     state.idx += 1
     // Modifiers
     if (!Number.isNaN(parseInt(char))) {
-      let nextChar = state.str.charAt(state.idx)
-      switch (nextChar) {
-        case '#':
-          sharp = 1
-          state.idx += 1
-          break
-        case 'b':
-          sharp = -1
-          state.idx += 1
-          break
-        case '^':
-          loud = 2
-          state.idx += 1
-          break
-        case 'v':
-          loud = 0.5
-          state.idx += 1
-          break
-        case '=':
-          long = 2
-          state.idx += 1
-          break
-        case '!':
-          long = 0.5
-          state.idx += 1
-          break
+      let done
+      while (!done) {
+        let nextChar = state.str.charAt(state.idx)
+        switch (nextChar) {
+          case '#': sharp = 1;   break;
+          case 'b': sharp = -1;  break;
+          case '^': loud = 1.5;  break;
+          case 'v': loud = 0.5;  break;
+          case '=': long = 2;    break;
+          case '!': long = 0.5;  break;
+          default : done = true; break;
         }
+        if (!done) { state.idx += 1 }
+      }
     }
     // console.log('event', state, 'value:', char, 'time:', time, 'dur:', dur)
     events.push({
@@ -537,20 +524,20 @@ define(function(require) {
 
   p = parsePattern('0^', 1)
   assert(1, p.length)
-  assert({value:'0',time:0,dur:1,loud:2}, p.events[0])
+  assert({value:'0',time:0,dur:1,loud:3/2}, p.events[0])
 
   p = parsePattern('0^1', 1)
   assert(2, p.length)
-  assert({value:'0',time:0,dur:1,loud:2}, p.events[0])
+  assert({value:'0',time:0,dur:1,loud:3/2}, p.events[0])
   assert({value:'1',time:1,dur:1}, p.events[1])
 
   p = parsePattern('1^2^', 1)
   assert(2, p.length)
-  assert({value:'1',time:0,dur:1,loud:2}, p.events[0])
-  assert({value:'2',time:1,dur:1, loud:2}, p.events[1])
+  assert({value:'1',time:0,dur:1,loud:3/2}, p.events[0])
+  assert({value:'2',time:1,dur:1, loud:3/2}, p.events[1])
 
-  assert({value:'-1',time:0,dur:1,loud:2}, parsePattern('-1^', 1).events[0])
-  assert({value:'0',time:0,dur:2,loud:2}, parsePattern('0^_', 1).events[0])
+  assert({value:'-1',time:0,dur:1,loud:3/2}, parsePattern('-1^', 1).events[0])
+  assert({value:'0',time:0,dur:2,loud:3/2}, parsePattern('0^_', 1).events[0])
   assert({value:'^',time:0,dur:1}, parsePattern('^', 1).events[0])
 
   p = parsePattern('a^', 1)
@@ -558,10 +545,10 @@ define(function(require) {
   assert({value:'a',time:0,dur:1}, p.events[0])
   assert({value:'^',time:1,dur:1}, p.events[1])
 
-  assert([{value:'0',time:0,dur:1,loud:2}], parsePattern('<0^>', 1).events[0].value({time:0,dur:1},0))
+  assert([{value:'0',time:0,dur:1,loud:3/2}], parsePattern('<0^>', 1).events[0].value({time:0,dur:1},0))
 
-  assertPattern(1, [{value:'0',time:0,dur:1,loud:2}], parsePattern('[0^]', 1))
-  assertPattern(1, [{value:'0',time:0,dur:1,loud:2}], parsePattern('(0^)', 1))
+  assertPattern(1, [{value:'0',time:0,dur:1,loud:3/2}], parsePattern('[0^]', 1))
+  assertPattern(1, [{value:'0',time:0,dur:1,loud:3/2}], parsePattern('(0^)', 1))
 
   assert({value:'0',time:0,dur:1,loud:0.5}, parsePattern('0v', 1).events[0])
 
@@ -594,6 +581,10 @@ define(function(require) {
   assertPattern(1, [{value:'0',time:0,dur:1,long:2}], parsePattern('(0=)', 1))
 
   assert({value:'0',time:0,dur:1,long:0.5}, parsePattern('0!', 1).events[0])
+
+  p = parsePattern('0#^=', 1)
+  assert(1, p.length)
+  assert({value:'0',time:0,dur:1,sharp:1,loud:3/2,long:2}, p.events[0])
 
   // p = parsePattern('<1[.3]>_', 1)
   // assert(2, p.length)
