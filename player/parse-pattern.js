@@ -106,6 +106,11 @@ define(function(require) {
         }
         if (!done) { state.idx += 1 }
       }
+    } else {
+      if (state.str.charAt(state.idx) == '^') { // Loud modifier works for non numeric pattern chars too
+        loud = 1.5
+        state.idx += 1
+      }
     }
     // console.log('event', state, 'value:', char, 'time:', time, 'dur:', dur)
     events.push({
@@ -541,9 +546,8 @@ define(function(require) {
   assert({value:'^',time:0,dur:1}, parsePattern('^', 1).events[0])
 
   p = parsePattern('a^', 1)
-  assert(2, p.length)
-  assert({value:'a',time:0,dur:1}, p.events[0])
-  assert({value:'^',time:1,dur:1}, p.events[1])
+  assert(1, p.length)
+  assert({value:'a',time:0,dur:1,loud:3/2}, p.events[0])
 
   assert([{value:'0',time:0,dur:1,loud:3/2}], parsePattern('<0^>', 1).events[0].value({time:0,dur:1},0))
 
