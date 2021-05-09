@@ -55,7 +55,8 @@ define(function (require) {
     params.endTime = params.time + (source.buffer ? source.buffer.duration : 0.1)
 
     let vca = system.audio.createGain()
-    vca.gain.value = Math.max(0, 0.18 * (typeof params.amp === 'number' ? params.amp : 1))
+    let gainbase = 0.18 * evalPerEvent(params, "loud", 1)
+    vca.gain.value = Math.max(0, gainbase * (typeof params.amp === 'number' ? params.amp : 1))
     waveEffects(params, source).connect(vca)
     system.mix(effects(params, vca))
     source.start(params.time)

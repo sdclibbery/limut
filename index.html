@@ -231,6 +231,13 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>0123</code> Sequence of events, each of duration <code>dur</code>, for use with tonal synths. Numbers are scale degrees</p>
 <p><code>0-1-2-3</code> Negative scale degrees allow tones below the synth root pitch</p>
 <p><code>x.</code> Use a dot for a rest</p>
+<p><code>0#</code> # following numeric event makes it a sharp</p>
+<p><code>0b</code> b following numeric event makes it a flat</p>
+<p><code>0=</code> = following numeric event extends the duration by 50%</p>
+<p><code>0!</code> ! following numeric event shortens the duration by 50%</p>
+<p><code>0^</code> ^ following numeric event makes it 50% louder</p>
+<p><code>0v</code> v following numeric event makes it 50% quieter</p>
+<p><code>x^</code> ^ following non-numeric event makes it 50% louder (for use with play synth)</p>
 <p><code>0_[_1]</code> Use underscore to extend the previous note duration</p>
 <p><code>0[123]</code> Square brackets to fit multiple events into one <code>dur</code> (triplet shown)</p>
 <p><code>0(135)</code> Round brackets to play multiple events together (i.e. a chord)</p>
@@ -464,7 +471,6 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <code>\</code> Lazer<br/>
 <code>~</code> Ride cymbal<br/>
 <code>%</code> Noise bursts<br/>
-<code>^</code> 'Donk'<br/>
 <code>$</code> Beatbox<br/>
 <code>#</code> Crash<br/>
 <code>!</code> Yeah!<br/>
@@ -566,9 +572,6 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-Pattern event modifiers (only used after numerics - same as '_'): sharp-#/flat-b/quiet-v/loud-^/short--/long-+
- Use ^ for all events
- docs #b =! ^v , also ^ for play events
 Player values are lost on code reload; eg dur=32,trigger=1 then trigger is lost on code reload...
 Text editor on mobile keeps deleting contents after play
 () blocks per frame eval? eg: v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
