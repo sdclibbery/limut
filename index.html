@@ -304,6 +304,7 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>clouds</code> Moving clouds</p>
 <p><code>kal</code> Changing kaleidoscope pattern</p>
 <p><code>swirl</code> Psychedelic swirl</p>
+<p><code>julia</code> Julia set fractal</p>
 <p><code>lines</code> Twisting lines</p>
 <p><code>blob</code> Morphing 3D blob</p>
 <p><code>streetlight</code> Looking up at the passing streetlights on a night drive</p>
@@ -490,6 +491,8 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 /*
 ====
 ==== audio ====
+Rate=-1
+Env=reverse (slow attack / fast release)
 save frequency onto event as this.freq
 should be able to use sus to gate play sounds
 Is it possible to control rate per frame?
@@ -546,9 +549,8 @@ special colours; hue/oil/blackbody; spatially varying
  Hue: float fb = foreBack*0.8+length(origCoord); col = 0.5+0.5*vec4(sin((fb+0.333)*6.2832), sin((fb+0.667)*6.2832), sin(fb*6.2832), 1.0);
  !! Not sure this is worth it as it stands. Really want to be able to write a mini tone mapping shader instead...
   Maybe these do work as 'palette=hue' 'palette=fore-mid-back'(default) 'palette=oil' 'palette={some custom shader...}'
-time param for visuals
+New param to offset time in shaders to allow doing sway 'manually'; time param for visuals
 Disco glowing geometric shapes shader
-Julia set shader
 Starfield shader
 Spiral or noise or shimmer pre distortion?
 Support echo for visuals? Additive but dimmed, time turned back? Move down??
@@ -572,12 +574,15 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+Random seed
+ [1,2,3]r4{seed:1}
+ [1,2,3]r4{seed:1,count:8}
+addc=[0,[0,24]e]r doesn't work :-/
 Player values are lost on code reload; eg dur=32,trigger=1 then trigger is lost on code reload...
 Text editor on mobile keeps deleting contents after play
 () blocks per frame eval? eg: v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
  // v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
 () inside {} doesnt work; eg: v glow 0, loc={x:[0:1]l2@f, y:(0,1/2), w:0.1, h:0.1}
-addc=[0,[0,24]e]r doesn't work :-/
 Need an additional eval interval; eg @i for 'per instance', so for each individual 'note' instance (each call to play)
  Useful for providing variation between (1,2,3,4) multiplied out sub-events without having to go full-on per frame, expecially for eg []r
 Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way?? Should be available for follow players too
@@ -623,7 +628,6 @@ extending patterns like every/sometimes/offadd/stutter etc
 Can support double quotes for strings??
 dur=[1,2,3,4]r
 maybe []i for int random?
-New param to offset time in shaders to allow doing sway 'manually'
 array index operator, so you can "ch=[(0,2,4)]" then "add=ch[0]"
 finish off: <> for 'in sequence on each repeat' in patterns
 Should be able to [red:blue]l8
