@@ -32,7 +32,7 @@ define(function (require) {
 
   return (params, node) => {
     node = shapeEffect(params, 'noisify', node, 500, noisify)
-    node = shapeEffect(params, 'drive', node, 256, (x, a) => Math.atan(x*Math.max(a,0.05)*100)/(5+a))
+    node = shapeEffect(params, 'drive', node, 256, (x, a) => Math.atan(x*Math.max(a,0.05)*100)/(3+a))
     node = shapeEffect(params, 'bits', node, 256, (x, b) => Math.pow(Math.round(Math.pow(x,1/2)*b)/b,2))
     return node
   }
