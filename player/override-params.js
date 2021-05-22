@@ -30,7 +30,7 @@ define(function(require) {
   let ignoreOp = (original,override) => original
   let addOp = (original,override) => applyOp((l,r)=>l+r, original, override)
   let paramOp = {
-    time: ignoreOp,
+    _time: ignoreOp,
     value: ignoreOp,
     add: addOp,
     delay: addOp,
@@ -69,7 +69,7 @@ define(function(require) {
   let c
 
   assert([ev()], overrideEventParams([ev()], {}))
-  assert([ev({delay:18})], overrideEventParams([ev({delay:10})], {value:'9', delay:8, time:7}))
+  assert([ev({delay:18})], overrideEventParams([ev({delay:10})], {value:'9', delay:8, _time:7}))
   assert([ev({oct:3}),ev({oct:4})], overrideEventParams([ev()], {oct:()=>[3,4]}))
   assert([ev({add:2})], overrideEventParams([ev({add:2})], {}))
   assert([ev({add:3})], overrideEventParams([ev()], {add:3}))

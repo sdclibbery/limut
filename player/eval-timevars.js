@@ -8,7 +8,7 @@ define(function(require) {
     let step = 0
     vs.forEach(v => {
       let dur = ds[step % ds.length]
-      steps.push({ value:v, time:length, duration:dur })
+      steps.push({ value:v, _time:length, duration:dur })
       length += dur
       step += 1
     })
@@ -17,7 +17,7 @@ define(function(require) {
   }
 
   let isInTimeVarStep  = (st, b) => {
-    return (b > st.time-0.00001)&&(b < st.time+st.duration+0.00001)
+    return (b > st._time-0.00001)&&(b < st._time+st.duration+0.00001)
   }
 
   let timeVar = (vs, ds, interval) => {
@@ -41,7 +41,7 @@ define(function(require) {
         let pre = evalRecurse(steps[idx], e,b)
         if (isInTimeVarStep(pre, count)) {
           let post = evalRecurse(steps[(idx+1) % steps.length], e,b)
-          let lerp = (count - pre.time) / pre.duration
+          let lerp = (count - pre._time) / pre.duration
           return (1-lerp)*pre.value + lerp*post.value
         }
       }
@@ -58,7 +58,7 @@ define(function(require) {
         let pre = evalRecurse(steps[idx], e,b)
         if (isInTimeVarStep(pre, count)) {
           let post = evalRecurse(steps[(idx+1) % steps.length], e,b)
-          let lerp = (count - pre.time) / pre.duration
+          let lerp = (count - pre._time) / pre.duration
           lerp = lerp*lerp*(3 - 2*lerp) // bezier ease in/out
           return (1-lerp)*pre.value + lerp*post.value
         }
@@ -69,7 +69,7 @@ define(function(require) {
   let eventTimeVar = (vs) => {
     return (e,b, evalRecurse) => {
       if (!e.countToTime) { return }
-      let eventFraction = (e.countToTime(b) - e.time) / (e.endTime - e.time)
+      let eventFraction = (e.countToTime(b) - e._time) / (e.endTime - e._time)
       eventFraction = eventFraction || 0
       let numSteps = vs.length-1
       let preIdx = Math.min(Math.max(Math.floor(eventFraction * numSteps), 0), numSteps)

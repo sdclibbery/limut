@@ -18,7 +18,7 @@ define(function (require) {
       audioParam.value = params[p]
     } else {
       setAudioParamValue(audioParam, evalParam(params[p], params, params.count))
-      system.add(params.time, state => {
+      system.add(params._time, state => {
         if (state.time > params.endTime) { return false }
         setAudioParamValue(audioParam, evalParam(params[p], params, state.count))
         return true

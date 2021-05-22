@@ -491,10 +491,9 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 /*
 ====
 ==== audio ====
-Rate=-1
+should be able to use sus to gate play sounds
 Env=reverse (slow attack / fast release)
 save frequency onto event as this.freq
-should be able to use sus to gate play sounds
 Is it possible to control rate per frame?
 reverb param allowing to use a convolution reverb with specified duration (at users own risk :-)
 pulse synth + formant/vowel effects for vocal aaa/ooo effects
@@ -535,21 +534,21 @@ strings pad - triangle?? vib?
 formant
 vowel?
 timpani sample?
-bitcrush param
 support -ve rate for reverse playback
-pan
-scale
 Normal bass synth
 FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+time param for shaders: overrides rate and allows setting shader time directly
+ need to rename the pattern params (time etc) with underscores...
+ eval timevars 17???
+ docs (both rate and time)
 special colours; hue/oil/blackbody; spatially varying
  Oil: float fb = foreBack+length(origCoord)/3.0; col = 0.5+0.5*vec4(sin(fb*17.0), sin(fb*18.5), sin(fb*20.0), 1.0);
  Hue: float fb = foreBack*0.8+length(origCoord); col = 0.5+0.5*vec4(sin((fb+0.333)*6.2832), sin((fb+0.667)*6.2832), sin(fb*6.2832), 1.0);
  !! Not sure this is worth it as it stands. Really want to be able to write a mini tone mapping shader instead...
   Maybe these do work as 'palette=hue' 'palette=fore-mid-back'(default) 'palette=oil' 'palette={some custom shader...}'
-New param to offset time in shaders to allow doing sway 'manually'; time param for visuals
 Disco glowing geometric shapes shader
 Starfield shader
 Spiral or noise or shimmer pre distortion?

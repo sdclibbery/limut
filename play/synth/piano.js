@@ -24,7 +24,7 @@ define(function (require) {
       source.stop(timeOverride+1)
       system.disconnectAt(timeOverride+1, [source])
     } else {
-      source.start(params.time)
+      source.start(params._time)
       source.stop(params.endTime)
       system.disconnect(params, [source])
     }
@@ -63,12 +63,12 @@ define(function (require) {
     if (isNaN(degree)) { return }
     let freq = scale.degreeToFreq(degree, evalPerEvent(params, 'oct', 4), evalPerEvent(params, 'scale'), evalPerEvent(params, 'sharp', 0))
     let dur = Math.max(0.01, evalPerEvent(params, 'sus', evalPerEvent(params, 'dur', 0.25)))
-    params.endTime = params.time + dur*params.beat.duration
+    params.endTime = params._time + dur*params.beat.duration
 
     let vca = system.audio.createGain()
     let gain = Math.max(0, 0.25 * (typeof params.amp === 'number' ? params.amp : 1))
-    vca.gain.cancelScheduledValues(params.time)
-    vca.gain.setValueAtTime(gain, params.time)
+    vca.gain.cancelScheduledValues(params._time)
+    vca.gain.setValueAtTime(gain, params._time)
     vca.gain.linearRampToValueAtTime(gain, params.endTime-0.01)
     vca.gain.linearRampToValueAtTime(0, params.endTime)
     vca.gain.linearRampToValueAtTime(gain, params.endTime+0.01)

@@ -43,9 +43,9 @@ define((require) => {
               playerFactory.play(e)
               let pulse = (ev,b) => {
                 let t = e.countToTime(b)
-                if (t<e.time || t>e.endTime) { return 0 }
-                let l = e.endTime - e.time
-                let x = (t - e.time) / l
+                if (t<e._time || t>e.endTime) { return 0 }
+                let l = e.endTime - e._time
+                let x = (t - e._time) / l
                 let v = x < 1/5 ? x*5 : 1-(x*6/5-1/5)
                 return Math.pow(v, 1/2)
               }
@@ -68,7 +68,7 @@ define((require) => {
           if (!es) { return {pulse:()=>0} }
           es = es.filter(e => {
             let t = e.countToTime(b)
-            return (t > e.time-0.0001) && (t < e.endTime)
+            return (t > e._time-0.0001) && (t < e.endTime)
           })
           return es.length>0 ? es[0] : {pulse:()=>0}
         }
@@ -110,7 +110,7 @@ define((require) => {
   }
   let p
   playerTypes.test = { play: (e) => {
-    e.endTime = e.time + e.dur
+    e.endTime = e._time + e.dur
     return {}
   } }
 

@@ -14,10 +14,10 @@ define(function (require) {
       lfo.type = 'sine'
       lfo.frequency.value = vib / params.beat.duration
       vcaVib = system.audio.createGain()
-      vcaVib.gain.setValueAtTime(0, params.time)
-      vcaVib.gain.linearRampToValueAtTime(vibdepth*100, params.time + vibdelay*params.beat.duration)
+      vcaVib.gain.setValueAtTime(0, params._time)
+      vcaVib.gain.linearRampToValueAtTime(vibdepth*100, params._time + vibdelay*params.beat.duration)
       lfo.connect(vcaVib)
-      lfo.start(params.time)
+      lfo.start(params._time)
       lfo.stop(params.endTime)
       system.disconnect(params, [lfo,vcaVib])
     }

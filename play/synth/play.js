@@ -52,14 +52,14 @@ define(function (require) {
     let source = system.audio.createBufferSource()
     source.buffer = getBuffer(getUrl(params.sound, evalPerEvent(params, 'sample', 1)))
     source.playbackRate.value = rate
-    params.endTime = params.time + (source.buffer ? source.buffer.duration : 0.1)
+    params.endTime = params._time + (source.buffer ? source.buffer.duration : 0.1)
 
     let vca = system.audio.createGain()
     let gainbase = 0.18 * evalPerEvent(params, "loud", 1)
     vca.gain.value = Math.max(0, gainbase * (typeof params.amp === 'number' ? params.amp : 1))
     waveEffects(params, source).connect(vca)
     system.mix(effects(params, vca))
-    source.start(params.time)
+    source.start(params._time)
     source.stop(params.endTime)
     system.disconnect(params, [source, vca])
   }

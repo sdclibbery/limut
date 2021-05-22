@@ -21,7 +21,7 @@ define(function (require) {
     vco.frequency.value = freq
     pitchEffects(params).connect(vco.detune)
     waveEffects(params, vco).connect(vca)
-    vco.start(params.time)
+    vco.start(params._time)
     vco.stop(params.endTime)
     system.disconnect(params, [vco, vca])
   }

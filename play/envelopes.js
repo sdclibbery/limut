@@ -8,7 +8,7 @@ define(function (require) {
     let dur = Math.max(0.01, param(params.sus, param(params.dur, 0.25)))
     dur *= evalPerEvent(params, "long", 1)
     let attack = param(params.att, 0.09) * params.beat.duration
-    params.time -= Math.min(attack, 0.05)
+    params._time -= Math.min(attack, 0.05)
     let decay = param(params.decay, 0.08*dur) * params.beat.duration
     let sustain = param(params.sus, dur) * params.beat.duration - decay
     let susLevel = param(params.suslevel, 0.8)
@@ -17,12 +17,12 @@ define(function (require) {
     let vca = system.audio.createGain();
     vca.gain.cancelScheduledValues(0)
     vca.gain.setValueAtTime(0, 0)
-    vca.gain.setValueAtTime(0, params.time)
-    vca.gain.linearRampToValueAtTime(gain, params.time + attack)
-    vca.gain.linearRampToValueAtTime(gain*susLevel, params.time + attack+decay)
-    vca.gain.linearRampToValueAtTime(gain*susLevel*0.8, params.time + attack+decay+sustain)
-    vca.gain.linearRampToValueAtTime(0, params.time + attack+decay+sustain+release)
-    params.endTime = params.time + attack+decay+sustain+release
+    vca.gain.setValueAtTime(0, params._time)
+    vca.gain.linearRampToValueAtTime(gain, params._time + attack)
+    vca.gain.linearRampToValueAtTime(gain*susLevel, params._time + attack+decay)
+    vca.gain.linearRampToValueAtTime(gain*susLevel*0.8, params._time + attack+decay+sustain)
+    vca.gain.linearRampToValueAtTime(0, params._time + attack+decay+sustain+release)
+    params.endTime = params._time + attack+decay+sustain+release
     return vca
   }
 
@@ -30,7 +30,7 @@ define(function (require) {
     let dur = Math.max(0.01, evalPerEvent(params, 'sus', evalPerEvent(params, 'dur', 0.25)))
     dur *= evalPerEvent(params, "long", 1)
     let attack = evalPerEvent(params, 'att', 0.09) * params.beat.duration
-    params.time -= Math.min(attack, 0.05)
+    params._time -= Math.min(attack, 0.05)
     let decay = evalPerEvent(params, 'decay', 0.08*dur) * params.beat.duration
     let susLevel = evalPerEvent(params, 'suslevel', 0.8)
     let release = evalPerEvent(params, 'rel', params.sus||dur) * params.beat.duration
@@ -38,11 +38,11 @@ define(function (require) {
     let vca = system.audio.createGain();
     vca.gain.cancelScheduledValues(0)
     vca.gain.setValueAtTime(0, 0)
-    vca.gain.setValueAtTime(0, params.time)
-    vca.gain.linearRampToValueAtTime(gain, params.time + attack)
-    vca.gain.linearRampToValueAtTime(gain*susLevel, params.time + attack+decay)
-    vca.gain.linearRampToValueAtTime(0, params.time + attack+decay+release)
-    params.endTime = params.time + attack+decay+release
+    vca.gain.setValueAtTime(0, params._time)
+    vca.gain.linearRampToValueAtTime(gain, params._time + attack)
+    vca.gain.linearRampToValueAtTime(gain*susLevel, params._time + attack+decay)
+    vca.gain.linearRampToValueAtTime(0, params._time + attack+decay+release)
+    params.endTime = params._time + attack+decay+release
     return vca
   }
 
@@ -63,10 +63,10 @@ define(function (require) {
     let vca = system.audio.createGain()
     vca.gain.cancelScheduledValues(0)
     vca.gain.setValueAtTime(0, 0)
-    vca.gain.setValueCurveAtTime(fade(0, gain), params.time, attack)
-    vca.gain.linearRampToValueAtTime(gain, params.time + attack+sus)
-    vca.gain.setValueCurveAtTime(fade(gain, 0), params.time + attack+sus, release)
-    params.endTime = params.time + attack+sus+release
+    vca.gain.setValueCurveAtTime(fade(0, gain), params._time, attack)
+    vca.gain.linearRampToValueAtTime(gain, params._time + attack+sus)
+    vca.gain.setValueCurveAtTime(fade(gain, 0), params._time + attack+sus, release)
+    params.endTime = params._time + attack+sus+release
     return vca
   }
 

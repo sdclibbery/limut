@@ -837,7 +837,7 @@ let digitChar = (char) => (char >= '0' && char <= '9') || char == '.' || char ==
 
   let e
   p = parseExpression("[0:1]e")
-  e = { idx:0, count:7, countToTime:b=>b, time:7, endTime:8 }
+  e = { idx:0, count:7, countToTime:b=>b, _time:7, endTime:8 }
   assert(0, p(e,6, evalParamFrame))
   assert(0, p(e,7, evalParamFrame))
   assert(0.5, p(e,7.5, evalParamFrame))
@@ -850,7 +850,7 @@ let digitChar = (char) => (char >= '0' && char <= '9') || char == '.' || char ==
   assert(0, parseExpression("[1,0]l1")(ev(1,1),1,evalParamFrame))
 
   p = parseExpression("[1000:100]e")
-  e = { idx:0, count:7, countToTime:b=>b, time:7, endTime:8 }
+  e = { idx:0, count:7, countToTime:b=>b, _time:7, endTime:8 }
   r = evalParamEvent(p,e,7)
   assert('function', typeof(r))
   assert(550, evalParamFrame(r,e,7.5))
@@ -896,7 +896,7 @@ let digitChar = (char) => (char >= '0' && char <= '9') || char == '.' || char ==
   assertIn(5, 6, p(ev(1,1),1,evalParamFrame))
 
   p = parseExpression("[1:1]r-[0:2]e")
-  e = { idx:0, count:7, countToTime:b=>b, time:7, endTime:8 }
+  e = { idx:0, count:7, countToTime:b=>b, _time:7, endTime:8 }
   assert(1, evalParamFrame(p,e,7))
   assert(0, evalParamFrame(p,e,7.5))
   assert(-1, evalParamFrame(p,e,8))

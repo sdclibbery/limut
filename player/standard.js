@@ -10,7 +10,7 @@ define(function(require) {
       let eventsForBeat = pattern(beat.count)
       let events = eventsForBeat.map(event => {
         let eventToPlay = Object.assign({}, event, {sound: event.value, beat: beat})
-        eventToPlay.time = beat.time + event.time*beat.duration
+        eventToPlay._time = beat.time + event._time*beat.duration
         return eventToPlay
       })
       return events

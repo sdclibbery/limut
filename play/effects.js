@@ -87,9 +87,9 @@ define(function (require) {
     lfo.type = 'square';
     lfo.frequency.value = chops / params.beat.duration
     let gain = system.audio.createGain()
-    gain.gain.setValueAtTime(1, params.time)
+    gain.gain.setValueAtTime(1, params._time)
     lfo.connect(gain.gain)
-    lfo.start(params.time)
+    lfo.start(params._time)
     lfo.stop(params.endTime)
     node.connect(gain)
     system.disconnect(params, [gain,lfo,node])
@@ -102,7 +102,7 @@ define(function (require) {
 
     let lfo = system.audio.createOscillator()
     lfo.frequency.value = lfoFreq / params.beat.duration
-    lfo.start(params.time)
+    lfo.start(params._time)
     lfo.stop(params.endTime)
 
     let lfoGain = system.audio.createGain()

@@ -8,10 +8,10 @@ define(function (require) {
     attack *= params.beat.duration
     release *= params.beat.duration
     let vca = system.audio.createGain();
-    vca.gain.cancelScheduledValues(params.time)
-    vca.gain.setValueAtTime(0, params.time)
-    vca.gain.linearRampToValueAtTime(gain, params.time + attack)
-    vca.gain.linearRampToValueAtTime(0, params.time + attack+release)
+    vca.gain.cancelScheduledValues(params._time)
+    vca.gain.setValueAtTime(0, params._time)
+    vca.gain.linearRampToValueAtTime(gain, params._time + attack)
+    vca.gain.linearRampToValueAtTime(0, params._time + attack+release)
     system.disconnect(params, [vca])
     return vca
   }
@@ -27,7 +27,7 @@ define(function (require) {
     let vco = system.audio.createOscillator()
     vco.type = wave || 'sine';
     vco.frequency.value = freq
-    vco.start(params.time)
+    vco.start(params._time)
     vco.stop(params.endTime)
     return vco
   }

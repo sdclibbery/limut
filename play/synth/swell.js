@@ -30,7 +30,7 @@ define(function (require) {
     multiosc.gain.value = 1/vcos.length
     waveEffects(params, multiosc).connect(vca)
     vcos.forEach(vco => vco.connect(multiosc))
-    vcos.forEach(vco => vco.start(params.time))
+    vcos.forEach(vco => vco.start(params._time))
     vcos.forEach(vco => vco.stop(params.endTime))
     system.disconnect(params, vcos.concat(vca,out,multiosc))
   }

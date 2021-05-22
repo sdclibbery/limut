@@ -27,12 +27,12 @@ define(function (require) {
     let lfoGain = system.audio.createGain()
     lfoGain.gain.value = 0.49
     lfoOsc.connect(lfoGain)
-    lfoOsc.start(params.time)
+    lfoOsc.start(params._time)
     lfoOsc.stop(params.endTime)
 
     let lpf = system.audio.createBiquadFilter()
     lpf.type = 'lowpass'
-    lpf.frequency.setValueAtTime(6000, params.time)
+    lpf.frequency.setValueAtTime(6000, params._time)
     lpf.frequency.linearRampToValueAtTime(freq*2, params.endTime)
     lpf.Q.value = 0.4
     lpf.connect(vca)
@@ -49,7 +49,7 @@ define(function (require) {
       lfoGain.connect(vco.parameters.get('pulseWidth'))
       pitch.connect(vco.parameters.get('detune'))
       vco.connect(multiosc)
-      vco.parameters.get('start').setValueAtTime(1, params.time)
+      vco.parameters.get('start').setValueAtTime(1, params._time)
       vco.parameters.get('stop').setValueAtTime(0, system.audio.currentTime)
       vco.parameters.get('stop').setValueAtTime(1, params.endTime)
       return vco

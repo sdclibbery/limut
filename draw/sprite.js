@@ -123,10 +123,11 @@ let verts = (loc, window) => {
       s = shaders(shader)
     }
     if (!s) { return () => {} }
-    let startTime = params.time
-    let endTime = params.time + evalParamEvent(params, 'sus', evalParamEvent(params, 'dur', 1)) * params.beat.duration
+    let startTime = params._time
+    let endTime = params._time + evalParamEvent(params, 'sus', evalParamEvent(params, 'dur', 1)) * params.beat.duration
     params.endTime = endTime
     let rate = evalParamEvent(params, 'rate', 1)
+    let timeParam = params._time
     let value = parseInt(evalParamEvent(params, 'value', '0'))
     if (value > 10) { value = value/5 }
     if (Number.isNaN(value)) { value = evalParamEvent(params, 'value', '0').charCodeAt(0) - 32 }
@@ -138,6 +139,10 @@ let verts = (loc, window) => {
     let fade = evalParamEvent(params, 'fade', defParams.fade || 0)
     return state => { // per frame
       if (state.time > endTime) { return false }
+      let shaderTime = evalParamFrame(params, 'time', null, state.count)
+      if (shaderTime === null) {
+        shaderTime = state.count*rate + sway*state.pulse
+      }
       let amp = Math.min(evalParamFrame(params, 'amp', 1, state.count), 5)
       let add = evalParamFrame(params, 'add', 1, state.count)
       let eventTime = ((state.time-startTime)/(endTime-startTime))
@@ -165,7 +170,7 @@ let verts = (loc, window) => {
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
       system.loadVertexAttrib(s.fragCoordBuf, s.fragCoordAttr, vtxData.tex, 2)
       system.gl.useProgram(s.program)
-      system.gl.uniform1f(s.timeUnif, state.count*rate + sway*state.pulse)
+      system.gl.uniform1f(s.timeUnif, shaderTime)
       system.gl.uniform1f(s.brightnessUnif, brightness)
       system.gl.uniform1f(s.monochromeUnif, monochrome)
       system.gl.uniform1f(s.vignetteUnif, vignette)
@@ -217,6 +222,6 @@ let verts = (loc, window) => {
   let emptyObject = {}
   return (shader, defFore, defBack, defParams) => (params) => {
     let zorder = param(params.zorder, param(params.linenum, 0)/1000)
-    system.add(params.time, play(shader, defFore, defBack, params, defParams || emptyObject), zorder)
+    system.add(params._time, play(shader, defFore, defBack, params, defParams || emptyObject), zorder)
   }
 })
