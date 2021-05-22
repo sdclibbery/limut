@@ -364,6 +364,8 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>add</code> Amount to add onto pattern value</p>
 <p><code>zorder</code> order in which to draw visual synths; defaults to the 1/1000th of the source code line number for the player, so that visuals draw strictly in the order they appear in the source code; however, this param can be used to override this and force specific visuals to the front or rear of the draw order.</p>
 <p><code>fade</code> brightness/transparent fadeout</p>
+<p><code>time</code> time value to use in the shader. If this is set, the <code>rate</code> and <code>sway</code> params have no effect</p>
+<p><code>rate</code> the rate that time should progress in the shader. If the <code>time</code> param is set, this has no effect</p>
 <p><code>pulse</code> extent to which the audio signal affects the value passed to visual synths</p>
 <p><code>sway</code> extent to which the audio signal affects the time passed to visual synths</p>
 <p><code>loc</code> position and size. The visual coordinate system runs from (-1,-1) in the bottom left of the screen to (1,1) in the top right. x and y define the centre of the visual, and w and h are the full width and height; eg <code>{x:0,y:0,w:2,h:2}</code> covers the full screen.</p>
@@ -540,10 +542,6 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-time param for shaders: overrides rate and allows setting shader time directly
- need to rename the pattern params (time etc) with underscores...
- eval timevars 17???
- docs (both rate and time)
 special colours; hue/oil/blackbody; spatially varying
  Oil: float fb = foreBack+length(origCoord)/3.0; col = 0.5+0.5*vec4(sin(fb*17.0), sin(fb*18.5), sin(fb*20.0), 1.0);
  Hue: float fb = foreBack*0.8+length(origCoord); col = 0.5+0.5*vec4(sin((fb+0.333)*6.2832), sin((fb+0.667)*6.2832), sin(fb*6.2832), 1.0);
