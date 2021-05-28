@@ -82,12 +82,22 @@ define(function (require) {
       float t = length(origCoord);
       col.rgb *= mix(1.,min(t,1.),l_tunnel);
     }
-    vec3 mono = vec3(0.21*col.r + 0.71*col.g + 0.07*col.b);
-    col.rgb = mix(col.rgb, mono, l_monochrome);
-    float b = min(foreBack > 0.5 ? 0.0 : 1.0-2.0*foreBack, 1.0);
-    float m = max(foreBack < 0.5 ? 2.0*foreBack : 2.0*(1.0-foreBack), 0.0);
-    float f = min(foreBack < 0.5 ? 0.0 : 2.0*foreBack-1.0, 1.0);
-    col *= l_back*b + l_mid*m + l_fore*f;
+    if (l_monochrome != 0.) {
+      vec3 mono = vec3(0.21*col.r + 0.71*col.g + 0.07*col.b);
+      col.rgb = mix(col.rgb, mono, l_monochrome);
+    }
+    if (true) {/*fore/mid/back*/
+      float b = min(foreBack > 0.5 ? 0.0 : 1.0-2.0*foreBack, 1.0);
+      float m = max(foreBack < 0.5 ? 2.0*foreBack : 2.0*(1.0-foreBack), 0.0);
+      float f = min(foreBack < 0.5 ? 0.0 : 2.0*foreBack-1.0, 1.0);
+      col *= l_back*b + l_mid*m + l_fore*f;
+    } else if (false) {/*oil*/
+      float fb = foreBack+length(origCoord)/3.0;
+      col = 0.5+0.5*vec4(sin(fb*17.0), sin(fb*18.5), sin(fb*20.0), 1.0);
+    } else if (false) {/*hue*/
+      float fb = foreBack*0.8+length(origCoord);
+      col = 0.5+0.5*vec4(sin((fb+0.333)*6.2832), sin((fb+0.667)*6.2832), sin(fb*6.2832), 1.0);
+    }
     fragColor.rgb = col.rgb*l_brightness*mix(col.a, 1.0, l_additive);
     fragColor.a = mix(col.a, 0.0, l_additive);
     if (length(fragColor) < 0.01) discard;
