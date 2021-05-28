@@ -71,6 +71,8 @@ define(function(require) {
   vars['rainbow_slow'] = parseExpression('{r:[0.8,0,0]l12@f,g:[0,0.7,0]l12@f,b:[0,0,1]l12@f,a:1}')
   vars['rainbow_fast'] = parseExpression('{r:[0.8,0,0]l2@f,g:[0,0.7,0]l2@f,b:[0,0,1]l2@f,a:1}')
   vars['random'] = parseExpression('{r:[0:0.8]n4,g:[0:0.7]n4,b:[0.1:0.9]n4,a:1}')
+  vars['oil'] = parseExpression('1')
+  vars['hue'] = parseExpression('2')
 
   vars['full'] = 'full'
   vars['simple'] = 'simple'

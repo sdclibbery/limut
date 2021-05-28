@@ -137,6 +137,7 @@ let verts = (loc, window) => {
     let url = evalParamEvent(params, 'url', 'favicon-32x32.png')
     let window = evalParamEvent(params, 'window', false)
     let fade = evalParamEvent(params, 'fade', defParams.fade || 0)
+    let recol = evalParamEvent(params, 'recol', 0)
     return state => { // per frame
       if (state.time > endTime) { return false }
       let shaderTime = evalParamFrame(params, 'time', null, state.count)
@@ -174,6 +175,7 @@ let verts = (loc, window) => {
       system.gl.uniform1f(s.brightnessUnif, brightness)
       system.gl.uniform1f(s.monochromeUnif, monochrome)
       system.gl.uniform1f(s.vignetteUnif, vignette)
+      system.gl.uniform1i(s.recolUnif, recol)
       system.gl.uniform1f(s.valueUnif, value+add + pulse*state.pulse)
       system.gl.uniform1f(s.ampUnif, amp + pulse*state.pulse*0.5)
       system.gl.uniform4fv(s.foreUnif, fore)
