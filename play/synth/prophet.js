@@ -43,7 +43,7 @@ define(function (require) {
     multiosc.gain.value = 1/vcos.length
     waveEffects(params, multiosc).connect(lpf)
 
-    vcos.map(detune => {
+    vcos = vcos.map(detune => {
       let vco = new AudioWorkletNode(system.audio, "pwm-oscillator")
       vco.parameters.get('frequency').value = freq * Math.pow(2, detune * detuneSemis/12)
       lfoGain.connect(vco.parameters.get('pulseWidth'))
