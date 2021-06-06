@@ -8,7 +8,7 @@ define(function(require) {
     '*': (l,r)=>l*r,
     '/': (l,r)=>l/r,
     '%': (l,r)=>l%r,
-    '^': (l,r)=>Math.pow(l,r),
+    '^': (l,r)=>(Math.pow(l,r) || 0),
   }
   let precedence = {'^':1,'%':2,'/':2,'*':2,'-':3,'+':3,}
 

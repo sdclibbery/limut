@@ -908,6 +908,7 @@ define(function(require) {
   assert(18, parseExpression('2*3^2'))
   assert(36, parseExpression('(2*3)^2'))
   assert(2, parseExpression('4^1/2'))
+  assert(0, parseExpression('-1^1/2'))
 
   console.log('Parse expression tests complete')
   }
