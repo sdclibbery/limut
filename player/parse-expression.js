@@ -277,7 +277,7 @@ define(function(require) {
       }
       // operator
       if (result !== undefined) {
-        if (['+','-','*','/','%'].includes(char)) {
+        if (['+','-','*','/','%','^'].includes(char)) {
           state.idx += 1
           operatorList.push(result)
           result = undefined
@@ -286,7 +286,7 @@ define(function(require) {
         }
       }
       // unary minus operator
-let digitChar = (char) => (char >= '0' && char <= '9') || char == '.' || char == 'e'
+      let digitChar = (char) => (char >= '0' && char <= '9') || char == '.' || char == 'e'
       if (char === '-' && !digitChar(state.str.charAt(state.idx+1)) ) {
         state.idx += 1
         operatorList.push(-1)
@@ -903,6 +903,11 @@ let digitChar = (char) => (char >= '0' && char <= '9') || char == '.' || char ==
 
   p = parseExpression("[]r")
   for (let i=0; i<20; i++) { assertIn(0,1, p(ev(0,0),0,evalParamFrame)) }
+
+  assert(8, parseExpression('2^3'))
+  assert(18, parseExpression('2*3^2'))
+  assert(36, parseExpression('(2*3)^2'))
+  assert(2, parseExpression('4^1/2'))
 
   console.log('Parse expression tests complete')
   }

@@ -270,6 +270,7 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>/</code> Divide values; eg 1/2</p>
 <p><code>*</code> Multiply values; eg lpf=[1,2,3]*1000</p>
 <p><code>%</code> Take remainder; eg (0,4,7,9)%7 is equivalent to (0,4,0,2)</p>
+<p><code>^</code> Raise to the power; eg 2^3 is 8</p>
 <p><code>{x:0,y:1}</code> Map, containing keys and values</p>
 <p><code>'abc'</code> String value</p>
 <p><code>foo</code> Lookup a global var named <code>foo</code>.</p>
@@ -567,7 +568,6 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-^ to raise to the power operator
 UI sliders; eg amp=input.volume
  default to 0 with -0.1 - 1 range
  range extends when drag to edge

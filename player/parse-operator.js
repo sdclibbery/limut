@@ -8,8 +8,9 @@ define(function(require) {
     '*': (l,r)=>l*r,
     '/': (l,r)=>l/r,
     '%': (l,r)=>l%r,
+    '^': (l,r)=>Math.pow(l,r),
   }
-  let precedence = {'%':1,'/':1,'*':1,'-':2,'+':2,}
+  let precedence = {'^':1,'%':2,'/':2,'*':2,'-':3,'+':3,}
 
   let precedenceTree = (ops) => {
     // Build an operator tree back up from a flattened list, taking precedence into account
