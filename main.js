@@ -2,10 +2,10 @@
 define(function(require) {
   require('polyfills')
   require('predefined-vars')
+  require('sliders')
   let system = require('play/system')
   let drawSystem = require('draw/system')
   let metronome = require('metronome')
-  let scale = require('music/scale')
   let players = require('player/players')
   let mainVars = require('main-vars')
   let vars = require('vars')

@@ -570,12 +570,19 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-UI sliders; eg my_slider = slider{min:-5, max:5, init: 0}  /  then use as amp=2*my_slider
+UI sliders; eg my_slider = slider.new{name:'Adder', min:-5, max:5, init:1}  /  then use as amp=2*my_slider
+ Slider module that defines a `slider` function var which creates a new slider and returns a slider method which can be called like an expression to get the value of the slider
+ Expression syntax for treating a var as a function and calling with named params: `slider{min:-5,max:5}`
+ Slider module creates slider UI and updates values etc
+ Slider new method should only be called on code load, not per event/frame etc
+  Does it need a new '/c' type thing?
+ Refreshes on code update (but doesn't lose old value) - suggest a gc mark/sweep approach
+ Docs
+Player values are lost on code reload; eg dur=32,trigger=1 then trigger is lost on code reload - suggest a gc mark/sweep approach
 Random seed
  [1,2,3]r4{seed:1}
  [1,2,3]r4{seed:1,count:8}
 addc=[0,[0,24]e]r doesn't work :-/
-Player values are lost on code reload; eg dur=32,trigger=1 then trigger is lost on code reload...
  Should persist current player data if the player still exists after the code reload
 All lerps should use operator eval, so allow [red, green]n etc
 () blocks per frame eval? eg: v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
