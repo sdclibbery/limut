@@ -495,6 +495,9 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 /*
 ====
 ==== audio ====
+Xylophone synth
+better default bpr value: 1
+more filters: notch, low/high shelf
 should be able to use sus to gate play sounds
 Env=reverse (slow attack / fast release)
 save frequency onto event as this.freq
@@ -568,7 +571,7 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-UI sliders; eg amp=input.volume
+UI sliders; eg amp=slider.volume / set slider volume = {min:-5, max:5, init: 0}
  default to 0 with -0.1 - 1 range
  range extends when drag to edge
 Random seed
