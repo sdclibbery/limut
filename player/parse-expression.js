@@ -873,6 +873,10 @@ define(function(require) {
   assert(7, parseExpression('foo{}+2'))
   delete vars.foo
 
+  vars.foo = ({val}) => val
+  assert(6, parseExpression('  foo  {  x:3, val : 6 }  '))
+  delete vars.foo
+
   console.log('Parse expression tests complete')
   }
   

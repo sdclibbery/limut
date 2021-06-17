@@ -128,6 +128,14 @@
       <span class="beat-readout" id="beat16-readout"></span>
       <span class="beat-readout" id="beat32-readout"></span>
     </p>
+    <p id="sliders">
+      <template id="slider-template">
+        <p style="display: flex; flex-flow: row nowrap;">
+          <span class="slider-name"></span>
+          <input class="slider" type="range" min="0" max="200" style="flex:auto;"/>
+        </p>
+      </template>
+    </p>
   </div>
   <div class="widget fixed-top">
     <button onclick="go()" title="Run the code Ctrl-Enter">▶</button>
@@ -571,9 +579,10 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 UI sliders; eg my_slider = slider{name:'Adder', min:-5, max:5, init:1}  /  then use as amp=2*my_slider
- Not working; return from slider function is not used as value...
  Slider module creates slider UI and updates values etc
- Refreshes on code update (but doesn't lose old value) - suggest a gc mark/sweep approach
+ Need to update slider when code changes
+  Eg if change min/max of existing slider, .value needs to update
+ Delete old ones if no longer referenced - suggest a gc mark/sweep approach
  Docs
 Player values are lost on code reload; eg dur=32,trigger=1 then trigger is lost on code reload - suggest a gc mark/sweep approach
 Random seed
