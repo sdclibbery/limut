@@ -9,8 +9,8 @@ define(function(require) {
     if (!params.name) { throw 'Cannot create slider, no name param' }
     if (!sliders[params.name]) { sliders[params.name] = params }
     let slider = sliders[params.name]
-    for (k in params) { slider[k] = params[k] } 
+    for (let k in params) { slider[k] = params[k] } 
     return () => slider.value || 0
   }
-  vars['slider.new'] = newSlider
+  vars['slider'] = newSlider
 })

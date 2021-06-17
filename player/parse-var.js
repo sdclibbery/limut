@@ -2,6 +2,8 @@
 define(function(require) {
   let vars = require('vars')
   let players = require('player/players')
+  let parseMap = require('player/parse-map')
+  let eatWhitespace = require('player/eat-whitespace')
 
   let varLookup = (state) => {
     let key = ''
@@ -15,6 +17,13 @@ define(function(require) {
       break
     }
     if (!key) { return }
+    // look for function call syntax; call var immediately if present
+    eatWhitespace(state)
+    if (typeof vars[key] === 'function' && state.str.charAt(state.idx).toLowerCase() === '{') {
+      let params = parseMap(state)
+      return vars[key](params)
+    }
+    // Return a lookup function
     let [playerId, param] = key.split('.')
     let result = (event,b) => {
       let v
@@ -76,6 +85,13 @@ define(function(require) {
 
   p = varLookup({str:'this.foo',idx:0})
   assert(1, p({foo:1}))
+
+  vars.foo = () => 3
+  state = {str:'foo {}',idx:0}
+  p = varLookup(state)
+  assert(6, state.idx)
+  assert(3, p)
+  delete vars.foo
 
   console.log('Parse var tests complete')
   }

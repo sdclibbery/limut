@@ -2,6 +2,8 @@
 define(function(require) {
   let param = require('player/default-param')
   let number = require('player/parse-number')
+  let parseMap = require('player/parse-map')
+  let eatWhitespace = require('player/eat-whitespace')
   let operatorTree = require('player/parse-operator')
   let {timeVar, linearTimeVar, smoothTimeVar, eventTimeVar} = require('player/eval-timevars')
   let {evalRandomRanged, evalRandomSet, periodicRandom, random, simpleNoise} = require('player/eval-randoms')
@@ -69,60 +71,6 @@ define(function(require) {
         return 4
       }
     }
-  }
-
-  let eatWhitespace = (state) => {
-    let char
-    while (char = state.str.charAt(state.idx)) {
-      if (char === ' ' || char === '\t' || char === '\n' || char === '\r') { state.idx += 1; continue }
-      break
-    }
-  }
-  let identifier = (state) => {
-    let char
-    let result = ''
-    while (char = state.str.charAt(state.idx).toLowerCase()) {
-      if ((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || char === '_') {
-        result += char
-        state.idx += 1
-        continue
-      }
-      break
-    }
-    return result
-  }
-  let parseMapEntry = (state) => {
-    eatWhitespace(state)
-    let k = identifier(state)
-    if (k === '') { return }
-    eatWhitespace(state)
-    if (state.str.charAt(state.idx) !== ':') { return }
-    state.idx += 1
-    eatWhitespace(state)
-    let v = expression(state)
-    eatWhitespace(state)
-    return {k:k,v:v}
-  }
-  let parseMap = (state) => {
-    let result = {}
-    let char
-    while (char = state.str.charAt(state.idx)) {
-      if (char === ' ' || char === '\t' || char === '\n' || char === '\r') { state.idx += 1; continue }
-      if (char == '{' || char == ',') {
-        state.idx += 1
-        let e = parseMapEntry(state)
-        if (e) {
-          result[e.k] = e.v
-          if (e.v.interval && !result.interval) { result.interval = e.v.interval }
-        }
-      } else if (char == '}') {
-        state.idx += 1
-        break
-      } else {
-        return undefined
-      }
-    }
-    return result
   }
 
   let parseString = (state) => {
@@ -316,7 +264,9 @@ define(function(require) {
       let v = varLookup(state)
       if (v !== undefined) {
         result = v
-        result.interval = parseInterval(state) || 'frame'
+        if (typeof v === 'function') {
+          result.interval = parseInterval(state) || 'frame'
+        }
         continue
       }
       break
@@ -334,6 +284,7 @@ define(function(require) {
     let state = {
       str: v,
       idx: 0,
+      expression: expression,
     }
     let result = expression(state)
     if (commented && state.commented) { commented() }
@@ -909,6 +860,18 @@ define(function(require) {
   assert(36, parseExpression('(2*3)^2'))
   assert(2, parseExpression('4^1/2'))
   assert(0, parseExpression('-1^1/2'))
+
+  vars.foo = () => 5
+  assert(5, parseExpression('foo{}'))
+  delete vars.foo
+
+  vars.foo = ({val}) => val
+  assert(5, parseExpression('foo{val:5}'))
+  delete vars.foo
+
+  vars.foo = () => 5
+  assert(7, parseExpression('foo{}+2'))
+  delete vars.foo
 
   console.log('Parse expression tests complete')
   }

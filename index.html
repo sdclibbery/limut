@@ -570,12 +570,9 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-UI sliders; eg my_slider = slider.new{name:'Adder', min:-5, max:5, init:1}  /  then use as amp=2*my_slider
- Slider module that defines a `slider` function var which creates a new slider and returns a slider method which can be called like an expression to get the value of the slider
- Expression syntax for treating a var as a function and calling with named params: `slider{min:-5,max:5}`
+UI sliders; eg my_slider = slider{name:'Adder', min:-5, max:5, init:1}  /  then use as amp=2*my_slider
+ Not working; return from slider function is not used as value...
  Slider module creates slider UI and updates values etc
- Slider new method should only be called on code load, not per event/frame etc
-  Does it need a new '/c' type thing?
  Refreshes on code update (but doesn't lose old value) - suggest a gc mark/sweep approach
  Docs
 Player values are lost on code reload; eg dur=32,trigger=1 then trigger is lost on code reload - suggest a gc mark/sweep approach
