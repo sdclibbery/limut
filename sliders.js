@@ -4,30 +4,43 @@ define(function(require) {
 
   let sliders = {}
 
+  let inputFromSlider = (slider, x) => Math.floor((x-slider.min)*1000/(slider.max-slider.min))
+  let sliderFromInput = (slider, x) => parseFloat(slider.min + (x*(slider.max-slider.min)/1000))
+
+  let idFromName = (name) => 'slider_'+name.replace(/[\W]+/g,"_")
+
   let createSliderUI = (slider) => {
     let template = document.querySelector('#slider-template')
     let s = template.content.cloneNode(true)
     s.querySelector('p .slider-name').innerText = slider.name + ':'
-    let range = slider.max-slider.min
-    let input = s.querySelector('p .slider')
-    input.value = Math.floor((slider.init-slider.min)*200/range)
-    input.oninput = ({target}) => {
-      slider.value = parseFloat(slider.min + (target.value*range/200))
-    }
-    slider.value = slider.init
+    s.querySelector('p .slider').id = idFromName(slider.name)
     document.getElementById('sliders').appendChild(s)
+  }
+
+  let updateSliderUI = (slider) => {
+    let input = document.querySelector('#'+idFromName(slider.name))
+    if (slider.value === undefined) {
+      slider.value = slider.init || 0
+    }
+    input.value = inputFromSlider(slider, slider.value)
+    input.oninput = ({target}) => {
+      slider.value = sliderFromInput(slider, target.value)
+    }
   }
 
   let newSlider = (params) => {
     if (!params) { throw 'Cannot create slider, no params passed' }
     if (!params.name) { throw 'Cannot create slider, no name param' }
-    if (!sliders[params.name]) {
+    let slider = sliders[params.name]
+    if (!slider) {
       params.init = params.init || 0
       sliders[params.name] = params
-      createSliderUI(sliders[params.name])
+      slider = sliders[params.name]
+      createSliderUI(slider)
+    } else {
+      for (let k in params) { slider[k] = params[k] } 
     }
-    let slider = sliders[params.name]
-    for (let k in params) { slider[k] = params[k] } 
+    updateSliderUI(slider)
     return () => slider.value || 0
   }
   vars['slider'] = newSlider

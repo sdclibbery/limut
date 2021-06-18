@@ -132,7 +132,7 @@
       <template id="slider-template">
         <p style="display: flex; flex-flow: row nowrap;">
           <span class="slider-name"></span>
-          <input class="slider" type="range" min="0" max="200" style="flex:auto;"/>
+          <input class="slider" type="range" min="0" max="1000" style="flex:auto;"/>
         </p>
       </template>
     </p>
@@ -579,10 +579,8 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 UI sliders; eg my_slider = slider{name:'Adder', min:-5, max:5, init:1}  /  then use as amp=2*my_slider
- Slider module creates slider UI and updates values etc
  Need to update slider when code changes
-  Eg if change min/max of existing slider, .value needs to update
- Delete old ones if no longer referenced - suggest a gc mark/sweep approach
+  Delete old ones if no longer referenced - suggest a gc mark/sweep approach
  Docs
 Player values are lost on code reload; eg dur=32,trigger=1 then trigger is lost on code reload - suggest a gc mark/sweep approach
 Random seed
