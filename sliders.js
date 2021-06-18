@@ -13,8 +13,14 @@ define(function(require) {
     let template = document.querySelector('#slider-template')
     let s = template.content.cloneNode(true)
     s.querySelector('p .slider-name').innerText = slider.name + ':'
+    s.querySelector('p').id = idFromName(slider.name)+'_root'
     s.querySelector('p .slider').id = idFromName(slider.name)
     document.getElementById('sliders').appendChild(s)
+  }
+
+  let deleteSliderUI = (slider) => {
+    let s = document.querySelector('#'+idFromName(slider.name)+'_root')
+    document.getElementById('sliders').removeChild(s)
   }
 
   let updateSliderUI = (slider) => {
@@ -41,7 +47,27 @@ define(function(require) {
       for (let k in params) { slider[k] = params[k] } 
     }
     updateSliderUI(slider)
+    slider.marked = true
     return () => slider.value || 0
   }
+
+  let gc_reset = () => {
+    for (let name in sliders) {
+      sliders[name].marked = false
+    }
+  }
+  let gc_sweep = () => {
+    for (let name in sliders) {
+      if (!sliders[name].marked) {
+        deleteSliderUI(sliders[name])
+        delete sliders[name]
+      }
+    }
+  }
+
   vars['slider'] = newSlider
+  return {
+    gc_reset: gc_reset,
+    gc_sweep: gc_sweep,
+  }
 })

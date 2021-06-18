@@ -5,6 +5,7 @@ define((require) => {
   let players = require('player/players')
   let mainVars = require('main-vars')
   let consoleOut = require('console')
+  let sliders = require('sliders')
 
   let parseCode = (code) => {
     let lines = code.split('\n')
@@ -30,8 +31,10 @@ define((require) => {
     players.instances = {}
     mainVars.reset()
     players.overrides = {}
+    sliders.gc_reset()
     consoleOut('> Update code')
     parseCode(code)
+    sliders.gc_sweep()
   }
 
   // TESTS //
