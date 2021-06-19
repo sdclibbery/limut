@@ -52,7 +52,9 @@ define(function (require) {
     let source = system.audio.createBufferSource()
     source.buffer = getBuffer(getUrl(params.sound, evalPerEvent(params, 'sample', 1)))
     source.playbackRate.value = rate
-    params.endTime = params._time + (source.buffer ? source.buffer.duration : 0.1)
+    let eventDur = Math.max(evalPerEvent(params, 'sus', evalPerEvent(params, 'dur', 0)), 0)
+    let bufferDur =  (source.buffer ? source.buffer.duration : 0.1)
+    params.endTime = params._time + Math.min(eventDur, bufferDur)
 
     let vca = system.audio.createGain()
     let gainbase = 0.18 * evalPerEvent(params, "loud", 1)

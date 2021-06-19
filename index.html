@@ -508,17 +508,17 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 /*
 ====
 ==== audio ====
+Should be able to use sus to gate play sounds
+Sample synth has start param and uses sus param for duration
 save current note frequency onto event as this.freq
 Env=reverse (slow attack / fast release)
 more filters: notch, low/high shelf
 reverb param allowing to use a convolution reverb with specified duration (at users own risk :-)
 Xylophone synth - https://www.youtube.com/watch?v=dXo_493fEpU
 pulse synth + formant/vowel effects for vocal aaa/ooo effects
-should be able to use sus to gate play sounds
 Constant envelope type to allow specifying per frame envelope with amp?
 Chorus effect
 ?portamento
-Sample synth can take play sample values, and also has start param (use sus to get end)
 Is it possible to control rate per frame?
 crackling on per frame amp change? eg testbass fmbass 0[7_.0], dur=4, oct=(1,2), amp=[2,1,0,0]s1/16@f
  chopwave
