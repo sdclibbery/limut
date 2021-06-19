@@ -74,7 +74,7 @@ define(function (require) {
     let bpf = system.audio.createBiquadFilter()
     bpf.type = 'bandpass'
     evalPerFrame(bpf.frequency, params, 'bpf')
-    evalPerFrame(bpf.Q, params, 'bpr', 5)
+    evalPerFrame(bpf.Q, params, 'bpr', 1)
     node.connect(bpf)
     system.disconnect(params, [bpf,node])
     return bpf
