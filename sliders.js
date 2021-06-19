@@ -39,7 +39,9 @@ define(function(require) {
     if (!params.name) { throw 'Cannot create slider, no name param' }
     let slider = sliders[params.name]
     if (!slider) {
-      params.init = params.init || 0
+      params.min = params.min || 0
+      params.max = params.max || 1
+      params.init = params.init || params.min
       sliders[params.name] = params
       slider = sliders[params.name]
       createSliderUI(slider)

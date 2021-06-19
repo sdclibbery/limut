@@ -282,6 +282,7 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>{x:0,y:1}</code> Map, containing keys and values</p>
 <p><code>'abc'</code> String value</p>
 <p><code>foo</code> Lookup a global var named <code>foo</code>.</p>
+<p><code>foo{x:2}</code> Lookup a global var named <code>foo</code>, and call it as a function passing in named parameters.</p>
 <p><code>p1.amp</code> Lookup the value of param <code>amp</code> from player <code>p1</code>. Uses the param from the most recently played event on that player. Can additionally use a <code>pulse</code> param on the player, which pulses from 0 to 1 as events play on that player.</p>
 <p><code>this.value</code> Get param <code>value</code> from the current event.</p>
 <p><code>@f</code> Place <code>@f</code> immediately after a value to evaluate it per frame (60 times a second). For example <code>lpf=[300:3000]l8@f</code> will update the lpf cutoff frequency continuously, while <code>lpf=[300:3000]l8</code> will be evaluated only once for each event played.</p>
@@ -420,6 +421,10 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>rainbow</code> Colour changing through the rainbow</p>
 <p><code>pad</code> Envelope types eg <code>envelope=pad</code>; also <code>full</code> and <code>simple</code></p>
 <p><code>wow</code> Randomly but smoothly varying signal, good for simulating analog 'wow' pitch distortion; eg <code>addc=wow</code></p>
+</div>
+<h4 onclick="toggleAccordion('accordion-controls')">▶ Controls</h4>
+<div id="accordion-controls" class="closed">
+<p><code>slider{name:'Foo', min:-5, max:5, init:0}</code> Create a new slider control on the page, with the given name and parameters. The name is required as it uniquely identifies the slider. The min and max parameters default to 0 and 1. The return value from this call is a value that will dynamically reflect the current value of the slider.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-play-samples')">▶ Play Samples</h4>
 <div id="accordion-play-samples" class="closed">
@@ -578,11 +583,8 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-UI sliders; eg my_slider = slider{name:'Adder', min:-5, max:5, init:1}  /  then use as amp=2*my_slider
- Need to update slider when code changes
-  Delete old ones if no longer referenced - suggest a gc mark/sweep approach
- Docs
-Player values are lost on code reload; eg dur=32,trigger=1 then trigger is lost on code reload - suggest a gc mark/sweep approach
+Player values are lost on code reload; eg dur=32,trigger=1 then trigger is lost on code reload
+ Suggest a gc mark/sweep approach like for sliders?
 Random seed
  [1,2,3]r4{seed:1}
  [1,2,3]r4{seed:1,count:8}
