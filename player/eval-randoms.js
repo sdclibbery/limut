@@ -1,5 +1,6 @@
 'use strict';
 define(function(require) {
+  let evalOperator = require('player/eval-operator')
 
   let evalRandomRanged = (lo, hi) => {
     return lo + Math.random() * (hi-lo)
@@ -32,6 +33,15 @@ define(function(require) {
     }
   }
 
+  let add = (a,b) => a+b
+  let mul = (a,b) => a*b
+  let lerpValue = (lerp, pre, post) => {
+    return evalOperator(add,
+      evalOperator(mul, 1-lerp, pre),
+      evalOperator(mul, lerp, post)
+    )
+  }
+
   let hash = (n) => {
     n += 213.43254
     n *= n
@@ -58,7 +68,7 @@ define(function(require) {
       if (evs.length >= 2) {
         let lo = evs[0]
         let hi = evs[evs.length-1]
-        result = lo + result*(hi-lo)
+        result = lerpValue(result, lo, hi)
       }
       return result
     }

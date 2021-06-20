@@ -508,7 +508,6 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 /*
 ====
 ==== audio ====
-Should be able to use sus to gate play sounds
 Sample synth has start param and uses sus param for duration
 save current note frequency onto event as this.freq
 Env=reverse (slow attack / fast release)
@@ -583,13 +582,12 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Player values are lost on code reload; eg dur=32,trigger=1 then trigger is lost on code reload
+ Should persist current player data if the player still exists after the code reload
  Suggest a gc mark/sweep approach like for sliders?
 Random seed
  [1,2,3]r4{seed:1}
  [1,2,3]r4{seed:1,count:8}
 addc=[0,[0,24]e]r doesn't work :-/
- Should persist current player data if the player still exists after the code reload
-All lerps should use operator eval, so allow [red, green]n etc
 () blocks per frame eval? eg: v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
  // v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
 () inside {} doesnt work; eg: v glow 0, loc={x:[0:1]l2@f, y:(0,1/2), w:0.1, h:0.1}

@@ -1,5 +1,6 @@
 'use strict';
 define(function(require) {
+  let evalOperator = require('player/eval-operator')
 
   let timeVarSteps = (vs, ds) => {
     if (!Array.isArray(ds)) { ds = [ds] }
@@ -31,6 +32,15 @@ define(function(require) {
     }
   }
 
+  let add = (a,b) => a+b
+  let mul = (a,b) => a*b
+  let lerpValue = (lerp, pre, post) => {
+    return evalOperator(add,
+      evalOperator(mul, 1-lerp, pre),
+      evalOperator(mul, lerp, post)
+    )
+  }
+
   let linearTimeVar = (vs, ds, interval) => {
     let steps = timeVarSteps(vs, ds)
     return (e,b, evalRecurse) => {
@@ -42,7 +52,7 @@ define(function(require) {
         if (isInTimeVarStep(pre, count)) {
           let post = evalRecurse(steps[(idx+1) % steps.length], e,b)
           let lerp = (count - pre._time) / pre.duration
-          return (1-lerp)*pre.value + lerp*post.value
+          return lerpValue(lerp, pre.value, post.value)
         }
       }
     }
@@ -60,7 +70,7 @@ define(function(require) {
           let post = evalRecurse(steps[(idx+1) % steps.length], e,b)
           let lerp = (count - pre._time) / pre.duration
           lerp = lerp*lerp*(3 - 2*lerp) // bezier ease in/out
-          return (1-lerp)*pre.value + lerp*post.value
+          return lerpValue(lerp, pre.value, post.value)
         }
       }
     }
@@ -77,7 +87,7 @@ define(function(require) {
       let pre = evalRecurse(vs[preIdx], e,b, evalRecurse)
       let post = evalRecurse(vs[postIdx], e,b, evalRecurse)
       let lerp = Math.min(Math.max((eventFraction - preIdx/numSteps)*numSteps, 0), 1)
-      return (1-lerp)*pre + lerp*post
+      return lerpValue(lerp, pre, post)
     }
   }
 
