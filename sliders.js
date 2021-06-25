@@ -41,7 +41,7 @@ define(function(require) {
     if (!slider) {
       params.min = params.min || 0
       params.max = params.max || 1
-      params.init = params.init || params.min
+      params.init = (params.init !== undefined) ? params.init : params.min
       sliders[params.name] = params
       slider = sliders[params.name]
       createSliderUI(slider)
