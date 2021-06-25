@@ -557,7 +557,6 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-Derive an fb value from the brightness for webcam and image synths
 Disco glowing geometric shapes shader
 Starfield shader
 text synth
@@ -582,11 +581,9 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-Player values are lost on code reload; eg dur=32,trigger=1 then trigger is lost on code reload
- Should persist current player data if the player still exists after the code reload
+glitch when trigger player starts new note
   v1 grid 0, dur=8, trigger=1, additive
   v2 gradient 0, amp=1/2+100*v1.trigger
- Suggest a gc mark/sweep approach like for sliders?
 Random seed
  [1,2,3]r4{seed:1}
  [1,2,3]r4{seed:1,count:8}

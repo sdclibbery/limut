@@ -28,12 +28,13 @@ define((require) => {
 
   let updateCode = (code) => {
     system.resume()
-    players.instances = {}
+    players.gc_reset()
     mainVars.reset()
     players.overrides = {}
     sliders.gc_reset()
     consoleOut('> Update code')
     parseCode(code)
+    players.gc_sweep()
     sliders.gc_sweep()
   }
 
