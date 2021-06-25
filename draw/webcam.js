@@ -20,7 +20,7 @@ define(function (require) {
     uv = preprocess(uv);
     uv = (uv / 2.0) + 0.5;
     vec4 c = texture(l_image, fract(uv));
-    float foreback = c.a;
+    float foreback = c.a*(c.r+c.g+c.b)/3.0;
     c.a = 1.0;
     if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) { foreback = 0.0; }
     postprocess(c, foreback);
