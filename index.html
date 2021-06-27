@@ -404,7 +404,7 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 <p><code>main.amp</code> Main mix amplitude control. Value resets unless set every time the code is updated.</p>
 <p><code>main.reverb</code> Main reverb amplitude control. Value resets unless set every time the code is updated.</p>
 <p><code>main.clear</code> Main visual buffer clear control. Set to zero to disable clear. This may not have any visual effect on most browsers. Value resets unless set every time the code is updated.</p>
-<p><code>root</code> Main root pitch offset; default <code>0</code> roots the pitches on middle c; <code>1</code> pitches up by one semitone etc. </p>
+<p><code>root</code> Main root pitch offset; default <code>0</code> roots the pitches on middle c; <code>1</code> pitches up by one semitone etc. This is fractional, so can be used to 'nudge' the tuning to match other instruments; eg <code>root=0.135</code> </p>
 <p><code>scale</code> Scale eg minor, major, chromatic, majorpentatonic, lydian etc etc. Value resets unless set every time the code is updated.</p>
 <p><code>drop6_2</code> Predefined time var: equivalent to <code>[1,0]t[6.2]</code>. These are all the predefined drops: drop6_2, drop7_1, drop12_4, drop14_2, drop15_1, drop24_8, drop28_4, drop30_2, drop31_1, drop56_8, drop60_4, drop62_2, drop63_1</p>
 <p><code>tile_full</code> Predefined loc param map to cover the full screen: equivalent to <code>{x:0,y:0,w:1,h:1}</code>. Other predefined locations: tile_tl/tr/bl/br/m, tile_h1/2/3/4/5, tile_v1/2/3/4/5</p>
@@ -510,14 +510,14 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 ==== audio ====
 Sample synth has start param and uses sus param for duration
 save current note frequency onto event as this.freq
-Env=reverse (slow attack / fast release)
+?portamento
 more filters: notch, low/high shelf
 reverb param allowing to use a convolution reverb with specified duration (at users own risk :-)
 Xylophone synth - https://www.youtube.com/watch?v=dXo_493fEpU
+Env=reverse (slow attack / fast release)
 pulse synth + formant/vowel effects for vocal aaa/ooo effects
 Constant envelope type to allow specifying per frame envelope with amp?
 Chorus effect
-?portamento
 Is it possible to control rate per frame?
 crackling on per frame amp change? eg testbass fmbass 0[7_.0], dur=4, oct=(1,2), amp=[2,1,0,0]s1/16@f
  chopwave
@@ -581,9 +581,6 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-glitch when trigger player starts new note
-  v1 grid 0, dur=8, trigger=1, additive
-  v2 gradient 0, amp=1/2+100*v1.trigger
 Random seed
  [1,2,3]r4{seed:1}
  [1,2,3]r4{seed:1,count:8}

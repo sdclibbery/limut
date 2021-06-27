@@ -36,7 +36,9 @@ define((require) => {
         // Create player
         let playerFactory = playerTypes[playerType.toLowerCase()]
         if (!playerFactory) { throw 'Player "'+playerType+'" not found' }
-        let play = (es) => {
+        let play = (es, beat) => {
+          player.events ||= []
+          player.events = player.events.filter(e => e.countToTime(beat.count) <= e.endTime)
           return es
             .filter(e => e.amp === undefined || typeof e.amp === 'function' || e.amp > 0)
             .map(e => {
@@ -50,7 +52,6 @@ define((require) => {
                 return Math.pow(v, 1/2)
               }
               if (player.lastCount !== e.beat.count) {
-                player.events = []
                 player.lastCount = e.beat.count
               }
               e.countToTime = (count) => e.beat.time + (count-e.beat.count)*e.beat.duration
