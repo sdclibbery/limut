@@ -39,9 +39,9 @@ define(function(require) {
   window.go = () => {
     updateCode(editor.getValue())
     if (editor.getValue().trim() !== '') {
-      editor.execCommand('selectAll')
-      setTimeout(() => editor.execCommand('undoSelection'), 100)
-      }
+      editorDiv.style.backgroundColor = '#d9d9d980'
+      setTimeout(() => editorDiv.style.backgroundColor = 'transparent', 25)
+    }
   }
   window.comment = () => {
     editor.toggleComment()
