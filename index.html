@@ -204,6 +204,8 @@ kk play ::[::][::][::]::., lpf=[600:900]l40, rate=[0.8:1.2]n
 ba dbass 0, dur=1/4, att=0, lpf=[1000:100]e, hpf=[0:500]n
 pi ping [010], add=[-5:5]l18/4, amp=[0:[0:1]t96]n, echo=1/2, oct=6, scale=minorpentatonic
 pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]s32@f, oct=3, addc=[2,2,0,0]s[62,4,62,0]@f</pre>
+<pre>bpm=90
+n noise 00, dur=[9,7], envelope=simple, bpf=523*[[1:5]e,[1:1/5]e]*[1:[1.1,1.25]]n1, amp=3/2, att=[2,1/4], rel=[9,7]</pre>
 </div>
 <h4 onclick="toggleAccordion('accordion-indicators')">▶ Indicators</h4>
 <div id="accordion-indicators" class="closed">
