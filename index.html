@@ -205,7 +205,9 @@ ba dbass 0, dur=1/4, att=0, lpf=[1000:100]e, hpf=[0:500]n
 pi ping [010], add=[-5:5]l18/4, amp=[0:[0:1]t96]n, echo=1/2, oct=6, scale=minorpentatonic
 pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]s32@f, oct=3, addc=[2,2,0,0]s[62,4,62,0]@f</pre>
 <pre>bpm=90
-n noise 00, dur=[9,7], envelope=simple, bpf=523*[[1:5]e,[1:1/5]e]*[1:[1.1,1.25]]n1, amp=3/2, att=[2,1/4], rel=[9,7]</pre>
+n noise 00, dur=[9,7], envelope=simple, bpf=523*[[1:5]e,[1:1/5]e]*[1:[1.1,1.25]]n1, amp=3/2, att=[2,1/4], rel=[9,7], pan=[-1,1]l8@f
+p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=[0.4:0.6]r, oct=6, pan=[-1:1]n8, amp=[0.3:1.1]n8, room=1
+</pre>
 </div>
 <h4 onclick="toggleAccordion('accordion-indicators')">▶ Indicators</h4>
 <div id="accordion-indicators" class="closed">
@@ -583,10 +585,11 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+delay can't be a random
+addc=[0,[0,24]e]r doesn't work :-/
 Random seed
  [1,2,3]r4{seed:1}
  [1,2,3]r4{seed:1,count:8}
-addc=[0,[0,24]e]r doesn't work :-/
 () blocks per frame eval? eg: v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
  // v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
 () inside {} doesnt work; eg: v glow 0, loc={x:[0:1]l2@f, y:(0,1/2), w:0.1, h:0.1}
