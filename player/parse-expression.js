@@ -877,6 +877,17 @@ define(function(require) {
   assert(6, parseExpression('  foo  {  x:3, val : 6 }  '))
   delete vars.foo
 
+  // assert('frame', parseExpression("[0,24]e").interval)
+  // assert('frame', parseExpression("[0,[0,24]e]r").interval)
+  // assert('frame', parseExpression("[0,[0,24]e]r1").interval)
+  // assert('frame', parseExpression("[0,[0:24]e]r").interval)
+  // assert('frame', parseExpression("[0,[0:24]e]r1").interval)
+  // assert('frame', parseExpression("[0:[0,24]e]r").interval)
+  // assert('frame', parseExpression("[0:[0,24]e]r1").interval)
+  // assert('frame', parseExpression("[0:[0:24]e]r").interval)
+  // assert('frame', parseExpression("[0:[0:24]e]r1").interval)
+  // assert('frame', parseExpression("[0,[0,24]r]e").interval)
+
   console.log('Parse expression tests complete')
   }
   

@@ -1,5 +1,6 @@
 'use strict';
 define(function(require) {
+  let combineIntervals = require('player/intervals').combine
 
   let objectMap = (obj, fn) => {
     obj.__evaluated = obj.__evaluated || {} // cache result object to avoid creating per-frame garbage
@@ -76,7 +77,7 @@ define(function(require) {
       if (result === undefined) { return operator(op, el, er) }
       return result
     }
-    evalOp.interval = l.interval == 'frame' ? 'frame' : (r.interval == 'frame' ? 'frame' : (l.interval || r.interval))
+    evalOp.interval = combineIntervals(l.interval, r.interval)
     return evalOp
   }
 
