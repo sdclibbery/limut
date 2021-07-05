@@ -8,6 +8,7 @@ define(function(require) {
   let {timeVar, linearTimeVar, smoothTimeVar, eventTimeVar} = require('player/eval-timevars')
   let {evalRandomRanged, evalRandomSet, periodicRandom, random, simpleNoise} = require('player/eval-randoms')
   let varLookup = require('player/parse-var')
+  let combineIntervals = require('player/intervals').combine
 
   let doArray = (state, open, close, separator) => {
     let result = []
@@ -178,8 +179,10 @@ define(function(require) {
             let lo = param(vs[0], 0)
             let hi = param(vs[1], 1)
             rand = (e,b,evalRecurse) => evalRandomRanged(evalRecurse(lo,e,b,evalRecurse), evalRecurse(hi,e,b.evalRecurse))
+            interval = combineIntervals(combineIntervals(interval, lo.interval), hi.interval)
           } else {
-            rand = (e,b,evalRecurse) => evalRandomSet(vs, e,b,evalRecurse)
+            rand = (e,b,evalRecurse) => evalRandomSet(vs)
+            interval = vs.map(v => v.interval).reduce(combineIntervals, interval)
           }
           if (period) {
             result = periodicRandom(rand, period, interval)
@@ -877,16 +880,20 @@ define(function(require) {
   assert(6, parseExpression('  foo  {  x:3, val : 6 }  '))
   delete vars.foo
 
-  // assert('frame', parseExpression("[0,24]e").interval)
-  // assert('frame', parseExpression("[0,[0,24]e]r").interval)
-  // assert('frame', parseExpression("[0,[0,24]e]r1").interval)
-  // assert('frame', parseExpression("[0,[0:24]e]r").interval)
-  // assert('frame', parseExpression("[0,[0:24]e]r1").interval)
-  // assert('frame', parseExpression("[0:[0,24]e]r").interval)
-  // assert('frame', parseExpression("[0:[0,24]e]r1").interval)
-  // assert('frame', parseExpression("[0:[0:24]e]r").interval)
-  // assert('frame', parseExpression("[0:[0:24]e]r1").interval)
-  // assert('frame', parseExpression("[0,[0,24]r]e").interval)
+  assert('event', parseExpression("[0,24]r").interval)
+  assert('event', parseExpression("[0:24]r").interval)
+  assert('frame', parseExpression("[0,24]e").interval)
+  assert('frame', parseExpression("[0,[0,24]e]r").interval)
+  assert('frame', parseExpression("[0,[0,24]e]r1").interval)
+  assert('frame', parseExpression("[0,[0:24]e]r").interval)
+  assert('frame', parseExpression("[0,[0:24]e]r1").interval)
+  assert('frame', parseExpression("[0:[0,24]e]r").interval)
+  assert('frame', parseExpression("[0:[0,24]e]r1").interval)
+  assert('frame', parseExpression("[0:[0:24]e]r").interval)
+  assert('frame', parseExpression("[0:[0:24]e]r1").interval)
+  assert('frame', parseExpression("[[0:24]e:0]r").interval)
+  assert('frame', parseExpression("[[0:24]e:0]r1").interval)
+  assert('frame', parseExpression("[0,[0,24]r]e").interval)
 
   console.log('Parse expression tests complete')
   }

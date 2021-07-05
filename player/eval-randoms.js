@@ -6,9 +6,9 @@ define(function(require) {
     return lo + Math.random() * (hi-lo)
   }
 
-  let evalRandomSet = (vs, e,b, evalRecurse) => {
+  let evalRandomSet = (vs) => {
     let idx = Math.floor(Math.random()*vs.length*0.9999)
-    return evalRecurse(vs[idx], e,b)
+    return vs[idx]
   }
 
   let periodicRandom = (getter, period, interval) => {
@@ -29,7 +29,7 @@ define(function(require) {
       if (!events.has(e)) {
         events.set(e, getter(e,b,evalRecurse))
       }
-      return events.get(e)
+      return evalRecurse(events.get(e), e,b)
     }
   }
 
