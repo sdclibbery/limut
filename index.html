@@ -590,14 +590,17 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+Do not set delay, loud, sharp, long unless they have a value; even setting to undefined costs
 Everything except operators is forcing the interval, when it should come from the args
- r,e,n,t,l,s - done
- [],(),var,{}
-Defining a name for every slider is too fiddly
-delay can't be a random
+ r,e,n,t,l,s,[] - done
+ (),var,{}
 () blocks per frame eval? eg: v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
  // v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
 () inside {} doesnt work; eg: v glow 0, loc={x:[0:1]l2@f, y:(0,1/2), w:0.1, h:0.1}
+Defining a name for every slider is too fiddly
+ allow slider{} ?
+ or even some UI method for slidering a value in the code??
+delay can't be a random
 Random seed
  [1,2,3]r4{seed:1}
  [1,2,3]r4{seed:1,count:8}

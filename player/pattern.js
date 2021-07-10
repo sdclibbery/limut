@@ -35,7 +35,7 @@ define(function(require) {
         let e = events[idx]
         let es = (typeof(e.value) == 'function') ? e.value(e, Math.floor(count/patternLength)) : [e]
         es.forEach(sourceEvent => {
-          let delay = evalParamEvent(params.delay, event, count)
+          let delay = !params.delay ? undefined : evalParamEvent(params.delay, sourceEvent, count)
           let delays = Array.isArray(delay) ? delay : [delay]
           delays.forEach(d => {
             let event = {}

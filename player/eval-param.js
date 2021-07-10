@@ -3,7 +3,7 @@ define((require) => {
 
   let evalParamNow = (evalRecurse, value, event, beat, stopAtTuple) => {
     if (Array.isArray(value)) {
-      let v = value[Math.floor(event.idx) % value.length]
+      let v = value[Math.floor(event.idx || 0) % value.length]
       if (typeof v == 'function') {
         return evalRecurse(v, event, beat, evalRecurse)
       }
@@ -37,7 +37,9 @@ define((require) => {
   }
 
   let evalParamEvent = (value, event, beat) => {
-    if (!!value && value.interval === 'frame') { return value }
+    if (!!value && value.interval === 'frame') {
+      return value
+    }
     return evalParamNow(evalParamEvent, value, event, beat)
   }
 
