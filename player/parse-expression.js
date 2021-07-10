@@ -132,6 +132,10 @@ define(function(require) {
     return result
   }
 
+  let arrayIntervals = (vs, def) => {
+    return vs.map(v => v.interval).reduce(combineIntervals, def)
+  }
+
   let expression = (state) => {
     let result
     let operatorList = []
@@ -171,7 +175,7 @@ define(function(require) {
         } else if (state.str.charAt(state.idx).toLowerCase() == 'r') { // random
           state.idx += 1
           let period = number(state)
-          let interval = parseInterval(state) || 'event'
+          let interval = 'event'
           let rand
           if (vs.length == 0) {
             rand = (e,b,evalRecurse) => evalRandomRanged(0.000001, 1)
@@ -182,8 +186,9 @@ define(function(require) {
             interval = combineIntervals(combineIntervals(interval, lo.interval), hi.interval)
           } else {
             rand = (e,b,evalRecurse) => evalRandomSet(vs)
-            interval = vs.map(v => v.interval).reduce(combineIntervals, interval)
+            interval = arrayIntervals(vs, interval)
           }
+          interval = parseInterval(state) || interval
           if (period) {
             result = periodicRandom(rand, period, interval)
           } else {
@@ -200,7 +205,7 @@ define(function(require) {
         } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
           state.idx += 1
           result = eventTimeVar(vs)
-          result.interval = parseInterval(state) || 'frame'
+          result.interval = parseInterval(state) || arrayIntervals(vs, 'frame')
         } else { // Basic array: one value per pattern step
           vs = expandColon(vs)
           result = vs
@@ -894,6 +899,9 @@ define(function(require) {
   assert('frame', parseExpression("[[0:24]e:0]r").interval)
   assert('frame', parseExpression("[[0:24]e:0]r1").interval)
   assert('frame', parseExpression("[0,[0,24]r]e").interval)
+  assert('event', parseExpression("[0,[0,24]r]e@e").interval)
+  assert('event', parseExpression("[0,[0,24]e]r@e").interval)
+  assert('frame', parseExpression("[0,24]r@f").interval)
 
   console.log('Parse expression tests complete')
   }
