@@ -163,13 +163,13 @@ define(function(require) {
         } else if (state.str.charAt(state.idx).toLowerCase() == 'l') { // linearly interpolated timevar
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
-          let interval = parseInterval(state) || 'event'
+          let interval = parseInterval(state) || arrayIntervals(vs, 'event')
           result = linearTimeVar(vs, ds, interval)
           result.interval = interval
         } else if (state.str.charAt(state.idx).toLowerCase() == 's') { // smoothstep interpolated timevar
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
-          let interval = parseInterval(state) || 'event'
+          let interval = parseInterval(state) || arrayIntervals(vs, 'event')
           result = smoothTimeVar(vs, ds, interval)
           result.interval = interval
         } else if (state.str.charAt(state.idx).toLowerCase() == 'r') { // random
@@ -912,6 +912,14 @@ define(function(require) {
   assert('frame', parseExpression("[0,[0,24]t]e").interval)
   assert('event', parseExpression("[0,[0,24]e]t@e").interval)
   assert('event', parseExpression("[0,[0,24]t]e@e").interval)
+  assert('frame', parseExpression("[0,[0,24]e]l").interval)
+  assert('frame', parseExpression("[0,[0,24]l]e").interval)
+  assert('event', parseExpression("[0,[0,24]e]l@e").interval)
+  assert('event', parseExpression("[0,[0,24]l]e@e").interval)
+  assert('frame', parseExpression("[0,[0,24]e]s").interval)
+  assert('frame', parseExpression("[0,[0,24]s]e").interval)
+  assert('event', parseExpression("[0,[0,24]e]s@e").interval)
+  assert('event', parseExpression("[0,[0,24]s]e@e").interval)
 
   console.log('Parse expression tests complete')
   }
