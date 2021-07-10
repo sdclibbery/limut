@@ -78,7 +78,7 @@ define(function(require) {
 
   let eventTimeVar = (vs) => {
     return (e,b, evalRecurse) => {
-      if (!e.countToTime) { return }
+      if (!e.countToTime) { return evalRecurse(vs[0] || 0, e,b, evalRecurse) }
       let eventFraction = (e.countToTime(b) - e._time) / (e.endTime - e._time)
       eventFraction = eventFraction || 0
       let numSteps = vs.length-1

@@ -590,13 +590,8 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-addc=[0,[0,24]e]r doesn't work, but [0:[0,24]r]e does.
- But [0,[0:24]e]r@f1 still doesn't (but is randomly 1 semitone higher..??)
-  !!! This is the first thing to fix...
- Ideally, all three should all do the same thing, but having to add @f to the []r wouldn't be the end of the world
 Everything except operators is forcing the interval, when it should come from the args
- r - done
- e ? In progress - need to check unit test state!!
+ r,e - done
  n,t,l,s,(),[],var,{}
 Defining a name for every slider is too fiddly
 delay can't be a random
