@@ -157,7 +157,7 @@ define(function(require) {
           vs = expandColon(vs)
           let ds = numberOrArrayOrFour(state)
           if (Array.isArray(ds)) { ds = expandColon(ds) }
-          let interval = parseInterval(state) || 'event'
+          let interval = parseInterval(state) || arrayIntervals(vs, 'event')
           result = timeVar(vs, ds, interval)
           result.interval = interval
         } else if (state.str.charAt(state.idx).toLowerCase() == 'l') { // linearly interpolated timevar
@@ -901,7 +901,17 @@ define(function(require) {
   assert('frame', parseExpression("[0,[0,24]r]e").interval)
   assert('event', parseExpression("[0,[0,24]r]e@e").interval)
   assert('event', parseExpression("[0,[0,24]e]r@e").interval)
+  assert('frame', parseExpression("[0,[0,24]r@e]e").interval)
+  assert('event', parseExpression("[0,[0,24]e@e]r").interval)
   assert('frame', parseExpression("[0,24]r@f").interval)
+  assert('frame', parseExpression("[0,[0,24]e]n").interval)
+  assert('frame', parseExpression("[0,[0,24]n]e").interval)
+  assert('event', parseExpression("[0,[0,24]e]n@e").interval)
+  assert('event', parseExpression("[0,[0,24]n]e@e").interval)
+  assert('frame', parseExpression("[0,[0,24]e]t").interval)
+  assert('frame', parseExpression("[0,[0,24]t]e").interval)
+  assert('event', parseExpression("[0,[0,24]e]t@e").interval)
+  assert('event', parseExpression("[0,[0,24]t]e@e").interval)
 
   console.log('Parse expression tests complete')
   }
