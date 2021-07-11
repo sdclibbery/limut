@@ -2,24 +2,24 @@
 define((require) => {
 
   let evalParamNow = (evalRecurse, value, event, beat, stopAtTuple) => {
-    if (Array.isArray(value)) {
+    if (Array.isArray(value)) { // Array is indexed by beat
       let v = value[Math.floor(event.idx || 0) % value.length]
       if (typeof v == 'function') {
         return evalRecurse(v, event, beat, evalRecurse)
       }
       return v
-    } else if (typeof value == 'function') {
+    } else if (typeof value == 'function') { // Call function to get current value
       let v = value(event, beat, evalRecurse)
-      if (Array.isArray(v)) {
+      if (Array.isArray(v)) { // If a function returns an array, then thats a tuple, like a chord
         let recurse = stopAtTuple ? evalParamEvent : evalRecurse
-        v.__evaluated = v.__evaluated || [] // cache result object to avoid creating per-frame garbage
+        v.__evaluated = v.__evaluated || [] // cache result array to avoid creating per-frame garbage
         for (let i = 0; i<v.length; i++) {
           v.__evaluated[i] = recurse(v[i], event, beat, recurse)
         }
         return v.__evaluated
       }
       return evalRecurse(v, event, beat)
-    } else if (typeof value == 'object') {
+    } else if (typeof value == 'object') { // Eval each field in the object
       value.__evaluated = value.__evaluated || {} // cache result object to avoid creating per-frame garbage
       for (let k in value) {
         if (k !== '__evaluated') {
@@ -32,18 +32,18 @@ define((require) => {
     }
   }
 
-  let evalParamFrame = (value, event, beat) => {
+  let evalParamFrame = (value, event, beat) => { // Fully evaluate down to a primitive number/string etc
     return evalParamNow(evalParamFrame, value, event, beat)
   }
 
-  let evalParamEvent = (value, event, beat) => {
+  let evalParamEvent = (value, event, beat) => { // Evaluate only values that are constant for the entire event
     if (!!value && value.interval === 'frame') {
       return value
     }
     return evalParamNow(evalParamEvent, value, event, beat)
   }
 
-  let evalParamToTuple = (value, event, beat) => {
+  let evalParamToTuple = (value, event, beat) => { // Evaluate fully until a tuple is reached, then evaluate per event
     return evalParamNow(evalParamToTuple, value, event, beat, true)
   }
 

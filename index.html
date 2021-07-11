@@ -590,10 +590,9 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-Do not set delay, loud, sharp, long unless they have a value; even setting to undefined costs
 Everything except operators is forcing the interval, when it should come from the args
- r,e,n,t,l,s,[] - done
- (),var,{}
+ r,e,n,t,l,s,[],() - done
+ {},var
 () blocks per frame eval? eg: v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
  // v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
 () inside {} doesnt work; eg: v glow 0, loc={x:[0:1]l2@f, y:(0,1/2), w:0.1, h:0.1}
@@ -622,6 +621,7 @@ pattern concat "xo + vi"
 pattern repeat "xo * 3" higher precedence than concat
 pattern support brackets "( xo + vi ) * 3"
 pattern values in vars, and then use in multiple players, and also invert, retrograde etc
+Do not set delay, loud, sharp, long unless they have a value; even setting to undefined costs
 WebMidi
  Outputs (to control external synths)
  Inputs (like sliders)
