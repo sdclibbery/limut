@@ -202,9 +202,9 @@ define(function(require) {
   pattern = parsePattern('0', {amp:2})
   assert([{value:'0',idx:0,_time:0,dur:1,count:0,amp:2}], pattern(0))
 
-  pattern = parsePattern('01', {amp:[2,3]})
+  pattern = parsePattern('01', {amp:()=>2})
   assert([{value:'0',idx:0,_time:0,dur:1,count:0,amp:2}], pattern(0))
-  assert([{value:'1',idx:1,_time:0,dur:1,count:1,amp:3}], pattern(1))
+  assert([{value:'1',idx:1,_time:0,dur:1,count:1,amp:2}], pattern(1))
   assert([{value:'0',idx:0,_time:0,dur:1,count:2,amp:2}], pattern(2))
 
   pattern = parsePattern('0', {delay:1/2})
@@ -225,9 +225,9 @@ define(function(require) {
   assert([{value:'0',idx:0,_time:0,dur:1,count:0,amp:2},{value:'0',idx:0,_time:0,dur:1,count:0,amp:3}], pattern(0))
   assert([{value:'0',idx:0,_time:0,dur:1,count:1,amp:2},{value:'0',idx:0,_time:0,dur:1,count:1,amp:3}], pattern(1))
 
-  pattern = parsePattern('01', {amp:[()=>[1,2],()=>[3,4]]})
+  pattern = parsePattern('01', {amp:()=>[1,2]})
   assert([{value:'0',idx:0,_time:0,dur:1,count:0,amp:1},{value:'0',idx:0,_time:0,dur:1,count:0,amp:2}], pattern(0))
-  assert([{value:'1',idx:1,_time:0,dur:1,count:1,amp:3},{value:'1',idx:1,_time:0,dur:1,count:1,amp:4}], pattern(1))
+  assert([{value:'1',idx:1,_time:0,dur:1,count:1,amp:1},{value:'1',idx:1,_time:0,dur:1,count:1,amp:2}], pattern(1))
   assert([{value:'0',idx:0,_time:0,dur:1,count:2,amp:1},{value:'0',idx:0,_time:0,dur:1,count:2,amp:2}], pattern(2))
 
   pattern = parsePattern('0', {amp:()=>[2,3],dur:2,decay:1})

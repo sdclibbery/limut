@@ -68,7 +68,8 @@ define(function(require) {
       value = '1'
       commented = true
     }
-    if (name.trim()) {
+    name = name.trim()
+    if (name) {
       let v
       if (name.toLowerCase() === 'dur') {
         v = parseDur(value, () => commented=true)
@@ -115,9 +116,9 @@ define(function(require) {
   assert({dur:[1,1]}, parseParams('dur=[1,1]'))
   assert({dur:1, oct:4}, parseParams('dur=1,oct=4'))
   assert({dur:[1,1]}, parseParams(' dur = [ 1 , 1 ] '))
-  assert({dur:[1,2], oct:[3, 4]}, parseParams('dur=[1, 2],oct=[3, 4]'))
+  assert({dur:[1,2], oct:3}, parseParams('dur=[1, 2],oct=3'))
   assert({dur:[[1,1],[[2],3]], oct:4}, parseParams('dur=[[1,1],[[2],3]],oct=4'))
-  assert({t:['a','b']}, parseParams("t=['a','b']"))
+  assert({t:'a'}, parseParams("t='a'"))
   assert({s:'abc'}, parseParams("s='abc'"))
   assert({s:'http://a.com/Bc.mp3'}, parseParams("s='http://a.com/Bc.mp3'"))
   assert({}, parseParams("//s='abc'"))
@@ -131,7 +132,7 @@ define(function(require) {
   assert({dur:1}, parseParams("dur=1//, amp=0.1, rate=10"))
   assert({dur:1}, parseParams("dur=1//1, amp=0.1, rate=10"))
   assert({dur:1}, parseParams("dur=1,// amp=0.1, rate=10"))
-  assert({str:['http://'], amp:0.1, rate:10}, parseParams("str=['http://'], amp=0.1, rate=10"))
+  assert({str:'http://', amp:0.1, rate:10}, parseParams("str='http://', amp=0.1, rate=10"))
   assert({window:1}, parseParams("window"))
   assert({amp:3,window:1,rate:2}, parseParams("amp=3, window, rate=2"))
   assert({amp:3,window:1}, parseParams("amp=3, window"))

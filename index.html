@@ -590,15 +590,16 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-Everything except operators is forcing the interval, when it should come from the args
- r,e,n,t,l,s,[],() - done
- {},var
 () blocks per frame eval? eg: v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
- // v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
-() inside {} doesnt work; eg: v glow 0, loc={x:[0:1]l2@f, y:(0,1/2), w:0.1, h:0.1}
+ Also () inside {} doesnt work; eg: v glow 0, loc={x:[0:1]l2@f, y:(0,1/2), w:0.1, h:0.1}
+ ? evalParamToTuple to blame
+  Tuples should be handled during play
+   By a new method that parses and rewrites tuples into a single array at the root of each param
+    And then play is called recursively for the multiplied combinations of these?
+    Per frame eval then just returns the first from any remaining tuple it finds, possibly also reporting an error
 Defining a name for every slider is too fiddly
  allow slider{} ?
- or even some UI method for slidering a value in the code??
+ or even some UI method for slidering a value??
 delay can't be a random
 Random seed
  [1,2,3]r4{seed:1}

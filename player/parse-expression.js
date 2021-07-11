@@ -5,7 +5,7 @@ define(function(require) {
   let parseMap = require('player/parse-map')
   let eatWhitespace = require('player/eat-whitespace')
   let operatorTree = require('player/parse-operator')
-  let {timeVar, linearTimeVar, smoothTimeVar, eventTimeVar} = require('player/eval-timevars')
+  let {timeVar, linearTimeVar, smoothTimeVar, eventTimeVar, eventIdxVar} = require('player/eval-timevars')
   let {evalRandomRanged, evalRandomSet, periodicRandom, random, simpleNoise} = require('player/eval-randoms')
   let varLookup = require('player/parse-var')
   let combineIntervals = require('player/intervals').combine
@@ -208,8 +208,8 @@ define(function(require) {
           result.interval = parseInterval(state) || arrayIntervals(vs, 'frame')
         } else { // Basic array: one value per pattern step
           vs = expandColon(vs)
-          result = vs
-          result.interval = 'event' // MUST always be event otherwise the array will get treated like a tuple
+          result = eventIdxVar(vs)
+          result.interval = 'event' // Only makes sense to be per event
           parseInterval(state) // Ignore this
         }
         continue
@@ -347,13 +347,18 @@ define(function(require) {
   assert(.123, parseExpression('.123'))
   assert(-1, parseExpression('-1'))
   assert(1e9, parseExpression('1e9'))
-  assert([1,2], parseExpression('[1,2]'))
-  assert([1,[2,3]], parseExpression('[1,[2,3]]'))
-  assert([1,[2,3]], parseExpression(' [ 1 , [ 2  , 3 ] ] '))
+  
+  assert(1, parseExpression('[1,2]')(ev(0),0,evalParamFrame))
+  assert(2, parseExpression('[1,2]')(ev(1),0,evalParamFrame))
+  assert(1, parseExpression('[1,2]')(ev(2),0,evalParamFrame))
+  assert(1, parseExpression('[[1,2]]')(ev(0),0,evalParamFrame))
+  assert(2, parseExpression('[[1,2]]')(ev(1),0,evalParamFrame))
+  assert(1, parseExpression('[[1,2]]')(ev(2),0,evalParamFrame))
+  assert(1, parseExpression('[1:3]')(ev(0),0,evalParamFrame))
+  assert(2, parseExpression('[1:3]')(ev(1),0,evalParamFrame))
+  assert(3, parseExpression('[1:3]')(ev(2),0,evalParamFrame))
+
   assert(1, parseExpression('(1)'))
-  assert([0,1,2,3], parseExpression('[:3]'))
-  assert([2,3], parseExpression('[2:3]'))
-  assert([2.25,3.5], parseExpression('[2.25:3.5]'))
 
   let p
   p = parseExpression('(1,2)')
@@ -361,8 +366,8 @@ define(function(require) {
   assert([1,2], p(ev(1),1))
 
   p = parseExpression('[1,(2,3)]')
-  assert(1, p[0])
-  assert([2,3], p[1](0,0))
+  assert(1, p(ev(0),0,evalParamFrame))
+  assert([2,3], p(ev(1),0,evalParamFrame))
 
   assert(3, parseExpression('1+2'))
   assert(6, parseExpression('1+2+3'))
@@ -387,8 +392,8 @@ define(function(require) {
   assert(1, p(ev(0),4,evalParamFrame))
 
   p = parseExpression('[(0,2),(1,3)]')
-  assert([0,2], p[0]())
-  assert([1,3], p[1]())
+  assert([0,2], p(ev(0),0,evalParamFrame))
+  assert([1,3], p(ev(1),0,evalParamFrame))
 
   p = parseExpression('[(0,2),(1,3)]T@f')
   assert([0,2], p(ev(0,0),0,evalParamFrame))
@@ -413,8 +418,8 @@ define(function(require) {
   vars.foo = 2
   p = parseExpression('[1,foo]')
   vars.foo = 3
-  assert(1, p[0])
-  assert(3, p[1]({}))
+  assert(1, p(ev(0),0,evalParamFrame))
+  assert(3, p(ev(1),1,evalParamFrame))
   delete vars.foo
 
   p = parseExpression('-[1,2] ')
@@ -666,8 +671,8 @@ define(function(require) {
   assert({x:2}, parseExpression('{x:1+1}'))
 
   p = parseExpression('{x:[1,2]}')
-  assert(1, p.x[0])
-  assert(2, p.x[1])
+  assert(1, p.x(ev(0),0,evalParamFrame))
+  assert(2, p.x(ev(1),1,evalParamFrame))
   assert(undefined, p.x[2])
 
   assert('a', parseExpression("'a'"))
@@ -693,7 +698,7 @@ define(function(require) {
   assert('http://a.com/Bc.mp3', parseExpression("'http://a.com/Bc.mp3'"))
 
   assert(2, parseExpression("[1]+1")(ev(0),0,evalParamFrame))
-  assert([1], parseExpression("[1]//+1"))
+  assert(1, parseExpression("[1]//+1")(ev(0),0,evalParamFrame))
 
   p = parseExpression("[#f00f,#00ff]t1@f")
   assert({r:1,g:0,b:0,a:1}, p(ev(0),0,evalParamFrame))

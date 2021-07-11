@@ -91,10 +91,18 @@ define(function(require) {
     }
   }
 
+  let eventIdxVar = (vs) => {
+    return (e,b, evalRecurse) => {
+      let v = vs[Math.floor(e.idx || 0) % vs.length]
+      return (v !== undefined) && evalRecurse(v, e,b)
+    }
+  }
+
   return {
     timeVar: timeVar,
     linearTimeVar: linearTimeVar,
     smoothTimeVar: smoothTimeVar,
     eventTimeVar: eventTimeVar,
+    eventIdxVar: eventIdxVar,
   }
 })

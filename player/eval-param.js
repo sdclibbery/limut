@@ -2,13 +2,7 @@
 define((require) => {
 
   let evalParamNow = (evalRecurse, value, event, beat, stopAtTuple) => {
-    if (Array.isArray(value)) { // Array is indexed by beat
-      let v = value[Math.floor(event.idx || 0) % value.length]
-      if (typeof v == 'function') {
-        return evalRecurse(v, event, beat, evalRecurse)
-      }
-      return v
-    } else if (typeof value == 'function') { // Call function to get current value
+    if (typeof value == 'function') { // Call function to get current value
       let v = value(event, beat, evalRecurse)
       if (Array.isArray(v)) { // If a function returns an array, then thats a tuple, like a chord
         let recurse = stopAtTuple ? evalParamEvent : evalRecurse
@@ -60,20 +54,11 @@ define((require) => {
   assert(undefined, evalParamEvent(undefined, ev(0), 0))
   assert(1, evalParamEvent(1, ev(0), 0))
   assert(1/2, evalParamEvent(1/2, ev(0), 0))
-  assert(1, evalParamEvent([1,2,3], ev(0), 0))
-  assert(1, evalParamEvent([1,2,3], ev(0.5), 0))
-  assert(2, evalParamEvent([1,2,3], ev(1), 0))
-  assert(3, evalParamEvent([1,2,3], ev(2), 0))
-  assert(1, evalParamEvent([1,2,3], ev(3), 0))
   assert(5, evalParamEvent(() => 5, ev(0), 0))
   assert(5, evalParamEvent((x,y) => y, ev(0), 5))
-  assert([1,2], evalParamEvent([()=>[1,2]], ev(0), 0))
-  assert([3,4], evalParamEvent([()=>[1,2],()=>[3,4]], ev(1), 0))
-  assert({x:1}, evalParamEvent({x:[1,2]}, ev(0), 0))
-  assert({x:2}, evalParamEvent({x:[1,2]}, ev(1), 1))
+  assert([1,2], evalParamEvent(()=>[1,2], ev(0), 0))
+  assert({x:[1,2]}, evalParamEvent({x:()=>[1,2]}, ev(0), 0))
   assert('a', evalParamEvent('a', ev(0), 0))
-  assert('a', evalParamEvent(['a','b'], ev(0), 0))
-  assert('b', evalParamEvent(['a','b'], ev(1), 1))
 
   let perFrameValue = () => 3
   perFrameValue.interval= 'frame'
@@ -100,9 +85,7 @@ define((require) => {
   assert('frame', evalParamEvent({a:perFrameValue}, ev(0), 0).a.interval)
 
   assert([1,2], evalParamToTuple(()=>[1,2], ev(0), 0))
-  assert([1,2], evalParamToTuple([()=>[1,2]], ev(0), 0))
   assert(2, evalParamToTuple(()=>[()=>2], ev(0), 0)[0])
-  assert(2, evalParamToTuple([()=>[()=>2]], ev(0), 0)[0])
   assert('frame', evalParamToTuple(()=>[perFrameValue], ev(0), 0)[0].interval)
   assert(4, evalParamToTuple(()=>[perEventValue], ev(0), 0)[0])
 
