@@ -15,9 +15,11 @@ define(function(require) {
   let expandTuples = (f, op, l, r) => {
     if (Array.isArray(r)) {
       if (Array.isArray(l)) {
-        return l.flatMap(lv => {
-          return r.map(rv => f(op, lv, rv))
-        })
+        if (l.length >= r.length) {
+          return l.map((lv,i) => f(op, lv, r[i%r.length]))
+        } else {
+          return r.map((rv,i) => f(op, l[i%l.length], rv))
+        }
       }
       return r.map(rv => f(op, l, rv))
     } else if (Array.isArray(l)) {

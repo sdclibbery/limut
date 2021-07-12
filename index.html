@@ -590,7 +590,9 @@ shadertoy synth multiple channels
  Also () inside {} doesnt work; eg: v glow 0, loc={x:[0:1]l2@f, y:(0,1/2), w:0.1, h:0.1}
   Handle tuples during parsing
    If an operator has an array as an arg, it must hoist it up and produce an appropriate array of output functions
-   Same for timevars etc possibly?
+   Same for timevars
+   Same for var lookup?
+   TEST everything works including overrides, follow etc
    Docs?
   Restore commented test cases in parse-expression.js
   evalPerFrame error if it finds an array
