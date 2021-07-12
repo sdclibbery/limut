@@ -591,8 +591,16 @@ shadertoy synth multiple channels
   Handle tuples during parsing
    If an operator has an array as an arg, it must hoist it up and produce an appropriate array of output functions
    Same for timevars
+    Done: []
+    ToDo: t, l, s, e
+   Same for objects??
+   Same for randoms r, n
+   Same for tuple!
    Same for var lookup?
    TEST everything works including overrides, follow etc
+   TEST per frame   eval v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
+   TEST () inside {}   v glow 0, loc={x:[0:1]l2@f, y:(0,1/2), w:0.1, h:0.1}
+   Check all tests uncommented in parse-expression
    Docs?
   Restore commented test cases in parse-expression.js
   evalPerFrame error if it finds an array
