@@ -12,6 +12,21 @@ define(function(require) {
   }
   let precedence = {'^':1,'%':2,'/':2,'*':2,'-':3,'+':3,}
 
+  let expandTuples = (f, op, l, r) => {
+    if (Array.isArray(r)) {
+      if (Array.isArray(l)) {
+        return l.flatMap(lv => {
+          return r.map(rv => f(op, lv, rv))
+        })
+      }
+      return r.map(rv => f(op, l, rv))
+    } else if (Array.isArray(l)) {
+      return l.map(lv => f(op, lv, r))
+    } else {
+      return f(op, l, r)
+    }
+  }
+
   let precedenceTree = (ops) => {
     // Build an operator tree back up from a flattened list, taking precedence into account
     if (ops.length < 3) { return ops[0] }
@@ -27,7 +42,7 @@ define(function(require) {
     if (pivot < 0) { return ops[0] }
     let lhs = precedenceTree(ops.slice(0, pivot))
     let rhs = precedenceTree(ops.slice(pivot+1))
-    return evalOperator(operators[ops[pivot]], lhs, rhs)
+    return expandTuples(evalOperator, operators[ops[pivot]], lhs, rhs)
   }
 
   return precedenceTree
