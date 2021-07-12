@@ -425,8 +425,8 @@ define(function(require) {
   assert(-1, p(ev(0),0, evalParamFrame))
   assert(-2, p(ev(1),1, evalParamFrame))
 
-  // p = parseExpression('-(1,2) ')
-  // assert([-1,-2], p(ev(0),0, evalParamFrame))
+  p = parseExpression('-(1,2) ')
+  assert([-1,-2], p)
 
   assert(-1, parseExpression('-(1)'))
 
