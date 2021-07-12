@@ -12,20 +12,20 @@ define(function(require) {
   }
   let precedence = {'^':1,'%':2,'/':2,'*':2,'-':3,'+':3,}
 
-  let expandTuples = (f, op, l, r) => {
+  let expandTuplesAndEval = (op, l, r) => {
     if (Array.isArray(r)) {
       if (Array.isArray(l)) {
         if (l.length >= r.length) {
-          return l.map((lv,i) => f(op, lv, r[i%r.length]))
+          return l.map((lv,i) => evalOperator(op, lv, r[i%r.length]))
         } else {
-          return r.map((rv,i) => f(op, l[i%l.length], rv))
+          return r.map((rv,i) => evalOperator(op, l[i%l.length], rv))
         }
       }
-      return r.map(rv => f(op, l, rv))
+      return r.map(rv => evalOperator(op, l, rv))
     } else if (Array.isArray(l)) {
-      return l.map(lv => f(op, lv, r))
+      return l.map(lv => evalOperator(op, lv, r))
     } else {
-      return f(op, l, r)
+      return evalOperator(op, l, r)
     }
   }
 
@@ -44,7 +44,7 @@ define(function(require) {
     if (pivot < 0) { return ops[0] }
     let lhs = precedenceTree(ops.slice(0, pivot))
     let rhs = precedenceTree(ops.slice(pivot+1))
-    return expandTuples(evalOperator, operators[ops[pivot]], lhs, rhs)
+    return expandTuplesAndEval(operators[ops[pivot]], lhs, rhs)
   }
 
   return precedenceTree
