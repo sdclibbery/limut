@@ -136,6 +136,14 @@ define(function(require) {
     return vs.map(v => v.interval).reduce(combineIntervals, def)
   }
 
+  let setInterval = (result, interval) => {
+    if (Array.isArray(result)) {
+      result.map(v => v.interval = interval)
+    } else {
+      result.interval = interval
+    }
+  }
+
   let expression = (state) => {
     let result
     let operatorList = []
@@ -159,19 +167,19 @@ define(function(require) {
           if (Array.isArray(ds)) { ds = expandColon(ds) }
           let interval = parseInterval(state) || arrayIntervals(vs, 'event')
           result = timeVar(vs, ds, interval)
-          result.interval = interval
+          setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'l') { // linearly interpolated timevar
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
           let interval = parseInterval(state) || arrayIntervals(vs, 'event')
           result = linearTimeVar(vs, ds, interval)
-          result.interval = interval
+          setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 's') { // smoothstep interpolated timevar
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
           let interval = parseInterval(state) || arrayIntervals(vs, 'event')
           result = smoothTimeVar(vs, ds, interval)
-          result.interval = interval
+          setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'r') { // random
           state.idx += 1
           let period = number(state)
@@ -205,7 +213,7 @@ define(function(require) {
         } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
           state.idx += 1
           result = eventTimeVar(vs)
-          result.interval = parseInterval(state) || arrayIntervals(vs, 'frame')
+          setInterval(result, parseInterval(state) || arrayIntervals(vs, 'frame'))
         } else { // Basic array: one value per pattern step
           vs = expandColon(vs)
           result = eventIdxVar(vs)
@@ -216,12 +224,12 @@ define(function(require) {
       }
       // tuple
       if (char == '(') {
-        let v = array(state, '(', ')')
-        v = expandColon(v)
-        if (v.length == 1) {
-          result = v[0]
+        let vs = array(state, '(', ')')
+        vs = expandColon(vs)
+        if (vs.length == 1) {
+          result = vs[0]
         } else {
-          result = v
+          result = vs
         }
         continue
       }
@@ -400,9 +408,19 @@ define(function(require) {
   assert([0,2], p.map(v=>v(ev(0),0,evalParamFrame)))
   assert([1,3], p.map(v=>v(ev(1),1,evalParamFrame)))
 
-  // p = parseExpression('[(0,2),(1,3)]T@f')
-  // assert([0,2], p(ev(0,0),0,evalParamFrame))
-  // assert([1,3], p(ev(4,4),4,evalParamFrame))
+  p = parseExpression('[(0,2),(1,3)]T@f')
+  assert([0,2], p.map(v=>v(ev(0,0),0,evalParamFrame)))
+  assert([1,3], p.map(v=>v(ev(4,4),4,evalParamFrame)))
+
+  p = parseExpression('[(0,2),(1,3)]l2@f')
+  assert([0,2], p.map(v=>v(ev(0,0),0,evalParamFrame)))
+  assert([0.5,2.5], p.map(v=>v(ev(1,1),1,evalParamFrame)))
+  assert([1,3], p.map(v=>v(ev(2,2),2,evalParamFrame)))
+
+  p = parseExpression('[(0,2),(1,3)]s2@f')
+  assert([0,2], p.map(v=>v(ev(0,0),0,evalParamFrame)))
+  assert([0.5,2.5], p.map(v=>v(ev(1,1),1,evalParamFrame)))
+  assert([1,3], p.map(v=>v(ev(2,2),2,evalParamFrame)))
 
   vars.foo = 'bar'
   p = parseExpression('foo')
@@ -744,13 +762,7 @@ define(function(require) {
   assert(undefined, parseExpression("(0,[0:1]r@f)")[0].interval)
   assert('frame', parseExpression("(0,[0:1]r@f)")[1].interval)
 
-  // p = parseExpression('foo')
-  // vars.foo = parseExpression('[(0,1),(2,3)]t1')
-  // assert([0,1], p({})(ev(0,0),0,evalParamFrame))
-  // assert([2,3], p({})(ev(1,1),1,evalParamFrame))
-  // delete vars.foo
-
-  assert(undefined, parseExpression("{a:0}").interval)
+   assert(undefined, parseExpression("{a:0}").interval)
   assert('event', parseExpression("{a:0}@e").interval)
   assert('frame', parseExpression("{a:0}@f").interval)
   assert('event', parseExpression("{a:[0,1]l@e}").interval)
@@ -812,6 +824,12 @@ define(function(require) {
   assert(0.5, p(e,7.5, evalParamFrame))
   assert(1, p(e,8, evalParamFrame))
   assert(1, p(e,9, evalParamFrame))
+
+  p = parseExpression('[(0,2),(1,3)]e')
+  e = { idx:0, count:0, countToTime:b=>b, _time:0, endTime:1 }
+  assert([0,2], p.map(v=>v(e,0,evalParamFrame)))
+  assert([0.5,2.5], p.map(v=>v(e,1/2,evalParamFrame)))
+  assert([1,3], p.map(v=>v(e,2,evalParamFrame)))
 
   assert(1, parseExpression("[1,0]t1")(ev(0,0),0,evalParamFrame))
   assert(0, parseExpression("[1,0]t1")(ev(1,1),1,evalParamFrame))
@@ -934,6 +952,10 @@ define(function(require) {
   assert('frame', parseExpression("[0,[0,24]]e").interval)
   assert('event', parseExpression("[0,[0,24]e]@e").interval)
   assert('event', parseExpression("[0,[0,24]e]@f").interval)
+  assert(['frame','frame'], parseExpression("[0.1,(0.1,5)]t1/4@f").map(v => v.interval))
+  assert(['frame','frame'], parseExpression("[0.1,(0.1,5)]l1/4@f").map(v => v.interval))
+  assert(['frame','frame'], parseExpression("[0.1,(0.1,5)]s1/4@f").map(v => v.interval))
+  assert(['frame','frame'], parseExpression("[0.1,(0.1,5)]e").map(v => v.interval))
 
   console.log('Parse expression tests complete')
   }

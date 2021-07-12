@@ -88,7 +88,8 @@ define((require) => {
           let events = getEventsForBeat(beat)
           events.forEach(e => e.linenum = linenum)
           let overrides = players.overrides[player.id] || {}
-          return overrideParams(events, overrides)
+          let es = overrideParams(events, overrides)
+          return es
         }
         return player
       }

@@ -91,15 +91,6 @@ define(function(require) {
     }
   }
 
-  let expandTuples = (operation) => (vs) => {
-    let maxLength = vs.filter(Array.isArray).reduce((a,b) => Math.max(a,b.length), 0)
-    if (maxLength <= 1) { return operation(vs) }
-    return Array.from({length: maxLength}).map((_,i) => {
-      let vst = vs.map(v => (Array.isArray(v)) ? v[i%v.length] : v)
-      return operation(vst)
-    })
-  }
-
   let eventIdxVar = (vs) => {
     return (e,b, evalRecurse) => {
       let v = vs[Math.floor(e.idx || 0) % vs.length]
@@ -107,11 +98,20 @@ define(function(require) {
     }
   }
 
+  let expandTuples = (operation) => (vs, ds, interval) => {
+    let maxLength = vs.filter(Array.isArray).reduce((a,b) => Math.max(a,b.length), 0)
+    if (maxLength <= 1) { return operation(vs, ds, interval) }
+    return Array.from({length: maxLength}).map((_,i) => {
+      let vst = vs.map(v => (Array.isArray(v)) ? v[i%v.length] : v)
+      return operation(vst, ds, interval)
+    })
+  }
+
   return {
-    timeVar: timeVar,
-    linearTimeVar: linearTimeVar,
-    smoothTimeVar: smoothTimeVar,
-    eventTimeVar: eventTimeVar,
+    timeVar: expandTuples(timeVar),
+    linearTimeVar: expandTuples(linearTimeVar),
+    smoothTimeVar: expandTuples(smoothTimeVar),
+    eventTimeVar: expandTuples(eventTimeVar),
     eventIdxVar: expandTuples(eventIdxVar),
   }
 })
