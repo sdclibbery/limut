@@ -70,12 +70,10 @@ define(function(require) {
 
   assert([ev()], overrideEventParams([ev()], {}))
   assert([ev({delay:18})], overrideEventParams([ev({delay:10})], {value:'9', delay:8, _time:7}))
-  assert([ev({oct:3}),ev({oct:4})], overrideEventParams([ev()], {oct:()=>[3,4]}))
   assert([ev({add:2})], overrideEventParams([ev({add:2})], {}))
   assert([ev({add:3})], overrideEventParams([ev()], {add:3}))
   assert([ev({add:5})], overrideEventParams([ev({add:2})], {add:3}))
   assert([ev({add:6})], overrideEventParams([ev({add:2})], {add:() => 4}))
-  assert([ev({add:5}),ev({add:6})], overrideEventParams([ev({add:2})], {add:()=>[3,4]}))
   
   c = overrideEventParams([ev()], {zoom:parseExpression('[2:4]l2@f')})
   assert(2, c[0].zoom(ev(),0,evalParam))

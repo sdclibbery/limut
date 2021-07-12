@@ -588,11 +588,12 @@ shadertoy synth multiple channels
 ==== other ====
 () blocks per frame eval? eg: v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
  Also () inside {} doesnt work; eg: v glow 0, loc={x:[0:1]l2@f, y:(0,1/2), w:0.1, h:0.1}
- ? evalParamToTuple to blame
-  Tuples should be handled during play
-   By a new method that parses and rewrites tuples into a single array at the root of each param
-    And then play is called recursively for the multiplied combinations of these?
-    Per frame eval then just returns the first from any remaining tuple it finds, possibly also reporting an error
+  Handle tuples during parsing
+   If an operator has an array as an arg, it must hoist it up and produce an appropriate array of output functions
+   Same for timevars etc possibly?
+   Docs?
+  Restore commented test cases in parse-expression.js
+Ignore rests . when setting event.idx (so that `0.1., amp=[1/2,1]` does as expected)
 Defining a name for every slider is too fiddly
  allow slider{} ?
  or even some UI method for slidering a value??

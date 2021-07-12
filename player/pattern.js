@@ -35,8 +35,7 @@ define(function(require) {
         let e = events[idx]
         let es = (typeof(e.value) == 'function') ? e.value(e, Math.floor(count/patternLength)) : [e]
         es.forEach(sourceEvent => {
-          let delay = !params.delay ? undefined : evalParamEvent(params.delay, sourceEvent, count)
-          let delays = Array.isArray(delay) ? delay : [delay]
+          let delays = Array.isArray(params.delay) ? params.delay : [params.delay]
           delays.forEach(d => {
             let event = {}
             event.value = sourceEvent.value
@@ -54,9 +53,8 @@ define(function(require) {
             if (event.value !== '.' && baseTime > -0.0001 && baseTime < 0.9999) {
               for (let k in params) {
                 if (k != '_time' && k != 'delay' && k != 'value' && k != 'dur') {
-                  let v = evalParamToTuple(params[k], event, event.count)
-                  if (Array.isArray(v)) { // If its a tuple, it must be handled per event
-                    event[k] = v
+                  if (Array.isArray(params[k])) { // Tuple (chord)
+                    event[k] = params[k].map(v => evalParamEvent(v, event, event.count))
                   } else {
                     event[k] = evalParamEvent(params[k], event, event.count)
                   }
@@ -221,24 +219,24 @@ define(function(require) {
   assert([{value:'2',idx:1,delay:-1,_time:-1,dur:1,count:0}], pattern(1))
   assert([{value:'3',idx:2,delay:-1,_time:-1,dur:1,count:1}], pattern(2))
 
-  pattern = parsePattern('0', {amp:()=>[2,3]})
+  pattern = parsePattern('0', {amp:[2,3]})
   assert([{value:'0',idx:0,_time:0,dur:1,count:0,amp:2},{value:'0',idx:0,_time:0,dur:1,count:0,amp:3}], pattern(0))
   assert([{value:'0',idx:0,_time:0,dur:1,count:1,amp:2},{value:'0',idx:0,_time:0,dur:1,count:1,amp:3}], pattern(1))
 
-  pattern = parsePattern('01', {amp:()=>[1,2]})
+  pattern = parsePattern('01', {amp:[1,2]})
   assert([{value:'0',idx:0,_time:0,dur:1,count:0,amp:1},{value:'0',idx:0,_time:0,dur:1,count:0,amp:2}], pattern(0))
   assert([{value:'1',idx:1,_time:0,dur:1,count:1,amp:1},{value:'1',idx:1,_time:0,dur:1,count:1,amp:2}], pattern(1))
   assert([{value:'0',idx:0,_time:0,dur:1,count:2,amp:1},{value:'0',idx:0,_time:0,dur:1,count:2,amp:2}], pattern(2))
 
-  pattern = parsePattern('0', {amp:()=>[2,3],dur:2,decay:1})
+  pattern = parsePattern('0', {amp:[2,3],dur:2,decay:1})
   assert([{value:'0',idx:0,_time:0,dur:2,count:0,amp:2,decay:1},{value:'0',idx:0,_time:0,dur:2,count:0,amp:3,decay:1}], pattern(0))
   assert([], pattern(1))
   assert([{value:'0',idx:0,_time:0,dur:2,count:2,amp:2,decay:1},{value:'0',idx:0,_time:0,dur:2,count:2,amp:3,decay:1}], pattern(2))
 
-  pattern = parsePattern('0', {amp:()=>[2,3],decay:()=>[4,5]})
+  pattern = parsePattern('0', {amp:[2,3],decay:[4,5]})
   assert([{value:'0',idx:0,_time:0,dur:1,count:0,amp:2,decay:4},{value:'0',idx:0,_time:0,dur:1,count:0,amp:2,decay:5},{value:'0',idx:0,_time:0,dur:1,count:0,amp:3,decay:4},{value:'0',idx:0,_time:0,dur:1,count:0,amp:3,decay:5}], pattern(0))
 
-  pattern = parsePattern('0', {delay:()=>[0,1/2]})
+  pattern = parsePattern('0', {delay:[0,1/2]})
   assert([{value:'0',idx:0,delay:0,_time:0,dur:1,count:0},{value:'0',idx:0,delay:1/2,_time:1/2,dur:1,count:1/2}], pattern(0))
   assert([{value:'0',idx:0,delay:0,_time:0,dur:1,count:1},{value:'0',idx:0,delay:1/2,_time:1/2,dur:1,count:3/2}], pattern(1))
 
@@ -248,7 +246,7 @@ define(function(require) {
   assert([{value:'0',idx:0,_time:0,dur:1,count:2,amp:2}], pattern(2))
   assert([{value:'0',idx:0,_time:0,dur:1,count:3,amp:0}], pattern(3))
 
-  pattern = parsePattern('0', {amp:(_,x)=>[0,1]})
+  pattern = parsePattern('0', {amp:[0,1]})
   assert([{value:'0',idx:0,_time:0,dur:1,count:0,amp:0},{value:'0',idx:0,_time:0,dur:1,count:0,amp:1}], pattern(0))
   assert([{value:'0',idx:0,_time:0,dur:1,count:1,amp:0},{value:'0',idx:0,_time:0,dur:1,count:1,amp:1}], pattern(1))
 
@@ -304,12 +302,12 @@ define(function(require) {
   evalPerFrame.interval = 'frame'
   assert(1, parsePattern('0', {scroll:evalPerFrame})(0)[0].scroll())
 
-  let perFrameTuple = ()=>[1,2]
+  let perFrameTuple = [1,2]
   perFrameTuple.interval = 'frame'
   pattern = parsePattern('0', {lpf:perFrameTuple})
   assert([{value:'0',idx:0,_time:0,dur:1,count:0,lpf:1},{value:'0',idx:0,_time:0,dur:1,count:0,lpf:2}], pattern(0))
 
-  let tupleWrappingPerFrame = ()=>[10,evalPerFrame]
+  let tupleWrappingPerFrame = [10,evalPerFrame]
   pattern = parsePattern('0', {lpf:tupleWrappingPerFrame})
   assert({value:'0',idx:0,_time:0,dur:1,count:0,lpf:10}, pattern(0)[0])
   assert('function', typeof pattern(0)[1].lpf)

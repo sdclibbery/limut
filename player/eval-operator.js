@@ -11,41 +11,17 @@ define(function(require) {
     }
     return obj.__evaluated
   }
-  let arrayMap = (arr, fn) => {
-    arr.__evaluated = arr.__evaluated || [] // cache result object to avoid creating per-frame garbage
-    for (let i = 0; i < arr.length; i++) {
-      arr.__evaluated[i] = fn(arr[i])
-    }
-    return arr.__evaluated
-  }
-
   let isPrimitive = v => (typeof v == 'number' || typeof v == 'string')
 
   let applyOperator = (op, el, er) => {
     if (isPrimitive(el)) {
       if (isPrimitive(er)) {
         return op(el,er)
-      } else if (Array.isArray(er)) {
-        return arrayMap(er, (x) => op(el,x))
       } else if (typeof er == 'object') {
         return objectMap(er, (v)=>op(el,v))
       }
-    } else if (Array.isArray(el)) {
-      if (isPrimitive(er)) {
-        return arrayMap(el, x => op(x,er))
-      } else if (Array.isArray(er)) {
-        el.__evaluated = el.__evaluated || [] // cache result object to avoid creating per-frame garbage
-        for (let i = 0; i < Math.max(el.length, er.length); i++) {
-          el.__evaluated.push(op(el[i % el.length], er[i % er.length]))
-        }
-        return el.__evaluated
-      } else if (typeof er == 'object') {
-        return objectMap(er, (v) => applyOperator(op,el,v))
-      }
     } else if (typeof el == 'object') {
       if (isPrimitive(er)) {
-        return objectMap(el, (v) => applyOperator(op,v,er))
-      } else if (Array.isArray(er)) {
         return objectMap(el, (v) => applyOperator(op,v,er))
       } else if (typeof er == 'object') {
         el.__evaluated = el.__evaluated || {} // cache result object to avoid creating per-frame garbage
@@ -105,21 +81,12 @@ define(function(require) {
 
   assert(3, operator(add, 1, 2))
   assert(8, operator(mul, 2, 4))
-  assert([4,5], operator(add, fn([1,2]), 3)(ev(0),0,evalParam))
-  assert([3,4], operator(add, 1, fn([2,3]))(ev(0),0,evalParam))
-  assert([3,8], operator(mul, fn([1,2]), fn([3,4]))(ev(0),0,evalParam))
-  assert([2,3], operator(mul, fn([1]), fn([2,3]))(ev(0),0,evalParam))
   assert({r:2}, operator(mul, {r:1}, 2)(ev(0),0,evalParam))
   assert({r:2}, operator(mul, 2, {r:1})(ev(0),0,evalParam))
   assert({r:4,g:5}, operator(add, {r:1,g:2}, 3)(ev(0),0,evalParam))
-  assert({r:[2,3]}, operator(mul, {r:1}, fn([2,3]))(ev(0),0,evalParam))
-  assert({r:[3,6]}, operator(mul, {r:fn([1,2])}, 3)(ev(0),0,evalParam))
   assert({r:3}, operator(add, {r:1}, {r:2})(ev(0),0,evalParam))
   assert({r:1,g:6,b:4}, operator(mul, {r:1,g:2}, {g:3,b:4})(ev(0),0,evalParam))
-  assert({r:[3,6]}, operator(mul, fn([1,2]), {r:3})(ev(0),0,evalParam))
   assert('ab', operator(add, 'a', 'b')(ev(0),0,evalParam))
-  assert(['ab','ac'], operator(add, 'a', fn(['b','c']))(ev(0),0,evalParam))
-  assert(['ac','bc'], operator(add, fn(['a','b']),'c')(ev(0),0,evalParam))
   assert(undefined, operator(add, fn(1), 2).interval)
   assert('frame', operator(add, perFrame, 2).interval)
   assert('frame', operator(add, 1, perFrame).interval)

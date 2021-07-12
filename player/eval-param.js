@@ -1,17 +1,9 @@
 'use strict';
 define((require) => {
 
-  let evalParamNow = (evalRecurse, value, event, beat, stopAtTuple) => {
+  let evalParamNow = (evalRecurse, value, event, beat) => {
     if (typeof value == 'function') { // Call function to get current value
       let v = value(event, beat, evalRecurse)
-      if (Array.isArray(v)) { // If a function returns an array, then thats a tuple, like a chord
-        let recurse = stopAtTuple ? evalParamEvent : evalRecurse
-        v.__evaluated = v.__evaluated || [] // cache result array to avoid creating per-frame garbage
-        for (let i = 0; i<v.length; i++) {
-          v.__evaluated[i] = recurse(v[i], event, beat, recurse)
-        }
-        return v.__evaluated
-      }
       return evalRecurse(v, event, beat)
     } else if (typeof value == 'object') { // Eval each field in the object
       value.__evaluated = value.__evaluated || {} // cache result object to avoid creating per-frame garbage
@@ -37,10 +29,6 @@ define((require) => {
     return evalParamNow(evalParamEvent, value, event, beat)
   }
 
-  let evalParamToTuple = (value, event, beat) => { // Evaluate fully until a tuple is reached, then evaluate per event
-    return evalParamNow(evalParamToTuple, value, event, beat, true)
-  }
-
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
@@ -56,8 +44,7 @@ define((require) => {
   assert(1/2, evalParamEvent(1/2, ev(0), 0))
   assert(5, evalParamEvent(() => 5, ev(0), 0))
   assert(5, evalParamEvent((x,y) => y, ev(0), 5))
-  assert([1,2], evalParamEvent(()=>[1,2], ev(0), 0))
-  assert({x:[1,2]}, evalParamEvent({x:()=>[1,2]}, ev(0), 0))
+  assert({x:1}, evalParamEvent({x:()=>1}, ev(0), 0))
   assert('a', evalParamEvent('a', ev(0), 0))
 
   let perFrameValue = () => 3
@@ -72,22 +59,10 @@ define((require) => {
   assert(4, evalParamEvent(perEventValue, ev(0), 0))
   assert(4, evalParamFrame(perEventValue, ev(0), 0))
 
-  assert([0,4], evalParamEvent(()=>[0,perEventValue], ev(0), 0))
-  assert([0,4], evalParamFrame(()=>[0,perEventValue], ev(0), 0))
-  assert([0,3], evalParamFrame(()=>[0,perFrameValue], ev(0), 0))
-  assert(0, evalParamEvent(()=>[0,perFrameValue], ev(0), 0)[0])
-  assert(3, evalParamEvent(()=>[0,perFrameValue], ev(0), 0)[1](0,0))
-  assert('frame', evalParamEvent(()=>[0,perFrameValue], ev(0), 0)[1].interval)
-
   assert({a:4}, evalParamFrame({a:perEventValue}, ev(0), 0))
   assert({a:3}, evalParamFrame({a:perFrameValue}, ev(0), 0))
   assert({a:4}, evalParamEvent({a:perEventValue}, ev(0), 0))
   assert('frame', evalParamEvent({a:perFrameValue}, ev(0), 0).a.interval)
-
-  assert([1,2], evalParamToTuple(()=>[1,2], ev(0), 0))
-  assert(2, evalParamToTuple(()=>[()=>2], ev(0), 0)[0])
-  assert('frame', evalParamToTuple(()=>[perFrameValue], ev(0), 0)[0].interval)
-  assert(4, evalParamToTuple(()=>[perEventValue], ev(0), 0)[0])
 
   console.log('Eval param tests complete')
   }
@@ -95,7 +70,6 @@ define((require) => {
   return {
     evalParamEvent:evalParamEvent,
     evalParamFrame:evalParamFrame,
-    evalParamToTuple: evalParamToTuple,
   }
 
 })
