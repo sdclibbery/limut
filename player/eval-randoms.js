@@ -74,11 +74,20 @@ define(function(require) {
     }
   }
 
+  let expandTuples = (operation) => (vs, a,b) => {
+    let maxLength = vs.filter(Array.isArray).reduce((a,b) => Math.max(a,b.length), 0)
+    if (maxLength <= 1) { return operation(vs, a,b) }
+    return Array.from({length: maxLength}).map((_,i) => {
+      let vst = vs.map(v => (Array.isArray(v)) ? v[i%v.length] : v)
+      return operation(vst, a,b)
+    })
+  }
+
   return {
     evalRandomRanged: evalRandomRanged,
     evalRandomSet: evalRandomSet,
     periodicRandom: periodicRandom,
     random: random,
-    simpleNoise: simpleNoise,
+    simpleNoise: expandTuples(simpleNoise),
   }
 })

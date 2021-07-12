@@ -590,8 +590,9 @@ shadertoy synth multiple channels
  Also () inside {} doesnt work; eg: v glow 0, loc={x:[0:1]l2@f, y:(0,1/2), w:0.1, h:0.1}
   Handle tuples during parsing
    If an operator has an array as an arg, it must hoist it up and produce an appropriate array of output functions
-   Same for randoms r, n
+   Same for randoms r
     Test for per frame eval (use setInterval)
+   Abstract out expandTuples... somehow
    Same for objects??
     Test for per frame eval (use setInterval)
    Same for tuple!

@@ -202,14 +202,14 @@ define(function(require) {
           } else {
             result = random(rand)
           }
-          result.interval = interval
+          setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'n') { // simple noise
           state.idx += 1
           let period = number(state)
           if (period === undefined) { period = 1 }
           let interval = parseInterval(state) || 'frame'
           result = simpleNoise(vs, period, interval)
-          result.interval = interval
+          setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
           state.idx += 1
           result = eventTimeVar(vs)
@@ -956,6 +956,12 @@ define(function(require) {
   assert(['frame','frame'], parseExpression("[0.1,(0.1,5)]l1/4@f").map(v => v.interval))
   assert(['frame','frame'], parseExpression("[0.1,(0.1,5)]s1/4@f").map(v => v.interval))
   assert(['frame','frame'], parseExpression("[0.1,(0.1,5)]e").map(v => v.interval))
+
+  assert([0,0], parseExpression("[0,(0,0)]n@f").map(v => v(ev(0,0),0,evalParamFrame)))
+  assert(['frame','frame'], parseExpression("[0.1,(0.1,5)]n@f").map(v => v.interval))
+
+  // assert([0,0], parseExpression("[0,(0,0)]r@f").map(v => v(ev(0,0),0,evalParamFrame)))
+  // assert(['frame','frame'], parseExpression("[0.1,(0.1,5)]r@f").map(v => v.interval))
 
   console.log('Parse expression tests complete')
   }
