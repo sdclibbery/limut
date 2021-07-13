@@ -1,12 +1,11 @@
 'use strict';
 define(function(require) {
-  let param = require('player/default-param')
   let number = require('player/parse-number')
   let parseMap = require('player/parse-map')
   let eatWhitespace = require('player/eat-whitespace')
   let operatorTree = require('player/parse-operator')
   let {timeVar, linearTimeVar, smoothTimeVar, eventTimeVar, eventIdxVar} = require('player/eval-timevars')
-  let {evalRandomRanged, evalRandomSet, periodicRandom, random, simpleNoise} = require('player/eval-randoms')
+  let {parseRandom, simpleNoise} = require('player/eval-randoms')
   let varLookup = require('player/parse-var')
   let combineIntervals = require('player/intervals').combine
 
@@ -183,25 +182,8 @@ define(function(require) {
         } else if (state.str.charAt(state.idx).toLowerCase() == 'r') { // random
           state.idx += 1
           let period = number(state)
-          let interval = 'event'
-          let rand
-          if (vs.length == 0) {
-            rand = (e,b,evalRecurse) => evalRandomRanged(0.000001, 1)
-          } else if (vs.separator == ':') {
-            let lo = param(vs[0], 0)
-            let hi = param(vs[1], 1)
-            rand = (e,b,evalRecurse) => evalRandomRanged(evalRecurse(lo,e,b,evalRecurse), evalRecurse(hi,e,b.evalRecurse))
-            interval = combineIntervals(combineIntervals(interval, lo.interval), hi.interval)
-          } else {
-            rand = (e,b,evalRecurse) => evalRandomSet(vs)
-            interval = arrayIntervals(vs, interval)
-          }
-          interval = parseInterval(state) || interval
-          if (period) {
-            result = periodicRandom(rand, period, interval)
-          } else {
-            result = random(rand)
-          }
+          let interval = parseInterval(state) || arrayIntervals(vs, 'event')
+          result = parseRandom(vs, period, interval)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'n') { // simple noise
           state.idx += 1

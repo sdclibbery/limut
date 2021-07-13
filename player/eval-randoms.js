@@ -1,6 +1,7 @@
 'use strict';
 define(function(require) {
   let evalOperator = require('player/eval-operator')
+  let param = require('player/default-param')
 
   let evalRandomRanged = (lo, hi) => {
     return lo + Math.random() * (hi-lo)
@@ -74,6 +75,24 @@ define(function(require) {
     }
   }
 
+  let parseRandom = (vs, period, interval) => {
+    let rand
+    if (vs.length == 0) {
+      rand = (e,b,evalRecurse) => evalRandomRanged(0.000001, 1)
+    } else if (vs.separator == ':') {
+      let lo = param(vs[0], 0)
+      let hi = param(vs[1], 1)
+      rand = (e,b,evalRecurse) => evalRandomRanged(evalRecurse(lo,e,b,evalRecurse), evalRecurse(hi,e,b.evalRecurse))
+    } else {
+      rand = (e,b,evalRecurse) => evalRandomSet(vs)
+    }
+    if (period) {
+      return periodicRandom(rand, period, interval)
+    } else {
+      return random(rand)
+    }
+  }
+
   let expandTuples = (operation) => (vs, a,b) => {
     let maxLength = vs.filter(Array.isArray).reduce((a,b) => Math.max(a,b.length), 0)
     if (maxLength <= 1) { return operation(vs, a,b) }
@@ -84,10 +103,7 @@ define(function(require) {
   }
 
   return {
-    evalRandomRanged: evalRandomRanged,
-    evalRandomSet: evalRandomSet,
-    periodicRandom: periodicRandom,
-    random: random,
+    parseRandom: parseRandom,
     simpleNoise: expandTuples(simpleNoise),
   }
 })
