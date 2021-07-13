@@ -942,8 +942,8 @@ define(function(require) {
   assert([0,0], parseExpression("[0,(0,0)]n@f").map(v => v(ev(0,0),0,evalParamFrame)))
   assert(['frame','frame'], parseExpression("[0.1,(0.1,5)]n@f").map(v => v.interval))
 
-  // assert([0,0], parseExpression("[0,(0,0)]r@f").map(v => v(ev(0,0),0,evalParamFrame)))
-  // assert(['frame','frame'], parseExpression("[0.1,(0.1,5)]r@f").map(v => v.interval))
+  assert([0,0], parseExpression("[0,(0,0)]r@f").map(v => v(ev(0,0),0,evalParamFrame)))
+  assert(['frame','frame'], parseExpression("[0.1,(0.1,5)]r@f").map(v => v.interval))
 
   console.log('Parse expression tests complete')
   }

@@ -103,7 +103,7 @@ define(function(require) {
   }
 
   return {
-    parseRandom: parseRandom,
+    parseRandom: expandTuples(parseRandom),
     simpleNoise: expandTuples(simpleNoise),
   }
 })
