@@ -2,6 +2,7 @@
 define(function(require) {
   let evalOperator = require('player/eval-operator')
   let param = require('player/default-param')
+  let hoistTuples = require('player/hoist-tuples').hoistTuples
 
   let evalRandomRanged = (lo, hi) => {
     return lo + Math.random() * (hi-lo)
@@ -93,17 +94,8 @@ define(function(require) {
     }
   }
 
-  let expandTuples = (operation) => (vs, a,b) => {
-    let maxLength = vs.filter(Array.isArray).reduce((a,b) => Math.max(a,b.length), 0)
-    if (maxLength <= 1) { return operation(vs, a,b) }
-    return Array.from({length: maxLength}).map((_,i) => {
-      let vst = vs.map(v => (Array.isArray(v)) ? v[i%v.length] : v)
-      return operation(vst, a,b)
-    })
-  }
-
   return {
-    parseRandom: expandTuples(parseRandom),
-    simpleNoise: expandTuples(simpleNoise),
+    parseRandom: hoistTuples(parseRandom),
+    simpleNoise: hoistTuples(simpleNoise),
   }
 })

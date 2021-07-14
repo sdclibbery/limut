@@ -1,6 +1,7 @@
 'use strict';
 define(function(require) {
   let evalOperator = require('player/eval-operator')
+  let hoistTuples = require('player/hoist-tuples').hoistTuples
 
   let timeVarSteps = (vs, ds) => {
     if (!Array.isArray(ds)) { ds = [ds] }
@@ -98,20 +99,11 @@ define(function(require) {
     }
   }
 
-  let expandTuples = (operation) => (vs, ds, interval) => {
-    let maxLength = vs.filter(Array.isArray).reduce((a,b) => Math.max(a,b.length), 0)
-    if (maxLength <= 1) { return operation(vs, ds, interval) }
-    return Array.from({length: maxLength}).map((_,i) => {
-      let vst = vs.map(v => (Array.isArray(v)) ? v[i%v.length] : v)
-      return operation(vst, ds, interval)
-    })
-  }
-
   return {
-    timeVar: expandTuples(timeVar),
-    linearTimeVar: expandTuples(linearTimeVar),
-    smoothTimeVar: expandTuples(smoothTimeVar),
-    eventTimeVar: expandTuples(eventTimeVar),
-    eventIdxVar: expandTuples(eventIdxVar),
+    timeVar: hoistTuples(timeVar),
+    linearTimeVar: hoistTuples(linearTimeVar),
+    smoothTimeVar: hoistTuples(smoothTimeVar),
+    eventTimeVar: hoistTuples(eventTimeVar),
+    eventIdxVar: hoistTuples(eventIdxVar),
   }
 })
