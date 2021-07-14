@@ -1,6 +1,7 @@
 'use strict';
 define(function(require) {
   let evalOperator = require('player/eval-operator')
+  let hoistTuples = require('player/hoist-tuples').hoistTuples
 
   let operators = {
     '+': (l,r)=>l+r,
@@ -11,23 +12,6 @@ define(function(require) {
     '^': (l,r)=>(Math.pow(l,r) || 0),
   }
   let precedence = {'^':1,'%':2,'/':2,'*':2,'-':3,'+':3,}
-
-  let expandTuplesAndEval = (op, l, r) => {
-    if (Array.isArray(r)) {
-      if (Array.isArray(l)) {
-        if (l.length >= r.length) {
-          return l.map((lv,i) => evalOperator(op, lv, r[i%r.length]))
-        } else {
-          return r.map((rv,i) => evalOperator(op, l[i%l.length], rv))
-        }
-      }
-      return r.map(rv => evalOperator(op, l, rv))
-    } else if (Array.isArray(l)) {
-      return l.map(lv => evalOperator(op, lv, r))
-    } else {
-      return evalOperator(op, l, r)
-    }
-  }
 
   let precedenceTree = (ops) => {
     // Build an operator tree back up from a flattened list, taking precedence into account
@@ -44,7 +28,8 @@ define(function(require) {
     if (pivot < 0) { return ops[0] }
     let lhs = precedenceTree(ops.slice(0, pivot))
     let rhs = precedenceTree(ops.slice(pivot+1))
-    return expandTuplesAndEval(operators[ops[pivot]], lhs, rhs)
+    let evalTrampoline = ([l,r]) => evalOperator(operators[ops[pivot]], l, r)
+    return hoistTuples(evalTrampoline)([lhs, rhs])
   }
 
   return precedenceTree
