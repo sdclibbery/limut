@@ -215,10 +215,10 @@ define(function(require) {
         }
         continue
       }
-      // map
+      // map (object)
       if (char == '{') {
         result = parseMap(state)
-        result.interval = result.interval || parseInterval(state)
+        parseInterval(state) // Ignore
         continue
       }
       // operator
@@ -744,11 +744,11 @@ define(function(require) {
   assert(undefined, parseExpression("(0,[0:1]r@f)")[0].interval)
   assert('frame', parseExpression("(0,[0:1]r@f)")[1].interval)
 
-   assert(undefined, parseExpression("{a:0}").interval)
-  assert('event', parseExpression("{a:0}@e").interval)
-  assert('frame', parseExpression("{a:0}@f").interval)
-  assert('event', parseExpression("{a:[0,1]l@e}").interval)
-  assert('frame', parseExpression("{a:[0,1]l@f}").interval)
+  assert(undefined, parseExpression("{a:0}").interval)
+  assert(undefined, parseExpression("{a:0}@e").interval)
+  assert(undefined, parseExpression("{a:0}@f").interval)
+  assert(undefined, parseExpression("{a:[0,1]l@e}").interval)
+  assert(undefined, parseExpression("{a:[0,1]l@f}").interval)
 
   p = parseExpression('foo')
   vars.foo = parseExpression('0')
@@ -944,6 +944,8 @@ define(function(require) {
 
   assert([0,0], parseExpression("[0,(0,0)]r@f").map(v => v(ev(0,0),0,evalParamFrame)))
   assert(['frame','frame'], parseExpression("[0.1,(0.1,5)]r@f").map(v => v.interval))
+
+  assert([{x:1},{x:2}], parseExpression("{x:(1,2)}"))
 
   console.log('Parse expression tests complete')
   }

@@ -1,6 +1,7 @@
 'use strict';
 define(function(require) {
   let eatWhitespace = require('player/eat-whitespace')
+  let hoistTuples = require('player/hoist-tuples').hoistTuples
 
   let identifier = (state) => {
     let char
@@ -15,7 +16,7 @@ define(function(require) {
     }
     return result
   }
-  let parseMapEntry = (state) => {
+  let parseMapEntry = (state, keys, values) => {
     eatWhitespace(state)
     let k = identifier(state)
     if (k === '') { return }
@@ -25,20 +26,27 @@ define(function(require) {
     eatWhitespace(state)
     let v = state.expression(state)
     eatWhitespace(state)
-    return {k:k,v:v}
+    keys.push(k)
+    values.push(v)
   }
-  let parseMap = (state) => {
+
+  let buildMap = (vs, keys) => {
     let result = {}
+    for (let i=0; i<vs.length; i++) {
+      result[keys[i]] = vs[i]
+    }
+    return result
+  }
+
+  let parseMap = (state) => {
+    let keys = []
+    let values = []
     let char
     while (char = state.str.charAt(state.idx)) {
       if (char === ' ' || char === '\t' || char === '\n' || char === '\r') { state.idx += 1; continue }
       if (char == '{' || char == ',') {
         state.idx += 1
-        let e = parseMapEntry(state)
-        if (e) {
-          result[e.k] = e.v
-          if (e.v.interval && !result.interval) { result.interval = e.v.interval }
-        }
+        parseMapEntry(state, keys, values)
       } else if (char == '}') {
         state.idx += 1
         break
@@ -46,7 +54,7 @@ define(function(require) {
         return undefined
       }
     }
-    return result
+    return hoistTuples(buildMap)(values, keys)
   }
 
   return parseMap
