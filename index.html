@@ -586,13 +586,14 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+Highlight on code update should last longer
 () blocks per frame eval? eg: v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
  Also () inside {} doesnt work; eg: v glow 0, loc={x:[0:1]l2@f, y:(0,1/2), w:0.1, h:0.1}
   Handle tuples during parsing
    If an operator has an array as an arg, it must hoist it up and produce an appropriate array of output functions
-   Same for tuple!
-    Test for per frame eval (use setInterval)
    Same for var lookup?
+    Test for per frame eval (use setInterval)
+   Same for tuple!
     Test for per frame eval (use setInterval)
    Tests for {()}, {(),()}, {[()]}, ({()}) etc
    TEST everything works including overrides, follow etc

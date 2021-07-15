@@ -40,7 +40,7 @@ define(function(require) {
     updateCode(editor.getValue())
     if (editor.getValue().trim() !== '') {
       editorDiv.style.backgroundColor = '#d9d9d980'
-      setTimeout(() => editorDiv.style.backgroundColor = 'transparent', 25)
+      setTimeout(() => editorDiv.style.backgroundColor = 'transparent', 150)
     }
   }
   window.comment = () => {
