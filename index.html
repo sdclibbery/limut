@@ -590,8 +590,8 @@ shadertoy synth multiple channels
  Also () inside {} doesnt work; eg: v glow 0, loc={x:[0:1]l2@f, y:(0,1/2), w:0.1, h:0.1}
   Handle tuples during parsing
    TEST everything works including overrides, follow etc
-   TEST per frame   eval v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
-   TEST () inside {}   v glow 0, loc={x:[0:1]l2@f, y:(0,1/2), w:0.1, h:0.1}
+    Follow player () doesn't work (but does if its on the player being followed)
+    Same for overrides :-/
    Docs?
   evalPerFrame error if it finds an array
 Ignore rests . when setting event.idx (so that `0.1., amp=[1/2,1]` does as expected)
