@@ -586,16 +586,13 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-Highlight on code update should last longer
 () blocks per frame eval? eg: v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
  Also () inside {} doesnt work; eg: v glow 0, loc={x:[0:1]l2@f, y:(0,1/2), w:0.1, h:0.1}
   Handle tuples during parsing
-   Tests for {()}, {(),()}, {[()]}, ({()}) etc
    TEST everything works including overrides, follow etc
    TEST per frame   eval v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
    TEST () inside {}   v glow 0, loc={x:[0:1]l2@f, y:(0,1/2), w:0.1, h:0.1}
    Docs?
-  Restore commented test cases in parse-expression.js
   evalPerFrame error if it finds an array
 Ignore rests . when setting event.idx (so that `0.1., amp=[1/2,1]` does as expected)
 Var lookup should be able to be a tuple; eg this ought to work:   var test=(1,2)  |  p play 0, add=test
@@ -624,6 +621,7 @@ pattern concat "xo + vi"
 pattern repeat "xo * 3" higher precedence than concat
 pattern support brackets "( xo + vi ) * 3"
 pattern values in vars, and then use in multiple players, and also invert, retrograde etc
+Have a [0,1][2,3] syntax to apply values to multiple events in a row
 Do not set delay, loud, sharp, long unless they have a value; even setting to undefined costs
 WebMidi
  Outputs (to control external synths)
