@@ -590,20 +590,15 @@ Highlight on code update should last longer
 () blocks per frame eval? eg: v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
  Also () inside {} doesnt work; eg: v glow 0, loc={x:[0:1]l2@f, y:(0,1/2), w:0.1, h:0.1}
   Handle tuples during parsing
-   If an operator has an array as an arg, it must hoist it up and produce an appropriate array of output functions
-   Same for var lookup?
-    Test for per frame eval (use setInterval)
-   Same for tuple!
-    Test for per frame eval (use setInterval)
    Tests for {()}, {(),()}, {[()]}, ({()}) etc
    TEST everything works including overrides, follow etc
    TEST per frame   eval v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
    TEST () inside {}   v glow 0, loc={x:[0:1]l2@f, y:(0,1/2), w:0.1, h:0.1}
-   Check all tests uncommented in parse-expression
    Docs?
   Restore commented test cases in parse-expression.js
   evalPerFrame error if it finds an array
 Ignore rests . when setting event.idx (so that `0.1., amp=[1/2,1]` does as expected)
+Var lookup should be able to be a tuple; eg this ought to work:   var test=(1,2)  |  p play 0, add=test
 Defining a name for every slider is too fiddly
  allow slider{} ?
  or even some UI method for slidering a value??

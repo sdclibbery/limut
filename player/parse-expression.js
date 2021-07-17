@@ -211,7 +211,7 @@ define(function(require) {
         if (vs.length == 1) {
           result = vs[0]
         } else {
-          result = vs
+          result = vs.flat()
         }
         continue
       }
@@ -946,6 +946,10 @@ define(function(require) {
   assert(['frame','frame'], parseExpression("[0.1,(0.1,5)]r@f").map(v => v.interval))
 
   assert([{x:1},{x:2}], parseExpression("{x:(1,2)}"))
+
+  assert([1,2], parseExpression("((1,2))"))
+  assert([1,2,3], parseExpression("(1,(2,3))"))
+  assert([1,2,3], parseExpression("((1,2),3))"))
 
   console.log('Parse expression tests complete')
   }
