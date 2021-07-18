@@ -586,16 +586,11 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-() blocks per frame eval? eg: v glow 0, fade=0, additive, fore=[red,green,blue]r, mirror=[0:6]l2@f*(1,2), rate=0
- Also () inside {} doesnt work; eg: v glow 0, loc={x:[0:1]l2@f, y:(0,1/2), w:0.1, h:0.1}
-  Handle tuples during parsing
-   TEST everything works including overrides, follow etc
-    Follow player () doesn't work (but does if its on the player being followed)
-    Same for overrides :-/
-   Docs?
-  evalPerFrame error if it finds an array
-Ignore rests . when setting event.idx (so that `0.1., amp=[1/2,1]` does as expected)
+evalParam error if it finds an array?
+ (Re)move some evalParamEVents?
 Var lookup should be able to be a tuple; eg this ought to work:   var test=(1,2)  |  p play 0, add=test
+ Cannot hoist tuples at parse time then???
+Ignore rests . when setting event.idx (so that `0.1., amp=[1/2,1]` does as expected)
 Defining a name for every slider is too fiddly
  allow slider{} ?
  or even some UI method for slidering a value??

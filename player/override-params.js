@@ -47,13 +47,14 @@ define(function(require) {
 }
 
   let overrideEventParams = (events, overrides) => {
-    return events.flatMap(sourceEvent => {
+    let allEvents = events.flatMap(sourceEvent => {
       let event = overrideParams(sourceEvent, overrides)
       for (let k in overrides) {
         event[k] = evalParam(event[k], sourceEvent, sourceEvent.count)
       }
       return multiplyEvents(event)
     })
+    return allEvents
   }
 
   // TESTS //

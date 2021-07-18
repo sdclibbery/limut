@@ -2,7 +2,9 @@
 define((require) => {
 
   let evalParamNow = (evalRecurse, value, event, beat) => {
-    if (typeof value == 'function') { // Call function to get current value
+    if (Array.isArray(value)) {
+      return value
+    } else if (typeof value == 'function') { // Call function to get current value
       let v = value(event, beat, evalRecurse)
       return evalRecurse(v, event, beat)
     } else if (typeof value == 'object') { // Eval each field in the object
