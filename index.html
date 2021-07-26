@@ -311,6 +311,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>noise</code> Noise pad. Note pattern value is not used; white noise is produced for all values.</p>
 <p><code>prophet</code> Prophet style detuned pulse with lfo controlled pulse-width</p>
 <p><code>glass</code> fm glass synth with a chiming sound</p>
+<p><code>supersaw</code> supersaw lead synth; 7 detuned saws</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-visual-synths')">▶ Visual Synths</h4>
 <div id="accordion-visual-synths" class="closed">
@@ -561,7 +562,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-Hue function
+Hue,hsl functions
 Disco glowing geometric shapes shader
 Starfield shader
 text synth
@@ -586,21 +587,33 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-evalParam error if it finds an array?
- (Re)move some evalParamEVents?
 Var lookup should be able to be a tuple; eg this ought to work:   var test=(1,2)  |  p play 0, add=test
- Cannot hoist tuples at parse time then???
+ Parse players in a second parse
+ Do var lookups at parse time not eval time
+Use proper operator eval for overrides at parse time so that objects/tuples/per-frame etc are handled properly
+Player var lookups should support tuples
+ Resolve at parse time??
+  What about circular dependencies?
+   Resolve at parse time but also allow at evalParamEvent time?
+evalParam error if it finds an array?
+ (Re)move some evalParamEvents?
+ Order should be
+  parse time: parse and hoist tuples
+  play time: get events -> multiply tuples -> evalParamEvent -> play
+ Test with follow and override
+Can modify params; eg 'set bass amp += 1/2'
+ Overrides should only modify when explicitly asked; so set b add=1 replaces the add param, it does not add an additional 1 to it
+ Can use for follow players, and indeed within a player; eg: p ping 0, amp=2/3, ..., amp*=2
 Ignore rests . when setting event.idx (so that `0.1., amp=[1/2,1]` does as expected)
 Defining a name for every slider is too fiddly
  allow slider{} ?
  or even some UI method for slidering a value??
-delay can't be a random
 Random seed
  [1,2,3]r4{seed:1}
  [1,2,3]r4{seed:1,count:8}
-Can modify params; eg 'set bass amp += 1/2' ?? Should add only add when used this way?? Should be available for follow players too
 apply overridden delay for follow player: allow canons
  refactor delay application to happen once in 'play' method
+Allow random delay
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 Wildcard player matching for groups 'set d? amp=0'  'set p* amp=0'
 ? rl, rt (==r), rs (==n); el (==e), es, et ?
@@ -616,6 +629,7 @@ pattern concat "xo + vi"
 pattern repeat "xo * 3" higher precedence than concat
 pattern support brackets "( xo + vi ) * 3"
 pattern values in vars, and then use in multiple players, and also invert, retrograde etc
+Pattern: should allow (024)^etc
 Have a [0,1][2,3] syntax to apply values to multiple events in a row
 Do not set delay, loud, sharp, long unless they have a value; even setting to undefined costs
 WebMidi

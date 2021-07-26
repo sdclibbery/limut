@@ -2,7 +2,7 @@
 define((require) => {
 
   let evalParamNow = (evalRecurse, value, event, beat) => {
-    if (Array.isArray(value)) {
+    if (Array.isArray(value)) { // unexpanded tuple
       return value
     } else if (typeof value == 'function') { // Call function to get current value
       let v = value(event, beat, evalRecurse)
