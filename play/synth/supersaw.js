@@ -14,7 +14,7 @@ define(function (require) {
     let freq = scale.degreeToFreq(degree, evalPerEvent(params, 'oct', 4), evalPerEvent(params, 'scale'), evalPerEvent(params, 'sharp', 0))
     let detune = evalPerEvent(params, 'detune', 0.1)
 
-    let vca = envelope(params, 0.07, 'full')
+    let vca = envelope(params, 0.09, 'full')
     let out = effects(params, vca)
     system.mix(out)
 

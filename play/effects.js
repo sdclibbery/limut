@@ -4,6 +4,7 @@ define(function (require) {
   let param = require('player/default-param')
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
   let freeverb = require('play/freeverb')
+  let chorus = require('play/chorus')
 
   let echoes = {}
   let echo = (params, node) => {
@@ -150,6 +151,7 @@ define(function (require) {
     node = hpf(params, node)
     node = bpf(params, node)
     node = phaser(params, node)
+    node = chorus(params, node)
     node = pan(params, node)
     node = reverb(params, node)
     node = echo(params, node)
