@@ -2,6 +2,9 @@
 define(function (require) {
   let system = require('play/system')
   let param = require('player/default-param')
+  let {evalPerEvent} = require('play/eval-audio-params')
+
+  // Inspired by https://www.soundonsound.com/techniques/more-creative-synthesis-delays
 
   let lfoLf1, lfoLf2, lfoLf3
   let lfoHfSrc, lfoHf
@@ -32,7 +35,7 @@ define(function (require) {
     bias = system.audio.createConstantSource()
     bias.start()
     bias.offset.value = 1.1
-}
+  }
 
   let makeDelay = (params, lfo1, lfo2) => {
     let lfoGain = system.audio.createGain()
@@ -42,7 +45,7 @@ define(function (require) {
 
     const maxDelay = 40/1000
     const lfoNormalise = 2*(1 + bias.offset.value + lfoHfGain)
-    lfoGain.gain.value = (params.chorus/8)*maxDelay/lfoNormalise
+    lfoGain.gain.value = (evalPerEvent(params, 'chorus', 0)/8)*maxDelay/lfoNormalise
 
     let delay = system.audio.createDelay(maxDelay*1.25)
     lfoGain.connect(delay.delayTime)
@@ -62,13 +65,30 @@ define(function (require) {
     let d3 = makeDelay(params, lfoLf3, lfoHf)
     node.connect(d3)
 
-    let mix = system.audio.createGain() // needs stereo output, with mix of delays going to each channel
-    d1.connect(mix)
-    d2.connect(mix)
-    d3.connect(mix)
-    mix.gain.value = 1/3
+    let panL = system.audio.createStereoPanner()
+    panL.pan.value = -3/4
+    let panR = system.audio.createStereoPanner()
+    panR.pan.value = 3/4
+    d1.connect(panL)
+    d2.connect(panL)
+    d2.connect(panR)
+    d3.connect(panR)
 
-    system.disconnect(params,[mix])
+    let mix = system.audio.createGain()
+    panL.connect(mix)
+    panR.connect(mix)
+    node.connect(mix)
+    mix.gain.value = 1/3
+    system.disconnect(params,[panL,panR,mix])
+
+    // This would be a simpler mono chorus but its not as rich sounding as the stereo
+    // let mix = system.audio.createGain()
+    // d1.connect(mix)
+    // d2.connect(mix)
+    // d3.connect(mix)
+    // mix.gain.value = 1/3
+    // system.disconnect(params,[mix])
+
     return mix
   }
 
