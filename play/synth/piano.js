@@ -2,8 +2,8 @@
 define(function (require) {
   let system = require('play/system');
   let {getBuffer, isLoaded} = require('play/samples')
-  let effects = require('play/effects')
-  let waveEffects = require('play/wave-effects')
+  let effects = require('play/effects/effects')
+  let waveEffects = require('play/effects/wave-effects')
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
   let scale = require('music/scale');
 

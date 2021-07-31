@@ -4,8 +4,8 @@ define(function (require) {
 
   let system = require('play/system');
   let envelope = require('play/envelopes')
-  let waveEffects = require('play/wave-effects')
-  let effects = require('play/effects')
+  let waveEffects = require('play/effects/wave-effects')
+  let effects = require('play/effects/effects')
 
   let processorCode = `
     class NoiseProcessor extends AudioWorkletProcessor {

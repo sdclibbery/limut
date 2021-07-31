@@ -2,10 +2,10 @@
 define(function (require) {
   let system = require('play/system');
   let {getBuffer} = require('play/samples')
-  let effects = require('play/effects')
+  let effects = require('play/effects/effects')
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
   let scale = require('music/scale');
-  let waveEffects = require('play/wave-effects')
+  let waveEffects = require('play/effects/wave-effects')
   let envelope = require('play/envelopes')
 
   return (params) => {
