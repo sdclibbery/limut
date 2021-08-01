@@ -114,14 +114,17 @@
   <script src="codemirror/codemirror.js"></script>
   <script src="codemirror/mode.js"></script>
   <script src="codemirror/comment.js"></script>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-0XV7RYV4EY"></script>
+  <!-- Google Analytics -->
   <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-0XV7RYV4EY');
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-13034280-3', { 'storage': 'none' }); // No cookies
+    ga('send', 'pageview');
   </script>
-  </head>
+  <!-- End Google Analytics -->
+</head>
 <body>
   <canvas id="canvas" class="fullscreen" style="width:100%; height:100%; background: #000f; display:none"></canvas>
   <div class="widget">
@@ -522,6 +525,10 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 ====
 ==== audio ====
 Better effect optimisation
+ Manage GCable chains of chorus -> phaser -> echo -> reverb effects
+  Create a chain for each event
+  But if the params are per-event and the same, then share them
+  How to GC them?
 save current note frequency onto event as this.freq
 ?portamento
 Sample synth has start param and uses sus param for duration
