@@ -34,18 +34,24 @@ define(function (require) {
   let quantise = (v, step) =>{
     return (Math.round(v*step)/step)
   }
+  let getParams = (params) => {
+    return {
+      chorusAmount: quantise(evalPerEvent(params, 'chorus', 0), 8),
+      lfoFreq: quantise(evalPerEvent(params, 'phaser', 0) / params.beat.duration, 16),
+      echoDelay: quantise(evalPerEvent(params, 'echo', 0) * params.beat.duration, 16),
+      echoFeedback: quantise(Math.min(evalPerEvent(params, 'echofeedback', 0.5), 0.95), 20),
+      room: quantise(evalPerEvent(params, 'room', 0)*0.7, 16),
+    }
+}
 
-  let createChain = (params, node) => {
+  let chains = {}
+
+  let createChain = (chainParams) => {
     let chain = {
-      params: {
-        chorusAmount: quantise(evalPerEvent(params, 'chorus', 0), 8),
-        lfoFreq: quantise(evalPerEvent(params, 'phaser', 0) / params.beat.duration, 16),
-        echoDelay: quantise(evalPerEvent(params, 'echo', 0) * params.beat.duration, 16),
-        echoFeedback: quantise(Math.min(evalPerEvent(params, 'echofeedback', 0.5), 0.95), 20),
-        room: quantise(evalPerEvent(params, 'room', 0)*0.7, 16),
-      }
+      params: chainParams
     }
     chain.in = system.audio.createGain()
+    let node
     node = chorus(chain.params.chorusAmount, chain.in)
     node = phaser(chain.params.lfoFreq, node)
     node = echo(chain.params.echoDelay, chain.params.echoFeedback, node)
@@ -55,7 +61,13 @@ define(function (require) {
   }
 
   return (params, node) => {
-    let chain = createChain(params)
+    let chainParams = getParams(params)
+    let key = JSON.stringify(chainParams)
+    if (!chains[key]) {
+      let chain = createChain(chainParams)
+      chains[key] = chain
+    }
+    let chain = chains[key]
     node.connect(chain.in)
     return chain.out
   }
