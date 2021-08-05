@@ -38,6 +38,6 @@ define(function (require) {
     let op4 = fm.op(freq*2, params)
     fm.connect(op4, op3, fm.simpleEnv(512*freq/261.6, params, 0, 2))
 
-    system.disconnect(params, [op1,op2,op3,op4,vca,out,multiosc])
+    system.disconnect(params, [op1,op2,op3,op4,vca,multiosc])
   }
 });

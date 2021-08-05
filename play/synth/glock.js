@@ -38,7 +38,7 @@ define(function (require) {
     let op1 = fm.op(freq*5, params, 'square')
     fm.connect(op1, op2, fm.simpleEnv(3000*freq/261.6, params, 0, 0.5))
 
-    system.disconnect(params, [op1,op2,op3,op4,vca,out,multiosc])
+    system.disconnect(params, [op1,op2,op3,op4,vca,multiosc])
     // frequencies from element433 https://youtu.be/CdPa6VLi4GQ?t=191
   }
 });

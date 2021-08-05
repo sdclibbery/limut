@@ -31,6 +31,6 @@ define(function (require) {
     let op1 = fm.op(freq*1.01, params, 'triangle')
     fm.connect(op1, op4, fm.flatEnv(params, 200*freq/261.6))
 
-    system.disconnect(params, [op1,op2,op3,op4,vca,out])
+    system.disconnect(params, [op1,op2,op3,op4,vca])
   }
 });

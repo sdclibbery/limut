@@ -46,6 +46,6 @@ define(function (require) {
     noise.parameters.get('start').setValueAtTime(1, params._time)
     noise.parameters.get('stop').setValueAtTime(0, system.audio.currentTime)
     noise.parameters.get('stop').setValueAtTime(1, params.endTime)
-    system.disconnect(params, [noise,vca,out])
+    system.disconnect(params, [noise,vca])
   }
 });

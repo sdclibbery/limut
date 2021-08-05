@@ -32,6 +32,6 @@ define(function (require) {
     vcos.forEach(vco => vco.connect(multiosc))
     vcos.forEach(vco => vco.start(params._time))
     vcos.forEach(vco => vco.stop(params.endTime))
-    system.disconnect(params, vcos.concat(vca,out,multiosc))
+    system.disconnect(params, vcos.concat(vca,multiosc))
   }
 });

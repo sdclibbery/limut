@@ -6,12 +6,14 @@ define(function (require) {
 
   // Inspired by https://www.soundonsound.com/techniques/more-creative-synthesis-delays
 
-  let lfoLf1, lfoLf2, lfoLf3
-  let lfoHfSrc, lfoHf
-  let bias
-  const lfoHfGain = 0.12
+  let chorus = (params, node) => {
+    if (!param(params.chorus, 0)) { return node }
 
-  let makeLfos = () => {
+    let lfoLf1, lfoLf2, lfoLf3
+    let lfoHfSrc, lfoHf
+    let bias
+    const lfoHfGain = 0.12
+  
     const lfFreq = 0.62165132
     lfoLf1 = system.audio.createOscillator()
     lfoLf1.frequency.value = lfFreq
@@ -35,29 +37,23 @@ define(function (require) {
     bias = system.audio.createConstantSource()
     bias.start()
     bias.offset.value = 1.1
-  }
 
-  let makeDelay = (params, lfo1, lfo2) => {
-    let lfoGain = system.audio.createGain()
-    lfo1.connect(lfoGain)
-    lfo2.connect(lfoGain)
-    bias.connect(lfoGain)
-
-    const maxDelay = 40/1000
-    const lfoNormalise = 2*(1 + bias.offset.value + lfoHfGain)
-    lfoGain.gain.value = (evalPerEvent(params, 'chorus', 0)/8)*maxDelay/lfoNormalise
-
-    let delay = system.audio.createDelay(maxDelay*1.25)
-    lfoGain.connect(delay.delayTime)
-
-    system.disconnect(params,[lfoGain, delay])
-    return delay
-  }
-
-  let chorus = (params, node) => {
-    if (!param(params.chorus, 0)) { return node }
-    if (!lfoLf1) { makeLfos() }
-
+    let makeDelay = (params, lfo1, lfo2) => {
+      let lfoGain = system.audio.createGain()
+      lfo1.connect(lfoGain)
+      lfo2.connect(lfoGain)
+      bias.connect(lfoGain)
+  
+      const maxDelay = 40/1000
+      const lfoNormalise = 2*(1 + bias.offset.value + lfoHfGain)
+      lfoGain.gain.value = (evalPerEvent(params, 'chorus', 0)/8)*maxDelay/lfoNormalise
+  
+      let delay = system.audio.createDelay(maxDelay*1.25)
+      lfoGain.connect(delay.delayTime)
+  
+      return delay
+    }
+  
     let d1 = makeDelay(params, lfoLf1, lfoHf)
     node.connect(d1)
     let d2 = makeDelay(params, lfoLf2, lfoHf)
@@ -79,7 +75,6 @@ define(function (require) {
     panR.connect(mix)
     node.connect(mix)
     mix.gain.value = 1/3
-    system.disconnect(params,[panL,panR,mix])
 
     // This would be a simpler mono chorus but its not as rich sounding as the stereo
     // let mix = system.audio.createGain()

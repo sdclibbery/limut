@@ -33,7 +33,7 @@ define(function (require) {
     fm.connect(op1, op2, fm.simpleEnv(300*freq/261.6, params, 0, 1))
     //    fm.connect(op1, op1, fm.flatEnv(params, 200)) // feedback doesnt work in webaudio?
 
-    system.disconnect(params, [op1,op2,op3,op4,vca,out])
+    system.disconnect(params, [op1,op2,op3,op4,vca])
     // frequencies from https://www.youtube.com/watch?v=CdPa6VLi4GQ
   }
 });

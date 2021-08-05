@@ -37,7 +37,6 @@ define(function (require) {
       .connect(makeAllPass(400))
       .connect(makeAllPass(800))
       .connect(mix)
-    system.disconnect(params, aps.concat([node,lfo,mix,lfoGain]))
     return mix
   }
 

@@ -59,6 +59,6 @@ define(function (require) {
     system.disconnect(params,
       ops.map(o=>o.op).filter(o => !!o)
       .concat(ops.map(o=>o.env).filter(o => !!o))
-      .concat([vca,out]))
+      .concat([vca]))
   }
 });

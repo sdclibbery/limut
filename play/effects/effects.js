@@ -3,42 +3,7 @@ define(function (require) {
   let system = require('play/system')
   let param = require('player/default-param')
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
-  let freeverb = require('play/effects/freeverb')
-  let phaser = require('play/effects/phaser')
-  let chorus = require('play/effects/chorus')
-
-  let echoes = {}
-  let echo = (params, node) => {
-    let echoDelay = evalPerEvent(params, 'echo', 0)
-    if (!echoDelay || echoDelay < 0.0001) { return node }
-    let echoFeedback = Math.min(evalPerEvent(params, 'echofeedback', 0.5), 0.95)
-    let quantisedEcho = (Math.round(echoDelay*16)/16) * params.beat.duration
-    let quantisedEchoFeedback = Math.round(echoFeedback*20)/20
-    let key = quantisedEcho + 'f' + quantisedEchoFeedback
-    if (!echoes[key]) {
-      echoes[key] = system.audio.createDelay(quantisedEcho)
-      echoes[key].delayTime.value = quantisedEcho
-      let echoGain = system.audio.createGain()
-      echoGain.gain.value = quantisedEchoFeedback
-      echoes[key].connect(echoGain)
-      echoGain.connect(echoes[key])
-      system.mix(echoGain)
-    }
-    node.connect(echoes[key])
-    return node
-  }
-
-  let reverbs = {}
-  let reverb = (params, node) => {
-    let room = evalPerEvent(params, 'room', 0)*0.7
-    if (!room || room < 0.01) { return node }
-    let quantisedRoom = Math.round(room*20)/20
-    if (!reverbs[quantisedRoom]) {
-      reverbs[quantisedRoom] = freeverb(quantisedRoom)
-    }
-    node.connect(reverbs[quantisedRoom])
-    return node
-  }
+  let chain = require('play/effects/chains')
 
   let perFrameAmp = (params, node) => {
     if (typeof params.amp !== 'function') { return node } // No per frame control required
@@ -108,16 +73,14 @@ define(function (require) {
   }
 
   return (params, node) => {
+    system.disconnect(params, [node])
     node = perFrameAmp(params, node)
     node = chop(params, node)
     node = lpf(params, node)
     node = hpf(params, node)
     node = bpf(params, node)
-    node = chorus(params, node)
-    node = phaser(params, node)
     node = pan(params, node)
-    node = reverb(params, node)
-    node = echo(params, node)
+    node = chain(params, node)
     return node
   }
 })

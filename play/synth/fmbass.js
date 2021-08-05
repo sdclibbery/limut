@@ -31,6 +31,6 @@ define(function (require) {
     let op4 = fm.op(freq*2, params)
     fm.connect(op4, op1, fm.simpleEnv(768*freq/261.6, params, 0, 4))
 
-    system.disconnect(params, [op1,op2,op3,op4,vca,out])
+    system.disconnect(params, [op1,op2,op3,op4,vca])
   }
 });
