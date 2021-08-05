@@ -6,10 +6,8 @@ define(function (require) {
   let phaser = require('play/effects/phaser')
   let chorus = require('play/effects/chorus')
 
-  let echo = (params, node) => {
-    let echoDelay = evalPerEvent(params, 'echo', 0) * params.beat.duration
+  let echo = (echoDelay, echoFeedback, node) => {
     if (!echoDelay || echoDelay < 0.0001) { return node }
-    let echoFeedback = Math.min(evalPerEvent(params, 'echofeedback', 0.5), 0.95)
     let echo = system.audio.createDelay(echoDelay)
     echo.delayTime.value = echoDelay
     let echoGain = system.audio.createGain()
@@ -23,8 +21,7 @@ define(function (require) {
     return mix
   }
 
-  let reverb = (params, node) => {
-    let room = evalPerEvent(params, 'room', 0)*0.7
+  let reverb = (room, node) => {
     if (!room || room < 0.01) { return node }
     let fv = freeverb(room)
     node.connect(fv)
@@ -34,11 +31,22 @@ define(function (require) {
     return mix
   }
 
+  let quantise = (v, step) =>{
+    return (Math.round(v*step)/step)
+  }
+
   return (params, node) => {
-    node = chorus(params, node)
-    node = phaser(params, node)
-    node = echo(params, node)
-    node = reverb(params, node)
+    let chainParams = {
+      chorusAmount: quantise(evalPerEvent(params, 'chorus', 0), 8),
+      lfoFreq: quantise(evalPerEvent(params, 'phaser', 0) / params.beat.duration, 16),
+      echoDelay: quantise(evalPerEvent(params, 'echo', 0) * params.beat.duration, 16),
+      echoFeedback: quantise(Math.min(evalPerEvent(params, 'echofeedback', 0.5), 0.95), 20),
+      room: quantise(evalPerEvent(params, 'room', 0)*0.7, 16),
+    }
+    node = chorus(chainParams.chorusAmount, node)
+    node = phaser(chainParams.lfoFreq, node)
+    node = echo(chainParams.echoDelay, chainParams.echoFeedback, node)
+    node = reverb(chainParams.room, node)
     return node
   }
 })

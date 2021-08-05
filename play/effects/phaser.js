@@ -1,16 +1,13 @@
 'use strict';
 define(function (require) {
   let system = require('play/system')
-  let {evalPerEvent} = require('play/eval-audio-params')
 
-  let phaser = (params, node) => {
-    let lfoFreq = evalPerEvent(params, 'phaser', 0)
+  let phaser = (lfoFreq, node) => {
     if (lfoFreq == 0) { return node }
 
     let lfo = system.audio.createOscillator()
-    lfo.frequency.value = lfoFreq / params.beat.duration
-    lfo.start(params._time)
-    lfo.stop(params.endTime)
+    lfo.frequency.value = lfoFreq
+    lfo.start(system.audio.currentTime)
 
     let lfoGain = system.audio.createGain()
     lfoGain.gain.value = 1200

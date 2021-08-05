@@ -1,13 +1,11 @@
 'use strict';
 define(function (require) {
   let system = require('play/system')
-  let param = require('player/default-param')
-  let {evalPerEvent} = require('play/eval-audio-params')
 
   // Inspired by https://www.soundonsound.com/techniques/more-creative-synthesis-delays
 
-  let chorus = (params, node) => {
-    if (!param(params.chorus, 0)) { return node }
+  let chorus = (chorusAmount, node) => {
+    if (!chorusAmount) { return node }
 
     let lfoLf1, lfoLf2, lfoLf3
     let lfoHfSrc, lfoHf
@@ -38,7 +36,7 @@ define(function (require) {
     bias.start()
     bias.offset.value = 1.1
 
-    let makeDelay = (params, lfo1, lfo2) => {
+    let makeDelay = (lfo1, lfo2) => {
       let lfoGain = system.audio.createGain()
       lfo1.connect(lfoGain)
       lfo2.connect(lfoGain)
@@ -46,7 +44,7 @@ define(function (require) {
   
       const maxDelay = 40/1000
       const lfoNormalise = 2*(1 + bias.offset.value + lfoHfGain)
-      lfoGain.gain.value = (evalPerEvent(params, 'chorus', 0)/8)*maxDelay/lfoNormalise
+      lfoGain.gain.value = (chorusAmount/8)*maxDelay/lfoNormalise
   
       let delay = system.audio.createDelay(maxDelay*1.25)
       lfoGain.connect(delay.delayTime)
@@ -54,11 +52,11 @@ define(function (require) {
       return delay
     }
   
-    let d1 = makeDelay(params, lfoLf1, lfoHf)
+    let d1 = makeDelay(lfoLf1, lfoHf)
     node.connect(d1)
-    let d2 = makeDelay(params, lfoLf2, lfoHf)
+    let d2 = makeDelay(lfoLf2, lfoHf)
     node.connect(d2)
-    let d3 = makeDelay(params, lfoLf3, lfoHf)
+    let d3 = makeDelay(lfoLf3, lfoHf)
     node.connect(d3)
 
     let panL = system.audio.createStereoPanner()
@@ -82,7 +80,6 @@ define(function (require) {
     // d2.connect(mix)
     // d3.connect(mix)
     // mix.gain.value = 1/3
-    // system.disconnect(params,[mix])
 
     return mix
   }
