@@ -39,7 +39,7 @@ define(function (require) {
       chorusAmount: quantise(evalPerEvent(params, 'chorus', 0), 8),
       lfoFreq: quantise(evalPerEvent(params, 'phaser', 0) / params.beat.duration, 16),
       echoDelay: quantise(evalPerEvent(params, 'echo', 0) * params.beat.duration, 16),
-      echoFeedback: quantise(Math.min(evalPerEvent(params, 'echofeedback', 0.5), 0.95), 20),
+      echoFeedback: quantise(Math.min(evalPerEvent(params, 'echofeedback', 0.35), 0.95), 20),
       room: quantise(evalPerEvent(params, 'room', 0)*0.7, 16),
     }
 }
