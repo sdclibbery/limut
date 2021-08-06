@@ -6,8 +6,9 @@ define(function (require) {
   let consoleOut = (str) => {
     cons.value += '\n'+str
     cons.scrollTop = cons.scrollHeight
+    console.log(str)
   }
-  consoleOut('\n> Welcome to Limut')
+  consoleOut('\n Welcome to Limut')
 
   return consoleOut
 })

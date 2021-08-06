@@ -528,7 +528,7 @@ Better effect optimisation
  Manage GCable chains of chorus -> phaser -> echo -> reverb effects
   GC for the chains
    gc on timeout
-   extend timeout whenever chain is connected to
+   extend timeout whenever chain is connected to, based on END TIME of event plus some reverb/echo time
    disconnect EVERYTHING on GC - check carefully! - including chain.in
 External audio input
  https://bobrov.dev/blog/web-audio-for-electric-guitar-how-to-connect-instrument/

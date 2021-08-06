@@ -2,6 +2,7 @@
 define(function (require) {
   let system = require('draw/system')
   let common = require('draw/shadercommon')
+  let consoleOut = require('console')
 
   let fragSource = `#version 300 es
   precision highp float;
@@ -32,13 +33,13 @@ define(function (require) {
     video = document.createElement('video')
     return new Promise((resolve, reject) => {
       const mediaConstraints = { audio: false, video: { 
-          width: 512, 
-          height: 512,
-          brightness: {ideal: 2} 
+          width: {ideal: 512}, 
+          height: {ideal: 512},
         }
       }
       navigator.mediaDevices.getUserMedia(
         mediaConstraints).then(mediaStream => {
+          consoleOut(`: Using Webcam: ${mediaStream.getTracks()[0].label}`)
           video.srcObject = mediaStream
           video.setAttribute('playsinline', true)
           video.onloadedmetadata = (e) => {
