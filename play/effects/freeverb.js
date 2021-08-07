@@ -8,11 +8,13 @@ define(function (require) {
   var combFilterTunings = [1557 / 44100, 1617 / 44100, 1491 / 44100, 1422 / 44100, 1277 / 44100, 1356 / 44100, 1188 / 44100, 1116 / 44100]
   var allpassFilterFrequencies = [225, 556, 441, 341]
 
-  let lowpassCombFilter = (dampening, delayTime, resonance) => {
+  let lowpassCombFilter = (dampening, delayTime, resonance, nodes) => {
     var node = system.audio.createDelay(delayTime)
+    nodes.push(node)
     node.delayTime.value = delayTime
 
     var output = system.audio.createBiquadFilter()
+    nodes.push(output)
     // this magic number seems to fix everything in Chrome 53
     // see https://github.com/livejs/freeverb/issues/1#issuecomment-249080213
     output.Q.value = -3.0102999566398125
@@ -21,6 +23,7 @@ define(function (require) {
     output.frequency.value = dampening
 
     var feedback = system.audio.createGain()
+    nodes.push(feedback)
     feedback.gain.value = resonance
 
     node.connect(output)
@@ -30,21 +33,24 @@ define(function (require) {
     return node
   }
 
-  return (room) => {
+  return (room, nodes) => {
     let dampening = 3000
     let resonance = 0.7 + 0.28 * Math.max(Math.min(room, 1), 0)
 
     var node = system.audio.createGain()
+    nodes.push(node)
     node.channelCountMode = 'explicit'
     node.channelCount = 2
 
     var merger = system.audio.createChannelMerger(2)
     var splitter = system.audio.createChannelSplitter(2)
     var highpass = system.audio.createBiquadFilter()
+    nodes.push(merger, splitter, highpass)
     highpass.type = 'highpass'
     highpass.frequency.value = 200
 
     var wet = system.audio.createGain()
+    nodes.push(wet)
     wet.gain.value = 0.3
 
     node.connect(wet)
@@ -57,6 +63,7 @@ define(function (require) {
 
     for (var l = 0; l < allpassFilterFrequencies.length; l++) {
       var allpassL = system.audio.createBiquadFilter()
+      nodes.push(allpassL)
       allpassL.type = 'allpass'
       allpassL.frequency.value = allpassFilterFrequencies[l]
       allpassFiltersL.push(allpassL)
@@ -69,6 +76,7 @@ define(function (require) {
 
     for (var r = 0; r < allpassFilterFrequencies.length; r++) {
       var allpassR = system.audio.createBiquadFilter()
+      nodes.push(allpassR)
       allpassR.type = 'allpass'
       allpassR.frequency.value = allpassFilterFrequencies[r]
       allpassFiltersR.push(allpassR)
@@ -80,7 +88,7 @@ define(function (require) {
     allpassFiltersR[allpassFiltersR.length - 1].connect(merger, 0, 1)
 
     for (var c = 0; c < combFilterTunings.length; c++) {
-      var lfpf = lowpassCombFilter(dampening, combFilterTunings[c], resonance)
+      var lfpf = lowpassCombFilter(dampening, combFilterTunings[c], resonance, nodes)
       if (c < combFilterTunings.length / 2) {
         splitter.connect(lfpf, 0)
         lfpf.connect(allpassFiltersL[0])

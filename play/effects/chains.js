@@ -6,26 +6,30 @@ define(function (require) {
   let phaser = require('play/effects/phaser')
   let chorus = require('play/effects/chorus')
 
-  let echo = (echoDelay, echoFeedback, node) => {
+  let echo = (echoDelay, echoFeedback, node, nodes) => {
     if (!echoDelay || echoDelay < 0.0001) { return node }
     let echo = system.audio.createDelay(echoDelay)
+    nodes.push(echo)
     echo.delayTime.value = echoDelay
     let echoGain = system.audio.createGain()
+    nodes.push(echoGain)
     echoGain.gain.value = echoFeedback
     echo.connect(echoGain)
     echoGain.connect(echo)
     node.connect(echo)
     let mix = system.audio.createGain()
+    nodes.push(mix)
     node.connect(mix)
     echoGain.connect(mix)
     return mix
   }
 
-  let reverb = (room, node) => {
+  let reverb = (room, node, nodes) => {
     if (!room || room < 0.01) { return node }
-    let fv = freeverb(room)
+    let fv = freeverb(room, nodes)
     node.connect(fv)
     let mix = system.audio.createGain()
+    nodes.push(mix)
     node.connect(mix)
     fv.connect(mix)
     return mix
@@ -48,22 +52,24 @@ define(function (require) {
 
   let createChain = (chainParams) => {
     let chain = {
-      params: chainParams
+      params: chainParams,
+      nodes: [],
     }
     chain.in = system.audio.createGain()
+    chain.nodes.push(chain.in)
     let node
-    node = chorus(chain.params.chorusAmount, chain.in)
-    node = phaser(chain.params.lfoFreq, node)
-    node = echo(chain.params.echoDelay, chain.params.echoFeedback, node)
-    node = reverb(chain.params.room, node)
+    node = chorus(chain.params.chorusAmount, chain.in, chain.nodes)
+    node = phaser(chain.params.lfoFreq, node, chain.nodes)
+    node = echo(chain.params.echoDelay, chain.params.echoFeedback, node, chain.nodes)
+    node = reverb(chain.params.room, node, chain.nodes)
+    chain.nodes.push(node)
     chain.out = node
     return chain
   }
 
   let destroyChain = (chain) => {
     delete chains[chain.key]
-    chain.in.disconnect()
-    chain.out.disconnect()
+    chain.nodes.map(n => n.disconnect())
   }
 
   return (params, node) => {
@@ -79,6 +85,7 @@ define(function (require) {
     let TTL = 1000*(params.endTime-params._time + chainParams.room*5 + chainParams.echoDelay*chainParams.echoFeedback*10 + 2)
     chain.timeoutID = setTimeout(() => destroyChain(chain), TTL)
     node.connect(chain.in)
+    chain.nodes.push(node)
     return chain.out
   }
 })

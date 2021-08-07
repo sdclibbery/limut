@@ -4,7 +4,7 @@ define(function (require) {
 
   // Inspired by https://www.soundonsound.com/techniques/more-creative-synthesis-delays
 
-  let chorus = (chorusAmount, node) => {
+  let chorus = (chorusAmount, node, nodes) => {
     if (!chorusAmount) { return node }
 
     let lfoLf1, lfoLf2, lfoLf3
@@ -14,30 +14,37 @@ define(function (require) {
   
     const lfFreq = 0.62165132
     lfoLf1 = system.audio.createOscillator()
+    nodes.push(lfoLf1)
     lfoLf1.frequency.value = lfFreq
     lfoLf1.start(system.audio.currentTime)
 
     lfoLf2 = system.audio.createOscillator()
+    nodes.push(lfoLf2)
     lfoLf2.frequency.value = lfFreq
     lfoLf2.start(system.audio.currentTime+0.333/lfFreq)
 
     lfoLf3 = system.audio.createOscillator()
+    nodes.push(lfoLf3)
     lfoLf3.frequency.value = lfFreq
     lfoLf3.start(system.audio.currentTime+0.667/lfFreq)
 
     lfoHfSrc = system.audio.createOscillator()
+    nodes.push(lfoHfSrc)
     lfoHfSrc.frequency.value = 6.674325
     lfoHfSrc.start(system.audio.currentTime)
     lfoHf = system.audio.createGain()
+    nodes.push(lfoHf)
     lfoHf.gain.value = lfoHfGain
     lfoHfSrc.connect(lfoHf)
 
     bias = system.audio.createConstantSource()
+    nodes.push(bias)
     bias.start()
     bias.offset.value = 1.1
 
     let makeDelay = (lfo1, lfo2) => {
       let lfoGain = system.audio.createGain()
+      nodes.push(lfoGain)
       lfo1.connect(lfoGain)
       lfo2.connect(lfoGain)
       bias.connect(lfoGain)
@@ -47,6 +54,7 @@ define(function (require) {
       lfoGain.gain.value = (chorusAmount/8)*maxDelay/lfoNormalise
   
       let delay = system.audio.createDelay(maxDelay*1.25)
+      nodes.push(delay)
       lfoGain.connect(delay.delayTime)
   
       return delay
@@ -60,8 +68,10 @@ define(function (require) {
     node.connect(d3)
 
     let panL = system.audio.createStereoPanner()
+    nodes.push(panL)
     panL.pan.value = -3/4
     let panR = system.audio.createStereoPanner()
+    nodes.push(panR)
     panR.pan.value = 3/4
     d1.connect(panL)
     d2.connect(panL)
@@ -69,6 +79,7 @@ define(function (require) {
     d3.connect(panR)
 
     let mix = system.audio.createGain()
+    nodes.push(mix)
     panL.connect(mix)
     panR.connect(mix)
     node.connect(mix)
