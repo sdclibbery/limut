@@ -60,14 +60,24 @@ define(function (require) {
     return chain
   }
 
+  let destroyChain = (chain) => {
+    delete chains[chain.key]
+    chain.in.disconnect()
+    chain.out.disconnect()
+  }
+
   return (params, node) => {
     let chainParams = getParams(params)
     let key = JSON.stringify(chainParams)
     if (!chains[key]) {
       let chain = createChain(chainParams)
+      chain.key = key
       chains[key] = chain
     }
     let chain = chains[key]
+    clearTimeout(chain.timeoutID)
+    let TTL = 1000*(params.endTime-params._time + chainParams.room*5 + chainParams.echoDelay*chainParams.echoFeedback*10 + 2)
+    chain.timeoutID = setTimeout(() => destroyChain(chain), TTL)
     node.connect(chain.in)
     return chain.out
   }
