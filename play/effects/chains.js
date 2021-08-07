@@ -54,13 +54,17 @@ define(function (require) {
     let chain = {
       params: chainParams,
       nodes: [],
+      oscs: [],
     }
     chain.in = system.audio.createGain()
     chain.nodes.push(chain.in)
     let node
-    node = chorus(chain.params.chorusAmount, chain.in, chain.nodes)
-    node = phaser(chain.params.lfoFreq, node, chain.nodes)
+    node = chorus(chain.params.chorusAmount, chain.in, chain.nodes, chain.oscs)
+    chain.nodes.push(node)
+    node = phaser(chain.params.lfoFreq, node, chain.nodes, chain.oscs)
+    chain.nodes.push(node)
     node = echo(chain.params.echoDelay, chain.params.echoFeedback, node, chain.nodes)
+    chain.nodes.push(node)
     node = reverb(chain.params.room, node, chain.nodes)
     chain.nodes.push(node)
     chain.out = node
@@ -69,6 +73,7 @@ define(function (require) {
 
   let destroyChain = (chain) => {
     delete chains[chain.key]
+    chain.oscs.map(n => n.stop())
     chain.nodes.map(n => n.disconnect())
   }
 

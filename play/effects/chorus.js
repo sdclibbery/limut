@@ -4,7 +4,7 @@ define(function (require) {
 
   // Inspired by https://www.soundonsound.com/techniques/more-creative-synthesis-delays
 
-  let chorus = (chorusAmount, node, nodes) => {
+  let chorus = (chorusAmount, node, nodes, oscs) => {
     if (!chorusAmount) { return node }
 
     let lfoLf1, lfoLf2, lfoLf3
@@ -15,21 +15,25 @@ define(function (require) {
     const lfFreq = 0.62165132
     lfoLf1 = system.audio.createOscillator()
     nodes.push(lfoLf1)
+    oscs.push(lfoLf1)
     lfoLf1.frequency.value = lfFreq
     lfoLf1.start(system.audio.currentTime)
 
     lfoLf2 = system.audio.createOscillator()
     nodes.push(lfoLf2)
+    oscs.push(lfoLf2)
     lfoLf2.frequency.value = lfFreq
     lfoLf2.start(system.audio.currentTime+0.333/lfFreq)
 
     lfoLf3 = system.audio.createOscillator()
     nodes.push(lfoLf3)
+    oscs.push(lfoLf3)
     lfoLf3.frequency.value = lfFreq
     lfoLf3.start(system.audio.currentTime+0.667/lfFreq)
 
     lfoHfSrc = system.audio.createOscillator()
     nodes.push(lfoHfSrc)
+    oscs.push(lfoHfSrc)
     lfoHfSrc.frequency.value = 6.674325
     lfoHfSrc.start(system.audio.currentTime)
     lfoHf = system.audio.createGain()
@@ -39,6 +43,7 @@ define(function (require) {
 
     bias = system.audio.createConstantSource()
     nodes.push(bias)
+    oscs.push(bias)
     bias.start()
     bias.offset.value = 1.1
 
