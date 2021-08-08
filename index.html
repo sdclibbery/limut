@@ -529,25 +529,21 @@ save current note frequency onto event as this.freq
 ?portamento
 Sample synth has start param and uses sus param for duration
 more filters: notch, low/high shelf
-reverb param allowing to use a convolution reverb with specified duration (at users own risk :-)
 Xylophone synth - https://www.youtube.com/watch?v=dXo_493fEpU
 Env=reverse (slow attack / fast release)
-pulse synth + formant/vowel effects for vocal aaa/ooo effects
-Constant envelope type to allow specifying per frame envelope with amp?
+pulse synth + formant/vowel effects for vocal aaa/ooo/choir effects
 Is it possible to control rate per frame?
 crackling on per frame amp change? eg testbass fmbass 0[7_.0], dur=4, oct=(1,2), amp=[2,1,0,0]s1/16@f
  chopwave
 fmpluck
  test fm 070604_[21], att=0, dur=1/2, echo=0, oct=4, amp=1, op1target='out', op1ratio=1, op2target=1, op2ratio=1, op2depth=1024, op2att=0, op2rel=8, op3target=1, op3ratio=2, op3depth=768, op3att=0, op3rel=8, op4target=1, op4ratio=3, op4depth=3072, op4att=0, op4rel=1/4, op4wave='sawtooth'
-GC for echoes and reverbs and allow finer quantisation; fix 'leaks' on bpm change
 Is play rate per frame?
 Allow setting main reverb room size
 Look into improving quality of samples playing at slow rates?
-? Make echo and reverb special
- so they are per player, and a tuple of echoes are all added together onto the player so they multiply
-AudioWorklet freeverb with webaseembly
+AudioWorklet freeverb with webassembly
 Drive should be per frame
-Try drive from here: https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
+Constant envelope type to allow specifying per frame envelope with amp?
+reverb param allowing to use a convolution reverb with specified duration (at users own risk :-)
 Pluck/guitar synths
  https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
  https://github.com/ronkot/ks-guitar-synth/blob/master/src/js/guitar-string.js
@@ -556,7 +552,6 @@ Nice gentle pads
 FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
 'X' doesn't work on mobile
 Preload samples immediately after parsing
-PWM techno pad??
 'add' param for play synth?
 AudioWorklet FM operator supporting feedback with webassembly
 speech synth
@@ -564,9 +559,6 @@ echoey space synth
  ethereal vib=3, att=0, sus=2, rel=2, phaser=1/4, echo=(3,4), oct=5
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
 strings pad - triangle?? vib?
-formant
-vowel?
-timpani sample?
 support -ve rate for reverse playback
 Normal bass synth
 FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
@@ -574,13 +566,13 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
 Hue,hsl functions
+Spiral or noise or shimmer pre distortion?
+Consider pushing data of each event into a texture so a shader could display all events, eg as 2D patterns or voxels or 3D shapes
 Disco glowing geometric shapes shader
 Starfield shader
 text synth
-Spiral or noise or shimmer pre distortion?
 Check image.shadertoy, webcam etc etc for per frame alloc
 make vignette work with window
-Consider pushing data of each event into a texture so a shader could display all events, eg as 2D patterns or voxels
 video synth (use video element to load video file; don't try and target eg youtube)
 vmirror?
 Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
@@ -598,7 +590,7 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-Var lookup should be able to be a tuple; eg this ought to work:   var test=(1,2)  |  p play 0, add=test
+Var lookup should be able to be a tuple; eg this ought to work:   var test=(1,2)  \n  p play 0, add=test
  Parse players in a second parse
  Do var lookups at parse time not eval time
 Use proper operator eval for overrides at parse time so that objects/tuples/per-frame etc are handled properly
