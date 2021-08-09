@@ -365,11 +365,20 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>echofeedback</code> Echo feedback gain, 0 to 1, default 0.5. Higher value means the echo persists for longer.</p>
 <p><code>detune</code> Amount of detune in semitones</p>
 <p><code>lpf</code> Low pass filter frequency in Hertz</p>
-<p><code>lpr</code> Low pass filter resonance. 10 is approximately the transition where resonance starts to kick in. default: 10</p>
+<p><code>lpr</code> Low pass filter resonance. 10 is approximately the transition where resonance starts to kick in.</p>
 <p><code>hpf</code> High pass filter frequency in Hertz</p>
 <p><code>hpr</code> High pass filter resonance</p>
 <p><code>bpf</code> Band pass filter frequency in Hertz</p>
 <p><code>bpr</code> Band pass filter resonance</p>
+<p><code>nf</code> Notch filter frequency in Hertz</p>
+<p><code>nr</code> Notch filter resonance</p>
+<p><code>low</code> Low shelf gain in decibels. Use negative values to cut frequencies below the cutoff, positive to boost them.</p>
+<p><code>lowf</code> Low shelf cutoff frequency. Default: 200Hz</p>
+<p><code>mid</code> Mid gain in decibels. Use negative values to cut frequencies around the cutoff, positive to boost them.</p>
+<p><code>midf</code> Mid cutoff frequency. Default: 600Hz</p>
+<p><code>midq</code> Mid q defines the width of the frequency band; low q is wide. Default: 5</p>
+<p><code>high</code> High shelf gain in decibels. Use negative values to cut frequencies above the cutoff, positive to boost them.</p>
+<p><code>highf</code> High shelf cutoff frequency. Default: 1100Hz</p>
 <p><code>chop</code> Chop the signal into a number of parts per beat</p>
 <p><code>sample</code> With 'play' synth: number: choose which sample set to use. With 'sample' synth: string: url of online audio file to play (note: server must support cross origin requests for the file)</p>
 <p><code>samplepitch</code> For the 'sample' synth, use this to specify the original pitch of 'sample' in Hz (eg '261.6' for C4)</p>
@@ -525,7 +534,6 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
-more filters: low/high shelf, peaking
 save current note frequency onto event as this.freq
 ?portamento
 Sample synth has start param and uses sus param for duration

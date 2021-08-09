@@ -4,43 +4,42 @@ define(function (require) {
   let param = require('player/default-param')
   let {evalPerFrame} = require('play/eval-audio-params')
 
-  let lpf = (params, node) => {
-    if (!param(params.lpf, 0)) { return node }
-    let lpf = system.audio.createBiquadFilter()
-    lpf.type = 'lowpass'
-    evalPerFrame(lpf.frequency, params, 'lpf')
-    evalPerFrame(lpf.Q, params, 'lpr', 5)
-    node.connect(lpf)
-    system.disconnect(params, [lpf,node])
-    return lpf
+  let resonant = (params, node, type, prefix, defaultResonance) => {
+    let freqParam = prefix+'f'
+    if (!param(params[freqParam], 0)) { return node }
+    let resonanceParam = prefix+'r'
+    let filter = system.audio.createBiquadFilter()
+    filter.type = type
+    evalPerFrame(filter.frequency, params, freqParam)
+    evalPerFrame(filter.Q, params, resonanceParam, defaultResonance)
+    node.connect(filter)
+    system.disconnect(params, [filter,node])
+    return filter
   }
 
-  let hpf = (params, node) => {
-    if (!param(params.hpf, 0)) { return node }
-    let hpf = system.audio.createBiquadFilter()
-    hpf.type = 'highpass'
-    evalPerFrame(hpf.frequency, params, 'hpf')
-    evalPerFrame(hpf.Q, params, 'hpr', 5)
-    node.connect(hpf)
-    system.disconnect(params, [hpf,node])
-    return hpf
-  }
-
-  let bpf = (params, node) => {
-    if (!param(params.bpf, 0)) { return node }
-    let bpf = system.audio.createBiquadFilter()
-    bpf.type = 'bandpass'
-    evalPerFrame(bpf.frequency, params, 'bpf')
-    evalPerFrame(bpf.Q, params, 'bpr', 1)
-    node.connect(bpf)
-    system.disconnect(params, [bpf,node])
-    return bpf
+  let eq = (params, node, type, prefix, defaultFreq, defaultQ) => {
+    let gainParam = prefix
+    if (!param(params[gainParam], 0)) { return node }
+    let freqParam = prefix+'f'
+    let qParam = prefix+'q'
+    let filter = system.audio.createBiquadFilter()
+    filter.type = type
+    evalPerFrame(filter.frequency, params, freqParam, defaultFreq)
+    evalPerFrame(filter.gain, params, gainParam)
+    evalPerFrame(filter.Q, params, qParam, defaultQ)
+    node.connect(filter)
+    system.disconnect(params, [filter,node])
+    return filter
   }
 
   return (params, node) => {
-    node = lpf(params, node)
-    node = hpf(params, node)
-    node = bpf(params, node)
+    node = resonant(params, node, 'lowpass', 'lp', 5)
+    node = resonant(params, node, 'highpass', 'hp', 5)
+    node = resonant(params, node, 'bandpass', 'bp', 1)
+    node = resonant(params, node, 'notch', 'n', 1)
+    node = eq(params, node, 'lowshelf', 'low', 200, 0)
+    node = eq(params, node, 'highshelf', 'high', 1100, 0)
+    node = eq(params, node, 'peaking', 'mid', 600, 5)
     return node
   }
 })
