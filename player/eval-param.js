@@ -8,13 +8,19 @@ define((require) => {
       let v = value(event, beat, evalRecurse)
       return evalRecurse(v, event, beat)
     } else if (typeof value == 'object') { // Eval each field in the object
-      value.__evaluated = value.__evaluated || {} // cache result object to avoid creating per-frame garbage
+      if (!event.__objectMap) {
+        event.__objectMap = new WeakMap() // Cache result objects by the value in the event to avoid per-frame garbage
+      }
+      if (!event.__objectMap.has(value)) {
+        event.__objectMap.set(value, {})
+      }
+      let result = event.__objectMap.get(value)
       for (let k in value) {
         if (k !== '__evaluated') {
-          value.__evaluated[k] = evalRecurse(value[k], event, beat, evalRecurse)
+          result[k] = evalRecurse(value[k], event, beat, evalRecurse)
         }
       }
-      return value.__evaluated
+      return result
     } else {
       return value
     }
