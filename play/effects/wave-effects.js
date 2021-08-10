@@ -7,15 +7,15 @@ define(function (require) {
     let amount = evalPerEvent(params, effect, 0)
     if (!amount) { return node }
     let shaper = system.audio.createWaveShaper()
-    let noisifyCurve = new Float32Array(2*count+1)
-    noisifyCurve[count] = 0
+    let curve = new Float32Array(2*count+1)
+    curve[count] = 0
     for (let i = 1; i < count+1; i++) {
       let x = i/count
       let y = shape(x, amount, i)
-      noisifyCurve[count-i] = -y
-      noisifyCurve[count+i] = y
+      curve[count-i] = -y
+      curve[count+i] = y
     }
-    shaper.curve = noisifyCurve
+    shaper.curve = curve
     shaper.oversample = 'none'
     node.connect(shaper)
     system.disconnect(params, [shaper,node])
@@ -32,7 +32,7 @@ define(function (require) {
 
   return (params, node) => {
     node = shapeEffect(params, 'noisify', node, 500, noisify)
-    node = shapeEffect(params, 'drive', node, 256, (x, a) => Math.atan(x*Math.max(a,0.05)*100)/(3+a))
+    node = shapeEffect(params, 'drive', node, 256, (x, a) => Math.atan(x*Math.max(a,0.05)*100)/(2+a))
     node = shapeEffect(params, 'bits', node, 256, (x, b) => Math.pow(Math.round(Math.pow(x,1/2)*b)/b,2))
     return node
   }
