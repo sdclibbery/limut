@@ -383,8 +383,10 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>sample</code> With 'play' synth: number: choose which sample set to use. With 'sample' synth: string: url of online audio file to play (note: server must support cross origin requests for the file)</p>
 <p><code>samplepitch</code> For the 'sample' synth, use this to specify the original pitch of 'sample' in Hz (eg '261.6' for C4)</p>
 <p><code>room</code> reverb room size (using freeverb)</p>
-<p><code>drive</code> overdrive level</p>
 <p><code>noisify</code> noisify: distort the signal into noise</p>
+<p><code>distort</code> distort the signal by boosting then flipping the overdriven part of the waveform</p>
+<p><code>clip</code> boost the signal then apply hard clipping</p>
+<p><code>drive</code> overdrive by boosting the signal then applying soft clipping</p>
 <p><code>bits</code> bit crush effect; value is number of bits. 1 bit is very distorted to (eg) 32 bits is relatively clean. 0 disables the effect.</p>
 <p><code>scale</code> override scale for this player; set to a string eg <code>'penta'</code> or <code>'minor'</code></p>
 <p><code>phaser</code> LFO frequency for phaser effect, in phase sweep cycles per beat</p>
