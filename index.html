@@ -600,8 +600,7 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-Var lookup should be able to be a tuple; eg this ought to work:   var test=(1,2)  \n  p play 0, add=test
- Parse players in a second parse
+Var lookup should be able to be a tuple; eg this ought to work:   test=(1,2)  \n  p play 0, add=test
  Do var lookups at parse time not eval time
 Use proper operator eval for overrides at parse time so that objects/tuples/per-frame etc are handled properly
 Player var lookups should support tuples
@@ -616,14 +615,16 @@ evalParam error if it finds an array?
  Test with follow and override
 Can modify params; eg 'set bass amp += 1/2'
  Overrides should only modify when explicitly asked; so set b add=1 replaces the add param, it does not add an additional 1 to it
- Can use for follow players, and indeed within a player; eg: p ping 0, amp=2/3, ..., amp*=2
+ Can use for follow players, set, and indeed within a player; eg: p ping 0, amp=2/3, ..., amp*=2
 Ignore rests . when setting event.idx (so that `0.1., amp=[1/2,1]` does as expected)
-Defining a name for every slider is too fiddly
- allow slider{} ?
- or even some UI method for slidering a value??
+? Possible to additionally allow '=' as object key/value separator? Eg {r=1,g=2} etc ? Will this conflict with line/param parsing??
 Random seed
  [1,2,3]r4{seed:1}
  [1,2,3]r4{seed:1,count:8}
+Defining a name for every slider is too fiddly
+ allow slider{} ?
+ or even some UI method for slidering a value??
+ Need a way to read off the current value of a slider!
 apply overridden delay for follow player: allow canons
  refactor delay application to happen once in 'play' method
 Allow random delay

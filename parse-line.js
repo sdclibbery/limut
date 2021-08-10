@@ -49,7 +49,7 @@ define((require) => {
     return result
   }
 
-  let parseLine = (line, linenum) => {
+  let parseOtherLine = (line, linenum) => {
     line = line.trim()
     if (!line) { return }
     if (line.startsWith('//')) { return }
@@ -80,6 +80,13 @@ define((require) => {
       })
       return
     }
+    return 'player'
+  }
+
+  let parsePlayerLine = (line, linenum) => {
+    line = line.trim()
+    if (!line) { return }
+    if (line.startsWith('//')) { return }
     // Define a player
     let player = parsePlayer(line, linenum)
     if (player) {
@@ -109,82 +116,86 @@ define((require) => {
     finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
   }
 
-  parseLine('')
+  parseOtherLine('')
+  parsePlayerLine('')
 
-  parseLine('foo=1+1')
+  parseOtherLine('foo=1+1')
   assert(2, vars.foo)
   delete vars.foo
 
-  parseLine('//foo=1+1')
+  parseOtherLine('//foo=1+1')
   assert(undefined, vars.foo)
 
-  parseLine('// foo=1+1')
+  parseOtherLine('// foo=1+1')
   assert(undefined, vars.foo)
 
-  parseLine('  //foo=1+1  ')
+  parseOtherLine('  //foo=1+1  ')
   assert(undefined, vars.foo)
 
-  parseLine('foo=1//+1')
+  parseOtherLine('foo=1//+1')
   assert(1, vars.foo)
   delete vars.foo
 
-  parseLine('foo=1 // +1')
+  parseOtherLine('foo=1 // +1')
   assert(1, vars.foo)
   delete vars.foo
 
-  parseLine("foo='http://a.com/Bc.mp3'")
+  parseOtherLine("foo='http://a.com/Bc.mp3'")
   assert('http://a.com/Bc.mp3', vars.foo)
   delete vars.foo
 
-  parseLine("foo='http://a.com/Bc.mp3'// BLAH")
+  parseOtherLine("foo='http://a.com/Bc.mp3'// BLAH")
   assert('http://a.com/Bc.mp3', vars.foo)
   delete vars.foo
 
-  parseLine(' \tfoo = 1 + 2 ')
+  parseOtherLine(' \tfoo = 1 + 2 ')
   assert(3, vars.foo)
   delete vars.foo
 
-  parseLine('p play xo, amp=2')
+  parseOtherLine('p play xo, amp=2')
+  assert(undefined, players.instances.p)
+
+  parsePlayerLine('p play xo, amp=2')
   assert('function', typeof players.instances.p.getEventsForBeat)
   assert('function', typeof players.instances.p.play)
   assert(2, players.instances.p.getEventsForBeat({count:0})[0].amp)
   delete players.instances.p
 
-  parseLine('p play xo,// amp=2')
+  parsePlayerLine('p play xo,// amp=2')
   assert(undefined, players.instances.p.getEventsForBeat({count:0})[0].amp)
   delete players.instances.p
 
-  parseLine('p play 0//, amp=2')
+  parsePlayerLine('p play 0//, amp=2')
   assert(undefined, players.instances.p.getEventsForBeat({count:0})[0].amp)
   assert('0', players.instances.p.getEventsForBeat({count:1})[0].value)
   delete players.instances.p
 
-  parseLine('p play 0, window//, amp=2')
+  parsePlayerLine('p play 0, window//, amp=2')
   assert(undefined, players.instances.p.getEventsForBeat({count:0})[0].amp)
   assert(1, players.instances.p.getEventsForBeat({count:0})[0].window)
   delete players.instances.p
 
-  parseLine('set p amp=2')
+  parseOtherLine('set p amp=2')
   assert(2, players.overrides.p.amp)
   delete players.overrides.p
 
-  parseLine('set p amp=2')
-  parseLine('set p amp=3')
+  parseOtherLine('set p amp=2')
+  parseOtherLine('set p amp=3')
   assert(3, players.overrides.p.amp)
   delete players.overrides.p
 
-  parseLine('set p amp=2')
-  parseLine('set p lpf=300')
+  parseOtherLine('set p amp=2')
+  parseOtherLine('set p lpf=300')
   assert(2, players.overrides.p.amp)
   assert(300, players.overrides.p.lpf)
   delete players.overrides.p
 
-  parseLine('set p add=2')
-  parseLine('set p add=3')
+  parseOtherLine('set p add=2')
+  parseOtherLine('set p add=3')
   assert(5, players.overrides.p.add)
   delete players.overrides.p
 
-  parseLine(' set [ p , q ] amp = 2 ')
+  parseOtherLine(' set [ p , q ] amp = 2 ')
   assert(2, players.overrides.p.amp)
   assert(2, players.overrides.q.amp)
   delete players.overrides.p
@@ -193,5 +204,8 @@ define((require) => {
   console.log('Parse line tests complete')
   }
   
-  return parseLine
+  return {
+    parseOtherLine:parseOtherLine,
+    parsePlayerLine:parsePlayerLine,
+  }
 })
