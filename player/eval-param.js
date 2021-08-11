@@ -3,10 +3,10 @@ define((require) => {
 
   let evalParamNow = (evalRecurse, value, event, beat) => {
     if (Array.isArray(value)) { // unexpanded tuple
-      return value
+      return value.map(v => evalRecurse(v, event, beat, evalRecurse))
     } else if (typeof value == 'function') { // Call function to get current value
       let v = value(event, beat, evalRecurse)
-      return evalRecurse(v, event, beat)
+      return evalRecurse(v, event, beat, evalRecurse)
     } else if (typeof value == 'object') { // Eval each field in the object
       if (!event.__objectMap) {
         event.__objectMap = new WeakMap() // Cache result objects by the value in the event to avoid per-frame garbage

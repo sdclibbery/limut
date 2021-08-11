@@ -1,7 +1,6 @@
 'use strict';
 define(function(require) {
   let evalOperator = require('player/eval-operator')
-  let hoistTuples = require('player/hoist-tuples').hoistTuples
 
   let operators = {
     '+': (l,r)=>l+r,
@@ -28,8 +27,7 @@ define(function(require) {
     if (pivot < 0) { return ops[0] }
     let lhs = precedenceTree(ops.slice(0, pivot))
     let rhs = precedenceTree(ops.slice(pivot+1))
-    let evalTrampoline = ([l,r]) => evalOperator(operators[ops[pivot]], l, r)
-    return hoistTuples(evalTrampoline)([lhs, rhs])
+    return evalOperator(operators[ops[pivot]], lhs, rhs)
   }
 
   return precedenceTree

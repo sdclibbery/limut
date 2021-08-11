@@ -601,12 +601,13 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Work on branch: try to evaluate tuples at event time
- Undo two pass parse
- Operators support tuples
  evalperframe every param on play, multiply events, but remember will need to eval tuples later so use an index
- remove parse time tuple hoisting
+ timevar eval support tuples
  what about overrides and follow?
  what about objects?
+ what else?
+ per frame array creation in operator eval needs tidying up (and elsewhere??) also in eval-param array case
+! Check object caching in eval-operator; does it have a variation of the kitt lights problem?
 Var lookup should be able to be a tuple; eg this ought to work:   test=(1,2)  \n  p play 0, add=test
  Do var lookups at parse time not eval time
 Use proper operator eval for overrides at parse time so that objects/tuples/per-frame etc are handled properly

@@ -17,8 +17,18 @@ define(function(require) {
     if (isPrimitive(el)) {
       if (isPrimitive(er)) {
         return op(el,er)
+      } else if (Array.isArray(er)) {
+        return er.map(r => applyOperator(op, el, r))
       } else if (typeof er == 'object') {
         return objectMap(er, (v)=>op(el,v))
+      }
+    } else if (Array.isArray(el)) {
+      if (isPrimitive(er)) {
+        return el.map(l => applyOperator(op, l, er))
+      } else if (Array.isArray(er)) {
+        let len = Math.max(el.length, er.length)
+        return (Array.from(Array(len).keys()))
+          .map(i => applyOperator(op, el[i%el.length], er[i%er.length]))
       }
     } else if (typeof el == 'object') {
       if (isPrimitive(er)) {
@@ -103,6 +113,17 @@ define(function(require) {
   assert(0, operator(add, perFrame, perFrame)(ev(0,5), 0, evalParam))
   assert(3, operator(add, perEvent, perFrame)(ev(0,3), 0, evalParam))
   assert(4, operator(add, perEvent, perFrame)(ev(0,0), 4, evalParam))
+
+  assert([3,4], operator(add, 1, [2,3])(ev(0),0,evalParam))
+  assert([4,5], operator(add, [1,2], 3)(ev(0),0,evalParam))
+  assert([4,6], operator(add, [1,2], [3,4])(ev(0),0,evalParam))
+  assert([4,5], operator(add, [1], [3,4])(ev(0),0,evalParam))
+  assert([4,5], operator(add, [1,2], [3])(ev(0),0,evalParam))
+  assert([4,5], operator(add, [1,2], fn(3))(ev(0),0,evalParam))
+  assert([4,5], operator(add, [1,fn(2)], 3)(ev(0),0,evalParam))
+  assert([4,5], operator(add, fn([1,2]), [3])(ev(0),0,evalParam))
+  assert([3,4], operator(add, 1, [fn(2),3])(ev(0),0,evalParam))
+  assert([4,5], operator(add, [fn(1),2], 3)(ev(0),0,evalParam))
 
   console.log('eval operator tests complete')
   }
