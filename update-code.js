@@ -1,6 +1,6 @@
 'use strict'
 define((require) => {
-  let {parseOtherLine,parsePlayerLine} = require('parse-line')
+  let {parseLine} = require('parse-line')
   let system = require('play/system')
   let players = require('player/players')
   let mainVars = require('main-vars')
@@ -11,8 +11,6 @@ define((require) => {
     let lines = code.split('\n')
       .map(l => l.trim())
       .filter(l => l!='')
-      let playerLines = []
-      let playerLineNumbers = []
       for (let i = 0; i<lines.length; i++) {
       try {
         let line = lines[i]
@@ -20,21 +18,10 @@ define((require) => {
           line = line.slice(0, -2) + ' ' + lines[i+1]
           i++
         }
-        if (parseOtherLine(line, i)) {
-          playerLines.push(line)
-          playerLineNumbers.push(i)
-        }
+        parseLine(line, i)
       } catch (e) {
         let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
         consoleOut('Error on line '+(i+1)+': ' + e + st)
-      }
-    }
-    for (let i = 0; i<playerLines.length; i++) {
-      try {
-        parsePlayerLine(playerLines[i], playerLineNumbers[i])
-      } catch (e) {
-        let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
-        consoleOut('Error on player line '+(playerLineNumbers[i]+1)+': ' + e + st)
       }
     }
   }
