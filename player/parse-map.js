@@ -1,7 +1,6 @@
 'use strict';
 define(function(require) {
   let eatWhitespace = require('player/eat-whitespace')
-  let hoistTuples = require('player/hoist-tuples').hoistTuples
 
   let identifier = (state) => {
     let char
@@ -54,7 +53,7 @@ define(function(require) {
         return undefined
       }
     }
-    return hoistTuples(buildMap)(values, keys)
+    return buildMap(values, keys)
   }
 
   return parseMap

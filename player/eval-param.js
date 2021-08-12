@@ -1,6 +1,20 @@
 'use strict';
 define((require) => {
 
+  let expandTuples = (o) => {
+    for (let k in o) {
+      let v = o[k]
+      if (Array.isArray(v)) {
+        return v.flatMap(x => {
+          let e = Object.assign({}, o)
+          e[k] = x
+          return expandTuples(e)
+        })
+      }
+    }
+    return o
+  }
+
   let evalParamNow = (evalRecurse, value, event, beat) => {
     if (Array.isArray(value)) { // unexpanded tuple
       return value.map(v => evalRecurse(v, event, beat, evalRecurse))
@@ -20,7 +34,7 @@ define((require) => {
           result[k] = evalRecurse(value[k], event, beat, evalRecurse)
         }
       }
-      return result
+      return expandTuples(result)
     } else {
       return value
     }
@@ -54,6 +68,13 @@ define((require) => {
   assert(5, evalParamEvent((x,y) => y, ev(0), 5))
   assert({x:1}, evalParamEvent({x:()=>1}, ev(0), 0))
   assert('a', evalParamEvent('a', ev(0), 0))
+  assert([1,2], evalParamEvent([1,2], ev(0), 0))
+  assert([1,5], evalParamEvent([1,() => 5], ev(0), 0))
+  assert([{x:1},{x:2}], evalParamEvent({x:[1,2]}, ev(0), 0))
+  // assert([{x:1,y:3},{x:2,y:4}], evalParamEvent({x:[1,2],y:[3,4]}, ev(0), 0))
+  // assert([1,2,3], evalParamEvent([1,[2,3]], ev(0), 0))
+  // assert([1,2,3], evalParamEvent([1,() => [2,3]], ev(0), 0))
+  // assert([{x:1},{x:2},{x:3}], evalParamEvent([{x:1},{x:[2,3]}], ev(0), 0))
 
   let perFrameValue = () => 3
   perFrameValue.interval= 'frame'

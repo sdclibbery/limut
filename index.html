@@ -601,10 +601,17 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Work on branch: try to evaluate tuples at event time
- evalperframe every param on play, multiply events, but remember will need to eval tuples later so use an index
+ objects: remove hoist tuples
+  need eval-param to hoist tuples through objects now
+ split expandtuples out of overrideparams - and can use same code to hoist tuples in eval-param for objects??
+ expandtuples
+  call evalParamFrame to get the tuple-count
+  for params that are tuples, multiply out, but wrap params in functions that index into the tuple
  timevar eval support tuples
+ var lookup
+ Eval Param will need to flatten nested tuples
  what about overrides and follow?
- what about objects?
+ [0:(2,4)]e could be a tricky case?
  what else?
  per frame array creation in operator eval needs tidying up (and elsewhere??) also in eval-param array case
 ! Check object caching in eval-operator; does it have a variation of the kitt lights problem?

@@ -1,7 +1,7 @@
 'use strict';
 define(function(require) {
   let operator = require('player/eval-operator')
-  let evalParam = require('player/eval-param').evalParamEvent
+  let {evalParamEvent,evalParamFrame} = require('player/eval-param')
 
   let multiplyEvents = (event) => {
     for (let k in event) {
@@ -44,13 +44,13 @@ define(function(require) {
       result[k] = op(result[k], overrides[k])
     }
     return result
-}
+  }
 
   let overrideEventParams = (events, overrides) => {
     let allEvents = events.flatMap(sourceEvent => {
       let event = overrideParams(sourceEvent, overrides)
       for (let k in overrides) {
-        event[k] = evalParam(event[k], sourceEvent, sourceEvent.count)
+        event[k] = evalParamEvent(event[k], sourceEvent, sourceEvent.count)
       }
       return multiplyEvents(event)
     })
@@ -77,8 +77,8 @@ define(function(require) {
   assert([ev({add:6})], overrideEventParams([ev({add:2})], {add:() => 4}))
   
   c = overrideEventParams([ev()], {zoom:parseExpression('[2:4]l2@f')})
-  assert(2, c[0].zoom(ev(),0,evalParam))
-  assert(3, c[0].zoom(ev({idx:1}),1,evalParam))
+  assert(2, c[0].zoom(ev(),0,evalParamEvent))
+  assert(3, c[0].zoom(ev({idx:1}),1,evalParamEvent))
 
   console.log('Override params tests complete')
   }

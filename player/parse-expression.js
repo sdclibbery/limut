@@ -945,16 +945,15 @@ define(function(require) {
   assert([0,0], parseExpression("[0,(0,0)]r@f").map(v => v(ev(0,0),0,evalParamFrame)))
   assert(['frame','frame'], parseExpression("[0.1,(0.1,5)]r@f").map(v => v.interval))
 
-  assert([{x:1},{x:2}], parseExpression("{x:(1,2)}"))
+  assert({x:[1,2]}, parseExpression("{x:(1,2)}"))
 
   assert([1,2], parseExpression("((1,2))"))
   assert([1,2,3], parseExpression("(1,(2,3))"))
   assert([1,2,3], parseExpression("((1,2),3))"))
 
-  assert([{x:1,y:3},{x:2,y:4}], parseExpression("{x:(1,2),y:(3,4)}"))
-  assert([0,0], parseExpression("{x:[0,(1,2)]}").map(({x}) => x(ev(0,0),0,evalParamFrame)))
-  assert([1,2], parseExpression("{x:[0,(1,2)]}").map(({x}) => x(ev(1,1),1,evalParamFrame)))
-  assert([{x:0},{x:1},{x:2}], parseExpression("({x:0},{x:(1,2)})"))
+  assert([{x:0},{x:[1,2]}], parseExpression("({x:0},{x:(1,2)})"))
+  // assert([{x:1},{x:2}], evalParamFrame(parseExpression("{x:(1,2)}")))
+  // assert([{x:0},{x:1},{x:2}], evalParamFrame(parseExpression("({x:0},{x:(1,2)})")))
 
   console.log('Parse expression tests complete')
   }
