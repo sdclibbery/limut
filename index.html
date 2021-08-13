@@ -536,6 +536,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
+Rename distort to fold or wavefold
 save current note frequency onto event as this.freq
 ?portamento
 Sample synth has start param and uses sus param for duration
@@ -603,9 +604,10 @@ shadertoy synth multiple channels
 Work on branch: try to evaluate tuples at event time
  objects: remove hoist tuples
   need eval-param to hoist tuples through objects now
+  !!eval-params tests!!
  split expandtuples out of overrideparams - and can use same code to hoist tuples in eval-param for objects??
  expandtuples
-  call evalParamFrame to get the tuple-count
+  call evalParamFrame to get the tuple cardinality
   for params that are tuples, multiply out, but wrap params in functions that index into the tuple
  timevar eval support tuples
  var lookup
