@@ -26,25 +26,26 @@ define((require) => {
   }
 
   let evalParamNow = (evalRecurse, value, event, beat) => {
-    if (Array.isArray(value)) { // tuple
+    if (Array.isArray(value)) { // tuple, eval individual values
       return value.map(v => evalRecurse(v, event, beat, evalRecurse)).flat()
     } else if (typeof value == 'function') { // Call function to get current value
       let v = value(event, beat, evalRecurse)
       return evalRecurse(v, event, beat, evalRecurse)
     } else if (typeof value == 'object') { // Eval each field in the object
-      if (!event.__objectMap) {
-        event.__objectMap = new WeakMap() // Cache result objects by the value in the event to avoid per-frame garbage
-      }
-      if (!event.__objectMap.has(value)) {
-        event.__objectMap.set(value, {})
-      }
-      let result = event.__objectMap.get(value)
+      // if (!event.__objectMap) {
+      //   event.__objectMap = new WeakMap() // Cache result objects by the value in the event to avoid per-frame garbage
+      // }
+      // if (!event.__objectMap.has(value)) {
+      //   event.__objectMap.set(value, {})
+      // }
+      // let result = event.__objectMap.get(value)
+      let result = {}
       for (let k in value) {
         if (k !== '__evaluated') {
           result[k] = evalRecurse(value[k], event, beat, evalRecurse)
         }
       }
-      return expandTuples(result)
+      return expandTuples(result) // and hoist tuples up
     } else {
       return value
     }
@@ -103,6 +104,8 @@ define((require) => {
   assert({a:3}, evalParamFrame({a:perFrameValue}, ev(0), 0))
   assert({a:4}, evalParamEvent({a:perEventValue}, ev(0), 0))
   assert('frame', evalParamEvent({a:perFrameValue}, ev(0), 0).a.interval)
+  assert({r:1}, evalParamFrame(()=>{return({r:1})}, ev(0), 0))
+  assert([{r:1,g:3},{r:2,g:3}], evalParamFrame(()=>{return({r:()=>[1,2],g:3})}, ev(0), 0))
 
   console.log('Eval param tests complete')
   }

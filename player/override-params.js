@@ -3,20 +3,6 @@ define(function(require) {
   let operator = require('player/eval-operator')
   let {evalParamEvent,evalParamFrame} = require('player/eval-param')
 
-  let multiplyEvents = (event) => {
-    for (let k in event) {
-      let v = event[k]
-      if (Array.isArray(v)) {
-        return v.flatMap(x => {
-          let e = Object.assign({}, event)
-          e[k] = x
-          return multiplyEvents(e)
-        })
-      }
-    }
-    return [event]
-  }
-
   let applyOp = (op, orig, over) => {
     if (orig === undefined) {
       return over
@@ -46,17 +32,6 @@ define(function(require) {
     return result
   }
 
-  let overrideEventParams = (events, overrides) => {
-    let allEvents = events.flatMap(sourceEvent => {
-      let event = overrideParams(sourceEvent, overrides)
-      for (let k in overrides) {
-        event[k] = evalParamEvent(event[k], sourceEvent, sourceEvent.count)
-      }
-      return multiplyEvents(event)
-    })
-    return allEvents
-  }
-
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
@@ -69,22 +44,16 @@ define(function(require) {
   let ev = ps => Object.assign({idx:0, count:0, value:'1'}, ps)
   let c
 
-  assert([ev()], overrideEventParams([ev()], {}))
-  assert([ev({delay:18})], overrideEventParams([ev({delay:10})], {value:'9', delay:8, _time:7}))
-  assert([ev({add:2})], overrideEventParams([ev({add:2})], {}))
-  assert([ev({add:3})], overrideEventParams([ev()], {add:3}))
-  assert([ev({add:5})], overrideEventParams([ev({add:2})], {add:3}))
-  assert([ev({add:6})], overrideEventParams([ev({add:2})], {add:() => 4}))
+  assert(ev(), overrideParams(ev(), {}))
+  assert(ev({delay:18}), overrideParams(ev({delay:10}), {value:'9', delay:8, _time:7}))
+  assert(ev({add:2}), overrideParams(ev({add:2}), {}))
+  assert(ev({add:3}), overrideParams(ev(), {add:3}))
+  assert(ev({add:5}), overrideParams(ev({add:2}), {add:3}))
   
-  c = overrideEventParams([ev()], {zoom:parseExpression('[2:4]l2@f')})
-  assert(2, c[0].zoom(ev(),0,evalParamEvent))
-  assert(3, c[0].zoom(ev({idx:1}),1,evalParamEvent))
-
   console.log('Override params tests complete')
   }
 
   return {
-    overrideEventParams: overrideEventParams,
     overrideParams: overrideParams,
   }
 });

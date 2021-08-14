@@ -2,10 +2,11 @@
 define((require) => {
   let playerTypes = require('player/player-types')
   var parseParams = require('player/params')
-  var overrideParams = require('player/override-params').overrideEventParams
+  var overrideParams = require('player/override-params').overrideParams
   var players = require('player/players')
   let standardPlayer = require('player/standard')
   var followPlayer = require('player/follow')
+  var expandTuples = require('player/expand-tuples')
 
   let splitOnAll = (str, ch) => {
     if (!str) { return [] }
@@ -88,7 +89,8 @@ define((require) => {
           let events = getEventsForBeat(beat)
           events.forEach(e => e.linenum = linenum)
           let overrides = players.overrides[player.id] || {}
-          let es = overrideParams(events, overrides)
+          let es = events.map(e => overrideParams(e, overrides))
+          es = expandTuples(es)
           return es
         }
         return player
@@ -147,6 +149,10 @@ define((require) => {
   assertThrows('Missing player type', ()=>parsePlayer('p'))
   assertThrows('Missing pattern/params', ()=>parsePlayer('p play'))
   assertThrows('Player "INVALID" not found', ()=>parsePlayer('p INVALID xo'))
+
+  p = parsePlayer('p grid 0, fore=[{r:[(1,2)]t,g:3}]t')
+  assert({r:1,g:3}, p.getEventsForBeat({count:0})[0].fore)
+  assert({r:2,g:3}, p.getEventsForBeat({count:0})[1].fore)
 
   console.log('Parse player tests complete')
   }

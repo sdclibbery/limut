@@ -537,6 +537,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 ====
 ==== audio ====
 Rename distort to fold or wavefold
+choke param for play synth to choke one sound off when the next plays (eg hihats)
 save current note frequency onto event as this.freq
 ?portamento
 Sample synth has start param and uses sus param for duration
@@ -602,20 +603,15 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Work on branch: try to evaluate tuples at event time
- objects: remove hoist tuples
-  need eval-param to hoist tuples through objects now
-  !!eval-params tests!!
- split expandtuples out of overrideparams - and can use same code to hoist tuples in eval-param for objects??
- expandtuples
-  call evalParamFrame to get the tuple cardinality
-  for params that are tuples, multiply out, but wrap params in functions that index into the tuple
  timevar eval support tuples
  var lookup
  Eval Param will need to flatten nested tuples
  what about overrides and follow?
  [0:(2,4)]e could be a tricky case?
  what else?
+ check we aren't now evalling stuff per frame when it could be per event
  per frame array creation in operator eval needs tidying up (and elsewhere??) also in eval-param array case
+  Actually needs re-optimising
 ! Check object caching in eval-operator; does it have a variation of the kitt lights problem?
 Var lookup should be able to be a tuple; eg this ought to work:   test=(1,2)  \n  p play 0, add=test
  Do var lookups at parse time not eval time
