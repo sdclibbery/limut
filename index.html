@@ -602,30 +602,22 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-Work on branch: try to evaluate tuples at event time
- timevar eval support tuples
- var lookup
+evaluate tuples at event time
+ expand instead of hoist tuples
+  timevar eval
+  random eval
+  random eval
+  var lookup
+  others?
+ does everything work per frame?
  Eval Param will need to flatten nested tuples
  what about overrides and follow?
- [0:(2,4)]e could be a tricky case?
- what else?
  check we aren't now evalling stuff per frame when it could be per event
  per frame array creation in operator eval needs tidying up (and elsewhere??) also in eval-param array case
   Actually needs re-optimising
+ how do player var tuple lookups work now?
 ! Check object caching in eval-operator; does it have a variation of the kitt lights problem?
-Var lookup should be able to be a tuple; eg this ought to work:   test=(1,2)  \n  p play 0, add=test
- Do var lookups at parse time not eval time
-Use proper operator eval for overrides at parse time so that objects/tuples/per-frame etc are handled properly
-Player var lookups should support tuples
- Resolve at parse time??
-  What about circular dependencies?
-   Resolve at parse time but also allow at evalParamEvent time?
-evalParam error if it finds an array?
- (Re)move some evalParamEvents?
- Order should be
-  parse time: parse and hoist tuples
-  play time: get events -> multiply tuples -> evalParamEvent -> play
- Test with follow and override
+Use proper operator eval for overrides so that objects/tuples/per-frame etc are handled properly
 Can modify params; eg 'set bass amp += 1/2'
  Overrides should only modify when explicitly asked; so set b add=1 replaces the add param, it does not add an additional 1 to it
  Can use for follow players, set, and indeed within a player; eg: p ping 0, amp=2/3, ..., amp*=2

@@ -357,6 +357,8 @@ define(function(require) {
   p = parseExpression('[1,(2,3)]')
   assert([1,1], p.map(v=>v(ev(0),0,evalParamFrame)))
   assert([2,3], p.map(v=>v(ev(1),1,evalParamFrame)))
+  // assert([1,1], p(ev(0),0,evalParamFrame))
+  // assert([2,3], p(ev(1),1,evalParamFrame))
 
   p = parseExpression('[(1,2,3),4,(5,6)]')
   assert([1,2,3], p.map(v=>v(ev(0),0,evalParamFrame)))

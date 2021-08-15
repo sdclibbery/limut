@@ -154,6 +154,20 @@ define((require) => {
   assert({r:1,g:3}, p.getEventsForBeat({count:0})[0].fore)
   assert({r:2,g:3}, p.getEventsForBeat({count:0})[1].fore)
 
+  p = parsePlayer('p test 00, amp=[1,(2,3)]')
+  assert(1, p.getEventsForBeat({count:0})[0].amp)
+  assert(1, p.getEventsForBeat({count:0})[1].amp)
+  assert(2, p.getEventsForBeat({count:1})[0].amp)
+  assert(3, p.getEventsForBeat({count:1})[1].amp)
+
+  p = parsePlayer('p play 0, amp=[1,(2,3)]l1')
+  assert(1, p.getEventsForBeat({count:0})[0].amp)
+  assert(1, p.getEventsForBeat({count:0})[1].amp)
+  assert(1.5, p.getEventsForBeat({count:1/2})[0].amp)
+  assert(2, p.getEventsForBeat({count:1/2})[1].amp)
+  assert(2, p.getEventsForBeat({count:1})[0].amp)
+  assert(3, p.getEventsForBeat({count:1})[1].amp)
+
   console.log('Parse player tests complete')
   }
   
