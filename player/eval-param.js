@@ -1,7 +1,7 @@
 'use strict';
 define((require) => {
 
-  let expandTuples = (o) => {
+  let expandObjectTuples = (o) => {
     let maxCardinality = 0
     for (let k in o) {
       if (Array.isArray(o[k])) {
@@ -45,7 +45,7 @@ define((require) => {
           result[k] = evalRecurse(value[k], event, beat, evalRecurse)
         }
       }
-      return expandTuples(result) // and hoist tuples up
+      return expandObjectTuples(result) // and hoist tuples up
     } else {
       return value
     }

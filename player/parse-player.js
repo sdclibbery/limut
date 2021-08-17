@@ -117,6 +117,8 @@ define((require) => {
     e.endTime = e._time + e.dur
     return {}
   } }
+  let {evalParamFrame,evalParamEvent} = require('player/eval-param')
+  let ev = (i,c,d) => {return{idx:i,count:c,dur:d}}
 
   p = parsePlayer('p play xo, amp=2')
   assert('p', p.id)
@@ -155,18 +157,18 @@ define((require) => {
   assert({r:2,g:3}, p.getEventsForBeat({count:0})[1].fore)
 
   p = parsePlayer('p test 00, amp=[1,(2,3)]')
-  assert(1, p.getEventsForBeat({count:0})[0].amp)
-  assert(1, p.getEventsForBeat({count:0})[1].amp)
-  assert(2, p.getEventsForBeat({count:1})[0].amp)
-  assert(3, p.getEventsForBeat({count:1})[1].amp)
+  assert(1,  evalParamFrame(p.getEventsForBeat({count:0})[0].amp,ev(0,0),0))
+  assert(undefined, p.getEventsForBeat({count:0})[1])
+  assert(2, evalParamFrame(p.getEventsForBeat({count:1})[0].amp,ev(0,0),0))
+  assert(3, evalParamFrame(p.getEventsForBeat({count:1})[1].amp,ev(0,0),0))
 
   p = parsePlayer('p play 0, amp=[1,(2,3)]l1')
-  assert(1, p.getEventsForBeat({count:0})[0].amp)
-  assert(1, p.getEventsForBeat({count:0})[1].amp)
-  assert(1.5, p.getEventsForBeat({count:1/2})[0].amp)
-  assert(2, p.getEventsForBeat({count:1/2})[1].amp)
-  assert(2, p.getEventsForBeat({count:1})[0].amp)
-  assert(3, p.getEventsForBeat({count:1})[1].amp)
+  assert(1, evalParamFrame(p.getEventsForBeat({count:0})[0].amp,ev(0,0),0))
+  assert(1, evalParamFrame(p.getEventsForBeat({count:0})[1].amp,ev(0,0),0))
+  assert(1.5, evalParamFrame(p.getEventsForBeat({count:1/2})[0].amp,ev(0,0),0))
+  assert(2, evalParamFrame(p.getEventsForBeat({count:1/2})[1].amp,ev(0,0),0))
+  assert(2, evalParamFrame(p.getEventsForBeat({count:1})[0].amp,ev(0,0),0))
+  assert(3, evalParamFrame(p.getEventsForBeat({count:1})[1].amp,ev(0,0),0))
 
   console.log('Parse player tests complete')
   }

@@ -1,7 +1,6 @@
 'use strict';
 define(function(require) {
   let evalOperator = require('player/eval-operator')
-  let hoistTuples = require('player/hoist-tuples').hoistTuples
 
   let timeVarSteps = (vs, ds) => {
     if (!Array.isArray(ds)) { ds = [ds] }
@@ -29,7 +28,7 @@ define(function(require) {
       if (interval !== 'frame') { count = e.count }
       count = (count+0.0001) % steps.totalDuration
       let step = steps.filter(st => isInTimeVarStep(st, count) )[0]
-      return (step !== undefined) && evalRecurse(step.value, e,b)
+      return (step !== undefined) && evalRecurse(step.value, e,b,evalRecurse)
     }
   }
 
@@ -49,11 +48,11 @@ define(function(require) {
       if (interval !== 'frame') { count = e.count }
       count = count % steps.totalDuration
       for (let idx = 0; idx < steps.length; idx++) {
-        let pre = evalRecurse(steps[idx], e,b)
+        let pre = steps[idx]
         if (isInTimeVarStep(pre, count)) {
-          let post = evalRecurse(steps[(idx+1) % steps.length], e,b)
+          let post = steps[(idx+1) % steps.length]
           let lerp = (count - pre._time) / pre.duration
-          return lerpValue(lerp, pre.value, post.value)
+          return lerpValue(lerp, evalRecurse(pre.value,e,b,evalRecurse), evalRecurse(post.value,e,b,evalRecurse))
         }
       }
     }
@@ -66,12 +65,12 @@ define(function(require) {
       if (interval !== 'frame') { count = e.count }
       count = count % steps.totalDuration
       for (let idx = 0; idx < steps.length; idx++) {
-        let pre = evalRecurse(steps[idx], e,b)
+        let pre = steps[idx]
         if (isInTimeVarStep(pre, count)) {
-          let post = evalRecurse(steps[(idx+1) % steps.length], e,b)
+          let post = steps[(idx+1) % steps.length]
           let lerp = (count - pre._time) / pre.duration
           lerp = lerp*lerp*(3 - 2*lerp) // bezier ease in/out
-          return lerpValue(lerp, pre.value, post.value)
+          return lerpValue(lerp, evalRecurse(pre.value,e,b,evalRecurse), evalRecurse(post.value,e,b,evalRecurse))
         }
       }
     }
@@ -79,14 +78,14 @@ define(function(require) {
 
   let eventTimeVar = (vs) => {
     return (e,b, evalRecurse) => {
-      if (!e.countToTime) { return evalRecurse(vs[0] || 0, e,b, evalRecurse) }
+      if (!e.countToTime) { return evalRecurse(vs[0] || 0, e,b,evalRecurse) }
       let eventFraction = (e.countToTime(b) - e._time) / (e.endTime - e._time)
       eventFraction = eventFraction || 0
       let numSteps = vs.length-1
       let preIdx = Math.min(Math.max(Math.floor(eventFraction * numSteps), 0), numSteps)
       let postIdx = Math.min(preIdx + 1, numSteps)
-      let pre = evalRecurse(vs[preIdx], e,b, evalRecurse)
-      let post = evalRecurse(vs[postIdx], e,b, evalRecurse)
+      let pre = evalRecurse(vs[preIdx], e,b,evalRecurse)
+      let post = evalRecurse(vs[postIdx], e,b,evalRecurse)
       let lerp = Math.min(Math.max((eventFraction - preIdx/numSteps)*numSteps, 0), 1)
       return lerpValue(lerp, pre, post)
     }
@@ -95,15 +94,15 @@ define(function(require) {
   let eventIdxVar = (vs) => {
     return (e,b, evalRecurse) => {
       let v = vs[Math.floor(e.idx || 0) % vs.length]
-      return (v !== undefined) && evalRecurse(v, e,b)
+      return (v !== undefined) && evalRecurse(v, e,b,evalRecurse)
     }
   }
 
   return {
-    timeVar: hoistTuples(timeVar),
-    linearTimeVar: hoistTuples(linearTimeVar),
-    smoothTimeVar: hoistTuples(smoothTimeVar),
-    eventTimeVar: hoistTuples(eventTimeVar),
-    eventIdxVar: hoistTuples(eventIdxVar),
+    timeVar: timeVar,
+    linearTimeVar: linearTimeVar,
+    smoothTimeVar: smoothTimeVar,
+    eventTimeVar: eventTimeVar,
+    eventIdxVar: eventIdxVar,
   }
 })

@@ -2,7 +2,6 @@
 define(function(require) {
   let evalOperator = require('player/eval-operator')
   let param = require('player/default-param')
-  let hoistTuples = require('player/hoist-tuples').hoistTuples
 
   let evalRandomRanged = (lo, hi) => {
     return lo + Math.random() * (hi-lo)
@@ -95,7 +94,7 @@ define(function(require) {
   }
 
   return {
-    parseRandom: hoistTuples(parseRandom),
-    simpleNoise: hoistTuples(simpleNoise),
+    parseRandom: parseRandom,
+    simpleNoise: simpleNoise,
   }
 })
