@@ -85,13 +85,15 @@ define((require) => {
           getEventsForBeat = standardPlayer(patternStr, paramsStr, playerFactory.defaultDur)
         }
         // override event params
-        player.getEventsForBeat = (beat) => {
+        player.getEventsForBeatBase = (beat) => {
           let events = getEventsForBeat(beat)
           events.forEach(e => e.linenum = linenum)
           let overrides = players.overrides[player.id] || {}
           let es = events.map(e => overrideParams(e, overrides))
-          es = expandTuples(es)
           return es
+        }
+        player.getEventsForBeat = (beat) => {
+          return expandTuples(player.getEventsForBeatBase(beat))
         }
         return player
       }
