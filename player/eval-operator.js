@@ -33,20 +33,18 @@ define(function(require) {
     } else if (typeof el == 'object') {
       if (isPrimitive(er)) {
         return objectMap(el, (v) => applyOperator(op,v,er))
+      } else if (Array.isArray(er)) {
+        return er.map(r => applyOperator(op, el, r))
       } else if (typeof er == 'object') {
-        el.__evaluated = el.__evaluated || {} // cache result object to avoid creating per-frame garbage
+        let result = {}
         for (let k in el) {
-          if (k !== '__evaluated') {
-            let erv = er[k]
-            el.__evaluated[k] = (erv !== undefined) ? applyOperator(op,el[k],erv) : el[k]
-          }
+          let erv = er[k]
+          result[k] = (erv !== undefined) ? applyOperator(op,el[k],erv) : el[k]
         }
         for (let k in er) {
-          if (k !== '__evaluated') {
-            if (el.__evaluated[k] === undefined) { el.__evaluated[k] = er[k] }
-          }
+          if (result[k] === undefined) { result[k] = er[k] }
         }
-        return el.__evaluated
+        return result
       }
     }
   }
@@ -60,7 +58,6 @@ define(function(require) {
       let el = evalRecurse(l, event,b,evalRecurse)
       let er = evalRecurse(r, event,b,evalRecurse)
       let result = applyOperator(op, el, er)
-      if (result === undefined) { return operator(op, el, er) }
       return result
     }
     evalOp.interval = combineIntervals(l.interval, r.interval)
@@ -124,6 +121,9 @@ define(function(require) {
   assert([4,5], operator(add, fn([1,2]), [3])(ev(0),0,evalParam))
   assert([3,4], operator(add, 1, [fn(2),3])(ev(0),0,evalParam))
   assert([4,5], operator(add, [fn(1),2], 3)(ev(0),0,evalParam))
+
+  assert([{r:3},{r:4}], evalParam(operator(add, {r:1}, [{r:2},{r:3}]),ev(0),0))
+  assert([{r:3},{r:1,g:1}], evalParam(operator(add, {r:1}, [{r:2},{g:1}]),ev(0),0))
 
   console.log('eval operator tests complete')
   }

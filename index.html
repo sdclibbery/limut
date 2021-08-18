@@ -606,15 +606,17 @@ shadertoy synth multiple channels
 ==== other ====
 evaluate tuples at event time
  expand instead of hoist tuples
-  player param lookup - not getting tuples through
   vg glow 00, loc=tile_random, fore=blue+(red,green)
+   Also try (red,green)+blue
+   Also (red,blue)+(green,yellow)
+  player param lookup - not getting tuples through
   others?
  does everything work per frame?
  Eval Param will need to flatten nested tuples?
  what about overrides and follow?
  check we aren't now evalling stuff per frame when it could be per event
  per frame array creation in operator eval needs tidying up (and elsewhere??) also in eval-param array case
-  Actually needs re-optimising
+  Actually needs re-optimising; check all, and watch out for breaking edge cases!
  how do player var tuple lookups work now?
 ! Check object caching in eval-operator; does it have a variation of the kitt lights problem?
 Use proper operator eval for overrides so that objects/tuples/per-frame etc are handled properly

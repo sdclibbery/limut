@@ -22,8 +22,10 @@ define((require) => {
             e[k] = v[i] // get correct element from tuple
           } else if (typeof v == 'function') {
             e[k] = (e,b,evalRecurse) => tupleIndex(v(e,b,evalRecurse),i) // return function to get tuple, then index it
+            e[k].interval = v.interval
           } else if (typeof v == 'object') {
             e[k] = (e,b,evalRecurse) => tupleIndex(evalRecurse(v, e,b,evalRecurse),i) // return function to get tuple, then index it
+            e[k].interval = v.interval
           } else {
             e[k] = v // primitive so use same value across all tuple indices
           }
