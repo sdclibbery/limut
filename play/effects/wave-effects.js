@@ -30,7 +30,7 @@ define(function (require) {
     return y
   }
 
-  let distort = (x, a) => {
+  let fold = (x, a) => {
     let sgn = Math.sign(x)
     let v = Math.abs(x)*(1+a)
     return sgn * (v>1 ? 1-(v-1) : v)
@@ -45,7 +45,7 @@ define(function (require) {
   return (params, node) => {
     node = shapeEffect(params, 'noisify', node, 500, noisify)
     node = shapeEffect(params, 'bits', node, 256, (x, b) => Math.pow(Math.round(Math.pow(x,1/2)*b)/b,2))
-    node = shapeEffect(params, 'distort', node, 256, distort)
+    node = shapeEffect(params, 'fold', node, 256, fold)
     node = shapeEffect(params, 'clip', node, 256, clip)
     node = shapeEffect(params, 'drive', node, 256, (x, a) => Math.atan(x*Math.max(a,0.05)*100)/(2+a))
     return node
