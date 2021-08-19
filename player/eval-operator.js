@@ -29,6 +29,8 @@ define(function(require) {
         let len = Math.max(el.length, er.length)
         return (Array.from(Array(len).keys()))
           .map(i => applyOperator(op, el[i%el.length], er[i%er.length]))
+      } else if (typeof er == 'object') {
+        return el.map(l => applyOperator(op, l, er))
       }
     } else if (typeof el == 'object') {
       if (isPrimitive(er)) {
@@ -124,6 +126,9 @@ define(function(require) {
 
   assert([{r:3},{r:4}], evalParam(operator(add, {r:1}, [{r:2},{r:3}]),ev(0),0))
   assert([{r:3},{r:1,g:1}], evalParam(operator(add, {r:1}, [{r:2},{g:1}]),ev(0),0))
+
+  assert([{r:3},{r:4}], evalParam(operator(add, [{r:2},{r:3}], {r:1}),ev(0),0))
+  assert([{r:3},{g:1,r:1}], evalParam(operator(add, [{r:2},{g:1}], {r:1}),ev(0),0))
 
   console.log('eval operator tests complete')
   }
