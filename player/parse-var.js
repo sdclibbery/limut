@@ -25,12 +25,12 @@ define(function(require) {
     }
     // Return a lookup function
     let [playerId, param] = key.split('.')
-    let result = (event,b) => {
+    let result = (event,b,evalRecurse) => {
       let v
       if (param) {
         let player = players.instances[playerId]
         if (player) {
-          let ce = player.currentEvent ? player.currentEvent(event,b) : undefined
+          let ce = player.getEventsForBeatBase(event.beat)[0]
           v = (ce ? ce[param] : 0) || 0
         } else if (playerId === 'this') {
           v = event[param]
@@ -41,7 +41,7 @@ define(function(require) {
       } else {
         v = vars[key]
       }
-      return v
+      return evalRecurse(v,event,b,evalRecurse)
     }
     return result
   }

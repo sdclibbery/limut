@@ -262,7 +262,7 @@ define(function(require) {
       let v = varLookup(state)
       if (v !== undefined) {
         result = v
-        if (typeof v === 'function') {
+        if (typeof result === 'function') {
           result.interval = parseInterval(state) || 'frame'
         }
         continue
