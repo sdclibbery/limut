@@ -61,30 +61,30 @@ define(function(require) {
   p = varLookup(state)
   assert(3, state.idx)
   vars.foo = 'baz'
-  assert('baz', p({}))
+  assert('baz', p({},0,(v)=>v))
   delete vars.foo
 
   vars['foo.woo'] = 'bar'
   p = varLookup({str:'foo.woo',idx:0})
-  assert('bar', p({}))
+  assert('bar', p({},0,(v)=>v))
   vars['foo.woo'] = undefined
 
   vars['foo'] = 'bar'
   p = varLookup({str:'FoO',idx:0})
-  assert('bar', p({}))
+  assert('bar', p({},0,(v)=>v))
   delete vars.foo
 
-  players.instances.p1 = { currentEvent:(e,b)=>{ return {foo:b}} }
+  players.instances.p1 = { getEventsForBeatBase:(b)=>{ return [{foo:b}]} }
   p = varLookup({str:'p1.foo',idx:0})
-  assert(0, p({},0))
-  assert(2, p({},2))
+  assert(0, p({},0,(v)=>v))
+  assert(2, p({beat:2},0,(v)=>v))
   delete players.instances.p1
 
   p = varLookup({str:'p1.foo',idx:0})
-  assert(0, p({}))
+  assert(0, p({},0,(v)=>v))
 
   p = varLookup({str:'this.foo',idx:0})
-  assert(1, p({foo:1}))
+  assert(1, p({foo:1},0,(v)=>v))
 
   vars.foo = () => 3
   state = {str:'foo {}',idx:0}

@@ -412,17 +412,17 @@ define(function(require) {
   vars.foo = 'bar'
   p = parseExpression('foo')
   vars.foo = 'baz'
-  assert('baz', p({}))
+  assert('baz', p({},0,(v)=>v))
   delete vars.foo
 
   vars['foo.woo'] = 'bar'
   p = parseExpression('foo.woo')
-  assert('bar', p({}))
+  assert('bar', p({},0,(v)=>v))
   vars['foo.woo'] = undefined
 
   vars['foo'] = 'bar'
   p = parseExpression('FoO')
-  assert('bar', p({}))
+  assert('bar', p({},0,(v)=>v))
   vars['foo'] = undefined
 
   vars.foo = 2
