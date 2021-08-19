@@ -18,30 +18,30 @@ define(function(require) {
       if (isPrimitive(er)) {
         return op(el,er)
       } else if (Array.isArray(er)) {
-        return er.map(r => applyOperator(op, el, r))
+        return er.map(r => operator(op, el, r))
       } else if (typeof er == 'object') {
         return objectMap(er, (v)=>op(el,v))
       }
     } else if (Array.isArray(el)) {
       if (isPrimitive(er)) {
-        return el.map(l => applyOperator(op, l, er))
+        return el.map(l => operator(op, l, er))
       } else if (Array.isArray(er)) {
         let len = Math.max(el.length, er.length)
         return (Array.from(Array(len).keys()))
-          .map(i => applyOperator(op, el[i%el.length], er[i%er.length]))
+          .map(i => operator(op, el[i%el.length], er[i%er.length]))
       } else if (typeof er == 'object') {
-        return el.map(l => applyOperator(op, l, er))
+        return el.map(l => operator(op, l, er))
       }
     } else if (typeof el == 'object') {
       if (isPrimitive(er)) {
-        return objectMap(el, (v) => applyOperator(op,v,er))
+        return objectMap(el, (v) => operator(op,v,er))
       } else if (Array.isArray(er)) {
-        return er.map(r => applyOperator(op, el, r))
+        return er.map(r => operator(op, el, r))
       } else if (typeof er == 'object') {
         let result = {}
         for (let k in el) {
           let erv = er[k]
-          result[k] = (erv !== undefined) ? applyOperator(op,el[k],erv) : el[k]
+          result[k] = (erv !== undefined) ? operator(op,el[k],erv) : el[k]
         }
         for (let k in er) {
           if (result[k] === undefined) { result[k] = er[k] }
@@ -129,6 +129,9 @@ define(function(require) {
 
   assert([{r:3},{r:4}], evalParam(operator(add, [{r:2},{r:3}], {r:1}),ev(0),0))
   assert([{r:3},{g:1,r:1}], evalParam(operator(add, [{r:2},{g:1}], {r:1}),ev(0),0))
+
+  assert([{r:4},{r:6}], evalParam(operator(add, [{r:1},{r:2}], [{r:3},{r:4}]),ev(0),0))
+  assert([{r:1,g:3},{g:2,r:4}], evalParam(operator(add, [{r:1},{g:2}], [{g:3},{r:4}]),ev(0),0))
 
   console.log('eval operator tests complete')
   }
