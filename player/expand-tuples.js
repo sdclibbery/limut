@@ -30,11 +30,14 @@ define((require) => {
           } else {
             e[k] = v // primitive so use same value across all tuple indices
           }
+          e[k] = evalParamEvent(e[k], e, e.count) // eval to the event level
           es.push(...multiplyEvents(e)) // And recurse to expand out any other tuple params
         }
         return es
       }
-      event[k] = evalParamEvent(event[k], event, event.count) // eval to the event level
+      else {
+        event[k] = evalParamEvent(event[k], event, event.count) // eval to the event level
+      }
     }
     return [event]
   }
