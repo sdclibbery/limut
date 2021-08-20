@@ -12,6 +12,7 @@ define((require) => {
 
   let multiplyEvents = (event) => {
     for (let k in event) {
+      if (k == 'beat') { continue }
       let v = event[k]
       let evaled = evalParamFrame(v, event, event.count)
       if (Array.isArray(evaled)) { // If param k is a tuple, expand it out
@@ -29,11 +30,11 @@ define((require) => {
           } else {
             e[k] = v // primitive so use same value across all tuple indices
           }
-          e[k] = evalParamEvent(e[k], event, event.count) // eval to the event level
           es.push(...multiplyEvents(e)) // And recurse to expand out any other tuple params
         }
         return es
       }
+      event[k] = evalParamEvent(event[k], event, event.count) // eval to the event level
     }
     return [event]
   }
