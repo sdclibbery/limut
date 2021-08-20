@@ -2,7 +2,6 @@
 define(function(require) {
   let param = require('player/default-param')
   let parsePatternString = require('player/parse-pattern')
-  let {evalParamEvent,evalParamFrame} = require('player/eval-param')
 
   let parsePattern = (pattern, params, defaultDur) => {
     if (!pattern) { return () => [] }
@@ -26,11 +25,10 @@ define(function(require) {
             let event = {}
             event.value = sourceEvent.value
             event.idx = idx
-            let countForEval = count + patternStartTime + sourceEvent._time
-            event.delay = evalParamFrame(d, {count:countForEval, idx:idx}, countForEval) || 0
-            event._time = sourceEvent._time + event.delay
+            event.delay = d
+            event._time = sourceEvent._time + (event.delay || 0)
             _time = (patternStartTime + event._time) - count
-            baseTime = _time - event.delay
+            baseTime = _time - (event.delay || 0)
             event.dur = sourceEvent.dur
             event._time = _time
             event.count = count+_time
