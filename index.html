@@ -602,21 +602,21 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-Eval delay param; and/or have a swing param or pattern modifier
+Ignore rests . when setting event.idx (so that `0.1., amp=[1/2,1]` does as expected)
 Can modify params; eg 'set bass amp += 1/2'
  Overrides should only modify when explicitly asked; so set b add=1 replaces the add param, it does not add an additional 1 to it
  Can use for follow players, set, and indeed within a player; eg: p ping 0, amp=2/3, ..., amp*=2
-Ignore rests . when setting event.idx (so that `0.1., amp=[1/2,1]` does as expected)
-? Possible to additionally allow '=' as object key/value separator? Eg {r=1,g=2} etc ? Will this conflict with line/param parsing??
 Random seed
  [1,2,3]r4{seed:1}
  [1,2,3]r4{seed:1,count:8}
+? Possible to additionally allow '=' as object key/value separator? Eg {r=1,g=2} etc ? Will this conflict with line/param parsing??
 Defining a name for every slider is too fiddly
  allow slider{} ?
  or even some UI method for slidering a value??
  Need a way to read off the current value of a slider!
 apply overridden delay for follow player: allow canons
  refactor delay application to happen once in 'play' method
+swing param or pattern modifier
 Allow random delay
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 Wildcard player matching for groups 'set d? amp=0'  'set p* amp=0'
