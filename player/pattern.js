@@ -20,30 +20,26 @@ define(function(require) {
         let e = events[idx]
         let es = (typeof(e.value) == 'function') ? e.value(e, Math.floor(count/patternLength)) : [e]
         es.forEach(sourceEvent => {
-          let delays = Array.isArray(params.delay) ? params.delay : [params.delay]
-          delays.forEach(d => {
-            let event = {}
-            event.value = sourceEvent.value
-            event.idx = idx
-            event.delay = d
-            event._time = sourceEvent._time + (event.delay || 0)
-            _time = (patternStartTime + event._time) - count
-            baseTime = _time - (event.delay || 0)
-            event.dur = sourceEvent.dur
-            event._time = _time
-            event.count = count+_time
-            event.sharp = sourceEvent.sharp
-            event.loud = sourceEvent.loud
-            event.long = sourceEvent.long
-            if (event.value !== '.' && baseTime > -0.0001 && baseTime < 0.9999) {
-              for (let k in params) {
-                if (k != '_time' && k != 'delay' && k != 'value' && k != 'dur') {
-                  event[k] = params[k]
-                }
+          let event = {}
+          event.value = sourceEvent.value
+          event.idx = idx
+          event._time = sourceEvent._time
+          _time = (patternStartTime + event._time) - count
+          baseTime = _time
+          event.dur = sourceEvent.dur
+          event._time = _time
+          event.count = count+_time
+          event.sharp = sourceEvent.sharp
+          event.loud = sourceEvent.loud
+          event.long = sourceEvent.long
+          if (event.value !== '.' && baseTime > -0.0001 && baseTime < 0.9999) {
+            for (let k in params) {
+              if (k != '_time' && k != 'value' && k != 'dur') {
+                event[k] = params[k]
               }
-              eventsForBeat.push(event)
             }
-          })
+            eventsForBeat.push(event)
+          }
         })
         idx += 1
         if (idx >= events.length) {
@@ -182,18 +178,7 @@ define(function(require) {
   assert([{value:'0',idx:0,_time:0,dur:1,count:0,amp:2}], pattern(0))
 
   pattern = parsePattern('0', {delay:1/2})
-  assert([{value:'0',idx:0,delay:1/2,_time:1/2,dur:1,count:1/2}], pattern(0))
-
-  pattern = parsePattern('123', {delay:1})
-  assert([{value:'1',idx:0,delay:1,_time:1,dur:1,count:1}], pattern(0))
-  assert([{value:'2',idx:1,delay:1,_time:1,dur:1,count:2}], pattern(1))
-  assert([{value:'3',idx:2,delay:1,_time:1,dur:1,count:3}], pattern(2))
-  assert([{value:'1',idx:0,delay:1,_time:1,dur:1,count:4}], pattern(3))
-
-  pattern = parsePattern('123', {delay:-1})
-  assert([{value:'1',idx:0,delay:-1,_time:-1,dur:1,count:-1}], pattern(0))
-  assert([{value:'2',idx:1,delay:-1,_time:-1,dur:1,count:0}], pattern(1))
-  assert([{value:'3',idx:2,delay:-1,_time:-1,dur:1,count:1}], pattern(2))
+  assert([{value:'0',idx:0,_time:0,dur:1,count:0,delay:1/2}], pattern(0))
 
   pattern = parsePattern('0', {amp:[2,3]})
   assert([{value:'0',idx:0,_time:0,dur:1,count:0,amp:[2,3]}], pattern(0))
