@@ -7,6 +7,7 @@ define((require) => {
   let standardPlayer = require('player/standard')
   var followPlayer = require('player/follow')
   var expandTuples = require('player/expand-tuples')
+  let {evalParamEvent,evalParamFrame} = require('player/eval-param')
 
   let splitOnAll = (str, ch) => {
     if (!str) { return [] }
@@ -17,6 +18,12 @@ define((require) => {
     if (!str) { return [] }
     let parts = splitOnAll(str, ch)
     return [parts[0], parts.slice(1).join()]
+  }
+
+  let applyDelay = (event) => {
+    let d = evalParamFrame(event.delay || 0, event, event.count)
+    event._time += d
+    event.count += d
   }
 
   let parsePlayer = (line, linenum) => {
@@ -90,6 +97,7 @@ define((require) => {
           events.forEach(e => e.linenum = linenum)
           let overrides = players.overrides[player.id] || {}
           let es = events.map(e => overrideParams(e, overrides))
+          es.forEach(applyDelay)
           return es
         }
         player.getEventsForBeat = (beat) => {
@@ -114,7 +122,7 @@ define((require) => {
     catch (e) { if (e.includes(expected)) {got=true} else {console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: ${e}`)} }
     finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
   }
-  let p
+  let p,e
   playerTypes.test = { play: (e) => {
     e.endTime = e._time + e.dur
     return {}
@@ -127,6 +135,14 @@ define((require) => {
   assert('function', typeof p.getEventsForBeat)
   assert('function', typeof p.play)
   assert(2, p.getEventsForBeat({count:0})[0].amp)
+
+  e = parsePlayer('p play x, delay=0').getEventsForBeat({time:0, count:0, duration:1})[0]
+  assert(0, e._time)
+  assert(0, e.count)
+
+  e = parsePlayer('p play x, delay=1/2').getEventsForBeat({time:0, count:0, duration:1})[0]
+  assert(1/2, e._time)
+  assert(1/2, e.count)
 
   p = parsePlayer('p test xo, dur=1/2')
   p.play(p.getEventsForBeat({time:0, count:0, duration:1}))
