@@ -8,7 +8,6 @@ define(function(require) {
       let p = players.instances[playerName.toLowerCase()]
       if (p === undefined) { return [] }
       let events = p.getEventsForBeatBase(beat)
-      events.forEach(e => delete e.oct)
       return events.map(e => overrideParams(e, params))
     }
   }

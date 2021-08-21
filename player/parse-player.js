@@ -20,9 +20,15 @@ define((require) => {
     return [parts[0], parts.slice(1).join()]
   }
 
-  let applyDelay = (event) => {
+  let evalToEvent = (event, beat) => {
+    for (let k in event) {
+      event[k] = evalParamEvent(event[k], event, beat.count)
+    }
+  }
+
+  let applyDelay = (event, beat) => {
     let d = evalParamFrame(event.delay || 0, event, event.count)
-    event._time += d
+    event._time += d*beat.duration
     event.count += d
   }
 
@@ -97,11 +103,14 @@ define((require) => {
           events.forEach(e => e.linenum = linenum)
           let overrides = players.overrides[player.id] || {}
           let es = events.map(e => overrideParams(e, overrides))
-          es.forEach(applyDelay)
+          es.forEach(e => evalToEvent(e, beat))
           return es
         }
         player.getEventsForBeat = (beat) => {
-          return expandTuples(player.getEventsForBeatBase(beat))
+          let es = player.getEventsForBeatBase(beat)
+          es = expandTuples(es)
+          es.forEach(e => applyDelay(e, beat))
+          return es
         }
         return player
       }
@@ -142,6 +151,10 @@ define((require) => {
 
   e = parsePlayer('p play x, delay=1/2').getEventsForBeat({time:0, count:0, duration:1})[0]
   assert(1/2, e._time)
+  assert(1/2, e.count)
+
+  e = parsePlayer('p play x, delay=1/2').getEventsForBeat({time:0, count:0, duration:1/2})[0]
+  assert(1/4, e._time)
   assert(1/2, e.count)
 
   p = parsePlayer('p test xo, dur=1/2')

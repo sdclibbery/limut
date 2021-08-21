@@ -14,29 +14,24 @@ define((require) => {
     for (let k in event) {
       if (k == 'beat') { continue }
       let v = event[k]
+      if (v && v.__alreadyExpanded) { continue }
       let evaled = evalParamFrame(v, event, event.count)
-      if (Array.isArray(evaled)) { // If param k is a tuple, expand it out
+      if (Array.isArray(evaled)) { // If param k is going to eval to a tuple, expand it out
         let es = []
         for (let i=0; i<evaled.length; i++) {
           let e = Object.assign({}, event)
           if (Array.isArray(v)) {
-            e[k] = v[i] // get correct element from tuple
-          } else if (typeof v == 'function') {
-            e[k] = (e,b,evalRecurse) => tupleIndex(v(e,b,evalRecurse),i) // return function to get tuple, then index it
+            e[k] = v[i] // tuple in a tuple
+          } else if (typeof v == 'function' || typeof v == 'object') {
+            e[k] = (e,b,evalRecurse) => tupleIndex(evalRecurse(v, e,b,evalRecurse),i)
             e[k].interval = v.interval
-          } else if (typeof v == 'object') {
-            e[k] = (e,b,evalRecurse) => tupleIndex(evalRecurse(v, e,b,evalRecurse),i) // return function to get tuple, then index it
-            e[k].interval = v.interval
+            e[k].__alreadyExpanded = true
           } else {
             e[k] = v // primitive so use same value across all tuple indices
           }
-          e[k] = evalParamEvent(e[k], e, e.count) // eval to the event level
           es.push(...multiplyEvents(e)) // And recurse to expand out any other tuple params
         }
         return es
-      }
-      else {
-        event[k] = evalParamEvent(event[k], event, event.count) // eval to the event level
       }
     }
     return [event]
@@ -66,8 +61,8 @@ define((require) => {
     assert([{x:1,y:3},{x:1,y:4},{x:2,y:3},{x:2,y:4}], expandTuples([{x:[1,2],y:[3,4]}]))
 
     p = expandTuples([{x:()=>[1,2]}])
-    assert(1, p[0].x)
-    assert(2, p[1].x)
+    assert(1, evalParamFrame(p[0].x,e,b))
+    assert(2, evalParamFrame(p[1].x,e,b))
 
     p = expandTuples([{x:{r:[1,2]}}])
     assert({r:1}, evalParamFrame(p[0].x,e,b))
