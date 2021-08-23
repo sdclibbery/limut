@@ -602,6 +602,7 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+optimise per frame garbage in eval-params and eval-operators
 Not working: v kal 0, fore=[red:[green:blue]r]r
 Player 'this' not working: v1 glow 0, loc={x:-1/2,y:this.y, w:1/2,h:1/2}, y:([0:7]l4)/8
 apply overridden delay for follow player: allow canons
@@ -617,6 +618,7 @@ Can modify params; eg 'set bass amp += 1/2'
 Random seed
  [1,2,3]r4{seed:1}
  [1,2,3]r4{seed:1,count:8}
+Duration should move into the pattern and not be a Param
 Defining a name for every slider is too fiddly
  allow slider{} ?
  or even some UI method for slidering a value??
