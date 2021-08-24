@@ -30,7 +30,7 @@ define(function(require) {
       if (!events.has(e)) {
         events.set(e, getter(e,b,evalRecurse))
       }
-      return evalRecurse(events.get(e), e,b)
+      return evalRecurse(events.get(e), e,b, evalRecurse)
     }
   }
 
@@ -82,7 +82,7 @@ define(function(require) {
     } else if (vs.separator == ':') {
       let lo = param(vs[0], 0)
       let hi = param(vs[1], 1)
-      rand = (e,b,evalRecurse) => evalRandomRanged(evalRecurse(lo,e,b,evalRecurse), evalRecurse(hi,e,b.evalRecurse))
+      rand = (e,b,evalRecurse) => evalRandomRanged(evalRecurse(lo,e,b,evalRecurse), evalRecurse(hi,e,b,evalRecurse))
     } else {
       rand = (e,b,evalRecurse) => evalRandomSet(vs)
     }
