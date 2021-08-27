@@ -30,7 +30,7 @@ define(function(require) {
       if (param) {
         let player = players.instances[playerId]
         if (player) {
-          let ce = player.getEventsForBeatBase(event.beat)[0]
+          let ce = player.currentEvent(event, b)
           v = (ce ? ce[param] : 0) || 0
         } else if (playerId === 'this') {
           v = event[param]
@@ -74,10 +74,10 @@ define(function(require) {
   assert('bar', p({},0,(v)=>v))
   delete vars.foo
 
-  players.instances.p1 = { getEventsForBeatBase:(b)=>{ return [{foo:b}]} }
+  players.instances.p1 = { currentEvent:(e,b)=>{ return {foo:b}} }
   p = varLookup({str:'p1.foo',idx:0})
   assert(0, p({},0,(v)=>v))
-  assert(2, p({beat:2},0,(v)=>v))
+  assert(2, p({beat:2},2,(v)=>v))
   delete players.instances.p1
 
   p = varLookup({str:'p1.foo',idx:0})

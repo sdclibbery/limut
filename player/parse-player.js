@@ -57,7 +57,8 @@ define((require) => {
             .filter(e => e.amp === undefined || typeof e.amp === 'function' || e.amp > 0)
             .map(e => {
               playerFactory.play(e)
-              let pulse = (ev,b) => {
+              e.countToTime = (count) => e.beat.time + (count-e.beat.count)*e.beat.duration
+              e.pulse = (ev,b) => {
                 let t = e.countToTime(b)
                 if (t<e._time || t>e.endTime) { return 0 }
                 let l = e.endTime - e._time
@@ -65,11 +66,6 @@ define((require) => {
                 let v = x < 1/5 ? x*5 : 1-(x*6/5-1/5)
                 return Math.pow(v, 1/2)
               }
-              if (player.lastCount !== e.beat.count) {
-                player.lastCount = e.beat.count
-              }
-              e.countToTime = (count) => e.beat.time + (count-e.beat.count)*e.beat.duration
-              e.pulse = pulse
               player.events.push(e)
             })
         }
@@ -97,7 +93,6 @@ define((require) => {
         } else {
           getEventsForBeat = standardPlayer(patternStr, paramsStr, playerFactory.defaultDur)
         }
-        // override event params
         player.getEventsForBeatBase = (beat) => {
           let events = getEventsForBeat(beat)
           events.forEach(e => e.linenum = linenum)
