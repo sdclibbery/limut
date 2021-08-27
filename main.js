@@ -63,7 +63,10 @@ define(function(require) {
   window.addEventListener('resize', onResize, false)
   onResize()
   let ctxGl = canvas.getContext("webgl2")
-  if (!ctxGl) { console.error('WebGL2 not supported!') }
+  if (!ctxGl) {
+    console.error('WebGL2 not supported!')
+    alert('WebGL2 not supported in this browser; Limut cannot run. Try running in Chrome or Firefox.')
+  }
 
   // Update
   let compressorReadout = document.getElementById('compressor-readout')
