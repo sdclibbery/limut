@@ -3,8 +3,17 @@ define(function(require) {
   let evalOperator = require('player/eval-operator')
   let param = require('player/default-param')
 
+  let add = (a,b) => a+b
+  let mul = (a,b) => a*b
+  let lerpValue = (lerp, pre, post) => {
+    return evalOperator(add,
+      evalOperator(mul, 1-lerp, pre),
+      evalOperator(mul, lerp, post)
+    )
+  }
+
   let evalRandomRanged = (lo, hi) => {
-    return lo + Math.random() * (hi-lo)
+    return lerpValue(Math.random(), lo, hi)
   }
 
   let evalRandomSet = (vs) => {
@@ -32,15 +41,6 @@ define(function(require) {
       }
       return evalRecurse(events.get(e), e,b, evalRecurse)
     }
-  }
-
-  let add = (a,b) => a+b
-  let mul = (a,b) => a*b
-  let lerpValue = (lerp, pre, post) => {
-    return evalOperator(add,
-      evalOperator(mul, 1-lerp, pre),
-      evalOperator(mul, lerp, post)
-    )
   }
 
   let hash = (n) => {
@@ -84,7 +84,7 @@ define(function(require) {
       let hi = param(vs[1], 1)
       rand = (e,b,evalRecurse) => evalRandomRanged(evalRecurse(lo,e,b,evalRecurse), evalRecurse(hi,e,b,evalRecurse))
     } else {
-      rand = (e,b,evalRecurse) => evalRandomSet(vs)
+      rand = (e,b,evalRecurse) => evalRecurse(evalRandomSet(vs),e,b,evalRecurse)
     }
     if (period) {
       return periodicRandom(rand, period, interval)

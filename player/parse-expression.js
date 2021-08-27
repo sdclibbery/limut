@@ -43,22 +43,6 @@ define(function(require) {
     colonArray.separator = ':'
     return colonArray
   }
-  let expandColon = (vs) => {
-    if (vs.separator == ':') {
-      let lo = 0
-      let hi = 1
-      if (vs.length == 1) {
-        hi = vs[0]
-      } else if (vs.length == 2) {
-        lo = vs[0]
-        hi = vs[1]
-      }
-      if (Number.isInteger(lo) && Number.isInteger(hi) && hi>lo && hi-lo < 20) {
-        return [...Array(hi-lo+1).keys()].map(x => x+lo)
-      }
-    }
-    return vs
-  }
   let numberOrArrayOrFour = (state) => {
     let n = number(state)
     if (n !== undefined) {
@@ -161,9 +145,7 @@ define(function(require) {
         let vs = array(state, '[', ']')
         if (state.str.charAt(state.idx).toLowerCase() == 't') { // timevar; values per time interval
           state.idx += 1
-          vs = expandColon(vs)
           let ds = numberOrArrayOrFour(state)
-          if (Array.isArray(ds)) { ds = expandColon(ds) }
           let interval = parseInterval(state) || arrayIntervals(vs, 'event')
           result = timeVar(vs, ds, interval)
           setInterval(result, interval)
@@ -197,7 +179,6 @@ define(function(require) {
           result = eventTimeVar(vs)
           setInterval(result, parseInterval(state) || arrayIntervals(vs, 'frame'))
         } else { // Basic array: one value per pattern step
-          vs = expandColon(vs)
           result = eventIdxVar(vs)
           result.interval = 'event' // Only makes sense to be per event
           parseInterval(state) // Ignore this
@@ -207,7 +188,6 @@ define(function(require) {
       // tuple
       if (char == '(') {
         let vs = array(state, '(', ')')
-        vs = expandColon(vs)
         if (vs.length == 1) {
           result = vs[0]
         } else {
@@ -292,7 +272,7 @@ define(function(require) {
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
-  let vars = require('vars')
+    let vars = require('vars')
   
   let assert = (expected, actual) => {
     let x = JSON.stringify(expected)
@@ -344,8 +324,7 @@ define(function(require) {
   assert(2, parseExpression('[[1,2]]')(ev(1),0,evalParamFrame))
   assert(1, parseExpression('[[1,2]]')(ev(2),0,evalParamFrame))
   assert(1, parseExpression('[1:3]')(ev(0),0,evalParamFrame))
-  assert(2, parseExpression('[1:3]')(ev(1),0,evalParamFrame))
-  assert(3, parseExpression('[1:3]')(ev(2),0,evalParamFrame))
+  assert(3, parseExpression('[1:3]')(ev(1),0,evalParamFrame))
 
   assert(1, parseExpression('(1)'))
 
@@ -957,8 +936,18 @@ define(function(require) {
   assert([1,2,3], parseExpression("((1,2),3))"))
 
   assert([{x:0},{x:[1,2]}], parseExpression("({x:0},{x:(1,2)})"))
-  // assert([{x:1},{x:2}], evalParamFrame(parseExpression("{x:(1,2)}")))
-  // assert([{x:0},{x:1},{x:2}], evalParamFrame(parseExpression("({x:0},{x:(1,2)})")))
+  assert([{x:1},{x:2}], evalParamFrame(parseExpression("{x:(1,2)}")))
+  assert([{x:0},{x:1},{x:2}], evalParamFrame(parseExpression("({x:0},{x:(1,2)})")))
+
+
+  vars['green'] = parseExpression('{r:0,g:0.8,b:0,a:1}')
+  vars['blue'] = parseExpression('{r:0,g:0.6,b:1,a:1}')
+  p = parseExpression("[green:blue]r")
+  r = evalParamFrame(p,ev(0,0),0)
+  assert(0, r.r)
+  assertIn(0, 1, r.g)
+  assertIn(0, 1, r.b)
+  assert(1, r.a)
 
   console.log('Parse expression tests complete')
   }
