@@ -40,6 +40,11 @@ define(function(require) {
       evalOperator(mul, lerp, post)
     )
   }
+  let calcLerp = (t, start, dur) => {
+    let lerp = (t - start) / Math.max(dur, 0.0001)
+    lerp = Math.min(Math.max(lerp, 0), 1)
+    return lerp
+  }
 
   let linearTimeVar = (vs, ds, interval) => {
     let steps = timeVarSteps(vs, ds)
@@ -51,7 +56,7 @@ define(function(require) {
         let pre = steps[idx]
         if (isInTimeVarStep(pre, count)) {
           let post = steps[(idx+1) % steps.length]
-          let lerp = (count - pre._time) / pre.duration
+          let lerp = calcLerp(count, pre._time, pre.duration)
           return lerpValue(lerp, evalRecurse(pre.value,e,b,evalRecurse), evalRecurse(post.value,e,b,evalRecurse))
         }
       }
@@ -68,7 +73,7 @@ define(function(require) {
         let pre = steps[idx]
         if (isInTimeVarStep(pre, count)) {
           let post = steps[(idx+1) % steps.length]
-          let lerp = (count - pre._time) / pre.duration
+          let lerp = calcLerp(count, pre._time, pre.duration)
           lerp = lerp*lerp*(3 - 2*lerp) // bezier ease in/out
           return lerpValue(lerp, evalRecurse(pre.value,e,b,evalRecurse), evalRecurse(post.value,e,b,evalRecurse))
         }
