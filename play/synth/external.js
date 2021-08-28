@@ -5,6 +5,7 @@ define(function (require) {
   let effects = require('play/effects/effects')
   let waveEffects = require('play/effects/wave-effects')
   let consoleOut = require('console')
+  let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
 
   let stream
   let getStream = () => {
@@ -16,7 +17,9 @@ define(function (require) {
         latency: 0
       }
     }).then(s => {
-      consoleOut(`: Using External audio: ${s.getTracks()[0].label}`)
+      s.getTracks().forEach((t,i) => {
+        consoleOut(`: External audio: Track ${i} - ${t.label}`)
+      })
       stream=s
     })
   }
@@ -27,8 +30,19 @@ define(function (require) {
       return
     }
     let vca = envelope(params, 0.5, 'pad')
+    let track = evalPerEvent(params, 'track', undefined)
     system.mix(effects(params, vca))
-    let audioIn = system.audio.createMediaStreamSource(stream)
+    let audioIn
+    if (track !== undefined) {
+      let mediaTrack = stream.getTracks()[track]
+      if (mediaTrack === undefined) {
+        consoleOut(`Track ${track} is not valid for this device`)
+        return
+      }
+      audioIn = system.audio.createMediaStreamTrackSource(mediaTrack)
+    } else {
+      audioIn = system.audio.createMediaStreamSource(stream)
+    }
     waveEffects(params, audioIn).connect(vca)
     system.disconnect(params, [audioIn, vca])
   }
