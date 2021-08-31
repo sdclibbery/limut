@@ -79,7 +79,8 @@ define((require) => {
           if (!es) { return {pulse:()=>0} }
           es = es.filter(e => {
             let t = e.countToTime(b)
-            return (t > e._time-0.0001) && (t < e.endTime)
+            let endTime = e._time + e.dur*e.beat.duration
+            return (t > e._time-0.0001) && (t < endTime)
           })
           return es
         }
