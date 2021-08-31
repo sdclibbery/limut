@@ -604,6 +604,8 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+No longer getting tuples through player var lookups? Eg ds.add
+ rel gives tuples when not expected
 apply overridden delay for follow player: allow canons
  do not reevaluate params when following with delay
   ?Will need to store recent events on player and get them when following?
@@ -618,6 +620,7 @@ Can modify params; eg 'set bass amp += 1/2'
 Swing param or pattern modifier
 Maybe optimise per frame garbage in eval-params and eval-operators
 Random seed
+ Seedable PRNG; https://stackoverflow.com/a/47593316
  [1,2,3]r4{seed:1}
  [1,2,3]r4{seed:1,count:8}
 Defining a name for every slider is too fiddly

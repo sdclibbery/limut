@@ -81,7 +81,7 @@ define((require) => {
             let t = e.countToTime(b)
             return (t > e._time-0.0001) && (t < e.endTime)
           })
-          return es.length>0 ? es[0] : {pulse:()=>0}
+          return es
         }
         let getEventsForBeat
         if (patternStr.startsWith('follow')) {
@@ -152,16 +152,17 @@ define((require) => {
   assert(1/4, e._time)
   assert(1/2, e.count)
 
-  p = parsePlayer('p test xo, dur=1/2')
+  p = parsePlayer('p test x(op), dur=1/2')
   p.play(p.getEventsForBeat({time:0, count:0, duration:1}))
-  assert('x', p.currentEvent(0,0).value)
-  assert('o', p.currentEvent(0,1/2).value)
-  assert(0, p.currentEvent(0,0).pulse(0,0))
-  assert(0.77, p.currentEvent(0,0).pulse(0,1/4))
+  assert('x', p.currentEvent(0,0)[0].value)
+  assert('o', p.currentEvent(0,1/2)[0].value)
+  assert('p', p.currentEvent(0,1/2)[1].value)
+  assert(0, p.currentEvent(0,0)[0].pulse(0,0))
+  assert(0.77, p.currentEvent(0,0)[0].pulse(0,1/4))
 
   p = parsePlayer('p test 0, amp=2')
   p.play(p.getEventsForBeat({time:0, count:0, duration:1}))
-  assert(2, p.currentEvent(0,0).amp)
+  assert(2, p.currentEvent(0,0)[0].amp)
   
   p = parsePlayer('p play xo,// amp=2')
   assert(undefined, p.getEventsForBeat({count:0})[0].amp)
