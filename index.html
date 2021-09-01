@@ -605,10 +605,6 @@ shadertoy synth supports textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-player var lookups are VERY player order dependent
- call player play() methods in order of dependencies from main.js
-  store onto the player which other players its dependent on
-   then eval in order from least to most (for now; eventually make a proper dependency graph traversal)
 apply overridden delay for follow player: allow canons
  do not reevaluate params when following with delay
   ?Will need to store recent events on player and get them when following?

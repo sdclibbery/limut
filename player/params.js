@@ -74,7 +74,7 @@ define(function(require) {
       if (name.toLowerCase() === 'dur') {
         v = parseDur(value, () => commented=true)
       } else {
-        v = parseExpression(value, () => commented=true)
+        v = parseExpression(value, () => commented=true, state.dependsOn)
       }
       state.params[name.toLowerCase().trim()] = v
       if (commented) { return false }
@@ -83,12 +83,13 @@ define(function(require) {
     return false
   }
 
-  let parseParams = (paramsStr) => {
+  let parseParams = (paramsStr, dependsOn) => {
     let state = {
       str: paramsStr,
       idx: 0,
       params: {},
       bracketStack: [],
+      dependsOn: dependsOn || [],
     }
     while (parseParam(state)) {}
     return state.params

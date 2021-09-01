@@ -94,18 +94,18 @@ define(function(require) {
       beat16Readout.innerText = (beat.count%16 + 1) + '/16'
       beat32Readout.innerText = (beat.count%32 + 1) + '/32'
       mainVars.update(Math.floor(beatTime), beatTime)
-      for (let playerName of Object.keys(players.instances)) {
-        let player = players.instances[playerName]
+      let sortedPlayers = Object.values(players.instances).sort((a,b) => a.dependsOn.length - b.dependsOn.length) // should be a proper dependency graph sort
+      sortedPlayers.forEach(player => {
         if (player !== undefined) {
           try {
             player.play(player.getEventsForBeat(beat), beat)
           } catch (e) {
             let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
-            consoleOut('Run Error from player '+playerName+': ' + e + st)
+            consoleOut('Run Error from player '+player.id+': ' + e + st)
             console.log(e)
           }
         }
-      }
+      })
       let timeNow = (new Date()).getTime() / 1000
       beatLatency = ((timeNow - lastBeatTime) / beat.duration) - 1
       lastBeatTime = timeNow

@@ -73,6 +73,7 @@ define((require) => {
           play: play,
           id: playerId,
           type: playerType,
+          dependsOn: [],
         }
         player.currentEvent = (ev,b) => {
           let es = player.events
@@ -87,12 +88,12 @@ define((require) => {
         let getEventsForBeat
         if (patternStr.startsWith('follow')) {
           // Follow player
-          let params = parseParams(paramsStr)
+          let params = parseParams(paramsStr, player.dependsOn)
           getEventsForBeat = followPlayer(patternStr.slice(6).trim(), params)
         } else if (playerFactory.stopped) {
           getEventsForBeat = () => []
         } else {
-          getEventsForBeat = standardPlayer(patternStr, paramsStr, playerFactory.defaultDur)
+          getEventsForBeat = standardPlayer(patternStr, paramsStr, playerFactory.defaultDur, player.dependsOn)
         }
         player.getEventsForBeatBase = (beat) => {
           let events = getEventsForBeat(beat)

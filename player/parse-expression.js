@@ -256,13 +256,14 @@ define(function(require) {
     return result
   }
 
-  let parseExpression = (v, commented) => {
+  let parseExpression = (v, commented, dependsOn) => {
     if (v == '' || v == undefined) { return }
     v = v.trim()
     let state = {
       str: v,
       idx: 0,
       expression: expression,
+      dependsOn: dependsOn || [],
     }
     let result = expression(state)
     if (commented && state.commented) { commented() }

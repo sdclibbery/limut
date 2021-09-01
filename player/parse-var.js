@@ -25,6 +25,9 @@ define(function(require) {
     }
     // Return a lookup function
     let [playerId, param] = key.split('.')
+    if (playerId && param) {
+      state.dependsOn.push(playerId)
+    }
     let result = (event,b,evalRecurse) => {
       let v
       if (param) {
@@ -58,7 +61,7 @@ define(function(require) {
   let p
 
   vars.foo = 'bar'
-  let state = {str:'foo',idx:0}
+  let state = {str:'foo',idx:0,dependsOn:[]}
   p = varLookup(state)
   assert(3, state.idx)
   vars.foo = 'baz'
@@ -66,25 +69,25 @@ define(function(require) {
   delete vars.foo
 
   vars['foo.woo'] = 'bar'
-  p = varLookup({str:'foo.woo',idx:0})
+  p = varLookup({str:'foo.woo',idx:0,dependsOn:[]})
   assert('bar', p({},0,(v)=>v))
   vars['foo.woo'] = undefined
 
   vars['foo'] = 'bar'
-  p = varLookup({str:'FoO',idx:0})
+  p = varLookup({str:'FoO',idx:0,dependsOn:[]})
   assert('bar', p({},0,(v)=>v))
   delete vars.foo
 
   players.instances.p1 = { currentEvent:(e,b)=>{ return [{foo:b}]} }
-  p = varLookup({str:'p1.foo',idx:0})
+  p = varLookup({str:'p1.foo',idx:0,dependsOn:[]})
   assert(0, p({},0,(v)=>v))
   assert(2, p({beat:2},2,(v)=>v))
   delete players.instances.p1
 
-  p = varLookup({str:'p1.foo',idx:0})
+  p = varLookup({str:'p1.foo',idx:0,dependsOn:[]})
   assert(0, p({},0,(v)=>v))
 
-  p = varLookup({str:'this.foo',idx:0})
+  p = varLookup({str:'this.foo',idx:0,dependsOn:[]})
   assert(1, p({foo:1},0,(v)=>v))
 
   vars.foo = () => 3
@@ -93,6 +96,10 @@ define(function(require) {
   assert(6, state.idx)
   assert(3, p)
   delete vars.foo
+
+  let s = {str:'foo.bar',idx:0,dependsOn:[]}
+  varLookup(s)
+  assert(['foo'], s.dependsOn)
 
   console.log('Parse var tests complete')
   }
