@@ -102,6 +102,7 @@ define(function(require) {
           } catch (e) {
             let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
             consoleOut('Run Error from player '+playerName+': ' + e + st)
+            console.log(e)
           }
         }
       }
@@ -111,12 +112,13 @@ define(function(require) {
       if (beatLatency > 0.03 && beat.count > 2) {
         console.log(`slow beatLatency ${beatLatency} at ${beat.count}`)
       }
-      }
+    }
   try {
       system.frame(now, beatTime)
     } catch (e) {
       let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
       consoleOut('Run Error from audio updating: ' + e + st)
+      console.log(e)
     }
     tickCount++
     if (ctxGl) {
@@ -129,6 +131,7 @@ define(function(require) {
       } catch (e) {
         let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
         consoleOut('Run Error from drawing: ' + e + st)
+        console.log(e)
       }
     }
     if (!!beat || tickCount % 20 == 0) {
