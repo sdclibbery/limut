@@ -164,8 +164,9 @@ define(function(require) {
         } else if (state.str.charAt(state.idx).toLowerCase() == 'r') { // random
           state.idx += 1
           let period = number(state)
+          let config = parseMap(state)
           let interval = parseInterval(state) || arrayIntervals(vs, 'event')
-          result = parseRandom(vs, period, interval)
+          result = parseRandom(vs, period, config, interval)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'n') { // simple noise
           state.idx += 1

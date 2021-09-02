@@ -75,7 +75,7 @@ define(function(require) {
     }
   }
 
-  let parseRandom = (vs, period, interval) => {
+  let parseRandom = (vs, period, config, interval) => {
     let rand
     if (vs.length == 0) {
       rand = (e,b,evalRecurse) => evalRandomRanged(0.000001, 1)
@@ -101,18 +101,49 @@ define(function(require) {
       let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
     }
-    let assertIs1Of = (expected, getter) => {
-      for (let i=0; i<10; i++) {
+    let assertIs1OfEveryTime = (expected, getter) => {
+      for (let i=0; i<20; i++) {
         let r = getter()
         if (!expected.includes(r)) { console.trace(`Assertion failed.\n>>Expected one of:\n  ${expected}\n>>Actual:\n  ${r}`) }
       }
     }
+    let assertIsInRangeEveryTime = (lo, hi, getter) => {
+      for (let i=0; i<20; i++) {
+        let r = getter()
+        if (r<lo || r>hi) { console.trace(`Assertion failed.\n>>Expected in range:\n  ${lo} - ${hi}\n>>Actual:\n  ${r}`) }
+      }
+    }
+    let assertIsSameEveryTime = (getter) => {
+      let x = getter()
+      for (let i=0; i<20; i++) {
+        assert(x, getter())
+      }
+    }
     let evalParam = require('player/eval-param').evalParamFrame
     let ev = (i,c) => {return{idx:i,count:c}}
-    let p
+    let p, vs
 
     p = parseRandom([3,5])
-    assertIs1Of([3,5], () => evalParam(p,ev(0),0))
+    assertIs1OfEveryTime([3,5], () => evalParam(p,ev(0),0))
+
+    p = parseRandom([])
+    assertIsInRangeEveryTime(0,1, () => evalParam(p,ev(0),0))
+
+    vs = [3,5]
+    vs.separator = ':'
+    p = parseRandom(vs)
+    assertIsInRangeEveryTime(3,5, () => evalParam(p,ev(0),0))
+
+    p = parseRandom([3,5], 1)
+    assertIsSameEveryTime(() => evalParam(p,ev(0),0))
+    assertIsSameEveryTime(() => evalParam(p,ev(1),1))
+
+    // p = parseRandom([], undefined, {seed:1})
+    // assert(0, evalParam(p,ev(0),0))
+    // assert(0, evalParam(p,ev(0),0))
+    // assert(0, evalParam(p,ev(0),0))
+    // assert(0, evalParam(p,ev(0),0))
+    // assert(0, evalParam(p,ev(0),0))
   
     console.log('Eval random tests complete')
   }
