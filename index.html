@@ -541,6 +541,7 @@ Can specify media stream device
  device param to specify required device ID to be used - need to store one stream per device
  Same for webcam
 save current note frequency onto event as this.freq
+filters for echo and reverb
 ?portamento
 Sample synth has start param and uses sus param for duration
 choke param for play synth to choke one sound off when the next plays (eg hihats)
@@ -580,8 +581,10 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+Julia values should each be a different coord to give a different look; http://www.karlsims.com/julias-and-mandelbrot.jpg
+Spiral and noise and shimmer predistortions
 Hue,hsl functions
-Spiral or noise or shimmer pre distortion?
+Colour parsing should assume alpha of 1 for eg #fff and #ffffff
 Consider pushing data of each event into a texture so a shader could display all events, eg as 2D patterns or voxels or 3D shapes
 Disco glowing geometric shapes shader
 Starfield shader
@@ -600,21 +603,23 @@ gamma
 noise/film grain
 pixellate per frame
 Sprites duration should include rel? Or not??
-shadertoy synth supports textures - MtGSzh
+shadertoy synth support textures - MtGSzh
  NO CORS!! https://www.shadertoy.com/media/a/f735bee5b64ef98879dc618b016ecf7939a5756040c2cde21ccb15e69a6e1cfb.png
 shadertoy synth multiple channels
 ====
 ==== other ====
-apply overridden delay for follow player: allow canons
- do not reevaluate params when following with delay
-  ?Will need to store recent events on player and get them when following?
-   Otherwise theres no way to get []r to return same values?
- Or, make randoms deterministic??
-Ignore rests . when setting event.idx (so that `0.1., amp=[1/2,1]` does as expected) - is that expected? It wouldnt be for dur..?
 Random seed
  Seedable PRNG; https://stackoverflow.com/a/47593316
- [1,2,3]r4{seed:1}
+ [1,2,3]r{seed:1}
  [1,2,3]r4{seed:1,count:8}
+ Same for []n
+apply overridden delay for follow player: allow canons
+ do not reevaluate params when following with delay
+  ?Will need to store recent events on player and get them when following? - ie variation on currentEvents?
+   Otherwise theres no way to get []r to return same values?
+ Or, make randoms deterministic??
+  Try using a default seed derived from playerId and beat count (and adjust this for delay?)?
+Ignore rests . when setting event.idx (so that `0.1., amp=[1/2,1]` does as expected) - is that expected? It wouldnt be for dur..?
 Can modify params; eg 'set bass amp += 1/2'
  Overrides should only modify when explicitly asked; so set b add=1 replaces the add param, it does not add an additional 1 to it
  Can use for follow players, set, and indeed within a player; eg: p ping 0, amp=2/3, ..., amp*=2

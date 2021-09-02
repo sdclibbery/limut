@@ -93,6 +93,30 @@ define(function(require) {
     }
   }
 
+  // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+
+    let assert = (expected, actual) => {
+      let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
+      let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
+      if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
+    }
+    let assertIs1Of = (expected, getter) => {
+      for (let i=0; i<10; i++) {
+        let r = getter()
+        if (!expected.includes(r)) { console.trace(`Assertion failed.\n>>Expected one of:\n  ${expected}\n>>Actual:\n  ${r}`) }
+      }
+    }
+    let evalParam = require('player/eval-param').evalParamFrame
+    let ev = (i,c) => {return{idx:i,count:c}}
+    let p
+
+    p = parseRandom([3,5])
+    assertIs1Of([3,5], () => evalParam(p,ev(0),0))
+  
+    console.log('Eval random tests complete')
+  }
+
   return {
     parseRandom: parseRandom,
     simpleNoise: simpleNoise,
