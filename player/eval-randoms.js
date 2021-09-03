@@ -12,12 +12,12 @@ define(function(require) {
     )
   }
 
-  let evalRandomRanged = (lo, hi) => {
-    return lerpValue(Math.random(), lo, hi)
+  let evalRandomRanged = (generator, lo, hi) => {
+    return lerpValue(generator(), lo, hi)
   }
 
-  let evalRandomSet = (vs) => {
-    let idx = Math.floor(Math.random()*vs.length*0.9999)
+  let evalRandomSet = (generator, vs) => {
+    let idx = Math.floor(generator()*vs.length*0.9999)
     return vs[idx]
   }
 
@@ -77,14 +77,15 @@ define(function(require) {
 
   let parseRandom = (vs, period, config, interval) => {
     let rand
+    let generator = Math.random
     if (vs.length == 0) {
-      rand = (e,b,evalRecurse) => evalRandomRanged(0.000001, 1)
+      rand = (e,b,evalRecurse) => evalRandomRanged(generator, 0.000001, 1)
     } else if (vs.separator == ':') {
       let lo = param(vs[0], 0)
       let hi = param(vs[1], 1)
-      rand = (e,b,evalRecurse) => evalRandomRanged(evalRecurse(lo,e,b,evalRecurse), evalRecurse(hi,e,b,evalRecurse))
+      rand = (e,b,evalRecurse) => evalRandomRanged(generator, evalRecurse(lo,e,b,evalRecurse), evalRecurse(hi,e,b,evalRecurse))
     } else {
-      rand = (e,b,evalRecurse) => evalRecurse(evalRandomSet(vs),e,b,evalRecurse)
+      rand = (e,b,evalRecurse) => evalRecurse(evalRandomSet(generator, vs),e,b,evalRecurse)
     }
     if (period) {
       return periodicRandom(rand, period, interval)
@@ -144,7 +145,7 @@ define(function(require) {
     // assert(0, evalParam(p,ev(0),0))
     // assert(0, evalParam(p,ev(0),0))
     // assert(0, evalParam(p,ev(0),0))
-  
+
     console.log('Eval random tests complete')
   }
 
