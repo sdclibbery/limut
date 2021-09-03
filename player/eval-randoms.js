@@ -76,21 +76,21 @@ define(function(require) {
   }
 
   let parseRandom = (vs, period, config, interval) => {
-    let rand
+    let evaluator
     let generator = Math.random
     if (vs.length == 0) {
-      rand = (e,b,evalRecurse) => evalRandomRanged(generator, 0.000001, 1)
+      evaluator = (e,b,evalRecurse) => evalRandomRanged(generator, 0, 1)
     } else if (vs.separator == ':') {
       let lo = param(vs[0], 0)
       let hi = param(vs[1], 1)
-      rand = (e,b,evalRecurse) => evalRandomRanged(generator, evalRecurse(lo,e,b,evalRecurse), evalRecurse(hi,e,b,evalRecurse))
+      evaluator = (e,b,evalRecurse) => evalRandomRanged(generator, evalRecurse(lo,e,b,evalRecurse), evalRecurse(hi,e,b,evalRecurse))
     } else {
-      rand = (e,b,evalRecurse) => evalRecurse(evalRandomSet(generator, vs),e,b,evalRecurse)
+      evaluator = (e,b,evalRecurse) => evalRecurse(evalRandomSet(generator, vs),e,b,evalRecurse)
     }
     if (period) {
-      return periodicRandom(rand, period, interval)
+      return periodicRandom(evaluator, period, interval)
     } else {
-      return random(rand)
+      return random(evaluator)
     }
   }
 
