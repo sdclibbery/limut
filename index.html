@@ -609,9 +609,14 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Random seed
- Is seed:0 a problem?
- [1,2,3]r4{seed:1,count:8}
+ [1,2,3]r4{seed:1,reset:8}
+ Is seed:0 or time:0 a problem?
+ eval seed etc params
+ [1,2,3]r4{seed:1,reset:8,offset:1} to allow you to 'roll through' random sequences like sonic pi?
+ tests of more combinations set/ranged, periodic, various numbers oif params, seed, count, etc
  Same for []n
+ Docs
+Proper tests for follow and overrides and combinations, including tuples
 apply overridden delay for follow player: allow canons
  do not reevaluate params when following with delay
   ?Will need to store recent events on player and get them when following? - ie variation on currentEvents?

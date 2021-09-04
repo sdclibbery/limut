@@ -3,13 +3,17 @@ define(function(require) {
   let evalOperator = require('player/eval-operator')
   let param = require('player/default-param')
 
-  let mulberry32 = (a) => {
-    return () => {
-      var t = a += 0x6D2B79F5;
-      t = Math.imul(t ^ t >>> 15, t | 1);
-      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-      return ((t ^ t >>> 14) >>> 0) / 4294967296;
-    }
+  function xmur3(time, seed) {
+    let h = 1779033703
+    h = Math.imul(h ^ Math.floor(seed), 3432918353)
+    h = h << 13 | h >>> 19
+    h = Math.imul(h ^ Math.floor(time), 3432918353)
+    h = h << 13 | h >>> 19
+    h = Math.imul(h ^ Math.floor((time%1)*4294967296), 3432918353)
+    h = h << 13 | h >>> 19
+    h = Math.imul(h ^ h >>> 16, 2246822507)
+    h = Math.imul(h ^ h >>> 13, 3266489909)
+    return (h ^= h >>> 16) >>> 0
   }
 
   let add = (a,b) => a+b
@@ -21,12 +25,12 @@ define(function(require) {
     )
   }
 
-  let evalRandomRanged = (generator, lo, hi) => {
-    return lerpValue(generator(), lo, hi)
+  let evalRandomRanged = (generator, lo, hi, e, b) => {
+    return lerpValue(generator(e,b), lo, hi)
   }
 
-  let evalRandomSet = (generator, vs) => {
-    let idx = Math.floor(generator()*vs.length*0.9999)
+  let evalRandomSet = (generator, vs, e, b) => {
+    let idx = Math.floor(generator(e,b)*vs.length*0.9999)
     return vs[idx]
   }
 
@@ -86,18 +90,18 @@ define(function(require) {
 
   let parseRandom = (vs, period, config, interval) => {
     let evaluator
-    let generator = Math.random
+    let generator = () => Math.random()
     if (config && config.seed !== undefined) {
-      generator = mulberry32(config.seed)
+      generator = (e,b) => xmur3(e.count % (config.reset || 4294967296), config.seed) / 4294967296
     }
     if (vs.length == 0) {
-      evaluator = (e,b,evalRecurse) => evalRandomRanged(generator, 0, 1)
+      evaluator = (e,b,evalRecurse) => evalRandomRanged(generator, 0, 1, e, b)
     } else if (vs.separator == ':') {
       let lo = param(vs[0], 0)
       let hi = param(vs[1], 1)
-      evaluator = (e,b,evalRecurse) => evalRandomRanged(generator, evalRecurse(lo,e,b,evalRecurse), evalRecurse(hi,e,b,evalRecurse))
+      evaluator = (e,b,evalRecurse) => evalRandomRanged(generator, evalRecurse(lo,e,b,evalRecurse), evalRecurse(hi,e,b,evalRecurse), e, b)
     } else {
-      evaluator = (e,b,evalRecurse) => evalRecurse(evalRandomSet(generator, vs),e,b,evalRecurse)
+      evaluator = (e,b,evalRecurse) => evalRecurse(evalRandomSet(generator, vs, e, b),e,b,evalRecurse)
     }
     if (period) {
       return periodicRandom(evaluator, period, interval)
@@ -134,7 +138,7 @@ define(function(require) {
       }
     }
     let evalParam = require('player/eval-param').evalParamFrame
-    let ev = (i,c) => {return{idx:i,count:c}}
+    let ev = (c) => {return{count:c}}
     let p, vs
 
     p = parseRandom([3,5])
@@ -159,11 +163,25 @@ define(function(require) {
 
     // Same sequence every time when seeded
     p = parseRandom([], undefined, {seed:1})
-    assert(0.6270739405881613, evalParam(p,ev(0),0))
-    assert(0.002735721180215478, evalParam(p,ev(0),0))
-    assert(0.5274470399599522, evalParam(p,ev(0),0))
-    assert(0.9810509674716741, evalParam(p,ev(0),0))
-    assert(0.9683778982143849, evalParam(p,ev(0),0))
+    assert(0.28334228484891355, evalParam(p,ev(0),0))
+    assert(0.7462359906639904, evalParam(p,ev(1/4),1/4))
+    assert(0.3572767286095768, evalParam(p,ev(1/2),1/2))
+    assert(0.9428444323129952, evalParam(p,ev(3/4),3/4))
+    assert(0.6775630139745772, evalParam(p,ev(1),1))
+    assert(0.7935523670166731, evalParam(p,ev(2),2))
+    assert(0.6304690549150109, evalParam(p,ev(3),3))
+    assert(0.5204362396616489, evalParam(p,ev(4),4))
+
+    // // Reset seed on every reset'th beat
+    // p = parseRandom([], undefined, {seed:1,reset:3})
+    // assert(0.28334228484891355, evalParam(p,ev(0),0))
+    // assert(0.6775630139745772, evalParam(p,ev(1),1))
+    // assert(0.7935523670166731, evalParam(p,ev(2),2))
+    // assert(0.9810509674716741, evalParam(p,ev(2),2))
+    // assert(0.28334228484891355, evalParam(p,ev(3),3))
+    // assert(0.6775630139745772, evalParam(p,ev(3),3))
+    // assert(0.7935523670166731, evalParam(p,ev(3),3))
+    // assert(0.28334228484891355, evalParam(p,ev(6),6))
 
     console.log('Eval random tests complete')
   }
