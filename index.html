@@ -609,10 +609,8 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Random seed
- tests for pushing through a sequence by incrementing seed
- Is seed:0 and time:0 a problem?
  eval seed/per params
- tests of more combinations set/ranged, periodic, various numbers oif params, seed, count, etc
+ tests of more combinations set/ranged, periodic, various numbers of params, seed, count, etc
  Same for []n
  Docs
 apply overridden delay for follow player: allow canons
@@ -622,6 +620,7 @@ apply overridden delay for follow player: allow canons
  Or, make randoms deterministic??
   They are when seeded, but will need to take time from the ORIGINAL time, not the delayed time...
 Proper tests for follow and overrides and combinations, including tuples
+[]w for random walk; eg [0:7]w random walk within 0 - 7 range; [0:7]w2{seed:1,per:8} etc
 Ignore rests . when setting event.idx (so that `0.1., amp=[1/2,1]` does as expected) - is that expected? It wouldnt be for dur..?
 Can modify params; eg 'set bass amp += 1/2'
  Overrides should only modify when explicitly asked; so set b add=1 replaces the add param, it does not add an additional 1 to it

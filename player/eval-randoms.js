@@ -130,7 +130,7 @@ define(function(require) {
     let assertIsInRangeEveryTime = (lo, hi, getter) => {
       for (let i=0; i<20; i++) {
         let r = getter()
-        if (r<lo || r>hi) { console.trace(`Assertion failed.\n>>Expected in range:\n  ${lo} - ${hi}\n>>Actual:\n  ${r}`) }
+        if (r === undefined || isNaN(r) || r<lo || r>hi) { console.trace(`Assertion failed.\n>>Expected in range:\n  ${lo} - ${hi}\n>>Actual:\n  ${r}`) }
       }
     }
     let assertIsSameEveryTime = (getter) => {
@@ -185,6 +185,24 @@ define(function(require) {
     assert(0.3853306171949953, evalParam(p,ev(3),3))
     assert(0.8534541970584542, evalParam(p,ev(4),4))
     assert(0.3853306171949953, evalParam(p,ev(6),6))
+
+    // Shifted sequence when bump seed
+    p = parseRandom([], undefined, {seed:1})
+    assert(0.3853306171949953, evalParam(p,ev(0),0))
+    assert(0.8534541970584542, evalParam(p,ev(1),1))
+    assert(0.35433487710542977, evalParam(p,ev(2),2))
+    assert(0.08498840616084635, evalParam(p,ev(3),3))
+    p = parseRandom([], undefined, {seed:2})
+    assert(0.3672695131972432, evalParam(p,ev(0),0))
+    assert(0.3853306171949953, evalParam(p,ev(1),1))
+    assert(0.8534541970584542, evalParam(p,ev(2),2))
+    assert(0.35433487710542977, evalParam(p,ev(3),3))
+
+    p = parseRandom([], undefined, {seed:0})
+    assertIsInRangeEveryTime(0,1, () => evalParam(p,ev(0),0))
+
+    p = parseRandom([], undefined, {seed:-100})
+    assertIsInRangeEveryTime(0,1, () => evalParam(p,ev(0),0))
 
     console.log('Eval random tests complete')
   }
