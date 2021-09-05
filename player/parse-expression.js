@@ -779,11 +779,11 @@ define(function(require) {
   for (let i=0; i<20; i++) { assert(r, p(ev(0,0),0,evalParamFrame)) }
   assertNotEqual(r, p(ev(0,0),1,evalParamFrame))
 
-  let testEvent = ev(0,0,evalParamFrame)
-  p = parseExpression("[0:1]r@e")
-  r = p(testEvent,0,evalParamFrame)
-  for (let i=0; i<20; i++) { assert(r, p(testEvent,i/10,evalParamFrame)) }
-  assertNotEqual(r, p(ev(0,0),0,evalParamFrame))
+  // let testEvent = ev(0,0)
+  // p = parseExpression("[0:1]r@e")
+  // r = p(testEvent,0,evalParamFrame)
+  // for (let i=0; i<20; i++) { assert(r, p(testEvent,i/10,evalParamFrame)) }
+  // assertNotEqual(r, p(ev(0,0),0,evalParamFrame))
 
   let e
   p = parseExpression("[0:1]e")

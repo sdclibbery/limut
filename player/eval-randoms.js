@@ -45,12 +45,13 @@ define(function(require) {
   }
 
   let random = (getter) => {
-    let events = new WeakMap()
+    // let events = new WeakMap()
     return (e,b,evalRecurse) => {
-      if (!events.has(e)) {
-        events.set(e, getter(e,b,evalRecurse))
-      }
-      return evalRecurse(events.get(e), e,b, evalRecurse)
+      // if (!events.has(e)) {
+      //   events.set(e, getter(e,b,evalRecurse))
+      // }
+      // return evalRecurse(events.get(e), e,b, evalRecurse)
+      return evalRecurse(getter(e,b,evalRecurse), e,b, evalRecurse)
     }
   }
 

@@ -611,11 +611,15 @@ shadertoy synth support textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+seed/per not working when @f??
+ because 60fps is hitting slightly different times every repeat, so never get same pattern again...
+[0,1]n should randomly choose one of 0 or one then smooth between them [0:1]n should pick random values between 0 and 1...
+ In which case, rewrite it as the main random, but then smoothed
+Proper tests for follow and overrides and combinations, including tuples
 apply overridden delay for follow player: allow canons
  do not reevaluate params when following with delay
   ?Will need to store recent events on player and get them when following? - ie variation on currentEvents?
    Otherwise theres no way to get []r to return same values?
-Proper tests for follow and overrides and combinations, including tuples
 []w for random walk; eg [0:7]w random walk within 0 - 7 range; [0:7]w2{seed:1,per:8} etc
 Ignore rests . when setting event.idx (so that `0.1., amp=[1/2,1]` does as expected) - is that expected? It wouldnt be for dur..?
 Can modify params; eg 'set bass amp += 1/2'
