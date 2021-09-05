@@ -172,8 +172,9 @@ define(function(require) {
           state.idx += 1
           let period = number(state)
           if (period === undefined) { period = 1 }
+          let config = parseMap(state)
           let interval = parseInterval(state) || 'frame'
-          result = simpleNoise(vs, period, interval)
+          result = simpleNoise(vs, period, config, interval)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
           state.idx += 1

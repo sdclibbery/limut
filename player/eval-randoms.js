@@ -23,12 +23,12 @@ define(function(require) {
     )
   }
 
-  let evalRandomRanged = (generator, lo, hi, e, b) => {
-    return lerpValue(generator(e,b), lo, hi)
+  let evalRandomRanged = (generator, lo, hi, e, b, evalRecurse) => {
+    return lerpValue(generator(e,b,evalRecurse), lo, hi)
   }
 
-  let evalRandomSet = (generator, vs, e, b) => {
-    let idx = Math.floor(generator(e,b)*vs.length*0.9999)
+  let evalRandomSet = (generator, vs, e, b, evalRecurse) => {
+    let idx = Math.floor(generator(e,b,evalRecurse)*vs.length*0.9999)
     return vs[idx]
   }
 
@@ -67,14 +67,24 @@ define(function(require) {
       let r = f*(f-1.0)*((16.0*k-4.0)*f*(f-1.0)-1.0)
       return r
     }
-  let simpleNoise = (vs, period, interval) => {
-    let paramSeed = Math.random()*10000
+  let simpleNoise = (vs, period, config, interval) => {
+    let ps = Math.random()*10000
+    let generator = (e,b,evalRecurse) => {
+      return ((interval !== 'frame') ? e.count : b) + ps
+    }
+    if (config && config.seed !== undefined) {
+      generator = (e,b,evalRecurse) => {
+        let per = evalRecurse(config.per,e,b,evalRecurse) || 4294967296
+        let count = (interval !== 'frame') ? e.count : b
+        let seed = (count % per) - evalRecurse(config.seed,e,b,evalRecurse)
+        return xmur3(seed) / 4294967296
+      }
+    }
     return (e,b, evalRecurse) => {
-      let count = (interval !== 'frame') ? e.count : b
-      count += paramSeed
+      let value = generator(e,b,evalRecurse)
       let result = (
-          bnoise(count*1/period)*2
-          +(1-bnoise(count*2.3/period))*1
+          bnoise(value*1/period)*2
+          +(1-bnoise(value*2.3/period))*1
         )/3
       let evs = vs.map(v => evalRecurse(v, e,b, evalRecurse))
       if (evs.length >= 2) {
@@ -90,20 +100,21 @@ define(function(require) {
     let evaluator
     let generator = () => Math.random()
     if (config && config.seed !== undefined) {
-      generator = (e,b) => {
-        let period = config.per || 4294967296
-        let seed = (e.count % period) - config.seed
+      generator = (e,b,evalRecurse) => {
+        let period = evalRecurse(config.per,e,b,evalRecurse) || 4294967296
+        let count = (interval !== 'frame') ? e.count : b
+        let seed = (count % period) - evalRecurse(config.seed,e,b,evalRecurse)
         return xmur3(seed) / 4294967296
       }
     }
     if (vs.length == 0) {
-      evaluator = (e,b,evalRecurse) => evalRandomRanged(generator, 0, 1, e, b)
+      evaluator = (e,b,evalRecurse) => evalRandomRanged(generator, 0, 1, e, b, evalRecurse)
     } else if (vs.separator == ':') {
       let lo = param(vs[0], 0)
       let hi = param(vs[1], 1)
-      evaluator = (e,b,evalRecurse) => evalRandomRanged(generator, evalRecurse(lo,e,b,evalRecurse), evalRecurse(hi,e,b,evalRecurse), e, b)
+      evaluator = (e,b,evalRecurse) => evalRandomRanged(generator, evalRecurse(lo,e,b,evalRecurse), evalRecurse(hi,e,b,evalRecurse), e, b, evalRecurse)
     } else {
-      evaluator = (e,b,evalRecurse) => evalRecurse(evalRandomSet(generator, vs, e, b),e,b,evalRecurse)
+      evaluator = (e,b,evalRecurse) => evalRecurse(evalRandomSet(generator, vs, e, b, evalRecurse),e,b,evalRecurse)
     }
     if (period) {
       return periodicRandom(evaluator, period, interval)
@@ -161,7 +172,7 @@ define(function(require) {
 
     // Non fixed value when not seeded
     p = parseRandom([], undefined, {})
-    assertNotEqual(0.6270739405881613, evalParam(p,ev(0),0))
+    assertNotEqual(0.3853306171949953, evalParam(p,ev(0),0))
 
     // Same sequence every time when seeded
     p = parseRandom([], undefined, {seed:1})
@@ -203,6 +214,30 @@ define(function(require) {
 
     p = parseRandom([], undefined, {seed:-100})
     assertIsInRangeEveryTime(0,1, () => evalParam(p,ev(0),0))
+
+    p = parseRandom([], undefined, {seed:()=>1,per:()=>3})
+    assert(0.3853306171949953, evalParam(p,ev(0),0))
+    assert(0.3853306171949953, evalParam(p,ev(3),3))
+
+    p = simpleNoise([], 1)
+    assertIsInRangeEveryTime(0,1, () => evalParam(p,ev(0),0))
+
+    p = simpleNoise([3,5], 1)
+    assertIsInRangeEveryTime(3,5, () => evalParam(p,ev(0),0))
+
+    // Same sequence every time when seeded
+    p = simpleNoise([], 1, {seed:1})
+    assert(0.8426829859122709, evalParam(p,ev(0),0))
+    assert(0.9005707556884941, evalParam(p,ev(1/4),1/4))
+    assert(0.5210828635247373, evalParam(p,ev(1),1))
+
+    // Reset seed on every reset'th beat
+    p = simpleNoise([], 1, {seed:1,per:3})
+    assert(0.8426829859122709, evalParam(p,ev(0),0))
+    assert(0.5210828635247373, evalParam(p,ev(1),1))
+    assert(0.7448183519247357, evalParam(p,ev(2),2))
+    assert(0.7448183519247357, evalParam(p,ev(2),2))
+    assert(0.8426829859122709, evalParam(p,ev(3),3))
 
     console.log('Eval random tests complete')
   }
