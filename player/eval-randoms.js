@@ -44,14 +44,17 @@ define(function(require) {
     }
   }
 
-  let random = (getter) => {
-    // let events = new WeakMap()
+  let random = (getter, interval) => {
+    let events
     return (e,b,evalRecurse) => {
-      // if (!events.has(e)) {
-      //   events.set(e, getter(e,b,evalRecurse))
-      // }
-      // return evalRecurse(events.get(e), e,b, evalRecurse)
-      return evalRecurse(getter(e,b,evalRecurse), e,b, evalRecurse)
+      if (interval === 'frame') {
+        return evalRecurse(getter(e,b,evalRecurse), e,b, evalRecurse)
+      }
+      if (!events) { events = new WeakMap() }
+      if (!events.has(e)) {
+        events.set(e, getter(e,b,evalRecurse))
+      }
+      return evalRecurse(events.get(e), e,b, evalRecurse)
     }
   }
 
@@ -102,9 +105,9 @@ define(function(require) {
     let generator = () => Math.random()
     if (config && config.seed !== undefined) {
       generator = (e,b,evalRecurse) => {
-        let period = evalRecurse(config.per,e,b,evalRecurse) || 4294967296
+        let per = evalRecurse(config.per,e,b,evalRecurse) || 4294967296
         let count = (interval !== 'frame') ? e.count : b
-        let seed = (count % period) - evalRecurse(config.seed,e,b,evalRecurse)
+        let seed = (count % per) - evalRecurse(config.seed,e,b,evalRecurse)
         return xmur3(seed) / 4294967296
       }
     }
@@ -120,7 +123,7 @@ define(function(require) {
     if (period) {
       return periodicRandom(evaluator, period, interval)
     } else {
-      return random(evaluator)
+      return random(evaluator, interval)
     }
   }
 
@@ -135,13 +138,13 @@ define(function(require) {
     }
     let assertIs1OfEveryTime = (expected, getter) => {
       for (let i=0; i<20; i++) {
-        let r = getter()
+        let r = getter(i)
         if (!expected.includes(r)) { console.trace(`Assertion failed.\n>>Expected one of:\n  ${expected}\n>>Actual:\n  ${r}`) }
       }
     }
     let assertIsInRangeEveryTime = (lo, hi, getter) => {
       for (let i=0; i<20; i++) {
-        let r = getter()
+        let r = getter(i)
         if (r === undefined || isNaN(r) || r<lo || r>hi) { console.trace(`Assertion failed.\n>>Expected in range:\n  ${lo} - ${hi}\n>>Actual:\n  ${r}`) }
       }
     }
@@ -153,7 +156,7 @@ define(function(require) {
     }
     let evalParam = require('player/eval-param').evalParamFrame
     let ev = (c) => {return{count:c}}
-    let p, vs
+    let p, vs, r
 
     p = parseRandom([3,5])
     assertIs1OfEveryTime([3,5], () => evalParam(p,ev(0),0))
@@ -219,6 +222,13 @@ define(function(require) {
     p = parseRandom([], undefined, {seed:()=>1,per:()=>3})
     assert(0.3853306171949953, evalParam(p,ev(0),0))
     assert(0.3853306171949953, evalParam(p,ev(3),3))
+
+    // []r should give a new value for each event
+    let testEvent = ev(0,0)
+    p = parseRandom([], undefined, undefined, undefined)
+    r = p(testEvent,0,evalParam)
+    assertIs1OfEveryTime([r], (i)=>p(testEvent,i/10,evalParam))
+    assertNotEqual(r, p(ev(0,0),0,evalParam)) // different value for new event
 
     p = simpleNoise([], 1)
     assertIsInRangeEveryTime(0,1, () => evalParam(p,ev(0),0))

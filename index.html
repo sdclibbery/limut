@@ -611,8 +611,9 @@ shadertoy synth support textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-seed/per not working when @f??
- because 60fps is hitting slightly different times every repeat, so never get same pattern again...
+Periodic frame random should eval at periodic time
+ So at least []R1/4{seed:1}@f should eval exactly on 1/4 beats, not on nearest 1/60s ...
+Pull test codes from emails and try them
 [0,1]n should randomly choose one of 0 or one then smooth between them [0:1]n should pick random values between 0 and 1...
  In which case, rewrite it as the main random, but then smoothed
 Proper tests for follow and overrides and combinations, including tuples
