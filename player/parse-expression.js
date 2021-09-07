@@ -87,6 +87,26 @@ define(function(require) {
     return result
   }
 
+  let hoistInterval = (def, ...args) => {
+    let interval = def
+    args.forEach(arg => {
+      if (Array.isArray(arg)) {
+        interval = arg.map(v => v.interval).reduce(combineIntervals, interval)
+      } else if (!!arg) {
+        interval = Object.values(arg).map(v => v.interval).reduce(combineIntervals, interval)
+      }
+    })
+    return interval
+  }
+
+  let setInterval = (result, interval) => {
+    if (Array.isArray(result)) {
+      result.map(v => v.interval = interval)
+    } else {
+      result.interval = interval
+    }
+  }
+
   let parseColour = (state) => {
     let str = ''
     let char
@@ -115,18 +135,6 @@ define(function(require) {
     return result
   }
 
-  let arrayIntervals = (vs, def) => {
-    return vs.map(v => v.interval).reduce(combineIntervals, def)
-  }
-
-  let setInterval = (result, interval) => {
-    if (Array.isArray(result)) {
-      result.map(v => v.interval = interval)
-    } else {
-      result.interval = interval
-    }
-  }
-
   let expression = (state) => {
     let result
     let operatorList = []
@@ -146,26 +154,26 @@ define(function(require) {
         if (state.str.charAt(state.idx).toLowerCase() == 't') { // timevar; values per time interval
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
-          let interval = parseInterval(state) || arrayIntervals(vs, 'event')
+          let interval = parseInterval(state) || hoistInterval('event', vs)
           result = timeVar(vs, ds, interval)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'l') { // linearly interpolated timevar
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
-          let interval = parseInterval(state) || arrayIntervals(vs, 'event')
+          let interval = parseInterval(state) || hoistInterval('event', vs)
           result = linearTimeVar(vs, ds, interval)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 's') { // smoothstep interpolated timevar
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
-          let interval = parseInterval(state) || arrayIntervals(vs, 'event')
+          let interval = parseInterval(state) || hoistInterval('event', vs)
           result = smoothTimeVar(vs, ds, interval)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'r') { // random
           state.idx += 1
           let period = number(state)
           let config = parseMap(state)
-          let interval = parseInterval(state) || arrayIntervals(vs, 'event')
+          let interval = parseInterval(state) || hoistInterval('event', vs, config)
           result = parseRandom(vs, period, config, interval)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'n') { // simple noise
@@ -173,13 +181,13 @@ define(function(require) {
           let period = number(state)
           if (period === undefined) { period = 1 }
           let config = parseMap(state)
-          let interval = parseInterval(state) || 'frame'
+          let interval = parseInterval(state) || hoistInterval('frame', config)
           result = simpleNoise(vs, period, config, interval)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
           state.idx += 1
           result = eventTimeVar(vs)
-          setInterval(result, parseInterval(state) || arrayIntervals(vs, 'frame'))
+          setInterval(result, parseInterval(state) || hoistInterval('frame', vs))
         } else { // Basic array: one value per pattern step
           result = eventIdxVar(vs)
           result.interval = 'event' // Only makes sense to be per event
@@ -919,6 +927,15 @@ define(function(require) {
   assert('frame', parseExpression("[0.1,(0.1,5)]l1/4@f").interval)
   assert('frame', parseExpression("[0.1,(0.1,5)]s1/4@f").interval)
   assert('frame', parseExpression("[0.1,(0.1,5)]e").interval)
+  assert('frame', parseExpression("[]r@f").interval)
+  assert('event', parseExpression("[]r").interval)
+  assert('event', parseExpression("[]r1").interval)
+  assert('event', parseExpression("[]r{seed:1}").interval)
+  assert('event', parseExpression("[]r{seed:1+2}").interval)
+  assert('event', parseExpression("[]r{seed:[]r}").interval)
+  assert('frame', parseExpression("[]r{seed:[]e}").interval)
+  assert('event', parseExpression("[]r{seed:1,per:1}").interval)
+  assert('frame', parseExpression("[]r{seed:1,per:[]e}").interval)
 
   assert([0,0], evalParamFrame(parseExpression("[0,(0,0)]n@f"),ev(0,0),0,evalParamFrame))
   assert('frame', parseExpression("[0.1,(0.1,5)]n@f").interval)

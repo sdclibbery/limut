@@ -2,7 +2,6 @@
 define(function(require) {
   let evalOperator = require('player/eval-operator')
   let param = require('player/default-param')
-  let {evalParamFrame} = require('player/eval-param')
 
   function xmur3(seed) {
     let h = 1779033703
@@ -63,9 +62,9 @@ define(function(require) {
     let generator = () => Math.random()
     if (config && config.seed !== undefined) {
       generator = (e,b,evalRecurse) => {
-        let per = evalParamFrame(config.per,e,b) || 4294967296
+        let per = evalRecurse(config.per,e,b,evalRecurse) || 4294967296
         let count = (interval !== 'frame') ? e.count : b
-        let seed = evalParamFrame(config.seed,e,b)
+        let seed = evalRecurse(config.seed,e,b,evalRecurse)
         return xmur3((count % per) - seed) / 4294967296
       }
     }
