@@ -611,12 +611,15 @@ shadertoy synth support textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-Gone completely ballistic when per frame!!!!!
-Eval durs
+Periodic random should use %, because now it runs from whenever the code update happens
+Tests for {seed:var}
+Can var lookup take the interval from the var interval?
+ Need two pass parse??
+ What about player var lookup then?
+Eval durs - will need to hoist intervals AND force full eval of values
  []t[1,2]r
  dur=[]r
  !! Note will need to pull interval up, so a per frame duration makes the entire expression per frame...
-Tests for {seed:var}
 Not respecting per: [400:3000]r{seed:[0:1000]r128,per:1}
 Periodic frame random should eval at periodic time
  So at least []R1/4{seed:1}@f should eval exactly on 1/4 beats, not on nearest 1/60s ...
