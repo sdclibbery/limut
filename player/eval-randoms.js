@@ -38,7 +38,7 @@ define(function(require) {
     return (e,b,evalRecurse) => {
       let count = (interval !== 'frame') ? e.count : b
       let repeat = Math.floor(count/period)
-      if (lastValue === undefined || period === undefined || repeat > lastRepeat) {
+      if (lastValue === undefined || lastRepeat === undefined || period === undefined || repeat > lastRepeat) {
         lastRepeat = repeat
         lastValue = getter(e,b,evalRecurse)
       }
