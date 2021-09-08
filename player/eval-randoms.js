@@ -34,11 +34,12 @@ define(function(require) {
   }
 
   let periodicRandom = (getter, period, interval) => {
-    let lastBeat, lastValue
+    let lastRepeat, lastValue
     return (e,b,evalRecurse) => {
       let count = (interval !== 'frame') ? e.count : b
-      if (lastValue === undefined || period === undefined || count >= lastBeat+period-0.0001) {
-        lastBeat = count
+      let repeat = Math.floor(count/period)
+      if (lastValue === undefined || period === undefined || repeat > lastRepeat) {
+        lastRepeat = repeat
         lastValue = getter(e,b,evalRecurse)
       }
       return lastValue
