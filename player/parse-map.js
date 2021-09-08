@@ -41,8 +41,9 @@ define(function(require) {
     let keys = []
     let values = []
     let char
+    eatWhitespace(state)
+    if (state.str.charAt(state.idx) !== '{') { return }
     while (char = state.str.charAt(state.idx)) {
-      if (char === ' ' || char === '\t' || char === '\n' || char === '\r') { state.idx += 1; continue }
       if (char == '{' || char == ',') {
         state.idx += 1
         parseMapEntry(state, keys, values)

@@ -968,6 +968,11 @@ define(function(require) {
   assert(0.3853306171949953, evalParamFrame(p,ev(0,0),0))
   delete vars.foo
 
+  p = parseExpression("[]r{seed:[1]r4,per:1}")
+  assert(0.3853306171949953, evalParamFrame(p,ev(0,0),0))
+  assert(0.3853306171949953, evalParamFrame(p,ev(1,1),1))
+  assert(0.3853306171949953, evalParamFrame(p,ev(2,2),2))
+
   console.log('Parse expression tests complete')
   }
   
