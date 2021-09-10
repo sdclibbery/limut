@@ -171,18 +171,18 @@ define(function(require) {
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'r') { // random
           state.idx += 1
-          let period = number(state)
+          let hold = number(state)
           let config = parseMap(state)
           let interval = parseInterval(state) || hoistInterval('event', vs, config)
-          result = parseRandom(vs, period, config, interval)
+          result = parseRandom(vs, hold, config, interval)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'n') { // simple noise
           state.idx += 1
-          let period = number(state)
-          if (period === undefined) { period = 1 }
+          let hold = number(state)
+          if (hold === undefined) { hold = 1 }
           let config = parseMap(state)
           let interval = parseInterval(state) || hoistInterval('frame', config)
-          result = simpleNoise(vs, period, config, interval)
+          result = simpleNoise(vs, hold, config, interval)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
           state.idx += 1

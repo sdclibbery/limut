@@ -33,16 +33,11 @@ define(function(require) {
     return vs[idx]
   }
 
-  let periodicRandom = (getter, period, interval) => {
-    let lastRepeat, lastValue
+  let heldRandom = (getter, hold, interval) => {
     return (e,b,evalRecurse) => {
       let count = (interval !== 'frame') ? e.count : b
-      let repeat = Math.floor(count/period)
-      if (lastValue === undefined || lastRepeat === undefined || period === undefined || repeat > lastRepeat) {
-        lastRepeat = repeat
-        lastValue = getter(e,b,evalRecurse)
-      }
-      return lastValue
+      let evalCount = Math.floor(count/hold)*hold
+      return getter({count:evalCount},evalCount,evalRecurse)
     }
   }
 
@@ -115,7 +110,11 @@ define(function(require) {
     }
   }
 
-  let parseRandom = (vs, period, config, interval) => {
+  let parseRandom = (vs, hold, config, interval) => {
+    if (hold) {
+      if (!config) { config = {} }
+      if (!config.seed) { config.seed = Math.random()*999999 } // Always use deterministic random for held randoms
+    }
     let generator = getGenerator(config, interval)
     let evaluator
     if (vs.length == 0) {
@@ -127,8 +126,8 @@ define(function(require) {
     } else {
       evaluator = (e,b,evalRecurse) => evalRecurse(evalRandomSet(generator, vs, e, b, evalRecurse),e,b,evalRecurse)
     }
-    if (period) {
-      return periodicRandom(evaluator, period, interval)
+    if (hold) {
+      return heldRandom(evaluator, hold, interval)
     } else {
       return random(evaluator, interval)
     }
@@ -137,11 +136,11 @@ define(function(require) {
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
-    let assert = (expected, actual) => {
-      if (expected !== actual) { console.trace(`Assertion failed.\n>>Expected equal:\n  ${expected}\n>>Actual:\n  ${actual}`) }
+    let assert = (expected, actual, msg) => {
+      if (expected !== actual) { console.trace(`Assertion failed ${msg}.\n>>Expected equal:\n  ${expected}\n>>Actual:\n  ${actual}`) }
     }
-    let assertNotEqual = (expected, actual) => {
-      if (expected === actual) { console.trace(`Assertion failed.\n>>Expected unequal:\n  ${expected}\n>>Actual:\n  ${actual}`) }
+    let assertNotEqual = (expected, actual, msg) => {
+      if (expected === actual) { console.trace(`Assertion failed ${msg}.\n>>Expected unequal:\n  ${expected}\n>>Actual:\n  ${actual}`) }
     }
     let assertIs1OfEveryTime = (expected, getter) => {
       for (let i=0; i<20; i++) {
@@ -156,14 +155,27 @@ define(function(require) {
       }
     }
     let assertIsSameEveryTime = (getter) => {
-      let x = getter()
-      for (let i=0; i<20; i++) {
-        assert(x, getter())
+      let x = getter(0)
+      for (let i=1; i<=20; i++) {
+        assert(x, getter(i))
+      }
+    }
+    let assertIsDifferentEveryTime = (getter) => {
+      let old = getter(0)
+      for (let i=1; i<=20; i++) {
+        let next = getter(i)
+        assertNotEqual(old, next, `Index: ${i}`)
+        old = next
       }
     }
     let evalParam = require('player/eval-param').evalParamFrame
     let ev = (c) => {return{count:c}}
-    let p, vs, r
+    let p, r
+    let range = (lo,hi) => {
+      let vs = [lo,hi]
+      vs.separator = ':'
+      return vs
+    }
 
     p = parseRandom([3,5])
     assertIs1OfEveryTime([3,5], () => evalParam(p,ev(0),0))
@@ -171,15 +183,20 @@ define(function(require) {
     p = parseRandom([])
     assertIsInRangeEveryTime(0,1, () => evalParam(p,ev(0),0))
 
-    vs = [3,5]
-    vs.separator = ':'
-    p = parseRandom(vs)
+    p = parseRandom(range(3,5))
     assertIsInRangeEveryTime(3,5, () => evalParam(p,ev(0),0))
 
     // Always gives same value at same time when periodic, even when not seeded
-    p = parseRandom([3,5], 1)
-    assertIsSameEveryTime(() => evalParam(p,ev(0),0))
-    assertIsSameEveryTime(() => evalParam(p,ev(1),1))
+    p = parseRandom(range(3,5), 1)
+    assertIsSameEveryTime((i) => evalParam(p,ev(i/100),i/100))
+    assertIsSameEveryTime((i) => evalParam(p,ev(1+i/100),1+i/100))
+    p = parseRandom(range(3,5), 1)
+    assertIsDifferentEveryTime((i) => evalParam(p,ev(i),i))
+
+    // Give correct value even when evalled out of time order
+    p = parseRandom(range(-1,1), 1/4)
+    evalParam(p,ev(1),1) // equivalent to a later event being evalled per event
+    assertIsDifferentEveryTime((i) => evalParam(p,ev(i/4),i/4))
 
     // Non fixed value when not seeded
     p = parseRandom([], undefined, {})
