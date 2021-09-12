@@ -299,8 +299,12 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>{x:0,y:1}</code> Map, containing keys and values</p>
 <p><code>'abc'</code> String value</p>
 <p><code>foo</code> Lookup a global var named <code>foo</code>.</p>
+<p><code>foo[0]</code> Lookup a global var named <code>foo</code>, and if it contains a tuple, extract the first element only from it.</p>
+<p><code>foo[0,2]</code> Lookup a global var named <code>foo</code>, and if it contains a tuple, extract the first and third elements only from it.</p>
+<p><code>foo[0:2]</code> Lookup a global var named <code>foo</code>, and if it contains a tuple, extract the first to the third elements only from it.</p>
 <p><code>foo{x:2}</code> Lookup a global var named <code>foo</code>, and call it as a function passing in named parameters.</p>
 <p><code>p1.amp</code> Lookup the value of param <code>amp</code> from player <code>p1</code>. Uses the param from the most recently played event on that player. Can additionally use a <code>pulse</code> param on the player, which pulses from 0 to 1 as events play on that player.</p>
+<p><code>p1.amp[0]</code> Lookup a global var named <code>foo</code>, and if it contains a tuple, extract the first element only from it.</p>
 <p><code>this.value</code> Get param <code>value</code> from the current event.</p>
 <p><code>@f</code> Place <code>@f</code> immediately after a value to evaluate it per frame (60 times a second). For example <code>lpf=[300:3000]l8@f</code> will update the lpf cutoff frequency continuously, while <code>lpf=[300:3000]l8</code> will be evaluated only once for each event played.</p>
 <p><code>@e</code> Place <code>@e</code> immediately after a value to evaluate only once per event.</p>
@@ -694,7 +698,6 @@ extending patterns like every/sometimes/offadd/stutter etc
 Can support double quotes for strings??
 dur=[1,2,3,4]r
 maybe []i for int random?
-array index operator, so you can "ch=[(0,2,4)]" then "add=ch[0]"
 finish off: <> for 'in sequence on each repeat' in patterns
 Should be able to [red:blue]l8
 should multiply out 'chords' in objects eg loc={x:(0,1,2,3), y:(0,1,2,3), w:1,h:1}/4

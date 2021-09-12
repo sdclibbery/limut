@@ -3,6 +3,7 @@ define(function(require) {
   let vars = require('vars')
   let players = require('player/players')
   let parseMap = require('player/parse-map')
+  let parseArray = require('player/parse-array')
   let eatWhitespace = require('player/eat-whitespace')
 
   let varLookup = (state) => {
@@ -23,6 +24,9 @@ define(function(require) {
       let params = parseMap(state)
       return vars[key](params)
     }
+    // Look for a tuple indexer
+    eatWhitespace(state)
+    let tupleIndices = parseArray(state, '[', ']')
     // Return a lookup function
     let [playerId, param] = key.split('.')
     if (playerId && param) {
@@ -35,30 +39,48 @@ define(function(require) {
         if (player) {
           let es = player.currentEvent(event, b)
           v = es.map(e => e[param])
-          if (v.length === 1) { v = v[0] }
         } else if (playerId === 'this') {
           v = event[param]
         } else {
           v = vars[key]
-          if (v === undefined) { v = 0 } // If not found as a var, assume its for a currently unavailable player and default to zero
         }
       } else {
         v = vars[key]
       }
-      return evalRecurse(v,event,b,evalRecurse)
+      v = evalRecurse(v,event,b,evalRecurse)
+      if (Array.isArray(v)) {
+        if (tupleIndices.length > 0) { // extract required elements only from tuple
+          if (tupleIndices.separator === ':') {
+            let vn = []
+            for (let i = Math.floor(tupleIndices[0]); i <= Math.floor(tupleIndices[1]); i++) {
+              vn.push(v[i % v.length])
+            }
+            v = vn
+          } else {
+            v = tupleIndices.map(i => v[i % v.length])
+          }
+        }
+        if (v.length === 1) { v = v[0] }
+        if (v.length === 0) { v = 0 }
+      }
+      if (v === undefined) { v = 0 } // If not found as a var, assume its for a currently unavailable player and default to zero
+      return v
     }
     return result
   }
 
   // TESTS
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
-
+  
   let assert = (expected, actual) => {
     let x = JSON.stringify(expected)
     let a = JSON.stringify(actual)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
   let p
+  let {evalParamFrame,evalParamEvent} = require('player/eval-param')
+  let parseNumber = require('player/parse-number')
+  let ev = (i,c,d) => {return{idx:i,count:c,dur:d}}
 
   vars.foo = 'bar'
   let state = {str:'foo',idx:0,dependsOn:[]}
@@ -100,6 +122,65 @@ define(function(require) {
   let s = {str:'foo.bar',idx:0,dependsOn:[]}
   varLookup(s)
   assert(['foo'], s.dependsOn)
+
+  vars.foo = () => [1,2]
+  state = {str:'foo',idx:0}
+  p = varLookup(state)
+  assert([1,2], p(ev(0),0,evalParamFrame))
+  delete vars.foo
+
+  vars.foo = () => [1]
+  state = {str:'foo',idx:0}
+  p = varLookup(state)
+  assert(1, p(ev(0),0,evalParamFrame))
+  delete vars.foo
+
+  vars.foo = () => []
+  state = {str:'foo',idx:0}
+  p = varLookup(state)
+  assert(0, p(ev(0),0,evalParamFrame))
+  delete vars.foo
+
+  vars.foo = () => undefined
+  state = {str:'foo',idx:0}
+  p = varLookup(state)
+  assert(0, p(ev(0),0,evalParamFrame))
+  delete vars.foo
+
+  vars.foo = () => [2,3]
+  state = {str:'foo[0]',idx:0,expression:parseNumber}
+  p = varLookup(state)
+  assert(2, p(ev(0),0,evalParamFrame))
+  delete vars.foo
+
+  vars.foo = () => 2
+  state = {str:'foo[0]',idx:0,expression:parseNumber}
+  p = varLookup(state)
+  assert(2, p(ev(0),0,evalParamFrame))
+  delete vars.foo
+
+  players.instances.p1 = { currentEvent:(e,b)=>{ return [{foo:[2,3]}]} }
+  p = varLookup({str:'p1.foo[0]',idx:0,dependsOn:[],expression:parseNumber})
+  assert(2, p(ev(0),0,evalParamFrame))
+  delete players.instances.p1
+
+  vars.foo = [2,3]
+  state = {str:'foo[0]',idx:0,expression:parseNumber}
+  p = varLookup(state)
+  assert(2, p(ev(0),0,evalParamFrame))
+  delete vars.foo
+
+  vars.foo = () => [2,3,4]
+  state = {str:'foo[0,2]',idx:0,expression:parseNumber}
+  p = varLookup(state)
+  assert([2,4], p(ev(0),0,evalParamFrame))
+  delete vars.foo
+
+  vars.foo = () => [2,3,4]
+  state = {str:'foo[0:2]',idx:0,expression:parseNumber}
+  p = varLookup(state)
+  assert([2,3,4], p(ev(0),0,evalParamFrame))
+  delete vars.foo
 
   console.log('Parse var tests complete')
   }

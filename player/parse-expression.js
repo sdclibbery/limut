@@ -2,6 +2,7 @@
 define(function(require) {
   let number = require('player/parse-number')
   let parseMap = require('player/parse-map')
+  let parseArray = require('player/parse-array')
   let eatWhitespace = require('player/eat-whitespace')
   let operatorTree = require('player/parse-operator')
   let {timeVar, linearTimeVar, smoothTimeVar, eventTimeVar, eventIdxVar} = require('player/eval-timevars')
@@ -9,47 +10,13 @@ define(function(require) {
   let varLookup = require('player/parse-var')
   let combineIntervals = require('player/intervals').combine
 
-  let doArray = (state, open, close, separator) => {
-    let result = []
-    let char
-    while (char = state.str.charAt(state.idx)) {
-      if (char == open) {
-        state.idx += 1
-        let v = expression(state)
-        if (v !== undefined) { result.push(v) }
-      } else if (char == separator) {
-        state.idx += 1
-        let v = expression(state)
-        if (v !== undefined) { result.push(v) }
-      } else if (char == close) {
-        state.idx += 1
-        break
-      } else {
-        return undefined
-      }
-    }
-    return result
-  }
-  let array = (state, open, close) => {
-    let tryState = Object.assign({}, state)
-    let commaArray = doArray(tryState, open, close, ',')
-    if (commaArray != undefined) {
-      Object.assign(state, tryState)
-      commaArray.separator = ','
-      return commaArray
-    }
-    let colonArray = doArray(state, open, close, ':')
-    if (colonArray == undefined) { return [] }
-    colonArray.separator = ':'
-    return colonArray
-  }
   let numberOrArrayOrFour = (state) => {
     let n = number(state)
     if (n !== undefined) {
       return n
     } else {
       if (state.str.charAt(state.idx) == '[') {
-        let ds = array(state, '[', ']')
+        let ds = parseArray(state, '[', ']')
         return ds
       } else {
         return 4
@@ -150,7 +117,7 @@ define(function(require) {
       }
       // array / time var / random
       if (char == '[') {
-        let vs = array(state, '[', ']')
+        let vs = parseArray(state, '[', ']')
         if (state.str.charAt(state.idx).toLowerCase() == 't') { // timevar; values per time interval
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
@@ -197,7 +164,7 @@ define(function(require) {
       }
       // tuple
       if (char == '(') {
-        let vs = array(state, '(', ')')
+        let vs = parseArray(state, '(', ')')
         if (vs.length == 1) {
           result = vs[0]
         } else {
