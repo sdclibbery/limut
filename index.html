@@ -314,17 +314,19 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>! / stop / none</code> </p>
 <p><code>play</code> Play samples. Use letters, symbols and digits 1-4 in the pattern to choose the sample (see below for full list). Note duration defaults to 1/2.</p>
 <p><code>sample</code> Pitched sample player. Use the 'sample' and 'samplepitch' params, and then use it as a piched synth</p>
-<p><code>dsaw</code> Detuned saw</p>
-<p><code>dsquare</code> Detuned square</p>
-<p><code>dbass</code> Detuned saw bass</p>
+<p><code>saw</code> Sawtooth wave</p>
+<p><code>pulse</code> Pulse wave</p>
+<p><code>dsaw</code> Detuned saw - multiple sawtooth waves slightly out of tune for a fuller sound</p>
+<p><code>dsquare</code> Detuned square - multiple square waves slightly out of tune for a fuller sound</p>
+<p><code>dbass</code> Detuned saw bass - multiple sawtooth waves slightly out of tune for a fuller sound</p>
 <p><code>fmbass</code> Funky FM bass</p>
 <p><code>ping</code> Sine ping</p>
-<p><code>swell</code> Swell pad</p>
+<p><code>swell</code> Swell pad - triangle wave</p>
 <p><code>bell</code> FM generated bell</p>
 <p><code>glock</code> FM generated glockenspiel</p>
 <p><code>piano</code> Sampled piano</p>
-<p><code>ethereal</code> Ethereal pad</p>
-<p><code>dsine</code> Detuned sine pad</p>
+<p><code>ethereal</code> FM Ethereal pad</p>
+<p><code>dsine</code> Detuned sine pad - multiple sine waves slightly out of tune for a fuller sound</p>
 <p><code>noise</code> Noise pad. Note pattern value is not used; white noise is produced for all values.</p>
 <p><code>prophet</code> Prophet style detuned pulse with lfo controlled pulse-width</p>
 <p><code>glass</code> fm glass synth with a chiming sound</p>
@@ -616,6 +618,7 @@ shadertoy synth support textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
+[]e4 to start on the event but run for 4 beats irrespective of how long the event actually lasts
 Eval durs - will need to hoist intervals AND force full eval of values
  Remove special casing for dur parameter
  When parsing pattern:

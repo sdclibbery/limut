@@ -24,6 +24,8 @@ define((require) => {
   let glass = require('play/synth/glass')
   let supersaw = require('play/synth/supersaw')
   let external = require('play/synth/external')
+  let saw = require('play/synth/saw')
+  let pulse = require('play/synth/pulse')
 
   let nullPlayer = { play: () => {}, stopped: true }
   let playerTypes = {
@@ -71,6 +73,8 @@ define((require) => {
     glass: { play: glass },
     supersaw: { play: supersaw },
     external: { play: external },
+    saw: { play: saw },
+    pulse: { play: pulse },
   }
 
   return playerTypes

@@ -662,3 +662,20 @@ build play [\\], sample=1, rate=[3,4,3], amp=[0,0,2]l[14,2,0]
 ch=[1,3,0,5]t8
 space dsine -7047, sus=4, rel=3, room=0.7, add=ch, amp=1/2, vib=2, oct=5
 
+
+bpm=140
+main.amp=2
+root=2.2
+scale=phrygian
+v webcam 0, monochrome=0.9+kk.pulse, recol=oil
+vs swirl 0, back=transparent, mid=transparent, fore=gray, monochrome, time=kk.pulse/2+time/4, zoom=2
+k play X., room=0.1
+// kk play V^+, drive, fold, room=0.1, amp=1/2, rate=1/2
+// pc play downrowt, drive, room=0.1, amp=2/3, echo=3/4, rate=[1/2:1]n
+// p2 play *D.., drive, amp=1, rate=[1/2:2]n, fold, sample=[0:3]r
+sd=[0:1000]r32
+db dbass 000777.., dur=1/4, sus=[1/8:1/4]n, att=0.1, rel=0.1, lpf=[[400:3000]r{seed:sd,per:8}:100]e, amp=3/2, lpr=15, add=[0,1,2]r{seed:sd,per:[8,2,1/4]t[20,8,4]}, oct=2, hpf=[0,800]t[28,4]
+x external 0, drive, amp=1, fold
+// ds dsaw 0124, dur=8, chop=4, lpf=[100,1000,400,200,100]e, oct=(3,4,5), amp=2, lpr=15, addc=(0,[0:-3]e)
+// bl bell 0., dur=8, oct=4, chorus, chop=5, room, addc=(0,[0,-12]e), add=[0:7]r
+
