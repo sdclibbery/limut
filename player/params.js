@@ -1,7 +1,6 @@
 'use strict';
 define(function(require) {
   let parseExpression = require('player/parse-expression')
-  let parseDur = require('player/parse-dur')
 
   let parseName = (state) => {
     let name = ''
@@ -70,12 +69,7 @@ define(function(require) {
     }
     name = name.trim()
     if (name) {
-      let v
-      if (name.toLowerCase() === 'dur') {
-        v = parseDur(value, () => commented=true)
-      } else {
-        v = parseExpression(value, () => commented=true, state.dependsOn)
-      }
+      let v = parseExpression(value, () => commented=true, state.dependsOn)
       state.params[name.toLowerCase().trim()] = v
       if (commented) { return false }
       return true
@@ -112,13 +106,7 @@ define(function(require) {
   assert({dur:1, oct:4}, parseParams('dur=1, oct=4'))
   assert({dur:4, oct:5, decay:2, att:2}, parseParams('dur=4, oct=5, decay=2, att=2'))
   assert({dur:1/2}, parseParams('dur=1/2'))
-  assert({dur:[]}, parseParams('dur=[]'))
-  assert({dur:[1]}, parseParams('dur=[1]'))
-  assert({dur:[1,1]}, parseParams('dur=[1,1]'))
   assert({dur:1, oct:4}, parseParams('dur=1,oct=4'))
-  assert({dur:[1,1]}, parseParams(' dur = [ 1 , 1 ] '))
-  assert({dur:[1,2], oct:3}, parseParams('dur=[1, 2],oct=3'))
-  assert({dur:[[1,1],[[2],3]], oct:4}, parseParams('dur=[[1,1],[[2],3]],oct=4'))
   assert({t:'a'}, parseParams("t='a'"))
   assert({s:'abc'}, parseParams("s='abc'"))
   assert({s:'http://a.com/Bc.mp3'}, parseParams("s='http://a.com/Bc.mp3'"))
