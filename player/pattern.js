@@ -6,8 +6,8 @@ define(function(require) {
   let parsePattern = (pattern, params, defaultDur) => {
     if (!pattern) { return () => [] }
     let dur = param(param(params.dur, defaultDur), 1)
-    let result = parsePatternString(pattern, dur)
-    let patternLength = result.length
+    let result = parsePatternString(pattern)
+    let patternLength = result.length * dur
     let events = result.events
     return (count) => {
       if (events.length == 0) { return [] }
@@ -23,10 +23,10 @@ define(function(require) {
           let event = {}
           event.value = sourceEvent.value
           event.idx = idx
-          event._time = sourceEvent._time
+          event._time = sourceEvent._time * dur
           _time = (patternStartTime + event._time) - count
           baseTime = _time
-          event.dur = sourceEvent.dur
+          event.dur = sourceEvent.dur * dur
           event._time = _time
           event.count = count+_time
           event.sharp = sourceEvent.sharp
@@ -152,20 +152,6 @@ define(function(require) {
     assert([], pattern(2*i+1))
   }
 
-  pattern = parsePattern('0123', {dur:[1,2]})
-  assert([{value:'0',idx:0,_time:0,dur:1,count:0}], pattern(0))
-  assert([{value:'1',idx:1,_time:0,dur:2,count:1}], pattern(1))
-  assert([], pattern(2))
-  assert([{value:'2',idx:2,_time:0,dur:1,count:3}], pattern(3))
-  assert([{value:'3',idx:3,_time:0,dur:2,count:4}], pattern(4))
-  assert([], pattern(5))
-  assert([{value:'0',idx:0,_time:0,dur:1,count:6}], pattern(6))
-
-  pattern = parsePattern('x', {dur:[1,1/2,1/2]})
-  assert([{value:'x',idx:0,_time:0,dur:1,count:0}], pattern(0))
-  assert([{value:'x',idx:1,_time:0,dur:1/2,count:1},{value:'x',idx:2,_time:1/2,dur:1/2,count:3/2}], pattern(1))
-  assert([{value:'x',idx:0,_time:0,dur:1,count:2}], pattern(2))
-
   pattern = parsePattern('0-1-2-x1', {})
   assert([{value:'0',idx:0,_time:0,dur:1,count:0}], pattern(0))
   assert([{value:'-1',idx:1,_time:0,dur:1,count:1}], pattern(1))
@@ -236,28 +222,11 @@ define(function(require) {
   evalPerFrame.interval = 'frame'
   assert(1, parsePattern('0', {scroll:evalPerFrame})(0)[0].scroll())
 
-  pattern = parsePattern('0', {dur:[1,2]})
-  assert([{value:'0',idx:0,_time:0,dur:1,count:0}], pattern(0))
-  assert([{value:'0',idx:1,_time:0,dur:2,count:1}], pattern(1))
-  assert([], pattern(2))
-  assert([{value:'0',idx:0,_time:0,dur:1,count:3}], pattern(3))
-
   pattern = parsePattern('(01)', {dur:1})
   assert([{value:'0',idx:0,_time:0,dur:1,count:0},{value:'1',idx:1,_time:0,dur:1,count:0}], pattern(0))
   assert([{value:'0',idx:0,_time:0,dur:1,count:1},{value:'1',idx:1,_time:0,dur:1,count:1}], pattern(1))
   assert([{value:'0',idx:0,_time:0,dur:1,count:2},{value:'1',idx:1,_time:0,dur:1,count:2}], pattern(2))
   assert([{value:'0',idx:0,_time:0,dur:1,count:3},{value:'1',idx:1,_time:0,dur:1,count:3}], pattern(3))
-
-  pattern = parsePattern('(01)', {dur:[1,2]})
-  assert([{value:'0',idx:0,_time:0,dur:1,count:0},{value:'1',idx:1,_time:0,dur:1,count:0}], pattern(0))
-  assert([{value:'0',idx:2,_time:0,dur:2,count:1},{value:'1',idx:3,_time:0,dur:2,count:1}], pattern(1))
-  assert([], pattern(2))
-  assert([{value:'0',idx:0,_time:0,dur:1,count:3},{value:'1',idx:1,_time:0,dur:1,count:3}], pattern(3))
-
-  pattern = parsePattern('1(23)4', {dur:[1,1/2,1]})
-  assert([{value:'1',idx:0,_time:0,dur:1,count:0}], pattern(0))
-  assert([{value:'2',idx:1,_time:0,dur:0.5,count:1},{value:'3',idx:2,_time:0,dur:0.5,count:1},{value:'4',idx:3,_time:0.5,dur:1,count:1.5}], pattern(1))
-  assert([{value:'1',idx:0,_time:0.5,dur:1,count:2.5}], pattern(2))
 
   pattern = parsePattern('0#', {dur:1})
   assert([{value:'0',idx:0,_time:0,dur:1,count:0,sharp:1}], pattern(0))
