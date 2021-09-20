@@ -551,8 +551,8 @@ Can specify media stream device
  device param to specify required device ID to be used - need to store one stream per device
  Same for webcam
 save current note frequency onto event as this.freq
-filters for echo and reverb
 portamento
+filters for echo and reverb
 Sample synth has start param and uses sus param for duration
 choke param for play synth to choke one sound off when the next plays (eg hihats)
 Xylophone synth - https://www.youtube.com/watch?v=dXo_493fEpU
@@ -592,6 +592,7 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
 Julia values should each be a different coord to give a different look; http://www.karlsims.com/julias-and-mandelbrot.jpg
+Possible nice shader https://twitter.com/zozuar/status/1438117355746377728?s=03
 Spiral and noise and shimmer predistortions
 Hue,hsl functions
 Colour parsing should assume alpha of 1 for eg #fff and #ffffff
@@ -618,7 +619,6 @@ shadertoy synth support textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== other ====
-[]e4 to start on the event but run for 4 beats irrespective of how long the event actually lasts
 Eval durs - will need to hoist intervals AND force full eval of values
  Remove special casing for dur parameter
  When parsing pattern:
@@ -632,9 +632,11 @@ Eval durs - will need to hoist intervals AND force full eval of values
 Swing param or pattern modifier
  Only makes sense as part of pattern if dur is also part of pattern?
 apply overridden delay for follow player: allow canons
+ ?? Consider different approach to delay: call getEventsForBeat with a time offset by delay..???
  do not reevaluate params when following with delay
   ?Will need to store recent events on player and get them when following? - ie variation on currentEvents?
    Otherwise theres no way to get []r to return same values?
+[]e4 to start on the event but run for 4 beats irrespective of how long the event actually lasts
 [0,1]n should randomly choose one of 0 or one then smooth between them, [0:1]n should pick random values between 0 and 1...
  In which case, rewrite it as the main random, but then smoothed
 Proper tests for follow and overrides and combinations, including tuples
