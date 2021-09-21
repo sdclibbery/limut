@@ -64,7 +64,7 @@ define(function(require) {
         while (player._patternStartCount < count + 0.9999) {
           let e = events[player._patternIdx]
           let es = (typeof(e.value) == 'function') ? e.value(e, player._patternRepeats) : [e]
-          let duration = evalParamFrame(dur, {idx: player._patternIdx, count: count}, count)
+          let duration = evalParamFrame(dur, {idx: player._patternIdx, count: player._patternStartCount}, count)
           let eventDur = duration
           es.forEach(sourceEvent => {
             let event = {}
