@@ -61,10 +61,10 @@ define(function(require) {
         if (!player._patternStartCount) { player._patternStartCount = count }
         if (!player._patternRepeats) { player._patternRepeats = 0 }
         let eventsForBeat = []
-        do {
+        while (player._patternStartCount < count + 0.9999) {
           let e = events[player._patternIdx]
           let es = (typeof(e.value) == 'function') ? e.value(e, player._patternRepeats) : [e]
-          let duration = evalParamFrame(dur, {idx: player._patternIdx}, count)
+          let duration = evalParamFrame(dur, {idx: player._patternIdx, count: count}, count)
           let eventDur = duration
           es.forEach(sourceEvent => {
             let event = {}
@@ -92,7 +92,7 @@ define(function(require) {
             player._patternIdx = 0
             player._patternRepeats++
           }
-        } while (player._patternStartCount < count + 0.9999)
+        }
         return eventsForBeat.filter(({value}) => value !== undefined)
       }
     }
@@ -149,6 +149,12 @@ define(function(require) {
   pattern = parsePattern('x[--]', {dur:()=>1/2}, undefined, {})
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:0},{value:'-',idx:1,_time:1/2,dur:1/4,count:1/2},{value:'-',idx:2,_time:3/4,dur:1/4,count:3/4}], pattern(0))
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:1},{value:'-',idx:1,_time:1/2,dur:1/4,count:3/2},{value:'-',idx:2,_time:3/4,dur:1/4,count:7/4}], pattern(1))
+
+  pattern = parsePattern('x', {dur:({count})=>count+1}, undefined, {})
+  assert([{value:'x',idx:0,_time:0,dur:1,count:0}], pattern(0))
+  assert([{value:'x',idx:0,_time:0,dur:2,count:1}], pattern(1))
+  assert([], pattern(2))
+  assert([{value:'x',idx:0,_time:0,dur:4,count:3}], pattern(3))
 
   pattern = parsePattern('-', {dur:1/4}, undefined, {})
   assert([{value:'-',idx:0,_time:0,dur:1/4,count:0},{value:'-',idx:0,_time:1/4,dur:1/4,count:1/4},{value:'-',idx:0,_time:2/4,dur:1/4,count:2/4},{value:'-',idx:0,_time:3/4,dur:1/4,count:3/4}], pattern(0))
