@@ -10,7 +10,7 @@ define(function(require) {
     let events = pattern.events
     if (events.length == 0) { return () => [] }
     let dur = param(param(params.dur, defaultDur), 1)
-    if (typeof dur === 'number') { // const duration, get events at time deterministically
+    if (typeof dur === 'number') { // const duration, get events for a beat deterministically
       let patternLength = pattern.length * dur
       return (count) => {
         player._patternIdx = undefined
@@ -57,6 +57,7 @@ define(function(require) {
     } else { // non-const duration, step through events in realtime
       return (count) => {
         if (!player._patternIdx) { player._patternIdx = 0 }
+        if (player._patternIdx >= events.length) { player._patternIdx = 0 }
         if (!player._patternStartCount) { player._patternStartCount = count }
         if (!player._patternRepeats) { player._patternRepeats = 0 }
         let eventsForBeat = []
@@ -64,12 +65,14 @@ define(function(require) {
           let e = events[player._patternIdx]
           let es = (typeof(e.value) == 'function') ? e.value(e, player._patternRepeats) : [e]
           let duration = evalParamFrame(dur, {idx: player._patternIdx}, count)
+          let eventDur = duration
           es.forEach(sourceEvent => {
             let event = {}
             event.value = sourceEvent.value
             event.idx = player._patternIdx
             event._time = player._patternStartCount - count
             event.dur = sourceEvent.dur * duration
+            eventDur = event.dur
             event.count = count + event._time
             event.sharp = sourceEvent.sharp
             event.loud = sourceEvent.loud
@@ -84,7 +87,7 @@ define(function(require) {
             }
           })
           player._patternIdx++
-          player._patternStartCount += duration
+          player._patternStartCount += eventDur
           if (player._patternIdx >= events.length) {
             player._patternIdx = 0
             player._patternRepeats++
@@ -142,6 +145,10 @@ define(function(require) {
   assert([{value:'o',idx:1,_time:1/2,dur:1/4,count:14/4},{value:'x',idx:0,_time:3/4,dur:1,count:15/4}], pattern(3))
   assert([{value:'o',idx:1,_time:3/4,dur:1/4,count:19/4}], pattern(4))
   assert([{value:'x',idx:0,_time:0,dur:1,count:20/4}], pattern(5))
+
+  pattern = parsePattern('x[--]', {dur:()=>1/2}, undefined, {})
+  assert([{value:'x',idx:0,_time:0,dur:1/2,count:0},{value:'-',idx:1,_time:1/2,dur:1/4,count:1/2},{value:'-',idx:2,_time:3/4,dur:1/4,count:3/4}], pattern(0))
+  assert([{value:'x',idx:0,_time:0,dur:1/2,count:1},{value:'-',idx:1,_time:1/2,dur:1/4,count:3/2},{value:'-',idx:2,_time:3/4,dur:1/4,count:7/4}], pattern(1))
 
   pattern = parsePattern('-', {dur:1/4}, undefined, {})
   assert([{value:'-',idx:0,_time:0,dur:1/4,count:0},{value:'-',idx:0,_time:1/4,dur:1/4,count:1/4},{value:'-',idx:0,_time:2/4,dur:1/4,count:2/4},{value:'-',idx:0,_time:3/4,dur:1/4,count:3/4}], pattern(0))
