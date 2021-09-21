@@ -620,11 +620,8 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Eval durs - will need to hoist intervals AND force full eval of values
- When parsing pattern:
-  If actual number, proceed as now
-   Can remove array handling though
-  If not, need to keep last pattern count on the player, then, on get events, eval dur and progress through pattern
-   Need tests
+ eval dur param and keep last pattern count on the player, then, on get events, eval dur and progress through pattern
+   Need lots more tests
  dur=[1,2]
  dur=[1:4]l4
  dur=[1,2]r

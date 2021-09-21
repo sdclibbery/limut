@@ -93,7 +93,7 @@ define((require) => {
         } else if (playerFactory.stopped) {
           getEventsForBeat = () => []
         } else {
-          getEventsForBeat = standardPlayer(patternStr, paramsStr, playerFactory.defaultDur, player.dependsOn)
+          getEventsForBeat = standardPlayer(patternStr, paramsStr, playerFactory.defaultDur, player)
         }
         player.getEventsForBeatBase = (beat) => {
           let events = getEventsForBeat(beat)

@@ -2,52 +2,89 @@
 define(function(require) {
   let param = require('player/default-param')
   let parsePatternString = require('player/parse-pattern')
+  let {evalParamFrame} = require('player/eval-param')
 
-  let parsePattern = (pattern, params, defaultDur) => {
-    if (!pattern) { return () => [] }
+  let parsePattern = (patternStr, params, defaultDur, player) => {
+    if (!patternStr) { return () => [] }
+    let pattern = parsePatternString(patternStr)
+    let events = pattern.events
+    if (events.length == 0) { return () => [] }
     let dur = param(param(params.dur, defaultDur), 1)
-    let result = parsePatternString(pattern)
-    let patternLength = result.length * dur
-    let events = result.events
-    return (count) => {
-      if (events.length == 0) { return [] }
-      let patternStartTime = patternLength * Math.floor(count / patternLength)
-      let idx = 0
-      let eventsForBeat = []
-      let _time = 0
-      let baseTime = 0
-      do {
-        let e = events[idx]
-        let es = (typeof(e.value) == 'function') ? e.value(e, Math.floor(count/patternLength)) : [e]
-        es.forEach(sourceEvent => {
-          let event = {}
-          event.value = sourceEvent.value
-          event.idx = idx
-          event._time = sourceEvent._time * dur
-          _time = (patternStartTime + event._time) - count
-          baseTime = _time
-          event.dur = sourceEvent.dur * dur
-          event._time = _time
-          event.count = count+_time
-          event.sharp = sourceEvent.sharp
-          event.loud = sourceEvent.loud
-          event.long = sourceEvent.long
-          if (event.value !== '.' && baseTime > -0.0001 && baseTime < 0.9999) {
-            for (let k in params) {
-              if (k != '_time' && k != 'value' && k != 'dur') {
-                event[k] = params[k]
+    if (typeof dur === 'number') { // const duration, get events at time deterministically
+      let patternLength = pattern.length * dur
+      return (count) => {
+        let patternStartTime = patternLength * Math.floor(count / patternLength)
+        let idx = 0
+        let eventsForBeat = []
+        let _time = 0
+        let baseTime = 0
+        do {
+          let e = events[idx]
+          let es = (typeof(e.value) == 'function') ? e.value(e, Math.floor(count/patternLength)) : [e]
+          es.forEach(sourceEvent => {
+            let event = {}
+            event.value = sourceEvent.value
+            event.idx = idx
+            event._time = sourceEvent._time * dur
+            _time = (patternStartTime + event._time) - count
+            baseTime = _time
+            event.dur = sourceEvent.dur * dur
+            event._time = _time
+            event.count = count+_time
+            event.sharp = sourceEvent.sharp
+            event.loud = sourceEvent.loud
+            event.long = sourceEvent.long
+            if (event.value !== '.' && baseTime > -0.0001 && baseTime < 0.9999) {
+              for (let k in params) {
+                if (k != '_time' && k != 'value' && k != 'dur') {
+                  event[k] = params[k]
+                }
               }
+              eventsForBeat.push(event)
             }
-            eventsForBeat.push(event)
+          })
+          idx += 1
+          if (idx >= events.length) {
+            idx = 0
+            patternStartTime += patternLength
           }
-        })
-        idx += 1
-        if (idx >= events.length) {
-          idx = 0
-          patternStartTime += patternLength
-        }
-      } while (baseTime < 1.0001)
-      return eventsForBeat.filter(({value}) => value !== undefined)
+        } while (baseTime < 1.0001)
+        return eventsForBeat.filter(({value}) => value !== undefined)
+      }
+    } else { // non-const duration, step through events in realtime
+      return (count) => {
+        if (!player._patternIdx) { player._patternIdx = 0 }
+        if (!player._patternStartCount) { player._patternStartCount = count }
+        let eventsForBeat = []
+        do {
+          let e = events[player._patternIdx]
+          let es = (typeof(e.value) == 'function') ? e.value(e, player._patternIdx) : [e]
+          let duration = evalParamFrame(dur, {idx: player._patternIdx}, count)
+          es.forEach(sourceEvent => {
+            let event = {}
+            event.value = sourceEvent.value
+            event.idx = player._patternIdx // THIS IS WRONG! should be step idx, not events index?? Needs tests either way
+            event._time = sourceEvent._time * duration
+            event.dur = sourceEvent.dur * duration
+            event.count = count + sourceEvent._time * duration
+            event.sharp = sourceEvent.sharp
+            event.loud = sourceEvent.loud
+            event.long = sourceEvent.long
+            if (event.value !== '.') {
+              for (let k in params) {
+                if (k != '_time' && k != 'value' && k != 'dur') {
+                  event[k] = params[k]
+                }
+              }
+              eventsForBeat.push(event)
+            }
+          })
+          player._patternIdx++
+          player._patternStartCount += duration
+          if (player._patternIdx >= events.length) { player._patternIdx = 0 }
+        } while (player._patternStartCount < count + 0.9999)
+        return eventsForBeat.filter(({value}) => value !== undefined)
+      }
     }
   }
 
@@ -78,6 +115,12 @@ define(function(require) {
   pattern = parsePattern('xo', {dur:1/2})
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:0},{value:'o',idx:1,_time:1/2,dur:1/2,count:0.5}], pattern(0))
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:1},{value:'o',idx:1,_time:1/2,dur:1/2,count:1.5}], pattern(1))
+
+  pattern = parsePattern('xo', {dur:()=>1/2}, undefined, {})
+  assert([{value:'x',idx:0,_time:0,dur:1/2,count:0},{value:'o',idx:1,_time:1/2,dur:1/2,count:0.5}], pattern(0))
+  assert([{value:'x',idx:0,_time:0,dur:1/2,count:1},{value:'o',idx:1,_time:1/2,dur:1/2,count:1.5}], pattern(1))
+  assert([{value:'x',idx:0,_time:0,dur:1/2,count:2},{value:'o',idx:1,_time:1/2,dur:1/2,count:2.5}], pattern(2))
+  assert([{value:'x',idx:0,_time:0,dur:1/2,count:3},{value:'o',idx:1,_time:1/2,dur:1/2,count:3.5}], pattern(3))
 
   pattern = parsePattern('-', {dur:1/4})
   assert([{value:'-',idx:0,_time:0,dur:1/4,count:0},{value:'-',idx:0,_time:1/4,dur:1/4,count:1/4},{value:'-',idx:0,_time:2/4,dur:1/4,count:2/4},{value:'-',idx:0,_time:3/4,dur:1/4,count:3/4}], pattern(0))

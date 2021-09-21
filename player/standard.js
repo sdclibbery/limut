@@ -3,9 +3,9 @@ define(function(require) {
   var parsePattern = require('player/pattern');
   var parseParams = require('player/params');
 
-  return (patternStr, paramsStr, defaultDur, dependsOn) => {
-    let params = parseParams(paramsStr, dependsOn)
-    let pattern = parsePattern(patternStr, params, defaultDur)
+  return (patternStr, paramsStr, defaultDur, player) => {
+    let params = parseParams(paramsStr, player.dependsOn)
+    let pattern = parsePattern(patternStr, params, defaultDur, player)
     return (beat) => {
       let eventsForBeat = pattern(beat.count)
       let events = eventsForBeat.map(event => {
