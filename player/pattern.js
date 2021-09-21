@@ -15,7 +15,8 @@ define(function(require) {
       return (count) => {
         player._patternIdx = undefined
         player._patternStartCount = undefined
-          let patternStartTime = patternLength * Math.floor(count / patternLength)
+        player._patternRepeats = undefined
+        let patternStartTime = patternLength * Math.floor(count / patternLength)
         let idx = 0
         let eventsForBeat = []
         let _time = 0
@@ -57,18 +58,19 @@ define(function(require) {
       return (count) => {
         if (!player._patternIdx) { player._patternIdx = 0 }
         if (!player._patternStartCount) { player._patternStartCount = count }
+        if (!player._patternRepeats) { player._patternRepeats = 0 }
         let eventsForBeat = []
         do {
           let e = events[player._patternIdx]
-          let es = (typeof(e.value) == 'function') ? e.value(e, player._patternIdx) : [e]
+          let es = (typeof(e.value) == 'function') ? e.value(e, player._patternRepeats) : [e]
           let duration = evalParamFrame(dur, {idx: player._patternIdx}, count)
           es.forEach(sourceEvent => {
             let event = {}
             event.value = sourceEvent.value
-            event.idx = player._patternIdx // THIS IS WRONG! should be step idx, not events index?? Needs tests either way
-            event._time = sourceEvent._time * duration
+            event.idx = player._patternIdx
+            event._time = player._patternStartCount - count
             event.dur = sourceEvent.dur * duration
-            event.count = count + sourceEvent._time * duration
+            event.count = count + event._time
             event.sharp = sourceEvent.sharp
             event.loud = sourceEvent.loud
             event.long = sourceEvent.long
@@ -83,7 +85,10 @@ define(function(require) {
           })
           player._patternIdx++
           player._patternStartCount += duration
-          if (player._patternIdx >= events.length) { player._patternIdx = 0 }
+          if (player._patternIdx >= events.length) {
+            player._patternIdx = 0
+            player._patternRepeats++
+          }
         } while (player._patternStartCount < count + 0.9999)
         return eventsForBeat.filter(({value}) => value !== undefined)
       }
@@ -124,8 +129,19 @@ define(function(require) {
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:2},{value:'o',idx:1,_time:1/2,dur:1/2,count:2.5}], pattern(2))
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:3},{value:'o',idx:1,_time:1/2,dur:1/2,count:3.5}], pattern(3))
 
-  // pattern = parsePattern('xo', {dur:({idx})=> idx%2 ? 1/4 : 1}, undefined, {})
-  // assert([{value:'x',idx:0,_time:0,dur:1/2,count:0},{value:'o',idx:1,_time:1/2,dur:1/2,count:0.5}], pattern(0))
+  pattern = parsePattern('xo', {dur:({idx})=> idx%2 ? 1/4 : 3/4}, undefined, {})
+  assert([{value:'x',idx:0,_time:0,dur:3/4,count:0},{value:'o',idx:1,_time:3/4,dur:1/4,count:3/4}], pattern(0))
+  assert([{value:'x',idx:0,_time:0,dur:3/4,count:1},{value:'o',idx:1,_time:3/4,dur:1/4,count:7/4}], pattern(1))
+  assert([{value:'x',idx:0,_time:0,dur:3/4,count:2},{value:'o',idx:1,_time:3/4,dur:1/4,count:11/4}], pattern(2))
+  assert([{value:'x',idx:0,_time:0,dur:3/4,count:3},{value:'o',idx:1,_time:3/4,dur:1/4,count:15/4}], pattern(3))
+
+  pattern = parsePattern('xo', {dur:({idx})=> idx%2 ? 1/4 : 1}, undefined, {})
+  assert([{value:'x',idx:0,_time:0,dur:1,count:0}], pattern(0))
+  assert([{value:'o',idx:1,_time:0,dur:1/4,count:1},{value:'x',idx:0,_time:1/4,dur:1,count:5/4}], pattern(1))
+  assert([{value:'o',idx:1,_time:1/4,dur:1/4,count:9/4},{value:'x',idx:0,_time:1/2,dur:1,count:10/4}], pattern(2))
+  assert([{value:'o',idx:1,_time:1/2,dur:1/4,count:14/4},{value:'x',idx:0,_time:3/4,dur:1,count:15/4}], pattern(3))
+  assert([{value:'o',idx:1,_time:3/4,dur:1/4,count:19/4}], pattern(4))
+  assert([{value:'x',idx:0,_time:0,dur:1,count:20/4}], pattern(5))
 
   pattern = parsePattern('-', {dur:1/4}, undefined, {})
   assert([{value:'-',idx:0,_time:0,dur:1/4,count:0},{value:'-',idx:0,_time:1/4,dur:1/4,count:1/4},{value:'-',idx:0,_time:2/4,dur:1/4,count:2/4},{value:'-',idx:0,_time:3/4,dur:1/4,count:3/4}], pattern(0))
