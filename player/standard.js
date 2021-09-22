@@ -5,9 +5,9 @@ define(function(require) {
 
   return (patternStr, paramsStr, defaultDur, player) => {
     let params = parseParams(paramsStr, player.dependsOn)
-    let pattern = parsePattern(patternStr, params, defaultDur, player)
+    let pattern = parsePattern(patternStr, params, defaultDur)
     return (beat) => {
-      let eventsForBeat = pattern(beat.count)
+      let eventsForBeat = pattern(beat.count, player)
       let events = eventsForBeat.map(event => {
         let eventToPlay = Object.assign({}, event, {sound: event.value, beat: beat})
         eventToPlay._time = beat.time + event._time*beat.duration

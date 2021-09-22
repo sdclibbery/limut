@@ -354,7 +354,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 </div>
 <h4 onclick="toggleAccordion('accordion-event-params')">▶ Common Event Params</h4>
 <div id="accordion-event-params" class="closed">
-<p><code>dur</code> Event time in beats. Can only use a basic value syntax including numbers, arrays [], * and /.</p>
+<p><code>dur</code> Event time in beats</p>
 <p><code>delay</code> Event start time offset in beats</p>
 <p><code>amp</code> Player amplitude control</p>
 <p><code>att</code> Attack time in beats</p>
@@ -620,9 +620,15 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Eval durs - will need to hoist intervals AND force full eval of values
- test follow, overrides, tuples, var lookup, player var lookup
+ follow
+  Not working: player being followed has already advanced to count, so follow player gets no events!!!!
+   Need to use the _follow_ player as the context that stores the timing info
+  Check double follow etc
+ overrides
+ tuples
+ var lookup
+ player var lookup
  update docs for dur
-? Duration should move into the pattern and not be a Param
 Swing param or pattern modifier
  Only makes sense as part of pattern if dur is also part of pattern?
 apply overridden delay for follow player: allow canons
