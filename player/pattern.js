@@ -13,7 +13,7 @@ define(function(require) {
     if (typeof dur === 'number') { // const duration, get events for a beat deterministically
       let patternLength = pattern.length * dur
       return (count, timingContext) => {
-        timingContext._patternIdx = undefined
+        timingContext._patternCount = undefined
         timingContext._patternStartCount = undefined
         timingContext._patternRepeats = undefined
         let patternStartTime = patternLength * Math.floor(count / patternLength)
@@ -56,20 +56,19 @@ define(function(require) {
       }
     } else { // non-const duration, step through events in realtime
       return (count, timingContext) => {
-        if (!timingContext._patternIdx) { timingContext._patternIdx = 0 }
-        if (timingContext._patternIdx >= events.length) { timingContext._patternIdx = 0 }
+        if (!timingContext._patternCount) { timingContext._patternCount = 0 }
         if (!timingContext._patternStartCount) { timingContext._patternStartCount = count }
-        if (!timingContext._patternRepeats) { timingContext._patternRepeats = 0 }
+        timingContext._patternRepeats = timingContext._patternCount % events.length
         let eventsForBeat = []
         while (timingContext._patternStartCount < count + 0.9999) {
-          let e = events[timingContext._patternIdx]
+          let e = events[timingContext._patternCount % events.length]
           let es = (typeof(e.value) == 'function') ? e.value(e, timingContext._patternRepeats) : [e]
-          let duration = evalParamFrame(dur, {idx: timingContext._patternIdx, count: timingContext._patternStartCount}, count)
+          let duration = evalParamFrame(dur, {idx: timingContext._patternCount, count: timingContext._patternStartCount}, count)
           let eventDur = duration
           es.forEach(sourceEvent => {
             let event = {}
             event.value = sourceEvent.value
-            event.idx = timingContext._patternIdx
+            event.idx = timingContext._patternCount
             event._time = timingContext._patternStartCount - count
             event.dur = sourceEvent.dur * duration
             eventDur = event.dur
@@ -86,12 +85,8 @@ define(function(require) {
               eventsForBeat.push(event)
             }
           })
-          timingContext._patternIdx++
+          timingContext._patternCount++
           timingContext._patternStartCount += eventDur
-          if (timingContext._patternIdx >= events.length) {
-            timingContext._patternIdx = 0
-            timingContext._patternRepeats++
-          }
         }
         return eventsForBeat.filter(({value}) => value !== undefined)
       }
@@ -129,37 +124,42 @@ define(function(require) {
   tc = {}
   pattern = parsePattern('xo', {dur:()=>1/2})
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:0},{value:'o',idx:1,_time:1/2,dur:1/2,count:0.5}], pattern(0, tc))
-  assert([{value:'x',idx:0,_time:0,dur:1/2,count:1},{value:'o',idx:1,_time:1/2,dur:1/2,count:1.5}], pattern(1, tc))
-  assert([{value:'x',idx:0,_time:0,dur:1/2,count:2},{value:'o',idx:1,_time:1/2,dur:1/2,count:2.5}], pattern(2, tc))
-  assert([{value:'x',idx:0,_time:0,dur:1/2,count:3},{value:'o',idx:1,_time:1/2,dur:1/2,count:3.5}], pattern(3, tc))
+  assert([{value:'x',idx:2,_time:0,dur:1/2,count:1},{value:'o',idx:3,_time:1/2,dur:1/2,count:1.5}], pattern(1, tc))
+  assert([{value:'x',idx:4,_time:0,dur:1/2,count:2},{value:'o',idx:5,_time:1/2,dur:1/2,count:2.5}], pattern(2, tc))
+  assert([{value:'x',idx:6,_time:0,dur:1/2,count:3},{value:'o',idx:7,_time:1/2,dur:1/2,count:3.5}], pattern(3, tc))
 
   tc = {}
   pattern = parsePattern('xo', {dur:({idx})=> idx%2 ? 1/4 : 3/4})
   assert([{value:'x',idx:0,_time:0,dur:3/4,count:0},{value:'o',idx:1,_time:3/4,dur:1/4,count:3/4}], pattern(0, tc))
-  assert([{value:'x',idx:0,_time:0,dur:3/4,count:1},{value:'o',idx:1,_time:3/4,dur:1/4,count:7/4}], pattern(1, tc))
-  assert([{value:'x',idx:0,_time:0,dur:3/4,count:2},{value:'o',idx:1,_time:3/4,dur:1/4,count:11/4}], pattern(2, tc))
-  assert([{value:'x',idx:0,_time:0,dur:3/4,count:3},{value:'o',idx:1,_time:3/4,dur:1/4,count:15/4}], pattern(3, tc))
+  assert([{value:'x',idx:2,_time:0,dur:3/4,count:1},{value:'o',idx:3,_time:3/4,dur:1/4,count:7/4}], pattern(1, tc))
+  assert([{value:'x',idx:4,_time:0,dur:3/4,count:2},{value:'o',idx:5,_time:3/4,dur:1/4,count:11/4}], pattern(2, tc))
+  assert([{value:'x',idx:6,_time:0,dur:3/4,count:3},{value:'o',idx:7,_time:3/4,dur:1/4,count:15/4}], pattern(3, tc))
 
   tc = {}
   pattern = parsePattern('xo', {dur:({idx})=> idx%2 ? 1/4 : 1})
   assert([{value:'x',idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
-  assert([{value:'o',idx:1,_time:0,dur:1/4,count:1},{value:'x',idx:0,_time:1/4,dur:1,count:5/4}], pattern(1, tc))
-  assert([{value:'o',idx:1,_time:1/4,dur:1/4,count:9/4},{value:'x',idx:0,_time:1/2,dur:1,count:10/4}], pattern(2, tc))
-  assert([{value:'o',idx:1,_time:1/2,dur:1/4,count:14/4},{value:'x',idx:0,_time:3/4,dur:1,count:15/4}], pattern(3, tc))
-  assert([{value:'o',idx:1,_time:3/4,dur:1/4,count:19/4}], pattern(4, tc))
-  assert([{value:'x',idx:0,_time:0,dur:1,count:20/4}], pattern(5, tc))
+  assert([{value:'o',idx:1,_time:0,dur:1/4,count:1},{value:'x',idx:2,_time:1/4,dur:1,count:5/4}], pattern(1, tc))
+  assert([{value:'o',idx:3,_time:1/4,dur:1/4,count:9/4},{value:'x',idx:4,_time:1/2,dur:1,count:10/4}], pattern(2, tc))
+  assert([{value:'o',idx:5,_time:1/2,dur:1/4,count:14/4},{value:'x',idx:6,_time:3/4,dur:1,count:15/4}], pattern(3, tc))
+  assert([{value:'o',idx:7,_time:3/4,dur:1/4,count:19/4}], pattern(4, tc))
+  assert([{value:'x',idx:8,_time:0,dur:1,count:20/4}], pattern(5, tc))
 
   tc = {}
   pattern = parsePattern('x[--]', {dur:()=>1/2})
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:0},{value:'-',idx:1,_time:1/2,dur:1/4,count:1/2},{value:'-',idx:2,_time:3/4,dur:1/4,count:3/4}], pattern(0, tc))
-  assert([{value:'x',idx:0,_time:0,dur:1/2,count:1},{value:'-',idx:1,_time:1/2,dur:1/4,count:3/2},{value:'-',idx:2,_time:3/4,dur:1/4,count:7/4}], pattern(1, tc))
+  assert([{value:'x',idx:3,_time:0,dur:1/2,count:1},{value:'-',idx:4,_time:1/2,dur:1/4,count:3/2},{value:'-',idx:5,_time:3/4,dur:1/4,count:7/4}], pattern(1, tc))
 
   tc = {}
   pattern = parsePattern('x', {dur:({count})=>count+1})
   assert([{value:'x',idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
-  assert([{value:'x',idx:0,_time:0,dur:2,count:1}], pattern(1, tc))
+  assert([{value:'x',idx:1,_time:0,dur:2,count:1}], pattern(1, tc))
   assert([], pattern(2, tc))
-  assert([{value:'x',idx:0,_time:0,dur:4,count:3}], pattern(3, tc))
+  assert([{value:'x',idx:2,_time:0,dur:4,count:3}], pattern(3, tc))
+
+  tc = {}
+  pattern = parsePattern('x', {dur:({idx})=>[3/4,3/4,2/4][idx % 3]})
+  assert([{value:'x',idx:0,_time:0,dur:3/4,count:0},{value:'x',idx:1,_time:3/4,dur:3/4,count:3/4}], pattern(0, tc))
+  assert([{value:'x',idx:2,_time:1/2,dur:2/4,count:3/2}], pattern(1, tc))
 
   pattern = parsePattern('-', {dur:1/4})
   assert([{value:'-',idx:0,_time:0,dur:1/4,count:0},{value:'-',idx:0,_time:1/4,dur:1/4,count:1/4},{value:'-',idx:0,_time:2/4,dur:1/4,count:2/4},{value:'-',idx:0,_time:3/4,dur:1/4,count:3/4}], pattern(0, {}))
