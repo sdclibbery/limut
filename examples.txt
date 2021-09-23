@@ -1,35 +1,3 @@
-s=[0:999]r8
-v glow 0, dur=1/4, sus=1, loc={x:[-1:1]l[2,0],w:1/4,h:1/4,y:[-1:1]r{seed:s,per:2}@e}
-
-v glow 0, dur=1/4, sus=1, loc={x:[-1:1]l[2,0],w:1/4,h:1/4,y:[-1:1]r1/4{seed:1,per:2}}
-
-v glow 0, dur=1/4, sus=1, loc={x:[-1:1]l[2,0],w:1/4,h:1/4,y:[-1:1]r1/4@f}
-
-v glow 0, dur=1/4, sus=1, loc={x:[-1:1]l[2,0],w:1/4,h:1/4,y:[-1:1]r{seed:1,per:2}}
-
-v gradient 0, dur=1/4, fore=black+red*[]r{seed:[0:1000]r8,per:1}
-v gradient 0, dur=1/4, fore=black+red*[]r{per:1,seed:[0:1000]r128}
-
-v glow 0, dur=4, loc={x:[-1:1]l[2,0]@f,w:1/4,h:1/4,y:[-1:1]r1/4{seed:1,per:2}@f}, fade=0
-
-p dbass 0, dur=1/4, lpf=[[400:3000]r{seed:0,per:1}:100]e, lpr=18
-p dbass 0, dur=1/4, lpf=[[400:3000]r{seed:[0:1000]r128,per:1}:100]e, lpr=18
-p dbass 0, dur=1/4, lpf=[400:3000]r{seed:[0:1000]r128,per:1}, lpr=18
-
-db dbass 0, dur=1/4, lpf=[200:1500]r{seed:1,per:4}
-
-ds1 dsaw 000000.., dur=1/4, add=[0:7]r{seed:8/4,per:2}
-ds2 dsaw 0, dur=1/2, add=[0,2*[0:4]r{seed:0,per:4}]t[1/4,7/4]
-ds3 dsaw 0, dur=1/4, add=[0,2*[0:4]r{seed:1,per:3}]t[1/4,7/4]
-
-v glow 0, dur=1/4, sus=1, loc={x:[-1:1]l[2,0],w:1/4,h:1/4,y:[-1:1]r{seed:([4,5,6,7,8,9,10,11]t2)/4,per:2}}
-
-v kal 0, amp=[0.1:3]r1/4{seed:10,per:1}@f
-
-v glow 0, dur=1/4, sus=1, loc={x:[-1:1]l[2,0],w:1/4,h:1/4,y:[-1:1]r}
-
-
-
 v swirl 2, rate=1/6, zoom=2, mirror=4, mid=#818f*sy2.lpf/300, back=red, fore=blue
 sy2 fmbass 0<0000111133332222>, dur=1/4, room=2, echo=3/2, echofeedback=0.6, chorus, pan=[-1/2:1/2]r, lpr=15, lpf=100*[1,2,1,1/2,1/4]e*[1,1,[2,7,20]r1/4]s[8,24,0], oct=5, amp=1/3, add=[0:4]r4
 
@@ -678,4 +646,41 @@ db dbass 000777.., dur=1/4, sus=[1/8:1/4]n, att=0.1, rel=0.1, lpf=[[400:3000]r{s
 x external 0, drive, amp=1, fold
 // ds dsaw 0124, dur=8, chop=4, lpf=[100,1000,400,200,100]e, oct=(3,4,5), amp=2, lpr=15, addc=(0,[0:-3]e)
 // bl bell 0., dur=8, oct=4, chorus, chop=5, room, addc=(0,[0,-12]e), add=[0:7]r
+
+
+// seeded random test cases
+s=[0:999]r8
+v1 glow 0, dur=1/4, sus=1, loc={x:[-1:1]l[2,0],w:1/4,h:1/4,y:[-1:1]r{seed:s,per:2}@e}
+v2 glow 0, dur=1/4, sus=1, loc={x:[-1:1]l[2,0],w:1/4,h:1/4,y:[-1:1]r1/4{seed:1,per:2}}
+v3 glow 0, dur=1/4, sus=1, loc={x:[-1:1]l[2,0],w:1/4,h:1/4,y:[-1:1]r1/4@f}
+v4 glow 0, dur=1/4, sus=1, loc={x:[-1:1]l[2,0],w:1/4,h:1/4,y:[-1:1]r{seed:1,per:2}}
+v5 gradient 0, dur=1/4, fore=black+red*[]r{seed:[0:1000]r8,per:1}
+v6 gradient 0, dur=1/4, fore=black+red*[]r{per:1,seed:[0:1000]r128}
+v7 glow 0, dur=4, loc={x:[-1:1]l[2,0]@f,w:1/4,h:1/4,y:[-1:1]r1/4{seed:1,per:2}@f}, fade=0
+p1 dbass 0, dur=1/4, lpf=[[400:3000]r{seed:0,per:1}:100]e, lpr=18
+p2 dbass 0, dur=1/4, lpf=[[400:3000]r{seed:[0:1000]r128,per:1}:100]e, lpr=18
+p3 dbass 0, dur=1/4, lpf=[400:3000]r{seed:[0:1000]r128,per:1}, lpr=18
+db1 dbass 0, dur=1/4, lpf=[200:1500]r{seed:1,per:4}
+ds1 dsaw 000000.., dur=1/4, add=[0:7]r{seed:8/4,per:2}
+ds2 dsaw 0, dur=1/2, add=[0,2*[0:4]r{seed:0,per:4}]t[1/4,7/4]
+ds3 dsaw 0, dur=1/4, add=[0,2*[0:4]r{seed:1,per:3}]t[1/4,7/4]
+v8 glow 0, dur=1/4, sus=1, loc={x:[-1:1]l[2,0],w:1/4,h:1/4,y:[-1:1]r{seed:([4,5,6,7,8,9,10,11]t2)/4,per:2}}
+v9 kal 0, amp=[0.1:3]r1/4{seed:10,per:1}@f
+v10 glow 0, dur=1/4, sus=1, loc={x:[-1:1]l[2,0],w:1/4,h:1/4,y:[-1:1]r}
+
+
+// Complex duration test cases
+v1 glow 0, dur=1/4, loc=sparkle, sus=1, fore=red
+v2 glow 08, dur=[1,3]/4, loc=sparkle, fore=green, sus=1
+v3 glow 0, dur=[1/4,1/2,1]r, loc=sparkle, sus=1, fore=blue
+v4 glow 0, dur=[1/8,1]t8, loc=sparkle, sus=1, fore=#80ff
+v5 glow 0, dur=[1/16:1]l8, loc=sparkle, sus=1, fore=#0fff
+v6 glow 0, dur=[1/16:1]l1, loc=sparkle, fore=#0fff
+v7 glow 0, dur=[1:4]e, loc=sparkle, fore=#0fff
+v8 glow 0, dur=[1/8:2]n2, loc=sparkle, fore=#0fff
+p1 supersaw 0, dur=[1/8:1]l8, scale=penta, add=[-10:10]r{seed:0,per:8}, room=2, lpf=[300,3000,300]e, amp=2
+vx glow 0, dur=[3,3,2]/4, loc=sparkle
+
+
+v12 glow 0, loc=sparkle, add=[0,9]
 

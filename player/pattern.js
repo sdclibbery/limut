@@ -27,7 +27,7 @@ define(function(require) {
           es.forEach(sourceEvent => {
             let event = {}
             event.value = sourceEvent.value
-            event.idx = idx
+            event.idx = events.length == 1 ? events.length * patternStartTime / patternLength + idx : idx
             event._time = sourceEvent._time * dur
             _time = (patternStartTime + event._time) - count
             baseTime = _time
@@ -46,7 +46,7 @@ define(function(require) {
               eventsForBeat.push(event)
             }
           })
-          idx += 1
+          idx++
           if (idx >= events.length) {
             idx = 0
             patternStartTime += patternLength
@@ -68,7 +68,7 @@ define(function(require) {
           es.forEach(sourceEvent => {
             let event = {}
             event.value = sourceEvent.value
-            event.idx = timingContext._patternCount
+            event.idx = events.length == 1 ? timingContext._patternCount : timingContext._patternCount % events.length
             event._time = timingContext._patternStartCount - count
             event.dur = sourceEvent.dur * duration
             eventDur = event.dur
@@ -110,7 +110,7 @@ define(function(require) {
 
   pattern = parsePattern('x', {})
   assert([{value:'x',idx:0,_time:0,dur:1,count:0}], pattern(0, {}))
-  assert([{value:'x',idx:0,_time:0,dur:1,count:1}], pattern(1, {}))
+  assert([{value:'x',idx:1,_time:0,dur:1,count:1}], pattern(1, {}))
 
   pattern = parsePattern('xo', {})
   assert([{value:'x',idx:0,_time:0,dur:1,count:0}], pattern(0, {}))
@@ -124,30 +124,30 @@ define(function(require) {
   tc = {}
   pattern = parsePattern('xo', {dur:()=>1/2})
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:0},{value:'o',idx:1,_time:1/2,dur:1/2,count:0.5}], pattern(0, tc))
-  assert([{value:'x',idx:2,_time:0,dur:1/2,count:1},{value:'o',idx:3,_time:1/2,dur:1/2,count:1.5}], pattern(1, tc))
-  assert([{value:'x',idx:4,_time:0,dur:1/2,count:2},{value:'o',idx:5,_time:1/2,dur:1/2,count:2.5}], pattern(2, tc))
-  assert([{value:'x',idx:6,_time:0,dur:1/2,count:3},{value:'o',idx:7,_time:1/2,dur:1/2,count:3.5}], pattern(3, tc))
+  assert([{value:'x',idx:0,_time:0,dur:1/2,count:1},{value:'o',idx:1,_time:1/2,dur:1/2,count:1.5}], pattern(1, tc))
+  assert([{value:'x',idx:0,_time:0,dur:1/2,count:2},{value:'o',idx:1,_time:1/2,dur:1/2,count:2.5}], pattern(2, tc))
+  assert([{value:'x',idx:0,_time:0,dur:1/2,count:3},{value:'o',idx:1,_time:1/2,dur:1/2,count:3.5}], pattern(3, tc))
 
   tc = {}
   pattern = parsePattern('xo', {dur:({idx})=> idx%2 ? 1/4 : 3/4})
   assert([{value:'x',idx:0,_time:0,dur:3/4,count:0},{value:'o',idx:1,_time:3/4,dur:1/4,count:3/4}], pattern(0, tc))
-  assert([{value:'x',idx:2,_time:0,dur:3/4,count:1},{value:'o',idx:3,_time:3/4,dur:1/4,count:7/4}], pattern(1, tc))
-  assert([{value:'x',idx:4,_time:0,dur:3/4,count:2},{value:'o',idx:5,_time:3/4,dur:1/4,count:11/4}], pattern(2, tc))
-  assert([{value:'x',idx:6,_time:0,dur:3/4,count:3},{value:'o',idx:7,_time:3/4,dur:1/4,count:15/4}], pattern(3, tc))
+  assert([{value:'x',idx:0,_time:0,dur:3/4,count:1},{value:'o',idx:1,_time:3/4,dur:1/4,count:7/4}], pattern(1, tc))
+  assert([{value:'x',idx:0,_time:0,dur:3/4,count:2},{value:'o',idx:1,_time:3/4,dur:1/4,count:11/4}], pattern(2, tc))
+  assert([{value:'x',idx:0,_time:0,dur:3/4,count:3},{value:'o',idx:1,_time:3/4,dur:1/4,count:15/4}], pattern(3, tc))
 
   tc = {}
   pattern = parsePattern('xo', {dur:({idx})=> idx%2 ? 1/4 : 1})
   assert([{value:'x',idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
-  assert([{value:'o',idx:1,_time:0,dur:1/4,count:1},{value:'x',idx:2,_time:1/4,dur:1,count:5/4}], pattern(1, tc))
-  assert([{value:'o',idx:3,_time:1/4,dur:1/4,count:9/4},{value:'x',idx:4,_time:1/2,dur:1,count:10/4}], pattern(2, tc))
-  assert([{value:'o',idx:5,_time:1/2,dur:1/4,count:14/4},{value:'x',idx:6,_time:3/4,dur:1,count:15/4}], pattern(3, tc))
-  assert([{value:'o',idx:7,_time:3/4,dur:1/4,count:19/4}], pattern(4, tc))
-  assert([{value:'x',idx:8,_time:0,dur:1,count:20/4}], pattern(5, tc))
+  assert([{value:'o',idx:1,_time:0,dur:1/4,count:1},{value:'x',idx:0,_time:1/4,dur:1,count:5/4}], pattern(1, tc))
+  assert([{value:'o',idx:1,_time:1/4,dur:1/4,count:9/4},{value:'x',idx:0,_time:1/2,dur:1,count:10/4}], pattern(2, tc))
+  assert([{value:'o',idx:1,_time:1/2,dur:1/4,count:14/4},{value:'x',idx:0,_time:3/4,dur:1,count:15/4}], pattern(3, tc))
+  assert([{value:'o',idx:1,_time:3/4,dur:1/4,count:19/4}], pattern(4, tc))
+  assert([{value:'x',idx:0,_time:0,dur:1,count:20/4}], pattern(5, tc))
 
   tc = {}
   pattern = parsePattern('x[--]', {dur:()=>1/2})
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:0},{value:'-',idx:1,_time:1/2,dur:1/4,count:1/2},{value:'-',idx:2,_time:3/4,dur:1/4,count:3/4}], pattern(0, tc))
-  assert([{value:'x',idx:3,_time:0,dur:1/2,count:1},{value:'-',idx:4,_time:1/2,dur:1/4,count:3/2},{value:'-',idx:5,_time:3/4,dur:1/4,count:7/4}], pattern(1, tc))
+  assert([{value:'x',idx:0,_time:0,dur:1/2,count:1},{value:'-',idx:1,_time:1/2,dur:1/4,count:3/2},{value:'-',idx:2,_time:3/4,dur:1/4,count:7/4}], pattern(1, tc))
 
   tc = {}
   pattern = parsePattern('x', {dur:({count})=>count+1})
@@ -162,16 +162,16 @@ define(function(require) {
   assert([{value:'x',idx:2,_time:1/2,dur:2/4,count:3/2}], pattern(1, tc))
 
   pattern = parsePattern('-', {dur:1/4})
-  assert([{value:'-',idx:0,_time:0,dur:1/4,count:0},{value:'-',idx:0,_time:1/4,dur:1/4,count:1/4},{value:'-',idx:0,_time:2/4,dur:1/4,count:2/4},{value:'-',idx:0,_time:3/4,dur:1/4,count:3/4}], pattern(0, {}))
-  assert([{value:'-',idx:0,_time:0,dur:1/4,count:1},{value:'-',idx:0,_time:1/4,dur:1/4,count:5/4},{value:'-',idx:0,_time:2/4,dur:1/4,count:6/4},{value:'-',idx:0,_time:3/4,dur:1/4,count:7/4}], pattern(1, {}))
+  assert([{value:'-',idx:0,_time:0,dur:1/4,count:0},{value:'-',idx:1,_time:1/4,dur:1/4,count:1/4},{value:'-',idx:2,_time:2/4,dur:1/4,count:2/4},{value:'-',idx:3,_time:3/4,dur:1/4,count:3/4}], pattern(0, {}))
+  assert([{value:'-',idx:4,_time:0,dur:1/4,count:1},{value:'-',idx:5,_time:1/4,dur:1/4,count:5/4},{value:'-',idx:6,_time:2/4,dur:1/4,count:6/4},{value:'-',idx:7,_time:3/4,dur:1/4,count:7/4}], pattern(1, {}))
 
   pattern = parsePattern('-', {dur:4/5})
-  assert([{value:'-',idx:0,_time:0,dur:4/5,count:0},{value:'-',idx:0,_time:4/5,dur:4/5,count:4/5}], pattern(0, {}))
-  assert([{value:'-',idx:0,_time:3/5,dur:4/5,count:8/5}], pattern(1, {}))
-  assert([{value:'-',idx:0,_time:2/5,dur:4/5,count:12/5}], pattern(2, {}))
-  assert([{value:'-',idx:0,_time:1/5,dur:4/5,count:16/5}], pattern(3, {}))
-  assert([{value:'-',idx:0,_time:0,dur:4/5,count:4},{value:'-',idx:0,_time:4/5,dur:4/5,count:24/5}], pattern(4, {}))
-  assert([{value:'-',idx:0,_time:3/5,dur:4/5,count:28/5}], pattern(5, {}))
+  assert([{value:'-',idx:0,_time:0,dur:4/5,count:0},{value:'-',idx:1,_time:4/5,dur:4/5,count:4/5}], pattern(0, {}))
+  assert([{value:'-',idx:2,_time:3/5,dur:4/5,count:8/5}], pattern(1, {}))
+  assert([{value:'-',idx:3,_time:2/5,dur:4/5,count:12/5}], pattern(2, {}))
+  assert([{value:'-',idx:4,_time:1/5,dur:4/5,count:16/5}], pattern(3, {}))
+  assert([{value:'-',idx:5,_time:0,dur:4/5,count:4},{value:'-',idx:6,_time:4/5,dur:4/5,count:24/5}], pattern(4, {}))
+  assert([{value:'-',idx:7,_time:3/5,dur:4/5,count:28/5}], pattern(5, {}))
 
   pattern = parsePattern('xo', {dur:2})
   assert([{value:'x',idx:0,_time:0,dur:2,count:0}], pattern(0, {}))
@@ -250,12 +250,12 @@ define(function(require) {
 
   pattern = parsePattern('0', {amp:[2,3]})
   assert([{value:'0',idx:0,_time:0,dur:1,count:0,amp:[2,3]}], pattern(0, {}))
-  assert([{value:'0',idx:0,_time:0,dur:1,count:1,amp:[2,3]}], pattern(1, {}))
+  assert([{value:'0',idx:1,_time:0,dur:1,count:1,amp:[2,3]}], pattern(1, {}))
 
   pattern = parsePattern('0_', {})
   assert([{value:'0',idx:0,_time:0,dur:2,count:0}], pattern(0, {}))
   assert([], pattern(1, {}))
-  assert([{value:'0',idx:0,_time:0,dur:2,count:2}], pattern(2, {}))
+  assert([{value:'0',idx:1,_time:0,dur:2,count:2}], pattern(2, {}))
 
   pattern = parsePattern('0[_1]', {})
   assert([{value:'0',idx:0,_time:0,dur:1.5,count:0}], pattern(0, {}))
@@ -286,8 +286,8 @@ define(function(require) {
 
   pattern = parsePattern('<01>', {})
   assert([{value:'0',idx:0,_time:0,dur:1,count:0}], pattern(0, {}))
-  assert([{value:'1',idx:0,_time:0,dur:1,count:1}], pattern(1, {}))
-  assert([{value:'0',idx:0,_time:0,dur:1,count:2}], pattern(2, {}))
+  assert([{value:'1',idx:1,_time:0,dur:1,count:1}], pattern(1, {}))
+  assert([{value:'0',idx:2,_time:0,dur:1,count:2}], pattern(2, {}))
 
   pattern = parsePattern('<01><345>', {dur:1/2})
   assert([{value:'0',idx:0,_time:0,dur:1/2,count:0},{value:'3',idx:1,_time:1/2,dur:1/2,count:1/2}], pattern(0, {}))
@@ -297,8 +297,8 @@ define(function(require) {
 
   pattern = parsePattern('<1[23]>', {})
   assert([{value:'1',idx:0,_time:0,dur:1,count:0}], pattern(0, {}))
-  assert([{value:'2',idx:0,_time:0,dur:1/2,count:1},{value:'3',idx:0,_time:1/2,dur:1/2,count:3/2}], pattern(1, {}))
-  assert([{value:'1',idx:0,_time:0,dur:1,count:2}], pattern(2, {}))
+  assert([{value:'2',idx:1,_time:0,dur:1/2,count:1},{value:'3',idx:1,_time:1/2,dur:1/2,count:3/2}], pattern(1, {}))
+  assert([{value:'1',idx:2,_time:0,dur:1,count:2}], pattern(2, {}))
 
   let evalPerFrame = ()=>1
   evalPerFrame.interval = 'frame'
