@@ -618,24 +618,21 @@ shadertoy synth support textures - MtGSzh
  NO CORS!! https://www.shadertoy.com/media/a/f735bee5b64ef98879dc618b016ecf7939a5756040c2cde21ccb15e69a6e1cfb.png
 shadertoy synth multiple channels
 ====
+==== things to test ====
+timevars, randoms, var, player var, tuples, follow, overrides, complex durs
+====
 ==== other ====
-Eval durs - will need to hoist intervals AND force full eval of values
- follow
-  Not working: player being followed has already advanced to count, so follow player gets no events!!!!
-   Need to use the _follow_ player as the context that stores the timing info
-  Check double follow etc
- overrides
+Follow player refactor: theres too much thats nondeterministic
+ Either use stored events with a dependency, OR install a callback in the player being followed
+ Things to test:
+  randoms
+  complex durations (including random)
+  delays
+Complex durs
+ overrides - need to apply overrides earlier? Should apply to delay overrides too
  tuples
- var lookup
- player var lookup
- update docs for dur
+ var lookup (& player var lookup)
 Swing param or pattern modifier
- Only makes sense as part of pattern if dur is also part of pattern?
-apply overridden delay for follow player: allow canons
- ?? Consider different approach to delay: call getEventsForBeat with a time offset by delay..???
- do not reevaluate params when following with delay
-  ?Will need to store recent events on player and get them when following? - ie variation on currentEvents?
-   Otherwise theres no way to get []r to return same values?
 []e4 to start on the event but run for 4 beats irrespective of how long the event actually lasts
 [0,1]n should randomly choose one of 0 or one then smooth between them, [0:1]n should pick random values between 0 and 1...
  In which case, rewrite it as the main random, but then smoothed
@@ -653,7 +650,7 @@ Maybe optimise per frame garbage in eval-params and eval-operators
 Defining a name for every slider is too fiddly
  allow slider{} ?
  or even some UI method for slidering a value??
- Need a way to read off the current value of a slider!
+ Need a way to read off the current value of a slider! - or indeed anything; either 'log' statement or '!' expresion modifier?
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 Wildcard player matching for groups 'set d? amp=0'  'set p* amp=0'
 ? rl, rt (==r), rs (==n); el (==e), es, et ?
