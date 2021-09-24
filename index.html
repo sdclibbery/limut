@@ -545,11 +545,12 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
+Ring modulation
 room={room:1,mix:1/2} - same for echo, chorus etc
 Then also allow adding filters in the room/echo loops eg echo={echo:3/4,lpf:523}
 Should also roll feedback into the object eg echo={echo:3/4,feedback: 0.85}
 Then add gate effect, which would then allow gated reverb
-Ring modulation
+Envelope follower? Pitch follower?
 Can specify media stream device
  Print list of all devices with IDs
  device param to specify required device ID to be used - need to store one stream per device
@@ -622,25 +623,30 @@ shadertoy synth support textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== things to test ====
-timevars, randoms, var, player var, tuples, follow, overrides, complex durs
+[], []tls, []e, []n, []r, var, player var, (), follow, overrides, complex durs
 ====
 ==== other ====
-Follow player refactor: theres too much thats nondeterministic
- Either use stored events with a dependency, OR install a callback in the player being followed
+[]r{per:4,zero} to force output to zero at start of every per repeat
+[]e4 to start on the event but run for 4 beats irrespective of how long the event actually lasts
+Follow player refactor
+ Better follow tests
+ Use stored events with a dependency
  Things to test:
-  randoms
+  randoms (per event only)
   complex durations (including random)
   delays
+ Clean up any unnecessary gumpf around getEventsForBeatBase etc
+[0,1]n should randomly choose one of 0 or one then smooth between them, [0:1]n should pick random values between 0 and 1...
+ In which case, rewrite it as the main random, but then smoothed
+All randoms including []r and []n should be deterministic
+ Need to seed with enough variation; player and time?
+ Per frame random should then be synchronised in follow player
+Proper tests for follow and overrides and combinations, including tuples
 Complex durs
  overrides - need to apply overrides earlier? Should apply to delay overrides too
  tuples
  var lookup (& player var lookup)
 Swing param or pattern modifier
-[]r{per:4,zero} to force output to zero at start of every per repeat
-[]e4 to start on the event but run for 4 beats irrespective of how long the event actually lasts
-[0,1]n should randomly choose one of 0 or one then smooth between them, [0:1]n should pick random values between 0 and 1...
- In which case, rewrite it as the main random, but then smoothed
-Proper tests for follow and overrides and combinations, including tuples
 []w for random walk; eg [0:7]w random walk within 0 - 7 range; [0:7]w2{seed:1,per:8} etc
 Ignore rests . when setting event.idx (so that `0.1., amp=[1/2,1]` does as expected) - is that expected? It wouldnt be for dur..?
 Can var lookup take the interval from the var interval?
