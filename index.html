@@ -547,9 +547,9 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 ==== audio ====
 Ring modulation
 room={room:1,mix:1/2} - same for echo, chorus etc
-Then also allow adding filters in the room/echo loops eg echo={echo:3/4,lpf:523}
+Then also allow adding filters in the room/echo loops eg echo={echo:3/4,lpf:523} - but dont use full filter chain as must be per event only!
 Should also roll feedback into the object eg echo={echo:3/4,feedback: 0.85}
-Then add gate effect, which would then allow gated reverb
+Gated reverb room={room:1,gate:1/4}
 Envelope follower? Pitch follower?
 Can specify media stream device
  Print list of all devices with IDs
@@ -561,7 +561,7 @@ Sample synth has start param and uses sus param for duration
 choke param for play synth to choke one sound off when the next plays (eg hihats)
 Xylophone synth - https://www.youtube.com/watch?v=dXo_493fEpU
 Env=reverse (slow attack / fast release)
-pulse synth + formant/vowel effects for vocal aaa/ooo/choir effects
+formant/vowel effects for vocal aaa/ooo/choir effects
 Is it possible to control rate per frame?
 crackling on per frame amp change? eg testbass fmbass 0[7_.0], dur=4, oct=(1,2), amp=[2,1,0,0]s1/16@f
  chopwave
@@ -598,7 +598,7 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 Julia values should each be a different coord to give a different look; http://www.karlsims.com/julias-and-mandelbrot.jpg
 Possible nice shader https://twitter.com/zozuar/status/1438117355746377728?s=03
 Spiral and noise and shimmer predistortions
-Hue,hsl functions
+Hue,hsl functions (or just more params eg {h:1/3,l:1/2} ?)
 Colour parsing should assume alpha of 1 for eg #fff and #ffffff
 Consider pushing data of each event into a texture so a shader could display all events, eg as 2D patterns or voxels or 3D shapes
 Disco glowing geometric shapes shader
@@ -626,8 +626,12 @@ shadertoy synth multiple channels
 [], []tls, []e, []n, []r, var, player var, (), follow, overrides, complex durs
 ====
 ==== other ====
-[]r{per:4,zero} to force output to zero at start of every per repeat
 []e4 to start on the event but run for 4 beats irrespective of how long the event actually lasts
+ test
+ docs
+[]r{per:4,zero} to force output to zero at start of every per repeat
+ test
+ docs
 Follow player refactor
  Better follow tests
  Use stored events with a dependency

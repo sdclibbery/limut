@@ -145,7 +145,7 @@ let verts = (loc, window) => {
         shaderTime = state.count*rate + sway*state.pulse
       }
       let amp = Math.min(evalParamFrame(params, 'amp', 1, state.count), 5)
-      let add = evalParamFrame(params, 'add', 1, state.count)
+      let add = evalParamFrame(params, 'add', 0, state.count)
       let eventTime = ((state.time-startTime)/(endTime-startTime))
       let brightness = 1 - (eventTime*eventTime)*fade
       let monochrome = evalParamFrame(params, 'monochrome', 0, state.count)
