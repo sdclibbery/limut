@@ -545,6 +545,10 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
+room={room:1,mix:1/2} - same for echo, chorus etc
+Then also allow adding filters in the room/echo loops eg echo={echo:3/4,lpf:523}
+Should also roll feedback into the object eg echo={echo:3/4,feedback: 0.85}
+Then add gate effect, which would then allow gated reverb
 Ring modulation
 Can specify media stream device
  Print list of all devices with IDs
@@ -552,7 +556,6 @@ Can specify media stream device
  Same for webcam
 save current note frequency onto event as this.freq
 portamento
-filters for echo and reverb
 Sample synth has start param and uses sus param for duration
 choke param for play synth to choke one sound off when the next plays (eg hihats)
 Xylophone synth - https://www.youtube.com/watch?v=dXo_493fEpU
@@ -622,7 +625,6 @@ shadertoy synth multiple channels
 timevars, randoms, var, player var, tuples, follow, overrides, complex durs
 ====
 ==== other ====
-Why does this not work: v11 glow 0, loc=sparkle, fore=[red,green]
 Follow player refactor: theres too much thats nondeterministic
  Either use stored events with a dependency, OR install a callback in the player being followed
  Things to test:
@@ -634,6 +636,7 @@ Complex durs
  tuples
  var lookup (& player var lookup)
 Swing param or pattern modifier
+[]r{per:4,zero} to force output to zero at start of every per repeat
 []e4 to start on the event but run for 4 beats irrespective of how long the event actually lasts
 [0,1]n should randomly choose one of 0 or one then smooth between them, [0:1]n should pick random values between 0 and 1...
  In which case, rewrite it as the main random, but then smoothed

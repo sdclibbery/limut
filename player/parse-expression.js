@@ -940,6 +940,13 @@ define(function(require) {
   assert(0.3853306171949953, evalParamFrame(p,ev(1,1),1))
   assert(0.3853306171949953, evalParamFrame(p,ev(2,2),2))
 
+  vars.red = parseExpression("{r:1}")
+  vars.green = parseExpression("{g:1}")
+  p = parseExpression("[red,green]t1")
+  assert({g:1}, evalParamFrame(p,ev(1,1),1))
+  delete vars.red
+  delete vars.green
+
   console.log('Parse expression tests complete')
   }
   

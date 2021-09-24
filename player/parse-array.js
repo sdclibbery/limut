@@ -5,6 +5,9 @@ define(function(require) {
   let doArray = (state, open, close, separator) => {
     let result = []
     let char
+    if (state.str.charAt(state.idx) !== open) {
+      return undefined
+    }
     while (char = state.str.charAt(state.idx)) {
       if (char == open) {
         state.idx += 1
