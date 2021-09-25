@@ -21,17 +21,17 @@ const DEFAULT_DETUNE = 0;
 const DEFAULT_PULSE_WIDTH = 0.5;
 const TWOPI = Math.PI * 2;
 
-const bitwiseOrZero = (t) => t | 0;
-const square_number = (x) => x * x;
 // Adapted from "Phaseshaping Oscillator Algorithms for Musical Sound
 // Synthesis" by Jari Kleimola, Victor Lazzarini, Joseph Timoney, and Vesa
 // Valimaki.
 // http://www.acoustics.hut.fi/publications/papers/smc2010-phaseshaping/
 const blep = (t, dt) => {
   if (t < dt) {
-    return -square_number(t / dt - 1);
+    let x = t / dt - 1;
+    return -(x*x);
   } else if (t > 1 - dt) {
-    return square_number((t - 1) / dt + 1);
+    let x = (t - 1) / dt + 1;
+    return x*x;
   } else {
     return 0;
   }
@@ -99,19 +99,9 @@ class PwmOscillator extends AudioWorkletProcessor {
     this.amplitude = 1;
     this.t = 0;
   }
-  inc() {
-    this.t += this.freqInSecondsPerSample;
-    this.t -= bitwiseOrZero(this.t);
-  }
-  getFreqInHz() {
-    return this.freqInSecondsPerSample * sampleRate;
-  }
-  sin() {
-    return this.amplitude * Math.sin(TWOPI * this.t);
-  }
   saw() {
     let _t = this.t + 0.5;
-    _t -= bitwiseOrZero(_t);
+    _t -= (_t) | 0;
 
     let y = 2 * _t - 1;
     y -= blep(_t, this.freqInSecondsPerSample);
@@ -120,7 +110,7 @@ class PwmOscillator extends AudioWorkletProcessor {
   }
   rect(pulseWidth) {
     let t2 = this.t + 1 - pulseWidth;
-    t2 -= bitwiseOrZero(t2);
+    t2 -= (t2) | 0;
 
     let y = -2 * pulseWidth;
     if (this.t < pulseWidth) {
@@ -135,6 +125,9 @@ class PwmOscillator extends AudioWorkletProcessor {
   }
 
   process(inputs, outputs, parameters) {
+    if (parameters.start[0] < 0.5) { return true }
+    if (parameters.stop[0] > 0.5) { return false }
+
     const output = outputs[0];
     const getFrequency = paramGetter(parameters.frequency);
     const getDetune = paramGetter(parameters.detune);
@@ -146,22 +139,28 @@ class PwmOscillator extends AudioWorkletProcessor {
         const frequency = getFrequency(i);
         const detune = getDetune(i);
         const pulseWidth = getPulseWidth(i);
+
         // calculate frequency
         const freq = Math.abs(frequency * Math.pow(2, detune / 1200));
-
+      
         // set new phase
+        let freqInHz = this.freqInSecondsPerSample * sampleRate;
+        let sine = this.amplitude * Math.sin(TWOPI * this.t);
         if (this.freq !== freq) {
           this.freq = freq;
           this.freqInSecondsPerSample = freq / sampleRate;
         }
-        const out = (this.getFreqInHz() >= sampleRate / 4)
-          ? this.sin()
+        const out = (freqInHz >= sampleRate / 4)
+          ? sine
           : this.rect(pulseWidth);
-        channel[i] = parameters.start[i%parameters.start.length] * out
-        this.inc();
+        channel[i] = out
+
+        // inc
+        this.t += this.freqInSecondsPerSample;
+        this.t -= (this.t) | 0;
       }
     });
-    return parameters.stop[parameters.stop.length-1]<0.5
+    return true
   }
 }
 registerProcessor('pwm-oscillator', PwmOscillator);

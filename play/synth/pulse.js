@@ -23,6 +23,7 @@ define(function (require) {
 
     let pitch = pitchEffects(params)
     let vco = new AudioWorkletNode(system.audio, "pwm-oscillator")
+    vco.parameters.get('pulseWidth').value = 0.03
     vco.parameters.get('frequency').value = freq * Math.pow(2, detuneSemis/12)
     pitch.connect(vco.parameters.get('detune'))
 

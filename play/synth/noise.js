@@ -24,12 +24,14 @@ define(function (require) {
         }]
       }
       process(inputs, outputs, parameters) {
+        if (parameters.start[0] < 0.5) { return true }
+        if (parameters.stop[0] > 0.5) { return false }
         outputs[0].forEach(channel => {
           for (let i = 0; i < channel.length; i++) {
-            channel[i] = parameters.start[i%parameters.start.length]*(Math.random()*2-1)
+            channel[i] = (Math.random()*2-1)
           }
         })
-        return parameters.stop[0]<0.5
+        return true
       }
     }
     registerProcessor("noise-processor", NoiseProcessor)

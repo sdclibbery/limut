@@ -25,7 +25,7 @@ define(function (require) {
     lfoOsc.type = 'triangle'
     lfoOsc.frequency.value = lfo / params.beat.duration
     let lfoGain = system.audio.createGain()
-    lfoGain.gain.value = 0.49
+    lfoGain.gain.value = 0.45
     lfoOsc.connect(lfoGain)
     lfoOsc.start(params._time)
     lfoOsc.stop(params.endTime)
@@ -38,7 +38,7 @@ define(function (require) {
     lpf.connect(vca)
 
     let pitch = pitchEffects(params)
-    let vcos = [0, 0.1]
+    let vcos = [0]
     let multiosc = system.audio.createGain()
     multiosc.gain.value = 1/vcos.length
     waveEffects(params, multiosc).connect(lpf)
