@@ -25,6 +25,7 @@ define((require) => {
   let supersaw = require('play/synth/supersaw')
   let external = require('play/synth/external')
   let saw = require('play/synth/saw')
+  let square = require('play/synth/square')
   let pulse = require('play/synth/pulse')
 
   let nullPlayer = { play: () => {}, stopped: true }
@@ -74,6 +75,7 @@ define((require) => {
     supersaw: { play: supersaw },
     external: { play: external },
     saw: { play: saw },
+    square: { play: square },
     pulse: { play: pulse },
   }
 

@@ -315,6 +315,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>play</code> Play samples. Use letters, symbols and digits 1-4 in the pattern to choose the sample (see below for full list). Note duration defaults to 1/2.</p>
 <p><code>sample</code> Pitched sample player. Use the 'sample' and 'samplepitch' params, and then use it as a piched synth</p>
 <p><code>saw</code> Sawtooth wave</p>
+<p><code>square</code> Square wave</p>
 <p><code>pulse</code> Pulse wave (uses AudioWorklet so will use more audio render capacity than other synth types)</p>
 <p><code>dsaw</code> Detuned saw - multiple sawtooth waves slightly out of tune for a fuller sound</p>
 <p><code>dsquare</code> Detuned square - multiple square waves slightly out of tune for a fuller sound</p>
@@ -545,12 +546,12 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
-Square synth
-Convert pulse and noise to webassembly, performance is terrible compared to native oscs
+Can pulse synth use a native FFT osc instead of PWM?
 Ring modulation
 room={room:1,mix:1/2} - same for echo, chorus etc
 Then also allow adding filters in the room/echo loops eg echo={echo:3/4,lpf:523} - but dont use full filter chain as must be per event only!
 Should also roll feedback into the object eg echo={echo:3/4,feedback: 0.85}
+Convert pwm and noise to webassembly, performance is terrible compared to native oscs
 Gated reverb room={room:1,gate:1/4}
 Envelope follower? Pitch follower?
 Can specify media stream device
