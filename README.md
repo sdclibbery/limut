@@ -4,7 +4,7 @@ Live coding music and visuals in the browser. Inspired by FoxDot with a desire t
 
 # Documentation
 
-Documentation (what there is of it) is available in the page itself, underneath the console.
+Documentation (what there is of it) is available in the page itself, underneath the console; this includes a number of examples that can be copied into the editor and run.
 
 # Try it
 
