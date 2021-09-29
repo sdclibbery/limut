@@ -684,3 +684,33 @@ vx glow 0, dur=[3,3,2]/4, loc=sparkle
 
 v12 glow 0, loc=sparkle, add=[0,9]
 
+
+bpm=85
+root=2.2
+main.amp=1
+scale=minor
+v webcam 0, zoom=1.4, fore=rainbow_fast, back=rainbow_slow
+scratch='https://upload.wikimedia.org/wikipedia/commons/4/48/Bauchamp_-_101_scratch_it.ogg'
+sam sample -3, sample=scratch, amp=2, high=4, drive=1/4
+// sam2 sample 0, sample=scratch, amp=1/2, high=4, drive=1/2, add=[-7,-4]t[28,4]
+// sam3 sample 4, sample=scratch, amp=1, drive=1/2, add=[0,7]t[28,4]
+// sam4 sample 4, sample=scratch, amp=3/2, drive=1, add=7+[0,7]t[28,4]
+// p play [d<.x>]Xf[Xx], amp=3, room=0.1
+// pr play xanuxeni, echo=3/4, amp=3/2, rate=4/3, drive=1/2
+// x external 0, amp=1.9, drive, fold
+// db dbass 0..0..0., addc=[12:[0,0,-5]r]e, lpf=523, amp=3, sus=3/2, room=0.1, fold, add=(0,7)
+
+
+// bpm=135
+// scale=minor
+// v swirl 0, fore=gray, recol=hue, time=time/2, zoom=1+k.pulse/4
+// k play X.
+// rm play mxvmxvmv, echo=3/4, room=0.1, amp=1/3, rate=[1,8]t[28,4]
+// c play ..(oH*)., room
+// t play YNlA, echo=3/4, rate=[4/5,1,4/3,5/4]t2
+// ho play .=, drive=1/8, amp=0.7
+// hc play [--], drive=1/8, amp=1/2
+// pr play Thirty, echo=3/4, drive, amp=1/3
+// ba pulse 00.00.0., dur=1/4, lpf=[400:[1200:2500]l8]r{seed:10+[0,99]t[12,4]+[0,1]t8,per:4}*[1:1/2]e, lpr=[25:40]l8, oct=2//, add=[-7:7]n4
+
+
