@@ -22,7 +22,23 @@ define(function (require) {
     lfo.type = 'square';
     lfo.frequency.value = chops / params.beat.duration
     let gain = system.audio.createGain()
-    gain.gain.setValueAtTime(1, params._time)
+    gain.gain.setValueAtTime(1, system.audio.currentTime)
+    lfo.connect(gain.gain)
+    lfo.start(params._time)
+    lfo.stop(params.endTime)
+    node.connect(gain)
+    system.disconnect(params, [gain,lfo,node])
+    return gain
+  }
+
+  let ring = (params, node) => {
+    let freq = evalPerEvent(params, 'ring', 0)
+    if (!freq) { return node }
+    let lfo = system.audio.createOscillator()
+    lfo.type = 'triangle';
+    lfo.frequency.value = freq
+    let gain = system.audio.createGain()
+    gain.gain.setValueAtTime(0, system.audio.currentTime)
     lfo.connect(gain.gain)
     lfo.start(params._time)
     lfo.stop(params.endTime)
@@ -44,6 +60,7 @@ define(function (require) {
     system.disconnect(params, [node])
     node = perFrameAmp(params, node)
     node = chop(params, node)
+    node = ring(params, node)
     node = filters(params, node)
     node = pan(params, node)
     node = chain(params, node)

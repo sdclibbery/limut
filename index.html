@@ -390,6 +390,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>high</code> High shelf gain in decibels. Use negative values to cut frequencies above the cutoff, positive to boost them.</p>
 <p><code>highf</code> High shelf cutoff frequency. Default: 1100Hz</p>
 <p><code>chop</code> Chop the signal into a number of parts per beat</p>
+<p><code>ring</code> Apply ring modulation at the given frequency in Hertz</p>
 <p><code>sample</code> With 'play' synth: number: choose which sample set to use. With 'sample' synth: string: url of online audio file to play (note: server must support cross origin requests for the file)</p>
 <p><code>samplepitch</code> For the 'sample' synth, use this to specify the original pitch of 'sample' in Hz (eg '261.6' for C4)</p>
 <p><code>room</code> reverb room size (using freeverb)</p>
@@ -546,18 +547,22 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
-Ring modulation
-room={room:1,mix:1/2} - same for echo, chorus etc
-Then also allow adding filters in the room/echo loops eg echo={echo:3/4,lpf:523} - but dont use full filter chain as must be per event only!
-Should also roll feedback into the object eg echo={echo:3/4,feedback: 0.85}
+ring={wave:'sine',ring:32}  ;  chop={wave:'sine',chop:2}
+ Make generic subparam or main param or default getter
+Function to get freq from scale eg ring=pitch{oct:3,degree:2,scale:minor}  ; defaults: oct:3, degree:0, scale:<current>
+save current note frequency onto event as this.freq
+Mix subparam for all effects, eg room={room:1,mix:1/2}  ; do not add any audio nodes if not specified
+Bug: chop doubles amplitude...
+Allow adding filters in the room/echo loops eg echo={echo:3/4,lpf:523} - but dont use existing filter handlers as must be per event only!
+Should also roll echofeedback into the object eg echo={echo:3/4,feedback: 0.85}
 Convert pwm and noise to webassembly, performance is terrible compared to native oscs
-Gated reverb room={room:1,gate:1/4}
-Envelope follower? Pitch follower?
+Reverb gate: room={room:1,gate:1/4}
+Envelope follower? Pitch follower? for external synth
+Sine, tri synths
 Can specify media stream device
  Print list of all devices with IDs
  device param to specify required device ID to be used - need to store one stream per device
  Same for webcam
-save current note frequency onto event as this.freq
 portamento
 Sample synth has start param and uses sus param for duration
 choke param for play synth to choke one sound off when the next plays (eg hihats)
@@ -624,16 +629,21 @@ shadertoy synth support textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== things to test ====
-[], []tls, []e, []n, []r, var, player var, (), follow, overrides, complex durs, {offset,per,0:0}
+[], []tls, []e, []n, []r, var, player var, (), follow, overrides, complex durs, {offset,per,0:0}, delay, @e, @f
 ====
 ==== other ====
+@e on var fails if the expression being looked up itself contains a var lookup
+ Eg
+  vf glow follow s, loc={x:(this.add@e/8)-1/2,y:0,w:1/2,h:1/2}
+  s saw 0, dur=1/2, amp=1/4, add=[0:5]r{seed:0,per:8}+off
+  off=0
+  EG here, remove the "+off" and the glow moves correctly
 {per} should apply to ALL expressions by wrapping and mod-ing the count/beat to the per
  Eg [0,1,2]t1{per:16} , also []r{per:4} (ie without seed)
-{offset} to apply an offset to the time counts
- Eg [0,1,2,3]t4{offset:1}
 {0:0,1:1/4} to force overrides at given time values
  Eg []r{seed:0,per:4,0:0} to force output to zero at start of every per repeat , also [1:4]l8{0:0} etc
-[]e4 to start on the event but run for 4 beats irrespective of how long the event actually lasts
+[]w for random walk; eg [0:7]w random walk within 0 - 7 range; [0:7]w2{seed:1,per:8} etc
+Proper tests for follow and overrides and combinations, including tuples
 Follow player refactor
  Better follow tests
  Use stored events with a dependency
@@ -642,18 +652,22 @@ Follow player refactor
   complex durations (including random)
   delays
  Clean up any unnecessary gumpf around getEventsForBeatBase etc
-[0,1]n should randomly choose one of 0 or one then smooth between them, [0:1]n should pick random values between 0 and 1...
+{offset} to apply an offset to the time counts
+ Eg [0,1,2,3]t4{offset:1}
+{step} to apply a step to the counts
+ Eg [0:1000]l32{step:2} so the value onnly changes every 2 beats instead of snoothly
+[]e4 to start on the event but run for 4 beats irrespective of how long the event actually lasts
+ [0,1]n should randomly choose one of 0 or one then smooth between them, [0:1]n should pick random values between 0 and 1...
  In which case, rewrite it as the main random, but then smoothed
 All randoms including []r and []n should be deterministic
  Need to seed with enough variation; player and time?
  Per frame random should then be synchronised in follow player
-Proper tests for follow and overrides and combinations, including tuples
+? Presets?
 Complex durs
  overrides - need to apply overrides earlier? Should apply to delay overrides too
  tuples
  var lookup (& player var lookup)
 Swing param or pattern modifier
-[]w for random walk; eg [0:7]w random walk within 0 - 7 range; [0:7]w2{seed:1,per:8} etc
 Ignore rests . when setting event.idx (so that `0.1., amp=[1/2,1]` does as expected) - is that expected? It wouldnt be for dur..?
 Can var lookup take the interval from the var interval?
  Need two pass parse??
@@ -664,7 +678,7 @@ Can modify params; eg 'set bass amp += 1/2'
 ? Possible to additionally allow '=' as object key/value separator? Eg {r=1,g=2} etc ? Will this conflict with line/param parsing??
 Maybe optimise per frame garbage in eval-params and eval-operators
 Defining a name for every slider is too fiddly
- allow slider{} ?
+ allow slider{} - Slider with no name uses player.param or var name for slider name?
  or even some UI method for slidering a value??
  Need a way to read off the current value of a slider! - or indeed anything; either 'log' statement or '!' expresion modifier?
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
