@@ -23,13 +23,33 @@ define(function (require) {
     return vca
   }
 
+  let wave
+  let noiseWaveFft = () => {
+    if (!wave) {
+      let real = [0]
+      let imag = [0]
+      for (let i = 1; i < 256; i++) {
+        real.push(Math.random()/(1+i))
+        imag.push(0)
+      }
+      wave = system.audio.createPeriodicWave(new Float32Array(real), new Float32Array(imag))
+    }
+    return wave
+  }
+
   fm.op = (freq, params, wave) => {
-    let vco = system.audio.createOscillator()
-    vco.type = wave || 'sine';
-    vco.frequency.value = freq
-    vco.start(params._time)
-    vco.stop(params.endTime)
-    return vco
+    let vco
+    if (wave === 'noise') {
+      vco = system.audio.createOscillator()
+      vco.setPeriodicWave(noiseWaveFft())
+    } else {
+      vco = system.audio.createOscillator()
+      vco.type = wave || 'sine';
+      }
+      vco.frequency.value = freq
+      vco.start(params._time)
+      vco.stop(params.endTime)
+      return vco
   }
 
   fm.connect = (modulator, carrier, envelope) => {

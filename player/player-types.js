@@ -27,6 +27,7 @@ define((require) => {
   let saw = require('play/synth/saw')
   let square = require('play/synth/square')
   let pulse = require('play/synth/pulse')
+  let xylo = require('play/synth/xylo')
 
   let nullPlayer = { play: () => {}, stopped: true }
   let playerTypes = {
@@ -77,6 +78,7 @@ define((require) => {
     saw: { play: saw },
     square: { play: square },
     pulse: { play: pulse },
+    xylo: { play: xylo },
   }
 
   return playerTypes

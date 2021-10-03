@@ -331,12 +331,13 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>swell</code> Swell pad - triangle wave</p>
 <p><code>bell</code> FM generated bell</p>
 <p><code>glock</code> FM generated glockenspiel</p>
+<p><code>glass</code> fm glass synth with a chiming sound</p>
+<p><code>xylo</code> fm xylophone</p>
 <p><code>piano</code> Sampled piano</p>
 <p><code>ethereal</code> FM Ethereal pad</p>
 <p><code>dsine</code> Detuned sine pad - multiple sine waves slightly out of tune for a fuller sound</p>
 <p><code>noise</code> Noise pad. Note pattern value is not used; white noise is produced for all values (uses AudioWorklet so will use more audio render capacity than other synth types).</p>
 <p><code>prophet</code> Prophet style pulse wave with lfo controlled pulse-width (uses AudioWorklet so will use more audio render capacity than other synth types)</p>
-<p><code>glass</code> fm glass synth with a chiming sound</p>
 <p><code>supersaw</code> supersaw lead synth; 7 detuned saws</p>
 <p><code>external</code> take audio from microphone or line in. Use the <code>track</code> param to specify the track within the stream.</p>
 </div>
@@ -553,18 +554,16 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
-ring={wave:'sine',ring:32}  ;  chop={wave:'sine',chop:2}
- ??? Should it actually be ring=32{wave:'sine',mix:1/2}
- Make generic subparam or main param or default getter
+ring=32{wave:'sine'}  ;  chop=2{wave:'sine'}
 Function to get freq from scale eg ring=pitch{oct:3,degree:2,scale:minor}  ; defaults: oct:3, degree:0, scale:<current>
 save current note frequency onto event as this.freq
-Mix subparam for all effects, eg room={room:1,mix:1/2}  ; do not add any audio nodes if not specified
- Again; should be room=1{mix:1/2,0:0}
+Mix modifier for all effects, eg ring=32{mix:1/2}
+ Do not add any audio nodes if not specified
 Bug: chop doubles amplitude...
-Allow adding filters in the room/echo loops eg echo={echo:3/4,lpf:523} - but dont use existing filter handlers as must be per event only!
-Should also roll echofeedback into the object eg echo={echo:3/4,feedback: 0.85}
+Allow adding filters in the room/echo loops eg echo=3/4{lpf:523} - but dont use existing filter handlers as must be per event only!
+ Should also roll echofeedback into the object eg echo=3/4{feedback:0.85}
 Convert pwm and noise to webassembly, performance is terrible compared to native oscs
-Reverb gate: room={room:1,gate:1/4}
+Reverb gate: room=1{gate:1/4}
 Envelope follower? Pitch follower? for external synth
 Sine, tri synths
 Can specify media stream device
@@ -574,7 +573,6 @@ Can specify media stream device
 portamento
 Sample synth has start param and uses sus param for duration
 choke param for play synth to choke one sound off when the next plays (eg hihats)
-Xylophone synth - https://www.youtube.com/watch?v=dXo_493fEpU
 Env=reverse (slow attack / fast release)
 formant/vowel effects for vocal aaa/ooo/choir effects
 Is it possible to control rate per frame?
