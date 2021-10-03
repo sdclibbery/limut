@@ -154,7 +154,7 @@ define(function(require) {
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
           state.idx += 1
-          result = eventTimeVar(vs)
+          result = wrapMods(eventTimeVar(vs), parseMap(state))
           setInterval(result, parseInterval(state) || hoistInterval('frame', vs))
         } else { // Basic array: one value per pattern step
           result = eventIdxVar(vs)
@@ -959,6 +959,12 @@ define(function(require) {
   p = parseExpression("[0,1]s1{per:1}")
   assert(0, evalParamFrame(p,ev(0,0),0))
   assert(0, evalParamFrame(p,ev(1,1),1))
+
+  p = parseExpression("[0:1]e{per:1/2}")
+  e = { idx:0, count:0, countToTime:b=>b, _time:0, endTime:1 }
+  assert(0, p(e,0, evalParamFrame))
+  assert(1/4, p(e,1/4, evalParamFrame))
+  assert(1/4, p(e,3/4, evalParamFrame))
 
   console.log('Parse expression tests complete')
   }
