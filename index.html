@@ -636,13 +636,12 @@ shadertoy synth multiple channels
 ==== other ====
 {per} should apply to ALL expressions by wrapping and mod-ing the count/beat to the per
  apply to all expression types
- clean up per in randoms; should no longer be needed
  ?? Needs to modify event.beat.?? as well???
  ?? Anything else? Consider 'things to test list' :-)
  docs
 {0:0,1:1/4} to force overrides at given time values
  Eg []r{seed:0,per:4,0:0} to force output to zero at start of every per repeat , also [1:4]l8{0:0} etc
-[]r{per:4} (ie without seed) ??
+[]r{per:4} (ie without seed) ?? What should this do? Shouls it repeat? Or not??
 []w for random walk; eg [0:7]w random walk within 0 - 7 range; [0:7]w2{seed:1,per:8} etc; [0:7]w{step:2}
 Proper tests for follow and overrides and combinations, including tuples
 Follow player refactor

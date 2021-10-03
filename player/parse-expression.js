@@ -142,7 +142,7 @@ define(function(require) {
           let hold = number(state)
           let modifiers = parseMap(state)
           let interval = parseInterval(state) || hoistInterval('event', vs, modifiers)
-          result = parseRandom(vs, hold, modifiers, interval)
+          result = wrapMods(parseRandom(vs, hold, modifiers, interval), modifiers)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'n') { // simple noise
           state.idx += 1
@@ -150,7 +150,7 @@ define(function(require) {
           if (hold === undefined) { hold = 1 }
           let modifiers = parseMap(state)
           let interval = parseInterval(state) || hoistInterval('frame', modifiers)
-          result = simpleNoise(vs, hold, modifiers, interval)
+          result = wrapMods(simpleNoise(vs, hold, modifiers, interval), modifiers)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
           state.idx += 1

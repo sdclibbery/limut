@@ -55,14 +55,13 @@ define(function(require) {
     }
   }
 
-  let getGenerator = (config, interval) => {
+  let getGenerator = (modifiers, interval) => {
     let generator = () => Math.random()
-    if (config && config.seed !== undefined) {
+    if (modifiers && modifiers.seed !== undefined) {
       generator = (e,b,evalRecurse) => {
-        let per = evalParamFrame(config.per,e,b) || 4294967296
         let count = (interval !== 'frame') ? e.count : b
-        let seed = evalParamFrame(config.seed,e,b)
-        return xmur3((count % per) - seed) / 4294967296
+        let seed = evalParamFrame(modifiers.seed,e,b)
+        return xmur3(count - seed) / 4294967296
       }
     }
     return generator
@@ -81,16 +80,15 @@ define(function(require) {
       let r = f*(f-1.0)*((16.0*k-4.0)*f*(f-1.0)-1.0)
       return r
     }
-  let simpleNoise = (vs, period, config, interval) => {
+  let simpleNoise = (vs, period, modifiers, interval) => {
     let ps = Math.random()*10000
     let generator = (e,b,evalRecurse) => {
       return ((interval !== 'frame') ? e.count : b) + ps
     }
-    if (config && config.seed !== undefined) {
+    if (modifiers && modifiers.seed !== undefined) {
       generator = (e,b,evalRecurse) => {
-        let per = evalParamFrame(config.per,e,b) || 4294967296
         let count = (interval !== 'frame') ? e.count : b
-        let seed = (count % per) - evalParamFrame(config.seed,e,b)
+        let seed = count - evalParamFrame(modifiers.seed,e,b)
         return xmur3(seed) / 4294967296
       }
     }
@@ -110,12 +108,12 @@ define(function(require) {
     }
   }
 
-  let parseRandom = (vs, hold, config, interval) => {
+  let parseRandom = (vs, hold, modifiers, interval) => {
     if (hold) {
-      if (!config) { config = {} }
-      if (!config.seed) { config.seed = Math.random()*999999 } // Always use deterministic random for held randoms
+      if (!modifiers) { modifiers = {} }
+      if (!modifiers.seed) { modifiers.seed = Math.random()*999999 } // Always use deterministic random for held randoms
     }
-    let generator = getGenerator(config, interval)
+    let generator = getGenerator(modifiers, interval)
     let evaluator
     if (vs.length == 0) {
       evaluator = (e,b,evalRecurse) => evalRandomRanged(generator, 0, 1, e, b, evalRecurse)
@@ -213,22 +211,6 @@ define(function(require) {
     assert(0.08498840616084635, evalParam(p,ev(3),3))
     assert(0.8467781520448625, evalParam(p,ev(4),4))
 
-    // Reset seed on every per beat
-    p = parseRandom([], undefined, {seed:1,per:3})
-    assert(0.3853306171949953, evalParam(p,ev(0),0))
-    assert(0.8534541970584542, evalParam(p,ev(1),1))
-    assert(0.35433487710542977, evalParam(p,ev(2),2))
-    assert(0.35433487710542977, evalParam(p,ev(2),2))
-    assert(0.3853306171949953, evalParam(p,ev(3),3))
-    assert(0.3853306171949953, evalParam(p,ev(3),3))
-    assert(0.3853306171949953, evalParam(p,ev(3),3))
-    assert(0.8534541970584542, evalParam(p,ev(4),4))
-    assert(0.3853306171949953, evalParam(p,ev(6),6))
-
-    p = parseRandom([], undefined, {seed:()=>1,per:1})
-    assert(0.3853306171949953, evalParam(p,ev(0),0))
-    assert(0.3853306171949953, evalParam(p,ev(1),1))
-
     // Shifted sequence when bump seed
     p = parseRandom([], undefined, {seed:1})
     assert(0.3853306171949953, evalParam(p,ev(0),0))
@@ -246,10 +228,6 @@ define(function(require) {
 
     p = parseRandom([], undefined, {seed:-100})
     assertIsInRangeEveryTime(0,1, () => evalParam(p,ev(0),0))
-
-    p = parseRandom([], undefined, {seed:()=>1,per:()=>3})
-    assert(0.3853306171949953, evalParam(p,ev(0),0))
-    assert(0.3853306171949953, evalParam(p,ev(3),3))
 
     // []r should give a new value for each event
     let testEvent = ev(0,0)
@@ -269,14 +247,6 @@ define(function(require) {
     assert(0.8426829859122709, evalParam(p,ev(0),0))
     assert(0.9005707556884941, evalParam(p,ev(1/4),1/4))
     assert(0.5210828635247373, evalParam(p,ev(1),1))
-
-    // Reset seed on every reset'th beat
-    p = simpleNoise([], 1, {seed:1,per:3})
-    assert(0.8426829859122709, evalParam(p,ev(0),0))
-    assert(0.5210828635247373, evalParam(p,ev(1),1))
-    assert(0.7448183519247357, evalParam(p,ev(2),2))
-    assert(0.7448183519247357, evalParam(p,ev(2),2))
-    assert(0.8426829859122709, evalParam(p,ev(3),3))
 
     console.log('Eval random tests complete')
   }
