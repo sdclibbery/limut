@@ -129,13 +129,13 @@ define(function(require) {
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
           let interval = parseInterval(state) || hoistInterval('event', vs)
-          result = linearTimeVar(vs, ds, interval)
+          result = wrapMods(linearTimeVar(vs, ds, interval), parseMap(state))
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 's') { // smoothstep interpolated timevar
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
           let interval = parseInterval(state) || hoistInterval('event', vs)
-          result = smoothTimeVar(vs, ds, interval)
+          result = wrapMods(smoothTimeVar(vs, ds, interval), parseMap(state))
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'r') { // random
           state.idx += 1
@@ -949,6 +949,14 @@ define(function(require) {
   delete vars.green
 
   p = parseExpression("[0,1]t1{per:1}")
+  assert(0, evalParamFrame(p,ev(0,0),0))
+  assert(0, evalParamFrame(p,ev(1,1),1))
+
+  p = parseExpression("[0,1]l1{per:1}")
+  assert(0, evalParamFrame(p,ev(0,0),0))
+  assert(0, evalParamFrame(p,ev(1,1),1))
+
+  p = parseExpression("[0,1]s1{per:1}")
   assert(0, evalParamFrame(p,ev(0,0),0))
   assert(0, evalParamFrame(p,ev(1,1),1))
 
