@@ -171,11 +171,14 @@ define(function(require) {
         } else {
           result = vs.flat()
         }
+        parseMap(state) // support modifiers map but ignore it
+        parseInterval(state) // Ignore
         continue
       }
       // map (object)
       if (char == '{') {
         result = parseMap(state)
+        parseMap(state) // support modifiers map but ignore it
         parseInterval(state) // Ignore
         continue
       }
@@ -201,25 +204,25 @@ define(function(require) {
       // number
       let n = number(state)
       if (n !== undefined) {
-        result = n
+        result = wrapMods(n, parseMap(state))
         continue
       }
       // string
       if (char == '\'') {
         state.idx += 1
-        result = parseString(state)
+        result = wrapMods(parseString(state), parseMap(state))
         continue
       }
       // colour
       if (char == '#') {
         state.idx += 1
-        result = parseColour(state)
+        result = wrapMods(parseColour(state), parseMap(state))
         continue
       }
       // vars
       let v = varLookup(state)
       if (v !== undefined) {
-        result = v
+        result = wrapMods(v, parseMap(state))
         if (typeof result === 'function') {
           result.interval = parseInterval(state) || 'frame'
         }
@@ -969,6 +972,27 @@ define(function(require) {
   p = parseExpression("[0,1]{per:1}")
   assert(0, evalParamFrame(p,ev(0,0),0))
   assert(1, evalParamFrame(p,ev(1,1),1)) // idx not affected by per
+
+  p = parseExpression('(1,2){per:1}')
+  assert([1,2], p)
+
+  p = parseExpression('{foo:2}{per:1}')
+  assert({foo:2}, p)
+
+  p = parseExpression('5{per:1}')
+  assert(5, evalParamFrame(p,ev(0,0),0))
+
+  p = parseExpression("'foo'{per:1}")
+  assert('foo', evalParamFrame(p,ev(0,0),0))
+
+  p = parseExpression('#ffff{per:1}')
+  assert({r:1,g:1,b:1,a:1}, evalParamFrame(p,ev(0,0),0))
+
+  p = parseExpression('foo{per:1}')
+  vars.foo = parseExpression('[0,1]t1')
+  assert(0, evalParamFrame(p,ev(0,0),0))
+  assert(0, evalParamFrame(p,ev(1,1),1))
+  delete vars.foo
 
   console.log('Parse expression tests complete')
   }
