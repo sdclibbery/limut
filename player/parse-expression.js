@@ -9,6 +9,7 @@ define(function(require) {
   let {parseRandom, simpleNoise} = require('player/eval-randoms')
   let varLookup = require('player/parse-var')
   let combineIntervals = require('player/intervals').combine
+  let wrapMods = require('player/time-modifiers').wrap
 
   let numberOrArrayOrFour = (state) => {
     let n = number(state)
@@ -122,7 +123,7 @@ define(function(require) {
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
           let interval = parseInterval(state) || hoistInterval('event', vs)
-          result = timeVar(vs, ds, interval)
+          result = wrapMods(timeVar(vs, ds, interval), parseMap(state))
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'l') { // linearly interpolated timevar
           state.idx += 1
@@ -139,17 +140,17 @@ define(function(require) {
         } else if (state.str.charAt(state.idx).toLowerCase() == 'r') { // random
           state.idx += 1
           let hold = number(state)
-          let config = parseMap(state)
-          let interval = parseInterval(state) || hoistInterval('event', vs, config)
-          result = parseRandom(vs, hold, config, interval)
+          let modifiers = parseMap(state)
+          let interval = parseInterval(state) || hoistInterval('event', vs, modifiers)
+          result = parseRandom(vs, hold, modifiers, interval)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'n') { // simple noise
           state.idx += 1
           let hold = number(state)
           if (hold === undefined) { hold = 1 }
-          let config = parseMap(state)
-          let interval = parseInterval(state) || hoistInterval('frame', config)
-          result = simpleNoise(vs, hold, config, interval)
+          let modifiers = parseMap(state)
+          let interval = parseInterval(state) || hoistInterval('frame', modifiers)
+          result = simpleNoise(vs, hold, modifiers, interval)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
           state.idx += 1
@@ -946,6 +947,10 @@ define(function(require) {
   assert({g:1}, evalParamFrame(p,ev(1,1),1))
   delete vars.red
   delete vars.green
+
+  p = parseExpression("[0,1]t1{per:1}")
+  assert(0, evalParamFrame(p,ev(0,0),0))
+  assert(0, evalParamFrame(p,ev(1,1),1))
 
   console.log('Parse expression tests complete')
   }
