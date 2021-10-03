@@ -157,7 +157,7 @@ define(function(require) {
           result = wrapMods(eventTimeVar(vs), parseMap(state))
           setInterval(result, parseInterval(state) || hoistInterval('frame', vs))
         } else { // Basic array: one value per pattern step
-          result = eventIdxVar(vs)
+          result = wrapMods(eventIdxVar(vs), parseMap(state))
           result.interval = 'event' // Only makes sense to be per event
           parseInterval(state) // Ignore this
         }
@@ -965,6 +965,10 @@ define(function(require) {
   assert(0, p(e,0, evalParamFrame))
   assert(1/4, p(e,1/4, evalParamFrame))
   assert(1/4, p(e,3/4, evalParamFrame))
+
+  p = parseExpression("[0,1]{per:1}")
+  assert(0, evalParamFrame(p,ev(0,0),0))
+  assert(1, evalParamFrame(p,ev(1,1),1)) // idx not affected by per
 
   console.log('Parse expression tests complete')
   }
