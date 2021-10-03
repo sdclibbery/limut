@@ -8,7 +8,7 @@ define(function(require) {
               let per = evalRecurse(modifiers.per, ev,b,evalRecurse)
               let originalCount = ev.count
               ev.count = ev.count % per
-              let result = evalRecurse(exp, ev,b % per,evalRecurse)
+              let result = evalRecurse(exp, ev,b%per,evalRecurse)
               ev.count = originalCount
               return result
           }

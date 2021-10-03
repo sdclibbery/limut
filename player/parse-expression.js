@@ -7,7 +7,7 @@ define(function(require) {
   let operatorTree = require('player/parse-operator')
   let {timeVar, linearTimeVar, smoothTimeVar, eventTimeVar, eventIdxVar} = require('player/eval-timevars')
   let {parseRandom, simpleNoise} = require('player/eval-randoms')
-  let varLookup = require('player/parse-var')
+  let {parseVar,varLookup} = require('player/parse-var')
   let combineIntervals = require('player/intervals').combine
   let wrapMods = require('player/time-modifiers').wrap
 
@@ -122,20 +122,23 @@ define(function(require) {
         if (state.str.charAt(state.idx).toLowerCase() == 't') { // timevar; values per time interval
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
+          let modifiers = parseMap(state)
           let interval = parseInterval(state) || hoistInterval('event', vs)
-          result = wrapMods(timeVar(vs, ds, interval), parseMap(state))
+          result = wrapMods(timeVar(vs, ds, interval), modifiers)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'l') { // linearly interpolated timevar
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
+          let modifiers = parseMap(state)
           let interval = parseInterval(state) || hoistInterval('event', vs)
-          result = wrapMods(linearTimeVar(vs, ds, interval), parseMap(state))
+          result = wrapMods(linearTimeVar(vs, ds, interval), modifiers)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 's') { // smoothstep interpolated timevar
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
+          let modifiers = parseMap(state)
           let interval = parseInterval(state) || hoistInterval('event', vs)
-          result = wrapMods(smoothTimeVar(vs, ds, interval), parseMap(state))
+          result = wrapMods(smoothTimeVar(vs, ds, interval), modifiers)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'r') { // random
           state.idx += 1
@@ -220,9 +223,11 @@ define(function(require) {
         continue
       }
       // vars
-      let v = varLookup(state)
+      let parsed = parseVar(state)
+      let modifiers = parseMap(state)
+      let v = varLookup(parsed, state.dependsOn, modifiers)
       if (v !== undefined) {
-        result = wrapMods(v, parseMap(state))
+        result = wrapMods(v, modifiers)
         if (typeof result === 'function') {
           result.interval = parseInterval(state) || 'frame'
         }
@@ -840,18 +845,22 @@ define(function(require) {
   assert(0, parseExpression('-1^1/2'))
 
   vars.foo = () => 5
+  vars.foo.isVarFunction = true
   assert(5, parseExpression('foo{}'))
   delete vars.foo
 
   vars.foo = ({val}) => val
+  vars.foo.isVarFunction = true
   assert(5, parseExpression('foo{val:5}'))
   delete vars.foo
 
   vars.foo = () => 5
+  vars.foo.isVarFunction = true
   assert(7, parseExpression('foo{}+2'))
   delete vars.foo
 
   vars.foo = ({val}) => val
+  vars.foo.isVarFunction = true
   assert(6, parseExpression('  foo  {  x:3, val : 6 }  '))
   delete vars.foo
 
@@ -988,8 +997,8 @@ define(function(require) {
   p = parseExpression('#ffff{per:1}')
   assert({r:1,g:1,b:1,a:1}, evalParamFrame(p,ev(0,0),0))
 
-  p = parseExpression('foo{per:1}')
   vars.foo = parseExpression('[0,1]t1')
+  p = parseExpression('foo{per:1}')
   assert(0, evalParamFrame(p,ev(0,0),0))
   assert(0, evalParamFrame(p,ev(1,1),1))
   delete vars.foo

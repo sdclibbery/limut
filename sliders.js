@@ -67,6 +67,7 @@ define(function(require) {
     }
   }
 
+  newSlider.isVarFunction = true
   vars['slider'] = newSlider
   return {
     gc_reset: gc_reset,
