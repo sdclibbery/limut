@@ -714,3 +714,16 @@ sam sample -3, sample=scratch, amp=2, high=4, drive=1/4
 // ba pulse 00.00.0., dur=1/4, lpf=[400:[1200:2500]l8]r{seed:10+[0,99]t[12,4]+[0,1]t8,per:4}*[1:1/2]e, lpr=[25:40]l8, oct=2//, add=[-7:7]n4
 
 
+foo=[-1:1]l1@f
+v2 glow 0, loc={x:[-1:1]l[1,0]@f,y:foo{per:1/2}}
+
+v2 glow 0, loc={x:[-1:1]l[1,0]@f,y:slider{name:'foo'}}
+
+
+v glow 0, loc={x:[-1:1]l[1,0]@f,y:this.foo{per:1/4}}, foo=[-1:1]l1@f
+
+v glow 0, fade=0, amp=1
+set v amp=[0:5]l4{per:1/2}@f
+
+
+
