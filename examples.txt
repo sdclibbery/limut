@@ -725,5 +725,14 @@ v glow 0, loc={x:[-1:1]l[1,0]@f,y:this.foo{per:1/4}}, foo=[-1:1]l1@f
 v glow 0, fade=0, amp=1
 set v amp=[0:5]l4{per:1/2}@f
 
-
-
+bpm=97
+main.amp=3/2
+scale=minor
+ocean shadertoy 0, id='3scfD7', rate=1/12, fore=[#baff:#abff]l32@f
+prog=[0,-3,1,-2]t16
+waves noise 00, dur=[9,7], envelope=simple, bpf=523*[[1:5]e,[1:1/5]e]*[1:[1.1,1.25]]n1, att=[2,1/4], rel=[9,7], pan=(-1,0,1), amp=1/2
+seagull dsaw 0., dur=[5:15]r, addc=[2,0]e, envelope=simple, att=0.1, rel=[0.4:0.6]r, oct=6, pan=[-1:1]n8, amp=[0.2:0.7]n8, room=1, add=prog
+shaker play ss+ss+s+, room=2, amp=1/2*[]n16*[]n1, rate=3/4, echo=1, pan=[-3/4:3/4]l8+[-1/4:1/4]n2
+pads ethereal (012), dur=4, room=2, oct=(3,4), amp=[1/8:1/3]r, pan=[-2/3:2/3]r, add=prog
+xylo xylo [0<.-1>]2[04]., room, pan=[-1/2:0]r, amp=1.1, add=prog
+glass glass 10_....4, room, pan=[0:1/2]r, add=prog
