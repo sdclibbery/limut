@@ -3,11 +3,21 @@ define(function(require) {
 
   let wrapWithModifiers = (exp, modifiers) => {
       if (!modifiers) { return exp }
+      let overrides = new Map()
+      for (const [key, value] of Object.entries(modifiers)) {
+          let n = parseFloat(key)
+          if (!Number.isNaN(n)) {
+              overrides.set(n, value)
+          }
+      }
       if (modifiers.per) {
           return (ev,b,evalRecurse) => {
               let per = evalRecurse(modifiers.per, ev,b,evalRecurse)
+              let modCount = ev.count % per
+              let override = overrides.get(modCount)
+              if (override !== undefined) { return override }
               let originalCount = ev.count
-              ev.count = ev.count % per
+              ev.count = modCount
               let result = evalRecurse(exp, ev,b%per,evalRecurse)
               ev.count = originalCount
               return result
@@ -54,6 +64,12 @@ define(function(require) {
     assert(0, evalParamFrame(w,ev(0,0),0))
     assert(0, w({count:1},1,evalParamFrame))
     assert(0, evalParamFrame(w,ev(1,1),1))
+
+    w = wrapWithModifiers((e,b,er) => b, {per:2,"0":7})
+    assert(7, evalParamFrame(w,ev(0,0),0))
+    assert(1, evalParamFrame(w,ev(1,1),1))
+    assert(7, evalParamFrame(w,ev(2,2),2))
+    assert(1, evalParamFrame(w,ev(3,3),3))
 
     console.log('Time modifiers tests complete')
   }

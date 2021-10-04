@@ -1003,6 +1003,12 @@ define(function(require) {
   assert(0, evalParamFrame(p,ev(1,1),1))
   delete vars.foo
 
+  p = parseExpression('5{per:2,0:1}')
+  assert(1, evalParamFrame(p,ev(0,0),0))
+  assert(5, evalParamFrame(p,ev(1,1),1))
+  assert(1, evalParamFrame(p,ev(2,2),2))
+  assert(5, evalParamFrame(p,ev(3,3),3))
+
   console.log('Parse expression tests complete')
   }
   
