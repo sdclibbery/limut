@@ -639,7 +639,6 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 {0:0,1:1/4} to force overrides at given time values
- Should it be using ev.count? Or b? Or both?? - think ev.count is OK, because the overrides are instantaneous
  And eval value
  Use parse number to allow fractions
  docs!!! note, requires per
@@ -662,6 +661,7 @@ Follow player refactor
 []e4 to start on the event but run for 4 beats irrespective of how long the event actually lasts
  [0,1]n should randomly choose one of 0 or one then smooth between them, [0:1]n should pick random values between 0 and 1...
  In which case, rewrite it as the main random, but then smoothed
+Support range overrides? Eg add=[0,1]l2{per:4,0-1:0}
 Complex durations cause beat drift ?? Round pattern count to smallest possible duration? Eg [1/2,1/3]r rounds to nearest 1/6
 []w for random walk; eg [0:7]w random walk within 0 - 7 range; [0:7]w2{seed:1,per:8} etc; [0:7]w{step:2}
 All randoms including []r and []n should be deterministic

@@ -14,7 +14,7 @@ define(function(require) {
           return (ev,b,evalRecurse) => {
               let per = evalRecurse(modifiers.per, ev,b,evalRecurse)
               let modCount = ev.count % per // Use event.count for overrides as overrides are essentially instantaneous
-              let override = overrides.get(modCount)
+              let override = overrides.get(Math.round(modCount*16384)/16384)
               if (override !== undefined) { return override }
               let originalCount = ev.count
               ev.count = modCount
@@ -67,6 +67,7 @@ define(function(require) {
 
     w = wrapWithModifiers((e,b,er) => b, {per:2,"0":7})
     assert(7, evalParamFrame(w,ev(0,0),0))
+    assert(7, evalParamFrame(w,ev(0,0.00001),0.00001))
     assert(1, evalParamFrame(w,ev(0,1),1))
     assert(7, evalParamFrame(w,ev(0,2),2))
     assert(1, evalParamFrame(w,ev(0,3),3))
