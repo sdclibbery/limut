@@ -15,7 +15,7 @@ define(function(require) {
               let per = evalRecurse(modifiers.per, ev,b,evalRecurse)
               let modCount = ev.count % per // Use event.count for overrides as overrides are essentially instantaneous
               let override = overrides.get(Math.round(modCount*16384)/16384)
-              if (override !== undefined) { return override }
+              if (override !== undefined) { return evalRecurse(override, ev,b,evalRecurse) }
               let originalCount = ev.count
               ev.count = modCount
               let result = evalRecurse(exp, ev, b%per, evalRecurse)
@@ -73,6 +73,10 @@ define(function(require) {
     assert(1, evalParamFrame(w,ev(0,3),3))
     assert(7, evalParamFrame(w,ev(0,2362313525416110),2362313525416110))
     assert(1, evalParamFrame(w,ev(0,2362313525416111),2362313525416111))
+
+    w = wrapWithModifiers((e,b,er) => b, {per:2,"0":()=>7})
+    assert(7, evalParamFrame(w,ev(0,0),0))
+    assert(1, evalParamFrame(w,ev(1,1),1))
 
     console.log('Time modifiers tests complete')
   }
