@@ -1,12 +1,14 @@
 'use strict';
 define(function(require) {
+  let number = require('player/parse-number')
 
   let wrapWithModifiers = (exp, modifiers) => {
       if (!modifiers) { return exp }
       let overrides = new Map()
       for (const [key, value] of Object.entries(modifiers)) {
-          let n = parseFloat(key)
-          if (!Number.isNaN(n)) {
+        let state = { str: key, idx: 0, }
+          let n = number(state)
+          if (n !== undefined) {
               overrides.set(n, value)
           }
       }
@@ -33,7 +35,7 @@ define(function(require) {
       if (expected !== actual) { console.trace(`Assertion failed ${msg}.\n>>Expected equal:\n  ${expected}\n>>Actual:\n  ${actual}`) }
     }
     let f, w
-    let ev = (i,c,d) => {return{idx:i,count:c,dur:d}}
+    let ev = (c,d) => {return{idx:0,count:c,dur:d}}
     let {evalParamFrame,evalParamEvent} = require('player/eval-param')
     
     assert(0, wrapWithModifiers(0))
@@ -43,40 +45,44 @@ define(function(require) {
     assert(f, wrapWithModifiers(f, {}))
 
     w = wrapWithModifiers((e,b,er) => b)
-    assert(0, evalParamFrame(w,ev(0,0),0))
-    assert(1, evalParamFrame(w,ev(1,1),1))
+    assert(0, evalParamFrame(w,ev(0),0))
+    assert(1, evalParamFrame(w,ev(1),1))
 
     w = wrapWithModifiers((e,b,er) => b, {})
-    assert(0, evalParamFrame(w,ev(0,0),0))
-    assert(1, evalParamFrame(w,ev(1,1),1))
+    assert(0, evalParamFrame(w,ev(0),0))
+    assert(1, evalParamFrame(w,ev(1),1))
 
     w = wrapWithModifiers((e,b,er) => b, {per:1})
-    assert(0, evalParamFrame(w,ev(0,0),0))
+    assert(0, evalParamFrame(w,ev(0),0))
     assert(0, w({count:1},1,evalParamFrame))
-    assert(0, evalParamFrame(w,ev(1,1),1))
+    assert(0, evalParamFrame(w,ev(1),1))
 
     w = wrapWithModifiers(({count},b,er) => count, {per:1})
-    assert(0, evalParamFrame(w,ev(0,0),0))
+    assert(0, evalParamFrame(w,ev(0),0))
     assert(0, w({count:1},1,evalParamFrame))
-    assert(0, evalParamFrame(w,ev(1,1),1))
+    assert(0, evalParamFrame(w,ev(1),1))
 
     w = wrapWithModifiers((e,b,er) => b, {per:()=>1})
-    assert(0, evalParamFrame(w,ev(0,0),0))
+    assert(0, evalParamFrame(w,ev(0),0))
     assert(0, w({count:1},1,evalParamFrame))
-    assert(0, evalParamFrame(w,ev(1,1),1))
+    assert(0, evalParamFrame(w,ev(1),1))
 
     w = wrapWithModifiers((e,b,er) => b, {per:2,"0":7})
-    assert(7, evalParamFrame(w,ev(0,0),0))
-    assert(7, evalParamFrame(w,ev(0,0.00001),0.00001))
-    assert(1, evalParamFrame(w,ev(0,1),1))
-    assert(7, evalParamFrame(w,ev(0,2),2))
-    assert(1, evalParamFrame(w,ev(0,3),3))
-    assert(7, evalParamFrame(w,ev(0,2362313525416110),2362313525416110))
-    assert(1, evalParamFrame(w,ev(0,2362313525416111),2362313525416111))
+    assert(7, evalParamFrame(w,ev(0),0))
+    assert(7, evalParamFrame(w,ev(0.00001),0.00001))
+    assert(1, evalParamFrame(w,ev(1),1))
+    assert(7, evalParamFrame(w,ev(2),2))
+    assert(1, evalParamFrame(w,ev(3),3))
+    assert(7, evalParamFrame(w,ev(2362313525416110),2362313525416110))
+    assert(1, evalParamFrame(w,ev(2362313525416111),2362313525416111))
 
     w = wrapWithModifiers((e,b,er) => b, {per:2,"0":()=>7})
-    assert(7, evalParamFrame(w,ev(0,0),0))
-    assert(1, evalParamFrame(w,ev(1,1),1))
+    assert(7, evalParamFrame(w,ev(0),0))
+    assert(1, evalParamFrame(w,ev(1),1))
+
+    w = wrapWithModifiers((e,b,er) => b, {per:1,"1/2":()=>7})
+    assert(0, evalParamFrame(w,ev(0),0))
+    assert(7, evalParamFrame(w,ev(1/2),1/2))
 
     console.log('Time modifiers tests complete')
   }
