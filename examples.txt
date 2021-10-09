@@ -736,3 +736,24 @@ shaker play ss+ss+s+, room=2, amp=1/2*[]n16*[]n1, rate=3/4, echo=1, pan=[-3/4:3/
 pads ethereal (012), dur=4, room=2, oct=(3,4), amp=[1/8:1/3]r, pan=[-2/3:2/3]r, add=prog
 xylo xylo [0<.-1>]2[04]., room, pan=[-1/2:0]r, amp=1.1, add=prog
 glass glass 10_....4, room, pan=[0:1/2]r, add=prog
+
+
+bpm=64
+root=4 // E
+city image 0, url='https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Guatemala_City_at_Night.JPG/2560px-Guatemala_City_at_Night.JPG', zoom=[0.85:2]l192@f, fore=#aaaf
+room swirl follow beep, monochrome, add=0, back=#234f, fore=#bcea, sus=1, rate=1/8
+fireball shadertoy follow boom, id='XtVyDz', additive, loc={x:0.2+0.05*[-1:1]r*[1/2:3/2]e,y:-0.1+0.05*[-1:1]r+[0:1/4]e,w:[1/4:1/2]r,h:[1/4:1/2]r}*1.6, vignette=2, time=[1/8,2/3,1/2]e, fade, sus=3, fore=#222f
+spinner glow follow whoosh, loc={x:[7/8:8/7]r,y:-2/3,w:1,h:1}*[1:0]e, fade, fore=#430f, sus=2
+rum noise 0, dur=[1/2:1]r, envelope=pad, lpf=[40:70]n4, room=2, amp=5, echo=1/2
+shh noise 0, dur=8, amp=0.3*[1/16:1/12]n3, lpf=[800:1200]n4, pan=(-1,1), room
+pad dsaw (024), dur=4, chorus, room=2, envelope=pad, oct=5, addc=wow/2, amp=1/16
+// bass saw 0., dur=[[2,3]r,8], oct=2, att=1/2, rel=3, room=2, amp=3*[1/7:1/4]r, addc=wow
+// boom play [(vx)(vX)(VXM)(VXM#)].., room=2, echo=(0.465,0.53426), amp=2/3, rate=(1/4,1)
+// whoosh dsaw (047).., dur=1/2, detune=0.432, chorus, envelope=simple, att=1/2, rel=3, lpf=[3000,300]e, hpf=[400,0]e, oct=(2,3), amp=2/4, room=2, noisify=1/2, addc=[1,0]e
+// mel1 saw 0vvvvv___1v-2__-3___...., addc=0.04*(-1,1)+wow/4, amp=0.6
+// mel2 saw 0___13__[21]2__...., addc=0.04*(-1,1)+wow/4, amp=0.6
+// mel3 saw 4___53#__13__7vvv___, addc=0.04*(-1,1)+wow/4+[0,0,-3,-8,-16]e*0{12:1,per:16}, amp=[0.6]l@f*1{12:[1,0]e,per:64}
+// twinkle glock 0, dur=1/4, echo=3/8, amp=[0,1/32]r, add=[-2,-2,0,2]r, oct=7
+// beep ping 2., dur=1/2, envelope=full, att=0, rel=0.1, room=1.2, oct=3, lpf=700, amp=1/10, addc=wow/2+[0,0,0,-2,-2]e, add=(0,7)
+// set [shh,pad] amp=1/32
+set [mel1,mel2,mel3] vib=2, vibdepth=0.1, lpf=[800,2000,700,400]e, room=1, rel=3/2, att=2/3, pan=[-1/4:1/4]n
