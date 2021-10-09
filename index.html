@@ -270,16 +270,19 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 </div>
 <h4 onclick="toggleAccordion('accordion-value-syntax')">▶ Value Syntax</h4>
 <div id="accordion-value-syntax" class="closed">
+<p>Basic structure <code>value{modifiers}@interval</code></p>
+<p><code>value</code> Actual value; see below</p>
+<p><code>{modifiers}</code> Map of modifiers. Modifiers may modify the time passed to the value expression, or the value it returns, or provide additional data for a parameter. For example, <code>[1,2,3]t1{0:0,per:8}</code> will give a sequence that repeats every 8 beats, forced to the value 0 at the start of each repeat.</p>
+<p><code>@interval</code> Intervals specify how often the value should be evaluated, for example once per event (then the same value through the event), or continuously varying.</p>
+<h5>Values:</h5>
 <p><code>1</code> Single, constant value</p>
 <p><code></code> No value: set param to <code>1</code>. Eg <code>monochrome</code> is the same as <code>monochrome=1</code></p>
 <p><code>(1,2)</code> Multiple values, all played together</p>
 <p><code>[1,2]</code> Sequence of values, one per event in the pattern; for single length patterns only, all values will be expanded, so <code>p ping 0, add=[0,1,2]</code> will cycle through all three values.</p>
 <p><code>[1,2]t3</code> Timed sequence, each value lasts for 3 beats</p>
 <p><code>[1,2]t[12,4]</code> Timed sequence with one timing per value</p>
-<p><code>[0,1,2]t1{per:8}</code> Timed sequence of three values, each lasting one beat; the sequence repeats every 8 beats</p>
 <p><code>[1,2]l3</code> Timed linear interpolated sequence, each value takes 3 beats to change into the next</p>
 <p><code>[1,2]l[14,2]</code> Timed linear interpolated sequence, one timing per value</p>
-<p><code>[0:7]l4{per:2}</code> Timed linear interpolated sequence, taking four beats; the sequence repeats every 2 beats, so it plays the first two beats of the sequence repeatedly</p>
 <p><code>[1,2]s3</code> Timed smooth interpolated sequence, each value takes 3 beats to change into the next, using an 's' shaped eas in/out curve</p>
 <p><code>[1,2]s[14,2]</code> Timed smooth interpolated sequence, one timing per value</p>
 <p><code>[1,2]e</code> Timed smooth interpolated sequence, each value is evenly spaced from beginning to end of the current event</p>
@@ -312,8 +315,12 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>p1.amp</code> Lookup the value of param <code>amp</code> from player <code>p1</code>. Uses the param from the most recently played event on that player. Can additionally use a <code>pulse</code> param on the player, which pulses from 0 to 1 as events play on that player.</p>
 <p><code>p1.amp[0]</code> Lookup a global var named <code>foo</code>, and if it contains a tuple, extract the first element only from it.</p>
 <p><code>this.value</code> Get param <code>value</code> from the current event.</p>
-<p><code>@f</code> Place <code>@f</code> immediately after a value to evaluate it per frame (60 times a second). For example <code>lpf=[300:3000]l8@f</code> will update the lpf cutoff frequency continuously, while <code>lpf=[300:3000]l8</code> will be evaluated only once for each event played.</p>
-<p><code>@e</code> Place <code>@e</code> immediately after a value to evaluate only once per event.</p>
+<h5>Modifiers:</h5>
+<p><code>{per:8}</code> Repeat a sequence <code>[1,2,3]t1{per:8}</code> will give a sequence that repeats every 8 beats.</p>
+<p><code>{per:8,0:7,2:3}</code> Force the value to evaluate to 7 at the start of each repeat, and 3 on the second beat of every repeat.</p>
+<h5>Intervals:</h5>
+<p><code>@e</code> Use <code>@e</code> to evaluate this value once per event</p>
+<p><code>@f</code> Use <code>@f</code> to evaluate once per frame (60 times a second). For example <code>lpf=[300:3000]l8@f</code> will update the lpf cutoff frequency continuously, while <code>lpf=[300:3000]l8</code> will be evaluated only once for each event played.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-audio-synths')">▶ Audio Synths</h4>
 <div id="accordion-audio-synths" class="closed">
@@ -639,6 +646,9 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 {0:0,1:1/4} to force overrides at given time values
+ player var lookup with per doesnt work, eg:
+  v1 glow 0, fore=#100f, foo=[-1:1]l1@f, fade=0
+  v2 glow 2, fade=0, amp=v1.foo{per:1/2}
  docs!!! note, requires per
 Per can default to repeat of thing being modified?
  Eg [0:1]l4{0:0} per defaults to 8?
