@@ -317,7 +317,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>this.value</code> Get param <code>value</code> from the current event.</p>
 <h5>Modifiers:</h5>
 <p><code>{per:8}</code> Repeat a sequence <code>[1,2,3]t1{per:8}</code> will give a sequence that repeats every 8 beats.</p>
-<p><code>{per:8,0:7,2:3}</code> Force the value to evaluate to 7 at the start of each repeat, and 3 on the second beat of every repeat.</p>
+<p><code>{per:8,0:7,2:3}</code> Force the value to evaluate to 7 at the start of each repeat, and 3 on the second beat of every repeat. Note this only works if <code>per</code> is used to make a repeating sequence.</p>
 <h5>Intervals:</h5>
 <p><code>@e</code> Use <code>@e</code> to evaluate this value once per event</p>
 <p><code>@f</code> Use <code>@f</code> to evaluate once per frame (60 times a second). For example <code>lpf=[300:3000]l8@f</code> will update the lpf cutoff frequency continuously, while <code>lpf=[300:3000]l8</code> will be evaluated only once for each event played.</p>
@@ -645,11 +645,6 @@ shadertoy synth multiple channels
 [], []tls, []e, []n, []r, var, player var, (), follow, overrides, complex durs, {offset,per,0:0}, delay, @e, @f
 ====
 ==== other ====
-{0:0,1:1/4} to force overrides at given time values
- player var lookup with per doesnt work, eg:
-  v1 glow 0, fore=#100f, foo=[-1:1]l1@f, fade=0
-  v2 glow 2, fade=0, amp=v1.foo{per:1/2}
- docs!!! note, requires per
 Per can default to repeat of thing being modified?
  Eg [0:1]l4{0:0} per defaults to 8?
 Could use a syntax error on `set v.amp=0` (should be `set v amp=0`)

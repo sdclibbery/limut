@@ -43,7 +43,8 @@ define(function(require) {
       if (param) {
         let player = players.instances[playerId]
         if (player) {
-          let es = player.currentEvent(event, b)
+          let realB = event._realB === undefined ? b : event._realB
+          let es = player.currentEvent(realB)
           v = es.map(e => e[param])
         } else if (playerId === 'this') {
           v = event[param]
@@ -106,7 +107,7 @@ define(function(require) {
   assert('bar', p({},0,(v)=>v))
   delete vars.foo
 
-  players.instances.p1 = { currentEvent:(e,b)=>{ return [{foo:b}]} }
+  players.instances.p1 = { currentEvent:(b)=>{ return [{foo:b}]} }
   p = varLookup(parseVar({str:'p1.foo',idx:0}), [])
   assert(0, p({},0,(v)=>v))
   assert(2, p({beat:2},2,(v)=>v))
@@ -167,7 +168,7 @@ define(function(require) {
   assert(2, p(ev(0),0,evalParamFrame))
   delete vars.foo
 
-  players.instances.p1 = { currentEvent:(e,b)=>{ return [{foo:[2,3]}]} }
+  players.instances.p1 = { currentEvent:(b)=>{ return [{foo:[2,3]}]} }
   p = varLookup(parseVar({str:'p1.foo[0]',idx:0,expression:parseNumber}), [])
   assert(2, p(ev(0),0,evalParamFrame))
   delete players.instances.p1

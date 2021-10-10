@@ -75,7 +75,7 @@ define((require) => {
           type: playerType,
           dependsOn: [],
         }
-        player.currentEvent = (ev,b) => {
+        player.currentEvent = (b) => {
           let es = player.events
           if (!es) { return [] }
           es = es.filter(e => {
@@ -128,7 +128,7 @@ define((require) => {
     catch (e) { if (e.includes(expected)) {got=true} else {console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: ${e}`)} }
     finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
   }
-  let p,e
+  let p,e,p1,p2
   playerTypes.test = { play: (e) => {
     e.endTime = e._time + e.dur
     return {}
@@ -156,15 +156,15 @@ define((require) => {
 
   p = parsePlayer('p test x(op), dur=1/2')
   p.play(p.getEventsForBeat({time:0, count:0, duration:1}))
-  assert('x', p.currentEvent(0,0)[0].value)
-  assert('o', p.currentEvent(0,1/2)[0].value)
-  assert('p', p.currentEvent(0,1/2)[1].value)
-  assert(0, p.currentEvent(0,0)[0].pulse(0,0))
-  assert(0.77, p.currentEvent(0,0)[0].pulse(0,1/4))
+  assert('x', p.currentEvent(0)[0].value)
+  assert('o', p.currentEvent(1/2)[0].value)
+  assert('p', p.currentEvent(1/2)[1].value)
+  assert(0, p.currentEvent(0)[0].pulse(0,0))
+  assert(0.77, p.currentEvent(0)[0].pulse(0,1/4))
 
   p = parsePlayer('p test 0, amp=2')
   p.play(p.getEventsForBeat({time:0, count:0, duration:1}))
-  assert(2, p.currentEvent(0,0)[0].amp)
+  assert(2, p.currentEvent(0)[0].amp)
   
   p = parsePlayer('p play xo,// amp=2')
   assert(undefined, p.getEventsForBeat({count:0})[0].amp)
@@ -198,6 +198,24 @@ define((require) => {
   assert(2, evalParamFrame(p.getEventsForBeat({count:1/2})[1].amp,ev(0,0),0))
   assert(2, evalParamFrame(p.getEventsForBeat({count:1})[0].amp,ev(0,0),0))
   assert(3, evalParamFrame(p.getEventsForBeat({count:1})[1].amp,ev(0,0),0))
+
+  p1 = parsePlayer('p1 kal 0, foo=[1:2]l1')
+  players.instances.p1 = p1
+  p2 = parsePlayer('p2 kal 0, bar=p1.foo')
+  p1.play(p1.getEventsForBeat({count:10,duration:1,time:10}),{count:10})
+  assert(1, evalParamFrame(p2.getEventsForBeat({count:10})[0].bar,ev(10,10),10))
+  p1.play(p1.getEventsForBeat({count:11,duration:1,time:11}),{count:11})
+  assert(2, evalParamFrame(p2.getEventsForBeat({count:11})[0].bar,ev(11,11),11))
+  delete players.instances.p1
+
+  p1 = parsePlayer('p1 kal 0, foo=[1:2]l1')
+  players.instances.p1 = p1
+  p2 = parsePlayer('p2 kal 0, bar=p1.foo{per:2}')
+  p1.play(p1.getEventsForBeat({count:10,duration:1,time:10}),{count:10})
+  assert(1, evalParamFrame(p2.getEventsForBeat({count:10})[0].bar,ev(10,10),10))
+  p1.play(p1.getEventsForBeat({count:11,duration:1,time:11}),{count:11})
+  assert(2, evalParamFrame(p2.getEventsForBeat({count:11})[0].bar,ev(11,11),11))
+  delete players.instances.p1
 
   console.log('Parse player tests complete')
   }
