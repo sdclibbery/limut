@@ -561,10 +561,13 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
-ring=32{wave:'sine'}  ;  chop=2{wave:'sine'}
+chop={value:2,wave:'sine'}  ;  ring={value:32,wave:'sine'}
+ Actually chop/ring freq should be per frame...
+ Extract sub/main param to module
+ Document as ring={32,wave:sine} etc though
+Mix subparam for all effects, eg ring=32{mix:1/2}, room=2{mix:1/2} etc; should be per frame?
 Function to get freq from scale eg ring=pitch{oct:3,degree:2,scale:minor}  ; defaults: oct:3, degree:0, scale:<current>
 save current note frequency onto event as this.freq
-Mix modifier for all effects, eg ring=32{mix:1/2}
  Do not add any audio nodes if not specified
 Bug: chop doubles amplitude...
 Allow adding filters in the room/echo loops eg echo=3/4{lpf:523} - but dont use existing filter handlers as must be per event only!
@@ -642,14 +645,18 @@ shadertoy synth support textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== things to test ====
-[], []tls, []e, []n, []r, var, player var, (), follow, overrides, complex durs, {offset,per,0:0}, delay, @e, @f
+[], []t, []ls, []e, []n, []r, var, player var, (), follow, overrides, complex durs, {offset,per,0:0}, delay, @e, @f
 ====
 ==== other ====
+Syntactic sugar for parameters with modifiers
+ Eg chop={2,wave:sine} becomes chop={value:2,wave:sine}
+Should event Param evaluation force b to the time of the event?
 Per can default to repeat of thing being modified?
  Eg [0:1]l4{0:0} per defaults to 8?
 Could use a syntax error on `set v.amp=0` (should be `set v amp=0`)
 []r{per:4} (ie without seed) ?? What should this do? Should it repeat? Or not?? Probably not??
 Should Eg [0:1]e{per:1/4,1/2:-1} work??
+stutter parameter?
 Proper tests for follow and overrides and combinations, including tuples
 Follow player refactor
  Better follow tests

@@ -757,3 +757,16 @@ pad dsaw (024), dur=4, chorus, room=2, envelope=pad, oct=5, addc=wow/2, amp=1/16
 // beep ping 2., dur=1/2, envelope=full, att=0, rel=0.1, room=1.2, oct=3, lpf=700, amp=1/10, addc=wow/2+[0,0,0,-2,-2]e, add=(0,7)
 // set [shh,pad] amp=1/32
 set [mel1,mel2,mel3] vib=2, vibdepth=0.1, lpf=[800,2000,700,400]e, room=1, rel=3/2, att=2/3, pan=[-1/4:1/4]n
+
+
+scale=phrygian
+bpm=121
+vg gradient 0, amp=9.25-3*bld.amp[0], fore=white*(0.8+[0:bld.amp[0]/9]r@f)
+vj julia 5, back=transparent, mid=[#0f0f,#f0ff]n1, fore=transparent, rate=4, scroll={x:0.05*[-1:1]n2,y:0.04*[-1:1]n2}, zoom=1.4, pixellate=b.ring[0]/3
+stress=slider{name:'stress'}
+p play X-=<k+>O-<=X>k, dur=1/4, echo=3/4, room=0.1, pan=(-1,1), amp=2/3, hpf=[0,523*3]t[96,32], hpr=15, drive=stress
+cb play T., amp=[0.5,0]t32, pan=[-1:1]s16, drive, noisify=1/8
+b saw 0^01123.., oct=3, dur=1/4, sus=[1/8:1/4]l8, high=[-8:-2]l12, amp=6, ring=520/[4,8]t32, drive=[0:stress]l[32,0], pan=[-1/2:1/2]r, room=0.1
+bld ethereal (02468), dur=4, amp=[stress,1+2*stress,3+stress*3]l[24,8,0]@f, oct=3, phaser=1/4, room, add=([0,[0,2,4,14]t[16,8,4,4]]r), chop=[0,[0,1,8]t[24,4,4],[0,0,2,4]t8]r, pan=[-1/4:1/4]r+[-1/4:1/4]l8, rel=1
+
+

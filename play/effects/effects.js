@@ -15,12 +15,24 @@ define(function (require) {
     return vca
   }
 
+  let subParam = (p, name, def) => {
+    let v
+    if (typeof p === 'object') { v = p[name] }
+    return param(v, def)
+  }
+
+  let mainParam = (p, def) => {
+    if (typeof p === 'number') { return p }
+    return subParam(p, 'value', def)
+  }
+
   let chop = (params, node) => {
-    let chops = evalPerEvent(params, 'chop', 0)
-    if (!chops) { return node }
+    let p = evalPerEvent(params, 'chop')
+    let freq = mainParam(p, 0)
+    if (!freq) { return node }
     let lfo = system.audio.createOscillator()
-    lfo.type = 'square';
-    lfo.frequency.value = chops / params.beat.duration
+    lfo.type = subParam(p, 'wave', 'sine')
+    lfo.frequency.value = freq / params.beat.duration
     let gain = system.audio.createGain()
     gain.gain.setValueAtTime(1, system.audio.currentTime)
     lfo.connect(gain.gain)
@@ -32,10 +44,11 @@ define(function (require) {
   }
 
   let ring = (params, node) => {
-    let freq = evalPerEvent(params, 'ring', 0)
+    let p = evalPerEvent(params, 'ring')
+    let freq = mainParam(p, 0)
     if (!freq) { return node }
     let lfo = system.audio.createOscillator()
-    lfo.type = 'triangle';
+    lfo.type = subParam(p, 'wave', 'triangle')
     lfo.frequency.value = freq
     let gain = system.audio.createGain()
     gain.gain.setValueAtTime(0, system.audio.currentTime)
