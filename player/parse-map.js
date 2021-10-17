@@ -15,12 +15,21 @@ define(function(require) {
     }
     return result
   }
+
   let parseMapEntry = (state, keys, values) => {
     eatWhitespace(state)
-    let k = identifier(state)
-    if (k === '') { return }
-    eatWhitespace(state)
-    if (state.str.charAt(state.idx) !== ':') { return }
+    let tryState = Object.assign({}, state)
+    let k = identifier(tryState)
+    eatWhitespace(tryState)
+    if (k === '' || tryState.str.charAt(tryState.idx) !== ':') {
+      // Try parse as keyless value instead
+      let v = state.expression(state)
+      eatWhitespace(state)
+      keys.push('value')
+      values.push(v)
+        return
+    }
+    Object.assign(state, tryState)
     state.idx += 1
     eatWhitespace(state)
     let v = state.expression(state)
@@ -57,5 +66,33 @@ define(function(require) {
     return buildMap(values, keys)
   }
 
+  // TESTS
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+
+  let assert = (expected, actual) => {
+    let x = JSON.stringify(expected)
+    let a = JSON.stringify(actual)
+    if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
+  }
+  let number = require('player/parse-number') // Expressions should only be numbers in these tests for simplicity
+
+  assert(undefined, parseMap({str:'',idx:0,expression:number}))
+  assert(undefined, parseMap({str:'ff',idx:0,expression:number}))
+  assert(undefined, parseMap({str:'k:v',idx:0,expression:number}))
+  assert(undefined, parseMap({str:'(k:v)',idx:0,expression:number}))
+  assert({}, parseMap({str:'{}',idx:0,expression:number}))
+  assert({foo:0.5}, parseMap({str:'{foo:1/2}',idx:0,expression:number}))
+  assert({foo:0.5}, parseMap({str:'{foo:1/2}',idx:0,expression:number}))
+  assert({foo:0.5,bar:-1.5}, parseMap({str:'{foo:1/2,bar:-3/2}',idx:0,expression:number}))
+  assert({foo:0.5,bar:-1.5}, parseMap({str:' \t{ \tfoo \t: \t1/2 \t, \tbar \t: \t-3/2 \t} \t',idx:0,expression:number}))
+  assert({value:0.5}, parseMap({str:'{1/2}',idx:0,expression:number}))
+  assert({value:0.5}, parseMap({str:' \t{ \t1/2 \t} \t',idx:0,expression:number}))
+  assert({value:0.5,foo:2}, parseMap({str:'{1/2,foo:2}',idx:0,expression:number}))
+  assert({value:0.5,foo:2}, parseMap({str:'{ \t1/2 \t, \tfoo \t: \t2 \t}',idx:0,expression:number}))
+  assert({foo:2,value:0.5}, parseMap({str:'{foo:2,1/2}',idx:0,expression:number}))
+  
+  console.log('Parse map tests complete')
+  }
+    
   return parseMap
 })
