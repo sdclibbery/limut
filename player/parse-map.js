@@ -90,6 +90,7 @@ define(function(require) {
   assert({value:0.5,foo:2}, parseMap({str:'{1/2,foo:2}',idx:0,expression:number}))
   assert({value:0.5,foo:2}, parseMap({str:'{ \t1/2 \t, \tfoo \t: \t2 \t}',idx:0,expression:number}))
   assert({foo:2,value:0.5}, parseMap({str:'{foo:2,1/2}',idx:0,expression:number}))
+  assert({value:3,foo:2}, parseMap({str:'{1/2,2,foo:2,3}',idx:0,expression:number}))
   
   console.log('Parse map tests complete')
   }

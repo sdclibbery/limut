@@ -304,6 +304,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>%</code> Take remainder; eg (0,4,7,9)%7 is equivalent to (0,4,0,2)</p>
 <p><code>^</code> Raise to the power; eg <code>2^3</code> is 8. Imaginary results return 0; eg <code>-1^1/2</code> returns 0.</p>
 <p><code>{x:0,y:1}</code> Map, containing keys and values</p>
+<p><code>{2,y:1}</code> Map, containing keys and values, with a 'default' value of 2. The default value is used for some parameters; eg <code>chop={2,wave:triangle}</code> is the same as <code>chop=2</code>, but also supplies an additional 'wave' subparemeter.</p>
 <p><code>#246f</code> Colour value which becomes the colour map <code>{r:2/16,g:4/16,b:6/16,a:1}</code></p>
 <p><code>#204060ff</code> Colour value which becomes the colour map <code>{r:2/16,g:4/16,b:6/16,a:1}</code></p>
 <p><code>'abc'</code> String value</p>
@@ -648,12 +649,10 @@ shadertoy synth multiple channels
 [], []t, []ls, []e, []n, []r, var, player var, (), follow, overrides, complex durs, {offset,per,0:0}, delay, @e, @f
 ====
 ==== other ====
-Syntactic sugar for parameters with modifiers
- Eg chop={2,wave:sine} becomes chop={value:2,wave:sine}
- docs?
 Should event Param evaluation force b to the time of the event?
 Per can default to repeat of thing being modified?
  Eg [0:1]l4{0:0} per defaults to 8?
+Var tuple lookup should round, and allow expressions
 Could use a syntax error on `set v.amp=0` (should be `set v amp=0`)
 []r{per:4} (ie without seed) ?? What should this do? Should it repeat? Or not?? Probably not??
 Should Eg [0:1]e{per:1/4,1/2:-1} work??
