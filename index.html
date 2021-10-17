@@ -404,8 +404,8 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>midq</code> Mid q defines the width of the frequency band; low q is wide. Default: 5</p>
 <p><code>high</code> High shelf gain in decibels. Use negative values to cut frequencies above the cutoff, positive to boost them.</p>
 <p><code>highf</code> High shelf cutoff frequency. Default: 1100Hz</p>
-<p><code>chop</code> Chop the signal into a number of parts per beat</p>
-<p><code>ring</code> Apply ring modulation at the given frequency in Hertz</p>
+<p><code>chop</code> Chop the signal into a number of parts per beat, eg <code>chop=2</code> chops the signal twice per beat. Subparam for waveform; eg <code>chop={2,wave:triangle}</code> chops twice per beat with a triangle waveform. The default waveform is sine; the options are sine, square, triangle, saw.</p>
+<p><code>ring</code> Apply ring modulation at the given frequency in Hertz, eg <code>ring=32</code> apply ring modulation at 32Hz. Subparam for waveform; eg <code>ring={32,wave:saw}</code> 32Hz ring modulation with a triangle waveform. The default waveform is triangle; the options are sine, square, triangle, saw.</p>
 <p><code>sample</code> With 'play' synth: number: choose which sample set to use. With 'sample' synth: string: url of online audio file to play (note: server must support cross origin requests for the file)</p>
 <p><code>samplepitch</code> For the 'sample' synth, use this to specify the original pitch of 'sample' in Hz (eg '261.6' for C4)</p>
 <p><code>room</code> reverb room size (using freeverb)</p>
@@ -564,8 +564,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 ==== audio ====
 chop={value:2,wave:'sine'}  ;  ring={value:32,wave:'sine'}
  Actually chop/ring freq should be per frame...
-  Actually , should have evalMainParamEvent, evalSubParamEvent, evalMainParamFrame, evalSubParamFrame..?
- Document as ring={32,wave:sine} etc though
+  Actually, should have evalMainParamEvent, evalSubParamEvent, evalMainParamFrame, evalSubParamFrame..?
 Mix subparam for all effects, eg ring=32{mix:1/2}, room=2{mix:1/2} etc; should be per frame?
 Function to get freq from scale eg ring=pitch{oct:3,degree:2,scale:minor}  ; defaults: oct:3, degree:0, scale:<current>
 save current note frequency onto event as this.freq
@@ -650,14 +649,16 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Should event Param evaluation force b to the time of the event?
+Var tuple lookup should round, and allow expressions
 Per can default to repeat of thing being modified?
  Eg [0:1]l4{0:0} per defaults to 8?
-Var tuple lookup should round, and allow expressions
 Could use a syntax error on `set v.amp=0` (should be `set v amp=0`)
 []r{per:4} (ie without seed) ?? What should this do? Should it repeat? Or not?? Probably not??
 Should Eg [0:1]e{per:1/4,1/2:-1} work??
 stutter parameter?
 Proper tests for follow and overrides and combinations, including tuples
+round function
+ eg delay=round{[]r*4}/4 or delay=round{[]r,to:1/4}
 Follow player refactor
  Better follow tests
  Use stored events with a dependency

@@ -82,6 +82,7 @@ define(function(require) {
   vars['square'] = 'square'
   vars['triangle'] = 'triangle'
   vars['sawtooth'] = 'sawtooth'
+  vars['saw'] = 'sawtooth'
 
   vars['wow'] = parseExpression('[-0.3:0.3]n2')
 })
