@@ -11,7 +11,7 @@ define(function(require) {
     if (events.length == 0) { return () => [] }
     let dur = param(param(params.dur, defaultDur), 1)
     if (typeof dur === 'number') { // const duration, get events for a beat deterministically
-      if (dur <= 0) { return ()=>[] }
+      if (dur <= 0) { throw 'Zero duration' }
       let patternLength = pattern.length * dur
       return (count, timingContext) => {
         timingContext._patternCount = undefined
@@ -65,7 +65,7 @@ define(function(require) {
           let e = events[timingContext._patternCount % events.length]
           let es = (typeof(e.value) == 'function') ? e.value(e, timingContext._patternRepeats) : [e]
           let duration = evalParamFrame(dur, {idx: timingContext._patternCount, count: timingContext._patternStartCount}, count)
-          if (duration <= 0) { return [] }
+          if (duration <= 0) { throw 'Zero duration' }
           let eventDur = duration
           es.forEach(sourceEvent => {
             let event = {}
@@ -329,9 +329,6 @@ define(function(require) {
 
   pattern = parsePattern('0!', {dur:1})
   assert([{value:'0',idx:0,_time:0,dur:1,count:0,long:1/2}], pattern(0, {}))
-
-  assert([], parsePattern('1', {dur:0})(0,{}))
-  assert([], parsePattern('1', {dur:()=>0})(0,{}))
 
   console.log("Pattern tests complete")
   }
