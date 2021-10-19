@@ -95,8 +95,8 @@ define(function (require) {
   }
 
   scale.degreeToFreq = (degree, octave, scaleOverride, sharp) => {
-    degree = Math.round(degree)
-    octave = Math.round(octave)
+    degree = Math.floor(degree) // Has to be floor not round; round gives an uneven distribution for randoms
+    octave = Math.floor(octave)
     let currentScale = scales[scaleOverride || scale.current]
     let octDelta = Math.floor(degree / currentScale.length)
     let oct = octave - 4 + octDelta
@@ -114,7 +114,7 @@ define(function (require) {
 
   assert(261.6, scale.degreeToFreq(0, 4, 'major', 0))
   assert(261.6, scale.degreeToFreq(0.4, 4.4, 'major', 0))
-  assert(587.3, scale.degreeToFreq(0.6, 4.6, 'major', 0))
+  assert(261.6, scale.degreeToFreq(0.6, 4.6, 'major', 0))
   assert(130.8, scale.degreeToFreq(0, 3, 'major', 0))
   assert(523.3, scale.degreeToFreq(0, 5, 'major', 0))
   assert(440.0, scale.degreeToFreq(5, 4, 'major', 0))

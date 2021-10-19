@@ -59,8 +59,8 @@ define(function(require) {
         if (tupleIndices.length > 0) { // extract required elements only from tuple
           if (tupleIndices.separator === ':') {
             let vn = []
-            let lo = Math.round(evalParamFrame(tupleIndices[0], event,b))
-            let hi = Math.round(evalParamFrame(tupleIndices[1], event,b))
+            let lo = Math.floor(evalParamFrame(tupleIndices[0], event,b))
+            let hi = Math.floor(evalParamFrame(tupleIndices[1], event,b))
             for (let idx = lo; idx <= hi; idx++) {
               vn.push(v[idx % v.length])
             }
@@ -68,7 +68,7 @@ define(function(require) {
           } else {
             v = tupleIndices.map(idx => {
               let evalled = evalParamFrame(idx, event,b)
-              return v[Math.round(evalled) % v.length]
+              return v[Math.floor(evalled) % v.length]
             })
           }
         }
