@@ -2,9 +2,9 @@
 define(function(require) {
   let vars = require('vars')
   let players = require('player/players')
-  let parseMap = require('player/parse-map')
   let parseArray = require('player/parse-array')
   let eatWhitespace = require('player/eat-whitespace')
+  let {evalParamFrame,evalParamEvent} = require('player/eval-param')
 
   let parseVar = (state) => {
     let key = ''
@@ -59,12 +59,17 @@ define(function(require) {
         if (tupleIndices.length > 0) { // extract required elements only from tuple
           if (tupleIndices.separator === ':') {
             let vn = []
-            for (let i = Math.floor(tupleIndices[0]); i <= Math.floor(tupleIndices[1]); i++) {
-              vn.push(v[i % v.length])
+            let lo = Math.round(evalParamFrame(tupleIndices[0], event,b))
+            let hi = Math.round(evalParamFrame(tupleIndices[1], event,b))
+            for (let idx = lo; idx <= hi; idx++) {
+              vn.push(v[idx % v.length])
             }
             v = vn
           } else {
-            v = tupleIndices.map(i => v[i % v.length])
+            v = tupleIndices.map(idx => {
+              let evalled = evalParamFrame(idx, event,b)
+              return v[Math.round(evalled) % v.length]
+            })
           }
         }
         if (!!v && v.length === 1) { v = v[0] }
@@ -85,7 +90,6 @@ define(function(require) {
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
   let p
-  let {evalParamFrame,evalParamEvent} = require('player/eval-param')
   let parseNumber = require('player/parse-number')
   let ev = (i,c,d) => {return{idx:i,count:c,dur:d}}
 
