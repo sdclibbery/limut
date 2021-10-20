@@ -10,10 +10,10 @@ define((require) => {
   let parseCode = (code) => {
     let lines = code.split('\n')
       .map(l => l.trim())
-      .filter(l => l!='')
       for (let i = 0; i<lines.length; i++) {
       try {
         let line = lines[i]
+        if (line === '') { continue }
         while ((i+1)<lines.length && line.endsWith(' \\')) {
           line = line.slice(0, -2) + ' ' + lines[i+1]
           i++
@@ -22,6 +22,7 @@ define((require) => {
       } catch (e) {
         let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
         consoleOut('Error on line '+(i+1)+': ' + e + st)
+        console.log(e)
       }
     }
   }
