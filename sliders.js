@@ -1,6 +1,7 @@
 'use strict'
 define(function(require) {
   let vars = require('vars')
+  let consoleOut = require('console')
 
   let sliders = {}
 
@@ -31,6 +32,7 @@ define(function(require) {
     input.value = inputFromSlider(slider, slider.value)
     input.oninput = ({target}) => {
       slider.value = sliderFromInput(slider, target.value)
+      consoleOut(`Slider '${slider.name}': ${slider.value}`)
     }
   }
 
