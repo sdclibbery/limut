@@ -650,11 +650,8 @@ shadertoy synth multiple channels
 [], []t, []ls, []e, []n, []r, var, player var, (), follow, overrides, complex durs, {offset,per,0:0}, delay, @e, @f
 ====
 ==== other ====
-Parse error line numbers are wrong?? eg v glow 0, dur=0
 var for seed not working
- eg:
-  advance=[0,100]t8
-  gl1 glass 0, dur=1/4, delay=[0,1/4,1/2]r{per:8,seed:advance+2,0:0}, add=[0,2,4,6,7]r{per:8,seed:advance+0,0:0}, amp=[1/3:1]n11
+ Test more?
 Is it because of the per? Is that getting applied when calculating the seed?????
 Should event Param evaluation force b to the time of the event?
 Should delayed notes eval per event at the time of the delayed or undelayed event??

@@ -59,7 +59,7 @@ define(function(require) {
     let generator = () => Math.random()
     if (modifiers && modifiers.seed !== undefined) {
       generator = (e,b,evalRecurse) => {
-        let count = (interval !== 'frame') ? e.count : b
+        let count = (interval !== 'frame') ? e.count : (e._realB !== undefined ? e._realB : b) // Seed must ignore any 'per' modifier
         let seed = evalParamFrame(modifiers.seed,e,b)
         return xmur3(count - seed) / 4294967296
       }
@@ -87,7 +87,7 @@ define(function(require) {
     }
     if (modifiers && modifiers.seed !== undefined) {
       generator = (e,b,evalRecurse) => {
-        let count = (interval !== 'frame') ? e.count : b
+        let count = (interval !== 'frame') ? e.count : (e._realB !== undefined ? e._realB : b) // Seed must ignore any 'per' modifier
         let seed = count - evalParamFrame(modifiers.seed,e,b)
         return xmur3(seed) / 4294967296
       }
