@@ -98,13 +98,18 @@ define((require) => {
         let playerFactoryOverrides = playerFactory.overrides
         player.getEventsForBeatBase = (beat) => {
           let events = getEventsForBeat(beat)
-          events.forEach(e => e.linenum = linenum)
-          let es = events
           if (playerFactoryOverrides) {
-            es = es.map(e => overrideParams(e, playerFactoryOverrides))
+            events.forEach(e => {
+              for (let k in playerFactoryOverrides) {
+                if (e[k] === undefined) {
+                  e[k] = playerFactoryOverrides[k]
+                }
+              }
+            })
           }
+          events.forEach(e => e.linenum = linenum)
           let overrides = players.overrides[player.id] || {}
-          es = es.map(e => overrideParams(e, overrides))
+          let es = events.map(e => overrideParams(e, overrides))
           es.forEach(e => evalToEvent(e, beat))
           return es
         }
