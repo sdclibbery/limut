@@ -10,7 +10,6 @@ define((require) => {
   let dsaw = require('play/synth/dsaw')
   let dsine = require('play/synth/dsine')
   let dbass = require('play/synth/dbass')
-  let ping = require('play/synth/ping')
   let swell = require('play/synth/swell')
   let bell = require('play/synth/bell')
   let glock = require('play/synth/glock')
@@ -62,7 +61,7 @@ define((require) => {
     dsaw: { play: dsaw },
     dsine: { play: dsine },
     dbass: { play: dbass },
-    ping: { play: ping },
+    ping: { play: wave, overrides: {wave:'sine', oct:5, envelope:'simple', _gainbase:0.04} },
     swell: { play: swell },
     bell: { play: bell },
     glock: { play: glock },

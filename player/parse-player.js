@@ -95,11 +95,16 @@ define((require) => {
         } else {
           getEventsForBeat = standardPlayer(patternStr, paramsStr, playerFactory.defaultDur, player)
         }
+        let playerFactoryOverrides = playerFactory.overrides
         player.getEventsForBeatBase = (beat) => {
           let events = getEventsForBeat(beat)
           events.forEach(e => e.linenum = linenum)
+          let es = events
+          if (playerFactoryOverrides) {
+            es = es.map(e => overrideParams(e, playerFactoryOverrides))
+          }
           let overrides = players.overrides[player.id] || {}
-          let es = events.map(e => overrideParams(e, overrides))
+          es = es.map(e => overrideParams(e, overrides))
           es.forEach(e => evalToEvent(e, beat))
           return es
         }
