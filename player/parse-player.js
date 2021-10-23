@@ -126,6 +126,7 @@ define((require) => {
 
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+  let vars = require('vars')
 
   let assert = (expected, actual) => {
     let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
@@ -226,6 +227,13 @@ define((require) => {
   p1.play(p1.getEventsForBeat({count:11,duration:1,time:11}),{count:11})
   assert(2, evalParamFrame(p2.getEventsForBeat({count:11})[0].bar,ev(11,11),11))
   delete players.instances.p1
+
+  vars.foo = () => [2,3,4,5]
+  p = parsePlayer('p kal 0, bar=foo[[1,3]t1]')
+  assert(3, evalParamFrame(p.getEventsForBeat({count:0})[0].bar,ev(0,0),0))
+  assert(5, evalParamFrame(p.getEventsForBeat({count:1})[0].bar,ev(1,1),1))
+  assert(3, evalParamFrame(p.getEventsForBeat({count:2})[0].bar,ev(2,2),2))
+  delete vars.foo
 
   console.log('Parse player tests complete')
   }

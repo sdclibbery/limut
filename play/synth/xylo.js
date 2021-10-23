@@ -27,14 +27,14 @@ define(function (require) {
     op4Env.connect(vca)
 
     let op3 = fm.op(freq*9.42, params, 'noise')
-    fm.connect(op3, op4, fm.simpleEnv(200*freq/261.6, params, 0, 1))
+    fm.connect(op3, op4, fm.simpleEnv(200*freq/261.6, params, 0.01, 1))
 
     let op2 = fm.op(freq*0.5, params)
     pitchEffects(params).connect(op2.detune)
     waveEffects(params, op2).connect(vca)
 
     let op1 = fm.op(freq*5.19, params, 'saw')
-    fm.connect(op1, op2, fm.simpleEnv(800*freq/261.6, params, 0, 1/10))
+    fm.connect(op1, op2, fm.simpleEnv(800*freq/261.6, params, 0.01, 1/10))
 
     let op0 = fm.op(freq/131072, params, 'noise')
     fm.connect(op1, op2, fm.flatEnv(params, 15*freq/261.6))

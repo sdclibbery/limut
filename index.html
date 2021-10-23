@@ -564,6 +564,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
+xylo nasty clicking
 chop={value:2,wave:'sine'}  ;  ring={value:32,wave:'sine'}
  Actually chop/ring freq should be per frame...
   Actually, should have evalMainParamEvent, evalSubParamEvent, evalMainParamFrame, evalSubParamFrame..?
@@ -663,7 +664,6 @@ shadertoy synth multiple channels
 ==== other ====
 Should event Param evaluation force b to the time of the event?
 Should delayed notes eval per event at the time of the delayed or undelayed event??
-Var tuple lookup should round, and allow expressions
 Per can default to repeat of thing being modified?
  Eg [0:1]l4{0:0} per defaults to 8?
 Could use a syntax error on `set v.amp=0` (should be `set v amp=0`)

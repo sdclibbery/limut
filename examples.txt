@@ -798,3 +798,16 @@ arp square 01239, dur=1/4, echo=3/4, amp=[0,0,2/3]l[252,16,100000]*[]n, oct=4, s
 root=[-2,0]t[254,100000]
 
 
+s=[31,999]t4
+gl1 glass 0, dur=1/4, add=[2,4,6,7]r{per:2,seed:s,0:0}, delay=[0,1/4,1/2]r{per:2,seed:s,0:0}
+
+
+bpm=127
+k play X., room=0.1, rate=(1,2)
+s play ..(H*)., room=0.1
+h play -:
+t play .tt.tt.t, echo=3/4, amp=3/2
+b saw [.0], oct=(1,2), lpf=523, att=0.01, rel=0.01, amp=3/2
+acid saw 0^_72, dur=1/4, lpf=523*[[1/2:4]r{per:4,seed:400},1/4]e, lpr=[15:25]l16, att=0.05, rel=0.05, oct=(2,3), amp=[1/2:2]r{per:4,seed:100}
+ss supersaw 0__., chop={[2/3,2/3,2]r,wave:sine}, echo=3/4, add=[2,4,1,0]t4, room=1.2, oct=(4,5), addc=[0,0,[0,2,-5]r{seed:0,per:32}]e, lpf=523*2*[2,3,2,1,1/2]e+[0:523]s20
+
