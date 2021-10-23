@@ -332,6 +332,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>square</code> Square wave</p>
 <p><code>pulse</code> Pulse wave (uses AudioWorklet so will use more audio render capacity than other synth types)</p>
 <p><code>dsaw</code> Detuned saw - multiple sawtooth waves slightly out of tune for a fuller sound</p>
+<p><code>wave</code> Synthesizer using a waveform specified by the <code>wave</code> param. Possible values <code>saw, square, sine, triangle, pulse</code></p>
 <p><code>dsquare</code> Detuned square - multiple square waves slightly out of tune for a fuller sound</p>
 <p><code>dbass</code> Detuned saw bass - multiple sawtooth waves slightly out of tune for a fuller sound</p>
 <p><code>fmbass</code> Funky FM bass</p>
@@ -563,11 +564,8 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 ====
 ==== audio ====
 Refactor waveform synths
- wave synth
-  Turn saw/square etc into versions of this with a preset wave param and amp
-  Extract waveform setting (and base amp) including pulse
-  docs
  dwave synth to replace dsaw, dsquare etc etc
+  Extract waveform setting to module
   docs
 Add ambi synth
  Cluster of sines, spread controlled by detune param, moving about?

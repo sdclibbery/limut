@@ -23,7 +23,6 @@ define((require) => {
   let glass = require('play/synth/glass')
   let supersaw = require('play/synth/supersaw')
   let external = require('play/synth/external')
-  let pulse = require('play/synth/pulse')
   let xylo = require('play/synth/xylo')
   let wave = require('play/synth/wave')
 
@@ -60,7 +59,7 @@ define((require) => {
     dsine: { play: dsine },
     dbass: { play: dbass },
     ping: { play: wave, baseParams: {wave:'sine', oct:5, envelope:'simple', _gainbase:0.04} },
-    pulse: { play: pulse },
+    pulse: { play: wave, baseParams: {wave:'pulse', oct:3, envelope:'full', _gainbase:0.06} },
     saw: { play: wave, baseParams: {wave:'sawtooth', oct:4, envelope:'full', _gainbase:0.06} },
     square: { play: wave, baseParams: {wave:'square', oct:4, envelope:'full', _gainbase:0.054} },
     triangle: { play: wave, baseParams: {wave:'triangle', oct:4, envelope:'full', _gainbase:0.06} },
