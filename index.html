@@ -661,10 +661,6 @@ shadertoy synth multiple channels
 [], []t, []ls, []e, []n, []r, var, player var, (), follow, overrides, complex durs, {offset,per,0:0}, delay, @e, @f
 ====
 ==== other ====
-Seed must be evalled with original count, not modified by per etc
- Tests for @e and @f cases; per:4 with [1,2]t4 should work properly for both
- Also tests for the same but in a var
-Is it because of the per? Is that getting applied when calculating the seed?????
 Should event Param evaluation force b to the time of the event?
 Should delayed notes eval per event at the time of the delayed or undelayed event??
 Var tuple lookup should round, and allow expressions

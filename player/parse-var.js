@@ -43,8 +43,8 @@ define(function(require) {
       if (param) {
         let player = players.instances[playerId]
         if (player) {
-          let realB = event._realB === undefined ? b : event._realB
-          let es = player.currentEvent(realB)
+          let _originalB = event._originalB === undefined ? b : event._originalB
+          let es = player.currentEvent(_originalB)
           v = es.map(e => e[param])
         } else if (playerId === 'this') {
           v = event[param]

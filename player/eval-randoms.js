@@ -55,8 +55,13 @@ define(function(require) {
     }
   }
 
-  let evalSeed = (modifiers, e,b) => {
-    return evalParamFrame(modifiers.seed,e,b)//(e._realB !== undefined ? e._realB : b)) // Seed must ignore any 'per' modifier
+  let evalSeed = (modifiers, ev,b) => {
+    let oldCount = ev.count
+    ev.count = ev._originalCount !== undefined ? ev._originalCount : ev.count // seed must ignore time modifiers
+    b = ev._originalB !== undefined ? ev._originalB : b
+    let result = evalParamFrame(modifiers.seed,ev,b)
+    ev.count = oldCount
+    return result
   }
 
   let getGenerator = (modifiers, interval) => {
