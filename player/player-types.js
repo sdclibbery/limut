@@ -25,6 +25,7 @@ define((require) => {
   let external = require('play/synth/external')
   let xylo = require('play/synth/xylo')
   let wave = require('play/synth/wave')
+  let dwave = require('play/synth/dwave')
 
   let nullPlayer = { play: () => {}, stopped: true }
   let playerTypes = {
@@ -55,15 +56,18 @@ define((require) => {
     drums: { play: play, defaultDur: 1/2 },
     play: { play: play, defaultDur: 1/2 },
     sample: { play: sample },
+    dwave: { play: dwave },
     dsaw: { play: dsaw },
     dsine: { play: dsine },
+    swell: { play: swell },
     dbass: { play: dbass },
+    dtri: { play: dwave, baseParams: {wave:'triangle', oct:4, envelope:'full', _gainbase:0.06} },
+    dpulse: { play: dwave, baseParams: {wave:'pulse', oct:3, envelope:'full', _gainbase:0.06} },
     ping: { play: wave, baseParams: {wave:'sine', oct:5, envelope:'simple', _gainbase:0.04} },
     pulse: { play: wave, baseParams: {wave:'pulse', oct:3, envelope:'full', _gainbase:0.06} },
     saw: { play: wave, baseParams: {wave:'sawtooth', oct:4, envelope:'full', _gainbase:0.06} },
     square: { play: wave, baseParams: {wave:'square', oct:4, envelope:'full', _gainbase:0.054} },
     triangle: { play: wave, baseParams: {wave:'triangle', oct:4, envelope:'full', _gainbase:0.06} },
-    swell: { play: swell },
     bell: { play: bell },
     glock: { play: glock },
     piano: { play: piano },
