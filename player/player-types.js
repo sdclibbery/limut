@@ -7,17 +7,12 @@ define((require) => {
   let scope = require('draw/scope')
   let play = require('play/synth/play')
   let sample = require('play/synth/sample')
-  let dsaw = require('play/synth/dsaw')
-  let dsine = require('play/synth/dsine')
-  let dbass = require('play/synth/dbass')
-  let swell = require('play/synth/swell')
   let bell = require('play/synth/bell')
   let glock = require('play/synth/glock')
   let piano = require('play/synth/piano')
   let ethereal = require('play/synth/ethereal')
   let noise = require('play/synth/noise')
   let prophet = require('play/synth/prophet')
-  let dsquare = require('play/synth/dsquare')
   let fmbass = require('play/synth/fmbass')
   let fm = require('play/synth/fm')
   let glass = require('play/synth/glass')
@@ -57,10 +52,11 @@ define((require) => {
     play: { play: play, defaultDur: 1/2 },
     sample: { play: sample },
     dwave: { play: dwave },
-    dsaw: { play: dsaw },
-    dsine: { play: dsine },
-    swell: { play: swell },
-    dbass: { play: dbass },
+    dsaw: { play: dwave, baseParams: {wave:'sawtooth', oct:4, envelope:'full', _gainbase:0.06} },
+    dsine: { play: dwave, baseParams: {wave:'sine', oct:4, envelope:'pad', _gainbase:0.045} },
+    dsquare: { play: dwave, baseParams: {wave:'square', oct:4, envelope:'full', _gainbase:0.054} },
+    swell: { play: dwave, baseParams: {wave:'triangle', oct:4, envelope:'pad', _gainbase:0.06, detune:0.02} },
+    dbass: { play: dwave, baseParams: {wave:'sawtooth', oct:2, envelope:'full', _gainbase:0.09} },
     dtri: { play: dwave, baseParams: {wave:'triangle', oct:4, envelope:'full', _gainbase:0.06} },
     dpulse: { play: dwave, baseParams: {wave:'pulse', oct:3, envelope:'full', _gainbase:0.06} },
     ping: { play: wave, baseParams: {wave:'sine', oct:5, envelope:'simple', _gainbase:0.04} },
@@ -74,7 +70,6 @@ define((require) => {
     ethereal: { play: ethereal },
     noise: { play: noise },
     prophet: { play: prophet },
-    dsquare: { play: dsquare },
     fmbass: { play: fmbass },
     fm: { play: fm },
     glass: { play: glass },
