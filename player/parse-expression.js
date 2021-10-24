@@ -846,22 +846,22 @@ define(function(require) {
 
   vars.foo = () => 5
   vars.foo.isVarFunction = true
-  assert(5, parseExpression('foo{}'))
+  assert(5, parseExpression('foo{}')(ev(0,0),0,evalParamFrame))
   delete vars.foo
 
   vars.foo = ({val}) => val
   vars.foo.isVarFunction = true
-  assert(5, parseExpression('foo{val:5}'))
+  assert(5, parseExpression('foo{val:5}')(ev(0,0),0,evalParamFrame))
   delete vars.foo
 
   vars.foo = () => 5
   vars.foo.isVarFunction = true
-  assert(7, parseExpression('foo{}+2'))
+  assert(7, parseExpression('foo{}+2')(ev(0,0),0,evalParamFrame))
   delete vars.foo
 
   vars.foo = ({val}) => val
   vars.foo.isVarFunction = true
-  assert(6, parseExpression('  foo  {  x:3, val : 6 }  '))
+  assert(6, parseExpression('  foo  {  x:3, val : 6 }  ')(ev(0,0),0,evalParamFrame))
   delete vars.foo
 
   assert('event', parseExpression("[0,24]r").interval)

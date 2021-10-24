@@ -842,3 +842,6 @@ v3 bars 0, zoom=1/6, scroll=time/5
 set [v1,v2,v3] recol=hue, fore=gray, mirror=10, rotate=time/32
 
 
+pn noise 0[00], dur=1, bpf=pitch{[0:7]r{per:8,seed:0,0:0},octave:6}, bpr=80, amp=20, sus=2/3, room
+
+

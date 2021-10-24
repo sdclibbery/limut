@@ -27,12 +27,6 @@ define(function(require) {
   let varLookup = ({key,tupleIndices}, dependsOn, modifiers) => {
     if (!key) { return }
 
-    // look for function call; call var immediately if present
-    let f = vars[key]
-    if (typeof f === 'function' && f.isVarFunction) {
-      return f(modifiers)
-    }
-
     // Return a lookup function
     let [playerId, param] = key.split('.')
     if (playerId && param) {
@@ -53,6 +47,9 @@ define(function(require) {
         }
       } else {
         v = vars[key]
+      }
+      if (typeof vars[key] === 'function' && vars[key].isVarFunction) { // Var function
+        v = vars[key](modifiers, event,b,evalRecurse)
       }
       v = evalRecurse(v,event,b,evalRecurse)
       if (Array.isArray(v)) {
@@ -128,7 +125,7 @@ define(function(require) {
   state = {str:'foo',idx:0}
   p = varLookup(parseVar(state), [], {})
   assert(3, state.idx)
-  assert(3, p)
+  assert(3, p(ev(0,0),0,evalParamFrame))
   delete vars.foo
 
   let s = {str:'foo.bar',idx:0}

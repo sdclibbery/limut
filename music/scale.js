@@ -1,6 +1,8 @@
 'use strict';
 define(function (require) {
   let vars = require('vars')
+  let param = require('player/default-param')
+  let {evalParamFrame,evalParamEvent} = require('player/eval-param')
 
   let scales = {
     chromatic       :[0,1,2,3,4,5,6,7,8,9,10,11],
@@ -103,6 +105,16 @@ define(function (require) {
     let chromatic = currentScale[(degree + currentScale.length*100) % currentScale.length] + oct*12 + scale.root + sharp
     return 261.6256 * Math.pow(2, chromatic/12)
   }
+
+  let pitchFunc = (params, e,b,evalRecurse) => {
+    params = params || {}
+    let degree = evalParamFrame(param(params.value, param(params.degree, 0)), e,b)
+    let octave = evalParamFrame(param(params.octave, 4), e,b)
+    let sharp = evalParamFrame(param(params.sharp, 0), e,b)
+    return scale.degreeToFreq(degree, octave, params.scale, sharp)
+  }
+  pitchFunc.isVarFunction = true
+  vars['pitch'] = pitchFunc
 
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {

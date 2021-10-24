@@ -485,6 +485,10 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <div id="accordion-controls" class="closed">
 <p><code>slider{name:'Foo', min:-5, max:5, init:0}</code> Create a new slider control on the page, with the given name and parameters. The name is required as it uniquely identifies the slider. The min and max parameters default to 0 and 1. The return value from this call is a value that will dynamically reflect the current value of the slider.</p>
 </div>
+<h4 onclick="toggleAccordion('accordion-functions')">▶ Functions</h4>
+<div id="accordion-functions" class="closed">
+<p><code>pitch{degree:1,sharp:1,octave:3,scale:minor}</code> Calculate a frequency in Hz for a scale degree on an octave, with possible sharpening/flattening.</p>
+</div>
 <h4 onclick="toggleAccordion('accordion-play-samples')">▶ Play Samples</h4>
 <div id="accordion-play-samples" class="closed">
 <p>
@@ -567,7 +571,8 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
-Function to get freq from scale eg ring=pitch{oct:3,degree:2,scale:minor}  ; defaults: oct:3, degree:0, scale:<current>
+Function to get freq from scale eg ring=pitch{2,sharp:1,oct:3,scale:minor}  ; defaults: degree:0, oct:4, scale:<current>
+  docs
 save current note frequency onto event as this.freq
 chop={value:2,wave:'sine'}  ;  ring={value:32,wave:'sine'}
  Actually chop/ring freq should be per frame...
