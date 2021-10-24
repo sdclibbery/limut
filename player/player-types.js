@@ -64,7 +64,7 @@ define((require) => {
     pulse: { play: wave, baseParams: {wave:'pulse', oct:3, envelope:'full', _gainbase:0.06} },
     saw: { play: wave, baseParams: {wave:'sawtooth', oct:4, envelope:'full', _gainbase:0.06} },
     square: { play: wave, baseParams: {wave:'square', oct:4, envelope:'full', _gainbase:0.054} },
-    triangle: { play: wave, baseParams: {wave:'triangle', oct:4, envelope:'full', _gainbase:0.06} },
+    tri: { play: wave, baseParams: {wave:'triangle', oct:4, envelope:'full', _gainbase:0.06} },
     bell: { play: bell },
     glock: { play: glock },
     piano: { play: piano },

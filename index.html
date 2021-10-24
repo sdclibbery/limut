@@ -329,23 +329,26 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>play</code> Play samples. Use letters, symbols and digits 1-4 in the pattern to choose the sample (see below for full list). Note duration defaults to 1/2.</p>
 <p><code>sample</code> Pitched sample player. Use the 'sample' and 'samplepitch' params, and then use it as a piched synth</p>
 <p><code>saw</code> Sawtooth wave</p>
+<p><code>sine</code> Sine wave</p>
 <p><code>square</code> Square wave</p>
-<p><code>pulse</code> Pulse wave (uses AudioWorklet so will use more audio render capacity than other synth types)</p>
+<p><code>tri</code> Triangle wave</p>
+<p><code>pulse</code> Pulse wave</p>
 <p><code>wave</code> Synthesizer using a waveform specified by the <code>wave</code> param. Possible values <code>saw, square, sine, triangle, pulse</code></p>
 <p><code>dwave</code> Synthesizer using multiple detuned waveforms specified by the <code>wave</code> param. Possible values <code>saw, square, sine, triangle, pulse</code></p>
 <p><code>dsaw</code> Detuned saw - multiple sawtooth waves slightly out of tune for a fuller sound</p>
 <p><code>dsquare</code> Detuned square - multiple square waves slightly out of tune for a fuller sound</p>
+<p><code>dsine</code> Detuned sine pad - multiple sine waves slightly out of tune for a fuller sound</p>
+<p><code>dtri</code> Detuned tri - multiple triangle waves slightly out of tune for a fuller sound</p>
 <p><code>dbass</code> Detuned saw bass - multiple sawtooth waves slightly out of tune for a fuller sound</p>
 <p><code>fmbass</code> Funky FM bass</p>
-<p><code>ping</code> Sine ping</p>
+<p><code>ping</code> Sine wave ping</p>
 <p><code>swell</code> Swell pad - triangle wave</p>
 <p><code>bell</code> FM generated bell</p>
 <p><code>glock</code> FM generated glockenspiel</p>
-<p><code>glass</code> fm glass synth with a chiming sound</p>
-<p><code>xylo</code> fm xylophone</p>
+<p><code>glass</code> FM glass synth with a chiming sound</p>
+<p><code>xylo</code> FM xylophone</p>
 <p><code>piano</code> Sampled piano</p>
 <p><code>ethereal</code> FM Ethereal pad</p>
-<p><code>dsine</code> Detuned sine pad - multiple sine waves slightly out of tune for a fuller sound</p>
 <p><code>noise</code> Noise pad. Note pattern value is not used; white noise is produced for all values (uses AudioWorklet so will use more audio render capacity than other synth types).</p>
 <p><code>prophet</code> Prophet style pulse wave with lfo controlled pulse-width (uses AudioWorklet so will use more audio render capacity than other synth types)</p>
 <p><code>supersaw</code> supersaw lead synth; 7 detuned saws</p>
@@ -564,15 +567,17 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
+Function to get freq from scale eg ring=pitch{oct:3,degree:2,scale:minor}  ; defaults: oct:3, degree:0, scale:<current>
+save current note frequency onto event as this.freq
 chop={value:2,wave:'sine'}  ;  ring={value:32,wave:'sine'}
  Actually chop/ring freq should be per frame...
   Actually, should have evalMainParamEvent, evalSubParamEvent, evalMainParamFrame, evalSubParamFrame..?
-Bug: chop doubles amplitude...
 Mix subparam for all effects, eg ring={32,mix:1/2}, room={2,mix:1/2} etc; should be per frame?
-Function to get freq from scale eg ring=pitch{oct:3,degree:2,scale:minor}  ; defaults: oct:3, degree:0, scale:<current>
-save current note frequency onto event as this.freq
  Do not add any audio nodes if not specified
-Add ambi synth
+Bug: chop doubles amplitude...
+echo={1/2,stereo:1} for stereo ping pong echo
+envelope exp (exponent) subparam, eg att={1/2,exp:2}
+ambi synth
  Cluster of sines, spread controlled by detune param, moving about?
 808 synth based on https://github.com/vincentriemer/io-808
 Allow adding filters in the room/echo loops eg echo=3/4{lpf:523} - but dont use existing filter handlers as must be per event only!
@@ -593,8 +598,6 @@ choke param for play synth to choke one sound off when the next plays (eg hihats
 Env=reverse (slow attack / fast release)
 formant/vowel effects for vocal aaa/ooo/choir effects
 Is it possible to control rate per frame?
-crackling on per frame amp change? eg testbass fmbass 0[7_.0], dur=4, oct=(1,2), amp=[2,1,0,0]s1/16@f
- chopwave or rather chop={freq:2,wave:'sine'}
 fmpluck
  test fm 070604_[21], att=0, dur=1/2, echo=0, oct=4, amp=1, op1target='out', op1ratio=1, op2target=1, op2ratio=1, op2depth=1024, op2att=0, op2rel=8, op3target=1, op3ratio=2, op3depth=768, op3att=0, op3rel=8, op4target=1, op4ratio=3, op4depth=3072, op4att=0, op4rel=1/4, op4wave='sawtooth'
 Is play rate per frame?
@@ -657,16 +660,10 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Should event Param evaluation force b to the time of the event?
-Should delayed notes eval per event at the time of the delayed or undelayed event??
-Per can default to repeat of thing being modified?
- Eg [0:1]l4{0:0} per defaults to 8?
-Could use a syntax error on `set v.amp=0` (should be `set v amp=0`)
-[]r{per:4} (ie without seed) ?? What should this do? Should it repeat? Or not?? Probably not??
-Should Eg [0:1]e{per:1/4,1/2:-1} work??
-stutter parameter?
+ Yes probably, and then all evaluation should use b, never e.count
+ And maybe rename: evalParamEvent->preEvalParam (should only be called at event creation?) and evalParamFrame->evalParamAt?
+round function: delay=round{[]r,to:1/4}
 Proper tests for follow and overrides and combinations, including tuples
-round function
- eg delay=round{[]r*4}/4 or delay=round{[]r,to:1/4}
 Follow player refactor
  Better follow tests
  Use stored events with a dependency
@@ -682,8 +679,15 @@ Follow player refactor
 []e4 to start on the event but run for 4 beats irrespective of how long the event actually lasts
  [0,1]n should randomly choose one of 0 or one then smooth between them, [0:1]n should pick random values between 0 and 1...
  In which case, rewrite it as the main random, but then smoothed
-Support range overrides? Eg add=[0,1]l2{per:4,0-1:0}
+Should delayed notes eval per event at the time of the delayed or undelayed event??
 Complex durations cause beat drift ?? Round pattern count to smallest possible duration? Eg [1/2,1/3]r rounds to nearest 1/6
+Per can default to repeat of thing being modified?
+ Eg [0:1]l4{0:0} per defaults to 8?
+Could use a syntax error on `set v.amp=0` (should be `set v amp=0`)
+[]r{per:4} (ie without seed) ?? What should this do? Should it repeat? Or not?? Probably not??
+Should Eg [0:1]e{per:1/4,1/2:-1} work??
+stutter parameter?
+Support range overrides? Eg add=[0,1]l2{per:4,0-1:0}
 []w for random walk; eg [0:7]w random walk within 0 - 7 range; [0:7]w2{seed:1,per:8} etc; [0:7]w{step:2}
 All randoms including []r and []n should be deterministic
  Need to seed with enough variation; player and time?
@@ -701,6 +705,7 @@ Complex durs
  var lookup (& player var lookup)
 Swing param or pattern modifier
 Ignore rests . when setting event.idx (so that `0.1., amp=[1/2,1]` does as expected) - is that expected? It wouldnt be for dur..?
+Exponent exp modifier, eg [0:1]l{exp:1/2} to modify lerp shape
 Can var lookup take the interval from the var interval?
  Need two pass parse??
   What about player var lookup then?
@@ -711,7 +716,7 @@ Can modify params; eg 'set bass amp += 1/2'
 Maybe optimise per frame garbage in eval-params and eval-operators
 Defining a name for every slider is too fiddly
  allow slider{} - Slider with no name uses player.param or var name for slider name?
- or even some UI method for slidering a value??
+ or even some UI method for slidering a value? Eg double click value to turn into a slider?
  Need a way to read off the current value of a slider! - or indeed anything; either 'log' statement or '!' expresion modifier?
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 Wildcard player matching for groups 'set d? amp=0'  'set p* amp=0'

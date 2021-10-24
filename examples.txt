@@ -831,4 +831,14 @@ set [v1,v2,v3] mirror=5, amp=1
 set [k,sd,p] amp=0
 
 
+v1 bars 0, zoom=1/6, scroll=time/2, fore=orange, tunnel
+v2 bars 0, zoom=1/5, scroll=time/2, fore=green, tunnel
+v3 bars 0, zoom=1/6, scroll=time/3, fore=blue, tunnel
+
+
+v1 bars 0, zoom=1/6, scroll=time/3
+v2 bars 0, zoom=1/5, scroll=time/3
+v3 bars 0, zoom=1/6, scroll=time/5
+set [v1,v2,v3] recol=hue, fore=gray, mirror=10, rotate=time/32
+
 
