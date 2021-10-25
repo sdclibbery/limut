@@ -2,6 +2,7 @@
 define(function (require) {
   let vars = require('vars')
   let param = require('player/default-param')
+  let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
   let {evalParamFrame,evalParamEvent} = require('player/eval-param')
 
   let scales = {
@@ -106,12 +107,22 @@ define(function (require) {
     return 261.6256 * Math.pow(2, chromatic/12)
   }
 
-  let pitchFunc = (params, e,b,evalRecurse) => {
-    params = params || {}
-    let degree = evalParamFrame(param(params.value, param(params.degree, 0)), e,b)
-    let octave = evalParamFrame(param(params.octave, 4), e,b)
-    let sharp = evalParamFrame(param(params.sharp, 0), e,b)
-    return scale.degreeToFreq(degree, octave, params.scale, sharp)
+  scale.paramsToFreq = (params, defaultOctave) => {
+    let degree = parseInt(params.sound) + evalPerEvent(params, 'add', 0)
+    if (isNaN(parseInt(degree))) { return }
+    let octave = evalPerEvent(params, 'oct', defaultOctave)
+    let sharp = evalPerEvent(params, 'sharp', 0)
+    let freq = scale.degreeToFreq(degree, octave, evalPerEvent(params, 'scale'), sharp)
+    params.freq = freq
+    return freq
+  }
+
+  let pitchFunc = (args, e,b,evalRecurse) => {
+    args = args || {}
+    let degree = evalParamFrame(param(args.value, param(args.degree, 0)), e,b)
+    let octave = evalParamFrame(param(args.octave, 4), e,b)
+    let sharp = evalParamFrame(param(args.sharp, 0), e,b)
+    return scale.degreeToFreq(degree, octave, args.scale, sharp)
   }
   pitchFunc.isVarFunction = true
   vars['pitch'] = pitchFunc
