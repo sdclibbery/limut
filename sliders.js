@@ -36,19 +36,19 @@ define(function(require) {
     }
   }
 
-  let newSlider = (params) => {
-    if (!params) { throw 'Cannot create slider, no params passed' }
-    if (!params.name) { throw 'Cannot create slider, no name param' }
-    let slider = sliders[params.name]
+  let newSlider = (args) => {
+    if (!args) { throw 'Cannot create slider, no args passed' }
+    if (!args.name) { throw 'Cannot create slider, no name param' }
+    let slider = sliders[args.name]
     if (!slider) {
-      params.min = params.min || 0
-      params.max = params.max || 1
-      params.init = (params.init !== undefined) ? params.init : params.min
-      sliders[params.name] = params
-      slider = sliders[params.name]
+      args.min = args.min || 0
+      args.max = args.max || 1
+      args.init = (args.init !== undefined) ? args.init : args.min
+      sliders[args.name] = args
+      slider = sliders[args.name]
       createSliderUI(slider)
     } else {
-      for (let k in params) { slider[k] = params[k] } 
+      for (let k in args) { slider[k] = args[k] } 
     }
     updateSliderUI(slider)
     slider.marked = true
@@ -69,7 +69,7 @@ define(function(require) {
     }
   }
 
-  newSlider.isVarFunction = true
+  newSlider.isStaticVarFunction = true
   vars['slider'] = newSlider
   return {
     gc_reset: gc_reset,

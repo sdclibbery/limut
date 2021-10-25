@@ -27,6 +27,12 @@ define(function(require) {
   let varLookup = ({key,tupleIndices}, dependsOn, modifiers) => {
     if (!key) { return }
 
+    // look for static function call; call var immediately if present
+    let f = vars[key]
+    if (typeof f === 'function' && f.isStaticVarFunction) {
+      return f(modifiers)
+    }
+
     // Return a lookup function
     let [playerId, param] = key.split('.')
     if (playerId && param) {
