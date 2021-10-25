@@ -13,7 +13,7 @@ define(function (require) {
     if (params[p] === undefined) {
       audioParam.value = def
     } else if (typeof params[p] == 'number') {
-      // single value; no need for callback
+      // single value; no need for regular per frame update
       audioParam.value = params[p]
     } else {
       setAudioParamValue(audioParam, evalParam(params[p], params, params.count))

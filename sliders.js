@@ -52,7 +52,9 @@ define(function(require) {
     }
     updateSliderUI(slider)
     slider.marked = true
-    return () => slider.value || 0
+    return () => {
+      return slider.value || 0
+    }
   }
 
   let gc_reset = () => {
