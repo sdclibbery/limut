@@ -427,6 +427,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>lfo</code> lfo frequency in cycles per beat for synths that use an lfo</p>
 <p><code>pan</code> pan from -1 (left) to 1 (right). default: 0</p>
 <p><code>chorus</code> lfo-delay based stereo chorus effect</p>
+<p><code>freq</code> READ ONLY param. This param is set by all tonal synths, to the frequency in Hz of the note being played. This value can then be read for other purposes; eg <code>lpf=this.freq*2</code> will set the low pass cutoff frequency to double the note frequency.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-visual-params')">▶ Visual Params</h4>
 <div id="accordion-visual-params" class="closed">
@@ -572,10 +573,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 ====
 ==== audio ====
 save current note frequency onto event as this.freq
- base freq
-  do for all synths
- addc
- docs
+ Handle addc
 chop={value:2,wave:'sine'}  ;  ring={value:32,wave:'sine'}
  Actually chop/ring freq should be per frame...
   Actually, should have evalMainParamEvent, evalSubParamEvent, evalMainParamFrame, evalSubParamFrame..?

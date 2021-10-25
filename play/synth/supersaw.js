@@ -9,9 +9,8 @@ define(function (require) {
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
 
   return (params) => {
-    let degree = parseInt(params.sound) + evalPerEvent(params, 'add', 0)
-    if (isNaN(degree)) { return }
-    let freq = scale.degreeToFreq(degree, evalPerEvent(params, 'oct', 4), evalPerEvent(params, 'scale'), evalPerEvent(params, 'sharp', 0))
+    let freq = scale.paramsToFreq(params, 4)
+    if (isNaN(freq)) { return }
     let detune = evalPerEvent(params, 'detune', 0.1)
 
     let vca = envelope(params, 0.09, 'full')

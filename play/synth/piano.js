@@ -59,9 +59,8 @@ define(function (require) {
     C6: 261.6256*4,
   }
   return (params) => {
-    let degree = parseInt(params.sound) + evalPerEvent(params, 'add', 0)
-    if (isNaN(degree)) { return }
-    let freq = scale.degreeToFreq(degree, evalPerEvent(params, 'oct', 4), evalPerEvent(params, 'scale'), evalPerEvent(params, 'sharp', 0))
+    let freq = scale.paramsToFreq(params, 4)
+    if (isNaN(freq)) { return }
     let dur = Math.max(0.01, evalPerEvent(params, 'sus', evalPerEvent(params, 'dur', 0.25)))
     params.endTime = params._time + dur*params.beat.duration
 

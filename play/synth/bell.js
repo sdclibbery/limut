@@ -11,9 +11,8 @@ define(function (require) {
 
   return (params) => {
     if (params.dur !== undefined && params.dur < 2) { params.dur = 2 }
-    let degree = parseInt(params.sound) + evalPerEvent(params, 'add', 0)
-    if (isNaN(degree)) { return }
-    let freq = scale.degreeToFreq(degree, evalPerEvent(params, 'oct', 4), evalPerEvent(params, 'scale'), evalPerEvent(params, 'sharp', 0))
+    let freq = scale.paramsToFreq(params, 4)
+    if (isNaN(freq)) { return }
 
     let vca = envelope(params, 0.03, 'simple')
     let out = effects(params, vca)

@@ -10,9 +10,8 @@ define(function (require) {
   let fm = require('play/fm')
 
   return (params) => {
-    let degree = parseInt(params.sound) + evalPerEvent(params, 'add', 0)
-    if (isNaN(degree)) { return }
-    let freq = scale.degreeToFreq(degree, evalPerEvent(params, 'oct', 5), evalPerEvent(params, 'scale'), evalPerEvent(params, 'sharp', 0))
+    let freq = scale.paramsToFreq(params, 5)
+    if (isNaN(freq)) { return }
 
     let vca = envelope(params, 0.018, 'pad')
     let out = effects(params, vca)

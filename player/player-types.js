@@ -63,6 +63,7 @@ define((require) => {
     ping: { play: wave, baseParams: {wave:'sine', oct:5, envelope:'simple', _gainbase:0.04} },
     pulse: { play: wave, baseParams: {wave:'pulse', oct:3, envelope:'full', _gainbase:0.06} },
     saw: { play: wave, baseParams: {wave:'sawtooth', oct:4, envelope:'full', _gainbase:0.06} },
+    sine: { play: wave, baseParams: {wave:'sine', oct:4, envelope:'full', _gainbase:0.05} },
     square: { play: wave, baseParams: {wave:'square', oct:4, envelope:'full', _gainbase:0.054} },
     tri: { play: wave, baseParams: {wave:'triangle', oct:4, envelope:'full', _gainbase:0.06} },
     bell: { play: bell },

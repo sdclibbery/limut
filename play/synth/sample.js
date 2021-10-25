@@ -9,9 +9,8 @@ define(function (require) {
   let envelope = require('play/envelopes')
 
   return (params) => {
-    let degree = parseInt(params.sound) + evalPerEvent(params, 'add', 0)
-    if (isNaN(degree)) { return }
-    let freq = scale.degreeToFreq(degree, evalPerEvent(params, 'oct', 4), evalPerEvent(params, 'scale'), evalPerEvent(params, 'sharp', 0))
+    let freq = scale.paramsToFreq(params, 4)
+    if (isNaN(freq)) { return }
     let source = system.audio.createBufferSource()
     source.buffer = getBuffer(evalPerEvent(params, 'sample', 'sample/salamander/C4v8.mp3'))
     let samplePitch = evalPerEvent(params, 'samplepitch', 261.6256)

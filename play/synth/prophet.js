@@ -12,9 +12,8 @@ define(function (require) {
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
 
   return (params) => {
-    let degree = parseInt(params.sound) + evalPerEvent(params, 'add', 0)
-    if (isNaN(degree)) { return }
-    let freq = scale.degreeToFreq(degree, evalPerEvent(params, 'oct', 3), evalPerEvent(params, 'scale'), evalPerEvent(params, 'sharp', 0))
+    let freq = scale.paramsToFreq(params, 3)
+    if (isNaN(freq)) { return }
     let detuneSemis = evalPerEvent(params, 'detune', 0.1)
     let lfo = evalPerEvent(params, 'lfo', 1/4)
 
