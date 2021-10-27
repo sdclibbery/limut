@@ -572,19 +572,18 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
-save current note frequency onto event as this.freq
- Handle addc
 chop={value:2,wave:'sine'}  ;  ring={value:32,wave:'sine'}
  Actually chop/ring freq should be per frame...
   Actually, should have evalMainParamEvent, evalSubParamEvent, evalMainParamFrame, evalSubParamFrame..?
 Mix subparam for all effects, eg ring={32,mix:1/2}, room={2,mix:1/2} etc; should be per frame?
  Do not add any audio nodes if not specified
 Bug: chop doubles amplitude...
+this.freq also responds to addc
+808 synth based on https://github.com/vincentriemer/io-808
 echo={1/2,stereo:1} for stereo ping pong echo
 envelope exp (exponent) subparam, eg att={1/2,exp:2}
 ambi synth
  Cluster of sines, spread controlled by detune param, moving about?
-808 synth based on https://github.com/vincentriemer/io-808
 Allow adding filters in the room/echo loops eg echo=3/4{lpf:523} - but dont use existing filter handlers as must be per event only!
  Should also roll echofeedback into the object eg echo=3/4{feedback:0.85}
 Add some more waveforms  https://github.com/GoogleChromeLabs/web-audio-samples/tree/main/archive/demos/wave-tables
@@ -633,9 +632,9 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+Spiral and noise and shimmer predistortions
 Fan subparam for mirror  Eg mirror={6,fan:1/32}  Each mirror 'segment' is rotated by 1/32 more than the last
 Possible nice shader https://twitter.com/zozuar/status/1438117355746377728?s=03
-Spiral and noise and shimmer predistortions
 Hue,hsl functions (or just more params eg {h:1/3,l:1/2} ?)
 Colour parsing should assume alpha of 1 for eg #fff and #ffffff
 Consider pushing data of each event into a texture so a shader could display all events, eg as 2D patterns or voxels or 3D shapes
@@ -665,9 +664,10 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Should event Param evaluation force b to the time of the event?
- Yes probably, and then all evaluation should use b, never e.count
- And maybe rename: evalParamEvent->preEvalParam (should only be called at event creation?) and evalParamFrame->evalParamAt?
-round function: delay=round{[]r,to:1/4}
+ Yes probably, and then all evaluation should use b, never e.count? And evalParamEvent should ONLY be used for the pre-optimise?
+  In which case we don't need to force b, we just need to always use evalParamFrame
+ And so maybe rename: evalParamEvent->preEvalParam (should only be called at event creation?) and evalParamFrame->evalParamAt?
+Should delayed notes eval per event at the time of the delayed or undelayed event??
 Proper tests for follow and overrides and combinations, including tuples
 Follow player refactor
  Better follow tests
@@ -684,7 +684,7 @@ Follow player refactor
 []e4 to start on the event but run for 4 beats irrespective of how long the event actually lasts
  [0,1]n should randomly choose one of 0 or one then smooth between them, [0:1]n should pick random values between 0 and 1...
  In which case, rewrite it as the main random, but then smoothed
-Should delayed notes eval per event at the time of the delayed or undelayed event??
+floor function: delay=floor{[]r,to:1/4}
 Complex durations cause beat drift ?? Round pattern count to smallest possible duration? Eg [1/2,1/3]r rounds to nearest 1/6
 Per can default to repeat of thing being modified?
  Eg [0:1]l4{0:0} per defaults to 8?
