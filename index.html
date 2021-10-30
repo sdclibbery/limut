@@ -348,6 +348,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>glass</code> FM glass synth with a chiming sound</p>
 <p><code>xylo</code> FM xylophone</p>
 <p><code>piano</code> Sampled piano</p>
+<p><code>ambi</code> Ambient drone; multiple sines with varying detunes</p>
 <p><code>ethereal</code> FM Ethereal pad</p>
 <p><code>noise</code> Noise pad. Note pattern value is not used; white noise is produced for all values (uses AudioWorklet so will use more audio render capacity than other synth types).</p>
 <p><code>prophet</code> Prophet style pulse wave with lfo controlled pulse-width (uses AudioWorklet so will use more audio render capacity than other synth types)</p>
@@ -577,13 +578,10 @@ chop={value:2,wave:'sine'}  ;  ring={value:32,wave:'sine'}
   Actually, should have evalMainParamEvent, evalSubParamEvent, evalMainParamFrame, evalSubParamFrame..?
 Mix subparam for all effects, eg ring={32,mix:1/2}, room={2,mix:1/2} etc; should be per frame?
  Do not add any audio nodes if not specified
-Bug: chop doubles amplitude...
-this.freq also responds to addc
+Bug: chop doubles amplitude... also room, chorus etc all change amp and shouldnt
 808 synth based on https://github.com/vincentriemer/io-808
 echo={1/2,stereo:1} for stereo ping pong echo
 envelope exp (exponent) subparam, eg att={1/2,exp:2}
-ambi synth
- Cluster of sines, spread controlled by detune param, moving about?
 Allow adding filters in the room/echo loops eg echo=3/4{lpf:523} - but dont use existing filter handlers as must be per event only!
  Should also roll echofeedback into the object eg echo=3/4{feedback:0.85}
 Add some more waveforms  https://github.com/GoogleChromeLabs/web-audio-samples/tree/main/archive/demos/wave-tables
@@ -591,6 +589,7 @@ Make noise into a waveform not a worklet?  https://github.com/GoogleChromeLabs/w
  And so use wave synth instead?
 Convert pwm and noise to webassembly, performance is terrible compared to native oscs
 Reverb gate: room={1,gate:1/4}
+this.freq also responds to addc
 Envelope follower? Pitch follower? for external synth
 Can specify media stream device
  Print list of all devices with IDs
@@ -665,9 +664,13 @@ shadertoy synth multiple channels
 ==== other ====
 Should event Param evaluation force b to the time of the event?
  Yes probably, and then all evaluation should use b, never e.count? And evalParamEvent should ONLY be used for the pre-optimise?
+  ! What about @e and @f?
   In which case we don't need to force b, we just need to always use evalParamFrame
  And so maybe rename: evalParamEvent->preEvalParam (should only be called at event creation?) and evalParamFrame->evalParamAt?
 Should delayed notes eval per event at the time of the delayed or undelayed event??
+Really, embedded values should use the original b/count, not modified
+ eg add=[[0,2,4,7]t4]r{seed:0,per:4,0:0}
+Fullscreen not working on safari
 Proper tests for follow and overrides and combinations, including tuples
 Follow player refactor
  Better follow tests

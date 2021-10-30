@@ -1,5 +1,6 @@
 'use strict'
 define((require) => {
+  let parseExpression = require('player/parse-expression')
   let sprite = require('draw/sprite')
   let shadertoy = require('draw/shadertoy')
   let image = require('draw/image')
@@ -21,6 +22,7 @@ define((require) => {
   let xylo = require('play/synth/xylo')
   let wave = require('play/synth/wave')
   let dwave = require('play/synth/dwave')
+  let ambi = require('play/synth/ambi')
 
   let nullPlayer = { play: () => {}, stopped: true }
   let playerTypes = {
@@ -60,6 +62,7 @@ define((require) => {
     dbass: { play: dwave, baseParams: {wave:'sawtooth', oct:2, envelope:'full', _gainbase:0.09} },
     dtri: { play: dwave, baseParams: {wave:'triangle', oct:4, envelope:'full', _gainbase:0.06} },
     dpulse: { play: dwave, baseParams: {wave:'pulse', oct:3, envelope:'full', _gainbase:0.06} },
+    wave: { play: wave },
     ping: { play: wave, baseParams: {wave:'sine', oct:5, envelope:'simple', _gainbase:0.04} },
     pulse: { play: wave, baseParams: {wave:'pulse', oct:3, envelope:'full', _gainbase:0.06} },
     saw: { play: wave, baseParams: {wave:'sawtooth', oct:4, envelope:'full', _gainbase:0.06} },
@@ -78,7 +81,7 @@ define((require) => {
     supersaw: { play: supersaw },
     external: { play: external },
     xylo: { play: xylo },
-    wave: { play: wave },
+    ambi: { play: ambi },
   }
 
   return playerTypes

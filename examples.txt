@@ -860,3 +860,33 @@ p2 play [v+][s:], dur=1, delay=(0,[1/4,1/2,3/4]r{per:8,seed:0,0:0}), oct=4, chor
 p3 play t<cj>t[tttt]t<jjc>t, room, high=-8, amp=[0:1/2]l32*fade2, pan=[-1/3,1/3]r
 
 
+bpm=127
+scale=minor
+vb bits B, rate=1/2, fore=#228f, zoom=4
+v kal 0, zoom=3, amp=0.01+k.pulse/8, rate=1/2, back=#00fe, mid=blue, tunnel, mirror=5
+k play V., room=0.1
+hh play [-^<+->], fold, amp=[]r{seed:100,per:4,0:1}, echo=3/4, pan=[-1/2:1/2]r
+sd play ..*., fold, echo=1/8, pan=(-1,1)
+pc play WednesdayShowstopper, echo=3/4, fold, amp=3/2
+db dbass [00].[.0]2[00]..[.-1], lpf=[2000:200]e, amp=2, clip=1/4, room, echo=5/4, oct=(2,3)
+ss saw ....[02][.4](0<6597>)_, amp=2, room=2, lpf=[2000,5000,700]e, rel=3, oct=(3,4,5)
+aah sine (02468), dur=2, amp=[1/4:1]l[32,0], chop=[0,1,2,4,8]t[16,8,4,2,2]+[0,0,1]r, oct=(3,4,5)
+sq square -302[64]7, oct=(4,5,6), room=2, lpf=[400:1000]n, lpr=12, sus=2/3, rel=1/2, amp=2/3
+
+
+bpm=92
+scale=minor
+ch=[0,[2,3,5]r32,[4,1,6]r32,0]t32
+vs swirl 0, monochrome, scroll={x:time/128,y:-time/8}, time=time/4, fore=#ddff, back=#ddff+spr.pulse, mid=#888f+sp.pulse*0.7
+vs2 swirl 9, monochrome, scroll={x:time/128,y:-time/8}, time=0.2+time/4, additive, back=black, mid=#108f, fore=#018f
+// bs saw 0, dur=1/2, sus=1/3, oct=[1,2,3]r, rel=1, lpf=[400:1000]l16, att=0.01, pan=[-1/4:1/4]r
+// ss dsaw 0, dur=1/2, sus=1/3, oct=[3]r, rel=1, add=[0,4]t8+ch, lpf=[400:2000]l10, lpr=12, pan=[-1/2,1/2]r
+// sp supersaw (02)., dur=16, chorus, room=2, phaser=1/3, oct=(2,4), envelope=simple, amp=[1.5:2.5]r, add=ch, pan=[-1/3:1/3]r, detune=[0.23:0.27]l128
+spr dsquare ..4-7, dur=8, oct=(3,4), envelope=simple, room=2, amp=[0.2:0.3]r16, chorus, pan=[-1:1]l3@f, detune=[0.3:0.45]l192
+
+
+scale=minor
+// a ambi 0
+// a ambi (024), oct=(3,4), amp=1/3, room=2
+// a sine 0, envelope=pad, addc=([-1/4:1/4]l7@f,[-1/2:1/2]l19@f,[-1/2:1/2]l23@f,[-1/2:1/2]l31@f)
+// a sine (024), envelope=pad, addc=([-1/4:1/4]l7@f,[-1/2:1/2]l19@f,[-1/2:1/2]l23@f,[-1/2:1/2]l31@f), oct=(3,4), amp=1/3, room=2
