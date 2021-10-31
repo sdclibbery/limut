@@ -890,3 +890,12 @@ scale=minor
 // a ambi (024), oct=(3,4), amp=1/3, room=2
 // a sine 0, envelope=pad, addc=([-1/4:1/4]l7@f,[-1/2:1/2]l19@f,[-1/2:1/2]l23@f,[-1/2:1/2]l31@f)
 // a sine (024), envelope=pad, addc=([-1/4:1/4]l7@f,[-1/2:1/2]l19@f,[-1/2:1/2]l23@f,[-1/2:1/2]l31@f), oct=(3,4), amp=1/3, room=2
+
+v kal 0, zoom=1/4, amp=0.01, ripple
+// v gradient 0, ripple, recol=oil
+// v image 0, url='https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/TGRT_Testcard.jpg/800px-TGRT_Testcard.jpg', ripple
+// v shadertoy 0, ripple
+// v kal 0, ripple=p.pulse, scroll=time/64, zoom=2, perspective, tunnel
+// p play d[.d].d.dd.
+
+

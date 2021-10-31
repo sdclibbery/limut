@@ -32,7 +32,7 @@ define(function (require) {
   return (params) => {
     let freq = scale.paramsToFreq(params, 4)
     if (isNaN(freq)) { return }
-    let detuneSemis = evalPerEvent(params, 'detune', 1/2)
+    let detuneSemis = evalPerEvent(params, 'detune', 1/3)
     let wave = evalPerEvent(params, "wave", "sine")
 
     let vca = envelope(params, 0.06, 'pad')

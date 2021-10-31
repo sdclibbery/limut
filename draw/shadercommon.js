@@ -13,12 +13,14 @@ define(function (require) {
 
   let commonProcessors = `
   out vec4 fragColor;
+  uniform float iTime;
   uniform vec2 l_scroll;
   uniform vec2 l_zoom;
   uniform float l_rotate;
   uniform float l_mirror;
   uniform float l_perspective;
   uniform float l_tunnel;
+  uniform float l_ripple;
   uniform float l_pixellate;
   uniform float l_additive;
   uniform vec4 l_fore;
@@ -32,6 +34,9 @@ define(function (require) {
   vec2 preprocess( vec2 coord ) {
     origCoord = coord;
     if (l_pixellate != 0.) { coord = floor((coord+(0.5/l_pixellate))*l_pixellate)/l_pixellate; }
+    if (l_ripple != 0.) {
+      coord += coord*0.1*l_ripple*sin(length(coord)*24.0-iTime)/length(coord);
+    }
     if (l_perspective != 0.) {
       const float sz = 1.0;
       const float pz = 1.0;
@@ -127,6 +132,7 @@ define(function (require) {
     shader.mirrorUnif = system.gl.getUniformLocation(program, "l_mirror")
     shader.pixellateUnif = system.gl.getUniformLocation(program, "l_pixellate")
     shader.tunnelUnif = system.gl.getUniformLocation(program, "l_tunnel")
+    shader.rippleUnif = system.gl.getUniformLocation(program, "l_ripple")
     shader.perspectiveUnif = system.gl.getUniformLocation(program, "l_perspective")
     shader.additiveUnif = system.gl.getUniformLocation(program, "l_additive")
     shader.timeUnif = system.gl.getUniformLocation(program, "iTime")

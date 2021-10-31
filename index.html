@@ -451,6 +451,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>pixellate</code> number of pixels to pixellate to in each direction, or 0 to disable pixellation</p>
 <p><code>perspective</code> perspective warp to apply to shader (negative to invert), or 0 to disable</p>
 <p><code>tunnel</code> tunnel warp to apply to shader, or 0 to disable. Applies a slitscan type warp, where scrolling in the x direction will scroll the original shader through the tunnel.</p>
+<p><code>ripple</code> Apply a ripple warp to the shader, to give the effect of waves of image distortion rippling out from the centre of the shader.</p>
 <p><code>additive</code> add this shaders output to those beneath instead of blending</p>
 <p><code>monochrome</code> make the shader output monochrome; 0 for normal, 1 for monochrome</p>
 <p><code>vignette</code> fade out the visual around the edges. The value controls the shape.</p>
@@ -663,8 +664,13 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Should event Param evaluation force b to the time of the event?
- Yes probably, and then all evaluation should use b, never e.count? And evalParamEvent should ONLY be used for the pre-optimise?
   ! What about @e and @f?
+  !! Theres a difference between 'part eval params for an event' vs 'eval a param that mustnt change over an event'
+There are three cases actually
+Pre eval
+Eval for param that isn't allowed to change per frame
+Eval for param that could change per frame
+ Yes probably, and then all evaluation should use b, never e.count? And evalParamEvent should ONLY be used for the pre-optimise?
   In which case we don't need to force b, we just need to always use evalParamFrame
  And so maybe rename: evalParamEvent->preEvalParam (should only be called at event creation?) and evalParamFrame->evalParamAt?
 Should delayed notes eval per event at the time of the delayed or undelayed event??

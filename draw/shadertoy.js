@@ -11,7 +11,7 @@ define(function (require) {
   }
 
   let pre = `#version 300 es
-  precision highp float; in vec2 fragCoord; uniform float l_value; uniform float l_amp; vec2 iResolution = vec2(100.,100.); vec4 iMouse = vec4(0.); uniform float iTime;
+  precision highp float; in vec2 fragCoord; uniform float l_value; uniform float l_amp; vec2 iResolution = vec2(100.,100.); vec4 iMouse = vec4(0.);
   #define HW_PERFORMANCE 0
   `
 
@@ -46,7 +46,7 @@ define(function (require) {
           throw msg
         }
         let code = json.Shader.renderpass[0].code
-        let source = pre + code + common.commonProcessors + post
+        let source = pre + common.commonProcessors + code + post
         shaders[url] = {fragSource: source}
       }
       request.send()

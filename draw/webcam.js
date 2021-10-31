@@ -7,7 +7,6 @@ define(function (require) {
   let fragSource = `#version 300 es
   precision highp float;
   in vec2 fragCoord;
-  uniform float iTime;
   uniform float l_value;
   uniform float l_amp;
   uniform sampler2D l_image;

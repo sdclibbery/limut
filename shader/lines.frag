@@ -2,7 +2,6 @@
 // from https://www.shadertoy.com/view/wd3SDH
 precision mediump float;
 in vec2 fragCoord;
-uniform float iTime;
 uniform float l_value;
 uniform float l_amp;
 

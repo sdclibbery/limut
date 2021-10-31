@@ -127,7 +127,6 @@ let verts = (loc, window) => {
     let endTime = params._time + evalParamEvent(params, 'sus', evalParamEvent(params, 'dur', 1)) * params.beat.duration
     params.endTime = endTime
     let rate = evalParamEvent(params, 'rate', 1)
-    let timeParam = params._time
     let value = parseInt(evalParamEvent(params, 'value', '0'))
     if (value > 10) { value = value/5 }
     if (Number.isNaN(value)) { value = evalParamEvent(params, 'value', '0').charCodeAt(0) - 32 }
@@ -156,6 +155,7 @@ let verts = (loc, window) => {
       let zoom = vec(evalParamFrame(params, 'zoom', blankObj, state.count), defZoom, 'zoom')
       let perspective = evalParamFrame(params, 'perspective', 0, state.count)
       let tunnel = evalParamFrame(params, 'tunnel', 0, state.count)
+      let ripple = evalParamFrame(params, 'ripple', 0, state.count)
       let rotate = evalParamFrame(params, 'rotate', 0, state.count) * Math.PI*2
       let mirror = evalParamFrame(params, 'mirror', 0, state.count)
       let fore = colour(evalParamFrame(params, 'fore', blankObj, state.count), defFore, 'fore')
@@ -188,6 +188,7 @@ let verts = (loc, window) => {
       system.gl.uniform1f(s.mirrorUnif, mirror)
       system.gl.uniform1f(s.pixellateUnif, pixellate)
       system.gl.uniform1f(s.tunnelUnif, tunnel)
+      system.gl.uniform1f(s.rippleUnif, ripple)
       system.gl.uniform1f(s.perspectiveUnif, perspective)
       system.gl.uniform1f(s.additiveUnif, additive)
       system.gl.uniform1f(s.eventTimeUnif, eventTime)
