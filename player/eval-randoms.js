@@ -85,12 +85,12 @@ define(function(require) {
     return r
   }
   let bnoise = (x) => {
-      let i = Math.trunc(x)
-      let f = x%1
-      let k = hash(i)
-      let r = f*(f-1.0)*((16.0*k-4.0)*f*(f-1.0)-1.0)
-      return r
-    }
+    let i = Math.trunc(x)
+    let f = x%1
+    let k = hash(i)
+    let r = f*(f-1.0)*((16.0*k-4.0)*f*(f-1.0)-1.0)
+    return r
+  }
   let simpleNoise = (vs, period, modifiers, interval) => {
     let ps = Math.random()*10000
     let generator = (e,b,evalRecurse) => {
@@ -100,7 +100,7 @@ define(function(require) {
       generator = (e,b,evalRecurse) => {
         let count = (interval !== 'frame') ? e.count : b
         let seed = evalSeed(modifiers, e,b)
-        return xmur3(count - seed) / 4294967296
+        return count + seed
       }
     }
     return (e,b, evalRecurse) => {
@@ -175,6 +175,14 @@ define(function(require) {
         let next = getter(i)
         assertNotEqual(old, next, `Index: ${i}`)
         old = next
+      }
+    }
+    let assertIsCloseEveryTime = (getter) => {
+      let last = getter(0)
+      for (let i=1; i<=20; i++) {
+        let v = getter(i)
+        if (Math.abs(v-last) > 0.1) { console.trace(`Assertion failed.\n>>Expected ${v} to be close to ${last}`) }
+        last = v
       }
     }
     let evalParam = require('player/eval-param').evalParamFrame
@@ -255,9 +263,16 @@ define(function(require) {
 
     // Same sequence every time when seeded
     p = simpleNoise([], 1, {seed:1})
-    assert(0.8426829859122709, evalParam(p,ev(0),0))
-    assert(0.9005707556884941, evalParam(p,ev(1/4),1/4))
-    assert(0.5210828635247373, evalParam(p,ev(1),1))
+    assert(0.1989616905192142, evalParam(p,ev(0),0))
+    assert(0.503624927728974, evalParam(p,ev(1/4),1/4))
+    assert(0.3226893881270972, evalParam(p,ev(1),1))
+
+    //Noise should be smooth
+    p = simpleNoise([], 4)
+    assertIsCloseEveryTime((i)=>p(ev(i/10),i/10,evalParam))
+
+    p = simpleNoise([], 4, {seed:1})
+    assertIsCloseEveryTime((i)=>p(ev(i/10),i/10,evalParam))
 
     console.log('Eval random tests complete')
   }
