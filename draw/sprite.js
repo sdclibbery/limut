@@ -5,6 +5,7 @@ define(function (require) {
   let param = require('player/default-param')
   let evalParam = require('player/eval-param').evalParamFrame
   let texture = require('draw/texture')
+  let textTexture = require('draw/text')
 
   let evalParamFrame = (params, p, def, count) =>{
     let v = params[p]
@@ -134,6 +135,7 @@ let verts = (loc, window) => {
     let sway = evalParamEvent(params, 'sway', 0)
     let additive = evalParamEvent(params, 'additive', defParams.additive || 0)
     let url = evalParamEvent(params, 'url', 'favicon-32x32.png')
+    let text = evalParamEvent(params, 'text', 'blah')
     let window = evalParamEvent(params, 'window', false)
     let fade = evalParamEvent(params, 'fade', defParams.fade || 0)
     let recol = evalParamEvent(params, 'recol', 0)
@@ -194,7 +196,7 @@ let verts = (loc, window) => {
       system.gl.uniform1f(s.eventTimeUnif, eventTime)
       if (s.textureUnif) {
         s.textureUnif.forEach((tu,i) => {
-          let t = s.texture || texture(url)
+          let t = s.texture || (text ? textTexture(text) : texture(url))
           if (t.update) { t.update(state) }
           system.gl.activeTexture(system.gl['TEXTURE'+i])
           system.gl.bindTexture(system.gl.TEXTURE_2D, t.tex)
