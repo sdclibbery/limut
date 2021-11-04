@@ -22,7 +22,15 @@ define(function (require) {
       ctx.textAlign = "center"
       ctx.textBaseline = "middle"
       ctx.font = "72px monospace"
-      ctx.fillText(value, canvas.width/2, canvas.height/2)
+      if (typeof value !== 'string') { value = value.toString() }
+      let lineHeight = ctx.measureText("Mg").width * 1.02
+      let lines = value.split("\\n")
+      let x = canvas.width/2
+      let y = canvas.height/2 - lineHeight*(lines.length-1)/2
+      for (let i = 0; i < lines.length; ++i) {
+        ctx.fillText(lines[i], x, y)
+        y += lineHeight
+      }
       system.gl.bindTexture(system.gl.TEXTURE_2D, text.tex)
       system.gl.texImage2D(system.gl.TEXTURE_2D, 0, system.gl.RGBA, text.width, text.height, 0, system.gl.RGBA, system.gl.UNSIGNED_BYTE, canvas)
     }

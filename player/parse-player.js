@@ -39,7 +39,7 @@ define((require) => {
       let playerType = parts[1]
       if (!playerType) { throw 'Missing player type' }
       if (playerType) {
-        let command  = parts.slice(2).join('').trim()
+        let command = line.replace(parts[0],'').replace(parts[1],'').trim()
         if (!command) { throw 'Player "'+playerType+'" Missing pattern/params' }
         let [patternStr, paramsStr] = splitOnFirst(command, ',').map(s => s.trim())
         // All params commented out?
@@ -176,6 +176,14 @@ define((require) => {
   p = parsePlayer('p test 0, amp=2')
   p.play(p.getEventsForBeat({time:0, count:0, duration:1}))
   assert(2, p.currentEvent(0)[0].amp)
+  
+  p = parsePlayer('p test 0 , amp = 2 ')
+  p.play(p.getEventsForBeat({time:0, count:0, duration:1}))
+  assert(2, p.currentEvent(0)[0].amp)
+  
+  p = parsePlayer("p test 0, foo='a b  c'")
+  p.play(p.getEventsForBeat({time:0, count:0, duration:1}))
+  assert('a b  c', p.currentEvent(0)[0].foo)
   
   p = parsePlayer('p play xo,// amp=2')
   assert(undefined, p.getEventsForBeat({count:0})[0].amp)

@@ -109,6 +109,7 @@ define(function(require) {
   assert({dur:1, oct:4}, parseParams('dur=1,oct=4'))
   assert({t:'a'}, parseParams("t='a'"))
   assert({s:'abc'}, parseParams("s='abc'"))
+  assert({s:'a b  c'}, parseParams("s='a b  c'"))
   assert({s:'http://a.com/Bc.mp3'}, parseParams("s='http://a.com/Bc.mp3'"))
   assert({}, parseParams("//s='abc'"))
   assert({s:1}, parseParams("s//='abc'"))

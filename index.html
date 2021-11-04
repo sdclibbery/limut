@@ -635,9 +635,11 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
 text synth
- Support line breaks
+ \n should be parsed out of the string, and text should split on \n not \\n
  Support subparams for font/size/layout etc
   Handle caching correctly
+ Autosize to fit and maximise use of texture?
+ Texture repeat?
  Docs
 Spiral and noise and shimmer predistortions
 Fan subparam for mirror  Eg mirror={6,fan:1/32}  Each mirror 'segment' is rotated by 1/32 more than the last

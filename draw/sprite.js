@@ -135,7 +135,7 @@ let verts = (loc, window) => {
     let sway = evalParamEvent(params, 'sway', 0)
     let additive = evalParamEvent(params, 'additive', defParams.additive || 0)
     let url = evalParamEvent(params, 'url', 'favicon-32x32.png')
-    let text = evalParamEvent(params, 'text', 'blah')
+    let text = evalParamEvent(params, 'text')
     let window = evalParamEvent(params, 'window', false)
     let fade = evalParamEvent(params, 'fade', defParams.fade || 0)
     let recol = evalParamEvent(params, 'recol', 0)
