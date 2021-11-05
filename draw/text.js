@@ -23,7 +23,7 @@ define(function (require) {
       ctx.textBaseline = "middle"
       ctx.font = "72px monospace"
       if (typeof value !== 'string') { value = value.toString() }
-      let lineHeight = ctx.measureText("Mg").width * 1.02
+      let lineHeight = ctx.measureText("Mg").width * 0.9
       let lines = value.split("\n")
       let x = canvas.width/2
       let y = canvas.height/2 - lineHeight*(lines.length-1)/2

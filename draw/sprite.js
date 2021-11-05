@@ -9,16 +9,16 @@ define(function (require) {
 
   let evalParamFrame = (params, p, def, count) =>{
     let v = params[p]
-    if (typeof v !== 'number' && !v) { return def }
+    if (v === undefined) { return def }
     v = evalParam(v, params, count)
-    if (typeof v !== 'number' && !v) { return def }
+    if (v === undefined) { return def }
     return v
   }
   let evalParamEvent = (params, p, def) =>{
     let v = params[p]
-    if (typeof v !== 'number' && !v) { return def }
+    if (v === undefined) { return def }
     v =  evalParam(v, params, params.beat.count)
-    if (typeof v !== 'number' && !v) { return def }
+    if (v === undefined) { return def }
     return v
   }
 
@@ -196,7 +196,7 @@ let verts = (loc, window) => {
       system.gl.uniform1f(s.eventTimeUnif, eventTime)
       if (s.textureUnif) {
         s.textureUnif.forEach((tu,i) => {
-          let t = s.texture || (text ? textTexture(text) : texture(url))
+          let t = s.texture || (text !== undefined ? textTexture(text) : texture(url))
           if (t.update) { t.update(state) }
           system.gl.activeTexture(system.gl['TEXTURE'+i])
           system.gl.bindTexture(system.gl.TEXTURE_2D, t.tex)
