@@ -29,12 +29,23 @@ define(function(require) {
     let result = ''
     let char
     while (char = state.str.charAt(state.idx)) {
-      if (char == '\'') {
+      if (char == '\\') {
+        state.idx += 1
+        char = state.str.charAt(state.idx)
+        state.idx += 1
+        if (char == 'n') { result += '\n' }
+        else if (char == 't') { result += '\t' }
+        else if (char == 'r') { }
+        else { result += char }
+      }
+      else if (char == '\'') {
         state.idx += 1
         break
       }
-      result += char
-      state.idx += 1
+      else {
+        result += char
+        state.idx += 1
+      }
     }
     return result
   }
@@ -686,6 +697,8 @@ define(function(require) {
   for (let i = 0; i<20; i+=1) { assert(v1, p(ev(1),1,evalParamFrame)) }
 
   assert('ab', parseExpression("'a'+'b'")(ev(0,0),0,evalParamFrame))
+
+  assert('a\nb', parseExpression("'a\\nb'"))
 
   assert('event', parseExpression("[0,1]r").interval)
   assert('event', parseExpression("[0:1]r").interval)
