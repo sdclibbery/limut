@@ -34,6 +34,8 @@ define(function (require) {
       system.gl.bindTexture(system.gl.TEXTURE_2D, text.tex)
       system.gl.texImage2D(system.gl.TEXTURE_2D, 0, system.gl.RGBA, text.width, text.height, 0, system.gl.RGBA, system.gl.UNSIGNED_BYTE, canvas)
     }
+    texts[value].lastUsed = system.time
+    for (let k in texts) { if (texts[k].lastUsed < system.time-1) delete texts[k] } // Cleanup old textures
     return texts[value]
   }
 })
