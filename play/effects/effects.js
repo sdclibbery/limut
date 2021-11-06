@@ -2,6 +2,7 @@
 define(function (require) {
   let system = require('play/system')
   let param = require('player/default-param')
+  let {subParam,mainParam} = require('player/sub-param')
   let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
   let chain = require('play/effects/chains')
   let filters = require('play/effects/filters')
@@ -13,17 +14,6 @@ define(function (require) {
     node.connect(vca)
     system.disconnect(params, [vca,node])
     return vca
-  }
-
-  let subParam = (p, name, def) => {
-    let v
-    if (typeof p === 'object') { v = p[name] }
-    return param(v, def)
-  }
-
-  let mainParam = (p, def) => {
-    if (typeof p === 'number') { return p }
-    return subParam(p, 'value', def)
   }
 
   let chop = (params, node) => {

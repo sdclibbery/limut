@@ -635,10 +635,9 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
 text synth
- Support subparams for font/size/layout etc
-  Handle caching correctly
- Texture repeat? Param for images genrally?
- Docs
+ Texture repeat? Subparam for images genrally?
+ Docs subparams: font, fontsize, linesize
+video synth (use video element to load video file; don't try and target eg youtube)
 Spiral and noise and shimmer predistortions
 Fan subparam for mirror  Eg mirror={6,fan:1/32}  Each mirror 'segment' is rotated by 1/32 more than the last
 Possible nice shader https://twitter.com/zozuar/status/1438117355746377728?s=03
@@ -649,7 +648,6 @@ Disco glowing geometric shapes shader
 Starfield shader
 Check image.shadertoy, webcam etc etc for per frame alloc
 make vignette work with window
-video synth (use video element to load video file; don't try and target eg youtube)
 vmirror?
 Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
 Some form of anti aliasing eg for grid shader in perspective distance?
