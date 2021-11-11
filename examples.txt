@@ -912,3 +912,51 @@ b saw 00[43]-707[-32]-4, dur=1/2, oct=2, amp=2, echo=3/4, lpf=this.freq*slider{n
 // a ambi (024), room=2, oct=(3,4), amp=[1/6:2/3]l[32:0]
 
 
+bpm=125
+scale=phrygian
+vg gradient 0, fore=#404040ff
+v bars 0, amp=1+sd.pulse[0]*0.6+fill.pulse[0]/4, scroll=time/4, recol=hue, ripple=b.pulse[0]/2, monochrome=0.4-10*a.amp[0], additive=0, back=transparent, fore=#aaaf
+kd play X., room=0.1, amp=1/2
+hh play .<---[-y]>, fold, pan=-1/2
+sd play ..(*H)., pan=1/2
+p2 play h<.*>tsf;ts, echo=3/4
+b saw 40[02][.1].1.[.0], dur=1/2, oct=(2,3), echo=1, pan=[-1/4:1/4]r, lpf=this.freq*3
+// set b lpf=this.freq*[2:50]r{seed:[100,0]t[12,4],per:4}, lpr=20
+// set b lpf=this.freq*[2:50]n3/2, lpr=20
+// set b lpf=this.freq*[30,13,3,7,2,7,4,5]s1@f, lpr=14
+// set b lpf=this.freq*slider{name:'cutoff',min:3,max:50}, lpr=12
+// fill play [oo], rate=3/4, amp=0.7*[0,1/2,3/2]l[28,4,0]], pan=[-1/2,1/2], echo=1/8
+// set b lpf=this.freq*[3:50]l[32,0], lpr=[5:25]l[32,0], rel=[0.01:1]l[32,0]
+// set [kd,hh] amp=0
+// a ambi (0246), oct=(3,4), amp=[0:1/4]l[32,0]
+// set v mirror=3
+
+
+bpm=125
+scale=minor
+main.amp=3/2
+vt text 0, dur=1/4, text={['Ragle','Gumm',' ',' '],fontsize:144}
+vj julia 3, back=#1118, mid=rainbow, rate=2, ripple=kr.pulse, scroll={x:[-1:1]n2,y:[-1:1]n2}/12, zoom=2+k.pulse/6
+k play x., room=0.1, pan=(-1,1)
+hh play --=--=-=, fold, echo=3/4, pan=[-1/2,1/2]r
+sd play ..(H*)., fold
+b saw 0.-7<20>.0[.7]., dur=1/2, amp=2, oct=2, lpf=this.freq*[3:7]n2
+kr play VM.VM.<mX>., echo=3/4, fold, amp=1, pan=[-1/2:1/2]r
+le pulse 0[76]<-4-5-6-7>., amp=2, room, oct=4, chorus, att=0.02, echo=1, lpf=this.freq*[2:10]l7@f, lpr=12, pan=[-3/4:3/4]l8
+//<-4-5-6-7>
+set le lpf=this.freq*slider{name:'cutoff',min:2,max:30}
+a ambi (0124), oct=(3,4), room=2, amp=1/4
+n noise 0, dur=4, amp=[0:0.2]n+[0:1]l[32,0]@f, room, hpf=[8000,2000,100]l[28,4,0]@f
+f play [uu], amp=[0,0,4]l[30,2,0], fold
+
+
+t1 text 0, text='Hello', back=rainbow_fast, fore=blue
+t2 text 0, text='Algorave\nAlgorave', fore=red
+t3 text 0, dur=1/16, text=[0:100]r, fore=gray
+tt text 0, dur=1/30, text={'Hello\nYou',font:'arial', fontsize:['bold 144','144']r, linesize:0.6}
+
+
+v image 0, url='https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/TGRT_Testcard.jpg/800px-TGRT_Testcard.jpg', ripple
+tn text 0, dur=1/30, text={'Hello\nYou',font:'arial', fontsize:'144', linesize:0.7, y:1/4, x:2/3, fontstyle:'bold italic'}
+
+

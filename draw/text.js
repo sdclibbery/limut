@@ -26,11 +26,12 @@ define(function (require) {
       ctx.textAlign = 'center'
       let font = subParam(data, 'font', 'monospace')
       let fontsize = subParam(data, 'fontsize', 72)
-      ctx.font = `${fontsize}px ${font}`
+      let fontstyle = subParam(data, 'fontstyle', '')
+      ctx.font = `${fontstyle} ${fontsize}px ${font}`
       let lineHeight = ctx.measureText('Mg').width * subParam(data, 'linesize', 1)*0.9
       let lines = str.split('\n')
-      let x = canvas.width/2
-      let y = canvas.height/2 - lineHeight*(lines.length-1)/2
+      let x = canvas.width * subParam(data, 'x', 1/2)
+      let y = canvas.height * (1 - subParam(data, 'y', 1/2)) - lineHeight*Math.floor((lines.length-1)/2)
       for (let i = 0; i < lines.length; ++i) {
         ctx.fillText(lines[i], x, y)
         y += lineHeight
