@@ -134,6 +134,7 @@ let verts = (loc, window) => {
     let pulse = evalParamEvent(params, 'pulse', 0)
     let sway = evalParamEvent(params, 'sway', 0)
     let additive = evalParamEvent(params, 'additive', defParams.additive || 0)
+    let blend = evalParamEvent(params, 'blend')
     let url = evalParamEvent(params, 'url', 'favicon-32x32.png')
     let text = evalParamEvent(params, 'text')
     let window = evalParamEvent(params, 'window', false)
@@ -213,13 +214,22 @@ let verts = (loc, window) => {
           if (t.params) { t.params() }
         })
       }
-      if (fore[3] >= 0.9999 && back[3] >= 0.9999 && mid[3] >= 0.9999 && additive == 0 && vignette == 0) {
-        system.gl.disable(system.gl.BLEND)
+      let gl = system.gl
+      if (fore[3] >= 0.9999 && back[3] >= 0.9999 && mid[3] >= 0.9999 && additive == 0 && vignette == 0 && blend === undefined) {
+        gl.disable(gl.BLEND)
       } else {
-        system.gl.enable(system.gl.BLEND)
-        system.gl.blendFunc(system.gl.ONE, system.gl.ONE_MINUS_SRC_ALPHA)
+        gl.enable(gl.BLEND)
+        gl.blendEquation(gl.FUNC_ADD)
+        if (blend === 'additive') { gl.blendFunc(gl.ONE, gl.ONE) }
+        else if (blend === 'subtractive') { gl.blendFunc(gl.ONE, gl.ONE); gl.blendEquationSeparate(gl.FUNC_REVERSE_SUBTRACT, gl.FUNC_ADD) }
+        else if (blend === 'invert') { gl.blendFunc(gl.ONE, gl.ONE); gl.blendEquationSeparate(gl.FUNC_SUBTRACT, gl.FUNC_ADD) }
+        else if (blend === 'average') { gl.blendFunc(gl.CONSTANT_COLOR, gl.CONSTANT_COLOR); gl.blendColor(0.5,0.5,0.5,0.5) }
+        else if (blend === 'multiply') { gl.blendFunc(gl.DST_COLOR, gl.ZERO) }
+        else if (blend === 'max') { gl.blendFunc(gl.ONE, gl.ONE); gl.blendEquationSeparate(gl.MAX, gl.FUNC_ADD) }
+        else if (blend === 'min') { gl.blendFunc(gl.ONE, gl.ONE); gl.blendEquationSeparate(gl.MIN, gl.FUNC_ADD) }
+        else { gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA) }
       }
-      system.gl.drawArrays(system.gl.TRIANGLES, 0, 6)
+      gl.drawArrays(gl.TRIANGLES, 0, 6)
       return true
     }
   }
