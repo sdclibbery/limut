@@ -29,6 +29,7 @@ define(function (require) {
   uniform float l_monochrome;
   uniform float l_brightness;
   uniform float l_vignette;
+  uniform float l_contrast;
   uniform int l_recol;
   vec2 origCoord;
   vec2 preprocess( vec2 coord ) {
@@ -111,6 +112,9 @@ define(function (require) {
     float m = max(foreBack < 0.5 ? 2.0*foreBack : 2.0*(1.0-foreBack), 0.0);
     float f = min(foreBack < 0.5 ? 0.0 : 2.0*foreBack-1.0, 1.0);
     col *= l_back*b + l_mid*m + l_fore*f;
+    if (l_contrast != 0.) {
+      col.rgb = pow(col.rgb,vec3(l_contrast+1.0));
+    }
     fragColor.rgb = col.rgb*l_brightness*mix(col.a, 1.0, l_additive);
     fragColor.a = mix(col.a, 0.0, l_additive);
     if (length(fragColor) < 0.01) discard;
@@ -146,6 +150,7 @@ define(function (require) {
     shader.textureUnif = [system.gl.getUniformLocation(program, 'l_image')]
     shader.extentsUnif = system.gl.getUniformLocation(program, "l_extents")
     shader.eventTimeUnif = system.gl.getUniformLocation(program, "l_eventTime")
+    shader.contrastUnif = system.gl.getUniformLocation(program, "l_contrast")
 }
 
   return {

@@ -140,6 +140,7 @@ let verts = (loc, window) => {
     let window = evalParamEvent(params, 'window', false)
     let fade = evalParamEvent(params, 'fade', defParams.fade || 0)
     let recol = evalParamEvent(params, 'recol', 0)
+    let contrast = evalParamEvent(params, 'contrast', 0)
     return state => { // per frame
       if (state.time > endTime) { return false }
       let shaderTime = evalParamFrame(params, 'time', null, state.count)
@@ -195,6 +196,7 @@ let verts = (loc, window) => {
       system.gl.uniform1f(s.perspectiveUnif, perspective)
       system.gl.uniform1f(s.additiveUnif, additive)
       system.gl.uniform1f(s.eventTimeUnif, eventTime)
+      system.gl.uniform1f(s.contrastUnif, contrast)
       if (s.textureUnif) {
         s.textureUnif.forEach((tu,i) => {
           let t = s.texture || (text !== undefined ? textTexture(text) : texture(url))
