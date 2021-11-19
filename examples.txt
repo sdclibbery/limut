@@ -964,3 +964,33 @@ vg swirl 0
 vt kal 1, blend='invert'
 
 
+bpm=150
+scale=phrygian
+main.amp=3/2
+vk1 kal 0, rate=1/2, add=[0:1]l16@f, fore=orange, mid=red*2*k.pulse
+vk2 kal 4, rate=2, fore=ror.pulse*1.6*#4f8f+arp.pulse*#880f, mid=black
+vk3 kal 1, rate=1/4, fore=blue*bas.playing, mid=black, add=bas.value/10
+set [vk1,vk2,vk3] pixellate=27, vignette=2, amp=0.5, zoom=3/2, back=black, additive, scroll=1, mirror=2, contrast
+k play x., amp=3, fold
+a play .a, high=-8, amp=[0.3:0.5]n, room, pan=[-1:1]r
+c play ..(hH*)., room=1, rate=(1,2/3), drive, amp=1/16
+p play DWAY, echo=3/4, clip, amp=[1/10:1/5]n, pan=[-1:1]n, rate=[1,1,5/8]r{per:5,seed:10}//, delay=[0,1/3,2/3]r{per:5,seed:10,0:0}
+bas saw 01.01.[.6]0, dur=1/2, oct=2, lpf=this.freq*[2:40]n8, lpr=15, add=[0,1,-1]t[24,4,4], room, amp=2/3, playing
+arp dsquare 010, dur=1/2, echo=3/4, sus=1/5, phaser=1/3, room, amp=[1:2]n8, noisify=1/8, fold, chorus, add=[0,0,[0:7]n32], suslevel=1/3, att=0.02, decay=0.2, oct=[3,4,5]r{per:8,seed:0}
+// set bas amp=2/3+[0,1,3]l[28,4,0], lpf=this.freq*[5,20,50]l[28,4,0]
+// ror bell 0., dur=[32]r, oct=2, hpf=this.freq*8, amp=4, clip=[0:1]r, ring=this.freq/2.3213, room, echo, add=[0,1,-3,-7]r, pan=[-2/3:2/3]l5@f, sus=8
+
+
+scale=minor
+vg grid 0, perspective=-0.8, fore=blue*0.95, amp=4, scroll=time/42
+vb swirl 5, rate=1/16, zoom=4, fore=#12ff, back={r:[1/2:1]n19,g:[0:2/3]n11,b:0,a:1}*van.amp*[0:3]l2@f, perspective=-0.8, monochrome=1/2, additive
+vf kal 4, perspective=-1.1, blend='multiply', amp=2, contrast=3, scroll=time/32
+am ambi (014)(145)(2356)(357), dur=8, room=2, oct=(3,4), amp=1/4, fold=[0:1/2]l23, pan=[-1:1]r
+van saw [76]2<4.1..><.33>.[0<.-3>]..[76]8.[97]<.2.6>..., dur=4, vib=3, vibdepth=0.1, lpf=this.freq*[5,17,10,4,3]e, addc=wow/2, sus=4, rel=8, room=2, amp=1/3
+// pul pulse 0.0.0..., dur=1/2, oct=2, amp=[0:0.35]l41, room, lpf=this.freq*[8:15]l16, lpr=12, pan=[-1/2:1/2]l17
+bep tri 0..., dur=2/3, addc=[0,0,-2,-2]e, room=2, oct=4, amp=[0.2:0.5]l47, pan=(-1,1)
+set [vb,van] amp=0
+// set am fold=0
+// set am fold=2/3
+
+
