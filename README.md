@@ -4,17 +4,19 @@ Live coding music and visuals in the browser. Inspired by FoxDot with a desire t
 
 # Documentation
 
-Documentation (what there is of it) is available in the page itself, underneath the console; this includes a number of examples that can be copied into the editor and run.
+Documentation is available in the page itself, underneath the console.
 
 # Try it
 
 Try it at https://sdclibbery.github.io/limut/
 
+Example limut code can be pasted into the editor to see what Limut can do; this can be found on the page under the editor and console windows, or there are many examples (including some technical tests) at https://github.com/sdclibbery/limut/blob/master/examples.txt
+
 Please report problems / bugs / browser issues etc as github issues at https://github.com/sdclibbery/limut/issues
 
 # Electron app
 
-Limut can be run as a website, or packaged into a desktop web app. With npm installed, run `npm install` to install electron, and then `npm start` to run the electron app. There are no prepackaged versions available at present.
+Limut can be run as a website, or packaged into a desktop web app. With npm installed, run `npm install` to install electron, and then `npm start` to run the electron app. There are no prepackaged versions available at present (pull requests welcome).
 
 # Code Editor
 
