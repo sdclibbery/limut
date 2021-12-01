@@ -73,9 +73,8 @@ define(function(require) {
   let beatLatencyReadout = document.getElementById('beat-latency-readout')
   let visualReadout = document.getElementById('visual-readout')
   let beatReadout = document.getElementById('beat-readout')
-  let beat12Readout = document.getElementById('beat12-readout')
-  let beat16Readout = document.getElementById('beat16-readout')
-  let beat32Readout = document.getElementById('beat32-readout')
+  let beatReadouts = [document.getElementById('beat1-readout'),document.getElementById('beat2-readout'),document.getElementById('beat3-readout')]
+  vars['beat.readouts'] = [12,16,32]
   let lastBeatTime = 0 
   let beatLatency = 0
   let lastVisualsActive
@@ -90,9 +89,13 @@ define(function(require) {
     vars.time = beatTime
     if (beat) {
       beatReadout.innerText = beat.count
-      beat12Readout.innerText = (beat.count%12 + 1) + '/12'
-      beat16Readout.innerText = (beat.count%16 + 1) + '/16'
-      beat32Readout.innerText = (beat.count%32 + 1) + '/32'
+      let bc = vars['beat.readouts']
+      if (typeof bc === 'number') { bc = [bc] }
+      beatReadouts.forEach((r,i) => {
+        let c = bc[i]
+        r.style.display = !c ? 'none' : 'inline'
+        r.innerText = (beat.count%c + 1) + '/'+c
+      })
       mainVars.update(Math.floor(beatTime), beatTime)
       let sortedPlayers = Object.values(players.instances).sort((a,b) => a.dependsOn.length - b.dependsOn.length) // should be a proper dependency graph sort
       sortedPlayers.forEach(player => {

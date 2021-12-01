@@ -994,3 +994,22 @@ set [vb,van] amp=0
 // set am fold=2/3
 
 
+bpm=125
+scale=minor
+main.amp=2
+big={w:2/3,h:2/3}
+vg gradient follow pc, amp=1
+vs kal 0, blend='multiply', monochrome, amp=2, zoom=4+pk.pulse/4, scroll=time/96, time=time/4+ps.pulse/2+py.pulse*3
+va kal follow a, blend='min', zoom=1+a.amp/2, amp=1
+vb glow follow b, loc=sparkle+big, additive, fore=blue, amp=1/2, rate=3
+vy glow follow py, loc=sparkle+big*2, additive, fore=yellow, amp=1, rate=10
+vc swirl follow c, blend='max', time=time/2+5*c.amp[0], zoom=1/4+c.addc[0]/15, fore=#fff6
+pc sample 0, dur=32, sus=32, sample='https://upload.wikimedia.org/wikipedia/commons/1/15/Festival_concert_people_crowd.ogg', room=1/2, amp=1/4
+pk play (x)., fold=[0.2:0.3]n, lpf=1000, amp=2
+ps play .[st], mid=-60
+pr play XMVeMk, dur=1/4, amp=1/3, pan=[-1:1]s1/2
+py play ..#., rate=2/3, fold=[1,1/2,3/4,1/4]t2, sus=1/3
+b saw 2[00], dur=1/2, oct=2, lpf=this.freq*slider{name:'cutoff',min:2,max:50}, sus=[1/8:1/5]l[32,0], lpr=15, att=0.02, rel=0.02, amp=3
+c tri (03468), oct=3, envelope=pad, amp=[0.2:0.4]n8@f, pan=[-2/3:2/3]r, addc=[0,0,7,7]l[10,1/2,5,1/2]@f+wow/2, lpf=700, chorus, room
+a pulse 0121, dur=1/2, sus=1/4, rel=1, lpf=this.freq*[2:7]l[32,0], lpr=15, oct=4, amp=[5:1]l16@f, chorus, fold
+
