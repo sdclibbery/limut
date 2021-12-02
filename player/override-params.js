@@ -35,7 +35,6 @@ define(function(require) {
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
-  let parseExpression = require('player/parse-expression')
   let assert = (expected, actual) => {
     let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
     let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)

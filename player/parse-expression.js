@@ -236,7 +236,7 @@ define(function(require) {
       // vars
       let parsed = parseVar(state)
       let modifiers = parseMap(state)
-      let v = varLookup(parsed, state.dependsOn, modifiers)
+      let v = varLookup(parsed, state.dependsOn, modifiers, state.context)
       if (v !== undefined) {
         result = wrapMods(v, modifiers)
         if (typeof result === 'function') {
@@ -253,7 +253,7 @@ define(function(require) {
     return result
   }
 
-  let parseExpression = (v, commented, dependsOn) => {
+  let parseExpression = (v, commented, dependsOn, context) => {
     if (v == '' || v == undefined) { return }
     v = v.trim()
     let state = {
@@ -261,6 +261,7 @@ define(function(require) {
       idx: 0,
       expression: expression,
       dependsOn: dependsOn || [],
+      context: context,
     }
     let result = expression(state)
     if (commented && state.commented) { commented() }

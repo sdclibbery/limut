@@ -36,8 +36,11 @@ define(function(require) {
     }
   }
 
-  let newSlider = (args) => {
+  let newSlider = (args, context) => {
     if (!args) { args={} }
+    if (!args.name) {
+      args.name = context
+    }
     if (!args.name) {
       args.name = 'Slider'+Math.floor(Math.random()*10000)
     }

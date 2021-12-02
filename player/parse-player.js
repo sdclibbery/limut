@@ -88,7 +88,7 @@ define((require) => {
         let getEventsForBeat
         if (patternStr.startsWith('follow')) {
           // Follow player
-          let params = parseParams(paramsStr, player.dependsOn)
+          let params = parseParams(paramsStr, player.dependsOn, playerId)
           getEventsForBeat = followPlayer(patternStr.slice(6).trim(), params)
         } else if (playerFactory.stopped) {
           getEventsForBeat = () => []

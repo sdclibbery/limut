@@ -1,6 +1,5 @@
 'use strict'
 define((require) => {
-  let parseExpression = require('player/parse-expression')
   let sprite = require('draw/sprite')
   let shadertoy = require('draw/shadertoy')
   let image = require('draw/image')

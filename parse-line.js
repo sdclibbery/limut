@@ -58,9 +58,9 @@ define((require) => {
     k = k.toLowerCase()
     if (k.match(/^[a-z][a-z0-9_\.]*$/) && !!v) {
       if (mainVars.exists(k)) {
-        mainVars.set(k, parseExpression(v))
+        mainVars.set(k, parseExpression(v, undefined, undefined, k))
       } else {
-        v = parseExpression(v)
+        v = parseExpression(v, undefined, undefined, k)
         vars[k] = v
       }
       return
@@ -74,7 +74,7 @@ define((require) => {
       } else {
         playerIds = [identifier(state)]
       }
-      let params = parseParams(state.str.slice(state.idx).trim())
+      let params = parseParams(state.str.slice(state.idx).trim(), undefined, playerIds.join(','))
       playerIds.forEach(playerId => {
         players.overrides[playerId] = overrideParams(players.overrides[playerId] || {}, params)
       })

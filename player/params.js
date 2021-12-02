@@ -69,7 +69,7 @@ define(function(require) {
     }
     name = name.trim()
     if (name) {
-      let v = parseExpression(value, () => commented=true, state.dependsOn)
+      let v = parseExpression(value, () => commented=true, state.dependsOn, (state.context?state.context+'.':'')+name)
       state.params[name.toLowerCase().trim()] = v
       if (commented) { return false }
       return true
@@ -77,13 +77,14 @@ define(function(require) {
     return false
   }
 
-  let parseParams = (paramsStr, dependsOn) => {
+  let parseParams = (paramsStr, dependsOn, context) => {
     let state = {
       str: paramsStr,
       idx: 0,
       params: {},
       bracketStack: [],
       dependsOn: dependsOn || [],
+      context: context,
     }
     while (parseParam(state)) {}
     return state.params

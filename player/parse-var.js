@@ -24,13 +24,13 @@ define(function(require) {
     return {key:key, tupleIndices:tupleIndices}
   }
 
-  let varLookup = ({key,tupleIndices}, dependsOn, modifiers) => {
+  let varLookup = ({key,tupleIndices}, dependsOn, args, context) => {
     if (!key) { return }
 
     // look for static function call; call var immediately if present
     let f = vars[key]
     if (typeof f === 'function' && f.isStaticVarFunction) {
-      return f(modifiers)
+      return f(args, context)
     }
 
     // Return a lookup function
@@ -55,7 +55,7 @@ define(function(require) {
         v = vars[key]
       }
       if (typeof vars[key] === 'function' && vars[key].isVarFunction) { // Var function
-        v = vars[key](modifiers, event,b,evalRecurse)
+        v = vars[key](args, event,b,evalRecurse)
       }
       v = evalRecurse(v,event,b,evalRecurse)
       if (Array.isArray(v)) {
