@@ -37,8 +37,10 @@ define(function(require) {
   }
 
   let newSlider = (args) => {
-    if (!args) { throw 'Cannot create slider, no args passed' }
-    if (!args.name) { throw 'Cannot create slider, no name param' }
+    if (!args) { args={} }
+    if (!args.name) {
+      args.name = 'Slider'+Math.floor(Math.random()*10000)
+    }
     let slider = sliders[args.name]
     if (!slider) {
       args.min = args.min || 0
