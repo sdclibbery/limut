@@ -61,7 +61,6 @@ define(function (require) {
   }
 
   return {
-    evalPerFrame: evalMainParamFrame,
     evalMainParamNow: evalMainParamNow,
     evalSubParamNow: evalSubParamNow,
     evalMainParamFrame: evalMainParamFrame,

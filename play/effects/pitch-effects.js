@@ -1,7 +1,7 @@
 'use strict';
 define(function (require) {
   let system = require('play/system')
-  let {evalMainParamNow,evalPerFrame} = require('play/eval-audio-params')
+  let {evalMainParamNow,evalMainParamFrame} = require('play/eval-audio-params')
 
   return (params) => {
     let vcaVib
@@ -25,7 +25,7 @@ define(function (require) {
       let cents = system.audio.createConstantSource()
       cents.offset.value = 100
       vcaAddc = system.audio.createGain()
-      evalPerFrame(vcaAddc.gain, params, 'addc', 0)
+      evalMainParamFrame(vcaAddc.gain, params, 'addc', 0)
       cents.connect(vcaAddc)
       cents.start()
       cents.stop(params.endTime)

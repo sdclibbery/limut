@@ -2,7 +2,7 @@
 define(function (require) {
   let system = require('play/system')
   let param = require('player/default-param')
-  let {evalPerFrame} = require('play/eval-audio-params')
+  let {evalMainParamFrame} = require('play/eval-audio-params')
 
   let resonant = (params, node, type, prefix, defaultResonance) => {
     let freqParam = prefix+'f'
@@ -10,8 +10,8 @@ define(function (require) {
     let resonanceParam = prefix+'r'
     let filter = system.audio.createBiquadFilter()
     filter.type = type
-    evalPerFrame(filter.frequency, params, freqParam)
-    evalPerFrame(filter.Q, params, resonanceParam, defaultResonance)
+    evalMainParamFrame(filter.frequency, params, freqParam)
+    evalMainParamFrame(filter.Q, params, resonanceParam, defaultResonance)
     node.connect(filter)
     system.disconnect(params, [filter,node])
     return filter
@@ -24,9 +24,9 @@ define(function (require) {
     let qParam = prefix+'q'
     let filter = system.audio.createBiquadFilter()
     filter.type = type
-    evalPerFrame(filter.frequency, params, freqParam, defaultFreq)
-    evalPerFrame(filter.gain, params, gainParam)
-    evalPerFrame(filter.Q, params, qParam, defaultQ)
+    evalMainParamFrame(filter.frequency, params, freqParam, defaultFreq)
+    evalMainParamFrame(filter.gain, params, gainParam)
+    evalMainParamFrame(filter.Q, params, qParam, defaultQ)
     node.connect(filter)
     system.disconnect(params, [filter,node])
     return filter
