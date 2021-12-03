@@ -1,10 +1,10 @@
 'use strict';
 define(function (require) {
   let system = require('play/system')
-  let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
+  let {evalMainParamNow} = require('play/eval-audio-params')
 
   let shapeEffect = (params, effect, node, count, shape) => {
-    let amount = evalPerEvent(params, effect, 0)
+    let amount = evalMainParamNow(params, effect, 0)
     if (!amount) { return node }
     let shaper = system.audio.createWaveShaper()
     let curve = new Float32Array(2*count+1)

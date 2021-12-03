@@ -1,7 +1,7 @@
 'use strict';
 define(function (require) {
   let system = require('play/system')
-  let {evalPerEvent} = require('play/eval-audio-params')
+  let {evalMainParamNow} = require('play/eval-audio-params')
   let freeverb = require('play/effects/freeverb')
   let phaser = require('play/effects/phaser')
   let chorus = require('play/effects/chorus')
@@ -40,11 +40,11 @@ define(function (require) {
   }
   let getParams = (params) => {
     return {
-      chorusAmount: quantise(evalPerEvent(params, 'chorus', 0), 8),
-      lfoFreq: quantise(evalPerEvent(params, 'phaser', 0) / params.beat.duration, 16),
-      echoDelay: quantise(evalPerEvent(params, 'echo', 0) * params.beat.duration, 16),
-      echoFeedback: quantise(Math.min(evalPerEvent(params, 'echofeedback', 0.35), 0.95), 20),
-      room: quantise(evalPerEvent(params, 'room', 0)*0.7, 16),
+      chorusAmount: quantise(evalMainParamNow(params, 'chorus', 0), 8),
+      lfoFreq: quantise(evalMainParamNow(params, 'phaser', 0) / params.beat.duration, 16),
+      echoDelay: quantise(evalMainParamNow(params, 'echo', 0) * params.beat.duration, 16),
+      echoFeedback: quantise(Math.min(evalMainParamNow(params, 'echofeedback', 0.35), 0.95), 20),
+      room: quantise(evalMainParamNow(params, 'room', 0)*0.7, 16),
     }
 }
 

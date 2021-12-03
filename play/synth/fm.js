@@ -6,27 +6,27 @@ define(function (require) {
   let envelope = require('play/envelopes')
   let effects = require('play/effects/effects')
   let pitchEffects = require('play/effects/pitch-effects')
-  let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
+  let {evalMainParamNow} = require('play/eval-audio-params')
 
   return (params) => {
-    let degree = parseInt(params.sound) + evalPerEvent(params, 'add', 0)
+    let degree = parseInt(params.sound) + evalMainParamNow(params, 'add', 0)
     if (isNaN(degree)) { return }
-    let freq = scale.degreeToFreq(degree, evalPerEvent(params, 'oct', 4), evalPerEvent(params, 'scale'))
+    let freq = scale.degreeToFreq(degree, evalMainParamNow(params, 'oct', 4), evalMainParamNow(params, 'scale'))
 
     let vca = envelope(params, 0.04, 'full')
     let out = effects(params, vca)
     system.mix(out)
 
     let ops = [1,2,3,4,5,6].map(idx => {
-      let op = evalPerEvent(params, 'op'+idx, {})
-      let target = evalPerEvent(op, 'target', undefined)
-      let ratio = evalPerEvent(op, 'ratio', 1)
-      let wave = evalPerEvent(op, 'wave', 'sine')
+      let op = evalMainParamNow(params, 'op'+idx, {})
+      let target = evalMainParamNow(op, 'target', undefined)
+      let ratio = evalMainParamNow(op, 'ratio', 1)
+      let wave = evalMainParamNow(op, 'wave', 'sine')
       return {
         target: target,
-        depth: evalPerEvent(op, 'depth', 1024),
-        att: evalPerEvent(op, 'att', undefined),
-        rel: evalPerEvent(op, 'rel', 1),
+        depth: evalMainParamNow(op, 'depth', 1024),
+        att: evalMainParamNow(op, 'att', undefined),
+        rel: evalMainParamNow(op, 'rel', 1),
         ratio: ratio,
         op: (!!target) ? fm.op(freq*ratio, params, wave) : undefined,
         idx: idx,

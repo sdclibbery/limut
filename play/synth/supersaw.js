@@ -6,12 +6,12 @@ define(function (require) {
   let effects = require('play/effects/effects')
   let pitchEffects = require('play/effects/pitch-effects')
   let waveEffects = require('play/effects/wave-effects')
-  let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
+  let {evalMainParamNow} = require('play/eval-audio-params')
 
   return (params) => {
     let freq = scale.paramsToFreq(params, 4)
     if (isNaN(freq)) { return }
-    let detune = evalPerEvent(params, 'detune', 0.1)
+    let detune = evalMainParamNow(params, 'detune', 0.1)
 
     let vca = envelope(params, 0.09, 'full')
     let out = effects(params, vca)

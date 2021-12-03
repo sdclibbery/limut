@@ -4,7 +4,7 @@ define(function (require) {
   let {getBuffer} = require('play/samples')
   let effects = require('play/effects/effects')
   let waveEffects = require('play/effects/wave-effects')
-  let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
+  let {evalMainParamNow} = require('play/eval-audio-params')
 
   let symbols = {
     "&": "ampersand",
@@ -48,16 +48,16 @@ define(function (require) {
   }
 
   return (params) => {
-    let rate = evalPerEvent(params, 'rate', 1)
+    let rate = evalMainParamNow(params, 'rate', 1)
     let source = system.audio.createBufferSource()
-    source.buffer = getBuffer(getUrl(params.sound, evalPerEvent(params, 'sample', 1)))
+    source.buffer = getBuffer(getUrl(params.sound, evalMainParamNow(params, 'sample', 1)))
     source.playbackRate.value = rate
-    let eventDur = evalPerEvent(params, 'sus', 1e10) * params.beat.duration
+    let eventDur = evalMainParamNow(params, 'sus', 1e10) * params.beat.duration
     let bufferDur =  (source.buffer ? source.buffer.duration : 0.1)
     params.endTime = params._time + Math.min(eventDur, bufferDur)
 
     let vca = system.audio.createGain()
-    let gainbase = 0.18 * evalPerEvent(params, "loud", 1)
+    let gainbase = 0.18 * evalMainParamNow(params, "loud", 1)
     vca.gain.value = Math.max(0, gainbase * (typeof params.amp === 'number' ? params.amp : 1))
     waveEffects(params, source).connect(vca)
     system.mix(effects(params, vca))

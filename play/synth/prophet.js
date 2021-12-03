@@ -9,13 +9,13 @@ define(function (require) {
   let effects = require('play/effects/effects')
   let pitchEffects = require('play/effects/pitch-effects')
   let waveEffects = require('play/effects/wave-effects')
-  let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
+  let {evalMainParamNow} = require('play/eval-audio-params')
 
   return (params) => {
     let freq = scale.paramsToFreq(params, 3)
     if (isNaN(freq)) { return }
-    let detuneSemis = evalPerEvent(params, 'detune', 0.1)
-    let lfo = evalPerEvent(params, 'lfo', 1/4)
+    let detuneSemis = evalMainParamNow(params, 'detune', 0.1)
+    let lfo = evalMainParamNow(params, 'lfo', 1/4)
 
     let vca = envelope(params, 0.04, 'full')
     system.mix(effects(params, vca))

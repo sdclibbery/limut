@@ -6,7 +6,6 @@ define(function (require) {
   let effects = require('play/effects/effects')
   let pitchEffects = require('play/effects/pitch-effects')
   let waveEffects = require('play/effects/wave-effects')
-  let {evalPerEvent,evalPerFrame} = require('play/eval-audio-params')
   let fm = require('play/fm')
 
   return (params) => {
