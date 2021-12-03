@@ -172,12 +172,12 @@
 <pre>ARP dsaw 02479742, dur=1/4, lpf=100*[3,30]l6.8, lpr=8, Oct=(3,5), echo=3/8, att=0
 Bass prophet -2210, dur=4, Oct=(2,3), amp=1.7</pre>
 <pre>chords = [0,2,-2,3]t8
-p1 dbass 0-100, dur=1, chop=[2,2.5,3]t1, add=chords, echo=(1/17,1/23)
+p1 dbass 0-100, dur=1, chop={[2,2.5,3]t1,wave:'square'}, add=chords, echo=(1/17,1/23)
 k play X., lpf=800
 s play ..*.
 hh play -., echo=1/4, amp=2
 arp ping 04794697, dur=1/4, echo=3/8, add=chords, lpf=[10000,1000]t[24,8]
-main dsaw 0, dur=8, add=chords, detune=(0,0.1,0.3), chop=[0,2,3]t32, amp=0.5</pre>
+main dsaw 0, dur=8, add=chords, detune=(0,0.1,0.3), chop={[0,2,3]t32,wave:'square'}, amp=0.3</pre>
 <pre>d play x.h[.x]x[x.]h.
 chords=[0,2,4,3]t[16,8,4,4]
 be bell 0[.......2], dur=8, add=chords
@@ -580,12 +580,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
-chop={2,wave:'sine'}  ;  ring={32,wave:'sine'}
- Actually chop/ring freq should be per frame...
-  Actually, should have evalMainParamEvent, evalSubParamEvent, evalMainParamFrame, evalSubParamFrame..?
-  Cannot use a composite param thats evaluated once to then eval a main/subparam per frame
-   So in chop, Can evalParamEvent the composite p, but must still reevaluate from scratch to get chop mainparam
-    Need a method for this, so yes need audio evalMainParamFrame etc
+Convert all old usage of eval audio params to new and remove old methods
 Mix subparam for all effects, eg ring={32,mix:1/2}, room={2,mix:1/2} etc; should be per frame?
  Do not add any extra audio nodes if not specified
 Bug: chop doubles amplitude... also room, chorus etc all change amp and shouldnt
@@ -678,10 +673,6 @@ modifiers {offset,per,0:0}, @e, @f
 subparams {2,mix:1/2}
 ====
 ==== other ====
-Sliders
- Exponential option
- Remember last value even when not shown
- Display slider value on UI, instead of logging
 Should event Param evaluation force b to the time of the event?
  There are three cases
   Pre eval
@@ -732,6 +723,10 @@ Could use a syntax error on `set v.amp=0` (should be `set v amp=0`)
 []r{per:4} (ie without seed) ?? What should this do? Should it repeat? Or not?? Probably not??
 Should Eg [0:1]e{per:1/4,1/2:-1} work??
 stutter parameter?
+Sliders
+ Exponential option
+ Remember last value even when not shown
+ Display slider value on UI, instead of logging
 Support range overrides? Eg add=[0,1]l2{per:4,0-1:0}
 []w for random walk; eg [0:7]w random walk within 0 - 7 range; [0:7]w2{seed:1,per:8} etc; [0:7]w{step:2}
 All randoms including []r and []n should be deterministic

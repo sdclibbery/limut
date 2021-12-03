@@ -1013,3 +1013,7 @@ b saw 2[00], dur=1/2, oct=2, lpf=this.freq*slider{name:'cutoff',min:2,max:50}, s
 c tri (03468), oct=3, envelope=pad, amp=[0.2:0.4]n8@f, pan=[-2/3:2/3]r, addc=[0,0,7,7]l[10,1/2,5,1/2]@f+wow/2, lpf=700, chorus, room
 a pulse 0121, dur=1/2, sus=1/4, rel=1, lpf=this.freq*[2:7]l[32,0], lpr=15, oct=4, amp=[5:1]l16@f, chorus, fold
 
+
+p dsaw 0624, dur=4, ring=this.freq*{[1/4:1]l2@f,wave:square}, chop={[4,1]l2@f}, room, chorus, add=(0,-7,4,14), addc=wow
+
+
