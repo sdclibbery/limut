@@ -29,10 +29,10 @@ metronome.beatDuration = function (d) {
   return beatDuration
 }
 
-metronome.advance = () => 0.1
+metronome.advance = () => 0.1*beatDuration
 
 metronome.update = function (now) {
-  if (now > nextBeatAt - metronome.advance()*beatDuration) { // Process just BEFORE the next beat to make sure that events composed ON the beat can be scheduled accurately
+  if (now > nextBeatAt - metronome.advance()) { // Process just BEFORE the next beat to make sure that events composed ON the beat can be scheduled accurately
     var beat = {
       now: now,
       beatTime: metronome.beatTime(now),
@@ -41,7 +41,9 @@ metronome.update = function (now) {
       count: count+1,
     }
     lastBeatAt = nextBeatAt
-    nextBeatAt += beatDuration
+    let numBeats = Math.ceil((now-nextBeatAt+metronome.advance())/beatDuration) // Skip multiple beats; this might happen after losing focus
+    if (numBeats > 1) { console.log(`Skipping ${numBeats-1} beats`) }
+    nextBeatAt += numBeats*beatDuration
     count += 1
     return beat
   }
