@@ -141,7 +141,7 @@ define(function(require) {
       compressorReadout.style.backgroundColor = readoutColor(system.compressorReduction(), 0, -0.1)
       beatLatencyReadout.style.backgroundColor = readoutColor(beatLatency, 0, 0.05)
       visualReadout.style.backgroundColor = readoutColor(drawSystem.latency(), 0.02, 0.1)
-      }
+    }
     requestAnimationFrame(tick)
   }
   requestAnimationFrame(tick)
