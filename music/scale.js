@@ -3,7 +3,7 @@ define(function (require) {
   let vars = require('vars')
   let param = require('player/default-param')
   let {evalMainParamNow} = require('play/eval-audio-params')
-  let {evalParamFrame,evalParamEvent} = require('player/eval-param')
+  let {evalParamFrame} = require('player/eval-param')
 
   let scales = {
     chromatic       :[0,1,2,3,4,5,6,7,8,9,10,11],
