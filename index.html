@@ -688,12 +688,12 @@ Should event Param evaluation force b to the time of the event?
    Evals with the b passed in, and recurses fully and reduces to primitives
  TODO
   Add new preEvalParam method
-   Evals with the b/count for the event time, but recursion stops at interval==='frame'
    And use it for the optimisation pass at event creation time (on tuple expansion)
    Clean up any remiaining use of eval-params.evalParamEvent and remove it
   eval-params.evalParamEvent method is like evalParamFrame but forces b to e.count
+   Tests
    Investigate existing calls to functions called evalParamEvent
-   And switch appropriate uses of evalParamFrame to evalParamEvent where appropriate
+   And switch appropriate uses of evalParamFrame to evalParamEvent where appropriate; eg sprite.js??
   ? Rename eval-params.evalParamFrame to evalParamAt
   TEST everything
 Really, embedded values should use the original b/count, not modified
