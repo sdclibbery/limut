@@ -6,14 +6,14 @@ define(function (require) {
   let effects = require('play/effects/effects')
   let pitchEffects = require('play/effects/pitch-effects')
   let waveEffects = require('play/effects/wave-effects')
-  let {evalMainParamNow} = require('play/eval-audio-params')
+  let {evalMainParamEvent} = require('play/eval-audio-params')
   let setWave = require('play/synth/waveforms/set-wave')
 
   return (params) => {
     let freq = scale.paramsToFreq(params, 4)
     if (isNaN(freq)) { return }
-    let detuneSemis = evalMainParamNow(params, 'detune', 0)
-    let wave = evalMainParamNow(params, "wave", "sawtooth")
+    let detuneSemis = evalMainParamEvent(params, 'detune', 0)
+    let wave = evalMainParamEvent(params, "wave", "sawtooth")
 
     let vca = envelope(params, 0.06, 'full')
     let out = effects(params, vca)

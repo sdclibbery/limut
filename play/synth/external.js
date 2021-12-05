@@ -5,7 +5,7 @@ define(function (require) {
   let effects = require('play/effects/effects')
   let waveEffects = require('play/effects/wave-effects')
   let consoleOut = require('console')
-  let {evalMainParamNow} = require('play/eval-audio-params')
+  let {evalMainParamEvent} = require('play/eval-audio-params')
 
   let stream
   let getStream = () => {
@@ -30,7 +30,7 @@ define(function (require) {
       return
     }
     let vca = envelope(params, 0.5, 'pad')
-    let track = evalMainParamNow(params, 'track', undefined)
+    let track = evalMainParamEvent(params, 'track', undefined)
     system.mix(effects(params, vca))
     let audioIn
     if (track !== undefined) {

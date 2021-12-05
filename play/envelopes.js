@@ -1,17 +1,17 @@
 'use strict';
 define(function (require) {
   let system = require('play/system');
-  let {evalMainParamNow} = require('play/eval-audio-params')
+  let {evalMainParamEvent} = require('play/eval-audio-params')
 
   let fullEnvelope = (params, gainBase) => {
-    let dur = Math.max(0.01, evalMainParamNow(params, 'sus', evalMainParamNow(params, 'dur', 0.25)))
-    dur *= evalMainParamNow(params, "long", 1)
-    let attack = evalMainParamNow(params, 'att', 0.09) * params.beat.duration
+    let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25)))
+    dur *= evalMainParamEvent(params, "long", 1)
+    let attack = evalMainParamEvent(params, 'att', 0.09) * params.beat.duration
     params._time -= Math.min(attack, 0.05)
-    let decay = evalMainParamNow(params, 'decay', 0.08*dur) * params.beat.duration
-    let sustain = evalMainParamNow(params, 'sus', dur) * params.beat.duration - decay
-    let susLevel = evalMainParamNow(params, 'suslevel', 0.8)
-    let release = evalMainParamNow(params, 'rel', 0.1*dur) * params.beat.duration
+    let decay = evalMainParamEvent(params, 'decay', 0.08*dur) * params.beat.duration
+    let sustain = evalMainParamEvent(params, 'sus', dur) * params.beat.duration - decay
+    let susLevel = evalMainParamEvent(params, 'suslevel', 0.8)
+    let release = evalMainParamEvent(params, 'rel', 0.1*dur) * params.beat.duration
     let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     let vca = system.audio.createGain();
     vca.gain.cancelScheduledValues(0)
@@ -26,13 +26,13 @@ define(function (require) {
   }
 
   let simpleEnvelope = (params, gainBase) => {
-    let dur = Math.max(0.01, evalMainParamNow(params, 'sus', evalMainParamNow(params, 'dur', 0.25)))
-    dur *= evalMainParamNow(params, "long", 1)
-    let attack = evalMainParamNow(params, 'att', 0.09) * params.beat.duration
+    let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25)))
+    dur *= evalMainParamEvent(params, "long", 1)
+    let attack = evalMainParamEvent(params, 'att', 0.09) * params.beat.duration
     params._time -= Math.min(attack, 0.05)
-    let decay = evalMainParamNow(params, 'decay', 0.08*dur) * params.beat.duration
-    let susLevel = evalMainParamNow(params, 'suslevel', 0.8)
-    let release = evalMainParamNow(params, 'rel', dur) * params.beat.duration
+    let decay = evalMainParamEvent(params, 'decay', 0.08*dur) * params.beat.duration
+    let susLevel = evalMainParamEvent(params, 'suslevel', 0.8)
+    let release = evalMainParamEvent(params, 'rel', dur) * params.beat.duration
     let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     let vca = system.audio.createGain();
     vca.gain.cancelScheduledValues(0)
@@ -53,10 +53,10 @@ define(function (require) {
   }
 
   let padEnvelope = (params, gainBase) => {
-    let dur = Math.max(evalMainParamNow(params, 'sus', evalMainParamNow(params, 'dur', 0.25)), 0.01)
-    dur *= evalMainParamNow(params, "long", 1)
-    let attack = Math.max(evalMainParamNow(params, 'att', dur/2) * params.beat.duration, 0.001)
-    let release = Math.max(evalMainParamNow(params, 'rel', dur/2) * params.beat.duration, 0.001)
+    let dur = Math.max(evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25)), 0.01)
+    dur *= evalMainParamEvent(params, "long", 1)
+    let attack = Math.max(evalMainParamEvent(params, 'att', dur/2) * params.beat.duration, 0.001)
+    let release = Math.max(evalMainParamEvent(params, 'rel', dur/2) * params.beat.duration, 0.001)
     let sus = Math.max(dur*params.beat.duration - attack, 0.001)
     let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     let vca = system.audio.createGain()
@@ -70,8 +70,8 @@ define(function (require) {
   }
 
   return (params, gainbase, defaultEnvelope) => {
-    gainbase *= evalMainParamNow(params, "loud", 1)
-    let envelope = evalMainParamNow(params, "envelope", defaultEnvelope)
+    gainbase *= evalMainParamEvent(params, "loud", 1)
+    let envelope = evalMainParamEvent(params, "envelope", defaultEnvelope)
     switch (envelope) {
       case 'full': return fullEnvelope(params, gainbase)
       case 'simple': return simpleEnvelope(params, gainbase)

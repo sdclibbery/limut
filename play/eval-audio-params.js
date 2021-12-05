@@ -81,7 +81,7 @@ define(function (require) {
   }
 
   return {
-    evalMainParamNow: evalMainParamEvent,
+    evalMainParamEvent: evalMainParamEvent,
     evalSubParamEvent: evalSubParamEvent,
     evalMainParamFrame: evalMainParamFrame,
     evalSubParamFrame: evalSubParamFrame,

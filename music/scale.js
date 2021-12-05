@@ -2,7 +2,7 @@
 define(function (require) {
   let vars = require('vars')
   let param = require('player/default-param')
-  let {evalMainParamNow} = require('play/eval-audio-params')
+  let {evalMainParamEvent} = require('play/eval-audio-params')
   let {evalParamFrame} = require('player/eval-param')
 
   let scales = {
@@ -108,11 +108,11 @@ define(function (require) {
   }
 
   scale.paramsToFreq = (params, defaultOctave) => {
-    let degree = parseInt(params.sound) + evalMainParamNow(params, 'add', 0)
+    let degree = parseInt(params.sound) + evalMainParamEvent(params, 'add', 0)
     if (isNaN(parseInt(degree))) { return }
-    let octave = evalMainParamNow(params, 'oct', defaultOctave)
-    let sharp = evalMainParamNow(params, 'sharp', 0)
-    let freq = scale.degreeToFreq(degree, octave, evalMainParamNow(params, 'scale'), sharp)
+    let octave = evalMainParamEvent(params, 'oct', defaultOctave)
+    let sharp = evalMainParamEvent(params, 'sharp', 0)
+    let freq = scale.degreeToFreq(degree, octave, evalMainParamEvent(params, 'scale'), sharp)
     params.freq = freq
     return freq
   }

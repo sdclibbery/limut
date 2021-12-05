@@ -4,7 +4,7 @@ define(function (require) {
   let {getBuffer, isLoaded} = require('play/samples')
   let effects = require('play/effects/effects')
   let waveEffects = require('play/effects/wave-effects')
-  let {evalMainParamNow} = require('play/eval-audio-params')
+  let {evalMainParamEvent} = require('play/eval-audio-params')
   let scale = require('music/scale');
 
   let getNoteUrl = (note) => {
@@ -61,7 +61,7 @@ define(function (require) {
   return (params) => {
     let freq = scale.paramsToFreq(params, 4)
     if (isNaN(freq)) { return }
-    let dur = Math.max(0.01, evalMainParamNow(params, 'sus', evalMainParamNow(params, 'dur', 0.25)))
+    let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25)))
     params.endTime = params._time + dur*params.beat.duration
 
     let vca = system.audio.createGain()
