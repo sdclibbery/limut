@@ -1,25 +1,45 @@
 'use strict';
 define(function (require) {
   let system = require('play/system')
-  let evalParam = require('player/eval-param').evalParamFrame
+  let evalParam = require('player/eval-param')
   let {subParam,mainParam} = require('player/sub-param')
 
-  let evalParamNow = (params, p, b, def) => {
+  let evalPerEvent = (params, p, def) => {
     let v = params[p]
     if (typeof v !== 'number' && !v) { return def }
-    v =  evalParam(v, params, b) // Room for optimisation here: only eval objects the specific sub (or main) param thats needed for this call
+    v =  evalParam.evalParamEvent(v, params) // Room for optimisation here: only eval objects the specific sub (or main) param thats needed for this call
     if (typeof v !== 'number' && !v) { return def }
     return v
   }
 
-  let evalMainParamNow = (params, p, def, b) => {
-    let v = evalParamNow(params, p, b || params.count, def)
+  let evalMainParamEvent = (params, p, def) => {
+    let v = evalPerEvent(params, p, def)
     if (typeof v !== 'object') { return v }
     return mainParam(v, def)
   }
 
-  let evalSubParamNow = (params, p, subParamName, def, b) => {
-    let v = evalParamNow(params, p, b || params.count, def)
+  let evalSubParamEvent = (params, p, subParamName, def) => {
+    let v = evalPerEvent(params, p, def)
+    if (typeof v !== 'object') { return def }
+    return subParam(v, subParamName, def)
+  }
+
+  let evalPerFrame = (params, p, b, def) => {
+    let v = params[p]
+    if (typeof v !== 'number' && !v) { return def }
+    v =  evalParam.evalParamFrame(v, params, b) // Room for optimisation here: only eval objects the specific sub (or main) param thats needed for this call
+    if (typeof v !== 'number' && !v) { return def }
+    return v
+  }
+
+  let evalMainPerFrame = (params, p, def, b) => {
+    let v = evalPerFrame(params, p, b || params.count, def)
+    if (typeof v !== 'object') { return v }
+    return mainParam(v, def)
+  }
+
+  let evalSubPerFrame = (params, p, subParamName, def, b) => {
+    let v = evalPerFrame(params, p, b || params.count, def)
     if (typeof v !== 'object') { return def }
     return subParam(v, subParamName, def)
   }
@@ -53,16 +73,16 @@ define(function (require) {
   }
 
   let evalMainParamFrame = (audioParam, params, p, def, mod) => {
-    evalPerFrameParam(audioParam, params, p, def, (b) => evalMainParamNow(params, p, def, b), mod)
+    evalPerFrameParam(audioParam, params, p, def, (b) => evalMainPerFrame(params, p, def, b), mod)
   }
 
   let evalSubParamFrame = (audioParam, params, p, subParamName, def, mod) => {
-    evalPerFrameParam(audioParam, params, p, def, (b) => evalSubParamNow(params, p, subParamName, def, b), mod)
+    evalPerFrameParam(audioParam, params, p, def, (b) => evalSubPerFrame(params, p, subParamName, def, b), mod)
   }
 
   return {
-    evalMainParamNow: evalMainParamNow,
-    evalSubParamNow: evalSubParamNow,
+    evalMainParamNow: evalMainParamEvent,
+    evalSubParamNow: evalSubParamEvent,
     evalMainParamFrame: evalMainParamFrame,
     evalSubParamFrame: evalSubParamFrame,
   }
