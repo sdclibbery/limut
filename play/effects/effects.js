@@ -2,7 +2,7 @@
 define(function (require) {
   let system = require('play/system')
   let param = require('player/default-param')
-  let {evalMainParamFrame,evalSubParamNow} = require('play/eval-audio-params')
+  let {evalMainParamFrame,evalSubParamEvent} = require('play/eval-audio-params')
   let chain = require('play/effects/chains')
   let filters = require('play/effects/filters')
 
@@ -18,7 +18,7 @@ define(function (require) {
   let chop = (params, node) => {
     if (params['chop'] === undefined) { return node }
     let lfo = system.audio.createOscillator()
-    lfo.type = evalSubParamNow(params, 'chop', 'wave', 'sine')
+    lfo.type = evalSubParamEvent(params, 'chop', 'wave', 'sine')
     evalMainParamFrame(lfo.frequency, params, 'chop', 1, v => v / params.beat.duration)
     let gain = system.audio.createGain()
     gain.gain.setValueAtTime(1, system.audio.currentTime)
@@ -33,7 +33,7 @@ define(function (require) {
   let ring = (params, node) => {
     if (params['ring'] === undefined) { return node }
     let lfo = system.audio.createOscillator()
-    lfo.type = evalSubParamNow(params, 'ring', 'wave', 'triangle')
+    lfo.type = evalSubParamEvent(params, 'ring', 'wave', 'triangle')
     evalMainParamFrame(lfo.frequency, params, 'ring', 1)
     let gain = system.audio.createGain()
     gain.gain.setValueAtTime(0, system.audio.currentTime)
