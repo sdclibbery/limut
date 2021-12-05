@@ -1,7 +1,7 @@
 'use strict'
 define((require) => {
   let metronome = require('metronome')
-  let {evalParamEvent, evalParamFrame} = require('player/eval-param')
+  let {evalParamFrame} = require('player/eval-param')
   let system = require('play/system')
   let scale = require('music/scale')
   let drawSystem = require('draw/system')

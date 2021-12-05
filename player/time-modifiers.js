@@ -1,7 +1,7 @@
 'use strict';
 define(function(require) {
   let number = require('player/parse-number')
-  let {evalParamFrame,evalParamEvent} = require('player/eval-param')
+  let {evalParamFrame} = require('player/eval-param')
 
   let wrapWithModifiers = (exp, modifiers) => {
       if (!modifiers) { return exp }
@@ -40,7 +40,7 @@ define(function(require) {
     }
     let f, w
     let ev = (c,d) => {return{idx:0,count:c,dur:d}}
-    let {evalParamFrame,evalParamEvent} = require('player/eval-param')
+    let {evalParamFrame} = require('player/eval-param')
     
     assert(0, wrapWithModifiers(0))
     assert(0, wrapWithModifiers(0, {}))

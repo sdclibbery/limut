@@ -1017,3 +1017,12 @@ a pulse 0121, dur=1/2, sus=1/4, rel=1, lpf=this.freq*[2:7]l[32,0], lpr=15, oct=4
 p dsaw 0624, dur=4, ring=this.freq*{[1/4:1]l2@f,wave:square}, chop={[4,1]l2@f}, room, chorus, add=(0,-7,4,14), addc=wow
 
 
+bpm=122
+scale=minor
+p play X-(XO)-, mid=4, high=8, low=8
+db saw 000.010.000010.., dur=1/4, oct=2, att=0.01, rel=0, sus=1/6
+x xylo 0123235<-1#7>, echo=3/4, amp=1.8
+g supersaw (02)(03)(13)(14), dur=2, ring=this.freq/2, room, sus=1/2, room, echo=3/4
+a ambi (0468), room=2, amp=[1/4:1/2]n8, oct=3, add=[0,3]t[14,2]
+
+

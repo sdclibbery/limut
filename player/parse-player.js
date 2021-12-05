@@ -7,7 +7,7 @@ define((require) => {
   let standardPlayer = require('player/standard')
   var followPlayer = require('player/follow')
   var expandTuples = require('player/expand-tuples')
-  let {evalParamEvent,evalParamFrame} = require('player/eval-param')
+  let {preEvalParam,evalParamFrame} = require('player/eval-param')
 
   let splitOnAll = (str, ch) => {
     if (!str) { return [] }
@@ -22,7 +22,7 @@ define((require) => {
 
   let evalToEvent = (event, beat) => {
     for (let k in event) {
-      event[k] = evalParamEvent(event[k], event, beat.count)
+      event[k] = preEvalParam(event[k], event, beat.count)
     }
   }
 
@@ -144,7 +144,7 @@ define((require) => {
     e.endTime = e._time + e.dur
     return {}
   } }
-  let {evalParamFrame,evalParamEvent} = require('player/eval-param')
+  let {evalParamFrame} = require('player/eval-param')
   let ev = (i,c,d) => {return{idx:i,count:c,dur:d}}
 
   p = parsePlayer('p play xo, amp=2')

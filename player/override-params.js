@@ -1,7 +1,6 @@
 'use strict';
 define(function(require) {
   let operator = require('player/eval-operator')
-  let {evalParamEvent,evalParamFrame} = require('player/eval-param')
 
   let applyOp = (op, orig, over) => {
     if (orig === undefined) {

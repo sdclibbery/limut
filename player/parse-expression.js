@@ -304,7 +304,7 @@ define(function(require) {
     if (!vs.includes(actual)) { console.trace(`Assertion failed.\n>>Expected one of ${vs}\n>>Actual: ${actual}`) }
   }
 
-  let {evalParamFrame,evalParamEvent} = require('player/eval-param')
+  let {evalParamFrame,preEvalParam} = require('player/eval-param')
   let ev = (i,c,d) => {return{idx:i,count:c,dur:d}}
 
   assert(undefined, parseExpression())
@@ -502,10 +502,10 @@ define(function(require) {
   
   let p2
   p = parseExpression('[1,[2,3]l1@f]t2@e')
-  p2 = evalParamEvent(p,ev(0,0),0,evalParamEvent)
+  p2 = preEvalParam(p,ev(0,0),0,preEvalParam)
   assert(1, evalParamFrame(p2,ev(0,0),0,evalParamFrame))
   assert(1, evalParamFrame(p2,ev(0,0),1,evalParamFrame))
-  p2 = evalParamEvent(p,ev(2,2),0,evalParamEvent)
+  p2 = preEvalParam(p,ev(2,2),0,preEvalParam)
   assert(2, evalParamFrame(p2,ev(2,2),2,evalParamFrame))
   assert(2.5, evalParamFrame(p2,ev(2,2),2.5,evalParamFrame))
   assert(3, evalParamFrame(p2,ev(2,2),3,evalParamFrame))
@@ -799,7 +799,7 @@ define(function(require) {
 
   p = parseExpression("[1000:100]e")
   e = { idx:0, count:7, countToTime:b=>b, _time:7, endTime:8 }
-  r = evalParamEvent(p,e,7)
+  r = preEvalParam(p,e,7)
   assert('function', typeof(r))
   assert(550, evalParamFrame(r,e,7.5))
 

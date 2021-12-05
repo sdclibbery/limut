@@ -1,6 +1,6 @@
 'use strict'
 define((require) => {
-  let {evalParamEvent,evalParamFrame} = require('player/eval-param')
+  let {evalParamFrame} = require('player/eval-param')
 
   let tupleIndex = (v, i) => {
     if (Array.isArray(v)) {

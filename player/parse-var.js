@@ -4,7 +4,7 @@ define(function(require) {
   let players = require('player/players')
   let parseArray = require('player/parse-array')
   let eatWhitespace = require('player/eat-whitespace')
-  let {evalParamFrame,evalParamEvent} = require('player/eval-param')
+  let {evalParamFrame} = require('player/eval-param')
 
   let parseVar = (state) => {
     let key = ''

@@ -102,6 +102,7 @@ define((require) => {
   }
 
   return {
+    preEvalParam:evalParamEvent,
     evalParamEvent:evalParamEvent,
     evalParamFrame:evalParamFrame,
   }
