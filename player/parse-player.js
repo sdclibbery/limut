@@ -110,7 +110,7 @@ define((require) => {
           events.forEach(e => e.linenum = linenum)
           let overrides = players.overrides[player.id] || {}
           let es = events.map(e => overrideParams(e, overrides))
-          es.forEach(e => evalToEvent(e, beat))
+          es.forEach(e => evalToEvent(e, beat)) // Optimisation: evaluate down to a primitive for values that don't change over the course of the event
           return es
         }
         player.getEventsForBeat = (beat) => {

@@ -3,21 +3,21 @@ define(function (require) {
   let system = require('draw/system')
   let shaders = require('draw/shaders')
   let param = require('player/default-param')
-  let evalParam = require('player/eval-param').evalParamFrame
+  let evalParam = require('player/eval-param')
   let texture = require('draw/texture')
   let textTexture = require('draw/text')
 
   let evalParamFrame = (params, p, def, count) =>{
     let v = params[p]
     if (v === undefined) { return def }
-    v = evalParam(v, params, count)
+    v = evalParam.evalParamFrame(v, params, count)
     if (v === undefined) { return def }
     return v
   }
   let evalParamEvent = (params, p, def) =>{
     let v = params[p]
     if (v === undefined) { return def }
-    v =  evalParam(v, params, params.beat.count)
+    v =  evalParam.evalParamEvent(v, params)
     if (v === undefined) { return def }
     return v
   }

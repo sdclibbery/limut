@@ -687,15 +687,12 @@ Should event Param evaluation force b to the time of the event?
   Eval for param that could change per frame
    Evals with the b passed in, and recurses fully and reduces to primitives
  TODO
-  Add new preEvalParam method
-   And use it for the optimisation pass at event creation time (on tuple expansion)
-   Clean up any remiaining use of eval-params.evalParamEvent and remove it
   eval-params.evalParamEvent method is like evalParamFrame but forces b to e.count
-   Tests
-   Investigate existing calls to functions called evalParamEvent
-   And switch appropriate uses of evalParamFrame to evalParamEvent where appropriate; eg sprite.js??
+   use for audio...
+    ? Rename evalMainParamNow to evalMainParamEvent???? etc etc - and remove 'b' param where appropriate
   ? Rename eval-params.evalParamFrame to evalParamAt
   TEST everything
+   especially test time modifiers, follow, but test all
 Really, embedded values should use the original b/count, not modified
  eg add=[[0,2,4,7]t4]r{seed:0,per:4,0:0}
 Should delayed notes eval per event at the time of the delayed or undelayed event??
