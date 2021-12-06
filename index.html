@@ -675,24 +675,10 @@ modifiers {offset,per,0:0}, @e, @f
 subparams {2,mix:1/2}
 ====
 ==== other ====
-Should event Param evaluation force b to the time of the event?
- There are three cases
-  Pre eval
-   ONLY used at event creation, as an optimisation pass, to simplify params that cannot change per frame
-   Evals with the b/count for the event time, but recursion stops at subparam/value with interval==='frame'
-  Eval for param that isn't allowed to change per frame
-   Evals with the b/count for the event time, but recurses fully and reduces to primitives 0 '' {} ()
-   ? Can we ditch any evaluation (eg in random) that uses e.count, and just use b?
-    NO because there may be @e on the expression, so it must use the event time no matter what
-  Eval for param that could change per frame
-   Evals with the b passed in, and recurses fully and reduces to primitives
- TODO
-  evalParamEvent method
-   use for audio...
-    Rename evalMainParamNow to evalMainParamEvent etc - and remove 'b' param where appropriate
-  ? Rename eval-params.evalParamFrame to evalParamAt
-  TEST everything
-   especially test time modifiers, follow, but test all
+Complex dur breaks chords:   d dsaw (02)(79), dur=[1/2,2]r
+STOPPED WORKING
+  p1 ping 0, dur=[1/2,1,2]r, add=[0:4]r
+  v8 glow follow p1, loc=sparkle+{y:this.add/4}, fore=#0fff
 Really, embedded values should use the original b/count, not modified
  eg add=[[0,2,4,7]t4]r{seed:0,per:4,0:0}
 Should delayed notes eval per event at the time of the delayed or undelayed event??

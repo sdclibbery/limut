@@ -58,10 +58,14 @@ define(function (require) {
 
   let evalPerFrameParam = (audioParam, params, p, def, evalMethod, mod) => {
     if (params[p] === undefined) {
-      audioParam.value = def
+      let v = def
+      if (typeof mod === 'function') { v = mod(v) }
+      audioParam.value = v
     } else if (typeof params[p] == 'number') {
       // single value; no need for regular per frame update
-      audioParam.value = params[p]
+      let v = params[p]
+      if (typeof mod === 'function') { v = mod(v) }
+      audioParam.value = v
     } else {
       setAudioParamValue(audioParam, evalMethod(params.count), p, mod)
       system.add(params._time, state => {
