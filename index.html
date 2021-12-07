@@ -669,6 +669,7 @@ shadertoy synth multiple channels
 ====
 ==== things to test/consider ====
 pattern features (), [], <>, #b, ^v, !=
+p ping 0, add=[0,1,2,3]
 (), follow, complex durs, delay, overrides
 [], []t, []l/s, []e, []n, []r
 var, player.var, var{params}
@@ -678,9 +679,7 @@ subparams {2,mix:1/2}
 ==== other ====
 Complex durs doesn't handle () or <>
  Complex dur breaks chords:   d dsaw (02)(79), dur=[1]r
- Also not working:  d dsaw <024>7, dur=[1]r
  Also check:  d dsaw <0(468)>, dur=[1]r
- Needs a rewrite as its also very duplicated and nasty?
 Really, embedded values should use the original b/count, not modified
  eg add=[[0,2,4,7]t4]r{seed:0,per:4,0:0}
 Should delayed notes eval per event at the time of the delayed or undelayed event??

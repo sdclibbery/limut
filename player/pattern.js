@@ -59,11 +59,11 @@ define(function(require) {
       return (count, timingContext) => {
         if (!timingContext._patternCount) { timingContext._patternCount = 0 }
         if (!timingContext._patternStartCount) { timingContext._patternStartCount = count }
-        timingContext._patternRepeats = timingContext._patternCount % events.length
+        let patternRepeats = Math.floor(timingContext._patternCount / events.length)
         let eventsForBeat = []
         while (timingContext._patternStartCount < count + 0.9999) {
           let e = events[timingContext._patternCount % events.length]
-          let es = (typeof(e.value) == 'function') ? e.value(e, timingContext._patternRepeats) : [e]
+          let es = (typeof(e.value) == 'function') ? e.value(e, patternRepeats) : [e]
           let duration = evalParamFrame(dur, {idx: timingContext._patternCount, count: timingContext._patternStartCount}, count)
           if (duration <= 0) { throw 'Zero duration' }
           let eventDur = duration
@@ -330,11 +330,11 @@ define(function(require) {
   pattern = parsePattern('0!', {dur:1})
   assert([{value:'0',idx:0,_time:0,dur:1,count:0,long:1/2}], pattern(0, {}))
 
-  // tc = {}
-  // pattern = parsePattern('<01>', {dur:()=>1})
-  // assert([{value:'0',idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
-  // assert([{value:'1',idx:1,_time:0,dur:1,count:1}], pattern(1, tc))
-  // assert([{value:'0',idx:2,_time:0,dur:1,count:2}], pattern(2, tc))
+  tc = {}
+  pattern = parsePattern('<01>', {dur:()=>1})
+  assert([{value:'0',idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
+  assert([{value:'1',idx:1,_time:0,dur:1,count:1}], pattern(1, tc))
+  assert([{value:'0',idx:2,_time:0,dur:1,count:2}], pattern(2, tc))
 
   // tc = {}
   // pattern = parsePattern('(02)', {dur:()=>1})
