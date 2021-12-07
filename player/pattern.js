@@ -57,21 +57,21 @@ define(function(require) {
       }
     } else { // non-const duration, step through events in realtime
       return (count, timingContext) => {
-        if (!timingContext._patternCount) { timingContext._patternCount = 0 }
-        if (!timingContext._patternStartCount) { timingContext._patternStartCount = count }
-        let patternRepeats = Math.floor(timingContext._patternCount / events.length)
+        if (!timingContext._patternIdx) { timingContext._patternIdx = 0 }
+        if (!timingContext._patternCount) { timingContext._patternCount = count }
+        let patternRepeats = Math.floor(timingContext._patternIdx / events.length)
         let eventsForBeat = []
-        while (timingContext._patternStartCount < count + 0.9999) {
-          let e = events[timingContext._patternCount % events.length]
+        while (timingContext._patternCount < count + 0.9999) {
+          let e = events[timingContext._patternIdx % events.length]
           let es = (typeof(e.value) == 'function') ? e.value(e, patternRepeats) : [e]
-          let duration = evalParamFrame(dur, {idx: timingContext._patternCount, count: timingContext._patternStartCount}, count)
+          let duration = evalParamFrame(dur, {idx: timingContext._patternIdx, count: timingContext._patternCount}, count)
           if (duration <= 0) { throw 'Zero duration' }
           let eventDur = duration
           es.forEach(sourceEvent => {
             let event = {}
             event.value = sourceEvent.value
-            event.idx = events.length == 1 ? timingContext._patternCount : timingContext._patternCount % events.length
-            event._time = timingContext._patternStartCount - count
+            event.idx = events.length == 1 ? timingContext._patternIdx : timingContext._patternIdx % events.length
+            event._time = timingContext._patternCount - count
             event.dur = sourceEvent.dur * duration
             eventDur = event.dur
             event.count = count + event._time
@@ -87,8 +87,11 @@ define(function(require) {
               eventsForBeat.push(event)
             }
           })
-          timingContext._patternCount++
-          timingContext._patternStartCount += eventDur
+          timingContext._patternIdx++
+          let nextEvent = events[timingContext._patternIdx % events.length]
+          if (nextEvent._time != es[0]._time || timingContext._patternIdx % events.length == 0) {
+            timingContext._patternCount += eventDur
+          }
         }
         return eventsForBeat.filter(({value}) => value !== undefined)
       }
@@ -336,12 +339,12 @@ define(function(require) {
   assert([{value:'1',idx:1,_time:0,dur:1,count:1}], pattern(1, tc))
   assert([{value:'0',idx:2,_time:0,dur:1,count:2}], pattern(2, tc))
 
-  // tc = {}
-  // pattern = parsePattern('(02)', {dur:()=>1})
-  // assert([{value:'0',idx:0,_time:0,dur:1,count:0},{value:'2',idx:1,_time:0,dur:1,count:0}], pattern(0, tc))
-  // assert([{value:'0',idx:0,_time:0,dur:1,count:1},{value:'2',idx:1,_time:0,dur:1,count:1}], pattern(1, tc))
-  // assert([{value:'0',idx:0,_time:0,dur:1,count:2},{value:'1',idx:1,_time:0,dur:1,count:2}], pattern(2, tc))
-  // assert([{value:'0',idx:0,_time:0,dur:1,count:3},{value:'1',idx:1,_time:0,dur:1,count:3}], pattern(3, tc))
+  tc = {}
+  pattern = parsePattern('(02)', {dur:()=>1})
+  assert([{value:'0',idx:0,_time:0,dur:1,count:0},{value:'2',idx:1,_time:0,dur:1,count:0}], pattern(0, tc))
+  assert([{value:'0',idx:0,_time:0,dur:1,count:1},{value:'2',idx:1,_time:0,dur:1,count:1}], pattern(1, tc))
+  assert([{value:'0',idx:0,_time:0,dur:1,count:2},{value:'2',idx:1,_time:0,dur:1,count:2}], pattern(2, tc))
+  assert([{value:'0',idx:0,_time:0,dur:1,count:3},{value:'2',idx:1,_time:0,dur:1,count:3}], pattern(3, tc))
 
   console.log("Pattern tests complete")
   }
