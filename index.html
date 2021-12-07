@@ -668,6 +668,7 @@ shadertoy synth support textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== things to test/consider ====
+pattern features (), [], <>, #b, ^v, !=
 (), follow, complex durs, delay, overrides
 [], []t, []l/s, []e, []n, []r
 var, player.var, var{params}
@@ -675,10 +676,11 @@ modifiers {offset,per,0:0}, @e, @f
 subparams {2,mix:1/2}
 ====
 ==== other ====
-Complex dur breaks chords:   d dsaw (02)(79), dur=[1/2,2]r
-STOPPED WORKING
-  p1 ping 0, dur=[1/2,1,2]r, add=[0:4]r
-  v8 glow follow p1, loc=sparkle+{y:this.add/4}, fore=#0fff
+Complex durs doesn't handle () or <>
+ Complex dur breaks chords:   d dsaw (02)(79), dur=[1]r
+ Also not working:  d dsaw <024>7, dur=[1]r
+ Also check:  d dsaw <0(468)>, dur=[1]r
+ Needs a rewrite as its also very duplicated and nasty?
 Really, embedded values should use the original b/count, not modified
  eg add=[[0,2,4,7]t4]r{seed:0,per:4,0:0}
 Should delayed notes eval per event at the time of the delayed or undelayed event??
@@ -688,7 +690,11 @@ Follow player refactor
  Use stored events with a dependency
  Things to test:
   randoms (per event only)
-  complex durations (including random)
+    p1 ping 0, dur=1, amp=0.1, oct=4, add=[0:4]r
+    v8 glow follow p1, loc={y:-1+this.add/2}, 
+  complex durations (including random); EG:
+    p1 ping 0, dur=[1]r, amp=0.1, oct=4
+    v8 glow follow p1, loc=sparkle
   delays
  Clean up any unnecessary gumpf around getEventsForBeatBase etc
 Modifier or function that smooths the value over time, separate attach and decay rates if possible

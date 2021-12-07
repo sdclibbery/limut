@@ -330,6 +330,19 @@ define(function(require) {
   pattern = parsePattern('0!', {dur:1})
   assert([{value:'0',idx:0,_time:0,dur:1,count:0,long:1/2}], pattern(0, {}))
 
+  // tc = {}
+  // pattern = parsePattern('<01>', {dur:()=>1})
+  // assert([{value:'0',idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
+  // assert([{value:'1',idx:1,_time:0,dur:1,count:1}], pattern(1, tc))
+  // assert([{value:'0',idx:2,_time:0,dur:1,count:2}], pattern(2, tc))
+
+  // tc = {}
+  // pattern = parsePattern('(02)', {dur:()=>1})
+  // assert([{value:'0',idx:0,_time:0,dur:1,count:0},{value:'2',idx:1,_time:0,dur:1,count:0}], pattern(0, tc))
+  // assert([{value:'0',idx:0,_time:0,dur:1,count:1},{value:'2',idx:1,_time:0,dur:1,count:1}], pattern(1, tc))
+  // assert([{value:'0',idx:0,_time:0,dur:1,count:2},{value:'1',idx:1,_time:0,dur:1,count:2}], pattern(2, tc))
+  // assert([{value:'0',idx:0,_time:0,dur:1,count:3},{value:'1',idx:1,_time:0,dur:1,count:3}], pattern(3, tc))
+
   console.log("Pattern tests complete")
   }
   
