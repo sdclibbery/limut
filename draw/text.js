@@ -25,8 +25,8 @@ define(function (require) {
       ctx.fillStyle = 'rgba(255, 255, 255, 1.0)'
       ctx.textAlign = 'center'
       let font = subParam(data, 'font', 'monospace')
-      let fontsize = subParam(data, 'fontsize', 72)
-      let fontstyle = subParam(data, 'fontstyle', '')
+      let fontsize = subParam(data, 'size', 72)
+      let fontstyle = subParam(data, 'style', '')
       ctx.font = `${fontstyle} ${fontsize}px ${font}`
       let lineHeight = ctx.measureText('Mg').width * subParam(data, 'linesize', 1)*0.9
       let lines = str.split('\n')

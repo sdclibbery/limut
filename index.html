@@ -375,7 +375,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>shadertoy</code> Display a shadertoy synth. Use the <code>id</code> param to specify which shader. Only shaders published with the 'public+api' option are available, others will give error 'Shader not found'. At present, shaders that use textures or multiple channels will also not work.</p>
 <p><code>image</code> Display an online image. Use the <code>url</code> param to specify the image url. The image must be served using CORS. by default the image <code>back</code> is transparent.</p>
 <p><code>webcam</code> Display video feed from the attached webcam (if present). The browser will ask permission before allowing access to the webcam.</p>
-<p><code>text</code> Draw and display text. Use the text param; eg <code>text='Hello'</code>. Use <code>\n</code> to split to multiple lines: <code>text='Hello\nWorld'</code>. Use subparams to control the text rendering, eg: <code>text={'Hello',font:'times',fontsize:'144',linesize:0.7,y:1/4,x:2/3,fontstyle:'bold italic'}</code>. Text is evaluated only per event, not per frame.</p>
+<p><code>text</code> Draw and display text. Use the text param; eg <code>text='Hello'</code>. Use <code>\n</code> to split to multiple lines: <code>text='Hello\nWorld'</code>. Use subparams to control the text rendering, eg: <code>text={'Hello',font:'times',size:'144',linesize:0.7,y:1/4,x:2/3,style:'bold italic'}</code>. Text is evaluated only per event, not per frame.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-event-params')">▶ Common Event Params</h4>
 <div id="accordion-event-params" class="closed">
@@ -590,10 +590,10 @@ envelope exp (exponent) subparam, eg att={1/2,exp:2} ?? Or name it 'pow'?
 Allow adding filters in the room/echo loops eg echo=3/4{lpf:523} - but dont use existing filter handlers as must be per event only!
  Should also roll echofeedback into the object eg echo=3/4{feedback:0.85}
 Add some more waveforms  https://github.com/GoogleChromeLabs/web-audio-samples/tree/main/archive/demos/wave-tables
-echo={1/2,stereo:1} for stereo ping pong echo
+echo={1/2,pingpong:1} for stereo ping pong echo; use splitter and merger
 Make noise into a waveform not a worklet?  https://github.com/GoogleChromeLabs/web-audio-samples/blob/main/archive/demos/wave-tables/04_Noise
  And so use wave synth instead?
-Convert pwm and noise to webassembly, performance is terrible compared to native oscs
+Convert pwm and ?noise to webassembly, performance is terrible compared to native oscs
 Reverb gate: room={1,gate:1/4}
 this.freq also responds to addc
 Envelope follower? Pitch follower? for external synth
@@ -677,6 +677,19 @@ modifiers {offset,per,0:0}, @e, @f
 subparams {2,mix:1/2}
 ====
 ==== other ====
+Can modify params; eg 'set bass amp += 1/2'
+ Overrides should only modify when explicitly asked; so set b add=1 replaces the add param, it does not add an additional 1 to it
+ Can use for follow players, set, and indeed within a player; eg: p ping 0, amp=2/3, ..., amp*=2
+Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
+Wildcard player matching for groups 'set d? amp=0'  'set p* amp=0'
+? rl, rt (==r), rs (==n); el (==e), es, et ?
+ ?[1,3,5]n syntax to smoothly transition between randomly chosen values or should be [1,3,5]rs?
+ []w for random walk?
+[]e4 to start on the event but run for 4 beats irrespective of how long the event actually lasts
+Modifier or function that smooths the value over time, separate attach and decay rates if possible
+<player>.pulse should takes average of playing notes? To reduce sudden jumps when notes overlap?
+Ability to set the pattern used on a player
+ param: p play x:, pattern='X-O-'
 Really, embedded values should use the original b/count, not modified
  eg add=[[0,2,4,7]t4]r{seed:0,per:4,0:0}
 Should delayed notes eval per event at the time of the delayed or undelayed event??
@@ -693,8 +706,6 @@ Follow player refactor
     v8 glow follow p1, loc=sparkle
   delays
  Clean up any unnecessary gumpf around getEventsForBeatBase etc
-Modifier or function that smooths the value over time, separate attach and decay rates if possible
-<player>.pulse should takes average of playing notes? To reduce sudden jumps when notes overlap?
 {offset} to apply an offset to the time counts
  Eg [0,1,2,3]t4{offset:1}
 {step} to apply a step to the counts
@@ -702,8 +713,7 @@ Modifier or function that smooths the value over time, separate attach and decay
 ? env{att:0.1,dec:1/4,sus:1,suslevel:0.6,rel:} - sus should default to the actual note length of the event
  Use for eg: lpf=this.freq*50*env{att:0.02,dec:0.2,suslevel:0.1}
 Fullscreen not working on safari
-[]e4 to start on the event but run for 4 beats irrespective of how long the event actually lasts
- [0,1]n should randomly choose one of 0 or one then smooth between them, [0:1]n should pick random values between 0 and 1...
+[0,1]n should randomly choose one of 0 or one then smooth between them, [0:1]n should pick random values between 0 and 1...
  In which case, rewrite it as the main random, but then smoothed
 floor function: delay=floor{[]r,to:1/4}
 Complex durations cause beat drift ?? Round pattern count to smallest possible duration? Eg [1/2,1/3]r rounds to nearest 1/6
@@ -713,6 +723,7 @@ Could use a syntax error on `set v.amp=0` (should be `set v amp=0`)
 []r{per:4} (ie without seed) ?? What should this do? Should it repeat? Or not?? Probably not??
 Should Eg [0:1]e{per:1/4,1/2:-1} work??
 stutter parameter??
+Better error for eg  p ping _0
 Sliders
  Exponential option
  Remember last value even when not shown
@@ -739,16 +750,8 @@ Exponent exp modifier, eg [0:1]l{exp:1/2} to modify lerp shape
 Can var lookup take the interval from the var interval?
  Need two pass parse??
   What about player var lookup then?
-Can modify params; eg 'set bass amp += 1/2'
- Overrides should only modify when explicitly asked; so set b add=1 replaces the add param, it does not add an additional 1 to it
- Can use for follow players, set, and indeed within a player; eg: p ping 0, amp=2/3, ..., amp*=2
 ? Possible to additionally allow '=' as object key/value separator? Eg {r=1,g=2} etc ? Will this conflict with line/param parsing??
 Maybe optimise per frame garbage in eval-params and eval-operators
-Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
-Wildcard player matching for groups 'set d? amp=0'  'set p* amp=0'
-? rl, rt (==r), rs (==n); el (==e), es, et ?
- ?[1,3,5]n syntax to smoothly transition between randomly chosen values or should be [1,3,5]rs?
- []w for random walk?
 multiline command fix: // should only comment out that one line
 "on next 4 " / "on next 28 of 32 " syntax to execute a line on the next beat count
   - but how not to repeat this if rerun? replace now/next in source with actual count?
