@@ -6,6 +6,27 @@ define(function (require) {
   let chain = require('play/effects/chains')
   let filters = require('play/effects/filters')
 
+  let mix = (params, param, dry, wet, def) => {
+    if (def === undefined) { def = 1 }
+    let mix = evalSubParamEvent(params, param, 'mix', def)
+    if (mix <= 0) { return dry }
+    if (mix >= 1) { return wet }
+    let lerp = Math.sin(mix * 0.5*Math.PI)
+    // Actual lerp would require a 3rd gain node to sum the dry and wet: wet*m + dry*(1-m)
+    // Modified lerp can be done with two gain nodes: m*(wet + dry*(1-m)/m)
+    let dryGain = (1-lerp)/lerp
+    let wetGain = lerp
+    let dryGainNode = system.audio.createGain()
+    dryGainNode.gain.value = dryGain
+    dry.connect(dryGainNode)
+    let outGainNode = system.audio.createGain()
+    outGainNode.gain.value = wetGain
+    wet.connect(outGainNode)
+    dryGainNode.connect(outGainNode)
+    system.disconnect(params, [dryGainNode,outGainNode])
+    return outGainNode
+  }
+
   let perFrameAmp = (params, node) => {
     if (typeof params.amp !== 'function') { return node } // No per frame control required
     let vca = system.audio.createGain()
@@ -27,7 +48,7 @@ define(function (require) {
     lfo.stop(params.endTime)
     node.connect(gain)
     system.disconnect(params, [gain,lfo,node])
-    return gain
+    return mix(params, 'chop', node, gain, 1)
   }
 
   let ring = (params, node) => {
@@ -42,7 +63,7 @@ define(function (require) {
     lfo.stop(params.endTime)
     node.connect(gain)
     system.disconnect(params, [gain,lfo,node])
-    return gain
+    return mix(params, 'ring', node, gain, 1)
   }
 
   let pan = (params, node) => {
