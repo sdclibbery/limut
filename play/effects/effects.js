@@ -6,9 +6,9 @@ define(function (require) {
   let chain = require('play/effects/chains')
   let filters = require('play/effects/filters')
 
-  let mix = (params, param, dry, wet, def) => {
+  let mix = (params, p, dry, wet, def) => {
     if (def === undefined) { def = 1 }
-    let mix = evalSubParamEvent(params, param, 'mix', def)
+    let mix = evalSubParamEvent(params, p, 'mix', def)
     if (mix <= 0) { return dry }
     if (mix >= 1) { return wet }
     let lerp = Math.sin(mix * 0.5*Math.PI)
