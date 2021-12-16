@@ -73,10 +73,15 @@ define(function (require) {
     }
   }
 
-  let evalSubParamFrame = (audioParam, params, p, subParamName, def, mod) => {
+  let fixedPerFrame = (params, p, subParamName, def) => {
     let v = subParam(params[p], subParamName, def)
-    if (typeof params[p] !== 'function' && typeof v == 'number') {
+     return typeof params[p] !== 'function' && typeof v == 'number'
+  }
+
+  let evalSubParamFrame = (audioParam, params, p, subParamName, def, mod) => {
+    if (fixedPerFrame(params, p, subParamName, def)) {
       // single value; no need for regular per frame update
+      let v = subParam(params[p], subParamName, def)
       if (typeof mod === 'function') { v = mod(v) }
       audioParam.value = v
     } else {
@@ -172,5 +177,6 @@ define(function (require) {
     evalSubParamEvent: evalSubParamEvent,
     evalMainParamFrame: evalMainParamFrame,
     evalSubParamFrame: evalSubParamFrame,
+    fixedPerFrame: fixedPerFrame,
   }
 })
