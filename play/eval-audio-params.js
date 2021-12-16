@@ -26,21 +26,26 @@ define(function (require) {
 
   let evalPerFrame = (params, p, b, def) => {
     let v = params[p]
-    if (typeof v !== 'number' && !v) { return def }
     v =  evalParam.evalParamFrame(v, params, b) // Room for optimisation here: only eval objects the specific sub (or main) param thats needed for this call
-    if (typeof v !== 'number' && !v) { return def }
+    if (typeof v !== 'number' && !v) {
+      return def
+    }
     return v
   }
 
   let evalMainPerFrame = (params, p, def, b) => {
     let v = evalPerFrame(params, p, b || params.count, def)
-    if (typeof v !== 'object') { return v }
+    if (typeof v !== 'object') {
+      return v
+    }
     return mainParam(v, def)
   }
 
   let evalSubPerFrame = (params, p, subParamName, def, b) => {
     let v = evalPerFrame(params, p, b || params.count, def)
-    if (typeof v !== 'object') { return def }
+    if (typeof v !== 'object') {
+      return def
+    }
     return subParam(v, subParamName, def)
   }
 
@@ -92,23 +97,71 @@ define(function (require) {
       let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
     }
-  
+
     assert(2, evalMainParamEvent({}, 'foo', 2))
     assert(3, evalMainParamEvent({foo:3}, 'foo', 2))
+    assert(2, evalMainParamEvent({foo:undefined}, 'foo', 2))
     assert(3, evalMainParamEvent({foo:{value:3,sub:4}}, 'foo', 2))
+    assert(2, evalMainParamEvent({foo:{value:undefined,sub:4}}, 'foo', 2))
     assert(3, evalMainParamEvent({foo:()=>3}, 'foo', 2))
+    assert(2, evalMainParamEvent({foo:()=>undefined}, 'foo', 2))
     assert(3, evalMainParamEvent({foo:{value:()=>3,sub:4}}, 'foo', 2))
     assert(3, evalMainParamEvent({foo:()=>{return {value:3,sub:4}}}, 'foo', 2))
+    assert(2, evalMainParamEvent({foo:()=>{return {value:undefined,sub:4}}}, 'foo', 2))
     assert(3, evalMainParamEvent({foo:()=>{return {value:()=>3,sub:4}}}, 'foo', 2))
-  
+
     assert(2, evalSubParamEvent({}, 'foo', 'sub', 2))
     assert(2, evalSubParamEvent({foo:3}, 'foo', 'sub', 2))
     assert(4, evalSubParamEvent({foo:{value:3,sub:4}}, 'foo', 'sub', 2))
+    assert(2, evalSubParamEvent({foo:{value:3,sub:undefined}}, 'foo', 'sub', 2))
     assert(2, evalSubParamEvent({foo:()=>3}, 'foo', 'sub', 2))
     assert(4, evalSubParamEvent({foo:{value:()=>3,sub:4}}, 'foo', 'sub', 2))
     assert(4, evalSubParamEvent({foo:()=>{return {value:3,sub:4}}}, 'foo', 'sub', 2))
+    assert(2, evalSubParamEvent({foo:()=>{return {value:3,sub:undefined}}}, 'foo', 'sub', 2))
     assert(4, evalSubParamEvent({foo:()=>{return {value:3,sub:()=>4}}}, 'foo', 'sub', 2))
+    assert(2, evalSubParamEvent({foo:()=>{return {value:3,sub:()=>undefined}}}, 'foo', 'sub', 2))
   
+    let assertAudioParamTest = (expected, expectedSystemAddCalled, test, mod) => {
+      let systemAdd = system.add
+      let called = false
+      system.add = () => called=true
+      let ap = {}
+      test(ap, mod)
+      assert(expected, ap.value)
+      assert(expectedSystemAddCalled, called)
+      system.add = systemAdd
+    }
+    let assertAudioParam = (expected, expectedSystemAddCalled, test) => {
+      assertAudioParamTest(expected, expectedSystemAddCalled, test, x => x)
+      assertAudioParamTest(2*expected, expectedSystemAddCalled, test, x => 2*x)
+    }
+
+    assertAudioParam(2, false, (ap,mod)=>evalMainParamFrame(ap, {}, 'foo', 2, mod))
+    assertAudioParam(3, false, (ap,mod)=>evalMainParamFrame(ap, {foo:3}, 'foo', 2, mod))
+    assertAudioParam(2, false, (ap,mod)=>evalMainParamFrame(ap, {foo:undefined}, 'foo', 2, mod))
+    assertAudioParam(3, true, (ap,mod)=>evalMainParamFrame(ap, {foo:{value:3,sub:4}}, 'foo', 2, mod))
+    assertAudioParam(2, true, (ap,mod)=>evalMainParamFrame(ap, {foo:{value:undefined,sub:4}}, 'foo', 2, mod))
+    assertAudioParam(3, true, (ap,mod)=>evalMainParamFrame(ap, {foo:()=>3}, 'foo', 2, mod))
+    assertAudioParam(2, true, (ap,mod)=>evalMainParamFrame(ap, {foo:()=>undefined}, 'foo', 2, mod))
+    assertAudioParam(3, true, (ap,mod)=>evalMainParamFrame(ap, {foo:{value:()=>3,sub:4}}, 'foo', 2, mod))
+    assertAudioParam(3, true, (ap,mod)=>evalMainParamFrame(ap, {foo:()=>{return {value:3,sub:4}}}, 'foo', 2, mod))
+    assertAudioParam(2, true, (ap,mod)=>evalMainParamFrame(ap, {foo:()=>{return {value:undefined,sub:4}}}, 'foo', 2, mod))
+    assertAudioParam(3, true, (ap,mod)=>evalMainParamFrame(ap, {foo:()=>{return {value:()=>3,sub:4}}}, 'foo', 2, mod))
+    assertAudioParam(2, true, (ap,mod)=>evalMainParamFrame(ap, {foo:()=>{return {value:()=>undefined,sub:4}}}, 'foo', 2, mod))
+
+    assertAudioParam(2, false, (ap,mod)=>evalSubParamFrame(ap, {}, 'foo', 'sub', 2, mod))
+    // assertAudioParam(2, false, (ap,mod)=>evalSubParamFrame(ap, {foo:3}, 'foo', 'sub', 2, mod))
+    assertAudioParam(2, false, (ap,mod)=>evalSubParamFrame(ap, {foo:undefined}, 'foo', 'sub', 2, mod))
+    assertAudioParam(4, true, (ap,mod)=>evalSubParamFrame(ap, {foo:{value:3,sub:4}}, 'foo', 'sub', 2, mod))
+    assertAudioParam(2, true, (ap,mod)=>evalSubParamFrame(ap, {foo:{value:3,sub:undefined}}, 'foo', 'sub', 2, mod))
+    assertAudioParam(2, true, (ap,mod)=>evalSubParamFrame(ap, {foo:()=>3}, 'foo', 'sub', 2, mod))
+    assertAudioParam(2, true, (ap,mod)=>evalSubParamFrame(ap, {foo:()=>undefined}, 'foo', 'sub', 2, mod))
+    assertAudioParam(4, true, (ap,mod)=>evalSubParamFrame(ap, {foo:{value:()=>3,sub:4}}, 'foo', 'sub', 2, mod))
+    assertAudioParam(4, true, (ap,mod)=>evalSubParamFrame(ap, {foo:()=>{return {value:3,sub:4}}}, 'foo', 'sub', 2, mod))
+    assertAudioParam(2, true, (ap,mod)=>evalSubParamFrame(ap, {foo:()=>{return {value:3,sub:undefined}}}, 'foo', 'sub', 2, mod))
+    assertAudioParam(4, true, (ap,mod)=>evalSubParamFrame(ap, {foo:()=>{return {value:()=>3,sub:4}}}, 'foo', 'sub', 2, mod))
+    assertAudioParam(2, true, (ap,mod)=>evalSubParamFrame(ap, {foo:()=>{return {value:()=>3,sub:undefined}}}, 'foo', 'sub', 2, mod))
+
     console.log('Eval audio param tests complete')
   }
 
