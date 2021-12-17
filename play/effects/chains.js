@@ -62,7 +62,7 @@ define(function (require) {
     node = fixedMix(c.params.chorusMix, node, chorus(c.params.chorusAmount, node, c.nodes, c.oscs), c.nodes)
     node = fixedMix(c.params.phaserMix, node, phaser(c.params.phaserRate, node, c.nodes, c.oscs), c.nodes)
     node = echo(c.params.echoDelay, c.params.echoFeedback, node, c.nodes)
-    node = fixedMix(c.params.roomMix, node, reverb(c.params.room, c.params.roomMix, node, c.nodes), c.nodes)
+    node = fixedMix(c.params.roomMix, node, reverb(c.params.room, node, c.nodes), c.nodes)
     c.out = node
     return c
   }

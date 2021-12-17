@@ -581,18 +581,20 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 ====
 ==== audio ====
 Mix subparam for all effects, eg ring={32,mix:1/2}, room={2,mix:1/2} etc
+ Double check freeview/mix disconnect; fails to gc sometimes
  Double check all nodes get cleaned up from effects chains
  Docs: chorus, room
+Multiple unnecessary gains from default effects chain?
 Move echo feedback to subparam? Also filter resonance?? also echo level?
+ Allow adding filters in the room/echo loops eg echo=3/4{lpf:523} - but dont use existing filter handlers as must be per event only!
+  Should also roll echofeedback into the object eg echo=3/4{feedback:0.85}
+echo={1/2,pingpong:1} for stereo ping pong echo; use splitter and merger
 Bug: chop doubles amplitude... also room, chorus etc all change amp and shouldnt
 808 synth based on https://github.com/vincentriemer/io-808
  ?? Or custom percussion synths
 Flanger
 envelope exp (exponent) subparam, eg att={1/2,exp:2} ?? Or name it 'pow'?
-Allow adding filters in the room/echo loops eg echo=3/4{lpf:523} - but dont use existing filter handlers as must be per event only!
- Should also roll echofeedback into the object eg echo=3/4{feedback:0.85}
 Add some more waveforms  https://github.com/GoogleChromeLabs/web-audio-samples/tree/main/archive/demos/wave-tables
-echo={1/2,pingpong:1} for stereo ping pong echo; use splitter and merger
 Make noise into a waveform not a worklet?  https://github.com/GoogleChromeLabs/web-audio-samples/blob/main/archive/demos/wave-tables/04_Noise
  And so use wave synth instead?
 Convert pwm and ?noise to webassembly, performance is terrible compared to native oscs
