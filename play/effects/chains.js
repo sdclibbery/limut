@@ -38,6 +38,7 @@ define(function (require) {
   let getParams = (params) => {
     return {
       chorusAmount: quantise(evalMainParamEvent(params, 'chorus', 0), 8),
+      chorusMix: quantise(evalSubParamEvent(params, 'chorus', 'mix', 1), 16),
       lfoFreq: quantise(evalMainParamEvent(params, 'phaser', 0) / params.beat.duration, 16),
       echoDelay: quantise(evalMainParamEvent(params, 'echo', 0) * params.beat.duration, 16),
       echoFeedback: quantise(Math.min(evalMainParamEvent(params, 'echofeedback', 0.35), 0.95), 20),
@@ -56,15 +57,11 @@ define(function (require) {
     }
     chain.in = system.audio.createGain()
     chain.nodes.push(chain.in)
-    let node
-    node = chorus(chain.params.chorusAmount, chain.in, chain.nodes, chain.oscs)
-    chain.nodes.push(node)
+    let node = chain.in
+    node = fixedMix(chain.params.chorusMix, node, chorus(chain.params.chorusAmount, node, chain.nodes, chain.oscs), chain.nodes)
     node = phaser(chain.params.lfoFreq, node, chain.nodes, chain.oscs)
-    chain.nodes.push(node)
     node = echo(chain.params.echoDelay, chain.params.echoFeedback, node, chain.nodes)
-    chain.nodes.push(node)
     node = reverb(chain.params.room, chain.params.roomMix, node, chain.nodes)
-    chain.nodes.push(node)
     chain.out = node
     return chain
   }

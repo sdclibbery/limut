@@ -83,21 +83,20 @@ define(function (require) {
     d2.connect(panR)
     d3.connect(panR)
 
-    let mix = system.audio.createGain()
-    nodes.push(mix)
-    panL.connect(mix)
-    panR.connect(mix)
-    node.connect(mix)
-    mix.gain.value = 1/3
+    let output = system.audio.createGain()
+    nodes.push(output)
+    panL.connect(output)
+    panR.connect(output)
+    output.gain.value = 3/4
 
     // This would be a simpler mono chorus but its not as rich sounding as the stereo
-    // let mix = system.audio.createGain()
-    // d1.connect(mix)
-    // d2.connect(mix)
-    // d3.connect(mix)
-    // mix.gain.value = 1/3
+    // let output = system.audio.createGain()
+    // d1.connect(output)
+    // d2.connect(output)
+    // d3.connect(output)
+    // output.gain.value = 1/3
 
-    return mix
+    return output
   }
 
   return chorus
