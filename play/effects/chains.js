@@ -1,10 +1,11 @@
 'use strict';
 define(function (require) {
   let system = require('play/system')
-  let {evalMainParamEvent} = require('play/eval-audio-params')
+  let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
   let freeverb = require('play/effects/freeverb')
   let phaser = require('play/effects/phaser')
   let chorus = require('play/effects/chorus')
+  let {fixedMix} = require('play/effects/mix')
 
   let echo = (echoDelay, echoFeedback, node, nodes) => {
     if (!echoDelay || echoDelay < 0.0001) { return node }
@@ -24,19 +25,15 @@ define(function (require) {
     return mix
   }
 
-  let reverb = (room, node, nodes) => {
-    if (!room || room < 0.01) { return node }
-    let fv = freeverb(room, nodes)
+  let reverb = (room, mix, node, nodes) => {
+    if (!room || room < 0.01 || mix < 0.01) { return node }
+    let fv = freeverb(room, node, nodes)
     node.connect(fv)
-    let mix = system.audio.createGain()
-    nodes.push(mix)
-    node.connect(mix)
-    fv.connect(mix)
-    return mix
+    return fixedMix(mix, node, fv, nodes)
   }
 
   let quantise = (v, step) =>{
-    return (Math.round(v*step)/step)
+    return Math.round(v*step)/step
   }
   let getParams = (params) => {
     return {
@@ -45,6 +42,7 @@ define(function (require) {
       echoDelay: quantise(evalMainParamEvent(params, 'echo', 0) * params.beat.duration, 16),
       echoFeedback: quantise(Math.min(evalMainParamEvent(params, 'echofeedback', 0.35), 0.95), 20),
       room: quantise(evalMainParamEvent(params, 'room', 0)*0.7, 16),
+      roomMix: quantise(evalSubParamEvent(params, 'room', 'mix', 1/2), 16),
     }
 }
 
@@ -65,7 +63,7 @@ define(function (require) {
     chain.nodes.push(node)
     node = echo(chain.params.echoDelay, chain.params.echoFeedback, node, chain.nodes)
     chain.nodes.push(node)
-    node = reverb(chain.params.room, node, chain.nodes)
+    node = reverb(chain.params.room, chain.params.roomMix, node, chain.nodes)
     chain.nodes.push(node)
     chain.out = node
     return chain

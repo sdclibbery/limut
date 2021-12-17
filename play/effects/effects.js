@@ -5,7 +5,7 @@ define(function (require) {
   let {evalMainParamFrame,evalSubParamEvent} = require('play/eval-audio-params')
   let chain = require('play/effects/chains')
   let filters = require('play/effects/filters')
-  let mix = require('play/effects/mix')
+  let {mix} = require('play/effects/mix')
 
   let perFrameAmp = (params, node) => {
     if (typeof params.amp !== 'function') { return node } // No per frame control required

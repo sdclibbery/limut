@@ -18,21 +18,28 @@ define(function (require) {
 
   let outGain = (mix) => mixLerp(mix)
 
+  let fixedMix = (mix, dry, wet, nodesToDisconnect) => {
+    if (mix <= 0.01) { return dry }
+    if (mix >= 1) { return wet }
+    let dryGainNode = system.audio.createGain()
+    dryGainNode.gain.value = dryGain(mix)
+    dry.connect(dryGainNode)
+    let outGainNode = system.audio.createGain()
+    outGainNode.gain.value = outGain(mix)
+    dryGainNode.connect(outGainNode)
+    wet.connect(outGainNode)
+    nodesToDisconnect.push(dryGainNode,outGainNode)
+    return outGainNode
+  }
+
   let mix = (params, p, dry, wet, def) => {
     if (def === undefined) { def = 1 }
     if (fixedPerFrame(params, p, 'mix', def)) {
       let mix = evalSubParamEvent(params, p, 'mix', def)
-      if (mix <= 0.01) { return dry }
-      if (mix >= 1) { return wet }
-      let dryGainNode = system.audio.createGain()
-      dryGainNode.gain.value = dryGain(mix)
-      dry.connect(dryGainNode)
-      let outGainNode = system.audio.createGain()
-      outGainNode.gain.value = outGain(mix)
-      wet.connect(outGainNode)
-      dryGainNode.connect(outGainNode)
-      system.disconnect(params, [dryGainNode,outGainNode])
-      return outGainNode
+      let nodes = []
+      let outNode = fixedMix(mix, dry, wet, nodes)
+      system.disconnect(params, nodes)
+      return outNode
     } else {
       // per frame
       let dryGainNode = system.audio.createGain()
@@ -47,5 +54,8 @@ define(function (require) {
     }
   }
 
-  return mix
+  return {
+    mix:mix,
+    fixedMix:fixedMix,
+  }
 })

@@ -33,14 +33,9 @@ define(function (require) {
     return node
   }
 
-  return (room, nodes) => {
+  return (room, node, nodes) => {
     let dampening = 3000
     let resonance = 0.7 + 0.28 * Math.max(Math.min(room, 1), 0)
-
-    var node = system.audio.createGain()
-    nodes.push(node)
-    node.channelCountMode = 'explicit'
-    node.channelCount = 2
 
     var merger = system.audio.createChannelMerger(2)
     var splitter = system.audio.createChannelSplitter(2)
@@ -48,13 +43,17 @@ define(function (require) {
     nodes.push(merger, splitter, highpass)
     highpass.type = 'highpass'
     highpass.frequency.value = 200
+    highpass.channelCountMode = 'explicit'
+    highpass.channelCount = 2
 
-    var wet = system.audio.createGain()
-    nodes.push(wet)
-    wet.gain.value = 0.3
+    var preamp = system.audio.createGain()
+    preamp.channelCountMode = 'explicit'
+    preamp.channelCount = 2
+    nodes.push(preamp)
+    preamp.gain.value = 0.3
 
-    node.connect(wet)
-    wet.connect(splitter)
+    node.connect(preamp)
+    preamp.connect(splitter)
     merger.connect(highpass)
 
     var combFilters = []
@@ -99,7 +98,6 @@ define(function (require) {
       combFilters.push(lfpf)
     }
 
-    system.mix(highpass)
-    return node
+    return highpass
   }
 })
