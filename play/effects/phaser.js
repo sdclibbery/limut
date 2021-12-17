@@ -16,9 +16,8 @@ define(function (require) {
     lfoGain.gain.value = 1200
     lfo.connect(lfoGain)
 
-    let mix = system.audio.createGain()
-    nodes.push(mix)
-    mix.gain.value = 1/2
+    let output = system.audio.createGain()
+    nodes.push(output)
 
     let makeAllPass = (freq) => {
       let ap = system.audio.createBiquadFilter()
@@ -27,6 +26,7 @@ define(function (require) {
       ap.Q.value = 0.125
       ap.frequency.value = freq
       lfoGain.connect(ap.detune)
+      ap.connect(output)
       return ap
     }
 
@@ -35,8 +35,8 @@ define(function (require) {
       .connect(makeAllPass(200))
       .connect(makeAllPass(400))
       .connect(makeAllPass(800))
-      .connect(mix)
-    return mix
+      .connect(makeAllPass(1600))
+    return output
   }
 
   return phaser

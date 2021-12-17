@@ -25,11 +25,11 @@ define(function (require) {
     return mix
   }
 
-  let reverb = (room, mix, node, nodes) => {
-    if (!room || room < 0.01 || mix < 0.01) { return node }
+  let reverb = (room, node, nodes) => {
+    if (!room || room < 0.01) { return node }
     let fv = freeverb(room, node, nodes)
     node.connect(fv)
-    return fixedMix(mix, node, fv, nodes)
+    return fv
   }
 
   let quantise = (v, step) =>{
@@ -39,7 +39,8 @@ define(function (require) {
     return {
       chorusAmount: quantise(evalMainParamEvent(params, 'chorus', 0), 8),
       chorusMix: quantise(evalSubParamEvent(params, 'chorus', 'mix', 1), 16),
-      lfoFreq: quantise(evalMainParamEvent(params, 'phaser', 0) / params.beat.duration, 16),
+      phaserRate: quantise(evalMainParamEvent(params, 'phaser', 0) / params.beat.duration, 16),
+      phaserMix: quantise(evalSubParamEvent(params, 'phaser', 'mix', 1), 16),
       echoDelay: quantise(evalMainParamEvent(params, 'echo', 0) * params.beat.duration, 16),
       echoFeedback: quantise(Math.min(evalMainParamEvent(params, 'echofeedback', 0.35), 0.95), 20),
       room: quantise(evalMainParamEvent(params, 'room', 0)*0.7, 16),
@@ -50,20 +51,20 @@ define(function (require) {
   let chains = {}
 
   let createChain = (chainParams) => {
-    let chain = {
+    let c = {
       params: chainParams,
       nodes: [],
       oscs: [],
     }
-    chain.in = system.audio.createGain()
-    chain.nodes.push(chain.in)
-    let node = chain.in
-    node = fixedMix(chain.params.chorusMix, node, chorus(chain.params.chorusAmount, node, chain.nodes, chain.oscs), chain.nodes)
-    node = phaser(chain.params.lfoFreq, node, chain.nodes, chain.oscs)
-    node = echo(chain.params.echoDelay, chain.params.echoFeedback, node, chain.nodes)
-    node = reverb(chain.params.room, chain.params.roomMix, node, chain.nodes)
-    chain.out = node
-    return chain
+    c.in = system.audio.createGain()
+    c.nodes.push(c.in)
+    let node = c.in
+    node = fixedMix(c.params.chorusMix, node, chorus(c.params.chorusAmount, node, c.nodes, c.oscs), c.nodes)
+    node = fixedMix(c.params.phaserMix, node, phaser(c.params.phaserRate, node, c.nodes, c.oscs), c.nodes)
+    node = echo(c.params.echoDelay, c.params.echoFeedback, node, c.nodes)
+    node = fixedMix(c.params.roomMix, node, reverb(c.params.room, c.params.roomMix, node, c.nodes), c.nodes)
+    c.out = node
+    return c
   }
 
   let destroyChain = (chain) => {
