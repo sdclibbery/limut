@@ -1,5 +1,5 @@
 v swirl 2, rate=1/6, zoom=2, mirror=4, mid=#818f*sy2.lpf/300, back=red, fore=blue
-sy2 fmbass 0<0000111133332222>, dur=1/4, room=2, echo=3/2, echofeedback=0.6, chorus, pan=[-1/2:1/2]r, lpr=15, lpf=100*[1,2,1,1/2,1/4]e*[1,1,[2,7,20]r1/4]s[8,24,0], oct=5, amp=1/3, add=[0:4]r4
+sy2 fmbass 0<0000111133332222>, dur=1/4, room=2, echo={3/2,feedback:0.6}, chorus, pan=[-1/2:1/2]r, lpr=15, lpf=100*[1,2,1,1/2,1/4]e*[1,1,[2,7,20]r1/4]s[8,24,0], oct=5, amp=1/3, add=[0:4]r4
 
 p ping 0, dur=4, amp=3, addc=[]r@f
 
@@ -12,7 +12,7 @@ k play x., room=0.1
 kr play mxvmxvmv, room=0.6, echo=3/4, pan=[-1,0,1], amp=1/3
 hc play ..(H*).,room=0.1, amp=1/2
 hh play --.-.--, drive=1/16, echo=3/4
-sy2 dsaw 0<0000111133332222>, dur=1/4, room=2, echo=3/2, echofeedback=0.6, chorus, pan=[-1/2:1/2]r, lpr=15, lpf=100*[1,2,1,1/2,1/4]e*[1,1,[2,7,20]r]s[8,24,0], oct=4, amp=1/3
+sy2 dsaw 0<0000111133332222>, dur=1/4, room=2, echo={3/2,feedback:0.6}, chorus, pan=[-1/2:1/2]r, lpr=15, lpf=100*[1,2,1,1/2,1/4]e*[1,1,[2,7,20]r]s[8,24,0], oct=4, amp=1/3
 
 
 bpm=150
@@ -21,7 +21,7 @@ hc play ..H., echo=1/8, amp=2, room=0.1
 hh play :[+:]:<:[::]>, echo=3/4, drive=1/4
 perc play drawgonedrawtune, dur=1/4, echo=3/4, amp=6, bpf=[100:2500]l8, bpr=1
 ss supersaw (02)(24)(-7-5), dur=[2,2,1,2,1]/4, echo=3/4, room=1, lpf=[400:4000]l8, lpr=12, drive=1/4, amp=0.6, add=[0:4]r1{seed:100,per:8}, oct=(3,4,5)
-// gl dsaw 02468, echo=(1/2,3/4), room, oct=(5,6), echofeedback=0.7, chop=4, drive=1/4, add=[0,2]r5, amp=3/4
+// gl dsaw 02468, echo={(1/2,3/4),feedback:0.7}, room, oct=(5,6), chop=4, drive=1/4, add=[0,2]r5, amp=3/4
 
 
 scale=penta
@@ -32,7 +32,7 @@ d3 dsaw 0, dur=4, add=d1.add+[3,4]r, oct=4
 d4 dsaw 0, dur=[3,2,1], add=d1.add+[0:8]r, oct=5
 set [d1,d2,d3,d4] envelope=pad, lpf=[1000:3000]s16@f, lpr=12
 pi piano 0, add=d1.add+[-2:3]n1/4, amp=[0,[0.2:1.3]n6]r@e, room=0.7, oct=4
-fly ping 0..[23]...., echo=1, echofeedback=0.8, add=d1.add, oct=6, amp=[0:2]s96
+fly ping 0..[23]...., echo={1,feedback:0.8}, add=d1.add, oct=6, amp=[0:2]s96
 
 
 scale=dorian
@@ -102,8 +102,8 @@ ss play [ss]
 sd play ..(OH*)., room=0.5
 db dbass 0.70.70., dur=1/2, att=0, lpf=[200:600]l8, lpr=18, oct=(1,2), room=0.3, amp=3/2//, echo=3/4
 pr prophet 0, dur=8, addc=[0,0,5,5]e+wow, pan=(-1,1), oct=(2,3), amp=[0,3/2]t32
-pi glass .......[5678], dur=1/2, echo=1/2, echofeedback=0.7, oct=(5,6), add=[0,1,2]r8, pan=[-1,1]r, amp=2
-le dsaw 123.456., echo=3/4, echofeedback=0.7, lpf=[600:2000]l6, lpr=22, addc=wow, amp=3/2
+pi glass .......[5678], dur=1/2, echo={1/2,feedback:0.7}, oct=(5,6), add=[0,1,2]r8, pan=[-1,1]r, amp=2
+le dsaw 123.456., echo={3/4,feedback:0.7}, lpf=[600:2000]l6, lpr=22, addc=wow, amp=3/2
 
 
 bpm=127
@@ -111,7 +111,7 @@ scale=minor
 kd play (Xv)., room=0.2
 hh play .[:+], room=0.1
 d play ..(oH*)., room=0.2, lpf=[1500:3000]r, amp=3/2
-bass fmbass 0..4..7., dur=1/2, oct=(1,2), room=0.5, lpf=[250:1000]l7, lpr=[15:20]l5, amp=0.5, echo=1, echofeedback=0.6
+bass fmbass 0..4..7., dur=1/2, oct=(1,2), room=0.5, lpf=[250:1000]l7, lpr=[15:20]l5, amp=0.5, echo={1,feedback:0.6}
 arp dsaw 4567.<01><.34>., dur=1/2, echo=3/4, amp=1, lpf=[700:2000]l5, lpr=20, addc=wow
 
 
@@ -126,7 +126,7 @@ n noise 0, bpf=[1,4/5,5/4,2]s7@f*1000, bpr=[5:25]n5
 bpm=135
 perc play (Xv).+:u.+:+:u.+:u., dur=1/4, room=0.2
 n noise 0, hpf=440*[1,4/5,5/4,6/5]r1/2@f, hpr=30, lpf=880*[1,4/5,5/4,6/5]r1@f, lpr=30, amp=1/16, room=1
-p dsaw 0[<-72-734><0-4>][5<.0-3>][.<6.2.>], dur=1, chop=3, att=0, rel=0, echo=(3/4,4/3), echofeedback=0.7, lpf=[500:2000]r
+p dsaw 0[<-72-734><0-4>][5<.0-3>][.<6.2.>], dur=1, chop=3, att=0, rel=0, echo={(3/4,4/3),feedback:0.7}, lpf=[500:2000]r
 
 
 scale=minor
@@ -180,8 +180,8 @@ kd play X., room=0.1, pan=-1/4
 sh play [ss]l.<[lll]l>, room=0.3, pan=1/4
 pp play pPPpPPpP, echo=1/4, pan=[-.1:.1]r
 pb prophet 0, dur=8, oct=(1,2), amp=3/2, att=2
-dq dsquare 0246135724683579, dur=1/4, echo=1/2, echofeedback=0.65, room=0.5, lpf=532*[1/2:2]r, lpr=15, hpf=532*[3/2:1/8]l6, hpr=2, oct=(2,3,4), att=0.01, pan=[-1/2:1/2]r
-ds dsaw 02402[76].., dur=1/2, lpf=532*[1:3]l8, lpr=15, hpf=532*[1/8:2]r, hpr=15, echo=3/4, echofeedback=0.65, att=0.01, oct=(2,3,4), room=0.5, pan=[[-1:-1/2]r,[1/2:1]r]r
+dq dsquare 0246135724683579, dur=1/4, echo={1/2,feedback:0.65}, room=0.5, lpf=532*[1/2:2]r, lpr=15, hpf=532*[3/2:1/8]l6, hpr=2, oct=(2,3,4), att=0.01, pan=[-1/2:1/2]r
+ds dsaw 02402[76].., dur=1/2, lpf=532*[1:3]l8, lpr=15, hpf=532*[1/8:2]r, hpr=15, echo={3/4,feedback:0.65}, att=0.01, oct=(2,3,4), room=0.5, pan=[[-1:-1/2]r,[1/2:1]r]r
 ng glass (04), dur=4, sus=1, rel=3, addc=[0,[-3:3]n1/4,[-12:12]n1/8]e, oct=(4,6,8), room=1, add=[0:4]r, pan=[-3/4,3/4]l2@f, amp=0.7
 
 
@@ -194,14 +194,14 @@ pp play x.o., room=0.5, pan=1/2
 p2 play .<:[::]>.<kl[kk][kkkkkkk]>, room=0.5, pan=-1/2
 db dbass 4567456746576879, dur=1/4, amp=1/2, room=0.5, lpf=440*[1,4/3,3/4,2,1/2]r, lpr=20, pan=0.2*[-1:1]r
 pad dsine 024-1, dur=2, rel=6
-g glass 4.6..5<.7>., amp=[0,0,1/2,1]r8, att=0.01, room=1, echo=3/2, echofeedback=0.9, add=[-2,0,1,3,5]r8
+g glass 4.6..5<.7>., amp=[0,0,1/2,1]r8, att=0.01, room=1, echo={3/2,feedback:0.9}, add=[-2,0,1,3,5]r8
 
 
 bpm=127
 scale=minor
 ch=[0,-2]t16
 kd play (Xv)..X..<*(O*)>., room=0.5, echo=1/8, amp=2
-d1 dsaw 0.4.2.7.5.9.4.8., dur=1/4, echo=3/4, echofeedback=0.6, lpf=[1200:3000]l8, lpr=15, add=ch, chop=3, oct=(2,3), room=1
+d1 dsaw 0.4.2.7.5.9.4.8., dur=1/4, echo={3/4,feedback:0.6}, lpf=[1200:3000]l8, lpr=15, add=ch, chop=3, oct=(2,3), room=1
 d2 dsaw 0120120<2221>, dur=1/2, sus=1/2, echo=1/4, room=1, rel=1, suslevel=1/2, oct=[5,(4,5)]t32, lpf=[1000:2000]l8, lpr=15, add=ch
 
 
@@ -211,7 +211,7 @@ n2 noise 0, bpf=[200:1000]n1/2, bpr=70, amp=5, room=0.3
 
 bpm=135
 perc play (Xv).+:u.+:+:u.+:u., dur=1/4, room=0.2
-p dsaw 0[<-72-734><0-4>][5<.0-3>][.<6.2.>], dur=1, chop=3, att=0, rel=0, echo=(3/4,4/3), echofeedback=0.7, lpf=[500:2000]r, amp=1/2
+p dsaw 0[<-72-734><0-4>][5<.0-3>][.<6.2.>], dur=1, chop=3, att=0, rel=0, echo={(3/4,4/3),feedback:0.7}, lpf=[500:2000]r, amp=1/2
 
 
 bpm=125
@@ -262,7 +262,7 @@ sd play ..(oH).
 sh play <s.>s.<s[ss][.s]>
 ch=[2,1,0]t16
 pb prophet 0, dur=4, rel=1, oct=2, lpf=700
-gl dsaw 02.04.<0567>., dur=1/2, oct=3, amp=1/2, echo=(3/4,3/2), echofeedback=0.7, room=0.7, lpf=[600:1000]l8, add=ch
+gl dsaw 02.04.<0567>., dur=1/2, oct=3, amp=1/2, echo={(3/4,3/2),feedback:0.7}, room=0.7, lpf=[600:1000]l8, add=ch
 pad ethereal (0246)(0257), dur=4, oct=4, add=ch, chop=2, amp=1/2, room=0.5
 lead dsaw 02_54[_2]34, dur=2, oct=(5,6), add=ch
 
@@ -283,7 +283,7 @@ lc play #, room=0.7, echo=(1/2,0,1), dur=16, rate=(1/2,3/4)
 bpm=125
 p play X<+[+:]+><O(OH)><x[+:]>, room=0.1, amp=[1,[0.2:0.7]r]
 b dbass 0004, dur=1/4, att=0, lpf=[150:500]l3, lpr=[11,[12:15]r], add=[0,[0:3]r]t[28,4]
-l dsaw 02435167, dur=1/2, sus=1/4, echo=3/4, echofeedback=[0.5:0.8]r, lpf=[500:1500]l7, lpr=22, att=0, add=[0,1,2,[0:2]r]r6, amp=[1,[0,1]r]*0.7
+l dsaw 02435167, dur=1/2, sus=1/4, echo={3/4,feedback:[0.5:0.8]r}, lpf=[500:1500]l7, lpr=22, att=0, add=[0,1,2,[0:2]r]r6, amp=[1,[0,1]r]*0.7
 
 
 
@@ -337,7 +337,7 @@ fill play [DD], amp=[0,0,1]l[12,4,0]*3, room=0.1
 dbf prophet follow ba
 ch=[0,1,2,3]t8
 db dbass 0, dur=1/4, lpf=[150:800]r, amp=2.5, add=ch, lpr=15, att=0
-arp dsaw 05432..., lpf=[300:2000]l8, echo=3/4, dur=1/4, att=0, amp=1, oct=(4,5), add=ch, lpr=15, echofeedback=0.85
+arp dsaw 05432..., lpf=[300:2000]l8, echo={3/4,feedback:0.85}, dur=1/4, att=0, amp=1, oct=(4,5), add=ch, lpr=15
 arpf glock follow arp, amp=0.5
 stab dsaw (024), dur=[2,2,1,1,2]/4, lpf=[500:2000]l8@f, lpr=15, oct=(3,4,5), amp=2, add=ch, sus=1/4, att=0, echo=1/2
 
@@ -390,10 +390,10 @@ ch =[0,-3,-2,[0,1,0,2]t32]t8
 kd play X., room=0.7
 sd play ..(*h)., room=0.2, amp=1/2
 hh play -, echo=1/4, amp=2, room=0.5
-pe2 play ..j..j.j, dur=1, echo=1/3, echofeedback=0.5, amp=[0:1.3]s37
+pe2 play ..j..j.j, dur=1, echo={1/3,feedback:0.5}, amp=[0:1.3]s37
 db dbass 0[.0][10]_, lpf=[100,[400:600]l48,150]e, add=ch, room=0.3w, amp=2, echo=1/4
 pad dsine (0234)(-1125)(0124), dur=2, add=ch, amp=1, oct=3
-pi piano 0.7<.4.>6<58>.<2468>, room=0.7, echo=(1,3/2), echofeedback=0.85, add=ch, amp=[0,0,0,0.6,0.7]r2, oct=[4,5,6]r16
+pi piano 0.7<.4.>6<58>.<2468>, room=0.7, echo={(1,3/2),feedback:0.85}, add=ch, amp=[0,0,0,0.6,0.7]r2, oct=[4,5,6]r16
 vs glow 3, scroll={y:2/3}, fade=0, fore=#fd4f, mid=#f88f, back=#32ff, rate=0, zoom=3/2, amp=[0:1]l1@f+[2:4]s23@f
 v glow follow pi, loc=sparkle, fore=#aaff*[0,1,4/5,1/3,0]e, sus=16, add=[0,2,4,6]r, rate=[-1/4:1/4]r, back=black
 
@@ -420,7 +420,7 @@ sd play ..O., room=0.2, amp=[1,0]t[96,32]
 hh play .[::], echo=1/8, amp=1/2
 pe play pp.pp.p.ppp., dur=1/4, room=0.1, rate=[4/5,1,5/4]r, amp=2/3
 fill play [UU], amp=[0,0,1]l[28,4,0]
-db dbass 013[21]041[23], dur=4, rel=3, lpf=[[400:2000]s12,[400:2500]s11,[400:5000]s10]e, lpr=[0:[20:40]n7]n1/4@f, oct=[(1,2),(2,3)]t32, room=0.5, echo=1, echofeedback=0.7, hpf=[0,1200]t[96,32]
+db dbass 013[21]041[23], dur=4, rel=3, lpf=[[400:2000]s12,[400:2500]s11,[400:5000]s10]e, lpr=[0:[20:40]n7]n1/4@f, oct=[(1,2),(2,3)]t32, room=0.5, echo={1,feedback:0.7}, hpf=[0,1200]t[96,32]
 
 
 scale=minor
