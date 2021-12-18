@@ -174,9 +174,9 @@
 <div id="accordion-examples" class="closed">
 <pre>d1 play x-o-</pre>
 <pre>p1 dsaw 0534, add=(0,2,4), dur=4</pre>
-<pre>Ba dbass 0, dur=1/4, add=[0:2]r*2, lpf=[3:12]r*100, lpr=8, att=0</pre>
+<pre>Ba dbass 0, dur=1/4, add=[0:2]r*2, lpf={[3:12]r*100,q:8}, att=0</pre>
 <pre>d dsaw 4[32]<01>__.., phaser=1/2, rel=2, amp=2, room={1.2,mix:1/3}</pre>
-<pre>ARP dsaw 02479742, dur=1/4, lpf=100*[3,30]l6.8, lpr=8, Oct=(3,5), echo=3/8, att=0
+<pre>ARP dsaw 02479742, dur=1/4, lpf={100*[3,30]l6.8,q:8}, Oct=(3,5), echo=3/8, att=0
 Bass prophet -2210, dur=4, Oct=(2,3), amp=1.7</pre>
 <pre>chords = [0,2,-2,3]t8
 p1 dbass 0-100, dur=1, chop={[2,2.5,3]t1,wave:'square'}, add=chords, echo=(1/17,1/23), amp=2
@@ -205,7 +205,7 @@ Sn play .o, dur=2, room=0.7</pre>
 Scale=phrygian
 Kd play X.:X.:X., Sample=2
 HH play [--], amp=2
-Db dbass .0_..0_1, drive=1, lpf=[1200,200]e, lpr=15</pre>
+Db dbass .0_..0_1, drive=1, lpf={[1200,200]e,q:15}</pre>
 <pre>bpm=120
 scale=minor
 k play Xv, room=1/4
@@ -230,7 +230,7 @@ pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]
 n noise 00, dur=[9,7], envelope=simple, bpf=523*[[1:5]e,[1:1/5]e]*[1:[1.1,1.25]]n1, amp=3/2, att=[2,1/4], rel=[9,7], pan=[-1,1]l8@f
 p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=[0.4:0.6]r, oct=6, pan=[-1:1]n8, amp=[0.3:1.1]n8, room=1
 </pre>
-<pre>s supersaw 0, dur=[1/4:1]l8, scale=penta, add=[-10:10]r1/2, room=2, lpf=[300,3000,300]e, lpr=11, amp=2, phaser=1/4
+<pre>s supersaw 0, dur=[1/4:1]l8, scale=penta, add=[-10:10]r1/2, room=2, lpf={[300,3000,300]e,q:11}, amp=2, phaser=1/4
 </pre>
 </div>
 <h4 onclick="toggleAccordion('accordion-indicators')">▶ Indicators</h4>
@@ -407,20 +407,20 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>envelope</code> Specify the envelope type to use: 'full' (ADSR), 'simple' (AD), 'pad' (uses a sine roll on/off so consecutive notes maintain constant volume)</p>
 <p><code>detune</code> Amount of detune in semitones</p>
 <p><code>lpf</code> Low pass filter frequency in Hertz</p>
-<p><code>lpr</code> Low pass filter resonance. 10 is approximately the transition where resonance starts to kick in.</p>
+<p class='sub'><code>lpf={400,q:20}</code> Low pass filter resonance. 10 is approximately the transition where resonance starts to kick in. Default: 5.</p>
 <p><code>hpf</code> High pass filter frequency in Hertz</p>
-<p><code>hpr</code> High pass filter resonance</p>
+<p class='sub'><code>hpf={400,q:20}</code> High pass filter resonance. Default: 5.</p>
 <p><code>bpf</code> Band pass filter frequency in Hertz</p>
-<p><code>bpr</code> Band pass filter resonance</p>
+<p class='sub'><code>bpf={400,q:20}</code> Band pass filter resonance. Default: 1.</p>
 <p><code>nf</code> Notch filter frequency in Hertz</p>
-<p><code>nr</code> Notch filter resonance</p>
+<p class='sub'><code>nf={400,q:20}</code> Notch filter resonance. Default: 1.</p>
 <p><code>low</code> Low shelf gain in decibels. Use negative values to cut frequencies below the cutoff, positive to boost them.</p>
-<p><code>lowf</code> Low shelf cutoff frequency. Default: 200Hz</p>
+<p class='sub'><code>low={-8,freq:400}</code> Low shelf cutoff frequency. Default: 200Hz</p>
 <p><code>mid</code> Mid gain in decibels. Use negative values to cut frequencies around the cutoff, positive to boost them.</p>
-<p><code>midf</code> Mid cutoff frequency. Default: 600Hz</p>
-<p><code>midq</code> Mid q defines the width of the frequency band; low q is wide. Default: 5</p>
+<p class='sub'><code>mid={-8,freq:400}</code> Mid cutoff frequency. Default: 600Hz</p>
+<p class='sub'><code>mid={-8,q:10}</code> Mid q defines the width of the mid frequency band; low q is wide. Default: 5</p>
 <p><code>high</code> High shelf gain in decibels. Use negative values to cut frequencies above the cutoff, positive to boost them.</p>
-<p><code>highf</code> High shelf cutoff frequency. Default: 1100Hz</p>
+<p class='sub'><code>high={-8,freq:400}</code> High shelf cutoff frequency. Default: 1100Hz</p>
 <p><code>chop</code> Chop the signal into a number of parts per beat, eg <code>chop=2</code> chops the signal twice per beat. Subparam for waveform; eg <code>chop={2,wave:triangle}</code> chops twice per beat with a triangle waveform. The default waveform is sine; the options are sine, square, triangle, saw.</p>
 <p class='sub'><code>chop={4,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>ring</code> Apply ring modulation at the given frequency in Hertz, eg <code>ring=32</code> apply ring modulation at 32Hz. Subparam for waveform; eg <code>ring={32,wave:saw}</code> 32Hz ring modulation with a triangle waveform. The default waveform is triangle; the options are sine, square, triangle, saw.</p>
@@ -596,8 +596,9 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 ====
 ==== audio ====
 Move parameters to subparams
-  resonant filter qs
-  Eq filter frequencies
+  resonant filter qs and Eq filter frequencies
+   example code update for all subparams
+   TEST low/mid/high subparams
   samplepitch
   vibdepth/vibdelay
   suslevel
@@ -696,6 +697,7 @@ subparams {2,mix:1/2}
 ====
 ==== other ====
 Check that functions args are case insensitive eg  slider{MAX:10}  or  pitch{DEGree:3}
+?? How to override a subparam without changing the main param (or other subparams)?
 Can modify params; eg 'set bass amp += 1/2'
  Overrides should only modify when explicitly asked; so set b add=1 replaces the add param, it does not add an additional 1 to it
  Can use for follow players, set, and indeed within a player; eg: p ping 0, amp=2/3, ..., amp*=2
