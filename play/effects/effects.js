@@ -27,8 +27,11 @@ define(function (require) {
     lfo.start(params._time)
     lfo.stop(params.endTime)
     node.connect(gain)
-    system.disconnect(params, [gain,lfo,node])
-    return mix(params, 'chop', node, gain, 1)
+    let output = system.audio.createGain()
+    output.gain.setValueAtTime(1/2, system.audio.currentTime)
+    gain.connect(output)
+    system.disconnect(params, [gain,lfo,node,output])
+    return mix(params, 'chop', node, output, 1)
   }
 
   let ring = (params, node) => {
