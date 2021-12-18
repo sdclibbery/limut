@@ -5,7 +5,8 @@ define(function (require) {
   // adapted from: https://raw.githubusercontent.com/mmckegg/freeverb/master/index.js
   // adapted from: https://github.com/TONEnoTONE/Tone.js/blob/master/Tone/effect/Freeverb.js
 
-  var combFilterTunings = [1557 / 44100, 1617 / 44100, 1491 / 44100, 1422 / 44100, 1277 / 44100, 1356 / 44100, 1188 / 44100, 1116 / 44100]
+  const sampleRate = system.audio.sampleRate
+  var combFilterTunings = [1557 / sampleRate, 1617 / sampleRate, 1491 / sampleRate, 1422 / sampleRate, 1277 / sampleRate, 1356 / sampleRate, 1188 / sampleRate, 1116 / sampleRate]
   var allpassFilterFrequencies = [225, 556, 441, 341]
 
   let lowpassCombFilter = (dampening, delayTime, resonance, nodes) => {

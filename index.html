@@ -581,9 +581,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 ====
 ==== audio ====
 Mix subparam for all effects, eg ring={32,mix:1/2}, room={2,mix:1/2} etc
- Double check freeview/mix disconnect; fails to gc sometimes
- Double check all nodes get cleaned up from effects chains
- Docs: chorus, room
+ Docs: mix for chorus, room, phaser
 Multiple unnecessary gains from default effects chain?
 Move echo feedback to subparam? Also filter resonance?? also echo level?
  Allow adding filters in the room/echo loops eg echo=3/4{lpf:523} - but dont use existing filter handlers as must be per event only!
