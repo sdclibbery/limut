@@ -1,21 +1,21 @@
 'use strict';
 define(function (require) {
   let system = require('play/system')
-  let {evalMainParamEvent,evalMainParamFrame} = require('play/eval-audio-params')
+  let {evalMainParamEvent,evalSubParamEvent,evalMainParamFrame} = require('play/eval-audio-params')
 
   return (params) => {
     let vcaVib
     let vcaAddc
     if (params.vib !== undefined) {
       let vib = evalMainParamEvent(params, 'vib', 0)
-      let vibdepth = evalMainParamEvent(params, 'vibdepth', 0.4)
-      let vibdelay = evalMainParamEvent(params, 'vibdelay', 1)
+      let vibdepth = evalSubParamEvent(params, 'vib', 'depth', 0.4)
+      let vibdelay = evalSubParamEvent(params, 'vib', 'delay', 1/2)
       let lfo = system.audio.createOscillator()
       lfo.type = 'sine'
       lfo.frequency.value = vib / params.beat.duration
       vcaVib = system.audio.createGain()
-      vcaVib.gain.setValueAtTime(0, params._time)
-      vcaVib.gain.linearRampToValueAtTime(vibdepth*100, params._time + vibdelay*params.beat.duration)
+      vcaVib.gain.setValueAtTime(0.001, params._time)
+      vcaVib.gain.exponentialRampToValueAtTime(vibdepth*100, params._time + vibdelay*params.beat.duration)
       lfo.connect(vcaVib)
       lfo.start(params._time)
       lfo.stop(params.endTime)
