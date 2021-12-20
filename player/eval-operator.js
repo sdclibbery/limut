@@ -3,6 +3,10 @@ define(function(require) {
   let combineIntervals = require('player/intervals').combine
 
   let objectMap = (obj, fn) => {
+    if (obj.hasOwnProperty('value')) { // 'value' field implies this is an object with subparams instead of a normal object
+      obj.value = fn(obj.value)
+      return obj
+    }
     obj.__evaluated = obj.__evaluated || {} // cache result object to avoid creating per-frame garbage
     for (let k in obj) {
       if (k !== '__evaluated') {
@@ -132,6 +136,9 @@ define(function(require) {
 
   assert([{r:4},{r:6}], evalParam(operator(add, [{r:1},{r:2}], [{r:3},{r:4}]),ev(0),0))
   assert([{r:1,g:3},{g:2,r:4}], evalParam(operator(add, [{r:1},{g:2}], [{g:3},{r:4}]),ev(0),0))
+
+  assert({value:4,mix:2}, evalParam(operator(add, {value:1,mix:2}, 3),ev(0),0))
+  assert({value:4,mix:2}, evalParam(operator(add, 3, {value:1,mix:2}),ev(0),0))
 
   console.log('eval operator tests complete')
   }

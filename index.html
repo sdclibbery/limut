@@ -682,14 +682,15 @@ pattern features (), [], <>, #b, ^v, !=
 p ping 0, add=[0,1,2,3]
 (), follow, complex durs, delay, overrides
 [], []t, []l/s, []e, []n, []r
+operators + - * / ^ %
 var, player.var, var{params}
-modifiers {offset,per,0:0}, @e, @f
+modifiers {seed,per,0:0}, @e, @f
 subparams {2,mix:1/2}
 ====
 ==== other ====
-operator eval should check for 'value' field, and if present, only modify that
- Eg   vib={2,depth:0.5}+1   should be the same as   vib={3,depth:0.5}
- But   fore={r:0.5,g:0.5}+1   should be the same as   fore={r:1.5,g:1.5}
+Rename any other params if desired
+ decay -> dec
+ envelope/att/sus/dec/rel -> env={simple,att=0.1,rel=2} etc?
 Publish as a release version with breaking change notification
 Embedded values should use the original b/count, not modified
  eg add=[[0,2,4,7]t4]r{seed:0,per:4,0:0}
