@@ -595,9 +595,6 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
-Move parameters to subparams
- Before deploying, consider the effect on the += syntax proposal!!!
- Deploy as a release version with breaking change
 Allow adding filters in the room/echo loops eg echo=3/4{lpf:523} - but dont use existing filter handlers as must be per event only!
 envelope exp (exponent) subparam, eg att={1/2,exp:2} ?? Or name it 'pow'?
 Can specify media stream device
@@ -653,13 +650,12 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ==== visual ====
 video synth (use video element to load video file; don't try and target eg youtube)
  can play audio through external audio synth??
-main/sub params for visuals
 Nice shader idea? https://tanck.nl/wallpaper/
 Can set texture repeat for text and image synths?
 Spiral and noise and shimmer predistortions
 Fan subparam for mirror  Eg mirror={6,fan:1/32}  Each mirror 'segment' is rotated by 1/32 more than the last
 Possible nice shader https://twitter.com/zozuar/status/1438117355746377728?s=03
-Hue,hsl functions (or just more params eg {h:1/3,l:1/2} ?)
+Hue,hsl functions (or just more fields on colours eg {h:1/3,l:1/2} ?)
 Colour parsing should assume alpha of 1 for eg #fff and #ffffff
 Consider pushing data of each event into a texture so a shader could display all events, eg as 2D patterns or voxels or 3D shapes
 Disco glowing geometric shapes shader
@@ -691,9 +687,18 @@ modifiers {offset,per,0:0}, @e, @f
 subparams {2,mix:1/2}
 ====
 ==== other ====
+operator eval should check for 'value' field, and if present, only modify that
+ Eg   vib={2,depth:0.5}+1   should be the same as   vib={3,depth:0.5}
+ But   fore={r:0.5,g:0.5}+1   should be the same as   fore={r:1.5,g:1.5}
+Publish as a release version with breaking change notification
+Embedded values should use the original b/count, not modified
+ eg add=[[0,2,4,7]t4]r{seed:0,per:4,0:0}
 Can modify params; eg 'set bass amp += 1/2'
  Overrides should only modify when explicitly asked; so set b add=1 replaces the add param, it does not add an additional 1 to it
  Can use for follow players, set, and indeed within a player; eg: p ping 0, amp=2/3, ..., amp*=2
+ Need to handle sub params
+  Eg   set p1 vib+=1   !Doesn't affect vib depth;   set p1 vib.depth+=0.5   !Doesn't affect vib value or vib delay
+Better syntax highlighting for {} brackets; maybe bracket match highlighting??
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 Wildcard player matching for groups 'set d? amp=0'  'set p* amp=0'
 ? rl, rt (==r), rs (==n); el (==e), es, et ?
@@ -704,8 +709,6 @@ Modifier or function that smooths the value over time, separate attach and decay
 <player>.pulse should takes average of playing notes? To reduce sudden jumps when notes overlap?
 Ability to set the pattern used on a player
  param: p play x:, pattern='X-O-'
-Really, embedded values should use the original b/count, not modified
- eg add=[[0,2,4,7]t4]r{seed:0,per:4,0:0}
 Should delayed notes eval per event at the time of the delayed or undelayed event??
 Proper tests for follow and overrides and combinations, including tuples
 ?? How to override a subparam without changing the main param (or other subparams)? Eg set lpf q without changing freq?
