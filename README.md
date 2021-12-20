@@ -14,6 +14,12 @@ Example limut code can be pasted into the editor to see what Limut can do; this 
 
 Please report problems / bugs / browser issues etc as github issues at https://github.com/sdclibbery/limut/issues
 
+# Releases and breaking changes
+
+Normal development should be backwards compatible. There is no specific log of added functionality (apart from the commit log).
+
+Occasionally, breaking changes are introduced; when this happens, a new github release is produced: https://github.com/sdclibbery/limut/releases to document the upgrade path for user code.
+
 # Electron app
 
 Limut can be run as a website, or packaged into a desktop web app. With npm installed, run `npm install` to install electron, and then `npm start` to run the electron app. There are no prepackaged versions available at present (pull requests welcome).
