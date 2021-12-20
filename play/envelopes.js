@@ -1,7 +1,7 @@
 'use strict';
 define(function (require) {
   let system = require('play/system');
-  let {evalMainParamEvent} = require('play/eval-audio-params')
+  let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
 
   let fullEnvelope = (params, gainBase) => {
     let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25)))
@@ -10,7 +10,7 @@ define(function (require) {
     params._time -= Math.min(attack, 0.05)
     let decay = evalMainParamEvent(params, 'decay', 0.08*dur) * params.beat.duration
     let sustain = evalMainParamEvent(params, 'sus', dur) * params.beat.duration - decay
-    let susLevel = evalMainParamEvent(params, 'suslevel', 0.8)
+    let susLevel = evalSubParamEvent(params, 'sus', 'level', 0.8)
     let release = evalMainParamEvent(params, 'rel', 0.1*dur) * params.beat.duration
     let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     let vca = system.audio.createGain();
@@ -31,7 +31,7 @@ define(function (require) {
     let attack = evalMainParamEvent(params, 'att', 0.09) * params.beat.duration
     params._time -= Math.min(attack, 0.05)
     let decay = evalMainParamEvent(params, 'decay', 0.08*dur) * params.beat.duration
-    let susLevel = evalMainParamEvent(params, 'suslevel', 0.8)
+    let susLevel = evalSubParamEvent(params, 'sus', 'level', 0.8)
     let release = evalMainParamEvent(params, 'rel', dur) * params.beat.duration
     let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     let vca = system.audio.createGain();
