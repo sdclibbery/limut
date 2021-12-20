@@ -393,7 +393,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>delay</code> Event start time offset in beats</p>
 <p><code>amp</code> Player amplitude control</p>
 <p><code>att</code> Attack time in beats</p>
-<p><code>decay</code> Decay time in beats</p>
+<p><code>dec</code> Decay time in beats</p>
 <p><code>sus</code> Sustain time in beats. Note the 'sustain' in an ADSR envelope sets the sustain level, however this param sets the sustain time. The default is time required after attack and decay to take the note to the end of the duration.</p>
 <p class='sub'><code>sus={level:1/6}</code> Set the amplitude level for sustain. Note the 'sustain' in an ADSR envelope is the level, so it is this value not the main 'sus' value (which is actually the sustain time). Default: 0.8.</p>
 <p><code>rel</code> Release time in beats</p>
@@ -689,7 +689,6 @@ subparams {2,mix:1/2}
 ====
 ==== other ====
 Rename any other params if desired
- decay -> dec
  envelope/att/sus/dec/rel -> env={simple,att=0.1,rel=2} etc?
 Publish as a release version with breaking change notification
 Embedded values should use the original b/count, not modified

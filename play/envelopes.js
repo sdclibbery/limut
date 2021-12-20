@@ -8,7 +8,7 @@ define(function (require) {
     dur *= evalMainParamEvent(params, "long", 1)
     let attack = evalMainParamEvent(params, 'att', 0.09) * params.beat.duration
     params._time -= Math.min(attack, 0.05)
-    let decay = evalMainParamEvent(params, 'decay', 0.08*dur) * params.beat.duration
+    let decay = evalMainParamEvent(params, 'dec', 0.08*dur) * params.beat.duration
     let sustain = evalMainParamEvent(params, 'sus', dur) * params.beat.duration - decay
     let susLevel = evalSubParamEvent(params, 'sus', 'level', 0.8)
     let release = evalMainParamEvent(params, 'rel', 0.1*dur) * params.beat.duration
@@ -30,7 +30,7 @@ define(function (require) {
     dur *= evalMainParamEvent(params, "long", 1)
     let attack = evalMainParamEvent(params, 'att', 0.09) * params.beat.duration
     params._time -= Math.min(attack, 0.05)
-    let decay = evalMainParamEvent(params, 'decay', 0.08*dur) * params.beat.duration
+    let decay = evalMainParamEvent(params, 'dec', 0.08*dur) * params.beat.duration
     let susLevel = evalSubParamEvent(params, 'sus', 'level', 0.8)
     let release = evalMainParamEvent(params, 'rel', dur) * params.beat.duration
     let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))

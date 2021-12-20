@@ -105,7 +105,7 @@ define(function(require) {
   assert({dur:1}, parseParams('dur=1'))
   assert({dur:1}, parseParams('Dur=1'))
   assert({dur:1, oct:4}, parseParams('dur=1, oct=4'))
-  assert({dur:4, oct:5, decay:2, att:2}, parseParams('dur=4, oct=5, decay=2, att=2'))
+  assert({dur:4, oct:5, dec:2, att:2}, parseParams('dur=4, oct=5, dec=2, att=2'))
   assert({dur:1/2}, parseParams('dur=1/2'))
   assert({dur:1, oct:4}, parseParams('dur=1,oct=4'))
   assert({t:'a'}, parseParams("t='a'"))
