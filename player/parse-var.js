@@ -4,6 +4,7 @@ define(function(require) {
   let players = require('player/players')
   let parseArray = require('player/parse-array')
   let eatWhitespace = require('player/eat-whitespace')
+  let tupleIndexer = require('player/tuple-indexer')
   let {evalParamFrame} = require('player/eval-param')
 
   let parseVar = (state) => {
@@ -59,24 +60,7 @@ define(function(require) {
       }
       v = evalRecurse(v,event,b,evalRecurse)
       if (Array.isArray(v)) {
-        if (tupleIndices.length > 0) { // extract required elements only from tuple
-          if (tupleIndices.separator === ':') {
-            let vn = []
-            let lo = Math.floor(evalParamFrame(tupleIndices[0], event,b))
-            let hi = Math.floor(evalParamFrame(tupleIndices[1], event,b))
-            for (let idx = lo; idx <= hi; idx++) {
-              vn.push(v[idx % v.length])
-            }
-            v = vn
-          } else {
-            v = tupleIndices.map(idx => {
-              let evalled = evalParamFrame(idx, event,b)
-              return v[Math.floor(evalled) % v.length]
-            })
-          }
-        }
-        if (!!v && v.length === 1) { v = v[0] }
-        if (!!v && v.length === 0) { v = 0 }
+        v = tupleIndexer(v, tupleIndices, event, b) // extract required elements only from tuple
       }
       if (v === undefined) { v = 0 } // If not found as a var, assume its for a currently unavailable player and default to zero
       return v

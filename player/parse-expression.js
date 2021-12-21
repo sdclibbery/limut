@@ -10,6 +10,7 @@ define(function(require) {
   let {parseVar,varLookup} = require('player/parse-var')
   let combineIntervals = require('player/intervals').combine
   let wrapMods = require('player/time-modifiers').wrap
+  let tupleIndexer = require('player/tuple-indexer')
 
   let numberOrArrayOrFour = (state) => {
     let n = number(state)
@@ -180,13 +181,28 @@ define(function(require) {
       // tuple
       if (char == '(') {
         let vs = parseArray(state, '(', ')')
-        if (vs.length == 1) {
-          result = vs[0]
-        } else {
-          result = vs.flat()
+        eatWhitespace(state)
+        let indices = parseArray(state, '[', ']')
+        let modifiers = parseMap(state)
+        let interval = parseInterval(state)
+        if (indices && indices.length > 0) {
+          result = (event,b,evalRecurse) => {
+            return tupleIndexer(vs, indices, event, b) // extract required elements only from tuple
+          }
+          if (result !== undefined) {
+            result = wrapMods(result, modifiers)
+            if (typeof result === 'function') {
+              result.interval = interval || 'frame'
+            }
+          }
         }
-        parseMap(state) // support modifiers map but ignore it
-        parseInterval(state) // Ignore
+        else if (vs.length == 1) {
+          result = vs[0]
+        } else if (Array.isArray(vs)) {
+          result = vs.flat()
+        } else {
+          result = vs
+        }
         continue
       }
       // map (object)
@@ -1026,6 +1042,37 @@ define(function(require) {
   p = parseExpression('[0:1]r{seed:[1,100]t1,per:1}')
   assert(0.3853306171949953, evalParamFrame(p,ev(0,0),0))
   assert(0.19610000611282885, evalParamFrame(p,ev(1,1),1))
+
+  assert(1, evalParamFrame(parseExpression('(1,2)[0]'),ev(0,0),0))
+  assert(2, evalParamFrame(parseExpression('(1,2)[1]'),ev(0,0),0))
+  assert(1, evalParamFrame(parseExpression('(1,2)[2]'),ev(0,0),0))
+  assert(1, evalParamFrame(parseExpression('(1,2)[0.8]'),ev(0,0),0))
+  assert([1,2], evalParamFrame(parseExpression('(1,2,3,4)[0,1]'),ev(0,0),0))
+  assert([1,2], evalParamFrame(parseExpression('(1,2,3,4)[0,1]'),ev(0,0),0))
+  assert([2,3,4], evalParamFrame(parseExpression('(1,2,3,4)[1:3]'),ev(0,0),0))
+  assert(1, evalParamFrame(parseExpression(' ( 1 , 2 )  [ 0 ] @e'),ev(0,0),0))
+
+  p = parseExpression('([3,4]t1,2)[0]')
+  assert(3, evalParamFrame(p,ev(0,0),0))
+  assert(4, evalParamFrame(p,ev(1,1),1))
+
+  p = parseExpression('(1,2)[ [0,1]t1 ]')
+  assert(1, evalParamFrame(p,ev(0,0),0))
+  assert(2, evalParamFrame(p,ev(1,1),1))
+
+  p = parseExpression('(1,2,3)[ 0, [1,2]t1 ]')
+  assert([1,2], evalParamFrame(p,ev(0,0),0))
+  assert([1,3], evalParamFrame(p,ev(1,1),1))
+
+  p = parseExpression('(1,2,3)[ 0 : [1,2]t1 ]')
+  assert([1,2], evalParamFrame(p,ev(0,0),0))
+  assert([1,2,3], evalParamFrame(p,ev(1,1),1))
+
+  p = parseExpression('(1,2)[0]{per:2,0:5}')
+  assert(5, evalParamFrame(p,ev(0,0),0))
+  assert(1, evalParamFrame(p,ev(1,1),1))
+  assert(5, evalParamFrame(p,ev(2,2),2))
+  assert(1, evalParamFrame(p,ev(3,3),3))
 
   console.log('Parse expression tests complete')
   }
