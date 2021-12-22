@@ -24,9 +24,7 @@ define(function(require) {
   let timeVar = (vs, ds, interval) => {
     let steps = timeVarSteps(vs, ds)
     return (e,b, evalRecurse) => {
-      let count = b
-      if (interval !== 'frame') { count = e.count }
-      count = (count+0.0001) % steps.totalDuration
+      let count = (b+0.0001) % steps.totalDuration
       let step = steps.filter(st => isInTimeVarStep(st, count) )[0]
       return (step !== undefined) && step.value
     }
@@ -49,9 +47,7 @@ define(function(require) {
   let linearTimeVar = (vs, ds, interval) => {
     let steps = timeVarSteps(vs, ds)
     return (e,b, evalRecurse) => {
-      let count = b
-      if (interval !== 'frame') { count = e.count }
-      count = count % steps.totalDuration
+      let count = b % steps.totalDuration
       for (let idx = 0; idx < steps.length; idx++) {
         let pre = steps[idx]
         if (isInTimeVarStep(pre, count)) {
@@ -66,9 +62,7 @@ define(function(require) {
   let smoothTimeVar = (vs, ds, interval) => {
     let steps = timeVarSteps(vs, ds)
     return (e,b, evalRecurse) => {
-      let count = b
-      if (interval !== 'frame') { count = e.count }
-      count = count % steps.totalDuration
+      let count = b % steps.totalDuration
       for (let idx = 0; idx < steps.length; idx++) {
         let pre = steps[idx]
         if (isInTimeVarStep(pre, count)) {
