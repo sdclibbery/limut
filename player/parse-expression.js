@@ -9,7 +9,7 @@ define(function(require) {
   let {parseRandom, simpleNoise} = require('player/eval-randoms')
   let {parseVar,varLookup} = require('player/parse-var')
   let combineIntervals = require('player/intervals').combine
-  let wrapMods = require('player/time-modifiers').wrap
+  let wrapMods = require('player/time-modifiers').wrapMods
   let tupleIndexer = require('player/tuple-indexer')
 
   let numberOrArrayOrFour = (state) => {

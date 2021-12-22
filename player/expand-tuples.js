@@ -23,7 +23,7 @@ define((require) => {
           if (Array.isArray(v)) {
             e[k] = v[i] // tuple in a tuple
           } else if (typeof v == 'function' || typeof v == 'object') {
-            e[k] = (e,b,evalRecurse) => tupleIndex(evalRecurse(v, e,b,evalRecurse),i)
+            e[k] = (e,b,evalRecurse) => tupleIndex(evalRecurse(v, e,b),i)
             e[k].interval = v.interval
             e[k].__alreadyExpanded = true
           } else {

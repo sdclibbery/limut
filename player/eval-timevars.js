@@ -57,7 +57,7 @@ define(function(require) {
         if (isInTimeVarStep(pre, count)) {
           let post = steps[(idx+1) % steps.length]
           let lerp = calcLerp(count, pre._time, pre.duration)
-          return lerpValue(lerp, evalRecurse(pre.value,e,b,evalRecurse), evalRecurse(post.value,e,b,evalRecurse))
+          return lerpValue(lerp, evalRecurse(pre.value,e,b), evalRecurse(post.value,e,b))
         }
       }
     }
@@ -75,7 +75,7 @@ define(function(require) {
           let post = steps[(idx+1) % steps.length]
           let lerp = calcLerp(count, pre._time, pre.duration)
           lerp = lerp*lerp*(3 - 2*lerp) // bezier ease in/out
-          return lerpValue(lerp, evalRecurse(pre.value,e,b,evalRecurse), evalRecurse(post.value,e,b,evalRecurse))
+          return lerpValue(lerp, evalRecurse(pre.value,e,b), evalRecurse(post.value,e,b))
         }
       }
     }
@@ -89,8 +89,8 @@ define(function(require) {
       let numSteps = vs.length-1
       let preIdx = Math.min(Math.max(Math.floor(eventFraction * numSteps), 0), numSteps)
       let postIdx = Math.min(preIdx + 1, numSteps)
-      let pre = evalRecurse(vs[preIdx], e,b,evalRecurse)
-      let post = evalRecurse(vs[postIdx], e,b,evalRecurse)
+      let pre = evalRecurse(vs[preIdx], e,b)
+      let post = evalRecurse(vs[postIdx], e,b)
       let lerp = Math.min(Math.max((eventFraction - preIdx/numSteps)*numSteps, 0), 1)
       return lerpValue(lerp, pre, post)
     }

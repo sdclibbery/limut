@@ -61,8 +61,8 @@ define(function(require) {
       return op(l, r)
     }
     let evalOp = (event,b,evalRecurse) => {
-      let el = evalRecurse(l, event,b,evalRecurse)
-      let er = evalRecurse(r, event,b,evalRecurse)
+      let el = evalRecurse(l, event,b)
+      let er = evalRecurse(r, event,b)
       let result = applyOperator(op, el, er)
       return result
     }

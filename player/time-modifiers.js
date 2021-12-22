@@ -3,6 +3,16 @@ define(function(require) {
   let number = require('player/parse-number')
   let {evalParamFrame} = require('player/eval-param')
 
+  let clear = (ev, b) => {
+    if (ev._originalCount !== undefined) {
+      b = ev._originalB
+      ev.count = ev._originalCount
+      delete ev._originalB
+      delete ev._originalCount
+    }
+    return b
+}
+
   let wrapWithModifiers = (exp, modifiers) => {
       if (!modifiers) { return exp }
       let overrides = new Map()
@@ -18,14 +28,12 @@ define(function(require) {
             let per = evalParamFrame(modifiers.per, ev,b)
             let modCount = ev.count % per // Use event.count for overrides as overrides are essentially instantaneous
             let override = overrides.get(Math.round(modCount*16384)/16384)
-            if (override !== undefined) { return evalRecurse(override, ev,b,evalRecurse) }
+            if (override !== undefined) { return override }
             ev._originalCount = ev.count
             ev.count = modCount
             ev._originalB = b
-            let result = evalRecurse(exp, ev, b%per, evalRecurse)
-            ev.count = ev._originalCount
-            delete ev._originalB
-            delete ev._originalCount
+            let result = evalRecurse(exp, ev, b%per)
+            clear(ev)
             return result
           }
       }
@@ -92,6 +100,7 @@ define(function(require) {
   }
 
   return {
-    wrap: wrapWithModifiers,
+    wrapMods: wrapWithModifiers,
+    clearMods: clear,
   }
 })

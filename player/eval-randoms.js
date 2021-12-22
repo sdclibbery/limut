@@ -109,7 +109,7 @@ define(function(require) {
           bnoise(value*1/period)*2
           +(1-bnoise(value*2.3/period))*1
         )/3
-      let evs = vs.map(v => evalRecurse(v, e,b, evalRecurse))
+      let evs = vs.map(v => evalRecurse(v, e,b))
       if (evs.length >= 2) {
         let lo = evs[0]
         let hi = evs[evs.length-1]
@@ -131,7 +131,7 @@ define(function(require) {
     } else if (vs.separator == ':') {
       let lo = param(vs[0], 0)
       let hi = param(vs[1], 1)
-      evaluator = (e,b,evalRecurse) => evalRandomRanged(generator, evalRecurse(lo,e,b,evalRecurse), evalRecurse(hi,e,b,evalRecurse), e, b, evalRecurse)
+      evaluator = (e,b,evalRecurse) => evalRandomRanged(generator, evalRecurse(lo,e,b), evalRecurse(hi,e,b), e, b, evalRecurse)
     } else {
       evaluator = (e,b,evalRecurse) => evalRandomSet(generator, vs, e, b, evalRecurse)
     }

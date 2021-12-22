@@ -27,14 +27,14 @@ define((require) => {
 
   let evalParamNow = (evalRecurse, value, event, beat) => {
     if (Array.isArray(value)) { // tuple, eval individual values
-      return value.map(v => evalRecurse(v, event, beat, evalRecurse)).flat()
+      return value.map(v => evalRecurse(v, event, beat)).flat()
     } else if (typeof value == 'function') { // Call function to get current value
       let v = value(event, beat, evalRecurse)
-      return evalRecurse(v, event, beat, evalRecurse)
+      return evalRecurse(v, event, beat)
     } else if (typeof value == 'object') { // Eval each field in the object
       let result = {}
       for (let k in value) {
-        result[k] = evalRecurse(value[k], event, beat, evalRecurse)
+        result[k] = evalRecurse(value[k], event, beat)
       }
       return expandObjectTuples(result) // and hoist tuples up
     } else {
@@ -42,15 +42,18 @@ define((require) => {
     }
   }
 
-  let evalParamFrame = (value, event, beat) => { // Fully evaluate down to a primitive number/string etc, allowing the value to change every frame if it wants to
+  let evalParamFrame = (value, event, beat) => {
+    // Fully evaluate down to a primitive number/string etc, allowing the value to change every frame if it wants to
     return evalParamNow(evalParamFrame, value, event, beat)
   }
 
-  let evalParamEvent = (value, event) => { // Fully evaluate down to a primitive number/string etc, fixing the value for the life of the event it is part of
+  let evalParamEvent = (value, event) => {
+    // Fully evaluate down to a primitive number/string etc, fixing the value for the life of the event it is part of
     return evalParamNow(evalParamEvent, value, event, event.count)
   }
 
-  let preEvalParam = (value, event) => { // Evaluate only to values that are constant for the entire event
+  let preEvalParam = (value, event) => {
+    // Evaluate only to values that are constant for the entire event
     if (!!value && value.interval === 'frame') {
       return value
     }
