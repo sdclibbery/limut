@@ -13,31 +13,31 @@ define(function(require) {
     return b
 }
 
-  let wrapWithModifiers = (exp, modifiers) => {
-      if (!modifiers) { return exp }
-      let overrides = new Map()
-      for (const [key, value] of Object.entries(modifiers)) {
-        let state = { str: key, idx: 0, }
-          let n = number(state)
-          if (n !== undefined) {
-              overrides.set(n, value)
-          }
-      }
-      if (modifiers.per) {
-        return (ev,b,evalRecurse) => {
-            let per = evalParamFrame(modifiers.per, ev,b)
-            let modCount = ev.count % per // Use event.count for overrides as overrides are essentially instantaneous
-            let override = overrides.get(Math.round(modCount*16384)/16384)
-            if (override !== undefined) { return override }
-            ev._originalCount = ev.count
-            ev.count = modCount
-            ev._originalB = b
-            let result = evalRecurse(exp, ev, b%per)
-            clear(ev)
-            return result
-          }
-      }
-      return exp
+let wrapWithModifiers = (exp, modifiers) => {
+    if (!modifiers) { return exp }
+    let overrides = new Map()
+    for (const [key, value] of Object.entries(modifiers)) {
+      let state = { str: key, idx: 0, }
+        let n = number(state)
+        if (n !== undefined) {
+            overrides.set(n, value)
+        }
+    }
+    if (modifiers.per) {
+      return (ev,b,evalRecurse) => {
+          let per = evalParamFrame(modifiers.per, ev,b)
+          let modCount = ev.count % per // Use event.count for overrides as overrides are essentially instantaneous
+          let override = overrides.get(Math.round(modCount*16384)/16384)
+          if (override !== undefined) { return override }
+          ev._originalCount = ev.count
+          ev.count = modCount
+          ev._originalB = b
+          let result = evalRecurse(exp, ev, b%per)
+          clear(ev)
+          return result
+        }
+    }
+    return exp
   }
 
   // TESTS //

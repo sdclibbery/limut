@@ -35,8 +35,7 @@ define(function(require) {
 
   let heldRandom = (getter, hold, interval) => {
     return (e,b,evalRecurse) => {
-      let count = (interval !== 'frame') ? e.count : b
-      let evalCount = Math.floor(count/hold)*hold
+      let evalCount = Math.floor(b/hold)*hold
       return getter({count:evalCount},evalCount,evalRecurse)
     }
   }
@@ -57,7 +56,7 @@ define(function(require) {
 
   let evalSeed = (modifiers, ev,b) => {
     let oldCount = ev.count
-    ev.count = ev._originalCount !== undefined ? ev._originalCount : ev.count // seed must ignore time modifiers
+    ev.count = ev._originalCount !== undefined ? ev._originalCount : ev.count
     b = ev._originalB !== undefined ? ev._originalB : b
     let result = evalParamFrame(modifiers.seed,ev,b)
     ev.count = oldCount
@@ -68,9 +67,8 @@ define(function(require) {
     let generator
     if (modifiers && modifiers.seed !== undefined) {
       generator = (e,b,evalRecurse) => {
-        let count = (interval !== 'frame') ? e.count : b
         let seed = evalSeed(modifiers, e,b)
-        return xmur3(count - seed) / 4294967296
+        return xmur3(b - seed) / 4294967296
       }
     } else {
       generator = () => Math.random()
@@ -94,13 +92,12 @@ define(function(require) {
   let simpleNoise = (vs, period, modifiers, interval) => {
     let ps = Math.random()*10000
     let generator = (e,b,evalRecurse) => {
-      return ((interval !== 'frame') ? e.count : b) + ps
+      return b + ps
     }
     if (modifiers && modifiers.seed !== undefined) {
       generator = (e,b,evalRecurse) => {
-        let count = (interval !== 'frame') ? e.count : b
         let seed = evalSeed(modifiers, e,b)
-        return count + seed
+        return b + seed
       }
     }
     return (e,b, evalRecurse) => {

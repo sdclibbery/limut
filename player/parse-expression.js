@@ -781,12 +781,12 @@ define(function(require) {
   p = parseExpression("[0:1]r1")
   r = p(ev(0,0),0,evalParamFrame)
   for (let i=0; i<20; i++) { assert(r, p(ev(0,0),0,evalParamFrame)) }
-  assertNotEqual(r, p(ev(0,1),0,evalParamFrame))
+  assertNotEqual(r, p(ev(1,1),1,evalParamFrame))
 
   p = parseExpression("[0:1]r1@e")
   r = p(ev(0,0),0,evalParamFrame)
   for (let i=0; i<20; i++) { assert(r, p(ev(0,0),0,evalParamFrame)) }
-  assertNotEqual(r, p(ev(0,1),0,evalParamFrame))
+  assertNotEqual(r, p(ev(1,1),1,evalParamFrame))
 
   p = parseExpression("[0:1]r1@f")
   r = p(ev(0,0),0,evalParamFrame)
@@ -960,8 +960,8 @@ define(function(require) {
   assert([1,2,3], parseExpression("((1,2),3))"))
 
   assert([{x:0},{x:[1,2]}], parseExpression("({x:0},{x:(1,2)})"))
-  assert([{x:1},{x:2}], evalParamFrame(parseExpression("{x:(1,2)}")))
-  assert([{x:0},{x:1},{x:2}], evalParamFrame(parseExpression("({x:0},{x:(1,2)})")))
+  assert([{x:1},{x:2}], evalParamFrame(parseExpression("{x:(1,2)}"), ev(0,0),0))
+  assert([{x:0},{x:1},{x:2}], evalParamFrame(parseExpression("({x:0},{x:(1,2)})"), ev(0,0),0))
 
 
   vars['green'] = parseExpression('{r:0,g:0.8,b:0,a:1}')
@@ -1080,6 +1080,16 @@ define(function(require) {
   // assert(2, evalParamFrame(p,ev(2,2),2))
   // assert(2, evalParamFrame(p,ev(3,3),3))
   // assert(1, evalParamFrame(p,ev(4,4),4))
+
+  // p = parseExpression('[0,[2,4,7]t4]l2{per:4}')
+  // assert(0, evalParamFrame(p,ev(0,0),0))
+  // assert(1, evalParamFrame(p,ev(1,1),1))
+  // assert(2, evalParamFrame(p,ev(2,2),2))
+  // assert(1, evalParamFrame(p,ev(3,3),3))
+  // assert(0, evalParamFrame(p,ev(4,4),4))
+  // assert(4, evalParamFrame(p,ev(6,6),6))
+  // assert(0, evalParamFrame(p,ev(8,8),8))
+  // assert(7, evalParamFrame(p,ev(10,10),10))
 
   console.log('Parse expression tests complete')
   }
