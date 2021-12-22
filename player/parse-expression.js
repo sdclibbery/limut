@@ -335,9 +335,9 @@ define(function(require) {
   assert(1, parseExpression('[1,2]')(ev(0),0,evalParamFrame))
   assert(2, parseExpression('[1,2]')(ev(1),0,evalParamFrame))
   assert(1, parseExpression('[1,2]')(ev(2),0,evalParamFrame))
-  assert(1, parseExpression('[[1,2]]')(ev(0),0,evalParamFrame))
-  assert(2, parseExpression('[[1,2]]')(ev(1),0,evalParamFrame))
-  assert(1, parseExpression('[[1,2]]')(ev(2),0,evalParamFrame))
+  assert(1, evalParamFrame(parseExpression('[[1,2]]'),ev(0),0))
+  assert(2, evalParamFrame(parseExpression('[[1,2]]'),ev(1),0))
+  assert(1, evalParamFrame(parseExpression('[[1,2]]'),ev(2),0))
   assert(1, parseExpression('[1:3]')(ev(0),0,evalParamFrame))
   assert(3, parseExpression('[1:3]')(ev(1),0,evalParamFrame))
 
@@ -422,8 +422,8 @@ define(function(require) {
   vars.foo = 2
   p = parseExpression('[1,foo]')
   vars.foo = 3
-  assert(1, p(ev(0),0,evalParamFrame))
-  assert(3, p(ev(1),1,evalParamFrame))
+  assert(1, evalParamFrame(p, ev(0),0))
+  assert(3, evalParamFrame(p, ev(1),1))
   delete vars.foo
 
   p = parseExpression('-[1,2] ')
@@ -1073,6 +1073,13 @@ define(function(require) {
   assert(1, evalParamFrame(p,ev(1,1),1))
   assert(5, evalParamFrame(p,ev(2,2),2))
   assert(1, evalParamFrame(p,ev(3,3),3))
+
+  // p = parseExpression('[[1,2]t2]r{seed:0,per:1}')
+  // assert(1, evalParamFrame(p,ev(0,0),0))
+  // assert(1, evalParamFrame(p,ev(1,1),1))
+  // assert(2, evalParamFrame(p,ev(2,2),2))
+  // assert(2, evalParamFrame(p,ev(3,3),3))
+  // assert(1, evalParamFrame(p,ev(4,4),4))
 
   console.log('Parse expression tests complete')
   }

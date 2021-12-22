@@ -45,13 +45,13 @@ define(function(require) {
     let events
     return (e,b,evalRecurse) => {
       if (interval === 'frame') {
-        return evalRecurse(getter(e,b,evalRecurse), e,b, evalRecurse)
+        return getter(e,b,evalRecurse)
       }
       if (!events) { events = new WeakMap() }
       if (!events.has(e)) {
         events.set(e, getter(e,b,evalRecurse))
       }
-      return evalRecurse(events.get(e), e,b, evalRecurse)
+      return events.get(e)
     }
   }
 
@@ -133,7 +133,7 @@ define(function(require) {
       let hi = param(vs[1], 1)
       evaluator = (e,b,evalRecurse) => evalRandomRanged(generator, evalRecurse(lo,e,b,evalRecurse), evalRecurse(hi,e,b,evalRecurse), e, b, evalRecurse)
     } else {
-      evaluator = (e,b,evalRecurse) => evalRecurse(evalRandomSet(generator, vs, e, b, evalRecurse),e,b,evalRecurse)
+      evaluator = (e,b,evalRecurse) => evalRandomSet(generator, vs, e, b, evalRecurse)
     }
     if (hold) {
       return heldRandom(evaluator, hold, interval)

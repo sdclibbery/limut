@@ -28,7 +28,7 @@ define(function(require) {
       if (interval !== 'frame') { count = e.count }
       count = (count+0.0001) % steps.totalDuration
       let step = steps.filter(st => isInTimeVarStep(st, count) )[0]
-      return (step !== undefined) && evalRecurse(step.value, e,b,evalRecurse)
+      return (step !== undefined) && step.value
     }
   }
 
@@ -83,7 +83,7 @@ define(function(require) {
 
   let eventTimeVar = (vs) => {
     return (e,b, evalRecurse) => {
-      if (!e.countToTime) { return evalRecurse(vs[0] || 0, e,b,evalRecurse) }
+      if (!e.countToTime) { return vs[0] || 0 }
       let eventFraction = (e.countToTime(b) - e._time) / (e.endTime - e._time)
       eventFraction = eventFraction || 0
       let numSteps = vs.length-1
@@ -99,7 +99,7 @@ define(function(require) {
   let eventIdxVar = (vs) => {
     return (e,b, evalRecurse) => {
       let v = vs[Math.floor(e.idx || 0) % vs.length]
-      return (v !== undefined) && evalRecurse(v, e,b,evalRecurse)
+      return (v !== undefined) && v
     }
   }
 
