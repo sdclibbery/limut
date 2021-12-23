@@ -54,17 +54,11 @@ define(function(require) {
     }
   }
 
-  let evalSeed = (modifiers, ev,b) => {
-    if (ev._originalB !== undefined) { b = ev._originalB }
-    let result = evalParamFrame(modifiers.seed,ev,b)
-    return result
-  }
-
   let getGenerator = (modifiers, interval) => {
     let generator
     if (modifiers && modifiers.seed !== undefined) {
       generator = (e,b,evalRecurse) => {
-        let seed = evalSeed(modifiers, e,b)
+        let seed = evalRecurse(modifiers.seed, e,b)
         return xmur3(b - seed) / 4294967296
       }
     } else {
@@ -93,7 +87,7 @@ define(function(require) {
     }
     if (modifiers && modifiers.seed !== undefined) {
       generator = (e,b,evalRecurse) => {
-        let seed = evalSeed(modifiers, e,b)
+        let seed = evalRecurse(modifiers.seed, e,b)
         return b + seed
       }
     }

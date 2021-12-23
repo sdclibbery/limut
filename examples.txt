@@ -1138,3 +1138,11 @@ set s6 amp=(0,0,0,0,0,1)[chooser]
 // s1 piano 0____0-2[-7-6-5]
 
 
+p ping 0, dur=1/4, add=[0,10]r{seed:0,per:1}
+p ping 0, dur=1/4, add=[0,[2,4,6,7]t4]r{seed:[20,9999]t16,per:2}
+p ping 0, dur=1/4, add=[0,[10,11,12,13]t4]r{seed:20,per:2}
+p ping 0, dur=1/4, addc=[0,2,4,7]r1/3{seed:0,per:4}@f
+p ping 0, dur=1/4, add=[0,[2,4,7]t4]l2{seed:0,per:4,0:0}
+p ping 0, dur=1/4, add=[0,2]l2{seed:0,per:4,0:-7}
+
+
