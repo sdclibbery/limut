@@ -20,7 +20,7 @@ define(function(require) {
           let override = overrides.get(Math.round(modCount*16384)/16384)
           if (override !== undefined) { return override }
           ev._originalB = b
-          let result = evalRecurse(exp, ev, b%per)
+          let result = evalParamFrame(exp, ev, b%per)
           delete ev._originalB
           return result
         }

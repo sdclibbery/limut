@@ -42,13 +42,21 @@ define((require) => {
     }
   }
 
+  let clearMods = (event, beat) => {
+    if (event._originalB !== undefined) { // remove any time modification when recursing
+      beat = event._originalB
+    }
+    return beat
+  }
   let evalRecurseFull = (value, event, beat) => {
+    beat = clearMods(event, beat)
     return evalParamNow(evalRecurseFull, value, event, beat)
   }
   let evalRecursePre = (value, event, beat) => {
     if (!!value && value.interval === 'frame') {
       return value
     }
+    beat = clearMods(event, beat)
     return evalParamNow(evalRecursePre, value, event, beat)
   }
 

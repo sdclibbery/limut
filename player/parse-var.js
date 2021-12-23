@@ -58,7 +58,7 @@ define(function(require) {
       if (typeof vars[key] === 'function' && vars[key].isVarFunction) { // Var function
         v = vars[key](args, event,b,evalRecurse)
       }
-      v = evalRecurse(v,event,b)
+      v = evalParamFrame(v,event,b)
       if (Array.isArray(v)) {
         v = tupleIndexer(v, tupleIndices, event, b) // extract required elements only from tuple
       }

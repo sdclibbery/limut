@@ -1082,12 +1082,12 @@ define(function(require) {
   assert(5, evalParamFrame(p,ev(2,2),2))
   assert(1, evalParamFrame(p,ev(3,3),3))
 
-  // p = parseExpression('[[1,2]t2]r{seed:0,per:1}')
-  // assert(1, evalParamFrame(p,ev(0,0),0))
-  // assert(1, evalParamFrame(p,ev(1,1),1))
-  // assert(2, evalParamFrame(p,ev(2,2),2))
-  // assert(2, evalParamFrame(p,ev(3,3),3))
-  // assert(1, evalParamFrame(p,ev(4,4),4))
+  p = parseExpression('[[1,2]t2]r{seed:0,per:1}')
+  assert(1, evalParamFrame(p,ev(0,0),0))
+  assert(1, evalParamFrame(p,ev(1,1),1))
+  assert(2, evalParamFrame(p,ev(2,2),2))
+  assert(2, evalParamFrame(p,ev(3,3),3))
+  assert(1, evalParamFrame(p,ev(4,4),4))
 
   // p = parseExpression('[0,[2,4,7]t4]l2{per:4}')
   // assert(0, evalParamFrame(p,ev(0,0),0))
