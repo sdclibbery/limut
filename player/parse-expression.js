@@ -1039,9 +1039,17 @@ define(function(require) {
   assert(1, evalParamFrame(p,ev(2,2),2))
   assert(5, evalParamFrame(p,ev(3,3),3))
 
+  p = parseExpression('[0:1]r{seed:1,per:2}')
+  assert(0.3853306171949953, evalParamFrame(p,ev(0,0),0))
+  assert(0.8534541970584542, evalParamFrame(p,ev(1,1),1))
+  assert(0.3853306171949953, evalParamFrame(p,ev(2,2),2))
+  assert(0.8534541970584542, evalParamFrame(p,ev(3,3),3))
+
   p = parseExpression('[0:1]r{seed:[1,100]t1,per:1}')
   assert(0.3853306171949953, evalParamFrame(p,ev(0,0),0))
   assert(0.19610000611282885, evalParamFrame(p,ev(1,1),1))
+  assert(0.3853306171949953, evalParamFrame(p,ev(2,2),2))
+  assert(0.19610000611282885, evalParamFrame(p,ev(3,3),3))
 
   assert(1, evalParamFrame(parseExpression('(1,2)[0]'),ev(0,0),0))
   assert(2, evalParamFrame(parseExpression('(1,2)[1]'),ev(0,0),0))

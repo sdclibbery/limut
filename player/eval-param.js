@@ -42,14 +42,24 @@ define((require) => {
     }
   }
 
+  let evalRecurseFull = (value, event, beat) => {
+    return evalParamNow(evalRecurseFull, value, event, beat)
+  }
+  let evalRecursePre = (value, event, beat) => {
+    if (!!value && value.interval === 'frame') {
+      return value
+    }
+    return evalParamNow(evalRecursePre, value, event, beat)
+  }
+
   let evalParamFrame = (value, event, beat) => {
     // Fully evaluate down to a primitive number/string etc, allowing the value to change every frame if it wants to
-    return evalParamNow(evalParamFrame, value, event, beat)
+    return evalParamNow(evalRecurseFull, value, event, beat)
   }
 
   let evalParamEvent = (value, event) => {
     // Fully evaluate down to a primitive number/string etc, fixing the value for the life of the event it is part of
-    return evalParamNow(evalParamEvent, value, event, event.count)
+    return evalParamNow(evalRecurseFull, value, event, event.count)
   }
 
   let preEvalParam = (value, event) => {
@@ -57,7 +67,7 @@ define((require) => {
     if (!!value && value.interval === 'frame') {
       return value
     }
-    return evalParamNow(preEvalParam, value, event, event.count)
+    return evalParamNow(evalRecursePre, value, event, event.count)
   }
 
   // TESTS //

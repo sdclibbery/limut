@@ -55,11 +55,8 @@ define(function(require) {
   }
 
   let evalSeed = (modifiers, ev,b) => {
-    let oldCount = ev.count
-    ev.count = ev._originalCount !== undefined ? ev._originalCount : ev.count
-    b = ev._originalB !== undefined ? ev._originalB : b
+    if (ev._originalB !== undefined) { b = ev._originalB }
     let result = evalParamFrame(modifiers.seed,ev,b)
-    ev.count = oldCount
     return result
   }
 

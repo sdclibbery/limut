@@ -689,29 +689,13 @@ modifiers {seed,per,0:0}, @e, @f
 subparams {2,mix:1/2}
 ====
 ==== other ====
-Make sure all eval functions (timevar, random etc) are using b not e.count
 Embedded values should use the original b/count, not modified
  eg add=[[0,2,4,7]t4]r{seed:0,per:4,0:0}
- Rewrite the way time modifiers works
-  It shouldn't statefully change the value of b/ev
-   Instead it should provide the override time data to eval-params via the evalRecurse call it makes
-    Then eval-params should apply the modification just for the one level of call
   !! Two distinct cases:
    1. evalrecurse called in eg operator eval or timevar lerp
    2. evalrecurse called in evalparamNow after 1st level eval
    Both of these need to use the original times
- Callstack:
-  evalRecurse which will be passed the modified times but must use the original
-  The actual eg linearTimeVar function, which must use the modified times
-  evalParamNow with modified times and evalRecurse as normal evalParamFrame
-  evalRecurse (eg evalParamFrame) with modified times
-  time-modifier function
-  evalParam on the time-modifier function
- IDEA
-  replace 'b' in all evalling functions with a 'timing' object that includes both current time and event time
-   Then this can have modified/unmodified versions that can be handled much easier
-  !!! Or better still, since b gets set to e.count for evalParamEvent, everything should use b only?? And so only need to mod b?
-   ?? NEEDS investigating
+ Get  add=[[0,2,4,7]t4]r{seed:0,per:4,0:0}   working
  Look at evalSeed, must be a better way, surely??
 Can modify params; eg 'set bass amp += 1/2'
  Overrides should only modify when explicitly asked; so set b add=1 replaces the add param, it does not add an additional 1 to it
