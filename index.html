@@ -175,7 +175,7 @@
 <pre>d1 play x-o-</pre>
 <pre>p1 dsaw 0534, add=(0,2,4), dur=4</pre>
 <pre>Ba dbass 0, dur=1/4, add=[0:2]r*2, lpf={[3:12]r*100,q:8}, att=0</pre>
-<pre>d dsaw 4[32]<01>__.., phaser=1/2, rel=2, amp=2, room={1.2,mix:1/3}</pre>
+<pre>d dsaw 4[32]<10>___.., phaser=1/3, envelope=simple, rel=this.dur*2, amp=3, room={2,mix:1/4}</pre>
 <pre>ARP dsaw 02479742, dur=1/4, lpf={100*[3,30]l6.8,q:8}, Oct=(3,5), echo=3/8, att=0
 Bass prophet -2210, dur=4, Oct=(2,3), amp=1.7</pre>
 <pre>chords = [0,2,-2,3]t8
@@ -183,29 +183,29 @@ p1 dbass 0-100, dur=1, chop={[2,2.5,3]t1,wave:'square'}, add=chords, echo=(1/17,
 k play X., lpf=800
 s play ..*.
 hh play -., echo=1/4, amp=2
-arp ping 04794697, dur=1/4, echo=3/8, add=chords, lpf=[10000,1000]t[24,8], amp=2/3
+arp ping 04794697, dur=1/4, echo=3/8, add=chords, lpf=[10000,1000]t[24,8], amp=1/2
 main dsaw 0, dur=8, add=chords, detune=(0,0.1,0.3), chop={[0,2,3]t32,wave:'square'}, amp=0.6
 </pre>
-<pre>d play x.h[.x]x[x.]h.
+<pre>d play x.h[.x]x[x.]h., room={0.1,mix:1/3}, amp=3/2
 chords=[0,2,4,3]t[16,8,4,4]
 be bell 0[.......2], dur=8, add=chords
 gl glock 024797.., dur=1/4, add=chords</pre>
-<pre>Perc play lstig, dur=[1,3,2], amp=0.5, echo=1/8
-Amb dsine 0[21]., dur=4, release=8, detune=[(0,0.3,0.5,0.9),(0,0.5,0.7,1.1)]t4
+<pre>Perc play lstig, dur=[1,3,2], amp=[1/6:1/2]l16, echo=1/8, pan=[-1:1]r
+Amb ambi 0[21]., dur=4, release=8, room=2, pan=(-1,1)
 Bass dbass 0, dur=8, att=2, rel=4, lpf=100*[3,30]l16@f</pre>
 <pre>Prog=[2,5,4,0]t8
 Ba piano 0__2, add=prog, amp=4, Oct=2
 Ch piano 0, dur=8, Sus=12, add=(prog+(0,2,4))%7, amp=2, Oct=3
 Le piano 0_.[.0]2343, amp=3, add=prog, Oct=4</pre>
 <pre>scale=minor
-Ba dbass 0.4[21], dur=4, amp=1.5, room=0.7
-Kd play x[.x]x., dur=2, room=0.7
-Sn play .o, dur=2, room=0.7</pre>
-<pre>V lines 0, pulse=3
+Ba dbass 0.4[21], dur=4, amp=2, room=1.2, att=0.01, lpf=this.freq*[30,24,4]e, phaser=1/8
+Kd play V[.V]V., dur=2, room=1.2, rate=3/4, echo=1/8
+Sn play .O, dur=2, room={1.2,mix:1}, low=-12, mid=4, high=4</pre>
+<pre>V lines 0, pulse, amp=3*Db.pulse
 Scale=phrygian
-Kd play X.:X.:X., Sample=2
-HH play [--], amp=2
-Db dbass .0_..0_1, drive=1, lpf={[1200,200]e,q:15}</pre>
+Kd play X.:X.:X., Sample=2, room=0.1
+HH play [--], amp=3/2
+Db dbass .0_..0_1, drive=1, lpf={[1200,200]e,q:15}, room=1/2</pre>
 <pre>bpm=120
 scale=minor
 k play Xv, room=1/4
@@ -225,7 +225,7 @@ hh play -, dur=1/4, amp=[0.2:1.2]n
 kk play ::[::][::][::]::., lpf=[600:900]l40, rate=[0.8:1.2]n
 ba dbass 0, dur=1/4, att=0, lpf=[1000:100]e, hpf=[0:500]n
 pi ping [010], add=[-5:5]l18/4, amp=[0:[0:1]t96]n, echo=1/2, oct=6, scale=minorpentatonic
-pad dsaw (-303), dur=16, envelope=pad, amp=[0:1]s64@f, room=0.5, lpf=[1000:3000]s32@f, oct=3, addc=[2,2,0,0]s[62,4,62,0]@f</pre>
+pad dsaw (-303), dur=16, envelope=pad, amp=[0:3/2]s64@f, room=0.5, lpf=[1000:3000]s32@f, oct=3, addc=[2,2,0,0]s[62,4,62,0]@f</pre>
 <pre>bpm=90
 n noise 00, dur=[9,7], envelope=simple, bpf=523*[[1:5]e,[1:1/5]e]*[1:[1.1,1.25]]n1, amp=3/2, att=[2,1/4], rel=[9,7], pan=[-1,1]l8@f
 p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=[0.4:0.6]r, oct=6, pan=[-1:1]n8, amp=[0.3:1.1]n8, room=1
@@ -689,7 +689,6 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-! `d dsaw 0 | p ping follow d` the ping is played using the saw wave!!
 Can modify params; eg 'set bass amp += 1/2'
  Overrides should only modify when explicitly asked; so set b add=1 replaces the add param, it does not add an additional 1 to it
  Can use for follow players, set, and indeed within a player; eg: p ping 0, amp=2/3, ..., amp*=2
@@ -705,6 +704,7 @@ Wildcard player matching for groups 'set d? amp=0'  'set p* amp=0'
  []w for random walk?
 []e4 to start on the event but run for 4 beats irrespective of how long the event actually lasts
 Modifier or function that smooths the value over time, separate attach and decay rates if possible
+! `d dsaw 0 | p ping follow d` the ping is played using the saw wave!!
 Ability to set the pattern used on a player
  param: p play x:, pattern='X-O-'
 Should delayed notes eval per event at the time of the delayed or undelayed event??
