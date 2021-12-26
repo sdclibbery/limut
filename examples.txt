@@ -1146,3 +1146,14 @@ p ping 0, dur=1/4, add=[0,[2,4,7]t4]l2{seed:0,per:4,0:0}
 p ping 0, dur=1/4, add=[0,2]l2{seed:0,per:4,0:-7}
 
 
+bpm=125
+// p play [X-]-(X*)-, delay=[0,1/22]t1/4, high=4
+p play [X-]-(X*)<---[--^]>, swing=59, high=6
+
+
+bpm=125
+p play [X-]-(X*)<---[--^]>, swing=61, high=6
+s tri (0246), dur=1, delay=[0,1/4,3/4]r{per:4,seed:100,0:0}, sus=1/6, att=0.01, room, oct=3, fold, phaser=1/16, amp=2/3, pan=[-1/2:1/2]r, swing=61
+b dbass ...[0246], room=0.1, swing=61
+
+

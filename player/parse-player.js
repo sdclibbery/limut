@@ -26,10 +26,24 @@ define((require) => {
     }
   }
 
+  let applySwing = (event, beat) => {
+    let swingPeriod = 1/4
+    let swingPercent = evalParamFrame(event.swing || 50, event, event.count)
+    let swingBeatPush = 0
+    let swingBeatFraction = (event.count % (swingPeriod*2)) / (swingPeriod*2)
+    if (swingBeatFraction == 1/2) {
+      let swingPush = (swingPercent - 50) / 25
+      swingBeatPush = swingPush * swingPeriod / 2
+    }
+    event._time += swingBeatPush * beat.duration
+    event.count += swingBeatPush
+  }
+
   let applyDelay = (event, beat) => {
     let d = evalParamFrame(event.delay || 0, event, event.count)
     event._time += d*beat.duration
     event.count += d
+    applySwing(event, beat)
   }
 
   let parsePlayer = (line, linenum) => {
@@ -129,8 +143,8 @@ define((require) => {
   let vars = require('vars')
 
   let assert = (expected, actual) => {
-    let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
-    let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
+    let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(3) : v)
+    let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(3) : v)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
   let assertThrows = (expected, code) => {
@@ -139,7 +153,7 @@ define((require) => {
     catch (e) { if (e.includes(expected)) {got=true} else {console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: ${e}`)} }
     finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
   }
-  let p,e,p1,p2
+  let p,e,es,p1,p2
   playerTypes.test = { play: (e) => {
     e.endTime = e._time + e.dur
     return {}
@@ -165,13 +179,28 @@ define((require) => {
   assert(1/4, e._time)
   assert(1/2, e.count)
 
+  es = parsePlayer('p play -, dur=1/4').getEventsForBeat({time:0, count:0, duration:1})
+  assert([0,1/4,1/2,3/4], es.map(e => e._time))
+
+  es = parsePlayer('p play -, dur=1/4, swing=75').getEventsForBeat({time:0, count:0, duration:1})
+  assert([0,3/8,1/2,7/8], es.map(e => e._time))
+
+  es = parsePlayer('p play -, dur=1/4, swing=60').getEventsForBeat({time:0, count:0, duration:1})
+  assert([0,0.3,1/2,0.8], es.map(e => e._time))
+
+  es = parsePlayer('p play -, dur=1/4, delay=1/4, swing=75').getEventsForBeat({time:0, count:0, duration:1})
+  assert([3/8,1/2,7/8,1], es.map(e => e._time))
+
+  es = parsePlayer('p play -, dur=1/4, swing=75').getEventsForBeat({time:10, count:10, duration:1})
+  assert([10,10.375,10.5,10.875], es.map(e => e._time))
+
   p = parsePlayer('p test x(op), dur=1/2')
   p.play(p.getEventsForBeat({time:0, count:0, duration:1}))
   assert('x', p.currentEvent(0)[0].value)
   assert('o', p.currentEvent(1/2)[0].value)
   assert('p', p.currentEvent(1/2)[1].value)
   assert(0, p.currentEvent(0)[0].pulse(0,0))
-  assert(0.77, p.currentEvent(0)[0].pulse(0,1/4))
+  assert(0.775, p.currentEvent(0)[0].pulse(0,1/4))
 
   p = parsePlayer('p test 0, amp=2')
   p.play(p.getEventsForBeat({time:0, count:0, duration:1}))
