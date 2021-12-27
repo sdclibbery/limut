@@ -8,11 +8,11 @@ define((require) => {
   let vars = require('vars')
   let mainVars = require('main-vars')
 
-  let identifier = (state) => {
+  let identifierWithWildcards = (state) => {
     let char
     let result = ''
     while (char = state.str.charAt(state.idx).toLowerCase()) {
-      if ((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || char === '_') {
+      if ((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || char === '_' || char == '*') {
         result += char
         state.idx += 1
         continue
@@ -36,7 +36,7 @@ define((require) => {
       if (char == '[' || char == ',') {
         state.idx += 1
         eatWhitespace(state)
-        let v = identifier(state)
+        let v = identifierWithWildcards(state)
         if (v !== undefined) { result.push(v) }
         eatWhitespace(state)
       } else if (char == ']') {
@@ -72,7 +72,7 @@ define((require) => {
       if (state.str[0] == '[') {
         playerIds = parsePlayerIds(state).map(id=>id.trim())
       } else {
-        playerIds = [identifier(state)]
+        playerIds = [identifierWithWildcards(state)]
       }
       let params = parseParams(state.str.slice(state.idx).trim(), undefined, playerIds.join(','))
       playerIds.forEach(playerId => {
@@ -185,11 +185,25 @@ define((require) => {
   assert(5, players.overrides.p.add)
   delete players.overrides.p
 
+  parseLine('set p* add=2')
+  assert(2, players.overrides['p*'].add)
+  delete players.overrides['p*']
+
+  parseLine('set * add=2')
+  assert(2, players.overrides['*'].add)
+  delete players.overrides['*']
+
   parseLine(' set [ p , q ] amp = 2 ')
   assert(2, players.overrides.p.amp)
   assert(2, players.overrides.q.amp)
   delete players.overrides.p
   delete players.overrides.q
+
+  parseLine(' set [ p1 , q* ] amp = 2 ')
+  assert(2, players.overrides.p1.amp)
+  assert(2, players.overrides['q*'].amp)
+  delete players.overrides.p1
+  delete players.overrides['q*']
 
   console.log('Parse line tests complete')
   }

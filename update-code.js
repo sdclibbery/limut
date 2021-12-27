@@ -37,6 +37,7 @@ define((require) => {
     parseCode(code)
     players.gc_sweep()
     sliders.gc_sweep()
+    players.expandOverrides()
   }
 
   // TESTS //
