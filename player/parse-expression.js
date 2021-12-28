@@ -1099,6 +1099,8 @@ define(function(require) {
   assert(0, evalParamFrame(p,ev(8,8),8))
   assert(7, evalParamFrame(p,ev(10,10),10))
 
+  assert(1, evalParamFrame(parseExpression('[1]r{}'),ev(0,0),0))
+
   console.log('Parse expression tests complete')
   }
   
