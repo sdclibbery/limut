@@ -187,7 +187,7 @@ define(function(require) {
         let interval = parseInterval(state)
         if (indices && indices.length > 0) {
           result = (event,b,evalRecurse) => {
-            return tupleIndexer(vs, indices, event, b) // extract required elements only from tuple
+            return tupleIndexer(evalRecurse(vs,event,b), indices, event, b) // extract required elements only from tuple
           }
           if (result !== undefined) {
             result = wrapMods(result, modifiers)

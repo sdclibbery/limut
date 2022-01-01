@@ -1,7 +1,6 @@
 'use strict'
 define(function(require) {
   let vars = require('vars')
-  let {evalParamFrame} = require('player/eval-param')
 
   let createAggregator = (name, fn) => {
     let aggFunc = (args, e,b,evalRecurse) => {
@@ -11,7 +10,10 @@ define(function(require) {
       else if (Array.isArray(args.value)) { vs = args.value }
       else if (args.value !== undefined) { vs = [args.value] }
       else { vs = [0] }
-      vs = evalParamFrame(vs, e,b)
+      vs = vs.map(v => {
+        if (typeof(v) === 'object' && v.hasOwnProperty('value')) { return v.value }
+        return v
+      })
       return fn(vs)
     }
     aggFunc.isVarFunction = true

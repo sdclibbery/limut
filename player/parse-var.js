@@ -56,7 +56,7 @@ define(function(require) {
         v = vars[key]
       }
       if (typeof vars[key] === 'function' && vars[key].isVarFunction) { // Var function
-        v = vars[key](args, event,b,evalRecurse)
+        v = vars[key](evalRecurse(args,event,b), event,b,evalRecurse)
       }
       v = evalParamFrame(v,event,b)
       if (Array.isArray(v)) {

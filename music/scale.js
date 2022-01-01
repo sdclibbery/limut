@@ -3,7 +3,6 @@ define(function (require) {
   let vars = require('vars')
   let param = require('player/default-param')
   let {evalMainParamEvent} = require('play/eval-audio-params')
-  let {evalParamFrame} = require('player/eval-param')
 
   let scales = {
     chromatic       :[0,1,2,3,4,5,6,7,8,9,10,11],
@@ -119,9 +118,9 @@ define(function (require) {
 
   let pitchFunc = (args, e,b,evalRecurse) => {
     args = args || {}
-    let degree = evalParamFrame(param(args.value, param(args.degree, 0)), e,b)
-    let octave = evalParamFrame(param(args.octave, 4), e,b)
-    let sharp = evalParamFrame(param(args.sharp, 0), e,b)
+    let degree = param(args.value, param(args.degree, 0))
+    let octave = param(args.octave, 4)
+    let sharp = param(args.sharp, 0)
     return scale.degreeToFreq(degree, octave, args.scale, sharp)
   }
   pitchFunc.isVarFunction = true

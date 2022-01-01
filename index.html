@@ -685,9 +685,6 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Aggregations over tuples; eg fore=blue*p.pulse[max]
- Setup agrregators as functions
-  Should do the eval in the callers instead of the functions? Ie callers just fully eval args before passing in
-   parse-var does already eval?? But parse-expression line 190 doesnt???
  Tuple indexer applies var function if present
   ? How? What if there are multiple things in the indexer array?
 For pulse, can we make sure the order within the tuple is consistent?
