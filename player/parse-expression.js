@@ -11,6 +11,8 @@ define(function(require) {
   let combineIntervals = require('player/intervals').combine
   let wrapMods = require('player/time-modifiers').wrapMods
   let tupleIndexer = require('player/tuple-indexer')
+  let {evalParamFrame} = require('player/eval-param')
+  let parseAggregator = require('player/parse-aggregator')
 
   let numberOrArrayOrFour = (state) => {
     let n = number(state)
@@ -187,13 +189,11 @@ define(function(require) {
         let interval = parseInterval(state)
         if (indices && indices.length > 0) {
           result = (event,b,evalRecurse) => {
-            return tupleIndexer(evalRecurse(vs,event,b), indices, event, b) // extract required elements only from tuple
+            return tupleIndexer(evalParamFrame(vs,event,b), indices, event, b) // extract required elements only from tuple
           }
-          if (result !== undefined) {
-            result = wrapMods(result, modifiers)
-            if (typeof result === 'function') {
-              result.interval = interval || 'frame'
-            }
+          result = wrapMods(result, modifiers)
+          if (typeof result === 'function') {
+            setInterval(result, interval || hoistInterval('event', vs))
           }
         }
         else if (vs.length == 1) {
@@ -249,6 +249,12 @@ define(function(require) {
         result = wrapMods(parseColour(state), parseMap(state))
         continue
       }
+      // Aggregators
+      let aggregator = parseAggregator(state)
+      if (aggregator) {
+        result = aggregator
+        continue
+      }
       // vars
       let parsed = parseVar(state)
       let modifiers = parseMap(state)
@@ -278,6 +284,9 @@ define(function(require) {
       expression: expression,
       dependsOn: dependsOn || [],
       context: context,
+      parseInterval: parseInterval,
+      hoistInterval: hoistInterval,
+      setInterval: setInterval,
     }
     let result = expression(state)
     if (commented && state.commented) { commented() }
@@ -1101,7 +1110,6 @@ define(function(require) {
 
   assert(1, evalParamFrame(parseExpression('[1]r{}'),ev(0,0),0))
 
-  assert(0, evalParamFrame(parseExpression('min'),ev(0,0),0))
   assert(2, evalParamFrame(parseExpression('min{2}'),ev(0,0),0))
   assert(2, evalParamFrame(parseExpression('min{(2,3)}'),ev(0,0),0))
   assert(2, evalParamFrame(parseExpression('count{(0,0)}'),ev(0,0),0))
@@ -1111,11 +1119,11 @@ define(function(require) {
   assert(3, evalParamFrame(parseExpression('max{[(2,3),(4,5)]t1}'),ev(0,0),0))
   assert(5, evalParamFrame(parseExpression('max{[(2,3),(4,5)]t1}'),ev(1,1),1))
 
-  // assert(3, evalParamFrame(parseExpression('(1,2,3)[max]'),ev(0,0),0))
-  // assert([1,3], evalParamFrame(parseExpression('(1,2,3)[min,max]'),ev(0,0),0))
-  // assert(3, evalParamFrame(parseExpression('(1,2,[3,4]t1)[max]'),ev(0,0),0))
-  // assert(4, evalParamFrame(parseExpression('(1,2,[3,4]t1)[max]'),ev(1,1),1))
-  // assert(3, evalParamFrame(parseExpression('(1,(2,3))[max]'),ev(0,0),0))
+  assert(3, evalParamFrame(parseExpression('(1,2,3)[max]'),ev(0,0),0))
+  assert([1,3], evalParamFrame(parseExpression('(1,2,3)[min,max]'),ev(0,0),0))
+  assert(3, evalParamFrame(parseExpression('(1,2,[3,4]t1)[max]'),ev(0,0),0))
+  assert(4, evalParamFrame(parseExpression('(1,2,[3,4]t1)[max]'),ev(1,1),1))
+  assert(3, evalParamFrame(parseExpression('(1,(2,3))[max]'),ev(0,0),0))
 
   console.log('Parse expression tests complete')
   }

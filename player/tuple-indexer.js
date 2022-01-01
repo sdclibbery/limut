@@ -2,20 +2,26 @@
 define(function(require) {
   let {evalParamFrame} = require('player/eval-param')
 
+  let elementByIndex = (tuple, idx, e,b) => {
+    if (typeof(idx) === 'function' && idx.isTupleAggregator) {
+      return idx(tuple, e,b)
+    }
+    return tuple[Math.floor(evalParamFrame(idx, e,b)) % tuple.length]
+  }
+
   let select = (v, indices, event, b) => {
     if (!!indices && indices.length > 0) {
       if (indices.separator === ':') {
         let vn = []
-        let lo = Math.floor(evalParamFrame(indices[0], event,b))
-        let hi = Math.floor(evalParamFrame(indices[1], event,b))
-        for (let idx = lo; idx <= hi; idx++) {
+        let loIdx = Math.floor(evalParamFrame(indices[0], event,b))
+        let hiIdx = Math.floor(evalParamFrame(indices[1], event,b))
+        for (let idx = loIdx; idx <= hiIdx; idx++) {
           vn.push(v[idx % v.length])
         }
         v = vn
       } else {
         v = indices.map(idx => {
-          let evalled = evalParamFrame(idx, event,b)
-          return v[Math.floor(evalled) % v.length]
+          return elementByIndex(v, idx, event,b)
         })
       }
     }

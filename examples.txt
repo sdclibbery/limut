@@ -1157,3 +1157,19 @@ s tri (0246), dur=1, delay=[0,1/4,3/4]r{per:4,seed:100,0:0}, sus=1/6, att=0.01, 
 b dbass ...[0246], room=0.1, swing=61
 
 
+// v julia 0, add=max{(0,5)}
+// v julia 0, add=max{[0:5]t1/2}
+// v julia 0, add=max{[0:5]r@f}
+// v julia 0, add=max{([0:0]r,[1,2]t1/2@f)}
+// v julia 0, add=(0,[1,2]t1/2@f)[max]
+// v julia 0, add=count{(0,0,0,0,0)}
+// v julia 0, add=min{(3,2,1)}
+// v julia 0, add=max{(3,2,1)}
+// v julia 0, add=first{(3,2,1)}
+// v julia 0, add=last{(3,2,1)}
+// v julia 0, add=rand{(3,2,1)}
+// v julia 0, add=sum{(3,2,1)}
+// v julia 0, add=avg{(3,2,1)}
+// v julia 0, add=(3,2,1)[rand]
+
+

@@ -693,21 +693,15 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Aggregations over tuples; eg fore=blue*p.pulse[max]
- Need to figure out how tuple indexer aggregators can be passed the tuple in the first place
- Tuple indexer applies var function if present
-  !! Problem is, we need to pass the tuple as the args for the aggregator, but there's no way to get it there
-   Need special cases in tuple-indexer to handle indices being aggregators
-    But also have no way to identify aggregators at the moment, because they get wrapped into var eval functions...
-     So the question is: How do we parse an aggregator in such a way as to identify it in tuple-indexer...
-     We cant know at compile time that its going to be an aggregator
-      So either aggregators STOP being vars
-       Or, we have to have some super special magic at eval-time to get the args through
-       Can we switch at parse time, so `max` is a standalone aggregator, but `max{}` is an aggregator in a var?
-        Or, when parsing a tuple-indexer array only, switch on parsing of aggregators as keywords not vars?
-  ? How? What if there are multiple things in the indexer array?
-  Docs
+ Test everything
+ review
+ Docs
+!max{([0:0]r,[1,2]t1/2@f)} should be per frame but isnt
+!Tuple indexer [2:0] will die because lo and hi are the wrong way round
+ Where else will also have this problem?
+ Also, Should support `(1,2,3)[min:max]`? Or not?
 !No docs for player.pulse anywhere
-For pulse, can we make sure the order within the tuple is consistent?
+For player.pulse, can we make sure the order within the tuple is consistent?
  Eg so the most recent events are first in the tuple in case of event overlap?
  Also does pulse cutoff too early ignoring release time?
 Tuple indexing should really work anywhere, eg [(1,2)]r[max] etc

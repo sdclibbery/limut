@@ -3,7 +3,6 @@ define(function(require) {
   require('polyfills')
   require('predefined-vars')
   require('sliders')
-  require('player/aggregators')
   let system = require('play/system')
   let drawSystem = require('draw/system')
   let metronome = require('metronome')
