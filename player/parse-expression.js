@@ -1111,6 +1111,12 @@ define(function(require) {
   assert(3, evalParamFrame(parseExpression('max{[(2,3),(4,5)]t1}'),ev(0,0),0))
   assert(5, evalParamFrame(parseExpression('max{[(2,3),(4,5)]t1}'),ev(1,1),1))
 
+  // assert(3, evalParamFrame(parseExpression('(1,2,3)[max]'),ev(0,0),0))
+  // assert([1,3], evalParamFrame(parseExpression('(1,2,3)[min,max]'),ev(0,0),0))
+  // assert(3, evalParamFrame(parseExpression('(1,2,[3,4]t1)[max]'),ev(0,0),0))
+  // assert(4, evalParamFrame(parseExpression('(1,2,[3,4]t1)[max]'),ev(1,1),1))
+  // assert(3, evalParamFrame(parseExpression('(1,(2,3))[max]'),ev(0,0),0))
+
   console.log('Parse expression tests complete')
   }
   

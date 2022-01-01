@@ -24,8 +24,8 @@ define(function(require) {
   createAggregator('last', vs => vs[vs.length-1])
   createAggregator('rand', vs => vs[Math.floor(Math.random()*vs.length)])
 
-  createAggregator('max', vs => Math.max(...vs))
   createAggregator('min', vs => Math.min(...vs))
+  createAggregator('max', vs => Math.max(...vs))
 
   let sum = vs => vs.reduce((a,x) => a+x, 0)
   createAggregator('count', vs => vs.length)
