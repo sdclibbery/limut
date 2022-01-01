@@ -1101,6 +1101,16 @@ define(function(require) {
 
   assert(1, evalParamFrame(parseExpression('[1]r{}'),ev(0,0),0))
 
+  assert(0, evalParamFrame(parseExpression('min'),ev(0,0),0))
+  assert(2, evalParamFrame(parseExpression('min{2}'),ev(0,0),0))
+  assert(2, evalParamFrame(parseExpression('min{(2,3)}'),ev(0,0),0))
+  assert(2, evalParamFrame(parseExpression('count{(0,0)}'),ev(0,0),0))
+  assert(3, evalParamFrame(parseExpression('max{(2,3)}'),ev(0,0),0))
+  assert(4, evalParamFrame(parseExpression('max{(2,[4,5]t1)}'),ev(0,0),0))
+  assert(5, evalParamFrame(parseExpression('max{(2,[4,5]t1)}'),ev(1,1),1))
+  assert(3, evalParamFrame(parseExpression('max{[(2,3),(4,5)]t1}'),ev(0,0),0))
+  assert(5, evalParamFrame(parseExpression('max{[(2,3),(4,5)]t1}'),ev(1,1),1))
+
   console.log('Parse expression tests complete')
   }
   

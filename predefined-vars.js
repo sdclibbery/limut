@@ -81,6 +81,7 @@ define(function(require) {
   vars['sine'] = 'sine'
   vars['square'] = 'square'
   vars['triangle'] = 'triangle'
+  vars['tri'] = 'triangle'
   vars['sawtooth'] = 'sawtooth'
   vars['saw'] = 'sawtooth'
 
