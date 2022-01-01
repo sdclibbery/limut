@@ -16,6 +16,7 @@ define(function(require) {
         if (typeof(v) === 'object' && v.hasOwnProperty('value')) { return v.value }
         return v
       })
+      if (vs.length === 0) { vs = [0] }
       return fn(vs)
     }
     aggFunc.isVarFunction = true
