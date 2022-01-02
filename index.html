@@ -704,12 +704,9 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-Aggregations over tuples; eg fore=blue*p.pulse[max]
- !max{([0:0]r,[1,2]t1/2@f)}  should be per frame but isnt; also  add=max{(0,[0,5]e)}  also  add=max{(0,[0:5]r@f)}
-  ALSO add=(0,[4,p.foo])[max]   - where  p ping 0, amp=0.001, foo=[5,6]r@f   - and same with non player var
- !Tuple indexer [2:0] will die because lo and hi are the wrong way round
-  Where else will also have this problem?
-  Also, Should support `(1,2,3)[min:max]`? Or not?
+!Tuple indexer [2:0] will die because lo and hi are the wrong way round
+ Where else will also have this problem?
+ Also, Should support `(1,2,3)[min:max]`? Or not?
 For player.pulse, can we make sure the order within the tuple is consistent?
  Eg so the most recent events are first in the tuple in case of event overlap?
  Also does pulse cutoff too early ignoring release time?

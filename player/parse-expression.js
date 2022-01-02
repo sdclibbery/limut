@@ -75,7 +75,7 @@ define(function(require) {
       if (Array.isArray(arg)) {
         interval = arg.map(v => v.interval).reduce(combineIntervals, interval)
       } else if (!!arg) {
-        interval = Object.values(arg).map(v => v.interval).reduce(combineIntervals, interval)
+        interval = Object.values(arg).flat().map(v => v.interval).reduce(combineIntervals, interval)
       }
     })
     return interval
