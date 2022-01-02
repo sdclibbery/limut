@@ -1126,6 +1126,9 @@ define(function(require) {
   assert(4, evalParamFrame(parseExpression('(1,2,[3,4]t1)[max]'),ev(1,1),1))
   assert(3, evalParamFrame(parseExpression('(1,(2,3))[max]'),ev(0,0),0))
 
+  assert('frame', parseExpression('(0,[1,2]l1/2@f)[max]').interval)
+  assert('frame', parseExpression('max{(0,[1,2]l1/2@f)}').interval)
+
   console.log('Parse expression tests complete')
   }
   
