@@ -2,6 +2,7 @@
 define(function (require) {
   let system = require('play/system')
   let {evalMainParamEvent} = require('play/eval-audio-params')
+  let {mix} = require('play/effects/mix')
 
   let shapeEffect = (params, effect, node, count, shape) => {
     let amount = evalMainParamEvent(params, effect, 0)
@@ -19,7 +20,7 @@ define(function (require) {
     shaper.oversample = 'none'
     node.connect(shaper)
     system.disconnect(params, [shaper,node])
-    return shaper
+    return mix(params, effect, node, shaper, 1)
   }
 
   let noisify = (x, amount, i) => {

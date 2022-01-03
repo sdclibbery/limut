@@ -208,7 +208,8 @@ ba saw 020.00.0.040.00., dur=1/4, oct=2, sus=1/6, amp=2, lpf={this.freq*[[4:25]l
 pad dsaw (024)(025)(035)(026), envelope=pad, dur=4, lpf=[600:3000]s21, oct=3, amp=[1.2:2.0]s70
 padf ethereal follow pad, oct=4
 pi ping 0, dur=[3,3,2]/20, amp=[0.5:1.2]n*[2:0]s96, oct=[3,4,5,6]t1/4, add=[0,5,3,4]t4+[0,[1:3]n32,4,[6:10]n37]r, sus=2, addc=[-.15:.15]n</pre>
-<pre>v kal 0, tunnel, scroll={x:time/8}, monochrome, fore=rainbow, mid=white</pre>
+<pre>v kal 0, tunnel, scroll={x:time/8}, monochrome, fore=rainbow, mid=white
+b dbass [(04v).], dur=8, noisify=1/8, drive=2/8, fold=1, amp=3, phaser=1/8, room=2, add=[2,3,1,0]t8, addc=wow, pan=[-1/2:1/2]r, chorus=2, att=1/2, rel=5</pre>
 <pre>bpm=145
 scale=minor
 v streetlight 0
@@ -433,10 +434,15 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>sample</code> With 'play' synth: number: choose which sample set to use. With 'sample' synth: string: url of online audio file to play (note: server must support cross origin requests for the file)</p>
 <p class='sub'><code>sample={32,pitch:261.6}</code> Specify the original pitch of the sample in Hz (eg default is 261.6 Hz for C4)</p>
 <p><code>noisify</code> noisify: distort the signal into noise</p>
+<p class='sub'><code>noisify={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>fold</code> distort the signal by boosting then folding the overdriven part of the waveform</p>
+<p class='sub'><code>fold={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>clip</code> boost the signal then apply hard clipping</p>
+<p class='sub'><code>clip={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>drive</code> overdrive by boosting the signal then applying soft clipping</p>
+<p class='sub'><code>drive={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>bits</code> bit crush effect; value is number of bits. 1 bit is very distorted to (eg) 32 bits is relatively clean. 0 disables the effect.</p>
+<p class='sub'><code>bits={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>scale</code> override scale for this player; set to a string eg <code>'penta'</code> or <code>'minor'</code></p>
 <p><code>vib</code> vibrato frequency in cycles per beat</p>
 <p class='sub'><code>vib={2,depth:1}</code> vibrato depth in semitones (default 0.4)</p>
@@ -608,8 +614,6 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
-Should prophet lfo be continuous like ambi?
-Drive, clip etc should all have mix params
 Allow adding filters in the room/echo loops eg echo=3/4{lpf:523} - but dont use existing filter handlers as must be per event only!
 envelope exp (exponent) subparam, eg att={1/2,exp:2} ?? Or name it 'pow'?
 Can specify media stream device
@@ -623,6 +627,7 @@ Add some more waveforms  https://github.com/GoogleChromeLabs/web-audio-samples/t
  ?? Or custom percussion synths
 echo={1/2,pingpong:1} for stereo ping pong echo; use splitter and merger
 Flanger
+Should prophet lfo be continuous like ambi?
 Make noise into a waveform not a worklet?  https://github.com/GoogleChromeLabs/web-audio-samples/blob/main/archive/demos/wave-tables/04_Noise
  And so use wave synth instead?
 Convert pwm and ?noise to webassembly, performance is terrible compared to native oscs
