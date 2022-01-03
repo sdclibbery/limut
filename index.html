@@ -708,9 +708,6 @@ shadertoy synth multiple channels
 !Tuple indexer [2:0] will die because lo and hi are the wrong way round
  Where else will also have this problem?
  Also, Should support `(1,2,3)[min:max]`? Or not?
-For player.pulse, can we make sure the order within the tuple is consistent?
- Eg so the most recent events are first in the tuple in case of event overlap?
- Also does pulse cutoff too early ignoring release time?
 Tuple indexing should really work anywhere, eg [(1,2)]r[max] etc
 ? Support max{1,2,3} syntax (so multiple 'value' entries are parsed into a tuple array instead of replacing each other)
 Can modify params; eg 'set bass amp += 1/2'
@@ -763,6 +760,9 @@ Follow player refactor
  Eg [0,1,2,3]t4{offset:1}
 {step} to apply a step to the counts
  Eg [0:1000]l32{step:2} so the value onnly changes every 2 beats instead of smoothly
+For player.pulse, can we make sure the order within the tuple is consistent?
+ Eg so the most recent events are first in the tuple in case of event overlap?
+ Also does pulse cutoff too early ignoring release time?
 ? env{att:0.1,dec:1/4,sus:1,suslevel:0.6,rel:} - sus should default to the actual note length of the event
  Use for eg: lpf=this.freq*50*env{att:0.02,dec:0.2,suslevel:0.1}
 Fullscreen not working on safari

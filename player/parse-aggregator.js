@@ -15,7 +15,7 @@ define(function(require) {
       vs = vs.map(v => {
         if (typeof(v) === 'object' && v.hasOwnProperty('value')) { return v.value }
         return v
-      })
+      }).map(v => v===undefined?0:v)
       if (vs.length === 0) { vs = [0] }
       return fn(vs)
     }
