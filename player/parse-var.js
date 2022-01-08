@@ -7,11 +7,15 @@ define(function(require) {
   let tupleIndexer = require('player/tuple-indexer')
   let {evalParamFrame} = require('player/eval-param')
 
+  let isVarChar = (char) => {
+    return (char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || (char == '_') || (char == '.')
+  }
+
   let parseVar = (state) => {
     let key = ''
     let char
     while (char = state.str.charAt(state.idx).toLowerCase()) {
-      if ((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || (char == '_') || (char == '.')) {
+      if (isVarChar(char)) {
         key += char
         state.idx += 1
         continue
@@ -188,5 +192,6 @@ define(function(require) {
   return {
     parseVar: parseVar,
     varLookup: varLookup,
+    isVarChar: isVarChar,
   }
 })
