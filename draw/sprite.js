@@ -6,6 +6,7 @@ define(function (require) {
   let evalParam = require('player/eval-param')
   let texture = require('draw/texture')
   let textTexture = require('draw/text')
+  let colour = require('draw/colour')
 
   let evalParamFrame = (params, p, def, count) =>{
     let v = params[p]
@@ -82,14 +83,6 @@ let verts = (loc, window) => {
   let ca = (n) => {
     if (cachedObjects[n] === undefined) { cachedObjects[n] = [] }
     return cachedObjects[n]
-  }
-  let colour = ({r,g,b,a}, d, name) => {
-    let ar = ca(name)
-    ar[0] = param(r, d.r)
-    ar[1] = param(g, d.g)
-    ar[2] = param(b, d.b)
-    ar[3] = param(a, d.a)
-    return ar
   }
   let vec = (v, d, name) => {
     let a = ca(name)
