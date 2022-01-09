@@ -1239,3 +1239,7 @@ vHSV gradient 0, loc=tile_tr, scroll=-5, fore={h:[0:1]l[18,0]@f}
 vRAINBOW gradient 0, loc=tile_bl, scroll=-5, fore=rainbow
 
 
+v swirl 0
+vRANDOM gradient 0, loc=tile_br, scroll=-5, fore=random, blend=min
+
+

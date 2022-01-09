@@ -29,6 +29,7 @@ define((require) => {
     if (Array.isArray(value)) { // tuple, eval individual values
       return value.map(v => evalRecurse(v, event, beat)).flat()
     } else if (typeof value == 'function') { // Call function to get current value
+      if (value.evalOverride !== undefined) { return value.evalOverride }
       let v = value(event, beat, evalRecurse)
       return evalRecurse(v, event, beat)
     } else if (typeof value == 'object') { // Eval each field in the object
@@ -126,6 +127,10 @@ define((require) => {
   assert('frame', preEvalParam({a:perFrameValue}, ev(0)).a.interval)
   assert({r:1}, evalParamFrame(()=>{return({r:1})}, ev(0), 0))
   assert([{r:1,g:3},{r:2,g:3}], evalParamFrame(()=>{return({r:()=>[1,2],g:3})}, ev(0), 0))
+
+  let overriddenFunc = () => 7
+  overriddenFunc.evalOverride = 'Foo'
+  assert('Foo', evalParamFrame(overriddenFunc, ev(0), 0))
 
   console.log('Eval param tests complete')
   }
