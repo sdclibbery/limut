@@ -672,11 +672,11 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-Antialias param?? Subpixel supersampling??
 video synth (use video element to load video file; don't try and target eg youtube)
  can play audio through external audio synth??
-Nice shader idea? https://tanck.nl/wallpaper/
 Can set texture repeat for text and image synths?
+Antialias param?? Subpixel supersampling??
+Nice shader idea? https://tanck.nl/wallpaper/
 Spiral and noise and shimmer predistortions
 Fan subparam for mirror  Eg mirror={6,fan:1/32}  Each mirror 'segment' is rotated by 1/32 more than the last
 Possible nice shader https://twitter.com/zozuar/status/1438117355746377728?s=03
@@ -713,12 +713,11 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-!Tuple indexer [2:0] will die because lo and hi are the wrong way round
- Where else will also have this problem?
- Also, Should support `(1,2,3)[min:max]`? Or not?
-Tuple indexing should really work anywhere, eg [(1,2)]r[max] etc
-? Support max{1,2,3} syntax (so multiple 'value' entries are parsed into a tuple array instead of replacing each other)
-weight modifier for random to go with seed
+Support max{1,2,3} syntax (so multiple 'value' entries are parsed into a tuple array instead of replacing each other)
+Could use a syntax error on `set v.amp=0` (should be `set v amp=0`)
+Better error for eg  p ping _0
+Weight modifier for random to go with seed
+[]e4 to start on the event but run for 4 beats irrespective of how long the event actually lasts
 Can modify params; eg 'set bass amp += 1/2'
  Overrides should only modify when explicitly asked; so set b add=1 replaces the add param, it does not add an additional 1 to it
  Can use for follow players, set, and indeed within a player; eg: p ping 0, amp=2/3, ..., amp*=2
@@ -736,6 +735,7 @@ Can modify params; eg 'set bass amp += 1/2'
   Use for set
   Use for follow
   Use for multiple params within one player def??
+Tuple indexing should really work anywhere, eg [(1,2)]r[max] etc
 Presets? Allow to define new synths; eg 'preset mysaw saw, att=0.02, lpf=this.freq*[5,3,2,1,1/2]e' then use mysaw as a synth
 Better syntax highlighting for {} brackets; maybe bracket match highlighting??
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
@@ -745,7 +745,6 @@ Swing doesn't only affect event exactly on 3/4, it expands the preceeding 1/4 be
 ? rl, rt (==r), rs (==n); el (==e), es, et ?
  ?[1,3,5]n syntax to smoothly transition between randomly chosen values or should be [1,3,5]rs?
  []w for random walk?
-[]e4 to start on the event but run for 4 beats irrespective of how long the event actually lasts
 Modifier or function that smooths the value over time, separate attach and decay rates if possible
 ! `d dsaw 0 | p ping follow d` the ping is played using the saw wave!!
 Ability to set the pattern used on a player
@@ -775,18 +774,15 @@ For player.pulse, can we make sure the order within the tuple is consistent?
 ? env{att:0.1,dec:1/4,sus:1,suslevel:0.6,rel:} - sus should default to the actual note length of the event
  Use for eg: lpf=this.freq*50*env{att:0.02,dec:0.2,suslevel:0.1}
 Fullscreen not working on safari
-<player>.pulse should takes average of playing notes? To reduce sudden jumps when notes overlap?
 [0,1]n should randomly choose one of 0 or one then smooth between them, [0:1]n should pick random values between 0 and 1...
  In which case, rewrite it as the main random, but then smoothed
 floor function: delay=floor{[]r,to:1/4}
 Complex durations cause beat drift ?? Round pattern count to smallest possible duration? Eg [1/2,1/3]r rounds to nearest 1/6
 Per can default to repeat of thing being modified?
  Eg [0:1]l4{0:0} per defaults to 8?
-Could use a syntax error on `set v.amp=0` (should be `set v amp=0`)
 []r{per:4} (ie without seed) ?? What should this do? Should it repeat? Or not?? Probably not??
 Should Eg [0:1]e{per:1/4,1/2:-1} work??
 stutter parameter??
-Better error for eg  p ping _0
 Sliders
  Exponential option
  Remember last value even when not shown
@@ -808,6 +804,7 @@ Complex durs
  var lookup (& player var lookup)
 Ignore rests . when setting event.idx (so that `0.1., amp=[1/2,1]` does as expected) - is that expected? It wouldnt be for dur..?
 Exponent exp modifier, eg [0:1]l{exp:1/2} to modify lerp shape
+Should support `(1,2,3)[min:max]`? Or not?
 Can var lookup take the interval from the var interval?
  Need two pass parse??
   What about player var lookup then?

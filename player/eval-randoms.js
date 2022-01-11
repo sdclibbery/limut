@@ -2,7 +2,6 @@
 define(function(require) {
   let evalOperator = require('player/eval-operator')
   let param = require('player/default-param')
-  let evalParamFrame = require('player/eval-param').evalParamFrame
 
   function xmur3(seed) {
     let h = 1779033703
@@ -190,6 +189,12 @@ define(function(require) {
 
     p = parseRandom(range(3,5))
     assertIsInRangeEveryTime(3,5, () => evalParam(p,ev(0),0))
+
+    p = parseRandom(range(5,3))
+    assertIsInRangeEveryTime(3,5, () => evalParam(p,ev(0),0))
+
+    p = parseRandom(range(3))
+    assertIsInRangeEveryTime(0,3, () => evalParam(p,ev(0),0))
 
     // Always gives same value at same time when periodic, even when not seeded
     p = parseRandom(range(3,5), 1)
