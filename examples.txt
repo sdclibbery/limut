@@ -1243,3 +1243,6 @@ v swirl 0
 vRANDOM gradient 0, loc=tile_br, scroll=-5, fore=random, blend=min
 
 
+v glow 0, loc=tile_random, fore=(red,green,blue,yellow,white)[2:0]
+
+

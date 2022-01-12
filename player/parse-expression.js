@@ -1111,6 +1111,11 @@ define(function(require) {
   assert(1, evalParamFrame(parseExpression('[1]r{}'),ev(0,0),0))
 
   assert(2, evalParamFrame(parseExpression('min{2}'),ev(0,0),0))
+  assert(2, evalParamFrame(parseExpression('max{2,1}'),ev(0,0),0))
+  assert(3, evalParamFrame(parseExpression('max{(2,3),1}'),ev(0,0),0))
+  assert(1, evalParamFrame(parseExpression('min{(2,3),1}'),ev(0,0),0))
+  assert(3, evalParamFrame(parseExpression('max{1,(2,3)}'),ev(0,0),0))
+  assert(1, evalParamFrame(parseExpression('min{1,(2,3)}'),ev(0,0),0))
   assert(2, evalParamFrame(parseExpression('min{(2,3)}'),ev(0,0),0))
   assert(2, evalParamFrame(parseExpression('count{(0,0)}'),ev(0,0),0))
   assert(3, evalParamFrame(parseExpression('max{(2,3)}'),ev(0,0),0))

@@ -525,14 +525,14 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <h4 onclick="toggleAccordion('accordion-functions')">▶ Functions</h4>
 <div id="accordion-functions" class="closed">
 <p><code>pitch{degree:1,sharp:1,octave:3,scale:minor}</code> Calculate a frequency in Hz for a scale degree on an octave, with possible sharpening/flattening.</p>
-<p><code>first{(1,2,3)}</code> Returns the first element in a tuple (1 in the example)</p>
-<p><code>last{(1,2,3)}</code> Returns the last element in a tuple (3 in the example)</p>
-<p><code>rand{(1,2,3)}</code> Returns a random element from a tuple</p>
-<p><code>min{(1,2,3)}</code> Returns the smallest element in a tuple (1 in the example)</p>
-<p><code>max{(1,2,3)}</code> Returns the largest element in a tuple (3 in the example)</p>
-<p><code>count{(1,2,3)}</code> Returns the number of elements in a tuple (3 in the example)</p>
-<p><code>sum{(1,2,3)}</code> Returns the sum of all elements in a tuple (6 in the example)</p>
-<p><code>avg{(1,2,3)}</code> Returns the mean average of all elements in a tuple (2 in the example)</p>
+<p><code>first{1,2,3}</code> Returns the first element in a tuple (1 in the example)</p>
+<p><code>last{1,2,3}</code> Returns the last element in a tuple (3 in the example)</p>
+<p><code>rand{1,2,3}</code> Returns a random element from a tuple</p>
+<p><code>min{1,2,3}</code> Returns the smallest element in a tuple (1 in the example)</p>
+<p><code>max{1,2,3}</code> Returns the largest element in a tuple (3 in the example)</p>
+<p><code>count{1,2,3}</code> Returns the number of elements in a tuple (3 in the example)</p>
+<p><code>sum{1,2,3}</code> Returns the sum of all elements in a tuple (6 in the example)</p>
+<p><code>avg{1,2,3}</code> Returns the mean average of all elements in a tuple (2 in the example)</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-play-samples')">▶ Play Samples</h4>
 <div id="accordion-play-samples" class="closed">
@@ -713,7 +713,6 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-Support max{1,2,3} syntax (so multiple 'value' entries are parsed into a tuple array instead of replacing each other)
 Could use a syntax error on `set v.amp=0` (should be `set v amp=0`)
 Better error for eg  p ping _0
 Weight modifier for random to go with seed
