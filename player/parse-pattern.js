@@ -167,6 +167,7 @@ define(function(require) {
     let result = []
     events.forEach(event => {
       if (event.value === '_') {
+        if (result.length == 0) { throw 'Invalid pattern starting with _' }
         let lastTime = result[result.length-1]._time
         // console.log('continuation', event, 'lastTime', lastTime)
         result.filter(e => e._time == lastTime).forEach(e => e.dur += event.dur)
@@ -245,6 +246,12 @@ define(function(require) {
     let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
+  let assertThrows = (expected, code) => {
+    let got
+    try {code()}
+    catch (e) { if (e.includes(expected)) {got=true} else {console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: ${e}`)} }
+    finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
+  }
 
   assertPattern(0, [], parsePattern(''))
   assertPattern(0, [], parsePattern('[]'))
@@ -288,6 +295,8 @@ define(function(require) {
   assertPattern(2, [
     {value:'0',_time:0, dur:2},
   ], parsePattern('0_'))
+
+  assertThrows('Invalid pattern starting with _', ()=>parsePattern('_0'))
 
   assertPattern(3, [
     {value:'0',_time:0, dur:3/2},
