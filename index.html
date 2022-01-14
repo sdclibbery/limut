@@ -241,7 +241,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p>Lines: Each command must be on a single line with no line breaks, unless "<code> \</code>" is used at the end of a line to continue the command onto the next line.</p>
 <h5>Defining a player</h5>
 <p>Basic structure: <code>id synth pattern, params</code></p>
-<p><code>id</code> Identifier for the player, so it can be referred to from other players etc.</p>
+<p><code>id</code> Identifier for the player, so it can be referred to from other players etc. Must not contain a dot: <code>.</code></p>
 <p><code>synth</code> Name of the audio or visual synth to use; eg <code>piano</code></p>
 <p><code>pattern</code> Pattern of notes to play. Specifies the notes or sounds to play, and when to play them</p>
 <p><code>params</code> Comma separated list of params (eg <code>amp=1/2</code>) that affect how the player plays; see 'Value Syntax' and 'Params' sections below</p>
@@ -672,13 +672,14 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+Fan subparam for mirror  Eg mirror={6,fan:1/32}  Each mirror 'segment' is rotated by 1/32 more than the last
+ Maybe also subparam for vertical rather than horizontal mirror origin?
 video synth (use video element to load video file; don't try and target eg youtube)
  can play audio through external audio synth??
-Can set texture repeat for text and image synths?
+Can set texture repeat for text and image synths? Subparam or not?
 Antialias param?? Subpixel supersampling??
 Nice shader idea? https://tanck.nl/wallpaper/
 Spiral and noise and shimmer predistortions
-Fan subparam for mirror  Eg mirror={6,fan:1/32}  Each mirror 'segment' is rotated by 1/32 more than the last
 Possible nice shader https://twitter.com/zozuar/status/1438117355746377728?s=03
 Colour parsing should assume alpha of 1 for eg #fff and #ffffff
 Consider pushing data of each event into a texture so a shader could display all events, eg as 2D patterns or voxels or 3D shapes
@@ -715,7 +716,7 @@ shadertoy synth multiple channels
 ==== other ====
 Could use a syntax error on `set v.amp=0` (should be `set v amp=0`)
 Better error for eg  p ping _0
-Weight modifier for random to go with seed
+Analyser on each player for pulse?
 []e4 to start on the event but run for 4 beats irrespective of how long the event actually lasts
 Can modify params; eg 'set bass amp += 1/2'
  Overrides should only modify when explicitly asked; so set b add=1 replaces the add param, it does not add an additional 1 to it
@@ -737,6 +738,7 @@ Can modify params; eg 'set bass amp += 1/2'
 Tuple indexing should really work anywhere, eg [(1,2)]r[max] etc
 Presets? Allow to define new synths; eg 'preset mysaw saw, att=0.02, lpf=this.freq*[5,3,2,1,1/2]e' then use mysaw as a synth
 Better syntax highlighting for {} brackets; maybe bracket match highlighting??
+Weight modifier for random to go with seed
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 Can set swing timescale with a subparam: swing={60,on:1/2}
 Swing doesn't only affect event exactly on 3/4, it expands the preceeding 1/4 beat and compresses the following

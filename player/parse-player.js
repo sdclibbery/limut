@@ -50,6 +50,7 @@ define((require) => {
     let parts = line.split(/(\s+)/).map(p => p.trim()).filter(p => p != '')
     let playerId = parts[0].toLowerCase()
     if (playerId) {
+      if (playerId.includes('.')) { throw 'Invalid player name '+playerId }
       let playerType = parts[1]
       if (!playerType) { throw 'Missing player type' }
       if (playerType) {
@@ -228,6 +229,7 @@ define((require) => {
   assertThrows('Missing player type', ()=>parsePlayer('p'))
   assertThrows('Missing pattern/params', ()=>parsePlayer('p play'))
   assertThrows('Player "INVALID" not found', ()=>parsePlayer('p INVALID xo'))
+  assertThrows('Invalid player name', ()=>parsePlayer('p.p play 0'))
 
   p = parsePlayer('p grid 0, fore=[{r:[(1,2)]t,g:3}]t')
   assert({r:1,g:3}, p.getEventsForBeat({count:0})[0].fore)

@@ -1246,3 +1246,7 @@ vRANDOM gradient 0, loc=tile_br, scroll=-5, fore=random, blend=min
 v glow 0, loc=tile_random, fore=(red,green,blue,yellow,white)[2:0]
 
 
+vb kal 0, zoom=7, rate=1/3, monochrome=1/4, fore=#222f
+vf bars 0, mirror=12, recol=oil, rotate=[1/16:3/16]s32@f, zoom=1/6, ripple
+
+
