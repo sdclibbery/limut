@@ -75,6 +75,7 @@ define((require) => {
         playerIds = [identifierWithWildcards(state)]
       }
       let params = parseParams(state.str.slice(state.idx).trim(), undefined, playerIds.join(','))
+      for (k in params) { if (k.includes('.')) { throw 'Invalid param name '+k } }
       playerIds.forEach(playerId => {
         players.overrides[playerId] = overrideParams(players.overrides[playerId] || {}, params)
       })
@@ -168,6 +169,8 @@ define((require) => {
   parseLine('set p amp=2')
   assert(2, players.overrides.p.amp)
   delete players.overrides.p
+
+  assertThrows('Invalid param name', ()=>parseLine('set v.amp=0'))
 
   parseLine('set p amp=2')
   parseLine('set p amp=3')
