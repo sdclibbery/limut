@@ -21,7 +21,7 @@ define(function(require) {
     return (b > st._time-0.00001)&&(b < st._time+st.duration+0.00001)
   }
 
-  let timeVar = (vs, ds, interval) => {
+  let timeVar = (vs, ds) => {
     let steps = timeVarSteps(vs, ds)
     return (e,b, evalRecurse) => {
       let count = (b+0.0001) % steps.totalDuration
@@ -44,7 +44,7 @@ define(function(require) {
     return lerp
   }
 
-  let linearTimeVar = (vs, ds, interval) => {
+  let linearTimeVar = (vs, ds) => {
     let steps = timeVarSteps(vs, ds)
     return (e,b, evalRecurse) => {
       let count = b % steps.totalDuration
@@ -59,7 +59,7 @@ define(function(require) {
     }
   }
 
-  let smoothTimeVar = (vs, ds, interval) => {
+  let smoothTimeVar = (vs, ds) => {
     let steps = timeVarSteps(vs, ds)
     return (e,b, evalRecurse) => {
       let count = b % steps.totalDuration
@@ -75,18 +75,23 @@ define(function(require) {
     }
   }
 
-  let eventTimeVar = (vs) => {
+  let eventTimeVar = (vs, ds) => {
     return (e,b, evalRecurse) => {
       if (!e.countToTime) { return vs[0] || 0 }
-      let eventFraction = (e.countToTime(b) - e._time) / (e.endTime - e._time)
-      eventFraction = eventFraction || 0
-      let numSteps = vs.length-1
-      let preIdx = Math.min(Math.max(Math.floor(eventFraction * numSteps), 0), numSteps)
-      let postIdx = Math.min(preIdx + 1, numSteps)
-      let pre = evalRecurse(vs[preIdx], e,b)
-      let post = evalRecurse(vs[postIdx], e,b)
-      let lerp = Math.min(Math.max((eventFraction - preIdx/numSteps)*numSteps, 0), 1)
-      return lerpValue(lerp, pre, post)
+      if (ds === undefined) { ds = e.endTime - e._time }
+      let steps = timeVarSteps(vs, ds)
+      let count = e.countToTime(b) - e._time
+      if (count < 0) { count = 0 }
+      if (count > steps.totalDuration) { count = steps.totalDuration }
+      for (let idx = 0; idx < steps.length; idx++) {
+        let pre = steps[idx]
+        if (isInTimeVarStep(pre, count)) {
+          let post = steps[idx+1]
+          if (post === undefined) { post = pre }
+          let lerp = calcLerp(count, pre._time, pre.duration)
+          return lerpValue(lerp, evalRecurse(pre.value,e,b), evalRecurse(post.value,e,b))
+        }
+      }
     }
   }
 

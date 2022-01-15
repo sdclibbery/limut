@@ -14,7 +14,7 @@ define(function(require) {
   let {evalParamFrame} = require('player/eval-param')
   let parseAggregator = require('player/parse-aggregator')
 
-  let numberOrArrayOrFour = (state) => {
+  let numberOrArray = (state) => {
     let n = number(state)
     if (n !== undefined) {
       return n
@@ -23,9 +23,14 @@ define(function(require) {
         let ds = parseArray(state, '[', ']')
         return ds
       } else {
-        return 4
+        return
       }
     }
+  }
+
+  let numberOrArrayOrFour = (state) => {
+    let n = numberOrArray(state)
+    return (n !== undefined) ? n : 4
   }
 
   let parseString = (state) => {
@@ -138,21 +143,21 @@ define(function(require) {
           let ds = numberOrArrayOrFour(state)
           let modifiers = parseMap(state)
           let interval = parseInterval(state) || hoistInterval('event', vs)
-          result = wrapMods(timeVar(vs, ds, interval), modifiers)
+          result = wrapMods(timeVar(vs, ds), modifiers)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'l') { // linearly interpolated timevar
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
           let modifiers = parseMap(state)
           let interval = parseInterval(state) || hoistInterval('event', vs)
-          result = wrapMods(linearTimeVar(vs, ds, interval), modifiers)
+          result = wrapMods(linearTimeVar(vs, ds), modifiers)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 's') { // smoothstep interpolated timevar
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
           let modifiers = parseMap(state)
           let interval = parseInterval(state) || hoistInterval('event', vs)
-          result = wrapMods(smoothTimeVar(vs, ds, interval), modifiers)
+          result = wrapMods(smoothTimeVar(vs, ds), modifiers)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'r') { // random
           state.idx += 1
@@ -171,7 +176,8 @@ define(function(require) {
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
           state.idx += 1
-          result = wrapMods(eventTimeVar(vs), parseMap(state))
+          let ds = numberOrArray(state)
+          result = wrapMods(eventTimeVar(vs, ds), parseMap(state))
           setInterval(result, parseInterval(state) || hoistInterval('frame', vs))
         } else { // Basic array: one value per pattern step
           result = wrapMods(eventIdxVar(vs), parseMap(state))
@@ -810,6 +816,31 @@ define(function(require) {
   assert(0.5, p(e,7.5, evalParamFrame))
   assert(1, p(e,8, evalParamFrame))
   assert(1, p(e,9, evalParamFrame))
+
+  p = parseExpression("[0:1]e2")
+  e = { idx:0, count:7, countToTime:b=>b, _time:7, endTime:8 }
+  assert(0, p(e,6, evalParamFrame))
+  assert(0, p(e,7, evalParamFrame))
+  assert(0.5, p(e,8, evalParamFrame))
+  assert(1, p(e,9, evalParamFrame))
+  assert(1, p(e,10, evalParamFrame))
+
+  p = parseExpression("[0:1]e1/2")
+  e = { idx:0, count:7, countToTime:b=>b, _time:7, endTime:8 }
+  assert(0, p(e,6, evalParamFrame))
+  assert(0, p(e,7, evalParamFrame))
+  assert(0.5, p(e,7.25, evalParamFrame))
+  assert(1, p(e,7.5, evalParamFrame))
+  assert(1, p(e,8, evalParamFrame))
+  assert(1, p(e,9, evalParamFrame))
+
+  p = parseExpression("[0,1,2]e[2,1]")
+  e = { idx:0, count:0, countToTime:b=>b, _time:0, endTime:3 }
+  assert(0, p(e,0, evalParamFrame))
+  assert(0.5, p(e,1, evalParamFrame))
+  assert(1, p(e,2, evalParamFrame))
+  assert(2, p(e,3, evalParamFrame))
+  assert(2, p(e,4, evalParamFrame))
 
   p = parseExpression('[(0,2),(1,3)]e')
   e = { idx:0, count:0, countToTime:b=>b, _time:0, endTime:1 }
