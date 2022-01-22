@@ -456,10 +456,12 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>pan</code> pan from -1 (left) to 1 (right). default: 0</p>
 <p><code>echo</code> Echo time delay in beats</p>
 <p class='sub'><code>echo={1,feedback:0.8}</code> Echo feedback gain, 0 to 1, default 0.35. Higher value means the echo persists for longer.</p>
-<p><code>chorus</code> lfo-delay based stereo chorus effect.</p>
+<p><code>chorus</code> Strength of lfo-delay based stereo chorus effect.</p>
 <p class='sub'><code>chorus={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>phaser</code> LFO frequency for phaser effect, in phase sweep cycles per beat.</p>
 <p class='sub'><code>phaser={1/3,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
+<p><code>flanger</code> LFO frequency for flanger effect, in cycles per beat.</p>
+<p class='sub'><code>flanger={1/3,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>room</code> reverb room size (using freeverb).</p>
 <p class='sub'><code>room={2,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1/2</p>
 <p><code>freq</code> READ ONLY param. This param is set by all tonal synths, to the frequency in Hz of the note being played. This value can then be read for other purposes; eg <code>lpf=this.freq*2</code> will set the low pass cutoff frequency to double the note frequency.</p>
@@ -619,6 +621,9 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
+Sample synth has start param and uses sus param for duration
+ And beatstretch param? Or loop synth?
+portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-notes/legato-synths-glide-slide-portamento/
 Allow adding filters in the room/echo loops eg echo=3/4{lpf:523} - but dont use existing filter handlers as must be per event only!
  Pitch shift up an octave to give shimmer reverb (pitch shifter: https://tonejs.github.io/docs/14.7.77/PitchShift.html)
 envelope exp (exponent) subparam, eg att={1/2,exp:2} ?? Or name it 'pow'?
@@ -626,14 +631,11 @@ Can specify media stream device
  Print list of all devices with IDs
  device param to specify required device ID to be used - need to store one stream per device
  Same for webcam
-Sample synth has start param and uses sus param for duration
-portamento
 Add some more waveforms  https://github.com/GoogleChromeLabs/web-audio-samples/tree/main/archive/demos/wave-tables
 808 synth based on https://github.com/vincentriemer/io-808
  ?? Or custom percussion synths
+What happens if you do audio frequency modulation of a filter?
 echo={1/2,pingpong:1} for stereo ping pong echo; use splitter and merger
-Flanger
-Should prophet lfo be continuous like ambi?
 Make noise into a waveform not a worklet?  https://github.com/GoogleChromeLabs/web-audio-samples/blob/main/archive/demos/wave-tables/04_Noise
  And so use wave synth instead?
 Convert pwm and ?noise to webassembly, performance is terrible compared to native oscs
@@ -674,11 +676,12 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+slitscan param for 2001 style slitscan, subparams for rotation
+Can set texture repeat for text and image etc synths? Subparam or not?
 Fan subparam for mirror  Eg mirror={6,fan:1/32}  Each mirror 'segment' is rotated by 1/32 more than the last
  Maybe also subparam for vertical rather than horizontal mirror origin?
 video synth (use video element to load video file; don't try and target eg youtube)
  can play audio through external audio synth??
-Can set texture repeat for text and image synths? Subparam or not?
 Antialias param?? Subpixel supersampling??
 Nice shader idea? https://tanck.nl/wallpaper/
 Spiral and noise and shimmer predistortions
@@ -716,7 +719,6 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-Analyser on each player for pulse?
 Can modify params; eg 'set bass amp += 1/2'
  Overrides should only modify when explicitly asked; so set b add=1 replaces the add param, it does not add an additional 1 to it
  Can use for follow players, set, and indeed within a player; eg: p ping 0, amp=2/3, ..., amp*=2
@@ -734,8 +736,33 @@ Can modify params; eg 'set bass amp += 1/2'
   Use for set
   Use for follow
   Use for multiple params within one player def??
+Analyser on each player for pulse?
+Follow player refactor
+ Better follow tests - Proper tests for follow and overrides and combinations, including tuples
+ Use stored events with a dependency
+ Things to test:
+  randoms (per event only)
+    p1 ping 0, dur=1, amp=0.1, oct=4, add=[0:4]r
+    v8 glow follow p1, loc={y:-1+this.add/2}, 
+  complex durations (including random); EG:
+    p1 ping 0, dur=[1]r, amp=0.1, oct=4
+    v8 glow follow p1, loc=sparkle
+  delays
+ Clean up any unnecessary gumpf around getEventsForBeatBase etc
+? env{att:0.1,dec:1/4,sus:1,suslevel:0.6,rel:} - sus should default to the actual note length of the event
+ Use for eg: lpf=this.freq*50*env{att:0.02,dec:0.2,suslevel:0.1}
+ ?adsr and ar envelope functions that can be used in eg lpf=adsr{,,,} but also as env=ar{,} etc, but also ripple=ar{,} etc
+{offset} to apply an offset to the time counts
+ Eg [0,1,2,3]t4{offset:1}
+{step} to apply a step to the counts
+ Eg [0:1000]l32{step:2} so the value onnly changes every 2 beats instead of smoothly
+For player.pulse, can we make sure the order within the tuple is consistent?
+ Eg so the most recent events are first in the tuple in case of event overlap?
+ Also does pulse cutoff too early ignoring release time?
+?? How to override a subparam without changing the main param (or other subparams)? Eg set lpf q without changing freq?
 Tuple indexing should really work anywhere, eg [(1,2)]r[max] etc
 Presets? Allow to define new synths; eg 'preset mysaw saw, att=0.02, lpf=this.freq*[5,3,2,1,1/2]e' then use mysaw as a synth
+ Presets should be able to include additional follow synths
 Better syntax highlighting for {} brackets; maybe bracket match highlighting??
 Weight modifier for random to go with seed
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
@@ -749,30 +776,6 @@ Modifier or function that smooths the value over time, separate attach and decay
 ! `d dsaw 0 | p ping follow d` the ping is played using the saw wave!!
 Ability to set the pattern used on a player
  param: p play x:, pattern='X-O-'
-Should delayed notes eval per event at the time of the delayed or undelayed event??
-Proper tests for follow and overrides and combinations, including tuples
-?? How to override a subparam without changing the main param (or other subparams)? Eg set lpf q without changing freq?
-Follow player refactor
- Better follow tests
- Use stored events with a dependency
- Things to test:
-  randoms (per event only)
-    p1 ping 0, dur=1, amp=0.1, oct=4, add=[0:4]r
-    v8 glow follow p1, loc={y:-1+this.add/2}, 
-  complex durations (including random); EG:
-    p1 ping 0, dur=[1]r, amp=0.1, oct=4
-    v8 glow follow p1, loc=sparkle
-  delays
- Clean up any unnecessary gumpf around getEventsForBeatBase etc
-{offset} to apply an offset to the time counts
- Eg [0,1,2,3]t4{offset:1}
-{step} to apply a step to the counts
- Eg [0:1000]l32{step:2} so the value onnly changes every 2 beats instead of smoothly
-For player.pulse, can we make sure the order within the tuple is consistent?
- Eg so the most recent events are first in the tuple in case of event overlap?
- Also does pulse cutoff too early ignoring release time?
-? env{att:0.1,dec:1/4,sus:1,suslevel:0.6,rel:} - sus should default to the actual note length of the event
- Use for eg: lpf=this.freq*50*env{att:0.02,dec:0.2,suslevel:0.1}
 Fullscreen not working on safari
 [0,1]n should randomly choose one of 0 or one then smooth between them, [0:1]n should pick random values between 0 and 1...
  In which case, rewrite it as the main random, but then smoothed
@@ -858,17 +861,11 @@ finish off: <> for 'in sequence on each repeat' in patterns
 Should be able to [red:blue]l8
 should multiply out 'chords' in objects eg loc={x:(0,1,2,3), y:(0,1,2,3), w:1,h:1}/4
 _ extends all notes properly, even across brackets (eg <1[.3]>_ etc)
-<> for 'in sequence on each repeat' in params
 rests in params
 random in patterns: what syntax??
-sliders that appear in the code as vars
-popup keyboard triggered by pattern eg "p piano keyboard"
-seeded random: takes repeat length and optional seed
 ^ operator: concat arrays
 ? What do nested [] mean in params?
-allow dur to be tvar
 ?? Should param pattern repeat be independent of main pattern repeat? Eg so you can xo, amp=[1,2,3] and it multiplies out
-fix delay param problems (commented tests in pattern.js)
 index pattern by beat to improve performance in finding events - same for timeVar evaluation
 pattern generators: tri, Dur, walk etc?
 ==

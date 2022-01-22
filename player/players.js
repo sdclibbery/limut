@@ -71,7 +71,7 @@ define(function(require) {
     testOverrideWildcard(['p1'], {p1:{bar:1},'*':{foo:1}}, {p1:{bar:1,foo:1}})
     testOverrideWildcard(['p1'], {'*':{foo:1},p1:{bar:1}}, {p1:{foo:1,bar:1}})
 
-    console.log('Update code tests complete')
+    console.log('Players tests complete')
   }
   
   return players
