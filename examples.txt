@@ -1256,3 +1256,19 @@ s saw 03, dur=4, oct=(2,3), add=(0,4), flanger=1/8
 p prophet 03, dur=4, oct=(2,3), add=(0,4), amp=1/3, flanger=1/10
 
 
+bpm=125
+scale=minor
+set * swing=58
+v kal 1, time=time*2+pk.pulse[max], zoom=2, contrast=3, scroll={x:-time/8,y:2}, mirror=4, rotate=[0:1]l64@f
+pk play Xmx<yM>, fold=1/4
+ph play --.--.-.--.-.--., dur=1/4, delay=(0,3/4), amp=2/3, pan=-1/3
+ps play e.o<...[ttt]>, room=0.1, rate=2/3, high=-8, pan=1/3
+b dbass 0[0<.2>], dur=1/2, lpf={this.freq*[2:8]l8*[4,1,2]e,q:15}, room, chorus, flanger=1/8, oct=(2,3), amp=1/2, pan=[-1/2:1/2]r
+// set p* hpf=[10:1000]l[32,0], room=2, pan=[-1:1]r
+
+
+vb bits 0, loc=tile_b, perspective=-1.1, rotate=3/4, zoom={y:16,x:1}
+vt bits 0, loc=tile_t, perspective=1.1, rotate=1/4, zoom={y:16,x:-1}
+set [vb,vt] scroll={x:-time/8}, time=0, mid=random*3/2, contrast, add=19
+
+
