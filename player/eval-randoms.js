@@ -262,7 +262,7 @@ define(function(require) {
 
     //Noise should be smooth
     p = simpleNoise([], 4)
-    assertIsCloseEveryTime((i)=>p(ev(i/10),i/10,evalParam))
+    assertIsCloseEveryTime((i)=>p(ev(i/20),i/20,evalParam))
 
     p = simpleNoise([], 4, {seed:1})
     assertIsCloseEveryTime((i)=>p(ev(i/10),i/10,evalParam))

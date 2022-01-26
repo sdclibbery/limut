@@ -137,8 +137,9 @@
   <canvas id="canvas" class="fullscreen" style="width:100%; height:100%; background: #000f; display:none"></canvas>
   <div class="widget">
     <h3>Limut live coding</h3>
-    <p>
-      <input id="main-amp-slider" type="range" min="0" max="200" oninput="mainAmpChange(parseFloat(this.value)/100)" style="width:100%;" />
+    <p style="display: flex; flex-flow: row nowrap;">
+      <span id="vu-readout", class="meter"> </span>
+      <input id="main-amp-slider" type="range" min="0" max="200" oninput="mainAmpChange(parseFloat(this.value)/100)" style="flex:auto; margin-left:12px;" />
     </p>
     <p>
       Beat: <span class="beat-readout" id="beat-readout"></span>
@@ -621,7 +622,6 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
-Think global volume needs turning up a bit??
 Addc for sample synth
 Sample synth has start param and uses sus param for duration
  And beatstretch param? Or loop synth?
@@ -721,11 +721,6 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-Random tests failed:
- Expected 0.5228639279844186 to be close to 0.4216604182731214 eval-randoms.js:171:47
-  http://localhost:8000/player/eval-randoms.js:265
- Expected 0.6238381811143353 to be close to 0.5228639279844186 eval-randoms.js:171:47
-  http://localhost:8000/player/eval-randoms.js:265
 Can modify params; eg 'set bass amp += 1/2'
  Overrides should only modify when explicitly asked; so set b add=1 replaces the add param, it does not add an additional 1 to it
  Can use for follow players, set, and indeed within a player; eg: p ping 0, amp=2/3, ..., amp*=2

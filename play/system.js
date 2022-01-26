@@ -63,23 +63,34 @@ system.analyser = system.audio.createAnalyser()
 system.analyser.fftSize = 1024
 system.analyser.smoothingTimeConstant = 0.6
 let analyserBufferLength = system.analyser.frequencyBinCount
-let analyserData = new Uint8Array(analyserBufferLength)
+const spectrumData = new Uint8Array(analyserBufferLength)
 let chunk = (data, reducer, init) => {
   return data.reduce((a,b) => reducer(a,b), init) / 255
 }
-let spec = []
+const spec = []
 system.spectrum = () => {
-  system.analyser.getByteFrequencyData(analyserData)
-  spec[0] = chunk(analyserData.slice(0,4), Math.min, 1e6)
-  spec[1] = chunk(analyserData.slice(4,8), Math.min, 1e6)
-  spec[2] = chunk(analyserData.slice(8,12), (a,b)=>a+b, 0)/4
-  spec[3] = chunk(analyserData.slice(12), Math.max,0)
+  system.analyser.getByteFrequencyData(spectrumData)
+  spec[0] = chunk(spectrumData.slice(0,4), Math.min, 1e6)
+  spec[1] = chunk(spectrumData.slice(4,8), Math.min, 1e6)
+  spec[2] = chunk(spectrumData.slice(8,12), (a,b)=>a+b, 0)/4
+  spec[3] = chunk(spectrumData.slice(12), Math.max,0)
   return spec
 }
+const scopeData = new Float32Array(system.analyser.fftSize)
 system.scope = () => {
-  let data = new Float32Array(system.analyser.fftSize)
-  system.analyser.getFloatTimeDomainData(data)
-  return data
+  system.analyser.getFloatTimeDomainData(scopeData)
+  return scopeData
+}
+const meterData = new Float32Array(system.analyser.fftSize)
+system.meter = () => {
+  system.analyser.getFloatTimeDomainData(meterData)
+  let peakInstantaneousPower = 0
+  for (let i = 0; i < system.analyser.fftSize; i++) {
+    const power = meterData[i] ** 2
+    peakInstantaneousPower = Math.max(power, peakInstantaneousPower)
+  }
+  const peakInstantaneousPowerDecibels = 10 * Math.log10(peakInstantaneousPower)
+  return peakInstantaneousPowerDecibels
 }
 
 system.mix = function (node) {
@@ -135,7 +146,7 @@ system.vcaPreAmp.connect(system.compressor)
 system.vcaPreAmp.connect(system.reverb)
 system.vcaReverb.connect(system.compressor)
 system.compressor.connect(system.vcaMainAmp)
-system.compressor.connect(system.analyser)
+system.vcaMainAmp.connect(system.analyser)
 system.vcaMainAmp.connect(system.audio.destination)
 
 return system;
