@@ -44,9 +44,9 @@ define(function(require) {
   let vuMeterStyle = (style, x, lo, hi) => {
     let c = scaled(x, lo, hi)
     if (c > 1) {
-      style.backgroundColor = `rgb(255,0,${to255(Math.cos((c-1)*1.57))})`
+      style.background = `rgb(255,0,${to255(Math.cos((c-1)*1.57))})`
     } else {
-      style.backgroundColor = `rgb(${to255(Math.sin(c*1.57))},${to255(Math.cos(c*1.57))},0)`
+      style.background = `linear-gradient(to right, #0f0, #ff0 3em, #f00 4em)`
     }
     style.width = `${to100(c)}%`
   }
@@ -148,7 +148,7 @@ define(function(require) {
         console.log(e)
       }
     }
-    vuMeterStyle(vuMeter.style, system.meter(), -20, 0)
+    vuMeterStyle(vuMeter.style, system.meter(), -30, 0)
     compressorReadout.style.backgroundColor = readoutColor(Math.abs(system.compressorReduction()), 0, 1)
     if (!!beat || tickCount % 20 == 0) {
       beatLatencyReadout.style.backgroundColor = readoutColor(beatLatency, 0, 0.05)
