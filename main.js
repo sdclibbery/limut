@@ -32,13 +32,23 @@ define(function(require) {
 
   // indicator helpers
   let to255 = (x) => Math.min(Math.max(Math.floor(x*256), 0), 255)
+  let to100 = (x) => Math.min(Math.max(Math.floor(x*100), 0), 100)
+  let scaled = (x, lo, hi) => (Math.max(x,lo)-lo)/(hi-lo)
   let readoutColor = (x, lo, hi) => {
-    let c = (Math.max(x,lo)-lo)/(hi-lo)
+    let c = scaled(x, lo, hi)
     if (c > 1) {
-      c = c-1
-      return `rgb(255,0,${to255(Math.cos(c*1.57))})`
+      return `rgb(255,0,${to255(Math.cos((c-1)*1.57))})`
     }
     return `rgb(${to255(Math.sin(c*1.57))},${to255(Math.cos(c*1.57))},0)`
+  }
+  let vuMeterStyle = (style, x, lo, hi) => {
+    let c = scaled(x, lo, hi)
+    if (c > 1) {
+      style.backgroundColor = `rgb(255,0,${to255(Math.cos((c-1)*1.57))})`
+    } else {
+      style.backgroundColor = `rgb(${to255(Math.sin(c*1.57))},${to255(Math.cos(c*1.57))},0)`
+    }
+    style.width = `${to100(c)}%`
   }
 
   // fullscreen
@@ -69,7 +79,7 @@ define(function(require) {
   }
 
   // Update
-  let vuReadout = document.getElementById('vu-readout')
+  let vuMeter = document.getElementById('vu-meter')
   let compressorReadout = document.getElementById('compressor-readout')
   let beatLatencyReadout = document.getElementById('beat-latency-readout')
   let visualReadout = document.getElementById('visual-readout')
@@ -138,9 +148,9 @@ define(function(require) {
         console.log(e)
       }
     }
-    vuReadout.style.backgroundColor = readoutColor(system.meter(), -20, 0)
+    vuMeterStyle(vuMeter.style, system.meter(), -20, 0)
+    compressorReadout.style.backgroundColor = readoutColor(Math.abs(system.compressorReduction()), 0, 1)
     if (!!beat || tickCount % 20 == 0) {
-      compressorReadout.style.backgroundColor = readoutColor(system.compressorReduction(), 0, -0.1)
       beatLatencyReadout.style.backgroundColor = readoutColor(beatLatency, 0, 0.05)
       visualReadout.style.backgroundColor = readoutColor(drawSystem.latency(), 0.02, 0.1)
     }
