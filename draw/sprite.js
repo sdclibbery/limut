@@ -4,23 +4,38 @@ define(function (require) {
   let shaders = require('draw/shaders')
   let param = require('player/default-param')
   let evalParam = require('player/eval-param')
+  let {subParam,mainParam} = require('player/sub-param')
   let texture = require('draw/texture')
   let textTexture = require('draw/text')
   let colour = require('draw/colour')
 
-  let evalParamFrame = (params, p, def, count) =>{
+  let evalMainParamFrame = (params, p, def, count) => {
     let v = params[p]
     if (v === undefined) { return def }
     v = evalParam.evalParamFrame(v, params, count)
     if (v === undefined) { return def }
-    return v
+    return mainParam(v, def)
   }
-  let evalParamEvent = (params, p, def) =>{
+  let evalSubParamFrame = (params, p, sub, def, count) => {
+    let v = params[p]
+    if (v === undefined) { return def }
+    v = evalParam.evalParamFrame(v, params, count)
+    if (v === undefined) { return def }
+    return subParam(v, sub, def)
+  }
+  let evalMainParamEvent = (params, p, def) => {
     let v = params[p]
     if (v === undefined) { return def }
     v =  evalParam.evalParamEvent(v, params)
     if (v === undefined) { return def }
-    return v
+    return mainParam(v, def)
+  }
+  let evalSubParamEvent = (params, p, sub, def) => {
+    let v = params[p]
+    if (v === undefined) { return def }
+    v =  evalParam.evalParamEvent(v, params)
+    if (v === undefined) { return def }
+    return subParam(v, sub, def)
   }
 
 let vtxData = {
@@ -118,51 +133,54 @@ let verts = (loc, window) => {
     }
     if (!s) { return () => {} }
     let startTime = params._time
-    let endTime = params._time + evalParamEvent(params, 'sus', evalParamEvent(params, 'dur', 1)) * params.beat.duration
+    let endTime = params._time + evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 1)) * params.beat.duration
     params.endTime = endTime
-    let rate = evalParamEvent(params, 'rate', 1)
-    let value = parseInt(evalParamEvent(params, 'value', '0'))
+    let rate = evalMainParamEvent(params, 'rate', 1)
+    let value = parseInt(evalMainParamEvent(params, 'value', '0'))
     if (value > 10) { value = value/5 }
-    if (Number.isNaN(value)) { value = evalParamEvent(params, 'value', '0').charCodeAt(0) - 32 }
-    let pulse = evalParamEvent(params, 'pulse', 0)
-    let sway = evalParamEvent(params, 'sway', 0)
-    let additive = evalParamEvent(params, 'additive', defParams.additive || 0)
-    let blend = evalParamEvent(params, 'blend')
-    let url = evalParamEvent(params, 'url', 'favicon-32x32.png')
-    let text = evalParamEvent(params, 'text')
-    let window = evalParamEvent(params, 'window', false)
-    let fade = evalParamEvent(params, 'fade', defParams.fade || 0)
-    let recol = evalParamEvent(params, 'recol', 0)
-    let contrast = evalParamEvent(params, 'contrast', 0)
+    if (Number.isNaN(value)) { value = evalMainParamEvent(params, 'value', '0').charCodeAt(0) - 32 }
+    let pulse = evalMainParamEvent(params, 'pulse', 0)
+    let sway = evalMainParamEvent(params, 'sway', 0)
+    let additive = evalMainParamEvent(params, 'additive', defParams.additive || 0)
+    let blend = evalMainParamEvent(params, 'blend')
+    let url = evalMainParamEvent(params, 'url', 'favicon-32x32.png')
+    let text = evalMainParamEvent(params, 'text')
+    let window = evalMainParamEvent(params, 'window', false)
+    let fade = evalMainParamEvent(params, 'fade', defParams.fade || 0)
+    let recol = evalMainParamEvent(params, 'recol', 0)
+    let contrast = evalMainParamEvent(params, 'contrast', 0)
     return state => { // per frame
       if (state.time > endTime) { return false }
-      let shaderTime = evalParamFrame(params, 'time', null, state.count)
+      let shaderTime = evalMainParamFrame(params, 'time', null, state.count)
       if (shaderTime === null) {
         shaderTime = state.count*rate + sway*state.pulse
       }
-      let amp = Math.min(evalParamFrame(params, 'amp', 1, state.count), 5)
-      let add = evalParamFrame(params, 'add', 0, state.count)
+      let amp = Math.min(evalMainParamFrame(params, 'amp', 1, state.count), 5)
+      let add = evalMainParamFrame(params, 'add', 0, state.count)
       let eventTime = ((state.time-startTime)/(endTime-startTime))
       let brightness = 1 - (eventTime*eventTime)*fade
-      let monochrome = evalParamFrame(params, 'monochrome', 0, state.count)
-      let pixellate = evalParamFrame(params, 'pixellate', 0, state.count)
-      let vignette = evalParamFrame(params, 'vignette', 0, state.count)
-      let loc = rect(evalParamFrame(params, 'loc', blankObj, state.count), defLoc, 'loc')
-      let scroll = vec(evalParamFrame(params, 'scroll', blankObj, state.count), defScroll, 'scroll')
-      let zoom = vec(evalParamFrame(params, 'zoom', blankObj, state.count), defZoom, 'zoom')
-      let perspective = evalParamFrame(params, 'perspective', 0, state.count)
-      let tunnel = evalParamFrame(params, 'tunnel', 0, state.count)
-      let ripple = evalParamFrame(params, 'ripple', 0, state.count)
-      let rotate = evalParamFrame(params, 'rotate', 0, state.count) * Math.PI*2
-      let mirror = evalParamFrame(params, 'mirror', 0, state.count)
-      let fore = colour(evalParamFrame(params, 'fore', blankObj, state.count), defFore, 'fore')
-      let back = colour(evalParamFrame(params, 'back', blankObj, state.count), defBack, 'back')
+      let monochrome = evalMainParamFrame(params, 'monochrome', 0, state.count)
+      let pixellate = evalMainParamFrame(params, 'pixellate', 0, state.count)
+      let vignette = evalMainParamFrame(params, 'vignette', 0, state.count)
+      let loc = rect(evalMainParamFrame(params, 'loc', blankObj, state.count), defLoc, 'loc')
+      let scroll = vec(evalMainParamFrame(params, 'scroll', blankObj, state.count), defScroll, 'scroll')
+      let zoom = vec(evalMainParamFrame(params, 'zoom', blankObj, state.count), defZoom, 'zoom')
+      let perspective = evalMainParamFrame(params, 'perspective', 0, state.count)
+      let tunnel = evalMainParamFrame(params, 'tunnel', 0, state.count)
+      let ripple = evalMainParamFrame(params, 'ripple', 0, state.count)
+      let rotate = evalMainParamFrame(params, 'rotate', 0, state.count) * Math.PI*2
+      let mirror = ca('mirror')
+      mirror[0] = evalMainParamFrame(params, 'mirror', 0, state.count)
+      mirror[1] = evalSubParamFrame(params, 'mirror', 'fan', 0, state.count)
+      mirror[2] = mirror[3] = 0
+      let fore = colour(evalMainParamFrame(params, 'fore', blankObj, state.count), defFore, 'fore')
+      let back = colour(evalMainParamFrame(params, 'back', blankObj, state.count), defBack, 'back')
       let mid
       if (params.mid === undefined) {
         mid = ca('mid')
         for (let i=0; i<4; i++) { mid[i] = (fore[i]+back[i])/2 }
       } else {
-        mid = colour(evalParamFrame(params, 'mid', blankObj, state.count), defMid, 'mid')
+        mid = colour(evalMainParamFrame(params, 'mid', blankObj, state.count), defMid, 'mid')
       }
       let vtxData = verts(loc, window)
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
@@ -182,7 +200,7 @@ let verts = (loc, window) => {
       system.gl.uniform2fv(s.scrollUnif, scroll)
       system.gl.uniform2fv(s.zoomUnif, zoom)
       system.gl.uniform1f(s.rotateUnif, rotate)
-      system.gl.uniform1f(s.mirrorUnif, mirror)
+      system.gl.uniform4fv(s.mirrorUnif, mirror)
       system.gl.uniform1f(s.pixellateUnif, pixellate)
       system.gl.uniform1f(s.tunnelUnif, tunnel)
       system.gl.uniform1f(s.rippleUnif, ripple)

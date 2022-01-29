@@ -1302,3 +1302,6 @@ vt text 0, dur=4, text=words[chooser], fade, loc={y:-0.4}+firefly/8, perspective
 i sample 0, dur=4, sample=samples[chooser], bits=2, room=1.1, high=[8:12]r, echo=1/4, amp=1/4*active
 
 
+v kal 0, mirror={100,fan:[7:12]s32@f/10}, zoom=3, mid=random, contrast
+
+

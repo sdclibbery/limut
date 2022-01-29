@@ -17,7 +17,7 @@ define(function (require) {
   uniform vec2 l_scroll;
   uniform vec2 l_zoom;
   uniform float l_rotate;
-  uniform float l_mirror;
+  uniform vec4 l_mirror;
   uniform float l_perspective;
   uniform float l_tunnel;
   uniform float l_ripple;
@@ -54,15 +54,16 @@ define(function (require) {
       float theta = atan(coord.x, coord.y)/6.28;
       coord = mix(coord, vec2(r*0.5, theta), l_tunnel);
     }
-    if (l_mirror != 0.) {
+    if (l_mirror.x != 0.) {
       float r = length(coord);
-      float theta = atan(coord.y, coord.x);
-      float n = l_mirror;
-      bool flip = mod(floor(2.*n*theta/6.283), 2.) < 1.0;
-      theta = fract(n*theta/6.283)/n;
+      float thetaBase = atan(coord.y, coord.x);
+      float n = l_mirror.x;
+      bool flip = mod(floor(2.*n*thetaBase/6.283), 2.) < 1.0;
+      float theta = fract(n*thetaBase/6.283)/n;
       if (!flip) { theta = 1./n - theta; }
+      theta += l_mirror.y/n*floor(n*(thetaBase+3.142)/6.283);
       theta *= 6.283;
-      coord = vec2(cos(theta), sin(theta))*r;
+      coord = vec2(cos(theta), -sin(theta))*r;
     }
     coord = coord / l_zoom;
     if (l_rotate != 0.) {
