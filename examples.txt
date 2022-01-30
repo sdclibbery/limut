@@ -1292,7 +1292,7 @@ vc clouds 0, perspective, monochrome, zoom=4, time=time/4, add=pulse/4, contrast
 k play Vs
 hh play -[--]-[.-], delay=(0,1/4), amp=3/2, pan=1/3
 sd play ..*., room=1/2, pan=-1/3
-b dbass .0-4, dur=1/4, amp=[]r{per:4,0:2,1:0,2:0,4:0,seed:101}, att=0.01, rel=0.01, delay=(0,[1/2,3/4]r), lpf={this.freq*[20,5]e*[1:2]s10,q:10}, echo=1.01, room, flanger=1/16, add=[0,-1]t16, pan=[-1/2:1/2]r
+b dbass 0020, dur=1/4, amp=[]r{per:4,0:2,1:0,2:0,4:0,seed:101}, att=0.01, rel=0.01, delay=(0,[1/2,3/4]r), lpf={this.freq*[20,5]e*[1:2]s10,q:10}, echo=1.01, room, flanger=1/16, add=[0,-1]t16, pan=[-1/2:1/2]r
 active=[0,1]t32
 chooser=[0,1,2,3,4]r4
 words=('imagination','regret','escape','consent','revolution')
@@ -1302,6 +1302,9 @@ vt text 0, dur=4, text=words[chooser], fade, loc={y:-0.4}+firefly/8, perspective
 i sample 0, dur=4, sample=samples[chooser], bits=2, room=1.1, high=[8:12]r, echo=1/4, amp=1/4*active
 
 
+v image 0, url='https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/TGRT_Testcard.jpg/800px-TGRT_Testcard.jpg', mirror={4,fan:[0:20]l2@f/100}
 v kal 0, mirror={100,fan:[7:12]s32@f/10}, zoom=3, mid=random, contrast
+v lines 9, mirror={1/[0.1:0.01]s37@f,fan:[7:12]s32@f/10}, zoom=1, contrast=3, fore=random, ripple
+v kal 1, contrast=3, fore={labh:[0,1]l16@f,c:0.2,l:0.7}, ripple, zoom=3
 
 
