@@ -95,9 +95,14 @@ let verts = (loc, window) => {
     if (cachedObjects[n] === undefined) { cachedObjects[n] = {} }
     return cachedObjects[n]
   }
-  let ca = (n) => {
+  let ca = (n, x,y,z,w) => {
     if (cachedObjects[n] === undefined) { cachedObjects[n] = [] }
-    return cachedObjects[n]
+    let ar = cachedObjects[n]
+    if (x !== undefined) { ar[0] = x }
+    if (y !== undefined) { ar[1] = y }
+    if (z !== undefined) { ar[2] = z }
+    if (w !== undefined) { ar[3] = w }
+    return ar
   }
   let vec = (v, d, name) => {
     let a = ca(name)
@@ -167,12 +172,18 @@ let verts = (loc, window) => {
       let zoom = vec(evalMainParamFrame(params, 'zoom', blankObj, state.count), defZoom, 'zoom')
       let perspective = evalMainParamFrame(params, 'perspective', 0, state.count)
       let tunnel = evalMainParamFrame(params, 'tunnel', 0, state.count)
-      let ripple = evalMainParamFrame(params, 'ripple', 0, state.count)
+      let ripple = ca('ripple',
+        evalMainParamFrame(params, 'ripple', 0, state.count),
+        evalSubParamFrame(params, 'ripple', 'scale', 1, state.count),
+        0,0
+      )
       let rotate = evalMainParamFrame(params, 'rotate', 0, state.count) * Math.PI*2
-      let mirror = ca('mirror')
-      mirror[0] = evalMainParamFrame(params, 'mirror', 0, state.count)
-      mirror[1] = evalSubParamFrame(params, 'mirror', 'fan', 0, state.count)
-      mirror[2] = mirror[3] = 0
+      let mirror = ca('mirror',
+        evalMainParamFrame(params, 'mirror', 0, state.count),
+        evalSubParamFrame(params, 'mirror', 'fan', 0, state.count),
+        evalSubParamFrame(params, 'mirror', 'rotate', 0, state.count),
+        0
+      )
       let fore = colour(evalMainParamFrame(params, 'fore', blankObj, state.count), defFore, 'fore')
       let back = colour(evalMainParamFrame(params, 'back', blankObj, state.count), defBack, 'back')
       let mid
@@ -203,7 +214,7 @@ let verts = (loc, window) => {
       system.gl.uniform4fv(s.mirrorUnif, mirror)
       system.gl.uniform1f(s.pixellateUnif, pixellate)
       system.gl.uniform1f(s.tunnelUnif, tunnel)
-      system.gl.uniform1f(s.rippleUnif, ripple)
+      system.gl.uniform4fv(s.rippleUnif, ripple)
       system.gl.uniform1f(s.perspectiveUnif, perspective)
       system.gl.uniform1f(s.additiveUnif, additive)
       system.gl.uniform1f(s.eventTimeUnif, eventTime)

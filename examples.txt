@@ -1306,5 +1306,9 @@ v image 0, url='https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/TGRT_T
 v kal 0, mirror={100,fan:[7:12]s32@f/10}, zoom=3, mid=random, contrast
 v lines 9, mirror={1/[0.1:0.01]s37@f,fan:[7:12]s32@f/10}, zoom=1, contrast=3, fore=random, ripple
 v kal 1, contrast=3, fore={labh:[0,1]l16@f,c:0.2,l:0.7}, ripple, zoom=3
+v kal 3, contrast=3, fore={labh:[0,1]l16@f,c:0.2,l:0.7}, ripple={20,scale:1/4}, rotate=time/256
+v webcam 0, ripple={1/2,scale:100000}, time=0
+v kal 4, mirror={50,fan:1/2,rotate:time/64}, zoom=2, mid=random, contrast=3
+v swirl 0, contrast=5, mirror={3,rotate:1/4}
 
 
