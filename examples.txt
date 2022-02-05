@@ -1312,3 +1312,15 @@ v kal 4, mirror={50,fan:1/2,rotate:time/64}, zoom=2, mid=random, contrast=3
 v swirl 0, contrast=5, mirror={3,rotate:1/4}
 
 
+v shadertoy 0, id='Xtf3zn', fore=#888f
+v shadertoy 0, id='tdjSWR', rate=1/4, fore=#aaaf
+v shadertoy 0, id='WlByzy', fore=#888f
+
+
+bpm=132
+scale=phrygian
+k play V^<mv>, rate=5/4, amp=[1/4:1]r, room=0.1, fold=1/3
+pk play k<Naf>, dur=1/2, amp=[0:1/2]n, drive=[]n, rate=1/4+[]n, bpf=[200:4000]l16, bpr=1
+b dbass 0, dur=1/4, lpf=[[200:[800:1800]l16]r{seed:0,per:8}:100]e, lpr=12, oct=(2,3), amp=2+[]n, sus=[1/12:1/4]n, add=[0,1,7]r{seed:0,per:8}
+
+

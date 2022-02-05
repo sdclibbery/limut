@@ -53,14 +53,14 @@ define(function(require) {
 
   // fullscreen
   window.fullscreen = () => {
-    if (!document.fullscreenElement) {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
       consoleOut('> Fullscreen')
-      document.body.requestFullscreen();
+      let rfs = document.body.requestFullscreen || document.body.webkitRequestFullscreen
+      rfs.call(document.body);
     } else {
-      if (document.exitFullscreen) {
-        consoleOut('> Exit fullscreen')
-        document.exitFullscreen(); 
-      }
+      consoleOut('> Exit fullscreen')
+      let efs = document.exitFullscreen || document.webkitExitFullscreen
+      efs.call(document);
     }
   }
 
