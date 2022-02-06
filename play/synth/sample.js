@@ -7,6 +7,7 @@ define(function (require) {
   let scale = require('music/scale');
   let waveEffects = require('play/effects/wave-effects')
   let envelope = require('play/envelopes')
+  let pitchEffects = require('play/effects/pitch-effects')
 
   return (params) => {
     let freq = scale.paramsToFreq(params, 4)
@@ -20,6 +21,9 @@ define(function (require) {
     let vca = envelope(params, 0.25, 'full')
     waveEffects(params, source).connect(vca)
     system.mix(effects(params, vca))
+
+    let pitch = pitchEffects(params)
+    pitch.connect(source.detune)
 
     source.start(params._time)
     source.stop(params.endTime)
