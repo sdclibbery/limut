@@ -78,9 +78,6 @@ define(function (require) {
   }
   void postprocess( vec4 col, float foreBack ) {
     switch (l_recol) {
-      case 0: { /* original */
-        break;
-      }
       case 1: { /* oil */
         float fb = foreBack+length(origCoord)/3.0;
         col = 0.5+0.5*vec4(sin(fb*17.0), sin(fb*18.5), sin(fb*20.0), 1.0);
@@ -89,6 +86,16 @@ define(function (require) {
       case 2: { /* hue */
         float fb = foreBack*0.8+length(origCoord);
         col = 0.5+0.5*vec4(sin((fb+0.333)*6.2832), sin((fb+0.667)*6.2832), sin(fb*6.2832), 1.0);
+        break;
+      }
+      case 3: { /* fire */
+        /* float fb = (foreBack+length(origCoord))/2.414; */
+        float fb = (foreBack + 0.5 + 0.5*sin(origCoord.x))/2.0;
+        float c = 0.5+0.5*sin(fb*3.0*6.2832)+0.25*(origCoord.y+1.0)*sin(origCoord.y*5.0-iTime*3.0);
+        col = vec4(0.6+c, c, 0.0, 1.0);
+        break;
+      }
+      default: { /* original */
         break;
       }
     }
