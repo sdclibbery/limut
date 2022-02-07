@@ -17,6 +17,7 @@ define(function (require) {
     let samplePitch = evalSubParamEvent(params, 'sample', 'pitch', 261.6256)
     source.playbackRate.value = freq / samplePitch
     params.endTime = params._time + evalMainParamEvent(params, 'dur', 0.1)*params.beat.duration
+    let startTime = evalMainParamEvent(params, 'start', 0)
 
     let vca = envelope(params, 0.25, 'full')
     waveEffects(params, source).connect(vca)
@@ -25,7 +26,7 @@ define(function (require) {
     let pitch = pitchEffects(params)
     pitch.connect(source.detune)
 
-    source.start(params._time)
+    source.start(params._time, startTime)
     source.stop(params.endTime)
     system.disconnect(params, [source, vca])
   }
