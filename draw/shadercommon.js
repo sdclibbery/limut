@@ -89,12 +89,18 @@ define(function (require) {
         break;
       }
       case 3: { /* fire */
-        /* float fb = (foreBack+length(origCoord))/2.414; */
         float fb = (foreBack + 0.5 + 0.5*sin(origCoord.x))/2.0;
         float c = 0.5+0.5*sin(fb*3.0*6.2832)+0.25*(origCoord.y+1.0)*sin(origCoord.y*5.0-iTime*3.0);
         col = vec4(0.6+c, c, 0.0, 1.0);
         break;
       }
+      case 4: { /* sunset */
+        float fb = foreBack + 0.07*sin(origCoord.x*6.283);
+        float c = min(max(fb,0.0),1.0);
+        col = vec4(0.9-pow(c,1.2), 0.5-pow(c,0.8), 0.5-pow(c-0.6, 2.0), 1.0);
+        break;
+      }
+      /* New recols: neon, titanium (anodisation) */
       default: { /* original */
         break;
       }

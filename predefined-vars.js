@@ -73,6 +73,7 @@ define(function(require) {
   vars['oil'] = parseExpression('1')
   vars['hue'] = parseExpression('2')
   vars['fire'] = parseExpression('3')
+  vars['sunset'] = parseExpression('4')
 
   vars['full'] = 'full'
   vars['simple'] = 'simple'

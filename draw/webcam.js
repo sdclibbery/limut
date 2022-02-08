@@ -16,8 +16,8 @@ define(function (require) {
     vec2 uv = fragCoord;
     float ar = l_extents.x / l_extents.y;
     if (ar > 1.0) { uv.x /= ar; } else { uv.y *= ar; }
-    uv.y = -uv.y;
     uv = preprocess(uv);
+    uv.y = -uv.y;
     uv = (uv / 2.0) + 0.5;
     vec4 c = texture(l_image, fract(uv));
     float foreback = c.a*(c.r+c.g+c.b)/3.0;
