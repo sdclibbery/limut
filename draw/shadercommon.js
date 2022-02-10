@@ -100,6 +100,13 @@ define(function (require) {
         col = vec4(0.9-pow(c,1.2), 0.5-pow(c,0.8), 0.5-pow(c-0.6, 2.0), 1.0);
         break;
       }
+      case 5: { /* neon */
+        float c = min(max(foreBack,0.0),1.0) - mod(origCoord.x*origCoord.y,0.2)/5.0;
+        float mag = min(max(pow(1.0-abs(c-0.75),10.0),0.0),1.0);
+        float cya = min(max(pow(1.0-abs(c-0.25),10.0),0.0),1.0);
+        col = vec4(mag, cya, mag+cya, 1.0);
+        break;
+      }
       /* New recols: neon, titanium (anodisation) */
       default: { /* original */
         break;
