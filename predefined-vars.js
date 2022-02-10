@@ -75,6 +75,7 @@ define(function(require) {
   vars['fire'] = parseExpression('3')
   vars['sunset'] = parseExpression('4')
   vars['neon'] = parseExpression('5')
+  vars['titanium'] = parseExpression('6')
 
   vars['full'] = 'full'
   vars['simple'] = 'simple'

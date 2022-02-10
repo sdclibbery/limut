@@ -107,7 +107,11 @@ define(function (require) {
         col = vec4(mag, cya, mag+cya, 1.0);
         break;
       }
-      /* New recols: neon, titanium (anodisation) */
+      case 6: { /* titanium */
+        float fb = foreBack+origCoord.x/10.0;
+        col = 0.5+0.4*vec4(-sin(fb*7.0), -sin(fb*9.0), -sin(fb*11.0), 1.0);
+        break;
+      }
       default: { /* original */
         break;
       }
