@@ -30,6 +30,7 @@ define(function (require) {
   let video
   let accessWebcam = () => {
     video = document.createElement('video')
+    video.addEventListener('playing', () => { video.ready = true })
     return new Promise((resolve, reject) => {
       const mediaConstraints = { audio: false, video: { 
           width: {ideal: 512}, 
@@ -63,10 +64,10 @@ define(function (require) {
       texture.height = v.videoHeight
     })
     texture.update = (state) => {
-      if (state.time === lastUpdateTime) { return }
+      if (!video.ready || state.time === lastUpdateTime) { return }
       lastUpdateTime = state.time
-      system.gl.bindTexture(system.gl.TEXTURE_2D, texture.tex)
       system.gl.texImage2D(system.gl.TEXTURE_2D, 0, system.gl.RGBA, texture.width, texture.height, 0, system.gl.RGBA, system.gl.UNSIGNED_BYTE, video)
+      system.gl.bindTexture(system.gl.TEXTURE_2D, texture.tex)
     }
     return texture
   }
