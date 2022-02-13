@@ -743,14 +743,8 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Tuple indexing should really work anywhere
- Should be parsed at end of any single value, but can be present multiple times
-  ? What is syntax order between tuple indexing and time modifiers / intervals?
-   Eg I guess it's  [(1,2),(3,4)]r{per:4}@f[rand]  ?
- Move tuple indexer OUT of parse-var (and tuple parsing)
-  And INTO a generic post-value parse step
- eg [(1,2),(3,4)]r[0]
- Also eg ((1,2),(3,4))[0][1]
- Docs
+ Docs - syntax order and specific examples
+Fireworks (and other?) predefined vars: width and height are not the same as each other
 Object lookup operator; interchangeable in syntax location with tuple indexer
  eg  {foo:2}.foo ==2
  must allow eg  ({a:1},{a:2})[1].a ==2

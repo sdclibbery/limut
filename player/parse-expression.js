@@ -11,7 +11,7 @@ define(function(require) {
   let combineIntervals = require('player/intervals').combine
   let wrapMods = require('player/time-modifiers').wrapMods
   let tupleIndexer = require('player/tuple-indexer')
-  let {evalParamFrame} = require('player/eval-param')
+  let {evalParamFrame,evalParamFrameNoFlatten} = require('player/eval-param')
   let parseAggregator = require('player/parse-aggregator')
   let parseColour = require('player/parse-colour')
 
@@ -114,7 +114,7 @@ define(function(require) {
         if (indices && indices.length > 0) {
           let r = result
           result = (event,b,evalRecurse) => {
-            return tupleIndexer(evalParamFrame(r,event,b), indices, event, b) // extract required elements only from tuple
+            return tupleIndexer(evalParamFrameNoFlatten(r,event,b), indices, event, b) // extract required elements only from tuple
           }
           setInterval(result, parseInterval(state) || r.interval || hoistInterval('event', indices))
         }
@@ -178,7 +178,7 @@ define(function(require) {
         if (vs.length == 1) {
           result = vs[0]
         } else if (Array.isArray(vs)) {
-          result = vs.flat()
+          result = vs
           result = wrapMods(result, parseMap(state))
           result.interval = parseInterval(state) || hoistInterval('event', vs)
         } else {
@@ -335,7 +335,6 @@ define(function(require) {
 
   let p
   p = parseExpression('(1,2)')
-  assert([1,2], p)
   assert([1,2], p)
 
   p = parseExpression('[1,(2,3)]')
@@ -971,8 +970,8 @@ define(function(require) {
   assert({x:[1,2]}, parseExpression("{x:(1,2)}"))
 
   assert([1,2], parseExpression("((1,2))"))
-  assert([1,2,3], parseExpression("(1,(2,3))"))
-  assert([1,2,3], parseExpression("((1,2),3))"))
+  assert([1,[2,3]], parseExpression("(1,(2,3))"))
+  assert([[1,2],3], parseExpression("((1,2),3))"))
 
   assert([{x:0},{x:[1,2]}], parseExpression("({x:0},{x:(1,2)})"))
   assert([{x:1},{x:2}], evalParamFrame(parseExpression("{x:(1,2)}"), ev(0,0),0))
@@ -1143,9 +1142,18 @@ define(function(require) {
 
   assert('min', evalParamFrame(parseExpression('min'),ev(0,0),0))
 
-  // eg [(1,2),(3,4)]r[0]
-  // Also eg ((1,2),(3,4))[0][1]
+  assert(1, evalParamFrame(parseExpression('[(1,2),(3,4)]t1[0]'),ev(0,0),0))
+  assert(3, evalParamFrame(parseExpression('[(1,2),(3,4)]t1[0]'),ev(1,1),1))
+  assert(2, evalParamFrame(parseExpression('[(1,2),(3,4)]t1[1]'),ev(0,0),0))
+  assert(4, evalParamFrame(parseExpression('[(1,2),(3,4)]t1[1]'),ev(1,1),1))
+
+  assert(3, evalParamFrame(parseExpression('((1,2),(3,4))[1][0]'),ev(0,0),0))
  
+  vars.foo = parseExpression('3')
+  p = parseExpression('(1,(2,foo))')
+  assert([1,2,3], evalParamFrame(p,ev(0,0),0))
+  delete vars.foo
+
   console.log('Parse expression tests complete')
   }
   

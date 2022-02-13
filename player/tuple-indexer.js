@@ -60,6 +60,9 @@ define(function(require) {
     assert(1, select(1, [0]))
     assert(1, select(1, [0,1])) // Wrong really, should return `[1,1]`
 
+    assert([1,2], select([[1,2],[3,4]], [0]))
+    assert([3,4], select([[1,2],[3,4]], [1]))
+
     assert([2,3], select([1,2,3,4], range(1,2)))
     assert([1,2,3,4], select([1,2,3,4], range(0,3)))
     assert([1,2,3,4,1,2,3,4], select([1,2,3,4], range(0,7)))

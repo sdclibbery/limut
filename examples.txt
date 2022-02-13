@@ -1353,3 +1353,10 @@ a4 ambi (0256), oct=(4,5), addc=3+([]n1+[]n2+[]n4)/2, amp=[1/8,1/2]l23
 set a* dur=2, envelope=pad, room=2, chorus, pan=[-1:1]r
 
 
+v glow 2, loc=fireworks, fore=[(red,yellow),(green,blue)]r1[1]@e
+v glow 2, loc=fireworks, fore=((red,yellow),(green,blue))[0]
+v glow 2, loc=fireworks, fore=((red,yellow),(green,blue))
+foo=3
+v glow 0, loc=fireworks, bar=(1,(2,foo))
+
+

@@ -21,7 +21,7 @@ define((require) => {
         for (let i=0; i<evaled.length; i++) {
           let e = Object.assign({}, event)
           if (Array.isArray(v)) {
-            e[k] = v[i] // tuple in a tuple
+            e[k] = v.flat()[i] // tuple in a tuple
           } else if (typeof v == 'function' || typeof v == 'object') {
             e[k] = (e,b,evalRecurse) => tupleIndex(evalRecurse(v, e,b),i)
             e[k].interval = v.interval
@@ -59,6 +59,7 @@ define((require) => {
 
     assert([{x:1},{x:2}], expandTuples([{x:[1,2]}]))
     assert([{x:1,y:3},{x:1,y:4},{x:2,y:3},{x:2,y:4}], expandTuples([{x:[1,2],y:[3,4]}]))
+    assert([{x:1},{x:2},{x:3}], expandTuples([{x:[1,[2,3]]}]))
 
     p = expandTuples([{x:()=>[1,2]}])
     assert(1, evalParamFrame(p[0].x,e,b))
