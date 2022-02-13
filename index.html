@@ -294,15 +294,15 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 </div>
 <h4 onclick="toggleAccordion('accordion-value-syntax')">▶ Value Syntax</h4>
 <div id="accordion-value-syntax" class="closed">
-<p>Basic structure <code>value{modifiers}@interval</code></p>
+<p>Basic structure <code>value{modifiers}@interval[indexing]</code></p>
 <p><code>value</code> Actual value (which may include subparameters); see below</p>
-<p><code>{modifiers}</code> Map of modifiers. Modifiers may modify the time passed to the value expression, or the value it returns, or provide additional data for a parameter. For example, <code>[1,2,3]t1{0:0,per:8}</code> will give a sequence that repeats every 8 beats, forced to the value 0 at the start of each repeat.</p>
+<p><code>{modifiers}</code> Map of modifiers. Modifiers may modify the time passed to the value expression, or the value it returns, or provide additional data for a parameter. For example, <code>[1,2,3]t1{0:0,per:8}</code> will give a sequence that repeats every 8 beats, forced to the value 0 at the start of each repeat. In other words, the repeating sequence: 0,2,3,1,2,3,1,2.</p>
 <p><code>@interval</code> Intervals specify how often the value should be evaluated, for example once per event (then the same value through the event), or continuously varying.</p>
+<p><code>[indexing]</code> Tuples (chords) are groups of multiple values. Use indexing to extract specific values from them. See "Tuple indexers" below..</p>
 <h5>Values:</h5>
 <p><code>1</code> Single, constant value</p>
 <p><code></code> No value: set param to <code>1</code>. Eg <code>monochrome</code> is the same as <code>monochrome=1</code></p>
-<p><code>(1,2)</code> Multiple values, all played together</p>
-<p><code>(1,2)[0]</code> Multiple values, with an index lookup to select one (or more). <code>(1,2)[0]</code> will always give <code>1</code> (the indexing is zero based). <code>(1,2,3,4)[1,2]</code> will give <code>(2,3)</code>. The index may be an expression.</p>
+<p><code>(1,2)</code> A 'tuple' or chord. Multiple values, all played together</p>
 <p><code>[1,2]</code> Sequence of values, one per event in the pattern; for single length patterns only, all values will be expanded, so <code>p ping 0, add=[0,1,2]</code> will cycle through all three values.</p>
 <p><code>[1,2]t3</code> Timed sequence, each value lasts for 3 beats</p>
 <p><code>[1,2]t[12,4]</code> Timed sequence with one timing per value. At present the timings must be const numbers, they cannot be expressions.</p>
@@ -341,10 +341,6 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>#003366</code> Hex colour value which becomes the colour map <code>{r:0,g:0.2,b:0.4,a:1}</code></p>
 <p><code>'abc'</code> String value</p>
 <p><code>foo</code> Lookup a global var named <code>foo</code>.</p>
-<p><code>foo[0]</code> Lookup a global var named <code>foo</code>, and if it contains a tuple, extract the first element only from it.</p>
-<p><code>foo[0,2]</code> Lookup a global var named <code>foo</code>, and if it contains a tuple, extract the first and third elements only from it.</p>
-<p><code>foo[0:2]</code> Lookup a global var named <code>foo</code>, and if it contains a tuple, extract the first to the third elements only from it.</p>
-<p><code>foo[avg]</code> Lookup a global var named <code>foo</code>, and if it contains a tuple, calculate the mean average of all the tuple elements (for a list of all aggregator types, see 'tuple aggregators' below).</p>
 <p><code>foo{x:2}</code> Lookup a global var named <code>foo</code>, and call it as a function passing in named parameters.</p>
 <p><code>p1.amp</code> Lookup the value of param <code>amp</code> from player <code>p1</code>. Uses the param from the most recently played event on that player. Can additionally use a <code>pulse</code> param on the player, which pulses from 0 to 1 as events play on that player.</p>
 <p><code>p1.amp[0]</code> Lookup the value of param <code>amp</code> from player <code>p1</code>, and if it contains a tuple, extract the first element only from it.</p>
@@ -356,7 +352,11 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <h5>Intervals:</h5>
 <p><code>@e</code> Use <code>@e</code> to evaluate this value once per event</p>
 <p><code>@f</code> Use <code>@f</code> to evaluate once per frame (60 times a second). For example <code>lpf=[300:3000]l8@f</code> will update the lpf cutoff frequency continuously, while <code>lpf=[300:3000]l8</code> will be evaluated only once for each event played.</p>
-<h5>Tuple aggregators:</h5>
+<h5>Tuple indexers:</h5>
+<p><code>(3,1,2)[0]</code> Returns the nth element in a tuple (3 in the example)</p>
+<p><code>(3,1,2)[3]</code> Returns the nth element in a tuple, wrapping around (3 in the example)</p>
+<p><code>(3,1,2)[0,2]</code> Returns multiple elements in a tuple ([3,2] in the example)</p>
+<p><code>(3,1,2)[0:2]</code> Returns a range of elements in a tuple ([3,1,2] in the example)</p>
 <p><code>(3,1,2)[first]</code> Returns the first element in a tuple (3 in the example)</p>
 <p><code>(3,1,2)[last]</code> Returns the last element in a tuple (2 in the example)</p>
 <p><code>(3,1,2)[rand]</code> Returns a random element from a tuple</p>
@@ -742,8 +742,6 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-Tuple indexing should really work anywhere
- Docs - syntax order and specific examples
 Fireworks (and other?) predefined vars: width and height are not the same as each other
 Object lookup operator; interchangeable in syntax location with tuple indexer
  eg  {foo:2}.foo ==2
