@@ -1332,3 +1332,24 @@ sax='https://upload.wikimedia.org/wikipedia/commons/3/38/Lick_Tenor_Sax.wav'
 s2 sample 0, dur=1, sample=sax, start=[0:3]l4, chorus, addc=[0,2,4,5]r4
 
 
+vb kal 0, loc=tile_b, perspective=-1.07, rotate=3/4, zoom={y:16,x:3}, f=-1
+vt kal 0, loc=tile_t, perspective=1.07, rotate=1/4, zoom={y:16,x:-3}, f=1
+set [vb,vt] scroll={x:-time/12,y:2}, time=time/12, contrast=3, zoom={x:12*this.f,y:24}, fore=(white+random)*0.66, add=1
+
+
+v swirl 4, zoom=6, mirror={50,fan:0.95,rotate:time/64}, recol=titanium, rate=1/8, scroll={y:-time/8}
+
+
+vb kal 0, loc=tile_b, perspective=-1.05, rotate=3/4
+vb2 swirl 0, loc=tile_b, perspective=-1.05, rotate=3/4
+vt kal 0, loc=tile_t, perspective=1.05, rotate=1/4, to=3
+vt2 swirl 0, loc=tile_t, perspective=1.05, rotate=1/4, to=3
+set [vb,vt]  scroll={x:-time/16,y:1.3}, time=this.to+time/4, contrast=2, add=[1:3/2]s48@f, zoom={x:3,y:6}, monochrome, back=white
+set [vb2,vt2]  time=0, scroll={x:-time/8,y:1.3}, zoom={x:3,y:6}, blend=subtractive, fore=white*3/2, contrast
+a1 ambi (0246), oct=(2,3), addc=0+([]n1+[]n2+[]n4)/2, amp=[1/8,1/2]l13
+a2 ambi (149), oct=(3,4), addc=1+([]n1+[]n2+[]n4)/2, amp=[1/8,1/2]l17
+a3 ambi (2367), oct=(4), addc=2+([]n1+[]n2+[]n4)/2, amp=[1/8,1/2]l19
+a4 ambi (0256), oct=(4,5), addc=3+([]n1+[]n2+[]n4)/2, amp=[1/8,1/2]l23
+set a* dur=2, envelope=pad, room=2, chorus, pan=[-1:1]r
+
+

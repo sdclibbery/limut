@@ -257,8 +257,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <div id="accordion-basic-syntax" class="closed">
 <p>Limut is case insensitive; <code>piano</code>, <code>Piano</code>, and <code>PIANO</code> are all treated the same; <code>[1:4]t4</code> is the same as <code>[1:4]T4</code> etc.</p>
 <p>Comments: Anything after <code>//</code> on a line is ignored</p>
-<p>Also, commands (eg defining a player) cannot be split over multiple lines; there must not be line breaks within a command.</p>
-<p>Lines: Each command must be on a single line with no line breaks, unless "<code> \</code>" is used at the end of a line to continue the command onto the next line.</p>
+<p>Lines: Each command (eg defining a player, setting values) must be on a single line with no line breaks, unless "<code> \</code>" is used at the end of a line to continue the command onto the next line.</p>
 <h5>Defining a player</h5>
 <p>Basic structure: <code>id synth pattern, params</code></p>
 <p><code>id</code> Identifier for the player, so it can be referred to from other players etc. Must not contain a dot: <code>.</code></p>
@@ -745,15 +744,17 @@ shadertoy synth multiple channels
 ==== other ====
 Tuple indexing should really work anywhere
  Should be parsed at end of any single value, but can be present multiple times
-  ? What is syntax order between tuple indexing and time modifiers?
-   Eg I guess it's  [(1,2),(3,4)]r{per:4}[rand]  ?
+  ? What is syntax order between tuple indexing and time modifiers / intervals?
+   Eg I guess it's  [(1,2),(3,4)]r{per:4}@f[rand]  ?
  eg [(1,2)]r[max]
  Also eg ((1,2),(3,4))[0][1]
  Docs
-Object lookup operator
+Object lookup operator; interchangeable in syntax location with tuple indexer
  eg  {foo:2}.foo ==2
  must allow eg  ({a:1},{a:2})[1].a ==2
+ also {a:{foo:1},b:{foo:2}}.b.foo ==2
  Docs
+Electron warning: The default of contextIsolation is deprecated
 Tuple indexing should allow object lookup?
  eg  {foo:2}['foo'] ==2
  also  {1,2}[1] ==2

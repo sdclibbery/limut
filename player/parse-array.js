@@ -41,5 +41,34 @@ define(function(require) {
     return colonArray
   }
 
-  return array
+  // TESTS
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+
+    let assert = (expected, actual) => {
+      let x = JSON.stringify(expected)
+      let a = JSON.stringify(actual)
+      if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
+    }
+    let number = require('player/parse-number') // Expressions should only be numbers in these tests for simplicity
+  
+    assert([], array({str:'',idx:0,expression:number}, '[', ']'))
+    assert([], array({str:'[]',idx:0,expression:number}, '[', ']'))
+    assert([], array({str:'[',idx:0,expression:number}, '[', ']'))
+    assert([], array({str:'a',idx:0,expression:number}, '[', ']'))
+    assert([1], array({str:'[1]',idx:0,expression:number}, '[', ']'))
+    assert([1,2,3], array({str:'[1,2,3]',idx:0,expression:number}, '[', ']'))
+    assert([1,2,3], array({str:'[1:2:3]',idx:0,expression:number}, '[', ']'))
+    assert(',', array({str:'[1,2]',idx:0,expression:number}, '[', ']').separator)
+    assert(':', array({str:'[1:2]',idx:0,expression:number}, '[', ']').separator)
+    assert([], array({str:'[1,2:3]',idx:0,expression:number}, '[', ']'))
+    assert([1,2,3], array({str:'[1:2:3]',idx:0,expression:number}, '[', ']'))
+    assert([1,2,3], array({str:'(1,2,3)',idx:0,expression:number}, '(', ')'))
+    assert([], array({str:'[1,2,3]',idx:0,expression:number}, '(', ')'))
+    assert([1,2,3], array({str:'[1,2,3',idx:0,expression:number}, '[', ']'))
+    assert([1,2,3], array({str:'[1,2,3,]',idx:0,expression:number}, '[', ']'))
+    
+    console.log('Parse array tests complete')
+    }
+      
+    return array
 })
