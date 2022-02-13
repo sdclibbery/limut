@@ -163,9 +163,9 @@ define(function(require) {
       if (char == '(') {
         let vs = parseArray(state, '(', ')')
         eatWhitespace(state)
-        let indices = parseArray(state, '[', ']')
         let modifiers = parseMap(state)
         let interval = parseInterval(state)
+        let indices = parseArray(state, '[', ']')
         if (indices && indices.length > 0) {
           result = (event,b,evalRecurse) => {
             return tupleIndexer(evalParamFrame(vs,event,b), indices, event, b) // extract required elements only from tuple
@@ -1089,7 +1089,7 @@ define(function(require) {
   assert([1,2], evalParamFrame(p,ev(0,0),0))
   assert([1,2,3], evalParamFrame(p,ev(1,1),1))
 
-  p = parseExpression('(1,2)[0]{per:2,0:5}')
+  p = parseExpression('(1,2){per:2,0:5}@f[0]')
   assert(5, evalParamFrame(p,ev(0,0),0))
   assert(1, evalParamFrame(p,ev(1,1),1))
   assert(5, evalParamFrame(p,ev(2,2),2))
