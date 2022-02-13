@@ -108,6 +108,18 @@ define(function(require) {
         state.commented = true
         break
       }
+      // tuple indexer on previously parsed result
+      if (result !== undefined && char === '[') {
+        let indices = parseArray(state, '[', ']')        
+        if (indices && indices.length > 0) {
+          let r = result
+          result = (event,b,evalRecurse) => {
+            return tupleIndexer(evalParamFrame(r,event,b), indices, event, b) // extract required elements only from tuple
+          }
+          setInterval(result, parseInterval(state) || r.interval || hoistInterval('event', indices))
+        }
+        continue
+      }
       // array / time var / random
       if (char == '[') {
         let vs = parseArray(state, '[', ']')
@@ -163,22 +175,12 @@ define(function(require) {
       if (char == '(') {
         let vs = parseArray(state, '(', ')')
         eatWhitespace(state)
-        let modifiers = parseMap(state)
-        let interval = parseInterval(state)
-        let indices = parseArray(state, '[', ']')
-        if (indices && indices.length > 0) {
-          result = (event,b,evalRecurse) => {
-            return tupleIndexer(evalParamFrame(vs,event,b), indices, event, b) // extract required elements only from tuple
-          }
-          result = wrapMods(result, modifiers)
-          if (typeof result === 'function') {
-            setInterval(result, interval || hoistInterval('event', vs))
-          }
-        }
-        else if (vs.length == 1) {
+        if (vs.length == 1) {
           result = vs[0]
         } else if (Array.isArray(vs)) {
           result = vs.flat()
+          result = wrapMods(result, parseMap(state))
+          result.interval = parseInterval(state) || hoistInterval('event', vs)
         } else {
           result = vs
         }
@@ -187,7 +189,7 @@ define(function(require) {
       // map (object)
       if (char == '{') {
         result = parseMap(state)
-        parseMap(state) // support modifiers map but ignore it
+        result = wrapMods(result, parseMap(state))
         parseInterval(state) // Ignore
         continue
       }
@@ -728,9 +730,9 @@ define(function(require) {
   assert('frame', parseExpression("[0,1]s4@f").interval)
   assert('event', parseExpression("[0,1]s4@e").interval)
 
-  assert(undefined, parseExpression("(0,1)").interval)
-  assert(undefined, parseExpression("(0,[0:1]r@f)").interval)
+  assert('event', parseExpression("(0,1)").interval)
   assert(undefined, parseExpression("(0,[0:1]r@f)")[0].interval)
+  assert('frame', parseExpression("(0,[0:1]r@f)").interval)
   assert('frame', parseExpression("(0,[0:1]r@f)")[1].interval)
 
   assert(undefined, parseExpression("{a:0}").interval)
@@ -1026,10 +1028,10 @@ define(function(require) {
   assert(1, evalParamFrame(p,ev(1,1),1)) // idx not affected by per
 
   p = parseExpression('(1,2){per:1}')
-  assert([1,2], p)
+  assert([1,2], evalParamFrame(p,ev(0,0),0))
 
   p = parseExpression('{foo:2}{per:1}')
-  assert({foo:2}, p)
+  assert({foo:2}, evalParamFrame(p,ev(0,0),0))
 
   p = parseExpression('5{per:1}')
   assert(5, evalParamFrame(p,ev(0,0),0))
@@ -1135,11 +1137,15 @@ define(function(require) {
   assert(4, evalParamFrame(parseExpression('(1,2,[3,4]t1)[max]'),ev(1,1),1))
   assert(3, evalParamFrame(parseExpression('(1,(2,3))[max]'),ev(0,0),0))
 
+  assert('frame', parseExpression('(0,[1,2]l1/2@f)').interval)
   assert('frame', parseExpression('(0,[1,2]l1/2@f)[max]').interval)
   assert('frame', parseExpression('max{(0,[1,2]l1/2@f)}').interval)
 
   assert('min', evalParamFrame(parseExpression('min'),ev(0,0),0))
 
+  // eg [(1,2),(3,4)]r[0]
+  // Also eg ((1,2),(3,4))[0][1]
+ 
   console.log('Parse expression tests complete')
   }
   

@@ -11,7 +11,7 @@ define(function(require) {
   }
 
   let select = (v, indices, event, b) => {
-    if (!!indices && indices.length > 0) {
+    if (!!indices && indices.length > 0 && Array.isArray(v)) {
       if (indices.separator === ':') {
         let vn = []
         let i = Math.floor(evalParamFrame(param(indices[0], 0), event,b))
@@ -56,6 +56,9 @@ define(function(require) {
     assert(1, select([1,2], [2]))
     assert(2, select([1,2], [3]))
     assert([1,2], select([1,2,3,4], [0,1]))
+    assert(1, select(1, []))
+    assert(1, select(1, [0]))
+    assert(1, select(1, [0,1])) // Wrong really, should return `[1,1]`
 
     assert([2,3], select([1,2,3,4], range(1,2)))
     assert([1,2,3,4], select([1,2,3,4], range(0,3)))

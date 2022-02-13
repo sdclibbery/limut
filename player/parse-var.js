@@ -22,14 +22,10 @@ define(function(require) {
       }
       break
     }
-
-    // Look for a tuple indexer
-    eatWhitespace(state)
-    let tupleIndices = parseArray(state, '[', ']')
-    return {key:key, tupleIndices:tupleIndices}
+    return key
   }
 
-  let varLookup = ({key,tupleIndices}, dependsOn, args, context) => {
+  let varLookup = (key, dependsOn, args, context) => {
     if (!key) { return }
 
     // look for static function call; call var immediately if present
@@ -63,9 +59,6 @@ define(function(require) {
         v = vars[key](evalParamFrame(args,event,b), event,b)
       }
       v = evalParamFrame(v,event,b)
-      if (Array.isArray(v)) {
-        v = tupleIndexer(v, tupleIndices, event, b) // extract required elements only from tuple
-      }
       if (v === undefined) { v = 0 } // If not found as a var, assume its for a currently unavailable player and default to zero
       return v
     }
@@ -104,8 +97,8 @@ define(function(require) {
 
   players.instances.p1 = { currentEvent:(b)=>{ return [{foo:b}]} }
   p = varLookup(parseVar({str:'p1.foo',idx:0}), [])
-  assert(0, p({},0,(v)=>v))
-  assert(2, p({beat:2},2,(v)=>v))
+  assert([0], p({},0,(v)=>v))
+  assert([2], p({beat:2},2,(v)=>v))
   delete players.instances.p1
 
   p = varLookup(parseVar({str:'p1.foo',idx:0}), [])
@@ -136,54 +129,19 @@ define(function(require) {
   vars.foo = () => [1]
   state = {str:'foo',idx:0}
   p = varLookup(parseVar(state), [])
-  assert(1, p(ev(0),0,evalParamFrame))
+  assert([1], p(ev(0),0,evalParamFrame))
   delete vars.foo
 
   vars.foo = () => []
   state = {str:'foo',idx:0}
   p = varLookup(parseVar(state), [])
-  assert(0, p(ev(0),0,evalParamFrame))
+  assert([], p(ev(0),0,evalParamFrame))
   delete vars.foo
 
   vars.foo = () => undefined
   state = {str:'foo',idx:0}
   p = varLookup(parseVar(state), [])
   assert(0, p(ev(0),0,evalParamFrame))
-  delete vars.foo
-
-  vars.foo = () => [2,3]
-  state = {str:'foo[0]',idx:0,expression:parseNumber}
-  p = varLookup(parseVar(state), [])
-  assert(2, p(ev(0),0,evalParamFrame))
-  delete vars.foo
-
-  vars.foo = () => 2
-  state = {str:'foo[0]',idx:0,expression:parseNumber}
-  p = varLookup(parseVar(state), [])
-  assert(2, p(ev(0),0,evalParamFrame))
-  delete vars.foo
-
-  players.instances.p1 = { currentEvent:(b)=>{ return [{foo:[2,3]}]} }
-  p = varLookup(parseVar({str:'p1.foo[0]',idx:0,expression:parseNumber}), [])
-  assert(2, p(ev(0),0,evalParamFrame))
-  delete players.instances.p1
-
-  vars.foo = [2,3]
-  state = {str:'foo[0]',idx:0,expression:parseNumber}
-  p = varLookup(parseVar(state), [])
-  assert(2, p(ev(0),0,evalParamFrame))
-  delete vars.foo
-
-  vars.foo = () => [2,3,4]
-  state = {str:'foo[0,2]',idx:0,expression:parseNumber}
-  p = varLookup(parseVar(state), [])
-  assert([2,4], p(ev(0),0,evalParamFrame))
-  delete vars.foo
-
-  vars.foo = () => [2,3,4]
-  state = {str:'foo[0:2]',idx:0,expression:parseNumber}
-  p = varLookup(parseVar(state), [])
-  assert([2,3,4], p(ev(0),0,evalParamFrame))
   delete vars.foo
 
   console.log('Parse var tests complete')
