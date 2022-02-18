@@ -4,26 +4,28 @@ define(function (require) {
   let {subParam,mainParam} = require('player/sub-param')
 
   let texts = {}
-  
+
   return (data) => {
     let key = JSON.stringify(data)
     if (!texts[key]) {
       let str = mainParam(data, 'Blah')
       if (typeof str !== 'string') { str = str.toString() }
       let text = {
-        width:512,
-        height:512,
+        width:1024,
+        height:1024,
       }
       text.tex = system.gl.createTexture()
       texts[key] = text
       let canvas = document.getElementById('text-canvas')
-      canvas.width = 512
-      canvas.height = 512
+      canvas.width = 1024
+      canvas.height = 1024
       let ctx = canvas.getContext('2d')
       ctx.fillStyle = 'rgba(255, 255, 255, 0.01)'
       ctx.fillRect(0,0,canvas.width,canvas.height)
       ctx.fillStyle = 'rgba(255, 255, 255, 1.0)'
       ctx.textAlign = 'center'
+
+      
       let font = subParam(data, 'font', 'monospace')
       let fontsize = subParam(data, 'size', 72)
       let fontstyle = subParam(data, 'style', '')

@@ -26,14 +26,14 @@ define(function (require) {
   let evalMainParamEvent = (params, p, def) => {
     let v = params[p]
     if (v === undefined) { return def }
-    v =  evalParam.evalParamEvent(v, params)
+    v = evalParam.evalParamEvent(v, params)
     if (v === undefined) { return def }
     return mainParam(v, def)
   }
   let evalSubParamEvent = (params, p, sub, def) => {
     let v = params[p]
     if (v === undefined) { return def }
-    v =  evalParam.evalParamEvent(v, params)
+    v = evalParam.evalParamEvent(v, params)
     if (v === undefined) { return def }
     return subParam(v, sub, def)
   }
@@ -149,7 +149,7 @@ let verts = (loc, window) => {
     let additive = evalMainParamEvent(params, 'additive', defParams.additive || 0)
     let blend = evalMainParamEvent(params, 'blend')
     let url = evalMainParamEvent(params, 'url', 'favicon-32x32.png')
-    let text = evalMainParamEvent(params, 'text')
+    let text = evalParam.evalParamEvent(params['text'], params)
     let window = evalMainParamEvent(params, 'window', false)
     let fade = evalMainParamEvent(params, 'fade', defParams.fade || 0)
     let recol = evalMainParamEvent(params, 'recol', 0)

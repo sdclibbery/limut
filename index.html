@@ -742,7 +742,8 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-!! [red,blue]r  should be per event but is coming out per frame and requires @e on the end; is this deliberate??
+!!! Some die out early, but all MOVE at the same rate!!:
+ v glow 0, dur=1/12, sus=[1:12]r, loc={x:[-1:1]r,y:[1.3:-1.3]e,w:0.6,h:0.6}
 Object lookup operator; interchangeable in syntax location with tuple indexer
  eg  {foo:2}.foo ==2
  must allow eg  ({a:1},{a:2})[1].a ==2
@@ -843,6 +844,7 @@ Should support `(1,2,3)[min:max]`? Or not?
 Can var lookup take the interval from the var interval?
  Need two pass parse??
   What about player var lookup then?
+  EG!! [red,blue]r  is per frame but  [#f00f,#00ff]r  is per event
 ? Possible to additionally allow '=' as object key/value separator? Eg {r=1,g=2} etc ? Will this conflict with line/param parsing??
 Maybe optimise per frame garbage in eval-params and eval-operators
 multiline command fix: // should only comment out that one line
