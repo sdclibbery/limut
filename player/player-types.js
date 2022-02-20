@@ -45,7 +45,7 @@ define((require) => {
     shadertoy: { play: sprite(shadertoy, {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:1},) },
     image: { play: sprite(image, {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:0},) },
     text: { play: sprite(image, {r:1,g:1,b:1,a:1}, {r:0,g:0,b:0,a:0},) },
-    webcam: { play: sprite(webcam, {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:0},) },
+    webcam: { play: sprite(webcam, {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:1},) },
     scope: { play: sprite(scope, {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:0},) },
     lights: { play: sprite('lights', {r:1.0,g:1.0,b:1.0,a:1}, {r:0.5,g:0.4,b:0.3,a:0}, {additive:1}) },
     julia: { play: sprite('julia', {r:0.9,g:0.9,b:0.9,a:1}, {r:0.1,g:0.1,b:0.1,a:1}) },
