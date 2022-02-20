@@ -699,6 +699,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+Webcam broken eg  vk kal 0 \ vw webcam 0
 Should the coord system for text positionin not be -1:1 like for normal loc?
 slitscan param for 2001 style slitscan, subparams for shape, rotation
 Digital JPEG corruption filter param
@@ -743,12 +744,6 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-Object lookup operator; interchangeable in syntax location with tuple indexer
- eg  {foo:2}.foo ==2
- must allow eg  ({a:1},{a:2})[1].a ==2
- also {a:{foo:1},b:{foo:2}}.b.foo ==2
- Docs
-Electron warning: The default of contextIsolation is deprecated
 Tuple indexing should allow object lookup?
  eg  {foo:2}['foo'] ==2
  also  {1,2}[1] ==2
@@ -796,6 +791,11 @@ For player.pulse, can we make sure the order within the tuple is consistent?
 Presets? Allow to define new synths; eg 'preset mysaw saw, att=0.02, lpf=this.freq*[5,3,2,1,1/2]e' then use mysaw as a synth
  Presets should be able to include additional follow synths
 Better syntax highlighting for {} brackets; maybe bracket match highlighting??
+Object lookup operator; interchangeable in syntax location with tuple indexer
+ eg  {foo:2}.foo ==2
+ must allow eg  ({a:1},{a:2})[1].a ==2
+ also {a:{foo:1},b:{foo:2}}.b.foo ==2
+ Docs
 Weight modifier for random to go with seed
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 Can set swing timescale with a subparam: swing={60,on:1/2}
