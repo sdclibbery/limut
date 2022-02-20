@@ -75,9 +75,10 @@ define(function(require) {
     }
   }
 
-  let eventTimeVar = (vs, ds) => {
+  let eventTimeVar = (vs, ds_parsed) => {
     return (e,b, evalRecurse) => {
       if (!e.countToTime) { return vs[0] || 0 }
+      let ds = ds_parsed
       if (ds === undefined) { ds = e.endTime - e._time }
       let steps = timeVarSteps(vs, ds)
       let count = e.countToTime(b) - e._time

@@ -822,6 +822,12 @@ define(function(require) {
   assert([0.5,2.5], evalParamFrame(p,e,1/2,evalParamFrame))
   assert([1,3], evalParamFrame(p,e,2,evalParamFrame))
 
+  p = parseExpression("[0:1]e")
+  let e1 = { idx:0, count:7, countToTime:b=>b, _time:7, endTime:70 }
+  let e2 = { idx:0, count:7, countToTime:b=>b, _time:7, endTime:8 }
+  assert(0.015873015873015872, p(e1,8, evalParamFrame))
+  assert(1, p(e2,8, evalParamFrame))
+
   assert(1, parseExpression("[1,0]t1")(ev(0,0),0,evalParamFrame))
   assert(0, parseExpression("[1,0]t1")(ev(1,1),1,evalParamFrame))
   assert(1, parseExpression("[1,0]l1")(ev(0,0),0,evalParamFrame))
