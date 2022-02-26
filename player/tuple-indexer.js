@@ -3,15 +3,23 @@ define(function(require) {
   let {evalParamFrame} = require('player/eval-param')
   let param = require('player/default-param')
 
-  let elementByIndex = (tuple, idx, e,b) => {
+  let byIndex = (v, idx) => {
+    let r = v[idx]
+    if (r === undefined && typeof v.length === 'number') { r = v[Math.floor(idx) % v.length] }
+    return r
+  }
+
+  let elementByIndex = (v, idx, e,b) => {
     if (typeof(idx) === 'function' && idx.isTupleAggregator) {
-      return idx(tuple, e,b)
+      return idx(v, e,b)
     }
-    return tuple[Math.floor(evalParamFrame(idx, e,b)) % tuple.length]
+    return byIndex(v, evalParamFrame(idx, e,b))
   }
 
   let select = (v, indices, event, b) => {
-    if (!!indices && indices.length > 0 && Array.isArray(v)) {
+    let isArray = Array.isArray(v)
+    let isObject = !isArray && typeof v === 'object'
+    if (!!indices && indices.length > 0 && (isArray || isObject)) {
       if (indices.separator === ':') {
         let vn = []
         let i = Math.floor(evalParamFrame(param(indices[0], 0), event,b))
@@ -19,7 +27,7 @@ define(function(require) {
         let loIdx = Math.min(i,j)
         let hiIdx = Math.max(i,j)
         for (let idx = loIdx; idx <= hiIdx; idx++) {
-          vn.push(v[idx % v.length])
+          vn.push(byIndex(v, idx))
         }
         v = vn
       } else {
@@ -70,6 +78,13 @@ define(function(require) {
     assert(2, select([1,2,3,4], range(1,1)))
     assert([1,2,3], select([1,2,3,4], range(2)))
 
+    assert(2, select({foo:2}, ['foo']))
+    assert([2,3], select({foo:2,bar:3}, ['foo','bar']))
+    let vs = {}
+    vs[0] = 1
+    vs[1] = 2
+    assert([2,1], select(vs, [1,0]))
+   
     console.log('Tuple indexer tests complete')
   }
 

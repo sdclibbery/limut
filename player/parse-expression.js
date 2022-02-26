@@ -1160,6 +1160,13 @@ define(function(require) {
   assert([1,2,3], evalParamFrame(p,ev(0,0),0))
   delete vars.foo
 
+  assert(2, evalParamFrame(parseExpression("{foo:2}['foo']"),ev(0,0),0))
+  assert(3, evalParamFrame(parseExpression("{foo:[2:3]t1}['foo']"),ev(1,1),1))
+  assert(2, evalParamFrame(parseExpression("{foo:2,bar:3}[['foo','bar']t1]"),ev(0,0),0))
+  assert(3, evalParamFrame(parseExpression("{foo:2,bar:3}[['foo','bar']t1]"),ev(1,1),1))
+
+  assert(0, evalParamFrame(parseExpression("{foo:2,bar:3}[max]"),ev(0,0),0))
+
   console.log('Parse expression tests complete')
   }
   

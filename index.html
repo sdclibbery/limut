@@ -296,19 +296,19 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <div id="accordion-value-syntax" class="closed">
 <p>Basic structure <code>value{modifiers}@interval[indexing]</code></p>
 <p><code>value</code> Actual value (which may include subparameters); see below</p>
-<p><code>{modifiers}</code> Map of modifiers. Modifiers may modify the time passed to the value expression, or the value it returns, or provide additional data for a parameter. For example, <code>[1,2,3]t1{0:0,per:8}</code> will give a sequence that repeats every 8 beats, forced to the value 0 at the start of each repeat. In other words, the repeating sequence: 0,2,3,1,2,3,1,2.</p>
-<p><code>@interval</code> Intervals specify how often the value should be evaluated, for example once per event (then the same value through the event), or continuously varying.</p>
-<p><code>[indexing]</code> Tuples (chords) are groups of multiple values. Use indexing to extract specific values from them. See "Tuple indexers" below..</p>
+<p><code>{modifiers}</code> Map of modifiers. Modifiers may modify the time passed to the value expression, or the value it returns, or provide additional data for a parameter. For example, <code>[1,2,3]t1{0:0,per:8}</code> will give a sequence that repeats every 8 beats, forced to the value 0 at the start of each repeat. In other words, the repeating sequence: 0,2,3,1,2,3,1,2. See "Modifiers" below.</p>
+<p><code>@interval</code> Intervals specify how often the value should be evaluated, for example once per event (then the same value through the event), or continuously varying. See "Intervals" below.</p>
+<p><code>[indexing]</code> Lookup within tuples (chords) or objects. Tuples are groups of multiple values. Use indexing to extract specific values from them; see "Tuple indexers" below. Objects are dictionary maps containing multiple values. Use indexing to extract an individual value; see "Object lookup" below.</p>
 <h5>Values:</h5>
 <p><code>1</code> Single, constant value</p>
-<p><code></code> No value: set param to <code>1</code>. Eg <code>monochrome</code> is the same as <code>monochrome=1</code></p>
+<p><code></code> No value: for a param, missing a value is the same as setting the param to <code>1</code>. Eg <code>monochrome</code> is the same as <code>monochrome=1</code></p>
 <p><code>(1,2)</code> A 'tuple' or chord. Multiple values, all played together</p>
 <p><code>[1,2]</code> Sequence of values, one per event in the pattern; for single length patterns only, all values will be expanded, so <code>p ping 0, add=[0,1,2]</code> will cycle through all three values.</p>
 <p><code>[1,2]t3</code> Timed sequence, each value lasts for 3 beats</p>
 <p><code>[1,2]t[12,4]</code> Timed sequence with one timing per value. At present the timings must be const numbers, they cannot be expressions.</p>
 <p><code>[1,2]l3</code> Timed linear interpolated sequence, each value takes 3 beats to change into the next</p>
 <p><code>[1,2]l[14,2]</code> Timed linear interpolated sequence, one timing per value. At present the timings must be const numbers, they cannot be expressions.</p>
-<p><code>[1,2]s3</code> Timed smooth interpolated sequence, each value takes 3 beats to change into the next, using an 's' shaped eas in/out curve</p>
+<p><code>[1,2]s3</code> Timed smooth interpolated sequence, each value takes 3 beats to change into the next, using an 's' shaped ease in/out curve</p>
 <p><code>[1,2]s[14,2]</code> Timed smooth interpolated sequence, one timing per value. At present the timings must be const numbers, they cannot be expressions.</p>
 <p><code>[1,2]e</code> Timed smooth interpolated sequence, each value is evenly spaced from beginning to end of the current event</p>
 <p><code>[1,2]e1</code> Timed smooth interpolated sequence starting at the beginning of the event, each value takes 1 beat to change to the next</p>
@@ -342,10 +342,10 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>'abc'</code> String value</p>
 <p><code>foo</code> Lookup a global var named <code>foo</code>.</p>
 <p><code>foo{x:2}</code> Lookup a global var named <code>foo</code>, and call it as a function passing in named parameters.</p>
-<p><code>p1.amp</code> Lookup the value of param <code>amp</code> from player <code>p1</code>. Uses the param from the most recently played event on that player. Can additionally use a <code>pulse</code> param on the player, which pulses from 0 to 1 as events play on that player.</p>
+<p><code>p1.amp</code> Lookup the value of param <code>amp</code> from player <code>p1</code>. Returns a tuple of values from all currently playing events; use tuple indexing to select a single value.</p>
 <p><code>p1.amp[0]</code> Lookup the value of param <code>amp</code> from player <code>p1</code>, and if it contains a tuple, extract the first element only from it.</p>
-<p><code>p1.pulse[max]</code> Lookup the value of the <code>pulse</code> from player <code>p1</code>, and if it contains a tuple, extract the largest element only from it (see 'tuple aggregators' below). The pulse param gives a smoothed approximate envelope shaped value between 0 and 1 for each event.</p>
-<p><code>this.value</code> Get param <code>value</code> from the current event.</p>
+<p><code>p1.pulse[max]</code> Lookup the value of the <code>pulse</code> from player <code>p1</code>, and if it contains a tuple, extract the largest element only from it (see 'tuple indexing' below). The pulse param gives a smoothed approximate envelope shaped value between 0 and 1 for each event.</p>
+<p><code>this.value</code> Get param <code>value</code> from the current event, which contains the value specified by the pattern.</p>
 <h5>Modifiers:</h5>
 <p><code>{per:8}</code> Repeat a sequence <code>[1,2,3]t1{per:8}</code> will give a sequence that repeats every 8 beats.</p>
 <p><code>{per:8,0:7,2:3}</code> Force the value to evaluate to 7 at the start of each repeat, and 3 on the second beat of every repeat. Note this only works if <code>per</code> is used to make a repeating sequence.</p>
@@ -365,6 +365,8 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>(3,1,2)[count]</code> Returns the number of elements in a tuple (3 in the example)</p>
 <p><code>(3,1,2)[sum]</code> Returns the sum of all elements in a tuple (6 in the example)</p>
 <p><code>(3,1,2)[avg]</code> Returns the mean average of all elements in a tuple (2 in the example)</p>
+<h5>Object lookup:</h5>
+<p><code>{foo:2}['foo']</code> Returns a field in an object (returns 2 in this example)</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-audio-synths')">▶ Audio Synths</h4>
 <div id="accordion-audio-synths" class="closed">
@@ -699,6 +701,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+Doesn't default to any text:  v text 0
 Should the coord system for text positionin not be -1:1 like for normal loc?
 slitscan param for 2001 style slitscan, subparams for shape, rotation
 Digital JPEG corruption filter param
@@ -737,15 +740,13 @@ shadertoy synth multiple channels
 // (), follow, complex durs, delay, overrides
 // [], []t, []l/s, []e, []n, []r
 // operators + - * / ^ %
-// var, player.var, var{params}
-// (...)[...], (...)[max], max{(...)}
+// var, player.var, this.param, var{params}
+// (...)[...], (...)[max], max{(...)}, {foo:...}['foo']
 // modifiers {seed,per,0:0}, @e, @f
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-Tuple indexing should allow object lookup?
- eg  {foo:2}['foo'] ==2
- also  {1,2}[1] ==2
+!Cannot comment out lines in the middle of a ` \` multiline command
 Can modify params; eg 'set bass amp += 1/2'
  Overrides should only modify when explicitly asked; so set b add=1 replaces the add param, it does not add an additional 1 to it
  Can use for follow players, set, and indeed within a player; eg: p ping 0, amp=2/3, ..., amp*=2

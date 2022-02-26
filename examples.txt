@@ -1363,3 +1363,51 @@ v glow 0, loc=fireworks, bar=(1,(2,foo))
 v glow 0, dur=1/8, sus=[1:12]r, loc={x:2*this._time%1-1,y:[1.3:-1.3]e,w:0.6,h:0.6}, fade=0, rate=0
 
 
+words=[ \
+{w:'Red',c:red}, \
+{w:'Green',c:green}, \
+{w:'Blue',c:blue}, \
+{w:'Random',c:{h:[]r}}, \
+{w:'Flashing',c:[gray,white]t1/4@f}, \
+]
+v text 0, text={words['w'],style:'bold',y:0.4}, fore=words['c']
+
+
+bpm=121
+scale=minor
+main.amp=5
+set * swing=56
+v kal 0, dur=1/8, sus=[13:17]r, fore={r:[0:0.1]r,g:[0.6:1]r,b:[0:0.3]r,a:1/2}, loc={x:[-1:1]r+[0:0.1*[-1:1]r]e,y:[1.3:-1.3]e,w:0.6,h:0.6}, time=[0:100]r+time*[1/8:1/4]r, zoom=[4:8]r+[-1:1]e*[]r, vignette=1/2, add=[0:1]r, scroll=[1/2:3/2]r
+l1 tri 0, dur=1/2, add=[0,2,4,5]r{per:4,0:0,seed:0}, oct=3, amp=[0,1/2]r{per:4,seed:0}
+l2 tri 0, dur=1/2, add=[0,2,4,5]r{per:5,0:4,seed:0}, oct=4, amp=[0,1/2]r{per:5,seed:10}
+l3 tri 0, dur=1/2, add=[0,2,4,5,[7,[9:15]l16]r]r{per:7,0:0,seed:0}, oct=4, amp=[0,0,1/2]r{per:7,seed:100}
+set l* room=1.3, att=0.03, decay=1/8, suslevel=1/4, sus=3/8, pan=[-1/2:1/2]r, lpf=900, echo=1/2
+p play mx.xm.mxxm, sample=2, high=-24, mid=-12, delay=(0,3/4), amp=3/4
+r play ..o..o.., pan=-1/3, amp=1/3, room=0.4, rate=3/4, mid=8, high=-11
+hh play -, amp=3/2, pan=1/3, mid=4, high=-4
+vt text 0, dur=8, text={blah,y:0.41,size:108,font:'helvetica,arial'}, zoom=1.6, ripple=0.2, fore={a:[0,1/3]l[2,6]@f^1.7}
+blah=[ \
+'All of us', \
+'Pinioned', \
+'Empty and open', \
+'Nothing special', \
+'H̸̡̪̯ͨ͊̽̅̾̎Ȩ̬̩̾͛ͪ̈́̀́͘ ̶̧̨̱̹̭̯ͧ̾ͬC̷̙̲̝͖ͭ̏ͥͮ͟Oͮ͏̮̪̝͍M̲̖͊̒ͪͩͬ̚̚͜Ȇ̴̟̟͙̞ͩ͌͝S̨̥̫͎̭ͯ̿̔̀ͅ', \
+'Affordances', \
+'Sonorous', \
+'Nightshock', \
+'Darkness', \
+]r8
+
+
+bpm=130
+scale=minor
+v kal 1, recol=neon, zoom=8, scroll=2, mirror={30,fan:1/2,rotate:time/128}, fore=gray, rate=1/3, ripple={1/3,scale:2}
+set * swing=58
+// p play +-;:+, dur=8*[]r, fold=[]r, clip=[]r, amp=1/2, delay=(1,[5/4,6/4,7/4]r), rate=[2/3:3/2]r, pan=[-1/2:1/2]r
+// k play X., amp=1
+// hh play -[--]--[--], fold, amp=1
+// b dbass 0[.4]28, dur=1/4, sus=1/6, amp=1, oct=(2,3), flanger=1/16, add=([0,-2,-3,1]t4,[1,2,4]t8), fold, room=1/2, pan=[-2/3:2/3]l8
+a ambi (0246), oct=(3,4), room=2, amp=1, add=[0,2,4]t8, chop=4, ring=24, addc=[0,-36]l32@f
+// arp supersaw 0246, dur=1/2, sus=1/3, echo=5/4, room=1/4, oct=(5,4), lpf=[500:2000]l8, amp=2, add=4+[0,2,4]t8, bits=2
+
+
