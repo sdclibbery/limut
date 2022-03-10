@@ -746,6 +746,7 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
+!beat.readouts do not return to default when the code is removed!
 !Cannot comment out lines in the middle of a ` \` multiline command
 Can modify params; eg 'set bass amp += 1/2'
  Overrides should only modify when explicitly asked; so set b add=1 replaces the add param, it does not add an additional 1 to it
@@ -764,6 +765,9 @@ Can modify params; eg 'set bass amp += 1/2'
   Use for set
   Use for follow
   Use for multiple params within one player def??
+stutter parameter
+ stutter=4  - repeat each note 4 times within the duration the original note would have had
+ stutter={4,dur:1/8}  - repeat each note four times, with each repeat lasting 1/8 of a beat
 Analyser on each player for pulse?
 Follow player refactor
  Better follow tests - Proper tests for follow and overrides and combinations, including tuples
@@ -817,7 +821,6 @@ Per can default to repeat of thing being modified?
  Eg [0:1]l4{0:0} per defaults to 8?
 []r{per:4} (ie without seed) ?? What should this do? Should it repeat? Or not?? Probably not??
 Should Eg [0:1]e{per:1/4,1/2:-1} work??
-stutter parameter??
 Sliders
  Exponential option
  Remember last value even when not shown

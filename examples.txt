@@ -1411,3 +1411,51 @@ a ambi (0246), oct=(3,4), room=2, amp=1, add=[0,2,4]t8, chop=4, ring=24, addc=[0
 // arp supersaw 0246, dur=1/2, sus=1/3, echo=5/4, room=1/4, oct=(5,4), lpf=[500:2000]l8, amp=2, add=4+[0,2,4]t8, bits=2
 
 
+bpm=50
+scale=minor
+set * swing=60
+main.amp=1.2
+v kal 1, recol=sunset, zoom=4, ripple={1,scale:1/2}, scroll=2
+a ambi (02468), oct=(2,4), amp=1/6, room=2, chorus, add=[0,1]r
+pk play vsxs, amp=1/2
+ph play pkls, amp=1/2, room, dur=1/2, delay=(0,[1/4,3/4]r)
+set a add=0, flanger=1/8, amp=1/16
+
+
+bpm=127
+set * swing=60
+main.amp=1.6
+vk kal 1, recol=sunset, contrast, rotate=time/256
+vl glow follow b, mirror={[0:4]r1,rotate:[]r}, fade, sus=4, fore={labh:1/16,l:b.playing[max]/2}, amp=3
+vw lines 0, additive, fade, sus=1, add=r.pulse[max], rate=1/8, fore=blue*0.7*r.playing[0], amp=0.8+r.pulse[max]/4
+vwl lines follow l, additive, fade, fore=rainbow/16, rate=1/4, sus=1/2
+k play Xs, amp=3/2
+hh play [--]-[.-][.-], fold=[1/2:1.2]l16, amp=2
+cl play ..*., fold, room=0.1, pan=1/3, amp=3/2
+l dsaw 0..0.0.0.0.0.0.., dur=1/4, delay=(0,1/2), lpf={this.freq*[2:10]l8*[2:1]e,q:[5:15]l32}, att=0.03, add=(0,-3), oct=[3,4]t[26,6], pan=[-1/4,1/2]t1/2
+ch=[0,2,4,3]t4
+sb saw 07.0.70., dur=1/4, oct=[2,3]t[26,6], amp=1.5, lpf=[5000:200]e, add=ch
+r pulse -40..0..7, dur=1/4, echo=3/4, amp=2.5, oct=(4,5), pan=[-1/2:0]r, lpf=[600:2500]n8, playing, add=(0,2,4)+ch
+b dbass -3-21[-10], dur=4, amp=5, lpf=500*[2:1/2]e, playing, chop=4
+pad dsaw (0246)(0357)(3458)[(1346)(0134)], dur=4, room, amp=1/6, oct=(3,[5,6]t16), chorus, att=1/2, decay=3/4, lpf=this.freq*[3,15,3]e, pan=[-1/2:1/2]r, clip
+
+
+bpm=122
+scale=minor
+set * swing=62
+main.amp=2
+ch=[0,0,3,1]t32
+v swirl 0, recol=sunset, zoom=4, time=time/8+[0:1/4]s2, monochrome=0.4
+babygab='https://upload.wikimedia.org/wikipedia/commons/a/ab/Baby_5_months_old_gabbling_laughing_practising_voice.ogg'
+babylaugh='https://upload.wikimedia.org/wikipedia/commons/6/6b/Baby_Laugh.ogg'
+pk play X.
+ph play --=<------+<.+>>, dur=1/4, sus=this.dur, amp=1/2, room=0.5, sample=2, pan=[-1/3:1/6]l8, mid=-8, fold=1/3
+ps play ..o., room=0.5, pan=1/3
+b dbass 00[.2]0<42>_<3.>[_<-1.>], dur=1/2, lpf=[500:100]e, room=0.1, amp=2.2, oct=(1,2), att=0.03, pan=(-1/4,1/4)
+a ambi (02468).(-5-1)., dur=8, envelope=pad, oct=(3,4,5), room=2, amp=1/4, add=ch, chorus, pan=[-2/3:2/3]r
+l ping 01, dur=1/4, add=ch+[0:8]n2, amp=[0,2/3]t[7,1], rel=1, echo=1, scale=minorPentatonic, pan=[-2/3:2/3]n2
+sg sample .0, dur=16, sample=babygab, room=0.5, amp=1.2, start=[0:180]r
+sl sample 0., dur=16, sample=babylaugh, room=0.5, amp=[3/2,0,0]r
+rs glass 00v, dur=1/2, amp=[1/4,1,3]l[28,4,0], oct=5, pan=[-1/2,1/2]r, add=[0:8]l[4,0]+[0:7]l[32,0]
+
+
