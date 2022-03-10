@@ -7,6 +7,7 @@ var beatDuration = 60 / 110
 var lastBeatAt = 0
 var count = 0
 var nextBeatAt = 0
+let beatReadouts
 
 metronome.beatTime = (now) => {
   return count + (now - lastBeatAt) / (nextBeatAt - lastBeatAt)
@@ -48,6 +49,9 @@ metronome.update = function (now) {
     return beat
   }
 }
+
+metronome.setBeatReadouts = (v) => beatReadouts = v
+metronome.getBeatReadouts = () => beatReadouts
 
 return metronome
 })

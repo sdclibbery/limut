@@ -3,11 +3,11 @@ define(function(require) {
   require('polyfills')
   require('predefined-vars')
   require('sliders')
+  let mainVars = require('main-vars')
   let system = require('play/system')
   let drawSystem = require('draw/system')
   let metronome = require('metronome')
   let players = require('player/players')
-  let mainVars = require('main-vars')
   let vars = require('vars')
   let consoleOut = require('console')
   require('editor-textarea')
@@ -85,7 +85,6 @@ define(function(require) {
   let visualReadout = document.getElementById('visual-readout')
   let beatReadout = document.getElementById('beat-readout')
   let beatReadouts = [document.getElementById('beat1-readout'),document.getElementById('beat2-readout'),document.getElementById('beat3-readout')]
-  vars['beat.readouts'] = [12,16,32]
   let lastBeatTime = 0 
   let beatLatency = 0
   let lastVisualsActive
@@ -99,15 +98,15 @@ define(function(require) {
     vars.pulse = pulse
     vars.time = beatTime
     if (beat) {
+      mainVars.update(Math.floor(beatTime), beatTime)
       beatReadout.innerText = beat.count
-      let bc = vars['beat.readouts']
+      let bc = metronome.getBeatReadouts()
       if (typeof bc === 'number') { bc = [bc] }
       beatReadouts.forEach((r,i) => {
         let c = bc[i]
         r.style.display = !c ? 'none' : 'inline'
         r.innerText = (beat.count%c + 1) + '/'+c
       })
-      mainVars.update(Math.floor(beatTime), beatTime)
       let sortedPlayers = Object.values(players.instances).sort((a,b) => a.dependsOn.length - b.dependsOn.length) // should be a proper dependency graph sort
       sortedPlayers.forEach(player => {
         if (player !== undefined) {
