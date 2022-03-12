@@ -8,15 +8,16 @@ define((require) => {
   let sliders = require('sliders')
 
   let parseCode = (code) => {
-    let lines = code.split('\n')
-      .map(l => l.trim())
+    let lines = code.split('\n').map(l => l.trim())
     for (let i = 0; i<lines.length; i++) {
       try {
         let line = lines[i]
         if (line === '') { continue }
         if (line.startsWith('//')) { continue }
         while ((i+1)<lines.length && line.endsWith(' \\')) {
-          line = line.slice(0, -2) + ' ' + lines[i+1]
+          if (!lines[i+1].startsWith('//')) {
+            line = line.slice(0, -2) + ' ' + lines[i+1]
+          }
           i++
         }
         parseLine(line, i)
@@ -103,7 +104,7 @@ define((require) => {
     delete vars.bar
 
     assertVars('foo=( \\\n1, \\\n2, \\\n3)', {foo:[1,2,3]})
-    assertVars('foo=( \\\n//1, \\\n2, \\\n3)', {foo:[2,3]})
+    assertVars('foo=( \\\n1, \\\n//2, \\\n3)', {foo:[1,3]})
 
 //    assertOverrides('set p foo=2,bar=\'FOO \\\n\'', 'p', {foo:2,bar:'FOO'})
 // !!! tricky; should not add a space into a string split over multiple lines...
