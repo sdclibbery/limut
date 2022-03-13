@@ -1,16 +1,7 @@
 'use strict';
 define(function(require) {
   let evalOperator = require('player/eval-operator')
-
-  let operators = {
-    '+': (l,r)=>l+r,
-    '-': (l,r)=>l-r,
-    '*': (l,r)=>l*r,
-    '/': (l,r)=>l/r,
-    '%': (l,r)=>l%r,
-    '^': (l,r)=>(Math.pow(l,r) || 0),
-  }
-  let precedence = {'^':1,'%':2,'/':2,'*':2,'-':3,'+':3,}
+  let {operators,precedence} = require('player/operators')
 
   let precedenceTree = (ops) => {
     // Build an operator tree back up from a flattened list, taking precedence into account
