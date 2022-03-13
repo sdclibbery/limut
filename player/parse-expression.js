@@ -5,6 +5,7 @@ define(function(require) {
   let parseArray = require('player/parse-array')
   let eatWhitespace = require('player/eat-whitespace')
   let operatorTree = require('player/parse-operator')
+  let {operators} = require('player/operators')
   let {timeVar, linearTimeVar, smoothTimeVar, eventTimeVar, eventIdxVar} = require('player/eval-timevars')
   let {parseRandom, simpleNoise} = require('player/eval-randoms')
   let {parseVar,varLookup} = require('player/parse-var')
@@ -195,7 +196,7 @@ define(function(require) {
       }
       // operator
       if (result !== undefined) {
-        if (['+','-','*','/','%','^'].includes(char)) {
+        if (operators.hasOwnProperty(char)) {
           state.idx += 1
           operatorList.push(result)
           result = undefined
