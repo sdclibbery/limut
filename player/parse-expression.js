@@ -703,7 +703,7 @@ define(function(require) {
   let v1 = p(ev(1),1,evalParamFrame)
   for (let i = 0; i<20; i+=1) { assert(v1, p(ev(1),1,evalParamFrame)) }
 
-  assert('ab', parseExpression("'a'+'b'")(ev(0,0),0,evalParamFrame))
+  assert('ab', parseExpression("'a'+'b'"))
 
   assert('a\nb', parseExpression("'a\\nb'"))
 

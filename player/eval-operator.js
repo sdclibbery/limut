@@ -56,8 +56,8 @@ define(function(require) {
   }
 
   let operator = (op, l, r) => {
-    if (l === undefined || r === undefined) { return }
-    if (typeof l == 'number' && typeof (r) == 'number') {
+    if (l === undefined || r === undefined) { return undefined }
+    if (isPrimitive(l) && isPrimitive(r)) {
       return op(l, r)
     }
     let evalOp = (event,b,evalRecurse) => {
@@ -99,7 +99,8 @@ define(function(require) {
   assert({r:4,g:5}, operator(add, {r:1,g:2}, 3)(ev(0),0,evalParam))
   assert({r:3}, operator(add, {r:1}, {r:2})(ev(0),0,evalParam))
   assert({r:1,g:6,b:4}, operator(mul, {r:1,g:2}, {g:3,b:4})(ev(0),0,evalParam))
-  assert('ab', operator(add, 'a', 'b')(ev(0),0,evalParam))
+  assert('ab', operator(add, 'a', 'b'))
+  assert('a3', operator(add, 'a', 3))
   assert(undefined, operator(add, fn(1), 2).interval)
   assert('frame', operator(add, perFrame, 2).interval)
   assert('frame', operator(add, 1, perFrame).interval)
