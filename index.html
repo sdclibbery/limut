@@ -708,14 +708,15 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-!Doesn't default to any text:  v text 0
+Digital JPEG corruption filter param
+ Takes square blocks and maps then to random other parts of the image, or darkens them, or colours them randomly green or magenta
+ Main param value determines the amout of corruption
+ Subparam for scale
+Can set texture repeat for text and image etc synths? Subparam or not?
+Starfield shader; https://www.shadertoy.com/view/WdyXDm
 Should the coord system for text positionin not be -1:1 like for normal loc?
 slitscan param for 2001 style slitscan, subparams for shape, rotation
-Digital JPEG corruption filter param
- Takes square blocks and maps then to random other parts of the image, or colours them randomly
- Param value determines the amout of corruption
 Gradient values should give different types of gradients eg radial etc
-Can set texture repeat for text and image etc synths? Subparam or not?
 video synth (use video element to load video file; don't try and target eg youtube)
  can play audio through external audio synth??
 Antialias param?? Subpixel supersampling??
@@ -724,7 +725,6 @@ Spiral and noise and shimmer predistortions
 Possible nice shader https://twitter.com/zozuar/status/1438117355746377728?s=03
 Consider pushing data of each event into a texture so a shader could display all events, eg as 2D patterns or voxels or 3D shapes
 Disco glowing geometric shapes shader
-Starfield shader
 Check image.shadertoy, webcam etc etc for per frame alloc
 make vignette work with window
 Drop canvas to half res if gl frame rate is low? - Reduce canvas width and height to do this - need smoothing/hysteresis
@@ -766,8 +766,11 @@ Can modify params; eg 'set bass amp += 1/2'
     Then the override replaces that with an operator add that adds 4 to the original random function
     When does the replacement happen?
  Suggestion
+  Rewrite override-params to use operators
   Represent overrides as functions that take the old expression value, and return a new (combined or replaced) expression value
-  Support parsing += etc syntax, and drop auto += for 'add' etc
+  Support parsing += etc syntax, and drop auto += for 'add' and 'delay'
+   Update all examples to use += instead of = for add and delay
+   Still need to ignore _time and value though? Is this just for follow?
   Use for set
   Use for follow
   Use for multiple params within one player def??
