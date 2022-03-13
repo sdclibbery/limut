@@ -4,10 +4,7 @@ define(function(require) {
   let {operators} = require('player/operators')
 
   let overrideOp = (original,override) => override
-  let ignoreOp = (original,override) => original
   let paramOp = {
-    _time: ignoreOp,
-    value: ignoreOp,
     add: operators['+'],
     delay: operators['+'],
   }
@@ -15,6 +12,7 @@ define(function(require) {
   let overrideParams = (params, overrides) => {
     let result = Object.assign({}, params)
     for (let k in overrides) {
+      if (k === '_time' || k === 'value') { continue } // Do not override these values
       let op = paramOp[k]
       if (!op) { op = overrideOp }
       result[k] = operator(op, result[k], overrides[k])
