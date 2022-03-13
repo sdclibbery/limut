@@ -766,9 +766,9 @@ Can modify params; eg 'set bass amp += 1/2'
     Then the override replaces that with an operator add that adds 4 to the original random function
     When does the replacement happen?
  Suggestion
-  Rewrite override-params to use operators
   Represent overrides as functions that take the old expression value, and return a new (combined or replaced) expression value
-  Support parsing += etc syntax, and drop auto += for 'add' and 'delay'
+  When applying overrides, if the override is a function marked '_override', then pass the old value in
+  Support parsing += etc syntax, and stop doing auto += for 'add' and 'delay'
    Update all examples to use += instead of = for add and delay
    Still need to ignore _time and value though? Is this just for follow?
    New version as breaking change?
@@ -777,6 +777,7 @@ Can modify params; eg 'set bass amp += 1/2'
   Use for multiple params within one player def??
   TEST EVERYTHING
   Docs
+!Docs: att/dec/rel/suslevel are NOT common params, they are audio only params
 stutter parameter
  stutter=4  - repeat each note 4 times within the duration the original note would have had
  stutter={4,dur:1/8}  - repeat each note four times, with each repeat lasting 1/8 of a beat

@@ -144,6 +144,12 @@ define(function(require) {
   assert(3, evalParamFrame(exp, ev(4,4), 4))
   assert(4, evalParamFrame(exp, ev(4,4), 5))
 
+  // assert({add:2}, parseParams('add+=2'))
+  // assert({add:2}, parseParams(' add += 2'))
+  assert({'add+':2}, parseParams('add+ =2'))
+  assert({add:1}, parseParams('add//+=2'))
+  assert({'add+':1}, parseParams('add+//=2'))
+
   console.log("Params tests complete")
   }
   
