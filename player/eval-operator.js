@@ -15,7 +15,7 @@ define(function(require) {
     }
     return obj.__evaluated
   }
-  let isPrimitive = v => (typeof v == 'number' || typeof v == 'string')
+  let isPrimitive = v => (typeof v == 'number' || typeof v == 'string' || v === undefined)
 
   let applyOperator = (op, el, er) => {
     if (isPrimitive(el)) {
@@ -56,7 +56,6 @@ define(function(require) {
   }
 
   let operator = (op, l, r) => {
-    if (l === undefined || r === undefined) { return undefined }
     if (isPrimitive(l) && isPrimitive(r)) {
       return op(l, r)
     }
@@ -66,7 +65,7 @@ define(function(require) {
       let result = applyOperator(op, el, er)
       return result
     }
-    evalOp.interval = combineIntervals(l.interval, r.interval)
+    evalOp.interval = combineIntervals(l&&l.interval, r&&r.interval)
     return evalOp
   }
 
@@ -82,9 +81,9 @@ define(function(require) {
 
   let ev = (i,c) => {return{idx:i,count:c}}
 
-  let add = (a,b)=>a+b
-  let mul = (a,b)=>a*b
-  let div = (a,b)=>a/b
+  let {operators} = require('player/operators')
+  let add = operators['+']
+  let mul = operators['*']
   let fn = (x)=>()=>x
 
   let perFrame = ({},b)=>b
@@ -93,6 +92,8 @@ define(function(require) {
   perEvent.interval = 'event'
 
   assert(3, operator(add, 1, 2))
+  assert(1, operator(mul, 1, undefined))
+  assert(2, operator(mul, undefined, 2))
   assert(8, operator(mul, 2, 4))
   assert({r:2}, operator(mul, {r:1}, 2)(ev(0),0,evalParam))
   assert({r:2}, operator(mul, 2, {r:1})(ev(0),0,evalParam))

@@ -1,24 +1,15 @@
 'use strict';
 define(function(require) {
   let operator = require('player/eval-operator')
+  let {operators} = require('player/operators')
 
-  let applyOp = (op, orig, over) => {
-    if (orig === undefined) {
-      return over
-    } else if (over === undefined) {
-      return orig
-    } else {
-      return operator(op, orig, over)
-    }
-  }
   let overrideOp = (original,override) => override
   let ignoreOp = (original,override) => original
-  let addOp = (original,override) => applyOp((l,r)=>l+r, original, override)
   let paramOp = {
     _time: ignoreOp,
     value: ignoreOp,
-    add: addOp,
-    delay: addOp,
+    add: operators['+'],
+    delay: operators['+'],
   }
 
   let overrideParams = (params, overrides) => {
@@ -26,7 +17,7 @@ define(function(require) {
     for (let k in overrides) {
       let op = paramOp[k]
       if (!op) { op = overrideOp }
-      result[k] = op(result[k], overrides[k])
+      result[k] = operator(op, result[k], overrides[k])
     }
     return result
   }
@@ -45,7 +36,7 @@ define(function(require) {
   assert(ev(), overrideParams(ev(), {}))
   assert(ev({delay:18}), overrideParams(ev({delay:10}), {value:'9', delay:8, _time:7}))
   assert(ev({add:2}), overrideParams(ev({add:2}), {}))
-  assert(ev({add:3}), overrideParams(ev(), {add:3}))
+  assert(ev({add:3}), overrideParams(ev({}), {add:3}))
   assert(ev({add:5}), overrideParams(ev({add:2}), {add:3}))
   
   console.log('Override params tests complete')
