@@ -159,10 +159,14 @@ define(function(require) {
   assert(4, evalParamFrame(exp, ev(4,4), 5))
 
   p = parseParams('add+=2').add
+  assert('function', typeof p)
   assert(true, p._override)
+  assert(3, p(1))
   
   p = parseParams('add += 2').add
+  assert('function', typeof p)
   assert(true, p._override)
+  assert(3, p(1))
 
   assert({'add+':2}, parseParams('add+ =2'))
   assert({add:1}, parseParams('add//+=2'))
