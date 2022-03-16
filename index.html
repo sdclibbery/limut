@@ -744,7 +744,7 @@ shadertoy synth multiple channels
 ==== things to test/consider ====
 // pattern features (), [], <>, #b, ^v, !=
 // p ping 0, add=[0,1,2,3]
-// (), follow, complex durs, delay, overrides
+// (), follow, complex durs, delay, overrides, +=
 // [], []t, []l/s, []e, []n, []r
 // operators + - * / ^ %
 // var, player.var, this.param, var{params}
@@ -754,24 +754,20 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Can modify params; eg 'set bass amp += 1/2'
- Overrides should only modify when explicitly asked; so set b add=1 replaces the add param, it does not add an additional 1 to it
- Can use for follow players, set, and indeed within a player; eg: p ping 0, amp=2/3, ..., amp*=2
- Need to handle sub params
-  Eg   set p1 vib+=1   !Doesn't affect vib depth;   set p1 vib.depth+=0.5   !Doesn't affect vib value or vib delay
- !! How to store these?
-  Is it possible to store them as operator functions? And build up?
-   p ping 0, add=[0,1]r
-   set p add+=4
-    Want the player to store the random function
-    Then the override replaces that with an operator add that adds 4 to the original random function
-    When does the replacement happen?
  Suggestion
-  Represent overrides as functions that take the old expression value, and return a new (combined or replaced) expression value
-  When applying overrides, if the override is a function marked '_override', then pass the old value in
   Support parsing += etc syntax, and stop doing auto += for 'add' and 'delay'
+    Need a total change to the representation
+     Need to build up an expression, whilst keeping a placeholder at the top into which the 'original' value can be put when evalling
+     Should have a valid interface that encapsulates the override representation now
+    Sort out tests in parse-line
    Update all examples to use += instead of = for add and delay
    Still need to ignore _time and value though? Is this just for follow?
    New version as breaking change?
+  Make sure it all works with timevars/vars lookups etc etc
+  Parse-line test for multiple set statements that all affect the same param
+  Need to handle sub params
+   Eg   set p1 vib+=1   !Doesn't affect vib depth;   set p1 vib.depth+=0.5   !Doesn't affect vib value or vib delay
+  Do / - ^ % etc have the correct ordering?
   Use for set
   Use for follow
   Use for multiple params within one player def??
@@ -779,6 +775,7 @@ Can modify params; eg 'set bass amp += 1/2'
   Docs
 !Docs: att/dec/rel/suslevel are NOT common params, they are audio only params
 stutter parameter
+ ??? Some way to create tuples with arbitrary cardinality from expressions? Then you could do stutter with only delay???
  stutter=4  - repeat each note 4 times within the duration the original note would have had
  stutter={4,dur:1/8}  - repeat each note four times, with each repeat lasting 1/8 of a beat
 Analyser on each player for pulse?

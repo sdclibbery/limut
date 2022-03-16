@@ -4,7 +4,7 @@ define((require) => {
   var parsePlayer = require('player/parse-player')
   var parseParams = require('player/params')
   let parseExpression = require('player/parse-expression')
-  let overrideParams = require('player/override-params').overrideParams
+  let {combineOverrides} = require('player/override-params')
   let vars = require('vars')
   let mainVars = require('main-vars')
 
@@ -77,7 +77,7 @@ define((require) => {
       let params = parseParams(state.str.slice(state.idx).trim(), undefined, playerIds.join(','))
       for (k in params) { if (k.includes('.')) { throw 'Invalid param name '+k } }
       playerIds.forEach(playerId => {
-        players.overrides[playerId] = overrideParams(players.overrides[playerId] || {}, params)
+        players.overrides[playerId] = combineOverrides(players.overrides[playerId] || {}, params)
       })
       return
     }
@@ -183,11 +183,6 @@ define((require) => {
   assert(300, players.overrides.p.lpf)
   delete players.overrides.p
 
-  parseLine('set p add=2')
-  parseLine('set p add=3')
-  assert(5, players.overrides.p.add)
-  delete players.overrides.p
-
   parseLine('set p* add=2')
   assert(2, players.overrides['p*'].add)
   delete players.overrides['p*']
@@ -207,6 +202,15 @@ define((require) => {
   assert(2, players.overrides['q*'].amp)
   delete players.overrides.p1
   delete players.overrides['q*']
+
+  // parseLine('set p add+=2')
+  // assert(5, players.overrides.p.add(3))
+  // delete players.overrides.p
+
+  // parseLine('set p add+=2')
+  // parseLine('set p add+=3')
+  // assert(9, players.overrides.p.add(4))
+  // delete players.overrides.p
 
   console.log('Parse line tests complete')
   }

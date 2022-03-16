@@ -1,6 +1,6 @@
 'use strict'
 define(function(require) {
-  let overrideParams = require('player/override-params').overrideParams
+  let {combineOverrides} = require('player/override-params')
 
   let players = {
     instances: {},
@@ -30,11 +30,11 @@ define(function(require) {
         let re = new RegExp('^'+k.replaceAll('*','.*')+'$')
         for (let ks in players.instances) {
           if (ks.match(re)) {
-            newOverrides[ks] = overrideParams(newOverrides[ks] || {}, players.overrides[k])
+            newOverrides[ks] = combineOverrides(newOverrides[ks] || {}, players.overrides[k])
           }
         }
       } else {
-        newOverrides[k] = overrideParams(newOverrides[k] || {}, players.overrides[k])
+        newOverrides[k] = combineOverrides(newOverrides[k] || {}, players.overrides[k])
       }
     }
     players.overrides = newOverrides

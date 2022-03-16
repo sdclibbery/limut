@@ -1,21 +1,35 @@
 'use strict';
 define(function(require) {
-  let operator = require('player/eval-operator')
-  let {operators} = require('player/operators')
 
-  let overrideOp = (original,override) => override
-  let paramOp = {
-    add: operators['+'],
-    delay: operators['+'],
+  let isOverrideFunc = (v) => typeof v == 'function' && v._override
+
+  let newOverride = (value, operator) => {
+    return value
   }
 
-  let overrideParams = (params, overrides) => {
+  let combineOverrides = (oldOverrides, newOverrides) => {
+    let result = Object.assign({}, oldOverrides)
+    for (let k in newOverrides) {
+      let ov = newOverrides[k]
+      if (isOverrideFunc(ov)) {
+        result[k] = ov(result[k]) // NO! Combine into new function somehow. Need tests for this!!!
+      } else {
+        result[k] = ov
+      }
+    }
+    return result
+  }
+
+  let applyOverrides = (params, overrides) => {
     let result = Object.assign({}, params)
     for (let k in overrides) {
       if (k === '_time' || k === 'value') { continue } // Do not override these values
-      let op = paramOp[k]
-      if (!op) { op = overrideOp }
-      result[k] = operator(op, result[k], overrides[k])
+      let ov = overrides[k]
+      if (isOverrideFunc(ov)) {
+        result[k] = ov(result[k])
+      } else {
+        result[k] = ov
+      }
     }
     return result
   }
@@ -31,16 +45,28 @@ define(function(require) {
   let ev = ps => Object.assign({idx:0, count:0, value:'1'}, ps)
   let c
 
-  assert(ev(), overrideParams(ev(), {}))
-  assert(ev({delay:18}), overrideParams(ev({delay:10}), {value:'9', delay:8, _time:7}))
-  assert(ev({add:2}), overrideParams(ev({add:2}), {}))
-  assert(ev({add:3}), overrideParams(ev({}), {add:3}))
-  assert(ev({add:5}), overrideParams(ev({add:2}), {add:3}))
-  
+  assert(ev(), applyOverrides(ev(), {}))
+  assert(ev({delay:8}), applyOverrides(ev({delay:10}), {value:'9', delay:8, _time:7}))
+  assert(ev({add:2}), applyOverrides(ev({add:2}), {}))
+  assert(ev({add:3}), applyOverrides(ev({}), {add:3}))
+
+  let ovChooseOverride = (original) => 7
+  ovChooseOverride._override = true
+  let ovChooseOriginal = (original) => original
+  ovChooseOriginal._override = true
+  let ovAddSeven = (original) => original+7
+  ovAddSeven._override = true
+
+  assert(ev({add:7}), applyOverrides(ev({add:3}), {add:ovChooseOverride}))
+  assert(ev({add:3}), applyOverrides(ev({add:3}), {add:ovChooseOriginal}))
+  assert(ev({add:10}), applyOverrides(ev({add:3}), {add:ovAddSeven}))
+
   console.log('Override params tests complete')
   }
 
   return {
-    overrideParams: overrideParams,
+    newOverride: newOverride,
+    combineOverrides: combineOverrides,
+    applyOverrides: applyOverrides,
   }
 });

@@ -1,6 +1,8 @@
 'use strict';
 define(function(require) {
   let parseExpression = require('player/parse-expression')
+  let {operators} = require('player/operators')
+  let {newOverride} = require('player/override-params')
 
   let parseName = (state) => {
     let name = ''
@@ -9,18 +11,24 @@ define(function(require) {
     while (char = state.str.charAt(state.idx)) {
       if (char == '=') {
         state.idx += 1
-        return name
+        let prevChar = state.str.charAt(state.idx - 2)
+        let prevPrevChar = state.str.charAt(state.idx - 3)
+        let isComment = prevChar == '/' && prevPrevChar == '/'
+        if (!isComment && operators.hasOwnProperty(prevChar)) {
+          return {name:name.slice(0,-1), operator:operators[prevChar]}
+        }
+        return {name:name}
       } else if (char == ',') {
         state.valueless = true
         state.idx += 1
-        return name
+        return {name:name}
       } else {
         name = name+char
         state.idx += 1
       }
     }
     state.valueless = true
-    return name
+    return {name:name}
   }
 
   let brackets = {
@@ -54,7 +62,7 @@ define(function(require) {
   }
 
   let parseParam = (state) => {
-    let name = parseName(state)
+    let {name, operator} = parseName(state)
     let value
     if (state.valueless) {
       value = '1'
@@ -66,10 +74,14 @@ define(function(require) {
       name = name.replace(/\/\/.*/, '')
       value = '1'
       commented = true
+      operator = undefined
     }
     name = name.trim()
     if (name) {
       let v = parseExpression(value, () => commented=true, state.dependsOn, (state.context?state.context+'.':'')+name)
+      if (operator) {
+        v = newOverride(v, operator)
+      }
       state.params[name.toLowerCase().trim()] = v
       if (commented) { return false }
       return true
@@ -100,8 +112,10 @@ define(function(require) {
   }
   let {preEvalParam,evalParamFrame} = require('player/eval-param')
   let ev = (i,c) => {return{idx:i,count:c}}
+  let p
 
   assert({}, parseParams(''))
+  assert({}, parseParams('=1'))
   assert({dur:1}, parseParams('dur=1'))
   assert({dur:1}, parseParams('Dur=1'))
   assert({dur:1, oct:4}, parseParams('dur=1, oct=4'))
@@ -144,8 +158,12 @@ define(function(require) {
   assert(3, evalParamFrame(exp, ev(4,4), 4))
   assert(4, evalParamFrame(exp, ev(4,4), 5))
 
-  // assert({add:2}, parseParams('add+=2'))
-  // assert({add:2}, parseParams(' add += 2'))
+  p = parseParams('add+=2').add
+  assert(true, p._override)
+  
+  p = parseParams('add += 2').add
+  assert(true, p._override)
+
   assert({'add+':2}, parseParams('add+ =2'))
   assert({add:1}, parseParams('add//+=2'))
   assert({'add+':1}, parseParams('add+//=2'))
