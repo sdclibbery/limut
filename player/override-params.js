@@ -1,13 +1,13 @@
 'use strict';
 define(function(require) {
 
+  let isOverride = (v) => Array.isArray(v) && v._override
+
   let newOverride = (value, operator) => {
-    let ov
-    if (operator) {
-      ov = (original) => operator(original, value)
-    } else {
-      ov = (original) => value
+    if (!operator) {
+      operator = (l,r) => r // Replace previous value if no combining operator specified
     }
+    let ov = [{value:value,operator:operator}]
     ov._override = true
     return ov
   }
@@ -15,7 +15,11 @@ define(function(require) {
   let combineOverrides = (oldOverrides, newOverrides) => {
     let result = Object.assign({}, oldOverrides)
     for (let k in newOverrides) {
-      result[k] = newOverrides[k]
+      if (isOverride(result[k]) && isOverride(newOverrides[k])) {
+        result[k].push(...newOverrides[k]) // Combine override arrays
+      } else {
+        result[k] = newOverrides[k] // just replace
+      }
     }
     return result
   }
@@ -24,7 +28,7 @@ define(function(require) {
     let result = Object.assign({}, params)
     for (let k in overrides) {
       if (k === '_time' || k === 'value') { continue } // Do not override these values
-      result[k] = overrides[k](result[k])
+      result[k] = overrides[k].reduce((original, override) => override.operator(original, override.value), result[k])
     }
     return result
   }
@@ -38,7 +42,9 @@ define(function(require) {
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
   let ev = ps => Object.assign({idx:0, count:0, value:'1'}, ps)
+  let overrides
   let opAdd = (l,r) => l+r
+  let opMul = (l,r) => l*r
 
   assert(ev(), applyOverrides(ev(), {}))
   assert(ev({add:2}), applyOverrides(ev({add:2}), {}))
@@ -47,6 +53,22 @@ define(function(require) {
   assert(ev({delay:8}), applyOverrides(ev({delay:10}), {value:newOverride('9'), delay:newOverride(8), _time:newOverride(7)}))
 
   assert(ev({add:5}), applyOverrides(ev({add:2}), {add:newOverride(3, opAdd)}))
+
+  overrides = {add:newOverride(3, opAdd)}
+  overrides = combineOverrides(overrides, {add:newOverride(4, opAdd)})
+  assert(ev({add:9}), applyOverrides(ev({add:2}), overrides))
+
+  overrides = {add:newOverride(3, opAdd)}
+  overrides = combineOverrides(overrides, {add:newOverride(4)})
+  assert(ev({add:4}), applyOverrides(ev({add:2}), overrides))
+
+  overrides = {add:newOverride(3)}
+  overrides = combineOverrides(overrides, {add:newOverride(4, opAdd)})
+  assert(ev({add:7}), applyOverrides(ev({add:2}), overrides))
+
+  overrides = {add:newOverride(3, opAdd)}
+  overrides = combineOverrides(overrides, {add:newOverride(2, opMul)})
+  assert(ev({add:10}), applyOverrides(ev({add:2}), overrides))
 
   console.log('Override params tests complete')
   }

@@ -755,15 +755,9 @@ shadertoy synth multiple channels
 ==== other ====
 Can modify params; eg 'set bass amp += 1/2'
  Suggestion
-  Support parsing += etc syntax, and stop doing auto += for 'add' and 'delay'
-    Need a total change to the representation
-     Need to build up an expression, whilst keeping a placeholder at the top into which the 'original' value can be put when evalling
-     Should have a valid interface that encapsulates the override representation now
-    Sort out tests in parse-line
-   Update all examples to use += instead of = for add and delay
-   Still need to ignore _time and value though? Is this just for follow?
-   New version as breaking change?
-  Make sure it all works with timevars/vars lookups etc etc
+  Not working with timevars etc
+  Sort out tests in parse-line
+  Test everything, including intervals
   Parse-line test for multiple set statements that all affect the same param
   Need to handle sub params
    Eg   set p1 vib+=1   !Doesn't affect vib depth;   set p1 vib.depth+=0.5   !Doesn't affect vib value or vib delay
@@ -771,8 +765,10 @@ Can modify params; eg 'set bass amp += 1/2'
   Use for set
   Use for follow
   Use for multiple params within one player def??
+  Update all examples to use += instead of = for add and delay, and test them
   TEST EVERYTHING
   Docs
+  New version as breaking change?
 !Docs: att/dec/rel/suslevel are NOT common params, they are audio only params
 stutter parameter
  ??? Some way to create tuples with arbitrary cardinality from expressions? Then you could do stutter with only delay???
