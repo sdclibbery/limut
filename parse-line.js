@@ -4,7 +4,7 @@ define((require) => {
   var parsePlayer = require('player/parse-player')
   var parseParams = require('player/params')
   let parseExpression = require('player/parse-expression')
-  let {combineOverrides} = require('player/override-params')
+  let {combineOverrides,applyOverrides,isOverride} = require('player/override-params')
   let vars = require('vars')
   let mainVars = require('main-vars')
 
@@ -203,14 +203,15 @@ define((require) => {
   delete players.overrides.p1
   delete players.overrides['q*']
 
-  // parseLine('set p add+=2')
-  // assert(5, players.overrides.p.add(3))
-  // delete players.overrides.p
+  parseLine('set p add+=2')
+  assert(true, isOverride(players.overrides.p.add))
+  assert({add:5}, applyOverrides({add:3}, players.overrides.p))
+  delete players.overrides.p
 
-  // parseLine('set p add+=2')
-  // parseLine('set p add+=3')
-  // assert(9, players.overrides.p.add(4))
-  // delete players.overrides.p
+  parseLine('set p add+=2')
+  parseLine('set p add+=3')
+  assert({add:9}, applyOverrides({add:4}, players.overrides.p))
+  delete players.overrides.p
 
   console.log('Parse line tests complete')
   }

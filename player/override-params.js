@@ -84,5 +84,6 @@ define(function(require) {
     newOverride: newOverride,
     combineOverrides: combineOverrides,
     applyOverrides: applyOverrides,
+    isOverride: isOverride,
   }
 });
