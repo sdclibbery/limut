@@ -213,6 +213,10 @@ define((require) => {
   assert({add:9}, applyOverrides({add:4}, players.overrides.p))
   delete players.overrides.p
 
+  parseLine('set p add=2')
+  assert({add:2}, applyOverrides({add:4}, players.overrides.p))
+  delete players.overrides.p
+
   console.log('Parse line tests complete')
   }
   

@@ -755,14 +755,11 @@ shadertoy synth multiple channels
 ==== other ====
 Can modify params; eg 'set bass amp += 1/2'
  Suggestion
-  Parse-line test for multiple set statements that all affect the same param
-  Test everything, including intervals
   Need to handle sub params
    Eg   set p1 vib+=1   !Doesn't affect vib depth;   set p1 vib.depth+=0.5   !Doesn't affect vib value or vib delay
-  Do / - ^ % etc have the correct ordering?
-  Use for set
   Use for follow
   Use for multiple params within one player def??
+  Test combination of multi params within player, then set, then multi-param follow, then more set...
   Update all examples to use += instead of = for add and delay, and test them
   TEST EVERYTHING
   Docs

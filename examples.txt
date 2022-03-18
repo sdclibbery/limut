@@ -1471,3 +1471,7 @@ a ambi 0, sus=8, add=[-7:7]r, amp=0.32, pan=[-2/3:2/3]r, addc=wow, room=2, oct=(
 // s sample 0., dur=[1,256], sample='https://upload.wikimedia.org/wikipedia/commons/2/2e/Apollo_8_genesis_reading.ogg', sus=55, room=2, amp=[1/16:1/10]n8//, fold=1/2
 
 
+v kal 0, add=[0,1]t1/4, zoom=4, contrast
+set v add+=[0,3]l1@f
+
+
