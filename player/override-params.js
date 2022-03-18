@@ -1,5 +1,6 @@
 'use strict';
 define(function(require) {
+  let applyOperator = require('player/eval-operator')
 
   let isOverride = (v) => Array.isArray(v) && v._override
 
@@ -28,7 +29,9 @@ define(function(require) {
     let result = Object.assign({}, params)
     for (let k in overrides) {
       if (k === '_time' || k === 'value') { continue } // Do not override these values
-      result[k] = overrides[k].reduce((original, override) => override.operator(original, override.value), result[k])
+      result[k] = overrides[k].reduce((original, override) => {
+        return applyOperator(override.operator, original, override.value)
+      }, result[k])
     }
     return result
   }
@@ -45,6 +48,7 @@ define(function(require) {
   let overrides
   let opAdd = (l,r) => l+r
   let opMul = (l,r) => l*r
+  let evalParam = require('player/eval-param').evalParamFrame
 
   assert(ev(), applyOverrides(ev(), {}))
   assert(ev({add:2}), applyOverrides(ev({add:2}), {}))
@@ -69,6 +73,9 @@ define(function(require) {
   overrides = {add:newOverride(3, opAdd)}
   overrides = combineOverrides(overrides, {add:newOverride(2, opMul)})
   assert(ev({add:10}), applyOverrides(ev({add:2}), overrides))
+
+  overrides = {add:newOverride(3, opAdd)}
+  assert(5, evalParam(applyOverrides(ev({add:()=>2}), overrides).add,{},0))
 
   console.log('Override params tests complete')
   }
