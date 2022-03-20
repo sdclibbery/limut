@@ -754,9 +754,6 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Can modify params; eg 'set bass amp += 1/2'
-  Test combination of multi params within player, then set, then multi-param follow, then more set...
-   TEST EVERYTHING
-  Update all examples to use += instead of = for add and delay in set and follow, and test them
   Docs
   New version as breaking change?
 !Docs: att/dec/rel/suslevel are NOT common params, they are audio only params
@@ -764,6 +761,7 @@ stutter parameter
  ??? Some way to create tuples with arbitrary cardinality from expressions? Then you could do stutter with only delay???
  stutter=4  - repeat each note 4 times within the duration the original note would have had
  stutter={4,dur:1/8}  - repeat each note four times, with each repeat lasting 1/8 of a beat
+Should really reset vars on code update; eg set var, then comment out, and it still applies...
 Allow overriding subparams; eg  set p lpf.q=20  or  set p room.mix*=2
 Analyser on each player for pulse?
 Follow player refactor

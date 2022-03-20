@@ -1072,7 +1072,7 @@ am ambi (0246), room=2, oct=3, amp=1/4, pan=[-1:1]r, addc=wow
 pi glass 00.[.<3-2>], room=2, amp=1/2, amp=[1/4:1]n4, add=[0,1]r8, oct=4, pan=[2/3:-2/3]l8, addc=wow
 xy xylo ...........[576], room=2, amp=1/5, lpf=[100,1000,10000]r8, echo=1, addc=wow
 // cr sample 0, dur=[64]r, sample=roaster, room, att=2, amp=1/6, high=8
-// set [pc,pi,vs] room=2, lpf={800,q:1}, add=[7,6,5,4,3,2,1,-1]t4, fore=#88ff, back=#804f, ripple
+// set [pc,pi,vs] room=2, lpf={800,q:1}, add+=[7,6,5,4,3,2,1,-1]t4, fore=#88ff, back=#804f, ripple
 // set [am,xy] oct=4, amp=1/8
 set [pc,pi] hpf=4000
 // pr prophet 0., dur=8, amp=1/2, att=3/4, oct=2, lpf=1000, room=2, addc=[0,0,0,0,0,-1,-5,-12]e, phaser=1/4
@@ -1201,7 +1201,7 @@ ph play [.-]-.<---[--^]>, high=4, pan=[0:1/4]r
 // a ambi (0268), room, oct=(4,7), lpf=[200,900,5000]l[26,4,2]@f, amp=[0,1/5,1/3]l[26,4,2]@f, ring={this.freq/8,mix:1/3}, room
 // set * hpf=[10,20000]t[30,2]
 // set [pc,pk,g] amp=0
-// set t add=[0,2,0,0]t2
+// set t add+=[0,2,0,0]t2
 // set t clip=[1/4:1/24]l[16,0]
 // set [p*,t,b,a,g] amp=0
 // set vj add=-3
@@ -1473,5 +1473,19 @@ a ambi 0, sus=8, add=[-7:7]r, amp=0.32, pan=[-2/3:2/3]r, addc=wow, room=2, oct=(
 
 v kal 0, add=[0,1]t1/4, zoom=4, contrast
 set v add+=[0,3]l1@f
+
+
+vbl julia 67, loc=tile_bl, mid=blue
+vbr kal 57, loc=tile_br, mid=blue
+v julia 2, add=1, add+=1, loc=tile_tl, mid=blue
+vf kal follow v, loc=tile_tr
+set v add+=1
+set [v,vf] add+=[1,2]
+set vf add+=-2
+
+
+p ping 0, add=(0,2,4,6)
+set p add+=[0,2,4,6]t2
+set p add%=7
 
 
