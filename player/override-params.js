@@ -13,29 +13,47 @@ define(function(require) {
     return ov
   }
 
+  let combineOverride = (oldO, newO) => {
+    if (!isOverride(newO) || oldO === undefined) {
+      return newO // just replace
+    }
+    if (!isOverride(oldO)) {
+      oldO = newOverride(oldO) // If old isn't already an override, make it one
+    }
+    oldO.push(...newO) // Combine override arrays
+    return oldO
+}
+
   let combineOverrides = (oldOverrides, newOverrides) => {
     let result = Object.assign({}, oldOverrides)
     for (let k in newOverrides) {
-      if (isOverride(result[k]) && isOverride(newOverrides[k])) {
-        result[k].push(...newOverrides[k]) // Combine override arrays
-      } else {
-        result[k] = newOverrides[k] // just replace
-      }
+      result[k] = combineOverride(result[k], newOverrides[k])
     }
     return result
+  }
+
+  let applyOverride = (original, override) => {
+    if (isOverride(override)) {
+      return override.reduce((orig, over) => {
+        return applyOperator(over.operator, orig, over.value)
+      }, original)
+    } else {
+        return override
+    }
+}
+
+  let collapseOverrides = (overrides) => {
+    for (let k in overrides) {
+      overrides[k] = applyOverride(undefined, overrides[k])
+    }
+    return overrides
   }
 
   let applyOverrides = (params, overrides) => {
     let result = Object.assign({}, params)
     for (let k in overrides) {
       if (k === '_time' || k === 'value') { continue } // Do not override these values
-      if (isOverride(overrides[k])) {
-        result[k] = overrides[k].reduce((original, override) => {
-          return applyOperator(override.operator, original, override.value)
-        }, result[k])
-        } else {
-          result[k] = overrides[k]
-      }
+      result[k] = applyOverride(result[k], overrides[k])
     }
     return result
   }
@@ -86,12 +104,32 @@ define(function(require) {
   overrides = combineOverrides(overrides, {add:newOverride(2, opDiv)})
   assert(ev({add:2}), applyOverrides(ev({add:1}), overrides))
 
+  overrides = {add:combineOverride(undefined, newOverride(2, opAdd))}
+  assert(ev({add:3}), applyOverrides(ev({add:1}), overrides))
+
+  overrides = {add:combineOverride(1, newOverride(2, opAdd))}
+  assert(ev({add:3}), applyOverrides(ev({}), overrides))
+
+  overrides = {add:combineOverride(newOverride(2, opAdd), 1)}
+  assert(ev({add:1}), applyOverrides(ev({}), overrides))
+
+  overrides = {add:combineOverride(1, 2)}
+  assert(ev({add:2}), applyOverrides(ev({}), overrides))
+
+  assert({add:1}, collapseOverrides({add:1}))
+  assert({add:2}, collapseOverrides({add:newOverride(2)}))
+
+  overrides = {add:combineOverride(1, newOverride(2, opAdd))}
+  assert({add:3}, collapseOverrides(overrides))
+
   console.log('Override params tests complete')
   }
 
   return {
     newOverride: newOverride,
+    combineOverride: combineOverride,
     combineOverrides: combineOverrides,
+    collapseOverrides: collapseOverrides,
     applyOverrides: applyOverrides,
     isOverride: isOverride,
   }

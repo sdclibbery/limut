@@ -2,7 +2,7 @@
 define(function(require) {
   let parseExpression = require('player/parse-expression')
   let {operators} = require('player/operators')
-  let {newOverride} = require('player/override-params')
+  let {newOverride,combineOverride,applyOverrides} = require('player/override-params')
 
   let parseName = (state) => {
     let name = ''
@@ -76,13 +76,13 @@ define(function(require) {
       commented = true
       operator = undefined
     }
-    name = name.trim()
+    name = name.trim().toLowerCase()
     if (name) {
       let v = parseExpression(value, () => commented=true, state.dependsOn, (state.context?state.context+'.':'')+name)
       if (operator) {
         v = newOverride(v, operator)
       }
-      state.params[name.toLowerCase().trim()] = v
+      state.params[name] = combineOverride(state.params[name], v)
       if (commented) { return false }
       return true
     }
@@ -158,17 +158,22 @@ define(function(require) {
   assert(3, evalParamFrame(exp, ev(4,4), 4))
   assert(4, evalParamFrame(exp, ev(4,4), 5))
 
-  p = parseParams('add+=2').add
-  assert(true, Array.isArray(p))
-  assert(true, p._override)
+  p = parseParams('add+=2')
+  assert(true, Array.isArray(p.add))
+  assert(true, p.add._override)
+  assert({add:3}, applyOverrides({add:1}, p))
   
-  p = parseParams('add += 2').add
-  assert(true, Array.isArray(p))
-  assert(true, p._override)
+  p = parseParams('add += 2')
+  assert(true, Array.isArray(p.add))
+  assert(true, p.add._override)
 
   assert({'add+':2}, parseParams('add+ =2'))
   assert({add:1}, parseParams('add//+=2'))
   assert({'add+':1}, parseParams('add+//=2'))
+
+  assert({add:2}, applyOverrides({}, parseParams('add+=2')))
+  assert({add:3}, applyOverrides({}, parseParams('add=1, add+=2')))
+  assert({add:2}, applyOverrides({}, parseParams('add+=1, add=2')))
 
   console.log("Params tests complete")
   }
