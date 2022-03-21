@@ -32,7 +32,7 @@ define((require) => {
     // visualisations
     scope: { play: sprite(scope, {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:0},) },
     meter: { play: sprite('meter', {r:0.9,g:0.0,b:0.9,a:1}, {r:0.1,g:0.1,b:0.1,a:1}) },
-    readout: { play: sprite('readout', {r:0.9,g:0.9,b:0.9,a:1}, {r:0.1,g:0.1,b:0.1,a:1}) },
+    readout: { play: sprite('readout', {r:0.9,g:0.9,b:0.9,a:1}, {r:0.1,g:0.1,b:0.1,a:1}, {additive:1}) },
     webcam: { play: sprite(webcam, {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:1},) },
     shadertoy: { play: sprite(shadertoy, {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:1},) },
     image: { play: sprite(image, {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:0},) },

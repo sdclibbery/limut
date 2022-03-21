@@ -220,7 +220,7 @@ define((require) => {
 
   p = parsePlayer('p play 0//, amp=2')
   assert(undefined, p.getEventsForBeat({count:0})[0].amp)
-  assert('0', p.getEventsForBeat({count:1})[0].value)
+  assert(0, p.getEventsForBeat({count:1})[0].value)
 
   p = parsePlayer('p play 0, window//, amp=2')
   assert(undefined, p.getEventsForBeat({count:0})[0].amp)

@@ -78,6 +78,11 @@ define(function(require) {
     assert(3, parseAggregator(st('count'))([{value:[1,1,1]}]))
     assert(3, parseAggregator(st('count'))([{value:1},{value:1},{value:1}]))
 
+    assert(6, parseAggregator(st('sum'))([1,2,3]))
+    assert(1, parseAggregator(st('first'))([1,2,3]))
+    assert(3, parseAggregator(st('last'))([1,2,3]))
+    assert(2, parseAggregator(st('avg'))([1,2,3]))
+
     assert(0, parseAggregator(st('min'))([]))
     assert(0, parseAggregator(st('max'))([]))
     assert(0, parseAggregator(st('first'))([]))
