@@ -250,6 +250,8 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 </pre>
 <pre>v kal 0, mirror={100,fan:[7:12]s32@f/10}, zoom=3, mid=random, contrast
 </pre>
+<pre>ld dsaw 0^.70-7.70, dur=1/4, scale=minor, add=[0,2,4]r+[0,2,3,0]t4, lpf={this.freq*[3/2,2,3,5]t4,q:25}, room, delay=(0,[1/4,1/2,3/4,5/4]r), echo=7/8
+</pre>
 <p>More examples: <a href="https://github.com/sdclibbery/limut/blob/master/examples.txt" target="_blank">https://github.com/sdclibbery/limut/blob/master/examples.txt</a></p>
 </div>
 <h4 onclick="toggleAccordion('accordion-indicators')">▶ Indicators</h4>
@@ -755,12 +757,14 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 !Docs: att/dec/rel/suslevel are NOT common params, they are audio only params
+floor function:  delay=floor{[]r,to:1/4}  or  add=floor{[0:7]r,to:2}
 stutter parameter
  ??? Some way to create tuples with arbitrary cardinality from expressions? Then you could do stutter with only delay???
  stutter=4  - repeat each note 4 times within the duration the original note would have had
  stutter={4,dur:1/8}  - repeat each note four times, with each repeat lasting 1/8 of a beat
 Should really reset vars on code update; eg set var, then comment out, and it still applies...
 Allow overriding subparams; eg  set p lpf.q=20  or  set p room.mix*=2
+ Actually, can already modify subparams; just can't replace; eg: lpf+={q:10}
 Analyser on each player for pulse?
 Follow player refactor
  Better follow tests - Proper tests for follow and overrides and combinations, including tuples
@@ -784,7 +788,6 @@ Follow player refactor
 For player.pulse, can we make sure the order within the tuple is consistent?
  Eg so the most recent events are first in the tuple in case of event overlap?
  Also does pulse cutoff too early ignoring release time?
-?? How to override a subparam without changing the main param (or other subparams)? Eg set lpf q without changing freq?
 Presets? Allow to define new synths; eg 'preset mysaw saw, att=0.02, lpf=this.freq*[5,3,2,1,1/2]e' then use mysaw as a synth
  Presets should be able to include additional follow synths
 Better syntax highlighting for {} brackets; maybe bracket match highlighting??
@@ -808,7 +811,6 @@ Ability to set the pattern used on a player
 Fullscreen not working on safari
 [0,1]n should randomly choose one of 0 or one then smooth between them, [0:1]n should pick random values between 0 and 1...
  In which case, rewrite it as the main random, but then smoothed
-floor function: delay=floor{[]r,to:1/4}
 Complex durations cause beat drift ?? Round pattern count to smallest possible duration? Eg [1/2,1/3]r rounds to nearest 1/6
 Per can default to repeat of thing being modified?
  Eg [0:1]l4{0:0} per defaults to 8?
