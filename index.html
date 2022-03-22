@@ -482,7 +482,52 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p class='sub'><code>drive={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>bits</code> bit crush effect; value is number of bits. 1 bit is very distorted to (eg) 32 bits is relatively clean. 0 disables the effect.</p>
 <p class='sub'><code>bits={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
-<p><code>scale</code> override scale for this player; set to a string eg <code>'penta'</code> or <code>'minor'</code></p>
+<p><code>scale</code> override scale for this player; set to one of these strings: 
+  <code>'chromatic'</code>, 
+  <code>'major'</code>, 
+  <code>'majorpentatonic'</code>, 
+  <code>'pentatonic'</code>, 
+  <code>'penta'</code>, 
+  <code>'minor'</code>, 
+  <code>'aeolian'</code>, 
+  <code>'minorpentatonic'</code>, 
+  <code>'mixolydian'</code>, 
+  <code>'melodicminor'</code>, 
+  <code>'melodicmajor'</code>, 
+  <code>'harmonicminor'</code>, 
+  <code>'harmonicmajor'</code>, 
+  <code>'dorian'</code>, 
+  <code>'dorian2'</code>, 
+  <code>'diminished'</code>, 
+  <code>'egyptian'</code>, 
+  <code>'yu'</code>, 
+  <code>'zhi'</code>, 
+  <code>'phrygian'</code>, 
+  <code>'prometheus'</code>, 
+  <code>'indian'</code>, 
+  <code>'locrian'</code>, 
+  <code>'locrianmajor'</code>, 
+  <code>'lydian'</code>, 
+  <code>'lydianminor'</code>, 
+  <code>'hungarianminor'</code>, 
+  <code>'romanianminor'</code>, 
+  <code>'chinese'</code>, 
+  <code>'wholetone'</code>, 
+  <code>'halfwhole'</code>, 
+  <code>'wholehalf'</code>, 
+  <code>'bebopmaj'</code>, 
+  <code>'bebopdorian'</code>, 
+  <code>'bebopdom'</code>, 
+  <code>'bebopmelmin'</code>, 
+  <code>'blues'</code>, 
+  <code>'minmaj'</code>, 
+  <code>'susb9'</code>, 
+  <code>'lydianaug'</code>, 
+  <code>'lydiandom'</code>, 
+  <code>'melmin5th'</code>, 
+  <code>'halfdim'</code>, 
+  <code>'altered'</code>, 
+</p>
 <p><code>vib</code> vibrato frequency in cycles per beat</p>
 <p class='sub'><code>vib={2,depth:1}</code> vibrato depth in semitones (default 0.4)</p>
 <p class='sub'><code>vib={2,delay:1}</code> delay before vibrato starts in beats (default 1/2)</p>
@@ -712,9 +757,9 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-julia should repeat as you scroll
-recol=fb which recols to monochrome, but sets the foreback value so that eg webcam can be recoloured using fore/mid/back
+recol=foreback which recols to monochrome, but sets the foreback value so that eg webcam can be recoloured using fore/mid/back
 Allow pixellate with separate pixel width and height (or aspect ratio)
+julia should repeat as you scroll
 Digital JPEG corruption filter param
  Takes square blocks and maps then to random other parts of the image, or darkens them, or colours them randomly green or magenta
  Main param value determines the amout of corruption
@@ -761,7 +806,6 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Add doc section with an example and a detailed explanation of it
-Docs should list all scales
 !Docs: att/dec/rel/suslevel are NOT common params, they are audio only params
 floor function:  delay=floor{[]r,to:1/4}  or  add=floor{[0:7]r,to:2}
 stutter parameter
