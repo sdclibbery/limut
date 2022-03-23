@@ -1509,4 +1509,6 @@ v julia 1, mid=neongreen, scroll=time/8, repeat=1/4
 
 v glow 9, zoom=3/2, scroll=-time/16, repeat=0.5, mirror=10, fore=orange, fade=0
 
+v kal 5, zoom=3/2, scroll=-time/16, repeat={0.5,x:-1/4}, mirror=10, fore=orange, fade=0
+
 

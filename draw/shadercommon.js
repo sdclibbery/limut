@@ -14,7 +14,7 @@ define(function (require) {
   let commonProcessors = `
   out vec4 fragColor;
   uniform float iTime;
-  uniform float l_repeat;
+  uniform vec4 l_repeat;
   uniform vec2 l_scroll;
   uniform vec2 l_zoom;
   uniform float l_rotate;
@@ -77,10 +77,11 @@ define(function (require) {
       coord = rot * coord;
     }
     coord = coord + l_scroll;
-    if (l_repeat != 0.) {
-      coord += l_repeat;
-      coord = mod(coord, l_repeat*2.0);
-      coord -= l_repeat;
+    if (l_repeat.x != 0.) {
+      coord += l_repeat.x;
+      coord = mod(coord, l_repeat.x*2.0);
+      coord -= l_repeat.x;
+      coord += l_repeat.zw;
     }
     return coord;
   }

@@ -173,7 +173,12 @@ let verts = (loc, window) => {
       )
       let vignette = evalMainParamFrame(params, 'vignette', 0, state.count)
       let loc = rect(evalMainParamFrame(params, 'loc', blankObj, state.count), defLoc, 'loc')
-      let repeat = evalMainParamFrame(params, 'repeat', 0, state.count)
+      let repeat = ca('repeat',
+        evalMainParamFrame(params, 'repeat', 0, state.count),
+        0,
+        evalSubParamFrame(params, 'repeat', 'x', 0, state.count),
+        evalSubParamFrame(params, 'repeat', 'y', 0, state.count)
+      )
       let scroll = vec(evalMainParamFrame(params, 'scroll', blankObj, state.count), defScroll, 'scroll')
       let zoom = vec(evalMainParamFrame(params, 'zoom', blankObj, state.count), defZoom, 'zoom')
       let perspective = evalMainParamFrame(params, 'perspective', 0, state.count)
@@ -214,7 +219,7 @@ let verts = (loc, window) => {
       system.gl.uniform4fv(s.midUnif, mid)
       system.gl.uniform4fv(s.backUnif, back)
       system.gl.uniform4fv(s.spectrumUnif, state.spectrum)
-      system.gl.uniform1f(s.repeatUnif, repeat)
+      system.gl.uniform4fv(s.repeatUnif, repeat)
       system.gl.uniform2fv(s.scrollUnif, scroll)
       system.gl.uniform2fv(s.zoomUnif, zoom)
       system.gl.uniform1f(s.rotateUnif, rotate)

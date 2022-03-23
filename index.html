@@ -557,6 +557,8 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>loc</code> position and size. The visual coordinate system runs from (-1,-1) in the bottom left of the screen to (1,1) in the top right. x and y define the centre of the visual, and w and h are the full width and height; eg <code>{x:0,y:0,w:2,h:2}</code> covers the full screen.</p>
 <p><code>window</code> display the only part of the shader image appropriate to the location of the tile on the screen. This way, a tile moved around the screen will act like a window onto the overall shader image.</p>
 <p><code>scroll</code> scroll the shader; default: <code>{x:0,y:0}</code></p>
+<p><code>repeat</code> repeat a section of the shader image in both directions. Value is the size of the area to be repeated.</p>
+<p class='sub'><code>repeat={1/2,x:0.1,y:-0.05}</code> x/y offsets to apply to the area of the shader image being repeated.</p>
 <p><code>zoom</code> zoom the shader; default: <code>{x:1,y:1}</code></p>
 <p><code>rotate</code> rotate the shader; angle in full rotations so 1/2 is 180 degrees; default: <code>0</code></p>
 <p><code>mirror</code> mirror the shader; number of mirror planes to apply; default: <code>0</code></p>
@@ -758,9 +760,6 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-!preprocess repeat param, mods coords to given scale
- subparams for xy offset
- DOCS
 Digital JPEG corruption filter param
  Takes square blocks and maps then to random other parts of the image, or darkens them, or colours them randomly green or magenta
  Main param value determines the amout of corruption
@@ -807,6 +806,9 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
+??Special param on every event that is its index in a tuple
+ Eg then can target values to a specific instance from a tuple:
+ p dsaw 0, add=(0,2), sus=(2,1/2)[this.index]
 Add doc section with an example and a detailed explanation of it
 !Docs: att/dec/rel/suslevel are NOT common params, they are audio only params
 floor function:  delay=floor{[]r,to:1/4}  or  add=floor{[0:7]r,to:2}
