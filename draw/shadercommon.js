@@ -14,6 +14,7 @@ define(function (require) {
   let commonProcessors = `
   out vec4 fragColor;
   uniform float iTime;
+  uniform float l_repeat;
   uniform vec2 l_scroll;
   uniform vec2 l_zoom;
   uniform float l_rotate;
@@ -76,6 +77,11 @@ define(function (require) {
       coord = rot * coord;
     }
     coord = coord + l_scroll;
+    if (l_repeat != 0.) {
+      coord += l_repeat;
+      coord = mod(coord, l_repeat*2.0);
+      coord -= l_repeat;
+    }
     return coord;
   }
   void postprocess( vec4 col, float foreBack ) {
@@ -159,6 +165,7 @@ define(function (require) {
     shader.midUnif = system.gl.getUniformLocation(program, "l_mid")
     shader.backUnif = system.gl.getUniformLocation(program, "l_back")
     shader.scrollUnif = system.gl.getUniformLocation(program, "l_scroll")
+    shader.repeatUnif = system.gl.getUniformLocation(program, "l_repeat")
     shader.zoomUnif = system.gl.getUniformLocation(program, "l_zoom")
     shader.rotateUnif = system.gl.getUniformLocation(program, "l_rotate")
     shader.mirrorUnif = system.gl.getUniformLocation(program, "l_mirror")
