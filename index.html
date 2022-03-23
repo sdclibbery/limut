@@ -757,7 +757,6 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-recol=foreback which recols to monochrome, but sets the foreback value so that eg webcam can be recoloured using fore/mid/back
 Allow pixellate with separate pixel width and height (or aspect ratio)
 julia should repeat as you scroll
 Digital JPEG corruption filter param
@@ -813,10 +812,8 @@ stutter parameter
  stutter=4  - repeat each note 4 times within the duration the original note would have had
  stutter={4,dur:1/8}  - repeat each note four times, with each repeat lasting 1/8 of a beat
 Should really reset vars on code update; eg set var, then comment out, and it still applies...
-Allow overriding subparams; eg  set p lpf.q=20  or  set p room.mix*=2
- Actually, can already modify subparams; just can't replace; eg: lpf+={q:10}
-Analyser on each player for pulse?
 Follow player refactor
+ !currently follow player fails on complex durations; eg:  ds dsaw 0[23]4_, dur=[1]  \  vds glow follow ds
  Better follow tests - Proper tests for follow and overrides and combinations, including tuples
  Use stored events with a dependency
  Things to test:
@@ -828,6 +825,12 @@ Follow player refactor
     v8 glow follow p1, loc=sparkle
   delays
  Clean up any unnecessary gumpf around getEventsForBeatBase etc
+For player.pulse, can we make sure the order within the tuple is consistent?
+ Eg so the most recent events are first in the tuple in case of event overlap?
+ Also does pulse cutoff too early ignoring release time?
+Allow overriding subparams; eg  set p lpf.q=20  or  set p room.mix*=2
+ Actually, can already modify subparams; just can't replace; eg: lpf+={q:10}
+Analyser on each player for pulse?
 ? env{att:0.1,dec:1/4,sus:1,suslevel:0.6,rel:} - sus should default to the actual note length of the event
  Use for eg: lpf=this.freq*50*env{att:0.02,dec:0.2,suslevel:0.1}
  ?adsr and ar envelope functions that can be used in eg lpf=adsr{,,,} but also as env=ar{,} etc, but also ripple=ar{,} etc
@@ -835,9 +838,33 @@ Follow player refactor
  Eg [0,1,2,3]t4{offset:1}
 {step} to apply a step to the counts
  Eg [0:1000]l32{step:2} so the value onnly changes every 2 beats(??or changes by 2 units?) instead of smoothly
-For player.pulse, can we make sure the order within the tuple is consistent?
- Eg so the most recent events are first in the tuple in case of event overlap?
- Also does pulse cutoff too early ignoring release time?
+!`d dsaw 0 | p ping follow d` the ping is played using the saw wave!!
+!pattern "(01)": idx should be 0 for both events, surely?
+ event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
+Ability to set the pattern used on a player
+ param: p play x:, pattern='X-O-'
+pattern concat "xo + vi"
+pattern repeat "xo * 3 + vi" higher precedence than concat
+pattern support brackets "( xo + vi ) * 3"
+pattern values in vars, and then use in multiple players, and also invert, retrograde etc
+Pattern: should allow (024)^etc
+Fullscreen not working on safari
+[0,1]n should randomly choose one of 0 or one then smooth between them, [0:1]n should pick random values between 0 and 1...
+ In which case, rewrite it as the main random, but then smoothed
+Complex durs
+ overrides - need to apply overrides earlier? Should apply to delay overrides too
+ tuples
+ var lookup (& player var lookup)
+Ignore rests . when setting event.idx (so that `0.1., amp=[1/2,1]` does as expected) - is that expected? It wouldnt be for dur..?
+multiline command fix: // should only comment out that one line
+"on next 4 " / "on next 28 of 32 " syntax to execute a line on the next beat count
+  - but how not to repeat this if rerun? replace now/next in source with actual count?
+"every 4 " / "every 28 of 32 "
+"until next 16 set [bass,kd] amp=0" ? - but how not to repeat this if rerun?
+"by next 16 set bass amp=0" - lerps to the new value - but how not to repeat this if rerun?
+Need an additional eval interval; eg @i for 'per instance', so for each individual 'note' instance (each call to play)
+ Useful for providing variation between (1,2,3,4) multiplied out sub-events without having to go full-on per frame, expecially for eg []r
+ ? Isn't that what @e should be? And then we could have @t for 'eval once for all tuple values'
 Presets? Allow to define new synths; eg 'preset mysaw saw, att=0.02, lpf=this.freq*[5,3,2,1,1/2]e' then use mysaw as a synth
  Presets should be able to include additional follow synths
 Better syntax highlighting for {} brackets; maybe bracket match highlighting??
@@ -845,6 +872,7 @@ Map lookup operator; interchangeable in syntax location with tuple indexer
  eg  {foo:2}.foo ==2
  must allow eg  ({a:1},{a:2})[1].a ==2
  also {a:{foo:1},b:{foo:2}}.b.foo ==2
+ '.='???
  Docs
 Weight modifier for random to go with seed
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
@@ -854,13 +882,7 @@ Swing doesn't only affect event exactly on 3/4, it expands the preceeding 1/4 be
 ? rl, rt (==r), rs (==n); el (==e), es, et ?
  ?[1,3,5]n syntax to smoothly transition between randomly chosen values or should be [1,3,5]rs?
  []w for random walk?
-Modifier or function that smooths the value over time, separate attach and decay rates if possible
-! `d dsaw 0 | p ping follow d` the ping is played using the saw wave!!
-Ability to set the pattern used on a player
- param: p play x:, pattern='X-O-'
-Fullscreen not working on safari
-[0,1]n should randomly choose one of 0 or one then smooth between them, [0:1]n should pick random values between 0 and 1...
- In which case, rewrite it as the main random, but then smoothed
+Modifier or function that smooths the value over time, separate attack and decay rates if possible
 Complex durations cause beat drift ?? Round pattern count to smallest possible duration? Eg [1/2,1/3]r rounds to nearest 1/6
 Per can default to repeat of thing being modified?
  Eg [0:1]l4{0:0} per defaults to 8?
@@ -881,39 +903,20 @@ All randoms including []r and []n should be deterministic
   s saw 0, dur=1/2, amp=1/4, add=[0:5]r{seed:0,per:8}+off
   off=0
   EG here, remove the "+off" and the glow moves correctly
-Complex durs
- overrides - need to apply overrides earlier? Should apply to delay overrides too
- tuples
- var lookup (& player var lookup)
-Ignore rests . when setting event.idx (so that `0.1., amp=[1/2,1]` does as expected) - is that expected? It wouldnt be for dur..?
 Exponent exp modifier, eg [0:1]l{exp:1/2} to modify lerp shape
-Should support `(1,2,3)[min:max]`? Or not?
 Can var lookup take the interval from the var interval?
  Need two pass parse??
   What about player var lookup then?
   EG!! [red,blue]r  is per frame but  [#f00f,#00ff]r  is per event
 ? Possible to additionally allow '=' as map key/value separator? Eg {r=1,g=2} etc ? Will this conflict with line/param parsing??
-Maybe optimise per frame garbage in eval-params and eval-operators
-multiline command fix: // should only comment out that one line
-"on next 4 " / "on next 28 of 32 " syntax to execute a line on the next beat count
-  - but how not to repeat this if rerun? replace now/next in source with actual count?
-"every 4 " / "every 28 of 32 "
-"until next 16 set [bass,kd] amp=0" ? - but how not to repeat this if rerun?
-"by next 16 set bass amp=0" - lerps to the new value - but how not to repeat this if rerun?
-pattern concat "xo + vi"
-pattern repeat "xo * 3" higher precedence than concat
-pattern support brackets "( xo + vi ) * 3"
-pattern values in vars, and then use in multiple players, and also invert, retrograde etc
-Pattern: should allow (024)^etc
-Have a [0,1][2,3] syntax to apply values to multiple events in a row
+Textarea editor keeps deleting contents after play
 Do not set delay, loud, sharp, long unless they have a value; even setting to undefined costs
 WebMidi
  Outputs (to control external synths)
  Inputs (like sliders)
  Beat sync input?
-Textarea editor keeps deleting contents after play
-Need an additional eval interval; eg @i for 'per instance', so for each individual 'note' instance (each call to play)
- Useful for providing variation between (1,2,3,4) multiplied out sub-events without having to go full-on per frame, expecially for eg []r
+Have a [0,1][2,3] syntax to apply values to multiple events in a row
+Should support `(1,2,3)[min:max]`? Or not?
 Tutorials
  ? Can automate the copy to clipboard paraphernalia?
  Link on this page
@@ -925,8 +928,6 @@ can set seed for noise
 can set seed for random
 if do amp=p1.amp, and p1 doesn't explicitly set its amp, you get zeroes...
 value param to override the pattern value
-pattern "(01)": idx should be 0 for both events, surely?
- event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
 how to enable random chord same for all players: ch=[0:4]r ..?
  ? could [0:4]r1 be made to do it?
 syntax coloring: colour for patterns
@@ -949,12 +950,6 @@ random in patterns: what syntax??
 ?? Should param pattern repeat be independent of main pattern repeat? Eg so you can xo, amp=[1,2,3] and it multiplies out
 index pattern by beat to improve performance in finding events - same for timeVar evaluation
 pattern generators: tri, Dur, walk etc?
-==
-==== Glitching
-glitching test case:
-p dsaw 0, dur=1/170, sus=1, lpf=[1000:2000]l5@f, amp=1/8
-v swirl 0, rate=5, fore=rainbow_fast
-Think we need to minimise/reduce per beat allocation too; audit all code :-/
 ===
 ===== Interesting shadertoys
 -- working
