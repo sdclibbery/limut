@@ -1489,3 +1489,19 @@ set p add+=[0,2,4,6]t2
 set p add%=7
 
 
+// Cyborg
+bpm=120
+scale=minor
+kd play x.
+main.amp=3
+ch=[0,3,-2,-1]t16
+db dbass 0-7, dur=1/2, lpf={[100:[300:1000]n8@e,3000]e,q:[5,[10:30]l32]n1/4@f}, att=0, addc=wow, sus=1/2, rel=1, add=ch, amp=1+wow
+ds dsaw 0[23]4_, dur=[3,3,2]*2, lpf=[100:[700:5000]s8]e, addc=wow, oct=(3,4), phaser=1/3, echo=1, room=0.7, add=ch, amp=1+wow
+dsf prophet follow ds
+no noise 0, dur=4, amp=[.05:.1]n19@f, hpf=[4000:8000]n23@f
+pi ping 00, dur=1/8, oct=[6,7], echo=3/4, amp=[1,0,0]l[4,12,0], add=[0:7]n+ch, addc=wow
+v streetlight 0, rate=-1+wow, perspective=0.5, scroll={y:1}
+vds glow 0__, scroll={y:1}, back=neonpink, fore=white
+vpi glow follow pi, loc=sparkle+firefly/4, sus=1/4, back=blue, fore=white
+
+

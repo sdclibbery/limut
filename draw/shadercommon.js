@@ -21,7 +21,7 @@ define(function (require) {
   uniform float l_perspective;
   uniform float l_tunnel;
   uniform vec4 l_ripple;
-  uniform float l_pixellate;
+  uniform vec4 l_pixellate;
   uniform float l_additive;
   uniform vec4 l_fore;
   uniform vec4 l_mid;
@@ -34,7 +34,9 @@ define(function (require) {
   vec2 origCoord;
   vec2 preprocess( vec2 coord ) {
     origCoord = coord;
-    if (l_pixellate != 0.) { coord = floor((coord+(0.5/l_pixellate))*l_pixellate)/l_pixellate; }
+    if (l_pixellate.x != 0.) {
+      coord = floor((coord+(0.5/l_pixellate.xy))*l_pixellate.xy)/l_pixellate.xy;
+    }
     if (l_ripple.x != 0.) {
       coord += coord*0.1*l_ripple.x*sin(length(coord)*24.0*l_ripple.y-iTime)/length(coord);
     }
@@ -118,7 +120,7 @@ define(function (require) {
     }
     if (l_vignette != 0.) {
       vec2 coord = origCoord;
-      if (l_pixellate != 0.) { coord = mod((coord+(0.5/l_pixellate))*l_pixellate, 1.0)*2.0-1.0; }
+      if (l_pixellate.x != 0.) { coord = mod((coord+(0.5/l_pixellate.xy))*l_pixellate.xy, 1.0)*2.0-1.0; }
       float p = 4.0/l_vignette;
       const float cutoff = 0.9;
       float d = pow(pow(abs(coord.x),p)+pow(abs(coord.y),p), 1.0/p);

@@ -565,7 +565,8 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>fore</code> foreground colour; eg <code>{r:0,g:1,b:0,a:1}</code> for green or <code>#fa0f</code> for orange.</p>
 <p><code>mid</code> middleground colour; eg <code>{r:0,g:1,b:0,a:1}</code> for green or <code>#fa0f</code> for orange. If not specified, defaults to midway between fore and back.</p>
 <p><code>back</code> background colour; eg <code>{r:0,g:1,b:0,a:1}</code> for green or <code>#00ff</code> for orange.</p>
-<p><code>pixellate</code> number of pixels to pixellate to in each direction, or 0 to disable pixellation</p>
+<p><code>pixellate</code> number of pixels to pixellate to in x direction, or 0 to disable pixellation</p>
+<p class='sub'><code>pixellate={10,y:20}</code> number of pixels to pixellate to in y direction, or same as x if not present.</p>
 <p><code>perspective</code> perspective warp to apply to shader (negative to invert), or 0 to disable</p>
 <p><code>tunnel</code> tunnel warp to apply to shader, or 0 to disable. Applies a slitscan type warp, where scrolling in the x direction will scroll the original shader through the tunnel.</p>
 <p><code>ripple</code> Apply a ripple warp to the shader, to give the effect of waves of image distortion rippling out from the centre of the shader.</p>
@@ -757,12 +758,12 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-Allow pixellate with separate pixel width and height (or aspect ratio)
 julia should repeat as you scroll
 Digital JPEG corruption filter param
  Takes square blocks and maps then to random other parts of the image, or darkens them, or colours them randomly green or magenta
  Main param value determines the amout of corruption
- Subparam for scale
+ Subparam for block scale
+ Subparam for extremity of effect within corrupted blocks?
 Can set texture repeat for text and image etc synths? Subparam or not?
 Starfield shader; https://www.shadertoy.com/view/WdyXDm
 Should the coord system for text positionin not be -1:1 like for normal loc?

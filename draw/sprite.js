@@ -165,7 +165,12 @@ let verts = (loc, window) => {
       let eventTime = ((state.time-startTime)/(endTime-startTime))
       let brightness = 1 - (eventTime*eventTime)*fade
       let monochrome = evalMainParamFrame(params, 'monochrome', 0, state.count)
-      let pixellate = evalMainParamFrame(params, 'pixellate', 0, state.count)
+      let pixellateX = evalMainParamFrame(params, 'pixellate', 0, state.count)
+      let pixellate = ca('pixellate',
+        pixellateX,
+        evalSubParamFrame(params, 'pixellate', 'y', pixellateX, state.count),
+        0,0
+      )
       let vignette = evalMainParamFrame(params, 'vignette', 0, state.count)
       let loc = rect(evalMainParamFrame(params, 'loc', blankObj, state.count), defLoc, 'loc')
       let scroll = vec(evalMainParamFrame(params, 'scroll', blankObj, state.count), defScroll, 'scroll')
@@ -212,7 +217,7 @@ let verts = (loc, window) => {
       system.gl.uniform2fv(s.zoomUnif, zoom)
       system.gl.uniform1f(s.rotateUnif, rotate)
       system.gl.uniform4fv(s.mirrorUnif, mirror)
-      system.gl.uniform1f(s.pixellateUnif, pixellate)
+      system.gl.uniform4fv(s.pixellateUnif, pixellate)
       system.gl.uniform1f(s.tunnelUnif, tunnel)
       system.gl.uniform4fv(s.rippleUnif, ripple)
       system.gl.uniform1f(s.perspectiveUnif, perspective)
