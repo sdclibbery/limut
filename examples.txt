@@ -1506,9 +1506,8 @@ vpi glow follow pi, loc=sparkle+firefly/4, sus=1/4, back=blue, fore=white
 
 
 v julia 1, mid=neongreen, scroll=time/8, repeat=1/4
-
 v glow 9, zoom=3/2, scroll=-time/16, repeat=0.5, mirror=10, fore=orange, fade=0
-
-v kal 5, zoom=3/2, scroll=-time/16, repeat={0.5,x:-1/4}, mirror=10, fore=orange, fade=0
+v kal 5, zoom=3/2, scroll=-time/16, repeat={0.5,x:-1/4}, mirror=10, fore=orange
+v kal 5, zoom=3/2, scroll=-time/32, repeat={0.5,x:-1/4}, mirror={10, rotate:time/32}, contrast, fore=orange, mid=#f88
 
 

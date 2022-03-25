@@ -16,6 +16,7 @@ define(function(require) {
   // accordions
   window.toggleAccordion = (id) => {
     document.getElementById(id).classList.toggle('closed')
+    document.getElementById(id).previousElementSibling.classList.toggle('opened')
   }
 
   // Main amp UI

@@ -134,6 +134,12 @@
     a:visited {
       color: #99b;
     }
+    .accordion::before {
+      content: "▶";
+    }
+    .accordion.opened::before {
+      content: "◢";
+    }
     :fullscreen { display: flex; flex-flow: column; }
     :fullscreen > * > h3 { font-size: 1em; }
     :fullscreen > .code { flex: 1; max-height: calc(100% + 100px); }
@@ -180,7 +186,7 @@
     </p>
   </div>
   <div class="widget fixed-top">
-    <button onclick="go()" title="Run the code Ctrl-Enter">▶</button>
+    <button onclick="go()" title="Run the code Ctrl-Enter" class="accordion"></button>
     <button onclick="stop()" title="Stop all players Ctrl-.">◼</button>
     <button onclick="comment()" title="Toggle comment for line Ctrl-/">//</button>
     <button onclick="fullscreen()" title="Toggle fullscreen">⛶</button>
@@ -193,7 +199,7 @@
   <textarea id="console" class="widget" rows="5"></textarea>
 </div>
 <div class="info">
-<h4 onclick="toggleAccordion('accordion-examples')">▶ Examples</h4>
+<h4 onclick="toggleAccordion('accordion-examples')" class="accordion"> Examples</h4>
 <div id="accordion-examples" class="closed">
 <pre>d1 play x-o-</pre>
 <pre>p1 dsaw 0534, add=(0,2,4), dur=4</pre>
@@ -254,7 +260,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 </pre>
 <p>More examples: <a href="https://github.com/sdclibbery/limut/blob/master/examples.txt" target="_blank">https://github.com/sdclibbery/limut/blob/master/examples.txt</a></p>
 </div>
-<h4 onclick="toggleAccordion('accordion-indicators')">▶ Indicators</h4>
+<h4 onclick="toggleAccordion('accordion-indicators')" class="accordion"> Indicators</h4>
 <div id="accordion-indicators" class="closed">
   <p><b>Level</b> VU meter for current output signal level. Use this to adjust the output level, using either <code>main.amp</code> or the level slider, so it is just touching the red at its loudest.</p>
   <p><b>Beat</b> Current audio system beat count, followed by beat counts out of 12, 16 and 32 beats (useful for synchronising changes to various size musical bars and progressions)</p>
@@ -262,7 +268,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
   <p><b>Visual</b> Visual lag; green when the framerate is keeping up to 60 fps; turns red when the system is struggling, which may lead to visual glitching</p>
   <p><b>Limiter</b> Audio limiter: turns red when the internal Limut limiter is active, implying the combined audio sources are too loud. Note this limiter is before the <code>main.amp</code> control and vu meter, it makes sure the levels from individual synths do not go so loud as to distort. So if it is lighting up, lower the <code>amp</code> on individual synths, and if necessary, raise the <code>main.amp</code> level to compensate.</p>
 </div>
-<h4 onclick="toggleAccordion('accordion-basic-syntax')">▶ Basic Syntax</h4>
+<h4 onclick="toggleAccordion('accordion-basic-syntax')" class="accordion"> Basic Syntax</h4>
 <div id="accordion-basic-syntax" class="closed">
 <p>Limut is case insensitive; <code>piano</code>, <code>Piano</code>, and <code>PIANO</code> are all treated the same; <code>[1:4]t4</code> is the same as <code>[1:4]T4</code> etc.</p>
 <p>Comments: Anything after <code>//</code> on a line is ignored</p>
@@ -283,7 +289,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>var</code> variable to set; either a predefined var (see 'Predefined Vars' section below) or a user defined var which can be referenced from params on any player(s)</p>
 <p><code>value</code> expression value to set; see 'Value Syntax'</p>
 </div>
-<h4 onclick="toggleAccordion('accordion-pattern-syntax')">▶ Pattern Syntax</h4>
+<h4 onclick="toggleAccordion('accordion-pattern-syntax')" class="accordion"> Pattern Syntax</h4>
 <div id="accordion-pattern-syntax" class="closed">
 <p><code>x-o-</code> Sequence of events, each of duration <code>dur</code>, for use with <code>play</code></p>
 <p><code>0123</code> Sequence of events, each of duration <code>dur</code>, for use with tonal synths. Numbers are scale degrees</p>
@@ -302,7 +308,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>0&lt;12&gt;</code> Angle brackets to play events in sequence as the pattern repeats. Eg <code>0&lt;12&gt;</code> is exactly equivalent to <code>0102</code></p>
 <p><code>follow p1</code> Use <code>follow</code> to follow another player (named 'p1' in the example) pattern</p>
 </div>
-<h4 onclick="toggleAccordion('accordion-value-syntax')">▶ Value Syntax</h4>
+<h4 onclick="toggleAccordion('accordion-value-syntax')" class="accordion"> Value Syntax</h4>
 <div id="accordion-value-syntax" class="closed">
 <p>Basic structure <code>value{modifiers}@interval[indexing]</code></p>
 <p><code>value</code> Actual value (which may include subparameters); see below</p>
@@ -378,7 +384,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <h5>Map lookup:</h5>
 <p><code>{foo:2}['foo']</code> Returns a field in a map (returns 2 in this example)</p>
 </div>
-<h4 onclick="toggleAccordion('accordion-audio-synths')">▶ Audio Synths</h4>
+<h4 onclick="toggleAccordion('accordion-audio-synths')" class="accordion"> Audio Synths</h4>
 <div id="accordion-audio-synths" class="closed">
 <p><code>! / stop / none</code> </p>
 <p><code>play</code> Play samples. Use letters, symbols and digits 1-4 in the pattern to choose the sample (see below for full list). Note duration defaults to 1/2.</p>
@@ -410,7 +416,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>supersaw</code> supersaw lead synth; 7 detuned saws</p>
 <p><code>external</code> take audio from microphone or line in. Use the <code>track</code> param to specify the track within the stream.</p>
 </div>
-<h4 onclick="toggleAccordion('accordion-visual-synths')">▶ Visual Synths</h4>
+<h4 onclick="toggleAccordion('accordion-visual-synths')" class="accordion"> Visual Synths</h4>
 <div id="accordion-visual-synths" class="closed">
 <p><code>! / stop / none</code> </p>
 <p><code>clouds</code> Moving clouds</p>
@@ -430,7 +436,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>webcam</code> Display video feed from the attached webcam (if present). The browser will ask permission before allowing access to the webcam.</p>
 <p><code>text</code> Draw and display text. Use the text param; eg <code>text='Hello'</code>. Use <code>\n</code> to split to multiple lines: <code>text='Hello\nWorld'</code>. Use subparams to control the text rendering, eg: <code>text={'Hello',font:'times',size:'144',linesize:0.7,y:1/4,x:2/3,style:'bold italic'}</code>. Text is evaluated only per event, not per frame.</p>
 </div>
-<h4 onclick="toggleAccordion('accordion-event-params')">▶ Common Event Params</h4>
+<h4 onclick="toggleAccordion('accordion-event-params')" class="accordion"> Common Event Params</h4>
 <div id="accordion-event-params" class="closed">
 <p><code>dur</code> Event time in beats</p>
 <p><code>delay</code> Event start time offset in beats</p>
@@ -443,7 +449,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>rel</code> Release time in beats</p>
 <p><code>rate</code> Playback rate for 'play' samples, animation rate for visuals</p>
 </div>
-<h4 onclick="toggleAccordion('accordion-audio-params')">▶ Audio Params</h4>
+<h4 onclick="toggleAccordion('accordion-audio-params')" class="accordion"> Audio Params</h4>
 <div id="accordion-audio-params" class="closed">
 <p><code>add</code> Amount to add onto event scale degree, in degrees. Evaluated per event only.</p>
 <p><code>addc</code> Amount to add onto event pitch, in semitones. Evaluated per frame, and accepts fractional values, so <code>addc=[0:12]e</code> will slide the note from the starting pitch smoothly up a whole octave over the course of the note.</p>
@@ -545,7 +551,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p class='sub'><code>room={2,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1/2</p>
 <p><code>freq</code> READ ONLY param. This param is set by all tonal synths, to the frequency in Hz of the note being played. This value can then be read for other purposes; eg <code>lpf=this.freq*2</code> will set the low pass cutoff frequency to double the note frequency.</p>
 </div>
-<h4 onclick="toggleAccordion('accordion-visual-params')">▶ Visual Params</h4>
+<h4 onclick="toggleAccordion('accordion-visual-params')" class="accordion"> Visual Params</h4>
 <div id="accordion-visual-params" class="closed">
 <p><code>add</code> Amount to add onto pattern value</p>
 <p><code>zorder</code> order in which to draw visual synths; defaults to the 1/1000th of the source code line number for the player, so that visuals draw strictly in the order they appear in the source code; however, this param can be used to override this and force specific visuals to the front or rear of the draw order.</p>
@@ -580,7 +586,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>recol</code> recolour the shader. Set to <code>oil</code> for oil film colours, <code>hue</code> for a hue spectrum, <code>fire</code> for a flame effect, <code>sunset</code> for dusk colours, <code>neon</code> for neon megenta and cyan, <code>titanium</code> for titanium anodisation colours</p>
 <p><code>contrast</code> apply a power based contrast curve. Default is zero meaning no contrast curve applied.</p>
 </div>
-<h4 onclick="toggleAccordion('accordion-predefined-vars')">▶ Predefined Vars</h4>
+<h4 onclick="toggleAccordion('accordion-predefined-vars')" class="accordion"> Predefined Vars</h4>
 <div id="accordion-predefined-vars" class="closed">
 <p><code>bpm</code> Beats per minute. Value resets unless set every time the code is updated.</p>
 <p><code>time</code> Time, counted in beats (including fractions of a beat)</p>
@@ -607,11 +613,11 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>pad</code> Envelope types eg <code>envelope=pad</code>; also <code>full</code> and <code>simple</code></p>
 <p><code>wow</code> Randomly but smoothly varying signal, good for simulating analog 'wow' pitch distortion; eg <code>addc=wow</code></p>
 </div>
-<h4 onclick="toggleAccordion('accordion-controls')">▶ Controls</h4>
+<h4 onclick="toggleAccordion('accordion-controls')" class="accordion"> Controls</h4>
 <div id="accordion-controls" class="closed">
 <p><code>slider{name:'Foo', min:-5, max:5, init:0}</code> Create a new slider control on the page, which can be used for live control of live coded expressions. The name uniquely identifies the slider. The min and max parameters default to 0 and 1. The value dynamically updates to reflect the current position of the slider control.</p>
 </div>
-<h4 onclick="toggleAccordion('accordion-functions')">▶ Functions</h4>
+<h4 onclick="toggleAccordion('accordion-functions')" class="accordion"> Functions</h4>
 <div id="accordion-functions" class="closed">
 <p><code>pitch{degree:1,sharp:1,octave:3,scale:minor}</code> Calculate a frequency in Hz for a scale degree on an octave, with possible sharpening/flattening.</p>
 <p><code>first{1,2,3}</code> Returns the first element in a tuple (1 in the example)</p>
@@ -623,7 +629,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>sum{1,2,3}</code> Returns the sum of all elements in a tuple (6 in the example)</p>
 <p><code>avg{1,2,3}</code> Returns the mean average of all elements in a tuple (2 in the example)</p>
 </div>
-<h4 onclick="toggleAccordion('accordion-play-samples')">▶ Play Samples</h4>
+<h4 onclick="toggleAccordion('accordion-play-samples')" class="accordion"> Play Samples</h4>
 <div id="accordion-play-samples" class="closed">
 <p>
 <code>a</code> Gameboy hihat<br/>
@@ -806,11 +812,11 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-??Special param on every event that is its index in a tuple
- Eg then can target values to a specific instance from a tuple:
- p dsaw 0, add=(0,2), sus=(2,1/2)[this.index]
-Add doc section with an example and a detailed explanation of it
+!Adding something@f to []l@e forces the []l to per frame which is wrong
+ v glow 0, dur=1/4, sus=1, loc={w:1/2,h:1/2,x:[-1:1]l2@e,y:[-1:1]l3@e}+firefly/8
+ ^ Try commenting out the "+firefly" bit
 !Docs: att/dec/rel/suslevel are NOT common params, they are audio only params
+Add doc section with an example and a detailed explanation of it
 floor function:  delay=floor{[]r,to:1/4}  or  add=floor{[0:7]r,to:2}
 stutter parameter
  ??? Some way to create tuples with arbitrary cardinality from expressions? Then you could do stutter with only delay???
@@ -833,6 +839,9 @@ Follow player refactor
 For player.pulse, can we make sure the order within the tuple is consistent?
  Eg so the most recent events are first in the tuple in case of event overlap?
  Also does pulse cutoff too early ignoring release time?
+??Special param on every event that is its index in a tuple
+ Eg then can target values to a specific instance from a tuple:
+ p dsaw 0, add=(0,2), sus=(2,1/2)[this.index]
 Allow overriding subparams; eg  set p lpf.q=20  or  set p room.mix*=2
  Actually, can already modify subparams; just can't replace; eg: lpf+={q:10}
 Analyser on each player for pulse?
