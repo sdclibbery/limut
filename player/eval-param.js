@@ -32,6 +32,7 @@ define((require) => {
       return v
     } else if (typeof value == 'function') { // Call function to get current value
       if (value.evalOverride !== undefined) { return value.evalOverride }
+      if (value.interval === 'event') { beat = event.count } // Force per event if explicitly called for
       let v = value(event, beat, evalRecurse)
       return evalRecurse(v, event, beat)
     } else if (typeof value == 'object') { // Eval each field in the object
@@ -48,6 +49,7 @@ define((require) => {
   let clearMods = (event, beat) => {
     if (event._originalB !== undefined) { // remove any time modification when recursing
       beat = event._originalB
+      event.count = event._originalCount
     }
     return beat
   }

@@ -20,8 +20,11 @@ define(function(require) {
           let override = overrides.get(Math.round(modCount*16384)/16384)
           if (override !== undefined) { return override }
           ev._originalB = b
+          ev._originalCount = ev.count
+          ev.count = modCount
           let result = evalParamFrame(exp, ev, b%per)
           delete ev._originalB
+          delete ev._originalCount
           return result
         }
     }

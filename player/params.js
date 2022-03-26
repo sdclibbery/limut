@@ -153,8 +153,8 @@ define(function(require) {
   assert(3, evalParamFrame(exp, ev(0,0), 1))
   assert(2, evalParamFrame(exp, ev(0,0), 2))
   assert(3, evalParamFrame(exp, ev(0,0), 3))
-  assert(3, evalParamFrame(exp, ev(0,0), 4))
-  assert(4, evalParamFrame(exp, ev(0,0), 5))
+  assert(2, evalParamFrame(exp, ev(0,0), 4))
+  assert(3, evalParamFrame(exp, ev(0,0), 5))
   assert(3, evalParamFrame(exp, ev(4,4), 4))
   assert(4, evalParamFrame(exp, ev(4,4), 5))
 

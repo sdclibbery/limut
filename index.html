@@ -773,6 +773,7 @@ Digital JPEG corruption filter param
  Subparam for block scale
  Subparam for extremity of effect within corrupted blocks?
 Can set texture repeat for text and image etc synths? Subparam or not?
+ ? Not needed now we have repeat param?
 Starfield shader; https://www.shadertoy.com/view/WdyXDm
 Should the coord system for text positionin not be -1:1 like for normal loc?
 slitscan param for 2001 style slitscan, subparams for shape, rotation
@@ -816,10 +817,15 @@ shadertoy synth multiple channels
 !Adding something@f to []l@e forces the []l to per frame which is wrong
  v glow 0, dur=1/4, sus=1, loc={w:1/2,h:1/2,x:[-1:1]l2@e,y:[-1:1]l3@e}+firefly/8
  ^ Try commenting out the "+firefly" bit
+ EvalParamPerFrame would have to check the interval on everything, and force b to e.count..???
+ Write new tests for new behaviour
+ TEST ALL CASES
+ TEST some complex examples
 Add doc section with an example and a detailed explanation of it
 floor function:  delay=floor{[]r,to:1/4}  or  add=floor{[0:7]r,to:2}
 stutter parameter
  ??? Some way to create tuples with arbitrary cardinality from expressions? Then you could do stutter with only delay???
+  ?? Or stutter function to use with delay?
  stutter=4  - repeat each note 4 times within the duration the original note would have had
  stutter={4,dur:1/8}  - repeat each note four times, with each repeat lasting 1/8 of a beat
 Should really reset vars on code update; eg set var, then comment out, and it still applies...
