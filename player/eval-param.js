@@ -27,6 +27,7 @@ define((require) => {
 
   let evalParamNow = (evalRecurse, value, event, beat, flattenTuples) => {
     if (Array.isArray(value)) { // tuple, eval individual values
+      if (value.interval === 'event') { beat = event.count } // Force per event if explicitly called for
       let v = value.map(v => evalRecurse(v, event, beat))
       if (flattenTuples) { v = v.flat() }
       return v
@@ -36,6 +37,7 @@ define((require) => {
       let v = value(event, beat, evalRecurse)
       return evalRecurse(v, event, beat)
     } else if (typeof value == 'object') { // Eval each field in the object
+      if (value.interval === 'event') { beat = event.count } // Force per event if explicitly called for
       let result = {}
       for (let k in value) {
         result[k] = evalRecurse(value[k], event, beat)
@@ -149,9 +151,21 @@ define((require) => {
   assert(0, evalParamEvent(perEventValueGetB, ev(0), 1))
   assert(0, evalParamFrame(perEventValueGetB, ev(0), 1))
   let perFrameThenEventValueGetB = (e,b,er) => er(perEventValueGetB,e,b)
-  perFrameThenEventValueGetB.interval= 'frame'
+  perFrameThenEventValueGetB.interval = 'frame'
   assert(0, evalParamEvent(perFrameThenEventValueGetB, ev(0), 1))
   assert(0, evalParamFrame(perFrameThenEventValueGetB, ev(0), 1))
+
+  let perFrameValueGetB = (e,b) => b
+  perFrameValueGetB.interval= 'frame'
+  let perEventThenFrameTuple = [perFrameValueGetB,perFrameValueGetB]
+  perEventThenFrameTuple.interval = 'event'
+  assert([0,0], evalParamEvent(perEventThenFrameTuple, ev(0), 1))
+  assert([0,0], evalParamFrame(perEventThenFrameTuple, ev(0), 1))
+
+  let perEventThenFrameObject = {foo:perFrameValueGetB}
+  perEventThenFrameObject.interval = 'event'
+  assert({foo:0,interval:'event'}, evalParamEvent(perEventThenFrameObject, ev(0), 1))
+  assert({foo:0,interval:'event'}, evalParamFrame(perEventThenFrameObject, ev(0), 1))
 
   console.log('Eval param tests complete')
   }
