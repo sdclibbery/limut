@@ -144,6 +144,15 @@ define((require) => {
   overriddenFunc.evalOverride = 'Foo'
   assert('Foo', evalParamFrame(overriddenFunc, ev(0), 0))
 
+  let perEventValueGetB = (e,b) => b
+  perEventValueGetB.interval= 'event'
+  assert(0, evalParamEvent(perEventValueGetB, ev(0), 1))
+  assert(0, evalParamFrame(perEventValueGetB, ev(0), 1))
+  let perFrameThenEventValueGetB = (e,b,er) => er(perEventValueGetB,e,b)
+  perFrameThenEventValueGetB.interval= 'frame'
+  assert(0, evalParamEvent(perFrameThenEventValueGetB, ev(0), 1))
+  assert(0, evalParamFrame(perFrameThenEventValueGetB, ev(0), 1))
+
   console.log('Eval param tests complete')
   }
 

@@ -817,10 +817,13 @@ shadertoy synth multiple channels
 !Adding something@f to []l@e forces the []l to per frame which is wrong
  v glow 0, dur=1/4, sus=1, loc={w:1/2,h:1/2,x:[-1:1]l2@e,y:[-1:1]l3@e}+firefly/8
  ^ Try commenting out the "+firefly" bit
- EvalParamPerFrame would have to check the interval on everything, and force b to e.count..???
- Write new tests for new behaviour
- TEST ALL CASES
- TEST some complex examples
+ EvalParamPerFrame check the interval on everything, and force b to e.count...
+  Write new tests for new behaviour
+   evalParam forces b to e.count on sub-@e
+    !Same for evalling tuples and objects
+   time modifiers set e.count as well as b, and then it gets cleared
+  TEST ALL CASES
+  TEST some complex examples
 Add doc section with an example and a detailed explanation of it
 floor function:  delay=floor{[]r,to:1/4}  or  add=floor{[0:7]r,to:2}
 stutter parameter
