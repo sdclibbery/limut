@@ -82,6 +82,12 @@ define(function(require) {
     assert(0, evalParamFrame(w,ev(0),0))
     assert(7, evalParamFrame(w,ev(1/2),1/2))
 
+    w = wrapWithModifiers((e,b,er) => e.count, {per:2})
+    assert(0, evalParamFrame(w,ev(0),0))
+    assert(1, evalParamFrame(w,ev(1),1))
+    assert(0, evalParamFrame(w,ev(2),2))
+    assert(1, evalParamFrame(w,ev(3),3))
+
     console.log('Time modifiers tests complete')
   }
 
