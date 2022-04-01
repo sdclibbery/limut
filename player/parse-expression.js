@@ -487,8 +487,8 @@ define(function(require) {
   assert(1, evalParamFrame(p,ev(0,0),3,evalParamFrame))
   assert(2, evalParamFrame(p,ev(1,1),0,evalParamFrame))
   assert(2, evalParamFrame(p,ev(1,1),1,evalParamFrame))
-  assert(2, evalParamFrame(p,ev(1,1),2,evalParamFrame))
-  assert(2, evalParamFrame(p,ev(1,1),3,evalParamFrame))
+  assert(3, evalParamFrame(p,ev(1,1),2,evalParamFrame))
+  assert(3, evalParamFrame(p,ev(1,1),3,evalParamFrame))
   
   p = parseExpression('[1,[2,3]t2@e]l1@f')
   assert(1, evalParamFrame(p,ev(0,0),0,evalParamFrame))
@@ -504,7 +504,7 @@ define(function(require) {
   assert(1, evalParamFrame(p,ev(0,0),0,evalParamFrame))
   assert(1, evalParamFrame(p,ev(0,0),1,evalParamFrame))
   assert(2, evalParamFrame(p,ev(2,2),2,evalParamFrame))
-  assert(2, evalParamFrame(p,ev(2,2),3,evalParamFrame))
+  assert(3, evalParamFrame(p,ev(2,2),3,evalParamFrame))
   
   let p2
   p = parseExpression('[1,[2,3]l1@f]t2@e')
