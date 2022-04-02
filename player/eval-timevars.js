@@ -23,7 +23,7 @@ define(function(require) {
 
   let timeVar = (vs, ds) => {
     let steps = timeVarSteps(vs, ds)
-    return (e,b, evalRecurse) => {
+    return (e,b) => {
       let count = (b+0.0001) % steps.totalDuration
       let step = steps.filter(st => isInTimeVarStep(st, count) )[0]
       return (step !== undefined) && step.value
@@ -46,14 +46,14 @@ define(function(require) {
 
   let linearTimeVar = (vs, ds) => {
     let steps = timeVarSteps(vs, ds)
-    return (e,b, evalRecurse) => {
+    return (e,b) => {
       let count = b % steps.totalDuration
       for (let idx = 0; idx < steps.length; idx++) {
         let pre = steps[idx]
         if (isInTimeVarStep(pre, count)) {
           let post = steps[(idx+1) % steps.length]
           let lerp = calcLerp(count, pre._time, pre.duration)
-          return lerpValue(lerp, evalRecurse(pre.value,e,b), evalRecurse(post.value,e,b))
+          return lerpValue(lerp, pre.value, post.value)
         }
       }
     }
@@ -61,7 +61,7 @@ define(function(require) {
 
   let smoothTimeVar = (vs, ds) => {
     let steps = timeVarSteps(vs, ds)
-    return (e,b, evalRecurse) => {
+    return (e,b) => {
       let count = b % steps.totalDuration
       for (let idx = 0; idx < steps.length; idx++) {
         let pre = steps[idx]
@@ -69,14 +69,14 @@ define(function(require) {
           let post = steps[(idx+1) % steps.length]
           let lerp = calcLerp(count, pre._time, pre.duration)
           lerp = lerp*lerp*(3 - 2*lerp) // bezier ease in/out
-          return lerpValue(lerp, evalRecurse(pre.value,e,b), evalRecurse(post.value,e,b))
+          return lerpValue(lerp, pre.value, post.value)
         }
       }
     }
   }
 
   let eventTimeVar = (vs, ds_parsed) => {
-    return (e,b, evalRecurse) => {
+    return (e,b) => {
       if (!e.countToTime) { return vs[0] || 0 }
       let ds = ds_parsed
       if (ds === undefined) { ds = e.endTime - e._time }
@@ -90,14 +90,14 @@ define(function(require) {
           let post = steps[idx+1]
           if (post === undefined) { post = pre }
           let lerp = calcLerp(count, pre._time, pre.duration)
-          return lerpValue(lerp, evalRecurse(pre.value,e,b), evalRecurse(post.value,e,b))
+          return lerpValue(lerp, pre.value, post.value)
         }
       }
     }
   }
 
   let eventIdxVar = (vs) => {
-    return (e,b, evalRecurse) => {
+    return (e,b) => {
       let v = vs[Math.floor(e.idx || 0) % vs.length]
       return (v !== undefined) && v
     }

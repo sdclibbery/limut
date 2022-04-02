@@ -116,7 +116,7 @@ define(function (require) {
     return freq
   }
 
-  let pitchFunc = (args, e,b,evalRecurse) => {
+  let pitchFunc = (args, e,b) => {
     args = args || {}
     let degree = param(args.value, param(args.degree, 0))
     let octave = param(args.octave, 4)

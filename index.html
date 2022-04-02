@@ -767,7 +767,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-Digital JPEG corruption filter param
+Digital JPEG corruption filter param - https://www.shadertoy.com/view/Md2GDw
  Takes square blocks and maps then to random other parts of the image, or darkens them, or colours them randomly green or magenta
  Main param value determines the amout of corruption
  Subparam for block scale
@@ -818,10 +818,10 @@ shadertoy synth multiple channels
  v glow 0, dur=1/4, sus=1, loc={w:1/2,h:1/2,x:[-1:1]l2@e,y:[-1:1]l3@e}+firefly/8
  ^ Try commenting out the "+firefly" bit
  EvalParamPerFrame check the interval on everything, and force b to e.count...
-  [1:[2:7]e@f]r@e not working when called through a var; the @f is not respected
   TEST ALL CASES
   TEST some complex examples
 https://github.com/sdclibbery/limut/pull/4/files
+!p dsaw 0., dur=2, sus={level:1/8}
 Multiple time modifiers up a hierarchy probably don't work properly
  Because we can only save a single set of _originalXxx values on the event
  Make a test case

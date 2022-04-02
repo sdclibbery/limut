@@ -6,7 +6,7 @@ define(function(require) {
   let {isVarChar} = require('player/parse-var')
 
   let createAggregator = (name, fn) => {
-    let aggFunc = (args, e,b,evalRecurse) => {
+    let aggFunc = (args, e,b) => {
       let vs
       if (!args) { vs = [] }
       else if (Array.isArray(args)) { vs = args }
@@ -33,7 +33,7 @@ define(function(require) {
       let args = parseMap(state)
       let result
       if (!!args) { // call aggregator as function
-        result = (e,b,evalRecurse) => aggFn(evalParamFrame(args,e,b), e,b,evalRecurse)
+        result = (e,b) => aggFn(evalParamFrame(args,e,b), e,b)
       } else { // return aggregator function directly for use as a tuple indexer
         result = aggFn          
       }

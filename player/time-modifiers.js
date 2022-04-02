@@ -14,7 +14,7 @@ define(function(require) {
         }
     }
     if (modifiers.per) {
-      return (ev,b,evalRecurse) => {
+      return (ev,b) => {
           let per = evalParamFrame(modifiers.per, ev,b)
           let modCount = ev.count % per // Use event.count for overrides as overrides are essentially instantaneous
           let override = overrides.get(Math.round(modCount*16384)/16384)

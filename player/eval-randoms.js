@@ -118,7 +118,7 @@ define(function(require) {
     } else if (vs.separator == ':') {
       let lo = param(vs[0], 0)
       let hi = param(vs[1], 1)
-      evaluator = (e,b,evalRecurse) => evalRandomRanged(generator, evalRecurse(lo,e,b), evalRecurse(hi,e,b), e, b, evalRecurse)
+      evaluator = (e,b,evalRecurse) => evalRandomRanged(generator, lo, hi, e, b, evalRecurse)
     } else {
       evaluator = (e,b,evalRecurse) => evalRandomSet(generator, vs, e, b, evalRecurse)
     }

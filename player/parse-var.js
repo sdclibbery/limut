@@ -2,9 +2,6 @@
 define(function(require) {
   let vars = require('vars')
   let players = require('player/players')
-  let parseArray = require('player/parse-array')
-  let eatWhitespace = require('player/eat-whitespace')
-  let tupleIndexer = require('player/tuple-indexer')
   let {evalParamFrame} = require('player/eval-param')
 
   let isVarChar = (char) => {
@@ -39,7 +36,7 @@ define(function(require) {
     if (playerId && param) {
       dependsOn.push(playerId)
     }
-    let result = (event,b,evalRecurse) => {
+    let result = (event,b) => {
       let v
       if (param) {
         let player = players.instances[playerId]
