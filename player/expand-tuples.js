@@ -22,6 +22,7 @@ define((require) => {
           let e = Object.assign({}, event)
           if (Array.isArray(v)) {
             e[k] = v.flat()[i] // tuple in a tuple
+            if (e[k] === undefined) { continue }
           } else if (typeof v == 'function' || typeof v == 'object') {
             e[k] = (e,b,evalRecurse) => tupleIndex(evalRecurse(v, e,b),i)
             e[k].interval = v.interval
@@ -85,6 +86,21 @@ define((require) => {
     p = expandTuples([{x:()=>{return({r:()=>[1,2],g:3})}}])
     assert({r:1,g:3}, evalParamFrame(p[0].x,e,b))
     assert({r:2,g:3}, evalParamFrame(p[1].x,e,b))
+
+    p = expandTuples([{x:()=>{return({r:()=>[1,2],g:[3,4]})}}])
+    assert({r:1,g:3}, evalParamFrame(p[0].x,e,b))
+    assert({r:1,g:4}, evalParamFrame(p[1].x,e,b))
+    assert({r:2,g:3}, evalParamFrame(p[2].x,e,b))
+    assert({r:2,g:4}, evalParamFrame(p[3].x,e,b))
+
+    let pff = () => [3,4]
+    pff.interval = 'frame'
+    p = expandTuples([{x:[{r:1,g:pff},{r:2,g:pff}]}])
+    assert({r:1,g:3}, evalParamFrame(p[0].x,e,b))
+    assert({r:1,g:4}, evalParamFrame(p[1].x,e,b))
+    assert({r:2,g:3}, evalParamFrame(p[2].x,e,b))
+    assert({r:2,g:4}, evalParamFrame(p[3].x,e,b))
+    assert(undefined, p[4])
   }
   return expandTuples
 })
