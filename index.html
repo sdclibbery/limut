@@ -814,7 +814,7 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-https://github.com/sdclibbery/limut/pull/4/files
+!v glow 0, loc={x:(-1/2,1/2),y:this.ch,w:1/8,h:1/8}, ch=(0,1/2)
 !p dsaw 0., dur=2, sus={level:1/8}
 Multiple time modifiers up a hierarchy probably don't work properly
  Because we can only save a single set of _originalXxx values on the event
@@ -824,6 +824,7 @@ Add doc section with an example and a detailed explanation of it
 floor function:  delay=floor{[]r,to:1/4}  or  add=floor{[0:7]r,to:2}
 stutter parameter
  ??? Some way to create tuples with arbitrary cardinality from expressions? Then you could do stutter with only delay???
+  !!Some mechanism for creating tuples cuould be generally useful; eg for making a bunch of glows all at once
   ?? Or stutter function to use with delay?
  stutter=4  - repeat each note 4 times within the duration the original note would have had
  stutter={4,dur:1/8}  - repeat each note four times, with each repeat lasting 1/8 of a beat

@@ -2,27 +2,19 @@
 define((require) => {
 
   let expandObjectTuples = (o) => {
-    let maxCardinality = 0
     for (let k in o) {
-      if (Array.isArray(o[k])) {
-        maxCardinality = Math.max(maxCardinality, o[k].length)
-      }
-    }
-    if (maxCardinality == 0) { return o }
-    let os = []
-    for (let i=0; i<maxCardinality; i++) {
-      let on = {}
-      for (let k in o) {
-        let v = o[k]
-        if (Array.isArray(v)) {
-          on[k] = v[i%v.length]
-        } else {
+      let vs = o[k]
+      if (Array.isArray(vs)) {
+        let es = []
+        vs.forEach(v => {
+          let on = Object.assign({}, o)
           on[k] = v
-        }
+          es.push(...expandObjectTuples(on))
+        })
+        return es
       }
-      os.push(on)
     }
-    return os
+    return [o]
   }
 
   let evalParamNow = (evalRecurse, value, event, beat, flattenTuples) => {
@@ -42,7 +34,8 @@ define((require) => {
       for (let k in value) {
         result[k] = evalRecurse(value[k], event, beat)
       }
-      return expandObjectTuples(result) // and hoist tuples up
+      let r = expandObjectTuples(result) // and hoist tuples up
+      return r.length === 1 ? r[0] : r
     } else {
       return value
     }
@@ -110,8 +103,8 @@ define((require) => {
   assert([1,2], evalParamEvent([1,2], ev(0)))
   assert([1,5], evalParamEvent([1,() => 5], ev(0)))
   assert([{x:1},{x:2}], evalParamEvent({x:[1,2]}, ev(0)))
-  assert([{x:1,y:3},{x:2,y:4}], evalParamEvent({x:[1,2],y:[3,4]}, ev(0)))
-  assert([{x:1,y:4},{x:2,y:5},{x:3,y:4}], evalParamEvent({x:[1,2,3],y:[4,5]}, ev(0)))
+  assert([{x:1,y:3},{x:1,y:4},{x:2,y:3},{x:2,y:4}], evalParamEvent({x:[1,2],y:[3,4]}, ev(0)))
+  assert([{x:1,y:4},{x:1,y:5},{x:2,y:4},{x:2,y:5},{x:3,y:4},{x:3,y:5}], evalParamEvent({x:[1,2,3],y:[4,5]}, ev(0)))
   assert([1,2,3], evalParamEvent([1,[2,3]], ev(0)))
   assert([{x:1},{x:2},{x:3}], evalParamEvent([{x:1},{x:[2,3]}], ev(0)))
   assert([1,2,3], evalParamEvent([1,() => [2,3]], ev(0)))

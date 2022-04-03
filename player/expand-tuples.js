@@ -38,7 +38,8 @@ define((require) => {
   }
 
   let expandTuples = (es) => {
-    return es.flatMap(e => multiplyEvents(e))
+    let result = es.flatMap(e => multiplyEvents(e))
+    return result
   }
 
   // TESTS //
@@ -60,6 +61,7 @@ define((require) => {
     assert([{x:1},{x:2}], expandTuples([{x:[1,2]}]))
     assert([{x:1,y:3},{x:1,y:4},{x:2,y:3},{x:2,y:4}], expandTuples([{x:[1,2],y:[3,4]}]))
     assert([{x:1},{x:2},{x:3}], expandTuples([{x:[1,[2,3]]}]))
+    assert([{x:1,y:3,w:5},{x:1,y:4,w:5},{x:2,y:3,w:5},{x:2,y:4,w:5}], expandTuples([{x:[1,2],y:[3,4],w:5}]))
 
     p = expandTuples([{x:()=>[1,2]}])
     assert(1, evalParamFrame(p[0].x,e,b))
