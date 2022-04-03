@@ -814,12 +814,6 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-!Adding something@f to []l@e forces the []l to per frame which is wrong
- v glow 0, dur=1/4, sus=1, loc={w:1/2,h:1/2,x:[-1:1]l2@e,y:[-1:1]l3@e}+firefly/8
- ^ Try commenting out the "+firefly" bit
- EvalParamPerFrame check the interval on everything, and force b to e.count...
-  TEST ALL CASES
-  TEST some complex examples
 https://github.com/sdclibbery/limut/pull/4/files
 !p dsaw 0., dur=2, sus={level:1/8}
 Multiple time modifiers up a hierarchy probably don't work properly

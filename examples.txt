@@ -1522,3 +1522,44 @@ g3 glass 0, delay=[0,1/2]r{per:4,0:0}, add=[0:7]l5{per:8,0:0}+ch, oct=5
 g4 glass 0, delay=[0,1/2,1]r{per:4,0:0}, add=[0:3]l7*2+[0,1]r+ch, oct=6
 
 
+// bpm=130
+// scale=phrygian
+// set * swing=58
+// main.amp=2
+// pk play V.
+// ph play [.-]-[.-][--]
+// v grid 0, add=ba.lpf[max]/100, fore=black, back=random, rotate=ba.pulse[max]/128, mirror=50, recol=oil, ripple=1/3
+// ba saw 0[.0].[.0], dur=1/4, oct=2, add=[0:4]l3{per:4}, lpf={[200:[300:1500]l5]e,q:12}, flanger=1/7, amp=3/2
+// rb dbass 0, dur=8, lpf=[100:200]n4, amp=3/2, addc=(-1,1)/8, envelope=pad
+// le supersaw 0, add=ba.add[max], delay=(0,[1/2,3/4]r), lpf=[2000:ba.lpf[max]]e, room, sus=1/4
+
+
+bpm=125
+scale=phrygian
+set * swing=58
+main.amp=3/2
+v kal 5, add=ba.value[avg]/10, zoom=1/3, scroll=1, contrast=1/2, amp=1+2*ls.pulse[max], back=2*white*ps.pulse[max]
+pk play (Xv).
+pr play .[.m].[.mxm], dur=1, pan=[-1/2:1/2]r
+ph play .<---[--]>, fold, pan=-1/2, room=1/3
+ps play ..(K)., pan=1/2, room=1/3
+fill play #, amp=[0,1]t[30,2], pan(-1,1)
+ls tri .17[.0], sus=1/8, add=(0,2,4,6,8), oct=3, lpf=2000, room, phaser=1/8, amp=[0,1]t[12,4], pan=[1:1]r, addc=wow
+ba dsaw 0710260, sus=[1/2:1/6]l16, lpf={[200:800]l4*[2:1/2]e,q:15}, delay=(0,[1/4,3/4,5/4]r,3/2), att=0.03, addc=[0,0,0,0,0,[0:3]e]r, oct=2, pan=[-1/3:1/3]s+[-1/4:1/4]r
+//--
+// am ambi 0, dur=4, amp=[0:3/2]l[32,0]@f, add=(0,2,4,6), oct=(3,4), room=1/2, addc=wow, chop=4
+// set [p*,v] lpf=[5000:800]l[32,0], add+=5, fore=[#f88:#f80]n2
+// set ba flanger=1/3, room, lpf+=[0:400]n2, addc+=wow*3
+
+
+
+scale=[phrygian, dorian, major, lydian]t32
+main.amp=1.3
+set * swing=54
+ch=[(0,2,4,7),(0,3,5,9),(1,3,4,6),(-1,3,4,8)]t8
+v glow 0, loc={x:[-1:1]r@f/4,y:this.ch/10-1/2,w:1/2,h:1/2}, ch=ch, fore={labh:this.ch/10}
+ba dbass 0, dur=4, add=ch[0], lpf=400, amp=3, addc=(-1,1)/8
+x xylo 0, dur=1/2, add=ch[[0,1,2,3]], room, delay=(0,[1/2,3/4]r{per:4,seed:101+[0:4]r32}), pan=[-1/3:1/3]r
+a ambi 0, dur=8, add=ch, oct=(3,4), sus=6, room=2, pan=[-1/2:1/2]r
+
+
