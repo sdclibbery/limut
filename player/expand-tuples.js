@@ -1,6 +1,6 @@
 'use strict'
 define((require) => {
-  let {evalParamFrame} = require('player/eval-param')
+  let {evalParamFrame,evalParamFrameIgnoreThisVars} = require('player/eval-param')
 
   let tupleIndex = (v, i) => {
     if (Array.isArray(v)) {
@@ -15,7 +15,7 @@ define((require) => {
       if (k == 'beat') { continue }
       let v = event[k]
       if (v && v.__alreadyExpanded) { continue }
-      let evaled = evalParamFrame(v, event, event.count)
+      let evaled = evalParamFrameIgnoreThisVars(v, event, event.count)
       if (Array.isArray(evaled)) { // If param k is going to eval to a tuple, expand it out
         let es = []
         for (let i=0; i<evaled.length; i++) {
@@ -24,7 +24,7 @@ define((require) => {
             e[k] = v.flat()[i] // tuple in a tuple
             if (e[k] === undefined) { continue }
           } else if (typeof v == 'function' || typeof v == 'object') {
-            e[k] = (e,b,evalRecurse) => tupleIndex(evalRecurse(v, e,b),i)
+            e[k] = (e,b,evalRecurse) => tupleIndex(evalRecurse(v, e,b),i) // Get correct value out of a function that returns a tuple
             e[k].interval = v.interval
             e[k].__alreadyExpanded = true
           } else {
@@ -101,6 +101,32 @@ define((require) => {
     assert({r:2,g:3}, evalParamFrame(p[2].x,e,b))
     assert({r:2,g:4}, evalParamFrame(p[3].x,e,b))
     assert(undefined, p[4])
+
+    let tvf = (e) => e.f
+    tvf.interval = 'frame'
+    tvf._thisVar = true
+    p = expandTuples([{x:tvf,f:1}])
+    assert(1, p.length)
+    assert(1, evalParamFrame(p[0].x,p[0],b))
+    assert(1, evalParamFrame(p[0].f,p[0],b))
+
+    p = expandTuples([{x:tvf,f:[3,4]}])
+    assert(2, p.length)
+    assert(3, evalParamFrame(p[0].x,p[0],b))
+    assert(3, evalParamFrame(p[0].f,p[0],b))
+    assert(4, evalParamFrame(p[1].x,p[1],b))
+    assert(4, evalParamFrame(p[1].f,p[1],b))
+
+    p = expandTuples([{x:[{r:1,g:tvf},{r:2,g:tvf}],f:[3,4]}])
+    assert(4, p.length)
+    assert({r:1,g:3}, evalParamFrame(p[0].x,p[0],b))
+    assert(3, evalParamFrame(p[0].f,p[0],b))
+    assert({r:1,g:4}, evalParamFrame(p[1].x,p[1],b))
+    assert(4, evalParamFrame(p[1].f,p[1],b))
+    assert({r:2,g:3}, evalParamFrame(p[2].x,p[2],b))
+    assert(3, evalParamFrame(p[2].f,p[2],b))
+    assert({r:2,g:4}, evalParamFrame(p[3].x,p[3],b))
+    assert(4, evalParamFrame(p[3].f,p[3],b))
   }
   return expandTuples
 })

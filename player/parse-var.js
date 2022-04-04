@@ -59,6 +59,9 @@ define(function(require) {
       if (v === undefined) { v = 0 } // If not found as a var, assume its for a currently unavailable player and default to zero
       return v
     }
+    if (playerId === 'this') {
+      result._thisVar = true
+    }
     return result
   }
 

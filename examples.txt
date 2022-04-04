@@ -1563,3 +1563,9 @@ x xylo 0, dur=1/2, add=ch[[0,1,2,3]], room, delay=(0,[1/2,3/4]r{per:4,seed:101+[
 a ambi 0, dur=8, add=ch, oct=(3,4), sus=6, room=2, pan=[-1/2:1/2]r
 
 
+v glow 0, loc={x:this.x,y:this.y,w:1/8,h:1/8}, x=(-1/2,1/2), y=(0,1/2)
+v glow 0, loc={x:(-1/2,1/2),y:(0,1/2),w:1/8,h:1/8}
+v glow 0, loc={x:(-1/2,1/2),y:[(0,1/2)]r@f,w:1/8,h:1/8}
+v glow 0, loc={x:(-1/2,1/2),y:this.y,w:1/8,h:1/8}, y=(0,1/2)
+
+
