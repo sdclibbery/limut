@@ -1,6 +1,6 @@
 'use strict'
 define(function (require) {
-  let param = require('player/default-param')
+  let {subParam} = require('player/sub-param')
 
   let hsv2rgb = (ar,h,s,v) => {
     let f = (n,k=(n+h*6)%6) => v - v*s*Math.max( Math.min(k,4-k,1), 0)
@@ -41,24 +41,29 @@ define(function (require) {
     if (cachedObjects[n] === undefined) { cachedObjects[n] = [] }
     return cachedObjects[n]
   }
-  let colour = ({labh,l,c,h,s,v,r,g,b,a}, d, name) => {
+  let colour = (v, d, name) => {
     let ar = ca(name)
+    let labh = subParam(v, 'labh', undefined)
+    let h = subParam(v, 'h', undefined)
+    let r = subParam(v, 'r', d.r)
+    let g = subParam(v, 'g', d.g)
+    let b = subParam(v, 'b', d.b)
     if (labh !== undefined) {
-      lab2rgb(ar, param(l, 1/2), param(c, 1), labh)
-      if (r !== undefined) { ar[0] = r }
-      if (g !== undefined) { ar[1] = g }
-      if (b !== undefined) { ar[2] = b }
+      lab2rgb(ar, subParam(v, 'l', 1/2), subParam(v, 'c', 1), labh)
+      if (v.r !== undefined) { ar[0] = r }
+      if (v.g !== undefined) { ar[1] = g }
+      if (v.b !== undefined) { ar[2] = b }
     } else if (h !== undefined) {
-      hsv2rgb(ar, h, param(s, 1), param(v, 1))
-      if (r !== undefined) { ar[0] = r }
-      if (g !== undefined) { ar[1] = g }
-      if (b !== undefined) { ar[2] = b }
+      hsv2rgb(ar, h, subParam(v, 's', 1), subParam(v, 'v', 1))
+      if (v.r !== undefined) { ar[0] = r }
+      if (v.g !== undefined) { ar[1] = g }
+      if (v.b !== undefined) { ar[2] = b }
     } else {
-      ar[0] = param(r, d.r)
-      ar[1] = param(g, d.g)
-      ar[2] = param(b, d.b)
+      ar[0] = r
+      ar[1] = g
+      ar[2] = b
     }
-    ar[3] = param(a, d.a)
+    ar[3] = subParam(v, 'a', d.a)
     return ar
   }
 

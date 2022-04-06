@@ -110,17 +110,17 @@ let verts = (loc, window) => {
       a[0] = v
       a[1] = v
     } else {
-      a[0] = param(v.x, d.x)
-      a[1] = param(v.y, d.y)
+      a[0] = subParam(v, 'x', d.x)
+      a[1] = subParam(v, 'y', d.y)
     }
     return a
   }
   let rect = (v, d, name) => {
     let o = co(name)
-    o.x = param(v.x, d.x)
-    o.y = param(v.y, d.y)
-    o.w = param(v.w, d.w)
-    o.h = param(v.h, d.h)
+    o.x = subParam(v, 'x', d.x)
+    o.y = subParam(v, 'y', d.y)
+    o.w = subParam(v, 'w', d.w)
+    o.h = subParam(v, 'h', d.h)
     return o
   }
 
@@ -172,15 +172,15 @@ let verts = (loc, window) => {
         0,0
       )
       let vignette = evalMainParamFrame(params, 'vignette', 0, state.count)
-      let loc = rect(evalMainParamFrame(params, 'loc', blankObj, state.count), defLoc, 'loc')
+      let loc = rect(evalParam.evalParamFrame(params.loc, params, state.count), defLoc, 'loc')
       let repeat = ca('repeat',
         evalMainParamFrame(params, 'repeat', 0, state.count),
         0,
         evalSubParamFrame(params, 'repeat', 'x', 0, state.count),
         evalSubParamFrame(params, 'repeat', 'y', 0, state.count)
       )
-      let scroll = vec(evalMainParamFrame(params, 'scroll', blankObj, state.count), defScroll, 'scroll')
-      let zoom = vec(evalMainParamFrame(params, 'zoom', blankObj, state.count), defZoom, 'zoom')
+      let scroll = vec(evalParam.evalParamFrame(params.scroll, params, state.count), defScroll, 'scroll')
+      let zoom = vec(evalParam.evalParamFrame(params.zoom, params, state.count), defZoom, 'zoom')
       let perspective = evalMainParamFrame(params, 'perspective', 0, state.count)
       let tunnel = evalMainParamFrame(params, 'tunnel', 0, state.count)
       let ripple = ca('ripple',
@@ -195,14 +195,14 @@ let verts = (loc, window) => {
         evalSubParamFrame(params, 'mirror', 'rotate', 0, state.count),
         0
       )
-      let fore = colour(evalMainParamFrame(params, 'fore', blankObj, state.count), defFore, 'fore')
-      let back = colour(evalMainParamFrame(params, 'back', blankObj, state.count), defBack, 'back')
+      let fore = colour(evalParam.evalParamFrame(params.fore, params, state.count), defFore, 'fore')
+      let back = colour(evalParam.evalParamFrame(params.back, params, state.count), defBack, 'back')
       let mid
       if (params.mid === undefined) {
         mid = ca('mid')
         for (let i=0; i<4; i++) { mid[i] = (fore[i]+back[i])/2 }
       } else {
-        mid = colour(evalMainParamFrame(params, 'mid', blankObj, state.count), defMid, 'mid')
+        mid = colour(evalParam.evalParamFrame(params.mid, params, state.count), defMid, 'mid')
       }
       let vtxData = verts(loc, window)
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)

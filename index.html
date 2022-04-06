@@ -713,6 +713,10 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
+!p dsaw 0., dur=2, sus={level:1/8}
+ !Suddenly got EVEN more copies of the firefly??!?!!!
+ TEST a LOT, all params and subparams, this could have broken stuff!
+!Should be a mix param on echo!
 ?Really/ideally, everything that uses an lfo (ambi, phaser, prophet etc) etc should just use a parameter so the lfo behaviour is defined in the code
 portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-notes/legato-synths-glide-slide-portamento/
 Allow adding filters in the room/echo loops eg echo=3/4{lpf:523} - but dont use existing filter handlers as must be per event only!
@@ -767,6 +771,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+!Firefly each instance moves at the same time; eg  v glow 0, dur=1/4, sus=2, loc=sparkle+firefly
 Digital JPEG corruption filter param - https://www.shadertoy.com/view/Md2GDw
  Takes square blocks and maps then to random other parts of the image, or darkens them, or colours them randomly green or magenta
  Main param value determines the amout of corruption
@@ -814,7 +819,6 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-!p dsaw 0., dur=2, sus={level:1/8}
 Multiple time modifiers up a hierarchy probably don't work properly
  Because we can only save a single set of _originalXxx values on the event
  Make a test case
