@@ -713,9 +713,6 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
-!p dsaw 0., dur=2, sus={level:1/8}
- !Suddenly got EVEN more copies of the firefly??!?!!!
- TEST a LOT, all params and subparams, this could have broken stuff!
 !Should be a mix param on echo!
 ?Really/ideally, everything that uses an lfo (ambi, phaser, prophet etc) etc should just use a parameter so the lfo behaviour is defined in the code
 portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-notes/legato-synths-glide-slide-portamento/
@@ -819,7 +816,22 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-Multiple time modifiers up a hierarchy probably don't work properly
+Support # and b subparams for add; eg  add=[0,{0,#},{1,b}]  ??So have to allow '#' as a field name char... (and in syntax col)
+ Must also support in visual add by getting mainparam
+Map lookup operator; interchangeable in syntax location with tuple indexer
+ eg  {foo:2}.foo ==2
+ must allow eg  ({a:1},{a:2})[1].a ==2
+ also {a:{foo:1},b:{foo:2}}.b.foo ==2
+ '.='???
+ Docs
+!root change using []t is 1 beat late in changing
+!allow root param on player to override global root (add or replace?)
+!Comment after multiline break breaks the parsing? Eg:
+ p kal 0, \ //Hello
+ fore=red
+??? allow overriding params using delay subparams; eg delay=(0,{1,add:2})
+?Do delayed events have any cost? Do we process them per frame?
+!Multiple time modifiers up a hierarchy probably don't work properly
  Because we can only save a single set of _originalXxx values on the event
  Make a test case
  Either find another way to save the _originalXxx data, or make it into a stack
@@ -891,12 +903,6 @@ Need an additional eval interval; eg @i for 'per instance', so for each individu
 Presets? Allow to define new synths; eg 'preset mysaw saw, att=0.02, lpf=this.freq*[5,3,2,1,1/2]e' then use mysaw as a synth
  Presets should be able to include additional follow synths
 Better syntax highlighting for {} brackets; maybe bracket match highlighting??
-Map lookup operator; interchangeable in syntax location with tuple indexer
- eg  {foo:2}.foo ==2
- must allow eg  ({a:1},{a:2})[1].a ==2
- also {a:{foo:1},b:{foo:2}}.b.foo ==2
- '.='???
- Docs
 Weight modifier for random to go with seed
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 Can set swing timescale with a subparam: swing={60,on:1/2}

@@ -274,6 +274,18 @@ define((require) => {
   assert(3, evalParamFrame(p.getEventsForBeat({count:2})[0].bar,ev(2,2),2))
   delete vars.foo
 
+  p = parsePlayer('p kal 0, x={x:this.f}, f=(2,3)')
+  es = p.getEventsForBeat({count:0})
+  assert(2, es.length)
+  assert({x:2}, evalParamFrame(es[0].x,es[0],0))
+  assert({x:3}, evalParamFrame(es[1].x,es[1],0))
+
+  p = parsePlayer('p kal 0, x={x:this.f}+1, f=(2,3)')
+  es = p.getEventsForBeat({count:0})
+  assert(2, es.length)
+  assert({x:3}, evalParamFrame(es[0].x,es[0],0))
+  assert({x:4}, evalParamFrame(es[1].x,es[1],0))
+
   console.log('Parse player tests complete')
   }
   

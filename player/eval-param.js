@@ -51,14 +51,16 @@ define((require) => {
   }
   let evalRecurseFull = (value, event, beat, options) => {
     beat = clearMods(event, beat)
-    return evalParamNow(evalRecurseFull, value, event, beat, options || {})
+    options = options || {}
+    return evalParamNow(evalRecurseWithOptions(evalRecurseFull, options), value, event, beat, options)
   }
   let evalRecursePre = (value, event, beat, options) => {
     if (!!value && value.interval === 'frame') {
       return value
     }
     beat = clearMods(event, beat)
-    return evalParamNow(evalRecursePre, value, event, beat, options || {})
+    options = options || {}
+    return evalParamNow(evalRecurseWithOptions(evalRecursePre, options), value, event, beat, options)
   }
 
   let evalRecurseWithOptions = (er, options) => {

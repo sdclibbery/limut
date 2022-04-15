@@ -98,6 +98,7 @@ define(function(require) {
     let pulse = spectrum[0]*spectrum[0] + spectrum[3]*spectrum[3]
     vars.pulse = pulse
     vars.time = beatTime
+    vars.spectrum = spectrum
     if (beat) {
       mainVars.update(Math.floor(beatTime), beatTime)
       beatReadout.innerText = beat.count
