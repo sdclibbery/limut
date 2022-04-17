@@ -216,6 +216,12 @@ define(function(require) {
       // number
       let n = number(state)
       if (n !== undefined) {
+        let next = state.str.charAt(state.idx)
+        if (next === '#' || next === 'b') { // Allow sharp/flat notation immediately following a number
+          state.idx += 1
+          n = {value:n}
+          n[next] = 1
+        }
         result = wrapMods(n, parseMap(state))
         continue
       }
@@ -1203,6 +1209,9 @@ define(function(require) {
   assert(3, evalParamFrame(parseExpression("{foo:2,bar:3}[['foo','bar']t1]"),ev(1,1),1))
 
   assert(0, evalParamFrame(parseExpression("{foo:2,bar:3}[max]"),ev(0,0),0))
+
+  assert({value:0,'#':1}, evalParamFrame(parseExpression("0#"),ev(0,0),0))
+  assert({value:2,b:1}, evalParamFrame(parseExpression("2b"),ev(0,0),0))
 
   console.log('Parse expression tests complete')
   }

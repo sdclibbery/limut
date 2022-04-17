@@ -289,7 +289,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>var</code> variable to set; either a predefined var (see 'Predefined Vars' section below) or a user defined var which can be referenced from params on any player(s)</p>
 <p><code>value</code> expression value to set; see 'Value Syntax'</p>
 </div>
-<h4 onclick="toggleAccordion('accordion-pattern-syntax')" class="accordion"> Pattern Syntax</h4>
+<h4 onclick="toggleAccordion('accordion-pattern-syntax')" class="accordion"> Patterns</h4>
 <div id="accordion-pattern-syntax" class="closed">
 <p><code>x-o-</code> Sequence of events, each of duration <code>dur</code>, for use with <code>play</code></p>
 <p><code>0123</code> Sequence of events, each of duration <code>dur</code>, for use with tonal synths. Numbers are scale degrees</p>
@@ -308,7 +308,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>0&lt;12&gt;</code> Angle brackets to play events in sequence as the pattern repeats. Eg <code>0&lt;12&gt;</code> is exactly equivalent to <code>0102</code></p>
 <p><code>follow p1</code> Use <code>follow</code> to follow another player (named 'p1' in the example) pattern</p>
 </div>
-<h4 onclick="toggleAccordion('accordion-value-syntax')" class="accordion"> Value Syntax</h4>
+<h4 onclick="toggleAccordion('accordion-value-syntax')" class="accordion"> Values</h4>
 <div id="accordion-value-syntax" class="closed">
 <p>Basic structure <code>value{modifiers}@interval[indexing]</code></p>
 <p><code>value</code> Actual value (which may include subparameters); see below</p>
@@ -317,6 +317,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>[indexing]</code> Lookup within tuples (chords) or maps. Tuples are groups of multiple values. Use indexing to extract specific values from them; see "Tuple indexers" below. Maps are dictionary maps containing multiple values. Use indexing to extract an individual value; see "Map lookup" below.</p>
 <h5>Values:</h5>
 <p><code>1</code> Single, constant value</p>
+<p><code>1#</code> <code>1b</code> For use with the audio <code>add</code> param, sharpen or flatten the value. This is parsed into <code>{1,#:1}</code> or <code>{1,b:1}</code></p>
 <p><code></code> No value: for a param, missing a value is the same as setting the param to <code>1</code>. Eg <code>monochrome</code> is the same as <code>monochrome=1</code></p>
 <p><code>(1,2)</code> A 'tuple' or chord. Multiple values, all played together</p>
 <p><code>[1,2]</code> Sequence of values, one per event in the pattern; for single length patterns only, all values will be expanded, so <code>p ping 0, add=[0,1,2]</code> will cycle through all three values.</p>
@@ -441,13 +442,15 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>dur</code> Event time in beats</p>
 <p><code>delay</code> Event start time offset in beats</p>
 <p><code>swing</code> Amount to swing alternating 1/4 beats, as a Linn LM-1 style percentage from <code>50</code> (no swing) to <code>66</code> (perfect triplet swing) to <code>75</code> (maximum dotted note swing). You can set swing for all players at once using (eg) <code>set * swing=60</code></p>
-<p><code>add</code> Amount to add onto event scale degree, in degrees. Evaluated per event only.</p>
 <p><code>amp</code> Player amplitude control</p>
 <p><code>sus</code> Sustain time in beats. Note the 'sustain' in an ADSR envelope sets the sustain level, however this param sets the sustain time. The default is time required after attack and decay to take the note to the end of the duration.</p>
 <p><code>rate</code> Playback rate for 'play' samples, animation rate for visuals</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-audio-params')" class="accordion"> Audio Params</h4>
 <div id="accordion-audio-params" class="closed">
+<p><code>add</code> Amount to add onto event scale degree, in degrees. Evaluated per event only.</p>
+<p class='sub'><code>add={0,#:1}</code> Sharpen the scale degree (add a given number of semitones)</p>
+<p class='sub'><code>add={0,b:1}</code> Flatten the scale degree (subtract a given number of semitones)</p>
 <p><code>addc</code> Amount to add onto event pitch, in semitones. Evaluated per frame, and accepts fractional values, so <code>addc=[0:12]e</code> will slide the note from the starting pitch smoothly up a whole octave over the course of the note.</p>
 <p><code>oct</code> Octave; middle C is in octave 4</p>
 <p><code>envelope</code> Specify the envelope type to use: 'full' (ADSR), 'simple' (AD), 'pad' (uses a sine roll on/off so consecutive notes maintain constant volume)</p>
@@ -816,9 +819,8 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-Support # and b subparams for add; eg  add=[0,{0,#},{1,b}]  ??So have to allow '#' as a field name char... (and in syntax col)
- Must also support in visual add by getting mainparam
-Map lookup operator; interchangeable in syntax location with tuple indexer
+!Colour literals (#80ff etc) should have syntax colouring
+ Map lookup operator; interchangeable in syntax location with tuple indexer
  eg  {foo:2}.foo ==2
  must allow eg  ({a:1},{a:2})[1].a ==2
  also {a:{foo:1},b:{foo:2}}.b.foo ==2

@@ -26,6 +26,7 @@ define(function(require) {
     if (value == '') { return undefined }
     return parseFloat(value)
   }
+
   let number = (state) => {
     let numerator = numberValue(state)
     if (numerator === undefined) { return undefined }
