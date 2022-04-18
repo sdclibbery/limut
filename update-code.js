@@ -1,6 +1,7 @@
 'use strict'
 define((require) => {
   let {parseLine} = require('parse-line')
+  let parseString = require('player/parse-string')
   let system = require('play/system')
   let players = require('player/players')
   let mainVars = require('main-vars')
@@ -14,9 +15,10 @@ define((require) => {
         let line = lines[i]
         if (line === '') { continue }
         if (line.startsWith('//')) { continue }
+        line = preParseLine(line)
         while ((i+1)<lines.length && line.endsWith(' \\')) {
           if (!lines[i+1].startsWith('//')) {
-            line = line.slice(0, -2) + ' ' + lines[i+1]
+            line = line.slice(0, -2) + ' ' + preParseLine(lines[i+1])
           }
           i++
         }
@@ -27,6 +29,29 @@ define((require) => {
         console.log(e)
       }
     }
+  }
+
+  let preParseLine = (line) => {
+    let state = {
+      str: line,
+      idx: 0,
+    }
+    let char
+    while (char = state.str.charAt(state.idx)) {
+      if (char == '\'') { // String - skip over
+        state.idx += 1
+        parseString(state)
+      } else if (char == '/' && state.str.charAt(state.idx+1) == '/') { // Comment
+        let result = line.slice(0, state.idx).trim()
+        if (line.endsWith(' \\')) {
+          result += ' \\'
+        }
+        return result
+      } else {
+        state.idx += 1
+      }
+    }
+    return line
   }
 
   let updateCode = (code) => {
@@ -106,10 +131,19 @@ define((require) => {
     assertVars('foo=( \\\n1, \\\n2, \\\n3)', {foo:[1,2,3]})
     assertVars('foo=( \\\n1, \\\n//2, \\\n3)', {foo:[1,3]})
 
-//    assertOverrides('set p foo=2,bar=\'FOO \\\n\'', 'p', {foo:2,bar:'FOO'})
-// !!! tricky; should not add a space into a string split over multiple lines...
+    assertVars("foo='http://a.com/Bc.mp3'", {foo:'http://a.com/Bc.mp3'})
+    assertVars("foo='http://a.com/B \\\\c.mp3'", {foo:'http://a.com/B \\c.mp3'})
+    assertVars("foo='http://a.com/Bc.mp3'//FOO", {foo:'http://a.com/Bc.mp3'})
+    assertOverrides("set p foo=//'http://a.com/Bc.mp3'", 'p', {foo:undefined})
 
-  console.log('Update code tests complete')
+    assertVars('foo= \\\n 1', {foo:1})
+    assertVars('foo= \\ \n 1', {foo:1})
+    assertVars('foo= \\ //Cmnt \n 1', {foo:1})
+    assertVars('foo= //Cmnt \\\n 1', {foo:1})
+
+    // assertOverrides('set p foo=2,bar=\'FOO \\\n\'', 'p', {foo:2,bar:'FOO'}) // !!! tricky; should not add a space into a string split over multiple lines...
+
+    console.log('Update code tests complete')
   }
 
   return updateCode

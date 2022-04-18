@@ -60,6 +60,8 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
       return state.tokenize(stream, state);
     } else if ((ch == "." || ch == "-") && stream.match(/^\d[\d_]*(?:[eE][+\-]?[\d_]+)?(\/[\d]+)?/)) {
       return ret("number", "number");
+    } else if (ch == "#" && stream.match(/^[0-9a-fA-F]{1,8}/)) {
+      return ret("colour", "colour");
     } else if (ch == ']') {
       stream.match(/[tslenr]?/);
       return ret("bracket","bracket");

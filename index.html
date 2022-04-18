@@ -819,25 +819,25 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-!Colour literals (#80ff etc) should have syntax colouring
- Map lookup operator; interchangeable in syntax location with tuple indexer
+!Comment after multiline break breaks the parsing
+ !Suggest handling comments within update-code ; will need to match string quotes though, including escaped quotes inside strings
+  ?extract string parsing to module and use it to eat strings after the first quote?
+ ?Can remove all the icky comment handling in params / parse-expression then??
+??? allow overriding params using delay subparams; eg delay=(0,{1,add:2})
+?Do delayed events have any cost? Do we process them per frame?
+Map lookup operator; interchangeable in syntax location with tuple indexer
  eg  {foo:2}.foo ==2
  must allow eg  ({a:1},{a:2})[1].a ==2
  also {a:{foo:1},b:{foo:2}}.b.foo ==2
  '.='???
  Docs
 !root change using []t is 1 beat late in changing
-!allow root param on player to override global root (add or replace?)
-!Comment after multiline break breaks the parsing? Eg:
- p kal 0, \ //Hello
- fore=red
-??? allow overriding params using delay subparams; eg delay=(0,{1,add:2})
-?Do delayed events have any cost? Do we process them per frame?
 !Multiple time modifiers up a hierarchy probably don't work properly
  Because we can only save a single set of _originalXxx values on the event
  Make a test case
  Either find another way to save the _originalXxx data, or make it into a stack
 Add doc section with an example and a detailed explanation of it
+allow root param on player to override global root (add or replace?)
 floor function:  delay=floor{[]r,to:1/4}  or  add=floor{[0:7]r,to:2}
 stutter parameter
  ??? Some way to create tuples with arbitrary cardinality from expressions? Then you could do stutter with only delay???
