@@ -819,10 +819,10 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-!Comment after multiline break breaks the parsing
- !Suggest handling comments within update-code ; will need to match string quotes though, including escaped quotes inside strings
-  ?extract string parsing to module and use it to eat strings after the first quote?
- ?Can remove all the icky comment handling in params / parse-expression then??
+!Remove 'commented' 2nd arg to parseExpression!
+!Visual does not play all the time unless [max] is used on the player lookup???
+ v kal 0, ripple=p.pulse
+ p play d[.d].d.dd.
 ??? allow overriding params using delay subparams; eg delay=(0,{1,add:2})
 ?Do delayed events have any cost? Do we process them per frame?
 Map lookup operator; interchangeable in syntax location with tuple indexer

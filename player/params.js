@@ -69,21 +69,13 @@ define(function(require) {
     } else {
       value = parseValue(state).trim()
     }
-    let commented
-    if (name.includes('//')) {
-      name = name.replace(/\/\/.*/, '')
-      value = '1'
-      commented = true
-      operator = undefined
-    }
     name = name.trim().toLowerCase()
     if (name) {
-      let v = parseExpression(value, () => commented=true, state.dependsOn, (state.context?state.context+'.':'')+name)
+      let v = parseExpression(value, undefined, state.dependsOn, (state.context?state.context+'.':'')+name)
       if (operator) {
         v = newOverride(v, operator)
       }
       state.params[name] = combineOverride(state.params[name], v)
-      if (commented) { return false }
       return true
     }
     return false
@@ -126,23 +118,10 @@ define(function(require) {
   assert({s:'abc'}, parseParams("s='abc'"))
   assert({s:'a b  c'}, parseParams("s='a b  c'"))
   assert({s:'http://a.com/Bc.mp3'}, parseParams("s='http://a.com/Bc.mp3'"))
-  assert({}, parseParams("//s='abc'"))
-  assert({s:1}, parseParams("s//='abc'"))
-  assert({}, parseParams("s=//'abc'"))
-  assert({a:1}, parseParams("a=1,//s='abc'"))
-  assert({a:1}, parseParams("a=1//,s='abc'"))
-  assert({a:1}, parseParams("a=1, //s='abc'"))
-  assert({a:1}, parseParams("a=1, //s='abc'"))
-  assert({dur:1}, parseParams("dur=1// amp=0.1, rate=10"))
-  assert({dur:1}, parseParams("dur=1//, amp=0.1, rate=10"))
-  assert({dur:1}, parseParams("dur=1//1, amp=0.1, rate=10"))
-  assert({dur:1}, parseParams("dur=1,// amp=0.1, rate=10"))
-  assert({str:'http://', amp:0.1, rate:10}, parseParams("str='http://', amp=0.1, rate=10"))
   assert({window:1}, parseParams("window"))
   assert({amp:3,window:1,rate:2}, parseParams("amp=3, window, rate=2"))
   assert({amp:3,window:1}, parseParams("amp=3, window"))
   assert({window:1,rate:2}, parseParams("window, rate=2"))
-  assert({window:1}, parseParams("window//, rate=2"))
   assert('event', parseParams("fore=[0,1]r").fore.interval)
   assert('event', parseParams("fore=[0,1]r4").fore.interval)
   assert('frame', parseParams("fore=[0,1]r@f").fore.interval)
@@ -168,8 +147,6 @@ define(function(require) {
   assert(true, p.add._override)
 
   assert({'add+':2}, parseParams('add+ =2'))
-  assert({add:1}, parseParams('add//+=2'))
-  assert({'add+':1}, parseParams('add+//=2'))
 
   assert({add:2}, applyOverrides({}, parseParams('add+=2')))
   assert({add:3}, applyOverrides({}, parseParams('add=1, add+=2')))

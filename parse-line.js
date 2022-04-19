@@ -152,20 +152,6 @@ define((require) => {
   assert(2, players.instances.p.getEventsForBeat({count:0})[0].amp)
   delete players.instances.p
 
-  parseLine('p play xo,// amp=2')
-  assert(undefined, players.instances.p.getEventsForBeat({count:0})[0].amp)
-  delete players.instances.p
-
-  parseLine('p play 0//, amp=2')
-  assert(undefined, players.instances.p.getEventsForBeat({count:0})[0].amp)
-  assert(0, players.instances.p.getEventsForBeat({count:1})[0].value)
-  delete players.instances.p
-
-  parseLine('p play 0, window//, amp=2')
-  assert(undefined, players.instances.p.getEventsForBeat({count:0})[0].amp)
-  assert(1, players.instances.p.getEventsForBeat({count:0})[0].window)
-  delete players.instances.p
-
   parseLine('set p amp=2')
   assert(2, players.overrides.p.amp)
   delete players.overrides.p

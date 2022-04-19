@@ -79,12 +79,6 @@ define(function(require) {
     while (char = state.str.charAt(state.idx)) {
       if (char === '') { break }
       if (char === ' ' || char === '\t' || char === '\n' || char === '\r') { state.idx += 1; continue }
-      if (char === '/' && state.str.charAt(state.idx+1) === '/') {
-        // comment
-        state.idx = state.str.length
-        state.commented = true
-        break
-      }
       // tuple indexer on previously parsed result
       if (result !== undefined && char === '[') {
         let indices = parseArray(state, '[', ']')        
@@ -253,7 +247,6 @@ define(function(require) {
       setInterval: setInterval,
     }
     let result = expression(state)
-    if (commented && state.commented) { commented() }
     return result
   }
 

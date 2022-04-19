@@ -215,17 +215,6 @@ define((require) => {
   p.play(p.getEventsForBeat({time:0, count:0, duration:1}))
   assert('a b  c', p.currentEvent(0)[0].foo)
   
-  p = parsePlayer('p play xo,// amp=2')
-  assert(undefined, p.getEventsForBeat({count:0})[0].amp)
-
-  p = parsePlayer('p play 0//, amp=2')
-  assert(undefined, p.getEventsForBeat({count:0})[0].amp)
-  assert(0, p.getEventsForBeat({count:1})[0].value)
-
-  p = parsePlayer('p play 0, window//, amp=2')
-  assert(undefined, p.getEventsForBeat({count:0})[0].amp)
-  assert(1, p.getEventsForBeat({count:0})[0].window)
-
   assertThrows('Missing player type', ()=>parsePlayer('p'))
   assertThrows('Missing pattern/params', ()=>parsePlayer('p play'))
   assertThrows('Player "INVALID" not found', ()=>parsePlayer('p INVALID xo'))

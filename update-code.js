@@ -141,6 +141,18 @@ define((require) => {
     assertVars('foo= \\ //Cmnt \n 1', {foo:1})
     assertVars('foo= //Cmnt \\\n 1', {foo:1})
 
+    assertOverrides("set p //s='abc'", 'p', {})
+    assertOverrides("set p s//='abc'", 'p', {s:1})
+    assertOverrides("set p s=//'abc'", 'p', {})
+    assertOverrides("set p a=1//,s='abc'", 'p', {a:1})
+    assertOverrides("set p a=1//1,s='abc'", 'p', {a:1})
+    assertOverrides("set p a=1,//s='abc'", 'p', {a:1})
+    assertOverrides("set p a=1, //s='abc'", 'p', {a:1})
+    assertOverrides("set p str='http://', amp=0.1, rate=10", 'p', {str:'http://', amp:0.1, rate:10})
+    assertOverrides("set p window//, rate=2", 'p', {window:1})
+    assertOverrides("set p add//+=2", 'p', {add:1})
+    assertOverrides("set p add+//=2", 'p', {'add+':1})
+
     // assertOverrides('set p foo=2,bar=\'FOO \\\n\'', 'p', {foo:2,bar:'FOO'}) // !!! tricky; should not add a space into a string split over multiple lines...
 
     console.log('Update code tests complete')
