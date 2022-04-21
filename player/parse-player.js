@@ -2,12 +2,13 @@
 define((require) => {
   let playerTypes = require('player/player-types')
   var parseParams = require('player/params')
-  var applyOverrides = require('player/override-params').applyOverrides
+  var {applyOverrides,applyOverridesInPlace} = require('player/override-params')
   var players = require('player/players')
   let standardPlayer = require('player/standard')
   var followPlayer = require('player/follow')
   var expandTuples = require('player/expand-tuples')
   let {preEvalParam,evalParamFrame} = require('player/eval-param')
+  let {mainParam} = require('player/sub-param')
 
   let splitOnAll = (str, ch) => {
     if (!str) { return [] }
@@ -40,9 +41,11 @@ define((require) => {
   }
 
   let applyDelay = (event, beat) => {
-    let d = evalParamFrame(event.delay || 0, event, event.count)
+    let dp = evalParamFrame(event.delay, event, event.count)
+    let d = mainParam(dp, 0)
     event._time += d*beat.duration
     event.count += d
+    applyOverridesInPlace(event, dp)
     applySwing(event, beat)
   }
 
@@ -274,6 +277,10 @@ define((require) => {
   assert(2, es.length)
   assert({x:3}, evalParamFrame(es[0].x,es[0],0))
   assert({x:4}, evalParamFrame(es[1].x,es[1],0))
+
+  e = parsePlayer('p play x, delay={1,add:2}').getEventsForBeat({time:0, count:0, duration:1})[0]
+  assert(1, e._time)
+  assert(2, e.add)
 
   console.log('Parse player tests complete')
   }

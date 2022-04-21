@@ -49,12 +49,16 @@ define(function(require) {
     return overrides
   }
 
-  let applyOverrides = (params, overrides) => {
-    let result = Object.assign({}, params)
+  let applyOverridesInPlace = (params, overrides) => {
     for (let k in overrides) {
       if (k === '_time' || k === 'value') { continue } // Do not override these values
-      result[k] = applyOverride(result[k], overrides[k])
+      params[k] = applyOverride(params[k], overrides[k])
     }
+  }
+
+  let applyOverrides = (params, overrides) => {
+    let result = Object.assign({}, params)
+    applyOverridesInPlace(result,overrides)
     return result
   }
 
@@ -131,6 +135,7 @@ define(function(require) {
     combineOverrides: combineOverrides,
     collapseOverrides: collapseOverrides,
     applyOverrides: applyOverrides,
+    applyOverridesInPlace: applyOverridesInPlace,
     isOverride: isOverride,
   }
 });
