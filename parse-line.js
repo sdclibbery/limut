@@ -58,9 +58,9 @@ define((require) => {
     k = k.toLowerCase()
     if (k.match(/^[a-z][a-z0-9_\.]*$/) && !!v) {
       if (mainVars.exists(k)) {
-        mainVars.set(k, parseExpression(v, undefined, undefined, k))
+        mainVars.set(k, parseExpression(v, undefined, k))
       } else {
-        v = parseExpression(v, undefined, undefined, k)
+        v = parseExpression(v, undefined, k)
         vars[k] = v
       }
       return

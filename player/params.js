@@ -71,7 +71,7 @@ define(function(require) {
     }
     name = name.trim().toLowerCase()
     if (name) {
-      let v = parseExpression(value, undefined, state.dependsOn, (state.context?state.context+'.':'')+name)
+      let v = parseExpression(value, state.dependsOn, (state.context?state.context+'.':'')+name)
       if (operator) {
         v = newOverride(v, operator)
       }

@@ -233,7 +233,7 @@ define(function(require) {
     return result
   }
 
-  let parseExpression = (v, commented, dependsOn, context) => {
+  let parseExpression = (v, dependsOn, context) => {
     if (v == '' || v == undefined) { return }
     v = v.trim()
     let state = {

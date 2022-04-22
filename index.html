@@ -820,10 +820,6 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-Delay subparams should support modifying overrides; eg  add=2, delay=(0,{1,add+:2})
- ! The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
-?Do delayed events have any cost? Do we process them per frame?
-!Remove 'commented' 2nd arg to parseExpression!
 !Visual does not play all the time unless [max] is used on the player lookup???
  v kal 0, ripple=p.pulse
  p play d[.d].d.dd.
@@ -839,6 +835,10 @@ Map lookup operator; interchangeable in syntax location with tuple indexer
  Because we can only save a single set of _originalXxx values on the event
  Make a test case
  Either find another way to save the _originalXxx data, or make it into a stack
+?Do delayed events have any cost? Do we process them per frame?
+ I guess we might process any per-frame callbacks every frame while waiting for the event?
+Delay subparams should support modifying overrides; eg  add=2, delay=(0,{1,add+:2})
+ ! The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
 Add doc section with an example and a detailed explanation of it
 allow root param on player to override global root (add or replace?)
 floor function:  delay=floor{[]r,to:1/4}  or  add=floor{[0:7]r,to:2}
