@@ -718,18 +718,18 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 ====
 ==== audio ====
 !Should be a mix param on echo!
-?Really/ideally, everything that uses an lfo (ambi, phaser, prophet etc) etc should just use a parameter so the lfo behaviour is defined in the code
 portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-notes/legato-synths-glide-slide-portamento/
 Allow adding filters in the room/echo loops eg echo=3/4{lpf:523} - but dont use existing filter handlers as must be per event only!
  Pitch shift up an octave to give shimmer reverb (pitch shifter: https://tonejs.github.io/docs/14.7.77/PitchShift.html)
 envelope exp (exponent) subparam, eg att={1/2,exp:2} ?? Or name it 'pow'? Default to nonzero?
+Add some more waveforms  https://github.com/GoogleChromeLabs/web-audio-samples/tree/main/archive/demos/wave-tables
+808 synth based on https://github.com/vincentriemer/io-808
+ ?? Or custom percussion synths
+?Really/ideally, everything that uses an lfo (ambi, phaser, prophet etc) etc should just use a parameter so the lfo behaviour is defined in the code
 Can specify media stream device
  Print list of all devices with IDs
  device param to specify required device ID to be used - need to store one stream per device
  Same for webcam
-Add some more waveforms  https://github.com/GoogleChromeLabs/web-audio-samples/tree/main/archive/demos/wave-tables
-808 synth based on https://github.com/vincentriemer/io-808
- ?? Or custom percussion synths
 What happens if you do audio frequency modulation of a filter?
 echo={1/2,pingpong:1} for stereo ping pong echo; use splitter and merger
 Make noise into a waveform not a worklet?  https://github.com/GoogleChromeLabs/web-audio-samples/blob/main/archive/demos/wave-tables/04_Noise
@@ -774,7 +774,7 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ==== visual ====
 !Firefly each instance moves at the same time; eg  v glow 0, dur=1/4, sus=2, loc=sparkle+firefly
 Digital JPEG corruption filter param - https://www.shadertoy.com/view/Md2GDw
- Takes square blocks and maps then to random other parts of the image, or darkens them, or colours them randomly green or magenta
+ Takes square blocks and maps them to adjacent parts of the image, or colours them randomly green or magenta
  Main param value determines the amout of corruption
  Subparam for block scale
  Subparam for extremity of effect within corrupted blocks?
@@ -820,10 +820,12 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-!Visual does not play all the time unless [max] is used on the player lookup???
- v kal 0, ripple=p.pulse
- p play d[.d].d.dd.
-?? Should modifiers actually be subparams? Would it be simpler syntax-wise? Eg {[0,1]r,per:4,seed:0,0:0}
+!The  +{y:}  breaks this:  vb bits 0, scroll=16+{y:[]n}
+?? Should modifiers actually be subparams? Would it be simpler/more-natural syntax-wise? Eg {[0,1]r,per:4,seed:0,0:0}
+!pattern "(01)": idx should be 0 for both events, surely?
+ event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
+Delay subparams should support modifying overrides; eg  add=2, delay=(0,{1,add+:2})
+ ! The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
 Map lookup operator; interchangeable in syntax location with tuple indexer
  eg  {foo:2}.foo ==2
  must allow eg  ({a:1},{a:2})[1].a ==2
@@ -837,8 +839,6 @@ Map lookup operator; interchangeable in syntax location with tuple indexer
  Either find another way to save the _originalXxx data, or make it into a stack
 ?Do delayed events have any cost? Do we process them per frame?
  I guess we might process any per-frame callbacks every frame while waiting for the event?
-Delay subparams should support modifying overrides; eg  add=2, delay=(0,{1,add+:2})
- ! The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
 Add doc section with an example and a detailed explanation of it
 allow root param on player to override global root (add or replace?)
 floor function:  delay=floor{[]r,to:1/4}  or  add=floor{[0:7]r,to:2}
@@ -879,8 +879,6 @@ Analyser on each player for pulse?
 {step} to apply a step to the counts
  Eg [0:1000]l32{step:2} so the value onnly changes every 2 beats(??or changes by 2 units?) instead of smoothly
 !`d dsaw 0 | p ping follow d` the ping is played using the saw wave!!
-!pattern "(01)": idx should be 0 for both events, surely?
- event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
 Ability to set the pattern used on a player
  param: p play x:, pattern='X-O-'
 pattern concat "xo + vi"

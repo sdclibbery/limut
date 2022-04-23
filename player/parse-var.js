@@ -44,6 +44,8 @@ define(function(require) {
           let _originalB = event._originalB === undefined ? b : event._originalB
           let es = player.currentEvent(_originalB)
           v = es.map(e => e[param])
+          if (v.length === 0) { v = 0 }
+          if (v.length === 1) { v = v[0] }
         } else if (playerId === 'this') {
           v = event[param]
         } else {
@@ -95,10 +97,21 @@ define(function(require) {
   assert('bar', p({},0,(v)=>v))
   delete vars.foo
 
+  players.instances.p1 = { currentEvent:(b)=>{ return []} }
+  p = varLookup(parseVar({str:'p1.foo',idx:0}), [])
+  assert(0, p({},0,(v)=>v))
+  delete players.instances.p1
+
   players.instances.p1 = { currentEvent:(b)=>{ return [{foo:b}]} }
   p = varLookup(parseVar({str:'p1.foo',idx:0}), [])
-  assert([0], p({},0,(v)=>v))
-  assert([2], p({beat:2},2,(v)=>v))
+  assert(0, p({},0,(v)=>v))
+  assert(2, p({beat:2},2,(v)=>v))
+  delete players.instances.p1
+
+  players.instances.p1 = { currentEvent:(b)=>{ return [{foo:b},{foo:b}]} }
+  p = varLookup(parseVar({str:'p1.foo',idx:0}), [])
+  assert([0,0], p({},0,(v)=>v))
+  assert([2,2], p({beat:2},2,(v)=>v))
   delete players.instances.p1
 
   p = varLookup(parseVar({str:'p1.foo',idx:0}), [])
