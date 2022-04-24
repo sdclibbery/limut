@@ -9,7 +9,7 @@ define(function(require) {
   let {timeVar, linearTimeVar, smoothTimeVar, eventTimeVar, eventIdxVar} = require('player/eval-timevars')
   let {parseRandom, simpleNoise} = require('player/eval-randoms')
   let {parseVar,varLookup} = require('player/parse-var')
-  let combineIntervals = require('player/intervals').combine
+  let {hoistInterval} = require('player/intervals')
   let wrapMods = require('player/time-modifiers').wrapMods
   let tupleIndexer = require('player/tuple-indexer')
   let {evalParamFrame,evalParamFrameNoFlatten} = require('player/eval-param')
@@ -50,18 +50,6 @@ define(function(require) {
       }
     }
     return result
-  }
-
-  let hoistInterval = (def, ...args) => {
-    let interval = def
-    args.forEach(arg => {
-      if (Array.isArray(arg)) {
-        interval = arg.map(v => v.interval).reduce(combineIntervals, interval)
-      } else if (!!arg) {
-        interval = Object.values(arg).flat().map(v => v.interval).reduce(combineIntervals, interval)
-      }
-    })
-    return interval
   }
 
   let setInterval = (result, interval) => {
