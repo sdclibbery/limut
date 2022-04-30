@@ -323,6 +323,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>[1,2]</code> Sequence of values, one per event in the pattern; for single length patterns only, all values will be expanded, so <code>p ping 0, add=[0,1,2]</code> will cycle through all three values.</p>
 <p><code>[1,2]t3</code> Timed sequence, each value lasts for 3 beats</p>
 <p><code>[1,2]t[12,4]</code> Timed sequence with one timing per value. At present the timings must be const numbers, they cannot be expressions.</p>
+<p><code>[0:3]t1</code> Timed sequence, expanded. The example is equivalent to <code>[0,1,2,3]t1</code></p>
 <p><code>[1,2]l3</code> Timed linear interpolated sequence, each value takes 3 beats to change into the next</p>
 <p><code>[1,2]l[14,2]</code> Timed linear interpolated sequence, one timing per value. At present the timings must be const numbers, they cannot be expressions.</p>
 <p><code>[1,2]s3</code> Timed smooth interpolated sequence, each value takes 3 beats to change into the next, using an 's' shaped ease in/out curve</p>
@@ -717,6 +718,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
+!Cant change wave on supersaw?
 !Should be a mix param on echo!
 Should be able to have the filter follow the note envelope (with scaling)
 portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-notes/legato-synths-glide-slide-portamento/
@@ -821,8 +823,6 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-!`time` is the current time when the event is created. It 'wants' be event time; eg  pr prophet 0, dur=1/4, add=(time*4)%4
-![0:4]t1 should really be same as [0,1,2,3]t1
 ?? Should modifiers actually be subparams? Would it be simpler/more-natural syntax-wise? Eg {[0,1]r,per:4,seed:0,0:0}
 !pattern "(01)": idx should be 0 for both events, surely?
  event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
@@ -839,6 +839,9 @@ Map lookup operator; interchangeable in syntax location with tuple indexer
  Because we can only save a single set of _originalXxx values on the event
  Make a test case
  Either find another way to save the _originalXxx data, or make it into a stack
+!when `time` is used @e it should be event time, not time when the event is created
+ eg  v readout 0, add=time@e
+ !Really thats true for other vars though; eg  reading p.value  or something
 ?Do delayed events have any cost? Do we process them per frame?
  I guess we might process any per-frame callbacks every frame while waiting for the event?
 Add doc section with an example and a detailed explanation of it

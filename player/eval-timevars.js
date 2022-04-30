@@ -21,7 +21,24 @@ define(function(require) {
     return (b > st._time-0.00001)&&(b < st._time+st.duration+0.00001)
   }
 
+  let expandTimeVar = (vs, ds) => {
+    let lo = vs[0] || 0
+    let hi = vs[1] || lo+1
+    return (e,b,evalRecurse) => {
+      let elo = evalRecurse(lo, e,b)
+      let ehi = evalRecurse(hi, e,b)
+      let vs = Array.from({length: ehi-elo+1}, (_, i) => i + elo)
+      let steps = timeVarSteps(vs, ds)
+      let count = (b+0.0001) % steps.totalDuration
+      let step = steps.filter(st => isInTimeVarStep(st, count) )[0]
+      return (step !== undefined) && step.value
+    }
+  }
+
   let timeVar = (vs, ds) => {
+    if (vs.separator == ':') {
+      return expandTimeVar(vs, ds)
+    }
     let steps = timeVarSteps(vs, ds)
     return (e,b) => {
       let count = (b+0.0001) % steps.totalDuration
