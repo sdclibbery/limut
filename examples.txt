@@ -1689,3 +1689,12 @@ v kal 0, ripple=p.pulse
 p play d[.d].d.dd.
 
 
+main.amp=3
+scale=[major,dorian,locrian]t16
+set * room
+p0 glass 0, dur=[1/2,1]r, add=[0:[7,8]]t1/2, oct=6
+p1 glass 0, dur=[1/2,1/2,1], add=[[0,2]:[5,6]]t1/2, oct=5
+p2 glass 0, dur=[1/2,1,1/2], add=[0:[3,4]]t1/2, oct=4
+p3 xylo 0, dur=1, add=[0:[1,2]]t1, amp=3/2
+
+

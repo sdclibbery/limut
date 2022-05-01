@@ -146,19 +146,19 @@
     :fullscreen > .info { display: none; }
   </style>
   <link rel="stylesheet" href="codemirror/codemirror.css">
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-M1EBQVY3B4"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('set', { 'restricted_data_processing':true });
+    gtag('config', 'G-M1EBQVY3B4', { 'allow_google_signals':false,'allow_ad_personalization_signals':false });
+  </script>
+  <!-- End Google Analytics -->
   <script src="codemirror/codemirror.js"></script>
   <script src="codemirror/mode.js"></script>
   <script src="codemirror/comment.js"></script>
-  <!-- Google Analytics -->
-  <script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-    ga('create', 'UA-13034280-3', { 'storage': 'none' }); // No cookies
-    ga('send', 'pageview');
-  </script>
-  <!-- End Google Analytics -->
 </head>
 <body>
   <canvas id="canvas" class="fullscreen" style="width:100%; height:100%; background: #000f; display:none"></canvas>
@@ -823,7 +823,13 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
+Use let for setting vars, and then allow multiline statements without line continuation char
 ?? Should modifiers actually be subparams? Would it be simpler/more-natural syntax-wise? Eg {[0,1]r,per:4,seed:0,0:0}
+ Yes, then can move time modifier code into eval-params
+ let bpm=120
+ let ch=[0,2]t8
+ p ping 0,
+   add=ch
 !pattern "(01)": idx should be 0 for both events, surely?
  event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
 Delay subparams should support modifying overrides; eg  add=2, delay=(0,{1,add+:2})
@@ -834,6 +840,7 @@ Map lookup operator; interchangeable in syntax location with tuple indexer
  also {a:{foo:1},b:{foo:2}}.b.foo ==2
  '.='???
  Docs
+Allow mixing , and :   Eg  [0,2:4,5]r  meaning 0 or 2 to 4 or 5  Or  [0:4,7,9:10]t1  meaning [0,1,2,3,4,7,9,10]t1
 !root change using []t is 1 beat late in changing
 !Multiple time modifiers up a hierarchy probably don't work properly
  Because we can only save a single set of _originalXxx values on the event
