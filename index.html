@@ -826,10 +826,11 @@ shadertoy synth multiple channels
 Use let for setting vars, and then allow multiline statements without line continuation char
 ?? Should modifiers actually be subparams? Would it be simpler/more-natural syntax-wise? Eg {[0,1]r,per:4,seed:0,0:0}
  Yes, then can move time modifier code into eval-params
- let bpm=120
- let ch=[0,2]t8
- p ping 0,
-   add=ch
+  let bpm=120
+  let ch=[0,2]t8
+  p ping 0,
+    add=ch
+ ??Should @e/@f also become subparams??
 !pattern "(01)": idx should be 0 for both events, surely?
  event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
 Delay subparams should support modifying overrides; eg  add=2, delay=(0,{1,add+:2})

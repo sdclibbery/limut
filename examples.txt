@@ -1698,3 +1698,15 @@ p2 glass 0, dur=[1/2,1,1/2], add=[0:[3,4]]t1/2, oct=4
 p3 xylo 0, dur=1, add=[0:[1,2]]t1, amp=3/2
 
 
+// Anxiety - InTheClub MP3 Mix
+scale=phrygian
+bpm=121
+main.amp=1.2
+set * swing=56
+stress=slider{name:'stress',max:2/3}
+p play X-=<k+>O-<=X>k, dur=1/4, delay=(0,3/4), room=1/2, pan=(-1,1), amp=2/3-stress/5, hpf={[0,523*3]t[96,32],q:15}, drive=stress, low=16
+cb play T., amp=[0.5,0]t32, pan=[-1:1]s16, drive, noisify=1/8, room=1/2
+b saw 0^01123.., oct=3, dur=1/4, sus=[1/8:1/4]l8, high=[-8:-2]l12, amp=6, ring=520/[4,8]t32, drive=[0:stress]l[32,0], pan=[-1/2:1/2]r, room=0.1, add=[0,1]t[28,4], room=1/4
+bld ethereal (02468), dur=4, amp=[stress,1+2*stress,3+stress*3]l[24,8,0]@f, oct=3, phaser=1/4, room, add=([0,[0,2,4,14]t[16,8,4,4]]r), chop=[0,[0,1,8]t[24,4,4],[0,0,2,4]t8]r, pan=[-1/4:1/4]r+[-1/4:1/4]l8, rel=1
+
+

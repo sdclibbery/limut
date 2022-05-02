@@ -1196,6 +1196,11 @@ define(function(require) {
   assert({value:0,'#':1}, evalParamFrame(parseExpression("0#"),ev(0,0),0))
   assert({value:2,b:1}, evalParamFrame(parseExpression("2b"),ev(0,0),0))
 
+  vars.e = 1
+  p = parseExpression('e')
+  assert(1, p({},0,(v)=>v))
+  delete vars.e
+
   console.log('Parse expression tests complete')
   }
   

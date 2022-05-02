@@ -1,21 +1,24 @@
 'use strict';
 define(function(require) {
 
-  let digitChar = (char) => (char >= '0' && char <= '9') || char == '.' || char == 'e'
+  let digitChar = (char) => (char >= '0' && char <= '9') || char == '.'
+  let numberChar = (char) => digitChar(char) || char == 'e'
+  let firstChar = (char) => digitChar(char) || char == '-'
 
   let numberValue = (state) => {
+    if (!firstChar(state.str.charAt(state.idx))) { return undefined }
     let value = ''
     let char
     let sign = true
     while (char = state.str.charAt(state.idx)) {
       if (char == '') { break }
-      if (sign && char == '-' && digitChar(state.str.charAt(state.idx+1))) {
+      if (sign && char == '-' && numberChar(state.str.charAt(state.idx+1))) {
         sign = false
         value += char
         state.idx += 1
         continue
       }
-      if (digitChar(char)) {
+      if (numberChar(char)) {
         sign = false
         value += char
         state.idx += 1
@@ -52,10 +55,13 @@ define(function(require) {
   }
 
   assert(1, number({str:'1',idx:0}))
+  assert(1e9, number({str:'1e9',idx:0}))
   assert(-2, number({str:'-2',idx:0}))
   assert(undefined, number({str:'a',idx:0}))
   assert(undefined, number({str:'-',idx:0}))
   assert(undefined, number({str:'-a',idx:0}))
+  assert(undefined, number({str:'e',idx:0}))
+  assert(undefined, number({str:'efoo',idx:0}))
   
   console.log('Parse number tests complete')
   }
