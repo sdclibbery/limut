@@ -824,8 +824,13 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Use let for setting vars, and then allow multiline statements without line continuation char
+ Use let for setting vars
+ Remove line continuation stuff
+ Don't parse line-by-line, parse until cannot parse any more
+ Docs
+ Release
 ?? Should modifiers actually be subparams? Would it be simpler/more-natural syntax-wise? Eg {[0,1]r,per:4,seed:0,0:0}
- Yes, then can move time modifier code into eval-params
+ Yes, and then can move time modifier code into eval-params
   let bpm=120
   let ch=[0,2]t8
   p ping 0,
