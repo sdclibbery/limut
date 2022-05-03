@@ -91,7 +91,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
           return ret(kw.type, kw.style, word)
         }
       }
-      return ret("keyword", "keyword");
+      return ret("identifier", "identifier");
     }
   }
 

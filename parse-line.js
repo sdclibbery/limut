@@ -53,21 +53,22 @@ define((require) => {
     line = line.trim()
     if (!line) { return }
     if (line.startsWith('//')) { return }
-    // Setting global vars
-    let [k,v] = line.split('=').map(p => p.trim()).filter(p => p != '')
-    k = k.toLowerCase()
-    if (k.match(/^[a-z][a-z0-9_\.]*$/) && !!v) {
-      if (mainVars.exists(k)) {
-        mainVars.set(k, parseExpression(v, undefined, k))
-      } else {
-        v = parseExpression(v, undefined, k)
-        vars[k] = v
-      }
-      return
-    }
-    // Set (override) params for a player
     if (line.startsWith('set ')) {
-      let state = { str: line.slice(4).trim(), idx: 0 }
+      line = line.slice(4).trim()
+      // Set global vars and settings
+      let [k,v] = line.split('=').map(p => p.trim()).filter(p => p != '')
+      k = k.toLowerCase()
+      if (k.match(/^[a-z][a-z0-9_\.]*$/) && !!v) {
+        if (mainVars.exists(k)) {
+          mainVars.set(k, parseExpression(v, undefined, k))
+        } else {
+          v = parseExpression(v, undefined, k)
+          vars[k] = v
+        }
+        return
+      }
+      // Set (override) params for a player
+      let state = { str: line, idx: 0 }
       let playerIds
       if (state.str[0] == '[') {
         playerIds = parsePlayerIds(state).map(id=>id.trim())
@@ -75,7 +76,7 @@ define((require) => {
         playerIds = [identifierWithWildcards(state)]
       }
       let params = parseParams(state.str.slice(state.idx).trim(), undefined, playerIds.join(','))
-      for (k in params) { if (k.includes('.')) { throw 'Invalid param name '+k } }
+      for (let k in params) { if (k.includes('.')) { throw 'Invalid param name '+k } }
       playerIds.forEach(playerId => {
         players.overrides[playerId] = combineOverrides(players.overrides[playerId] || {}, params)
       })
@@ -113,36 +114,36 @@ define((require) => {
   parseLine('')
   parseLine('')
 
-  parseLine('foo=1+1')
+  parseLine('set foo=1+1')
   assert(2, vars.foo)
   delete vars.foo
 
-  parseLine('//foo=1+1')
+  parseLine('//set foo=1+1')
   assert(undefined, vars.foo)
 
-  parseLine('// foo=1+1')
+  parseLine('// set foo=1+1')
   assert(undefined, vars.foo)
 
-  parseLine('  //foo=1+1  ')
+  parseLine('  //set foo=1+1  ')
   assert(undefined, vars.foo)
 
-  parseLine('foo=1//+1')
+  parseLine('set foo=1//+1')
   assert(1, vars.foo)
   delete vars.foo
 
-  parseLine('foo=1 // +1')
+  parseLine('set foo=1 // +1')
   assert(1, vars.foo)
   delete vars.foo
 
-  parseLine("foo='http://a.com/Bc.mp3'")
+  parseLine("set foo='http://a.com/Bc.mp3'")
   assert('http://a.com/Bc.mp3', vars.foo)
   delete vars.foo
 
-  parseLine("foo='http://a.com/Bc.mp3'// BLAH")
+  parseLine("set foo='http://a.com/Bc.mp3'// BLAH")
   assert('http://a.com/Bc.mp3', vars.foo)
   delete vars.foo
 
-  parseLine(' \tfoo = 1 + 2 ')
+  parseLine(' \tset foo = 1 + 2 ')
   assert(3, vars.foo)
   delete vars.foo
 
@@ -155,8 +156,6 @@ define((require) => {
   parseLine('set p amp=2')
   assert(2, players.overrides.p.amp)
   delete players.overrides.p
-
-  assertThrows('Invalid param name', ()=>parseLine('set v.amp=0'))
 
   parseLine('set p amp=2')
   parseLine('set p amp=3')

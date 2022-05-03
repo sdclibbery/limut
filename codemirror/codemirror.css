@@ -121,12 +121,14 @@
 .cm-link {text-decoration: underline;}
 .cm-strikethrough {text-decoration: line-through;}
 
-.cm-s-default .cm-keyword {color: rgb(182, 129, 189);}
+.cm-s-default .cm-identifier {color: rgb(182, 129, 189);}
+.cm-s-default .cm-keyword {color: #88f;}
 .cm-s-default .cm-atom {color: #42f;}
 .cm-s-default .cm-number {color: #6ad;}
 .cm-s-default .cm-colour {color: #a64;}
 .cm-s-default .cm-def {color: #00f;}
 .cm-s-default .cm-linecont {color: #fc0;}
+.cm-s-default .cm-playerid {color: rgb(228, 146, 106);}
 .cm-s-default .cm-variable {}
 .cm-s-default .cm-punctuation,
 .cm-s-default .cm-property,

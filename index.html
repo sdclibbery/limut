@@ -207,40 +207,40 @@
 <pre>d dsaw 4[32]<10>___.., phaser=1/3, envelope=simple, rel=this.dur*2, amp=3, room={2,mix:1/4}</pre>
 <pre>ARP dsaw 02479742, dur=1/4, lpf={100*[3,30]l6.8,q:8}, Oct=(3,5), echo=3/8, att=0
 Bass prophet -2210, dur=4, Oct=(2,3), amp=1.7</pre>
-<pre>bpm=125
+<pre>set bpm=125
 set * swing=61
 p play [X-]-(X*)<---[--^]>, high=4, pan=[-1/4:1/4]r
 s tri 00[...0][.0..], dur=1, sus=1/6, att=0.05, room, oct=3, fold, phaser=1/16, amp=2/3, pan=[-1/2:1/2]l4@f+[-1/4:1/4]r, add=(0,2,4,6)
 b dbass ...[02]...[0246], room=0.1, lpf={this.freq*[3:12]l11@f,q:15}, pan=[-1/4:1/4]r</pre>
 <pre>d play x.h[.x]x[x.]h., room={0.1,mix:1/3}, amp=3/2
-chords=[0,2,4,3]t[16,8,4,4]
+set chords=[0,2,4,3]t[16,8,4,4]
 be bell 0[.......2], dur=8, add=chords
 gl glock 024797.., dur=1/4, add=chords</pre>
 <pre>Perc play lstig, dur=[1,3,2], amp=[1/6:1/2]l16, echo=1/8, pan=[-1:1]r
 Amb ambi 0[21]., dur=4, release=8, room=2, pan=(-1,1)
 Bass dbass 0, dur=8, att=2, rel=4, lpf=100*[3,30]l16@f</pre>
-<pre>Prog=[2,5,4,0]t8
+<pre>set Prog=[2,5,4,0]t8
 Ba piano 0__2, add=prog, amp=4, Oct=2
 Ch piano 0, dur=8, Sus=12, add=(prog+(0,2,4))%7, amp=2, Oct=3
 Le piano 0_.[.0]2343, amp=3, add=prog, Oct=4</pre>
-<pre>scale=minor
+<pre>set scale=minor
 Ba dbass 0.4[21], dur=4, amp=2, room=1.2, att=0.01, lpf=this.freq*[30,24,4]e, phaser=1/8
 Kd play V[.V]V., dur=2, room=1.1, echo=1/16, amp=2
 Sn play .(xO), dur=2, room=1.1, echo=1/16</pre>
-<pre>bpm=120
+<pre>set bpm=120
 set * swing=58
-scale=minor
+set scale=minor
 k play Xv, room=1/4, amp=3/2
 h play s-, dur=1/4, amp=1/2
 ba saw 020.00.0.040.00., dur=1/4, oct=2, sus=1/6, amp=2, lpf={this.freq*[[4:25]l7,2]e,q:15}, room={1,mix:1/5}</pre>
-<pre>bpm=65
+<pre>set bpm=65
 pad dsaw (024)(025)(035)(026), envelope=pad, dur=4, lpf=[600:3000]s21, oct=3, amp=[1.2:2.0]s70
 padf ethereal follow pad, oct=4
 pi ping 0, dur=[3,3,2]/20, amp=[0.5:1.2]n*[2:0]s96, oct=[3,4,5,6]t1/4, add=[0,5,3,4]t4+[0,[1:3]n32,4,[6:10]n37]r, sus=2, addc=[-.15:.15]n</pre>
 <pre>v kal 0, tunnel, scroll={x:time/8}, monochrome, fore=rainbow, mid=white
 b dbass [(04v).], dur=8, noisify=1/8, drive=2/8, fold=1, phaser=1/8, room=2, add=[2,3,1,0]t8, addc=wow, pan=[-1/2:1/2]r, chorus=2, att=1/2, rel=5</pre>
-<pre>bpm=145
-scale=minor
+<pre>set bpm=145
+set scale=minor
 v streetlight 0
 kd play (xv):, lpf=1000
 hh play -, dur=1/4, amp=[0.2:1.2]n
@@ -248,7 +248,7 @@ kk play ::[::][::][::]::., lpf=[600:900]l40, rate=[0.8:1.2]n
 ba dbass 0, dur=1/4, att=0, lpf=[1000:100]e, hpf=[0:500]n
 pi ping [010], add=[-5:5]l18/4, amp=[0:[0:1]t96]n, echo=1/2, oct=6, scale=minorpentatonic
 pad dsaw (-303), dur=16, envelope=pad, amp=[0:3/2]s64@f, room=0.5, lpf=[1000:3000]s32@f, oct=3, addc=[2,2,0,0]s[62,4,62,0]@f</pre>
-<pre>bpm=90
+<pre>set bpm=90
 n noise 00, dur=[9,7], envelope=simple, bpf=523*[[1:5]e,[1:1/5]e]*[1:[1.1,1.25]]n1, amp=3/2, att=[2,1/4], rel=[9,7], pan=[-1,1]l8@f
 p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=[0.4:0.6]r, oct=6, pan=[-1:1]n8, amp=[0.3:1.1]n8, room=1
 </pre>
@@ -285,7 +285,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>params</code> Comma separated list of params (eg <code>amp=1/2</code>) that affect how the player plays; see 'Value Syntax' and 'Params' sections below</p>
 <p class='sub'><code>modification overrides</code> params can be defined using operators to modify existing values rather than override them; eg <code>add+=2</code> will increase the add parameter by an additional 2 on top of what it was already set to.</p>
 <h5>Setting global vars:</h5>
-<p>Basic structure: <code>var = value</code></p>
+<p>Basic structure: <code>set var = value</code></p>
 <p><code>var</code> variable to set; either a predefined var (see 'Predefined Vars' section below) or a user defined var which can be referenced from params on any player(s)</p>
 <p><code>value</code> expression value to set; see 'Value Syntax'</p>
 </div>
@@ -823,12 +823,13 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-Use let for setting vars, and then allow multiline statements without line continuation char
- Use let for setting vars
- Remove line continuation stuff
+Use set for setting vars, and then allow multiline statements without line continuation char
+ Use set for setting vars
+  Release new version!
  Don't parse line-by-line, parse until cannot parse any more
- Docs
- Release
+  Remove line continuation stuff
+  Docs
+  Release new version!
 ?? Should modifiers actually be subparams? Would it be simpler/more-natural syntax-wise? Eg {[0,1]r,per:4,seed:0,0:0}
  Yes, and then can move time modifier code into eval-params
   let bpm=120
