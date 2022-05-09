@@ -718,12 +718,12 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
+Allow adding filters in the room/echo loops eg echo=3/4{lpf:523} - but dont use existing filter handlers as must be per event only!
+ Pitch shift up an octave to give shimmer reverb (pitch shifter: https://tonejs.github.io/docs/14.7.77/PitchShift.html)
 !Cant change wave on supersaw?
 !Should be a mix param on echo!
 Should be able to have the filter follow the note envelope (with scaling)
 portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-notes/legato-synths-glide-slide-portamento/
-Allow adding filters in the room/echo loops eg echo=3/4{lpf:523} - but dont use existing filter handlers as must be per event only!
- Pitch shift up an octave to give shimmer reverb (pitch shifter: https://tonejs.github.io/docs/14.7.77/PitchShift.html)
 envelope exp (exponent) subparam, eg att={1/2,exp:2} ?? Or name it 'pow'? Default to nonzero?
 Add some more waveforms  https://github.com/GoogleChromeLabs/web-audio-samples/tree/main/archive/demos/wave-tables
 808 synth based on https://github.com/vincentriemer/io-808
@@ -824,12 +824,13 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Use set for setting vars, and then allow multiline statements without line continuation char
- Use set for setting vars
-  Release new version!
- Don't parse line-by-line, parse until cannot parse any more
   Remove line continuation stuff
+  If a line won't parse as a "set" or player, then add it onto the previous line
   Docs
+  Update examples
   Release new version!
+    Maybe put a banner on the actual page warning of breaking changes?
+    Also maybe leave a comment on each previous video warning of syntax breaks?
 ?? Should modifiers actually be subparams? Would it be simpler/more-natural syntax-wise? Eg {[0,1]r,per:4,seed:0,0:0}
  Yes, and then can move time modifier code into eval-params
   let bpm=120
@@ -837,6 +838,14 @@ Use set for setting vars, and then allow multiline statements without line conti
   p ping 0,
     add=ch
  ??Should @e/@f also become subparams??
+!Cannot cancel a param by *0 when it has subparams; eg  lpf={0*500}  or  lpf=0*{500}  ;cf  lpf=0*500
+stutter parameter
+ ??? Some way to create tuples with arbitrary cardinality from expressions? Then you could do stutter with only delay???
+  !!Some mechanism for creating tuples cuould be generally useful; eg for making a bunch of glows all at once
+  ?? Or stutter function to use with delay?
+ stutter=4  - repeat each note 4 times within the duration the original note would have had
+ stutter={4,dur:1/8}  - repeat each note four times, with each repeat lasting 1/8 of a beat
+Modifier or function that smooths the value over time, separate attack and decay rates if possible
 !pattern "(01)": idx should be 0 for both events, surely?
  event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
 Delay subparams should support modifying overrides; eg  add=2, delay=(0,{1,add+:2})
@@ -861,12 +870,6 @@ Allow mixing , and :   Eg  [0,2:4,5]r  meaning 0 or 2 to 4 or 5  Or  [0:4,7,9:10
 Add doc section with an example and a detailed explanation of it
 allow root param on player to override global root (add or replace?)
 floor function:  delay=floor{[]r,to:1/4}  or  add=floor{[0:7]r,to:2}
-stutter parameter
- ??? Some way to create tuples with arbitrary cardinality from expressions? Then you could do stutter with only delay???
-  !!Some mechanism for creating tuples cuould be generally useful; eg for making a bunch of glows all at once
-  ?? Or stutter function to use with delay?
- stutter=4  - repeat each note 4 times within the duration the original note would have had
- stutter={4,dur:1/8}  - repeat each note four times, with each repeat lasting 1/8 of a beat
 Should really reset vars on code update; eg set var, then comment out, and it still applies...
 Follow player refactor
  !currently follow player fails on complex durations; eg:  ds dsaw 0[23]4_, dur=[1]  \  vds glow follow ds
@@ -933,7 +936,6 @@ Swing doesn't only affect event exactly on 3/4, it expands the preceeding 1/4 be
 ? rl, rt (==r), rs (==n); el (==e), es, et ?
  ?[1,3,5]n syntax to smoothly transition between randomly chosen values or should be [1,3,5]rs?
  []w for random walk?
-Modifier or function that smooths the value over time, separate attack and decay rates if possible
 Complex durations cause beat drift ?? Round pattern count to smallest possible duration? Eg [1/2,1/3]r rounds to nearest 1/6
 Per can default to repeat of thing being modified?
  Eg [0:1]l4{0:0} per defaults to 8?
