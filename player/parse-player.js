@@ -60,11 +60,6 @@ define((require) => {
         let command = line.replace(parts[0],'').replace(parts[1],'').trim()
         if (!command) { throw 'Player "'+playerType+'" Missing pattern/params' }
         let [patternStr, paramsStr] = splitOnFirst(command, ',').map(s => s.trim())
-        // All params commented out?
-        if (patternStr.endsWith('//')) {
-          paramsStr = ''
-          patternStr = patternStr.slice(0, -2).trim()
-        }
         // Create player
         let playerFactory = playerTypes[playerType.toLowerCase()]
         if (!playerFactory) { throw 'Player "'+playerType+'" not found' }

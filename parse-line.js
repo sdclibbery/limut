@@ -52,8 +52,7 @@ define((require) => {
   let parseLine = (line, linenum) => {
     line = line.trim()
     if (!line) { return }
-    if (line.startsWith('//')) { return }
-    if (line.startsWith('set ')) {
+    if (startsWithSet(line)) {
       line = line.slice(4).trim()
       // Set global vars and settings
       let [k,v] = line.split('=').map(p => p.trim()).filter(p => p != '')
@@ -96,6 +95,22 @@ define((require) => {
     }
   }
 
+  let startsWithSet = (str) => {
+    let r = new RegExp(/^\s*set\s+[\[\*\w]+/, 'i')
+    return r.test(str)
+  }
+
+  let startsWithPlayer = (str) => {
+    let r = new RegExp(/^\s*\w+\s+\w+\s+[^\s,]+/, 'i')
+    return r.test(str)
+  }
+
+  let isLineStart = (str) => {
+    if (startsWithSet(str)) { return true }
+    if (startsWithPlayer(str)) { return true }
+    return false
+  }
+
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
@@ -111,35 +126,37 @@ define((require) => {
     finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
   }
 
+  assert(false, isLineStart('foo bar'))
+  assert(false, isLineStart('set '))
+  assert(false, isLineStart('set\t'))
+  assert(true, isLineStart('set p'))
+  assert(true, isLineStart('set p '))
+  assert(true, isLineStart('set\tp'))
+  assert(true, isLineStart('set p1'))
+  assert(true, isLineStart('set *'))
+  assert(true, isLineStart('set [ p , a* ] '))
+  assert(true, isLineStart('SET P'))
+  assert(false, isLineStart('sett '))
+  assert(false, isLineStart('p ping'))
+  assert(false, isLineStart('p ping '))
+  assert(false, isLineStart('p ping ,'))
+  assert(true, isLineStart('p ping !0'))
+  assert(true, isLineStart('p ping !0,'))
+  assert(true, isLineStart('p ping !0 ,'))
+  assert(true, isLineStart('p\t\tping\t\t!0'))
+
   parseLine('')
   parseLine('')
+
+  parseLine('SET FOO=1+1')
+  assert(2, vars.foo)
+  delete vars.foo
 
   parseLine('set foo=1+1')
   assert(2, vars.foo)
   delete vars.foo
 
-  parseLine('//set foo=1+1')
-  assert(undefined, vars.foo)
-
-  parseLine('// set foo=1+1')
-  assert(undefined, vars.foo)
-
-  parseLine('  //set foo=1+1  ')
-  assert(undefined, vars.foo)
-
-  parseLine('set foo=1//+1')
-  assert(1, vars.foo)
-  delete vars.foo
-
-  parseLine('set foo=1 // +1')
-  assert(1, vars.foo)
-  delete vars.foo
-
   parseLine("set foo='http://a.com/Bc.mp3'")
-  assert('http://a.com/Bc.mp3', vars.foo)
-  delete vars.foo
-
-  parseLine("set foo='http://a.com/Bc.mp3'// BLAH")
   assert('http://a.com/Bc.mp3', vars.foo)
   delete vars.foo
 
@@ -207,6 +224,6 @@ define((require) => {
   
   return {
     parseLine:parseLine,
-    parseLine:parseLine,
+    isLineStart:isLineStart,
   }
 })
