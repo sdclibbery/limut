@@ -1299,7 +1299,7 @@ b dbass 0020, dur=1/4, amp=[]r{per:4,0:2,1:0,2:0,4:0,seed:101}, att=0.01, rel=0.
 set active=[0,1]t32
 set chooser=[0,1,2,3,4]r4
 set words=('imagination','regret','escape','consent','revolution')
-set samples='https://upload.wikimedia.org/wikipedia/commons/'+ \
+set samples='https://upload.wikimedia.org/wikipedia/commons/'+
   ('1/1a/En-us-imagination.ogg','6/6d/En-us-regret.ogg','3/39/En-us-escape.ogg','3/35/En-us-consent.ogg','8/85/En-uk-revolution.ogg')
 vt text 0, dur=4, text=words[chooser], fade, loc={y:-0.4}+firefly/8, perspective=1, zoom=1.8, additive, amp=active@e
 i sample 0, dur=4, sample=samples[chooser], bits=2, room=1.1, high=[8:12]r, echo=1/4, amp=1/4*active
@@ -1379,16 +1379,16 @@ p play mx.xm.mxxm, sample=2, high=-24, mid=-12, delay=(0,3/4), amp=3/4
 r play ..o..o.., pan=-1/3, amp=1/3, room=0.4, rate=3/4, mid=8, high=-11
 hh play -, amp=3/2, pan=1/3, mid=4, high=-4
 vt text 0, dur=8, text={blah,y:0.41,size:108,font:'helvetica,arial'}, zoom=1.6, ripple=0.2, fore={a:[0,1/3]l[2,6]@f^1.7}
-set blah=[ \
-'All of us', \
-'Pinioned', \
-'Empty and open', \
-'Nothing special', \
-'H̸̡̪̯ͨ͊̽̅̾̎Ȩ̬̩̾͛ͪ̈́̀́͘ ̶̧̨̱̹̭̯ͧ̾ͬC̷̙̲̝͖ͭ̏ͥͮ͟Oͮ͏̮̪̝͍M̲̖͊̒ͪͩͬ̚̚͜Ȇ̴̟̟͙̞ͩ͌͝S̨̥̫͎̭ͯ̿̔̀ͅ', \
-'Affordances', \
-'Sonorous', \
-'Nightshock', \
-'Darkness', \
+set blah=[
+'All of us',
+'Pinioned',
+'Empty and open',
+'Nothing special',
+'H̸̡̪̯ͨ͊̽̅̾̎Ȩ̬̩̾͛ͪ̈́̀́͘ ̶̧̨̱̹̭̯ͧ̾ͬC̷̙̲̝͖ͭ̏ͥͮ͟Oͮ͏̮̪̝͍M̲̖͊̒ͪͩͬ̚̚͜Ȇ̴̟̟͙̞ͩ͌͝S̨̥̫͎̭ͯ̿̔̀ͅ',
+'Affordances',
+'Sonorous',
+'Nightshock',
+'Darkness',
 ]r8
 
 
@@ -1452,12 +1452,12 @@ sl sample 0., dur=16, sample=babylaugh, room=0.5, amp=[3/2,0,0]r
 rs glass 00v, dur=1/2, amp=[1/4,1,3]l[28,4,0], oct=5, pan=[-1/2,1/2]r, add=[0:8]l[4,0]+[0:7]l[32,0]
 
 
-set words=[ \
-{w:'Red',c:red}, \
-{w:'Green',c:green}, \
-{w:'Blue',c:blue}, \
-{w:'Random',c:{h:[]r}}, \
-{w:'Flashing',c:[black,white]s1/4@f}, \
+set words=[
+{w:'Red',c:red},
+{w:'Green',c:green},
+{w:'Blue',c:blue},
+{w:'Random',c:{h:[]r}},
+{w:'Flashing',c:[black,white]s1/4@f},
 ]
 v text 0, dur=1/2, text={words['w'],style:'bold',y:0.4}, fore=words['c']
 
@@ -1643,19 +1643,19 @@ p piano 0, dur=1/2, add=[0,0#,0b]
 set bpm=112
 set * swing=56
 pi piano 0, dur=1/4, add=ch[[0,1,2,3,4,2,3,4]], sus=[8,7,1,1,1,1,1,1]/3, room=3/4
-set ch=[ \
-(0,2,4,7,9),(0,1,5,8,10),(-1,1,4,8,10), \
-(0,2,4,7,9),(0,2,5,9,12),(0,1,3#,5,9), \
-(-1,1,4,8,11),(-1,0,2,4,7),(-2,0,2,4,7), \
-(-6,-2,1,3#,7),(-3,-1,1,4,6),(-3,-1b,2,4,8b), \
-(-4,-2,1,5,8),(-4,-2b,1,3,6),(-5,-3,0,4,7), \
-(-5,-4,-2,0,3),(-6,-4,-2,0,3),(-10,-6,-3,-1,3), \
-(-7,-5,-3,0,2),(-7,-3,-1b,0,2),(-11,-4,-2,0,2), \
-(-11#,-7,-2,0,2b),(-10,-5b,-1,0,2b),(-9b,-4,-1,0,1), \
-(-10,-4,-3,-1,1),(-10,-5,-3,0,2),(-10,-6,-3,0,3), \
-(-10,-6,-3,-1,3),(-10,-5b,-2,0,3#),(-10,-5,-3,0,4), \
-(-10,-6,-3,0,3),(-10,-6,-3,-1,3),(-14,-7,-3,-1b,2), \
-(-14,-7,-4,0,3),(-14,-8,4,6,8),(-14,-7,2,4,7) \
+set ch=[
+(0,2,4,7,9),(0,1,5,8,10),(-1,1,4,8,10),
+(0,2,4,7,9),(0,2,5,9,12),(0,1,3#,5,9),
+(-1,1,4,8,11),(-1,0,2,4,7),(-2,0,2,4,7),
+(-6,-2,1,3#,7),(-3,-1,1,4,6),(-3,-1b,2,4,8b),
+(-4,-2,1,5,8),(-4,-2b,1,3,6),(-5,-3,0,4,7),
+(-5,-4,-2,0,3),(-6,-4,-2,0,3),(-10,-6,-3,-1,3),
+(-7,-5,-3,0,2),(-7,-3,-1b,0,2),(-11,-4,-2,0,2),
+(-11#,-7,-2,0,2b),(-10,-5b,-1,0,2b),(-9b,-4,-1,0,1),
+(-10,-4,-3,-1,1),(-10,-5,-3,0,2),(-10,-6,-3,0,3),
+(-10,-6,-3,-1,3),(-10,-5b,-2,0,3#),(-10,-5,-3,0,4),
+(-10,-6,-3,0,3),(-10,-6,-3,-1,3),(-14,-7,-3,-1b,2),
+(-14,-7,-4,0,3),(-14,-8,4,6,8),(-14,-7,2,4,7)
 ]t4
 
 
@@ -1737,7 +1737,7 @@ set * swing=52
 pp play x-(x*)-, room=1/8
 set ch=[(0,2,4),(0,5,3),(0,2,5),(-1,3,4)]t4
 tb saw 0, dur=1/3, add=ch[0], sus=1/5, room=1/4, oct=2
-tl prophet 0, dur=1/4, add=ch[[0,1,2]t1/4{per:4}], oct=(3,4), chorus, \
+tl prophet 0, dur=1/4, add=ch[[0,1,2]t1/4{per:4}], oct=(3,4), chorus,
     room={1.15,mix:1/3}, att=1/128, dec=1/6, sus={level:1/3}, rel=1/8
 tls saw follow tl
 
