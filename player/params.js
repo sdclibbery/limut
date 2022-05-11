@@ -1,6 +1,7 @@
 'use strict';
 define(function(require) {
   let parseExpression = require('player/parse-expression')
+  let eatWhitespace = require('player/eat-whitespace')
   let {operators} = require('player/operators')
   let {newOverride,combineOverride,applyOverrides} = require('player/override-params')
 
@@ -62,6 +63,11 @@ define(function(require) {
   }
 
   let parseParam = (state) => {
+    eatWhitespace(state)
+    if (state.str.charAt(state.idx) === ',') {
+      state.idx++
+      return true
+    }
     let {name, operator} = parseName(state)
     let value
     if (state.valueless) {
@@ -114,6 +120,7 @@ define(function(require) {
   assert({dur:4, oct:5, dec:2, att:2}, parseParams('dur=4, oct=5, dec=2, att=2'))
   assert({dur:1/2}, parseParams('dur=1/2'))
   assert({dur:1, oct:4}, parseParams('dur=1,oct=4'))
+  assert({dur:1, oct:4}, parseParams(',,dur=1,,,oct=4,,'))
   assert({t:'a'}, parseParams("t='a'"))
   assert({s:'abc'}, parseParams("s='abc'"))
   assert({s:'a b  c'}, parseParams("s='a b  c'"))

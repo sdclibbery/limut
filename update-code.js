@@ -16,7 +16,8 @@ define((require) => {
         if (line === '') { continue }
         line = preParseLine(line)
         while ((i+1)<lines.length && !isLineStart(lines[i+1])) {
-          line = line + preParseLine(lines[i+1])
+          let nextLine = preParseLine(lines[i+1])
+          line = line + nextLine
           i++
         }
         parseLine(line, i)
@@ -86,7 +87,7 @@ define((require) => {
     }
   
     assertVars('', {})
-    assertVars(' \n \n ', {})
+    assertVars(' \n \t\n ', {})
 
     assertVars('//set foo=1+1', {foo:undefined})
 
@@ -95,6 +96,9 @@ define((require) => {
 
     assertOverrides('set p amp=2', 'p', {amp:2})
     assertOverrides('set p foo=2, bar=4', 'p', {foo:2,bar:4})
+
+    assertOverrides('set p foo=2,\n,bar=4', 'p', {foo:2,bar:4})
+    assertOverrides('set p foo=2 , \n , bar=4', 'p', {foo:2,bar:4})
 
     assertOverrides('set p \nfoo=2,bar=4', 'p', {foo:2,bar:4})
     assertOverrides('set p foo\n=2,bar=4', 'p', {foo:2,bar:4})
