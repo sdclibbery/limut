@@ -1,11 +1,11 @@
 'use strict';
 define(function (require) {
   let system = require('play/system')
-  let param = require('player/default-param')
+  let {mainParam} = require('player/sub-param')
   let {evalMainParamFrame,evalSubParamFrame} = require('play/eval-audio-params')
 
   let resonant = (params, node, type, freqParam, defaultResonance) => {
-    if (!param(params[freqParam], 0)) { return node }
+    if (!mainParam(params[freqParam], 0)) { return node }
     let filter = system.audio.createBiquadFilter()
     filter.type = type
     evalMainParamFrame(filter.frequency, params, freqParam)
@@ -16,7 +16,7 @@ define(function (require) {
   }
 
   let eq = (params, node, type, gainParam, defaultFreq, defaultQ) => {
-    if (!param(params[gainParam], 0)) { return node }
+    if (!mainParam(params[gainParam], 0)) { return node }
     let filter = system.audio.createBiquadFilter()
     filter.type = type
     evalMainParamFrame(filter.gain, params, gainParam)

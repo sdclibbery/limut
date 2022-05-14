@@ -1,14 +1,14 @@
 'use strict';
 define(function (require) {
   let system = require('play/system')
-  let param = require('player/default-param')
+  let {mainParam} = require('player/sub-param')
   let {evalMainParamFrame,evalSubParamEvent} = require('play/eval-audio-params')
   let chain = require('play/effects/chains')
   let filters = require('play/effects/filters')
   let {mix} = require('play/effects/mix')
 
   let perFrameAmp = (params, node) => {
-    if (typeof params.amp !== 'function') { return node } // No per frame control required
+    if (typeof mainParam(params.amp) !== 'function') { return node } // No per frame control required
     let vca = system.audio.createGain()
     evalMainParamFrame(vca.gain, params, 'amp', 1)
     node.connect(vca)
@@ -17,7 +17,7 @@ define(function (require) {
   }
 
   let chop = (params, node) => {
-    if (params['chop'] === undefined) { return node }
+    if (!mainParam(params.chop, 0)) { return node }
     let lfo = system.audio.createOscillator()
     lfo.type = evalSubParamEvent(params, 'chop', 'wave', 'sine')
     evalMainParamFrame(lfo.frequency, params, 'chop', 1, v => v / params.beat.duration)
@@ -35,7 +35,7 @@ define(function (require) {
   }
 
   let ring = (params, node) => {
-    if (params['ring'] === undefined) { return node }
+    if (!mainParam(params.ring, 0)) { return node }
     let lfo = system.audio.createOscillator()
     lfo.type = evalSubParamEvent(params, 'ring', 'wave', 'triangle')
     evalMainParamFrame(lfo.frequency, params, 'ring', 1)
@@ -50,7 +50,7 @@ define(function (require) {
   }
 
   let pan = (params, node) => {
-    if (!param(params.pan, 0)) { return node }
+    if (!mainParam(params.pan, 0)) { return node }
     let pan = system.audio.createStereoPanner()
     evalMainParamFrame(pan.pan, params, 'pan')
     node.connect(pan)

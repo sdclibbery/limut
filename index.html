@@ -851,6 +851,12 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
+stutter parameter
+ ??? Some way to create tuples with arbitrary cardinality from expressions? Then you could do stutter with only delay???
+  !!Some mechanism for creating tuples cuould be generally useful; eg for making a bunch of glows all at once
+  ?? Or stutter function to use with delay?
+ stutter=4  - repeat each note 4 times within the duration the original note would have had
+ stutter={4,dur:1/8}  - repeat each note four times, with each repeat lasting 1/8 of a beat
 ?? Should modifiers actually be subparams? Would it be simpler/more-natural syntax-wise? Eg {[0,1]r,per:4,seed:0,0:0}
  Yes, and then can move time modifier code into eval-params
   let bpm=120
@@ -858,13 +864,7 @@ shadertoy synth multiple channels
   p ping 0,
     add=ch
  ??Should @e/@f also become subparams??
-!Cannot cancel a param by *0 when it has subparams; eg  lpf={0*500}  or  lpf=0*{500}  ;cf  lpf=0*500
-stutter parameter
- ??? Some way to create tuples with arbitrary cardinality from expressions? Then you could do stutter with only delay???
-  !!Some mechanism for creating tuples cuould be generally useful; eg for making a bunch of glows all at once
-  ?? Or stutter function to use with delay?
- stutter=4  - repeat each note 4 times within the duration the original note would have had
- stutter={4,dur:1/8}  - repeat each note four times, with each repeat lasting 1/8 of a beat
+ Release...
 Modifier or function that smooths the value over time, separate attack and decay rates if possible
 !pattern "(01)": idx should be 0 for both events, surely?
  event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord

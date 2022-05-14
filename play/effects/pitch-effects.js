@@ -1,12 +1,13 @@
 'use strict';
 define(function (require) {
   let system = require('play/system')
+  let {mainParam} = require('player/sub-param')
   let {evalMainParamEvent,evalSubParamEvent,evalMainParamFrame} = require('play/eval-audio-params')
 
   return (params) => {
     let vcaVib
     let vcaAddc
-    if (params.vib !== undefined) {
+    if (mainParam(params.vib)) {
       let vib = evalMainParamEvent(params, 'vib', 0)
       let vibdepth = evalSubParamEvent(params, 'vib', 'depth', 0.4)
       let vibdelay = evalSubParamEvent(params, 'vib', 'delay', 1/2)
@@ -21,7 +22,7 @@ define(function (require) {
       lfo.stop(params.endTime)
       system.disconnect(params, [lfo,vcaVib])
     }
-    if (params.addc !== undefined) {
+    if (mainParam(params.addc)) {
       let cents = system.audio.createConstantSource()
       cents.offset.value = 100
       vcaAddc = system.audio.createGain()
