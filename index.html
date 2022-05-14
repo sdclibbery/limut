@@ -209,11 +209,6 @@
     Visual: <span id="visual-readout" class="meter"> </span>
     Limiter: <span id="compressor-readout" class="meter"> </span>
   </div>
-  <div class="warn">
-    <p>⚠️ Recent breaking syntax change: lines setting global vars must be prefixed with "<code>set </code>".</p>
-    <p>Eg <code>bpm=130</code> must be changed to <code>set bpm=130</code> etc.</p>
-    <p>⚠️ Also multiline commands are automatic, the <code> \</code> is no longer needed and must be removed.</p>
-  </div>
   <div id="code-codemirror" class="widget code" style="display:none;"></div>
   <textarea id="code-textarea" class="widget code" rows="15" style="display:none;"></textarea>
   <textarea id="console" class="widget" rows="5"></textarea>
@@ -856,9 +851,6 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-Use set for setting vars, and then allow multiline statements without line continuation char
-  Release new version!
-  Also maybe leave a comment on each previous video warning of syntax breaks?
 ?? Should modifiers actually be subparams? Would it be simpler/more-natural syntax-wise? Eg {[0,1]r,per:4,seed:0,0:0}
  Yes, and then can move time modifier code into eval-params
   let bpm=120
@@ -866,7 +858,6 @@ Use set for setting vars, and then allow multiline statements without line conti
   p ping 0,
     add=ch
  ??Should @e/@f also become subparams??
-Remove warning banner
 !Cannot cancel a param by *0 when it has subparams; eg  lpf={0*500}  or  lpf=0*{500}  ;cf  lpf=0*500
 stutter parameter
  ??? Some way to create tuples with arbitrary cardinality from expressions? Then you could do stutter with only delay???
