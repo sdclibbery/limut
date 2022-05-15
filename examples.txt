@@ -1801,3 +1801,7 @@ a supersaw [-20][_0]__, add=ch+[3,2,1,0,3,2,1,7]t4, room={1.2,mix:1/3}, oct=(3,4
 // set tl amp=2/3
 
 
+g gradient 0, recol=neon
+v xor 0, back=#004f, fore=#2a4f, rate=8, scroll=time/16
+
+
