@@ -94,9 +94,12 @@ define(function(require) {
 
   let eventTimeVar = (vs, ds_parsed) => {
     return (e,b) => {
+      if (vs.length === 0) { return 0 }
+      if (vs.length === 1) { return vs[0] }
       if (!e.countToTime) { return vs[0] || 0 }
       let ds = ds_parsed
-      if (ds === undefined) { ds = e.endTime - e._time }
+      let eDur = e.endTime - e._time
+      if (ds === undefined) { ds = eDur / (vs.length-1) }
       let steps = timeVarSteps(vs, ds)
       let count = e.countToTime(b) - e._time
       if (count < 0) { count = 0 }

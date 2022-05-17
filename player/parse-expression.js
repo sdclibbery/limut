@@ -809,6 +809,40 @@ define(function(require) {
   assert(1, p(e,9, evalParamFrame))
   assert(1, p(e,10, evalParamFrame))
 
+  p = parseExpression("[0,1,0]e")
+  e = { idx:0, count:7, countToTime:b=>b, _time:7, endTime:8 }
+  assert(0, p(e,6, evalParamFrame))
+  assert(0, p(e,7, evalParamFrame))
+  assert(1, p(e,7.5, evalParamFrame))
+  assert(0, p(e,8, evalParamFrame))
+  assert(0, p(e,9, evalParamFrame))
+
+  p = parseExpression("[0:1]e")
+  e = { idx:0, count:7, countToTime:b=>b, _time:1, endTime:3 }
+  assert(0, p(e,1, evalParamFrame))
+  assert(0.5, p(e,2, evalParamFrame))
+  assert(1, p(e,3, evalParamFrame))
+
+  p = parseExpression("[0,1,0]e")
+  e = { idx:0, count:7, countToTime:b=>b, _time:1, endTime:3 }
+  assert(0, p(e,1, evalParamFrame))
+  assert(1, p(e,2, evalParamFrame))
+  assert(0, p(e,3, evalParamFrame))
+
+  p = parseExpression("[1]e")
+  e = { idx:0, count:7, countToTime:b=>b, _time:1, endTime:2 }
+  assert(1, p(e,0, evalParamFrame))
+  assert(1, p(e,1, evalParamFrame))
+  assert(1, p(e,2, evalParamFrame))
+  assert(1, p(e,3, evalParamFrame))
+
+  p = parseExpression("[]e")
+  e = { idx:0, count:7, countToTime:b=>b, _time:1, endTime:2 }
+  assert(0, p(e,0, evalParamFrame))
+  assert(0, p(e,1, evalParamFrame))
+  assert(0, p(e,2, evalParamFrame))
+  assert(0, p(e,3, evalParamFrame))
+
   p = parseExpression("[0:1]e1/2")
   e = { idx:0, count:7, countToTime:b=>b, _time:7, endTime:8 }
   assert(0, p(e,6, evalParamFrame))
