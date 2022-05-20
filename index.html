@@ -854,10 +854,11 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-stutter parameter
- test with all usual cases
+!v kal 0, scroll=[0:1/8]t1/4@f
+ !! Fails because of the colon
 stutter={4,dur:1/8}  - repeat each note four times, with each repeat lasting 1/8 of a beat
 stutter={4,amp:1/2}  - apply overrides
+!Want `set * amp/=2` to halve the current amplitude even when it's using the default fallback value
 ? How to provide overrides per stuttured notes?
  stutter={4,dur:1/8,i=>{amp:1/i}}
 ?? Should modifiers actually be subparams? Would it be simpler/more-natural syntax-wise? Eg {[0,1]r,per:4,seed:0,0:0}

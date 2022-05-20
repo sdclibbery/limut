@@ -690,6 +690,11 @@ define(function(require) {
   assert(2, p(ev(1),1,evalParamFrame))
   assert(1, p(ev(2),2,evalParamFrame))
 
+  p = parseExpression("[0,1]t1/4@f")
+  assert(0, p(ev(0),0/4,evalParamFrame))
+  assert(1, p(ev(0),1/4,evalParamFrame))
+  assert(0, p(ev(0),2/4,evalParamFrame))
+
   p = parseExpression("[1,2]t2@f*2")
   assert(2, p(ev(0),0,evalParamFrame))
   assert(2, p(ev(1),1,evalParamFrame))
@@ -727,6 +732,7 @@ define(function(require) {
   assert('event', parseExpression("[0,1]").interval)
   assert('event', parseExpression("[0,1]t4").interval)
   assert('frame', parseExpression("[0,1]t4@f").interval)
+  assert('frame', parseExpression("[0,1]t1/4@f").interval)
   assert('event', parseExpression("[0,1]@e").interval)
   assert('event', parseExpression("[0,1]t@e").interval)
   assert('event', parseExpression("[0,1]t4@e").interval)

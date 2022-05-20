@@ -49,7 +49,7 @@ define(function (require) {
     try {
       if (v !== undefined) {
         if (typeof mod === 'function') { v = mod(v) }
-        audioParam.value = v
+        audioParam.setValueAtTime(v, system.timeNow())
       }
     } catch (e) {
       console.log(audioParam, e)
@@ -62,7 +62,7 @@ define(function (require) {
     if (typeof v == 'number') {
       // single value; no need for regular per frame update
       if (typeof mod === 'function') { v = mod(v) }
-      audioParam.value = v
+      audioParam.setValueAtTime(v, system.timeNow())
     } else {
       setAudioParamValue(audioParam, evalMainPerFrame(params, p, def, params.count), p, mod) // set now
       system.add(params._time, state => { // per frame update
@@ -83,7 +83,7 @@ define(function (require) {
       // single value; no need for regular per frame update
       let v = subParam(params[p], subParamName, def)
       if (typeof mod === 'function') { v = mod(v) }
-      audioParam.value = v
+      audioParam.setValueAtTime(v, system.timeNow())
     } else {
       setAudioParamValue(audioParam, evalSubPerFrame(params, p, subParamName, def, params.count), p, mod) // set now
       system.add(params._time, state => { // per frame update
@@ -131,11 +131,12 @@ define(function (require) {
     let assertAudioParamTest = (expected, expectedSystemAddCalled, test, mod) => {
       let systemAdd = system.add
       let called = false
+      let valueSet = undefined
       system.add = () => called=true
-      let ap = {}
+      let ap = {setValueAtTime:(v) => valueSet=v}
       test(ap, mod)
-      assert(expected, ap.value)
       assert(expectedSystemAddCalled, called)
+      assert(expected, valueSet)
       system.add = systemAdd
     }
     let assertAudioParam = (expected, expectedSystemAddCalled, test) => {

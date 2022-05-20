@@ -174,6 +174,8 @@ define((require) => {
   assert({foo:0,interval:'event'}, evalParamEvent(perEventThenFrameObject, ev(0), 1))
   assert({foo:1,interval:'event'}, evalParamFrame(perEventThenFrameObject, ev(0), 1))
 
+  assert(perFrameValue, preEvalParam({a:perFrameValue}, ev(0), 0).a)
+
   console.log('Eval param tests complete')
   }
 
