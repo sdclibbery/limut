@@ -49,6 +49,27 @@ define((require) => {
     applySwing(event, beat)
   }
 
+  let expandStutter = (es) => {
+    let result = []
+    es.forEach(event => {
+      let sp = evalParamFrame(event.stutter, event, event.count)
+      let s = Math.max(Math.floor(mainParam(sp, 1)), 1)
+      if (s == 1) {
+        result.push(event)
+        return
+      }
+      let dur = event.dur / s
+      for (let i = 0; i < s; i++) {
+        let e = Object.assign({}, event)
+        e.dur = dur
+        e.count += i*dur
+        e._time += i*dur*event.beat.duration
+        result.push(e)
+      }
+    })
+    return result
+  }
+
   let parsePlayer = (line, linenum) => {
     let parts = line.split(/(\s+)/).map(p => p.trim()).filter(p => p != '')
     let playerId = parts[0].toLowerCase()
@@ -130,6 +151,7 @@ define((require) => {
           let es = player.getEventsForBeatBase(beat)
           es = expandTuples(es)
           es.forEach(e => applyDelay(e, beat))
+          es = expandStutter(es)
           return es
         }
         return player
@@ -141,10 +163,10 @@ define((require) => {
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
   let vars = require('vars')
 
-  let assert = (expected, actual) => {
+  let assert = (expected, actual, msg) => {
     let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(3) : v)
     let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(3) : v)
-    if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
+    if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}${msg?'\n'+msg:''}`) }
   }
   let assertThrows = (expected, code) => {
     let got
@@ -169,6 +191,7 @@ define((require) => {
   e = parsePlayer('p play x, delay=0').getEventsForBeat({time:0, count:0, duration:1})[0]
   assert(0, e._time)
   assert(0, e.count)
+  assert(1/2, e.dur)
 
   e = parsePlayer('p play x, delay=1/2').getEventsForBeat({time:0, count:0, duration:1})[0]
   assert(1/2, e._time)
@@ -276,6 +299,57 @@ define((require) => {
   e = parsePlayer('p play x, delay={1,add:2}').getEventsForBeat({time:0, count:0, duration:1})[0]
   assert(1, e._time)
   assert(2, e.add)
+
+  let assertEvent = (t, c, d, e) => {
+    assert(t, e._time, 'Incorrect _time')
+    assert(c, e.count, 'Incorrect count')
+    assert(d, e.dur, 'Incorrect dur')
+  }
+
+  es = parsePlayer('p test 0, stutter=2').getEventsForBeat({time:0, count:0, duration:1})
+  assert(2, es.length)
+  assertEvent(0,0,1/2, es[0])
+  assertEvent(1/2,1/2,1/2, es[1])
+
+  es = parsePlayer('p test 0, dur=3, stutter=2').getEventsForBeat({time:0, count:0, duration:2})
+  assert(2, es.length)
+  assertEvent(0,0,3/2, es[0])
+  assertEvent(3,3/2,3/2, es[1])
+
+  es = parsePlayer('p test 0, stutter=(2,3)').getEventsForBeat({time:0, count:0, duration:1})
+  assert(5, es.length)
+  assertEvent(0,0,1/2, es[0])
+  assertEvent(1/2,1/2,1/2, es[1])
+  assertEvent(0,0,1/3, es[2])
+  assertEvent(1/3,1/3,1/3, es[3])
+  assertEvent(2/3,2/3,1/3, es[4])
+
+  es = parsePlayer('p test 0, stutter=2, delay=1').getEventsForBeat({time:0, count:0, duration:1})
+  assert(2, es.length)
+  assertEvent(1,1,1/2, es[0])
+  assertEvent(3/2,3/2,1/2, es[1])
+
+  p = parsePlayer('p test 0, stutter=[1,2]t1@e')
+  es = p.getEventsForBeat({time:0, count:0, duration:1})
+  assert(1, es.length)
+  assertEvent(0,0,1, es[0])
+  es = p.getEventsForBeat({time:1, count:1, duration:1})
+  assert(2, es.length)
+  assertEvent(1,1,1/2, es[0])
+  assertEvent(3/2,3/2,1/2, es[1])
+
+  p = parsePlayer('p test 0, stutter=[1,2]t1@f')
+  es = p.getEventsForBeat({time:0, count:0, duration:1})
+  assert(1, es.length)
+  assertEvent(0,0,1, es[0])
+  es = p.getEventsForBeat({time:1, count:1, duration:1})
+  assert(2, es.length)
+  assertEvent(1,1,1/2, es[0])
+  assertEvent(3/2,3/2,1/2, es[1])
+
+  es = parsePlayer('p test 0, stutter=[1,10]e').getEventsForBeat({time:0, count:0, duration:1})
+  assert(1, es.length)
+  assertEvent(0,0,1, es[0])
 
   console.log('Parse player tests complete')
   }

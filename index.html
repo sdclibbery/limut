@@ -472,6 +472,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>dur</code> Event time in beats</p>
 <p><code>delay</code> Event start time offset in beats</p>
 <p class='sub'><code>delay={1/2,add:2}</code> subparams on delay will be used to override the event values. In the example given, the <code>add</code> param of the delayed event will be set to 2, but any params can be overridden this way. This is most useful with tuples of delay values, as it allows individual delayed events to change their properties.</p>
+<p><code>stutter</code> Split each event into multiple events spaced evenly within the same time period. Eg with <code>stutter=2</code>, an event starting at time 0 with a duration of 1 will be split into two events of duration 1/2, starting at 0 and 1/2. Stutter of 0 or 1 has no effect and is the default. Stutter is rounded down to the nearest integer value.</p>
 <p><code>swing</code> Amount to swing alternating 1/4 beats, as a Linn LM-1 style percentage from <code>50</code> (no swing) to <code>66</code> (perfect triplet swing) to <code>75</code> (maximum dotted note swing). You can set swing for all players at once using (eg) <code>set * swing=60</code></p>
 <p><code>amp</code> Player amplitude control</p>
 <p><code>sus</code> Sustain time in beats. Note the 'sustain' in an ADSR envelope sets the sustain level, however this param sets the sustain time. The default is time required after attack and decay to take the note to the end of the duration.</p>
@@ -844,7 +845,7 @@ shadertoy synth multiple channels
 ==== things to test/consider ====
 // pattern features (), [], <>, #b, ^v, !=
 // p ping 0, add=[0,1,2,3]
-// (), follow, complex durs, delay, overrides, +=
+// (), follow, complex durs, delay, stutter, overrides, +=
 // [], []t, []l/s, []e, []n, []r
 // operators + - * / ^ %
 // var, player.var, this.param, var{params}
@@ -854,14 +855,11 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 stutter parameter
- stutter=4  - repeat each note 4 times within the duration the original note would have had
- stutter={4,dur:1/8}  - repeat each note four times, with each repeat lasting 1/8 of a beat
- ? How to provide overrides for stuttured notes?
-  stutter={4,dur:1/8,i=>{amp:1/i}}
- ?? OR stutter function to use with delay, that returns a tuple?
-  delay=stutter{4,dur:1/8}
-  ? How to provide overrides for stuttured notes?
-   delay=stutter{4,dur:1/8,i=>{amp:1/i}}
+ test with all usual cases
+stutter={4,dur:1/8}  - repeat each note four times, with each repeat lasting 1/8 of a beat
+stutter={4,amp:1/2}  - apply overrides
+? How to provide overrides per stuttured notes?
+ stutter={4,dur:1/8,i=>{amp:1/i}}
 ?? Should modifiers actually be subparams? Would it be simpler/more-natural syntax-wise? Eg {[0,1]r,per:4,seed:0,0:0}
  Yes, and then can move time modifier code into eval-params
   let bpm=120
