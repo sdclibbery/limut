@@ -339,6 +339,12 @@ define(function(require) {
   assert(2, p(ev(2,2),2,evalParamFrame))
   assert(0, p(ev(3,3),3,evalParamFrame))
 
+  p = parseExpression('[-1:1]t1')
+  assert(-1, p(ev(0,0),0,evalParamFrame))
+  assert(0, p(ev(1,1),1,evalParamFrame))
+  assert(1, p(ev(2,2),2,evalParamFrame))
+  assert(-1, p(ev(3,3),3,evalParamFrame))
+
   p = parseExpression('[0:[1,2]]t1')
   assert(0, p(ev(0,0),0,evalParamFrame))
   assert(1, p(ev(1,1),1,evalParamFrame))

@@ -1,6 +1,7 @@
 'use strict';
 define(function(require) {
   let evalOperator = require('player/eval-operator')
+  let consoleOut = require('console')
 
   let timeVarSteps = (vs, ds) => {
     if (!Array.isArray(ds)) { ds = [ds] }
@@ -27,6 +28,8 @@ define(function(require) {
     return (e,b,evalRecurse) => {
       let elo = evalRecurse(lo, e,b)
       let ehi = evalRecurse(hi, e,b)
+      if (!Number.isInteger(elo)) { consoleOut(`Warning: Time var low value ${elo} is not an integer`) }
+      if (!Number.isInteger(ehi)) { consoleOut(`Warning: Time var high value ${ehi} is not an integer`) }
       let vs = Array.from({length: ehi-elo+1}, (_, i) => i + elo)
       let steps = timeVarSteps(vs, ds)
       let count = (b+0.0001) % steps.totalDuration
