@@ -757,7 +757,7 @@ portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-n
 envelope exp (exponent) subparam, eg att={1/2,exp:2} ?? Or name it 'pow'? Default to nonzero?
 Add some more waveforms  https://github.com/GoogleChromeLabs/web-audio-samples/tree/main/archive/demos/wave-tables
 808 synth based on https://github.com/vincentriemer/io-808
- ?? Or custom percussion synths
+ Actually, split into multiple custom pitched percussion synths
 ?Really/ideally, everything that uses an lfo (ambi, phaser, prophet etc) etc should just use a parameter so the lfo behaviour is defined in the code
 Can specify media stream device
  Print list of all devices with IDs
@@ -805,7 +805,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-!Should be able to pixellate={x:20,y:40}
+!Should be able to  pixellate={x:20,y:40}
 !Firefly each instance moves at the same time; eg  v glow 0, dur=1/4, sus=2, loc=sparkle+firefly
 Digital JPEG corruption filter param - https://www.shadertoy.com/view/Md2GDw
  Takes square blocks and maps them to adjacent parts of the image, or colours them randomly green or magenta
@@ -855,9 +855,8 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 floor/ceil/round functions
- Specify precision eg  floor{[]r,to:1/4}
  Extract helper
- ceil/round
+ ceil/round too
  Thorough test of:
   // var, player.var, this.param, var{params}, slider
   // (...)[...], (...)[max], max{(...)}, {foo:...}['foo']

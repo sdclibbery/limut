@@ -1875,3 +1875,13 @@ lf saw follow l, oct+=1, amp-=2, delay=(0,{3/2,oct:3})
 pt play .t, dur=4, stutter=[0:12]r
 
 
+// p ping 0, addc=floor{[0:7]r1/4@f,to:[1,4]r2}
+// v readout 0, add=floor{[0:2]r@f,to:[1/8,1]}
+// v readout 0, add=floor{[0:2]r@f}
+// v readout 0, add=floor{(1,2)}, additive
+// p ping 0, addc=floor{(0,4)}
+// p ping 0, addc=floor{1/2}
+// p ping 0, addc=floor{[0:2]r1/4@f}*4
+// p ping 0, addc=[0:2]r1/4@f*4
+
+

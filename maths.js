@@ -1,10 +1,11 @@
 'use strict'
 define(function(require) {
   let vars = require('vars')
+  let {mainParam,subParam} = require('player/sub-param')
 
   let floor = (args) => {
-    if (!args) { return 0 }
-    return Math.floor(args.value)
+    let to = subParam(args, 'to', 1)
+    return Math.floor(mainParam(args.value, 0)/to)*to
   }
   floor.isVarFunction = true
   vars['floor'] = floor
@@ -21,9 +22,15 @@ define(function(require) {
   let {evalParamFrame} = require('player/eval-param')
   let ev = (i,c,d) => {return{idx:i,count:c,dur:d,_time:c}}
 
-  assert(1, evalParamFrame(parseExpression('floor{3/2}'), ev(0,0), 0))
-  assert(1, evalParamFrame(parseExpression('floor{[3/2]t1}'), ev(0,0), 0))
-  assert([1,2], evalParamFrame(parseExpression('floor{(1,2)}'), ev(0,0), 0))
+  assert(1, evalParamFrame(parseExpression('floor{1.5}'), ev(0,0), 0))
+  assert(-2, evalParamFrame(parseExpression('floor{-1.5}'), ev(0,0), 0))
+  assert(1, evalParamFrame(parseExpression('floor{[1.5,2.5]t1@e}'), ev(0,0), 0))
+  assert(2, evalParamFrame(parseExpression('floor{[1.5,2.5]t1@e}'), ev(1,1), 1))
+  assert(1, evalParamFrame(parseExpression('floor{[1.5,2.5]t1@f}'), ev(0,0), 0))
+  assert(2, evalParamFrame(parseExpression('floor{[1.5,2.5]t1@f}'), ev(1,1), 1))
+  assert([1,2], evalParamFrame(parseExpression('floor{(1.5,2.5)}'), ev(0,0), 0))
+  assert(1/2, evalParamFrame(parseExpression('floor{0.6,to:1/2}'), ev(0,0), 0))
+  assert(-1.5, evalParamFrame(parseExpression('floor{-1.2,to:1/2}'), ev(0,0), 0))
 
   console.log('Maths tests complete')
   }
