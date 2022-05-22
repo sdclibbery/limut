@@ -848,18 +848,19 @@ shadertoy synth multiple channels
 // (), follow, complex durs, delay, stutter, overrides, +=
 // [], []t, []l/s, []e, []n, []r
 // operators + - * / ^ %
-// var, player.var, this.param, var{params}
+// var, player.var, this.param, var{params}, slider
 // (...)[...], (...)[max], max{(...)}, {foo:...}['foo']
 // modifiers {seed,per,0:0}, @e, @f
 // subparams {2,mix:1/2}
 ====
 ==== other ====
 floor/ceil/round functions
- !Tuples inside args should be expanded before getting to the function; eg  floor{(1,2)}
-  Make sure aggregators all still work then
  Specify precision eg  floor{[]r,to:1/4}
  Extract helper
  ceil/round
+ Thorough test of:
+  // var, player.var, this.param, var{params}, slider
+  // (...)[...], (...)[max], max{(...)}, {foo:...}['foo']
  Docs
 ! Tuples not hoisted correctly from modifiers:
  p ping 0, add=[0,2]t1{per:(1,2)}

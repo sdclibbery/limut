@@ -23,7 +23,7 @@ define(function(require) {
 
   assert(1, evalParamFrame(parseExpression('floor{3/2}'), ev(0,0), 0))
   assert(1, evalParamFrame(parseExpression('floor{[3/2]t1}'), ev(0,0), 0))
-  // assert([1,2], evalParamFrame(parseExpression('floor{(1,2)}'), ev(0,0), 0))
+  assert([1,2], evalParamFrame(parseExpression('floor{(1,2)}'), ev(0,0), 0))
 
   console.log('Maths tests complete')
   }

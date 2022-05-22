@@ -52,7 +52,14 @@ define(function(require) {
           v = vars[key]
         }
       } else if (typeof vars[key] === 'function' && vars[key].isVarFunction) { // Var function
-        v = vars[key](evalParamFrame(args,event,b), event,b)
+        let argse = evalParamFrame(args,event,b)
+        if (Array.isArray(argse)) {
+          v = argse.map(x => {
+            return vars[key](x, event,b)
+          })
+        } else {
+          v = vars[key](argse, event,b)
+        }
       } else {
         v = vars[key]
       }
@@ -154,6 +161,20 @@ define(function(require) {
   state = {str:'foo',idx:0}
   p = varLookup(parseVar(state), [])
   assert(0, p(ev(0),0,evalParamFrame))
+  delete vars.foo
+
+  vars.foo = (x) => x.value*x.value
+  vars.foo.isVarFunction = true
+  state = {str:'foo',idx:0}
+  p = varLookup(parseVar(state), [], {value:2})
+  assert(4, evalParamFrame(p,ev(0),0))
+  delete vars.foo
+
+  vars.foo = (x) => x.value*x.value
+  vars.foo.isVarFunction = true
+  state = {str:'foo',idx:0}
+  p = varLookup(parseVar(state), [], {value:[2,3]})
+  assert([4,9], evalParamFrame(p,ev(0),0))
   delete vars.foo
 
   console.log('Parse var tests complete')

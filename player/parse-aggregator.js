@@ -19,7 +19,6 @@ define(function(require) {
       }).map(v => v===undefined?0:v)
       return fn(vs)
     }
-    aggFunc.isVarFunction = true
     aggFunc.isTupleAggregator = true
     aggFunc.evalOverride = name // If this ever gets evaluated as a value rather than an aggregator, then return the original name as a string. This allows `blend=min` to work alongside the 'min' aggregator.
     return aggFunc
