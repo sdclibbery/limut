@@ -854,11 +854,18 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-stutter={4,dur:1/8}  - repeat each note four times, with each repeat lasting 1/8 of a beat
-stutter={4,amp:1/2}  - apply overrides
+floor/ceil/round functions
+ !Tuples inside args should be expanded before getting to the function; eg  floor{(1,2)}
+  Make sure aggregators all still work then
+ Specify precision eg  floor{[]r,to:1/4}
+ Extract helper
+ ceil/round
+ Docs
+! Tuples not hoisted correctly from modifiers:
+ p ping 0, add=[0,2]t1{per:(1,2)}
+ p ping 0, add=[0,2]r1{seed:(0,10)}
+Some sort of matching or booleans would be handy; eg  rel=2+6*(this.value<0)  or maybe  rel=match{this.value,default:2,-7:8}
 !Want `set * amp/=2` to halve the current amplitude even when it's using the default fallback value
-? How to provide overrides per stuttured notes?
- stutter={4,dur:1/8,i=>{amp:1/i}}
 ?? Should modifiers actually be subparams? Would it be simpler/more-natural syntax-wise? Eg {[0,1]r,per:4,seed:0,0:0}
  Yes, and then can move time modifier code into eval-params
   let bpm=120
@@ -867,11 +874,17 @@ stutter={4,amp:1/2}  - apply overrides
     add=ch
  ??Should @e/@f also become subparams??
  Release...
+Delay etc subparams should support modifying overrides; eg  add=2, delay=(0,{1,add+:2})
+ ! The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
+stutter={4,amp:1/2}  - apply overrides
+ ?How to provide overrides per stuttured notes?
+  stutter={4,dur:1/8,i=>{amp:1/i}}
+stutter={4,dur:1/8}  - repeat each note four times, with each repeat lasting 1/8 of a beat
+ !!! ?? Should be done using sus override instead???
+  ?Not if you want it to extend beyond the original event duration (or vice versa)
 Modifier or function that smooths the value over time, separate attack and decay rates if possible
 !pattern "(01)": idx should be 0 for both events, surely?
  event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
-Delay subparams should support modifying overrides; eg  add=2, delay=(0,{1,add+:2})
- ! The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
 Map lookup operator; interchangeable in syntax location with tuple indexer
  eg  {foo:2}.foo ==2
  must allow eg  ({a:1},{a:2})[1].a ==2

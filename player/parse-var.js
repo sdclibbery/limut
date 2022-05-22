@@ -51,11 +51,10 @@ define(function(require) {
         } else {
           v = vars[key]
         }
+      } else if (typeof vars[key] === 'function' && vars[key].isVarFunction) { // Var function
+        v = vars[key](evalParamFrame(args,event,b), event,b)
       } else {
         v = vars[key]
-      }
-      if (typeof vars[key] === 'function' && vars[key].isVarFunction) { // Var function
-        v = vars[key](evalParamFrame(args,event,b), event,b)
       }
       v = evalParamFrame(v,event,b)
       if (v === undefined) { v = 0 } // If not found as a var, assume its for a currently unavailable player and default to zero
