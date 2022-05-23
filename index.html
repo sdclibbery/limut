@@ -664,6 +664,12 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>count{1,2,3}</code> Returns the number of elements in a tuple (3 in the example)</p>
 <p><code>sum{1,2,3}</code> Returns the sum of all elements in a tuple (6 in the example)</p>
 <p><code>avg{1,2,3}</code> Returns the mean average of all elements in a tuple (2 in the example)</p>
+<p><code>floor{1.5}</code> Returns the rounded down value (returns 1 in the example)</p>
+<p class='sub'><code>floor{1.7,to:1/2}</code> Precision to round to, so the example rounds 1.7 down to the nearest 1/2, which is 1.5. Defaults to 1, which rounds down to the nearest integer below.</p>
+<p><code>ceil{1.5}</code> Returns the rounded up value (returns 2 in the example)</p>
+<p class='sub'><code>ceil{1.2,to:1/2}</code> Precision to round to, so the example rounds 1.2 up to the nearest 1/2, which is 1.5. Defaults to 1, which rounds up to the nearest integer above.</p>
+<p><code>round{1.5}</code> Returns the rounded value (returns 2 in the example)</p>
+<p class='sub'><code>round{1.7,to:1/2}</code> Precision to round to, so the example rounds 1.7 to the nearest 1/2, which is 1.5. Defaults to 1, which rounds to the nearest integer.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-play-samples')" class="accordion"> Play Samples</h4>
 <div id="accordion-play-samples" class="closed">
@@ -854,14 +860,10 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-floor/ceil/round functions
- Thorough test of:
-  // var, player.var, this.param, var{params}, slider
-  // (...)[...], (...)[max], max{(...)}, {foo:...}['foo']
- Docs
 ! Tuples not hoisted correctly from modifiers:
  p ping 0, add=[0,2]t1{per:(1,2)}
  p ping 0, add=[0,2]r1{seed:(0,10)}
+?Should be able to stutter with euclidean patterns??
 Some sort of matching or booleans would be handy; eg  rel=2+6*(this.value<0)  or maybe  rel=match{this.value,default:2,-7:8}
 !Want `set * amp/=2` to halve the current amplitude even when it's using the default fallback value
 ?? Should modifiers actually be subparams? Would it be simpler/more-natural syntax-wise? Eg {[0,1]r,per:4,seed:0,0:0}
@@ -872,6 +874,10 @@ Some sort of matching or booleans would be handy; eg  rel=2+6*(this.value<0)  or
     add=ch
  ??Should @e/@f also become subparams??
  Release...
+Swing doesn't only affect event exactly on 3/4, it expands the preceeding 1/4 beat and compresses the following
+ And this affects the event dur as well
+{offset} to apply an offset to the time counts
+ Eg [0,1,2,3]t4{offset:1}
 Delay etc subparams should support modifying overrides; eg  add=2, delay=(0,{1,add+:2})
  ! The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
 stutter={4,amp:1/2}  - apply overrides
@@ -929,8 +935,6 @@ Analyser on each player for pulse?
 ? env{att:0.1,dec:1/4,sus:1,suslevel:0.6,rel:} - sus should default to the actual note length of the event
  Use for eg: lpf=this.freq*50*env{att:0.02,dec:0.2,suslevel:0.1}
  ?adsr and ar envelope functions that can be used in eg lpf=adsr{,,,} but also as env=ar{,} etc, but also ripple=ar{,} etc
-{offset} to apply an offset to the time counts
- Eg [0,1,2,3]t4{offset:1}
 {step} to apply a step to the counts
  Eg [0:1000]l32{step:2} so the value onnly changes every 2 beats(??or changes by 2 units?) instead of smoothly
 !`d dsaw 0 | p ping follow d` the ping is played using the saw wave!!
@@ -964,8 +968,6 @@ Better syntax highlighting for {} brackets; maybe bracket match highlighting??
 Weight modifier for random to go with seed
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 Can set swing timescale with a subparam: swing={60,on:1/2}
-Swing doesn't only affect event exactly on 3/4, it expands the preceeding 1/4 beat and compresses the following
- And this affects the event dur as well
 ? rl, rt (==r), rs (==n); el (==e), es, et ?
  ?[1,3,5]n syntax to smoothly transition between randomly chosen values or should be [1,3,5]rs?
  []w for random walk?
