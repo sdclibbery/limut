@@ -28,19 +28,23 @@ define((require) => {
   }
 
   let applySwing = (event, beat) => {
-    let swingPeriod = 1/4
     let swingPercent = evalParamFrame(event.swing || 50, event, event.count)
-    let maxSwingPush = (swingPercent - 50) / 200
+    if (swingPercent === 50) { return }
+    let swingPeriod = 1/4
+    let maxSwingPush = (swingPercent - 50) / 50
     let swingBeatFraction = (event.count % (swingPeriod*2)) / (swingPeriod*2)
-    let lerp
+    let lerp, stretch
     if (swingBeatFraction < 1/2) {
       lerp = swingBeatFraction*2
+      stretch = 1+maxSwingPush
     } else {
       lerp = (1-swingBeatFraction)*2
+      stretch = 1-maxSwingPush
     }
-    let swingBeatPush = lerp*maxSwingPush
+    let swingBeatPush = lerp*maxSwingPush/4
     event._time += swingBeatPush * beat.duration
     event.count += swingBeatPush
+    event.dur *= stretch
   }
 
   let applyDelay = (event, beat) => {
@@ -206,9 +210,13 @@ define((require) => {
 
   es = parsePlayer('p play -, dur=1/4').getEventsForBeat({time:0, count:0, duration:1})
   assert([0,1/4,1/2,3/4], es.map(e => e._time))
+  assert([0,1/4,1/2,3/4], es.map(e => e.count))
+  assert([1/4,1/4,1/4,1/4], es.map(e => e.dur))
 
   es = parsePlayer('p play -, dur=1/4, swing=75').getEventsForBeat({time:0, count:0, duration:1})
   assert([0,3/8,1/2,7/8], es.map(e => e._time))
+  assert([0,3/8,1/2,7/8], es.map(e => e.count))
+  assert([3/8,1/8,3/8,1/8], es.map(e => e.dur))
 
   es = parsePlayer('p play -, dur=1/4, swing=60').getEventsForBeat({time:0, count:0, duration:1})
   assert([0,0.3,1/2,0.8], es.map(e => e._time))

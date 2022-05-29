@@ -861,9 +861,6 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-!Swing shouldn't only affect event exactly on 3/4, it expands the preceeding 1/4 beat and compresses the following
- Swing should affect the event dur as well
- Check swing docs
 ?? Should modifiers actually be subparams? Would it be simpler/more-natural syntax-wise? Eg {[0,1]r,per:4,seed:0,0:0}
  Yes, and then can move time modifier code into eval-params
   let bpm=120
