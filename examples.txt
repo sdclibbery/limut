@@ -1923,3 +1923,14 @@ pj play .j.Y..j., stutter=[1:4]r, pan=[-1:1]r
 ba dbass 00[.2].[.0][29].., dur=1/2, stutter=2, pan=[-1/4:1/4]r, att=0, oct=(1,2)
 
 
+v1 gradient 0, swing=75, fore=[red,green], additive
+// set bpm=30
+// v2 gradient 0, dur=1/4, swing=75, fore=[red,green], additive
+// v3 gradient 0, dur=1/4, fore=[red,green], additive
+// v2 readout 0, dur=1/4, swing=90, fore=[red,green], additive, add=this.dur
+// set bpm=30
+// set * swing=50
+// p play [tt]t..
+// p play [tttttttt]t..
+
+
