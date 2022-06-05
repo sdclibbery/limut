@@ -523,6 +523,7 @@ ds dsaw (024)., dur=16, amp=[0,2/3,0]e, room=1, oct=(3,4,5), pan=(-1,1), hpf=523
 arp dsaw 0^000, dur=1/4, att=0.05, sus=1/8, echo=3/8, lpf={[500:1500]l8,q:15}, add=[[-2,0,0,2]r8,[-1,1,3]r8[0,2,4]r4,[4,5,6]r1], pan=[-1/2:1/2]n, oct=[3,4,5]r, amp=[]n4
 
 
+// Tutorial webcam
 wc webcam 0, loc={x:0.8,y:-0.75,w:0.3,h:0.5}, zoom={x:5/3}, monochrome, fore=#fffb, vignette=2
 
 
@@ -1932,5 +1933,21 @@ v1 gradient 0, swing=75, fore=[red,green], additive
 // set * swing=50
 // p play [tt]t..
 // p play [tttttttt]t..
+
+
+set bpm=137
+set main.amp=2.5
+set scale=phrygian
+set * swing=54
+v1 xor 0, scroll={x:time/32,y:pk.pulse[0]/32}, back=black, mirror, fore=[white:orange]l8@f
+v2 xor 7, scroll={y:time/32}, additive, fore=#88df, zoom=1+pg.pulse[0]/12
+// pk play (x+)., drive=1/4, stutter=[1,2]t[7,1], high=-12
+// ph play .-=., dur=1/4, drive=1/8, amp=[0.4:0.5]r, pan=-1/2, sample=2, sus=1/3, room={1/4,mix:1/4}
+a ambi 0, wave=tri, dur=2, oct=(5,6), add=(0,2,4,6), amp=1/8, room=2, chorus=3, add+=[0,1]t16
+// pc play ..(*;)., fold=1/2, stutter=[1,3]t[15,1], amp=1.1, pan=1/2
+// pp play .[.d]d..<d.>.d, drive=1/8, rate=3/4, amp=[1/6:1/3]n2, stutter=[1,1,1,1,2]r, pan=[-1,1]t1/4, room, drive
+// pg play [.j]......., drive=1/4, rate=1/2, room=1/4, amp=2/3
+// pr play [BB], rate=[3/4,1/4,2]r, room=1.2, amp=[2/3,0]t2
+// set [pp,pc,pk,pg] hpf=2000
 
 
