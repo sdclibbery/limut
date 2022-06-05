@@ -866,79 +866,22 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-[x,x,x] - the things
-r,seed - how to choose the things
-1@e,@f - when to choose
-per,0 - modifying time
-{} - more info to go with the chosen thing - subparams
-lpf={[150:1000]rs0,per:4,q:{[5,10,30]rs0,per:4}} - !Seed cannot be a full expression - or can it??
-lpf={[150:1000]r{seed:0},per:4,q:{[5,10,30]r{seed:0},per:4}}
-lpf={[150:1000]r{seed:0},per:4,q:{[5,10,30]r{seed:0},per:4}}
-lpf={seed{0,[150:1000]r},per:4,q:{seed{0,[5,10,30]r},per:4}}
-lpf=[150:1000]r,seed:0,per:4,q:[5,10,30]r,seed:0,per:4 - ambiguous syntax
-lpf={[150:1000]r<seed:0>,per:4,q:{[5,10,30]r<seed:0>,per:4}}
-lpf={[150:1000]r@seed:0,per:4,q:{[5,10,30]r@seed:0,per:4}}
-lpf={[150:1000]r!seed:0,per:4,q:{[5,10,30]r!seed:0,per:4}}
-lpf={[150:1000]r!0,per:4,q:{[5,10,30]r!0,per:4}}
-
-??How to make the syntax as flexible as possible
-Support  lpf=500{q:10}  parsing to the same as  lpf={500,q:10}
- So all three of these should work:
-lpf={[150:1000]r,per:1,seed:0,q:{[5,10,30]r,per:2,seed:10}}
-lpf=[150:1000]r{per:1,seed:0,q:[5,10,30]r{per:2,seed:10}}
-lpf={[150:1000]r{per:1,seed:0},q:[5,10,30]r{per:2,seed:10}}
-Work required
- !!!Still need to somehow get seed passed to random!!!
- Time modifiers work from subparams and pass a modified evalRecurse to cancel the time mod
- Modifier map parse adds subparams rather than creating a separate modifier map (creates a main map if needed)
- subParam needs to be able to get subparam value from {value:}
- Tests and Docs
-
-??How to make the syntax as flexible as possible
-Support  lpf=500{q:10}  parsing to the same as  lpf={500,q:10}
- So all three of these should work:
-lpf={[150:1000]r{seed:0},per:1,q:{[5,10,30]r{seed:10},per:2}}
-lpf=[150:1000]r{per:1,seed:0,q:[5,10,30]r{per:2,seed:10}}
-lpf={[150:1000]r{per:1,seed:0},q:[5,10,30]r{per:2,seed:10}}
-!!! BUT NOT lpf={[150:1000]r,per:1,seed:0,q:{[5,10,30]r,per:2,seed:10}} !!!
-Work required
- Time modifiers work from subparams and pass a modified evalRecurse to cancel the time mod
- Modifier map parse adds subparams rather than creating a separate modifier map (creates a main map if needed)
-  - But still gets passed to random so seed works
- subParam needs to be able to get subparam value from {value:}
- Tests and Docs
-
- ??!! OR, leave the syntax as is and just rewrite the implementation of time modifier to be done from within eval-params
+Leave the modifier/seed/subparam syntax as is and just rewrite the implementation of time modifiers to be done from within eval-params
  So that the modifier object is attached to the value rather than wrapping in a function
-  Literal values with modifiers (eg `10{0:1}`) would then need to be wrapped into a const function with the modifiers attached
-
-??IDEA
- swap modifiers to subparams, and leave seed as {seed:0} for now
- then consider something like [0:3,seed:0]r ???
-!!??? Or should subparams actually all be modifiers? eg   lpf=400{q:15}
-?? Should modifiers actually be subparams? Would it be simpler/more-natural syntax-wise? Eg {[0,1]r,per:4,seed:0,0:0}
-lpf={[150:1000]r{per:4,seed:0},q:[5,10,30]r{per:4,seed:0}}
-  + No changes required
-  - Bit klunky, uses two seperate {} syntax constructions
-lpf={[150:1000]r,per:4,seed:0,q:{[5,10,30]r,per:4,seed:0}}
-  + Seems natural to write; if in doubt, everything becomes an object
-  - Can't easily handle random seed
-  - Has sub-subparams
-lpf=[150:1000]r{per:4,seed:0,q:[5,10,30]r{per:4,seed:0}}
-  ? Syntax is all about modifying the main param; is that always appropriate for subparams? Eg loc={x:,y:}??
-   Yes, tempting but not right; this syntax suggests modifying the expression not the param
-  - Requires quite a change to subparam handling
-  - Can't set only subparams; eg sus={level:1/3} - why not??
-  - Syntax for objects with subparams or modifiers is still klunky? {x:,y:}{scale:}??
- Changes required
-  Modifiers can be implemented differently as everything with modifiers will be an object
-   How? Can all be implemented in eval-params? Can avoid use of _originalXxx data by creating a custom eval-recurse?
-  Somehow random seed needs to come from subparam
-   How? Seems tricky; we don't have the whole object with subparams at parse time?
-    ?Would have to pass a ref to the containing object up at parse time? Very awkward, would require two phase parse??
-    ?Or pass the object ref up at eval time? How to pass it?
-  Subparams may now themselves be objects with sub-subparams
- Release...
+  Primitive values with modifiers (eg `10{0:1}`) would then need to be wrapped into a const function with the modifiers attached
+ Changes Required
+  wrapMods should attach modifiers to the value, not wrap into an enclosing function
+   if the value is primitive, wrap it into a const function
+  eval-params now does the modification, creating a modified evalRecurse to undo the mods
+ Clean up redundant code
+ TEST
+ Review docs
+  Write doc section on various syntax constructs
+   () for chords
+   [] for sequences and indexing (timevars, tuple indexers, map indexer)
+   {} for supplying extra info (subparams, functions, value modifiers)
+   @ for intervals
+ Review issues below:
 ! Tuples not hoisted correctly from modifiers:
  p ping 0, add=[0,2]t1{per:(1,2)}
  p ping 0, add=[0,2]r1{seed:(0,10)}
