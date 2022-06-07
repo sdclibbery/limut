@@ -17,7 +17,41 @@ define((require) => {
     return [o]
   }
 
+  let applyModifiers = (value, event, modArgs) => {
+    if (value === undefined || typeof value === 'number' || typeof value === 'string') { return }
+    let mods = value.modifiers
+    if (!mods) { return }
+    let per = evalParamFrame(mods.per, event, modArgs.beat)
+    let modCount = event.count // Use event.count for overrides as overrides are essentially instantaneous
+    if (per !== undefined) {
+      modCount = modCount % per
+    }
+    if (mods.overrides === undefined) { return }
+    let key = Math.round(modCount*16384)/16384
+    let override = mods.overrides.get(key)
+    if (override !== undefined) { return override }
+    let originalBeat = modArgs.beat
+    if (per !== undefined) {
+      modArgs.beat = modArgs.beat % per
+    }
+    let originalCount = event.count
+    event.count = modCount
+    let originalEvalRecurse = modArgs.evalRecurse
+    modArgs.evalRecurse = (v, e, b) => {
+      e.count = originalCount
+      return originalEvalRecurse(v, e, originalBeat)
+    }
+    return
+  }
+
+  let modArgs = {}
   let evalParamNow = (evalRecurse, value, event, beat, {nestedTuples,ignoreThisVars}) => {
+    modArgs.beat = beat
+    modArgs.evalRecurse = evalRecurse
+    let override = applyModifiers(value, event, modArgs)
+    if (override !== undefined) { return override }
+    beat = modArgs.beat
+    evalRecurse = modArgs.evalRecurse
     if (Array.isArray(value)) { // tuple, eval individual values
       let v = value.map(v => evalRecurse(v, event, beat))
       if (!nestedTuples) { v = v.flat() }
@@ -42,15 +76,7 @@ define((require) => {
     }
   }
 
-  let clearMods = (event, beat) => {
-    if (event._originalB !== undefined) { // remove any time modification when recursing
-      beat = event._originalB
-      event.count = event._originalCount
-    }
-    return beat
-  }
   let evalRecurseFull = (value, event, beat, options) => {
-    beat = clearMods(event, beat)
     options = options || {}
     return evalParamNow(evalRecurseWithOptions(evalRecurseFull, options), value, event, beat, options)
   }
@@ -58,7 +84,6 @@ define((require) => {
     if (!!value && value.interval === 'frame') {
       return value
     }
-    beat = clearMods(event, beat)
     options = options || {}
     return evalParamNow(evalRecurseWithOptions(evalRecursePre, options), value, event, beat, options)
   }
@@ -175,6 +200,64 @@ define((require) => {
   assert({foo:1,interval:'event'}, evalParamFrame(perEventThenFrameObject, ev(0), 1))
 
   assert(perFrameValue, preEvalParam({a:perFrameValue}, ev(0), 0).a)
+
+  let constWithMods = () => 1
+  constWithMods.modifiers = {}
+  assert(1, evalParamFrame(constWithMods, ev(0), 1))
+
+  let ovrs = (...vs) => {
+    let r = new Map()
+    vs.forEach(v => {
+      r.set(Math.round(v*16384)/16384, 2*v)
+    })
+    return r
+  }
+
+  constWithMods.modifiers = {overrides:ovrs(3,5)}
+  assert(1, evalParamFrame(constWithMods, ev(0), 0))
+  assert(6, evalParamFrame(constWithMods, ev(3), 3))
+  assert(10, evalParamFrame(constWithMods, ev(5), 5))
+
+  constWithMods.modifiers = {per:2,overrides:ovrs(0)}
+  assert(0, evalParamFrame(constWithMods, ev(0), 0))
+  assert(1, evalParamFrame(constWithMods, ev(1), 1))
+  assert(0, evalParamFrame(constWithMods, ev(2), 2))
+
+  constWithMods.modifiers = {overrides:ovrs(1/2)}
+  assert(1, evalParamFrame(constWithMods, ev(1/2), 1/2))
+
+  constWithMods.modifiers = {overrides:ovrs(1/3)}
+  assert(2/3, evalParamFrame(constWithMods, ev(1/3), 1/3))
+
+  let getCWithMods = (e,b) => e.count
+  getCWithMods.modifiers = {overrides:ovrs()}
+  assert(1, evalParamFrame(getCWithMods, ev(1), 0))
+
+  getCWithMods.modifiers = {per:2,overrides:ovrs()}
+  assert(0, evalParamFrame(getCWithMods, ev(0), 0))
+  assert(1, evalParamFrame(getCWithMods, ev(1), 1))
+  assert(0, evalParamFrame(getCWithMods, ev(2), 2))
+  assert(1, evalParamFrame(getCWithMods, ev(3), 3))
+
+  let getBWithMods = (e,b) => b
+  getBWithMods.modifiers = {overrides:ovrs()}
+  assert(1, evalParamFrame(getBWithMods, ev(0), 1))
+
+  getBWithMods.modifiers = {per:2,overrides:ovrs()}
+  assert(0, evalParamFrame(getBWithMods, ev(0), 0))
+  assert(1, evalParamFrame(getBWithMods, ev(1), 1))
+  assert(0, evalParamFrame(getBWithMods, ev(2), 2))
+  assert(1, evalParamFrame(getBWithMods, ev(3), 3))
+
+  getCWithMods.modifiers = {overrides:ovrs(1)}
+  assert(0, evalParamFrame(getCWithMods, ev(0), 0))
+  assert(2, evalParamFrame(getCWithMods, ev(1), 1))
+  assert(2, evalParamFrame(getCWithMods, ev(2), 2))
+
+  getBWithMods.modifiers = {overrides:ovrs(1)}
+  assert(0, evalParamFrame(getBWithMods, ev(0), 0))
+  assert(2, evalParamFrame(getBWithMods, ev(1), 1))
+  assert(2, evalParamFrame(getBWithMods, ev(2), 2))
 
   console.log('Eval param tests complete')
   }

@@ -866,31 +866,29 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-Leave the modifier/seed/subparam syntax as is and just rewrite the implementation of time modifiers to be done from within eval-params
- So that the modifier object is attached to the value rather than wrapping in a function
-  Primitive values with modifiers (eg `10{0:1}`) would then need to be wrapped into a const function with the modifiers attached
- Changes Required
-  wrapMods should attach modifiers to the value, not wrap into an enclosing function
-   if the value is primitive, wrap it into a const function
-  eval-params now does the modification, creating a modified evalRecurse to undo the mods
+Fix time modifier implementation
+ !!!Math.round(n*16384)/16384 duplicated in THREE places!!!
+ ??parse-var used to use _originalB when getting events...
+ !1/2:99 doesn't work; map cannot parse keys with . or / ?
  Clean up redundant code
- TEST
+ TEST - including examples
  Review docs
-  Write doc section on various syntax constructs
+  Write doc section on various syntax constructs:
    () for chords
    [] for sequences and indexing (timevars, tuple indexers, map indexer)
    {} for supplying extra info (subparams, functions, value modifiers)
    @ for intervals
  Review issues below:
-! Tuples not hoisted correctly from modifiers:
- p ping 0, add=[0,2]t1{per:(1,2)}
- p ping 0, add=[0,2]r1{seed:(0,10)}
-!Multiple time modifiers up a hierarchy probably don't work properly
- Because we can only save a single set of _originalXxx values on the event
- Make a test case
-  ? It does seem to work ok? EG  v readout 0, add=[[1,2,3]t1{per:1},0]t1{per:2}
-   Maybe need deeper or more branched hierarchy to see this?
- Either find another way to save the _originalXxx data, or make it into a stack
+  ! Tuples not hoisted correctly from modifiers:
+   p ping 0, add=[0,2]t1{per:(1,2)}
+   p ping 0, add=[0,2]r1{seed:(0,10)}
+  !Multiple time modifiers up a hierarchy probably don't work properly
+   Because we can only save a single set of _originalXxx values on the event
+   Make a test case
+    ? It does seem to work ok? EG  v readout 0, add=[[1,2,3]t1{per:1},0]t1{per:2}
+     Maybe need deeper or more branched hierarchy to see this?
+   Either find another way to save the _originalXxx data, or make it into a stack
+!Syntax colouring is case sensitive;eg  `Set` does not get coloured correctly
 !Want `set * amp/=2` to halve the current amplitude even when it's using the default fallback value
 Some sort of matching or booleans would be handy; eg  rel=2+6*(this.value<0)  or maybe  rel=match{this.value,default:2,-7:8}
 Delay etc subparams should support modifying overrides; eg  add=2, delay=(0,{1,add+:2})

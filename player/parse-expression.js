@@ -1080,9 +1080,10 @@ define(function(require) {
 
   p = parseExpression("[0:1]e{per:1/2}")
   e = { idx:0, count:0, countToTime:b=>b, _time:0, endTime:1 }
-  assert(0, p(e,0, evalParamFrame))
-  assert(1/4, p(e,1/4, evalParamFrame))
-  assert(1/4, p(e,3/4, evalParamFrame))
+  assert(0, evalParamFrame(p,e,0))
+  assert(1/4, evalParamFrame(p,e,1/4))
+  assert(0, evalParamFrame(p,e,1/2))
+  assert(1/4, evalParamFrame(p,e,3/4))
 
   p = parseExpression("[0,1]{per:1}")
   assert(0, evalParamFrame(p,ev(0,0),0))
@@ -1092,16 +1093,13 @@ define(function(require) {
   assert([1,2], evalParamFrame(p,ev(0,0),0))
 
   p = parseExpression('{foo:2}{per:1}')
-  assert({foo:2}, evalParamFrame(p,ev(0,0),0))
+  assert({foo:2,modifiers:{per:1,overrides:{}}}, evalParamFrame(p,ev(0,0),0))
 
   p = parseExpression('5{per:1}')
   assert(5, evalParamFrame(p,ev(0,0),0))
 
   p = parseExpression("'foo'{per:1}")
   assert('foo', evalParamFrame(p,ev(0,0),0))
-
-  p = parseExpression('#ffff{per:1}')
-  assert({r:1,g:1,b:1,a:1}, evalParamFrame(p,ev(0,0),0))
 
   vars.foo = parseExpression('[0,1]t1@f')
   p = parseExpression('foo{per:1}')

@@ -1,92 +1,58 @@
 'use strict';
 define(function(require) {
   let number = require('player/parse-number')
-  let {evalParamFrame} = require('player/eval-param')
 
   let wrapWithModifiers = (exp, modifiers) => {
     if (!modifiers) { return exp }
     let overrides = new Map()
     for (const [key, value] of Object.entries(modifiers)) {
-      let state = { str: key, idx: 0, }
-        let n = number(state)
-        if (n !== undefined) {
-            overrides.set(n, value)
-        }
+     let state = { str: key, idx: 0, }
+       let n = number(state)
+       if (n !== undefined) {
+        let rounded = Math.round(n*16384)/16384
+        overrides.set(rounded, value)
+        delete modifiers[key]
+      }
     }
-    if (modifiers.per) {
-      return (ev,b) => {
-          let per = evalParamFrame(modifiers.per, ev,b)
-          let modCount = ev.count % per // Use event.count for overrides as overrides are essentially instantaneous
-          let override = overrides.get(Math.round(modCount*16384)/16384)
-          if (override !== undefined) { return override }
-          ev._originalB = b
-          ev._originalCount = ev.count
-          ev.count = modCount
-          let result = evalParamFrame(exp, ev, b%per)
-          delete ev._originalB
-          delete ev._originalCount
-          return result
-        }
+    modifiers.overrides = overrides
+    if (exp === undefined || typeof exp === 'number' || typeof exp === 'string') {
+      let wrap = () => exp
+      wrap.modifiers = modifiers
+      return wrap
     }
+    exp.modifiers = modifiers
     return exp
   }
 
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
-    let assert = (expected, actual, msg) => {
-      if (expected !== actual) { console.trace(`Assertion failed ${msg}.\n>>Expected equal:\n  ${expected}\n>>Actual:\n  ${actual}`) }
+    let assert = (expected, actual) => {
+      let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
+      let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
+      if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
     }
-    let f, w
-    let ev = (c,d) => {return{idx:0,count:c,dur:d}}
-    let {evalParamFrame} = require('player/eval-param')
-    
-    assert(0, wrapWithModifiers(0))
-    assert(0, wrapWithModifiers(0, {}))
-    f = (x) => x
-    assert(f, wrapWithModifiers(f))
-    assert(f, wrapWithModifiers(f, {}))
+  
+    assert(1, wrapWithModifiers(1))
 
-    w = wrapWithModifiers((e,b,er) => b)
-    assert(0, evalParamFrame(w,ev(0),0))
-    assert(1, evalParamFrame(w,ev(1),1))
+    assert({foo:1,modifiers:{bar:2,overrides:{}}}, wrapWithModifiers({foo:1}, {bar:2}))
 
-    w = wrapWithModifiers((e,b,er) => b, {})
-    assert(0, evalParamFrame(w,ev(0),0))
-    assert(1, evalParamFrame(w,ev(1),1))
+    let f = (x) => x
+    assert(1, wrapWithModifiers(f, {bar:2})(1))
+    assert({bar:2,overrides:{}}, wrapWithModifiers(f, {bar:2}).modifiers)
 
-    w = wrapWithModifiers((e,b,er) => b, {per:1})
-    assert(0, evalParamFrame(w,ev(0),0))
-    assert(0, w({count:1},1,evalParamFrame))
-    assert(0, evalParamFrame(w,ev(1),1))
+    assert([0,1], wrapWithModifiers([0,1], {bar:2}))
+    assert({bar:2,overrides:{}}, wrapWithModifiers([0,1], {bar:2}).modifiers)
 
-    w = wrapWithModifiers((e,b,er) => b, {per:()=>1})
-    assert(0, evalParamFrame(w,ev(0),0))
-    assert(0, w({count:1},1,evalParamFrame))
-    assert(0, evalParamFrame(w,ev(1),1))
+    assert(1, wrapWithModifiers(1, {bar:2})())
+    assert({bar:2,overrides:{}}, wrapWithModifiers(1, {bar:2}).modifiers)
 
-    w = wrapWithModifiers((e,b,er) => b, {per:2,"0":7})
-    assert(7, evalParamFrame(w,ev(0),0))
-    assert(7, evalParamFrame(w,ev(0.00001),0.00001))
-    assert(1, evalParamFrame(w,ev(1),1))
-    assert(7, evalParamFrame(w,ev(2),2))
-    assert(1, evalParamFrame(w,ev(3),3))
-    assert(7, evalParamFrame(w,ev(2362313525416110),2362313525416110))
-    assert(1, evalParamFrame(w,ev(2362313525416111),2362313525416111))
+    assert("foo", wrapWithModifiers("foo", {bar:2})())
+    assert({bar:2,overrides:{}}, wrapWithModifiers("foo", {bar:2}).modifiers)
 
-    w = wrapWithModifiers((e,b,er) => b, {per:2,"0":()=>7})
-    assert(7, evalParamFrame(w,ev(0),0))
-    assert(1, evalParamFrame(w,ev(1),1))
-
-    w = wrapWithModifiers((e,b,er) => b, {per:1,"1/2":()=>7})
-    assert(0, evalParamFrame(w,ev(0),0))
-    assert(7, evalParamFrame(w,ev(1/2),1/2))
-
-    w = wrapWithModifiers((e,b,er) => e.count, {per:2})
-    assert(0, evalParamFrame(w,ev(0),0))
-    assert(1, evalParamFrame(w,ev(1),1))
-    assert(0, evalParamFrame(w,ev(2),2))
-    assert(1, evalParamFrame(w,ev(3),3))
+    assert(2, wrapWithModifiers(1, {bar:2,'1':2}).modifiers.overrides.get(1))
+    assert(2, wrapWithModifiers(1, {bar:2,'1/2':2}).modifiers.overrides.get(0.5))
+    assert(2, wrapWithModifiers(1, {bar:2,'1/3':2}).modifiers.overrides.get(0.33331298828125))
 
     console.log('Time modifiers tests complete')
   }

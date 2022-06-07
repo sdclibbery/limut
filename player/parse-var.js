@@ -36,13 +36,13 @@ define(function(require) {
     if (playerId && param) {
       dependsOn.push(playerId)
     }
-    let result = (event,b) => {
+    let result = (event,b, evalRecurse) => {
       let v
       if (param) {
         let player = players.instances[playerId]
         if (player) {
-          let _originalB = event._originalB === undefined ? b : event._originalB
-          let es = player.currentEvent(_originalB)
+          let originalB = evalRecurse((e,originalB) => originalB, event, b)
+          let es = player.currentEvent(originalB)
           v = es.map(e => e[param])
           if (v.length === 0) { v = 0 }
           if (v.length === 1) { v = v[0] }
