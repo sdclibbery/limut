@@ -6,7 +6,7 @@ define(function(require) {
     let char
     let result = ''
     while (char = state.str.charAt(state.idx).toLowerCase()) {
-      if ((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || char === '_' || char === '#') {
+      if ((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || char === '_' || char === '#' || char === '.' || char === '/' || char === '-') {
         result += char
         state.idx += 1
         continue
@@ -107,6 +107,11 @@ define(function(require) {
   assert({value:[1,2]}, parseMap({str:'{1,2}',idx:0,expression:number}))
   assert({value:[1,2,3]}, parseMap({str:'{1,2,3}',idx:0,expression:number}))
   assert({value:0,'#':1}, parseMap({str:'{0,#:1}',idx:0,expression:number}))
+  assert({'0':1}, parseMap({str:'{0:1}',idx:0,expression:number}))
+  assert({'1':1}, parseMap({str:'{1:1}',idx:0,expression:number}))
+  assert({'-1':1}, parseMap({str:'{-1:1}',idx:0,expression:number}))
+  assert({'0.5':1}, parseMap({str:'{0.5:1}',idx:0,expression:number}))
+  assert({'1/2':1}, parseMap({str:'{1/2:1}',idx:0,expression:number}))
   
   console.log('Parse map tests complete')
   }
