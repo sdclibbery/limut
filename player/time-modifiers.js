@@ -2,7 +2,7 @@
 define(function(require) {
   let number = require('player/parse-number')
 
-  let wrapWithModifiers = (exp, modifiers) => {
+  let addModifiers = (exp, modifiers) => {
     if (!modifiers) { return exp }
     let overrides = new Map()
     for (const [key, value] of Object.entries(modifiers)) {
@@ -33,31 +33,31 @@ define(function(require) {
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
     }
   
-    assert(1, wrapWithModifiers(1))
+    assert(1, addModifiers(1))
 
-    assert({foo:1,modifiers:{bar:2,overrides:{}}}, wrapWithModifiers({foo:1}, {bar:2}))
+    assert({foo:1,modifiers:{bar:2,overrides:{}}}, addModifiers({foo:1}, {bar:2}))
 
     let f = (x) => x
-    assert(1, wrapWithModifiers(f, {bar:2})(1))
-    assert({bar:2,overrides:{}}, wrapWithModifiers(f, {bar:2}).modifiers)
+    assert(1, addModifiers(f, {bar:2})(1))
+    assert({bar:2,overrides:{}}, addModifiers(f, {bar:2}).modifiers)
 
-    assert([0,1], wrapWithModifiers([0,1], {bar:2}))
-    assert({bar:2,overrides:{}}, wrapWithModifiers([0,1], {bar:2}).modifiers)
+    assert([0,1], addModifiers([0,1], {bar:2}))
+    assert({bar:2,overrides:{}}, addModifiers([0,1], {bar:2}).modifiers)
 
-    assert(1, wrapWithModifiers(1, {bar:2})())
-    assert({bar:2,overrides:{}}, wrapWithModifiers(1, {bar:2}).modifiers)
+    assert(1, addModifiers(1, {bar:2})())
+    assert({bar:2,overrides:{}}, addModifiers(1, {bar:2}).modifiers)
 
-    assert("foo", wrapWithModifiers("foo", {bar:2})())
-    assert({bar:2,overrides:{}}, wrapWithModifiers("foo", {bar:2}).modifiers)
+    assert("foo", addModifiers("foo", {bar:2})())
+    assert({bar:2,overrides:{}}, addModifiers("foo", {bar:2}).modifiers)
 
-    assert(2, wrapWithModifiers(1, {bar:2,'1':2}).modifiers.overrides.get(1))
-    assert(2, wrapWithModifiers(1, {bar:2,'1/2':2}).modifiers.overrides.get(0.5))
-    assert(2, wrapWithModifiers(1, {bar:2,'1/3':2}).modifiers.overrides.get(0.33331298828125))
+    assert(2, addModifiers(1, {bar:2,'1':2}).modifiers.overrides.get(1))
+    assert(2, addModifiers(1, {bar:2,'1/2':2}).modifiers.overrides.get(0.5))
+    assert(2, addModifiers(1, {bar:2,'1/3':2}).modifiers.overrides.get(0.33331298828125))
 
     console.log('Time modifiers tests complete')
   }
 
   return {
-    wrapMods: wrapWithModifiers,
+    addModifiers: addModifiers,
   }
 })

@@ -10,7 +10,7 @@ define(function(require) {
   let {parseRandom, simpleNoise} = require('player/eval-randoms')
   let {parseVar,varLookup} = require('player/parse-var')
   let {hoistInterval} = require('player/intervals')
-  let wrapMods = require('player/time-modifiers').wrapMods
+  let addModifiers = require('player/time-modifiers').addModifiers
   let tupleIndexer = require('player/tuple-indexer')
   let {evalParamFrame,evalParamFrameNoFlatten} = require('player/eval-param')
   let parseAggregator = require('player/parse-aggregator')
@@ -87,28 +87,28 @@ define(function(require) {
           let ds = numberOrArrayOrFour(state)
           let modifiers = parseMap(state)
           let interval = parseInterval(state) || hoistInterval('event', vs)
-          result = wrapMods(timeVar(vs, ds), modifiers)
+          result = addModifiers(timeVar(vs, ds), modifiers)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'l') { // linearly interpolated timevar
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
           let modifiers = parseMap(state)
           let interval = parseInterval(state) || hoistInterval('event', vs)
-          result = wrapMods(linearTimeVar(vs, ds), modifiers)
+          result = addModifiers(linearTimeVar(vs, ds), modifiers)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 's') { // smoothstep interpolated timevar
           state.idx += 1
           let ds = numberOrArrayOrFour(state)
           let modifiers = parseMap(state)
           let interval = parseInterval(state) || hoistInterval('event', vs)
-          result = wrapMods(smoothTimeVar(vs, ds), modifiers)
+          result = addModifiers(smoothTimeVar(vs, ds), modifiers)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'r') { // random
           state.idx += 1
           let hold = number(state)
           let modifiers = parseMap(state)
           let interval = parseInterval(state) || hoistInterval('event', vs, modifiers)
-          result = wrapMods(parseRandom(vs, hold, modifiers, interval), modifiers)
+          result = addModifiers(parseRandom(vs, hold, modifiers, interval), modifiers)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'n') { // simple noise
           state.idx += 1
@@ -116,15 +116,15 @@ define(function(require) {
           if (hold === undefined) { hold = 1 }
           let modifiers = parseMap(state)
           let interval = parseInterval(state) || hoistInterval('frame', modifiers)
-          result = wrapMods(simpleNoise(vs, hold, modifiers, interval), modifiers)
+          result = addModifiers(simpleNoise(vs, hold, modifiers, interval), modifiers)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
           state.idx += 1
           let ds = numberOrArray(state)
-          result = wrapMods(eventTimeVar(vs, ds), parseMap(state))
+          result = addModifiers(eventTimeVar(vs, ds), parseMap(state))
           setInterval(result, parseInterval(state) || hoistInterval('frame', vs))
         } else { // Basic array: one value per pattern step
-          result = wrapMods(eventIdxVar(vs), parseMap(state))
+          result = addModifiers(eventIdxVar(vs), parseMap(state))
           result.interval = 'event' // Only makes sense to be per event
           parseInterval(state) // Ignore this
         }
@@ -138,7 +138,7 @@ define(function(require) {
           result = vs[0]
         } else if (Array.isArray(vs)) {
           result = vs
-          result = wrapMods(result, parseMap(state))
+          result = addModifiers(result, parseMap(state))
           result.interval = parseInterval(state) || hoistInterval('event', vs)
         } else {
           result = vs
@@ -148,7 +148,7 @@ define(function(require) {
       // map (object)
       if (char == '{') {
         result = parseMap(state)
-        result = wrapMods(result, parseMap(state))
+        result = addModifiers(result, parseMap(state))
         parseInterval(state) // Ignore
         continue
       }
@@ -180,19 +180,19 @@ define(function(require) {
           n = {value:n}
           n[next] = 1
         }
-        result = wrapMods(n, parseMap(state))
+        result = addModifiers(n, parseMap(state))
         continue
       }
       // string
       if (char == '\'') {
         state.idx += 1
-        result = wrapMods(parseString(state), parseMap(state))
+        result = addModifiers(parseString(state), parseMap(state))
         continue
       }
       // colour
       if (char == '#') {
         state.idx += 1
-        result = wrapMods(parseColour(state), parseMap(state))
+        result = addModifiers(parseColour(state), parseMap(state))
         continue
       }
       // Aggregators
@@ -206,7 +206,7 @@ define(function(require) {
       let modifiers = parseMap(state)
       let v = varLookup(parsed, state.dependsOn, modifiers, state.context)
       if (v !== undefined) {
-        result = wrapMods(v, modifiers)
+        result = addModifiers(v, modifiers)
         if (typeof result === 'function') {
           result.interval = parseInterval(state) || 'frame'
         }

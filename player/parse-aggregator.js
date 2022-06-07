@@ -1,7 +1,7 @@
 'use strict'
 define(function(require) {
   let parseMap = require('player/parse-map')
-  let wrapMods = require('player/time-modifiers').wrapMods
+  let addModifiers = require('player/time-modifiers').addModifiers
   let {evalParamFrame} = require('player/eval-param')
   let {isVarChar} = require('player/parse-var')
 
@@ -37,7 +37,7 @@ define(function(require) {
         result = aggFn          
       }
       let modifiers = parseMap(state)
-      result = wrapMods(result, modifiers)
+      result = addModifiers(result, modifiers)
       let interval = state.parseInterval(state)
       if (typeof result === 'function') {
         state.setInterval(result, interval || state.hoistInterval('event', args))
