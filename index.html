@@ -867,9 +867,10 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Fix time modifier implementation
+ ?Should applyModifiers wrap evalParamNow instead of get called from it?
  ?Move applyModifiers to time-modifiers module?
  !!!Math.round(n*16384)/16384 duplicated in THREE places!!!
- ?Should applyModifiers wrap evalParamNow instead of get called from it?
+  Also the bombing out for primitive value types
  TEST - including examples
  Review docs
   Write doc section on various syntax constructs:
