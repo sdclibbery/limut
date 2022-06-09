@@ -1951,3 +1951,12 @@ a ambi 0, wave=tri, dur=2, oct=(5,6), add=(0,2,4,6), amp=1/8, room=2, chorus=3, 
 // set [pp,pc,pk,pg] hpf=2000
 
 
+set bpm=40
+set scale=minor
+set main.amp=3
+v kal 5, dur=4, fore=#fff2, back=#fff2, zoom=2.5, time=480+time+this.perspective, contrast, perspective=(1,2,3,4,5)/2.5
+d ambi 0, dur=4, oct=(1,2,3), room=2, chorus, pan=([-1:0]r,[0:1]r), addc=wow, amp=[1/3:3/4]n16
+// a ambi 0[23], dur=8, wave=tri, room=2, chorus=[1,2]r, oct=3, envelope=simple, att=2, rel=12, pan=[-1:1]r, amp=2/3,
+// 	addc=[12,[0:29]r]r+wow+[0,0,0,0,0,[0:[-12,-2]]e,[0,3,0]e]r, ring={220,mix:[0:3/4]r}, lpf=[10000:100]e
+
+

@@ -1,5 +1,6 @@
 'use strict';
 define((require) => {
+  let {overrideKey} = require('player/time-modifiers')
 
   let expandObjectTuples = (o) => {
     for (let k in o) {
@@ -55,7 +56,7 @@ define((require) => {
         beat = beat % per
       }
       if (mods.overrides !== undefined) {
-        let key = Math.round(modCount*16384)/16384 // Use event.count (not beat) for overrides as overrides are essentially instantaneous
+        let key = overrideKey(modCount) // Use event.count (not beat) for overrides as overrides are essentially instantaneous
         let override = mods.overrides.get(key)
         if (override !== undefined) { return override }
       }
@@ -200,7 +201,7 @@ define((require) => {
   let ovrs = (...vs) => {
     let r = new Map()
     vs.forEach(v => {
-      r.set(Math.round(v*16384)/16384, 2*v)
+      r.set(overrideKey(v), 2*v)
     })
     return r
   }

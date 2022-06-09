@@ -867,10 +867,9 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Fix time modifier implementation
- ?Should applyModifiers wrap evalParamNow instead of get called from it?
- ?Move applyModifiers to time-modifiers module?
- !!!Math.round(n*16384)/16384 duplicated in THREE places!!!
-  Also the bombing out for primitive value types
+ How much of evalParamWithModifiers should be extracted to time-modifiers?
+  All the actual modifying of time (and primitive test) should be; but the evalRecurse replacement should not be??
+  Tests for whats extracted to time-modifiers
  TEST - including examples
  Review docs
   Write doc section on various syntax constructs:

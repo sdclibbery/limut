@@ -2,6 +2,8 @@
 define(function(require) {
   let number = require('player/parse-number')
 
+  let overrideKey = (v) => Math.round(v*16384)/16384
+
   let addModifiers = (exp, modifiers) => {
     if (!modifiers) { return exp }
     let overrides = new Map()
@@ -9,7 +11,7 @@ define(function(require) {
      let state = { str: key, idx: 0, }
        let n = number(state)
        if (n !== undefined) {
-        let rounded = Math.round(n*16384)/16384
+        let rounded = overrideKey(n)
         overrides.set(rounded, value)
         delete modifiers[key]
       }
@@ -58,6 +60,7 @@ define(function(require) {
   }
 
   return {
+    overrideKey: overrideKey,
     addModifiers: addModifiers,
   }
 })
