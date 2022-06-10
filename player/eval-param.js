@@ -45,21 +45,24 @@ define((require) => {
 
   let evalParamWithModifiers = (evalRecurse, value, event, beat, options) => {
     if (value !== undefined && typeof value !== 'number' && typeof value !== 'string' && value.modifiers !== undefined) {
-      let mods = value.modifiers
-      let per = evalParamFrame(mods.per, event, beat)
       let originalBeat = beat
       let originalCount = event.count
       let originalEvalRecurse = evalRecurse
+      let mods = evalParamFrame(value.modifiers, event, beat)
+
+      let modBeat = beat
       let modCount = event.count
-      if (per !== undefined) {
-        modCount = modCount % per
-        beat = beat % per
+      if (mods.per !== undefined) {
+        modCount = modCount % mods.per
+        modBeat = modBeat % mods.per
       }
       if (mods.overrides !== undefined) {
         let key = overrideKey(modCount) // Use event.count (not beat) for overrides as overrides are essentially instantaneous
-        let override = mods.overrides.get(key)
+        let override = mods.overrides[key]
         if (override !== undefined) { return override }
       }
+
+      beat = modBeat
       event.count = modCount
       evalRecurse = (v, e, b) => {
         e.count = originalCount
@@ -199,9 +202,9 @@ define((require) => {
   assert(1, evalParamFrame(constWithMods, ev(0), 1))
 
   let ovrs = (...vs) => {
-    let r = new Map()
+    let r = {}
     vs.forEach(v => {
-      r.set(overrideKey(v), 2*v)
+      r[overrideKey(v)] = 2*v
     })
     return r
   }

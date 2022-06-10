@@ -2,17 +2,17 @@
 define(function(require) {
   let number = require('player/parse-number')
 
-  let overrideKey = (v) => Math.round(v*16384)/16384
+  let overrideKey = (v) => '@'+Math.round(v*16384)/16384
 
   let addModifiers = (exp, modifiers) => {
     if (!modifiers) { return exp }
-    let overrides = new Map()
+    let overrides = {}
     for (const [key, value] of Object.entries(modifiers)) {
      let state = { str: key, idx: 0, }
        let n = number(state)
        if (n !== undefined) {
-        let rounded = overrideKey(n)
-        overrides.set(rounded, value)
+        let key = overrideKey(n)
+        overrides[key] = value
         delete modifiers[key]
       }
     }
@@ -52,9 +52,13 @@ define(function(require) {
     assert("foo", addModifiers("foo", {bar:2})())
     assert({bar:2,overrides:{}}, addModifiers("foo", {bar:2}).modifiers)
 
-    assert(2, addModifiers(1, {bar:2,'1':2}).modifiers.overrides.get(1))
-    assert(2, addModifiers(1, {bar:2,'1/2':2}).modifiers.overrides.get(0.5))
-    assert(2, addModifiers(1, {bar:2,'1/3':2}).modifiers.overrides.get(0.33331298828125))
+    assert(2, addModifiers(1, {bar:2,'1':2}).modifiers.overrides[overrideKey(1)])
+    assert(2, addModifiers(1, {bar:2,'0.5':2}).modifiers.overrides[overrideKey(0.5)])
+    assert(2, addModifiers(1, {bar:2,'1/2':2}).modifiers.overrides[overrideKey(0.5)])
+    assert(2, addModifiers(1, {bar:2,'1/3':2}).modifiers.overrides[overrideKey(0.33333333333333)])
+    assert(2, addModifiers(1, {bar:2,'1/3':2}).modifiers.overrides[overrideKey(0.33331298828125)])
+    assert(2, addModifiers(1, {bar:2,'1/3':2}).modifiers.overrides[overrideKey(0.3333)])
+    assert(undefined, addModifiers(1, {bar:2,'1/3':2}).modifiers.overrides[overrideKey(0.333)])
 
     console.log('Time modifiers tests complete')
   }
