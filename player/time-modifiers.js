@@ -26,6 +26,22 @@ define(function(require) {
     return exp
   }
 
+  let applyModifiers = (results, mods, event, beat) => {
+    let modBeat = beat
+    let modCount = event.count
+    if (mods.per !== undefined) {
+      modCount = modCount % mods.per
+      modBeat = modBeat % mods.per
+    }
+    if (mods.overrides !== undefined) {
+      let key = overrideKey(modCount) // Use event.count (not beat) for overrides as overrides are essentially instantaneous
+      let override = mods.overrides[key]
+      if (override !== undefined) { return override }
+    }
+    results.modBeat = modBeat
+    results.modCount = modCount
+  }
+
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
@@ -66,5 +82,6 @@ define(function(require) {
   return {
     overrideKey: overrideKey,
     addModifiers: addModifiers,
+    applyModifiers: applyModifiers,
   }
 })

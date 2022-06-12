@@ -1,6 +1,6 @@
 'use strict';
 define((require) => {
-  let {overrideKey} = require('player/time-modifiers')
+  let {overrideKey,applyModifiers} = require('player/time-modifiers')
 
   let expandObjectTuples = (o) => {
     for (let k in o) {
@@ -43,27 +43,17 @@ define((require) => {
     }
   }
 
+  let results = {}
   let evalParamWithModifiers = (evalRecurse, value, event, beat, options) => {
     if (value !== undefined && typeof value !== 'number' && typeof value !== 'string' && value.modifiers !== undefined) {
       let originalBeat = beat
       let originalCount = event.count
       let originalEvalRecurse = evalRecurse
       let mods = evalParamFrame(value.modifiers, event, beat)
-
-      let modBeat = beat
-      let modCount = event.count
-      if (mods.per !== undefined) {
-        modCount = modCount % mods.per
-        modBeat = modBeat % mods.per
-      }
-      if (mods.overrides !== undefined) {
-        let key = overrideKey(modCount) // Use event.count (not beat) for overrides as overrides are essentially instantaneous
-        let override = mods.overrides[key]
-        if (override !== undefined) { return override }
-      }
-
-      beat = modBeat
-      event.count = modCount
+      let override = applyModifiers(results, mods, event, beat)
+      if (override !== undefined) { return override }
+      beat = results.modBeat
+      event.count = results.modCount
       evalRecurse = (v, e, b) => {
         e.count = originalCount
         return originalEvalRecurse(v, e, originalBeat)
