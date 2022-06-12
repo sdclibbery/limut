@@ -1960,3 +1960,16 @@ d ambi 0, dur=4, oct=(1,2,3), room=2, chorus, pan=([-1:0]r,[0:1]r), addc=wow, am
 // 	addc=[12,[0:29]r]r+wow+[0,0,0,0,0,[0:[-12,-2]]e,[0,3,0]e]r, ring={220,mix:[0:3/4]r}, lpf=[10000:100]e
 
 
+set bpm=130
+set * swing=62
+vg gradient 0, mid=#633f*b.pulse[min], fore=#012f
+v1 lines 0, amp=ph.pulse[min], additive, scroll=-1/4, rate=2, add=ph.stutter[min]-1
+v2 lines 0, amp=pc.pulse[min], fore=orange, additive, rate=4, scroll=1/4, add=pc.stutter[min]-1
+pk play x..xx.x., amp=3/2
+pc play ..(Kd)., rate=[1,3/4]t2
+ph play :[<t.>:]<:[-:]>[<:+:>:]
+set p* amp*=[3/4,0]t[15,1], room=1/16, drive=1/8, chorus, amp/=2
+set p* stutter=[1,1,2,2,4,8]r
+b square .4[.0]....., dur=1/2, oct=(1,2), ring=this.freq/2, chorus, room=1.2, amp=2, lpf=[10,350,10]e, envelope=pad, low=8
+
+

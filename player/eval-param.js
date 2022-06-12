@@ -255,6 +255,14 @@ define((require) => {
   assert(2, evalParamFrame(getBWithMods, ev(1), 1))
   assert(2, evalParamFrame(getBWithMods, ev(2), 2))
 
+  let ov = {}
+  ov[overrideKey(1)] = (e,b) => b*7
+  getBWithMods.modifiers = {per:2,overrides:ov}
+  assert(0, evalParamFrame(getBWithMods, ev(0), 0))
+  assert(7, evalParamFrame(getBWithMods, ev(1), 1))
+  assert(0, evalParamFrame(getBWithMods, ev(2), 2))
+  assert(21, evalParamFrame(getBWithMods, ev(3), 3)) // override eval should not used the modified time
+
   console.log('Eval param tests complete')
   }
 
