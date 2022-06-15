@@ -1,6 +1,6 @@
 'use strict';
 define((require) => {
-  let {overrideKey,applyModifiers} = require('player/time-modifiers')
+  let {overrideKey,canHaveOwnModifiers,applyModifiers} = require('player/time-modifiers')
 
   let expandObjectTuples = (o) => {
     for (let k in o) {
@@ -18,6 +18,28 @@ define((require) => {
     return [o]
   }
 
+  let results = {}
+  let evalFunction = (value, event, beat, evalRecurse) => {
+    if (value.interval === 'event') { beat = event.count } // Force per event if explicitly called for
+    if (value.modifiers === undefined) {
+      return value(event, beat, evalRecurse) // No time modifiers
+    }
+    let mods = evalParamFrame(value.modifiers, event, beat)
+    let override = applyModifiers(results, mods, event, beat)
+    if (override !== undefined) { return override }
+    let originalCount = event.count
+    event.count = results.modCount
+    let result = value(event, results.modBeat, (v,e,b) => {
+      let oldEc = e.count
+      e.count = originalCount
+      let result = evalRecurse(v, e, beat)
+      e.count = oldEc
+      return result
+    })
+    event.count = originalCount
+    return result
+  }
+
   let evalParamValue = (evalRecurse, value, event, beat, {nestedTuples,ignoreThisVars}) => {
     if (Array.isArray(value)) { // tuple, eval individual values
       let v = value.map(v => evalRecurse(v, event, beat))
@@ -26,10 +48,7 @@ define((require) => {
     } else if (typeof value == 'function') { // Call function to get current value
       if (value.evalOverride !== undefined) { return value.evalOverride }
       if (ignoreThisVars && value._thisVar) { return }
-      let _originalBeat = beat
-      if (value.interval === 'event') { beat = event.count } // Force per event if explicitly called for
-      let v = value(event, beat, evalRecurse)
-      beat = _originalBeat
+      let v = evalFunction(value, event, beat, evalRecurse)
       return evalRecurse(v, event, beat)
     } else if (typeof value == 'object') { // Eval each field in the object
       let result = {}
@@ -43,35 +62,16 @@ define((require) => {
     }
   }
 
-  let results = {}
-  let evalParamWithModifiers = (evalRecurse, value, event, beat, options) => {
-    if (value !== undefined && typeof value !== 'number' && typeof value !== 'string' && value.modifiers !== undefined) {
-      let originalBeat = beat
-      let originalCount = event.count
-      let originalEvalRecurse = evalRecurse
-      let mods = evalParamFrame(value.modifiers, event, beat)
-      let override = applyModifiers(results, mods, event, beat)
-      if (override !== undefined) { return override }
-      beat = results.modBeat
-      event.count = results.modCount
-      evalRecurse = (v, e, b) => {
-        e.count = originalCount
-        return originalEvalRecurse(v, e, originalBeat)
-      }
-    }
-    return evalParamValue(evalRecurse, value, event, beat, options)
-  }
-
   let evalRecurseFull = (value, event, beat, options) => {
     options = options || {}
-    return evalParamWithModifiers(evalRecurseWithOptions(evalRecurseFull, options), value, event, beat, options)
+    return evalParamValue(evalRecurseWithOptions(evalRecurseFull, options), value, event, beat, options)
   }
   let evalRecursePre = (value, event, beat, options) => {
     if (!!value && value.interval === 'frame') {
       return value
     }
     options = options || {}
-    return evalParamWithModifiers(evalRecurseWithOptions(evalRecursePre, options), value, event, beat, options)
+    return evalParamValue(evalRecurseWithOptions(evalRecursePre, options), value, event, beat, options)
   }
 
   let evalRecurseWithOptions = (er, options) => {
@@ -82,22 +82,22 @@ define((require) => {
 
   let evalParamFrame = (value, event, beat) => {
     // Fully evaluate down to a primitive number/string etc, allowing the value to change every frame if it wants to
-    return evalParamWithModifiers(evalRecurseFull, value, event, beat, {})
+    return evalParamValue(evalRecurseFull, value, event, beat, {})
   }
 
   let evalParamFrameNoFlatten = (value, event, beat) => {
     let options = {nestedTuples:true}
-    return evalParamWithModifiers(evalRecurseFull, value, event, beat, options)
+    return evalParamValue(evalRecurseFull, value, event, beat, options)
   }
 
   let evalParamFrameIgnoreThisVars = (value, event, beat) => {
     let options = {ignoreThisVars:true}
-    return evalParamWithModifiers(evalRecurseWithOptions(evalRecurseFull, options), value, event, beat, options)
+    return evalParamValue(evalRecurseWithOptions(evalRecurseFull, options), value, event, beat, options)
   }
 
   let evalParamEvent = (value, event) => {
     // Fully evaluate down to a primitive number/string etc, fixing the value for the life of the event it is part of
-    return evalParamWithModifiers(evalRecurseFull, value, event, event.count, {})
+    return evalParamValue(evalRecurseFull, value, event, event.count, {})
   }
 
   let preEvalParam = (value, event) => {
@@ -105,7 +105,7 @@ define((require) => {
     if (!!value && value.interval === 'frame') {
       return value
     }
-    return evalParamWithModifiers(evalRecursePre, value, event, event.count, {})
+    return evalParamValue(evalRecursePre, value, event, event.count, {})
   }
 
   // TESTS //

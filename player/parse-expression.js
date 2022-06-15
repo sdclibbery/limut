@@ -1093,7 +1093,7 @@ define(function(require) {
   assert([1,2], evalParamFrame(p,ev(0,0),0))
 
   p = parseExpression('{foo:2}{per:1}')
-  assert({foo:2,modifiers:{per:1,overrides:{}}}, evalParamFrame(p,ev(0,0),0))
+  assert({foo:2}, evalParamFrame(p,ev(0,0),0))
 
   p = parseExpression('5{per:1}')
   assert(5, evalParamFrame(p,ev(0,0),0))

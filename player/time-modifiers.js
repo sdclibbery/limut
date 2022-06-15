@@ -4,6 +4,8 @@ define(function(require) {
 
   let overrideKey = (v) => '@'+Math.round(v*16384)/16384
 
+  let canHaveOwnModifiers = (value) => value !== undefined && typeof value === 'function'
+
   let addModifiers = (exp, modifiers) => {
     if (!modifiers) { return exp }
     let overrides = {}
@@ -17,7 +19,7 @@ define(function(require) {
       }
     }
     modifiers.overrides = overrides
-    if (exp === undefined || typeof exp === 'number' || typeof exp === 'string') {
+    if (!canHaveOwnModifiers(exp)) {
       let wrap = () => exp
       wrap.modifiers = modifiers
       return wrap
@@ -52,14 +54,16 @@ define(function(require) {
     }
   
     assert(1, addModifiers(1))
+    assert({foo:1}, addModifiers({foo:1}))
+    assert([1], addModifiers([1]))
 
-    assert({foo:1,modifiers:{bar:2,overrides:{}}}, addModifiers({foo:1}, {bar:2}))
+    assert({bar:2,overrides:{}}, addModifiers({foo:1}, {bar:2}).modifiers)
 
     let f = (x) => x
     assert(1, addModifiers(f, {bar:2})(1))
     assert({bar:2,overrides:{}}, addModifiers(f, {bar:2}).modifiers)
 
-    assert([0,1], addModifiers([0,1], {bar:2}))
+    assert({bar:2,overrides:{}}, addModifiers([0,1], {bar:2}).modifiers)
     assert({bar:2,overrides:{}}, addModifiers([0,1], {bar:2}).modifiers)
 
     assert(1, addModifiers(1, {bar:2})())
