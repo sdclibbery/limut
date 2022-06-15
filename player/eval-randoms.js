@@ -2,6 +2,7 @@
 define(function(require) {
   let evalOperator = require('player/eval-operator')
   let param = require('player/default-param')
+  let {evalParamFrame} = require('player/eval-param')
 
   function xmur3(seed) {
     let h = 1779033703
@@ -57,7 +58,9 @@ define(function(require) {
     let generator
     if (modifiers && modifiers.seed !== undefined) {
       generator = (e,b,evalRecurse) => {
-        let seed = evalRecurse(modifiers.seed, e,b)
+        let seed = evalRecurse((e,b) => {
+          return evalParamFrame(modifiers.seed,e,b)
+        }, e,b)
         return xmur3(b - seed) / 4294967296
       }
     } else {
@@ -86,7 +89,9 @@ define(function(require) {
     }
     if (modifiers && modifiers.seed !== undefined) {
       generator = (e,b,evalRecurse) => {
-        let seed = evalRecurse(modifiers.seed, e,b)
+        let seed = evalRecurse((e,b) => {
+          return evalParamFrame(modifiers.seed,e,b)
+        }, e,b)
         return b + seed
       }
     }

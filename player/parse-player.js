@@ -312,6 +312,26 @@ define((require) => {
   e = p.getEventsForBeat({count:1})[0]; assert(2, evalParamFrame(e.bar,e,1))
   e = p.getEventsForBeat({count:2})[0]; assert(1, evalParamFrame(e.bar,e,2))
 
+  p = parsePlayer('p kal 0, bar=[0:1]r{per:4,seed:[10]}@e')
+  e = p.getEventsForBeat({count:0})[0]; assert(0.244, evalParamFrame(e.bar,e,0))
+  e = p.getEventsForBeat({count:1})[0]; assert(0.329, evalParamFrame(e.bar,e,1))
+  e = p.getEventsForBeat({count:2})[0]; assert(0.796, evalParamFrame(e.bar,e,2))
+  e = p.getEventsForBeat({count:3})[0]; assert(0.029, evalParamFrame(e.bar,e,3))
+
+  p = parsePlayer('p kal 0, bar=[0:1]r{per:4,seed:this.foo}@e, foo=[10]')
+  e = p.getEventsForBeat({count:0})[0]; assert(0.244, evalParamFrame(e.bar,e,0))
+  e = p.getEventsForBeat({count:1})[0]; assert(0.329, evalParamFrame(e.bar,e,1))
+  e = p.getEventsForBeat({count:2})[0]; assert(0.796, evalParamFrame(e.bar,e,2))
+  e = p.getEventsForBeat({count:3})[0]; assert(0.029, evalParamFrame(e.bar,e,3))
+
+  vars.foo = () => 10
+  p = parsePlayer('p kal 0, bar=[0:1]r{per:4,seed:foo}@e')
+  e = p.getEventsForBeat({count:0})[0]; assert(0.244, evalParamFrame(e.bar,e,0))
+  e = p.getEventsForBeat({count:1})[0]; assert(0.329, evalParamFrame(e.bar,e,1))
+  e = p.getEventsForBeat({count:2})[0]; assert(0.796, evalParamFrame(e.bar,e,2))
+  e = p.getEventsForBeat({count:3})[0]; assert(0.029, evalParamFrame(e.bar,e,3))
+  delete vars.foo
+
   vars.foo = () => [2,3,4,5]
   p = parsePlayer('p kal 0, bar=foo[[1,3]t1]')
   assert(3, evalParamFrame(p.getEventsForBeat({count:0})[0].bar,ev(0,0),0))
