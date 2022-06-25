@@ -275,7 +275,7 @@ define(function(require) {
   }
 
   let {evalParamFrame,preEvalParam} = require('player/eval-param')
-  let ev = (i,c,d) => {return{idx:i,count:c,dur:d,_time:c}}
+  let ev = (i,c,d) => {return{idx:i, count:c, dur:d, _time:c, endTime:c+d, countToTime:x=>x}}
 
   assert(undefined, parseExpression())
   assert(undefined, parseExpression(''))
@@ -815,7 +815,7 @@ define(function(require) {
 
   p = parseExpression("[0:1]e2")
   e = { idx:0, count:7, countToTime:b=>b, _time:7, endTime:8 }
-  assert(0, p(e,6, evalParamFrame))
+  assert(1, p(e,6, evalParamFrame))
   assert(0, p(e,7, evalParamFrame))
   assert(0.5, p(e,8, evalParamFrame))
   assert(1, p(e,9, evalParamFrame))
@@ -1245,8 +1245,25 @@ define(function(require) {
   assert(1, p({},0,(v)=>v))
   delete vars.e
 
+  assert(0, evalParamFrame(parseExpression("[0,1]t1/4{per:1}@f"),ev(0,0,1),0))
+  assert(1, evalParamFrame(parseExpression("[0,1]t1/4{per:1}@f"),ev(0,0,1),1/4))
+  assert(0, evalParamFrame(parseExpression("[0,1]t1/4{per:1}@f"),ev(0,0,1),1/2))
+  assert(1, evalParamFrame(parseExpression("[0,1]t1/4{per:1}@f"),ev(0,1,1),3/4))
+
+  assert(0, evalParamFrame(parseExpression("[0,1]e"),ev(0,0,1),0))
+  assert(1/4, evalParamFrame(parseExpression("[0,1]e"),ev(0,0,1),1/4))
+  assert(1/2, evalParamFrame(parseExpression("[0,1]e"),ev(0,0,1),1/2))
+  assert(3/4, evalParamFrame(parseExpression("[0,1]e"),ev(0,0,1),3/4))
+  assert(0, evalParamFrame(parseExpression("[0,1]e"),ev(0,1,1),1))
+
+  assert(0, evalParamFrame(parseExpression("[0,1]e{per:1}"),ev(0,0,1),0))
+  assert(1/4, evalParamFrame(parseExpression("[0,1]e{per:1}"),ev(0,0,1),1/4))
+  assert(1/2, evalParamFrame(parseExpression("[0,1]e{per:1}"),ev(0,0,1),1/2))
+  assert(3/4, evalParamFrame(parseExpression("[0,1]e{per:1}"),ev(0,0,1),3/4))
+  assert(0, evalParamFrame(parseExpression("[0,1]e{per:1}"),ev(0,1,1),1))
+
   console.log('Parse expression tests complete')
   }
-  
+
   return parseExpression
 })

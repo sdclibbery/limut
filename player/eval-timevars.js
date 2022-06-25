@@ -102,17 +102,20 @@ define(function(require) {
       if (!e.countToTime) { return vs[0] || 0 }
       let ds = ds_parsed
       let eDur = e.endTime - e._time
-      if (ds === undefined) { ds = eDur / (vs.length-1) }
+      if (ds === undefined) { ds = [eDur / (vs.length-1), 0] }
       let steps = timeVarSteps(vs, ds)
-      let count = e.countToTime(b) - e._time
-      if (count < 0) { count = 0 }
-      if (count > steps.totalDuration) { count = steps.totalDuration }
+      let time = e.countToTime(b) - e._time
+      if (time >= steps.totalDuration) {
+        time = steps.totalDuration
+      } else {
+        time = (time % steps.totalDuration + steps.totalDuration) % steps.totalDuration
+      }
       for (let idx = 0; idx < steps.length; idx++) {
         let pre = steps[idx]
-        if (isInTimeVarStep(pre, count)) {
+        if (isInTimeVarStep(pre, time)) {
           let post = steps[idx+1]
           if (post === undefined) { post = pre }
-          let lerp = calcLerp(count, pre._time, pre.duration)
+          let lerp = calcLerp(time, pre._time, pre.duration)
           return lerpValue(lerp, pre.value, post.value)
         }
       }
@@ -124,6 +127,56 @@ define(function(require) {
       let v = vs[Math.floor(e.idx || 0) % vs.length]
       return (v !== undefined) && v
     }
+  }
+
+  // TESTS
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+  
+    let assert = (expected, actual) => {
+      let x = JSON.stringify(expected)
+      let a = JSON.stringify(actual)
+      if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
+    }
+    let ev = (c,d,i) => {return{idx:i||0, count:c||0, dur:d||1, _time:c, endTime:c+d, countToTime:x=>x}}
+    let ev120 = (c,d) => {return{idx:0, count:c, dur:d, _time:c/2, endTime:c/2+d/2, countToTime:(count) => c*0.5 + (count-c)*0.5}}
+
+    assert(1, eventIdxVar([1,2])(ev(0,1,0), 0))
+    assert(2, eventIdxVar([1,2])(ev(0,1,1), 0))
+    assert(1, eventIdxVar([1,2])(ev(0,1,2), 0))
+
+    assert(1, eventTimeVar([1,2])(ev(0,1), 0))
+    assert(1.5, eventTimeVar([1,2])(ev(0,1), 0.5))
+    assert(2, eventTimeVar([1,2])(ev(0,1), 1))
+    assert(2, eventTimeVar([1,2])(ev(0,1), 2))
+
+    assert(1, eventTimeVar([1,2])(ev120(0,1), 0))
+    assert(1.5, eventTimeVar([1,2])(ev120(0,1), 0.5))
+    assert(2, eventTimeVar([1,2])(ev120(0,1), 1))
+    assert(2, eventTimeVar([1,2])(ev120(0,1), 2))
+
+    assert(1, eventTimeVar([1,2])(ev(10,2), 0))
+    assert(9/8, eventTimeVar([1,2])(ev(10,2), 1/4))
+    assert(1.5, eventTimeVar([1,2])(ev(10,2), 1))
+    assert(1, eventTimeVar([1,2])(ev(10,2), 2))
+    assert(1, eventTimeVar([1,2])(ev(10,2), 8))
+    assert(1.5, eventTimeVar([1,2])(ev(10,2), 9))
+    assert(1, eventTimeVar([1,2])(ev(10,2), 10))
+    assert(1.5, eventTimeVar([1,2])(ev(10,2), 11))
+    assert(2, eventTimeVar([1,2])(ev(10,2), 12))
+    assert(2, eventTimeVar([1,2])(ev(10,2), 13))
+
+    assert(1, eventTimeVar([1,2])(ev120(10,2), 0))
+    assert(9/8, eventTimeVar([1,2])(ev120(10,2), 1/4))
+    assert(1.5, eventTimeVar([1,2])(ev120(10,2), 1))
+    assert(1, eventTimeVar([1,2])(ev120(10,2), 2))
+    assert(1, eventTimeVar([1,2])(ev120(10,2), 8))
+    assert(1.5, eventTimeVar([1,2])(ev120(10,2), 9))
+    assert(1, eventTimeVar([1,2])(ev120(10,2), 10))
+    assert(1.5, eventTimeVar([1,2])(ev120(10,2), 11))
+    assert(2, eventTimeVar([1,2])(ev120(10,2), 12))
+    assert(2, eventTimeVar([1,2])(ev120(10,2), 13))
+
+    console.log('Eval timevar tests complete')
   }
 
   return {

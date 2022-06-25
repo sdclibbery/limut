@@ -26,7 +26,7 @@ define(function (require) {
       let cents = system.audio.createConstantSource()
       cents.offset.value = 100
       vcaAddc = system.audio.createGain()
-      evalMainParamFrame(vcaAddc.gain, params, 'addc', 0)
+      evalMainParamFrame(vcaAddc.gain, params, 'addc', 0)//, x => {console.log(x); return x})
       cents.connect(vcaAddc)
       cents.start()
       cents.stop(params.endTime)
