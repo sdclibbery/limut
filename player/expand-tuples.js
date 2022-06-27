@@ -127,6 +127,8 @@ define((require) => {
     assert(3, evalParamFrame(p[2].f,p[2],b))
     assert({r:2,g:4}, evalParamFrame(p[3].x,p[3],b))
     assert(4, evalParamFrame(p[3].f,p[3],b))
+
+    console.log('Expand tuples tests complete')
   }
   return expandTuples
 })

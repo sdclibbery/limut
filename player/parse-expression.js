@@ -957,7 +957,7 @@ define(function(require) {
 
   vars.foo = ({val}) => val
   vars.foo.isVarFunction = true
-  assert(5, parseExpression('foo{val:5}')(ev(0,0),0,evalParamFrame))
+  assert(5, evalParamFrame(parseExpression('foo{val:5}'),ev(0,0),0))
   delete vars.foo
 
   vars.foo = () => 5
@@ -967,7 +967,7 @@ define(function(require) {
 
   vars.foo = ({val}) => val
   vars.foo.isVarFunction = true
-  assert(6, parseExpression('  foo  {  x:3, val : 6 }  ')(ev(0,0),0,evalParamFrame))
+  assert(6, evalParamFrame(parseExpression('  foo  {  x:3, val : 6 }  '),ev(0,0),0))
   delete vars.foo
 
   assert('event', parseExpression("[0,24]r").interval)
@@ -1261,6 +1261,9 @@ define(function(require) {
   assert(1/2, evalParamFrame(parseExpression("[0,1]e{per:1}"),ev(0,0,1),1/2))
   assert(3/4, evalParamFrame(parseExpression("[0,1]e{per:1}"),ev(0,0,1),3/4))
   assert(0, evalParamFrame(parseExpression("[0,1]e{per:1}"),ev(0,1,1),1))
+
+  assert([0,0], evalParamFrame(parseExpression("[0,2]t1{per:(1,2)}"),ev(0,0,1),0))
+  assert([0,2], evalParamFrame(parseExpression("[0,2]t1{per:(1,2)}"),ev(0,1,1),1))
 
   console.log('Parse expression tests complete')
   }

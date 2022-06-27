@@ -36,32 +36,25 @@ define(function(require) {
     if (playerId && param) {
       dependsOn.push(playerId)
     }
-    let result = (event,b, evalRecurse) => {
+    let result = (event,b, evalRecurse, modifiers) => {
       let v
       if (param) {
         let player = players.instances[playerId]
-        if (player) {
+        if (player) { // player lookup func
           let originalB = evalRecurse((e,originalB) => originalB, event, b)
           let es = player.currentEvent(originalB)
           v = es.map(e => e[param])
           if (v.length === 0) { v = 0 }
           if (v.length === 1) { v = v[0] }
-        } else if (playerId === 'this') {
+        } else if (playerId === 'this') { // this func
           v = event[param]
         } else {
-          v = vars[key]
+          v = vars[key] // ordinary var
         }
       } else if (typeof vars[key] === 'function' && vars[key].isVarFunction) { // Var function
-        let argse = evalParamFrame(args,event,b)
-        if (Array.isArray(argse)) {
-          v = argse.map(x => {
-            return vars[key](x, event,b)
-          })
-        } else {
-          v = vars[key](argse, event,b)
-        }
+        v = vars[key](modifiers, event,b)
       } else {
-        v = vars[key]
+        v = vars[key] // ordinary var
       }
       v = evalParamFrame(v,event,b)
       if (v === undefined) { v = 0 } // If not found as a var, assume its for a currently unavailable player and default to zero
@@ -166,14 +159,16 @@ define(function(require) {
   vars.foo = (x) => x.value*x.value
   vars.foo.isVarFunction = true
   state = {str:'foo',idx:0}
-  p = varLookup(parseVar(state), [], {value:2})
+  p = varLookup(parseVar(state), [])
+  p.modifiers = {value:2}
   assert(4, evalParamFrame(p,ev(0),0))
   delete vars.foo
 
   vars.foo = (x) => x.value*x.value
   vars.foo.isVarFunction = true
   state = {str:'foo',idx:0}
-  p = varLookup(parseVar(state), [], {value:[2,3]})
+  p = varLookup(parseVar(state), [])
+  p.modifiers = {value:[2,3]}
   assert([4,9], evalParamFrame(p,ev(0),0))
   delete vars.foo
 

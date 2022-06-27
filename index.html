@@ -867,6 +867,17 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Fix time modifier implementation
+ ! Tuples not hoisted correctly from per
+  p ping 0, add=[0,2]t1{per:(1,2)}
+  v readout 0, add=[0,2]t1{per:(1,2)}, loc=sparkle
+  !!Current fix sort of works but it means tuples get expanded twice for varfunctions with args, and doesn't expand seed tuples
+   Need expand tuples to handle modifiers? - It does???!!
+    !!!!!Actually eval params should expand tuples across values, but make a new modifiers object for each...
+ !Tuples not hoisted from seed
+  !parseRandom must use seed from eval time modifiers
+  !simpleNoise must use seed from eval time modifiers
+  p ping 0, add=[0,2]r1{seed:(0,10)}
+ ?Tuples hoisted from overrides?
  Review docs
   Write doc section on various syntax constructs:
    () for chords
@@ -874,32 +885,18 @@ Fix time modifier implementation
    <> for sequences on repeat (in patterns)
    {} for supplying extra info (subparams, functions, value modifiers)
    @ for intervals
- Review issues below:
-  ! Tuples not hoisted correctly from modifiers:
-   p ping 0, add=[0,2]t1{per:(1,2)}
-   p ping 0, add=[0,2]r1{seed:(0,10)}
-  !Multiple time modifiers up a hierarchy probably don't work properly
-   Because we can only save a single set of _originalXxx values on the event
-   Make a test case
-    ? It does seem to work ok? EG  v readout 0, add=[[1,2,3]t1{per:1},0]t1{per:2}
-     Maybe need deeper or more branched hierarchy to see this?
-   Either find another way to save the _originalXxx data, or make it into a stack
 !Multiple louds in pattern dont work? Eg  ph play -^^---, dur=1/4
 !Want `set * amp/=2` to halve the current amplitude even when it's using the default fallback value
-!Really need a complete audit of time vs count. Need the code to be clear and unambiguous which is which. There will be issues to fix.
 !Readout doesn't work:  p ping 0, foo=[0,1,2,3]t1, add=this.foo \ r readout 0, add=p.add
 !WTF is with pitch{octave:x} rather than using oct: ???
+!Really need a complete audit of time vs count. Need the code to be clear and unambiguous which is which. There will be issues to fix. Look at []e and []e{per}
 !Syntax colouring is case sensitive;eg  `Set` does not get coloured correctly
 Some sort of matching or booleans would be handy; eg  rel=2+6*(this.value<0)  or maybe  rel=match{this.value,default:2,-7:8}
 Delay etc subparams should support modifying overrides; eg  add=2, delay=(0,{1,add+:2})
  ! The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
 {offset} to apply an offset to the time counts
  Eg [0,1,2,3]t4{offset:1}
-stutter={4,dur:1/8}  - repeat each note four times, with each repeat lasting 1/8 of a beat
- !!! ?? Should be done using sus override instead???
-  ?Not if you want it to extend beyond the original event duration (or vice versa)
-  Nor if you want to do dur=[3,3,2]
- ?Should be able to stutter with euclidean patterns??
+?Should be able to stutter with euclidean patterns??
 Modifier or function that smooths the value over time, separate attack and decay rates if possible
 !pattern "(01)": idx should be 0 for both events, surely?
  event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord

@@ -19,12 +19,7 @@ define((require) => {
   }
 
   let results = {}
-  let evalFunction = (value, event, beat, evalRecurse) => {
-    if (value.interval === 'event') { beat = event.count } // Force per event if explicitly called for
-    if (value.modifiers === undefined) {
-      return value(event, beat, evalRecurse) // No time modifiers
-    }
-    let mods = evalParamFrame(value.modifiers, event, beat)
+  let evalFunction = (value, mods, event, beat, evalRecurse) => {
     let override = applyModifiers(results, mods, event, beat)
     if (override !== undefined) { return override }
     let originalCount = event.count
@@ -35,8 +30,23 @@ define((require) => {
       let result = evalRecurse(v, e, beat)
       e.count = oldEc
       return result
-    })
+    }, mods)
     event.count = originalCount
+    return result
+  }
+
+  let evalFunctionWithModifiers = (value, event, beat, evalRecurse) => {
+    if (value.interval === 'event') { beat = event.count } // Force per event if explicitly called for
+    if (value.modifiers === undefined) {
+      return value(event, beat, evalRecurse) // No modifiers
+    }
+    let mods = evalParamFrame(value.modifiers, event, beat)
+    let result
+    if (!Array.isArray(mods)) {
+      result = evalFunction(value, mods, event, beat, evalRecurse)
+    } else {
+      result = mods.map(m => evalFunction(value, m, event, beat, evalRecurse))
+    }
     return result
   }
 
@@ -48,7 +58,7 @@ define((require) => {
     } else if (typeof value == 'function') { // Call function to get current value
       if (value.evalOverride !== undefined) { return value.evalOverride }
       if (ignoreThisVars && value._thisVar) { return }
-      let v = evalFunction(value, event, beat, evalRecurse)
+      let v = evalFunctionWithModifiers(value, event, beat, evalRecurse)
       return evalRecurse(v, event, beat)
     } else if (typeof value == 'object') { // Eval each field in the object
       let result = {}
