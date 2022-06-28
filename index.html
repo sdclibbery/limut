@@ -867,15 +867,12 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Fix time modifier implementation
- ! Tuples not hoisted correctly from per
-  p ping 0, add=[0,2]t1{per:(1,2)}
-  v readout 0, add=[0,2]t1{per:(1,2)}, loc=sparkle
-  !!Current fix sort of works but it means tuples get expanded twice for varfunctions with args, and doesn't expand seed tuples
-   Need expand tuples to handle modifiers? - It does???!!
-    !!!!!Actually eval params should expand tuples across values, but make a new modifiers object for each...
  !Tuples not hoisted from seed
-  !parseRandom must use seed from eval time modifiers
-  !simpleNoise must use seed from eval time modifiers
+  Refactor random and noise to allow getting seed in a common way from eval-time modifiers
+   !Still not actually playing the two tuple values!
+   !Make sure evalled seeds work OK
+  Refactor noise to allow getting seed in a common way from eval-time modifiers
+  Tests for seed tuples
   p ping 0, add=[0,2]r1{seed:(0,10)}
  ?Tuples hoisted from overrides?
  Review docs

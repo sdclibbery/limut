@@ -24,49 +24,67 @@ define(function(require) {
     )
   }
 
-  let evalRandomRanged = (generator, lo, hi, e, b, evalRecurse) => {
-    return lerpValue(generator(e,b,evalRecurse), lo, hi)
+  let unrangedRandom = (hold, perParseSeed, b, modifiers) => {
+    let seed = modifiers && modifiers.seed
+    if (hold) {
+      if (!seed) { seed = perParseSeed*999999 } // Always use deterministic random for held randoms
+    }
+    if (seed !== undefined) {
+      return xmur3(b - seed) / 4294967296
+    } else {
+      return Math.random()
+    }
   }
 
-  let evalRandomSet = (generator, vs, e, b, evalRecurse) => {
-    let idx = Math.floor(generator(e,b,evalRecurse)*vs.length*0.9999)
+  let evalRandomRanged = (perParseSeed, hold, lo, hi, b, modifiers) => {
+    let baseRandom = unrangedRandom(hold, perParseSeed, b, modifiers)
+    return lerpValue(baseRandom, lo, hi)
+  }
+
+  let evalRandomSet = (perParseSeed, hold, vs, b, modifiers) => {
+    let baseRandom = unrangedRandom(hold, perParseSeed, b, modifiers)
+    let idx = Math.floor(baseRandom*vs.length*0.9999)
     return vs[idx]
   }
 
-  let heldRandom = (getter, hold, interval) => {
-    return (e,b,evalRecurse) => {
+  let heldRandom = (getter, hold) => {
+    return (e,b,evalRecurse,modifiers) => {
       let evalCount = Math.floor(b/hold)*hold
-      return getter({count:evalCount},evalCount,evalRecurse)
+      return getter({count:evalCount},evalCount,evalRecurse,modifiers)
     }
   }
 
   let random = (getter, interval) => {
     let events
-    return (e,b,evalRecurse) => {
+    return (e,b,evalRecurse,modifiers) => {
       if (interval === 'frame') {
-        return getter(e,b,evalRecurse)
+        return getter(e,b,evalRecurse,modifiers)
       }
       if (!events) { events = new WeakMap() }
       if (!events.has(e)) {
-        events.set(e, getter(e,b,evalRecurse))
+        events.set(e, getter(e,b,evalRecurse,modifiers))
       }
       return events.get(e)
     }
   }
 
-  let getGenerator = (modifiers, interval) => {
-    let generator
-    if (modifiers && modifiers.seed !== undefined) {
-      generator = (e,b,evalRecurse) => {
-        let seed = evalRecurse((e,b) => {
-          return evalParamFrame(modifiers.seed,e,b)
-        }, e,b)
-        return xmur3(b - seed) / 4294967296
-      }
+  let parseRandom = (vs, hold, interval) => {
+    let perParseSeed = Math.random()
+    let evaluator
+    if (vs.length == 0) {
+      evaluator = (e,b,evalRecurse,modifiers) => evalRandomRanged(perParseSeed, hold, 0, 1, b, modifiers)
+    } else if (vs.separator == ':') {
+      let lo = param(vs[0], 0)
+      let hi = param(vs[1], 1)
+      evaluator = (e,b,evalRecurse,modifiers) => evalRandomRanged(perParseSeed, hold, lo, hi, b, modifiers)
     } else {
-      generator = () => Math.random()
+      evaluator = (e,b,evalRecurse,modifiers) => evalRandomSet(perParseSeed, hold, vs, b, modifiers)
     }
-    return generator
+    if (hold) {
+      return heldRandom(evaluator, hold)
+    } else {
+      return random(evaluator, interval)
+    }
   }
 
   let hash = (n) => {
@@ -108,29 +126,6 @@ define(function(require) {
         result = lerpValue(result, lo, hi)
       }
       return result
-    }
-  }
-
-  let parseRandom = (vs, hold, modifiers, interval) => {
-    if (hold) {
-      if (!modifiers) { modifiers = {} }
-      if (!modifiers.seed) { modifiers.seed = Math.random()*999999 } // Always use deterministic random for held randoms
-    }
-    let generator = getGenerator(modifiers, interval)
-    let evaluator
-    if (vs.length == 0) {
-      evaluator = (e,b,evalRecurse) => evalRandomRanged(generator, 0, 1, e, b, evalRecurse)
-    } else if (vs.separator == ':') {
-      let lo = param(vs[0], 0)
-      let hi = param(vs[1], 1)
-      evaluator = (e,b,evalRecurse) => evalRandomRanged(generator, lo, hi, e, b, evalRecurse)
-    } else {
-      evaluator = (e,b,evalRecurse) => evalRandomSet(generator, vs, e, b, evalRecurse)
-    }
-    if (hold) {
-      return heldRandom(evaluator, hold, interval)
-    } else {
-      return random(evaluator, interval)
     }
   }
 
@@ -218,7 +213,8 @@ define(function(require) {
     assertNotEqual(0.3853306171949953, evalParam(p,ev(0),0))
 
     // Same sequence every time when seeded
-    p = parseRandom([], undefined, {seed:1})
+    p = parseRandom([])
+    p.modifiers = {seed:1}
     assert(0.3853306171949953, evalParam(p,ev(0),0))
     assert(0.5050126616843045, evalParam(p,ev(1/4),1/4))
     assert(0.6197433876805007, evalParam(p,ev(1/2),1/2))
@@ -229,21 +225,25 @@ define(function(require) {
     assert(0.8467781520448625, evalParam(p,ev(4),4))
 
     // Shifted sequence when bump seed
-    p = parseRandom([], undefined, {seed:1})
+    p = parseRandom([])
+    p.modifiers = {seed:1}
     assert(0.3853306171949953, evalParam(p,ev(0),0))
     assert(0.8534541970584542, evalParam(p,ev(1),1))
     assert(0.35433487710542977, evalParam(p,ev(2),2))
     assert(0.08498840616084635, evalParam(p,ev(3),3))
-    p = parseRandom([], undefined, {seed:2})
+    p = parseRandom([])
+    p.modifiers = {seed:2}
     assert(0.3672695131972432, evalParam(p,ev(0),0))
     assert(0.3853306171949953, evalParam(p,ev(1),1))
     assert(0.8534541970584542, evalParam(p,ev(2),2))
     assert(0.35433487710542977, evalParam(p,ev(3),3))
 
-    p = parseRandom([], undefined, {seed:0})
+    p = parseRandom([])
+    p.modifiers = {seed:0}
     assertIsInRangeEveryTime(0,1, () => evalParam(p,ev(0),0))
 
-    p = parseRandom([], undefined, {seed:-100})
+    p = parseRandom([])
+    p.modifiers = {seed:-100}
     assertIsInRangeEveryTime(0,1, () => evalParam(p,ev(0),0))
 
     // []r should give a new value for each event
@@ -269,7 +269,8 @@ define(function(require) {
     p = simpleNoise([], 4)
     assertIsCloseEveryTime((i)=>p(ev(i/20),i/20,evalParam))
 
-    p = simpleNoise([], 4, {seed:1})
+    p = simpleNoise([], 4)
+    p.modifiers = {seed:1}
     assertIsCloseEveryTime((i)=>p(ev(i/10),i/10,evalParam))
 
     console.log('Eval random tests complete')

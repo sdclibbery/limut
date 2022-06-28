@@ -108,7 +108,7 @@ define(function(require) {
           let hold = number(state)
           let modifiers = parseMap(state)
           let interval = parseInterval(state) || hoistInterval('event', vs, modifiers)
-          result = addModifiers(parseRandom(vs, hold, modifiers, interval), modifiers)
+          result = addModifiers(parseRandom(vs, hold, interval), modifiers)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'n') { // simple noise
           state.idx += 1
