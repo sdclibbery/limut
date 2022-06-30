@@ -866,28 +866,23 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-Fix time modifier implementation
- !Tuples not hoisted from seed
-  Refactor random and noise to allow getting seed in a common way from eval-time modifiers
-   !Still not actually playing the two tuple values!
-   !Make sure evalled seeds work OK
-  Refactor noise to allow getting seed in a common way from eval-time modifiers
-  Tests for seed tuples
-  p ping 0, add=[0,2]r1{seed:(0,10)}
- ?Tuples hoisted from overrides?
- Review docs
-  Write doc section on various syntax constructs:
-   () for chords
-   [] for sequences and indexing (timevars, tuple indexers, map indexer)
-   <> for sequences on repeat (in patterns)
-   {} for supplying extra info (subparams, functions, value modifiers)
-   @ for intervals
+Review docs
+ Write doc section on various syntax constructs:
+  () for chords
+  [] for sequences and indexing (timevars, tuple indexers, map indexer)
+  <> for sequences on repeat (in patterns)
+  {} for supplying extra info (subparams, functions, value modifiers)
+  @ for intervals
+!Make sure evalled seeds work OK
+Refactor noise to allow getting seed in a common way from eval-time modifiers
+?Tuples hoisted from overrides?
 !Multiple louds in pattern dont work? Eg  ph play -^^---, dur=1/4
 !Want `set * amp/=2` to halve the current amplitude even when it's using the default fallback value
 !Readout doesn't work:  p ping 0, foo=[0,1,2,3]t1, add=this.foo \ r readout 0, add=p.add
 !WTF is with pitch{octave:x} rather than using oct: ???
 !Really need a complete audit of time vs count. Need the code to be clear and unambiguous which is which. There will be issues to fix. Look at []e and []e{per}
 !Syntax colouring is case sensitive;eg  `Set` does not get coloured correctly
+Some functions to work with tuples; eg repeat, shuffle etc
 Some sort of matching or booleans would be handy; eg  rel=2+6*(this.value<0)  or maybe  rel=match{this.value,default:2,-7:8}
 Delay etc subparams should support modifying overrides; eg  add=2, delay=(0,{1,add+:2})
  ! The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?

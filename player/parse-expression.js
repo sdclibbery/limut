@@ -1265,6 +1265,10 @@ define(function(require) {
   assert([0,0], evalParamFrame(parseExpression("[0,2]t1{per:(1,2)}"),ev(0,0,1),0))
   assert([0,2], evalParamFrame(parseExpression("[0,2]t1{per:(1,2)}"),ev(0,1,1),1))
 
+  assert(0.8534541970584542, evalParamFrame(parseExpression("[0:1]r{per:1,seed:0}"),ev(0,0,1),0))
+  assert(0.24364092224277556, evalParamFrame(parseExpression("[0:1]r{per:1,seed:10}"),ev(0,0,1),0))
+  assert([0.8534541970584542, 0.24364092224277556], evalParamFrame(parseExpression("[0:1]r{per:1,seed:(0,10)}"),ev(0,0,1),0))
+
   console.log('Parse expression tests complete')
   }
 

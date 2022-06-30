@@ -45,7 +45,10 @@ define((require) => {
     if (!Array.isArray(mods)) {
       result = evalFunction(value, mods, event, beat, evalRecurse)
     } else {
-      result = mods.map(m => evalFunction(value, m, event, beat, evalRecurse))
+      result = mods.map(m => {
+        let e = Object.assign({}, event) // Copy event so things keyed from the event work properly
+        return evalFunction(value, m, e, beat, evalRecurse)
+      })
     }
     return result
   }
