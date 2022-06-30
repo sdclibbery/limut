@@ -1973,3 +1973,29 @@ set p* stutter=[1,1,2,2,4,8]r
 b square .4[.0]....., dur=1/2, oct=(1,2), ring=this.freq/2, chorus, room=1.2, amp=2, lpf=[10,350,10]e, envelope=pad, low=8
 
 
+//floor test
+p ping 0, addc=floor{[0:7]r1/4@f,to:[1,4]r2}
+v readout 0, add=floor{[0:2]r@f,to:[1/8,1]}
+v readout 0, add=floor{[0:2]r@f}
+v readout 0, add=floor{(1,2)}, additive
+p ping 0, addc=floor{(0,4)}
+p ping 0, addc=floor{1/2}
+p ping 0, addc=floor{[0:2]r1/4@f}*4
+p ping 0, addc=[0:2]r1/4@f*4
+
+//time modifier tests
+p ping 0, dur=1/4, add=[0,2,4]r{per:4,seed:[0:100]r16,0:7}
+v readout 0, dur=1/2, add=[1,2,3,4]t1{per:2,1/2:[10:40]l8}
+v readout 0, add=[[1,2,3]t1{per:1},0]t1{per:2}
+v readout 0, add=[0,1]r{per:8,seed:(1,2)}, loc=sparkle, fore=(red,blue)[this.add]
+v readout 0, add=[0,1]t1{per:(1,2)}, loc=sparkle, fore=(red,blue)[this.add]
+p ping 0, add=[0,2]t1{per:(1,2)}
+p ping 0, dur=1/4, add=[0,3]r{per:2,seed:(100,10)}
+p ping 0, dur=1, add=[0,2]r1{per:8,seed:(0,10)}//, amp=1/1000
+v readout 0, add=[0:4]e{per:1/2}
+v readout 0, add=[0,1]t1/4{per:1}@f
+p ping 0., addc=[0:4]e
+p ping 0., addc=[0:4]e{per:1/2}
+p ping 0., addc=[0:4]n1/4{per:1/4}
+
+
