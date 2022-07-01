@@ -201,7 +201,7 @@
     </p>
   </div>
   <div class="widget fixed-top">
-    <button onclick="go()" title="Run the code Ctrl-Enter" class="accordion"></button>
+    <button onclick="go()" title="Run the code Ctrl-Enter">▶</button>
     <button onclick="stop()" title="Stop all players Ctrl-.">◼</button>
     <button onclick="comment()" title="Toggle comment for line Ctrl-/">//</button>
     <button onclick="fullscreen()" title="Toggle fullscreen">⛶</button>
@@ -216,6 +216,7 @@
 <div class="info">
 <h4 onclick="toggleAccordion('accordion-examples')" class="accordion"> Examples</h4>
 <div id="accordion-examples" class="closed">
+  <p>Copy and paste these examples into the editor window, then hit the play ▶ button:</p>
 <pre>d1 play x-o-</pre>
 <pre>p1 dsaw 0534, add=(0,2,4), dur=4</pre>
 <pre>Ba dbass 0, dur=1/4, add=[0:2]r*2, lpf={[3:12]r*100,q:8}, att=0</pre>
@@ -275,6 +276,24 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 </pre>
 <p>More examples: <a href="https://github.com/sdclibbery/limut/blob/master/examples.txt" target="_blank">https://github.com/sdclibbery/limut/blob/master/examples.txt</a></p>
 </div>
+<h4 onclick="toggleAccordion('accordion-glossary')" class="accordion"> Glossary</h4>
+<div id="accordion-glossary" class="closed">
+  <p>Chord: multiple simultaneous events</p>
+  <p>Command: One programming instruction to tell limut what to do</p>
+  <p>Event: One event to be played; either an audio note/sample or a visual display</p>
+  <p>Expression: Code that evaluates to a value</p>
+  <p>Indicator: Visual display on the limut screen to help with composition or production</p>
+  <p>Map: Value containing multiple values indexed by keys</p>
+  <p>Modifier: Additional data thats changes the value of an expression, eg by modifying the current time it sees, or by providing a random seed</p>
+  <p>Subparam: An additional parameter provided extra info on how a param should control the output of a synth</p>
+  <p>Synth: An audio or visual synthesizer that can produce sound output or visual display.</p>
+  <p>Param: A parameter that controls the output produced by a synth</p>
+  <p>Pattern: A sequence defining the notes or control values to be played by a synth</p>
+  <p>Player: An player uses a synth to play a pattern, controlled by params</p>
+  <p>Timevar: An expression whose value varies over time</p>
+  <p>Value: A primitive value to control synths</p>
+  <p>Global Var: A variable; something whose value can be set by a command, and then read in an expression</p>
+</div>
 <h4 onclick="toggleAccordion('accordion-indicators')" class="accordion"> Indicators</h4>
 <div id="accordion-indicators" class="closed">
   <p><b>Level</b> VU meter for current output signal level. Use this to adjust the output level, using either <code>main.amp</code> or the level slider, so it is just touching the red at its loudest.</p>
@@ -282,6 +301,14 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
   <p><b>Audio</b> Audio lag; green when the browser audio system is keeping up; turns red when the system is struggling, which may lead to audio glitching</p>
   <p><b>Visual</b> Visual lag; green when the framerate is keeping up to 60 fps; turns red when the system is struggling, which may lead to visual glitching</p>
   <p><b>Limiter</b> Audio limiter: turns red when the internal Limut limiter is active, implying the combined audio sources are too loud. Note this limiter is before the <code>main.amp</code> control and vu meter, it makes sure the levels from individual synths do not go so loud as to distort. So if it is lighting up, lower the <code>amp</code> on individual synths, and if necessary, raise the <code>main.amp</code> level to compensate.</p>
+</div>
+<h4 onclick="toggleAccordion('accordion-syntax-principles')" class="accordion"> Syntax Principles</h4>
+<div id="accordion-syntax-principles" class="closed">
+  <p><code>()</code> Round brackets define chords in both patterns and expressions; that is, mutltiple events played at the same time. Chord indexers and aggregators can be used to extract various elements from chords.</p>
+  <p><code>[]</code> Square brackets define sequences in both patterns and expressions; that is, multiple events one after another (timevars). They are also used for indexing into chords and maps</p>
+  <p><code>&lt;&gt;</code> Angle brackets define higher level sequences in patterns; that is, a sequence where the next event is selected when the entire pattern repeats next.</p>
+  <p><code>{}</code> Curly brackets in an expression supply extra information to a param (subparams), value (modifiers) or function call (arguments)</p>
+  <p><code>@</code> Defines the interval for an expression; that is, how often the expression should be evaluated within the event</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-basic-syntax')" class="accordion"> Basic Syntax</h4>
 <div id="accordion-basic-syntax" class="closed">
@@ -342,12 +369,12 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>value</code> Actual value (which may include subparameters); see below</p>
 <p><code>{modifiers}</code> Map of modifiers. Modifiers may modify the time passed to the value expression, or the value it returns, or provide additional data for a parameter. For example, <code>[1,2,3]t1{0:0,per:8}</code> will give a sequence that repeats every 8 beats, forced to the value 0 at the start of each repeat. In other words, the repeating sequence: 0,2,3,1,2,3,1,2. See "Modifiers" below.</p>
 <p><code>@interval</code> Intervals specify how often the value should be evaluated, for example once per event (then the same value through the event), or continuously varying. See "Intervals" below.</p>
-<p><code>[indexing]</code> Lookup within tuples (chords) or maps. Tuples are groups of multiple values. Use indexing to extract specific values from them; see "Tuple indexers" below. Maps are dictionary maps containing multiple values. Use indexing to extract an individual value; see "Map lookup" below.</p>
+<p><code>[indexing]</code> Lookup within chords (chords) or maps. chords are groups of multiple values. Use indexing to extract specific values from them; see "chord indexers" below. Maps are dictionary maps containing multiple values. Use indexing to extract an individual value; see "Map lookup" below.</p>
 <h5>Values:</h5>
 <p><code>1</code> Single, constant value</p>
 <p><code>1#</code> <code>1b</code> For use with the audio <code>add</code> param, sharpen or flatten the value. This is parsed into <code>{1,#:1}</code> or <code>{1,b:1}</code></p>
 <p><code></code> No value: for a param, missing a value is the same as setting the param to <code>1</code>. Eg <code>monochrome</code> is the same as <code>monochrome=1</code></p>
-<p><code>(1,2)</code> A 'tuple' or chord. Multiple values, all played together</p>
+<p><code>(1,2)</code> A 'chord' or chord. Multiple values, all played together</p>
 <p><code>[1,2]</code> Sequence of values, one per event in the pattern; for single length patterns only, all values will be expanded, so <code>p ping 0, add=[0,1,2]</code> will cycle through all three values.</p>
 <p><code>[1,2]t3</code> Timed sequence, each value lasts for 3 beats</p>
 <p><code>[1,2]t[12,4]</code> Timed sequence with one timing per value. At present the timings must be const numbers, they cannot be expressions.</p>
@@ -388,9 +415,9 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>'abc'</code> String value</p>
 <p><code>foo</code> Lookup a global var named <code>foo</code>.</p>
 <p><code>foo{x:2}</code> Lookup a global var named <code>foo</code>, and call it as a function passing in named parameters.</p>
-<p><code>p1.amp</code> Lookup the value of param <code>amp</code> from player <code>p1</code>. Returns a tuple of values from all currently playing events; use tuple indexing to select a single value.</p>
-<p><code>p1.amp[0]</code> Lookup the value of param <code>amp</code> from player <code>p1</code>, and if it contains a tuple, extract the first element only from it.</p>
-<p><code>p1.pulse[max]</code> Lookup the value of the <code>pulse</code> from player <code>p1</code>, and if it contains a tuple, extract the largest element only from it (see 'tuple indexing' below). The pulse param gives a smoothed approximate envelope shaped value between 0 and 1 for each event.</p>
+<p><code>p1.amp</code> Lookup the value of param <code>amp</code> from player <code>p1</code>. Returns a chord of values from all currently playing events; use chord indexing to select a single value.</p>
+<p><code>p1.amp[0]</code> Lookup the value of param <code>amp</code> from player <code>p1</code>, and if it contains a chord, extract the first element only from it.</p>
+<p><code>p1.pulse[max]</code> Lookup the value of the <code>pulse</code> from player <code>p1</code>, and if it contains a chord, extract the largest element only from it (see 'chord indexing' below). The pulse param gives a smoothed approximate envelope shaped value between 0 and 1 for each event.</p>
 <p><code>this.value</code> Get param <code>value</code> from the current event, which contains the value specified by the pattern.</p>
 <h5>Modifiers:</h5>
 <p><code>{per:8}</code> Repeat a sequence <code>[1,2,3]t1{per:8}</code> will give a sequence that repeats every 8 beats.</p>
@@ -398,19 +425,19 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <h5>Intervals:</h5>
 <p><code>@e</code> Use <code>@e</code> to evaluate this value once per event</p>
 <p><code>@f</code> Use <code>@f</code> to evaluate once per frame (60 times a second). For example <code>lpf=[300:3000]l8@f</code> will update the lpf cutoff frequency continuously, while <code>lpf=[300:3000]l8</code> will be evaluated only once for each event played.</p>
-<h5>Tuple indexers:</h5>
-<p><code>(3,1,2)[0]</code> Returns the nth element in a tuple (3 in the example)</p>
-<p><code>(3,1,2)[3]</code> Returns the nth element in a tuple, wrapping around (3 in the example)</p>
-<p><code>(3,1,2)[0,2]</code> Returns multiple elements in a tuple ([3,2] in the example)</p>
-<p><code>(3,1,2)[0:2]</code> Returns a range of elements in a tuple ([3,1,2] in the example)</p>
-<p><code>(3,1,2)[first]</code> Returns the first element in a tuple (3 in the example)</p>
-<p><code>(3,1,2)[last]</code> Returns the last element in a tuple (2 in the example)</p>
-<p><code>(3,1,2)[rand]</code> Returns a random element from a tuple</p>
-<p><code>(3,1,2)[min]</code> Returns the smallest element in a tuple (1 in the example)</p>
-<p><code>(3,1,2)[max]</code> Returns the largest element in a tuple (3 in the example)</p>
-<p><code>(3,1,2)[count]</code> Returns the number of elements in a tuple (3 in the example)</p>
-<p><code>(3,1,2)[sum]</code> Returns the sum of all elements in a tuple (6 in the example)</p>
-<p><code>(3,1,2)[avg]</code> Returns the mean average of all elements in a tuple (2 in the example)</p>
+<h5>chord indexers:</h5>
+<p><code>(3,1,2)[0]</code> Returns the nth element in a chord (3 in the example)</p>
+<p><code>(3,1,2)[3]</code> Returns the nth element in a chord, wrapping around (3 in the example)</p>
+<p><code>(3,1,2)[0,2]</code> Returns multiple elements in a chord ([3,2] in the example)</p>
+<p><code>(3,1,2)[0:2]</code> Returns a range of elements in a chord ([3,1,2] in the example)</p>
+<p><code>(3,1,2)[first]</code> Returns the first element in a chord (3 in the example)</p>
+<p><code>(3,1,2)[last]</code> Returns the last element in a chord (2 in the example)</p>
+<p><code>(3,1,2)[rand]</code> Returns a random element from a chord</p>
+<p><code>(3,1,2)[min]</code> Returns the smallest element in a chord (1 in the example)</p>
+<p><code>(3,1,2)[max]</code> Returns the largest element in a chord (3 in the example)</p>
+<p><code>(3,1,2)[count]</code> Returns the number of elements in a chord (3 in the example)</p>
+<p><code>(3,1,2)[sum]</code> Returns the sum of all elements in a chord (6 in the example)</p>
+<p><code>(3,1,2)[avg]</code> Returns the mean average of all elements in a chord (2 in the example)</p>
 <h5>Map lookup:</h5>
 <p><code>{foo:2}['foo']</code> Returns a field in a map (returns 2 in this example)</p>
 </div>
@@ -471,7 +498,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <div id="accordion-event-params" class="closed">
 <p><code>dur</code> Event time in beats</p>
 <p><code>delay</code> Event start time offset in beats</p>
-<p class='sub'><code>delay={1/2,add:2}</code> subparams on delay will be used to override the event values. In the example given, the <code>add</code> param of the delayed event will be set to 2, but any params can be overridden this way. This is most useful with tuples of delay values, as it allows individual delayed events to change their properties.</p>
+<p class='sub'><code>delay={1/2,add:2}</code> subparams on delay will be used to override the event values. In the example given, the <code>add</code> param of the delayed event will be set to 2, but any params can be overridden this way. This is most useful with chords of delay values, as it allows individual delayed events to change their properties.</p>
 <p><code>stutter</code> Split each event into multiple events spaced evenly within the same time period. Eg with <code>stutter=2</code>, an event starting at time 0 with a duration of 1 will be split into two events of duration 1/2, starting at 0 and 1/2. Stutter of 0 or 1 has no effect and is the default. Stutter is rounded down to the nearest integer value.</p>
 <p><code>swing</code> Amount to swing alternating 1/4 beats, as a Linn LM-1 style percentage from <code>50</code> (no swing) to <code>66</code> (perfect triplet swing) to <code>75</code> (maximum dotted note swing). You can set swing for all players at once using (eg) <code>set * swing=60</code></p>
 <p><code>amp</code> Player amplitude control</p>
@@ -658,14 +685,14 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <h4 onclick="toggleAccordion('accordion-functions')" class="accordion"> Functions</h4>
 <div id="accordion-functions" class="closed">
 <p><code>pitch{degree:1,sharp:1,octave:3,scale:minor}</code> Calculate a frequency in Hz for a scale degree on an octave, with possible sharpening/flattening.</p>
-<p><code>first{1,2,3}</code> Returns the first element in a tuple (1 in the example)</p>
-<p><code>last{1,2,3}</code> Returns the last element in a tuple (3 in the example)</p>
-<p><code>rand{1,2,3}</code> Returns a random element from a tuple</p>
-<p><code>min{1,2,3}</code> Returns the smallest element in a tuple (1 in the example)</p>
-<p><code>max{1,2,3}</code> Returns the largest element in a tuple (3 in the example)</p>
-<p><code>count{1,2,3}</code> Returns the number of elements in a tuple (3 in the example)</p>
-<p><code>sum{1,2,3}</code> Returns the sum of all elements in a tuple (6 in the example)</p>
-<p><code>avg{1,2,3}</code> Returns the mean average of all elements in a tuple (2 in the example)</p>
+<p><code>first{1,2,3}</code> Returns the first element in a chord (1 in the example)</p>
+<p><code>last{1,2,3}</code> Returns the last element in a chord (3 in the example)</p>
+<p><code>rand{1,2,3}</code> Returns a random element from a chord</p>
+<p><code>min{1,2,3}</code> Returns the smallest element in a chord (1 in the example)</p>
+<p><code>max{1,2,3}</code> Returns the largest element in a chord (3 in the example)</p>
+<p><code>count{1,2,3}</code> Returns the number of elements in a chord (3 in the example)</p>
+<p><code>sum{1,2,3}</code> Returns the sum of all elements in a chord (6 in the example)</p>
+<p><code>avg{1,2,3}</code> Returns the mean average of all elements in a chord (2 in the example)</p>
 <p><code>floor{1.5}</code> Returns the rounded down value (returns 1 in the example)</p>
 <p class='sub'><code>floor{1.7,to:1/2}</code> Precision to round to, so the example rounds 1.7 down to the nearest 1/2, which is 1.5. Defaults to 1, which rounds down to the nearest integer below.</p>
 <p><code>ceil{1.5}</code> Returns the rounded up value (returns 2 in the example)</p>
@@ -866,23 +893,16 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-Review docs
- Write doc section on various syntax constructs:
-  () for chords
-  [] for sequences and indexing (timevars, tuple indexers, map indexer)
-  <> for sequences on repeat (in patterns)
-  {} for supplying extra info (subparams, functions, value modifiers)
-  @ for intervals
 !Make sure evalled seeds work OK
 Refactor noise to allow getting seed in a common way from eval-time modifiers
-?Tuples hoisted from overrides?
+?chords hoisted from overrides?
 !Multiple louds in pattern dont work? Eg  ph play -^^---, dur=1/4
 !Want `set * amp/=2` to halve the current amplitude even when it's using the default fallback value
 !Readout doesn't work:  p ping 0, foo=[0,1,2,3]t1, add=this.foo \ r readout 0, add=p.add
 !WTF is with pitch{octave:x} rather than using oct: ???
 !Really need a complete audit of time vs count. Need the code to be clear and unambiguous which is which. There will be issues to fix. Look at []e and []e{per}
 !Syntax colouring is case sensitive;eg  `Set` does not get coloured correctly
-Some functions to work with tuples; eg repeat, shuffle etc
+Some functions to work with chords; eg repeat, shuffle etc
 Some sort of matching or booleans would be handy; eg  rel=2+6*(this.value<0)  or maybe  rel=match{this.value,default:2,-7:8}
 Delay etc subparams should support modifying overrides; eg  add=2, delay=(0,{1,add+:2})
  ! The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
@@ -892,7 +912,7 @@ Delay etc subparams should support modifying overrides; eg  add=2, delay=(0,{1,a
 Modifier or function that smooths the value over time, separate attack and decay rates if possible
 !pattern "(01)": idx should be 0 for both events, surely?
  event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
-Map lookup operator; interchangeable in syntax location with tuple indexer
+Map lookup operator; interchangeable in syntax location with chord indexer
  eg  {foo:2}.foo ==2
  must allow eg  ({a:1},{a:2})[1].a ==2
  also {a:{foo:1},b:{foo:2}}.b.foo ==2
@@ -914,7 +934,7 @@ floor function:  delay=floor{[]r,to:1/4}  or  add=floor{[0:7]r,to:2}
 Should really reset vars on code update; eg set var, then comment out, and it still applies...
 Follow player refactor
  !currently follow player fails on complex durations; eg:  ds dsaw 0[23]4_, dur=[1]  \  vds glow follow ds
- Better follow tests - Proper tests for follow and overrides and combinations, including tuples
+ Better follow tests - Proper tests for follow and overrides and combinations, including chords
  Use stored events with a dependency
  Things to test:
   randoms (per event only)
@@ -925,11 +945,11 @@ Follow player refactor
     v8 glow follow p1, loc=sparkle
   delays
  Clean up any unnecessary gumpf around getEventsForBeatBase etc
-For player.pulse, can we make sure the order within the tuple is consistent?
- Eg so the most recent events are first in the tuple in case of event overlap?
+For player.pulse, can we make sure the order within the chord is consistent?
+ Eg so the most recent events are first in the chord in case of event overlap?
  Also does pulse cutoff too early ignoring release time?
-??Special param on every event that is its index in a tuple
- Eg then can target values to a specific instance from a tuple:
+??Special param on every event that is its index in a chord
+ Eg then can target values to a specific instance from a chord:
  p dsaw 0, add=(0,2), sus=(2,1/2)[this.index]
 Allow overriding subparams; eg  set p lpf.q=20  or  set p room.mix*=2
  Actually, can already modify subparams; just can't replace; eg: lpf+={q:10}
@@ -952,7 +972,7 @@ Fullscreen not working on safari
  In which case, rewrite it as the main random, but then smoothed
 Complex durs
  overrides - need to apply overrides earlier? Should apply to delay overrides too
- tuples
+ chords
  var lookup (& player var lookup)
 Ignore rests . when setting event.idx (so that `0.1., amp=[1/2,1]` does as expected) - is that expected? It wouldnt be for dur..?
 multiline command fix: // should only comment out that one line
@@ -963,7 +983,7 @@ multiline command fix: // should only comment out that one line
 "by next 16 set bass amp=0" - lerps to the new value - but how not to repeat this if rerun?
 Need an additional eval interval; eg @i for 'per instance', so for each individual 'note' instance (each call to play)
  Useful for providing variation between (1,2,3,4) multiplied out sub-events without having to go full-on per frame, expecially for eg []r
- ? Isn't that what @e should be? And then we could have @t for 'eval once for all tuple values'
+ ? Isn't that what @e should be? And then we could have @t for 'eval once for all chord values'
 Presets? Allow to define new synths; eg 'preset mysaw saw, att=0.02, lpf=this.freq*[5,3,2,1,1/2]e' then use mysaw as a synth
  Presets should be able to include additional follow synths
 Better syntax highlighting for {} brackets; maybe bracket match highlighting??
