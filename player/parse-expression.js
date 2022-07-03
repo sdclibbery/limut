@@ -1269,6 +1269,10 @@ define(function(require) {
   assert(0.24364092224277556, evalParamFrame(parseExpression("[0:1]r{per:1,seed:10}"),ev(0,0,1),0))
   assert([0.8534541970584542, 0.24364092224277556], evalParamFrame(parseExpression("[0:1]r{per:1,seed:(0,10)}"),ev(0,0,1),0))
 
+  assert(0.1989616905192142, evalParamFrame(parseExpression("[0:1]n{per:2,seed:0}"),ev(0,1,1),1))
+  assert(0.31159096606000625, evalParamFrame(parseExpression("[0:1]n{per:2,seed:10}"),ev(0,1,1),1))
+  assert([0.1989616905192142, 0.31159096606000625], evalParamFrame(parseExpression("[0:1]n{per:2,seed:(0,10)}"),ev(0,1,1),1))
+
   console.log('Parse expression tests complete')
   }
 

@@ -1997,5 +1997,11 @@ v readout 0, add=[0,1]t1/4{per:1}@f
 p ping 0., addc=[0:4]e
 p ping 0., addc=[0:4]e{per:1/2}
 p ping 0., addc=[0:4]n1/4{per:1/4}
+p ping 0, dur=1/4, add=[0:3]n{per:2,seed:10}
+p ping 0, dur=1/4, add=[0:3]n{per:2,seed:100}
+p ping 0, dur=1/4, add=[0:3]n{per:2,seed:[10,(10,100)]t8}
+p ping 0, dur=1/4, add=[0,3]r{per:2,seed:10}
+p ping 0, dur=1/4, add=[0,3]r{per:2,seed:100}
+p ping 0, dur=1/4, add=[0,3]r{per:2,seed:[10,(10,100)]t8}
 
 

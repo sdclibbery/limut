@@ -101,20 +101,12 @@ define(function(require) {
     return r
   }
   let simpleNoise = (vs, period, modifiers, interval) => {
-    let ps = Math.random()*10000
-    let generator = (e,b,evalRecurse) => {
-      return b + ps
-    }
-    if (modifiers && modifiers.seed !== undefined) {
-      generator = (e,b,evalRecurse) => {
-        let seed = evalRecurse((e,b) => {
-          return evalParamFrame(modifiers.seed,e,b)
-        }, e,b)
-        return b + seed
+    let seed = Math.random()*10000
+    return (e,b, evalRecurse, modifiers) => {
+      if (modifiers && modifiers.seed !== undefined) {
+        seed = modifiers.seed
       }
-    }
-    return (e,b, evalRecurse) => {
-      let value = generator(e,b,evalRecurse)
+      let value = b + seed
       let result = (
           bnoise(value*1/period)*2
           +(1-bnoise(value*2.3/period))*1
@@ -260,7 +252,8 @@ define(function(require) {
     assertIsInRangeEveryTime(3,5, () => evalParam(p,ev(0),0))
 
     // Same sequence every time when seeded
-    p = simpleNoise([], 1, {seed:1})
+    p = simpleNoise([], 1)
+    p.modifiers = {seed:1}
     assert(0.1989616905192142, evalParam(p,ev(0),0))
     assert(0.503624927728974, evalParam(p,ev(1/4),1/4))
     assert(0.3226893881270972, evalParam(p,ev(1),1))
