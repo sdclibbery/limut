@@ -15,6 +15,8 @@ define(function(require) {
     })
   }
 
+  let def = (x,d) => x === undefined ? d : x
+
   let step = (state) => {
     let events = []
     let dur = state.dur
@@ -96,19 +98,19 @@ define(function(require) {
       while (!done) {
         let nextChar = state.str.charAt(state.idx)
         switch (nextChar) {
-          case '#': sharp = 1;   break;
-          case 'b': sharp = -1;  break;
-          case '^': loud = 1.5;  break;
-          case 'v': loud = 0.5;  break;
-          case '=': long = 2;    break;
-          case '!': long = 0.5;  break;
+          case '#': sharp = def(sharp,0) + 1;   break;
+          case 'b': sharp = def(sharp,0) - 1;  break;
+          case '^': loud = def(loud,1) * 1.5;  break;
+          case 'v': loud = def(loud,1) * 0.5;  break;
+          case '=': long = def(long,1) * 2;    break;
+          case '!': long = def(long,1) * 0.5;  break;
           default : done = true; break;
         }
         if (!done) { state.idx += 1 }
       }
     } else {
       if (state.str.charAt(state.idx) == '^') { // Loud modifier works for non numeric pattern chars too
-        loud = 1.5
+        loud = def(loud,1) * 1.5
         state.idx += 1
       }
     }
@@ -528,6 +530,8 @@ define(function(require) {
   assertPattern(1, [{value:0,_time:0,dur:1,long:2}], parsePattern('(0=)'))
 
   assert({value:0,_time:0,dur:1,long:0.5}, parsePattern('0!').events[0])
+
+  assert({value:0,_time:0,dur:1,long:0.25}, parsePattern('0!!').events[0])
 
   p = parsePattern('0#^=')
   assert(1, p.length)
