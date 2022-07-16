@@ -783,9 +783,10 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
+portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-notes/legato-synths-glide-slide-portamento/
 808 synth based on https://github.com/vincentriemer/io-808
  Actually, split into multiple custom pitched percussion synths
-portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-notes/legato-synths-glide-slide-portamento/
+Stereo widener effect: https://www.soundonsound.com/techniques/classic-stereo-widening
 Add some more waveforms  https://github.com/GoogleChromeLabs/web-audio-samples/tree/main/archive/demos/wave-tables
 ?Maybe define an effects bus, and then the params can be changed per frame; 'bus' param on players to route audio to an effect bus
 Allow adding filters in the room/echo loops eg echo=3/4{lpf:523} - but dont use existing filter handlers as must be per event only!
@@ -893,16 +894,20 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-!Readout doesn't work:  p ping 0, foo=[0,1,2,3]t1, add=this.foo \ r readout 0, add=p.add
 !Trying to shut off a visual synth based on another player using  amp=p.playing[0]  doesn't work
-!WTF is with pitch{octave:x} rather than using oct: ???
-!Syntax colouring is case sensitive;eg  `Set` does not get coloured correctly
+For breakbeats, need a param to switch the pattern step used for an event
 Want `set * amp/=2` to halve the current amplitude even when it's using the default fallback value ??It DOES work already??
+ When wouldn't it work?  sus+=1/4  ?
 Ability to check if a player exists, even if its only playing a rest at the moment; eg  v glow 0, amp=pk.exists
+!Readout doesn't work here:  p ping 0, foo=[0,1,2,3]t1, add=this.foo \ r readout 0, add=p.add
+ It's specifically the this.foo that makes it fail
+!WTF is with pitch{octave:x} rather than using oct: ???
+!add=(0,2,4,6)[rand]{per:2,seed:0} doesn't work; rand chord indexer needs to respect time modifiers and seed etc
 !Really need a complete audit of time vs count. Need the code to be clear and unambiguous which is which. There will be issues to fix. Look at []e and []e{per}
 !pattern "(01)": idx should be 0 for both events, surely?
-For breakbeats, need a param to switch the pattern step used for an event
+!Syntax colouring is case sensitive;eg  `Set` does not get coloured correctly
 Some functions to work with chords; eg repeat, shuffle etc
+ Also operator to concatenate to a tuple; eg  b dbass 0, delay=(0,1/2) \ set b delay|=(1,2)
 Some sort of matching or booleans would be handy; eg  rel=2+6*(this.value<0)  or maybe  rel=match{this.value,default:2,-7:8}
 Delay etc subparams should support modifying overrides; eg  add=2, delay=(0,{1,add+:2})
  The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
