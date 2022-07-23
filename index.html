@@ -896,6 +896,8 @@ shadertoy synth multiple channels
 ==== other ====
 !Trying to shut off a visual synth based on another player using  amp=p.playing[0]  doesn't work
 For breakbeats, need a param to switch the pattern step used for an event
+ This seems tricky with a param, as we don't even know what the params are until the pattern is evalled
+ Will have to be a pattern syntax instead...
 Want `set * amp/=2` to halve the current amplitude even when it's using the default fallback value ??It DOES work already??
  When wouldn't it work?  sus+=1/4  ?
 Ability to check if a player exists, even if its only playing a rest at the moment; eg  v glow 0, amp=pk.exists

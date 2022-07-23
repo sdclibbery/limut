@@ -153,7 +153,6 @@ let verts = (loc, window) => {
     let window = evalMainParamEvent(params, 'window', false)
     let fade = evalMainParamEvent(params, 'fade', defParams.fade || 0)
     let recol = evalMainParamEvent(params, 'recol', 0)
-    let contrast = evalMainParamEvent(params, 'contrast', 0)
     return state => { // per frame
       if (state.time > endTime) { return false }
       let shaderTime = evalMainParamFrame(params, 'time', null, state.count)
@@ -183,6 +182,7 @@ let verts = (loc, window) => {
       let zoom = vec(evalParam.evalParamFrame(params.zoom, params, state.count), defZoom, 'zoom')
       let perspective = evalMainParamFrame(params, 'perspective', 0, state.count)
       let tunnel = evalMainParamFrame(params, 'tunnel', 0, state.count)
+      let contrast = evalMainParamFrame(params, 'contrast', 0, state.count)
       let ripple = ca('ripple',
         evalMainParamFrame(params, 'ripple', 0, state.count),
         evalSubParamFrame(params, 'ripple', 'scale', 1, state.count),
