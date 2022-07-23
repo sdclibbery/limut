@@ -894,12 +894,15 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-For breakbeats, need a param to switch the pattern step used for an event
- This seems tricky with a param, as we don't even know what the params are until the pattern is evalled
- Will have to be a pattern syntax instead...
+More standard Player params
+ .exists - 1 if player exists at all
+ .playing - 1 whenever its not playing a rest
 Want `set * amp/=2` to halve the current amplitude even when it's using the default fallback value ??It DOES work already??
  When wouldn't it work?  sus+=1/4  ?
 Ability to check if a player exists, even if its only playing a rest at the moment; eg  v glow 0, amp=pk.exists
+For breakbeats, need a param to switch the pattern step used for an event
+ This seems tricky with a param, as we don't even know what the params are until the pattern is evalled
+ Will have to be a pattern syntax instead...
 !Readout doesn't work here:  p ping 0, foo=[0,1,2,3]t1, add=this.foo \ r readout 0, add=p.add
  It's specifically the this.foo that makes it fail
 !WTF is with pitch{octave:x} rather than using oct: ???
