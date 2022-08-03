@@ -57,6 +57,18 @@ define(function (require) {
     }
   }
 
+  let rampAudioParamValue = (audioParam, v, p, mod) => {
+    try {
+      if (v !== undefined) {
+        if (typeof mod === 'function') { v = mod(v) }
+        audioParam.linearRampToValueAtTime(v, system.timeNow()+2/60)
+      }
+    } catch (e) {
+      console.log(audioParam, e)
+      throw `Failed setting audio param ${p} to ${v}`
+    }
+  }
+
   let evalMainParamFrame = (audioParam, params, p, def, mod) => {
     let v = mainParam(params[p], def)
     if (typeof v == 'number') {
@@ -67,7 +79,7 @@ define(function (require) {
       setAudioParamValue(audioParam, evalMainPerFrame(params, p, def, params.count), p, mod) // set now
       system.add(params._time, state => { // per frame update
         if (state.time > params.endTime) { return false }
-        setAudioParamValue(audioParam, evalMainPerFrame(params, p, def, state.count), p, mod)
+        rampAudioParamValue(audioParam, evalMainPerFrame(params, p, def, state.count), p, mod)
         return true
       })
     }
@@ -133,7 +145,7 @@ define(function (require) {
       let called = false
       let valueSet = undefined
       system.add = () => called=true
-      let ap = {setValueAtTime:(v) => valueSet=v}
+      let ap = {linearRampToValueAtTime:(v) => valueSet=v,setValueAtTime:(v) => valueSet=v}
       test(ap, mod)
       assert(expectedSystemAddCalled, called)
       assert(expected, valueSet)

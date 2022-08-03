@@ -2066,3 +2066,26 @@ p prophet 0[1!!...], dur=4, oct=2, room=1/8, echo=1/8, flanger=1/7, att=0.01, su
 // set p* rate=[1/2:1]t1, fold=[]r, stutter=[1,2]r, delay=(0,4/4)
 
 
+set  bpm=122
+set * swing=54
+set main.amp=1.1
+set scale=mixolydian
+vb bits 9, perspective=1, fore=#234f, rate=1/4
+vl lines 9, scroll=2/3, time=time/8+(1,2,3,4)/3, blend=max, fore=#1810ffff, pulse=1/2
+p play x., amp=2.5, sus=1/5
+ph play --.--.-:, dur=1/4, pan=-1/2
+pk play .k..k.K., stutter=[1,2]t[6,2], amp=3/4, pan=1/2
+pr play mxMxm, delay=[0,1/4], rate=[1,3/2]t4, pan=[-1/4,1/4]r, amp=1/2-p.pulse[0]@e/2, chorus
+pc play ..*., echo=[0,1/2]t[14,2]
+d xylo -3, amp=2, delay=1/2+[0,1,0,0]/4
+a1 ambi (0268), amp=1/6, wave=tri, addc=[33/8,7/3,45/7,0]t8, room=2, chorus, pan=[-1/2:1/2]r
+a2 ambi 0, amp=1/2, wave=tri, addc=[33/8,7/3,45/7,0]t8, room=2, chorus
+g glass 0541321<[78]3>, room={2,mix:1/3}, amp=2/3, addc=wow, amp=2/3, pan=-1/3
+gl glass 03578[___9]4_, dur=4, rel=2, envelope=simple, room=2, oct=[5,6]t32, echo=1/4, addc=wow/4, amp=2/3, pan=1/3
+
+
+pm play C, lpf=[10:10000]s1/16@f
+pm play C, amp=[0:1]s1/16@f
+ps play +, stutter=2, swing=58
+
+
