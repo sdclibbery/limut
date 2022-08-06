@@ -2090,5 +2090,6 @@ ps play +, stutter=2, swing=58
 
 
 v webcam 0, pixellate={x:10,y:40}
-
+v glow 0, dur=1/8, sus=2, loc=tile_random*{w:1/4,h:1/4}+firefly
+v glow 0, dur=1/4, sus=2, loc=sparkle+firefly
 
