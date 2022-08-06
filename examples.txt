@@ -2089,3 +2089,6 @@ pm play C, amp=[0:1]s1/16@f
 ps play +, stutter=2, swing=58
 
 
+v webcam 0, pixellate={x:10,y:40}
+
+

@@ -165,7 +165,8 @@ let verts = (loc, window) => {
       let eventTime = ((state.time-startTime)/(endTime-startTime))
       let brightness = 1 - (eventTime*eventTime)*fade
       let monochrome = evalMainParamFrame(params, 'monochrome', 0, state.count)
-      let pixellateX = evalMainParamFrame(params, 'pixellate', 0, state.count)
+      let pixellateX = evalMainParamFrame(params, 'pixellate', 0, state.count) ||
+                        evalSubParamFrame(params, 'pixellate', 'x', 0, state.count)
       let pixellate = ca('pixellate',
         pixellateX,
         evalSubParamFrame(params, 'pixellate', 'y', pixellateX, state.count),
