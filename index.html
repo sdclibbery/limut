@@ -891,6 +891,10 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
+Modifier or function that smooths the value over time, separate attack and decay rates if possible
+ event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
+ AND one to accumulate a value over time; eg time=accumulate{p.pulse[min]}
+  this would maintain a counter, and every frame, add the 1/60th of value in the argument to the counter
 More standard Player params
  .exists - 1 if player exists at all
  .playing - 1 whenever its not playing a rest
@@ -915,8 +919,6 @@ Delay etc subparams should support modifying overrides; eg  add=2, delay=(0,{1,a
 {offset} to apply an offset to the time counts Eg [0,1,2,3]t4{offset:1} would start from 1 not 0 on beat 0
 {step} to apply stepping to the time counts Eg [0:1]l4{step:1/4} would only change value every 1/4
 ?Should be able to stutter with euclidean patterns??
-Modifier or function that smooths the value over time, separate attack and decay rates if possible
- event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
 Map lookup operator; interchangeable in syntax location with chord indexer
  eg  {foo:2}.foo ==2
  must allow eg  ({a:1},{a:2})[1].a ==2

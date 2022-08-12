@@ -56,7 +56,6 @@ define((require) => {
     event._time += d*beat.duration
     event.count += d
     applyOverridesInPlace(event, dp)
-    applySwing(event, beat)
   }
 
   let expandStutter = (es) => {
@@ -160,8 +159,9 @@ define((require) => {
         player.getEventsForBeat = (beat) => {
           let es = player.getEventsForBeatBase(beat)
           es = expandTuples(es)
-          es = expandStutter(es)
           es.forEach(e => applyDelay(e, beat))
+          es = expandStutter(es)
+          es.forEach(e => applySwing(e, beat))
           return es
         }
         return player
@@ -410,6 +410,15 @@ define((require) => {
   assert([0,3/8,1/2,7/8], es.map(e => e._time))
   assert([0,3/8,1/2,7/8], es.map(e => e.count))
   assert([3/8,1/8,3/8,1/8], es.map(e => e.dur))
+
+  p = parsePlayer('p test 0, delay=({0,stutter:[1,2]})')
+  es = p.getEventsForBeat({time:0, count:0, duration:1})
+  assert(1, es.length)
+  assertEvent(0,0,1, es[0])
+  es = p.getEventsForBeat({time:1, count:1, duration:1})
+  assert(2, es.length)
+  assertEvent(1,1,1/2, es[0])
+  assertEvent(3/2,3/2,1/2, es[1])
 
   console.log('Parse player tests complete')
   }
