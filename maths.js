@@ -21,12 +21,26 @@ define(function(require) {
   createFunc('ceil', roundWrapper(Math.ceil))
   createFunc('round', roundWrapper(Math.round))
 
-  createFunc('accum', (args, e,b, state) => {
-    let dt = b - (state.b || b)
-    state.b = b
-    state.v = (state.v || 0) + (mainParam(args, 0) || 0)*dt
-    return state.v
-  })
+  let statefulWrapper = (fn) => {
+    return (args, e,b, state) => {
+      let dt = b - (state.b || b)
+      state.b = b
+      let target = (mainParam(args, 0) || 0)
+      state.v = fn(args, (state.v || 0), target, dt)
+      return state.v
+    }
+  }
+
+  createFunc('accum', statefulWrapper( (args, v, t, dt) => v + t*dt ))
+  createFunc('smooth', statefulWrapper( (args, v, t, dt) => {
+    if (t > v) {
+      let att = subParam(args, 'att', 8)
+      return v + (t-v)*att*dt
+    } else {
+      let dec = subParam(args, 'dec', 4)
+      return v + (t-v)*dec*dt
+    }
+  }))
 
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
@@ -74,11 +88,34 @@ define(function(require) {
   assert(1, evalParamFrame(p, ev(0,0), 2))
   assert(2, evalParamFrame(p, ev(0,0), 3))
 
+  p = parseExpression('accum{1}')
+  assert(0, evalParamFrame(p, ev(0,0), 1))
+  assert(1/2, evalParamFrame(p, ev(0,0), 1.5))
+  assert(1, evalParamFrame(p, ev(0,0), 2))
+
   p = parseExpression('accum{[1,2]t1@f}')
   assert(0, evalParamFrame(p, ev(0,0), 1))
   assert(1, evalParamFrame(p, ev(0,0), 2))
   assert(3, evalParamFrame(p, ev(0,0), 3))
   assert(4, evalParamFrame(p, ev(0,0), 4))
+
+  p = parseExpression('smooth{1,att:1,dec:0}')
+  assert(0, evalParamFrame(p, ev(0,0), 1))
+  assert(1/2, evalParamFrame(p, ev(0,0), 1.5))
+  assert(3/4, evalParamFrame(p, ev(0,0), 2))
+  assert(1, evalParamFrame(p, ev(0,0), 3))
+
+  p = parseExpression('smooth{1,att:1/2,dec:0}')
+  assert(0, evalParamFrame(p, ev(0,0), 1))
+  assert(1/2, evalParamFrame(p, ev(0,0), 2))
+  assert(3/4, evalParamFrame(p, ev(0,0), 3))
+  assert(7/8, evalParamFrame(p, ev(0,0), 4))
+
+  p = parseExpression('smooth{-1,att:0,dec:1}')
+  assert(0, evalParamFrame(p, ev(0,0), 1))
+  assert(-1/2, evalParamFrame(p, ev(0,0), 1.5))
+  assert(-3/4, evalParamFrame(p, ev(0,0), 2))
+  assert(-1, evalParamFrame(p, ev(0,0), 3))
 
   console.log('Maths tests complete')
   }
