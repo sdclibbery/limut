@@ -21,7 +21,7 @@ define(function(require) {
   createFunc('ceil', roundWrapper(Math.ceil))
   createFunc('round', roundWrapper(Math.round))
 
-  createFunc('accumulate', (args, e,b, state) => {
+  createFunc('accum', (args, e,b, state) => {
     let dt = b - (state.b || b)
     state.b = b
     state.v = (state.v || 0) + (mainParam(args, 0) || 0)*dt
@@ -65,16 +65,16 @@ define(function(require) {
   assert(1/2, evalParamFrame(parseExpression('round{0.4,to:1/2}'), ev(0,0), 0))
   assert(-1.5, evalParamFrame(parseExpression('round{-1.7,to:1/2}'), ev(0,0), 0))
 
-  assert(0, evalParamFrame(parseExpression('accumulate'), ev(0,0), 0))
-  assert(0, evalParamFrame(parseExpression('accumulate{}'), ev(0,0), 0))
-  assert(0, evalParamFrame(parseExpression('accumulate{0}'), ev(0,0), 0))
+  assert(0, evalParamFrame(parseExpression('accum'), ev(0,0), 0))
+  assert(0, evalParamFrame(parseExpression('accum{}'), ev(0,0), 0))
+  assert(0, evalParamFrame(parseExpression('accum{0}'), ev(0,0), 0))
 
-  p = parseExpression('accumulate{1}')
+  p = parseExpression('accum{1}')
   assert(0, evalParamFrame(p, ev(0,0), 1))
   assert(1, evalParamFrame(p, ev(0,0), 2))
   assert(2, evalParamFrame(p, ev(0,0), 3))
 
-  p = parseExpression('accumulate{[1,2]t1@f}')
+  p = parseExpression('accum{[1,2]t1@f}')
   assert(0, evalParamFrame(p, ev(0,0), 1))
   assert(1, evalParamFrame(p, ev(0,0), 2))
   assert(3, evalParamFrame(p, ev(0,0), 3))
