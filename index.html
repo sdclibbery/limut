@@ -891,10 +891,11 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-Modifier or function that smooths the value over time, separate attack and decay rates if possible
- event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
- AND one to accumulate a value over time; eg time=accumulate{p.pulse[min]}
-  this would maintain a counter, and every frame, add the 1/60th of value in the argument to the counter
+Stateful functions
+ smooth{v,attack:1,decay:1} - smooths a changing value over time with an exponential falloff
+ ma{v,window:1} - calculate the moving average of a value over a given time window
+ rate{v} - repoert the rate of change of a value in units per beat
+!event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
 More standard Player params
  .exists - 1 if player exists at all
  .playing - 1 whenever its not playing a rest

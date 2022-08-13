@@ -36,6 +36,7 @@ define(function(require) {
     if (playerId && param) {
       dependsOn.push(playerId)
     }
+    let state = {}
     let result = (event,b, evalRecurse, modifiers) => {
       let v
       if (param) {
@@ -52,7 +53,7 @@ define(function(require) {
           v = vars[key] // ordinary var
         }
       } else if (typeof vars[key] === 'function' && vars[key].isVarFunction) { // Var function
-        v = vars[key](modifiers, event,b)
+        v = vars[key](modifiers, event,b, state)
       } else {
         v = vars[key] // ordinary var
       }

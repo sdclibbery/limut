@@ -2113,3 +2113,14 @@ v glow 0, stutter=[1,2]
 v glow 0, delay=({0,stutter:[1,2]})
 
 
+pk play xx.xx.x.
+v lines 0, time=accumulate{pk.pulse[min]}*10, contrast
+v2 glow 0, rotate=accumulate{pk.pulse[min]}, rate=0, fade=0
+
+v1 glow 0..., dur=1/4, playing=1, att=0, rel=0
+v2 readout 0, add=accumulate{v1.playing[0]}
+
+vr readout 0, add=accumulate{1/10}
+// set bpm=300
+
+
