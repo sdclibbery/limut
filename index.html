@@ -699,7 +699,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p class='sub'><code>ceil{1.2,to:1/2}</code> Precision to round to, so the example rounds 1.2 up to the nearest 1/2, which is 1.5. Defaults to 1, which rounds up to the nearest integer above.</p>
 <p><code>round{1.5}</code> Returns the rounded value (returns 2 in the example)</p>
 <p class='sub'><code>round{1.7,to:1/2}</code> Precision to round to, so the example rounds 1.7 to the nearest 1/2, which is 1.5. Defaults to 1, which rounds to the nearest integer.</p>
-<p><code>accum{1}</code> Accumulates a value over time. In the example, the result will be 1 after the first beat, 2 after the second etc, 3 after the third etc.</p>
+<p><code>accum{1}</code> Accumulates a value over time. In the example, the result will be 1 after the first beat, 2 after the second etc, 3 after the third etc. Note that negative values are ignored; the accum value will only ever rise over time.</p>
 <p><code>smooth{1}</code> Smooths a value over time. In the example, the result will rise towards 1.</p>
 <p class='sub'><code>smooth{1,att:4}</code> Smoothing attack rate; higher rate means the value will converge to the target faster when the target is above the current value. Default is 8.</p>
 <p class='sub'><code>smooth{1,dec:4}</code> Smoothing decay rate; higher rate means the value will converge to the target faster when the target is below the current value. Default is 4.</p>
