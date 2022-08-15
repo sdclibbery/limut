@@ -895,6 +895,10 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
+More stateful function work
+ !smooth should be capped so it cannot oscillate
+ ? Should accum be up only, and have ?integrate to be the general sum over time?
+ rate{v} - report the rate of change of a value in units per beat
 !event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
 More standard Player params
  .exists - 1 if player exists at all
@@ -996,9 +1000,7 @@ Presets? Allow to define new synths; eg 'preset mysaw saw, att=0.02, lpf=this.fr
  Presets should be able to include additional follow synths
 Better syntax highlighting for {} brackets; maybe bracket match highlighting??
 Weight modifier for random to go with seed
-More stateful functions
- rate{v} - repoert the rate of change of a value in units per beat
- ma{v,window:1} - calculate the moving average of a value over a given time window
+ma{v,window:1} - calculate the moving average of a value over a given time window
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 Can set swing timescale with a subparam: swing={60,on:1/2}
 ? rl, rt (==r), rs (==n); el (==e), es, et ?

@@ -35,10 +35,10 @@ define(function(require) {
   createFunc('smooth', statefulWrapper( (args, v, t, dt) => {
     if (t > v) {
       let att = subParam(args, 'att', 8)
-      return v + (t-v)*att*dt
+      return Math.min(v + (t-v)*att*dt, t)
     } else {
       let dec = subParam(args, 'dec', 4)
-      return v + (t-v)*dec*dt
+      return Math.max(v + (t-v)*dec*dt, t)
     }
   }))
 
@@ -105,6 +105,10 @@ define(function(require) {
   assert(3/4, evalParamFrame(p, ev(0,0), 2))
   assert(1, evalParamFrame(p, ev(0,0), 3))
 
+  p = parseExpression('smooth{1,att:1,dec:0}')
+  assert(0, evalParamFrame(p, ev(0,0), 1))
+  assert(1, evalParamFrame(p, ev(0,0), 11))
+
   p = parseExpression('smooth{1,att:1/2,dec:0}')
   assert(0, evalParamFrame(p, ev(0,0), 1))
   assert(1/2, evalParamFrame(p, ev(0,0), 2))
@@ -116,6 +120,10 @@ define(function(require) {
   assert(-1/2, evalParamFrame(p, ev(0,0), 1.5))
   assert(-3/4, evalParamFrame(p, ev(0,0), 2))
   assert(-1, evalParamFrame(p, ev(0,0), 3))
+
+  p = parseExpression('smooth{-1,att:0,dec:1}')
+  assert(0, evalParamFrame(p, ev(0,0), 1))
+  assert(-1, evalParamFrame(p, ev(0,0), 11))
 
   console.log('Maths tests complete')
   }
