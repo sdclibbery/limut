@@ -32,15 +32,23 @@ define(function(require) {
   }
 
   createFunc('accum', statefulWrapper( (args, v, x, dt) => v + Math.max(x,0)*dt ))
-  createFunc('smooth', statefulWrapper( (args, v, t, dt) => {
-    if (t > v) {
+  createFunc('smooth', statefulWrapper( (args, v, x, dt) => {
+    if (x > v) {
       let att = subParam(args, 'att', 8)
-      return Math.min(v + (t-v)*att*dt, t)
+      return Math.min(v + (x-v)*att*dt, x)
     } else {
       let dec = subParam(args, 'dec', 4)
-      return Math.max(v + (t-v)*dec*dt, t)
+      return Math.max(v + (x-v)*dec*dt, x)
     }
   }))
+  createFunc('rate', (args, e,b, state) => {
+    let dt = b - (state.b || b)
+    state.b = b
+    let x = (mainParam(args, 0) || 0)
+    let rate = (x - (state.last || x))/dt
+    state.last = x
+    return rate
+  })
 
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
