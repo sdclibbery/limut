@@ -2123,7 +2123,11 @@ v2 readout 0, add=accum{v1.playing[0]}
 vr readout 0, add=accum{1/10}
 // set bpm=300
 
-pk play x..x..x.
+pk play x..x..x.//, stutter=2
 v lines 0, time=accum{smooth{rate{pk.pulse[min]}}}, contrast
+v lines 0, time=accum{rate{smooth{pk.pulse[min]}}}, contrast
 v2 glow 0, rotate=smooth{rate{pk.pulse[min]}}/64, rate=0, fade=0
+v lines 0, time=accum{rate{pk.pulse[min]}}, contrast
+v2 glow 0, rotate=rate{pk.pulse[min]}/64, rate=0, fade=0
+
 

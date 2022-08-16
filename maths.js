@@ -45,9 +45,10 @@ define(function(require) {
     let dt = b - (state.b || b)
     state.b = b
     let x = (mainParam(args, 0) || 0)
-    let rate = (x - (state.last || x))/dt
+    let last = state.last===undefined ? x : state.last
+    let rate = (x - last)/dt
     state.last = x
-    return rate
+    return rate || 0
   })
 
   // TESTS //
@@ -137,6 +138,11 @@ define(function(require) {
   p = parseExpression('smooth{-1,att:0,dec:1}')
   assert(0, evalParamFrame(p, ev(0,0), 1))
   assert(-1, evalParamFrame(p, ev(0,0), 11))
+
+  p = parseExpression('rate{[0:1]l1@f}')
+  assert(0, evalParamFrame(p, ev(0,0), 1))
+  assert(-1, evalParamFrame(p, ev(0,0), 2))
+  assert(1, evalParamFrame(p, ev(0,0), 3))
 
   console.log('Maths tests complete')
   }
