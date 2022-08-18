@@ -7,11 +7,13 @@ define(function (require) {
   let pitchEffects = require('play/effects/pitch-effects')
   let waveEffects = require('play/effects/wave-effects')
   let {evalMainParamEvent} = require('play/eval-audio-params')
+  let setWave = require('play/synth/waveforms/set-wave')
 
   return (params) => {
     let freq = scale.paramsToFreq(params, 4)
     if (isNaN(freq)) { return }
     let detune = evalMainParamEvent(params, 'detune', 0.1)
+    let wave = evalMainParamEvent(params, "wave", "sawtooth")
 
     let vca = envelope(params, 0.09, 'full')
     let out = effects(params, vca)
@@ -20,7 +22,7 @@ define(function (require) {
     let pitch = pitchEffects(params)
     let vcos = [1.1077, 1.0633, 1.0204, 1, 0.9811, 0.9382, 0.8908].map(vcoDetune => {
       let vco = system.audio.createOscillator()
-      vco.type = 'sawtooth'
+      setWave(vco, wave)
       vco.frequency.value = freq * (detune*vcoDetune + 1-detune)
       pitch.connect(vco.detune)
       return vco
