@@ -788,6 +788,9 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 /*
 ====
 ==== audio ====
+Make noise into a sample not a worklet; the sample should loop; start playback at a random point
+ allow use in FM
+ support use for cymbals etc
 !Cant change wave on supersaw?
 !Should be a mix param on echo!
 Should be able to have the filter follow the note envelope (with scaling)
@@ -795,7 +798,7 @@ portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-n
 808 synth based on https://github.com/vincentriemer/io-808
  Actually, split into multiple custom pitched percussion synths
   ? Do we want the pattern value to be pitch? Or something like velocity?
-Add some more waveforms  https://github.com/GoogleChromeLabs/web-audio-samples/tree/main/archive/demos/wave-tables
+Add some more waveforms  https://github.com/GoogleChromeLabs/web-audio-samples/tree/main/src/demos/wavetable-synth/wave-tables
 Allow adding filters in the room/echo loops eg echo=3/4{lpf:523} - but dont use existing filter handlers as must be per event only!
  Pitch shift up an octave to give shimmer reverb (pitch shifter: https://tonejs.github.io/docs/14.7.77/PitchShift.html)
 ?Maybe define an effects bus, and then the params can be changed per frame; 'bus' param on players to route audio to an effect bus
@@ -809,8 +812,6 @@ Can specify media stream device
  device param to specify required device ID to be used - need to store one stream per device
  Same for webcam
 echo={1/2,pingpong:1} for stereo ping pong echo; use splitter and merger
-Make noise into a waveform not a worklet?  https://github.com/GoogleChromeLabs/web-audio-samples/blob/main/archive/demos/wave-tables/04_Noise
- And so use wave synth instead?
 Convert pwm and ?noise to webassembly, performance is terrible compared to native oscs
 Reverb gate: room={1,gate:1/4}
 Multiple unnecessary gain nodes even from default effects chain (that has no effects)

@@ -45,26 +45,30 @@ define(function (require) {
     return vca
   }
 
-  let fade = (from, to) => {
+  let fadeUp = (gain) => {
     return (new Float32Array(16)).map((_,i) => {
-      let lerp = Math.sin(i/15 * 0.5*Math.PI)
-      return from*(1-lerp) + to*lerp
+      return Math.sin(i/15 * 0.5*Math.PI)*gain
+    })
+  }
+  let fadeDown = (gain) => {
+    return (new Float32Array(16)).map((_,i) => {
+      return Math.cos(i/15 * 0.5*Math.PI)*gain
     })
   }
 
   let padEnvelope = (params, gainBase) => {
     let dur = Math.max(evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25)), 0.01)
     dur *= evalMainParamEvent(params, "long", 1)
-    let attack = Math.max(evalMainParamEvent(params, 'att', dur/2) * params.beat.duration, 0.001)
-    let release = Math.max(evalMainParamEvent(params, 'rel', dur/2) * params.beat.duration, 0.001)
+    let attack = Math.max(evalMainParamEvent(params, 'att', dur) * params.beat.duration, 0.001)
+    let release = Math.max(evalMainParamEvent(params, 'rel', dur) * params.beat.duration, 0.001)
     let sus = Math.max(dur*params.beat.duration - attack, 0.001)
     let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     let vca = system.audio.createGain()
     vca.gain.cancelScheduledValues(0)
     vca.gain.setValueAtTime(0, 0)
-    vca.gain.setValueCurveAtTime(fade(0, gain), params._time, attack)
+    vca.gain.setValueCurveAtTime(fadeUp(gain), params._time, attack)
     vca.gain.linearRampToValueAtTime(gain, params._time + attack+sus)
-    vca.gain.setValueCurveAtTime(fade(gain, 0), params._time + attack+sus, release)
+    vca.gain.setValueCurveAtTime(fadeDown(gain), params._time + attack+sus, release)
     params.endTime = params._time + attack+sus+release
     return vca
   }
