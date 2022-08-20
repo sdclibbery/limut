@@ -518,6 +518,62 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>sus</code> Sustain time in beats. Note the 'sustain' in an ADSR envelope sets the sustain level, however this param sets the sustain time. The default is time required after attack and decay to take the note to the end of the duration.</p>
 <p class='sub'><code>sus={level:1/6}</code> Set the amplitude level for sustain. Note the 'sustain' in an ADSR envelope is the level, so it is this value not the main 'sus' value (which is actually the sustain time). Default: 0.8.</p>
 <p><code>rel</code> Release time in beats</p>
+<p><code>wave</code> For audio synths that use a waveform, specify which waveform to use, from this list:
+  <code>'sine'</code> (can use <code>sine</code> for convenience), 
+  <code>'square'</code> (can use <code>square</code> for convenience), 
+  <code>'sawtooth'</code> (can use <code>saw</code> for convenience), 
+  <code>'triangle'</code> (can use <code>tri</code> for convenience), 
+  <code>'pulse'</code> (can use <code>pulse</code> for convenience), 
+  <code>'ah'</code>,
+  <code>'bah'</code>,
+  <code>'bass'</code>,
+  <code>'bass-amp360'</code>,
+  <code>'bass-fuzz'</code>,
+  <code>'bass-fuzz-2'</code>,
+  <code>'bass-sub-dub'</code>,
+  <code>'bass-sub-dub-2'</code>,
+  <code>'brass'</code>,
+  <code>'brit-blues'</code>,
+  <code>'brit-blues-driven'</code>,
+  <code>'buzzy'</code>,
+  <code>'buzzy-2'</code>,
+  <code>'celeste'</code>,
+  <code>'chorus-strings'</code>,
+  <code>'dissonant-1'</code>,
+  <code>'dissonant-2'</code>,
+  <code>'dissonant-piano'</code>,
+  <code>'dropped-saw'</code>,
+  <code>'dropped-square'</code>,
+  <code>'dyna-ep-bright'</code>,
+  <code>'dyna-ep-med'</code>,
+  <code>'ee'</code>,
+  <code>'ethnic'</code>,
+  <code>'full'</code>,
+  <code>'full-2'</code>,
+  <code>'guitar-fuzz'</code>,
+  <code>'harsh'</code>,
+  <code>'mkl-hard'</code>,
+  <code>'noise'</code>,
+  <code>'o'</code>,
+  <code>'ooh'</code>,
+  <code>'organ'</code>,
+  <code>'organ-2'</code>,
+  <code>'piano'</code>,
+  <code>'pop-ahhh'</code>,
+  <code>'pulse'</code>,
+  <code>'putney-wavering'</code>,
+  <code>'tb303'</code>,
+  <code>'throaty'</code>,
+  <code>'trombone'</code>,
+  <code>'twelve-optines'</code>,
+  <code>'twelve-string-guitar'</code>,
+  <code>'warm-saw'</code>,
+  <code>'warm-square'</code>,
+  <code>'warm-triangle'</code>,
+  <code>'wurlitzer'</code>,
+  <code>'wurlitzer-2'</code>
+  Note that these values are strings and must be enclosed in quotes, but a few convenience vars are defined. So <code>'brass'</code> must be a string emclosed in quotes, but <code>saw</code> can be used instead of the string <code>'sawtooth'</code>.
+</p>
 <p><code>detune</code> Amount of detune in semitones</p>
 <p><code>lpf</code> Low pass filter frequency in Hertz</p>
 <p class='sub'><code>lpf={400,q:20}</code> Low pass filter resonance. 10 is approximately the transition where resonance starts to kick in. Default: 5.</p>
@@ -795,7 +851,6 @@ portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-n
 Individual percussion synths
  Refer to https://github.com/vincentriemer/io-808, and sound-on-sound
  ? Do we want the pattern value to be pitch? Or something like velocity?
-Add some more waveforms  https://github.com/GoogleChromeLabs/web-audio-samples/tree/main/src/demos/wavetable-synth/wave-tables
 Allow adding filters in the room/echo loops eg echo=3/4{lpf:523} - but dont use existing filter handlers as must be per event only!
  Pitch shift up an octave to give shimmer reverb (pitch shifter: https://tonejs.github.io/docs/14.7.77/PitchShift.html)
 ?Maybe define an effects bus, and then the params can be changed per frame; 'bus' param on players to route audio to an effect bus

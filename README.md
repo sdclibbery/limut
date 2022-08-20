@@ -46,6 +46,10 @@ Limut's audio files have been copied from FoxDot (https://github.com/Qirky/FoxDo
 
 If you feel I've used a sample where I shouldn't have, please get in touch!
 
+# Waveforms
+
+Some waveform tables are taken from the Web Audio Samples repo, under the Apache license: https://github.com/GoogleChromeLabs/web-audio-samples
+
 # Shaders
 
 Many shaders are based on ones from https://www.shadertoy.com/ , and the shadertoy synth uses the Shadertoy.com API to load shaders directly from shadertoy.
