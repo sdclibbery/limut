@@ -2159,3 +2159,6 @@ a ambi (04), wave='ooh', room=2, oct=(2,3), amp=2, chorus
 // v glow 0, fore=red|blue
 
 
+v webcam 0, blend=max, contrast=2, fore=white+random/2, back=black, rotate=(1,2,3,4,5,6)/6, zoom=1.2
+
+
