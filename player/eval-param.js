@@ -60,7 +60,7 @@ define((require) => {
       return v
     } else if (typeof value == 'function') { // Call function to get current value
       if (value.evalOverride !== undefined) { return value.evalOverride }
-      if (ignoreThisVars && value._thisVar) { return }
+      if (ignoreThisVars && value._thisVar) { return null } // return null to hold a place in a chord
       let v = evalFunctionWithModifiers(value, event, beat, evalRecurse)
       return evalRecurse(v, event, beat)
     } else if (typeof value == 'object') { // Eval each field in the object

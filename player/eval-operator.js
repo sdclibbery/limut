@@ -62,8 +62,11 @@ define(function(require) {
     let evalOp = (event,b,evalRecurse) => {
       let el = evalRecurse(l, event,b)
       let er = evalRecurse(r, event,b)
-      let result = applyOperator(op, el, er)
-      return result
+      if (op.raw) {
+        return op(el, er)
+      } else {
+        return applyOperator(op, el, er)
+      }
     }
     evalOp.interval = combineIntervalsFrom(l, r)
     return evalOp
@@ -84,6 +87,7 @@ define(function(require) {
   let {operators} = require('player/operators')
   let add = operators['+']
   let mul = operators['*']
+  let cat = operators['|']
   let fn = (x)=>()=>x
 
   let perFrame = ({},b)=>b
@@ -141,6 +145,9 @@ define(function(require) {
 
   assert({value:4,mix:2}, evalParam(operator(add, {value:1,mix:2}, 3),ev(0),0))
   assert({value:4,mix:2}, evalParam(operator(add, 3, {value:1,mix:2}),ev(0),0))
+
+  assert([1,2,3,4], evalParam(operator(cat, [1,2], [3,4]),ev(0),0))
+  assert([1,2], evalParam(operator(cat, 1, 2),ev(0),0))
 
   console.log('eval operator tests complete')
   }

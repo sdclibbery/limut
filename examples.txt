@@ -2143,3 +2143,19 @@ b wave -332-2_-7_[_.], dur=2, sus={level:1/2}, rel=1.2, att=0.01, pan=[-1/4,1/4]
 
 a ambi (04), wave='ooh', room=2, oct=(2,3), amp=2, chorus
 
+
+// v glow 0, loc=sparkle, fore=red|this.foo, foo=blue
+// v glow 0, loc=sparkle, fore=(red,this.foo), foo|=blue
+// v glow 0, loc=sparkle, fore=red|(blue,yellow), fore|=(green,orange)|white
+// p ping 0, amp=0.001, foo=red
+// v glow 0, loc=sparkle, fore=rainbow|p.foo
+// set foo=rainbow_fast
+// v glow 0, loc=sparkle, fore=rainbow|foo
+// v glow 0, loc=sparkle, fore=(red,blue), fore|=[green,orange]r1/4@f
+// v glow 0, loc=sparkle, fore=white|white-red|green
+// v glow 0, loc=sparkle, fore=(red,blue), fore|=green
+// v glow 0, loc=sparkle, fore=(red|blue)[[0,1]t1/4@f]
+// v glow 0, loc=sparkle, fore=red|blue
+// v glow 0, fore=red|blue
+
+
