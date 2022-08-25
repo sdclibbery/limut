@@ -45,6 +45,21 @@ define(function (require) {
     return vca
   }
 
+  let percussionEnvelope = (params, gainBase) => {
+    let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25)))
+    dur *= evalMainParamEvent(params, "long", 1)
+    let decay = evalMainParamEvent(params, 'dec', evalMainParamEvent(params, 'rel', dur)) * params.beat.duration
+    let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
+    let vca = system.audio.createGain();
+    vca.gain.cancelScheduledValues(0)
+    vca.gain.setValueAtTime(0, 0)
+    vca.gain.setValueAtTime(gain, params._time)
+    vca.gain.linearRampToValueAtTime(0, params._time + decay)
+    params.endTime = params._time + decay
+    params.decayTime = decay
+    return vca
+  }
+
   let fadeUp = (gain) => {
     return (new Float32Array(16)).map((_,i) => {
       return Math.sin(i/15 * 0.5*Math.PI)*gain
@@ -80,6 +95,7 @@ define(function (require) {
       case 'full': return fullEnvelope(params, gainbase)
       case 'simple': return simpleEnvelope(params, gainbase)
       case 'pad': return padEnvelope(params, gainbase)
+      case 'percussion': return percussionEnvelope(params, gainbase)
     }
     return fullEnvelope(params, gainbase)
   }

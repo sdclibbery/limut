@@ -24,7 +24,6 @@ define(function (require) {
       request.open('GET', baseUrl+wave, true)
       request.responseType = 'text'
       request.onload = () => {
-        // let data = JSON.parse(request.response)
         let data = eval('(' + request.response + ')')
         waveTable.periodicWave = system.audio.createPeriodicWave(new Float32Array(data.real), new Float32Array(data.imag))
       }

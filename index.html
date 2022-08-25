@@ -849,9 +849,17 @@ Individual percussion synths
  References
   https://github.com/sdclibbery/limut/blob/c5fec6e5eced92145000561801704afc919241b6/play/percussion.js
   https://github.com/vincentriemer/io-808
- ? Do we want the pattern value to be pitch? Or something like velocity?
  bd
   https://www.soundonsound.com/techniques/practical-bass-drum-synthesis
+  explore params; make some different types of kicks
+   !Sounds a little bit polite, and a little bit slow at the start??
+  velocity
+  Are all the components needed? Can we make the full range of sounds? Do we need to replace or add components?
+   Do we really need both hit AND rattle?
+   Add an lpf just on body??
+  Why is it so slow with a loaded wave??
+  !!! check for disconnecting everything
+  docs
  oh/ch
   https://www.soundonsound.com/techniques/practical-cymbal-synthesis
  sd
@@ -966,6 +974,7 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
+!!!BROKEN:  sw saw 0, amp=[1,0]e, lpf=500+3000*this.amp
 Operator to concatenate to a tuple; eg  b dbass 0, delay=(0,1/2) \ set b delay|=(1,2)
  docs
 !v glow 0, loc=sparkle, fore=(red,blue)[max]
