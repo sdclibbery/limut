@@ -33,19 +33,29 @@ define(function (require) {
     return vca
   }
 
+  let curve = (init, final, power) => {
+    const steps = 9
+    const data = new Float32Array(steps)
+    for (let i=0; i<steps; i++) {
+      let lerp = Math.pow(i/(steps-1), 1/power)
+      data[i] = init*(1-lerp) + final*lerp
+    }
+    return data
+  }
+
   let body = (params, nodes) => {
     let gain = evalMainParamEvent(params, 'body', 1)*1.5
     if (gain <= 0.0001) { return }
-    let freq = evalSubParamEvent(params, 'body', 'freq', 65)
-    let endFreq = evalSubParamEvent(params, 'body', 'endfreq', 45)
+    let freq = evalSubParamEvent(params, 'body', 'freq', 130)
+    let endFreq = evalSubParamEvent(params, 'body', 'endfreq', 55)
+    let pow = evalSubParamEvent(params, 'body', 'curve', 4)
     let wave = evalSubParamEvent(params, 'body', 'wave', 'sine')
     let vco = system.audio.createOscillator()
     nodes.push(vco)
     setWave(vco, wave)
     vco.frequency.cancelScheduledValues(0)
     vco.frequency.setValueAtTime(0, 0)
-    vco.frequency.setValueAtTime(freq, params._time)
-    vco.frequency.exponentialRampToValueAtTime(endFreq, params.endTime)
+    vco.frequency.setValueCurveAtTime(curve(freq, endFreq, pow), params._time, params.endTime-params._time)
     vco.start(params._time)
     vco.stop(params.endTime)
     let vca = system.audio.createGain()
@@ -58,9 +68,10 @@ define(function (require) {
   let rattle = (params, nodes) => {
     let gain = evalMainParamEvent(params, 'rattle', 1)*2
     if (gain <= 0.0001) { return }
-    let freq = evalSubParamEvent(params, 'rattle', 'freq', 135)
-    let endFreq = evalSubParamEvent(params, 'rattle', 'endfreq', 45)
-    let q = evalSubParamEvent(params, 'rattle', 'q', 20)
+    let freq = evalSubParamEvent(params, 'rattle', 'freq', 280)
+    let endFreq = evalSubParamEvent(params, 'rattle', 'endfreq', 25)
+    let pow = evalSubParamEvent(params, 'rattle', 'curve', 4)
+    let q = evalSubParamEvent(params, 'rattle', 'q', 25)
     let n = whiteNoise()
     nodes.push(n)
     n.start(params._time)
@@ -71,8 +82,7 @@ define(function (require) {
     lpf.Q.value = q
     lpf.frequency.cancelScheduledValues(0)
     lpf.frequency.setValueAtTime(0, 0)
-    lpf.frequency.setValueAtTime(freq, params._time)
-    lpf.frequency.exponentialRampToValueAtTime(endFreq, params.endTime)
+    lpf.frequency.setValueCurveAtTime(curve(freq, endFreq, pow), params._time, params.endTime-params._time)
     n.connect(lpf)
     let vca = system.audio.createGain()
     nodes.push(vca)

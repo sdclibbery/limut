@@ -851,13 +851,14 @@ Individual percussion synths
   https://github.com/vincentriemer/io-808
  bd
   https://www.soundonsound.com/techniques/practical-bass-drum-synthesis
-  Curve control for pitch/filter envelopes
-  Try an lpf just on body?? - With a sweep and offset control?
-  Replace hit and/or click with a sample player
+  freq/endFreq should be freq(is final freq)/freqboost
+  Try an lpf just on body?? - With a sweep and offset control? Other waveforms are pointless without this??
+  Replace hit and/or click with a sample player?
   Compression?
   explore params; make some different types of kicks
    !Sounds a little bit polite, and a little bit slow at the start??
   velocity from value; affects gains and raise cutoff and emphasise hit/click/rattle more
+  more efficient curve()? Dont recreate them on every event if not needed?
   Are all the components needed? Can we make the full range of sounds? Do we need to replace or add components?
    Do we really need both hit AND rattle?
   !!! check for disconnecting everything
