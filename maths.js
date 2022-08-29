@@ -23,8 +23,9 @@ define(function(require) {
 
   let statefulWrapper = (fn) => {
     return (args, e,b, state) => {
-      let dt = b - (state.b || b)
+      let dt = b - (state.b || b) // Does not work for chord args; all get evalled on the same frame
       state.b = b
+      if (dt === 0) { return 0 } // This is wrong; but these methods cant currently handle chords
       let value = (mainParam(args, 0) || 0)
       state.v = fn(args, (state.v || 0), value, dt)
       return state.v
@@ -42,8 +43,9 @@ define(function(require) {
     }
   }))
   createFunc('rate', (args, e,b, state) => {
-    let dt = b - (state.b || b)
+    let dt = b - (state.b || b) // Does not work for chord args; all get evalled on the same frame
     state.b = b
+    if (dt === 0) { return 0 } // This is wrong; but these methods cant currently handle chords
     let x = (mainParam(args, 0) || 0)
     let last = state.last===undefined ? x : state.last
     let rate = (x - last)/dt
@@ -91,6 +93,7 @@ define(function(require) {
   assert(0, evalParamFrame(parseExpression('accum'), ev(0,0), 0))
   assert(0, evalParamFrame(parseExpression('accum{}'), ev(0,0), 0))
   assert(0, evalParamFrame(parseExpression('accum{0}'), ev(0,0), 0))
+  assert([0,0], evalParamFrame(parseExpression('accum{1,2}'), ev(0,0), 0))
 
   p = parseExpression('accum{1}')
   assert(0, evalParamFrame(p, ev(0,0), 1))
@@ -112,6 +115,9 @@ define(function(require) {
   assert(1, evalParamFrame(p, ev(0,0), 2))
   assert(3, evalParamFrame(p, ev(0,0), 3))
   assert(4, evalParamFrame(p, ev(0,0), 4))
+
+  assert(0, evalParamFrame(parseExpression('smooth{0}'), ev(0,0), 0))
+  assert([0,0], evalParamFrame(parseExpression('smooth{1,2}'), ev(0,0), 0))
 
   p = parseExpression('smooth{1,att:1,dec:0}')
   assert(0, evalParamFrame(p, ev(0,0), 1))
@@ -139,10 +145,15 @@ define(function(require) {
   assert(0, evalParamFrame(p, ev(0,0), 1))
   assert(-1, evalParamFrame(p, ev(0,0), 11))
 
+  assert(0, evalParamFrame(parseExpression('rate{0}'), ev(0,0), 0))
+  assert([0,0], evalParamFrame(parseExpression('rate{1,2}'), ev(0,0), 0))
+
   p = parseExpression('rate{[0:1]l1@f}')
   assert(0, evalParamFrame(p, ev(0,0), 1))
-  assert(-1, evalParamFrame(p, ev(0,0), 2))
+  assert(0, evalParamFrame(p, ev(0,0), 2))
   assert(1, evalParamFrame(p, ev(0,0), 3))
+  assert(-1, evalParamFrame(p, ev(0,0), 4))
+  assert(1, evalParamFrame(p, ev(0,0), 5))
 
   console.log('Maths tests complete')
   }

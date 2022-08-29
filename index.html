@@ -851,13 +851,15 @@ Individual percussion synths
   https://github.com/vincentriemer/io-808
  bd
   https://www.soundonsound.com/techniques/practical-bass-drum-synthesis
+  Curve control for pitch/filter envelopes
+  Try an lpf just on body?? - With a sweep and offset control?
+  Replace hit and/or click with a sample player
+  Compression?
   explore params; make some different types of kicks
    !Sounds a little bit polite, and a little bit slow at the start??
-   Add an lpf just on body?? - With a sweep?
-  velocity
+  velocity from value; affects gains and raise cutoff and emphasise hit/click/rattle more
   Are all the components needed? Can we make the full range of sounds? Do we need to replace or add components?
    Do we really need both hit AND rattle?
-  Why is it so slow with a loaded wave??
   !!! check for disconnecting everything
   docs
  oh/ch
@@ -965,7 +967,7 @@ shadertoy synth multiple channels
 ==== things to test/consider ====
 // pattern features (), [], <>, #b, ^v, !=
 // p ping 0, add=[0,1,2,3]
-// (), follow, complex durs, delay, stutter, overrides, +=
+// (), follow, complex durs, delay, stutter, overrides, +=, |=
 // [], []t, []l/s, []e, []n, []r
 // operators + - * / ^ % |
 // var, player.var, this.param, var{params}, slider
@@ -974,9 +976,9 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-Operator to concatenate to a tuple; eg  b dbass 0, delay=(0,1/2) \ set b delay|=(1,2)
- docs
-!v glow 0, loc=sparkle, fore=(red,blue)[max]
+Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7]r, delay=(0,{1/2,add+:2})
+ But not sure of syntax
+  The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
 !event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
  !pattern "(01)": idx should be 0 for both events, surely?
 More standard Player params
@@ -997,11 +999,10 @@ For breakbeats, need a param to switch the pattern step used for an event
 Some functions to work with chords; eg repeat, shuffle etc
  Functions for making chords?
 Some sort of matching or booleans would be handy; eg  rel=2+6*(this.value<0)  or maybe  rel=match{this.value,default:2,-7:8}
-Delay etc subparams should support modifying overrides; eg  add=2, delay=(0,{1,add+:2})
- The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
 {offset} to apply an offset to the time counts Eg [0,1,2,3]t4{offset:1} would start from 1 not 0 on beat 0
 {step} to apply stepping to the time counts Eg [0:1]l4{step:1/4} would only change value every 1/4
 ?Should be able to stutter with euclidean patterns??
+!v glow 0, loc=sparkle, fore=(red,blue)[max]
 Map lookup operator; interchangeable in syntax location with chord indexer
  eg  {foo:2}.foo ==2
  must allow eg  ({a:1},{a:2})[1].a ==2
