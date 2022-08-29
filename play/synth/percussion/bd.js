@@ -46,8 +46,8 @@ define(function (require) {
   let body = (params, nodes) => {
     let gain = evalMainParamEvent(params, 'body', 1)*1.5
     if (gain <= 0.0001) { return }
-    let freq = evalSubParamEvent(params, 'body', 'freq', 130)
-    let endFreq = evalSubParamEvent(params, 'body', 'endfreq', 55)
+    let freq = evalSubParamEvent(params, 'body', 'freq', 55)
+    let boost = evalSubParamEvent(params, 'body', 'boost', 75)
     let pow = evalSubParamEvent(params, 'body', 'curve', 4)
     let wave = evalSubParamEvent(params, 'body', 'wave', 'sine')
     let vco = system.audio.createOscillator()
@@ -55,7 +55,7 @@ define(function (require) {
     setWave(vco, wave)
     vco.frequency.cancelScheduledValues(0)
     vco.frequency.setValueAtTime(0, 0)
-    vco.frequency.setValueCurveAtTime(curve(freq, endFreq, pow), params._time, params.endTime-params._time)
+    vco.frequency.setValueCurveAtTime(curve(freq+boost, freq, pow), params._time, params.endTime-params._time)
     vco.start(params._time)
     vco.stop(params.endTime)
     let vca = system.audio.createGain()
@@ -68,8 +68,8 @@ define(function (require) {
   let rattle = (params, nodes) => {
     let gain = evalMainParamEvent(params, 'rattle', 1)*2
     if (gain <= 0.0001) { return }
-    let freq = evalSubParamEvent(params, 'rattle', 'freq', 280)
-    let endFreq = evalSubParamEvent(params, 'rattle', 'endfreq', 25)
+    let freq = evalSubParamEvent(params, 'rattle', 'freq', 25)
+    let boost = evalSubParamEvent(params, 'rattle', 'boost', 255)
     let pow = evalSubParamEvent(params, 'rattle', 'curve', 4)
     let q = evalSubParamEvent(params, 'rattle', 'q', 25)
     let n = whiteNoise()
@@ -82,7 +82,7 @@ define(function (require) {
     lpf.Q.value = q
     lpf.frequency.cancelScheduledValues(0)
     lpf.frequency.setValueAtTime(0, 0)
-    lpf.frequency.setValueCurveAtTime(curve(freq, endFreq, pow), params._time, params.endTime-params._time)
+    lpf.frequency.setValueCurveAtTime(curve(freq+boost, freq, pow), params._time, params.endTime-params._time)
     n.connect(lpf)
     let vca = system.audio.createGain()
     nodes.push(vca)
