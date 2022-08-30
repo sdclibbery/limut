@@ -852,7 +852,7 @@ Individual percussion synths
  bd
   https://www.soundonsound.com/techniques/practical-bass-drum-synthesis
   Try an lpf just on body?? - With a sweep and offset control? Other waveforms are pointless without this??
-  Replace hit and/or click with a sample player?
+  Replace hit and/or click with a sample player? LPF for click?
   Compression?
   explore params; make some different types of kicks
    !Sounds a little bit polite, and a little bit slow at the start??
@@ -986,6 +986,7 @@ More standard Player params
  .playing - 1 whenever its not playing a rest
 Want `set * amp/=2` to halve the current amplitude even when it's using the default fallback value ??It DOES work already??
  When wouldn't it work?  sus+=1/4  ?
+ ??Should ALL defaults be moved into player types instead of being in the evalParam calls???
 !Syntax colouring is case sensitive;eg  `Set` does not get coloured correctly
 For breakbeats, need a param to switch the pattern step used for an event
  This seems tricky with a param, as we don't even know what the params are until the pattern is evalled

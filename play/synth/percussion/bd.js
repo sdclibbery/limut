@@ -47,7 +47,7 @@ define(function (require) {
     let gain = evalMainParamEvent(params, 'body', 1)*1.5
     if (gain <= 0.0001) { return }
     let freq = evalSubParamEvent(params, 'body', 'freq', 55)
-    let boost = evalSubParamEvent(params, 'body', 'boost', 75)
+    let boost = evalSubParamEvent(params, 'body', 'boost', 220)
     let pow = evalSubParamEvent(params, 'body', 'curve', 4)
     let wave = evalSubParamEvent(params, 'body', 'wave', 'sine')
     let vco = system.audio.createOscillator()
@@ -68,10 +68,10 @@ define(function (require) {
   let rattle = (params, nodes) => {
     let gain = evalMainParamEvent(params, 'rattle', 1)*2
     if (gain <= 0.0001) { return }
-    let freq = evalSubParamEvent(params, 'rattle', 'freq', 25)
-    let boost = evalSubParamEvent(params, 'rattle', 'boost', 255)
-    let pow = evalSubParamEvent(params, 'rattle', 'curve', 4)
-    let q = evalSubParamEvent(params, 'rattle', 'q', 25)
+    let freq = evalSubParamEvent(params, 'rattle', 'freq', 55)
+    let boost = evalSubParamEvent(params, 'rattle', 'boost', 110)
+    let pow = evalSubParamEvent(params, 'rattle', 'curve', 2)
+    let q = evalSubParamEvent(params, 'rattle', 'q', 35)
     let n = whiteNoise()
     nodes.push(n)
     n.start(params._time)
