@@ -851,11 +851,8 @@ Individual percussion synths
   https://github.com/vincentriemer/io-808
  bd
   https://www.soundonsound.com/techniques/practical-bass-drum-synthesis
-  Try an lpf just on body?? - With a sweep and offset control? Other waveforms are pointless without this??
   Replace hit and/or click with a sample player? LPF for click?
-  Compression?
   explore params; make some different types of kicks
-   !Sounds a little bit polite, and a little bit slow at the start??
   velocity from value; affects gains and raise cutoff and emphasise hit/click/rattle more
   more efficient curve()? Dont recreate them on every event if not needed?
   Are all the components needed? Can we make the full range of sounds? Do we need to replace or add components?
@@ -875,6 +872,7 @@ Individual percussion synths
  toms
  congas
 !Should be a mix param on echo!
+Compression effect
 Should be able to have the filter follow the note envelope (with scaling)
  Generally work is needed on envelopes...
 portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-notes/legato-synths-glide-slide-portamento/
@@ -988,6 +986,7 @@ Want `set * amp/=2` to halve the current amplitude even when it's using the defa
  When wouldn't it work?  sus+=1/4  ?
  ??Should ALL defaults be moved into player types instead of being in the evalParam calls???
 !Syntax colouring is case sensitive;eg  `Set` does not get coloured correctly
+!Handle 'cookie blocking' https://blog.tomayac.com/2022/08/30/things-not-available-when-someone-blocks-all-cookies/
 For breakbeats, need a param to switch the pattern step used for an event
  This seems tricky with a param, as we don't even know what the params are until the pattern is evalled
  Will have to be a pattern syntax instead..?

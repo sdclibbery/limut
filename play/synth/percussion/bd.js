@@ -24,17 +24,19 @@ define(function (require) {
     let gain = evalMainParamEvent(params, 'click', 1)*0.8
     if (gain <= 0.0001) { return }
     let click = system.audio.createBufferSource()
+    nodes.push(click)
     click.buffer = getClick()
     click.start(params._time)
     click.stop(params._time + 0.01)
     let vca = system.audio.createGain()
+    nodes.push(vca)
     vca.gain.value = gain
     click.connect(vca)
     return vca
   }
 
   let curve = (init, final, power) => {
-    const steps = 9
+    const steps = 7
     const data = new Float32Array(steps)
     for (let i=0; i<steps; i++) {
       let lerp = Math.pow(i/(steps-1), 1/power)
@@ -43,13 +45,41 @@ define(function (require) {
     return data
   }
 
+  let hit = (params, nodes) => {
+    let gain = evalMainParamEvent(params, 'hit', 1)*2.0
+    if (gain <= 0.0001) { return }
+    let dec = evalSubParamEvent(params, 'hit', 'dec', 0.5)
+    let pow = evalSubParamEvent(params, 'hit', 'curve', 2)
+    let cutoff = evalSubParamEvent(params, 'hit', 'cutoff', 260)
+    let q = evalSubParamEvent(params, 'hit', 'q', 10)
+    let n = whiteNoise()
+    nodes.push(n)
+    let vca = system.audio.createGain()
+    nodes.push(vca)
+    vca.gain.cancelScheduledValues(0)
+    vca.gain.setValueAtTime(0, 0)
+    vca.gain.setValueCurveAtTime(curve(gain, 0, pow), params._time, dec)
+    let lpf = system.audio.createBiquadFilter()
+    nodes.push(lpf)
+    lpf.type = 'lowpass'
+    lpf.Q.value = q
+    lpf.frequency.value = cutoff
+    n.connect(lpf)
+    lpf.connect(vca)
+    n.start(params._time)
+    n.stop(params._time+dec)
+    return vca
+  }
+
   let body = (params, nodes) => {
     let gain = evalMainParamEvent(params, 'body', 1)*1.5
     if (gain <= 0.0001) { return }
     let freq = evalSubParamEvent(params, 'body', 'freq', 55)
-    let boost = evalSubParamEvent(params, 'body', 'boost', 220)
+    let boost = evalSubParamEvent(params, 'body', 'boost', 200)
     let pow = evalSubParamEvent(params, 'body', 'curve', 4)
     let wave = evalSubParamEvent(params, 'body', 'wave', 'sine')
+    let cutoff = evalSubParamEvent(params, 'body', 'cutoff', 3)
+    let q = evalSubParamEvent(params, 'body', 'q', 10)
     let vco = system.audio.createOscillator()
     nodes.push(vco)
     setWave(vco, wave)
@@ -58,10 +88,18 @@ define(function (require) {
     vco.frequency.setValueCurveAtTime(curve(freq+boost, freq, pow), params._time, params.endTime-params._time)
     vco.start(params._time)
     vco.stop(params.endTime)
+    let lpf = system.audio.createBiquadFilter()
+    nodes.push(lpf)
+    lpf.type = 'lowpass'
+    lpf.Q.value = q
+    lpf.frequency.cancelScheduledValues(0)
+    lpf.frequency.setValueAtTime(0, 0)
+    lpf.frequency.setValueCurveAtTime(curve((freq+boost)*cutoff, freq*cutoff, pow), params._time, params.endTime-params._time)
     let vca = system.audio.createGain()
     nodes.push(vca)
     vca.gain.value = gain
-    vco.connect(vca)
+    vco.connect(lpf)
+    lpf.connect(vca)
     return vca
   }
 
@@ -92,7 +130,7 @@ define(function (require) {
   }
 
   return (params) => {
-    let vca = envelope(params, 0.12, 'percussion')
+    let vca = envelope(params, 0.08, 'percussion')
     let out = effects(params, vca)
     system.mix(out)
     let mix = system.audio.createGain()
@@ -100,6 +138,7 @@ define(function (require) {
     let nodes = []
     let components = [
       click(params, nodes),
+      hit(params, nodes),
       body(params, nodes),
       rattle(params, nodes),
     ].filter(c => c !== undefined)
