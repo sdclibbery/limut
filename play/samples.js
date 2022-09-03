@@ -29,8 +29,50 @@ define(function (require) {
     return !!buf && buf !== nullBuffer
   }
 
+  let symbols = {
+    "&": "ampersand",
+    "@": "at",
+    "|": "bar",
+    ":": "colon",
+    "=": "equals",
+    "/": "forwardslash",
+    "-": "hyphen",
+    "%": "percent",
+    "?": "question",
+    "~": "tilde",
+    "*": "asterix",
+    "\\": "backslash",
+    "^": "caret",
+    "$": "dollar",
+    "!": "exclamation",
+    "#": "hash",
+    "<": "lessthan",
+    "+": "plus",
+    ";": "semicolon",
+    "1": "1",
+    "2": "2",
+    "3": "3",
+    "4": "4",
+  }
+
+  let getUrl = (char, sample) => {
+    if (typeof sample == 'string') {
+      return sample
+    }
+    sample = Math.floor(sample)
+    if (char == '.' || char == ' ') {
+      return null
+    } else if (symbols[char]) {
+      return "sample/symbol/"+symbols[char]+"/0"+sample+".wav"
+    } else {
+      let subdir = char.toUpperCase()==char ? "upper" : "lower"
+      return "sample/"+char.toLowerCase()+"/"+subdir+"/0"+sample+".wav"
+    }
+  }
+
   return {
     getBuffer: getBuffer,
     isLoaded: isLoaded,
+    getUrl: getUrl,
   }
 })

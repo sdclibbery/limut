@@ -1,51 +1,10 @@
 'use strict';
 define(function (require) {
   let system = require('play/system');
-  let {getBuffer} = require('play/samples')
+  let {getBuffer,getUrl} = require('play/samples')
   let effects = require('play/effects/effects')
   let waveEffects = require('play/effects/wave-effects')
   let {evalMainParamEvent} = require('play/eval-audio-params')
-
-  let symbols = {
-    "&": "ampersand",
-    "@": "at",
-    "|": "bar",
-    ":": "colon",
-    "=": "equals",
-    "/": "forwardslash",
-    "-": "hyphen",
-    "%": "percent",
-    "?": "question",
-    "~": "tilde",
-    "*": "asterix",
-    "\\": "backslash",
-    "^": "caret",
-    "$": "dollar",
-    "!": "exclamation",
-    "#": "hash",
-    "<": "lessthan",
-    "+": "plus",
-    ";": "semicolon",
-    "1": "1",
-    "2": "2",
-    "3": "3",
-    "4": "4",
-  }
-
-  let getUrl = (char, sample) => {
-    if (typeof sample == 'string') {
-      return sample
-    }
-    sample = Math.floor(sample)
-    if (char == '.' || char == ' ') {
-      return null
-    } else if (symbols[char]) {
-      return "sample/symbol/"+symbols[char]+"/0"+sample+".wav"
-    } else {
-      let subdir = char.toUpperCase()==char ? "upper" : "lower"
-      return "sample/"+char.toLowerCase()+"/"+subdir+"/0"+sample+".wav"
-    }
-  }
 
   return (params) => {
     let rate = evalMainParamEvent(params, 'rate', 1)

@@ -6,6 +6,7 @@ define(function (require) {
   let waveEffects = require('play/effects/wave-effects')
   let whiteNoise = require('play/synth/waveforms/noise').white
   let setWave = require('play/synth/waveforms/set-wave')
+  let {getBuffer,getUrl} = require('play/samples')
   let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
 
   let clickBuffer
@@ -46,29 +47,27 @@ define(function (require) {
   }
 
   let hit = (params, nodes) => {
-    let gain = evalMainParamEvent(params, 'hit', 1)*2.0
+    let gain = evalMainParamEvent(params, 'hit', 1)*8.0
     if (gain <= 0.0001) { return }
-    let dec = evalSubParamEvent(params, 'hit', 'dec', 0.5)
-    let pow = evalSubParamEvent(params, 'hit', 'curve', 2)
-    let cutoff = evalSubParamEvent(params, 'hit', 'cutoff', 260)
+    let sample = evalSubParamEvent(params, 'hit', 'sample', 'y')
+    let sampleIdx = evalSubParamEvent(params, 'hit', 'index', 3)
+    let rate = evalSubParamEvent(params, 'hit', 'rate', 1/4)
+    let cutoff = evalSubParamEvent(params, 'hit', 'cutoff', 440)
     let q = evalSubParamEvent(params, 'hit', 'q', 10)
-    let n = whiteNoise()
-    nodes.push(n)
-    let vca = system.audio.createGain()
-    nodes.push(vca)
-    vca.gain.cancelScheduledValues(0)
-    vca.gain.setValueAtTime(0, 0)
-    vca.gain.setValueCurveAtTime(curve(gain, 0, pow), params._time, dec)
+    let source = system.audio.createBufferSource()
+    nodes.push(source)
+    source.buffer = getBuffer(getUrl(sample, sampleIdx))
+    source.playbackRate.value = rate
+    let bufferDur =  (source.buffer ? source.buffer.duration : 0.1)
     let lpf = system.audio.createBiquadFilter()
     nodes.push(lpf)
     lpf.type = 'lowpass'
     lpf.Q.value = q
     lpf.frequency.value = cutoff
-    n.connect(lpf)
-    lpf.connect(vca)
-    n.start(params._time)
-    n.stop(params._time+dec)
-    return vca
+    source.connect(lpf)
+    source.start(params._time)
+    source.stop(params._time+bufferDur)
+    return lpf
   }
 
   let body = (params, nodes) => {
