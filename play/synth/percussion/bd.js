@@ -22,7 +22,7 @@ define(function (require) {
     return clickBuffer
   }
   let click = (params, nodes) => {
-    let gain = evalMainParamEvent(params, 'click', 1)*0.8
+    let gain = evalMainParamEvent(params, 'click', 1)*5
     if (gain <= 0.0001) { return }
     let click = system.audio.createBufferSource()
     nodes.push(click)
@@ -47,12 +47,12 @@ define(function (require) {
   }
 
   let hit = (params, nodes) => {
-    let gain = evalMainParamEvent(params, 'hit', 1)*8.0
+    let gain = evalMainParamEvent(params, 'hit', 1)*12.0
     if (gain <= 0.0001) { return }
-    let sample = evalSubParamEvent(params, 'hit', 'sample', 'y')
-    let sampleIdx = evalSubParamEvent(params, 'hit', 'index', 3)
-    let rate = evalSubParamEvent(params, 'hit', 'rate', 1/4)
-    let cutoff = evalSubParamEvent(params, 'hit', 'cutoff', 440)
+    let sample = evalSubParamEvent(params, 'hit', 'sample', ';')
+    let sampleIdx = evalSubParamEvent(params, 'hit', 'index', 1)
+    let rate = evalSubParamEvent(params, 'hit', 'rate', 3/2)
+    let cutoff = evalSubParamEvent(params, 'hit', 'cutoff', 150)
     let q = evalSubParamEvent(params, 'hit', 'q', 10)
     let source = system.audio.createBufferSource()
     nodes.push(source)
@@ -64,20 +64,24 @@ define(function (require) {
     lpf.type = 'lowpass'
     lpf.Q.value = q
     lpf.frequency.value = cutoff
+    let vca = system.audio.createGain()
+    nodes.push(vca)
+    vca.gain.value = gain
     source.connect(lpf)
+    lpf.connect(vca)
     source.start(params._time)
     source.stop(params._time+bufferDur)
-    return lpf
+    return vca
   }
 
   let body = (params, nodes) => {
     let gain = evalMainParamEvent(params, 'body', 1)*1.5
     if (gain <= 0.0001) { return }
-    let freq = evalSubParamEvent(params, 'body', 'freq', 55)
-    let boost = evalSubParamEvent(params, 'body', 'boost', 200)
-    let pow = evalSubParamEvent(params, 'body', 'curve', 4)
+    let freq = evalSubParamEvent(params, 'body', 'freq', 45)
+    let boost = evalSubParamEvent(params, 'body', 'boost', 50)
+    let pow = evalSubParamEvent(params, 'body', 'curve', 2)
     let wave = evalSubParamEvent(params, 'body', 'wave', 'sine')
-    let cutoff = evalSubParamEvent(params, 'body', 'cutoff', 3)
+    let cutoff = evalSubParamEvent(params, 'body', 'cutoff', 2)
     let q = evalSubParamEvent(params, 'body', 'q', 10)
     let vco = system.audio.createOscillator()
     nodes.push(vco)
@@ -103,12 +107,12 @@ define(function (require) {
   }
 
   let rattle = (params, nodes) => {
-    let gain = evalMainParamEvent(params, 'rattle', 1)*2
+    let gain = evalMainParamEvent(params, 'rattle', 1)*6
     if (gain <= 0.0001) { return }
-    let freq = evalSubParamEvent(params, 'rattle', 'freq', 55)
-    let boost = evalSubParamEvent(params, 'rattle', 'boost', 110)
-    let pow = evalSubParamEvent(params, 'rattle', 'curve', 2)
-    let q = evalSubParamEvent(params, 'rattle', 'q', 35)
+    let freq = evalSubParamEvent(params, 'rattle', 'freq', 70)
+    let boost = evalSubParamEvent(params, 'rattle', 'boost', 155)
+    let pow = evalSubParamEvent(params, 'rattle', 'curve', 8)
+    let q = evalSubParamEvent(params, 'rattle', 'q', 20)
     let n = whiteNoise()
     nodes.push(n)
     n.start(params._time)
@@ -129,7 +133,7 @@ define(function (require) {
   }
 
   return (params) => {
-    let vca = envelope(params, 0.08, 'percussion')
+    let vca = envelope(params, 0.03, 'percussion')
     let out = effects(params, vca)
     system.mix(out)
     let mix = system.audio.createGain()

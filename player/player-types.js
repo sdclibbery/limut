@@ -56,7 +56,7 @@ define((require) => {
     // instruments
     drums: { play: play, defaultDur: 1/2 },
     play: { play: play, defaultDur: 1/2 },
-    bd: { play: bd, defaultDur: 1/2, baseParams: {sus:0.4} },
+    bd: { play: bd, defaultDur: 1/2, baseParams: {sus:2/3} },
     sample: { play: sample },
     dwave: { play: dwave },
     dsaw: { play: dwave, baseParams: {wave:'sawtooth', oct:4, envelope:'full', _gainbase:0.06} },

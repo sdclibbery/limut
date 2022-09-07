@@ -2195,3 +2195,21 @@ h piano 0[2][472]_[..][_0][...]., room, addc=wow,
 	delay=({0,oct:3},{2,oct:4},{4,oct:5})
 
 
+set bpm=130
+set * swing=61
+set beat.readouts=(16,28,32)
+v1 xor 0, time=accum{rate{pk.pulse[min]}}*8, ripple=f.pulse[min]/4, fore=gray, back=black, tunnel, zoom=1/4
+v2 xor 7, time=7+accum{h.playing[max]*16}, ripple=f.pulse[min]/4, fore=rainbow, tunnel, zoom=1/4
+pk bd 0., amp=2
+ph play --t--t<yd>s, dur=1/4, amp=1/5, drive, high=-6, pan=-1/3
+pc play ..*., chorus, stutter=1,2]t[15,1]
+pp play m.mm., amp=2/3, stutter=[1,2]r, rate=[3,2], pan=1/3, stutter+=[0,2]t[15,1]
+f play ...f.....f...f.., dur=1/4, delay=(0,{1/4,rate:5/4},{1/3,rate:6/5}), amp=1/32, drive=1/4, room=1/8, chorus, pan=[-1:1]n1@f
+ba wave 7-30, dur=1/4, wave='bass', oct=2, amp=2-max{rate{pk.pulse[max]},-3}, lpf=250, pan=[-1/3:1/3]r
+// a ambi 0, wave='noise', oct=-1, room=2, amp=1/2*[1,3]s12, chorus, echo=1/12, hpf={[10:500]n8,q:5}
+// r ambi 0, amp=1/8, noisify=1, room=2, ring=440*3, chorus, add=[0,(0,2b)]r, addc=[-24:24]n
+// h ambi 0, wave='noise', oct=1, room=2, amp=[0,3/2]t[23,5], chorus, pan=(-1,1), playing
+// set [p*,ba] delay=floor{[0:4]r,to:1/2}
+// set p* room, delay|={3/4,rate:1/2,amp:1/3}
+
+

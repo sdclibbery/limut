@@ -852,6 +852,7 @@ Individual percussion synths
  bd
   https://www.soundonsound.com/techniques/practical-bass-drum-synthesis
   explore params; make some different types of kicks
+   https://www.youtube.com/watch?v=aTZwzD5Rn3Q&t=1211s
   velocity from value; affects gains and raise cutoff and emphasise hit/click/rattle more
   more efficient curve()? Dont recreate them on every event if not needed?
   Are all the components needed? Can we make the full range of sounds? Do we need to replace or add components?
@@ -973,6 +974,10 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
+!Should be a single event but parses as multiple:  p play t^^
+!!One of the two chord parts does not advance in these:
+ v xor 0, time=(0,7)+accum{[0,8]t1@f}*8, fore=(red,blue)[this.time]
+ v xor 0, time=(0,7)+smooth{time}*8, fore=(red,blue)[this.time]
 Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7]r, delay=(0,{1/2,add+:2})
  But not sure of syntax
   The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
