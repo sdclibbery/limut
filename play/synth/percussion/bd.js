@@ -22,17 +22,25 @@ define(function (require) {
     return clickBuffer
   }
   let click = (params, nodes) => {
-    let gain = evalMainParamEvent(params, 'click', 1)*5
+    let gain = evalMainParamEvent(params, 'click', 1)*2
+    let cutoff = evalSubParamEvent(params, 'click', 'cutoff', 500)
+    let q = evalSubParamEvent(params, 'click', 'q', 1)
     if (gain <= 0.0001) { return }
     let click = system.audio.createBufferSource()
     nodes.push(click)
     click.buffer = getClick()
     click.start(params._time)
     click.stop(params._time + 0.01)
+    let lpf = system.audio.createBiquadFilter()
+    nodes.push(lpf)
+    lpf.type = 'lowpass'
+    lpf.Q.value = q
+    lpf.frequency.value = cutoff
     let vca = system.audio.createGain()
     nodes.push(vca)
     vca.gain.value = gain
-    click.connect(vca)
+    click.connect(lpf)
+    lpf.connect(vca)
     return vca
   }
 
@@ -53,7 +61,7 @@ define(function (require) {
     let sampleIdx = evalSubParamEvent(params, 'hit', 'index', 1)
     let rate = evalSubParamEvent(params, 'hit', 'rate', 3/2)
     let cutoff = evalSubParamEvent(params, 'hit', 'cutoff', 150)
-    let q = evalSubParamEvent(params, 'hit', 'q', 10)
+    let q = evalSubParamEvent(params, 'hit', 'q', 1)
     let source = system.audio.createBufferSource()
     nodes.push(source)
     source.buffer = getBuffer(getUrl(sample, sampleIdx))
@@ -109,10 +117,10 @@ define(function (require) {
   let rattle = (params, nodes) => {
     let gain = evalMainParamEvent(params, 'rattle', 1)*6
     if (gain <= 0.0001) { return }
-    let freq = evalSubParamEvent(params, 'rattle', 'freq', 70)
-    let boost = evalSubParamEvent(params, 'rattle', 'boost', 155)
+    let freq = evalSubParamEvent(params, 'rattle', 'freq', 55)
+    let boost = evalSubParamEvent(params, 'rattle', 'boost', 205)
     let pow = evalSubParamEvent(params, 'rattle', 'curve', 8)
-    let q = evalSubParamEvent(params, 'rattle', 'q', 20)
+    let q = evalSubParamEvent(params, 'rattle', 'q', 18)
     let n = whiteNoise()
     nodes.push(n)
     n.start(params._time)

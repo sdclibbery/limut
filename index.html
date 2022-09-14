@@ -29,8 +29,8 @@
       width: 100%;
     }
     .widget {
-      color: #d0d0d0;
-      border: 2px solid #202020;
+      color: #ddd;
+      border: 2px solid #222;
       border-radius: 6px;
       margin: 2px;
       padding: 2px;
@@ -100,6 +100,11 @@
       width: 100%;
       max-width: 100%;
       overflow-x: auto;
+    }
+    #accordion-examples pre {
+      margin: 8px 2px 16px 2px;
+      padding: 4px;
+      border: 2px #222 solid;
     }
     .sub {
       margin-top: -10px;
@@ -216,7 +221,7 @@
 <div class="info">
 <h4 onclick="toggleAccordion('accordion-examples')" class="accordion"> Examples</h4>
 <div id="accordion-examples" class="closed">
-  <p>Copy and paste these examples into the editor window, then hit the play ▶ button:</p>
+  <p>Copy and paste an example into the editor window, then hit the play ▶ button:</p>
 <pre>d1 play x-o-</pre>
 <pre>p1 dsaw 0534, add=(0,2,4), dur=4</pre>
 <pre>Ba dbass 0, dur=1/4, add=[0:2]r*2, lpf={[3:12]r*100,q:8}, att=0</pre>
@@ -871,6 +876,7 @@ Individual percussion synths
   https://www.soundonsound.com/techniques/synthesizing-cowbells-claves
  toms
  congas
+Click Synth
 !Should be a mix param on echo!
 Compression effect
 Should be able to have the filter follow the note envelope (with scaling)
