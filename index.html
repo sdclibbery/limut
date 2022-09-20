@@ -578,7 +578,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
   <code>'warm-triangle'</code>,
   <code>'wurlitzer'</code>,
   <code>'wurlitzer-2'</code>
-  Note that these values are strings and must be enclosed in quotes, but a few convenience vars are defined. So <code>'brass'</code> must be a string emclosed in quotes, but <code>saw</code> can be used instead of the string <code>'sawtooth'</code>.
+  Note that these values are strings and must be enclosed in quotes, but a few convenience predefined vars are provided. So <code>'brass'</code> must be a string emclosed in quotes, but <code>saw</code> can be used instead of the string <code>'sawtooth'. In addition, apart from the basic waveforms, there may be a performance problem with using dynamic (per frame) pitch sweeps using these waveforms.</code>.
 </p>
 <p><code>detune</code> Amount of detune in semitones</p>
 <p><code>lpf</code> Low pass filter frequency in Hertz</p>
@@ -855,6 +855,7 @@ Individual percussion synths
   https://github.com/sdclibbery/limut/blob/c5fec6e5eced92145000561801704afc919241b6/play/percussion.js
   https://github.com/vincentriemer/io-808
  bd
+  Unless we want to get a load of kick2 style transient samples, do we have to accept that this will mainly be 909 style kicks?
   https://www.soundonsound.com/techniques/practical-bass-drum-synthesis
   explore params; make some different types of kicks
    https://www.youtube.com/watch?v=aTZwzD5Rn3Q&t=1211s
@@ -980,6 +981,7 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
+!Expected 0.4266279550809961 to be close to 0.5281743901059811  eval-randoms.js:267
 !Should be a single event but parses as multiple:  p play t^^
 !!One of the two chord parts does not advance in these:
  v xor 0, time=(0,7)+accum{[0,8]t1@f}*8, fore=(red,blue)[this.time]

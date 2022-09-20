@@ -13,24 +13,33 @@ define(function (require) {
   let getClick = () => {
     if (clickBuffer === undefined) {
       const sampleRate = system.audio.sampleRate
-      clickBuffer = system.audio.createBuffer(1, 0.001*sampleRate, sampleRate);
+      clickBuffer = system.audio.createBuffer(1, 0.1*sampleRate, sampleRate);
       let clickData = clickBuffer.getChannelData(0)
+      let impulseSamples = 0.001*sampleRate
       for (var i = 0; i < clickData.length; i++) {
-        clickData[i] = 1
+        if (i < impulseSamples)
+        {
+          clickData[i] = 1
+        } else {
+          let v = (i-impulseSamples) / clickData.length
+          let n = v*Math.random()*2
+          clickData[i] = 1-n
+        }
       }
     }
     return clickBuffer
   }
   let click = (params, nodes) => {
-    let gain = evalMainParamEvent(params, 'click', 1)*2
-    let cutoff = evalSubParamEvent(params, 'click', 'cutoff', 500)
-    let q = evalSubParamEvent(params, 'click', 'q', 1)
+    let gain = evalMainParamEvent(params, 'click', 1)*4
     if (gain <= 0.0001) { return }
+    let dur = evalSubParamEvent(params, 'click', 'dur', 1/5) * params.beat.duration
+    let cutoff = evalSubParamEvent(params, 'click', 'cutoff', 2000)
+    let q = evalSubParamEvent(params, 'click', 'q', 5)
     let click = system.audio.createBufferSource()
     nodes.push(click)
     click.buffer = getClick()
     click.start(params._time)
-    click.stop(params._time + 0.01)
+    click.stop(params._time + dur)
     let lpf = system.audio.createBiquadFilter()
     nodes.push(lpf)
     lpf.type = 'lowpass'
@@ -38,14 +47,17 @@ define(function (require) {
     lpf.frequency.value = cutoff
     let vca = system.audio.createGain()
     nodes.push(vca)
-    vca.gain.value = gain
+    vca.gain.cancelScheduledValues(0)
+    vca.gain.setValueAtTime(1, 0)
+    vca.gain.setValueAtTime(gain, params._time)
+    vca.gain.exponentialRampToValueAtTime(0.001, params._time + dur)
     click.connect(lpf)
     lpf.connect(vca)
     return vca
   }
 
   let curve = (init, final, power) => {
-    const steps = 7
+    const steps = 19
     const data = new Float32Array(steps)
     for (let i=0; i<steps; i++) {
       let lerp = Math.pow(i/(steps-1), 1/power)
@@ -55,7 +67,7 @@ define(function (require) {
   }
 
   let hit = (params, nodes) => {
-    let gain = evalMainParamEvent(params, 'hit', 1)*12.0
+    let gain = evalMainParamEvent(params, 'hit', 1)*2.0
     if (gain <= 0.0001) { return }
     let sample = evalSubParamEvent(params, 'hit', 'sample', ';')
     let sampleIdx = evalSubParamEvent(params, 'hit', 'index', 1)
@@ -117,6 +129,7 @@ define(function (require) {
   let rattle = (params, nodes) => {
     let gain = evalMainParamEvent(params, 'rattle', 1)*6
     if (gain <= 0.0001) { return }
+    let rate = evalSubParamEvent(params, 'rattle', 'rate', 1)
     let freq = evalSubParamEvent(params, 'rattle', 'freq', 55)
     let boost = evalSubParamEvent(params, 'rattle', 'boost', 205)
     let pow = evalSubParamEvent(params, 'rattle', 'curve', 8)
@@ -125,6 +138,7 @@ define(function (require) {
     nodes.push(n)
     n.start(params._time)
     n.stop(params.endTime)
+    n.playbackRate.value = rate
     let lpf = system.audio.createBiquadFilter()
     nodes.push(lpf)
     lpf.type = 'lowpass'
