@@ -264,7 +264,7 @@ define(function(require) {
 
     p = simpleNoise([], 4)
     p.modifiers = {seed:1}
-    assertIsCloseEveryTime((i)=>p(ev(i/10),i/10,evalParam))
+    assertIsCloseEveryTime((i)=>p(ev(i/11),i/11,evalParam))
 
     console.log('Eval random tests complete')
   }
