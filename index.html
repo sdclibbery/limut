@@ -982,9 +982,6 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-!scale{} degree does not accept sharp/flat eg  i impulse 0, bpf={pitch{degree:1b},q:15}, amp=12
- Do a release
-!Should be a single event but parses as multiple:  p play t^^
 !!One of the two chord parts does not advance in these:
  v xor 0, time=(0,7)+accum{[0,8]t1@f}*8, fore=(red,blue)[this.time]
  v xor 0, time=(0,7)+smooth{time}*8, fore=(red,blue)[this.time]
@@ -1010,7 +1007,6 @@ For breakbeats, need a param to switch the pattern step used for an event
   Unless some params are stored per player? And can be used to modify pattern evaluation? Arguably, dur is already like that?
 !Readout doesn't work here:  p ping 0, foo=[0,1,2,3]t1, add=this.foo \ r readout 0, add=p.add
  It's specifically the this.foo that makes it fail
-!WTF is with pitch{octave:x} rather than using oct: ???
 !add=(0,2,4,6)[rand]{per:2,seed:0} doesn't work; rand chord indexer needs to respect time modifiers and seed etc
 !Really need a complete audit of time vs count. Need the code to be clear and unambiguous which is which. There will be issues to fix. Look at []e and []e{per}
 Some functions to work with chords; eg repeat, shuffle etc

@@ -98,7 +98,7 @@ define(function(require) {
       while (!done) {
         let nextChar = state.str.charAt(state.idx)
         switch (nextChar) {
-          case '#': sharp = def(sharp,0) + 1;   break;
+          case '#': sharp = def(sharp,0) + 1;  break;
           case 'b': sharp = def(sharp,0) - 1;  break;
           case '^': loud = def(loud,1) * 1.5;  break;
           case 'v': loud = def(loud,1) * 0.5;  break;
@@ -109,10 +109,17 @@ define(function(require) {
         if (!done) { state.idx += 1 }
       }
     } else {
-      if (state.str.charAt(state.idx) == '^') { // Loud modifier works for non numeric pattern chars too
-        loud = def(loud,1) * 1.5
-        state.idx += 1
+      let done
+      while (!done) {
+        let nextChar = state.str.charAt(state.idx)
+        if (nextChar == '^') { // Loud modifier works for non numeric pattern chars too
+          loud = def(loud,1) * 1.5
+        } else {
+          done = true
+        }
+          if (!done) { state.idx += 1 }
       }
+
     }
     // console.log('event', state, 'value:', char, '_time:', _time, 'dur:', dur)
     let v = parseFloat(char)
@@ -494,6 +501,10 @@ define(function(require) {
   assert(1, p.length)
   assert({value:'a',_time:0,dur:1,loud:3/2}, p.events[0])
 
+  p = parsePattern('a^^')
+  assert(1, p.length)
+  assert({value:'a',_time:0,dur:1,loud:9/4}, p.events[0])
+
   assert([{value:0,_time:0,dur:1,loud:3/2}], parsePattern('<0^>').events[0].value({_time:0,dur:1},0))
 
   assertPattern(1, [{value:0,_time:0,dur:1,loud:3/2}], parsePattern('[0^]'))
@@ -530,8 +541,11 @@ define(function(require) {
   assertPattern(1, [{value:0,_time:0,dur:1,long:2}], parsePattern('(0=)'))
 
   assert({value:0,_time:0,dur:1,long:0.5}, parsePattern('0!').events[0])
-
   assert({value:0,_time:0,dur:1,long:0.25}, parsePattern('0!!').events[0])
+
+  p = parsePattern('0^^')
+  assert(1, p.length)
+  assert({value:0,_time:0,dur:1,loud:9/4}, p.events[0])
 
   p = parsePattern('0#^=')
   assert(1, p.length)
