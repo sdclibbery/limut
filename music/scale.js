@@ -118,9 +118,10 @@ define(function (require) {
 
   let pitchFunc = (args, e,b) => {
     args = args || {}
-    let degree = param(args.value, param(args.degree, 0))
-    let octave = param(args.octave, 4)
-    let sharp = param(args.sharp, 0)
+    let value = args.value || args.degree || 0
+    let degree = evalMainParamEvent(args, 'value', evalMainParamEvent(args, 'degree', 0))
+    let octave = evalMainParamEvent(args, 'oct', 4)
+    let sharp = evalMainParamEvent(args, 'sharp', 0) + evalMainParamEvent(value, '#', 0) - evalMainParamEvent(value, 'b', 0)
     return scale.degreeToFreq(degree, octave, args.scale, sharp)
   }
   pitchFunc.isVarFunction = true
@@ -145,6 +146,17 @@ define(function (require) {
 
   assert(261.6, scale.degreeToFreq(0, 4, 'chromatic', 0))
   assert(415.3, scale.degreeToFreq(8, 4, 'chromatic', 0))
+
+  assert(261.6, pitchFunc())
+  assert(261.6, pitchFunc({}))
+  assert(261.6/2, pitchFunc({oct:3}))
+  assert(261.6, pitchFunc({degree:0}))
+  assert(261.6/2, pitchFunc({sharp:-12}))
+  assert(261.6/2, pitchFunc({value:{value:0,"#":-12}}))
+  assert(261.6/2, pitchFunc({value:{value:0,"b":12}}))
+  assert(261.6/2, pitchFunc({degree:{value:0,"#":-12}}))
+  assert(261.6/2, pitchFunc({degree:{value:0,"b":12}}))
+  assert(261.6/4, pitchFunc({degree:{value:0,"b":12},sharp:-12}))
 
   console.log('Scale tests complete')
   }
