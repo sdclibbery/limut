@@ -23,6 +23,7 @@ define((require) => {
   let dwave = require('play/synth/dwave')
   let ambi = require('play/synth/ambi')
   let bd = require('play/synth/percussion/bd')
+  let impulse = require('play/synth/percussion/impulse')
 
   let nullPlayer = { play: () => {}, stopped: true }
   let playerTypes = {
@@ -56,6 +57,7 @@ define((require) => {
     // instruments
     drums: { play: play, defaultDur: 1/2 },
     play: { play: play, defaultDur: 1/2 },
+    impulse: { play: impulse },
     bd: { play: bd, defaultDur: 1/2, baseParams: {sus:2/3} },
     sample: { play: sample },
     dwave: { play: dwave },

@@ -2229,3 +2229,5 @@ fs bd 0, click=1, body=0, hit=0, rattle=0, room=2, hpf=[100,500,1200]r, amp=[1:8
 // pt play runkyfunkapunkydunka, delay=(0,[1/4,1/2]r,[3/4,5/4]r), pan=[-3/4:3/4]r, amp=1/2, rate=[1/2,3/4,1]r@f, fold=[0,1/8]r@f
 
 
+i impulse 0, delay=(0,{[1/4,1/2]r}), stutter=[1,2,4], bpf={pitch{degree:[0:7]r,octave:[2:5]r},q:12}, amp=15, room, echo=1/3
+
