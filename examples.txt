@@ -2234,3 +2234,21 @@ set main.amp=3
 p impulse 0.<0..0.>0<.0>0<.0.>0, dur=1/2, lpf=100*[2,40]t1, delay=(0,3/4), room=[0,1]t[3,1]
 i impulse 0, bpf={pitch{degree:[0,-1]t8},q:[5:20]s12}, amp=12, delay=(0,[3/4,5/4]r)
 
+
+// bd kick testing
+set bpm=130
+set main.amp=2
+pbd bd 0.,//[.0]00[.0].00,
+	sus=2/3, click=0,hit=0,body=0,rattle=0,
+	click={1,dur:1/5,cutoff:2700,q:5},
+  hit={1,sample:'D',index:1,rate:1,cutoff:1500,q:1},
+  body={1,freq:40,boost:90,curve:4,wave:'square',cutoff:1.2,q:10},
+  rattle={1,rate:1,freq:40,boost:400,curve:6,q:7},
+// pbd play X., sample=1//, amp=[0,1,1]l[0.002,0.998,0]@f
+// pbdr play .X
+// set pbd* high={-48,freq:220}
+// set pbd* low={-48,freq:220}
+// set pbd* low={-24,freq:440}, high={-24,freq:880}
+v scope 0, zoom={x:1.1,y:1/4}
+
+
