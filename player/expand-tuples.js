@@ -10,7 +10,7 @@ define((require) => {
     }
   }
 
-  let multiplyEvents = (event, index) => {
+  let multiplyEvents = (event) => {
     for (let k in event) {
       if (k == 'beat') { continue }
       let v = event[k]
@@ -30,20 +30,32 @@ define((require) => {
           } else {
             e[k] = v // primitive so use same value across all tuple indices
           }
-          es.push(...multiplyEvents(e, index)) // And recurse to expand out any other tuple params
+          es.push(...multiplyEvents(e)) // And recurse to expand out any other tuple params
         }
-        es.forEach(e => e.index = index++)
         return es
       }
     }
-    event.index = index++
     return [event]
   }
 
   let expandTuples = (es) => {
+    let indexGroups = {}
     let result = es.flatMap(e => {
-      let index = 0
-      return multiplyEvents(e, index)
+      let indexGroup = e.__indexGroup
+      let exp = multiplyEvents(e)
+      let index
+      if (e.__indexWith !== undefined) {
+        index = (indexGroups[e.__indexWith]) || 0 // Start chord indexing from the appropriate group
+      } else {
+        index = 0 // No group to index with, so start indexing afresh
+      }
+      exp.forEach(e => {
+        e.index = index++
+        delete e.__indexGroup // Remove temp indexing info
+        delete e.__indexWith
+      })
+      indexGroups[indexGroup] = index // Store largest index for this group so others that index with it can start from here
+      return exp
     })
     return result
   }
@@ -51,12 +63,17 @@ define((require) => {
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
-    let assert = (expected, actual) => {
+    let assert = (expected, actual, msg) => {
       let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
       let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
-      if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
+      if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}${msg?'\n'+msg:''}`) }
     }
-    let p
+    let assertHas = (expected, actual) => {
+      for (let k in expected) {
+        assert(expected[k], actual[k], `for ${k}`)
+      }
+    }
+      let p
     let e = {}
     let b = 0
 
@@ -135,6 +152,24 @@ define((require) => {
     assert({r:2,g:4}, evalParamFrame(p[3].x,p[3],b))
     assert(4, evalParamFrame(p[3].f,p[3],b))
 
+    p = expandTuples([{__indexGroup:0,__indexWith:0,value:'a'},{__indexGroup:0,__indexWith:0, value:'b'}])
+    assert(2, p.length)
+    assertHas({index:0,value:'a'}, evalParamFrame(p[0],b))
+    assertHas({index:1,value:'b'}, evalParamFrame(p[1],b))
+
+    p = expandTuples([
+      {__indexGroup:0,__indexWith:0,value:['a','b']},
+      {__indexGroup:1,__indexWith:0,value:['c','d']},
+      {__indexGroup:2,__indexWith:0,value:['e','f']},
+    ])
+    assert(6, p.length)
+    assertHas({index:0,value:'a'}, evalParamFrame(p[0],b))
+    assertHas({index:1,value:'b'}, evalParamFrame(p[1],b))
+    assertHas({index:2,value:'c'}, evalParamFrame(p[2],b))
+    assertHas({index:3,value:'d'}, evalParamFrame(p[3],b))
+    assertHas({index:2,value:'e'}, evalParamFrame(p[4],b))
+    assertHas({index:3,value:'f'}, evalParamFrame(p[5],b))
+    
     console.log('Expand tuples tests complete')
   }
   return expandTuples
