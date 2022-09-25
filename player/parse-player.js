@@ -178,6 +178,11 @@ define((require) => {
     let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(3) : v)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}${msg?'\n'+msg:''}`) }
   }
+  let assertHas = (expected, actual) => {
+    for (let k in expected) {
+      assert(expected[k], actual[k], `for ${k}`)
+    }
+  }
   let assertThrows = (expected, code) => {
     let got
     try {code()}
@@ -419,6 +424,24 @@ define((require) => {
   assert(2, es.length)
   assertEvent(1,1,1/2, es[0])
   assertEvent(3/2,3/2,1/2, es[1])
+
+  p = parsePlayer('p test a, add=(1,2)')
+  es = p.getEventsForBeat({time:0, count:0, duration:1})
+  assertHas({add:1,index:0}, es[0])
+  assertHas({add:2,index:1}, es[1])
+
+  p = parsePlayer('p test (ab), add=(1,2)')
+  es = p.getEventsForBeat({time:0, count:0, duration:1})
+  assertHas({value:'a',add:1,index:0}, es[0])
+  assertHas({value:'a',add:2,index:1}, es[1])
+  assertHas({value:'b',add:1,index:2}, es[2])
+  assertHas({value:'b',add:2,index:3}, es[3])
+
+  p = parsePlayer('p test (a(bc))')
+  es = p.getEventsForBeat({time:0, count:0, duration:1})
+  assertHas({value:'a',index:0}, es[0])
+  assertHas({value:'b',index:1}, es[1])
+  assertHas({value:'c',index:2}, es[2])
 
   console.log('Parse player tests complete')
   }

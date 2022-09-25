@@ -983,7 +983,8 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Special param on every event that is its index in a chord
- !!This isn't right yet! expandTuples is called for ALL events within a beat, not just those that form a chord...
+ ?What about chords in the pattern?
+  ???Should pattern chords parse to single events with array for value? And then the normal expandTuples can resolve them?
 !!One of the two chord parts does not advance in these:
  v xor 0, time=(0,7)+accum{[0,8]t1@f}*8, fore=(red,blue)[this.index]
  v xor 0, time=(0,7)+smooth{time}*8, fore=(red,blue)[this.index]

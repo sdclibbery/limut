@@ -48,7 +48,7 @@ define(function(require) {
       })
       return events
     }
-    // together
+    // chord
     if (char == '(') {
       state.idx += 1
       let tog = array(state, ')')
