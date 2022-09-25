@@ -10,7 +10,7 @@ define((require) => {
     }
   }
 
-  let multiplyEvents = (event) => {
+  let multiplyEvents = (event, index) => {
     for (let k in event) {
       if (k == 'beat') { continue }
       let v = event[k]
@@ -30,16 +30,21 @@ define((require) => {
           } else {
             e[k] = v // primitive so use same value across all tuple indices
           }
-          es.push(...multiplyEvents(e)) // And recurse to expand out any other tuple params
+          es.push(...multiplyEvents(e, index)) // And recurse to expand out any other tuple params
         }
+        es.forEach(e => e.index = index++)
         return es
       }
     }
+    event.index = index++
     return [event]
   }
 
   let expandTuples = (es) => {
-    let result = es.flatMap(e => multiplyEvents(e))
+    let result = es.flatMap(e => {
+      let index = 0
+      return multiplyEvents(e, index)
+    })
     return result
   }
 
@@ -56,17 +61,19 @@ define((require) => {
     let b = 0
 
     assert([], expandTuples([]))
-    assert([{x:1,y:2}], expandTuples([{x:1,y:2}]))
-    assert([{x:1},{x:2}], expandTuples([{x:1},{x:2}]))
+    assert([{x:1,y:2,index:0}], expandTuples([{x:1,y:2}]))
+    assert([{x:1,index:0},{x:2,index:0}], expandTuples([{x:1},{x:2}]))
 
-    assert([{x:1},{x:2}], expandTuples([{x:[1,2]}]))
-    assert([{x:1,y:3},{x:1,y:4},{x:2,y:3},{x:2,y:4}], expandTuples([{x:[1,2],y:[3,4]}]))
-    assert([{x:1},{x:2},{x:3}], expandTuples([{x:[1,[2,3]]}]))
-    assert([{x:1,y:3,w:5},{x:1,y:4,w:5},{x:2,y:3,w:5},{x:2,y:4,w:5}], expandTuples([{x:[1,2],y:[3,4],w:5}]))
+    assert([{x:1,index:0},{x:2,index:1}], expandTuples([{x:[1,2]}]))
+    assert([{x:1,y:3,index:0},{x:1,y:4,index:1},{x:2,y:3,index:2},{x:2,y:4,index:3}], expandTuples([{x:[1,2],y:[3,4]}]))
+    assert([{x:1,index:0},{x:2,index:1},{x:3,index:2}], expandTuples([{x:[1,[2,3]]}]))
+    assert([{x:1,y:3,w:5,index:0},{x:1,y:4,w:5,index:1},{x:2,y:3,w:5,index:2},{x:2,y:4,w:5,index:3}], expandTuples([{x:[1,2],y:[3,4],w:5}]))
 
     p = expandTuples([{x:()=>[1,2]}])
     assert(1, evalParamFrame(p[0].x,e,b))
+    assert(0, evalParamFrame(p[0].index,e,b))
     assert(2, evalParamFrame(p[1].x,e,b))
+    assert(1, evalParamFrame(p[1].index,e,b))
 
     p = expandTuples([{x:{r:[1,2]}}])
     assert({r:1}, evalParamFrame(p[0].x,e,b))
