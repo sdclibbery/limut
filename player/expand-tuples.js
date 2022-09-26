@@ -39,25 +39,19 @@ define((require) => {
   }
 
   let expandTuples = (es) => {
-    let indexGroups = {}
-    let result = es.flatMap(e => {
-      let indexGroup = e.__indexGroup
-      let exp = multiplyEvents(e)
-      let index
-      if (e.__indexWith !== undefined) {
-        index = (indexGroups[e.__indexWith]) || 0 // Start chord indexing from the appropriate group
-      } else {
-        index = 0 // No group to index with, so start indexing afresh
+    let index = 0
+    let lastTime = -1
+    return es.flatMap(e => {
+      if (e._time !== lastTime) { // Group pattern events by start time. Not really correct, but doing it properly requires adding a lot of complexity to pattern parsing to specify chord groups
+        index = 0
+        lastTime = e._time
       }
+      let exp = multiplyEvents(e)
       exp.forEach(e => {
         e.index = index++
-        delete e.__indexGroup // Remove temp indexing info
-        delete e.__indexWith
       })
-      indexGroups[indexGroup] = index // Store largest index for this group so others that index with it can start from here
       return exp
     })
-    return result
   }
 
   // TESTS //
@@ -73,13 +67,13 @@ define((require) => {
         assert(expected[k], actual[k], `for ${k}`)
       }
     }
-      let p
+    let p
     let e = {}
     let b = 0
 
     assert([], expandTuples([]))
     assert([{x:1,y:2,index:0}], expandTuples([{x:1,y:2}]))
-    assert([{x:1,index:0},{x:2,index:0}], expandTuples([{x:1},{x:2}]))
+    assert([{x:1,_time:0,index:0},{x:2,_time:1,index:0}], expandTuples([{x:1,_time:0},{x:2,_time:1}]))
 
     assert([{x:1,index:0},{x:2,index:1}], expandTuples([{x:[1,2]}]))
     assert([{x:1,y:3,index:0},{x:1,y:4,index:1},{x:2,y:3,index:2},{x:2,y:4,index:3}], expandTuples([{x:[1,2],y:[3,4]}]))
@@ -152,23 +146,23 @@ define((require) => {
     assert({r:2,g:4}, evalParamFrame(p[3].x,p[3],b))
     assert(4, evalParamFrame(p[3].f,p[3],b))
 
-    p = expandTuples([{__indexGroup:0,__indexWith:0,value:'a'},{__indexGroup:0,__indexWith:0, value:'b'}])
+    p = expandTuples([{value:'a'},{ value:'b'}])
     assert(2, p.length)
     assertHas({index:0,value:'a'}, evalParamFrame(p[0],b))
     assertHas({index:1,value:'b'}, evalParamFrame(p[1],b))
 
     p = expandTuples([
-      {__indexGroup:0,__indexWith:0,value:['a','b']},
-      {__indexGroup:1,__indexWith:0,value:['c','d']},
-      {__indexGroup:2,__indexWith:0,value:['e','f']},
+      {value:['a','b'],_time:0},
+      {value:['c','d'],_time:0},
+      {value:['e','f'],_time:1/2},
     ])
     assert(6, p.length)
     assertHas({index:0,value:'a'}, evalParamFrame(p[0],b))
     assertHas({index:1,value:'b'}, evalParamFrame(p[1],b))
     assertHas({index:2,value:'c'}, evalParamFrame(p[2],b))
     assertHas({index:3,value:'d'}, evalParamFrame(p[3],b))
-    assertHas({index:2,value:'e'}, evalParamFrame(p[4],b))
-    assertHas({index:3,value:'f'}, evalParamFrame(p[5],b))
+    assertHas({index:0,value:'e'}, evalParamFrame(p[4],b))
+    assertHas({index:1,value:'f'}, evalParamFrame(p[5],b))
     
     console.log('Expand tuples tests complete')
   }

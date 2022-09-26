@@ -976,15 +976,16 @@ shadertoy synth multiple channels
 // (), follow, complex durs, delay, stutter, overrides, +=, |=
 // [], []t, []l/s, []e, []n, []r
 // operators + - * / ^ % |
-// var, player.var, this.param, var{params}, slider
+// var, player.var, this.param, this.index, var{params}, slider
 // (...)[...], (...)[max], max{(...)}, {foo:...}['foo']
 // modifiers {seed,per,0:0}, @e, @f
 // subparams {2,mix:1/2}
 ====
 ==== other ====
 Special param on every event that is its index in a chord
- ?What about chords in the pattern?
-  OK so expand-tuples can handle it if parse-pattern can generate __indexGroup and __indexWith correctly
+ What about follow player, does it preserve index? Or recreate it correctly?
+ TEST
+ Docs?
 !!One of the two chord parts does not advance in these:
  v xor 0, time=(0,7)+accum{[0,8]t1@f}*8, fore=(red,blue)[this.index]
  v xor 0, time=(0,7)+smooth{time}*8, fore=(red,blue)[this.index]
