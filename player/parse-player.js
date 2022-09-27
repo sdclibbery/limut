@@ -6,7 +6,7 @@ define((require) => {
   var players = require('player/players')
   let standardPlayer = require('player/standard')
   var followPlayer = require('player/follow')
-  var expandTuples = require('player/expand-tuples')
+  var expandChords = require('player/expand-chords')
   let {preEvalParam,evalParamFrame} = require('player/eval-param')
   let {mainParam} = require('player/sub-param')
 
@@ -158,7 +158,7 @@ define((require) => {
         }
         player.getEventsForBeat = (beat) => {
           let es = player.getEventsForBeatBase(beat)
-          es = expandTuples(es)
+          es = expandChords(es)
           es.forEach(e => applyDelay(e, beat))
           es = expandStutter(es)
           es.forEach(e => applySwing(e, beat))

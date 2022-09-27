@@ -982,19 +982,22 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
+??? Should rename this.index to this.voice???
+ expand-chords; maths; docs; ???
+More standard Player params
+ .exists - 1 if player exists at all
+ .playing - 1 whenever its not playing a rest
 Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7]r, delay=(0,{1/2,add+:2})
  But not sure of syntax
   The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
 !event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
  !pattern "(01)": idx should be 0 for both events, surely?
-More standard Player params
- .exists - 1 if player exists at all
- .playing - 1 whenever its not playing a rest
+ Eg:  v xor (00), time=0, add=[0,8], fore=(red,blue)[this.index]
 Percussion player for single sample; value is velocity Eg  p playv 90520070, sample=':'
  ?Or go whole hog and patterns should become expressions and all params should be {} 'info' on the player?
   Eg  P saw {\0246\, oct=5, lpf=\3<52>4\*1000}  or something?
 Want `set * amp/=2` to halve the current amplitude even when it's using the default fallback value ??It DOES work already??
- When wouldn't it work?  sus+=1/4  ?
+ When wouldn't it work?  sus+=1/4  ? oct-=1  ?
  ??Should ALL defaults be moved into player types instead of being in the evalParam calls???
 !Syntax colouring is case sensitive; eg  `Set` does not get coloured correctly
 !Handle 'cookie blocking' https://blog.tomayac.com/2022/08/30/things-not-available-when-someone-blocks-all-cookies/
@@ -1011,7 +1014,8 @@ Some functions to work with chords; eg repeat, shuffle etc
 Some sort of matching or booleans would be handy; eg  rel=2+6*(this.value<0)  or maybe  rel=match{this.value,default:2,-7:8}
 {offset} to apply an offset to the time counts Eg [0,1,2,3]t4{offset:1} would start from 1 not 0 on beat 0
 {step} to apply stepping to the time counts Eg [0:1]l4{step:1/4} would only change value every 1/4
-?Should be able to stutter with euclidean patterns??
+?Should be able to stutter with euclidean (or other?) patterns??
+?stutter subparam for overriding interval between stuttered notes?
 !v glow 0, loc=sparkle, fore=(red,blue)[max]
 Map lookup operator; interchangeable in syntax location with chord indexer
  eg  {foo:2}.foo ==2
@@ -1021,7 +1025,6 @@ Map lookup operator; interchangeable in syntax location with chord indexer
  Docs
 Allow mixing , and :   Eg  [0,2:4,5]r  meaning 0 or 2 to 4 or 5  Or  [0:4,7,9:10]t1  meaning [0,1,2,3,4,7,9,10]t1
 !root change using []t is 1 beat late in changing
-?stutter subparam for overriding interval between stuttered notes?
 stutter={4,amp:1/2}  - apply overrides
  ?How to provide overrides per stuttured notes?
   stutter={4,dur:1/8,i=>{amp:1/i}}
