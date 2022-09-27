@@ -2255,3 +2255,9 @@ v scope 0, zoom={x:1.1,y:1/4}
 v xor (09), fore=(red,blue,green,yellow)[this.index], zoom=(1,4), back=black
 
 
+// v xor 0, time=(0,8)+accum{[0,8]t1@f}*8, fore=(red,blue)[this.index]
+// v xor 0, time=(0,8)+smooth{time}*8, fore=(red,blue)[this.index]
+// v xor 0, time=(0,7,14)+smooth{100}, fore=(red,blue,green)[this.index]
+// v xor 0, time=(0,1)+smooth{[8,16]t1}, fore=(red,blue)[this.index]
+
+

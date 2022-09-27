@@ -982,13 +982,6 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-!!One of the two chord parts does not advance in these:
- v xor 0, time=(0,7)+accum{[0,8]t1@f}*8, fore=(red,blue)[this.index]
- v xor 0, time=(0,7)+smooth{time}*8, fore=(red,blue)[this.index]
- v xor 0, time=(0,7,14)+smooth{100}, fore=(red,blue,green)[this.index]
- ? For some reason, adding the smooth{} keeps the chord, but stops it updating??
-  Repro expression:   (0,1)+smooth{[8,16]t1}
- !Will need to store separate state per chord index
 Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7]r, delay=(0,{1/2,add+:2})
  But not sure of syntax
   The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?

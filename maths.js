@@ -21,11 +21,20 @@ define(function(require) {
   createFunc('ceil', roundWrapper(Math.ceil))
   createFunc('round', roundWrapper(Math.round))
 
+  let getVoiceState = (fullState, e,b) => {
+    if (fullState.voices === undefined) { fullState.voices = {} }
+    if (fullState.voices[e.index] === undefined) { fullState.voices[e.index] = {} }
+    let state = fullState.voices[e.index] // Store separate state for each chord voice
+    let dt = b - (state.b || b)
+    state.b = b
+    state.dt = dt
+    return state
+  }
   let statefulWrapper = (fn) => {
-    return (args, e,b, state) => {
-      let dt = b - (state.b || b) // Does not work for chord args; all get evalled on the same frame
-      state.b = b
-      if (dt === 0) { return 0 } // This is wrong; but these methods cant currently handle chords
+    return (args, e,b, fullState) => {
+      let state = getVoiceState(fullState, e,b)
+      let dt = state.dt
+      if (dt === 0) { return 0 }
       let value = (mainParam(args, 0) || 0)
       state.v = fn(args, (state.v || 0), value, dt)
       return state.v
@@ -42,10 +51,10 @@ define(function(require) {
       return Math.max(v + (x-v)*dec*dt, x)
     }
   }))
-  createFunc('rate', (args, e,b, state) => {
-    let dt = b - (state.b || b) // Does not work for chord args; all get evalled on the same frame
-    state.b = b
-    if (dt === 0) { return 0 } // This is wrong; but these methods cant currently handle chords
+  createFunc('rate', (args, e,b, fullState) => {
+    let state = getVoiceState(fullState, e,b)
+    let dt = state.dt
+    if (dt === 0) { return 0 }
     let x = (mainParam(args, 0) || 0)
     let last = state.last===undefined ? x : state.last
     let rate = (x - last)/dt
@@ -63,7 +72,7 @@ define(function(require) {
   }
   let parseExpression = require('player/parse-expression')
   let {evalParamFrame} = require('player/eval-param')
-  let ev = (i,c,d) => {return{idx:i,count:c,dur:d,_time:c}}
+  let ev = (i,c,d,ind) => {return{idx:i,count:c,dur:d,_time:c,index:ind}}
   let p
 
   assert(0, evalParamFrame(parseExpression('floor'), ev(0,0), 0))
@@ -154,6 +163,12 @@ define(function(require) {
   assert(1, evalParamFrame(p, ev(0,0), 3))
   assert(-1, evalParamFrame(p, ev(0,0), 4))
   assert(1, evalParamFrame(p, ev(0,0), 5))
+
+  p = parseExpression('(0,1)+smooth{2}')
+  assert([0,1], evalParamFrame(p, ev(0,0,1,0), 1))
+  assert([0,1], evalParamFrame(p, ev(0,0,1,1), 1))
+  assert([2,3], evalParamFrame(p, ev(0,0,1,0), 2))
+  assert([2,3], evalParamFrame(p, ev(0,0,1,1), 2))
 
   console.log('Maths tests complete')
   }
