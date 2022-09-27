@@ -19,7 +19,7 @@ define(function(require) {
       }).map(v => v===undefined?0:v)
       return fn(vs)
     }
-    aggFunc.isTupleAggregator = true
+    aggFunc.isChordAggregator = true
     aggFunc.evalOverride = name // If this ever gets evaluated as a value rather than an aggregator, then return the original name as a string. This allows `blend=min` to work alongside the 'min' aggregator.
     return aggFunc
   }
@@ -33,7 +33,7 @@ define(function(require) {
       let result
       if (!!args) { // call aggregator as function
         result = (e,b) => aggFn(evalParamFrame(args,e,b), e,b)
-      } else { // return aggregator function directly for use as a tuple indexer
+      } else { // return aggregator function directly for use as a chord indexer
         result = aggFn          
       }
       let modifiers = parseMap(state)

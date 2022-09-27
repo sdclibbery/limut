@@ -2,7 +2,7 @@
 define((require) => {
   let {overrideKey,canHaveOwnModifiers,applyModifiers} = require('player/time-modifiers')
 
-  let expandObjectTuples = (o) => {
+  let expandObjectChords = (o) => {
     for (let k in o) {
       let vs = o[k]
       if (Array.isArray(vs)) {
@@ -10,7 +10,7 @@ define((require) => {
         vs.forEach(v => {
           let on = Object.assign({}, o)
           on[k] = v
-          es.push(...expandObjectTuples(on))
+          es.push(...expandObjectChords(on))
         })
         return es
       }
@@ -53,10 +53,10 @@ define((require) => {
     return result
   }
 
-  let evalParamValue = (evalRecurse, value, event, beat, {nestedTuples,ignoreThisVars}) => {
-    if (Array.isArray(value)) { // tuple, eval individual values
+  let evalParamValue = (evalRecurse, value, event, beat, {nestedChords,ignoreThisVars}) => {
+    if (Array.isArray(value)) { // chord, eval individual values
       let v = value.map(v => evalRecurse(v, event, beat))
-      if (!nestedTuples) { v = v.flat() }
+      if (!nestedChords) { v = v.flat() }
       return v
     } else if (typeof value == 'function') { // Call function to get current value
       if (value.evalOverride !== undefined) { return value.evalOverride }
@@ -68,7 +68,7 @@ define((require) => {
       for (let k in value) {
         result[k] = evalRecurse(value[k], event, beat)
       }
-      let r = expandObjectTuples(result) // and hoist tuples up
+      let r = expandObjectChords(result) // and hoist chords up
       return r.length === 1 ? r[0] : r
     } else {
       return value
@@ -99,7 +99,7 @@ define((require) => {
   }
 
   let evalParamFrameNoFlatten = (value, event, beat) => {
-    let options = {nestedTuples:true}
+    let options = {nestedChords:true}
     return evalParamValue(evalRecurseFull, value, event, beat, options)
   }
 
@@ -188,10 +188,10 @@ define((require) => {
 
   let perFrameValueGetB = (e,b) => b
   perFrameValueGetB.interval= 'frame'
-  let perEventThenFrameTuple = [perFrameValueGetB,perFrameValueGetB]
-  perEventThenFrameTuple.interval = 'event'
-  assert([0,0], evalParamEvent(perEventThenFrameTuple, ev(0), 1))
-  assert([1,1], evalParamFrame(perEventThenFrameTuple, ev(0), 1))
+  let perEventThenFrameChord = [perFrameValueGetB,perFrameValueGetB]
+  perEventThenFrameChord.interval = 'event'
+  assert([0,0], evalParamEvent(perEventThenFrameChord, ev(0), 1))
+  assert([1,1], evalParamFrame(perEventThenFrameChord, ev(0), 1))
 
   let perEventThenFrameObject = {foo:perFrameValueGetB}
   perEventThenFrameObject.interval = 'event'

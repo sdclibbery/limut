@@ -10,7 +10,7 @@ define(function(require) {
   }
 
   let elementByIndex = (v, idx, e,b) => {
-    if (typeof(idx) === 'function' && idx.isTupleAggregator) {
+    if (typeof(idx) === 'function' && idx.isChordAggregator) {
       return idx(v, e,b)
     }
     return byIndex(v, evalParamFrame(idx, e,b))
@@ -85,7 +85,7 @@ define(function(require) {
     vs[1] = 2
     assert([2,1], select(vs, [1,0]))
    
-    console.log('Tuple indexer tests complete')
+    console.log('Chord indexer tests complete')
   }
 
   return select

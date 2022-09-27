@@ -67,13 +67,13 @@ define(function(require) {
     while (char = state.str.charAt(state.idx)) {
       if (char === '') { break }
       if (char === ' ' || char === '\t' || char === '\n' || char === '\r') { state.idx += 1; continue }
-      // tuple indexer on previously parsed result
+      // chord indexer on previously parsed result
       if (result !== undefined && char === '[') {
         let indices = parseArray(state, '[', ']')        
         if (indices && indices.length > 0) {
           let r = result
           result = (event,b) => {
-            return chordIndexer(evalParamFrameNoFlatten(r,event,b), indices, event, b) // extract required elements only from tuple
+            return chordIndexer(evalParamFrameNoFlatten(r,event,b), indices, event, b) // extract required elements only from chord
           }
           setInterval(result, parseInterval(state) || r.interval || hoistInterval('event', indices))
         }
@@ -130,7 +130,7 @@ define(function(require) {
         }
         continue
       }
-      // tuple
+      // chord
       if (char == '(') {
         let vs = parseArray(state, '(', ')')
         eatWhitespace(state)
