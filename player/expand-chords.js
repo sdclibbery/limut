@@ -39,16 +39,16 @@ define((require) => {
   }
 
   let expandChords = (es) => {
-    let index = 0
+    let voice = 0
     let lastTime = -1
     return es.flatMap(e => {
       if (e._time !== lastTime) { // Group pattern events by start time. Not really correct, but doing it properly requires adding a lot of complexity to pattern parsing to specify chord groups
-        index = 0
+        voice = 0
         lastTime = e._time
       }
       let exp = multiplyEvents(e)
       exp.forEach(e => {
-        e.index = index++
+        e.voice = voice++
       })
       return exp
     })
@@ -72,19 +72,19 @@ define((require) => {
     let b = 0
 
     assert([], expandChords([]))
-    assert([{x:1,y:2,index:0}], expandChords([{x:1,y:2}]))
-    assert([{x:1,_time:0,index:0},{x:2,_time:1,index:0}], expandChords([{x:1,_time:0},{x:2,_time:1}]))
+    assert([{x:1,y:2,voice:0}], expandChords([{x:1,y:2}]))
+    assert([{x:1,_time:0,voice:0},{x:2,_time:1,voice:0}], expandChords([{x:1,_time:0},{x:2,_time:1}]))
 
-    assert([{x:1,index:0},{x:2,index:1}], expandChords([{x:[1,2]}]))
-    assert([{x:1,y:3,index:0},{x:1,y:4,index:1},{x:2,y:3,index:2},{x:2,y:4,index:3}], expandChords([{x:[1,2],y:[3,4]}]))
-    assert([{x:1,index:0},{x:2,index:1},{x:3,index:2}], expandChords([{x:[1,[2,3]]}]))
-    assert([{x:1,y:3,w:5,index:0},{x:1,y:4,w:5,index:1},{x:2,y:3,w:5,index:2},{x:2,y:4,w:5,index:3}], expandChords([{x:[1,2],y:[3,4],w:5}]))
+    assert([{x:1,voice:0},{x:2,voice:1}], expandChords([{x:[1,2]}]))
+    assert([{x:1,y:3,voice:0},{x:1,y:4,voice:1},{x:2,y:3,voice:2},{x:2,y:4,voice:3}], expandChords([{x:[1,2],y:[3,4]}]))
+    assert([{x:1,voice:0},{x:2,voice:1},{x:3,voice:2}], expandChords([{x:[1,[2,3]]}]))
+    assert([{x:1,y:3,w:5,voice:0},{x:1,y:4,w:5,voice:1},{x:2,y:3,w:5,voice:2},{x:2,y:4,w:5,voice:3}], expandChords([{x:[1,2],y:[3,4],w:5}]))
 
     p = expandChords([{x:()=>[1,2]}])
     assert(1, evalParamFrame(p[0].x,e,b))
-    assert(0, evalParamFrame(p[0].index,e,b))
+    assert(0, evalParamFrame(p[0].voice,e,b))
     assert(2, evalParamFrame(p[1].x,e,b))
-    assert(1, evalParamFrame(p[1].index,e,b))
+    assert(1, evalParamFrame(p[1].voice,e,b))
 
     p = expandChords([{x:{r:[1,2]}}])
     assert({r:1}, evalParamFrame(p[0].x,e,b))
@@ -148,8 +148,8 @@ define((require) => {
 
     p = expandChords([{value:'a'},{ value:'b'}])
     assert(2, p.length)
-    assertHas({index:0,value:'a'}, evalParamFrame(p[0],b))
-    assertHas({index:1,value:'b'}, evalParamFrame(p[1],b))
+    assertHas({voice:0,value:'a'}, evalParamFrame(p[0],b))
+    assertHas({voice:1,value:'b'}, evalParamFrame(p[1],b))
 
     p = expandChords([
       {value:['a','b'],_time:0},
@@ -157,12 +157,12 @@ define((require) => {
       {value:['e','f'],_time:1/2},
     ])
     assert(6, p.length)
-    assertHas({index:0,value:'a'}, evalParamFrame(p[0],b))
-    assertHas({index:1,value:'b'}, evalParamFrame(p[1],b))
-    assertHas({index:2,value:'c'}, evalParamFrame(p[2],b))
-    assertHas({index:3,value:'d'}, evalParamFrame(p[3],b))
-    assertHas({index:0,value:'e'}, evalParamFrame(p[4],b))
-    assertHas({index:1,value:'f'}, evalParamFrame(p[5],b))
+    assertHas({voice:0,value:'a'}, evalParamFrame(p[0],b))
+    assertHas({voice:1,value:'b'}, evalParamFrame(p[1],b))
+    assertHas({voice:2,value:'c'}, evalParamFrame(p[2],b))
+    assertHas({voice:3,value:'d'}, evalParamFrame(p[3],b))
+    assertHas({voice:0,value:'e'}, evalParamFrame(p[4],b))
+    assertHas({voice:1,value:'f'}, evalParamFrame(p[5],b))
     
     console.log('Expand chords tests complete')
   }

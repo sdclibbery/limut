@@ -511,7 +511,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>amp</code> Player amplitude control</p>
 <p><code>sus</code> Sustain time in beats. Note the 'sustain' in an ADSR envelope sets the sustain level, however this param sets the sustain time. The default is time required after attack and decay to take the note to the end of the duration.</p>
 <p><code>rate</code> Playback rate for 'play' samples, animation rate for visuals</p>
-<p><code>index</code> READ ONLY param. This param is set to the index of an individual event within a chord. So for example: <code>p ping 0, add=(0,2)</code>. Here, there are two events within the chord, with <code>add</code> values of 0 and 2. The <code>index</code> values for these events will be 0 and 1, since the <code>index</code> increments. This can be used to change other values based on the index within the chord.</p>
+<p><code>voice</code> READ ONLY param. This param is set to the voice index of an individual event within a chord. So for example: <code>p ping 0, add=(0,2)</code>. Here, there are two events within the chord, with <code>add</code> values of 0 and 2. The <code>voice</code> values for these events will be 0 and 1, since the <code>voice</code> increments. This can be used to change other values based on the voice index within the chord.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-audio-params')" class="accordion"> Audio Params</h4>
 <div id="accordion-audio-params" class="closed">
@@ -982,8 +982,6 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-??? Should rename this.index to this.voice???
- expand-chords; maths; docs; ???
 More standard Player params
  .exists - 1 if player exists at all
  .playing - 1 whenever its not playing a rest

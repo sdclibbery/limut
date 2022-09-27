@@ -23,8 +23,8 @@ define(function(require) {
 
   let getVoiceState = (fullState, e,b) => {
     if (fullState.voices === undefined) { fullState.voices = {} }
-    if (fullState.voices[e.index] === undefined) { fullState.voices[e.index] = {} }
-    let state = fullState.voices[e.index] // Store separate state for each chord voice
+    if (fullState.voices[e.voice] === undefined) { fullState.voices[e.voice] = {} }
+    let state = fullState.voices[e.voice] // Store separate state for each chord voice
     let dt = b - (state.b || b)
     state.b = b
     state.dt = dt
@@ -72,7 +72,7 @@ define(function(require) {
   }
   let parseExpression = require('player/parse-expression')
   let {evalParamFrame} = require('player/eval-param')
-  let ev = (i,c,d,ind) => {return{idx:i,count:c,dur:d,_time:c,index:ind}}
+  let ev = (i,c,d,v) => {return{idx:i,count:c,dur:d,_time:c,voice:v}}
   let p
 
   assert(0, evalParamFrame(parseExpression('floor'), ev(0,0), 0))
