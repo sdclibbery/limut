@@ -11,7 +11,7 @@ define(function(require) {
   let {parseVar,varLookup} = require('player/parse-var')
   let {hoistInterval} = require('player/intervals')
   let addModifiers = require('player/time-modifiers').addModifiers
-  let tupleIndexer = require('player/tuple-indexer')
+  let chordIndexer = require('player/chord-indexer')
   let {evalParamFrame,evalParamFrameNoFlatten} = require('player/eval-param')
   let parseAggregator = require('player/parse-aggregator')
   let parseColour = require('player/parse-colour')
@@ -73,7 +73,7 @@ define(function(require) {
         if (indices && indices.length > 0) {
           let r = result
           result = (event,b) => {
-            return tupleIndexer(evalParamFrameNoFlatten(r,event,b), indices, event, b) // extract required elements only from tuple
+            return chordIndexer(evalParamFrameNoFlatten(r,event,b), indices, event, b) // extract required elements only from tuple
           }
           setInterval(result, parseInterval(state) || r.interval || hoistInterval('event', indices))
         }
