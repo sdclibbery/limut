@@ -881,6 +881,10 @@ Individual percussion synths
  congas
 !Should be a mix param on echo!
 Compression effect?
+Pitch shifter effect
+ Can use https://github.com/Tonejs/Tone.js/blob/c313bc672bcc09a8cee4df97a07ba80155fd1946/Tone/effect/PitchShift.ts
+ See http://msp.ucsd.edu/techniques/v0.11/book-html/node115.html
+ Should also be able to insert this into the reverb loop...
 Should be able to have the filter follow the note envelope (with scaling)
  Generally work is needed on envelopes...
 portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-notes/legato-synths-glide-slide-portamento/
@@ -988,12 +992,12 @@ More standard Player params
 Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7]r, delay=(0,{1/2,add+:2})
  But not sure of syntax
   The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
-!event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
- !pattern "(01)": idx should be 0 for both events, surely?
- Eg:  v xor (00), time=0, add=[0,8], fore=(red,blue)[this.index]
 Percussion player for single sample; value is velocity Eg  p playv 90520070, sample=':'
  ?Or go whole hog and patterns should become expressions and all params should be {} 'info' on the player?
   Eg  P saw {\0246\, oct=5, lpf=\3<52>4\*1000}  or something?
+!event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
+ !pattern "(01)": idx should be 0 for both events, surely?
+ Eg:  v xor (00), time=0, add=[0,8], fore=(red,blue)[this.index]
 Want `set * amp/=2` to halve the current amplitude even when it's using the default fallback value ??It DOES work already??
  When wouldn't it work?  sus+=1/4  ? oct-=1  ?
  ??Should ALL defaults be moved into player types instead of being in the evalParam calls???
