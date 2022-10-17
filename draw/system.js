@@ -1,5 +1,6 @@
 'use strict'
 define((require) => {
+let renderList = require('draw/render-list')
 let {move, filterInPlace} = require('array-in-place')
 
 let system = {
@@ -7,12 +8,11 @@ let system = {
   gl: null,
   cw: 1,
   ch: 1,
-  queued: [],
-  active: [],
+  renderList: renderList(),
 }
 
 system.add = (startTime, render, zorder) => {
-  system.queued.push({t:startTime, render:render, zorder:zorder})
+  system.renderList.add(startTime, render, zorder)
 }
 
 let state = {}
@@ -26,7 +26,7 @@ system.frameStart = (time, count, gl, cw, ch, spectrum, pulse) => {
     system.gl = gl
     system.gl.getExtension('OES_standard_derivatives')
   }
-  if (system.queued.length === 0 && system.active.length === 0) { return false }
+  if (system.renderList.empty()) { return false }
 
   system.gl.viewport(0,0,cw,ch)
   system.gl.enable(system.gl.DEPTH_TEST)
@@ -36,14 +36,12 @@ system.frameStart = (time, count, gl, cw, ch, spectrum, pulse) => {
   system.gl.clearColor(0,0,0,1)
   system.gl.clear(system.gl.COLOR_BUFFER_BIT|system.gl.DEPTH_BUFFER_BIT)
 
-  move(system.queued, system.active, ({t}) => time > t)
   state.count = count
   state.time = time
   state.dt = system.dt
   state.spectrum = spectrum
   state.pulse = pulse
-  system.active.sort((l,r) => l.zorder - r.zorder)
-  filterInPlace(system.active, ({render}) => render(state))
+  system.renderList.render(state)
 
   return true
 }
