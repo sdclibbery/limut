@@ -12,7 +12,6 @@ define((require) => {
     root: { setter: (v) => { scale.setRoot(v) }, default:0 },
     'main.amp': { setter: (v) => system.mainAmp(v), default:1 },
     'main.reverb': { setter: (v) => system.mainReverb(v), default:1 },
-    'main.clear': { setter: (v) => drawSystem.setClear(v), default:1 },
     'beat.readouts': { setter: (v) => metronome.setBeatReadouts(v), default:[12,16,32] },
   }
 

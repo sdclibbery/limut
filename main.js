@@ -74,7 +74,7 @@ define(function(require) {
   }
   window.addEventListener('resize', onResize, false)
   onResize()
-  let ctxGl = canvas.getContext("webgl2")
+  let ctxGl = canvas.getContext("webgl2", { alpha: false })
   if (!ctxGl) {
     console.error('WebGL2 not supported!')
     alert('WebGL2 not supported in this browser; Limut cannot run. Try running in Chrome or Firefox.')

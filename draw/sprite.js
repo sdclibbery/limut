@@ -124,17 +124,16 @@ let verts = (loc, window) => {
     return o
   }
 
-  const blankObj = {}
   let defLoc = {x:0,y:0,w:2,h:2}
   let defScroll = {x:0,y:0}
   let defZoom = {x:1,y:1}
   let defMid = {r:0,g:0,b:0,a:1}
-  let play = (shader, defFore, defBack, params, defParams) => {
+  let play = (renderer, defFore, defBack, params, defParams) => {
     let s
-    if (typeof shader === 'function') {
-      s = shader(params)
+    if (typeof renderer === 'function') {
+      s = renderer(params)
     } else {
-      s = shaders(shader)
+      s = shaders(renderer)
     }
     if (!s) { return () => {} }
     let startTime = params._time
@@ -273,8 +272,8 @@ let verts = (loc, window) => {
   }
 
   let emptyObject = {}
-  return (shader, defFore, defBack, defParams) => (params) => {
+  return (renderer, defFore, defBack, defParams) => (params) => {
     let zorder = param(params.zorder, param(params.linenum, 0)/1000)
-    system.add(params._time, play(shader, defFore, defBack, params, defParams || emptyObject), zorder)
+    system.add(params._time, play(renderer, defFore, defBack, params, defParams || emptyObject), zorder)
   }
 })

@@ -5,6 +5,7 @@ define((require) => {
   let image = require('draw/image')
   let webcam = require('draw/webcam')
   let scope = require('draw/scope')
+  let buffer = require('draw/buffer')
   let play = require('play/synth/play')
   let sample = require('play/synth/sample')
   let bell = require('play/synth/bell')
@@ -38,6 +39,7 @@ define((require) => {
     webcam: { play: sprite(webcam, {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:1},) },
     shadertoy: { play: sprite(shadertoy, {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:1},) },
     image: { play: sprite(image, {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:0},) },
+    buffer: { play: sprite(buffer, {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:0},) },
     text: { play: sprite(image, {r:1,g:1,b:1,a:1}, {r:0,g:0,b:0,a:0},) },
     clouds: { play: sprite('clouds', {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:1}) },
     kal: { play: sprite('kaleidoscope', {r:1,g:1,b:1,a:1}, {r:1,g:1,b:1,a:1}) },

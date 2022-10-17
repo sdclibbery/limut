@@ -93,12 +93,18 @@ define((require) => {
         // Create player
         let playerFactory = playerTypes[playerType.toLowerCase()]
         if (!playerFactory) { throw 'Player "'+playerType+'" not found' }
-        let play = (es, beat) => {
+        let player = {
+          id: playerId,
+          type: playerType,
+          dependsOn: [],
+        }
+        player.play = (es, beat) => {
           player.events ||= []
           player.events = player.events.filter(e => e.countToTime(beat.count) < e.endTime)
           return es
             .filter(e => e.amp === undefined || typeof e.amp === 'function' || e.amp > 0)
             .map(e => {
+              e._player = player
               playerFactory.play(e)
               e.countToTime = (count) => e.beat.time + (count-e.beat.count)*e.beat.duration
               e.pulse = (ev,b) => {
@@ -111,12 +117,6 @@ define((require) => {
               }
               player.events.push(e)
             })
-        }
-        let player = {
-          play: play,
-          id: playerId,
-          type: playerType,
-          dependsOn: [],
         }
         player.currentEvent = (b) => {
           let es = player.events
