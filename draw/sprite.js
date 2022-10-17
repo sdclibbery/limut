@@ -266,6 +266,7 @@ let verts = (loc, window) => {
         else if (blend === 'min') { gl.blendFunc(gl.ONE, gl.ONE); gl.blendEquationSeparate(gl.MIN, gl.FUNC_ADD) }
         else { gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA) }
       }
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null)
       gl.drawArrays(gl.TRIANGLES, 0, 6)
       return true
     }

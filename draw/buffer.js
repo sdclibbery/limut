@@ -28,14 +28,19 @@ define(function (require) {
 
   let getTexture = (buffer) => {
     if (buffer.texture) { return buffer.texture }
+    let gl = system.gl
     buffer.texture = {}
     let texture = buffer.texture
-    texture.tex = system.gl.createTexture()
-    system.gl.bindTexture(system.gl.TEXTURE_2D, texture.tex)
-    system.gl.texImage2D(system.gl.TEXTURE_2D, 0, system.gl.RGBA, 512, 512, 0, system.gl.RGBA, system.gl.UNSIGNED_BYTE, null)
-    system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_MIN_FILTER, system.gl.LINEAR);
-    system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_S, system.gl.CLAMP_TO_EDGE);
-    system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_T, system.gl.CLAMP_TO_EDGE);
+    texture.tex = gl.createTexture()
+    gl.bindTexture(gl.TEXTURE_2D, texture.tex)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 512, 512, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+    // Also create the framebuffer to render into
+    buffer.framebuffer = gl.createFramebuffer()
+    gl.bindFramebuffer(gl.FRAMEBUFFER, buffer.framebuffer)
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture.tex, 0)
     return texture
   }
 
