@@ -12,7 +12,7 @@ return () => {
     rl.queued.push({t:startTime, render:render, zorder:zorder})
   }
 
-  rl.empty = () => rl.queued.length === 0 && rl.active.length === 0
+  rl.isEmpty = () => rl.queued.length === 0 && rl.active.length === 0
 
   rl.render = (state) => {
     move(rl.queued, rl.active, ({t}) => state.time > t)

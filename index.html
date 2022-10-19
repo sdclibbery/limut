@@ -939,14 +939,15 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
 Effects buffer for visuals
- Buffer installs own render list onto player buffer object
  Buffer param on visual players which sends the output to a named texture player instead of the main system destination
-  Note framebuffer bind is currently set at end of sprite, just before drawing
+  Need to adjust/setup state so viewport etc is setup correctly
+  ! Syntax should be `buffer=vb` not `buffer='vb'`
  Can (partial) clear buffer every frame (Is this needed? just use another player rendering to the buffer?)
  ??New bus-only effects like blur, temporal blur, bloom, temporal move+fade etc - can this be done by rendering effects on the two players?
   Can be done by allowing the buffer to render to itself?
  Can specify texture size
  Test with multiple buffers at once
+ Test with various orderings of source and buffer players in the source code
 Digital JPEG corruption filter param - https://www.shadertoy.com/view/Md2GDw
  Takes square blocks and maps them to adjacent parts of the image, or colours them randomly green or magenta
  Main param value determines the amout of corruption

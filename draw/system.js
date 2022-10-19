@@ -1,7 +1,6 @@
 'use strict'
 define((require) => {
 let renderList = require('draw/render-list')
-let {move, filterInPlace} = require('array-in-place')
 
 let system = {
   time: 0,
@@ -26,7 +25,7 @@ system.frameStart = (time, count, gl, cw, ch, spectrum, pulse) => {
     system.gl = gl
     system.gl.getExtension('OES_standard_derivatives')
   }
-  if (system.renderList.empty()) { return false }
+  if (system.renderList.isEmpty()) { return false }
 
   system.gl.viewport(0,0,cw,ch)
   system.gl.enable(system.gl.DEPTH_TEST)

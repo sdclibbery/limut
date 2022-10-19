@@ -2302,5 +2302,5 @@ pp play x[.s]vxstvt, room
 // p play stYtxv[sr]x
 
 
-g glass (-5-30349)..., add=[0:8]l8, delay=this.voice/7, rel=4, phaser=1/2
+g glass (-5-30349)..., add=[0:8]l19, delay=this.voice/7, rel=3, phaser=1/2, room=2
 

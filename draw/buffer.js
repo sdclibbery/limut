@@ -2,6 +2,7 @@
 define(function (require) {
   let system = require('draw/system')
   let common = require('draw/shadercommon')
+  let renderList = require('draw/render-list')
 
   let fragSource = `#version 300 es
   precision highp float;
@@ -26,8 +27,7 @@ define(function (require) {
   }
   `
 
-  let getTexture = (buffer) => {
-    if (buffer.texture) { return buffer.texture }
+  let initBuffer = (buffer) => {
     let gl = system.gl
     buffer.texture = {}
     let texture = buffer.texture
@@ -41,7 +41,15 @@ define(function (require) {
     buffer.framebuffer = gl.createFramebuffer()
     gl.bindFramebuffer(gl.FRAMEBUFFER, buffer.framebuffer)
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture.tex, 0)
-    return texture
+    // Render list
+    buffer.renderList = renderList()
+  }
+
+  let getTexture = (buffer) => {
+    if (!buffer.texture) {
+      initBuffer(buffer)
+    }
+    return buffer.texture
   }
 
   let program
@@ -66,6 +74,9 @@ define(function (require) {
       buffer.shader.program = program || null
       common.getCommonUniforms(buffer.shader)
       buffer.shader.texture = getTexture(buffer)
+      buffer.shader.preRender = (state) => {
+        buffer.renderList.render(state)
+      }
     }
     return buffer.shader
   }

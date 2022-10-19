@@ -8,6 +8,7 @@ define(function (require) {
   let texture = require('draw/texture')
   let textTexture = require('draw/text')
   let colour = require('draw/colour')
+  let players = require('player/players')
 
   let evalMainParamFrame = (params, p, def, count) => {
     let v = params[p]
@@ -152,8 +153,17 @@ let verts = (loc, window) => {
     let window = evalMainParamEvent(params, 'window', false)
     let fade = evalMainParamEvent(params, 'fade', defParams.fade || 0)
     let recol = evalMainParamEvent(params, 'recol', 0)
+    let framebuffer = null
+    let targetBufferPlayerId = evalMainParamEvent(params, 'buffer')
+    let bufferPlayer = players.instances[targetBufferPlayerId]
+    if (bufferPlayer && bufferPlayer.buffer) {
+      framebuffer = bufferPlayer.buffer.framebuffer || null
+    }
     return state => { // per frame
       if (state.time > endTime) { return false }
+      if (s.preRender) {
+        s.preRender(state)
+      }
       let shaderTime = evalMainParamFrame(params, 'time', null, state.count)
       if (shaderTime === null) {
         shaderTime = state.count*rate + sway*state.pulse
@@ -266,7 +276,7 @@ let verts = (loc, window) => {
         else if (blend === 'min') { gl.blendFunc(gl.ONE, gl.ONE); gl.blendEquationSeparate(gl.MIN, gl.FUNC_ADD) }
         else { gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA) }
       }
-      gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+      gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer)
       gl.drawArrays(gl.TRIANGLES, 0, 6)
       return true
     }
@@ -275,6 +285,13 @@ let verts = (loc, window) => {
   let emptyObject = {}
   return (renderer, defFore, defBack, defParams) => (params) => {
     let zorder = param(params.zorder, param(params.linenum, 0)/1000)
-    system.add(params._time, play(renderer, defFore, defBack, params, defParams || emptyObject), zorder)
+    let renderTask = play(renderer, defFore, defBack, params, defParams || emptyObject)
+    let targetBufferPlayerId = evalMainParamEvent(params, 'buffer')
+    let bufferPlayer = players.instances[targetBufferPlayerId]
+    if (bufferPlayer && bufferPlayer.buffer) {
+      bufferPlayer.buffer.renderList.add(params._time, renderTask, zorder)
+    } else {
+      system.add(params._time, renderTask, zorder)
+    }
   }
 })
