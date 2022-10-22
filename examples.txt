@@ -2304,3 +2304,31 @@ pp play x[.s]vxstvt, room
 
 g glass (-5-30349)..., add=[0:8]l19, delay=this.voice/7, rel=3, phaser=1/2, room=2
 
+
+v swirl 0, monochrome, mid=#778f, contrast, rate=1/4, sway=1/4
+//// "presets"
+set pad room=2, envelope=pad, amp*=0.3, lpf=this.freq*3, addc+=wow, oct=(3,4), ring={[100:200]n8,mix:[0,1/3]n12}, pan=[-3/4:1/4]n16
+set click echo=[0:1/4]r, amp=3/2, bpf={[100:1000]r,q:[1/2:7]r}, pan=[-1/3:1/3]r
+set growl oct=1, nf={3000,q:1}, high=-24, amp=3, room=2, flanger=1/64, envelope=simple, rel=6, addc=wow, ring={400,mix:1/4}, pan=[-1/4:3/4]r
+//// setup
+set bpm=90
+set main.amp=2.5
+set root=-5
+//// players
+// pad ambi (-7#-2b02b4b9b)
+// click impulse 0, stutter=[0:3]r, delay=[0,1/8,1/4]r
+// growl prophet 6.2., dur=4, delay=(0,{1/2,add:this.add+9}), lpf=700, add=3
+// pad xylo (02b4), amp=3, add=1
+// click saw 0[-76b], sus=1/16, oct=3, stutter=[2:4]r, delay=([0,1/8,1/4]r,1/2,3/4), add=[-10,-7,0,2b,3]r, echo=(3/4,5/4), high=-8, add+=8
+// growl bell (02b)5b, add=20+1
+
+
+v glow 0, loc={w:1/3,h:1/3,x:(b.start[0],r.start[0],l.start[0],t.start[0])-1/2,y:this.voice/4-1/2}, fore=(red,yellow,green,blue)[this.voice], fade:0
+set bid='https://upload.wikimedia.org/wikipedia/commons/0/07/En-au-break_it_down.ogg'
+// e sample 0, dur=[1/40:1/80]r, envelope=pad, sample=bid, start=[0:1]l[4,0], room, amp=2, pan=[-1/2:1/2]s2, oct=3, room=2, fold=1
+// b sample 0, dur=[1/40:1/80]r, envelope=pad, sample=bid, start=[0:1]n3{per:4,seed:0}, oct=2, amp=7, room
+// r sample 0, dur=[1/40:1/80]r, envelope=pad, sample=bid, start=[0:1]r1/4{per:4,seed:10}+[0:1/4]l[1/4,0], add=[0,2b,5b,0]t1/4, oct=[3,4]t1/4, amp=5, room=1/4, pan=[-1/4:1/4]r
+// l sample 0, dur=[1/40:1/80]r, envelope=pad, sample=bid, start=0.4242+wow, room=1/8, amp=2.5, pan=[-1/2:1/2]n8
+// t sample 0, sample=bid, dur=[1/40:1/80]r, start=[0:1]r1/4+[0:1/4]l[1/4,0], envelope=pad, room=1/8, echo
+
+
