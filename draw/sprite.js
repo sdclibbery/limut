@@ -43,12 +43,11 @@ let vtxData = {
   vtx: new Float32Array(12),
   tex: new Float32Array(12),
 }
-let verts = (loc, window) => {
+let verts = (loc, window, har) => {
     let l = loc.x - loc.w/2
     let r = l + loc.w
     let t = loc.y - loc.h/2
     let b = t + loc.h
-    let har = system.cw / system.ch
     let ihar = 1
     if (har > 2 || har < 1/2) {
       har = Math.sqrt(har)
@@ -215,7 +214,9 @@ let verts = (loc, window) => {
       } else {
         mid = colour(evalParam.evalParamFrame(params.mid, params, state.count), defMid, 'mid')
       }
-      let vtxData = verts(loc, window)
+      let har = system.cw / system.ch
+      if (framebuffer) { har = 1 }
+      let vtxData = verts(loc, window, har)
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
       system.loadVertexAttrib(s.fragCoordBuf, s.fragCoordAttr, vtxData.tex, 2)
       system.gl.useProgram(s.program)
@@ -275,6 +276,11 @@ let verts = (loc, window) => {
         else if (blend === 'max') { gl.blendFunc(gl.ONE, gl.ONE); gl.blendEquationSeparate(gl.MAX, gl.FUNC_ADD) }
         else if (blend === 'min') { gl.blendFunc(gl.ONE, gl.ONE); gl.blendEquationSeparate(gl.MIN, gl.FUNC_ADD) }
         else { gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA) }
+      }
+      if (framebuffer) {
+        system.gl.viewport(0,0,512,512)
+      } else {
+        system.gl.viewport(0,0,system.cw,system.ch)
       }
       gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer)
       gl.drawArrays(gl.TRIANGLES, 0, 6)

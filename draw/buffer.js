@@ -13,16 +13,11 @@ define(function (require) {
   uniform vec2 l_extents;
   ${common.commonProcessors}
   void main() {
-    vec2 uv = fragCoord;
-    float ar = l_extents.x / l_extents.y;
-    if (ar > 1.0) { uv.x /= ar; } else { uv.y *= ar; }
-    uv.y = -uv.y;
+    vec2 uv = (fragCoord+1.0)/2.0;
     uv = preprocess(uv);
-    uv = (uv / 2.0) + 0.5;
     vec4 c = texture(l_image, fract(uv));
     float foreback = c.a;
     c.a = 1.0;
-    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) { foreback = 0.0; }
     postprocess(c, foreback);
   }
   `

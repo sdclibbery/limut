@@ -939,8 +939,16 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
 Effects buffer for visuals
+ Need a 'blank' synth to help with blanking
+ Transform is wrong; tunnel is not in centre; pixellate is wrong size compared to on source player
  Buffer param on visual players which sends the output to a named texture player instead of the main system destination
-  Need to adjust/setup state so viewport etc is setup correctly
+  Should not hardcode texture size to 512x512 (see both sprite and buffer)
+   Should specify in params?? Or always make it identical to canvas rez? Or thats an option? Or always canvas AR?
+  Not getting clamp at edges even though we asked to??
+  Tests
+   loc param
+   window param
+   Nested buffers
   ! Syntax should be `buffer=vb` not `buffer='vb'`
  Can (partial) clear buffer every frame (Is this needed? just use another player rendering to the buffer?)
  ??New bus-only effects like blur, temporal blur, bloom, temporal move+fade etc - can this be done by rendering effects on the two players?
@@ -995,6 +1003,8 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
+Another reason to make players a first class syntax item:  b dbass 0 \n l glass 0. \n v glow 0, loc={x:(b,l).pulse}
+Advance param to specify how far in advance events should be generated - Would allow for negative delays
 ! `p ping 0, amp/=2` amp/=2 INCreases the volume?? - Because there is no original value, so it just gets given 2
 Presets? Allow to define new synths; eg 'preset mysaw saw, att=0.02, lpf=this.freq*[5,3,2,1,1/2]e' then use mysaw as a synth
  Presets should be overridden by actual synth params; eg `preset m saw, add=1 | lead m 0, add=2` should have add=2
