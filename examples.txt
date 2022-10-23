@@ -2332,3 +2332,7 @@ set bid='https://upload.wikimedia.org/wikipedia/commons/0/07/En-au-break_it_down
 // t sample 0, sample=bid, dur=[1/40:1/80]r, start=[0:1]r1/4+[0:1/4]l[1/4,0], envelope=pad, room=1/8, echo
 
 
+vk lines 2, buffer='vb1', fore=#f441, mid=#8af0, back=#2081, repeat=2/3, scroll=time/6, zoom=1/4, time=accum{[0:4]r1/4}
+vb1 buffer 0, repeat=1, scroll=-time/16, mirror=3, tunnel
+
+
