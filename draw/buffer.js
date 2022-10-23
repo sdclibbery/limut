@@ -13,8 +13,8 @@ define(function (require) {
   uniform vec2 l_extents;
   ${common.commonProcessors}
   void main() {
-    vec2 uv = (fragCoord+1.0)/2.0;
-    uv = preprocess(uv);
+    vec2 uv = preprocess(fragCoord);
+    uv = (uv+1.0)/2.0;
     vec4 c = texture(l_image, fract(uv));
     float foreback = c.a;
     c.a = 1.0;
