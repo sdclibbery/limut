@@ -13,7 +13,10 @@ define(function (require) {
   uniform vec2 l_extents;
   ${common.commonProcessors}
   void main() {
-    vec2 uv = preprocess(fragCoord);
+    vec2 uv = fragCoord;
+    float ar = l_extents.x / l_extents.y;
+    uv.x /= ar;
+    uv = preprocess(uv);
     uv = (uv+1.0)/2.0;
     vec4 c = texture(l_image, fract(uv));
     float foreback = c.a;
@@ -24,12 +27,16 @@ define(function (require) {
 
   let initBuffer = (buffer) => {
     let gl = system.gl
+    // Texture
     buffer.texture = {}
+    buffer.texture.width = system.cw * buffer.rez
+    buffer.texture.height = system.ch * buffer.rez
     let texture = buffer.texture
     texture.tex = gl.createTexture()
     gl.bindTexture(gl.TEXTURE_2D, texture.tex)
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 512, 512, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, buffer.texture.width, buffer.texture.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
     // Also create the framebuffer to render into
@@ -40,7 +47,7 @@ define(function (require) {
     buffer.renderList = renderList()
   }
 
-  let getTexture = (buffer) => {
+  let getBuffer = (buffer) => {
     if (!buffer.texture) {
       initBuffer(buffer)
     }
@@ -66,9 +73,10 @@ define(function (require) {
           throw e
         }
       }
+      buffer.rez = 1/2
       buffer.shader.program = program || null
       common.getCommonUniforms(buffer.shader)
-      buffer.shader.texture = getTexture(buffer)
+      buffer.shader.texture = getBuffer(buffer)
       buffer.shader.preRender = (state) => {
         buffer.renderList.render(state)
       }

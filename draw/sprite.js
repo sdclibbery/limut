@@ -152,11 +152,11 @@ let verts = (loc, window, har) => {
     let window = evalMainParamEvent(params, 'window', false)
     let fade = evalMainParamEvent(params, 'fade', defParams.fade || 0)
     let recol = evalMainParamEvent(params, 'recol', 0)
-    let framebuffer = null
+    let buffer = undefined
     let targetBufferPlayerId = evalMainParamEvent(params, 'buffer')
     let bufferPlayer = players.instances[targetBufferPlayerId]
-    if (bufferPlayer && bufferPlayer.buffer) {
-      framebuffer = bufferPlayer.buffer.framebuffer || null
+    if (bufferPlayer && bufferPlayer.buffer && bufferPlayer.buffer.framebuffer) {
+      buffer = bufferPlayer.buffer || undefined
     }
     return state => { // per frame
       if (state.time > endTime) { return false }
@@ -215,54 +215,55 @@ let verts = (loc, window, har) => {
         mid = colour(evalParam.evalParamFrame(params.mid, params, state.count), defMid, 'mid')
       }
       let har = system.cw / system.ch
-      if (framebuffer) { har = 1 }
+      if (buffer) { har = buffer.texture.width / buffer.texture.height }
       let vtxData = verts(loc, window, har)
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
       system.loadVertexAttrib(s.fragCoordBuf, s.fragCoordAttr, vtxData.tex, 2)
-      system.gl.useProgram(s.program)
-      system.gl.uniform1f(s.timeUnif, shaderTime)
-      system.gl.uniform1f(s.brightnessUnif, brightness)
-      system.gl.uniform1f(s.monochromeUnif, monochrome)
-      system.gl.uniform1f(s.vignetteUnif, vignette)
-      system.gl.uniform1i(s.recolUnif, recol)
-      system.gl.uniform1f(s.valueUnif, value+add + pulse*state.pulse)
-      system.gl.uniform1f(s.ampUnif, amp + pulse*state.pulse*0.5)
-      system.gl.uniform4fv(s.foreUnif, fore)
-      system.gl.uniform4fv(s.midUnif, mid)
-      system.gl.uniform4fv(s.backUnif, back)
-      system.gl.uniform4fv(s.spectrumUnif, state.spectrum)
-      system.gl.uniform4fv(s.repeatUnif, repeat)
-      system.gl.uniform2fv(s.scrollUnif, scroll)
-      system.gl.uniform2fv(s.zoomUnif, zoom)
-      system.gl.uniform1f(s.rotateUnif, rotate)
-      system.gl.uniform4fv(s.mirrorUnif, mirror)
-      system.gl.uniform4fv(s.pixellateUnif, pixellate)
-      system.gl.uniform1f(s.tunnelUnif, tunnel)
-      system.gl.uniform4fv(s.rippleUnif, ripple)
-      system.gl.uniform1f(s.perspectiveUnif, perspective)
-      system.gl.uniform1f(s.additiveUnif, additive)
-      system.gl.uniform1f(s.eventTimeUnif, eventTime)
-      system.gl.uniform1f(s.contrastUnif, contrast)
+      let gl = system.gl
+      gl.useProgram(s.program)
+      gl.uniform1f(s.timeUnif, shaderTime)
+      gl.uniform1f(s.brightnessUnif, brightness)
+      gl.uniform1f(s.monochromeUnif, monochrome)
+      gl.uniform1f(s.vignetteUnif, vignette)
+      gl.uniform1i(s.recolUnif, recol)
+      gl.uniform1f(s.valueUnif, value+add + pulse*state.pulse)
+      gl.uniform1f(s.ampUnif, amp + pulse*state.pulse*0.5)
+      gl.uniform4fv(s.foreUnif, fore)
+      gl.uniform4fv(s.midUnif, mid)
+      gl.uniform4fv(s.backUnif, back)
+      gl.uniform4fv(s.spectrumUnif, state.spectrum)
+      gl.uniform4fv(s.repeatUnif, repeat)
+      gl.uniform2fv(s.scrollUnif, scroll)
+      gl.uniform2fv(s.zoomUnif, zoom)
+      gl.uniform1f(s.rotateUnif, rotate)
+      gl.uniform4fv(s.mirrorUnif, mirror)
+      gl.uniform4fv(s.pixellateUnif, pixellate)
+      gl.uniform1f(s.tunnelUnif, tunnel)
+      gl.uniform4fv(s.rippleUnif, ripple)
+      gl.uniform1f(s.perspectiveUnif, perspective)
+      gl.uniform1f(s.additiveUnif, additive)
+      gl.uniform1f(s.eventTimeUnif, eventTime)
+      gl.uniform1f(s.contrastUnif, contrast)
       if (s.textureUnif) {
         s.textureUnif.forEach((tu,i) => {
           let t = s.texture || (text !== undefined ? textTexture(text) : texture(url))
           if (t.update) { t.update(state) }
-          system.gl.activeTexture(system.gl['TEXTURE'+i])
-          system.gl.bindTexture(system.gl.TEXTURE_2D, t.tex)
-          system.gl.uniform1i(tu, i)
-          system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_S, system.gl.CLAMP_TO_EDGE)
-          system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_WRAP_T, system.gl.CLAMP_TO_EDGE)
-          system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_MIN_FILTER, system.gl.LINEAR)
+          gl.activeTexture(gl['TEXTURE'+i])
+          gl.bindTexture(gl.TEXTURE_2D, t.tex)
+          gl.uniform1i(tu, i)
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
           if (s.extentsUnif && t.width && t.height) {
             let extents = ca('extents')
             extents[0] = t.width
             extents[1] = t.height
-            system.gl.uniform2fv(s.extentsUnif, extents)
+            gl.uniform2fv(s.extentsUnif, extents)
           }
           if (t.params) { t.params() }
         })
       }
-      let gl = system.gl
       if (fore[3] >= 0.9999 && back[3] >= 0.9999 && mid[3] >= 0.9999 && additive == 0 && vignette == 0 && blend === undefined) {
         gl.disable(gl.BLEND)
       } else {
@@ -277,12 +278,13 @@ let verts = (loc, window, har) => {
         else if (blend === 'min') { gl.blendFunc(gl.ONE, gl.ONE); gl.blendEquationSeparate(gl.MIN, gl.FUNC_ADD) }
         else { gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA) }
       }
-      if (framebuffer) {
-        system.gl.viewport(0,0,512,512)
+      if (buffer) {
+        gl.viewport(0,0,buffer.texture.width,buffer.texture.height)
+        gl.bindFramebuffer(gl.FRAMEBUFFER, buffer.framebuffer)
       } else {
-        system.gl.viewport(0,0,system.cw,system.ch)
+        gl.viewport(0,0,system.cw,system.ch)
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null)
       }
-      gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer)
       gl.drawArrays(gl.TRIANGLES, 0, 6)
       return true
     }
