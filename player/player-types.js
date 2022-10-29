@@ -53,7 +53,7 @@ define((require) => {
     bits: { play: sprite('bits', {r:1.0,g:1.0,b:1.0,a:1}, {r:0.1,g:0.1,b:0.1,a:1}) },
     xor: { play: sprite('xor', {r:1.0,g:1.0,b:1.0,a:1}, {r:0.1,g:0.1,b:0.1,a:1}, {additive:1}) },
     gradient: { play: sprite('gradient', {r:1.0,g:1.0,b:1.0,a:1}, {r:0.1,g:0.1,b:0.1,a:1}) },
-    blank: { play: sprite('blank', {r:0.0,g:0.0,b:0.0,a:0.1}, {r:0.0,g:0.0,b:0.0,a:0.1}) },
+    blank: { play: sprite('blank', {r:0.0,g:0.0,b:0.0,a:0}, {r:0.0,g:0.0,b:0.0,a:6/256}) },
     lights: { play: sprite('lights', {r:1.0,g:1.0,b:1.0,a:1}, {r:0.5,g:0.4,b:0.3,a:0}, {additive:1}) },
     julia: { play: sprite('julia', {r:0.9,g:0.9,b:0.9,a:1}, {r:0.1,g:0.1,b:0.1,a:1}) },
     bars: { play: sprite('bars', {r:1,g:1,b:1,a:1}, {r:0,g:0,b:0,a:1}, {additive:1}) },

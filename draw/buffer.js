@@ -3,6 +3,7 @@ define(function (require) {
   let system = require('draw/system')
   let common = require('draw/shadercommon')
   let renderList = require('draw/render-list')
+  let {evalParamEvent} = require('player/eval-param')
 
   let fragSource = `#version 300 es
   precision highp float;
@@ -39,47 +40,48 @@ define(function (require) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+    buffer.shader.texture = texture
     // Also create the framebuffer to render into
     buffer.framebuffer = gl.createFramebuffer()
     gl.bindFramebuffer(gl.FRAMEBUFFER, buffer.framebuffer)
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture.tex, 0)
     // Render list
     buffer.renderList = renderList()
-  }
-
-  let getBuffer = (buffer) => {
-    if (!buffer.texture) {
-      initBuffer(buffer)
+    buffer.shader.preRender = (state) => {
+      buffer.renderList.render(state)
     }
-    return buffer.texture
-  }
+}
 
   let program
+  let initProgram = (buffer) => {
+    buffer.shader = {}
+    if (!program) {
+      let vtxCompiled = system.loadShader(common.vtxShader, system.gl.VERTEX_SHADER)
+      try {
+        program = system.loadProgram([
+          vtxCompiled,
+          system.loadShader(fragSource, system.gl.FRAGMENT_SHADER)
+        ])
+      } catch (e) {
+        buffer.shader.program = null
+        throw e
+      }
+    }
+    buffer.shader.program = program || null
+    common.getCommonUniforms(buffer.shader)
+  }
+
   return (params) => {
     let player = params._player
-    player.buffer = player.buffer || {}
-    let buffer = player.buffer
-    if (buffer.shader === undefined) {
-      buffer.shader = {}
-      if (!program) {
-        let vtxCompiled = system.loadShader(common.vtxShader, system.gl.VERTEX_SHADER)
-        try {
-          program = system.loadProgram([
-            vtxCompiled,
-            system.loadShader(fragSource, system.gl.FRAGMENT_SHADER)
-          ])
-        } catch (e) {
-          buffer.shader.program = null
-          throw e
-        }
-      }
-      buffer.rez = 1/2
-      buffer.shader.program = program || null
-      common.getCommonUniforms(buffer.shader)
-      buffer.shader.texture = getBuffer(buffer)
-      buffer.shader.preRender = (state) => {
-        buffer.renderList.render(state)
-      }
+    let buffer = player.buffer || {}
+    let rez = evalParamEvent(params.rez, params) || 1/2
+    if (buffer.shader === undefined || buffer.rez !== rez || system.cw !== buffer.systemCw || system.ch !== buffer.systemCh) {
+      buffer.rez = rez
+      buffer.systemCw = system.cw
+      buffer.systemCh = system.ch
+      initProgram(buffer)
+      initBuffer(buffer)
+      player.buffer = buffer
     }
     return buffer.shader
   }

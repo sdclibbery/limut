@@ -940,18 +940,20 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
 Effects buffer for visuals
- Recreate texture when system cw/ch change
- Buffer rez from param
  ! Syntax should be `buffer=vb` not `buffer='vb'`
+  Support parsing of players - what if the player is later in the source code?
+  buffer param supports either string player name, or player object
  Tests
   loc param
   window param
+  Multiple buffers at once
+  Various orderings of source and buffer players in the source code
   Nested buffers
- ??New bus-only effects like blur, temporal blur, bloom, temporal move+fade etc - can this be done by rendering effects on the two players?
-  Can be done by allowing the buffer to render to itself? IE double buffer?
- Test with multiple buffers at once
- Test with various orderings of source and buffer players in the source code
- Docs
+ Docs: buffer param, buffer synth, rez param
+recol=fb that leaves all pixels white but with fb set, to allow recolouring with fore/mid/back. check it for webcam/image etc too
+??New bus-only effects like blur, temporal blur, bloom, temporal move+fade etc - can this be done by rendering effects on the two players?
+ Can be done by allowing the buffer to render to itself? IE double buffer?
+Should be able to use  back=0, fore=1  to get transparent and white etc
 Generative synth
  Complementary colours?
  Shapes? Noise? Dream?
@@ -1002,13 +1004,13 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
+Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as needed
 Another reason to make players a first class syntax item:  b dbass 0 \n l glass 0. \n v glow 0, loc={x:(b,l).pulse}
 Advance param to specify how far in advance events should be generated - Would allow for negative delays
 ! `p ping 0, amp/=2` amp/=2 INCreases the volume?? - Because there is no original value, so it just gets given 2
-Presets? Allow to define new synths; eg 'preset mysaw saw, att=0.02, lpf=this.freq*[5,3,2,1,1/2]e' then use mysaw as a synth
- Presets should be overridden by actual synth params; eg `preset m saw, add=1 | lead m 0, add=2` should have add=2
- Presets should be able to include additional follow synths
-? (0,2:8) syntax?
+ Want `set * amp/=2` to halve the current amplitude even when it's using the default fallback value ??It DOES work already??
+  When wouldn't it work?  sus+=1/4  ? oct-=1  ?
+  ??Should ALL defaults be moved into player types instead of being in the evalParam calls???
 More standard Player params
  .exists - 1 if player exists at all
  .playing - 1 whenever its not playing a rest
@@ -1016,15 +1018,16 @@ Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7
  !Actually, this is already possible using  delay=(0,{1/2,add:this.add+2})
  But not sure of syntax
   The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
+Presets? Allow to define new synths; eg 'preset mysaw saw, att=0.02, lpf=this.freq*[5,3,2,1,1/2]e' then use mysaw as a synth
+ Presets should be overridden by actual synth params; eg `preset m saw, add=1 | lead m 0, add=2` should have add=2
+ Presets should be able to include additional follow synths
+? (0,2:8) syntax?
 Percussion player for single sample; value is velocity Eg  p playv 90520070, sample=':'
  ?Or go whole hog and patterns should become expressions and all params should be {} 'info' on the player?
   Eg  P saw {\0246\, oct=5, lpf=\3<52>4\*1000}  or something?
 !event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
  !pattern "(01)": idx should be 0 for both events, surely?
  Eg:  v xor (00), time=0, add=[0,8], fore=(red,blue)[this.index]
-Want `set * amp/=2` to halve the current amplitude even when it's using the default fallback value ??It DOES work already??
- When wouldn't it work?  sus+=1/4  ? oct-=1  ?
- ??Should ALL defaults be moved into player types instead of being in the evalParam calls???
 !Syntax colouring is case sensitive; eg  `Set` does not get coloured correctly
 !Handle 'cookie blocking' https://blog.tomayac.com/2022/08/30/things-not-available-when-someone-blocks-all-cookies/
 For breakbeats, need a param to switch the pattern step used for an event
