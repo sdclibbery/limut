@@ -941,8 +941,8 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ==== visual ====
 Effects buffer for visuals
  ! Syntax should be `buffer=vb` not `buffer='vb'`
-  Support parsing of players - what if the player is later in the source code?
-  buffer param supports either string player name, or player object
+  Update docs for blend, wave, envelope and predefined vars as necessary
+  Test everything related to var lookup
  Tests
   loc param
   window param
@@ -1006,6 +1006,7 @@ shadertoy synth multiple channels
 ==== other ====
 Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as needed
 Another reason to make players a first class syntax item:  b dbass 0 \n l glass 0. \n v glow 0, loc={x:(b,l).pulse}
+ Can we do this so the '.' operator can take a string as LHS arg, and look it up to a player?
 Advance param to specify how far in advance events should be generated - Would allow for negative delays
 ! `p ping 0, amp/=2` amp/=2 INCreases the volume?? - Because there is no original value, so it just gets given 2
  Want `set * amp/=2` to halve the current amplitude even when it's using the default fallback value ??It DOES work already??

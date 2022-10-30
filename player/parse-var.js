@@ -56,6 +56,7 @@ define(function(require) {
         v = vars[key](modifiers, event,b, state)
       } else {
         v = vars[key] // ordinary var
+        if (v === undefined) { v = key } // If not found as a var, treat as a string value
       }
       v = evalParamFrame(v,event,b)
       if (v === undefined) { v = 0 } // If not found as a var, assume its for a currently unavailable player and default to zero
@@ -172,6 +173,10 @@ define(function(require) {
   p.modifiers = {value:[2,3]}
   assert([4,9], evalParamFrame(p,ev(0),0))
   delete vars.foo
+
+  state = {str:'foo',idx:0}
+  p = varLookup(parseVar(state), [])
+  assert('foo', p(ev(0),0,evalParamFrame))
 
   console.log('Parse var tests complete')
   }
