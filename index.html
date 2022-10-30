@@ -309,8 +309,8 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 </div>
 <h4 onclick="toggleAccordion('accordion-syntax-principles')" class="accordion"> Syntax Principles</h4>
 <div id="accordion-syntax-principles" class="closed">
-  <p><code>()</code> Round brackets define chords in both patterns and expressions; that is, mutltiple events played at the same time. Chord indexers and aggregators can be used to extract various elements from chords.</p>
-  <p><code>[]</code> Square brackets define sequences in both patterns and expressions; that is, multiple events one after another (timevars). They are also used for indexing into chords and maps</p>
+  <p><code>()</code> Round brackets define chords in both patterns and expressions; that is, mutltiple events or values at the same time. Chord indexers and aggregators can be used to extract various elements from chords.</p>
+  <p><code>[]</code> Square brackets define sequences in both patterns and expressions; that is, multiple events or values one after another (sequences/timevars). They are also used for indexing (looking up) into chords and maps</p>
   <p><code>&lt;&gt;</code> Angle brackets define higher level sequences in patterns; that is, a sequence where the next event is selected when the entire pattern repeats next.</p>
   <p><code>{}</code> Curly brackets in an expression supply extra information to a param (subparams), value (modifiers) or function call (arguments)</p>
   <p><code>@</code> Defines the interval for an expression; that is, how often the expression should be evaluated within the event</p>
@@ -445,7 +445,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>(3,1,2)[sum]</code> Returns the sum of all elements in a chord (6 in the example)</p>
 <p><code>(3,1,2)[avg]</code> Returns the mean average of all elements in a chord (2 in the example)</p>
 <h5>Map lookup:</h5>
-<p><code>{foo:2}['foo']</code> Returns a field in a map (returns 2 in this example)</p>
+<p><code>{foo:2}[foo]</code> Returns a field in a map (returns 2 in this example)</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-audio-synths')" class="accordion"> Audio Synths</h4>
 <div id="accordion-audio-synths" class="closed">
@@ -528,25 +528,25 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p class='sub'><code>sus={level:1/6}</code> Set the amplitude level for sustain. Note the 'sustain' in an ADSR envelope is the level, so it is this value not the main 'sus' value (which is actually the sustain time). Default: 0.8.</p>
 <p><code>rel</code> Release time in beats</p>
 <p><code>wave</code> For audio synths that use a waveform, specify which waveform to use, from this list:
-  <code>'sine'</code> (can use <code>sine</code> for convenience), 
-  <code>'square'</code> (can use <code>square</code> for convenience), 
-  <code>'sawtooth'</code> (can use <code>saw</code> for convenience), 
-  <code>'triangle'</code> (can use <code>tri</code> for convenience), 
-  <code>'pulse'</code> (can use <code>pulse</code> for convenience), 
-  <code>'ah'</code>,
-  <code>'bah'</code>,
-  <code>'bass'</code>,
+  <code>sine</code>, 
+  <code>square</code>, 
+  <code>sawtooth</code> (can also use <code>saw</code> for convenience), 
+  <code>triangle</code> (can also use <code>tri</code> for convenience), 
+  <code>pulse</code>, 
+  <code>ah</code>,
+  <code>bah</code>,
+  <code>bass</code>,
   <code>'bass-amp360'</code>,
   <code>'bass-fuzz'</code>,
   <code>'bass-fuzz-2'</code>,
   <code>'bass-sub-dub'</code>,
   <code>'bass-sub-dub-2'</code>,
-  <code>'brass'</code>,
+  <code>brass</code>,
   <code>'brit-blues'</code>,
   <code>'brit-blues-driven'</code>,
-  <code>'buzzy'</code>,
+  <code>buzzy</code>,
   <code>'buzzy-2'</code>,
-  <code>'celeste'</code>,
+  <code>celeste</code>,
   <code>'chorus-strings'</code>,
   <code>'dissonant-1'</code>,
   <code>'dissonant-2'</code>,
@@ -555,33 +555,33 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
   <code>'dropped-square'</code>,
   <code>'dyna-ep-bright'</code>,
   <code>'dyna-ep-med'</code>,
-  <code>'ee'</code>,
-  <code>'ethnic'</code>,
-  <code>'full'</code>,
+  <code>ee</code>,
+  <code>ethnic</code>,
+  <code>full</code>,
   <code>'full-2'</code>,
   <code>'guitar-fuzz'</code>,
-  <code>'harsh'</code>,
+  <code>harsh</code>,
   <code>'mkl-hard'</code>,
-  <code>'noise'</code>,
-  <code>'o'</code>,
-  <code>'ooh'</code>,
-  <code>'organ'</code>,
+  <code>noise</code>,
+  <code>o</code>,
+  <code>ooh</code>,
+  <code>organ</code>,
   <code>'organ-2'</code>,
-  <code>'piano'</code>,
+  <code>piano</code>,
   <code>'pop-ahhh'</code>,
-  <code>'pulse'</code>,
+  <code>pulse</code>,
   <code>'putney-wavering'</code>,
-  <code>'tb303'</code>,
-  <code>'throaty'</code>,
-  <code>'trombone'</code>,
+  <code>tb303</code>,
+  <code>throaty</code>,
+  <code>trombone</code>,
   <code>'twelve-optines'</code>,
   <code>'twelve-string-guitar'</code>,
   <code>'warm-saw'</code>,
   <code>'warm-square'</code>,
   <code>'warm-triangle'</code>,
-  <code>'wurlitzer'</code>,
+  <code>wurlitzer</code>,
   <code>'wurlitzer-2'</code>
-  Note that these values are strings and must be enclosed in quotes, but a few convenience predefined vars are provided. So <code>'brass'</code> must be a string emclosed in quotes, but <code>saw</code> can be used instead of the string <code>'sawtooth'. In addition, apart from the basic waveforms, there may be a performance problem with using dynamic (per frame) pitch sweeps using these waveforms.</code>.
+  Note that values with hyphens must be enclosed in quotes. In addition, there may be a performance problem with using dynamic (per frame) pitch sweeps using these waveforms. This penalty does not apply to the basic waveforms (sine, sawtooth, triangle, square).
 </p>
 <p><code>detune</code> Amount of detune in semitones</p>
 <p><code>lpf</code> Low pass filter frequency in Hertz</p>
@@ -619,50 +619,50 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>bits</code> bit crush effect; value is number of bits. 1 bit is very distorted to (eg) 32 bits is relatively clean. 0 disables the effect.</p>
 <p class='sub'><code>bits={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>scale</code> override scale for this player; set to one of these strings: 
-  <code>'chromatic'</code>, 
-  <code>'major'</code>, 
-  <code>'majorpentatonic'</code>, 
-  <code>'pentatonic'</code>, 
-  <code>'penta'</code>, 
-  <code>'minor'</code>, 
-  <code>'aeolian'</code>, 
-  <code>'minorpentatonic'</code>, 
-  <code>'mixolydian'</code>, 
-  <code>'melodicminor'</code>, 
-  <code>'melodicmajor'</code>, 
-  <code>'harmonicminor'</code>, 
-  <code>'harmonicmajor'</code>, 
-  <code>'dorian'</code>, 
-  <code>'dorian2'</code>, 
-  <code>'diminished'</code>, 
-  <code>'egyptian'</code>, 
-  <code>'yu'</code>, 
-  <code>'zhi'</code>, 
-  <code>'phrygian'</code>, 
-  <code>'prometheus'</code>, 
-  <code>'indian'</code>, 
-  <code>'locrian'</code>, 
-  <code>'locrianmajor'</code>, 
-  <code>'lydian'</code>, 
-  <code>'lydianminor'</code>, 
-  <code>'hungarianminor'</code>, 
-  <code>'romanianminor'</code>, 
-  <code>'chinese'</code>, 
-  <code>'wholetone'</code>, 
-  <code>'halfwhole'</code>, 
-  <code>'wholehalf'</code>, 
-  <code>'bebopmaj'</code>, 
-  <code>'bebopdorian'</code>, 
-  <code>'bebopdom'</code>, 
-  <code>'bebopmelmin'</code>, 
-  <code>'blues'</code>, 
-  <code>'minmaj'</code>, 
-  <code>'susb9'</code>, 
-  <code>'lydianaug'</code>, 
-  <code>'lydiandom'</code>, 
-  <code>'melmin5th'</code>, 
-  <code>'halfdim'</code>, 
-  <code>'altered'</code>, 
+  <code>chromatic</code>, 
+  <code>major</code>, 
+  <code>majorpentatonic</code>, 
+  <code>pentatonic</code>, 
+  <code>penta</code>, 
+  <code>minor</code>, 
+  <code>aeolian</code>, 
+  <code>minorpentatonic</code>, 
+  <code>mixolydian</code>, 
+  <code>melodicminor</code>, 
+  <code>melodicmajor</code>, 
+  <code>harmonicminor</code>, 
+  <code>harmonicmajor</code>, 
+  <code>dorian</code>, 
+  <code>dorian2</code>, 
+  <code>diminished</code>, 
+  <code>egyptian</code>, 
+  <code>yu</code>, 
+  <code>zhi</code>, 
+  <code>phrygian</code>, 
+  <code>prometheus</code>, 
+  <code>indian</code>, 
+  <code>locrian</code>, 
+  <code>locrianmajor</code>, 
+  <code>lydian</code>, 
+  <code>lydianminor</code>, 
+  <code>hungarianminor</code>, 
+  <code>romanianminor</code>, 
+  <code>chinese</code>, 
+  <code>wholetone</code>, 
+  <code>halfwhole</code>, 
+  <code>wholehalf</code>, 
+  <code>bebopmaj</code>, 
+  <code>bebopdorian</code>, 
+  <code>bebopdom</code>, 
+  <code>bebopmelmin</code>, 
+  <code>blues</code>, 
+  <code>minmaj</code>, 
+  <code>susb9</code>, 
+  <code>lydianaug</code>, 
+  <code>lydiandom</code>, 
+  <code>melmin5th</code>, 
+  <code>halfdim</code>, 
+  <code>altered</code>, 
 </p>
 <p><code>vib</code> vibrato frequency in cycles per beat</p>
 <p class='sub'><code>vib={2,depth:1}</code> vibrato depth in semitones (default 0.4)</p>
@@ -710,7 +710,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>ripple</code> Apply a ripple warp to the shader, to give the effect of waves of image distortion rippling out from the centre of the shader.</p>
 <p class='sub'><code>ripple={1,scale:1/4}</code> scale (size) of ripples. Defaults to 1.</p>
 <p><code>additive</code> add this shaders output to those beneath instead of blending</p>
-<p><code>blend</code> set the blend mode which defines how this shaders output interacts with the color already present underneath. Possible values: <code>'additive' 'subtractive' 'average' 'multiply' 'invert' 'min' 'max'</code></p>
+<p><code>blend</code> set the blend mode which defines how this shaders output interacts with the color already present underneath. Possible values: <code>additive subtractive average multiply invert min max</code></p>
 <p><code>monochrome</code> make the shader output monochrome; 0 for normal, 1 for monochrome</p>
 <p><code>vignette</code> fade out the visual around the edges. The value controls the shape.</p>
 <p><code>recol</code> recolour the shader. Set to <code>oil</code> for oil film colours, <code>hue</code> for a hue spectrum, <code>fire</code> for a flame effect, <code>sunset</code> for dusk colours, <code>neon</code> for neon megenta and cyan, <code>titanium</code> for titanium anodisation colours</p>
@@ -739,7 +739,6 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>transparent</code> Predefined colour. Others: black, darkgray, gray, lightgray, white, red, orange, yellow, green, blue, indigo, violet, neonpink, neongreen</p>
 <p><code>random</code> Random colour</p>
 <p><code>rainbow</code> Colour changing through the rainbow</p>
-<p><code>pad</code> Envelope types eg <code>envelope=pad</code>; also <code>full</code> and <code>simple</code></p>
 <p><code>wow</code> Randomly but smoothly varying signal, good for simulating analog 'wow' pitch distortion; eg <code>addc=wow</code></p>
 </div>
 <h4 onclick="toggleAccordion('accordion-controls')" class="accordion"> Controls</h4>
@@ -941,7 +940,6 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ==== visual ====
 Effects buffer for visuals
  ! Syntax should be `buffer=vb` not `buffer='vb'`
-  Update docs for blend, wave, envelope and predefined vars as necessary
   Test everything related to var lookup
  Tests
   loc param
@@ -1004,9 +1002,14 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
+Another reason to make players a first class syntax item:  b dbass 0 \n l glass 0. \n v glow 0, loc={x:(b,l)[pulse]}
+ Can we do this so the '[]' operator can take a string args, and look it up to/with player?
+ Should then DROP the  `fore=p1.foo`  syntax; and just use  `fore=p1[foo]`  instead, and player field lookup stops being a parse-var thing and becomes an operator[] thing?
+ Or should we go the other way? `[]` are supposed to be for sequential values; overloading them as map lookup is icky?
+  Then it should all just be '.' operator?? But what about chord indexing then?
+  Or support both `.` and `[]` as far as possible, and still move player field lookup out of parse-var into both `operator[]` and a new `operator.`??
 Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as needed
-Another reason to make players a first class syntax item:  b dbass 0 \n l glass 0. \n v glow 0, loc={x:(b,l).pulse}
- Can we do this so the '.' operator can take a string as LHS arg, and look it up to a player?
+ Should the syntax be  `fore[g]=0`  ??
 Advance param to specify how far in advance events should be generated - Would allow for negative delays
 ! `p ping 0, amp/=2` amp/=2 INCreases the volume?? - Because there is no original value, so it just gets given 2
  Want `set * amp/=2` to halve the current amplitude even when it's using the default fallback value ??It DOES work already??
