@@ -501,6 +501,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>image</code> Display an online image. Use the <code>url</code> param to specify the image url. The image must be served using CORS. by default the image <code>back</code> is transparent.</p>
 <p><code>webcam</code> Display video feed from the attached webcam (if present). The browser will ask permission before allowing access to the webcam.</p>
 <p><code>text</code> Draw and display text. Use the text param; eg <code>text='Hello'</code>. Use <code>\n</code> to split to multiple lines: <code>text='Hello\nWorld'</code>. Use subparams to control the text rendering, eg: <code>text={'Hello',font:'times',size:'144',linesize:0.7,y:1/4,x:2/3,style:'bold italic'}</code>. Text is evaluated only per event, not per frame.</p>
+<p><code>buffer</code> Maintain a render target, which other synths can render into. The render target is then drawn to the screen by this synth. Use the <code>buffer</code> param on another synth to direct its output to a <code>buffer</code> synth. Use the <code>rez</code> param on the buffer synth to set the render target texture resolution scale.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-event-params')" class="accordion"> Common Event Params</h4>
 <div id="accordion-event-params" class="closed">
@@ -715,6 +716,8 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>vignette</code> fade out the visual around the edges. The value controls the shape.</p>
 <p><code>recol</code> recolour the shader. Set to <code>oil</code> for oil film colours, <code>hue</code> for a hue spectrum, <code>fire</code> for a flame effect, <code>sunset</code> for dusk colours, <code>neon</code> for neon megenta and cyan, <code>titanium</code> for titanium anodisation colours</p>
 <p><code>contrast</code> apply a power based contrast curve. Default is zero meaning no contrast curve applied.</p>
+<p><code>buffer</code> send the output of this synth to a buffer player. For example, <code>buffer=vb</code> makes this synth render to the synth with id <code>vb</code>, which must be a synth of type <code>buffer</code>. The buffer synth can then render itself to the screen to display the output.</p>
+<p><code>rez</code> only for a <code>buffer</code> synth: sets the render target resolution scaling. For example, a <code>rez</code> of <code>1</code> will make a render target texture that is identical width and height to the display screen canvas. Default value is 1/2.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-predefined-vars')" class="accordion"> Predefined Vars</h4>
 <div id="accordion-predefined-vars" class="closed">
@@ -938,16 +941,6 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-Effects buffer for visuals
- ! Syntax should be `buffer=vb` not `buffer='vb'`
-  Test everything related to var lookup
- Tests
-  loc param
-  window param
-  Multiple buffers at once
-  Various orderings of source and buffer players in the source code
-  Nested buffers
- Docs: buffer param, buffer synth, rez param
 recol=fb that leaves all pixels white but with fb set, to allow recolouring with fore/mid/back. check it for webcam/image etc too
 ??New bus-only effects like blur, temporal blur, bloom, temporal move+fade etc - can this be done by rendering effects on the two players?
  Can be done by allowing the buffer to render to itself? IE double buffer?
@@ -996,18 +989,18 @@ shadertoy synth multiple channels
 // (), follow, complex durs, delay, stutter, overrides, +=, |=
 // [], []t, []l/s, []e, []n, []r
 // operators + - * / ^ % |
-// var, player.var, this.param, this.index, var{params}, slider
+// var, player.var, this.param, this.voice, var{params}, slider
 // (...)[...], (...)[max], max{(...)}, {foo:...}['foo']
 // modifiers {seed,per,0:0}, @e, @f
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-Another reason to make players a first class syntax item:  b dbass 0 \n l glass 0. \n v glow 0, loc={x:(b,l)[pulse]}
- Can we do this so the '[]' operator can take a string args, and look it up to/with player?
+!FLickering on player lookup:  `v1 kal 0, foo=blue \n  v2 kal 0, fore=v1.foo`
+Another reason to make players a first class syntax item:  b dbass 0 \n l glass 0. \n v glow 0, loc={x:(b,l).pulse}
+ Hm, should this be  `loc={x:(b,l)[pulse]}` ??
+ Can we do this so the '[]' operator can take string args, and look it up to/with player?
  Should then DROP the  `fore=p1.foo`  syntax; and just use  `fore=p1[foo]`  instead, and player field lookup stops being a parse-var thing and becomes an operator[] thing?
- Or should we go the other way? `[]` are supposed to be for sequential values; overloading them as map lookup is icky?
-  Then it should all just be '.' operator?? But what about chord indexing then?
-  Or support both `.` and `[]` as far as possible, and still move player field lookup out of parse-var into both `operator[]` and a new `operator.`??
+ Or support both `.` and `[]` as far as possible, and still move player field lookup out of parse-var into both `operator[]` and a new `operator.`??
 Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as needed
  Should the syntax be  `fore[g]=0`  ??
 Advance param to specify how far in advance events should be generated - Would allow for negative delays
