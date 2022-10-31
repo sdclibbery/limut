@@ -43,6 +43,10 @@ define(function (require) {
   }
   let colour = (v, d, name) => {
     let ar = ca(name)
+    if (typeof v === 'number') {
+      ar[0] = ar[1] = ar[2] = ar[3] = v
+      return ar
+    }
     let labh = subParam(v, 'labh', undefined)
     let h = subParam(v, 'h', undefined)
     let r = subParam(v, 'r', d.r)
@@ -77,6 +81,8 @@ define(function (require) {
     let white = () => { return {r:1,g:1,b:1,a:1} }
     let red = () => { return {r:1,g:0,b:0,a:1} }
 
+    assert([0,0,0,0], colour(0, red(), 'blah'))
+    assert([1,1,1,1], colour(1, red(), 'blah'))
     assert([1,1,1,1], colour({}, white(), 'blah'))
     assert([1,0,0,1], colour({}, red(), 'blah'))
     assert([1,0,0,1], colour(red(), white(), 'blah'))
