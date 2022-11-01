@@ -2362,3 +2362,7 @@ vg julia 0, buffer=vb, amp=0.5, perspective=-1.1, repeat, mid=orange, scroll={x:
 vb buffer 0, rez=2
 
 
+v1 gradient 0, foo=5, fore=red, back=red
+v2 kal 0, fore=v1.foo
+
+

@@ -994,8 +994,16 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}
 ====
 ==== other ====
-!Flickering on player lookup:  `v1 kal 0, foo=blue \n  v2 kal 0, fore=v1.foo`
- Its getting zero for the player var lookup when new events are created
+operator.
+  LHS is map - lookup
+  LHS is chord
+    RHS is indexer or number - extract value 
+    RHS is aggregator or chord - extract multiple values
+    RHS is string - recurse operator. across all elements
+  LHS is player id string - do player event lookup
+  LHS is other string - treat string as chord of characters and allow index/aggregate etc etc??
+  LHS is 'this' - do event lookup
+  ??DROP the ()[min] ()[0] syntax altogether??
 Another reason to make players a first class syntax item:  b dbass 0 \n l glass 0. \n v glow 0, loc={x:(b,l).pulse}
  Hm, should this be  `loc={x:(b,l)[pulse]}` ??
  Can we do this so the '[]' operator can take string args, and look it up to/with player?

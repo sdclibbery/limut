@@ -1,6 +1,7 @@
 'use strict'
 define((require) => {
   let playerTypes = require('player/player-types')
+  let metronome = require('metronome')
   var parseParams = require('player/params')
   var {applyOverrides,applyOverridesInPlace} = require('player/override-params')
   var players = require('player/players')
@@ -100,7 +101,8 @@ define((require) => {
         }
         player.play = (es, beat) => {
           player.events ||= []
-          player.events = player.events.filter(e => e.countToTime(beat.count) < e.endTime)
+          let timeNow = metronome.timeNow()
+          player.events = player.events.filter(e => e.endTime === undefined || timeNow < e.endTime)
           return es
             .filter(e => e.amp === undefined || typeof e.amp === 'function' || e.amp > 0)
             .map(e => {

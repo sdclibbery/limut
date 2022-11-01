@@ -8,6 +8,7 @@ var lastBeatAt = 0
 var count = 0
 var nextBeatAt = 0
 let beatReadouts
+let time = 0
 
 metronome.beatTime = (now) => {
   return count + (now - lastBeatAt) / (nextBeatAt - lastBeatAt)
@@ -33,6 +34,7 @@ metronome.beatDuration = function (d) {
 metronome.advance = () => 0.1*beatDuration
 
 metronome.update = function (now) {
+  time = now
   if (now > nextBeatAt - metronome.advance()) { // Process just BEFORE the next beat to make sure that events composed ON the beat can be scheduled accurately
     var beat = {
       now: now,
@@ -49,6 +51,8 @@ metronome.update = function (now) {
     return beat
   }
 }
+
+metronome.timeNow = () => time
 
 metronome.setBeatReadouts = (v) => beatReadouts = v
 metronome.getBeatReadouts = () => beatReadouts
