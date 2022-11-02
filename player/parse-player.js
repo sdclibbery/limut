@@ -102,7 +102,10 @@ define((require) => {
         player.play = (es, beat) => {
           player.events ||= []
           let timeNow = metronome.timeNow()
-          player.events = player.events.filter(e => e.endTime === undefined || timeNow < e.endTime)
+          player.events = player.events.filter(e => {
+            if (e.endTime === undefined) { return timeNow < e._time + 10 } // Filter out events with no endTime but only if they've been hanging around for ages
+            return timeNow < e.endTime // Filter out events that are complete
+          })
           return es
             .filter(e => e.amp === undefined || typeof e.amp === 'function' || e.amp > 0)
             .map(e => {

@@ -10,7 +10,7 @@ define(function(require) {
     let p = 0
     for (let i=1; i < ops.length; i+=2) {
       let opP = precedence[ops[i]]
-      if (opP && opP > p) {
+      if (opP && opP >= p) {
         p = opP
         pivot = i
       }
