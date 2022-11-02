@@ -28,7 +28,7 @@ define(function(require) {
     '%': (l,r)=>ignoreUndefined((l,r)=>l%r, l,r),
     '^': (l,r)=>ignoreUndefined((l,r)=>(Math.pow(l,r) || 0), l,r),
     '|': (l,r)=>concatOp(l,r),
-    '.': (l,r)=>lookupOp(l,r),
+    '.': (l,r, e,b,er)=>lookupOp(l,r, e,b,er),
   }
   operators['|'].raw = true
   operators['.'].raw = true

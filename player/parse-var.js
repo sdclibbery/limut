@@ -77,7 +77,6 @@ define(function(require) {
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
   let p
-  let parseNumber = require('player/parse-number')
   let ev = (i,c,d) => {return{idx:i,count:c,dur:d}}
 
   vars.foo = 'bar'

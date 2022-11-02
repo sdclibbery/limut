@@ -994,19 +994,19 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 operator.
- LHS is player id string - do player event lookup - and so STOP doing special parsing for this in parse var
-  !Must also set dependsOn
  LHS is 'this' - do event lookup - and so STOP doing special parsing for this in parse var
- parse-var must stop considering '.' as a var char
+ parse-var must stop considering '.' as a var char, and stop doing player. and this. lookup
  Uncomment `.a.b` test in parse-expression
+ Need to rip out dependsOn altogether
  LHS is map - lookup
  LHS is chord
-  RHS is indexer or number - extract single value 
-  RHS is aggregator or chord - extract multiple values
-  RHS is string - recurse operator. across all elements
+  RHS is indexer or number or aggregator - extract values
+  RHS is string - recurse operator.(RHS) across all elements
  LHS is other string - treat string as chord of characters and allow index/aggregate etc etc??
+ RHS is chord - map operator.(LHS) over each element in chord
  ??DROP the ()[min] ()[0] syntax altogether??
  TEST a lot
+  Do we need to put in play-time dependencies between players (what used to be dependsOn)??
  Docs - add new operator with example cases, remove old
 Another reason to make players a first class syntax item:  b dbass 0 \n l glass 0. \n v glow 0, loc={x:(b,l).pulse}
  Hm, should this be  `loc={x:(b,l)[pulse]}` ??
