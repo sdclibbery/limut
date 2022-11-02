@@ -12,6 +12,9 @@ define(function(require) {
       return l[r] // Map lookup
     }
     if (typeof l === 'string') {
+      if (l.toLowerCase() === 'this') {
+        return event[r]
+      }
       let player = players.instances[l]
       if (player) { // lookup a param on player events
         let originalB = evalRecurse((e,originalB) => originalB, event, b)
@@ -58,6 +61,10 @@ define(function(require) {
     assert([0,0], lookupOp('p1', 'foo', {},0,(v)=>0))
     assert([2,2], lookupOp('p1', 'foo', {},2,(v)=>2))
     delete players.instances.p1
+  
+    assert('p1', lookupOp('p1', 'foo', {},0,(v)=>0))
+  
+    assert(1, lookupOp('this', 'foo', {foo:1},0,(v)=>0))
   
     console.log('lookupOp tests complete')
   }
