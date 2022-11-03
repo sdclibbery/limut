@@ -13,7 +13,10 @@ define(function(require) {
     }
     if (typeof l === 'string') {
       if (l.toLowerCase() === 'this') {
-        return event[r]
+        let v = event[r]
+        let result = (e,b,er) => v // Wrap into a function so we can set _thisVar to prevent doubling up of chords
+        result._thisVar = true
+        return result
       }
       let player = players.instances[l]
       if (player) { // lookup a param on player events
@@ -64,7 +67,7 @@ define(function(require) {
   
     assert('p1', lookupOp('p1', 'foo', {},0,(v)=>0))
   
-    assert(1, lookupOp('this', 'foo', {foo:1},0,(v)=>0))
+    assert(1, lookupOp('this', 'foo', {foo:1},0,(v)=>0)())
   
     console.log('lookupOp tests complete')
   }

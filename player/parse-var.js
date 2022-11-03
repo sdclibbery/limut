@@ -5,7 +5,7 @@ define(function(require) {
   let {evalParamFrame} = require('player/eval-param')
 
   let isVarChar = (char) => {
-    return (char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || (char == '_') || (char == '.')
+    return (char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || (char == '_')
   }
 
   let parseVar = (state) => {
@@ -32,27 +32,10 @@ define(function(require) {
     }
 
     // Return a lookup function
-    let [playerId, param] = key.split('.')
-    if (playerId && param) {
-      dependsOn.push(playerId)
-    }
     let state = {}
     let result = (event,b, evalRecurse, modifiers) => {
       let v
-      if (param) {
-        let player = players.instances[playerId]
-        if (player) { // player lookup func
-          let originalB = evalRecurse((e,originalB) => originalB, event, b)
-          let es = player.currentEvent(originalB)
-          v = es.map(e => e[param])
-          if (v.length === 0) { v = 0 }
-          if (v.length === 1) { v = v[0] }
-        } else if (playerId === 'this') { // this func
-          v = event[param]
-        } else {
-          v = vars[key] // ordinary var
-        }
-      } else if (typeof vars[key] === 'function' && vars[key].isVarFunction) { // Var function
+      if (typeof vars[key] === 'function' && vars[key].isVarFunction) { // Var function
         v = vars[key](modifiers, event,b, state)
       } else {
         v = vars[key] // ordinary var
@@ -61,9 +44,6 @@ define(function(require) {
       v = evalParamFrame(v,event,b)
       if (v === undefined) { v = 0 } // If not found as a var, assume its for a currently unavailable player and default to zero
       return v
-    }
-    if (playerId === 'this') {
-      result._thisVar = true
     }
     return result
   }
@@ -87,38 +67,10 @@ define(function(require) {
   assert('baz', p({},0,(v)=>v))
   delete vars.foo
 
-  vars['foo.woo'] = 'bar'
-  p = varLookup(parseVar({str:'foo.woo',idx:0}), [])
-  assert('bar', p({},0,(v)=>v))
-  vars['foo.woo'] = undefined
-
   vars['foo'] = 'bar'
   p = varLookup(parseVar({str:'FoO',idx:0}), [])
   assert('bar', p({},0,(v)=>v))
   delete vars.foo
-
-  players.instances.p1 = { currentEvent:(b)=>{ return []} }
-  p = varLookup(parseVar({str:'p1.foo',idx:0}), [])
-  assert(0, p({},0,(v)=>v))
-  delete players.instances.p1
-
-  players.instances.p1 = { currentEvent:(b)=>{ return [{foo:b}]} }
-  p = varLookup(parseVar({str:'p1.foo',idx:0}), [])
-  assert(0, p({},0,(v)=>v))
-  assert(2, p({beat:2},2,(v)=>v))
-  delete players.instances.p1
-
-  players.instances.p1 = { currentEvent:(b)=>{ return [{foo:b},{foo:b}]} }
-  p = varLookup(parseVar({str:'p1.foo',idx:0}), [])
-  assert([0,0], p({},0,(v)=>v))
-  assert([2,2], p({beat:2},2,(v)=>v))
-  delete players.instances.p1
-
-  p = varLookup(parseVar({str:'p1.foo',idx:0}), [])
-  assert(0, p({},0,(v)=>v))
-
-  p = varLookup(parseVar({str:'this.foo',idx:0}), [])
-  assert(1, p({foo:1},0,(v)=>v))
 
   vars.foo = () => 3
   vars.foo.isVarFunction = true
@@ -127,11 +79,6 @@ define(function(require) {
   assert(3, state.idx)
   assert(3, p(ev(0,0),0,evalParamFrame))
   delete vars.foo
-
-  let s = {str:'foo.bar',idx:0}
-  let dependsOn = []
-  varLookup(parseVar(s),dependsOn)
-  assert(['foo'], dependsOn)
 
   vars.foo = () => [1,2]
   state = {str:'foo',idx:0}

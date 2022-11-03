@@ -994,10 +994,9 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 operator.
- parse-var must stop considering '.' as a var char, and stop doing player. and this. lookup
- Uncomment `.a.b` test in parse-expression
  Need to rip out dependsOn altogether
  Try ALL cases with timevars etc to see if we need to eval more
+ Can we handle eg  v readout 0, add=main.amp
  LHS is map - lookup
  LHS is chord
   RHS is indexer or number or aggregator - extract values
@@ -1009,6 +1008,7 @@ operator.
   Try ALL cases with timevars etc to see if we need to eval more
   Do we need to put in play-time dependencies between players (what used to be dependsOn)??
  Docs - add new operator with example cases, remove old
+Oil/sunset/fire etc should not be vars, they should now be parsed from the string in sprite.js
 Another reason to make players a first class syntax item:  b dbass 0 \n l glass 0. \n v glow 0, loc={x:(b,l).pulse}
  Hm, should this be  `loc={x:(b,l)[pulse]}` ??
  Can we do this so the '[]' operator can take string args, and look it up to/with player?

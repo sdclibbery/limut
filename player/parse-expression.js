@@ -394,11 +394,6 @@ define(function(require) {
   assert('baz', p({},0,(v)=>v))
   delete vars.foo
 
-  vars['foo.woo'] = 'bar'
-  p = parseExpression('foo.woo')
-  assert('bar', p({},0,(v)=>v))
-  vars['foo.woo'] = undefined
-
   vars['foo'] = 'bar'
   p = parseExpression('FoO')
   assert('bar', p({},0,(v)=>v))
@@ -1274,7 +1269,7 @@ define(function(require) {
   assert([0.1989616905192142, 0.31159096606000625], evalParamFrame(parseExpression("[0:1]n{per:2,seed:(0,10)}"),ev(0,1,1),1))
 
   assert(64, evalParamFrame(parseExpression("2^3^2"),ev(0,0,0),0))
-  // assert(2, evalParamFrame(parseExpression("{a:{b:2}}.a.b"),ev(0,0,0),0))
+  assert(2, evalParamFrame(parseExpression("{a:{b:2}}.a.b"),ev(0,0,0),0))
 
   console.log('Parse expression tests complete')
   }
