@@ -994,26 +994,25 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 operator.
- Need to rip out dependsOn altogether
- Try ALL cases with timevars etc to see if we need to eval more
- Can we handle eg  v readout 0, add=main.amp
- LHS is map - lookup
+ Investigate dependsOn: commit e3252d11802dfbfbe449b1f787e9d14d4736ffae
  LHS is chord
   RHS is indexer or number or aggregator - extract values
   RHS is string - recurse operator.(RHS) across all elements
- LHS is other string - treat string as chord of characters and allow index/aggregate etc etc??
  RHS is chord - map operator.(LHS) over each element in chord
- ??DROP the ()[min] ()[0] syntax altogether??
+ LHS is other string - treat string as chord of characters and allow index/aggregate etc etc??
  TEST a lot
   Try ALL cases with timevars etc to see if we need to eval more
-  Do we need to put in play-time dependencies between players (what used to be dependsOn)??
+  Full regression test
  Docs - add new operator with example cases, remove old
+ Another reason to make players a first class syntax item:  b dbass 0 \n l glass 0. \n v glow 0, loc={x:(b,l).pulse}
+  !!!Can probably ditch all this, but review it first...
+  Hm, should this be  `loc={x:(b,l)[pulse]}` ??
+  Can we do this so the '[]' operator can take string args, and look it up to/with player?
+  Should then DROP the  `fore=p1.foo`  syntax; and just use  `fore=p1[foo]`  instead, and player field lookup stops being a parse-var thing and becomes an operator[] thing?
+  Or support both `.` and `[]` as far as possible, and still move player field lookup out of parse-var into both `operator[]` and a new `operator.`??
+??DROP the ()[min] ()[0] syntax altogether?? Is it redundant now?
 Oil/sunset/fire etc should not be vars, they should now be parsed from the string in sprite.js
-Another reason to make players a first class syntax item:  b dbass 0 \n l glass 0. \n v glow 0, loc={x:(b,l).pulse}
- Hm, should this be  `loc={x:(b,l)[pulse]}` ??
- Can we do this so the '[]' operator can take string args, and look it up to/with player?
- Should then DROP the  `fore=p1.foo`  syntax; and just use  `fore=p1[foo]`  instead, and player field lookup stops being a parse-var thing and becomes an operator[] thing?
- Or support both `.` and `[]` as far as possible, and still move player field lookup out of parse-var into both `operator[]` and a new `operator.`??
+!Doesn't work:  v readout 0, add=main.amp
 Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as needed
  Should the syntax be  `fore[g]=0`  ??
 Advance param to specify how far in advance events should be generated - Would allow for negative delays

@@ -77,7 +77,7 @@ define(function(require) {
     }
     name = name.trim().toLowerCase()
     if (name) {
-      let v = parseExpression(value, state.dependsOn, (state.context?state.context+'.':'')+name)
+      let v = parseExpression(value, (state.context?state.context+'.':'')+name)
       if (operator) {
         v = newOverride(v, operator)
       }
@@ -87,13 +87,12 @@ define(function(require) {
     return false
   }
 
-  let parseParams = (paramsStr, dependsOn, context) => {
+  let parseParams = (paramsStr, context) => {
     let state = {
       str: paramsStr,
       idx: 0,
       params: {},
       bracketStack: [],
-      dependsOn: dependsOn || [],
       context: context,
     }
     while (parseParam(state)) {}

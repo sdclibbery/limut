@@ -97,7 +97,6 @@ define((require) => {
         let player = {
           id: playerId,
           type: playerType,
-          dependsOn: [],
         }
         player.play = (es, beat) => {
           player.events ||= []
@@ -136,7 +135,7 @@ define((require) => {
         let getEventsForBeat
         if (patternStr.startsWith('follow')) {
           // Follow player
-          let params = parseParams(paramsStr, player.dependsOn, playerId)
+          let params = parseParams(paramsStr, playerId)
           getEventsForBeat = followPlayer(patternStr.slice(6).trim(), params)
         } else if (playerFactory.stopped) {
           getEventsForBeat = () => []

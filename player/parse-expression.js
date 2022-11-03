@@ -204,7 +204,7 @@ define(function(require) {
       // vars
       let parsed = parseVar(state)
       let modifiers = parseMap(state)
-      let v = varLookup(parsed, state.dependsOn, modifiers, state.context)
+      let v = varLookup(parsed, modifiers, state.context)
       if (v !== undefined) {
         result = addModifiers(v, modifiers)
         if (typeof result === 'function') {
@@ -221,14 +221,13 @@ define(function(require) {
     return result
   }
 
-  let parseExpression = (v, dependsOn, context) => {
+  let parseExpression = (v, context) => {
     if (v == '' || v == undefined) { return }
     v = v.trim()
     let state = {
       str: v,
       idx: 0,
       expression: expression,
-      dependsOn: dependsOn || [],
       context: context,
       parseInterval: parseInterval,
       hoistInterval: hoistInterval,
@@ -1270,6 +1269,7 @@ define(function(require) {
 
   assert(64, evalParamFrame(parseExpression("2^3^2"),ev(0,0,0),0))
   assert(2, evalParamFrame(parseExpression("{a:{b:2}}.a.b"),ev(0,0,0),0))
+  assert(2, evalParamFrame(parseExpression("{a:2} . a"),ev(0,0,0),0))
 
   console.log('Parse expression tests complete')
   }

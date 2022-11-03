@@ -22,7 +22,7 @@ define(function(require) {
     return key
   }
 
-  let varLookup = (key, dependsOn, args, context) => {
+  let varLookup = (key, args, context) => {
     if (!key) { return }
 
     // look for static function call; call var immediately if present

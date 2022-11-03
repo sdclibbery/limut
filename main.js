@@ -110,8 +110,7 @@ define(function(require) {
         r.style.display = !c ? 'none' : 'inline'
         r.innerText = (beat.count%c + 1) + '/'+c
       })
-      let sortedPlayers = Object.values(players.instances).sort((a,b) => a.dependsOn.length - b.dependsOn.length) // should be a proper dependency graph sort
-      sortedPlayers.forEach(player => {
+      Object.values(players.instances).forEach(player => {
         if (player !== undefined) {
           try {
             player.play(player.getEventsForBeat(beat), beat)
