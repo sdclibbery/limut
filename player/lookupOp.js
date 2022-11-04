@@ -6,6 +6,9 @@ define(function(require) {
   let lookupOp = (l,r, event,b,evalRecurse) => {
     if (l === undefined) { return undefined }
     if (r === undefined) { return l }
+    if (Array.isArray(r)) {
+      return r.map(rv => lookupOp(l, rv, event,b,evalRecurse)) // If RHS is a chord, map the lookup of each element
+    }
     if (Array.isArray(l)) {
       let aggregator = getAggregator(r)
       if (aggregator) { return aggregator(l, event,b) } // Chord aggregator
@@ -50,6 +53,9 @@ define(function(require) {
     assert(2, lookupOp([1,2], 1.5))
     assert(1, lookupOp([1,2], 2))
     assert([2,3], lookupOp([1,[2,3]], 1))
+
+    assert([1,4], lookupOp([1,2,3,4], [0,3]))
+    assert([1,4], lookupOp([3,4,2,1], ['min','max']))
 
     assert(3, lookupOp([1,2], 'sum'))
 

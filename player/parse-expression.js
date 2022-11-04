@@ -1220,11 +1220,11 @@ define(function(require) {
   assert(64, evalParamFrame(parseExpression("2^3^2"),ev(0,0,0),0))
   assert(2, evalParamFrame(parseExpression("{a:{b:2}}.a.b"),ev(0,0,0),0))
   assert(2, evalParamFrame(parseExpression("{a:2} . a"),ev(0,0,0),0))
-  // assert([1,2], evalParamFrame(parseExpression('(1,2,3,4).(0,1)'),ev(0,0),0))
+  assert([1,2], evalParamFrame(parseExpression('(1,2,3,4).(0,1)'),ev(0,0),0))
 
-  // p = parseExpression('(1,2,3).( 0, [1,2]t1 )')
-  // assert([1,2], evalParamFrame(p,ev(0,0),0))
-  // assert([1,3], evalParamFrame(p,ev(1,1),1))
+  p = parseExpression('(1,2,3).( 0, [1,2]t1 )')
+  assert([1,2], evalParamFrame(p,ev(0,0),0))
+  assert([1,3], evalParamFrame(p,ev(1,1),1))
 
   console.log('Parse expression tests complete')
   }

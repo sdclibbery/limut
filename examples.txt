@@ -2366,3 +2366,14 @@ v1 gradient 0, foo=5, fore=red, back=red
 v2 kal 0, fore=v1.foo
 
 
+v readout 0, add=(1,2,3).1
+v readout 0, add=(1,2,3).(0,2), loc=sparkle
+v readout 0, add=(1,2,3).rand
+v readout 0, add=(1,2,3).sum
+v readout 0, add={a:{b:[0:10]s4@f}}.a.b
+v readout 0, add={a:{b:2}}.a.b
+v readout 0, add=this.foo, foo=[]n
+v readout 0, add=this.foo, foo=[0,(1,2)]r, loc=sparkle
+v readout 0, x={x:this.f}, f=(2,3), loc=sparkle
+
+

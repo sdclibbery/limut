@@ -994,36 +994,29 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 operator.
- RHS is chord - map operator.(LHS) over each element in chord - put tests in parse expression back
- LHS is chord
-  RHS is string - recurse operator.(RHS) across all elements
- LHS is other string - treat string as chord of characters and allow index/aggregate etc etc??
  TEST a lot
   Try ALL cases with timevars etc to see if we need to eval more
   Full regression test
+  Update all examples for breaking changes and test them
  Docs
-  Add new operator with example cases
-  Remove old ()[] indexer syntax !Breaking change - also update examples
-  Remove aggregator function call syntax eg sum{0,1} !Breaking change - also update examples
+  Add new operator. with example cases
+  Remove old ()[] indexer syntax
+  Remove aggregator function call syntax eg sum{0,1}
   Review entire docs; especially principles and basic syntax
- Another reason to make players a first class syntax item:  b dbass 0 \n l glass 0. \n v glow 0, loc={x:(b,l).pulse}
-  !!!Can probably ditch all this, but review it first...
-  Hm, should this be  `loc={x:(b,l)[pulse]}` ??
-  Can we do this so the '[]' operator can take string args, and look it up to/with player?
-  Should then DROP the  `fore=p1.foo`  syntax; and just use  `fore=p1[foo]`  instead, and player field lookup stops being a parse-var thing and becomes an operator[] thing?
-  Or support both `.` and `[]` as far as possible, and still move player field lookup out of parse-var into both `operator[]` and a new `operator.`??
-Oil/sunset/fire etc should not be vars, they should now be parsed from the string in sprite.js
+ Do a release for the breaking changes
+Oil/sunset/fire etc should not be vars, they should now be parsed from the string in sprite.js - also allows error message
+operator. LHS is chord and RHS is non aggregator string: recurse operator.(RHS) across all elements
+ Allows lookup from multiple maps or players eg  (pk,ps).pulse.0
+More standard Player params
+ .exists - 1 if player exists at all
+ .playing - 1 whenever its not playing a rest
 !Doesn't work:  v readout 0, add=main.amp
 Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as needed
- Should the syntax be  `fore[g]=0`  ??
 Advance param to specify how far in advance events should be generated - Would allow for negative delays
 ! `p ping 0, amp/=2` amp/=2 INCreases the volume?? - Because there is no original value, so it just gets given 2
  Want `set * amp/=2` to halve the current amplitude even when it's using the default fallback value ??It DOES work already??
   When wouldn't it work?  sus+=1/4  ? oct-=1  ?
   ??Should ALL defaults be moved into player types instead of being in the evalParam calls???
-More standard Player params
- .exists - 1 if player exists at all
- .playing - 1 whenever its not playing a rest
 Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7]r, delay=(0,{1/2,add+:2})
  !Actually, this is already possible using  delay=(0,{1/2,add:this.add+2})
  But not sure of syntax
