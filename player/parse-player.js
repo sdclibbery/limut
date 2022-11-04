@@ -342,7 +342,7 @@ define((require) => {
   delete vars.foo
 
   vars.foo = () => [2,3,4,5]
-  p = parsePlayer('p kal 0, bar=foo[[1,3]t1]')
+  p = parsePlayer('p kal 0, bar=foo.[1,3]t1')
   assert(3, evalParamFrame(p.getEventsForBeat({count:0})[0].bar,ev(0,0),0))
   assert(5, evalParamFrame(p.getEventsForBeat({count:1})[0].bar,ev(1,1),1))
   assert(3, evalParamFrame(p.getEventsForBeat({count:2})[0].bar,ev(2,2),2))

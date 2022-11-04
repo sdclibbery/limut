@@ -1,11 +1,14 @@
 'use strict';
 define(function(require) {
   let players = require('player/players')
+  let getAggregator = require('player/aggregators')
 
   let lookupOp = (l,r, event,b,evalRecurse) => {
     if (l === undefined) { return undefined }
     if (r === undefined) { return l }
     if (Array.isArray(l)) {
+      let aggregator = getAggregator(r)
+      if (aggregator) { return aggregator(l, event,b) } // Chord aggregator
       return l[Math.floor(r % l.length)] // Chord index
     }
     if (typeof l === 'object') {
@@ -47,6 +50,9 @@ define(function(require) {
     assert(2, lookupOp([1,2], 1.5))
     assert(1, lookupOp([1,2], 2))
     assert([2,3], lookupOp([1,[2,3]], 1))
+
+    assert(3, lookupOp([1,2], 'sum'))
+
     assert(1, lookupOp({v:1}, 'v'))
     assert({b:1}, lookupOp({a:{b:1}}, 'a'))
     assert(1, lookupOp(lookupOp({a:{b:1}}, 'a'), 'b'))

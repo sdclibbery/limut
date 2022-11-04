@@ -59,7 +59,6 @@ define((require) => {
       if (!nestedChords) { v = v.flat() }
       return v
     } else if (typeof value == 'function') { // Call function to get current value
-      if (value.evalOverride !== undefined) { return value.evalOverride }
       if (ignoreThisVars && value._thisVar) { return 0 } // return 0 to hold a place in a chord
       let v = evalFunctionWithModifiers(value, event, beat, evalRecurse)
       return evalRecurse(v, event, beat)
@@ -172,10 +171,6 @@ define((require) => {
   assert('frame', preEvalParam({a:perFrameValue}, ev(0)).a.interval)
   assert({r:1}, evalParamFrame(()=>{return({r:1})}, ev(0), 0))
   assert([{r:1,g:3},{r:2,g:3}], evalParamFrame(()=>{return({r:()=>[1,2],g:3})}, ev(0), 0))
-
-  let overriddenFunc = () => 7
-  overriddenFunc.evalOverride = 'Foo'
-  assert('Foo', evalParamFrame(overriddenFunc, ev(0), 0))
 
   let perEventValueGetB = (e,b) => b
   perEventValueGetB.interval= 'event'
