@@ -1,6 +1,6 @@
 'use strict';
 define((require) => {
-  let {overrideKey,canHaveOwnModifiers,applyModifiers} = require('player/time-modifiers')
+  let {overrideKey,applyModifiers} = require('player/time-modifiers')
 
   let expandObjectChords = (o) => {
     for (let k in o) {

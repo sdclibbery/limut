@@ -91,15 +91,15 @@ define(function(require) {
   let beatLatency = 0
   let lastVisualsActive
   let tickCount = 0
+  vars.main = vars.main || {}
   let tick = (t) => {
     let now = system.timeNow()
     let beat = metronome.update(now)
     let beatTime = metronome.beatTime(now)
     let spectrum = system.spectrum()
     let pulse = spectrum[0]*spectrum[0] + spectrum[3]*spectrum[3]
-    vars.pulse = pulse
+    vars.main.pulse = pulse
     vars.time = beatTime
-    vars.spectrum = spectrum
     if (beat) {
       mainVars.update(Math.floor(beatTime), beatTime)
       beatReadout.innerText = beat.count

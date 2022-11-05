@@ -2,6 +2,7 @@
 define(function(require) {
   let players = require('player/players')
   let getAggregator = require('player/aggregators')
+  let {evalParamFrame} = require('player/eval-param')
 
   let lookupOp = (l,r, event,b,evalRecurse) => {
     if (l === undefined) { return undefined }
@@ -20,6 +21,7 @@ define(function(require) {
     if (typeof l === 'string') {
       if (l.toLowerCase() === 'this') {
         let v = event[r]
+        v = evalParamFrame(v, event,b) // Eval so that time modifiers get applied
         let result = (e,b,er) => v // Wrap into a function so we can set _thisVar to prevent doubling up of chords
         result._thisVar = true
         return result
@@ -31,7 +33,10 @@ define(function(require) {
         let v = es.map(e => e[r])
         if (v.length === 0) { v = 0 }
         if (v.length === 1) { v = v[0] }
-        return v
+        return evalParamFrame(v, event,b) // Eval so that time modifiers get applied
+      }
+      else {
+        return 0 // Fallback to zero if not found as a player
       }
     }
     return l // fallback: just return the LHS value
@@ -77,7 +82,7 @@ define(function(require) {
     assert([2,2], lookupOp('p1', 'foo', {},2,(v)=>2))
     delete players.instances.p1
   
-    assert('p1', lookupOp('p1', 'foo', {},0,(v)=>0))
+    assert(0, lookupOp('p1', 'foo', {},2,(v)=>2))
   
     assert(1, lookupOp('this', 'foo', {foo:1},0,(v)=>0)())
   

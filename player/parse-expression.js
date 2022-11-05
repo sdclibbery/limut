@@ -122,6 +122,7 @@ define(function(require) {
         eatWhitespace(state)
         if (vs.length == 1) {
           result = vs[0]
+          result = addModifiers(result, parseMap(state))
         } else if (Array.isArray(vs)) {
           result = vs
           result = addModifiers(result, parseMap(state))

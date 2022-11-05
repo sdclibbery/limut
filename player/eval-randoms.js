@@ -2,7 +2,6 @@
 define(function(require) {
   let evalOperator = require('player/eval-operator')
   let param = require('player/default-param')
-  let {evalParamFrame} = require('player/eval-param')
 
   function xmur3(seed) {
     let h = 1779033703
