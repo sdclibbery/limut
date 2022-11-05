@@ -1227,6 +1227,10 @@ define(function(require) {
   assert([1,2], evalParamFrame(p,ev(0,0),0))
   assert([1,3], evalParamFrame(p,ev(1,1),1))
 
+  p = parseExpression('([0:1]l4@f){per:1}')
+  assert(0, evalParamFrame(p,ev(0,0),0))
+  assert(0, evalParamFrame(p,ev(1,1),1))
+
   console.log('Parse expression tests complete')
   }
 
