@@ -2385,3 +2385,12 @@ v readout 0, add=(1,2,3,8).count
 v readout 0, add=(1,2,3,4).(this.foo), foo=[1,2]
 
 
+// r readout 0, add=pitch{6,scale:penta}
+// r readout 0, add=floor{2.5}
+// r readout 0, add=slider{max:10}
+// r readout 0, add=main.pulse
+// set foo=[0:10]l4@f
+// set foo=1
+// r readout 0, add=foo
+
+

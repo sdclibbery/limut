@@ -1,6 +1,6 @@
 'use strict'
 define(function(require) {
-  let vars = require('vars')
+  let addVar = require('predefined-vars').add
   let {mainParam,subParam} = require('player/sub-param')
 
   let createFunc = (name, fn) => {
@@ -8,7 +8,7 @@ define(function(require) {
       return fn(args, e,b, state)
     }
     func.isVarFunction = true
-    vars[name] = func
+    addVar(name, func)
   }
 
   let roundWrapper = (fn) => {
@@ -70,6 +70,7 @@ define(function(require) {
     let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
+  require('predefined-vars').apply(require('vars').all())
   let parseExpression = require('player/parse-expression')
   let {evalParamFrame} = require('player/eval-param')
   let ev = (i,c,d,v) => {return{idx:i,count:c,dur:d,_time:c,voice:v}}

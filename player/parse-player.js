@@ -175,7 +175,7 @@ define((require) => {
 
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
-  let vars = require('vars')
+  let vars = require('vars').all()
 
   let assert = (expected, actual, msg) => {
     let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(3) : v)

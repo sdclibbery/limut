@@ -1,85 +1,97 @@
 'use strict'
 define(function(require) {
   let parseExpression = require('player/parse-expression')
-  let vars = require('vars')
 
-  vars['drop4_4'] = parseExpression('[1,0]t[4,4]')
-  vars['drop6_2'] = parseExpression('[1,0]t[6,2]')
-  vars['drop7_1'] = parseExpression('[1,0]t[7,1]')
-  vars['drop8_8'] = parseExpression('[1,0]t[8,8]')
-  vars['drop12_4'] = parseExpression('[1,0]t[12,4]')
-  vars['drop14_2'] = parseExpression('[1,0]t[14,2]')
-  vars['drop15_1'] = parseExpression('[1,0]t[15,1]')
-  vars['drop16_16'] = parseExpression('[1,0]t[16,16]')
-  vars['drop24_8'] = parseExpression('[1,0]t[24,8]')
-  vars['drop28_4'] = parseExpression('[1,0]t[28,4]')
-  vars['drop30_2'] = parseExpression('[1,0]t[30,2]')
-  vars['drop31_1'] = parseExpression('[1,0]t[31,1]')
-  vars['drop32_32'] = parseExpression('[1,0]t[32,32]')
-  vars['drop56_8'] = parseExpression('[1,0]t[56,8]')
-  vars['drop60_4'] = parseExpression('[1,0]t[60,4]')
-  vars['drop62_2'] = parseExpression('[1,0]t[62,2]')
-  vars['drop63_1'] = parseExpression('[1,0]t[63,1]')
+  let predefinedVars = {
+    'drop4_4': parseExpression('[1,0]t[4,4]'),
+    'drop6_2': parseExpression('[1,0]t[6,2]'),
+    'drop7_1': parseExpression('[1,0]t[7,1]'),
+    'drop8_8': parseExpression('[1,0]t[8,8]'),
+    'drop12_4': parseExpression('[1,0]t[12,4]'),
+    'drop14_2': parseExpression('[1,0]t[14,2]'),
+    'drop15_1': parseExpression('[1,0]t[15,1]'),
+    'drop16_16': parseExpression('[1,0]t[16,16]'),
+    'drop24_8': parseExpression('[1,0]t[24,8]'),
+    'drop28_4': parseExpression('[1,0]t[28,4]'),
+    'drop30_2': parseExpression('[1,0]t[30,2]'),
+    'drop31_1': parseExpression('[1,0]t[31,1]'),
+    'drop32_32': parseExpression('[1,0]t[32,32]'),
+    'drop56_8': parseExpression('[1,0]t[56,8]'),
+    'drop60_4': parseExpression('[1,0]t[60,4]'),
+    'drop62_2': parseExpression('[1,0]t[62,2]'),
+    'drop63_1': parseExpression('[1,0]t[63,1]'),
+  
+    'fullscreen': parseExpression('{x:0,y:0,w:2,h:2}'),
+    'tile_full': parseExpression('{x:0,y:0,w:2,h:2}'),
+    'tile_tl': parseExpression('{x:-1/2,y:1/2,w:1,h:1}'),
+    'tile_tr': parseExpression('{x:1/2,y:1/2,w:1,h:1}'),
+    'tile_bl': parseExpression('{x:-1/2,y:-1/2,w:1,h:1}'),
+    'tile_br': parseExpression('{x:1/2,y:-1/2,w:1,h:1}'),
+    'tile_t': parseExpression('{x:0,y:1/2,w:2,h:1}'),
+    'tile_b': parseExpression('{x:0,y:-1/2,w:2,h:1}'),
+    'tile_l': parseExpression('{x:-1/2,y:0,w:1,h:2}'),
+    'tile_r': parseExpression('{x:1/2,y:0,w:1,h:2}'),
+    'tile_m': parseExpression('{x:0,y:0,w:1,h:1}'),
+    'tile_h1': parseExpression('{x:0,y:3/4,w:2,h:1/2}'),
+    'tile_h2': parseExpression('{x:0,y:1/4,w:2,h:1/2}'),
+    'tile_h3': parseExpression('{x:0,y:-1/4,w:2,h:1/2}'),
+    'tile_h4': parseExpression('{x:0,y:-3/4,w:2,h:1/2}'),
+    'tile_v1': parseExpression('{x:-3/4,y:0,w:1/2,h:2}'),
+    'tile_v2': parseExpression('{x:-1/4,y:0,w:1/2,h:2}'),
+    'tile_v3': parseExpression('{x:1/4,y:0,w:1/2,h:2}'),
+    'tile_v4': parseExpression('{x:3/4,y:0,w:1/2,h:2}'),
+    'tile_random': parseExpression('{x:[-7/8:7/8]r,y:[-7/8:7/8]r,w:1/2,h:1/2}'),
+    'tile_rand': parseExpression('{x:[-7/8:7/8]r,y:[-7/8:7/8]r,w:1/2,h:1/2}'),
+    '_random_per_event': parseExpression('[0:1]r@e'),
+    'sparkle': parseExpression('{x:5/6*[-5/6:5/6]r@e,y:[-5/6:5/6]r@e,w:1/3,h:1/3}'),
+    'fireworks': parseExpression('{x:[-5/6:5/6]r@e,y:[-5/6:5/6]r@e,w:0.5+_random_per_event,h:0.5+_random_per_event}'),
+    'droplet': parseExpression('{w:1/4,h:1/4,x:[-15/16:15/16]r,y:[0.8:1.2]r-[0:2]e}'),
+    'gravity': parseExpression('{y:[0:-3/2]e*[0:3/2]e}'),
+    'spark': parseExpression('{w:1/8,h:1/8, x:[0,[-1.01:1]r]e, y:[0,[-1.01:1]r]e}'),
+    'firefly': parseExpression('{x:[-1/4:1/4]n{seed:[]r}, y:[-1/4:1/4]n{seed:[]r}}'),
+  
+    'transparent': parseExpression('{r:0,g:0,b:0,a:0}'),
+    'black': parseExpression('{r:0,g:0,b:0,a:1}'),
+    'darkgray': parseExpression('{r:0.2,g:0.2,b:0.2,a:1}'),
+    'gray': parseExpression('{r:0.4,g:0.4,b:0.4,a:1}'),
+    'lightgray': parseExpression('{r:0.8,g:0.8,b:0.8,a:1}'),
+    'white': parseExpression('{r:1,g:1,b:1,a:1}'),
+    'red': parseExpression('{r:1,g:0,b:0,a:1}'),
+    'orange': parseExpression('{r:1,g:0.3,b:0,a:1}'),
+    'yellow': parseExpression('{r:1,g:0.9,b:0,a:1}'),
+    'green': parseExpression('{r:0,g:0.8,b:0,a:1}'),
+    'blue': parseExpression('{r:0,g:0.6,b:1,a:1}'),
+    'indigo': parseExpression('{r:0,g:0,b:0.8,a:1}'),
+    'violet': parseExpression('{r:0.4,g:0,b:0.8,a:1}'),
+    'purple': parseExpression('{r:0.6,g:0,b:0.8,a:1}'),
+    'neonpink': parseExpression('{r:1,g:0,b:1,a:1}'),
+    'neongreen': parseExpression('{r:0,g:0.7,b:1,a:1}'),
+    'rainbow': parseExpression('{r:[0.8,0,0]l6@f,g:[0,0.7,0]l6@f,b:[0,0,1]l6@f,a:1}'),
+    'rainbow_slow': parseExpression('{r:[0.8,0,0]l12@f,g:[0,0.7,0]l12@f,b:[0,0,1]l12@f,a:1}'),
+    'rainbow_fast': parseExpression('{r:[0.8,0,0]l2@f,g:[0,0.7,0]l2@f,b:[0,0,1]l2@f,a:1}'),
+    'random': parseExpression('{r:[0:0.8]n4,g:[0:0.7]n4,b:[0.1:0.9]n4,a:1}'),
+  
+    'oil': parseExpression('1'),
+    'hue': parseExpression('2'),
+    'fire': parseExpression('3'),
+    'sunset': parseExpression('4'),
+    'neon': parseExpression('5'),
+    'titanium': parseExpression('6'),
+  
+    'tri': 'triangle',
+    'saw': 'sawtooth',
+  
+    'wow': parseExpression('[-0.3:0.3]n2'),
+  }
 
-  vars['fullscreen'] = parseExpression('{x:0,y:0,w:2,h:2}')
-  vars['tile_full'] = parseExpression('{x:0,y:0,w:2,h:2}')
-  vars['tile_tl'] = parseExpression('{x:-1/2,y:1/2,w:1,h:1}')
-  vars['tile_tr'] = parseExpression('{x:1/2,y:1/2,w:1,h:1}')
-  vars['tile_bl'] = parseExpression('{x:-1/2,y:-1/2,w:1,h:1}')
-  vars['tile_br'] = parseExpression('{x:1/2,y:-1/2,w:1,h:1}')
-  vars['tile_t'] = parseExpression('{x:0,y:1/2,w:2,h:1}')
-  vars['tile_b'] = parseExpression('{x:0,y:-1/2,w:2,h:1}')
-  vars['tile_l'] = parseExpression('{x:-1/2,y:0,w:1,h:2}')
-  vars['tile_r'] = parseExpression('{x:1/2,y:0,w:1,h:2}')
-  vars['tile_m'] = parseExpression('{x:0,y:0,w:1,h:1}')
-  vars['tile_h1'] = parseExpression('{x:0,y:3/4,w:2,h:1/2}')
-  vars['tile_h2'] = parseExpression('{x:0,y:1/4,w:2,h:1/2}')
-  vars['tile_h3'] = parseExpression('{x:0,y:-1/4,w:2,h:1/2}')
-  vars['tile_h4'] = parseExpression('{x:0,y:-3/4,w:2,h:1/2}')
-  vars['tile_v1'] = parseExpression('{x:-3/4,y:0,w:1/2,h:2}')
-  vars['tile_v2'] = parseExpression('{x:-1/4,y:0,w:1/2,h:2}')
-  vars['tile_v3'] = parseExpression('{x:1/4,y:0,w:1/2,h:2}')
-  vars['tile_v4'] = parseExpression('{x:3/4,y:0,w:1/2,h:2}')
-  vars['tile_random'] = parseExpression('{x:[-7/8:7/8]r,y:[-7/8:7/8]r,w:1/2,h:1/2}')
-  vars['tile_rand'] = parseExpression('{x:[-7/8:7/8]r,y:[-7/8:7/8]r,w:1/2,h:1/2}')
-  vars['_random_per_event'] = parseExpression('[0:1]r@e')
-  vars['sparkle'] = parseExpression('{x:5/6*[-5/6:5/6]r@e,y:[-5/6:5/6]r@e,w:1/3,h:1/3}')
-  vars['fireworks'] = parseExpression('{x:[-5/6:5/6]r@e,y:[-5/6:5/6]r@e,w:0.5+_random_per_event,h:0.5+_random_per_event}')
-  vars['droplet'] = parseExpression('{w:1/4,h:1/4,x:[-15/16:15/16]r,y:[0.8:1.2]r-[0:2]e}')
-  vars['gravity'] = parseExpression('{y:[0:-3/2]e*[0:3/2]e}')
-  vars['spark'] = parseExpression('{w:1/8,h:1/8, x:[0,[-1.01:1]r]e, y:[0,[-1.01:1]r]e}')
-  vars['firefly'] = parseExpression('{x:[-1/4:1/4]n{seed:[]r}, y:[-1/4:1/4]n{seed:[]r}}')
+  let add = (k, v) => { predefinedVars[k] = v }
 
-  vars['transparent'] = parseExpression('{r:0,g:0,b:0,a:0}')
-  vars['black'] = parseExpression('{r:0,g:0,b:0,a:1}')
-  vars['darkgray'] = parseExpression('{r:0.2,g:0.2,b:0.2,a:1}')
-  vars['gray'] = parseExpression('{r:0.4,g:0.4,b:0.4,a:1}')
-  vars['lightgray'] = parseExpression('{r:0.8,g:0.8,b:0.8,a:1}')
-  vars['white'] = parseExpression('{r:1,g:1,b:1,a:1}')
-  vars['red'] = parseExpression('{r:1,g:0,b:0,a:1}')
-  vars['orange'] = parseExpression('{r:1,g:0.3,b:0,a:1}')
-  vars['yellow'] = parseExpression('{r:1,g:0.9,b:0,a:1}')
-  vars['green'] = parseExpression('{r:0,g:0.8,b:0,a:1}')
-  vars['blue'] = parseExpression('{r:0,g:0.6,b:1,a:1}')
-  vars['indigo'] = parseExpression('{r:0,g:0,b:0.8,a:1}')
-  vars['violet'] = parseExpression('{r:0.4,g:0,b:0.8,a:1}')
-  vars['purple'] = parseExpression('{r:0.6,g:0,b:0.8,a:1}')
-  vars['neonpink'] = parseExpression('{r:1,g:0,b:1,a:1}')
-  vars['neongreen'] = parseExpression('{r:0,g:0.7,b:1,a:1}')
-  vars['rainbow'] = parseExpression('{r:[0.8,0,0]l6@f,g:[0,0.7,0]l6@f,b:[0,0,1]l6@f,a:1}')
-  vars['rainbow_slow'] = parseExpression('{r:[0.8,0,0]l12@f,g:[0,0.7,0]l12@f,b:[0,0,1]l12@f,a:1}')
-  vars['rainbow_fast'] = parseExpression('{r:[0.8,0,0]l2@f,g:[0,0.7,0]l2@f,b:[0,0,1]l2@f,a:1}')
-  vars['random'] = parseExpression('{r:[0:0.8]n4,g:[0:0.7]n4,b:[0.1:0.9]n4,a:1}')
+  let apply = (vars) => {
+    Object.assign(vars, predefinedVars)
+  }
 
-  vars['oil'] = parseExpression('1')
-  vars['hue'] = parseExpression('2')
-  vars['fire'] = parseExpression('3')
-  vars['sunset'] = parseExpression('4')
-  vars['neon'] = parseExpression('5')
-  vars['titanium'] = parseExpression('6')
-
-  vars['tri'] = 'triangle'
-  vars['saw'] = 'sawtooth'
-
-  vars['wow'] = parseExpression('[-0.3:0.3]n2')
+  return {
+    add: add,
+    apply: apply,
+  }
 })

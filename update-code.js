@@ -7,6 +7,8 @@ define((require) => {
   let mainVars = require('main-vars')
   let consoleOut = require('console')
   let sliders = require('sliders')
+  let predefinedVars = require('predefined-vars')
+  let vars = require('vars')
 
   let parseCode = (code) => {
     let lines = code.split('\n')
@@ -55,6 +57,8 @@ define((require) => {
     mainVars.reset()
     players.overrides = {}
     sliders.gc_reset()
+    vars.clear()
+    predefinedVars.apply(vars.all())
     consoleOut('> Update code')
     parseCode(code)
     players.gc_sweep()
@@ -64,7 +68,7 @@ define((require) => {
 
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
-    let vars = require('vars')
+    let vars = require('vars').all()
 
     let assert = (expected, actual) => {
       let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)

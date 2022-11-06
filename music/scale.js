@@ -1,8 +1,7 @@
 'use strict';
 define(function (require) {
-  let vars = require('vars')
-  let param = require('player/default-param')
   let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
+  let addVar = require('predefined-vars').add
 
   let scales = {
     chromatic       :[0,1,2,3,4,5,6,7,8,9,10,11],
@@ -75,7 +74,6 @@ define(function (require) {
     // Seventh Mode - altered (diminished whole-tone), (x)7alt
     altered      :[ 0, 1, 3, 4, 6, 8, 10 ],
   }
-  Object.keys(scales).forEach(k => vars[k]=k)
   let scale = {
     scales: scales,
     current: 'major',
@@ -125,7 +123,7 @@ define(function (require) {
     return scale.degreeToFreq(degree, octave, args.scale, sharp)
   }
   pitchFunc.isVarFunction = true
-  vars['pitch'] = pitchFunc
+  addVar('pitch', pitchFunc)
 
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {

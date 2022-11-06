@@ -1,7 +1,6 @@
 'use strict';
 define(function(require) {
   let vars = require('vars')
-  let players = require('player/players')
   let {evalParamFrame} = require('player/eval-param')
 
   let isVarChar = (char) => {
@@ -26,7 +25,7 @@ define(function(require) {
     if (!key) { return }
 
     // look for static function call; call var immediately if present
-    let f = vars[key]
+    let f = vars.get(key)
     if (typeof f === 'function' && f.isStaticVarFunction) {
       return f(args, context)
     }
@@ -34,11 +33,12 @@ define(function(require) {
     // Return a lookup function
     let state = {}
     let result = (event,b, evalRecurse, modifiers) => {
+      let vr = vars.get(key)
       let v
-      if (typeof vars[key] === 'function' && vars[key].isVarFunction) { // Var function
-        v = vars[key](modifiers, event,b, state)
+      if (typeof vr === 'function' && vr.isVarFunction) { // Var function
+        v = vr(modifiers, event,b, state)
       } else {
-        v = vars[key] // ordinary var
+        v = vr // ordinary var
         if (v === undefined) { v = key } // If not found as a var, treat as a string value
       }
       v = evalParamFrame(v,event,b)
@@ -58,6 +58,7 @@ define(function(require) {
   }
   let p
   let ev = (i,c,d) => {return{idx:i,count:c,dur:d}}
+  let vars = require('vars').all()
 
   vars.foo = 'bar'
   let state = {str:'foo',idx:0}

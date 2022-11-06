@@ -1,6 +1,6 @@
 'use strict'
 define(function(require) {
-  let vars = require('vars')
+  let addVar = require('predefined-vars').add
   let consoleOut = require('console')
 
   let sliders = {}
@@ -77,7 +77,7 @@ define(function(require) {
   }
 
   newSlider.isStaticVarFunction = true
-  vars['slider'] = newSlider
+  addVar('slider', newSlider)
   return {
     gc_reset: gc_reset,
     gc_sweep: gc_sweep,

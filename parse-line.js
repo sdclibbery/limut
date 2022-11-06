@@ -5,7 +5,7 @@ define((require) => {
   var parseParams = require('player/params')
   let parseExpression = require('player/parse-expression')
   let {combineOverrides,applyOverrides,isOverride} = require('player/override-params')
-  let vars = require('vars')
+  let setVar = require('vars').set
   let mainVars = require('main-vars')
 
   let identifierWithWildcards = (state) => {
@@ -62,7 +62,7 @@ define((require) => {
           mainVars.set(k, parseExpression(v, undefined, k))
         } else {
           v = parseExpression(v, undefined, k)
-          vars[k] = v
+          setVar(k, v)
         }
         return
       }
@@ -125,6 +125,7 @@ define((require) => {
     catch (e) { if (e.includes(expected)) {got=true} else {console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: ${e}`)} }
     finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
   }
+  let vars = require('vars').all()
 
   assert(false, isLineStart('foo bar'))
   assert(false, isLineStart('set '))

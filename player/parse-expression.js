@@ -221,7 +221,7 @@ define(function(require) {
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
-  let vars = require('vars')
+  let vars = require('vars').all()
   
   let assert = (expected, actual) => {
     let x = JSON.stringify(expected)
