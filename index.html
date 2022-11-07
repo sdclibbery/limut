@@ -987,24 +987,25 @@ shadertoy synth multiple channels
 // [], []t, []l/s, []e, []n, []r
 // operators + - * / ^ % |
 // var, player.var, this.param, this.voice, var{params}, slider
-// (...).1, (...).max, {foo:...}.foo
+// (...).1, (...).max, {foo:...}.foo, max{1,2}
 // modifiers {seed,per,0:0}, @e, @f
 // subparams {2,mix:1/2}
 ====
 ==== other ====
 operator.
  TEST a lot
-  Test everything with [a-zA-Z]\.[a-zA-Z]
-   To line 725
   Test and fix everything with [^=:\]]\s*\[
-  Update all examples for breaking changes and test them   
+  Must search examples for max{ sum{ etc too
+  TEST all browser examples
  Docs
   Add new operator. with example cases
   Remove old ()[] indexer syntax
+  Remove old max{} etc syntax for aggregators
   Remove aggregator function call syntax eg sum{0,1}
   Review entire docs; especially principles and basic syntax
  Do a release for the breaking changes
   ()[] syntax replaced with operator.
+  max{} syntax for aggregators replaced with ().max
   var lookup defaults to the string value
   global `pulse` renamed to `main.pulse`
 (1.5,2.5).floor should work??
