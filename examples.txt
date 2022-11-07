@@ -1171,7 +1171,7 @@ b dbass ...[0246], room=0.1, swing=61
 // v julia 0, add=max{[0:5]t1/2}
 // v julia 0, add=max{[0:5]r@f}
 // v julia 0, add=max{([0:0]r,[1,2]t1/2@f)}
-// v julia 0, add=(0,[1,2]t1/2@f)[max]
+// v julia 0, add=(0,[1,2]t1/2@f).max
 // v julia 0, add=count{(0,0,0,0,0)}
 // v julia 0, add=min{(3,2,1)}
 // v julia 0, add=max{(3,2,1)}
@@ -1180,7 +1180,7 @@ b dbass ...[0246], room=0.1, swing=61
 // v julia 0, add=rand{(3,2,1)}
 // v julia 0, add=sum{(3,2,1)}
 // v julia 0, add=avg{(3,2,1)}
-// v julia 0, add=(3,2,1)[rand]
+// v julia 0, add=(3,2,1).rand
 
 
 set bpm=132
@@ -1253,7 +1253,7 @@ v swirl 0
 vRANDOM gradient 0, loc=tile_br, scroll=-5, fore=random, blend=min
 
 
-v glow 0, loc=tile_random, fore=(red,green,blue,yellow,white)[2:0]
+v glow 0, loc=tile_random, fore=(red,green,blue,yellow,white).(2,1,0)
 
 
 vb kal 0, zoom=7, rate=1/3, monochrome=1/4, fore=#222f
@@ -1363,11 +1363,11 @@ a4 ambi (0256), oct=(4,5), addc=3+([]n1+[]n2+[]n4)/2, amp=[1/8,1/2]l23
 set a* dur=2, envelope=pad, room=2, chorus, pan=[-1:1]r
 
 
-v glow 2, loc=fireworks, fore=[(red,yellow),(green,blue)]r1[1]@e
-v glow 2, loc=fireworks, fore=((red,yellow),(green,blue))[0]
-v glow 2, loc=fireworks, fore=((red,yellow),(green,blue))
-set foo=3
-v glow 0, loc=fireworks, bar=(1,(2,foo))
+// v glow 2, loc=fireworks, fore=[(red,yellow),(green,blue)]r1@e.1
+// v glow 2, loc=fireworks, fore=((red,yellow),(green,blue)).0
+// v glow 2, loc=fireworks, fore=((red,yellow),(green,blue))
+// set foo=red
+// v glow 0, loc=fireworks, fore=(green,(blue,foo))
 
 
 v glow 0, dur=1/8, sus=[1:12]r, loc={x:2*this._time%1-1,y:[1.3:-1.3]e,w:0.6,h:0.6}, fade=0, rate=0
@@ -1893,7 +1893,7 @@ pt play .t, dur=4, stutter=[0:12]r
 
 
 set ch=[(0,2),(0,3),(1,3),(1,4)]t2
-p ping 0, dur=1/4, add=(-7,ch)[rand,rand,rand]
+p ping 0, dur=1/4, add=(-7,ch).(rand,rand,rand)
 
 
 set bpm=138
@@ -2160,7 +2160,7 @@ a ambi (04), wave='ooh', room=2, oct=(2,3), amp=2, chorus
 // v glow 0, loc=sparkle, fore=(red,blue), fore|=[green,orange]r1/4@f
 // v glow 0, loc=sparkle, fore=white|white-red|green
 // v glow 0, loc=sparkle, fore=(red,blue), fore|=green
-// v glow 0, loc=sparkle, fore=(red|blue)[[0,1]t1/4@f]
+// v glow 0, loc=sparkle, fore=(red|blue).[0,1]t1/4@f
 // v glow 0, loc=sparkle, fore=red|blue
 // v glow 0, fore=red|blue
 
