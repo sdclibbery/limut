@@ -750,14 +750,6 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <h4 onclick="toggleAccordion('accordion-functions')" class="accordion"> Functions</h4>
 <div id="accordion-functions" class="closed">
 <p><code>pitch{degree:1,sharp:1,oct:3,scale:minor}</code> Calculate a frequency in Hz for a scale degree on an octave, with possible sharpening/flattening.</p>
-<p><code>first{1,2,3}</code> Returns the first element in a chord (1 in the example)</p>
-<p><code>last{1,2,3}</code> Returns the last element in a chord (3 in the example)</p>
-<p><code>rand{1,2,3}</code> Returns a random element from a chord</p>
-<p><code>min{1,2,3}</code> Returns the smallest element in a chord (1 in the example)</p>
-<p><code>max{1,2,3}</code> Returns the largest element in a chord (3 in the example)</p>
-<p><code>count{1,2,3}</code> Returns the number of elements in a chord (3 in the example)</p>
-<p><code>sum{1,2,3}</code> Returns the sum of all elements in a chord (6 in the example)</p>
-<p><code>avg{1,2,3}</code> Returns the mean average of all elements in a chord (2 in the example)</p>
 <p><code>floor{1.5}</code> Returns the rounded down value (returns 1 in the example)</p>
 <p class='sub'><code>floor{1.7,to:1/2}</code> Precision to round to, so the example rounds 1.7 down to the nearest 1/2, which is 1.5. Defaults to 1, which rounds down to the nearest integer below.</p>
 <p><code>ceil{1.5}</code> Returns the rounded up value (returns 2 in the example)</p>
@@ -994,13 +986,11 @@ shadertoy synth multiple channels
 ==== other ====
 operator.
  TEST a lot
-  Must search examples for max{ sum{ etc too
   TEST all browser examples
  Docs
   Add new operator. with example cases
-  Remove old ()[] indexer syntax
+  Remove old ()[] indexer syntax from everywhere
   Remove old max{} etc syntax for aggregators
-  Remove aggregator function call syntax eg sum{0,1}
   Review entire docs; especially principles and basic syntax
  Do a release for the breaking changes
   ()[] syntax replaced with operator.
