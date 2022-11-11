@@ -2399,3 +2399,8 @@ v readout 0, add=(1,2,3,4).(this.foo), foo=[1,2]
 // r readout 0, add=max{(1,2)}
 
 
+// p noise 0, bpf={440,q:20}, amp=5
+// p noise 0, bpf={pitch{(0,2,[4,4b]t2),oct:5},q:50}, amp=8
+// p noise 0, bpf={max{440},q:50}, amp=8
+
+

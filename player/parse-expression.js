@@ -1240,6 +1240,9 @@ define(function(require) {
   assert(1, evalParamFrame(parseExpression("(1,2).max{0}"),ev(0,0,0),0))
   assert('max', evalParamFrame(parseExpression("max"),ev(0,0,0),0))
 
+  assert({value:{a:1},b:2}, evalParamFrame(parseExpression("{{a:1},b:2}"),ev(0,0,0),0))
+  assert({value:440,q:50}, evalParamFrame(parseExpression("{max{440},q:50}"),ev(0,0,0),0))
+
   console.log('Parse expression tests complete')
   }
 

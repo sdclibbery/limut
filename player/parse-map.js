@@ -16,7 +16,7 @@ define(function(require) {
     return result
   }
 
-  let parseMapEntry = (state, keys, values) => {
+  let parseMapEntry = (state, _mapValueIndex, keys, values) => {
     eatWhitespace(state)
     let tryState = Object.assign({}, state)
     let k = identifier(tryState)
@@ -26,15 +26,15 @@ define(function(require) {
       let v = state.expression(state)
       eatWhitespace(state)
       if (v !== undefined) {
-        if (state._mapValueIndex === 0) {
+        if (_mapValueIndex === 0) {
           keys.push('value')
         } else {
-          keys.push('value'+state._mapValueIndex)
+          keys.push('value'+_mapValueIndex)
         }
-        state._mapValueIndex++
+        _mapValueIndex++
         values.push(v)
       }
-      return
+      return _mapValueIndex
     }
     Object.assign(state, tryState)
     state.idx += 1
@@ -43,6 +43,7 @@ define(function(require) {
     eatWhitespace(state)
     keys.push(k)
     values.push(v)
+    return _mapValueIndex
   }
 
   let buildMap = (vs, keys) => {
@@ -59,11 +60,11 @@ define(function(require) {
     let char
     eatWhitespace(state)
     if (state.str.charAt(state.idx) !== '{') { return }
-    state._mapValueIndex = 0
+    let _mapValueIndex = 0
     while (char = state.str.charAt(state.idx)) {
       if (char == '{' || char == ',') {
         state.idx += 1
-        parseMapEntry(state, keys, values)
+        _mapValueIndex = parseMapEntry(state, _mapValueIndex, keys, values)
       } else if (char == '}') {
         state.idx += 1
         break
