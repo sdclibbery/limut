@@ -985,12 +985,16 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 operator.
- ??Could keep the max{} syntax?? By setting `"max"` onto the function and having the blend look that up if its a function?
- TEST a lot
+  TEST
+   all var function stuff
+   pitch{0,2,4, scale=minor}
+   blend
+   combinations of var functions with blend
+   predefined vars
+   main vars
  Docs
   Add new operator. with example cases
   Remove old ()[] indexer syntax from everywhere
-  Remove old max{} etc syntax for aggregators
   Review entire docs; especially principles and basic syntax
  Do a release for the breaking changes
   ()[] syntax replaced with operator.
@@ -999,6 +1003,7 @@ operator.
   global `pulse` renamed to `main.pulse`
 (1.5,2.5).floor should work??
 ((1,2,3,4).[0:3]t1){per:4,0:3} should work??
+floor{1.5,2.5} should work??? Or should it??
 Oil/sunset/fire etc should not be vars, they should now be parsed from the string in sprite.js - also allows error message
  !Also, should NOT have 'tri' var that evals to 'triangle'; that would be really confusing if a player was named tri!!!
 !!`p1 ping 0, dur=4, foo=[100,1000,100]e \n p2 kal 0, dur=1, amp=p1.foo/1000` the []e is evalled in the WRONG players dur

@@ -1,8 +1,8 @@
 'use strict';
 define(function(require) {
   let players = require('player/players')
-  let getAggregator = require('player/aggregators')
   let {evalParamFrame} = require('player/eval-param')
+  let getVarFunction = require('predefined-vars').getVarFunction
 
   let lookupOp = (l,r, event,b,evalRecurse) => {
     if (l === undefined) { return undefined }
@@ -10,9 +10,11 @@ define(function(require) {
     if (Array.isArray(r)) {
       return r.map(rv => lookupOp(l, rv, event,b,evalRecurse)) // If RHS is a chord, map the lookup of each element
     }
+    let varFunc = getVarFunction(r)
+    if (varFunc) {
+      return varFunc(l, event,b) // Var function, eg chord aggregator or maths function
+    }
     if (Array.isArray(l)) {
-      let aggregator = getAggregator(r)
-      if (aggregator) { return aggregator(l, event,b) } // Chord aggregator
       return l[Math.floor(r % l.length)] // Chord index
     }
     if (typeof l === 'object') {
@@ -60,9 +62,6 @@ define(function(require) {
     assert([2,3], lookupOp([1,[2,3]], 1))
 
     assert([1,4], lookupOp([1,2,3,4], [0,3]))
-    assert([1,4], lookupOp([3,4,2,1], ['min','max']))
-
-    assert(3, lookupOp([1,2], 'sum'))
 
     assert(1, lookupOp({v:1}, 'v'))
     assert({b:1}, lookupOp({a:{b:1}}, 'a'))
@@ -85,6 +84,9 @@ define(function(require) {
     assert(0, lookupOp('p1', 'foo', {},2,(v)=>2))
   
     assert(1, lookupOp('this', 'foo', {foo:1},0,(v)=>0)())
+
+    assert(2, lookupOp([1,2], 'max'))
+    assert(2, lookupOp(2, 'max'))
   
     console.log('lookupOp tests complete')
   }

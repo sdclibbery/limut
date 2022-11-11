@@ -26,18 +26,13 @@ define(function(require) {
       let v = state.expression(state)
       eatWhitespace(state)
       if (v !== undefined) {
-        let valueIdx = keys.findIndex(x => x==='value')
-        if (valueIdx === -1) {
+        if (state._mapValueIndex === 0) {
           keys.push('value')
-          values.push(v)
         } else {
-          let value = values[valueIdx]
-          if (Array.isArray(value)) {
-            value.push(v)
-          } else {
-            values[valueIdx] = [value,v]
-          }
+          keys.push('value'+state._mapValueIndex)
         }
+        state._mapValueIndex++
+        values.push(v)
       }
       return
     }
@@ -64,6 +59,7 @@ define(function(require) {
     let char
     eatWhitespace(state)
     if (state.str.charAt(state.idx) !== '{') { return }
+    state._mapValueIndex = 0
     while (char = state.str.charAt(state.idx)) {
       if (char == '{' || char == ',') {
         state.idx += 1
@@ -102,10 +98,10 @@ define(function(require) {
   assert({value:0.5,foo:2}, parseMap({str:'{1/2,foo:2}',idx:0,expression:number}))
   assert({value:0.5,foo:2}, parseMap({str:'{ \t1/2 \t, \tfoo \t: \t2 \t}',idx:0,expression:number}))
   assert({foo:2,value:0.5}, parseMap({str:'{foo:2,1/2}',idx:0,expression:number}))
-  assert({value:[1,2,3],foo:2}, parseMap({str:'{1,2,foo:2,3}',idx:0,expression:number}))
+  assert({value:1,value1:2,foo:2,value2:3}, parseMap({str:'{1,2,foo:2,3}',idx:0,expression:number}))
   assert(false, parseMap({str:'{}',idx:0,expression:()=>undefined}).hasOwnProperty('value'))
-  assert({value:[1,2]}, parseMap({str:'{1,2}',idx:0,expression:number}))
-  assert({value:[1,2,3]}, parseMap({str:'{1,2,3}',idx:0,expression:number}))
+  assert({value:1,value1:2}, parseMap({str:'{1,2}',idx:0,expression:number}))
+  assert({value:1,value1:2,value2:3}, parseMap({str:'{1,2,3}',idx:0,expression:number}))
   assert({value:0,'#':1}, parseMap({str:'{0,#:1}',idx:0,expression:number}))
   assert({'0':1}, parseMap({str:'{0:1}',idx:0,expression:number}))
   assert({'1':1}, parseMap({str:'{1:1}',idx:0,expression:number}))

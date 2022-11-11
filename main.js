@@ -2,7 +2,9 @@
 define(function(require) {
   require('polyfills')
   require('maths')
+  require('aggregators')
   require('sliders')
+  require('predefined-var-defs')
   let mainVars = require('main-vars')
   let system = require('play/system')
   let drawSystem = require('draw/system')

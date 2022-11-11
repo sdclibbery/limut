@@ -1,15 +1,7 @@
 'use strict'
 define(function(require) {
-  let addVar = require('predefined-vars').add
+  let addVarFunction = require('predefined-vars').addVarFunction
   let {mainParam,subParam} = require('player/sub-param')
-
-  let createFunc = (name, fn) => {
-    let func = (args, e,b, state) => {
-      return fn(args, e,b, state)
-    }
-    func.isVarFunction = true
-    addVar(name, func)
-  }
 
   let roundWrapper = (fn) => {
     return (args) => {
@@ -17,9 +9,9 @@ define(function(require) {
       return fn(mainParam(args, 0)/to)*to
     }
   }
-  createFunc('floor', roundWrapper(Math.floor))
-  createFunc('ceil', roundWrapper(Math.ceil))
-  createFunc('round', roundWrapper(Math.round))
+  addVarFunction('floor', roundWrapper(Math.floor))
+  addVarFunction('ceil', roundWrapper(Math.ceil))
+  addVarFunction('round', roundWrapper(Math.round))
 
   let getVoiceState = (fullState, e,b) => {
     if (fullState.voices === undefined) { fullState.voices = {} }
@@ -41,8 +33,8 @@ define(function(require) {
     }
   }
 
-  createFunc('accum', statefulWrapper( (args, v, x, dt) => v + Math.max(x,0)*dt ))
-  createFunc('smooth', statefulWrapper( (args, v, x, dt) => {
+  addVarFunction('accum', statefulWrapper( (args, v, x, dt) => v + Math.max(x,0)*dt ))
+  addVarFunction('smooth', statefulWrapper( (args, v, x, dt) => {
     if (x > v) {
       let att = subParam(args, 'att', 8)
       return Math.min(v + (x-v)*att*dt, x)
@@ -51,7 +43,7 @@ define(function(require) {
       return Math.max(v + (x-v)*dec*dt, x)
     }
   }))
-  createFunc('rate', (args, e,b, fullState) => {
+  addVarFunction('rate', (args, e,b, fullState) => {
     let state = getVoiceState(fullState, e,b)
     let dt = state.dt
     if (dt === 0) { return 0 }
@@ -76,7 +68,6 @@ define(function(require) {
   let ev = (i,c,d,v) => {return{idx:i,count:c,dur:d,_time:c,voice:v}}
   let p
 
-  assert(0, evalParamFrame(parseExpression('floor'), ev(0,0), 0))
   assert(0, evalParamFrame(parseExpression('floor{}'), ev(0,0), 0))
   assert(1, evalParamFrame(parseExpression('floor{1.5}'), ev(0,0), 0))
   assert(-2, evalParamFrame(parseExpression('floor{-1.5}'), ev(0,0), 0))
@@ -89,6 +80,13 @@ define(function(require) {
   assert(2, evalParamFrame(parseExpression('floor{[1.5,2.5]t1@f}'), ev(1,1), 1))
   assert([1,2], evalParamFrame(parseExpression('floor{(1.5,2.5)}'), ev(0,0), 0))
 
+  assert(1, evalParamFrame(parseExpression("floor{1.5,2.5}"),ev(0,0,0),0))
+  assert([1,2], evalParamFrame(parseExpression("floor{(1.5,2.5)}"),ev(0,0,0),0))
+  assert(1, evalParamFrame(parseExpression("1.5 .floor"),ev(0,0,0),0))
+  // assert([1,2], evalParamFrame(parseExpression("(1.5,2.5).floor"),ev(0,0,0),0))
+  // assert([4/3,7/3], evalParamFrame(parseExpression("(1.5,2.5).floor{to:1/3}"),ev(0,0,0),0))
+  assert(2.5, evalParamFrame(parseExpression("(1.5,2.5).floor{1.5}"),ev(0,0,0),0))
+
   assert(2, evalParamFrame(parseExpression('ceil{1.5}'), ev(0,0), 0))
   assert(-1, evalParamFrame(parseExpression('ceil{-1.5}'), ev(0,0), 0))
   assert(1/2, evalParamFrame(parseExpression('ceil{0.4,to:1/2}'), ev(0,0), 0))
@@ -100,10 +98,8 @@ define(function(require) {
   assert(1/2, evalParamFrame(parseExpression('round{0.4,to:1/2}'), ev(0,0), 0))
   assert(-1.5, evalParamFrame(parseExpression('round{-1.7,to:1/2}'), ev(0,0), 0))
 
-  assert(0, evalParamFrame(parseExpression('accum'), ev(0,0), 0))
   assert(0, evalParamFrame(parseExpression('accum{}'), ev(0,0), 0))
   assert(0, evalParamFrame(parseExpression('accum{0}'), ev(0,0), 0))
-  assert([0,0], evalParamFrame(parseExpression('accum{1,2}'), ev(0,0), 0))
 
   p = parseExpression('accum{1}')
   assert(0, evalParamFrame(p, ev(0,0), 1))
@@ -127,7 +123,6 @@ define(function(require) {
   assert(4, evalParamFrame(p, ev(0,0), 4))
 
   assert(0, evalParamFrame(parseExpression('smooth{0}'), ev(0,0), 0))
-  assert([0,0], evalParamFrame(parseExpression('smooth{1,2}'), ev(0,0), 0))
 
   p = parseExpression('smooth{1,att:1,dec:0}')
   assert(0, evalParamFrame(p, ev(0,0), 1))
@@ -156,7 +151,6 @@ define(function(require) {
   assert(-1, evalParamFrame(p, ev(0,0), 11))
 
   assert(0, evalParamFrame(parseExpression('rate{0}'), ev(0,0), 0))
-  assert([0,0], evalParamFrame(parseExpression('rate{1,2}'), ev(0,0), 0))
 
   p = parseExpression('rate{[0:1]l1@f}')
   assert(0, evalParamFrame(p, ev(0,0), 1))

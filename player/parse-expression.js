@@ -254,6 +254,7 @@ define(function(require) {
     if (!vs.includes(actual)) { console.trace(`Assertion failed.\n>>Expected one of ${vs}\n>>Actual: ${actual}`) }
   }
 
+  require('predefined-vars').apply(require('vars').all())
   let {evalParamFrame,preEvalParam} = require('player/eval-param')
   let ev = (i,c,d) => {return{idx:i, count:c, dur:d, _time:c, endTime:c+d, countToTime:x=>x}}
 
@@ -927,7 +928,7 @@ define(function(require) {
 
   vars.foo = () => 5
   vars.foo.isVarFunction = true
-  assert(5, parseExpression('foo{}')(ev(0,0),0,evalParamFrame))
+  assert(5, evalParamFrame(parseExpression('foo{}'),ev(0,0),0))
   delete vars.foo
 
   vars.foo = ({val}) => val
@@ -1180,7 +1181,7 @@ define(function(require) {
   assert(2, evalParamFrame(parseExpression("{foo:2,bar:3}.['foo','bar']t1"),ev(0,0),0))
   assert(3, evalParamFrame(parseExpression("{foo:2,bar:3}.['foo','bar']t1"),ev(1,1),1))
 
-  assert(undefined, evalParamFrame(parseExpression("{foo:2,bar:3}.max"),ev(0,0),0))
+  assert({foo:2,bar:3}, evalParamFrame(parseExpression("{foo:2,bar:3}.max"),ev(0,0),0))
 
   assert({value:0,'#':1}, evalParamFrame(parseExpression("0#"),ev(0,0),0))
   assert({value:2,b:1}, evalParamFrame(parseExpression("2b"),ev(0,0),0))
@@ -1230,6 +1231,14 @@ define(function(require) {
   p = parseExpression('([0:1]l4@f){per:1}')
   assert(0, evalParamFrame(p,ev(0,0),0))
   assert(0, evalParamFrame(p,ev(1,1),1))
+
+  assert(2, evalParamFrame(parseExpression("max{2}"),ev(0,0,0),0))
+  assert(2, evalParamFrame(parseExpression("2 .max"),ev(0,0,0),0))
+  assert(2, evalParamFrame(parseExpression("(1,2).max"),ev(0,0,0),0))
+  assert(2, evalParamFrame(parseExpression("max{1,2}"),ev(0,0,0),0))
+  assert([1,2], evalParamFrame(parseExpression("max{(1,2)}"),ev(0,0,0),0))
+  assert(1, evalParamFrame(parseExpression("(1,2).max{0}"),ev(0,0,0),0))
+  assert('max', evalParamFrame(parseExpression("max"),ev(0,0,0),0))
 
   console.log('Parse expression tests complete')
   }

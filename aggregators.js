@@ -1,12 +1,28 @@
 'use strict'
 define(function(require) {
+  let addVarFunction = require('predefined-vars').addVarFunction
+
+  let getChordFromValues = (args) => {
+    let result = [args.value]
+    let index = 1
+    let v
+    do {
+      let key = 'value'+index
+      index++
+      v = args[key]
+      if (v) { result.push(v) }
+    } while (v)
+    return result
+  }
+  
   let createAggregator = (name, fn) => {
     let aggFunc = (args, e,b) => {
       let vs
       if (!args) { vs = [] }
       else if (Array.isArray(args)) { vs = args }
       else if (Array.isArray(args.value)) { vs = args.value }
-      else if (args.value !== undefined) { vs = [args.value] }
+      else if (args.value !== undefined) { vs = getChordFromValues(args) }
+      else if (args !== undefined) { vs = [args] }
       else { vs = [] }
       vs = vs.flatMap(v => {
         if (typeof(v) === 'object' && v.hasOwnProperty('value')) { return v.value }
@@ -14,20 +30,28 @@ define(function(require) {
       }).map(v => v===undefined?0:v)
       return fn(vs)
     }
+    addVarFunction(name, aggFunc)
     return aggFunc
   }
 
+  let wrapper = (fn) => {
+    return (vs) => {
+      if (vs.length === 0) { return 0 }
+      if (vs.length === 1) { return vs[0] }
+      return fn(vs)
+    }
+  }
   let sum = vs => vs.reduce((a,x) => a+x, 0)
   let aggregators = {
-    'max': createAggregator('max', vs => vs.length===0?0:Math.max(...vs)),
-    'min': createAggregator('min', vs => vs.length===0?0:Math.min(...vs)||0),
-    'first': createAggregator('first', vs => vs.length===0?0:vs[0]),
-    'last': createAggregator('last', vs => vs.length===0?0:vs[vs.length-1]),
-    'rand': createAggregator('rand', vs => vs.length===0?0:vs[Math.floor(Math.random()*vs.length)]),
+    'max': createAggregator('max', wrapper(vs => Math.max(...vs))),
+    'min': createAggregator('min', wrapper(vs => Math.min(...vs)||0)),
+    'first': createAggregator('first', wrapper(vs => vs[0])),
+    'last': createAggregator('last', wrapper(vs => vs[vs.length-1])),
+    'rand': createAggregator('rand', wrapper(vs => vs[Math.floor(Math.random()*vs.length)])),
+    'avg': createAggregator('avg', wrapper(vs => sum(vs)/vs.length)),
+    'sum': createAggregator('sum', wrapper(vs => sum(vs))),
     'count': createAggregator('count', vs => vs.length),
-    'sum': createAggregator('sum', sum),
-    'avg': createAggregator('avg', vs => vs.length===0?0:sum(vs)/vs.length),
-}
+  }
 
   let getAggregator = (name) => {
     return aggregators[name]
@@ -46,6 +70,7 @@ define(function(require) {
     assert(0, getAggregator('count')())
     assert(3, getAggregator('count')([1,1,1]))
     assert(3, getAggregator('count')({value:[1,1,1]}))
+    assert(3, getAggregator('count')({value:1,value1:1,value2:1}))
     assert(3, getAggregator('count')([1,1,1]))
     assert(3, getAggregator('count')([{value:[1,1,1]}]))
     assert(3, getAggregator('count')([{value:1},{value:1},{value:1}]))
@@ -57,6 +82,7 @@ define(function(require) {
 
     assert(0, getAggregator('min')([]))
     assert(0, getAggregator('max')([]))
+    assert(2, getAggregator('max')(2))
     assert(0, getAggregator('first')([]))
     assert(0, getAggregator('last')([]))
     assert(0, getAggregator('rand')([]))
@@ -64,11 +90,6 @@ define(function(require) {
     assert(0, getAggregator('sum')([]))
     assert(0, getAggregator('avg')([]))
 
-    assert('function', typeof getAggregator('count'))
-    assert('undefined', typeof getAggregator('countdown'))
-
     console.log('Aggregator tests complete')
   }
-  
-  return getAggregator
 })

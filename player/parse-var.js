@@ -36,7 +36,11 @@ define(function(require) {
       let vr = vars.get(key)
       let v
       if (typeof vr === 'function' && vr.isVarFunction) { // Var function
-        v = vr(modifiers, event,b, state)
+        if (modifiers) {
+          v = vr(modifiers, event,b, state)
+        } else {
+          v = key // If no arguments to function, treat as a string value instead
+        }
       } else {
         v = vr // ordinary var
         if (v === undefined) { v = key } // If not found as a var, treat as a string value
@@ -73,12 +77,20 @@ define(function(require) {
   assert('bar', p({},0,(v)=>v))
   delete vars.foo
 
-  vars.foo = () => 3
+  vars.foo = () => 5
   vars.foo.isVarFunction = true
   state = {str:'foo',idx:0}
   p = varLookup(parseVar(state), [], {})
   assert(3, state.idx)
-  assert(3, p(ev(0,0),0,evalParamFrame))
+  assert(5, p(ev(0,0),0,evalParamFrame,{}))
+  delete vars.foo
+
+  vars.foo = () => 5
+  vars.foo.isVarFunction = true
+  state = {str:'foo',idx:0}
+  p = varLookup(parseVar(state), [], {})
+  assert(3, state.idx)
+  assert('foo', p(ev(0,0),0,evalParamFrame, undefined))
   delete vars.foo
 
   vars.foo = () => [1,2]
@@ -113,12 +125,12 @@ define(function(require) {
   assert(4, evalParamFrame(p,ev(0),0))
   delete vars.foo
 
-  vars.foo = (x) => x.value*x.value
+  vars.foo = (x) => x.value
   vars.foo.isVarFunction = true
   state = {str:'foo',idx:0}
   p = varLookup(parseVar(state), [])
   p.modifiers = {value:[2,3]}
-  assert([4,9], evalParamFrame(p,ev(0),0))
+  assert([2,3], evalParamFrame(p,ev(0),0))
   delete vars.foo
 
   state = {str:'foo',idx:0}

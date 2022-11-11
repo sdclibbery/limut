@@ -4,7 +4,6 @@ define((require) => {
   let {evalParamFrame} = require('player/eval-param')
   let system = require('play/system')
   let scale = require('music/scale')
-  let drawSystem = require('draw/system')
 
   let mainVars = {
     bpm: { setter: (v) => metronome.bpm(v), default:110 },

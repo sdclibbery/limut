@@ -2394,3 +2394,8 @@ v readout 0, add=(1,2,3,4).(this.foo), foo=[1,2]
 // r readout 0, add=foo
 
 
+// r readout 0, add=(1,2).max
+// r readout 0, add=max{1,2}
+// r readout 0, add=max{(1,2)}
+
+
