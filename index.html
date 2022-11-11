@@ -979,19 +979,13 @@ shadertoy synth multiple channels
 // [], []t, []l/s, []e, []n, []r
 // operators + - * / ^ % |
 // var, player.var, this.param, this.voice, var{params}, slider
-// (...).1, (...).max, max{...}, {foo:...}.foo
+// (...).1, (...).max, max{...}, {foo:...}.foo, floor{}, accum{}
 // modifiers {seed,per,0:0}, @e, @f
 // subparams {2,mix:1/2}
 ====
 ==== other ====
 operator.
-  TEST
-   all var function stuff
-   pitch{0,2,4, scale=minor}
-   blend
-   combinations of var functions with blend
-   predefined vars
-   main vars
+ Also  v kal 0, time=10, mirror={4,rotate:smooth{time/4}}
  Docs
   Add new operator. with example cases
   Remove old ()[] indexer syntax from everywhere
@@ -1002,7 +996,9 @@ operator.
   max{} syntax for aggregators replaced with ().max
   var lookup defaults to the string value
   global `pulse` renamed to `main.pulse`
-(1.5,2.5).floor should work??
+(1.5).floor{to:1/4} should work - if modifiers.value is undef, then do not treat as var function call...
+([0,1]t1).accum should work - need to sort out the voiceState business properly
+(1.5,2.5).floor{to:1/4} should work??
 ((1,2,3,4).[0:3]t1){per:4,0:3} should work??
 floor{1.5,2.5} should work??? Or should it??
 Oil/sunset/fire etc should not be vars, they should now be parsed from the string in sprite.js - also allows error message

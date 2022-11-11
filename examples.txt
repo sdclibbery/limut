@@ -2404,3 +2404,17 @@ v readout 0, add=(1,2,3,4).(this.foo), foo=[1,2]
 // p noise 0, bpf={max{440},q:50}, amp=8
 
 
+// r readout 0, add=this.foo, foo=(0,floor{(0,[1,0]e).1,to:1/3}).sum
+// r readout 0, add=this.foo, foo=accum{[0,1]t1}
+// r readout 0, add=([(1,7),(2,5)]t2).rand
+// r readout 0, add=max{[0:10]l5,[-10:10]l3@f}
+// r readout 0, add=slider{max:2}
+
+// p noise 0, bpf={440,q:20}, amp=5
+// p noise 0, bpf={pitch{(0,2,[4,4b]t2),oct:5},q:50}, amp=8
+// p noise 0, bpf={max{440},q:50}, amp=8
+
+// v kal 0
+// v2 clouds 0, blend=(additive,invert).((0,1).[min,max]t1)
+
+
