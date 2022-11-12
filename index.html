@@ -287,17 +287,17 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
   <p>Command: One programming instruction to tell limut what to do</p>
   <p>Event: One event to be played; either an audio note/sample or a visual display</p>
   <p>Expression: Code that evaluates to a value</p>
+  <p>Global Var: A variable; something whose value can be set by a command, and then read in an expression</p>
   <p>Indicator: Visual display on the limut screen to help with composition or production</p>
   <p>Map: Value containing multiple values indexed by keys</p>
   <p>Modifier: Additional data thats changes the value of an expression, eg by modifying the current time it sees, or by providing a random seed</p>
+  <p>Param: A named parameter expression that controls the output produced by a synth</p>
+  <p>Pattern: A sequence defining the notes or control values to be played by a synth</p>
+  <p>Player: An player uses a synth to play events in a pattern, controlled by params</p>
   <p>Subparam: An additional parameter provided extra info on how a param should control the output of a synth</p>
   <p>Synth: An audio or visual synthesizer that can produce sound output or visual display.</p>
-  <p>Param: A parameter that controls the output produced by a synth</p>
-  <p>Pattern: A sequence defining the notes or control values to be played by a synth</p>
-  <p>Player: An player uses a synth to play a pattern, controlled by params</p>
   <p>Timevar: An expression whose value varies over time</p>
   <p>Value: A primitive value to control synths</p>
-  <p>Global Var: A variable; something whose value can be set by a command, and then read in an expression</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-indicators')" class="accordion"> Indicators</h4>
 <div id="accordion-indicators" class="closed">
@@ -309,8 +309,8 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 </div>
 <h4 onclick="toggleAccordion('accordion-syntax-principles')" class="accordion"> Syntax Principles</h4>
 <div id="accordion-syntax-principles" class="closed">
-  <p><code>()</code> Round brackets define chords in both patterns and expressions; that is, mutltiple events or values at the same time. Chord indexers and aggregators can be used to extract various elements from chords.</p>
-  <p><code>[]</code> Square brackets define sequences in both patterns and expressions; that is, multiple events or values one after another (sequences/timevars). They are also used for indexing (looking up) into chords and maps</p>
+  <p><code>()</code> Round brackets define chords in both patterns and expressions; that is, mutltiple events or values at the same time. Chord indexers and aggregators can be used to extract various values from chords.</p>
+  <p><code>[]</code> Square brackets define sequences in both patterns and expressions; that is, multiple events or values one after another over time (sequences/timevars)</p>
   <p><code>&lt;&gt;</code> Angle brackets define higher level sequences in patterns; that is, a sequence where the next event is selected when the entire pattern repeats next.</p>
   <p><code>{}</code> Curly brackets in an expression supply extra information to a param (subparams), value (modifiers) or function call (arguments)</p>
   <p><code>@</code> Defines the interval for an expression; that is, how often the expression should be evaluated within the event</p>
@@ -327,7 +327,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
     set bpm=130           // Command that sets the global bpm (beats per minute) var to 130bpm.
     kick play x., amp=2,  // Start of a command that defines the kick player, of type `play`, with an amp (volume) of 2
       drive=1/2           // Continuation of the kick player definition, setting its drive param to 1/2
-    set kick drive=0      // New command defining an override for the kick player, setting its drive param to zero
+    set kick drive=0      // New command defining an override for the kick player, setting its drive param to zero. Overrides like this take precedence over params set on the player itself.
   </pre>
 </p>
 <h5>Defining a player</h5>
@@ -370,11 +370,10 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 </div>
 <h4 onclick="toggleAccordion('accordion-value-syntax')" class="accordion"> Values</h4>
 <div id="accordion-value-syntax" class="closed">
-<p>Basic structure <code>value{modifiers}@interval[indexing]</code></p>
+<p>Basic structure <code>value{modifiers}@interval</code></p>
 <p><code>value</code> Actual value (which may include subparameters); see below</p>
-<p><code>{modifiers}</code> Map of modifiers. Modifiers may modify the time passed to the value expression, or the value it returns, or provide additional data for a parameter. For example, <code>[1,2,3]t1{0:0,per:8}</code> will give a sequence that repeats every 8 beats, forced to the value 0 at the start of each repeat. In other words, the repeating sequence: 0,2,3,1,2,3,1,2. See "Modifiers" below.</p>
+<p><code>{modifiers}</code> Map of modifiers and/or arguments. Modifiers may modify the time passed to the value expression, or the value it returns, or provide additional data for a parameter. For example, <code>[1,2,3]t1{0:0,per:8}</code> will give a sequence that repeats every 8 beats, forced to the value 0 at the start of each repeat. In other words, the repeating sequence: 0,2,3,1,2,3,1,2. See "Modifiers" below.</p>
 <p><code>@interval</code> Intervals specify how often the value should be evaluated, for example once per event (then the same value through the event), or continuously varying. See "Intervals" below.</p>
-<p><code>[indexing]</code> Lookup within chords (chords) or maps. chords are groups of multiple values. Use indexing to extract specific values from them; see "chord indexers" below. Maps are dictionary maps containing multiple values. Use indexing to extract an individual value; see "Map lookup" below.</p>
 <h5>Values:</h5>
 <p><code>1</code> Single, constant value</p>
 <p><code>1#</code> <code>1b</code> For use with the audio <code>add</code> param, sharpen or flatten the value. This is parsed into <code>{1,#:1}</code> or <code>{1,b:1}</code></p>
@@ -409,6 +408,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>%</code> Take remainder; eg (0,4,7,9)%7 is equivalent to (0,4,0,2)</p>
 <p><code>^</code> Raise to the power; eg <code>2^3</code> is 8. Imaginary results return 0; eg <code>-1^1/2</code> returns 0.</p>
 <p><code>|</code> Concatenate chords; eg <code>1|2</code> is the same as <code>(1,2)</code>, and <code>(1,2)|(3,4)</code> is <code>(1,2,3,4)</code></p>
+<p><code>.</code> Lookup values in a player (with a param name), a chord (with an index or aggregator) or a map (with a field name). See examples below.</p>
 <p><code>{x:0,y:1}</code> Map, containing keys and values</p>
 <p><code>{2,y:1}</code> Map, containing keys and values, with a 'default' value of 2. The default value is used for some parameters; eg <code>chop={2,wave:triangle}</code> is the same as <code>chop=2</code>, but also supplies an additional 'wave' subparameter.</p>
 <p><code>{r:1,g:0,b:0,a:1}</code> RGBA colour; component range is 0 - 1.</p>
@@ -419,32 +419,31 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>#00336699</code> Hex colour value which becomes the colour map <code>{r:0,g:0.2,b:0.4,a:0.6}</code></p>
 <p><code>#003366</code> Hex colour value which becomes the colour map <code>{r:0,g:0.2,b:0.4,a:1}</code></p>
 <p><code>'abc'</code> String value</p>
-<p><code>foo</code> Lookup a global var named <code>foo</code>.</p>
+<p><code>foo</code> Lookup a global var named <code>foo</code>. If there is no var, predefined var, or var function named foo, then the string <code>'foo'</code> will be returned instead. If there is a var named foo, but no arguments are provided, then the string <code>'foo'</code> will be returned instead.</p>
 <p><code>foo{x:2}</code> Lookup a global var named <code>foo</code>, and call it as a function passing in named parameters.</p>
-<p><code>p1.amp</code> Lookup the value of param <code>amp</code> from player <code>p1</code>. Returns a chord of values from all currently playing events; use chord indexing to select a single value.</p>
-<p><code>p1.amp.0</code> Lookup the value of param <code>amp</code> from player <code>p1</code>, and if it contains a chord, extract the first element only from it.</p>
-<p><code>p1.pulse.max</code> Lookup the value of the <code>pulse</code> from player <code>p1</code>, and if it contains a chord, extract the largest element only from it (see 'chord indexing' below). The pulse param gives a smoothed approximate envelope shaped value between 0 and 1 for each event.</p>
-<p><code>this.value</code> Get param <code>value</code> from the current event, which contains the value specified by the pattern.</p>
 <h5>Modifiers:</h5>
 <p><code>{per:8}</code> Repeat a sequence <code>[1,2,3]t1{per:8}</code> will give a sequence that repeats every 8 beats.</p>
 <p><code>{per:8,0:7,2:3}</code> Force the value to evaluate to 7 at the start of each repeat, and 3 on the second beat of every repeat. Note this only works if <code>per</code> is used to make a repeating sequence.</p>
 <h5>Intervals:</h5>
 <p><code>@e</code> Use <code>@e</code> to evaluate this value once per event</p>
 <p><code>@f</code> Use <code>@f</code> to evaluate once per frame (60 times a second). For example <code>lpf=[300:3000]l8@f</code> will update the lpf cutoff frequency continuously, while <code>lpf=[300:3000]l8</code> will be evaluated only once for each event played.</p>
-<h5>chord indexers:</h5>
-<p><code>(3,1,2).0</code> Returns the nth element in a chord (3 in the example)</p>
-<p><code>(3,1,2).3</code> Returns the nth element in a chord, wrapping around (3 in the example)</p>
-<p><code>(3,1,2).(0,2)</code> Returns multiple elements in a chord ([3,2] in the example)</p>
-<p><code>(3,1,2).first</code> Returns the first element in a chord (3 in the example)</p>
-<p><code>(3,1,2).last</code> Returns the last element in a chord (2 in the example)</p>
-<p><code>(3,1,2).rand</code> Returns a random element from a chord</p>
-<p><code>(3,1,2).min</code> Returns the smallest element in a chord (1 in the example)</p>
-<p><code>(3,1,2).max</code> Returns the largest element in a chord (3 in the example)</p>
-<p><code>(3,1,2).count</code> Returns the number of elements in a chord (3 in the example)</p>
-<p><code>(3,1,2).sum</code> Returns the sum of all elements in a chord (6 in the example)</p>
-<p><code>(3,1,2).avg</code> Returns the mean average of all elements in a chord (2 in the example)</p>
-<h5>Map lookup:</h5>
+<h5>Lookup examples</h5>
+<p><code>p1.amp</code> Lookup the value of param <code>amp</code> from player <code>p1</code>. Returns a chord of values from all currently playing events.</p>
+<p><code>p1.amp.0</code> Lookup the value of param <code>amp</code> from player <code>p1</code>, and if it contains a chord, extract the first element only from it.</p>
+<p><code>p1.pulse.max</code> Lookup the value of the <code>pulse</code> from player <code>p1</code>, and if it contains a chord, extract the largest element only from it. The pulse param gives a smoothed approximate envelope shaped value between 0 and 1 for each event.</p>
+<p><code>this.value</code> Get param <code>value</code> from the current event. Never returns a chord because <code>this</code> refers only to the single current event by definition.</p>
 <p><code>{foo:2}.foo</code> Returns a field in a map (returns 2 in this example)</p>
+<p><code>(3,1,2).0</code> Returns the nth element in a chord (returns 3 in the example)</p>
+<p><code>(3,1,2).3</code> Returns the nth element in a chord, wrapping around (returns 3 in the example)</p>
+<p><code>(3,1,2).(0,2)</code> Returns multiple elements in a chord (returns (3,2) in the example)</p>
+<p><code>(3,1,2).first</code> Returns the first element in a chord (returns 3 in the example)</p>
+<p><code>(3,1,2).last</code> Returns the last element in a chord (returns 2 in the example)</p>
+<p><code>(3,1,2).rand</code> Returns a random element from a chord (returns 1, 2 or 3 at random in this example)</p>
+<p><code>(3,1,2).min</code> Returns the smallest element in a chord (returns 1 in the example)</p>
+<p><code>(3,1,2).max</code> Returns the largest element in a chord (returns 3 in the example)</p>
+<p><code>(3,1,2).count</code> Returns the number of elements in a chord (returns 3 in the example)</p>
+<p><code>(3,1,2).sum</code> Returns the sum of all elements in a chord (returns 6 in the example)</p>
+<p><code>(3,1,2).avg</code> Returns the mean average of all elements in a chord (returns 2 in the example)</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-audio-synths')" class="accordion"> Audio Synths</h4>
 <div id="accordion-audio-synths" class="closed">
@@ -725,7 +724,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>main.pulse</code> The current musical pulse; like a VU level meter</p>
 <p><code>main.amp</code> Main mix amplitude control. Value resets unless set every time the code is updated.</p>
 <p><code>main.reverb</code> Main reverb amplitude control. Value resets unless set every time the code is updated.</p>
-<p><code>beat.readouts</code> Set the beat counts to use for the readouts; eg <code>beat.readouts=(3,12)</code> will show two beat counters, one that counts in 3's (for a waltz), and another that counts to 12 (for 4 bars of a waltz). There cannot be more than 3 readouts. The default is <code>[12,16,32]</code></p>
+<p><code>beat.readouts</code> Set the beat counts to use for the readouts; eg <code>beat.readouts=(3,12)</code> will show two beat counters, one that counts in 3's (for a waltz), and another that counts to 12 (for 4 bars of a waltz). There cannot be more than 3 readouts. The default is <code>(12,16,32)</code></p>
 <p><code>root</code> Main root pitch offset; default <code>0</code> roots the pitches on middle c; <code>1</code> pitches up by one semitone etc. This is fractional, so can be used to 'nudge' the tuning to match other instruments; eg <code>root=0.135</code> </p>
 <p><code>scale</code> Scale eg minor, major, chromatic, majorpentatonic, lydian etc etc. Value resets unless set every time the code is updated.</p>
 <p><code>drop6_2</code> Predefined time var: equivalent to <code>[1,0]t[6.2]</code>. These are all the predefined drops: drop6_2, drop7_1, drop12_4, drop14_2, drop15_1, drop24_8, drop28_4, drop30_2, drop31_1, drop56_8, drop60_4, drop62_2, drop63_1</p>
@@ -761,6 +760,14 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p class='sub'><code>smooth{1,att:4}</code> Smoothing attack rate; higher rate means the value will converge to the target faster when the target is above the current value. Default is 8.</p>
 <p class='sub'><code>smooth{1,dec:4}</code> Smoothing decay rate; higher rate means the value will converge to the target faster when the target is below the current value. Default is 4.</p>
 <p><code>rate{[0:1]l1@f}</code> Calculate a rate of change of a value over time, in units per beat. In the example, the expression <code>[0:1]l1@f</code> rises from 0 to 1 over the course of the first beat, so the rate will be approximately 1 for the first beat. It then falls so the rate will be approximately -1. The rates will have jitter due to measurement inaccuracies, so it can be useful to <code>smooth{}</code> the result.</p>
+<p><code>first{3,1,2}</code> Returns the first argument (3 in the example)</p>
+<p><code>last{3,1,2}</code> Returns the last argument (2 in the example)</p>
+<p><code>rand{3,1,2}</code> Returns a random argument (1, 2 or 3 at random in this example)</p>
+<p><code>min{3,1,2}</code> Returns the smallest argument (1 in the example)</p>
+<p><code>max{3,1,2}</code> Returns the largest argument (3 in the example)</p>
+<p><code>count{3,1,2}</code> Returns the number of arguments (3 in the example)</p>
+<p><code>sum{3,1,2}</code> Returns the sum of all arguments (6 in the example)</p>
+<p><code>avg{3,1,2}</code> Returns the mean average of all arguments (2 in the example)</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-play-samples')" class="accordion"> Play Samples</h4>
 <div id="accordion-play-samples" class="closed">
@@ -985,17 +992,13 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 operator.
- Docs
-  Add new operator. with example cases
-  Remove old ()[] indexer syntax from everywhere
-  Put max{} syntax back in!
-  Review entire docs; especially principles and basic syntax
  Do a release for the breaking changes
   ()[] syntax replaced with operator.
   var lookup defaults to the string value
   global `pulse` renamed to `main.pulse`
 Oil/sunset/fire etc should not be vars, they should now be parsed from the string in sprite.js - also allows error message
  !Also, should NOT have 'tri' var that evals to 'triangle'; that would be really confusing if a player was named tri!!!
+! `set [p,b] ...`  syntax should use round brackets!!!
 operator. LHS is chord and RHS is non aggregator string: recurse operator.(RHS) across all elements
  Allows lookup from multiple maps or players eg  (pk,ps).pulse.0
 ([0,1]t1).accum should work - need to sort out the voiceState business properly

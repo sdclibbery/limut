@@ -2384,6 +2384,7 @@ v readout 0, x={x:this.f}, f=(2,3), loc=sparkle
 v readout 0, add=(1,2,3,4).[0:3]t1/4@f
 v readout 0, add=(1,2,3,8).count
 v readout 0, add=(1,2,3,4).(this.foo), foo=[1,2]
+v readout 0, add=#e000.r
 
 // r readout 0, add=pitch{6,scale:penta}
 // r readout 0, add=floor{2.5}
