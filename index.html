@@ -985,7 +985,8 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 operator.
- Also  v kal 0, time=10, mirror={4,rotate:smooth{time/4}}
+ (1.5).floor{to:1/4} should work - if modifiers.value is undef, then do not treat as var function call...
+  But then how to pass actual modifiers like 'to'? parse-var has to make subparams? {value:'floor',to:1/4}
  Docs
   Add new operator. with example cases
   Remove old ()[] indexer syntax from everywhere
@@ -996,10 +997,9 @@ operator.
   max{} syntax for aggregators replaced with ().max
   var lookup defaults to the string value
   global `pulse` renamed to `main.pulse`
-(1.5).floor{to:1/4} should work - if modifiers.value is undef, then do not treat as var function call...
 ([0,1]t1).accum should work - need to sort out the voiceState business properly
 (1.5,2.5).floor{to:1/4} should work??
-((1,2,3,4).[0:3]t1){per:4,0:3} should work??
+((1,2,3,4).[0:3]t1){per:4,0:3} should work?? Or not?
 floor{1.5,2.5} should work??? Or should it??
 Oil/sunset/fire etc should not be vars, they should now be parsed from the string in sprite.js - also allows error message
  !Also, should NOT have 'tri' var that evals to 'triangle'; that would be really confusing if a player was named tri!!!

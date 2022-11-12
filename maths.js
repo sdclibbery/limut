@@ -17,16 +17,18 @@ define(function(require) {
     if (fullState.voices === undefined) { fullState.voices = {} }
     if (fullState.voices[e.voice] === undefined) { fullState.voices[e.voice] = {} }
     let state = fullState.voices[e.voice] // Store separate state for each chord voice
-    let dt = b - (state.b || b)
-    state.b = b
-    state.dt = dt
+    if (!state.b || b > state.b) {
+      let dt = b - (state.b || b)
+      state.b = b
+      state.dt = dt
+    }
     return state
   }
   let statefulWrapper = (fn) => {
     return (args, e,b, fullState) => {
       let state = getVoiceState(fullState, e,b)
       let dt = state.dt
-      if (dt === 0) { return 0 }
+      if (dt === 0) { return state.v || 0 }
       let value = (mainParam(args, 0) || 0)
       state.v = fn(args, (state.v || 0), value, dt)
       return state.v
