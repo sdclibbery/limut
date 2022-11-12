@@ -928,22 +928,27 @@ define(function(require) {
 
   vars.foo = () => 5
   vars.foo.isVarFunction = true
-  assert(5, evalParamFrame(parseExpression('foo{}'),ev(0,0),0))
-  delete vars.foo
-
-  vars.foo = ({val}) => val
-  vars.foo.isVarFunction = true
-  assert(5, evalParamFrame(parseExpression('foo{val:5}'),ev(0,0),0))
+  assert('foo', evalParamFrame(parseExpression('foo'),ev(0,0),0))
   delete vars.foo
 
   vars.foo = () => 5
   vars.foo.isVarFunction = true
-  assert(7, parseExpression('foo{}+2')(ev(0,0),0,evalParamFrame))
+  assert({value:'foo'}, evalParamFrame(parseExpression('foo{}'),ev(0,0),0))
   delete vars.foo
 
-  vars.foo = ({val}) => val
+  vars.foo = ({value}) => value
   vars.foo.isVarFunction = true
-  assert(6, evalParamFrame(parseExpression('  foo  {  x:3, val : 6 }  '),ev(0,0),0))
+  assert(5, evalParamFrame(parseExpression('foo{5}'),ev(0,0),0))
+  delete vars.foo
+
+  vars.foo = ({value}) => value
+  vars.foo.isVarFunction = true
+  assert(7, parseExpression('foo{5}+2')(ev(0,0),0,evalParamFrame))
+  delete vars.foo
+
+  vars.foo = ({value}) => value
+  vars.foo.isVarFunction = true
+  assert(6, evalParamFrame(parseExpression('  foo  {  x:3, 6 }  '),ev(0,0),0))
   delete vars.foo
 
   assert('event', parseExpression("[0,24]r").interval)

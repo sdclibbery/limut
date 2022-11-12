@@ -1,6 +1,7 @@
 'use strict';
 define(function(require) {
   let players = require('player/players')
+  let mainParam = require('player/sub-param').mainParam
   let {evalParamFrame} = require('player/eval-param')
   let getVarFunction = require('predefined-vars').getVarFunction
 
@@ -10,9 +11,14 @@ define(function(require) {
     if (Array.isArray(r)) {
       return r.map(rv => lookupOp(l, rv, event,b,evalRecurse)) // If RHS is a chord, map the lookup of each element
     }
-    let varFunc = getVarFunction(r)
+    let varFunc = getVarFunction(mainParam(r))
     if (varFunc) {
-      return varFunc(l, event,b) // Var function, eg chord aggregator or maths function
+      let args = l
+      if (typeof r === 'object') {
+        args = Object.assign({}, r)
+        args.value = l
+      }
+      return varFunc(args, event,b) // Var function, eg chord aggregator or maths function
     }
     if (Array.isArray(l)) {
       return l[Math.floor(r % l.length)] // Chord index
@@ -87,6 +93,8 @@ define(function(require) {
 
     assert(2, lookupOp([1,2], 'max'))
     assert(2, lookupOp(2, 'max'))
+
+    // Use with var functions is tested in parse-expression tests as its awkward to test here
   
     console.log('lookupOp tests complete')
   }

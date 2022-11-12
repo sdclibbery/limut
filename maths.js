@@ -70,7 +70,6 @@ define(function(require) {
   let ev = (i,c,d,v) => {return{idx:i,count:c,dur:d,_time:c,voice:v}}
   let p
 
-  assert(0, evalParamFrame(parseExpression('floor{}'), ev(0,0), 0))
   assert(1, evalParamFrame(parseExpression('floor{1.5}'), ev(0,0), 0))
   assert(-2, evalParamFrame(parseExpression('floor{-1.5}'), ev(0,0), 0))
   assert(1/2, evalParamFrame(parseExpression('floor{0.6,to:1/2}'), ev(0,0), 0))
@@ -85,6 +84,7 @@ define(function(require) {
   assert(1, evalParamFrame(parseExpression("floor{1.5,2.5}"),ev(0,0,0),0))
   assert([1,2], evalParamFrame(parseExpression("floor{(1.5,2.5)}"),ev(0,0,0),0))
   assert(1, evalParamFrame(parseExpression("1.5 .floor"),ev(0,0,0),0))
+  assert(1.25, evalParamFrame(parseExpression("(1.3).floor{to:1/4}"),ev(0,0,0),0))
   // assert([1,2], evalParamFrame(parseExpression("(1.5,2.5).floor"),ev(0,0,0),0))
   // assert([4/3,7/3], evalParamFrame(parseExpression("(1.5,2.5).floor{to:1/3}"),ev(0,0,0),0))
   assert(2.5, evalParamFrame(parseExpression("(1.5,2.5).floor{1.5}"),ev(0,0,0),0))
@@ -100,7 +100,6 @@ define(function(require) {
   assert(1/2, evalParamFrame(parseExpression('round{0.4,to:1/2}'), ev(0,0), 0))
   assert(-1.5, evalParamFrame(parseExpression('round{-1.7,to:1/2}'), ev(0,0), 0))
 
-  assert(0, evalParamFrame(parseExpression('accum{}'), ev(0,0), 0))
   assert(0, evalParamFrame(parseExpression('accum{0}'), ev(0,0), 0))
 
   p = parseExpression('accum{1}')

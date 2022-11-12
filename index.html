@@ -978,15 +978,13 @@ shadertoy synth multiple channels
 // (), follow, complex durs, delay, stutter, overrides, +=, |=
 // [], []t, []l/s, []e, []n, []r
 // operators + - * / ^ % |
-// var, player.var, this.param, this.voice, var{params}, slider
-// (...).1, (...).max, max{...}, {foo:...}.foo, floor{}, accum{}
+// var, player.var, this.param, this.voice, var{params}, slider{}, floor{}, .floor{to:}, accum{}
+// (...).1, (...).max, max{...}, {foo:...}.foo
 // modifiers {seed,per,0:0}, @e, @f
 // subparams {2,mix:1/2}
 ====
 ==== other ====
 operator.
- (1.5).floor{to:1/4} should work - if modifiers.value is undef, then do not treat as var function call...
-  But then how to pass actual modifiers like 'to'? parse-var has to make subparams? {value:'floor',to:1/4}
  Docs
   Add new operator. with example cases
   Remove old ()[] indexer syntax from everywhere
@@ -994,18 +992,17 @@ operator.
   Review entire docs; especially principles and basic syntax
  Do a release for the breaking changes
   ()[] syntax replaced with operator.
-  max{} syntax for aggregators replaced with ().max
   var lookup defaults to the string value
   global `pulse` renamed to `main.pulse`
+Oil/sunset/fire etc should not be vars, they should now be parsed from the string in sprite.js - also allows error message
+ !Also, should NOT have 'tri' var that evals to 'triangle'; that would be really confusing if a player was named tri!!!
+operator. LHS is chord and RHS is non aggregator string: recurse operator.(RHS) across all elements
+ Allows lookup from multiple maps or players eg  (pk,ps).pulse.0
 ([0,1]t1).accum should work - need to sort out the voiceState business properly
 (1.5,2.5).floor{to:1/4} should work??
 ((1,2,3,4).[0:3]t1){per:4,0:3} should work?? Or not?
 floor{1.5,2.5} should work??? Or should it??
-Oil/sunset/fire etc should not be vars, they should now be parsed from the string in sprite.js - also allows error message
- !Also, should NOT have 'tri' var that evals to 'triangle'; that would be really confusing if a player was named tri!!!
 !!`p1 ping 0, dur=4, foo=[100,1000,100]e \n p2 kal 0, dur=1, amp=p1.foo/1000` the []e is evalled in the WRONG players dur
-operator. LHS is chord and RHS is non aggregator string: recurse operator.(RHS) across all elements
- Allows lookup from multiple maps or players eg  (pk,ps).pulse.0
 Really, `set [pk,pc] amp=0` should be `set (pk,pc) amp=0`
 More standard Player params
  .exists - 1 if player exists at all

@@ -18,7 +18,7 @@ define(function(require) {
         delete modifiers[key]
       }
     }
-    modifiers.overrides = overrides
+    if (Object.keys(overrides).length > 0) { modifiers.overrides = overrides }
     if (!canHaveOwnModifiers(exp)) {
       let wrap = () => exp
       wrap.modifiers = modifiers
@@ -57,20 +57,20 @@ define(function(require) {
     assert({foo:1}, addModifiers({foo:1}))
     assert([1], addModifiers([1]))
 
-    assert({bar:2,overrides:{}}, addModifiers({foo:1}, {bar:2}).modifiers)
+    assert({bar:2}, addModifiers({foo:1}, {bar:2}).modifiers)
 
     let f = (x) => x
     assert(1, addModifiers(f, {bar:2})(1))
-    assert({bar:2,overrides:{}}, addModifiers(f, {bar:2}).modifiers)
+    assert({bar:2}, addModifiers(f, {bar:2}).modifiers)
 
-    assert({bar:2,overrides:{}}, addModifiers([0,1], {bar:2}).modifiers)
-    assert({bar:2,overrides:{}}, addModifiers([0,1], {bar:2}).modifiers)
+    assert({bar:2}, addModifiers([0,1], {bar:2}).modifiers)
+    assert({bar:2}, addModifiers([0,1], {bar:2}).modifiers)
 
     assert(1, addModifiers(1, {bar:2})())
-    assert({bar:2,overrides:{}}, addModifiers(1, {bar:2}).modifiers)
+    assert({bar:2}, addModifiers(1, {bar:2}).modifiers)
 
     assert("foo", addModifiers("foo", {bar:2})())
-    assert({bar:2,overrides:{}}, addModifiers("foo", {bar:2}).modifiers)
+    assert({bar:2}, addModifiers("foo", {bar:2}).modifiers)
 
     assert(2, addModifiers(1, {bar:2,'1':2}).modifiers.overrides[overrideKey(1)])
     assert(2, addModifiers(1, {bar:2,'0.5':2}).modifiers.overrides[overrideKey(0.5)])
