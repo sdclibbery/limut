@@ -340,7 +340,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <h5>Overriding player params:</h5>
 <p>Basic structure: <code>set id params</code></p>
 <p>A set overrides command begins when <code>set </code> begins a new line. The id and params may follow on subsequent lines.</p>
-<p><code>id</code> Player identifier; the override params will be apllied to this player. Can also be a list of multiple players to apply the params to; eg <code>set [kd,sd] amp=0</code>. Can include wildcards, so <code>set p* ...</code> will apply the overrides to every player whose name starts with 'p'. <code>set * ...</code> will apply to all players.</p>
+<p><code>id</code> Player identifier; the override params will be apllied to this player. Can also be a list of multiple players to apply the params to; eg <code>set (kd,sd) amp=0</code>. Can include wildcards, so <code>set p* ...</code> will apply the overrides to every player whose name starts with 'p'. <code>set * ...</code> will apply to all players.</p>
 <p><code>params</code> Comma separated list of params (eg <code>amp=1/2</code>) that affect how the player plays; see 'Value Syntax' and 'Params' sections below</p>
 <p class='sub'><code>modification overrides</code> params can be defined using operators to modify existing values rather than override them; eg <code>add+=2</code> will increase the add parameter by an additional 2 on top of what it was already set to.</p>
 <h5>Setting global vars:</h5>
@@ -996,7 +996,6 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-! `set [p,b] ...`  syntax should use round brackets!!!
 operator. LHS is chord and RHS is non aggregator string: recurse operator.(RHS) across all elements
  Allows lookup from multiple maps or players eg  (pk,ps).pulse.0
 ([0,1]t1).accum should work - need to sort out the voiceState business properly
@@ -1004,7 +1003,6 @@ operator. LHS is chord and RHS is non aggregator string: recurse operator.(RHS) 
 ((1,2,3,4).[0:3]t1){per:4,0:3} should work?? Or not?
 floor{1.5,2.5} should work??? Or should it??
 !!`p1 ping 0, dur=4, foo=[100,1000,100]e \n p2 kal 0, dur=1, amp=p1.foo/1000` the []e is evalled in the WRONG players dur
-Really, `set [pk,pc] amp=0` should be `set (pk,pc) amp=0`
 More standard Player params
  .exists - 1 if player exists at all
  .playing - 1 whenever its not playing a rest
@@ -1112,7 +1110,7 @@ multiline command fix: // should only comment out that one line
 "on next 4 " / "on next 28 of 32 " syntax to execute a line on the next beat count
   - but how not to repeat this if rerun? replace now/next in source with actual count?
 "every 4 " / "every 28 of 32 "
-"until next 16 set [bass,kd] amp=0" ? - but how not to repeat this if rerun?
+"until next 16 set (bass,kd) amp=0" ? - but how not to repeat this if rerun?
 "by next 16 set bass amp=0" - lerps to the new value - but how not to repeat this if rerun?
 Need an additional eval interval; eg @i for 'per instance', so for each individual 'note' instance (each call to play)
  Useful for providing variation between (1,2,3,4) multiplied out sub-events without having to go full-on per frame, expecially for eg []r

@@ -33,13 +33,13 @@ define((require) => {
     let char
     while (char = state.str.charAt(state.idx)) {
       eatWhitespace(state)
-      if (char == '[' || char == ',') {
+      if (char == '(' || char == ',') {
         state.idx += 1
         eatWhitespace(state)
         let v = identifierWithWildcards(state)
         if (v !== undefined) { result.push(v) }
         eatWhitespace(state)
-      } else if (char == ']') {
+      } else if (char == ')') {
         state.idx += 1
         break
       } else {
@@ -69,7 +69,7 @@ define((require) => {
       // Set (override) params for a player
       let state = { str: line, idx: 0 }
       let playerIds
-      if (state.str[0] == '[') {
+      if (state.str[0] == '(') {
         playerIds = parsePlayerIds(state).map(id=>id.trim())
       } else {
         playerIds = [identifierWithWildcards(state)]
@@ -96,7 +96,7 @@ define((require) => {
   }
 
   let startsWithSet = (str) => {
-    let r = new RegExp(/^\s*set\s+[\[\*\w]+/, 'i')
+    let r = new RegExp(/^\s*set\s+[\(\*\w]+/, 'i')
     return r.test(str)
   }
 
@@ -135,7 +135,7 @@ define((require) => {
   assert(true, isLineStart('set\tp'))
   assert(true, isLineStart('set p1'))
   assert(true, isLineStart('set *'))
-  assert(true, isLineStart('set [ p , a* ] '))
+  assert(true, isLineStart('set ( p , a* ) '))
   assert(true, isLineStart('SET P'))
   assert(false, isLineStart('sett '))
   assert(false, isLineStart('p ping'))
@@ -194,13 +194,13 @@ define((require) => {
   assert(2, players.overrides['*'].add)
   delete players.overrides['*']
 
-  parseLine(' set [ p , q ] amp = 2 ')
+  parseLine(' set ( p , q ) amp = 2 ')
   assert(2, players.overrides.p.amp)
   assert(2, players.overrides.q.amp)
   delete players.overrides.p
   delete players.overrides.q
 
-  parseLine(' set [ p1 , q* ] amp = 2 ')
+  parseLine(' set ( p1 , q* ) amp = 2 ')
   assert(2, players.overrides.p1.amp)
   assert(2, players.overrides['q*'].amp)
   delete players.overrides.p1
