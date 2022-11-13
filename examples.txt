@@ -2238,7 +2238,7 @@ fs bd 0, click=1, body=0, hit=0, rattle=0, room=2, hpf=[100,500,1200]r, amp=[1:8
 set bpm=130
 set main.amp=3
 p impulse 0.<0..0.>0<.0>0<.0.>0, dur=1/2, lpf=100*[2,40]t1, delay=(0,3/4), room=[0,1]t[3,1]
-i impulse 0, bpf={pitch{degree:[0,-1]t8},q:[5:20]s12}, amp=12, delay=(0,[3/4,5/4]r)
+i impulse 0, bpf={pitch{[0,-1]t8},q:[5:20]s12}, amp=12, delay=(0,[3/4,5/4]r)
 
 
 // bd kick testing

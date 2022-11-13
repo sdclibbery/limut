@@ -1,7 +1,7 @@
 'use strict';
 define(function (require) {
   let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
-  let addVar = require('predefined-vars').add
+  let addVarFunction = require('predefined-vars').addVarFunction
 
   let scales = {
     chromatic       :[0,1,2,3,4,5,6,7,8,9,10,11],
@@ -116,14 +116,13 @@ define(function (require) {
 
   let pitchFunc = (args, e,b) => {
     args = args || {}
-    let value = args.value || args.degree || 0
-    let degree = evalMainParamEvent(args, 'value', evalMainParamEvent(args, 'degree', 0))
+    let value = args.value || 0
+    let degree = evalMainParamEvent(args, 'value', 0)
     let octave = evalMainParamEvent(args, 'oct', 4)
     let sharp = evalMainParamEvent(args, 'sharp', 0) + evalMainParamEvent(value, '#', 0) - evalMainParamEvent(value, 'b', 0)
     return scale.degreeToFreq(degree, octave, args.scale, sharp)
   }
-  pitchFunc.isVarFunction = true
-  addVar('pitch', pitchFunc)
+  addVarFunction('pitch', pitchFunc)
 
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
@@ -145,16 +144,11 @@ define(function (require) {
   assert(261.6, scale.degreeToFreq(0, 4, 'chromatic', 0))
   assert(415.3, scale.degreeToFreq(8, 4, 'chromatic', 0))
 
-  assert(261.6, pitchFunc())
-  assert(261.6, pitchFunc({}))
-  assert(261.6/2, pitchFunc({oct:3}))
-  assert(261.6, pitchFunc({degree:0}))
+  assert(261.6, pitchFunc({value:0}))
   assert(261.6/2, pitchFunc({sharp:-12}))
   assert(261.6/2, pitchFunc({value:{value:0,"#":-12}}))
   assert(261.6/2, pitchFunc({value:{value:0,"b":12}}))
-  assert(261.6/2, pitchFunc({degree:{value:0,"#":-12}}))
-  assert(261.6/2, pitchFunc({degree:{value:0,"b":12}}))
-  assert(261.6/4, pitchFunc({degree:{value:0,"b":12},sharp:-12}))
+  assert(261.6/4, pitchFunc({value:{value:0,"b":12},sharp:-12}))
 
   console.log('Scale tests complete')
   }

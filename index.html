@@ -748,7 +748,10 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 </div>
 <h4 onclick="toggleAccordion('accordion-functions')" class="accordion"> Functions</h4>
 <div id="accordion-functions" class="closed">
-<p><code>pitch{degree:1,sharp:1,oct:3,scale:minor}</code> Calculate a frequency in Hz for a scale degree on an octave, with possible sharpening/flattening.</p>
+<p><code>pitch{1}</code> Calculate a frequency in Hz for a given scale degree.</p>
+<p class='sub'><code>pitch{4#}</code> Calculate a frequency in Hz for a given scale degree with sharpening (#) or flattening.</p>
+<p class='sub'><code>pitch{0,oct:3}</code> Calculate a frequency in Hz for a given scale degree on a given octave. Default octave is 4.</p>
+<p class='sub'><code>pitch{0,scale:minor}</code> Calculate a frequency in Hz for a given scale degree using a given scale. Default scale is the current global var <code>scale</code></p>
 <p><code>floor{1.5}</code> Returns the rounded down value (returns 1 in the example)</p>
 <p class='sub'><code>floor{1.7,to:1/2}</code> Precision to round to, so the example rounds 1.7 down to the nearest 1/2, which is 1.5. Defaults to 1, which rounds down to the nearest integer below.</p>
 <p><code>ceil{1.5}</code> Returns the rounded up value (returns 2 in the example)</p>
@@ -880,6 +883,7 @@ Individual percussion synths
   https://www.soundonsound.com/techniques/synthesizing-cowbells-claves
  toms
  congas
+portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-notes/legato-synths-glide-slide-portamento/
 !Should be a mix param on echo!
 Compression effect?
 Pitch shifter effect
@@ -888,7 +892,6 @@ Pitch shifter effect
  Should also be able to insert this into the reverb loop...
 Should be able to have the filter follow the note envelope (with scaling)
  Generally work is needed on envelopes...
-portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-notes/legato-synths-glide-slide-portamento/
 Allow adding filters in the room/echo loops eg echo=3/4{lpf:523} - but dont use existing filter handlers as must be per event only!
  Pitch shift up an octave to give shimmer reverb (pitch shifter: https://tonejs.github.io/docs/14.7.77/PitchShift.html)
 ?Maybe define an effects bus, and then the params can be changed per frame; 'bus' param on players to route audio to an effect bus
@@ -940,7 +943,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-recol=fb that leaves all pixels white but with fb set, to allow recolouring with fore/mid/back. check it for webcam/image etc too
+recol=fmb that leaves all pixels white but with fb set, to allow recolouring with fore/mid/back. check it for webcam/image etc too
 ??New bus-only effects like blur, temporal blur, bloom, move+fade/swirl etc - can this be done by rendering effects on the two players? Or need to ping pong?
 Generative visual synth
  Complementary colours?
@@ -1064,6 +1067,7 @@ Add doc section with an example and a detailed explanation of it
 allow root param on player to override global root (add or replace?)
 floor function:  delay=floor{[]r,to:1/4}  or  add=floor{[0:7]r,to:2}
 Should really reset vars on code update; eg set var, then comment out, and it still applies...
+!slider{max:(1,2)} should work
 Follow player refactor
  !currently follow player fails on complex durations; eg:  ds dsaw 0[23]4_, dur=[1]  \  vds glow follow ds
  Better follow tests - Proper tests for follow and overrides and combinations, including chords
