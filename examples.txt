@@ -2423,3 +2423,27 @@ v readout 0, add=#e000.r
 v readout 0, add=smooth{floor{[1.5,1.9]t1,to:1/3,per:4,0:0},att:10,dec:10,per:8,0:333}
 
 
+set bpm=130
+set main.amp=2.5
+set bid='https://upload.wikimedia.org/wikipedia/commons/0/07/En-au-break_it_down.ogg'
+vg blank 0, buffer=vb
+vk kal 1, buffer=vb, contrast=4-2*pk.pulse.max, time=1000-time/8+2*accum{l.pulse.0}, zoom=3+b.playing.max*[0,0.2]l1/2@f, back=0, fore={a:0.1}, amp=1+2*s.pulse.max+2*pad.pulse.max, add=2*slow.pulse.max, mirror={8,rotate:(time+[0:1]s1/2@f)/192}, scroll=2/3
+vb buffer 0, rez=1/3
+pk bd 0., rattle={1.2,boost:440}
+ps play .k, nf=2000, amp=3/4
+ph play -, dur=1/4, amp=[1/6:1/2]r{per:4,seed:0}, delay=(0,{3/4,rate:3/4,amp:this.amp*2/3}), fold=1/2, swing=58, pan=-1/3, rate=2/3
+pc play .*(h^H^A)*, amp=1/3, room=1/2, pan=[-1/4,1/4], high=1, stutter=[0,[1,2]t[6,2]]t1/2
+pm play DED<DdKU>, room, amp=1/3, bpf={550,q:2}, delay=(0,[1/4,3/4]t[2,6]), pan=1/3, fold=1/2, low=-16, swing=56, mid=-10
+b wave 0, dur=1/4, sus=1/5, wave='bass-sub-dub-2', oct=2, lpf={this.freq*[6,1/2]e,q:15}, amp=[0.8,1,0.6,1.2]*(1.2-pk.pulse.min)+wow, swing=56, playing
+l prophet ...0, dur=8, envelope=simple, att=this.dur, rel=1/8, lpf={this.freq*[1,4]e^2,q:9}, oct=(2,3), ring={880,mix:1/4}, amp=1.7, pan=(-1,1)
+s sample 0, dur=16, sample=bid, drive, room, amp=1/10, pan=(-1,1), add=-1b, mid=4, high=8, echo=1/4, sus=2
+// pad supersaw (5!!!8^!!!).......0__.6__., add=(0,2,4,6,8), amp=0.6, scale=phrygian, room, phaser=1/8, att=0.01, oct=4, pan=[-1:1]r, envelope=pad
+//---
+// set (p*,s,vk) amp=0
+// imp impulse 0, dur=[1,1/110]l[32,0]*[0.95,1.05]r, bpf={[100,1000]l[32,0],q:[3,0.1]l[32,0]}, room=1/4, phaser=1/8, pan=[-1/3:1/3]r, amp=2
+// vimp glow 0, dur=[1,1/110]l[32,0]*[0.95,1.05]r, sus=1/8, zoom=1.2, buffer=vb, back=blue
+//---
+// set (p*,s,l,b,pad) amp=0
+// slow sample 0, dur=[1/40:1/80]r, envelope=pad, sample=bid, start=[0:1]l[16,0], room=2, drive=1/8, amp=1/4, pan=(-1,1), addc=[0:-7]l[16,0]
+
+
