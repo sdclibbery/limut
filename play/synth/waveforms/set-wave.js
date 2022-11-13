@@ -37,6 +37,8 @@ define(function (require) {
   return (osc, wave) => {
     wave = wave.toLowerCase()
     if (wave === 'pulse') { osc.setPeriodicWave(pulse()) }
+    else if (wave === 'saw') { osc.type = 'sawtooth' }
+    else if (wave === 'tri') { osc.type = 'triangle' }
     else if ({'sine':1,'square':1,'sawtooth':1,'triangle':1}[wave]) { osc.type = wave }
     else { osc.setPeriodicWave(getPeriodicWave(wave)) }
   }
