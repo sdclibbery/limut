@@ -123,6 +123,14 @@ let verts = (loc, window, har) => {
     o.h = subParam(v, 'h', d.h)
     return o
   }
+  let recols = {
+    oil: 1,
+    hue: 2,
+    fire: 3,
+    sunset: 4,
+    neon: 5,
+    titanium: 6,
+  }
 
   let defLoc = {x:0,y:0,w:2,h:2}
   let defScroll = {x:0,y:0}
@@ -151,7 +159,7 @@ let verts = (loc, window, har) => {
     let text = evalParam.evalParamEvent(params['text'], params)
     let window = evalMainParamEvent(params, 'window', false)
     let fade = evalMainParamEvent(params, 'fade', defParams.fade || 0)
-    let recol = evalMainParamEvent(params, 'recol', 0)
+    let recol = recols[evalMainParamEvent(params, 'recol')] || 0
     let buffer = undefined
     let targetBufferPlayerId = evalMainParamEvent(params, 'buffer')
     let bufferPlayer = players.instances[targetBufferPlayerId]

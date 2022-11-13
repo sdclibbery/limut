@@ -990,15 +990,10 @@ shadertoy synth multiple channels
 // (...).1, (...).max, max{...}, {foo:...}.foo
 // modifiers {seed,per,0:0}, @e, @f
 // subparams {2,mix:1/2}
+!!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-operator.
- Do a release for the breaking changes
-  ()[] syntax replaced with operator.
-  var lookup defaults to the string value
-  global `pulse` renamed to `main.pulse`
-Oil/sunset/fire etc should not be vars, they should now be parsed from the string in sprite.js - also allows error message
- !Also, should NOT have 'tri' var that evals to 'triangle'; that would be really confusing if a player was named tri!!!
+!Should NOT have 'tri' var that evals to 'triangle'; that would be really confusing if a player was named tri!!!
 ! `set [p,b] ...`  syntax should use round brackets!!!
 operator. LHS is chord and RHS is non aggregator string: recurse operator.(RHS) across all elements
  Allows lookup from multiple maps or players eg  (pk,ps).pulse.0
