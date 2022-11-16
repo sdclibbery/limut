@@ -2423,6 +2423,7 @@ v readout 0, add=#e000.r
 v readout 0, add=smooth{floor{[1.5,1.9]t1,to:1/3,per:4,0:0},att:10,dec:10,per:8,0:333}
 
 
+// Break it down
 set bpm=130
 set main.amp=2.5
 set bid='https://upload.wikimedia.org/wikipedia/commons/0/07/En-au-break_it_down.ogg'
@@ -2445,5 +2446,18 @@ s sample 0, dur=16, sample=bid, drive, room, amp=1/10, pan=(-1,1), add=-1b, mid=
 //---
 // set (p*,s,l,b,pad) amp=0
 // slow sample 0, dur=[1/40:1/80]r, envelope=pad, sample=bid, start=[0:1]l[16,0], room=2, drive=1/8, amp=1/4, pan=(-1,1), addc=[0:-7]l[16,0]
+
+// Breathe Soft
+set main.amp=2
+// Visuals
+vbl blank 0, buffer=vb, back=0.01
+vl swirl -1, blend=min, buffer=vb, mid={labh:[]n13,c:1/2,l:0.5,a:1}, rate=1.2, scroll={x:wow/8+time/8}
+vv kal (15), buffer=vb, back=1, mid=0, fore=0.35+smooth{main.pulse}*0.4, blend=max, loc={y:[-1/4:1/4]n4,x:[-1/4:1/4]n3,w:10,h:10}/4, zoom=4, perspective=(-1,1)*wow*(this.voice+1), rotate=wow*this.voice/64, contrast=3, monochrome=1/3, rate=2/3, ripple-1/2
+vb buffer 0, rez=1/4
+// The choral sample
+set url='https://upload.wikimedia.org/wikipedia/commons/c/ca/Paxton_Breathe_soft_ye_winds_performed_by_the_dwsChorale.ogg'
+// Granular resynthesis of the choral sample
+s sample 0, sample=url, dur=[1/40:1/80]r, envelope=pad, start=[0:2]l[4,0]+[5:50]r16-[0,1/2]t8, room=2, chorus, echo, addc=wow, oct=(3,[4:5.3]n2), ring={[330:550]r4,mix:[0:1/2]r4}, amp=1/3
+d sample 0, sample=url, dur=[1/40:1/80]r, envelope=pad, start=22+[0:18]l64, oct=3, room=2, amp=3
 
 

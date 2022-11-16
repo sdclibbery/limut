@@ -943,8 +943,19 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+Ping pong for buffer
+ Have two render targets when feedback param exists (even if no value)
+ Auto render one rander target to the other every frame and swap
+ Subparams give all sprite render params for the ping pong renders
+ Check and fix any and all webgl and js warnings
+ Docs
+Blur param for all texture based synths
+ Image shader texture lookup uses a blur kernel
+ Would be cool to have a blend subparam, so you can max etc. Max would allow growing a shape instead of blurring etc
+ Docs
 recol=fmb that leaves all pixels white but with fb set, to allow recolouring with fore/mid/back. check it for webcam/image etc too
-??New bus-only effects like blur, temporal blur, bloom, move+fade/swirl etc - can this be done by rendering effects on the two players? Or need to ping pong?
+Make buffer param per frame
+ !!This fails at the moment because the synths are added to only one buffers renderList, and its done per event not per frame
 Generative visual synth
  Complementary colours?
  Shapes? Noise? NN Dreams?
