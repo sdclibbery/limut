@@ -163,7 +163,7 @@ let verts = (loc, window, har) => {
     let buffer = undefined
     let targetBufferPlayerId = evalMainParamEvent(params, 'buffer')
     let bufferPlayer = players.instances[targetBufferPlayerId]
-    if (bufferPlayer && bufferPlayer.buffer && bufferPlayer.buffer.framebuffer) {
+    if (bufferPlayer && bufferPlayer.buffer && bufferPlayer.buffer.texture && bufferPlayer.buffer.texture.framebuffer) {
       buffer = bufferPlayer.buffer || undefined
     }
     return state => { // per frame
@@ -286,9 +286,9 @@ let verts = (loc, window, har) => {
         else if (blend === 'min') { gl.blendFunc(gl.ONE, gl.ONE); gl.blendEquationSeparate(gl.MIN, gl.FUNC_ADD) }
         else { gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA) }
       }
-      if (buffer) {
+      if (buffer && buffer.texture && buffer.texture.framebuffer) {
         gl.viewport(0,0,buffer.texture.width,buffer.texture.height)
-        gl.bindFramebuffer(gl.FRAMEBUFFER, buffer.framebuffer)
+        gl.bindFramebuffer(gl.FRAMEBUFFER, buffer.texture.framebuffer)
       } else {
         gl.viewport(0,0,system.cw,system.ch)
         gl.bindFramebuffer(gl.FRAMEBUFFER, null)

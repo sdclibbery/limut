@@ -26,25 +26,27 @@ define(function (require) {
   }
   `
 
-  let initBuffer = (buffer) => {
+  let createRenderTarget = (rez) => {
     let gl = system.gl
     // Texture
-    buffer.texture = {}
-    buffer.texture.width = system.cw * buffer.rez
-    buffer.texture.height = system.ch * buffer.rez
-    let texture = buffer.texture
-    texture.tex = gl.createTexture()
-    gl.bindTexture(gl.TEXTURE_2D, texture.tex)
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, buffer.texture.width, buffer.texture.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-    buffer.shader.texture = texture
+    let texture = {}
+    texture.width = system.cw * rez
+    texture.height = system.ch * rez
+    let tex = gl.createTexture()
+    gl.bindTexture(gl.TEXTURE_2D, tex)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, texture.width, texture.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+    texture.tex = tex
     // Also create the framebuffer to render into
-    buffer.framebuffer = gl.createFramebuffer()
-    gl.bindFramebuffer(gl.FRAMEBUFFER, buffer.framebuffer)
+    texture.framebuffer = gl.createFramebuffer()
+    gl.bindFramebuffer(gl.FRAMEBUFFER, texture.framebuffer)
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture.tex, 0)
+    return texture
+  }
+
+  let initBuffer = (buffer) => {
+    // Create render target
+    buffer.texture = createRenderTarget(buffer.rez)
+    buffer.shader.texture = buffer.texture
     // Render list
     buffer.renderList = renderList()
     buffer.shader.preRender = (state) => {
@@ -75,10 +77,12 @@ define(function (require) {
     let player = params._player
     let buffer = player.buffer || {}
     let rez = evalParamEvent(params.rez, params) || 1/2
-    if (buffer.shader === undefined || buffer.rez !== rez || system.cw !== buffer.systemCw || system.ch !== buffer.systemCh) {
+    let feedback = params.feedback
+    if (buffer.shader === undefined || buffer.rez !== rez || system.cw !== buffer.systemCw || system.ch !== buffer.systemCh || (!!feedback) !== (!!buffer.feedback)) {
       buffer.rez = rez
       buffer.systemCw = system.cw
       buffer.systemCh = system.ch
+      buffer.feedback = feedback
       initProgram(buffer)
       initBuffer(buffer)
       player.buffer = buffer
