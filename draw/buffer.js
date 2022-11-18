@@ -37,6 +37,7 @@ define(function (require) {
     let tex = gl.createTexture()
     gl.bindTexture(gl.TEXTURE_2D, tex)
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, texture.width, texture.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+    // NOTE: passing null to texImage2D leads to a "incurring lazy initialization" warning in Firefox. This is not a problem.
     texture.tex = tex
     // Also create the framebuffer to render into
     texture.framebuffer = gl.createFramebuffer()
@@ -99,6 +100,9 @@ define(function (require) {
     let buffer = player.buffer || {}
     let rez = evalParamEvent(params.rez, params) || 1/2
     let feedback = params.feedback
+    if (!!feedback && typeof feedback !== 'object') {
+      feedback = {}
+    }
     if (buffer.shader === undefined || buffer.rez !== rez || system.cw !== buffer.systemCw || system.ch !== buffer.systemCh || (!!feedback) !== (!!buffer.feedback)) {
       buffer._playerId = params._player.id
       buffer.rez = rez
