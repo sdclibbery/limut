@@ -163,7 +163,7 @@ let verts = (loc, window, har) => {
     let buffer = undefined
     let targetBufferPlayerId = evalMainParamEvent(params, 'buffer')
     let bufferPlayer = players.instances[targetBufferPlayerId]
-    if (bufferPlayer && bufferPlayer.buffer && bufferPlayer.buffer.texture && bufferPlayer.buffer.texture.framebuffer) {
+    if (bufferPlayer && bufferPlayer.buffer && bufferPlayer.buffer.target && bufferPlayer.buffer.target.framebuffer) {
       buffer = bufferPlayer.buffer || undefined
     }
     return state => { // per frame
@@ -179,7 +179,10 @@ let verts = (loc, window, har) => {
       if (amp <= 0.0001) { return true }
       let add = evalMainParamFrame(params, 'add', 0, state.count)
       let eventTime = ((state.time-startTime)/(endTime-startTime))
-      let brightness = 1 - (eventTime*eventTime)*fade
+      let brightness = 1
+      if (fade > 0) {
+        brightness = brightness - (eventTime*eventTime)*fade
+      }
       let monochrome = evalMainParamFrame(params, 'monochrome', 0, state.count)
       let pixellateX = evalMainParamFrame(params, 'pixellate', 0, state.count) ||
                         evalSubParamFrame(params, 'pixellate', 'x', 0, state.count)
@@ -223,7 +226,7 @@ let verts = (loc, window, har) => {
         mid = colour(evalParam.evalParamFrame(params.mid, params, state.count), defMid, 'mid')
       }
       let har = system.cw / system.ch
-      if (buffer) { har = buffer.texture.width / buffer.texture.height }
+      if (buffer) { har = buffer.target.width / buffer.target.height }
       let vtxData = verts(loc, window, har)
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
       system.loadVertexAttrib(s.fragCoordBuf, s.fragCoordAttr, vtxData.tex, 2)
@@ -286,9 +289,9 @@ let verts = (loc, window, har) => {
         else if (blend === 'min') { gl.blendFunc(gl.ONE, gl.ONE); gl.blendEquationSeparate(gl.MIN, gl.FUNC_ADD) }
         else { gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA) }
       }
-      if (buffer && buffer.texture && buffer.texture.framebuffer) {
-        gl.viewport(0,0,buffer.texture.width,buffer.texture.height)
-        gl.bindFramebuffer(gl.FRAMEBUFFER, buffer.texture.framebuffer)
+      if (buffer && buffer.target && buffer.target.framebuffer) {
+        gl.viewport(0,0,buffer.target.width,buffer.target.height)
+        gl.bindFramebuffer(gl.FRAMEBUFFER, buffer.target.framebuffer)
       } else {
         gl.viewport(0,0,system.cw,system.ch)
         gl.bindFramebuffer(gl.FRAMEBUFFER, null)
@@ -299,7 +302,7 @@ let verts = (loc, window, har) => {
   }
 
   let emptyObject = {}
-  return (renderer, defFore, defBack, defParams) => (params) => {
+  let create = (renderer, defFore, defBack, defParams) => (params) => {
     let zorder = param(params.zorder, param(params.linenum, 0)/1000)
     let renderTask = play(renderer, defFore, defBack, params, defParams || emptyObject)
     let targetBufferPlayerId = evalMainParamEvent(params, 'buffer')
@@ -309,5 +312,10 @@ let verts = (loc, window, har) => {
     } else {
       system.add(params._time, renderTask, zorder)
     }
+  }
+
+  return {
+    create: create,
+    play: play,
   }
 })

@@ -2461,3 +2461,11 @@ s sample 0, sample=url, dur=[1/40:1/80]r, envelope=pad, start=[0:2]l[4,0]+[5:50]
 d sample 0, sample=url, dur=[1/40:1/80]r, envelope=pad, start=22+[0:18]l64, oct=3, room=2, amp=3
 
 
+// buffer feedback
+v kal 1, buffer=vb1, back=0, mid=0, zoom=4, scroll=1, contrast=3, blend=max, rate=2
+vb1 buffer 0, feedback={rotate:[-1,1]l11@f*0.002,zoom:[1.01,1.0099]l7@f,perspective:0.04}
+
+v julia 0, buffer=vb1, back=0, mid=rainbow_fast, blend=max, rate=2, fore=rainbow*10, recol=hue, tunnel
+vb1 buffer 0, feedback={rotate:[-1,1]l11@f*0.001,zoom:1.006,perspective:[-1:1]n16*0.04,fore:0.99}
+
+

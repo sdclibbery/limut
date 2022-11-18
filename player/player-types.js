@@ -1,6 +1,6 @@
 'use strict'
 define((require) => {
-  let sprite = require('draw/sprite')
+  let sprite = require('draw/sprite').create
   let shadertoy = require('draw/shadertoy')
   let image = require('draw/image')
   let webcam = require('draw/webcam')
