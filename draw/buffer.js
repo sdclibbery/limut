@@ -37,9 +37,9 @@ define(function (require) {
     let tex = gl.createTexture()
     gl.bindTexture(gl.TEXTURE_2D, tex)
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, texture.width, texture.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
-    // NOTE: passing null to texImage2D leads to a "incurring lazy initialization" warning in Firefox. This is not a problem.
+     // NOTE: passing null to texImage2D leads to an "incurring lazy initialization" warning in Firefox. This is not a problem.
     texture.tex = tex
-    // Also create the framebuffer to render into
+    // Also create the framebuffer to allow rendering into the texture
     texture.framebuffer = gl.createFramebuffer()
     gl.bindFramebuffer(gl.FRAMEBUFFER, texture.framebuffer)
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture.tex, 0)
@@ -50,9 +50,11 @@ define(function (require) {
     // Create render target(s)
     buffer.rt = []
     buffer.rt[0] = createRenderTarget(buffer.rez)
-    if (buffer.feedback) { // Create a doublebuffer
+    if (buffer.feedback) { // For feedback need a second texture because you cant render a texture to itself
       buffer.rt[1] = createRenderTarget(buffer.rez)
-      buffer.flipShader = initProgram()
+      buffer.flipShader = initShader()
+// buffer.rt[0].id = buffer._playerId+'-'+'rt[0]'
+// buffer.rt[1].id = buffer._playerId+'-'+'rt[1]'
     }
     buffer.current = 0
     buffer.target = buffer.rt[buffer.current]
@@ -61,7 +63,7 @@ define(function (require) {
     buffer.renderList = renderList()
     buffer.shader.preRender = (state) => {
       if (buffer.feedback) {
-        // Flip render targets if doublebuffering
+        // Flip render targets if using feedback
         buffer.current = 1 - buffer.current // Flip
         buffer.target = buffer.rt[buffer.current] // Render into new texture
         buffer.shader.texture = buffer.rt[buffer.current] // Render to screen from new texture
@@ -76,7 +78,7 @@ define(function (require) {
   }
 
   let program
-  let initProgram = () => {
+  let initShader = () => {
     let shader = {}
     if (!program) {
       let vtxCompiled = system.loadShader(common.vtxShader, system.gl.VERTEX_SHADER)
@@ -100,20 +102,18 @@ define(function (require) {
     let buffer = player.buffer || {}
     let rez = evalParamEvent(params.rez, params) || 1/2
     let feedback = params.feedback
-    if (!!feedback && typeof feedback !== 'object') {
-      feedback = {}
-    }
+    if (!!feedback && typeof feedback !== 'object') { feedback = {} } // If feedback
     if (buffer.shader === undefined || buffer.rez !== rez || system.cw !== buffer.systemCw || system.ch !== buffer.systemCh || (!!feedback) !== (!!buffer.feedback)) {
       buffer._playerId = params._player.id
       buffer.rez = rez
       buffer.feedback = feedback
       buffer.systemCw = system.cw
       buffer.systemCh = system.ch
-      buffer.shader = initProgram()
+      buffer.shader = initShader()
       initBuffer(buffer)
       player.buffer = buffer
     }
-    if (buffer.feedback) { buffer.feedback = feedback }
+    if (buffer.feedback) { buffer.feedback = feedback } // Update feedback params in case of code update
     return buffer.shader
   }
 })

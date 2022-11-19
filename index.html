@@ -279,6 +279,9 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 </pre>
 <pre>ld dsaw 0^.70-7.70, dur=1/4, scale=minor, add=[0,2,4]r+[0,2,3,0]t4, lpf={this.freq*[3/2,2,3,5]t4,q:25}, room, delay=(0,[1/4,1/2,3/4,5/4]r), echo=7/8, addc=wow
 </pre>
+<pre>v kal 1, buffer=vb1, contrast=3, blend=max, zoom=2, scroll=1
+vb1 buffer 0, feedback={zoom:1.01,ripple:1/32}
+</pre>
 <p>More examples: <a href="https://github.com/sdclibbery/limut/blob/master/examples.txt" target="_blank">https://github.com/sdclibbery/limut/blob/master/examples.txt</a></p>
 </div>
 <h4 onclick="toggleAccordion('accordion-glossary')" class="accordion"> Glossary</h4>
@@ -499,7 +502,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>image</code> Display an online image. Use the <code>url</code> param to specify the image url. The image must be served using CORS. by default the image <code>back</code> is transparent.</p>
 <p><code>webcam</code> Display video feed from the attached webcam (if present). The browser will ask permission before allowing access to the webcam.</p>
 <p><code>text</code> Draw and display text. Use the text param; eg <code>text='Hello'</code>. Use <code>\n</code> to split to multiple lines: <code>text='Hello\nWorld'</code>. Use subparams to control the text rendering, eg: <code>text={'Hello',font:'times',size:'144',linesize:0.7,y:1/4,x:2/3,style:'bold italic'}</code>. Text is evaluated only per event, not per frame.</p>
-<p><code>buffer</code> Maintain a render target, which other synths can render into. The render target is then drawn to the screen by this synth. Use the <code>buffer</code> param on another synth to direct its output to a <code>buffer</code> synth. Use the <code>rez</code> param on the buffer synth to set the render target texture resolution scale.</p>
+<p><code>buffer</code> Maintain a render target, which other synths can render into. The render target is then drawn to the screen by this synth. Use the <code>buffer</code> param on another synth to direct its output to a <code>buffer</code> synth. Use the <code>rez</code> param on the buffer synth to set the render target texture resolution scale. Use the <code>feedback</code> param to provide video feedback by rendering this buffer on top of itself every frame. The subparams will modify the feedback render.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-event-params')" class="accordion"> Common Event Params</h4>
 <div id="accordion-event-params" class="closed">
@@ -716,6 +719,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <p><code>contrast</code> apply a power based contrast curve. Default is zero meaning no contrast curve applied.</p>
 <p><code>buffer</code> send the output of this synth to a buffer player. For example, <code>buffer=vb</code> makes this synth render to the synth with id <code>vb</code>, which must be a synth of type <code>buffer</code>. The buffer synth can then render itself to the screen to display the output.</p>
 <p><code>rez</code> only for a <code>buffer</code> synth: sets the render target resolution scaling. For example, a <code>rez</code> of <code>1</code> will make a render target texture that is identical width and height to the display screen canvas. Default value is 1/2.</p>
+<p><code>feedback</code> only for a <code>buffer</code> synth: use video feedback by rednering the buffer onto itself every frame. The subparams control that rendering. Any visual params can be used as <code>feedback</code> subparams. For example <code>feedback={zoom:1.01}</code> will render the feedback slightly zoomed, giving a classic video feedback effect.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-predefined-vars')" class="accordion"> Predefined Vars</h4>
 <div id="accordion-predefined-vars" class="closed">
@@ -943,15 +947,13 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-Ping pong for buffer
- Going to have trouble with multiple buffers with different feedback params
- Docs
 Blur param for all texture based synths
- Image shader texture lookup uses a blur kernel
+ Image and buffer and webcam shader texture lookup supports a blur kernel with controlled size
  Would be cool to have a blend subparam, so you can max etc. Max would allow growing a shape instead of blurring etc
+  ? Should be filter param instead?
  Docs
 recol=fmb that leaves all pixels white but with fb set, to allow recolouring with fore/mid/back. check it for webcam/image etc too
-Make buffer param per frame
+Make buffer param work per frame
  !!This fails at the moment because the synths are added to only one buffers renderList, and its done per event not per frame
 Generative visual synth
  Complementary colours?
@@ -1004,6 +1006,7 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
+Some tests failing on Chrome??
 operator. LHS is chord and RHS is non aggregator string: recurse operator.(RHS) across all elements
  Allows lookup from multiple maps or players eg  (pk,ps).pulse.0
 ([0,1]t1).accum should work - need to sort out the voiceState business properly
