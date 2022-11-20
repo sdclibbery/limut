@@ -21,7 +21,11 @@ define(function(require) {
       return varFunc(args, event,b) // Var function, eg chord aggregator or maths function
     }
     if (Array.isArray(l)) {
-      return l[Math.floor(r % l.length)] // Chord index
+      if (typeof r === 'number') {
+        return l[Math.floor(r % l.length)] // Chord index
+      } else if (typeof r === 'string') {
+        return l.map(lv => lookupOp(lv, r, event,b,evalRecurse)) // If RHS is a string, map lookup over the LHS
+      }
     }
     if (typeof l === 'object') {
       return l[r] // Map lookup
@@ -94,6 +98,12 @@ define(function(require) {
     assert(2, lookupOp([1,2], 'max'))
     assert(2, lookupOp(2, 'max'))
 
+    players.instances.p1 = { currentEvent:()=>{ return [{foo:1}]} }
+    players.instances.p2 = { currentEvent:()=>{ return [{foo:2}]} }
+    assert([1,2], lookupOp(['p1','p2'], 'foo', {},0,(v)=>0))
+    delete players.instances.p1
+    delete players.instances.p2
+  
     // Use with var functions is tested in parse-expression tests as its awkward to test here
   
     console.log('lookupOp tests complete')

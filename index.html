@@ -447,6 +447,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32}
 <p><code>(3,1,2).count</code> Returns the number of elements in a chord (returns 3 in the example)</p>
 <p><code>(3,1,2).sum</code> Returns the sum of all elements in a chord (returns 6 in the example)</p>
 <p><code>(3,1,2).avg</code> Returns the mean average of all elements in a chord (returns 2 in the example)</p>
+<p><code>(pk,ps).pulse</code> If <code>pk</code> and <code>pk</code> are players, returns a chord of both their <code>pulse</code> values.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-audio-synths')" class="accordion"> Audio Synths</h4>
 <div id="accordion-audio-synths" class="closed">
@@ -1000,15 +1001,12 @@ shadertoy synth multiple channels
 // [], []t, []l/s, []e, []n, []r
 // operators + - * / ^ % |
 // var, player.var, this.param, this.voice, var{params}, slider{}, floor{}, .floor{to:}, accum{}
-// (...).1, (...).max, max{...}, {foo:...}.foo
+// (...).1, (...).max, max{...}, {foo:...}.foo, (pk,ps).pulse
 // modifiers {seed,per,0:0}, @e, @f
 // subparams {2,mix:1/2}
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-Some tests failing on Chrome??
-operator. LHS is chord and RHS is non aggregator string: recurse operator.(RHS) across all elements
- Allows lookup from multiple maps or players eg  (pk,ps).pulse.0
 ([0,1]t1).accum should work - need to sort out the voiceState business properly
 (1.5,2.5).floor{to:1/4} should work??
 ((1,2,3,4).[0:3]t1){per:4,0:3} should work?? Or not?
@@ -1251,12 +1249,6 @@ Spiral flow: https://www.shadertoy.com/view/MdlXRS
 Fractal https://www.shadertoy.com/view/lslGWr
 Colour tunnel: https://www.shadertoy.com/view/XdSGzR
 Cell flow: https://www.shadertoy.com/view/MlsGWX
-=== Images
-icon='https://upload.wikimedia.org/wikipedia/commons/0/04/Radiation_diamond.svg'
-drums='https://upload.wikimedia.org/wikipedia/commons/0/0b/Radioactive_keeper_drums.JPG'
-sign='https://upload.wikimedia.org/wikipedia/commons/7/7d/Trinity_007.jpg'
-spider='https://upload.wikimedia.org/wikipedia/commons/2/26/Jumping_Spider.jpg'
-cleanup='https://upload.wikimedia.org/wikipedia/commons/4/40/IAEA_02790019_%285613119300%29.jpg'
 ---
 test fm 020406[79]5, oct=5, att=1/16,
   op1={target:'out',ratio:1},
