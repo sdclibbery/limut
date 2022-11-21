@@ -1,5 +1,6 @@
 'use strict'
 define(function (require) {
+  let consoleOut = require('console')
   let system = require('draw/system')
   let shaders = require('draw/shaders')
   let param = require('player/default-param')
@@ -159,7 +160,11 @@ let verts = (loc, window, har) => {
     let text = evalParam.evalParamEvent(params['text'], params)
     let window = evalMainParamEvent(params, 'window', false)
     let fade = evalMainParamEvent(params, 'fade', defParams.fade || 0)
-    let recol = recols[evalMainParamEvent(params, 'recol')] || 0
+    let recolType = evalMainParamEvent(params, 'recol')
+    let recol = recols[recolType] || 0
+    if (!!recolType && !recol) {
+      consoleOut(`Error: Unknown recol type ${recolType}`)
+    }
     let buffer = undefined
     let targetBufferPlayerId = evalMainParamEvent(params, 'buffer')
     let bufferPlayer = players.instances[targetBufferPlayerId]
@@ -287,7 +292,11 @@ let verts = (loc, window, har) => {
         else if (blend === 'multiply') { gl.blendFunc(gl.DST_COLOR, gl.ZERO) }
         else if (blend === 'max') { gl.blendFunc(gl.ONE, gl.ONE); gl.blendEquationSeparate(gl.MAX, gl.FUNC_ADD) }
         else if (blend === 'min') { gl.blendFunc(gl.ONE, gl.ONE); gl.blendEquationSeparate(gl.MIN, gl.FUNC_ADD) }
-        else { gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA) }
+        else if (!blend) {gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA) }
+        else {
+          consoleOut(`Error: Unknown blend type ${blend}`)
+          gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
+        }
       }
       if (buffer && buffer.target && buffer.target.framebuffer) {
         gl.viewport(0,0,buffer.target.width,buffer.target.height)

@@ -280,7 +280,7 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <pre>ld dsaw 0^.70-7.70, dur=1/4, scale=minor, add=[0,2,4]r+[0,2,3,0]t4, lpf={this.freq*[3/2,2,3,5]t4,q:25}, room, delay=(0,[1/4,1/2,3/4,5/4]r), echo=7/8, addc=wow
 </pre>
 <pre>v kal 1, buffer=vb1, contrast=3, blend=max, zoom=2, scroll=1
-vb1 buffer 0, feedback={zoom:1.01,ripple:1/32}
+vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 </pre>
 <p>More examples: <a href="https://github.com/sdclibbery/limut/blob/master/examples.txt" target="_blank">https://github.com/sdclibbery/limut/blob/master/examples.txt</a></p>
 </div>
@@ -1008,9 +1008,11 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 ([0,1]t1).accum should work - need to sort out the voiceState business properly
-(1.5,2.5).floor{to:1/4} should work??
-((1,2,3,4).[0:3]t1){per:4,0:3} should work?? Or not?
-floor{1.5,2.5} should work??? Or should it??
+ How _should_ the state be stored?
+  Needs to be per-parse-instance and per-voice? Is per-voice correct even?
+(1.5,2.5).floor should work? And (1.5,2.5).floor{to:1/4}? - Need to distinguish between var functions that aggregate and those that don't
+((1,2,3,4).[0:3]t1){per:4,0:3} should work?? Or not? Probably not? The per etc should be applied to the []t oif thats what you want??
+floor{1.5,2.5} should work??? Or should it?? Probably not? But then it should give an error?
 !!`p1 ping 0, dur=4, foo=[100,1000,100]e \n p2 kal 0, dur=1, amp=p1.foo/1000` the []e is evalled in the WRONG players dur
 More standard Player params
  .exists - 1 if player exists at all
