@@ -25,7 +25,7 @@ define(function(require) {
     return state
   }
   let statefulWrapper = (fn) => {
-    return (args, e,b, fullState) => {
+    return (args, e,b, fullState) => { // fullState is state per parse instance of the function
       let state = getVoiceState(fullState, e,b)
       let dt = state.dt
       if (dt === 0) { return state.v || 0 }

@@ -37,12 +37,15 @@ define(function(require) {
       let v
       if (typeof vr === 'function' && vr.isVarFunction) { // Var function
         if (modifiers && modifiers.value !== undefined) {
-          v = vr(modifiers, event,b, state)
+          v = vr(modifiers, event,b, state) // Call var function
         } else if (modifiers) {
-          v = Object.assign({}, modifiers) // Make modifiers available as other arguments to function
+          v = Object.assign({}, modifiers) // Make modifiers available as other arguments, in case this turns out to be a var function
+          v._state = state // Make state available if this turns out to be a var function
           v.value = key // If no value arguments to function, treat as a string value instead
         } else {
-          v = key // If no arguments to function, treat as a string value instead
+          v = {}
+          v._state = state // Make state available if this turns out to be a var function
+          v.value = key // If no value arguments to function, treat as a string value instead
         }
       } else {
         v = vr // ordinary var
@@ -93,7 +96,7 @@ define(function(require) {
   state = {str:'foo',idx:0}
   p = varLookup(parseVar(state), [], {})
   assert(3, state.idx)
-  assert('foo', p(ev(0,0),0,evalParamFrame, undefined))
+  assert({_state:{},value:'foo'}, p(ev(0,0),0,evalParamFrame, undefined))
   delete vars.foo
 
   vars.foo = () => 5
@@ -101,7 +104,7 @@ define(function(require) {
   state = {str:'foo',idx:0}
   p = varLookup(parseVar(state), [], {})
   assert(3, state.idx)
-  assert({bar:3,value:'foo'}, p(ev(0,0),0,evalParamFrame, {bar:3}))
+  assert({bar:3,_state:{},value:'foo'}, p(ev(0,0),0,evalParamFrame, {bar:3}))
   delete vars.foo
 
   vars.foo = () => [1,2]

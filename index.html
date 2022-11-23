@@ -890,7 +890,7 @@ Individual percussion synths
  congas
 portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-notes/legato-synths-glide-slide-portamento/
 !Should be a mix param on echo!
-Compression effect?
+Compression effect param
 Pitch shifter effect
  Can use https://github.com/Tonejs/Tone.js/blob/c313bc672bcc09a8cee4df97a07ba80155fd1946/Tone/effect/PitchShift.ts
  See http://msp.ucsd.edu/techniques/v0.11/book-html/node115.html
@@ -948,6 +948,10 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+!Feedback positioned wrong on wide aspect ratio
+ EG this on widescreen:
+   vg glow 0, buffer=vb, loc=sparkle/4
+   vb buffer 0, feedback
 Blur param for all texture based synths
  Image and buffer and webcam shader texture lookup supports a blur kernel with controlled size
  Would be cool to have a blend subparam, so you can max etc. Max would allow growing a shape instead of blurring etc
@@ -1008,9 +1012,13 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 ([0,1]t1).accum should work - need to sort out the voiceState business properly
- How _should_ the state be stored?
-  Needs to be per-parse-instance and per-voice? Is per-voice correct even?
-(1.5,2.5).floor should work? And (1.5,2.5).floor{to:1/4}? - Need to distinguish between var functions that aggregate and those that don't
+ Unit tests for new cases
+  eval-param not eval recursing on _state
+  lookupOp passing state through
+  parse-var passing state through (probably already handled)
+ Could check whether state is actually needed by putting flag on the var function? Is it worth it?
+!FIX visual buffer feedback aspect ratio bug!
+ (1.5,2.5).floor should work? And (1.5,2.5).floor{to:1/4}? - Need to distinguish between var functions that aggregate and those that don't
 ((1,2,3,4).[0:3]t1){per:4,0:3} should work?? Or not? Probably not? The per etc should be applied to the []t oif thats what you want??
 floor{1.5,2.5} should work??? Or should it?? Probably not? But then it should give an error?
 !!`p1 ping 0, dur=4, foo=[100,1000,100]e \n p2 kal 0, dur=1, amp=p1.foo/1000` the []e is evalled in the WRONG players dur

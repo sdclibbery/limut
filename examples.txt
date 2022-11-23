@@ -2488,4 +2488,13 @@ vb1 buffer 0, buffer=vb2, feedback={zoom:1.01}, fore=#fff1
 vb2 buffer 0, buffer=vb3, feedback={scroll:-0.01}, fore=#fff4
 vb3 buffer 0, feedback={rotate:0.01}
 
+r readout 0, add=[0,1]t1
+r readout 0, add=accum{[0,1]t1}
+r readout 0, add=[0,1]t1 .accum
+r readout 0, add=([0,1]t1).accum
+r readout 0, add=([0,1]t1).accum{foo:bar}
+
+v kal 4, buffer=vb, blend=max, pixellate={x:40,y:80}, contrast=3, zoom=2, scroll=3/4, rate=2, mirror={3,rotate:-time/128}
+vb buffer 0, feedback={contrast:0.1,zoom:1.01,rotate:-0.005}
+
 

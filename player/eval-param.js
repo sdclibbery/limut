@@ -62,10 +62,14 @@ define((require) => {
       if (ignoreThisVars && value._thisVar) { return 0 } // return 0 to hold a place in a chord
       let v = evalFunctionWithModifiers(value, event, beat, evalRecurse)
       return evalRecurse(v, event, beat)
-    } else if (typeof value == 'object') { // Eval each field in the object
+    } else if (typeof value === 'object') { // Eval each field in the object
       let result = {}
       for (let k in value) {
-        result[k] = evalRecurse(value[k], event, beat)
+        if (k === '_state') {
+          result[k] = value[k] // Pass _state without evaluation
+        } else {
+          result[k] = evalRecurse(value[k], event, beat)
+        }
       }
       let r = expandObjectChords(result) // and hoist chords up
       return r.length === 1 ? r[0] : r

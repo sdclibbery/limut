@@ -928,12 +928,12 @@ define(function(require) {
 
   vars.foo = () => 5
   vars.foo.isVarFunction = true
-  assert('foo', evalParamFrame(parseExpression('foo'),ev(0,0),0))
+  assert({_state:{},value:'foo'}, evalParamFrame(parseExpression('foo'),ev(0,0),0))
   delete vars.foo
 
   vars.foo = () => 5
   vars.foo.isVarFunction = true
-  assert({value:'foo'}, evalParamFrame(parseExpression('foo{}'),ev(0,0),0))
+  assert({_state:{},value:'foo'}, evalParamFrame(parseExpression('foo{}'),ev(0,0),0))
   delete vars.foo
 
   vars.foo = ({value}) => value
@@ -1169,7 +1169,7 @@ define(function(require) {
 
   assert('frame', parseExpression('(0,[1,2]l1/2@f)').interval)
   assert('frame', parseExpression('(0,[1,2]l1/2@f).max').interval)
-  assert('min', evalParamFrame(parseExpression('min'),ev(0,0),0))
+  assert({_state:{},value:'min'}, evalParamFrame(parseExpression('min'),ev(0,0),0))
 
   assert(1, evalParamFrame(parseExpression('[(1,2),(3,4)]t1 .0'),ev(0,0),0))
   assert(3, evalParamFrame(parseExpression('[(1,2),(3,4)]t1 .0'),ev(1,1),1))
@@ -1243,7 +1243,7 @@ define(function(require) {
   assert(2, evalParamFrame(parseExpression("max{1,2}"),ev(0,0,0),0))
   assert([1,2], evalParamFrame(parseExpression("max{(1,2)}"),ev(0,0,0),0))
   assert(1, evalParamFrame(parseExpression("(1,2).max{0}"),ev(0,0,0),0))
-  assert('max', evalParamFrame(parseExpression("max"),ev(0,0,0),0))
+  assert({_state:{},value:'max'}, evalParamFrame(parseExpression("max"),ev(0,0,0),0))
 
   assert({value:{a:1},b:2}, evalParamFrame(parseExpression("{{a:1},b:2}"),ev(0,0,0),0))
   assert({value:440,q:50}, evalParamFrame(parseExpression("{max{440},q:50}"),ev(0,0,0),0))

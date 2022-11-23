@@ -1,7 +1,7 @@
 'use strict';
 define(function(require) {
   let players = require('player/players')
-  let mainParam = require('player/sub-param').mainParam
+  let {mainParam, subParam} = require('player/sub-param')
   let {evalParamFrame} = require('player/eval-param')
   let getVarFunction = require('predefined-vars').getVarFunction
 
@@ -18,7 +18,8 @@ define(function(require) {
         args = Object.assign({}, r)
         args.value = l
       }
-      return varFunc(args, event,b) // Var function, eg chord aggregator or maths function
+      let state = subParam(r, '_state') // Extract state to support stateful var functions
+      return varFunc(args, event,b, state) // Var function, eg chord aggregator or maths function
     }
     if (Array.isArray(l)) {
       if (typeof r === 'number') {
