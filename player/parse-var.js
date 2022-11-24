@@ -37,22 +37,22 @@ define(function(require) {
       let v
       if (typeof vr === 'function' && vr.isVarFunction) { // Var function
         if (modifiers && modifiers.value !== undefined) {
-          v = vr(modifiers, event,b, state) // Call var function
+          v = vr(modifiers, event,b, state) // Call var function immediately as the value is in the modifiers
         } else if (modifiers) {
           v = Object.assign({}, modifiers) // Make modifiers available as other arguments, in case this turns out to be a var function
-          v._state = state // Make state available if this turns out to be a var function
-          v.value = key // If no value arguments to function, treat as a string value instead
+          v._state = state // Make state available to var function
+          v.value = key // If value not in modifiers, treat as a string value instead, allowing lookup to find var function later if appropriate, or other params can use string directly (eg `min`, `max` etc)
         } else {
           v = {}
-          v._state = state // Make state available if this turns out to be a var function
-          v.value = key // If no value arguments to function, treat as a string value instead
+          v._state = state // Make state available to var function
+          v.value = key // If no modifiers, treat as a string value instead
         }
       } else {
         v = vr // ordinary var
         if (v === undefined) { v = key } // If not found as a var, treat as a string value
       }
       v = evalParamFrame(v,event,b)
-      if (v === undefined) { v = 0 } // If not found as a var, assume its for a currently unavailable player and default to zero
+      if (v === undefined) { v = 0 } // If not found at all, assume its for a currently unavailable player and default to zero
       return v
     }
     return result
