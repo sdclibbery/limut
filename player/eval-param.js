@@ -265,6 +265,11 @@ define((require) => {
   assert(0, evalParamFrame(getBWithMods, ev(2), 2))
   assert(21, evalParamFrame(getBWithMods, ev(3), 3)) // override eval should not used the modified time
 
+  let testState = {}
+  let v = evalParamFrame({foo:'bar',_state:testState}, ev(0), 0)
+  v._state.baz = 'doo'
+  assert({baz:'doo'}, testState)
+
   console.log('Eval param tests complete')
   }
 

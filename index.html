@@ -1012,11 +1012,9 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 ([0,1]t1).accum should work - need to sort out the voiceState business properly
- Unit tests for new cases
-  eval-param not eval recursing on _state
-  lookupOp passing state through
-  parse-var passing state through (probably already handled)
  Could check whether state is actually needed by putting flag on the var function? Is it worth it?
+ TEST
+ Docs
 !FIX visual buffer feedback aspect ratio bug!
  (1.5,2.5).floor should work? And (1.5,2.5).floor{to:1/4}? - Need to distinguish between var functions that aggregate and those that don't
 ((1,2,3,4).[0:3]t1){per:4,0:3} should work?? Or not? Probably not? The per etc should be applied to the []t oif thats what you want??

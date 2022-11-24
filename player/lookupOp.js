@@ -3,7 +3,7 @@ define(function(require) {
   let players = require('player/players')
   let {mainParam, subParam} = require('player/sub-param')
   let {evalParamFrame} = require('player/eval-param')
-  let getVarFunction = require('predefined-vars').getVarFunction
+  let {getVarFunction,addVarFunction,remove} = require('predefined-vars')
 
   let lookupOp = (l,r, event,b,evalRecurse) => {
     if (l === undefined) { return undefined }
@@ -98,6 +98,15 @@ define(function(require) {
 
     assert(2, lookupOp([1,2], 'max'))
     assert(2, lookupOp(2, 'max'))
+
+    addVarFunction('foo', (v)=>mainParam(v))
+    assert(1, lookupOp(1, 'foo'))
+    assert(2, lookupOp(2, {value:'foo'}))
+    remove('foo')
+
+    addVarFunction('foo', (v,e,b,s)=>s)
+    assert(5, lookupOp(2, {value:'foo',_state:5}))
+    remove('foo')
 
     players.instances.p1 = { currentEvent:()=>{ return [{foo:1}]} }
     players.instances.p2 = { currentEvent:()=>{ return [{foo:2}]} }

@@ -4,6 +4,8 @@ define(function(require) {
 
   let add = (k, v) => { predefinedVars[k] = v }
 
+  let remove = (k) => { delete predefinedVars[k] }
+
   let addVarFunction = (k, v) => {
     v.isVarFunction = true
     add(k, v)
@@ -21,6 +23,7 @@ define(function(require) {
 
   return {
     add: add,
+    remove: remove,
     addVarFunction: addVarFunction,
     getVarFunction: getVarFunction,
     apply: apply,
