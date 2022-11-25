@@ -2491,6 +2491,7 @@ vb3 buffer 0, feedback={rotate:0.01}
 r readout 0, add=[0,1]t1
 r readout 0, add=accum{[0,1]t1}
 r readout 0, add=[0,1]t1 .accum
+r readout 0, add=[0,1]t1/2@f.accum
 r readout 0, add=([0,1]t1).accum
 r readout 0, add=([0,1]t1).accum{foo:bar}
 

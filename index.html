@@ -434,6 +434,8 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>p1.amp</code> Lookup the value of param <code>amp</code> from player <code>p1</code>. Returns a chord of values from all currently playing events.</p>
 <p><code>p1.amp.0</code> Lookup the value of param <code>amp</code> from player <code>p1</code>, and if it contains a chord, extract the first element only from it.</p>
 <p><code>p1.pulse.max</code> Lookup the value of the <code>pulse</code> from player <code>p1</code>, and if it contains a chord, extract the largest element only from it. The pulse param gives a smoothed approximate envelope shaped value between 0 and 1 for each event.</p>
+<p><code>(pk,ps).pulse</code> If <code>pk</code> and <code>pk</code> are players, returns a chord of both their <code>pulse</code> values.</p>
+<p><code>([0,1]t1@f).accum</code> Smoothly accumulate 1 every other beat</p>
 <p><code>this.value</code> Get param <code>value</code> from the current event. Never returns a chord because <code>this</code> refers only to the single current event by definition.</p>
 <p><code>{foo:2}.foo</code> Returns a field in a map (returns 2 in this example)</p>
 <p><code>(3,1,2).0</code> Returns the nth element in a chord (returns 3 in the example)</p>
@@ -447,7 +449,6 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>(3,1,2).count</code> Returns the number of elements in a chord (returns 3 in the example)</p>
 <p><code>(3,1,2).sum</code> Returns the sum of all elements in a chord (returns 6 in the example)</p>
 <p><code>(3,1,2).avg</code> Returns the mean average of all elements in a chord (returns 2 in the example)</p>
-<p><code>(pk,ps).pulse</code> If <code>pk</code> and <code>pk</code> are players, returns a chord of both their <code>pulse</code> values.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-audio-synths')" class="accordion"> Audio Synths</h4>
 <div id="accordion-audio-synths" class="closed">
@@ -948,10 +949,6 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-!Feedback positioned wrong on wide aspect ratio
- EG this on widescreen:
-   vg glow 0, buffer=vb, loc=sparkle/4
-   vb buffer 0, feedback
 Blur param for all texture based synths
  Image and buffer and webcam shader texture lookup supports a blur kernel with controlled size
  Would be cool to have a blend subparam, so you can max etc. Max would allow growing a shape instead of blurring etc
@@ -1011,12 +1008,7 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-([0,1]t1).accum should work - need to sort out the voiceState business properly
- Could check whether state is actually needed by putting flag on the var function? Is it worth it?
- TEST
- Docs
-!FIX visual buffer feedback aspect ratio bug!
- (1.5,2.5).floor should work? And (1.5,2.5).floor{to:1/4}? - Need to distinguish between var functions that aggregate and those that don't
+(1.5,2.5).floor should work? And (1.5,2.5).floor{to:1/4}? - Need to distinguish between var functions that aggregate and those that don't
 ((1,2,3,4).[0:3]t1){per:4,0:3} should work?? Or not? Probably not? The per etc should be applied to the []t oif thats what you want??
 floor{1.5,2.5} should work??? Or should it?? Probably not? But then it should give an error?
 !!`p1 ping 0, dur=4, foo=[100,1000,100]e \n p2 kal 0, dur=1, amp=p1.foo/1000` the []e is evalled in the WRONG players dur

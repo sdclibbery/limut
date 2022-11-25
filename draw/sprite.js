@@ -44,13 +44,13 @@ let vtxData = {
   vtx: new Float32Array(12),
   tex: new Float32Array(12),
 }
-let verts = (loc, window, har) => {
+let verts = (loc, window, har, allowHarAdjust) => {
     let l = loc.x - loc.w/2
     let r = l + loc.w
     let t = loc.y - loc.h/2
     let b = t + loc.h
     let ihar = 1
-    if (har > 2 || har < 1/2) {
+    if (allowHarAdjust && (har > 2 || har < 1/2)) {
       har = Math.sqrt(har)
       ihar = 1/har
     }
@@ -232,7 +232,7 @@ let verts = (loc, window, har) => {
       }
       let har = system.cw / system.ch
       if (buffer) { har = buffer.target.width / buffer.target.height }
-      let vtxData = verts(loc, window, har)
+      let vtxData = verts(loc, window, har, !params.isBufferFeedback) // Never mess with aspect ratio for feedback as it would break the effect
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
       system.loadVertexAttrib(s.fragCoordBuf, s.fragCoordAttr, vtxData.tex, 2)
       let gl = system.gl

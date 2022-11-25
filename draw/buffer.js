@@ -70,6 +70,7 @@ define(function (require) {
         // Apply feedback
         buffer.feedback.beat = metronome.lastBeat()
         buffer.feedback.buffer = buffer._playerId // Feedback to current texture
+        buffer.feedback.isBufferFeedback = true
         buffer.flipShader.texture = buffer.rt[1-buffer.current] // Feedback from old texture
         sprite.play(()=>buffer.flipShader, {r:0.99,g:0.99,b:0.99,a:0.99}, {r:1,g:1,b:1,a:1}, buffer.feedback, {})(state) // Draw last frame to this to provide feedback
       }
