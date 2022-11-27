@@ -30,6 +30,7 @@ define(function(require) {
       }).map(v => v===undefined?0:v)
       return fn(vs)
     }
+    aggFunc._isAggregator = true
     addVarFunction(name, aggFunc)
     return aggFunc
   }

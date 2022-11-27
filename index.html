@@ -435,6 +435,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>p1.amp.0</code> Lookup the value of param <code>amp</code> from player <code>p1</code>, and if it contains a chord, extract the first element only from it.</p>
 <p><code>p1.pulse.max</code> Lookup the value of the <code>pulse</code> from player <code>p1</code>, and if it contains a chord, extract the largest element only from it. The pulse param gives a smoothed approximate envelope shaped value between 0 and 1 for each event.</p>
 <p><code>(pk,ps).pulse</code> If <code>pk</code> and <code>pk</code> are players, returns a chord of both their <code>pulse</code> values.</p>
+<p><code>(1,2).foo</code> Lookup a global var named <code>foo</code>, and call it as a function for each element in a chord.</p>
 <p><code>([0,1]t1@f).accum</code> Smoothly accumulate 1 every other beat</p>
 <p><code>this.value</code> Get param <code>value</code> from the current event. Never returns a chord because <code>this</code> refers only to the single current event by definition.</p>
 <p><code>{foo:2}.foo</code> Returns a field in a map (returns 2 in this example)</p>
@@ -949,12 +950,12 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-Blur param for all texture based synths
- Image and buffer and webcam shader texture lookup supports a blur kernel with controlled size
- Would be cool to have a blend subparam, so you can max etc. Max would allow growing a shape instead of blurring etc
-  ? Should be filter param instead?
- Docs
+Filter param for all texture based synths
+ Image and buffer and webcam shader texture lookup supports a filter kernel with controlled size
+  Kernel options for blur, sharpen, max... etc
 recol=fmb that leaves all pixels white but with fb set, to allow recolouring with fore/mid/back. check it for webcam/image etc too
+!Should really multiply feedback params by dt, otherwise the rate of feedback motions will be framerate dependent
+ Tricky to do; have to eval params first them multiply, and it's very param dependent; eg zoom vs scroll
 Make buffer param work per frame
  !!This fails at the moment because the synths are added to only one buffers renderList, and its done per event not per frame
 Generative visual synth
@@ -1008,20 +1009,20 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-(1.5,2.5).floor should work? And (1.5,2.5).floor{to:1/4}? - Need to distinguish between var functions that aggregate and those that don't
-((1,2,3,4).[0:3]t1){per:4,0:3} should work?? Or not? Probably not? The per etc should be applied to the []t oif thats what you want??
-floor{1.5,2.5} should work??? Or should it?? Probably not? But then it should give an error?
-!!`p1 ping 0, dur=4, foo=[100,1000,100]e \n p2 kal 0, dur=1, amp=p1.foo/1000` the []e is evalled in the WRONG players dur
+!().accum should work - why doesn't it? I guess the chord voices haven't been split yet?
+ r readout 0, loc={y:2/3-this.voice/2}, add=([0,1]t1,[0,1]t2).accum
 More standard Player params
  .exists - 1 if player exists at all
  .playing - 1 whenever its not playing a rest
-!Doesn't work:  v readout 0, add=main.amp
+floor{1.5,2.5} should work??? Or should it?? Probably not? But then it should give an error?
+!!`p1 ping 0, dur=4, foo=[100,1000,100]e \n p2 kal 0, dur=1, amp=p1.foo/1000` the []e is evalled in the WRONG players dur
 Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as needed
-Advance param to specify how far in advance events should be generated - Would allow for negative delays
 ! `p ping 0, amp/=2` amp/=2 INCreases the volume?? - Because there is no original value, so it just gets given 2
  Want `set * amp/=2` to halve the current amplitude even when it's using the default fallback value ??It DOES work already??
   When wouldn't it work?  sus+=1/4  ? oct-=1  ?
   ??Should ALL defaults be moved into player types instead of being in the evalParam calls???
+!Doesn't work:  v readout 0, add=main.amp
+Advance param to specify how far in advance events should be generated - Would allow for negative delays
 Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7]r, delay=(0,{1/2,add+:2})
  !Actually, this is already possible using  delay=(0,{1/2,add:this.add+2})
  But not sure of syntax

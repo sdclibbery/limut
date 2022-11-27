@@ -13,6 +13,9 @@ define(function(require) {
     }
     let varFunc = getVarFunction(mainParam(r))
     if (varFunc) {
+      if (!varFunc._isAggregator && Array.isArray(l)) { // If var function is NOT an aggregator...
+        return l.map(lv => lookupOp(lv, r, event,b,evalRecurse)) // then map it over LHS array instead of passing LHS array to it
+      }
       let args = l
       if (typeof r === 'object') {
         args = Object.assign({}, r)
@@ -114,8 +117,12 @@ define(function(require) {
     delete players.instances.p1
     delete players.instances.p2
   
-    // Use with var functions is tested in parse-expression tests as its awkward to test here
-  
+    addVarFunction('foo', (v,e,b,s)=>mainParam(v)+1)
+    assert([2,3], lookupOp([1,2], 'foo'))
+    assert([2,3], lookupOp([1,2], {value:'foo'}))
+    assert([2,3], lookupOp([1,2], {value:'foo',_state:5}))
+    remove('foo')
+
     console.log('lookupOp tests complete')
   }
   return lookupOp

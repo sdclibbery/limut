@@ -2498,4 +2498,13 @@ r readout 0, add=([0,1]t1).accum{foo:bar}
 v kal 4, buffer=vb, blend=max, pixellate={x:40,y:80}, contrast=3, zoom=2, scroll=3/4, rate=2, mirror={3,rotate:-time/128}
 vb buffer 0, feedback={contrast:0.1,zoom:1.01,rotate:-0.005}
 
+vg glow 0, buffer=vb, loc=sparkle, dur=1/40, fore=rainbow_fast
+vb buffer 0, feedback={rotate:0.001,zoom:1.01,fore:0.995,contrast:0.01}
+r readout 0, add=[0:10]l[0,10]@f, fore=random/(this.voice*17+1), buffer=(0,vb)
+
+r readout 0, loc={y:2/3-this.voice/2}, add=floor{(1.5,2.5)}
+r readout 0, loc={y:2/3-this.voice/2}, add=(1.5,2.5).sum
+r readout 0, loc={y:2/3-this.voice/2}, add=(1.5,2.5).floor
+r readout 0, loc={y:2/3-this.voice/2}, add=(1.5,2.5).floor{to:1/3}
+
 
