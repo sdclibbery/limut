@@ -54,11 +54,6 @@ system.mainAmpUi = (amp) => {
 system.vcaPreAmp = system.audio.createGain()
 system.vcaPreAmp.gain.value = 0.5
 
-system.compressorReduction = () => {
-  if (!system.compressor) { return 0 }
-  return system.compressor.reduction
-}
-
 system.analyser = system.audio.createAnalyser()
 system.analyser.fftSize = 1024
 system.analyser.smoothingTimeConstant = 0.6
@@ -135,17 +130,22 @@ system.vcaReverb = system.audio.createGain()
 system.vcaReverb.gain.value = 1
 system.reverb.connect(system.vcaReverb)
 
-system.compressor = system.audio.createDynamicsCompressor()
-system.compressor.ratio.value = 20
-system.compressor.threshold.value = -2
-system.compressor.release.value = 0.05
-system.compressor.attack.value = 0.001
-system.compressor.knee.value = 0
+system.limiter = system.audio.createDynamicsCompressor()
+system.limiter.ratio.value = 20
+system.limiter.threshold.value = -2
+system.limiter.release.value = 0.05
+system.limiter.attack.value = 0.001
+system.limiter.knee.value = 0
 
-system.vcaPreAmp.connect(system.compressor)
+system.limiterReduction = () => {
+  if (!system.limiter) { return 0 }
+  return system.limiter.reduction
+}
+
+system.vcaPreAmp.connect(system.limiter)
 system.vcaPreAmp.connect(system.reverb)
-system.vcaReverb.connect(system.compressor)
-system.compressor.connect(system.vcaMainAmp)
+system.vcaReverb.connect(system.limiter)
+system.limiter.connect(system.vcaMainAmp)
 system.vcaMainAmp.connect(system.analyser)
 system.vcaMainAmp.connect(system.audio.destination)
 
