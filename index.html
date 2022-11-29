@@ -1009,8 +1009,6 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-numeric lookup into non chord should just return the thing even for map in var
- Eg   set foo=({bar:3},{bar:4})   r readout 0, add=foo.0.bar, loc={y:2/3-this.voice/2}
 !().accum should work - why doesn't it? I guess the chord voices haven't been split yet?
  r readout 0, loc={y:2/3-this.voice/2}, add=([0,1]t1,[0,1]t2).accum
 More standard Player params

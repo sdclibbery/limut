@@ -32,7 +32,9 @@ define(function(require) {
       }
     }
     if (typeof l === 'object') {
-      return l[r] // Map lookup
+      let result = l[r] // Map lookup
+      if (result === undefined && typeof r === 'number') { return l } // If numeric lookup failed, return the entire map. This is useful when a chord of objects optimises down to a single object but you still want to have an indexer on it.
+      return result
     }
     if (typeof l === 'string') {
       if (l.toLowerCase() === 'this') {
@@ -80,6 +82,8 @@ define(function(require) {
     assert(1, lookupOp({v:1}, 'v'))
     assert({b:1}, lookupOp({a:{b:1}}, 'a'))
     assert(1, lookupOp(lookupOp({a:{b:1}}, 'a'), 'b'))
+    assert({foo:1}, lookupOp({foo:1}, 0))
+    assert(undefined, lookupOp({foo:1}, 'bar'))
 
     players.instances.p1 = { currentEvent:(b)=>{ return []} }
     assert(0, lookupOp('p1', 'foo', {},0,(v)=>v()))
