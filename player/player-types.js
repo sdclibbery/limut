@@ -23,7 +23,7 @@ define((require) => {
   let wave = require('play/synth/wave')
   let dwave = require('play/synth/dwave')
   let ambi = require('play/synth/ambi')
-  let bd = require('play/synth/percussion/bd')
+  let pitchedPercussion = require('play/synth/percussion/pitched')
   let impulse = require('play/synth/percussion/impulse')
 
   let nullPlayer = { play: () => {}, stopped: true }
@@ -60,8 +60,8 @@ define((require) => {
     // instruments
     drums: { play: play, defaultDur: 1/2 },
     play: { play: play, defaultDur: 1/2 },
+    bd: { play: pitchedPercussion, defaultDur: 1/2, baseParams: {hit:0,rattle:0} },
     impulse: { play: impulse },
-    bd: { play: bd, defaultDur: 1/2, baseParams: {sus:2/3} },
     sample: { play: sample },
     dwave: { play: dwave },
     dsaw: { play: dwave, baseParams: {wave:'sawtooth', oct:4, envelope:'full', _gainbase:0.06} },

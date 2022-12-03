@@ -30,10 +30,10 @@ define(function (require) {
     return clickBuffer
   }
   let click = (params, nodes) => {
-    let gain = evalMainParamEvent(params, 'click', 1)*4
+    let gain = evalMainParamEvent(params, 'click', 1)*1
     if (gain <= 0.0001) { return }
     let dur = evalSubParamEvent(params, 'click', 'dur', 1/5) * params.beat.duration
-    let cutoff = evalSubParamEvent(params, 'click', 'cutoff', 2000)
+    let cutoff = evalSubParamEvent(params, 'click', 'cutoff', 1500)
     let q = evalSubParamEvent(params, 'click', 'q', 5)
     let click = system.audio.createBufferSource()
     nodes.push(click)
@@ -67,12 +67,12 @@ define(function (require) {
   }
 
   let hit = (params, nodes) => {
-    let gain = evalMainParamEvent(params, 'hit', 1)*2.0
+    let gain = evalMainParamEvent(params, 'hit', 1)*4.0
     if (gain <= 0.0001) { return }
-    let sample = evalSubParamEvent(params, 'hit', 'sample', ';')
+    let sample = evalSubParamEvent(params, 'hit', 'sample', '^')
     let sampleIdx = evalSubParamEvent(params, 'hit', 'index', 1)
     let rate = evalSubParamEvent(params, 'hit', 'rate', 3/2)
-    let cutoff = evalSubParamEvent(params, 'hit', 'cutoff', 150)
+    let cutoff = evalSubParamEvent(params, 'hit', 'cutoff', 250)
     let q = evalSubParamEvent(params, 'hit', 'q', 1)
     let source = system.audio.createBufferSource()
     nodes.push(source)
@@ -95,9 +95,9 @@ define(function (require) {
   }
 
   let body = (params, nodes) => {
-    let gain = evalMainParamEvent(params, 'body', 1)*1.5
+    let gain = evalMainParamEvent(params, 'body', 1)*3
     if (gain <= 0.0001) { return }
-    let freq = evalSubParamEvent(params, 'body', 'freq', 45)
+    let freq = evalSubParamEvent(params, 'body', 'freq', 55)
     let boost = evalSubParamEvent(params, 'body', 'boost', 50)
     let pow = evalSubParamEvent(params, 'body', 'curve', 2)
     let wave = evalSubParamEvent(params, 'body', 'wave', 'sine')
@@ -155,7 +155,7 @@ define(function (require) {
   }
 
   return (params) => {
-    let vca = envelope(params, 0.03, 'percussion')
+    let vca = envelope(params, 0.05, 'percussion')
     let out = effects(params, vca)
     system.mix(out)
     let mix = system.audio.createGain()
