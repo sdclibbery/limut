@@ -30,7 +30,7 @@ define(function (require) {
     return clickBuffer
   }
   let click = (params, nodes) => {
-    let gain = evalMainParamEvent(params, 'click', 1)*1
+    let gain = evalMainParamEvent(params, 'click', 1)*0.1
     if (gain <= 0.0001) { return }
     let dur = evalSubParamEvent(params, 'click', 'dur', 1/5) * params.beat.duration
     let cutoff = evalSubParamEvent(params, 'click', 'cutoff', 1500)
@@ -67,7 +67,7 @@ define(function (require) {
   }
 
   let hit = (params, nodes) => {
-    let gain = evalMainParamEvent(params, 'hit', 1)*4.0
+    let gain = evalMainParamEvent(params, 'hit', 1)*0.4
     if (gain <= 0.0001) { return }
     let sample = evalSubParamEvent(params, 'hit', 'sample', '^')
     let sampleIdx = evalSubParamEvent(params, 'hit', 'index', 1)
@@ -95,7 +95,7 @@ define(function (require) {
   }
 
   let body = (params, nodes) => {
-    let gain = evalMainParamEvent(params, 'body', 1)*3
+    let gain = evalMainParamEvent(params, 'body', 1)*0.3
     if (gain <= 0.0001) { return }
     let freq = evalSubParamEvent(params, 'body', 'freq', 55)
     let boost = evalSubParamEvent(params, 'body', 'boost', 50)
@@ -127,7 +127,7 @@ define(function (require) {
   }
 
   let rattle = (params, nodes) => {
-    let gain = evalMainParamEvent(params, 'rattle', 1)*6
+    let gain = evalMainParamEvent(params, 'rattle', 1)*0.6
     if (gain <= 0.0001) { return }
     let rate = evalSubParamEvent(params, 'rattle', 'rate', 1)
     let freq = evalSubParamEvent(params, 'rattle', 'freq', 55)
@@ -155,7 +155,7 @@ define(function (require) {
   }
 
   return (params) => {
-    let vca = envelope(params, 0.05, 'percussion')
+    let vca = envelope(params, 0.4, 'percussion')
     let out = effects(params, vca)
     system.mix(out)
     let mix = system.audio.createGain()
@@ -166,8 +166,9 @@ define(function (require) {
       hit(params, nodes),
       body(params, nodes),
       rattle(params, nodes),
-    ].filter(c => c !== undefined)
-    components.map(c => c.connect(mix))
+    ]
+    components.filter(c => c !== undefined)
+              .forEach(c => c.connect(mix))
 
     waveEffects(params, mix).connect(vca)
     system.disconnect(params, nodes.concat([mix,vca]))

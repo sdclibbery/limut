@@ -863,14 +863,16 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
+!!Need to rescale everything. A linear waveshaper should NOT apply any distortion to any signal
+ Any synth with a default amp of less than 0.1 is probably wrong and needs fixing
+ To fix, scale the initial VCO amplitude down by 10x and raise the default amp by 10x
 Individual percussion synths
  References
   https://github.com/sdclibbery/limut/blob/c5fec6e5eced92145000561801704afc919241b6/play/percussion.js
   https://github.com/vincentriemer/io-808
  bd
-  drive not working right; cannot go below a certain level; never gives overdriven sound only fuzzy
   velocity from value; affects gains and raise cutoff and emphasise hit/click/rattle more
-  more efficient curve()? Dont recreate them on every event if not needed?
+  more efficient curve()? Dont recreate them on every event if not needed? Use a weak map???
   !!! check for disconnecting everything
   docs
  oh/ch

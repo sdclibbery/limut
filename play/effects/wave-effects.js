@@ -48,7 +48,7 @@ define(function (require) {
     node = shapeEffect(params, 'bits', node, 256, (x, b) => Math.pow(Math.round(Math.pow(x,1/2)*b)/b,2))
     node = shapeEffect(params, 'fold', node, 256, fold)
     node = shapeEffect(params, 'clip', node, 256, clip)
-    node = shapeEffect(params, 'drive', node, 256, (x, a) => Math.atan(x*Math.max(a,0.05)*100)/(2+a))
+    node = shapeEffect(params, 'drive', node, 256, (x, a) => Math.atan(x*a*100)/(2+a))
     return node
   }
 })
