@@ -49,6 +49,7 @@ define(function (require) {
     node = shapeEffect(params, 'fold', node, 256, fold)
     node = shapeEffect(params, 'clip', node, 256, clip)
     node = shapeEffect(params, 'drive', node, 256, (x, a) => Math.atan(x*a*100)/(2+a))
+    node = shapeEffect(params, 'linearshape', node, 8, (x) => x) // For testing purposes; applies clipping at -1 and 1, so can be used to test synth intermediate levels
     return node
   }
 })
