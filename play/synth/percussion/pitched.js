@@ -98,8 +98,8 @@ define(function (require) {
     let gain = evalMainParamEvent(params, 'body', 1)*0.3
     if (gain <= 0.0001) { return }
     let freq = evalSubParamEvent(params, 'body', 'freq', 55)
-    let boost = evalSubParamEvent(params, 'body', 'boost', 50)
-    let pow = evalSubParamEvent(params, 'body', 'curve', 2)
+    let boost = evalSubParamEvent(params, 'body', 'boost', 150)
+    let pow = evalSubParamEvent(params, 'body', 'curve', 3)
     let wave = evalSubParamEvent(params, 'body', 'wave', 'sine')
     let cutoff = evalSubParamEvent(params, 'body', 'cutoff', 2)
     let q = evalSubParamEvent(params, 'body', 'q', 10)
