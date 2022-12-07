@@ -51,6 +51,7 @@
       color: #d0d0ff;
     }
     textarea {
+      font-family: courier, mono, monospace;
       font-size: 1.5em;
       color: #e0e0e0;
       width: 100%;
@@ -863,23 +864,25 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
+Compression effect param
 Individual percussion synths
  References
   https://github.com/sdclibbery/limut/blob/c5fec6e5eced92145000561801704afc919241b6/play/percussion.js
   https://github.com/vincentriemer/io-808
  bd
   velocity from value; affects gains and raise cutoff and emphasise hit/click/rattle more
+   ?? Should be part of the "preset", not built in to the synth??
   more efficient curve()? Dont recreate them on every event if not needed? Use a weak map???
   !!! check for disconnecting everything
   docs
  oh/ch
   https://www.soundonsound.com/techniques/practical-cymbal-synthesis
+ cp
+  https://www.kvraudio.com/forum/viewtopic.php?t=466450
  sd
   https://www.soundonsound.com/techniques/practical-snare-drum-synthesis
   ?Can do as pitched with strong rattle? sd bd ..0., rattle={1/2,freq:1500,boost:500,curve:4,q:10}, body={1/3,freq:100}, hit=0, click=0, sus=1/2
    Will need two body tones...
- cp
-  https://www.kvraudio.com/forum/viewtopic.php?t=466450
  cb
   https://www.soundonsound.com/techniques/synthesizing-cowbells-claves
  cl
@@ -889,7 +892,6 @@ Individual percussion synths
 portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-notes/legato-synths-glide-slide-portamento/
 !Should be a mix subparam on echo!
 !Should 
-Compression effect param
 Pitch shifter effect
  Can use https://github.com/Tonejs/Tone.js/blob/c313bc672bcc09a8cee4df97a07ba80155fd1946/Tone/effect/PitchShift.ts
  See http://msp.ucsd.edu/techniques/v0.11/book-html/node115.html
@@ -1006,6 +1008,7 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
+!@e should work on lookups:   r readout 0, add=this.foo@e, foo=[5:1]e
 !().accum should work - why doesn't it? I guess the chord voices haven't been split yet?
  r readout 0, loc={y:2/3-this.voice/2}, add=([0,1]t1,[0,1]t2).accum
 More standard Player params
