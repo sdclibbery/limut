@@ -614,6 +614,11 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>sample</code> With 'play' synth: number: choose which sample set to use. With 'sample' synth: string: url of online audio file to play (note: server must support cross origin requests for the file)</p>
 <p class='sub'><code>sample={32,pitch:261.6}</code> Specify the original pitch of the sample in Hz (eg default is 261.6 Hz for C4)</p>
 <p><code>start</code> For the 'sample' synth, specify the playback start time in seconds within the sample. </p>
+<p><code>compress</code> Compression ratio, or the reduction in volume for signals above the compression threshold. A ratio of zero disables compression.</p>
+<p class='sub'><code>compress={12,threshold:-40}</code> Threshold in dB at which the compression ratio kicks in. Default is -50</p>
+<p class='sub'><code>compress={12,knee:10}</code> the 'knee' is a softening of the compression curve, so that there is no sudden changeover at the threshold. A value of 0 disables the knee and gives a sudden changeover. Other values are a dB range over which the knee should apply. Default is 40.</p>
+<p class='sub'><code>compress={12,att:0.1}</code> Compressor attack time in seconds. The attack time is the time it takes for compression to 'kick in' once a signal crosses the threshold. Default is 0.01 (or 10ms).</p>
+<p class='sub'><code>compress={12,rel:0.2}</code> Compressor release time in seconds. The release time is the time it takes for compression to 'go away' once a signal falls back below the threshold. Default is 0.25.</p>
 <p><code>noisify</code> noisify: distort the signal into noise</p>
 <p class='sub'><code>noisify={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>fold</code> distort the signal by boosting then folding the overdriven part of the waveform</p>
@@ -864,16 +869,18 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
-Compression effect param
 Individual percussion synths
  References
   https://github.com/sdclibbery/limut/blob/c5fec6e5eced92145000561801704afc919241b6/play/percussion.js
   https://github.com/vincentriemer/io-808
  bd
-  velocity from value; affects gains and raise cutoff and emphasise hit/click/rattle more
+  accent from value; affects gains and raise cutoff and emphasise body/click/rattle more
    ?? Should be part of the "preset", not built in to the synth??
-  more efficient curve()? Dont recreate them on every event if not needed? Use a weak map???
-  !!! check for disconnecting everything
+   Want to do things like  body*={2^(this.value/8)}
+    How to do this as a preset? What order of override application is needed?
+   Going off this.value is not right anyway as it won't include add param..?
+   This is decent for accent, ignoring `add`:
+    body={2^(this.value/8),wave:square,cutoff:1+this.value/12}
   docs
  oh/ch
   https://www.soundonsound.com/techniques/practical-cymbal-synthesis
@@ -949,14 +956,9 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-Filter param for all texture based synths
- Image and buffer and webcam shader texture lookup supports a filter kernel with controlled size
-  Kernel options for blur, sharpen, max... etc
 recol=fmb that leaves all pixels white but with fb set, to allow recolouring with fore/mid/back. check it for webcam/image etc too
 !Should really multiply feedback params by dt, otherwise the rate of feedback motions will be framerate dependent
  Tricky to do; have to eval params first them multiply, and it's very param dependent; eg zoom vs scroll
-Make buffer param work per frame
- !!This fails at the moment because the synths are added to only one buffers renderList, and its done per event not per frame
 Generative visual synth
  Complementary colours?
  Shapes? Noise? NN Dreams?
@@ -965,6 +967,11 @@ Digital JPEG corruption filter param - https://www.shadertoy.com/view/Md2GDw
  Main param value determines the amout of corruption
  Subparam for block scale
  Subparam for extremity of effect within corrupted blocks?
+Filter param for all texture based synths
+ Image and buffer and webcam shader texture lookup supports a filter kernel with controlled size
+  Kernel options for blur, sharpen, max... etc
+Make buffer param work per frame
+ !!This fails at the moment because the synths are added to only one buffers renderList, and its done per event not per frame
 Can set texture repeat for text and image etc synths? Subparam or not?
  ? Not needed now we have repeat param?
 Starfield shader; https://www.shadertoy.com/view/WdyXDm

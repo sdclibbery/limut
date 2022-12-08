@@ -1,7 +1,7 @@
 'use strict';
 define(function (require) {
   let system = require('play/system')
-  let {evalMainParamEvent} = require('play/eval-audio-params')
+  let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
   let {mix} = require('play/effects/mix')
 
   let shapeEffect = (params, effect, node, count, shape) => {
@@ -43,7 +43,22 @@ define(function (require) {
     return sgn * (v>1 ? 1 : v)
   }
 
+  let compressor = (params, node) => {
+    let compress = evalMainParamEvent(params, 'compress', 0)
+    if (!compress) { return node }
+    let compressor = system.audio.createDynamicsCompressor()
+    compressor.ratio.value = compress
+    compressor.threshold.value = evalSubParamEvent(params, 'compress', 'threshold', -50)
+    compressor.knee.value = evalSubParamEvent(params, 'compress', 'knee', 40)
+    compressor.attack.value = evalSubParamEvent(params, 'compress', 'att', 0.01)
+    compressor.release.value = evalSubParamEvent(params, 'compress', 'rel', 0.25)
+    node.connect(compressor)
+    system.disconnect(params, [compressor,node])
+    return compressor
+  }
+
   return (params, node) => {
+    node = compressor(params, node)
     node = shapeEffect(params, 'noisify', node, 500, noisify)
     node = shapeEffect(params, 'bits', node, 256, (x, b) => Math.pow(Math.round(Math.pow(x,1/2)*b)/b,2))
     node = shapeEffect(params, 'fold', node, 256, fold)
