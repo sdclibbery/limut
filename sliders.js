@@ -5,8 +5,16 @@ define(function(require) {
 
   let sliders = {}
 
-  let inputFromSlider = (slider, x) => Math.floor((x-slider.min)*1000/(slider.max-slider.min))
-  let sliderFromInput = (slider, x) => parseFloat(slider.min + (x*(slider.max-slider.min)/1000))
+  let inputFromSlider = (slider, x) => {
+    let lerp = (x-slider.min) / (slider.max-slider.min)
+    let curved = Math.pow(lerp, Math.pow(2, -slider.curve))
+    return Math.floor(1000 * curved)
+  }
+  let sliderFromInput = (slider, x) => {
+    let lerp = x / 1000
+    let curved = Math.pow(lerp, Math.pow(2, slider.curve))
+    return parseFloat(slider.min + curved*(slider.max-slider.min))
+  }
 
   let idFromName = (name) => 'slider_'+name.replace(/[\W]+/g,"_")
 
@@ -48,7 +56,8 @@ define(function(require) {
     if (!slider) {
       args.min = args.min || 0
       args.max = args.max || 1
-      args.init = (args.init !== undefined) ? args.init : args.min
+      args.curve = args.curve || 0
+      args.init = (args.value !== undefined) ? args.value : ((args.init !== undefined) ? args.init : args.min)
       sliders[args.name] = args
       slider = sliders[args.name]
       createSliderUI(slider)

@@ -757,7 +757,11 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 </div>
 <h4 onclick="toggleAccordion('accordion-controls')" class="accordion"> Controls</h4>
 <div id="accordion-controls" class="closed">
-<p><code>slider{name:'Foo', min:-5, max:5, init:0}</code> Create a new slider control on the page, which can be used for live control of live coded expressions. The name uniquely identifies the slider. The min and max parameters default to 0 and 1. The value dynamically updates to reflect the current position of the slider control.</p>
+<p><code>slider{}</code> Create a new slider control on the page, which can be used for live control of live coded expressions. The value dynamically updates to reflect the current position of the slider control.</p>
+<p class='sub'><code>slider{0.1}</code> Initial value for the slider control when it is first created. Default is 0.</p>
+<p class='sub'><code>slider{name:'Foo'}</code> Name to display with the slider. The name uniquely identifies the slider. Multiple <code>slider</code> usages in the source code with the same name will be treated as all referencing the same slider. Default is a name constructed from the player and param names.</p>
+<p class='sub'><code>slider{min:-5, max:5}</code> Minimum and maximum values when the slider is at the ends of its travel. Defaults are min:0 max:1.</p>
+<p class='sub'><code>slider{curve:2}</code> Curve to apply to the values. Positive values give greater change in value towards the lower end of travel. Default is 0.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-functions')" class="accordion"> Functions</h4>
 <div id="accordion-functions" class="closed">
@@ -881,6 +885,9 @@ Individual percussion synths
    Going off this.value is not right anyway as it won't include add param..?
    This is decent for accent, ignoring `add`:
     body={2^(this.value/8),wave:square,cutoff:1+this.value/12}
+   !Presets should define NEW parameters for users to control
+    So have pitchedperc synth with its actual params
+    And also have a bd preset, that defines the pitchedperc params in terms of new params tone, decay and accent
   docs
  oh/ch
   https://www.soundonsound.com/techniques/practical-cymbal-synthesis
@@ -1037,6 +1044,10 @@ Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7
 Presets? Allow to define new synths; eg 'preset mysaw saw, att=0.02, lpf=this.freq*[5,3,2,1,1/2]e' then use mysaw as a synth
  Presets should be overridden by actual synth params; eg `preset m saw, add=1 | lead m 0, add=2` should have add=2
  Presets should be able to include additional follow synths
+ How to handle derived params? Eg bd wants to increase cutoff based on value, but still want user to have control too
+  !Presets should define NEW parameters for users to control
+   So have pitchedperc synth with its actual params
+   And also have a bd preset, that defines the pitchedperc params in terms of new params tone, decay and accent
 ? (0,2:8) syntax?
 Percussion player for single sample; value is velocity Eg  p playv 90520070, sample=':'
  ?Or go whole hog and patterns should become expressions and all params should be {} 'info' on the player?
