@@ -25,6 +25,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
     function kw(type) {return {type: type, style: "keyword"};}
     return {
       "set": kw("set"),
+      "preset": kw("preset"),
       "follow": kw("follow"),
     };
   }();

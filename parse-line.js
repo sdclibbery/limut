@@ -1,6 +1,7 @@
 'use strict'
 define((require) => {
   let players = require('player/players')
+  let playerTypes = require('player/player-types')
   var parsePlayer = require('player/parse-player')
   var parseParams = require('player/params')
   let parseExpression = require('player/parse-expression')
@@ -49,6 +50,16 @@ define((require) => {
     return result
   }
 
+  let splitOnAll = (str, ch) => {
+    if (!str) { return [] }
+    return str.split(ch).map(x => x.trim()).filter(x => x!=ch)
+  }
+  let splitOnFirst = (str, ch) => {
+    if (!str) { return [] }
+    let parts = splitOnAll(str, ch)
+    return [parts[0], parts.slice(1).join()]
+  }
+
   let parseLine = (line, linenum) => {
     line = line.trim()
     if (!line) { return }
@@ -81,6 +92,21 @@ define((require) => {
       })
       return
     }
+    if (startsWithPreset(line)) {
+      line = line.slice(7).trim()
+      // Create a named synth preset based on a preexisting synth
+      let [preset, params] = splitOnFirst(line, ',')
+      let parts = preset.split(/(\s+)/).map(p => p.trim()).filter(p => p != '')
+      let presetName = parts[0].toLowerCase()
+      let baseType = parts[1].toLowerCase()
+      if (!baseType) { throw `Missing base type for preset ${presetName}` }
+      if (playerTypes[baseType] === undefined) { throw `Invalid base type ${baseType} for preset ${presetName}` }
+      playerTypes[presetName] = {
+        play: playerTypes[baseType].play,
+      }
+      if (params) { playerTypes[presetName].baseParams = parseParams(params) }
+      return
+    }
     // Define a player
     let player = parsePlayer(line, linenum)
     if (player) {
@@ -100,6 +126,11 @@ define((require) => {
     return r.test(str)
   }
 
+  let startsWithPreset = (str) => {
+    let r = new RegExp(/^\s*preset\s+\w+\s+\w+/, 'i')
+    return r.test(str)
+  }
+
   let startsWithPlayer = (str) => {
     let r = new RegExp(/^\s*\w+\s+\w+\s+[^\s,]+/, 'i')
     return r.test(str)
@@ -107,6 +138,7 @@ define((require) => {
 
   let isLineStart = (str) => {
     if (startsWithSet(str)) { return true }
+    if (startsWithPreset(str)) { return true }
     if (startsWithPlayer(str)) { return true }
     return false
   }
@@ -145,6 +177,12 @@ define((require) => {
   assert(true, isLineStart('p ping !0,'))
   assert(true, isLineStart('p ping !0 ,'))
   assert(true, isLineStart('p\t\tping\t\t!0'))
+  assert(true, isLineStart('preset p b'))
+  assert(true, isLineStart(' PRESET P b'))
+  assert(true, isLineStart('preset p b '))
+  assert(true, isLineStart('preset\tp b'))
+  assert(true, isLineStart('preset p1 b1'))
+  assert(false, isLineStart('presett p'))
 
   parseLine('')
   parseLine('')
@@ -219,6 +257,20 @@ define((require) => {
   parseLine('set p add=2')
   assert({add:2}, applyOverrides({add:4}, players.overrides.p))
   delete players.overrides.p
+
+  parseLine('preset foo readout')
+  assert(playerTypes.readout.play, playerTypes.foo.play)
+  delete playerTypes.foo
+
+  parseLine('preset foo readout, add=2')
+  assert({add:2}, playerTypes.foo.baseParams)
+  delete playerTypes.foo
+
+  parseLine('preset foo readout, a=2, b=3')
+  assert({a:2,b:3}, playerTypes.foo.baseParams)
+  delete playerTypes.foo
+
+  assertThrows('Invalid base', () => parseLine('preset a b'))
 
   console.log('Parse line tests complete')
   }

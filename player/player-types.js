@@ -60,7 +60,8 @@ define((require) => {
     // instruments
     drums: { play: play, defaultDur: 1/2 },
     play: { play: play, defaultDur: 1/2 },
-    bd: { play: pitchedPercussion, defaultDur: 1/2, baseParams: {sus:1/3,hit:0,rattle:0} },
+    pitchedperc: { play: pitchedPercussion, defaultDur: 1/2, baseParams: {sus:1/3}},
+    bd: { play: pitchedPercussion, defaultDur: 1/4, baseParams: {sus:1/3,hit:0,rattle:0} },
     impulse: { play: impulse },
     sample: { play: sample },
     dwave: { play: dwave },

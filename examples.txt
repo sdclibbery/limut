@@ -2533,3 +2533,9 @@ g xylo 0242, dur=1/4, add=ch+[0,0,1]r, room, amp=1/2*[]n4*(1-pk.pulse.max), pan=
 
 pk play v., compress=8, drive=1/8, lpf=[500:100]e, sus=1/3
 
+
+// preset myro readout, fore=rainbow, add=[0:2]s4@f
+// r myro 0
+// r myro 0, add=3
+
+
