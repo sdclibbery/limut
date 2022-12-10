@@ -54,7 +54,7 @@ define(function(require) {
         return evalParamFrame(v, event,b) // Eval so that time modifiers get applied
       }
       else {
-        return 0 // Fallback to zero if not found as a player
+        return 0 // Not found as a player - should really return undefined now we have '?' operator, but this could be a breaking change
       }
     }
     return l // fallback: just return the LHS value

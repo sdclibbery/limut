@@ -412,6 +412,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>%</code> Take remainder; eg (0,4,7,9)%7 is equivalent to (0,4,0,2)</p>
 <p><code>^</code> Raise to the power; eg <code>2^3</code> is 8. Imaginary results return 0; eg <code>-1^1/2</code> returns 0.</p>
 <p><code>|</code> Concatenate chords; eg <code>1|2</code> is the same as <code>(1,2)</code>, and <code>(1,2)|(3,4)</code> is <code>(1,2,3,4)</code></p>
+<p><code>?</code> Get a default if a value is missing. Eg <code>this.foo?5</code> will give the value of <code>this.foo</code> if present, or <code>5</code> if not.</p>
 <p><code>.</code> Lookup values in a player (with a param name), a chord (with an index or aggregator) or a map (with a field name). See examples below.</p>
 <p><code>{x:0,y:1}</code> Map, containing keys and values</p>
 <p><code>{2,y:1}</code> Map, containing keys and values, with a 'default' value of 2. The default value is used for some parameters; eg <code>chop={2,wave:triangle}</code> is the same as <code>chop=2</code>, but also supplies an additional 'wave' subparameter.</p>
@@ -878,16 +879,8 @@ Individual percussion synths
   https://github.com/sdclibbery/limut/blob/c5fec6e5eced92145000561801704afc919241b6/play/percussion.js
   https://github.com/vincentriemer/io-808
  bd
-  accent from value; affects gains and raise cutoff and emphasise body/click/rattle more
-   ?? Should be part of the "preset", not built in to the synth??
-   Want to do things like  body*={2^(this.value/8)}
-    How to do this as a preset? What order of override application is needed?
-   Going off this.value is not right anyway as it won't include add param..?
-   This is decent for accent, ignoring `add`:
-    body={2^(this.value/8),wave:square,cutoff:1+this.value/12}
-   !Presets should define NEW parameters for users to control
-    So have pitchedperc synth with its actual params
-    And also have a bd 909 preset, that defines the pitchedperc params in terms of new params tone, decay and accent
+  test with headphones
+  move bd into a new limut presets file that is loaded at startup
   docs
    pitchedperc synth
    bd909 preset
@@ -1024,24 +1017,13 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-New operator `?` eg `foo?0` would return the value of foo unless its undefined, in which case it gives zero
- Needs to have quite high precedence; only just behind lookup
 Presets
- !need to be able to derive params and handle defaulting
-  Eg  add=this.accent^2  if the actual player does not set accent, then this will default to 2 which is wrong
-  ? New operator eg `foo?0` would return the value of foo unless its undefined, in which case it gives zero
-   Needs to have quite high precedence; only just behind lookup
-   Then can do add=this.accent?0^2
-  What happens if eval of something defaults it to 0?
- How to handle derived params? Eg bd wants to increase cutoff based on value, but still want user to have control too
-  !Presets should define NEW parameters for users to control
-   So have pitchedperc synth with its actual params
-   And also have a bd preset, that defines the pitchedperc params in terms of new params tone, decay and accent
- !preset params are not overrides; eg add+=2 is ignored
- !should be able to set dur in preset
- Can define a preset based on another preset
- Presets should be able to include additional follow synths
+ !baseParams must be modifiable; eg if preset defines amp then player must be able to amp+=
+  Eg preset defines  body={2,cutoff:4}  and then player will be able to  body.cutoff=2  etc
+ !should be able to set dur in preset - pull dur out of params and set defaultDur??
+ !should be able to define a preset based on another - need to copy baseParams etc
  Docs
+Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as needed
 Prophet should become a preset of a new PWM synth - pwm synth should have 'live' pwm param instead of LFO
 !@e should work on lookups:   r readout 0, add=this.foo@e, foo=[5:1]e
 !().accum should work - why doesn't it? I guess the chord voices haven't been split yet?
@@ -1049,9 +1031,9 @@ Prophet should become a preset of a new PWM synth - pwm synth should have 'live'
 More standard Player params
  .exists - 1 if player exists at all
  .playing - 1 whenever its not playing a rest
+Presets should be able to define multiple synths to play at once
 floor{1.5,2.5} should work??? Or should it?? Probably not? But then it should give an error?
 !!`p1 ping 0, dur=4, foo=[100,1000,100]e \n p2 kal 0, dur=1, amp=p1.foo/1000` the []e is evalled in the WRONG players dur
-Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as needed
 ! `p ping 0, amp/=2` amp/=2 INCreases the volume?? - Because there is no original value, so it just gets given 2
  Want `set * amp/=2` to halve the current amplitude even when it's using the default fallback value ??It DOES work already??
   When wouldn't it work?  sus+=1/4  ? oct-=1  ?
@@ -1087,12 +1069,6 @@ Some sort of matching or booleans would be handy; eg  rel=2+6*(this.value<0)  or
 ?Should be able to stutter with euclidean (or other?) patterns??
 ?stutter subparam for overriding interval between stuttered notes?
 !v glow 0, loc=sparkle, fore=(red,blue)[max]
-Map lookup operator; interchangeable in syntax location with chord indexer
- eg  {foo:2}.foo ==2
- must allow eg  ({a:1},{a:2})[1].a ==2
- also {a:{foo:1},b:{foo:2}}.b.foo ==2
- '.='???
- Docs
 Allow mixing , and :   Eg  [0,2:4,5]r  meaning 0 or 2 to 4 or 5  Or  [0:4,7,9:10]t1  meaning [0,1,2,3,4,7,9,10]t1
 !root change using []t is 1 beat late in changing
 stutter={4,amp:1/2}  - apply overrides

@@ -8,6 +8,11 @@ define(function(require) {
     return op(l,r)
   }
 
+  let defaultOp = (l,r) => {
+    if (l === undefined) { return r }
+    return l
+  }
+
   let concatOp = (l,r) => {
     if (l === undefined) { return [r] }
     if (r === undefined) { return [l] }
@@ -29,10 +34,11 @@ define(function(require) {
     '^': (l,r)=>ignoreUndefined((l,r)=>(Math.pow(l,r) || 0), l,r),
     '|': (l,r)=>concatOp(l,r),
     '.': (l,r, e,b,er)=>lookupOp(l,r, e,b,er),
+    '?': (l,r)=>defaultOp(l,r),
   }
   operators['|'].raw = true
   operators['.'].raw = true
-  let precedence = {'.':1,'|':2,'^':3,'%':4,'/':4,'*':4,'-':5,'+':5,} // MUST ALL BE > 0
+  let precedence = {'.':1,'?':2,'|':3,'^':4,'%':5,'/':5,'*':5,'-':6,'+':6,} // MUST ALL BE > 0
 
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
@@ -48,6 +54,12 @@ define(function(require) {
     assert([1,3,4], concatOp(1, [3,4]))
     assert([1,2], concatOp(1, 2))
     assert([1], concatOp(1, undefined))
+
+    assert(1, defaultOp(1, 2))
+    assert(1, defaultOp(1, undefined))
+    assert(2, defaultOp(undefined, 2))
+    assert(undefined, defaultOp(undefined, undefined))
+    assert(0, defaultOp(0, 2))
 
     assert(undefined, lookupOp())
     assert(1, lookupOp(1, undefined))

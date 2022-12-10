@@ -1251,6 +1251,12 @@ define(function(require) {
   assert({value:4,rotate:1}, evalParamFrame(parseExpression("{4,rotate:1}"),ev(0,0,0),0))
   assert({value:4,rotate:2}, evalParamFrame(parseExpression("{4,rotate:max{1,2}}"),ev(0,0,0),0))
 
+  assert(1, evalParamFrame(parseExpression("1?2"),ev(0,0,0),0))
+  assert(2, evalParamFrame(parseExpression("this.foo?2"),ev(0,0,0),0))
+  assert(2, evalParamFrame(parseExpression("this.foo ? 2"),ev(0,0,0),0))
+  assert(2, evalParamFrame(parseExpression("{a:this.foo}.a?2"),ev(0,0,0),0))
+  assert(2, evalParamFrame(parseExpression("{}.foo?2"),ev(0,0,0),0))
+
   console.log('Parse expression tests complete')
   }
 
