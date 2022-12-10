@@ -30,7 +30,7 @@ define(function (require) {
     return clickBuffer
   }
   let click = (params, nodes) => {
-    let gain = evalMainParamEvent(params, 'click', 1)*0.1
+    let gain = evalMainParamEvent(params, 'click', 1)*0.07
     if (gain <= 0.0001) { return }
     let dur = evalSubParamEvent(params, 'click', 'dur', 1/5) * params.beat.duration
     let cutoff = evalSubParamEvent(params, 'click', 'cutoff', 1500)
@@ -67,7 +67,7 @@ define(function (require) {
   }
 
   let hit = (params, nodes) => {
-    let gain = evalMainParamEvent(params, 'hit', 1)*0.4
+    let gain = evalMainParamEvent(params, 'hit', 1)*0.25
     if (gain <= 0.0001) { return }
     let sample = evalSubParamEvent(params, 'hit', 'sample', '^')
     let sampleIdx = evalSubParamEvent(params, 'hit', 'index', 1)
@@ -95,7 +95,7 @@ define(function (require) {
   }
 
   let body = (params, nodes) => {
-    let gain = evalMainParamEvent(params, 'body', 1)*0.3
+    let gain = evalMainParamEvent(params, 'body', 1)*0.2
     if (gain <= 0.0001) { return }
     let freq = evalSubParamEvent(params, 'body', 'freq', 55)
     let boost = evalSubParamEvent(params, 'body', 'boost', 150)
@@ -127,7 +127,7 @@ define(function (require) {
   }
 
   let rattle = (params, nodes) => {
-    let gain = evalMainParamEvent(params, 'rattle', 1)*0.6
+    let gain = evalMainParamEvent(params, 'rattle', 1)*0.4
     if (gain <= 0.0001) { return }
     let rate = evalSubParamEvent(params, 'rattle', 'rate', 1)
     let freq = evalSubParamEvent(params, 'rattle', 'freq', 55)
