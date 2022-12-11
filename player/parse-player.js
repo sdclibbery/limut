@@ -472,6 +472,18 @@ define((require) => {
   assert(0, evalParamFrame(p2.getEventsForBeat({count:2})[0].bar,ev(2,2),2))
   delete players.instances.p1
 
+  playerTypes.foo = {play:()=>[], baseParams:{bar:3}}
+  p = parsePlayer('p foo 0')
+  assert(3, evalParamFrame(p.getEventsForBeat({count:0})[0].bar,ev(0,0),0))
+  delete players.instances.p
+  p = parsePlayer('p foo 0, bar=5')
+  assert(5, evalParamFrame(p.getEventsForBeat({count:0})[0].bar,ev(0,0),0))
+  delete players.instances.p
+  p = parsePlayer('p foo 0, bar+=5')
+  assert(8, evalParamFrame(p.getEventsForBeat({count:0})[0].bar,ev(0,0),0))
+  delete players.instances.p
+  delete playerTypes.foo
+
   console.log('Parse player tests complete')
   }
   

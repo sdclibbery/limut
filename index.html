@@ -880,10 +880,14 @@ Individual percussion synths
   https://github.com/vincentriemer/io-808
  bd
   test with headphones
+  review control params; naming, range etc
+   ? should decay be dec and in beats?
+   ? Should tune take oct/scale etc?
+   ? Should tone and accent be 0-1 not 0-10?
   move bd into a new limut presets file that is loaded at startup
   docs
    pitchedperc synth
-   bd909 preset
+   bd preset
  oh/ch
   https://www.soundonsound.com/techniques/practical-cymbal-synthesis
  cp
@@ -1019,8 +1023,6 @@ shadertoy synth multiple channels
 ==== other ====
 Presets
  !baseParams must be modifiable; eg if preset defines amp then player must be able to amp+=
-  Eg preset defines  body={2,cutoff:4}  and then player will be able to  body.cutoff=2  etc
-  Write TESTS
   Handle follow player
  !should be able to set dur in preset - pull dur out of params and set defaultDur??
   It works now?? If so get rid of defaultDur BUT!!! its probably broken pattern step durations now; TEST
