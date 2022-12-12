@@ -104,7 +104,8 @@ define((require) => {
       playerTypes[presetName] = {
         play: playerTypes[baseType].play,
       }
-      if (params) { playerTypes[presetName].baseParams = parseParams(params) }
+      let baseBaseParams = playerTypes[baseType].baseParams || {}
+      playerTypes[presetName].baseParams = applyOverrides(baseBaseParams, parseParams(params))
       return
     }
     // Define a player
@@ -258,6 +259,8 @@ define((require) => {
   assert({add:2}, applyOverrides({add:4}, players.overrides.p))
   delete players.overrides.p
 
+  assertThrows('Invalid base', () => parseLine('preset a b'))
+
   parseLine('preset foo readout')
   assert(playerTypes.readout.play, playerTypes.foo.play)
   delete playerTypes.foo
@@ -278,7 +281,35 @@ define((require) => {
   delete players.instances.r2
   delete playerTypes.myro
 
-  assertThrows('Invalid base', () => parseLine('preset a b'))
+  parseLine('preset myp ping')
+  parseLine('lp myp 0')
+  assert('sine', players.instances.lp.getEventsForBeat({count:0})[0].wave)
+  delete players.instances.lp
+  delete playerTypes.myp
+
+  parseLine('preset myro readout, add=4')
+  parseLine('preset myro2 myro')
+  parseLine('r myro2 0, add+=1')
+  assert(5, players.instances.r.getEventsForBeat({count:0})[0].add)
+  delete players.instances.r
+  delete playerTypes.myro2
+  delete playerTypes.myro
+
+  parseLine('preset myro readout, add=4')
+  parseLine('preset myro2 myro, add=2')
+  parseLine('r myro2 0, add+=1')
+  assert(3, players.instances.r.getEventsForBeat({count:0})[0].add)
+  delete players.instances.r
+  delete playerTypes.myro2
+  delete playerTypes.myro
+
+  parseLine('preset myro readout, add=4')
+  parseLine('preset myro2 myro, add+=2')
+  parseLine('r myro2 0, add+=1')
+  assert(7, players.instances.r.getEventsForBeat({count:0})[0].add)
+  delete players.instances.r
+  delete playerTypes.myro2
+  delete playerTypes.myro
 
   console.log('Parse line tests complete')
   }
