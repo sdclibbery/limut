@@ -2545,4 +2545,16 @@ pk play v., compress=8, drive=1/8, lpf=[500:100]e, sus=1/3
 // preset myro readout, add=2
 // r myro 0, add+=1
 
+// preset myro readout, add=2
+// r1 myro 0, addt+=1, loc={y:1/4}
+// r2 myro follow r1, add+=1, loc={y:-1/4}
+
+// preset myro readout, add=2
+// r1 myro 0, add+=1, loc={y:1/4}
+// r2 readout follow r1, add+=1, loc={y:-1/4}
+
+// preset myro readout, add=4
+// r1 readout 0, loc={y:1/4}, add=2
+// r2 myro follow r1, loc={y:-1/4}, add+=1
+
 

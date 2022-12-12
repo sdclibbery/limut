@@ -270,6 +270,14 @@ define((require) => {
   assert({a:2,b:3}, playerTypes.foo.baseParams)
   delete playerTypes.foo
 
+  parseLine('preset myro readout, add=4')
+  parseLine('r1 readout 0, add=2')
+  parseLine('r2 myro follow r1, add+=1')
+  assert(3, players.instances.r2.getEventsForBeat({count:0})[0].add)
+  delete players.instances.r1
+  delete players.instances.r2
+  delete playerTypes.myro
+
   assertThrows('Invalid base', () => parseLine('preset a b'))
 
   console.log('Parse line tests complete')
