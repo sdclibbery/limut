@@ -4,11 +4,11 @@ define(function(require) {
   var parseParams = require('player/params');
   let {applyOverrides,collapseOverrides} = require('player/override-params')
 
-  return (patternStr, paramsStr, defaultDur, player, baseParams) => {
+  return (patternStr, paramsStr, player, baseParams) => {
     let params = parseParams(paramsStr, player.id)
     params = applyOverrides(baseParams, params)
     params = collapseOverrides(params)
-    let pattern = parsePattern(patternStr, params, defaultDur)
+    let pattern = parsePattern(patternStr, params)
     return (beat) => {
       let eventsForBeat = pattern(beat.count, player)
       let events = eventsForBeat.map(event => {

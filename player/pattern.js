@@ -4,12 +4,12 @@ define(function(require) {
   let parsePatternString = require('player/parse-pattern')
   let {evalParamFrame} = require('player/eval-param')
 
-  let parsePattern = (patternStr, params, defaultDur) => {
+  let parsePattern = (patternStr, params) => {
     if (!patternStr) { return () => [] }
     let pattern = parsePatternString(patternStr)
     let events = pattern.events
     if (events.length == 0) { return () => [] }
-    let dur = param(param(params.dur, defaultDur), 1)
+    let dur = param(params.dur, 1)
     if (typeof dur === 'number') { // const duration, get events for a beat deterministically
       if (dur <= 0) { throw 'Zero duration' }
       let patternLength = pattern.length * dur
