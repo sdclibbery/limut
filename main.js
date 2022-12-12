@@ -14,6 +14,15 @@ define(function(require) {
   let consoleOut = require('console')
   require('editor-textarea')
   require('editor-codemirror')
+  let {parseCode} = require('update-code')
+
+  // Load presets
+  fetch('preset/percussion.limut')
+    .then(response => response.text())
+    .then((data) => {
+      console.log(`Loaded percussion presets`)
+      parseCode(data)
+    })
 
   // accordions
   window.toggleAccordion = (id) => {

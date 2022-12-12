@@ -5,7 +5,7 @@ define(function(require) {
   let system = require('play/system')
   let players = require('player/players')
   let consoleOut = require('console')
-  let updateCode = require('update-code')
+  let {updateCode} = require('update-code')
 
   let codeTextArea = document.getElementById('code-textarea')
   codeTextArea.style.display = 'block'

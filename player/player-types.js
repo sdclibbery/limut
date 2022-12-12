@@ -61,7 +61,6 @@ define((require) => {
     drums: { play: play, baseParams:{dur: 1/2} },
     play: { play: play, baseParams:{dur: 1/2} },
     pitchedperc: { play: pitchedPercussion, baseParams: {dur:1/2,sus:1/3}},
-    bd: { play: pitchedPercussion, baseParams: {dur:1/4,sus:1/3,hit:0,rattle:0} },
     impulse: { play: impulse },
     sample: { play: sample },
     dwave: { play: dwave },

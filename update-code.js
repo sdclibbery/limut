@@ -156,5 +156,8 @@ define((require) => {
     console.log('Update code tests complete')
   }
 
-  return updateCode
+  return {
+    parseCode:parseCode,
+    updateCode:updateCode,
+  }
 })

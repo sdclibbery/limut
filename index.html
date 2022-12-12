@@ -311,7 +311,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
   <p><b>Visual</b> Visual lag; green when the framerate is keeping up to 60 fps; turns red when the system is struggling, which may lead to visual glitching</p>
   <p><b>Limiter</b> Audio limiter: turns red when the internal Limut limiter is active, implying the combined audio sources are too loud. Note this limiter is before the <code>main.amp</code> control and vu meter, it makes sure the levels from individual synths do not go so loud as to distort. So if it is lighting up, lower the <code>amp</code> on individual synths, and if necessary, raise the <code>main.amp</code> level to compensate.</p>
 </div>
-<h4 onclick="toggleAccordion('accordion-syntax-principles')" class="accordion"> Syntax Principles</h4>
+<h4 onclick="toggleAccordion('accordion-syntax-principles')" class="accordion"> Syntax Principles for Expressions</h4>
 <div id="accordion-syntax-principles" class="closed">
   <p><code>()</code> Round brackets define chords in both patterns and expressions; that is, mutltiple events or values at the same time. Chord indexers and aggregators can be used to extract various values from chords.</p>
   <p><code>[]</code> Square brackets define sequences in both patterns and expressions; that is, multiple events or values one after another over time (sequences/timevars)</p>
@@ -325,13 +325,14 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <h5>Comments</h5>
 <p>Anything after <code>//</code> on a line is ignored</p>
 <h5>Commands</h5>
-<p>A command defines a player or sets player overrides or sets global variables. Commands may span multiple lines; a new command is started whenever the beginning of a command is recognised at the start of a new line. So any line that begins with <code>set </code> keyword for setting vars or overrides, or with the <code>id type pattern</code> syntax for defining a player, will begin a new command.</p>
+<p>A command defines a player or preset, or sets player overrides, or sets global variables. Commands may span multiple lines; a new command is started whenever the beginning of a command is recognised at the start of a new line. So any line that begins with <code>set </code> keyword for setting vars or overrides, or with the <code>id type pattern</code> syntax for defining a player, will begin a new command.</p>
 <p>Example:
   <pre>
-    set bpm=130           // Command that sets the global bpm (beats per minute) var to 130bpm.
-    kick play x., amp=2,  // Start of a command that defines the kick player, of type `play`, with an amp (volume) of 2
-      drive=1/2           // Continuation of the kick player definition, setting its drive param to 1/2
-    set kick drive=0      // New command defining an override for the kick player, setting its drive param to zero. Overrides like this take precedence over params set on the player itself.
+    preset mysynth ping, amp=3  // Command that creates a preset synth based on the 'ping' synth, but overriding the amp value
+    set bpm=130                 // Command that sets the global bpm (beats per minute) var to 130bpm.
+    kick play x., amp=2,        // Start of a command that defines the player called 'kick', of type `play`, with an amp (volume) of 2
+      drive=1/2                 // Continuation of the kick player definition, setting its drive param to 1/2
+    set kick drive=0            // New command defining an override for the kick player, setting its drive param to zero. Overrides like this take precedence over params set on the player itself.
   </pre>
 </p>
 <h5>Defining a player</h5>
@@ -352,6 +353,12 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p>A set global var command begins when <code>set </code> begins a new line. The var and value may follow on subsequent lines.</p>
 <p><code>var</code> variable to set; either a predefined var (see 'Predefined Vars' section below) or a user defined var which can be referenced from params on any player(s)</p>
 <p><code>value</code> expression value to set; see 'Value Syntax'</p>
+<h5>Creating a synth preset:</h5>
+<p>Basic structure: <code>preset name synth, params</code></p>
+<p>A preset global var command begins when <code>preset </code> begins a new line. The params may follow on subsequent lines.</p>
+<p><code>name</code> The name for the preset. The preset can be used by players by referring to this name as the player type.</p>
+<p><code>synth</code> The existing synth (or preset) to base this preset on</p>
+<p><code>params</code> Series of param overrides to apply for players that use this preset</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-pattern-syntax')" class="accordion"> Patterns</h4>
 <div id="accordion-pattern-syntax" class="closed">
@@ -879,15 +886,9 @@ Individual percussion synths
   https://github.com/sdclibbery/limut/blob/c5fec6e5eced92145000561801704afc919241b6/play/percussion.js
   https://github.com/vincentriemer/io-808
  bd
-  test with headphones
-  review control params; naming, range etc
-   ? should decay be dec and in beats?
-   ? Should tune take oct/scale etc?
-   ? Should tone and accent be 0-1 not 0-10?
-  move bd into a new limut presets file that is loaded at startup
   docs
    pitchedperc synth
-   bd preset
+   bd preset; control params
  oh/ch
   https://www.soundonsound.com/techniques/practical-cymbal-synthesis
  cp
@@ -1021,8 +1022,6 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-Presets
- Docs
 Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as needed
 Prophet should become a preset of a new PWM synth - pwm synth should have 'live' pwm param instead of LFO
 !@e should work on lookups:   r readout 0, add=this.foo@e, foo=[5:1]e

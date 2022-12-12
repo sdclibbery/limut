@@ -4,7 +4,7 @@ define(function(require) {
 
   let system = require('play/system')
   let players = require('player/players')
-  let updateCode = require('update-code')
+  let {updateCode} = require('update-code')
   let consoleOut = require('console')
 
   let editorDiv = document.getElementById('code-codemirror')
