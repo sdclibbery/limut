@@ -464,6 +464,15 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <div id="accordion-audio-synths" class="closed">
 <p><code>! / stop / none</code> </p>
 <p><code>play</code> Play samples. Use letters, symbols and digits 1-4 in the pattern to choose the sample (see below for full list). Note duration defaults to 1/2.</p>
+<p><code>pitchedperc</code> Synthesised pitched percussion for kick drums, toms etc. The sound is made up of click, hit, body and rattle components. The synth has a number of unique params:</p>
+<p class='sub'><code>click={1,dur:1/5,cutoff:1500,q:5}</code> The click is the initial impact sound. The main param is the loudness of the click. Dur is the duration in beats, cutoff (in Hz) and q control the low pass filtering. The default values are shown.</p>
+<p class='sub'><code>hit={1,sample:'^',index:1,rate:3/2,cutoff:250,q:1}</code> The hit is a sample to be played with the initial impact sound. The main param is the loudness of the hit. Sample, index and rate control the sample playback (similar to the play synth). Cutoff (in Hz) and q control the low pass filtering. The default values are shown.</p>
+<p class='sub'><code>body={1,freq:55,boost:150,curve:3,wave:sine,cutoff:2,q:10}</code> The body is the resonant, pitched body of the sound. The main param is the loudness of the body. freq is the base frequency in Hz, boost is the initial frequency boost in Hz, curve is the amount of curvature for the frequency envelope, and wave is the waveform to use. Cutoff and q control the low pass filtering, however the body cutoff is a multiplier over the main frequency rather than an absolute frequency in Hz. The default values are shown.</p>
+<p class='sub'><code>rattle={1,rate:1,freq:55,boost:205,cutoff:8,q:18}</code> The rattle is a noisy component of the sound. The main param is the loudness of the rattle. Rate is the sample playback rate of the noise sample; adjusting this can provide some additional filtering. freq is the base frequency in Hz, boost is the initial frequency boost in Hz, curve is the amount of curvature for the frequency envelope, and wave is the waveform to use. Cutoff and q control the low pass filtering, however the rattle cutoff is a multiplier over the main frequency rather than an absolute frequency in Hz. The default values are shown.</p>
+<p><code>bd</code> Preset based on pitchedperc. Provides a broadly 909 style kick drum. Use sus or dec params to control the duration of the kick. Uses some unique params:</p>
+<p class='sub'><code>accent=0</code> Positive values accent the kick making it louder and stronger. Negative values diminish the kick. Default value is derived from the player pattern value and 'add' param.</p>
+<p class='sub'><code>tone=0</code> Tone control for the kick. Larger values will open the filters.</p>
+<p class='sub'><code>tune=55</code> Base frequency for the kick in Hz. Usually this should be between about 45 and 65 Hz. The pitch{} function can be used to calculate specific frequencies for tuning the kick to the current key; for example <code>tune=pitch{0,oct:2}</code></p>
 <p><code>impulse</code> Play an atonal impulse; that is a single pulse of millisecond duration.</p>
 <p><code>sample</code> Pitched sample player. Use the 'sample' param, and then use it as a piched synth. Use the <code>start</code> param to specify the playback start time within the original sample in seconds.</p>
 <p><code>saw</code> Sawtooth wave</p>
@@ -885,10 +894,6 @@ Individual percussion synths
  References
   https://github.com/sdclibbery/limut/blob/c5fec6e5eced92145000561801704afc919241b6/play/percussion.js
   https://github.com/vincentriemer/io-808
- bd
-  docs
-   pitchedperc synth
-   bd preset; control params
  oh/ch
   https://www.soundonsound.com/techniques/practical-cymbal-synthesis
  cp

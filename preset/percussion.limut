@@ -1,11 +1,11 @@
 // 909 style kick
 preset bd pitchedperc,
 	dur=1/4, // Default duration; 16th notes like a 909 sequencer
+  sus=1/3,
   // preset control params
   accent=this.value+this.add-3,
   tone=0,
-  tune=pitch{4,oct:1},
-  dec=1/3,
+  tune=55,
   // derived pitchedperc params
   hit=0, rattle=0,
 	body={
