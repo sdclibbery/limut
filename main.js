@@ -17,12 +17,16 @@ define(function(require) {
   let {parseCode} = require('update-code')
 
   // Load presets
-  fetch('preset/percussion.limut')
+  let loadPresetCollection = (name) => {
+    fetch(`preset/${name}.limut`)
     .then(response => response.text())
     .then((data) => {
-      console.log(`Loaded percussion presets`)
+      console.log(`Loaded ${name} presets`)
       parseCode(data)
     })
+  }
+  loadPresetCollection('percussion')
+  loadPresetCollection('synth')
 
   // accordions
   window.toggleAccordion = (id) => {
