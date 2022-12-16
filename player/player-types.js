@@ -14,6 +14,7 @@ define((require) => {
   let ethereal = require('play/synth/ethereal')
   let noise = require('play/synth/noise')
   let prophet = require('play/synth/prophet')
+  let pwm = require('play/synth/pwm')
   let fmbass = require('play/synth/fmbass')
   let fm = require('play/synth/fm')
   let glass = require('play/synth/glass')
@@ -84,6 +85,7 @@ define((require) => {
     ethereal: { play: ethereal },
     noise: { play: noise },
     prophet: { play: prophet },
+    pwm: { play: pwm },
     fmbass: { play: fmbass },
     fm: { play: fm },
     glass: { play: glass },
