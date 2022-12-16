@@ -2598,3 +2598,17 @@ ab ping 01b0., dur=1/2, amp=[0,1]t[14,2], addc=wow, room, att=0.01, pan=[-0.6:0.
 am ambi (02468), room=2, amp=[0,1/2]l32, oct=3, chorus=3, add=[0,1]t16, pan=[-1:1]r
 // ls wave 0, dur=4, oct=6, amp=2/3, addc=[0,0,2,2]s[12,4]@f+wow/4, chorus, wave=tri, envelope=pad, echo=1.01
 
+
+// Ice Station
+set bpm=90
+set scale=egyptian
+set main.amp=1.8
+v1 kal 3, monochrome, fore=#adef, back=#adef, perspective=-3/4, scroll={y:time/8}, time=20+time/12, contrast, zoom=0.8
+v2 swirl 3, monochrome, fore=#acef, back=#acef, perspective=-3/4, scroll={y:time/8}, rate=1/4, additive
+a ambi (0369), wave=saw, room=2, add=[0,1]t[6,2], oct=(2,3), high=-24, chorus=2, flanger=1/64, ring={[200:400]s11@f,mix:1/3}, pan=[-1:1]r
+// i impulse ..0., bpf={[80:120]r,q:1/2}, amp=16, room=2
+// p prophet 0......., dur=4, oct=1, addc=[12,2,0]e+wow*2, amp=[1:5]r, lpf=[200,300,400]r, rel=3
+// g glass 000-10026, room=2, ring={[200:400]s11@f,mix:1/3}, amp=[0:2]s28@f, oct=[5,5,5,6]r, delay=0|[(),(),(),{1/2,add:1}]r, addc=wow+[-1/2:1/2]n8, pan=[-1.8:1/8]r+[-1:1]n10
+// s sine ...0, dur=4, amp=1, addc=wow, oct=6, chop={[1,2,4]r1/2@f,wave:square}, envelope=pad
+
+

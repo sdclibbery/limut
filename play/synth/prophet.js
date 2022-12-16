@@ -3,7 +3,7 @@ define(function (require) {
   if (!window.AudioWorkletNode) { return ()=>{} }
 
   let system = require('play/system')
-  require('play/pwm')
+  require('play/pwm-source')
   let scale = require('music/scale')
   let envelope = require('play/envelopes')
   let effects = require('play/effects/effects')
