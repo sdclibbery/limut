@@ -202,6 +202,7 @@ define(function (require) {
     evalMainPerFrame: evalMainPerFrame,
     evalSubPerFrame: evalSubPerFrame,
     fixedPerFrame: fixedPerFrame,
+    setAudioParamValue: setAudioParamValue,
     evalFuncFrame: evalFuncFrame,
   }
 })

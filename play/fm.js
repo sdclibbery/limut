@@ -45,11 +45,11 @@ define(function (require) {
     } else {
       vco = system.audio.createOscillator()
       vco.type = wave || 'sine';
-      }
-      vco.frequency.value = freq
-      vco.start(params._time)
-      vco.stop(params.endTime)
-      return vco
+    }
+    vco.frequency.value = freq
+    vco.start(params._time)
+    vco.stop(params.endTime)
+    return vco
   }
 
   fm.connect = (modulator, carrier, envelope) => {
