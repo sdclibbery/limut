@@ -106,6 +106,15 @@ define(function (require) {
     }
   }
 
+  let evalFuncFrame = (audioParam, params, name, fn) => {
+    setAudioParamValue(audioParam, fn(params.count), name) // set now
+    system.add(params._time, state => { // per frame update
+      if (state.time > params.endTime) { return false }
+      rampAudioParamValue(audioParam, fn(state.count), name)
+      return true
+    })
+}
+
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
@@ -190,6 +199,9 @@ define(function (require) {
     evalSubParamEvent: evalSubParamEvent,
     evalMainParamFrame: evalMainParamFrame,
     evalSubParamFrame: evalSubParamFrame,
+    evalMainPerFrame: evalMainPerFrame,
+    evalSubPerFrame: evalSubPerFrame,
     fixedPerFrame: fixedPerFrame,
+    evalFuncFrame: evalFuncFrame,
   }
 })

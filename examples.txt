@@ -2612,3 +2612,20 @@ a ambi (0369), wave=saw, room=2, add=[0,1]t[6,2], oct=(2,3), high=-24, chorus=2,
 // s sine ...0, dur=4, amp=1, addc=wow, oct=6, chop={[1,2,4]r1/2@f,wave:square}, envelope=pad
 
 
+// Alien thrust machine
+set * swing 60
+// Visuals
+v kal 0, buffer=vb, blend=max, monochrome, fore=(rainbow_slow,rainbow), add=this.voice/2, contrast=this.voice, zoom=2, ripple
+vb buffer 0, feedback={zoom:0.98+l.pulse.max/16,contrast:0.01}
+// Percussion
+pk bd 9..<.-4.0>, drive=1/8, compress=20, sus=1/4, amp=2/3
+pd play dfkdfkyu, delay=(0,{3/4,loud:2/3,ring:pitch{0}}), amp=2, rate=1/2, pan=[-1/2,1/2]
+pc play shes, amp=3, pan=[-1/4:1/4]r
+// Synths
+r pwm -7, dur=1/4, oct:2, ring=pitch{2*[0:7]t1/2@f,oct:4}, lpf={this.freq*[4:12]r{per:8,seed:0},q:20}, room, chorus, pwm=[0.1:1/2]s8@f, add=[0,3]t16, amp=2/3, pan=[-1/2:1/2]r
+l supersaw 0[66..], dur=2, oct=5, ring=this.freq*[2,5,2]e, amp=5, chorus, add=[0,3]t16, pan=[-1,1], room=1/2
+
+
+// For testing pitch effects
+t sine 0_., amp=3, add=[0,1,2]t3, vib={2,depth:4,delay:1}, addc=[0:5]e
+

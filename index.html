@@ -497,8 +497,10 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>piano</code> Sampled piano</p>
 <p><code>ambi</code> Ambient drone; multiple sines with varying detunes</p>
 <p><code>ethereal</code> FM Ethereal pad</p>
-<p><code>noise</code> Noise pad. Note pattern value is not used; white noise is produced for all values (uses AudioWorklet so will use more audio render capacity than other synth types).</p>
-<p><code>prophet</code> Prophet style pulse wave with lfo controlled pulse-width (uses AudioWorklet so will use more audio render capacity than other synth types)</p>
+<p><code>noise</code> Noise pad. Note pattern value is not used; white noise is produced for all values (uses AudioWorklet so may use more audio render capacity than other synth types).</p>
+<p><code>prophet</code> Prophet style preset: pulse wave with lfo controlled pulse-width (uses AudioWorklet so may use more audio render capacity than other synth types)</p>
+<p><code>pwm</code> Pulse width modulation synth. A pulse wave with variable pulse width, from pulse to square. Note: uses AudioWorklet so may use more audio render capacity than other synth types. Also note there may be aliasing, so you may want to apply some filtering to cut harsh high frequencies.</p>
+<p class='sub'><code>pwm=1/2</code> Set the pulse width from 0 to 1. The default is 1/2, a square wave (50% duty cycle).</p>
 <p><code>supersaw</code> supersaw lead synth; 7 detuned saws</p>
 <p><code>external</code> take audio from microphone or line in. Use the <code>track</code> param to specify the track within the stream.</p>
 </div>
@@ -695,7 +697,6 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>vib</code> vibrato frequency in cycles per beat</p>
 <p class='sub'><code>vib={2,depth:1}</code> vibrato depth in semitones (default 0.4)</p>
 <p class='sub'><code>vib={2,delay:1}</code> delay before vibrato starts in beats (default 1/2)</p>
-<p><code>lfo</code> lfo frequency in cycles per beat for synths that use an lfo</p>
 <p><code>pan</code> pan from -1 (left) to 1 (right). default: 0</p>
 <p><code>echo</code> Echo time delay in beats</p>
 <p class='sub'><code>echo={1,feedback:0.8}</code> Echo feedback gain, 0 to 1, default 0.35. Higher value means the echo persists for longer.</p>
@@ -890,11 +891,24 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
+FIRST look at refactoring/rewriting pitch effects
+  In fact, should the _actual_ pitch be included in this calculation too? So we actually only set vco frequency and leave detune alone???
 portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-notes/legato-synths-glide-slide-portamento/
  ?Maybe just try something to start with...
   If we glide the new note up from the old pitch, what about the old note release that won't be gliding up?
    Old note will have to glide too, so it will have to know that the following note is gliding???
    Have to lerp from old freq to new freq, and use the result for BOTH events??
+ ?Use event .freq for lerp targets? Will need to fix .freq to take addc into account?
+ Proposal: When an event has a non zero glide param:
+  Finds the event on the player, with the same voice, which will end latest
+   This supplies the glide base freq
+   If there is no such event, then glide is ignored
+  The gliding event then calculates a lerp every frame based on the glide duration
+   And uses this to apply a frequency offset to lerp from the base event freq to the actual glide event freq
+  Milestone 2: It also finds _all_ events on the same player in the same voice
+   And it retrofits those events to be updated every frame with the lerp and target freq
+   Each event then lerps from its current freq to the target freq (the freq of the gliding event)
+    Has to handle case where existing effect does or doesn't already have any pitch effects
 Individual percussion synths
  References
   https://github.com/sdclibbery/limut/blob/c5fec6e5eced92145000561801704afc919241b6/play/percussion.js
@@ -1031,9 +1045,7 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-Prophet should become a preset of a new PWM synth - pwm synth should have 'live' pwm param instead of LFO
- docs for pwm synth and mark prophet as a preset; remove lfo param
- technically a breaking release as the prophet lfo param is gone
+!![]e broken when there's more than one value:  r readout 0, dur=4, add=[10,7,0]e
 More standard Player params
  .exists - 1 if player exists at all
  .playing - 1 whenever its not playing a rest
@@ -1046,10 +1058,12 @@ Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7
   When wouldn't it work?  sus+=1/4  ? oct-=1  ?
   ??Should ALL defaults be moved into player types instead of being in the evalParam calls???
 Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as needed
+ Needs to work for overrides too eg  body.boost+=100
 !@e should work on lookups:   r readout 0, add=this.foo@e, foo=[5:1]e
 !().accum should work - why doesn't it? I guess the chord voices haven't been split yet?
  r readout 0, loc={y:2/3-this.voice/2}, add=([0,1]t1,[0,1]t2).accum
 Presets should be able to define multiple synths to play at once
+delay time modifier, pauses time at the start of the event
 floor{1.5,2.5} should work??? Or should it?? Probably not? But then it should give an error?
 !`p1 ping 0, dur=4, foo=[100,1000,100]e \n p2 kal 0, dur=1, amp=p1.foo/1000` the []e is evalled in the WRONG players dur
 !Doesn't work:  v readout 0, add=main.amp
