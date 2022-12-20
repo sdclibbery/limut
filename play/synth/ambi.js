@@ -39,7 +39,6 @@ define(function (require) {
     let out = effects(params, vca)
     system.mix(out)
 
-    let pitch = pitchEffects(params)
     let lfoVcas = []
     let vcos = getLfos().map(lfo => {
       let vco = system.audio.createOscillator()
@@ -51,7 +50,7 @@ define(function (require) {
       lfo.connect(vca)
       vca.connect(vco.frequency)
       lfoVcas.push(vca)
-      pitch.connect(vco.detune)
+      pitchEffects(vco.detune, params)
       return vco
     })
     

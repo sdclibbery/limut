@@ -17,7 +17,7 @@ define(function (require) {
     system.mix(out)
 
     let op1 = fm.op(freq, params)
-    pitchEffects(params).connect(op1.detune)
+    pitchEffects(op1.detune, params)
     waveEffects(params, op1).connect(vca)
 
     let op2 = fm.op(freq*1/2, params)

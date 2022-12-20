@@ -17,7 +17,7 @@ define(function (require) {
     system.mix(out)
 
     let op4 = fm.op(freq, params)
-    pitchEffects(params).connect(op4.detune)
+    pitchEffects(op4.detune, params)
     waveEffects(params, op4).connect(vca)
 
     let op3 = fm.op(freq*7, params, 'triangle')

@@ -892,7 +892,10 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 FIRST look at refactoring/rewriting pitch effects
-  In fact, should the _actual_ pitch be included in this calculation too? So we actually only set vco frequency and leave detune alone???
+ Move detune param into pitch effects?
+ Move synth detune into pitch effects?
+ Move note base freq into pitch effects?
+ TEST all synths
 portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-notes/legato-synths-glide-slide-portamento/
  ?Maybe just try something to start with...
   If we glide the new note up from the old pitch, what about the old note release that won't be gliding up?

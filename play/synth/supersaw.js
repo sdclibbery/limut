@@ -19,12 +19,11 @@ define(function (require) {
     let out = effects(params, vca)
     system.mix(out)
 
-    let pitch = pitchEffects(params)
     let vcos = [1.1077, 1.0633, 1.0204, 1, 0.9811, 0.9382, 0.8908].map(vcoDetune => {
       let vco = system.audio.createOscillator()
       setWave(vco, wave)
       vco.frequency.value = freq * (detune*vcoDetune + 1-detune)
-      pitch.connect(vco.detune)
+      pitchEffects(vco.detune, params)
       return vco
     })
     

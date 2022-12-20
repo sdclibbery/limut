@@ -36,7 +36,7 @@ define(function (require) {
 
     ops = ops.map(({target, depth, att, rel, op, env}) => {
       if (!target || (target !== 'out' && ops[target].op === undefined)) return
-      pitchEffects(params).connect(op.detune)
+      pitchEffects(op.detune, params)
       if (target === 'out') {
         if (att === undefined) {
           op.connect(vca)

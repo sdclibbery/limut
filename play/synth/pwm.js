@@ -20,11 +20,10 @@ define(function (require) {
     let out = effects(params, vca)
     system.mix(out)
 
-    let pitch = pitchEffects(params)
     let vco = new AudioWorkletNode(system.audio, "pwm-oscillator")
     vco.parameters.get('frequency').value = freq * Math.pow(2, detuneSemis/12)
     evalMainParamFrame(vco.parameters.get('pulseWidth'), params, "pwm", 1/2)
-    pitch.connect(vco.parameters.get('detune'))
+    pitchEffects(vco.parameters.get('detune'), params)
     vco.connect(vca)
     vco.parameters.get('start').setValueAtTime(1, params._time)
     vco.parameters.get('stop').setValueAtTime(0, system.audio.currentTime)

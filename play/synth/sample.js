@@ -23,8 +23,7 @@ define(function (require) {
     waveEffects(params, source).connect(vca)
     system.mix(effects(params, vca))
 
-    let pitch = pitchEffects(params)
-    pitch.connect(source.detune)
+    pitchEffects(source.detune, params)
 
     source.start(params._time, startTime)
     source.stop(params.endTime)

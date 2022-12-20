@@ -18,7 +18,7 @@ define(function (require) {
     system.mix(out)
 
     let op4 = fm.op(freq*2, params)
-    pitchEffects(params).connect(op4.detune)
+    pitchEffects(op4.detune, params)
     let op4We = waveEffects(params, op4)
     let op4Env = fm.simpleEnv(0.3, params, 1/8, 3/4)
     op4We.connect(op4Env)
@@ -28,7 +28,7 @@ define(function (require) {
     fm.connect(op3, op4, fm.simpleEnv(200*freq/261.6, params, 0.01, 1))
 
     let op2 = fm.op(freq*0.5, params)
-    pitchEffects(params).connect(op2.detune)
+    pitchEffects(op2.detune, params)
     waveEffects(params, op2).connect(vca)
 
     let op1 = fm.op(freq*5.19, params, 'saw')

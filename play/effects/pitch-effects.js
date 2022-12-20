@@ -23,27 +23,23 @@ define(function (require) {
     return v * vibdepth
   }
 
-  return (params) => {
-    return {
-      connect : (audioParam) => {
-        // per event
+  return (audioParam, params) => {
+    // per event
+    let detune = 0
+    detune += evalMainParamEvent(params, 'addc', 0)
+    setAudioParamValue(audioParam, detune*100, 'pitcheffects')
+    // per frane
+    if (hasFrameParam(params, 'addc') || hasParam(params, 'vib')) {
+      let vib = evalMainParamEvent(params, 'vib', 0)
+      let vibdepth = evalSubParamEvent(params, 'vib', 'depth', 0.4)
+      let vibdelay = evalSubParamEvent(params, 'vib', 'delay', 1/2)
+      evalFuncFrame(audioParam, params, 'pitcheffects', (count) => {
         let detune = 0
-        detune += evalMainParamEvent(params, 'addc', 0)
-        setAudioParamValue(audioParam, detune*100, 'pitcheffects')
-        // per frane
-        if (hasFrameParam(params, 'addc') || hasParam(params, 'vib')) {
-          let vib = evalMainParamEvent(params, 'vib', 0)
-          let vibdepth = evalSubParamEvent(params, 'vib', 'depth', 0.4)
-          let vibdelay = evalSubParamEvent(params, 'vib', 'delay', 1/2)
-          evalFuncFrame(audioParam, params, 'pitcheffects', (count) => {
-            let detune = 0
-            detune += evalMainPerFrame(params, 'addc', 0, count)
-            detune += vibrato(vib, vibdepth, vibdelay, params.count, count)
-            return detune*100 // Convert to cents for the detune audioParam
-          })
-          }
+        detune += evalMainPerFrame(params, 'addc', 0, count)
+        detune += vibrato(vib, vibdepth, vibdelay, params.count, count)
+        return detune*100 // Convert to cents for the detune audioParam
+      })
       }
-    }
   }
 
 })

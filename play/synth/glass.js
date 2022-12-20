@@ -23,14 +23,14 @@ define(function (require) {
     waveEffects(params, multiosc).connect(vca)
 
     let op1 = fm.op(freq, params)
-    pitchEffects(params).connect(op1.detune)
+    pitchEffects(op1.detune, params)
     op1.connect(multiosc)
 
     let op2 = fm.op(freq*3.53, params)
     fm.connect(op2, op1, fm.simpleEnv(512*freq/261.6, params, 0, 2))
 
     let op3 = fm.op(freq, params)
-    pitchEffects(params).connect(op3.detune)
+    pitchEffects(op3.detune, params)
     op3.connect(multiosc)
 
     let op4 = fm.op(freq*2, params)

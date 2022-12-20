@@ -19,12 +19,11 @@ define(function (require) {
     let out = effects(params, vca)
     system.mix(out)
 
-    let pitch = pitchEffects(params)
     let vcos = [0, 0.7, 1].map(lerp => {
       let vco = system.audio.createOscillator()
       setWave(vco, wave)
       vco.frequency.value = freq * Math.pow(2, lerp * detuneSemis/12)
-      pitch.connect(vco.detune)
+      pitchEffects(vco.detune, params)
       return vco
     })
     
