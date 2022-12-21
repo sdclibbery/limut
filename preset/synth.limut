@@ -1,1 +1,8 @@
 preset prophet pwm, lpf={[6000:this.freq*2]e,q:0.4}, pwm=[0.5,0.9,0.5,0.1,0.5,0.9,0.5,0.1]e1
+
+preset ping wave, wave='sine', oct=5, envelope='simple'
+preset pulse wave, wave='pulse', oct=3, envelope='full'
+preset saw wave, wave='sawtooth', oct=4, envelope='full'
+preset sine wave, wave='sine', oct=4, envelope='full'
+preset square wave, wave='square', oct=4, envelope='full'
+preset tri wave, wave='triangle', oct=4, envelope='full'

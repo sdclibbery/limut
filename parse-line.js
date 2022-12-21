@@ -281,9 +281,9 @@ define((require) => {
   delete players.instances.r2
   delete playerTypes.myro
 
-  parseLine('preset myp ping')
+  parseLine('preset myp play')
   parseLine('lp myp 0')
-  assert('sine', players.instances.lp.getEventsForBeat({count:0})[0].wave)
+  assert(1/2, players.instances.lp.getEventsForBeat({count:0})[0].dur)
   delete players.instances.lp
   delete playerTypes.myp
 
