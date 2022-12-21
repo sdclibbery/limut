@@ -36,3 +36,10 @@ preset glock fm, envelope='simple', oct=4, sus=(this.dur,2).max, // frequencies 
   op2={ratio:1,target:'out',depth:0.4},
   op3={ratio:14,target:'out',depth:0.4},
   op4={ratio:1,target:'out',depth:0.4},
+
+preset xylo fm, envelope='simple', oct=4, sus=(this.dur,3/2).max, // frequencies from https://www.youtube.com/watch?v=dXo_493fEpU
+  op1={ratio:2,target:'out',depth:0.45,att:1/8,rel:3/4},
+  op2={ratio:9.42,target:1,wave:'noise',depth:0.2,att:0.01,rel:1},
+  op3={ratio:1/2,target:'out',depth:1.5},
+  op4={ratio:5.19,target:3,wave:'saw',depth:0.8,att:0.01,rel:0.1},
+  op5={ratio:5.19,target:3,wave:'saw',depth:0.015},

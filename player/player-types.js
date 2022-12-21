@@ -14,7 +14,6 @@ define((require) => {
   let fm = require('play/synth/fm')
   let supersaw = require('play/synth/supersaw')
   let external = require('play/synth/external')
-  let xylo = require('play/synth/xylo')
   let wave = require('play/synth/wave')
   let dwave = require('play/synth/dwave')
   let ambi = require('play/synth/ambi')
@@ -63,9 +62,7 @@ define((require) => {
     noise: { play: noise },
     pwm: { play: pwm },
     wave: { play: wave },
-
     fm: { play: fm },
-    xylo: { play: xylo },
 
     dwave: { play: dwave },
     dsaw: { play: dwave, baseParams: {wave:'sawtooth', oct:4, envelope:'full', _gainbase:0.06} },
