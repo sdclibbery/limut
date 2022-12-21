@@ -19,3 +19,8 @@ preset ethereal fm, envelope='pad', oct=5,
   op3={ratio:7,target:4,wave:'triangle',depth:0.3},
   op4={ratio:1,target:'out'},
 
+preset fmbass fm, envelope='full', oct=2,
+  op1={ratio:1,target:'out'},
+  op2={ratio:1/2,target:1,depth:1,att:0,rel:4},
+  op3={ratio:1,target:1,depth:3/4,att:0,rel:3/4},
+  op4={ratio:2,target:1,depth:3/4,att:0,rel:4},

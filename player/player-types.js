@@ -12,7 +12,6 @@ define((require) => {
   let piano = require('play/synth/piano')
   let noise = require('play/synth/noise')
   let pwm = require('play/synth/pwm')
-  let fmbass = require('play/synth/fmbass')
   let fm = require('play/synth/fm')
   let glass = require('play/synth/glass')
   let supersaw = require('play/synth/supersaw')
@@ -68,7 +67,6 @@ define((require) => {
     wave: { play: wave },
 
     fm: { play: fm },
-    fmbass: { play: fmbass },
     glass: { play: glass },
     glock: { play: glock },
     xylo: { play: xylo },
