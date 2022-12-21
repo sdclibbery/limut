@@ -24,7 +24,7 @@ define(function (require) {
       return {
         target: target,
         targetIdx: parseInt(target)-1,
-        depth: evalSubParamEvent(params, id, 'depth', 1024),
+        depth: evalSubParamEvent(params, id, 'depth', 1),
         att: evalSubParamEvent(params, id, 'att', undefined),
         rel: evalSubParamEvent(params, id, 'rel', 1),
         ratio: ratio,
@@ -41,15 +41,15 @@ define(function (require) {
         if (att === undefined) {
           op.connect(vca)
         } else {
-          env = fm.simpleEnv(depth/1024, params, att, rel)
+          env = fm.simpleEnv(depth, params, att, rel)
           op.connect(env)
           env.connect(vca)
         }
       } else {
         if (att === undefined) {
-          env = fm.flatEnv(params, depth*freq/261.6)
+          env = fm.flatEnv(params, depth*1024*freq/261.6)
         } else {
-          env = fm.simpleEnv(depth*freq/261.6, params, att, rel)
+          env = fm.simpleEnv(depth*1024*freq/261.6, params, att, rel)
         }
         fm.connect(op, ops[targetIdx].op, env)
       }

@@ -8,7 +8,14 @@ preset square wave, wave='square', oct=4, envelope='full'
 preset tri wave, wave='triangle', oct=4, envelope='full'
 
 preset bell fm, envelope='simple', sus=2,  // frequencies from https://www.youtube.com/watch?v=CdPa6VLi4GQ
-  op1={ratio:19.03/3.14,target:2,wave:'square',depth:300,att:0,rel:1},
-  op2={ratio:3.14/3.14,target:4,depth:386,att:0,rel:2},
-  op3={ratio:10.38/3.14,target:4,depth:702},
+  op1={ratio:19.03/3.14,target:2,wave:'square',depth:0.3,att:0,rel:1},
+  op2={ratio:3.14/3.14,target:4,depth:0.386,att:0,rel:2},
+  op3={ratio:10.38/3.14,target:4,depth:0.702},
   op4={ratio:21.98/3.14,target:'out'},
+
+preset ethereal fm, envelope='pad', oct=5,
+  op1={ratio:1.01,target:4,wave:'triangle',depth:0.2},
+  op2={ratio:1,target:3,wave:'triangle',depth:0.7},
+  op3={ratio:7,target:4,wave:'triangle',depth:0.3},
+  op4={ratio:1,target:'out'},
+

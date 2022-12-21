@@ -10,7 +10,6 @@ define((require) => {
   let sample = require('play/synth/sample')
   let glock = require('play/synth/glock')
   let piano = require('play/synth/piano')
-  let ethereal = require('play/synth/ethereal')
   let noise = require('play/synth/noise')
   let pwm = require('play/synth/pwm')
   let fmbass = require('play/synth/fmbass')
@@ -69,10 +68,9 @@ define((require) => {
     wave: { play: wave },
 
     fm: { play: fm },
-    glock: { play: glock },
-    ethereal: { play: ethereal },
     fmbass: { play: fmbass },
     glass: { play: glass },
+    glock: { play: glock },
     xylo: { play: xylo },
 
     dwave: { play: dwave },
