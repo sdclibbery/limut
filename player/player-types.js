@@ -13,7 +13,6 @@ define((require) => {
   let noise = require('play/synth/noise')
   let pwm = require('play/synth/pwm')
   let fm = require('play/synth/fm')
-  let glass = require('play/synth/glass')
   let supersaw = require('play/synth/supersaw')
   let external = require('play/synth/external')
   let xylo = require('play/synth/xylo')
@@ -67,7 +66,6 @@ define((require) => {
     wave: { play: wave },
 
     fm: { play: fm },
-    glass: { play: glass },
     glock: { play: glock },
     xylo: { play: xylo },
 

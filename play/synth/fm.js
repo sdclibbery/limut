@@ -39,7 +39,13 @@ define(function (require) {
       pitchEffects(op.detune, params)
       if (target === 'out') {
         if (att === undefined) {
-          op.connect(vca)
+          if (depth === 1) {
+            op.connect(vca)
+          } else {
+            env = fm.flatEnv(params, depth)
+            op.connect(env)
+            env.connect(vca)
+          }
         } else {
           env = fm.simpleEnv(depth, params, att, rel)
           op.connect(env)
