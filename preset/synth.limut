@@ -6,3 +6,9 @@ preset saw wave, wave='sawtooth', oct=4, envelope='full'
 preset sine wave, wave='sine', oct=4, envelope='full'
 preset square wave, wave='square', oct=4, envelope='full'
 preset tri wave, wave='triangle', oct=4, envelope='full'
+
+preset bell fm, envelope='simple', sus=2,  // frequencies from https://www.youtube.com/watch?v=CdPa6VLi4GQ
+  op1={ratio:19.03/3.14,target:2,wave:'square',depth:300,att:0,rel:1},
+  op2={ratio:3.14/3.14,target:4,depth:386,att:0,rel:2},
+  op3={ratio:10.38/3.14,target:4,depth:702},
+  op4={ratio:21.98/3.14,target:'out'},

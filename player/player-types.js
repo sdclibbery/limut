@@ -8,7 +8,6 @@ define((require) => {
   let buffer = require('draw/buffer')
   let play = require('play/synth/play')
   let sample = require('play/synth/sample')
-  let bell = require('play/synth/bell')
   let glock = require('play/synth/glock')
   let piano = require('play/synth/piano')
   let ethereal = require('play/synth/ethereal')
@@ -63,18 +62,17 @@ define((require) => {
     pitchedperc: { play: pitchedPercussion, baseParams: {dur:1/2,sus:1/3}},
     impulse: { play: impulse },
     sample: { play: sample },
+    external: { play: external },
+    piano: { play: piano },
     noise: { play: noise },
+    pwm: { play: pwm },
     wave: { play: wave },
 
     fm: { play: fm },
-    bell: { play: bell },
     glock: { play: glock },
-    piano: { play: piano },
     ethereal: { play: ethereal },
-    pwm: { play: pwm },
     fmbass: { play: fmbass },
     glass: { play: glass },
-    external: { play: external },
     xylo: { play: xylo },
 
     dwave: { play: dwave },

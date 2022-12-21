@@ -6,27 +6,27 @@ define(function (require) {
   let envelope = require('play/envelopes')
   let effects = require('play/effects/effects')
   let pitchEffects = require('play/effects/pitch-effects')
-  let {evalMainParamEvent} = require('play/eval-audio-params')
+  let {evalSubParamEvent} = require('play/eval-audio-params')
 
   return (params) => {
-    let degree = parseInt(params.sound) + evalMainParamEvent(params, 'add', 0)
-    if (isNaN(degree)) { return }
-    let freq = scale.degreeToFreq(degree, evalMainParamEvent(params, 'oct', 4), evalMainParamEvent(params, 'scale'))
+    let freq = scale.paramsToFreq(params, 4)
+    if (isNaN(freq)) { return }
 
     let vca = envelope(params, 0.04, 'full')
     let out = effects(params, vca)
     system.mix(out)
 
     let ops = [1,2,3,4,5,6].map(idx => {
-      let op = evalMainParamEvent(params, 'op'+idx, {})
-      let target = evalMainParamEvent(op, 'target', undefined)
-      let ratio = evalMainParamEvent(op, 'ratio', 1)
-      let wave = evalMainParamEvent(op, 'wave', 'sine')
+      let id = 'op'+idx
+      let target = evalSubParamEvent(params, id, 'target', undefined)
+      let ratio = evalSubParamEvent(params, id, 'ratio', 1)
+      let wave = evalSubParamEvent(params, id, 'wave', 'sine')
       return {
         target: target,
-        depth: evalMainParamEvent(op, 'depth', 1024),
-        att: evalMainParamEvent(op, 'att', undefined),
-        rel: evalMainParamEvent(op, 'rel', 1),
+        targetIdx: parseInt(target)-1,
+        depth: evalSubParamEvent(params, id, 'depth', 1024),
+        att: evalSubParamEvent(params, id, 'att', undefined),
+        rel: evalSubParamEvent(params, id, 'rel', 1),
         ratio: ratio,
         op: (!!target) ? fm.op(freq*ratio, params, wave) : undefined,
         idx: idx,
@@ -34,8 +34,8 @@ define(function (require) {
       }
     })
 
-    ops = ops.map(({target, depth, att, rel, op, env}) => {
-      if (!target || (target !== 'out' && ops[target].op === undefined)) return
+    ops = ops.map(({target, depth, att, rel, op, env, targetIdx}) => {
+      if (!target || (target !== 'out' && ops[targetIdx].op === undefined)) return
       pitchEffects(op.detune, params)
       if (target === 'out') {
         if (att === undefined) {
@@ -51,7 +51,7 @@ define(function (require) {
         } else {
           env = fm.simpleEnv(depth*freq/261.6, params, att, rel)
         }
-        fm.connect(op, ops[parseInt(target)-1].op, env)
+        fm.connect(op, ops[targetIdx].op, env)
       }
       return {op,env}
     }).filter(o => !!o)
