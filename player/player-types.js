@@ -8,7 +8,6 @@ define((require) => {
   let buffer = require('draw/buffer')
   let play = require('play/synth/play')
   let sample = require('play/synth/sample')
-  let glock = require('play/synth/glock')
   let piano = require('play/synth/piano')
   let noise = require('play/synth/noise')
   let pwm = require('play/synth/pwm')
@@ -66,7 +65,6 @@ define((require) => {
     wave: { play: wave },
 
     fm: { play: fm },
-    glock: { play: glock },
     xylo: { play: xylo },
 
     dwave: { play: dwave },

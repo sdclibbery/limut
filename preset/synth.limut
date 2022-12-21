@@ -7,7 +7,7 @@ preset sine wave, wave='sine', oct=4, envelope='full'
 preset square wave, wave='square', oct=4, envelope='full'
 preset tri wave, wave='triangle', oct=4, envelope='full'
 
-preset bell fm, envelope='simple', sus=2,  // frequencies from https://www.youtube.com/watch?v=CdPa6VLi4GQ
+preset bell fm, envelope='simple', sus=(this.dur,2).max,  // frequencies from https://www.youtube.com/watch?v=CdPa6VLi4GQ
   op1={ratio:19.03/3.14,target:2,wave:'square',depth:0.3,att:0,rel:1},
   op2={ratio:3.14/3.14,target:4,depth:0.386,att:0,rel:2},
   op3={ratio:10.38/3.14,target:4,depth:0.702},
@@ -30,3 +30,9 @@ preset glass fm, envelope='full', oct=5, att=0, rel=this.dur,
   op2={ratio:3.53,target:1,depth:1/2,att:0,rel:2},
   op3={ratio:1,target:'out',depth:1/2},
   op4={ratio:2,target:3,depth:1/2,att:0,rel:2},
+
+preset glock fm, envelope='simple', oct=4, sus=(this.dur,2).max, // frequencies from element433 https://youtu.be/CdPa6VLi4GQ?t=191
+  op1={ratio:5,target:2,wave:'square',depth:3,att:0,rel:1/2},
+  op2={ratio:1,target:'out',depth:0.4},
+  op3={ratio:14,target:'out',depth:0.4},
+  op4={ratio:1,target:'out',depth:0.4},
