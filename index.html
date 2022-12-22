@@ -894,9 +894,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 fm synths should be presets
- Test examples
-dwave or equivalent synth that allows to specify the vcos, and have per frame control over amp and tune for each, and then they ALL get mixed before going to wave effects / filters etc etc
- dsine/dsaw etc, ambi, supersaw should all be presets
+ Test some examples: xylo, glass, bell, ethereal, fmbass
 portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-notes/legato-synths-glide-slide-portamento/
  ?Maybe just try something to start with...
   If we glide the new note up from the old pitch, what about the old note release that won't be gliding up?
@@ -913,6 +911,8 @@ portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-n
    And it retrofits those events to be updated every frame with the lerp and target freq
    Each event then lerps from its current freq to the target freq (the freq of the gliding event)
     Has to handle case where existing effect does or doesn't already have any pitch effects
+dwave or equivalent synth that allows to specify the vcos, and have per frame control over amp and tune for each, and then they ALL get mixed before going to wave effects / filters etc etc
+ dsine/dsaw etc, ambi, supersaw should all be presets
 Individual percussion synths
  References
   https://github.com/sdclibbery/limut/blob/c5fec6e5eced92145000561801704afc919241b6/play/percussion.js
@@ -1049,7 +1049,6 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-!!! max{1,2} syntax doesn't work but is listed in the docs??!!
 !![]e broken when there's more than one value:  r readout 0, dur=4, add=[10,7,0]e
 More standard Player params
  .exists - 1 if player exists at all
