@@ -6,7 +6,7 @@ define(function (require) {
     return !!params[p]
   }
 
-  let hasFrameParam = (params, p) => {
+  let hasPerFrameParam = (params, p) => {
     let v = params[p]
     if (typeof v === 'function') { return true }
     return false
@@ -37,15 +37,17 @@ define(function (require) {
     let glide = evalMainParamEvent(params, 'glide', 0)
     let glideBaseEvent
     if (glide) {
-      let es = params._player.events.filter(e => e.voice === params.voice)
-      glideBaseEvent = es[es.length-1]
+      let es = params._player.events
+        .filter(e => e.voice === params.voice) // Find only events in the same voice
+        .sort((a,b) => a.endTime - b.endTime) // If there are multiple possible base events, choose the one that goes on longest
+      glideBaseEvent = es[es.length - 1]
     }
     // per event
     let detune = 0
     detune += evalMainParamEvent(params, 'addc', 0)
     setAudioParamValue(audioParam, detune*100, 'pitcheffects')
     // per frane
-    if (hasFrameParam(params, 'addc') || hasParam(params, 'vib') || glideBaseEvent) {
+    if (hasPerFrameParam(params, 'addc') || hasParam(params, 'vib') || glideBaseEvent) {
       let vib = evalMainParamEvent(params, 'vib', 0)
       let vibdepth = evalSubParamEvent(params, 'vib', 'depth', 0.4)
       let vibdelay = evalSubParamEvent(params, 'vib', 'delay', 1/2)
@@ -56,7 +58,7 @@ define(function (require) {
         detune += glideSemis(params, count, glide, glideBaseEvent)
         return detune*100 // Convert to cents for the detune audioParam
       })
-      }
+    }
   }
 
 })

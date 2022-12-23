@@ -909,12 +909,13 @@ portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-n
    Each event then lerps from its current freq to the target freq (the freq of the gliding event)
     Has to handle case where existing effect does or doesn't already have any pitch effects
  Basic glide of target event; just pick any event from same voice
+ Test multiple events in same voice; pick one that ends last?  p ping 4==2=0, glide=1/3
  Test with pad envelope; what about also gliding the base event, up to the target?
   Glide base event up to target
   If base event has no per-frame update, then create one when glide is needed
- Test multiple events in same voice; pick one that ends last?  p ping 4==2=0, glide=1/3
  Subparam for glide curve
- TEST all cases; especially chords, 'dynamic' chords, follow player, delays, stutter etc
+ TEST all cases; especially chords, 'dynamic' chords, follow player, delays, stutter, addc, vib etc
+ TEST some previous examples
  Docs
 dwave or equivalent synth that allows to specify the vcos, and have per frame control over amp and tune for each, and then they ALL get mixed before going to wave effects / filters etc etc
  dsine/dsaw etc, ambi, supersaw should all be presets
