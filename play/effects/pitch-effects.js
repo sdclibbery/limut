@@ -23,14 +23,25 @@ define(function (require) {
     return v * vibdepth
   }
 
-  let glideSemis = (params, count, glide, glideBaseEvent) => {
+  let glideTarget = (params, count, glide, glideBaseEvent) => {
     if (!glideBaseEvent) { return 0 }
     let lerp = (count - params.count) / glide
-    if (lerp > 1) { return 0 }
+    if (lerp > 1 || lerp < 0) { return 0 }
     let baseFreq = glideBaseEvent.freq
     let targetFreq = params.freq
     let glideFreq = targetFreq*lerp + baseFreq*(1-lerp)
     return 12 * Math.log2(glideFreq / targetFreq)
+  }
+
+  let glideBase = (params, count) => {
+    if (!params._glideTargetEvent) { return 0 }
+    let lerp = (count - params._glideTargetEvent.count) / params._glide
+    if (lerp < 0) { return 0 }
+    if (lerp > 1) { lerp = 1 }
+    let baseFreq = params.freq
+    let targetFreq = params._glideTargetEvent.freq
+    let glideFreq = targetFreq*lerp + baseFreq*(1-lerp)
+    return 12 * Math.log2(glideFreq / baseFreq)
   }
 
   return (audioParam, params) => {
@@ -41,6 +52,10 @@ define(function (require) {
         .filter(e => e.voice === params.voice) // Find only events in the same voice
         .sort((a,b) => a.endTime - b.endTime) // If there are multiple possible base events, choose the one that goes on longest
       glideBaseEvent = es[es.length - 1]
+      if (glideBaseEvent) {
+        glideBaseEvent._glideTargetEvent = params
+        glideBaseEvent._glide = glide
+      }
     }
     // per event
     let detune = 0
@@ -55,7 +70,8 @@ define(function (require) {
         let detune = 0
         detune += evalMainPerFrame(params, 'addc', 0, count)
         detune += vibrato(vib, vibdepth, vibdelay, params.count, count)
-        detune += glideSemis(params, count, glide, glideBaseEvent)
+        detune += glideTarget(params, count, glide, glideBaseEvent)
+        detune += glideBase(params, count)
         return detune*100 // Convert to cents for the detune audioParam
       })
     }

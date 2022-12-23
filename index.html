@@ -894,25 +894,10 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-notes/legato-synths-glide-slide-portamento/
- ?Maybe just try something to start with...
-  If we glide the new note up from the old pitch, what about the old note release that won't be gliding up?
-   Old note will have to glide too, so it will have to know that the following note is gliding???
-   Have to lerp from old freq to new freq, and use the result for BOTH events??
- Proposal: When an event has a non zero glide param:
-  Finds the event on the player, with the same voice, which will end latest
-   This supplies the glide base freq
-   If there is no such event, then glide is ignored
-  The gliding event then calculates a lerp every frame based on the glide duration
-   And uses this to apply a frequency offset to lerp from the base event freq to the actual glide event freq
-  Milestone 2: It also finds _all_ events on the same player in the same voice
-   And it retrofits those events to be updated every frame with the lerp and target freq
-   Each event then lerps from its current freq to the target freq (the freq of the gliding event)
-    Has to handle case where existing effect does or doesn't already have any pitch effects
- Basic glide of target event; just pick any event from same voice
- Test multiple events in same voice; pick one that ends last?  p ping 4==2=0, glide=1/3
- Test with pad envelope; what about also gliding the base event, up to the target?
-  Glide base event up to target
-  If base event has no per-frame update, then create one when glide is needed
+ Minor refactor: set _glideBaseEvent on target params instead of passing around
+ If base event has no per-frame update, then create one when glide is needed
+ Something wrong for non-pad envelopes
+ ?If there are multiple possible base events in same voice, then make them ALL glide to the new target?
  Subparam for glide curve
  TEST all cases; especially chords, 'dynamic' chords, follow player, delays, stutter, addc, vib etc
  TEST some previous examples
