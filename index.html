@@ -894,11 +894,11 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 portamento/glide/slide/legato https://www.attackmagazine.com/technique/passing-notes/legato-synths-glide-slide-portamento/
- If base event has no per-frame update, then create one when glide is needed
  ?If there are multiple possible base events in same voice, then make them ALL glide to the new target?
  Subparam for glide curve
+ Subparam for delay?
  TEST all cases; especially chords, 'dynamic' chords, follow player, delays, stutter, addc, vib etc
- TEST some previous examples
+ TEST some previous examples using vib and addc
  Docs
 dwave or equivalent synth that allows to specify the vcos, and have per frame control over amp and tune for each, and then they ALL get mixed before going to wave effects / filters etc etc
  dsine/dsaw etc, ambi, supersaw should all be presets
@@ -1039,6 +1039,8 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 !![]e broken when there's more than one value:  r readout 0, dur=4, add=[10,7,0]e
+!Better error message would be nice:  p ping 0, addc=smooth{{4}}
+!When event dur is 4, this is constant 100:  r readout 0, dur=4, add=smooth{[0:10]r1/4{per:4,0:100}@f}
 More standard Player params
  .exists - 1 if player exists at all
  .playing - 1 whenever its not playing a rest

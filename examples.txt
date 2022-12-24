@@ -2629,3 +2629,21 @@ l supersaw 0[66..], dur=2, oct=5, ring=this.freq*[2,5,2]e, amp=5, chorus, add=[0
 // For testing pitch effects
 t sine 0_., amp=3, add=[0,1,2]t3, vib={2,depth:4,delay:1}, addc=[0:5]e
 
+
+// testing glide
+p ping 05, glide=1/3
+p ping 05!, glide=1/3
+p ping 05, glide=1
+p xylo 05, glide=1/2
+p ambi 05, glide=1/4
+p square 05.., envelope=pad, glide=1/3
+p ambi (35)(14)(-131)(02), dur=2, glide=2/3
+p ping 4==2=0, glide=1/3
+p dsaw 202[7=07=0], glide=[0,1/2,0,1/4]t1, lpf=[900:1500]s8@f
+p dsaw 202[7070], glide=[0,1/2,0,1/8]t1, lpf=[900:1500]s8@f
+d pulse 0, dur=1/4, envelope=pad, glide=1/8, lpf=[500:2000]n4, amp=2, add=[0:7]r{per:4,seed:[0:1000]r16,0:0}
+t sine 05, dur=2, amp=3, envelope=simple,vib={2,depth:4,delay:1}, addc=[0:7]l16, glide=1/2
+
+set ch=[ (0,2,4,7), (0,3,5,7), (1,3,5b,7), (1,3,4,6#), ]t4
+p dsaw 0, dur=2, envelope=pad, add=ch, glide=2/3, lpf=[900:1500]s13@f
+

@@ -45,22 +45,26 @@ define(function (require) {
   }
 
   return (audioParam, params) => {
+    // Glide init
     let glide = evalMainParamEvent(params, 'glide', 0)
     if (glide) {
-      let es = params._player.events
+      let es = params._player.events // Find base event to glide from:
         .filter(e => e.voice === params.voice) // Find only events in the same voice
         .sort((a,b) => a.endTime - b.endTime) // If there are multiple possible base events, choose the one that ends latest
-      params._glideBaseEvent = es[es.length - 1] // Set the base event this will be gliding from
-      if (params._glideBaseEvent) { // If the base event is still playing, it'll need to glide to this one
-        params._glideBaseEvent._glideTargetEvent = params
-        params._glideBaseEvent._glide = glide
+      let glideBaseEvent = es[es.length - 1]
+      if (glideBaseEvent) {
+        // If the base event is still playing, it'll need to glide to this one, so set that up
+        glideBaseEvent._glideTargetEvent = params
+        glideBaseEvent._glide = glide
+        if (glideBaseEvent._setupGlideBase) { glideBaseEvent._setupGlideBase() } // If the base event has no per frame update, then set one up
       }
+      params._glideBaseEvent = glideBaseEvent
     }
-    // per event
+    // Per event
     let detune = 0
     detune += evalMainParamEvent(params, 'addc', 0)
     setAudioParamValue(audioParam, detune*100, 'pitcheffects')
-    // per frane
+    // Per frame
     if (hasPerFrameParam(params, 'addc') || hasParam(params, 'vib') || params._glideBaseEvent) {
       let vib = evalMainParamEvent(params, 'vib', 0)
       let vibdepth = evalSubParamEvent(params, 'vib', 'depth', 0.4)
@@ -73,6 +77,13 @@ define(function (require) {
         detune += glideBase(params, count)
         return detune*100 // Convert to cents for the detune audioParam
       })
+    } else if (params.glide !== undefined) {
+      // No per frame update needed, but allow setting one up if this event becomes a glide base event
+      params._setupGlideBase = () => {
+        evalFuncFrame(audioParam, params, 'pitcheffects', (count) => {
+          return glideBase(params, count)*100
+        })
+      }
     }
   }
 
