@@ -48,17 +48,16 @@ define(function (require) {
     // Glide init
     let glide = evalMainParamEvent(params, 'glide', 0)
     if (glide) {
-      let es = params._player.events // Find base event to glide from:
+      let es = params._player.events // Find base events to glide from:
         .filter(e => e.voice === params.voice) // Find only events in the same voice
         .sort((a,b) => a.endTime - b.endTime) // If there are multiple possible base events, choose the one that ends latest
+      es.forEach(e => { // Glide these events to the new events freq
+        e._glideTargetEvent = params
+        e._glide = glide
+        if (e._setupGlideBase) { e._setupGlideBase() } // If the base event has no per frame update, then set one up
+      })
       let glideBaseEvent = es[es.length - 1]
-      if (glideBaseEvent) {
-        // If the base event is still playing, it'll need to glide to this one, so set that up
-        glideBaseEvent._glideTargetEvent = params
-        glideBaseEvent._glide = glide
-        if (glideBaseEvent._setupGlideBase) { glideBaseEvent._setupGlideBase() } // If the base event has no per frame update, then set one up
-      }
-      params._glideBaseEvent = glideBaseEvent
+      params._glideBaseEvent = glideBaseEvent // The new event glides _from_ this one base events freq
     }
     // Per event
     let detune = 0
@@ -83,6 +82,7 @@ define(function (require) {
         evalFuncFrame(audioParam, params, 'pitcheffects', (count) => {
           return glideBase(params, count)*100
         })
+        delete params._setupGlideBase
       }
     }
   }
