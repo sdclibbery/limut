@@ -2649,12 +2649,18 @@ p ping 05, glide=1
 p xylo 05, glide=1/2
 p ambi 05, glide=1/4
 p square 05.., envelope=pad, glide=1/3
-p ambi (35)(14)(-131)(02), dur=2, glide=2/3
-p ping 4==2=0, glide=1/3
-p dsaw 202[7=07=0], glide=[0,1/2,0,1/4]t1, lpf=[900:1500]s8@f
+p ping 05, dur=2, glide={2,curve:5}
+p pulse 4==2=0, glide=1/3
+p dsaw 6==0==, glide=1/2, lpf=[900:1500]s8@f
+p prophet 05, glide=1/3, delay=(0,{1/2,oct:5})
 p dsaw 202[7070], glide=[0,1/2,0,1/8]t1, lpf=[900:1500]s8@f
+s saw 02479864, dur=1/4, oct=2, scale=minor, glide=[0:1/7]s8, chorus, phaser=1/7, delay=(0,{3/8,oct:3},{5/8,oct:4,wave:ooh})
 d pulse 0, dur=1/4, envelope=pad, glide=1/8, lpf=[500:2000]n4, amp=2, add=[0:7]r{per:4,seed:[0:1000]r16,0:0}
-t sine 05, dur=2, amp=3, envelope=simple,vib={2,depth:4,delay:1}, addc=[0:7]l16, glide=1/2
+t sine 0509, dur=2, amp=3, envelope=simple,vib={2,depth:4,delay:1}, addc=[0:7]l16, glide=1/2
+p prophet 04, glide=1/3, stutter=4, delay=({0,add:[0,7,9]r},{1/2,add:7+[-2,-3]t4}), oct=2, flanger=1/7, amp=3/2, chorus
+
+a ambi (35)(14)(-131)(02), dur=4, glide=2/3, amp=2
+l sine 0, add=a.value.rand, glide=1/4, oct=5, dur=4, delay=1
 
 set ch=[ (0,2,4,7), (0,3,5,7), (1,3,5b,7), (1,3,4,6#), ]t4
 p dsaw 0, dur=2, envelope=pad, add=ch, glide=2/3, lpf=[900:1500]s13@f
