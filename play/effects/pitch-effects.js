@@ -23,10 +23,11 @@ define(function (require) {
     return v * vibdepth
   }
 
-  let glideTarget = (params, count, glide) => {
+  let glideTarget = (params, count, glide, glideCurve) => {
     if (!params._glideBaseEvent) { return 0 }
     let lerp = (count - params.count) / glide
     if (lerp > 1 || lerp < 0) { return 0 }
+    lerp = Math.pow(lerp, 1/(glideCurve+1))
     let baseFreq = params._glideBaseEvent.freq
     let targetFreq = params.freq
     let glideFreq = targetFreq*lerp + baseFreq*(1-lerp)
@@ -38,6 +39,7 @@ define(function (require) {
     let lerp = (count - params._glideTargetEvent.count) / params._glide
     if (lerp < 0) { return 0 }
     if (lerp > 1) { lerp = 1 }
+    lerp = Math.pow(lerp, 1/(params._glideCurve+1))
     let baseFreq = params.freq
     let targetFreq = params._glideTargetEvent.freq
     let glideFreq = targetFreq*lerp + baseFreq*(1-lerp)
@@ -47,6 +49,7 @@ define(function (require) {
   return (audioParam, params) => {
     // Glide init
     let glide = evalMainParamEvent(params, 'glide', 0)
+    let glideCurve = evalSubParamEvent(params, 'glide', 'curve', 1)
     if (glide) {
       let es = params._player.events // Find base events to glide from:
         .filter(e => e.voice === params.voice) // Find only events in the same voice
@@ -54,6 +57,7 @@ define(function (require) {
       es.forEach(e => { // Glide these events to the new events freq
         e._glideTargetEvent = params
         e._glide = glide
+        e._glideCurve = glideCurve
         if (e._setupGlideBase) { e._setupGlideBase() } // If the base event has no per frame update, then set one up
       })
       let glideBaseEvent = es[es.length - 1]
@@ -72,7 +76,7 @@ define(function (require) {
         let detune = 0
         detune += evalMainPerFrame(params, 'addc', 0, count)
         detune += vibrato(vib, vibdepth, vibdelay, params.count, count)
-        detune += glideTarget(params, count, glide)
+        detune += glideTarget(params, count, glide, glideCurve)
         detune += glideBase(params, count)
         return detune*100 // Convert to cents for the detune audioParam
       })
