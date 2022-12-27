@@ -30,6 +30,7 @@ define(function(require) {
       let dt = state.dt
       if (dt === 0) { return state.v || 0 }
       let value = (mainParam(args, 0) || 0)
+      if (typeof value !== 'number') { value = 0 }
       state.v = fn(args, (state.v || 0), value, dt)
       return state.v
     }
@@ -150,6 +151,10 @@ define(function(require) {
   p = parseExpression('smooth{-1,att:0,dec:1}')
   assert(0, evalParamFrame(p, ev(0,0), 1))
   assert(-1, evalParamFrame(p, ev(0,0), 11))
+
+  p = parseExpression('smooth{{4}}')
+  assert(0, evalParamFrame(p, ev(0,0), 1))
+  assert(0, evalParamFrame(p, ev(0,0), 2))
 
   assert(0, evalParamFrame(parseExpression('rate{0}'), ev(0,0), 0))
 
