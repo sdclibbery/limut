@@ -102,7 +102,11 @@ define(function(require) {
       if (!e.countToTime) { return vs[0] || 0 }
       let ds = ds_parsed
       let eDur = e.endTime - e._time
-      if (ds === undefined) { ds = [eDur / (vs.length-1), 0] }
+      if (ds === undefined) { // If no durations set, then create durations to space the values out evenly through the event duration
+        let d = eDur / (vs.length-1)
+        ds = new Array(vs.length-1).fill(d)
+        ds.push(0)
+      }
       let steps = timeVarSteps(vs, ds)
       let time = e.countToTime(b) - e._time
       if (time >= steps.totalDuration) {
@@ -175,6 +179,12 @@ define(function(require) {
     assert(1.5, eventTimeVar([1,2])(ev120(10,2), 11))
     assert(2, eventTimeVar([1,2])(ev120(10,2), 12))
     assert(2, eventTimeVar([1,2])(ev120(10,2), 13))
+
+    assert(1, eventTimeVar([1,2,3])(ev(0,1), 0))
+    assert(1.5, eventTimeVar([1,2,3])(ev(0,1), 0.25))
+    assert(2, eventTimeVar([1,2,3])(ev(0,1), 0.5))
+    assert(2.5, eventTimeVar([1,2,3])(ev(0,1), 0.75))
+    assert(3, eventTimeVar([1,2,3])(ev(0,1), 1))
 
     console.log('Eval timevar tests complete')
   }
