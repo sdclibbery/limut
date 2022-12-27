@@ -1257,6 +1257,9 @@ define(function(require) {
   assert(2, evalParamFrame(parseExpression("{a:this.foo}.a?2"),ev(0,0,0),0))
   assert(2, evalParamFrame(parseExpression("{}.foo?2"),ev(0,0,0),0))
 
+  assert(100, evalParamFrame(parseExpression("[0:1]l4{per:4,0:100}@f"),ev(0,0,4),0))
+  assert(1/4, evalParamFrame(parseExpression("[0:1]l4{per:4,0:100}@f"),ev(0,0,4),1))
+
   console.log('Parse expression tests complete')
   }
 

@@ -20,7 +20,7 @@ define((require) => {
 
   let results = {}
   let evalFunction = (value, mods, event, beat, evalRecurse) => {
-    let override = applyModifiers(results, mods, event, beat)
+    let override = applyModifiers(results, mods, event, beat, value.interval)
     if (override !== undefined) { return override }
     let originalCount = event.count
     event.count = results.modCount

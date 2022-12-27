@@ -28,7 +28,7 @@ define(function(require) {
     return exp
   }
 
-  let applyModifiers = (results, mods, event, beat) => {
+  let applyModifiers = (results, mods, event, beat, interval) => {
     let modBeat = beat
     let modCount = event.count
     if (mods.per !== undefined) {
@@ -36,7 +36,8 @@ define(function(require) {
       modBeat = modBeat % mods.per
     }
     if (mods.overrides !== undefined) {
-      let key = overrideKey(modCount) // Use event.count (not beat) for overrides as overrides are essentially instantaneous
+      let bc = interval === 'frame' ? modBeat : modCount // Note overrides will not really work for per frame values, because you're very unlikely to actually hit the exact right count to trigger the override.
+      let key = overrideKey(bc)
       let override = mods.overrides[key]
       if (override !== undefined) { return override }
     }

@@ -895,8 +895,6 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
-dwave or equivalent synth that allows to specify the vcos, and have per frame control over amp and tune for each, and then they ALL get mixed before going to wave effects / filters etc etc
- dsine/dsaw etc, ambi, supersaw should all be presets of this
 Individual percussion synths
  References
   https://github.com/sdclibbery/limut/blob/c5fec6e5eced92145000561801704afc919241b6/play/percussion.js
@@ -915,6 +913,8 @@ Individual percussion synths
   https://www.soundonsound.com/techniques/synthesizing-cowbells-claves
  toms
  congas
+dwave or equivalent synth that allows to specify the vcos, and have per frame control over amp and tune for each, and then they ALL get mixed before going to wave effects / filters etc etc
+ dsine/dsaw etc, ambi, supersaw should all be presets of this
 !Should be a mix subparam on echo!
 !FM operator should support all wave types
 Pattern char to set glide?
@@ -1035,7 +1035,6 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 !Better error message would be nice:  p ping 0, addc=smooth{{4}}
-!When event dur is 4, this is constant 100:  r readout 0, dur=4, add=smooth{[0:10]r1/4{per:4,0:100}@f}
 More standard Player params
  .exists - 1 if player exists at all
  .playing - 1 whenever its not playing a rest
