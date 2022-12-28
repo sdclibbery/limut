@@ -45,15 +45,16 @@ define(function(require) {
         return result
       }
       let player = players.instances[l]
+      if (r === 'exists') { return !!player ? 1 : 0 }
       if (player) { // lookup a param on player events
         let originalB = evalRecurse((e,originalB) => originalB, event, b)
         let es = player.currentEvent(originalB)
+        if (r === 'playing') { return es.length>0 ? 1 : 0 }
         let v = es.map(e => e[r])
         if (v.length === 0) { v = 0 }
         if (v.length === 1) { v = v[0] }
         return evalParamFrame(v, event,b) // Eval so that time modifiers get applied
-      }
-      else {
+      } else {
         return 0 // Not found as a player - should really return undefined now we have '?' operator, but this could be a breaking change
       }
     }
@@ -97,6 +98,18 @@ define(function(require) {
     players.instances.p1 = { currentEvent:(b)=>{ return [{foo:b},{foo:b}]} }
     assert([0,0], lookupOp('p1', 'foo', {},0,(v)=>0))
     assert([2,2], lookupOp('p1', 'foo', {},2,(v)=>2))
+    delete players.instances.p1
+  
+    assert(0, lookupOp('p1', 'exists', {},0,(v)=>v()))
+    players.instances.p1 = { currentEvent:(b)=>{ return []} }
+    assert(1, lookupOp('p1', 'exists', {},0,(v)=>v()))
+    delete players.instances.p1
+  
+    players.instances.p1 = { currentEvent:(b)=>{ return []} }
+    assert(0, lookupOp('p1', 'playing', {},0,(v)=>v()))
+    delete players.instances.p1
+    players.instances.p1 = { currentEvent:(b)=>{ return [{}]} }
+    assert(1, lookupOp('p1', 'playing', {},0,(v)=>v()))
     delete players.instances.p1
   
     assert(0, lookupOp('p1', 'foo', {},2,(v)=>2))

@@ -2666,3 +2666,7 @@ set ch=[ (0,2,4,7), (0,3,5,7), (1,3,5b,7), (1,3,4,6#), ]t4
 p dsaw 0, dur=2, envelope=pad, add=ch, glide=2/3, lpf=[900:1500]s13@f
 
 
+v glow 0., fore=#844f
+r readout 0, add=(v.fore.r,v.exists,v.playing), loc={y:this.voice/2-1/3}
+
+
