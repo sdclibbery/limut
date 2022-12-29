@@ -6,7 +6,7 @@ define(function (require) {
   let effects = require('play/effects/effects')
   let pitchEffects = require('play/effects/pitch-effects')
   let waveEffects = require('play/effects/wave-effects')
-  let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
+  let {evalMainParamEvent,evalSubParamEvent,evalSubParamFrame} = require('play/eval-audio-params')
   let setWave = require('play/synth/waveforms/set-wave')
 
   return (params) => {
@@ -21,7 +21,6 @@ define(function (require) {
       let id = "wave"+idx
       let wave = evalMainParamEvent(params, id)
       if (!wave) { return undefined }
-      let amp = evalSubParamEvent(params, id, 'amp', 1)
       let detuneSemis = evalSubParamEvent(params, id, 'detune', 0)
       // vco
       let vco = system.audio.createOscillator()
@@ -30,10 +29,10 @@ define(function (require) {
       pitchEffects(vco.detune, params)
       vco.start(params._time)
       vco.stop(params.endTime)
-        // vca
-      if (amp === 1) { return vco }
+      // vca
+      if (typeof params[id] === 'object' && params[id].amp === undefined) { return vco } // No need for vca if amp is constant 1
       let vca = system.audio.createGain()
-      vca.gain.value = amp
+      evalSubParamFrame(vca.gain, params, id, 'amp', 1)
       vco.connect(vca)
       return vca
     }).filter(o => !!o)
