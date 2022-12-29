@@ -65,16 +65,7 @@ define((require) => {
     fm: { play: fm },
 
     dwave: { play: dwave },
-    dsaw: { play: dwave, baseParams: {wave:'sawtooth', oct:4, envelope:'full', _gainbase:0.06} },
-    dsine: { play: dwave, baseParams: {wave:'sine', oct:4, envelope:'pad', _gainbase:0.045} },
-    dsquare: { play: dwave, baseParams: {wave:'square', oct:4, envelope:'full', _gainbase:0.054} },
-    swell: { play: dwave, baseParams: {wave:'triangle', oct:4, envelope:'pad', _gainbase:0.06, detune:0.02} },
-    dbass: { play: dwave, baseParams: {wave:'sawtooth', oct:2, envelope:'full', _gainbase:0.09} },
-    dtri: { play: dwave, baseParams: {wave:'triangle', oct:4, envelope:'full', _gainbase:0.06} },
-    dpulse: { play: dwave, baseParams: {wave:'pulse', oct:3, envelope:'full', _gainbase:0.06} },
-
     supersaw: { play: supersaw },
-
     ambi: { play: ambi },
   }
 
