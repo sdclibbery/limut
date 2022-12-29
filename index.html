@@ -917,10 +917,13 @@ Individual percussion synths
  congas
 dwave or equivalent synth that allows to specify the vcos, and have per frame control over amp and tune for each, and then they ALL get mixed before going to wave effects / filters etc etc
  dsine/dsaw etc, ambi, supersaw should all be presets of this
-303 synth preset
 !Should be a mix subparam on echo!
 !FM operator should support all wave types
 Pattern char to set glide?
+Percussion player for single sample; value is velocity Eg  p playv 90520070, sample=':'
+ ?Or go whole hog and patterns should become expressions and all params should be {} 'info' on the player?
+  Eg  P saw {\0246\, oct=5, lpf=\3<52>4\*1000}  or something?
+303 synth preset
 Pitch shifter effect
  Can use https://github.com/Tonejs/Tone.js/blob/c313bc672bcc09a8cee4df97a07ba80155fd1946/Tone/effect/PitchShift.ts
  See http://msp.ucsd.edu/techniques/v0.11/book-html/node115.html
@@ -1037,42 +1040,55 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7]r, delay=(0,{1/2,add+:2})
- !Actually, this is already possible using  delay=(0,{1/2,add:this.add+2}) . but this is ugly :-/
- But not sure of syntax
-  The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
 !`p ping 0, amp/=2` amp/=2 INCreases the volume?? - Because there is no original value, so it just gets given 2
  Want `set * amp/=2` to halve the current amplitude even when it's using the default fallback value ??It DOES work already??
   When wouldn't it work?  sus+=1/4  ? oct-=1  ?
   ??Should ALL defaults be moved into player types instead of being in the evalParam calls???
+!Syntax colouring is case sensitive; eg  `Set` does not get coloured correctly
+!`p1 ping 0, dur=4, foo=[100,1000,100]e \n p2 kal 0, dur=1, amp=p1.foo/1000` the []e is evalled in the WRONG players dur
+!event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
+ !pattern "(01)": idx should be 0 for both events, surely?
+ Eg:  v xor (00), time=0, add=[0,8], fore=(red,blue)[this.index]
+!Readout doesn't work here:  p ping 0, foo=[0,1,2,3]t1, add=this.foo \ r readout 0, add=p.add
+ It's specifically the this.foo that makes it fail
+!add=(0,2,4,6)[rand]{per:2,seed:0} doesn't work; rand chord indexer needs to respect time modifiers and seed etc
+!Really need a complete audit of time vs count. Need the code to be clear and unambiguous which is which. There will be issues to fix. Look at []e and []e{per}
+!when `time` is used @e it should be event time, not time when the event is created
+ eg  v readout 0, add=time@e
+ !Really thats true for other vars though; eg  reading p.value  or something
+!Follow player refactor
+ !currently follow player fails on complex durations; eg:  ds dsaw 0[23]4_, dur=[1]  \  vds glow follow ds
+ Better follow tests - Proper tests for follow and overrides and combinations, including chords
+ Use stored events with a dependency
+ Things to test:
+  randoms (per event only)
+    p1 ping 0, dur=1, amp=0.1, oct=4, add=[0:4]r
+    v8 glow follow p1, loc={y:-1+this.add/2}, 
+  complex durations (including random); EG:
+    p1 ping 0, dur=[1]r, amp=0.1, oct=4
+    v8 glow follow p1, loc=sparkle
+  delays
+ Clean up any unnecessary gumpf around getEventsForBeatBase etc
 Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as needed
  Needs to work for overrides too eg  body.boost+=100
+Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7]r, delay=(0,{1/2,add+:2})
+ !Actually, this is already possible using  delay=(0,{1/2,add:this.add+2}) . but this is ugly :-/
+ But not sure of syntax
+  The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
 !@e should work on lookups:   r readout 0, add=this.foo@e, foo=[5:1]e
 !().accum should work - why doesn't it? I guess the chord voices haven't been split yet?
  r readout 0, loc={y:2/3-this.voice/2}, add=([0,1]t1,[0,1]t2).accum
 Presets should be able to define multiple synths to play at once
 delay time modifier, pauses time at the start of the event
-floor{1.5,2.5} should work??? Or should it?? Probably not? But then it should give an error?
-!`p1 ping 0, dur=4, foo=[100,1000,100]e \n p2 kal 0, dur=1, amp=p1.foo/1000` the []e is evalled in the WRONG players dur
+floor{1.5,2.5} should work??? Or should it?? Probably not? But then it should give an error? But sum{1,2} works?
 !Doesn't work:  v readout 0, add=main.amp
 ? (0,2:8) syntax?
-Percussion player for single sample; value is velocity Eg  p playv 90520070, sample=':'
- ?Or go whole hog and patterns should become expressions and all params should be {} 'info' on the player?
-  Eg  P saw {\0246\, oct=5, lpf=\3<52>4\*1000}  or something?
-!event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
- !pattern "(01)": idx should be 0 for both events, surely?
- Eg:  v xor (00), time=0, add=[0,8], fore=(red,blue)[this.index]
-!Syntax colouring is case sensitive; eg  `Set` does not get coloured correctly
 !Handle 'cookie blocking' https://blog.tomayac.com/2022/08/30/things-not-available-when-someone-blocks-all-cookies/
 Advance param to specify how far in advance events should be generated - Would allow for negative delays
 For breakbeats, need a param to switch the pattern step used for an event
  This seems tricky with a param, as we don't even know what the params are until the pattern is evalled
  Will have to be a pattern syntax instead..?
   Unless some params are stored per player? And can be used to modify pattern evaluation? Arguably, dur is already like that?
-!Readout doesn't work here:  p ping 0, foo=[0,1,2,3]t1, add=this.foo \ r readout 0, add=p.add
- It's specifically the this.foo that makes it fail
-!add=(0,2,4,6)[rand]{per:2,seed:0} doesn't work; rand chord indexer needs to respect time modifiers and seed etc
-!Really need a complete audit of time vs count. Need the code to be clear and unambiguous which is which. There will be issues to fix. Look at []e and []e{per}
 Some functions to work with chords; eg repeat, shuffle etc
  Functions for making chords?
 Some sort of matching or booleans would be handy; eg  rel=2+6*(this.value<0)  or maybe  rel=match{this.value,default:2,-7:8}
@@ -1086,9 +1102,6 @@ Allow mixing , and :   Eg  [0,2:4,5]r  meaning 0 or 2 to 4 or 5  Or  [0:4,7,9:10
 stutter={4,amp:1/2}  - apply overrides
  ?How to provide overrides per stuttured notes?
   stutter={4,dur:1/8,i=>{amp:1/i}}
-!when `time` is used @e it should be event time, not time when the event is created
- eg  v readout 0, add=time@e
- !Really thats true for other vars though; eg  reading p.value  or something
 ?Do delayed events have any cost? Do we process them per frame?
  I guess we might process any per-frame callbacks every frame while waiting for the event?
 Add doc section with an example and a detailed explanation of it
@@ -1096,19 +1109,6 @@ allow root param on player to override global root (add or replace?)
 floor function:  delay=floor{[]r,to:1/4}  or  add=floor{[0:7]r,to:2}
 Should really reset vars on code update; eg set var, then comment out, and it still applies...
 !slider{max:(1,2)} should work
-Follow player refactor
- !currently follow player fails on complex durations; eg:  ds dsaw 0[23]4_, dur=[1]  \  vds glow follow ds
- Better follow tests - Proper tests for follow and overrides and combinations, including chords
- Use stored events with a dependency
- Things to test:
-  randoms (per event only)
-    p1 ping 0, dur=1, amp=0.1, oct=4, add=[0:4]r
-    v8 glow follow p1, loc={y:-1+this.add/2}, 
-  complex durations (including random); EG:
-    p1 ping 0, dur=[1]r, amp=0.1, oct=4
-    v8 glow follow p1, loc=sparkle
-  delays
- Clean up any unnecessary gumpf around getEventsForBeatBase etc
 For player.pulse, can we make sure the order within the chord is consistent?
  Eg so the most recent events are first in the chord in case of event overlap?
  Also does pulse cutoff too early ignoring release time?
