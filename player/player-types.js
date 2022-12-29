@@ -16,7 +16,6 @@ define((require) => {
   let external = require('play/synth/external')
   let wave = require('play/synth/wave')
   let multiwave = require('play/synth/multiwave')
-  let ambi = require('play/synth/ambi')
   let pitchedPercussion = require('play/synth/percussion/pitched')
   let impulse = require('play/synth/percussion/impulse')
 
@@ -66,7 +65,6 @@ define((require) => {
     multiwave: { play: multiwave },
 
     supersaw: { play: supersaw },
-    ambi: { play: ambi },
   }
 
   return playerTypes
