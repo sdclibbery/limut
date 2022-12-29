@@ -17,7 +17,7 @@ define(function (require) {
     let out = effects(params, vca)
     system.mix(out)
 
-    let vcos = [1,2,3,4,5,6].map(idx => {
+    let vcos = [1,2,3,4,5,6,7].map(idx => {
       let id = "wave"+idx
       let wave = evalMainParamEvent(params, id)
       if (!wave) { return undefined }

@@ -12,7 +12,6 @@ define((require) => {
   let noise = require('play/synth/noise')
   let pwm = require('play/synth/pwm')
   let fm = require('play/synth/fm')
-  let supersaw = require('play/synth/supersaw')
   let external = require('play/synth/external')
   let wave = require('play/synth/wave')
   let multiwave = require('play/synth/multiwave')
@@ -63,8 +62,6 @@ define((require) => {
     wave: { play: wave },
     fm: { play: fm },
     multiwave: { play: multiwave },
-
-    supersaw: { play: supersaw },
   }
 
   return playerTypes
