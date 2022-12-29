@@ -15,7 +15,7 @@ define((require) => {
   let supersaw = require('play/synth/supersaw')
   let external = require('play/synth/external')
   let wave = require('play/synth/wave')
-  let dwave = require('play/synth/dwave')
+  let multiwave = require('play/synth/multiwave')
   let ambi = require('play/synth/ambi')
   let pitchedPercussion = require('play/synth/percussion/pitched')
   let impulse = require('play/synth/percussion/impulse')
@@ -63,8 +63,8 @@ define((require) => {
     pwm: { play: pwm },
     wave: { play: wave },
     fm: { play: fm },
+    multiwave: { play: multiwave },
 
-    dwave: { play: dwave },
     supersaw: { play: supersaw },
     ambi: { play: ambi },
   }

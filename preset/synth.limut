@@ -7,13 +7,14 @@ preset sine wave, wave='sine', oct=4, envelope='full'
 preset square wave, wave='square', oct=4, envelope='full'
 preset tri wave, wave='triangle', oct=4, envelope='full'
 
-preset dsaw dwave, wave='sawtooth', oct=4, envelope='full', _gainbase=0.06
-preset dsine dwave, wave='sine', oct=4, envelope='pad', _gainbase=0.045
-preset dsquare dwave, wave='square', oct=4, envelope='full', _gainbase=0.054
-preset swell dwave, wave='triangle', oct=4, envelope='pad', _gainbase=0.06, detune:0.02
-preset dbass dwave, wave='sawtooth', oct=2, envelope='full', _gainbase=0.09
-preset dtri dwave, wave='triangle', oct=4, envelope='full', _gainbase=0.06
-preset dpulse dwave, wave='pulse', oct=3, envelope='full', _gainbase=0.06
+preset dwave multiwave, wave1={this.wave,detune:0}, wave2={this.wave,detune:0.07}, wave3={this.wave,detune:0.1}
+preset dsaw dwave, wave='sawtooth', oct=4, envelope='full'
+preset dsine dwave, wave='sine', oct=4, envelope='pad'
+preset dsquare dwave, wave='square', oct=4, envelope='full'
+preset swell dwave, wave='triangle', oct=4, envelope='pad', detune:0.02
+preset dbass dwave, wave='sawtooth', oct=2, envelope='full'
+preset dtri dwave, wave='triangle', oct=4, envelope='full'
+preset dpulse dwave, wave='pulse', oct=3, envelope='full'
 
 preset bell fm, envelope='simple', sus=(this.dur,2).max,  // frequencies from https://www.youtube.com/watch?v=CdPa6VLi4GQ
   op1={ratio:19.03/3.14,target:2,wave:'square',depth:0.3,att:0,rel:1},
