@@ -13,7 +13,7 @@ define(function (require) {
     let freq = scale.paramsToFreq(params, 4)
     if (isNaN(freq)) { return }
 
-    let vca = envelope(params, 0.06, 'full')
+    let vca = envelope(params, 0.03, 'full')
     let out = effects(params, vca)
     system.mix(out)
 
@@ -21,11 +21,10 @@ define(function (require) {
       let id = "wave"+idx
       let wave = evalMainParamEvent(params, id)
       if (!wave) { return undefined }
-      let detuneSemis = evalSubParamEvent(params, id, 'detune', 0)
       // vco
       let vco = system.audio.createOscillator()
       setWave(vco, wave)
-      vco.frequency.value = freq * Math.pow(2, detuneSemis/12)
+      evalSubParamFrame(vco.frequency, params, id, 'detune', 0, (d) => freq * Math.pow(2, d/12))
       pitchEffects(vco.detune, params)
       vco.start(params._time)
       vco.stop(params.endTime)
@@ -38,7 +37,7 @@ define(function (require) {
     }).filter(o => !!o)
 
     let multiosc = system.audio.createGain()
-    multiosc.gain.value = 1/Math.max(vcos.length,1)
+    multiosc.gain.value = Math.pow(1/Math.max(vcos.length,1), 1/4)
     vcos.forEach(vco => vco.connect(multiosc))
     waveEffects(params, multiosc).connect(vca)
     system.disconnect(params, vcos.concat(vca,multiosc))
