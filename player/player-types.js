@@ -15,7 +15,7 @@ define((require) => {
   let external = require('play/synth/external')
   let wave = require('play/synth/wave')
   let multiwave = require('play/synth/multiwave')
-  let pitchedPercussion = require('play/synth/pitched')
+  let pitchedPerc = require('play/synth/pitchedperc')
   let impulse = require('play/synth/impulse')
 
   let nullPlayer = { play: () => {}, stopped: true }
@@ -52,7 +52,7 @@ define((require) => {
     // instruments
     drums: { play: play, baseParams:{dur: 1/2} },
     play: { play: play, baseParams:{dur: 1/2} },
-    pitchedperc: { play: pitchedPercussion, baseParams: {dur:1/2,sus:1/3}},
+    pitchedperc: { play: pitchedPerc, baseParams: {dur:1/2,sus:1/3}},
     impulse: { play: impulse },
     sample: { play: sample },
     external: { play: external },
