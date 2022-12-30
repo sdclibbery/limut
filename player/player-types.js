@@ -15,8 +15,8 @@ define((require) => {
   let external = require('play/synth/external')
   let wave = require('play/synth/wave')
   let multiwave = require('play/synth/multiwave')
-  let pitchedPercussion = require('play/synth/percussion/pitched')
-  let impulse = require('play/synth/percussion/impulse')
+  let pitchedPercussion = require('play/synth/pitched')
+  let impulse = require('play/synth/impulse')
 
   let nullPlayer = { play: () => {}, stopped: true }
   let playerTypes = {
