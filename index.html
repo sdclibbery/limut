@@ -475,36 +475,38 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p class='sub'><code>tune=55</code> Base frequency for the kick in Hz. Usually this should be between about 45 and 65 Hz. The pitch{} function can be used to calculate specific frequencies for tuning the kick to the current key; for example <code>tune=pitch{0,oct:2}</code></p>
 <p><code>impulse</code> Play an atonal impulse; that is a single pulse of millisecond duration.</p>
 <p><code>sample</code> Pitched sample player. Use the 'sample' param, and then use it as a piched synth. Use the <code>start</code> param to specify the playback start time within the original sample in seconds.</p>
-<p><code>saw</code> Sawtooth wave (preset)</p>
-<p><code>sine</code> Sine wave (preset)</p>
-<p><code>square</code> Square wave (preset)</p>
-<p><code>tri</code> Triangle wave (preset)</p>
-<p><code>pulse</code> Pulse wave (preset)</p>
+<p><code>saw</code> Sawtooth wave preset</p>
+<p><code>sine</code> Sine wave preset</p>
+<p><code>square</code> Square wave preset</p>
+<p><code>tri</code> Triangle wave preset</p>
+<p><code>pulse</code> Pulse wave preset</p>
 <p><code>wave</code> Synthesizer using a waveform specified by the <code>wave</code> param. Possible values <code>saw, square, sine, triangle, pulse</code></p>
-<p><code>dwave</code> Synthesizer using multiple detuned waveforms specified by the <code>wave</code> param. Possible values <code>saw, square, sine, triangle, pulse</code></p>
-<p><code>dsaw</code> Detuned saw - multiple sawtooth waves slightly out of tune for a fuller sound</p>
-<p><code>dsquare</code> Detuned square - multiple square waves slightly out of tune for a fuller sound</p>
-<p><code>dsine</code> Detuned sine pad - multiple sine waves slightly out of tune for a fuller sound</p>
-<p><code>dtri</code> Detuned tri - multiple triangle waves slightly out of tune for a fuller sound</p>
-<p><code>dbass</code> Detuned saw bass - multiple sawtooth waves slightly out of tune for a fuller sound</p>
-<p><code>fmbass</code> Funky FM bass (preset)</p>
-<p><code>ping</code> Sine wave ping (preset)</p>
+<p><code>dwave</code> Synthesizer preset using multiple detuned waveforms specified by the <code>wave</code> param. Possible values <code>saw, square, sine, triangle, pulse</code></p>
+<p><code>dsaw</code> Detuned saw preset - multiple sawtooth waves slightly out of tune for a fuller sound</p>
+<p><code>dsquare</code> Detuned square preset - multiple square waves slightly out of tune for a fuller sound</p>
+<p><code>dsine</code> Detuned sine pad preset - multiple sine waves slightly out of tune for a fuller sound</p>
+<p><code>dtri</code> Detuned tri preset - multiple triangle waves slightly out of tune for a fuller sound</p>
+<p><code>dbass</code> Detuned saw bass preset - multiple sawtooth waves slightly out of tune for a fuller sound</p>
+<p><code>fmbass</code> Funky FM bass preset</p>
+<p><code>ping</code> Sine wave ping preset</p>
 <p><code>swell</code> Swell pad - triangle wave</p>
 <p><code>fm</code> FM base synth; allows configuration of FM operators and envelopes. Each of up to 6 operators is specified using params <code>op1</code> to <code>op6</code>:</p>
 <p class='sub'><code>op1={ratio:5.19,target:3,wave:'saw',depth:0.8,att:0.01,rel:0.1}</code> ratio: frequency ratio for this operator relative to base event frequency. target: the number of the operator that this one should modulate (eg `1` to target `op1`); use 'out' to send this operator output to the synth output. wave: the waveform to use for this operator. Depth: the amount of modulation this operator should apply to the target (note this will be scaled by the note frequency). att/rel simple envelope attack and release for this operator.</p>
-<p><code>bell</code> FM generated bell (preset)</p>
-<p><code>glock</code> FM generated glockenspiel (preset)</p>
-<p><code>glass</code> FM glass synth with a chiming sound (preset)</p>
-<p><code>xylo</code> FM xylophone (preset)</p>
+<p><code>bell</code> FM generated bell preset</p>
+<p><code>glock</code> FM generated glockenspiel preset</p>
+<p><code>glass</code> FM glass synth with a chiming sound preset</p>
+<p><code>xylo</code> FM xylophone preset</p>
 <p><code>piano</code> Sampled piano</p>
-<p><code>ambi</code> Ambient drone; multiple sines with varying detunes</p>
-<p><code>ethereal</code> FM Ethereal pad (preset)</p>
+<p><code>ambi</code> Ambient drone preset; multiple sines with varying detunes</p>
+<p><code>ethereal</code> FM Ethereal pad preset</p>
 <p><code>noise</code> Noise pad. Note pattern value is not used; white noise is produced for all values (uses AudioWorklet so may use more audio render capacity than other synth types).</p>
 <p><code>prophet</code> Prophet style preset: pulse wave with lfo controlled pulse-width (uses AudioWorklet so may use more audio render capacity than other synth types)</p>
 <p><code>pwm</code> Pulse width modulation synth. A pulse wave with variable pulse width, from pulse to square. Note: uses AudioWorklet so may use more audio render capacity than other synth types. Also note there may be aliasing, so you may want to apply some filtering to cut harsh high frequencies.</p>
 <p class='sub'><code>pwm=1/2</code> Set the pulse width from 0 to 1. The default is 1/2, a square wave (50% duty cycle).</p>
-<p><code>supersaw</code> supersaw lead synth; 7 detuned saws</p>
+<p><code>supersaw</code> supersaw lead synth preset; 7 detuned saws</p>
 <p><code>external</code> take audio from microphone or line in. Use the <code>track</code> param to specify the track within the stream.</p>
+<p><code>multiwave</code> Synthesizer providing up to 7 wave oscillators which can have their amp and detune controlled dynamically. Each wave is specified using params <code>wave1</code> to <code>wave6</code>:</p>
+<p class='sub'><code>wave1={'saw',amp:[0:1]n,detune:wow}</code> The main value is a string giving the waveform to use. amp is a per frame amplitude control. detune is a per frame detune control in semitones.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-visual-synths')" class="accordion"> Visual Synths</h4>
 <div id="accordion-visual-synths" class="closed">
@@ -897,8 +899,6 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
-multiwave synth that allows to specify multiple vcos with params, and have per frame control over amp and tune for each, and then they all get mixed BEFORE going to wave effects / filters etc etc
- Docs - multiwave and any new presets, and mark dwave/dsaw/ambi/etc as presets
 Individual percussion synths
  References
   https://github.com/sdclibbery/limut/blob/c5fec6e5eced92145000561801704afc919241b6/play/percussion.js
