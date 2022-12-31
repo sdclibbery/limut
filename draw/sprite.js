@@ -133,11 +133,13 @@ let verts = (loc, window, har, allowHarAdjust) => {
     titanium: 6,
   }
 
+  let defFore = {r:1,g:1,b:1,a:1}
+  let defBack = {r:0,g:0,b:0,a:0}
   let defLoc = {x:0,y:0,w:2,h:2}
   let defScroll = {x:0,y:0}
   let defZoom = {x:1,y:1}
   let defMid = {r:0,g:0,b:0,a:1}
-  let play = (renderer, defFore, defBack, params, defParams) => {
+  let play = (renderer, params) => {
     let s
     if (typeof renderer === 'function') {
       s = renderer(params)
@@ -154,12 +156,12 @@ let verts = (loc, window, har, allowHarAdjust) => {
     if (Number.isNaN(value)) { value = evalMainParamEvent(params, 'value', '0').charCodeAt(0) - 32 }
     let pulse = evalMainParamEvent(params, 'pulse', 0)
     let sway = evalMainParamEvent(params, 'sway', 0)
-    let additive = evalMainParamEvent(params, 'additive', defParams.additive || 0)
+    let additive = evalMainParamEvent(params, 'additive', 0)
     let blend = evalMainParamEvent(params, 'blend')
     let url = evalMainParamEvent(params, 'url', 'favicon-32x32.png')
     let text = evalParam.evalParamEvent(params['text'], params)
     let window = evalMainParamEvent(params, 'window', false)
-    let fade = evalMainParamEvent(params, 'fade', defParams.fade || 0)
+    let fade = evalMainParamEvent(params, 'fade', 0)
     let recolType = evalMainParamEvent(params, 'recol')
     let recol = recols[recolType] || 0
     if (!!recolType && !recol) {
@@ -310,10 +312,9 @@ let verts = (loc, window, har, allowHarAdjust) => {
     }
   }
 
-  let emptyObject = {}
-  let create = (renderer, defFore, defBack, defParams) => (params) => {
+  let create = (renderer) => (params) => {
     let zorder = param(params.zorder, param(params.linenum, 0)/1000)
-    let renderTask = play(renderer, defFore, defBack, params, defParams || emptyObject)
+    let renderTask = play(renderer, params)
     let targetBufferPlayerId = evalMainParamEvent(params, 'buffer')
     let bufferPlayer = players.instances[targetBufferPlayerId]
     if (bufferPlayer && bufferPlayer.buffer) {
