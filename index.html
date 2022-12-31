@@ -1044,11 +1044,10 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 !`p ping 0, amp/=2` amp/=2 INCreases the volume?? - Because there is no original value, so it just gets given 2
- Want `set * amp/=2` to halve the current amplitude even when it's using the default fallback value ??It DOES work already??
-  When wouldn't it work?  sus+=1/4  ? oct-=1  ?
-  ??Should ALL defaults be moved into player types instead of being in the evalParam calls???
-  YES, any param that defaults to non zero should be explicitly set in all player types
-   ?Does this work as expected for all operator types and default values?
+ What other params have non zero defaults and should alwasy be set?
+  dur
+  sus??
+  oct
 !Syntax colouring is case sensitive; eg  `Set` does not get coloured correctly
 !`p1 ping 0, dur=4, foo=[100,1000,100]e \n p2 kal 0, dur=1, amp=p1.foo/1000` the []e is evalled in the WRONG players dur
 !event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
