@@ -1744,7 +1744,7 @@ set * swing=52
 pp play x-(x*)-, room=1/8
 set ch=[(0,2,4),(0,5,3),(0,2,5),(-1,3,4)]t4
 tb saw 0, dur=1/3, add=ch.0, sus=1/5, room=1/4, oct=2
-tl prophet 0, dur=1/4, add=ch[[0,1,2]t1/4{per:4}], oct=(3,4), chorus,
+tl prophet 0, dur=1/4, add=ch.[0,1,2]t1/4{per:4}, oct=(3,4), chorus,
     room={1.15,mix:1/3}, att=1/128, dec=1/6, sus={level:1/3}, rel=1/8
 tls saw follow tl
 
@@ -1758,13 +1758,13 @@ v julia 5, zoom=3+k.pulse/3, mirror={11,fan:1/2,rotate:time/16}, scroll=time/16,
 k play (XVn)., lo=24, mid=-16, amp=3/2
 ph play [--], pan=-1/4, amp=3/4-wow
 s play ..(;a*)., room=1/3, pan=1/4, amp=2/3
-tb tri .0v0^0, dur=1/4, add=ch[[0,0,1,[0,2]t[3,1]]], oct=(1,2), amp=3/2*[0,0,1,1]s[0.2,0.1,0.7,0], sus=1/[8,6,6], rel=0.01, att=0.01, lo=32, lpf=this.freq*30
+tb tri .0v0^0, dur=1/4, add=ch.[0,0,1,[0,2]t[3,1]], oct=(1,2), amp=3/2*[0,0,1,1]s[0.2,0.1,0.7,0], sus=1/[8,6,6], rel=0.01, att=0.01, lo=32, lpf=this.freq*30
 tbf pulse follow tb
 pc play #, dur=32, room=1.1, amp=2, rate=(2/3,1)
 pf play .[kk], room=1/8, amp=1/6, pan=[-1/4,1/4]r, rate=3/4
 pn play .K, pan=-1/2
 pnn play .pT., pan=1/2
-tl supersaw 0, dur=1/4, add=ch[[0,1,2]t1/4{per:4}], oct=(3,4), chorus, room={1.15,mix:0.4}, att=1/128, dec=1/6, sus={1/8,level:0.4}, rel=1/6, pan=[-1/3,1/3]r, lpf={2200,q:1}, amp=2/3
+tl supersaw 0, dur=1/4, add=ch.[0,1,2]t1/4{per:4}, oct=(3,4), chorus, room={1.15,mix:0.4}, att=1/128, dec=1/6, sus={1/8,level:0.4}, rel=1/6, pan=[-1/3,1/3]r, lpf={2200,q:1}, amp=2/3
 set tl amp*=[1,0,1]r{per:4,seed:40}
 // a supersaw [-20][_0]__, add=ch+[3,2,1,0,3,2,1,7]t4, room={1.2,mix:1/3}, oct=(3,4), att=[1/3,1/2], rel=1, bpf={[1500:100]e,q:3}, chorus, pan=[-1/3,1/3]r, drive=1/2, sus=this.dur*1.1, amp=1/2
 fill play [oo], amp=[0,0,1]l[28,4,0]
@@ -1795,13 +1795,13 @@ v julia 5, zoom=3+k.pulse/3, mirror={11,fan:1/2,rotate:time/16}, scroll=time/16,
 k play (XVn)., lo=32, mid=-16, amp=3/2
 ph play [--], pan=-1/4, amp=3/4-wow
 s play ..(;a*)., room=1/3, pan=1/4, amp=2/3
-tb tri .0v0^0, dur=1/4, add=ch[[0,0,1,[0,2]t[3,1]]], oct=(1,2), amp=3/2*[0,0,1,1]s[0.2,0.1,0.7,0], sus=1/[8,6,6], rel=0.01, att=0.01, lo=32, lpf=this.freq*32
+tb tri .0v0^0, dur=1/4, add=ch.[0,0,1,[0,2]t[3,1]], oct=(1,2), amp=3/2*[0,0,1,1]s[0.2,0.1,0.7,0], sus=1/[8,6,6], rel=0.01, att=0.01, lo=32, lpf=this.freq*32
 tbf pulse follow tb
 pc play #, dur=32, room=1.1, amp=2, rate=(2/3,1)
 pf play .[kk], room=1/8, amp=1/5, pan=[-1/4,1/4]r, rate=3/4
 pn play .K, pan=-1/2, mid=-16, echo=1/2
 pnn play .pT., pan=1/2, mid=-16, echo=1/2
-tl supersaw 0, dur=1/4, add=ch[[0,1,2]t1/4{per:4}], oct=(3,4), chorus, room={1.15,mix:0.4}, att=1/128, dec=1/6, sus={1/8,level:0.4}, rel=1/6, pan=[-1/3,1/3]r, lpf={2200,q:1}, amp=2/3
+tl supersaw 0, dur=1/4, add=ch.[0,1,2]t1/4{per:4}, oct=(3,4), chorus, room={1.15,mix:0.4}, att=1/128, dec=1/6, sus={1/8,level:0.4}, rel=1/6, pan=[-1/3,1/3]r, lpf={2200,q:1}, amp=2/3
 // set tl amp*=[1,1*3/5,1]r{per:4,seed:40}
 // a supersaw [-20][_0]__, add=ch+[3,2,1,0,3,2,1,7]t4, room={1.2,mix:1/3}, oct=(3,4), att=[1/3,1/2], rel=1, bpf={[1500:100]e,q:2}, chorus, pan=[-1/3,1/3]r, drive=1/2, sus=this.dur*1.1, amp=0.35
 // fill play [oo], amp=[0,0,1]l[28,4,0]
