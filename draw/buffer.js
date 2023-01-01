@@ -53,6 +53,8 @@ define(function (require) {
     if (buffer.feedback) { // For feedback need a second texture because you cant render a texture to itself
       buffer.rt[1] = createRenderTarget(buffer.rez)
       buffer.flipShader = initShader()
+      buffer.fore = {r:0.99,g:0.99,b:0.99,a:0.99}
+      buffer.back = {r:1,g:1,b:1,a:1}
 // buffer.rt[0].id = buffer._playerId+'-'+'rt[0]'
 // buffer.rt[1].id = buffer._playerId+'-'+'rt[1]'
     }
@@ -72,7 +74,7 @@ define(function (require) {
         buffer.feedback.buffer = buffer._playerId // Feedback to current texture
         buffer.feedback.isBufferFeedback = true
         buffer.flipShader.texture = buffer.rt[1-buffer.current] // Feedback from old texture
-        sprite.play(()=>buffer.flipShader, {r:0.99,g:0.99,b:0.99,a:0.99}, {r:1,g:1,b:1,a:1}, buffer.feedback, {})(state) // Draw last frame to this to provide feedback
+        sprite.play(()=>buffer.flipShader, buffer.feedback)(state) // Draw last frame to this to provide feedback
       }
       buffer.renderList.render(state)
     }
