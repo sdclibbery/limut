@@ -59,7 +59,12 @@ define((require) => {
     // instruments
     drums: { play: play, baseParams:{ amp:1, dur:1/2 } },
     play: { play: play, baseParams:{ amp:1, dur:1/2, rate:1 } },
-    pitchedperc: { play: pitchedPerc, baseParams:{ amp:1, dur:1/2,sus:1/3 } },
+    pitchedperc: { play: pitchedPerc, baseParams:{ amp:1, dur:1/2, sus:1/3,
+        click:{ value:1, dur:0.2, cutoff:1500, q:5 },
+        hit:{ value:1, sample:'^', index:1, rate:1.5, cutoff:250, q:1 },
+        body:{ value:1, freq:55, boost:150, curve:3, wave:'sine', cutoff:2, q:10 },
+        rattle:{ value:1, rate:1, freq:55, boost:205, curve:8, q:18 }
+      } },
     impulse: { play: impulse, baseParams:{ amp:1 } },
     external: { play: external, baseParams:{ amp:1 } },
     noise: { play: noise, baseParams:{ amp:1 } },
