@@ -61,14 +61,14 @@ define((require) => {
     play: { play: play, baseParams:{ amp:1, dur: 1/2} },
     pitchedperc: { play: pitchedPerc, baseParams:{ amp:1, dur:1/2,sus:1/3}},
     impulse: { play: impulse, baseParams:{ amp:1 } },
-    sample: { play: sample, baseParams:{ amp:1 } },
     external: { play: external, baseParams:{ amp:1 } },
-    piano: { play: piano, baseParams:{ amp:1 } },
     noise: { play: noise, baseParams:{ amp:1 } },
-    pwm: { play: pwm, baseParams:{ amp:1 } },
-    wave: { play: wave, baseParams:{ amp:1 } },
-    fm: { play: fm, baseParams:{ amp:1 } },
-    multiwave: { play: multiwave, baseParams:{ amp:1 } },
+    sample: { play: sample, baseParams:{ amp:1, oct:4 } },
+    piano: { play: piano, baseParams:{ amp:1, oct:4 } },
+    pwm: { play: pwm, baseParams:{ amp:1, oct:4 } },
+    wave: { play: wave, baseParams:{ amp:1, oct:4 } },
+    fm: { play: fm, baseParams:{ amp:1, oct:4 } },
+    multiwave: { play: multiwave, baseParams:{ amp:1, oct:4 } },
   }
 
   return playerTypes

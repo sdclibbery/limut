@@ -266,11 +266,12 @@ define((require) => {
   delete playerTypes.foo
 
   parseLine('preset foo readout, add=2')
-  assert({add:2}, playerTypes.foo.baseParams)
+  assert(2, playerTypes.foo.baseParams.add)
   delete playerTypes.foo
 
   parseLine('preset foo readout, a=2, b=3')
-  assert({a:2,b:3}, playerTypes.foo.baseParams)
+  assert(2, playerTypes.foo.baseParams.a)
+  assert(3, playerTypes.foo.baseParams.b)
   delete playerTypes.foo
 
   parseLine('preset myro readout, add=4')
