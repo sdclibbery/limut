@@ -2670,3 +2670,31 @@ v glow 0., fore=#844f
 r readout 0, add=(v.fore.r,v.exists,v.playing), loc={y:this.voice/2-1/3}
 
 
+// Skullthump
+set bpm=123
+set scale=phrygian
+set * swing=54
+vi image 0, url='https://upload.wikimedia.org/wikipedia/commons/8/86/Gray190.png', buffer=vb, fore=0.9, back=0, blend=max, contrast,
+ loc=(1/2+2*s.pulse.max)*firefly/4, monochrome=-l.pulse.max*5,
+ scroll={x:-0.2}, rotate=smooth{l.playing.max/(1+l.add.first/2)}, zoom=smooth{1+l.pulse.min/3}
+vb buffer 0, feedback={rotate:[-0.01:0.01]n,fore:#edd8,scroll:firefly/8,zoom:1.03}
+pk bd 9..<.-7.-3>, clip=2/3, ring=55, low=8, pan=-1/4, amp=3/2, compress=10
+pn noise ..0., dur=1/2, sus=[1/4:1/6]s20, att=0, high=-8, low=8, mid=8, room
+pp play flaky, rate=1/4, fold, ring=220, sus=1/3, pan=[-1/3,1/3]r
+p pwm 0032.032.0.21.<.1>., dur=1/4, oct=2, mid=16, lpf=3000, sus=1/6, pwm=[0.3:0.7]n, phaser=1/7, amp=3/2, pan=[0:1/3]n
+s saw 001020304056<-18>_.., dur=1/4, glide=1/5, lpf=4000, chorus, amp=1.3, oct=3, add=(0,4), phaser=1/11, pan=-1/2
+// l saw 0010..0___1___.., dur=1/2, glide=1/5, lpf=6000, amp=3/2, chorus, oct=[3,4]r2, add=(0,5)+[0,1,2,3]r3, pan=2/3, mid=8, high=2, addc=wow, ring={this.freq*3.43+110,mix:1/2}, phaser=1/13, rel=1
+
+
+// Gliding
+set bpm=75
+set main.amp=1.7
+vj julia 5, buffer=vb, blend=max, mid=rainbow_fast, fore=random, back=0, rate=1/4, amp=0.8
+vb buffer 0, feedback={rotate:0.001, zoom:1.004, fore:0.95+0.06*p.pulse.max}
+b wave 0, envelope=pad, wave='noise', amp=[0.2:0.7]n6@f, oct=(0,1,2), room=2, lpf=300
+a ambi 0, dur=4, add=[(0,4,8),(0,3,6b)]t16, oct=(1,2,3), room=2, chorus, wave='ooh', lpf=[1200:2400]s8@f, amp=1/2, glide=1, pan=[-1/2:1/2]r, addc=wow
+r ping 0, dur=[1/8,1/4,1/2]r, sus=1/8, add=[0,4,6b,8]r, amp=[0:1]n8, delay=(0,{3/4,oct:3}), wave='tri', flanger=1/7, room, pan=[-1:1]r, echo=2/3, oct=4
+p prophet 0.-1b., envelope=simple, att=2, rel=7, dur=8, oct=(1,2), amp=2, room=2, phaser=1/5, flanger=1/4
+set root=0
+
+

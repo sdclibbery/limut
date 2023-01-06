@@ -983,7 +983,6 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-?sprite default fore and back should be normal base params, not special?
 recol=fmb that leaves all pixels white but with fb set, to allow recolouring with fore/mid/back. check it for webcam/image etc too
 !Should really multiply feedback params by dt, otherwise the rate of feedback motions will be framerate dependent
  Tricky to do; have to eval params first them multiply, and it's very param dependent; eg zoom vs scroll
@@ -1043,7 +1042,7 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-?? ((...)) syntax for actual array not chord; eg for FM operators or waves, or sending to mutliple buffers/buses
+?? ((...)) syntax for actual array not chord; eg for FM operators or waves, or sending to mutliple buffers/buses, or having multiple bpf/nf filters
  ? Or can this be done automatically based on what param is being set? So op=({},{}) gets marked as "non chord" *because* it's the op param??
 !Syntax colouring is case sensitive; eg  `Set` does not get coloured correctly
 !`p1 ping 0, dur=4, foo=[100,1000,100]e \n p2 kal 0, dur=1, amp=p1.foo/1000` the []e is evalled in the WRONG players dur
