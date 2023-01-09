@@ -502,7 +502,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>noise</code> Noise pad. Note pattern value is not used; white noise is produced for all values (uses AudioWorklet so may use more audio render capacity than other synth types).</p>
 <p><code>prophet</code> Prophet style preset: pulse wave with lfo controlled pulse-width (uses AudioWorklet so may use more audio render capacity than other synth types)</p>
 <p><code>pwm</code> Pulse width modulation synth. A pulse wave with variable pulse width, from pulse to square. Note: uses AudioWorklet so may use more audio render capacity than other synth types. Also note there may be aliasing, so you may want to apply some filtering to cut harsh high frequencies.</p>
-<p class='sub'><code>pwm=1/2</code> Set the pulse width from 0 to 1. The default is 1/2, a square wave (50% duty cycle).</p>
+<p class='sub'><code>pwm=1/2</code> Set the pulse width from 0 to 1. The default is 1/2, a square wave (50% duty cycle). values very close to 0 and 1 will produce no sound since the actual pulse width will become vanishingly small.</p>
 <p><code>supersaw</code> supersaw lead synth preset; 7 detuned saws</p>
 <p><code>external</code> take audio from microphone or line in. Use the <code>track</code> param to specify the track within the stream.</p>
 <p><code>multiwave</code> Synthesizer providing up to 7 wave oscillators which can have their amp and detune controlled dynamically. Each wave is specified using params <code>wave1</code> to <code>wave6</code>:</p>
@@ -899,24 +899,22 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
+! echo={1,feedback:0} should still produce a single delayed echo
 Individual percussion synths
  References
   https://github.com/sdclibbery/limut/blob/c5fec6e5eced92145000561801704afc919241b6/play/percussion.js
   https://github.com/vincentriemer/io-808
- oh/ch
+ oh/ch/cymbal
   https://www.soundonsound.com/techniques/practical-cymbal-synthesis
- cp
+ clap
   https://www.kvraudio.com/forum/viewtopic.php?t=466450
  sd
   https://www.soundonsound.com/techniques/practical-snare-drum-synthesis
   ?Can do as pitched with strong rattle? sd bd ..0., rattle={1/2,freq:1500,boost:500,curve:4,q:10}, body={1/3,freq:100}, hit=0, click=0, sus=1/2
    Will need two body tones...
- cb
+ cb/cl
   https://www.soundonsound.com/techniques/synthesizing-cowbells-claves
- cl
-  https://www.soundonsound.com/techniques/synthesizing-cowbells-claves
- toms
- congas
+Includable preset files for 808 and 909
 New presets for sub-osc and mixed saw/square etc?
 !glide=0 does not give zero glide????!
 !Should be a mix subparam on echo!
@@ -1042,9 +1040,19 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
+Ability to include limut source file from a URL
+ How to test it without polluting the limut console?
+ Cache the includes
+ Syntax coloring
+ Docs
+Crackle preset: preset crackle impulse, dur=[0.01:1]r, amp=[0:2]r, hpf={[500:5000]r,q:1/2}
+ Also noisefloor preset??
+Setup some includable preset files eg for synthwave 
 ?? ((...)) syntax for actual array not chord; eg for FM operators or waves, or sending to mutliple buffers/buses, or having multiple bpf/nf filters
  ? Or can this be done automatically based on what param is being set? So op=({},{}) gets marked as "non chord" *because* it's the op param??
 !Syntax colouring is case sensitive; eg  `Set` does not get coloured correctly
+Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as needed
+ Needs to work for overrides too eg  body.boost+=100
 !`p1 ping 0, dur=4, foo=[100,1000,100]e \n p2 kal 0, dur=1, amp=p1.foo/1000` the []e is evalled in the WRONG players dur
 !event.idx (supposed to be the index of the event through the pattern) is incorrect when there's a () chord
  !pattern "(01)": idx should be 0 for both events, surely?
@@ -1069,8 +1077,6 @@ shadertoy synth multiple channels
     v8 glow follow p1, loc=sparkle
   delays
  Clean up any unnecessary gumpf around getEventsForBeatBase etc
-Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as needed
- Needs to work for overrides too eg  body.boost+=100
 Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7]r, delay=(0,{1/2,add+:2})
  !Actually, this is already possible using  delay=(0,{1/2,add:this.add+2}) . but this is ugly :-/
  But not sure of syntax

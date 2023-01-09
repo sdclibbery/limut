@@ -1,0 +1,2 @@
+preset moroder multiwave, dur=1/4, oct=3, lpf={[1/2:1]s8*[700:400]e,q:10}, addc=wow, att=0.01,
+  wave1={'saw'}, wave2={'square',detune:-12,amp:1/2},

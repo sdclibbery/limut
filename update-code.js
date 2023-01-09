@@ -10,7 +10,7 @@ define((require) => {
   let predefinedVars = require('predefined-vars')
   let vars = require('vars')
 
-  let parseCode = (code) => {
+  let parseCode = async (code) => {
     let lines = code.split('\n')
     for (let i = 0; i<lines.length; i++) {
       try {
@@ -22,7 +22,7 @@ define((require) => {
           line = line + nextLine
           i++
         }
-        parseLine(line, i)
+        await parseLine(line, i, parseCode)
       } catch (e) {
         let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
         consoleOut('Error on line '+(i+1)+': ' + e + st)
@@ -75,15 +75,15 @@ define((require) => {
       let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
     }
-    let assertVars = (code, expected) => {
-      parseCode(code)
+    let assertVars = async (code, expected) => {
+      await parseCode(code)
       Object.keys(expected).forEach(k => {
         assert(expected[k], vars[k])
         delete vars[k]
       })
     }
-    let assertOverrides = (code, playerId, expected) => {
-      parseCode(code)
+    let assertOverrides = async (code, playerId, expected) => {
+      await parseCode(code)
       Object.keys(expected).forEach(k => {
         assert(expected[k], players.overrides[playerId][k])
       })
@@ -93,65 +93,65 @@ define((require) => {
     assertVars('', {})
     assertVars(' \n \t\n ', {})
 
-    assertVars('//set foo=1+1', {foo:undefined})
+    assertVars('//set fooa=1+1', {fooa:undefined})
 
-    assertVars('set foo=1+1', {foo:2})
-    assertVars(' \n//yo \nset foo=1+1 \n \n \n\n set bar = 2 + 2 \n ', {foo:2,bar:4})
+    assertVars('set foob=1+1', {foob:2})
+    assertVars(' \n//yo \nset fooc=1+1 \n \n \n\n set barc = 2 + 2 \n ', {fooc:2,barc:4})
 
-    assertOverrides('set p amp=2', 'p', {amp:2})
-    assertOverrides('set p foo=2, bar=4', 'p', {foo:2,bar:4})
+    assertOverrides('set pa amp=2', 'pa', {amp:2})
+    assertOverrides('set pb foo=2, bar=4', 'pb', {foo:2,bar:4})
 
-    assertOverrides('set p foo=2,\n,bar=4', 'p', {foo:2,bar:4})
-    assertOverrides('set p foo=2 , \n , bar=4', 'p', {foo:2,bar:4})
+    assertOverrides('set pc foo=2,\n,bar=4', 'pc', {foo:2,bar:4})
+    assertOverrides('set pd foo=2 , \n , bar=4', 'pd', {foo:2,bar:4})
 
-    assertOverrides('set p \nfoo=2,bar=4', 'p', {foo:2,bar:4})
-    assertOverrides('set p foo\n=2,bar=4', 'p', {foo:2,bar:4})
-    assertOverrides('set p foo=\n2,bar=4', 'p', {foo:2,bar:4})
-    assertOverrides('set p foo=2\n,bar=4', 'p', {foo:2,bar:4})
-    assertOverrides('set p foo=2,\nbar=4', 'p', {foo:2,bar:4})
-    assertOverrides('set p foo=2,bar\n=4', 'p', {foo:2,bar:4})
-    assertOverrides('set p foo=2,bar=\n4', 'p', {foo:2,bar:4})
-  
-    assertOverrides(' set p \n foo = 2 , bar = 4 ', 'p', {foo:2,bar:4})
-    assertOverrides(' set p foo \n = 2 , bar = 4 ', 'p', {foo:2,bar:4})
-    assertOverrides(' set p foo = \n 2 , bar = 4 ', 'p', {foo:2,bar:4})
-    assertOverrides(' set p foo = 2 \n , bar = 4 ', 'p', {foo:2,bar:4})
-    assertOverrides(' set p foo = 2 , \n bar = 4 ', 'p', {foo:2,bar:4})
-    assertOverrides(' set p foo = 2 , bar \n = 4 ', 'p', {foo:2,bar:4})
-    assertOverrides(' set p foo = 2 , bar = \n 4 ', 'p', {foo:2,bar:4})
+    assertOverrides('set pe \nfoo=2,bar=4', 'pe', {foo:2,bar:4})
+    assertOverrides('set pf foo\n=2,bar=4', 'pf', {foo:2,bar:4})
+    assertOverrides('set pg foo=\n2,bar=4', 'pg', {foo:2,bar:4})
+    assertOverrides('set ph foo=2\n,bar=4', 'ph', {foo:2,bar:4})
+    assertOverrides('set pi foo=2,\nbar=4', 'pi', {foo:2,bar:4})
+    assertOverrides('set pj foo=2,bar\n=4', 'pj', {foo:2,bar:4})
+    assertOverrides('set pk foo=2,bar=\n4', 'pk', {foo:2,bar:4})
 
-    assertOverrides('set p foo=2,\\\nbar=4', 'p', {foo:2,bar:undefined})
+    assertOverrides(' set pl \n foo = 2 , bar = 4 ', 'pl', {foo:2,bar:4})
+    assertOverrides(' set pm foo \n = 2 , bar = 4 ', 'pm', {foo:2,bar:4})
+    assertOverrides(' set pn foo = \n 2 , bar = 4 ', 'pn', {foo:2,bar:4})
+    assertOverrides(' set po foo = 2 \n , bar = 4 ', 'po', {foo:2,bar:4})
+    assertOverrides(' set pp foo = 2 , \n bar = 4 ', 'pp', {foo:2,bar:4})
+    assertOverrides(' set pq foo = 2 , bar \n = 4 ', 'pq', {foo:2,bar:4})
+    assertOverrides(' set pr foo = 2 , bar = \n 4 ', 'pr', {foo:2,bar:4})
+
+    assertOverrides('set ps foo=2,\\\nbar=4', 'ps', {foo:2,bar:undefined})
     assert(undefined, vars.bar)
 
-    assertOverrides('set p foo=2, HELLO\nbar=4', 'p', {foo:2,bar:undefined})
+    assertOverrides('set pt foo=2, HELLO\nbar=4', 'pt', {foo:2,bar:undefined})
     assert(undefined, vars.bar)
 
-    assertVars('set foo=(\n1,\n2,\n3)', {foo:[1,2,3]})
-    assertVars('set foo=(\n1,\n//2,\n3)', {foo:[1,3]})
+    assertVars('set food=(\n1,\n2,\n3)', {food:[1,2,3]})
+    assertVars('set fooe=(\n1,\n//2,\n3)', {fooe:[1,3]})
 
-    assertVars("set foo='http://a.com/Bc.mp3'", {foo:'http://a.com/Bc.mp3'})
-    assertVars("set foo='http://a.com/B\\c.mp3'", {foo:'http://a.com/Bc.mp3'})
-    assertVars("set foo='http://a.com/Bc.mp3'//FOO", {foo:'http://a.com/Bc.mp3'})
-    assertOverrides("set p foo=//'http://a.com/Bc.mp3'", 'p', {foo:undefined})
+    assertVars("set foof='http://a.com/Bc.mp3'", {foof:'http://a.com/Bc.mp3'})
+    assertVars("set foog='http://a.com/B\\c.mp3'", {foog:'http://a.com/Bc.mp3'})
+    assertVars("set fooh='http://a.com/Bc.mp3'//FOO", {fooh:'http://a.com/Bc.mp3'})
+    assertOverrides("set pu foo=//'http://a.com/Bc.mp3'", 'pu', {foo:undefined})
 
-    assertVars('set foo=\n 1', {foo:1})
-    assertVars('set foo= \n 1', {foo:1})
-    assertVars('set foo= //Cmnt \n 1', {foo:1})
-    assertVars('set foo= //Cmnt\n 1', {foo:1})
+    assertVars('set fooi=\n 1', {fooi:1})
+    assertVars('set fooj= \n 1', {fooj:1})
+    assertVars('set fook= //Cmnt \n 1', {fook:1})
+    assertVars('set fool= //Cmnt\n 1', {fool:1})
 
-    assertOverrides("set p //s='abc'", 'p', {})
-    assertOverrides("set p s//='abc'", 'p', {s:1})
-    assertOverrides("set p s=//'abc'", 'p', {})
-    assertOverrides("set p a=1//,s='abc'", 'p', {a:1})
-    assertOverrides("set p a=1//1,s='abc'", 'p', {a:1})
-    assertOverrides("set p a=1,//s='abc'", 'p', {a:1})
-    assertOverrides("set p a=1, //s='abc'", 'p', {a:1})
-    assertOverrides("set p str='http://', amp=0.1, rate=10", 'p', {str:'http://', amp:0.1, rate:10})
-    assertOverrides("set p window//, rate=2", 'p', {window:1})
-    assertOverrides("set p add//+=2", 'p', {add:1})
-    assertOverrides("set p add+//=2", 'p', {'add+':1})
+    assertOverrides("set pv //s='abc'", 'pv', {})
+    assertOverrides("set pw s//='abc'", 'pw', {s:1})
+    assertOverrides("set px s=//'abc'", 'px', {})
+    assertOverrides("set py a=1//,s='abc'", 'py', {a:1})
+    assertOverrides("set pz a=1//1,s='abc'", 'pz', {a:1})
+    assertOverrides("set paa a=1,//s='abc'", 'paa', {a:1})
+    assertOverrides("set pab a=1, //s='abc'", 'pab', {a:1})
+    assertOverrides("set pac str='http://', amp=0.1, rate=10", 'pac', {str:'http://', amp:0.1, rate:10})
+    assertOverrides("set pad window//, rate=2", 'pad', {window:1})
+    assertOverrides("set pae add//+=2", 'pae', {add:1})
+    assertOverrides("set paf add+//=2", 'paf', {'add+':1})
 
-    assertOverrides('set p foo=2,bar=\'FOO\n\'', 'p', {foo:2,bar:'FOO'})
+    assertOverrides('set pag foo=2,bar=\'FOO\n\'', 'pag', {foo:2,bar:'FOO'})
 
     console.log('Update code tests complete')
   }

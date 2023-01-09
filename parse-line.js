@@ -8,6 +8,7 @@ define((require) => {
   let {combineOverrides,applyOverrides,isOverride} = require('player/override-params')
   let setVar = require('vars').set
   let mainVars = require('main-vars')
+  let getInclude = require('includes')
 
   let identifierWithWildcards = (state) => {
     let char
@@ -60,9 +61,16 @@ define((require) => {
     return [parts[0], parts.slice(1).join()]
   }
 
-  let parseLine = (line, linenum) => {
+  let parseLine = async (line, linenum, parseCode) => {
     line = line.trim()
     if (!line) { return }
+    if (startsWithInclude(line)) {
+      // Include external limut source file
+      let url = line.trim().slice(7).trim()
+      let code = await getInclude(url)
+      await parseCode(code)
+      return
+    }
     if (startsWithSet(line)) {
       line = line.slice(4).trim()
       // Set global vars and settings
@@ -122,6 +130,11 @@ define((require) => {
     }
   }
 
+  let startsWithInclude = (str) => {
+    let r = new RegExp(/^\s*include\s+/, 'i')
+    return r.test(str)
+  }
+
   let startsWithSet = (str) => {
     let r = new RegExp(/^\s*set\s+[\(\*\w]+/, 'i')
     return r.test(str)
@@ -138,6 +151,7 @@ define((require) => {
   }
 
   let isLineStart = (str) => {
+    if (startsWithInclude(str)) { return true }
     if (startsWithSet(str)) { return true }
     if (startsWithPreset(str)) { return true }
     if (startsWithPlayer(str)) { return true }
@@ -152,9 +166,9 @@ define((require) => {
     let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
-  let assertThrows = (expected, code) => {
+  let assertThrows = async (expected, code) => {
     let got
-    try {code()}
+    try {await code()}
     catch (e) { if (e.includes(expected)) {got=true} else {console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: ${e}`)} }
     finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
   }
@@ -184,6 +198,10 @@ define((require) => {
   assert(true, isLineStart('preset\tp b'))
   assert(true, isLineStart('preset p1 b1'))
   assert(false, isLineStart('presett p'))
+  assert(false, isLineStart('include'))
+  assert(false, isLineStart('includetest'))
+  assert(true, isLineStart('include blah'))
+  assert(true, isLineStart('iNCLUDe blah'))
 
   parseLine('')
   parseLine('')
@@ -259,7 +277,7 @@ define((require) => {
   assert({add:2}, applyOverrides({add:4}, players.overrides.p))
   delete players.overrides.p
 
-  assertThrows('Invalid base', () => parseLine('preset a b'))
+  assertThrows('Invalid base', async () => parseLine('preset a b'))
 
   parseLine('preset foo readout')
   assert(playerTypes.readout.play, playerTypes.foo.play)
@@ -311,6 +329,12 @@ define((require) => {
   delete players.instances.r
   delete playerTypes.myro2
   delete playerTypes.myro
+
+  let included
+  parseLine('include preset/test.limut', 0, (l) => included=l)
+    .then(() => {
+      assert('includetest preset none', included)
+    })
 
   console.log('Parse line tests complete')
   }
