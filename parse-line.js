@@ -61,13 +61,13 @@ define((require) => {
     return [parts[0], parts.slice(1).join()]
   }
 
-  let parseLine = async (line, linenum, parseCode) => {
+  let parseLine = async (line, linenum, parseCode, suppressLogs) => {
     line = line.trim()
     if (!line) { return }
     if (startsWithInclude(line)) {
       // Include external limut source file
       let url = line.trim().slice(7).trim()
-      let code = await getInclude(url)
+      let code = await getInclude(url, suppressLogs)
       await parseCode(code)
       return
     }
@@ -331,7 +331,7 @@ define((require) => {
   delete playerTypes.myro
 
   let included
-  parseLine('include preset/test.limut', 0, (l) => included=l)
+  parseLine('include preset/test.limut', 0, (l) => included=l, true)
     .then(() => {
       assert('includetest preset none', included)
     })
