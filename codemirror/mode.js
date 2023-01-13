@@ -27,6 +27,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
       "set": kw("set"),
       "preset": kw("preset"),
       "follow": kw("follow"),
+      "include": kw("include"),
     };
   }();
 
@@ -54,9 +55,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
   }
   function tokenBase(stream, state) {
     var ch = stream.next();
-    if (ch === "i" && stream.match(/nclude\s+.*/)) {
-      return ret("include", "include")
-    } else if (ch == "'") {
+    if (ch == "'") {
       state.tokenize = tokenString(ch);
       return state.tokenize(stream, state);
     } else if ((ch == "." || ch == "-") && stream.match(/^\d[\d_]*(?:[eE][+\-]?[\d_]+)?(\/[\d]+)?/)) {
