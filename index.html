@@ -325,14 +325,15 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <h5>Comments</h5>
 <p>Anything after <code>//</code> on a line is ignored</p>
 <h5>Commands</h5>
-<p>A command defines a player or preset, or sets player overrides, or sets global variables. Commands may span multiple lines; a new command is started whenever the beginning of a command is recognised at the start of a new line. So any line that begins with <code>set </code> keyword for setting vars or overrides, or with the <code>id type pattern</code> syntax for defining a player, will begin a new command.</p>
+<p>A command defines a player or preset, or sets player overrides, or sets global variables, or includes a limut source file. Commands may span multiple lines; a new command is started whenever the beginning of a command is recognised at the start of a new line. So any line that begins with <code>set </code> keyword for setting vars or overrides, or with the <code>id type pattern</code> syntax for defining a player, will begin a new command.</p>
 <p>Example:
   <pre>
-    preset mysynth ping, amp=3  // Command that creates a preset synth based on the 'ping' synth, but overriding the amp value
-    set bpm=130                 // Command that sets the global bpm (beats per minute) var to 130bpm.
-    kick play x., amp=2,        // Start of a command that defines the player called 'kick', of type `play`, with an amp (volume) of 2
-      drive=1/2                 // Continuation of the kick player definition, setting its drive param to 1/2
-    set kick drive=0            // New command defining an override for the kick player, setting its drive param to zero. Overrides like this take precedence over params set on the player itself.
+    include 'preset/synthwave.limut' // Command that includes a limut source file from a URL
+    preset mysynth ping, amp=3       // Command that creates a preset synth based on the 'ping' synth, but overriding the amp value
+    set bpm=130                      // Command that sets the global bpm (beats per minute) var to 130bpm.
+    kick play x., amp=2,             // Start of a command that defines the player called 'kick', of type `play`, with an amp (volume) of 2
+      drive=1/2                      // Continuation of the kick player definition, setting its drive param to 1/2
+    set kick drive=0                 // New command defining an override for the kick player, setting its drive param to zero. Overrides like this take precedence over params set on the player itself.
   </pre>
 </p>
 <h5>Defining a player</h5>
@@ -359,6 +360,10 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>name</code> The name for the preset. The preset can be used by players by referring to this name as the player type.</p>
 <p><code>synth</code> The existing synth (or preset) to base this preset on</p>
 <p><code>params</code> Series of param overrides to apply for players that use this preset</p>
+<h5>Including a limut source file:</h5>
+<p>Basic structure: <code>include 'url'</code></p>
+<p>Include a limut source file. The file will be downloaded from the given URL and then executed as limut code. The file will only be downloaded once, but will be executed every time the code is updated.</p>
+<p><code>url</code> The URL of the limut source file to include. Must be in single quotes as a limut string. Include standard limut libraries from eg <code>'preset/synthwave.limut'</code>. Include limut source from anywhere on the web (CORS permitting) using the full URL; eg <code>'https://sdclibbery.github.io/limut/preset/synthwave.limut'</code></p>
 </div>
 <h4 onclick="toggleAccordion('accordion-pattern-syntax')" class="accordion"> Patterns</h4>
 <div id="accordion-pattern-syntax" class="closed">
@@ -1040,8 +1045,6 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-Ability to include limut source file from a URL
- Docs
 Crackle preset: preset crackle impulse, dur=[0.01:1]r, amp=[0:2]r, hpf={[500:5000]r,q:1/2}
  Also noisefloor preset??
 Setup some includable preset files eg for synthwave 
