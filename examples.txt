@@ -2719,3 +2719,11 @@ po play [(OL)<XP>], amp=[0:3/2]r{per:8,seed:0,0:1}, rate=[1:2]r{per:8,seed:100},
 e external 0, drive=1/3, echo=(1/2,2/3), amp=0.15, pan=(-1,1), chorus
 
 
+include 'preset/synthwave.limut'
+set bpm=125
+set * swing=54
+set scale=minor
+p bd 7...
+b moroder 00-3-1, add=[0,[-7,7]]t[14,2]
+
+
