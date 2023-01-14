@@ -515,6 +515,8 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>external</code> take audio from microphone or line in. Use the <code>track</code> param to specify the track within the stream.</p>
 <p><code>multiwave</code> Synthesizer providing up to 7 wave oscillators which can have their amp and detune controlled dynamically. Each wave is specified using params <code>wave1</code> to <code>wave6</code>:</p>
 <p class='sub'><code>wave1={'saw',amp:[0:1]n,detune:wow}</code> The main value is a string giving the waveform to use. amp is a per frame amplitude control. detune is a per frame detune control in semitones.</p>
+<p><code>crackle</code> Crackly crackle sounds.</p>
+<p><code>noisefloor</code> Provide a slowly varying noise floor.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-visual-synths')" class="accordion"> Visual Synths</h4>
 <div id="accordion-visual-synths" class="closed">
@@ -903,7 +905,8 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <div id="accordion-standard-libraries" class="closed">
 <h5>Synthwave library: <code>include 'preset/synthwave.limut'</code></h5>
 <p><code>moroder</code> Moroder bass preset with a 1/16 note delay echo with stereo pan, broadly in the style of the I Feel Love bass. Eg <code>b moroder 00-3-1b</code></p>
-<p><code>blade</code> Wobbly sawtooth lead preset in the style of the Blade Runner opening titles. Eg <code>mel1 blade 0v___1v-2__-3___....</code></p>
+<p><code>blade</code> Wobbly sawtooth lead preset in the style of the Blade Runner opening titles. Eg <code>l blade 0v___1v-2__-3___....</code></p>
+<p><code>laserharp</code> PWM preset vaguely in the style of the Elka Synthex laser harp sound. Eg <code>l laserharp [98]_7_____[6#6]_5_____</code></p>
 </div>
 <hr>
 <p>Please report bugs, problems, issues and suggestions on <a href="https://github.com/sdclibbery/limut/issues" target="_blank">https://github.com/sdclibbery/limut/issues</a></p>
@@ -1055,9 +1058,6 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-Crackle preset: preset crackle impulse, dur=[0.01:1]r, amp=[0:2]r, hpf={[500:5000]r,q:1/2}
- Also noisefloor preset??
- Docs
 Setup some includable preset files eg for synthwave 
 ?? ((...)) syntax for actual array not chord; eg for FM operators or waves, or sending to mutliple buffers/buses, or having multiple bpf/nf filters
  ? Or can this be done automatically based on what param is being set? So op=({},{}) gets marked as "non chord" *because* it's the op param??

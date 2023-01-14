@@ -67,3 +67,7 @@ preset xylo fm, envelope='simple', oct=4, sus=(this.dur,3/2).max, // frequencies
   op3={ratio:1/2,target:'out',depth:1.5},
   op4={ratio:5.19,target:3,wave:'saw',depth:0.8,att:0.01,rel:0.1},
   op5={ratio:5.19,target:3,wave:'saw',depth:0.015},
+
+preset crackle impulse, dur=[1/8:1]r, amp=[1/8:2/8]r, hpf={[300:3000]r,q:1}
+
+preset noisefloor noise, lpf=[600:800]n8, amp=1/8
