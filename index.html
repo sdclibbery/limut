@@ -540,6 +540,9 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>webcam</code> Display video feed from the attached webcam (if present). The browser will ask permission before allowing access to the webcam.</p>
 <p><code>text</code> Draw and display text. Use the text param; eg <code>text='Hello'</code>. Use <code>\n</code> to split to multiple lines: <code>text='Hello\nWorld'</code>. Use subparams to control the text rendering, eg: <code>text={'Hello',font:'times',size:'144',linesize:0.7,y:1/4,x:2/3,style:'bold italic'}</code>. Text is evaluated only per event, not per frame.</p>
 <p><code>buffer</code> Maintain a render target, which other synths can render into. The render target is then drawn to the screen by this synth. Use the <code>buffer</code> param on another synth to direct its output to a <code>buffer</code> synth. Use the <code>rez</code> param on the buffer synth to set the render target texture resolution scale. Use the <code>feedback</code> param to provide video feedback by rendering this buffer on top of itself every frame. The subparams will modify the feedback render.</p>
+<p><code>scope</code> Display the current audio waveform</p>
+<p><code>scopefft</code> Display the frequency spectrum of the current audio waveform</p>
+<p><code>readout</code> Display the current value as a digital display</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-event-params')" class="accordion"> Common Event Params</h4>
 <div id="accordion-event-params" class="closed">
@@ -917,6 +920,15 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
+synthwave presets
+ oxy? - phasered eminent strings
+  phaser has subparams to control number of poles and spacing
+ detuned bass with sub
+ string pad
+ choir pad
+ synth guitar lead
+ dx7 epiano??
+ synth chime lead
 ! echo={1,feedback:0} should still produce a single delayed echo
 Individual percussion synths
  References

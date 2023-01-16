@@ -5,6 +5,7 @@ define((require) => {
   let image = require('draw/image')
   let webcam = require('draw/webcam')
   let scope = require('draw/scope')
+  let scopefft = require('draw/scopefft')
   let buffer = require('draw/buffer')
   let play = require('play/synth/play')
   let sample = require('play/synth/sample')
@@ -33,6 +34,7 @@ define((require) => {
     '!': nullPlayer,
     // visualisations
     scope: { play: sprite(scope), baseParams:{ amp:1, rate:1, zoom:1, fore:white, back:transWhite } },
+    scopefft: { play: sprite(scopefft), baseParams:{ amp:1, rate:1, zoom:1, fore:white, back:transWhite } },
     meter: { play: sprite('meter'), baseParams:{ amp:1, rate:1, zoom:1, fore:{r:0.9,g:0.0,b:0.9,a:1}, back:offBlack } },
     readout: { play: sprite('readout'), baseParams:{ amp:1, rate:1, zoom:1, fore:offWhite, back:offBlack, additive:1 } },
     webcam: { play: sprite(webcam), baseParams:{ amp:1, rate:1, zoom:1, fore:white, back:white } },

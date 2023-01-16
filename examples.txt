@@ -2759,3 +2759,17 @@ l laserharp [98]_7_____[6#6]_5_____
 // l laserharp [56]_7_____[45]_6_____[34]_5_____[43]_0_____, rel+=0{per:32,26:8}
 
 
+include 'preset/synthwave.limut'
+set bpm=120
+set scale=minor
+// n noisefloor 0
+// pk bd 7...
+// ps play ..O.
+// ph play s, echo=1/4, amp=1/2
+// b moroder 00260053
+// lh laserharp 0_[32]_.[4<36>]_.
+// lb blade 024035, dur=4, amp=2, room=2, oct+=1
+// b moroder 7654654376546532, amp*=2, oct+=[0,1]
+// lb blade 0, dur=8, amp=2, room=2, oct+=1
+
+

@@ -76,6 +76,11 @@ system.scope = () => {
   system.analyser.getFloatTimeDomainData(scopeData)
   return scopeData
 }
+const fftData = new Float32Array(system.analyser.frequencyBinCount)
+system.fft = () => {
+  system.analyser.getFloatFrequencyData(fftData)
+  return fftData
+}
 const meterData = new Float32Array(system.analyser.fftSize)
 system.meter = () => {
   system.analyser.getFloatTimeDomainData(meterData)

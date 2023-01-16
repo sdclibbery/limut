@@ -13,18 +13,16 @@ define(function (require) {
   void main() {
     vec2 pos = preprocess(fragCoord);
     pos = (pos / 2.0) + 0.5;
-    float value = texture(l_image, vec2(pos.x,0.0)).r;
-    float f = pow(1.0-abs(pos.y - (value*3.0+0.5)), 200.0);
+    // float freq = 24000.0 * pow((pos.x+0.5)*2.0,10.0)/4096.0;
+    float freq = 24000.0 * pow(pos.x+1.0,10.0)/1024.0;
+    float value = texture(l_image, vec2(freq/24000.0,0.0)).r;
+    value = (pos.x<0.0) ? 0.0 : value;
+    value = (pos.x>1.0) ? 0.0 : value;
+    value = (100.0+value)/200.0;
+    float f = pow(1.0-abs(pos.y - (value+0.5)), 200.0);
     postprocess(vec4(f,f,f,1.0), 1.0);
   }
   `
-
-  let findZeroCrossing = (data) => {
-    let idx = 0
-    while (idx < data.length && Math.sign(data[idx]) > 0) { idx++ }
-    while (idx < data.length && Math.sign(data[idx]) < 0) { idx++ }
-    data.copyWithin(0, idx)
-  }
 
   let texture
   let lastUpdateTime
@@ -36,10 +34,8 @@ define(function (require) {
       if (state.time === lastUpdateTime) { return }
       lastUpdateTime = state.time
       system.gl.bindTexture(system.gl.TEXTURE_2D, texture.tex)
-      let data = playSystem.scope()
-      findZeroCrossing(data)
-      system.gl.texImage2D(system.gl.TEXTURE_2D, 0, system.gl.R16F, data.length, 1,
-        0, system.gl.RED, system.gl.FLOAT, data)
+      let data = playSystem.fft()
+      system.gl.texImage2D(system.gl.TEXTURE_2D, 0, system.gl.R16F, data.length, 1, 0, system.gl.RED, system.gl.FLOAT, data)
     }
     texture.params = () => {
       system.gl.texParameteri(system.gl.TEXTURE_2D, system.gl.TEXTURE_MIN_FILTER, system.gl.LINEAR);

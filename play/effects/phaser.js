@@ -6,6 +6,7 @@ define(function (require) {
     if (lfoFreq == 0) { return node }
 
     let lfo = system.audio.createOscillator()
+    lfo.type= 'triangle'
     nodes.push(lfo)
     oscs.push(lfo)
     lfo.frequency.value = lfoFreq
@@ -13,7 +14,7 @@ define(function (require) {
 
     let lfoGain = system.audio.createGain()
     nodes.push(lfoGain)
-    lfoGain.gain.value = 1200
+    lfoGain.gain.value = 1900
     lfo.connect(lfoGain)
 
     let output = system.audio.createGain()
@@ -23,7 +24,7 @@ define(function (require) {
       let ap = system.audio.createBiquadFilter()
       nodes.push(ap)
       ap.type='allpass'
-      ap.Q.value = 0.125
+      ap.Q.value = 0.1
       ap.frequency.value = freq
       lfoGain.connect(ap.detune)
       ap.connect(output)
@@ -31,11 +32,10 @@ define(function (require) {
     }
 
     node
-      .connect(makeAllPass(100))
-      .connect(makeAllPass(200))
-      .connect(makeAllPass(400))
-      .connect(makeAllPass(800))
-      .connect(makeAllPass(1600))
+    .connect(makeAllPass(200))
+    .connect(makeAllPass(400))
+    .connect(makeAllPass(1100))
+    .connect(makeAllPass(2100))
     return output
   }
 
