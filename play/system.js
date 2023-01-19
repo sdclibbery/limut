@@ -55,7 +55,7 @@ system.vcaPreAmp = system.audio.createGain()
 system.vcaPreAmp.gain.value = 0.5
 
 system.analyser = system.audio.createAnalyser()
-system.analyser.fftSize = 1024
+system.analyser.fftSize = 2048
 system.analyser.smoothingTimeConstant = 0.6
 let analyserBufferLength = system.analyser.frequencyBinCount
 const spectrumData = new Uint8Array(analyserBufferLength)

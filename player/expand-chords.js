@@ -10,9 +10,10 @@ define((require) => {
     }
   }
 
-  let multiplyEvents = (event) => {
+  let multiplyEvents = (event, nonChordParams) => {
     for (let k in event) {
       if (k == 'beat') { continue }
+      if (!!nonChordParams && !!nonChordParams[k]) { continue }
       let v = event[k]
       if (v && v.__alreadyExpanded) { continue }
       let evaled = evalParamFrameIgnoreThisVars(v, event, event.count)
@@ -30,7 +31,7 @@ define((require) => {
           } else {
             e[k] = v // primitive so use same value across all chord indices
           }
-          es.push(...multiplyEvents(e)) // And recurse to expand out any other chord params
+          es.push(...multiplyEvents(e, nonChordParams)) // And recurse to expand out any other chord params
         }
         return es
       }
@@ -38,7 +39,7 @@ define((require) => {
     return [event]
   }
 
-  let expandChords = (es) => {
+  let expandChords = (es, nonChordParams) => {
     let voice = 0
     let lastTime = -1
     return es.flatMap(e => {
@@ -46,7 +47,7 @@ define((require) => {
         voice = 0
         lastTime = e._time
       }
-      let exp = multiplyEvents(e)
+      let exp = multiplyEvents(e, nonChordParams)
       exp.forEach(e => {
         e.voice = voice++
       })
@@ -79,6 +80,11 @@ define((require) => {
     assert([{x:1,y:3,voice:0},{x:1,y:4,voice:1},{x:2,y:3,voice:2},{x:2,y:4,voice:3}], expandChords([{x:[1,2],y:[3,4]}]))
     assert([{x:1,voice:0},{x:2,voice:1},{x:3,voice:2}], expandChords([{x:[1,[2,3]]}]))
     assert([{x:1,y:3,w:5,voice:0},{x:1,y:4,w:5,voice:1},{x:2,y:3,w:5,voice:2},{x:2,y:4,w:5,voice:3}], expandChords([{x:[1,2],y:[3,4],w:5}]))
+
+    assert([{x:1,beat:[2,3],voice:0}], expandChords([{x:1,beat:[2,3]}]))
+    assert([{x:1,voice:0},{x:2,voice:1}], expandChords([{x:[1,2]}]))
+    assert([{x:[1,2],voice:0}], expandChords([{x:[1,2]}], {x:true}))
+    assert([{x:[1,2],y:3,voice:0},{x:[1,2],y:4,voice:1}], expandChords([{x:[1,2],y:[3,4]}], {x:true}))
 
     p = expandChords([{x:()=>[1,2]}])
     assert(1, evalParamFrame(p[0].x,e,b))
@@ -166,5 +172,6 @@ define((require) => {
     
     console.log('Expand chords tests complete')
   }
+
   return expandChords
 })

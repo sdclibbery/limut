@@ -923,6 +923,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 synthwave presets
  oxy? - phasered eminent strings
   phaser has subparams to control number of poles and spacing
+  Also try making phaser using notch filters instead of actual phaser..??
  detuned bass with sub
  string pad
  choir pad
@@ -1070,9 +1071,18 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-Setup some includable preset files eg for synthwave 
-?? ((...)) syntax for actual array not chord; eg for FM operators or waves, or sending to mutliple buffers/buses, or having multiple bpf/nf filters
- ? Or can this be done automatically based on what param is being set? So op=({},{}) gets marked as "non chord" *because* it's the op param??
+Arrays not chords for certain params
+ Eg waves param for multiwave
+  Clean up in multiwave...
+  Docs: multiwave waves param
+ Also nonchord: ops param for fm
+ Also nonchord: nf (series) and bpf (parallel) for all audio
+ Also nonchord: buffer for all visual
+ Docs
+!this var lookup failing in various ways:
+ // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
+ // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1
+ r readout 0, add=m.bar.detune, loc=sparkle
 !Syntax colouring is case sensitive; eg  `Set` does not get coloured correctly
 Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as needed
  Needs to work for overrides too eg  body.boost+=100

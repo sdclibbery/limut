@@ -152,7 +152,7 @@ define((require) => {
         }
         player.getEventsForBeat = (beat) => {
           let es = player.getEventsForBeatBase(beat)
-          es = expandChords(es)
+          es = expandChords(es, playerFactory.nonChordParams)
           es.forEach(e => applyDelay(e, beat))
           es = expandStutter(es)
           es.forEach(e => applySwing(e, beat))

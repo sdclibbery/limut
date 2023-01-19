@@ -75,7 +75,7 @@ define((require) => {
     pwm: { play: pwm, baseParams:{ amp:1, oct:4, pwm:0.5 } },
     wave: { play: wave, baseParams:{ amp:1, oct:4 } },
     fm: { play: fm, baseParams:{ amp:1, oct:4 } },
-    multiwave: { play: multiwave, baseParams:{ amp:1, oct:4 } },
+    multiwave: { play: multiwave, baseParams:{ amp:1, oct:4 }, nonChordParams:{waves:true} },
   }
 
   return playerTypes
