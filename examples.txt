@@ -2774,8 +2774,6 @@ set scale=minor
 
 
 // Non chord array testing
-// m multiwave 0, wave1={'tri',detune:-12}, wave2={'tri',detune:12}, foo=(1,2)
-//
 // m multiwave 0, waves={'tri',detune:(12,-12)}
 // m multiwave 0, waves=({'tri',detune:-12},{'tri',detune:12}), oct=(1,2)
 // m multiwave 0, waves={'tri',detune:[(12,-12),0]t1}

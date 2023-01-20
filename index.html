@@ -513,8 +513,8 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p class='sub'><code>pwm=1/2</code> Set the pulse width from 0 to 1. The default is 1/2, a square wave (50% duty cycle). values very close to 0 and 1 will produce no sound since the actual pulse width will become vanishingly small.</p>
 <p><code>supersaw</code> supersaw lead synth preset; 7 detuned saws</p>
 <p><code>external</code> take audio from microphone or line in. Use the <code>track</code> param to specify the track within the stream.</p>
-<p><code>multiwave</code> Synthesizer providing up to 7 wave oscillators which can have their amp and detune controlled dynamically. Each wave is specified using params <code>wave1</code> to <code>wave6</code>:</p>
-<p class='sub'><code>wave1={'saw',amp:[0:1]n,detune:wow}</code> The main value is a string giving the waveform to use. amp is a per frame amplitude control. detune is a per frame detune control in semitones.</p>
+<p><code>multiwave</code> Synthesizer providing multiple waveform oscillators which can have their amp and detune controlled individually and  dynamically. The waves are specified using param <code>waves</code>. A chord is used to specify the multiple waves, but the chord is not expanded into mutliple individual voices, it is just used to specify multiple source oscillators for a single note on a single voice:</p>
+<p class='sub'><code>waves=({'square'},{'saw',amp:[0:1]n,detune:wow})</code> The main value is a string giving the waveform to use. amp is a per frame amplitude control. detune is a per frame detune control in semitones.</p>
 <p><code>crackle</code> Crackly crackle sounds.</p>
 <p><code>noisefloor</code> Provide a slowly varying noise floor.</p>
 </div>
@@ -1073,12 +1073,20 @@ shadertoy synth multiple channels
 ==== other ====
 Arrays not chords for certain params
  Eg waves param for multiwave
+  Migrate to waves param only
   Clean up in multiwave...
   Docs: multiwave waves param
  Also nonchord: ops param for fm
+  Support array
+  Migrate
+  Clean up
+  Docs
  Also nonchord: nf (series) and bpf (parallel) for all audio
- Also nonchord: buffer for all visual
- Docs
+  Support array
+  Migrate
+  Clean up
+  Docs
+ Release: loss of wave1 etc params is a breaking change
 !this var lookup failing in various ways:
  // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
  // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1

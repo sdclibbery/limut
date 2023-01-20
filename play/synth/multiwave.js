@@ -45,12 +45,8 @@ define(function (require) {
       vcos = params.waves.map((w, idx) => {
         return createWave(params.waves, idx, freq) // Again, a bit icky so that the param eval can pretend its a normal params object and not an array
       })
-    } else if (!!params.waves) { // Used the waves param, but only used a single one
-      vcos = [createWave(params, 'waves', freq)]
     } else {
-      vcos = [1,2,3,4,5,6,7].map(idx => {
-        return createWave(params, 'wave'+idx, freq)
-      })
+      vcos = [createWave(params, 'waves', freq)]
     }
     vcos = vcos.filter(o => !!o)
     // console.log(vcos.length, params.waves) // Use to the length to prove that the array is coming through as a non-chord array
