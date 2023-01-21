@@ -1067,15 +1067,11 @@ shadertoy synth multiple channels
 // var, player.var, this.param, this.voice, var{params}, slider{}, floor{}, .floor{to:}, accum{}
 // (...).1, (...).max, max{...}, {foo:...}.foo, (pk,ps).pulse
 // modifiers {seed,per,0:0}, @e, @f
-// subparams {2,mix:1/2}
+// subparams {2,mix:1/2}, non chord params, presets
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
 Arrays not chords for certain params
- Eg waves param for multiwave
-  Migrate to waves param only
-  Clean up in multiwave...
-  Docs: multiwave waves param
  Also nonchord: ops param for fm
   Support array
   Migrate
@@ -1087,6 +1083,7 @@ Arrays not chords for certain params
   Clean up
   Docs
  Release: loss of wave1 etc params is a breaking change
+  Update link on page!
 !this var lookup failing in various ways:
  // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
  // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1
