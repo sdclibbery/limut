@@ -920,9 +920,12 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
+! Phaser should be two series stages of two parallel all-pass - doing all in parallel must lessen the effect
 synthwave presets
  oxy? - phasered eminent strings
-  build custom phaser out of allpass filters
+  build custom phaser out of allpass filters - but need both series/parallel
+  Try out of multiple notches; is there actually any difference?
+  Maybe add a new filter type: phaserstage, which is two allpass in parallel, and you can have multiple stages in series
  detuned bass with sub
  string pad
  choir pad
@@ -1074,14 +1077,12 @@ shadertoy synth multiple channels
 Arrays not chords for certain params
  !!Non chord params not working with post operated @f; eg  waves={'tri',detune:(12,-12)*1@f}
  AllPassFilters
-  Build phasers
-  Test
   Docs
- Also nonchord: ops param for fm
+ Also nonchord: apf (parallel), nf (series) and bpf (parallel) for all audio
   Support array
   Migrate
   Docs
- Also nonchord: apf (parallel), nf (series) and bpf (parallel) for all audio
+ Also nonchord: ops param for fm
   Support array
   Migrate
   Docs
