@@ -922,8 +922,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ==== audio ====
 synthwave presets
  oxy? - phasered eminent strings
-  phaser has subparams to control number of poles and spacing
-  Also try making phaser using notch filters instead of actual phaser..??
+  build custom phaser out of allpass filters
  detuned bass with sub
  string pad
  choir pad
@@ -1012,6 +1011,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+!Buffer texture clear on every code update?
 recol=fmb that leaves all pixels white but with fb set, to allow recolouring with fore/mid/back. check it for webcam/image etc too
 !Should really multiply feedback params by dt, otherwise the rate of feedback motions will be framerate dependent
  Tricky to do; have to eval params first them multiply, and it's very param dependent; eg zoom vs scroll
@@ -1072,15 +1072,18 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Arrays not chords for certain params
+ !!Non chord params not working with post operated @f; eg  waves={'tri',detune:(12,-12)*1@f}
+ AllPassFilters
+  Build phasers
+  Test
+  Docs
  Also nonchord: ops param for fm
   Support array
   Migrate
-  Clean up
   Docs
- Also nonchord: nf (series) and bpf (parallel) for all audio
+ Also nonchord: apf (parallel), nf (series) and bpf (parallel) for all audio
   Support array
   Migrate
-  Clean up
   Docs
  Release: loss of wave1 etc params is a breaking change
   Update link on page!

@@ -2798,5 +2798,16 @@ set scale=minor
 // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
 // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1
 // r readout 0, add=m.bar.detune, loc=sparkle
+//
+// preset mw multiwave
+// preset mmw mw
+// m mmw 0, waves={'tri',detune:(12,-12)}
+//
+// m multiwave 0, waves={'tri'}
+// m multiwave 0, waves={'tri',detune:[-12:12]l2@f}
+// m multiwave 0, waves={'tri',detune:(12,-12)*1@f}
+// m multiwave 0, waves={'tri',detune:(0,[-12:12]l2@f)}
+// m multiwave 0, waves={'tri',detune:(12,-12)*[1:2]l2@f}
+// d dsaw 0
 
 
