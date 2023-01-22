@@ -922,11 +922,12 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ==== audio ====
 ! Phaser should be two series stages of two parallel all-pass - doing all in parallel must lessen the effect
  !!Phaser is currently input in SERIES but outputting in PARALLEL?
+ Phaser should be in series/parallel like psf!!!
 synthwave presets
  oxy? - phasered eminent strings
-  build custom phaser out of allpass filters - but need both series/parallel
-  Try out of multiple notches; is there actually any difference?
-  Maybe add a new filter type: psf (phaser stage filter), which is two allpass in parallel, and you can have multiple stages in series
+  docs
+ sunsetsky / neongrid
+  docs
  detuned bass with sub
  string pad
  choir pad
@@ -1077,12 +1078,16 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Arrays not chords for certain params
- Consider refactoring findNonChordParams usage
+ !If we remove the original waves param, then we can't do lookups on it
+    m multiwave 0, waves={'tri',detune:(12,-12)*[1]t@f}, amp=0.001
+    r readout 0, add=m.waves.detune, loc=sparkle
+  !OTOH, if we leave it, it will keep getting chord expanded
  AllPassFilters
   Docs
- Also nonchord: apf (parallel), nf (series) and bpf (parallel) for all audio
-  Support array
-  Migrate
+ PhaserStageFilter
+  Docs
+ ?Remove non-chord-params file and combine into expand-chords so that the two similar algos are together
+ Also nonchord: nf (series) and bpf (parallel) for all audio
   Docs
  Also nonchord: ops param for fm
   Support array

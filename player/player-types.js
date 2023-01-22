@@ -29,7 +29,7 @@ define((require) => {
   let nullPlayer = { play: () => {}, stopped: true }
   let audioNCP = (...extra) => {
     let ncp = {}
-    let commonNcp = ['apf']
+    let commonNcp = ['apf','psf']
     commonNcp.concat(extra).forEach(p => { ncp[p] = true })
     return ncp
   }

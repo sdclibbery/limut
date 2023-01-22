@@ -28,22 +28,50 @@ define(function (require) {
     return filter
   }
 
+  let psf = (params, p, n, f, defaultFreq) => {
+    let filter = system.audio.createBiquadFilter()
+    filter.type = 'allpass'
+    evalSubParamFrame(filter.frequency, params, p, f, defaultFreq)
+    evalSubParamFrame(filter.Q, params, p, 'q', 1)
+    n.connect(filter)
+    system.disconnect(params, [filter,n])
+    return filter
+  }
+  let phaserStageFilter = (params, p, n) => { // Two allpass in parallel
+    let output = system.audio.createGain()
+    output.gain.value = 1/2
+    system.disconnect(params, [output])
+    psf(params, p, n, 'f1', 200).connect(output)
+    psf(params, p, n, 'f2', 800).connect(output)
+    return output
+  }
+
+  let parallel = (params, node, p, creator) => {
+    let ps = findNonChordParams(params, p)
+    if (ps.length == 0) { return node }
+    let output = system.audio.createGain()
+    output.gain.value = 1/ps.length
+    system.disconnect(params, [output])
+    ps.map(p => creator(p, node)).forEach(f => f.connect(output))
+    return output
+  }
+
+  let series = (params, node, p, creator) => {
+    let ps = findNonChordParams(params, p)
+    if (ps.length == 0) { return node }
+    ps.forEach(p => {
+      node = creator(p, node)
+    })
+    return node
+  }
+
   return (params, node) => {
     node = resonant(params, node, 'lowpass', 'lpf', 5)
     node = resonant(params, node, 'highpass', 'hpf', 5)
     node = resonant(params, node, 'bandpass', 'bpf', 1)
     node = resonant(params, node, 'notch', 'nf', 1)
-
-    let apfs = findNonChordParams(params, 'apf')
-    if (apfs.length > 0) {
-      let output = system.audio.createGain() // Connect allpass in parallel to an output gain
-      system.disconnect(params, [output])
-      apfs.forEach(id => {
-        resonant(params, node, 'allpass', id, 0.1).connect(output)
-      })
-      node = output
-    }
-
+    node = parallel(params, node, 'apf', (p,n) => resonant(params, n, 'allpass', p, 1))
+    node = series(params, node, 'psf', (p,n) => phaserStageFilter(params, p, n))
     node = eq(params, node, 'lowshelf', 'low', 200, 0)
     node = eq(params, node, 'highshelf', 'high', 1100, 0)
     node = eq(params, node, 'peaking', 'mid', 600, 5)
