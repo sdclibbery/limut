@@ -921,11 +921,12 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 ! Phaser should be two series stages of two parallel all-pass - doing all in parallel must lessen the effect
+ !!Phaser is currently input in SERIES but outputting in PARALLEL?
 synthwave presets
  oxy? - phasered eminent strings
   build custom phaser out of allpass filters - but need both series/parallel
   Try out of multiple notches; is there actually any difference?
-  Maybe add a new filter type: phaserstage, which is two allpass in parallel, and you can have multiple stages in series
+  Maybe add a new filter type: psf (phaser stage filter), which is two allpass in parallel, and you can have multiple stages in series
  detuned bass with sub
  string pad
  choir pad
@@ -1015,6 +1016,7 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
 !Buffer texture clear on every code update?
+Proper gradients, not just fore/mid/back
 recol=fmb that leaves all pixels white but with fb set, to allow recolouring with fore/mid/back. check it for webcam/image etc too
 !Should really multiply feedback params by dt, otherwise the rate of feedback motions will be framerate dependent
  Tricky to do; have to eval params first them multiply, and it's very param dependent; eg zoom vs scroll
@@ -1075,7 +1077,7 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Arrays not chords for certain params
- !!Non chord params not working with post operated @f; eg  waves={'tri',detune:(12,-12)*1@f}
+ Consider refactoring findNonChordParams usage
  AllPassFilters
   Docs
  Also nonchord: apf (parallel), nf (series) and bpf (parallel) for all audio

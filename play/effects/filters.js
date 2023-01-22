@@ -3,7 +3,7 @@ define(function (require) {
   let system = require('play/system')
   let {mainParam} = require('player/sub-param')
   let {evalMainParamFrame,evalSubParamFrame} = require('play/eval-audio-params')
-  let {expandNonChordParam} = require('player/non-chord-params')
+  let {findNonChordParams} = require('player/non-chord-params')
 
   let resonant = (params, node, type, freqParam, defaultResonance) => {
     if (!mainParam(params[freqParam], 0)) { return node }
@@ -34,7 +34,7 @@ define(function (require) {
     node = resonant(params, node, 'bandpass', 'bpf', 1)
     node = resonant(params, node, 'notch', 'nf', 1)
 
-    let apfs = expandNonChordParam(params, 'apf')
+    let apfs = findNonChordParams(params, 'apf')
     if (apfs.length > 0) {
       let output = system.audio.createGain() // Connect allpass in parallel to an output gain
       system.disconnect(params, [output])

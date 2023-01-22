@@ -10,18 +10,17 @@ define((require) => {
     }
   }
 
-  let multiplyEvents = (event, nonChordParams) => {
+  let multiplyEvents = (event) => {
     for (let k in event) {
       if (k == 'beat') { continue }
-      if (!!nonChordParams && !!nonChordParams[k]) { continue }
       let v = event[k]
       if (v && v.__alreadyExpanded) { continue }
       let evaled = evalParamFrameIgnoreThisVars(v, event, event.count)
-      if (Array.isArray(evaled)) { // If param k is going to eval to a chord, expand it out
+      if (Array.isArray(evaled)) { // If param k is going to eval to a chord at the start of the event, expand it out
         let es = []
         for (let i=0; i<evaled.length; i++) {
           let e = Object.assign({}, event)
-          if (Array.isArray(v)) {
+          if (Array.isArray(v)) { // Was a literal chord even before being evalled
             e[k] = v.flat()[i] // chord in a chord
             if (e[k] === undefined) { continue }
           } else if (typeof v == 'function' || typeof v == 'object') {
@@ -31,7 +30,7 @@ define((require) => {
           } else {
             e[k] = v // primitive so use same value across all chord indices
           }
-          es.push(...multiplyEvents(e, nonChordParams)) // And recurse to expand out any other chord params
+          es.push(...multiplyEvents(e)) // And recurse to expand out any other chord params
         }
         return es
       }
@@ -39,7 +38,7 @@ define((require) => {
     return [event]
   }
 
-  let expandChords = (es, nonChordParams) => {
+  let expandChords = (es) => {
     let voice = 0
     let lastTime = -1
     return es.flatMap(e => {
@@ -47,7 +46,7 @@ define((require) => {
         voice = 0
         lastTime = e._time
       }
-      let exp = multiplyEvents(e, nonChordParams)
+      let exp = multiplyEvents(e)
       exp.forEach(e => {
         e.voice = voice++
       })
@@ -83,8 +82,6 @@ define((require) => {
 
     assert([{x:1,beat:[2,3],voice:0}], expandChords([{x:1,beat:[2,3]}]))
     assert([{x:1,voice:0},{x:2,voice:1}], expandChords([{x:[1,2]}]))
-    assert([{x:[1,2],voice:0}], expandChords([{x:[1,2]}], {x:true}))
-    assert([{x:[1,2],y:3,voice:0},{x:[1,2],y:4,voice:1}], expandChords([{x:[1,2],y:[3,4]}], {x:true}))
 
     p = expandChords([{x:()=>[1,2]}])
     assert(1, evalParamFrame(p[0].x,e,b))
@@ -169,8 +166,8 @@ define((require) => {
     assertHas({voice:3,value:'d'}, evalParamFrame(p[3],b))
     assertHas({voice:0,value:'e'}, evalParamFrame(p[4],b))
     assertHas({voice:1,value:'f'}, evalParamFrame(p[5],b))
-    
-    console.log('Expand chords tests complete')
+
+  console.log('Expand chords tests complete')
   }
 
   return expandChords
