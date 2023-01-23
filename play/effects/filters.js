@@ -37,12 +37,13 @@ define(function (require) {
     system.disconnect(params, [filter,n])
     return filter
   }
-  let phaserStageFilter = (params, p, n) => { // Two allpass in parallel
+  let phaserStageFilter = (params, p, node) => { // Two allpass in parallel
+    if (params[p] === undefined) { return node }
     let output = system.audio.createGain()
     output.gain.value = 1/2
     system.disconnect(params, [output])
-    psf(params, p, n, 'f1', 200).connect(output)
-    psf(params, p, n, 'f2', 800).connect(output)
+    psf(params, p, node, 'f1', 200).connect(output)
+    psf(params, p, node, 'f2', 800).connect(output)
     return output
   }
 
@@ -71,6 +72,7 @@ define(function (require) {
     node = resonant(params, node, 'bandpass', 'bpf', 1)
     node = resonant(params, node, 'notch', 'nf', 1)
     node = parallel(params, node, 'apf', (p,n) => resonant(params, n, 'allpass', p, 1))
+    node = phaserStageFilter(params, 'psf', node) // Can have a single unnumbered psf if desired
     node = series(params, node, 'psf', (p,n) => phaserStageFilter(params, p, n))
     node = eq(params, node, 'lowshelf', 'low', 200, 0)
     node = eq(params, node, 'highshelf', 'high', 1100, 0)
