@@ -27,12 +27,6 @@ define((require) => {
   let transBlack = {r:0,g:0,b:0,a:0}
   let warm = {r:1.0,g:0.8,b:0.6,a:1}
   let nullPlayer = { play: () => {}, stopped: true }
-  let audioNCP = (...extra) => {
-    let ncp = {}
-    let commonNcp = ['apf','psf']
-    commonNcp.concat(extra).forEach(p => { ncp[p] = true })
-    return ncp
-  }
   let playerTypes = {
     // stop
     none: nullPlayer,
@@ -65,23 +59,23 @@ define((require) => {
     julia: { play: sprite('julia'), baseParams:{ amp:1, rate:1, zoom:1, fore:offWhite, back:offBlack } },
     bars: { play: sprite('bars'), baseParams:{ amp:1, rate:1, zoom:1, fore:white, back:black, additive:1 } },
     // audio
-    drums: { play: play, baseParams:{ amp:1, dur:1/2 }, nonChordParams:audioNCP() },
-    play: { play: play, baseParams:{ amp:1, dur:1/2, rate:1 }, nonChordParams:audioNCP() },
+    drums: { play: play, baseParams:{ amp:1, dur:1/2 } },
+    play: { play: play, baseParams:{ amp:1, dur:1/2, rate:1 } },
     pitchedperc: { play: pitchedPerc, baseParams:{ amp:1, dur:1/2, sus:1/3,
         click:{ value:1, dur:0.2, cutoff:1500, q:5 },
         hit:{ value:1, sample:'^', index:1, rate:1.5, cutoff:250, q:1 },
         body:{ value:1, freq:55, boost:150, curve:3, wave:'sine', cutoff:2, q:10 },
         rattle:{ value:1, rate:1, freq:55, boost:205, curve:8, q:18 }
-      }, nonChordParams:audioNCP() },
-    impulse: { play: impulse, baseParams:{ amp:1 }, nonChordParams:audioNCP() },
-    external: { play: external, baseParams:{ amp:1 }, nonChordParams:audioNCP() },
-    noise: { play: noise, baseParams:{ amp:1 }, nonChordParams:audioNCP() },
-    sample: { play: sample, baseParams:{ amp:1, oct:4 }, nonChordParams:audioNCP() },
-    piano: { play: piano, baseParams:{ amp:1, oct:4 }, nonChordParams:audioNCP() },
-    pwm: { play: pwm, baseParams:{ amp:1, oct:4, pwm:0.5 }, nonChordParams:audioNCP() },
-    wave: { play: wave, baseParams:{ amp:1, oct:4 }, nonChordParams:audioNCP() },
-    fm: { play: fm, baseParams:{ amp:1, oct:4 }, nonChordParams:audioNCP() },
-    multiwave: { play: multiwave, baseParams:{ amp:1, oct:4 }, nonChordParams:audioNCP('waves') },
+      } },
+    impulse: { play: impulse, baseParams:{ amp:1 } },
+    external: { play: external, baseParams:{ amp:1 } },
+    noise: { play: noise, baseParams:{ amp:1 } },
+    sample: { play: sample, baseParams:{ amp:1, oct:4 } },
+    piano: { play: piano, baseParams:{ amp:1, oct:4 } },
+    pwm: { play: pwm, baseParams:{ amp:1, oct:4, pwm:0.5 } },
+    wave: { play: wave, baseParams:{ amp:1, oct:4 } },
+    fm: { play: fm, baseParams:{ amp:1, oct:4 } },
+    multiwave: { play: multiwave, baseParams:{ amp:1, oct:4 } },
   }
 
   return playerTypes

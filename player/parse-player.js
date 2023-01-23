@@ -10,7 +10,6 @@ define((require) => {
   var expandChords = require('player/expand-chords')
   let {preEvalParam,evalParamFrame} = require('player/eval-param')
   let {mainParam} = require('player/sub-param')
-  let {expandNonChordParams} = require('player/non-chord-params')
 
   let splitOnAll = (str, ch) => {
     if (!str) { return [] }
@@ -153,7 +152,6 @@ define((require) => {
         }
         player.getEventsForBeat = (beat) => {
           let es = player.getEventsForBeatBase(beat)
-          es = expandNonChordParams(es, playerFactory.nonChordParams)
           es = expandChords(es)
           es.forEach(e => applyDelay(e, beat))
           es = expandStutter(es)
@@ -484,20 +482,6 @@ define((require) => {
   p = parsePlayer('p foo 0, bar+=5')
   assert(8, evalParamFrame(p.getEventsForBeat({count:0})[0].bar,ev(0,0),0))
   delete players.instances.p
-  delete playerTypes.foo
-
-  playerTypes.foo = {play:()=>[], nonChordParams:{bar:true}}
-  p = parsePlayer('p1 foo 0, bar=1')
-  assert(1, evalParamFrame(p.getEventsForBeat({count:0})[0]._bar0,ev(0,0),0))
-  delete players.instances.p1
-  p = parsePlayer('p2 foo 0, bar=(1,2)')
-  assert(1, evalParamFrame(p.getEventsForBeat({count:0})[0]._bar0,ev(0,0),0))
-  assert(2, evalParamFrame(p.getEventsForBeat({count:0})[0]._bar1,ev(0,0),0))
-  delete players.instances.p2
-  p = parsePlayer('p3 foo 0, bar=(1,2)*[1]t@f')
-  assert(1, evalParamFrame(p.getEventsForBeat({count:0})[0]._bar0,ev(0,0),0))
-  assert(2, evalParamFrame(p.getEventsForBeat({count:0})[0]._bar1,ev(0,0),0))
-  delete players.instances.p3
   delete playerTypes.foo
 
   console.log('Parse player tests complete')

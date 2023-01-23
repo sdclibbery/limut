@@ -111,7 +111,6 @@ define((require) => {
       if (playerTypes[baseType] === undefined) { throw `Invalid base type ${baseType} for preset ${presetName}` }
       playerTypes[presetName] = {
         play: playerTypes[baseType].play,
-        nonChordParams: playerTypes[baseType].nonChordParams,
       }
       let baseBaseParams = playerTypes[baseType].baseParams || {}
       playerTypes[presetName].baseParams = applyOverrides(baseBaseParams, parseParams(params))

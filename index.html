@@ -1078,10 +1078,9 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Arrays not chords for certain params
- !If we remove the original waves param, then we can't do lookups on it
-    m multiwave 0, waves={'tri',detune:(12,-12)*[1]t@f}, amp=0.001
-    r readout 0, add=m.waves.detune, loc=sparkle
-  !OTOH, if we leave it, it will keep getting chord expanded
+  NO!!!!
+   Quit on all the auto expansion stuff, its too confusing and complicated
+   Instead, lets go back to wave1, wave2 etc, but keep the auto-finder for those params
  AllPassFilters
   Docs
  PhaserStageFilter
@@ -1093,8 +1092,6 @@ Arrays not chords for certain params
   Support array
   Migrate
   Docs
- Release: loss of wave1 etc params is a breaking change
-  Update link on page!
 !this var lookup failing in various ways:
  // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
  // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1
