@@ -51,7 +51,7 @@ define((require) => {
     return line.trimStart()
   }
 
-  let updateCode = (code) => {
+  let updateCode = async (code) => {
     system.resume()
     players.gc_reset()
     mainVars.reset()
@@ -60,7 +60,7 @@ define((require) => {
     vars.clear()
     predefinedVars.apply(vars.all())
     consoleOut('> Update code')
-    parseCode(code)
+    await parseCode(code)
     players.gc_sweep()
     sliders.gc_sweep()
     players.expandOverrides()
