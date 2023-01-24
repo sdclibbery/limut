@@ -2,7 +2,17 @@
 define(function (require) {
   let system = require('play/system')
 
-  let phaser = (lfoFreq, node, nodes, oscs) => {
+  let makeAllPass = (nodes, freq, q, lfoGain) => {
+    let ap = system.audio.createBiquadFilter()
+    nodes.push(ap)
+    ap.type='allpass'
+    ap.Q.value = q
+    ap.frequency.value = freq
+    lfoGain.connect(ap.detune)
+    return ap
+  }
+
+let phaser = (lfoFreq, node, nodes, oscs) => {
     if (lfoFreq == 0) { return node }
 
     let lfo = system.audio.createOscillator()
@@ -14,28 +24,21 @@ define(function (require) {
 
     let lfoGain = system.audio.createGain()
     nodes.push(lfoGain)
-    lfoGain.gain.value = 1900
+    lfoGain.gain.value = 2600
     lfo.connect(lfoGain)
 
     let output = system.audio.createGain()
     nodes.push(output)
 
-    let makeAllPass = (freq) => {
-      let ap = system.audio.createBiquadFilter()
-      nodes.push(ap)
-      ap.type='allpass'
-      ap.Q.value = 0.1
-      ap.frequency.value = freq
-      lfoGain.connect(ap.detune)
-      ap.connect(output)
-      return ap
-    }
+    let ap
+    ap = makeAllPass(nodes, 200, 0.7, lfoGain)
+    node.connect(ap)
+    ap.connect(output)
 
-    node
-    .connect(makeAllPass(200))
-    .connect(makeAllPass(400))
-    .connect(makeAllPass(1100))
-    .connect(makeAllPass(2100))
+    ap = makeAllPass(nodes, 1700, 0.7, lfoGain)
+    node.connect(ap)
+    ap.connect(output)
+
     return output
   }
 
