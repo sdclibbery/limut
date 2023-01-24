@@ -7,6 +7,24 @@ define(function (require) {
   let effects = require('play/effects/effects')
   let pitchEffects = require('play/effects/pitch-effects')
   let {evalSubParamEvent} = require('play/eval-audio-params')
+  let {findNonChordParams} = require('player/non-chord-params')
+
+  let createOp = (params, idx, id, freq) => {
+    let target = evalSubParamEvent(params, id, 'target', undefined)
+    let ratio = evalSubParamEvent(params, id, 'ratio', 1)
+    let wave = evalSubParamEvent(params, id, 'wave', 'sine')
+    return {
+      target: target,
+      targetIdx: parseInt(target)-1,
+      depth: evalSubParamEvent(params, id, 'depth', 1),
+      att: evalSubParamEvent(params, id, 'att', undefined),
+      rel: evalSubParamEvent(params, id, 'rel', 1),
+      ratio: ratio,
+      op: (!!target) ? fm.op(freq*ratio, params, wave) : undefined,
+      idx: idx,
+      env: undefined,
+    }
+  }
 
   return (params) => {
     let freq = scale.paramsToFreq(params, 4)
@@ -16,23 +34,9 @@ define(function (require) {
     let out = effects(params, vca)
     system.mix(out)
 
-    let ops = [1,2,3,4,5,6].map(idx => {
-      let id = 'op'+idx
-      let target = evalSubParamEvent(params, id, 'target', undefined)
-      let ratio = evalSubParamEvent(params, id, 'ratio', 1)
-      let wave = evalSubParamEvent(params, id, 'wave', 'sine')
-      return {
-        target: target,
-        targetIdx: parseInt(target)-1,
-        depth: evalSubParamEvent(params, id, 'depth', 1),
-        att: evalSubParamEvent(params, id, 'att', undefined),
-        rel: evalSubParamEvent(params, id, 'rel', 1),
-        ratio: ratio,
-        op: (!!target) ? fm.op(freq*ratio, params, wave) : undefined,
-        idx: idx,
-        env: undefined,
-      }
-    })
+    let ops = findNonChordParams(params, 'op')
+    .map((id, idx) => createOp(params, idx, id, freq))
+    console.log(ops.length) // Use the length to prove that the array is coming through as a non-chord array
 
     ops = ops.map(({target, depth, att, rel, op, env, targetIdx}) => {
       if (!target || (target !== 'out' && ops[targetIdx].op === undefined)) return

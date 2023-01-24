@@ -41,7 +41,7 @@ define(function (require) {
     let vcos = findNonChordParams(params, 'wave')
       .map(id => createWave(params, id, freq))
       .filter(o => !!o)
-    // console.log(vcos.length) // Use to the length to prove that the array is coming through as a non-chord array
+    // console.log(vcos.length) // Use the length to prove that the array is coming through as a non-chord array
 
     let multiosc = system.audio.createGain()
     multiosc.gain.value = Math.pow(1/Math.max(vcos.length,1), 1/4)
