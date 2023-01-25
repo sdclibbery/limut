@@ -2786,3 +2786,17 @@ b moroder 0000220-1, glide=1/5
 // o oxy (024)(035), oct=[3,4,5]t1, room=2, amp=1/2
 
 
+// Synthwave improv 25/Jan/2023
+include 'preset/synthwave.limut'
+set scale=minor
+v shadertoy 0, id='7tGSzm', contrast=1/2, ripple=0.05, loc=tile_tr
+va vambi (0-7), dur=4
+// bl blues 0-32..[76].., amp*=0.2
+// m moroder 0..7, add=[0,-1]t8
+// b blade 05_26_8_3_2__..., amp=3, add=[0,[0:3]r]
+// bb blues 0, dur=4, oct=2, amp=2, chop=2
+// p play X..x.X..
+// o oxy (02)(04), dur=4, oct=[4,5]r4, amp*=0.2
+// b blade 05_26_8_3_2__..., amp=3, add=[0,-1]t8
+
+

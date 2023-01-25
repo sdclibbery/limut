@@ -911,10 +911,16 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <h4 onclick="toggleAccordion('accordion-standard-libraries')" class="accordion"> Standard Libraries</h4>
 <div id="accordion-standard-libraries" class="closed">
 <h5>Synthwave library: <code>include 'preset/synthwave.limut'</code></h5>
-<p><code>moroder</code> Moroder bass preset with a 1/16 note delay echo with stereo pan, broadly in the style of the I Feel Love bass. Eg <code>b moroder 00-3-1b</code></p>
+<p><code>sunsetsky</code> Visual preset of a sunset gradient sky in the top half of the frame</p>
+<p><code>sun</code> Visual preset of a setting sun</p>
+<p><code>neongrid</code> Visual preset of a pink neon perspective grid scrolling towards the viewer, in the lower half of the frame</p>
+<p><code>neonbars</code> Visual preset of neon perspective bars scrolling towards the viewer, in the lower half of the frame</p>
 <p><code>blade</code> Wobbly sawtooth lead preset in the style of the Blade Runner opening titles. Eg <code>l blade 0v___1v-2__-3___....</code></p>
+<p><code>blues</code> Sawtooth lead preset in the style of Blade Runner blues</p>
 <p><code>laserharp</code> PWM preset vaguely in the style of the Elka Synthex laser harp sound. Eg <code>l laserharp [98]_7_____[6#6]_5_____</code></p>
+<p><code>moroder</code> Moroder bass preset with a 1/16 note delay echo with stereo pan, broadly in the style of the I Feel Love bass. Eg <code>b moroder 00-3-1b</code></p>
 <p><code>oxy</code> Attempt at the Solina strings from an Eminent organ, with a phaser and delay effect. Eg <code>o oxy -7-3-50-3264, dur=1/2, sus=1/4</code></p>
+<p><code>vambi</code> PWM ambient preset in the style of Vangelis.</p>
 </div>
 <hr>
 <p>Please report bugs, problems, issues and suggestions on <a href="https://github.com/sdclibbery/limut/issues" target="_blank">https://github.com/sdclibbery/limut/issues</a></p>
@@ -925,22 +931,15 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
-Also use nonchord find: ops param for fm
- Docs
-Also use nonchord find: nf (series) and bpf (parallel) for all audio
- Docs
 synthwave presets
- oxy? - phasered eminent strings
-  docs
- sunsetsky / neongrid
-  docs
  detuned bass with sub
  string pad
  choir pad
  synth guitar lead
  dx7 epiano??
  synth chime lead
-! echo={1,feedback:0} should still produce a single delayed echo
+!echo={1,feedback:0} should still produce a single delayed echo
+!Chop/ring LFO Freq should be per frame
 Individual percussion synths
  References
   https://github.com/sdclibbery/limut/blob/c5fec6e5eced92145000561801704afc919241b6/play/percussion.js
@@ -955,8 +954,11 @@ Individual percussion synths
    Will need two body tones...
  cb/cl
   https://www.soundonsound.com/techniques/synthesizing-cowbells-claves
-Includable preset files for 808 and 909
-New presets for sub-osc and mixed saw/square etc?
+Also use nonchord find: nf (series) and bpf (parallel) for all audio
+ Docs
+Techno include lib
+ 909
+ Reese bass
 !glide=0 does not give zero glide????!
 !Should be a mix subparam on echo!
 !FM operator should support all wave types
