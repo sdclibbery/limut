@@ -931,13 +931,11 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
+!Getting audioparam set fail with NaN from pitch-effects:75
+envelopes
+busses
 synthwave presets
- detuned bass with sub
- string pad
- choir pad
- synth guitar lead
- dx7 epiano??
- synth chime lead
+ synth chime
 !echo={1,feedback:0} should still produce a single delayed echo
 !Chop/ring LFO Freq should be per frame
 Individual percussion synths
@@ -1084,6 +1082,7 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
+!dur pattern is NOT observed when there are 3 notes in the chord:  p ping (024), dur=[2,1,2]/4
 !this var lookup failing in various ways:
  // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
  // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1

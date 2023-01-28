@@ -2800,3 +2800,33 @@ va vambi (0-7), dur=4
 // b blade 05_26_8_3_2__..., amp=3, add=[0,-1]t8
 
 
+// Synthwave improv 28/Jan/2023
+include 'preset/synthwave.limut'
+set bpm=120
+// pk play80s X.xXx.X.
+// pc play80s ..(*h).
+vs sunsetsky 0
+vsu sun 0
+vg neongrid 0
+set * add+=[0,2,5,4]t8
+// b synbass 07[.0].
+// ca chiparp 05
+// sp oxy (02)
+// spl synpluck 076-7-6
+// l synlead 7______[7676], amp*=3/2
+// l synlead 0_______, amp*=2
+
+
+// Synthwave improv 28/Jan/2023 II
+include 'preset/synthwave.limut'
+set bpm=100
+set scale=minor
+v1 shadertoy 0, id='7s3Xzl', monochrome=-1/2, contrast=0.2*[1/2:2]l8@f
+// pk play80s X..X..X.
+// ph play ..(*h).
+set * add+=[0,-2,0,1]t8
+// bl blues 0__1
+// b moroder 0081
+// s stringpad (024)
+// sp synpluck 0<89>6
+// o oxy -8086-3, dur=1/2
