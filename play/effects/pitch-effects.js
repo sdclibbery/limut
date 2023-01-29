@@ -78,6 +78,7 @@ define(function (require) {
         detune += vibrato(vib, vibdepth, vibdelay, params.count, count)
         detune += glideTarget(params, count, glide, glideCurve)
         detune += glideBase(params, count)
+if (Number.isNaN(detune)) { console.log('detune NaN', detune, count, vib, vibdepth, vibdelay, glide, glideCurve, params) }
         return detune*100 // Convert to cents for the detune audioParam
       })
     } else if (params.glide !== undefined) {

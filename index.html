@@ -932,8 +932,17 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 !Getting audioparam set fail with NaN from pitch-effects:75
-envelopes
 busses
+ Use 'bus' player to create an effects bus, and 'bus' param to send a player to an effects bus
+ Effects in a bus can have per frame control; eg can vary room mix per frame etc
+ If player bus is itself, ignore it and do nothing
+ Allow mulitple busses; bus1, bus2 etc
+envelopes
+ * Create envelopes for eg lpf, eg  lpf=this.freq*10*ar{a:1/4,r:1}
+  ??Is that the same as  lpf=this.freq*[0,10,0]e[1/4,1]  ??
+  ??Should use att/rel etc names for consistency??
+ * Get main envelope and use it for eg lpf
+ * Can use adsr{} etc for main envelope
 synthwave presets
  synth chime
 !echo={1,feedback:0} should still produce a single delayed echo
@@ -969,13 +978,8 @@ Pitch shifter effect
  Can use https://github.com/Tonejs/Tone.js/blob/c313bc672bcc09a8cee4df97a07ba80155fd1946/Tone/effect/PitchShift.ts
  See http://msp.ucsd.edu/techniques/v0.11/book-html/node115.html
  Should also be able to insert this into the reverb loop...
-Should be able to have the filter follow the note envelope (with scaling)
- Generally work is needed on envelopes...
 Allow adding filters in the room/echo loops eg echo={3/4,lpf:523} - but dont use existing filter handlers as must be per event only!
  Pitch shift up an octave to give shimmer reverb (pitch shifter: https://tonejs.github.io/docs/14.7.77/PitchShift.html)
-?Maybe define an effects bus, and then the params can be changed per frame; 'bus' param on players to route audio to an effect bus
- Use 'bus' statement to create an effects bus, and 'bus' param to send a player to an effects bus
- Effects in a bus can have per frame control; eg can vary room mix per frame etc
 Stereo widener effect: https://www.soundonsound.com/techniques/classic-stereo-widening
 envelope exp (exponent) subparam, eg att={1/2,exp:2} ?? Or name it 'pow'? Default to nonzero?
 ?Really/ideally, everything that uses an lfo (ambi, phaser, prophet etc) etc should just use a parameter so the lfo behaviour is defined in the code
@@ -1083,6 +1087,7 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 !dur pattern is NOT observed when there are 3 notes in the chord:  p ping (024), dur=[2,1,2]/4
+ Due to step index varying across pattern chord voices
 !this var lookup failing in various ways:
  // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
  // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1
