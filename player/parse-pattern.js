@@ -204,7 +204,12 @@ define(function(require) {
       if (e._time < -0.0001) {e._time += result.length}
       if (e._time > result.length-0.0001) {e._time -= result.length}
       return e
-    }).sort((a,b) => a._time-b._time)
+    }).sort((a,b) => {
+      if (a._time === b._time) {
+        return b.dur - a.dur // If start times are the same, sort by duration to put longer events first. This is necesary so the pattern eval handles chords of sequences properly.
+      }
+      return a._time - b._time // sort by start time
+    })
 
     let events = []
     let patternCount = result.events.length
@@ -337,8 +342,8 @@ define(function(require) {
 
   assertPattern(2, [
     {value:'x',_time:0, dur:1},
-    {value:'-',_time:1, dur:1/2},
     {value:'o',_time:1, dur:1},
+    {value:'-',_time:1, dur:1/2},
     {value:'-',_time:3/2, dur:1/2},
   ], parsePattern('x([--]o)'))
 
