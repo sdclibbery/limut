@@ -1087,8 +1087,20 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 !dur pattern is NOT observed when there are 3 notes in the chord:  p ping (024), dur=[2,1,2]/4
- All timingContext vars should be defaulted as accurately as possible
-  Need tests for this
+ Follow player now broken for all cases, not just complex durs
+  !Follow player refactor
+  !currently follow player fails on complex durations; eg:  ds dsaw 0[23]4_, dur=[1]  \  vds glow follow ds
+  Better follow tests - Proper tests for follow and overrides and combinations, including chords
+  Use stored events with a dependency
+  Things to test:
+    randoms (per event only)
+      p1 ping 0, dur=1, amp=0.1, oct=4, add=[0:4]r
+      v8 glow follow p1, loc={y:-1+this.add/2}, 
+    complex durations (including random); EG:
+      p1 ping 0, dur=[1]r, amp=0.1, oct=4
+      v8 glow follow p1, loc=sparkle
+    delays
+  Clean up any unnecessary gumpf around getEventsForBeatBase etc
  TEST!!
 !this var lookup failing in various ways:
  // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
@@ -1109,19 +1121,6 @@ Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as 
 !when `time` is used @e it should be event time, not time when the event is created
  eg  v readout 0, add=time@e
  !Really thats true for other vars though; eg  reading p.value  or something
-!Follow player refactor
- !currently follow player fails on complex durations; eg:  ds dsaw 0[23]4_, dur=[1]  \  vds glow follow ds
- Better follow tests - Proper tests for follow and overrides and combinations, including chords
- Use stored events with a dependency
- Things to test:
-  randoms (per event only)
-    p1 ping 0, dur=1, amp=0.1, oct=4, add=[0:4]r
-    v8 glow follow p1, loc={y:-1+this.add/2}, 
-  complex durations (including random); EG:
-    p1 ping 0, dur=[1]r, amp=0.1, oct=4
-    v8 glow follow p1, loc=sparkle
-  delays
- Clean up any unnecessary gumpf around getEventsForBeatBase etc
 Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7]r, delay=(0,{1/2,add+:2})
  !Actually, this is already possible using  delay=(0,{1/2,add:this.add+2}) . but this is ugly :-/
  But not sure of syntax
