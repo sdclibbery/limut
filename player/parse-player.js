@@ -142,8 +142,8 @@ define((require) => {
         } else {
           getEventsForBeat = standardPlayer(patternStr, paramsStr, player, playerFactory.baseParams)
         }
-        player.getEventsForBeatBase = (beat) => {
-          let events = getEventsForBeat(beat)
+        player.getEventsForBeatBase = (beat, timingContext) => {
+          let events = getEventsForBeat(beat, timingContext)
           events.forEach(e => e.linenum = linenum)
           let overrides = players.overrides[player.id] || {}
           let es = events.map(e => applyOverrides(e, overrides))
@@ -151,7 +151,7 @@ define((require) => {
           return es
         }
         player.getEventsForBeat = (beat) => {
-          let es = player.getEventsForBeatBase(beat)
+          let es = player.getEventsForBeatBase(beat, player)
           es = expandChords(es)
           es.forEach(e => applyDelay(e, beat))
           es = expandStutter(es)

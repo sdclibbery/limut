@@ -4,10 +4,10 @@ define(function(require) {
   let {combineOverrides,applyOverrides} = require('player/override-params')
 
   let followPlayer = (playerIdToFollow, params, baseParams) => {
-    return (beat) => {
+    return (beat, timingContext) => {
       let p = players.instances[playerIdToFollow.toLowerCase()]
       if (p === undefined) { return [] }
-      let events = p.getEventsForBeatBase(beat)
+      let events = p.getEventsForBeatBase(beat, timingContext)
       return events.map(e => {
         // base params - the preset for the follow player
         // e - the event the follow player is following

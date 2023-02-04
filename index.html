@@ -1085,22 +1085,9 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-!dur pattern is NOT observed when there are 3 notes in the chord:  p ping (024), dur=[2,1,2]/4
- Follow player now broken for all cases, not just complex durs
-  !Follow player refactor
-  !currently follow player fails on complex durations; eg:  ds dsaw 0[23]4_, dur=[1]  \  vds glow follow ds
-  Better follow tests - Proper tests for follow and overrides and combinations, including chords
-  Use stored events with a dependency
-  Things to test:
-    randoms (per event only)
-      p1 ping 0, dur=1, amp=0.1, oct=4, add=[0:4]r
-      v8 glow follow p1, loc={y:-1+this.add/2}, 
-    complex durations (including random); EG:
-      p1 ping 0, dur=[1]r, amp=0.1, oct=4
-      v8 glow follow p1, loc=sparkle
-    delays
-  Clean up any unnecessary gumpf around getEventsForBeatBase etc
+!Problem with pattern indexes
  TEST!!
+  Examples with complex patterns and complex durs
   // pattern features (), [], <>, #b, v^, single event pattern
   // (), follow, complex durs, simple durs, delay, stutter, overrides, +=, |=, []
 !this var lookup failing in various ways:
@@ -1109,6 +1096,9 @@ shadertoy synth multiple channels
  r readout 0, add=m.bar.detune, loc=sparkle
  !!Does follow player still work at all???
 !Syntax colouring is case sensitive; eg  `Set` does not get coloured correctly
+!Follow player chooses different random values so it does not copy the original player properly
+ Tests for this
+ Need all randoms to be seeded, and the seed to vary between players but be the same for a follow player
 Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as needed
  Needs to work for overrides too eg  body.boost+=100
 !`p1 ping 0, dur=4, foo=[100,1000,100]e \n p2 kal 0, dur=1, amp=p1.foo/1000` the []e is evalled in the WRONG players dur
