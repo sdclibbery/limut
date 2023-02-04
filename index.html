@@ -1087,18 +1087,9 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 !dur pattern is NOT observed when there are 3 notes in the chord:  p ping (024), dur=[2,1,2]/4
- Due to step index varying across pattern chord voices
-  Need to do complex durs else as well
- ALSO: when deciding that [0,1] should be spread across single pattern step, a chord (024) MUST count as a single pattern step...
- WHAT IS IDX??
-  If pattern is a single event or chord, idx just counts up per step and does not loop or reset
-   This allows [1,2] etc to work with single event patterns
-  If pattern has multiple events/chords, idx counts up, and then loops back to 0 when the pattern loops
-   This makes sure that multievent patterns are as consistent as possible
-  !Now go through and review ALL the pattern tests to check the idxs are right
-// !!!!!This new approach: IF I start a player it will always start from the beginning of the pattern
-// But it MUSTNT for simple durs
-// Need a test for this!!! And it must also verify that idx is correct too, when dropping in
+ All timingContext vars should be defaulted as accurately as possible
+  Need tests for this
+ TEST!!
 !this var lookup failing in various ways:
  // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
  // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1

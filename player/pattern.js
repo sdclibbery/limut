@@ -4,6 +4,48 @@ define(function(require) {
   let parsePatternString = require('player/parse-pattern')
   let {evalParamFrame} = require('player/eval-param')
 
+  let getSubEvents = (e, events, timingContext) => {
+    return e.value(e, timingContext._patternRepeats)
+  }
+
+  let getEvent = (events, timingContext) => {
+    let e = events[timingContext._patternIdx]
+    if (typeof e.value === 'function') {
+      let es = getSubEvents(e, events, timingContext)
+      return es[timingContext._subPatternIdx]
+    }
+    return e
+  }
+
+  let nextEventMaybeLoop = (events, timingContext) => {
+    let e = events[timingContext._patternIdx]
+    if (typeof e.value === 'function') {
+      timingContext._subPatternIdx++ // Step through sub pattern
+      let subLength = getSubEvents(e, events, timingContext).length
+      if (timingContext._subPatternIdx < subLength) { return false } // Still in the subpattern, didn't loop the main pattern
+      timingContext._subPatternIdx = 0 // Looped around the subpattern; fall through and also step through main pattern
+    }
+    timingContext._patternIdx++ // Step through main pattern
+    if (timingContext._patternIdx >= events.length) {
+      timingContext._patternIdx = 0
+      timingContext._patternRepeats++
+      return true // Looped around the main pattern
+    }
+    return false // Didn't loop
+  }
+
+  let getNextChord = (events, timingContext) => {
+    let event = getEvent(events, timingContext)
+    let chordTime = event._time
+    let result = []
+    do {
+      result.push(event)
+      if (nextEventMaybeLoop(events, timingContext)) { break }
+      event = getEvent(events, timingContext)
+    } while (event._time === chordTime)
+    return result
+  }
+
   let parsePattern = (patternStr, params) => {
     if (!patternStr) { return () => [] }
     let pattern = parsePatternString(patternStr)
@@ -16,57 +58,42 @@ define(function(require) {
     return (count, timingContext) => {
       // let patternStartTime = patternLength * Math.floor(count / patternLength)
       if (!timingContext._patternIdx) { timingContext._patternIdx = 0 }
+      if (!timingContext._subPatternIdx) { timingContext._subPatternIdx = 0 }
+      if (!timingContext._patternRepeats) { timingContext._patternRepeats = 0 }
       if (!timingContext._patternCount) { timingContext._patternCount = count }
-      if (timingContext._idx === undefined) { timingContext._idx = -1 }
-      if (timingContext._lastTime === undefined) { timingContext._lastTime = -1 }
+      if (!timingContext._idx) { timingContext._idx = 0 }
       let eventsForBeat = []
       while (timingContext._patternCount < count + 0.9999) {
-        let e = events[timingContext._patternIdx % events.length]
-        let patternRepeats = Math.floor(timingContext._patternIdx / events.length)
-        let es = (typeof(e.value) == 'function') ? e.value(e, patternRepeats) : [e]
-        let duration = evalParamFrame(dur, {idx: timingContext._patternIdx, count: timingContext._patternCount}, count)
+        let duration = evalParamFrame(dur, {idx: timingContext._idx, count: timingContext._patternCount}, count)
         if (duration <= 0) { throw 'Zero duration' }
-        let patternCount = timingContext._patternCount
-        let advance = 0
-        let lastDur = 0
-        es.forEach(sourceEvent => {
-          let event = {}
+        let chord = getNextChord(events, timingContext)
+        let anyNotRest = false
+        chord.forEach(sourceEvent => {
           let isRest = sourceEvent.value === undefined
-          let isChordEvent = sourceEvent._time === timingContext._lastTime
-          timingContext._lastTime = sourceEvent._time
-          if (!isChordEvent && !isRest) {
-            timingContext._idx++
-          }
+          if (!isRest) { anyNotRest = true }
+          let event = {}
           event.value = sourceEvent.value
           event.idx = isSingleStep ? timingContext._idx : timingContext._idx % numDistinctTimes
-          event._time = patternCount - count - (isChordEvent ? lastDur : 0)
+          event._time = timingContext._patternCount - count
           event.dur = sourceEvent.dur * duration
-          lastDur = event.dur
           event.count = count + event._time
-          event.sharp = sourceEvent.sharp
-          event.loud = sourceEvent.loud
-          event.long = sourceEvent.long
-          if (!isRest) {
+          if (!isRest) { // No point setting up loads of data on rests that will be discarded anyway
+            event.sharp = sourceEvent.sharp
+            event.loud = sourceEvent.loud
+            event.long = sourceEvent.long
             for (let k in params) {
               if (k != '_time' && k != 'value' && k != 'dur') {
                 event[k] = params[k]
               }
             }
-            eventsForBeat.push(event)
-          }
-          advance += event.dur // should be in below if
-          if (!isChordEvent) {
-            patternCount += event.dur
-          }
+            }
+          eventsForBeat.push(event)
         })
-        timingContext._patternIdx++
-        let nextEvent = events[timingContext._patternIdx % events.length]
-        if (nextEvent._time != es[0]._time || timingContext._patternIdx % events.length == 0) {
-          timingContext._patternCount += advance
-          timingContext._lastTime = -1
-        }
+        let lastEvent = eventsForBeat[eventsForBeat.length-1]
+        timingContext._patternCount += lastEvent.dur // Events in a chord are pre-sorted so shortest duration is last
+        if (anyNotRest) { timingContext._idx++ }
       }
-      return eventsForBeat.filter(({value}) => value !== undefined)
+      return eventsForBeat.filter(({value}) => value !== undefined) // Discard rests
     }
   }
 
