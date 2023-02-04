@@ -73,7 +73,7 @@ define(function(require) {
         if (!isRest) { anyNotRest = true }
         let event = {}
         event.value = sourceEvent.value
-        event.idx = timingContext.isSingleStep ? timingContext._idx : timingContext._idx % timingContext.numDistinctTimes
+        event.idx = timingContext._isSingleStep ? timingContext._idx : timingContext._idx % timingContext._numDistinctTimes
         event._time = timingContext._patternCount - count
         event.dur = sourceEvent.dur * duration
         event.count = count + event._time
@@ -118,8 +118,8 @@ define(function(require) {
     return (count, timingContext) => {
       if (timingContext._patternIdx === undefined) {
         initialiseTimingContext(count, dur, events, timingContext)
-        timingContext.isSingleStep = isSingleStep
-        timingContext.numDistinctTimes = numDistinctTimes
+        timingContext._isSingleStep = isSingleStep
+        timingContext._numDistinctTimes = numDistinctTimes
       }
       let eventsForBeat = stepToCount(count, dur, events, timingContext)
                             .filter(({value}) => value !== undefined) // Discard rests

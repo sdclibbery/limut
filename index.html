@@ -1074,9 +1074,8 @@ shadertoy synth support textures - MtGSzh
 shadertoy synth multiple channels
 ====
 ==== things to test/consider ====
-// pattern features (), [], <>, #b, v^
-// p ping 0, add=[0,1,2,3]
-// (), follow, complex durs, delay, stutter, overrides, +=, |=
+// pattern features (), [], <>, #b, v^, single event pattern
+// (), follow, complex durs, simple durs, delay, stutter, overrides, +=, |=, []
 // [], []t, []l/s, []e, []n, []r
 // operators + - * / ^ % |
 // var, player.var, this.param, this.voice, var{params}, slider{}, floor{}, .floor{to:}, accum{}
@@ -1102,6 +1101,8 @@ shadertoy synth multiple channels
     delays
   Clean up any unnecessary gumpf around getEventsForBeatBase etc
  TEST!!
+  // pattern features (), [], <>, #b, v^, single event pattern
+  // (), follow, complex durs, simple durs, delay, stutter, overrides, +=, |=, []
 !this var lookup failing in various ways:
  // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
  // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1
