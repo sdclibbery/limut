@@ -92,6 +92,12 @@ define(function(require) {
   }
 
   let initialiseTimingContext = (count, dur, events, timingContext) => {
+    // Pattern summary info
+    let nonRestEvents = events.filter(e => e.value !== undefined)
+    let numDistinctTimes = new Set(nonRestEvents.map(e => e._time)).size
+    let isSingleStep = numDistinctTimes === 1
+    timingContext._isSingleStep = isSingleStep
+    timingContext._numDistinctTimes = numDistinctTimes
     // Get a value for pattern length. May not be accurate for random or super-complex durations
     let patternLength = calculatePatternLength(dur, events)
     let patternRepeats = Math.floor(count / patternLength)
@@ -99,27 +105,22 @@ define(function(require) {
     // Initialise timing context as if we're at the beginning of the current repeat of the pattern
     timingContext._patternIdx = 0
     timingContext._subPatternIdx = 0
-    timingContext._idx = 0
+    timingContext._idx = isSingleStep ? patternRepeats : 0
     timingContext._patternRepeats = patternRepeats
     timingContext._patternCount = patternStartTime
     // Step through the pattern to reach the last count; that will fully initialise the timing context
     stepToCount(count-1, dur, events, timingContext)
-  }
+}
 
   let parsePattern = (patternStr, params) => {
     if (!patternStr) { return () => [] }
     let pattern = parsePatternString(patternStr)
     let events = pattern.events
     if (events.length == 0) { return () => [] }
-    let nonRestEvents = events.filter(e => e.value !== undefined)
-    let numDistinctTimes = new Set(nonRestEvents.map(e => e._time)).size
-    let isSingleStep = numDistinctTimes === 1
     let dur = param(params.dur, 1)
     return (count, timingContext) => {
       if (timingContext._patternIdx === undefined) {
         initialiseTimingContext(count, dur, events, timingContext)
-        timingContext._isSingleStep = isSingleStep
-        timingContext._numDistinctTimes = numDistinctTimes
       }
       let eventsForBeat = stepToCount(count, dur, events, timingContext)
                             .filter(({value}) => value !== undefined) // Discard rests
@@ -182,7 +183,7 @@ define(function(require) {
 
   pattern = parsePattern('<1234>', {})
   tc = {}
-  assert([{value:3,idx:0,_time:0,dur:1,count:2}], pattern(2, tc))
+  assert([{value:3,idx:2,_time:0,dur:1,count:2}], pattern(2, tc))
 
   pattern = parsePattern('[1234]', {dur:4})
   tc = {}
@@ -194,8 +195,13 @@ define(function(require) {
 
   pattern = parsePattern('<1[23]>', {dur:2})
   tc = {}
-  assert([{value:3,idx:1,_time:0,dur:1,count:3}], pattern(3, tc))
-  assert([{value:1,idx:2,_time:0,dur:2,count:4}], pattern(4, tc))
+  assert([{value:3,idx:2,_time:0,dur:1,count:3}], pattern(3, tc))
+  assert([{value:1,idx:3,_time:0,dur:2,count:4}], pattern(4, tc))
+
+  tc = {}
+  pattern = parsePattern('0', {})
+  assert([{value:0,idx:3,_time:0,dur:1,count:3}], pattern(3, tc))
+  assert([{value:0,idx:4,_time:0,dur:1,count:4}], pattern(4, tc))
 
   tc = {}
   pattern = parsePattern('x', {})
