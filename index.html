@@ -1092,7 +1092,6 @@ shadertoy synth multiple channels
     stepToCount http://localhost:8000/player/pattern.js:69
     parsePattern http://localhost:8000/player/pattern.js:125     
  TEST!!
-  Examples with complex patterns and complex durs
   // pattern features (), [], <>, #b, v^, single event pattern
   // (), follow, complex durs, simple durs, delay, stutter, overrides, +=, |=, []
 !Should really re-initialise the timing context when code update changes the player in some way?
@@ -1101,6 +1100,8 @@ shadertoy synth multiple channels
  // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1
  r readout 0, add=m.bar.detune, loc=sparkle
  !!Does follow player still work at all???
+!Can no longer use a complex dur to force a pattern to start when the player is uncommented
+ EG the boom and whoosh in BLade Runner opening titles
 !Syntax colouring is case sensitive; eg  `Set` does not get coloured correctly
 !Follow player chooses different random values so it does not copy the original player properly
  Tests for this
