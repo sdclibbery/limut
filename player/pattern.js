@@ -15,7 +15,6 @@ define(function(require) {
 
   let nextEventMaybeLoop = (events, timingContext) => {
     let e = events[timingContext._patternIdx]
-if (e === undefined) { console.log(timingContext, events) }
     if (typeof e.value === 'function') {
       timingContext._subPatternIdx++ // Step through sub pattern
       let subLength = e.value(e, timingContext._patternRepeats).length
@@ -120,8 +119,12 @@ if (e === undefined) { console.log(timingContext, events) }
     if (events.length == 0) { return () => [] }
     let dur = param(params.dur, 1)
     return (count, timingContext) => {
-      if (timingContext._patternIdx === undefined) {
+      let tcNotInitialised = timingContext._patternIdx === undefined
+      let patternChanged = timingContext._patternString !== patternStr
+      let patternIdxOutsideRange = timingContext._patternIdx >= events.length
+      if (tcNotInitialised || patternChanged || patternIdxOutsideRange) {
         initialiseTimingContext(count, dur, events, timingContext)
+        timingContext._patternString = patternStr
       }
       let eventsForBeat = stepToCount(count, dur, events, timingContext)
                             .filter(({value}) => value !== undefined) // Discard rests
