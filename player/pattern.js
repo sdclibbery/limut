@@ -15,6 +15,7 @@ define(function(require) {
 
   let nextEventMaybeLoop = (events, timingContext) => {
     let e = events[timingContext._patternIdx]
+if (e === undefined) { console.log(timingContext, events) }
     if (typeof e.value === 'function') {
       timingContext._subPatternIdx++ // Step through sub pattern
       let subLength = e.value(e, timingContext._patternRepeats).length

@@ -1086,10 +1086,16 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 !Problem with pattern indexes
+ !!FAILURE: TypeError: e is undefined
+    getEvent http://localhost:8000/player/pattern.js:9
+    getNextChord http://localhost:8000/player/pattern.js:34
+    stepToCount http://localhost:8000/player/pattern.js:69
+    parsePattern http://localhost:8000/player/pattern.js:125     
  TEST!!
   Examples with complex patterns and complex durs
   // pattern features (), [], <>, #b, v^, single event pattern
   // (), follow, complex durs, simple durs, delay, stutter, overrides, +=, |=, []
+!Should really re-initialise the timing context when code update changes the player in some way?
 !this var lookup failing in various ways:
  // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
  // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1
