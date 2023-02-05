@@ -398,7 +398,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>1#</code> <code>1b</code> For use with the audio <code>add</code> param, sharpen or flatten the value. This is parsed into <code>{1,#:1}</code> or <code>{1,b:1}</code></p>
 <p><code></code> No value: for a param, missing a value is the same as setting the param to <code>1</code>. Eg <code>monochrome</code> is the same as <code>monochrome=1</code></p>
 <p><code>(1,2)</code> A 'chord' or chord. Multiple values, all played together</p>
-<p><code>[1,2]</code> Sequence of values, one per event in the pattern; for single length patterns only, all values will be expanded, so <code>p ping 0, add=[0,1,2]</code> will cycle through all three values.</p>
+<p><code>[1,2]</code> Sequence of values, one per event in the pattern, ignoring rests. For single length patterns only, all values will be expanded, so <code>p ping 0, add=[0,1,2]</code> will cycle through all three values.</p>
 <p><code>[1,2]t3</code> Timed sequence, each value lasts for 3 beats</p>
 <p><code>[1,2]t[12,4]</code> Timed sequence with one timing per value. At present the timings must be const numbers, they cannot be expressions.</p>
 <p><code>[0:3]t1</code> Timed sequence, expanded. The example is equivalent to <code>[0,1,2,3]t1</code></p>
@@ -1087,6 +1087,10 @@ shadertoy synth multiple channels
 ==== other ====
 !Problem with pattern indexes
  RELEASE
+  Follow player now works with complex durs
+  Pattern index [] now works with chords: all events in chord get the same index
+  Pattern index ignores rests
+  Complex durs are no longer guaranteed to start playback immediately on code update
 !this var lookup failing in various ways:
  // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
  // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1
