@@ -74,14 +74,13 @@ define(function (require) {
     dur *= evalMainParamEvent(params, "long", 1)
     let attack = Math.max(evalMainParamEvent(params, 'att', dur) * params.beat.duration, 0.001)
     let release = Math.max(evalMainParamEvent(params, 'rel', dur) * params.beat.duration, 0.001)
-    let sus = Math.max(dur*params.beat.duration - attack, 0.001)
+    let sus = Math.max(dur*params.beat.duration - attack, 0)
     let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     let vca = system.audio.createGain()
     vca.gain.cancelScheduledValues(0)
     vca.gain.setValueAtTime(0, 0)
     vca.gain.setValueAtTime(0, params._time)
     vca.gain.setValueCurveAtTime(fadeUp(gain), params._time, attack)
-    vca.gain.linearRampToValueAtTime(gain, params._time + attack+sus)
     vca.gain.setValueCurveAtTime(fadeDown(gain), params._time + attack+sus, release)
     params.endTime = params._time + attack+sus+release
     return vca
