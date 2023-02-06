@@ -924,7 +924,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 </div>
 <hr>
 <p>Please report bugs, problems, issues and suggestions on <a href="https://github.com/sdclibbery/limut/issues" target="_blank">https://github.com/sdclibbery/limut/issues</a></p>
-<p>Latest release notes including breaking changes: <a href="https://github.com/sdclibbery/limut/releases/tag/v0.6.1-alpha" target="_blank">https://github.com/sdclibbery/limut/releases/tag/v0.6.1-alpha</a></p>
+<p>Latest release notes including breaking changes: <a href="https://github.com/sdclibbery/limut/releases/tag/v0.7.0-alpha" target="_blank">https://github.com/sdclibbery/limut/releases/tag/v0.7.0-alpha</a></p>
 <canvas id="text-canvas" style="display: none;"></canvas>
 </body>
 <script data-main="main" src="require.js">
@@ -1085,12 +1085,6 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-!Problem with pattern indexes
- RELEASE
-  Follow player now works with complex durs
-  Pattern index [] now works with chords: all events in chord get the same index
-  Pattern index ignores rests
-  Complex durs are no longer guaranteed to start playback immediately on code update
 !this var lookup failing in various ways:
  // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
  // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1
