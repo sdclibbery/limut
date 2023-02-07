@@ -19,7 +19,7 @@ define(function (require) {
   uniform vec2 l_zoom;
   uniform float l_rotate;
   uniform vec4 l_mirror;
-  uniform float l_perspective;
+  uniform vec4 l_perspective;
   uniform float l_tunnel;
   uniform vec4 l_ripple;
   uniform vec4 l_pixellate;
@@ -41,11 +41,11 @@ define(function (require) {
     if (l_ripple.x != 0.) {
       coord += coord*0.1*l_ripple.x*sin(length(coord)*24.0*l_ripple.y-iTime)/length(coord);
     }
-    if (l_perspective != 0.) {
+    if (l_perspective.x != 0.) {
       const float sz = 1.0;
       const float pz = 1.0;
       vec2 s = coord / sz;
-      float p = (origCoord.y*sin(l_perspective*0.68) + cos(l_perspective*0.68));
+      float p = (origCoord.y*sin(l_perspective.x*0.68) + cos(l_perspective.x*0.68));
       vec2 uv = vec2(
         s.x*pz/p,
         s.y*pz/p
@@ -138,6 +138,10 @@ define(function (require) {
     if (l_tunnel != 0.) {
       float t = length(origCoord);
       col.rgb *= mix(1.,min(t,1.),l_tunnel);
+    }
+    if (l_perspective.y != 0.) {
+      float p = (origCoord.y*sin(l_perspective.x*0.68) + cos(l_perspective.x*0.68));
+      col.rgb *= mix(1.0, min(1.0,0.1+p*0.7), l_perspective.y);
     }
     if (l_monochrome != 0.) {
       vec3 mono = vec3(0.21*col.r + 0.71*col.g + 0.07*col.b);

@@ -2853,3 +2853,10 @@ set * add+=[0,-2,0,1]t8
 // r readout 1<23>, loc=tile_tr, dur=[1,2]
 // f readout follow r, loc=tile_br, delay=1
 
+
+// v kal 0, perspective={[-1:1]l2@f,shade:3/2}
+// v gradient 0_, back=white, fore=white, perspective={-1,shade:[1/4,1/2,1]}
+// v gradient 0, back=white, fore=white, loc=tile_t, perspective={1,shade:1}
+// v gradient 0, back=white, fore=white, loc=tile_b, perspective={-1,shade:1}
+
+

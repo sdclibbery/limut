@@ -208,7 +208,11 @@ let verts = (loc, window, har, allowHarAdjust) => {
       )
       let scroll = vec(evalParam.evalParamFrame(params.scroll, params, state.count), defScroll, 'scroll')
       let zoom = vec(evalParam.evalParamFrame(params.zoom, params, state.count), defZoom, 'zoom')
-      let perspective = evalMainParamFrame(params, 'perspective', 0, state.count)
+      let perspective = ca('perspective',
+        evalMainParamFrame(params, 'perspective', 0, state.count),
+        evalSubParamFrame(params, 'perspective', 'shade', 0, state.count),
+        0,0
+      )
       let tunnel = evalMainParamFrame(params, 'tunnel', 0, state.count)
       let contrast = evalMainParamFrame(params, 'contrast', 0, state.count)
       let ripple = ca('ripple',
@@ -258,7 +262,7 @@ let verts = (loc, window, har, allowHarAdjust) => {
       gl.uniform4fv(s.pixellateUnif, pixellate)
       gl.uniform1f(s.tunnelUnif, tunnel)
       gl.uniform4fv(s.rippleUnif, ripple)
-      gl.uniform1f(s.perspectiveUnif, perspective)
+      gl.uniform4fv(s.perspectiveUnif, perspective)
       gl.uniform1f(s.additiveUnif, additive)
       gl.uniform1f(s.eventTimeUnif, eventTime)
       gl.uniform1f(s.contrastUnif, contrast)
