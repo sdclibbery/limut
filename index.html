@@ -1086,6 +1086,15 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
+dur=euclid{5,from:8,offset:1}
+ Not (re)starting properly at the right time
+  This is because the pattern TC init code is evalling only one pass through the pattern
+   And this won't work for (eg)  r readout 0, dur=[3,2,3], fade, add=this.dur
+ Docs - note, uses bresenham so may not be identical to Euclidean. Eg 332 vs 323
+!g gradient 0, fore=[orange]/2  DOESNT work, but only for index []
+Need syntax for "not" player group
+ Eg set !p* add=4
+ What is our "not" operator??
 !this var lookup failing in various ways:
  // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
  // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1

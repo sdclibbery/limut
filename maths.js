@@ -13,6 +13,34 @@ define(function(require) {
   addVarFunction('ceil', roundWrapper(Math.ceil))
   addVarFunction('round', roundWrapper(Math.round))
 
+  addVarFunction('euclid', (args, e) => {
+    let k = Math.floor(mainParam(args, 1)) // Distribute k beats...
+    let n = Math.floor(subParam(args, 'from', 1)) // ...between n steps
+    let offset = Math.floor(subParam(args, 'offset', 0)) // ...rotated by offset
+    n = Math.max(n, 1) // Must have at least one step
+    k = Math.max(k, 1) // Must have at least one beat
+    k = Math.min(k, n) // Can't have more beats than steps
+    // Build the array of euclidean durations
+    let x = 0
+    let xi = 0
+    let step = n/k
+    let stepi = Math.ceil(step)
+    let targetIdx = (e.idx + k - offset) % k
+    let idx = 0
+    let dur = 1
+    do {
+      dur = stepi
+      if (xi > x) {
+        dur--
+      }
+      xi += dur
+      x += step
+      idx++
+    } while (idx <= targetIdx) // Stop when we've reached the value we need
+    // console.log(k, n, targetIdx, dur)
+    return dur
+  })
+
   let getVoiceState = (fullState, e,b) => {
     if (fullState.voices === undefined) { fullState.voices = {} }
     if (fullState.voices[e.voice] === undefined) { fullState.voices[e.voice] = {} }
@@ -60,10 +88,10 @@ define(function(require) {
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
-  let assert = (expected, actual) => {
+  let assert = (expected, actual, msg) => {
     let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
     let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
-    if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
+    if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`+(msg?'\n'+msg:'')) }
   }
   require('predefined-vars').apply(require('vars').all())
   let parseExpression = require('player/parse-expression')
@@ -170,6 +198,27 @@ define(function(require) {
   assert([0,1], evalParamFrame(p, ev(0,0,1,1), 1))
   assert([2,3], evalParamFrame(p, ev(0,0,1,0), 2))
   assert([2,3], evalParamFrame(p, ev(0,0,1,1), 2))
+
+  let testEuclid = (expected, p) => {
+    for (let i=0; i<expected.length; i++) {
+      assert(expected[i], evalParamFrame(p, ev(i,0), 0), `Index ${i} of expected ${expected}`)
+    }
+  }
+  testEuclid([1], parseExpression('euclid{3}'))
+  testEuclid([1], parseExpression('euclid{0,from:0}'))
+  testEuclid([1], parseExpression('euclid{1,from:1}'))
+  testEuclid([1], parseExpression('euclid{2,from:1}'))
+
+  testEuclid([2], parseExpression('euclid{1,from:2}'))
+  testEuclid([2,1], parseExpression('euclid{2,from:3}'))
+  testEuclid([2,2], parseExpression('euclid{2,from:4}'))
+  testEuclid([3,2,3], parseExpression('euclid{3,from:8}'))
+  testEuclid([3,2,3,2,3], parseExpression('euclid{5,from:13}'))
+
+  testEuclid([3,2,3], parseExpression('euclid{3,from:8,offset:0}'))
+  testEuclid([3,3,2], parseExpression('euclid{3,from:8,offset:1}'))
+  testEuclid([2,3,3], parseExpression('euclid{3,from:8,offset:2}'))
+  testEuclid([3,2,3], parseExpression('euclid{3,from:8,offset:3}'))
 
   console.log('Maths tests complete')
   }
