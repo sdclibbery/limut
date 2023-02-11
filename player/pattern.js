@@ -100,6 +100,7 @@ define(function(require) {
     // Should step through the same as stepToCount, but as quickly as possible
     while (timingContext._patternCount < count + 0.9999) {
       let duration = mainParam(evalParamFrame(dur, {idx: timingContext._idx, count: timingContext._patternCount}, count), 1)
+      if (duration < 1/8) { return false } // Bomb out if there are very short durations, to avoid looping for ages
       let anyNotRest = false
       let lastDur = 1
       let event = getEvent(events, timingContext)
@@ -114,10 +115,10 @@ define(function(require) {
       timingContext._patternCount += lastDur
       if (anyNotRest) { timingContext._idx++ }
     }
+    return true
   }
 
   let initialiseTimingContext = (count, dur, events, timingContext) => {
-console.time()
     // Pattern summary info
     let nonRestEvents = events.filter(e => e.value !== undefined)
     let numDistinctTimes = new Set(nonRestEvents.map(e => e._time)).size
@@ -131,10 +132,11 @@ console.time()
       timingContext._idx = 0
       timingContext._patternRepeats = 0
       timingContext._patternCount = 0
-      stepToCountFast(count-1, dur, events, timingContext)
-      return
+      if (stepToCountFast(count-1, dur, events, timingContext)) {
+        return
+      }
     } else {
-      // Initialise timing context as if we're at the beginning of the current repeat of the pattern, then step through to current count
+      // For known length patterns, initialise timing context as if we're at the beginning of the current repeat of the pattern, then step through to current count
       let patternLength = calculatePatternLength(dur, events)
       let patternRepeats = Math.floor(count / patternLength)
       timingContext._patternIdx = 0
@@ -142,9 +144,16 @@ console.time()
       timingContext._idx = isSingleStep ? patternRepeats : 0
       timingContext._patternRepeats = patternRepeats
       timingContext._patternCount = patternLength * patternRepeats
-      stepToCountFast(count-1, dur, events, timingContext)
+      if (stepToCountFast(count-1, dur, events, timingContext)) {
+        return
+      }
     }
-console.timeEnd()
+    // Fallback: default TC init as if the pattern length is one
+    timingContext._patternIdx = 0
+    timingContext._subPatternIdx = 0
+    timingContext._idx = count-1
+    timingContext._patternRepeats = count-1
+    timingContext._patternCount = count-1
   }
 
   let parsePattern = (patternStr, params) => {
@@ -272,13 +281,21 @@ console.timeEnd()
   assert([{value:0,idx:4,_time:0,dur:1,count:8}], pattern(8, tc))
   assert([{value:0,idx:5,_time:0,dur:3,count:9}], pattern(9, tc))
 
-  // Test for checking the max time to step through patterns for TC init
+  // // Test for checking the max time to step through patterns for TC init
   // tc = {}
-  // pattern = parsePattern('0', {dur:()=>1})
-  // let n = 16000000 // 10000 beats * 80 granular duration * 20 players at once
-  // console.time()
-  // assert([{value:0,idx:n,_time:0,dur:1,count:n}], pattern(n, tc))
-  // console.timeEnd()
+  // pattern = parsePattern('0', {dur:()=>1/8})
+  // let n = 200000 // 100000 beats * 100 players at once; assumed worst case
+  // console.time('test')
+  // pattern(n, tc)
+  // console.timeEnd('test') // Expect this to take a little while; eg 100ms as TC init will count up from 0
+
+  // // Test for checking the max time to step through patterns for TC init
+  // tc = {}
+  // pattern = parsePattern('0', {dur:()=>1/80}) // granular might use 1/80 duration
+  // let n = 200000 // 100000 beats * 20 granular players at once; assumed worst case
+  // console.time('test')
+  // pattern(n, tc)
+  // console.timeEnd('test') // Expect this to be very quick as it will bomb out of the TC init count from 0 due to very short duration
 
   tc = {}
   pattern = parsePattern('x', {})
