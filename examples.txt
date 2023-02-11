@@ -2860,3 +2860,13 @@ set * add+=[0,-2,0,1]t8
 // v gradient 0, back=white, fore=white, loc=tile_b, perspective={-1,shade:1}
 
 
+// p play x......., amp=2
+// r ping 0, dur=euclid{3,from:8,offset:2}/2, add=this.dur*4, sus=1/4
+
+// p play :......., amp=5
+// r ping 0, dur=euclid{3,from:8}, add=this.dur*4, sus=1/4, amp=3
+
+// r readout 0, dur=euclid{3,from:8}/2, fade, add=this.dur
+// r readout 0, dur=[3,2,3], fade, add=this.dur
+
+

@@ -3,6 +3,7 @@ define(function(require) {
   let param = require('player/default-param')
   let parsePatternString = require('player/parse-pattern')
   let {evalParamFrame} = require('player/eval-param')
+  let {mainParam,subParam} = require('player/sub-param')
 
   let getEvent = (events, timingContext) => {
     let e = events[timingContext._patternIdx]
@@ -50,7 +51,8 @@ define(function(require) {
     do {
       let e = events[patternIdx]
       if (e._time !== lastTime){
-        let duration = evalParamFrame(dur, {idx: idx, count: length}, length)
+        let durEvalled = evalParamFrame(dur, {idx: idx, count: length}, length)
+        let duration = mainParam(durEvalled, 1)
         if (duration <= 0) { throw 'Zero duration' }
         length += duration * e.dur
         if (e.value !== undefined) { idx++ }
@@ -64,7 +66,7 @@ define(function(require) {
   let stepToCount = (count, dur, events, timingContext) => {
     let eventsForBeat = []
     while (timingContext._patternCount < count + 0.9999) {
-      let duration = evalParamFrame(dur, {idx: timingContext._idx, count: timingContext._patternCount}, count)
+      let duration = mainParam(evalParamFrame(dur, {idx: timingContext._idx, count: timingContext._patternCount}, count), 1)
       if (duration <= 0) { throw 'Zero duration' }
       let chord = getNextChord(events, timingContext)
       let anyNotRest = false
@@ -100,17 +102,28 @@ define(function(require) {
     timingContext._numDistinctTimes = numDistinctTimes
     // Get a value for pattern length. May not be accurate for random or super-complex durations
     let patternLength = calculatePatternLength(dur, events)
-    let patternRepeats = Math.floor(count / patternLength)
-    let patternStartTime = patternLength * patternRepeats
+    let patternIdxLength = 1
+    if (events.length === 1) {
+      let durVal = evalParamFrame(dur, {idx: 0, count: 0}, 0)
+      patternIdxLength = subParam(durVal, '_repeatCount', 1)
+      // Step through "dur pattern"
+      patternLength = 0
+      let idx = 0
+      do {
+        patternLength += mainParam(evalParamFrame(dur, {idx: idx, count: patternIdxLength}, patternIdxLength), 1)
+        idx++
+      } while (idx < patternIdxLength)
+    }
     // Initialise timing context as if we're at the beginning of the current repeat of the pattern
+    let patternRepeats = Math.floor(count / patternLength)
     timingContext._patternIdx = 0
     timingContext._subPatternIdx = 0
-    timingContext._idx = isSingleStep ? patternRepeats : 0
+    timingContext._idx = isSingleStep ? patternRepeats*patternIdxLength : 0
     timingContext._patternRepeats = patternRepeats
-    timingContext._patternCount = patternStartTime
+    timingContext._patternCount = patternLength * patternRepeats
     // Step through the pattern to reach the last count; that will fully initialise the timing context
     stepToCount(count-1, dur, events, timingContext)
-}
+  }
 
   let parsePattern = (patternStr, params) => {
     if (!patternStr) { return () => [] }
@@ -172,6 +185,7 @@ define(function(require) {
   assert(3, calculatePatternLength(()=>3, parsePatternString('0').events))
   assert(1, calculatePatternLength(({idx})=>idx+1, parsePatternString('0').events))
   assert(9, calculatePatternLength(({idx})=>idx+1, parsePatternString('.0.00').events))
+  assert(3, calculatePatternLength(()=>{return {value:3}}, parsePatternString('0').events))
 
   pattern = parsePattern('1234', {})
   tc = {}
@@ -197,15 +211,29 @@ define(function(require) {
   tc = {}
   assert([{value:3,idx:2,_time:0,dur:1,count:2}], pattern(2, tc))
 
+  tc = {}
+  pattern = parsePattern('0', {})
+  assert([{value:0,idx:3,_time:0,dur:1,count:3}], pattern(3, tc))
+  assert([{value:0,idx:4,_time:0,dur:1,count:4}], pattern(4, tc))
+
   pattern = parsePattern('<1[23]>', {dur:2})
   tc = {}
   assert([{value:3,idx:2,_time:0,dur:1,count:3}], pattern(3, tc))
   assert([{value:1,idx:3,_time:0,dur:2,count:4}], pattern(4, tc))
 
   tc = {}
-  pattern = parsePattern('0', {})
-  assert([{value:0,idx:3,_time:0,dur:1,count:3}], pattern(3, tc))
-  assert([{value:0,idx:4,_time:0,dur:1,count:4}], pattern(4, tc))
+  pattern = parsePattern('0', {dur:({idx})=>{ return {value:idx%2?3:1,_repeatCount:2}}})
+  assert([{value:0,idx:3,_time:0,dur:3,count:5}], pattern(5, tc))
+  assert([], pattern(6, tc))
+  assert([], pattern(7, tc))
+  assert([{value:0,idx:4,_time:0,dur:1,count:8}], pattern(8, tc))
+
+  tc = {}
+  pattern = parsePattern('0', {dur:({idx})=>{ return {value:idx%2?3:1,_repeatCount:2}}})
+  assert([], pattern(6, tc))
+  assert([], pattern(7, tc))
+  assert([{value:0,idx:4,_time:0,dur:1,count:8}], pattern(8, tc))
+  assert([{value:0,idx:5,_time:0,dur:3,count:9}], pattern(9, tc))
 
   tc = {}
   pattern = parsePattern('x', {})
@@ -571,6 +599,16 @@ define(function(require) {
   assert([{value:1,idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
   assert([{value:2,idx:1,_time:0,dur:1,count:1},{value:3,idx:1,_time:0,dur:1,count:1}], pattern(1, tc))
   assert([{value:1,idx:2,_time:0,dur:1,count:2}], pattern(2, tc))
+
+  tc = {}
+  pattern = parsePattern('0', {dur:()=>{ return {value:1}}})
+  assert([{value:0,idx:4,_time:0,dur:1,count:4}], pattern(4, tc))
+  assert([{value:0,idx:5,_time:0,dur:1,count:5}], pattern(5, tc))
+
+  tc = {}
+  pattern = parsePattern('01', {dur:()=>{ return {value:1}}})
+  assert([{value:0,idx:0,_time:0,dur:1,count:4}], pattern(4, tc))
+  assert([{value:1,idx:1,_time:0,dur:1,count:5}], pattern(5, tc))
 
   let evalPerFrame = ()=>1
   evalPerFrame.interval = 'frame'

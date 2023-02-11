@@ -38,7 +38,7 @@ define(function(require) {
       idx++
     } while (idx <= targetIdx) // Stop when we've reached the value we need
     // console.log(k, n, targetIdx, dur)
-    return dur
+    return {value:dur,_repeatCount:k}
   })
 
   let getVoiceState = (fullState, e,b) => {
@@ -199,26 +199,28 @@ define(function(require) {
   assert([2,3], evalParamFrame(p, ev(0,0,1,0), 2))
   assert([2,3], evalParamFrame(p, ev(0,0,1,1), 2))
 
-  let testEuclid = (expected, p) => {
+  let testEuclid = (expected, expectedLength, expectedIdxLength, p) => {
     for (let i=0; i<expected.length; i++) {
-      assert(expected[i], evalParamFrame(p, ev(i,0), 0), `Index ${i} of expected ${expected}`)
+      let v = evalParamFrame(p, ev(i,0), 0)
+      assert(expected[i], mainParam(v), `Main Index ${i} of expected ${expected}`)
+      assert(expectedIdxLength, subParam(v,'_repeatCount'), `Count: Index ${i}`)
     }
   }
-  testEuclid([1], parseExpression('euclid{3}'))
-  testEuclid([1], parseExpression('euclid{0,from:0}'))
-  testEuclid([1], parseExpression('euclid{1,from:1}'))
-  testEuclid([1], parseExpression('euclid{2,from:1}'))
+  testEuclid([1], 1, 1, parseExpression('euclid{3}'))
+  testEuclid([1], 1, 1, parseExpression('euclid{0,from:0}'))
+  testEuclid([1], 1, 1, parseExpression('euclid{1,from:1}'))
+  testEuclid([1], 1, 1, parseExpression('euclid{2,from:1}'))
 
-  testEuclid([2], parseExpression('euclid{1,from:2}'))
-  testEuclid([2,1], parseExpression('euclid{2,from:3}'))
-  testEuclid([2,2], parseExpression('euclid{2,from:4}'))
-  testEuclid([3,2,3], parseExpression('euclid{3,from:8}'))
-  testEuclid([3,2,3,2,3], parseExpression('euclid{5,from:13}'))
+  testEuclid([2], 2, 1, parseExpression('euclid{1,from:2}'))
+  testEuclid([2,1], 3, 2, parseExpression('euclid{2,from:3}'))
+  testEuclid([2,2], 4, 2, parseExpression('euclid{2,from:4}'))
+  testEuclid([3,2,3], 8, 3, parseExpression('euclid{3,from:8}'))
+  testEuclid([3,2,3,2,3], 13, 5, parseExpression('euclid{5,from:13}'))
 
-  testEuclid([3,2,3], parseExpression('euclid{3,from:8,offset:0}'))
-  testEuclid([3,3,2], parseExpression('euclid{3,from:8,offset:1}'))
-  testEuclid([2,3,3], parseExpression('euclid{3,from:8,offset:2}'))
-  testEuclid([3,2,3], parseExpression('euclid{3,from:8,offset:3}'))
+  testEuclid([3,2,3], 8, 3, parseExpression('euclid{3,from:8,offset:0}'))
+  testEuclid([3,3,2], 8, 3, parseExpression('euclid{3,from:8,offset:1}'))
+  testEuclid([2,3,3], 8, 3, parseExpression('euclid{3,from:8,offset:2}'))
+  testEuclid([3,2,3], 8, 3, parseExpression('euclid{3,from:8,offset:3}'))
 
   console.log('Maths tests complete')
   }

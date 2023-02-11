@@ -1088,8 +1088,10 @@ shadertoy synth multiple channels
 ==== other ====
 dur=euclid{5,from:8,offset:1}
  Not (re)starting properly at the right time
-  This is because the pattern TC init code is evalling only one pass through the pattern
-   And this won't work for (eg)  r readout 0, dur=[3,2,3], fade, add=this.dur
+  Index timevar should also return repeat subparam
+  Should also reinit TC if the "dur pattern" changes
+ WTF happens if you use a chord for dur??
+ TEST with non static n and k and offset etc etc
  Docs - note, uses bresenham so may not be identical to Euclidean. Eg 332 vs 323
 !g gradient 0, fore=[orange]/2  DOESNT work, but only for index []
 Need syntax for "not" player group
