@@ -1087,9 +1087,11 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 dur=euclid{5,from:8,offset:1}
- WTF happens if you use a chord for dur??
- TEST everything, also with non static n and k and offset etc etc
- Docs - note, uses bresenham so may not be identical to Euclidean. Eg 332 vs 323, but can use offset to fix
+ Should reinit TC when the dur value changes in any way...
+ TEST everything
+ Docs
+  note, uses bresenham so may not be identical to Euclidean. Eg 332 vs 323, but can use offset to fix
+  cannot use chords in dur
 !g gradient 0, fore=[orange]/2  DOESNT work, but only for index []
 Need syntax for "not" player group
  Eg set !p* add=4

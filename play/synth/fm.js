@@ -36,7 +36,7 @@ define(function (require) {
 
     let ops = findNonChordParams(params, 'op')
     .map((id, idx) => createOp(params, idx, id, freq))
-    console.log(ops.length) // Use the length to prove that the array is coming through as a non-chord array
+    // console.log(ops.length) // Use the length to prove that the array is coming through as a non-chord array
 
     ops = ops.map(({target, depth, att, rel, op, env, targetIdx}) => {
       if (!target || (target !== 'out' && ops[targetIdx].op === undefined)) return

@@ -759,7 +759,7 @@ pad dsaw (024), dur=4, chorus, room=2, envelope=pad, oct=5, addc=wow/2, amp=1/16
 // bass saw 0., dur=[[2,3]r,8], oct=2, att=1/2, rel=3, room=2, amp=3*[1/7:1/4]r, addc=wow
 // boom play [(vx)(vX)(VXM)(VXM#)].., room=2, echo=(0.465,0.53426), amp=2/3, rate=(1/4,1)
 // whoosh dsaw (047).., dur=1/2, detune=0.432, chorus, envelope=simple, att=1/2, rel=3, lpf=[3000,300]e, hpf=[400,0]e, oct=(2,3), amp=2/4, room=2, noisify=1/2, addc=[1,0]e
-// mel1 saw 0vvvvv___1v-2__-3___...., addc=0.04*(-1,1)+wow/4, amp=0.6
+// mel1 saw 0v___1v-2__-3___...., addc=0.04*(-1,1)+wow/4, amp=0.6
 // mel2 saw 0___13__[21]2__...., addc=0.04*(-1,1)+wow/4, amp=0.6
 // mel3 saw 4___53#__13__7vvv___, addc=0.04*(-1,1)+wow/4+[0,0,-3,-8,-16]e*0{12:1,per:16}, amp=[0.6]l@f*1{12:[1,0]e,per:64}
 // twinkle glock 0, dur=1/4, echo=3/8, amp=[0,1/32]r, add=[-2,-2,0,2]r, oct=7
@@ -1802,7 +1802,7 @@ pn play .K, pan=-1/2, mid=-16, echo=1/2
 pnn play .pT., pan=1/2, mid=-16, echo=1/2
 tl supersaw 0, dur=1/4, add=ch.[0,1,2]t1/4{per:4}, oct=(3,4), chorus, room={1.15,mix:0.4}, att=1/128, dec=1/6, sus={1/8,level:0.4}, rel=1/6, pan=[-1/3,1/3]r, lpf={2200,q:1}, amp=2/3
 // set tl amp*=[1,1*3/5,1]r{per:4,seed:40}
-// a supersaw [-20][_0]__, add=ch+[3,2,1,0,3,2,1,7]t4, room={1.2,mix:1/3}, oct=(3,4), att=[1/3,1/2], rel=1, bpf={[1500:100]e,q:2}, chorus, pan=[-1/3,1/3]r, drive=1/2, sus=this.dur*1.1, amp=0.35
+// a supersaw [-20][_0]__, add=ch+[3,2,1,0,3,2,1,7]t4, room={1.2,mix:1/3}, oct=(3,4), att=[1/3,1/2], rel=1, bpf={[1500:100]e,q:2}, chorus, pan=[-1/3,1/3]r, drive=1/2, sus=this.dur*1.1, amp=1
 // fill play [oo], amp=[0,0,1]l[28,4,0]
 // set tl amp=2/3
 
