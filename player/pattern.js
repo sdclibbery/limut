@@ -31,18 +31,6 @@ define(function(require) {
     return false // Didn't loop
   }
 
-  let getNextChord = (events, timingContext) => {
-    let event = getEvent(events, timingContext)
-    let chordTime = event._time
-    let result = []
-    do {
-      result.push(event)
-      if (nextEventMaybeLoop(events, timingContext)) { break }
-      event = getEvent(events, timingContext)
-    } while (event._time === chordTime)
-    return result
-  }
-
   let calculatePatternLength = (dur, events) => {
     let length = 0
     let patternIdx = 0
@@ -63,7 +51,21 @@ define(function(require) {
     return length
   }
 
+  let getNextChord = (events, timingContext) => {
+    //!!Changes here must be mirrored in stepToCountFast!!
+    let event = getEvent(events, timingContext)
+    let chordTime = event._time
+    let result = []
+    do {
+      result.push(event)
+      if (nextEventMaybeLoop(events, timingContext)) { break }
+      event = getEvent(events, timingContext)
+    } while (event._time === chordTime)
+    return result
+  }
+
   let stepToCount = (count, dur, events, timingContext) => {
+    //!!Changes here must be mirrored in stepToCountFast!!
     let eventsForBeat = []
     while (timingContext._patternCount < count + 0.9999) {
       let duration = mainParam(evalParamFrame(dur, {idx: timingContext._idx, count: timingContext._patternCount}, count), 1)
@@ -93,36 +95,56 @@ define(function(require) {
     return eventsForBeat
   }
 
+  let stepToCountFast = (count, dur, events, timingContext) => {
+    //!!Changes here must be mirrored in stepToCount and getNextChord!!
+    // Should step through the same as stepToCount, but as quickly as possible
+    while (timingContext._patternCount < count + 0.9999) {
+      let duration = mainParam(evalParamFrame(dur, {idx: timingContext._idx, count: timingContext._patternCount}, count), 1)
+      let anyNotRest = false
+      let lastDur = 1
+      let event = getEvent(events, timingContext)
+      let chordTime = event._time
+      do {
+        let isRest = event.value === undefined
+        if (!isRest) { anyNotRest = true }
+        lastDur = event.dur * duration
+        if (nextEventMaybeLoop(events, timingContext)) { break }
+        event = getEvent(events, timingContext)
+      } while (event._time === chordTime)
+      timingContext._patternCount += lastDur
+      if (anyNotRest) { timingContext._idx++ }
+    }
+  }
+
   let initialiseTimingContext = (count, dur, events, timingContext) => {
+console.time()
     // Pattern summary info
     let nonRestEvents = events.filter(e => e.value !== undefined)
     let numDistinctTimes = new Set(nonRestEvents.map(e => e._time)).size
     let isSingleStep = numDistinctTimes === 1
     timingContext._isSingleStep = isSingleStep
     timingContext._numDistinctTimes = numDistinctTimes
-    // Get a value for pattern length. May not be accurate for random or super-complex durations
-    let patternLength = calculatePatternLength(dur, events)
-    let patternIdxLength = 1
-    if (events.length === 1) {
-      let durVal = evalParamFrame(dur, {idx: 0, count: 0}, 0)
-      patternIdxLength = subParam(durVal, '_repeatCount', 1)
-      // Step through "dur pattern"
-      patternLength = 0
-      let idx = 0
-      do {
-        patternLength += mainParam(evalParamFrame(dur, {idx: idx, count: patternIdxLength}, patternIdxLength), 1)
-        idx++
-      } while (idx < patternIdxLength)
+    if (events.length === 1 && !Number.isNaN(dur) ) {
+      // Complex dur for single step pattern; initialise timing context by stepping through from time 0; accurate but slow
+      timingContext._patternIdx = 0
+      timingContext._subPatternIdx = 0
+      timingContext._idx = 0
+      timingContext._patternRepeats = 0
+      timingContext._patternCount = 0
+      stepToCountFast(count-1, dur, events, timingContext)
+      return
+    } else {
+      // Initialise timing context as if we're at the beginning of the current repeat of the pattern, then step through to current count
+      let patternLength = calculatePatternLength(dur, events)
+      let patternRepeats = Math.floor(count / patternLength)
+      timingContext._patternIdx = 0
+      timingContext._subPatternIdx = 0
+      timingContext._idx = isSingleStep ? patternRepeats : 0
+      timingContext._patternRepeats = patternRepeats
+      timingContext._patternCount = patternLength * patternRepeats
+      stepToCountFast(count-1, dur, events, timingContext)
     }
-    // Initialise timing context as if we're at the beginning of the current repeat of the pattern
-    let patternRepeats = Math.floor(count / patternLength)
-    timingContext._patternIdx = 0
-    timingContext._subPatternIdx = 0
-    timingContext._idx = isSingleStep ? patternRepeats*patternIdxLength : 0
-    timingContext._patternRepeats = patternRepeats
-    timingContext._patternCount = patternLength * patternRepeats
-    // Step through the pattern to reach the last count; that will fully initialise the timing context
-    stepToCount(count-1, dur, events, timingContext)
+console.timeEnd()
   }
 
   let parsePattern = (patternStr, params) => {
@@ -173,20 +195,6 @@ define(function(require) {
   assert([], pattern(0, tc))
   assert([], pattern(1, tc))
 
-  assert(1, calculatePatternLength(1, parsePatternString('0').events))
-  assert(1, calculatePatternLength(1, parsePatternString('.').events))
-  assert(2, calculatePatternLength(2, parsePatternString('0').events))
-  assert(2, calculatePatternLength(1, parsePatternString('0_').events))
-  assert(2, calculatePatternLength(1, parsePatternString('00').events))
-  assert(2, calculatePatternLength(1, parsePatternString('.0').events))
-  assert(2, calculatePatternLength(1, parsePatternString('0.').events))
-  assert(1, calculatePatternLength(1, parsePatternString('[00]').events))
-  assert(1, calculatePatternLength(1, parsePatternString('(00)').events))
-  assert(3, calculatePatternLength(()=>3, parsePatternString('0').events))
-  assert(1, calculatePatternLength(({idx})=>idx+1, parsePatternString('0').events))
-  assert(9, calculatePatternLength(({idx})=>idx+1, parsePatternString('.0.00').events))
-  assert(3, calculatePatternLength(()=>{return {value:3}}, parsePatternString('0').events))
-
   pattern = parsePattern('1234', {})
   tc = {}
   assert([{value:1,idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
@@ -222,6 +230,35 @@ define(function(require) {
   assert([{value:1,idx:3,_time:0,dur:2,count:4}], pattern(4, tc))
 
   tc = {}
+  pattern = parsePattern('0', {})
+  assert([{value:0,idx:8,_time:0,dur:1,count:8}], pattern(8, tc))
+  assert([{value:0,idx:9,_time:0,dur:1,count:9}], pattern(9, tc))
+
+  tc = {}
+  pattern = parsePattern('0', {dur:2})
+  assert([], pattern(3, tc))
+  assert([{value:0,idx:2,_time:0,dur:2,count:4}], pattern(4, tc))
+
+  tc = {}
+  pattern = parsePattern('0_', {})
+  assert([], pattern(3, tc))
+  assert([{value:0,idx:2,_time:0,dur:2,count:4}], pattern(4, tc))
+
+  tc = {}
+  pattern = parsePattern('0_1_', {})
+  assert([], pattern(5, tc))
+  assert([{value:1,idx:1,_time:0,dur:2,count:6}], pattern(6, tc))
+  assert([], pattern(7, tc))
+  assert([{value:0,idx:0,_time:0,dur:2,count:8}], pattern(8, tc))
+
+  tc = {}
+  pattern = parsePattern('01', {dur:2})
+  assert([], pattern(5, tc))
+  assert([{value:1,idx:1,_time:0,dur:2,count:6}], pattern(6, tc))
+  assert([], pattern(7, tc))
+  assert([{value:0,idx:0,_time:0,dur:2,count:8}], pattern(8, tc))
+
+  tc = {}
   pattern = parsePattern('0', {dur:({idx})=>{ return {value:idx%2?3:1,_repeatCount:2}}})
   assert([{value:0,idx:3,_time:0,dur:3,count:5}], pattern(5, tc))
   assert([], pattern(6, tc))
@@ -234,6 +271,14 @@ define(function(require) {
   assert([], pattern(7, tc))
   assert([{value:0,idx:4,_time:0,dur:1,count:8}], pattern(8, tc))
   assert([{value:0,idx:5,_time:0,dur:3,count:9}], pattern(9, tc))
+
+  // Test for checking the max time to step through patterns for TC init
+  // tc = {}
+  // pattern = parsePattern('0', {dur:()=>1})
+  // let n = 16000000 // 10000 beats * 80 granular duration * 20 players at once
+  // console.time()
+  // assert([{value:0,idx:n,_time:0,dur:1,count:n}], pattern(n, tc))
+  // console.timeEnd()
 
   tc = {}
   pattern = parsePattern('x', {})

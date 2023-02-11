@@ -10,6 +10,9 @@ var nextBeatAt = 0
 let beatReadouts
 let time = 0
 
+// For debugging to force count to a high value
+metronome.setCount = (c) => count=c
+
 metronome.beatTime = (now) => {
   return count + (now - lastBeatAt) / (nextBeatAt - lastBeatAt)
 }

@@ -1088,8 +1088,9 @@ shadertoy synth multiple channels
 ==== other ====
 dur=euclid{5,from:8,offset:1}
  Not (re)starting properly at the right time
-  Index timevar should also return repeat subparam
-  Should also reinit TC if the "dur pattern" changes
+  OK lets just step from 0
+  !Drop out when any dur is < 1/8 though?
+   And then ditch stepToCountFast, it wont be worth it
  WTF happens if you use a chord for dur??
  TEST with non static n and k and offset etc etc
  Docs - note, uses bresenham so may not be identical to Euclidean. Eg 332 vs 323
