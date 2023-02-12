@@ -546,7 +546,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 </div>
 <h4 onclick="toggleAccordion('accordion-event-params')" class="accordion"> Common Event Params</h4>
 <div id="accordion-event-params" class="closed">
-<p><code>dur</code> Event time in beats</p>
+<p><code>dur</code> Event time in beats. Timevars, random vars and index vars can be used to give variation in duration. Chords cannot be used with the dur param.</p>
 <p><code>delay</code> Event start time offset in beats</p>
 <p class='sub'><code>delay={1/2,add:2}</code> subparams on delay will be used to override the event values. In the example given, the <code>add</code> param of the delayed event will be set to 2, but any params can be overridden this way. This is most useful with chords of delay values, as it allows individual delayed events to change their properties.</p>
 <p><code>stutter</code> Split each event into multiple events spaced evenly within the same time period. Eg with <code>stutter=2</code>, an event starting at time 0 with a duration of 1 will be split into two events of duration 1/2, starting at 0 and 1/2. Stutter of 0 or 1 has no effect and is the default. Stutter is rounded down to the nearest integer value.</p>
@@ -832,6 +832,8 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>count{3,1,2}</code> Returns the number of arguments (3 in the example)</p>
 <p><code>sum{3,1,2}</code> Returns the sum of all arguments (6 in the example)</p>
 <p><code>avg{3,1,2}</code> Returns the mean average of all arguments (2 in the example)</p>
+<p><code>euclid{3,from:8}</code> Euclidean rhythm generator. The example will evenly spread 3 events between 8 beats. For example <code>p ping 0, dur=euclid{3,from:8}</code> will make 3 notes of durations 3,2 and 3. Note this uses a Bresenham type algorithm to spread the events, rather than a classic Euclidean algorithm. This it may produce a slightly different ordering ("3 from 8" would give a 3,3,2 pattern in a classic Euclidean algorithm, but the Bresenham gives a 3,2,3 pattern. The offset subparam can be used to 'fix' this.</p>
+<p class='sub'><code>euclid{3,from:8,offset:1}</code> Offset rotates the pattern. The example will give a 3,3,2 pattern which is the default 3,2,3 pattern but rotated by one.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-play-samples')" class="accordion"> Play Samples</h4>
 <div id="accordion-play-samples" class="closed">
@@ -938,6 +940,7 @@ busses
  Effects in a bus can have per frame control; eg can vary room mix per frame etc
  If player bus is itself, ignore it and do nothing
  Allow mulitple busses; bus1, bus2 etc
+ bus subparam for mix level (per frame)
 envelopes
  * Create envelopes for eg lpf, eg  lpf=this.freq*10*ar{a:1/4,r:1}
   ??Is that the same as  lpf=this.freq*[0,10,0]e[1/4,1]  ??
@@ -1027,6 +1030,10 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+Filter param for all texture based synths (including buffer feedback)
+ Image and buffer and webcam shader texture lookup supports a filter kernel with controlled size
+  Kernel options for blur, sharpen, max... etc
+ Option for additive blur (ie glow/bloom)
 Proper gradients, not just fore/mid/back
 recol=fmb that leaves all pixels white but with fb set, to allow recolouring with fore/mid/back. check it for webcam/image etc too
 !Should really multiply feedback params by dt, otherwise the rate of feedback motions will be framerate dependent
@@ -1039,9 +1046,6 @@ Digital JPEG corruption filter param - https://www.shadertoy.com/view/Md2GDw
  Main param value determines the amout of corruption
  Subparam for block scale
  Subparam for extremity of effect within corrupted blocks?
-Filter param for all texture based synths
- Image and buffer and webcam shader texture lookup supports a filter kernel with controlled size
-  Kernel options for blur, sharpen, max... etc
 Make buffer param work per frame
  !!This fails at the moment because the synths are added to only one buffers renderList, and its done per event not per frame
 Can set texture repeat for text and image etc synths? Subparam or not?
@@ -1086,13 +1090,9 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-dur=euclid{5,from:8,offset:1}
- Should reinit TC when the dur value changes in any way...
- TEST everything
- Docs
-  note, uses bresenham so may not be identical to Euclidean. Eg 332 vs 323, but can use offset to fix
-  cannot use chords in dur
 !g gradient 0, fore=[orange]/2  DOESNT work, but only for index []
+!Should reinit TC when the dur value changes in any way...
+ How?
 Need syntax for "not" player group
  Eg set !p* add=4
  What is our "not" operator??
