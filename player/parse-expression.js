@@ -11,7 +11,7 @@ define(function(require) {
   let {parseVar,varLookup} = require('player/parse-var')
   let {hoistInterval} = require('player/intervals')
   let addModifiers = require('player/time-modifiers').addModifiers
-  let {evalParamFrame,evalParamFrameNoFlatten} = require('player/eval-param')
+  let {evalParamFrame,preEvalParam} = require('player/eval-param')
   let parseColour = require('player/parse-colour')
   let parseString = require('player/parse-string')
 
@@ -111,8 +111,7 @@ define(function(require) {
           setInterval(result, parseInterval(state) || hoistInterval('frame', vs))
         } else { // Basic array: one value per pattern step
           result = addModifiers(eventIdxVar(vs), parseMap(state))
-          result.interval = 'event' // Only makes sense to be per event
-          parseInterval(state) // Ignore this
+          setInterval(result, parseInterval(state) || hoistInterval('event', vs))
         }
         continue
       }
@@ -986,10 +985,10 @@ define(function(require) {
   assert('frame', parseExpression("[0,[0,24]s]e").interval)
   assert('event', parseExpression("[0,[0,24]e]s@e").interval)
   assert('event', parseExpression("[0,[0,24]s]e@e").interval)
-  assert('event', parseExpression("[0,[0,24]e]").interval)
+  assert('frame', parseExpression("[0,[0,24]e]").interval)
   assert('frame', parseExpression("[0,[0,24]]e").interval)
   assert('event', parseExpression("[0,[0,24]e]@e").interval)
-  assert('event', parseExpression("[0,[0,24]e]@f").interval)
+  assert('frame', parseExpression("[0,[0,24]e]@f").interval)
   assert('frame', parseExpression("[0.1,(0.1,5)]t1/4@f").interval)
   assert('frame', parseExpression("[0.1,(0.1,5)]l1/4@f").interval)
   assert('frame', parseExpression("[0.1,(0.1,5)]s1/4@f").interval)

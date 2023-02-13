@@ -53,10 +53,10 @@ define((require) => {
     return result
   }
 
-  let evalParamValue = (evalRecurse, value, event, beat, {nestedChords,ignoreThisVars}) => {
+  let evalParamValue = (evalRecurse, value, event, beat, {ignoreThisVars}) => {
     if (Array.isArray(value)) { // chord, eval individual values
       let v = value.map(v => evalRecurse(v, event, beat))
-      if (!nestedChords) { v = v.flat() }
+      v = v.flat()
       return v
     } else if (typeof value == 'function') { // Call function to get current value
       if (ignoreThisVars && value._thisVar) { return 0 } // return 0 to hold a place in a chord
@@ -99,11 +99,6 @@ define((require) => {
   let evalParamFrame = (value, event, beat) => {
     // Fully evaluate down to a primitive number/string etc, allowing the value to change every frame if it wants to
     return evalParamValue(evalRecurseFull, value, event, beat, {})
-  }
-
-  let evalParamFrameNoFlatten = (value, event, beat) => {
-    let options = {nestedChords:true}
-    return evalParamValue(evalRecurseFull, value, event, beat, options)
   }
 
   let evalParamFrameIgnoreThisVars = (value, event, beat) => {
@@ -150,7 +145,6 @@ define((require) => {
   assert([{x:1},{x:2},{x:3}], evalParamEvent([{x:1},{x:[2,3]}], ev(0)))
   assert([1,2,3], evalParamEvent([1,() => [2,3]], ev(0)))
   assert([1,2,3,4], evalParamEvent([[1,2],[3,4]], ev(0)))
-  assert([[1,2],[3,4]], evalParamFrameNoFlatten([[1,2],[3,4]], ev(0)))
   assert([1,2,3,4], preEvalParam([[1,2],[3,4]], ev(0)))
   
   let perFrameValue = () => 3
@@ -277,7 +271,6 @@ define((require) => {
     preEvalParam:preEvalParam,
     evalParamEvent:evalParamEvent,
     evalParamFrame:evalParamFrame,
-    evalParamFrameNoFlatten:evalParamFrameNoFlatten,
     evalParamFrameIgnoreThisVars:evalParamFrameIgnoreThisVars,
   }
 
