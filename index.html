@@ -428,7 +428,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>^</code> Raise to the power; eg <code>2^3</code> is 8. Imaginary results return 0; eg <code>-1^1/2</code> returns 0.</p>
 <p><code>|</code> Concatenate chords; eg <code>1|2</code> is the same as <code>(1,2)</code>, and <code>(1,2)|(3,4)</code> is <code>(1,2,3,4)</code></p>
 <p><code>?</code> Get a default if a value is missing. Eg <code>this.foo?5</code> will give the value of <code>this.foo</code> if present, or <code>5</code> if not.</p>
-<p><code>.</code> Lookup values in a player (with a param name), a chord (with an index or aggregator) or a map (with a field name). See examples below.</p>
+<p><code>.</code> Lookup values in a player (with a param name), a chord (with an index or aggregator) or a map (with a field name). See Lookup Examples section below.</p>
 <p><code>{x:0,y:1}</code> Map, containing keys and values</p>
 <p><code>{2,y:1}</code> Map, containing keys and values, with a 'default' value of 2. The default value is used for some parameters; eg <code>chop={2,wave:triangle}</code> is the same as <code>chop=2</code>, but also supplies an additional 'wave' subparameter.</p>
 <p><code>{r:1,g:0,b:0,a:1}</code> RGBA colour; component range is 0 - 1.</p>
@@ -451,7 +451,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>p1.amp</code> Lookup the value of param <code>amp</code> from player <code>p1</code>. Returns a chord of values from all currently playing events.</p>
 <p><code>p1.amp.0</code> Lookup the value of param <code>amp</code> from player <code>p1</code>, and if it contains a chord, extract the first element only from it.</p>
 <p><code>p1.pulse.max</code> Lookup the value of the <code>pulse</code> from player <code>p1</code>, and if it contains a chord, extract the largest element only from it. The pulse param gives a smoothed approximate envelope shaped value between 0 and 1 for each event.</p>
-<p><code>(pk,ps).pulse</code> If <code>pk</code> and <code>pk</code> are players, returns a chord of both their <code>pulse</code> values.</p>
+<p><code>(pk,ps).pulse</code> If <code>pk</code> and <code>ps</code> are players, returns a chord of both their <code>pulse</code> values.</p>
 <p><code>(1,2).foo</code> Lookup a global var named <code>foo</code>, and call it as a function for each element in a chord.</p>
 <p><code>([0,1]t1@f).accum</code> Smoothly accumulate 1 every other beat</p>
 <p><code>this.value</code> Get param <code>value</code> from the current event. Never returns a chord because <code>this</code> refers only to the single current event by definition.</p>
@@ -1091,10 +1091,8 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Need syntax for "not" player group
- Eg set !p* add=4
+ Eg  set !p* add=4  also  set [g,!b] add=2  also  set ![g,b] add=3
  What is our "not" operator??
-!Should reinit TC when the dur value changes in any way...
- How?
 !this var lookup failing in various ways:
  // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
  // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1

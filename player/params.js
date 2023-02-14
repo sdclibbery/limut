@@ -69,6 +69,7 @@ define(function(require) {
       return true
     }
     let {name, operator} = parseName(state)
+    let startIdx = state.idx
     let value
     if (state.valueless) {
       value = '1'
@@ -81,7 +82,12 @@ define(function(require) {
       if (operator) {
         v = newOverride(v, operator)
       }
-      state.params[name] = combineOverride(state.params[name], v)
+      let paramValue = combineOverride(state.params[name], v)
+      if (name === 'dur' && typeof paramValue === 'function') { // Save the dur expression as a string so that the pattern can reset the timing context if it changes
+        let durParamString = state.str.slice(startIdx, state.idx)
+        paramValue._durParamString = durParamString
+      }
+      state.params[name] = paramValue
       return true
     }
     return false

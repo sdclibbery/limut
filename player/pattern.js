@@ -162,13 +162,16 @@ define(function(require) {
     let events = pattern.events
     if (events.length == 0) { return () => [] }
     let dur = param(params.dur, 1)
+    let durString = typeof dur === 'function' ? dur._durParamString : dur.toString()
     return (count, timingContext) => {
       let tcNotInitialised = timingContext._patternIdx === undefined
       let patternChanged = timingContext._patternString !== patternStr
+      let durChanged = timingContext._durParamString !== durString
       let patternIdxOutsideRange = timingContext._patternIdx >= events.length
-      if (tcNotInitialised || patternChanged || patternIdxOutsideRange) {
+      if (tcNotInitialised || patternChanged || patternIdxOutsideRange || durChanged) {
         initialiseTimingContext(count, dur, events, timingContext)
         timingContext._patternString = patternStr
+        timingContext._durParamString = durString
       }
       let eventsForBeat = stepToCount(count, dur, events, timingContext)
                             .filter(({value}) => value !== undefined) // Discard rests
