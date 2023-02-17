@@ -74,4 +74,6 @@ preset chiparp multiwave, oct=4, envelope='simple',
 	wave1={'square',amp:3/4,detune:-0.04}, wave2={'square',amp:3/4,detune:0.04},
   delay=(0,{1/4,add:this.add+2},{2/4,add:this.add+4},{3/4,add:this.add+7})
 
+preset softpad supersaw, envelope=pad, amp=1/2, phaser=1/9, oct=(3,5), pan=[-1:1]r, dur=2
+
 preset play80s play, room=1/8, low=16
