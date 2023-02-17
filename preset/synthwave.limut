@@ -1,7 +1,7 @@
 preset sunsetsky gradient, loc=tile_t, back=#00af, mid=#60af, fore=#a40f, amp=3/2
 preset sun glow 0, loc=tile_t, window, fade=0, amp=2, back=0, rate=1/8, fore=#f83f, add=5, scroll={y:[-1/10:1/2]s32@f}
 preset skybars bars, fore=#000a, additive=0, back=0, rotate=1/4, perspective=-0.7, scroll={x:time/16}, zoom=1/4, amp=1, loc=tile_t, add=9
-preset neongrid grid, loc=tile_b, fore=neonpink*3/2, perspective={-1,shade:0.7}, scroll={y:time/4}, zoom=3/2, amp=max{1/2, smooth{main.pulse}*2 - 1/2}, recol='titanium', back=#308f
+preset neongrid grid, loc=tile_b, fore=neonpink*3/2, perspective={-0.9,shade:0.7}, scroll={y:time/4}, zoom=3/2, amp=max{1, 1+smooth{main.pulse}}, recol='titanium', back=#308f
 preset neonbars gradient, loc=tile_b, perspective={-0.9,shade:0.7}, repeat=1, scroll={y:time/4}, zoom=1/2, fore=neonpink, mid=#214f, back=neongreen, ripple=0.1
 preset neonbits bits, loc=tile_b, perspective={-1.1,shade:0.7}, repeat=1, scroll={y:time/8}, zoom=1, fore=neonpink*1.1, mid=#214f, back=#0aff, time=(([1,1,0]s[14,1,1]@f)^64)/2, contrast=1/2
 preset neonlines lines, loc=tile_b, amp=5, recol='neon', fore*=6, zoom={x:2,y:1}, rate=1/8, perspective={-1,shade:1}, scroll={y:time/4}, repeat=1.2, add=9
