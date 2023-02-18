@@ -1106,10 +1106,16 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-! Pattern does not parse properly: 0<__>
+!Pattern does not have correct timing: <3[45]>_
+!Cannot have random per event when using param chord. Eg these two should do the same:
+ p ping (000), add=[-7:7]r
+ p ping 0, foo=(0,0,0), add=[-7:7]r
 Need syntax for "not" player group
  Eg  set !p* add=4  also  set [g,!b] add=2  also  set ![g,b] add=3
  What is our "not" operator??
+!Can no longer use a complex dur to force a pattern to start when the player is uncommented
+ EG the boom and whoosh in Blade Runner opening titles
+ Maybe some other, proper, way to force this?
 !this var lookup failing in various ways:
  // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
  // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1
@@ -1119,9 +1125,6 @@ Need syntax for "not" player group
 !when `time` is used @e it should be event time, not time when the event is created
  eg  v readout 0, add=time@e
  !Really thats true for other vars though; eg  reading p.value  or something
-!Can no longer use a complex dur to force a pattern to start when the player is uncommented
- EG the boom and whoosh in Blade Runner opening titles
- Maybe some other, proper, way to force this?
 !Syntax colouring is case sensitive; eg  `Set` does not get coloured correctly
 !Follow player chooses different random values so it does not copy the original player properly
  Tests for this
@@ -1139,6 +1142,7 @@ Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7
 !@e should work on lookups:   r readout 0, add=this.foo@e, foo=[5:1]e
 !().accum should work - why doesn't it? I guess the chord voices haven't been split yet?
  r readout 0, loc={y:2/3-this.voice/2}, add=([0,1]t1,[0,1]t2).accum
+Variable rate expressions somehow EG  addc=[-1,1]s[1/8:1]e  Or  addc=sin{[1/8:1]e*6.28}  or something
 Presets should be able to define multiple synths to play at once
 delay time modifier, pauses time at the start of the event
 floor{1.5,2.5} should work??? Or should it?? Probably not? But then it should give an error? But sum{1,2} works?

@@ -10,6 +10,7 @@ define(function(require) {
         // console.log('evalSequence func', event, r/seq.length)
         return value(event, Math.floor(r / seq.length))
       }
+      if (value === '_') { value = undefined } // Discard unfolded continuations
       // console.log('evalSequence val', value, event)
       return [{value:value, _time:event._time, dur:event.dur, sharp:event.sharp, loud:event.loud, long:event.long}]
     })
@@ -51,9 +52,10 @@ define(function(require) {
     // chord
     if (char == '(') {
       state.idx += 1
-      let tog = array(state, ')')
-      // console.log('together', tog)
-      events = events.concat(tog)
+      let chord = array(state, ')')
+        .filter(e => e.value !== '_') // Ignore continuations in chords, its too complicated
+      // console.log('chord', chord)
+      events = events.concat(chord)
       return events
     }
     // sequence
@@ -550,16 +552,44 @@ define(function(require) {
 
   p = parsePattern('0^^')
   assert(1, p.length)
-  assert({value:0,_time:0,dur:1,loud:9/4}, p.events[0])
+  assert([{value:0,_time:0,dur:1,loud:9/4}], p.events)
 
   p = parsePattern('0#^=')
   assert(1, p.length)
-  assert({value:0,_time:0,dur:1,sharp:1,loud:3/2,long:2}, p.events[0])
+  assert([{value:0,_time:0,dur:1,sharp:1,loud:3/2,long:2}], p.events)
 
-  // p = parsePattern('<1[.3]>_')
-  // assert(2, p.length)
-  // assert([{value:1,_time:0, dur:2}], p.events[0].value({_time:0,dur:1},0))
-  // assert([{value:3,_time:1/2, dur:3/2}], p.events[0].value({_time:0,dur:1},1))
+  p = parsePattern('0[__]')
+  assert(2, p.length)
+  assert([{value:0,_time:0,dur:2}], p.events)
+
+  p = parsePattern('<12>_')
+  assert(2, p.length)
+  assert([{value:1,_time:0, dur:2}], p.events[0].value({_time:0,dur:2},0))
+  assert([{value:2,_time:0, dur:2}], p.events[0].value({_time:0,dur:2},1))
+
+  p = parsePattern('<1[.3]>_')
+  assert(2, p.length)
+  assert([{value:1,_time:0, dur:2}], p.events[0].value({_time:0,dur:2},0))
+  // assert([{_time:0, dur:1/2},{value:3,_time:1/2, dur:3/2}], p.events[0].value({_time:0,dur:2},1))
+   // Should be this but it needs fixing ^
+
+   p = parsePattern('0<_1>') // For now, just ignore _ inside <> otherwise its too complicated
+   assert(2, p.length)
+   assert({value:0,_time:0,dur:1}, p.events[0])
+   assert([{_time:1,dur:1}], p.events[1].value({_time:1,dur:1},0))
+   assert([{value:1,_time:3,dur:1}], p.events[1].value({_time:3,dur:1},1))
+ 
+   p = parsePattern('0(_)') // For now ignore _ inside a chord
+  assert(2, p.length)
+  assert([{value:0,_time:0,dur:1},{value:0,_time:1,dur:1}], p.events)
+
+  p = parsePattern('0(__)') // For now ignore _ inside a chord
+  assert(2, p.length)
+  assert([{value:0,_time:0,dur:1},{value:0,_time:1,dur:1}], p.events)
+
+  p = parsePattern('0(1_2_)') // For now ignore _ inside a chord
+  assert(2, p.length)
+  assert([{value:0,_time:0,dur:1},{value:1,_time:1,dur:1},{value:2,_time:1,dur:1}], p.events)
 
   // <.(12)>_
   // 0<1_>
