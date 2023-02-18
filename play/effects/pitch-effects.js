@@ -29,6 +29,7 @@ define(function (require) {
     if (lerp > 1 || lerp < 0) { return 0 }
     lerp = Math.pow(lerp, 1/(glideCurve+1))
     let baseFreq = params._glideBaseEvent.freq
+    if (!baseFreq) { return 0 }
     let targetFreq = params.freq
     let glideFreq = targetFreq*lerp + baseFreq*(1-lerp)
     return 12 * Math.log2(glideFreq / targetFreq)
@@ -42,6 +43,7 @@ define(function (require) {
     lerp = Math.pow(lerp, 1/(params._glideCurve+1))
     let baseFreq = params.freq
     let targetFreq = params._glideTargetEvent.freq
+    if (!targetFreq) { return 0 }
     let glideFreq = targetFreq*lerp + baseFreq*(1-lerp)
     return 12 * Math.log2(glideFreq / baseFreq)
   }
