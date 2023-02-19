@@ -147,16 +147,15 @@ define((require) => {
           events.forEach(e => e.linenum = linenum)
           let overrides = players.overrides[player.id] || {}
           let es = events.map(e => applyOverrides(e, overrides))
-          es.forEach(e => evalToEvent(e, beat)) // Optimisation: evaluate down to a primitive for values that don't change over the course of the event
-          return es
-        }
-        player.getEventsForBeat = (beat) => {
-          let es = player.getEventsForBeatBase(beat, player)
           es = expandChords(es)
+          es.forEach(e => evalToEvent(e, beat)) // Optimisation: evaluate down to a primitive for values that don't change over the course of the event
           es.forEach(e => applyDelay(e, beat))
           es = expandStutter(es)
           es.forEach(e => applySwing(e, beat))
           return es
+        }
+        player.getEventsForBeat = (beat) => {
+          return player.getEventsForBeatBase(beat, player)
         }
         return player
       }
@@ -175,6 +174,16 @@ define((require) => {
   let assertHas = (expected, actual) => {
     for (let k in expected) {
       assert(expected[k], actual[k], `for ${k}`)
+    }
+  }
+  let assertNotSame = (vs) => {
+    for (let i=0; i<vs.length; i++) {
+      for (let j=i+1; j<vs.length; j++) {
+        if (vs[i] === vs[j]) {
+          console.trace(`Assertion failed.\n>>Expected values to all be different ${vs}}`)
+          return
+        }
+      }
     }
   }
   let assertThrows = (expected, code) => {
@@ -489,6 +498,12 @@ define((require) => {
   assert(8, evalParamFrame(p.getEventsForBeat({count:0})[0].bar,ev(0,0),0))
   delete players.instances.p
   delete playerTypes.foo
+
+  p = parsePlayer('p test (000), add=[-7:7]r')
+  assertNotSame(p.getEventsForBeat({count:0}).map(e => e.add))
+
+  p = parsePlayer('p test 0, foo=(0,0,0), add=[-7:7]r')
+  assertNotSame(p.getEventsForBeat({count:0}).map(e => e.add))
 
   console.log('Parse player tests complete')
   }

@@ -295,7 +295,7 @@ define((require) => {
   parseLine('preset myro readout, add=4')
   parseLine('r1 readout 0, add=2')
   parseLine('r2 myro follow r1, add+=1')
-  assert(3, players.instances.r2.getEventsForBeat({count:0})[0].add)
+  assert(5, players.instances.r2.getEventsForBeat({count:0})[0].add) // follow player's preset should win over the player being followed
   delete players.instances.r1
   delete players.instances.r2
   delete playerTypes.myro

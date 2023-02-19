@@ -1102,14 +1102,10 @@ shadertoy synth multiple channels
 // var, player.var, this.param, this.voice, var{params}, slider{}, floor{}, .floor{to:}, accum{}
 // (...).1, (...).max, max{...}, {foo:...}.foo, (pk,ps).pulse
 // modifiers {seed,per,0:0}, @e, @f
-// subparams {2,mix:1/2}, non chord params, presets
+// subparams {2,mix:1/2}, presets
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-!Pattern does not have correct timing: <3[45]>_
-!Cannot have random per event when using param chord. Eg these two should do the same:
- p ping (000), add=[-7:7]r
- p ping 0, foo=(0,0,0), add=[-7:7]r
 Need syntax for "not" player group
  Eg  set !p* add=4  also  set [g,!b] add=2  also  set ![g,b] add=3
  What is our "not" operator??
@@ -1135,6 +1131,7 @@ Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as 
 !`p1 ping 0, dur=4, foo=[100,1000,100]e \n p2 kal 0, dur=1, amp=p1.foo/1000` the []e is evalled in the WRONG players dur
 !add=(0,2,4,6)[rand]{per:2,seed:0} doesn't work; rand chord indexer needs to respect time modifiers and seed etc
 !Really need a complete audit of time vs count. Need the code to be clear and unambiguous which is which. There will be issues to fix. Look at []e and []e{per}
+!Pattern does not have correct timing: <3[45]>_
 Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7]r, delay=(0,{1/2,add+:2})
  !Actually, this is already possible using  delay=(0,{1/2,add:this.add+2}) . but this is ugly :-/
  But not sure of syntax
