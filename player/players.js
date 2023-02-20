@@ -26,16 +26,25 @@ define(function(require) {
   players.expandOverrides = () => {
     let newOverrides = {}
     for (let k in players.overrides) {
-      if (k.includes('*')) {
-        let re = new RegExp('^'+k.replaceAll('*','.*')+'$')
-        for (let ks in players.instances) {
-          if (ks.match(re)) {
-            newOverrides[ks] = combineOverrides(newOverrides[ks] || {}, players.overrides[k])
-          }
-        }
-      } else {
-        newOverrides[k] = combineOverrides(newOverrides[k] || {}, players.overrides[k])
+      let invert = false
+      let oid = k
+      if (k[0] === '!') {
+        invert = true
+        oid = k.substring(1)
       }
+      let matches
+      if (oid.includes('*')) {
+        let re = new RegExp('^'+oid.replaceAll('*','.*')+'$')
+        matches = Object.keys(players.instances).filter(id => id.match(re))
+      } else {
+        matches = [oid]
+      }
+      if (invert) {
+        matches = Object.keys(players.instances).filter(id => !matches.includes(id))
+      }
+      matches.forEach(m => {
+        newOverrides[m] = combineOverrides(newOverrides[m] || {}, players.overrides[k])
+      })
     }
     players.overrides = newOverrides
   }
@@ -70,6 +79,13 @@ define(function(require) {
 
     testOverrideWildcard(['p1'], {p1:{bar:1},'*':{foo:1}}, {p1:{bar:1,foo:1}})
     testOverrideWildcard(['p1'], {'*':{foo:1},p1:{bar:1}}, {p1:{foo:1,bar:1}})
+
+    testOverrideWildcard(['p1'], {'!p1':{foo:1}}, {})
+    testOverrideWildcard(['p1'], {'!q1':{foo:1}}, {p1:{foo:1}})
+    testOverrideWildcard(['p1','p2'], {'!q':{foo:1}}, {p1:{foo:1},p2:{foo:1}})
+    testOverrideWildcard(['p1','p2'], {'!p1':{foo:1}}, {p2:{foo:1}})
+    testOverrideWildcard(['p1','p2','q1'], {'!p*':{foo:1}}, {q1:{foo:1}})
+    testOverrideWildcard(['p1','p2','q1'], {'!*1':{foo:1}}, {p2:{foo:1}})
 
     console.log('Players tests complete')
   }

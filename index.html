@@ -349,7 +349,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <h5>Overriding player params:</h5>
 <p>Basic structure: <code>set id params</code></p>
 <p>A set overrides command begins when <code>set </code> begins a new line. The id and params may follow on subsequent lines.</p>
-<p><code>id</code> Player identifier; the override params will be apllied to this player. Can also be a list of multiple players to apply the params to; eg <code>set (kd,sd) amp=0</code>. Can include wildcards, so <code>set p* ...</code> will apply the overrides to every player whose name starts with 'p'. <code>set * ...</code> will apply to all players.</p>
+<p><code>id</code> Player identifier; the override params will be apllied to this player. Can also be a list of multiple players to apply the params to; eg <code>set (kd,sd) amp=0</code>. Can include wildcards, so <code>set p* ...</code> will apply the overrides to every player whose name starts with 'p'. <code>set * ...</code> will apply to all players. <code>set !p ...</code> will apply to all players _except_ 'p'.</p>
 <p><code>params</code> Comma separated list of params (eg <code>amp=1/2</code>) that affect how the player plays; see 'Value Syntax' and 'Params' sections below</p>
 <p class='sub'><code>modification overrides</code> params can be defined using operators to modify existing values rather than override them; eg <code>add+=2</code> will increase the add parameter by an additional 2 on top of what it was already set to.</p>
 <h5>Setting global vars:</h5>
@@ -1106,9 +1106,6 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-Need syntax for "not" player group
- Eg  set !p* add=4  also  set [g,!b] add=2  also  set ![g,b] add=3
- What is our "not" operator??
 !Can no longer use a complex dur to force a pattern to start when the player is uncommented
  EG the boom and whoosh in Blade Runner opening titles
  Maybe some other, proper, way to force this?

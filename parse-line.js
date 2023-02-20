@@ -14,7 +14,7 @@ define((require) => {
     let char
     let result = ''
     while (char = state.str.charAt(state.idx).toLowerCase()) {
-      if ((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || char === '_' || char == '*') {
+      if ((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || char === '_' || char == '*' || char == '!') {
         result += char
         state.idx += 1
         continue
@@ -136,7 +136,7 @@ define((require) => {
   }
 
   let startsWithSet = (str) => {
-    let r = new RegExp(/^\s*set\s+[\(\*\w]+/, 'i')
+    let r = new RegExp(/^\s*set\s+[\(\*\w\!]+/, 'i')
     return r.test(str)
   }
 
@@ -181,6 +181,7 @@ define((require) => {
   assert(true, isLineStart('set p '))
   assert(true, isLineStart('set\tp'))
   assert(true, isLineStart('set p1'))
+  assert(true, isLineStart('set !p'))
   assert(true, isLineStart('set *'))
   assert(true, isLineStart('set ( p , a* ) '))
   assert(true, isLineStart('SET P'))
@@ -262,6 +263,16 @@ define((require) => {
   assert(2, players.overrides['q*'].amp)
   delete players.overrides.p1
   delete players.overrides['q*']
+
+  parseLine(' set !p amp = 2 ')
+  assert(2, players.overrides['!p'].amp)
+  delete players.overrides['!p']
+
+  parseLine(' set ( p1 , !p ) amp = 2 ')
+  assert(2, players.overrides.p1.amp)
+  assert(2, players.overrides['!p'].amp)
+  delete players.overrides.p1
+  delete players.overrides['!p']
 
   parseLine('set p add+=2')
   assert(true, isOverride(players.overrides.p.add))
