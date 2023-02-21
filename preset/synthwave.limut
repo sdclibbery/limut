@@ -69,10 +69,10 @@ preset synbass multiwave, oct=2, envelope='simple', dur=1/2, rel=3/4,
   wave1={'pulse',detune:-12+0.01}, wave2={'saw',detune:0.01,amp:2},
   wave3={'pulse',detune:-12-0.01}, wave4={'saw',detune:-0.01,amp:2}
 
-preset chiparp multiwave, oct=4, envelope='simple',
+preset chiparp multiwave, dur=1/4, oct=4, envelope='simple',
 	att=0.01, rel=0.03, addc=wow, room=1/4,
 	wave1={'square',amp:3/4,detune:-0.04}, wave2={'square',amp:3/4,detune:0.04},
-  delay=(0,{1/4,add:this.add+2},{2/4,add:this.add+4},{3/4,add:this.add+7})
+  add=[0,4,7,2]
 
 preset softpad supersaw, envelope=pad, amp=1/2, phaser=1/9, oct=(3,5), pan=[-1:1]r, dur=2
 
