@@ -32,9 +32,37 @@ define(function (require) {
   uniform float l_vignette;
   uniform float l_contrast;
   uniform int l_recol;
+  uniform float l_vhs;
   vec2 origCoord;
+  float rand(vec2 co) {
+      return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+  }
+  vec3 rgb2yiq( vec3 rgb ) {
+    return mat3( 0.299, 0.596, 0.211, 0.587, -0.274, -0.523, 0.114, -0.322, 0.312 ) * rgb;
+  }
+  vec3 yiq2rgb( vec3 yiq ) {
+    return mat3( 1.000, 1.000, 1.000, 0.956, -0.272, -1.106, 0.621, -0.647, 1.703 ) * yiq;
+  }
+  float snPhase = 0.;
+  float tcPhase = 0.;
   vec2 preprocess( vec2 coord ) {
     origCoord = coord;
+    if (l_vhs != 0.) { /* from https://www.shadertoy.com/view/XtBXDt */
+      vec2 uv = 0.5 + coord*0.5;
+      vec2 uvn = uv;
+      /* tape wave */
+      uvn.x += ( rand( vec2( uvn.y, iTime ) ) - 0.5 )* 0.005;
+      uvn.x += ( rand( vec2( uvn.y * 100.0, iTime * 10.0 ) ) - 0.5 ) * 0.01;
+      /* tape crease */
+      tcPhase = clamp( ( sin( uvn.y * 8.0 - iTime * 3.14159 * 0.6 ) - 0.92 ) * rand( vec2( iTime*0.5 ) ), 0.0, 0.01 ) * 10.0;
+      float tcNoise = max( rand( vec2( uvn.y * 100.0, iTime * 10.0 ) ) - 0.5, 0.0 );
+      uvn.x = uvn.x - tcNoise * tcPhase;
+      /* switching noise */
+      float snPhase = smoothstep( 0.03, 0.0, uvn.y );
+      uvn.y += snPhase * 0.3;
+      uvn.x += snPhase * ( ( rand( vec2( uv.y * 100.0, iTime * 10.0 ) ) - 0.5 ) * 0.2 );
+      coord = uvn*2.0 - 1.0;
+    }
     if (l_pixellate.x != 0.) {
       coord = floor((coord+(0.5/l_pixellate.xy))*l_pixellate.xy)/l_pixellate.xy;
     }
@@ -147,6 +175,21 @@ define(function (require) {
       vec3 mono = vec3(0.21*col.r + 0.71*col.g + 0.07*col.b);
       col.rgb = mix(col.rgb, mono, l_monochrome);
     }
+    if (l_vhs != 0.) {
+      vec2 uv = 0.5 + origCoord*0.5;
+      col.rgb = mix(col.rgb, fwidth(col.rgb), 0.2+snPhase);
+      col.rgb *= 1.0 - tcPhase;
+      col.rgb = mix(
+        col.rgb,
+        col.yzx,
+        snPhase
+      );
+      col.rgb *= 1.0 + clamp( rand( vec2( 0.0, uv.y + iTime * 0.2 ) ) * 0.6 - 0.25, 0.0, 0.1 );
+      col = clamp( col, 0., 1.);
+      col.rgb = rgb2yiq( col.rgb );
+      col.rgb = vec3( 0.1, -0.1, 0.0 ) + vec3( 0.9, 1.1, 1.5 ) * col.rgb;
+      col.rgb = yiq2rgb( col.rgb );
+    }
     float b = min(foreBack > 0.5 ? 0.0 : 1.0-2.0*foreBack, 1.0);
     float m = max(foreBack < 0.5 ? 2.0*foreBack : 2.0*(1.0-foreBack), 0.0);
     float f = min(foreBack < 0.5 ? 0.0 : 2.0*foreBack-1.0, 1.0);
@@ -191,6 +234,7 @@ define(function (require) {
     shader.extentsUnif = system.gl.getUniformLocation(program, "l_extents")
     shader.eventTimeUnif = system.gl.getUniformLocation(program, "l_eventTime")
     shader.contrastUnif = system.gl.getUniformLocation(program, "l_contrast")
+    shader.vhsUnif = system.gl.getUniformLocation(program, "l_vhs")
 }
 
   return {

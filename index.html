@@ -948,20 +948,21 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
+!put `delay=0` on all audio base types so any player can do `delay|=...`
+envelopes
+ * Create envelopes for eg lpf, eg  lpf=this.freq*10*ar{a:1/4,r:1}
+  ??Is that the same as  lpf=this.freq*[0,10,0]e[1/4,1]  ??
+  ??Should use att/rel etc names for consistency??
+ * Get main envelope and use it for eg lpf
+ * Can also use adsr{} etc for main envelope
+synthwave presets
+ synth chime
 busses
  Use 'bus' player to create an effects bus, and 'bus' param to send a player to an effects bus
  Effects in a bus can have per frame control; eg can vary room mix per frame etc
  If player bus is itself, ignore it and do nothing
  Allow mulitple busses; bus1, bus2 etc
  bus subparam for mix level (per frame)
-envelopes
- * Create envelopes for eg lpf, eg  lpf=this.freq*10*ar{a:1/4,r:1}
-  ??Is that the same as  lpf=this.freq*[0,10,0]e[1/4,1]  ??
-  ??Should use att/rel etc names for consistency??
- * Get main envelope and use it for eg lpf
- * Can use adsr{} etc for main envelope
-synthwave presets
- synth chime
 !echo={1,feedback:0} should still produce a single delayed echo
 !Chop/ring LFO Freq should be per frame
 Individual percussion synths
@@ -1041,7 +1042,15 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+! neongrid turns white when played onto a buffer!
 VHS effect param: https://www.shadertoy.com/view/MdffD7
+ !Time should not be scaled by rate for this!!
+ 240 res horizontal bars
+ ? vertical colour wobble?
+ ? colour blips?
+ param should affect the effect
+ ! refactor/optimise
+ Docs
 !What happens to buffer when it uses eg loc=tile_b ??
 !Some kind of antialiasing for perspective distance; even if its user configurable
  ? point sampled antialiasing? will be very inefficient/slow?

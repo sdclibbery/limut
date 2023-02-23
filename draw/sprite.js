@@ -215,6 +215,7 @@ let verts = (loc, window, har, allowHarAdjust) => {
       )
       let tunnel = evalMainParamFrame(params, 'tunnel', 0, state.count)
       let contrast = evalMainParamFrame(params, 'contrast', 0, state.count)
+      let vhs = evalMainParamFrame(params, 'vhs', 0, state.count)
       let ripple = ca('ripple',
         evalMainParamFrame(params, 'ripple', 0, state.count),
         evalSubParamFrame(params, 'ripple', 'scale', 1, state.count),
@@ -266,6 +267,7 @@ let verts = (loc, window, har, allowHarAdjust) => {
       gl.uniform1f(s.additiveUnif, additive)
       gl.uniform1f(s.eventTimeUnif, eventTime)
       gl.uniform1f(s.contrastUnif, contrast)
+      gl.uniform1f(s.vhsUnif, vhs)
       if (s.textureUnif) {
         s.textureUnif.forEach((tu,i) => {
           let t = s.texture || (text !== undefined ? textTexture(text) : texture(url))
