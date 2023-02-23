@@ -14,6 +14,7 @@ define(function (require) {
   let commonProcessors = `
   out vec4 fragColor;
   uniform float iTime;
+  uniform float l_realTime;
   uniform vec4 l_repeat;
   uniform vec2 l_scroll;
   uniform vec2 l_zoom;
@@ -51,16 +52,16 @@ define(function (require) {
       vec2 uv = 0.5 + coord*0.5;
       vec2 uvn = uv;
       /* tape wave */
-      uvn.x += ( rand( vec2( uvn.y, iTime ) ) - 0.5 )* 0.005;
-      uvn.x += ( rand( vec2( uvn.y * 100.0, iTime * 10.0 ) ) - 0.5 ) * 0.01;
+      uvn.x += ( rand( vec2( uvn.y, l_realTime ) ) - 0.5 )* 0.005;
+      uvn.x += ( rand( vec2( uvn.y * 100.0, l_realTime * 10.0 ) ) - 0.5 ) * 0.01;
       /* tape crease */
-      tcPhase = clamp( ( sin( uvn.y * 8.0 - iTime * 3.14159 * 0.6 ) - 0.92 ) * rand( vec2( iTime*0.5 ) ), 0.0, 0.01 ) * 10.0;
-      float tcNoise = max( rand( vec2( uvn.y * 100.0, iTime * 10.0 ) ) - 0.5, 0.0 );
+      tcPhase = clamp( ( sin( uvn.y * 8.0 - l_realTime * 3.14159 * 0.6 ) - 0.92 ) * rand( vec2( l_realTime*0.5 ) ), 0.0, 0.01 ) * 10.0;
+      float tcNoise = max( rand( vec2( uvn.y * 100.0, l_realTime * 10.0 ) ) - 0.5, 0.0 );
       uvn.x = uvn.x - tcNoise * tcPhase;
       /* switching noise */
       float snPhase = smoothstep( 0.03, 0.0, uvn.y );
       uvn.y += snPhase * 0.3;
-      uvn.x += snPhase * ( ( rand( vec2( uv.y * 100.0, iTime * 10.0 ) ) - 0.5 ) * 0.2 );
+      uvn.x += snPhase * ( ( rand( vec2( uv.y * 100.0, l_realTime * 10.0 ) ) - 0.5 ) * 0.2 );
       coord = uvn*2.0 - 1.0;
     }
     if (l_pixellate.x != 0.) {
@@ -184,7 +185,7 @@ define(function (require) {
         col.yzx,
         snPhase
       );
-      col.rgb *= 1.0 + clamp( rand( vec2( 0.0, uv.y + iTime * 0.2 ) ) * 0.6 - 0.25, 0.0, 0.1 );
+      col.rgb *= 1.0 + clamp( rand( vec2( 0.0, uv.y + l_realTime * 0.2 ) ) * 0.6 - 0.25, 0.0, 0.1 );
       col = clamp( col, 0., 1.);
       col.rgb = rgb2yiq( col.rgb );
       col.rgb = vec3( 0.1, -0.1, 0.0 ) + vec3( 0.9, 1.1, 1.5 ) * col.rgb;
@@ -223,6 +224,8 @@ define(function (require) {
     shader.perspectiveUnif = system.gl.getUniformLocation(program, "l_perspective")
     shader.additiveUnif = system.gl.getUniformLocation(program, "l_additive")
     shader.timeUnif = system.gl.getUniformLocation(program, "iTime")
+    shader.realTimeUnif = system.gl.getUniformLocation(program, "l_realTime")
+    shader.eventTimeUnif = system.gl.getUniformLocation(program, "l_eventTime")
     shader.brightnessUnif = system.gl.getUniformLocation(program, "l_brightness")
     shader.monochromeUnif = system.gl.getUniformLocation(program, "l_monochrome")
     shader.vignetteUnif = system.gl.getUniformLocation(program, "l_vignette")
@@ -232,7 +235,6 @@ define(function (require) {
     shader.spectrumUnif = system.gl.getUniformLocation(program, "l_spectrum")
     shader.textureUnif = [system.gl.getUniformLocation(program, 'l_image')]
     shader.extentsUnif = system.gl.getUniformLocation(program, "l_extents")
-    shader.eventTimeUnif = system.gl.getUniformLocation(program, "l_eventTime")
     shader.contrastUnif = system.gl.getUniformLocation(program, "l_contrast")
     shader.vhsUnif = system.gl.getUniformLocation(program, "l_vhs")
 }

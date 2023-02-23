@@ -182,6 +182,7 @@ let verts = (loc, window, har, allowHarAdjust) => {
       if (shaderTime === null) {
         shaderTime = state.count*rate + sway*state.pulse
       }
+      let realTime = state.count
       let amp = Math.min(evalMainParamFrame(params, 'amp', 1, state.count), 5)
       if (amp <= 0.0001) { return true }
       let add = evalMainParamFrame(params, 'add', 0, state.count)
@@ -245,6 +246,7 @@ let verts = (loc, window, har, allowHarAdjust) => {
       let gl = system.gl
       gl.useProgram(s.program)
       gl.uniform1f(s.timeUnif, shaderTime)
+      gl.uniform1f(s.realTimeUnif, realTime)
       gl.uniform1f(s.brightnessUnif, brightness)
       gl.uniform1f(s.monochromeUnif, monochrome)
       gl.uniform1f(s.vignetteUnif, vignette)
