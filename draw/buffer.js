@@ -17,9 +17,9 @@ define(function (require) {
   ${common.commonProcessors}
   void main() {
     vec2 uv = fragCoord;
+    uv = preprocess(uv);
     float ar = l_extents.x / l_extents.y;
     uv.x /= ar;
-    uv = preprocess(uv);
     uv = (uv+1.0)/2.0;
     vec4 c = texture(l_image, fract(uv));
     float foreback = c.a;

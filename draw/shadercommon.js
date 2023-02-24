@@ -30,7 +30,7 @@ define(function (require) {
   uniform vec4 l_back;
   uniform float l_monochrome;
   uniform float l_brightness;
-  uniform float l_vignette;
+  uniform vec4 l_vignette;
   uniform float l_contrast;
   uniform int l_recol;
   uniform float l_vhs;
@@ -153,12 +153,12 @@ define(function (require) {
         break;
       }
     }
-    if (l_vignette != 0.) {
+    if (l_vignette.x != 0.) {
       vec2 coord = origCoord;
       if (l_pixellate.x != 0.) { coord = mod((coord+(0.5/l_pixellate.xy))*l_pixellate.xy, 1.0)*2.0-1.0; }
-      float p = 4.0/l_vignette;
-      const float cutoff = 0.9;
-      float d = pow(pow(abs(coord.x),p)+pow(abs(coord.y),p), 1.0/p);
+      float p = 4.0/l_vignette.x;
+      float cutoff = l_vignette.z;
+      float d = pow(pow(abs(coord.x/l_vignette.y),p)+pow(abs(coord.y),p), 1.0/p);
       float vignette = d < cutoff ? 1.0 : max(1.0-(d-cutoff)/(1.0-cutoff),0.0);
       col.a *= vignette;
       col.rgb *= mix(1.0, vignette, l_additive);

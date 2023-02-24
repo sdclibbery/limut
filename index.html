@@ -1042,13 +1042,14 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-! neongrid turns white when played onto a buffer!
-! Vignette is always square; should be able to set an aspect ratio
 VHS effect param: https://www.shadertoy.com/view/MdffD7
  param should affect the effect
- ! refactor/optimise
- test
+ !refactor/optimise
+ !really when uv.x is pushed, there should be black at the edge, NOT more shader output...
+ test lots; buffers WITH feedback; check aspect ratio!, vhs, vignette, pixellate
  Docs
+  vhs param
+  vignette subparams
 !What happens to buffer when it uses eg loc=tile_b ??
 !Some kind of antialiasing for perspective distance; even if its user configurable
  ? point sampled antialiasing? will be very inefficient/slow?

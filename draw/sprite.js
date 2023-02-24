@@ -137,6 +137,7 @@ let verts = (loc, window, har, allowHarAdjust) => {
   let defBack = {r:0,g:0,b:0,a:0}
   let defLoc = {x:0,y:0,w:2,h:2}
   let defScroll = {x:0,y:0}
+  let defVignette = {x:0,y:0}
   let defZoom = {x:1,y:1}
   let defMid = {r:0,g:0,b:0,a:1}
   let play = (renderer, params) => {
@@ -199,7 +200,11 @@ let verts = (loc, window, har, allowHarAdjust) => {
         evalSubParamFrame(params, 'pixellate', 'y', pixellateX, state.count),
         0,0
       )
-      let vignette = evalMainParamFrame(params, 'vignette', 0, state.count)
+      let vignette = ca('vignette',
+        evalMainParamFrame(params, 'vignette', 0, state.count),
+        evalSubParamFrame(params, 'vignette', 'aspect', 1, state.count),
+        evalSubParamFrame(params, 'vignette', 'cutoff', 0.9, state.count),0
+      )
       let loc = rect(evalParam.evalParamFrame(params.loc, params, state.count), defLoc, 'loc')
       let repeat = ca('repeat',
         evalMainParamFrame(params, 'repeat', 0, state.count),
@@ -249,7 +254,7 @@ let verts = (loc, window, har, allowHarAdjust) => {
       gl.uniform1f(s.realTimeUnif, realTime)
       gl.uniform1f(s.brightnessUnif, brightness)
       gl.uniform1f(s.monochromeUnif, monochrome)
-      gl.uniform1f(s.vignetteUnif, vignette)
+      gl.uniform4fv(s.vignetteUnif, vignette)
       gl.uniform1i(s.recolUnif, recol)
       gl.uniform1f(s.valueUnif, value+add + pulse*state.pulse)
       gl.uniform1f(s.ampUnif, amp + pulse*state.pulse*0.5)
