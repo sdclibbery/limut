@@ -1043,9 +1043,6 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
 VHS effect param: https://www.shadertoy.com/view/MdffD7
- param should affect the effect
- !refactor/optimise
- !really when uv.x is pushed, there should be black at the edge, NOT more shader output...
  test lots; buffers WITH feedback; check aspect ratio!, vhs, vignette, pixellate
  Docs
   vhs param
@@ -1114,6 +1111,10 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
+More time modifiers
+ offset
+ rate
+ ?delay time modifier, pauses time at the start of the event
 !Can no longer use a complex dur to force a pattern to start when the player is uncommented
  EG the boom and whoosh in Blade Runner opening titles
  Maybe some other, proper, way to force this?
@@ -1146,7 +1147,6 @@ Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7
  r readout 0, loc={y:2/3-this.voice/2}, add=([0,1]t1,[0,1]t2).accum
 Variable rate expressions somehow EG  addc=[-1,1]s[1/8:1]e  Or  addc=sin{[1/8:1]e*6.28}  or something
 Presets should be able to define multiple synths to play at once
-delay time modifier, pauses time at the start of the event
 floor{1.5,2.5} should work??? Or should it?? Probably not? But then it should give an error? But sum{1,2} works?
 !Doesn't work:  v readout 0, add=main.amp
 ? (0,2:8) syntax?
@@ -1213,7 +1213,7 @@ Need an additional eval interval; eg @i for 'per instance', so for each individu
  Useful for providing variation between (1,2,3,4) multiplied out sub-events without having to go full-on per frame, expecially for eg []r
  ? Isn't that what @e should be? And then we could have @t for 'eval once for all chord values'
 Better syntax highlighting for {} brackets; maybe bracket match highlighting??
-Weight modifier for random to go with seed
+Weighted random: nice syntax?:  [1,2,{3,weight:1/2}]r
 ma{v,window:1} - calculate the moving average of a value over a given time window
 Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
 Can set swing timescale with a subparam: swing={60,on:1/2}

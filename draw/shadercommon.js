@@ -46,22 +46,25 @@ define(function (require) {
   }
   float snPhase = 0.;
   float tcPhase = 0.;
+  float outside = 0.;
   vec2 preprocess( vec2 coord ) {
     origCoord = coord;
     if (l_vhs != 0.) { /* from https://www.shadertoy.com/view/XtBXDt */
       vec2 uv = 0.5 + coord*0.5;
+      /* tape crease */
+      tcPhase = clamp( ( sin( uv.y * 8.0 - l_realTime * 3.14 * 0.6 ) - 0.92 ) * rand( vec2( l_realTime*0.5 ) ), 0.0, 0.01 ) * 10.0;
+      float tcNoise = max( rand( vec2( uv.y * 100.0, l_realTime * 10.0 ) ) - 0.5, 0.0 )*1.5;
+      uv.x -= tcNoise * tcPhase;
       /* tape wave */
       uv.x += ( rand( vec2( uv.y, l_realTime ) ) - 0.5 )* 0.005;
       uv.x += ( rand( vec2( uv.y * 100.0, l_realTime * 10.0 ) ) - 0.5 ) * 0.01;
-      /* tape crease */
-      tcPhase = clamp( ( sin( uv.y * 8.0 - l_realTime * 3.14 * 0.6 ) - 0.92 ) * rand( vec2( l_realTime*0.5 ) ), 0.0, 0.01 ) * 10.0;
-      float tcNoise = max( rand( vec2( uv.y * 100.0, l_realTime * 10.0 ) ) - 0.5, 0.0 );
-      uv.x = uv.x - tcNoise * tcPhase;
       /* switching noise */
       float snPhase = smoothstep( 0.04, 0.0, uv.y );
       uv.y += snPhase * 0.3;
       uv.x += snPhase * ( ( rand( vec2( uv.y * 100.0, l_realTime * 10.0 ) ) - 0.5 ) * 0.2 );
-      coord = uv*2.0 - 1.0;
+      if (uv.x - tcNoise*tcPhase*1.5 < -0.2) { outside = 1.0; }
+      if (uv.x > 1.2) { outside = 1.0; }
+      coord = mix(coord, uv*2.0 - 1.0, l_vhs);
     }
     if (l_pixellate.x != 0.) {
       coord = floor((coord+(0.5/l_pixellate.xy))*l_pixellate.xy)/l_pixellate.xy;
@@ -177,16 +180,19 @@ define(function (require) {
     }
     if (l_vhs != 0.) {
       vec2 uv = 0.5 + origCoord*0.5;
-      col.rgb = mix(col.rgb, fwidth(col.rgb), 0.2+snPhase);
-      col.rgb *= 1.0 - tcPhase;
-      col.rgb = mix(col.rgb, col.yzx, snPhase);
-      col.rgb *= 1.0 + clamp( rand( vec2( 0.0, uv.y + l_realTime * 0.2 ) ) * 0.6 - 0.25, 0.0, 0.1 );
+      vec3 res = col.rgb;
+      res = mix(res, fwidth(res), 0.2+snPhase);
+      res *= 1.0 - tcPhase;
+      res *= 1.0 - outside;
+      res = mix(res, col.yzx, snPhase);
+      res *= 1.0 + clamp( rand( vec2( 0.0, uv.y + l_realTime * 0.2 ) ) * 0.6 - 0.25, 0.0, 0.1 );
       col = clamp( col, 0., 1.);
-      col.xyz = rgb2yiq( col.rgb );
-      col.xyz = vec3( 0.1, -0.1, 0.0 ) + vec3( 0.9, 1.1, 1.5 ) * col.xyz;
-      col.x *= pow(sin(uv.y*6.28*120.0), 2.0)*1.2;
-      col.yz += sin(uv.y*vec2(3.21,5.33)+l_realTime*vec2(-0.79,0.83))*0.03;
-      col.rgb = yiq2rgb( col.xyz );
+      res = rgb2yiq( res );
+      res = vec3( 0.1, -0.1, 0.0 ) + vec3( 0.9, 1.1, 1.5 ) * res;
+      res.x *= pow(sin(uv.y*6.28*120.0), 2.0)*1.2;
+      res.yz += sin(uv.y*vec2(3.21,5.33)+l_realTime*vec2(-0.79,0.83))*0.03;
+      res = yiq2rgb( res );
+      col.rgb = mix(col.rgb, res, l_vhs);
     }
     float b = min(foreBack > 0.5 ? 0.0 : 1.0-2.0*foreBack, 1.0);
     float m = max(foreBack < 0.5 ? 2.0*foreBack : 2.0*(1.0-foreBack), 0.0);
