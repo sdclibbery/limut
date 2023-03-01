@@ -918,12 +918,15 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <div id="accordion-standard-libraries" class="closed">
 <h5>Synthwave library: <code>include 'preset/synthwave.limut'</code></h5>
 <h6>Visual</h6>
-<p><code>neongrid</code> Visual preset of a pink neon perspective grid scrolling towards the viewer, in the lower half of the frame</p>
+<p><code>neongrid</code> Visual preset of a pink neon perspective grid scrolling towards the viewer, in the lower half of the frame. Shader loaded from shadertoy.com</p>
 <p><code>neonbars</code> Visual preset of neon perspective bars scrolling towards the viewer, in the lower half of the frame</p>
 <p><code>neonbits</code> Visual preset of bit patterns, in the lower half of the frame </p>
 <p><code>neonlines</code> Visual preset of wavy neon lines, in the lower half of the frame </p>
+<p><code>neonsine</code> Visual preset of neon sine waves with a VHS TV effect. Shader loaded from shadertoy.com </p>
+<p><code>neonheart</code> Visual preset of a neon heart with a VHS TV effect. Shader loaded from shadertoy.com </p>
+<p><code>neonshapes</code> Visual preset of prismatic neon shapes with a VHS TV effect. Shader loaded from shadertoy.com </p>
 <p><code>skybars</code> Visual preset of horizontal bars across the sky</p>
-<p><code>sun</code> Visual preset of a setting sun</p>
+<p><code>sun</code> Visual preset of a setting sun. Shader loaded from shadertoy.com</p>
 <p><code>sunsetsky</code> Visual preset of a sunset gradient sky in the top half of the frame</p>
 <p><code>vhsbuffer</code> Visual preset of a buffer that displays like a VHS tape on a CRT TV</p>
 <h6>Audio</h6>
@@ -1046,20 +1049,15 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-VHS effect param: https://www.shadertoy.com/view/MdffD7
- Docs
-  vhs param
-  vignette subparams
-  vhsbuffer preset
 !What happens to buffer when it uses eg loc=tile_b ??
  It works fine, but should the buffer rez be changed to compensate??
-?Some kind of antialiasing for perspective distance; even if its user configurable
- ? point sampled antialiasing? will be very inefficient/slow?
- ? some kind of hinting to the actual shader?
 Filter param for all texture based synths (including buffer feedback)
  Image and buffer and webcam shader texture lookup supports a filter kernel with controlled size
   Kernel options for blur, sharpen, max... etc
  Option for additive blur (ie glow/bloom)
+?Some kind of antialiasing for perspective distance; even if its user configurable
+ ? point sampled antialiasing? will be very inefficient/slow?
+ ? some kind of hinting to the actual shader?
 Proper gradients, not just fore/mid/back
 recol=fmb that leaves all pixels white but with fb set, to allow recolouring with fore/mid/back. check it for webcam/image etc too
 !Should really multiply feedback params by dt, otherwise the rate of feedback motions will be framerate dependent
@@ -1116,10 +1114,17 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
+Can print out list of all current player types to console
+ Syntax???
+ Split by audio vs visual
 More time modifiers
  offset
  rate
+ time
  ?delay time modifier, pauses time at the start of the event
+!when `time` is used @e it should be event time, not time when the event is created
+ eg  v readout 0, add=time@e
+ !Really thats true for other vars though; eg  reading p.value  or something
 !Can no longer use a complex dur to force a pattern to start when the player is uncommented
  EG the boom and whoosh in Blade Runner opening titles
  Maybe some other, proper, way to force this?
@@ -1129,9 +1134,6 @@ More time modifiers
  r readout 0, add=m.bar.detune, loc=sparkle
 !Readout doesn't work here:  p ping 0, foo=[0,1,2,3]t1, add=this.foo \ r readout 0, add=p.add
  It's specifically the this.foo that makes it fail
-!when `time` is used @e it should be event time, not time when the event is created
- eg  v readout 0, add=time@e
- !Really thats true for other vars though; eg  reading p.value  or something
 !Syntax colouring is case sensitive; eg  `Set` does not get coloured correctly
 !Follow player chooses different random values so it does not copy the original player properly
  Tests for this

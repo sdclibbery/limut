@@ -1,3 +1,4 @@
+set crt={1/3,aspect:4/3,cutoff:0.96}
 preset sunsetsky gradient, loc=tile_t, back=#004f, mid=#206f, fore=#a08f, amp=3/2
 preset sun shadertoy, id='ml2XWt', loc={x:0,y:0.35,w:1,h:1}, blend='max', rate=1/8, fore=0.9
 preset skybars bars, fore=#000a, additive=0, back=0, rotate=1/4, perspective=-0.7, scroll={x:time/16}, zoom=1/4, amp=1, loc=tile_t, add=9
@@ -5,7 +6,10 @@ preset neongrid shadertoy, id='dt2SDt', loc=tile_b+{h:0.1}, rate=2/3
 preset neonbars gradient, loc=tile_b, perspective={-0.9,shade:0.7}, repeat=1, scroll={y:time/4}, zoom=1/2, fore=neonpink, mid=#214f, back=neongreen, ripple=0.1
 preset neonbits bits, loc=tile_b, perspective={-1.1,shade:0.7}, repeat=1, scroll={y:time/8}, zoom=1, fore=neonpink*1.1, mid=#214f, back=#0aff, time=(([1,1,0]s[14,1,1]@f)^64)/2, contrast=1/2
 preset neonlines lines, loc=tile_b, amp=5, recol='neon', fore*=6, zoom={x:2,y:1}, rate=1/8, perspective={-1,shade:1}, scroll={y:time/4}, repeat=1.2, add=9
-preset vhsbuffer buffer, rez=1, vhs, vignette={1/3,aspect:4/3,cutoff:0.96}
+preset neonsine shadertoy, id='ls3Xzn', vhs, time=floor{time*4}/16, vignette=crt
+preset neonheart shadertoy, id='7l3GDS', vhs, time=floor{time*3}/48, vignette=crt
+preset neonshapes shadertoy, id='NsB3zK', vhs, time=floor{time*3}/16, vignette=crt
+preset vhsbuffer buffer, rez=1, vhs, vignette=crt
 
 preset moroder multiwave, dur=1/2, oct=3,
   att=0.01, sus={1/4,level:1/2}, addc=wow,
