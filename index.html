@@ -930,9 +930,13 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>sunsetsky</code> Visual preset of a sunset gradient sky in the top half of the frame</p>
 <p><code>vhsbuffer</code> Visual preset of a buffer that displays like a VHS tape on a CRT TV</p>
 <h6>Audio</h6>
+<p><code>basspluck</code> plucked synth bass preset </p>
 <p><code>blade</code> Wobbly sawtooth lead preset in the style of the Blade Runner opening titles. Eg <code>l blade 0v___1v-2__-3___....</code></p>
+<p><code>blips</code> random computer blips preset </p>
 <p><code>blues</code> Sawtooth lead preset in the style of Blade Runner blues</p>
+<p><code>chime</code> Synth chime preset </p>
 <p><code>chiparp</code> Chip style preset that plays a simple arpeggio from the given note </p>
+<p><code>cyborg</code> Wobbly synth lead preset </p>
 <p><code>laserharp</code> PWM preset vaguely in the style of the Elka Synthex laser harp sound. Eg <code>l laserharp [98]_7_____[6#6]_5_____</code></p>
 <p><code>lushpad</code> 80s style string pad preset </p>
 <p><code>moroder</code> Moroder bass preset with a 1/16 note delay echo with stereo pan, broadly in the style of the I Feel Love bass. Eg <code>b moroder 00-3-1b</code></p>
@@ -956,6 +960,8 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 !put `delay=0` on all audio base types so any player can do `delay|=...`
+put some default pan on synthwave presets
+add some presets from hydraulic and cyborg?
 envelopes
  * Create envelopes for eg lpf, eg  lpf=this.freq*10*ar{a:1/4,r:1}
   ??Is that the same as  lpf=this.freq*[0,10,0]e[1/4,1]  ??

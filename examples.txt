@@ -143,7 +143,7 @@ set speech='https://upload.wikimedia.org/wikipedia/commons/5/52/Alfabeto_portugu
 sp play 0, dur=32, sample=speech, amp=[1/12:1/6]r, room=1, echo=(1/4,1/2), rate=[2/3,3/4,5/6,1,4/3]r, pan=[-1:1]l8@f
 
 
-set scale=minor
+set scale=minor // Hydraulic
 set bpm=120
 vw lines follow pr, fade, fore=random/2
 vg glow follow db, fore=#118f, zoom=2
