@@ -2914,3 +2914,21 @@ bl blues 0_4[23], add+=ch.rand, amp*=3/2, pan=[-1/4:1/4]r
 sp synpluck 0, add+=ch.[0,3,1,2], oct+=1, pan=[]r
 
 
+// Cyberpunk improv 11/Mar/2023
+include 'preset/synthwave.limut'
+set bpm=105
+set scale=minor
+v image 0, loc=tile_tr,
+	url='https://upload.wikimedia.org/wikipedia/commons/3/37/Blade_runner_2049_picture_for_free_use.png'
+pk bd 7...
+ps play80s ..O., low=-8, stutter=[1,2]t[7,1]
+ph hiss .0
+cb cybass .0v00
+bp basspluck .0, rel=1/4, amp*=1/2
+ch chime 07061514, scale='phrygian', amp*=2/3
+cy cyborg 0_7_54
+cd cydist [09][08][07][21-1], oct+=(0,1)
+set * add+=[-1,1,0,0]t8
+vv vambi 0
+o oxy -7
+

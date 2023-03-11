@@ -1,6 +1,7 @@
 'use strict';
 define(function (require) {
   let system = require('play/system');
+  let setWave = require('play/synth/waveforms/set-wave')
 
   let fm = {}
 
@@ -44,7 +45,7 @@ define(function (require) {
       vco.setPeriodicWave(noiseWaveFft())
     } else {
       vco = system.audio.createOscillator()
-      vco.type = wave || 'sine';
+      setWave(vco, wave)
     }
     vco.frequency.value = freq
     vco.start(params._time)

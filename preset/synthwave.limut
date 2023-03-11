@@ -87,7 +87,7 @@ preset play80s play, room=1/8, low=16, pan=[-1/8:1/8]r
 
 preset basspluck dbass, dur=1/2, pan=[-1/8:1/8]r,
   lpf={[100:[300:1000]n8@e,3000]e,q:[5,[10:30]l32]n1/4@f},
-  att=0, addc=wow, sus=1/2, rel=1, amp=1+wow
+  att=0, addc=wow, sus=1/2, rel=1, amp=3/2+wow
 
 preset blips ping, dur=1/8, oct=[6,7], echo=3/4, add=[0:7]n, addc=wow, pan=[-1:1]r
 
@@ -99,3 +99,18 @@ preset cyborg multiwave, dur=2, lpf=[100:[700:5000]s8]e, addc=wow, pan=[-1/4:1/4
 preset chime dsaw, dur=1/2, oct=(4,5,6), rel=1, echo=3/2, att=0.01, lpf={660*[2:4]l8,q:20},
   room=1, pan=[-1/4,0,1/4]r, amp=1/3
 
+preset cybass multiwave, dur=1/4, att=0.01, rel=1/8, amp=3/2, envelope='full,
+	lpf={[[2500:3500]l16:500]e}, oct=2, pan=[-1/2:1/2]r,
+	wave1={'square',detune:-0.3}, wave2={'square',detune:0.3},
+	wave3={'saw',detune:-0.2}, wave4={'saw',detune:0}, wave5={'saw',detune:-0.2}
+
+preset cydist fm, lpf=[1200:200]e, oct=4, glide=this.dur/6, pan=[-1/2:1/2]n,
+	envelope=full, att=0.01, dec=1/4, sus={level:3/4}, rel:1, noisify=1/2,
+  room={1,mix:1/3}, amp=2/3,
+  op1={ratio:1,target:'out',wave:'square'},
+  op2={ratio:3/4,target:1,depth:0.8,wave:'sine',att:0,rel:4},
+  op3={ratio:5/4,target:2,depth:0.8,wave:'square',att:0,rel:1},
+  op4={ratio:1.8735,target:1,depth:1,wave:'sine',att:0,rel:1/4},
+  op5={ratio:1,target:'out',wave:'saw'}
+
+preset hiss noise, dur=1/2, amp=1/4, envelope='percussion', pan=[-1/2,1/2], low=-8

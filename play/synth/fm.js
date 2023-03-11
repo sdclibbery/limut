@@ -5,6 +5,7 @@ define(function (require) {
   let scale = require('music/scale');
   let envelope = require('play/envelopes')
   let effects = require('play/effects/effects')
+  let waveEffects = require('play/effects/wave-effects')
   let pitchEffects = require('play/effects/pitch-effects')
   let {evalSubParamEvent} = require('play/eval-audio-params')
   let {findNonChordParams} = require('player/non-chord-params')
@@ -33,6 +34,7 @@ define(function (require) {
     let vca = envelope(params, 0.04, 'full')
     let out = effects(params, vca)
     system.mix(out)
+    let vcaMix = system.audio.createGain()
 
     let ops = findNonChordParams(params, 'op')
     .map((id, idx) => createOp(params, idx, id, freq))
@@ -44,16 +46,16 @@ define(function (require) {
       if (target === 'out') {
         if (att === undefined) {
           if (depth === 1) {
-            op.connect(vca)
+            op.connect(vcaMix)
           } else {
             env = fm.flatEnv(params, depth)
             op.connect(env)
-            env.connect(vca)
+            env.connect(vcaMix)
           }
         } else {
           env = fm.simpleEnv(depth, params, att, rel)
           op.connect(env)
-          env.connect(vca)
+          env.connect(vcaMix)
         }
       } else {
         if (att === undefined) {
@@ -66,6 +68,7 @@ define(function (require) {
       return {op,env}
     }).filter(o => !!o)
 
+    waveEffects(params, vcaMix).connect(vca)
     system.disconnect(params,
       ops.map(o=>o.op).filter(o => !!o)
       .concat(ops.map(o=>o.env).filter(o => !!o))
