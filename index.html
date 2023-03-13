@@ -936,7 +936,10 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>blues</code> Sawtooth lead preset in the style of Blade Runner blues</p>
 <p><code>chime</code> Synth chime preset </p>
 <p><code>chiparp</code> Chip style preset that plays a simple arpeggio from the given note </p>
+<p><code>cybass</code> Cyberpunk bass preset </p>
+<p><code>cydist</code> Cyberpunk distorted preset </p>
 <p><code>cyborg</code> Wobbly synth lead preset </p>
+<p><code>hiss</code> Noise hiss synth preset; can be used for percussion </p>
 <p><code>laserharp</code> PWM preset vaguely in the style of the Elka Synthex laser harp sound. Eg <code>l laserharp [98]_7_____[6#6]_5_____</code></p>
 <p><code>lushpad</code> 80s style string pad preset </p>
 <p><code>moroder</code> Moroder bass preset with a 1/16 note delay echo with stereo pan, broadly in the style of the I Feel Love bass. Eg <code>b moroder 00-3-1b</code></p>
@@ -959,19 +962,20 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
-Docs for cydist, cybass and hiss
-envelopes
- * Create envelopes for eg lpf, eg  lpf=this.freq*10*ar{a:1/4,r:1}
-  ??Is that the same as  lpf=this.freq*[0,10,0]e[1/4,1]  ??
-  ??Should use att/rel etc names for consistency??
- * Get main envelope and use it for eg lpf
- * Can also use adsr{} etc for main envelope
 busses
  Use 'bus' player to create an effects bus, and 'bus' param to send a player to an effects bus
  Effects in a bus can have per frame control; eg can vary room mix per frame etc
  If player bus is itself, ignore it and do nothing
  Allow mulitple busses; bus1, bus2 etc
  bus subparam for mix level (per frame)
+master bus with full effects
+ preset for synthwave master with some reverb, compression etc
+envelopes
+ * Create envelopes for eg lpf, eg  lpf=this.freq*10*ar{a:1/4,r:1}
+  ??Is that the same as  lpf=this.freq*[0,10,0]e[1/4,1]  ??
+  ??Should use att/rel etc names for consistency??
+ * Get main envelope and use it for eg lpf
+ * Can also use adsr{} etc for main envelope
 !echo={1,feedback:0} should still produce a single delayed echo
 !Chop/ring LFO Freq should be per frame
 Individual percussion synths

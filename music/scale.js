@@ -95,6 +95,7 @@ define(function (require) {
   }
 
   scale.degreeToFreq = (degree, octave, scaleOverride, sharp) => {
+    if (typeof degree !== 'number') { degree = 0 }
     degree = Math.floor(degree) // Has to be floor not round; round gives an uneven distribution for randoms
     octave = Math.floor(octave)
     let currentScale = scales[scaleOverride || scale.current]
@@ -105,7 +106,7 @@ define(function (require) {
   }
 
   scale.paramsToFreq = (params, defaultOctave) => {
-    let degree = parseInt(params.sound) + evalMainParamEvent(params, 'add', 0)
+    let degree = (parseInt(params.sound) || 0) + evalMainParamEvent(params, 'add', 0)
     if (isNaN(parseInt(degree))) { return }
     let octave = evalMainParamEvent(params, 'oct', defaultOctave)
     let sharp = evalMainParamEvent(params, 'sharp', 0) + evalSubParamEvent(params, 'add', '#', 0) - evalSubParamEvent(params, 'add', 'b', 0)
@@ -144,6 +145,10 @@ define(function (require) {
   assert(261.6, scale.degreeToFreq(0, 4, 'chromatic', 0))
   assert(415.3, scale.degreeToFreq(8, 4, 'chromatic', 0))
 
+  assert(261.6, scale.degreeToFreq('x', 4, 'major', 0))
+  assert(261.6, scale.degreeToFreq('-', 4, 'major', 0))
+
+  assert(261.6, pitchFunc({value:'x'}))
   assert(261.6, pitchFunc({value:0}))
   assert(261.6/2, pitchFunc({sharp:-12}))
   assert(261.6/2, pitchFunc({value:{value:0,"#":-12}}))
