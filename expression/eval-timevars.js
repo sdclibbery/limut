@@ -1,6 +1,6 @@
 'use strict';
 define(function(require) {
-  let evalOperator = require('player/eval-operator')
+  let evalOperator = require('expression/eval-operator')
   let consoleOut = require('console')
 
   let timeVarSteps = (vs, ds) => {

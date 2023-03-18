@@ -1,7 +1,7 @@
 'use strict'
 define((require) => {
   let {parseLine,isLineStart} = require('parse-line')
-  let parseString = require('player/parse-string')
+  let parseString = require('expression/parse-string')
   let system = require('play/system')
   let players = require('player/players')
   let mainVars = require('main-vars')

@@ -1,6 +1,6 @@
 'use strict';
 define(function(require) {
-  let number = require('player/parse-number')
+  let number = require('expression/parse-number')
 
   let overrideKey = (v) => '@'+Math.round(v*16384)/16384
 

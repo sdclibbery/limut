@@ -1,7 +1,7 @@
 'use strict';
 define(function(require) {
-  let evalOperator = require('player/eval-operator')
-  let {operators,precedence} = require('player/operators')
+  let evalOperator = require('expression/eval-operator')
+  let {operators,precedence} = require('expression/operators')
 
   let precedenceTree = (ops) => {
     // Build an operator tree back up from a flattened list, taking precedence into account

@@ -1,6 +1,6 @@
 'use strict';
 define(function(require) {
-  let {combineIntervalsFrom} = require('player/intervals')
+  let {combineIntervalsFrom} = require('expression/intervals')
 
   let objectMap = (obj, fn) => {
     if (obj.hasOwnProperty('value')) { // 'value' field implies this is an object with subparams instead of a normal object

@@ -1,6 +1,6 @@
 'use strict';
 define(function(require) {
-  let lookupOp = require('player/lookupOp')
+  let lookupOp = require('expression/lookupOp')
 
   let ignoreUndefined = (op, l,r) => {
     if (l === undefined) { return r }

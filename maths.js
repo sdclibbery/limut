@@ -94,7 +94,7 @@ define(function(require) {
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`+(msg?'\n'+msg:'')) }
   }
   require('predefined-vars').apply(require('vars').all())
-  let parseExpression = require('player/parse-expression')
+  let parseExpression = require('expression/parse-expression')
   let {evalParamFrame} = require('player/eval-param')
   let ev = (i,c,d,v) => {return{idx:i,count:c,dur:d,_time:c,voice:v}}
   let p

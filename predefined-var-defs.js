@@ -1,7 +1,7 @@
 'use strict'
 define(function(require) {
   let addVar = require('predefined-vars').add
-  let parseExpression = require('player/parse-expression')
+  let parseExpression = require('expression/parse-expression')
 
   let defs = {
     'drop4_4': parseExpression('[1,0]t[4,4]'),

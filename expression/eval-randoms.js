@@ -1,6 +1,6 @@
 'use strict';
 define(function(require) {
-  let evalOperator = require('player/eval-operator')
+  let evalOperator = require('expression/eval-operator')
   let param = require('player/default-param')
 
   function xmur3(seed) {

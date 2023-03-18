@@ -1,6 +1,6 @@
 'use strict';
 define(function(require) {
-  let eatWhitespace = require('player/eat-whitespace')
+  let eatWhitespace = require('expression/eat-whitespace')
 
   let identifier = (state) => {
     let char
@@ -83,7 +83,7 @@ define(function(require) {
     let a = JSON.stringify(actual)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
-  let number = require('player/parse-number') // Expressions should only be numbers in these tests for simplicity
+  let number = require('expression/parse-number') // Expressions should only be numbers in these tests for simplicity
 
   assert(undefined, parseMap({str:'',idx:0,expression:number}))
   assert(undefined, parseMap({str:'ff',idx:0,expression:number}))

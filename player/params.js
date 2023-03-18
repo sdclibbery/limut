@@ -1,8 +1,8 @@
 'use strict';
 define(function(require) {
-  let parseExpression = require('player/parse-expression')
-  let eatWhitespace = require('player/eat-whitespace')
-  let {operators} = require('player/operators')
+  let parseExpression = require('expression/parse-expression')
+  let eatWhitespace = require('expression/eat-whitespace')
+  let {operators} = require('expression/operators')
   let {newOverride,combineOverride,applyOverrides} = require('player/override-params')
 
   let parseName = (state) => {

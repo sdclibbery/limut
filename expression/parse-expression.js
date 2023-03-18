@@ -1,19 +1,19 @@
 'use strict';
 define(function(require) {
-  let number = require('player/parse-number')
-  let parseMap = require('player/parse-map')
-  let parseArray = require('player/parse-array')
-  let eatWhitespace = require('player/eat-whitespace')
-  let operatorTree = require('player/parse-operator')
-  let {operators} = require('player/operators')
-  let {timeVar, linearTimeVar, smoothTimeVar, eventTimeVar, eventIdxVar} = require('player/eval-timevars')
-  let {parseRandom, simpleNoise} = require('player/eval-randoms')
-  let {parseVar,varLookup} = require('player/parse-var')
-  let {hoistInterval} = require('player/intervals')
-  let addModifiers = require('player/time-modifiers').addModifiers
+  let number = require('expression/parse-number')
+  let parseMap = require('expression/parse-map')
+  let parseArray = require('expression/parse-array')
+  let eatWhitespace = require('expression/eat-whitespace')
+  let operatorTree = require('expression/parse-operator')
+  let {operators} = require('expression/operators')
+  let {timeVar, linearTimeVar, smoothTimeVar, eventTimeVar, eventIdxVar} = require('expression/eval-timevars')
+  let {parseRandom, simpleNoise} = require('expression/eval-randoms')
+  let {parseVar,varLookup} = require('expression/parse-var')
+  let {hoistInterval} = require('expression/intervals')
+  let addModifiers = require('expression/time-modifiers').addModifiers
   let {evalParamFrame,preEvalParam} = require('player/eval-param')
-  let parseColour = require('player/parse-colour')
-  let parseString = require('player/parse-string')
+  let parseColour = require('expression/parse-colour')
+  let parseString = require('expression/parse-string')
 
   let numberOrArray = (state) => {
     let n = number(state)

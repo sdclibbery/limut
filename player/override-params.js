@@ -1,6 +1,6 @@
 'use strict';
 define(function(require) {
-  let applyOperator = require('player/eval-operator')
+  let applyOperator = require('expression/eval-operator')
 
   let isOverride = (v) => Array.isArray(v) && v._override
 
