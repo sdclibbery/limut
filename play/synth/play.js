@@ -3,6 +3,7 @@ define(function (require) {
   let system = require('play/system');
   let {getBuffer,getUrl} = require('play/samples')
   let effects = require('play/effects/effects')
+  let fxMixChain = require('play/effects/fxMixChain')
   let waveEffects = require('play/effects/wave-effects')
   let {evalMainParamEvent} = require('play/eval-audio-params')
 
@@ -19,7 +20,7 @@ define(function (require) {
     let gainbase = 0.18 * evalMainParamEvent(params, "loud", 1)
     vca.gain.value = Math.max(0, gainbase * (typeof params.amp === 'number' ? params.amp : 1))
     waveEffects(params, source).connect(vca)
-    system.mix(effects(params, vca))
+    fxMixChain(params, effects(params, vca))
     source.start(params._time)
     source.stop(params.endTime)
     system.disconnect(params, [source, vca])

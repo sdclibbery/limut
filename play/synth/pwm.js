@@ -7,6 +7,7 @@ define(function (require) {
   let scale = require('music/scale')
   let envelope = require('play/envelopes')
   let effects = require('play/effects/effects')
+  let fxMixChain = require('play/effects/fxMixChain')
   let pitchEffects = require('play/effects/pitch-effects')
   let waveEffects = require('play/effects/wave-effects')
   let {evalMainParamEvent,evalMainParamFrame} = require('play/eval-audio-params')
@@ -17,8 +18,7 @@ define(function (require) {
     let detuneSemis = evalMainParamEvent(params, 'detune', 0.1)
 
     let vca = envelope(params, 0.04, 'full')
-    let out = effects(params, vca)
-    system.mix(out)
+    fxMixChain(params, effects(params, vca))
 
     let vco = new AudioWorkletNode(system.audio, "pwm-oscillator")
     vco.parameters.get('frequency').value = freq * Math.pow(2, detuneSemis/12)

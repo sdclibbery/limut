@@ -2,6 +2,7 @@
 define(function (require) {
   let system = require('play/system');
   let effects = require('play/effects/effects')
+  let fxMixChain = require('play/effects/fxMixChain')
   let waveEffects = require('play/effects/wave-effects')
 
   let clickBuffer
@@ -24,8 +25,7 @@ define(function (require) {
 
     let vca = system.audio.createGain()
     vca.gain.value = gain
-    let out = effects(params, vca)
-    system.mix(out)
+    fxMixChain(params, effects(params, vca))
 
     let click = system.audio.createBufferSource()
     click.buffer = getClick()

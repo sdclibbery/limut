@@ -3,7 +3,6 @@ define(function (require) {
   let system = require('play/system')
   let {mainParam} = require('player/sub-param')
   let {evalMainParamFrame,evalSubParamEvent} = require('play/eval-audio-params')
-  let chain = require('play/effects/chains')
   let filters = require('play/effects/filters')
   let {mix} = require('play/effects/mix')
 
@@ -65,7 +64,6 @@ define(function (require) {
     node = ring(params, node)
     node = filters(params, node)
     node = pan(params, node)
-    node = chain(params, node)
     return node
   }
 })

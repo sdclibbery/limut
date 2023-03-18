@@ -5,12 +5,12 @@ define(function (require) {
   let envelope = require('play/envelopes')
   let waveEffects = require('play/effects/wave-effects')
   let effects = require('play/effects/effects')
+  let fxMixChain = require('play/effects/fxMixChain')
   let scale = require('music/scale');
 
   return (params) => {
     let vca = envelope(params, 0.1, 'pad')
-    let out = effects(params, vca)
-    system.mix(out)
+    fxMixChain(params, effects(params, vca))
 
     let source = noise.white()
     waveEffects(params, source).connect(vca)

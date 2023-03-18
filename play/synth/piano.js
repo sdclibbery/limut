@@ -3,6 +3,7 @@ define(function (require) {
   let system = require('play/system');
   let {getBuffer, isLoaded} = require('play/samples')
   let effects = require('play/effects/effects')
+  let fxMixChain = require('play/effects/fxMixChain')
   let waveEffects = require('play/effects/wave-effects')
   let {evalMainParamEvent} = require('play/eval-audio-params')
   let scale = require('music/scale');
@@ -71,7 +72,7 @@ define(function (require) {
     vca.gain.linearRampToValueAtTime(gain, params.endTime-0.01)
     vca.gain.linearRampToValueAtTime(0, params.endTime)
     vca.gain.linearRampToValueAtTime(gain, params.endTime+0.01)
-    system.mix(effects(params, vca))
+    fxMixChain(params, effects(params, vca))
 
     let sample = findNearestSample(freq)
     getBuffer(getNoteUrl(sample))

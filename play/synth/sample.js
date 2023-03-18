@@ -3,6 +3,7 @@ define(function (require) {
   let system = require('play/system');
   let {getBuffer} = require('play/samples')
   let effects = require('play/effects/effects')
+  let fxMixChain = require('play/effects/fxMixChain')
   let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
   let scale = require('music/scale');
   let waveEffects = require('play/effects/wave-effects')
@@ -21,7 +22,7 @@ define(function (require) {
 
     let vca = envelope(params, 0.25, 'full')
     waveEffects(params, source).connect(vca)
-    system.mix(effects(params, vca))
+    fxMixChain(params, effects(params, vca))
 
     pitchEffects(source.detune, params)
 

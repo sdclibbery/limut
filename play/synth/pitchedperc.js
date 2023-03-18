@@ -3,6 +3,7 @@ define(function (require) {
   let system = require('play/system');
   let envelope = require('play/envelopes')
   let effects = require('play/effects/effects')
+  let fxMixChain = require('play/effects/fxMixChain')
   let waveEffects = require('play/effects/wave-effects')
   let whiteNoise = require('play/synth/waveforms/noise').white
   let setWave = require('play/synth/waveforms/set-wave')
@@ -156,8 +157,7 @@ define(function (require) {
 
   return (params) => {
     let vca = envelope(params, 0.4, 'percussion')
-    let out = effects(params, vca)
-    system.mix(out)
+    fxMixChain(params, effects(params, vca))
     let mix = system.audio.createGain()
 
     let nodes = []

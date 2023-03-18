@@ -962,14 +962,31 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
-busses
- Use 'bus' player to create an effects bus, and 'bus' param to send a player to an effects bus
- Effects in a bus can have per frame control; eg can vary room mix per frame etc
- If player bus is itself, ignore it and do nothing
- Allow mulitple busses; bus1, bus2 etc
- bus subparam for mix level (per frame)
-master bus with full effects
- preset for synthwave master with some reverb, compression etc
+New 'bus' player to create an effects bus, and 'bus' param to send a player to an effects bus
+ New syntax for bus:   `bus b, lpf=300`
+ Busses are not normal players, they're something else
+ Have an input gain that is continuously played
+  So no envelope, but must still have amp param
+ fxMixChain mixes to bus, not player
+ Do not use effect chains, the effects are normal, non shared, components in a bus
+ Entire bus graph is rebuilt only when it changes
+ By default, a main or master bus is created
+ Comment bus in and out; should stop playing when commented out then restart when commented back in
+ If bus's bus is set to itself, ignore it (to allow   set * bus=bus1   without mucking up bus1 itself)
+ Docs: bus line syntax
+default master/main bus with full effects
+ if player's bus is not set, send to the main/master bus
+ move main.amp to be on the default main/master bus instead of on system
+ make convultion reverb into a normal effect and move the main reverb from system to the default bus
+ preset bus for synthwave master with some reverb, compression etc
+Allow multiple bus outputs from one player; (bus1, bus2) etc
+ bus subparam for mix level (per frame); eg   p ping 0, bus={bus1,mix:1/2}
+Chain effects for busses
+ Must never share chain with other players (so can be simpler!)
+ Allow per frame control; eg can vary room mix per frame etc
+Support for bus feedback???
+! pad envelope not giving clean continuous sound? Maybe just because the phase is different from one note to the next??
+ Eg p square 0, envelope='pad'
 envelopes
  * Create envelopes for eg lpf, eg  lpf=this.freq*10*ar{a:1/4,r:1}
   ??Is that the same as  lpf=this.freq*[0,10,0]e[1/4,1]  ??

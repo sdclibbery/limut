@@ -7,6 +7,7 @@ define(function (require) {
   let flanger = require('play/effects/flanger')
   let chorus = require('play/effects/chorus')
   let {fixedMix} = require('play/effects/mix')
+  let players = require('player/players')
 
   let echo = (echoDelay, echoFeedback, node, nodes) => {
     if (!echoDelay || echoDelay < 0.0001) { return node }
@@ -48,6 +49,7 @@ define(function (require) {
       echoFeedback: quantise(Math.min(evalSubParamEvent(params, 'echo', 'feedback', 0.35), 0.95), 20),
       room: quantise(evalMainParamEvent(params, 'room', 0)*0.7, 16),
       roomMix: quantise(evalSubParamEvent(params, 'room', 'mix', 1/2), 16),
+      bus: evalMainParamEvent(params, 'bus'),
     }
 }
 
@@ -71,6 +73,28 @@ define(function (require) {
     return c
   }
 
+  let connectChain = (c) => {
+    // if (c.params.bus) {
+    //   let busPlayer = players.instances[c.params.bus]
+    //   if (!busPlayer) {
+    //     c.connected = false
+    //     return
+    //   }
+    //   if (c.connected) { return }
+    //   if (busPlayer) {
+    //     if (!busPlayer.busIn) {
+    //       busPlayer.busIn = system.audio.createGain()
+    //     }
+    //     c.out.connect(busPlayer.busIn)
+    //     c.connected = true
+    //   } // Do nothing if bus player not present
+    // } else {
+      if (c.connected) { return }
+      system.mix(c.out)
+      c.connected = true
+    // }
+  }
+
   let destroyChain = (chain) => {
     delete chains[chain.key]
     chain.oscs.map(n => n.stop())
@@ -91,6 +115,6 @@ define(function (require) {
     chain.timeoutID = setTimeout(() => destroyChain(chain), TTL)
     node.connect(chain.in)
     chain.nodes.push(node)
-    return chain.out
+    connectChain(chain)
   }
 })

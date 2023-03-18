@@ -5,6 +5,7 @@ define(function (require) {
   let scale = require('music/scale');
   let envelope = require('play/envelopes')
   let effects = require('play/effects/effects')
+  let fxMixChain = require('play/effects/fxMixChain')
   let waveEffects = require('play/effects/wave-effects')
   let pitchEffects = require('play/effects/pitch-effects')
   let {evalSubParamEvent} = require('play/eval-audio-params')
@@ -32,8 +33,7 @@ define(function (require) {
     if (isNaN(freq)) { return }
 
     let vca = envelope(params, 0.04, 'full')
-    let out = effects(params, vca)
-    system.mix(out)
+    fxMixChain(params, effects(params, vca))
     let vcaMix = system.audio.createGain()
 
     let ops = findNonChordParams(params, 'op')
