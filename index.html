@@ -964,7 +964,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ==== audio ====
 New 'bus' player to create an effects bus, and 'bus' param to send a player to an effects bus
  New syntax for bus:   `bus b, lpf=300`
- Busses are not normal players, they're something else
+ Buses are not normal players, they're something else
  Have an input gain that is continuously played
   So no envelope, but must still have amp param
  fxMixChain mixes to bus, not player
@@ -973,11 +973,14 @@ New 'bus' player to create an effects bus, and 'bus' param to send a player to a
  By default, a main or master bus is created
  Comment bus in and out; should stop playing when commented out then restart when commented back in
  If bus's bus is set to itself, ignore it (to allow   set * bus=bus1   without mucking up bus1 itself)
+ Allow `set` overrides to be applied to buses
+ Allow var lookup from buses; eg `bus b, amp=1/2``p ping 0, amp=b.amp`
+ Warning when redefine a player as a bus or vice versa?
  Docs: bus line syntax
 default master/main bus with full effects
  if player's bus is not set, send to the main/master bus
  move main.amp to be on the default main/master bus instead of on system
- make convultion reverb into a normal effect and move the main reverb from system to the default bus
+ make convolution reverb into a normal effect and move the main reverb from system to the default bus
  preset bus for synthwave master with some reverb, compression etc
 Allow multiple bus outputs from one player; (bus1, bus2) etc
  bus subparam for mix level (per frame); eg   p ping 0, bus={bus1,mix:1/2}

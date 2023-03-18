@@ -145,6 +145,11 @@ define((require) => {
     return r.test(str)
   }
 
+  let startsWithBus = (str) => {
+    let r = new RegExp(/^\s*bus\s+\w+(\s+|$)/, 'i')
+    return r.test(str)
+  }
+
   let startsWithPlayer = (str) => {
     let r = new RegExp(/^\s*\w+\s+\w+\s+[^\s,]+/, 'i')
     return r.test(str)
@@ -154,6 +159,7 @@ define((require) => {
     if (startsWithInclude(str)) { return true }
     if (startsWithSet(str)) { return true }
     if (startsWithPreset(str)) { return true }
+    if (startsWithBus(str)) { return true }
     if (startsWithPlayer(str)) { return true }
     return false
   }
@@ -203,6 +209,13 @@ define((require) => {
   assert(false, isLineStart('includetest'))
   assert(true, isLineStart('include blah'))
   assert(true, isLineStart('iNCLUDe blah'))
+  assert(true, isLineStart('bus b'))
+  assert(true, isLineStart(' bus b '))
+  assert(true, isLineStart('bus b amp=1, lpf=200'))
+  assert(true, isLineStart('BUS B'))
+  assert(false, isLineStart('bus b+'))
+  assert(false, isLineStart('bus, b,'))
+  assert(false, isLineStart('buss b'))
 
   parseLine('')
   parseLine('')
@@ -347,7 +360,11 @@ define((require) => {
       assert('includetest preset none', included)
     })
 
-  console.log('Parse line tests complete')
+    // parseLine('bus b amp=1/2')
+    // assert(7, buses.instances.b)
+    // delete players.buses.b
+  
+    console.log('Parse line tests complete')
   }
   
   return {
