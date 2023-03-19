@@ -7,7 +7,7 @@ define(function (require) {
   let flanger = require('play/effects/flanger')
   let chorus = require('play/effects/chorus')
   let {fixedMix} = require('play/effects/mix')
-  let players = require('player/players')
+  let buses = require('play/bus/buses')
 
   let echo = (echoDelay, echoFeedback, node, nodes) => {
     if (!echoDelay || echoDelay < 0.0001) { return node }
@@ -74,25 +74,22 @@ define(function (require) {
   }
 
   let connectChain = (c) => {
-    // if (c.params.bus) {
-    //   let busPlayer = players.instances[c.params.bus]
-    //   if (!busPlayer) {
-    //     c.connected = false
-    //     return
-    //   }
-    //   if (c.connected) { return }
-    //   if (busPlayer) {
-    //     if (!busPlayer.busIn) {
-    //       busPlayer.busIn = system.audio.createGain()
-    //     }
-    //     c.out.connect(busPlayer.busIn)
-    //     c.connected = true
-    //   } // Do nothing if bus player not present
-    // } else {
+    if (c.params.bus) {
+      let bus = buses.instances[c.params.bus]
+      if (!bus) {
+        c.connected = false
+        return
+      }
+      if (c.connected) { return }
+      if (bus) {
+        c.out.connect(bus.input)
+        c.connected = true
+      } // Do nothing if bus not present
+    } else {
       if (c.connected) { return }
       system.mix(c.out)
       c.connected = true
-    // }
+    }
   }
 
   let destroyChain = (chain) => {

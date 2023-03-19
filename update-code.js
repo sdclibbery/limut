@@ -4,6 +4,7 @@ define((require) => {
   let parseString = require('expression/parse-string')
   let system = require('play/system')
   let players = require('player/players')
+  let buses = require('play/bus/buses')
   let mainVars = require('main-vars')
   let consoleOut = require('console')
   let sliders = require('sliders')
@@ -54,6 +55,7 @@ define((require) => {
   let updateCode = async (code) => {
     system.resume()
     players.gc_reset()
+    buses.gc_reset()
     mainVars.reset()
     players.overrides = {}
     sliders.gc_reset()
@@ -62,6 +64,7 @@ define((require) => {
     consoleOut('> Update code')
     await parseCode(code)
     players.gc_sweep()
+    buses.gc_sweep()
     sliders.gc_sweep()
     players.expandOverrides()
   }

@@ -3,6 +3,8 @@ define((require) => {
   let players = require('player/players')
   let playerTypes = require('player/player-types')
   var parsePlayer = require('player/parse-player')
+  let buses = require('play/bus/buses')
+  var parseBus = require('play/bus/parse-bus')
   var parseParams = require('player/params')
   let parseExpression = require('expression/parse-expression')
   let {combineOverrides,applyOverrides,isOverride} = require('player/override-params')
@@ -116,6 +118,15 @@ define((require) => {
       playerTypes[presetName].baseParams = applyOverrides(baseBaseParams, parseParams(params))
       return
     }
+    // Define a bus
+    if (startsWithBus(line)) {
+      let bus = parseBus(line, linenum)
+      if (bus) {
+        buses.instances[bus.id] = bus
+        buses.gc_mark(bus.id)
+      }
+      return
+    }
     // Define a player
     let player = parsePlayer(line, linenum)
     if (player) {
@@ -128,6 +139,7 @@ define((require) => {
       players.instances[player.id] = player
       players.gc_mark(player.id)
     }
+    return
   }
 
   let startsWithInclude = (str) => {
@@ -146,7 +158,7 @@ define((require) => {
   }
 
   let startsWithBus = (str) => {
-    let r = new RegExp(/^\s*bus\s+\w+(\s+|$)/, 'i')
+    let r = new RegExp(/^\s*bus\s+\w+\s*,?(\s+|$)/, 'i')
     return r.test(str)
   }
 
@@ -212,6 +224,7 @@ define((require) => {
   assert(true, isLineStart('bus b'))
   assert(true, isLineStart(' bus b '))
   assert(true, isLineStart('bus b amp=1, lpf=200'))
+  assert(true, isLineStart('bus b, amp=1, lpf=200'))
   assert(true, isLineStart('BUS B'))
   assert(false, isLineStart('bus b+'))
   assert(false, isLineStart('bus, b,'))
@@ -356,17 +369,15 @@ define((require) => {
 
   let included
   parseLine("include 'preset/test.limut'", 0, (l) => included=l, true)
-    .then(() => {
-      assert('includetest preset none', included)
-    })
+    .then(() => { assert('includetest preset none', included) })
 
-    // parseLine('bus b amp=1/2')
-    // assert(7, buses.instances.b)
-    // delete players.buses.b
-  
-    console.log('Parse line tests complete')
+  parseLine('bus b')
+  assert('b', buses.instances.b.id)
+  delete buses.instances.b
+
+  console.log('Parse line tests complete')
   }
-  
+
   return {
     parseLine:parseLine,
     isLineStart:isLineStart,
