@@ -1,9 +1,10 @@
 'use strict'
 define((require) => {
   var parseParams = require('player/params')
+  let buses = require('play/bus/buses')
   var bus = require('play/bus/bus')
 
-  let parseBus = (line, linenum) => {
+  let parseBus = (line, linenum, oldBus) => {
     if (!line) { return }
     let match = [...line.matchAll(/bus\s+(\w+)\s*,?\s*(.*)/gmi)]
     if (!match[0]) { return }
@@ -13,7 +14,7 @@ define((require) => {
       if (busId.includes('.')) { throw 'Invalid bus name '+busId }
     }
     let params = parseParams(parts[2] || '', busId)
-    return bus(busId, params)
+    return bus(busId, params, buses.instances[busId])
   }
 
   // TESTS //
