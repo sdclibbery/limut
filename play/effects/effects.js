@@ -58,7 +58,6 @@ define(function (require) {
   }
 
   return (params, node) => {
-    system.disconnect(params, [node])
     node = perFrameAmp(params, node)
     node = chop(params, node)
     node = ring(params, node)
