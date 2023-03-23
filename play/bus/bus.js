@@ -3,11 +3,14 @@ define((require) => {
   var system = require('play/system')
   var metronome = require('metronome')
   let {evalMainParamFrame} = require('play/eval-audio-params')
+  let destructor = require('play/destructor')
   let effects = require('play/effects/effects')
+  let waveEffects = require('play/effects/wave-effects')
 
   let createBus = (busId, params, oldBus) => {
-    let bus = { id: busId, _perFrame: [] }
+    let bus = { id: busId, _perFrame: [], destructor: destructor() }
     params._perFrame = bus._perFrame
+    params._destructor = bus.destructor
     params.count = metronome.beatTime(metronome.timeNow())
 
     // Input and output
@@ -20,6 +23,7 @@ define((require) => {
     }
     bus.output = system.audio.createGain()
     system.mix(bus.output)
+    bus.destructor.disconnect(bus.input, bus.output)
 
     // Per frame update
     system.add(metronome.timeNow(), state => {
@@ -29,17 +33,15 @@ define((require) => {
     })
 
     // Bus chain
-    bus.input.gain.cancelScheduledValues(0)
-    // effects(params, bus.input).connect(bus.output)
-    bus.input.connect(bus.output)
+    effects(params, waveEffects(params, bus.input)).connect(bus.output)
+    bus.output.gain.cancelScheduledValues(0)
     evalMainParamFrame(bus.output.gain, params, 'amp', 1) // output amp
 
     // Cleanup
     bus.destroy = () => {
       bus.stopped = true
       bus._perFrame = []
-      bus.input.disconnect()
-      bus.output.disconnect()
+      bus.destructor.destroy()
     }
     return bus
   }

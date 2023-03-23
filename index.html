@@ -963,17 +963,10 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
- Actual bus
-  Effects params; filtering, compressor etc
-   !Effects Not working
-    !They're all calling system.disconnect :-/
-    !Would also need to stop lfos at the correct time
-    ?!Need to either:
-     ?Rewrite ALL effects specifically for bus
-     ?Or somehow extract the core logic from the disconnect/stop lifetime logic
-     ?Or somehow make the lifetime stuff properly flexible (and replace the _perFrame hack)
-    !Need to track all nodes and oscs for disconnection/stop at destroy time
-   What does a chord mean to a bus??? Eg  `bus b lpf=(300,1000)`
+ !`bus b//` on a line fails
+ Need to be able to set input gain on all wave effects (at least when used on a bus)
+ TEST that all nodes get cleaned up
+ !Get a click when comment a bus in or out
  Bus can mix to another bus
  Chain style effects, but not using a chain
   Allow per frame control; eg can vary room mix per frame etc
@@ -983,8 +976,18 @@ New 'bus' syntax to create an effects bus, and 'bus' param to send a player to a
  Allow var lookup from buses; eg `bus b, amp=1/2``p ping 0, amp=b.amp`
  Warning when redefine a player as a bus or vice versa?
  Don't recreate the bus if it's code hasn't changed?
+ What does a chord mean to a bus??? Eg  `bus b lpf=(300,1000)`
+ What does [0,1] mean to a bus? There are no pattern steps to refer to? Should make it be like [0,1]t1??
+ What does []r@e etc mean for a bus? Same for []l4 (which defaults to per event...)
+ What does []e mean for a bus?
  TEST (and add to test plan)
+  TEST ALL SYNTHS
+  TEST ALL EFFECTS
+  TEST STOP/DISCONNECT FOR ALL OF THESE!!!
  Docs: bus line syntax
+Impulse destructor should be snappier? It probably waits too long to clean up
+ ?Same for play???
+fxMixChain should use a destructor
 default master/main bus with full effects
  if player's bus is not set, send to the main/master bus
  move main.amp to be on the default main/master bus instead of on system

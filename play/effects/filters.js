@@ -12,7 +12,7 @@ define(function (require) {
     evalMainParamFrame(filter.frequency, params, freqParam)
     evalSubParamFrame(filter.Q, params, freqParam, 'q', defaultResonance)
     node.connect(filter)
-    system.disconnect(params, [filter,node])
+    params._destructor.disconnect(filter, node)
     return filter
   }
 
@@ -24,7 +24,7 @@ define(function (require) {
     evalSubParamFrame(filter.frequency, params, gainParam, 'freq', defaultFreq)
     evalSubParamFrame(filter.Q, params, gainParam, 'q', defaultQ)
     node.connect(filter)
-    system.disconnect(params, [filter,node])
+    params._destructor.disconnect(filter, node)
     return filter
   }
 
@@ -34,14 +34,14 @@ define(function (require) {
     evalSubParamFrame(filter.frequency, params, p, f, defaultFreq)
     evalSubParamFrame(filter.Q, params, p, 'q', 1)
     n.connect(filter)
-    system.disconnect(params, [filter,n])
+    params._destructor.disconnect(filter, n)
     return filter
   }
   let phaserStageFilter = (params, p, node) => { // Two allpass in parallel
     if (params[p] === undefined) { return node }
     let output = system.audio.createGain()
     output.gain.value = 1/2
-    system.disconnect(params, [output])
+    params._destructor.disconnect(output)
     psf(params, p, node, 'f1', 200).connect(output)
     psf(params, p, node, 'f2', 800).connect(output)
     return output
@@ -52,7 +52,7 @@ define(function (require) {
     if (ps.length == 0) { return node }
     let output = system.audio.createGain()
     output.gain.value = 1/ps.length
-    system.disconnect(params, [output])
+    params._destructor.disconnect(output)
     ps.map(p => creator(p, node)).forEach(f => f.connect(output))
     return output
   }

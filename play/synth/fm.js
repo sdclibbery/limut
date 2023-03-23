@@ -10,6 +10,7 @@ define(function (require) {
   let pitchEffects = require('play/effects/pitch-effects')
   let {evalSubParamEvent} = require('play/eval-audio-params')
   let {findNonChordParams} = require('player/non-chord-params')
+  let perFrameAmp = require('play/effects/perFrameAmp')
 
   let createOp = (params, idx, id, freq) => {
     let target = evalSubParamEvent(params, id, 'target', undefined)
@@ -33,7 +34,7 @@ define(function (require) {
     if (isNaN(freq)) { return }
 
     let vca = envelope(params, 0.04, 'full')
-    fxMixChain(params, effects(params, vca))
+    fxMixChain(params, effects(params, perFrameAmp(params, vca)))
     let vcaMix = system.audio.createGain()
 
     let ops = findNonChordParams(params, 'op')
@@ -65,13 +66,13 @@ define(function (require) {
         }
         fm.connect(op, ops[targetIdx].op, env)
       }
+      if (!!env) { params._destructor.disconnect(env) }
+      params._destructor.disconnect(op)
+      params._destructor.stop(op)
       return {op,env}
     }).filter(o => !!o)
 
     waveEffects(params, vcaMix).connect(vca)
-    system.disconnect(params,
-      ops.map(o=>o.op).filter(o => !!o)
-      .concat(ops.map(o=>o.env).filter(o => !!o))
-      .concat([vca]))
+    params._destructor.disconnect(vca, vcaMix)
   }
 });

@@ -9,6 +9,7 @@ define(function (require) {
   let waveEffects = require('play/effects/wave-effects')
   let envelope = require('play/envelopes')
   let pitchEffects = require('play/effects/pitch-effects')
+  let perFrameAmp = require('play/effects/perFrameAmp')
 
   return (params) => {
     let freq = scale.paramsToFreq(params, 4)
@@ -22,12 +23,12 @@ define(function (require) {
 
     let vca = envelope(params, 0.25, 'full')
     waveEffects(params, source).connect(vca)
-    fxMixChain(params, effects(params, vca))
+    fxMixChain(params, effects(params, perFrameAmp(params, vca)))
 
     pitchEffects(source.detune, params)
 
     source.start(params._time, startTime)
-    source.stop(params.endTime)
-    system.disconnect(params, [source, vca])
+    params._destructor.disconnect(vca, source)
+    params._destructor.stop(source)
   }
 });

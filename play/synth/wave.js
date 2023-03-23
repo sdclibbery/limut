@@ -9,6 +9,7 @@ define(function (require) {
   let waveEffects = require('play/effects/wave-effects')
   let {evalMainParamEvent} = require('play/eval-audio-params')
   let setWave = require('play/synth/waveforms/set-wave')
+  let perFrameAmp = require('play/effects/perFrameAmp')
 
   return (params) => {
     let freq = scale.paramsToFreq(params, 4)
@@ -17,7 +18,7 @@ define(function (require) {
     let wave = evalMainParamEvent(params, "wave", "sawtooth")
 
     let vca = envelope(params, 0.06, 'full')
-    fxMixChain(params, effects(params, vca))
+    fxMixChain(params, effects(params, perFrameAmp(params, vca)))
 
     let vco = system.audio.createOscillator()
     setWave(vco, wave)
@@ -26,7 +27,7 @@ define(function (require) {
     
     waveEffects(params, vco).connect(vca)
     vco.start(params._time)
-    vco.stop(params.endTime)
-    system.disconnect(params, [vca,vco])
+    params._destructor.disconnect(vca, vco)
+    params._destructor.stop(vco)
   }
 });

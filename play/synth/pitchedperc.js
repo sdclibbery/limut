@@ -9,6 +9,7 @@ define(function (require) {
   let setWave = require('play/synth/waveforms/set-wave')
   let {getBuffer,getUrl} = require('play/samples')
   let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
+  let perFrameAmp = require('play/effects/perFrameAmp')
 
   let clickBuffer
   let getClick = () => {
@@ -157,7 +158,7 @@ define(function (require) {
 
   return (params) => {
     let vca = envelope(params, 0.4, 'percussion')
-    fxMixChain(params, effects(params, vca))
+    fxMixChain(params, effects(params, perFrameAmp(params, vca)))
     let mix = system.audio.createGain()
 
     let nodes = []
@@ -171,6 +172,6 @@ define(function (require) {
               .forEach(c => c.connect(mix))
 
     waveEffects(params, mix).connect(vca)
-    system.disconnect(params, nodes.concat([mix,vca]))
+    params._destructor.disconnect(vca, mix, nodes)
   }
 });

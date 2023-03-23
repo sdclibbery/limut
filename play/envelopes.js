@@ -2,6 +2,7 @@
 define(function (require) {
   let system = require('play/system');
   let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
+  let destructor = require('play/destructor')
 
   let fullEnvelope = (params, gainBase) => {
     let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25)))
@@ -21,6 +22,7 @@ define(function (require) {
     vca.gain.linearRampToValueAtTime(gain*susLevel*0.8, params._time + attack+decay+sustain)
     vca.gain.linearRampToValueAtTime(0, params._time + attack+decay+sustain+release)
     params.endTime = params._time + attack+decay+sustain+release
+    params._destructor.disconnect(vca)
     return vca
   }
 
@@ -40,6 +42,7 @@ define(function (require) {
     vca.gain.linearRampToValueAtTime(gain*susLevel, params._time + attack+decay)
     vca.gain.linearRampToValueAtTime(0, params._time + attack+decay+release)
     params.endTime = params._time + attack+decay+release
+    params._destructor.disconnect(vca)
     return vca
   }
 
@@ -55,6 +58,7 @@ define(function (require) {
     vca.gain.linearRampToValueAtTime(0, params._time + decay)
     params.endTime = params._time + decay
     params.decayTime = decay
+    params._destructor.disconnect(vca)
     return vca
   }
 
@@ -83,18 +87,23 @@ define(function (require) {
     vca.gain.setValueCurveAtTime(fadeUp(gain), params._time, attack)
     vca.gain.setValueCurveAtTime(fadeDown(gain), params._time + attack+sus, release)
     params.endTime = params._time + attack+sus+release
+    params._destructor.disconnect(vca)
     return vca
   }
 
   return (params, gainbase, defaultEnvelope) => {
+    params._destructor = destructor()
     gainbase *= evalMainParamEvent(params, "loud", 1)
     let envelope = evalMainParamEvent(params, "envelope", defaultEnvelope)
+    let env
     switch (envelope) {
-      case 'full': return fullEnvelope(params, gainbase)
-      case 'simple': return simpleEnvelope(params, gainbase)
-      case 'pad': return padEnvelope(params, gainbase)
-      case 'percussion': return percussionEnvelope(params, gainbase)
+      case 'full': env = fullEnvelope(params, gainbase); break
+      case 'simple': env = simpleEnvelope(params, gainbase); break
+      case 'pad': env = padEnvelope(params, gainbase); break
+      case 'percussion': env = percussionEnvelope(params, gainbase); break
+      default: env = fullEnvelope(params, gainbase); break
     }
-    return fullEnvelope(params, gainbase)
+    setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
+    return env
   }
 })

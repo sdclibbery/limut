@@ -19,7 +19,7 @@ define(function (require) {
     shaper.curve = curve
     shaper.oversample = 'none'
     node.connect(shaper)
-    system.disconnect(params, [shaper,node])
+    params._destructor.disconnect(shaper, node)
     return mix(params, effect, node, shaper, 1)
   }
 
@@ -53,7 +53,7 @@ define(function (require) {
     compressor.attack.value = evalSubParamEvent(params, 'compress', 'att', 0.01)
     compressor.release.value = evalSubParamEvent(params, 'compress', 'rel', 0.25)
     node.connect(compressor)
-    system.disconnect(params, [compressor,node])
+    params._destructor.disconnect(compressor, node)
     return compressor
   }
 

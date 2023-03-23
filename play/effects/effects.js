@@ -1,35 +1,27 @@
 'use strict';
 define(function (require) {
   let system = require('play/system')
+  let metronome = require('metronome')
   let {mainParam} = require('player/sub-param')
   let {evalMainParamFrame,evalSubParamEvent} = require('play/eval-audio-params')
   let filters = require('play/effects/filters')
   let {mix} = require('play/effects/mix')
 
-  let perFrameAmp = (params, node) => {
-    if (typeof mainParam(params.amp) !== 'function') { return node } // No per frame control required
-    let vca = system.audio.createGain()
-    evalMainParamFrame(vca.gain, params, 'amp', 1)
-    node.connect(vca)
-    system.disconnect(params, [vca,node])
-    return vca
-  }
-
   let chop = (params, node) => {
     if (!mainParam(params.chop, 0)) { return node }
     let lfo = system.audio.createOscillator()
     lfo.type = evalSubParamEvent(params, 'chop', 'wave', 'sine')
-    evalMainParamFrame(lfo.frequency, params, 'chop', 1, v => v / params.beat.duration)
+    evalMainParamFrame(lfo.frequency, params, 'chop', 1, v => v / metronome.beatDuration())
     let gain = system.audio.createGain()
     gain.gain.setValueAtTime(1, system.audio.currentTime)
     lfo.connect(gain.gain)
     lfo.start(params._time)
-    lfo.stop(params.endTime)
     node.connect(gain)
     let output = system.audio.createGain()
     output.gain.setValueAtTime(1/2, system.audio.currentTime)
     gain.connect(output)
-    system.disconnect(params, [gain,lfo,node,output])
+    params._destructor.stop(lfo)
+    params._destructor.disconnect(gain, lfo, node, output)
     return mix(params, 'chop', node, output, 1)
   }
 
@@ -42,9 +34,9 @@ define(function (require) {
     gain.gain.setValueAtTime(0, system.audio.currentTime)
     lfo.connect(gain.gain)
     lfo.start(params._time)
-    lfo.stop(params.endTime)
     node.connect(gain)
-    system.disconnect(params, [gain,lfo,node])
+    params._destructor.stop(lfo)
+    params._destructor.disconnect(gain, lfo, node)
     return mix(params, 'ring', node, gain, 1)
   }
 
@@ -53,12 +45,11 @@ define(function (require) {
     let pan = system.audio.createStereoPanner()
     evalMainParamFrame(pan.pan, params, 'pan')
     node.connect(pan)
-    system.disconnect(params, [pan,node])
+    params._destructor.disconnect(pan, node)
     return pan
   }
 
   return (params, node) => {
-    node = perFrameAmp(params, node)
     node = chop(params, node)
     node = ring(params, node)
     node = filters(params, node)

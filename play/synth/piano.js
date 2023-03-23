@@ -7,6 +7,8 @@ define(function (require) {
   let waveEffects = require('play/effects/wave-effects')
   let {evalMainParamEvent} = require('play/eval-audio-params')
   let scale = require('music/scale');
+  let perFrameAmp = require('play/effects/perFrameAmp')
+  let destructor = require('play/destructor')
 
   let getNoteUrl = (note) => {
     return 'sample/salamander/'+note+'v8.mp3'
@@ -20,16 +22,10 @@ define(function (require) {
     source.buffer = getBuffer(url)
     source.playbackRate.value = rate
     waveEffects(params, source).connect(vca)
-    if (timeOverride !== undefined) {
-      source.start(timeOverride)
-      source.stop(timeOverride+1)
-      system.disconnectAt(timeOverride+1, [source])
-    } else {
-      source.start(params._time)
-      source.stop(params.endTime)
-      system.disconnect(params, [source])
-    }
-  }
+    source.start(timeOverride || params._time)
+    params._destructor.disconnect(source)
+    params._destructor.stop(source)
+}
 
   let findNearestSample = (freq, loadedOnly) => {
     let sample
@@ -64,6 +60,8 @@ define(function (require) {
     if (isNaN(freq)) { return }
     let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25)))
     params.endTime = params._time + dur*params.beat.duration
+    params._destructor = destructor()
+    setTimeout(() => params._destructor.destroy(), 1100+(params.endTime - system.audio.currentTime)*1000)
 
     let vca = system.audio.createGain()
     let gain = Math.max(0, 0.25 * (typeof params.amp === 'number' ? params.amp : 1))
@@ -72,7 +70,7 @@ define(function (require) {
     vca.gain.linearRampToValueAtTime(gain, params.endTime-0.01)
     vca.gain.linearRampToValueAtTime(0, params.endTime)
     vca.gain.linearRampToValueAtTime(gain, params.endTime+0.01)
-    fxMixChain(params, effects(params, vca))
+    fxMixChain(params, effects(params, perFrameAmp(params, vca)))
 
     let sample = findNearestSample(freq)
     getBuffer(getNoteUrl(sample))
@@ -81,6 +79,6 @@ define(function (require) {
     playBuffer(params, getNoteUrl(sample), rate, vca)
     getBuffer(getHarmonicsUrl(sample))
     playBuffer(params, getHarmonicsUrl(sample), rate, vca, params.endTime)
-    system.disconnect(params, [vca])
+    params._destructor.disconnect(vca)
   }
 });

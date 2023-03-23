@@ -10,6 +10,7 @@ define(function (require) {
   let {evalMainParamEvent,evalSubParamFrame} = require('play/eval-audio-params')
   let setWave = require('play/synth/waveforms/set-wave')
   let {findNonChordParams} = require('player/non-chord-params')
+  let perFrameAmp = require('play/effects/perFrameAmp')
 
   let createWave = (params, id, freq) => {
     let wave = evalMainParamEvent(params, id)
@@ -20,7 +21,7 @@ define(function (require) {
     evalSubParamFrame(vco.frequency, params, id, 'detune', 0, (d) => freq * Math.pow(2, d/12))
     pitchEffects(vco.detune, params)
     vco.start(params._time)
-    vco.stop(params.endTime)
+    params._destructor.stop(vco)
     // vca
     if (typeof params[id] === 'object' && (params[id].amp === undefined || params[id].amp === 1)) {
       return vco // No need for vca if amp is constant 1
@@ -36,7 +37,7 @@ define(function (require) {
     if (isNaN(freq)) { return }
 
     let vca = envelope(params, 0.03, 'full')
-    fxMixChain(params, effects(params, vca))
+    fxMixChain(params, effects(params, perFrameAmp(params, vca)))
 
     let vcos = findNonChordParams(params, 'wave')
       .map(id => createWave(params, id, freq))
@@ -47,6 +48,6 @@ define(function (require) {
     multiosc.gain.value = Math.pow(1/Math.max(vcos.length,1), 1/4)
     vcos.forEach(vco => vco.connect(multiosc))
     waveEffects(params, multiosc).connect(vca)
-    system.disconnect(params, vcos.concat(vca,multiosc))
+    params._destructor.disconnect(vca, multiosc, vcos)
   }
 });

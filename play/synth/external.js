@@ -7,6 +7,7 @@ define(function (require) {
   let waveEffects = require('play/effects/wave-effects')
   let consoleOut = require('console')
   let {evalMainParamEvent} = require('play/eval-audio-params')
+  let perFrameAmp = require('play/effects/perFrameAmp')
 
   let stream
   let getStream = () => {
@@ -32,7 +33,7 @@ define(function (require) {
     }
     let vca = envelope(params, 0.5, 'pad')
     let track = evalMainParamEvent(params, 'track', undefined)
-    fxMixChain(params, effects(params, vca))
+    fxMixChain(params, effects(params, perFrameAmp(params, vca)))
     let audioIn
     if (track !== undefined) {
       let mediaTrack = stream.getTracks()[track]
@@ -45,6 +46,6 @@ define(function (require) {
       audioIn = system.audio.createMediaStreamSource(stream)
     }
     waveEffects(params, audioIn).connect(vca)
-    system.disconnect(params, [audioIn, vca])
+    params._destructor.disconnect(vca, audioIn)
   }
 })

@@ -7,10 +7,11 @@ define(function (require) {
   let effects = require('play/effects/effects')
   let fxMixChain = require('play/effects/fxMixChain')
   let scale = require('music/scale');
+  let perFrameAmp = require('play/effects/perFrameAmp')
 
   return (params) => {
     let vca = envelope(params, 0.1, 'pad')
-    fxMixChain(params, effects(params, vca))
+    fxMixChain(params, effects(params, perFrameAmp(params, vca)))
 
     let source = noise.white()
     waveEffects(params, source).connect(vca)
@@ -19,7 +20,7 @@ define(function (require) {
 
     let startTime = Math.random()*2
     source.start(params._time, startTime)
-    source.stop(params.endTime)
-    system.disconnect(params, [source, vca])
+    params._destructor.disconnect(vca, source)
+    params._destructor.stop(source)
   }
 });

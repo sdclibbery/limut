@@ -38,7 +38,7 @@ define(function (require) {
       let mix = evalSubParamEvent(params, p, 'mix', def)
       let nodes = []
       let outNode = fixedMix(mix, dry, wet, nodes)
-      system.disconnect(params, nodes)
+      params._destructor.disconnect(nodes)
       return outNode
     } else {
       // per frame
@@ -49,7 +49,7 @@ define(function (require) {
       dryGainNode.connect(outGainNode)
       evalSubParamFrame(dryGainNode.gain, params, p, 'mix', def, mix => dryGain(mix))
       evalSubParamFrame(outGainNode.gain, params, p, 'mix', def, mix => outGain(mix))
-      system.disconnect(params, [dryGainNode,outGainNode])
+      params._destructor.disconnect(dryGainNode, outGainNode)
       return outGainNode
     }
   }
