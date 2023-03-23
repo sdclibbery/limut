@@ -18,7 +18,7 @@ define((require) => {
         let line = lines[i]
         if (line === '') { continue }
         line = preParseLine(line)
-        while ((i+1)<lines.length && !isLineStart(lines[i+1])) {
+        while ((i+1)<lines.length && !isLineStart(preParseLine(lines[i+1]))) {
           let nextLine = preParseLine(lines[i+1])
           line = line + nextLine
           i++

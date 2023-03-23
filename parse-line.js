@@ -222,6 +222,7 @@ define((require) => {
   assert(true, isLineStart('include blah'))
   assert(true, isLineStart('iNCLUDe blah'))
   assert(true, isLineStart('bus b'))
+  assert(true, isLineStart('bus b,'))
   assert(true, isLineStart(' bus b '))
   assert(true, isLineStart('bus b amp=1, lpf=200'))
   assert(true, isLineStart('bus b, amp=1, lpf=200'))
