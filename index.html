@@ -963,8 +963,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
- Need to be able to set input gain on all wave effects (at least when used on a bus)
- TEST that all nodes get cleaned up
+ Need to be able to set an input gain on all wave effects
  !Get a click when comment a bus in or out
  Bus can mix to another bus
  Chain style effects, but not using a chain
@@ -979,11 +978,17 @@ New 'bus' syntax to create an effects bus, and 'bus' param to send a player to a
  What does [0,1] mean to a bus? There are no pattern steps to refer to? Should make it be like [0,1]t1??
  What does []r@e etc mean for a bus? Same for []l4 (which defaults to per event...)
  What does []e mean for a bus?
+ What happens if do var lookup onto a bus?
+ What if a player tries to connect to a player than isn't a bus? Error messages etc?
+ Make player pattern optional in the syntax; if missing, defaults to `0`?
+ ?Should rename bus param to 'dest' or 'out' or 'mix' or something? As theres no reason you can't mix out to an external..?
+  ...Well, there is a reason; it's an external and cant take internal input...
  TEST (and add to test plan)
   TEST ALL SYNTHS
   TEST ALL EFFECTS
   TEST STOP/DISCONNECT FOR ALL OF THESE!!!
  Docs: bus line syntax
+External player should be a bus-like player, with no events
 Impulse destructor should be snappier? It probably waits too long to clean up
  ?Same for play???
 fxMixChain should use a destructor

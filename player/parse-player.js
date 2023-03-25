@@ -6,6 +6,7 @@ define((require) => {
   var {applyOverrides,applyOverridesInPlace} = require('player/override-params')
   var players = require('player/players')
   let standardPlayer = require('player/standard')
+  let continuousPlayer = require('player/continuous')
   var followPlayer = require('player/follow')
   var expandChords = require('player/expand-chords')
   let {preEvalParam,evalParamFrame} = require('player/eval-param')
@@ -94,6 +95,11 @@ define((require) => {
         // Create player
         let playerFactory = playerTypes[playerType.toLowerCase()]
         if (!playerFactory) { throw 'Player "'+playerType+'" not found' }
+        // Continuous player, no events
+        if (playerFactory.create) {
+          return continuousPlayer(playerFactory, paramsStr, playerId, playerFactory.baseParams)
+        }
+        // Normal player
         let player = {
           id: playerId,
           type: playerType,

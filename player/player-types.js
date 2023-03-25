@@ -7,6 +7,7 @@ define((require) => {
   let scope = require('draw/scope')
   let scopefft = require('draw/scopefft')
   let buffer = require('draw/buffer')
+  let bus = require('play/synth/bus')
   let play = require('play/synth/play')
   let sample = require('play/synth/sample')
   let piano = require('play/synth/piano')
@@ -59,6 +60,7 @@ define((require) => {
     julia: { play: sprite('julia'), baseParams:{ amp:1, delay:0, rate:1, zoom:1, fore:offWhite, back:offBlack } },
     bars: { play: sprite('bars'), baseParams:{ amp:1, delay:0, rate:1, zoom:1, fore:white, back:black, additive:1 } },
     // audio
+    bus: { create: bus, baseParams:{ amp:1 } },
     drums: { play: play, baseParams:{ amp:1, delay:0, dur:1/2 } },
     play: { play: play, baseParams:{ amp:1, delay:0, dur:1/2, rate:1 } },
     pitchedperc: { play: pitchedPerc, baseParams:{ amp:1, delay:0, dur:1/2, sus:1/3,

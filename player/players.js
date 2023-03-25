@@ -18,6 +18,9 @@ define(function(require) {
   players.gc_sweep = () => {
     for (let id in players.instances) {
       if (!players.instances[id].marked) {
+        if (players.instances[id].destroy) {
+          players.instances[id].destroy()
+        }
         delete players.instances[id]
       }
     }

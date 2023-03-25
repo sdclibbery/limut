@@ -28,7 +28,6 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
       "preset": kw("preset"),
       "follow": kw("follow"),
       "include": kw("include"),
-      "bus": kw("bus"),
     };
   }();
 
