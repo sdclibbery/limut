@@ -1,12 +1,22 @@
 'use strict';
 define(function (require) {
   let system = require('play/system')
-  let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
+  let {evalMainParamEvent,evalSubParamEvent,evalSubParamFrame} = require('play/eval-audio-params')
   let {mix} = require('play/effects/mix')
+
+  let inputAmp = (params, p, node) => {
+    if (params[p].amp === undefined) { return node }
+    let gain = system.audio.createGain()
+    evalSubParamFrame(gain.gain, params, p, 'amp', 1)
+    node.connect(gain)
+    params._destructor.disconnect(gain)
+    return gain
+  }
 
   let shapeEffect = (params, effect, node, count, shape) => {
     let amount = evalMainParamEvent(params, effect, 0)
     if (!amount) { return node }
+    node = inputAmp(params, effect, node)
     let shaper = system.audio.createWaveShaper()
     let curve = new Float32Array(2*count+1)
     curve[count] = 0
@@ -46,6 +56,7 @@ define(function (require) {
   let compressor = (params, node) => {
     let compress = evalMainParamEvent(params, 'compress', 0)
     if (!compress) { return node }
+    node = inputAmp(params, 'compress', node)
     let compressor = system.audio.createDynamicsCompressor()
     compressor.ratio.value = compress
     compressor.threshold.value = evalSubParamEvent(params, 'compress', 'threshold', -50)
@@ -58,13 +69,13 @@ define(function (require) {
   }
 
   return (params, node) => {
-    node = compressor(params, node)
     node = shapeEffect(params, 'noisify', node, 500, noisify)
     node = shapeEffect(params, 'bits', node, 256, (x, b) => Math.pow(Math.round(Math.pow(x,1/2)*b)/b,2))
     node = shapeEffect(params, 'fold', node, 256, fold)
     node = shapeEffect(params, 'clip', node, 256, clip)
     node = shapeEffect(params, 'drive', node, 256, (x, a) => Math.atan(x*a*100)/(2+a))
     node = shapeEffect(params, 'linearshape', node, 8, (x) => x) // For testing purposes; applies clipping at -1 and 1, so can be used to test synth intermediate levels
+    node = compressor(params, node)
     return node
   }
 })

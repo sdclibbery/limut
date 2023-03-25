@@ -963,31 +963,37 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
- Need to be able to set an input gain on all wave effects
- !Get a click when comment a bus in or out
- Bus can mix to another bus
- Chain style effects, but not using a chain
+ ?Should rename bus param to 'dest' or 'out' or 'mix' or something? As theres no reason you can't mix out to an external..?
+  ...Well, there is a reason; it's an external and cant take internal input...
+ Bus issues
+  Overrides should work for bus
+  Don't recreate the bus if it's code hasn't changed?
+  What if a player tries to connect to a player than isn't a bus? Error messages etc?
+  !Get a click when comment a bus in or out
+  !Sometimes when commenting things in and out, players that should go the bus go direct instead
+ Effects for bus
+  room, reverb, phaser, flanger, chorus, echo
   Allow per frame control; eg can vary room mix per frame etc
- By default, a main or master bus is created
- If bus's bus is set to itself, ignore it (to allow   set * bus=bus1   without mucking up bus1 itself)
- Allow `set` overrides to be applied to buses
- Allow var lookup from buses; eg `bus b, amp=1/2``p ping 0, amp=b.amp`
- Warning when redefine a player as a bus or vice versa?
- Don't recreate the bus if it's code hasn't changed?
+ Bus can mix to another bus
+  If bus's bus is set to itself, ignore it (to allow   set * bus=bus1   without mucking up bus1 itself)
+ Can set 'bus=direct' to force direct to system mix
  What does a chord mean to a bus??? Eg  `bus b lpf=(300,1000)`
  What does [0,1] mean to a bus? There are no pattern steps to refer to? Should make it be like [0,1]t1??
  What does []r@e etc mean for a bus? Same for []l4 (which defaults to per event...)
  What does []e mean for a bus?
  What happens if do var lookup onto a bus?
- What if a player tries to connect to a player than isn't a bus? Error messages etc?
+  Allow var lookup from buses; eg `bus b, amp=1/2``p ping 0, amp=b.amp`
+ Warning when redefine a player as a bus or vice versa?
  Make player pattern optional in the syntax; if missing, defaults to `0`?
- ?Should rename bus param to 'dest' or 'out' or 'mix' or something? As theres no reason you can't mix out to an external..?
-  ...Well, there is a reason; it's an external and cant take internal input...
- TEST (and add to test plan)
+ TEST
   TEST ALL SYNTHS
   TEST ALL EFFECTS
   TEST STOP/DISCONNECT FOR ALL OF THESE!!!
- Docs: bus line syntax
+ Docs: bus param, amp subparam for wave effects and compress,
+?bus echo can feedback via another bus? To allow full range of filters and effects?
+ ??Same for room?
+!Should be able to have multiple bandpass and notch filters
+More options for setting up the convolution reverb
 External player should be a bus-like player, with no events
 Impulse destructor should be snappier? It probably waits too long to clean up
  ?Same for play???
@@ -1148,7 +1154,7 @@ shadertoy synth multiple channels
 // var, player.var, this.param, this.voice, var{params}, slider{}, floor{}, .floor{to:}, accum{}
 // (...).1, (...).max, max{...}, {foo:...}.foo, (pk,ps).pulse
 // modifiers {seed,per,0:0}, @e, @f
-// subparams {2,mix:1/2}, presets
+// subparams {2,mix:1/2}, presets, buses
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
