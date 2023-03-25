@@ -963,14 +963,12 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
- ?Should rename bus param to 'dest' or 'out' or 'mix' or something? As theres no reason you can't mix out to an external..?
-  ...Well, there is a reason; it's an external and cant take internal input...
  Bus issues
-  Overrides should work for bus
-  Don't recreate the bus if it's code hasn't changed?
-  What if a player tries to connect to a player than isn't a bus? Error messages etc?
+  Don't recreate the bus if it's code hasn't changed? ...but also have to consider overrides
+   Really, player should stay the same, and the delta in params should be applied as a delta...
   !Get a click when comment a bus in or out
-  !Sometimes when commenting things in and out, players that should go the bus go direct instead
+  !Sometimes when commenting players things in and out, players that should go the bus go direct instead!?
+  What if a player tries to connect to a player that isn't a bus? Error messages etc?
  Effects for bus
   room, reverb, phaser, flanger, chorus, echo
   Allow per frame control; eg can vary room mix per frame etc

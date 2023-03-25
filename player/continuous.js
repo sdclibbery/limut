@@ -8,10 +8,20 @@ define(function(require) {
     let params = parseParams(paramsStr, playerId)
     params = applyOverrides(baseParams, params)
     params = collapseOverrides(params)
-    let player = playerFactory.create(playerId, params, players.instances[playerId])
+
+    let player = playerFactory.create(playerId, players.instances[playerId])
+
     player.getEventsForBeat = () => []
-    player.play = () => {}
+    let played = false
+    player.play = () => {
+      if (played) { return }
+      let overrides = players.overrides[playerId] || {}
+      params = applyOverrides(params, overrides)
+      player.createChain(params)
+      played = true
+    }
     player.currentEvent = () => []
+
     return player
   }
 });
