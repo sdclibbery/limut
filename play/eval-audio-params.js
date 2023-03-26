@@ -102,11 +102,15 @@ define(function (require) {
       audioParam.setValueAtTime(v, system.timeNow())
     } else {
       setAudioParamValue(audioParam, evalSubPerFrame(params, p, subParamName, def, params.count), p, mod) // set now
-      system.add(params._time, state => { // per frame update
-        if (state.time > params.endTime) { return false }
-        setAudioParamValue(audioParam, evalSubPerFrame(params, p, subParamName, def, state.count), p, mod)
-        return true
-      })
+      if (params._perFrame) {
+        params._perFrame.push(state => rampAudioParamValue(audioParam, evalSubPerFrame(params, p, subParamName, def, state.count), p, mod))
+      } else {
+        system.add(params._time, state => { // per frame update
+          if (state.time > params.endTime) { return false }
+          rampAudioParamValue(audioParam, evalSubPerFrame(params, p, subParamName, def, state.count), p, mod)
+          return true
+        })
+      }
     }
   }
 
