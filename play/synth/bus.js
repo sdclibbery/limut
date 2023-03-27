@@ -7,31 +7,57 @@ define((require) => {
   let effects = require('play/effects/effects')
   let waveEffects = require('play/effects/wave-effects')
 
+  let fadeTime = 0.1
+  let fadeIn = (node) => {
+    node.gain.cancelScheduledValues(0)
+    node.gain.setValueAtTime(0, system.timeNow()) // Similar signal on both sides of the crossfade, so use a linear crossfade
+    node.gain.linearRampToValueAtTime(1, system.timeNow()+fadeTime)
+  }
+  let fadeOut = (node, cleanup) => {
+    node.gain.cancelScheduledValues(0)
+    node.gain.setValueAtTime(1, system.timeNow())
+    node.gain.linearRampToValueAtTime(0, system.timeNow()+fadeTime)
+    setTimeout(cleanup, fadeTime*1000)
+  }
+
   let createBus = (busId, oldBus) => {
-    let bus = { id: busId, _perFrame: [], destructor: destructor() }
+    let bus = {
+      id: busId,
+      oldBus: oldBus,
+      _perFrame: [], destructor: destructor()
+     }
 
-    // Input and output
-    if (oldBus) {
-      // Transfer input mixer from the previous version of this bus
-      bus.input = oldBus.input
-      oldBus.destroy()
-    } else {
-      bus.input = system.audio.createGain()
+    // Input
+    let input
+    if (bus.oldBus) {
+      input = bus.oldBus.input // Transfer input mixer from the previous version of this bus
     }
-
-    // output
-    bus.output = system.audio.createGain()
-    system.mix(bus.output)
-    bus.destructor.disconnect(bus.input, bus.output)
+    if (!input) {
+      input = system.audio.createGain()
+    }
+    bus.input = input
     
-    // Created rest of bus later, when param overrides are available
+    // Create rest of bus later, when param overrides are available
     let stopped = false
     bus.createChain = (params) => {
       params._perFrame = bus._perFrame
       params._destructor = bus.destructor
       params.count = metronome.beatTime(metronome.timeNow())
-      // effect chain
-      effects(params, waveEffects(params, bus.input)).connect(bus.output)
+      // output
+      bus.output = system.audio.createGain()
+      system.mix(bus.output)
+      bus.destructor.disconnect(bus.output)
+      // crossfade
+      bus.crossfade = system.audio.createGain() // Crossfade from old version of bus to new
+      input.connect(bus.crossfade)
+      bus.destructor.disconnect(bus.crossfade)
+      if (bus.oldBus) {
+        bus.oldBus.destroy()
+        delete bus.oldBus
+      }
+      fadeIn(bus.crossfade)
+        // effect chain
+      effects(params, waveEffects(params, bus.crossfade)).connect(bus.output)
       bus.output.gain.cancelScheduledValues(0)
       evalMainParamFrame(bus.output.gain, params, 'amp', 1) // output amp
       // Per frame update
@@ -42,9 +68,12 @@ define((require) => {
       })
       // Cleanup
       bus.destroy = () => {
-        stopped = true
-        bus._perFrame = []
-        bus.destructor.destroy()
+        fadeOut(bus.crossfade, () => {
+          stopped = true
+          bus._perFrame = []
+          input.disconnect(bus.crossfade) // Only disconnect input from THIS bus as it may get transferred to another bus
+          bus.destructor.destroy()
+        })
       }
     }
 

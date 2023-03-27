@@ -9,7 +9,8 @@ define(function(require) {
     params = applyOverrides(baseParams, params)
     params = collapseOverrides(params)
 
-    let player = playerFactory.create(playerId, players.instances[playerId])
+    let oldPlayer = players.instances[playerId]
+    let player = playerFactory.create(playerId, oldPlayer)
 
     player.getEventsForBeat = () => []
     let played = false
