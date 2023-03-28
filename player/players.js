@@ -26,6 +26,16 @@ define(function(require) {
     }
   }
 
+  players.stopAll = () => {
+    for (let id in players.instances) {
+      if (players.instances[id].destroy) {
+        players.instances[id].destroy()
+      }
+    }
+    players.instances = {}
+    players.overrides = {}
+  }
+
   players.expandOverrides = () => {
     let newOverrides = {}
     for (let k in players.overrides) {

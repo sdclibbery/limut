@@ -2952,3 +2952,20 @@ vl lines 0, vhs, loc=tile_tr, fore=(neonpink,neongreen),
 // s softpad (024), dur=4, oct+=[0,1,2], ring=300, amp*=1/4
 
 
+//Synthwave improv 28/Mar/2023
+include 'preset/synthwave.limut'
+set scale=minor
+set bpm=123
+set main.amp=1.5
+vr julia 0, buffer='vb', add=[0:4]r, scroll={x:[]r1,y:[]r1}/3, zoom=[1:4]r1, blend=max
+vb vhsbuffer 0, feedback={fore:0.97,ripple:0.05}, loc=tile_tr
+// pk bd 9..., drive=1/32, compress=3, amp*=1.2
+// ph play80s [--]
+// ps play80s ..O., compress=2
+// cb cybass 0, oct+=[0,1]r, add+=[0,2]r
+ch chime [70]..[35].[61]..//, oct+=[0,1]t8, amp*=2, add+=[0,3]r4
+// sp softpad (0134), amp*=0.5
+// sp synpluck 0, oct+=[0,1]r, add+=[0,2,3]r, amp*=1/32, room=1.5
+// o oxy -404, room=2, amp/=8
+
+

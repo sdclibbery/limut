@@ -33,7 +33,7 @@ define(function(require) {
   })
   window.stop = () => {
     system.resume()
-    players.instances = {}
+    players.stopAll()
     consoleOut('> Stop all players')
   }
   window.go = () => {
