@@ -39,7 +39,7 @@ define((require) => {
     
     // Create rest of bus later, when param overrides are available
     let stopped = false
-    bus.createChain = (params) => {
+    bus.start = (params) => {
       params._perFrame = bus._perFrame
       params._destructor = bus.destructor
       params.count = metronome.beatTime(metronome.timeNow())
@@ -66,17 +66,27 @@ define((require) => {
         bus._perFrame.forEach(pf => pf(state))
         return true
       })
-      // Cleanup
-      bus.destroy = () => {
+    }
+    // Cleanup
+    bus.destroy = () => {
+      if (bus.oldBus) {
+        if (bus.oldBus.destroy) { bus.oldBus.destroy() } // Fade out old bus and destroy
+        delete bus.oldBus
+      }
+      if (bus.crossfade) {
         fadeOut(bus.crossfade, () => {
           stopped = true
           bus._perFrame = []
           input.disconnect(bus.crossfade) // Only disconnect input from THIS bus as it may get transferred to another bus
           bus.destructor.destroy()
         })
+      } else {
+        stopped = true
+        bus._perFrame = []
+        bus.destructor.destroy()
       }
     }
-
+        
     return bus
   }
 

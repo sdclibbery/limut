@@ -18,7 +18,7 @@ define(function(require) {
       if (played) { return }
       let overrides = players.overrides[playerId] || {}
       params = applyOverrides(params, overrides)
-      player.createChain(params)
+      player.start(params)
       played = true
     }
     player.currentEvent = () => []
