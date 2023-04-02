@@ -4,7 +4,7 @@ define(function (require) {
   let scale = require('music/scale');
   let envelope = require('play/envelopes')
   let effects = require('play/effects/effects')
-  let fxMixChain = require('play/effects/fxMixChain')
+  let {fxMixChain} = require('play/effects/fxMixChain')
   let pitchEffects = require('play/effects/pitch-effects')
   let waveEffects = require('play/effects/wave-effects')
   let {evalMainParamEvent} = require('play/eval-audio-params')

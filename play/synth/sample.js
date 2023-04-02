@@ -3,7 +3,7 @@ define(function (require) {
   let system = require('play/system');
   let {getBuffer} = require('play/samples')
   let effects = require('play/effects/effects')
-  let fxMixChain = require('play/effects/fxMixChain')
+  let {fxMixChain} = require('play/effects/fxMixChain')
   let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
   let scale = require('music/scale');
   let waveEffects = require('play/effects/wave-effects')

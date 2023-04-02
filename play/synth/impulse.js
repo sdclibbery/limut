@@ -2,7 +2,7 @@
 define(function (require) {
   let system = require('play/system');
   let effects = require('play/effects/effects')
-  let fxMixChain = require('play/effects/fxMixChain')
+  let {fxMixChain} = require('play/effects/fxMixChain')
   let waveEffects = require('play/effects/wave-effects')
   let perFrameAmp = require('play/effects/perFrameAmp')
   let destructor = require('play/destructor')

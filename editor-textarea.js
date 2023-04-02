@@ -6,6 +6,7 @@ define(function(require) {
   let players = require('player/players')
   let consoleOut = require('console')
   let {updateCode} = require('update-code')
+  let fxMixChain = require('play/effects/fxMixChain')
 
   let codeTextArea = document.getElementById('code-textarea')
   codeTextArea.style.display = 'block'
@@ -26,6 +27,7 @@ define(function(require) {
   })
   window.stop = () => {
     system.resume()
+    fxMixChain.disconnectAll()
     players.stopAll()
     consoleOut('\n> Stop all players')
   }

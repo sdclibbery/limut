@@ -76,15 +76,13 @@ define(function (require) {
   let connectChain = (c) => {
     if (c.params.bus) {
       let bus = players.instances[c.params.bus]
-      if (!bus || !bus.input) {
+      if (!bus || !bus.input) { // Do nothing if bus not present
         c.connected = false
         return
       }
       if (c.connected) { return }
-      if (bus) {
-        c.out.connect(bus.input)
-        c.connected = true
-      } // Do nothing if bus not present
+      c.out.connect(bus.input)
+      c.connected = true
     } else {
       if (c.connected) { return }
       system.mix(c.out)
@@ -92,13 +90,17 @@ define(function (require) {
     }
   }
 
-  let destroyChain = (chain) => {
-    delete chains[chain.key]
-    chain.oscs.map(n => n.stop())
-    chain.nodes.map(n => n.disconnect())
+  let disconnectAll = () => {
+    Object.values(chains).forEach(c => c.connected = false)
   }
 
-  return (params, node) => {
+  let destroyChain = (chain) => {
+    chain.oscs.map(n => n.stop())
+    chain.nodes.map(n => n.disconnect())
+    delete chains[chain.key]
+  }
+
+  let fxMixChain = (params, node) => {
     let chainParams = getParams(params)
     let key = JSON.stringify(chainParams)
     if (!chains[key]) {
@@ -113,5 +115,10 @@ define(function (require) {
     node.connect(chain.in)
     chain.nodes.push(node)
     connectChain(chain)
+  }
+
+  return {
+    fxMixChain: fxMixChain,
+    disconnectAll: disconnectAll,
   }
 })

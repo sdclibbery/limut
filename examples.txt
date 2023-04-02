@@ -2969,3 +2969,16 @@ ch chime [70]..[35].[61]..//, oct+=[0,1]t8, amp*=2, add+=[0,3]r4
 // o oxy -404, room=2, amp/=8
 
 
+set bpm=122
+set * swing=58
+set main.amp=3
+pk impulse 0, amp=2, lpf=3000
+ph play .-, fold
+pb dbass ...0..0., dur=1/4, sus=1/8, amp*=1/2, att=0, lpf=800
+py play y..y., amp=3/4
+ps play ..(Ik)., sus=1/6, low+=8, amp*=1/3
+set p* bus='perc'
+perc bus 0, compress=5
+a ambi (0246), amp*=1/28, wave='saw', room=2, chorus
+
+

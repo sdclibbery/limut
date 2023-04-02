@@ -965,13 +965,21 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
- Effects for bus
-  room, reverb, phaser, flanger, chorus, echo
-  Allow per frame control; eg can vary room mix per frame etc
+!!!!!
+Also error:
+  TypeError: bus.oldBus.destroy is not a function
+    createChain http://localhost:8000/play/synth/bus.js:55
+    play http://localhost:8000/player/continuous.js:21
+    tick http://localhost:8000/main.js:130
+!!!!!
+Effects for bus
+  Phaser, flanger, Room, reverb, chorus, echo
+   Will need to cache these when players transition to avoid loss of echo/reverb/lfo
+    ?Do this for all bus effects???
+   Allow per frame control; eg can vary room mix per frame etc
  Bus can mix to another bus
   If bus's bus is set to itself, ignore it (to allow   set * bus=bus1   without mucking up bus1 itself)
   ?Can set 'bus=direct' to force direct to system mix?
- Make player pattern optional in the syntax; if missing, defaults to `0`?
  What if a player tries to connect to a player that isn't a bus? Error messages etc?
  What does a chord mean to a bus??? Eg  `bus b lpf=(300,1000)`
  What does eg [0,1]l1 mean to a bus? Should it be evalled as if the pattern is `0`? Or as if its per frame?
@@ -982,8 +990,7 @@ New 'bus' syntax to create an effects bus, and 'bus' param to send a player to a
   Allow var lookup from buses; eg `bus b, amp=1/2``p ping 0, amp=b.amp`
  Bus pulse should be an actual analyzer node; create on first demand?
  Warning when redefine a player as a bus or vice versa?
- Don't recreate the bus if it's code hasn't changed? ...but also have to consider overrides
-  Really, player should stay the same, and the delta in params should be applied as a delta...
+ Make player pattern optional in the syntax; if missing, defaults to `0`?
  TEST
   TEST ALL SYNTHS
   TEST ALL EFFECTS
