@@ -76,12 +76,12 @@ define(function (require) {
   let connectChain = (c) => {
     if (c.params.bus) {
       let bus = players.instances[c.params.bus]
-      if (!bus || !bus.input) { // Do nothing if bus not present
+      if (!bus || !bus._input) { // Do nothing if bus not present
         c.connected = false
         return
       }
       if (c.connected) { return }
-      c.out.connect(bus.input)
+      c.out.connect(bus._input)
       c.connected = true
     } else {
       if (c.connected) { return }

@@ -30,12 +30,12 @@ define((require) => {
     // Input
     let input
     if (bus.oldBus) {
-      input = bus.oldBus.input // Transfer input mixer from the previous version of this bus
+      input = bus.oldBus._input // Copy the same input mixer from the previous version of this bus to allow crossfading
     }
     if (!input) {
       input = system.audio.createGain()
     }
-    bus.input = input
+    bus._input = input
     
     // Create rest of bus later, when param overrides are available
     let stopped = false
@@ -52,7 +52,7 @@ define((require) => {
       input.connect(bus.crossfade)
       bus.destructor.disconnect(bus.crossfade)
       if (bus.oldBus) {
-        bus.oldBus.destroy()
+        if (bus.oldBus.destroy) { bus.oldBus.destroy() } // Fade out old bus and destroy
         delete bus.oldBus
       }
       fadeIn(bus.crossfade)

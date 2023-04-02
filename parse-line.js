@@ -119,11 +119,9 @@ define((require) => {
     // Define a player
     let player = parsePlayer(line, linenum)
     if (player) {
-      let oldPlayer = players.instances[player.id] || {}
-      for (let k in oldPlayer) {
-        if (player[k] === undefined) {
-          player[k] = oldPlayer[k]
-        }
+      let oldPlayer = players.instances[player.id]
+      if (oldPlayer) {
+        player.keepState = oldPlayer.keepState // Copy the state that should be maintained on code update
       }
       players.instances[player.id] = player
       players.gc_mark(player.id)

@@ -965,18 +965,12 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
-!!!!!
-Also error:
-  TypeError: bus.oldBus.destroy is not a function
-    createChain http://localhost:8000/play/synth/bus.js:55
-    play http://localhost:8000/player/continuous.js:21
-    tick http://localhost:8000/main.js:130
-!!!!!
-Effects for bus
+ !If do code update multiple times in one beat, you get multiple active buses somehow
+ Effects for bus
   Phaser, flanger, Room, reverb, chorus, echo
    Will need to cache these when players transition to avoid loss of echo/reverb/lfo
     ?Do this for all bus effects???
-   Allow per frame control; eg can vary room mix per frame etc
+   Allow more per frame control; eg can vary room mix per frame etc
  Bus can mix to another bus
   If bus's bus is set to itself, ignore it (to allow   set * bus=bus1   without mucking up bus1 itself)
   ?Can set 'bus=direct' to force direct to system mix?

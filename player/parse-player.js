@@ -97,12 +97,18 @@ define((require) => {
         if (!playerFactory) { throw 'Player "'+playerType+'" not found' }
         // Continuous player, no events
         if (playerFactory.create) {
-          return continuousPlayer(playerFactory, paramsStr, playerId, playerFactory.baseParams)
+          let player = continuousPlayer(playerFactory, paramsStr, playerId, playerFactory.baseParams)
+          player.type = playerType
+          player.keepState = {}
+          return player
         }
+        let oldPlayer = players.instances[playerId]
+        if (oldPlayer && oldPlayer.destroy) { oldPlayer.destroy() } // If new player is not continuous, make sure old one still gets destroyed
         // Normal player
         let player = {
           id: playerId,
           type: playerType,
+          keepState: {},
         }
         player.play = (es, beat) => {
           player.events ||= []
@@ -161,7 +167,7 @@ define((require) => {
           return es
         }
         player.getEventsForBeat = (beat) => {
-          return player.getEventsForBeatBase(beat, player)
+          return player.getEventsForBeatBase(beat, player.keepState) // Use the keepState for the timing context so it is transferred to the new instance of the player on code update
         }
         return player
       }
