@@ -10,7 +10,6 @@ define((require) => {
     scale: { setter: (v) => { if (typeof v === 'string') { scale.set(v.toLowerCase()) } }, default:'major' },
     root: { setter: (v) => { scale.setRoot(v) }, default:0 },
     'main.amp': { setter: (v) => system.mainAmp(v), default:1 },
-    'main.reverb': { setter: (v) => system.mainReverb(v), default:1 },
     'beat.readouts': { setter: (v) => metronome.setBeatReadouts(v), default:[12,16,32] },
   }
 

@@ -785,7 +785,6 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>time</code> Time, counted in beats (including fractions of a beat)</p>
 <p><code>main.pulse</code> The current musical pulse; like a VU level meter</p>
 <p><code>main.amp</code> Main mix amplitude control. Value resets unless set every time the code is updated.</p>
-<p><code>main.reverb</code> Main reverb amplitude control. Value resets unless set every time the code is updated.</p>
 <p><code>beat.readouts</code> Set the beat counts to use for the readouts; eg <code>beat.readouts=(3,12)</code> will show two beat counters, one that counts in 3's (for a waltz), and another that counts to 12 (for 4 bars of a waltz). There cannot be more than 3 readouts. The default is <code>(12,16,32)</code></p>
 <p><code>root</code> Main root pitch offset; default <code>0</code> roots the pitches on middle c; <code>1</code> pitches up by one semitone etc. This is fractional, so can be used to 'nudge' the tuning to match other instruments; eg <code>root=0.135</code> </p>
 <p><code>scale</code> Scale eg minor, major, chromatic, majorpentatonic, lydian etc etc. Value resets unless set every time the code is updated.</p>
@@ -965,12 +964,11 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
- Effects for bus
-  Phaser, flanger, Room, reverb, chorus, echo
-   Will need to cache these when players transition to avoid loss of echo/reverb/lfo
-    ?Do this for all bus effects???
-   Allow more per frame control; eg can vary room mix per frame etc
+ Convolution reverb for bus
+  Will need to cache these when players transition to avoid loss of echo/reverb/lfo
+   ?Do this for all bus effects???
  Bus can mix to another bus
+  If possible I think it would be nice for players with a missing bus to mix to system
   If bus's bus is set to itself, ignore it (to allow   set * bus=bus1   without mucking up bus1 itself)
   ?Can set 'bus=direct' to force direct to system mix?
  What if a player tries to connect to a player that isn't a bus? Error messages etc?
@@ -988,27 +986,32 @@ New 'bus' syntax to create an effects bus, and 'bus' param to send a player to a
   TEST ALL SYNTHS
   TEST ALL EFFECTS
   TEST STOP/DISCONNECT FOR ALL OF THESE!!!
- Docs: bus param, amp subparam for wave effects and compress,
-!xylo gain staging is too loud; try it with linearshape and see waveform deform into a square wave
-?bus echo can feedback via another bus? To allow full range of filters and effects?
- ??Same for room?
-!Should be able to have multiple bandpass and notch filters
-?Try linear cross-fade for pad envelope, at least for non-noise synths?
-More options for setting up the convolution reverb
-External player should be a bus-like player, with no events
-Impulse destructor should be snappier? It probably waits too long to clean up
- ?Same for play???
-fxMixChain should use a destructor
+ Docs: bus param, amp subparam for wave effects and compress, reverb param with curve sub
+ Release: removed main.reverb var
 default master/main bus with full effects
  if player's bus is not set, send to the main/master bus
  move main.amp to be on the default main/master bus instead of on system
  make convolution reverb into a normal effect and move the main reverb from system to the default bus
  preset bus for synthwave master with some reverb, compression etc
+ convolutionReverb should not have to have system passed in
 Allow non-chord multiple bus outputs from one player; (bus1, bus2) etc
  bus subparam for mix level (per frame); eg   p ping 0, bus={bus1,mix:1/2}
-Support for bus feedback???
+?bus echo can feedback via another bus? To allow full range of filters and effects?
+ ??Same for room?
+!Should be able to have multiple bandpass and notch filters
 ! pad envelope not giving clean continuous sound? Maybe just because the phase is different from one note to the next??
  Eg p square 0, envelope='pad'
+ ?Try linear cross-fade for pad envelope, at least for non-noise synths?
+More options for setting up the convolution reverb
+ Mono/stereo: how much difference between L and R
+ Some real impulse responses as options??
+More bus effects: Phaser, flanger, Room, reverb, chorus, echo
+External player should be a bus-like player, with no events
+Impulse destructor should be snappier? It probably waits too long to clean up
+ ?Same for play???
+fxMixChain should use a destructor
+!xylo gain staging is too loud; try it with linearshape and see waveform deform into a square wave
+Support for bus feedback???
 envelopes
  * Create envelopes for eg lpf, eg  lpf=this.freq*10*ar{a:1/4,r:1}
   ??Is that the same as  lpf=this.freq*[0,10,0]e[1/4,1]  ??
@@ -1094,7 +1097,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
-!Like with busses, a visual synth routed to a buffer should not play at all if the buffer is not there
+?A visual synth routed to a buffer should not play at all if the buffer is not there?
 !What happens to buffer when it uses eg loc=tile_b ??
  It works fine, but should the buffer rez be changed to compensate??
 Filter param for all texture based synths (including buffer feedback)

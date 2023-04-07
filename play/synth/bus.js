@@ -2,10 +2,13 @@
 define((require) => {
   var system = require('play/system')
   var metronome = require('metronome')
-  let {evalMainParamFrame} = require('play/eval-audio-params')
+  let {mainParam} = require('player/sub-param')
+  let {evalMainParamFrame,evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
   let destructor = require('play/destructor')
   let effects = require('play/effects/effects')
   let waveEffects = require('play/effects/wave-effects')
+  let convolutionReverb = require('play/effects/convolutionReverb')
+  let {mix} = require('play/effects/mix')
 
   let fadeTime = 0.1
   let fadeIn = (node) => {
@@ -18,6 +21,22 @@ define((require) => {
     node.gain.setValueAtTime(1, system.timeNow())
     node.gain.linearRampToValueAtTime(0, system.timeNow()+fadeTime)
     setTimeout(cleanup, fadeTime*1000)
+  }
+
+  let reverb = (params, node) => {
+    if (!mainParam(params.reverb, 0)) { return node }
+    let duration = evalMainParamEvent(params, 'reverb', 1/2) * metronome.beatDuration()
+    let curve = evalSubParamEvent(params, 'reverb', 'curve', 3)
+    let rev = convolutionReverb(system, duration, curve)
+    let boost = system.audio.createGain()
+    boost.gain.value = 6 // Boost the wet signal else the whole bus sounds quieter with a reverb in
+    node.connect(rev)
+    rev.connect(boost)
+    return mix(params, 'reverb', node, boost, 1/3)
+  }
+
+  let effectChain = (params, bus) => {
+    return reverb(params, effects(params, waveEffects(params, bus.crossfade)))
   }
 
   let createBus = (busId, oldBus) => {
@@ -56,8 +75,8 @@ define((require) => {
         delete bus.oldBus
       }
       fadeIn(bus.crossfade)
-        // effect chain
-      effects(params, waveEffects(params, bus.crossfade)).connect(bus.output)
+      // effect chain
+      effectChain(params, bus).connect(bus.output)
       bus.output.gain.cancelScheduledValues(0)
       evalMainParamFrame(bus.output.gain, params, 'amp', 1) // output amp
       // Per frame update
