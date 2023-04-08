@@ -964,13 +964,9 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
- Bus can mix to another bus
-  If bus's bus is set to itself, ignore it (to allow   set * bus=bus1   without mucking up bus1 itself)
-  ?Can set 'bus=direct' to force direct to system mix?
- What if a player or bus tries to connect to a player that isn't a bus? Error messages etc?
- Warning when redefine a player as a bus or vice versa?
  Cache bus effects nodes; especially reverb
   If the (eg) reverb hasn't changed, then transfer from old bus to new? What about the crossfade though? And disconnecting?
+ LOTS of things are looking up players in instances in a case SENSitive way!!
  What does a chord mean to a bus??? Eg  `bus b lpf=(300,1000)`
  What does eg [0,1]l1 mean to a bus? Should it be evalled as if the pattern is `0`? Or as if its per frame?
  What does [0,1] mean to a bus? There are no pattern steps to refer to? Should make it be like [0,1]t1??

@@ -8,6 +8,7 @@ define(function (require) {
   let chorus = require('play/effects/chorus')
   let {fixedMix} = require('play/effects/mix')
   let players = require('player/players')
+  let consoleOut = require('console')
 
   let echo = (echoDelay, echoFeedback, node, nodes) => {
     if (!echoDelay || echoDelay < 0.0001) { return node }
@@ -73,11 +74,12 @@ define(function (require) {
     return c
   }
 
-  let connectChain = (c) => {
+  let connectChain = (c, playerId) => {
     let busId = c.params.bus
     if (!busId) { busId = 'main' } // Default to main bus if not specified
     let bus = players.instances[busId]
     if (!bus || !bus._input) { // Do nothing if bus not present
+      consoleOut(`Player ${playerId} failed to connect to destination bus ${busId}`)
       c.connected = false
       return
     }
@@ -110,7 +112,7 @@ define(function (require) {
     chain.timeoutID = setTimeout(() => destroyChain(chain), TTL)
     node.connect(chain.in)
     chain.nodes.push(node)
-    connectChain(chain)
+    connectChain(chain, params._player.id)
   }
 
   return {
