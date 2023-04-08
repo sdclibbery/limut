@@ -1,7 +1,6 @@
 'use strict';
 define(function (require) {
 let {move, filterInPlace} = require('array-in-place')
-let reverb = require('play/effects/convolutionReverb')
 
 var webAudio = window.AudioContext || window.webkitAudioContext
 var system = {
@@ -32,27 +31,16 @@ system.latency = () => {
   return system.audio.outputLatency 
 }
 
-let globalBaseGain = 2
 system.vcaMainAmp = system.audio.createGain()
-system.vcaMainAmp.gain.value = globalBaseGain
-system.mainAmpValue = 1
+system.vcaMainAmp.gain.value = 1
 system.mainAmpUiValue = 1
-system.mainAmp = (amp) => {
-  if (typeof amp == 'number') {
-    system.mainAmpValue = amp
-    system.vcaMainAmp.gain.value = Math.pow(system.mainAmpUiValue, 2)*system.mainAmpValue*globalBaseGain
-  }
-  return system.mainAmpValue
-}
 system.mainAmpUi = (amp) => {
-  if (typeof amp == 'number') {
+  if (typeof amp === 'number') {
     system.mainAmpUiValue = amp
-    system.vcaMainAmp.gain.value = Math.pow(system.mainAmpUiValue, 2)*system.mainAmpValue*globalBaseGain
+    system.vcaMainAmp.gain.value = Math.pow(system.mainAmpUiValue, 2)
   }
   return system.mainAmpUiValue
 }
-system.vcaPreAmp = system.audio.createGain()
-system.vcaPreAmp.gain.value = 0.5
 
 system.analyser = system.audio.createAnalyser()
 system.analyser.fftSize = 2048
@@ -94,7 +82,7 @@ system.meter = () => {
 }
 
 system.mix = function (node) {
-  node.connect(system.vcaPreAmp)
+  node.connect(system.vcaMainAmp)
 }
 
 system.disconnect = (params, nodes) => {
@@ -111,24 +99,18 @@ system.disconnectAt = (time, nodes) => {
 
 system.limiter = system.audio.createDynamicsCompressor()
 system.limiter.ratio.value = 20
-system.limiter.threshold.value = -2
+system.limiter.threshold.value = -1
 system.limiter.release.value = 0.05
 system.limiter.attack.value = 0.001
 system.limiter.knee.value = 0
-
 system.limiterReduction = () => {
   if (!system.limiter) { return 0 }
   return system.limiter.reduction
 }
 
-system.reverb = reverb(system, 0.5, 5)
+system.vcaMainAmp.connect(system.limiter)
+system.limiter.connect(system.analyser)
+system.analyser.connect(system.audio.destination)
 
-system.vcaPreAmp.connect(system.limiter)
-system.vcaPreAmp.connect(system.reverb)
-system.reverb.connect(system.limiter)
-system.limiter.connect(system.vcaMainAmp)
-system.vcaMainAmp.connect(system.analyser)
-system.vcaMainAmp.connect(system.audio.destination)
-
-return system;
-});
+return system
+})

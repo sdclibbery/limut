@@ -1,9 +1,8 @@
 'use strict';
 define(function (require) {
-  // let system = require('play/system')
+  let system = require('play/system')
 
-  // return (duration, curve) => {
-  return (system, duration, curve) => {
+  return (duration, curve) => {
     let reverb = system.audio.createConvolver()
     var rate = system.audio.sampleRate
     var length = rate * duration
