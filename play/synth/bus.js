@@ -9,6 +9,8 @@ define((require) => {
   let waveEffects = require('play/effects/wave-effects')
   let convolutionReverb = require('play/effects/convolutionReverb')
   let {mix} = require('play/effects/mix')
+  let players = require('player/players')
+  let consoleOut = require('console')
 
   let fadeTime = 0.1
   let fadeIn = (node) => {
@@ -39,6 +41,21 @@ define((require) => {
     return reverb(params, effects(params, waveEffects(params, bus.crossfade)))
   }
 
+  let connectToDestination = (bus, params) => {
+    if (bus.id === 'main') { // If this is the main bus, it must mix direct to system
+      system.mix(bus.output)
+      return
+    }
+    let destBusId = evalMainParamEvent(params, 'bus')
+    if (!destBusId) { destBusId = 'main' } // Default to main bus if not specified
+    let destBus = players.instances[destBusId]
+    if (destBus && destBus._input) { // Do nothing if bus not present
+      bus.output.connect(destBus._input)
+    } else {
+      consoleOut(`Bus ${bus.id} failed to connect to destination bus ${destBusId}`)
+    }
+  }
+
   let createBus = (busId, oldBus) => {
     let bus = {
       id: busId,
@@ -64,7 +81,7 @@ define((require) => {
       params.count = metronome.beatTime(metronome.timeNow())
       // output
       bus.output = system.audio.createGain()
-      system.mix(bus.output)
+      connectToDestination(bus, params)
       bus.destructor.disconnect(bus.output)
       // crossfade
       bus.crossfade = system.audio.createGain() // Crossfade from old version of bus to new
