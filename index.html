@@ -986,7 +986,7 @@ New 'bus' syntax to create an effects bus, and 'bus' param to send a player to a
   TEST ALL SYNTHS
   TEST ALL EFFECTS
   TEST STOP/DISCONNECT FOR ALL OF THESE!!!
- Docs: bus param, amp subparam for wave effects and compress, reverb param with curve sub
+ Docs: bus param; input gain subparam for wave effects and compress; reverb param with curve sub
  Release: removed main.reverb var
 default master/main bus with full effects
  if player's bus is not set, send to the main/master bus
@@ -1098,6 +1098,7 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
 ?A visual synth routed to a buffer should not play at all if the buffer is not there?
+ Right now, it works except the synth pauses..??
 !What happens to buffer when it uses eg loc=tile_b ??
  It works fine, but should the buffer rez be changed to compensate??
 Filter param for all texture based synths (including buffer feedback)

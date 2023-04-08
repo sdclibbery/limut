@@ -2982,3 +2982,36 @@ perc bus 0, compress=5
 a ambi (0246), amp*=1/28, wave='saw', room=2, chorus
 
 
+// Cybertech
+include 'preset/synthwave.limut'
+set scale=minor
+set bpm=123
+set main.amp=1.5
+set * swing=58
+/// Visuals
+vr bars 0, buffer='vb', scroll={x:time}*(1,2,3)/4, fore=(neonpink/12,rainbow_slow/10,neongreen/8).(this.voice), zoom=1+this.voice/4
+vb vhsbuffer 0, feedback={fore:0.85}, loc={x:1/3,y:1/4,w:3/2,h:3/2}
+/// Presets
+preset sax pulse, room, bpf={this.freq*[2:15]s4@f,q:[1/8:1]s4@f}, oct-=1, phaser=1/8, echo=1/2, amp=2, pan=[-1/4:1/4]r
+preset ghost sine, envelope='pad', noisify=[1:10]n4, bpf={pitch{[0,2,4,3]},q:20},
+phaser=1/17, chorus=3, room={2,mix:1/4}, sus=2, pan=[-1/4:1/4]s8@f
+/// Percussion
+pk bd 9..., sus=1/4, amp*=3/2
+pb cybass .0v00, lpf*=[1/2:1]s8, sus=1/10
+ps play80s .:a:, pan=-1/2, amp=1/3, high=-4, rate=2/3, fold
+pp play80s nuktku, amp=1/3, delay=[0,1/4]t2, pan=1/2, rate=3/4, sus=0.4
+// set bperc bpf={440,q:1/[10:0.1]l[32,0]@f}, amp*=[1:2]l[32,0]@f
+// set bperc reverb={1,mix:[0:1]l[32,0]@f}, amp*=[1:1.2]l[32,0]@f
+/// Pads
+// t ghost 0, add=[-2,0,2,4,6]r4 + [0,-1]t16, amp*=[0.5,1]n26*[2/3,1]l13@f
+l sax [07].[6<1.>]., amp*=[3,5]n32
+// va vambi 0, dur=2, envelope='pad', oct+=1, add+=[0,-1]t16, glide, amp*=1.4
+// bl blips -10, amp*=1/3
+// sp softpad 0, add+=[(0,2,4),(-1,1,3),(0,2,4),(0,3,5)]t8, amp*=1.3
+/// Mix Buses
+set p* bus='bperc'
+bperc bus 0, high=-1, drive={1/20,gain:1.3}, compress={3,gain:5}, amp=0.5, low=1, mid=-28
+set !p* bus='bpads'
+bpads bus 0, drive={1/24,gain:1.3}, compress={3,gain:5}, amp=0.12, mid=16
+
+

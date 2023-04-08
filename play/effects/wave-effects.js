@@ -4,10 +4,10 @@ define(function (require) {
   let {evalMainParamEvent,evalSubParamEvent,evalSubParamFrame} = require('play/eval-audio-params')
   let {mix} = require('play/effects/mix')
 
-  let inputAmp = (params, p, node) => {
-    if (params[p].amp === undefined) { return node }
+  let inputGain = (params, p, node) => {
+    if (params[p].gain === undefined) { return node }
     let gain = system.audio.createGain()
-    evalSubParamFrame(gain.gain, params, p, 'amp', 1)
+    evalSubParamFrame(gain.gain, params, p, 'gain', 1)
     node.connect(gain)
     params._destructor.disconnect(gain)
     return gain
@@ -16,7 +16,7 @@ define(function (require) {
   let shapeEffect = (params, effect, node, count, shape) => {
     let amount = evalMainParamEvent(params, effect, 0)
     if (!amount) { return node }
-    node = inputAmp(params, effect, node)
+    node = inputGain(params, effect, node)
     let shaper = system.audio.createWaveShaper()
     let curve = new Float32Array(2*count+1)
     curve[count] = 0
@@ -56,7 +56,7 @@ define(function (require) {
   let compressor = (params, node) => {
     let compress = evalMainParamEvent(params, 'compress', 0)
     if (!compress) { return node }
-    node = inputAmp(params, 'compress', node)
+    node = inputGain(params, 'compress', node)
     let compressor = system.audio.createDynamicsCompressor()
     compressor.ratio.value = compress
     compressor.threshold.value = evalSubParamEvent(params, 'compress', 'threshold', -50)

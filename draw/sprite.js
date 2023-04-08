@@ -168,14 +168,15 @@ let verts = (loc, window, har, allowHarAdjust) => {
     if (!!recolType && !recol) {
       consoleOut(`Error: Unknown recol type ${recolType}`)
     }
-    let buffer = undefined
     let targetBufferPlayerId = evalMainParamEvent(params, 'buffer')
-    let bufferPlayer = players.instances[targetBufferPlayerId]
-    if (bufferPlayer && bufferPlayer.buffer && bufferPlayer.buffer.target && bufferPlayer.buffer.target.framebuffer) {
-      buffer = bufferPlayer.buffer || undefined
-    }
     return state => { // per frame
       if (state.time > endTime) { return false }
+      let bufferPlayer = players.instances[targetBufferPlayerId]
+      let buffer = undefined
+      if (bufferPlayer && bufferPlayer.buffer && bufferPlayer.buffer.target && bufferPlayer.buffer.target.framebuffer) {
+        buffer = bufferPlayer.buffer || undefined
+      }
+      if (targetBufferPlayerId && !buffer) { return true }
       if (s.preRender) {
         s.preRender(state)
       }
