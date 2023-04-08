@@ -102,7 +102,7 @@ define((require) => {
           player.keepState = {}
           return player
         }
-        let oldPlayer = players.instances[playerId]
+        let oldPlayer = players.getById(playerId)
         if (oldPlayer && oldPlayer.destroy) { oldPlayer.destroy() } // If new player is not continuous, make sure old one still gets destroyed
         // Normal player
         let player = {

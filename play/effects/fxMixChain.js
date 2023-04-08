@@ -77,7 +77,7 @@ define(function (require) {
   let connectChain = (c, playerId) => {
     let busId = c.params.bus
     if (!busId) { busId = 'main' } // Default to main bus if not specified
-    let bus = players.instances[busId]
+    let bus = players.getById(busId)
     if (!bus || !bus._input) { // Do nothing if bus not present
       consoleOut(`Player ${playerId} failed to connect to destination bus ${busId}`)
       c.connected = false

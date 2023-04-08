@@ -5,7 +5,7 @@ define(function(require) {
 
   let followPlayer = (playerIdToFollow, params, baseParams) => {
     return (beat, timingContext) => {
-      let p = players.instances[playerIdToFollow.toLowerCase()]
+      let p = players.getById(playerIdToFollow)
       if (p === undefined) { return [] }
       let events = p.getEventsForBeatBase(beat, timingContext)
       return events.map(e => {

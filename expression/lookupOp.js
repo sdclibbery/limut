@@ -44,7 +44,7 @@ define(function(require) {
         result._thisVar = true
         return result
       }
-      let player = players.instances[l]
+      let player = players.getById(l)
       if (r === 'exists') { return !!player ? 1 : 0 }
       if (player) { // lookup a param on player events
         let originalB = evalRecurse((e,originalB) => originalB, event, b)

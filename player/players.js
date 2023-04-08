@@ -36,6 +36,11 @@ define(function(require) {
     players.overrides = {}
   }
 
+  players.getById = (id) => {
+    if (!id) { return }
+    return players.instances[id.toLowerCase()]
+  }
+
   players.expandOverrides = () => {
     let newOverrides = {}
     for (let k in players.overrides) {
@@ -99,6 +104,12 @@ define(function(require) {
     testOverrideWildcard(['p1','p2'], {'!p1':{foo:1}}, {p2:{foo:1}})
     testOverrideWildcard(['p1','p2','q1'], {'!p*':{foo:1}}, {q1:{foo:1}})
     testOverrideWildcard(['p1','p2','q1'], {'!*1':{foo:1}}, {p2:{foo:1}})
+
+    players.instances = { pp: 5 }
+    assert(5, players.getById('pp'))
+    assert(5, players.getById('pP'))
+    assert(undefined, players.getById('pO'))
+    players.instances = {}
 
     console.log('Players tests complete')
   }

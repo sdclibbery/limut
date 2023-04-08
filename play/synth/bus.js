@@ -48,7 +48,7 @@ define((require) => {
     }
     let destBusId = evalMainParamEvent(params, 'bus')
     if (!destBusId) { destBusId = 'main' } // Default to main bus if not specified
-    let destBus = players.instances[destBusId]
+    let destBus = players.getById(destBusId)
     if (destBus && destBus._input) { // Do nothing if bus not present
       bus.output.connect(destBus._input)
     } else {

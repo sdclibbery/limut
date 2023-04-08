@@ -171,7 +171,7 @@ let verts = (loc, window, har, allowHarAdjust) => {
     let targetBufferPlayerId = evalMainParamEvent(params, 'buffer')
     return state => { // per frame
       if (state.time > endTime) { return false }
-      let bufferPlayer = players.instances[targetBufferPlayerId]
+      let bufferPlayer = players.getById(targetBufferPlayerId)
       let buffer = undefined
       if (bufferPlayer && bufferPlayer.buffer && bufferPlayer.buffer.target && bufferPlayer.buffer.target.framebuffer) {
         buffer = bufferPlayer.buffer || undefined
@@ -330,7 +330,7 @@ let verts = (loc, window, har, allowHarAdjust) => {
     let zorder = param(params.zorder, param(params.linenum, 0)/1000)
     let renderTask = play(renderer, params)
     let targetBufferPlayerId = evalMainParamEvent(params, 'buffer')
-    let bufferPlayer = players.instances[targetBufferPlayerId]
+    let bufferPlayer = players.getById(targetBufferPlayerId)
     if (bufferPlayer && bufferPlayer.buffer) {
       bufferPlayer.buffer.renderList.add(params._time, renderTask, zorder)
     } else {
