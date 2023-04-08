@@ -9,6 +9,7 @@ define((require) => {
   let sliders = require('sliders')
   let predefinedVars = require('predefined-vars')
   let vars = require('vars')
+  let mainBus = require('play/main-bus')
 
   let parseCode = async (code) => {
     let lines = code.split('\n')
@@ -60,7 +61,7 @@ define((require) => {
     vars.clear()
     predefinedVars.apply(vars.all())
     consoleOut('> Update code')
-    await parseCode(code)
+    await parseCode(mainBus() + '\n\n' + code)
     players.gc_sweep()
     sliders.gc_sweep()
     players.expandOverrides()

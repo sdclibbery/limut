@@ -74,20 +74,16 @@ define(function (require) {
   }
 
   let connectChain = (c) => {
-    if (c.params.bus) {
-      let bus = players.instances[c.params.bus]
-      if (!bus || !bus._input) { // Do nothing if bus not present
-        c.connected = false
-        return
-      }
-      if (c.connected) { return }
-      c.out.connect(bus._input)
-      c.connected = true
-    } else {
-      if (c.connected) { return }
-      system.mix(c.out)
-      c.connected = true
+    let busId = c.params.bus
+    if (!busId) { busId = 'main' } // Default to main bus if not specified
+    let bus = players.instances[busId]
+    if (!bus || !bus._input) { // Do nothing if bus not present
+      c.connected = false
+      return
     }
+    if (c.connected) { return }
+    c.out.connect(bus._input)
+    c.connected = true
   }
 
   let disconnectAll = () => {

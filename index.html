@@ -963,20 +963,14 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
-default main bus with full effects
- Create a main bus
-  Default reverb, amp
- if player's bus is not set, send to the main/master bus
- move main.amp to be on the default main/master bus instead of on system
- make convolution reverb into a normal effect and move the main reverb from system to the default bus
- preset bus for synthwave master with some reverb, compression etc
- convolutionReverb should not have to have system passed in
 New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
  Bus can mix to another bus
   If possible I think it would be nice for players with a missing bus to mix to system????
    Probably NO?
   If bus's bus is set to itself, ignore it (to allow   set * bus=bus1   without mucking up bus1 itself)
   ?Can set 'bus=direct' to force direct to system mix?
+ ?Cache bus effects nodes; especially reverb?
+  If the (eg) reverb hasn't changed, then transfer from old bus to new? What about the crossfade though? And disconnecting?
  What if a player tries to connect to a player that isn't a bus? Error messages etc?
  What does a chord mean to a bus??? Eg  `bus b lpf=(300,1000)`
  What does eg [0,1]l1 mean to a bus? Should it be evalled as if the pattern is `0`? Or as if its per frame?
@@ -989,13 +983,14 @@ New 'bus' syntax to create an effects bus, and 'bus' param to send a player to a
  Warning when redefine a player as a bus or vice versa?
  More bus effects: echo, room, phaser, flanger, chorus
  Make player pattern optional in the syntax; if missing, defaults to `0`?
- ?Cache bus effects nodes; especially reverb?
+ preset bus for synthwave main with some reverb, compression etc
  TEST
   TEST ALL SYNTHS
   TEST ALL EFFECTS
   TEST STOP/DISCONNECT FOR ALL OF THESE!!!
- Docs: bus param; input gain subparam for wave effects and compress; reverb param with curve sub
- Release: removed main.reverb var
+ Docs: bus param; input gain subparam for wave effects and compress; reverb param with curve sub, main bus params
+ Release: removed main.reverb var, `set main.amp` is now `set main amp`
+  Update all examples for these (especially main.amp)
 Allow non-chord multiple bus outputs from one player; (bus1, bus2) etc
  bus subparam for mix level (per frame); eg   p ping 0, bus={bus1,mix:1/2}
 ?bus echo can feedback via another bus? To allow full range of filters and effects?
