@@ -477,7 +477,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p class='sub'><code>hit={1,sample:'^',index:1,rate:3/2,cutoff:250,q:1}</code> The hit is a sample to be played with the initial impact sound. The main param is the loudness of the hit. Sample, index and rate control the sample playback (similar to the play synth). Cutoff (in Hz) and q control the low pass filtering. The default values are shown.</p>
 <p class='sub'><code>body={1,freq:55,boost:150,curve:3,wave:sine,cutoff:2,q:10}</code> The body is the resonant, pitched body of the sound. The main param is the loudness of the body. freq is the base frequency in Hz, boost is the initial frequency boost in Hz, curve is the amount of curvature for the frequency envelope, and wave is the waveform to use. Cutoff and q control the low pass filtering, however the body cutoff is a multiplier over the main frequency rather than an absolute frequency in Hz. The default values are shown.</p>
 <p class='sub'><code>rattle={1,rate:1,freq:55,boost:205,cutoff:8,q:18}</code> The rattle is a noisy component of the sound. The main param is the loudness of the rattle. Rate is the sample playback rate of the noise sample; adjusting this can provide some additional filtering. freq is the base frequency in Hz, boost is the initial frequency boost in Hz, curve is the amount of curvature for the frequency envelope, and wave is the waveform to use. Cutoff and q control the low pass filtering, however the rattle cutoff is a multiplier over the main frequency rather than an absolute frequency in Hz. The default values are shown.</p>
-<p><code>bd</code> Preset based on pitchedperc. Provides a broadly 909 style kick drum. Note that as this synth is not sample based, it only accepts digits in the player pattern, unlike the play synth. Use sus or dec params to control the duration of the kick. Uses some unique params:</p>
+<p><code>bd</code> Preset based on pitchedperc. Provides a basic synthesized kick drum. Note that as this synth is not sample based, it only accepts digits in the player pattern, unlike the play synth. Use sus or dec params to control the duration of the kick. Uses some unique params:</p>
 <p class='sub'><code>accent=0</code> Positive values accent the kick making it louder and stronger. Negative values diminish the kick. Default value is derived from the player pattern value and 'add' param.</p>
 <p class='sub'><code>tone=0</code> Tone control for the kick. Larger values will open the filters.</p>
 <p class='sub'><code>tune=55</code> Base frequency for the kick in Hz. Usually this should be between about 45 and 65 Hz. The pitch{} function can be used to calculate specific frequencies for tuning the kick to the current key; for example <code>tune=pitch{0,oct:2}</code></p>
@@ -964,16 +964,17 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
+ ?Is crossfading working properly for main bus??
  Cache bus effects nodes; especially reverb
   If the (eg) reverb hasn't changed, then transfer from old bus to new? What about the crossfade though? And disconnecting?
- What does a chord mean to a bus??? Eg  `bus b lpf=(300,1000)`
  What does eg [0,1]l1 mean to a bus? Should it be evalled as if the pattern is `0`? Or as if its per frame?
+  Or according to the actual pattern???
  What does [0,1] mean to a bus? There are no pattern steps to refer to? Should make it be like [0,1]t1??
  What does []r@e etc mean for a bus? Same for []l4 (which defaults to per event...)
  What does []e mean for a bus?
- What happens if do var lookup onto a bus?
-  Allow var lookup from buses; eg `bus b, amp=1/2``p ping 0, amp=b.amp`
+ Allow var lookup from buses; eg `bus b, amp=1/2` `p ping 0, amp=b.amp`
  Bus pulse should be an actual analyzer node; create on first demand?
+ What does a chord mean to a bus??? Eg  `bus b lpf=(300,1000)`
  More bus effects: echo, room, phaser, flanger, chorus
  Make player pattern optional in the syntax; if missing, defaults to `0`?
  preset bus for synthwave main with some reverb, compression etc
@@ -982,7 +983,8 @@ New 'bus' syntax to create an effects bus, and 'bus' param to send a player to a
   TEST ALL EFFECTS
   TEST STOP/DISCONNECT FOR ALL OF THESE!!!
  Docs
-  bus param; say that if bus doesn't exist, player will be silent
+  bus player; continuous, ignores pattern, different effects, main bus
+  bus param; note: if bus doesn't exist, player will be silent; default to main bus
   input gain subparam for wave effects and compress
   reverb param with curve sub
   main bus
@@ -990,6 +992,7 @@ New 'bus' syntax to create an effects bus, and 'bus' param to send a player to a
   removed main.reverb var
   `set main.amp` is now `set main amp`
   Update all examples for these (especially main.amp)
+!xylo gain staging is too loud; try it with linearshape and see waveform deform into a square wave
 Allow non-chord multiple bus outputs from one player; (bus1, bus2) etc
  bus subparam for mix level (per frame); eg   p ping 0, bus={bus1,mix:1/2}
 ?bus echo can feedback via another bus? To allow full range of filters and effects?
@@ -1005,7 +1008,6 @@ External player should be a bus-like player, with no events
 Impulse destructor should be snappier? It probably waits too long to clean up
  ?Same for play???
 fxMixChain should use a destructor
-!xylo gain staging is too loud; try it with linearshape and see waveform deform into a square wave
 Support for bus feedback???
 envelopes
  * Create envelopes for eg lpf, eg  lpf=this.freq*10*ar{a:1/4,r:1}
@@ -1162,6 +1164,7 @@ shadertoy synth multiple channels
 Can print out list of all current player types to console
  Syntax???
  Split by audio vs visual
+ Additional info?
 More time modifiers
  offset
  rate
