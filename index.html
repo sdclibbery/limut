@@ -964,9 +964,6 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
- ?Is crossfading working properly for main bus?? Getting clicks?
-  Only when theres a reverb in, and sound playing
-  Still get clicks even when crossfade time is large, so either its failing to crossfade, or its something else
  ?Should ALL buses be kept around on stop all to allow all sounds to play out?
   So basically, stop all does not stop any continuous players? Or only buses? External player would want to stop on stop all?
  Cache bus effects nodes; especially reverb
@@ -980,6 +977,7 @@ New 'bus' syntax to create an effects bus, and 'bus' param to send a player to a
  Bus pulse should be an actual analyzer node; create on first demand?
  What does a chord mean to a bus??? Eg  `bus b lpf=(300,1000)`
  More bus effects: echo, room, phaser, flanger, chorus
+  For echo & room, don't forget to add to params._destroyWait!!
  Make player pattern optional in the syntax; if missing, defaults to `0`?
  preset bus for synthwave main with some reverb, compression etc
  TEST

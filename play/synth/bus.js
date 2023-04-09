@@ -34,11 +34,12 @@ define((require) => {
     boost.gain.value = 6 // Boost the wet signal else the whole bus sounds quieter with a reverb in
     node.connect(rev)
     rev.connect(boost)
+    params._destroyWait += duration
     return mix(params, 'reverb', node, boost, 1/3)
   }
 
-  let effectChain = (params, bus) => {
-    return reverb(params, effects(params, waveEffects(params, bus.crossfade)))
+  let effectChain = (params, node) => {
+    return reverb(params, effects(params, waveEffects(params, node)))
   }
 
   let connectToDestination = (bus, params) => {
@@ -60,7 +61,8 @@ define((require) => {
     let bus = {
       id: busId,
       oldBus: oldBus,
-      _perFrame: [], destructor: destructor()
+      _perFrame: [], destructor: destructor(),
+      destroyWait: 0.1,
      }
 
     // Input
@@ -79,6 +81,7 @@ define((require) => {
       params._perFrame = bus._perFrame
       params._destructor = bus.destructor
       params.count = metronome.beatTime(metronome.timeNow())
+      params._destroyWait = 0
       // output
       bus.output = system.audio.createGain()
       connectToDestination(bus, params)
@@ -93,7 +96,8 @@ define((require) => {
       }
       fadeIn(bus.crossfade)
       // effect chain
-      effectChain(params, bus).connect(bus.output)
+      effectChain(params, bus.crossfade, bus).connect(bus.output)
+      bus.destroyWait += params._destroyWait
       bus.output.gain.cancelScheduledValues(0)
       evalMainParamFrame(bus.output.gain, params, 'amp', 1) // output amp
       // Per frame update
@@ -114,12 +118,12 @@ define((require) => {
           stopped = true
           bus._perFrame = []
           input.disconnect(bus.crossfade) // Only disconnect input from THIS bus as it may get transferred to another bus
-          bus.destructor.destroy()
+          setTimeout(() => bus.destructor.destroy(), bus.destroyWait*1000)
         })
       } else {
         stopped = true
         bus._perFrame = []
-        bus.destructor.destroy()
+        setTimeout(() => bus.destructor.destroy(), bus.destroyWait*1000)
       }
     }
         
