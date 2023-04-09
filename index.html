@@ -964,9 +964,11 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
- ?Is crossfading working properly for main bus??
-  Getting clicks and dropouts?
- Need convo reverb to be more predictable
+ ?Is crossfading working properly for main bus?? Getting clicks?
+  Only when theres a reverb in, and sound playing
+  Still get clicks even when crossfade time is large, so either its failing to crossfade, or its something else
+ ?Should ALL buses be kept around on stop all to allow all sounds to play out?
+  So basically, stop all does not stop any continuous players? Or only buses? External player would want to stop on stop all?
  Cache bus effects nodes; especially reverb
   If the (eg) reverb hasn't changed, then transfer from old bus to new? What about the crossfade though? And disconnecting?
  What does eg [0,1]l1 mean to a bus? Should it be evalled as if the pattern is `0`? Or as if its per frame?
