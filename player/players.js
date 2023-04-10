@@ -28,10 +28,13 @@ define(function(require) {
 
   players.stopAll = () => {
     for (let id in players.instances) {
+      if (id === 'main') { continue } // Preserve main bus so reverb tails keep playing
       if (players.instances[id].destroy) {
         players.instances[id].destroy()
       }
-      delete players.instances[id]
+    }
+    players.instances = {
+      main: players.instances.main // Preserve main bus so it can be cleaned up when it gets recreated on code update
     }
     players.overrides = {}
   }
