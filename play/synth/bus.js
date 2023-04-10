@@ -80,7 +80,12 @@ define((require) => {
     bus.start = (params) => {
       params._perFrame = bus._perFrame
       params._destructor = bus.destructor
-      params.count = metronome.beatTime(metronome.timeNow())
+      Object.defineProperty(params, "count", { // Params must define count so that evalParamEvent works, but use a dynamic getter so we can give it the current time (this effectively forces all values to per-frame interval)
+        get() { return metronome.beatTime(metronome.timeNow()) },
+      })
+      Object.defineProperty(params, "idx", { // Also define idx to allow [] index timevar to sort of work
+        get() { return metronome.beatTime(metronome.timeNow())%2 },
+      })
       params._destroyWait = 0
       // output
       bus.output = system.audio.createGain()

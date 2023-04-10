@@ -964,14 +964,9 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
- What does eg [0,1]l1 mean to a bus? Should it be evalled as if the pattern is `0`? Or as if its per frame?
-  Or according to the actual pattern???
- What does [0,1] mean to a bus? There are no pattern steps to refer to? Should make it be like [0,1]t1??
- What does []r@e etc mean for a bus? Same for []l4 (which defaults to per event...)
- What does []e mean for a bus?
+ What does a chord mean to a bus??? Eg  `bus b lpf=(300,1000)`
  Allow var lookup from buses; eg `bus b, amp=1/2` `p ping 0, amp=b.amp`
  Bus pulse should be an actual analyzer node; create on first demand?
- What does a chord mean to a bus??? Eg  `bus b lpf=(300,1000)`
  More bus effects: echo, room, phaser, flanger, chorus
   For echo & room, don't forget to add to params._destroyWait!!
   Cache/transfer bus effect nodes if unchanged?
@@ -982,7 +977,7 @@ New 'bus' syntax to create an effects bus, and 'bus' param to send a player to a
   TEST ALL EFFECTS
   TEST STOP/DISCONNECT FOR ALL OF THESE!!!
  Docs
-  bus player; continuous, ignores pattern, different effects, main bus
+  bus player; continuous, ignores pattern, different effects, main bus, all values per frame, []e is meaningless
   bus param; note: if bus doesn't exist, player will be silent; default to main bus
   input gain subparam for wave effects and compress
   reverb param with curve sub
