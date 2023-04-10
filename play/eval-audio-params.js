@@ -8,6 +8,7 @@ define(function (require) {
     let v = params[p]
     if (typeof v !== 'number' && !v) { return def }
     v =  evalParam.evalParamEvent(v, params) // Room for optimisation here: only eval objects the specific sub (or main) param thats needed for this call
+    if (Array.isArray(v)) { v = v[0] } // Bus chords end up as arrays here so handle it by just picking the first value
     if (typeof v !== 'number' && !v) { return def }
     return v
   }
@@ -27,6 +28,7 @@ define(function (require) {
   let evalPerFrame = (params, p, b, def) => {
     let v = params[p]
     v =  evalParam.evalParamFrame(v, params, b) // Room for optimisation here: only eval objects the specific sub (or main) param thats needed for this call
+    if (Array.isArray(v)) { v = v[0] } // Bus chords end up as arrays here so handle it by just picking the first value
     if (typeof v !== 'number' && !v) {
       return def
     }
