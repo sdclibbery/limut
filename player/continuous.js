@@ -21,7 +21,7 @@ define(function(require) {
       player.start(params)
       played = true
     }
-    player.currentEvent = () => []
+    player.currentEvent = () => [params]
 
     return player
   }

@@ -111,8 +111,6 @@ define(function(require) {
     let beatTime = metronome.beatTime(now)
     let spectrum = system.spectrum()
     let pulse = spectrum[0]*spectrum[0] + spectrum[3]*spectrum[3]
-    vars.set('main', vars.get('main') || {})
-    vars.get('main').pulse = pulse
     vars.set('time', beatTime)
     if (beat) {
       mainVars.update(Math.floor(beatTime), beatTime)

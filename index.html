@@ -964,8 +964,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
- Allow var lookup from buses; eg `bus b, amp=1/2` `p ping 0, amp=b.amp`
- Bus pulse should be an actual analyzer node; create on first demand?
+ Bus .pulse should be an actual analyzer node; create on first demand?
  Make player pattern optional in the syntax; if missing, defaults to `0`?
  More bus effects: echo, room, phaser, flanger, chorus
   For echo & room, don't forget to add to params._destroyWait!!
@@ -974,6 +973,7 @@ New 'bus' syntax to create an effects bus, and 'bus' param to send a player to a
   TEST ALL SYNTHS
   TEST ALL EFFECTS
   TEST STOP/DISCONNECT FOR ALL OF THESE!!!
+  EVERYTHING
  Synthwave preset buses?
  Docs
   bus player; continuous, ignores pattern, different effects, main bus, all values per frame, []e is meaningless, chords pick first
