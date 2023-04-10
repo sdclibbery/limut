@@ -18,11 +18,11 @@ define((require) => {
     node.gain.setValueAtTime(0, system.timeNow()) // Similar signal on both sides of the crossfade, so use a linear crossfade
     node.gain.linearRampToValueAtTime(1, system.timeNow()+fadeTime)
   }
-  let fadeOut = (node, cleanup) => {
+  let fadeOut = (node, destroy) => {
     node.gain.cancelScheduledValues(0)
     node.gain.setValueAtTime(1, system.timeNow())
     node.gain.linearRampToValueAtTime(0, system.timeNow()+fadeTime)
-    setTimeout(cleanup, fadeTime*1000)
+    setTimeout(destroy, fadeTime*1000)
   }
 
   let reverb = (params, node) => {
@@ -107,24 +107,25 @@ define((require) => {
         return true
       })
     }
-    // Cleanup
+    // Destroy
     bus.destroy = () => {
       if (bus.oldBus) {
-        if (bus.oldBus.destroy) { bus.oldBus.destroy() } // Fade out old bus and destroy
+        if (bus.oldBus.destroy) { bus.oldBus.destroy() } // Fade out old bus and destroy (for when start() hasn't run yet)
         delete bus.oldBus
       }
       if (bus.crossfade) {
         fadeOut(bus.crossfade, () => {
-          stopped = true
-          bus._perFrame = []
           input.disconnect(bus.crossfade) // Only disconnect input from THIS bus as it may get transferred to another bus
-          setTimeout(() => bus.destructor.destroy(), bus.destroyWait*1000)
+          setTimeout(() => bus.cleanup(), bus.destroyWait*1000)
         })
       } else {
-        stopped = true
-        bus._perFrame = []
-        setTimeout(() => bus.destructor.destroy(), bus.destroyWait*1000)
+        setTimeout(() => bus.cleanup(), bus.destroyWait*1000)
       }
+    }
+    bus.cleanup = () => {
+      stopped = true
+      bus._perFrame = []
+      bus.destructor.destroy()
     }
         
     return bus

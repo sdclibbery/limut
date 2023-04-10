@@ -3015,3 +3015,19 @@ set !p* bus='bpads'
 bpads bus 0, drive={1/24,gain:1.3}, compress={3,gain:5}, amp=0.12, mid=16
 
 
+// busy
+vx xor follow p, buffer='vb', blend=max, fore=[red,blue,neonpink,orange,yellow]r@e,
+  add=[0:99]l32, back=black, zoom=1/2+[0:1/12]e, time=400
+vb buffer 0, feedback={fore:0.98,mirror:3,zoom:1.003}, loc=tile_r, rotate=3/4
+/// music
+set scale=minor
+p play XsOX[.s]XOs, room=0, delay=[0,(1/2,[1/4,3/4]r)]t[14,2]
+b supersaw 0.<3334=>..-72., oct=2, dur=1/4, pan=[-1/3,1/3], amp*=3/2
+/// main bus
+set main reverb={2/3,mix:1/4}, compress={5,gain:3}, drive=1/32 // mastering
+// set main lpf={[[500:2500]r1/4@f:300]l[1/4,0]@f,q:20} // acid
+// set main lpf={440*[2:4]s2@f,q:20} // whistle
+// set main reverb={2,curve:3,mix:1/2}, amp*=3/4 // big reverb
+// set main reverb={1,curve:1/2,mix:[0,2/3,1/2]l[1,2,1]@f} // pulse reverb
+// set main ring=440*[1/2,1,[3/2,2/3]t4@f]t[2,1,1]@f, amp*=3/4 // ring
+// set main hpf=500

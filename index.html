@@ -964,10 +964,6 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
- ?Should ALL buses be kept around on stop all to allow all sounds to play out?
-  So basically, stop all does not stop any continuous players? Or only buses? External player would want to stop on stop all?
- Cache bus effects nodes; especially reverb
-  If the (eg) reverb hasn't changed, then transfer from old bus to new? What about the crossfade though? And disconnecting?
  What does eg [0,1]l1 mean to a bus? Should it be evalled as if the pattern is `0`? Or as if its per frame?
   Or according to the actual pattern???
  What does [0,1] mean to a bus? There are no pattern steps to refer to? Should make it be like [0,1]t1??
@@ -978,6 +974,7 @@ New 'bus' syntax to create an effects bus, and 'bus' param to send a player to a
  What does a chord mean to a bus??? Eg  `bus b lpf=(300,1000)`
  More bus effects: echo, room, phaser, flanger, chorus
   For echo & room, don't forget to add to params._destroyWait!!
+  Cache/transfer bus effect nodes if unchanged?
  Make player pattern optional in the syntax; if missing, defaults to `0`?
  preset bus for synthwave main with some reverb, compression etc
  TEST
@@ -1114,6 +1111,7 @@ recol=fmb that leaves all pixels white but with fb set, to allow recolouring wit
 Generative visual synth
  Complementary colours?
  Shapes? Noise? NN Dreams?
+Would be nice for buffer feedback to keep playing until its finished when do StopAll?
 Digital JPEG corruption filter param - https://www.shadertoy.com/view/Md2GDw
  Takes square blocks and maps them to adjacent parts of the image, or colours them randomly green or gray or pixellated
  Main param value determines the amount of corruption
