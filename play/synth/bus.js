@@ -111,6 +111,27 @@ define((require) => {
         bus._perFrame.forEach(pf => pf(state))
         return true
       })
+      // Pulse
+      let pulseData
+      params.pulse = () => {
+        if (!bus.analyser) { // Create the analyser first time the data is asked for
+          bus.analyser = system.audio.createAnalyser()
+          bus.output.connect(bus.analyser)
+          bus.analyser.fftSize = 32
+          bus.analyser.smoothingTimeConstant = 1
+          bus.destructor.disconnect(bus.analyser)
+          pulseData = new Float32Array(bus.analyser.fftSize)
+        }
+        bus.analyser.getFloatTimeDomainData(pulseData)
+        let peakInstantaneousPower = 0
+        for (let i = 0; i < bus.analyser.fftSize; i++) {
+          const power = pulseData[i] ** 2
+          peakInstantaneousPower = Math.max(power, peakInstantaneousPower)
+        }
+        let peakInstantaneousPowerDecibels = 10 * Math.log10(peakInstantaneousPower)
+        let pulse = 1 + peakInstantaneousPowerDecibels / 30
+        return Math.min(Math.max(pulse, 0), 1)
+      }
     }
     // Destroy
     bus.destroy = () => {

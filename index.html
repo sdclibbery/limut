@@ -964,7 +964,6 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
- Bus .pulse should be an actual analyzer node; create on first demand?
  Make player pattern optional in the syntax; if missing, defaults to `0`?
  More bus effects: echo, room, phaser, flanger, chorus
   For echo & room, don't forget to add to params._destroyWait!!
@@ -1001,6 +1000,7 @@ External player should be a bus-like player, with no events
 Impulse destructor should be snappier? It probably waits too long to clean up
  ?Same for play???
 fxMixChain should use a destructor
+Other audio player pulse should come from an actual FFT same as bus
 Support for bus feedback???
 envelopes
  * Create envelopes for eg lpf, eg  lpf=this.freq*10*ar{a:1/4,r:1}

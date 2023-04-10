@@ -43,7 +43,7 @@ system.mainAmpUi = (amp) => {
 }
 
 system.analyser = system.audio.createAnalyser()
-system.analyser.fftSize = 2048
+system.analyser.fftSize = 4096
 system.analyser.smoothingTimeConstant = 0.6
 let analyserBufferLength = system.analyser.frequencyBinCount
 const spectrumData = new Uint8Array(analyserBufferLength)
