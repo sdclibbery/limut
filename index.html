@@ -964,27 +964,29 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
- Make player pattern optional in the syntax; if missing, defaults to `0`?
  More bus effects: echo, room, phaser, flanger, chorus
   For echo & room, don't forget to add to params._destroyWait!!
   Cache/transfer bus effect nodes if unchanged?
+ !set main echo=1/pitch{0} gives error 'getter only property 'count' from eval params
+ Update all examples for changes: main.amp, main.reverb
  TEST
   TEST ALL SYNTHS
   TEST ALL EFFECTS
   TEST STOP/DISCONNECT FOR ALL OF THESE!!!
   EVERYTHING
- Synthwave preset buses?
  Docs
   bus player; continuous, ignores pattern, different effects, main bus, all values per frame, []e is meaningless, chords pick first
   bus param; note: if bus doesn't exist, player will be silent; default to main bus
   input gain subparam for wave effects and compress
-  reverb param with curve sub
+  bus reverb param with curve sub
+  bus echo param with max sub
   main bus
  Release
   removed main.reverb var
   `set main.amp` is now `set main amp`
-  Update all examples for these (especially main.amp)
+  `main.pulse` is now from audio
 !xylo gain staging is too loud; try it with linearshape and see waveform deform into a square wave
+Synthwave preset buses?
 Allow non-chord multiple bus outputs from one player; (bus1, bus2) etc
  bus subparam for mix level (per frame); eg   p ping 0, bus={bus1,mix:1/2}
 ?bus echo can feedback via another bus? To allow full range of filters and effects?
@@ -1003,6 +1005,7 @@ fxMixChain should use a destructor
 Other audio player pulse should come from an actual FFT same as bus
 Setting to push analyser node FFT size up from 1024
 Support for bus feedback???
+??? Could use very short loop that moves stepwise on a carefully prepared sample to do wave table synthesis???
 envelopes
  * Create envelopes for eg lpf, eg  lpf=this.freq*10*ar{a:1/4,r:1}
   ??Is that the same as  lpf=this.freq*[0,10,0]e[1/4,1]  ??
@@ -1165,6 +1168,7 @@ More time modifiers
  rate
  time
  ?delay time modifier, pauses time at the start of the event
+Make player pattern optional in the syntax; if missing, defaults to `0`?
 !when `time` is used @e it should be event time, not time when the event is created
  eg  v readout 0, add=time@e
  !Really thats true for other vars though; eg  reading p.value  or something

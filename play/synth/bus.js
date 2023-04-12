@@ -2,15 +2,21 @@
 define((require) => {
   var system = require('play/system')
   var metronome = require('metronome')
-  let {mainParam} = require('player/sub-param')
-  let {evalMainParamFrame,evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
+  let {evalMainParamFrame,evalMainParamEvent} = require('play/eval-audio-params')
   let destructor = require('play/destructor')
   let effects = require('play/effects/effects')
   let waveEffects = require('play/effects/wave-effects')
-  let convolutionReverb = require('play/effects/convolutionReverb')
-  let {mix} = require('play/effects/mix')
+  let {reverb} = require('play/effects/reverb')
   let players = require('player/players')
   let consoleOut = require('console')
+  let {echo} = require('play/effects/echo')
+
+  let effectChain = (params, node) => {
+    return echo(params,
+            reverb(params,
+              effects(params,
+                waveEffects(params, node))))
+  }
 
   let fadeTime = 0.1
   let fadeIn = (node) => {
@@ -23,23 +29,6 @@ define((require) => {
     node.gain.setValueAtTime(1, system.timeNow())
     node.gain.linearRampToValueAtTime(0, system.timeNow()+fadeTime)
     setTimeout(destroy, fadeTime*1000)
-  }
-
-  let reverb = (params, node) => {
-    if (!mainParam(params.reverb, 0)) { return node }
-    let duration = evalMainParamEvent(params, 'reverb', 1/2) * metronome.beatDuration()
-    let curve = evalSubParamEvent(params, 'reverb', 'curve', 3)
-    let rev = convolutionReverb(duration, curve)
-    let boost = system.audio.createGain()
-    boost.gain.value = 6 // Boost the wet signal else the whole bus sounds quieter with a reverb in
-    node.connect(rev)
-    rev.connect(boost)
-    params._destroyWait += duration
-    return mix(params, 'reverb', node, boost, 1/3)
-  }
-
-  let effectChain = (params, node) => {
-    return reverb(params, effects(params, waveEffects(params, node)))
   }
 
   let connectToDestination = (bus, params) => {
