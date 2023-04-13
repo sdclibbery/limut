@@ -2,7 +2,7 @@
 define(function (require) {
   let system = require('play/system')
   let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
-  let freeverb = require('play/effects/freeverb')
+  let {fixedFreeverb} = require('play/effects/freeverb')
   let phaser = require('play/effects/phaser')
   let flanger = require('play/effects/flanger')
   let chorus = require('play/effects/chorus')
@@ -10,13 +10,7 @@ define(function (require) {
   let players = require('player/players')
   let consoleOut = require('console')
   let {fixedEcho} = require('play/effects/echo')
-
-  let reverb = (room, node, nodes) => {
-    if (!room || room < 0.01) { return node }
-    let fv = freeverb(room, node, nodes)
-    node.connect(fv)
-    return fv
-  }
+  let destructor = require('play/destructor')
 
   let quantise = (v, step) =>{
     return Math.round(v*step)/step
@@ -31,7 +25,7 @@ define(function (require) {
       flangerMix: quantise(evalSubParamEvent(params, 'flanger', 'mix', 1), 16),
       echoDelay: quantise(evalMainParamEvent(params, 'echo', 0) * params.beat.duration, 16),
       echoFeedback: quantise(Math.min(evalSubParamEvent(params, 'echo', 'feedback', 0.35), 0.95), 20),
-      room: quantise(evalMainParamEvent(params, 'room', 0)*0.7, 16),
+      room: quantise(evalMainParamEvent(params, 'room', 0), 16),
       roomMix: quantise(evalSubParamEvent(params, 'room', 'mix', 1/2), 16),
       bus: evalMainParamEvent(params, 'bus'),
     }
@@ -45,14 +39,15 @@ define(function (require) {
       nodes: [],
       oscs: [],
     }
+    c.destructor = destructor()
     c.in = system.audio.createGain()
     c.nodes.push(c.in)
     let node = c.in
     node = fixedMix(c.params.chorusMix, node, chorus(c.params.chorusAmount, node, c.nodes, c.oscs), c.nodes)
     node = fixedMix(c.params.phaserMix, node, phaser(c.params.phaserRate, node, c.nodes, c.oscs), c.nodes)
     node = fixedMix(c.params.flangerMix, node, flanger(c.params.flangerRate, node, c.nodes, c.oscs), c.nodes)
-    node = fixedEcho(c.params.echoDelay, c.params.echoFeedback, node, c.nodes)
-    node = fixedMix(c.params.roomMix, node, reverb(c.params.room, node, c.nodes), c.nodes)
+    node = fixedEcho(c.destructor, c.params.echoDelay, c.params.echoFeedback, node)
+    node = fixedMix(c.params.roomMix, node, fixedFreeverb(c.destructor, c.params.room, node, c.nodes), c.nodes)
     c.out = node
     return c
   }
@@ -78,6 +73,7 @@ define(function (require) {
   let destroyChain = (chain) => {
     chain.oscs.map(n => n.stop())
     chain.nodes.map(n => n.disconnect())
+    chain.destructor.destroy()
     delete chains[chain.key]
   }
 

@@ -24,19 +24,19 @@ define((require) => {
     return mix
   }
 
-  let fixedEcho = (echoDelay, echoFeedback, node, nodes) => {
+  let fixedEcho = (destructor, echoDelay, echoFeedback, node) => {
     if (!echoDelay || echoDelay < 0.0001) { return node }
     let echo = system.audio.createDelay(echoDelay)
-    nodes.push(echo)
+    destructor.disconnect(echo)
     echo.delayTime.value = echoDelay
     let echoGain = system.audio.createGain()
-    nodes.push(echoGain)
+    destructor.disconnect(echoGain)
     echoGain.gain.value = echoFeedback
     echo.connect(echoGain)
     echoGain.connect(echo)
     node.connect(echo)
     let mix = system.audio.createGain()
-    nodes.push(mix)
+    destructor.disconnect(mix)
     node.connect(mix)
     echoGain.connect(mix)
     return mix

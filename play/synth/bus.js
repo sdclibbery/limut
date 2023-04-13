@@ -7,15 +7,18 @@ define((require) => {
   let effects = require('play/effects/effects')
   let waveEffects = require('play/effects/wave-effects')
   let {reverb} = require('play/effects/reverb')
+  let {mixedFreeverb} = require('play/effects/freeverb')
   let players = require('player/players')
   let consoleOut = require('console')
   let {echo} = require('play/effects/echo')
 
   let effectChain = (params, node) => {
-    return echo(params,
-            reverb(params,
-              effects(params,
-                waveEffects(params, node))))
+    node = waveEffects(params, node)
+    node = effects(params, node)
+    node = mixedFreeverb(params, node)
+    node = reverb(params, node)
+    node = echo(params, node)
+    return node
   }
 
   let fadeTime = 0.1
