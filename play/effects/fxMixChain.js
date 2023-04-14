@@ -3,8 +3,8 @@ define(function (require) {
   let system = require('play/system')
   let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
   let {fixedFreeverb} = require('play/effects/freeverb')
-  let phaser = require('play/effects/phaser')
-  let flanger = require('play/effects/flanger')
+  let {fixedPhaser} = require('play/effects/phaser')
+  let {fixedFlanger} = require('play/effects/flanger')
   let {fixedChorus} = require('play/effects/chorus')
   let {fixedMix} = require('play/effects/mix')
   let players = require('player/players')
@@ -44,8 +44,8 @@ define(function (require) {
     c.nodes.push(c.in)
     let node = c.in
     node = fixedMix(c.params.chorusMix, node, fixedChorus(c.destructor, c.params.chorusAmount, node), c.nodes)
-    node = fixedMix(c.params.phaserMix, node, phaser(c.params.phaserRate, node, c.nodes, c.oscs), c.nodes)
-    node = fixedMix(c.params.flangerMix, node, flanger(c.params.flangerRate, node, c.nodes, c.oscs), c.nodes)
+    node = fixedMix(c.params.phaserMix, node, fixedPhaser(c.destructor, c.params.phaserRate, node), c.nodes)
+    node = fixedMix(c.params.flangerMix, node, fixedFlanger(c.destructor, c.params.flangerRate, node), c.nodes)
     node = fixedEcho(c.destructor, c.params.echoDelay, c.params.echoFeedback, node)
     node = fixedMix(c.params.roomMix, node, fixedFreeverb(c.destructor, c.params.room, node, c.nodes), c.nodes)
     c.out = node
