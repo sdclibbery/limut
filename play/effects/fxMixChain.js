@@ -36,18 +36,16 @@ define(function (require) {
   let createChain = (chainParams) => {
     let c = {
       params: chainParams,
-      nodes: [],
-      oscs: [],
     }
     c.destructor = destructor()
     c.in = system.audio.createGain()
-    c.nodes.push(c.in)
+    c.destructor.disconnect(c.in)
     let node = c.in
-    node = fixedMix(c.params.chorusMix, node, fixedChorus(c.destructor, c.params.chorusAmount, node), c.nodes)
-    node = fixedMix(c.params.phaserMix, node, fixedPhaser(c.destructor, c.params.phaserRate, node), c.nodes)
-    node = fixedMix(c.params.flangerMix, node, fixedFlanger(c.destructor, c.params.flangerRate, node), c.nodes)
+    node = fixedMix(c.destructor, c.params.chorusMix, node, fixedChorus(c.destructor, c.params.chorusAmount, node))
+    node = fixedMix(c.destructor, c.params.phaserMix, node, fixedPhaser(c.destructor, c.params.phaserRate, node))
+    node = fixedMix(c.destructor, c.params.flangerMix, node, fixedFlanger(c.destructor, c.params.flangerRate, node))
     node = fixedEcho(c.destructor, c.params.echoDelay, c.params.echoFeedback, node)
-    node = fixedMix(c.params.roomMix, node, fixedFreeverb(c.destructor, c.params.room, node, c.nodes), c.nodes)
+    node = fixedMix(c.destructor, c.params.roomMix, node, fixedFreeverb(c.destructor, c.params.room, node))
     c.out = node
     return c
   }
@@ -71,8 +69,6 @@ define(function (require) {
   }
 
   let destroyChain = (chain) => {
-    chain.oscs.map(n => n.stop())
-    chain.nodes.map(n => n.disconnect())
     chain.destructor.destroy()
     delete chains[chain.key]
   }
@@ -90,7 +86,7 @@ define(function (require) {
     let TTL = 1000*(params.endTime-params._time + chainParams.room*5 + chainParams.echoDelay*chainParams.echoFeedback*10 + 2)
     chain.timeoutID = setTimeout(() => destroyChain(chain), TTL)
     node.connect(chain.in)
-    chain.nodes.push(node)
+    chain.destructor.disconnect(node)
     connectChain(chain, params._player.id)
   }
 
