@@ -4,7 +4,7 @@ define(function (require) {
 
   // Inspired by https://www.soundonsound.com/techniques/more-creative-synthesis-delays
 
-  let chorus = (chorusAmount, node, nodes, oscs) => {
+  let chorus = (destructor, chorusAmount, node) => {
     if (!chorusAmount) { return node }
 
     let lfoLf1, lfoLf2, lfoLf3
@@ -14,42 +14,42 @@ define(function (require) {
   
     const lfFreq = 0.62165132
     lfoLf1 = system.audio.createOscillator()
-    nodes.push(lfoLf1)
-    oscs.push(lfoLf1)
+    destructor.disconnect(lfoLf1)
+    destructor.stop(lfoLf1)
     lfoLf1.frequency.value = lfFreq
     lfoLf1.start(system.audio.currentTime)
 
     lfoLf2 = system.audio.createOscillator()
-    nodes.push(lfoLf2)
-    oscs.push(lfoLf2)
+    destructor.disconnect(lfoLf2)
+    destructor.stop(lfoLf2)
     lfoLf2.frequency.value = lfFreq
     lfoLf2.start(system.audio.currentTime+0.333/lfFreq)
 
     lfoLf3 = system.audio.createOscillator()
-    nodes.push(lfoLf3)
-    oscs.push(lfoLf3)
+    destructor.disconnect(lfoLf3)
+    destructor.stop(lfoLf3)
     lfoLf3.frequency.value = lfFreq
     lfoLf3.start(system.audio.currentTime+0.667/lfFreq)
 
     lfoHfSrc = system.audio.createOscillator()
-    nodes.push(lfoHfSrc)
-    oscs.push(lfoHfSrc)
+    destructor.disconnect(lfoHfSrc)
+    destructor.stop(lfoHfSrc)
     lfoHfSrc.frequency.value = 6.674325
     lfoHfSrc.start(system.audio.currentTime)
     lfoHf = system.audio.createGain()
-    nodes.push(lfoHf)
+    destructor.disconnect(lfoHf)
     lfoHf.gain.value = lfoHfGain
     lfoHfSrc.connect(lfoHf)
 
     bias = system.audio.createConstantSource()
-    nodes.push(bias)
-    oscs.push(bias)
+    destructor.disconnect(bias)
+    destructor.stop(bias)
     bias.start()
     bias.offset.value = 1.1
 
     let makeDelay = (lfo1, lfo2) => {
       let lfoGain = system.audio.createGain()
-      nodes.push(lfoGain)
+      destructor.disconnect(lfoGain)
       lfo1.connect(lfoGain)
       lfo2.connect(lfoGain)
       bias.connect(lfoGain)
@@ -59,7 +59,7 @@ define(function (require) {
       lfoGain.gain.value = (chorusAmount/8)*maxDelay/lfoNormalise
   
       let delay = system.audio.createDelay(maxDelay*1.25)
-      nodes.push(delay)
+      destructor.disconnect(delay)
       lfoGain.connect(delay.delayTime)
   
       return delay
@@ -73,10 +73,10 @@ define(function (require) {
     node.connect(d3)
 
     let panL = system.audio.createStereoPanner()
-    nodes.push(panL)
+    destructor.disconnect(panL)
     panL.pan.value = -3/4
     let panR = system.audio.createStereoPanner()
-    nodes.push(panR)
+    destructor.disconnect(panR)
     panR.pan.value = 3/4
     d1.connect(panL)
     d2.connect(panL)
@@ -84,7 +84,7 @@ define(function (require) {
     d3.connect(panR)
 
     let output = system.audio.createGain()
-    nodes.push(output)
+    destructor.disconnect(output)
     panL.connect(output)
     panR.connect(output)
     output.gain.value = 3/4
@@ -99,5 +99,7 @@ define(function (require) {
     return output
   }
 
-  return chorus
+  return {
+    chorus: chorus,
+  }
 })

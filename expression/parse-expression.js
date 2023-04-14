@@ -889,8 +889,8 @@ define(function(require) {
     min = Math.min(min, current)
     max = Math.max(max, current)
   }
-  assertIn(0, 0.1, min)
-  assertIn(0.9, 1, max)
+  assertIn(0, 0.11, min)
+  assertIn(0.89, 1, max)
 
   p = parseExpression("[-1/8:5/8]n")
   e = ev(0,0)

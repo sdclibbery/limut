@@ -966,8 +966,20 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
  More bus effects
   Chorus
+   Use destructors
+   Rename current to fixed version
+   New version for bus
   Phaser
+   Use destructors
+   Rename current to fixed version
+   New version for bus
   Flanger
+   ???3rd delay is commented out???
+   Use destructors
+   Rename current to fixed version
+   New version for bus
+  fixedMix should use desutructor
+   And get rid of nodes/oscs on fxMixChain
   Cache/transfer bus effect nodes if unchanged?
  !set main echo=1/pitch{0} gives error 'getter only property 'count' from eval params
  Update all examples for changes: main.amp, main.reverb
@@ -983,6 +995,7 @@ New 'bus' syntax to create an effects bus, and 'bus' param to send a player to a
   bus reverb param with curve sub
   bus echo param with max sub
   main bus
+  Notes on echo, room, chorus, phaser & flanger that params are per frame when used with a bus, where possible
  Release
   removed main.reverb var
   `set main.amp` is now `set main amp`
