@@ -8,6 +8,7 @@ define((require) => {
   let waveEffects = require('play/effects/wave-effects')
   let {reverb} = require('play/effects/reverb')
   let {mixedFreeverb} = require('play/effects/freeverb')
+  let {mixedChorus} = require('play/effects/chorus')
   let players = require('player/players')
   let consoleOut = require('console')
   let {echo} = require('play/effects/echo')
@@ -15,6 +16,7 @@ define((require) => {
   let effectChain = (params, node) => {
     node = waveEffects(params, node)
     node = effects(params, node)
+    node = mixedChorus(params, node)
     node = mixedFreeverb(params, node)
     node = reverb(params, node)
     node = echo(params, node)

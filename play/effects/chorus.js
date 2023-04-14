@@ -1,12 +1,13 @@
 'use strict';
 define(function (require) {
   let system = require('play/system')
+  let {evalMainParamFrame} = require('play/eval-audio-params')
+  let {mix} = require('play/effects/mix')
+  let {mainParam} = require('player/sub-param')
 
   // Inspired by https://www.soundonsound.com/techniques/more-creative-synthesis-delays
 
-  let chorus = (destructor, chorusAmount, node) => {
-    if (!chorusAmount) { return node }
-
+  let chorus = (destructor, params, chorusAmount, node) => {
     let lfoLf1, lfoLf2, lfoLf3
     let lfoHfSrc, lfoHf
     let bias
@@ -56,7 +57,11 @@ define(function (require) {
   
       const maxDelay = 40/1000
       const lfoNormalise = 2*(1 + bias.offset.value + lfoHfGain)
-      lfoGain.gain.value = (chorusAmount/8)*maxDelay/lfoNormalise
+      if (!!params) {
+        evalMainParamFrame(lfoGain.gain, params, 'chorus', 1, c => (c/8)*maxDelay/lfoNormalise)
+      } else {
+        lfoGain.gain.value = (chorusAmount/8)*maxDelay/lfoNormalise
+      }
   
       let delay = system.audio.createDelay(maxDelay*1.25)
       destructor.disconnect(delay)
@@ -99,7 +104,19 @@ define(function (require) {
     return output
   }
 
+  let fixedChorus = (destructor, chorusAmount, node) => {
+    if (!chorusAmount) { return node }
+    return chorus(destructor, undefined, chorusAmount, node)
+  }
+
+  let mixedChorus = (params, node) => {
+    if (!mainParam(params.chorus, 0)) { return node }
+    let chorusNode = chorus(params._destructor, params, undefined, node)
+    return mix(params, 'chorus', node, chorusNode, 1)
+  }
+
   return {
-    chorus: chorus,
+    fixedChorus: fixedChorus,
+    mixedChorus: mixedChorus,
   }
 })

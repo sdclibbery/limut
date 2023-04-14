@@ -5,7 +5,7 @@ define(function (require) {
   let {fixedFreeverb} = require('play/effects/freeverb')
   let phaser = require('play/effects/phaser')
   let flanger = require('play/effects/flanger')
-  let {chorus} = require('play/effects/chorus')
+  let {fixedChorus} = require('play/effects/chorus')
   let {fixedMix} = require('play/effects/mix')
   let players = require('player/players')
   let consoleOut = require('console')
@@ -43,7 +43,7 @@ define(function (require) {
     c.in = system.audio.createGain()
     c.nodes.push(c.in)
     let node = c.in
-    node = fixedMix(c.params.chorusMix, node, chorus(c.destructor, c.params.chorusAmount, node), c.nodes)
+    node = fixedMix(c.params.chorusMix, node, fixedChorus(c.destructor, c.params.chorusAmount, node), c.nodes)
     node = fixedMix(c.params.phaserMix, node, phaser(c.params.phaserRate, node, c.nodes, c.oscs), c.nodes)
     node = fixedMix(c.params.flangerMix, node, flanger(c.params.flangerRate, node, c.nodes, c.oscs), c.nodes)
     node = fixedEcho(c.destructor, c.params.echoDelay, c.params.echoFeedback, node)
