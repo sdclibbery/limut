@@ -56,12 +56,10 @@ define(function (require) {
     let bus = players.getById(busId)
     if (!bus || !bus._input) { // Do nothing if bus not present
       consoleOut(`Player ${playerId} failed to connect to destination bus ${busId}`)
-      c.connected = false
       return
     }
-    if (c.connected) { return }
+    c.out.disconnect()
     c.out.connect(bus._input)
-    c.connected = true
   }
 
   let disconnectAll = () => {

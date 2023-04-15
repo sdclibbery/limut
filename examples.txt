@@ -3031,3 +3031,5 @@ set main reverb={2/3,mix:1/4}, compress={5,gain:3}, drive=1/32 // mastering
 // set main reverb={1,curve:1/2,mix:[0,2/3,1/2]l[1,2,1]@f} // pulse reverb
 // set main ring=440*[1/2,1,[3/2,2/3]t4@f]t[2,1,1]@f, amp*=3/4 // ring
 // set main hpf=500
+
+

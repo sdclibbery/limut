@@ -962,10 +962,11 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
+ Add tests to examples.txt
+  Rename to .limut!
  TEST
   TEST ALL SYNTHS
   TEST ALL EFFECTS
-  TEST STOP/DISCONNECT FOR ALL OF THESE!!!
   EVERYTHING
  Docs
   bus player; continuous, ignores pattern, different effects, main bus, all values per frame, []e is meaningless, chords pick first
@@ -974,7 +975,7 @@ New 'bus' syntax to create an effects bus, and 'bus' param to send a player to a
   bus reverb param with curve sub
   bus echo param with max sub
   main bus
-  Notes on echo, room, chorus, phaser & flanger that params are per frame when used with a bus, where possible
+  Notes on echo, room, chorus, phaser & flanger that params are per frame, where possible, when used with a bus
  Release
   removed main.reverb var
   `set main.amp` is now `set main amp`

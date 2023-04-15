@@ -5,11 +5,11 @@ define(function (require) {
   cons.value = ''
   let lastStr
   let consoleOut = (str) => {
+    console.log(str)
     if (str === lastStr) { return }
     lastStr = str
     cons.value += '\n'+str
     cons.scrollTop = cons.scrollHeight
-    console.log(str)
   }
   consoleOut('\n Welcome to Limut')
 
