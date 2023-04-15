@@ -78,8 +78,10 @@ define((require) => {
     bus.start = (params) => {
       params._perFrame = bus._perFrame
       params._destructor = bus.destructor
+      let offset = 0
       Object.defineProperty(params, "count", { // Params must define count so that evalParamEvent works, but use a dynamic getter so we can give it the current time (this effectively forces all values to per-frame interval)
-        get() { return metronome.beatTime(metronome.timeNow()) },
+        get() { return offset + metronome.beatTime(metronome.timeNow()) },
+        set(c) { offset = c - metronome.beatTime(metronome.timeNow()) },
       })
       Object.defineProperty(params, "idx", { // Also define idx to allow [] index timevar to sort of work
         get() { return metronome.beatTime(metronome.timeNow())%2 },
