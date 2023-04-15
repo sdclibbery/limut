@@ -308,11 +308,11 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 </div>
 <h4 onclick="toggleAccordion('accordion-indicators')" class="accordion"> Indicators</h4>
 <div id="accordion-indicators" class="closed">
-  <p><b>Level</b> VU meter for current output signal level. Use this to adjust the output level, using either <code>main.amp</code> or the level slider, so it is just touching the red at its loudest.</p>
+  <p><b>Level</b> VU meter for current output signal level. Use this when adjusting the output level, using either <code>set main amp</code> or the level slider, so it is just touching the red at its loudest.</p>
   <p><b>Beat</b> Current audio system beat count, followed by beat counts out of 12, 16 and 32 beats (useful for synchronising changes to various size musical bars and progressions)</p>
   <p><b>Audio</b> Audio lag; green when the browser audio system is keeping up; turns red when the system is struggling, which may lead to audio glitching</p>
   <p><b>Visual</b> Visual lag; green when the framerate is keeping up to 60 fps; turns red when the system is struggling, which may lead to visual glitching</p>
-  <p><b>Limiter</b> Audio limiter: turns red when the internal Limut limiter is active, implying the combined audio sources are too loud. Note this limiter is before the <code>main.amp</code> control and vu meter, it makes sure the levels from individual synths do not go so loud as to distort. So if it is lighting up, lower the <code>amp</code> on individual synths, and if necessary, raise the <code>main.amp</code> level to compensate.</p>
+  <p><b>Limiter</b> Audio limiter: turns red when the internal Limut limiter is active, implying the combined audio sources are too loud. Note this limiter is before the <code>main amp</code> control and vu meter, it makes sure the levels from individual synths do not go so loud as to distort. So if it is lighting up, lower the <code>amp</code> on individual synths, and if necessary, raise the <code>main amp</code> level to compensate.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-syntax-principles')" class="accordion"> Syntax Principles for Expressions</h4>
 <div id="accordion-syntax-principles" class="closed">
@@ -783,8 +783,6 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <div id="accordion-predefined-vars" class="closed">
 <p><code>bpm</code> Beats per minute. Value resets unless set every time the code is updated.</p>
 <p><code>time</code> Time, counted in beats (including fractions of a beat)</p>
-<p><code>main.pulse</code> The current musical pulse; like a VU level meter</p>
-<p><code>main.amp</code> Main mix amplitude control. Value resets unless set every time the code is updated.</p>
 <p><code>beat.readouts</code> Set the beat counts to use for the readouts; eg <code>beat.readouts=(3,12)</code> will show two beat counters, one that counts in 3's (for a waltz), and another that counts to 12 (for 4 bars of a waltz). There cannot be more than 3 readouts. The default is <code>(12,16,32)</code></p>
 <p><code>root</code> Main root pitch offset; default <code>0</code> roots the pitches on middle c; <code>1</code> pitches up by one semitone etc. This is fractional, so can be used to 'nudge' the tuning to match other instruments; eg <code>root=0.135</code> </p>
 <p><code>scale</code> Scale eg minor, major, chromatic, majorpentatonic, lydian etc etc. Value resets unless set every time the code is updated.</p>
@@ -964,7 +962,6 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
- Update all examples for changes: main.amp, main.reverb
  TEST
   TEST ALL SYNTHS
   TEST ALL EFFECTS
@@ -1200,7 +1197,6 @@ Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7
 Variable rate expressions somehow EG  addc=[-1,1]s[1/8:1]e  Or  addc=sin{[1/8:1]e*6.28}  or something
 Presets should be able to define multiple synths to play at once
 floor{1.5,2.5} should work??? Or should it?? Probably not? But then it should give an error? But sum{1,2} works?
-!Doesn't work:  v readout 0, add=main.amp
 ? (0,2:8) syntax?
 !Handle 'cookie blocking' https://blog.tomayac.com/2022/08/30/things-not-available-when-someone-blocks-all-cookies/
 Advance param to specify how far in advance events should be generated - Would allow for negative delays

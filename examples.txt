@@ -362,7 +362,7 @@ prf glock follow pr, oct=3
 
 set bpm=91
 set scale=mixolydian
-set main.amp=1.7
+set main amp=1.7
 vb gradient 0, fore=#040860ff*db.pulse.0
 v clouds 6, vignette=[1:3]s8@f, rotate=time/80, mirror=2, back=#0088, fore=#cabf
 kd play (xv).
@@ -634,7 +634,7 @@ space dsine -7047, sus=4, rel=3, room=0.7, add=ch, amp=1/2, vib=2, oct=5
 
 
 set bpm=140
-set main.amp=2
+set main amp=2
 set root=2.2
 set scale=phrygian
 v webcam 0, monochrome=0.9+kk.pulse, recol=oil
@@ -689,7 +689,7 @@ v12 glow 0, loc=sparkle, add=[0,9]
 
 set bpm=85
 set root=2.2
-set main.amp=1
+set main amp=1
 set scale=minor
 v webcam 0, zoom=1.4, fore=rainbow_fast, back=rainbow_slow
 set scratch='https://upload.wikimedia.org/wikipedia/commons/4/48/Bauchamp_-_101_scratch_it.ogg'
@@ -735,7 +735,7 @@ v glow 0, fade=0, amp=1
 set v amp=[0:5]l4{per:1/2}@f
 
 set bpm=97
-set main.amp=3/2
+set main amp=3/2
 set scale=minor
 ocean shadertoy 0, id='3scfD7', rate=1/12, fore=[#baff:#abff]l32@f
 set prog=[0,-3,1,-2]t16
@@ -855,7 +855,7 @@ pn noise 0[00], dur=1, bpf={pitch{[0:7]r{per:8,seed:0,0:0},oct:6},q:80}, amp=20,
 
 
 set bpm=125
-set main.amp=3/2
+set main amp=3/2
 set scale=minor
 vg gradient 0, back=#416f, mid=#424f, fore=#851f, amp=0.45
 vd swirl -3, monochrome, back=transparent, mid=transparent, fore=#fa68+#400f*[0:0.2]n2, time=-time/6, vignette, loc={y:-1, w:4}, perspective=-0.9, add=no.amp@f*10
@@ -924,7 +924,7 @@ b saw 00[43]-707[-32]-4, dur=1/2, oct=2, amp=2, echo=3/4, lpf={this.freq*slider{
 
 set bpm=125
 set scale=phrygian
-set main.amp=2
+set main amp=2
 vg gradient 0, fore=#404040ff
 v bars 0, amp=1+sd.pulse.min*0.6+fill.pulse.min/4, scroll=time/4, recol=hue, ripple=b.pulse.min/2, monochrome=0.4-10*a.amp.min, additive=0, back=transparent, fore=#aaaf
 kd play X., room=0.1, amp=1/2
@@ -945,7 +945,7 @@ b saw 40[02][.1].1.[.0], dur=1/2, oct=(2,3), echo=1, pan=[-1/4:1/4]r, lpf=this.f
 
 set bpm=125
 set scale=minor
-set main.amp=3/2
+set main amp=3/2
 vt text 0, dur=1/4, text={['Ragle','Gumm',' ',' '],size:144}
 vj julia 3, back=#1118, mid=rainbow, rate=2, ripple=kr.pulse.max, scroll={x:[-1:1]n2,y:[-1:1]n2}/12, zoom=2+k.pulse.max/6
 k play x., room=0.1, pan=(-1,1)
@@ -977,7 +977,7 @@ vt kal 1, blend='invert'
 
 set bpm=150
 set scale=phrygian
-set main.amp=3/2
+set main amp=3/2
 vk1 kal 0, rate=1/2, add=[0:1]l16@f, fore=orange, mid=red*2*k.pulse
 vk2 kal 4, rate=2, fore=ror.pulse*1.6*#4f8f+arp.pulse*#880f, mid=black
 vk3 kal 1, rate=1/4, fore=blue*bas.playing, mid=black, add=bas.value/10
@@ -1007,7 +1007,7 @@ bep tri 0..., dur=2/3, addc=[0,0,-2,-2]e, room=2, oct=4, amp=[0.2:0.5]l47, pan=(
 
 set bpm=125
 set scale=minor
-set main.amp=3/2
+set main amp=3/2
 set big={w:2/3,h:2/3}
 vg gradient follow pc, amp=1
 vs kal 0, blend='multiply', monochrome, amp=2, zoom=4+pk.pulse/4, scroll=time/96, time=time/4+ps.pulse/2+py.pulse*3
@@ -1039,7 +1039,7 @@ a ambi (0468), room=2, amp=[1/4:1/2]n8, oct=3, add=[0,3]t[14,2]
 
 set bpm=130
 set scale=phrygian
-set main.amp=1.2
+set main amp=1.2
 vg glow 0, back=black, fore=#daff*swp.pulse/16, fade=0, loc=firefly/2
 vl lights 0, zoom=(1/4,1/7), fore=#444f, scroll=time/16
 v2 julia 0, zoom=5, scroll={x:[0.25:0.4]s32@f}, back=black, mid=#012f*(1+pad.pulse.1*pad.amp.1), rate=0, additive, fore=#adff*0.9
@@ -1070,7 +1070,7 @@ x xylo 012....., room=2, echo=2, lpf=[300:3000]s20@f, pan=[0:1]r
 
 
 set bpm=97
-set main.amp=3/2
+set main amp=3/2
 vw swirl 0, rate=0, monochrome=2, perspective=-1/2, back=blue, zoom=1/2, scroll=time/16, ripple
 vg gradient 0, blend='invert'
 vs swirl 4, monochrome=0.9, perspective=-1, blend='multiply', fore=#40ff, back=#04ff, rate=1/2
@@ -1094,7 +1094,7 @@ pad piano 0, dur=[1/2,1/4,1/8]t[22,6,4], amp=0.8, room=1.2, add=[0,2,4,[6,7,9]r]
 
 set bpm=125
 set scale=phrygian
-set main.amp=1.2
+set main amp=1.2
 set words=('xy->r3','dr1ve','[>>]','//tt','l0g4j','sh311','%IO%','.*','a*b+c/4')
 vb bits 9, fore=random*0.4*(1+pad.rel.0), back=black, rate=1/2, scroll=time/4+firefly/2
 vtx1 text 0, text={'{x1}',size:96}, scroll={x:[-1:1]n8,y:[-1:1]n8}
@@ -1199,7 +1199,7 @@ b dbass [(04v).], dur=8, noisify=1/8, drive=2/8, fold=1, amp=3, phaser=1/8, room
 
 
 set bpm=125
-set main.amp=3/2
+set main amp=3/2
 set * swing=61
 vj julia 5, mid=[orange,red,neonpink]s16*(1+2*b.pulse.max), contrast=1/4, zoom=[2/3:1]s12+pk.pulse/8, time=1+2*t.pulse.max+2*t.clip.max+[-0.2:0.45]n2@f+ph.pulse.max/2, back=white*a.amp.avg/2+#000f+red*b4.pulse.max*b4.amp.max, rotate=time/512
 pk play X., pan=[-1/4:1/4]r
@@ -1294,7 +1294,7 @@ s supersaw (024)0.2(035)<0.>.<-2.>, sus=1/8, echo=1/4, att=0.01, oct=(2,3), pan=
 
 
 set bpm=115
-set main.amp=2.5
+set main amp=2.5
 set * swing=58
 vb bits 9, perspective, time=-time/128+main.pulse/16, mid={labh:[]n16,c:0.2}, contrast, scroll={y:[-1,1]t4*time/32}, zoom=4
 vc clouds 0, perspective, monochrome, zoom=4, time=time/4, add=main.pulse/4, contrast=8, blend=multiply
@@ -1374,7 +1374,7 @@ v glow 0, dur=1/8, sus=[1:12]r, loc={x:2*this._time%1-1,y:[1.3:-1.3]e,w:0.6,h:0.
 
 set bpm=121
 set scale=minor
-set main.amp=5
+set main amp=5
 set * swing=56
 v kal 0, dur=1/8, sus=[13:17]r, fore={r:[0:0.1]r,g:[0.6:1]r,b:[0:0.3]r,a:1/2}, loc={x:[-1:1]r+[0:0.1*[-1:1]r]e,y:[1.3:-1.3]e,w:0.6,h:0.6}, time=[0:100]r+time*[1/8:1/4]r, zoom=[4:8]r+[-1:1]e*[]r, vignette=1/2, add=[0:1]r, scroll=[1/2:3/2]r
 l1 tri 0, dur=1/2, add=[0,2,4,5]r{per:4,0:0,seed:0}, oct=3, amp=[0,1/2]r{per:4,seed:0}
@@ -1413,7 +1413,7 @@ a ambi (0246), oct=(3,4), room=2, amp=1, add=[0,2,4]t8, chop=4, ring=24, addc=[0
 set bpm=50
 set scale=minor
 set * swing=60
-set main.amp=1.2
+set main amp=1.2
 v kal 1, recol=sunset, zoom=4, ripple={1,scale:1/2}, scroll=2
 a ambi (02468), oct=(2,4), amp=1/6, room=2, chorus, add=[0,1]r
 pk play vsxs, amp=1/2
@@ -1423,7 +1423,7 @@ set a add=0, flanger=1/8, amp=1/16
 
 set bpm=127
 set * swing=60
-set main.amp=1.6
+set main amp=1.6
 vk kal 1, recol=sunset, contrast, rotate=time/256
 vl glow follow b, mirror={[0:4]r1,rotate:[]r}, fade, sus=4, fore={labh:1/16,l:b.playing.max/2}, amp=3
 vw lines 0, additive, fade, sus=1, add=r.pulse.max, rate=1/8, fore=blue*0.7*r.playing.0, amp=0.8+r.pulse.max/4
@@ -1442,7 +1442,7 @@ pad dsaw (0246)(0357)(3458)[(1346)(0134)], dur=4, room, amp=1/6, oct=(3,[5,6]t16
 set bpm=122
 set scale=minor
 set * swing=62
-set main.amp=2
+set main amp=2
 set ch=[0,0,3,1]t32
 v swirl 0, recol=sunset, zoom=4, time=time/8+[0:1/4]s2, monochrome=0.4
 babygab='https://upload.wikimedia.org/wikipedia/commons/a/ab/Baby_5_months_old_gabbling_laughing_practising_voice.ogg'
@@ -1470,7 +1470,7 @@ v text 0, dur=1/2, text={words['w'],style:'bold',y:0.4}, fore=words['c']
 
 set bpm=80
 set scale=minor
-set main.amp=5
+set main amp=5
 v1 swirl 2, zoom=3, add=[-3:3]n49, monochrome, rate=1/19, fore=#132, mid=#8be, back=#143
 v2 swirl 2, zoom=3, add=[-3:3]n64+g.pulse.max, monochrome, rate=1/24, fore=#123, mid=#8be, back=#134, blend=max
 n noise 0, dur=4, amp=1/[384:1024]n27, pan=(-2/3,2/3), envelope=pad, chorus, room=2
@@ -1502,7 +1502,7 @@ set p add%=7
 set bpm=120
 set scale=minor
 kd play x.
-set main.amp=2
+set main amp=2
 set ch=[0,3,-2,-1]t16
 db dbass 0-7, dur=1/2, lpf={[100:[300:1000]n8@e,3000]e,q:[5,[10:30]l32]n1/4@f}, att=0, addc=wow, sus=1/2, rel=1, add=ch, amp=1+wow
 ds dsaw 0[23]4_, dur=[3,3,2]*2, lpf=[100:[700:5000]s8]e, addc=wow, oct=(3,4), phaser=1/3, echo=1, room=0.7, add=ch, amp=1+wow
@@ -1534,7 +1534,7 @@ g4 glass 0, delay=[0,1/2,1]r{per:4,0:0}, add=[0:3]l7*2+[0,1]r+ch, oct=6
 set bpm=130
 set scale=phrygian
 set * swing=58
-set main.amp=2
+set main amp=2
 pk play V.
 ph play [.-]-[.-][--]
 v grid 0, add=ba.lpf.max/100, fore=black, back=random, rotate=ba.pulse.max/128, mirror=50, recol=oil, ripple=1/3
@@ -1546,7 +1546,7 @@ le supersaw 0, add=ba.add.max, delay=(0,[1/2,3/4]r), lpf=[2000:ba.lpf.max]e, roo
 set bpm=125
 set scale=phrygian
 set * swing=58
-set main.amp=3/2
+set main amp=3/2
 v kal 5, add=ba.value.avg/10, zoom=1/3, scroll=1, contrast=1/2, amp=1+2*ls.pulse.max, back=2*white*ps.pulse.max
 pk play (Xv).
 pr play .[.m].[.mxm], dur=1, pan=[-1/2:1/2]r
@@ -1563,7 +1563,7 @@ ba dsaw 0710260, sus=[1/2:1/6]l16, lpf={[200:800]l4*[2:1/2]e,q:15}, delay=(0,[1/
 
 
 set scale=[phrygian, dorian, major, lydian]t32
-set main.amp=1.3
+set main amp=1.3
 set * swing=54
 set ch=[(0,2,4,7),(0,3,5,9),(1,3,4,6),(-1,3,4,8)]t8
 v glow 0, loc={x:[-1:1]r@f/4,y:this.'ch'/10-1/2,w:1/2,h:1/2}, ch=ch, fore={labh:this.'ch'/10}
@@ -1583,7 +1583,7 @@ v glow 0, loc={x:(-1/2,1/2),y:this.y,w:1/8,h:1/8}+firefly, y=(0,1/2), fade=0
 
 
 set scale=[phrygian, dorian, major, lydian]t32
-set main.amp=1.5
+set main amp=1.5
 set * swing=54
 set ch=[(0,2,4,7),(0,3,5,9),(1,3,4,6),(-1,3,4,8)]t8
 v glow 0, loc={x:(0,1)/8*[-1:1]s0.856232@e,y:this.'ch'/10-1/2,w:4,h:1/3}, ch=ch, fore={labh:this.'ch'/10,l:0}, ripple=[]r@f, rate=0, pixellate=20, delay=(x.delay.min,x.delay.max)
@@ -1605,7 +1605,7 @@ pd play d[.d].d.dd.
 
 set bpm=130
 set scale=phrygian
-set main.amp=1.7
+set main amp=1.7
 v kal 4, fore={labh:[]n16,c:1/2,a:0.8}, ripple=7, time=time*2/3+pk.pulse.max/2
 set * swing=60
 pk play X., room=1.2, room=0.1
@@ -1671,7 +1671,7 @@ p glass 0, delay=(0,{1/2,add:[1,2,3]t1.2344},{[1/4,3/4]l1.4231,add:7})
 set bpm=132
 set scale=phrygian
 set * swing=53
-set main.amp=1.6
+set main amp=1.6
 vb bits 0, zoom=1/2, scroll=16, rotate=1/8, add=12
 vg gradient 0, fore={h:[0,0.1]n,s:[1/2:1]n-s.pulse.min/2,l:[]n}, blend=invert
 n noise 0, dur=4, envelope=pad, amp=[1/40:1/24]n4, lpf=[1000:2000]n, room=2, echo
@@ -1694,7 +1694,7 @@ v kal 0, ripple=p.pulse
 p play d[.d].d.dd.
 
 
-set main.amp=3
+set main amp=3
 set scale=[major,dorian,locrian]t16
 set * room
 p0 glass 0, dur=[1/2,1]r, add=[0:[7,8]]t1/2, oct=6
@@ -1706,7 +1706,7 @@ p3 xylo 0, dur=1, add=[0:[1,2]]t1, amp=3/2
 // Anxiety - InTheClub MP3 Mix
 set scale=phrygian
 set bpm=121
-set main.amp=1.2
+set main amp=1.2
 set * swing=56
 set stress=slider{name:'stress',max:2/3}
 p play X-=<k+>O-<=X>k, dur=1/4, delay=(0,3/4), room=1/2, pan=(-1,1), amp=2/3-stress/5, hpf={[0,523*3]t[96,32],q:15}, drive=stress, low=16
@@ -1727,7 +1727,7 @@ pr play MmxMmxV, dur=1/4, room, amp=5
 
 set bpm = 65
 set scale=minor
-set main.amp=3/2
+set main amp=3/2
 v gradient 0, ripple={4,scale:1/2}, back=#ccbf, fore=black, mid=[#433f,#778f]s8@f, amp=0.6, perspective=-1/2
 a ambi 0, dur=4, add=(0,2,4,6,[8:13]r), oct=(2,[3,4]r), wave=tri
 g glass 064, dur=[3,5,2]r, envelope=pad, oct=[2,3,4,5]r, amp=[2/3:3/2]r
@@ -1738,7 +1738,7 @@ set (a,g) room=2, chorus=3/2, phaser=1/13, add+=[0,1]t16
 
 set bpm=125
 set scale=minor
-set main.amp=3/2
+set main amp=3/2
 set * swing=52
 pp play x-(x*)-, room=1/8
 set ch=[(0,2,4),(0,5,3),(0,2,5),(-1,3,4)]t4
@@ -1750,7 +1750,7 @@ tls saw follow tl
 
 set bpm=130
 set scale=minor
-set main.amp=1.35
+set main amp=1.35
 set * swing=51
 set ch=[(0,2,4),(0,5,3),(0,2,5),(-1,3,4)]t4
 v julia 5, zoom=3+k.pulse/3, mirror={11,fan:1/2,rotate:time/16}, scroll=time/16, mid=rainbow_fast*ph.amp.max, fore=random, repeat=1/4, back=white*a.rel.max
@@ -1787,7 +1787,7 @@ p ping 0, add=ch,
 
 set bpm=130
 set scale=minor
-set main.amp=1.35
+set main amp=1.35
 set * swing=51
 set ch=[(0,2,4),(0,5,3),(0,2,5),(-1,3,4)]t4
 v julia 5, zoom=3+k.pulse/3, mirror={11,fan:1/2,rotate:time/16}, scroll=time/16, mid=rainbow_fast*ph.amp.max*3/2, fore=rainbow, repeat=1/4, back=white*a.rel.max
@@ -1812,7 +1812,7 @@ v xor 0, back=#004f, fore=#2a4f, rate=8, scroll=time/16, zoom=1/2
 
 
 set bpm=115
-set main.amp=3
+set main amp=3
 set * swing=58
 set root=0
 vk kal 0, contrast=30, amp=2*pad.playing.avg+pk.pulse.max, zoom=2, scroll=1/2, rate=1/2, ripple={arp.pulse.max/4,scale:1/4}
@@ -1829,7 +1829,7 @@ arp dsaw 7642, dur=1/4, sus=1/6, lpf=this.freq*[3:10]l6, amp=[2/3,0]t[2,6], room
 
 
 // Blinkenlights
-set main.amp=2
+set main amp=2
 v1 kal 0, dur=16, add=[0,1,4,5]r, time=[0:10000]r, fore=#af8f*[0.5,1.2]s8@f
 v2 kal 0, dur=16, delay=8, add=[0,1,4,5]r, time=[0:10000]r, fore=#af8f*[1,0.5]s8@f
 set v* zoom=[1/8,1/2,2]r@e, scroll={x:[1/2:3/2]r@e,y:[1/2:3/2]r@e},
@@ -1841,7 +1841,7 @@ n noise 0, dur=4, amp=1/24, mid=-4, high=-8, room=2
 
 set bpm=121
 set * swing=60
-set main.amp=3/2
+set main amp=3/2
 v gradient 0, recol=sunset, ripple={3+pv.pulse.max,scale:1/3}, zoom=-1, rate=3, fore=white*1.3
 vo xor 9, perspective=-1, fore=rainbow_fast+white*2/3, zoom=1+pb.pulse.max/16, scroll={x:pp1.pulse.max-pp2.pulse.max}/32
 pv play x., fold=[1,0]t32
@@ -1862,7 +1862,7 @@ p ping 0023, addc=[-12,0,12]t1/4@f, echo=3/4, room, chorus
 
 set bpm=117
 set scale=phrygian
-set main.amp=2
+set main amp=2
 set * swing=62
 v1 glow 0, add=[0,2,4,6,8]r, mid=#fecf, fore=#654f
 v2 stars 0, dur=4, fore={labh:[]r,c:1/16,l:1/12}, ripple={1,scale:3}
@@ -1896,7 +1896,7 @@ p ping 0, dur=1/4, add=(-7,ch).(rand,rand,rand)
 
 
 set bpm=138
-set main.amp=1.9
+set main amp=1.9
 set * swing=53
 v1 xor 0, fore=red, time=time*2, zoom=1+ps.pulse.avg/16
 v2 xor 7, additive, back=black, fore=blue+pk.pulse/2, time=time*2+1
@@ -1916,7 +1916,7 @@ baf wave follow ba, amp*=5, oct=1, wave=tri
 
 
 set bpm=138
-set main.amp=1.7
+set main amp=1.7
 set * swing=53
 set scale=phrygian
 v1 xor 0, fore=#d00f, rate=3
@@ -1941,7 +1941,7 @@ v1 gradient 0, swing=75, fore=[red,green], additive
 
 
 set bpm=137
-set main.amp=2.5
+set main amp=2.5
 set scale=phrygian
 set * swing=54
 v1 xor 0, scroll={x:time/32,y:pk.pulse.max/32}, back=black, mirror, fore=[white:orange]l8@f
@@ -1958,7 +1958,7 @@ pg play [.j]......., drive=1/4, rate=1/2, room=1/4, amp=2/3
 
 set bpm=40
 set scale=minor
-set main.amp=3
+set main amp=3
 v kal 5, dur=4, fore=#fff2, back=#fff2, zoom=2.5, time=480+time+this.perspective, contrast, perspective=(1,2,3,4,5)/2.5
 d ambi 0, dur=4, oct=(1,2,3), room=2, chorus, pan=([-1:0]r,[0:1]r), addc=wow, amp=[1/3:3/4]n16
 a ambi 0[23], dur=8, wave=tri, room=2, chorus=[1,2]r, oct=3, envelope=simple, att=2, rel=12, pan=[-1:1]r, amp=2/3,
@@ -2012,7 +2012,7 @@ p ping 0, dur=1/4, add=[0,3]r{per:2,seed:[10,(10,100)]t8}
 
 set bpm=137
 set * swing=57
-set main.amp=1.9
+set main amp=1.9
 set scale=minor
 v1 gradient 0, recol=sunset, zoom=-1, scroll=[]n1/4/3, fore=white*3/2, monochrome=-pc.pulse.max./2
 v2 bars 0, tunnel, scroll={x:time*1.1}, zoom=1/8, rotate=1/12, ripple={h.pulse.min.*3/2,scale:1/2}, vignette=3/2, amp=ph.playing.max.@e
@@ -2038,7 +2038,7 @@ l3 sample follow l1, oct=4, sample='sample/g/lower/01.wav', amp=2, stutter=[1,2]
 set bpm=122
 set * swing=59
 set p* room=1/16
-set main.amp=1.75
+set main amp=1.75
 v swirl 0, time=time/6+b.value.avg/12, zoom=2, recol=titanium, back=#28ff, fore=#2a8f, ripple={pc.pulse*3,scale:1/2}
 pk play Vs, low=6
 pc play ..*., pan=-1/2, amp=3/2
@@ -2057,7 +2057,7 @@ bb square .0, dur=1/2, oct=1, sus=1/10, stutter=[1,3]l3.5, lpf=250, amp=2, pan=(
 
 set bpm=122
 set * swing=59
-set main.amp=1.5
+set main amp=1.5
 set scale=phrygian
 v gradient 0, recol=fire
 pk play X.
@@ -2073,7 +2073,7 @@ p prophet 0[1!!...], dur=4, oct=2, room=1/8, echo=1/8, flanger=1/7, att=0.01, su
 
 set  bpm=122
 set * swing=54
-set main.amp=1.1
+set main amp=1.1
 set scale=mixolydian
 vb bits 9, perspective=1, fore=#234f, rate=1/4
 vl lines 9, scroll=2/3, time=time/8+(1,2,3,4)/3, blend=max, fore=#1810ffff, pulse=1/2
@@ -2102,7 +2102,7 @@ v glow 0, dur=1/4, sus=2, loc=sparkle+firefly
 set bpm=130
 set scale=minor
 set * swing=58
-set main.amp=0.8
+set main amp=0.8
 v kal 0, contrast=3, zoom=1+sidechain
 pk play V., sus=1/3, amp=3/2
 ph play --+--+-:, delay=(0,3/4), pan=1/2
@@ -2137,7 +2137,7 @@ v2 glow 0, rotate=rate{pk.pulse.min}/64, rate=0, fade=0
 
 
 set bpm=90
-set main.amp=0.52
+set main amp=0.52
 v swirl 0, mirror={2,fan:1/3}, back=white*4, mid=random*4, fore=black, monochrome, contrast=20, ripple={2,scale:1/2}, time=time/16+accum{rate{b.pulse.min.}}, loc={x:-smooth{b.pan.avg/2}}, zoom=3/2
 b wave -332-2_-7_[_.], dur=2, sus={level:1/2}, rel=1.2, att=0.01, pan=[-1/4,1/4]n12@f,
 	oct=(2,3), wave=(square,saw,pulse,tri), lpf={[900,700,600,500,400]e*[1:2]s24,q:12}, addc=(-1,0,1)/[10:20]l15, phaser=[0,1/11]t64,
@@ -2171,7 +2171,7 @@ v webcam 0, blend=max, contrast=2, fore=white+random/2, back=black, rotate=(1,2,
 set bpm=130
 set scale=minor
 set * swing=60
-set main.amp=1.3
+set main amp=1.3
 set ch=[3,4,7,5]t4
 vb xor 0, dur=4, add=11, zoom=1+main.pulse/16, back=rainbow/95, mirror=5, rate=-4, rotate=time/256, fore={r:[1/4:2/3]n8,g:0.05,b:[1/8:1/3]n8}/10, buffer=vbf
 vbf buffer 0, feedback={scroll:firefly/100,fore:0.99}}
@@ -2193,7 +2193,7 @@ g xylo 0242, dur=1/4, add=ch+[0,0,1]r, room, amp=1/2*[]n4*(1-pk.pulse.max), pan=
 
 
 // Minimalist cannon
-set main.amp=2
+set main amp=2
 set * swing=54
 v1 xor 0, scroll={x:time*(this.i-4)/32}, rotate=(0,1/4), i=(2,3), zoom=3/2,
 	fore={r:this.i/6,g:1/2-this.i/10,b:0.1}, back=black
@@ -2237,14 +2237,14 @@ fs bd 0, click=1, body=0, hit=0, rattle=0, room=2, hpf=[100,500,1200]r, amp=[1:8
 
 
 set bpm=130
-set main.amp=3
+set main amp=3
 p impulse 0.<0..0.>0<.0>0<.0.>0, dur=1/2, lpf=100*[2,40]t1, delay=(0,3/4), room=[0,1]t[3,1]
 i impulse 0, bpf={pitch{[0,-1]t8},q:[5:20]s12}, amp=12, delay=(0,[3/4,5/4]r)
 
 
 // bd kick testing
 set bpm=130
-set main.amp=2
+set main amp=2
 pbd bd 0.,//[.0]00[.0].00,
 	sus=2/3, click=0,hit=0,body=0,rattle=0,
 	click={1,dur:1/5,cutoff:2700,q:5},
@@ -2270,7 +2270,7 @@ v xor (09), fore=(red,blue,green,yellow).(this.voice), zoom=(1,4), back=black
 
 set bpm=132
 set * swing=58
-set main.amp=3/2
+set main amp=3/2
 set scale=phrygian
 pk bd 0., amp=2
 ph play [.-][:-], pan=[-1/8,1/8]r, amp=1/2, room={2,mix:1/4}, lpf=4000, delay=(0,[1,2,3]r/4)
@@ -2284,7 +2284,7 @@ ld prophet 60, dur=[5,3], room=2, chop=2, flanger=1/16, ring=220, echo=3/2
 //Didgeridoo cathedral psycho
 set bpm=132
 set * swing=58
-set main.amp=3/2
+set main amp=3/2
 set scale=phrygian
 pk bd 0., amp=2
 ph play [.-][:-], pan=[-1/8,1/8]r, amp=1/2, room={2,mix:1/4}, fold, amp=1/4, ring=320, lpf=4000, delay=(0,[1,5]/4)
@@ -2319,7 +2319,7 @@ set click echo=[0:1/4]r, amp=3/2, bpf={[100:1000]r,q:[1/2:7]r}, pan=[-1/3:1/3]r
 set growl oct=1, nf={3000,q:1}, high=-24, amp=3, room=2, flanger=1/64, envelope=simple, rel=6, addc=wow, ring={400,mix:1/4}, pan=[-1/4:3/4]r
 //// setup
 set bpm=90
-set main.amp=2.5
+set main amp=2.5
 set root=-5
 //// players
 // pad ambi (-7#-2b02b4b9b)
@@ -2350,7 +2350,7 @@ vb buffer 0
 // Gravity Well
 set bpm=117
 set scale=minor
-set main.amp=3
+set main amp=3
 set colbase={labh:[0:1]r4,c:0,l:0}
 set of={c:1/2,l:1/3}
 set om={labh:-0.05,c:1/2}
@@ -2426,7 +2426,7 @@ v readout 0, add=smooth{floor{[1.5,1.9]t1,to:1/3,per:4,0:0},att:10,dec:10,per:8,
 
 // Break it down
 set bpm=130
-set main.amp=2.5
+set main amp=2.5
 set bid='https://upload.wikimedia.org/wikipedia/commons/0/07/En-au-break_it_down.ogg'
 vg blank 0, buffer=vb
 vk kal 1, buffer=vb, contrast=4-2*pk.pulse.max, time=1000-time/8+2*accum{l.pulse.0}, zoom=3+b.playing.max*[0,0.2]l1/2@f, back=0, fore={a:0.1}, amp=1+2*s.pulse.max+2*pad.pulse.max, add=2*slow.pulse.max, mirror={8,rotate:(time+[0:1]s1/2@f)/192}, scroll=2/3
@@ -2449,7 +2449,7 @@ s sample 0, dur=16, sample=bid, drive, room, amp=1/10, pan=(-1,1), add=-1b, mid=
 // slow sample 0, dur=[1/40:1/80]r, envelope=pad, sample=bid, start=[0:1]l[16,0], room=2, drive=1/8, amp=1/4, pan=(-1,1), addc=[0:-7]l[16,0]
 
 // Breathe Soft
-set main.amp=2
+set main amp=2
 // Visuals
 vbl blank 0, buffer=vb, back=0.01
 vl swirl -1, blend=min, buffer=vb, mid={labh:[]n13,c:1/2,l:0.5,a:1}, rate=1.2, scroll={x:wow/8+time/8}
@@ -2510,7 +2510,7 @@ r readout 0, loc={y:2/3-this.voice/2}, add=(1.5,2.5).floor{to:1/3}
 set bpm=130
 set scale=minor
 set * swing=60
-set main.amp=1.3
+set main amp=1.3
 set ch=[7,5,3,4]t4
 vb xor 07, dur=4, add=11, zoom=1+main.pulse/14, back=rainbow/95, mirror=5, rate=-4, rotate=time/256, fore={r:[1/4:2/3]n8,g:0.05,b:[1/8:1/4]n8}/10, buffer=vbf
 vbf buffer 0, feedback={scroll:pc.pulse.min/128,contrast:0.001}}
@@ -2578,7 +2578,7 @@ pk play v., compress=8, drive=1/8, lpf=[500:100]e, sus=1/3
 // Chilldown
 set bpm=125
 set scale=minor
-set main.amp=1.6
+set main amp=1.6
 set p* swing=52
 // Visuals
 vk kal 145, dur=2, buffer=vb, blend=max, contrast=3-2*bs.pulse.max, scroll={x:1,y:0.3467}*time/(1+this.value)/8, zoom=4-bs.lpf.max/300, fore=0.8
@@ -2601,7 +2601,7 @@ am ambi (02468), room=2, amp=[0,1/2]l32, oct=3, chorus=3, add=[0,1]t16, pan=[-1:
 // Ice Station
 set bpm=90
 set scale=egyptian
-set main.amp=1.8
+set main amp=1.8
 v1 kal 3, monochrome, fore=#adef, back=#adef, perspective=-3/4, scroll={y:time/8}, time=20+time/12, contrast, zoom=0.8
 v2 swirl 3, monochrome, fore=#acef, back=#acef, perspective=-3/4, scroll={y:time/8}, rate=1/4, additive
 a ambi (0369), wave=saw, room=2, add=[0,1]t[6,2], oct=(2,3), high=-24, chorus=2, flanger=1/64, ring={[200:400]s11@f,mix:1/3}, pan=[-1:1]r
@@ -2687,7 +2687,7 @@ s saw 001020304056<-18>_.., dur=1/4, glide=1/5, lpf=4000, chorus, amp=1.3, oct=3
 
 // Gliding
 set bpm=75
-set main.amp=1.7
+set main amp=1.7
 vj julia 5, buffer=vb, blend=max, mid=rainbow_fast, fore=random, back=0, rate=1/4, amp=0.8
 vb buffer 0, feedback={rotate:0.001, zoom:1.004, fore:0.95+0.06*p.pulse.max}
 b wave 0, envelope=pad, wave='noise', amp=[0.2:0.7]n6@f, oct=(0,1,2), room=2, lpf=300
@@ -2705,7 +2705,7 @@ vb buffer 0, feedback={zoom:1.001,ripple:0.02,contrast:0.001,rotate:[-1:1]s8@f/6
 set root 2
 set bpm 90
 set * swing=58
-set main.amp=0.50
+set main amp=0.50
 pv play (+VX)., sus=1/4, amp=3/2, fold, compress=30, low=8
 ph play ----=---, dur=1/4, sample=3, fold, pan=1/4, room=1/2, amp=1.2
 pc play ..(Owa)., clip, room=2, sus=3/4, noisify=1/8, compress=30, amp=0.2, sample=3
@@ -2730,7 +2730,7 @@ b moroder 00-3-1, add=[0,[-7,7]]t[14,2]
 include 'preset/synthwave.limut'
 set bpm=64
 set root=4 // E
-set main.amp=2
+set main amp=2
 city image 0, url='https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Guatemala_City_at_Night.JPG/2560px-Guatemala_City_at_Night.JPG', zoom=[0.85:2]l192@f, fore=#aaaf
 room swirl follow beep, monochrome, add=0, back=#234f, fore=#bcea, sus=1, rate=1/8
 fireball shadertoy follow boom, id='XtVyDz', additive, loc={x:0.2+0.05*[-1:1]r*[1/2:3/2]e,y:-0.1+0.05*[-1:1]r+[0:1/4]e,w:[1/4:1/2]r,h:[1/4:1/2]r}*1.6, vignette=2, time=[1/8,2/3,1/2]e, fade, sus=3, fore=#222f
@@ -2956,7 +2956,7 @@ vl lines 0, vhs, loc=tile_tr, fore=(neonpink,neongreen),
 include 'preset/synthwave.limut'
 set scale=minor
 set bpm=123
-set main.amp=1.5
+set main amp=1.5
 vr julia 0, buffer='vb', add=[0:4]r, scroll={x:[]r1,y:[]r1}/3, zoom=[1:4]r1, blend=max
 vb vhsbuffer 0, feedback={fore:0.97,ripple:0.05}, loc=tile_tr
 // pk bd 9..., drive=1/32, compress=3, amp*=1.2
@@ -2971,7 +2971,7 @@ ch chime [70]..[35].[61]..//, oct+=[0,1]t8, amp*=2, add+=[0,3]r4
 
 set bpm=122
 set * swing=58
-set main.amp=3
+set main amp=3
 pk impulse 0, amp=2, lpf=3000
 ph play .-, fold
 pb dbass ...0..0., dur=1/4, sus=1/8, amp*=1/2, att=0, lpf=800
@@ -2986,7 +2986,7 @@ a ambi (0246), amp*=1/28, wave='saw', room=2, chorus
 include 'preset/synthwave.limut'
 set scale=minor
 set bpm=123
-set main.amp=1.5
+set main amp=1.5
 set * swing=58
 /// Visuals
 vr bars 0, buffer='vb', scroll={x:time}*(1,2,3)/4, fore=(neonpink/12,rainbow_slow/10,neongreen/8).(this.voice), zoom=1+this.voice/4
