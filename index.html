@@ -517,6 +517,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p class='sub'><code>wave1={'saw',amp:[0:1]n,detune:wow}</code> The main value is a string giving the waveform to use. amp is a per frame amplitude control. detune is a per frame detune control in semitones.</p>
 <p><code>crackle</code> Crackly crackle sounds.</p>
 <p><code>noisefloor</code> Provide a slowly varying noise floor.</p>
+<p><code>bus</code> Audio mix bus. Plays continuously, can take a pattern but the pattern is ignored. As a result, all bus param values are evaluated per frame. Chords and []e are not valid for bus players. Audio players can use the <code>bus</code> param to choose which bus to mix into (by id). A bus player does not have pitch effects (addc, vib etc), but does have wave effects (compress, drive, fold etc). There is an implicit bus called <code>main</code> that exists at all times, and provides the final mix for all other players and buses. Overrides can be used to set params on the main bus; eg <code>set main echo=1/2</code></p>
 </div>
 <h4 onclick="toggleAccordion('accordion-visual-synths')" class="accordion"> Visual Synths</h4>
 <div id="accordion-visual-synths" class="closed">
@@ -657,21 +658,28 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p class='sub'><code>sample={32,pitch:261.6}</code> Specify the original pitch of the sample in Hz (eg default is 261.6 Hz for C4)</p>
 <p><code>start</code> For the 'sample' synth, specify the playback start time in seconds within the sample. </p>
 <p><code>compress</code> Compression ratio, or the reduction in volume for signals above the compression threshold. A ratio of zero disables compression.</p>
+<p class='sub'><code>compress={12,gain:2}</code> Input gain; gain amp to apply to the signal before compression is applied</p>
 <p class='sub'><code>compress={12,threshold:-40}</code> Threshold in dB at which the compression ratio kicks in. Default is -50</p>
 <p class='sub'><code>compress={12,knee:10}</code> the 'knee' is a softening of the compression curve, so that there is no sudden changeover at the threshold. A value of 0 disables the knee and gives a sudden changeover. Other values are a dB range over which the knee should apply. Default is 40.</p>
 <p class='sub'><code>compress={12,att:0.1}</code> Compressor attack time in seconds. The attack time is the time it takes for compression to 'kick in' once a signal crosses the threshold. Default is 0.01 (or 10ms).</p>
 <p class='sub'><code>compress={12,rel:0.2}</code> Compressor release time in seconds. The release time is the time it takes for compression to 'go away' once a signal falls back below the threshold. Default is 0.25.</p>
 <p><code>noisify</code> noisify: distort the signal into noise</p>
+<p class='sub'><code>noisify={12,gain:2}</code> Input gain; gain amp to apply to the signal before noisify is applied</p>
 <p class='sub'><code>noisify={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>fold</code> distort the signal by boosting then folding the overdriven part of the waveform</p>
+<p class='sub'><code>fold={12,gain:2}</code> Input gain; gain amp to apply to the signal before fold is applied</p>
 <p class='sub'><code>fold={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>clip</code> boost the signal then apply hard clipping</p>
+<p class='sub'><code>clip={12,gain:2}</code> Input gain; gain amp to apply to the signal before clip is applied</p>
 <p class='sub'><code>clip={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>drive</code> overdrive by boosting the signal then applying soft clipping</p>
+<p class='sub'><code>drive={12,gain:2}</code> Input gain; gain amp to apply to the signal before drive is applied</p>
 <p class='sub'><code>drive={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>bits</code> bit crush effect; value is number of bits. 1 bit is very distorted to (eg) 32 bits is relatively clean. 0 disables the effect.</p>
+<p class='sub'><code>bits={12,gain:2}</code> Input gain; gain amp to apply to the signal before bits is applied</p>
 <p class='sub'><code>bits={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>suck</code> suck smaller amplitudes even smaller, but leave large amplitudes alone; value is a limit amplitude: when the waveform is within this limit, it is scaled down. This can provide an unusual form of distortion, or for samples with a long tail, can give a 'gated' effect.</p>
+<p class='sub'><code>suck={12,gain:2}</code> Input gain; gain amp to apply to the signal before suck is applied</p>
 <p class='sub'><code>suck={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>scale</code> override scale for this player; set to one of these strings: 
   <code>chromatic</code>, 
@@ -727,6 +735,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>pan</code> pan from -1 (left) to 1 (right). default: 0</p>
 <p><code>echo</code> Echo time delay in beats</p>
 <p class='sub'><code>echo={1,feedback:0.8}</code> Echo feedback gain, 0 to 1, default 0.35. Higher value means the echo persists for longer.</p>
+<p class='max'><code>echo={1,max:2}</code> Echo max time delay. Only valid for bus echo. The bus echo time can be varied, but cannot be larger than this. Defaults to either 1 beat, or the initial value of the delay time, whichever is larger.</p>
 <p><code>chorus</code> Strength of lfo-delay based stereo chorus effect.</p>
 <p class='sub'><code>chorus={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>phaser</code> LFO frequency for phaser effect, in phase sweep cycles per beat.</p>
@@ -735,7 +744,10 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p class='sub'><code>flanger={1/3,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>room</code> reverb room size (using freeverb).</p>
 <p class='sub'><code>room={2,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1/2</p>
+<p><code>reverb</code> Convolution reverb duration. Currently only valid for buses. The value is a time in beats that the reverb tail will last for.</p>
+<p class='sub'><code>reverb={2,curve:3}</code> Decay curve power of the reverb tail. 1 is a linear decay, larger values make the tail decay faster. default: 5</p>
 <p><code>freq</code> READ ONLY param. This param is set by all tonal synths, to the frequency in Hz of the note being played. This value can then be read for other purposes; eg <code>lpf=this.freq*2</code> will set the low pass cutoff frequency to double the note frequency.</p>
+<p><code>bus</code> id of the bus that this player should mix to. If the sepcified player does not exist, this player will be silent. If the bus param is not specified, this player will be mixed to the global <code>main</code> bus.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-visual-params')" class="accordion"> Visual Params</h4>
 <div id="accordion-visual-params" class="closed">
@@ -962,18 +974,11 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
- Docs
-  bus player; continuous, ignores pattern, different effects, main bus, all values per frame, []e is meaningless, chords pick first
-  bus param; note: if bus doesn't exist, player will be silent; default to main bus
-  input gain subparam for wave effects and compress
-  bus reverb param with curve sub
-  bus echo param with max sub
-  main bus
-  Notes on echo, room, chorus, phaser & flanger that params are per frame, where possible, when used with a bus
  Release
   removed main.reverb var
   `set main.amp` is now `set main amp`
   `main.pulse` is now from audio
+In-page example with percussion bus
 !xylo gain staging is too loud; try it with linearshape and see waveform deform into a square wave
 !Should be able to have multiple bandpass and notch filters
 !pad envelope not giving clean continuous sound? Maybe just because the phase is different from one note to the next??
