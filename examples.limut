@@ -1498,11 +1498,10 @@ set p add+=[0,2,4,6]t2
 set p add%=7
 
 
-// Cyborg
-set bpm=120
+// Cyborgset bpm=120
 set scale=minor
 kd play x.
-set main amp=2
+set main amp=4
 set ch=[0,3,-2,-1]t16
 db dbass 0-7, dur=1/2, lpf={[100:[300:1000]n8@e,3000]e,q:[5,[10:30]l32]n1/4@f}, att=0, addc=wow, sus=1/2, rel=1, add=ch, amp=1+wow
 ds dsaw 0[23]4_, dur=[3,3,2]*2, lpf=[100:[700:5000]s8]e, addc=wow, oct=(3,4), phaser=1/3, echo=1, room=0.7, add=ch, amp=1+wow
@@ -1511,7 +1510,7 @@ no noise 0, dur=4, amp=[.05:.1]n19@f, hpf=[4000:8000]n23@f
 pi ping 00, dur=1/8, oct=[6,7], echo=3/4, amp=[1,0,0]l[4,12,0], add=[0:7]n+ch, addc=wow
 v streetlight 0, rate=-1+wow, perspective=0.5, scroll={y:1}
 vds glow follow ds, scroll={y:1}, back=neonpink, fore=white
-vpi glow follow pi, loc=sparkle+firefly/4, sus=1/4, back=blue, fore=white
+vpi glow follow pi, loc=sparkle+firefly/4, sus=1/4, back=blue, fore=white, amp=pi.amp.0
 
 
 v julia 1, mid=neongreen, scroll=time/8, repeat=1/4
@@ -3031,5 +3030,99 @@ set main reverb={2/3,mix:1/4}, compress={5,gain:3}, drive=1/32 // mastering
 // set main reverb={1,curve:1/2,mix:[0,2/3,1/2]l[1,2,1]@f} // pulse reverb
 // set main ring=440*[1/2,1,[3/2,2/3]t4@f]t[2,1,1]@f, amp*=3/4 // ring
 // set main hpf=500
+
+
+/// Bus testing
+///
+vf scopefft 0
+vs scope 0, additive, fore=#fa0f, zoom={y:1/2}
+
+// i play Xsos, bus='b', amp=3
+// b bus 0, reverb={1,curve:1/2,mix:[0:1]l2@f}
+
+// n noise 0, dur=1/8, bus='b', amp=1/4
+// b bus 0, amp=1/2
+// b play -
+// set b lpf={440*4*[1/2:1]s2@f,q:20}, amp=10//lpf={400,q:40*[0:1]l4@f}
+
+// p play -, bus='b'
+// b bus ., amp=3
+// set b amp*=0.1
+
+// p play x., bus=b
+// b bus 0, drive={1/4,amp:1/3}
+
+// p play80s (Xx)x, bus=b, amp=5
+// b bus ., amp*=1/8
+
+// s saw 0[23], oct=2, dur=2, glide=1/4, flanger=1/7, bus=b
+// p play80s XsOs, delay=(0,[1/4,3/4]r), bus=b
+// b bus ., lpf={[[500:2500]r1/4@f:300]l[1/4,0]@f,q:15}, reverb, compress=5, amp=2
+
+// c saw 0, bus='b', amp=5, lpf=[2000:500]e
+// b bus 0
+
+// set main amp=[0:10]l2{per:1}@f
+// r readout 0, add=main.amp
+
+// p saw (0-7)//, flanger=1/8
+// set main flanger=[1/4,1]s2
+
+// p saw (0-7), phaser=1/4
+// set main phaser=[1/4,2]s2
+
+// p saw 0//, chorus
+// set main chorus=[0,2]t1
+
+// p play :., room={2,mix:7/8}
+// p play :.
+// set main room={2,mix:7/8}
+
+// p play :
+// i impulse 0..0.0.., dur=1/4
+// g xylo 02.., amp=1/2, add=[0:7]r
+// set main echo={[1/12,1/8],feedback:[0.6:0.9]l2}, compress={3,gain:2}, reverb=1
+
+// pk play80s X.
+// pb synbass .0.0, rel=[1/3,1], stutter=2, amp*=2/3
+// ps play80s .lul, delay=[0:1/8]n4
+// ph play80s [--^], amp*=2/3
+// pp play80s ertrep<te>y
+// set p* bus='bperc'
+// bperc bus 0, compress={3,gain:2}, amp=2/3, drive=1/24//, reverb={2,mix:[0,1]l2}
+// s supersaw -707<-40>04-31, dur=1/2, amp*=3
+
+// p play XosXdXad, delay=(0,[1/4,3/4]r)
+// s supersaw 0_.., amp=2
+// set main reverb=2
+// r readout 0, add=main.pulse
+// v glow 0, loc={x:0,y:main.pulse*2-1,w:1/3,h:1/3}
+// v kal 0, fore=smooth{main.pulse*4}, contrast=main.pulse*3
+
+// b bus 0
+// set b foo=7
+// r readout 0, add=b.foo
+
+// p play =, amp=1/2
+// n noise 0
+// set main bpf={(15000),q:20}
+// set main bpf={350,q:20}
+
+// set bpm=140
+// pk1 play X., amp=0.9
+// pk2 bd 0..., drive=0/16
+// set main amp=5//, hpf=300
+// ps play .[<s.s><+:+n;>]us
+// set main compress={3,gain:10}, reverb={2,mix:[0,1]l2,curve:1}, amp=1
+
+// k play xo
+// set !b1 bus='b1'
+// b1 bus 0
+
+// set main reverb=1
+// main ping 0
+
+// main bus ., reverb={0.5,curve:5}, amp=3/2
+// main bus ., reverb={5,curve:5}
 
 
