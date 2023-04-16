@@ -962,9 +962,6 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
- TEST
-  TEST ALL EFFECTS on both players and buses
-  EVERYTHING
  Docs
   bus player; continuous, ignores pattern, different effects, main bus, all values per frame, []e is meaningless, chords pick first
   bus param; note: if bus doesn't exist, player will be silent; default to main bus
@@ -978,25 +975,25 @@ New 'bus' syntax to create an effects bus, and 'bus' param to send a player to a
   `set main.amp` is now `set main amp`
   `main.pulse` is now from audio
 !xylo gain staging is too loud; try it with linearshape and see waveform deform into a square wave
-Synthwave preset buses?
-Allow non-chord multiple bus outputs from one player; (bus1, bus2) etc
- bus subparam for mix level (per frame); eg   p ping 0, bus={bus1,mix:1/2}
-?bus echo can feedback via another bus? To allow full range of filters and effects?
- ??Same for room?
 !Should be able to have multiple bandpass and notch filters
 !pad envelope not giving clean continuous sound? Maybe just because the phase is different from one note to the next??
  Eg p square 0, envelope='pad'
  ?Try linear cross-fade for pad envelope, at least for non-noise synths?
+!If read a value from a bus thats implicitly changing per frame, it will read as if its per event
+Impulse destructor should be snappier? It probably waits too long to clean up
+ ?Same for play???
+External player should be a bus-like player, with no events
+Other audio player pulse should come from an actual FFT same as bus
+Setting to push analyser node FFT size up from 1024
+Synthwave preset buses?
+Support for bus feedback???
+?bus echo can feedback via another bus? To allow full range of filters and effects?
+ ??Same for room?
+Allow non-chord multiple bus outputs from one player; (bus1, bus2) etc
+ bus subparam for mix level (per frame); eg   p ping 0, bus={bus1,mix:1/2}
 More options for setting up the convolution reverb
  Mono/stereo: how much difference between L and R
  Some real impulse responses as options??
-External player should be a bus-like player, with no events
-Impulse destructor should be snappier? It probably waits too long to clean up
- ?Same for play???
-fxMixChain should use a destructor
-Other audio player pulse should come from an actual FFT same as bus
-Setting to push analyser node FFT size up from 1024
-Support for bus feedback???
 ??? Could use very short loop that moves stepwise on a carefully prepared sample to do wave table synthesis???
 envelopes
  * Create envelopes for eg lpf, eg  lpf=this.freq*10*ar{a:1/4,r:1}
@@ -1148,7 +1145,7 @@ shadertoy synth multiple channels
 // var, player.var, this.param, this.voice, var{params}, slider{}, floor{}, .floor{to:}, accum{}
 // (...).1, (...).max, max{...}, {foo:...}.foo, (pk,ps).pulse
 // modifiers {seed,per,0:0}, @e, @f
-// subparams {2,mix:1/2}, presets, buses
+// subparams {2,mix:1/2}, presets, buses, buffers
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
