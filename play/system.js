@@ -99,7 +99,7 @@ system.disconnectAt = (time, nodes) => {
 
 system.limiter = system.audio.createDynamicsCompressor()
 system.limiter.ratio.value = 20
-system.limiter.threshold.value = -1
+system.limiter.threshold.value = 0
 system.limiter.release.value = 0.05
 system.limiter.attack.value = 0.001
 system.limiter.knee.value = 0
