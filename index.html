@@ -985,6 +985,8 @@ In-page example with percussion bus
  Eg p square 0, envelope='pad'
  ?Try linear cross-fade for pad envelope, at least for non-noise synths?
 !If read a value from a bus thats implicitly changing per frame, it will read as if its per event
+Allow non-chord multiple bus outputs from one player; (bus1, bus2) etc
+ bus subparam for mix level (per frame); eg   p ping 0, bus={bus1,mix:1/2}
 Impulse destructor should be snappier? It probably waits too long to clean up
  ?Same for play???
 External player should be a bus-like player, with no events
@@ -994,12 +996,12 @@ Synthwave preset buses?
 Support for bus feedback???
 ?bus echo can feedback via another bus? To allow full range of filters and effects?
  ??Same for room?
-Allow non-chord multiple bus outputs from one player; (bus1, bus2) etc
- bus subparam for mix level (per frame); eg   p ping 0, bus={bus1,mix:1/2}
 More options for setting up the convolution reverb
  Mono/stereo: how much difference between L and R
  Some real impulse responses as options??
-??? Could use very short loop that moves stepwise on a carefully prepared sample to do wave table synthesis???
+Ability to apply effects like compress, drive, reverb etc in bands
+ So you can compress low, mid and high independantly
+ ??? Could use very short loop that moves stepwise on a carefully prepared sample to do wave table synthesis???
 envelopes
  * Create envelopes for eg lpf, eg  lpf=this.freq*10*ar{a:1/4,r:1}
   ??Is that the same as  lpf=this.freq*[0,10,0]e[1/4,1]  ??

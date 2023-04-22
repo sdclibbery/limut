@@ -3126,3 +3126,22 @@ vs scope 0, additive, fore=#fa0f, zoom={y:1/2}
 // main bus ., reverb={5,curve:5}
 
 
+// Cybang
+include 'preset/synthwave.limut'
+set scale=minor
+set bpm=137
+vg blob follow pk, sus=1/16, buffer='vb', additive, fore={h:[0:1]r@e,v:2/3}, perspective=[-1:1]r@e, rotate=[0:1]r@e, contrast, back=a.add.0 /16
+vb buffer 0, feedback={fore:0.97}
+pk play80s X.X.X.X., low=16, amp*=2, bus='bbass'
+pb cybass 03.422.411.0_..., dur=1/2, amp*=2, low=8, att=0.01, lpf*=[2,1,1,1/2]e, delay=[1/8,-1/8]l4, bus='bbass'
+ps play80s ..(OS)., mid=8, bus='bperc'
+ph play80s [.+][++], high=-8, pan=-1/3, bus='bperc'
+pp play80s peppey, dur=1/4, amp*=2/3, rate=3/4, mid=-4, pan=1/3, bus='bperc'
+a ambi (024), wave='tri', oct=(3,4,5), chorus, phaser=1/4, add=[0,7,0,8]t[13,3], glide=1/2, pan=[-1/3:1/3]r, bus='blead'
+g glock .......[0242], oct+=1, amp*=3, pan=[-1/2,1/2], rel=3.5, bus='blead'
+bbass bus ., compress={2,gain:2}, drive=1/32, amp=3/2, high=6
+bperc bus ., compress={2,gain:2}, drive=1/32, amp=2/3
+blead bus ., compress={2,gain:2}, reverb={2,mix:1/3}, drive=1/32, amp=1/2
+// set main hpf=500
+
+
