@@ -23,7 +23,7 @@ define(function (require) {
       }
     }).then(s => {
       s.getTracks().forEach((t,i) => {
-        consoleOut(`: External audio: Track ${i} - ${t.label}`)
+        consoleOut(`: External audio: Track ${i} - ${t.label} : ${t.getSettings().channelCount} channel(s)`)
       })
       stream=s
     })
