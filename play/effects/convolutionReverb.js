@@ -12,19 +12,20 @@ define(function (require) {
   }
 
   return (duration, curve) => {
-    let reverb = system.audio.createConvolver()
+    let convolver = system.audio.createConvolver()
     var rate = system.audio.sampleRate
     var length = rate * duration
-    var impulse = system.audio.createBuffer(2, length, rate)
-    var impulseL = impulse.getChannelData(0)
-    var impulseR = impulse.getChannelData(1)
+    var buffer = system.audio.createBuffer(2, length, rate)
+    var bufferL = buffer.getChannelData(0)
+    var bufferR = buffer.getChannelData(1)
     let random = mulberry32(1) // Same random seed every time
     for (var i = 0; i < length; i++) {
-      impulseL[i] = (random() * 2 - 1) * Math.pow(1 - i / length, curve)
-      impulseR[i] = (random() * 2 - 1) * Math.pow(1 - i / length, curve)
+      bufferL[i] = (random() * 2 - 1) * Math.pow(1 - i / length, curve)
+      bufferR[i] = (random() * 2 - 1) * Math.pow(1 - i / length, curve)
     }
-    reverb.buffer = impulse
-    return reverb
+    convolver.normalize = false
+    convolver.buffer = buffer
+    return convolver
   }
 
 })

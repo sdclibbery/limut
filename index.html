@@ -128,7 +128,7 @@
     .vu-meter {
       display: block;
       width: 100%;
-      height: 100%;
+      height: 50%;
       background-color: black;
     }
     .info h4 {
@@ -190,7 +190,7 @@
     <h3>Limut live coding</h3>
     <p style="display: flex; flex-flow: row nowrap;">
       Level:&nbsp;&nbsp;
-      <span class="vu-meter-base"><span id="vu-meter" class="vu-meter"></span></span>
+      <span class="vu-meter-base"><span id="vu-meter-l" class="vu-meter"></span><span id="vu-meter-r" class="vu-meter"></span></span>
       <input id="main-amp-slider" type="range" min="0" max="200" oninput="mainAmpChange(parseFloat(this.value)/100)" style="flex:auto; margin-left:12px;" />
     </p>
     <p>
@@ -308,7 +308,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 </div>
 <h4 onclick="toggleAccordion('accordion-indicators')" class="accordion"> Indicators</h4>
 <div id="accordion-indicators" class="closed">
-  <p><b>Level</b> VU meter for current output signal level. Use this when adjusting the output level, using either <code>set main amp</code> or the level slider, so it is just touching the red at its loudest.</p>
+  <p><b>Level</b> VU meter for current output signal level. Use this when adjusting the output level, using either <code>set main amp</code> or the level slider, so it is just touching the red at its loudest. Only one active channel is shown if the mix is fully mono.</p>
   <p><b>Beat</b> Current audio system beat count, followed by beat counts out of 12, 16 and 32 beats (useful for synchronising changes to various size musical bars and progressions)</p>
   <p><b>Audio</b> Audio lag; green when the browser audio system is keeping up; turns red when the system is struggling, which may lead to audio glitching</p>
   <p><b>Visual</b> Visual lag; green when the framerate is keeping up to 60 fps; turns red when the system is struggling, which may lead to visual glitching</p>
@@ -973,11 +973,11 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
-New 'bus' syntax to create an effects bus, and 'bus' param to send a player to an effects bus
- Release
-  removed main.reverb var
-  `set main.amp` is now `set main amp`
-  `main.pulse` is now from audio
+!!!Why did external mix ONLY to left channel???
+ ?Must have been a stereo input but audio only in L channel?
+ ?Have a mono effect to force mono?
+?Why does convolver reverb cause stereo bias?
+External player should be a bus-like player, with no events
 In-page example with percussion bus
 !xylo gain staging is too loud; try it with linearshape and see waveform deform into a square wave
 !Should be able to have multiple bandpass and notch filters
@@ -989,13 +989,9 @@ Allow non-chord multiple bus outputs from one player; (bus1, bus2) etc
  bus subparam for mix level (per frame); eg   p ping 0, bus={bus1,mix:1/2}
 Impulse destructor should be snappier? It probably waits too long to clean up
  ?Same for play???
-External player should be a bus-like player, with no events
 Other audio player pulse should come from an actual FFT same as bus
 Setting to push analyser node FFT size up from 1024
 Synthwave preset buses?
-Support for bus feedback???
-?bus echo can feedback via another bus? To allow full range of filters and effects?
- ??Same for room?
 More options for setting up the convolution reverb
  Mono/stereo: how much difference between L and R
  Some real impulse responses as options??
@@ -1156,16 +1152,16 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-Can print out list of all current player types to console
- Syntax???
- Split by audio vs visual
- Additional info?
 More time modifiers
  offset
  rate
  time
  ?delay time modifier, pauses time at the start of the event
 Make player pattern optional in the syntax; if missing, defaults to `0`?
+Can print out list of all current player types to console
+ Syntax???
+ Split by audio vs visual
+ Additional info?
 !when `time` is used @e it should be event time, not time when the event is created
  eg  v readout 0, add=time@e
  !Really thats true for other vars though; eg  reading p.value  or something

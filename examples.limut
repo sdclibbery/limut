@@ -3145,3 +3145,89 @@ blead bus ., compress={2,gain:2}, reverb={2,mix:1/3}, drive=1/32, amp=1/2
 // set main hpf=500
 
 
+// Impulsive
+set bpm=145
+pk impulse 00.00.0., dur=1/2, low=24, mid=-16, high=-24, amp=5, delay=(0,[1/4,1/2]r), drive
+ps noise [.0]0[00][.0], sus=1/8, high=-8, low=-8, envelope='percussion', room
+ph impulse [00], low=-16, mid=-8, phaser=1/8, echo=3/8
+pb noise .00, dur=1/4, bpf={440*[1,1/2]*[1,2/3]t8,q:60}, amp=6, sus=1/8, env='simple', flanger=1/8
+pn noise .0, dur=4, envelope='pad', flanger=1/2, amp=1/2, chop=[2,4]t[6,2]@f, chorus
+set p* delay=[0,(0,[1/4,3/4]r)]t[7,1], stutter=[1,2]t[5,1], swing=52
+set main compress={2,gain:2}, drive=1/16, reverb={1,mix:[1/16,3/4]l[3,1]}, low=16, mid=8, room//, amp=[0:3/2]s4
+
+
+include 'preset/synthwave.limut'
+set bpm=115
+set root=0
+set scale=minor
+vw webcam 0, vignette=0, buffer='vb', recol=neon, blend=max
+vb buffer 0, loc=tile_tr, feedback={fore:0.9+0.15*be.pulse.0,zoom:1.02}
+pk bd 5.-2., bus='bp', amp=3, stutter=[1,3]t[5,1]
+px play80s x..x.x, bus='bp', pan=-1/4
+ps play80s .sus, bus='bp', pan=1/2
+pp play80s roasty, bus='bp', amp=1/2, rate=1/2
+pb moroder 0, bus='bp', amp=[1/4,3/4]l16, pan=1/4
+bp bus 0, compress={2,gain:2}, drive=1/16, amp=1/2, reverb=4
+set p* delay|=[0,(0,[1/4,3/4]r)]t[8,2,4,2]
+v vambi 0(04b)(04)(06), amp*=5, chop=4, oct-=1
+n noise 0, amp=[0:2]n8, room=1/4, flanger=1/4, chop={2,wave:'square'}
+// s softpad 0(04), amp*=2, oct-=1
+// c chime .36..087, amp*=2
+// o oxy ..7[0-7]_..., amp*=2
+e external 0, bus='be', echo=3/4
+be bus 0, compress={2,gain:2}, drive={1,gain:6}, amp=1/2, reverb=4, flanger=1/16
+
+
+set bpm=130
+set scale=minor
+vw webcam 0, vignette=0, buffer='vb', recol=oil, blend=max, contrast
+vb buffer 0, loc=tile_tr, feedback={fore:0.6+0.35*be.pulse.0,zoom:1.02}
+pi impulse 0, amp=8, bus='bp', low=16, high=-4, stutter=[1:3.1]l2.2, delay=[0,(0,1/4)]t[14,2]
+// pk play lXDwXMDX, bus='bp'
+// ps play ..a., bus='bp'
+// pa play .ak;+., dur=1/4, bus='bp', amp=1/4, rate=1/2
+// pn noise .0.[.0], envelope='simple', amp=2, bus='bp', high=-8
+// pb fmbass 024b44b2<.1>., dur=1/2, amp=1, drive=1/8, bus='bp', high=-8
+// pb fmbass ..04b04b84b, dur=1/4, amp=1, drive=1/8, bus='bp', high=-8
+bp bus 0, compress={2,gain:2}, drive=1/4, amp=3, ring={pitch{0,oct:2},mix:[0:1]l[3,1]@f}
+// et ethereal 0___64b_., glide=1/2, amp=14, fold=1/2, oct+=1
+// ei impulse 0., bus='be', amp=16, room=1/4
+e external 0, bus='be'
+be bus 0, compress={3,gain:3}, drive={1,gain:10}, amp=2, noisify=1/8, room=1/8
+set main compress={2,gain:2}, drive=1/32
+
+
+include 'preset/synthwave.limut'
+set bpm=90
+set scale=minor
+vw webcam 0, vignette=0, buffer='vb',  blend=max, contrast, pixellate=20, recol=sunset
+vb buffer 0, loc=tile_tr, feedback={fore:0.9+0.2*be.pulse.0,zoom:1.02}
+c crackle 0
+n noisefloor 0
+pi impulse 0[0..0]0..[.0]0., bus='bp'
+bp bus 0, reverb=3, amp=2.5
+// a ambi 0, add=[(0,2,4),(0,3,6)]t16, oct=(3,4), amp=1/8, bus='be', chorus
+// s space 0, dur=[2,3,4]r, add=a.add.rand, bus='be', amp=1/4
+// o oxy 0, dur=4, add=a.add.rand, bus='be', amp=1/4
+// b blues 0, dur=[2,3,4]r, add=a.add.rand, bus='be', amp=1/4
+// e external 0, bus='be', amp=2, echo=1/2
+// be bus 0, compress={2,gain:2}, amp=1/16, reverb=2
+
+
+v shadertoy 0, id='Wts3DB', loc=tile_tr, rate=1/8, contrast=2, fore=2
+
+
+include 'preset/synthwave.limut'
+set bpm=90
+set scale=minor
+v shadertoy 0, id='llSGzW', loc=tile_tr, fore=neongreen, rate=1/4
+// p play80s XxoX-Xox
+// o oxy 7..20..-5-7..-4-3.4., rel=1
+ob oxy 0_, oct=2
+s softpad (024)
+set * add=[0,-1]t16
+// s space 070503..
+p play80s -
+set main compress={2,gain:2}, amp=1/2, reverb=4
+
+

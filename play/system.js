@@ -44,12 +44,9 @@ system.mainAmpUi = (amp) => {
 
 system.analyser = system.audio.createAnalyser()
 system.analyser.fftSize = 1024
-system.analyser.smoothingTimeConstant = 0.6
 let analyserBufferLength = system.analyser.frequencyBinCount
 const spectrumData = new Uint8Array(analyserBufferLength)
-let chunk = (data, reducer, init) => {
-  return data.reduce((a,b) => reducer(a,b), init) / 255
-}
+let chunk = (data, reducer, init) =>  data.reduce((a,b) => reducer(a,b), init) / 255
 const spec = []
 system.spectrum = () => {
   system.analyser.getByteFrequencyData(spectrumData)
@@ -69,12 +66,23 @@ system.fft = () => {
   system.analyser.getFloatFrequencyData(fftData)
   return fftData
 }
-const meterData = new Float32Array(system.analyser.fftSize)
-system.meter = () => {
-  system.analyser.getFloatTimeDomainData(meterData)
+
+system.meterSplitter = system.audio.createChannelSplitter(2)
+system.analyserL = system.audio.createAnalyser()
+system.analyser.smoothingTimeConstant = 1
+system.analyserL.fftSize = 128
+system.meterSplitter.connect(system.analyserL, 0)
+system.analyserR = system.audio.createAnalyser()
+system.analyser.smoothingTimeConstant = 1
+system.analyserR.fftSize = 128
+system.meterSplitter.connect(system.analyserR, 1)
+system.meter = (channel) => {
+  let analyser = channel === 'L' ? system.analyserL : system.analyserR
+  const meterData = new Float32Array(analyser.fftSize)
+  analyser.getFloatTimeDomainData(meterData)
   let peakInstantaneousPower = 0
-  for (let i = 0; i < system.analyser.fftSize; i++) {
-    const power = meterData[i] ** 2
+  for (let i = 0; i < analyser.fftSize; i++) {
+    const power = (meterData[i]*2) ** 2
     peakInstantaneousPower = Math.max(power, peakInstantaneousPower)
   }
   const peakInstantaneousPowerDecibels = 10 * Math.log10(peakInstantaneousPower)
@@ -110,6 +118,7 @@ system.limiterReduction = () => {
 
 system.vcaMainAmp.connect(system.limiter)
 system.limiter.connect(system.analyser)
+system.limiter.connect(system.meterSplitter)
 system.analyser.connect(system.audio.destination)
 
 return system

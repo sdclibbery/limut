@@ -95,7 +95,8 @@ define(function(require) {
   }
 
   // Update
-  let vuMeter = document.getElementById('vu-meter')
+  let vuMeterL = document.getElementById('vu-meter-l')
+  let vuMeterR = document.getElementById('vu-meter-r')
   let limiterReadout = document.getElementById('compressor-readout')
   let beatLatencyReadout = document.getElementById('beat-latency-readout')
   let visualReadout = document.getElementById('visual-readout')
@@ -161,7 +162,8 @@ define(function(require) {
         console.log(e)
       }
     }
-    vuMeterStyle(vuMeter.style, system.meter(), -30, 0)
+    vuMeterStyle(vuMeterL.style, system.meter('L'), -30, 0)
+    vuMeterStyle(vuMeterR.style, system.meter('R'), -30, 0)
     limiterReadout.style.backgroundColor = readoutColor(-system.limiterReduction(), 0, 10)
     if (!!beat || tickCount % 20 == 0) {
       beatLatencyReadout.style.backgroundColor = readoutColor(beatLatency, 0, 0.05)

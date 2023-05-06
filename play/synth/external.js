@@ -14,6 +14,9 @@ define(function (require) {
     navigator.mediaDevices.getUserMedia({
       audio: {
         echoCancellation: false,
+        googAutoGainControl: false,
+        googNoiseSuppression: false,
+        googHighpassFilter: false,
         autoGainControl: false,
         noiseSuppression: false,
         latency: 0
