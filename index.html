@@ -512,7 +512,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>pwm</code> Pulse width modulation synth. A pulse wave with variable pulse width, from pulse to square. Note: uses AudioWorklet so may use more audio render capacity than other synth types. Also note there may be aliasing, so you may want to apply some filtering to cut harsh high frequencies.</p>
 <p class='sub'><code>pwm=1/2</code> Set the pulse width from 0 to 1. The default is 1/2, a square wave (50% duty cycle). values very close to 0 and 1 will produce no sound since the actual pulse width will become vanishingly small.</p>
 <p><code>supersaw</code> supersaw lead synth preset; 7 detuned saws</p>
-<p><code>external</code> take audio from microphone or line in. Use the <code>track</code> param to specify the track within the stream.</p>
+<p><code>external</code> take audio from microphone or line in. Use the <code>track</code> param to specify the track within the stream. If the input signal appears on only one stereo channel, use the <code>mono</code> param to force it onto both.</p>
 <p><code>multiwave</code> Synthesizer providing multiple waveform oscillators which can have their amp and detune controlled individually and  dynamically. The waves are specified using params <code>wave1</code>,  <code>wave2</code> etc:</p>
 <p class='sub'><code>wave1={'saw',amp:[0:1]n,detune:wow}</code> The main value is a string giving the waveform to use. amp is a per frame amplitude control. detune is a per frame detune control in semitones.</p>
 <p><code>crackle</code> Crackly crackle sounds.</p>
@@ -733,6 +733,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>glide</code> Glide from one note to the next (portamento). When a note plays with glide set, if there is a previous note playing on the same player in the same voice, then both notes will glide in pitch from the old note's pitch to the new. The value is in beats, so <code>glide=1/3</code> means it takes 1/3 of a beat to glide from the old note to the new. Default value is 0 (no glide).</p>
 <p class='sub'><code>glide={1/3,curve:4}</code> glide curve. Zero means no curve, or a linear frequency change. Positive curve means the frequency moves quickly to the target, then slows down as it approaches. Default is 1.</p>
 <p><code>pan</code> pan from -1 (left) to 1 (right). default: 0</p>
+<p><code>mono</code> Force a signal to mono: the input signal appears equally in both left and right channels</p>
 <p><code>echo</code> Echo time delay in beats</p>
 <p class='sub'><code>echo={1,feedback:0.8}</code> Echo feedback gain, 0 to 1, default 0.35. Higher value means the echo persists for longer.</p>
 <p class='max'><code>echo={1,max:2}</code> Echo max time delay. Only valid for bus echo. The bus echo time can be varied, but cannot be larger than this. Defaults to either 1 beat, or the initial value of the delay time, whichever is larger.</p>
@@ -973,9 +974,13 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
-Mono param to forcibly mix down to mono
-!!!Why did external mix ONLY to left channel???
- ?Must have been a stereo input but audio only in L channel?
+!drive=0.001 causes silence???
+More bus features
+ Allow non-chord multiple bus outputs from one player; (bus1, bus2) etc
+ Bus subparam for mix level (per frame); eg   p ping 0, bus={bus1,mix:1/2}
+ Inline bus param Eg p ping 0, bus={reverb:1}
+Ability to specify gain values in dB; eg compress={2,gain:3dB}
+!Pan should be equal power when panned
 ?Why does convolver reverb cause stereo bias?
 External player should be a bus-like player, with no events
 In-page example with percussion bus
@@ -985,8 +990,6 @@ In-page example with percussion bus
  Eg p square 0, envelope='pad'
  ?Try linear cross-fade for pad envelope, at least for non-noise synths?
 !If read a value from a bus thats implicitly changing per frame, it will read as if its per event
-Allow non-chord multiple bus outputs from one player; (bus1, bus2) etc
- bus subparam for mix level (per frame); eg   p ping 0, bus={bus1,mix:1/2}
 Impulse destructor should be snappier? It probably waits too long to clean up
  ?Same for play???
 Other audio player pulse should come from an actual FFT same as bus

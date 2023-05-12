@@ -40,6 +40,15 @@ define(function (require) {
     return mix(params, 'ring', node, gain, 1)
   }
 
+  let mono = (params, node) => {
+    if (!mainParam(params.mono, 0)) { return node }
+    let mixer = system.audio.createGain(1)
+    mixer.channelCount=1
+    mixer.channelCountMode = 'explicit'
+    node.connect(mixer)
+    return mixer
+  }
+
   let pan = (params, node) => {
     if (!mainParam(params.pan, 0)) { return node }
     let pan = system.audio.createStereoPanner()
@@ -53,6 +62,7 @@ define(function (require) {
     node = chop(params, node)
     node = ring(params, node)
     node = filters(params, node)
+    node = mono(params, node)
     node = pan(params, node)
     return node
   }
