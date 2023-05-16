@@ -13,6 +13,21 @@ define(function (require) {
     return gain
   }
 
+  let compressor = (params, node) => {
+    let compress = evalMainParamEvent(params, 'compress', 0)
+    if (!compress) { return node }
+    node = inputGain(params, 'compress', node)
+    let compressor = system.audio.createDynamicsCompressor()
+    compressor.ratio.value = compress
+    compressor.threshold.value = evalSubParamEvent(params, 'compress', 'threshold', -50)
+    compressor.knee.value = evalSubParamEvent(params, 'compress', 'knee', 40)
+    compressor.attack.value = evalSubParamEvent(params, 'compress', 'att', 0.01)
+    compressor.release.value = evalSubParamEvent(params, 'compress', 'rel', 0.25)
+    node.connect(compressor)
+    params._destructor.disconnect(compressor, node)
+    return compressor
+  }
+
   let shapeEffect = (params, effect, node, count, shape) => {
     let amount = evalMainParamEvent(params, effect, 0)
     if (!amount) { return node }
@@ -53,19 +68,9 @@ define(function (require) {
     return sgn * (v>1 ? 1 : v)
   }
 
-  let compressor = (params, node) => {
-    let compress = evalMainParamEvent(params, 'compress', 0)
-    if (!compress) { return node }
-    node = inputGain(params, 'compress', node)
-    let compressor = system.audio.createDynamicsCompressor()
-    compressor.ratio.value = compress
-    compressor.threshold.value = evalSubParamEvent(params, 'compress', 'threshold', -50)
-    compressor.knee.value = evalSubParamEvent(params, 'compress', 'knee', 40)
-    compressor.attack.value = evalSubParamEvent(params, 'compress', 'att', 0.01)
-    compressor.release.value = evalSubParamEvent(params, 'compress', 'rel', 0.25)
-    node.connect(compressor)
-    params._destructor.disconnect(compressor, node)
-    return compressor
+  let drive = (x, a) => {
+    a *= 100
+    return (3 + a) * x * Math.PI * 0.333 / (Math.PI + a * Math.abs(x));
   }
 
   return (params, node) => {
@@ -73,7 +78,7 @@ define(function (require) {
     node = shapeEffect(params, 'bits', node, 256, (x, b) => Math.pow(Math.round(Math.pow(x,1/2)*b)/b,2))
     node = shapeEffect(params, 'fold', node, 256, fold)
     node = shapeEffect(params, 'clip', node, 256, clip)
-    node = shapeEffect(params, 'drive', node, 256, (x, a) => Math.atan(x*a*100)/(2+a))
+    node = shapeEffect(params, 'drive', node, 4096, drive)
     node = shapeEffect(params, 'suck', node, 256, (x, a) => Math.abs(x)<a ? x*Math.abs(x)/a : x)
     node = shapeEffect(params, 'linearshape', node, 8, (x) => x) // For testing purposes; applies clipping at -1 and 1, so can be used to test synth intermediate levels
     node = compressor(params, node)
