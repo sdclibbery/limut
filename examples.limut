@@ -3231,3 +3231,13 @@ p play80s -
 set main compress={2,gain:2}, amp=1/2, reverb=4
 
 
+// Cyberpunk improv 16/May/2023
+include 'preset/synthwave.limut'
+set scale=minor
+set bpm=120
+vv kal 5, loc=tile_tr, vhs, contrast, zoom=4, rate=1/2
+cb cybass 0......., flanger=1/3, lpf={[330:990]l8@f,q:20}, add=[0]t8, echo=3/4, sus=1/4//, oct+=[0,0,0,1]r//, amp*=3/2, chorus, noisify
+// pk play X., mid=16, low=8, amp=32
+// ps play .sts, amp=1/2, high=-8, flanger=1/5, amp=3/2, echo=3/4
+set main compress={2,gain:2}, drive={1/8,gain:2}, amp=1/3, reverb={1,mix:1/3}, chorus
+

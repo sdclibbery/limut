@@ -58,7 +58,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
     if (ch == "'") {
       state.tokenize = tokenString(ch);
       return state.tokenize(stream, state);
-    } else if ((ch == "." || ch == "-") && stream.match(/^\d[\d_]*(?:[eE][+\-]?[\d_]+)?(\/[\d]+)?/)) {
+    } else if ((ch == "." || ch == "-" || ch == "+") && stream.match(/^\d[\d_]*(?:[eE][+\-]?[\d_]+)?(\/[\d]+)?([dD][bB])?/)) {
       return ret("number", "number");
     } else if (ch == "#" && stream.match(/^[0-9a-fA-F]{1,8}/)) {
       return ret("colour", "colour");
@@ -68,7 +68,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
     } else if (/[\[\]{}\(\)\<\>]/.test(ch)) {
       return ret("bracket","bracket");
     } else if (/\d/.test(ch)) {
-      stream.match(/^[\d_]*(?:n|(?:\.[\d_]*)?(?:[eE][+\-]?[\d_]+)?)?(\/[\d]+)?/);
+      stream.match(/^[\d_]*(?:n|(?:\.[\d_]*)?(?:[eE][+\-]?[\d_]+)?)?(\/[\d]+)?([dD][bB])?/);
       return ret("number", "number");
     } else if (ch == "/") {
       if (stream.eat("/")) {
