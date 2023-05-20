@@ -69,11 +69,11 @@ system.fft = () => {
 
 system.meterSplitter = system.audio.createChannelSplitter(2)
 system.analyserL = system.audio.createAnalyser()
-system.analyser.smoothingTimeConstant = 1
+system.analyserL.smoothingTimeConstant = 1
 system.analyserL.fftSize = 128
 system.meterSplitter.connect(system.analyserL, 0)
 system.analyserR = system.audio.createAnalyser()
-system.analyser.smoothingTimeConstant = 1
+system.analyserR.smoothingTimeConstant = 1
 system.analyserR.fftSize = 128
 system.meterSplitter.connect(system.analyserR, 1)
 system.meter = (channel) => {
@@ -119,7 +119,7 @@ system.limiterReduction = () => {
 system.vcaMainAmp.connect(system.limiter)
 system.limiter.connect(system.analyser)
 system.limiter.connect(system.meterSplitter)
-system.analyser.connect(system.audio.destination)
+system.limiter.connect(system.audio.destination)
 
 return system
 })
