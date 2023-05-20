@@ -642,13 +642,13 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p class='sub'><code>apf={400,q:2}</code> Allpass filter resonance. Default: 1.</p>
 <p><code>psf</code> Phaser stage filter consisting of two allpass filters in parallel. Multiple phaserstage filters can be specified with params <code>psf1</code>, <code>psf2</code> etc. The phaserstages will operate in series, allowing more complex phasers to be built up with multiple peaks and troughs in the frequency spectrum.</p>
 <p class='sub'><code>psf={f1:300,f2:2300,q:0.7}</code> f1 and f2 are the frequencies in Hertz of the two allpass filters. Sweep these dynamically for the swirling phaser effect. q is filter resonance. Default: 1.</p>
-<p><code>low</code> Low shelf gain in dB. Use negative values to cut frequencies below the cutoff, positive to boost them.</p>
-<p class='sub'><code>low={-8,freq:400}</code> Low shelf cutoff frequency. Default: 200Hz</p>
-<p><code>mid</code> Mid gain in dB. Use negative values to cut frequencies around the cutoff, positive to boost them.</p>
-<p class='sub'><code>mid={-8,freq:400}</code> Mid cutoff frequency. Default: 600Hz</p>
-<p class='sub'><code>mid={-8,q:10}</code> Mid q defines the width of the mid frequency band; low q is wide. Default: 5</p>
-<p><code>high</code> High shelf gain in dB. Use negative values to cut frequencies above the cutoff, positive to boost them.</p>
-<p class='sub'><code>high={-8,freq:400}</code> High shelf cutoff frequency. Default: 1100Hz</p>
+<p><code>low</code> Low shelf gain. Eg <code>low=-6dB</code> will act like a gain of 1/2 for the low frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
+<p class='sub'><code>low={-8db,freq:400}</code> Low shelf cutoff frequency in Hz. Default: 200Hz</p>
+<p><code>low</code> Mid gain. Eg <code>mid=-6dB</code> will act like a gain of 1/2 for the mid frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
+<p class='sub'><code>mid={-8db,freq:400}</code> Mid cutoff frequency in Hz. Default: 600Hz</p>
+<p class='sub'><code>mid={-8db,q:10}</code> Mid q defines the width of the mid frequency band; low q is wide. Default: 5</p>
+<p><code>low</code> High shelf gain. Eg <code>high=-6dB</code> will act like a gain of 1/2 for the high frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
+<p class='sub'><code>high={-8db,freq:400}</code> High shelf cutoff frequency in Hz. Default: 1100Hz</p>
 <p><code>chop</code> Chop the signal into a number of parts per beat, eg <code>chop=2</code> chops the signal twice per beat.</p>
 <p class='sub'><code>chop={2,wave:triangle}</code> chops twice per beat with a triangle waveform. The default waveform is sine; the options are sine, square, triangle, saw.</p>
 <p class='sub'><code>chop={4,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
@@ -660,8 +660,8 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>start</code> For the 'sample' synth, specify the playback start time in seconds within the sample. </p>
 <p><code>compress</code> Compression ratio, or the reduction in volume for signals above the compression threshold. A ratio of zero disables compression.</p>
 <p class='sub'><code>compress={12,gain:2}</code> Input gain; gain amp to apply to the signal before compression is applied</p>
-<p class='sub'><code>compress={12,threshold:-40}</code> Threshold in dB at which the compression ratio kicks in. Default is -50</p>
-<p class='sub'><code>compress={12,knee:10}</code> the 'knee' is a softening of the compression curve, so that there is no sudden changeover at the threshold. A value of 0 disables the knee and gives a sudden changeover. Other values are a dB range over which the knee should apply. Default is 40.</p>
+<p class='sub'><code>compress={12,threshold:-40dB}</code> Threshold at which the compression ratio kicks in. Default is <code>-50dB</code></p>
+<p class='sub'><code>compress={12,knee:10dB}</code> the 'knee' is a softening of the compression curve, so that there is no sudden changeover at the threshold. A value of <code>0dB</code> disables the knee and gives a sudden changeover. Other values are the range over which the knee should apply. Default is <code>40dB</code>.</p>
 <p class='sub'><code>compress={12,att:0.1}</code> Compressor attack time in seconds. The attack time is the time it takes for compression to 'kick in' once a signal crosses the threshold. Default is 0.01 (or 10ms).</p>
 <p class='sub'><code>compress={12,rel:0.2}</code> Compressor release time in seconds. The release time is the time it takes for compression to 'go away' once a signal falls back below the threshold. Default is 0.25.</p>
 <p><code>noisify</code> noisify: distort the signal into noise</p>
@@ -977,8 +977,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ==== audio ====
 Ability to specify gain values in dB; eg compress={2,gain:3dB} amp*=-3db    ;;;   amp gain = Math.pow(10, dB/20)
  What about high/mid/low etc that are already in dB??? Also compress threshold and knee
-  Have to change these
-  Docs
+  Examples high/mid/low; compress threshold/knee
  Release for high/mid/low and compress threshold/knee that have changed to V/V gain and need to have dB made explicit
 ?Try messing with resonance for the phaser??
 More bus features

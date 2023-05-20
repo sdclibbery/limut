@@ -20,7 +20,7 @@ define(function (require) {
     if (!mainParam(params[gainParam], 0)) { return node }
     let filter = system.audio.createBiquadFilter()
     filter.type = type
-    evalMainParamFrame(filter.gain, params, gainParam)//, undefined, x => Math.log10(x)*20)
+    evalMainParamFrame(filter.gain, params, gainParam, undefined, x => Math.log10(Math.max(x,1e-6))*20) // Convert to dB for WebAudio
     evalSubParamFrame(filter.frequency, params, gainParam, 'freq', defaultFreq)
     evalSubParamFrame(filter.Q, params, gainParam, 'q', defaultQ)
     node.connect(filter)
