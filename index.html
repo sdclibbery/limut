@@ -975,37 +975,34 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
-Ability to specify gain values in dB; eg compress={2,gain:3dB} amp*=-3db    ;;;   amp gain = Math.pow(10, dB/20)
- Release for high/mid/low and compress threshold/knee that have changed to V/V gain and need to have dB made explicit
-?Try messing with resonance for the phaser??
-More bus features
- Allow non-chord multiple bus outputs from one player; (bus1, bus2) etc
- Bus subparam for mix level (per frame); eg   p ping 0, bus={bus1,mix:1/2}
-  Also want to be able to split multiband too
- Inline bus param Eg p ping 0, bus={reverb:1}
-!If do add=slider*14 with dur=1/4, only see note change on every beat
-?How's about a slider that only gives output when you click/hold it? So you control note duration/rest as well as pitch?
-?Why does convolver reverb cause stereo bias?
-!Pan should be equal power when panned
 External player should be a bus-like player, with no events
-In-page example with percussion bus
-!xylo gain staging is too loud; try it with linearshape and see waveform deform into a square wave
-!Should be able to have multiple bandpass and notch filters
 !pad envelope not giving clean continuous sound? Maybe just because the phase is different from one note to the next??
  Eg p square 0, envelope='pad'
  ?Try linear cross-fade for pad envelope, at least for non-noise synths?
-!If read a value from a bus thats implicitly changing per frame, it will read as if its per event
+Convolution reverb for non bus effect chains
 Impulse destructor should be snappier? It probably waits too long to clean up
  ?Same for play???
+!If read a value from a bus thats implicitly changing per frame, it will read as if its per event
+!xylo gain staging is too loud; try it with linearshape and see waveform deform into a square wave
+!If do add=slider*14 with dur=1/4, only see note change on every beat
 Other audio player pulse should come from an actual FFT same as bus
-Setting to push analyser node FFT size up from 1024
+?Ability to apply effects like compress, drive, reverb etc in bands - So you can compress low, mid and high independantly
+Allow non-chord multiple bus outputs from one player; (bus1, bus2) etc
+Bus subparam for mix level (per frame); eg   p ping 0, bus={bus1,mix:1/2}
+ Also want to be able to split multiband too
+?How's about a slider that only gives output when you click/hold it? So you control note duration/rest as well as pitch?
+?Why does convolver reverb cause stereo bias?
+!Pan should be equal power when panned
+In-page example with percussion bus
+Should be able to have multiple bandpass and notch filters
+?Try messing with resonance for the phaser??
+Inline bus param Eg p ping 0, bus={reverb:1}
+?Setting to push analyser node FFT size up from 1024
 Synthwave preset buses?
 More options for setting up the convolution reverb
  Mono/stereo: how much difference between L and R
  Some real impulse responses as options??
-Ability to apply effects like compress, drive, reverb etc in bands
- So you can compress low, mid and high independantly
- ??? Could use very short loop that moves stepwise on a carefully prepared sample to do wave table synthesis???
+??? Could use very short loop that moves stepwise on a carefully prepared sample to do wave table synthesis???
 envelopes
  * Create envelopes for eg lpf, eg  lpf=this.freq*10*ar{a:1/4,r:1}
   ??Is that the same as  lpf=this.freq*[0,10,0]e[1/4,1]  ??
@@ -1160,29 +1157,29 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
+!Can no longer use a complex dur to force a pattern to start when the player is uncommented
+ EG the boom and whoosh in Blade Runner opening titles
+ Maybe some other, proper, way to force this?
 More time modifiers
  offset
  rate
  time
  ?delay time modifier, pauses time at the start of the event
 Make player pattern optional in the syntax; if missing, defaults to `0`?
-Can print out list of all current player types to console
+!Syntax colouring is case sensitive; eg  `Set` does not get coloured correctly
+?Can print out list of all current player types to console
  Syntax???
  Split by audio vs visual
  Additional info?
 !when `time` is used @e it should be event time, not time when the event is created
  eg  v readout 0, add=time@e
  !Really thats true for other vars though; eg  reading p.value  or something
-!Can no longer use a complex dur to force a pattern to start when the player is uncommented
- EG the boom and whoosh in Blade Runner opening titles
- Maybe some other, proper, way to force this?
 !this var lookup failing in various ways:
  // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
  // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1
  r readout 0, add=m.bar.detune, loc=sparkle
 !Readout doesn't work here:  p ping 0, foo=[0,1,2,3]t1, add=this.foo \ r readout 0, add=p.add
  It's specifically the this.foo that makes it fail
-!Syntax colouring is case sensitive; eg  `Set` does not get coloured correctly
 !Follow player chooses different random values so it does not copy the original player properly
  Tests for this
  Need all randoms to be seeded, and the seed to vary between players but be the same for a follow player
