@@ -746,7 +746,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p class='sub'><code>flanger={1/3,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>room</code> reverb room size (using freeverb).</p>
 <p class='sub'><code>room={2,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1/2</p>
-<p><code>reverb</code> Convolution reverb duration. Currently only valid for buses. The value is a time in beats that the reverb tail will last for.</p>
+<p><code>reverb</code> Convolution reverb duration. The value is a time in beats that the reverb tail will last for.</p>
 <p class='sub'><code>reverb={2,curve:3}</code> Decay curve power of the reverb tail. 1 is a linear decay, larger values make the tail decay faster. default: 5</p>
 <p><code>freq</code> READ ONLY param. This param is set by all tonal synths, to the frequency in Hz of the note being played. This value can then be read for other purposes; eg <code>lpf=this.freq*2</code> will set the low pass cutoff frequency to double the note frequency.</p>
 <p><code>bus</code> id of the bus that this player should mix to. If the sepcified player does not exist, this player will be silent. If the bus param is not specified, this player will be mixed to the global <code>main</code> bus.</p>
@@ -979,7 +979,6 @@ External player should be a bus-like player, with no events
 !pad envelope not giving clean continuous sound? Maybe just because the phase is different from one note to the next??
  Eg p square 0, envelope='pad'
  ?Try linear cross-fade for pad envelope, at least for non-noise synths?
-Convolution reverb for non bus effect chains
 Impulse destructor should be snappier? It probably waits too long to clean up
  ?Same for play???
 !If read a value from a bus thats implicitly changing per frame, it will read as if its per event

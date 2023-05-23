@@ -45,7 +45,19 @@ define(function (require) {
     return mix(params, 'reverb', node, boost, 1/3)
   }
 
+  let fixedReverb = (destructor, duration, curve, node) => {
+    if (!duration || duration < 0.0001) { return node }
+    let rev = convolutionReverb(duration, curve)
+    let boost = system.audio.createGain()
+    boost.gain.value = 6 // Boost the wet signal else the whole bus sounds quieter with a reverb in
+    node.connect(rev)
+    rev.connect(boost)
+    destructor.disconnect(rev, boost)
+    return boost
+  }
+
   return {
     reverb: reverb,
+    fixedReverb: fixedReverb,
   }
 })

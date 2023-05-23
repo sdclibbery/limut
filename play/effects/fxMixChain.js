@@ -3,6 +3,7 @@ define(function (require) {
   let system = require('play/system')
   let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
   let {fixedFreeverb} = require('play/effects/freeverb')
+  let {fixedReverb} = require('play/effects/reverb')
   let {fixedPhaser} = require('play/effects/phaser')
   let {fixedFlanger} = require('play/effects/flanger')
   let {fixedChorus} = require('play/effects/chorus')
@@ -27,9 +28,12 @@ define(function (require) {
       echoFeedback: quantise(Math.min(evalSubParamEvent(params, 'echo', 'feedback', 0.35), 0.95), 20),
       room: quantise(evalMainParamEvent(params, 'room', 0), 16),
       roomMix: quantise(evalSubParamEvent(params, 'room', 'mix', 1/2), 16),
+      reverb: quantise(evalMainParamEvent(params, 'reverb', 0) * params.beat.duration, 16),
+      reverbCurve: quantise(evalSubParamEvent(params, 'reverb', 'curve', 3), 16),
+      reverbMix: quantise(evalSubParamEvent(params, 'reverb', 'mix', 1/3), 16),
       bus: evalMainParamEvent(params, 'bus'),
     }
-}
+  }
 
   let chains = {}
 
@@ -46,6 +50,7 @@ define(function (require) {
     node = fixedMix(c.destructor, c.params.flangerMix, node, fixedFlanger(c.destructor, c.params.flangerRate, node))
     node = fixedEcho(c.destructor, c.params.echoDelay, c.params.echoFeedback, node)
     node = fixedMix(c.destructor, c.params.roomMix, node, fixedFreeverb(c.destructor, c.params.room, node))
+    node = fixedMix(c.destructor, c.params.reverbMix, node, fixedReverb(c.destructor, c.params.reverb, c.params.reverbCurve, node))
     c.out = node
     return c
   }
