@@ -975,11 +975,6 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
-Impulse destructor should be snappier? It probably waits too long to clean up
- ?Same for play???
-!If read a value from a bus thats implicitly changing per frame, it will read as if its per event
-!xylo gain staging is too loud; try it with linearshape and see waveform deform into a square wave
-!If do add=slider*14 with dur=1/4, only see note change on every beat
 Other audio player pulse should come from an actual FFT same as bus
 ?Ability to apply effects like compress, drive, reverb etc in bands - So you can compress low, mid and high independantly
 Allow non-chord multiple bus outputs from one player; (bus1, bus2) etc
@@ -988,6 +983,8 @@ Bus subparam for mix level (per frame); eg   p ping 0, bus={bus1,mix:1/2}
 ?How's about a slider that only gives output when you click/hold it? So you control note duration/rest as well as pitch?
 ?Why does convolver reverb cause stereo bias?
 !Pan should be equal power when panned
+Impulse destructor should be snappier? It probably waits too long to clean up
+ ?Same for play???
 External player should be a bus-like player, with no events ?? Will this still have an fxMixChain??
 In-page example with percussion bus
 Should be able to have multiple bandpass and notch filters
@@ -1161,6 +1158,8 @@ More time modifiers
  rate
  time
  ?delay time modifier, pauses time at the start of the event
+!If do add=slider*14 with dur=1/4, only see note change on every beat
+!If read a value from a bus thats implicitly changing per frame, it will read as if its per event
 Make player pattern optional in the syntax; if missing, defaults to `0`?
 !Syntax colouring is case sensitive; eg  `Set` does not get coloured correctly
 ?Can print out list of all current player types to console
