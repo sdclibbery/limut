@@ -62,18 +62,31 @@ define(function (require) {
     return vca
   }
 
-  let fadeUp = (gain) => {
+  let fadeUpCosine = (gain) => {
     return (new Float32Array(16)).map((_,i) => {
       return Math.sin(i/15 * 0.5*Math.PI)*gain
     })
   }
-  let fadeDown = (gain) => {
+  let fadeDownCosine = (gain) => {
     return (new Float32Array(16)).map((_,i) => {
       return Math.cos(i/15 * 0.5*Math.PI)*gain
     })
   }
 
-  let padEnvelope = (params, gainBase) => {
+  let fadeUpLinear = (gain) => {
+    return (new Float32Array(2)).map((_,i) => i*gain)
+  }
+  let fadeDownLinear = (gain) => {
+    return (new Float32Array(2)).map((_,i) => (1-i)*gain)
+  }
+
+  let padEnvelope = (params, gainBase, type) => {
+    let fadeUp = fadeUpCosine
+    let fadeDown = fadeDownCosine
+    if (type === 'linear') {
+      fadeUp = fadeUpLinear
+      fadeDown = fadeDownLinear
+    }
     let dur = Math.max(evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25)), 0.01)
     dur *= evalMainParamEvent(params, "long", 1)
     let attack = Math.max(evalMainParamEvent(params, 'att', dur) * params.beat.duration, 0.001)
@@ -99,7 +112,8 @@ define(function (require) {
     switch (envelope) {
       case 'full': env = fullEnvelope(params, gainbase); break
       case 'simple': env = simpleEnvelope(params, gainbase); break
-      case 'pad': env = padEnvelope(params, gainbase); break
+      case 'pad': env = padEnvelope(params, gainbase, 'cosine'); break
+      case 'linpad': env = padEnvelope(params, gainbase, 'linear'); break
       case 'percussion': env = percussionEnvelope(params, gainbase); break
       default: env = fullEnvelope(params, gainbase); break
     }

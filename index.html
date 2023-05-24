@@ -567,7 +567,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p class='sub'><code>add={0,b:1}</code> Flatten the scale degree (subtract a given number of semitones)</p>
 <p><code>addc</code> Amount to add onto event pitch, in semitones. Evaluated per frame, and accepts fractional values, so <code>addc=[0:12]e</code> will slide the note from the starting pitch smoothly up a whole octave over the course of the note.</p>
 <p><code>oct</code> Octave; middle C is in octave 4</p>
-<p><code>envelope</code> Specify the envelope type to use: 'full' (ADSR), 'simple' (AD), 'pad' (uses a sine roll on/off so consecutive notes maintain constant volume)</p>
+<p><code>envelope</code> Specify the envelope type to use: <code>'full'</code> (ADSR), <code>'simple'</code> (ADR), <code>'pad'</code> (uses a cosine roll on/off so consecutive notes maintain constant volume), <code>'linpad'</code> (uses a linear roll on/off, a better crossfade when the source is identical (including phase) between events), <code>'percussion'</code> (R - instant attack)</p>
 <p><code>att</code> Attack time in beats</p>
 <p><code>dec</code> Decay time in beats</p>
 <p><code>sus</code> Sustain time in beats. Note the 'sustain' in an ADSR envelope sets the sustain level, however this param sets the sustain time. The default is time required after attack and decay to take the note to the end of the duration.</p>
@@ -975,10 +975,6 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
-External player should be a bus-like player, with no events
-!pad envelope not giving clean continuous sound? Maybe just because the phase is different from one note to the next??
- Eg p square 0, envelope='pad'
- ?Try linear cross-fade for pad envelope, at least for non-noise synths?
 Impulse destructor should be snappier? It probably waits too long to clean up
  ?Same for play???
 !If read a value from a bus thats implicitly changing per frame, it will read as if its per event
@@ -992,6 +988,7 @@ Bus subparam for mix level (per frame); eg   p ping 0, bus={bus1,mix:1/2}
 ?How's about a slider that only gives output when you click/hold it? So you control note duration/rest as well as pitch?
 ?Why does convolver reverb cause stereo bias?
 !Pan should be equal power when panned
+External player should be a bus-like player, with no events ?? Will this still have an fxMixChain??
 In-page example with percussion bus
 Should be able to have multiple bandpass and notch filters
 ?Try messing with resonance for the phaser??

@@ -34,7 +34,7 @@ define(function (require) {
       getStream()
       return
     }
-    let vca = envelope(params, 0.5, 'pad')
+    let vca = envelope(params, 0.5, 'linpad')
     let track = evalMainParamEvent(params, 'track', undefined)
     fxMixChain(params, effects(params, perFrameAmp(params, vca)))
     let audioIn
