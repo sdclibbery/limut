@@ -36,10 +36,10 @@ preset oxy multiwave, echo=3/4, room={1.3,mix:1/3}, chorus=3/2, oct=5, pan=[-3/4
   lpf=8000, hpf={this.freq,q:0.7},
 	wave1={'saw',detune:0}, wave2={'saw',detune:-0.037}, wave3={'saw',detune:0.033}, wave4={'saw',detune:-0.053}, wave5={'saw',detune:0.057}
 
-preset vambi pwm, env='pad', oct=(2,3), addc=wow, amp=2, pan=[-1/4:1/4]s4@f,
+preset vambi pwm, envelope='pad', oct=(2,3), addc=wow, amp=2, pan=[-1/4:1/4]s4@f,
   room=2, chorus, addc=wow,
   pwm=[0.1:0.9]l4@f, psf={f1:[100:300]l4@f,f2:[900:2500]l4@f,q:0.5},
-  high={-48,freq:4200}, low={-24,freq:250}
+  high={-48db,freq:4200}, low={-24db,freq:250}
 
 preset blues saw, vib={3,depth:0.1}, lpf={this.freq*[5,15,10,4,3]e,q:1}, addc=wow/2, rel=8, room=2,
   amp=1/2, dur=2, glide=1/4, pan=[-1/4:1/4]n8
@@ -55,11 +55,11 @@ preset synpluck multiwave, oct=4, amp=3/2, dur=1/2, pan=[-1/2:1/4]r,
 	delay=({0,pan:-1/3},{3/4,pan:2/3}),
 	wave1={'saw',detune:0.04}, wave2={'square',detune:-0.04},
 	wave3={'saw',detune:-12+0.04}, wave4={'square',detune:-12-0.04},
-  lpf={this.freq*[5,2,1]e1/6*[1/3:2/3]s8,q:2}, high=-2
+  lpf={this.freq*[5,2,1]e1/6*[1/3:2/3]s8,q:2}, high=-2db
 
 preset stringpad multiwave, envelope='pad', dur=2, pan=[-1:1]r,
 	lpf={this.freq*4,q:1}, room, chorus=5/4, drive=1/8,
-  phaser={1/12,mix:1/8}, low=-4,high=3,
+  phaser={1/12,mix:1/8}, low=-4db,high=3db,
   wave1={'saw',detune:0.04}, wave2={'saw',detune:0}, wave3={'saw',detune:-12.04}, 
   oct=4, pan=(-1/2,-1/4,0,1/4,1/2), amp=1/16
 
@@ -83,7 +83,7 @@ preset softpad supersaw, envelope=pad, amp=1/2, phaser=1/9, oct=(3,5), pan=[-1:1
 
 preset space ethereal, vib=3, att=0, sus=2, rel=1, phaser=1/4, oct=5, room={2,mix:1/3}, pan=[-3/4:3/4]r
 
-preset play80s play, room=1/8, low=16, pan=[-1/8:1/8]r
+preset play80s play, room=1/8, low=16db, pan=[-1/8:1/8]r
 
 preset basspluck dbass, dur=1/2, pan=[-1/8:1/8]r,
   lpf={[100:[300:1000]n8@e,3000]e,q:[5,[10:30]l32]n1/4@f},
@@ -113,4 +113,4 @@ preset cydist fm, lpf=[1200:200]e, oct=4, glide=this.dur/6, pan=[-1/2:1/2]n,
   op4={ratio:1.8735,target:1,depth:1,wave:'sine',att:0,rel:1/4},
   op5={ratio:1,target:'out',wave:'saw'}
 
-preset hiss noise, dur=1/2, amp=1/4, envelope='percussion', pan=[-1/2,1/2], low=-8
+preset hiss noise, dur=1/2, amp=1/4, envelope='percussion', pan=[-1/2,1/2], low=-8db

@@ -14,6 +14,7 @@ define(function (require) {
     minor           :[0,2,3,5,7,8,10],
     aeolian         :[0,2,3,5,7,8,10],
     minorpentatonic :[0,3,5,7,10],
+    minorpenta      :[0,3,5,7,10],
 
     mixolydian      :[0,2,4,5,7,9,10],
 

@@ -691,6 +691,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
   <code>minor</code>, 
   <code>aeolian</code>, 
   <code>minorpentatonic</code>, 
+  <code>minorpenta</code>, 
   <code>mixolydian</code>, 
   <code>melodicminor</code>, 
   <code>melodicmajor</code>, 
@@ -975,35 +976,13 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
-Other audio player pulse should come from an actual FFT same as bus
-?Ability to apply effects like compress, drive, reverb etc in bands - So you can compress low, mid and high independantly
-Allow non-chord multiple bus outputs from one player; (bus1, bus2) etc
-Bus subparam for mix level (per frame); eg   p ping 0, bus={bus1,mix:1/2}
- Also want to be able to split multiband too
-?How's about a slider that only gives output when you click/hold it? So you control note duration/rest as well as pitch?
+?All synths should have default delay=0 so you can concat extra delay in
+ ?OR, nothing concat () should be zero?
+!!Does  amp+=3db  do whats expected? Or does it have to be  amp*=3db  ???
+ Yeah, currently you have to multiply by the value in db
+ For now, at least document it
+ Is there a way to be able to write amp+=6db??
 ?Why does convolver reverb cause stereo bias?
-!Pan should be equal power when panned
-Impulse destructor should be snappier? It probably waits too long to clean up
- ?Same for play???
-External player should be a bus-like player, with no events ?? Will this still have an fxMixChain??
-In-page example with percussion bus
-Should be able to have multiple bandpass and notch filters
-?Try messing with resonance for the phaser??
-Inline bus param Eg p ping 0, bus={reverb:1}
-?Setting to push analyser node FFT size up from 1024
-Synthwave preset buses?
-More options for setting up the convolution reverb
- Mono/stereo: how much difference between L and R
- Some real impulse responses as options??
-??? Could use very short loop that moves stepwise on a carefully prepared sample to do wave table synthesis???
-envelopes
- * Create envelopes for eg lpf, eg  lpf=this.freq*10*ar{a:1/4,r:1}
-  ??Is that the same as  lpf=this.freq*[0,10,0]e[1/4,1]  ??
-  ??Should use att/rel etc names for consistency??
- * Get main envelope and use it for eg lpf
- * Can also use adsr{} etc for main envelope
-!echo={1,feedback:0} should still produce a single delayed echo
-!Chop/ring LFO Freq should be per frame
 Individual percussion synths
  References
   https://github.com/sdclibbery/limut/blob/c5fec6e5eced92145000561801704afc919241b6/play/percussion.js
@@ -1019,11 +998,38 @@ Individual percussion synths
  cb/cl
   https://www.soundonsound.com/techniques/synthesizing-cowbells-claves
 Cache/transfer bus effect nodes if unchanged?
-Also use nonchord find: nf (series) and bpf (parallel) for all audio
- Docs
 Techno include lib
  909
  Reese bass
+Other audio player pulse should come from an actual FFT same as bus (only create on first read though)
+!Pan should be equal power when panned?
+Impulse destructor should be snappier? It probably waits too long to clean up
+ ?Same for play???
+?Ability to apply effects like compress, drive, reverb etc in bands - So you can compress low, mid and high independantly
+ ?EQ sub Params on input to reverb etc? Eg reverb={2,high:4db,low:-4db}
+Allow non-chord multiple bus outputs from one player; (bus1, bus2) etc
+ Bus subparam for mix level (per frame); eg   p ping 0, bus={bus1,mix:1/2}
+  Also want to be able to split multiband too
+In-page example with percussion bus
+Should be able to have multiple bandpass and notch filters
+?Inline bus param Eg p ping 0, bus={reverb:1}
+?Setting to push analyser node FFT size up from 1024
+Synthwave preset buses?
+External player should be a bus-like player, with no events ?? Will this still have an fxMixChain??
+More options for setting up the convolution reverb
+ Mono/stereo: how much difference between L and R
+ Some real impulse responses as options??
+??? Could use very short loop that moves stepwise on a carefully prepared sample to do wave table synthesis???
+envelopes
+ * Create envelopes for eg lpf, eg  lpf=this.freq*10*env{a:1/4,r:1}
+  ??Is that the same as  lpf=this.freq*[0,10,0]e[1/4,1]  ??
+  ??Should use att/rel etc names for consistency?? - Prolly not, but then prefer env{} for main envelope too?
+ * Can get main envelope and use it for eg lpf - syntax??
+ * Can also use env{} for main envelope
+!echo={1,feedback:0} should still produce a single delayed echo
+!Chop/ring LFO Freq should be per frame
+Also use nonchord find: nf (series) and bpf (parallel) for all audio
+ Docs
 !glide=0 does not give zero glide????!
 !Should be a mix subparam on echo!
 !FM operator should support all wave types
@@ -1093,7 +1099,7 @@ Filter param for all texture based synths (including buffer feedback)
 ?Some kind of antialiasing for perspective distance; even if its user configurable
  ? point sampled antialiasing? will be very inefficient/slow?
  ? some kind of hinting to the actual shader?
-Proper gradients, not just fore/mid/back
+Proper detailed gradients, not just fore/mid/back
 recol=fmb that leaves all pixels white but with fb set, to allow recolouring with fore/mid/back. check it for webcam/image etc too
 !Should really multiply feedback params by dt, otherwise the rate of feedback motions will be framerate dependent
  Tricky to do; have to eval params first them multiply, and it's very param dependent; eg zoom vs scroll
@@ -1150,6 +1156,7 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
+?How's about a slider that only gives output when you click/hold it? So you control note duration/rest as well as pitch?
 !Can no longer use a complex dur to force a pattern to start when the player is uncommented
  EG the boom and whoosh in Blade Runner opening titles
  Maybe some other, proper, way to force this?
