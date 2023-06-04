@@ -69,9 +69,9 @@ define((require) => {
         body:{ value:1, freq:55, boost:150, curve:3, wave:'sine', cutoff:2, q:10 },
         rattle:{ value:1, rate:1, freq:55, boost:205, curve:8, q:18 }
       } },
-    impulse: { play: impulse, baseParams:{ amp:1 } },
-    external: { play: external, baseParams:{ amp:1 } },
-    noise: { play: noise, baseParams:{ amp:1 } },
+    impulse: { play: impulse, baseParams:{ amp:1, delay:0 } },
+    external: { play: external, baseParams:{ amp:1, delay:0 } },
+    noise: { play: noise, baseParams:{ amp:1, delay:0 } },
     sample: { play: sample, baseParams:{ amp:1, delay:0, oct:4 } },
     piano: { play: piano, baseParams:{ amp:1, delay:0, oct:4 } },
     pwm: { play: pwm, baseParams:{ amp:1, delay:0, oct:4, pwm:0.5 } },
