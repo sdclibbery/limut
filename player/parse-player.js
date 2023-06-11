@@ -9,7 +9,7 @@ define((require) => {
   let continuousPlayer = require('player/continuous')
   var followPlayer = require('player/follow')
   var expandChords = require('player/expand-chords')
-  let {preEvalParam,evalParamFrame} = require('player/eval-param')
+  let {evalParamFrame} = require('player/eval-param')
   let {mainParam} = require('player/sub-param')
 
   let splitOnAll = (str, ch) => {
@@ -21,12 +21,6 @@ define((require) => {
     if (!str) { return [] }
     let parts = splitOnAll(str, ch)
     return [parts[0], parts.slice(1).join()]
-  }
-
-  let evalToEvent = (event, beat) => {
-    for (let k in event) {
-      event[k] = preEvalParam(event[k], event, beat.count)
-    }
   }
 
   let swingPushAt = (count, swingPercent) => {
@@ -160,7 +154,6 @@ define((require) => {
           let overrides = players.overrides[player.id] || {}
           let es = events.map(e => applyOverrides(e, overrides))
           es = expandChords(es)
-          es.forEach(e => evalToEvent(e, beat)) // Optimisation: evaluate down to a primitive for values that don't change over the course of the event
           es.forEach(e => applyDelay(e, beat))
           es = expandStutter(es)
           es.forEach(e => applySwing(e, beat))
@@ -288,27 +281,27 @@ define((require) => {
 
   p = parsePlayer('p grid 0, fore=[{r:[(1,2)]t,g:3}]t')
   es = p.getEventsForBeat({count:0})
-  assert({r:1,g:3}, es[0].fore)
-  assert({r:2,g:3}, es[1].fore)
+  assert({r:1,g:3}, evalParamFrame(es[0].fore,ev(0,0),0))
+  assert({r:2,g:3}, evalParamFrame(es[1].fore,ev(0,0),0))
 
   p = parsePlayer('p test 00, amp=[1,(2,3)]')
   es = p.getEventsForBeat({count:0})
   assert(1,  evalParamFrame(es[0].amp,ev(0,0),0))
   assert(undefined, es[1])
   es = p.getEventsForBeat({count:1})
-  assert(2, evalParamFrame(es[0].amp,ev(0,0),0))
-  assert(3, evalParamFrame(es[1].amp,ev(0,0),0))
+  assert(2, evalParamFrame(es[0].amp,ev(1,1),1))
+  assert(3, evalParamFrame(es[1].amp,ev(1,1),1))
 
   p = parsePlayer('p play 0, amp=[1,(2,3)]l2')
   es = p.getEventsForBeat({count:0})
   assert(1, evalParamFrame(es[0].amp,ev(0,0),0))
   assert(1, evalParamFrame(es[1].amp,ev(0,0),0))
   es = p.getEventsForBeat({count:1})
-  assert(1.5, evalParamFrame(es[0].amp,ev(0,0),0))
-  assert(2, evalParamFrame(es[1].amp,ev(0,0),0))
+  assert(1.5, evalParamFrame(es[0].amp,ev(1,1),1))
+  assert(2, evalParamFrame(es[1].amp,ev(1,1),1))
   es = p.getEventsForBeat({count:2})
-  assert(2, evalParamFrame(es[0].amp,ev(0,0),0))
-  assert(3, evalParamFrame(es[1].amp,ev(0,0),0))
+  assert(2, evalParamFrame(es[0].amp,ev(2,2),2))
+  assert(3, evalParamFrame(es[1].amp,ev(2,2),2))
 
   p1 = parsePlayer('p1 kal 0, foo=[1:2]l1')
   players.instances.p1 = p1
@@ -512,10 +505,10 @@ define((require) => {
   delete playerTypes.foo
 
   p = parsePlayer('p test (000), add=[-7:7]r')
-  assertNotSame(p.getEventsForBeat({count:0}).map(e => e.add))
+  assertNotSame(p.getEventsForBeat({count:0}).map(e => evalParamFrame(e.add,ev(0,0),0)))
 
   p = parsePlayer('p test 0, foo=(0,0,0), add=[-7:7]r')
-  assertNotSame(p.getEventsForBeat({count:0}).map(e => e.add))
+  assertNotSame(p.getEventsForBeat({count:0}).map(e => evalParamFrame(e.add,ev(0,0),0)))
 
   console.log('Parse player tests complete')
   }

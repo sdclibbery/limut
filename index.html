@@ -320,7 +320,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
   <p><code>[]</code> Square brackets define sequences in both patterns and expressions; that is, multiple events or values one after another over time (sequences/timevars)</p>
   <p><code>&lt;&gt;</code> Angle brackets define higher level sequences in patterns; that is, a sequence where the next event is selected when the entire pattern repeats next.</p>
   <p><code>{}</code> Curly brackets in an expression supply extra information to a param (subparams), value (modifiers) or function call (arguments)</p>
-  <p><code>@</code> Defines the interval for an expression; that is, how often the expression should be evaluated within the event</p>
+  <p><code>@</code> Defines the interval for an expression; that is, how often the expression should be evaluated within the event. Note, the interval applies directly to the nearest value. So for example, with <code>this.foo@e</code> the per-event <code>@e</code> interval will apply to the <code>foo</code> only. To force the overall <code>this.foo</code> lookup to be evaluated per event, you could use <code>(this.foo)@e</code>.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-basic-syntax')" class="accordion"> Basic Syntax</h4>
 <div id="accordion-basic-syntax" class="closed">
@@ -1086,6 +1086,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+Shader palettes from "an introduction to shader art coding" by kishimisu
 ?A visual synth routed to a buffer should not play at all if the buffer is not there?
  Right now, it works except the synth pauses..??
 !What happens to buffer when it uses eg loc=tile_b ??
@@ -1154,26 +1155,26 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-?How's about a slider that only gives output when you click/hold it? So you control note duration/rest as well as pitch?
+!Beat readouts should not move on digit change. Eg `4/16` should be ` 4/16`
+ ?What about main beat readout?? pad to 4 digits?
 !Can no longer use a complex dur to force a pattern to start when the player is uncommented
  EG the boom and whoosh in Blade Runner opening titles
  Maybe some other, proper, way to force this?
+ Need a proper language for patterns
 More time modifiers
  offset
  rate
  time
- ?delay time modifier, pauses time at the start of the event
-!If do add=slider*14 with dur=1/4, only see note change on every beat
-!If read a value from a bus thats implicitly changing per frame, it will read as if its per event
+ ?wait modifier, pauses time at the start of the event
+?Want a pattern language to express things like "2 beats anticipation of every 16" etc
+?How's about a slider that only gives output when you click/hold it? So you control note duration/rest as well as pitch?
+Should be able to stutter={4,dur:1}
 Make player pattern optional in the syntax; if missing, defaults to `0`?
 !Syntax colouring is case sensitive; eg  `Set` does not get coloured correctly
 ?Can print out list of all current player types to console
  Syntax???
  Split by audio vs visual
  Additional info?
-!when `time` is used @e it should be event time, not time when the event is created
- eg  v readout 0, add=time@e
- !Really thats true for other vars though; eg  reading p.value  or something
 !this var lookup failing in various ways:
  // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
  // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1
@@ -1194,7 +1195,6 @@ Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7
  !Actually, this is already possible using  delay=(0,{1/2,add:this.add+2}) . but this is ugly :-/
  But not sure of syntax
   The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
-!@e should work on lookups:   r readout 0, add=this.foo@e, foo=[5:1]e
 !().accum should work - why doesn't it? I guess the chord voices haven't been split yet?
  r readout 0, loc={y:2/3-this.voice/2}, add=([0,1]t1,[0,1]t2).accum
 Variable rate expressions somehow EG  addc=[-1,1]s[1/8:1]e  Or  addc=sin{[1/8:1]e*6.28}  or something

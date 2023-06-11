@@ -3260,3 +3260,20 @@ sp space 0246, dur=2, reverb=2, amp*=2
 set main compress={2,gain:2}, reverb=4
 
 
+// Per event @e test cases
+//
+// v readout 0, add=([5:1]e)@e
+// r readout 0, add=(this.foo)@e, foo=[5:1]e
+//
+// v blank 0, foo=[5:1]e
+// r readout 0, add=(v.foo)@e
+//
+// set foo=[5:1]e
+// r readout 0, add=foo@e
+//
+// v readout 0, add=time@e
+// r readout 0, add=slider@e
+//
+// r readout 0, add=this.foo@e, foo=[5:1]e // Should NOT be per event since the @e applies to the `foo` only, not the whole `this.foo`
+
+

@@ -114,10 +114,13 @@ define(function(require) {
   assert('frame', operator(add, perFrame, perEvent).interval)
 
   assert(10, operator(add, perEvent, perEvent)(ev(0,5), 0, evalParam))
+  delete perEvent.interval_memo
   assert(0, operator(add, perEvent, perEvent)(ev(0,0), 5, evalParam))
   assert(10, operator(add, perFrame, perFrame)(ev(0,0), 5, evalParam))
   assert(0, operator(add, perFrame, perFrame)(ev(0,5), 0, evalParam))
+  delete perEvent.interval_memo
   assert(3, operator(add, perEvent, perFrame)(ev(0,3), 0, evalParam))
+  delete perEvent.interval_memo
   assert(4, operator(add, perEvent, perFrame)(ev(0,0), 4, evalParam))
 
   assert([3,4], operator(add, 1, [2,3])(ev(0),0,evalParam))

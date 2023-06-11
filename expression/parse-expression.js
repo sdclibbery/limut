@@ -122,6 +122,8 @@ define(function(require) {
         if (vs.length == 1) {
           result = vs[0]
           result = addModifiers(result, parseMap(state))
+          let interval = parseInterval(state)
+          if (interval && typeof result === 'function') { result.interval = interval }
         } else if (Array.isArray(vs)) {
           result = vs
           result = addModifiers(result, parseMap(state))
@@ -476,15 +478,12 @@ define(function(require) {
   assert(2, evalParamFrame(p,ev(2,2),2,evalParamFrame))
   assert(3, evalParamFrame(p,ev(2,2),3,evalParamFrame))
   
-  let p2
   p = parseExpression('[1,[2,3]l1@f]t2@e')
-  p2 = preEvalParam(p,ev(0,0),0,preEvalParam)
-  assert(1, evalParamFrame(p2,ev(0,0),0,evalParamFrame))
-  assert(1, evalParamFrame(p2,ev(0,0),1,evalParamFrame))
-  p2 = preEvalParam(p,ev(2,2),0,preEvalParam)
-  assert(2, evalParamFrame(p2,ev(2,2),2,evalParamFrame))
-  assert(2.5, evalParamFrame(p2,ev(2,2),2.5,evalParamFrame))
-  assert(3, evalParamFrame(p2,ev(2,2),3,evalParamFrame))
+  assert(1, evalParamFrame(p,ev(0,0),0,evalParamFrame))
+  assert(1, evalParamFrame(p,ev(0,0),1,evalParamFrame))
+  assert(2, evalParamFrame(p,ev(2,2),2,evalParamFrame))
+  assert(2.5, evalParamFrame(p,ev(2,2),2.5,evalParamFrame))
+  assert(3, evalParamFrame(p,ev(2,2),3,evalParamFrame))
   
   assert([4,5], parseExpression('(1,2)+3')(ev(0),0, evalParamFrame))
   assert([4,5], parseExpression('3+(1,2)')(ev(0),0, evalParamFrame))
@@ -866,9 +865,7 @@ define(function(require) {
 
   p = parseExpression("[1000:100]e")
   e = { idx:0, count:7, countToTime:b=>b, _time:7, endTime:8 }
-  r = preEvalParam(p,e,7)
-  assert('function', typeof(r))
-  assert(550, evalParamFrame(r,e,7.5))
+  assert(550, evalParamFrame(p,e,7.5))
 
   let last, min, max
   p = parseExpression("[]n")
@@ -1258,6 +1255,18 @@ define(function(require) {
 
   assert(100, evalParamFrame(parseExpression("[0:1]l4{per:4,0:100}@f"),ev(0,0,4),0))
   assert(1/4, evalParamFrame(parseExpression("[0:1]l4{per:4,0:100}@f"),ev(0,0,4),1))
+
+  p = parseExpression("[1:2]e")
+  assert(1, evalParamFrame(p,ev(0,0,1),0))
+  assert(3/2, evalParamFrame(p,ev(0,0,1),1/2))
+
+  p = parseExpression("[1:2]e@e")
+  assert(1, evalParamFrame(p,ev(0,0,1),0))
+  assert(1, evalParamFrame(p,ev(0,0,1),1/2))
+
+  p = parseExpression("([1:2]e)@e")
+  assert(1, evalParamFrame(p,ev(0,0,1),0))
+  assert(1, evalParamFrame(p,ev(0,0,1),1/2))
 
   console.log('Parse expression tests complete')
   }

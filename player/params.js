@@ -139,7 +139,6 @@ define(function(require) {
   assert('frame', parseParams("fore=[0,1]r@f").fore.interval)
 
   let exp = parseParams("amp=[0,1]t4@e+[2:3]l1@f").amp
-  assert('function', typeof preEvalParam(exp, ev(0,0), 0))
   assert(2, evalParamFrame(exp, ev(0,0), 0))
   assert(3, evalParamFrame(exp, ev(0,0), 1))
   assert(2, evalParamFrame(exp, ev(0,0), 2))

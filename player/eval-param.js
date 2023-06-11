@@ -1,6 +1,7 @@
 'use strict';
 define((require) => {
   let {overrideKey,applyModifiers} = require('expression/time-modifiers')
+  let system = require('play/system')
 
   let expandObjectChords = (o) => {
     for (let k in o) {
@@ -53,7 +54,7 @@ define((require) => {
     return result
   }
 
-  let evalParamValue = (evalRecurse, value, event, beat, {ignoreThisVars}) => {
+  let evalParamValueForMemoisation = (evalRecurse, value, event, beat, {ignoreThisVars}) => {
     if (Array.isArray(value)) { // chord, eval individual values
       let v = value.map(v => evalRecurse(v, event, beat))
       v = v.flat()
@@ -78,16 +79,24 @@ define((require) => {
     }
   }
 
+  let evalParamValue = (evalRecurse, value, event, beat, options) => {
+    if (value === undefined) { return value }
+    if (!!value.interval_memo && value.interval_memo.has(event)) {
+      return value.interval_memo.get(event)
+    }
+    let result = evalParamValueForMemoisation(evalRecurse, value, event, beat, options)
+    if (value.interval === 'event') {
+      if (system.timeNow() >= event._time) { // Dont memoise until the event start time
+        if (!value.interval_memo) { value.interval_memo = new WeakMap() }
+        value.interval_memo.set(event, result)
+      }
+    }
+    return result
+  }
+
   let evalRecurseFull = (value, event, beat, options) => {
     options = options || {}
     return evalParamValue(evalRecurseWithOptions(evalRecurseFull, options), value, event, beat, options)
-  }
-  let evalRecursePre = (value, event, beat, options) => {
-    if (!!value && value.interval === 'frame') {
-      return value
-    }
-    options = options || {}
-    return evalParamValue(evalRecurseWithOptions(evalRecursePre, options), value, event, beat, options)
   }
 
   let evalRecurseWithOptions = (er, options) => {
@@ -111,14 +120,6 @@ define((require) => {
     return evalParamValue(evalRecurseFull, value, event, event.count, {})
   }
 
-  let preEvalParam = (value, event) => {
-    // Evaluate only to values that are constant for the entire event
-    if (!!value && value.interval === 'frame') {
-      return value
-    }
-    return evalParamValue(evalRecursePre, value, event, event.count, {})
-  }
-
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
@@ -127,7 +128,7 @@ define((require) => {
     let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
-  let ev = (n) => {return{idx:n,count:n}}
+  let ev = (n,t) => {return{idx:n,count:n,_time:t}}
 
   assert(undefined, evalParamEvent(undefined, ev(0)))
   assert(1, evalParamEvent(1, ev(0)))
@@ -145,7 +146,6 @@ define((require) => {
   assert([{x:1},{x:2},{x:3}], evalParamEvent([{x:1},{x:[2,3]}], ev(0)))
   assert([1,2,3], evalParamEvent([1,() => [2,3]], ev(0)))
   assert([1,2,3,4], evalParamEvent([[1,2],[3,4]], ev(0)))
-  assert([1,2,3,4], preEvalParam([[1,2],[3,4]], ev(0)))
   
   let perFrameValue = () => 3
   perFrameValue.interval= 'frame'
@@ -154,19 +154,15 @@ define((require) => {
 
   assert(1, evalParamFrame(1, ev(0), 0))
   assert(3, evalParamEvent(perFrameValue, ev(0)))
-  assert(perFrameValue, preEvalParam(perFrameValue, ev(0)))
   assert(3, evalParamFrame(perFrameValue, ev(0), 0))
   assert(1, evalParamFrame(1, ev(0), 0))
   assert(4, evalParamEvent(perEventValue, ev(0)))
-  assert(4, preEvalParam(perEventValue, ev(0)))
   assert(4, evalParamFrame(perEventValue, ev(0), 0))
 
   assert({a:4}, evalParamFrame({a:perEventValue}, ev(0), 0))
   assert({a:3}, evalParamFrame({a:perFrameValue}, ev(0), 0))
   assert({a:4}, evalParamEvent({a:perEventValue}, ev(0)))
   assert({a:3}, evalParamEvent({a:perFrameValue}, ev(0)))
-  assert({a:4}, preEvalParam({a:perEventValue}, ev(0)))
-  assert('frame', preEvalParam({a:perFrameValue}, ev(0)).a.interval)
   assert({r:1}, evalParamFrame(()=>{return({r:1})}, ev(0), 0))
   assert([{r:1,g:3},{r:2,g:3}], evalParamFrame(()=>{return({r:()=>[1,2],g:3})}, ev(0), 0))
 
@@ -184,14 +180,37 @@ define((require) => {
   let perEventThenFrameChord = [perFrameValueGetB,perFrameValueGetB]
   perEventThenFrameChord.interval = 'event'
   assert([0,0], evalParamEvent(perEventThenFrameChord, ev(0), 1))
+  delete perEventThenFrameChord.interval_memo
   assert([1,1], evalParamFrame(perEventThenFrameChord, ev(0), 1))
 
   let perEventThenFrameObject = {foo:perFrameValueGetB}
   perEventThenFrameObject.interval = 'event'
   assert({foo:0,interval:'event'}, evalParamEvent(perEventThenFrameObject, ev(0), 1))
+  delete perEventThenFrameObject.interval_memo
   assert({foo:1,interval:'event'}, evalParamFrame(perEventThenFrameObject, ev(0), 1))
 
-  assert(perFrameValue, preEvalParam({a:perFrameValue}, ev(0), 0).a)
+  let perEventThenFrameValueGetB = (e,b,er) => er(perFrameValueGetB,e,b)
+  perEventThenFrameValueGetB.interval = 'event'
+  let e = ev(10,10) // when run at startup, the current system time should be less than this
+  assert(10, evalParamEvent(perEventThenFrameValueGetB, e, 0.1))
+  assert(10, evalParamEvent(perEventThenFrameValueGetB, e, 0.2))
+  e._time = 0 // System time should be at least zero
+  assert(10, evalParamEvent(perEventThenFrameValueGetB, e, 0.3))
+  e._time = 10 // System time should be less again
+  e.count = 20 // This new value should be ignored
+  assert(10, evalParamEvent(perEventThenFrameValueGetB, e, 0.4))
+  assert(10, evalParamEvent(perEventThenFrameValueGetB, e, 0.5))
+
+  // Do not memoise if per frame, even if after event time
+  e = ev(10,10) // when run at startup, the current system time should be less than this
+  assert(10, evalParamEvent(perFrameValueGetB, e, 0.1))
+  assert(10, evalParamEvent(perFrameValueGetB, e, 0.2))
+  e._time = 0 // System time should be at least zero
+  assert(10, evalParamEvent(perFrameValueGetB, e, 0.3))
+  e._time = 10 // System time should be less again
+  e.count = 20 // This new value should not be ignored, because we shouldn't memoise per frame values
+  assert(20, evalParamEvent(perFrameValueGetB, e, 0.4))
+  assert(20, evalParamEvent(perFrameValueGetB, e, 0.5))
 
   let constWithMods = () => 1
   constWithMods.modifiers = {}
@@ -268,7 +287,6 @@ define((require) => {
   }
 
   return {
-    preEvalParam:preEvalParam,
     evalParamEvent:evalParamEvent,
     evalParamFrame:evalParamFrame,
     evalParamFrameIgnoreThisVars:evalParamFrameIgnoreThisVars,
