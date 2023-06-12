@@ -89,6 +89,7 @@
       padding-left: 24px;
       font-weight: normal;
       font-family: courier, mono, monospace;
+      white-space: pre;
     }
     .info {
       width: 100%;
@@ -209,14 +210,18 @@
       </template>
     </p>
   </div>
-  <div class="widget fixed-top">
-    <button onclick="go()" title="Run the code Ctrl-Enter">▶</button>
-    <button onclick="stop()" title="Stop all players Ctrl-.">◼</button>
-    <button onclick="comment()" title="Toggle comment for line Ctrl-/">//</button>
-    <button onclick="fullscreen()" title="Toggle fullscreen">⛶</button>
-    Audio: <span id="beat-latency-readout" class="meter"> </span>
-    Visual: <span id="visual-readout" class="meter"> </span>
-    Limiter: <span id="compressor-readout" class="meter"> </span>
+  <div class="widget fixed-top" style="display:flex; flex-wrap: wrap;">
+    <div style="margin-right:8px;">
+      <button onclick="go()" title="Run the code Ctrl-Enter">▶</button>
+      <button onclick="stop()" title="Stop all players Ctrl-.">◼</button>
+      <button onclick="comment()" title="Toggle comment for line Ctrl-/">//</button>
+      <button onclick="fullscreen()" title="Toggle fullscreen">⛶</button>
+    </div>
+    <div style="margin-top:8px;">
+      Audio: <span id="beat-latency-readout" class="meter"> </span>
+      Visual: <span id="visual-readout" class="meter"> </span>
+      Limiter: <span id="compressor-readout" class="meter"> </span>
+    </div>
   </div>
   <div id="code-codemirror" class="widget code" style="display:none;"></div>
   <textarea id="code-textarea" class="widget code" rows="15" style="display:none;"></textarea>
@@ -1155,12 +1160,11 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-!Beat readouts should not move on digit change. Eg `4/16` should be ` 4/16`
- ?What about main beat readout?? pad to 4 digits?
 !Can no longer use a complex dur to force a pattern to start when the player is uncommented
  EG the boom and whoosh in Blade Runner opening titles
  Maybe some other, proper, way to force this?
  Need a proper language for patterns
+Should support dur chords for polyrythms
 More time modifiers
  offset
  rate

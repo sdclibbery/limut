@@ -115,13 +115,13 @@ define(function(require) {
     vars.set('time', beatTime)
     if (beat) {
       mainVars.update(Math.floor(beatTime), beatTime)
-      beatReadout.innerText = beat.count
+      beatReadout.innerText = `${beat.count}`.padStart(4, ' ')
       let bc = metronome.getBeatReadouts()
       if (typeof bc === 'number') { bc = [bc] }
       beatReadouts.forEach((r,i) => {
         let c = bc[i]
         r.style.display = !c ? 'none' : 'inline'
-        r.innerText = (beat.count%c + 1) + '/'+c
+        r.innerText = ((beat.count%c + 1) + '/' + c).padStart(5, ' ')
       })
       Object.values(players.instances).forEach(player => {
         if (player !== undefined) {
