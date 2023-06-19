@@ -3277,3 +3277,18 @@ set main compress={2,gain:2}, reverb=4
 // r readout 0, add=this.foo@e, foo=[5:1]e // Should NOT be per event since the @e applies to the `foo` only, not the whole `this.foo`
 
 
+// Improv 18/Jun/2023
+include 'preset/synthwave.limut'
+set scale=phrygian
+vk swirl 2, loc=tile_tr, vhs, contrast, rate=1/16, recol=neon, zoom=2
+set ch=(0,1,4,6,8,10)+[0,0,-2,1]t8
+// c chime 0, add=ch.[0:8]l2.7{per:4}, amp*=3/2*[]r
+pb cybass 0, add=ch.[0,0,0,1], lpf*=1/10
+pk play .X..X..X
+pc play ..*t
+set p* delay|=[(),[1,3]r/4]t[14,2]
+// s softpad 0, add=ch.(0,2,5), chop=2, oct-=1, amp*=3/2
+cy chime 0, dur=euclid{7,from:16}/2, add=ch.[0,1,0,2,0,3,2], amp*=3/2
+set main compress={2,gain:2}, reverb=4
+
+
