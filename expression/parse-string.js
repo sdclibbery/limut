@@ -13,16 +13,15 @@ define(function(require) {
         else if (char == 't') { result += '\t' }
         else if (char == 'r') { }
         else { result += char }
-      }
-      else if (char == '\'') {
+      } else if (char == '\'') {
         state.idx += 1
         break
-      }
-      else {
+      } else {
         result += char
         state.idx += 1
       }
     }
+    if (!char) { return undefined } // Unterminated string, do not parse
     return result
   }
 

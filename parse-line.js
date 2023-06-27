@@ -145,7 +145,7 @@ define((require) => {
   }
 
   let startsWithPlayer = (str) => {
-    let r = new RegExp(/^\s*\w+\s+\w+\s+[^\s,]+/, 'i')
+    let r = new RegExp(/^\s*\w+\s+\w+/, 'i')
     return r.test(str)
   }
 
@@ -173,11 +173,11 @@ define((require) => {
   }
   let vars = require('vars').all()
 
-  assert(false, isLineStart('foo bar'))
+  assert(true, isLineStart('foo bar'))
   assert(false, isLineStart('set '))
   assert(false, isLineStart('set\t'))
   assert(true, isLineStart('set p'))
-  assert(true, isLineStart('set p '))
+  assert(true, isLineStart(' set p '))
   assert(true, isLineStart('set\tp'))
   assert(true, isLineStart('set p1'))
   assert(true, isLineStart('set !p'))
@@ -185,19 +185,21 @@ define((require) => {
   assert(true, isLineStart('set ( p , a* ) '))
   assert(true, isLineStart('SET P'))
   assert(false, isLineStart('sett '))
-  assert(false, isLineStart('p ping'))
-  assert(false, isLineStart('p ping '))
-  assert(false, isLineStart('p ping ,'))
+  assert(true, isLineStart('p ping'))
+  assert(true, isLineStart('p ping '))
+  assert(true, isLineStart('p ping,'))
+  assert(true, isLineStart('p ping ,'))
   assert(true, isLineStart('p ping !0'))
   assert(true, isLineStart('p ping !0,'))
   assert(true, isLineStart('p ping !0 ,'))
+  assert(true, isLineStart(' p ping !0 ,'))
   assert(true, isLineStart('p\t\tping\t\t!0'))
   assert(true, isLineStart('preset p b'))
   assert(true, isLineStart(' PRESET P b'))
   assert(true, isLineStart('preset p b '))
   assert(true, isLineStart('preset\tp b'))
   assert(true, isLineStart('preset p1 b1'))
-  assert(false, isLineStart('presett p'))
+  assert(true, isLineStart('presett p')) // Treated as a line start for a player
   assert(false, isLineStart('include'))
   assert(false, isLineStart('includetest'))
   assert(true, isLineStart('include blah'))

@@ -1,7 +1,7 @@
 'use strict';
 define(function(require) {
   let param = require('player/default-param')
-  let parsePatternString = require('player/parse-pattern')
+  let parsePatternString = require('pattern/parse-pattern')
   let {evalParamFrame} = require('player/eval-param')
   let {mainParam,subParam} = require('player/sub-param')
 

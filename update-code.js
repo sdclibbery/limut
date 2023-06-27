@@ -11,27 +11,6 @@ define((require) => {
   let vars = require('vars')
   let mainBus = require('play/main-bus')
 
-  let parseCode = async (code) => {
-    let lines = code.split('\n')
-    for (let i = 0; i<lines.length; i++) {
-      try {
-        let line = lines[i]
-        if (line === '') { continue }
-        line = preParseLine(line)
-        while ((i+1)<lines.length && !isLineStart(preParseLine(lines[i+1]))) {
-          let nextLine = preParseLine(lines[i+1])
-          line = line + nextLine
-          i++
-        }
-        await parseLine(line, i, parseCode)
-      } catch (e) {
-        let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
-        consoleOut('Error on line '+(i+1)+': ' + e + st)
-        console.log(e)
-      }
-    }
-  }
-
   let preParseLine = (line) => {
     let state = {
       str: line,
@@ -41,7 +20,7 @@ define((require) => {
     while (char = state.str.charAt(state.idx)) {
       if (char == '\'') { // String - skip over
         state.idx += 1
-        parseString(state)
+        if (parseString(state) === undefined) { throw `Unterminated string. Note, multiline strings are not supported.` }
       } else if (char == '/' && state.str.charAt(state.idx+1) == '/') { // Comment
         let result = line.slice(0, state.idx).trim()
         return result
@@ -50,6 +29,43 @@ define((require) => {
       }
     }
     return line.trimStart()
+  }
+
+  let parseCommand = async (lines, i) => {
+    let line = lines[i]
+    if (line === '') { return i }
+    if (line.startsWith('//') === '') { return i }
+    while ((i+1)<lines.length && !isLineStart(lines[i+1])) {
+      line = line + lines[i+1] // Accumulate all lines that aren't a new line start together into one new line
+      i++
+    }
+    await parseLine(line, i, parseCode)
+    return i
+  }
+
+  let reportError = (e, i) => {
+    let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
+    consoleOut(`Error on line ${i+1}: ${e} ${st}`)
+    console.log(e)
+  }
+
+  let parseCode = async (code) => {
+    let lines = code.split('\n')
+      .map((line, i) => {
+        try {
+          return preParseLine(line)
+        } catch (e) {
+          reportError(e, i)
+          return line
+        }
+      })
+    for (let i = 0; i<lines.length; i++) {
+      try {
+        i = await parseCommand(lines, i) // Will skip lines that were accumulated
+      } catch (e) {
+        reportError(e, i)
+      }
+    }
   }
 
   let updateCode = async (code) => {
@@ -61,7 +77,8 @@ define((require) => {
     vars.clear()
     predefinedVars.apply(vars.all())
     consoleOut('> Update code')
-    await parseCode(mainBus() + '\n\n' + code)
+    await parseCode(mainBus())
+    await parseCode(code)
     players.gc_sweep()
     sliders.gc_sweep()
     players.expandOverrides()
@@ -89,6 +106,12 @@ define((require) => {
         assert(expected[k], players.overrides[playerId][k])
       })
       delete players.overrides[playerId]
+    }
+    let assertThrows = async (expected, code) => {
+      let got
+      try {await code()}
+      catch (e) { if (e.includes(expected)) {got=true} else {console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: ${e}`)} }
+      finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
     }
   
     assertVars('', {})
@@ -152,7 +175,7 @@ define((require) => {
     assertOverrides("set pae add//+=2", 'pae', {add:1})
     assertOverrides("set paf add+//=2", 'paf', {'add+':1})
 
-    assertOverrides('set pag foo=2,bar=\'FOO\n\'', 'pag', {foo:2,bar:'FOO'})
+    assertThrows('Unterminated string', async () => preParseLine('set pag bar=\'FOO'))
 
     console.log('Update code tests complete')
   }

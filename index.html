@@ -46,6 +46,7 @@
       height: 400px;
       margin-bottom: 8px;
       max-width: 100%;
+      font-size: 1.2em;
     }
     code {
       color: #d0d0ff;
@@ -444,7 +445,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>#036</code> Hex colour value which becomes the colour map <code>{r:0,g:0.2,b:0.4,a:1}</code></p>
 <p><code>#00336699</code> Hex colour value which becomes the colour map <code>{r:0,g:0.2,b:0.4,a:0.6}</code></p>
 <p><code>#003366</code> Hex colour value which becomes the colour map <code>{r:0,g:0.2,b:0.4,a:1}</code></p>
-<p><code>'abc'</code> String value</p>
+<p><code>'abc'</code> String value. Strings must be defined on a single line; multiline strings are not supported. However, line breaks can be inserted with <code>\n</code></p>
 <p><code>foo</code> Lookup a global var named <code>foo</code>. If there is no var, predefined var, or var function named foo, then the string <code>'foo'</code> will be returned instead. If there is a var named foo, but no arguments are provided, then the string <code>'foo'</code> will be returned instead.</p>
 <p><code>foo{x:2}</code> Lookup a global var named <code>foo</code>, and call it as a function passing in named parameters.</p>
 <h5>Modifiers:</h5>
@@ -981,7 +982,10 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
-?Why does convolver reverb cause stereo bias?
+? Freeze delay, or sample recorder, or looper?
+!Add=slider still only grabs one value per beat for audio synths (works for visual)
+!Calculating pulse from analyser should involve a perceptual loudness curve
+!Why does convolver reverb cause stereo bias?
 Individual percussion synths
  References
   https://github.com/sdclibbery/limut/blob/c5fec6e5eced92145000561801704afc919241b6/play/percussion.js
@@ -1086,6 +1090,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+!Buffer freezes on code update
 ?Proper detailed gradients, not just fore/mid/back
  ?recol=fmb that leaves all pixels white but with fb set, to allow recolouring with fore/mid/back. check it for webcam/image etc too
  ?Shader palettes from https://github.com/Erkaman/glsl-cos-palette
@@ -1151,17 +1156,52 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
+Pattern update
+ Existing features:
+ x p ping 01(23)[45]<67>
+ x p ping 01#^!  etc
+ x p ping follow b
+ Default pattern:
+ • p ping  - Same as p ping 0
+  Release: breaking change: multiline strings no longer supported
+ Limit pattern repeats:
+ • p ping 01 loop 2  - Play the pattern through twice starting now, then stop
+ • p ping once  - Same as p ping 0 loop 1
+ • p ping `once`  - Pattern literal o n c e :-)
+ Generative features:
+ • p ping 01 * 4  - 01010101
+ • p ping 3 then 2  - 32
+ • p ping 01 * 2 then 2 * 3  - 0101222
+ • p ping 01g2., g={glide:this.dur/8}
+ • p ping 01234567 crop 4  - 0123
+ • p ping 01 pad 4  - 01..
+ • p ping 01 prepad 4  - ..01
+ • p ping choice 01 23[45] . 7  - Chooses a different subpattern each repeat
+ • p ping shuffle 01 [23]45  - Random shuffling of subpatterns every repeat
+ • p ping mirror 012 * 2  - 012012210210 - What is the precedence? Is this actually 012210012210?
+ • sometimes/often/rarely/every before an operator; eg:  often mirror 0123   0123 sometimes * 2   every 4 shuffle 0 1 2 3
+  Eg  p ping 0 then (choice 017 2[34] 52 .) * 5 crop 5 then [21]0
+ • Control numbers are not const, they are expressions? Eg  p ping 01 * [2,3]r
+  Eg  p ping 0 then 234 * 3 cropif delta{ch}  - when var 'ch' changes value, crop and restart the pattern from 0
+ !!Need to know this will support more generative operations; eg Schenkerian infill, voice leading..?
+  ?Would define new pattern operators?
+  ?Can the existing pattern syntax support what would be needed?
+  ?What arguments would be passed to a pattern operator definition?
+  ?Probably want voice leading on expressions not patterns anyway??
+?Should 'db' be a post operator, not a feature of number syntax? So you could do amp=[0:6]l2 db
+ Or is it better to do amp=[0db:6db]l2 anyway?
 !Can no longer use a complex dur to force a pattern to start when the player is uncommented; EG the boom and whoosh in Blade Runner opening titles
  ?pattern for 'once'?
 Should support dur chords for polyrythms
 More time modifiers
  offset
+ step
  rate
  curve - apply a curve; ??within each event? or specific to the thing being modified?
  time - set time directly to an expression
  shuffle - for each block of 'per' beats, break time values into 'shuffle' sized pieces and randmoly shuffle them
  ?wait modifier, pauses time at the start of the event?
-?Want a pattern language to express things like "2 beats anticipation of every 16" etc
+?Want pattern language that expresses things like "2 beats anticipation of every 16" etc
 ?How's about a slider that only gives output when you click/hold it? So you control note duration/rest as well as pitch?
 Should be able to stutter={4,dur:1}
 Make player pattern optional in the syntax; if missing, defaults to `0`?
@@ -1170,15 +1210,16 @@ Make player pattern optional in the syntax; if missing, defaults to `0`?
  Syntax???
  Split by audio vs visual
  Additional info?
+!Readout doesn't work here:  p ping 0, foo=[0,1,2,3]t1, add=this.foo \ r readout 0, add=p.add
+ It's specifically the this.foo that makes it fail
 !this var lookup failing in various ways:
  // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
  // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1
  r readout 0, add=m.bar.detune, loc=sparkle
-!Readout doesn't work here:  p ping 0, foo=[0,1,2,3]t1, add=this.foo \ r readout 0, add=p.add
- It's specifically the this.foo that makes it fail
 !Follow player chooses different random values so it does not copy the original player properly
  Tests for this
  Need all randoms to be seeded, and the seed to vary between players but be the same for a follow player
+  OR!! Should the follow player keep a queue of the events from the main player, delayed as needed?
  ?Do other things like timevars get followed correctly with correct delay?
 Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as needed
  Needs to work for overrides too eg  body.boost+=100
@@ -1190,10 +1231,14 @@ Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7
  !Actually, this is already possible using  delay=(0,{1/2,add:this.add+2}) . but this is ugly :-/
  But not sure of syntax
   The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
+"on next 4 " / "on next 28 of 32 " syntax to execute a line on the next beat count
+  - but how not to repeat this if rerun? replace now/next in source with actual count?
+"every 4 " / "every 28 of 32 "
+"until next 16 set (bass,kd) amp=0" ? - but how not to repeat this if rerun?
+"by next 16 set bass amp=0" - lerps to the new value - but how not to repeat this if rerun?
 !().accum should work - why doesn't it? I guess the chord voices haven't been split yet?
  r readout 0, loc={y:2/3-this.voice/2}, add=([0,1]t1,[0,1]t2).accum
 Variable rate expressions somehow EG  addc=[-1,1]s[1/8:1]e  Or  addc=sin{[1/8:1]e*6.28}  or something
-Presets should be able to define multiple synths to play at once
 floor{1.5,2.5} should work??? Or should it?? Probably not? But then it should give an error? But sum{1,2} works?
 ? (0,2:8) syntax?
 !Handle 'cookie blocking' https://blog.tomayac.com/2022/08/30/things-not-available-when-someone-blocks-all-cookies/
@@ -1202,11 +1247,9 @@ For breakbeats, need a param to switch the pattern step used for an event
  This seems tricky with a param, as we don't even know what the params are until the pattern is evalled
  Will have to be a pattern syntax instead..?
   Unless some params are stored per player? And can be used to modify pattern evaluation? Arguably, dur is already like that?
-Some functions to work with chords; eg repeat, shuffle etc
- Functions for making chords?
+ !Actually apply shuffle in the pattern?
+?Functions for making chords?
 Some sort of matching or booleans would be handy; eg  rel=2+6*(this.value<0)  or maybe  rel=match{this.value,default:2,-7:8}
-{offset} to apply an offset to the time counts Eg [0,1,2,3]t4{offset:1} would start from 1 not 0 on beat 0
-{step} to apply stepping to the time counts Eg [0:1]l4{step:1/4} would only change value every 1/4
 ?Should be able to stutter with euclidean (or other?) patterns??
 ?stutter subparam for overriding interval between stuttered notes?
 !v glow 0, loc=sparkle, fore=(red,blue)[max]
@@ -1217,35 +1260,10 @@ stutter={4,amp:1/2}  - apply overrides
   stutter={4,dur:1/8,i=>{amp:1/i}}
 ?Do delayed events have any cost? Do we process them per frame?
  I guess we might process any per-frame callbacks every frame while waiting for the event?
-Add doc section with an example and a detailed explanation of it
 allow root param on player to override global root (add or replace?)
-floor function:  delay=floor{[]r,to:1/4}  or  add=floor{[0:7]r,to:2}
-Should really reset vars on code update; eg set var, then comment out, and it still applies...
-!slider{max:(1,2)} should work
-For player.pulse, can we make sure the order within the chord is consistent?
- Eg so the most recent events are first in the chord in case of event overlap?
- Also does pulse cutoff too early ignoring release time?
-Allow overriding subparams; eg  set p lpf.q=20  or  set p room.mix*=2
- Actually, can already modify subparams; just can't replace; eg: lpf+={q:10}
-Analyser on each player for pulse?
-? env{att:0.1,dec:1/4,sus:1,suslevel:0.6,rel:} - sus should default to the actual note length of the event
- Use for eg: lpf=this.freq*50*env{att:0.02,dec:0.2,suslevel:0.1}
- ?adsr and ar envelope functions that can be used in eg lpf=adsr{,,,} but also as env=ar{,} etc, but also ripple=ar{,} etc
-{step} to apply a step to the counts
- Eg [0:1000]l32{step:2} so the value onnly changes every 2 beats(??or changes by 2 units?) instead of smoothly
+?slider{max:(1,2)} should work
 !`d dsaw 0 | p ping follow d` the ping is played using the saw wave!!
-Ability to set the pattern used on a player
- param: p play x:, pattern='X-O-'
-pattern concat "xo + vi"
-pattern repeat "xo * 3 + vi" higher precedence than concat
-pattern support brackets "( xo + vi ) * 3"
-pattern values in vars, and then use in multiple players, and also invert, retrograde etc
 Pattern: should allow (024)^etc
-"on next 4 " / "on next 28 of 32 " syntax to execute a line on the next beat count
-  - but how not to repeat this if rerun? replace now/next in source with actual count?
-"every 4 " / "every 28 of 32 "
-"until next 16 set (bass,kd) amp=0" ? - but how not to repeat this if rerun?
-"by next 16 set bass amp=0" - lerps to the new value - but how not to repeat this if rerun?
 Fullscreen not working on safari
 [0,1]n should randomly choose one of 0 or one then smooth between them, [0:1]n should pick random values between 0 and 1...
  In which case, rewrite it as the main random, but then smoothed
