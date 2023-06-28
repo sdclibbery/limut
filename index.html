@@ -975,7 +975,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 </div>
 <hr>
 <p>Please report bugs, problems, issues and suggestions on <a href="https://github.com/sdclibbery/limut/issues" target="_blank">https://github.com/sdclibbery/limut/issues</a></p>
-<p>Latest release notes including breaking changes: <a href="https://github.com/sdclibbery/limut/releases/tag/v0.9.0-alpha" target="_blank">https://github.com/sdclibbery/limut/releases/tag/v0.9.0-alpha</a></p>
+<p>Latest release notes including breaking changes: <a href="https://github.com/sdclibbery/limut/releases/tag/v0.10.0-alpha" target="_blank">https://github.com/sdclibbery/limut/releases/tag/v0.10.0-alpha</a></p>
 <canvas id="text-canvas" style="display: none;"></canvas>
 </body>
 <script data-main="main" src="require.js">
@@ -1162,23 +1162,25 @@ Pattern update
  x p ping 01#^!  etc
  x p ping follow b
  Default pattern:
- • p ping  - Same as p ping 0
+ x p ping  - Same as p ping 0
   Release: breaking change: multiline strings no longer supported
  Limit pattern repeats:
- • p ping 01 loop 2  - Play the pattern through twice starting now, then stop
  • p ping once  - Same as p ping 0 loop 1
  • p ping `once`  - Pattern literal o n c e :-)
+ • p ping 01 loop 2  - Play the pattern through twice starting now, then stop
+ Custom flags
+ • p ping 01g2., g={glide:this.dur/8}
  Generative features:
  • p ping 01 * 4  - 01010101
  • p ping 3 then 2  - 32
  • p ping 01 * 2 then 2 * 3  - 0101222
- • p ping 01g2., g={glide:this.dur/8}
  • p ping 01234567 crop 4  - 0123
  • p ping 01 pad 4  - 01..
  • p ping 01 prepad 4  - ..01
  • p ping choice 01 23[45] . 7  - Chooses a different subpattern each repeat
  • p ping shuffle 01 [23]45  - Random shuffling of subpatterns every repeat
- • p ping mirror 012 * 2  - 012012210210 - What is the precedence? Is this actually 012210012210?
+ • p ping mirror 012 * 2  - 012210012210
+ • p ping mirror (012 * 2)  - 012012210210
  • sometimes/often/rarely/every before an operator; eg:  often mirror 0123   0123 sometimes * 2   every 4 shuffle 0 1 2 3
   Eg  p ping 0 then (choice 017 2[34] 52 .) * 5 crop 5 then [21]0
  • Control numbers are not const, they are expressions? Eg  p ping 01 * [2,3]r
