@@ -1,9 +1,9 @@
 'use strict';
 define(function(require) {
   let param = require('player/default-param')
-  let parsePatternString = require('pattern/parse-pattern')
+  let parsePatternLiteral = require('pattern/parse-pattern-literal')
   let {evalParamFrame} = require('player/eval-param')
-  let {mainParam,subParam} = require('player/sub-param')
+  let {mainParam} = require('player/sub-param')
 
   let getEvent = (events, timingContext) => {
     let e = events[timingContext._patternIdx]
@@ -158,7 +158,7 @@ define(function(require) {
 
   let parsePattern = (patternStr, params) => {
     if (!patternStr) { return () => [] }
-    let pattern = parsePatternString(patternStr)
+    let pattern = parsePatternLiteral(patternStr)
     let events = pattern.events
     if (events.length == 0) { return () => [] }
     let dur = param(params.dur, 1)
