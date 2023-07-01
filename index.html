@@ -1166,6 +1166,8 @@ Pattern update
  Limit pattern repeats:
  • p ping 01 loop 2  - Play the pattern through twice starting now, then stop
   Ability to parse a pattern string including operators
+   Extract pattern processing to another file from parse-pattern
+    ?Where should it go? Is it pattern literal processing? Should it be encapsulated with the pattern literal?
   loop operator
   Pattern structure - sub patterns
  • p ping once  - Same as p ping 0 loop 1
@@ -1217,7 +1219,7 @@ Make player pattern optional in the syntax; if missing, defaults to `0`?
  Split by audio vs visual
  Additional info?
 !Readout doesn't work here:  p ping 0, foo=[0,1,2,3]t1, add=this.foo \ r readout 0, add=p.add
- It's specifically the this.foo that makes it fail
+ It's specifically the this.foo that makes it fail; it's using *r*'s event for this, not p's event
 !this var lookup failing in various ways:
  // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
  // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1

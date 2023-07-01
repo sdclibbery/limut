@@ -1,6 +1,6 @@
 'use strict';
 define(function(require) {
-  var parsePattern = require('pattern/pattern');
+  var parsePattern = require('pattern/parse-pattern');
   var parseParams = require('player/params');
   let {applyOverrides,collapseOverrides} = require('player/override-params')
 
