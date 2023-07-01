@@ -3,7 +3,13 @@ define(function(require) {
   let patternLiteral = require('pattern/pattern-literal.js')
 
   let parsePattern = (patternStr, params) => {
-    return patternLiteral(patternStr, params)
+    patternStr = patternStr.trim()
+    if (!patternStr) { return () => [] }
+    let state = {
+      str: patternStr,
+      idx: 0,
+    }
+    return patternLiteral(state, params)
   }
 
   // TESTS //
@@ -18,7 +24,7 @@ define(function(require) {
     let pattern, tc
   
     tc = {}
-    pattern = patternLiteral('x', {})
+    pattern = parsePattern('x', {})
     assert([{value:'x',idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
     assert([{value:'x',idx:1,_time:0,dur:1,count:1}], pattern(1, tc))
     assert([{value:'x',idx:2,_time:0,dur:1,count:2}], pattern(2, tc))

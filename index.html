@@ -1165,7 +1165,8 @@ Pattern update
  x p ping  - Same as p ping 0
  Limit pattern repeats:
  • p ping 01 loop 2  - Play the pattern through twice starting now, then stop
-  Pattern literal parsing must be given a parse state and stop when it hits any whitespace
+  Pattern literal parsing must stop when it hits any whitespace
+  Parse loop operator following initial pattern literal, then parse its one numeric param
   Move timing context up to parse-pattern
   Loop operator: Cap the number of repeats
  • p ping once  - Same as p ping 0 loop 1

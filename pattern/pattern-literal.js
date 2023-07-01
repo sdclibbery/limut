@@ -156,21 +156,20 @@ define(function(require) {
     timingContext._patternCount = count-1
   }
 
-  let patternLiteral = (patternStr, params) => {
-    if (!patternStr) { return () => [] }
-    let pattern = parsePatternLiteral(patternStr)
+  let patternLiteral = (state, params) => {
+    let pattern = parsePatternLiteral(state)
     let events = pattern.events
     if (events.length == 0) { return () => [] }
     let dur = param(params.dur, 1)
     let durString = typeof dur === 'function' ? dur._durParamString : dur.toString()
     return (count, timingContext) => {
       let tcNotInitialised = timingContext._patternIdx === undefined
-      let patternChanged = timingContext._patternString !== patternStr
+      let patternChanged = timingContext._patternString !== state.str
       let durChanged = timingContext._durParamString !== durString
       let patternIdxOutsideRange = timingContext._patternIdx >= events.length
       if (tcNotInitialised || patternChanged || patternIdxOutsideRange || durChanged) {
         initialiseTimingContext(count, dur, events, timingContext)
-        timingContext._patternString = patternStr
+        timingContext._patternString = state.str
         timingContext._durParamString = durString
       }
       let eventsForBeat = stepToCount(count, dur, events, timingContext)
@@ -196,18 +195,19 @@ define(function(require) {
   }
 
   let pattern, tc
+  let st = (str) => { return { str:str, idx:0 } }
 
   tc = {}
-  pattern = patternLiteral('', {})
+  pattern = patternLiteral(st(''), {})
   assert([], pattern(0, tc))
   assert([], pattern(1, tc))
 
   tc = {}
-  pattern = patternLiteral('.', {})
+  pattern = patternLiteral(st('.'), {})
   assert([], pattern(0, tc))
   assert([], pattern(1, tc))
 
-  pattern = patternLiteral('1234', {})
+  pattern = patternLiteral(st('1234'), {})
   tc = {}
   assert([{value:1,idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
   tc = {}
@@ -219,66 +219,66 @@ define(function(require) {
   tc = {}
   assert([{value:1,idx:0,_time:0,dur:1,count:4}], pattern(4, tc))
 
-  pattern = patternLiteral('<1234>', {})
+  pattern = patternLiteral(st('<1234>'), {})
   tc = {}
   assert([{value:3,idx:2,_time:0,dur:1,count:2}], pattern(2, tc))
 
-  pattern = patternLiteral('[1234]', {dur:4})
+  pattern = patternLiteral(st('[1234]'), {dur:4})
   tc = {}
   assert([{value:3,idx:2,_time:0,dur:1,count:2}], pattern(2, tc))
 
-  pattern = patternLiteral('1___2___3___4___', {dur:1/4})
+  pattern = patternLiteral(st('1___2___3___4___'), {dur:1/4})
   tc = {}
   assert([{value:3,idx:2,_time:0,dur:1,count:2}], pattern(2, tc))
 
   tc = {}
-  pattern = patternLiteral('0', {})
+  pattern = patternLiteral(st('0'), {})
   assert([{value:0,idx:3,_time:0,dur:1,count:3}], pattern(3, tc))
   assert([{value:0,idx:4,_time:0,dur:1,count:4}], pattern(4, tc))
 
-  pattern = patternLiteral('<1[23]>', {dur:2})
+  pattern = patternLiteral(st('<1[23]>'), {dur:2})
   tc = {}
   assert([{value:3,idx:2,_time:0,dur:1,count:3}], pattern(3, tc))
   assert([{value:1,idx:3,_time:0,dur:2,count:4}], pattern(4, tc))
 
   tc = {}
-  pattern = patternLiteral('0', {})
+  pattern = patternLiteral(st('0'), {})
   assert([{value:0,idx:8,_time:0,dur:1,count:8}], pattern(8, tc))
   assert([{value:0,idx:9,_time:0,dur:1,count:9}], pattern(9, tc))
 
   tc = {}
-  pattern = patternLiteral('0', {dur:2})
+  pattern = patternLiteral(st('0'), {dur:2})
   assert([], pattern(3, tc))
   assert([{value:0,idx:2,_time:0,dur:2,count:4}], pattern(4, tc))
 
   tc = {}
-  pattern = patternLiteral('0_', {})
+  pattern = patternLiteral(st('0_'), {})
   assert([], pattern(3, tc))
   assert([{value:0,idx:2,_time:0,dur:2,count:4}], pattern(4, tc))
 
   tc = {}
-  pattern = patternLiteral('0_1_', {})
+  pattern = patternLiteral(st('0_1_'), {})
   assert([], pattern(5, tc))
   assert([{value:1,idx:1,_time:0,dur:2,count:6}], pattern(6, tc))
   assert([], pattern(7, tc))
   assert([{value:0,idx:0,_time:0,dur:2,count:8}], pattern(8, tc))
 
   tc = {}
-  pattern = patternLiteral('01', {dur:2})
+  pattern = patternLiteral(st('01'), {dur:2})
   assert([], pattern(5, tc))
   assert([{value:1,idx:1,_time:0,dur:2,count:6}], pattern(6, tc))
   assert([], pattern(7, tc))
   assert([{value:0,idx:0,_time:0,dur:2,count:8}], pattern(8, tc))
 
   tc = {}
-  pattern = patternLiteral('0', {dur:({idx})=>{ return {value:idx%2?3:1,_repeatCount:2}}})
+  pattern = patternLiteral(st('0'), {dur:({idx})=>{ return {value:idx%2?3:1,_repeatCount:2}}})
   assert([{value:0,idx:3,_time:0,dur:3,count:5}], pattern(5, tc))
   assert([], pattern(6, tc))
   assert([], pattern(7, tc))
   assert([{value:0,idx:4,_time:0,dur:1,count:8}], pattern(8, tc))
 
   tc = {}
-  pattern = patternLiteral('0', {dur:({idx})=>{ return {value:idx%2?3:1,_repeatCount:2}}})
+  pattern = patternLiteral(st('0'), {dur:({idx})=>{ return {value:idx%2?3:1,_repeatCount:2}}})
   assert([], pattern(6, tc))
   assert([], pattern(7, tc))
   assert([{value:0,idx:4,_time:0,dur:1,count:8}], pattern(8, tc))
@@ -286,7 +286,7 @@ define(function(require) {
 
   // // Test for checking the max time to step through patterns for TC init
   // tc = {}
-  // pattern = patternLiteral('0', {dur:()=>1/8})
+  // pattern = patternLiteral(st('0'), {dur:()=>1/8})
   // let n = 200000 // 100000 beats * 100 players at once; assumed worst case
   // console.time('test')
   // pattern(n, tc)
@@ -294,52 +294,52 @@ define(function(require) {
 
   // // Test for checking the max time to step through patterns for TC init
   // tc = {}
-  // pattern = patternLiteral('0', {dur:()=>1/80}) // granular might use 1/80 duration
+  // pattern = patternLiteral(st('0'), {dur:()=>1/80}) // granular might use 1/80 duration
   // let n = 200000 // 100000 beats * 20 granular players at once; assumed worst case
   // console.time('test')
   // pattern(n, tc)
   // console.timeEnd('test') // Expect this to be very quick as it will bomb out of the TC init count from 0 due to very short duration
 
   tc = {}
-  pattern = patternLiteral('x', {})
+  pattern = patternLiteral(st('x'), {})
   assert([{value:'x',idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
   assert([{value:'x',idx:1,_time:0,dur:1,count:1}], pattern(1, tc))
   assert([{value:'x',idx:2,_time:0,dur:1,count:2}], pattern(2, tc))
 
   tc = {}
-  pattern = patternLiteral('x', {dur:()=>1})
+  pattern = patternLiteral(st('x'), {dur:()=>1})
   assert([{value:'x',idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
   assert([{value:'x',idx:1,_time:0,dur:1,count:1}], pattern(1, tc))
   assert([{value:'x',idx:2,_time:0,dur:1,count:2}], pattern(2, tc))
 
   tc = {}
-  pattern = patternLiteral('xo', {})
+  pattern = patternLiteral(st('xo'), {})
   assert([{value:'x',idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
   assert([{value:'o',idx:1,_time:0,dur:1,count:1}], pattern(1, tc))
   assert([{value:'x',idx:0,_time:0,dur:1,count:2}], pattern(2, tc))
   assert([{value:'o',idx:1,_time:0,dur:1,count:3}], pattern(3, tc))
 
   tc = {}
-  pattern = patternLiteral('xo', {dur:1/2})
+  pattern = patternLiteral(st('xo'), {dur:1/2})
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:0},{value:'o',idx:1,_time:1/2,dur:1/2,count:0.5}], pattern(0, tc))
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:1},{value:'o',idx:1,_time:1/2,dur:1/2,count:1.5}], pattern(1, tc))
 
   tc = {}
-  pattern = patternLiteral('xo', {dur:()=>1/2})
+  pattern = patternLiteral(st('xo'), {dur:()=>1/2})
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:0},{value:'o',idx:1,_time:1/2,dur:1/2,count:0.5}], pattern(0, tc))
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:1},{value:'o',idx:1,_time:1/2,dur:1/2,count:1.5}], pattern(1, tc))
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:2},{value:'o',idx:1,_time:1/2,dur:1/2,count:2.5}], pattern(2, tc))
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:3},{value:'o',idx:1,_time:1/2,dur:1/2,count:3.5}], pattern(3, tc))
 
   tc = {}
-  pattern = patternLiteral('xo', {dur:({idx})=> idx%2 ? 1/4 : 3/4})
+  pattern = patternLiteral(st('xo'), {dur:({idx})=> idx%2 ? 1/4 : 3/4})
   assert([{value:'x',idx:0,_time:0,dur:3/4,count:0},{value:'o',idx:1,_time:3/4,dur:1/4,count:3/4}], pattern(0, tc))
   assert([{value:'x',idx:0,_time:0,dur:3/4,count:1},{value:'o',idx:1,_time:3/4,dur:1/4,count:7/4}], pattern(1, tc))
   assert([{value:'x',idx:0,_time:0,dur:3/4,count:2},{value:'o',idx:1,_time:3/4,dur:1/4,count:11/4}], pattern(2, tc))
   assert([{value:'x',idx:0,_time:0,dur:3/4,count:3},{value:'o',idx:1,_time:3/4,dur:1/4,count:15/4}], pattern(3, tc))
 
   tc = {}
-  pattern = patternLiteral('xo', {dur:({idx})=> idx%2 ? 1/4 : 1})
+  pattern = patternLiteral(st('xo'), {dur:({idx})=> idx%2 ? 1/4 : 1})
   assert([{value:'x',idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
   assert([{value:'o',idx:1,_time:0,dur:1/4,count:1},{value:'x',idx:0,_time:1/4,dur:1,count:5/4}], pattern(1, tc))
   assert([{value:'o',idx:1,_time:1/4,dur:1/4,count:9/4},{value:'x',idx:0,_time:1/2,dur:1,count:10/4}], pattern(2, tc))
@@ -348,29 +348,29 @@ define(function(require) {
   assert([{value:'x',idx:0,_time:0,dur:1,count:20/4}], pattern(5, tc))
 
   tc = {}
-  pattern = patternLiteral('x[--]', {dur:()=>1/2})
+  pattern = patternLiteral(st('x[--]'), {dur:()=>1/2})
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:0},{value:'-',idx:1,_time:1/2,dur:1/4,count:1/2},{value:'-',idx:2,_time:3/4,dur:1/4,count:3/4}], pattern(0, tc))
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:1},{value:'-',idx:1,_time:1/2,dur:1/4,count:3/2},{value:'-',idx:2,_time:3/4,dur:1/4,count:7/4}], pattern(1, tc))
 
   tc = {}
-  pattern = patternLiteral('x', {dur:({count})=>count+1})
+  pattern = patternLiteral(st('x'), {dur:({count})=>count+1})
   assert([{value:'x',idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
   assert([{value:'x',idx:1,_time:0,dur:2,count:1}], pattern(1, tc))
   assert([], pattern(2, tc))
   assert([{value:'x',idx:2,_time:0,dur:4,count:3}], pattern(3, tc))
 
   tc = {}
-  pattern = patternLiteral('x', {dur:({idx})=>[3/4,3/4,2/4][idx % 3]})
+  pattern = patternLiteral(st('x'), {dur:({idx})=>[3/4,3/4,2/4][idx % 3]})
   assert([{value:'x',idx:0,_time:0,dur:3/4,count:0},{value:'x',idx:1,_time:3/4,dur:3/4,count:3/4}], pattern(0, tc))
   assert([{value:'x',idx:2,_time:1/2,dur:2/4,count:3/2}], pattern(1, tc))
 
   tc = {}
-  pattern = patternLiteral('-', {dur:1/4})
+  pattern = patternLiteral(st('-'), {dur:1/4})
   assert([{value:'-',idx:0,_time:0,dur:1/4,count:0},{value:'-',idx:1,_time:1/4,dur:1/4,count:1/4},{value:'-',idx:2,_time:2/4,dur:1/4,count:2/4},{value:'-',idx:3,_time:3/4,dur:1/4,count:3/4}], pattern(0, tc))
   assert([{value:'-',idx:4,_time:0,dur:1/4,count:1},{value:'-',idx:5,_time:1/4,dur:1/4,count:5/4},{value:'-',idx:6,_time:2/4,dur:1/4,count:6/4},{value:'-',idx:7,_time:3/4,dur:1/4,count:7/4}], pattern(1, tc))
 
   tc = {}
-  pattern = patternLiteral('-', {dur:4/5})
+  pattern = patternLiteral(st('-'), {dur:4/5})
   assert([{value:'-',idx:0,_time:0,dur:4/5,count:0},{value:'-',idx:1,_time:4/5,dur:4/5,count:4/5}], pattern(0, tc))
   assert([{value:'-',idx:2,_time:3/5,dur:4/5,count:8/5}], pattern(1, tc))
   assert([{value:'-',idx:3,_time:2/5,dur:4/5,count:12/5}], pattern(2, tc))
@@ -379,7 +379,7 @@ define(function(require) {
   assert([{value:'-',idx:7,_time:3/5,dur:4/5,count:28/5}], pattern(5, tc))
 
   tc = {}
-  pattern = patternLiteral('xo', {dur:2})
+  pattern = patternLiteral(st('xo'), {dur:2})
   assert([{value:'x',idx:0,_time:0,dur:2,count:0}], pattern(0, tc))
   assert([], pattern(1, tc))
   assert([{value:'o',idx:1,_time:0,dur:2,count:2}], pattern(2, tc))
@@ -387,14 +387,14 @@ define(function(require) {
   assert([{value:'x',idx:0,_time:0,dur:2,count:4}], pattern(4, tc))
 
   tc = {}
-  pattern = patternLiteral('xo', {dur:3/2})
+  pattern = patternLiteral(st('xo'), {dur:3/2})
   assert([{value:'x',idx:0,_time:0,dur:3/2,count:0}], pattern(0, tc))
   assert([{value:'o',idx:1,_time:1/2,dur:3/2,count:3/2}], pattern(1, tc))
   assert([], pattern(2, tc))
   assert([{value:'x',idx:0,_time:0,dur:3/2,count:3}], pattern(3, tc))
 
   tc = {}
-  pattern = patternLiteral('xo', {dur:3})
+  pattern = patternLiteral(st('xo'), {dur:3})
   assert([{value:'x',idx:0,_time:0,dur:3,count:0}], pattern(0, tc))
   assert([], pattern(1, tc))
   assert([], pattern(2, tc))
@@ -404,7 +404,7 @@ define(function(require) {
   assert([{value:'x',idx:0,_time:0,dur:3,count:6}], pattern(6, tc))
 
   tc = {}
-  pattern = patternLiteral('xo', {dur:2.5})
+  pattern = patternLiteral(st('xo'), {dur:2.5})
   assert([{value:'x',idx:0,_time:0,dur:2.5,count:0}], pattern(0, tc))
   assert([], pattern(1, tc))
   assert([{value:'o',idx:1,_time:0.5,dur:2.5,count:2.5}], pattern(2, tc))
@@ -413,65 +413,65 @@ define(function(require) {
   assert([{value:'x',idx:0,_time:0,dur:2.5,count:5}], pattern(5, tc))
 
   tc = {}
-  pattern = patternLiteral('.-', {dur:1/2})
+  pattern = patternLiteral(st('.-'), {dur:1/2})
   assert([{value:'-',idx:0,_time:1/2,dur:1/2,count:1/2}], pattern(0, tc))
   assert([{value:'-',idx:1,_time:1/2,dur:1/2,count:3/2}], pattern(1, tc))
   assert([{value:'-',idx:2,_time:1/2,dur:1/2,count:5/2}], pattern(2, tc))
 
   tc = {}
-  pattern = patternLiteral('=--.--', {dur:1/3})
+  pattern = patternLiteral(st('=--.--'), {dur:1/3})
   assert([{value:'=',idx:0,_time:0,dur:1/3,count:0},{value:'-',idx:1,_time:1/3,dur:1/3,count:1/3},{value:'-',idx:2,_time:2/3,dur:1/3,count:2/3}], pattern(0, tc))
   assert([{value:'-',idx:3,_time:1/3,dur:1/3,count:4/3},{value:'-',idx:4,_time:2/3,dur:1/3,count:5/3}], pattern(1, tc))
   assert([{value:'=',idx:0,_time:0,dur:1/3,count:6/3},{value:'-',idx:1,_time:1/3,dur:1/3,count:7/3},{value:'-',idx:2,_time:2/3,dur:1/3,count:8/3}], pattern(2, tc))
 
   tc = {}
-  pattern = patternLiteral('[xo]', {})
+  pattern = patternLiteral(st('[xo]'), {})
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:0},{value:'o',idx:1,_time:1/2,dur:1/2,count:1/2}], pattern(0, tc))
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:1},{value:'o',idx:1,_time:1/2,dur:1/2,count:3/2}], pattern(1, tc))
 
   tc = {}
-  pattern = patternLiteral('[---]', {})
+  pattern = patternLiteral(st('[---]'), {})
   assert([{value:'-',idx:0,_time:0,dur:1/3,count:0},{value:'-',idx:1,_time:1/3,dur:1/3,count:1/3},{value:'-',idx:2,_time:2/3,dur:1/3,count:2/3}], pattern(0, tc))
   assert([{value:'-',idx:0,_time:0,dur:1/3,count:1},{value:'-',idx:1,_time:1/3,dur:1/3,count:4/3},{value:'-',idx:2,_time:2/3,dur:1/3,count:5/3}], pattern(1, tc))
 
   tc = {}
-  pattern = patternLiteral('[--[--]-]', {})
+  pattern = patternLiteral(st('[--[--]-]'), {})
   assert([{value:'-',idx:0,_time:0,dur:1/4,count:0},{value:'-',idx:1,_time:1/4,dur:1/4,count:1/4},{value:'-',idx:2,_time:1/2,dur:1/8,count:1/2},{value:'-',idx:3,_time:5/8,dur:1/8,count:5/8},{value:'-',idx:4,_time:3/4,dur:1/4,count:3/4}], pattern(0, tc))
   assert([{value:'-',idx:0,_time:0,dur:1/4,count:1},{value:'-',idx:1,_time:1/4,dur:1/4,count:5/4},{value:'-',idx:2,_time:1/2,dur:1/8,count:3/2},{value:'-',idx:3,_time:5/8,dur:1/8,count:13/8},{value:'-',idx:4,_time:3/4,dur:1/4,count:7/4}], pattern(1, tc))
 
   tc = {}
-  pattern = patternLiteral('[xo]', {dur:1/2})
+  pattern = patternLiteral(st('[xo]'), {dur:1/2})
   assert([{value:'x',idx:0,_time:0,dur:1/4,count:0},{value:'o',idx:1,_time:1/4,dur:1/4,count:1/4},{value:'x',idx:0,_time:1/2,dur:1/4,count:2/4},{value:'o',idx:1,_time:3/4,dur:1/4,count:3/4}], pattern(0, tc))
   assert([{value:'x',idx:0,_time:0,dur:1/4,count:1},{value:'o',idx:1,_time:1/4,dur:1/4,count:5/4},{value:'x',idx:0,_time:1/2,dur:1/4,count:6/4},{value:'o',idx:1,_time:3/4,dur:1/4,count:7/4}], pattern(1, tc))
 
   tc = {}
-  pattern = patternLiteral('[xo].', {dur:1/2})
+  pattern = patternLiteral(st('[xo].'), {dur:1/2})
   assert([{value:'x',idx:0,_time:0,dur:1/4,count:0},{value:'o',idx:1,_time:1/4,dur:1/4,count:1/4}], pattern(0, tc))
   assert([{value:'x',idx:0,_time:0,dur:1/4,count:1},{value:'o',idx:1,_time:1/4,dur:1/4,count:5/4}], pattern(1, tc))
 
   tc = {}
-  pattern = patternLiteral('0_', {})
+  pattern = patternLiteral(st('0_'), {})
   assert([{value:0,idx:0,_time:0,dur:2,count:0}], pattern(0, tc))
   assert([], pattern(1, tc))
   assert([{value:0,idx:1,_time:0,dur:2,count:2}], pattern(2, tc))
   assert([], pattern(3, tc))
 
   tc = {}
-  pattern = patternLiteral('012345', {dur:2})
+  pattern = patternLiteral(st('012345'), {dur:2})
   for (let i = 0; i < 20; i++) {
     assert([{value:(i%6),idx:(i%6),_time:0,dur:2,count:2*i}], pattern(2*i, tc), `Iteration: ${i}`)
     assert([], pattern(2*i+1, tc), `Iteration: ${i}`)
   }
 
   tc = {}
-  pattern = patternLiteral('012345', {dur:()=>2})
+  pattern = patternLiteral(st('012345'), {dur:()=>2})
   for (let i = 0; i < 20; i++) {
     assert([{value:(i%6),idx:(i%6),_time:0,dur:2,count:2*i}], pattern(2*i, tc), `Iteration: ${i}`)
     assert([], pattern(2*i+1, tc), `Iteration: ${i}`)
   }
 
   tc = {}
-  pattern = patternLiteral('0-1-2-x1', {})
+  pattern = patternLiteral(st('0-1-2-x1'), {})
   assert([{value:0,idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
   assert([{value:-1,idx:1,_time:0,dur:1,count:1}], pattern(1, tc))
   assert([{value:-2,idx:2,_time:0,dur:1,count:2}], pattern(2, tc))
@@ -480,221 +480,221 @@ define(function(require) {
   assert([{value:1,idx:5,_time:0,dur:1,count:5}], pattern(5, tc))
 
   tc = {}
-  pattern = patternLiteral('0', {amp:2})
+  pattern = patternLiteral(st('0'), {amp:2})
   assert([{value:0,idx:0,_time:0,dur:1,count:0,amp:2}], pattern(0, tc))
 
   tc = {}
-  pattern = patternLiteral('0', {delay:1/2})
+  pattern = patternLiteral(st('0'), {delay:1/2})
   assert([{value:0,idx:0,_time:0,dur:1,count:0,delay:1/2}], pattern(0, tc))
 
   tc = {}
-  pattern = patternLiteral('0', {amp:[2,3]})
+  pattern = patternLiteral(st('0'), {amp:[2,3]})
   assert([{value:0,idx:0,_time:0,dur:1,count:0,amp:[2,3]}], pattern(0, tc))
   assert([{value:0,idx:1,_time:0,dur:1,count:1,amp:[2,3]}], pattern(1, tc))
 
   tc = {}
-  pattern = patternLiteral('0_', {})
+  pattern = patternLiteral(st('0_'), {})
   assert([{value:0,idx:0,_time:0,dur:2,count:0}], pattern(0, tc))
   assert([], pattern(1, tc))
   assert([{value:0,idx:1,_time:0,dur:2,count:2}], pattern(2, tc))
 
   tc = {}
-  pattern = patternLiteral('0.', {})
+  pattern = patternLiteral(st('0.'), {})
   assert([{value:0,idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
   assert([], pattern(1, tc))
   assert([{value:0,idx:1,_time:0,dur:1,count:2}], pattern(2, tc))
 
   tc = {}
-  pattern = patternLiteral('.0', {})
+  pattern = patternLiteral(st('.0'), {})
   assert([], pattern(0, tc))
   assert([{value:0,idx:0,_time:0,dur:1,count:1}], pattern(1, tc))
   assert([], pattern(2, tc))
   assert([{value:0,idx:1,_time:0,dur:1,count:3}], pattern(3, tc))
 
   tc = {}
-  pattern = patternLiteral('0_', {dur:()=>1})
+  pattern = patternLiteral(st('0_'), {dur:()=>1})
   assert([{value:0,idx:0,_time:0,dur:2,count:0}], pattern(0, tc))
   assert([], pattern(1, tc))
   assert([{value:0,idx:1,_time:0,dur:2,count:2}], pattern(2, tc))
 
   tc = {}
-  pattern = patternLiteral('0.', {dur:()=>1})
+  pattern = patternLiteral(st('0.'), {dur:()=>1})
   assert([{value:0,idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
   assert([], pattern(1, tc))
   assert([{value:0,idx:1,_time:0,dur:1,count:2}], pattern(2, tc))
 
   tc = {}
-  pattern = patternLiteral('.0', {dur:()=>1})
+  pattern = patternLiteral(st('.0'), {dur:()=>1})
   assert([], pattern(0, tc))
   assert([{value:0,idx:0,_time:0,dur:1,count:1}], pattern(1, tc))
   assert([], pattern(2, tc))
   assert([{value:0,idx:1,_time:0,dur:1,count:3}], pattern(3, tc))
 
   tc = {}
-  pattern = patternLiteral('0[_1]', {})
+  pattern = patternLiteral(st('0[_1]'), {})
   assert([{value:0,idx:0,_time:0,dur:1.5,count:0}], pattern(0, tc))
   assert([{value:1,idx:1,_time:1/2,dur:1/2,count:3/2}], pattern(1, tc))
   assert([{value:0,idx:0,_time:0,dur:1.5,count:2}], pattern(2, tc))
 
   tc = {}
-  pattern = patternLiteral('0[_1]', {dur:()=>1})
+  pattern = patternLiteral(st('0[_1]'), {dur:()=>1})
   assert([{value:0,idx:0,_time:0,dur:1.5,count:0}], pattern(0, tc))
   assert([{value:1,idx:1,_time:1/2,dur:1/2,count:3/2}], pattern(1, tc))
   assert([{value:0,idx:0,_time:0,dur:1.5,count:2}], pattern(2, tc))
 
   tc = {}
-  pattern = patternLiteral('(xo)', {})
+  pattern = patternLiteral(st('(xo)'), {})
   assert([{value:'x',idx:0,_time:0,dur:1,count:0},{value:'o',idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
   assert([{value:'x',idx:1,_time:0,dur:1,count:1},{value:'o',idx:1,_time:0,dur:1,count:1}], pattern(1, tc))
   assert([{value:'x',idx:2,_time:0,dur:1,count:2},{value:'o',idx:2,_time:0,dur:1,count:2}], pattern(2, tc))
 
   tc = {}
-  pattern = patternLiteral('(xo)', {dur:()=>1})
+  pattern = patternLiteral(st('(xo)'), {dur:()=>1})
   assert([{value:'x',idx:0,_time:0,dur:1,count:0},{value:'o',idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
   assert([{value:'x',idx:1,_time:0,dur:1,count:1},{value:'o',idx:1,_time:0,dur:1,count:1}], pattern(1, tc))
   assert([{value:'x',idx:2,_time:0,dur:1,count:2},{value:'o',idx:2,_time:0,dur:1,count:2}], pattern(2, tc))
 
   tc = {}
-  pattern = patternLiteral('(01)_', {})
+  pattern = patternLiteral(st('(01)_'), {})
   assert([{value:0,idx:0,_time:0,dur:2,count:0},{value:1,idx:0,_time:0,dur:2,count:0}], pattern(0, tc))
   assert([], pattern(1, tc))
   assert([{value:0,idx:1,_time:0,dur:2,count:2},{value:1,idx:1,_time:0,dur:2,count:2}], pattern(2, tc))
 
   tc = {}
-  pattern = patternLiteral('(01)_', {dur:()=>1/2})
+  pattern = patternLiteral(st('(01)_'), {dur:()=>1/2})
   assert([{value:0,idx:0,_time:0,dur:1,count:0},{value:1,idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
   assert([{value:0,idx:1,_time:0,dur:1,count:1},{value:1,idx:1,_time:0,dur:1,count:1}], pattern(1, tc))
 
   tc = {}
-  pattern = patternLiteral('.(01)', {})
+  pattern = patternLiteral(st('.(01)'), {})
   assert([], pattern(0, tc))
   assert([{value:0,idx:0,_time:0,dur:1,count:1},{value:1,idx:0,_time:0,dur:1,count:1}], pattern(1, tc))
   assert([], pattern(2, tc))
   assert([{value:0,idx:1,_time:0,dur:1,count:3},{value:1,idx:1,_time:0,dur:1,count:3}], pattern(3, tc))
 
   tc = {}
-  pattern = patternLiteral('.(01)', {dur:()=>1/2})
+  pattern = patternLiteral(st('.(01)'), {dur:()=>1/2})
   assert([{value:0,idx:0,_time:1/2,dur:1/2,count:1/2},{value:1,idx:0,_time:1/2,dur:1/2,count:1/2}], pattern(0, tc))
   assert([{value:0,idx:1,_time:1/2,dur:1/2,count:3/2},{value:1,idx:1,_time:1/2,dur:1/2,count:3/2}], pattern(1, tc))
 
   tc = {}
-  pattern = patternLiteral('[.(24)]_', {})
+  pattern = patternLiteral(st('[.(24)]_'), {})
   assert([{value:2,idx:0,_time:0.5,dur:1.5,count:1/2},{value:4,idx:0,_time:0.5,dur:1.5,count:1/2}], pattern(0, tc))
   assert([], pattern(1, tc))
   assert([{value:2,idx:1,_time:0.5,dur:1.5,count:5/2},{value:4,idx:1,_time:0.5,dur:1.5,count:5/2}], pattern(2, tc))
   
   tc = {}
-  pattern = patternLiteral('(o[--])', {})
+  pattern = patternLiteral(st('(o[--])'), {})
   assert([{value:'o',idx:0,_time:0,dur:1,count:0},{value:'-',idx:0,_time:0,dur:0.5,count:0},{value:'-',idx:1,_time:0.5,dur:0.5,count:1/2}], pattern(0, tc))
   assert([{value:'o',idx:0,_time:0,dur:1,count:1},{value:'-',idx:0,_time:0,dur:0.5,count:1},{value:'-',idx:1,_time:0.5,dur:0.5,count:3/2}], pattern(1, tc))
   
   tc = {}
-  pattern = patternLiteral('x(o[--])', {})
+  pattern = patternLiteral(st('x(o[--])'), {})
   assert([{value:'x',idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
   assert([{value:'o',idx:1,_time:0,dur:1,count:1},{value:'-',idx:1,_time:0,dur:0.5,count:1},{value:'-',idx:2,_time:0.5,dur:0.5,count:3/2}], pattern(1, tc))
   assert([{value:'x',idx:0,_time:0,dur:1,count:2}], pattern(2, tc))
 
   tc = {}
-  pattern = patternLiteral('([--]o)', {})
+  pattern = patternLiteral(st('([--]o)'), {})
   assert([{value:'o',idx:0,_time:0,dur:1,count:0},{value:'-',idx:0,_time:0,dur:1/2,count:0},{value:'-',idx:1,_time:1/2,dur:1/2,count:1/2}], pattern(0, tc))
   assert([{value:'o',idx:0,_time:0,dur:1,count:1},{value:'-',idx:0,_time:0,dur:1/2,count:1},{value:'-',idx:1,_time:1/2,dur:1/2,count:3/2}], pattern(1, tc))
 
   tc = {}
-  pattern = patternLiteral('x([--]o)', {})
+  pattern = patternLiteral(st('x([--]o)'), {})
   assert([{value:'x',idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
   assert([{value:'o',idx:1,_time:0,dur:1,count:1},{value:'-',idx:1,_time:0,dur:1/2,count:1},{value:'-',idx:2,_time:0.5,dur:0.5,count:3/2}], pattern(1, tc))
   assert([{value:'x',idx:0,_time:0,dur:1,count:2}], pattern(2, tc))
   
   tc = {}
-  pattern = patternLiteral('x(o[--])', {dur:()=>1/2})
+  pattern = patternLiteral(st('x(o[--])'), {dur:()=>1/2})
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:0},{value:'o',idx:1,_time:1/2,dur:1/2,count:1/2},{value:'-',idx:1,_time:1/2,dur:1/4,count:1/2},{value:'-',idx:2,_time:3/4,dur:1/4,count:3/4}], pattern(0, tc))
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:1},{value:'o',idx:1,_time:1/2,dur:1/2,count:3/2},{value:'-',idx:1,_time:1/2,dur:1/4,count:3/2},{value:'-',idx:2,_time:3/4,dur:1/4,count:7/4}], pattern(1, tc))
   
   tc = {}
-  pattern = patternLiteral('x([--]o)', {dur:()=>1/2})
+  pattern = patternLiteral(st('x([--]o)'), {dur:()=>1/2})
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:0},{value:'o',idx:1,_time:1/2,dur:1/2,count:1/2},{value:'-',idx:1,_time:1/2,dur:1/4,count:1/2},{value:'-',idx:2,_time:3/4,dur:1/4,count:3/4}], pattern(0, tc))
   assert([{value:'x',idx:0,_time:0,dur:1/2,count:1},{value:'o',idx:1,_time:1/2,dur:1/2,count:3/2},{value:'-',idx:1,_time:1/2,dur:1/4,count:3/2},{value:'-',idx:2,_time:3/4,dur:1/4,count:7/4}], pattern(1, tc))
 
   tc = {}
-  pattern = patternLiteral('<01>', {})
+  pattern = patternLiteral(st('<01>'), {})
   assert([{value:0,idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
   assert([{value:1,idx:1,_time:0,dur:1,count:1}], pattern(1, tc))
   assert([{value:0,idx:2,_time:0,dur:1,count:2}], pattern(2, tc))
 
   tc = {}
-  pattern = patternLiteral('<01><345>', {dur:1/2})
+  pattern = patternLiteral(st('<01><345>'), {dur:1/2})
   assert([{value:0,idx:0,_time:0,dur:1/2,count:0},{value:3,idx:1,_time:1/2,dur:1/2,count:1/2}], pattern(0, tc))
   assert([{value:1,idx:0,_time:0,dur:1/2,count:1},{value:4,idx:1,_time:1/2,dur:1/2,count:3/2}], pattern(1, tc))
   assert([{value:0,idx:0,_time:0,dur:1/2,count:2},{value:5,idx:1,_time:1/2,dur:1/2,count:5/2}], pattern(2, tc))
   assert([{value:1,idx:0,_time:0,dur:1/2,count:3},{value:3,idx:1,_time:1/2,dur:1/2,count:7/2}], pattern(3, tc))
 
   tc = {}
-  pattern = patternLiteral('<01>', {dur:()=>1})
+  pattern = patternLiteral(st('<01>'), {dur:()=>1})
   assert([{value:0,idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
   assert([{value:1,idx:1,_time:0,dur:1,count:1}], pattern(1, tc))
   assert([{value:0,idx:2,_time:0,dur:1,count:2}], pattern(2, tc))
 
   tc = {}
-  pattern = patternLiteral('<01><345>', {dur:()=>1/2})
+  pattern = patternLiteral(st('<01><345>'), {dur:()=>1/2})
   assert([{value:0,idx:0,_time:0,dur:1/2,count:0},{value:3,idx:1,_time:1/2,dur:1/2,count:1/2}], pattern(0, tc))
   assert([{value:1,idx:0,_time:0,dur:1/2,count:1},{value:4,idx:1,_time:1/2,dur:1/2,count:3/2}], pattern(1, tc))
   assert([{value:0,idx:0,_time:0,dur:1/2,count:2},{value:5,idx:1,_time:1/2,dur:1/2,count:5/2}], pattern(2, tc))
   assert([{value:1,idx:0,_time:0,dur:1/2,count:3},{value:3,idx:1,_time:1/2,dur:1/2,count:7/2}], pattern(3, tc))
 
   tc = {}
-  pattern = patternLiteral('<1[23]>', {})
+  pattern = patternLiteral(st('<1[23]>'), {})
   assert([{value:1,idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
   assert([{value:2,idx:1,_time:0,dur:1/2,count:1},{value:3,idx:2,_time:1/2,dur:1/2,count:3/2}], pattern(1, tc))
   assert([{value:1,idx:3,_time:0,dur:1,count:2}], pattern(2, tc))
 
   tc = {}
-  pattern = patternLiteral('<1[23]>', {dur:()=>1})
+  pattern = patternLiteral(st('<1[23]>'), {dur:()=>1})
   assert([{value:1,idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
   assert([{value:2,idx:1,_time:0,dur:1/2,count:1},{value:3,idx:2,_time:1/2,dur:1/2,count:3/2}], pattern(1, tc))
   assert([{value:1,idx:3,_time:0,dur:1,count:2}], pattern(2, tc))
 
   tc = {}
-  pattern = patternLiteral('<1[23]>', {dur:1/2})
+  pattern = patternLiteral(st('<1[23]>'), {dur:1/2})
   assert([{value:1,idx:0,_time:0,dur:1/2,count:0},{value:2,idx:1,_time:1/2,dur:1/4,count:1/2},{value:3,idx:2,_time:3/4,dur:1/4,count:3/4}], pattern(0, tc))
   assert([{value:1,idx:3,_time:0,dur:1/2,count:1},{value:2,idx:4,_time:1/2,dur:1/4,count:3/2},{value:3,idx:5,_time:3/4,dur:1/4,count:7/4}], pattern(1, tc))
    // idx should really be 0,1,2 again the second time through but hey.
 
   tc = {}
-  pattern = patternLiteral('<1(23)>', {})
+  pattern = patternLiteral(st('<1(23)>'), {})
   assert([{value:1,idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
   assert([{value:2,idx:1,_time:0,dur:1,count:1},{value:3,idx:1,_time:0,dur:1,count:1}], pattern(1, tc))
   assert([{value:1,idx:2,_time:0,dur:1,count:2}], pattern(2, tc))
 
   tc = {}
-  pattern = patternLiteral('0', {dur:()=>{ return {value:1}}})
+  pattern = patternLiteral(st('0'), {dur:()=>{ return {value:1}}})
   assert([{value:0,idx:4,_time:0,dur:1,count:4}], pattern(4, tc))
   assert([{value:0,idx:5,_time:0,dur:1,count:5}], pattern(5, tc))
 
   tc = {}
-  pattern = patternLiteral('01', {dur:()=>{ return {value:1}}})
+  pattern = patternLiteral(st('01'), {dur:()=>{ return {value:1}}})
   assert([{value:0,idx:0,_time:0,dur:1,count:4}], pattern(4, tc))
   assert([{value:1,idx:1,_time:0,dur:1,count:5}], pattern(5, tc))
 
   let evalPerFrame = ()=>1
   evalPerFrame.interval = 'frame'
-  assert(1, patternLiteral('0', {scroll:evalPerFrame})(0, {})[0].scroll())
+  assert(1, patternLiteral(st('0'), {scroll:evalPerFrame})(0, {})[0].scroll())
 
-  pattern = patternLiteral('0#', {dur:1})
+  pattern = patternLiteral(st('0#'), {dur:1})
   assert([{value:0,idx:0,_time:0,dur:1,count:0,sharp:1}], pattern(0, {}))
 
-  pattern = patternLiteral('0b', {dur:1})
+  pattern = patternLiteral(st('0b'), {dur:1})
   assert([{value:0,idx:0,_time:0,dur:1,count:0,sharp:-1}], pattern(0, {}))
 
-  pattern = patternLiteral('0^', {dur:1})
+  pattern = patternLiteral(st('0^'), {dur:1})
   assert([{value:0,idx:0,_time:0,dur:1,count:0,loud:3/2}], pattern(0, {}))
 
-  pattern = patternLiteral('0v', {dur:1})
+  pattern = patternLiteral(st('0v'), {dur:1})
   assert([{value:0,idx:0,_time:0,dur:1,count:0,loud:1/2}], pattern(0, {}))
 
-  pattern = patternLiteral('0=', {dur:1})
+  pattern = patternLiteral(st('0='), {dur:1})
   assert([{value:0,idx:0,_time:0,dur:1,count:0,long:2}], pattern(0, {}))
 
-  pattern = patternLiteral('0!', {dur:1})
+  pattern = patternLiteral(st('0!'), {dur:1})
   assert([{value:0,idx:0,_time:0,dur:1,count:0,long:1/2}], pattern(0, {}))
 
   console.log("Pattern Literal tests complete")
