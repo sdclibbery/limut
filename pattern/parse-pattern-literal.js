@@ -163,7 +163,7 @@ define(function(require) {
     let events = []
     let char
     while (char = state.str.charAt(state.idx)) {
-      if (char === '') { break }
+      if (char === '' || char === ' ' || char === '\t') { break }
       if (char === endChar) {
         state.idx += 1
         break
@@ -265,10 +265,18 @@ define(function(require) {
     catch (e) { if (e.includes(expected)) {got=true} else {console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: ${e}`)} }
     finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
   }
-  let st = (str) => { return { str:str, idx:0 } }
+  let state, st = (str) => { return { str:str, idx:0 } }
 
   assertPattern(0, [], parseLiteral(st('')))
   assertPattern(0, [], parseLiteral(st('[]')))
+
+  state = st('x o')
+  assertPattern(1, [{value:'x',_time:0, dur:1}], parseLiteral(state))
+  assert(1, state.idx)
+
+  state = st('x\to')
+  assertPattern(1, [{value:'x',_time:0, dur:1}], parseLiteral(state))
+  assert(1, state.idx)
 
   assertPattern(1, [
     {value:'x',_time:0, dur:1},
