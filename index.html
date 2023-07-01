@@ -348,7 +348,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <h5>Defining a player</h5>
 <p>Basic structure: <code>id synth pattern, params</code></p>
 <p>A player command begins when something matching <code>id synth pattern</code> begins a new line. The params may follow on subsequent lines.</p>
-<p><code>id</code> Identifier for the player, so it can be referred to from other players etc. Must not contain a dot: <code>.</code>, and no player can be named <code>set</code> as that is a reserved keyword.</p>
+<p><code>id</code> Identifier for the player, so it can be referred to from other players etc. Must contain only alphanumeric characters from the basic Latin alphabet or underscore, and must not start with a digit. No player can be named <code>set</code> or <code>preset</code> as those are reserved keywords.</p>
 <p><code>synth</code> Name of the audio or visual synth to use; eg <code>piano</code></p>
 <p><code>pattern</code> Pattern of notes to play. Specifies the notes or sounds to play, and when to play them</p>
 <p><code>params</code> Comma separated list of params (eg <code>amp=1/2</code>) that affect how the player plays; see 'Value Syntax' and 'Params' sections below</p>
@@ -366,7 +366,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <h5>Creating a synth preset:</h5>
 <p>Basic structure: <code>preset name synth, params</code></p>
 <p>A preset global var command begins when <code>preset </code> begins a new line. The params may follow on subsequent lines.</p>
-<p><code>name</code> The name for the preset. The preset can be used by players by referring to this name as the player type.</p>
+<p><code>name</code> The name for the preset. The preset can be used by players by referring to this name as the player type. Must contain only alphanumeric characters from the basic Latin alphabet or underscore, and must not start with a digit.</p>
 <p><code>synth</code> The existing synth (or preset) to base this preset on</p>
 <p><code>params</code> Series of param overrides to apply for players that use this preset</p>
 <h5>Including a limut source file:</h5>
@@ -1165,6 +1165,7 @@ Pattern update
  x p ping  - Same as p ping 0
  Limit pattern repeats:
  • p ping 01 loop 2  - Play the pattern through twice starting now, then stop
+  player/preset ids and types cnanot start with a digit
   Parse loop operator following initial pattern literal, then parse its one numeric param
   Move timing context up to parse-pattern
   Loop operator: Cap the number of repeats
