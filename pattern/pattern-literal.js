@@ -697,7 +697,7 @@ define(function(require) {
   pattern = patternLiteral('0!', {dur:1})
   assert([{value:0,idx:0,_time:0,dur:1,count:0,long:1/2}], pattern(0, {}))
 
-  console.log("Pattern tests complete")
+  console.log("Pattern Literal tests complete")
   }
   
   return patternLiteral

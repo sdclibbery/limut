@@ -6,6 +6,26 @@ define(function(require) {
     return patternLiteral(patternStr, params)
   }
 
-  return parsePattern
+  // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
+    let assert = (expected, actual, msg) => {
+      let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
+      let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
+      if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`+(!!msg?'\n'+msg:'')) }
+    }
+  
+    let pattern, tc
+  
+    tc = {}
+    pattern = patternLiteral('x', {})
+    assert([{value:'x',idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
+    assert([{value:'x',idx:1,_time:0,dur:1,count:1}], pattern(1, tc))
+    assert([{value:'x',idx:2,_time:0,dur:1,count:2}], pattern(2, tc))
+    
+    console.log("Pattern tests complete")
+  }
+
+  return parsePattern
+  
 })

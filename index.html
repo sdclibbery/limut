@@ -1165,8 +1165,9 @@ Pattern update
  x p ping  - Same as p ping 0
  Limit pattern repeats:
  • p ping 01 loop 2  - Play the pattern through twice starting now, then stop
-  Ability to parse a pattern string including operators - loop operator
-  Pattern structure - sub patterns
+  Pattern literal parsing must be given a parse state and stop when it hits any whitespace
+  Move timing context up to parse-pattern
+  Loop operator: Cap the number of repeats
  • p ping once  - Same as p ping 0 loop 1
   Update exmples - Blade Runner opening titles
   Docs
@@ -1175,6 +1176,7 @@ Pattern update
  • p ping 01g2., g={glide:this.dur/8}
  Generative features:
  • p ping 01 * 4  - 01010101
+  ? Tests in parse-pattern that test pattern equivalence; eg test that  01 * 2  gives same events as  0101?
  • p ping 3 then 2  - 32
  • p ping 01 * 2 then 2 * 3  - 0101222
  • p ping 01234567 crop 4  - 0123
