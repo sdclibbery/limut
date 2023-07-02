@@ -1165,10 +1165,8 @@ Pattern update
  x p ping  - Same as p ping 0
  Limit pattern repeats:
  • p ping 01 loop 2  - Play the pattern through twice starting now, then stop
-  player/preset ids and types cnanot start with a digit
-  Parse loop operator following initial pattern literal, then parse its one numeric param
-  Move timing context up to parse-pattern
-  Loop operator: Cap the number of repeats
+  Cap the number of pattern repeats
+   ?Move timing context up to parse-pattern? Or some of it? Or a copy of it?
  • p ping once  - Same as p ping 0 loop 1
   Update exmples - Blade Runner opening titles
   Docs
