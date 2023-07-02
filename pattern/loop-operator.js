@@ -8,9 +8,9 @@ define(function(require) {
     let char
     while (char = state.str.charAt(tryIdx)) {
       let keywordChar = keyword.charAt(keywordIdx)
-      if (!keywordChar) {
+      if (!keywordChar) { // Matched entire keyword
         state.idx = tryIdx
-        return true // Matched entire keyword
+        return state.str.charAt(state.idx).match(/\s/) // keyword must end followed by whitespace
       }
       if (char !== keywordChar) { return false } // Didn't match
       tryIdx++
@@ -37,8 +37,10 @@ define(function(require) {
     eatWhitespace(state)
     let loopCount = tryParseInteger(state) // IMPLEMENT ME
     if (loopCount === undefined) { return }
-    // Now do the actual loop thingy...
-    return literal // TEMP
+    return (count, timingContext) => {
+      // Now do the actual loop thingy...
+      return literal(count, timingContext)
+    }
   }
 
   // TESTS //
@@ -54,10 +56,11 @@ define(function(require) {
     let pattern, tc
     let st = (str) => { return { str:str, idx:0 } }
 
-    assert(undefined, loopOperator(st('foo'), lit))
-    assert(undefined, loopOperator(st(' foo 2'), lit))
-    assert(undefined, loopOperator(st('loop'), lit))
-    assert(undefined, loopOperator(st('loop foo'), lit))
+    assert('undefined', typeof loopOperator(st('foo'), lit))
+    assert('undefined', typeof loopOperator(st(' foo 2'), lit))
+    assert('undefined', typeof loopOperator(st('loop'), lit))
+    assert('undefined', typeof loopOperator(st('loop foo'), lit))
+    assert('undefined', typeof loopOperator(st(' loop1'), lit))
 
     tc = {}
     pattern = loopOperator(st(' loop 1'), lit)
