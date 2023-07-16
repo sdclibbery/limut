@@ -953,6 +953,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>basspluck</code> plucked synth bass preset </p>
 <p><code>blade</code> Wobbly sawtooth lead preset in the style of the Blade Runner opening titles. Eg <code>l blade 0v___1v-2__-3___....</code></p>
 <p><code>blips</code> random computer blips preset </p>
+<p><code>bloom</code> Big detuned saw bass pad</p>
 <p><code>blues</code> Sawtooth lead preset in the style of Blade Runner blues</p>
 <p><code>chime</code> Synth chime preset </p>
 <p><code>chiparp</code> Chip style preset that plays a simple arpeggio from the given note </p>
@@ -1165,8 +1166,7 @@ Pattern update
  x p ping  - Same as p ping 0
  Limit pattern repeats:
  • p ping 01 loop 2  - Play the pattern through twice starting now, then stop
-  Cap the number of pattern repeats
-   ?Move timing context up to parse-pattern? Or some of it? Or a copy of it?
+  STARTING NOW..??
  • p ping once  - Same as p ping 0 loop 1
   Update exmples - Blade Runner opening titles
   Docs
@@ -1182,12 +1182,12 @@ Pattern update
  • p ping 01 pad 4  - 01..
  • p ping 01 prepad 4  - ..01
  • p ping choice 01 23[45] . 7  - Chooses a different subpattern each repeat
- • p ping shuffle 01 [23]45  - Random shuffling of subpatterns every repeat
+ • p ping shuffle 01 [23] 4 5  - Random shuffling of subpatterns every repeat
  • p ping mirror 012 * 2  - 012210012210
  • p ping mirror (012 * 2)  - 012012210210
  • sometimes/often/rarely/every before an operator; eg:  often mirror 0123   0123 sometimes * 2   every 4 shuffle 0 1 2 3
-  Eg  p ping 0 then (choice 017 2[34] 52 .) * 5 crop 5 then [21]0
- • Control numbers are not const, they are expressions? Eg  p ping 01 * [2,3]r
+  Eg  p ping 0 then (choice 017 2[34] 52 .) * 5 crop 5 then [21]7
+ • Control numbers are not const, they are expressions? Eg  p ping 0 then 54 * [2,3]r
   Eg  p ping 0 then 234 * 3 cropif delta{ch}  - when var 'ch' changes value, crop and restart the pattern from 0
  !!Need to know this will support more generative operations; eg Schenkerian infill, voice leading..?
   ?Would define new pattern operators?
@@ -1196,8 +1196,6 @@ Pattern update
   ?Probably want voice leading on expressions not patterns anyway??
 ?Should 'db' be a post operator, not a feature of number syntax? So you could do amp=[0:6]l2 db
  Or is it better to do amp=[0db:6db]l2 anyway?
-!Can no longer use a complex dur to force a pattern to start when the player is uncommented; EG the boom and whoosh in Blade Runner opening titles
- ?pattern for 'once'?
 Should support dur chords for polyrythms
 More time modifiers
  offset

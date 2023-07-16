@@ -31,15 +31,17 @@ define(function(require) {
     return parseInt(value)
   }
 
-  let loopOperator = (state, literal) => {
+  let loopOperator = (state, target) => {
     eatWhitespace(state)
     if (!tryParseKeyword(state, 'loop')) { return }
     eatWhitespace(state)
-    let loopCount = tryParseInteger(state) // IMPLEMENT ME
+    let loopCount = tryParseInteger(state)
     if (loopCount === undefined) { return }
     return (count, timingContext) => {
-      // Now do the actual loop thingy...
-      return literal(count, timingContext)
+      if (timingContext._repeatsRemaining === undefined) {
+        timingContext._repeatsRemaining = loopCount
+      }
+      return target(count, timingContext)
     }
   }
 
@@ -52,9 +54,10 @@ define(function(require) {
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`+(!!msg?'\n'+msg:'')) }
     }
 
-    let lit = (count, timingContext) => [{ value:'x', _time:count, dur:1 }]
     let pattern, tc
     let st = (str) => { return { str:str, idx:0 } }
+    let patternLiteral = require('pattern/pattern-literal.js')
+    let lit = patternLiteral(st('x'), {})
 
     assert('undefined', typeof loopOperator(st('foo'), lit))
     assert('undefined', typeof loopOperator(st(' foo 2'), lit))
@@ -64,13 +67,14 @@ define(function(require) {
 
     tc = {}
     pattern = loopOperator(st(' loop 1'), lit)
-    assert([{ value:'x', _time:0, dur:1 }], pattern(0, tc))
+    assert([{value:'x',idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
     assert([], pattern(1, tc))
+    assert([], pattern(2, tc))
 
     tc = {}
     pattern = loopOperator(st(' loop 2'), lit)
-    assert([{ value:'x', _time:0, dur:1 }], pattern(0, tc))
-    assert([{ value:'x', _time:0, dur:1 }], pattern(1, tc))
+    assert([{value:'x',idx:0,_time:0,dur:1,count:0}], pattern(0, tc))
+    assert([{value:'x',idx:1,_time:0,dur:1,count:1}], pattern(1, tc))
     assert([], pattern(2, tc))
 
     console.log("Pattern Loop Operator tests complete")

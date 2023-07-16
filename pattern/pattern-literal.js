@@ -26,6 +26,12 @@ define(function(require) {
     if (timingContext._patternIdx >= events.length) {
       timingContext._patternIdx = 0
       timingContext._patternRepeats++
+      if (timingContext._repeatsRemaining !== undefined) { // Limit the number of loops?
+        timingContext._repeatsRemaining--
+        if (timingContext._repeatsRemaining <= 0) {
+          timingContext._stopped = true
+        }
+      }
       return true // Looped around the main pattern
     }
     return false // Didn't loop
@@ -53,6 +59,7 @@ define(function(require) {
 
   let getNextChord = (events, timingContext) => {
     //!!Changes here must be mirrored in stepToCountFast!!
+    if (timingContext._stopped) { return [] }
     let event = getEvent(events, timingContext)
     let chordTime = event._time
     let result = []
@@ -68,6 +75,7 @@ define(function(require) {
     //!!Changes here must be mirrored in stepToCountFast!!
     let eventsForBeat = []
     while (timingContext._patternCount < count + 0.9999) {
+      if (timingContext._stopped) { break }
       let duration = mainParam(evalParamFrame(dur, {idx: timingContext._idx, count: timingContext._patternCount}, count), 1)
       if (duration <= 0) { throw 'Zero duration' }
       let chord = getNextChord(events, timingContext)
@@ -99,6 +107,7 @@ define(function(require) {
     //!!Changes here must be mirrored in stepToCount and getNextChord!!
     // Should step through the same as stepToCount, but as quickly as possible
     while (timingContext._patternCount < count + 0.9999) {
+      if (timingContext._stopped) { break }
       let duration = mainParam(evalParamFrame(dur, {idx: timingContext._idx, count: timingContext._patternCount}, count), 1)
       if (duration < 1/8) { return false } // Bomb out if there are very short durations, to avoid looping for ages
       let anyNotRest = false
@@ -109,6 +118,8 @@ define(function(require) {
         let isRest = event.value === undefined
         if (!isRest) { anyNotRest = true }
         lastDur = event.dur * duration
+        let rr = timingContext._repeatsRemaining
+        delete timingContext._repeatsRemaining
         if (nextEventMaybeLoop(events, timingContext)) { break }
         event = getEvent(events, timingContext)
       } while (event._time === chordTime)
@@ -125,6 +136,8 @@ define(function(require) {
     let isSingleStep = numDistinctTimes === 1
     timingContext._isSingleStep = isSingleStep
     timingContext._numDistinctTimes = numDistinctTimes
+    let rr = timingContext._repeatsRemaining
+    delete timingContext._repeatsRemaining // Ignore repeat limit while initialising the TC
     if (events.length === 1 && !Number.isNaN(dur) ) {
       // Complex dur for single step pattern; initialise timing context by stepping through from time 0; accurate but slow
       timingContext._patternIdx = 0
@@ -133,6 +146,7 @@ define(function(require) {
       timingContext._patternRepeats = 0
       timingContext._patternCount = 0
       if (stepToCountFast(count-1, dur, events, timingContext)) {
+        timingContext._repeatsRemaining = rr
         return
       }
     } else {
@@ -145,6 +159,7 @@ define(function(require) {
       timingContext._patternRepeats = patternRepeats
       timingContext._patternCount = patternLength * patternRepeats
       if (stepToCountFast(count-1, dur, events, timingContext)) {
+        timingContext._repeatsRemaining = rr
         return
       }
     }
@@ -154,6 +169,7 @@ define(function(require) {
     timingContext._idx = count-1
     timingContext._patternRepeats = count-1
     timingContext._patternCount = count-1
+    timingContext._repeatsRemaining = rr
   }
 
   let patternLiteral = (state, params) => {
