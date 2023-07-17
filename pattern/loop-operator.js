@@ -31,6 +31,15 @@ define(function(require) {
     return parseInt(value)
   }
 
+  let initialiseTcForLoop = (timingContext, loopCount) => {
+    timingContext._patternIdx = 0
+    timingContext._subPatternIdx = 0
+    timingContext._idx = 0
+    timingContext._patternRepeats = 0
+    timingContext._patternCount = 0
+    timingContext._repeatsRemaining = loopCount
+}
+
   let loopOperator = (state, target) => {
     eatWhitespace(state)
     if (!tryParseKeyword(state, 'loop')) { return }
@@ -39,7 +48,7 @@ define(function(require) {
     if (loopCount === undefined) { return }
     return (count, timingContext) => {
       if (timingContext._repeatsRemaining === undefined) {
-        timingContext._repeatsRemaining = loopCount
+        initialiseTcForLoop(timingContext, loopCount)
       }
       return target(count, timingContext)
     }

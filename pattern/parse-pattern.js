@@ -2,6 +2,9 @@
 define(function(require) {
   let patternLiteral = require('pattern/pattern-literal.js')
   let loopOperator = require('pattern/loop-operator.js')
+//!!!!!!!!!!!!!!!!!
+require('pattern/unit-literal.js')
+//!!!!!!!!!!!!!!!!!
 
   let parsePattern = (patternStr, params) => {
     patternStr = patternStr.trim()
