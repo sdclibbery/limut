@@ -7,7 +7,7 @@ define(function(require) {
     while (char = state.str.charAt(state.idx)) {
       if (char === '' || char === ' ' || char === '\t') { break } // End of literal
       if (char === ']' || char === ')' || char === '>' || char ==='}') { // End of subpattern
-        state.idx++ // Skip closing bracket
+        state.idx++ // Skip closing bracket after subpattern
         break
       }
       if (char === '[') { // Parse sub pattern literal
@@ -27,7 +27,7 @@ define(function(require) {
       if (s.scaleDurs) { s.scaleDurs() } // Ignore actual steps, they are scaled inside scaleDurs()
     })
     let idx = 0
-    return {
+    let pattern = {
 
       next: () => { // Get the next step of event(s)
         let step = steps[idx]
@@ -41,12 +41,28 @@ define(function(require) {
         return step
       },
 
+      toStep: (stepNum) => { // Set this (and sub patterns) to a specific step number; used to initialise the pattern
+        steps.forEach(s => { if (s.reset) s.reset() }) // Reset sub patterns first
+        idx = stepNum % steps.length
+        let i = Math.floor(idx) // Integer part
+        let fract = idx - i // Fractional part
+        idx = i // This pattern index is integer only
+        let step = steps[idx]
+        if (step.toFract) {
+          step.toFract(fract)
+        }
+      },
+      toFract: (f) => {
+        let step = f * steps.length // Turn fractional into actual step number
+        pattern.toStep(step)
+      },
+
       scaleDurs: () => {  // Scale the durations within this pattern based on its length
                           // Used to scale subpatterns to fit in one step duration of the parent pattern
         let scale = 1 / steps.length // Split duration up into all the steps in this pattern
         steps.forEach(s => {
           if (s.scaleDurs) {
-            s.scaleDurs() // Apply duration scale to sub pattern
+            s.scaleDurs() // Recurse to sub pattern
           } else {
             s.forEach(e => e.dur *= scale) // Apply duration scale to the events in this step
           }
@@ -59,6 +75,7 @@ define(function(require) {
       }
 
     }
+    return pattern
   }
 
   // TESTS //
@@ -71,6 +88,14 @@ define(function(require) {
 
     let st = (str) => { return { str:str, idx:0 } }
     let p
+
+    p = parseLiteral(st(''))
+    assert(undefined, p.next())
+    p.reset()
+    assert(undefined, p.next())
+
+    p = parseLiteral(st('[]'))
+    assert(undefined, p.next())
 
     p = parseLiteral(st('x'))
     assert([{value:'x',dur:1}], p.next())
@@ -106,6 +131,30 @@ define(function(require) {
     assert([{value:'1',dur:1/4}], p.next())
     assert([{value:'2',dur:1/4}], p.next())
     assert(undefined, p.next())
+  
+    p = parseLiteral(st('0123'))
+    p.toStep(0)
+    assert([{value:'0',dur:1}], p.next())
+    p.toStep(3)
+    assert([{value:'3',dur:1}], p.next())
+    p.toStep(4)
+    assert([{value:'0',dur:1}], p.next())
+    p.toStep(4*1e6)
+    assert([{value:'0',dur:1}], p.next())
+  
+    p = parseLiteral(st('0[12]'))
+    p.toStep(0)
+    assert([{value:'0',dur:1}], p.next())
+    p.toStep(0.9)
+    assert([{value:'0',dur:1}], p.next())
+    p.toStep(3)
+    assert([{value:'1',dur:1/2}], p.next())
+    p.toStep(5.5)
+    assert([{value:'2',dur:1/2}], p.next())
+    p.toStep(5.1)
+    assert([{value:'1',dur:1/2}], p.next())
+    p.toStep(5)
+    assert([{value:'1',dur:1/2}], p.next())
   
     console.log("Literal unit tests complete")
   }
