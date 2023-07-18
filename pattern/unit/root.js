@@ -62,10 +62,15 @@ define(function(require) {
 
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
-    let assert = (expected, actual) => {
+    let assert = (expected, actual, msg) => {
       let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
       let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
-      if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
+      if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}\n${msg}`) }
+    }
+    let assertSamePattern = (a, b) => {
+      for (let i=0; i<100; i++) {
+        assert(a(i), b(i), `i: ${i}`)
+      }
     }
     let p
 
@@ -91,12 +96,17 @@ define(function(require) {
 
     p = root('01.2', {dur:1/4})
     assert([{value:"0",dur:1/4,_time:0,count:0,idx:0},{value:"1",dur:1/4,_time:1/4,count:1/4,idx:1},{value:"2",dur:1/4,_time:3/4,count:3/4,idx:2}], p(0))
+    assert([{value:"0",dur:1/4,_time:0,count:1,idx:0},{value:"1",dur:1/4,_time:1/4,count:5/4,idx:1},{value:"2",dur:1/4,_time:3/4,count:7/4,idx:2}], p(1))
+
+    assertSamePattern(root('01.2', {dur:1/4}), root('[01.2]', {}))
+    assertSamePattern(root('[01][.2]', {dur:1/2}), root('[01.2]', {}))
 
     p = root('01', {dur:2})
     assert([{value:"0",dur:2,_time:0,count:0,idx:0}], p(0))
     assert([], p(1))
     assert([{value:"1",dur:2,_time:0,count:2,idx:1}], p(2))
     assert([], p(3))
+    assert([{value:"0",dur:2,_time:0,count:4,idx:0}], p(4))
 
     p = root('01', {dur:2.5})
     assert([{value:"0",dur:2.5,_time:0,count:0,idx:0}], p(0))
@@ -104,7 +114,13 @@ define(function(require) {
     assert([{value:"1",dur:2.5,_time:1/2,count:2.5,idx:1}], p(2))
     assert([], p(3))
     assert([], p(4))
-  
+    assert([{value:"0",dur:2.5,_time:0,count:5,idx:0}], p(5))
+
+    p = root('0[12]', {})
+    assert([{value:"0",dur:1,_time:0,count:0,idx:0}], p(0))
+    assert([{value:"1",dur:1/2,_time:0,count:1,idx:1},{value:"2",dur:1/2,_time:1/2,count:3/2,idx:2}], p(1))
+    assert([{value:"0",dur:1,_time:0,count:2,idx:0}], p(2))
+
     console.log("Pattern unit root tests complete")
   }
   

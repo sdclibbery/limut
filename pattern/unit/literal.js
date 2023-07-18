@@ -33,9 +33,9 @@ define(function(require) {
         let step = steps[stepIdx]
         if (step && step.next) { // Sub pattern
           let subStep = step.next()
-          if (subStep) { return subStep}
+          if (subStep !== undefined) { return subStep}
           stepIdx++ // Sub pattern has finished
-          step = steps[stepIdx]
+          return pattern.next()
         }
         stepIdx++
         return step
@@ -117,6 +117,13 @@ define(function(require) {
     assert([{value:'o',dur:1/2}], p.next())
     assert([{value:'h',dur:1/2}], p.next())
     assert([{value:'x',dur:1}], p.next())
+    assert(undefined, p.next())
+  
+    p = literal(st('[01][.2]'))
+    assert([{value:'0',dur:1/2}], p.next())
+    assert([{value:'1',dur:1/2}], p.next())
+    assert([{value:undefined,dur:1/2}], p.next())
+    assert([{value:'2',dur:1/2}], p.next())
     assert(undefined, p.next())
   
     p = literal(st('x[oh]x'))
