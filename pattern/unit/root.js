@@ -1,0 +1,81 @@
+'use strict';
+define(function(require) {
+  let literal = require('pattern/unit/literal.js')
+  let param = require('player/default-param')
+
+  let stepToCount = (count, dur, lit, tc) => {
+    let eventsForBeat = []
+    while (tc.patternCount < count + 0.9999) {
+      let duration = dur//mainParam(evalParamFrame(dur, {idx: tc.idx, count: tc.patternCount}, count), 1)
+      // if (duration <= 0) { throw 'Zero duration' }
+      let chord = lit.next()
+      let anyNotRest = false
+      chord.forEach(sourceEvent => {
+        let isRest = sourceEvent.value === undefined
+        if (!isRest) { anyNotRest = true }
+        let event = {}
+        event.value = sourceEvent.value
+        event.dur = sourceEvent.dur * duration
+        event._time = tc.patternCount - count
+        event.count = count + event._time
+        event.idx = tc.idx
+        // if (!isRest) { // No point setting up loads of data on rests that will be discarded anyway
+        //   event.sharp = sourceEvent.sharp
+        //   event.loud = sourceEvent.loud
+        //   event.long = sourceEvent.long
+        // }
+        eventsForBeat.push(event)
+      })
+      let lastEvent = eventsForBeat[eventsForBeat.length-1]
+      tc.patternCount += lastEvent.dur // Events in a chord are pre-sorted so shortest duration is last
+      if (anyNotRest) { tc.idx++ }
+    }
+    return eventsForBeat
+  }
+
+  let root = (patternStr, params) => {
+    patternStr = patternStr.trim()
+    if (!patternStr) { return () => [] }
+    let state = {
+      str: patternStr,
+      idx: 0,
+    }
+    let lit = literal(state)
+    let dur = param(params.dur, 1)
+    let tc = {
+      patternCount: 0,
+      idx: 0,
+    }
+    return (count) => {
+      return stepToCount(count, dur, lit, tc)
+              .filter(({value}) => value !== undefined) // Discard rests
+    }
+  }
+
+  // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+    let assert = (expected, actual) => {
+      let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
+      let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
+      if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
+    }
+    let p
+
+    p = root('01', {})
+    assert([{value:"0",dur:1,_time:0,count:0,idx:0}], p(0))
+    assert([{value:"1",dur:1,_time:0,count:1,idx:1}], p(1))
+
+    p = root('0.1', {})
+    assert([{value:"0",dur:1,_time:0,count:0,idx:0}], p(0))
+    assert([], p(1))
+    assert([{value:"1",dur:1,_time:0,count:2,idx:1}], p(2))
+
+    p = root('01.2', {dur:1/2})
+    assert([{value:"0",dur:1/2,_time:0,count:0,idx:0},{value:"1",dur:1/2,_time:1/2,count:1/2,idx:1}], p(0))
+    assert([{value:"2",dur:1/2,_time:1/2,count:3/2,idx:2}], p(1))
+  
+    console.log("Pattern unit root tests complete")
+  }
+  
+  return root
+});

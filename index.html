@@ -1182,15 +1182,21 @@ Pattern update
     * For deterministic patterns, start at the correct point given current global beat count
     * For non-deterministic or loop limited patterns, start at beginning
     NEXT STEPS for unit literal:
-      Pattern idx field set correctly
+      Pattern root
+       Tests for various durations
+       Pattern repeat - reset idx on repeat
+       Const durations init
+       Variable durations init
       _
       <> 
       . (rest)
-      ()
+      () - make sure root handles timing and idx properly, especially with eg (01_) (0[12]) etc
       #! etc
       loop 1
-    ?! Keep the pattern itself in the keepState, and only reparse when the string has changed
-     Then, the TC state is simply a closure in the parse code
+      Use units in standard player instead of old patterns
+       ?! Keep the pattern itself in the keepState
+        Only reparse when the string has changed
+        Then, the TC state is simply a closure in the parse code
  • p ping once  - Same as p ping 0 loop 1
   Update exmples - Blade Runner opening titles
   Docs
@@ -1209,6 +1215,7 @@ Pattern update
  • p ping shuffle 01 [23] 4 5  - Random shuffling of subpatterns every repeat
  • p ping mirror 012 * 2  - 012210012210
  • p ping mirror (012 * 2)  - 012012210210
+ • Parallel patterns - play multiple patterns at once
  • sometimes/often/rarely/every before an operator; eg:  often mirror 0123   0123 sometimes * 2   every 4 shuffle 0 1 2 3
   Eg  p ping 0 then (choice 017 2[34] 52 .) * 5 crop 5 then [21]7
  • Control numbers are not const, they are expressions? Eg  p ping 0 then 54 * [2,3]r
