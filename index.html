@@ -1176,21 +1176,17 @@ Pattern update
      Parse state: start parsing a pattern, can delegate to a sub pattern
     Possible API: tc state held in player keepState, next(), reset(), will need some kind of set() too
     Requirements:
-    * Reparse all players every time
-    * Keep place in pattern between parses (Not all patterns can be deterministic)
+    * Keep place in pattern between code updates (Not all patterns can be deterministic)
     * Make patterns encapsulated and have a hierarchy
     * For deterministic patterns, start at the correct point given current global beat count
     * For non-deterministic or loop limited patterns, start at beginning
     NEXT STEPS for unit literal:
       Pattern root
-       Tests for various durations
-       Pattern repeat - reset idx on repeat
        Const durations init
        Variable durations init
       _
       <> 
-      . (rest)
-      () - make sure root handles timing and idx properly, especially with eg (01_) (0[12]) etc
+      () - make sure root handles timing and idx properly, especially with eg (01_) (0[12]) etc - lots of root level tests
       #! etc
       loop 1
       Use units in standard player instead of old patterns

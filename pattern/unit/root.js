@@ -3,12 +3,20 @@ define(function(require) {
   let literal = require('pattern/unit/literal.js')
   let param = require('player/default-param')
 
-  let stepToCount = (count, dur, lit, tc) => {
+  let stepToCount = (count, dur, pattern, tc) => {
     let eventsForBeat = []
     while (tc.patternCount < count + 0.9999) {
       let duration = dur//mainParam(evalParamFrame(dur, {idx: tc.idx, count: tc.patternCount}, count), 1)
       // if (duration <= 0) { throw 'Zero duration' }
-      let chord = lit.next()
+      let chord = pattern.next()
+      if (chord === undefined) { // End of pattern
+        pattern.reset() // Loop pattern: reset back to start
+        if (tc.idxOnFirstRepeat === undefined) { tc.idxOnFirstRepeat = tc.idx }
+        if (tc.idxOnFirstRepeat > 1) {
+          tc.idx = 0 // Reset idx, but only if pattern length is > 1
+        }
+        chord = pattern.next()
+      }
       let anyNotRest = false
       chord.forEach(sourceEvent => {
         let isRest = sourceEvent.value === undefined
@@ -61,9 +69,16 @@ define(function(require) {
     }
     let p
 
+    p = root('0', {})
+    assert([{value:"0",dur:1,_time:0,count:0,idx:0}], p(0))
+    assert([{value:"0",dur:1,_time:0,count:1,idx:1}], p(1))
+    assert([{value:"0",dur:1,_time:0,count:2,idx:2}], p(2))
+
     p = root('01', {})
     assert([{value:"0",dur:1,_time:0,count:0,idx:0}], p(0))
     assert([{value:"1",dur:1,_time:0,count:1,idx:1}], p(1))
+    assert([{value:"0",dur:1,_time:0,count:2,idx:0}], p(2))
+    assert([{value:"1",dur:1,_time:0,count:3,idx:1}], p(3))
 
     p = root('0.1', {})
     assert([{value:"0",dur:1,_time:0,count:0,idx:0}], p(0))
@@ -73,6 +88,22 @@ define(function(require) {
     p = root('01.2', {dur:1/2})
     assert([{value:"0",dur:1/2,_time:0,count:0,idx:0},{value:"1",dur:1/2,_time:1/2,count:1/2,idx:1}], p(0))
     assert([{value:"2",dur:1/2,_time:1/2,count:3/2,idx:2}], p(1))
+
+    p = root('01.2', {dur:1/4})
+    assert([{value:"0",dur:1/4,_time:0,count:0,idx:0},{value:"1",dur:1/4,_time:1/4,count:1/4,idx:1},{value:"2",dur:1/4,_time:3/4,count:3/4,idx:2}], p(0))
+
+    p = root('01', {dur:2})
+    assert([{value:"0",dur:2,_time:0,count:0,idx:0}], p(0))
+    assert([], p(1))
+    assert([{value:"1",dur:2,_time:0,count:2,idx:1}], p(2))
+    assert([], p(3))
+
+    p = root('01', {dur:2.5})
+    assert([{value:"0",dur:2.5,_time:0,count:0,idx:0}], p(0))
+    assert([], p(1))
+    assert([{value:"1",dur:2.5,_time:1/2,count:2.5,idx:1}], p(2))
+    assert([], p(3))
+    assert([], p(4))
   
     console.log("Pattern unit root tests complete")
   }
