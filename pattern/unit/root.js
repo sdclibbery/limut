@@ -48,14 +48,17 @@ define(function(require) {
       str: patternStr,
       idx: 0,
     }
-    let lit = literal(state)
+    let pattern = literal(state)
     let dur = param(params.dur, 1)
-    let tc = {
-      patternCount: 0,
-      idx: 0,
-    }
+    let tc = {}
     return (count) => {
-      return stepToCount(count, dur, lit, tc)
+      if (!tc.inited) {
+        tc.inited = true
+        pattern.toStep(count / dur)
+        tc.patternCount = count
+        tc.idx = 0
+      }
+      return stepToCount(count, dur, pattern, tc)
               .filter(({value}) => value !== undefined) // Discard rests
     }
   }
@@ -120,6 +123,19 @@ define(function(require) {
     assert([{value:"0",dur:1,_time:0,count:0,idx:0}], p(0))
     assert([{value:"1",dur:1/2,_time:0,count:1,idx:1},{value:"2",dur:1/2,_time:1/2,count:3/2,idx:2}], p(1))
     assert([{value:"0",dur:1,_time:0,count:2,idx:0}], p(2))
+
+    p = root('0123', {})
+    assert([{value:"2",dur:1,_time:0,count:2,idx:2}], p(2)) // Start at count 2
+    assert([{value:"3",dur:1,_time:0,count:3,idx:3}], p(3))
+    assert([{value:"0",dur:1,_time:0,count:4,idx:0}], p(4))
+
+    p = root('0123', {dur:1/2})
+    assert([{value:"2",dur:1/2,_time:0,count:1,idx:2},{value:"3",dur:1/2,_time:1/2,count:3/2,idx:3}], p(1))
+    assert([{value:"0",dur:1/2,_time:0,count:2,idx:0},{value:"1",dur:1/2,_time:1/2,count:5/2,idx:1}], p(2))
+
+    p = root('01', {dur:2})
+    assert([], p(1))
+    assert([{value:"1",dur:2,_time:0,count:2,idx:1}], p(2))
 
     console.log("Pattern unit root tests complete")
   }
