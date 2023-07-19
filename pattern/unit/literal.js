@@ -41,20 +41,12 @@ define(function(require) {
         return step
       },
 
-      toStep: (stepNum) => { // Set this (and sub patterns) to a specific step number; used to initialise the pattern
-        steps.forEach(s => { if (s.reset) s.reset() }) // Reset sub patterns first
-        stepIdx = stepNum % steps.length
-        let i = Math.floor(stepIdx) // Integer part
-        let fract = stepIdx - i // Fractional part
-        stepIdx = i // This pattern index is integer only
-        let step = steps[stepIdx]
-        if (step.toFract) {
-          step.toFract(fract)
-        }
-      },
-      toFract: (f) => {
-        let step = f * steps.length // Turn fractional into actual step number
-        pattern.toStep(step)
+      toPreviousStart: (count, dur) => {  // As efficiently as possible, calculate the count where this pattern
+                                          // would repeat just before the passed count
+        pattern.reset()
+        let patternLength = steps.length * dur
+        let numRepeats = Math.trunc(count / patternLength)
+        return patternLength * numRepeats
       },
 
       scaleDurs: () => {  // Scale the durations within this pattern based on its length
@@ -142,29 +134,34 @@ define(function(require) {
     assert([{value:'2',dur:1/4}], p.next())
     assert(undefined, p.next())
   
+    p = literal(st('0'))
+    assert(0, p.toPreviousStart(0, 1))
+    assert(1, p.toPreviousStart(1, 1))
+    assert(2, p.toPreviousStart(2, 1))
+  
     p = literal(st('0123'))
-    p.toStep(0)
-    assert([{value:'0',dur:1}], p.next())
-    p.toStep(3)
-    assert([{value:'3',dur:1}], p.next())
-    p.toStep(4)
-    assert([{value:'0',dur:1}], p.next())
-    p.toStep(4*1e6)
-    assert([{value:'0',dur:1}], p.next())
+    assert(0, p.toPreviousStart(0, 1))
+    assert(0, p.toPreviousStart(1, 1))
+    assert(0, p.toPreviousStart(2, 1))
+    assert(0, p.toPreviousStart(3, 1))
+    assert(4, p.toPreviousStart(4, 1))
+    assert(4, p.toPreviousStart(5, 1))
+  
+    p = literal(st('0123'))
+    assert(0, p.toPreviousStart(0, 1/4))
+    assert(1, p.toPreviousStart(1, 1/4))
+    assert(2, p.toPreviousStart(2, 1/4))
+  
+    p = literal(st('0'))
+    assert(0, p.toPreviousStart(0, 2))
+    assert(0, p.toPreviousStart(1, 2))
+    assert(2, p.toPreviousStart(2, 2))
   
     p = literal(st('0[12]'))
-    p.toStep(0)
-    assert([{value:'0',dur:1}], p.next())
-    p.toStep(0.9)
-    assert([{value:'0',dur:1}], p.next())
-    p.toStep(3)
-    assert([{value:'1',dur:1/2}], p.next())
-    p.toStep(5.5)
-    assert([{value:'2',dur:1/2}], p.next())
-    p.toStep(5.1)
-    assert([{value:'1',dur:1/2}], p.next())
-    p.toStep(5)
-    assert([{value:'1',dur:1/2}], p.next())
+    assert(0, p.toPreviousStart(0, 1))
+    assert(0, p.toPreviousStart(1, 1))
+    assert(2, p.toPreviousStart(2, 1))
+    assert(2, p.toPreviousStart(3, 1))
   
     console.log("Pattern unit literal tests complete")
   }

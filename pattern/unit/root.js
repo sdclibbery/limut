@@ -54,9 +54,13 @@ define(function(require) {
     return (count) => {
       if (!tc.inited) {
         tc.inited = true
-        pattern.toStep(count / dur)
-        tc.patternCount = count
         tc.idx = 0
+        if (count === 0) {
+          tc.patternCount = 0
+        } else {
+          tc.patternCount = pattern.toPreviousStart(count-1, dur) // Jump to the pattern restart point just before count-1
+          stepToCount(count-1, dur, pattern, tc) // Step through the pattern to count-1 to update the tc count and idx
+        }
       }
       return stepToCount(count, dur, pattern, tc)
               .filter(({value}) => value !== undefined) // Discard rests
@@ -130,11 +134,11 @@ define(function(require) {
     assert([{value:"0",dur:1,_time:0,count:4,idx:0}], p(4))
 
     p = root('0123', {dur:1/2})
-    assert([{value:"2",dur:1/2,_time:0,count:1,idx:2},{value:"3",dur:1/2,_time:1/2,count:3/2,idx:3}], p(1))
+    assert([{value:"2",dur:1/2,_time:0,count:1,idx:2},{value:"3",dur:1/2,_time:1/2,count:3/2,idx:3}], p(1)) // Start at 1
     assert([{value:"0",dur:1/2,_time:0,count:2,idx:0},{value:"1",dur:1/2,_time:1/2,count:5/2,idx:1}], p(2))
 
     p = root('01', {dur:2})
-    assert([], p(1))
+    assert([], p(1)) // Start at 1
     assert([{value:"1",dur:2,_time:0,count:2,idx:1}], p(2))
 
     console.log("Pattern unit root tests complete")
