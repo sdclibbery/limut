@@ -1183,6 +1183,14 @@ Pattern update
     NEXT STEPS for unit literal:
       Pattern root
        Variable durations init
+        ??? Should actually calc pattern length in root and then literal doesn't need to know about dur after all???
+        idx problem because its a single step pattern, so idx needs to be inited to the correct value
+        calculate pattern length
+         if do not loop after 128 steps, give up
+        test for idx based duration
+        random
+        test for euclid{}
+        test for dur with subparams
       _
       <> 
       () - make sure root handles timing and idx properly, especially with eg (01_) (0[12]) etc - lots of root level tests
@@ -1223,6 +1231,7 @@ Pattern update
 ?Should 'db' be a post operator, not a feature of number syntax? So you could do amp=[0:6]l2 db
  Or is it better to do amp=[0db:6db]l2 anyway?
 Should support dur chords for polyrythms
+! Cannot override dur using `set`, it only changes the sus
 More time modifiers
  offset
  step

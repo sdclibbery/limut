@@ -1,5 +1,24 @@
 'use strict';
 define(function(require) {
+  let {mainParam} = require('player/sub-param')
+  let {evalParamFrame} = require('player/eval-param')
+
+  let calculatePatternLength = (pattern, dur) => {
+    let idx = 0
+    let count = 0
+    let step
+    pattern.reset()
+    do {
+      let duration = mainParam(evalParamFrame(dur, {idx: idx, count: count}, count), 1)
+      step = pattern.next()
+      if (step !== undefined) {
+        idx++
+        count += duration * step[0].dur
+      }
+    } while (step !== undefined)
+    pattern.reset()
+    return count
+  }
 
   let literal = (state) => {
     let steps = []
@@ -44,7 +63,7 @@ define(function(require) {
       toPreviousStart: (count, dur) => {  // As efficiently as possible, calculate the count where this pattern
                                           // would repeat just before the passed count
         pattern.reset()
-        let patternLength = steps.length * dur
+        let patternLength = calculatePatternLength(pattern, dur)
         let numRepeats = Math.trunc(count / patternLength)
         return patternLength * numRepeats
       },
@@ -138,7 +157,7 @@ define(function(require) {
     assert(0, p.toPreviousStart(0, 1))
     assert(1, p.toPreviousStart(1, 1))
     assert(2, p.toPreviousStart(2, 1))
-  
+
     p = literal(st('0123'))
     assert(0, p.toPreviousStart(0, 1))
     assert(0, p.toPreviousStart(1, 1))
@@ -162,6 +181,11 @@ define(function(require) {
     assert(0, p.toPreviousStart(1, 1))
     assert(2, p.toPreviousStart(2, 1))
     assert(2, p.toPreviousStart(3, 1))
+    
+    p = literal(st('0'))
+    assert(0, p.toPreviousStart(0, ()=>1))
+    assert(1, p.toPreviousStart(1, ()=>1))
+    assert(2, p.toPreviousStart(2, ()=>1))
   
     console.log("Pattern unit literal tests complete")
   }

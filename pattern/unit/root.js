@@ -7,7 +7,7 @@ define(function(require) {
     let eventsForBeat = []
     while (tc.patternCount < count + 0.9999) {
       let duration = dur//mainParam(evalParamFrame(dur, {idx: tc.idx, count: tc.patternCount}, count), 1)
-      // if (duration <= 0) { throw 'Zero duration' }
+      if (duration <= 0) { throw 'Zero duration' }
       let chord = pattern.next()
       if (chord === undefined) { // End of pattern
         pattern.reset() // Loop pattern: reset back to start
@@ -128,6 +128,10 @@ define(function(require) {
     assert([{value:"1",dur:1/2,_time:0,count:1,idx:1},{value:"2",dur:1/2,_time:1/2,count:3/2,idx:2}], p(1))
     assert([{value:"0",dur:1,_time:0,count:2,idx:0}], p(2))
 
+    p = root('0', {})
+    assert([{value:"0",dur:1,_time:0,count:2,idx:2}], p(2)) // Start at count 2
+    assert([{value:"0",dur:1,_time:0,count:3,idx:3}], p(3))
+
     p = root('0123', {})
     assert([{value:"2",dur:1,_time:0,count:2,idx:2}], p(2)) // Start at count 2
     assert([{value:"3",dur:1,_time:0,count:3,idx:3}], p(3))
@@ -140,6 +144,10 @@ define(function(require) {
     p = root('01', {dur:2})
     assert([], p(1)) // Start at 1
     assert([{value:"1",dur:2,_time:0,count:2,idx:1}], p(2))
+
+    p = root('01', {dur:()=>1})
+    assert([{value:"1",dur:1,_time:0,count:1,idx:1}], p(1)) // Start at 1
+    assert([{value:"0",dur:1,_time:0,count:2,idx:0}], p(2))
 
     console.log("Pattern unit root tests complete")
   }
