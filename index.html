@@ -1181,23 +1181,15 @@ Pattern update
     * For deterministic patterns, start at the correct point given current global beat count
     * For non-deterministic or loop limited patterns, start at beginning
     NEXT STEPS for unit literal:
-      Pattern root
-       Variable durations init
-        calculate pattern length
-         if do not loop after 128 steps, give up
-        test for idx based duration
-        random
-        test for euclid{}
-        test for dur with subparams
-      _
-      <> 
+      Use units in standard player instead of old patterns
+       Keep the pattern itself in the keepState
+        Only reparse when the string has changed
+      _ - equivalence tests [0_] vs 0 etc etc
+      <> - equivalence tests 0<12> vs 0102 etc
       () - make sure root handles timing and idx properly, especially with eg (01_) (0[12]) etc - lots of root level tests
       #! etc
       loop 1
-      Use units in standard player instead of old patterns
-       ?! Keep the pattern itself in the keepState
-        Only reparse when the string has changed
-        Then, the TC state is simply a closure in the parse code
+      TEST EVERYTHING
  • p ping once  - Same as p ping 0 loop 1
   Update exmples - Blade Runner opening titles
   Docs
