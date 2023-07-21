@@ -15,8 +15,11 @@ define(function(require) {
         steps.push(literal(state))
         continue
       }
+      let v = parseFloat(char) // Convert to number if possible
+      if (isNaN(v)) { v = char }
+      if (v === '.') { v = undefined}
       steps.push([{
-        value: char === '.' ? undefined : char,
+        value: v,
         dur: 1,
       }]) // Literal event value char
       state.idx++
@@ -104,10 +107,10 @@ define(function(require) {
     assert(undefined, p.next())
   
     p = literal(st('[01][.2]'))
-    assert([{value:'0',dur:1/2}], p.next())
-    assert([{value:'1',dur:1/2}], p.next())
+    assert([{value:0,dur:1/2}], p.next())
+    assert([{value:1,dur:1/2}], p.next())
     assert([{value:undefined,dur:1/2}], p.next())
-    assert([{value:'2',dur:1/2}], p.next())
+    assert([{value:2,dur:1/2}], p.next())
     assert(undefined, p.next())
   
     p = literal(st('x[oh]x'))
@@ -121,9 +124,9 @@ define(function(require) {
     assert(undefined, p.next())
   
     p = literal(st('[0[12]]'))
-    assert([{value:'0',dur:1/2}], p.next())
-    assert([{value:'1',dur:1/4}], p.next())
-    assert([{value:'2',dur:1/4}], p.next())
+    assert([{value:0,dur:1/2}], p.next())
+    assert([{value:1,dur:1/4}], p.next())
+    assert([{value:2,dur:1/4}], p.next())
     assert(undefined, p.next())
   
     console.log("Pattern unit literal tests complete")

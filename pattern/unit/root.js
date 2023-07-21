@@ -114,6 +114,14 @@ define(function(require) {
       }
       return stepToCount(count, dur, pattern, tc)
               .filter(({value}) => value !== undefined) // Discard rests
+              .map(event => {
+                for (let k in params) {
+                  if (k != '_time' && k != 'value' && k != 'dur') {
+                    event[k] = params[k]
+                  }
+                }
+                return event
+              })
     }
   }
 
@@ -138,88 +146,91 @@ define(function(require) {
     let p
 
     p = root('0', {})
-    assert([{value:"0",dur:1,_time:0,count:0,idx:0}], p(0))
-    assert([{value:"0",dur:1,_time:0,count:1,idx:1}], p(1))
-    assert([{value:"0",dur:1,_time:0,count:2,idx:2}], p(2))
+    assert([{value:0,dur:1,_time:0,count:0,idx:0}], p(0))
+    assert([{value:0,dur:1,_time:0,count:1,idx:1}], p(1))
+    assert([{value:0,dur:1,_time:0,count:2,idx:2}], p(2))
+
+    p = root('0', {amp:3})
+    assert([{value:0,dur:1,_time:0,count:0,idx:0, amp:3}], p(0))
 
     p = root('01', {})
-    assert([{value:"0",dur:1,_time:0,count:0,idx:0}], p(0))
-    assert([{value:"1",dur:1,_time:0,count:1,idx:1}], p(1))
-    assert([{value:"0",dur:1,_time:0,count:2,idx:0}], p(2))
-    assert([{value:"1",dur:1,_time:0,count:3,idx:1}], p(3))
+    assert([{value:0,dur:1,_time:0,count:0,idx:0}], p(0))
+    assert([{value:1,dur:1,_time:0,count:1,idx:1}], p(1))
+    assert([{value:0,dur:1,_time:0,count:2,idx:0}], p(2))
+    assert([{value:1,dur:1,_time:0,count:3,idx:1}], p(3))
 
     p = root('0.1', {})
-    assert([{value:"0",dur:1,_time:0,count:0,idx:0}], p(0))
+    assert([{value:0,dur:1,_time:0,count:0,idx:0}], p(0))
     assert([], p(1))
-    assert([{value:"1",dur:1,_time:0,count:2,idx:1}], p(2))
+    assert([{value:1,dur:1,_time:0,count:2,idx:1}], p(2))
 
     p = root('01.2', {dur:1/2})
-    assert([{value:"0",dur:1/2,_time:0,count:0,idx:0},{value:"1",dur:1/2,_time:1/2,count:1/2,idx:1}], p(0))
-    assert([{value:"2",dur:1/2,_time:1/2,count:3/2,idx:2}], p(1))
+    assert([{value:0,dur:1/2,_time:0,count:0,idx:0},{value:1,dur:1/2,_time:1/2,count:1/2,idx:1}], p(0))
+    assert([{value:2,dur:1/2,_time:1/2,count:3/2,idx:2}], p(1))
 
     p = root('01.2', {dur:1/4})
-    assert([{value:"0",dur:1/4,_time:0,count:0,idx:0},{value:"1",dur:1/4,_time:1/4,count:1/4,idx:1},{value:"2",dur:1/4,_time:3/4,count:3/4,idx:2}], p(0))
-    assert([{value:"0",dur:1/4,_time:0,count:1,idx:0},{value:"1",dur:1/4,_time:1/4,count:5/4,idx:1},{value:"2",dur:1/4,_time:3/4,count:7/4,idx:2}], p(1))
+    assert([{value:0,dur:1/4,_time:0,count:0,idx:0},{value:1,dur:1/4,_time:1/4,count:1/4,idx:1},{value:2,dur:1/4,_time:3/4,count:3/4,idx:2}], p(0))
+    assert([{value:0,dur:1/4,_time:0,count:1,idx:0},{value:1,dur:1/4,_time:1/4,count:5/4,idx:1},{value:2,dur:1/4,_time:3/4,count:7/4,idx:2}], p(1))
 
     p = root('01', {dur:2})
-    assert([{value:"0",dur:2,_time:0,count:0,idx:0}], p(0))
+    assert([{value:0,dur:2,_time:0,count:0,idx:0}], p(0))
     assert([], p(1))
-    assert([{value:"1",dur:2,_time:0,count:2,idx:1}], p(2))
+    assert([{value:1,dur:2,_time:0,count:2,idx:1}], p(2))
     assert([], p(3))
-    assert([{value:"0",dur:2,_time:0,count:4,idx:0}], p(4))
+    assert([{value:0,dur:2,_time:0,count:4,idx:0}], p(4))
 
     p = root('01', {dur:2.5})
-    assert([{value:"0",dur:2.5,_time:0,count:0,idx:0}], p(0))
+    assert([{value:0,dur:2.5,_time:0,count:0,idx:0}], p(0))
     assert([], p(1))
-    assert([{value:"1",dur:2.5,_time:1/2,count:2.5,idx:1}], p(2))
+    assert([{value:1,dur:2.5,_time:1/2,count:2.5,idx:1}], p(2))
     assert([], p(3))
     assert([], p(4))
-    assert([{value:"0",dur:2.5,_time:0,count:5,idx:0}], p(5))
+    assert([{value:0,dur:2.5,_time:0,count:5,idx:0}], p(5))
 
     p = root('0[12]', {})
-    assert([{value:"0",dur:1,_time:0,count:0,idx:0}], p(0))
-    assert([{value:"1",dur:1/2,_time:0,count:1,idx:1},{value:"2",dur:1/2,_time:1/2,count:3/2,idx:2}], p(1))
-    assert([{value:"0",dur:1,_time:0,count:2,idx:0}], p(2))
+    assert([{value:0,dur:1,_time:0,count:0,idx:0}], p(0))
+    assert([{value:1,dur:1/2,_time:0,count:1,idx:1},{value:2,dur:1/2,_time:1/2,count:3/2,idx:2}], p(1))
+    assert([{value:0,dur:1,_time:0,count:2,idx:0}], p(2))
 
     p = root('0', {})
-    assert([{value:"0",dur:1,_time:0,count:2,idx:2}], p(2)) // Start at count 2
-    assert([{value:"0",dur:1,_time:0,count:3,idx:3}], p(3))
+    assert([{value:0,dur:1,_time:0,count:2,idx:2}], p(2)) // Start at count 2
+    assert([{value:0,dur:1,_time:0,count:3,idx:3}], p(3))
 
     p = root('0123', {})
-    assert([{value:"2",dur:1,_time:0,count:2,idx:2}], p(2)) // Start at count 2
-    assert([{value:"3",dur:1,_time:0,count:3,idx:3}], p(3))
-    assert([{value:"0",dur:1,_time:0,count:4,idx:0}], p(4))
+    assert([{value:2,dur:1,_time:0,count:2,idx:2}], p(2)) // Start at count 2
+    assert([{value:3,dur:1,_time:0,count:3,idx:3}], p(3))
+    assert([{value:0,dur:1,_time:0,count:4,idx:0}], p(4))
 
     p = root('0123', {dur:1/2})
-    assert([{value:"2",dur:1/2,_time:0,count:1,idx:2},{value:"3",dur:1/2,_time:1/2,count:3/2,idx:3}], p(1)) // Start at 1
-    assert([{value:"0",dur:1/2,_time:0,count:2,idx:0},{value:"1",dur:1/2,_time:1/2,count:5/2,idx:1}], p(2))
+    assert([{value:2,dur:1/2,_time:0,count:1,idx:2},{value:3,dur:1/2,_time:1/2,count:3/2,idx:3}], p(1)) // Start at 1
+    assert([{value:0,dur:1/2,_time:0,count:2,idx:0},{value:1,dur:1/2,_time:1/2,count:5/2,idx:1}], p(2))
 
     p = root('01', {dur:2})
     assert([], p(1)) // Start at 1
-    assert([{value:"1",dur:2,_time:0,count:2,idx:1}], p(2))
+    assert([{value:1,dur:2,_time:0,count:2,idx:1}], p(2))
 
     p = root('01', {dur:()=>1})
-    assert([{value:"1",dur:1,_time:0,count:1,idx:1}], p(1)) // Start at 1
-    assert([{value:"0",dur:1,_time:0,count:2,idx:0}], p(2))
+    assert([{value:1,dur:1,_time:0,count:1,idx:1}], p(1)) // Start at 1
+    assert([{value:0,dur:1,_time:0,count:2,idx:0}], p(2))
 
     p = root('012'.repeat(128), {}) // Very long string
-    assert([{value:"1",dur:1,_time:0,count:1,idx:1}], p(1)) // Start at 1
-    assert([{value:"2",dur:1,_time:0,count:2,idx:2}], p(2))
-    assert([{value:"0",dur:1,_time:0,count:3,idx:3}], p(3)) // As if its a single step pattern
+    assert([{value:1,dur:1,_time:0,count:1,idx:1}], p(1)) // Start at 1
+    assert([{value:2,dur:1,_time:0,count:2,idx:2}], p(2))
+    assert([{value:0,dur:1,_time:0,count:3,idx:3}], p(3)) // As if its a single step pattern
 
     p = root('0', {dur:({idx})=>{ return {value:idx%2 ? 3 : 1}}}) // idx based duration
-    assert([{value:"0",dur:1,_time:0,count:0,idx:0}], p(0))
-    assert([{value:"0",dur:3,_time:0,count:1,idx:1}], p(1))
+    assert([{value:0,dur:1,_time:0,count:0,idx:0}], p(0))
+    assert([{value:0,dur:3,_time:0,count:1,idx:1}], p(1))
     assert([], p(2))
     assert([], p(3))
-    assert([{value:"0",dur:1,_time:0,count:4,idx:2}], p(4))
+    assert([{value:0,dur:1,_time:0,count:4,idx:2}], p(4))
   
     p = root('0', {dur:({idx})=>{ return {value:idx%2 ? 3 : 1}}})
-    assert([{value:"0",dur:1,_time:0,count:4,idx:2}], p(4))
-    assert([{value:"0",dur:3,_time:0,count:5,idx:3}], p(5))
+    assert([{value:0,dur:1,_time:0,count:4,idx:2}], p(4))
+    assert([{value:0,dur:3,_time:0,count:5,idx:3}], p(5))
     assert([], p(6))
     assert([], p(7))
-    assert([{value:"0",dur:1,_time:0,count:8,idx:4}], p(8))
+    assert([{value:0,dur:1,_time:0,count:8,idx:4}], p(8))
   
     p = root('xo', {dur:({idx})=> idx%2 ? 1/4 : 3/4})
     assert([{value:'x',dur:3/4,_time:0,count:0,idx:0},{value:'o',dur:1/4,_time:3/4,count:3/4,idx:1}], p(0))
@@ -246,8 +257,8 @@ define(function(require) {
     assert([{value:'x',dur:2/4,_time:1/2,count:3/2,idx:2}], p(1))
   
     p = root('0', {dur:()=>{ return {value:1}}})
-    assert([{value:'0',dur:1,_time:0,count:4,idx:4}], p(4))
-    assert([{value:'0',dur:1,_time:0,count:5,idx:5}], p(5))
+    assert([{value:0,dur:1,_time:0,count:4,idx:4}], p(4))
+    assert([{value:0,dur:1,_time:0,count:5,idx:5}], p(5))
 
     assertSamePattern(root('01.2', {dur:1/4}), root('[01.2]', {}))
     assertSamePattern(root('[01][.2]', {dur:1/2}), root('[01.2]', {}))
