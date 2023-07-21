@@ -2,17 +2,69 @@
 define(function(require) {
   let literal = require('pattern/unit/literal.js')
   let param = require('player/default-param')
+  let {mainParam} = require('player/sub-param')
+  let {evalParamFrame} = require('player/eval-param')
+
+  let calculatePatternInfo = (pattern, dur, tc) => {
+    let idx = 0
+    let count = 0
+    let step
+    let numNonRests = 0
+    let numSteps = 0
+    do {
+      let duration = mainParam(evalParamFrame(dur, {idx: idx, count: count}, count), 1)
+      if (duration <= 0) { throw 'Zero duration' }
+      step = pattern.next()
+      if (step !== undefined) {
+        let e = step[0]
+        if (e.value !== undefined) {
+          numNonRests++
+          idx++
+        }
+        count += duration * e.dur
+      }
+      numSteps++
+      if (numSteps > 128) { // If the pattern is crazy long, act as if its a single stepper
+        tc.patternLength = 1
+        tc.isSingleStep = true
+        pattern.reset()
+        return
+      }
+    } while (step !== undefined)
+    tc.patternLength = count
+    tc.isSingleStep = numNonRests <= 1
+  }
+
+  let toPreviousStart = (pattern, count, dur, tc) => {
+    calculatePatternInfo(pattern, dur, tc)
+    let numRepeats = Math.trunc(count / tc.patternLength)
+    tc.patternCount = tc.patternLength * numRepeats
+    if (tc.isSingleStep) {
+      tc.idx = numRepeats
+    }
+  }
+
+  let initTimingContext = (tc, count, pattern, dur) => {
+    pattern.reset()
+    tc.idx = 0
+    if (count === 0) { // At count 0; must be starting at the start of the pattern :-)
+      calculatePatternInfo(pattern, dur, tc)
+      tc.patternCount = 0
+      return
+    }
+    toPreviousStart(pattern, count-1, dur, tc) // Jump to the pattern restart point just before count-1
+    stepToCount(count-1, dur, pattern, tc) // Step through the pattern to count-1 to update the tc count and idx
+  }
 
   let stepToCount = (count, dur, pattern, tc) => {
     let eventsForBeat = []
     while (tc.patternCount < count + 0.9999) {
-      let duration = dur//mainParam(evalParamFrame(dur, {idx: tc.idx, count: tc.patternCount}, count), 1)
+      let duration = mainParam(evalParamFrame(dur, {idx: tc.idx, count: tc.patternCount}, count), 1)
       if (duration <= 0) { throw 'Zero duration' }
       let chord = pattern.next()
       if (chord === undefined) { // End of pattern
         pattern.reset() // Loop pattern: reset back to start
-        if (tc.idxOnFirstRepeat === undefined) { tc.idxOnFirstRepeat = tc.idx }
-        if (tc.idxOnFirstRepeat > 1) {
+        if (!tc.isSingleStep) {
           tc.idx = 0 // Reset idx, but only if pattern length is > 1
         }
         chord = pattern.next()
@@ -54,13 +106,7 @@ define(function(require) {
     return (count) => {
       if (!tc.inited) {
         tc.inited = true
-        tc.idx = 0
-        if (count === 0) {
-          tc.patternCount = 0
-        } else {
-          tc.patternCount = pattern.toPreviousStart(count-1, dur) // Jump to the pattern restart point just before count-1
-          stepToCount(count-1, dur, pattern, tc) // Step through the pattern to count-1 to update the tc count and idx
-        }
+        initTimingContext(tc, count, pattern, dur)
       }
       return stepToCount(count, dur, pattern, tc)
               .filter(({value}) => value !== undefined) // Discard rests
@@ -148,6 +194,11 @@ define(function(require) {
     p = root('01', {dur:()=>1})
     assert([{value:"1",dur:1,_time:0,count:1,idx:1}], p(1)) // Start at 1
     assert([{value:"0",dur:1,_time:0,count:2,idx:0}], p(2))
+
+    p = root('012'.repeat(128), {}) // Very long string
+    assert([{value:"1",dur:1,_time:0,count:1,idx:1}], p(1)) // Start at 1
+    assert([{value:"2",dur:1,_time:0,count:2,idx:2}], p(2))
+    assert([{value:"0",dur:1,_time:0,count:3,idx:3}], p(3)) // As if its a single step pattern
 
     console.log("Pattern unit root tests complete")
   }

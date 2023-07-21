@@ -1,24 +1,5 @@
 'use strict';
 define(function(require) {
-  let {mainParam} = require('player/sub-param')
-  let {evalParamFrame} = require('player/eval-param')
-
-  let calculatePatternLength = (pattern, dur) => {
-    let idx = 0
-    let count = 0
-    let step
-    pattern.reset()
-    do {
-      let duration = mainParam(evalParamFrame(dur, {idx: idx, count: count}, count), 1)
-      step = pattern.next()
-      if (step !== undefined) {
-        idx++
-        count += duration * step[0].dur
-      }
-    } while (step !== undefined)
-    pattern.reset()
-    return count
-  }
 
   let literal = (state) => {
     let steps = []
@@ -58,14 +39,6 @@ define(function(require) {
         }
         stepIdx++
         return step
-      },
-
-      toPreviousStart: (count, dur) => {  // As efficiently as possible, calculate the count where this pattern
-                                          // would repeat just before the passed count
-        pattern.reset()
-        let patternLength = calculatePatternLength(pattern, dur)
-        let numRepeats = Math.trunc(count / patternLength)
-        return patternLength * numRepeats
       },
 
       scaleDurs: () => {  // Scale the durations within this pattern based on its length
@@ -152,40 +125,6 @@ define(function(require) {
     assert([{value:'1',dur:1/4}], p.next())
     assert([{value:'2',dur:1/4}], p.next())
     assert(undefined, p.next())
-  
-    p = literal(st('0'))
-    assert(0, p.toPreviousStart(0, 1))
-    assert(1, p.toPreviousStart(1, 1))
-    assert(2, p.toPreviousStart(2, 1))
-
-    p = literal(st('0123'))
-    assert(0, p.toPreviousStart(0, 1))
-    assert(0, p.toPreviousStart(1, 1))
-    assert(0, p.toPreviousStart(2, 1))
-    assert(0, p.toPreviousStart(3, 1))
-    assert(4, p.toPreviousStart(4, 1))
-    assert(4, p.toPreviousStart(5, 1))
-  
-    p = literal(st('0123'))
-    assert(0, p.toPreviousStart(0, 1/4))
-    assert(1, p.toPreviousStart(1, 1/4))
-    assert(2, p.toPreviousStart(2, 1/4))
-  
-    p = literal(st('0'))
-    assert(0, p.toPreviousStart(0, 2))
-    assert(0, p.toPreviousStart(1, 2))
-    assert(2, p.toPreviousStart(2, 2))
-  
-    p = literal(st('0[12]'))
-    assert(0, p.toPreviousStart(0, 1))
-    assert(0, p.toPreviousStart(1, 1))
-    assert(2, p.toPreviousStart(2, 1))
-    assert(2, p.toPreviousStart(3, 1))
-    
-    p = literal(st('0'))
-    assert(0, p.toPreviousStart(0, ()=>1))
-    assert(1, p.toPreviousStart(1, ()=>1))
-    assert(2, p.toPreviousStart(2, ()=>1))
   
     console.log("Pattern unit literal tests complete")
   }
