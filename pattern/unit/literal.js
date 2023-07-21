@@ -15,6 +15,11 @@ define(function(require) {
         steps.push(literal(state))
         continue
       }
+      let nextChar = state.str.charAt(state.idx+1)
+      if (char == '-' && nextChar >= '0' && nextChar <= '9') { // Numeric values can be negative
+        char = '-'+nextChar
+        state.idx += 1
+      }
       let v = parseFloat(char) // Convert to number if possible
       if (isNaN(v)) { v = char }
       if (v === '.') { v = undefined}
@@ -86,6 +91,14 @@ define(function(require) {
 
     p = literal(st('.'))
     assert([{value:undefined,dur:1}], p.next())
+
+    p = literal(st('0-12-x-'))
+    assert([{value:0,dur:1}], p.next())
+    assert([{value:-1,dur:1}], p.next())
+    assert([{value:2,dur:1}], p.next())
+    assert([{value:'-',dur:1}], p.next())
+    assert([{value:'x',dur:1}], p.next())
+    assert([{value:'-',dur:1}], p.next())
 
     p = literal(st('x'))
     assert([{value:'x',dur:1}], p.next())
