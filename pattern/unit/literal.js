@@ -4,22 +4,43 @@ define(function(require) {
   let literal = (state) => {
     let steps = []
     let char
+    let numContinuations = 0
     while (char = state.str.charAt(state.idx)) {
+// console.log(char, JSON.stringify(steps))
+
       if (char === '' || char === ' ' || char === '\t') { break } // End of literal
+
       if (char === ']' || char === ')' || char === '>' || char ==='}') { // End of subpattern
         state.idx++ // Skip closing bracket after subpattern
         break
       }
+
       if (char === '[') { // Parse sub pattern literal
         state.idx++ // Skip opening bracket
-        steps.push(literal(state))
+        let subPattern = literal(state)
+        if (subPattern.scaleToFit) { subPattern.scaleToFit() } // Scale subpattern to fit inside one step of this pattern
+        steps.push(subPattern)
         continue
       }
+
+      if (char === '_' && steps.length > 0) { // Duration continuation; previous step takes up this step's duration too
+        state.idx++
+        let step = steps[steps.length-1]
+        if (step.extendDur) {
+          step.extendDur() // Extend last step of this pattern by one
+        } else {
+          step.forEach(e => e.dur++) // Extend last step of subpattern
+        }
+        numContinuations++
+        continue
+      }
+
       let nextChar = state.str.charAt(state.idx+1)
       if (char == '-' && nextChar >= '0' && nextChar <= '9') { // Numeric values can be negative
         char = '-'+nextChar
         state.idx += 1
       }
+      
       let v = parseFloat(char) // Convert to number if possible
       if (isNaN(v)) { v = char }
       if (v === '.') { v = undefined}
@@ -29,14 +50,9 @@ define(function(require) {
       }]) // Literal event value char
       state.idx++
     }
-    steps.forEach(s => {  // Scale sub patterns after parsing
-                          // Note this leaves the top level pattern unscaled, so each step has dur=1 on the top level pattern,
-                          // and everything inside it is appropriately scaled
-      if (s.scaleDurs) { s.scaleDurs() } // Ignore actual steps, they are scaled inside scaleDurs()
-    })
+
     let stepIdx = 0
     let pattern = {
-
       next: () => { // Get the next step of event(s)
         let step = steps[stepIdx]
         if (step && step.next) { // Sub pattern
@@ -49,16 +65,30 @@ define(function(require) {
         return step
       },
 
-      scaleDurs: () => {  // Scale the durations within this pattern based on its length
+      scaleToFit: (scale) => { // Scale the durations within this pattern based on its length
                           // Used to scale subpatterns to fit in one step duration of the parent pattern
-        let scale = 1 / steps.length // Split duration up into all the steps in this pattern
+        if (scale === undefined) {
+          let length = steps.length + numContinuations
+          scale = 1 / length
+        }
         steps.forEach(s => {
-          if (s.scaleDurs) {
-            s.scaleDurs() // Recurse to sub pattern
+          if (s.scaleToFit) {
+            s.scaleToFit(scale) // Recurse to sub pattern
           } else {
             s.forEach(e => e.dur *= scale) // Apply duration scale to the events in this step
           }
         })
+// console.log('scaleToFit', scale, steps.length, numContinuations, JSON.stringify(steps))
+      },
+
+      extendDur: () => { // Extend the duration of the last step
+        let step = steps[steps.length-1]
+        if (step.extendDur) {
+          step.extendDur()
+        } else {
+          step.forEach(e => e.dur++)
+        }
+// console.log('extendDur', JSON.stringify(steps))
       },
 
       reset: () => { // Reset this pattern back to its beginning
@@ -141,7 +171,53 @@ define(function(require) {
     assert([{value:1,dur:1/4}], p.next())
     assert([{value:2,dur:1/4}], p.next())
     assert(undefined, p.next())
+
+    p = literal(st('0_'))
+    assert([{value:0,dur:2}], p.next())
+    assert(undefined, p.next())
+
+    p = literal(st('_'))
+    assert([{value:'_',dur:1}], p.next())
+    assert(undefined, p.next())
   
+    p = literal(st('x_0__'))
+    assert([{value:'x',dur:2}], p.next())
+    assert([{value:0,dur:3}], p.next())
+
+    p = literal(st('[ab]_'))
+    assert([{value:'a',dur:1/2}], p.next())
+    assert([{value:'b',dur:3/2}], p.next())
+    assert(undefined, p.next())
+
+    p = literal(st('.[ab_c]d'))
+    assert([{value:undefined,dur:1}], p.next())
+    assert([{value:'a',dur:1/4}], p.next())
+    assert([{value:'b',dur:1/2}], p.next())
+    assert([{value:'c',dur:1/4}], p.next())
+    assert([{value:'d',dur:1}], p.next())
+    assert(undefined, p.next())
+
+    p = literal(st('[[[ab]_]_]_'))
+    assert([{value:'a',dur:1/8}], p.next())
+    assert([{value:'b',dur:15/8}], p.next())
+    assert(undefined, p.next())
+
+    p = literal(st('a[b_[c_d]_]_e'))
+    assert([{value:'a',dur:1}], p.next())
+    assert([{value:'b',dur:2/4}], p.next())
+    assert([{value:'c',dur:2/12}], p.next())
+    assert([{value:'d',dur:16/12}], p.next())
+    assert([{value:'e',dur:1}], p.next())
+    assert(undefined, p.next())
+
+    p = literal(st('[aa_[b_[c_d]_]_]_'))
+    assert([{value:'a',dur:1/5}], p.next())
+    assert([{value:'a',dur:2/5}], p.next())
+    assert([{value:'b',dur:2/20}], p.next())
+    assert([{value:'c',dur:2/60}], p.next())
+    assert([{value:'d',dur:76/60}], p.next())
+    assert(undefined, p.next())
+
     console.log("Pattern unit literal tests complete")
   }
   

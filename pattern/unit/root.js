@@ -262,6 +262,9 @@ define(function(require) {
 
     assertSamePattern(root('01.2', {dur:1/4}), root('[01.2]', {}))
     assertSamePattern(root('[01][.2]', {dur:1/2}), root('[01.2]', {}))
+    assertSamePattern(root('[a_b_]', {}), root('[ab]', {}))
+    assertSamePattern(root('[0_]', {}), root('0', {}))
+    assertSamePattern(root('[[[[[0]_]_]_]_]', {}), root('0', {}))
   
     assertSameWhenStartLater(() => root('0', {}))
     assertSameWhenStartLater(() => root('012', {}))
@@ -274,6 +277,8 @@ define(function(require) {
     assertSameWhenStartLater(() => root('xo', {dur:({idx})=> idx%2 ? 1/4 : 1}))
     assertSameWhenStartLater(() => root('0', {dur:({count})=>count+1}))
     assertSameWhenStartLater(() => root('0', {dur:()=>{ return {value:1}}}))
+    assertSameWhenStartLater(() => root('0_', {}))
+    assertSameWhenStartLater(() => root('0_1', {}))
   
     console.log("Pattern unit root tests complete")
   }
