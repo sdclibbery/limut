@@ -143,7 +143,10 @@ define(function(require) {
       }
     }
     let assertSameRootPatternWithDurs = (as, bs) => {
-      [0.3,1/3,2/3,1,3/2,3].forEach(dur => {
+      let idxDur = ({idx}) => [3/4,3/4,2/4][idx % 3]
+      let countDur = ({count}) => count+1
+      let subParamDur = ()=>{ return {value: ()=>1 }}
+      [0.3,1/3,2/3,1,3/2,3,idxDur,countDur,subParamDur].forEach(dur => {
         let a = root(as, {dur:dur})
         let b = root(bs, {dur:dur})
         for (let i=0; i<100; i++) {
@@ -294,12 +297,15 @@ define(function(require) {
     assertSamePattern(root('[01][.2]', {dur:1/2}), root('[01.2]', {}))
 
     assertSameRootPatternWithDurs('[0]', '0')
+    assertSameRootPatternWithDurs('[[[0]]]', '0')
     assertSameRootPatternWithDurs('<0>', '0')
+    assertSameRootPatternWithDurs('<<<0>>>', '0')
     assertSameRootPatternWithDurs('[a_b_]', '[ab]')
     assertSameRootPatternWithDurs('[0_]', '[0]')
     assertSameRootPatternWithDurs('[0_]', '0')
     assertSameRootPatternWithDurs('[[[[[0]_]_]_]_]', '0')
     assertSameRootPatternWithDurs('0<1>', '01')
+    assertSameRootPatternWithDurs('0[1]', '01')
  
     assertSamePatternIgnoringIdx(root('0<12>', {}), root('0102', {}))
     assertSamePatternIgnoringIdx(root('0<1.>', {}), root('010.', {}))
