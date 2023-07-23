@@ -1182,9 +1182,18 @@ Pattern update
     * For deterministic patterns, start at the correct point given current global beat count
     * For non-deterministic or loop limited patterns, start at beginning
     NEXT STEPS for unit literal:
-      <> - equivalence tests 0<12> vs 0102 etc
+      <>
+       Start later
+       assertSameRootPatternWithDurs use complex durs too
+       Test for <1<23>>
+       Test for <0[12]>
+       Test for <12>_
+       Equivalence tests 0<12> vs 0102 etc, also [0<12>] vs 0<12>
+       Tests from old code
+      If durations are short during brute force TC init, don't do it
       () - make sure root handles timing and idx properly, especially with eg (01_) (0[12]) etc - lots of root level tests
-      Lots of mixed {}[]() tests
+       Have to handle <0(12)>
+      Lots of mixed []()<> tests
       #! etc
       Use units in standard player instead of old patterns
        Keep the pattern itself in the keepState
@@ -1192,6 +1201,7 @@ Pattern update
         TESTS
         Tidy up files
       loop 1
+      Errors for mismatched brackets, missing brackets, invalid continuations?
       TEST EVERYTHING
  • p ping once  - Same as p ping 0 loop 1
   Update exmples - Blade Runner opening titles

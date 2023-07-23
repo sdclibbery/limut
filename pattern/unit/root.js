@@ -26,33 +26,34 @@ define(function(require) {
       numSteps++
       if (numSteps > 128) { // If the pattern is crazy long, act as if its a single stepper
         tc.patternLength = 1
-        pattern.reset()
         return
       }
     } while (step !== undefined)
     tc.patternLength = count
-    pattern.reset()
   }
 
   let toPreviousStart = (pattern, count, dur, tc) => {
     tc.patternCount = 0
     tc.idx = 0
     calculatePatternInfo(pattern, dur, tc)
+    pattern.reset()
     if (tc.patternLength === 1 && !Number.isNaN(dur)) { // Single step with complex dur: init by counting up from zero. Slow but accurate for this case
       return // Return and allow the stepToCount in initTimingContext to step through from zero
     }
-    let numRepeats = Math.trunc(count / tc.patternLength)
-    tc.patternCount = tc.patternLength * numRepeats
+    tc.repeats = Math.trunc(count / tc.patternLength)
+    tc.patternCount = tc.patternLength * tc.repeats
     if (tc.numNonRests <= 1) { // Only one actual event in the pattern; init idx for a single step pattern
-      tc.idx = numRepeats
+      tc.idx = tc.repeats
     }
   }
 
   let initTimingContext = (tc, count, pattern, dur) => {
     pattern.reset()
     tc.idx = 0
+    tc.repeats = 0
     if (count === 0) { // At count 0; must be starting at the start of the pattern :-)
       calculatePatternInfo(pattern, dur, tc)
+      pattern.reset()
       tc.patternCount = 0
       return
     }
@@ -67,10 +68,11 @@ define(function(require) {
       if (duration <= 0) { throw 'Zero duration' }
       let chord = pattern.next()
       if (chord === undefined) { // End of pattern
-        pattern.reset() // Loop pattern: reset back to start
+        pattern.loop() // Loop pattern back to start
         if (tc.numNonRests > 1) {
           tc.idx = 0 // Reset idx, but only if multistep pattern
         }
+        tc.repeats++
         chord = pattern.next()
       }
       let anyNotRest = false
@@ -79,6 +81,9 @@ define(function(require) {
         if (!isRest) { anyNotRest = true }
         let event = {}
         event.value = sourceEvent.value
+        if (typeof event.value === 'function') {
+          event.value = event.value(tc)
+        }
         event.dur = sourceEvent.dur * duration
         event._time = tc.patternCount - count
         event.count = count + event._time
@@ -135,6 +140,24 @@ define(function(require) {
     let assertSamePattern = (a, b) => {
       for (let i=0; i<100; i++) {
         assert(a(i), b(i), `i: ${i}`)
+      }
+    }
+    let assertSameRootPatternWithDurs = (as, bs) => {
+      [0.3,1/3,2/3,1,3/2,3].forEach(dur => {
+        let a = root(as, {dur:dur})
+        let b = root(bs, {dur:dur})
+        for (let i=0; i<100; i++) {
+          assert(a(i), b(i), `dur: ${dur}; i: ${i}`)
+        }
+      })
+    }
+    let assertSamePatternIgnoringIdx = (a, b) => {
+      for (let i=0; i<100; i++) {
+        assert(
+          a(i).map(e => { delete e.idx; return e }), // Remove idx fields from both sides before comparison
+          b(i).map(e => { delete e.idx; return e }),
+          `i: ${i}`
+        )
       }
     }
     let assertSameWhenStartLater = (pc) => {
@@ -259,12 +282,31 @@ define(function(require) {
     p = root('0', {dur:()=>{ return {value:1}}})
     assert([{value:0,dur:1,_time:0,count:4,idx:4}], p(4))
     assert([{value:0,dur:1,_time:0,count:5,idx:5}], p(5))
+  
+    p = root('0<12>', {})
+    assert([{value:0,dur:1,_time:0,count:0,idx:0}], p(0))
+    assert([{value:1,dur:1,_time:0,count:1,idx:1}], p(1))
+    assert([{value:0,dur:1,_time:0,count:2,idx:0}], p(2))
+    assert([{value:2,dur:1,_time:0,count:3,idx:1}], p(3))
+    assert([{value:0,dur:1,_time:0,count:4,idx:0}], p(4))
 
     assertSamePattern(root('01.2', {dur:1/4}), root('[01.2]', {}))
     assertSamePattern(root('[01][.2]', {dur:1/2}), root('[01.2]', {}))
-    assertSamePattern(root('[a_b_]', {}), root('[ab]', {}))
-    assertSamePattern(root('[0_]', {}), root('0', {}))
-    assertSamePattern(root('[[[[[0]_]_]_]_]', {}), root('0', {}))
+
+    assertSameRootPatternWithDurs('[0]', '0')
+    assertSameRootPatternWithDurs('<0>', '0')
+    assertSameRootPatternWithDurs('[a_b_]', '[ab]')
+    assertSameRootPatternWithDurs('[0_]', '[0]')
+    assertSameRootPatternWithDurs('[0_]', '0')
+    assertSameRootPatternWithDurs('[[[[[0]_]_]_]_]', '0')
+    assertSameRootPatternWithDurs('0<1>', '01')
+ 
+    assertSamePatternIgnoringIdx(root('0<12>', {}), root('0102', {}))
+    assertSamePatternIgnoringIdx(root('0<1.>', {}), root('010.', {}))
+    assertSamePatternIgnoringIdx(root('0<1[23]>', {}), root('010[23]', {}))
+    assertSamePatternIgnoringIdx(root('0[1<23>]', {}), root('0[12]0[13]', {}))
+    assertSamePatternIgnoringIdx(root('0<1<23>>', {}), root('01020103', {}))
+    assertSamePatternIgnoringIdx(root('0<1[2<34>]>', {}), root('010[23]010[24]', {}))
   
     assertSameWhenStartLater(() => root('0', {}))
     assertSameWhenStartLater(() => root('012', {}))
@@ -279,6 +321,7 @@ define(function(require) {
     assertSameWhenStartLater(() => root('0', {dur:()=>{ return {value:1}}}))
     assertSameWhenStartLater(() => root('0_', {}))
     assertSameWhenStartLater(() => root('0_1', {}))
+    // assertSameWhenStartLater(() => root('0<12>', {}))
   
     console.log("Pattern unit root tests complete")
   }
