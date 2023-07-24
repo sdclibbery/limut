@@ -293,7 +293,9 @@ define(function(require) {
     assert([{value:0,dur:1,_time:0,count:4,idx:0}], p(4))
 
     assertSamePattern(root('01.2', {dur:1/4}), root('[01.2]', {}))
+    assertSamePattern(root('1___2___.___4___', {dur:1/4}), root('12.4', {}))
     assertSamePattern(root('[01][.2]', {dur:1/2}), root('[01.2]', {}))
+    assertSamePattern(root('0123', {dur:3/4}), root('[0__1__2__3__]', {dur:3}))
 
     assertSameRootPatternWithDurs('[0]', '0')
     assertSameRootPatternWithDurs('[[[0]]]', '0')
@@ -305,13 +307,16 @@ define(function(require) {
     assertSameRootPatternWithDurs('[[[[[0]_]_]_]_]', '0')
     assertSameRootPatternWithDurs('0<1>', '01')
     assertSameRootPatternWithDurs('0[1]', '01')
+    assertSameRootPatternWithDurs('[<01>_]', '<01>')
  
-    assertSamePatternIgnoringIdx(root('0<12>', {}), root('0102', {}))
+    assertSamePatternIgnoringIdx(root('0<12>3', {}), root('013023', {}))
     assertSamePatternIgnoringIdx(root('0<1.>', {}), root('010.', {}))
     assertSamePatternIgnoringIdx(root('0<1[23]>', {}), root('010[23]', {}))
     assertSamePatternIgnoringIdx(root('0[1<23>]', {}), root('0[12]0[13]', {}))
     assertSamePatternIgnoringIdx(root('0<1<23>>', {}), root('01020103', {}))
     assertSamePatternIgnoringIdx(root('0<1[2<34>]>', {}), root('010[23]010[24]', {}))
+    assertSamePatternIgnoringIdx(root('<12>_', {}), root('12', {dur:2}))
+    assertSamePatternIgnoringIdx(root('<[[[<12>__]]__]>', {}), root('12', {}))
   
     assertSameWhenStartLater(() => root('0', {}))
     assertSameWhenStartLater(() => root('012', {}))
@@ -329,6 +334,7 @@ define(function(require) {
     assertSameWhenStartLater(() => root('0<12>', {}))
     assertSameWhenStartLater(() => root('0<1<23>>', {}))
     assertSameWhenStartLater(() => root('0<1[2<34>]>', {}))
+    assertSameWhenStartLater(() => root('<12>_', {}))
   
     console.log("Pattern unit root tests complete")
   }

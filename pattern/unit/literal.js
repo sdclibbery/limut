@@ -185,7 +185,13 @@ define(function(require) {
       },
 
       extendDur: () => { // Extend the duration of the last step
-        throw "Write me!!!"
+        steps.forEach(step => { // Unlike ssub pattern, extend dur for every step in a sequence
+          if (step.extendDur) {
+            step.extendDur()
+          } else {
+            step.forEach(e => e.dur++)
+          }
+        })
       },
     }
     return pattern
@@ -390,6 +396,14 @@ define(function(require) {
     p.loop()
     assert([{value:0,dur:1}], p.next())
     assert([{value:1,dur:1}], p.next())
+    assert(undefined, p.next())
+
+    p = literal(st('<12>_'))
+    p.reset(0)
+    assert([{value:1,dur:2}], p.next())
+    assert(undefined, p.next())
+    p.loop()
+    assert([{value:2,dur:2}], p.next())
     assert(undefined, p.next())
 
     console.log("Pattern unit literal tests complete")
