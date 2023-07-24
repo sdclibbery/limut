@@ -36,24 +36,24 @@ define(function(require) {
     tc.patternCount = 0
     tc.idx = 0
     calculatePatternInfo(pattern, dur, tc)
-    pattern.reset()
     if (tc.patternLength === 1 && !Number.isNaN(dur)) { // Single step with complex dur: init by counting up from zero. Slow but accurate for this case
+      pattern.reset(0)
       return // Return and allow the stepToCount in initTimingContext to step through from zero
     }
-    tc.repeats = Math.trunc(count / tc.patternLength)
-    tc.patternCount = tc.patternLength * tc.repeats
+    let numTimesLooped = Math.trunc(count / tc.patternLength)
+    pattern.reset(numTimesLooped)
+    tc.patternCount = tc.patternLength * numTimesLooped
     if (tc.numNonRests <= 1) { // Only one actual event in the pattern; init idx for a single step pattern
-      tc.idx = tc.repeats
+      tc.idx = numTimesLooped
     }
   }
 
   let initTimingContext = (tc, count, pattern, dur) => {
-    pattern.reset()
+    pattern.reset(0)
     tc.idx = 0
-    tc.repeats = 0
     if (count === 0) { // At count 0; must be starting at the start of the pattern :-)
       calculatePatternInfo(pattern, dur, tc)
-      pattern.reset()
+      pattern.reset(0)
       tc.patternCount = 0
       return
     }
@@ -72,7 +72,6 @@ define(function(require) {
         if (tc.numNonRests > 1) {
           tc.idx = 0 // Reset idx, but only if multistep pattern
         }
-        tc.repeats++
         chord = pattern.next()
       }
       let anyNotRest = false
@@ -327,7 +326,9 @@ define(function(require) {
     assertSameWhenStartLater(() => root('0', {dur:()=>{ return {value:1}}}))
     assertSameWhenStartLater(() => root('0_', {}))
     assertSameWhenStartLater(() => root('0_1', {}))
-    // assertSameWhenStartLater(() => root('0<12>', {}))
+    assertSameWhenStartLater(() => root('0<12>', {}))
+    assertSameWhenStartLater(() => root('0<1<23>>', {}))
+    assertSameWhenStartLater(() => root('0<1[2<34>]>', {}))
   
     console.log("Pattern unit root tests complete")
   }

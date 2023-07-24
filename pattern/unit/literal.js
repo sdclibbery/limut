@@ -83,9 +83,9 @@ define(function(require) {
         steps.forEach(s => { if (s.loop) s.loop() }) // Reset sub patterns
       },
 
-      reset: () => { // Reset this pattern back to its beginning
+      reset: (numTimesLooped) => { // Reset this pattern back to its beginning
         stepIdx = 0
-        steps.forEach(s => { if (s.reset) s.reset() }) // Reset sub patterns
+        steps.forEach(s => { if (s.reset) s.reset(numTimesLooped) }) // Reset sub patterns
       },
 
       //---
@@ -159,10 +159,12 @@ define(function(require) {
         steps.forEach(s => { if (s.loop) s.loop() }) // loop sub patterns
       },
 
-      reset: () => { // Reset this pattern back to its beginning
+      reset: (numTimesLooped) => { // Reset this pattern back to its beginning
         active = true
-        stepIdx = 0 // Do fully reset step on reset
-        steps.forEach(s => { if (s.reset) s.reset() }) // Reset sub patterns
+        stepIdx = numTimesLooped % steps.length // Do fully reset step on reset, taking loop count into account for tc init
+        steps.forEach(s => {
+          if (s.reset) { s.reset(Math.floor(numTimesLooped / steps.length)) } // sub pattern loop count is based on how many times this sequence would have looped
+        }) // Reset sub patterns
       },
 
       //---
@@ -225,13 +227,13 @@ define(function(require) {
     assert([{value:'-',dur:1}], p.next())
 
     p = literal(st('x'))
-    p.reset()
+    p.reset(0)
     assert([{value:'x',dur:1}], p.next())
     assert(undefined, p.next())
     p.loop()
     assert([{value:'x',dur:1}], p.next())
     assert(undefined, p.next())
-    p.reset()
+    p.reset(0)
     assert([{value:'x',dur:1}], p.next())
     assert(undefined, p.next())
   
@@ -328,7 +330,7 @@ define(function(require) {
     assert(undefined, p.next())
 
     p = literal(st('0<12>'))
-    p.reset()
+    p.reset(0)
     assert([{value:0,dur:1}], p.next())
     assert([{value:1,dur:1}], p.next())
     assert(undefined, p.next())
@@ -340,7 +342,7 @@ define(function(require) {
     assert([{value:0,dur:1}], p.next())
     assert([{value:1,dur:1}], p.next())
     assert(undefined, p.next())
-    p.reset() // Reset back to beginning; get a 1 again
+    p.reset(0) // Reset back to beginning; get a 1 again
     assert([{value:0,dur:1}], p.next())
     assert([{value:1,dur:1}], p.next())
     assert(undefined, p.next())
@@ -374,6 +376,16 @@ define(function(require) {
     p.loop()
     assert([{value:0,dur:1}], p.next())
     assert([{value:3,dur:1}], p.next())
+    assert(undefined, p.next())
+    p.loop()
+    assert([{value:0,dur:1}], p.next())
+    assert([{value:1,dur:1}], p.next())
+    assert(undefined, p.next())
+
+    p = literal(st('0<12>'))
+    p.reset(1) // Reset to one repeat; should give a 2 on the first repeat now
+    assert([{value:0,dur:1}], p.next())
+    assert([{value:2,dur:1}], p.next())
     assert(undefined, p.next())
     p.loop()
     assert([{value:0,dur:1}], p.next())
