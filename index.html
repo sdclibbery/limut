@@ -1182,8 +1182,14 @@ Pattern update
     * For deterministic patterns, start at the correct point given current global beat count
     * For non-deterministic or loop limited patterns, start at beginning
     NEXT STEPS for unit literal:
-      () - make sure root handles timing and idx properly, especially with eg (01_) (0[12]) etc - lots of root level tests
+      Refactor
+       [] should be called a sequence, <> a MetaSequence and () a chord
+       Split up into files
+      ()
+       Test failures when timing varies within chord
+       make sure root handles timing and idx properly, especially with eg (01_) (0[12]) etc - lots of root level tests
        Have to handle <0(12)>
+      What about 0[_.]
       Lots of mixed []()<> tests
        Tests from old code
       If durations are short during brute force TC init, don't do it

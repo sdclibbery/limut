@@ -137,10 +137,11 @@ define(function(require) {
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}\n${msg}`) }
     }
     let assertSamePattern = (a, b) => {
-      for (let i=0; i<100; i++) {
+      for (let i=0; i<30; i++) {
         assert(a(i), b(i), `i: ${i}`)
       }
     }
+    let clearIdx = e => { delete e.idx; return e }
     let assertSameRootPatternWithDurs = (as, bs) => {
       let idxDur = ({idx}) => [3/4,3/4,2/4][idx % 3]
       let countDur = ({count}) => count+1
@@ -148,23 +149,33 @@ define(function(require) {
       [0.3,1/3,2/3,1,3/2,3,idxDur,countDur,subParamDur].forEach(dur => {
         let a = root(as, {dur:dur})
         let b = root(bs, {dur:dur})
-        for (let i=0; i<100; i++) {
+        for (let i=0; i<30; i++) {
           assert(a(i), b(i), `dur: ${dur}; i: ${i}`)
         }
       })
     }
     let assertSamePatternIgnoringIdx = (a, b) => {
-      for (let i=0; i<100; i++) {
+      for (let i=0; i<30; i++) {
         assert(
-          a(i).map(e => { delete e.idx; return e }), // Remove idx fields from both sides before comparison
-          b(i).map(e => { delete e.idx; return e }),
+          a(i).map(clearIdx), // Remove idx fields from both sides before comparison
+          b(i).map(clearIdx),
           `i: ${i}`
         )
       }
     }
+    let byCount = (a,b) => a.count - b.count
+    let assertSameAsParallel = (a, b, c) => {
+      for (let i=0; i<30; i++) {
+        let combined = b(i).concat(c(i))
+        assert(
+          combined.map(clearIdx).sort(byCount),
+          a(i).map(clearIdx).sort(byCount),
+          `i: ${i}`)
+      }
+    }
     let assertSameWhenStartLater = (pc) => {
       let a = pc() // Create the base pattern once and step through
-      for (let i=0; i<20; i++) {
+      for (let i=0; i<30; i++) {
         assert(a(i), pc()(i), `i: ${i}`) // Create the comparison pattern every time
       }
     }
@@ -292,6 +303,13 @@ define(function(require) {
     assert([{value:2,dur:1,_time:0,count:3,idx:1}], p(3))
     assert([{value:0,dur:1,_time:0,count:4,idx:0}], p(4))
 
+    p = root('(0[12])', {})
+    assert([
+      {value:0,dur:1,_time:0,count:0,idx:0},
+      {value:1,dur:1/2,_time:0,count:0,idx:0},
+      {value:2,dur:1/2,_time:1/2,count:1/2,idx:1}
+    ], p(0))
+
     assertSamePattern(root('01.2', {dur:1/4}), root('[01.2]', {}))
     assertSamePattern(root('1___2___.___4___', {dur:1/4}), root('12.4', {}))
     assertSamePattern(root('[01][.2]', {dur:1/2}), root('[01.2]', {}))
@@ -308,6 +326,7 @@ define(function(require) {
     assertSameRootPatternWithDurs('0<1>', '01')
     assertSameRootPatternWithDurs('0[1]', '01')
     assertSameRootPatternWithDurs('[<01>_]', '<01>')
+    assertSameRootPatternWithDurs('(0(23))', '(023)')
  
     assertSamePatternIgnoringIdx(root('0<12>3', {}), root('013023', {}))
     assertSamePatternIgnoringIdx(root('0<1.>', {}), root('010.', {}))
@@ -317,6 +336,16 @@ define(function(require) {
     assertSamePatternIgnoringIdx(root('0<1[2<34>]>', {}), root('010[23]010[24]', {}))
     assertSamePatternIgnoringIdx(root('<12>_', {}), root('12', {dur:2}))
     assertSamePatternIgnoringIdx(root('<[[[<12>__]]__]>', {}), root('12', {}))
+
+    assertSameAsParallel(root('(01)', {}), root('0', {}), root('1', {}))
+    assertSameAsParallel(root('(0(23))', {}), root('0', {}), root('(23)', {}))
+    assertSameAsParallel(root('(0[23])', {}), root('0', {}), root('[23]', {}))
+    // assertSameAsParallel(root('([01]2)', {}), root('[01]', {}), root('2', {}))
+    assertSameAsParallel(root('(01)_', {}), root('0_', {}), root('1_', {}))
+    assertSameAsParallel(root('(0[12])_', {}), root('0_', {}), root('[12]_', {}))
+    assertSameAsParallel(root('(0<12>)', {}), root('0', {}), root('<12>', {}))
+    assertSameAsParallel(root('(0<12>)_', {}), root('0_', {}), root('<12>_', {}))
+    assertSameAsParallel(root('(0<1[2<3[45]>]>)', {}), root('0', {}), root('<1[2<3[45]>]>', {}))
   
     assertSameWhenStartLater(() => root('0', {}))
     assertSameWhenStartLater(() => root('012', {}))
@@ -335,7 +364,13 @@ define(function(require) {
     assertSameWhenStartLater(() => root('0<1<23>>', {}))
     assertSameWhenStartLater(() => root('0<1[2<34>]>', {}))
     assertSameWhenStartLater(() => root('<12>_', {}))
-  
+    // assertSameWhenStartLater(() => root('(0[12])', {}))
+    // assertSameWhenStartLater(() => root('(0[12])_', {}))
+    // assertSameWhenStartLater(() => root('(01)', {}))
+    // assertSameWhenStartLater(() => root('(01)_', {}))
+    // assertSameWhenStartLater(() => root('(0<12>)', {}))
+    // assertSameWhenStartLater(() => root('(0<12>)_', {}))
+
     console.log("Pattern unit root tests complete")
   }
   

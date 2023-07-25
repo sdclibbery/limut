@@ -14,17 +14,24 @@ define(function(require) {
         break
       }
 
-      if (char === '[') { // Parse sub pattern literal
+      if (char === '[') { // Parse subsequence
         state.idx++ // Skip opening bracket
-        let subPattern = makeSubPattern(parseSteps(state))
-        if (subPattern.scaleToFit) { subPattern.scaleToFit() } // Scale subpattern to fit inside one step of this pattern
+        let subPattern = makeSubSequencePattern(parseSteps(state))
+        if (subPattern.scaleToFit) { subPattern.scaleToFit() } // Scale subsequence to fit inside one step of this pattern
         steps.push(subPattern)
         continue
       }
 
-      if (char === '<') { // Sequence: change value on every repeat
+      if (char === '<') { // Parse supersequence
         state.idx++ // Skip opening bracket
-        let subPattern = makeSequencePattern(parseSteps(state))
+        let subPattern = makeSuperSequencePattern(parseSteps(state))
+        steps.push(subPattern)
+        continue
+      }
+
+      if (char === '(') { // Parse chord
+        state.idx++ // Skip opening bracket
+        let subPattern = makeChordPattern(parseSteps(state))
         steps.push(subPattern)
         continue
       }
@@ -33,9 +40,9 @@ define(function(require) {
         state.idx++
         let step = steps[steps.length-1]
         if (step.extendDur) {
-          step.extendDur() // Extend last step of this pattern by one
+          step.extendDur() // Extend previous step of this pattern by one
         } else {
-          step.forEach(e => e.dur++) // Extend last step of subpattern
+          step.forEach(e => e.dur++) // Extend previous subpattern
         }
         steps.numContinuations++
         continue
@@ -60,7 +67,7 @@ define(function(require) {
     return steps
   }
 
-  let makeMainPattern = (steps) => { // Main literal pattern
+  let makeSubSequencePattern = (steps) => { // Sub Sequence pattern; series of steps in order
     let stepIdx = 0
     let pattern = {
       //---
@@ -92,7 +99,7 @@ define(function(require) {
       // Literal Interface
       //---
       scaleToFit: (scale) => { // Scale the durations within this pattern based on its length
-                          // Used to scale subpatterns to fit in one step duration of the parent pattern
+                               // Used to scale subpatterns to fit in one step duration of the parent pattern
         if (scale === undefined) {
           let length = steps.length + steps.numContinuations
           scale = 1 / length
@@ -118,11 +125,7 @@ define(function(require) {
     return pattern
   }
 
-  let makeSubPattern = (steps) => { // Sub pattern [] works same way as main pattern
-    return makeMainPattern(steps)
-  }
-
-  let makeSequencePattern = (steps) => { // Sequence <> works differently; gives one step only on each loop
+  let makeSuperSequencePattern = (steps) => { // SuperSequence <> works differently; gives one step only on each loop
     let stepIdx = 0
     let active = true
     let pattern = {
@@ -145,7 +148,7 @@ define(function(require) {
           return pattern.next()
         }
         active = false // Next time, move on in parent pattern
-        if (step === undefined) { // Loop this sequence only
+        if (step === undefined) { // Loop this supersequence only
           stepIdx = 0
           active = true
           return pattern.next()
@@ -155,7 +158,7 @@ define(function(require) {
 
       loop: () => { // Loop this pattern back to its beginning
         active = true
-        // Don't reset stepIdx, the whole point of a sequence is it changes from loop to loop
+        // Don't reset stepIdx, the whole point of a supersequence is it changes from loop to loop
         steps.forEach(s => { if (s.loop) s.loop() }) // loop sub patterns
       },
 
@@ -163,7 +166,7 @@ define(function(require) {
         active = true
         stepIdx = numTimesLooped % steps.length // Do fully reset step on reset, taking loop count into account for tc init
         steps.forEach(s => {
-          if (s.reset) { s.reset(Math.floor(numTimesLooped / steps.length)) } // sub pattern loop count is based on how many times this sequence would have looped
+          if (s.reset) { s.reset(Math.floor(numTimesLooped / steps.length)) } // sub pattern loop count is based on how many times this supersequence would have looped
         }) // Reset sub patterns
       },
 
@@ -171,7 +174,7 @@ define(function(require) {
       // Literal Interface
       //---
       scaleToFit: (scale) => { // Scale the durations within this pattern based on its length
-                          // Used to scale subpatterns to fit in one step duration of the parent pattern
+                               // Used to scale subpatterns to fit in one step duration of the parent pattern
         if (scale === undefined) {
           scale = 1
         }
@@ -184,8 +187,57 @@ define(function(require) {
         })
       },
 
+      extendDur: () => { // Extend the duration of all steps
+        steps.forEach(step => { // Unlike subsequence pattern, extend dur for every step in a supersequence
+          if (step.extendDur) {
+            step.extendDur()
+          } else {
+            step.forEach(e => e.dur++)
+          }
+        })
+      },
+    }
+    return pattern
+  }
+
+  let makeChordPattern = (steps) => { // Chord () play each step as iots own pattern in parallel
+    let stepIdx = 0
+    let pattern = {
+      //---
+      // Pattern Interface
+      //---
+      next: () => { // Get the next step of event(s)
+        let result = steps
+          .flatMap(s => {
+            if (s.next) { return s.next() }
+            if (stepIdx === 0) { return s }
+          })
+          .filter(e => e !== undefined)
+        stepIdx++
+        if (result.length === 0) { return undefined } // All finished in this chord
+        return result
+      },
+
+      loop: () => { // Loop this pattern back to its beginning
+        stepIdx = 0
+        steps.forEach(s => { if (s.loop) s.loop() }) // loop sub patterns
+      },
+
+      reset: (numTimesLooped) => { // Reset this pattern back to its beginning
+        stepIdx = 0
+        steps.forEach(s => { if (s.reset) { s.reset(Math.floor(numTimesLooped)) } }) // Reset sub patterns
+      },
+
+      //---
+      // Literal Interface
+      //---
+      scaleToFit: (scale) => { // Scale the durations within this pattern based on its length
+                               // Used to scale subpatterns to fit in one step duration of the parent pattern
+        // Do nothing; chord takes up one full step
+      },
+
       extendDur: () => { // Extend the duration of the last step
-        steps.forEach(step => { // Unlike ssub pattern, extend dur for every step in a sequence
+        steps.forEach(step => { // Unlike subsequence pattern, extend dur for every step in a chord
           if (step.extendDur) {
             step.extendDur()
           } else {
@@ -199,7 +251,7 @@ define(function(require) {
 
   let literal = (state) => {
     let steps = parseSteps(state)
-    return makeMainPattern(steps)
+    return makeSubSequencePattern(steps)
   }
 
   // TESTS //
@@ -406,6 +458,48 @@ define(function(require) {
     assert([{value:2,dur:2}], p.next())
     assert(undefined, p.next())
 
+    p = literal(st('(01)'))
+    p.reset(0)
+    assert([{value:0,dur:1},{value:1,dur:1}], p.next())
+    assert(undefined, p.next())
+    p.loop()
+    assert([{value:0,dur:1},{value:1,dur:1}], p.next())
+    assert(undefined, p.next())
+
+    p = literal(st('(01)_'))
+    assert([{value:0,dur:2},{value:1,dur:2}], p.next())
+    assert(undefined, p.next())
+
+    p = literal(st('(0[12])'))
+    assert([{value:0,dur:1},{value:1,dur:1/2}], p.next())
+    assert([{value:2,dur:1/2}], p.next())
+    assert(undefined, p.next())
+
+    p = literal(st('([01]2)'))
+    assert([{value:0,dur:1/2},{value:2,dur:1}], p.next())
+    assert([{value:1,dur:1/2}], p.next())
+    assert(undefined, p.next())
+
+    // p = literal(st('([01][234])'))
+    // assert([{value:0,dur:1/2},{value:2,dur:1/3}], p.next())
+    // assert([{value:3,dur:1/3}], p.next())
+    // assert([{value:1,dur:1/2}], p.next())
+    // assert([{value:4,dur:1/3}], p.next())
+    // assert(undefined, p.next())
+
+    p = literal(st('(0[12])_'))
+    assert([{value:0,dur:2},{value:1,dur:1/2}], p.next())
+    assert([{value:2,dur:3/2}], p.next())
+    assert(undefined, p.next())
+
+    p = literal(st('(0<12>)'))
+    p.reset(0)
+    assert([{value:0,dur:1},{value:1,dur:1}], p.next())
+    assert(undefined, p.next())
+    p.loop()
+    assert([{value:0,dur:1},{value:2,dur:1}], p.next())
+    assert(undefined, p.next())
+        
     console.log("Pattern unit literal tests complete")
   }
   
