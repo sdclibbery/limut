@@ -16,7 +16,7 @@ define(function(require) {
       if (duration <= 0) { throw 'Zero duration' }
       step = pattern.next()
       if (step !== undefined) {
-        let e = step[0]
+        let e = (step.toSorted((a,b) => a.dur - b.dur))[0] // Get shortest event
         if (e.value !== undefined) {
           tc.numNonRests++
           idx++
@@ -75,7 +75,9 @@ define(function(require) {
         chord = pattern.next()
       }
       let anyNotRest = false
-      chord.forEach(sourceEvent => {
+      chord
+      .toSorted((a,b) => b.dur - a.dur)
+      .forEach(sourceEvent => {
         let isRest = sourceEvent.value === undefined
         if (!isRest) { anyNotRest = true }
         let event = {}
@@ -95,7 +97,7 @@ define(function(require) {
         eventsForBeat.push(event)
       })
       let lastEvent = eventsForBeat[eventsForBeat.length-1]
-      tc.patternCount += lastEvent.dur // Events in a chord are pre-sorted so shortest duration is last
+      tc.patternCount += lastEvent.dur // Events are sorted so shortest duration is last
       if (anyNotRest) { tc.idx++ }
     }
     return eventsForBeat
@@ -317,6 +319,13 @@ define(function(require) {
       {value:1,dur:1/2,_time:1/2,count:1/2,idx:1}
     ], p(0))
 
+    p = root('(0[12])', {})
+    assert([
+      {value:0,dur:1,_time:0,count:3,idx:0},
+      {value:1,dur:1/2,_time:0,count:3,idx:0},
+      {value:2,dur:1/2,_time:1/2,count:3+1/2,idx:1}
+    ], p(3))
+
     assertSamePattern(root('01.2', {dur:1/4}), root('[01.2]', {}))
     assertSamePattern(root('1___2___.___4___', {dur:1/4}), root('12.4', {}))
     assertSamePattern(root('[01][.2]', {dur:1/2}), root('[01.2]', {}))
@@ -371,12 +380,13 @@ define(function(require) {
     assertSameWhenStartLater(() => root('0<1<23>>', {}))
     assertSameWhenStartLater(() => root('0<1[2<34>]>', {}))
     assertSameWhenStartLater(() => root('<12>_', {}))
-    // assertSameWhenStartLater(() => root('(01)', {}))
-    // assertSameWhenStartLater(() => root('(01)_', {}))
-    // assertSameWhenStartLater(() => root('(0[12])', {}))
-    // assertSameWhenStartLater(() => root('(0[12])_', {}))
-    // assertSameWhenStartLater(() => root('(0<12>)', {}))
-    // assertSameWhenStartLater(() => root('(0<12>)_', {}))
+    assertSameWhenStartLater(() => root('(01)', {}))
+    assertSameWhenStartLater(() => root('(01)_', {}))
+    assertSameWhenStartLater(() => root('(0[12])', {}))
+    assertSameWhenStartLater(() => root('(0[12])_', {}))
+    assertSameWhenStartLater(() => root('([01]2)', {}))
+    assertSameWhenStartLater(() => root('(0<12>)', {}))
+    assertSameWhenStartLater(() => root('(0<12>)_', {}))
 
     console.log("Pattern unit root tests complete")
   }
