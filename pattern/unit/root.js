@@ -310,6 +310,13 @@ define(function(require) {
       {value:2,dur:1/2,_time:1/2,count:1/2,idx:1}
     ], p(0))
 
+    p = root('([01]2)', {})
+    assert([
+      {value:2,dur:1,_time:0,count:0,idx:0},
+      {value:0,dur:1/2,_time:0,count:0,idx:0},
+      {value:1,dur:1/2,_time:1/2,count:1/2,idx:1}
+    ], p(0))
+
     assertSamePattern(root('01.2', {dur:1/4}), root('[01.2]', {}))
     assertSamePattern(root('1___2___.___4___', {dur:1/4}), root('12.4', {}))
     assertSamePattern(root('[01][.2]', {dur:1/2}), root('[01.2]', {}))
@@ -340,7 +347,7 @@ define(function(require) {
     assertSameAsParallel(root('(01)', {}), root('0', {}), root('1', {}))
     assertSameAsParallel(root('(0(23))', {}), root('0', {}), root('(23)', {}))
     assertSameAsParallel(root('(0[23])', {}), root('0', {}), root('[23]', {}))
-    // assertSameAsParallel(root('([01]2)', {}), root('[01]', {}), root('2', {}))
+    assertSameAsParallel(root('([01]2)', {}), root('2', {}), root('[01]', {}))
     assertSameAsParallel(root('(01)_', {}), root('0_', {}), root('1_', {}))
     assertSameAsParallel(root('(0[12])_', {}), root('0_', {}), root('[12]_', {}))
     assertSameAsParallel(root('(0<12>)', {}), root('0', {}), root('<12>', {}))
@@ -364,10 +371,10 @@ define(function(require) {
     assertSameWhenStartLater(() => root('0<1<23>>', {}))
     assertSameWhenStartLater(() => root('0<1[2<34>]>', {}))
     assertSameWhenStartLater(() => root('<12>_', {}))
-    // assertSameWhenStartLater(() => root('(0[12])', {}))
-    // assertSameWhenStartLater(() => root('(0[12])_', {}))
     // assertSameWhenStartLater(() => root('(01)', {}))
     // assertSameWhenStartLater(() => root('(01)_', {}))
+    // assertSameWhenStartLater(() => root('(0[12])', {}))
+    // assertSameWhenStartLater(() => root('(0[12])_', {}))
     // assertSameWhenStartLater(() => root('(0<12>)', {}))
     // assertSameWhenStartLater(() => root('(0<12>)_', {}))
 

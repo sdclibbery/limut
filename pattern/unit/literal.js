@@ -273,16 +273,9 @@ define(function(require) {
     assert(undefined, p.next())
 
     p = literal(st('([01]2)'))
-    assert([{value:0,dur:1/2},{value:2,dur:1}], p.next())
+    assert([{value:2,dur:1},{value:0,dur:1/2}], p.next())
     assert([{value:1,dur:1/2}], p.next())
     assert(undefined, p.next())
-
-    // p = literal(st('([01][234])'))
-    // assert([{value:0,dur:1/2},{value:2,dur:1/3}], p.next())
-    // assert([{value:3,dur:1/3}], p.next())
-    // assert([{value:1,dur:1/2}], p.next())
-    // assert([{value:4,dur:1/3}], p.next())
-    // assert(undefined, p.next())
 
     p = literal(st('(0[12])_'))
     assert([{value:0,dur:2},{value:1,dur:1/2}], p.next())
@@ -297,6 +290,13 @@ define(function(require) {
     assert([{value:0,dur:1},{value:2,dur:1}], p.next())
     assert(undefined, p.next())
         
+    // p = literal(st('([01][234])'))
+    // assert([{value:0,dur:1/2},{value:2,dur:1/3}], p.next())
+    // assert([{value:3,dur:1/3}], p.next())
+    // assert([{value:1,dur:1/2}], p.next())
+    // assert([{value:4,dur:1/3}], p.next())
+    // assert(undefined, p.next())
+
     console.log("Pattern unit literal tests complete")
   }
   

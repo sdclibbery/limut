@@ -14,6 +14,7 @@ define(function(require) {
             if (stepIdx === 0) { return s }
           })
           .filter(e => e !== undefined)
+        result.sort((a,b) => b.dur - a.dur)
         stepIdx++
         if (result.length === 0) { return undefined } // All finished in this chord
         return result
@@ -78,6 +79,10 @@ define(function(require) {
     p = chord([[{value:0,dur:1}],[{value:1,dur:1}]])
     p.extendDur()
     assert([{value:0,dur:2},{value:1,dur:2}], p.next())
+    assert(undefined, p.next())
+
+    p = chord([[{value:0,dur:1/2}],[{value:1,dur:1}]])
+    assert([{value:1,dur:1},{value:0,dur:1/2}], p.next()) // Must sort shortest duration last
     assert(undefined, p.next())
 
     console.log("Pattern chord tests complete")
