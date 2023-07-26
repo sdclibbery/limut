@@ -326,6 +326,49 @@ define(function(require) {
       {value:2,dur:1/2,_time:1/2,count:3+1/2,idx:1}
     ], p(3))
 
+    p = root('<1[23]>', {})
+    assert([{value:1,dur:1,_time:0,count:0,idx:0}], p(0))
+    assert([{value:2,dur:1/2,_time:0,count:1,idx:1},{value:3,dur:1/2,_time:1/2,count:3/2,idx:2}], p(1))
+    assert([{value:1,dur:1,_time:0,count:2,idx:3}], p(2))
+
+    p = root('(1<23>)', {})
+    assert([{value:1,dur:1,_time:0,count:0,idx:0},{value:2,dur:1,_time:0,count:0,idx:0}], p(0))
+    assert([{value:1,dur:1,_time:0,count:1,idx:1},{value:3,dur:1,_time:0,count:1,idx:1}], p(1))
+
+    p = root('(<1(23)>)', {})
+    assert([{value:1,dur:1,_time:0,count:0,idx:0}], p(0))
+    assert([{value:2,dur:1,_time:0,count:1,idx:1},{value:3,dur:1,_time:0,count:1,idx:1}], p(1))
+    assert([{value:1,dur:1,_time:0,count:2,idx:2}], p(2))
+
+    p = root('<[1(23)]>', {})
+    assert([{value:1,dur:1/2,_time:0,count:0,idx:0},{value:2,dur:1/2,_time:1/2,count:1/2,idx:1},{value:3,dur:1/2,_time:1/2,count:1/2,idx:1}], p(0))
+
+    p = root('<1<.3>>_', {})
+    assert([{value:1,dur:2,_time:0,count:0,idx:0}], p(0))
+    assert([], p(1))
+    assert([], p(2))
+    assert([], p(3))
+    assert([{value:1,dur:2,_time:0,count:4,idx:1}], p(4))
+    assert([], p(5))
+    assert([{value:3,dur:2,_time:0,count:6,idx:2}], p(6))
+    assert([], p(7))
+
+    p = root('<1[2<34>]>', {})
+    assert([{value:1,dur:1,_time:0,count:0,idx:0}], p(0))
+    assert([{value:2,dur:1/2,_time:0,count:1,idx:1},{value:3,dur:1/2,_time:1/2,count:3/2,idx:2}], p(1))
+    assert([{value:1,dur:1,_time:0,count:2,idx:3}], p(2))
+    assert([{value:2,dur:1/2,_time:0,count:3,idx:4},{value:4,dur:1/2,_time:1/2,count:3+1/2,idx:5}], p(3))
+
+    p = root('[1<2[34]>]', {})
+    assert([{value:1,dur:1/2,_time:0,count:0,idx:0},{value:2,dur:1/2,_time:1/2,count:1/2,idx:1}], p(0))
+    assert([{value:1,dur:1/2,_time:0,count:1,idx:0},{value:3,dur:1/4,_time:1/2,count:1+1/2,idx:1},{value:4,dur:1/4,_time:3/4,count:1+3/4,idx:2}], p(1))
+
+    p = root('(0<1[2<3[45]>]>)', {})
+    assert([{value:0,dur:1,_time:0,count:0,idx:0},{value:1,dur:1,_time:0,count:0,idx:0}], p(0))
+    assert([{value:0,dur:1,_time:0,count:1,idx:1},{value:2,dur:1/2,_time:0,count:1,idx:1},{value:3,dur:1/2,_time:1/2,count:1+1/2,idx:2}], p(1))
+    assert([{value:0,dur:1,_time:0,count:2,idx:3},{value:1,dur:1,_time:0,count:2,idx:3}], p(2))
+    assert([{value:0,dur:1,_time:0,count:3,idx:4},{value:2,dur:1/2,_time:0,count:3,idx:4},{value:4,dur:1/4,_time:1/2,count:3+1/2,idx:5},{value:5,dur:1/4,_time:3/4,count:3+3/4,idx:6}], p(3))
+    
     assertSamePattern(root('01.2', {dur:1/4}), root('[01.2]', {}))
     assertSamePattern(root('1___2___.___4___', {dur:1/4}), root('12.4', {}))
     assertSamePattern(root('[01][.2]', {dur:1/2}), root('[01.2]', {}))
@@ -352,6 +395,7 @@ define(function(require) {
     assertSamePatternIgnoringIdx(root('0<1[2<34>]>', {}), root('010[23]010[24]', {}))
     assertSamePatternIgnoringIdx(root('<12>_', {}), root('12', {dur:2}))
     assertSamePatternIgnoringIdx(root('<[[[<12>__]]__]>', {}), root('12', {}))
+    assertSamePatternIgnoringIdx(root('0<1(23)>', {}), root('010(23)', {}))
 
     assertSameAsParallel(root('(01)', {}), root('0', {}), root('1', {}))
     assertSameAsParallel(root('(0(23))', {}), root('0', {}), root('(23)', {}))
@@ -362,7 +406,8 @@ define(function(require) {
     assertSameAsParallel(root('(0<12>)', {}), root('0', {}), root('<12>', {}))
     assertSameAsParallel(root('(0<12>)_', {}), root('0_', {}), root('<12>_', {}))
     assertSameAsParallel(root('(0<1[2<3[45]>]>)', {}), root('0', {}), root('<1[2<3[45]>]>', {}))
-  
+    assertSameAsParallel(root('0<1(23)>', {}), root('0<12>', {}), root('.<.3>', {}))
+
     assertSameWhenStartLater(() => root('0', {}))
     assertSameWhenStartLater(() => root('012', {}))
     assertSameWhenStartLater(() => root('.0.', {}))
@@ -387,6 +432,13 @@ define(function(require) {
     assertSameWhenStartLater(() => root('([01]2)', {}))
     assertSameWhenStartLater(() => root('(0<12>)', {}))
     assertSameWhenStartLater(() => root('(0<12>)_', {}))
+    assertSameWhenStartLater(() => root('0<1(23)>', {}))
+    assertSameWhenStartLater(() => root('0<1(23)>', {}))
+    assertSameWhenStartLater(() => root('<[1(23)]>', {}))
+    // assertSameWhenStartLater(() => root('<1<.3>>_', {})) // Idx's dont match up because of the rest...
+    assertSameWhenStartLater(() => root('<1[2<34>]>', {}))
+    assertSameWhenStartLater(() => root('[1<2[34]>]', {}))
+    assertSameWhenStartLater(() => root('(0<1[2<3[45]>]>)', {}))
 
     console.log("Pattern unit root tests complete")
   }

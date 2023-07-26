@@ -9,8 +9,8 @@ define(function(require) {
     let params = parseParams(paramsStr, player.id)
     params = applyOverrides(baseParams, params)
     params = collapseOverrides(params)
-    let pattern = parsePattern(patternStr, params)
-    // let pattern = root(patternStr, params)
+    // let pattern = parsePattern(patternStr, params)
+    let pattern = root(patternStr, params)
     return (beat, timingContext) => {
       let eventsForBeat = pattern(beat.count, timingContext)
       let events = eventsForBeat.map(event => {

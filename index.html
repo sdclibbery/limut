@@ -1182,23 +1182,17 @@ Pattern update
     * For deterministic patterns, start at the correct point given current global beat count
     * For non-deterministic or loop limited patterns, start at beginning
     NEXT STEPS for unit literal:
-      ()
-       ([01][234])
-       <0(12)>
-       make sure root handles timing and idx properly, especially with eg (01_) (0[12]) etc - lots of root level tests
-      What about 0[_.]
-      Lots of mixed []()<> tests
-       Tests from old code
       If durations are short during brute force TC init, don't do it
       #! etc
       Use units in standard player instead of old patterns
        Keep the pattern itself in the keepState
+        ???Do we even need to worry about this? Why not reparse every time? I guess actual pattern with random dur needs it?
         Only reparse when the string has changed
         TESTS
         Tidy up files
       loop 1
       Errors for mismatched brackets, missing brackets, invalid continuations?
-      TEST EVERYTHING
+      TEST EVERYTHING!!!!! - follow player
  • p ping once  - Same as p ping 0 loop 1
   Update exmples - Blade Runner opening titles
   Docs

@@ -285,6 +285,23 @@ define(function(require) {
     assert([{value:0,dur:1},{value:2,dur:1}], p.next())
     assert(undefined, p.next())
 
+    p = literal(st('0<1(23)>'))
+    p.reset(0)
+    assert([{value:0,dur:1}], p.next())
+    assert([{value:1,dur:1}], p.next())
+    assert(undefined, p.next())
+    p.loop()
+    assert([{value:0,dur:1}], p.next())
+    assert([{value:2,dur:1},{value:3,dur:1}], p.next())
+    assert(undefined, p.next())
+
+    p = literal(st('0[1(23)]'))
+    p.reset(0)
+    assert([{value:0,dur:1}], p.next())
+    assert([{value:1,dur:1/2}], p.next())
+    assert([{value:2,dur:1/2},{value:3,dur:1/2}], p.next())
+    assert(undefined, p.next())
+
     // p = literal(st('([01][234])'))
     // assert([{value:0,dur:1/2},{value:2,dur:1/3}], p.next())
     // assert([{value:3,dur:1/3}], p.next())

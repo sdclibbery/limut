@@ -34,7 +34,16 @@ define(function(require) {
       //---
       scaleToFit: (scale) => { // Scale the durations within this pattern based on its length
                                // Used to scale subpatterns to fit in one step duration of the parent pattern
-        // Do nothing; chord takes up one full step
+        if (scale === undefined) {
+          scale = 1 // Entire chord fits in one step by default
+        }
+        steps.forEach(s => {
+          if (s.scaleToFit) {
+            s.scaleToFit(scale) // Recurse to sub pattern
+          } else {
+            s.forEach(e => e.dur *= scale) // Apply duration scale to the events in this step
+          }
+        })
       },
 
       extendDur: () => { // Extend the duration of the last step
@@ -73,6 +82,11 @@ define(function(require) {
     p = chord([[{value:0,dur:1}],[{value:1,dur:1}]])
     p.scaleToFit()
     assert([{value:0,dur:1},{value:1,dur:1}], p.next())
+    assert(undefined, p.next())
+
+    p = chord([[{value:0,dur:1}],[{value:1,dur:1}]])
+    p.scaleToFit(1/2)
+    assert([{value:0,dur:1/2},{value:1,dur:1/2}], p.next())
     assert(undefined, p.next())
 
     p = chord([[{value:0,dur:1}],[{value:1,dur:1}]])
