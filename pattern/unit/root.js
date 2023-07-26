@@ -37,6 +37,10 @@ define(function(require) {
     tc.idx = 0
     calculatePatternInfo(pattern, dur, tc)
     if (tc.patternLength === 1 && !Number.isNaN(dur)) { // Single step with complex dur: init by counting up from zero. Slow but accurate for this case
+      let duration = mainParam(evalParamFrame(dur, {idx: 0, count: 0}, 0), 1)
+      if (duration < 1/8) {
+        tc.patternCount = count-1 // If durations are very short, don't do full brute force init from count 0
+      }
       pattern.reset(0)
       return // Return and allow the stepToCount in initTimingContext to step through from zero
     }
