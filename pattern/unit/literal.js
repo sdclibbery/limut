@@ -4,6 +4,10 @@ define(function(require) {
   let supersequence = require('pattern/unit/supersequence.js')
   let chord = require('pattern/unit/chord.js')
 
+  let isDigit = (char) => char >= '0' && char <= '9'
+  let isNumericFlag = (char) => char !== '-' && char !== '.' && !isDigit(char)
+  let isNonNumericFlag = (char) => char === '^' // Only accent "^"" is valid for non numeric events
+
   let parseSteps = (state) => {
     let steps = []
     let char
@@ -54,9 +58,25 @@ define(function(require) {
       let nextChar = state.str.charAt(state.idx+1)
       if (char == '-' && nextChar >= '0' && nextChar <= '9') { // Numeric values can be negative
         char = '-'+nextChar
-        state.idx += 1
+        continue
       }
-      
+
+      let lastStep = steps[steps.length - 1]
+      let lastEvent = lastStep && lastStep[0]
+      if (isNumericFlag(char) && lastEvent && typeof lastEvent.value === 'number') { // Flag for numeric
+        char = char.toLowerCase()
+        if (lastEvent[char] === undefined) { lastEvent[char] = 0 }
+        lastEvent[char]++
+        state.idx++
+        continue
+      }
+      if (isNonNumericFlag(char) && lastEvent && typeof lastEvent.value === 'string') { // Flag for non numeric
+        if (lastEvent[char] === undefined) { lastEvent[char] = 0 }
+        lastEvent[char]++
+        state.idx++
+        continue
+      }
+
       let v = parseFloat(char) // Convert to number if possible
       if (isNaN(v)) { v = char }
       if (v === '.') { v = undefined}
@@ -96,6 +116,10 @@ define(function(require) {
 
     p = literal(st('.'))
     assert([{value:undefined,dur:1}], p.next())
+
+    p = literal(st('x o'))
+    assert([{value:'x',dur:1}], p.next())
+    assert(undefined, p.next())
 
     p = literal(st('x[oh]x'))
     assert([{value:'x',dur:1}], p.next())
@@ -301,6 +325,14 @@ define(function(require) {
     assert([{value:1,dur:1/2}], p.next())
     assert([{value:2,dur:1/2},{value:3,dur:1/2}], p.next())
     assert(undefined, p.next())
+
+    assert([{value:0,dur:1,'#':1}], literal(st('0#')).next())
+    assert([{value:1,dur:1,'#':2}], literal(st('1##')).next())
+    assert([{value:2,dur:1,'a':1}], literal(st('2a')).next())
+    assert([{value:3,dur:1,'a':2}], literal(st('3Aa')).next())
+    assert([{value:4,dur:1,'a':1,'#':1,'b':1,'!':1,'=':1,'^':1,'v':1}], literal(st('4a#b!=^v')).next())
+    assert([{value:'x',dur:1}], literal(st('x#')).next())
+    assert([{value:'x',dur:1,'^':1}], literal(st('x^')).next())
 
     // p = literal(st('([01][234])'))
     // assert([{value:0,dur:1/2},{value:2,dur:1/3}], p.next())

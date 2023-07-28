@@ -84,8 +84,7 @@ define(function(require) {
       .forEach(sourceEvent => {
         let isRest = sourceEvent.value === undefined
         if (!isRest) { anyNotRest = true }
-        let event = {}
-        event.value = sourceEvent.value
+        let event = Object.assign({}, sourceEvent)
         if (typeof event.value === 'function') {
           event.value = event.value(tc)
         }
@@ -93,11 +92,6 @@ define(function(require) {
         event._time = tc.patternCount - count
         event.count = count + event._time
         event.idx = tc.idx
-        // if (!isRest) { // No point setting up loads of data on rests that will be discarded anyway
-        //   event.sharp = sourceEvent.sharp
-        //   event.loud = sourceEvent.loud
-        //   event.long = sourceEvent.long
-        // }
         eventsForBeat.push(event)
       })
       let lastEvent = eventsForBeat[eventsForBeat.length-1]
@@ -372,7 +366,11 @@ define(function(require) {
     assert([{value:0,dur:1,_time:0,count:1,idx:1},{value:2,dur:1/2,_time:0,count:1,idx:1},{value:3,dur:1/2,_time:1/2,count:1+1/2,idx:2}], p(1))
     assert([{value:0,dur:1,_time:0,count:2,idx:3},{value:1,dur:1,_time:0,count:2,idx:3}], p(2))
     assert([{value:0,dur:1,_time:0,count:3,idx:4},{value:2,dur:1/2,_time:0,count:3,idx:4},{value:4,dur:1/4,_time:1/2,count:3+1/2,idx:5},{value:5,dur:1/4,_time:3/4,count:3+3/4,idx:6}], p(3))
-    
+
+    assert([{value:0,dur:1,a:1,_time:0,count:0,idx:0}], root('0a', {})(0))
+    assert([{value:'x',dur:1,_time:0,count:0,idx:0}], root('xa', {})(0))
+    assert([{value:'x',dur:1,'^':1,_time:0,count:0,idx:0}], root('x^', {})(0))
+
     assertSamePattern(root('01.2', {dur:1/4}), root('[01.2]', {}))
     assertSamePattern(root('1___2___.___4___', {dur:1/4}), root('12.4', {}))
     assertSamePattern(root('[01][.2]', {dur:1/2}), root('[01.2]', {}))

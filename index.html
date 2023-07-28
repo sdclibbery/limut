@@ -1183,6 +1183,7 @@ Pattern update
     * For non-deterministic or loop limited patterns, start at beginning
     NEXT STEPS for unit literal:
       #! etc
+       Convert #b to sharp, ^v to loud, != to long
       Use units in standard player instead of old patterns
        Keep the pattern itself in the keepState
         ???Do we even need to worry about this? Why not reparse every time? I guess actual pattern with random dur needs it?
@@ -1197,7 +1198,7 @@ Pattern update
   Docs
  • p ping `once`  - Pattern literal o n c e :-)
  Custom flags
- • p ping 01g2., g={glide:this.dur/8}
+ • p ping 01g2., glide=this.g*this.dur/8
  Generative features:
  • p ping 01 * 4  - 01010101
   ? Tests in parse-pattern that test pattern equivalence; eg test that  01 * 2  gives same events as  0101?
