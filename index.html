@@ -1168,28 +1168,14 @@ Pattern update
  Limit pattern repeats:
  • p ping 01 loop 2  - Play the pattern through twice starting now, then stop
   STARTING NOW..?? :-)
-   loop has a special TC init to start the pattern NOW and limit the loops
-   Then refactor TC out?
-   Hmm a new architecture is needed
-    We need to have individual pattern units that are purely a sequence that does not repeat
-    They report up to the parent when they finish, and the parent can decide whether to pass on to another unit or repeat
-    In short we need composable pattern pieces; the existing [] sub pattern should be done like this too...
-     Parse state: start parsing a pattern, can delegate to a sub pattern
-    Possible API: tc state held in player keepState, next(), reset(), will need some kind of set() too
-    Requirements:
-    * Keep place in pattern between code updates (Not all patterns can be deterministic)
-    * Make patterns encapsulated and have a hierarchy
-    * For deterministic patterns, start at the correct point given current global beat count
-    * For non-deterministic or loop limited patterns, start at beginning
     NEXT STEPS for unit literal:
-      #! etc
-       Convert #b to sharp, ^v to loud, != to long
+      #! etc: Doc change: default flags now 3/2 vs 2/3
       Use units in standard player instead of old patterns
        Keep the pattern itself in the keepState
         ???Do we even need to worry about this? Why not reparse every time? I guess actual pattern with random dur needs it?
         Only reparse when the string has changed
         TESTS
-        Tidy up files
+        Tidy up old files
       loop 1
       Errors for mismatched brackets, missing brackets, invalid continuations?
       TEST EVERYTHING!!!!! - follow player

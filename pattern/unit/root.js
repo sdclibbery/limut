@@ -65,6 +65,21 @@ define(function(require) {
     stepToCount(count-1, dur, pattern, tc) // Step through the pattern to count-1 to update the tc count and idx
   }
 
+  let expandDefaultFlags = (event) => {
+    let sh = event['#'] || 0
+    let fl = event['b'] || 0
+    let sharp = sh-fl
+    if (sharp) { event.sharp = sharp }
+    let lo = event['^'] ? Math.pow(3/2, event['^']) : 1
+    let qu = event['v'] ? Math.pow(2/3, event['v']) : 1
+    let loud = lo*qu
+    if (loud !== 1) { event.loud = loud }
+    let lon = event['='] ? Math.pow(3/2, event['=']) : 1
+    let sho = event['!'] ? Math.pow(2/3, event['!']) : 1
+    let long = lon*sho
+    if (long !== 1) { event.long = long }
+  }
+
   let stepToCount = (count, dur, pattern, tc) => {
     let eventsForBeat = []
     while (tc.patternCount < count + 0.9999) {
@@ -92,6 +107,7 @@ define(function(require) {
         event._time = tc.patternCount - count
         event.count = count + event._time
         event.idx = tc.idx
+        expandDefaultFlags(event)
         eventsForBeat.push(event)
       })
       let lastEvent = eventsForBeat[eventsForBeat.length-1]
@@ -369,7 +385,15 @@ define(function(require) {
 
     assert([{value:0,dur:1,a:1,_time:0,count:0,idx:0}], root('0a', {})(0))
     assert([{value:'x',dur:1,_time:0,count:0,idx:0}], root('xa', {})(0))
-    assert([{value:'x',dur:1,'^':1,_time:0,count:0,idx:0}], root('x^', {})(0))
+    assert([{value:'x',dur:1,'^':1,_time:0,count:0,idx:0, loud:3/2}], root('x^', {})(0))
+    assert([{value:0,dur:1,'#':1,_time:0,count:0,idx:0,sharp:1}], root('0#', {})(0))
+    assert([{value:0,dur:1,'#':2,_time:0,count:0,idx:0,sharp:2}], root('0##', {})(0))
+    assert([{value:0,dur:1,'b':1,_time:0,count:0,idx:0,sharp:-1}], root('0b', {})(0))
+    assert([{value:0,dur:1,'#':2,'b':1,_time:0,count:0,idx:0,sharp:1}], root('0##b', {})(0))
+    assert([{value:0,dur:1,'^':1,_time:0,count:0,idx:0,loud:3/2}], root('0^', {})(0))
+    assert([{value:0,dur:1,'v':1,_time:0,count:0,idx:0,loud:2/3}], root('0v', {})(0))
+    assert([{value:0,dur:1,'!':1,_time:0,count:0,idx:0,long:2/3}], root('0!', {})(0))
+    assert([{value:0,dur:1,'=':1,_time:0,count:0,idx:0,long:3/2}], root('0=', {})(0))
 
     assertSamePattern(root('01.2', {dur:1/4}), root('[01.2]', {}))
     assertSamePattern(root('1___2___.___4___', {dur:1/4}), root('12.4', {}))
