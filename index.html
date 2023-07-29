@@ -380,12 +380,12 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>0123</code> Sequence of events, each of duration <code>dur</code>, for use with tonal synths. Numbers are scale degrees</p>
 <p><code>0-1-2-3</code> Negative scale degrees allow tones below the synth root pitch</p>
 <p><code>x.</code> Use a dot for a rest</p>
-<p><code>0#</code> # following numeric event makes it a sharp</p>
-<p><code>0b</code> b following numeric event makes it a flat</p>
+<p><code>0#</code> # following numeric event makes it sharp</p>
+<p><code>0b</code> b following numeric event makes it flat</p>
 <p><code>0=</code> = following numeric event extends the duration by 50%</p>
-<p><code>0!</code> ! following numeric event shortens the duration by 50%</p>
+<p><code>0!</code> ! following numeric event shortens the duration by 33%</p>
 <p><code>0^</code> ^ following numeric event makes it 50% louder</p>
-<p><code>0v</code> v following numeric event makes it 50% quieter</p>
+<p><code>0v</code> v following numeric event makes it 33% quieter</p>
 <p><code>x^</code> ^ following non-numeric event makes it 50% louder (for use with play synth)</p>
 <p><code>0_[_1]</code> Use underscore to extend the previous note duration</p>
 <p><code>0[123]</code> Square brackets to fit multiple events into one <code>dur</code> (triplet shown)</p>
@@ -1169,7 +1169,6 @@ Pattern update
  • p ping 01 loop 2  - Play the pattern through twice starting now, then stop
   STARTING NOW..?? :-)
     NEXT STEPS for unit literal:
-      #! etc: Doc change: default flags now 3/2 vs 2/3
       Use units in standard player instead of old patterns
        Keep the pattern itself in the keepState
         ???Do we even need to worry about this? Why not reparse every time? I guess actual pattern with random dur needs it?
@@ -1179,15 +1178,17 @@ Pattern update
       loop 1
       Errors for mismatched brackets, missing brackets, invalid continuations?
       TEST EVERYTHING!!!!! - follow player
+      ([01][234])
  • p ping once  - Same as p ping 0 loop 1
   Update exmples - Blade Runner opening titles
   Docs
  • p ping `once`  - Pattern literal o n c e :-)
  Custom flags
  • p ping 01g2., glide=this.g*this.dur/8
+  !!!!BUT if this.g is missing,  this.g*1  defaults to 1 ALL THE TIME. Can do  this.g?0  but that sucks
  Generative features:
  • p ping 01 * 4  - 01010101
-  ? Tests in parse-pattern that test pattern equivalence; eg test that  01 * 2  gives same events as  0101?
+  Pattern equivalence tests; eg test that  01 * 2  gives same events as  0101
  • p ping 3 then 2  - 32
  • p ping 01 * 2 then 2 * 3  - 0101222
  • p ping 01234567 crop 4  - 0123
