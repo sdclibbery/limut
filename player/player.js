@@ -129,8 +129,8 @@ define((require) => {
     } else {
       getEventsForBeat = standardPlayer(patternStr, paramsStr, player, playerFactory.baseParams)
     }
-    player.getEventsForBeatBase = (beat, timingContext) => {
-      let events = getEventsForBeat(beat, timingContext)
+    player.getEventsForBeatBase = (beat) => {
+      let events = getEventsForBeat(beat)
       events.forEach(e => e.linenum = linenum)
       let overrides = players.overrides[player.id] || {}
       let es = events.map(e => applyOverrides(e, overrides))
@@ -141,7 +141,7 @@ define((require) => {
       return es
     }
     player.getEventsForBeat = (beat) => {
-      return player.getEventsForBeatBase(beat, player.keepState) // Use the keepState for the timing context so it is transferred to the new instance of the player on code update
+      return player.getEventsForBeatBase(beat)
     }
     return player
   }

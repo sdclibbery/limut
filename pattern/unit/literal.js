@@ -55,12 +55,6 @@ define(function(require) {
         continue
       }
 
-      let nextChar = state.str.charAt(state.idx+1)
-      if (char == '-' && nextChar >= '0' && nextChar <= '9') { // Numeric values can be negative
-        char = '-'+nextChar
-        continue
-      }
-
       let lastStep = steps[steps.length - 1]
       let lastEvent = lastStep && lastStep[0]
       if (isNumericFlag(char) && lastEvent && typeof lastEvent.value === 'number') { // Flag for numeric
@@ -77,6 +71,11 @@ define(function(require) {
         continue
       }
 
+      let nextChar = state.str.charAt(state.idx+1)
+      if (char == '-' && nextChar >= '0' && nextChar <= '9') { // Numeric values can be negative
+        char = '-'+nextChar
+        state.idx++
+      }
       let v = parseFloat(char) // Convert to number if possible
       if (isNaN(v)) { v = char }
       if (v === '.') { v = undefined}
@@ -116,6 +115,11 @@ define(function(require) {
 
     p = literal(st('.'))
     assert([{value:undefined,dur:1}], p.next())
+
+    p = literal(st('0-1'))
+    assert([{value:0,dur:1}], p.next())
+    assert([{value:-1,dur:1}], p.next())
+    assert(undefined, p.next())
 
     p = literal(st('x o'))
     assert([{value:'x',dur:1}], p.next())

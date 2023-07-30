@@ -4,10 +4,10 @@ define(function(require) {
   let {combineOverrides,applyOverrides} = require('player/override-params')
 
   let followPlayer = (playerIdToFollow, params, baseParams) => {
-    return (beat, timingContext) => {
+    return (beat) => {
       let p = players.getById(playerIdToFollow)
       if (p === undefined) { return [] }
-      let events = p.getEventsForBeatBase(beat, timingContext)
+      let events = p.getEventsForBeatBase(beat)
       return events.map(e => {
         // Remove params that affect the event stream itself. Eg remove stutter, otherwise the follow player will 'double stutter'
         delete e.stutter

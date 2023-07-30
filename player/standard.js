@@ -8,9 +8,13 @@ define(function(require) {
     let params = parseParams(paramsStr, player.id)
     params = applyOverrides(baseParams, params)
     params = collapseOverrides(params)
-    let pattern = root(patternStr, params)
-    return (beat, timingContext) => {
-      let eventsForBeat = pattern(beat.count, timingContext)
+    return (beat) => {
+      let ks = player.keepState
+      if (ks._pattern === undefined || ks._patternStr !== patternStr) { // Reparse pattern only when source has changed
+        ks._pattern = root(patternStr, params)
+        ks._patternStr = patternStr
+      }
+      let eventsForBeat = ks._pattern(beat.count)
       let events = eventsForBeat.map(event => {
         let eventToPlay = Object.assign({}, event, {sound: event.value, beat: beat})
         eventToPlay._time = beat.time + event._time*beat.duration

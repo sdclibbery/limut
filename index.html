@@ -983,6 +983,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
+Legato Eg on a 303, When 2 notes slide they are legato, and the amp and filter envelopes do Not reset for the second note...
 ? Feedback for chorus?
 ? Freeze delay, or sample recorder, or looper?
 !Add=slider still only grabs one value per beat for audio synths (works for visual)
@@ -1166,19 +1167,16 @@ Pattern update
  Default pattern:
  x p ping  - Same as p ping 0
  Limit pattern repeats:
+ BIG PATTERN REWRITE: unit patterns
+  Use units in standard player instead of old patterns
+    Clean up old files
+  Follow player: Need to completely change the way it works; have it replicate emitted events? Gives player ordering dependency?
+  Support  loop 1
+  Errors for mismatched brackets, missing brackets, invalid continuations?
+  TEST EVERYTHING!!!!! - follow player
+  ([01][234])
  • p ping 01 loop 2  - Play the pattern through twice starting now, then stop
   STARTING NOW..?? :-)
-    NEXT STEPS for unit literal:
-      Use units in standard player instead of old patterns
-       Keep the pattern itself in the keepState
-        ???Do we even need to worry about this? Why not reparse every time? I guess actual pattern with random dur needs it?
-        Only reparse when the string has changed
-        TESTS
-        Tidy up old files
-      loop 1
-      Errors for mismatched brackets, missing brackets, invalid continuations?
-      TEST EVERYTHING!!!!! - follow player
-      ([01][234])
  • p ping once  - Same as p ping 0 loop 1
   Update exmples - Blade Runner opening titles
   Docs
