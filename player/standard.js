@@ -2,7 +2,7 @@
 define(function(require) {
   var parseParams = require('player/params');
   let {applyOverrides,collapseOverrides} = require('player/override-params')
-  let root = require('pattern/unit/root.js')
+  let root = require('pattern/root.js')
 
   return (patternStr, paramsStr, player, baseParams) => {
     let params = parseParams(paramsStr, player.id)

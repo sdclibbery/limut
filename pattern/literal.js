@@ -1,8 +1,8 @@
 'use strict';
 define(function(require) {
-  let subsequence = require('pattern/unit/subsequence.js')
-  let supersequence = require('pattern/unit/supersequence.js')
-  let chord = require('pattern/unit/chord.js')
+  let subsequence = require('pattern/subsequence.js')
+  let supersequence = require('pattern/supersequence.js')
+  let chord = require('pattern/chord.js')
 
   let isDigit = (char) => char >= '0' && char <= '9'
   let isNumericFlag = (char) => char !== '-' && char !== '.' && !isDigit(char)

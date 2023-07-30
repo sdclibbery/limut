@@ -1,6 +1,6 @@
 'use strict';
 define(function(require) {
-  let literal = require('pattern/unit/literal.js')
+  let literal = require('pattern/literal.js')
   let param = require('player/default-param')
   let {mainParam} = require('player/sub-param')
   let {evalParamFrame} = require('player/eval-param')
