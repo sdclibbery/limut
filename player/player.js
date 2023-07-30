@@ -8,6 +8,62 @@ define((require) => {
   let continuousPlayer = require('player/continuous')
   var followPlayer = require('player/follow')
   let {evalParamFrame} = require('player/eval-param')
+  var players = require('player/players')
+  var expandChords = require('player/expand-chords')
+  let {mainParam} = require('player/sub-param')
+  let {applyOverrides,applyOverridesInPlace} = require('player/override-params')
+
+  let swingPushAt = (count, swingPercent) => {
+    let swingPeriod = 1/4
+    let swingBeatFraction = (count % (swingPeriod*2)) / (swingPeriod*2)
+    let maxSwingPush = (swingPercent - 50) / 50
+    let lerp
+    if (swingBeatFraction < 1/2) {
+      lerp = swingBeatFraction*2
+    } else {
+      lerp = (1-swingBeatFraction)*2
+    }
+    return lerp*maxSwingPush/4
+  }
+
+  let applySwing = (event, beat) => {
+    let swingPercent = evalParamFrame(event.swing || 50, event, event.count)
+    if (swingPercent === 50) { return }
+    let swingBeatPushAtStart = swingPushAt(event.count, swingPercent)
+    let swingBeatPushAtEnd = swingPushAt(event.count+event.dur, swingPercent)
+    event._time += swingBeatPushAtStart * beat.duration
+    event.count += swingBeatPushAtStart
+    event.dur += swingBeatPushAtEnd - swingBeatPushAtStart
+  }
+
+  let applyDelay = (event, beat) => {
+    let dp = evalParamFrame(event.delay, event, event.count)
+    let d = mainParam(dp, 0)
+    event._time += d*beat.duration
+    event.count += d
+    applyOverridesInPlace(event, dp)
+  }
+
+  let expandStutter = (es) => {
+    let result = []
+    es.forEach(event => {
+      let sp = evalParamFrame(event.stutter, event, event.count)
+      let s = Math.max(Math.floor(mainParam(sp, 1)), 1)
+      if (s == 1) {
+        result.push(event)
+        return
+      }
+      let dur = event.dur / s
+      for (let i = 0; i < s; i++) {
+        let e = Object.assign({}, event)
+        e.dur = dur
+        e.count += i*dur
+        e._time += i*dur*event.beat.duration
+        result.push(e)
+      }
+    })
+    return result
+  }
 
   let player = (playerId, playerType, patternStr, paramsStr, linenum) => {
     if (!patternStr) { patternStr = '0' } // Default to '0' if missing pattern string
@@ -64,19 +120,40 @@ define((require) => {
       })
       return es
     }
-    let getEventsForBeatBase
+    player.getEventsForBeatBase
     if (patternStr.startsWith('follow')) {
       // Follow player
       let params = parseParams(paramsStr, playerId)
-      getEventsForBeatBase = followPlayer(patternStr.slice(6).trim(), params, player, playerFactory.baseParams)
+      player.getEventsForBeatBase = followPlayer(patternStr.slice(6).trim(), params, player, playerFactory.baseParams)
     } else if (playerFactory.stopped) {
-      getEventsForBeatBase = () => []
+      player.getEventsForBeatBase = () => []
     } else {
-      getEventsForBeatBase = standardPlayer(patternStr, paramsStr, player, playerFactory.baseParams)
+      player.getEventsForBeatBase = standardPlayer(patternStr, paramsStr, player, playerFactory.baseParams)
     }
     player.linenum = linenum
+    player.getEventsForBeatRaw = (beat) => {
+      if (player.lastRawEventCount === beat.count) {
+        return player.lastRawEvents // Return previously calculated events (this may happen for a follow player for example)
+      }
+      let events = player.getEventsForBeatBase(beat)
+      player.lastRawEvents = events
+      player.lastRawEventCount = beat.count
+      return events
+    }
     player.getEventsForBeat = (beat) => {
-      let events = getEventsForBeatBase(beat)
+      let events = player.getEventsForBeatRaw(beat)
+      events = events.map(event => {
+        let eventToPlay = Object.assign({}, event, {sound: event.value, beat: beat})
+        eventToPlay._time = beat.time + event._time*beat.duration
+        return eventToPlay
+      })
+      events.forEach(e => e.linenum = player.linenum)
+      let overrides = players.overrides[player.id] || {}
+      events = events.map(e => applyOverrides(e, overrides))
+      events = expandChords(events)
+      events.forEach(e => applyDelay(e, beat))
+      events = expandStutter(events)
+      events.forEach(e => applySwing(e, beat))
       return events
     }
     return player
@@ -425,6 +502,10 @@ define((require) => {
 
   p = player('p', 'test', '0', 'foo=(0,0,0), add=[-7:7]r')
   assertNotSame(p.getEventsForBeat({count:0}).map(e => evalParamFrame(e.add,ev(0,0),0)))
+
+  p = player('p', 'test', '12', '')
+  assert(1, p.getEventsForBeat({count:0})[0].value)
+  assert(1, p.getEventsForBeat({count:0})[0].value) // Same when call again for same beat
 
   console.log('Player tests complete')
   }

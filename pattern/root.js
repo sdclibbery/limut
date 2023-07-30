@@ -206,6 +206,8 @@ define(function(require) {
 
     p = root('0', {amp:3})
     assert([{value:0,dur:1,_time:0,count:0,idx:0, amp:3}], p(0))
+    p.params = {amp:5} // Can change the params (this is what will happen on code update)
+    assert([{value:0,dur:1,_time:0,count:1,idx:1, amp:5}], p(1))
 
     p = root('01', {})
     assert([{value:0,dur:1,_time:0,count:0,idx:0}], p(0))

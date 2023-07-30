@@ -7,7 +7,7 @@ define(function(require) {
     return (beat) => {
       let p = players.getById(playerIdToFollow)
       if (p === undefined) { return [] }
-      let events = p.getEventsForBeat(beat)
+      let events = p.getEventsForBeatRaw(beat)
       events = events.map(e => {
         // base params - the preset for the follow player
         // e - the event the follow player is following
@@ -15,9 +15,6 @@ define(function(require) {
         e = combineOverrides(e, baseParams)
         return applyOverrides(e, params)
       })
-      events.forEach(e => e.linenum = player.linenum)
-      let overrides = players.overrides[player.id] || {}
-      events = events.map(e => applyOverrides(e, overrides))
       return events
     }
   }

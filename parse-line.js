@@ -311,8 +311,14 @@ define((require) => {
   assert(3, playerTypes.foo.baseParams.b)
   delete playerTypes.foo
 
-  parseLine('preset myro readout, add=4')
-  parseLine('r1 readout 0, add=2')
+  parseLine('r1 test 1')
+  parseLine('r2 test follow r1')
+  assert(1, players.instances.r2.getEventsForBeat({count:0})[0].value)
+  delete players.instances.r1
+  delete players.instances.r2
+
+  parseLine('preset myro test, add=4')
+  parseLine('r1 test 0, add=2')
   parseLine('r2 myro follow r1, add+=1')
   assert(5, players.instances.r2.getEventsForBeat({count:0})[0].add) // follow player's preset should win over the player being followed
   delete players.instances.r1
