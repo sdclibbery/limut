@@ -8,22 +8,25 @@ define(function(require) {
   let isNumericFlag = (char) => char !== '-' && char !== '.' && !isDigit(char)
   let isNonNumericFlag = (char) => char === '^' // Only accent "^"" is valid for non numeric events
 
-  let parseSteps = (state) => {
+  let parseSteps = (state, expectedClosingBracket) => {
     let steps = []
-    let char
     steps.numContinuations = 0
-    while (char = state.str.charAt(state.idx)) {
-
-      if (char === '' || char === ' ' || char === '\t') { break } // End of literal
+    do {
+      let char = state.str.charAt(state.idx)
+      if (!char || char === '' || char === ' ' || char === '\t') { // End of literal
+        if (expectedClosingBracket) { throw `Missing bracket, expecting ${expectedClosingBracket}` }
+        break
+      }
 
       if (char === ']' || char === ')' || char === '>' || char ==='}') { // End of subpattern
+        if (char !== expectedClosingBracket) { throw `Mismatched bracket, expecting ${expectedClosingBracket}` }
         state.idx++ // Skip closing bracket after subpattern
         break
       }
 
       if (char === '[') { // Parse subsequence
         state.idx++ // Skip opening bracket
-        let subPattern = subsequence(parseSteps(state))
+        let subPattern = subsequence(parseSteps(state, ']'))
         if (subPattern.scaleToFit) { subPattern.scaleToFit() } // Scale subsequence to fit inside one step of this pattern
         steps.push(subPattern)
         continue
@@ -31,14 +34,14 @@ define(function(require) {
 
       if (char === '<') { // Parse supersequence
         state.idx++ // Skip opening bracket
-        let subPattern = supersequence(parseSteps(state))
+        let subPattern = supersequence(parseSteps(state, '>'))
         steps.push(subPattern)
         continue
       }
 
       if (char === '(') { // Parse chord
         state.idx++ // Skip opening bracket
-        let subPattern = chord(parseSteps(state))
+        let subPattern = chord(parseSteps(state, ')'))
         steps.push(subPattern)
         continue
       }
@@ -84,7 +87,7 @@ define(function(require) {
         dur: 1,
       }]) // Literal event value char
       state.idx++
-    }
+    } while (true)
 
     return steps
   }
@@ -101,7 +104,13 @@ define(function(require) {
       let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
     }
-
+    let assertThrows = (expected, code) => {
+      let got
+      try {code()}
+      catch (e) { if (e.includes(expected)) {got=true} else {console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: ${e}`)} }
+      finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
+    }
+  
     let st = (str) => { return { str:str, idx:0 } }
     let p
 
@@ -112,6 +121,21 @@ define(function(require) {
 
     p = literal(st('[]'))
     assert(undefined, p.next())
+
+    assertThrows('Mismatched bracket, expecting ]', () => literal(st('[)')))
+    assertThrows('Mismatched bracket, expecting ]', () => literal(st('[>')))
+    assertThrows('Mismatched bracket, expecting )', () => literal(st('(])')))
+    assertThrows('Mismatched bracket, expecting ]', () => literal(st('[0)')))
+    assertThrows('Mismatched bracket, expecting ]', () => literal(st('[0[12])')))
+    assertThrows('Mismatched bracket, expecting ]', () => literal(st('(0[12))')))
+    assertThrows('Mismatched bracket, expecting ]', () => literal(st('0[1)2')))
+    assertThrows('Mismatched bracket, expecting ]', () => literal(st('<0[12)>')))
+    assertThrows('Mismatched bracket, expecting >', () => literal(st('<0[12]]')))
+    assertThrows('Mismatched bracket, expecting ]', () => literal(st('([)')))
+
+    assertThrows('Missing bracket, expecting ]', () => literal(st('[')))
+    assertThrows('Missing bracket, expecting ]', () => literal(st('[[]')))
+    assertThrows('Missing bracket, expecting ]', () => literal(st('[()')))
 
     p = literal(st('.'))
     assert([{value:undefined,dur:1}], p.next())

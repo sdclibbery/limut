@@ -3328,3 +3328,19 @@ p ping 012, bus='b', oct=3
 b bus, ring=440
 
 
+// Pattern rewrite follow player tests
+/////
+p ping 0435, delay=(0,1/2), stutter=0
+
+p ping 01234567, dur=[1/2,1]r
+f readout follow p, loc={y:this.voice/2}, delay=1/2
+
+r1 readout 0, add=[0:8]r1/2
+r2 readout follow r1, loc={y:1/2}, delay=1/3
+
+p ping 0, dur=[1,1/2,1/2], add=[0:8]l1.1
+pf ping follow p, oct-=1, delay=1, stutter=2
+
+b saw 01-706g-706g, dur=1/4, oct=2, lpf=[1500:200]e, glide=this.g?0*this.dur/2
+
+
