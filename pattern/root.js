@@ -125,9 +125,9 @@ define(function(require) {
       idx: 0,
     }
     let pattern = literal(state)
-    let dur = param(params.dur, 1)
     let tc = {}
-    return (count) => {
+    let result = (count) => {
+      let dur = param(result.params.dur, 1)
       if (!tc.inited) {
         tc.inited = true
         initTimingContext(tc, count, pattern, dur)
@@ -135,14 +135,16 @@ define(function(require) {
       return stepToCount(count, dur, pattern, tc)
               .filter(({value}) => value !== undefined) // Discard rests
               .map(event => {
-                for (let k in params) {
+                for (let k in result.params) {
                   if (k != '_time' && k != 'value' && k != 'dur') {
-                    event[k] = params[k]
+                    event[k] = result.params[k]
                   }
                 }
                 return event
               })
     }
+    result.params = params
+    return result
   }
 
   // TESTS //

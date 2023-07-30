@@ -70,6 +70,7 @@ define(function(require) {
         ks._pattern = root(patternStr, params)
         ks._patternStr = patternStr
       }
+      ks._pattern.params = params // Always update the params
       let eventsForBeat = ks._pattern(beat.count)
       let events = eventsForBeat.map(event => {
         let eventToPlay = Object.assign({}, event, {sound: event.value, beat: beat})
