@@ -1168,7 +1168,10 @@ Pattern update
  x p ping  - Same as p ping 0
  Limit pattern repeats:
  BIG PATTERN REWRITE: unit patterns
-  Follow player: Need to completely change the way it works; have it replicate emitted events? Gives player ordering dependency?
+  !!Param change has no effect until player rebuild
+  Follow player: Need to completely change the way it works
+   Have it replicate emitted events?
+   Must order player eval with follow dependencies then
   Support  loop 1
   Errors for mismatched brackets, missing brackets, invalid continuations?
   TEST EVERYTHING!!!!! - follow player
