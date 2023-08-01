@@ -433,6 +433,18 @@ define(function(require) {
     assert([{value:2,dur:1,_time:0,count:4,idx:2}], p(4))
     assert([], p(5))
 
+    p = root('1 loop 1', {dur:3/2})
+    assert([{value:1,dur:3/2,_time:0.5,count:4.5,idx:3}], p(4))
+    assert([], p(4))
+
+    p = root('12 loop 1', {dur:1/4})
+    assert([{value:1,dur:1/4,_time:0,count:4,idx:0},{value:2,dur:1/4,_time:1/4,count:4.25,idx:1}], p(4))
+    assert([], p(4))
+
+    p = root('12 loop 1', {dur:({idx})=> idx%2 ? 3/4 : 1/2})
+    assert([{value:1,dur:1/2,_time:0.25,count:4.25,idx:0},{value:2,dur:3/4,_time:0.75,count:4.75,idx:1}], p(4))
+    assert([], p(4))
+
     assert([{value:0,dur:1,a:1,_time:0,count:0,idx:0}], root('0a', {})(0))
     assert([{value:'x',dur:1,_time:0,count:0,idx:0}], root('xa', {})(0))
     assert([{value:'x',dur:1,'^':1,_time:0,count:0,idx:0, loud:3/2}], root('x^', {})(0))

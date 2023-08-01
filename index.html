@@ -983,6 +983,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
+!Cannot do  bpf=[0,500]  it doesn't work
 Legato Eg on a 303, When 2 notes slide they are legato, and the amp and filter envelopes do Not reset for the second note...
 ? Feedback for chorus?
 ? Freeze delay, or sample recorder, or looper?
@@ -1168,8 +1169,6 @@ Pattern update
  x p ping  - Same as p ping 0
  Limit pattern repeats:
  BIG PATTERN REWRITE: unit patterns
-  Support loop
-   Tests with different durations, also complex durations
   Pattern keyword match should require whitespace or eof after match
   !Granular will do brute force ATM
   Rename chord.js to literal-chord.js etc
@@ -1179,7 +1178,8 @@ Pattern update
   TEST EVERYTHING!!!!!
  • p ping 01 loop 2  - Play the pattern through twice starting now, then stop
   STARTING NOW..?? :-)
- • p ping once  - Same as p ping 0 loop 1
+ • p ping now 01, dur=8  - Play the pattern starting at the next beat start, not based on historical repeats
+ • p ping once  - Same as p ping now 0 loop 1
   Update exmples - Blade Runner opening titles
   Docs
  • p ping `once`  - Pattern literal o n c e :-)
