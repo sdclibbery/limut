@@ -1,8 +1,8 @@
 'use strict';
 define(function(require) {
-  let subsequence = require('pattern/subsequence.js')
-  let supersequence = require('pattern/supersequence.js')
-  let chord = require('pattern/chord.js')
+  let subsequence = require('pattern/literal-subsequence.js')
+  let supersequence = require('pattern/literal-supersequence.js')
+  let chord = require('pattern/literal-chord.js')
 
   let isWhitespace = (char) => char === '' || char === ' ' || char === '\t'
   let isDigit = (char) => char >= '0' && char <= '9'
