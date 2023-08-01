@@ -4,6 +4,7 @@ define(function(require) {
   let supersequence = require('pattern/supersequence.js')
   let chord = require('pattern/chord.js')
 
+  let isWhitespace = (char) => char === '' || char === ' ' || char === '\t'
   let isDigit = (char) => char >= '0' && char <= '9'
   let isNumericFlag = (char) => char !== '-' && char !== '.' && !isDigit(char)
   let isNonNumericFlag = (char) => char === '^' // Only accent "^"" is valid for non numeric events
@@ -13,7 +14,7 @@ define(function(require) {
     steps.numContinuations = 0
     do {
       let char = state.str.charAt(state.idx)
-      if (!char || char === '' || char === ' ' || char === '\t') { // End of literal
+      if (!char || isWhitespace(char)) { // End of literal
         if (expectedClosingBracket) { throw `Missing bracket, expecting ${expectedClosingBracket}` }
         break
       }

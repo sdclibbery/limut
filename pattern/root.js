@@ -15,10 +15,13 @@ define(function(require) {
     return lit
   }
 
+  let isWhitespace = (char) => char === '' || char === ' ' || char === '\t'
   let keyword = (state, kw) => {
     eatWhitespace(state)
-    if (state.str.slice(state.idx, state.idx + kw.length) !== kw) { return false}
-    state.idx += kw.length
+    if (state.str.slice(state.idx, state.idx + kw.length) !== kw) { return false} // Keyword doesn't match
+    let char = state.str[state.idx + kw.length]
+    if (!!char && !isWhitespace(char)) { return false } // Keyword not followed by whitespace or eof
+    state.idx += kw.length+1
     return true
   }
 
@@ -214,7 +217,16 @@ define(function(require) {
         assert(a(i), pc()(i), `i: ${i}`) // Create the comparison pattern every time
       }
     }
+    let st = (str) => { return { str:str, idx:0 } }
     let p
+
+    assert(true, keyword(st(' loop 1'), 'loop'))
+    assert(true, keyword(st('\tloop\t1'), 'loop'))
+    assert(true, keyword(st(' loop'), 'loop'))
+    assert(true, keyword(st('loop'), 'loop'))
+    assert(false, keyword(st(' loop 1'), 'loo'))
+    assert(false, keyword(st(' loop 1'), 'loopy'))
+    assert(false, keyword(st(' loop1'), 'loop'))
 
     p = root('0', {})
     assert([{value:0,dur:1,_time:0,count:0,idx:0}], p(0))
