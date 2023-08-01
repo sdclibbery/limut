@@ -72,14 +72,14 @@ define(function(require) {
     p = subsequence([
       [{value:0,dur:1}],
       [{value:-1,dur:1}],
-      [{value:2,dur:1}],
+      [{value:2,dur:2}],
       [{value:undefined,dur:1}],
       [{value:'x',dur:1}],
       [{value:'-',dur:1}],
     ])
     assert([{value:0,dur:1}], p.next())
     assert([{value:-1,dur:1}], p.next())
-    assert([{value:2,dur:1}], p.next())
+    assert([{value:2,dur:2}], p.next())
     assert([{value:undefined,dur:1}], p.next())
     assert([{value:'x',dur:1}], p.next())
     assert([{value:'-',dur:1}], p.next())
