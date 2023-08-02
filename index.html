@@ -1167,19 +1167,24 @@ Pattern update
  x p ping follow b
  Default pattern:
  x p ping  - Same as p ping 0
+ Looping
  x p ping 01 loop 2
   Limit pattern repeats
   BIG PATTERN REWRITE: unit patterns
    ([01][234])
    0[_.]
    Commented tests at bottom of root.js
+   ?Rename root to just pattern?
+   Error on misparse for loop operator
+   Error if root parse is complete but more stuff is left
    TEST EVERYTHING!!!!!
  • p ping now 01, dur=8  - Play the pattern starting at the next beat start, not based on historical repeats
-  ??In that case, p ping 123 loop 1 should NOT attempt to start "now"!
+  ??In that case,  p ping 123 loop 1  should NOT attempt to start "now"!
  • p ping once  - Same as p ping now 0 loop 1
   Update exmples - Blade Runner opening titles
   Docs
  • p ping `once`  - Pattern literal o n c e :-)
+ • p ping 012 loop 2 loop 1
  Custom flags
  • p ping 01g2., glide=this.g*this.dur/8
   !!!!BUT if this.g is missing,  this.g*1  defaults to 1 ALL THE TIME. Can do  this.g?0  but that sucks
