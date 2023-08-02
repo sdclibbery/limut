@@ -112,6 +112,9 @@ define(function(require) {
         }
         chord = pattern.next()
       }
+      if (chord === undefined) {
+        chord = [{dur:1}] // Default to a one beat rest if there is still nothing after looping
+      }
       let anyNotRest = false
       chord
       .toSorted((a,b) => b.dur - a.dur)
@@ -227,6 +230,11 @@ define(function(require) {
     assert(false, keyword(st(' loop 1'), 'loo'))
     assert(false, keyword(st(' loop 1'), 'loopy'))
     assert(false, keyword(st(' loop1'), 'loop'))
+
+    assert([], root('', {})(0))
+    assert([], root('()', {})(0))
+    assert([], root('[]', {})(0))
+    assert([], root('<>', {})(0))
 
     p = root('0', {})
     assert([{value:0,dur:1,_time:0,count:0,idx:0}], p(0))

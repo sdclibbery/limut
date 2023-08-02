@@ -9,6 +9,7 @@ define(function(require) {
       // Pattern Interface
       //---
       next: () => { // Get the next step of event(s)
+        if (steps.length === 0) { return undefined }
         if (!active) {
           active = true // Next time, return step
           stepIdx++
@@ -84,6 +85,11 @@ define(function(require) {
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}\n${msg}`) }
     }
     let p
+
+    p = supersequence([]) // No steps
+    p.scaleToFit()
+    assert(undefined, p.next())
+    assert(undefined, p.next())
 
     p = supersequence([
       [{value:0,dur:1}],

@@ -25,7 +25,7 @@ define(function(require) {
     let loops = 0
     let pattern = {
       next: () => {
-        if (loops >= loopCount) { return [{dur:1}] } // return a rest if loops have finished
+        if (loops >= loopCount) { return undefined } // return a rest if loops have finished
         return target.next()
       },
       loop: () => {
@@ -69,8 +69,8 @@ define(function(require) {
     assert([{value:'x',dur:1}], p.next()) // Second loop
     assert(undefined, p.next())
     p.loop()
-    assert([{dur:1}], p.next()) // Get rests after loops are expired
-    assert([{dur:1}], p.next()) // Get rests after loops are expired
+    assert(undefined, p.next()) // Get more undefined after loops are expired
+    assert(undefined, p.next())
     p.reset()
     assert([{value:'x',dur:1}], p.next()) // Start again after reset
     assert(undefined, p.next())
@@ -78,7 +78,7 @@ define(function(require) {
     assert([{value:'x',dur:1}], p.next())
     assert(undefined, p.next())
     p.loop()
-    assert([{dur:1}], p.next())
+    assert(undefined, p.next())
 
     console.log("Pattern loop tests complete")
   }
