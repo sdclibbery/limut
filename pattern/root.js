@@ -204,13 +204,17 @@ define(function(require) {
         )
       }
     }
-    let byCount = (a,b) => a.count - b.count
+    let byCountThenValue = (a,b) => {
+      let cd = a.count - b.count
+      if (Math.abs(cd) > 0.0001) { return cd}
+      return a.value - b.value
+    }
     let assertSameAsParallel = (a, b, c) => {
       for (let i=0; i<30; i++) {
         let combined = b(i).concat(c(i))
         assert(
-          combined.map(clearIdx).sort(byCount),
-          a(i).map(clearIdx).sort(byCount),
+          combined.map(clearIdx).sort(byCountThenValue),
+          a(i).map(clearIdx).sort(byCountThenValue),
           `i: ${i}`)
       }
     }
@@ -424,6 +428,15 @@ define(function(require) {
     assert([{value:0,dur:1,_time:0,count:2,idx:3},{value:1,dur:1,_time:0,count:2,idx:3}], p(2))
     assert([{value:0,dur:1,_time:0,count:3,idx:4},{value:2,dur:1/2,_time:0,count:3,idx:4},{value:4,dur:1/4,_time:1/2,count:3+1/2,idx:5},{value:5,dur:1/4,_time:3/4,count:3+3/4,idx:6}], p(3))
 
+    p = root('([01][234])', {})
+    assert([
+      {value:0,dur:1/2,_time:0,count:0,idx:0},
+      {value:2,dur:1/3,_time:0,count:0,idx:0},
+      {value:3,dur:1/3,_time:1/3,count:1/3,idx:1},
+      {value:1,dur:1/2,_time:1/2,count:1/2,idx:2},
+      {value:4,dur:1/3,_time:2/3,count:2/3,idx:3},
+    ], p(0))
+
     p = root('12 loop 2', {})
     assert([{value:1,dur:1,_time:0,count:0,idx:0}], p(0))
     assert([{value:2,dur:1,_time:0,count:1,idx:1}], p(1))
@@ -493,7 +506,10 @@ define(function(require) {
     assertSameRootPatternWithDurs('0<1>', '01')
     assertSameRootPatternWithDurs('0[1]', '01')
     assertSameRootPatternWithDurs('[<01>_]', '<01>')
+    assertSameRootPatternWithDurs('(((0)))', '0')
+    assertSameRootPatternWithDurs('([<([<([<0>])>])>])', '0')
     assertSameRootPatternWithDurs('(0(23))', '(023)')
+    assertSameRootPatternWithDurs('[(01)(23)]', '([02][13])')
  
     assertSamePatternIgnoringIdx(root('0<12>3', {}), root('013023', {}))
     assertSamePatternIgnoringIdx(root('0<1.>', {}), root('010.', {}))
@@ -515,6 +531,7 @@ define(function(require) {
     assertSameAsParallel(root('(0<12>)_', {}), root('0_', {}), root('<12>_', {}))
     assertSameAsParallel(root('(0<1[2<3[45]>]>)', {}), root('0', {}), root('<1[2<3[45]>]>', {}))
     assertSameAsParallel(root('0<1(23)>', {}), root('0<12>', {}), root('.<.3>', {}))
+    assertSameAsParallel(root('([01][234])', {}), root('[01]', {}), root('[234]', {}))
 
     assertSameWhenStartLater(() => root('0', {}))
     assertSameWhenStartLater(() => root('012', {}))

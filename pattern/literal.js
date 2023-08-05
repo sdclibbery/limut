@@ -363,13 +363,6 @@ define(function(require) {
     assert([{value:'x',dur:1}], literal(st('x#')).next())
     assert([{value:'x',dur:1,'^':1}], literal(st('x^')).next())
 
-    // p = literal(st('([01][234])'))
-    // assert([{value:0,dur:1/2},{value:2,dur:1/3}], p.next())
-    // assert([{value:3,dur:1/3}], p.next())
-    // assert([{value:1,dur:1/2}], p.next())
-    // assert([{value:4,dur:1/3}], p.next())
-    // assert(undefined, p.next())
-
     console.log("Pattern unit literal tests complete")
   }
   
