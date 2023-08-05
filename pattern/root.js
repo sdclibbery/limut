@@ -437,6 +437,25 @@ define(function(require) {
       {value:4,dur:1/3,_time:2/3,count:2/3,idx:3},
     ], p(0))
 
+    p = root('([01][2(34)5])', {})
+    assert([
+      {value:0,dur:1/2,_time:0,count:0,idx:0},
+      {value:2,dur:1/3,_time:0,count:0,idx:0},
+      {value:3,dur:1/3,_time:1/3,count:1/3,idx:1},
+      {value:4,dur:1/3,_time:1/3,count:1/3,idx:1},
+      {value:1,dur:1/2,_time:1/2,count:1/2,idx:2},
+      {value:5,dur:1/3,_time:2/3,count:2/3,idx:3},
+    ], p(0))
+
+    p = root('[0(1[2(34)])]', {})
+    assert([
+      {value:0,dur:1/2,_time:0,count:0,idx:0},
+      {value:1,dur:1/2,_time:1/2,count:1/2,idx:1},
+      {value:2,dur:1/4,_time:1/2,count:1/2,idx:1},
+      {value:3,dur:1/4,_time:3/4,count:3/4,idx:2},
+      {value:4,dur:1/4,_time:3/4,count:3/4,idx:2},
+    ], p(0))
+
     p = root('12 loop 2', {})
     assert([{value:1,dur:1,_time:0,count:0,idx:0}], p(0))
     assert([{value:2,dur:1,_time:0,count:1,idx:1}], p(1))
@@ -532,6 +551,7 @@ define(function(require) {
     assertSameAsParallel(root('(0<1[2<3[45]>]>)', {}), root('0', {}), root('<1[2<3[45]>]>', {}))
     assertSameAsParallel(root('0<1(23)>', {}), root('0<12>', {}), root('.<.3>', {}))
     assertSameAsParallel(root('([01][234])', {}), root('[01]', {}), root('[234]', {}))
+    assertSameAsParallel(root('[0(1[2(34)])]', {}), root('[0(1[.4])]', {}), root('[..23]', {}))
 
     assertSameWhenStartLater(() => root('0', {}))
     assertSameWhenStartLater(() => root('012', {}))
