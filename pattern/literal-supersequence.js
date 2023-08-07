@@ -64,12 +64,12 @@ define(function(require) {
         })
       },
 
-      extendDur: () => { // Extend the duration of all steps
+      extendDur: (dur) => { // Extend the duration of all steps
         steps.forEach(step => { // Unlike supersequence pattern, extend dur for every step in a supersequence
           if (step.extendDur) {
-            step.extendDur()
+            step.extendDur(dur)
           } else {
-            step.forEach(e => e.dur++)
+            step.forEach(e => e.dur += dur)
           }
         })
       },
@@ -117,7 +117,7 @@ define(function(require) {
     assert(undefined, p.next())
 
     p = supersequence([[{value:0,dur:1}],[{value:1,dur:1}]])
-    p.extendDur()
+    p.extendDur(1)
     assert([{value:0,dur:2}], p.next())
     assert(undefined, p.next())
     p.loop()

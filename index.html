@@ -1171,12 +1171,13 @@ Pattern update
  x p ping 01 loop 2
   Limit pattern repeats
   BIG PATTERN REWRITE: unit patterns
-   0[_.]
+   Only the commented test at botttom on literal now: handle non-initial continuation in chord
    Commented tests at bottom of root.js
    ?Rename root to just pattern?
    Error on misparse for loop operator
    Error if root parse is complete but more stuff is left
    TEST EVERYTHING!!!!!
+   Docs: Where continuation "_" is or isn't legal
  • p ping now 01, dur=8  - Play the pattern starting at the next beat start, not based on historical repeats
   ??In that case,  p ping 123 loop 1  should NOT attempt to start "now"!
  • p ping once  - Same as p ping now 0 loop 1

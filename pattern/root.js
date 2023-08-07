@@ -521,6 +521,7 @@ define(function(require) {
     assertSameRootPatternWithDurs('[a_b_]', '[ab]')
     assertSameRootPatternWithDurs('[0_]', '[0]')
     assertSameRootPatternWithDurs('[0_]', '0')
+    assertSameRootPatternWithDurs('0[__]', '0_')
     assertSameRootPatternWithDurs('[[[[[0]_]_]_]_]', '0')
     assertSameRootPatternWithDurs('0<1>', '01')
     assertSameRootPatternWithDurs('0[1]', '01')
@@ -580,6 +581,7 @@ define(function(require) {
     assertSameWhenStartLater(() => root('0<1(23)>', {}))
     assertSameWhenStartLater(() => root('0<1(23)>', {}))
     assertSameWhenStartLater(() => root('<[1(23)]>', {}))
+    assertSameWhenStartLater(() => root('0[__.]', {}))
     // assertSameWhenStartLater(() => root('<1<.3>>_', {})) // Idx's dont match up because of the rest...
     // assertSameWhenStartLater(() => root('<1[2<34>]>', {}))
     // assertSameWhenStartLater(() => root('[1<2[34]>]', {}))
