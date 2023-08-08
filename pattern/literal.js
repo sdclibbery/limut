@@ -70,7 +70,7 @@ define(function(require) {
           steps.initialContinuations += subSteps.initialContinuations
         } else if (subSteps.initialContinuations > 0) {
           extendDur(steps, 1, true)
-          // Insert rest if needed. But! rest needs to be inserted with the PREVIOUS event that has its duration extended!
+          subSteps.push([{dur:1}])
         }
         let subPattern = chord(subSteps)
         steps.push(subPattern)
@@ -452,7 +452,13 @@ define(function(require) {
     p = literal(st('0(_1__)'))
     p.reset(0)
     assert([{value:0,dur:2},{dur:1}], p.next()) // Use a rest to only advance stepToCount by 1
-    assert([{value:1,dur:1}], p.next())
+    assert([{value:1,dur:1},{dur:1}], p.next()) // Extra rest here is unnecessary, but not doing any harm
+    assert(undefined, p.next())
+
+    p = literal(st('0(__)'))
+    p.reset(0)
+    assert([{value:0,dur:2},{dur:1}], p.next())
+    assert([{dur:1}], p.next()) // Must put rest here too
     assert(undefined, p.next())
 
     console.log("Pattern literal tests complete")
