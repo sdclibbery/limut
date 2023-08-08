@@ -15,7 +15,10 @@ define(function(require) {
       step.extendDur(dur, addRest) // Extend previous step of this pattern by one
     } else {
       step.forEach(e => e.dur += dur) // Extend previous subpattern
-      if (addRest) { step.push({dur:1}) }
+      if (addRest) {
+        let minDur = Math.min(...step.map(e => e.dur))
+        step.push({dur:minDur-dur}) // Padding rest should take it up to the next step
+      }
     }
   }
 
@@ -460,6 +463,26 @@ define(function(require) {
     assert([{value:0,dur:2},{dur:1}], p.next())
     assert([{dur:1}], p.next()) // Must put rest here too
     assert(undefined, p.next())
+
+    p = literal(st('0(_(_1_))'))
+    p.reset(0)
+    assert([{value:0,dur:2},{dur:1}], p.next())
+    assert([{value:1,dur:1},{dur:1}], p.next())
+    assert(undefined, p.next())
+
+    p = literal(st('[01](_2__)'))
+    p.reset(0)
+    assert([{value:0,dur:1/2}], p.next())
+    assert([{value:1,dur:3/2},{dur:1/2}], p.next())
+    assert([{value:2,dur:1},{dur:1}], p.next())
+    assert(undefined, p.next())
+
+    // p = literal(st('0[(_1_)2]'))
+    // p.reset(0)
+    // assert([{value:0,dur:3/2},{dur:1}], p.next())
+    // assert([{value:1,dur:1/2},{dur:1/2}], p.next())
+    // assert([{value:2,dur:1/2}], p.next())
+    // assert(undefined, p.next())
 
     console.log("Pattern literal tests complete")
   }

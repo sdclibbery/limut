@@ -53,7 +53,10 @@ define(function(require) {
           step.extendDur(dur, addRest)
         } else {
           step.forEach(e => e.dur += dur)
-          if (addRest) { step.push({dur:1}) }
+          if (addRest) {
+            let minDur = Math.min(...step.map(e => e.dur))
+            step.push({dur:minDur-dur}) // Padding rest should take it up to the next step
+          }
         }
       },
     }

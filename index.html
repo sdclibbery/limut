@@ -1171,10 +1171,10 @@ Pattern update
  x p ping 01 loop 2
   Limit pattern repeats
   BIG PATTERN REWRITE: unit patterns
-   0(__)
-   0(_(_1_))
-   [01](_2__)
    0[(_1_)2]
+   0[(__)2]
+   (01)(_2)
+   (0[12])(_3_)
    <[(0)]><[(_)]>
    More root parameterised tests for initial continuations, chord continuations etc
     0(_1__)
@@ -1182,6 +1182,7 @@ Pattern update
     0(_(_1_))
     [01](_2__)
     0[(_1_)2]
+   (01)(_2)
     <[(0)]><[(_)]>
    Commented tests at bottom of root.js
    ?Rename root to just pattern?
