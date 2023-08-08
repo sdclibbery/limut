@@ -64,12 +64,13 @@ define(function(require) {
         })
       },
 
-      extendDur: (dur) => { // Extend the duration of all steps
+      extendDur: (dur, addRest) => { // Extend the duration of all steps
         steps.forEach(step => { // Unlike supersequence pattern, extend dur for every step in a supersequence
           if (step.extendDur) {
-            step.extendDur(dur)
+            step.extendDur(dur, addRest)
           } else {
             step.forEach(e => e.dur += dur)
+            if (addRest) { step.push({dur:1}) }
           }
         })
       },

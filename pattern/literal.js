@@ -9,24 +9,13 @@ define(function(require) {
   let isNumericFlag = (char) => char !== '-' && char !== '_' && char !== '.' && !isDigit(char)
   let isNonNumericFlag = (char) => char === '^' // Only accent "^"" is valid for non numeric events
 
-  let extendDur = (steps, dur) => {
+  let extendDur = (steps, dur, addRest) => {
     let step = steps[steps.length-1]
     if (step.extendDur) {
-      step.extendDur(dur) // Extend previous step of this pattern by one
+      step.extendDur(dur, addRest) // Extend previous step of this pattern by one
     } else {
       step.forEach(e => e.dur += dur) // Extend previous subpattern
-    }
-  }
-
-  let applyInitialContinuation = (steps, subSteps) => {
-    if (subSteps.initialContinuations > 0) {
-      let subStepsLength = subSteps.length + subSteps.numContinuations
-      let dur = subSteps.initialContinuations/subStepsLength
-      if (steps.length === 0) {
-        steps.initialContinuations += dur // Acts as an initial continuation on *this* pattern too
-      } else {
-        extendDur(steps, dur) // Extend last step on *this* pattern if sub pattern has an initial continuation
-      }
+      if (addRest) { step.push({dur:1}) }
     }
   }
 
@@ -50,7 +39,15 @@ define(function(require) {
       if (char === '[') { // Parse subsequence
         state.idx++ // Skip opening bracket
         let subSteps = parseSteps(state, ']')
-        applyInitialContinuation(steps, subSteps)
+        if (subSteps.initialContinuations > 0) {
+          let subStepsLength = subSteps.length + subSteps.numContinuations
+          let dur = subSteps.initialContinuations/subStepsLength
+          if (steps.length === 0) {
+            steps.initialContinuations += dur // Acts as an initial continuation on *this* pattern too
+          } else {
+            extendDur(steps, dur, false) // Extend last step on *this* pattern if sub pattern has an initial continuation
+          }
+        }
         let subPattern = subsequence(subSteps)
         if (subPattern.scaleToFit) { subPattern.scaleToFit() } // Scale subsequence to fit inside one step of this pattern
         steps.push(subPattern)
@@ -69,7 +66,12 @@ define(function(require) {
       if (char === '(') { // Parse chord
         state.idx++ // Skip opening bracket
         let subSteps = parseSteps(state, ')')
-        if (steps.length === 0) { steps.initialContinuations += subSteps.initialContinuations }
+        if (steps.length === 0) { // 
+          steps.initialContinuations += subSteps.initialContinuations
+        } else if (subSteps.initialContinuations > 0) {
+          extendDur(steps, 1, true)
+          // Insert rest if needed. But! rest needs to be inserted with the PREVIOUS event that has its duration extended!
+        }
         let subPattern = chord(subSteps)
         steps.push(subPattern)
         continue
@@ -81,9 +83,9 @@ define(function(require) {
         if (steps.length === 0) { // At the beginning of this (sub) pattern; the parent pattern can try to extend its previous step
           steps.initialContinuations++
         } else if (expectedClosingBracket === ')') { // Anywhere in a chord is an initial continuation
-          steps.initialContinuations++
+          steps.initialContinuations = 1
         } else { // Inside this (sub) pattern; extend previous step
-          extendDur(steps, 1)
+          extendDur(steps, 1, false)
         }
         continue
       }
@@ -168,6 +170,19 @@ define(function(require) {
     assertThrows('Missing bracket, expecting ]', () => literal(st('[[]')))
     assertThrows('Missing bracket, expecting ]', () => literal(st('[()')))
 
+    // Continuation at start of literal makes no sense
+    assertThrows('Continuation "_" not valid at start of literal', () => literal(st('_0')))
+    assertThrows('Continuation "_" not valid at start of literal', () => literal(st('[_0]')))
+    assertThrows('Continuation "_" not valid at start of literal', () => literal(st('(_0)')))
+    assertThrows('Continuation "_" not valid at start of literal', () => literal(st('(0_)')))
+    assertThrows('Continuation "_" not valid in super sequence "<...>"', () => literal(st('<_0>')))
+    assertThrows('Continuation "_" not valid in super sequence "<...>"', () => literal(st('<0_>')))
+
+    // Continuations in supersequence would require previous event to change duration from loop to loop
+    //  Not completely impossible, but not doing it now.
+    assertThrows('Continuation "_" not valid in super sequence "<...>"', () => literal(st('0<_1>')))
+    assertThrows('Continuation "_" not valid in super sequence "<...>"', () => literal(st('0<1_>')))
+
     p = literal(st('.'))
     assert([{value:undefined,dur:1}], p.next())
 
@@ -175,6 +190,14 @@ define(function(require) {
     assert([{value:0,dur:1}], p.next())
     assert([{value:-1,dur:1}], p.next())
     assert(undefined, p.next())
+
+    assert([{value:0,dur:1,'#':1}], literal(st('0#')).next())
+    assert([{value:1,dur:1,'#':2}], literal(st('1##')).next())
+    assert([{value:2,dur:1,'a':1}], literal(st('2a')).next())
+    assert([{value:3,dur:1,'a':2}], literal(st('3Aa')).next())
+    assert([{value:4,dur:1,'a':1,'#':1,'b':1,'!':1,'=':1,'^':1,'v':1}], literal(st('4a#b!=^v')).next())
+    assert([{value:'x',dur:1}], literal(st('x#')).next())
+    assert([{value:'x',dur:1,'^':1}], literal(st('x^')).next())
 
     p = literal(st('x o'))
     assert([{value:'x',dur:1}], p.next())
@@ -426,34 +449,13 @@ define(function(require) {
     assert([{dur:1/2}], p.next())
     assert(undefined, p.next())
 
-    // p = literal(st('0(_1__)'))
-    // p.reset(0)
-    // assert([{value:0,dur:2},{dur:1}], p.next()) // Use rest to keep the step to the correct duration; only extend dur by 1
-    // assert([{value:1,dur:1}], p.next())
-    // assert(undefined, p.next())
+    p = literal(st('0(_1__)'))
+    p.reset(0)
+    assert([{value:0,dur:2},{dur:1}], p.next()) // Use a rest to only advance stepToCount by 1
+    assert([{value:1,dur:1}], p.next())
+    assert(undefined, p.next())
 
-    // Continuation at start of literal makes no sense
-    assertThrows('Continuation "_" not valid at start of literal', () => literal(st('_0')))
-    assertThrows('Continuation "_" not valid at start of literal', () => literal(st('[_0]')))
-    assertThrows('Continuation "_" not valid at start of literal', () => literal(st('(_0)')))
-    assertThrows('Continuation "_" not valid at start of literal', () => literal(st('(0_)')))
-    assertThrows('Continuation "_" not valid in super sequence "<...>"', () => literal(st('<_0>')))
-    assertThrows('Continuation "_" not valid in super sequence "<...>"', () => literal(st('<0_>')))
-
-    // Continuations in supersequence would require previous event to change duration from loop to loop
-    //  Not completely impossible, but not doing it now.
-    assertThrows('Continuation "_" not valid in super sequence "<...>"', () => literal(st('0<_1>')))
-    assertThrows('Continuation "_" not valid in super sequence "<...>"', () => literal(st('0<1_>')))
-
-    assert([{value:0,dur:1,'#':1}], literal(st('0#')).next())
-    assert([{value:1,dur:1,'#':2}], literal(st('1##')).next())
-    assert([{value:2,dur:1,'a':1}], literal(st('2a')).next())
-    assert([{value:3,dur:1,'a':2}], literal(st('3Aa')).next())
-    assert([{value:4,dur:1,'a':1,'#':1,'b':1,'!':1,'=':1,'^':1,'v':1}], literal(st('4a#b!=^v')).next())
-    assert([{value:'x',dur:1}], literal(st('x#')).next())
-    assert([{value:'x',dur:1,'^':1}], literal(st('x^')).next())
-
-    console.log("Pattern unit literal tests complete")
+    console.log("Pattern literal tests complete")
   }
   
   return literal

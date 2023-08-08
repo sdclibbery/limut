@@ -51,11 +51,12 @@ define(function(require) {
       if (duration <= 0) { throw 'Zero duration' }
       step = pattern.next()
       if (step !== undefined) {
-        let e = (step.toSorted((a,b) => a.dur - b.dur))[0] // Get shortest event
-        if (e.value !== undefined) {
+        let hasNonRests = step.filter(e => e.value !== undefined).length > 0
+        if (hasNonRests) {
           tc.numNonRests++
           idx++
         }
+        let e = (step.toSorted((a,b) => a.dur - b.dur))[0] // Get shortest event
         count += duration * e.dur
       }
       numSteps++
@@ -455,6 +456,11 @@ define(function(require) {
       {value:3,dur:1/4,_time:3/4,count:3/4,idx:2},
       {value:4,dur:1/4,_time:3/4,count:3/4,idx:2},
     ], p(0))
+
+    p = root('0(_1__)', {})
+    assert([{value:0,dur:2,_time:0,count:0,idx:0}], p(0))
+    assert([{value:1,dur:1,_time:0,count:1,idx:1}], p(1))
+    assert([{value:0,dur:2,_time:0,count:2,idx:0}], p(2))
 
     p = root('12 loop 2', {})
     assert([{value:1,dur:1,_time:0,count:0,idx:0}], p(0))

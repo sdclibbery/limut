@@ -47,12 +47,13 @@ define(function(require) {
         })
       },
 
-      extendDur: (dur) => { // Extend the duration of the last step
+      extendDur: (dur, addRest) => { // Extend the duration of the last step
         let step = steps[steps.length-1]
         if (step.extendDur) {
-          step.extendDur(dur)
+          step.extendDur(dur, addRest)
         } else {
           step.forEach(e => e.dur += dur)
+          if (addRest) { step.push({dur:1}) }
         }
       },
     }
