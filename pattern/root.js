@@ -457,11 +457,6 @@ define(function(require) {
       {value:4,dur:1/4,_time:3/4,count:3/4,idx:2},
     ], p(0))
 
-    p = root('0(_1__)', {})
-    assert([{value:0,dur:2,_time:0,count:0,idx:0}], p(0))
-    assert([{value:1,dur:1,_time:0,count:1,idx:1}], p(1))
-    assert([{value:0,dur:2,_time:0,count:2,idx:0}], p(2))
-
     p = root('12 loop 2', {})
     assert([{value:1,dur:1,_time:0,count:0,idx:0}], p(0))
     assert([{value:2,dur:1,_time:0,count:1,idx:1}], p(1))

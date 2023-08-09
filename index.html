@@ -1171,19 +1171,7 @@ Pattern update
  x p ping 01 loop 2
   Limit pattern repeats
   BIG PATTERN REWRITE: unit patterns
-   0[(_1_)2]
-   0[(__)2]
-   (01)(_2)
-   (0[12])(_3_)
-   <[(0)]><[(_)]>
    More root parameterised tests for initial continuations, chord continuations etc
-    0(_1__)
-    0(__)
-    0(_(_1_))
-    [01](_2__)
-    0[(_1_)2]
-   (01)(_2)
-    <[(0)]><[(_)]>
    Commented tests at bottom of root.js
    ?Rename root to just pattern?
    Error on misparse for loop operator
@@ -1222,6 +1210,11 @@ Pattern update
   ?Can the existing pattern syntax support what would be needed?
   ?What arguments would be passed to a pattern operator definition?
   ?Probably want voice leading on expressions not patterns anyway??
+Support continuations inside chords in pattern literals
+ Continuation in chord means take up that "voice slot" in the chord by continuing the previous event
+ So all continuations in a chord are initial continuations
+ Have to add extra "timing rests" to keep the timing lined up in stepToCount
+ Test cases:  0(_1__)  0(__)  0(_(_1_))  0[(_1_)2]  0[(__)2]  0<(_1_)2>  (01)(_2)  (0[12])(_3_)  <[(0)]><[(_)]>
 !Follow player event params should be evaluated at the time of the _original_ event for canons
 ?Should 'db' be a post operator, not a feature of number syntax? So you could do amp=[0:6]l2 db
  Or is it better to do amp=[0db:6db]l2 anyway?
