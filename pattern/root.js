@@ -595,10 +595,10 @@ define(function(require) {
     assertSameWhenStartLater(() => root('[12][_.]', {}))
     assertSameWhenStartLater(() => root('(12)[_.]', {}))
     assertSameWhenStartLater(() => root('<12>[_.]', {}))
-    // assertSameWhenStartLater(() => root('<1<.3>>_', {})) // Idx's dont match up because of the rest...
-    // assertSameWhenStartLater(() => root('<1[2<34>]>', {}))
-    // assertSameWhenStartLater(() => root('[1<2[34]>]', {}))
-    // assertSameWhenStartLater(() => root('(0<1[2<3[45]>]>)', {}))
+    assertSameWhenStartLater(() => root('0<1<.3>>_', {}))
+    assertSameWhenStartLater(() => root('0<1[2<34>]>', {}))
+    assertSameWhenStartLater(() => root('[1<2[34]>]', {}))
+    assertSameWhenStartLater(() => root('a(0<1[2<3[45]>]>)', {}))
 
     console.log("Pattern unit root tests complete")
   }
