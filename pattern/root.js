@@ -514,6 +514,10 @@ define(function(require) {
     assertSamePattern(root('1___2___.___4___', {dur:1/4}), root('12.4', {}))
     assertSamePattern(root('[01][.2]', {dur:1/2}), root('[01.2]', {}))
     assertSamePattern(root('0123', {dur:3/4}), root('[0__1__2__3__]', {dur:3}))
+    assertSamePattern(root('0[_.]', {dur:1}), root('[0__.]', {dur:2}))
+    assertSamePattern(root('0[__.]', {dur:1}), root('[0____.]', {dur:2}))
+    assertSamePattern(root('0[_[_.]]', {dur:1}), root('0[___.]', {dur:1}))
+    assertSamePattern(root('[12][_.]', {dur:1}), root('[12_.]', {dur:2}))
 
     assertSameRootPatternWithDurs('[0]', '0')
     assertSameRootPatternWithDurs('[[[0]]]', '0')
@@ -541,6 +545,7 @@ define(function(require) {
     assertSamePatternIgnoringIdx(root('<12>_', {}), root('12', {dur:2}))
     assertSamePatternIgnoringIdx(root('<[[[<12>__]]__]>', {}), root('12', {}))
     assertSamePatternIgnoringIdx(root('0<1(23)>', {}), root('010(23)', {}))
+    assertSamePatternIgnoringIdx(root('<12>[_.]', {dur:1}), root('[1__.][2__.]', {dur:2}))
 
     assertSameAsParallel(root('(01)', {}), root('0', {}), root('1', {}))
     assertSameAsParallel(root('(0(23))', {}), root('0', {}), root('(23)', {}))
@@ -554,6 +559,7 @@ define(function(require) {
     assertSameAsParallel(root('0<1(23)>', {}), root('0<12>', {}), root('.<.3>', {}))
     assertSameAsParallel(root('([01][234])', {}), root('[01]', {}), root('[234]', {}))
     assertSameAsParallel(root('[0(1[2(34)])]', {}), root('[0(1[.4])]', {}), root('[..23]', {}))
+    assertSameAsParallel(root('(12)[_.]', {dur:1}), root('1__.', {dur:1/2}), root('2__.', {dur:1/2}))
 
     assertSameWhenStartLater(() => root('0', {}))
     assertSameWhenStartLater(() => root('012', {}))
@@ -583,6 +589,12 @@ define(function(require) {
     assertSameWhenStartLater(() => root('0<1(23)>', {}))
     assertSameWhenStartLater(() => root('<[1(23)]>', {}))
     assertSameWhenStartLater(() => root('0[__.]', {}))
+    assertSameWhenStartLater(() => root('0[_.]', {}))
+    assertSameWhenStartLater(() => root('0[__.]', {}))
+    assertSameWhenStartLater(() => root('0[_[_.]]', {}))
+    assertSameWhenStartLater(() => root('[12][_.]', {}))
+    assertSameWhenStartLater(() => root('(12)[_.]', {}))
+    assertSameWhenStartLater(() => root('<12>[_.]', {}))
     // assertSameWhenStartLater(() => root('<1<.3>>_', {})) // Idx's dont match up because of the rest...
     // assertSameWhenStartLater(() => root('<1[2<34>]>', {}))
     // assertSameWhenStartLater(() => root('[1<2[34]>]', {}))
