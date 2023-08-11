@@ -4,8 +4,8 @@ define(function(require) {
   let {mainParam} = require('player/sub-param')
   let {evalParamFrame} = require('player/eval-param')
   let eatWhitespace = require('expression/eat-whitespace')
-  let literal = require('pattern/literal.js')
-  let loop = require('pattern/loop.js')
+  let literal = require('pattern/literal/literal.js')
+  let loop = require('pattern/operator/loop.js')
 
   let parsePattern = (state) => {
     let lit = literal(state)
@@ -600,7 +600,7 @@ define(function(require) {
     assertSameWhenStartLater(() => root('[1<2[34]>]', {}))
     assertSameWhenStartLater(() => root('a(0<1[2<3[45]>]>)', {}))
 
-    console.log("Pattern unit root tests complete")
+    console.log("Pattern root tests complete")
   }
   
   return root
