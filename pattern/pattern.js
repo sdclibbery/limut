@@ -7,24 +7,6 @@ define(function(require) {
   let literal = require('pattern/literal/literal.js')
   let loop = require('pattern/operator/loop.js')
 
-  let parsePattern = (state) => {
-    let lit = literal(state)
-    if (keyword(state, 'loop')) {
-      return loop(state, lit)
-    }
-    return lit
-  }
-
-  let isWhitespace = (char) => char === '' || char === ' ' || char === '\t'
-  let keyword = (state, kw) => {
-    eatWhitespace(state)
-    if (state.str.slice(state.idx, state.idx + kw.length) !== kw) { return false} // Keyword doesn't match
-    let char = state.str[state.idx + kw.length]
-    if (!!char && !isWhitespace(char)) { return false } // Keyword not followed by whitespace or eof
-    state.idx += kw.length+1
-    return true
-  }
-
   let expandDefaultFlags = (event) => {
     let sh = event['#'] || 0
     let fl = event['b'] || 0
@@ -140,6 +122,24 @@ define(function(require) {
     return eventsForBeat
   }
 
+  let parsePattern = (state) => {
+    let lit = literal(state)
+    if (keyword(state, 'loop')) {
+      return loop(state, lit)
+    }
+    return lit
+  }
+
+  let isWhitespace = (char) => char === '' || char === ' ' || char === '\t'
+  let keyword = (state, kw) => {
+    eatWhitespace(state)
+    if (state.str.slice(state.idx, state.idx + kw.length) !== kw) { return false} // Keyword doesn't match
+    let char = state.str[state.idx + kw.length]
+    if (!!char && !isWhitespace(char)) { return false } // Keyword not followed by whitespace or eof
+    state.idx += kw.length+1
+    return true
+  }
+
   let root = (patternStr, params) => {
     patternStr = patternStr.trim()
     if (!patternStr) { return () => [] }
@@ -225,6 +225,12 @@ define(function(require) {
         assert(a(i), pc()(i), `i: ${i}`) // Create the comparison pattern every time
       }
     }
+    let assertThrows = (expected, code) => {
+      let got
+      try {code()}
+      catch (e) { if (e.includes(expected)) {got=true} else {console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: ${e}`)} }
+      finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
+    }
     let st = (str) => { return { str:str, idx:0 } }
     let p
 
@@ -235,6 +241,9 @@ define(function(require) {
     assert(false, keyword(st(' loop 1'), 'loo'))
     assert(false, keyword(st(' loop 1'), 'loopy'))
     assert(false, keyword(st(' loop1'), 'loop'))
+
+    assertThrows('Invalid argument to pattern loop operator', () => root('01 loop', {}))
+    assertThrows('Invalid argument to pattern loop operator', () => root('01 loop foo', {}))
 
     assert([], root('', {})(0))
     assert([], root('()', {})(0))

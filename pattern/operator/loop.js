@@ -8,15 +8,14 @@ define(function(require) {
     let char
     while (char = state.str.charAt(state.idx)) {
       if (char == '') { break }
-      if (digitChar(char)) {
-        value += char
-        state.idx++
-        continue
-      }
-      break
+      if (!digitChar(char)) { break }
+      value += char
+      state.idx++
     }
-    if (value == '') { return undefined }
-    return parseInt(value)
+    if (value == '') { throw `Invalid argument to pattern loop operator` }
+    let result = parseInt(value)
+    if (Number.isNaN(result)) { throw `Invalid argument ${value} to pattern loop operator` }
+    return result
   }
 
   let loop = (state, target) => {

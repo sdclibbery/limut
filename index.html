@@ -1171,9 +1171,9 @@ Pattern update
  x p ping 01 loop 2
   Limit pattern repeats
   BIG PATTERN REWRITE: unit patterns
-   ?Rename root to just pattern?
-   Error on misparse for loop operator
+   Refactor TC/stepToCount out of pattern.js
    Error if root parse is complete but more stuff is left
+   Parse: if there no whitespace, whatever is there must be a literal
    TEST EVERYTHING!!!!!
    Docs: Where continuation "_" is or isn't legal
  • p ping now 01, dur=8  - Play the pattern starting at the next beat start, not based on historical repeats
@@ -1208,6 +1208,8 @@ Pattern update
   ?Can the existing pattern syntax support what would be needed?
   ?What arguments would be passed to a pattern operator definition?
   ?Probably want voice leading on expressions not patterns anyway??
+?P ping 01, add=2 should really be p ping 01, value+=2 ?
+ ALSO, really would like to be able to be able to  P ping 0123, value=ch[this.pattern_value]  but nicer somehow...
 Support continuations inside chords in pattern literals
  Continuation in chord means take up that "voice slot" in the chord by continuing the previous event
  So all continuations in a chord are initial continuations
