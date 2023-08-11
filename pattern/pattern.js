@@ -7,11 +7,13 @@ define(function(require) {
   let {initTimingContext,stepToCount} = require('pattern/timing.js')
 
   let parsePattern = (state) => {
-    let lit = literal(state)
+    let result = literal(state)
     if (keyword(state, 'loop')) {
-      return loop(state, lit)
+      result = loop(state, result)
     }
-    return lit
+    eatWhitespace(state)
+    if (state.str[state.idx] !== undefined) { throw `Invalid pattern: extra pattern data ${state.str.slice(state.idx)}` }
+    return result
   }
 
   let isWhitespace = (char) => char === '' || char === ' ' || char === '\t'
@@ -144,6 +146,9 @@ define(function(require) {
 
     assertThrows('Invalid argument to pattern loop operator', () => root('01 loop', {}))
     assertThrows('Invalid argument to pattern loop operator', () => root('01 loop foo', {}))
+    assertThrows('Invalid pattern: extra pattern data foo', () => root('01 loop 1foo', {}))
+    assertThrows('Invalid pattern: extra pattern data foo', () => root('01 foo', {}))
+    assertThrows('Invalid pattern: extra pattern data foo', () => root('01 loop 1 foo', {}))
 
     assert([], root('', {})(0))
     assert([], root('()', {})(0))
