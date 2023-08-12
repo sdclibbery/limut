@@ -1162,17 +1162,6 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Pattern update
- Existing features:
- x p ping 01(23)[45]<67>
- x p ping 01#^!  etc
- x p ping follow b
- Default pattern:
- x p ping  - Same as p ping 0
- Looping
- x p ping 01 loop 2
-  Limit pattern repeats
-  BIG PATTERN REWRITE: unit patterns
-   Release: minor pattern changes
  • p ping now 01, dur=8  - Play the pattern starting at the next beat start, not based on historical repeats
   ??In that case,  p ping 123 loop 1  should NOT attempt to start "now"!
  • p ping once  - Same as p ping now 0 loop 1
@@ -1182,7 +1171,7 @@ Pattern update
  • p ping 012 loop 2 loop 1
  Custom flags
  • p ping 01g2., glide=this.g*this.dur/8
-  !!!!BUT if this.g is missing,  this.g*1  defaults to 1 ALL THE TIME. Can do  this.g?0  but that sucks
+  !!!!BUT if this.g is missing,  this.g*1  defaults to 1 ALL THE TIME. Can do  this.g?0  but that really sucks
  Generative features:
  • p ping 01 * 4  - 01010101
   Pattern equivalence tests; eg test that  01 * 2  gives same events as  0101
