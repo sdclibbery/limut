@@ -376,8 +376,8 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 </div>
 <h4 onclick="toggleAccordion('accordion-pattern-syntax')" class="accordion"> Patterns</h4>
 <div id="accordion-pattern-syntax" class="closed">
-<p><code>x-o-</code> Sequence of events, each of duration <code>dur</code>, for use with <code>play</code></p>
-<p><code>0123</code> Sequence of events, each of duration <code>dur</code>, for use with tonal synths. Numbers are scale degrees</p>
+<p><code>x-o-</code> Sequence of events, each with duration given by the player's <code>dur</code> param, for use with <code>play</code></p>
+<p><code>0123</code> Sequence of events, each with duration given by the player's <code>dur</code> param, for use with tonal synths. Numbers are scale degrees</p>
 <p><code>0-1-2-3</code> Negative scale degrees allow tones below the synth root pitch</p>
 <p><code>x.</code> Use a dot for a rest</p>
 <p><code>0#</code> # following numeric event makes it sharp</p>
@@ -386,11 +386,12 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>0!</code> ! following numeric event shortens the duration by 33%</p>
 <p><code>0^</code> ^ following numeric event makes it 50% louder</p>
 <p><code>0v</code> v following numeric event makes it 33% quieter</p>
+<p><code>0a</code> Other characters following numeric event become params; for example <code>p ping 01g23, glide=this.g?0</code></p>
 <p><code>x^</code> ^ following non-numeric event makes it 50% louder (for use with play synth)</p>
-<p><code>0_[_1]</code> Use underscore to extend the previous note duration</p>
-<p><code>0[123]</code> Square brackets to fit multiple events into one <code>dur</code> (triplet shown)</p>
-<p><code>0(135)</code> Round brackets to play multiple events together (i.e. a chord)</p>
-<p><code>0&lt;12&gt;</code> Angle brackets to play events in sequence as the pattern repeats. Eg <code>0&lt;12&gt;</code> is exactly equivalent to <code>0102</code></p>
+<p><code>0_[_1]</code> Continuation: use underscore to extend the previous note duration. Currently continuations are not valid within chords <code>()</code> or supersequences <code>&lt;&gt;</code></p>
+<p><code>0[123]</code> Subsequence: square brackets to fit multiple events into one <code>dur</code> (triplet shown)</p>
+<p><code>0(135)</code> Chord: Round brackets to play multiple events together</p>
+<p><code>0&lt;12&gt;</code> Supersequence: angle brackets to play events in sequence as the pattern repeats. Eg <code>0&lt;12&gt;</code> is exactly equivalent to <code>0102</code></p>
 <p><code>follow p1</code> Use <code>follow</code> to follow another player (named 'p1' in the example) pattern</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-value-syntax')" class="accordion"> Values</h4>
@@ -1171,13 +1172,12 @@ Pattern update
  x p ping 01 loop 2
   Limit pattern repeats
   BIG PATTERN REWRITE: unit patterns
-   Docs: Where continuation "_" is or isn't legal
    Release: minor pattern changes
  • p ping now 01, dur=8  - Play the pattern starting at the next beat start, not based on historical repeats
   ??In that case,  p ping 123 loop 1  should NOT attempt to start "now"!
  • p ping once  - Same as p ping now 0 loop 1
   Update exmples - Blade Runner opening titles
-  Docs
+  Docs for all loop/now/once
  • p ping `once`  - Pattern literal o n c e :-)
  • p ping 012 loop 2 loop 1
  Custom flags
