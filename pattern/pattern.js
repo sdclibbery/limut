@@ -171,6 +171,13 @@ define(function(require) {
     assert([{value:0,dur:1,_time:0,count:2,idx:0}], p(2))
     assert([{value:1,dur:1,_time:0,count:3,idx:1}], p(3))
 
+    p = root('loop', {})
+    assert([{value:'l',dur:1,_time:0,count:0,idx:0}], p(0))
+    assert([{value:'o',dur:1,_time:0,count:1,idx:1}], p(1))
+    assert([{value:'o',dur:1,_time:0,count:2,idx:2}], p(2))
+    assert([{value:'p',dur:1,_time:0,count:3,idx:3}], p(3))
+    assert([{value:'l',dur:1,_time:0,count:4,idx:0}], p(4))
+
     p = root('0.1', {})
     assert([{value:0,dur:1,_time:0,count:0,idx:0}], p(0))
     assert([], p(1))
@@ -432,6 +439,9 @@ define(function(require) {
     assertSamePattern(root('0[__.]', {dur:1}), root('[0____.]', {dur:2}))
     assertSamePattern(root('0[_[_.]]', {dur:1}), root('0[___.]', {dur:1}))
     assertSamePattern(root('[12][_.]', {dur:1}), root('[12_.]', {dur:2}))
+    assertSamePatternIgnoringIdx(root('1234', {dur:1}), root('<1234>', {dur:1}))
+    assertSamePatternIgnoringIdx(root('1234', {dur:1}), root('[1234]', {dur:4}))
+    assertSamePattern(root('1234', {dur:1}), root('1___2___3___4___', {dur:1/4}))
 
     assertSameRootPatternWithDurs('[0]', '0')
     assertSameRootPatternWithDurs('[[[0]]]', '0')

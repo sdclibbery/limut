@@ -1171,9 +1171,8 @@ Pattern update
  x p ping 01 loop 2
   Limit pattern repeats
   BIG PATTERN REWRITE: unit patterns
-   Parse: if there no whitespace, whatever is there must be a literal, eg   p ping loop
-   TEST EVERYTHING!!!!!
    Docs: Where continuation "_" is or isn't legal
+   Release: minor pattern changes
  • p ping now 01, dur=8  - Play the pattern starting at the next beat start, not based on historical repeats
   ??In that case,  p ping 123 loop 1  should NOT attempt to start "now"!
  • p ping once  - Same as p ping now 0 loop 1

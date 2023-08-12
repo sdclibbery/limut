@@ -1498,7 +1498,8 @@ set p add+=[0,2,4,6]t2
 set p add%=7
 
 
-// Cyborgset bpm=120
+// Cyborg
+set bpm=120
 set scale=minor
 kd play x.
 set main amp=4
@@ -3328,7 +3329,7 @@ p ping 012, bus='b', oct=3
 b bus, ring=440
 
 
-// Pattern rewrite follow player tests
+// Pattern rewrite tests
 /////
 p ping 0435, delay=(0,1/2), stutter=0
 
@@ -3342,5 +3343,29 @@ p ping 0, dur=[1,1/2,1/2], add=[0:8]l1.1
 pf ping follow p, oct-=1, delay=1, stutter=2
 
 b saw 01-706g-706g, dur=1/4, oct=2, lpf=[1500:200]e, glide=this.g?0*this.dur/2
+
+// p ping 0 loop 1
+// p ping 0246 loop 1
+// p ping 0246 loop 1, dur=1/16
+// p ping 0 loop 1, dur=1/4
+// p ping 0 loop 4, dur=1/4
+// p ping 0246 loop 1, dur=1/2
+// p ping (0246) loop 1
+// p ping [0246] loop 1, dur=1/4
+// p ping [(02)(46)] loop 1
+// p ping (02)(46) loop 1
+// p ping 0 loop 4
+// p ping 02 loop 4, dur=1/4
+
+// bass saw 0 loop 1, oct=2, att=1/2, rel=3, room=2, amp=3*[1/7:1/4]r, addc=wow
+// boom play [(vx)(vX)(VXM)(VXM#).] loop 1, room=2, echo=(0.465,0.53426), amp=1/2, rate=(1/4,1), dur=1
+// whoosh dsaw (047) loop 1, detune=0.432, chorus, envelope=simple, att=1/2, rel=3, lpf=[3000,300]e, hpf=[400,0]e, oct=(2,3), amp=2/4, room=2, noisify=1/2, addc=[1,0]e
+
+// p ping 0[12]<34>[_6], dur=[1/4,1/2]
+// f readout follow p, loc={y:this.voice/2}
+
+// p ping ([-7-8][789])., dur=4
+
+// p ping 0435, delay=(0,1/2), stutter=[1,2,3]
 
 
