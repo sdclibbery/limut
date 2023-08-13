@@ -55,7 +55,9 @@ define(function(require) {
       if (!tc.inited) {
         tc.inited = true
         initTimingContext(tc, count, pattern, dur)
-        if (pattern.start) { pattern.start() } // Tell the pattern TC init is complete and from now on, it'll be real operation
+        if (pattern.start) {
+          pattern.start() // Tell the pattern TC init is complete and from now on, it'll be real operation
+        }
       }
       return stepToCount(count, dur, pattern, tc)
               .filter(({value}) => value !== undefined) // Discard rests
@@ -403,13 +405,26 @@ define(function(require) {
     assert([], p(4))
 
     p = root('12 loop 1', {})
-    assert([{value:1,dur:1,_time:0,count:3,idx:1}], p(3)) // idxs are wrong here, but its kind of moot for a multistep pattern starting off its repeat
-    assert([{value:2,dur:1,_time:0,count:4,idx:2}], p(4))
-    assert([], p(5))
-
-    p = root('1 loop 1', {dur:3/2})
-    assert([{value:1,dur:3/2,_time:0.5,count:4.5,idx:3}], p(4))
+    assert([{value:2,dur:1,_time:0,count:3,idx:1}], p(3)) // Only get half the pattern as starting part way through
     assert([], p(4))
+
+    p = root('1', {dur:3/2})
+    assert([{value:1,dur:3/2,_time:1/2,count:4+1/2,idx:3}], p(4))
+    assert([], p(5))
+    assert([{value:1,dur:3/2,_time:0,count:6,idx:4}], p(6))
+    p = root('1 loop 1', {dur:3/2})
+    assert([{value:1,dur:3/2,_time:0,count:3,idx:2}], p(3))
+    assert([], p(4))
+    assert([], p(5))
+    p = root('1 loop 1', {dur:3/2})
+    assert([{value:1,dur:3/2,_time:1/2,count:4+1/2,idx:3}], p(4))
+    assert([], p(5))
+    assert([], p(6))
+    p = root('1 loop 1', {dur:5/2})
+    assert([], p(3))
+    assert([], p(4))
+    assert([{value:1,dur:5/2,_time:0,count:5,idx:2}], p(5))
+    assert([], p(6))
 
     p = root('12 loop 1', {dur:1/4})
     assert([{value:1,dur:1/4,_time:0,count:4,idx:0},{value:2,dur:1/4,_time:1/4,count:4.25,idx:1}], p(4))

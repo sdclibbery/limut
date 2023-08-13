@@ -22,21 +22,26 @@ define(function(require) {
     eatWhitespace(state)
     let loopCount = parseCount(state)
     let loops = 0
+    let justStarted = true
     let pattern = {
       next: () => {
-        if (loops >= loopCount) { return undefined } // return a rest if loops have finished
-        return target.next()
+        if (loops >= loopCount) { return undefined } // return a rest if loops have all finished
+        let result = target.next()
+        if (!!result) { justStarted = false }
+        return result
       },
       loop: () => {
-        loops++
+        if (!justStarted) { loops++ } // Do not count the loop if we've just started playing, otherwise a single step loop can end before playing any event
         target.loop()
       },
-      reset: () => { // Ignore reset repeat count
+      reset: (numTimesLooped) => {
         loops = 0
-        target.reset(0)
+        justStarted = true
+        target.reset(numTimesLooped)
       },
       start: () => { // TC init is complete
-        pattern.reset()
+        loops = 0
+        justStarted = true
         if (target.start) { target.start() }
       },
     }

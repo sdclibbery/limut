@@ -1164,6 +1164,9 @@ shadertoy synth multiple channels
 Pattern update
  • p ping now 01, dur=8  - Play the pattern starting at the next beat start, not based on historical repeats
   ??In that case,  p ping 123 loop 1  should NOT attempt to start "now"!
+   ??Get rid of start() pattern method and just do reset for 'now'?
+   !!!!!!!NOT working, STC not returning a value
+   Tests for loop 100 patterns being the same as without the loop at various start points and/or durations
  • p ping once  - Same as p ping now 0 loop 1
   Update exmples - Blade Runner opening titles
   Docs for all loop/now/once
