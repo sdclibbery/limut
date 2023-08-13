@@ -29,11 +29,12 @@ define((require) => {
   let warm = {r:1.0,g:0.8,b:0.6,a:1}
   let nullPlayer = { play: () => {}, stopped: true }
   let playerTypes = {
+    test: { play: (e) => { e.endTime = e._time + e.dur; return {} }, baseParams:{ amp:1 } },
     // stop
     none: nullPlayer,
     stop: nullPlayer,
     '!': nullPlayer,
-    // visual
+      // visual
     scope: { play: sprite(scope), baseParams:{ amp:1, delay:0, rate:1, zoom:1, fore:white, back:transWhite } },
     scopefft: { play: sprite(scopefft), baseParams:{ amp:1, delay:0, rate:1, zoom:1, fore:white, back:transWhite } },
     meter: { play: sprite('meter'), baseParams:{ amp:1, delay:0, rate:1, zoom:1, fore:{r:0.9,g:0.0,b:0.9,a:1}, back:offBlack } },

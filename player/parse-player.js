@@ -76,10 +76,6 @@ define((require) => {
     finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
   }
   let p,es
-  playerTypes.test = { play: (e) => {
-    e.endTime = e._time + e.dur
-    return {}
-  } }
 
   assertThrows('Missing player id', ()=>parsePlayer(''))
   assertThrows('Missing player type', ()=>parsePlayer('p'))

@@ -7,9 +7,9 @@ define((require) => {
   let standardPlayer = require('player/standard')
   let continuousPlayer = require('player/continuous')
   var followPlayer = require('player/follow')
-  let {evalParamFrame} = require('player/eval-param')
   var players = require('player/players')
   var expandChords = require('player/expand-chords')
+  let {evalParamFrame} = require('player/eval-param')
   let {mainParam} = require('player/sub-param')
   let {applyOverrides,applyOverridesInPlace} = require('player/override-params')
 
@@ -154,6 +154,7 @@ define((require) => {
       events.forEach(e => applyDelay(e, beat))
       events = expandStutter(events)
       events.forEach(e => applySwing(e, beat))
+      events = events.filter(e => mainParam(evalParamFrame(mainParam(evalParamFrame(e.amp, e, e.count), 0))) > 0) // Discard non playing events
       return events
     }
     return player
@@ -184,10 +185,6 @@ define((require) => {
     }
   }
   let p,e,es,p1,p2
-  playerTypes.test = { play: (e) => {
-    e.endTime = e._time + e.dur
-    return {}
-  } }
   let {evalParamFrame} = require('player/eval-param')
   let ev = (i,c,d) => {return{idx:i,count:c,dur:d}}
 
@@ -485,7 +482,7 @@ define((require) => {
   assert(0, evalParamFrame(p2.getEventsForBeat({count:2})[0].bar,ev(2,2),2))
   delete players.instances.p1
 
-  playerTypes.foo = {play:()=>[], baseParams:{bar:3}}
+  playerTypes.foo = {play:()=>[], baseParams:{bar:3,amp:1}}
   p = player('p', 'foo', '0')
   assert(3, evalParamFrame(p.getEventsForBeat({count:0})[0].bar,ev(0,0),0))
   delete players.instances.p
@@ -496,6 +493,11 @@ define((require) => {
   assert(8, evalParamFrame(p.getEventsForBeat({count:0})[0].bar,ev(0,0),0))
   delete players.instances.p
   delete playerTypes.foo
+
+  p = player('p', 'test', '0', 'amp=[0,1]', 0)
+  assert([], p.getEventsForBeat({count:0})) // Discard events with amp <= 0
+  assert(1, evalParamFrame(p.getEventsForBeat({count:1})[0].amp,ev(1,1),1))
+  delete players.instances.p
 
   p = player('p', 'test', '(000)', 'add=[-7:7]r')
   assertNotSame(p.getEventsForBeat({count:0}).map(e => evalParamFrame(e.add,ev(0,0),0)))

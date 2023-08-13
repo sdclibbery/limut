@@ -317,10 +317,16 @@ define((require) => {
   delete players.instances.r1
   delete players.instances.r2
 
-  parseLine('preset myro test, add=4')
-  parseLine('r1 test 0, add=2')
-  parseLine('r2 myro follow r1, add+=1')
-  assert(5, players.instances.r2.getEventsForBeat({count:0})[0].add) // follow player's preset should win over the player being followed
+  parseLine('r1 test 1, amp=0')
+  parseLine('r2 test follow r1')
+  assert([], players.instances.r2.getEventsForBeat({count:0})) // If event being followed has amp 0 and gets discarded, follow player should also not play it
+  delete players.instances.r1
+  delete players.instances.r2
+
+  parseLine('preset myro test, amp=4')
+  parseLine('r1 test 0, amp=2')
+  parseLine('r2 myro follow r1, amp+=1')
+  assert(5, players.instances.r2.getEventsForBeat({count:0})[0].amp) // follow player's preset should win over the player being followed
   delete players.instances.r1
   delete players.instances.r2
   delete playerTypes.myro
