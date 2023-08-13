@@ -685,7 +685,6 @@ define(function(require) {
   assert('http://a.com/Bc.mp3', parseExpression("'http://a.com/Bc.mp3'"))
 
   assert(2, parseExpression("[1]+1")(ev(0),0,evalParamFrame))
-  assert(1, parseExpression("[1]//+1")(ev(0),0,evalParamFrame))
 
   p = parseExpression("[#f00f,#00ff]t1@f")
   assert({r:1,g:0,b:0,a:1}, p(ev(0),0,evalParamFrame))

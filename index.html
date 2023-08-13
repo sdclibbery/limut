@@ -987,6 +987,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 !Cannot do  bpf=[0,500]  it doesn't work
+Try a convolution reverb with an envelope where the sound builds then fades instead of just dying away
 Legato Eg on a 303, When 2 notes slide they are legato, and the amp and filter envelopes do Not reset for the second note...
 ? Feedback for chorus?
 ? Freeze delay, or sample recorder, or looper?
@@ -1166,7 +1167,9 @@ shadertoy synth multiple channels
 Pattern update
  Custom flags
  • p ping 01g2., glide=this.g*this.dur/8
-  !!!!BUT if this.g is missing,  this.g*1  defaults to 1 ALL THE TIME. Can do  this.g?0  but that really sucks
+  Operators default to zero for missing inputs
+  TEST THIS!!!!! Especially:
+   TEST examples where the visuals are driven from the audio
  Generative features:
  • p ping 01 * 4  - 01010101
   Pattern equivalence tests; eg test that  01 * 2  gives same events as  0101

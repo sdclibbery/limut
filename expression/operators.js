@@ -2,10 +2,12 @@
 define(function(require) {
   let lookupOp = require('expression/lookupOp')
 
-  let ignoreUndefined = (op, l,r) => {
-    if (l === undefined) { return r }
-    if (r === undefined) { return l }
-    return op(l,r)
+  let defaultUndefined = (op, l,r) => {
+    if (l === undefined) { l = 0 }
+    if (r === undefined) { r = 0 }
+    let result = op(l,r)
+    if (typeof result === 'string') { return result }
+    return !Number.isFinite(result) ? 0 : result // Don't allow infinities
   }
 
   let defaultOp = (l,r) => {
@@ -26,12 +28,12 @@ define(function(require) {
   }
 
   let operators = {
-    '+': (l,r)=>ignoreUndefined((l,r)=>l+r, l,r),
-    '-': (l,r)=>ignoreUndefined((l,r)=>l-r, l,r),
-    '*': (l,r)=>ignoreUndefined((l,r)=>l*r, l,r),
-    '/': (l,r)=>ignoreUndefined((l,r)=>l/r, l,r),
-    '%': (l,r)=>ignoreUndefined((l,r)=>l%r, l,r),
-    '^': (l,r)=>ignoreUndefined((l,r)=>(Math.pow(l,r) || 0), l,r),
+    '+': (l,r)=>defaultUndefined((l,r)=>l+r, l,r),
+    '-': (l,r)=>defaultUndefined((l,r)=>l-r, l,r),
+    '*': (l,r)=>defaultUndefined((l,r)=>l*r, l,r),
+    '/': (l,r)=>defaultUndefined((l,r)=>(l/r), l,r),
+    '%': (l,r)=>defaultUndefined((l,r)=>l%r, l,r),
+    '^': (l,r)=>defaultUndefined((l,r)=>Math.pow(l,r), l,r),
     '|': (l,r)=>concatOp(l,r),
     '.': (l,r, e,b,er)=>lookupOp(l,r, e,b,er),
     '?': (l,r)=>defaultOp(l,r),
@@ -48,6 +50,33 @@ define(function(require) {
       let a = JSON.stringify(actual)
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
     }
+
+    assert(3, operators['+'](1,2))
+    assert('12', operators['+']('1','2'))
+    assert(1, operators['+'](1,undefined))
+    assert(2, operators['+'](undefined,2))
+    assert(0, operators['+'](undefined,undefined))
+
+    assert(6, operators['*'](2,3))
+    assert(0, operators['*'](2,undefined))
+    assert(0, operators['*'](undefined,3))
+    assert(0, operators['*'](undefined,undefined))
+
+    assert(2/3, operators['/'](2,3))
+    assert(0, operators['/'](2,undefined))
+    assert(0, operators['/'](undefined,3))
+    assert(0, operators['/'](undefined,undefined))
+
+    assert(1, operators['%'](3,2))
+    assert(0, operators['%'](2,undefined))
+    assert(0, operators['%'](undefined,3))
+    assert(0, operators['%'](undefined,undefined))
+
+    assert(8, operators['^'](2,3))
+    assert(0, operators['^'](-1,1/2))
+    assert(1, operators['^'](2,undefined))
+    assert(0, operators['^'](undefined,3))
+    assert(1, operators['^'](undefined,undefined))
 
     assert([1,2,3,4], concatOp([1,2], [3,4]))
     assert([1,2,3], concatOp([1,2], 3))

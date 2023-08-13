@@ -113,7 +113,7 @@ define(function(require) {
     let a = JSON.stringify(actual)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
-  let {preEvalParam,evalParamFrame} = require('player/eval-param')
+  let {evalParamFrame} = require('player/eval-param')
   let ev = (i,c) => {return{idx:i,count:c}}
   let p
 
