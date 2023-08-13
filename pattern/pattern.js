@@ -7,12 +7,14 @@ define(function(require) {
   let {initTimingContext,stepToCount} = require('pattern/timing.js')
 
   let parsePattern = (state) => {
+    let playFromStart = keyword(state, 'now')
     let result = literal(state)
     if (keyword(state, 'loop')) {
       result = loop(state, result)
     }
     eatWhitespace(state)
     if (state.str[state.idx] !== undefined) { throw `Invalid pattern: extra pattern data ${state.str.slice(state.idx)}` }
+    result.playFromStart = playFromStart
     return result
   }
 
@@ -54,7 +56,7 @@ define(function(require) {
       let dur = param(result.params.dur, 1)
       if (!tc.inited) {
         tc.inited = true
-        initTimingContext(tc, count, pattern, dur)
+        initTimingContext(tc, count, pattern, dur, pattern.playFromStart)
         if (pattern.start) {
           pattern.start() // Tell the pattern TC init is complete and from now on, it'll be real operation
         }
@@ -434,6 +436,22 @@ define(function(require) {
     assert([{value:1,dur:1/2,_time:0.25,count:4.25,idx:0},{value:2,dur:3/4,_time:0.75,count:4.75,idx:1}], p(4))
     assert([], p(4))
 
+    p = root('now 01', {})
+    assert([{value:0,dur:1,_time:0,count:0,idx:0}], p(0))
+    assert([{value:1,dur:1,_time:0,count:1,idx:1}], p(1))
+    assert([{value:0,dur:1,_time:0,count:2,idx:0}], p(2))
+    p = root('now 01', {})
+    assert([{value:0,dur:1,_time:0,count:1,idx:0}], p(1))
+    assert([{value:1,dur:1,_time:0,count:2,idx:1}], p(2))
+    assert([{value:0,dur:1,_time:0,count:3,idx:0}], p(3))
+    p = root('now 01 loop 1', {})
+    assert([{value:0,dur:1,_time:0,count:1,idx:0}], p(1))
+    assert([{value:1,dur:1,_time:0,count:2,idx:1}], p(2))
+    assert([], p(3))
+    p = root('01 loop 1', {})
+    assert([{value:1,dur:1,_time:0,count:1,idx:1}], p(1))
+    assert([], p(2))
+
     assert([{value:0,dur:1,a:1,_time:0,count:0,idx:0}], root('0a', {})(0))
     assert([{value:'x',dur:1,_time:0,count:0,idx:0}], root('xa', {})(0))
     assert([{value:'x',dur:1,'^':1,_time:0,count:0,idx:0, loud:3/2}], root('x^', {})(0))
@@ -538,6 +556,12 @@ define(function(require) {
     assertSameWhenStartLater(() => root('0<1[2<34>]>', {}))
     assertSameWhenStartLater(() => root('[1<2[34]>]', {}))
     assertSameWhenStartLater(() => root('a(0<1[2<3[45]>]>)', {}))
+    assertSameWhenStartLater(() => root('0 loop 1000', {}))
+    assertSameWhenStartLater(() => root('01 loop 1000', {}))
+    assertSameWhenStartLater(() => root('0 loop 1000', {dur:0.17}))
+    assertSameWhenStartLater(() => root('01 loop 1000', {dur:0.17}))
+    assertSameWhenStartLater(() => root('0 loop 1000', {dur:3.17}))
+    assertSameWhenStartLater(() => root('01 loop 1000', {dur:3.17}))
 
     console.log("Pattern root tests complete")
   }

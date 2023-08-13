@@ -1162,16 +1162,11 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Pattern update
- • p ping now 01, dur=8  - Play the pattern starting at the next beat start, not based on historical repeats
-  ??In that case,  p ping 123 loop 1  should NOT attempt to start "now"!
-   ??Get rid of start() pattern method and just do reset for 'now'?
-   !!!!!!!NOT working, STC not returning a value
-   Tests for loop 100 patterns being the same as without the loop at various start points and/or durations
  • p ping once  - Same as p ping now 0 loop 1
+  ?What about  p ping x-o- once  ?
   Update exmples - Blade Runner opening titles
   Docs for all loop/now/once
  • p ping `once`  - Pattern literal o n c e :-)
- • p ping 012 loop 2 loop 1
  Custom flags
  • p ping 01g2., glide=this.g*this.dur/8
   !!!!BUT if this.g is missing,  this.g*1  defaults to 1 ALL THE TIME. Can do  this.g?0  but that really sucks

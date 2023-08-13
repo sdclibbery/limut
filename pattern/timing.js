@@ -50,13 +50,13 @@ define(function(require) {
     }
   }
 
-  let initTimingContext = (tc, count, pattern, dur) => {
+  let initTimingContext = (tc, count, pattern, dur, playFromStart) => {
     pattern.reset(0)
     tc.idx = 0
-    if (count === 0) { // At count 0; must be starting at the start of the pattern :-)
+    if (count === 0 || playFromStart) {
       calculatePatternInfo(pattern, dur, tc)
       pattern.reset(0)
-      tc.patternCount = 0
+      tc.patternCount = count
       return
     }
     toPreviousStart(pattern, count, dur, tc) // Jump to the pattern restart point just before count-1
