@@ -1170,6 +1170,19 @@ Pattern update
   Operators default to zero for missing inputs
   TEST THIS!!!!! Especially:
    TEST examples where the visuals are driven from the audio
+!!!Follow player does not really make sense and needs changing
+Test case that started this is from Chilldown; followed player has  amp=[0,1]t[6,2]
+Currently, you get the followed event, with its baseParams including preset, without its overrides,
+ with the follow player baseParams including preset, with its overrides
+ So things can get "left over" from the followed player preset
+ But the followed player amp is basically always overridden
+ Options
+  ? Take NO params from followed event, but put the final combine params in a special param to make them accessible
+  ? Take NO params from followed event, but put only the followed event own params in a special param to make them accessible
+  ? Take followed event own params withOUT any baseParams or overrides, then apply follow player baseParams and overrides
+  ? Take follow player baseParams, then apply followed event own params only as overrides, then apply follow player overrides
+    This is preferable(?), but requires followPlayer is given the followed event WITHOUT baseParams applied
+!!!
  Generative features:
  • p ping 01 * 4  - 01010101
   Pattern equivalence tests; eg test that  01 * 2  gives same events as  0101
@@ -1195,6 +1208,8 @@ Pattern update
   ?Can the existing pattern syntax support what would be needed?
   ?What arguments would be passed to a pattern operator definition?
   ?Probably want voice leading on expressions not patterns anyway??
+!v readout 0, add=[0,(1,2)]r, loc={y:this.voice/2}
+ Should get either 1 event with `0` OR 2 events with `1` and `2`, but get all kinds of mixtures
 ?P ping 01, add=2 should really be p ping 01, value+=2 ?
  ALSO, really would like to be able to be able to  P ping 0123, value=ch[this.pattern_value]  but nicer somehow...
 Support continuations inside chords in pattern literals

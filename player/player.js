@@ -154,7 +154,6 @@ define((require) => {
       events.forEach(e => applyDelay(e, beat))
       events = expandStutter(events)
       events.forEach(e => applySwing(e, beat))
-      events = events.filter(e => mainParam(evalParamFrame(mainParam(evalParamFrame(e.amp, e, e.count), 0))) > 0) // Discard non playing events
       return events
     }
     return player
@@ -494,9 +493,8 @@ define((require) => {
   delete players.instances.p
   delete playerTypes.foo
 
-  p = player('p', 'test', '0', 'amp=[0,1]', 0)
-  assert([], p.getEventsForBeat({count:0})) // Discard events with amp <= 0
-  assert(1, evalParamFrame(p.getEventsForBeat({count:1})[0].amp,ev(1,1),1))
+  p = player('p', 'test', '0', 'amp=[0,1,0]e', 0)
+  assert(1, evalParamFrame(p.getEventsForBeat({count:0})[0].amp, {_time:0,endTime:1,countToTime:(c)=>c},1/2))
   delete players.instances.p
 
   p = player('p', 'test', '(000)', 'add=[-7:7]r')

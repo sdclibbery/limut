@@ -2359,7 +2359,7 @@ v gradient 0, fore=colbase+of, mid=colbase+om, back=colbase+ob, ripple={6,scale:
 va gradient 0, dur=8, fore=(colbase+of,colbase+om,colbase+ob)*{a:s.amp.0}, vignette=2, back=#aaaa*{a:s.amp.0}, mid=this.fore, rotate=-1/32, loc=(sparkle+firefly/8)*[2,-2]e, fade, ripple={2,scale:1/4}
 set ch=[ (0,2,4,7), (0,3,5,7), (1,3,5b,7), (1,3,4,6#), ]t8
 g saw 0, add=ch, delay=this.voice/4, oct=[4,3]t1, room, lpf={[[900:1800]l16,300]e,q:[5:10]l16}, sus=[1/6:1/4]l[32,0], echo=5/8, addc=wow/2, att=0.01, pan=[-1/2,1/2]t1/4
-x dbass 0[.0]<01><_2>, add=ch.(this.value)-this.value, lpf=[2000,400,200,100]e, att=0.01, addc=wow
+x dbass 0[.0]<01><.2>, add=ch.(this.value)-this.value, lpf=[2000,400,200,100]e, att=0.01, addc=wow
 i impulse 0, delay=({0,lpf:3000},{[1/4,3/4]r,hpf:3000}), room=1/8
 s ambi 0, dur=4, oct=5, add=ch[[1,2]r{per:8,0:3}], room=2, addc=wow+[-1/5:1/5]s1/3, chorus, amp=[0,0,1/2]s[28,64,4], pan=(-1,1)
 
