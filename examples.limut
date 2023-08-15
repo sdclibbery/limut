@@ -2582,7 +2582,7 @@ set main amp=1.6
 set p* swing=52
 // Visuals
 vk kal 145, dur=2, buffer=vb, blend=max, contrast=3-2*bs.pulse.max, scroll={x:1,y:0.3467}*time/(1+this.value)/8, zoom=4-bs.lpf.max/300, fore=0.8
-vg glow follow ab, fore=#010208ff, back=0, buffer=vb, loc={x:this.pan,y:this.value-1/2,w:2,h:2}, ripple, amp*=5
+vg glow follow ab, fore=#010208ff, back=0, buffer=vb, loc={x:this.pan,y:this.value-1/2,w:2,h:2}, ripple, amp*=5*ab.amp.min
 vb buffer 0, feedback={contrast:ps.pulse.0 /32,zoom:1.001,rotate:ps.pulse.max/256}
 // Percussion
 pbd bd 0.-5., fold, amp=2/3+this.value/10, compress=10
