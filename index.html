@@ -386,7 +386,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>0!</code> ! following numeric event shortens the duration by 33%</p>
 <p><code>0^</code> ^ following numeric event makes it 50% louder</p>
 <p><code>0v</code> v following numeric event makes it 33% quieter</p>
-<p><code>0a</code> Other characters following numeric event become params; for example <code>p ping 01g23, glide=this.g?0</code></p>
+<p><code>0a</code> Other characters following numeric event become params; for example <code>t tri 01g23, glide=this.g/2</code></p>
 <p><code>x^</code> ^ following non-numeric event makes it 50% louder (for use with play synth)</p>
 <p><code>0_[_1]</code> Continuation: use underscore to extend the previous note duration. Currently continuations are not valid within chords <code>()</code> or supersequences <code>&lt;&gt;</code></p>
 <p><code>0[123]</code> Subsequence: square brackets to fit multiple events into one <code>dur</code> (triplet shown)</p>
@@ -979,7 +979,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 </div>
 <hr>
 <p>Please report bugs, problems, issues and suggestions on <a href="https://github.com/sdclibbery/limut/issues" target="_blank">https://github.com/sdclibbery/limut/issues</a></p>
-<p>Latest release notes including breaking changes: <a href="https://github.com/sdclibbery/limut/releases/tag/v0.11.0-alpha" target="_blank">https://github.com/sdclibbery/limut/releases/tag/v0.11.0-alpha</a></p>
+<p>Latest release notes including breaking changes: <a href="https://github.com/sdclibbery/limut/releases/tag/v0.12.0-alpha" target="_blank">https://github.com/sdclibbery/limut/releases/tag/v0.12.0-alpha</a></p>
 <canvas id="text-canvas" style="display: none;"></canvas>
 </body>
 <script data-main="main" src="require.js">
@@ -1165,11 +1165,6 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Pattern update
- Custom flags
- • p ping 01g2., glide=this.g*this.dur/8
-  Operators default to zero for missing inputs
-  TEST THIS!!!!! Especially:
-   TEST examples where the visuals are driven from the audio
  Generative features:
  • p ping 01 * 4  - 01010101
   Pattern equivalence tests; eg test that  01 * 2  gives same events as  0101
