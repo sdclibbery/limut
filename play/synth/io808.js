@@ -45,11 +45,17 @@ define(function (require) {
     'rs': (params) => claveRimshot(params, settings(params, 1)),
     'cy': (params) => cymbal(params, settings(params)),
   }
+  let allMap = { 'x':'bd', 'X':'bd', 'v':'bd', 'V':'bd', 'o':'sd', 'O':'sd', 'i':'sd', 'u':'sd', '=':'oh', '-':'ch', ':':'ch',
+                 'T':'cb', 'e':'cb', '*':'cp', 'H':'cp', 'm':'mt', 't':'rs', '~':'cy', '#':'cy', }
 
   return (params) => {
     params._destructor = destructor()
 
     let type = evalMainParamEvent(params, 'type')
+    if (type === 'all') {
+      type = allMap[params.value]
+      if (!type) { throw `Unknown io808 value '${params.value}'` }
+    }
     let playMethod = types[type]
     if (!playMethod) { throw `Unknown io808 type '${type}'` }
     let source = playMethod(params)

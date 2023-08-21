@@ -986,6 +986,17 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
+Techno include lib
+ 808: Build from io808
+  Silence a sound if another of same type plays? What about hats?
+  Docs
+ io808 presets
+   type='t' allows  h/m/l toms; same for congas? Preset instead?
+   Docs
+ More presets
+  303
+  Reese
+  ...
 !Cannot do  bpf=[0,500]  it doesn't work
 Try a convolution reverb with an envelope where the sound builds then fades instead of just dying away
 Legato Eg on a 303, When 2 notes slide they are legato, and the amp and filter envelopes do Not reset for the second note...
@@ -994,19 +1005,6 @@ Legato Eg on a 303, When 2 notes slide they are legato, and the amp and filter e
 !Add=slider still only grabs one value per beat for audio synths (works for visual)
 !Calculating pulse from analyser should involve a perceptual loudness curve
 !Why does convolver reverb cause stereo bias?
-Techno include lib
- 808
-  Build from io808
-   What about the limiter, is that an 808 thing or an io808 thing?
-   type='all' allows  x-o-  etc
-   ? Should 'decay' params use 'dec' param??
-   Silence a sound if another of same type plays; what about hats?
-   Docs
- io808 presets
-   type='t' allows  h/m/l toms; same for congas? Preset instead?
-   Docs
- More presets
-  303
 Other audio player pulse should come from an actual FFT same as bus (only create on first read though)
 !Pan should be equal power when panned?
 Impulse destructor should be snappier? It probably waits too long to clean up
