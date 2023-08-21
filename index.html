@@ -994,23 +994,21 @@ Legato Eg on a 303, When 2 notes slide they are legato, and the amp and filter e
 !Add=slider still only grabs one value per beat for audio synths (works for visual)
 !Calculating pulse from analyser should involve a perceptual loudness curve
 !Why does convolver reverb cause stereo bias?
-Individual percussion synths
- References
-  https://github.com/sdclibbery/limut/blob/c5fec6e5eced92145000561801704afc919241b6/play/percussion.js
-  https://github.com/vincentriemer/io-808
- oh/ch/cymbal
-  https://www.soundonsound.com/techniques/practical-cymbal-synthesis
- clap
-  https://www.kvraudio.com/forum/viewtopic.php?t=466450
- sd
-  https://www.soundonsound.com/techniques/practical-snare-drum-synthesis
-  ?Can do as pitched with strong rattle? sd bd ..0., rattle={1/2,freq:1500,boost:500,curve:4,q:10}, body={1/3,freq:100}, hit=0, click=0, sus=1/2
-   Will need two body tones...
- cb/cl
-  https://www.soundonsound.com/techniques/synthesizing-cowbells-claves
 Techno include lib
- 909
- Reese bass
+ 808
+  Build from io808
+   Missing cymbal!!!
+   What about the limiter, is that an 808 thing or an io808 thing?
+   type='all' allows  x-o-  etc
+   ? Should 'decay' params use 'dec' param??
+   Compare all sounds to io808 and Recheck levels
+   Silence a sound if another of same type plays; what about hats?
+   Docs
+ io808 presets
+   type='t' allows  h/m/l toms; same for congas? Preset instead?
+   Docs
+ More presets
+  303
 Other audio player pulse should come from an actual FFT same as bus (only create on first read though)
 !Pan should be equal power when panned?
 Impulse destructor should be snappier? It probably waits too long to clean up

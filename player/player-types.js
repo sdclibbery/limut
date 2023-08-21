@@ -9,6 +9,7 @@ define((require) => {
   let buffer = require('draw/buffer')
   let bus = require('play/synth/bus')
   let play = require('play/synth/play')
+  let io808 = require('play/synth/io808')
   let sample = require('play/synth/sample')
   let piano = require('play/synth/piano')
   let noise = require('play/synth/noise')
@@ -63,6 +64,7 @@ define((require) => {
     // audio
     bus: { create: bus, baseParams:{ amp:1 } },
     drums: { play: play, baseParams:{ amp:1, delay:0, dur:1/2 } },
+    io808: { play: io808, baseParams:{ amp:1, delay:0, dur:1/4 } },
     play: { play: play, baseParams:{ amp:1, delay:0, dur:1/2, rate:1 } },
     pitchedperc: { play: pitchedPerc, baseParams:{ amp:1, delay:0, dur:1/2, sus:1/3,
         click:{ value:1, dur:0.2, cutoff:1500, q:5 },
