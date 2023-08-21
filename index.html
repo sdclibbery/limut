@@ -986,15 +986,22 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
+Choke groups Eg  p fmbass 0, choke='foo'  p2 ping [.0..], choke='foo'
+ Choke effect is given the env VCA? And registers with a global choke map by choke group?
+  If anything else plays later on the same choke group, then replace VCA env with new on to choke
 Techno include lib
  808: Build from io808
   Silence a sound if another of same type plays? What about hats?
+  ?Single SquareOscBank? Ref counted?
   Docs
  io808 presets
-   type='t' allows  h/m/l toms; same for congas? Preset instead?
+   Eg  pdb 808bd 0...
+   Use an '808hat' choke group to ch and oh? And choke groups for each other sound?
+   type='t' allows  h/m/l toms; same for congas? Preset instead? eg  pt 808t .5h00l
    Docs
  More presets
   303
+   wave, glide, accent, cutoff, resonance etc etc
   Reese
   ...
 !Cannot do  bpf=[0,500]  it doesn't work
