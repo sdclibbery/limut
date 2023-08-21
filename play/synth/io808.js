@@ -15,6 +15,7 @@ define(function (require) {
   let maracasHandclap = require('play/synth/io808/drumModules/maracasHandclap')
   let tomConga = require('play/synth/io808/drumModules/tomConga')
   let claveRimshot = require('play/synth/io808/drumModules/claveRimshot')
+  let cymbal = require('play/synth/io808/drumModules/cymbal')
 
   let settings = (params, selector) => { return {
     level: evalMainParamEvent(params, 'level', 1) * 100,
@@ -42,6 +43,7 @@ define(function (require) {
     'lc': (params) => tomConga('low')(params, settings(params, 0)),
     'cl': (params) => claveRimshot(params, settings(params, 0)),
     'rs': (params) => claveRimshot(params, settings(params, 1)),
+    'cy': (params) => cymbal(params, settings(params)),
   }
 
   return (params) => {
