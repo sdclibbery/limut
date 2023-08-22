@@ -5,7 +5,8 @@ define(function (require) {
   // Adapted from https://developer.tizen.org/documentation/articles/advanced-web-audio-api-usage
   function createWhiteNoiseOsc(audioCtx) {
     // Create noise buffer information
-    const buffer = audioCtx.createBuffer(1, 44100, 44100);
+    const sampleRate = audioCtx.sampleRate;
+    const buffer = audioCtx.createBuffer(1, sampleRate*0.15, sampleRate); // Long enough for snare, maracas and handclap
     const data = buffer.getChannelData(0);
     for (let i = 0; i < data.length; i++) {
       data[i] = (Math.random() - 0.5) * 2;
@@ -22,7 +23,8 @@ define(function (require) {
   function createPinkNoiseOsc(audioCtx) {
     let b0, b1, b2, b3, b4, b5, b6;
     b0 = b1 = b2 = b3 = b4 = b5 = b6 = 0.0;
-    const buffer = audioCtx.createBuffer(1, 44100, 44100);
+    const sampleRate = audioCtx.sampleRate;
+    const buffer = audioCtx.createBuffer(1, sampleRate*0.25, sampleRate); // long enough for toms and congas
     const data = buffer.getChannelData(0);
     for (let i = 0; i < data.length; i++) {
       const white = Math.random() * 2 - 1;
