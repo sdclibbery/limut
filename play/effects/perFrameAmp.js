@@ -32,6 +32,7 @@ define(function (require) {
       }
     }
     chokeGroup.splice(idx, 0, newChoke)
+    chokes[group] = chokeGroup.filter(c => c.endTime > startTime - 2) // Filter out old events
   }
   let choke = (params, node) => {
     let group = evalMainParamEvent(params, 'choke')
@@ -73,10 +74,10 @@ define(function (require) {
     chokes = {}
     addChokeEvent('group', stubVca, 0,1)
     assert([0], chokes.group.map(c => c.startTime))
-    addChokeEvent('group', stubVca, 5,6)
-    assert([0,5], chokes.group.map(c => c.startTime))
     addChokeEvent('group', stubVca, 2,3)
-    assert([0,2,5], chokes.group.map(c => c.startTime))
+    assert([0,2], chokes.group.map(c => c.startTime))
+    addChokeEvent('group', stubVca, 1,2)
+    assert([0,1,2], chokes.group.map(c => c.startTime))
 
     // Choke off an event
     chokes = {}
@@ -95,6 +96,12 @@ define(function (require) {
     addChokeEvent('group', stubVca, 0,2)
     assert([0,1], chokes.group.map(c => c.startTime))
     assert([1,2], chokes.group.map(c => c.endTime))
+
+    // Event cleanup
+    chokes = {}
+    addChokeEvent('group', stubVca, 0,1)
+    addChokeEvent('group', stubVca, 3,4)
+    assert(1, chokes.group.length)
 
     chokes = {} // Reset
     console.log('Per frame amp tests complete')
