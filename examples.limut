@@ -3368,4 +3368,27 @@ b saw 01-706g-706g, dur=1/4, oct=2, lpf=[1500:200]e, glide=this.g*this.dur/2
 
 // p ping 0435, delay=(0,1/2), stutter=[1,2,3]
 
+// Choke group testing
+// p3 ping [.0..], choke='foo', sus=1/32
+// p1 fmbass [0...], sus=2, choke='foo'
+// p2 fmbass [2...], sus=2, choke='foo'
+//
+// p play ~, drive, rate=[1/2,2], choke='foo'
+//
+// oh io808 0......., type='oh', decay=1, choke='808hat'
+// ch io808 .0......, type='ch', choke='808hat'
+//
+// p1 fmbass [(02)...], sus=2, choke='foo'
+// p2 ping [...7], choke='foo', sus=1/32
+// p3 ping [.0..], choke='foo', sus=1/32
+//
+// set bpm=124
+// set * swing=59
+// bd io808 5...5...5...50.0, type='bd'
+// cp io808 ....0.......0..., type='cp'
+// ch io808 500050.0.0005.00, type='ch', choke='808hat'
+// oh io808 ......0.5....0.., type='oh', choke='808hat'
+//
+// p8 io808 (x-)---(x*-)-=-(x=)---(x*-)(x=)-(x-), dur=1/4, type='all', choke='808'
+
 
