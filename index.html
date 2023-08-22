@@ -745,6 +745,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p class='sub'><code>glide={1/3,curve:4}</code> glide curve. Zero means no curve, or a linear frequency change. Positive curve means the frequency moves quickly to the target, then slows down as it approaches. Default is 1.</p>
 <p><code>pan</code> pan from -1 (left) to 1 (right). default: 0</p>
 <p><code>mono</code> Force a signal to mono: the input signal appears equally in both left and right channels</p>
+<p><code>choke</code> Set a choke group. Notes played with a choke group will cut off other notes that are already playing if they have the same choke group. The choke group can be a string, and can apply across multiple players.</p>
 <p><code>echo</code> Echo time delay in beats</p>
 <p class='sub'><code>echo={1,feedback:0.8}</code> Echo feedback gain, 0 to 1, default 0.35. Higher value means the echo persists for longer.</p>
 <p class='max'><code>echo={1,max:2}</code> Echo max time delay. Only valid for bus echo. The bus echo time can be varied, but cannot be larger than this. Defaults to either 1 beat, or the initial value of the delay time, whichever is larger.</p>
@@ -986,8 +987,6 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
-Choke groups Eg  p fmbass 0, choke='foo'  p2 ping [.0..], choke='foo'
- Docs
 Techno include lib
  808: Build from io808
   ?Single SquareOscBank? Ref counted and clear up if ref count drops to zero in destructor?
