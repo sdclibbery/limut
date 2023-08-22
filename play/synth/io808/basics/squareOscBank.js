@@ -7,41 +7,35 @@ define(function (require) {
   const OSC_FREQUENCIES = [263, 400, 421, 474, 587, 845];
   const OSC_AMPLITUDE = 0.3;
 
-  const DEFAULT_OSC_CONFIG = [true, true, true, true, true, true];
+  let oscBank
+
+  let create = (audioCtx) => {
+    if (!!oscBank) { return }
+    oscBank = OSC_FREQUENCIES.map((freq, index) => {
+      const osc = new VCO('square', audioCtx);
+      osc.frequency.value = freq;
+
+      const vca = new VCA(audioCtx);
+      vca.amplitude.value = OSC_AMPLITUDE;
+      osc.connect(vca);
+
+      osc.start(0)
+      return { osc, vca };
+    })
+  }
 
   class SquareOSCBank {
-    constructor(audioCtx, oscConfig = DEFAULT_OSC_CONFIG) {
+    constructor(audioCtx) {
       this.output = new VCA(audioCtx);
       this.output.amplitude.value = 1;
-
-      this.oscBank = OSC_FREQUENCIES.map((freq, index) => {
-        if (oscConfig[index]) {
-          const osc = new VCO('square', audioCtx);
-          osc.frequency.value = freq;
-
-          const vca = new VCA(audioCtx);
-          vca.amplitude.value = OSC_AMPLITUDE;
-
-          osc.connect(vca);
-          vca.connect(this.output);
-
-          return { osc, vca };
-        } else {
-          return null;
-        }
-      }).filter(x => !!x);
+      create(audioCtx)
+      oscBank.forEach(o => o.vca.connect(this.output))
     }
 
-    start(time) {
-      this.oscBank.forEach(({ osc }) => {
-        osc.start(time);
-      });
+    start(time) { // Single osc bank starts on creation
     }
 
-    stop() {
-      this.oscBank.forEach(({ osc }) => {
-        osc.stop();
-      });
+    stop() { // Not bothering to clean up now there's just one osc bank
     }
   }
 

@@ -491,6 +491,13 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p class='sub'><code>accent=0</code> Positive values accent the kick making it louder and stronger. Negative values diminish the kick. Default value is derived from the player pattern value and 'add' param.</p>
 <p class='sub'><code>tone=0</code> Tone control for the kick. Larger values will open the filters.</p>
 <p class='sub'><code>tune=55</code> Base frequency for the kick in Hz. Usually this should be between about 45 and 65 Hz. The pitch{} function can be used to calculate specific frequencies for tuning the kick to the current key; for example <code>tune=pitch{0,oct:2}</code></p>
+<p><code>io808</code> TR-808 simulation based on <a href="https://github.com/vincentriemer/io-808">IO-808</a>. Eg <code>p io808 0.9, type='bd'</code> plays a pattern with two bass drum hits, one unaccented then one with maximum accent</p>
+<p class='sub'><code>type='bd'</code> type of 808 sound: 'bd', 'sd', 'oh', 'ch', 'cb', 'cp', 'ma', 'ht', 'mt', 'lt', 'hc', 'mc', 'lc', 'cl', 'rs', 'cy'. The value from the pattern determines the level of accent placed on each event.</p>
+<p class='sub'><code>level=1</code> Output level. Used on all types.</p>
+<p class='sub'><code>tone=1/2</code> Tone control; used on bd, sd, and cy.</p>
+<p class='sub'><code>decay=1/2</code> Decay time; used on bd, cy, and oh.</p>
+<p class='sub'><code>snappy=1/2</code> Snappy control for sd.</p>
+<p class='sub'><code>tuning=1/2</code> Tuning control for toms and congas ht, mt, lt, hc, mc, and lc.</p>
 <p><code>impulse</code> Play an atonal impulse; that is a single pulse of millisecond duration.</p>
 <p><code>sample</code> Pitched sample player. Use the 'sample' param, and then use it as a piched synth. Use the <code>start</code> param to specify the playback start time within the original sample in seconds.</p>
 <p><code>saw</code> Sawtooth wave preset</p>
@@ -988,9 +995,6 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 Techno include lib
- 808: Build from io808
-  ?Single SquareOscBank? Ref counted and clear up if ref count drops to zero in destructor?
-  Docs for io808 synth with params; type, level, accent, decay, tuning, tone, snappy etc
  io808 presets
    Eg  pdb 808bd 0...
    Use an '808hat' choke group to ch and oh? And choke groups for each other sound?
