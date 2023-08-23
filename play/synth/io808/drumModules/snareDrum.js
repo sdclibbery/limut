@@ -60,7 +60,7 @@ define(function (require) {
     snappyEnv.trigger(params._time);
 
     // cleanup
-    params._destructor.disconnect(highOsc, lowOsc, oscVCA, noiseOsc, noiseVCF, noiseVCA, outputVCA)
+    params._destructor.disconnect(highOsc, lowOsc, noiseOsc, oscVCA, noiseVCF, noiseVCA, outputVCA)
     params._destructor.stop(highOsc, lowOsc, noiseOsc)
 
     return outputVCA;

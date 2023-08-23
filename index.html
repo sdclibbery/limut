@@ -491,7 +491,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p class='sub'><code>accent=0</code> Positive values accent the kick making it louder and stronger. Negative values diminish the kick. Default value is derived from the player pattern value and 'add' param.</p>
 <p class='sub'><code>tone=0</code> Tone control for the kick. Larger values will open the filters.</p>
 <p class='sub'><code>tune=55</code> Base frequency for the kick in Hz. Usually this should be between about 45 and 65 Hz. The pitch{} function can be used to calculate specific frequencies for tuning the kick to the current key; for example <code>tune=pitch{0,oct:2}</code></p>
-<p><code>io808</code> TR-808 simulation based on <a href="https://github.com/vincentriemer/io-808">IO-808</a>. Eg <code>p io808 0.9, type='bd'</code> plays a pattern with two bass drum hits, one unaccented then one with maximum accent</p>
+<p><code>io808</code> TR-808 simulation based on <a href="https://github.com/vincentriemer/io-808">IO-808</a>. Eg <code>p io808 0.9, type='bd'</code> plays a pattern with two bass drum hits, one unaccented then one with maximum accent. Event duration is 1/4 beat (16th note) to correspond to 808 sequencer.</p>
 <p class='sub'><code>type='bd'</code> type of 808 sound: 'bd', 'sd', 'oh', 'ch', 'cb', 'cp', 'ma', 'ht', 'mt', 'lt', 'hc', 'mc', 'lc', 'cl', 'rs', 'cy'. The value from the pattern determines the level of accent placed on each event.</p>
 <p class='sub'><code>level=1</code> Output level. Used on all types.</p>
 <p class='sub'><code>tone=1/2</code> Tone control; used on bd, sd, and cy.</p>
@@ -984,6 +984,24 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>synlead</code> Synth lead preset with glide (pitch slide betwen notes) </p>
 <p><code>synpluck</code> Synth pluck preset </p>
 <p><code>vambi</code> PWM ambient preset in the style of Vangelis.</p>
+<h5>Techno library: <code>include 'preset/techno.limut'</code></h5>
+<h6>Audio</h6>
+<p><code>bd808</code> Simulated 808 bd kick. Based on io808. </p>
+<p><code>sd808</code> Simulated 808 sd snare. Based on io808. </p>
+<p><code>oh808</code> Simulated 808 oh open hat. Based on io808. </p>
+<p><code>ch808</code> Simulated 808 ch closed hat. Based on io808. </p>
+<p><code>cb808</code> Simulated 808 cb cowbell. Based on io808. </p>
+<p><code>cp808</code> Simulated 808 cp clap. Based on io808. </p>
+<p><code>ma808</code> Simulated 808 ma maraca. Based on io808. </p>
+<p><code>ht808</code> Simulated 808 ht high tom. Based on io808. </p>
+<p><code>mt808</code> Simulated 808 mt mid tom. Based on io808. </p>
+<p><code>lt808</code> Simulated 808 lt low tom. Based on io808. </p>
+<p><code>hc808</code> Simulated 808 hc high conga. Based on io808. </p>
+<p><code>mc808</code> Simulated 808 mc mid conga. Based on io808. </p>
+<p><code>lc808</code> Simulated 808 lc low conga. Based on io808. </p>
+<p><code>cl808</code> Simulated 808 cl clave. Based on io808. </p>
+<p><code>rs808</code> Simulated 808 rs rimshot. Based on io808. </p>
+<p><code>cy808</code> Simulated 808 cy cymbal. Based on io808. </p>
 </div>
 <hr>
 <p>Please report bugs, problems, issues and suggestions on <a href="https://github.com/sdclibbery/limut/issues" target="_blank">https://github.com/sdclibbery/limut/issues</a></p>
@@ -995,16 +1013,9 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 Techno include lib
- io808 presets
-   Eg  pdb 808bd 0...
-   Use an '808hat' choke group to ch and oh? And choke groups for each other sound?
-   type='t' allows  h/m/l toms; same for congas? Preset instead? eg  pt 808t .5h00l
-   Docs
- More presets
-  303
-   wave, glide, accent, cutoff, resonance etc etc
-  Reese
-  ...
+ 303: wave, glide, accent, cutoff, resonance etc etc
+ Reese
+ ...
 !Cannot do  bpf=[0,500]  it doesn't work
 Try a convolution reverb with an envelope where the sound builds then fades instead of just dying away
 Legato Eg on a 303, When 2 notes slide they are legato, and the amp and filter envelopes do Not reset for the second note...

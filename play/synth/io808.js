@@ -18,11 +18,11 @@ define(function (require) {
   let cymbal = require('play/synth/io808/drumModules/cymbal')
 
   let settings = (params, selector) => { return {
-    level: evalMainParamEvent(params, 'level', 1) * 100,
-    accent: ((parseInt(params.value)/9) || 0) * 100,
+    level: evalMainParamEvent(params, 'level', 3/4) * 100,
+    accent: ((((parseInt(params.value)||0) + evalMainParamEvent(params, 'add', 0))/9)) * 100,
     tone: evalMainParamEvent(params, 'tone', 1/2) * 100,
     decay: evalMainParamEvent(params, 'decay', 1/2) * 100,
-    snappy: evalMainParamEvent(params, 'snappy', 1/2) * 10,
+    snappy: evalMainParamEvent(params, 'snappy', 1/2) * 100,
     tuning: evalMainParamEvent(params, 'tuning', 1/2) * 100,
     selector: selector,
   }}
