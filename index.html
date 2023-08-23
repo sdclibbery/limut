@@ -575,6 +575,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>voice</code> READ ONLY param. This param is set to the voice index of an individual event within a chord. So for example: <code>p ping 0, add=(0,2)</code>. Here, there are two events within the chord, with <code>add</code> values of 0 and 2. The <code>voice</code> values for these events will be 0 and 1, since the <code>voice</code> increments. This can be used to change other values based on the voice index within the chord.</p>
 <p><code>exists</code> READ ONLY param. Set to one if the player is defined, even if its not currently playing any event.</p>
 <p><code>playing</code> READ ONLY param. Set to one if the player exists and is currently playing one or more events.</p>
+<p><code>player</code> READ ONLY param. Set to the name of the player currently playing. For a follow player, will be the name of the follow player (not the player it's following).</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-audio-params')" class="accordion"> Audio Params</h4>
 <div id="accordion-audio-params" class="closed">
@@ -1012,8 +1013,38 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
+Subparam for lpf, hpf, bpf filters to be 4 pole 24db/octave by chaining 2 together; halve Q?
+Envelope function to use for 303 cutoff; env{a:0.001,d:this.decay}
+Can use env{} for actual envelope; if  envelope=env{}  then use a const envelope
+ Doc for this, and remove 'exponential' envelope type
 Techno include lib
- 303: wave, glide, accent, cutoff, resonance etc etc
+ 303
+  https://www.firstpr.com.au/rwi/dfish/303-unique.html
+  envelope - percussive attack < 3ms
+              fixed, long, exponential decay
+              should choke (choke group per player?)
+  cutoff - In the TB-303 the filter frequency was not affected by the pitch of the note
+           2500Hz max cutoff
+           500Hz at mid position
+           cutoff raised for accented notes according to accent knob
+           exponential decay to zero controlled by decay knob
+            On accented notes, use short decay time which is the same as when the Decay pot is fully anti-clockwise
+           24db/octave by chaining 2 lowpass?
+  resonance - the Resonance pot drives a special circuit – the Accent Sweep
+              Circuit – to pulse the filter frequency and add to the volume on accented notes. When the
+              Resonance pot is anti-clockwise, this is basically a direct pulse proportional to the setting of
+              Accent pot, and is derived from the MEG. When the Resonance pot is clockwise, this pulse
+              goes through a “lag” circuit which causes the filter to sweep up at the start of the note. This
+              gives the distinctive TB-303 resonant “wapp” sound.
+  env mod
+  decay - 200ms to 2s
+  glide - fixed 88ms
+          glide should cause envelopes to NOT retrigger...
+  accent
+  tuning
+  wave
+  choke by player id
+  Compare to a real 303
  Reese
  ...
 !Cannot do  bpf=[0,500]  it doesn't work

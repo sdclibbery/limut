@@ -154,6 +154,7 @@ define((require) => {
       events.forEach(e => applyDelay(e, beat))
       events = expandStutter(events)
       events.forEach(e => applySwing(e, beat))
+      events.forEach(e => e.player = player.id)
       return events
     }
     return player
