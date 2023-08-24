@@ -14,3 +14,17 @@ preset lc808 io808, type='lc', choke='808lc'
 preset cl808 io808, type='cl', choke='808cl'
 preset rs808 io808, type='rs', choke='808rs'
 preset cy808 io808, type='cy', choke='808cy'
+
+preset tb303 wave
+	, wave='saw', oct=2+this.u-this.d
+  , choke=this.player
+	, dur=1/4	, envelope='exp', dec=3/2
+  // 303 Controls
+  , cutoff=1/2
+  , resonance=1/2
+	, decay=1/2
+  , accent=1/2
+  // Derived params
+  , amp*=3/4+this.a*this.accent/4
+  , lpf={(this.cutoff*2350+this.a*this.accent*700+150)*[1,1/3,1/16]e, q:this.resonance*25, poles:4}
+  , glide=(this.g+this.s)/8

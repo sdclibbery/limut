@@ -2,17 +2,29 @@
 define(function (require) {
   let system = require('play/system')
   let {mainParam} = require('player/sub-param')
-  let {evalMainParamFrame,evalSubParamFrame} = require('play/eval-audio-params')
+  let {evalMainParamFrame,evalSubParamFrame,evalSubParamEvent} = require('play/eval-audio-params')
   let {findNonChordParams} = require('player/non-chord-params')
 
   let resonant = (params, node, type, freqParam, defaultResonance) => {
     if (!mainParam(params[freqParam], 0)) { return node }
+    let poles = evalSubParamEvent(params, freqParam, 'poles', 2)
+    let twoStage = (poles === 4)
+    let qModifier = twoStage ? x=>x/2 : undefined
     let filter = system.audio.createBiquadFilter()
     filter.type = type
     evalMainParamFrame(filter.frequency, params, freqParam)
-    evalSubParamFrame(filter.Q, params, freqParam, 'q', defaultResonance)
+    evalSubParamFrame(filter.Q, params, freqParam, 'q', defaultResonance, qModifier)
     node.connect(filter)
     params._destructor.disconnect(filter, node)
+    if (twoStage) { // Simulate a 4 pole 24 dB/octave filter
+      node = filter
+      filter = system.audio.createBiquadFilter()
+      filter.type = type
+      evalMainParamFrame(filter.frequency, params, freqParam)
+      evalSubParamFrame(filter.Q, params, freqParam, 'q', defaultResonance, qModifier)
+      node.connect(filter)
+      params._destructor.disconnect(filter, node)
+    }
     return filter
   }
 
