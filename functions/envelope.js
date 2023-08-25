@@ -10,13 +10,19 @@ define(function(require) {
     'ms': 1/1000,
   }
   let timeEnv = (args, e,b,state) => {
-    let units = subParam(args, 'units', 'beat')
+    let units = subParam(args, 'units', 's')
     let timeScale = scale[units] || 1
     let time = metronome.timeNow() - e._time
     if (time < 0) { return 0 }
+
+    let a = subParam(args, 'a', 0) * timeScale
+    if (time < a) { return time/a }
+    time -= a
+
     let d = subParam(args, 'd', 0) * timeScale
-    if (time >= d) { return 0 }
-    return 1 - time/d
+    if (time < d) { return 1 - time/d }
+
+    return 0    
   }
 
   let envelope = (args, e,b,state) => {
@@ -66,6 +72,14 @@ define(function(require) {
     assertAtTime(2, 0, () => evalParamFrame(p, ev(1,2,1), 2))
     assertAtTime(3, 0, () => evalParamFrame(p, ev(1,2,1), 2))
   
+    p = parseExpression("envelope{a:1,d:1,units:'s'}")
+    assertAtTime(1, 0, () => evalParamFrame(p, ev(1,2,1), 2))
+    assertAtTime(1.5, 1/2, () => evalParamFrame(p, ev(1,2,1), 2))
+    assertAtTime(2, 1, () => evalParamFrame(p, ev(1,2,1), 2))
+    assertAtTime(2.5, 1/2, () => evalParamFrame(p, ev(1,2,1), 2))
+    assertAtTime(3, 0, () => evalParamFrame(p, ev(1,2,1), 2))
+    assertAtTime(4, 0, () => evalParamFrame(p, ev(1,2,1), 2))
+
     metronome.setTime(0)
     console.log('Envelope function tests complete')
   }
