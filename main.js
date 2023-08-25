@@ -1,9 +1,10 @@
 'use strict'
 define(function(require) {
   require('polyfills')
-  require('maths')
-  require('aggregators')
-  require('sliders')
+  require('functions/maths')
+  require('functions/envelope')
+  require('functions/aggregators')
+  require('functions/sliders')
   require('predefined-var-defs')
   let mainVars = require('main-vars')
   let system = require('play/system')

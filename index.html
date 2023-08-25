@@ -1016,21 +1016,22 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
-Envelope function to use for 303 cutoff; env{a:0.001,d:this.decay}
- envs{} for same thing but in seconds not beats? Or env{a:{100,unit:'ms'}} or env{a:100,unit:'ms'}
-Can use env{} for actual envelope; if  envelope=env{}  then use a const envelope
- Doc for this, and remove 'exponential' envelope type
+Envelope function to use for 303 cutoff; envelope{d:200+this.decay*2000,units:'ms',shape='exp'}
+ Next: exponential shape
+ How much missing functionality to add?
+ Docs?
 Also want to do eg  pk bd808 0... 0.0. 0... 0..0
 Techno include lib
  303
   https://www.firstpr.com.au/rwi/dfish/303-unique.html
+  !Clickiong at high resonance
   vca envelope - percussive attack < 3ms
                 fixed, long, exponential decay
                 should choke (choke group per player?)
   cutoff - In the TB-303 the filter frequency was not affected by the pitch of the note
            2500Hz max cutoff
            500Hz at mid position
-           Should be exponential not linear
+           !!Should be exponential not linear
            cutoff raised for accented notes according to accent knob
            envelope: exponential decay to zero controlled by decay knob
             On accented notes, use short decay time which is the same as when the Decay pot is fully anti-clockwise
@@ -1043,13 +1044,14 @@ Techno include lib
               gives the distinctive TB-303 resonant “wapp” sound.
   env mod
   decay - 200ms to 2s
-  glide - fixed 88ms
-          glide should cause envelopes to NOT retrigger...
+  slide - fixed 88ms
+          slide should cause envelopes to NOT retrigger...
   accent
   tuning
   wave
   choke by player id
   Compare to a real 303
+  Docs - gsuda pattern flags, 303 settings, wave
  Reese
  ...
 !Cannot do  bpf=[0,500]  it doesn't work

@@ -36,7 +36,7 @@ define(function(require) {
       let vr = vars.get(key)
       let v
       if (typeof vr === 'function' && vr.isVarFunction) { // Var function
-        if (modifiers && modifiers.value !== undefined) {
+        if (vr.isDirectFunction || (modifiers && modifiers.value !== undefined)) {
           v = vr(modifiers, event,b, state) // Call var function immediately as the value is in the modifiers
         } else if (modifiers) {
           v = Object.assign({}, modifiers) // Make modifiers available as other arguments, in case this turns out to be a var function
@@ -89,6 +89,15 @@ define(function(require) {
   p = varLookup(parseVar(state), [], {})
   assert(3, state.idx)
   assert(5, p(ev(0,0),0,evalParamFrame,{value:1}))
+  delete vars.foo
+
+  vars.foo = (args) => args.baz
+  vars.foo.isVarFunction = true
+  vars.foo.isDirectFunction = true
+  state = {str:'foo',idx:0}
+  p = varLookup(parseVar(state), [], {})
+  assert(3, state.idx)
+  assert(5, p(ev(0,0),0,evalParamFrame,{baz:5}))
   delete vars.foo
 
   vars.foo = () => 5

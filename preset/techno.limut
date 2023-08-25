@@ -26,5 +26,9 @@ preset tb303 wave
   , accent=1/2
   // Derived params
   , amp*=3/4+this.a*this.accent/4
-  , lpf={(this.cutoff*2350+this.a*this.accent*700+150)*[1,1/3,1/16]e, q:this.resonance*25, poles:4}
+  , lpf={
+    (this.cutoff*2350+this.a*this.accent*700+150) * envelope{d:200+this.delay*2000,units:'ms'},
+    q:this.resonance*25,
+    poles:4
+  }
   , glide=(this.g+this.s)/8

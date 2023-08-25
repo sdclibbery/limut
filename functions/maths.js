@@ -221,6 +221,6 @@ define(function(require) {
   testEuclid([2,3,3], parseExpression('euclid{3,from:8,offset:2}'))
   testEuclid([3,2,3], parseExpression('euclid{3,from:8,offset:3}'))
 
-  console.log('Maths tests complete')
+  console.log('Maths functions tests complete')
   }
 })
