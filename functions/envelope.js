@@ -1,7 +1,6 @@
 'use strict'
 define(function(require) {
   let addVarFunction = require('predefined-vars').addVarFunction
-  let metronome = require('metronome')
   let {subParam} = require('player/sub-param')
   let {evalParamFrame} = require('player/eval-param')
 
@@ -12,7 +11,8 @@ define(function(require) {
   let timeEnv = (args, e,b,state) => {
     let units = subParam(args, 'units', 's')
     let timeScale = scale[units] || 1
-    let time = metronome.timeNow() - e._time
+    let timeNow = b * e.beat.duration
+    let time = timeNow - e._time
     if (time < 0) { return 0 }
 
     let a = subParam(args, 'a', 0) * timeScale
@@ -45,42 +45,37 @@ define(function(require) {
       let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`+(msg?'\n'+msg:'')) }
     }
-    let assertAtTime = (time, expected, actualFn, msg) => {
-      metronome.setTime(time)
-      assert(expected, actualFn(), msg)
-    }
     require('predefined-vars').apply(require('vars').all())
     let parseExpression = require('expression/parse-expression')
-    let ev = (t,c,d) => {return{idx:0,count:c,dur:d,_time:t,voice:0}}
+    let ev = (t,c,d) => {return{idx:0,count:c,dur:d,_time:t,voice:0,beat:{duration:t/c}}}
     let p
 
     p = parseExpression("envelope{units:'s'}")
-    assertAtTime(0, 0, () => evalParamFrame(p, ev(0,0,1), 0))
-    assertAtTime(1, 0, () => evalParamFrame(p, ev(0,0,1), 0))
-    assertAtTime(2, 0, () => evalParamFrame(p, ev(1,1,1), 1))
-    assertAtTime(0, 0, () => evalParamFrame(p, ev(1,1,1), 1))
+    assert(0, evalParamFrame(p, ev(0,0,4), 0))
+    assert(0, evalParamFrame(p, ev(0,0,4), 1))
+    assert(0, evalParamFrame(p, ev(0,0,4), 2))
+    assert(0, evalParamFrame(p, ev(0,0,4), 3))
 
     p = parseExpression("envelope{d:1,units:'s'}")
-    assertAtTime(1, 1, () => evalParamFrame(p, ev(1,2,1), 2))
-    assertAtTime(1.5, 1/2, () => evalParamFrame(p, ev(1,2,1), 2))
-    assertAtTime(2, 0, () => evalParamFrame(p, ev(1,2,1), 2))
-    assertAtTime(3, 0, () => evalParamFrame(p, ev(1,2,1), 2))
+    assert(1, evalParamFrame(p, ev(1,2,2), 2))
+    assert(1/2, evalParamFrame(p, ev(1,2,2), 3))
+    assert(0, evalParamFrame(p, ev(1,2,2), 4))
+    assert(0, evalParamFrame(p, ev(1,2,2), 5))
 
     p = parseExpression("envelope{d:1000,units:'ms'}")
-    assertAtTime(1, 1, () => evalParamFrame(p, ev(1,2,1), 2))
-    assertAtTime(1.5, 1/2, () => evalParamFrame(p, ev(1,2,1), 2))
-    assertAtTime(2, 0, () => evalParamFrame(p, ev(1,2,1), 2))
-    assertAtTime(3, 0, () => evalParamFrame(p, ev(1,2,1), 2))
+    assert(1, evalParamFrame(p, ev(1,2,2), 2))
+    assert(1/2, evalParamFrame(p, ev(1,2,2), 3))
+    assert(0, evalParamFrame(p, ev(1,2,2), 4))
+    assert(0, evalParamFrame(p, ev(1,2,2), 5))
   
     p = parseExpression("envelope{a:1,d:1,units:'s'}")
-    assertAtTime(1, 0, () => evalParamFrame(p, ev(1,2,1), 2))
-    assertAtTime(1.5, 1/2, () => evalParamFrame(p, ev(1,2,1), 2))
-    assertAtTime(2, 1, () => evalParamFrame(p, ev(1,2,1), 2))
-    assertAtTime(2.5, 1/2, () => evalParamFrame(p, ev(1,2,1), 2))
-    assertAtTime(3, 0, () => evalParamFrame(p, ev(1,2,1), 2))
-    assertAtTime(4, 0, () => evalParamFrame(p, ev(1,2,1), 2))
+    assert(0, evalParamFrame(p, ev(1,2,2), 2))
+    assert(1/2, evalParamFrame(p, ev(1,2,2), 3))
+    assert(1, evalParamFrame(p, ev(1,2,2), 4))
+    assert(1/2, evalParamFrame(p, ev(1,2,2), 5))
+    assert(0, evalParamFrame(p, ev(1,2,2), 6))
+    assert(0, evalParamFrame(p, ev(1,2,2), 7))
 
-    metronome.setTime(0)
     console.log('Envelope function tests complete')
   }
 })
