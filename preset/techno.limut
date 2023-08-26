@@ -27,7 +27,7 @@ preset tb303 wave
   // Derived params
   , amp*=3/4+this.a*this.accent/4
   , lpf={
-    (this.cutoff*2350+this.a*this.accent*700+150) * envelope{d:200+this.delay*2000,units:'ms'},
+    (this.cutoff*2350+this.a*this.accent*700+130) * envelope{d:200+this.decay*2000,units:'ms'} + 20,
     q:this.resonance*25,
     poles:4
   }

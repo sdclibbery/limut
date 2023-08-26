@@ -13,16 +13,16 @@ define(function(require) {
     let timeScale = scale[units] || 1
     let timeNow = b * e.beat.duration
     let time = timeNow - e._time
-    if (time < 0) { return 0 }
-
+    if (time < 0) { time = 0 } // Clamp to get initial value if evalled early
+    // Attack
     let a = subParam(args, 'a', 0) * timeScale
     if (time < a) { return time/a }
     time -= a
-
+    // Decay
     let d = subParam(args, 'd', 0) * timeScale
     if (time < d) { return 1 - time/d }
-
-    return 0    
+    // default
+    return 0
   }
 
   let envelope = (args, e,b,state) => {
@@ -57,6 +57,7 @@ define(function(require) {
     assert(0, evalParamFrame(p, ev(0,0,4), 3))
 
     p = parseExpression("envelope{d:1,units:'s'}")
+    assert(1, evalParamFrame(p, ev(1,2,2), 1))
     assert(1, evalParamFrame(p, ev(1,2,2), 2))
     assert(1/2, evalParamFrame(p, ev(1,2,2), 3))
     assert(0, evalParamFrame(p, ev(1,2,2), 4))
