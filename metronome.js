@@ -33,7 +33,6 @@ metronome.beatDuration = function (d) {
 
 metronome.advance = () => 0.1*beatDuration
 
-metronome._lastBeat
 metronome.lastBeat = () => metronome._lastBeat
 
 metronome.update = function (now) {

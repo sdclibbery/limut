@@ -26,8 +26,9 @@ preset tb303 wave
   , accent=1/2
   // Derived params
   , amp*=3/4+this.a*this.accent/4
+  , meg=envelope{d:200+this.decay*2000,units:'ms'} // 303 Main Envelope Generator
   , lpf={
-    (this.cutoff*2350+this.a*this.accent*700+130) * envelope{d:200+this.decay*2000,units:'ms'} + 20,
+    (this.cutoff*2350+this.a*this.accent*700+130) * this.meg + 20,
     q:this.resonance*25,
     poles:4
   }
