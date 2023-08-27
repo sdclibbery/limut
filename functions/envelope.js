@@ -3,17 +3,38 @@ define(function(require) {
   let addVarFunction = require('predefined-vars').addVarFunction
   let {subParam} = require('player/sub-param')
   let {evalParamFrame} = require('player/eval-param')
-
+  
+  let lerp = (v0, v1, t, t1) => {
+    if (t < 0) { return v0 }
+    if (t > t1) { return v1 }
+    return v0 + (v1-v0) * t/t1
+  }
+  let exp = (v0, v1, t, t1) => {
+    if (v0 <= 0) { return v0 }
+    if (v1 <= 0) { v1 = 0.0001 }
+    if (t < 0) { return v0 }
+    if (t > t1) { return v1 }
+    return v0 * Math.pow(v1/v0, t/t1)
+  }
+  let shapes = {
+    'lin': lerp,
+    'linear': lerp,
+    'exp': exp,
+    'exponential': exp,
+  }
   let scaledBeatEnv = (args, e,b,state, scale) => {
     let count = b - e.count
     if (count < 0) { count = 0 } // Clamp to get initial value if evalled early
+    let shape = subParam(args, 'shape')
+    let interp = shapes[shape] || lerp
     // Attack
     let a = subParam(args, 'a', 0) * scale
-    if (count < a) { return count/a }
+    if (count < a) { return interp(0,1, count,a) }
     count -= a
     // Decay
     let d = subParam(args, 'd', 0) * scale
-    if (count < d) { return 1 - count/d }
+    if (count < d) { return interp(1,0, count,d) }
+    count -= d
     // default
     return 0
   }
@@ -68,6 +89,11 @@ define(function(require) {
     assert(1/2, evalParamFrame(p, ev(1,2,2), 2.5))
     assert(0, evalParamFrame(p, ev(1,2,2), 3))
     assert(0, evalParamFrame(p, ev(1,2,2), 4))
+
+    p = parseExpression("envelope{d:1,shape:'exp'}")
+    assert(1, evalParamFrame(p, ev(1,2,2), 2))
+    assert(0.01, evalParamFrame(p, ev(1,2,2), 2.5))
+    assert(0, evalParamFrame(p, ev(1,2,2), 3))
 
     p = parseExpression("envelope{d:1,unit:'BEATS'}")
     assert(1, evalParamFrame(p, ev(1,2,2), 2))

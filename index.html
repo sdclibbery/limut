@@ -872,6 +872,11 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>avg{3,1,2}</code> Returns the mean average of all arguments (2 in the example)</p>
 <p><code>euclid{3,from:8}</code> Euclidean rhythm generator. The example will evenly spread 3 events between 8 beats. For example <code>p ping 0, dur=euclid{3,from:8}</code> will make 3 notes of durations 3,2 and 3. Note this uses a Bresenham type algorithm to spread the events, rather than a classic Euclidean algorithm. This it may produce a slightly different ordering ("3 from 8" would give a 3,3,2 pattern in a classic Euclidean algorithm, but the Bresenham gives a 3,2,3 pattern. The offset subparam can be used to 'fix' this.</p>
 <p class='sub'><code>euclid{3,from:8,offset:1}</code> Offset rotates the pattern. The example will give a 3,3,2 pattern which is the default 3,2,3 pattern but rotated by one.</p>
+<p><code>envelope{}</code> Return a value that changes over the course of each event like an envelope generator.</p>
+<p class='sub'><code>envelope{units:'s'}</code> Specify the units the a, d etc values are in. Valid values are 's', 'ms', and 'beats'. The default is 'beats'.</p>
+<p class='sub'><code>envelope{shape:'exp'}</code> Specify the shaping applied to envelope segments. Valid values 'exp' for an exponential trend to the new value, or 'lin' for linear'. The default is 'lin'.</p>
+<p class='sub'><code>envelope{a:1}</code> Attack time for the envelope, in the units specified by 'units' with the shaping of 'shape'.</p>
+<p class='sub'><code>envelope{d:1}</code> Decay time for the envelope, in the units specified by 'units' with the shaping of 'shape'.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-play-samples')" class="accordion"> Play Samples</h4>
 <div id="accordion-play-samples" class="closed">
@@ -1016,15 +1021,14 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
-Envelope function to use for 303 cutoff; envelope{d:200+this.decay*2000,units:'ms',shape='exp'}
- Exponential shape
- How much missing functionality to add?
- Docs?
+How to specify glide in ms?  glide={88,units:'ms'}
+Standard pattern flag for legato tie, meaningplay one event that changes value over time
+ Eg  p ping 0~2  would play one event lasting 2 beats, but after the first beat it changes pitch from 0 to 2
+ Glide param would then cause the change to slide instead of being abrupt Eg  p ping 0~2g, glide=1/4
 Also want to do eg  pk bd808 0... 0.0. 0... 0..0
 Techno include lib
  303
   https://www.firstpr.com.au/rwi/dfish/303-unique.html
-  !Clickiong at high resonance
   vca envelope - percussive attack < 3ms
                 fixed, long, exponential decay
                 should choke (choke group per player?)
@@ -1052,9 +1056,14 @@ Techno include lib
   choke by player id
   Compare to a real 303
   Docs - gsuda pattern flags, 303 settings, wave
+ 808 presets for toms/congas like:  preset t808 io808, type=('lt','mt','ht').(1 - this.l + this.h), choke='808t'
+  Use like  tom t808 0h.0m.0l...
  Reese
  ...
 !Cannot do  bpf=[0,500]  it doesn't work
+More envelope{}
+ sustain and release
+ units='event'
 Try a convolution reverb with an envelope where the sound builds then fades instead of just dying away
 Legato Eg on a 303, When 2 notes slide they are legato, and the amp and filter envelopes do Not reset for the second note...
 ? Feedback for chorus?

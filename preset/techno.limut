@@ -5,12 +5,12 @@ preset ch808 io808, type='ch', choke='808hat'
 preset cb808 io808, type='cb', choke='808cb'
 preset cp808 io808, type='cp', choke='808cp'
 preset ma808 io808, type='ma', choke='808ma'
-preset ht808 io808, type='ht', choke='808ht'
-preset mt808 io808, type='mt', choke='808mt'
-preset lt808 io808, type='lt', choke='808lt'
-preset hc808 io808, type='hc', choke='808hc'
-preset mc808 io808, type='mc', choke='808mc'
-preset lc808 io808, type='lc', choke='808lc'
+preset ht808 io808, type='ht', choke='808t'
+preset mt808 io808, type='mt', choke='808t'
+preset lt808 io808, type='lt', choke='808t'
+preset hc808 io808, type='hc', choke='808c'
+preset mc808 io808, type='mc', choke='808c'
+preset lc808 io808, type='lc', choke='808c'
 preset cl808 io808, type='cl', choke='808cl'
 preset rs808 io808, type='rs', choke='808rs'
 preset cy808 io808, type='cy', choke='808cy'
@@ -26,7 +26,7 @@ preset tb303 wave
   , accent=1/2
   // Derived params
   , amp*=3/4+this.a*this.accent/4
-  , meg=envelope{d:200+this.decay*2000,units:'ms'} // 303 Main Envelope Generator
+  , meg=envelope{d:200+this.decay*2000,units:'ms',shape:'exp'} // 303 Main Envelope Generator
   , lpf={
     (this.cutoff*2350+this.a*this.accent*700+130) * this.meg + 20,
     q:this.resonance*25,
