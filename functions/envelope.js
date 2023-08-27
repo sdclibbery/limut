@@ -1,6 +1,7 @@
 'use strict'
 define(function(require) {
   let addVarFunction = require('predefined-vars').addVarFunction
+  let timeToBeats = require('units').timeToBeats
   let {subParam} = require('player/sub-param')
   let {evalParamFrame} = require('player/eval-param')
   
@@ -39,20 +40,11 @@ define(function(require) {
     return 0
   }
 
-  let scale = {
-    's': 1,
-    'seconds': 1,
-    'ms': 1/1000,
-    'millis': 1/1000,
-  }
   let envelope = (args, e,b,state) => {
     args = evalParamFrame(args, e,b) // Eval all args once
     let units = subParam(args, 'units', 'beat').toLowerCase()
-    let timeScale = scale[units]
-    if (timeScale !== undefined) {
-      return scaledBeatEnv(args, e,b,state, timeScale / e.beat.duration) // ADSR in scaled time
-    }
-    return scaledBeatEnv(args, e,b,state, 1) // ADSR in beats
+    let timeScale = timeToBeats(1, units, e) // Get time scale factor for given units
+    return scaledBeatEnv(args, e,b,state, timeScale)
   }
   envelope.isDirectFunction = true
   addVarFunction('envelope', envelope)
