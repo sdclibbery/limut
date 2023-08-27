@@ -18,18 +18,19 @@ preset cy808 io808, type='cy', choke='808cy'
 preset tb303 wave
 	, wave='saw', oct=2+this.u-this.d
   , choke=this.player
-	, dur=1/4	, envelope='exp', dec=3/2
+	, dur=1/4, envelope='percussion', dec=this.dur // Should really be a long exponential envelope but gated to the event duration
   // 303 Controls
   , cutoff=1/2
   , resonance=1/2
+  , envmod=1/2
 	, decay=1/2
   , accent=1/2
   // Derived params
-  , amp*=3/4+this.a*this.accent/4
-  , meg=envelope{d:200+this.decay*2000,units:'ms',shape:'exp'} // 303 Main Envelope Generator
+  , amp*=3/4 + this.a*this.accent/4
+  , meg=envelope{d:200+(this.decay^2)*2000, units:'ms', shape:'exp'} // 303 Main Envelope Generator
   , lpf={
-    (this.cutoff*2350+this.a*this.accent*700+130) * this.meg + 20,
+    200 + (200 + 2100*(this.cutoff)^2 + 700*this.a*this.accent) * (this.envmod*this.meg + 1-this.envmod),
     q:this.resonance*25,
     poles:4
   }
-  , glide={(this.g+this.s)*88,units:'ms'}
+  , glide={(this.g+this.s)*88, units:'ms'}

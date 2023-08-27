@@ -1024,17 +1024,18 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 Standard pattern flag for legato tie, meaning play one event that changes value over time
  Eg  p ping 0~2  would play one event lasting 2 beats, but after the first beat it changes pitch from 0 to 2
  Glide param would then cause the change to slide instead of being abrupt Eg  p ping 0~2g, glide=1/4
-Also want to do eg  pk bd808 0... 0.0. 0... 0..0
 Techno include lib
  303
   https://www.firstpr.com.au/rwi/dfish/303-unique.html
   vca envelope - percussive attack < 3ms
                 fixed, long, exponential decay
+                must also gate though, so that the note cuts off (cleanly) at the end of its duration
                 should choke (choke group per player?)
   cutoff - In the TB-303 the filter frequency was not affected by the pitch of the note
            2500Hz max cutoff
            500Hz at mid position
-           !!Should be exponential not linear response - same for decay???
+           300Hz min??
+           Exponential not linear response
            cutoff raised for accented notes according to accent knob
            envelope: exponential decay to zero controlled by decay knob
             On accented notes, use short decay time which is the same as when the Decay pot is fully anti-clockwise
@@ -1046,7 +1047,7 @@ Techno include lib
               goes through a “lag” circuit which causes the filter to sweep up at the start of the note. This
               gives the distinctive TB-303 resonant “wapp” sound.
   env mod
-  decay - 200ms to 2s
+  decay - 200ms to 2s - exponential response???
   slide - fixed 88ms
           slide should cause envelopes to NOT retrigger...
   accent
@@ -1225,6 +1226,7 @@ shadertoy synth multiple channels
 ==== other ====
 Pattern update
  Generative features:
+ • Want to split pattern literal with whitespace eg  pk bd808 0... 0.0. 0... 0..0
  • p ping 01 * 4  - 01010101
   Pattern equivalence tests; eg test that  01 * 2  gives same events as  0101
   Tests mixing this with now, loop etc
