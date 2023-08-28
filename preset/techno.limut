@@ -26,9 +26,9 @@ preset tb303 wave
 	, decay=1/2
   , accent=1/2
   // Derived params
-  , amp*=3/4 + this.a*this.accent/4
+  , amp*=3/4 + this.a*this.accent/3
   , meg=envelope{d:340+(this.decay^2)*(1-this.a)*2000, units:'ms', shape:'exp'} // 303 Main Envelope Generator
-  , smoothedmeg=smooth{this.meg*this.a*128,att:2^-6,dec:2^-16+(1-this.a)*100}*this.resonance + this.meg*this.resonance // Smoothed meg for the accent sweep, based on resonance
+  , smoothedmeg=smooth{this.meg*this.a*128,att:2^-6,dec:2^-16+(1-this.a)*100}*this.resonance + this.meg*(1-this.resonance) // Smoothed meg for the accent sweep, based on resonance
   , accentedmeg=this.smoothedmeg*this.a*this.accent + this.meg*(1-this.a*this.accent) // Accent sweep uses smoothed meg
   , appliedmeg=(this.envmod+1)*this.accentedmeg + 1-this.envmod // Apply envmod
   , lpf={
