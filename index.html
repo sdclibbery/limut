@@ -1024,21 +1024,30 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 Standard pattern flag for legato tie, meaning play one event that changes value over time
  Eg  p ping 0~2  would play one event lasting 2 beats, but after the first beat it changes pitch from 0 to 2
  Glide param would then cause the change to slide instead of being abrupt Eg  p ping 0~2g, glide=1/4
+smooth{} should take units - set attack and decay in ms for 303 then
 Techno include lib
  303
   https://www.firstpr.com.au/rwi/dfish/303-unique.html
   vca envelope - percussive attack < 3ms
                 fixed, long, exponential decay
-                must also gate though, so that the note cuts off (cleanly) at the end of its duration
+                 must also gate though, so that the note cuts off (cleanly) at the end of its duration
                 should choke (choke group per player?)
   cutoff - In the TB-303 the filter frequency was not affected by the pitch of the note
-           2500Hz max cutoff
+           2500Hz max cutoff - 3200Hz max peak total filter peak when cutoff100% envmod 0%
            500Hz at mid position
            300Hz min??
-           Exponential not linear response
+            c0 r1 e0 d0 405 -> 245
+            c1 r1 e0 d0 3500 -> 1900
+            c1 r1 e1 d0 27900 -> 711 over 341 ms
+            c0 r1 e1 d0 3500 -> 70
+            curve: -0.2938485 / (1.0 + -608.94871 * exp(-6.1539216 * x)) ???
+           Exponential not linear response to cutoff setting
            cutoff raised for accented notes according to accent knob
            envelope: exponential decay to zero controlled by decay knob
-            On accented notes, use short decay time which is the same as when the Decay pot is fully anti-clockwise
+           > On accented notes, use short decay time which is the same as when the Decay pot is fully anti-clockwise
+            and this should ignore the accent pot
+           > Accented notes smooth the meg
+           > Repeated accent notes push cutoff even higher
            24db/octave by chaining 2 lowpass?
   resonance - the Resonance pot drives a special circuit – the Accent Sweep
               Circuit – to pulse the filter frequency and add to the volume on accented notes. When the
@@ -1047,21 +1056,21 @@ Techno include lib
               goes through a “lag” circuit which causes the filter to sweep up at the start of the note. This
               gives the distinctive TB-303 resonant “wapp” sound.
   env mod
-  decay - 200ms to 2s - exponential response???
+  decay - 200ms to 2s - exponential response??? - actual min 340ms??
   slide - fixed 88ms
-          slide should cause envelopes to NOT retrigger...
+          slide should cause envelopes to NOT retrigger... legato...
   accent
   tuning
   wave
   choke by player id
   Compare to a real 303
-  Docs - gsuda pattern flags, 303 settings, wave
+  Docs - gsuda~_ pattern flags, 303 settings, wave
  808 presets for toms/congas like:  preset t808 io808, type=('lt','mt','ht').(1 - this.l + this.h), choke='808t'
   Use like  tom t808 0h.0m.0l...
  Reese
  ...
 !Cannot do  bpf=[0,500]  it doesn't work
-More envelope{}
+More envelope{} features
  sustain and release
  units='event'
 Try a convolution reverb with an envelope where the sound builds then fades instead of just dying away

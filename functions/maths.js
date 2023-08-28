@@ -66,6 +66,7 @@ define(function(require) {
 
   addVarFunction('accum', statefulWrapper( (args, v, x, dt) => v + Math.max(x,0)*dt ))
   addVarFunction('smooth', statefulWrapper( (args, v, x, dt) => {
+    dt = Math.min(dt, 1/30) // Limit dt to prevent excessive large changes when there's a time gap (eg a pattern rest)
     if (x > v) {
       let att = subParam(args, 'att', 8)
       return Math.min(v + (x-v)*att*dt, x)
@@ -156,29 +157,24 @@ define(function(require) {
 
   p = parseExpression('smooth{1,att:1,dec:0}')
   assert(0, evalParamFrame(p, ev(0,0), 1))
-  assert(1/2, evalParamFrame(p, ev(0,0), 1.5))
-  assert(3/4, evalParamFrame(p, ev(0,0), 2))
-  assert(1, evalParamFrame(p, ev(0,0), 3))
+  assert(0.02, evalParamFrame(p, ev(0,0), 1+1/60))
+  assert(0.03, evalParamFrame(p, ev(0,0), 1+2/60))
 
-  p = parseExpression('smooth{1,att:1,dec:0}')
-  assert(0, evalParamFrame(p, ev(0,0), 1))
-  assert(1, evalParamFrame(p, ev(0,0), 11))
+  p = parseExpression('(0,1)+smooth{2}')
+  assert([0,1], evalParamFrame(p, ev(0,0,1,0), 1))
+  assert([0,1], evalParamFrame(p, ev(0,0,1,1), 1))
+  assert([0.27,1.27], evalParamFrame(p, ev(0,0,1,0), 1+1/60))
+  assert([0.27,1.27], evalParamFrame(p, ev(0,0,1,1), 1+1/60))
 
   p = parseExpression('smooth{1,att:1/2,dec:0}')
   assert(0, evalParamFrame(p, ev(0,0), 1))
-  assert(1/2, evalParamFrame(p, ev(0,0), 2))
-  assert(3/4, evalParamFrame(p, ev(0,0), 3))
-  assert(7/8, evalParamFrame(p, ev(0,0), 4))
+  assert(0.01, evalParamFrame(p, ev(0,0), 1+1/60))
+  assert(0.02, evalParamFrame(p, ev(0,0), 1+2/60))
 
   p = parseExpression('smooth{-1,att:0,dec:1}')
   assert(0, evalParamFrame(p, ev(0,0), 1))
-  assert(-1/2, evalParamFrame(p, ev(0,0), 1.5))
-  assert(-3/4, evalParamFrame(p, ev(0,0), 2))
-  assert(-1, evalParamFrame(p, ev(0,0), 3))
-
-  p = parseExpression('smooth{-1,att:0,dec:1}')
-  assert(0, evalParamFrame(p, ev(0,0), 1))
-  assert(-1, evalParamFrame(p, ev(0,0), 11))
+  assert(-0.02, evalParamFrame(p, ev(0,0), 1+1/60))
+  assert(-0.03, evalParamFrame(p, ev(0,0), 1+2/60))
 
   p = parseExpression('smooth{{4}}')
   assert(0, evalParamFrame(p, ev(0,0), 1))
@@ -192,12 +188,6 @@ define(function(require) {
   assert(1, evalParamFrame(p, ev(0,0), 3))
   assert(-1, evalParamFrame(p, ev(0,0), 4))
   assert(1, evalParamFrame(p, ev(0,0), 5))
-
-  p = parseExpression('(0,1)+smooth{2}')
-  assert([0,1], evalParamFrame(p, ev(0,0,1,0), 1))
-  assert([0,1], evalParamFrame(p, ev(0,0,1,1), 1))
-  assert([2,3], evalParamFrame(p, ev(0,0,1,0), 2))
-  assert([2,3], evalParamFrame(p, ev(0,0,1,1), 2))
 
   let testEuclid = (expected, p) => {
     for (let i=0; i<expected.length; i++) {
