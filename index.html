@@ -1011,6 +1011,9 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>cl808</code> Simulated 808 cl clave. Based on io808. </p>
 <p><code>rs808</code> Simulated 808 rs rimshot. Based on io808. </p>
 <p><code>cy808</code> Simulated 808 cy cymbal. Based on io808. </p>
+<p><code>t808</code> Combined 808 toms. Use 'h' and 'l' pattern flags to specify high and low toms; medium tom is default. Eg <code>p t808 .0h00l</code>. </p>
+<p><code>c808</code> Combined 808 congas. Use 'h' and 'l' pattern flags to specify high and low congas; medium conga is default. Eg <code>p c808 .0h00l</code>. </p>
+<p><code>h808</code> Combined 808 hihat. Use 'o' pattern flag to specify open hihat; closed is the default. Eg <code>p h808 000o0</code>. </p>
 </div>
 <hr>
 <p>Please report bugs, problems, issues and suggestions on <a href="https://github.com/sdclibbery/limut/issues" target="_blank">https://github.com/sdclibbery/limut/issues</a></p>
@@ -1048,10 +1051,10 @@ Techno include lib
            Exponential not linear response to cutoff setting
            cutoff raised for accented notes according to accent knob
            envelope: exponential decay to zero controlled by decay knob
-           > On accented notes, use short decay time which is the same as when the Decay pot is fully anti-clockwise
+           ! On accented notes, use short decay time which is the same as when the Decay pot is fully anti-clockwise
             and this should ignore the accent pot
-           > Accented notes smooth the meg
-           > Repeated accent notes push cutoff even higher
+           ! Accented notes smooth the meg
+           ! Repeated accent notes push cutoff even higher
            24db/octave by chaining 2 lowpass?
   resonance - the Resonance pot drives a special circuit – the Accent Sweep
               Circuit – to pulse the filter frequency and add to the volume on accented notes. When the
@@ -1062,20 +1065,19 @@ Techno include lib
   env mod
   decay - 200ms to 2s - exponential response??? - actual min 340ms??
   slide - fixed 88ms
-          slide should cause envelopes to NOT retrigger... legato...
-          should really start Before the end of the first note...
+        ! slide should cause envelopes to NOT retrigger... legato...
+        ! should really start Before the end of the first note...
   accent
-  tuning
+      ! Not doing much, especially when other settings turned down?
+      ! But also doing too much when all other settings turned right up?
+  tuning - ?
   wave
   choke by player id
   Compare to a real 303 - recreate some famous 303 lines
    https://www.youtube.com/watch?v=KwL2S5LRzFM&t=1107s
     3#3#ds3#ua3#d3#us3#d3#a3as  - but needs legato slide
-    ! Accent isn't doing much?
     ! Not getting much fuzz with 'drive' param; need a messier waveform?
   Docs - gsuda~_ pattern flags, 303 settings, wave
- 808 presets for toms/congas like:  preset t808 io808, type=('lt','mt','ht').(1 - this.l + this.h), choke='808t'
-  Use like  tom t808 0h.0m.0l...
  Reese
  ...
 !Cannot do  bpf=[0,500]  it doesn't work

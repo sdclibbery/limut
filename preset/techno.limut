@@ -1,5 +1,5 @@
-preset bd808 io808, type='bd', choke='808bd'
-preset sd808 io808, type='sd', choke='808sd'
+preset bd808 io808, type='bd', choke='808bd', decay=1/3
+preset sd808 io808, type='sd', choke='808sd', snappy=1/4
 preset oh808 io808, type='oh', choke='808hat'
 preset ch808 io808, type='ch', choke='808hat'
 preset cb808 io808, type='cb', choke='808cb'
@@ -14,6 +14,9 @@ preset lc808 io808, type='lc', choke='808c'
 preset cl808 io808, type='cl', choke='808cl'
 preset rs808 io808, type='rs', choke='808rs'
 preset cy808 io808, type='cy', choke='808cy'
+preset t808 io808, type=('lt','mt','ht').(1 - this.l + this.h), choke='808t'
+preset c808 io808, type=('lc','mc','hc').(1 - this.l + this.h), choke='808c'
+preset h808 io808, type=('ch','oh').(this.o), choke='808hat'
 
 preset tb303 wave
 	, wave='saw', oct=2+this.u-this.d
