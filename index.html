@@ -1023,7 +1023,11 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ==== audio ====
 Standard pattern flag for legato tie, meaning play one event that changes value over time
  Eg  p ping 0~2  would play one event lasting 2 beats, but after the first beat it changes pitch from 0 to 2
- Glide param would then cause the change to slide instead of being abrupt Eg  p ping 0~2g, glide=1/4
+  Play two notes, but make the envelope long enough for both and transfer it from one note to the other with crossfade
+   Need to conisder chords, and what other params can be affected
+   ? How to tell first event(s) to make a long envelope?
+   ? How to transfer it to next event?
+   ? How to crossfade?
 smooth{} should take units - set attack and decay in ms for 303 then
 Techno include lib
  303
@@ -1059,6 +1063,7 @@ Techno include lib
   decay - 200ms to 2s - exponential response??? - actual min 340ms??
   slide - fixed 88ms
           slide should cause envelopes to NOT retrigger... legato...
+          should really start Before the end of the first note...
   accent
   tuning
   wave
