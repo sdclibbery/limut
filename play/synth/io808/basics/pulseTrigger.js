@@ -29,10 +29,16 @@ define(function (require) {
     }
 
     trigger(time, audioCtx) {
-      const source = audioCtx.createBufferSource();
-      source.buffer = this.buffer;
-      source.connect(this.vcf.output);
-      source.start(time);
+      this.source = audioCtx.createBufferSource();
+      this.source.buffer = this.buffer;
+      this.source.connect(this.vcf.output);
+      this.source.start(time);
+    }
+
+    internalDisconnect() {
+      this.vcf.disconnect()
+      this.gain.disconnect()
+      this.source.disconnect()
     }
   }
 

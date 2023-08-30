@@ -39,6 +39,7 @@ define(function (require) {
 
     disconnect() {
       this.output.disconnect();
+      if (!!this.internalDisconnect) { this.internalDisconnect() }
     }
   });
 })

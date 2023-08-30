@@ -21,6 +21,10 @@ define(function (require) {
       this.frequency = this.filter.frequency;
       this.Q = this.filter.Q;
     }
+
+    internalDisconnect() {
+      this.filter.disconnect()
+    }
   }
 
   return WebAudioModule(VCF);

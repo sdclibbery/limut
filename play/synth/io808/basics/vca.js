@@ -16,6 +16,10 @@ define(function (require) {
       // make amplitude parameter available for connection
       this.amplitude = this.gain.gain;
     }
+
+    internalDisconnect() {
+      this.gain.disconnect()
+    }
   }
 
   return WebAudioModule(VCA);

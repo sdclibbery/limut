@@ -82,6 +82,10 @@ define(function (require) {
     stop() {
       this.oscillator.stop();
     }
+
+    internalDisconnect() {
+      this.oscillator.disconnect()
+    }
   }
 
   return WebAudioModule(VCO);

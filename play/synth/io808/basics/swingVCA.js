@@ -19,6 +19,12 @@ define(function (require) {
       this.input = this.rectifier.input;
       this.output = this.vca.output;
     }
+
+    internalDisconnect() {
+      this.rectifier.disconnect()
+      this.clipper.disconnect()
+      this.vca.disconnect()
+    }
   }
 
   return WebAudioModule(SwingVCA);

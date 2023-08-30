@@ -4,9 +4,9 @@ define(function (require) {
   // curve taken from http://stackoverflow.com/a/16887640/3105183
 
   const WS_CURVE = (() => {
-    const curve = new Float32Array(65536);
-    for (let i = 0; i < 32768; i++) curve[i] = 0.0;
-    for (let i = 32768; i < 65536; i++) curve[i] = i / 32768 - 1;
+    const curve = new Float32Array(32);
+    for (let i = 0; i < 16; i++) curve[i] = 0.0;
+    for (let i = 16; i < 32; i++) curve[i] = i / 16 - 1;
     return curve;
   })();
 
@@ -17,6 +17,10 @@ define(function (require) {
 
       this.input = this.waveshaper;
       this.output = this.waveshaper;
+    }
+
+    internalDisconnect() {
+      this.waveshaper.disconnect()
     }
   }
 

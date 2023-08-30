@@ -30,6 +30,11 @@ define(function (require) {
       this.input = this.gain.gain;
       this.output = this.waveshaper;
     }
+
+    internalDisconnect() {
+      this.waveshaper.disconnect()
+      this.gain.disconnect()
+    }
   }
 
   return WebAudioModule(SoftClipper);
