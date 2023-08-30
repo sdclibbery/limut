@@ -1017,13 +1017,15 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 </div>
 <hr>
 <p>Please report bugs, problems, issues and suggestions on <a href="https://github.com/sdclibbery/limut/issues" target="_blank">https://github.com/sdclibbery/limut/issues</a></p>
-<p>Latest release notes including breaking changes: <a href="https://github.com/sdclibbery/limut/releases/tag/v0.12.0-alpha" target="_blank">https://github.com/sdclibbery/limut/releases/tag/v0.12.0-alpha</a></p>
+<p>Latest release notes including breaking changes: <a href="https://github.com/sdclibbery/limut/releases/tag/v0.13.0-alpha" target="_blank">https://github.com/sdclibbery/limut/releases/tag/v0.13.0-alpha</a></p>
 <canvas id="text-canvas" style="display: none;"></canvas>
 </body>
 <script data-main="main" src="require.js">
 /*
 ====
 ==== audio ====
+!! Claves cl808 cause breakdown after a while ! Check all
+? Should the 808 value not be accent? If only for consistency with both play and 303?
 Standard pattern flag for legato tie, meaning play one event that changes value over time
  Eg  p ping 0~2  would play one event lasting 2 beats, but after the first beat it changes pitch from 0 to 2
   Play two notes, but make the envelope long enough for both and transfer it from one note to the other with crossfade
@@ -1031,6 +1033,7 @@ Standard pattern flag for legato tie, meaning play one event that changes value 
    ? How to tell first event(s) to make a long envelope?
    ? How to transfer it to next event?
    ? How to crossfade?
+   ? Will it work with chords and other things?
 smooth{} should take units - set attack and decay in ms for 303 then
 Techno include lib
  303
@@ -1246,24 +1249,28 @@ shadertoy synth multiple channels
 ==== other ====
 Pattern update
  Generative features:
- • Want to split pattern literal with whitespace eg  pk bd808 0... 0.0. 0... 0..0
+ • p ping 01 2 .  - same as 012.
+  Anything following whitespace that is not an operator should be concated
+  Eg  p ping 01 loop 2 23 - 0123 then 0123 then 23 then 23... etc
+   Or  p ping 01 23 loop 2 45 - 012345 then 012345 then 0145 then 0145... etc
+   So this requires operator precedence; concat is lowest precedence
  • p ping 01 * 4  - 01010101
   Pattern equivalence tests; eg test that  01 * 2  gives same events as  0101
   Tests mixing this with now, loop etc
- • p ping 3 then 2  - 32
-  Syntax: `then` or `+` ??
- • p ping 01 * 2 then 2 * 3  - 0101222
+ • p ping 01 * 2 2 * 3  - 0101222
  • p ping 01234567 crop 4  - 0123
   p ping 0[12]3 crop 2 - what does this mean?
+  Syntax: crop or '%'?
  • p ping 01 pad 4  - 01..
  • p ping 01 prepad 4  - ..01
- • p ping choice 01 23[45] . 7  - Chooses a different subpattern each repeat
+ • p ping choose 01 23[45] . 7  - Chooses a different subpattern each repeat
  • p ping shuffle 01 [23] 4 5  - Random shuffling of subpatterns every repeat
  • p ping mirror 012 * 2  - 012210012210
  • p ping mirror (012 * 2)  - 012012210210
  • Parallel patterns - play multiple patterns at once
+  Is this worth bothering with?
  • sometimes/often/rarely/every before an operator; eg:  often mirror 0123   0123 sometimes * 2   every 4 shuffle 0 1 2 3
-  Eg  p ping 0 then (choice 017 2[34] 52 .) * 5 crop 5 then [21]7
+  Eg  p ping 0 then ( choice 017 2[34] 52 . ) * 5 crop 5 then [21]7
  • Control numbers are not const, they are expressions? Eg  p ping 0 then 54 * [2,3]r
   Eg  p ping 0 then 234 * 3 cropif delta{ch}  - when var 'ch' changes value, crop and restart the pattern from 0
  !!Need to know this will support more generative operations; eg Schenkerian infill, voice leading..?

@@ -9,9 +9,7 @@ define(function(require) {
   let parsePattern = (state) => {
     let playFromStart = keyword(state, 'now')
     let result = literal(state)
-    if (keyword(state, 'loop')) {
-      result = loop(state, result)
-    }
+    if (keyword(state, 'loop')) { result = loop(state, result) }
     eatWhitespace(state)
     if (state.str[state.idx] !== undefined) { throw `Invalid pattern: extra pattern data ${state.str.slice(state.idx)}` }
     result.playFromStart = playFromStart

@@ -3392,3 +3392,12 @@ b saw 01-706g-706g, dur=1/4, oct=2, lpf=[1500:200]e, glide=this.g*this.dur/2
 // p8 io808 (x-)---(x*-)-=-(x=)---(x*-)(x=)-(x-), dur=1/4, type='all', choke='808'
 
 
+// g glow 0a0a00, loc={x:(time%4)/2-1,y:this.seg}, seg=smooth{this.eg*this.a*10,att:1,dec:1/2+(1-this.a)*100}, eg=envelope{d:100,units:'ms'}, fade=0
+// r readout 00.., add=smooth{this.eg,att:8,dec:1}, eg=envelope{a:10,d:10,units:'ms'}
+// r readout 0..., add=this.eg, eg=envelope{a:10,d:10,units:'ms'}
+
+// p ping 070., glide={1/4,units:'beats'}
+// p ping 070., glide={1/4,units:'s'}
+// p ping 070., glide={250,units:'ms'}
+
+
