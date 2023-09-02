@@ -1024,17 +1024,64 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
+Standard pattern flag for legato tie, meaning play one event that changes value over time
+ !OK need to figure out from scratch. Options:
+  • Can glide within a note
+    b tb303 0~2.., internalslide={88,units:'ms'}    -> 0_.. with internalslide={88,units:'ms',1:{value:2}}
+    Can only affect pitch
+    Is specified on the note before, like a 303 slide is
+  • Can join the envelope of one note into the next
+    b tb303 0~2s.., glide={88*this.s,units:'ms'}, legato=this.'~'
+    And legato means the first note envelope is extended and extensible
+    ? How does the second note know not to retrigger?
+    ? What about multi legato? 0~2~3~0 ?
+    But for the 303, it means slide notes need to have flags on BOTH notes
+  • Can glide one note into another
+    b tb303 0~2.., legatoglide={88,units:'ms'}   -> 02.. with legato=1 on both notes
+    Is specified on the note before, like a 303 slide is
+    ? If legato=1 on both notes, how do they know which is which?
+  • Can glide one note into another
+    b tb303 0s2.., legato={this.s, glide:{88,units:'ms'}}   -> 02.. with legato on first note; legatofollow and glide on 2nd
+    Second note is told to pick up the legato and slide
+     - The legato param on the first note gets stored on the player
+        And then the next note picks it up, continues the envelope, and takes the sub params
+    Nice: is specified on the note before, like a 303 slide is, and without a special pattern flag...
+  ??! But wait, for the 303 its actually the MEG that needs to not retrigger..??
+   So maybe what we need for 303 is a way to write 0_.., addc=slide{at:1/2,to:2}
+  Do we need some generic pattern feature for combining notes? So back to pattern tie flag
+   b tb303 0~2s..    -> one event so []e, envelope, envelope{} etc run through, then something to slide within the note
+    What about multiple tied slid notes then??
+  !!! How about tied notes are "sections" from an overall note?
+   Then, []e, envelope, envelope{} etc will all just work because it looks like a single event
+    But It's actually multiple events so pattern values and flags can be applied
+    So b tb303 0~2.. generates two events:
+     {value:0,_time:0,endTime:2,count:0,dur:2,playTime:0,playEndTime:1}
+     {value:2,_time:0,endTime:2,count:0,dur:2,playTime:1,playEndTime:2}
+    So a 303 slide would be b tb303 0~2s..  - so glide must be from individual event start, not 'tied' event start
+   ?Would still need a crossfade between tied notes?
+   !!Think this version is actually worth a try :-D
+   !!Need to investigate exactly what values in the event are used by []e, envelope and envelope{}
+    countToTime : beat.time, beat.count, beat.duration
+    currentEvent : countToTime, dur
+    expandStutter/applyDelay/applySwing : need considering
+    player play : _time/endTime (for cleanup), countToTime/_time/endTime (for pulse)
+    []e : _time, endTime, countToTime
+    envelope : _time, att/dec/sus/rel/long, endTime (for cleanup)
+    envelope{} : count
+   Requirements for tied notes
+    Set new versions of count, _time and endTime for just each inidividual tied part-event: playCount, playTime and playEndTime
+     ?? When where and how to set these?
+    event beat must have time/count values from the FIRST event in the tie (? Is this true? Or does it not matter?)
+    player event cleanup uses playTime/playEndTime
+    currentEvent uses playTime/playEndTime
+    expandStutter/applyDelay/applySwing : need considering!!!
+    play event cleanup uses playTime/playEndTime
+    envelope destructor uses playEndTime for cleanup
+    glide needs to work with playCount not count
+    Crossfade between part-events in a tied note?
 !! Claves cl808 cause breakdown after a while ! Check all
  Made sure everything gets disconnected, but still breaking up :-(
 ? Should the 808 value not be accent? If only for consistency with both play and 303?
-Standard pattern flag for legato tie, meaning play one event that changes value over time
- Eg  p ping 0~2  would play one event lasting 2 beats, but after the first beat it changes pitch from 0 to 2
-  Play two notes, but make the envelope long enough for both and transfer it from one note to the other with crossfade
-   Need to conisder chords, and what other params can be affected
-   ? How to tell first event(s) to make a long envelope?
-   ? How to transfer it to next event?
-   ? How to crossfade?
-   ? Will it work with chords and other things?
 smooth{} should take units - set attack and decay in ms for 303 then
 Techno include lib
  303
@@ -1070,7 +1117,8 @@ Techno include lib
   decay - 200ms to 2s - exponential response??? - actual min 340ms??
   slide - fixed 88ms
         ! slide should cause envelopes to NOT retrigger... legato...
-        ! should really start Before the end of the first note...
+        ? should really start Before the end of the first note...??? THIS IS NOT TRUE?
+        ! But it SHOULD really be specified on the note BEFORE! Is 0s2.. slides the 0 into the 2...
   accent
       ! Not doing much, especially when other settings turned down?
       ! But also doing too much when all other settings turned right up?
@@ -1252,9 +1300,9 @@ Pattern update
  Generative features:
  • p ping 01 2 .  - same as 012.
   Anything following whitespace that is not an operator should be concated
+  !! This cannot just be an operator though; need to support  0000 _000  if possible
   Eg  p ping 01 loop 2 23 - 0123 then 0123 then 23 then 23... etc
    Or  p ping 01 23 loop 2 45 - 012345 then 012345 then 0145 then 0145... etc
-   So this requires operator precedence; concat is lowest precedence
  • p ping 01 * 4  - 01010101
   Pattern equivalence tests; eg test that  01 * 2  gives same events as  0101
   Tests mixing this with now, loop etc

@@ -57,7 +57,6 @@ define(function (require) {
     vca.gain.setValueAtTime(gain, params._time)
     vca.gain.linearRampToValueAtTime(0, params._time + decay)
     params.endTime = params._time + decay
-    params.decayTime = decay
     params._destructor.disconnect(vca)
     return vca
   }
@@ -74,7 +73,6 @@ define(function (require) {
     vca.gain.linearRampToValueAtTime(gain, params._time+0.001) // 1ms attack
     vca.gain.exponentialRampToValueAtTime(0.0001, params._time + decay)
     params.endTime = params._time + decay
-    params.decayTime = decay
     params._destructor.disconnect(vca)
     return vca
   }
