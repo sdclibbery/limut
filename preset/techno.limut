@@ -18,6 +18,12 @@ preset t808 io808, type=('lt','mt','ht').(1 - this.l + this.h), choke='808t'
 preset c808 io808, type=('lc','mc','hc').(1 - this.l + this.h), choke='808c'
 preset h808 io808, type=('ch','oh').(this.o), choke='808hat'
 
+preset tinbass dbass
+  , dur=1/4
+  , amp=[]r{per:4,0:2,1:0,2:0,seed:101}, att=0.01, rel=0.01, pan=[-1/2:1/2]r
+  , lpf={this.freq*[20,5]e*[1:2]s10,q:10}
+  , echo=1.01, room, flanger=1/16
+
 preset tb303 wave
 	, wave='saw', oct=2+this.u-this.d
   , choke=this.player
