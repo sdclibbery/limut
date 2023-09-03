@@ -1025,38 +1025,12 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 Standard pattern flag for legato tie, meaning play one event that changes value over time
- !OK need to figure out from scratch. Options:
-  • Can glide within a note
-    b tb303 0~2.., internalslide={88,units:'ms'}    -> 0_.. with internalslide={88,units:'ms',1:{value:2}}
-    Can only affect pitch
-    Is specified on the note before, like a 303 slide is
-  • Can join the envelope of one note into the next
-    b tb303 0~2s.., glide={88*this.s,units:'ms'}, legato=this.'~'
-    And legato means the first note envelope is extended and extensible
-    ? How does the second note know not to retrigger?
-    ? What about multi legato? 0~2~3~0 ?
-    But for the 303, it means slide notes need to have flags on BOTH notes
-  • Can glide one note into another
-    b tb303 0~2.., legatoglide={88,units:'ms'}   -> 02.. with legato=1 on both notes
-    Is specified on the note before, like a 303 slide is
-    ? If legato=1 on both notes, how do they know which is which?
-  • Can glide one note into another
-    b tb303 0s2.., legato={this.s, glide:{88,units:'ms'}}   -> 02.. with legato on first note; legatofollow and glide on 2nd
-    Second note is told to pick up the legato and slide
-     - The legato param on the first note gets stored on the player
-        And then the next note picks it up, continues the envelope, and takes the sub params
-    Nice: is specified on the note before, like a 303 slide is, and without a special pattern flag...
-  ??! But wait, for the 303 its actually the MEG that needs to not retrigger..??
-   So maybe what we need for 303 is a way to write 0_.., addc=slide{at:1/2,to:2}
-  Do we need some generic pattern feature for combining notes? So back to pattern tie flag
-   b tb303 0~2s..    -> one event so []e, envelope, envelope{} etc run through, then something to slide within the note
-    What about multiple tied slid notes then??
-  !!! How about tied notes are "sections" from an overall note?
+  How about individual tied note parts are "sections" from the timing of the overall note?
    Then, []e, envelope, envelope{} etc will all just work because it looks like a single event
     But It's actually multiple events so pattern values and flags can be applied
     So b tb303 0~2.. generates two events:
-     {value:0,_time:0,endTime:2,count:0,dur:2,playTime:0,playEndTime:1}
-     {value:2,_time:0,endTime:2,count:0,dur:2,playTime:1,playEndTime:2}
+     {value:0,_time:0,endTime:2,count:0,dur:2,playTime:0,playDur:1,playEndTime:1}
+     {value:2,_time:0,endTime:2,count:0,dur:2,playTime:1,playDur:1,playEndTime:2}
     So a 303 slide would be b tb303 0~2s..  - so glide must be from individual event start, not 'tied' event start
    ?Would still need a crossfade between tied notes?
    !!Think this version is actually worth a try :-D
@@ -1068,18 +1042,19 @@ Standard pattern flag for legato tie, meaning play one event that changes value 
     []e : _time, endTime, countToTime
     envelope : _time, att/dec/sus/rel/long, endTime (for cleanup)
     envelope{} : count
-   Requirements for tied notes
-    Set new versions of count, _time and endTime for just each inidividual tied part-event: playCount, playTime and playEndTime
-     ?? When where and how to set these?
+  TRY THIS
+    Pattern syntax for ~ to act like _ but generate two notes with playCount, playTime and playDur
+    Player works with playCount etc if available
+    Envelopes set playEndTime as well as endTime
     event beat must have time/count values from the FIRST event in the tie (? Is this true? Or does it not matter?)
-    player event cleanup uses playTime/playEndTime
-    currentEvent uses playTime/playEndTime
-    expandStutter/applyDelay/applySwing : need considering!!!
-    play event cleanup uses playTime/playEndTime
     envelope destructor uses playEndTime for cleanup
+    currentEvent uses playTime/playEndTime
     glide needs to work with playCount not count
+    player event cleanup uses playTime/playEndTime
+    expandStutter/applyDelay/applySwing : need considering!!!
     Crossfade between part-events in a tied note?
-!! Claves cl808 cause breakdown after a while ! Check all
+
+!! Claves cl808 cause breakdown after a while; why??
  Made sure everything gets disconnected, but still breaking up :-(
 ? Should the 808 value not be accent? If only for consistency with both play and 303?
 smooth{} should take units - set attack and decay in ms for 303 then
@@ -1129,8 +1104,13 @@ Techno include lib
    https://www.youtube.com/watch?v=KwL2S5LRzFM&t=1107s
     3#3#ds3#ua3#d3#us3#d3#a3as  - but needs legato slide
     ! Not getting much fuzz with 'drive' param; need a messier waveform?
+   https://www.audiorealism.se/audiorealism-bass-line-2.html
   Docs - gsuda~_ pattern flags, 303 settings, wave
- Reese
+ Reese bass
+ Tin sky
+ HPF electric lead (phrack)
+ Melodic techno lead
+ Ambient techno pads
  ...
 !Cannot do  bpf=[0,500]  it doesn't work
 More envelope{} features
