@@ -1043,15 +1043,15 @@ Standard pattern flag for legato tie, meaning play one event that changes value 
     envelope : _time, att/dec/sus/rel/long, endTime (for cleanup)
     envelope{} : count
   TRY THIS
-    Pattern syntax for ~ to act like _ but generate two notes with playCount, playTime and playDur
-    Player works with playCount etc if available
+    x Pattern syntax for ~ to act like _ but generate two notes with playCount, playTime and playDur
+    * Player _time and playTime etc updated correctly
     Envelopes set playEndTime as well as endTime
-    event beat must have time/count values from the FIRST event in the tie (? Is this true? Or does it not matter?)
     envelope destructor uses playEndTime for cleanup
-    currentEvent uses playTime/playEndTime
-    glide needs to work with playCount not count
     player event cleanup uses playTime/playEndTime
     expandStutter/applyDelay/applySwing : need considering!!!
+    event beat must have time/count values from the FIRST event in the tie (? Is this true? Or does it not matter?)
+    Player currentEvent uses playTime/playEndTime
+    glide needs to work with playCount not count
     Crossfade between part-events in a tied note?
 
 !! Claves cl808 cause breakdown after a while; why??

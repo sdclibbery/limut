@@ -81,7 +81,7 @@ define(function(require) {
       }
       let anyNotRest = false
       chord
-      .toSorted((a,b) => b.dur - a.dur)
+      .toSorted((a,b) => (b.playDur || b.dur) - (a.playDur || a.dur))
       .forEach(sourceEvent => {
         let isRest = sourceEvent.value === undefined
         if (!isRest) { anyNotRest = true }
@@ -89,14 +89,35 @@ define(function(require) {
         if (typeof event.value === 'function') {
           event.value = event.value(tc)
         }
-        event.dur = sourceEvent.dur * duration
-        event._time = tc.patternCount - count
-        event.count = count + event._time
+        let startTime = tc.patternCount - count
+        if (event.tieDur !== undefined && tc.tie === undefined) {
+          tc.tie = {
+            totalDur: sourceEvent.tieDur,
+            remainingDur: sourceEvent.tieDur,
+            startTime : startTime,
+            startCount: count + startTime,
+          }
+        }
+        if (tc.tie !== undefined) {
+          tc.tie.remainingDur -= sourceEvent.dur
+          delete event.tieDur
+          event.dur = tc.tie.totalDur * duration
+          event._time = tc.tie.startTime
+          event.count = tc.tie.startCount
+          event.playDur = sourceEvent.dur * duration
+          event.playTime = startTime
+          event.playCount = count + startTime
+          if (tc.tie.remainingDur <= 0) { delete tc.tie }
+        } else {
+          event.dur = sourceEvent.dur * duration
+          event._time = startTime
+          event.count = count + startTime
+        }
         event.idx = tc.idx
         eventsForBeat.push(event)
       })
       let lastEvent = eventsForBeat[eventsForBeat.length-1]
-      tc.patternCount += lastEvent.dur // Events are sorted so shortest duration is last
+      tc.patternCount += lastEvent.playDur || lastEvent.dur // Events are sorted so shortest duration is last
       if (anyNotRest) { tc.idx++ }
     }
     return eventsForBeat

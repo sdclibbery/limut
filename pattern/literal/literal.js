@@ -84,14 +84,23 @@ define(function(require) {
 
       let lastStep = steps[steps.length - 1]
       let lastEvent = lastStep && lastStep[0]
-      if (isNumericFlag(char) && lastEvent && typeof lastEvent.value === 'number') { // Flag for numeric
+      let lastEventIsNumber = lastEvent && typeof lastEvent.value === 'number'
+
+      if (char === '~' && lastEventIsNumber) { // Tie previous step to the next step(s)
+        if (!lastEvent.tieDur) { lastEvent.tieDur = 1 }
+        lastEvent.tieDur++
+        state.idx++
+        continue
+      }
+
+      if (isNumericFlag(char) && lastEventIsNumber) { // Flag for numeric
         char = char.toLowerCase()
         if (lastEvent[char] === undefined) { lastEvent[char] = 0 }
         lastEvent[char]++
         state.idx++
         continue
       }
-      if (isNonNumericFlag(char) && lastEvent && typeof lastEvent.value === 'string') { // Flag for non numeric
+      if (isNonNumericFlag(char) && !lastEventIsNumber) { // Flag for non numeric
         if (lastEvent[char] === undefined) { lastEvent[char] = 0 }
         lastEvent[char]++
         state.idx++
@@ -445,6 +454,28 @@ define(function(require) {
     assert([{value:2,dur:3/2}], p.next())
     assert([{dur:1/2}], p.next())
     assert(undefined, p.next())
+
+    p = literal(st('x~'))
+    p.reset(0)
+    assert([{value:'x',dur:1}], p.next())
+    assert([{value:'~',dur:1}], p.next())
+
+    p = literal(st('0~24'))
+    p.reset(0)
+    assert([{value:0,dur:1,tieDur:2}], p.next())
+    assert([{value:2,dur:1}], p.next())
+    assert([{value:4,dur:1}], p.next())
+    assert(undefined, p.next())
+
+    // p = literal(st('0~2~4'))
+    // p.reset(0)
+    // assert([{value:0,dur:1,tieDur:3}], p.next())
+    // assert([{value:2,dur:1,tieDur:2}], p.next())
+    // assert([{value:4,dur:1}], p.next())
+    // assert(undefined, p.next())
+
+    // More tests; eg [1~2] 0~[12] [0~]1 0~1~[12] 0~[1~2]~3 0~[1~[2~3]] 0~<12> <0~1~>2 0~(12) (0~1~)2 etc
+    //  Invalid: 0~ ~0 (0~1) <0~1> [~0] [0~] (01)~2 <01>~2
 
     console.log("Pattern literal tests complete")
   }

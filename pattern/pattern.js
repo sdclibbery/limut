@@ -561,6 +561,18 @@ define(function(require) {
     assertSameWhenStartLater(() => root('0 loop 1000', {dur:3.17}))
     assertSameWhenStartLater(() => root('01 loop 1000', {dur:3.17}))
 
+    p = root('0~24', {})
+    assert([{value:0,dur:2,_time:0,count:0,playDur:1,playTime:0,playCount:0,idx:0}], p(0))
+    assert([{value:2,dur:2,_time:0,count:0,playDur:1,playTime:0,playCount:1,idx:1}], p(1))
+    assert([{value:4,dur:1,_time:0,count:2,idx:2}], p(2))
+
+    // p = root('0~2~4', {})
+    // assert([{value:0,dur:3,_time:0,count:0,playDur:1,playTime:0,playCount:0,idx:0}], p(0))
+    // assert([{value:2,dur:3,_time:0,count:0,playDur:1,playTime:1,playCount:1,idx:1}], p(1))
+    // assert([{value:4,dur:3,_time:0,count:0,playDur:1,playTime:2,playCount:2,idx:2}], p(2))
+
+    // More tests for other durations, chords, subsequences etc etc
+
     console.log("Pattern root tests complete")
   }
   

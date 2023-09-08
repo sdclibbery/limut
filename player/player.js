@@ -144,7 +144,12 @@ define((require) => {
       let events = player.getEventsForBeatRaw(beat)
       events = events.map(event => {
         let eventToPlay = Object.assign({}, event, {sound: event.value, beat: beat})
-        eventToPlay._time = beat.time + event._time*beat.duration
+        let delta = 0
+        if (eventToPlay.playTime !== undefined) {
+          delta = eventToPlay._time - eventToPlay.playTime
+          eventToPlay.playTime = beat.time + event.playTime*beat.duration
+        }
+        eventToPlay._time = beat.time + event._time*beat.duration + delta
         return eventToPlay
       })
       events.forEach(e => e.linenum = player.linenum)
@@ -507,6 +512,11 @@ define((require) => {
   p = player('p', 'test', '12', '')
   assert(1, p.getEventsForBeat({count:0})[0].value)
   assert(1, p.getEventsForBeat({count:0})[0].value) // Same when call again for same beat
+
+  p = player('p', 'test', '0~24', '')
+  assertHas({value:0,dur:2,_time:3,count:3,playDur:1,playTime:3,playCount:3,idx:0}, p.getEventsForBeat({time:3, count:0, duration:1})[0])
+  assertHas({value:2,dur:2,_time:3,count:3,playDur:1,playTime:4,playCount:4,idx:1}, p.getEventsForBeat({time:4, count:1, duration:1})[0])
+  assertHas({value:4,dur:1,_time:5,count:5,idx:2}, p.getEventsForBeat({time:5, count:2, duration:1})[0])
 
   console.log('Player tests complete')
   }
