@@ -35,6 +35,23 @@ define(function(require) {
     });
   }
 
+  if (!Array.prototype.toSorted) {
+    // From https://github.com/es-shims/Array.prototype.toSorted
+    console.log('!Polyfilling toSorted')
+    Object.defineProperty(Array.prototype, 'toSorted', {
+      configurable: true,
+      value: function toSorted (comparefn) {
+        if (typeof comparefn !== 'function') { throw '`comparefn` must be a function'; }
+        var len = this.length;
+        var A = [];
+        for (var j=0; j<len; j++) { A[j] = this[j]; }
+        A.sort(comparefn);
+        return A;
+      },
+      writable: true
+    });
+  }
+
   if (!Object.fromEntries) {
     // From https://gitlab.com/moongoal/js-polyfill-object.fromentries/-/blob/master/index.js
     console.log('!Polyfilling fromEntries')
