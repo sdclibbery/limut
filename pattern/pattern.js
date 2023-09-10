@@ -450,6 +450,15 @@ define(function(require) {
     assert([{value:1,dur:1,_time:0,count:1,idx:1}], p(1))
     assert([], p(2))
 
+    p = root('`01`', {})
+    assert([{value:0,dur:1,_time:0,count:0,idx:0}], p(0))
+    assert([{value:1,dur:1,_time:0,count:1,idx:1}], p(1))
+    assert([{value:0,dur:1,_time:0,count:2,idx:0}], p(2))
+    p = root('`0 1`', {})
+    assert([{value:0,dur:1,_time:0,count:0,idx:0}], p(0))
+    assert([{value:1,dur:1,_time:0,count:1,idx:1}], p(1))
+    assert([{value:0,dur:1,_time:0,count:2,idx:0}], p(2))
+
     assert([{value:0,dur:1,a:1,_time:0,count:0,idx:0}], root('0a', {})(0))
     assert([{value:'x',dur:1,_time:0,count:0,idx:0}], root('xa', {})(0))
     assert([{value:'x',dur:1,'^':1,_time:0,count:0,idx:0, loud:3/2}], root('x^', {})(0))
@@ -473,7 +482,13 @@ define(function(require) {
     assertSamePatternIgnoringIdx(root('1234', {dur:1}), root('<1234>', {dur:1}))
     assertSamePatternIgnoringIdx(root('1234', {dur:1}), root('[1234]', {dur:4}))
     assertSamePattern(root('1234', {dur:1}), root('1___2___3___4___', {dur:1/4}))
-
+    assertSamePattern(root('`01 . 2`', {}), root('01.2', {}))
+    assertSamePattern(root('`0[1 2]`', {}), root('0[12]', {}))
+    assertSamePattern(root('`01 23 _ 5`', {}), root('0123_5', {}))
+    assertSamePattern(root('`1 loop 2`', {}), root('1loop2', {}))
+    assertSamePattern(root('`01 23` loop 2', {}), root('0123 loop 2', {}))
+    assertSamePattern(root('now `01 23`', {}), root('now 0123', {}))
+ 
     assertSameRootPatternWithDurs('[0]', '0')
     assertSameRootPatternWithDurs('[[[0]]]', '0')
     assertSameRootPatternWithDurs('<0>', '0')

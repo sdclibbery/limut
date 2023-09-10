@@ -378,6 +378,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <div id="accordion-pattern-syntax" class="closed">
 <p><code>x-o-</code> Sequence of events, each with duration given by the player's <code>dur</code> param, for use with <code>play</code></p>
 <p><code>0123</code> Sequence of events, each with duration given by the player's <code>dur</code> param, for use with tonal synths. Numbers are scale degrees</p>
+<p><code>`01 23`</code> Pattern literal; inside backticks, pattern elements can be separated by whitespace which will be ignored. Backticks force the contents to be treated as a literal, so for example <code>`01 loop 1`</code> is treated as the literal <code>01loop1</code> and the loop operator is ignored.</p>
 <p><code>0-1-2-3</code> Negative scale degrees allow tones below the synth root pitch</p>
 <p><code>x.</code> Use a dot for a rest</p>
 <p><code>0#</code> # following numeric event makes it sharp</p>
@@ -1024,40 +1025,8 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
-Standard pattern flag for legato tie, meaning play one event that changes value over time
-  How about individual tied note parts are "sections" from the timing of the overall note?
-   Then, []e, envelope, envelope{} etc will all just work because it looks like a single event
-    But It's actually multiple events so pattern values and flags can be applied
-    So b tb303 0~2.. generates two events:
-     {value:0,_time:0,endTime:2,count:0,dur:2,playTime:0,playDur:1,playEndTime:1}
-     {value:2,_time:0,endTime:2,count:0,dur:2,playTime:1,playDur:1,playEndTime:2}
-    So a 303 slide would be b tb303 0~2s..  - so glide must be from individual event start, not 'tied' event start
-   ?Would still need a crossfade between tied notes?
-   !!Think this version is actually worth a try :-D
-   !!Need to investigate exactly what values in the event are used by []e, envelope and envelope{}
-    countToTime : beat.time, beat.count, beat.duration
-    currentEvent : countToTime, dur
-    expandStutter/applyDelay/applySwing : need considering
-    player play : _time/endTime (for cleanup), countToTime/_time/endTime (for pulse)
-    []e : _time, endTime, countToTime
-    envelope : _time, att/dec/sus/rel/long, endTime (for cleanup)
-    envelope{} : count
-  TRY THIS
-    Pattern syntax for ~ to act like _ but generate two notes with playCount, playTime and playDur
-    Player works with playCount etc if available
-    Envelopes set playEndTime as well as endTime
-    event beat must have time/count values from the FIRST event in the tie (? Is this true? Or does it not matter?)
-    envelope destructor uses playEndTime for cleanup
-    currentEvent uses playTime/playEndTime
-    glide needs to work with playCount not count
-    player event cleanup uses playTime/playEndTime
-    expandStutter/applyDelay/applySwing : need considering!!!
-    Crossfade between part-events in a tied note?
-
-!! Claves cl808 cause breakdown after a while; why??
- Made sure everything gets disconnected, but still breaking up :-(
-? Should the 808 value not be accent? If only for consistency with both play and 303?
 smooth{} should take units - set attack and decay in ms for 303 then
+? Should the 808 value not be accent? If only for consistency with both play and 303?
 Techno include lib
  303
   https://www.firstpr.com.au/rwi/dfish/303-unique.html
@@ -1114,6 +1083,15 @@ Techno include lib
  Ambient techno pads
  ...
 !Cannot do  bpf=[0,500]  it doesn't work
+!! Claves cl808 cause breakdown after a while; why??
+ Made sure everything gets disconnected, but still breaking up :-(
+Legato Tie
+ Allows multiple pattern notes to be played without envelope retrigger
+ Should allow 303 slide
+ Either do by extending one note across all tied notes and changing pitch along the way
+  ?But how to calculate pitch changes? And what about other paramas and flags on the tied notes
+ Or, do by playing multiple notes in such a way that their envelope, envelope{} and []e play subsections
+  ?Nut the timing becomes very complex...
 More envelope{} features
  sustain and release
  units='event'
@@ -1279,15 +1257,13 @@ shadertoy synth multiple channels
 ==== other ====
 Pattern update
  Generative features:
- • p ping 01 2 .  - same as 012.
-  Anything following whitespace that is not an operator should be concated
-  !! This cannot just be an operator though; need to support  0000 _000  if possible
-  Eg  p ping 01 loop 2 23 - 0123 then 0123 then 23 then 23... etc
-   Or  p ping 01 23 loop 2 45 - 012345 then 012345 then 0145 then 0145... etc
+ • p ping 01 + 23 - same as 0123, same as 0123
+  '+' is an operator, and has lowest precedence
+   p ping 01 + 23 loop 2 + 45 - 012345 then 012345 then 0145 then 0145... etc
  • p ping 01 * 4  - 01010101
   Pattern equivalence tests; eg test that  01 * 2  gives same events as  0101
   Tests mixing this with now, loop etc
- • p ping 01 * 2 2 * 3  - 0101222
+ • p ping 01 * 2 + 2 * 3  - 0101222
  • p ping 01234567 crop 4  - 0123
   p ping 0[12]3 crop 2 - what does this mean?
   Syntax: crop or '%'?

@@ -24,9 +24,21 @@ define(function(require) {
     steps.initialContinuations = 0
     do {
       let char = state.str.charAt(state.idx)
+      if (!!char && isWhitespace(char) && state._inDelimitedLiteral) { // Skip whitespace in delimited literal
+        state.idx++
+        continue
+      }
       if (!char || isWhitespace(char)) { // End of literal
         if (expectedClosingBracket) { throw `Pattern: Missing bracket, expecting ${expectedClosingBracket}` }
+        if (state._inDelimitedLiteral) { throw 'Pattern: Missing closing literal delimiter `' }
         break
+      }
+
+      if (char === '`') { // Backticks can delimit pattern literals
+        state.idx++
+        if (state._inDelimitedLiteral) { break } // End of delimited literal
+        state._inDelimitedLiteral = true // Start of delimited literal
+        continue
       }
 
       if (char === ']' || char === ')' || char === '>' || char ==='}') { // End of subpattern
@@ -161,6 +173,8 @@ define(function(require) {
     assertThrows('Missing bracket, expecting ]', () => literal(st('[')))
     assertThrows('Missing bracket, expecting ]', () => literal(st('[[]')))
     assertThrows('Missing bracket, expecting ]', () => literal(st('[()')))
+
+    assertThrows('Missing closing literal delimiter', () => literal(st('`01')))
 
     // Continuation at start of literal makes no sense
     assertThrows('Continuation "_" not valid at start of literal', () => literal(st('_0')))
@@ -444,6 +458,18 @@ define(function(require) {
     p.loop()
     assert([{value:2,dur:3/2}], p.next())
     assert([{dur:1/2}], p.next())
+    assert(undefined, p.next())
+
+    p = literal(st('`01`'))
+    p.reset(0)
+    assert([{value:0,dur:1}], p.next())
+    assert([{value:1,dur:1}], p.next())
+    assert(undefined, p.next())
+
+    p = literal(st('`0 1`'))
+    p.reset(0)
+    assert([{value:0,dur:1}], p.next())
+    assert([{value:1,dur:1}], p.next())
     assert(undefined, p.next())
 
     console.log("Pattern literal tests complete")
