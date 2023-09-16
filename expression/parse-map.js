@@ -1,8 +1,12 @@
-'use strict';
 define(function(require) {
   let eatWhitespace = require('expression/eat-whitespace')
+  let parseString = require('expression/parse-string')
 
-  let identifier = (state) => {
+  let key = (state) => {
+    if (state.str.charAt(state.idx) === '\'') { // String quoted key
+      state.idx += 1
+      return parseString(state)
+    }
     let char
     let result = ''
     while (char = state.str.charAt(state.idx).toLowerCase()) {
@@ -19,7 +23,7 @@ define(function(require) {
   let parseMapEntry = (state, _mapValueIndex, keys, values) => {
     eatWhitespace(state)
     let tryState = Object.assign({}, state)
-    let k = identifier(tryState)
+    let k = key(tryState)
     eatWhitespace(tryState)
     if (k === '' || tryState.str.charAt(tryState.idx) !== ':') {
       // Try parse as keyless value instead
@@ -108,6 +112,7 @@ define(function(require) {
   assert({'1':1}, parseMap({str:'{1:1}',idx:0,expression:number}))
   assert({'0.5':1}, parseMap({str:'{0.5:1}',idx:0,expression:number}))
   assert({'1/2':1}, parseMap({str:'{1/2:1}',idx:0,expression:number}))
+  assert({'-':1}, parseMap({str:"{'-':1}",idx:0,expression:number}))
   
   console.log('Parse map tests complete')
   }

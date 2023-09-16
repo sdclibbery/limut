@@ -17,6 +17,15 @@ preset cy808 io808, type='cy', choke='808cy'
 preset t808 io808, type=('lt','mt','ht').(1 - this.l + this.h), choke='808t'
 preset c808 io808, type=('lc','mc','hc').(1 - this.l + this.h), choke='808c'
 preset h808 io808, type=('ch','oh').(this.o), choke='808hat'
+preset tr808 io808, choke='808'
+  , type=({
+    x:'bd', v:'bd',
+    o:'sd', i:'sd', u:'sd',
+    h:'cp', '*':'cp',
+    '-':'ch', a:'ch', ':':'ch', '=':'oh', '~':'cy',
+    k:'cl', m:'mt', t:'rs', s:'ma', p:'mc', e:'cb',
+  }.(this.value))?'ch'
+  , add=this.loud*9 // Accent
 
 preset tinbass dbass
   , dur=1/4

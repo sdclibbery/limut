@@ -3401,3 +3401,18 @@ b saw 01-706g-706g, dur=1/4, oct=2, lpf=[1500:200]e, glide=this.g*this.dur/2
 // p ping 070., glide={250,units:'ms'}
 
 
+// Acid Trance
+include 'preset/synthwave.limut'
+include 'preset/techno.limut'
+set scale=minor
+set bpm=135
+set main drive=1/24
+pk bd808 0...
+pc cp808 ....0...
+pt t808 `.0.0h .00h. .0l.0 0l0h..`, delay=(0,3/4), swing=62
+ph h808 0, o=euclid{16,from:[19,23]t4}-1, swing=58
+set p* delay|=[(),[1,3]r/4]t[30,2]
+b tb303 0, amp=euclid{32,from:53}-7/8, a=euclid{16,from:27}-1, cutoff=[0:3/4]l8+[0:1/2]n3//, resonance=7/8, decay=0
+s supersaw 0, dur=1/4, amp=euclid{32,from:37}-1, reverb={2,mix:[1/6:1/3]l8}, add=([0,0,-1,-2]t4,[1,2,3,4]t3), oct=(3,4,5), chorus, echo=3/4, amp*=3/4, delay=(0,5/2), phaser=1/16
+// v vambi (-70), reverb=2
+// set p* stutter=[0,0,1,1,1,2,2,3]t4

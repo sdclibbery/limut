@@ -955,8 +955,8 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <code>4</code> Vocals (Four)<br/>
 </p>
 </div>
-<h4 onclick="toggleAccordion('accordion-standard-libraries')" class="accordion"> Standard Libraries</h4>
-<div id="accordion-standard-libraries" class="closed">
+<h4 onclick="toggleAccordion('accordion-synthwave-libraries')" class="accordion"> Synthwave Library</h4>
+<div id="accordion-synthwave-libraries" class="closed">
 <h5>Synthwave library: <code>include 'preset/synthwave.limut'</code></h5>
 <h6>Visual</h6>
 <p><code>neongrid</code> Visual preset of a pink neon perspective grid scrolling towards the viewer, in the lower half of the frame. Shader loaded from shadertoy.com</p>
@@ -994,6 +994,9 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>synlead</code> Synth lead preset with glide (pitch slide betwen notes) </p>
 <p><code>synpluck</code> Synth pluck preset </p>
 <p><code>vambi</code> PWM ambient preset in the style of Vangelis.</p>
+</div>
+<h4 onclick="toggleAccordion('accordion-techno-libraries')" class="accordion"> Techno Library</h4>
+<div id="accordion-techno-libraries" class="closed">
 <h5>Techno library: <code>include 'preset/techno.limut'</code></h5>
 <h6>Audio</h6>
 <p><code>bd808</code> Simulated 808 bd kick. Based on io808. </p>
@@ -1015,6 +1018,20 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>t808</code> Combined 808 toms. Use 'h' and 'l' pattern flags to specify high and low toms; medium tom is default. Eg <code>p t808 .0h00l</code>. </p>
 <p><code>c808</code> Combined 808 congas. Use 'h' and 'l' pattern flags to specify high and low congas; medium conga is default. Eg <code>p c808 .0h00l</code>. </p>
 <p><code>h808</code> Combined 808 hihat. Use 'o' pattern flag to specify open hihat; closed is the default. Eg <code>p h808 000o0</code>. </p>
+<p><code>tr808</code> Combined 808, all in one. Here pattern value does not specify accent, it specifies which 808 sound to play (similar to the <code>play</code> synth. For example, <code>p tr808 xo</code> plays 808 'bd' then 'sd'. Use the '^' pattern flag for accent. For example <code>ss^</code> plays a 'ma', then an accented 'ma'. The following pattern values are supported (everything else defaults to closed hihat):<br/>
+  <code>x v</code> : bd<br/>
+  <code>o i u</code> : sd<br/>
+  <code>h *</code> : cp<br/>
+  <code>- : a</code> : ch<br/>
+  <code>=</code> : oh<br/>
+  <code>~</code> : cy<br/>
+  <code>k</code> : cl<br/>
+  <code>m</code> : mt<br/>
+  <code>t</code> : rs<br/>
+  <code>s</code> : ma<br/>
+  <code>p</code> : mc<br/>
+  <code>e</code> : cb<br/>
+</p>
 </div>
 <hr>
 <p>Please report bugs, problems, issues and suggestions on <a href="https://github.com/sdclibbery/limut/issues" target="_blank">https://github.com/sdclibbery/limut/issues</a></p>
@@ -1025,6 +1042,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
+Check 808 tom sounds: too much noise???
 Noise Param that adds in sampled noise immediately after the synths own vcos - hopefully better fuzz?
 smooth{} should take units - set attack and decay in ms for 303 then
 can set high/mid/low params on reverb to EQ signal prior to reverb - Also on entry to all waveeffects?
@@ -1262,9 +1280,12 @@ Pattern update
  • p ping 01 + 23 - same as 0123, same as 0123
   '+' is an operator, and has lowest precedence
    p ping 01 + 23 loop 2 + 45 - 012345 then 012345 then 0145 then 0145... etc
+   '01 23' + 45
+   01 + _3
  • p ping 01 * 4  - 01010101
   Pattern equivalence tests; eg test that  01 * 2  gives same events as  0101
   Tests mixing this with now, loop etc
+  `01 23` * 2
  • p ping 01 * 2 + 2 * 3  - 0101222
  • p ping 01234567 crop 4  - 0123
   p ping 0[12]3 crop 2 - what does this mean?
