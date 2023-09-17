@@ -17,7 +17,7 @@ define(function (require) {
       },
       {
         frequencies: [100, 80],
-        decay: [200, 200]
+        decay: [200, 140]
       }
     ],
 
@@ -28,7 +28,7 @@ define(function (require) {
       },
       {
         frequencies: [160, 120],
-        decay: [130, 155]
+        decay: [130, 125]
       }
     ],
 
@@ -39,7 +39,7 @@ define(function (require) {
       },
       {
         frequencies: [220, 165],
-        decay: [200, 125]
+        decay: [200, 105]
       }
     ]
   };
