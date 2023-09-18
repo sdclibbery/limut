@@ -21,7 +21,7 @@ define(function (require) {
     let source = system.audio.createBufferSource()
     source.buffer = getBuffer(url)
     source.playbackRate.value = rate
-    waveEffects(params, source).connect(vca)
+    waveEffects(params, effects(params, source)).connect(vca)
     source.start(timeOverride || params._time)
     params._destructor.disconnect(source)
     params._destructor.stop(source)
@@ -70,7 +70,7 @@ define(function (require) {
     vca.gain.linearRampToValueAtTime(gain, params.endTime-0.01)
     vca.gain.linearRampToValueAtTime(0, params.endTime)
     vca.gain.linearRampToValueAtTime(gain, params.endTime+0.01)
-    fxMixChain(params, effects(params, perFrameAmp(params, vca)))
+    fxMixChain(params, perFrameAmp(params, vca))
 
     let sample = findNearestSample(freq)
     getBuffer(getNoteUrl(sample))

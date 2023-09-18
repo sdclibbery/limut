@@ -22,8 +22,8 @@ define(function (require) {
     let startTime = evalMainParamEvent(params, 'start', 0)
 
     let vca = envelope(params, 0.25, 'full')
-    waveEffects(params, source).connect(vca)
-    fxMixChain(params, effects(params, perFrameAmp(params, vca)))
+    waveEffects(params, effects(params, source)).connect(vca)
+    fxMixChain(params, perFrameAmp(params, vca))
 
     pitchEffects(source.detune, params)
 

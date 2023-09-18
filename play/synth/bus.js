@@ -16,8 +16,8 @@ define((require) => {
   let {echo} = require('play/effects/echo')
 
   let effectChain = (params, node) => {
-    node = waveEffects(params, node)
     node = effects(params, node)
+    node = waveEffects(params, node)
     node = mixedChorus(params, node)
     node = mixedPhaser(params, node)
     node = mixedFlanger(params, node)

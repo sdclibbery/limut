@@ -37,7 +37,7 @@ define(function (require) {
     if (isNaN(freq)) { return }
 
     let vca = envelope(params, 0.03, 'full')
-    fxMixChain(params, effects(params, perFrameAmp(params, vca)))
+    fxMixChain(params, perFrameAmp(params, vca))
 
     let vcos = findNonChordParams(params, 'wave')
       .map(id => createWave(params, id, freq))
@@ -47,7 +47,7 @@ define(function (require) {
     let multiosc = system.audio.createGain()
     multiosc.gain.value = Math.pow(1/Math.max(vcos.length,1), 1/4)
     vcos.forEach(vco => vco.connect(multiosc))
-    waveEffects(params, multiosc).connect(vca)
+    waveEffects(params, effects(params, multiosc)).connect(vca)
     params._destructor.disconnect(vca, multiosc, vcos)
   }
 });

@@ -29,13 +29,13 @@ define(function (require) {
 
     let vca = system.audio.createGain()
     vca.gain.value = gain
-    fxMixChain(params, effects(params, perFrameAmp(params, vca)))
+    fxMixChain(params, perFrameAmp(params, vca))
 
     let click = system.audio.createBufferSource()
     click.buffer = getClick()
     click.start(params._time)
 
-    waveEffects(params, click).connect(vca)
+    waveEffects(params, effects(params, click)).connect(vca)
     params._destructor.disconnect(vca, click)
     params._destructor.stop(click)
   }

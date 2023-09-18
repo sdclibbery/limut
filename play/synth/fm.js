@@ -34,7 +34,7 @@ define(function (require) {
     if (isNaN(freq)) { return }
 
     let vca = envelope(params, 0.04, 'full')
-    fxMixChain(params, effects(params, perFrameAmp(params, vca)))
+    fxMixChain(params, perFrameAmp(params, vca))
     let vcaMix = system.audio.createGain()
 
     let ops = findNonChordParams(params, 'op')
@@ -72,7 +72,7 @@ define(function (require) {
       return {op,env}
     }).filter(o => !!o)
 
-    waveEffects(params, vcaMix).connect(vca)
+    waveEffects(params, effects(params, vcaMix)).connect(vca)
     params._destructor.disconnect(vca, vcaMix)
   }
 });

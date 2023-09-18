@@ -665,10 +665,10 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p class='sub'><code>psf={f1:300,f2:2300,q:0.7}</code> f1 and f2 are the frequencies in Hertz of the two allpass filters. Sweep these dynamically for the swirling phaser effect. q is filter resonance. Default: 1.</p>
 <p><code>low</code> Low shelf gain. Eg <code>low=-6dB</code> will act like a gain of 1/2 for the low frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
 <p class='sub'><code>low={-8db,freq:400}</code> Low shelf cutoff frequency in Hz. Default: 200Hz</p>
-<p><code>low</code> Mid gain. Eg <code>mid=-6dB</code> will act like a gain of 1/2 for the mid frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
+<p><code>mid</code> Mid gain. Eg <code>mid=-6dB</code> will act like a gain of 1/2 for the mid frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
 <p class='sub'><code>mid={-8db,freq:400}</code> Mid cutoff frequency in Hz. Default: 600Hz</p>
 <p class='sub'><code>mid={-8db,q:10}</code> Mid q defines the width of the mid frequency band; low q is wide. Default: 5</p>
-<p><code>low</code> High shelf gain. Eg <code>high=-6dB</code> will act like a gain of 1/2 for the high frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
+<p><code>high</code> High shelf gain. Eg <code>high=-6dB</code> will act like a gain of 1/2 for the high frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
 <p class='sub'><code>high={-8db,freq:400}</code> High shelf cutoff frequency in Hz. Default: 1100Hz</p>
 <p><code>chop</code> Chop the signal into a number of parts per beat, eg <code>chop=2</code> chops the signal twice per beat.</p>
 <p class='sub'><code>chop={2,wave:triangle}</code> chops twice per beat with a triangle waveform. The default waveform is sine; the options are sine, square, triangle, saw.</p>
@@ -1042,10 +1042,10 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
-Noise Param that adds in sampled noise immediately after the synths own vcos - hopefully better fuzz for 303?
+Fix getting fuzz for synths by applying effects (including filters) BEFORE applying wave effects
+ Release - note change to effects order
 smooth{} should take units - set attack and decay in ms for 303 then
  ?Doesnt' actually make sense? What units are smooth att and decay anyway?
-can set high/mid/low params on reverb to EQ signal prior to reverb - Also on entry to all waveeffects?
 Allow h808 to also be `ph h808 --=--=-=-` :-)
 ? Should the 808 value not be accent? If only for consistency with both play and 303?
 Techno include lib
@@ -1117,6 +1117,7 @@ More envelope{} features
  sustain and release
  units='event'
 Try a convolution reverb with an envelope where the sound builds then fades instead of just dying away
+??can set high/mid/low params on reverb to EQ signal prior to reverb - Also on entry to all waveeffects?
 Legato Eg on a 303, When 2 notes slide they are legato, and the amp and filter envelopes do Not reset for the second note...
 ? Feedback for chorus?
 ? Freeze delay, or sample recorder, or looper?

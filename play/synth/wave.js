@@ -18,14 +18,14 @@ define(function (require) {
     let wave = evalMainParamEvent(params, "wave", "sawtooth")
 
     let vca = envelope(params, 0.06, 'full')
-    fxMixChain(params, effects(params, perFrameAmp(params, vca)))
+    fxMixChain(params, perFrameAmp(params, vca))
 
     let vco = system.audio.createOscillator()
     setWave(vco, wave)
     vco.frequency.value = freq * Math.pow(2, detuneSemis/12)
     pitchEffects(vco.detune, params)
     
-    waveEffects(params, vco).connect(vca)
+    waveEffects(params, effects(params, vco)).connect(vca)
     vco.start(params._time)
     params._destructor.disconnect(vca, vco)
     params._destructor.stop(vco)

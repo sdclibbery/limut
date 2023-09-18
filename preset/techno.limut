@@ -36,7 +36,7 @@ preset tinbass dbass
 preset tb303 wave
 	, wave='saw', oct=2+this.u-this.d, choke=this.player
 	, dur=1/4 // 1/16th notes
-  , envelope='full', att=0.01, dec=0, rel=0.01, sus={this.dur-(1-this.a)*5/48, level:1/2} // Gate
+  , envelope='full', att=0.01, dec=0, rel=0.01, sus={this.dur-(1-this.a)*5/48, level:1} // Gate
   , amp*=envelope{d:1000, units:'ms', shape:'exp'} // VCA envelope: slow exponential decay
   // 303 Controls
   , cutoff=1/2

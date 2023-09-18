@@ -64,8 +64,8 @@ define(function (require) {
     let vca = system.audio.createGain()
     let gainbase = 0.18 * evalMainParamEvent(params, "loud", 1)
     vca.gain.value = Math.max(0, gainbase * (typeof params.amp === 'number' ? params.amp : 1))
-    waveEffects(params, source).connect(vca)
-    fxMixChain(params, effects(params, perFrameAmp(params, vca)))
+    waveEffects(params, effects(params, source)).connect(vca)
+    fxMixChain(params, perFrameAmp(params, vca))
     params._destructor.disconnect(vca, source)
   }
 });

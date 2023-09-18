@@ -36,7 +36,7 @@ define(function (require) {
     }
     let vca = envelope(params, 0.5, 'linpad')
     let track = evalMainParamEvent(params, 'track', undefined)
-    fxMixChain(params, effects(params, perFrameAmp(params, vca)))
+    fxMixChain(params, perFrameAmp(params, vca))
     let audioIn
     if (track !== undefined) {
       let mediaTrack = stream.getTracks()[track]
@@ -48,7 +48,7 @@ define(function (require) {
     } else {
       audioIn = system.audio.createMediaStreamSource(stream)
     }
-    waveEffects(params, audioIn).connect(vca)
+    waveEffects(params, effects(params, audioIn)).connect(vca)
     params._destructor.disconnect(vca, audioIn)
   }
 })

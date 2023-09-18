@@ -158,7 +158,7 @@ define(function (require) {
 
   return (params) => {
     let vca = envelope(params, 0.4, 'percussion')
-    fxMixChain(params, effects(params, perFrameAmp(params, vca)))
+    fxMixChain(params, perFrameAmp(params, vca))
     let mix = system.audio.createGain()
 
     let nodes = []
@@ -171,7 +171,7 @@ define(function (require) {
     components.filter(c => c !== undefined)
               .forEach(c => c.connect(mix))
 
-    waveEffects(params, mix).connect(vca)
+    waveEffects(params, effects(params, mix)).connect(vca)
     params._destructor.disconnect(vca, mix, nodes)
   }
 });
