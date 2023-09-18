@@ -694,7 +694,7 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>clip</code> boost the signal then apply hard clipping</p>
 <p class='sub'><code>clip={12,gain:2}</code> Input gain; gain amp to apply to the signal before clip is applied</p>
 <p class='sub'><code>clip={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
-<p><code>drive</code> overdrive by boosting the signal then applying soft clipping</p>
+<p><code>drive</code> overdrive by boosting the signal then applying soft clipping. Low values (eg 1/32, 1/16) give a gentle overdrive. Mid values (eg 1/8, 1/4) give a distortion effect. Higher values (eg 1/2, 1) give a full on fuzz.</p>
 <p class='sub'><code>drive={12,gain:2}</code> Input gain; gain amp to apply to the signal before drive is applied</p>
 <p class='sub'><code>drive={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>bits</code> bit crush effect; value is number of bits. 1 bit is very distorted to (eg) 32 bits is relatively clean. 0 disables the effect.</p>
@@ -1042,8 +1042,6 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
-Fix getting fuzz for synths by applying effects (including filters) BEFORE applying wave effects
- Release - note change to effects order
 smooth{} should take units - set attack and decay in ms for 303 then
  ?Doesnt' actually make sense? What units are smooth att and decay anyway?
 Allow h808 to also be `ph h808 --=--=-=-` :-)
