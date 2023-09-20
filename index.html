@@ -1043,63 +1043,18 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 ====
 ==== audio ====
 Techno include lib
- 303
-  !!!!Review, clean up and Move to house lib
-  https://www.firstpr.com.au/rwi/dfish/303-unique.html
-  vca envelope - percussive attack < 3ms
-                fixed, long, exponential decay
-                 must also gate though, so that the note cuts off (cleanly) at the end of its duration
-                should choke (choke group per player?)
-                !!!Should reflect the gate: sus = dur/2 unless tied or accented!!!
-  cutoff - In the TB-303 the filter frequency was not affected by the pitch of the note
-           2500Hz max cutoff - 3200Hz max peak total filter peak when cutoff100% envmod 0%
-           500Hz at mid position
-           300Hz min??
-            c0 r1 e0 d0 405 -> 245
-            c1 r1 e0 d0 3500 -> 1900
-            c1 r1 e1 d0 27900 -> 711 over 341 ms
-            c0 r1 e1 d0 3500 -> 70
-            curve: -0.2938485 / (1.0 + -608.94871 * exp(-6.1539216 * x)) ???
-           Exponential not linear response to cutoff setting
-           cutoff raised for accented notes according to accent knob
-           envelope: exponential decay to zero controlled by decay knob
-           ! On accented notes, use short decay time which is the same as when the Decay pot is fully anti-clockwise
-            and this should ignore the accent pot
-           ! Accented notes smooth the meg
-           ! Repeated accent notes push cutoff even higher
-           24db/octave by chaining 2 lowpass?
-  resonance - the Resonance pot drives a special circuit – the Accent Sweep
-              Circuit – to pulse the filter frequency and add to the volume on accented notes. When the
-              Resonance pot is anti-clockwise, this is basically a direct pulse proportional to the setting of
-              Accent pot, and is derived from the MEG. When the Resonance pot is clockwise, this pulse
-              goes through a “lag” circuit which causes the filter to sweep up at the start of the note. This
-              gives the distinctive TB-303 resonant “wapp” sound.
-  env mod
-  decay - 200ms to 2s - exponential response??? - actual min 340ms??
-  slide - fixed 88ms
-        ! slide should cause envelopes to NOT retrigger... legato...
-        ? should really start Before the end of the first note...??? THIS IS NOT TRUE?
-        ! But it SHOULD really be specified on the note BEFORE! Is 0s2.. slides the 0 into the 2...
-  accent
-      ! Not doing much, especially when other settings turned down?
-      ! But also doing too much when all other settings turned right up?
-  tuning - ?
-  wave
-  choke by player id
-  Compare to a real 303 - recreate some famous 303 lines
-   https://www.youtube.com/watch?v=KwL2S5LRzFM&t=1107s
-    3#3#ds3#ua3#d3#us3#d3#a3as  - but needs legato slide
-    ! Not getting much fuzz with 'drive' param; need a messier waveform?
-   https://www.audiorealism.se/audiorealism-bass-line-2.html
-  Docs - gsuda~_ pattern flags, 303 settings, wave
  Reese bass
  Tin sky: tinbass (add accent / other controls??) (needs docs!)
  HPF electric lead (phrack)
  Melodic techno lead
  Ambient techno pads
+ Dark techno stuff
+ Classic detroit techno stuff
  ...
 House lib
- Move 303 here
+ 303
+  Move to house lib
+  Docs - gsuda~_ pattern flags, 303 settings, wave
  909 - https://github.com/matthewcieplak/er-99/blob/main/src/instruments.ts
 !Cannot do  bpf=[0,500]  it doesn't work
 !! Claves cl808 cause breakdown after a while; why??
@@ -1111,6 +1066,15 @@ Legato Tie
   ?But how to calculate pitch changes? And what about other paramas and flags on the tied notes
  Or, do by playing multiple notes in such a way that their envelope, envelope{} and []e play subsections
   ?Nut the timing becomes very complex...
+TB303 realism
+ slide - fixed 88ms
+  ! slide should cause envelopes to NOT retrigger... legato...
+  ? should really start Before the end of the first note...??? THIS IS NOT TRUE?
+  ! But it SHOULD really be specified on the note BEFORE! Is 0s2.. slides the 0 into the 2...
+ Compare to a real 303 - recreate some famous 303 lines
+  https://www.youtube.com/watch?v=KwL2S5LRzFM&t=1107s
+   3#3#ds3#ua3#d3#us3#d3#a3as  - but needs legato slide
+  https://www.audiorealism.se/audiorealism-bass-line-2.html
 More envelope{} features
  sustain and release
  units='event'
