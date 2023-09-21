@@ -28,7 +28,7 @@ define(function (require) {
     return compressor
   }
 
-  let shapeEffect = (params, effect, node, count, shape) => {
+  let shapeEffect = (params, effect, node, count, shape, oversample) => {
     let amount = evalMainParamEvent(params, effect, 0)
     if (!amount) { return node }
     node = inputGain(params, effect, node)
@@ -42,7 +42,7 @@ define(function (require) {
       curve[count+i] = y
     }
     shaper.curve = curve
-    shaper.oversample = 'none'
+    shaper.oversample = oversample || '2x'
     node.connect(shaper)
     params._destructor.disconnect(shaper, node)
     return mix(params, effect, node, shaper, 1)
@@ -50,9 +50,8 @@ define(function (require) {
 
   let noisify = (x, amount, i) => {
     let y
-    if (i%3 == 0) { y = x }
-    if (i%3 == 1) { y = x-amount*4*x }
-    if (i%3 == 2) { y = x+amount*4*x }
+    if (i%2 == 0) { y = x-amount*2*x }
+    if (i%2 == 1) { y = x+amount*2*x }
     return y
   }
 
@@ -74,13 +73,13 @@ define(function (require) {
   }
 
   return (params, node) => {
-    node = shapeEffect(params, 'noisify', node, 500, noisify)
-    node = shapeEffect(params, 'bits', node, 256, (x, b) => Math.pow(Math.round(Math.pow(x,1/2)*b)/b,2))
-    node = shapeEffect(params, 'fold', node, 256, fold)
-    node = shapeEffect(params, 'clip', node, 256, clip)
-    node = shapeEffect(params, 'drive', node, 4096, drive)
-    node = shapeEffect(params, 'suck', node, 256, (x, a) => Math.abs(x)<a ? x*Math.abs(x)/a : x)
-    node = shapeEffect(params, 'linearshape', node, 8, (x) => x) // For testing purposes; applies clipping at -1 and 1, so can be used to test synth intermediate levels
+    node = shapeEffect(params, 'noisify', node, 16383, noisify, '4x')
+    node = shapeEffect(params, 'bits', node, 255, (x, b) => Math.pow(Math.round(Math.pow(x,1/2)*b)/b,2))
+    node = shapeEffect(params, 'fold', node, 255, fold)
+    node = shapeEffect(params, 'clip', node, 255, clip)
+    node = shapeEffect(params, 'drive', node, 1023, drive)
+    node = shapeEffect(params, 'suck', node, 255, (x, a) => Math.abs(x)<a ? x*Math.abs(x)/a : x)
+    node = shapeEffect(params, 'linearshape', node, 7, (x) => x) // For testing purposes; applies clipping at -1 and 1, so can be used to test synth intermediate levels
     node = compressor(params, node)
     return node
   }
