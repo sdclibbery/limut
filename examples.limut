@@ -3404,6 +3404,7 @@ b saw 01-706g-706g, dur=1/4, oct=2, lpf=[1500:200]e, glide=this.g*this.dur/2
 // Acid Trance
 include 'preset/synthwave.limut'
 include 'preset/techno.limut'
+include 'preset/house.limut'
 set scale=minor
 set bpm=135
 set main drive=1/24

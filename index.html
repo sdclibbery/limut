@@ -292,6 +292,11 @@ p dsaw 0., dur=[3,1,5,3,3,4], addc=[1:3]r+[2,0]e, envelope=simple, att=0.1, rel=
 <pre>v kal 1, buffer=vb1, contrast=3, blend=max, zoom=2, scroll=1
 vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 </pre>
+<pre>
+include 'preset/house.limut'
+set bpm=127
+b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, accent=1  
+</pre>
 <p>More examples: <a href="https://github.com/sdclibbery/limut/blob/master/examples.txt" target="_blank">https://github.com/sdclibbery/limut/blob/master/examples.txt</a></p>
 </div>
 <h4 onclick="toggleAccordion('accordion-glossary')" class="accordion"> Glossary</h4>
@@ -1035,6 +1040,26 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 <p><code>hollow</code> Hollow sounding pad</p>
 <p><code>tinbass</code> Flanged bass</p>
 </div>
+<h4 onclick="toggleAccordion('accordion-house-libraries')" class="accordion"> House Library</h4>
+<div id="accordion-house-libraries" class="closed">
+<h5>House library: <code>include 'preset/house.limut'</code></h5>
+<h6>Audio</h6>
+<p><code>tb303</code> Simulated 303 (acid) bass.
+  The following custom control params are available, corresponding to the main control knobs on a 303:<br/>
+  <code>wave</code> 303 waveform. set to <code>'saw'</code> or <code>'square'</code>. The default is <code>'saw'</code>.<br/>
+  <code>cutoff</code> 303 cutoff control 0 to 1; default 1/2. Set the filter cutoff. Higher values give a brighter sound with more harmonics.<br/>
+  <code>resonance</code> 303 resonance control 0 to 1; default 1/2. Set the filter resonance. Higher values give a squelchy acid sound.<br/>
+  <code>envmod</code> 303 envmod control 0 to 1; default 1/2. Set the depth of envelope modulation. Higher values change the filter cutoff more over the course of a single note.<br/>
+  <code>decay</code> 303 decay control 0 to 1; default 1/2. Set the envelope decay time. Set the envelope decay time for filter envelope. Higher values take longer to decay.<br/>
+  <code>accent</code> 303 accent control 0 to 1; default 1/2. Set how much effect accented notes have.<br/>
+  The following pattern flags can be used:<br/>
+  <code>a</code> accent flag. Makes the preceding note accented, making it louder and brighter.<br/>
+  <code>u</code> up octave. Makes the preceding note an octave higher.<br/>
+  <code>d</code> down octave. Makes the preceding note an octave lower.<br/>
+  <code>s</code> slide. This does not (yet) work the same as the 303 slide, which would slide the _next_ note from this one, and not retrigger the envelope for it. However currently in the limut 303, it slides the _current_ note, and the envelope still retriggers (no legato).<br/>
+  For exampple <code>b tb303 0u0d0ua0</code> plays a pattern of four notes, one up an octave, the next down an octave, one up an octave and accented, then one without any flags.
+</p>
+</div>
 <hr>
 <p>Please report bugs, problems, issues and suggestions on <a href="https://github.com/sdclibbery/limut/issues" target="_blank">https://github.com/sdclibbery/limut/issues</a></p>
 <p>Latest release notes including breaking changes: <a href="https://github.com/sdclibbery/limut/releases/tag/v0.14.0-alpha" target="_blank">https://github.com/sdclibbery/limut/releases/tag/v0.14.0-alpha</a></p>
@@ -1044,6 +1069,11 @@ vb1 buffer 0, feedback={zoom:1.01,ripple:1/32,contrast:0.005}
 /*
 ====
 ==== audio ====
+House lib
+ 909 - https://github.com/matthewcieplak/er-99/blob/main/src/instruments.ts
+ M1 Organ
+ Rave stab?
+ ...
 Techno include lib
  Reese bass
  HPF electric lead (phrack)
@@ -1051,12 +1081,6 @@ Techno include lib
  Ambient techno pads
  Dark techno stuff
  Classic detroit techno stuff
-House lib
- 303
-  Move to house lib
-  Docs - gsuda~_ pattern flags, 303 controls, wave
- 909 - https://github.com/matthewcieplak/er-99/blob/main/src/instruments.ts
- M1 Organ
  ...
 !Cannot do  bpf=[0,500]  it doesn't work
 !! Claves cl808 cause breakdown after a while; why??
