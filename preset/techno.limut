@@ -36,7 +36,7 @@ preset tinbass dbass
 preset hollow tri
   , envelope='pad', addc=wow
   , oct+=(-1,0), add+=(0,4)
-  , amp*=[1/3:3/2]l[8.0]@f * [3/4,0]t[13,3]
+  , amp*=[1/3:3/2]l[8.0]@f
   , bpf=[500:2000]n8, echo=1.01, chorus=3, phaser=1/23
   , noisify=[1/16:1/4]n12
 
