@@ -21,3 +21,12 @@ preset tb303 wave
     poles:4
   }
   , glide={(this.g+this.s)*88, units:'ms'}
+
+preset bd909 pitchedperc
+	, choke=this.player
+	, click=1
+  , hit=0
+	, body={1,wave:'sine',att:5,dec:500,freq:60,boost:120,pitchdec:50}
+  , rattle={1,dec:200,freq:80,boost:120,pitchdec:50}
+  , lpf=3000, drive=1/48
+
