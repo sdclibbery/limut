@@ -32,7 +32,7 @@ preset bd909 pitchedperc
   , attack=1/2
   , decay=1/2
   // Pitched Perc params
-	, click= 1*this.attack
+	, click= 3/2*this.attack
   , hit= 0
 	, body={ 1
     , wave:'tri'
@@ -40,7 +40,7 @@ preset bd909 pitchedperc
     , freq:47, boost:120, pitchatt:2, pitchdec:5+100*this.tune
     , saturation:0.85
   }
-  , rattle={ 2*this.attack
+  , rattle={ 3*this.attack
     , dec:200
     , freq:47, boost:153, pitchatt:2, pitchdec:5+100*this.tune
   }
