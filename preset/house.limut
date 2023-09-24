@@ -26,7 +26,7 @@ preset bd909 pitchedperc
 	, dur=1/4, amp*=this.level*2
 	, choke=this.player
   , lpf=3000
-  // 909 Controls
+  // 909 BD Controls
   , level=1/2
   , tune=1/2
   , attack=1/2
@@ -44,4 +44,16 @@ preset bd909 pitchedperc
     , dec:200
     , freq:47, boost:153, pitchatt:2, pitchdec:5+100*this.tune
   }
+
+preset h909 sample
+	, sample='sample/909/hh.wav'
+  // 909 HiHat controls
+  , chdecay=1/2
+  , ohdecay=1/2
+  // Sample synth params
+  , dur=1/4, choke='h909'
+  , envelope='exp'
+  , dec=1/16 + ((this.ohdecay+1/4)*this.o)*4 + (this.chdecay*(1-this.o))/4
+  , rate=1
+
 
