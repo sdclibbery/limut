@@ -1072,55 +1072,13 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 House lib
  909 - https://github.com/matthewcieplak/er-99/blob/main/src/instruments.ts
        https://www.polynominal.com/site/studio/gear/drum/roland-tr909/roland-tr909-service-manual.pdf
-
- er99 kick
-  (
-    osc triangle 200Hz decay:50ms;exp to 80Hz
-     -> gain 1/2
-     -> waveshaper distortionCurve(2) oversample:2x
-     -> input gain 1/2 attack:5ms;linear decay:300ms;exp 
-    noise noise source white
-     -> noiseInput gain 1/2 attack:instant decay:20ms;exp
-  )
-   -> output gain vol 1/2 + accent
-   -> filter lowpass 3000Hz
-   -> compressor (destination)
-
-  pitchedperc kick
-   (
-    osc sine 205->55 pow 3
-     -> lowpass 410->110 freq
-    noise sample
-     -> lowpass 260->55 pow 8
-    click impulse
-     -> lowpass 1500
-   )
-   -> gain
-
-   SoS 909 kick
-   (
-    osc saw sweep decay only
-     -> lowpass
-     -> envelope AR modidifed by accent
-    (
-     noise
-      -> lowpass
-     impulse
-    )
-    -> envelope decay only
-   )
-   -> gain
-
-   Suggestion: modify pitchedperc
-    Set gainbase
-    Fix bd preset
-    Docs - all changed params/subparams
-    Release
-
+       https://youtu.be/6cT3Rndndic?si=WqQxNu93QQJ2NjAL
+       https://roland50.studio/
  bd909 using pitchedperc
-  Basic setup
   Controls
-  Accent
+   Check each control against the vid
+  Accent from value and add
+   Can check against vid??
   Docs
  hihat 909
  cp909
@@ -1132,6 +1090,9 @@ House lib
  909 toms - pitchedperc
  909 cymbals
  Modified 909 kick with extra pitch, drive, and tune depth controls
+ PitchedPerc update/release
+  Docs - all changed params/subparams
+  Release
  M1 Organ
  Rave stab?
  ...

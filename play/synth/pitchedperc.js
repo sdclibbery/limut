@@ -42,7 +42,7 @@ define(function (require) {
   }
 
   let hit = (params) => {
-    let gain = evalMainParamEvent(params, 'hit', 1)*0.25
+    let gain = evalMainParamEvent(params, 'hit', 0)*0.25
     if (gain <= 0.0001) { return undefined }
     let sample = evalSubParamEvent(params, 'hit', 'sample', '^')
     let sampleIdx = evalSubParamEvent(params, 'hit', 'index', 1)
@@ -62,6 +62,17 @@ define(function (require) {
     return vca
   }
 
+  let tanhCurveData
+  let tanhCurve = () => {
+    if (!!tanhCurveData) { return tanhCurveData }
+    var N = 255
+    tanhCurveData = new Float32Array(N)
+    for (var i = 0; i < tanhCurveData.length; i++) {
+        var x = 2 * (i / (N - 1)) - 1
+        tanhCurveData[i] = Math.tanh(x*2)
+    }
+    return tanhCurveData
+  }
   let body = (params) => {
     let gain = evalMainParamEvent(params, 'body', 1)*0.2
     if (gain <= 0.0001) { return undefined }
@@ -71,21 +82,36 @@ define(function (require) {
     let decay = evalSubParamEvent(params, 'body', 'dec', 400)*timeScale
     let freq = evalSubParamEvent(params, 'body', 'freq', 55)
     let boost = evalSubParamEvent(params, 'body', 'boost', 150)
+    let pitchatt = evalSubParamEvent(params, 'body', 'pitchatt', 0)*timeScale
     let pitchdec = evalSubParamEvent(params, 'body', 'pitchdec', 50)*timeScale
     let wave = evalSubParamEvent(params, 'body', 'wave', 'sine')
+    let saturation = evalSubParamEvent(params, 'body', 'saturation', 0)
     let vco = system.audio.createOscillator()
     params._destructor.disconnect(vco)
     setWave(vco, wave)
     vco.frequency.setValueAtTime(0,0)
-    vco.frequency.setValueAtTime(freq+boost, params._time)
-    vco.frequency.exponentialRampToValueAtTime(freq, params._time + pitchdec)
+    vco.frequency.setValueAtTime(0, params._time)
+    vco.frequency.linearRampToValueAtTime(freq+boost, params._time + pitchatt)
+    vco.frequency.exponentialRampToValueAtTime(freq, params._time + pitchatt+pitchdec)
     let vca = system.audio.createGain()
     params._destructor.disconnect(vca)
     vca.gain.setValueAtTime(0,0)
     vca.gain.setValueAtTime(0, params._time)
     vca.gain.linearRampToValueAtTime(gain, params._time+attack)
     vca.gain.exponentialRampToValueAtTime(0.00001, params._time + attack+decay)
-    vco.connect(vca)
+    if (!!saturation) {
+      let satGain = system.audio.createGain()
+      satGain.gain.value = saturation
+      let ws = system.audio.createWaveShaper()
+      ws.curve = tanhCurve()
+      ws.oversample = '2x'
+      vco.connect(satGain)
+      satGain.connect(ws)
+      ws.connect(vca)
+      params._destructor.disconnect(satGain, ws)
+    } else {
+      vco.connect(vca)
+    }
     vco.start(params._time)
     vco.stop(params._time + attack+decay)
     params.endTime = Math.max(params.endTime, params._time+attack+decay)
@@ -102,6 +128,7 @@ define(function (require) {
     let rate = evalSubParamEvent(params, 'rattle', 'rate', 1)
     let freq = evalSubParamEvent(params, 'rattle', 'freq', 55)
     let boost = evalSubParamEvent(params, 'rattle', 'boost', 205)
+    let pitchatt = evalSubParamEvent(params, 'rattle', 'pitchatt', 0)*timeScale
     let pitchdec = evalSubParamEvent(params, 'rattle', 'pitchdec', 50)*timeScale
     let q = evalSubParamEvent(params, 'rattle', 'q', 18)
     let n = whiteNoise()
@@ -112,8 +139,9 @@ define(function (require) {
     lpf.type = 'lowpass'
     lpf.Q.value = q
     lpf.frequency.setValueAtTime(0,0)
-    lpf.frequency.setValueAtTime(freq+boost, params._time)
-    lpf.frequency.exponentialRampToValueAtTime(freq, params._time + pitchdec)
+    lpf.frequency.setValueAtTime(0, params._time)
+    lpf.frequency.linearRampToValueAtTime(freq+boost, params._time + pitchatt)
+    lpf.frequency.exponentialRampToValueAtTime(freq, params._time + pitchatt+pitchdec)
     n.connect(lpf)
     let vca = system.audio.createGain()
     params._destructor.disconnect(vca)
