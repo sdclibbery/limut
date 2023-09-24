@@ -52,8 +52,8 @@ preset h909 sample
   , ohdecay=1/2
   // Sample synth params
   , dur=1/4, choke='h909'
-  , envelope='exp'
-  , dec=1/16 + ((this.ohdecay+1/4)*this.o)*4 + (this.chdecay*(1-this.o))/4
+  , envelope='full', att=0, dec=0, sus={1,level:1}, rel=0
+  , amp*=envelope{d:50 + ((this.ohdecay*1000+250)*this.o) + (this.chdecay*200*(1-this.o)), units:'ms', shape:'exp'}
   , rate=1
 
 
