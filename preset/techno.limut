@@ -1,23 +1,23 @@
-preset bd808 io808, type='bd', choke='808bd', decay=1/3
-preset sd808 io808, type='sd', choke='808sd', snappy=1/4
-preset oh808 io808, type='oh', choke='808hat'
-preset ch808 io808, type='ch', choke='808hat'
-preset cb808 io808, type='cb', choke='808cb'
-preset cp808 io808, type='cp', choke='808cp'
-preset ma808 io808, type='ma', choke='808ma'
-preset ht808 io808, type='ht', choke='808t'
-preset mt808 io808, type='mt', choke='808t'
-preset lt808 io808, type='lt', choke='808t'
-preset hc808 io808, type='hc', choke='808c'
-preset mc808 io808, type='mc', choke='808c'
-preset lc808 io808, type='lc', choke='808c'
-preset cl808 io808, type='cl', choke='808cl'
-preset rs808 io808, type='rs', choke='808rs'
-preset cy808 io808, type='cy', choke='808cy'
-preset t808 io808, type=('lt','mt','ht').(1 - this.l + this.h), choke='808t'
-preset c808 io808, type=('lc','mc','hc').(1 - this.l + this.h), choke='808c'
-preset h808 io808, type=('ch','oh').(this.o), choke='808hat'
-preset tr808 io808, choke='808'
+preset bd808 io808, type='bd', choke=this.player, decay=1/3
+preset sd808 io808, type='sd', choke=this.player, snappy=1/4
+preset oh808 io808, type='oh', choke=this.player
+preset ch808 io808, type='ch', choke=this.player
+preset cb808 io808, type='cb', choke=this.player
+preset cp808 io808, type='cp', choke=this.player
+preset ma808 io808, type='ma', choke=this.player
+preset ht808 io808, type='ht', choke=this.player
+preset mt808 io808, type='mt', choke=this.player
+preset lt808 io808, type='lt', choke=this.player
+preset hc808 io808, type='hc', choke=this.player
+preset mc808 io808, type='mc', choke=this.player
+preset lc808 io808, type='lc', choke=this.player
+preset cl808 io808, type='cl', choke=this.player
+preset rs808 io808, type='rs', choke=this.player
+preset cy808 io808, type='cy', choke=this.player
+preset t808 io808, type=('lt','mt','ht').(1 - this.l + this.h), choke=this.player
+preset c808 io808, type=('lc','mc','hc').(1 - this.l + this.h), choke=this.player
+preset h808 io808, type=('ch','oh').(this.o), choke=this.player
+preset tr808 io808, choke=this.player // Choke should really be per type, except for combining oh and ch
   , type=({
     x:'bd', v:'bd',
     o:'sd', i:'sd', u:'sd',

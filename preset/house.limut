@@ -31,16 +31,18 @@ preset bd909 pitchedperc
   , tune=1/2
   , attack=1/2
   , decay=1/2
+  // Derived params
+  , accent=(this.value+this.add)/7
   // Pitched Perc params
-	, click= 3/2*this.attack
+	, click= 3/2*(this.attack + this.accent)
   , hit= 0
-	, body={ 1
+	, body={ 1 + this.accent
     , wave:'tri'
     , att:5, dec:100+900*this.decay
     , freq:47, boost:120, pitchatt:2, pitchdec:5+100*this.tune
     , saturation:0.85
   }
-  , rattle={ 3*this.attack
+  , rattle={ 3*(this.attack + this.accent)
     , dec:200
     , freq:47, boost:153, pitchatt:2, pitchdec:5+100*this.tune
   }
@@ -48,12 +50,15 @@ preset bd909 pitchedperc
 preset h909 sample
 	, sample='sample/909/hh.wav'
   // 909 HiHat controls
+  , level=1/2
   , chdecay=1/2
   , ohdecay=1/2
+  // Derived params
+  , decay=50 + ((this.ohdecay*4000+250)*this.o) + (this.chdecay*150*(1-this.o))
+  , accent=(this.value+this.add)/7
   // Sample synth params
-  , dur=1/4, choke='h909'
+  , dur=1/4, choke=this.player
   , envelope='full', att=0, dec=0, sus={1,level:1}, rel=0
-  , amp*=envelope{d:50 + ((this.ohdecay*1000+250)*this.o) + (this.chdecay*200*(1-this.o)), units:'ms', shape:'exp'}
-  , rate=1
+  , amp*=envelope{d:this.decay, units:'ms', shape:'exp'}*(this.level+this.accent)
 
 
