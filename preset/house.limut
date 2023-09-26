@@ -54,11 +54,12 @@ preset h909 sample
   , chdecay=1/2
   , ohdecay=1/2
   // Derived params
-  , decay=50 + ((this.ohdecay*4000+250)*this.o) + (this.chdecay*150*(1-this.o))
+  , decay=30 + ((this.ohdecay*1000+400)*this.o) + (this.chdecay*180*(1-this.o))
   , accent=(this.value+this.add)/7
   // Sample synth params
   , dur=1/4, choke=this.player
+  , rate=1
   , envelope='full', att=0, dec=0, sus={1,level:1}, rel=0
-  , amp*=envelope{d:this.decay, units:'ms', shape:'exp'}*(this.level+this.accent)
+  , amp*=envelope{d:this.decay, units:'ms', shape:'exp'}*(this.level+this.accent)*0.7
 
 

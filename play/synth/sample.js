@@ -12,12 +12,21 @@ define(function (require) {
   let perFrameAmp = require('play/effects/perFrameAmp')
 
   return (params) => {
-    let freq = scale.paramsToFreq(params, 4)
-    if (isNaN(freq)) { return }
-    let source = system.audio.createBufferSource()
-    source.buffer = getBuffer(evalMainParamEvent(params, 'sample', 'sample/salamander/C4v8.mp3'))
-    let samplePitch = evalSubParamEvent(params, 'sample', 'pitch', 261.6256)
-    source.playbackRate.value = freq / samplePitch
+    let rate = evalMainParamEvent(params, 'rate')
+    let source
+    if (rate === undefined) {
+      let freq = scale.paramsToFreq(params, 4)
+      if (isNaN(freq)) { return }
+      source = system.audio.createBufferSource()
+      source.buffer = getBuffer(evalMainParamEvent(params, 'sample', 'sample/salamander/C4v8.mp3'))
+      let samplePitch = evalSubParamEvent(params, 'sample', 'pitch', 261.6256)
+      source.playbackRate.value = freq / samplePitch
+    } else { // If rate is set, use it instead of value/add
+      source = system.audio.createBufferSource()
+      source.buffer = getBuffer(evalMainParamEvent(params, 'sample', 'sample/salamander/C4v8.mp3'))
+      source.playbackRate.value = rate
+    }
+
     params.endTime = params._time + evalMainParamEvent(params, 'dur', 0.1)*params.beat.duration
     let startTime = evalMainParamEvent(params, 'start', 0)
 
