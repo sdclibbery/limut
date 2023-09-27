@@ -60,6 +60,6 @@ preset h909 sample
   , dur=1/4, choke=this.player
   , rate=1
   , envelope='organ'
-  , amp*=envelope{d:this.decay, units:'ms', shape:'exp'}*(this.level+this.accent)*0.4
+  , amp*=envelope{d:this.decay, units:'ms', shape:'exp'}*(this.level+this.accent)*0.35
 
-
+preset cp909 io808, type='cp', choke=this.player, amp*=3 // 909 uses similar handclap as 808

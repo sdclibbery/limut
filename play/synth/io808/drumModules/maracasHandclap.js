@@ -48,14 +48,15 @@ define(function (require) {
     else if (selector === 1) {
       // modules
       const clapFilter = new VCF('bandpass', system.audio);
-      clapFilter.frequency.value = 1000;
+      clapFilter.frequency.value = 1200;
+      clapFilter.q = 10;
 
       const sawVCA = new VCA(system.audio);
       const reverVCA = new VCA(system.audio);
 
       const sawEnv = new SawEnvGenerator();
-      const reverEnv = new ADGenerator('linear', 0.2, 115, 0, 0.75);
-      params.endTime = params._time + 0.2/1000 + 115/1000
+      const reverEnv = new ADGenerator('exponential', 0.1, 500, 0, 0.75);
+      params.endTime = params._time + 0.1/1000 + 500/1000
 
       // routing
       osc.connect(clapFilter);
