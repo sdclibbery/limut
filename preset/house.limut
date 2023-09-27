@@ -60,6 +60,6 @@ preset h909 sample
   , dur=1/4, choke=this.player
   , rate=1
   , envelope='full', att=0, dec=0, sus={1,level:1}, rel=0
-  , amp*=envelope{d:this.decay, units:'ms', shape:'exp'}*(this.level+this.accent)*0.7
+  , amp*=envelope{d:this.decay, units:'ms', shape:'exp'}*(this.level+this.accent)*0.4
 
 
