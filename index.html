@@ -1059,11 +1059,16 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
   <code>s</code> slide. This does not (yet) work the same as the 303 slide, which would slide the _next_ note from this one, and not retrigger the envelope for it. However currently in the limut 303, it slides the _current_ note, and the envelope still retriggers (no legato).<br/>
   For exampple <code>b tb303 0u0d0ua0</code> plays a pattern of four notes, one up an octave, the next down an octave, one up an octave and accented, then one without any flags.
 </p>
-<p><code>bd909</code> Simulated 909 kick. The value of the event gives the accent. Subparams:<br/>
+<p><code>bd909</code> Simulated 909 kick. The value of the event gives the accent. Control params:<br/>
   <code>level</code> Volume level from 0 to 1, default 1/2.<br/>
   <code>tune</code> BD tune from 0 to 1, default 1/2. Changes the pitch sweep decay time rather than the actual pitch<br/>
   <code>attack</code> Attack level from 0 to 1, default 1/2. Changes the level of initial click and noise hit rather than the actual attack.<br/>
   <code>decay</code> Decay from 0 to 1, default 1/2.<br/>
+</p>
+<p><code>h909</code> Simulated 909 hihats. The value of the event gives the accent. Use an <code>o</code> pattern flag for an open hihat. A choke group is used so an open hihat will be cutoff by subsequent hihat hits. Control params:<br/>
+  <code>level</code> Volume level from 0 to 1, default 1/2.<br/>
+  <code>chdecay</code> Closed hihat decay from 0 to 1, default 1/2.<br/>
+  <code>ohdecay</code> Open hihat decay from 0 to 1, default 1/2.<br/>
 </p>
 </div>
 <hr>
@@ -1080,10 +1085,6 @@ House lib
        https://www.polynominal.com/site/studio/gear/drum/roland-tr909/roland-tr909-service-manual.pdf
        https://youtu.be/6cT3Rndndic?si=WqQxNu93QQJ2NjAL
        https://roland50.studio/
- hihat 909
-  allow playing with - and =
-   !Would need to do same for h808
-  docs
  cp909 - ???
  rs909 - pitchedperc noise???
  sd909 - pitchedperc
