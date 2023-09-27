@@ -1,7 +1,7 @@
 preset tb303 wave
 	, wave='saw', oct=2+this.u-this.d, choke=this.player
 	, dur=1/4 // 1/16th notes
-  , envelope='full', att=0.01, dec=0, rel=0.01, sus={this.dur-(1-this.a)*5/48, level:1} // Gate
+  , envelope='organ', sus={this.dur-(1-this.a)*5/48, level:1} // Gate
   , amp*=envelope{d:1000, units:'ms', shape:'exp'} // VCA envelope: slow exponential decay
   // 303 Controls
   , cutoff=1/2
@@ -59,7 +59,7 @@ preset h909 sample
   // Sample synth params
   , dur=1/4, choke=this.player
   , rate=1
-  , envelope='full', att=0, dec=0, sus={1,level:1}, rel=0
+  , envelope='organ'
   , amp*=envelope{d:this.decay, units:'ms', shape:'exp'}*(this.level+this.accent)*0.4
 
 
