@@ -12,7 +12,7 @@ define(function (require) {
 
       let timeOffset = 0;
       for (let i = 0; i < 4; i++) {
-        this.param.setValueAtTime(1, time + timeOffset);
+        this.param.setValueAtTime(1-i/10, time + timeOffset);
         timeOffset += REVER_INTERVAL;
         this.param.exponentialRampToValueAtTime(0.00001, time + timeOffset);
       }

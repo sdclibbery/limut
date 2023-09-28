@@ -57,7 +57,7 @@ preset h909 sample
   , decay=30 + ((this.ohdecay*1000+400)*this.o) + (this.chdecay*180*(1-this.o))
   , accent=(this.value+this.add)/7
   // Sample synth params
-  , dur=1/4, choke=this.player
+  , dur=1/4, sus=max{this.dur,this.decay}, choke=this.player
   , rate=1
   , envelope='organ'
   , amp*=envelope{d:this.decay, units:'ms', shape:'exp'}*(this.level+this.accent)*0.35
