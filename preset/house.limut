@@ -63,3 +63,32 @@ preset h909 sample
   , amp*=envelope{d:this.decay, units:'ms', shape:'exp'}*(this.level+this.accent)*0.35
 
 preset cp909 io808, type='cp', choke=this.player, amp*=3 // 909 uses similar handclap as 808
+
+preset cc909 sample
+	, sample='sample/909/crash.wav'
+  // 909 Crash controls
+  , level=1/2
+  , tune=1/2
+  // Derived params
+  , decay=2000
+  , accent=(this.value+this.add)/7
+  // Sample synth params
+  , dur=1/4, sus=this.decay, choke=this.player
+  , rate=3/4+this.tune/2
+  , envelope='organ'
+  , amp*=(this.level+this.accent)*0.9
+
+preset rc909 sample
+	, sample='sample/909/ride.wav'
+  // 909 Ride controls
+  , level=1/2
+  , tune=1/2
+  // Derived params
+  , decay=2000
+  , accent=(this.value+this.add)/7
+  // Sample synth params
+  , dur=1/4, sus=this.decay, choke=this.player
+  , rate=3/4+this.tune/2
+  , envelope='organ'
+  , amp*=(this.level+this.accent)*0.4
+
