@@ -57,7 +57,7 @@ define(function (require) {
     vca.gain.value = gain
     source.connect(vca)
     source.start(params._time)
-    source.stop(params._time+source.buffer.duration)
+    params._destructor.stop(source)
     params.endTime = Math.max(params.endTime, params._time+source.buffer.duration)
     return vca
   }
@@ -73,19 +73,19 @@ define(function (require) {
     }
     return tanhCurveData
   }
-  let body = (params) => {
-    let gain = evalMainParamEvent(params, 'body', 1)*0.2
+  let body = (params, p, def) => {
+    let gain = evalMainParamEvent(params, p, def)*0.2
     if (gain <= 0.0001) { return undefined }
-    let units = evalSubParamEvent(params, 'body', 'units', 'ms').toLowerCase()
+    let units = evalSubParamEvent(params, p, 'units', 'ms').toLowerCase()
     let timeScale = timeToBeats(1, units, params)
-    let attack = evalSubParamEvent(params, 'body', 'att', 5)*timeScale
-    let decay = evalSubParamEvent(params, 'body', 'dec', 400)*timeScale
-    let freq = evalSubParamEvent(params, 'body', 'freq', 55)
-    let boost = evalSubParamEvent(params, 'body', 'boost', 150)
-    let pitchatt = evalSubParamEvent(params, 'body', 'pitchatt', 0)*timeScale
-    let pitchdec = evalSubParamEvent(params, 'body', 'pitchdec', 50)*timeScale
-    let wave = evalSubParamEvent(params, 'body', 'wave', 'sine')
-    let saturation = evalSubParamEvent(params, 'body', 'saturation', 0)
+    let attack = evalSubParamEvent(params, p, 'att', 5)*timeScale
+    let decay = evalSubParamEvent(params, p, 'dec', 400)*timeScale
+    let freq = evalSubParamEvent(params, p, 'freq', 55)
+    let boost = evalSubParamEvent(params, p, 'boost', 150)
+    let pitchatt = evalSubParamEvent(params, p, 'pitchatt', 0)*timeScale
+    let pitchdec = evalSubParamEvent(params, p, 'pitchdec', 50)*timeScale
+    let wave = evalSubParamEvent(params, p, 'wave', 'sine')
+    let saturation = evalSubParamEvent(params, p, 'saturation', 0)
     let vco = system.audio.createOscillator()
     params._destructor.disconnect(vco)
     setWave(vco, wave)
@@ -113,7 +113,7 @@ define(function (require) {
       vco.connect(vca)
     }
     vco.start(params._time)
-    vco.stop(params._time + attack+decay)
+    params._destructor.stop(vco)
     params.endTime = Math.max(params.endTime, params._time+attack+decay)
     return vca
   }
@@ -123,23 +123,24 @@ define(function (require) {
     if (gain <= 0.0001) { return undefined }
     let units = evalSubParamEvent(params, 'rattle', 'units', 'ms').toLowerCase()
     let timeScale = timeToBeats(1, units, params)
-    let attack = evalSubParamEvent(params, 'rattle', 'att', 0)*timeScale
+    let attack = evalSubParamEvent(params, 'rattle', 'att', 1)*timeScale
     let decay = evalSubParamEvent(params, 'rattle', 'dec', 30)*timeScale
     let rate = evalSubParamEvent(params, 'rattle', 'rate', 1)
     let freq = evalSubParamEvent(params, 'rattle', 'freq', 55)
     let boost = evalSubParamEvent(params, 'rattle', 'boost', 205)
-    let pitchatt = evalSubParamEvent(params, 'rattle', 'pitchatt', 0)*timeScale
+    let pitchatt = evalSubParamEvent(params, 'rattle', 'pitchatt', 1)*timeScale
     let pitchdec = evalSubParamEvent(params, 'rattle', 'pitchdec', 50)*timeScale
+    let filter = evalSubParamEvent(params, 'rattle', 'filter', 'lowpass')
     let q = evalSubParamEvent(params, 'rattle', 'q', 18)
     let n = whiteNoise()
     params._destructor.disconnect(n)
     n.playbackRate.value = rate
     let lpf = system.audio.createBiquadFilter()
     params._destructor.disconnect(lpf)
-    lpf.type = 'lowpass'
+    lpf.type = filter
     lpf.Q.value = q
-    lpf.frequency.setValueAtTime(0,0)
-    lpf.frequency.setValueAtTime(0, params._time)
+    lpf.frequency.setValueAtTime(10,0)
+    lpf.frequency.setValueAtTime(10, params._time)
     lpf.frequency.linearRampToValueAtTime(freq+boost, params._time + pitchatt)
     lpf.frequency.exponentialRampToValueAtTime(freq, params._time + pitchatt+pitchdec)
     n.connect(lpf)
@@ -151,8 +152,8 @@ define(function (require) {
     vca.gain.exponentialRampToValueAtTime(0.00001, params._time + attack+decay)
     lpf.connect(vca)
     n.start(params._time)
-    n.stop(params._time + decay)
-    params.endTime = Math.max(params.endTime, params._time+decay)
+    params._destructor.stop(n)
+    params.endTime = Math.max(params.endTime, params._time+attack+decay)
     return vca
   }
 
@@ -166,7 +167,8 @@ define(function (require) {
     let components = [
       click(params),
       hit(params),
-      body(params),
+      body(params, 'body', 1),
+      body(params, 'body2', 0),
       rattle(params),
     ]
     let mix = system.audio.createGain()

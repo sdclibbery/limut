@@ -2,7 +2,7 @@ preset tb303 wave
 	, wave='saw', oct=2+this.u-this.d, choke=this.player
 	, dur=1/4 // 1/16th notes
   , envelope='organ', sus={this.dur-(1-this.a)*5/48, level:1} // Gate
-  , amp*=envelope{d:1000, units:'ms', shape:'exp'} // VCA envelope: slow exponential decay
+  , amp*=envelope{d:1000, units:'ms', shape:'exp'}*3/4 // VCA envelope: slow exponential decay
   // 303 Controls
   , cutoff=1/2
   , resonance=1/2
@@ -90,5 +90,65 @@ preset rc909 sample
   , dur=1/4, sus=this.decay, choke=this.player
   , rate=3/4+this.tune/2
   , envelope='organ'
-  , amp*=(this.level+this.accent)*0.4
+  , amp*=(this.level+this.accent)*0.3
+
+preset sd909 pitchedperc
+	, dur=1/4, amp*=this.level
+	, choke=this.player
+  // 909 SD Controls
+  , level=1/2
+  , tune=1/2
+  , tone=1/2
+  , snappy=1/2
+  // Derived params
+  , accent=(this.value+this.add)/9
+  // Pitched Perc params
+	, click= 0
+  , hit= 0
+	, body={ 1 + this.accent
+    , wave:'tri'
+    , att:5, dec:130
+    , freq:110+177*this.tune, boost:100, pitchatt:2, pitchdec:20
+    , saturation:0.85
+  }
+	, body2={ 1/2 + this.accent/2
+    , wave:'tri'
+    , att:5, dec:130
+    , freq:139+107*this.tune, boost:133, pitchatt:2, pitchdec:20
+    , saturation:0.85
+  }
+  , rattle={ 3/2*(this.snappy + this.accent)
+    , dec:100+300*this.tone
+    , filter:'bandpass', freq:[2500:4000]e0.4, boost:153, pitchatt:2, pitchdec:200, q:0.2 // Real 909 splits noise signal and has low and high pass not bandpass
+  }
+
+preset t909 pitchedperc
+	, dur=1/4, amp*=this.level*2
+	, choke=this.player
+  // 909 Toms Controls
+  , level=1/2
+  , tune=1/2
+  , decay=1/2
+  // Derived params
+  , accent=(this.value+this.add)/9
+  , freq=(80 - 25*this.l + 35*this.h)*2/3 * (1+this.tune)
+  // Pitched Perc params
+	, click= 0
+  , hit= 0
+	, body={ 1 + this.accent
+    , wave:'tri'
+    , att:5, dec:250*(1+this.decay)
+    , freq:this.freq, boost:this.freq, pitchatt:2, pitchdec:150
+    , saturation:0.85
+  }
+	, body2={ 1 + this.accent
+    , wave:'tri'
+    , att:5, dec:100
+    , freq:this.freq*1.13, boost:this.freq*1.73, pitchatt:2, pitchdec:60
+    , saturation:1 // Real 909 has changing saturation over time
+  } // Real 909 has a third body tone
+  , rattle={ 1/2*(1 + this.accent)
+    , dec:50
+    , filter:'bandpass', freq:500, boost:200, pitchatt:0, pitchdec:30, q:[0.1:1]e0.05
+  }
 

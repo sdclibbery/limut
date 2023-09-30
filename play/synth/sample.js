@@ -30,7 +30,7 @@ define(function (require) {
     params.endTime = params._time + evalMainParamEvent(params, 'dur', 0.1)*params.beat.duration
     let startTime = evalMainParamEvent(params, 'start', 0)
 
-    let vca = envelope(params, 0.25, 'full')
+    let vca = envelope(params, 0.25, 'organ')
     waveEffects(params, effects(params, source)).connect(vca)
     fxMixChain(params, perFrameAmp(params, vca))
 
