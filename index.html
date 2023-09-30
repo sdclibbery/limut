@@ -492,7 +492,8 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>click={1}</code> The click is the initial impact sound. The main param is the loudness of the click. The default values are shown.</p>
 <p class='sub'><code>hit={0,sample:'^',index:1,rate:3/2}</code> The hit is a sample to be played with the initial impact sound. The main param is the loudness of the hit. Sample, index and rate control the sample playback (similar to the play synth). The default values are shown.</p>
 <p class='sub'><code>body={1,units:'ms',att:5,dec:400,freq:55,boost:150,pitchatt:0,pitchdec:50,wave:'sine',saturation:0}</code> The body is the resonant, pitched body of the sound. The main param is the loudness of the body. units is the time units for the various envelope attack and decay values. att is the attack time. dec is the decay time. freq is the base frequency in Hz, boost is the initial frequency boost in Hz. pitchatt is the attack time for the pitch sweep. pitchdec is the decay time for the pitch sweep. wave is the waveform to use. saturation is the gain for a tanh saturator applied to the body oscillator. The default values are shown.</p>
-<p class='sub'><code>rattle={1,units:'ms',att:0,dec:30,rate:1,freq:55,boost:205,pitchatt:0,pitchdec:50,q:18}</code> The rattle is a noisy component of the sound. The main param is the loudness of the rattle. units is the time units for the various envelope attack and decay values. att is the attack time. dec is the decay time. Rate is the sample playback rate of the noise sample; adjusting this can provide some additional filtering. freq is the base filter frequency in Hz, boost is the initial filter frequency boost in Hz, pitchatt is the attack time for the filter sweep. pitchdec is the decay time for the filter sweep. Q sets the filter resonance. The default values are shown.</p>
+<p class='sub'><code>body2={0,units:'ms',att:5,dec:400,freq:55,boost:150,pitchatt:0,pitchdec:50,wave:'sine',saturation:0}</code> Second body tone. May be useful for snares and toms etc.</p>
+<p class='sub'><code>rattle={1,units:'ms',att:0,dec:30,rate:1,filter:'lowpass',freq:55,boost:205,pitchatt:0,pitchdec:50,q:18}</code> The rattle is a noisy component of the sound. The main param is the loudness of the rattle. units is the time units for the various envelope attack and decay values. att is the attack time. dec is the decay time. Rate is the sample playback rate of the noise sample; adjusting this can provide some additional filtering. freq is the base filter frequency in Hz, boost is the initial filter frequency boost in Hz, pitchatt is the attack time for the filter sweep. pitchdec is the decay time for the filter sweep. Q sets the filter resonance. The default values are shown.</p>
 <p><code>bd</code> Preset based on pitchedperc. Provides a basic synthesized kick drum. Note that as this synth is not sample based, it only accepts digits in the player pattern, unlike the play synth. Use sus or dec params to control the duration of the kick. Uses some unique params:</p>
 <p class='sub'><code>accent=0</code> Positive values accent the kick making it louder and stronger. Negative values diminish the kick. Default value is derived from the player pattern value and 'add' param.</p>
 <p class='sub'><code>tone=0</code> Tone control for the kick. Larger values will open the filters.</p>
@@ -879,7 +880,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>euclid{3,from:8}</code> Euclidean rhythm generator. The example will evenly spread 3 events between 8 beats. For example <code>p ping 0, dur=euclid{3,from:8}</code> will make 3 notes of durations 3,2 and 3. Note this uses a Bresenham type algorithm to spread the events, rather than a classic Euclidean algorithm. This it may produce a slightly different ordering ("3 from 8" would give a 3,3,2 pattern in a classic Euclidean algorithm, but the Bresenham gives a 3,2,3 pattern. The offset subparam can be used to 'fix' this.</p>
 <p class='sub'><code>euclid{3,from:8,offset:1}</code> Offset rotates the pattern. The example will give a 3,3,2 pattern which is the default 3,2,3 pattern but rotated by one.</p>
 <p><code>envelope{}</code> Return a value that changes over the course of each event like an envelope generator.</p>
-<p class='sub'><code>envelope{units:'s'}</code> Specify the units the a, d etc values are in. Valid values are 's', 'ms', and 'beats'. The default is 'beats'.</p>
+<p class='sub'><code>envelope{units:'s'}</code> Specify the units the a, d etc values are in. Valid values are 's', 'ms', and 'beats'. The default is 'ms'.</p>
 <p class='sub'><code>envelope{shape:'exp'}</code> Specify the shaping applied to envelope segments. Valid values 'exp' for an exponential trend to the new value, or 'lin' for linear'. The default is 'lin'.</p>
 <p class='sub'><code>envelope{a:1}</code> Attack time for the envelope, in the units specified by 'units' with the shaping of 'shape'.</p>
 <p class='sub'><code>envelope{d:1}</code> Decay time for the envelope, in the units specified by 'units' with the shaping of 'shape'.</p>
@@ -1059,6 +1060,8 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
   <code>s</code> slide. This does not (yet) work the same as the 303 slide, which would slide the _next_ note from this one, and not retrigger the envelope for it. However currently in the limut 303, it slides the _current_ note, and the envelope still retriggers (no legato).<br/>
   For exampple <code>b tb303 0u0d0ua0</code> plays a pattern of four notes, one up an octave, the next down an octave, one up an octave and accented, then one without any flags.
 </p>
+<p><code>m1organ</code> Simulated M1 Organ sound. Has a <code>cutoff</code> control param from 0 to 1.<br/>
+</p>
 <p><code>bd909</code> Simulated 909 kick. The value of the event gives the accent. Control params:<br/>
   <code>level</code> Volume level from 0 to 1, default 1/2.<br/>
   <code>tune</code> BD tune from 0 to 1, default 1/2. Changes the pitch sweep decay time rather than the actual pitch<br/>
@@ -1097,9 +1100,8 @@ House lib
        https://www.polynominal.com/site/studio/gear/drum/roland-tr909/roland-tr909-service-manual.pdf
        https://youtu.be/6cT3Rndndic?si=WqQxNu93QQJ2NjAL
        https://roland50.studio/
-  rs909 - just noise???
+  rs909
   Check all 909 amps
-  pitched perc docs: body2, noise filter
  M1 Organ
  Rave stab?
  ...

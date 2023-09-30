@@ -42,7 +42,7 @@ define(function(require) {
 
   let envelope = (args, e,b,state) => {
     args = evalParamFrame(args, e,b) // Eval all args once
-    let units = subParam(args, 'units', 'beat').toLowerCase()
+    let units = subParam(args, 'units', 'ms').toLowerCase()
     let timeScale = timeToBeats(1, units, e) // Get time scale factor for given units
     return scaledBeatEnv(args, e,b,state, timeScale)
   }
@@ -75,19 +75,19 @@ define(function(require) {
     assert(0, evalParamFrame(p, ev(0,0,4), 2))
     assert(0, evalParamFrame(p, ev(0,0,4), 3))
 
-    p = parseExpression("envelope{d:1}")
+    p = parseExpression("envelope{d:1,units:'beats'}")
     assert(1, evalParamFrame(p, ev(1,2,2), 1))
     assert(1, evalParamFrame(p, ev(1,2,2), 2))
     assert(1/2, evalParamFrame(p, ev(1,2,2), 2.5))
     assert(0, evalParamFrame(p, ev(1,2,2), 3))
     assert(0, evalParamFrame(p, ev(1,2,2), 4))
 
-    p = parseExpression("envelope{d:1,shape:'exp'}")
+    p = parseExpression("envelope{d:1,shape:'exp',units:'beats'}")
     assert(1, evalParamFrame(p, ev(1,2,2), 2))
     assert(0.01, evalParamFrame(p, ev(1,2,2), 2.5))
     assert(0, evalParamFrame(p, ev(1,2,2), 3))
 
-    p = parseExpression("envelope{d:1,unit:'BEATS'}")
+    p = parseExpression("envelope{d:1,units:'BEATS'}")
     assert(1, evalParamFrame(p, ev(1,2,2), 2))
     assert(1/2, evalParamFrame(p, ev(1,2,2), 2.5))
     assert(0, evalParamFrame(p, ev(1,2,2), 3))
@@ -121,7 +121,7 @@ define(function(require) {
     assert(0, evalParamFrame(p, ev(1,2,2), 4))
     assert(0, evalParamFrame(p, ev(1,2,2), 5))
   
-    p = parseExpression("envelope{a:1,d:1}")
+    p = parseExpression("envelope{a:1,d:1,units:'beats'}")
     assert(0, evalParamFrame(p, ev(1,2,2), 2))
     assert(1/2, evalParamFrame(p, ev(1,2,2), 2.5))
     assert(1, evalParamFrame(p, ev(1,2,2), 3))

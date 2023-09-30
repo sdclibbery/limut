@@ -22,8 +22,17 @@ preset tb303 wave
   }
   , glide={(this.g+this.s)*88, units:'ms'}
 
+preset m1organ multiwave
+	, dur=1/4 // 16th notes for syncopation
+  , envelope='organ', rel=1/2, amp*=3
+  , cutoff=1/2
+  , wave1={'tri',detune:-24}
+  , wave2={'square',detune:7,amp:1/4}
+  , wave3={'noise',detune:-3*12,amp:envelope{d:10,shape:'exp'}/2}
+  , lpf={500*(1/2+this.cutoff)*(1+envelope{d:500,shape:'exp'}),poles:4,q:10}
+
 preset bd909 pitchedperc
-	, dur=1/4, amp*=this.level*2
+	, dur=1/4, amp*=this.level*4/3
 	, choke=this.player
   , lpf=3000
   // 909 BD Controls
@@ -60,9 +69,9 @@ preset h909 sample
   , dur=1/4, sus=max{this.dur,this.decay}, choke=this.player
   , rate=1
   , envelope='organ'
-  , amp*=envelope{d:this.decay, units:'ms', shape:'exp'}*(this.level+this.accent)*0.35
+  , amp*=envelope{d:this.decay, units:'ms', shape:'exp'}*(this.level+this.accent)*0.7/3
 
-preset cp909 io808, type='cp', choke=this.player, amp*=3 // 909 uses similar handclap as 808
+preset cp909 io808, type='cp', choke=this.player, amp*=2 // 909 uses similar handclap as 808
 
 preset cc909 sample
 	, sample='sample/909/crash.wav'
@@ -76,7 +85,7 @@ preset cc909 sample
   , dur=1/4, sus=this.decay, choke=this.player
   , rate=3/4+this.tune/2
   , envelope='organ'
-  , amp*=(this.level+this.accent)*0.9
+  , amp*=(this.level+this.accent)*0.6
 
 preset rc909 sample
 	, sample='sample/909/ride.wav'
@@ -90,10 +99,10 @@ preset rc909 sample
   , dur=1/4, sus=this.decay, choke=this.player
   , rate=3/4+this.tune/2
   , envelope='organ'
-  , amp*=(this.level+this.accent)*0.3
+  , amp*=(this.level+this.accent)*0.2
 
 preset sd909 pitchedperc
-	, dur=1/4, amp*=this.level
+	, dur=1/4, amp*=this.level*2/3
 	, choke=this.player
   // 909 SD Controls
   , level=1/2
@@ -123,7 +132,7 @@ preset sd909 pitchedperc
   }
 
 preset t909 pitchedperc
-	, dur=1/4, amp*=this.level*2
+	, dur=1/4, amp*=this.level*4/3
 	, choke=this.player
   // 909 Toms Controls
   , level=1/2

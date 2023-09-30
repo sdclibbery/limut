@@ -3417,3 +3417,16 @@ b tb303 0, amp=euclid{32,from:53}-7/8, a=euclid{16,from:27}-1, cutoff=[0:3/4]l8+
 s supersaw 0, dur=1/4, amp=euclid{32,from:37}-1, reverb={2,mix:[1/6:1/3]l8}, add=([0,0,-1,-2]t4,[1,2,3,4]t3), oct=(3,4,5), chorus, echo=3/4, amp*=3/4, delay=(0,5/2), phaser=1/16
 // v vambi (-70), reverb=2
 // set p* stutter=[0,0,1,1,1,2,2,3]t4
+
+// Techno/House demo
+set bpm=137
+set main drive=1/48
+pk bd909 4..., attack
+ph h909 -300o0, swing=54
+pt t909 `0..5 ..0h. 5.0. .5..`, swing=58
+ps sd909 0, dur=euclid{5,from:16}/4, swing=52
+// pb tb303 0d00ua0, cutoff=[]n4, resonance=7/8, add=[0,0,1,2]t10/4, swing=58//, drive=1/16
+o m1organ 0, dur=euclid{7,from:16}/4, add=[0,2,1,3]t1, sus=1/4, delay=(0,{3/4,addc:19})
+// c cyborg 024502-2-3, oct=4, dur=8, drive=1/8, vib=3
+// v vambi (024)...(035)., dur=1/2, sus=1/4, rel=1/4, amp*=2
+
