@@ -1002,10 +1002,9 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>synpluck</code> Synth pluck preset </p>
 <p><code>vambi</code> PWM ambient preset in the style of Vangelis.</p>
 </div>
-<h4 onclick="toggleAccordion('accordion-techno-libraries')" class="accordion"> Techno Library</h4>
-<div id="accordion-techno-libraries" class="closed">
-<h5>Techno library: <code>include 'preset/techno.limut'</code></h5>
-<h6>Audio</h6>
+<h4 onclick="toggleAccordion('accordion-808-libraries')" class="accordion"> 808 Library</h4>
+<div id="accordion-808-libraries" class="closed">
+<h5>808 library: <code>include 'preset/808.limut'</code></h5>
 <p><code>bd808</code> Simulated 808 bd kick. Based on io808. </p>
 <p><code>sd808</code> Simulated 808 sd snare. Based on io808. </p>
 <p><code>oh808</code> Simulated 808 oh open hat. Based on io808. </p>
@@ -1039,30 +1038,10 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
   <code>p</code> : mc<br/>
   <code>e</code> : cb<br/>
 </p>
-<p><code>hollow</code> Hollow sounding pad</p>
-<p><code>tinbass</code> Flanged bass</p>
 </div>
-<h4 onclick="toggleAccordion('accordion-house-libraries')" class="accordion"> House Library</h4>
-<div id="accordion-house-libraries" class="closed">
-<h5>House library: <code>include 'preset/house.limut'</code></h5>
-<h6>Audio</h6>
-<p><code>tb303</code> Simulated 303 (acid) bass.
-  The following custom control params are available, corresponding to the main control knobs on a 303:<br/>
-  <code>wave</code> 303 waveform. set to <code>'saw'</code> or <code>'square'</code>. The default is <code>'saw'</code>.<br/>
-  <code>cutoff</code> 303 cutoff control 0 to 1; default 1/2. Set the filter cutoff. Higher values give a brighter sound with more harmonics.<br/>
-  <code>resonance</code> 303 resonance control 0 to 1; default 1/2. Set the filter resonance. Higher values give a squelchy acid sound.<br/>
-  <code>envmod</code> 303 envmod control 0 to 1; default 1/2. Set the depth of envelope modulation. Higher values change the filter cutoff more over the course of a single note.<br/>
-  <code>decay</code> 303 decay control 0 to 1; default 1/2. Set the envelope decay time. Set the envelope decay time for filter envelope. Higher values take longer to decay.<br/>
-  <code>accent</code> 303 accent control 0 to 1; default 1/2. Set how much effect accented notes have.<br/>
-  The following pattern flags can be used:<br/>
-  <code>a</code> accent flag. Makes the preceding note accented, making it louder and brighter.<br/>
-  <code>u</code> up octave. Makes the preceding note an octave higher.<br/>
-  <code>d</code> down octave. Makes the preceding note an octave lower.<br/>
-  <code>s</code> slide. This does not (yet) work the same as the 303 slide, which would slide the _next_ note from this one, and not retrigger the envelope for it. However currently in the limut 303, it slides the _current_ note, and the envelope still retriggers (no legato).<br/>
-  For exampple <code>b tb303 0u0d0ua0</code> plays a pattern of four notes, one up an octave, the next down an octave, one up an octave and accented, then one without any flags.
-</p>
-<p><code>m1organ</code> Simulated M1 Organ sound. Has a <code>cutoff</code> control param from 0 to 1.<br/>
-</p>
+<h4 onclick="toggleAccordion('accordion-909-libraries')" class="accordion"> 909 Library</h4>
+<div id="accordion-909-libraries" class="closed">
+<h5>909 library: <code>include 'preset/909.limut'</code></h5>
 <p><code>bd909</code> Simulated 909 kick. The value of the event gives the accent. Control params:<br/>
   <code>level</code> Volume level from 0 to 1, default 1/2.<br/>
   <code>tune</code> BD tune from 0 to 1, default 1/2. Changes the pitch sweep decay time rather than the actual pitch<br/>
@@ -1086,34 +1065,68 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
   <code>tune</code> Tune from 0 to 1, default 1/2.<br/>
 </p>
 </div>
+<h4 onclick="toggleAccordion('accordion-techno-libraries')" class="accordion"> Techno Library</h4>
+<div id="accordion-techno-libraries" class="closed">
+<h5>Techno library: <code>include 'preset/techno.limut'</code></h5>
+<h6>Audio</h6>
+<p>The Techno library also includes the 909 library.</p>
+<p><code>hollow</code> Hollow sounding pad</p>
+<p><code>tinbass</code> Flanged bass</p>
+</div>
+<h4 onclick="toggleAccordion('accordion-house-libraries')" class="accordion"> House Library</h4>
+<div id="accordion-house-libraries" class="closed">
+<h5>House library: <code>include 'preset/house.limut'</code></h5>
+<h6>Audio</h6>
+<p>The House library also includes the 909 library.</p>
+<p><code>tb303</code> Simulated 303 (acid) bass.
+  The following custom control params are available, corresponding to the main control knobs on a 303:<br/>
+  <code>wave</code> 303 waveform. set to <code>'saw'</code> or <code>'square'</code>. The default is <code>'saw'</code>.<br/>
+  <code>cutoff</code> 303 cutoff control 0 to 1; default 1/2. Set the filter cutoff. Higher values give a brighter sound with more harmonics.<br/>
+  <code>resonance</code> 303 resonance control 0 to 1; default 1/2. Set the filter resonance. Higher values give a squelchy acid sound.<br/>
+  <code>envmod</code> 303 envmod control 0 to 1; default 1/2. Set the depth of envelope modulation. Higher values change the filter cutoff more over the course of a single note.<br/>
+  <code>decay</code> 303 decay control 0 to 1; default 1/2. Set the envelope decay time. Set the envelope decay time for filter envelope. Higher values take longer to decay.<br/>
+  <code>accent</code> 303 accent control 0 to 1; default 1/2. Set how much effect accented notes have.<br/>
+  The following pattern flags can be used:<br/>
+  <code>a</code> accent flag. Makes the preceding note accented, making it louder and brighter.<br/>
+  <code>u</code> up octave. Makes the preceding note an octave higher.<br/>
+  <code>d</code> down octave. Makes the preceding note an octave lower.<br/>
+  <code>s</code> slide. This does not (yet) work the same as the 303 slide, which would slide the _next_ note from this one, and not retrigger the envelope for it. However currently in the limut 303, it slides the _current_ note, and the envelope still retriggers (no legato).<br/>
+  For exampple <code>b tb303 0u0d0ua0</code> plays a pattern of four notes, one up an octave, the next down an octave, one up an octave and accented, then one without any flags.
+</p>
+<p><code>m1organ</code> Simulated M1 Organ sound. Has a <code>cutoff</code> control param from 0 to 1.<br/>
+</p>
+</div>
 <hr>
 <p>Please report bugs, problems, issues and suggestions on <a href="https://github.com/sdclibbery/limut/issues" target="_blank">https://github.com/sdclibbery/limut/issues</a></p>
-<p>Latest release notes including breaking changes: <a href="https://github.com/sdclibbery/limut/releases/tag/v0.15.0-alpha" target="_blank">https://github.com/sdclibbery/limut/releases/tag/v0.15.0-alpha</a></p>
+<p>Latest release notes including breaking changes: <a href="https://github.com/sdclibbery/limut/releases/tag/v0.16.0-alpha" target="_blank">https://github.com/sdclibbery/limut/releases/tag/v0.16.0-alpha</a></p>
 <canvas id="text-canvas" style="display: none;"></canvas>
 </body>
 <script data-main="main" src="require.js">
 /*
 ====
 ==== audio ====
+House lib
+ M1 organ: tweak envelopes - https://youtu.be/b-DNUaekuEo?si=WGWg6XLMgBTmtCmo
+ Lately bass - https://youtu.be/b-DNUaekuEo?si=WGWg6XLMgBTmtCmo
+  FM op supports units for att/rel times
+   OR!!!! just have a per frame amp and can use envelope{}
+ Prodigy patches: https://www.youtube.com/watch?v=KwL2S5LRzFM&t=1272s
+ Rave stab?
+ more...
 Techno include lib
- ?Move 808 out into its own lib? It's not really techno
-  ALSO 808 lib docs don't have control params
- 909 should also be in techno lib
  Reese bass
  HPF electric lead (phrack)
  Melodic techno lead
  Ambient techno pads
  Dark techno stuff
  Classic detroit techno stuff
- ...
-!Laserharp per frame amp doesn't work; because of the use of delay??
+ more...
 !Cannot do  bpf=[0,500]  it doesn't work
+!Laserharp per frame amp doesn't work; because of the use of delay??
 !glide=0 does not give zero glide????!
 !! Claves cl808 cause breakdown after a while; why??
  Made sure everything gets disconnected, but still breaking up :-(
-House lib
- Rave stab?
- ...
+808 lib docs don't have control params
 Legato Tie
  Allows multiple pattern notes to be played without envelope retrigger
  Should allow 303 slide
@@ -1131,7 +1144,7 @@ TB303 realism
    3#3#ds3#ua3#d3#us3#d3#a3as  - but needs legato slide
   https://www.audiorealism.se/audiorealism-bass-line-2.html
 More envelope{} features
- sustain and release
+ sustain and release - sustain should be level only; duration should be based an actual event length
  units='event'
 Try a convolution reverb with an envelope where the sound builds then fades instead of just dying away
 ??can set high/mid/low params on reverb to EQ signal prior to reverb - Also on entry to all waveeffects?
