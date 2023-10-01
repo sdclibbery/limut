@@ -161,3 +161,14 @@ preset t909 pitchedperc
     , filter:'bandpass', freq:500, boost:200, pitchatt:0, pitchdec:30, q:[0.1:1]e0.05
   }
 
+preset rs909 impulse
+	, dur=1/4, amp*=(this.level + this.accent)*20
+	, choke=this.player
+  , envelope='organ'
+  , accent=(this.value+this.add)/9
+  // 909 Rimshot Controls
+  , level=1/2
+  // Impulse params: 3 resonant bandpass filters simulating the bridged-t networks in the 909 rimshot
+  , bpf1={220,q:10.5}
+  , bpf2={500,q:10.5}
+  , bpf3={1000,q:10.5}

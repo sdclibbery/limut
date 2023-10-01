@@ -82,6 +82,7 @@ define(function (require) {
     node = resonant(params, node, 'lowpass', 'lpf', 5)
     node = resonant(params, node, 'highpass', 'hpf', 5)
     node = resonant(params, node, 'bandpass', 'bpf', 1)
+    node = parallel(params, node, 'bpf', (p,n) => resonant(params, n, 'bandpass', p, 1))
     node = resonant(params, node, 'notch', 'nf', 1)
     node = parallel(params, node, 'apf', (p,n) => resonant(params, n, 'allpass', p, 1))
     node = phaserStageFilter(params, 'psf', node) // Can have a single unnumbered psf if desired

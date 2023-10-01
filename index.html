@@ -660,9 +660,10 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>hpf</code> High pass filter frequency in Hertz</p>
 <p class='sub'><code>hpf={400,q:20}</code> High pass filter resonance. Default: 5.</p>
 <p class='sub'><code>hpf={400,poles:4}</code> Filter poles. Default is a 2 pole filter giving 12 dB/octave. Alternatively, specify 4 for a Moog-like 4 pole filter giving 24 dB/octave.</p>
-<p><code>bpf</code> Band pass filter frequency in Hertz</p>
+<p><code>bpf</code> Band pass filter frequency in Hertz.</p>
 <p class='sub'><code>bpf={400,q:20}</code> Band pass filter resonance. Default: 1.</p>
 <p class='sub'><code>bpf={400,poles:4}</code> Filter poles. Default is a 2 pole filter giving 12 dB/octave. Alternatively, specify 4 for a Moog-like 4 pole filter giving 24 dB/octave.</p>
+<p><code>bpf1</code> Multiple, parallel bandpass filters are available using params <code>bpf1</code>, <code>bpf2</code> etc.</p>
 <p><code>nf</code> Notch filter frequency in Hertz</p>
 <p class='sub'><code>nf={400,q:20}</code> Notch filter resonance. Default: 1.</p>
 <p><code>apf1</code> All pass filter frequency in Hertz. Multiple allpass filters can be specified with params <code>apf1</code>, <code>apf2</code> etc. They will operate in parallel so their outputs sum, allowing phase cancellation.</p>
@@ -1094,17 +1095,6 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 /*
 ====
 ==== audio ====
-!Redo cydist as a distorted subtractive synth
-House lib
- 909 - https://github.com/matthewcieplak/er-99/blob/main/src/instruments.ts
-       https://www.polynominal.com/site/studio/gear/drum/roland-tr909/roland-tr909-service-manual.pdf
-       https://youtu.be/6cT3Rndndic?si=WqQxNu93QQJ2NjAL
-       https://roland50.studio/
-  rs909
-  Check all 909 amps
- M1 Organ
- Rave stab?
- ...
 Techno include lib
  ?Move 808 out into its own lib? It's not really techno
   ALSO 808 lib docs don't have control params
@@ -1121,6 +1111,9 @@ Techno include lib
 !glide=0 does not give zero glide????!
 !! Claves cl808 cause breakdown after a while; why??
  Made sure everything gets disconnected, but still breaking up :-(
+House lib
+ Rave stab?
+ ...
 Legato Tie
  Allows multiple pattern notes to be played without envelope retrigger
  Should allow 303 slide
