@@ -129,6 +129,7 @@ define(function(require) {
   }
 
   let literal = (state) => {
+    state._inDelimitedLiteral = false
     let steps = parseSteps(state)
     if (steps.initialContinuations > 0) { throw `Pattern: Continuation "_" not valid at start of literal` }
     return subsequence(steps) // At the top level, a literal is like a subsequence

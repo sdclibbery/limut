@@ -4,12 +4,15 @@ define(function(require) {
   let eatWhitespace = require('expression/eat-whitespace')
   let literal = require('pattern/literal/literal.js')
   let loop = require('pattern/operator/loop.js')
+  let concat = require('pattern/operator/concat.js')
   let {initTimingContext,stepToCount} = require('pattern/timing.js')
 
   let parsePattern = (state) => {
     let playFromStart = keyword(state, 'now')
     let result = literal(state)
+    eatWhitespace(state)
     if (keyword(state, 'loop')) { result = loop(state, result) }
+    else if (keyword(state, '+')) { result = concat(state, result) }
     eatWhitespace(state)
     if (state.str[state.idx] !== undefined) { throw `Invalid pattern: extra pattern data ${state.str.slice(state.idx)}` }
     result.playFromStart = playFromStart
@@ -18,7 +21,6 @@ define(function(require) {
 
   let isWhitespace = (char) => char === '' || char === ' ' || char === '\t'
   let keyword = (state, kw) => {
-    eatWhitespace(state)
     if (state.str.slice(state.idx, state.idx + kw.length) !== kw) { return false} // Keyword doesn't match
     let char = state.str[state.idx + kw.length]
     if (!!char && !isWhitespace(char)) { return false } // Keyword not followed by whitespace or eof
@@ -138,13 +140,12 @@ define(function(require) {
     let st = (str) => { return { str:str, idx:0 } }
     let p
 
-    assert(true, keyword(st(' loop 1'), 'loop'))
-    assert(true, keyword(st('\tloop\t1'), 'loop'))
-    assert(true, keyword(st(' loop'), 'loop'))
+    assert(true, keyword(st('loop 1'), 'loop'))
+    assert(true, keyword(st('loop\t1'), 'loop'))
     assert(true, keyword(st('loop'), 'loop'))
-    assert(false, keyword(st(' loop 1'), 'loo'))
-    assert(false, keyword(st(' loop 1'), 'loopy'))
-    assert(false, keyword(st(' loop1'), 'loop'))
+    assert(false, keyword(st('loop 1'), 'loo'))
+    assert(false, keyword(st('loop 1'), 'loopy'))
+    assert(false, keyword(st('loop1'), 'loop'))
 
     assertThrows('Invalid argument to pattern loop operator', () => root('01 loop', {}))
     assertThrows('Invalid argument to pattern loop operator', () => root('01 loop foo', {}))
@@ -490,6 +491,8 @@ define(function(require) {
     assertSamePattern(root('`1 loop 2`', {}), root('1loop2', {}))
     assertSamePattern(root('`01 23` loop 2', {}), root('0123 loop 2', {}))
     assertSamePattern(root('now `01 23`', {}), root('now 0123', {}))
+    assertSamePattern(root('01 + 23', {}), root('0123', {}))
+    assertSamePattern(root('`1` + 2', {}), root('12', {}))
  
     assertSameRootPatternWithDurs('[0]', '0')
     assertSameRootPatternWithDurs('[[[0]]]', '0')
@@ -577,6 +580,7 @@ define(function(require) {
     assertSameWhenStartLater(() => root('01 loop 1000', {dur:0.17}))
     assertSameWhenStartLater(() => root('0 loop 1000', {dur:3.17}))
     assertSameWhenStartLater(() => root('01 loop 1000', {dur:3.17}))
+    assertSameWhenStartLater(() => root('01 + 23', {dur:3.17}))
 
     console.log("Pattern root tests complete")
   }
