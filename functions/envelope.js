@@ -27,7 +27,7 @@ define(function(require) {
     let count = b - e.count
     if (count < 0) { count = 0 } // Clamp to get initial value if evalled early
     let shape = subParam(args, 'shape')
-    let interp = shapes[shape] || lerp
+    let interp = shapes[shape] || exp
     // Attack
     let a = subParam(args, 'a', 0) * scale
     if (count < a) { return interp(0,1, count,a) }
@@ -75,7 +75,7 @@ define(function(require) {
     assert(0, evalParamFrame(p, ev(0,0,4), 2))
     assert(0, evalParamFrame(p, ev(0,0,4), 3))
 
-    p = parseExpression("envelope{d:1,units:'beats'}")
+    p = parseExpression("envelope{d:1,shape:'lin',units:'beats'}")
     assert(1, evalParamFrame(p, ev(1,2,2), 1))
     assert(1, evalParamFrame(p, ev(1,2,2), 2))
     assert(1/2, evalParamFrame(p, ev(1,2,2), 2.5))
@@ -87,41 +87,41 @@ define(function(require) {
     assert(0.01, evalParamFrame(p, ev(1,2,2), 2.5))
     assert(0, evalParamFrame(p, ev(1,2,2), 3))
 
-    p = parseExpression("envelope{d:1,units:'BEATS'}")
+    p = parseExpression("envelope{d:1,shape:'lin',units:'BEATS'}")
     assert(1, evalParamFrame(p, ev(1,2,2), 2))
     assert(1/2, evalParamFrame(p, ev(1,2,2), 2.5))
     assert(0, evalParamFrame(p, ev(1,2,2), 3))
 
-    p = parseExpression("envelope{d:1,units:'s'}")
+    p = parseExpression("envelope{d:1,shape:'lin',units:'s'}")
     assert(1, evalParamFrame(p, ev(1,2,2), 1))
     assert(1, evalParamFrame(p, ev(1,2,2), 2))
     assert(1/2, evalParamFrame(p, ev(1,2,2), 3))
     assert(0, evalParamFrame(p, ev(1,2,2), 4))
     assert(0, evalParamFrame(p, ev(1,2,2), 5))
 
-    p = parseExpression("envelope{d:1,units:'S'}")
+    p = parseExpression("envelope{d:1,shape:'lin',units:'S'}")
     assert(1, evalParamFrame(p, ev(1,2,2), 2))
     assert(1/2, evalParamFrame(p, ev(1,2,2), 3))
     assert(0, evalParamFrame(p, ev(1,2,2), 4))
 
-    p = parseExpression("envelope{d:1,units:'sEConDs'}")
+    p = parseExpression("envelope{d:1,shape:'lin',units:'sEConDs'}")
     assert(1, evalParamFrame(p, ev(1,2,2), 2))
     assert(1/2, evalParamFrame(p, ev(1,2,2), 3))
     assert(0, evalParamFrame(p, ev(1,2,2), 4))
 
-    p = parseExpression("envelope{d:1000,units:'ms'}")
+    p = parseExpression("envelope{d:1000,shape:'lin',units:'ms'}")
     assert(1, evalParamFrame(p, ev(1,2,2), 2))
     assert(1/2, evalParamFrame(p, ev(1,2,2), 3))
     assert(0, evalParamFrame(p, ev(1,2,2), 4))
     assert(0, evalParamFrame(p, ev(1,2,2), 5))
 
-    p = parseExpression("envelope{d:1000,units:'MIllIS'}")
+    p = parseExpression("envelope{d:1000,shape:'lin',units:'MIllIS'}")
     assert(1, evalParamFrame(p, ev(1,2,2), 2))
     assert(1/2, evalParamFrame(p, ev(1,2,2), 3))
     assert(0, evalParamFrame(p, ev(1,2,2), 4))
     assert(0, evalParamFrame(p, ev(1,2,2), 5))
   
-    p = parseExpression("envelope{a:1,d:1,units:'beats'}")
+    p = parseExpression("envelope{a:1,d:1,shape:'lin',units:'beats'}")
     assert(0, evalParamFrame(p, ev(1,2,2), 2))
     assert(1/2, evalParamFrame(p, ev(1,2,2), 2.5))
     assert(1, evalParamFrame(p, ev(1,2,2), 3))

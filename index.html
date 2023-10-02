@@ -882,7 +882,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>euclid{3,from:8,offset:1}</code> Offset rotates the pattern. The example will give a 3,3,2 pattern which is the default 3,2,3 pattern but rotated by one.</p>
 <p><code>envelope{}</code> Return a value that changes over the course of each event like an envelope generator.</p>
 <p class='sub'><code>envelope{units:'s'}</code> Specify the units the a, d etc values are in. Valid values are 's', 'ms', and 'beats'. The default is 'ms'.</p>
-<p class='sub'><code>envelope{shape:'exp'}</code> Specify the shaping applied to envelope segments. Valid values 'exp' for an exponential trend to the new value, or 'lin' for linear'. The default is 'lin'.</p>
+<p class='sub'><code>envelope{shape:'lin'}</code> Specify the shaping applied to envelope segments. Valid values 'exp' for an exponential trend to the new value, or 'lin' for linear'. The default is 'exp'.</p>
 <p class='sub'><code>envelope{a:1}</code> Attack time for the envelope, in the units specified by 'units' with the shaping of 'shape'.</p>
 <p class='sub'><code>envelope{d:1}</code> Decay time for the envelope, in the units specified by 'units' with the shaping of 'shape'.</p>
 </div>
@@ -1106,7 +1106,6 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 ====
 ==== audio ====
 House lib
- M1 organ: tweak envelopes - https://youtu.be/b-DNUaekuEo?si=WGWg6XLMgBTmtCmo
  Lately bass - https://youtu.be/b-DNUaekuEo?si=WGWg6XLMgBTmtCmo
   FM op supports units for att/rel times
    OR!!!! just have a per frame amp and can use envelope{}
@@ -1114,6 +1113,7 @@ House lib
  Rave stab?
  more...
 Techno include lib
+ Tinbass control for amount of amp modulation
  Reese bass
  HPF electric lead (phrack)
  Melodic techno lead
