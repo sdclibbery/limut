@@ -1,5 +1,5 @@
 preset bd909 pitchedperc
-	, dur=1/4, amp*=this.level*4/3
+	, dur=1/4, amp*=this.level*5/3
 	, choke=this.player
   , lpf=3000
   // 909 BD Controls

@@ -33,3 +33,4 @@ preset m1organ multiwave
   , wave3={'noise',detune:-3*12,amp:envelope{d:10}/3}
   , lpf={500*(1/2+this.cutoff)*(1+envelope{d:500}),poles:4,q:10}
 
+preset didgeridoo square 0, dur=1, envelope='pad', amp=[0.3:0.5]n3@f^2 + [0:0.3]l1@f, oct=2, clip, phaser=1/4, ring=1/4, glide=this.dur/2
