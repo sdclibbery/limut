@@ -3430,3 +3430,25 @@ o m1organ 0, dur=euclid{7,from:16}/4, add=[0,2,1,3]t1, sus=1/4, delay=(0,{3/4,ad
 // c cyborg 024502-2-3, oct=4, dur=8, drive=1/8, vib=3
 // v vambi (024)...(035)., dur=1/2, sus=1/4, rel=1/4, amp*=2
 
+preset lately fm
+	, oct=2, dur=1/4
+  , envelope='simple', att=1/16, dec=1/2
+  , op1={ratio:1,wave:'saw',target:'out'}
+  , op2={ratio:0.5,target:1,depth:1,att:0,rel:1/4}
+  , lpf={10+800*envelope{a:70,d:500},q:8}
+
+
+set bpm=137
+set main drive=1/48
+pk bd909 4..., attack
+ph h909 -300o0, swing=54
+pt t909 `..0h. 5.0. .0.. 5..0`, swing=58
+ps sd909 0, dur=euclid{5,from:16}/4, swing=52, tone=1/4
+// pb tb303 0d00ua0, cutoff=[]n4, resonance=7/8, add=[0,0,1,2]t10/4, swing=58//, drive=1/16
+// o m1organ 000, add=[0,3,2,5,4]t1, dur=[3,3,2]/4, sus=this.dur/2
+// o m1organ 0, dur=euclid{7,from:16}/4, add=[0,2,1,3]t1, sus=1/4, delay=(0,{3/4,addc:19})
+// c cyborg 024502-2-3, oct=4, dur=8, drive=1/8, vib=3
+// v vambi (024)...(035)., dur=1/2, sus=1/4, rel=1/4, amp*=2
+// b bloom now 0.., dur=4
+// b tinbass 07
+

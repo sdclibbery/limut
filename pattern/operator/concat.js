@@ -1,11 +1,7 @@
 'use strict';
 define(function(require) {
-  let eatWhitespace = require('expression/eat-whitespace')
-  let literal = require('pattern/literal/literal.js')
 
-  let concat = (state, l) => {
-    eatWhitespace(state)
-    let r = literal(state)
+  let concat = (l, r) => {
     let current = l
     let pattern = {
       next: () => {
@@ -41,18 +37,17 @@ define(function(require) {
       let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}\n${msg}`) }
     }
-    let st = (str) => { return { str:str, idx:0 } }
-    let testPattern = () => {
+    let testPattern = (v) => {
       let i = 0
       return {
-        next: () => i++ %2 ? undefined :  [{value:'x',dur:1}],
-        loop: () => {},
-        reset: () => {},
+        next: () => i++ == 0 ? [{value:v,dur:1}] : undefined,
+        loop: () => { i=0 },
+        reset: () => { i=0 },
       }
     }
     let p
 
-    p = concat(st(' y'), testPattern())
+    p = concat(testPattern('x'), testPattern('y'))
     assert([{value:'x',dur:1}], p.next())
     assert([{value:'y',dur:1}], p.next())
     assert(undefined, p.next())
