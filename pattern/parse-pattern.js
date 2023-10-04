@@ -101,6 +101,7 @@ define(function(require) {
     assertThrows('Invalid pattern: invalid argument foo to operator loop', () => parsePattern(st('01 loop foo')))
     assertThrows('Invalid pattern: missing argument to operator +', () => parsePattern(st(' loop +')))
     assertThrows('Invalid pattern: invalid argument loop to operator +', () => parsePattern(st('0 + loop')))
+    assertThrows('Invalid pattern: Continuation "_" not valid at start of literal', () => parsePattern(st('01 + _3')))
 
     console.log("Pattern parse tests complete")
   }

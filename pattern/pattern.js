@@ -456,7 +456,9 @@ define(function(require) {
     assertSamePattern(root('now `01 23`', {}), root('now 0123', {}))
     assertSamePattern(root('01 + 23', {}), root('0123', {}))
     assertSamePattern(root('`1` + 2', {}), root('12', {}))
- 
+    assertSamePattern(root('`01 23` + 45', {}), root('012345', {}))
+    assertSamePattern(root('1 + 2 + 3', {}), root('123', {}))
+
     assertSameRootPatternWithDurs('[0]', '0')
     assertSameRootPatternWithDurs('[[[0]]]', '0')
     assertSameRootPatternWithDurs('<0>', '0')

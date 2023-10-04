@@ -29,8 +29,8 @@ define(function(require) {
         continue
       }
       if (!char || isWhitespace(char)) { // End of literal
-        if (expectedClosingBracket) { throw `Pattern: Missing bracket, expecting ${expectedClosingBracket}` }
-        if (state._inDelimitedLiteral) { throw 'Pattern: Missing closing literal delimiter `' }
+        if (expectedClosingBracket) { throw `Invalid pattern: Missing bracket, expecting ${expectedClosingBracket}` }
+        if (state._inDelimitedLiteral) { throw 'Invalid pattern: Missing closing literal delimiter `' }
         break
       }
 
@@ -42,7 +42,7 @@ define(function(require) {
       }
 
       if (char === ']' || char === ')' || char === '>' || char ==='}') { // End of subpattern
-        if (char !== expectedClosingBracket) { throw `Pattern: Mismatched bracket, expecting ${expectedClosingBracket}` }
+        if (char !== expectedClosingBracket) { throw `Invalid pattern: Mismatched bracket, expecting ${expectedClosingBracket}` }
         state.idx++ // Skip closing bracket after subpattern
         break
       }
@@ -68,7 +68,7 @@ define(function(require) {
       if (char === '<') { // Parse supersequence
         state.idx++ // Skip opening bracket
         let subSteps = parseSteps(state, '>')
-        if (subSteps.numContinuations > 0) { throw `Pattern: Continuation "_" not valid in super sequence "<...>"` }
+        if (subSteps.numContinuations > 0) { throw `Invalid pattern: Continuation "_" not valid in super sequence "<...>"` }
         let subPattern = supersequence(subSteps)
         steps.push(subPattern)
         continue
@@ -77,7 +77,7 @@ define(function(require) {
       if (char === '(') { // Parse chord
         state.idx++ // Skip opening bracket
         let subSteps = parseSteps(state, ')')
-        if (subSteps.numContinuations > 0) { throw `Pattern: Continuation "_" not valid in chord "(...)"` }
+        if (subSteps.numContinuations > 0) { throw `Invalid pattern: Continuation "_" not valid in chord "(...)"` }
         let subPattern = chord(subSteps)
         steps.push(subPattern)
         continue
@@ -131,7 +131,7 @@ define(function(require) {
   let literal = (state) => {
     state._inDelimitedLiteral = false
     let steps = parseSteps(state)
-    if (steps.initialContinuations > 0) { throw `Pattern: Continuation "_" not valid at start of literal` }
+    if (steps.initialContinuations > 0) { throw `Invalid pattern: Continuation "_" not valid at start of literal` }
     return subsequence(steps) // At the top level, a literal is like a subsequence
   }
 
