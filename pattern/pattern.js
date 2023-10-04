@@ -137,7 +137,7 @@ define(function(require) {
     assert([{value:0,dur:1,_time:0,count:2,idx:0}], p(2))
     assert([{value:1,dur:1,_time:0,count:3,idx:1}], p(3))
 
-    p = root('loop', {})
+    p = root('`loop`', {})
     assert([{value:'l',dur:1,_time:0,count:0,idx:0}], p(0))
     assert([{value:'o',dur:1,_time:0,count:1,idx:1}], p(1))
     assert([{value:'o',dur:1,_time:0,count:2,idx:2}], p(2))

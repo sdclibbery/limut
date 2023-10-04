@@ -1,26 +1,6 @@
 'use strict';
 define(function(require) {
-  let eatWhitespace = require('expression/eat-whitespace')
-
-  let digitChar = (char) => char >= '0' && char <= '9'
-  let parseCount = (state) => {
-    let value = ''
-    let char
-    while (char = state.str.charAt(state.idx)) {
-      if (char == '') { break }
-      if (!digitChar(char)) { break }
-      value += char
-      state.idx++
-    }
-    if (value == '') { throw `Invalid argument to pattern loop operator` }
-    let result = parseInt(value)
-    if (Number.isNaN(result)) { throw `Invalid argument ${value} to pattern loop operator` }
-    return result
-  }
-
-  let loop = (state, target) => {
-    eatWhitespace(state)
-    let loopCount = parseCount(state)
+  let loop = (target, loopCount) => {
     let loops = 0
     let justStarted = true
     let pattern = {
@@ -66,7 +46,7 @@ define(function(require) {
     }
     let p
 
-    p = loop(st(' 2'), testPattern())
+    p = loop(testPattern(), 2)
     assert([{value:'x',dur:1}], p.next()) // First loop
     assert(undefined, p.next())
     p.loop()
