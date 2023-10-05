@@ -423,6 +423,15 @@ define(function(require) {
     assert([{value:1,dur:1,_time:0,count:1,idx:1}], p(1))
     assert([{value:0,dur:1,_time:0,count:2,idx:0}], p(2))
 
+    p = root('0 + 1 loop 1 + 2', {})
+    assert([{value:0,dur:1,_time:0,count:0,idx:0}], p(0))
+    assert([{value:1,dur:1,_time:0,count:1,idx:1}], p(1))
+    assert([{value:2,dur:1,_time:0,count:2,idx:2}], p(2))
+    assert([{value:0,dur:1,_time:0,count:3,idx:0}], p(3))
+    assert([{value:2,dur:1,_time:0,count:4,idx:1}], p(4))
+    assert([{value:0,dur:1,_time:0,count:5,idx:0}], p(5))
+    assert([{value:2,dur:1,_time:0,count:6,idx:1}], p(6))
+
     assert([{value:0,dur:1,a:1,_time:0,count:0,idx:0}], root('0a', {})(0))
     assert([{value:'x',dur:1,_time:0,count:0,idx:0}], root('xa', {})(0))
     assert([{value:'x',dur:1,'^':1,_time:0,count:0,idx:0, loud:3/2}], root('x^', {})(0))

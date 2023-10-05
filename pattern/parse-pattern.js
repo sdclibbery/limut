@@ -3,9 +3,17 @@ define(function(require) {
   let eatWhitespace = require('expression/eat-whitespace')
   let literal = require('pattern/literal/literal.js')
 
-  let keywords = [
-    {keyword:'loop', r:parseInt, action:require('pattern/operator/loop.js')},
-    {keyword:'+', action:require('pattern/operator/concat.js')},
+  let operators = [ // HIGHest operator precedence should have LOWest precedence number!
+    {
+      keyword: 'loop',
+      precedence: 1,
+      constructor: require('pattern/operator/loop.js'),
+    },
+    {
+      keyword: '+',
+      precedence: 2,
+      constructor: require('pattern/operator/concat.js'),
+    },
   ]
 
   let isWhitespace = (char) => char === '' || char === ' ' || char === '\t'
@@ -22,8 +30,8 @@ define(function(require) {
     eatWhitespace(state)
     if (state.str[state.idx] === undefined) { return undefined }
     let startIdx = state.idx
-    for (let idx in keywords) {
-      let k = keywords[idx]
+    for (let idx in operators) {
+      let k = operators[idx]
       if (keyword(state, k.keyword)) {
         result = Object.assign({}, k)
         break
@@ -32,43 +40,42 @@ define(function(require) {
     if (!result) {
       result = literal(state)
     }
-    result.src = state.str.slice(startIdx, state.idx)
+    result.src = state.str.slice(startIdx, state.idx).trim()
     return result
+  }
+
+  let precedenceTree = (elements) => {
+    // Build an operator tree back up from a flat list of syntax elements, taking precedence into account
+    if (elements.length === 1) { return elements[0] }
+    let pivot = -1
+    let p = 0
+    for (let i=1; i < elements.length; i+=2) {
+      let elementP = elements[i].precedence
+      if (elementP && elementP >= p) {
+        p = elementP
+        pivot = i
+      }
+    }
+    let op = elements[pivot]
+    if (op === undefined) { throw `Invalid pattern: missing operator` }
+    let lhs = precedenceTree(elements.slice(0, pivot))
+    if (lhs === undefined) { throw `Invalid pattern: missing argument to operator ${op.keyword}` }
+    if (lhs.keyword !== undefined) { throw `Invalid pattern: invalid argument ${lhs.src} to operator ${op.keyword}` }
+    let rhs = precedenceTree(elements.slice(pivot+1))
+    if (rhs === undefined) { throw `Invalid pattern: missing argument to operator ${op.keyword}` }
+    if (rhs.keyword !== undefined) { throw `Invalid pattern: invalid argument ${rhs.src} to operator ${op.keyword}` }
+    return op.constructor(lhs, rhs)
   }
 
   let parsePattern = (state) => {
     let playFromStart = keyword(state, 'now')
-
-    // Parse elements
     let elements = []
     let element = parseElement(state)
     while (!!element) {
       elements.push(element)
       element = parseElement(state)
     }
-
-    // Apply operator precedence
-
-    // Build result pattern expression
-    let idx = 0
-    let result = elements[idx++]
-    while (!!elements[idx]) {
-      let element = elements[idx++]
-      if (element.keyword) {
-        let r = elements[idx++]
-        if (r === undefined) { throw `Invalid pattern: missing argument to operator ${element.keyword}` }
-        if (r.keyword !== undefined) { throw `Invalid pattern: invalid argument ${r.src} to operator ${element.keyword}` }
-        if (element.r) {
-          let src = r.src
-          r = element.r(src)
-          if (!r) { throw `Invalid pattern: invalid argument ${src} to operator ${element.keyword}` }
-        }
-        result = element.action(result, r)
-      }
-    }
-
-    // Finish up
-    if (result.keyword) { throw `Invalid pattern: missing literal` }
+    let result = precedenceTree(elements)
     result.playFromStart = playFromStart
     return result
   }
@@ -97,9 +104,10 @@ define(function(require) {
     assert(false, keyword(st('loop 1'), 'loopy'))
     assert(false, keyword(st('loop1'), 'loop'))
 
-    assertThrows('Invalid pattern: missing argument to operator loop', () => parsePattern(st('01 loop')))
-    assertThrows('Invalid pattern: invalid argument foo to operator loop', () => parsePattern(st('01 loop foo')))
-    assertThrows('Invalid pattern: missing argument to operator +', () => parsePattern(st(' loop +')))
+    assertThrows('Invalid pattern: missing operator', () => parsePattern(st('01 loop')))
+    assertThrows('Invalid pattern: missing operator', () => parsePattern(st('loop 1')))
+    assertThrows('Invalid pattern: invalid loop count foo to operator loop', () => parsePattern(st('01 loop foo')))
+    assertThrows('Invalid pattern: invalid argument loop to operator +', () => parsePattern(st(' loop +')))
     assertThrows('Invalid pattern: invalid argument loop to operator +', () => parsePattern(st('0 + loop')))
     assertThrows('Invalid pattern: Continuation "_" not valid at start of literal', () => parsePattern(st('01 + _3')))
 

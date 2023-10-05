@@ -1,7 +1,9 @@
 'use strict';
 define(function(require) {
-  let loop = (target, loopCount) => {
+  let loop = (target, r) => {
     let loops = 0
+    let loopCount = parseInt(r.src)
+    if (!loopCount) { throw `Invalid pattern: invalid loop count ${r.src} to operator loop` }
     let justStarted = true
     let pattern = {
       next: () => {
@@ -46,7 +48,7 @@ define(function(require) {
     }
     let p
 
-    p = loop(testPattern(), 2)
+    p = loop(testPattern(), {src:'2'})
     assert([{value:'x',dur:1}], p.next()) // First loop
     assert(undefined, p.next())
     p.loop()
