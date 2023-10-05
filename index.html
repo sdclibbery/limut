@@ -399,6 +399,8 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>0(135)</code> Chord: Round brackets to play multiple events together</p>
 <p><code>0&lt;12&gt;</code> Supersequence: angle brackets to play events in sequence as the pattern repeats. Eg <code>0&lt;12&gt;</code> is exactly equivalent to <code>0102</code></p>
 <p><code>01 loop 2</code> Restrict the number of times the pattern can loop. In the example, the pattern <code>01</code> will play twice and then stop. The player will not reset until it gets recreated or changed. So if a player with a loop pattern has finished its repeats, it will not start playing again until it is commented out/in, or playback stopped and restarted, or the pattern string is changed and updated.</p>
+<p><code>1 + 2</code> Concatenate two patterns; the first pattern plays then the second. For example, <code>12 + 34</code> is the same as <code>1234</code></p>
+<p><code>1 * 2</code> Repeat a pattern; the first pattern plays a given number of times. For example, <code>12 * 2</code> is the same as <code>1212</code></p>
 <p><code>now 01</code> Play the pattern starting on the next beat, rather than as if it had been playing from beat 0. In the example, the pattern <code>0123</code> will play starting from the <code>0</code> whatever beat the player is started on.</p>
 <p><code>follow p1</code> Use <code>follow</code> to follow another player (named 'p1' in the example) pattern</p>
 </div>
@@ -1312,13 +1314,6 @@ shadertoy synth multiple channels
 ==== other ====
 Pattern update
  Generative features:
- • p ping 01 + 23 - same as 0123
-  Docs
- • p ping 01 * 4  - 01010101
-  Pattern equivalence tests; eg test that  01 * 2  gives same events as  0101
-  Tests mixing this with now, loop etc
-  `01 23` * 2
- • p ping 01 * 2 + 2 * 3  - 0101222
  • p ping 01234567 crop 4  - 0123
   p ping 0[12]3 crop 2 - what does this mean?
   Syntax: crop or '%'?

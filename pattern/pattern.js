@@ -467,6 +467,11 @@ define(function(require) {
     assertSamePattern(root('`1` + 2', {}), root('12', {}))
     assertSamePattern(root('`01 23` + 45', {}), root('012345', {}))
     assertSamePattern(root('1 + 2 + 3', {}), root('123', {}))
+    assertSamePattern(root('xy * 4', {}), root('xyxyxyxy', {}))
+    assertSamePattern(root('1 * 3 + 2', {}), root('1112', {}))
+    assertSamePattern(root('12 + 34 * 2 + 56 * 3', {}), root('123434565656', {}))
+    assertSamePattern(root('`01 23` * 2 + -9', {}), root('01230123-9', {}))
+    assertSamePattern(root('1 * 2 + 3 loop 2 + 4', {}), root('11 + 3 loop 2 + 4', {}))
 
     assertSameRootPatternWithDurs('[0]', '0')
     assertSameRootPatternWithDurs('[[[0]]]', '0')
