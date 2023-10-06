@@ -1,9 +1,10 @@
 'use strict';
 define(function(require) {
+  let number = require('expression/parse-number')
 
   let crop = (l, r) => {
     let currentTime = 0
-    let cropLength = parseInt(r.src)
+    let cropLength = number({str:r.src,idx:0})
     if (!cropLength) { throw `Invalid pattern: invalid crop length ${r.src} to operator crop` }
     let pattern = {
       next: () => {
@@ -13,7 +14,16 @@ define(function(require) {
           l.loop() // Loop the sub pattern if it finishes before the crop
           result = l.next()
         }
-        currentTime += result[0].dur
+        if (!!result) {
+          let maxDur = 0
+          result.forEach(e => { // Crop individual event durations down if required
+            maxDur = Math.max(maxDur, e.dur)
+            let diff = currentTime + e.dur - cropLength
+            if (diff > 0) { e.dur -= diff  }
+          })
+          result = result.filter(e => e.dur > 0)
+          currentTime += maxDur
+        }
         return result
       },
       loop: () => {
@@ -60,6 +70,10 @@ define(function(require) {
     p = crop(testPattern(['x']), {src:'2'})
     assert([{value:'x',dur:1}], p.next())
     assert([{value:'x',dur:1}], p.next())
+    assert(undefined, p.next())
+
+    p = crop(testPattern(['x']), {src:'0.5'})
+    assert([{value:'x',dur:1/2}], p.next())
     assert(undefined, p.next())
 
     console.log("Pattern crop tests complete")

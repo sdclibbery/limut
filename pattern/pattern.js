@@ -459,10 +459,12 @@ define(function(require) {
     assertSamePattern(root('`01 _ _`', {}), root('01__', {}))
     assertSamePattern(root('`0[1 2]`', {}), root('0[12]', {}))
     assertSamePattern(root('`0(1 2)`', {}), root('0(12)', {}))
+
     assertSamePattern(root('`01 23 _ 5`', {}), root('0123_5', {}))
     assertSamePattern(root('`1 loop 2`', {}), root('1loop2', {}))
     assertSamePattern(root('`01 23` loop 2', {}), root('0123 loop 2', {}))
     assertSamePattern(root('now `01 23`', {}), root('now 0123', {}))
+
     assertSamePattern(root('01 + 23', {}), root('0123', {}))
     assertSamePattern(root('`1` + 2', {}), root('12', {}))
     assertSamePattern(root('`01 23` + 45', {}), root('012345', {}))
@@ -472,18 +474,19 @@ define(function(require) {
     assertSamePattern(root('12 + 34 * 2 + 56 * 3', {}), root('123434565656', {}))
     assertSamePattern(root('`01 23` * 2 + -9', {}), root('01230123-9', {}))
     assertSamePattern(root('1 * 2 + 3 loop 2 + 4', {}), root('11 + 3 loop 2 + 4', {}))
+
     assertSamePattern(root('01234567 crop 4', {}), root('0123', {}))
     assertSamePattern(root('0.. crop 16', {}), root('0..0..0..0..0..0', {}))
     assertSamePattern(root('0.. crop 14 + 0.', {}), root('0..0..0..0..0.0.', {}))
     assertSamePattern(root('21 + 0.. crop 14', {}), root('210..0..0..0..0.', {}))
     assertSamePattern(root('0.. crop 4 * 3 + 0.0.', {}), root('0..00..00..00.0.', {}))
-    // 0___ crop 2 - 0_
-    // 0[12]34 crop 2 - 0[12]
-    // 0[12]34 crop 1.5 - 0[10][_1]
-    // 01 crop 1/4 - [0000]
-    // (0[12]) crop 1/2 - [(01)(01)]
-    // ([12]0) crop 1/2 - [(10)(10)]
-    // 0(1[23]) crop 1.5 - 0[(12)0][_(12)]
+    assertSamePattern(root('0___ crop 2', {}), root('0_', {}))
+    assertSamePattern(root('0[12]34 crop 2', {}), root('0[12]', {}))
+    assertSamePatternIgnoringIdx(root('0[12]34 crop 1.5', {}), root('0[10][_1]', {}))
+    assertSamePatternIgnoringIdx(root('01 crop 1/4', {}), root('[0000]', {}))
+    assertSamePatternIgnoringIdx(root('(0[12]) crop 1/2', {}), root('[(01)(01)]', {}))
+    assertSamePatternIgnoringIdx(root('([12]0) crop 1/2', {}), root('[(10)(10)]', {}))
+    assertSamePatternIgnoringIdx(root('0(1[23]) crop 1.5', {}), root('0[(12)0][_(12)]', {}))
   
     assertSameRootPatternWithDurs('[0]', '0')
     assertSameRootPatternWithDurs('[[[0]]]', '0')
