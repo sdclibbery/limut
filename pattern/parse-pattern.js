@@ -10,13 +10,18 @@ define(function(require) {
       constructor: require('pattern/operator/loop.js'),
     },
     {
-      keyword: '*',
+      keyword: 'crop',
       precedence: 2,
+      constructor: require('pattern/operator/crop.js'),
+    },
+    {
+      keyword: '*',
+      precedence: 3,
       constructor: require('pattern/operator/repeat.js'),
     },
     {
       keyword: '+',
-      precedence: 3,
+      precedence: 4,
       constructor: require('pattern/operator/concat.js'),
     },
   ]
