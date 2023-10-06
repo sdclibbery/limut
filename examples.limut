@@ -3452,3 +3452,6 @@ ps sd909 0, dur=euclid{5,from:16}/4, swing=52, tone=1/4
 // b bloom now 0.., dur=4
 // b tinbass 07
 
+
+r readout 78 * 2 + 1 * 3 + 2 * 2, sus=1/2
+
