@@ -2,22 +2,26 @@
 define(function(require) {
   let eatWhitespace = require('expression/eat-whitespace')
   let literal = require('pattern/literal/literal.js')
+  let number = require('expression/parse-number.js')
 
   let operators = [ // HIGHest operator precedence should have LOWest precedence number!
     {
       keyword: 'loop',
       precedence: 1,
       constructor: require('pattern/operator/loop.js'),
+      r: 'expression',
     },
     {
       keyword: 'crop',
       precedence: 2,
       constructor: require('pattern/operator/crop.js'),
+      r: 'expression',
     },
     {
       keyword: '*',
       precedence: 3,
       constructor: require('pattern/operator/repeat.js'),
+      r: 'expression',
     },
     {
       keyword: '+',
@@ -40,17 +44,31 @@ define(function(require) {
     eatWhitespace(state)
     if (state.str[state.idx] === undefined) { return undefined }
     let startIdx = state.idx
-    for (let idx in operators) {
-      let k = operators[idx]
-      if (keyword(state, k.keyword)) {
-        result = Object.assign({}, k)
-        break
-      }
-    }
-    if (!result) {
+    switch (state.expect) {
+    case 'literal':
       result = literal(state)
+      result.src = state.str.slice(startIdx, state.idx).trim()
+      state.expect = 'operator' // The only thing that can follow a literal is an operator to act on it
+      break;
+    case 'operator':
+      for (let idx in operators) {
+        let op = operators[idx]
+        if (keyword(state, op.keyword)) {
+          result = Object.assign({}, op)
+          if (op.r === 'expression') { state.expect = 'expression' }
+          else { state.expect = 'literal' } // Start of RHS pattern
+          break
+        }
+      }
+      if (!result) { throw `Invalid pattern: missing operator` }
+      result.src = state.str.slice(startIdx, state.idx).trim()
+      break;
+    case 'expression':
+      result = number(state)
+      if (result === undefined) { throw `Invalid pattern: bad expression` }
+      state.expect = 'operator' // Expression is always RHS so completes a subpattern
+      break;
     }
-    result.src = state.str.slice(startIdx, state.idx).trim()
     return result
   }
 
@@ -79,6 +97,7 @@ define(function(require) {
 
   let parsePattern = (state) => {
     let playFromStart = keyword(state, 'now')
+    state.expect = 'literal'
     let elements = []
     let element = parseElement(state)
     while (!!element) {
@@ -116,9 +135,8 @@ define(function(require) {
 
     assertThrows('Invalid pattern: missing operator', () => parsePattern(st('01 loop')))
     assertThrows('Invalid pattern: missing operator', () => parsePattern(st('loop 1')))
-    assertThrows('Invalid pattern: invalid loop count foo to operator loop', () => parsePattern(st('01 loop foo')))
-    assertThrows('Invalid pattern: invalid argument loop to operator +', () => parsePattern(st(' loop +')))
-    assertThrows('Invalid pattern: invalid argument loop to operator +', () => parsePattern(st('0 + loop')))
+    assertThrows('Invalid pattern: bad expression', () => parsePattern(st('01 loop foo')))
+    assertThrows('Invalid pattern: missing operator', () => parsePattern(st(' loop +')))
     assertThrows('Invalid pattern: Continuation "_" not valid at start of literal', () => parsePattern(st('01 + _3')))
 
     console.log("Pattern parse tests complete")

@@ -1,10 +1,8 @@
 'use strict';
 define(function(require) {
 
-  let repeat = (l, r) => {
+  let repeat = (l, repeatCount) => {
     let repeats = 0
-    let repeatCount = parseInt(r.src)
-    if (!repeatCount) { throw `Invalid pattern: invalid repeat count ${r.src} to operator repeat` }
     let pattern = {
       next: () => {
         let result = l.next()
@@ -49,7 +47,7 @@ define(function(require) {
     }
     let p
 
-    p = repeat(testPattern('x'), {src:'2'})
+    p = repeat(testPattern('x'), 2)
     assert([{value:'x',dur:1}], p.next())
     assert([{value:'x',dur:1}], p.next())
     assert(undefined, p.next())

@@ -1,10 +1,8 @@
 'use strict';
 define(function(require) {
-  let number = require('expression/parse-number')
 
-  let crop = (l, r) => {
+  let crop = (l, cropLength) => {
     let currentTime = 0
-    let cropLength = number({str:r.src,idx:0})
     if (!cropLength) { throw `Invalid pattern: invalid crop length ${r.src} to operator crop` }
     let pattern = {
       next: () => {
@@ -58,7 +56,7 @@ define(function(require) {
     }
     let p
 
-    p = crop(testPattern(['x','y','z']), {src:'2'})
+    p = crop(testPattern(['x','y','z']), 2)
     assert([{value:'x',dur:1}], p.next())
     assert([{value:'y',dur:1}], p.next())
     assert(undefined, p.next())
@@ -67,12 +65,12 @@ define(function(require) {
     assert([{value:'y',dur:1}], p.next())
     assert(undefined, p.next())
 
-    p = crop(testPattern(['x']), {src:'2'})
+    p = crop(testPattern(['x']), 2)
     assert([{value:'x',dur:1}], p.next())
     assert([{value:'x',dur:1}], p.next())
     assert(undefined, p.next())
 
-    p = crop(testPattern(['x']), {src:'0.5'})
+    p = crop(testPattern(['x']), 0.5)
     assert([{value:'x',dur:1/2}], p.next())
     assert(undefined, p.next())
 

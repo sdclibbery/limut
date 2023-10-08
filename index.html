@@ -1314,7 +1314,6 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-! p play + does not work - should treat as literal not operator
 ! Duration should be calculated on every step, not every beat: cf play t, dur=[1/16:1/128]l[4,0]
 User defined functions
  ? Syntax? Lambda style; {x,y} -> expression
@@ -1324,6 +1323,7 @@ Pattern update
  • brackets for precedence
   ( 0 + 1 * 2 ) crop 16 - 0110110110110110
  • p ping 01 pad 4  - 01..
+  1234 pad 3 - 123
  • p ping 01 prepad 4  - ..01
  • Mirror
   mirror 012 * 2  - 012210012210
