@@ -21,6 +21,7 @@ define(function(require) {
     'drop60_4': parseExpression('[1,0]t[60,4]'),
     'drop62_2': parseExpression('[1,0]t[62,2]'),
     'drop63_1': parseExpression('[1,0]t[63,1]'),
+    'riser': parseExpression('[0,1]l[32,0]@f'),
   
     'fullscreen': parseExpression('{x:0,y:0,w:2,h:2}'),
     'tile_full': parseExpression('{x:0,y:0,w:2,h:2}'),

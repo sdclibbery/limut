@@ -1151,7 +1151,7 @@ TB303 realism
 More envelope{} features
  sustain and release - sustain should be level only; duration should be based an actual event length
  units='event'
-Half wave rectifier
+Half wave rectifier shaper
  Symmetric but center half at zero then rise up
  Really want user functions and define your own shape
 Try a convolution reverb with an envelope where the sound builds then fades instead of just dying away
@@ -1314,14 +1314,21 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
+! p play + does not work - should treat as literal not operator
+! Duration should be calculated on every step, not every beat: cf play t, dur=[1/16:1/128]l[4,0]
+User defined functions
+ ? Syntax? Lambda style; {x,y} -> expression
+ var lookups check function parameters first, or have an "args" object?
 Pattern update
  Generative features:
  • brackets for precedence
   ( 0 + 1 * 2 ) crop 16 - 0110110110110110
  • p ping 01 pad 4  - 01..
  • p ping 01 prepad 4  - ..01
- • p ping mirror 012 * 2  - 012210012210
- • p ping mirror (012 * 2)  - 012012210210
+ • Mirror
+  mirror 012 * 2  - 012210012210
+  mirror (012 * 2)  - 012012210210
+  mirror 012 crop 16 - 0122100122100122
  • p ping choose 01 , 23[45] , . , 7  - Chooses a different subpattern each repeat
  • p ping shuffle 01 , [23] , 4 , 5  - Random shuffling of subpatterns every repeat
  • sometimes/often/rarely/every before an operator; eg:  often mirror 0123   0123 sometimes * 2   every 4 shuffle 0 1 2 3

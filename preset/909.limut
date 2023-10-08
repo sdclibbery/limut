@@ -10,7 +10,7 @@ preset bd909 pitchedperc
   // Derived params
   , accent=(this.value+this.add)/7
   // Pitched Perc params
-	, click= 3/2*(this.attack + this.accent)
+	, click= 3/2*(this.attack*2 + this.accent)
   , hit= 0
 	, body={ 1 + this.accent
     , wave:'tri'
@@ -18,7 +18,7 @@ preset bd909 pitchedperc
     , freq:47, boost:120, pitchatt:2, pitchdec:5+100*this.tune
     , saturation:0.85
   }
-  , rattle={ 3*(this.attack + this.accent)
+  , rattle={ 3*(this.attack*3 + this.accent)
     , dec:200
     , freq:47, boost:153, pitchatt:2, pitchdec:5+100*this.tune
   }
