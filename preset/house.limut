@@ -34,3 +34,29 @@ preset m1organ multiwave
   , lpf={500*(1/2+this.cutoff)*(1+envelope{d:500}),poles:4,q:10}
 
 preset didgeridoo square 0, dur=1, envelope='pad', amp=[0.3:0.5]n3@f^2 + [0:0.3]l1@f, oct=2, clip, phaser=1/4, ring=1/4, glide=this.dur/2
+
+preset trance multiwave
+	, dur=1/4, envelope='simple', att=0.01, rel=1
+  , oct=4, amp*=3/2
+  // supersaw plus sub
+  , wave1={'saw',detune:0.18546*3*this.detune}
+  , wave2={'saw',detune:0.10924*3*this.detune}
+  , wave3={'saw',detune:0.03528*3*this.detune}
+  , wave4={'saw',detune:0}
+  , wave5={'saw',detune:-0.033033*3*this.detune}
+  , wave6={'saw',detune:-0.11044*3*this.detune}
+  , wave7={'saw',detune:-0.2002*3*this.detune}
+	, wave8={'saw',detune:-12,amp:1/2}
+  // filter
+  , lpf={
+  	300+500*(1+7*envelope{d:100+300*this.decay^2})*2*this.cutoff
+    , poles:4, q:6
+  }
+	, low={-12db,freq:80}
+  , high=3db
+  // Effects
+  , reverb={2,curve:2,mix:0.25}, room={1.2,mix:0.15}
+  // Coontrol params - some default to LFO sweeps
+  , decay=[1:0]l16
+  , cutoff=[0.05:1]l8
+  , detune=0.5
