@@ -37,7 +37,7 @@ preset didgeridoo square 0, dur=1, envelope='pad', amp=[0.3:0.5]n3@f^2 + [0:0.3]
 
 preset trance multiwave
 	, dur=1/4, envelope='simple', att=0.01, rel=1
-  , oct=4, amp*=3/2
+  , oct=4, amp*=3/2, pan=[-1/2:1/2]r, add=(0,2)
   // supersaw plus sub
   , wave1={'saw',detune:0.18546*3*this.detune}
   , wave2={'saw',detune:0.10924*3*this.detune}

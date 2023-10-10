@@ -3476,3 +3476,19 @@ s sweep 0, chop=2, ring=pitch{[0,0,2,5]t8}
 // bl bloom now 0
 
 
+// Trance workshop
+include 'preset/house.limut'
+set scale=minor
+set bpm=127
+pk bd909 6..., attack
+ph h909 002o0, swing=54, pan=-1/2
+pr sd909 ..0 crop 16, swing=58, pan=1/2, snappy=1/4
+b tb303 `000a0 00ua0`//, cutoff=riser^2, resonaonce=riser^2, amp*=1+riser^2
+// t trance -7.. crop 16, amp*=1+riser^2, cutoff=riser^2
+// t trance 02. crop 14 + <49><18>
+// t trance 070.80 crop 14 + 56
+// t trance 07.07.0709.09.06
+// t trance 0020040060039876
+// t trance 9008007005003456
+// t trance 72. crop 14 + 89
+set !p* add+=[2,-1,1,0]t4, swing=56
