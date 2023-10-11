@@ -1,28 +1,6 @@
 include 'preset/909.limut'
-
-preset tb303 wave
-	, wave='saw', oct=2+this.u-this.d, choke=this.player
-	, dur=1/4 // 1/16th notes
-  , envelope='organ', sus={this.dur-(1-this.a)*5/48, level:1} // Gate
-  , amp*=envelope{d:1000}*3/4 // VCA envelope: slow exponential decay
-  // 303 Controls
-  , cutoff=1/2
-  , resonance=1/2
-  , envmod=1/2
-	, decay=1/2
-  , accent=1/2
-  // Derived params
-  , amp*=3/4 + this.a*this.accent/3
-  , meg=envelope{d:340+(this.decay^2)*(1-this.a)*2000} // 303 Main Envelope Generator
-  , smoothedmeg=smooth{this.meg*this.a*128,att:2^-6,dec:2^-16+(1-this.a)*100}*this.resonance + this.meg*(1-this.resonance) // Smoothed meg for the accent sweep, based on resonance
-  , accentedmeg=this.smoothedmeg*this.a*this.accent + this.meg*(1-this.a*this.accent) // Accent sweep uses smoothed meg
-  , appliedmeg=(this.envmod+1)*this.accentedmeg + 1-this.envmod // Apply envmod
-  , lpf={
-    80 + (160 + 1700*this.cutoff^3) * this.appliedmeg,
-    q:this.resonance*25,
-    poles:4
-  }
-  , glide={(this.g+this.s)*88, units:'ms'}
+include 'preset/303.limut'
+include 'preset/trance.limut'
 
 preset m1organ multiwave
 	, dur=1/4 // 16th notes for syncopation
@@ -33,30 +11,4 @@ preset m1organ multiwave
   , wave3={'noise',detune:-3*12,amp:envelope{d:10}/3}
   , lpf={500*(1/2+this.cutoff)*(1+envelope{d:500}),poles:4,q:10}
 
-preset didgeridoo square 0, dur=1, envelope='pad', amp=[0.3:0.5]n3@f^2 + [0:0.3]l1@f, oct=2, clip, phaser=1/4, ring=1/4, glide=this.dur/2
-
-preset trance multiwave
-	, dur=1/4, envelope='simple', att=0.01, rel=1
-  , oct=4, amp*=3/2, pan=[-1/2:1/2]r, add=(0,2)
-  // supersaw plus sub
-  , wave1={'saw',detune:0.18546*3*this.detune}
-  , wave2={'saw',detune:0.10924*3*this.detune}
-  , wave3={'saw',detune:0.03528*3*this.detune}
-  , wave4={'saw',detune:0}
-  , wave5={'saw',detune:-0.033033*3*this.detune}
-  , wave6={'saw',detune:-0.11044*3*this.detune}
-  , wave7={'saw',detune:-0.2002*3*this.detune}
-	, wave8={'saw',detune:-12,amp:1/2}
-  // filter
-  , lpf={
-  	300+500*(1+7*envelope{d:100+300*this.decay^2})*2*this.cutoff
-    , poles:4, q:6
-  }
-	, low={-12db,freq:80}
-  , high=3db
-  // Effects
-  , reverb={2,curve:2,mix:0.25}, room={1.2,mix:0.15}
-  // Coontrol params - some default to LFO sweeps
-  , decay=[1:0]l16
-  , cutoff=[0.05:1]l8
-  , detune=0.5
+preset didgeridoo square 0, dur=1, envelope='pad', amp=[0.25:0.5]n3/4@f^2 + [0:0.25]l1/3@f, oct=2, clip, phaser=1/7, ring=1/4, glide=this.dur/2
