@@ -31,3 +31,11 @@ preset techbass saw
   // Controls
   , decay=[1/8:3/4]l8
   , cutoff=[0:1]l4
+
+preset psy multiwave
+  , envelop='organ', oct=2, amp*=10, dur=1/4
+  , wave1={'saw'}
+  , wave2={'saw',amp:1/2,detune:-12}
+	, bpf={250+4250*this.cutoff^2,q:3,poles:4}, high=-3db
+  , drive=1/8, delay=1/8, room=1, glide=this.dur/10
+  , cutoff=[2/3:0]e + [0:1/3]l1/2@f + [0:1/3]l2@f
