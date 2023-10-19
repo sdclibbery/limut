@@ -3492,3 +3492,17 @@ b tb303 `000a0 00ua0`//, cutoff=riser^2, resonaonce=riser^2, amp*=1+riser^2
 // t trance 9008007005003456
 // t trance 72. crop 14 + 89
 set !p* add+=[2,-1,1,0]t4, swing=56
+
+
+include 'preset/techno.limut'
+set scale=minor
+set bpm=134
+set main drive=1/96
+v image 0, loc=tile_r, window, contrast=3/4, fore=1.2, scroll={x:-0.35}, url='https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Sunset_at_Bang_Tao_beach_-_01.jpg/1280px-Sunset_at_Bang_Tao_beach_-_01.jpg'
+pk bd909 0..., attack
+ph h909 ..00, swing=54
+b techbass .0vvv00
+// s sd909 0, snappy=1/4, level=riser^3 / 2
+// t trance -3.. crop 8
+t trance 72. crop 14 + 89
+set !p* add+=[0,-1,-2,1]t4

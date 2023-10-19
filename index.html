@@ -1131,6 +1131,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 /*
 ====
 ==== audio ====
+!External synth should detect mono and compensate
 FM op supports units for att/rel times
   OR!!!! just have a per frame amp and can use envelope{}
 House lib
@@ -1339,8 +1340,8 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 User defined functions
- ? Syntax? Lambda style; {x,y} -> expression
- var lookups check function parameters first, or have an "args" object?
+ Eg shape={x}->sgn{x}*max{abs{x}-1/2, 0}
+ Or set riser={dur}->[0,1]l[dur,0]@f
 Pattern update
  Generative features:
  • brackets for precedence
