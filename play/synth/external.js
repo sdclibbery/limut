@@ -22,7 +22,7 @@ define(function (require) {
         latency: 0
       }
     }).then(s => {
-      s.getTracks().forEach((t,i) => {
+      s.getAudioTracks().forEach((t,i) => {
         consoleOut(`: External audio: Track ${i} - ${t.label} : ${t.getSettings().channelCount} channel(s)`)
       })
       stream=s
@@ -39,7 +39,7 @@ define(function (require) {
     fxMixChain(params, perFrameAmp(params, vca))
     let audioIn
     if (track !== undefined) {
-      let mediaTrack = stream.getTracks()[track]
+      let mediaTrack = stream.getAudioTracks()[track]
       if (mediaTrack === undefined) {
         consoleOut(`Track ${track} is not valid for this device`)
         return

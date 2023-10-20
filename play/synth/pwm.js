@@ -25,7 +25,6 @@ define(function (require) {
     vco.parameters.get('frequency').value = freq * Math.pow(2, detuneSemis/12)
     evalMainParamFrame(vco.parameters.get('pulseWidth'), params, "pwm", 1/2, x=>Math.max(Math.min(x,1),0))
     pitchEffects(vco.parameters.get('detune'), params)
-    vco.connect(vca)
     vco.parameters.get('start').setValueAtTime(1, params._time)
     vco.parameters.get('stop').setValueAtTime(0, system.audio.currentTime)
     vco.parameters.get('stop').setValueAtTime(1, params.endTime)
