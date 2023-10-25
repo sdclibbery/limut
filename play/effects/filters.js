@@ -3,10 +3,13 @@ define(function (require) {
   let system = require('play/system')
   let {mainParam} = require('player/sub-param')
   let {evalMainParamFrame,evalSubParamFrame,evalSubParamEvent} = require('play/eval-audio-params')
+  let evalParamEvent = require('player/eval-param').evalParamEvent
   let {findNonChordParams} = require('player/non-chord-params')
 
   let resonant = (params, node, type, freqParam, defaultResonance) => {
-    if (!mainParam(params[freqParam], 0)) { return node }
+    let p = mainParam(params[freqParam], 0)
+    if (!p) { return node }
+    if (p.interval === 'event' && !evalParamEvent(p, params)) { return node }
     let poles = evalSubParamEvent(params, freqParam, 'poles', 2)
     let twoStage = (poles === 4)
     let qModifier = twoStage ? x=>x/2 : undefined

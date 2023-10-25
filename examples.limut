@@ -3506,3 +3506,16 @@ b techbass .0vvv00
 // t trance -3.. crop 8
 t trance 72. crop 14 + 89
 set !p* add+=[0,-1,-2,1]t4
+
+// Switter Beat
+include 'preset/techno.limut'
+set bpm=141
+set root=4
+set scale='mixolydian'
+pk bd909 4..., attack, drive=1/16
+pt t909 4l.. crop 8, swing=60, high=-6db
+ph h909 .02o2, swing=56
+b techbass .0vv0v0, add=[0,-3,-1,-4]t4, decay=1, cutoff=1/3, amp*=1/2
+t chime .242313_636_535_, dur=1, chorus, phaser=1/11
+
+
