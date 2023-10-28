@@ -1131,12 +1131,25 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 /*
 ====
 ==== audio ====
-!glide=0 does not give zero glide????!
 !External synth should detect mono and compensate
  Actually for a usb audio interface that puts 2 inputs on 2 channels, you'd want to select one channel and force to mono
   So have a channel param, and if its set, select that channel only and force mono
+Go through all params with time and support units
+ ?!Or, should units be part of the value after all? Eg echo=100ms
+  ?Should 'db' etc be a post operator, not a feature of number syntax? So you could do amp=[0:6]l2 db
+   Or is it better to do amp=[0db:6db]l2 anyway?
+   ?operator could be a function that returns the time value in a standard unit; would have to be beats?
 FM op supports units for att/rel times
   OR!!!! just have a per frame amp and can use envelope{}
+More envelope{} features
+ sustain and release - sustain should be level only; duration should be based an actual event length
+ units='event'
+envelopes
+ * Create envelopes for eg lpf, eg  lpf=this.freq*10*env{a:1/4,r:1}
+  ??Is that the same as  lpf=this.freq*[0,10,0]e[1/4,1]  ??
+  ??Should use att/rel etc names for consistency?? - Prolly not, but then prefer env{} for main envelope too?
+ * Can get main envelope and use it for eg lpf - syntax??
+ * Can also use env{} for main envelope
 House lib
  Prodigy patches: https://www.youtube.com/watch?v=KwL2S5LRzFM&t=1272s
  Rave stab?
@@ -1173,9 +1186,6 @@ TB303 realism
   https://www.youtube.com/watch?v=KwL2S5LRzFM&t=1107s
    3#3#ds3#ua3#d3#us3#d3#a3as  - but needs legato slide
   https://www.audiorealism.se/audiorealism-bass-line-2.html
-More envelope{} features
- sustain and release - sustain should be level only; duration should be based an actual event length
- units='event'
 Half wave rectifier shaper
  Symmetric but center half at zero then rise up
  Really want user functions and define your own shape
@@ -1207,12 +1217,6 @@ More options for setting up the convolution reverb
  Mono/stereo: how much difference between L and R
  Some real impulse responses as options??
 ??? Could use very short loop that moves stepwise on a carefully prepared sample to do wave table synthesis???
-envelopes
- * Create envelopes for eg lpf, eg  lpf=this.freq*10*env{a:1/4,r:1}
-  ??Is that the same as  lpf=this.freq*[0,10,0]e[1/4,1]  ??
-  ??Should use att/rel etc names for consistency?? - Prolly not, but then prefer env{} for main envelope too?
- * Can get main envelope and use it for eg lpf - syntax??
- * Can also use env{} for main envelope
 !echo={1,feedback:0} should still produce a single delayed echo
 !Chop/ring LFO Freq should be per frame
 Also use nonchord find: nf (series) and bpf (parallel) for all audio
@@ -1273,6 +1277,7 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 ====
 ==== visual ====
+!Readout digits are missing some pixels
 !Buffer freezes on code update
 ?Proper detailed gradients, not just fore/mid/back
  ?recol=fmb that leaves all pixels white but with fb set, to allow recolouring with fore/mid/back. check it for webcam/image etc too
@@ -1339,9 +1344,25 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
+!v readout 0, add=[0,(1,2)]r, loc={y:this.voice/2}
+ Should get either 1 event with `0` OR 2 events with `1` and `2`, but get all kinds of mixtures
+!Duration should be calculated on every step, not every beat: cf play t, dur=[1/16:1/128]l[4,0]
+!Cannot override dur using `set`, it only changes the sus
+!Readout doesn't work here:  p ping 0, foo=[0,1,2,3]t1, add=this.foo \ r readout 0, add=p.add
+ It's specifically the this.foo that makes it fail; it's using *r*'s event for this, not p's event
+!this var lookup failing in various ways:
+ // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
+ // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1
+ r readout 0, add=m.bar.detune, loc=sparkle
 User defined functions
  Eg shape={x}->sgn{x}*max{abs{x}-1/2, 0}
- Or set riser={dur}->[0,1]l[dur,0]@f
+  !But the default behaviour for our existing functions is to be evalled even without {}, so how to pass the functions as values?
+ Or set riser={dur}->(time%dur)/dur
+  Allow riser={dur?32}->(time%dur)/dur ?
+ ?If functions are values, how do they interact with other values? What if you add functions etc? Eg ({}->0) + ({}->1) ?
+ ?What about chords eg {x} -> x*(1,2,3) ?
+ !Should be able to access the default e and b params
+ !Should be able to eval functions as well as pass them; eg ({}->3){}
 Pattern update
  Generative features:
  • brackets for precedence
@@ -1364,8 +1385,6 @@ Pattern update
   ?Can the existing pattern syntax support what would be needed?
   ?What arguments would be passed to a pattern operator definition?
   ?Probably want voice leading on expressions not patterns anyway??
-!v readout 0, add=[0,(1,2)]r, loc={y:this.voice/2}
- Should get either 1 event with `0` OR 2 events with `1` and `2`, but get all kinds of mixtures
 ?P ping 01, add=2 should really be p ping 01, value+=2 ?
  ALSO, really would like to be able to be able to  P ping 0123, value=ch[this.pattern_value]  but nicer somehow...
 Support continuations inside chords in pattern literals
@@ -1374,11 +1393,7 @@ Support continuations inside chords in pattern literals
  Have to add extra "timing rests" to keep the timing lined up in stepToCount
  Test cases:  0(_1__)  0(__)  0(_(_1_))  0[(_1_)2]  0[(__)2]  0<(_1_)2>  (01)(_2)  (0[12])(_3_)  <[(0)]><[(_)]>
 !Follow player event params should be evaluated at the time of the _original_ event for canons
-?Should 'db' be a post operator, not a feature of number syntax? So you could do amp=[0:6]l2 db
- Or is it better to do amp=[0db:6db]l2 anyway?
 Should support dur chords for polyrythms
-! Cannot override dur using `set`, it only changes the sus
-! Duration should be calculated on every step, not every beat: cf play t, dur=[1/16:1/128]l[4,0]
 More time modifiers
  offset
  step
@@ -1395,12 +1410,6 @@ Should be able to stutter={4,dur:1}
  Syntax???
  Split by audio vs visual
  Additional info?
-!Readout doesn't work here:  p ping 0, foo=[0,1,2,3]t1, add=this.foo \ r readout 0, add=p.add
- It's specifically the this.foo that makes it fail; it's using *r*'s event for this, not p's event
-!this var lookup failing in various ways:
- // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
- // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1
- r readout 0, add=m.bar.detune, loc=sparkle
 Follow player sort-out
  !If we take any params from the original event, then really want them to just work and not be overridden by follow player base events, or be at the wrong time due to follow player delay
  !Follow player chooses different random values so it does not copy the original player properly

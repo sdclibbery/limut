@@ -41,7 +41,7 @@ define((require) => {
     let d = mainParam(dp, 0)
     event._time += d*beat.duration
     event.count += d
-    applyOverridesInPlace(event, dp)
+    applyOverridesInPlace(event, event.delay)
   }
 
   let expandStutter = (es) => {
@@ -363,6 +363,10 @@ define((require) => {
   e = player('p', 'play', 'x', 'delay={1,add:2}').getEventsForBeat({time:0, count:0, duration:1})[0]
   assert(1, e._time)
   assert(2, e.add)
+
+  e = player('p', 'play', 'x', 'delay={1,add:[0,2]t1/4@f}').getEventsForBeat({time:0, count:0, duration:1})[0]
+  assert(1, e._time)
+  assert(2, evalParamFrame(e.add,e,1.3))
 
   let assertEvent = (t, c, d, e) => {
     assert(t, e._time, 'Incorrect _time')
