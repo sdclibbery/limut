@@ -3519,3 +3519,18 @@ b techbass .0vv0v0, add=[0,-3,-1,-4]t4, decay=1, cutoff=1/3, amp*=1/2
 t chime .242313_636_535_, dur=1, chorus, phaser=1/11
 
 
+// Chant for warding off spirits
+set scale=minor
+set bpm=120
+vk kal 0, buffer=vbuf, fore=[1/64:1/32]n8, back=0, additive, zoom=4, scroll=1/2
+vs swirl 0, vignette=2, loc={x:[-1/4:1/4]n1/3,y:[-1/4:1/4]n1/3,w:1/4,h:1/4}*(1/8+2*main.pulse^2), amp=0.01+main.pulse*5, back=0, buffer=vbuf, additive, fore=[purple:orange]n1/4 *(main.pulse^1/2), rotate=[]r, zoom=4
+vbuf buffer 0, feedback={fore:0.95,zoom:1.05,scroll:[-1:1]n4 /64, ripple:0.02}
+set url='https://upload.wikimedia.org/wikipedia/commons/b/b7/Lamentation.III.Karsamstag.ogg'
+preset chant sample, sample=url, dur=[1/20:1/40]r, sus=this.dur*4, envelope='pad', pan=[-1:1]r, amp=0.8, //drive=1, noisify
+c1 chant 0, start=[0:1/2]l[4,0] + 111//+[0,1]t8
+  , room=2, reverb=2, chorus, oct=0, amp*=20
+// c2 chant 0, start=[0:2]l[4,0] + [22,26,7,70,13]r
+//   , room, reverb, chorus, oct=(2,3,8)
+// 	, echo=3/4, addc=wow
+
+

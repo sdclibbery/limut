@@ -45,12 +45,21 @@ define(function (require) {
     return mix(params, 'reverb', node, boost, 1/3)
   }
 
-  let fixedReverb = (destructor, duration, curve, node) => {
+  let fixedReverb = (destructor, duration, curve, hpf, node) => {
     if (!duration || duration < 0.0001) { return node }
     let rev = convolutionReverb(duration, curve)
     let boost = system.audio.createGain()
     boost.gain.value = 6 // Boost the wet signal else the whole bus sounds quieter with a reverb in
-    node.connect(rev)
+    if (!!hpf) {
+      let filter = system.audio.createBiquadFilter()
+      filter.type = 'highpass'
+      filter.frequency.value = hpf
+      filter.Q.value = 5
+      node.connect(filter)
+      filter.connect(rev)
+    } else {
+      node.connect(rev)
+    }
     rev.connect(boost)
     destructor.disconnect(rev, boost)
     return boost

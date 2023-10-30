@@ -30,6 +30,7 @@ define(function (require) {
       roomMix: quantise(evalSubParamEvent(params, 'room', 'mix', 1/2), 16),
       reverb: quantise(evalMainParamEvent(params, 'reverb', 0) * params.beat.duration, 16),
       reverbCurve: quantise(evalSubParamEvent(params, 'reverb', 'curve', 3), 16),
+      reverbHpf: quantise(evalSubParamEvent(params, 'reverb', 'hpf', 0), 1),
       reverbMix: quantise(evalSubParamEvent(params, 'reverb', 'mix', 1/3), 16),
       bus: evalMainParamEvent(params, 'bus'),
     }
@@ -50,7 +51,7 @@ define(function (require) {
     node = fixedMix(c.destructor, c.params.flangerMix, node, fixedFlanger(c.destructor, c.params.flangerRate, node))
     node = fixedEcho(c.destructor, c.params.echoDelay, c.params.echoFeedback, node)
     node = fixedMix(c.destructor, c.params.roomMix, node, fixedFreeverb(c.destructor, c.params.room, node))
-    node = fixedMix(c.destructor, c.params.reverbMix, node, fixedReverb(c.destructor, c.params.reverb, c.params.reverbCurve, node))
+    node = fixedMix(c.destructor, c.params.reverbMix, node, fixedReverb(c.destructor, c.params.reverb, c.params.reverbCurve, c.params.reverbHpf, node))
     c.out = node
     return c
   }
