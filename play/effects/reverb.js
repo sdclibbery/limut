@@ -6,6 +6,19 @@ define(function (require) {
   let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
   var metronome = require('metronome')
 
+  let doHpf = (node, hpf) => {
+    if (!!hpf) {
+      let filter = system.audio.createBiquadFilter()
+      filter.type = 'highpass'
+      filter.frequency.value = hpf
+      filter.Q.value = 5
+      node.connect(filter)
+      return filter
+    } else {
+      return node
+    }
+  }
+
   function mulberry32(a) {
     return function() {
       var t = a += 0x6D2B79F5;
@@ -35,10 +48,11 @@ define(function (require) {
     if (!mainParam(params.reverb, 0)) { return node }
     let duration = evalMainParamEvent(params, 'reverb', 1/2) * metronome.beatDuration()
     let curve = evalSubParamEvent(params, 'reverb', 'curve', 3)
+    let hpf = evalSubParamEvent(params, 'reverb', 'hpf', 0)
     let rev = convolutionReverb(duration, curve)
     let boost = system.audio.createGain()
     boost.gain.value = 6 // Boost the wet signal else the whole bus sounds quieter with a reverb in
-    node.connect(rev)
+    doHpf(node, hpf).connect(rev)
     rev.connect(boost)
     params._destroyWait += duration
     params._destructor.disconnect(rev, boost)
@@ -49,17 +63,8 @@ define(function (require) {
     if (!duration || duration < 0.0001) { return node }
     let rev = convolutionReverb(duration, curve)
     let boost = system.audio.createGain()
-    boost.gain.value = 6 // Boost the wet signal else the whole bus sounds quieter with a reverb in
-    if (!!hpf) {
-      let filter = system.audio.createBiquadFilter()
-      filter.type = 'highpass'
-      filter.frequency.value = hpf
-      filter.Q.value = 5
-      node.connect(filter)
-      filter.connect(rev)
-    } else {
-      node.connect(rev)
-    }
+    boost.gain.value = 6 // Boost the wet signal else the whole player sounds quieter with a reverb in
+    doHpf(node, hpf).connect(rev)
     rev.connect(boost)
     destructor.disconnect(rev, boost)
     return boost
