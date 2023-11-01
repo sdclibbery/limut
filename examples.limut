@@ -3547,3 +3547,12 @@ c1 chant 0, start=[0:1/2]l[4,0] + 111//+[0,1]t8
 // b reese 070 crop 14 + 89, detune=3/4, cutoff=[1/4:1]n3
 
 
+/// Testing reverb hpfs
+// d dbass 0.6., amp/=2, reverb={2,mix:1/2,hpf:2000}
+// d dbass 0.6., bus='b'
+// b bus, amp/=2, reverb={2,mix:1/2,hpf:2000}
+///
+// d dbass 0.6., amp/=2, room={2,mix:1/2,hpf:2000}
+// d dbass 0.6., bus='b'
+// b bus, amp/=2, room={2,mix:1/2,hpf:2000}
+

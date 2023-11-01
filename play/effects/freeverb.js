@@ -1,7 +1,7 @@
 'use strict';
 define(function (require) {
   let system = require('play/system');
-  let {evalMainParamEvent} = require('play/eval-audio-params')
+  let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
   let {mix} = require('play/effects/mix')
 
   // adapted from: https://raw.githubusercontent.com/mmckegg/freeverb/master/index.js
@@ -35,10 +35,23 @@ define(function (require) {
     return node
   }
 
-  let fixedFreeverb = (destructor, room, node) => {
+  let doHpf = (node, hpf) => {
+    if (!!hpf) {
+      let filter = system.audio.createBiquadFilter()
+      filter.type = 'highpass'
+      filter.frequency.value = hpf
+      filter.Q.value = 5
+      node.connect(filter)
+      return filter
+    } else {
+      return node
+    }
+  }
+
+  let fixedFreeverb = (destructor, room, hpf, node) => {
     room *= 0.7
     if (!room || room < 0.01) { return node }
-
+    node = doHpf(node, hpf)
     let dampening = 3000
     let resonance = 0.7 + 0.28 * Math.max(Math.min(room, 1), 0)
 
@@ -110,7 +123,8 @@ define(function (require) {
   let mixedFreeverb = (params, node) => {
     let room = evalMainParamEvent(params, 'room', 0)
     if (!room) { return node }
-    let fv = fixedFreeverb(params._destructor, room, node)
+    let hpf = evalSubParamEvent(params, 'room', 'hpf', 0)
+    let fv = fixedFreeverb(params._destructor, room, hpf, node)
     params._destroyWait += room*5
     return mix(params, 'room', node, fv, 1/2)
   }
