@@ -14,12 +14,22 @@ define(function(require) {
         }
         if (!!result) {
           let maxDur = 0
+          let filtered = []
           result.forEach(e => { // Crop individual event durations down if required
-            maxDur = Math.max(maxDur, e.dur)
             let diff = currentTime + e.dur - cropLength
-            if (diff > 0) { e.dur -= diff  }
+            if (e.dur - diff > 0) {
+              if (diff > 0) {
+                let cropped = Object.assign({},e)
+                cropped.dur -= diff
+                filtered.push(cropped)
+                maxDur = Math.max(maxDur, cropped.dur)
+              } else {
+                filtered.push(e)
+                maxDur = Math.max(maxDur, e.dur)
+              }
+            }
           })
-          result = result.filter(e => e.dur > 0)
+          result = filtered
           currentTime += maxDur
         }
         return result

@@ -62,7 +62,7 @@ define(function(require) {
     }
     let assertSamePattern = (a, b) => {
       for (let i=0; i<30; i++) {
-        assert(a(i), b(i), `i: ${i}`)
+        assert(b(i), a(i), `i: ${i}`)
       }
     }
     let clearIdx = e => { delete e.idx; return e }
@@ -74,15 +74,15 @@ define(function(require) {
         let a = root(as, {dur:dur})
         let b = root(bs, {dur:dur})
         for (let i=0; i<30; i++) {
-          assert(a(i), b(i), `dur: ${dur}; i: ${i}`)
+          assert(b(i), a(i), `dur: ${dur}; i: ${i}`)
         }
       })
     }
     let assertSamePatternIgnoringIdx = (a, b) => {
       for (let i=0; i<30; i++) {
         assert(
-          a(i).map(clearIdx), // Remove idx fields from both sides before comparison
-          b(i).map(clearIdx),
+          b(i).map(clearIdx), // Remove idx fields from both sides before comparison
+          a(i).map(clearIdx),
           `i: ${i}`
         )
       }
@@ -107,13 +107,6 @@ define(function(require) {
         assert(a(i), pc()(i), `i: ${i}`) // Create the comparison pattern every time
       }
     }
-    let assertThrows = (expected, code) => {
-      let got
-      try {code()}
-      catch (e) { if (e.includes(expected)) {got=true} else {console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: ${e}`)} }
-      finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
-    }
-    let st = (str) => { return { str:str, idx:0 } }
     let p
 
     assert([], root('', {})(0))
@@ -484,6 +477,8 @@ define(function(require) {
     assertSamePattern(root('21 + 0.. crop 14', {}), root('210..0..0..0..0.', {}))
     assertSamePattern(root('0.. crop 4 * 3 + 0.0.', {}), root('0..00..00..00.0.', {}))
     assertSamePattern(root('0___ crop 2', {}), root('0_', {}))
+    assertSamePattern(root('0_ crop 3', {}), root('0_0', {}))
+    assertSamePattern(root('0_ crop 5', {}), root('0_0_0', {}))
     assertSamePattern(root('0[12]34 crop 2', {}), root('0[12]', {}))
     assertSamePatternIgnoringIdx(root('0[12]34 crop 1.5', {}), root('0[10][_1]', {}))
     assertSamePatternIgnoringIdx(root('01 crop 1/4', {}), root('[0000]', {}))
