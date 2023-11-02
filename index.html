@@ -1122,8 +1122,16 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <h5>House library: <code>include 'preset/house.limut'</code></h5>
 <h6>Audio</h6>
 <p>The House library also includes the 909, 303 and trance libraries.</p>
-<p><code>m1organ</code> Simulated M1 Organ sound. Has a <code>cutoff</code> control param from 0 to 1.<br/></p>
+<p><code>m1organ</code> Simulated M1 Organ sound.
+  The following custom control params are available:<br/>
+  <code>cutoff</code> Cutoff control 0 to 1; defaults to 1/2. Set the filter cutoff. Higher values give a brighter sound.<br/>
+</p>
 <p><code>didgeridoo</code> Didgeridoo drone synth.<br/></p>
+<p><code>reese</code> Reese bass with detuned saws.
+  The following custom control params are available:<br/>
+  <code>cutoff</code> Cutoff control 0 to 1; defaults to 1/2. Set the filter cutoff. Higher values give a brighter sound.<br/>
+  <code>detune</code> Detune level 0 to 1; defaults to 1/2. Set the detune between the saws. Higher values give a more unstable sound.<br/>
+</p>
 </div>
 <hr>
 <p>Please report bugs, problems, issues and suggestions on <a href="https://github.com/sdclibbery/limut/issues" target="_blank">https://github.com/sdclibbery/limut/issues</a></p>
@@ -1134,7 +1142,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 /*
 ====
 ==== audio ====
-Docs for reese
+?Any other basses need hpf on their room/reverb?
 !External synth should detect mono and compensate
  Actually for a usb audio interface that puts 2 inputs on 2 channels, you'd want to select one channel and force to mono
   So have a channel param, and if its set, select that channel only and force mono

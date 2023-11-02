@@ -33,20 +33,9 @@ preset techbass saw
   , cutoff=[0:1]l4
 
 preset psy multiwave
-  , envelop='organ', oct=3, amp*=5, dur=1/4
+  , envelop='organ', oct=3, amp*=3, dur=1/4
   , wave1={'saw'}
   , wave2={'saw',amp:1/2,detune:-12}
 	, bpf={250+2250*this.cutoff^2,q:3,poles:4}, high=-3db
   , drive=1/8, delay=1/8, room=1, glide=this.dur/10
   , cutoff=[2/3:0]e + [0:1/3]l1/2@f + [0:1/3]l2@f
-
-preset reese multiwave
-  , oct=2, dur=1/4, envelope='organ', att=1/12, choke=this.player, glide=this.dur/4, amp=3
-  , wave1={'saw',detune:0,amp:1}
-  , wave2={'saw',detune:1/3*this.detune,amp:2/3}
-  , wave3={'saw',detune:-1/4*this.detune,amp:1/2}
-  , wave4={'tri',detune:-12,amp:1}
-  , lpf={100+1900*this.cutoff^3,q:9,poles:4}
-  , reverb={1,hpf:300,mix:1/8}
-  , detune=2/3
-  , cutoff=[0:1]s1@f
