@@ -18,7 +18,7 @@ preset trance multiwave
 	, low={-12db,freq:80}
   , high=3db
   // Effects
-  , reverb={2,curve:2,mix:0.25}, room={1.2,mix:0.15}
+  , reverb={2,curve:2,hpf:250,mix:0.25}, room={1.2,hpf:250,mix:0.15}
   // Coontrol params - some default to LFO sweeps
   , decay=[1:0]l16
   , cutoff=[0.05:1]l8
