@@ -1357,7 +1357,7 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-Cannot use delay overrides with | operator; eg  p ping 0, delay=0|{1/4,add:5}
+!delay overrides dont work with | operator; eg  p ping 0, delay=0|{1/4,add:5}
 !v readout 0, add=[0,(1,2)]r, loc={y:this.voice/2}
  Should get either 1 event with `0` OR 2 events with `1` and `2`, but get all kinds of mixtures
 !Duration should be calculated on every step, not every beat: cf play t, dur=[1/16:1/128]l[4,0]
