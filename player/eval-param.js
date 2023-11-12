@@ -54,7 +54,7 @@ define((require) => {
     return result
   }
 
-  let evalParamValueForMemoisation = (evalRecurse, value, event, beat, {ignoreThisVars}) => {
+  let evalParamValueForMemoisation = (evalRecurse, value, event, beat, {ignoreThisVars,evalToObjectOrPrimitive}) => {
     if (Array.isArray(value)) { // chord, eval individual values
       let v = value.map(v => evalRecurse(v, event, beat))
       v = v.flat()
@@ -66,7 +66,7 @@ define((require) => {
     } else if (typeof value === 'object') { // Eval each field in the object
       let result = {}
       for (let k in value) {
-        if (k === '_state') {
+        if (k === '_state' || evalToObjectOrPrimitive) {
           result[k] = value[k] // Pass _state without evaluation
         } else {
           result[k] = evalRecurse(value[k], event, beat)
@@ -112,6 +112,11 @@ define((require) => {
 
   let evalParamFrameIgnoreThisVars = (value, event, beat) => {
     let options = {ignoreThisVars:true}
+    return evalParamValue(evalRecurseWithOptions(evalRecurseFull, options), value, event, beat, options)
+  }
+
+  let evalParamToObjectOrPrimitive = (value, event, beat) => {
+    let options = {evalToObjectOrPrimitive:true}
     return evalParamValue(evalRecurseWithOptions(evalRecurseFull, options), value, event, beat, options)
   }
 
@@ -290,6 +295,7 @@ define((require) => {
     evalParamEvent:evalParamEvent,
     evalParamFrame:evalParamFrame,
     evalParamFrameIgnoreThisVars:evalParamFrameIgnoreThisVars,
+    evalParamToObjectOrPrimitive:evalParamToObjectOrPrimitive,
   }
 
 })

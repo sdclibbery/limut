@@ -3556,3 +3556,33 @@ c1 chant 0, start=[0:1/2]l[4,0] + 111//+[0,1]t8
 // d dbass 0.6., bus='b'
 // b bus, amp/=2, room={2,mix:1/2,hpf:2000}
 
+
+// Improv
+include 'preset/synthwave.limut'
+include 'preset/techno.limut'
+include 'preset/house.limut'
+set scale=minor
+set bpm=133
+set main drive=1/64
+set p* delay|=[(),[1,3,5]r/4]t[13,3]
+vk kal 1, loc=tile_tr, time=time+smooth{pk.pulse.min*8}, vhs=1/2
+pk bd909 0..., attack, drive=1/16
+ph h909 .03o2, swing=58
+pt t909 .4l. crop 16, swing=62
+br reese 0_7 crop 14 + 89, cutoff=[0:1]n3/2{per:4,seed:8}
+b3 tb303 .00ua0, cutoff=[0:3/4]l2@f, reverb={1,hpf:500,mix:1/4,curve:1}
+t trance -7, dur=[3,3,2], decay=5, reverb*=2//, delay=(0,{[1,3/2]r,add:[3,6,5]r})
+// s psy 076 crop 30 + 89, cutoff=[1/2:3/2]s3/2@f ^2, swing=60
+/// Drop
+// set (p*,b3) amp=0
+// t trance 0706, cutoff=riser^5
+// f sd909 2, level=riser^6
+
+
+r readout 0, loc=sparkle, delay=0|{1/3,add:5}
+r readout 0, loc=sparkle, delay={0,add:[0:5]l1/4@f}
+r readout 0, loc=sparkle, delay=0|{1/3,add:(1,2)}, fore=(red,green,blue).(this.voice)
+p ping 0, delay=0|{1/3,add:5}
+p ping 0, delay={0,addc:-7}|{1/3,addc:[5:17]e}
+p ping 0, delay={0,add:[0,5]}
+

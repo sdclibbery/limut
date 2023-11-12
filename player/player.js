@@ -9,7 +9,7 @@ define((require) => {
   var followPlayer = require('player/follow')
   var players = require('player/players')
   var expandChords = require('player/expand-chords')
-  let {evalParamFrame} = require('player/eval-param')
+  let {evalParamFrame,evalParamToObjectOrPrimitive} = require('player/eval-param')
   let {mainParam} = require('player/sub-param')
   let {applyOverrides,applyOverridesInPlace} = require('player/override-params')
 
@@ -37,11 +37,11 @@ define((require) => {
   }
 
   let applyDelay = (event, beat) => {
-    let dp = evalParamFrame(event.delay, event, event.count)
+    let dp = evalParamToObjectOrPrimitive(event.delay, event, event.count)
     let d = mainParam(dp, 0)
     event._time += d*beat.duration
     event.count += d
-    applyOverridesInPlace(event, event.delay)
+    applyOverridesInPlace(event, dp)
   }
 
   let expandStutter = (es) => {
@@ -367,6 +367,16 @@ define((require) => {
   e = player('p', 'play', 'x', 'delay={1,add:[0,2]t1/4@f}').getEventsForBeat({time:0, count:0, duration:1})[0]
   assert(1, e._time)
   assert(2, evalParamFrame(e.add,e,1.3))
+
+  e = player('p', 'play', 'x', 'delay={1,add:5}').getEventsForBeat({time:0, count:0, duration:1})[0]
+  assert(1, e._time)
+  assert(5, evalParamFrame(e.add,e,1))
+
+  e = player('p', 'play', 'x', 'delay=1|{2,add:5}').getEventsForBeat({time:0, count:0, duration:1})
+  assert(1, e[0]._time)
+  assert(undefined, e[0].add)
+  assert(2, e[1]._time)
+  assert(5, e[1].add)
 
   let assertEvent = (t, c, d, e) => {
     assert(t, e._time, 'Incorrect _time')

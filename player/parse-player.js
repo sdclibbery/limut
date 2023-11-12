@@ -57,7 +57,6 @@ define((require) => {
 
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
-  let vars = require('vars').all()
 
   let assert = (expected, actual, msg) => {
     let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(3) : v)
@@ -139,7 +138,7 @@ define((require) => {
   assertHas({value:'a',add:2,voice:1}, es[1])
   assertHas({value:'b',add:1,voice:2}, es[2])
   assertHas({value:'b',add:2,voice:3}, es[3])
-  assertHas({value:'c',add:1,voice:0}, es[4]) // Voice here (and below) should really be 4 (and 5), but that's a lot more complicated
+  assertHas({value:'c',add:1,voice:0}, es[4]) // Voice here (and below) should really be 2 (and 3), but that's a lot more complicated
   assertHas({value:'c',add:2,voice:1}, es[5])
 
   console.log('Parse player tests complete')

@@ -1142,7 +1142,6 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 /*
 ====
 ==== audio ====
-?Any other basses need hpf on their room/reverb?
 !External synth should detect mono and compensate
  Actually for a usb audio interface that puts 2 inputs on 2 channels, you'd want to select one channel and force to mono
   So have a channel param, and if its set, select that channel only and force mono
@@ -1357,7 +1356,8 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-!delay overrides dont work with | operator; eg  p ping 0, delay=0|{1/4,add:5}
+Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as needed. or  t trance 0, reverb.hpf=0
+ Needs to work for overrides too eg  body.boost+=100
 !v readout 0, add=[0,(1,2)]r, loc={y:this.voice/2}
  Should get either 1 event with `0` OR 2 events with `1` and `2`, but get all kinds of mixtures
 !Duration should be calculated on every step, not every beat: cf play t, dur=[1/16:1/128]l[4,0]
@@ -1377,6 +1377,7 @@ User defined functions
  ?What about chords eg {x} -> x*(1,2,3) ?
  !Should be able to access the default e and b params
  !Should be able to eval functions as well as pass them; eg ({}->3){}
+Should be able to [0:1]n{per:'event',seed:0} ie so the sequence repeats on every event
 Pattern update
  Generative features:
  • brackets for precedence
@@ -1430,8 +1431,6 @@ Follow player sort-out
   Need all randoms to be seeded, and the seed to vary between players but be the same for a follow player
    OR!! Should the follow player keep a queue of the events from the main player, delayed as needed?
   ?Do other things like timevars get followed correctly with correct delay?
-Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as needed
- Needs to work for overrides too eg  body.boost+=100
 !`p1 ping 0, dur=4, foo=[100,1000,100]e \n p2 kal 0, dur=1, amp=p1.foo/1000` the []e is evalled in the WRONG players dur
 !add=(0,2,4,6)[rand]{per:2,seed:0} doesn't work; rand chord indexer needs to respect time modifiers and seed etc
 !Really need a complete audit of time vs count. Need the code to be clear and unambiguous which is which. There will be issues to fix. Look at []e and []e{per}
