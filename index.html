@@ -491,6 +491,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <div id="accordion-audio-synths" class="closed">
 <p><code>! / stop / none</code> </p>
 <p><code>play</code> Play samples. Use letters, symbols and digits 1-4 in the pattern to choose the sample (see below for full list). Note duration defaults to 1/2.</p>
+<p><code>perc</code> Play sampled percussion. Similar to the play synth, and uses the same pattern values and samples, but defaults to 1/4 beat duration, and each player has a choke group.</p>
 <p><code>pitchedperc</code> Synthesised pitched percussion for kick drums, snare, toms etc. Note that as this synth is not sample based, it only accepts digits in the player pattern, unlike the play synth. The sound is made up of click, hit, body and rattle components. The synth has a number of unique params:</p>
 <p class='sub'><code>click={1}</code> The click is the initial impact sound. The main param is the loudness of the click. The default values are shown.</p>
 <p class='sub'><code>hit={0,sample:'^',index:1,rate:3/2}</code> The hit is a sample to be played with the initial impact sound. The main param is the loudness of the hit. Sample, index and rate control the sample playback (similar to the play synth). The default values are shown.</p>
@@ -1142,6 +1143,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 /*
 ====
 ==== audio ====
+Make sampled 909 presets using play synth, eg bds909 etc
 !External synth should detect mono and compensate
  Actually for a usb audio interface that puts 2 inputs on 2 channels, you'd want to select one channel and force to mono
   So have a channel param, and if its set, select that channel only and force mono
