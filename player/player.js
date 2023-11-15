@@ -143,7 +143,11 @@ define((require) => {
     player.getEventsForBeat = (beat) => {
       let events = player.getEventsForBeatRaw(beat)
       events = events.map(event => {
-        let eventToPlay = Object.assign({}, event, {sound: event.value, beat: beat})
+        let eventToPlay = Object.assign({}, event)
+        eventToPlay.beat = beat
+        if (eventToPlay.sound === undefined) {
+          eventToPlay.sound = event.value
+        }
         eventToPlay._time = beat.time + event._time*beat.duration
         return eventToPlay
       })

@@ -7,6 +7,7 @@ define(function(require) {
     'ms': 1/1000,
     'millis': 1/1000,
   }
+
   let timeToBeats = (value, units, e) => {
     let scale = timeScale[units]
     if (scale !== undefined) {
@@ -16,7 +17,17 @@ define(function(require) {
     return value
   }
 
+  let timeToTime = (value, units, e) => {
+    let scale = timeScale[units]
+    if (scale !== undefined) {
+      return value * scale
+    }
+    // Default to beats
+    return value * e.beat.duration
+  }
+
   return {
     timeToBeats: timeToBeats,
+    timeToTime: timeToTime,
   }
 })

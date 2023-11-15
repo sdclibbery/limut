@@ -14,13 +14,13 @@ preset bd909 pitchedperc
   , hit= 0
 	, body={ 1 + this.accent
     , wave:'tri'
-    , att:5, dec:100+900*this.decay
-    , freq:47, boost:120, pitchatt:2, pitchdec:5+100*this.tune
+    , att:10, dec:200+1800*this.decay
+    , freq:47, boost:120, pitchatt:4, pitchdec:10+200*this.tune
     , saturation:0.85
   }
   , rattle={ 3*(this.attack*3 + this.accent)
-    , dec:200
-    , freq:47, boost:153, pitchatt:2, pitchdec:5+100*this.tune
+    , dec:400
+    , freq:47, boost:153, pitchatt:4, pitchdec:10+200*this.tune
   }
 
 preset h909 sample
@@ -83,19 +83,19 @@ preset sd909 pitchedperc
   , hit= 0
 	, body={ 1 + this.accent
     , wave:'tri'
-    , att:5, dec:130
-    , freq:110+177*this.tune, boost:100, pitchatt:2, pitchdec:20
+    , att:10, dec:260
+    , freq:110+177*this.tune, boost:100, pitchatt:4, pitchdec:40
     , saturation:0.85
   }
 	, body2={ 1/2 + this.accent/2
     , wave:'tri'
-    , att:5, dec:130
-    , freq:139+107*this.tune, boost:133, pitchatt:2, pitchdec:20
+    , att:10, dec:260
+    , freq:139+107*this.tune, boost:133, pitchatt:4, pitchdec:40
     , saturation:0.85
   }
   , rattle={ 3/2*(this.snappy + this.accent)
-    , dec:100+300*this.tone
-    , filter:'bandpass', freq:[2500:4000]e0.4, boost:153, pitchatt:2, pitchdec:200, q:0.2 // Real 909 splits noise signal and has low and high pass not bandpass
+    , dec:200+600*this.tone
+    , filter:'bandpass', freq:[2500:4000]e0.4, boost:153, pitchatt:4, pitchdec:400, q:0.2 // Real 909 splits noise signal and has low and high pass not bandpass
   }
 
 preset t909 pitchedperc
@@ -113,19 +113,19 @@ preset t909 pitchedperc
   , hit= 0
 	, body={ 1 + this.accent
     , wave:'tri'
-    , att:5, dec:250*(1+this.decay)
-    , freq:this.freq, boost:this.freq, pitchatt:2, pitchdec:150
+    , att:10, dec:500*(1+this.decay)
+    , freq:this.freq, boost:this.freq, pitchatt:4, pitchdec:300
     , saturation:0.85
   }
 	, body2={ 1 + this.accent
     , wave:'tri'
-    , att:5, dec:100
-    , freq:this.freq*1.13, boost:this.freq*1.73, pitchatt:2, pitchdec:60
+    , att:10, dec:200
+    , freq:this.freq*1.13, boost:this.freq*1.73, pitchatt:4, pitchdec:120
     , saturation:1 // Real 909 has changing saturation over time
   } // Real 909 has a third body tone
   , rattle={ 1/2*(1 + this.accent)
-    , dec:50
-    , filter:'bandpass', freq:500, boost:200, pitchatt:0, pitchdec:30, q:[0.1:1]e0.05
+    , dec:100
+    , filter:'bandpass', freq:500, boost:200, pitchatt:0, pitchdec:60, q:[0.1:1]e0.05
   }
 
 preset rs909 impulse
@@ -139,3 +139,79 @@ preset rs909 impulse
   , bpf1={220,q:10.5}
   , bpf2={500,q:10.5}
   , bpf3={1000,q:10.5}
+
+//------------------------------------------------------------------------------------
+// Sample based 909 (very inaccurate)
+
+preset bds909 sample
+	, sample='sample/909/limut909bd.wav'
+  // Sample synth params
+  , dur=1/4, sus=100+900*this.decay, choke=this.player
+  , rate=3/4+this.tune/2
+  , envelope='organ', att=0
+	, amp*=this.level * (1 + this.accent + this.attack)
+  , lpf=20 + (200*(this.tune+0.02) + 4000*this.attack*(this.tune+0.02)) * envelope{d:100+900*this.decay,shape:'lin'}
+  // 909 BD Controls
+  , level=1/2
+  , tune=1/2
+  , attack=1/2
+  , decay=1/2
+  // Derived params
+  , accent=(this.value+this.add)/7
+
+
+preset hs909 h909
+
+preset cps909 sample
+	, sample='sample/909/limut909cp.wav'
+  // Sample synth params
+  , dur=1/4, choke=this.player, sus=1
+  , envelope='organ', att=0
+	, amp*=2 * this.level * (1 + this.accent)
+  // 909 CP Controls
+  , level=1/2
+  // Derived params
+  , accent=(this.value+this.add)/9
+
+preset ccs909 cc909
+
+preset rcs909 rc909
+
+preset sds909 sample
+	, sample='sample/909/limut909sd.wav'
+  // Sample synth params
+  , dur=1/4, choke=this.player, sus=1
+  , envelope='organ', att=0
+  , amp*=envelope{d:100+1200*(this.tone+this.snappy)}*(this.level + this.accent)
+  , lpf={4000*(0.1+this.snappy)*(0.2+0.5*envelope{d:10+this.tone*4000}),q:1}
+  , accent=(this.value+this.add)/9
+  // 909 SD Controls
+  , level=1/2
+  , tune=1/2
+  , tone=1/2
+  , snappy=1/2
+
+preset ts909 sample
+	, sample='sample/909/limut909t.wav'
+  // Sample synth params
+  , dur=1/4, choke=this.player, sus=1
+  , envelope='organ', att=0
+  , amp*=(this.level+this.accent/2)*envelope{d:250*(1+20*this.decay)}
+  // 909 Toms Controls
+  , level=1/2
+  , tune=1/2
+  , decay=1/2
+  // Derived params
+  , accent=(this.value+this.add)/9
+  , freq=(80 - 25*this.l + 35*this.h)*2/3 * (1+this.tune)
+
+preset rss909 sample
+	, sample='sample/909/limut909rs.wav'
+  // Sample synth params
+  , dur=1/4, choke=this.player, sus=1
+  , envelope='organ', att=0
+  , amp*=3*(this.level+this.accent/2)
+  // 909 rs Controls
+  , level=1/2
+  // Derived params
+  , accent=(this.value+this.add)/9

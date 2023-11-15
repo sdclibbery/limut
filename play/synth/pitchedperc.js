@@ -10,7 +10,7 @@ define(function (require) {
   let {getBuffer,getUrl} = require('play/samples')
   let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
   let perFrameAmp = require('play/effects/perFrameAmp')
-  let timeToBeats = require('units').timeToBeats
+  let timeToTime = require('units').timeToTime
 
   let clickBuffer
   let clickTime = 0.001
@@ -77,13 +77,13 @@ define(function (require) {
     let gain = evalMainParamEvent(params, p, def)*0.2
     if (gain <= 0.0001) { return undefined }
     let units = evalSubParamEvent(params, p, 'units', 'ms').toLowerCase()
-    let timeScale = timeToBeats(1, units, params)
-    let attack = evalSubParamEvent(params, p, 'att', 5)*timeScale
-    let decay = evalSubParamEvent(params, p, 'dec', 400)*timeScale
+    let timeScale = timeToTime(1, units, params)
+    let attack = evalSubParamEvent(params, p, 'att', 10)*timeScale
+    let decay = evalSubParamEvent(params, p, 'dec', 800)*timeScale
     let freq = evalSubParamEvent(params, p, 'freq', 55)
     let boost = evalSubParamEvent(params, p, 'boost', 150)
     let pitchatt = evalSubParamEvent(params, p, 'pitchatt', 0)*timeScale
-    let pitchdec = evalSubParamEvent(params, p, 'pitchdec', 50)*timeScale
+    let pitchdec = evalSubParamEvent(params, p, 'pitchdec', 100)*timeScale
     let wave = evalSubParamEvent(params, p, 'wave', 'sine')
     let saturation = evalSubParamEvent(params, p, 'saturation', 0)
     let vco = system.audio.createOscillator()
@@ -122,14 +122,14 @@ define(function (require) {
     let gain = evalMainParamEvent(params, 'rattle', 1)*0.4
     if (gain <= 0.0001) { return undefined }
     let units = evalSubParamEvent(params, 'rattle', 'units', 'ms').toLowerCase()
-    let timeScale = timeToBeats(1, units, params)
-    let attack = evalSubParamEvent(params, 'rattle', 'att', 1)*timeScale
-    let decay = evalSubParamEvent(params, 'rattle', 'dec', 30)*timeScale
+    let timeScale = timeToTime(1, units, params)
+    let attack = evalSubParamEvent(params, 'rattle', 'att', 2)*timeScale
+    let decay = evalSubParamEvent(params, 'rattle', 'dec', 60)*timeScale
     let rate = evalSubParamEvent(params, 'rattle', 'rate', 1)
     let freq = evalSubParamEvent(params, 'rattle', 'freq', 55)
     let boost = evalSubParamEvent(params, 'rattle', 'boost', 205)
-    let pitchatt = evalSubParamEvent(params, 'rattle', 'pitchatt', 1)*timeScale
-    let pitchdec = evalSubParamEvent(params, 'rattle', 'pitchdec', 50)*timeScale
+    let pitchatt = evalSubParamEvent(params, 'rattle', 'pitchatt', 2)*timeScale
+    let pitchdec = evalSubParamEvent(params, 'rattle', 'pitchdec', 100)*timeScale
     let filter = evalSubParamEvent(params, 'rattle', 'filter', 'lowpass')
     let q = evalSubParamEvent(params, 'rattle', 'q', 18)
     let n = whiteNoise()
