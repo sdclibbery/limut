@@ -185,9 +185,9 @@ preset sds909 sample
   , dur=1/4, choke=this.player, sus=1
   , rate=1
   , envelope='organ', att=0
-  , amp*=envelope{d:100+1200*(this.tone+this.snappy)}*(this.level + this.accent)
-	, mid=0.2 + 1.6*this.snappy
-	, high=0.2 + 1.6*this.snappy
+  , amp*=4*envelope{d:100+1200*(this.tone+this.snappy)}*(this.level + this.accent)
+	, mid=0.2 + 0.8*(this.tone+this.snappy)
+	, high=0.2 + 3.2*this.tone*this.snappy
   , accent=(this.value+this.add)/9
   // 909 SD Controls
   , level=1/2

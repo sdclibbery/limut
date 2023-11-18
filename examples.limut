@@ -3602,4 +3602,25 @@ p ping 0, delay={0,add:[0,5]}
 // set pt* level=2/4, attack=2/4, decay=2/4, tune=2/4, add=0
 // ph h909 ..0.....
 
+// set bpm=90
+// pt1 sd909 0.......
+// pt2 sds909 ....0...
+// set pt* level=2/4, snappy=2/4, tone=2/4, decay=2/4, tune=2/4, add=0, l=0, h=0
+// ph h909 ...0....
+
+// preset bd909 bds909
+// preset cp909 cps909
+// preset t909 ts909
+// preset sd909 sds909
+// preset rs909 rss909
+
+// set bpm=137
+// set main drive=1/48
+// pk bd909 4..., low=0, high=0//, attack
+// ph h909 -300o0, swing=54
+// pc cp909 ....0...
+// pt t909 `..0h. 9.0l. .0.. 9..0`, swing=58
+// ps sd909 0.. * 5 + ., swing=52, tone=1/4
+// pr rs909 .0. crop 16
+
 
