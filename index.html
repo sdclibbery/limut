@@ -1166,9 +1166,15 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 /*
 ====
 ==== audio ====
-!External synth should detect mono and compensate
- Actually for a usb audio interface that puts 2 inputs on 2 channels, you'd want to select one channel and force to mono
-  So have a channel param, and if its set, select that channel only and force mono
+!External synth defaulting to mono
+  ?Try using the `track` param and see if it helps; if so, default `track` to zero
+  Need a channel param to allow selecting a channel and forcing mono (or to both stereo output channels)
+ Players can have an analyser
+  Created on access
+  All events connect to it (and disconnect)
+  Use for player pulse
+  What about buses that already have an anlyser?
+  Use for external synth to detect and warn if mono
 Go through all params with time and support units
  ?!Or, should units be part of the value after all? Eg echo=100ms
   ?Should 'db' etc be a post operator, not a feature of number syntax? So you could do amp=[0:6]l2 db
@@ -1202,8 +1208,8 @@ Techno include lib
  Classic detroit techno stuff
  more...
 !Look at reducing GC for 909: single osc/shaper for bd etc..??
-!! Claves cl808 cause breakdown after a while; why??
- Made sure everything gets disconnected, but still breaking up :-(
+ !! Claves cl808 cause breakdown after a while; why??
+  Made sure everything gets disconnected, but still breaking up :-(
 808 lib docs don't have control params
 Legato Tie
  !? Consider if a monophonic synth type would help, even if that's the only thing that would support legato..??
