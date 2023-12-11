@@ -5,6 +5,7 @@ define(function (require) {
   let {mainParam} = require('player/sub-param')
   let {evalMainParamFrame,evalSubParamEvent} = require('play/eval-audio-params')
   let filters = require('play/effects/filters')
+  let convos = require('play/effects/convos')
   let {mix} = require('play/effects/mix')
 
   let chop = (params, node) => {
@@ -62,6 +63,7 @@ define(function (require) {
     node = chop(params, node)
     node = ring(params, node)
     node = filters(params, node)
+    node = convos(params, node)
     node = mono(params, node)
     node = pan(params, node)
     return node

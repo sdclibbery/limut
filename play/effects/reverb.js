@@ -40,6 +40,7 @@ define(function (require) {
       impulseL[i] = (random() * 2 - 1) * Math.pow(1 - i / length, curve)
       impulseR[i] = (random() * 2 - 1) * Math.pow(1 - i / length, curve)
     }
+    reverb.normalize = true
     reverb.buffer = impulse
     return reverb
   }

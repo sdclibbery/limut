@@ -153,7 +153,7 @@ define(function (require) {
       case 'exp': env = exponentialPercussionEnvelope(params, gainbase); break
       default: env = fullEnvelope(params, gainbase); break
     }
-    setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
+    params._destructorTimeout = setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
     return env
   }
 })
