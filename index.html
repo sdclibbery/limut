@@ -1386,6 +1386,14 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
+More time modifiers
+ offset
+ step
+ rate
+ curve - apply a curve; ??within each event? or specific to the thing being modified?
+ time - set time directly to an expression
+ shuffle - for each block of 'per' beats, break time values into 'shuffle' sized pieces and randmoly shuffle them
+ ?wait modifier, pauses time at the start of the event?
 Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as needed. or  t trance 0, reverb.hpf=0
  Needs to work for overrides too eg  body.boost+=100
 !v readout 0, add=[0,(1,2)]r, loc={y:this.voice/2}
@@ -1440,14 +1448,6 @@ Support continuations inside chords in pattern literals
  Test cases:  0(_1__)  0(__)  0(_(_1_))  0[(_1_)2]  0[(__)2]  0<(_1_)2>  (01)(_2)  (0[12])(_3_)  <[(0)]><[(_)]>
 !Follow player event params should be evaluated at the time of the _original_ event for canons
 Should support dur chords for polyrythms
-More time modifiers
- offset
- step
- rate
- curve - apply a curve; ??within each event? or specific to the thing being modified?
- time - set time directly to an expression
- shuffle - for each block of 'per' beats, break time values into 'shuffle' sized pieces and randmoly shuffle them
- ?wait modifier, pauses time at the start of the event?
 ?Want pattern language that expresses things like "2 beats anticipation of every 16" etc
 ?How's about a slider that only gives output when you click/hold it? So you control note duration/rest as well as pitch?
 Should be able to stutter={4,dur:1}
