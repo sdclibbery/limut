@@ -36,7 +36,6 @@ define(function (require) {
     }
     let vca = envelope(params, 0.5, 'linpad')
     let track = evalMainParamEvent(params, 'track', undefined)
-    fxMixChain(params, perFrameAmp(params, vca))
     let audioIn
     if (track !== undefined) {
       let mediaTrack = stream.getAudioTracks()[track]
@@ -48,7 +47,19 @@ define(function (require) {
     } else {
       audioIn = system.audio.createMediaStreamSource(stream)
     }
-    waveEffects(params, effects(params, audioIn)).connect(vca)
+    let channel = evalMainParamEvent(params, 'channel', undefined)
+    let signal = audioIn
+    if (channel !== undefined) {
+      let splitter = system.audio.createChannelSplitter()
+      audioIn.connect(splitter)
+      signal = system.audio.createGain(1)
+      signal.channelCountMode = "explicit"
+      signal.channelCount = 1
+      splitter.connect(signal, channel) // Select one channel only if channel param is specified
+      params._destructor.disconnect(splitter, signal)
+    }
+    fxMixChain(params, perFrameAmp(params, vca))
+    waveEffects(params, effects(params, signal)).connect(vca)
     params._destructor.disconnect(vca, audioIn)
   }
 })

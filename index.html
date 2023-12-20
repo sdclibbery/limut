@@ -540,7 +540,9 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>pwm</code> Pulse width modulation synth. A pulse wave with variable pulse width, from pulse to square. Note: uses AudioWorklet so may use more audio render capacity than other synth types. Also note there may be aliasing, so you may want to apply some filtering to cut harsh high frequencies.</p>
 <p class='sub'><code>pwm=1/2</code> Set the pulse width from 0 to 1. The default is 1/2, a square wave (50% duty cycle). values very close to 0 and 1 will produce no sound since the actual pulse width will become vanishingly small.</p>
 <p><code>supersaw</code> supersaw lead synth preset; 7 detuned saws</p>
-<p><code>external</code> take audio from microphone or line in. Use the <code>track</code> param to specify the track within the stream. If the input signal appears on only one stereo channel, use the <code>mono</code> param to force it onto both.</p>
+<p><code>external</code> take audio from microphone or line in. Use the <code>track</code> param to specify the track within the stream. If the input signal appears on only one stereo channel (or you only want the signal from one stereo channel), use the <code>channel</code> param to select the channel and force it to mono.</p>
+<p class='sub'><code>track=1</code> Select which audio track to use from the input.</p>
+<p class='sub'><code>channel=1</code> Select a single audio channel to use from the input.</p>
 <p><code>multiwave</code> Synthesizer providing multiple waveform oscillators which can have their amp and detune controlled individually and  dynamically. The waves are specified using params <code>wave1</code>,  <code>wave2</code> etc:</p>
 <p class='sub'><code>wave1={'saw',amp:[0:1]n,detune:wow}</code> The main value is a string giving the waveform to use. amp is a per frame amplitude control. detune is a per frame detune control in semitones.</p>
 <p><code>crackle</code> Crackly crackle sounds.</p>
@@ -1166,9 +1168,6 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 /*
 ====
 ==== audio ====
-!External synth defaulting to mono
-  ?Try using the `track` param and see if it helps; if so, default `track` to zero
-  Need a channel param to allow selecting a channel and forcing mono (or to both stereo output channels)
  Players can have an analyser
   Created on access
   All events connect to it (and disconnect)
