@@ -166,7 +166,7 @@ let verts = (loc, window, har, allowHarAdjust) => {
     let recolType = evalMainParamEvent(params, 'recol')
     let recol = recols[recolType] || 0
     if (!!recolType && !recol) {
-      consoleOut(`Error: Unknown recol type ${recolType}`)
+      consoleOut(`🔴 Error: Unknown recol type ${recolType}`)
     }
     let targetBufferPlayerId = evalMainParamEvent(params, 'buffer')
     return state => { // per frame
@@ -310,7 +310,7 @@ let verts = (loc, window, har, allowHarAdjust) => {
         else if (blend === 'min') { gl.blendFunc(gl.ONE, gl.ONE); gl.blendEquationSeparate(gl.MIN, gl.FUNC_ADD) }
         else if (!blend) {gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA) }
         else {
-          consoleOut(`Error: Unknown blend type ${blend}`)
+          consoleOut(`🔴 Error: Unknown blend type ${blend}`)
           gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
         }
       }

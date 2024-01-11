@@ -51,7 +51,7 @@ define((require) => {
     if (destBus && destBus._input) { // Do nothing if bus not present
       bus.output.connect(destBus._input)
     } else {
-      consoleOut(`Bus ${bus.id} failed to connect to destination bus ${destBusId}`)
+      consoleOut(`🟠 Bus ${bus.id} failed to connect to destination bus ${destBusId}`)
     }
   }
 

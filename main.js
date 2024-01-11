@@ -130,7 +130,7 @@ define(function(require) {
             player.play(player.getEventsForBeat(beat), beat)
           } catch (e) {
             let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
-            consoleOut('Run Error from player '+player.id+': ' + e + st)
+            consoleOut('🔴 Run Error from player '+player.id+': ' + e + st)
             console.log(e)
           }
         }
@@ -146,7 +146,7 @@ define(function(require) {
       system.frame(now, beatTime)
     } catch (e) {
       let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
-      consoleOut('Run Error from audio updating: ' + e + st)
+      consoleOut('🔴 Run Error from audio updating: ' + e + st)
       console.log(e)
     }
     tickCount++
@@ -159,7 +159,7 @@ define(function(require) {
         lastVisualsActive = visualsActive
       } catch (e) {
         let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
-        consoleOut('Run Error from drawing: ' + e + st)
+        consoleOut('🔴 Run Error from drawing: ' + e + st)
         console.log(e)
       }
     }

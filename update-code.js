@@ -45,7 +45,7 @@ define((require) => {
 
   let reportError = (e, i) => {
     let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
-    consoleOut(`Error on line ${i+1}: ${e} ${st}`)
+    consoleOut(`🔴 Error on line ${i+1}: ${e} ${st}`)
     console.log(e)
   }
 

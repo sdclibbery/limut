@@ -15,7 +15,7 @@ preset hollow tri
   , bpf=[500:2000]n8, echo=1.01, chorus=3, phaser=1/23
   , noisify=[1/16:1/4]n12
 
-preset sweep saw, dur=4, envelope='pad', lpf={[220:880]l8@f,q:16,poles:4}, oct=2, amp=1/2, glide=2
+preset sweep saw, dur=4, envelope='pad', lpf={[220:880]s8@f,q:16,poles:4}, oct=2, amp=1/2, glide=2
 
 preset robot wave
   , wave='saw', dur=1/4, envelope='percussion', oct=3

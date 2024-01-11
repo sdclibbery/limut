@@ -3665,3 +3665,63 @@ set !p* add+=[0,0,3,2,0,0,3,6]t
 // set l* cutoff=3/2*riser^3, add+=[3,0], swing=60
 
 
+include 'preset/synthwave.limut'
+include 'preset/techno.limut'
+include 'preset/house.limut'
+v kal 5, contrast=10, buffer='vb', zoom=3, blend='max', monochrome=[0,1,2]r@f
+vb buffer, feedback={fore:0.95, zoom:1+(pk.pulse.0-ps.pulse.0)/4}
+set root=2
+set scale='phrygian'
+set bpm=150
+set main compress={3/2,gain:3/2}, drive=1/128, amp*=-4db
+pk perc (xVv;)..., drive=[1/2,0]t[1,3], high=-3db, room=1/8, rate=0.8, mid=2
+ps perc ...O...., low=6db, drive=1/4, swing=54, rate=2/3, amp*=-3db
+pc perc -s= crop 8, rate=1/2, swing=58, sample=2, amp*=-16db, pan=-1/2
+pt perc .D..L crop 32, rate=1/2, drive=1/8, swing=[66:56]l2, pan=[-1,1]r*3/4, amp=[0,0.6]s0.619{per:4}
+set p* bus='bp'
+bp bus, compress={2,gain:2}, amp=2/3
+b reese 0__7__1_, cutoff=smooth{[0,0,[1:2]s12@f^2]t1/2{per:4}}, pan=(-1,1), mid=6db, high=6db, add=[0,0,0,1]t4, drive=1/64, echo=0.785, amp*=6db, swing=58
+sy psy ...07070, add=[0,0,0,1]t4, amp=2
+////
+// set (p*,sy) amp=[riser^4,0,0,riser^2]t1/4, stutter=2, delay|=1/2
+// rv perc v, amp=riser^2, drive=riser^4
+// b reese 09_8_7_6, cutoff=smooth{[[0:3/2]r*riser,[1/2:3/2]s16@f^2]t[1,1/2]{per:4}}, pan=(-1,1), mid=6db, high=6db, add=[0,0,0,1]t4, drive=riser^4, oct+=(0,1), swing=75
+
+
+include 'preset/synthwave.limut'
+include 'preset/techno.limut'
+include 'preset/house.limut'
+v kal, contrast=10, mirror={[6:3]s1@f,rotate:1/4,fan:1/8}, zoom=3, repeat={y:1/2}
+set bpm=135
+set scale='minor'
+set main compres={3/2,gain:3/2}, drive=1/96, amp=3/2
+pk bds909 0..., attack
+ph hs909 .04o0, swing=56, drive=1/24
+b techbass .070, amp=1/2
+t trance 072 crop 16, oct-=1
+set (b,t) add=[2,3,1,0]t4
+////
+// set p* amp=0
+// set (b,t) add=[0,1]t4
+// s sds909 0, amp=1/5+riser^6
+// b tinbass 0a000, amp=riser+this.a
+// t trance, cutoff=riser^3, oct+=[-1,0,1]r
+
+
+include 'preset/synthwave.limut'
+include 'preset/techno.limut'
+include 'preset/house.limut'
+set bpm=110
+set root=4
+set scale='minor'
+pk perc x..., low=3/2, drive=1/24
+ps perc ....u...
+ph perc .:, dur=1/2, delay=1/6, amp=2/3, pan=-1/2
+pp perc .sp-t., delay=[0,1/6]t1/2, pan=1/2
+pf perc fill, dur=1/2, amp=[0,1]t[14,2], delay=[0,1/6]l1/2, drive=1/16
+b tb303 ...0, amp=1, add=[0,-3]t16, sus=1/3
+a ambi (024), add=[0,-3]t16, amp=[0:3/4]l[8,0]@f, pan=(-1,1)
+g glass 0.7<.6>, add=[0,-3]t16, echo=2/3, amp=[0,1]t[32,64]
+s saw .(024), lpf=100+3000*envelope{d:170}, amp=3/2, add=[0,-3]t16
+
+

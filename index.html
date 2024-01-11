@@ -1385,7 +1385,8 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 ====
 ==== other ====
-!!! If you `set root=...` then it fails because root is reserved. NEED TO ERROR ON THAT!!!
+!Warning when read from a global var like root or scale?
+!Info when set global var like root, scale, bpm? But only the first time?
 --- Voice leading experiment 
 set root=[0,2,3,1]t4
 set ch=voice{root+[(0,2,4),(0,2,4,7)]t4}

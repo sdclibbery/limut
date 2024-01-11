@@ -40,7 +40,7 @@ define(function (require) {
     if (track !== undefined) {
       let mediaTrack = stream.getAudioTracks()[track]
       if (mediaTrack === undefined) {
-        consoleOut(`Track ${track} is not valid for this device`)
+        consoleOut(`🔴 Track ${track} is not valid for this device`)
         return
       }
       audioIn = system.audio.createMediaStreamTrackSource(mediaTrack)

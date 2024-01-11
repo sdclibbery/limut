@@ -41,7 +41,7 @@ define(function (require) {
       request.onload = () => {
         let json = JSON.parse(request.response)
         if (json.Error) {
-          let msg = `Shadertoy load error: ${json.Error} for ${id}`
+          let msg = `🔴 Shadertoy load error: ${json.Error} for ${id}`
           consoleOut(msg)
           throw msg
         }

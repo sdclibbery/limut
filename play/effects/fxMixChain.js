@@ -62,7 +62,7 @@ define(function (require) {
     if (!busId) { busId = 'main' } // Default to main bus if not specified
     let bus = players.getById(busId)
     if (!bus || !bus._input) { // Do nothing if bus not present
-      consoleOut(`Player ${playerId} failed to connect to destination bus ${busId}`)
+      consoleOut(`🟠 Player ${playerId} failed to connect to destination bus ${busId}`)
       return
     }
     c.out.disconnect()
