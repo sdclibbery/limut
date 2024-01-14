@@ -25,6 +25,7 @@ float drawFloat(in vec2 charCoord, float value, float digits, float decimals) {
 			bits = x==0?480599.:x==1?139810.:x==2?476951.:x==3?476999.:x==4?350020.:x==5?464711.:x==6?464727.:x==7?476228.:x==8?481111.:x==9?481095.:0.;
 		}
 	}
+	bits=bits+0.1; // Fix some rounding thing causing pixels to be wrong
 	return floor(mod(bits / pow(2., floor(fract(charCoord.x) * 4.) + floor(charCoord.y * 4.) * 4.), 2.));
 }
 
