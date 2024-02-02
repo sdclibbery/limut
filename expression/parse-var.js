@@ -1,6 +1,7 @@
 'use strict';
 define(function(require) {
   let vars = require('vars')
+  let mainVars = require('main-vars')
   let {evalParamFrame} = require('player/eval-param')
 
   let isVarChar = (char) => {
@@ -47,6 +48,8 @@ define(function(require) {
           v._state = state // Make state available to var function
           v.value = key // If no modifiers, treat as a string value instead
         }
+      } else if (mainVars.exists(key)) {
+        throw `Reading main var ${key}`
       } else {
         v = vr // ordinary var
         if (v === undefined) { v = key } // If not found as a var, treat as a string value
@@ -65,6 +68,12 @@ define(function(require) {
     let x = JSON.stringify(expected)
     let a = JSON.stringify(actual)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
+  }
+  let assertThrows = async (expected, code) => {
+    let got
+    try {await code()}
+    catch (e) { if (e.includes(expected)) {got=true} else {console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: ${e}`)} }
+    finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
   }
   let p
   let ev = (i,c,d) => {return{idx:i,count:c,dur:d}}
@@ -159,6 +168,10 @@ define(function(require) {
   state = {str:'foo',idx:0}
   p = varLookup(parseVar(state), [])
   assert('foo', p(ev(0),0,evalParamFrame))
+
+  state = {str:'bpm',idx:0}
+  p = varLookup(parseVar(state), [])
+  assertThrows('main var', () => p(ev(0),0,evalParamFrame))
 
   console.log('Parse var tests complete')
   }

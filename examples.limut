@@ -3715,12 +3715,14 @@ set bpm=110
 set root=4
 set scale='minor'
 set main drive=1/96
+vs sunsetsky
+vk sun
 pk perc x..., low=3/2, drive=1/24
 ps perc ....u...
 ph perc .:, dur=1/2, delay=1/6, amp=2/3, pan=-1/2
 pp perc .sp-t., delay=[0,1/6]t1/2, pan=1/2
 pf perc fill, dur=1/2, amp=[0,1]t[14,2], delay=[0,1/6]l1/2, drive=1/16
-b tb303 ...0, amp=1, add=[0,-3]t16, sus=1/3, delay=-1/20, cutoff=0.4
+b tb303 ..0., amp=1, add=[0,-3]t16, sus=1/3, delay=[0.18,0.15]t1, cutoff=0.4
 a ambi (024), add=[0,-3]t16, amp=[0:3/4]l[8,0]@f, pan=(-1,1), lpf={this.freq*[5:1]l[2/3,1/3]@f,q:15}
 g glass 0.7<.6>, add=[0,-3]t16, echo=2/3, amp=[0,1/2]t[32,64]
 s saw .(024), lpf=100+3000*envelope{d:170}, amp=3/2, add=[0,-3]t16, delay|=[(),{4/6}]t[14,2]
