@@ -38,7 +38,7 @@ define((require) => {
 
   let applyDelay = (event, beat) => {
     let dp = evalParamToObjectOrPrimitive(event.delay, event, event.count)
-    let d = mainParam(dp, 0)
+    let d = evalParamFrame(mainParam(dp, 0), event, event.count)
     event._time += d*beat.duration
     event.count += d
     applyOverridesInPlace(event, dp)
@@ -382,6 +382,9 @@ define((require) => {
   assert(2, e[1]._time)
   assert(5, e[1].add)
 
+  e = player('p', 'play', 'x', 'delay={[1]}').getEventsForBeat({time:0, count:0, duration:1})[0]
+  assert(1, e._time)
+  
   let assertEvent = (t, c, d, e) => {
     assert(t, e._time, 'Incorrect _time')
     assert(c, e.count, 'Incorrect count')
