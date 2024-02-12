@@ -3728,3 +3728,12 @@ g glass 0.7<.6>, add=[0,-3]t16, echo=2/3, amp=[0,1/2]t[32,64]
 s saw .(024), lpf=100+3000*envelope{d:170}, amp=3/2, add=[0,-3]t16, delay|=[(),{4/6}]t[14,2]
 
 
+set bpm=120
+p1 perc <XXXU>.x., drive=1/2, amp*=1/2
+p3 perc ..u<.A>, amp*=1/2, drive=1/8
+p2 h909 -=, swing=56, drive, amp*=2/3, room, sus=1/5, delay=[0,[1/4,1/2]r]t[14,2]
+e external, dur=2, channel=1, amp=1/2, chorus, reverb={1,curve:3/2,hpf:500}, drive=1/4
+set root=2
+b cybass 0..1.0<2226>., amp*=1, drive=1/8, swing=54
+
+

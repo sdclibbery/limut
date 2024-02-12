@@ -37,6 +37,10 @@ define(function (require) {
     let vca = envelope(params, 0.5, 'linpad')
     let track = evalMainParamEvent(params, 'track', undefined)
     let audioIn
+    if (system.audio.createMediaStreamTrackSource === undefined) {
+      consoleOut(`🔴 The "track" param is not valid in this browser; the default track will be used`)
+      track = undefined
+    }
     if (track !== undefined) {
       let mediaTrack = stream.getAudioTracks()[track]
       if (mediaTrack === undefined) {
