@@ -224,8 +224,6 @@ shadertoy synth multiple channels
 
 ====
 ==== other ====
-Can set swing timescale with a subparam: swing={60,on:1/2}
- Verify with reggae
 Voice leading
  ? Very clever or just noodles with random walks? Experiment...
  --- Voice leading experiment 

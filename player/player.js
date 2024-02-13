@@ -10,11 +10,10 @@ define((require) => {
   var players = require('player/players')
   var expandChords = require('player/expand-chords')
   let {evalParamFrame,evalParamToObjectOrPrimitive} = require('player/eval-param')
-  let {mainParam} = require('player/sub-param')
+  let {mainParam,subParam} = require('player/sub-param')
   let {applyOverrides,applyOverridesInPlace} = require('player/override-params')
 
-  let swingPushAt = (count, swingPercent) => {
-    let swingPeriod = 1/4
+  let swingPushAt = (count, swingPercent, swingPeriod) => {
     let swingBeatFraction = (count % (swingPeriod*2)) / (swingPeriod*2)
     let maxSwingPush = (swingPercent - 50) / 50
     let lerp
@@ -23,14 +22,16 @@ define((require) => {
     } else {
       lerp = (1-swingBeatFraction)*2
     }
-    return lerp*maxSwingPush/4
+    return lerp*maxSwingPush*swingPeriod
   }
 
   let applySwing = (event, beat) => {
-    let swingPercent = evalParamFrame(event.swing || 50, event, event.count)
+    let swingParam = evalParamFrame(event.swing, event, event.count)
+    let swingPercent = mainParam(swingParam, 50)
     if (swingPercent === 50) { return }
-    let swingBeatPushAtStart = swingPushAt(event.count, swingPercent)
-    let swingBeatPushAtEnd = swingPushAt(event.count+event.dur, swingPercent)
+    let swingPeriod = subParam(swingParam, 'period', 1/4)
+    let swingBeatPushAtStart = swingPushAt(event.count, swingPercent, swingPeriod)
+    let swingBeatPushAtEnd = swingPushAt(event.count+event.dur, swingPercent, swingPeriod)
     event._time += swingBeatPushAtStart * beat.duration
     event.count += swingBeatPushAtStart
     event.dur += swingBeatPushAtEnd - swingBeatPushAtStart
@@ -252,6 +253,21 @@ define((require) => {
 
   es = player('p', 'play', '[----]', 'dur=1/2, swing=66').getEventsForBeat({time:0, count:0, duration:1})
   assert([0,0.165,0.33,0.415,0.5,0.665,0.83,0.915], es.map(e => e._time))
+
+  es = player('p', 'play', '-', 'dur=1/4, swing={75,period:1/4}').getEventsForBeat({time:0, count:0, duration:1})
+  assert([0,3/8,1/2,7/8], es.map(e => e._time))
+  assert([0,3/8,1/2,7/8], es.map(e => e.count))
+  assert([3/8,1/8,3/8,1/8], es.map(e => e.dur))
+
+  es = player('p', 'play', '-', 'dur=1/2, swing={75,period:1/2}').getEventsForBeat({time:0, count:0, duration:1})
+  assert([0,3/4], es.map(e => e._time))
+  assert([0,3/4], es.map(e => e.count))
+  assert([3/4,1/4], es.map(e => e.dur))
+
+  es = player('p', 'play', '-', 'dur=1/4, swing={75,period:1/2}').getEventsForBeat({time:0, count:0, duration:1})
+  assert([0,3/8,3/4,7/8], es.map(e => e._time))
+  assert([0,3/8,3/4,7/8], es.map(e => e.count))
+  assert([3/8,3/8,1/8,1/8], es.map(e => e.dur))
 
   p = player('p', 'test', 'x(op)', 'dur=1/2')
   p.play(p.getEventsForBeat({time:0, count:0, duration:1}))
