@@ -1,6 +1,6 @@
 ====
 ==== audio ====
-Mix param for all filters, wanrt to  s saw .75 crop 6 + 68, lpf={100,mix:1-envelope{d:500}}
+Mix param for all filters, want to  s saw .75 crop 6 + 68, lpf={100,mix:1-envelope{d:500}}
 Players can have an analyser
   Created on access
   All events connect to it (and disconnect)
@@ -224,6 +224,15 @@ shadertoy synth multiple channels
 
 ====
 ==== other ====
+range function eg (0,2,4,6).range{0,to:riser*3}
+!this var lookup failing in various ways:
+ // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
+ // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1
+ r readout 0, add=m.bar.detune, loc=sparkle
+!Readout doesn't work here:  p ping 0, foo=[0,1,2,3]t1, add=this.foo \ r readout 0, add=p.add
+ It's specifically the this.foo that makes it fail; it's using *r*'s event for this, not p's event
+!Duration should be calculated on every step, not every beat: cf play t, dur=[1/16:1/128]l[4,0]
+!Cannot override dur using `set`, it only changes the sus
 Voice leading
  ? Very clever or just noodles with random walks? Experiment...
  --- Voice leading experiment 
@@ -247,17 +256,9 @@ Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as 
  Needs to work for overrides too eg  body.boost+=100
 !v readout 0, add=[0,(1,2)]r, loc={y:this.voice/2}
  Should get either 1 event with `0` OR 2 events with `1` and `2`, but get all kinds of mixtures
-!Duration should be calculated on every step, not every beat: cf play t, dur=[1/16:1/128]l[4,0]
-!Cannot override dur using `set`, it only changes the sus
-!Readout doesn't work here:  p ping 0, foo=[0,1,2,3]t1, add=this.foo \ r readout 0, add=p.add
- It's specifically the this.foo that makes it fail; it's using *r*'s event for this, not p's event
-!this var lookup failing in various ways:
- // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
- // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1
- r readout 0, add=m.bar.detune, loc=sparkle
 ?New timevar for "advance every time its read" eg  p ping (00), add=[0,2,1,3]??  same as  p ping (02)(13)  ?
 User defined functions
- Eg shape={x}->sgn{x}*max{abs{x}-1/2, 0}
+ Eg shape={x}->sgn{x}*max{abs{x}-1/2,0}
   !But the default behaviour for our existing functions is to be evalled even without {}, so how to pass the functions as values?
  Or set riser={dur}->(time%dur)/dur
   Allow riser={dur?32}->(time%dur)/dur ?
@@ -499,6 +500,7 @@ lines, scroll=(x:time), bf=(back:(r:1,g:0,b:0,a:1),fore:#f0f)
   So what is really needed is a generic syntax for defining piece-wise 1D functions cleanly
 red:/1/8,yellow:-1/8,white:/1/4,green:~1/4,blue:/1/4]
 [0,2,1,3]t4 - [0,2,1,3]:4
+[0,1]t[3,1] - [0:3,1:1]
 [0:1]l4 - [0,1]:/4
 [0:1]s4 - [0,1]:~4
 [0:1]l1@f - [0,1]:/1@f
@@ -508,4 +510,7 @@ red:/1/8,yellow:-1/8,white:/1/4,green:~1/4,blue:/1/4]
 envelope{d:250} - [1:^250ms,0]
 [0:/20ms, 1:^1/4, this.sus.level:-(this.sus?this.dur-1/2, this.sus.level:/1/4, 0:.]
 p saw, shape=x->[0:/1/4, sin{x*20}:1/2, 1:/1/4]x
-
+----
+* Actually, ideally need a syntax that supports all this:
+Per value: value, additional info, how to progress to this from the previous value (shape, time)
+Per bitwise function group: How to choose the next value (sequence, random, index by value), defaults for the per-value data
