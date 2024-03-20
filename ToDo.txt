@@ -224,7 +224,53 @@ shadertoy synth multiple channels
 
 ====
 ==== other ====
+Timevar rewrite to use these piecewise values instead
+  let piecewise = require('expression/eval-piecewise')
+ t
+ l
+ s
+ e
+ idx
+Random rewrite to use piecewise
+ rand{} function returns a hash based random between 0 and 1
+  []r   =>  rand@e
+  [2:5]r   =>  [2,/1;5,-0;]rand@e
+  [0,0,1]r => [0,-2;1,-1;]3*rand@e
+  []r1  =>  rand{step:1}
+  []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
+Syntax for piecewise functions with lookup
+ [ v1 ,i1s1; v2 ,i2s2; ] p
+ vn - expression giving the value of that piece
+ in - "comma operator" giving the interpolation curve  to the next value
+      some predefined like ,- for step, ,/ for linear etc
+      overall default is linear ,/ (because p can be `floor{time}` if you still want stepwise)
+ sn - size of the piece
+ p - parameter giving indicating the current piece. Non int values cause interpolation via the in functions
+      some predefined like `t` `e` `r` `l` etc (what about t8 etc??)
+      overall default is from pattern index??? Or drop this to default to t1
+ EG [0,1,2,3]t
+Allow non const step sizes in piecewise
+Voice leading
+ ? Very clever or just noodles with random walks? Experiment...
+ --- Voice leading experiment
+  set root=[0,2,3,1]t8
+  set ch=voice{root+[(0,2,4),(0,2,4,6)]t4}
+  b techbass .00 crop 16, add=root, cutoff/=4
+  sp softpad, add=ch
+  ld chime 070., add=ch.[0,rand,rand,rand], amp*=3/2
+More time modifiers
+ ??? Or just allow user defined time mod function?
+  ? Or it doesn't even need to be a function; just pass in the new time value from a normal expresion?
+   Already have global time var to work from; would also need a way to access event params during eval
+ offset
+ step
+ rate
+ curve - apply a curve; ??within each event? or specific to the thing being modified?
+ time - set time directly to an expression
+ shuffle - for each block of 'per' beats, break time values into 'shuffle' sized pieces and randmoly shuffle them
+ ?wait (pause?) modifier, pauses time at the start of the event?
 range function eg (0,2,4,6).range{0,to:riser*3}
+ IOW range{a,to:b} === (a,a+1,a+2,...,b)
 !this var lookup failing in various ways:
  // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
  // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1
@@ -233,25 +279,9 @@ range function eg (0,2,4,6).range{0,to:riser*3}
  It's specifically the this.foo that makes it fail; it's using *r*'s event for this, not p's event
 !Duration should be calculated on every step, not every beat: cf play t, dur=[1/16:1/128]l[4,0]
 !Cannot override dur using `set`, it only changes the sus
-Voice leading
- ? Very clever or just noodles with random walks? Experiment...
- --- Voice leading experiment 
-  set root=[0,2,3,1]t4
-  set ch=voice{root+[(0,2,4),(0,2,4,7)]t4}
-  b techbass .00 crop 16, add=root
-  sp softpad 0, add=ch
-  ld chime 0701, add=ch.[0,rand,rand,rand]
 root{chord} function that takes a chord and returns the root
 ?sound param can be overridden, so it defaults to pitch/oct/scale etc but you can override so the pattern can specify chord index etc
  ?Not necessary because [0,1,2] is effectively a pattern that can be used to select from chords?
-More time modifiers
- offset
- step
- rate
- curve - apply a curve; ??within each event? or specific to the thing being modified?
- time - set time directly to an expression
- shuffle - for each block of 'per' beats, break time values into 'shuffle' sized pieces and randmoly shuffle them
- ?wait modifier, pauses time at the start of the event?
 Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as needed. or  t trance 0, reverb.hpf=0
  Needs to work for overrides too eg  body.boost+=100
 !v readout 0, add=[0,(1,2)]r, loc={y:this.voice/2}
@@ -260,6 +290,7 @@ Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as 
 User defined functions
  Eg shape={x}->sgn{x}*max{abs{x}-1/2,0}
   !But the default behaviour for our existing functions is to be evalled even without {}, so how to pass the functions as values?
+   ?Can we default to non eval without {}, but do the eval if necessary in context? Eg operators can't act on function, so eval? etc
  Or set riser={dur}->(time%dur)/dur
   Allow riser={dur?32}->(time%dur)/dur ?
  ?If functions are values, how do they interact with other values? What if you add functions etc? Eg ({}->0) + ({}->1) ?
@@ -480,37 +511,46 @@ Syntax for routing splits and joins Eg defining a multiband compressor or a mixe
 ?What about monophonc and glides?
 Pipeline: metronome >> event generator >> pitch/coord generator >> source >> direct effects >> indirect effects >> buses >> destination
  This still doesn't address how monophonic / glide make sense. Are the pitches events or signals?
-
-Examples
-
-// Defining effects
-effect.biquad lpf coeffs=(v) -> (a0,a1,a2,b0 etc), priority=2
-effect.color bf (in,v) -> back + in * fore, priority=1
-effect.warp scroll (in,v) -> in+v, priority=1
-
-// Audio preset and player
-source.wavetable saw wave=(x) -> saw(this.f*x), f=pitch(note:this.value+this.add, oct:this.oct)+this.addc
-bpm*4 >> `. 7 2` >> crop(16) >> saw, lpf=(env(r:100ms)*440Hz*tri(8beats)), add=(0,3,2,4).step(4bts), id='bass'
-
-// Visual preset and player
-source.shader lines shader=(x,y) -> (r:1,g:1,b:1)*(x%0.1 < 0.05) + (a:1)
-lines, scroll=(x:time), bf=(back:(r:1,g:0,b:0,a:1),fore:#f0f)
+?What about overrides? Don't want +=, want something to apply any function as an override; eg add:=(a)->a+7
 
 * IDEA: time vars and gradients and waveshapes are really just 1D functions of different variables
+  What is missing from normal syntax is the ability to easily define functions piecewise
   So what is really needed is a generic syntax for defining piece-wise 1D functions cleanly
-red:/1/8,yellow:-1/8,white:/1/4,green:~1/4,blue:/1/4]
+[red:/1/8,yellow:-1/8,white:/1/4,green:~1/4,blue:/1/4]
 [0,2,1,3]t4 - [0,2,1,3]:4
 [0,1]t[3,1] - [0:3,1:1]
 [0:1]l4 - [0,1]:/4
 [0:1]s4 - [0,1]:~4
 [0:1]l1@f - [0,1]:/1@f
-[0,1]r - [0,1]:!
-[0,1]n2 - [0,1]:!~2
+[0,1]r - [0,1]:?
+[0,1]n2 - [0,1]:?~2
 [8,1]e - [8:\e,1:.]
 envelope{d:250} - [1:^250ms,0]
 [0:/20ms, 1:^1/4, this.sus.level:-(this.sus?this.dur-1/2, this.sus.level:/1/4, 0:.]
 p saw, shape=x->[0:/1/4, sin{x*20}:1/2, 1:/1/4]x
+??What about discontinuity? Eg hold at 1 for 1, then go from 0 to 1/2 for 1 then repeat [1:1,0:0,1/2:/1] - is that good enough?
 ----
 * Actually, ideally need a syntax that supports all this:
 Per value: value, additional info, how to progress to this from the previous value (shape, time)
 Per bitwise function group: How to choose the next value (sequence, random, index by value), defaults for the per-value data
+---
+Actually the transition should be separate from the values, eg
+ adsr - [0 ,/10ms; 1 ,^100ms; this.sus.level ,-this.sus; this.sus.level ,^250ms; 0]e
+And this could be added to the existing syntax by making the comma into a "clever" operator
+ How does this work for a random selector though? [0,~; 1,/10ms;]r
+
+Examples
+
+// Defining effects
+let lpf = effect.biquad coeffs=(v) -> a0=,a1=,a2=,b0=...etc, priority=2
+let bf = effect.color (in,v) -> back + in * fore, priority=1
+let scroll = effect.warp (in,v) -> in+v, priority=1
+
+// Audio preset and player
+let saw = source.wavetable wave=(x) -> [-1 ,/1; 1,;].x, f=pitch(note:this.value+this.add, oct:this.oct)+this.addc
+let b = bpm*4 >> `. 7 2` >> crop(16) >> saw, lpf=(env(r:100ms)*440Hz*tri(8beats)), add=[0,3,2,4].time/4
+
+// Visual preset and player
+let lines = source.shader shader=(x,y) -> (r:1,g:1,b:1)*(x%0.1 < 0.05) + (a:1)
+play l = scroll=(x:time), bf=(back:(r:1,g:0,b:0,a:1),fore:#f0f)
+
