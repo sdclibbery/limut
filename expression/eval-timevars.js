@@ -2,6 +2,13 @@
 define(function(require) {
   let evalOperator = require('expression/eval-operator')
   let consoleOut = require('console')
+  let {piecewise} = require('expression/eval-piecewise')
+
+  let step = () => 0
+  let linear = (i) => i
+  let smooth = (i) => i*i*(3-2*i) // bezier ease in/out
+
+  let time = (e,b) => b
 
   let timeVarSteps = (vs, ds) => {
     if (!Array.isArray(ds)) { ds = [ds] }
@@ -42,12 +49,10 @@ define(function(require) {
     if (vs.separator == ':') {
       return expandTimeVar(vs, ds)
     }
-    let steps = timeVarSteps(vs, ds)
-    return (e,b) => {
-      let count = (b+0.0001) % steps.totalDuration
-      let step = steps.filter(st => isInTimeVarStep(st, count) )[0]
-      return (step !== undefined) && step.value
-    }
+    if (!Array.isArray(ds)) { ds = [ds] }
+    let is = vs.map(() => step)
+    let ss = vs.map((_,i) => ds[i % ds.length])
+    return piecewise(vs, is, ss, time)
   }
 
   let add = (a,b) => a+b
@@ -65,34 +70,17 @@ define(function(require) {
   }
 
   let linearTimeVar = (vs, ds) => {
-    let steps = timeVarSteps(vs, ds)
-    return (e,b) => {
-      let count = b % steps.totalDuration
-      for (let idx = 0; idx < steps.length; idx++) {
-        let pre = steps[idx]
-        if (isInTimeVarStep(pre, count)) {
-          let post = steps[(idx+1) % steps.length]
-          let lerp = calcLerp(count, pre._time, pre.duration)
-          return lerpValue(lerp, pre.value, post.value)
-        }
-      }
-    }
+    if (!Array.isArray(ds)) { ds = [ds] }
+    let is = vs.map(() => linear)
+    let ss = vs.map((_,i) => ds[i % ds.length])
+    return piecewise(vs, is, ss, time)
   }
 
   let smoothTimeVar = (vs, ds) => {
-    let steps = timeVarSteps(vs, ds)
-    return (e,b) => {
-      let count = b % steps.totalDuration
-      for (let idx = 0; idx < steps.length; idx++) {
-        let pre = steps[idx]
-        if (isInTimeVarStep(pre, count)) {
-          let post = steps[(idx+1) % steps.length]
-          let lerp = calcLerp(count, pre._time, pre.duration)
-          lerp = lerp*lerp*(3 - 2*lerp) // bezier ease in/out
-          return lerpValue(lerp, pre.value, post.value)
-        }
-      }
-    }
+    if (!Array.isArray(ds)) { ds = [ds] }
+    let is = vs.map(() => smooth)
+    let ss = vs.map((_,i) => ds[i % ds.length])
+    return piecewise(vs, is, ss, time)
   }
 
   let eventTimeVar = (vs, ds_parsed) => {

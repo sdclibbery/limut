@@ -17,7 +17,7 @@ define(function(require) {
   }
 
   let add = (a,b) => a+b
-  let mul = (a,b) => a*b
+  let mul = (a,b) => (typeof b === 'string') ? (a === 0 ? '' : b) : a*b
   let lerpValue = (lerp, pre, post) => {
     return evalOperator(add,
       evalOperator(mul, 1-lerp, pre),

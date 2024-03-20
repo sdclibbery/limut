@@ -225,10 +225,6 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Timevar rewrite to use these piecewise values instead
-  let piecewise = require('expression/eval-piecewise')
- t
- l
- s
  e
  idx
 Random rewrite to use piecewise
@@ -239,7 +235,7 @@ Random rewrite to use piecewise
   []r1  =>  rand{step:1}
   []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
 Syntax for piecewise functions with lookup
- [ v1 ,i1s1; v2 ,i2s2; ] p
+ [ v1;i1s1, v2;i2s2 ] p
  vn - expression giving the value of that piece
  in - "comma operator" giving the interpolation curve  to the next value
       some predefined like ,- for step, ,/ for linear etc
