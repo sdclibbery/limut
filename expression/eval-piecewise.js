@@ -149,6 +149,13 @@ define(function(require) {
     x = 3; assert(1, evalParamFrame(pw,ev(0),0))
     x = 4; assert(0, evalParamFrame(pw,ev(0),0))
 
+    pw = piecewise([0,2,3], [lin,step,lin], [2,0,2], getb) // step discontinuity using zero size step
+    assert(0, pw(ev(),0))
+    assert(1, pw(ev(),1))
+    assert(3, pw(ev(),2))
+    assert(3/2, pw(ev(),3))
+    assert(0, pw(ev(),4))
+
     console.log('Piecewise tests complete')
   }
 

@@ -224,7 +224,6 @@ shadertoy synth multiple channels
 
 ====
 ==== other ====
-!Test in piecewise for step discontinuities!
 Timevar rewrite to use these piecewise values instead
  idx
 Random rewrite to use piecewise
