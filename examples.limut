@@ -3742,3 +3742,6 @@ set root=2
 b cybass 0..1.0<2226>., amp*=1, drive=1/8, swing=54
 
 
+// step test
+r readout, add=[0:9]l4{per:4,step:1/2,0:777}@f
+

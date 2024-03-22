@@ -283,6 +283,26 @@ define((require) => {
   assert(0, evalParamFrame(getBWithMods, ev(2), 2))
   assert(21, evalParamFrame(getBWithMods, ev(3), 3)) // override eval should not used the modified time
 
+  getBWithMods.modifiers = {step:2}
+  assert(0, evalParamFrame(getBWithMods, ev(0), 0))
+  assert(0, evalParamFrame(getBWithMods, ev(0), 1))
+  assert(2, evalParamFrame(getBWithMods, ev(0), 2))
+
+  getBWithMods.modifiers = {step:1/2}
+  assert(0, evalParamFrame(getBWithMods, ev(0), 0))
+  assert(0, evalParamFrame(getBWithMods, ev(0), 1/4))
+  assert(1/2, evalParamFrame(getBWithMods, ev(0), 1/2))
+  assert(1/2, evalParamFrame(getBWithMods, ev(0), 3/4))
+  assert(1, evalParamFrame(getBWithMods, ev(0), 1))
+
+  getBWithMods.modifiers = {step:2,per:3}
+  assert(0, evalParamFrame(getBWithMods, ev(0), 0))
+  assert(0, evalParamFrame(getBWithMods, ev(0), 1))
+  assert(2, evalParamFrame(getBWithMods, ev(0), 2))
+  assert(0, evalParamFrame(getBWithMods, ev(0), 3))
+  assert(0, evalParamFrame(getBWithMods, ev(0), 4))
+  assert(2, evalParamFrame(getBWithMods, ev(0), 5))
+
   let testState = {}
   let v = evalParamFrame({foo:'bar',_state:testState}, ev(0), 0)
   v._state.baz = 'doo'

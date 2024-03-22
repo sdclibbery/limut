@@ -28,12 +28,17 @@ define(function(require) {
     return exp
   }
 
+  let makeStep = (x, step) => Math.floor(x/step)*step
   let applyModifiers = (results, mods, event, beat, interval) => {
     let modBeat = beat
     let modCount = event.count
     if (mods.per !== undefined) {
       modCount = modCount % mods.per
       modBeat = modBeat % mods.per
+    }
+    if (mods.step) {
+      modCount = makeStep(modCount, mods.step)
+      modBeat = makeStep(modBeat, mods.step)
     }
     if (mods.overrides !== undefined) {
       let bc = interval === 'frame' ? modBeat : modCount // Note overrides will not really work for per frame values, because you're very unlikely to actually hit the exact right count to trigger the override.

@@ -225,12 +225,11 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Random rewrite to use piecewise
- step time modifier
-  test with step and per
- rand{} function returns a hash based random between 0 and 1; can be called from limut code
+ rand{} function returns a hashed time-based random between 0 and 1; can be called from limut code
   rand@e
   rand{step:}
   rand{seed:}
+  docs
  []r   =>  rand@e
  [2:5]r   =>  [2,/1;5,-0;]rand@e
  [0,0,1]r => [0,-2;1,-1;]3*rand@e
