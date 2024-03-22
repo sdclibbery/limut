@@ -297,7 +297,7 @@ define((require) => {
   p = player('p', 'test', '00', 'amp=[1,(2,3)]')
   es = p.getEventsForBeat({count:0})
   assert(1,  evalParamFrame(es[0].amp,ev(0,0),0))
-  assert(undefined, es[1])
+  assert(1,  evalParamFrame(es[1].amp,ev(0,0),0))
   es = p.getEventsForBeat({count:1})
   assert(2, evalParamFrame(es[0].amp,ev(1,1),1))
   assert(3, evalParamFrame(es[1].amp,ev(1,1),1))

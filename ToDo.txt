@@ -224,8 +224,6 @@ shadertoy synth multiple channels
 
 ====
 ==== other ====
-Timevar rewrite to use these piecewise values instead
- idx
 Random rewrite to use piecewise
  step time modifier
   test with step and per

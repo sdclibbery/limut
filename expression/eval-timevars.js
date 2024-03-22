@@ -9,6 +9,7 @@ define(function(require) {
   let smooth = (i) => i*i*(3-2*i) // bezier ease in/out
 
   let time = (e,b) => b
+  let idx = (e,b) => Math.floor(e.idx || 0)
 
   let timeVarSteps = (vs, ds) => {
     if (!Array.isArray(ds)) { ds = [ds] }
@@ -97,10 +98,9 @@ define(function(require) {
   }
 
   let eventIdxVar = (vs) => {
-    return (e,b) => {
-      let v = vs[Math.floor(e.idx || 0) % vs.length]
-      return (v !== undefined) && v
-    }
+    let is = vs.map(() => step)
+    let ss = vs.map(() => 1)
+    return piecewise(vs, is, ss, idx)
   }
 
   // TESTS
