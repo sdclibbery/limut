@@ -283,6 +283,10 @@ define(function(require) {
   p = parseExpression('(1,2)')
   assert([1,2], p)
 
+  p = parseExpression('[]')
+  assert(0, evalParamFrame(p,ev(0,0),0))
+  assert(0, evalParamFrame(p,ev(1,1),1))
+
   p = parseExpression('[1,2]')
   assert(1, evalParamFrame(p,ev(0,0),0))
   assert(2, evalParamFrame(p,ev(1,1),1))
