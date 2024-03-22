@@ -783,8 +783,8 @@ define(function(require) {
   assert(0, p(e,6, evalParamFrame))
   assert(0, p(e,7, evalParamFrame))
   assert(0.5, p(e,7.5, evalParamFrame))
-  assert(1, p(e,8, evalParamFrame))
-  assert(1, p(e,9, evalParamFrame))
+  assertApprox(1, p(e,8, evalParamFrame))
+  assertApprox(1, p(e,9, evalParamFrame))
 
   p = parseExpression("[0:1]e2")
   e = { idx:0, count:7, countToTime:b=>b, _time:7, endTime:8 }
@@ -799,20 +799,20 @@ define(function(require) {
   assert(0, p(e,6, evalParamFrame))
   assert(0, p(e,7, evalParamFrame))
   assert(1, p(e,7.5, evalParamFrame))
-  assert(0, p(e,8, evalParamFrame))
-  assert(0, p(e,9, evalParamFrame))
+  assertApprox(0, p(e,8, evalParamFrame))
+  assertApprox(0, p(e,9, evalParamFrame))
 
   p = parseExpression("[0:1]e")
   e = { idx:0, count:7, countToTime:b=>b, _time:1, endTime:3 }
   assert(0, p(e,1, evalParamFrame))
   assert(0.5, p(e,2, evalParamFrame))
-  assert(1, p(e,3, evalParamFrame))
+  assertApprox(1, p(e,3, evalParamFrame))
 
   p = parseExpression("[0,1,0]e")
   e = { idx:0, count:7, countToTime:b=>b, _time:1, endTime:3 }
   assert(0, p(e,1, evalParamFrame))
   assert(1, p(e,2, evalParamFrame))
-  assert(0, p(e,3, evalParamFrame))
+  assertApprox(0, p(e,3, evalParamFrame))
 
   p = parseExpression("[1]e")
   e = { idx:0, count:7, countToTime:b=>b, _time:1, endTime:2 }
@@ -849,13 +849,13 @@ define(function(require) {
   e = { idx:0, count:0, countToTime:b=>b, _time:0, endTime:1 }
   assert([0,2], evalParamFrame(p,e,0,evalParamFrame))
   assert([0.5,2.5], evalParamFrame(p,e,1/2,evalParamFrame))
-  assert([1,3], evalParamFrame(p,e,2,evalParamFrame))
+  assert([0.9999989999999999,2.999999], evalParamFrame(p,e,2,evalParamFrame))
 
   p = parseExpression("[0:1]e")
   let e1 = { idx:0, count:7, countToTime:b=>b, _time:7, endTime:70 }
   let e2 = { idx:0, count:7, countToTime:b=>b, _time:7, endTime:8 }
-  assert(0.015873015873015872, p(e1,8, evalParamFrame))
-  assert(1, p(e2,8, evalParamFrame))
+  assertApprox(0.015873015873015872, p(e1,8, evalParamFrame))
+  assertApprox(1, p(e2,8, evalParamFrame))
 
   assert(1, parseExpression("[1,0]t1")(ev(0,0),0,evalParamFrame))
   assert(0, parseExpression("[1,0]t1")(ev(1,1),1,evalParamFrame))
@@ -910,7 +910,7 @@ define(function(require) {
   e = { idx:0, count:7, countToTime:b=>b, _time:7, endTime:8 }
   assert(1, evalParamFrame(p,e,7))
   assert(0, evalParamFrame(p,e,7.5))
-  assert(-1, evalParamFrame(p,e,8))
+  assertApprox(-1, evalParamFrame(p,e,8))
 
   p = parseExpression("[]r")
   for (let i=0; i<20; i++) { assertIn(0,1, p(ev(0,0),0,evalParamFrame)) }

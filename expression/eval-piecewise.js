@@ -29,12 +29,12 @@ define(function(require) {
     if (vs.length === 0) { return () => 0 }
     if (is.length !== vs.length) { throw `is.length ${is} !== vs.length ${vs}` }
     if (ss.length !== vs.length) { throw `ss.length ${ss} !== vs.length ${vs}` }
-    let totalSize = ss.reduce((a, x) => a + x, 0) // Need to allow for non const sizes
+    let totalSize = ss.reduce((a, x) => a + x, 0)
     if (!Number.isFinite(totalSize)) { throw `invalid piecewise totalSize: ${totalSize}` }
     return (e,b) => {
       let piecePos = evalParamFrame(p, e, b)
       if (!Number.isFinite(piecePos)) { consoleOut(`🟠 Warning invalid piecewise piece param: ${piecePos}`); return 0; }
-      let piece = findPieceIdxWithFractional(ss, piecePos % totalSize)
+      let piece = findPieceIdxWithFractional(ss, (piecePos%totalSize + totalSize) % totalSize)
       let idx = Math.floor(piece)
       let l = vs[idx % vs.length]
       let r = vs[(idx+1) % vs.length]
@@ -100,11 +100,23 @@ define(function(require) {
     x = 4; assert(0, pw())
 
     pw = piecewise([0,2], [lin,lin], [2,2], getb)
+    assert(0, pw(ev(),-4))
+    assert(1, pw(ev(),-3))
+    assert(2, pw(ev(),-2))
+    assert(1, pw(ev(),-1))
     assert(0, pw(ev(),0))
     assert(1, pw(ev(),1))
     assert(2, pw(ev(),2))
     assert(1, pw(ev(),3))
     assert(0, pw(ev(),4))
+    assert(1, pw(ev(),5))
+    assert(2, pw(ev(),6))
+    assert(1, pw(ev(),7))
+    assert(0, pw(ev(),8))
+    assert(1, pw(ev(),9))
+    assert(2, pw(ev(),10))
+    assert(1, pw(ev(),11))
+    assert(0, pw(ev(),12))
 
     pw = piecewise([0,2], [lin,lin], [2,4], getx)
     x = 0; assert(0, pw())

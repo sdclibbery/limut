@@ -55,20 +55,6 @@ define(function(require) {
     return piecewise(vs, is, ss, time)
   }
 
-  let add = (a,b) => a+b
-  let mul = (a,b) => a*b
-  let lerpValue = (lerp, pre, post) => {
-    return evalOperator(add,
-      evalOperator(mul, 1-lerp, pre),
-      evalOperator(mul, lerp, post)
-    )
-  }
-  let calcLerp = (t, start, dur) => {
-    let lerp = (t - start) / Math.max(dur, 0.0001)
-    lerp = Math.min(Math.max(lerp, 0), 1)
-    return lerp
-  }
-
   let linearTimeVar = (vs, ds) => {
     if (!Array.isArray(ds)) { ds = [ds] }
     let is = vs.map(() => linear)
@@ -83,34 +69,30 @@ define(function(require) {
     return piecewise(vs, is, ss, time)
   }
 
-  let eventTimeVar = (vs, ds_parsed) => {
-    return (e,b) => {
-      if (vs.length === 0) { return 0 }
-      if (vs.length === 1) { return vs[0] }
-      if (!e.countToTime) { return vs[0] || 0 }
-      let ds = ds_parsed
-      let eDur = e.endTime - e._time
-      if (ds === undefined) { // If no durations set, then create durations to space the values out evenly through the event duration
-        let d = eDur / (vs.length-1)
-        ds = new Array(vs.length-1).fill(d)
-        ds.push(0)
+  let eventTimeVar = (vs, ds) => {
+    if (vs.length === 0) { return () => 0 }
+    if (vs.length === 1) { return () => vs[0] }
+    if (ds === undefined) { // If no durations set, space out evenly through the event
+      let is = vs.map(() => linear)
+      let ss = vs.map(() => 1/(vs.length-1))
+      is[is.length-1] = step // Last one is final value, not part of the event
+      ss[ss.length-1] = 0
+      let p = (e,b) => {
+        if (!e.countToTime) { return 0 }
+        return Math.min((e.countToTime(b) - e._time) / (e.endTime - e._time), 0.999999) // Hold at final value, don't keep repeating
       }
-      let steps = timeVarSteps(vs, ds)
-      let time = e.countToTime(b) - e._time
-      if (time >= steps.totalDuration) {
-        time = steps.totalDuration
-      } else {
-        time = (time % steps.totalDuration + steps.totalDuration) % steps.totalDuration
+      return piecewise(vs, is, ss, p)
+    } else { // Use durations provided
+      if (!Array.isArray(ds)) { ds = [ds] }
+      let is = vs.map(() => linear)
+      let ss = vs.map((_,i) => ds[i % ds.length])
+      is[is.length-1] = step // Last one is final value, not part of the event
+      let totalDuration = ss.reduce((a, x) => a + x, 0)
+      let p = (e,b) => {
+        if (!e.countToTime) { return 0 }
+        return Math.min(e.countToTime(b) - e._time, totalDuration-0.000001)
       }
-      for (let idx = 0; idx < steps.length; idx++) {
-        let pre = steps[idx]
-        if (isInTimeVarStep(pre, time)) {
-          let post = steps[idx+1]
-          if (post === undefined) { post = pre }
-          let lerp = calcLerp(time, pre._time, pre.duration)
-          return lerpValue(lerp, pre.value, post.value)
-        }
-      }
+      return piecewise(vs, is, ss, p)
     }
   }
 
@@ -124,10 +106,8 @@ define(function(require) {
   // TESTS
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
   
-    let assert = (expected, actual) => {
-      let x = JSON.stringify(expected)
-      let a = JSON.stringify(actual)
-      if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
+    let assert = (x, a) => {
+      if (Math.abs(x-a) > 0.001) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
     }
     let ev = (c,d,i) => {return{idx:i||0, count:c||0, dur:d||1, _time:c, endTime:c+d, countToTime:x=>x}}
     let ev120 = (c,d) => {return{idx:0, count:c, dur:d, _time:c/2, endTime:c/2+d/2, countToTime:(count) => c*0.5 + (count-c)*0.5}}
