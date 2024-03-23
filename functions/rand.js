@@ -81,11 +81,15 @@ define(function(require) {
     assertIsSameEveryTime((x) => evalParamFrame(p, ev(x*4%2,x*4%2,1), 0+x))
     assertIsDifferentEveryTime((i) => evalParamFrame(p, ev(i*2,i*2,1), i*2))
 
-    // rand{seed:1}@e
+    p = parseExpression("rand{seed:1}@e")
+    assert(0.385, evalParamFrame(p, ev(), 0))
+    assertIsSameEveryTime((x) => evalParamFrame(p, ev(0,0,1), 0+x))
+    assertIsDifferentEveryTime((i) => evalParamFrame(p, ev(i*2,i*2,1), i*2))
 
-    // rand{seed:1,step:2}@e
-
-    // rand{seed:1,step:2}
+    p = parseExpression("rand{per:1}")
+    assertIsDifferentEveryTime((i) => evalParamFrame(p, ev(), i/1200))
+    assert(evalParamFrame(p, ev(), 0), evalParamFrame(p, ev(), 1))
+    assert(evalParamFrame(p, ev(), 1), evalParamFrame(p, ev(), 2))
 
     console.log('Rand function tests complete')
   }

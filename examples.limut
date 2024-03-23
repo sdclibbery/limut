@@ -3744,4 +3744,10 @@ b cybass 0..1.0<2226>., amp*=1, drive=1/8, swing=54
 
 // step test
 r readout, add=[0:9]l4{per:4,step:1/2,0:777}@f
+// rand test
+r readout, add=rand
+r readout, add=rand@e
+r readout, add=rand{step:1/2}
+r readout, add=rand{seed:0,per:1/2,step:1/8}
+r readout, add=rand{step:1/2,seed:2,per:1}
 

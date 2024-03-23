@@ -225,10 +225,6 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Random rewrite to use piecewise
- rand{} function returns a hashed time-based random between 0 and 1; can be called from limut code
-  More test cases
-  test all of it live
-  docs
  []r   =>  rand@e
  [2:5]r   =>  [2,/1;5,-0;]rand@e
  [0,0,1]r => [0,-2;1,-1;]3*rand@e
