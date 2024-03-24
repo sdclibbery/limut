@@ -2,7 +2,7 @@
 define(function(require) {
   let evalOperator = require('expression/eval-operator')
   let param = require('player/default-param')
-  // let randFunction = require('functions/rand')
+  let randFunction = require('functions/rand')
 
   function xmur3(seed) {
     let h = 1779033703

@@ -232,9 +232,10 @@ define(function(require) {
   let assertNotEqual = (expected, actual) => {
     if (actual === expected) { console.trace(`Assertion failed.\n>>Expected ${expected}\n to be different than actual: ${actual}`) }
   }
-  let assertApprox = (expected, actual) => {
-    assertNumber(actual)
-    if (actual < expected-0.0001 || actual > expected+0.0001) { console.trace(`Assertion failed.\n>>Expected ${expected}\n>>Actual: ${actual}`) }
+  let assertApprox = (expected, actual, msg) => {
+    let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(3) : v)
+    let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(3) : v)
+    if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`+(msg?'\n'+msg:'')) }
   }
   let assertNumber = (v) => {
     if (typeof v !== 'number') { console.trace(`Assertion failed.\n>>Expected ${v} to be a number but was ${typeof v}`) }
@@ -253,6 +254,20 @@ define(function(require) {
   }
   let assertOneOf = (vs, actual) => {
     if (!vs.includes(actual)) { console.trace(`Assertion failed.\n>>Expected one of ${vs}\n>>Actual: ${actual}`) }
+  }
+  let assertIsSameEveryTime = (getter) => {
+    let x = getter(0)
+    for (let i=0; i<20; i++) {
+        assert(x, getter(i/20), `Index: ${i} x: ${i/20}`)
+    }
+  }
+  let assertIsDifferentEveryTime = (getter) => {
+    let old = getter(0)
+    for (let i=1; i<=20; i++) {
+      let next = getter(i)
+      assertNotEqual(old, next, `Index: ${i}`)
+      old = next
+    }
   }
 
   require('predefined-vars').apply(require('vars').all())
@@ -1275,6 +1290,43 @@ define(function(require) {
   p = parseExpression("([1:2]e)@e")
   assert(1, evalParamFrame(p,ev(0,0,1),0))
   assert(1, evalParamFrame(p,ev(0,0,1),1/2))
+
+  let evt = (t,c,d) => {return{idx:0,count:c||0,dur:d||1,_time:t||1,voice:0,beat:{duration:(t||1)/(c||1)}}}
+  assertIsDifferentEveryTime(() => evalParamFrame(parseExpression("rand"), ev(), 0))
+
+  p = parseExpression("rand{seed:1}")
+  assertApprox(0.385, evalParamFrame(p, evt(), 0))
+  assertIsSameEveryTime(() => evalParamFrame(p, evt(), 0))
+  assertIsDifferentEveryTime((i) => evalParamFrame(p, evt(), i/1200))
+
+  p = parseExpression("rand{seed:2}")
+  assertApprox(0.385, evalParamFrame(p, evt(), 1))
+
+  p = parseExpression("rand{step:1}")
+  assertIsSameEveryTime((x) => evalParamFrame(p, evt(), 0+x))
+  assertIsSameEveryTime((x) => evalParamFrame(p, evt(), 1+x))
+  assertIsSameEveryTime((x) => evalParamFrame(p, evt(), 2+x))
+  assertIsDifferentEveryTime((i) => evalParamFrame(p, evt(), i))
+
+  p = parseExpression("rand@e")
+  assertIsSameEveryTime((x) => evalParamFrame(p, evt(0,0,1), 0+x))
+  assertIsSameEveryTime((x) => evalParamFrame(p, evt(1,1,1), 1+x))
+  assertIsSameEveryTime((x) => evalParamFrame(p, evt(2,2,1), 2+x))
+  assertIsDifferentEveryTime((i) => evalParamFrame(p, evt(i,i,1), i))
+
+  p = parseExpression("rand{step:2}@e")
+  assertIsSameEveryTime((x) => evalParamFrame(p, evt(x*4%2,x*4%2,1), 0+x))
+  assertIsDifferentEveryTime((i) => evalParamFrame(p, evt(i*2,i*2,1), i*2))
+
+  p = parseExpression("rand{seed:1}@e")
+  assertApprox(0.385, evalParamFrame(p, evt(), 0))
+  assertIsSameEveryTime((x) => evalParamFrame(p, evt(0,0,1), 0+x))
+  assertIsDifferentEveryTime((i) => evalParamFrame(p, evt(i*2,i*2,1), i*2))
+
+  p = parseExpression("rand{per:1}")
+  assertIsDifferentEveryTime((i) => evalParamFrame(p, evt(), i/1200))
+  assert(evalParamFrame(p, evt(), 0), evalParamFrame(p, evt(), 1))
+  assert(evalParamFrame(p, evt(), 1), evalParamFrame(p, evt(), 2))
 
   console.log('Parse expression tests complete')
   }
