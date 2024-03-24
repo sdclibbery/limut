@@ -48,7 +48,6 @@ define(function(require) {
     'min': createAggregator('min', wrapper(vs => Math.min(...vs)||0)),
     'first': createAggregator('first', wrapper(vs => vs[0])),
     'last': createAggregator('last', wrapper(vs => vs[vs.length-1])),
-    'rand': createAggregator('rand', wrapper(vs => vs[Math.floor(Math.random()*vs.length)])),
     'avg': createAggregator('avg', wrapper(vs => sum(vs)/vs.length)),
     'sum': createAggregator('sum', wrapper(vs => sum(vs))),
     'count': createAggregator('count', vs => vs.length),
@@ -86,7 +85,6 @@ define(function(require) {
     assert(2, getAggregator('max')(2))
     assert(0, getAggregator('first')([]))
     assert(0, getAggregator('last')([]))
-    assert(0, getAggregator('rand')([]))
     assert(0, getAggregator('count')([]))
     assert(0, getAggregator('sum')([]))
     assert(0, getAggregator('avg')([]))

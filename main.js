@@ -1,10 +1,10 @@
 'use strict'
 define(function(require) {
   require('polyfills')
+  require('functions/rand')
   require('functions/aggregators')
   require('functions/envelope')
   require('functions/maths')
-  require('functions/rand')
   require('functions/sliders')
   require('predefined-var-defs')
   let mainVars = require('main-vars')

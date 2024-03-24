@@ -1,7 +1,7 @@
 'use strict'
 define(function(require) {
   let addVarFunction = require('predefined-vars').addVarFunction
-  
+
   let xmur3 = (x) => {
     let h = 1779033703
     h = Math.imul(h ^ Math.floor(x), 3432918353)

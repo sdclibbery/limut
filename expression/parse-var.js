@@ -32,7 +32,7 @@ define(function(require) {
     }
 
     // Return a lookup function
-    let state = {}
+    let state = {} // Create a state store for this parse instance
     let result = (event,b, evalRecurse, modifiers) => {
       let vr = vars.get(key)
       let v

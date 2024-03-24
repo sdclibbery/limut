@@ -888,7 +888,6 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>rate{[0:1]l1@f}</code> Calculate a rate of change of a value over time, in units per beat. In the example, the expression <code>[0:1]l1@f</code> rises from 0 to 1 over the course of the first beat, so the rate will be approximately 1 for the first beat. It then falls so the rate will be approximately -1. The rates will have jitter due to measurement inaccuracies, so it can be useful to <code>smooth{}</code> the result.</p>
 <p><code>first{3,1,2}</code> Returns the first argument (3 in the example)</p>
 <p><code>last{3,1,2}</code> Returns the last argument (2 in the example)</p>
-<p><code>rand{3,1,2}</code> Returns a random argument (1, 2 or 3 at random in this example)</p>
 <p><code>min{3,1,2}</code> Returns the smallest argument (1 in the example)</p>
 <p><code>max{3,1,2}</code> Returns the largest argument (3 in the example)</p>
 <p><code>count{3,1,2}</code> Returns the number of arguments (3 in the example)</p>

@@ -224,12 +224,15 @@ shadertoy synth multiple channels
 
 ====
 ==== other ====
+BREAKING CHANGES: No more rand aggregator; replace with (1,2,3,4).(rand*4)
 Random rewrite to use piecewise
- []r   =>  rand@e
- [2:5]r   =>  [2,/1;5,-0;]rand@e
- [0,0,1]r => [0,-2;1,-1;]3*rand@e
- []r1  =>  rand{step:1}
- []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
+ r
+  []r   =>  rand@e
+  [2:5]r   =>  [2,/1;5,-0;]rand@e
+  [0,0,1]r => [0,-2;1,-1;]3*rand@e
+  []r1  =>  rand{step:1}
+ n
+  []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
 Syntax for piecewise functions with lookup
  [ v1;i1s1, v2;i2s2 ] p
  vn - expression giving the value of that piece
@@ -239,9 +242,10 @@ Syntax for piecewise functions with lookup
  sn - size of the piece
  p - parameter giving indicating the current piece. Non int values cause interpolation via the in functions
       some predefined like `t` `e` `r` `l` etc (what about t8 etc??)
-      overall default is from pattern index??? Or drop this to default to t1
- EG [0,1,2,3]t
-Allow non const step sizes in piecewise
+      overall default is from pattern index??? Or drop this to default to t1?
+ Docs
+ Big regression test...
+Allow non const step sizes in piecewise?
 Voice leading
  ? Very clever or just noodles with random walks? Experiment...
  --- Voice leading experiment

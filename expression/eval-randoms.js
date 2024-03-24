@@ -2,6 +2,7 @@
 define(function(require) {
   let evalOperator = require('expression/eval-operator')
   let param = require('player/default-param')
+  // let randFunction = require('functions/rand')
 
   function xmur3(seed) {
     let h = 1779033703
@@ -70,8 +71,14 @@ define(function(require) {
   let parseRandom = (vs, hold, interval) => {
     let perParseSeed = Math.random()
     let evaluator
+    let state = {} // Create a state store for this parse instance
     if (vs.length == 0) {
-      evaluator = (e,b,evalRecurse,modifiers) => evalRandomRanged(perParseSeed, hold, 0, 1, b, modifiers)
+      if (hold) {
+        evaluator = (e,b,evalRecurse,modifiers) => evalRandomRanged(perParseSeed, hold, 0, 1, b, modifiers)
+      } else {
+        evaluator = (e,b,evalRecurse,modifiers) => evalRandomRanged(perParseSeed, hold, 0, 1, b, modifiers)
+        // return (e,b,evalRecurse,modifiers) => randFunction(modifiers, e, b, state)
+      }
     } else if (vs.separator == ':') {
       let lo = param(vs[0], 0)
       let hi = param(vs[1], 1)
@@ -163,7 +170,7 @@ define(function(require) {
         last = v
       }
     }
-    let evalParam = require('player/eval-param').evalParamFrame
+    let {evalParamFrame} = require('player/eval-param')
     let ev = (c) => {return{count:c}}
     let p, r
     let range = (lo,hi) => {
@@ -172,98 +179,98 @@ define(function(require) {
       return vs
     }
 
-    p = parseRandom([3,5])
-    assertIs1OfEveryTime([3,5], () => evalParam(p,ev(0),0))
-
     p = parseRandom([])
-    assertIsInRangeEveryTime(0,1, () => evalParam(p,ev(0),0))
+    assertIsInRangeEveryTime(0,1, () => evalParamFrame(p,ev(0),0))
+    
+    p = parseRandom([3,5])
+    assertIs1OfEveryTime([3,5], () => evalParamFrame(p,ev(0),0))
 
     p = parseRandom(range(3,5))
-    assertIsInRangeEveryTime(3,5, () => evalParam(p,ev(0),0))
+    assertIsInRangeEveryTime(3,5, () => evalParamFrame(p,ev(0),0))
 
     p = parseRandom(range(5,3))
-    assertIsInRangeEveryTime(3,5, () => evalParam(p,ev(0),0))
+    assertIsInRangeEveryTime(3,5, () => evalParamFrame(p,ev(0),0))
 
     p = parseRandom(range(3))
-    assertIsInRangeEveryTime(0,3, () => evalParam(p,ev(0),0))
+    assertIsInRangeEveryTime(0,3, () => evalParamFrame(p,ev(0),0))
 
     // Always gives same value at same time when periodic, even when not seeded
     p = parseRandom(range(3,5), 1)
-    assertIsSameEveryTime((i) => evalParam(p,ev(i/100),i/100))
-    assertIsSameEveryTime((i) => evalParam(p,ev(1+i/100),1+i/100))
+    assertIsSameEveryTime((i) => evalParamFrame(p,ev(i/100),i/100))
+    assertIsSameEveryTime((i) => evalParamFrame(p,ev(1+i/100),1+i/100))
     p = parseRandom(range(3,5), 1)
-    assertIsDifferentEveryTime((i) => evalParam(p,ev(i),i))
+    assertIsDifferentEveryTime((i) => evalParamFrame(p,ev(i),i))
 
     // Give correct value even when evalled out of time order
     p = parseRandom(range(-1,1), 1/4)
-    evalParam(p,ev(1),1) // equivalent to a later event being evalled per event
-    assertIsDifferentEveryTime((i) => evalParam(p,ev(i/4),i/4))
+    evalParamFrame(p,ev(1),1) // equivalent to a later event being evalled per event
+    assertIsDifferentEveryTime((i) => evalParamFrame(p,ev(i/4),i/4))
 
     // Non fixed value when not seeded
     p = parseRandom([], undefined, {})
-    assertNotEqual(0.3853306171949953, evalParam(p,ev(0),0))
+    assertNotEqual(0.3853306171949953, evalParamFrame(p,ev(0),0))
 
     // Same sequence every time when seeded
     p = parseRandom([])
     p.modifiers = {seed:1}
-    assert(0.3853306171949953, evalParam(p,ev(0),0))
-    assert(0.5050126616843045, evalParam(p,ev(1/4),1/4))
-    assert(0.6197433876805007, evalParam(p,ev(1/2),1/2))
-    assert(0.8054445369634777, evalParam(p,ev(3/4),3/4))
-    assert(0.8534541970584542, evalParam(p,ev(1),1))
-    assert(0.35433487710542977, evalParam(p,ev(2),2))
-    assert(0.08498840616084635, evalParam(p,ev(3),3))
-    assert(0.8467781520448625, evalParam(p,ev(4),4))
+    assert(0.3853306171949953, evalParamFrame(p,ev(0),0))
+    assert(0.5050126616843045, evalParamFrame(p,ev(1/4),1/4))
+    assert(0.6197433876805007, evalParamFrame(p,ev(1/2),1/2))
+    assert(0.8054445369634777, evalParamFrame(p,ev(3/4),3/4))
+    assert(0.8534541970584542, evalParamFrame(p,ev(1),1))
+    assert(0.35433487710542977, evalParamFrame(p,ev(2),2))
+    assert(0.08498840616084635, evalParamFrame(p,ev(3),3))
+    assert(0.8467781520448625, evalParamFrame(p,ev(4),4))
 
     // Shifted sequence when bump seed
     p = parseRandom([])
     p.modifiers = {seed:1}
-    assert(0.3853306171949953, evalParam(p,ev(0),0))
-    assert(0.8534541970584542, evalParam(p,ev(1),1))
-    assert(0.35433487710542977, evalParam(p,ev(2),2))
-    assert(0.08498840616084635, evalParam(p,ev(3),3))
+    assert(0.3853306171949953, evalParamFrame(p,ev(0),0))
+    assert(0.8534541970584542, evalParamFrame(p,ev(1),1))
+    assert(0.35433487710542977, evalParamFrame(p,ev(2),2))
+    assert(0.08498840616084635, evalParamFrame(p,ev(3),3))
     p = parseRandom([])
     p.modifiers = {seed:2}
-    assert(0.3672695131972432, evalParam(p,ev(0),0))
-    assert(0.3853306171949953, evalParam(p,ev(1),1))
-    assert(0.8534541970584542, evalParam(p,ev(2),2))
-    assert(0.35433487710542977, evalParam(p,ev(3),3))
+    assert(0.3672695131972432, evalParamFrame(p,ev(0),0))
+    assert(0.3853306171949953, evalParamFrame(p,ev(1),1))
+    assert(0.8534541970584542, evalParamFrame(p,ev(2),2))
+    assert(0.35433487710542977, evalParamFrame(p,ev(3),3))
 
     p = parseRandom([])
     p.modifiers = {seed:0}
-    assertIsInRangeEveryTime(0,1, () => evalParam(p,ev(0),0))
+    assertIsInRangeEveryTime(0,1, () => evalParamFrame(p,ev(0),0))
 
     p = parseRandom([])
     p.modifiers = {seed:-100}
-    assertIsInRangeEveryTime(0,1, () => evalParam(p,ev(0),0))
+    assertIsInRangeEveryTime(0,1, () => evalParamFrame(p,ev(0),0))
 
     // []r should give a new value for each event
     let testEvent = ev(0,0)
     p = parseRandom([], undefined, undefined, undefined)
-    r = p(testEvent,0,evalParam)
-    assertIs1OfEveryTime([r], (i)=>p(testEvent,i/10,evalParam))
-    assertNotEqual(r, p(ev(0,0),0,evalParam)) // different value for new event
+    r = p(testEvent,0,evalParamFrame)
+    assertIs1OfEveryTime([r], (i)=>p(testEvent,i/10,evalParamFrame))
+    assertNotEqual(r, p(ev(0,0),0,evalParamFrame)) // different value for new event
 
     p = simpleNoise([], 1)
-    assertIsInRangeEveryTime(0,1, () => evalParam(p,ev(0),0))
+    assertIsInRangeEveryTime(0,1, () => evalParamFrame(p,ev(0),0))
 
     p = simpleNoise([3,5], 1)
-    assertIsInRangeEveryTime(3,5, () => evalParam(p,ev(0),0))
+    assertIsInRangeEveryTime(3,5, () => evalParamFrame(p,ev(0),0))
 
     // Same sequence every time when seeded
     p = simpleNoise([], 1)
     p.modifiers = {seed:1}
-    assert(0.1989616905192142, evalParam(p,ev(0),0))
-    assert(0.503624927728974, evalParam(p,ev(1/4),1/4))
-    assert(0.3226893881270972, evalParam(p,ev(1),1))
+    assert(0.1989616905192142, evalParamFrame(p,ev(0),0))
+    assert(0.503624927728974, evalParamFrame(p,ev(1/4),1/4))
+    assert(0.3226893881270972, evalParamFrame(p,ev(1),1))
 
     //Noise should be smooth
     p = simpleNoise([], 4)
-    assertIsCloseEveryTime((i)=>p(ev(i/20),i/20,evalParam))
+    assertIsCloseEveryTime((i)=>p(ev(i/20),i/20,evalParamFrame))
 
     p = simpleNoise([], 4)
     p.modifiers = {seed:1}
-    assertIsCloseEveryTime((i)=>p(ev(i/11),i/11,evalParam))
+    assertIsCloseEveryTime((i)=>p(ev(i/11),i/11,evalParamFrame))
 
     console.log('Eval random tests complete')
   }
