@@ -14,11 +14,16 @@ define(function(require) {
   }
 
   let rand = (args, e,b,state) => {
-    if (state.perParseSeed === undefined) {
-        state.perParseSeed = Math.random()
-    }
     let seed = args && args.seed
-    if (seed === undefined) { seed = state.perParseSeed*999999 }
+    if (seed === undefined) {
+      if (state.perParseSeed === undefined) {
+        state.perParseSeed = Math.random()
+      }
+      if (e.perEventSeed === undefined) {
+        e.perEventSeed = Math.random()
+      }
+      seed = (state.perParseSeed + e.perEventSeed)*999999
+    }
     return xmur3(b - seed) / 4294967296
   }
   rand.isDirectFunction = true

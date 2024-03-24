@@ -76,8 +76,7 @@ define(function(require) {
       if (hold) {
         evaluator = (e,b,evalRecurse,modifiers) => evalRandomRanged(perParseSeed, hold, 0, 1, b, modifiers)
       } else {
-        evaluator = (e,b,evalRecurse,modifiers) => evalRandomRanged(perParseSeed, hold, 0, 1, b, modifiers)
-        // return (e,b,evalRecurse,modifiers) => randFunction(modifiers, e, b, state)
+        return (e,b,evalRecurse,modifiers) => randFunction(modifiers, e, b, state)
       }
     } else if (vs.separator == ':') {
       let lo = param(vs[0], 0)
@@ -243,13 +242,6 @@ define(function(require) {
     p = parseRandom([])
     p.modifiers = {seed:-100}
     assertIsInRangeEveryTime(0,1, () => evalParamFrame(p,ev(0),0))
-
-    // []r should give a new value for each event
-    let testEvent = ev(0,0)
-    p = parseRandom([], undefined, undefined, undefined)
-    r = p(testEvent,0,evalParamFrame)
-    assertIs1OfEveryTime([r], (i)=>p(testEvent,i/10,evalParamFrame))
-    assertNotEqual(r, p(ev(0,0),0,evalParamFrame)) // different value for new event
 
     p = simpleNoise([], 1)
     assertIsInRangeEveryTime(0,1, () => evalParamFrame(p,ev(0),0))

@@ -224,13 +224,14 @@ shadertoy synth multiple channels
 
 ====
 ==== other ====
-BREAKING CHANGES: No more rand aggregator; replace with (1,2,3,4).(rand*4)
+BREAKING CHANGES
+  No more rand aggregator; replace with (1,2,3,4).(rand*4)
+Can do timeVar with `;` by creating the piecewise every frame
 Random rewrite to use piecewise
  r
-  []r   =>  rand@e
+  []r1  =>  rand{step:1}
   [2:5]r   =>  [2,/1;5,-0;]rand@e
   [0,0,1]r => [0,-2;1,-1;]3*rand@e
-  []r1  =>  rand{step:1}
  n
   []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
 Syntax for piecewise functions with lookup

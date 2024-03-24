@@ -1303,19 +1303,20 @@ define(function(require) {
   assertApprox(0.385, evalParamFrame(p, evt(), 1))
 
   p = parseExpression("rand{step:1}")
-  assertIsSameEveryTime((x) => evalParamFrame(p, evt(), 0+x))
-  assertIsSameEveryTime((x) => evalParamFrame(p, evt(), 1+x))
-  assertIsSameEveryTime((x) => evalParamFrame(p, evt(), 2+x))
-  assertIsDifferentEveryTime((i) => evalParamFrame(p, evt(), i))
+  e = evt()
+  assertIsSameEveryTime((x) => evalParamFrame(p, e, 0+x))
+  assertIsSameEveryTime((x) => evalParamFrame(p, e, 1+x))
+  assertIsSameEveryTime((x) => evalParamFrame(p, e, 2+x))
+  assertIsDifferentEveryTime((i) => evalParamFrame(p, e, i))
 
   p = parseExpression("rand@e")
-  assertIsSameEveryTime((x) => evalParamFrame(p, evt(0,0,1), 0+x))
-  assertIsSameEveryTime((x) => evalParamFrame(p, evt(1,1,1), 1+x))
-  assertIsSameEveryTime((x) => evalParamFrame(p, evt(2,2,1), 2+x))
+  e = evt()
+  assertIsSameEveryTime((x) => evalParamFrame(p, e, 0+x))
   assertIsDifferentEveryTime((i) => evalParamFrame(p, evt(i,i,1), i))
 
   p = parseExpression("rand{step:2}@e")
-  assertIsSameEveryTime((x) => evalParamFrame(p, evt(x*4%2,x*4%2,1), 0+x))
+  e = evt()
+  assertIsSameEveryTime((x) => evalParamFrame(p, e, 0+x))
   assertIsDifferentEveryTime((i) => evalParamFrame(p, evt(i*2,i*2,1), i*2))
 
   p = parseExpression("rand{seed:1}@e")
@@ -1324,9 +1325,16 @@ define(function(require) {
   assertIsDifferentEveryTime((i) => evalParamFrame(p, evt(i*2,i*2,1), i*2))
 
   p = parseExpression("rand{per:1}")
-  assertIsDifferentEveryTime((i) => evalParamFrame(p, evt(), i/1200))
-  assert(evalParamFrame(p, evt(), 0), evalParamFrame(p, evt(), 1))
-  assert(evalParamFrame(p, evt(), 1), evalParamFrame(p, evt(), 2))
+  e = evt()
+  assertIsDifferentEveryTime((i) => evalParamFrame(p, e, i/1200))
+  assert(evalParamFrame(p, e, 0), evalParamFrame(p, e, 1))
+  assert(evalParamFrame(p, e, 1), evalParamFrame(p, e, 2))
+
+  let testEvent = ev(0,0)
+  p = parseExpression("[]r")
+  r = evalParamFrame(p,testEvent,0)
+  assert(r, evalParamFrame(p,testEvent,Math.random()))
+  assertNotEqual(r, evalParamFrame(p,ev(0,0),0)) // different values for new events
 
   console.log('Parse expression tests complete')
   }
