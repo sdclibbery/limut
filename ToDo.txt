@@ -226,7 +226,6 @@ shadertoy synth multiple channels
 ==== other ====
 BREAKING CHANGES
   No more rand aggregator; replace with (1,2,3,4).(rand*4)
-Can do timeVar with `;` by creating the piecewise every frame
 Random rewrite to use piecewise
  r
   []r1  =>  rand{step:1}

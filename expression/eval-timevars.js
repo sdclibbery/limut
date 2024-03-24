@@ -11,25 +11,6 @@ define(function(require) {
   let time = (e,b) => b
   let idx = (e,b) => Math.floor(e.idx || 0)
 
-  let timeVarSteps = (vs, ds) => {
-    if (!Array.isArray(ds)) { ds = [ds] }
-    let steps = []
-    let length = 0
-    let step = 0
-    vs.forEach(v => {
-      let dur = ds[step % ds.length]
-      steps.push({ value:v, _time:length, duration:dur })
-      length += dur
-      step += 1
-    })
-    steps.totalDuration = length
-    return steps
-  }
-
-  let isInTimeVarStep  = (st, b) => {
-    return (b > st._time-0.00001)&&(b < st._time+st.duration+0.00001)
-  }
-
   let expandTimeVar = (vs, ds) => {
     let lo = vs[0] || 0
     let hi = vs[1] || lo+1
@@ -39,10 +20,10 @@ define(function(require) {
       if (!Number.isInteger(elo)) { consoleOut(`🟠 Warning: Time var low value ${elo} is not an integer`) }
       if (!Number.isInteger(ehi)) { consoleOut(`🟠 Warning: Time var high value ${ehi} is not an integer`) }
       let vs = Array.from({length: ehi-elo+1}, (_, i) => i + elo)
-      let steps = timeVarSteps(vs, ds)
-      let count = (b+0.0001) % steps.totalDuration
-      let step = steps.filter(st => isInTimeVarStep(st, count) )[0]
-      return (step !== undefined) && step.value
+      if (!Array.isArray(ds)) { ds = [ds] }
+      let is = vs.map(() => step)
+      let ss = vs.map((_,i) => ds[i % ds.length])
+      return piecewise(vs, is, ss, time)
     }
   }
 
