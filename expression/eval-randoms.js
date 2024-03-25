@@ -5,71 +5,10 @@ define(function(require) {
   let randFunction = require('functions/rand')
   let {piecewise} = require('expression/eval-piecewise')
 
-  function xmur3(seed) {
-    let h = 1779033703
-    h = Math.imul(h ^ Math.floor(seed), 3432918353)
-    h = h << 13 | h >>> 19
-    h = Math.imul(h ^ Math.floor((seed%1)*4294967296), 3432918353)
-    h = h << 13 | h >>> 19
-    h = Math.imul(h ^ h >>> 16, 2246822507)
-    h = Math.imul(h ^ h >>> 13, 3266489909)
-    return (h ^= h >>> 16) >>> 0
-  }
-
   let step = () => 0
   let linear = (i) => i
 
-  let add = (a,b) => a+b
-  let mul = (a,b) => a*b
-  let lerpValue = (lerp, pre, post) => {
-    return evalOperator(add,
-      evalOperator(mul, 1-lerp, pre),
-      evalOperator(mul, lerp, post)
-    )
-  }
-
-  let unrangedRandom = (hold, perParseSeed, b, modifiers) => {
-    let seed = modifiers && modifiers.seed
-    if (hold) {
-      if (!seed) { seed = perParseSeed*999999 } // Always use deterministic random for held randoms
-    }
-    if (seed !== undefined) {
-      return xmur3(b - seed) / 4294967296
-    } else {
-      return Math.random()
-    }
-  }
-
-  let evalRandomSet = (perParseSeed, hold, vs, b, modifiers) => {
-    let baseRandom = unrangedRandom(hold, perParseSeed, b, modifiers)
-    let idx = Math.floor(baseRandom*vs.length*0.9999)
-    return vs[idx]
-  }
-
-  let heldRandom = (getter, hold) => {
-    return (e,b,evalRecurse,modifiers) => {
-      let evalCount = Math.floor(b/hold)*hold
-      return getter({count:evalCount},evalCount,evalRecurse,modifiers)
-    }
-  }
-
-  let random = (getter, interval) => {
-    let events
-    return (e,b,evalRecurse,modifiers) => {
-      if (interval === 'frame') {
-        return getter(e,b,evalRecurse,modifiers)
-      }
-      if (!events) { events = new WeakMap() }
-      if (!events.has(e)) {
-        events.set(e, getter(e,b,evalRecurse,modifiers))
-      }
-      return events.get(e)
-    }
-  }
-
-  let parseRandom = (vs, hold, interval) => {
-    let perParseSeed = Math.random()
-    let evaluator
+  let parseRandom = (vs) => {
     let state = {} // Create a state store for this parse instance
     if (vs.length == 0) {
       return (e,b,evalRecurse,modifiers) => randFunction(modifiers, e, b, state)
@@ -81,13 +20,22 @@ define(function(require) {
         return piecewise([lo, hi], [linear, step], [1,0], p)
       }
     } else {
-      evaluator = (e,b,evalRecurse,modifiers) => evalRandomSet(perParseSeed, hold, vs, b, modifiers)
+      return (e,b,evalRecurse,modifiers) => {
+        let p = randFunction(modifiers, e, b, state)
+        let is = vs.map(() => step)
+        let ss = vs.map(() => 1/vs.length)
+        return piecewise(vs, is, ss, p)
+      }
     }
-    if (hold) {
-      return heldRandom(evaluator, hold)
-    } else {
-      return random(evaluator, interval)
-    }
+  }
+
+  let add = (a,b) => a+b
+  let mul = (a,b) => a*b
+  let lerpValue = (lerp, pre, post) => {
+    return evalOperator(add,
+      evalOperator(mul, 1-lerp, pre),
+      evalOperator(mul, lerp, post)
+    )
   }
 
   let hash = (n) => {

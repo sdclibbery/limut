@@ -99,7 +99,7 @@ define(function(require) {
             if (modifiers.seed === undefined) { modifiers.seed = Math.random()*99999 } // Must set a seed for hold, otherwise every event gets a different seed and the random isn't held across events
           }
           let interval = parseInterval(state) || hoistInterval('event', vs, modifiers)
-          result = addModifiers(parseRandom(vs, hold, interval), modifiers)
+          result = addModifiers(parseRandom(vs), modifiers)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'n') { // simple noise
           state.idx += 1
@@ -598,7 +598,7 @@ define(function(require) {
 
   p = parseExpression('[1,5,7]r')
   for (let i = 0; i<20; i+=1) {
-    let v = p(ev(0,0),0,evalParamFrame)
+    let v = evalParamFrame(p,ev(0),0)
     assertOneOf([1,5,7], v)
     assertInteger(v, 'v:'+v)
   }
