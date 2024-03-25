@@ -3,6 +3,7 @@ define(function(require) {
   let evalOperator = require('expression/eval-operator')
   let param = require('player/default-param')
   let randFunction = require('functions/rand')
+  let {piecewise} = require('expression/eval-piecewise')
 
   function xmur3(seed) {
     let h = 1779033703
@@ -14,6 +15,9 @@ define(function(require) {
     h = Math.imul(h ^ h >>> 13, 3266489909)
     return (h ^= h >>> 16) >>> 0
   }
+
+  let step = () => 0
+  let linear = (i) => i
 
   let add = (a,b) => a+b
   let mul = (a,b) => a*b
@@ -34,11 +38,6 @@ define(function(require) {
     } else {
       return Math.random()
     }
-  }
-
-  let evalRandomRanged = (perParseSeed, hold, lo, hi, b, modifiers) => {
-    let baseRandom = unrangedRandom(hold, perParseSeed, b, modifiers)
-    return lerpValue(baseRandom, lo, hi)
   }
 
   let evalRandomSet = (perParseSeed, hold, vs, b, modifiers) => {
@@ -73,15 +72,14 @@ define(function(require) {
     let evaluator
     let state = {} // Create a state store for this parse instance
     if (vs.length == 0) {
-      if (hold) {
-        evaluator = (e,b,evalRecurse,modifiers) => evalRandomRanged(perParseSeed, hold, 0, 1, b, modifiers)
-      } else {
-        return (e,b,evalRecurse,modifiers) => randFunction(modifiers, e, b, state)
-      }
+      return (e,b,evalRecurse,modifiers) => randFunction(modifiers, e, b, state)
     } else if (vs.separator == ':') {
       let lo = param(vs[0], 0)
       let hi = param(vs[1], 1)
-      evaluator = (e,b,evalRecurse,modifiers) => evalRandomRanged(perParseSeed, hold, lo, hi, b, modifiers)
+      return (e,b,evalRecurse,modifiers) => {
+        let p = randFunction(modifiers, e, b, state)
+        return piecewise([lo, hi], [linear, step], [1,0], p)
+      }
     } else {
       evaluator = (e,b,evalRecurse,modifiers) => evalRandomSet(perParseSeed, hold, vs, b, modifiers)
     }
@@ -138,19 +136,19 @@ define(function(require) {
     let assertIs1OfEveryTime = (expected, getter) => {
       for (let i=0; i<20; i++) {
         let r = getter(i)
-        if (!expected.includes(r)) { console.trace(`Assertion failed.\n>>Expected one of:\n  ${expected}\n>>Actual:\n  ${r}`) }
+        if (!expected.includes(r)) { console.trace(`Assertion failed index ${i}.\n>>Expected one of:\n  ${expected}\n>>Actual:\n  ${r}`) }
       }
     }
     let assertIsInRangeEveryTime = (lo, hi, getter) => {
       for (let i=0; i<20; i++) {
         let r = getter(i)
-        if (r === undefined || isNaN(r) || r<lo || r>hi) { console.trace(`Assertion failed.\n>>Expected in range:\n  ${lo} - ${hi}\n>>Actual:\n  ${r}`) }
+        if (r === undefined || isNaN(r) || r<lo || r>hi) { console.trace(`Assertion failed index ${i}.\n>>Expected in range:\n  ${lo} - ${hi}\n>>Actual:\n  ${r}`) }
       }
     }
     let assertIsSameEveryTime = (getter) => {
       let x = getter(0)
       for (let i=1; i<=20; i++) {
-        assert(x, getter(i))
+        assert(x, getter(i), `Index: ${i}`)
       }
     }
     let assertIsDifferentEveryTime = (getter) => {
@@ -165,7 +163,7 @@ define(function(require) {
       let last = getter(0)
       for (let i=1; i<=20; i++) {
         let v = getter(i)
-        if (Math.abs(v-last) > 0.1) { console.trace(`Assertion failed.\n>>Expected ${v} to be close to ${last}`) }
+        if (Math.abs(v-last) > 0.1) { console.trace(`Assertion failed index ${i}.\n>>Expected ${v} to be close to ${last}`) }
         last = v
       }
     }
@@ -192,13 +190,6 @@ define(function(require) {
 
     p = parseRandom(range(3))
     assertIsInRangeEveryTime(0,3, () => evalParamFrame(p,ev(0),0))
-
-    // Always gives same value at same time when periodic, even when not seeded
-    p = parseRandom(range(3,5), 1)
-    assertIsSameEveryTime((i) => evalParamFrame(p,ev(i/100),i/100))
-    assertIsSameEveryTime((i) => evalParamFrame(p,ev(1+i/100),1+i/100))
-    p = parseRandom(range(3,5), 1)
-    assertIsDifferentEveryTime((i) => evalParamFrame(p,ev(i),i))
 
     // Give correct value even when evalled out of time order
     p = parseRandom(range(-1,1), 1/4)

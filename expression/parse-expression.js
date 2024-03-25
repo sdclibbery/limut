@@ -93,6 +93,11 @@ define(function(require) {
           state.idx += 1
           let hold = number(state)
           let modifiers = parseMap(state)
+          if (hold !== undefined) {
+            if (modifiers === undefined) { modifiers = {} }
+            modifiers.step = hold
+            if (modifiers.seed === undefined) { modifiers.seed = Math.random()*99999 } // Must set a seed for hold, otherwise every event gets a different seed and the random isn't held across events
+          }
           let interval = parseInterval(state) || hoistInterval('event', vs, modifiers)
           result = addModifiers(parseRandom(vs, hold, interval), modifiers)
           setInterval(result, interval)
@@ -600,8 +605,8 @@ define(function(require) {
 
   p = parseExpression('[0:9]r')
   for (let i = 0; i<20; i+=1) {
-    assertIn(0, 9, p(ev(0,0),0,evalParamFrame))
-    assertNotInteger(p(ev(0,0),0,evalParamFrame))
+    assertIn(0, 9, evalParamFrame(p,ev(0),0))
+    assertNotInteger(evalParamFrame(p,ev(0),0))
   }
 
   p = parseExpression('[[0,10]:[9,19]]r')
@@ -1336,6 +1341,10 @@ define(function(require) {
   assert(r, evalParamFrame(p,testEvent,Math.random()))
   assertNotEqual(r, evalParamFrame(p,ev(0,0),0)) // different values for new events
 
+  p = parseExpression("[]r2")
+  assertIsSameEveryTime((x) => evalParamFrame(p, evt(0,0,1), 0+x*2))
+  assertIsDifferentEveryTime((i) => evalParamFrame(p, evt(i*2,i*2,1), i*2))
+  
   console.log('Parse expression tests complete')
   }
 
