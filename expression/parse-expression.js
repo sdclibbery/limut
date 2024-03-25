@@ -103,11 +103,11 @@ define(function(require) {
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'n') { // simple noise
           state.idx += 1
-          let hold = number(state)
-          if (hold === undefined) { hold = 1 }
+          let period = number(state)
+          if (period === undefined) { period = 1 }
           let modifiers = parseMap(state)
           let interval = parseInterval(state) || hoistInterval('frame', modifiers)
-          result = addModifiers(simpleNoise(vs, hold, modifiers, interval), modifiers)
+          result = addModifiers(simpleNoise(vs, period), modifiers)
           setInterval(result, interval)
         } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
           state.idx += 1

@@ -51,7 +51,7 @@ define(function(require) {
     let r = f*(f-1.0)*((16.0*k-4.0)*f*(f-1.0)-1.0)
     return r
   }
-  let simpleNoise = (vs, period, modifiers, interval) => {
+  let simpleNoise = (vs, period) => {
     let seed = Math.random()*10000
     return (e,b, evalRecurse, modifiers) => {
       if (modifiers && modifiers.seed !== undefined) {
@@ -91,12 +91,6 @@ define(function(require) {
       for (let i=0; i<20; i++) {
         let r = getter(i)
         if (r === undefined || isNaN(r) || r<lo || r>hi) { console.trace(`Assertion failed index ${i}.\n>>Expected in range:\n  ${lo} - ${hi}\n>>Actual:\n  ${r}`) }
-      }
-    }
-    let assertIsSameEveryTime = (getter) => {
-      let x = getter(0)
-      for (let i=1; i<=20; i++) {
-        assert(x, getter(i), `Index: ${i}`)
       }
     }
     let assertIsDifferentEveryTime = (getter) => {
