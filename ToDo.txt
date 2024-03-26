@@ -226,10 +226,9 @@ shadertoy synth multiple channels
 ==== other ====
 BREAKING CHANGES
   No more rand aggregator; replace with (1,2,3,4).(rand*4)
-Random rewrite to use piecewise
- n
-  []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
 Syntax for piecewise functions with lookup
+ Pull out parsing into parse_piecewise
+  Still need to call out for []n though
  [ v1;i1s1, v2;i2s2 ] p
  vn - expression giving the value of that piece
  in - "comma operator" giving the interpolation curve  to the next value
@@ -240,6 +239,9 @@ Syntax for piecewise functions with lookup
       some predefined like `t` `e` `r` `l` etc (what about t8 etc??)
       overall default is from pattern index??? Or drop this to default to t1?
  Docs
+Random rewrite to use piecewise
+ n
+  []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
  Big regression test; aggregators, blend min/max, rand, timevars, randoms, piecewise, compose stuff with visuals
 Allow non const step sizes in piecewise?
 Voice leading

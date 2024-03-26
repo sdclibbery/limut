@@ -1,5 +1,6 @@
 'use strict';
 define(function(require) {
+  let eatWhitespace = require('expression/eat-whitespace')
 
   let combine = (l, r) => {
     return l === 'frame' ? 'frame' : (r === 'frame' ? 'frame' : (l || r))
@@ -32,6 +33,29 @@ define(function(require) {
     return interval
   }
 
+  let parseInterval = (state) => {
+    eatWhitespace(state)
+    let result
+    if (state.str.charAt(state.idx) == '@') {
+      state.idx += 1
+      if (state.str.charAt(state.idx) == 'f') {
+        state.idx += 1
+        result = 'frame'
+      } else if (state.str.charAt(state.idx) == 'e') {
+        state.idx += 1
+        result = 'event'
+      }
+    }
+    return result
+  }
+
+  let setInterval = (result, interval) => {
+    if (Array.isArray(result)) {
+      result.map(v => v.interval = interval)
+    } else {
+      result.interval = interval
+    }
+  }
 
   // TESTS
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
@@ -62,5 +86,7 @@ define(function(require) {
   return {
     combineIntervalsFrom: combineIntervalsFrom,
     hoistInterval: hoistInterval,
+    parseInterval: parseInterval,
+    setInterval: setInterval,
   }
 })
