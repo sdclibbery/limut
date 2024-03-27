@@ -1,5 +1,6 @@
 'use strict';
 define(function(require) {
+  let eatWhitespace = require('expression/eat-whitespace')
   let {hoistInterval,parseInterval,setInterval} = require('expression/intervals')
   let {parseRandom, simpleNoise} = require('expression/eval-randoms')
   let {timeVar, linearTimeVar, smoothTimeVar, eventTimeVar, eventIdxVar} = require('expression/eval-timevars')
@@ -85,6 +86,44 @@ define(function(require) {
     return result
   }
 
+  let iOperators = { '/':true, '_':true, '\\':true, '|':true, '~':true }
+  let parseEntry = (state, vs, is, ss) => {
+    eatWhitespace(state)
+    let v = state.expression(state)
+    if (v === undefined) { return false }
+    let i = undefined
+    let s = undefined
+    eatWhitespace(state)
+    if (state.str.charAt(state.idx) === ':') {
+      state.idx+=1
+      let char = state.str.charAt(state.idx)
+      if (iOperators[char]) {
+        state.idx+=1
+        i = char
+      }
+      eatWhitespace(state)
+      s = number(state)
+    }
+    vs.push(v)
+    is.push(i)
+    ss.push(s)
+    eatWhitespace(state)
+    if (state.str.charAt(state.idx) === ',') { state.idx+=1 }
+    return true
+  }
+
+  let parsePiecewiseArray = (state) => {
+    let char = state.str.charAt(state.idx)
+    if (char !== '[') { return undefined }
+    state.idx+=1
+    let vs = []
+    let is = []
+    let ss = []
+    while (parseEntry(state, vs, is, ss)) {}
+    if (state.str.charAt(state.idx) === ']') { state.idx+=1 }
+    return {vs:vs,is:is,ss:ss}
+  }
+
   // TESTS
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
@@ -93,8 +132,51 @@ define(function(require) {
       let a = JSON.stringify(actual)
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
     }
+    let number = require('expression/parse-number') // Expressions should only be numbers in these tests for simplicity
+    let st = (str) => { return {str:str, idx:0, expression:number} }
+    let s
 
-    // assert(undefined, parsePiecewise({str:'',idx:0}))
+    assert(undefined, parsePiecewiseArray(st('')))
+    assert(undefined, parsePiecewiseArray(st('a')))
+    assert(undefined, parsePiecewiseArray(st('()')))
+    assert({vs:[],is:[],ss:[]}, parsePiecewiseArray(st('[]')))
+    assert({vs:[],is:[],ss:[]}, parsePiecewiseArray(st('[')))
+    assert({vs:[],is:[],ss:[]}, parsePiecewiseArray(st('[]')))
+    assert({vs:[],is:[],ss:[]}, parsePiecewiseArray(st('[]')))
+    assert({vs:[],is:[],ss:[]}, parsePiecewiseArray(st('[ ]')))
+    assert({vs:[],is:[],ss:[]}, parsePiecewiseArray(st('[,]')))
+    assert({vs:[],is:[],ss:[]}, parsePiecewiseArray(st('[:]')))
+    assert({vs:[],is:[],ss:[]}, parsePiecewiseArray(st('[:,]')))
+
+    assert({vs:[5],is:[undefined],ss:[undefined]}, parsePiecewiseArray(st('[5]')))
+    assert({vs:[5,6],is:[undefined,undefined],ss:[undefined,undefined]}, parsePiecewiseArray(st('[5,6]')))
+    assert({vs:[5,6],is:[undefined,undefined],ss:[undefined,undefined]}, parsePiecewiseArray(st('[5,6,]')))
+    assert({vs:[5,6],is:[undefined,undefined],ss:[undefined,undefined]}, parsePiecewiseArray(st('[ 5 , 6 , ]')))
+
+    assert({vs:[5],is:[undefined],ss:[undefined]}, parsePiecewiseArray(st('[5]')))
+    assert({vs:[5],is:[undefined],ss:[undefined]}, parsePiecewiseArray(st('[5')))
+    assert({vs:[5],is:[undefined],ss:[undefined]}, parsePiecewiseArray(st('[5]]')))
+    assert({vs:[5],is:[undefined],ss:[undefined]}, parsePiecewiseArray(st('[5,]')))
+    assert({vs:[5],is:[undefined],ss:[undefined]}, parsePiecewiseArray(st('[5:]')))
+    assert({vs:[5],is:[undefined],ss:[undefined]}, parsePiecewiseArray(st('[5:,]')))
+    assert({vs:[5],is:[undefined],ss:[1]}, parsePiecewiseArray(st('[5:1]')))
+    assert({vs:[5],is:[undefined],ss:[1]}, parsePiecewiseArray(st('[5:1,]')))
+    assert({vs:[5],is:['/'],ss:[undefined]}, parsePiecewiseArray(st('[5:/]')))
+    assert({vs:[5],is:['/'],ss:[undefined]}, parsePiecewiseArray(st('[5:/,]')))
+    assert({vs:[5],is:['/'],ss:[1]}, parsePiecewiseArray(st('[5:/1]')))
+    assert({vs:[5],is:['/'],ss:[1]}, parsePiecewiseArray(st('[5:/1,]')))
+    assert({vs:[5],is:['/'],ss:[1]}, parsePiecewiseArray(st('[ 5 :/ 1 , ]')))
+
+    assert({vs:[5,6],is:[undefined,undefined],ss:[1,undefined]}, parsePiecewiseArray(st('[5:1,6]')))
+    assert({vs:[5,6],is:[undefined,undefined],ss:[undefined,1]}, parsePiecewiseArray(st('[5,6:1]')))
+    assert({vs:[5,6],is:['/','_'],ss:[undefined,undefined]}, parsePiecewiseArray(st('[5:/,6:_]')))
+    assert({vs:[5,6],is:['/','_'],ss:[1,2]}, parsePiecewiseArray(st('[5:/1,6:_2]')))
+    assert({vs:[5,6],is:[undefined,undefined],ss:[1,undefined]}, parsePiecewiseArray(st('[5:1,6,]')))
+    assert({vs:[5,6],is:[undefined,undefined],ss:[undefined,1]}, parsePiecewiseArray(st('[5,6:1,]')))
+    assert({vs:[5,6],is:['/','_'],ss:[undefined,undefined]}, parsePiecewiseArray(st('[5:/,6:_,]')))
+    assert({vs:[5,6],is:['/','_'],ss:[1,2]}, parsePiecewiseArray(st('[5:/1,6:_2,]')))
+    assert({vs:[5,6],is:[undefined,undefined],ss:[1,2]}, parsePiecewiseArray(st('[5:1,6:2,]')))
+    assert({vs:[5,6,7],is:['/','_',undefined],ss:[1,2,undefined]}, parsePiecewiseArray(st('[5:/1,6:_2,7]')))
 
     console.log('Parse piecewise tests complete')
   }

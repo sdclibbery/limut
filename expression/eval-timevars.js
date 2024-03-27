@@ -11,7 +11,7 @@ define(function(require) {
   let time = (e,b) => b
   let idx = (e,b) => Math.floor(e.idx || 0)
 
-  let expandTimeVar = (vs, ds) => {
+  let rangeTimeVar = (vs, ds) => {
     let lo = vs[0] || 0
     let hi = vs[1] || lo+1
     return (e,b,evalRecurse) => {
@@ -29,7 +29,7 @@ define(function(require) {
 
   let timeVar = (vs, ds) => {
     if (vs.separator == ':') {
-      return expandTimeVar(vs, ds)
+      return rangeTimeVar(vs, ds)
     }
     if (!Array.isArray(ds)) { ds = [ds] }
     let is = vs.map(() => step)
