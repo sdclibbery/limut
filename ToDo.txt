@@ -222,27 +222,39 @@ shadertoy synth multiple channels
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 
 
+
+-  p = parseExpression('([0:1]l4@f){per:1}')
++  p = parseExpression('[0:1]l4{per:1}@f')
+   assert(0, evalParamFrame(p,ev(0,0),0))
+   assert(0, evalParamFrame(p,ev(1,1),1))
++  assert(0, evalParamFrame(p,ev(2,2),2))
+
+
+-  assert(100, evalParamFrame(parseExpression("[0:1]l4{per:4,0:100}@f"),ev(0,0,4),0))
+-  assert(1/4, evalParamFrame(parseExpression("[0:1]l4{per:4,0:100}@f"),ev(0,0,4),1))
+
+
+
+
 ====
 ==== other ====
-BREAKING CHANGES
-  No more rand aggregator; replace with (1,2,3,4).(rand*4)
-Syntax for piecewise functions with lookup
- Try [ []r ]l@f
- Can [1:4]r parse as [1:/,4]r etc? [ v1:i1s1, v2:i2s2 ] p
- vn - expression giving the value of that piece
- in - "comma operator" giving the interpolation curve  to the next value
-      some predefined like ,- for step, ,/ for linear etc
-      overall default is linear ,/ (because p can be `floor{time}` if you still want stepwise)
- sn - size of the piece
- p - parameter giving indicating the current piece. Non int values cause interpolation via the in functions
-      some predefined like `t` `e` `r` `l` etc (what about t8 etc??)
-      overall default is from pattern index??? Or drop this to default to t1?
- Docs
+Syntax for piecewise functions with lookup [ v1:i1s1, v2:i2s2 ]{p}
+ More tests at bottom of parse-expression
+ Tidy up refactor in parse-piecewise, eval-timevars, eval-randoms etc
+ ? Roll eval-timevars into parse-piecewise??
+ Global 'time' var should be (e,b)=>b instead of just a number? Then modifiers could affect it...
+ Big regression test; aggregators, blend min/max, rand, timevars, randoms, piecewise, modifiers, compose stuff with visuals
+ Docs for new syntax and breaking changes
+ Release
+  BREAKING CHANGES
+    No more rand aggregator; replace with (1,2,3,4).(rand*4)
 Random rewrite to use piecewise
- n
-  []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
- Big regression test; aggregators, blend min/max, rand, timevars, randoms, piecewise, compose stuff with visuals
+ []n:  []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
+ Can [1:4]r parse as [1:/,4]r etc to replace legacy parsing?
+  And same for [:]t and [:]l and [:]e ?
+Time values: 150ms parses into a per-event function that returns 0.15s in beats?
 Allow non const step sizes in piecewise?
+"time" modifier allowing user defined time manipulation
 Voice leading
  ? Very clever or just noodles with random walks? Experiment...
  --- Voice leading experiment

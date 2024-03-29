@@ -1,6 +1,5 @@
 'use strict';
 define(function(require) {
-  let evalOperator = require('expression/eval-operator')
   let consoleOut = require('console')
   let {piecewise} = require('expression/eval-piecewise')
 
@@ -8,13 +7,10 @@ define(function(require) {
   let linear = (i) => i
   let smooth = (i) => i*i*(3-2*i) // bezier ease in/out
 
-  let time = (e,b) => b
-  let idx = (e,b) => Math.floor(e.idx || 0)
-
   let rangeTimeVar = (vs, ds) => {
     let lo = vs[0] || 0
     let hi = vs[1] || lo+1
-    return (e,b,evalRecurse) => {
+    let result = (e,b,evalRecurse) => {
       let elo = evalRecurse(lo, e,b)
       let ehi = evalRecurse(hi, e,b)
       if (!Number.isInteger(elo)) { consoleOut(`🟠 Warning: Time var low value ${elo} is not an integer`) }
@@ -23,8 +19,9 @@ define(function(require) {
       if (!Array.isArray(ds)) { ds = [ds] }
       let is = vs.map(() => step)
       let ss = vs.map((_,i) => ds[i % ds.length])
-      return piecewise(vs, is, ss, time)
+      return piecewise(vs, is, ss, (e,b) => b)
     }
+    return result
   }
 
   let timeVar = (vs, ds) => {
@@ -34,26 +31,28 @@ define(function(require) {
     if (!Array.isArray(ds)) { ds = [ds] }
     let is = vs.map(() => step)
     let ss = vs.map((_,i) => ds[i % ds.length])
-    return piecewise(vs, is, ss, time)
+    return piecewise(vs, is, ss, (e,b) => b)
   }
 
   let linearTimeVar = (vs, ds) => {
     if (!Array.isArray(ds)) { ds = [ds] }
     let is = vs.map(() => linear)
     let ss = vs.map((_,i) => ds[i % ds.length])
-    return piecewise(vs, is, ss, time)
+    let p = (e,b) => b
+    return piecewise(vs, is, ss, p)
   }
 
   let smoothTimeVar = (vs, ds) => {
     if (!Array.isArray(ds)) { ds = [ds] }
     let is = vs.map(() => smooth)
     let ss = vs.map((_,i) => ds[i % ds.length])
-    return piecewise(vs, is, ss, time)
+    let p = (e,b) => b
+    return piecewise(vs, is, ss, p)
   }
 
   let eventTimeVar = (vs, ds) => {
-    if (vs.length === 0) { return () => 0 }
-    if (vs.length === 1) { return () => vs[0] }
+    if (vs.length === 0) { return piecewise([]) }
+    if (vs.length === 1) { return piecewise(vs, [step], [1], ()=>0) }
     if (ds === undefined) { // If no durations set, space out evenly through the event
       let is = vs.map(() => linear)
       let ss = vs.map(() => 1/(vs.length-1))
@@ -77,13 +76,6 @@ define(function(require) {
       return piecewise(vs, is, ss, p)
     }
   }
-
-  let eventIdxVar = (vs) => {
-    let is = vs.map(() => step)
-    let ss = vs.map(() => 1)
-    return piecewise(vs, is, ss, idx)
-  }
-
   // TESTS
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
   
@@ -94,48 +86,45 @@ define(function(require) {
     }
     let ev = (c,d,i) => {return{idx:i||0, count:c||0, dur:d||1, _time:c, endTime:c+d, countToTime:x=>x}}
     let ev120 = (c,d) => {return{idx:0, count:c, dur:d, _time:c/2, endTime:c/2+d/2, countToTime:(count) => c*0.5 + (count-c)*0.5}}
+    let {evalParamFrame} = require('player/eval-param')
 
-    assert(1, eventIdxVar([1,2])(ev(0,1,0), 0))
-    assert(2, eventIdxVar([1,2])(ev(0,1,1), 0))
-    assert(1, eventIdxVar([1,2])(ev(0,1,2), 0))
+    assert(1, evalParamFrame(eventTimeVar([1,2]),ev(0,1), 0))
+    assert(1.5, evalParamFrame(eventTimeVar([1,2]),ev(0,1), 0.5))
+    assert(2, evalParamFrame(eventTimeVar([1,2]),ev(0,1), 1))
+    assert(2, evalParamFrame(eventTimeVar([1,2]),ev(0,1), 2))
 
-    assert(1, eventTimeVar([1,2])(ev(0,1), 0))
-    assert(1.5, eventTimeVar([1,2])(ev(0,1), 0.5))
-    assert(2, eventTimeVar([1,2])(ev(0,1), 1))
-    assert(2, eventTimeVar([1,2])(ev(0,1), 2))
+    assert(1, evalParamFrame(eventTimeVar([1,2]),ev120(0,1), 0))
+    assert(1.5, evalParamFrame(eventTimeVar([1,2]),ev120(0,1), 0.5))
+    assert(2, evalParamFrame(eventTimeVar([1,2]),ev120(0,1), 1))
+    assert(2, evalParamFrame(eventTimeVar([1,2]),ev120(0,1), 2))
 
-    assert(1, eventTimeVar([1,2])(ev120(0,1), 0))
-    assert(1.5, eventTimeVar([1,2])(ev120(0,1), 0.5))
-    assert(2, eventTimeVar([1,2])(ev120(0,1), 1))
-    assert(2, eventTimeVar([1,2])(ev120(0,1), 2))
+    assert(1, evalParamFrame(eventTimeVar([1,2]),ev(10,2), 0))
+    assert(9/8, evalParamFrame(eventTimeVar([1,2]),ev(10,2), 1/4))
+    assert(1.5, evalParamFrame(eventTimeVar([1,2]),ev(10,2), 1))
+    assert(1, evalParamFrame(eventTimeVar([1,2]),ev(10,2), 2))
+    assert(1, evalParamFrame(eventTimeVar([1,2]),ev(10,2), 8))
+    assert(1.5, evalParamFrame(eventTimeVar([1,2]),ev(10,2), 9))
+    assert(1, evalParamFrame(eventTimeVar([1,2]),ev(10,2), 10))
+    assert(1.5, evalParamFrame(eventTimeVar([1,2]),ev(10,2), 11))
+    assert(2, evalParamFrame(eventTimeVar([1,2]),ev(10,2), 12))
+    assert(2, evalParamFrame(eventTimeVar([1,2]),ev(10,2), 13))
 
-    assert(1, eventTimeVar([1,2])(ev(10,2), 0))
-    assert(9/8, eventTimeVar([1,2])(ev(10,2), 1/4))
-    assert(1.5, eventTimeVar([1,2])(ev(10,2), 1))
-    assert(1, eventTimeVar([1,2])(ev(10,2), 2))
-    assert(1, eventTimeVar([1,2])(ev(10,2), 8))
-    assert(1.5, eventTimeVar([1,2])(ev(10,2), 9))
-    assert(1, eventTimeVar([1,2])(ev(10,2), 10))
-    assert(1.5, eventTimeVar([1,2])(ev(10,2), 11))
-    assert(2, eventTimeVar([1,2])(ev(10,2), 12))
-    assert(2, eventTimeVar([1,2])(ev(10,2), 13))
+    assert(1, evalParamFrame(eventTimeVar([1,2]),ev120(10,2), 0))
+    assert(9/8, evalParamFrame(eventTimeVar([1,2]),ev120(10,2), 1/4))
+    assert(1.5, evalParamFrame(eventTimeVar([1,2]),ev120(10,2), 1))
+    assert(1, evalParamFrame(eventTimeVar([1,2]),ev120(10,2), 2))
+    assert(1, evalParamFrame(eventTimeVar([1,2]),ev120(10,2), 8))
+    assert(1.5, evalParamFrame(eventTimeVar([1,2]),ev120(10,2), 9))
+    assert(1, evalParamFrame(eventTimeVar([1,2]),ev120(10,2), 10))
+    assert(1.5, evalParamFrame(eventTimeVar([1,2]),ev120(10,2), 11))
+    assert(2, evalParamFrame(eventTimeVar([1,2]),ev120(10,2), 12))
+    assert(2, evalParamFrame(eventTimeVar([1,2]),ev120(10,2), 13))
 
-    assert(1, eventTimeVar([1,2])(ev120(10,2), 0))
-    assert(9/8, eventTimeVar([1,2])(ev120(10,2), 1/4))
-    assert(1.5, eventTimeVar([1,2])(ev120(10,2), 1))
-    assert(1, eventTimeVar([1,2])(ev120(10,2), 2))
-    assert(1, eventTimeVar([1,2])(ev120(10,2), 8))
-    assert(1.5, eventTimeVar([1,2])(ev120(10,2), 9))
-    assert(1, eventTimeVar([1,2])(ev120(10,2), 10))
-    assert(1.5, eventTimeVar([1,2])(ev120(10,2), 11))
-    assert(2, eventTimeVar([1,2])(ev120(10,2), 12))
-    assert(2, eventTimeVar([1,2])(ev120(10,2), 13))
-
-    assert(1, eventTimeVar([1,2,3])(ev(0,1), 0))
-    assert(1.5, eventTimeVar([1,2,3])(ev(0,1), 0.25))
-    assert(2, eventTimeVar([1,2,3])(ev(0,1), 0.5))
-    assert(2.5, eventTimeVar([1,2,3])(ev(0,1), 0.75))
-    assert(3, eventTimeVar([1,2,3])(ev(0,1), 1))
+    assert(1, evalParamFrame(eventTimeVar([1,2,3]),ev(0,1), 0))
+    assert(1.5, evalParamFrame(eventTimeVar([1,2,3]),ev(0,1), 0.25))
+    assert(2, evalParamFrame(eventTimeVar([1,2,3]),ev(0,1), 0.5))
+    assert(2.5, evalParamFrame(eventTimeVar([1,2,3]),ev(0,1), 0.75))
+    assert(3, evalParamFrame(eventTimeVar([1,2,3]),ev(0,1), 1))
 
     console.log('Eval timevar tests complete')
   }
@@ -145,6 +134,5 @@ define(function(require) {
     linearTimeVar: linearTimeVar,
     smoothTimeVar: smoothTimeVar,
     eventTimeVar: eventTimeVar,
-    eventIdxVar: eventIdxVar,
   }
 })

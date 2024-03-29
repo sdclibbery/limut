@@ -24,7 +24,11 @@ define(function(require) {
       wrap.modifiers = modifiers
       return wrap
     }
-    exp.modifiers = modifiers
+    if (exp.modifiers === undefined) {
+      exp.modifiers = modifiers
+    } else {
+      Object.assign(exp.modifiers, modifiers)
+    }
     return exp
   }
 
@@ -85,6 +89,11 @@ define(function(require) {
     assert(2, addModifiers(1, {bar:2,'1/3':2}).modifiers.overrides[overrideKey(0.33331298828125)])
     assert(2, addModifiers(1, {bar:2,'1/3':2}).modifiers.overrides[overrideKey(0.3333)])
     assert(undefined, addModifiers(1, {bar:2,'1/3':2}).modifiers.overrides[overrideKey(0.333)])
+
+    let v = () => 0
+    v.modifiers = {bar:3}
+    assert(2, addModifiers(v, {foo:2}).modifiers.foo)
+    assert(3, addModifiers(v, {foo:2}).modifiers.bar)
 
     console.log('Time modifiers tests complete')
   }

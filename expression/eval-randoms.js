@@ -11,21 +11,18 @@ define(function(require) {
   let parseRandom = (vs) => {
     let state = {} // Create a state store for this parse instance
     if (vs.length == 0) { // Default to random between 0 and 1
-      return (e,b,evalRecurse,modifiers) => randFunction(modifiers, e, b, state)
+      let p = (e,b,er,m) => randFunction(m, e, b, state)
+      return piecewise([0,1], [linear,step], [1,0], p)
     } else if (vs.separator == ':') { // Range syntax
       let lo = param(vs[0], 0)
       let hi = param(vs[1], 1)
-      return (e,b,evalRecurse,modifiers) => {
-        let p = randFunction(modifiers, e, b, state)
-        return piecewise([lo, hi], [linear, step], [1,0], p)
-      }
+      let p = (e,b,er,m) => randFunction(m, e, b, state)
+      return piecewise([lo, hi], [linear, step], [1,0], p)
     } else { // Choose from a list
-      return (e,b,evalRecurse,modifiers) => {
-        let p = randFunction(modifiers, e, b, state)
-        let is = vs.map(() => step)
-        let ss = vs.map(() => 1/vs.length)
-        return piecewise(vs, is, ss, p)
-      }
+      let is = vs.map(() => step)
+      let ss = vs.map(() => 1/vs.length)
+      let p = (e,b,er,m) => randFunction(m, e, b, state)
+      return piecewise(vs, is, ss, p)
     }
   }
 
