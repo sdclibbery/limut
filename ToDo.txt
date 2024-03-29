@@ -227,7 +227,8 @@ shadertoy synth multiple channels
 BREAKING CHANGES
   No more rand aggregator; replace with (1,2,3,4).(rand*4)
 Syntax for piecewise functions with lookup
- [ v1:i1s1, v2:i2s2 ] p
+ Try [ []r ]l@f
+ Can [1:4]r parse as [1:/,4]r etc? [ v1:i1s1, v2:i2s2 ] p
  vn - expression giving the value of that piece
  in - "comma operator" giving the interpolation curve  to the next value
       some predefined like ,- for step, ,/ for linear etc
