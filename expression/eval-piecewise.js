@@ -44,6 +44,8 @@ define(function(require) {
       let l = vs[idx % vs.length]
       let r = vs[(idx+1) % vs.length]
       let interp = is[idx % is.length](piece%1)
+      if (interp <= 0) { return l }
+      if (interp >= 1) { return r }
       let result = lerpValue(interp, l, r)
       return result
     }

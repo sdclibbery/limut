@@ -217,13 +217,13 @@ define(function(require) {
   assert(1, evalParamFrame(p,ev(2,2),2))
 
   p = parseExpression('[1,(2,3)]')
-  assert([1,1], evalParamFrame(p,ev(0,0),0))
+  assert(1, evalParamFrame(p,ev(0,0),0))
   assert([2,3], evalParamFrame(p,ev(1,1),1))
 
   p = parseExpression('[(1,2,3),4,(5,6)]')
   assert([1,2,3], evalParamFrame(p,ev(0,0),0))
-  assert([4,4], evalParamFrame(p,ev(1,1),1))
-  assert([5,6,5], evalParamFrame(p,ev(2,2),2))
+  assert(4, evalParamFrame(p,ev(1,1),1))
+  assert([5,6], evalParamFrame(p,ev(2,2),2))
   assert([1,2,3], evalParamFrame(p,ev(3,3),3))
 
   assert(3, parseExpression('1+2'))
@@ -294,7 +294,7 @@ define(function(require) {
   assert([1,3], evalParamFrame(p,ev(2,2),2))
 
   p = parseExpression('[0,(1,2)]l2@f')
-  assert([0,0], evalParamFrame(p,ev(0,0),0))
+  assert(0, evalParamFrame(p,ev(0,0),0))
   assert([0.5,1], evalParamFrame(p,ev(1,1),1))
   assert([1,2], evalParamFrame(p,ev(2,2),2))
 
@@ -972,7 +972,7 @@ define(function(require) {
   vars.red = parseExpression("{r:1}")
   vars.green = parseExpression("{g:1}")
   p = parseExpression("[red,green]l1")
-  assert({g:1,r:0}, evalParamFrame(p,ev(1,1),1))
+  assert({g:1}, evalParamFrame(p,ev(1,1),1))
   assert({r:1/2,g:1/2}, evalParamFrame(p,ev(1,1/2),1/2))
   delete vars.red
   delete vars.green
@@ -1352,6 +1352,10 @@ define(function(require) {
 
   p = parseExpression("[0:0,0:0,0:0,0:0,0:0,1:1]r")
   assertNotEqual(0, evalParamFrame(p, ev(0,0,1), 0))
+
+  p = parseExpression("[(),2]t1")
+  assert([], evalParamFrame(p, ev(0,0,1), 0))
+  assert(2, evalParamFrame(p, ev(1,1,1), 1))
 
   console.log('Parse expression tests complete')
   }
