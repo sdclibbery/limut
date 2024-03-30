@@ -5,7 +5,6 @@ define(function(require) {
 
   let step = () => 0
   let linear = (i) => i
-  let smooth = (i) => i*i*(3-2*i) // bezier ease in/out
 
   let rangeTimeVar = (vs, ds) => {
     let lo = vs[0] || 0
@@ -24,30 +23,11 @@ define(function(require) {
     return result
   }
 
-  let timeVar = (vs, is, ss, ds) => {
-    if (vs.separator == ':') {
-      return rangeTimeVar(vs, ds)
-    }
+  let timeVar = (vs, is, ss, ds, defaultI) => {
     if (!Array.isArray(ds)) { ds = [ds] }
-    is = is.map(i => i || step)
+    is = is.map(i => i || defaultI)
     ss = ss.map((s,idx) => s!==undefined ? s : ds[idx % ds.length])
     return piecewise(vs, is, ss, (e,b) => b)
-  }
-
-  let linearTimeVar = (vs, is, ss, ds) => {
-    if (!Array.isArray(ds)) { ds = [ds] }
-    is = is.map(i => i || linear)
-    ss = ss.map((s,idx) => s!==undefined ? s : ds[idx % ds.length])
-    let p = (e,b) => b
-    return piecewise(vs, is, ss, p)
-  }
-
-  let smoothTimeVar = (vs, is, ss, ds) => {
-    if (!Array.isArray(ds)) { ds = [ds] }
-    is = is.map(i => i || smooth)
-    ss = ss.map((s,idx) => s!==undefined ? s : ds[idx % ds.length])
-    let p = (e,b) => b
-    return piecewise(vs, is, ss, p)
   }
 
   let eventTimeVar = (vs, is, ss, ds) => {
@@ -137,8 +117,7 @@ define(function(require) {
 
   return {
     timeVar: timeVar,
-    linearTimeVar: linearTimeVar,
-    smoothTimeVar: smoothTimeVar,
+    rangeTimeVar: rangeTimeVar,
     eventTimeVar: eventTimeVar,
   }
 })

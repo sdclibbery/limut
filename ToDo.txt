@@ -224,20 +224,17 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Syntax for piecewise functions with lookup [ v1:i1s1, v2:i2s2 ]{p}
- Can [1:4]r parse as [1:/,4]r etc to replace legacy parsing?
-  And same for [:]t and [:]l and [:]e ?
- Tidy up refactor in parse-piecewise, eval-timevars, eval-randoms etc
-  ? Roll eval-timevars into parse-piecewise?? what about eval-randoms then?
  Global 'time' var should be (e,b)=>b instead of just a number? Then modifiers could affect it...
   Also should have  this.time  as  (e,b)=>b-e.count
- Big regression test; aggregators, blend min/max, rand, timevars, randoms, piecewise, modifiers, compose stuff with visuals
+ Big regression test; aggregators, blend min/max, rand, timevars, time, randoms, piecewise, modifiers, compose stuff with visuals
  Docs for new syntax and breaking changes
+  In []r, specifically mention the [1:4,2]r syntax for changing the probabilities
  Release
   BREAKING CHANGES
     No more rand aggregator; replace with (1,2,3,4).(rand*4)
+Time values: 150ms parses into a per-event function that returns 0.15s in beats?
 Random rewrite to use piecewise
  []n:  []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
-Time values: 150ms parses into a per-event function that returns 0.15s in beats?
 Allow non const step sizes in piecewise?
 "time" modifier allowing user defined time manipulation
 Voice leading

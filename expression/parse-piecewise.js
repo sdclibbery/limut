@@ -3,7 +3,7 @@ define(function(require) {
   let eatWhitespace = require('expression/eat-whitespace')
   let {hoistInterval,parseInterval,setInterval} = require('expression/intervals')
   let {parseRandom, simpleNoise} = require('expression/eval-randoms')
-  let {timeVar, linearTimeVar, smoothTimeVar, eventTimeVar} = require('expression/eval-timevars')
+  let {timeVar, rangeTimeVar, linearTimeVar, smoothTimeVar, eventTimeVar} = require('expression/eval-timevars')
   let addModifiers = require('expression/time-modifiers').addModifiers
   let parseMap = require('expression/parse-map')
   let parseArray = require('expression/parse-array')
@@ -91,7 +91,11 @@ define(function(require) {
       let ds = numberOrArrayOrFour(state)
       let modifiers = parseMap(state)
       is = is.map(i => iOperators[i])
-      result = timeVar(vs, is, ss, ds)
+      if (vs.separator == ':') {
+        result = rangeTimeVar(vs, ds)
+      } else {
+        result = timeVar(vs, is, ss, ds, iOperators['_'])
+      }
       result = addModifiers(result, modifiers)
       let interval = parseInterval(state) || hoistInterval('event', vs)
       setInterval(result, interval)
@@ -100,7 +104,7 @@ define(function(require) {
       let ds = numberOrArrayOrFour(state)
       let modifiers = parseMap(state)
       is = is.map(i => iOperators[i])
-      result = linearTimeVar(vs, is, ss, ds)
+      result = timeVar(vs, is, ss, ds, iOperators['/'])
       result = addModifiers(result, modifiers)
       let interval = parseInterval(state) || hoistInterval('event', vs)
       setInterval(result, interval)
@@ -109,7 +113,7 @@ define(function(require) {
       let ds = numberOrArrayOrFour(state)
       let modifiers = parseMap(state)
       is = is.map(i => iOperators[i])
-      result = smoothTimeVar(vs, is, ss, ds)
+      result = timeVar(vs, is, ss, ds, iOperators['~'])
       result = addModifiers(result, modifiers)
       let interval = parseInterval(state) || hoistInterval('event', vs)
       setInterval(result, interval)
