@@ -232,6 +232,7 @@ Syntax for piecewise functions with lookup [ v1:i1s1, v2:i2s2 ]{p}
  Release
   BREAKING CHANGES
     No more rand aggregator; replace with (1,2,3,4).(rand*4)
+    L, E and S timevars and R randoms handle chord lerping slightly differently[0,(1,2)]l now gives 0 not (0,0) at time 0
 Time values: 150ms parses into a per-event function that returns 0.15s in beats?
 Random rewrite to use piecewise
  []n:  []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
