@@ -1168,6 +1168,14 @@ define(function(require) {
   assert(0.31159096606000625, evalParamFrame(parseExpression("[0:1]n{per:2,seed:10}"),ev(0,1,1),1))
   assert([0.1989616905192142, 0.31159096606000625], evalParamFrame(parseExpression("[0:1]n{per:2,seed:(0,10)}"),ev(0,1,1),1))
 
+  p = parseExpression('([0:1]l4@f){per:1}')
+  assert(0, evalParamFrame(p,ev(0,0),0))
+  assert(0, evalParamFrame(p,ev(1,1),1))
+  assert(0, evalParamFrame(p,ev(2,2),2))
+
+  assert(100, evalParamFrame(parseExpression("[0:1]l4{per:4,0:100}@f"),ev(0,0,4),0))
+  assert(1/4, evalParamFrame(parseExpression("[0:1]l4{per:4,0:100}@f"),ev(0,0,4),1))
+
   assert(64, evalParamFrame(parseExpression("2^3^2"),ev(0,0,0),0))
   assert(2, evalParamFrame(parseExpression("{a:{b:2}}.a.b"),ev(0,0,0),0))
   assert(2, evalParamFrame(parseExpression("{a:2} . a"),ev(0,0,0),0))
@@ -1264,10 +1272,10 @@ define(function(require) {
   assert(evalParamFrame(p, e, 0), evalParamFrame(p, e, 1))
   assert(evalParamFrame(p, e, 1), evalParamFrame(p, e, 2))
 
-  let testEvent = ev(0,0)
+  e = ev(0,0)
   p = parseExpression("[]r")
-  r = evalParamFrame(p,testEvent,0)
-  assert(r, evalParamFrame(p,testEvent,Math.random()))
+  r = evalParamFrame(p,e,0)
+  assert(r, evalParamFrame(p,e,Math.random()))
   assertNotEqual(r, evalParamFrame(p,ev(0,0),0)) // different values for new events
 
   p = parseExpression("[]r2")
@@ -1283,16 +1291,21 @@ define(function(require) {
   assert(3/2, evalParamFrame(p, evt(), 0))
   assertIsSameEveryTime((x) => evalParamFrame(p, evt(), 0+x*2))
 
-  p = parseExpression('([0:1]l4@f){per:1}')
-  assert(0, evalParamFrame(p,ev(0,0),0))
-  assert(0, evalParamFrame(p,ev(1,1),1))
-  assert(0, evalParamFrame(p,ev(2,2),2))
+  p = parseExpression("[ (1,2).1 ]{0}")
+  assert(2, evalParamFrame(p, evt(0,0,1), 0))
+  assert(2, evalParamFrame(p, evt(1,1,1), 1))
 
-  assert(100, evalParamFrame(parseExpression("[0:1]l4{per:4,0:100}@f"),ev(0,0,4),0))
-  assert(1/4, evalParamFrame(parseExpression("[0:1]l4{per:4,0:100}@f"),ev(0,0,4),1))
+  p = parseExpression("[ [1,2]t1 ]{0}")
+  assert(1, evalParamFrame(p, evt(0,0,1), 0))
+  assert(2, evalParamFrame(p, evt(1,1,1), 1))
+  assert(1, evalParamFrame(p, evt(2,2,1), 2))
 
-  // Tests for vs being expressions
-
+  p = parseExpression("[ [1,2]t1/4@f ]{0}")
+  assert(1, evalParamFrame(p, evt(0,0,1), 0))
+  assert(2, evalParamFrame(p, evt(0,0,1), 1/4))
+  assert(1, evalParamFrame(p, evt(0,0,1), 1/2))
+  assert(1, evalParamFrame(p, evt(1,1,1), 1))
+  
   // Tests for p beign an expression
   
   console.log('Parse expression tests complete')

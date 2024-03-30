@@ -221,28 +221,15 @@ shadertoy synth multiple channels
 // subparams {2,mix:1/2}, presets, buses, buffers
 !!!!Remember to update breaking changes link on this page when doing a release!!!!
 
-
-
--  p = parseExpression('([0:1]l4@f){per:1}')
-+  p = parseExpression('[0:1]l4{per:1}@f')
-   assert(0, evalParamFrame(p,ev(0,0),0))
-   assert(0, evalParamFrame(p,ev(1,1),1))
-+  assert(0, evalParamFrame(p,ev(2,2),2))
-
-
--  assert(100, evalParamFrame(parseExpression("[0:1]l4{per:4,0:100}@f"),ev(0,0,4),0))
--  assert(1/4, evalParamFrame(parseExpression("[0:1]l4{per:4,0:100}@f"),ev(0,0,4),1))
-
-
-
-
 ====
 ==== other ====
 Syntax for piecewise functions with lookup [ v1:i1s1, v2:i2s2 ]{p}
  More tests at bottom of parse-expression
+ Mixed syntax eg  [0:/1/8,1:\1/4,1/2:-1:\1/4,0]e  or  [0:/6,1:\2]t
  Tidy up refactor in parse-piecewise, eval-timevars, eval-randoms etc
  ? Roll eval-timevars into parse-piecewise??
  Global 'time' var should be (e,b)=>b instead of just a number? Then modifiers could affect it...
+  Also should have  this.time  as  (e,b)=>b-e.count
  Big regression test; aggregators, blend min/max, rand, timevars, randoms, piecewise, modifiers, compose stuff with visuals
  Docs for new syntax and breaking changes
  Release
