@@ -1321,6 +1321,38 @@ define(function(require) {
   assert(2, evalParamFrame(p, evt(0,0,1), 1/2))
   assert(2, evalParamFrame(p, evt(1,1,1), 1))
   
+  p = parseExpression("[0:/3,3:\\1]t")
+  assert(0, evalParamFrame(p, evt(0,0,1), 0))
+  assert(1, evalParamFrame(p, evt(1,1,1), 1))
+  assert(2, evalParamFrame(p, evt(2,2,1), 2))
+  assert(3, evalParamFrame(p, evt(3,3,1), 3))
+  assert(0, evalParamFrame(p, evt(4,4,1), 4))
+
+  p = parseExpression("[0:3,3:1]l")
+  assert(0, evalParamFrame(p, evt(0,0,1), 0))
+  assert(1, evalParamFrame(p, evt(1,1,1), 1))
+  assert(2, evalParamFrame(p, evt(2,2,1), 2))
+  assert(3, evalParamFrame(p, evt(3,3,1), 3))
+  assert(0, evalParamFrame(p, evt(4,4,1), 4))
+
+  p = parseExpression("[0:/3,3:1]s")
+  assert(0, evalParamFrame(p, evt(0,0,1), 0))
+  assert(1, evalParamFrame(p, evt(1,1,1), 1))
+  assert(2, evalParamFrame(p, evt(2,2,1), 2))
+  assert(3, evalParamFrame(p, evt(3,3,1), 3))
+  assert(0, evalParamFrame(p, evt(4,4,1), 4))
+
+  p = parseExpression("[0:3,3]e")
+  e = ev(0,0,4)
+  assert(0, evalParamFrame(p, e, 0))
+  assert(1, evalParamFrame(p, e, 1))
+  assert(2, evalParamFrame(p, e, 2))
+  assert(3, evalParamFrame(p, e, 3))
+  assert(3, evalParamFrame(p, e, 4))
+
+  p = parseExpression("[0:0,0:0,0:0,0:0,0:0,1:1]r")
+  assertNotEqual(0, evalParamFrame(p, ev(0,0,1), 0))
+
   console.log('Parse expression tests complete')
   }
 

@@ -8,19 +8,20 @@ define(function(require) {
   let step = () => 0
   let linear = (i) => i
 
-  let parseRandom = (vs) => {
+  let parseRandom = (vs, is, ss) => {
     let state = {} // Create a state store for this parse instance
     if (vs.length == 0) { // Default to random between 0 and 1
-      let p = (e,b,er,m) => randFunction(m, e, b, state)
-      return piecewise([0,1], [linear,step], [1,0], p)
+      return (e,b,er,m) => randFunction(m, e, b, state)
     } else if (vs.separator == ':') { // Range syntax
       let lo = param(vs[0], 0)
       let hi = param(vs[1], 1)
       let p = (e,b,er,m) => randFunction(m, e, b, state)
       return piecewise([lo, hi], [linear, step], [1,0], p)
     } else { // Choose from a list
-      let is = vs.map(() => step)
-      let ss = vs.map(() => 1/vs.length)
+      is = is.map(i => i || step)
+      ss = ss.map(s => s!==undefined ? s : 1)
+      let total = ss.reduce((a, x) => a + x, 0)
+      ss = ss.map(s => s/total) // Normalise sizes
       let p = (e,b,er,m) => randFunction(m, e, b, state)
       return piecewise(vs, is, ss, p)
     }
@@ -115,19 +116,19 @@ define(function(require) {
       return vs
     }
 
-    p = parseRandom([])
+    p = parseRandom([], [], [])
     assertIsInRangeEveryTime(0,1, () => evalParamFrame(p,ev(0),0))
     
-    p = parseRandom([3,5])
+    p = parseRandom([3,5], [undefined,undefined], [undefined,undefined])
     assertIs1OfEveryTime([3,5], () => evalParamFrame(p,ev(0),0))
 
-    p = parseRandom(range(3,5))
+    p = parseRandom(range(3,5), [undefined,undefined], [undefined,undefined])
     assertIsInRangeEveryTime(3,5, () => evalParamFrame(p,ev(0),0))
 
-    p = parseRandom(range(5,3))
+    p = parseRandom(range(5,3), [undefined,undefined], [undefined,undefined])
     assertIsInRangeEveryTime(3,5, () => evalParamFrame(p,ev(0),0))
 
-    p = parseRandom(range(3))
+    p = parseRandom(range(3), [undefined], [undefined])
     assertIsInRangeEveryTime(0,3, () => evalParamFrame(p,ev(0),0))
 
     // Give correct value even when evalled out of time order
@@ -136,11 +137,11 @@ define(function(require) {
     assertIsDifferentEveryTime((i) => evalParamFrame(p,ev(i/4),i/4))
 
     // Non fixed value when not seeded
-    p = parseRandom([], undefined, {})
+    p = parseRandom([], [], [])
     assertNotEqual(0.3853306171949953, evalParamFrame(p,ev(0),0))
 
     // Same sequence every time when seeded
-    p = parseRandom([])
+    p = parseRandom([], [], [])
     p.modifiers = {seed:1}
     assert(0.3853306171949953, evalParamFrame(p,ev(0),0))
     assert(0.5050126616843045, evalParamFrame(p,ev(1/4),1/4))
@@ -152,24 +153,24 @@ define(function(require) {
     assert(0.8467781520448625, evalParamFrame(p,ev(4),4))
 
     // Shifted sequence when bump seed
-    p = parseRandom([])
+    p = parseRandom([], [], [])
     p.modifiers = {seed:1}
     assert(0.3853306171949953, evalParamFrame(p,ev(0),0))
     assert(0.8534541970584542, evalParamFrame(p,ev(1),1))
     assert(0.35433487710542977, evalParamFrame(p,ev(2),2))
     assert(0.08498840616084635, evalParamFrame(p,ev(3),3))
-    p = parseRandom([])
+    p = parseRandom([], [], [])
     p.modifiers = {seed:2}
     assert(0.3672695131972432, evalParamFrame(p,ev(0),0))
     assert(0.3853306171949953, evalParamFrame(p,ev(1),1))
     assert(0.8534541970584542, evalParamFrame(p,ev(2),2))
     assert(0.35433487710542977, evalParamFrame(p,ev(3),3))
 
-    p = parseRandom([])
+    p = parseRandom([], [], [])
     p.modifiers = {seed:0}
     assertIsInRangeEveryTime(0,1, () => evalParamFrame(p,ev(0),0))
 
-    p = parseRandom([])
+    p = parseRandom([], [], [])
     p.modifiers = {seed:-100}
     assertIsInRangeEveryTime(0,1, () => evalParamFrame(p,ev(0),0))
 

@@ -90,7 +90,8 @@ define(function(require) {
       state.idx += 1
       let ds = numberOrArrayOrFour(state)
       let modifiers = parseMap(state)
-      result = timeVar(vs, ds)
+      is = is.map(i => iOperators[i])
+      result = timeVar(vs, is, ss, ds)
       result = addModifiers(result, modifiers)
       let interval = parseInterval(state) || hoistInterval('event', vs)
       setInterval(result, interval)
@@ -98,7 +99,8 @@ define(function(require) {
       state.idx += 1
       let ds = numberOrArrayOrFour(state)
       let modifiers = parseMap(state)
-      result = linearTimeVar(vs, ds)
+      is = is.map(i => iOperators[i])
+      result = linearTimeVar(vs, is, ss, ds)
       result = addModifiers(result, modifiers)
       let interval = parseInterval(state) || hoistInterval('event', vs)
       setInterval(result, interval)
@@ -106,10 +108,19 @@ define(function(require) {
       state.idx += 1
       let ds = numberOrArrayOrFour(state)
       let modifiers = parseMap(state)
-      result = smoothTimeVar(vs, ds)
+      is = is.map(i => iOperators[i])
+      result = smoothTimeVar(vs, is, ss, ds)
       result = addModifiers(result, modifiers)
       let interval = parseInterval(state) || hoistInterval('event', vs)
       setInterval(result, interval)
+    } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
+      state.idx += 1
+      let ds = numberOrArray(state)
+      let modifiers = parseMap(state)
+      is = is.map(i => iOperators[i])
+      result = eventTimeVar(vs, is, ss, ds)
+      result = addModifiers(result, modifiers)
+      setInterval(result, parseInterval(state) || hoistInterval('frame', vs))
     } else if (state.str.charAt(state.idx).toLowerCase() == 'r') { // random
       state.idx += 1
       let hold = number(state)
@@ -119,7 +130,8 @@ define(function(require) {
         modifiers.step = hold
         if (modifiers.seed === undefined) { modifiers.seed = Math.random()*99999 } // Must set a seed for hold, otherwise every event gets a different seed and the random isn't held across events
       }
-      result = parseRandom(vs)
+      is = is.map(i => iOperators[i])
+      result = parseRandom(vs, is, ss)
       result = addModifiers(result, modifiers)
       let interval = parseInterval(state) || hoistInterval('event', vs, modifiers)
       setInterval(result, interval)
@@ -131,13 +143,6 @@ define(function(require) {
       result = addModifiers(simpleNoise(vs, period), modifiers)
       let interval = parseInterval(state) || hoistInterval('frame', modifiers)
       setInterval(result, interval)
-    } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
-      state.idx += 1
-      let ds = numberOrArray(state)
-      let modifiers = parseMap(state)
-      result = eventTimeVar(vs, ds)
-      result = addModifiers(result, modifiers)
-      setInterval(result, parseInterval(state) || hoistInterval('frame', vs))
     } else { // Piecewise as a function not an expression
       is = is.map(i => iOperators[i || '/']) // Default to linear interpolation
       ss = ss.map(s => s!==undefined ? s : 1) // Default to size 1

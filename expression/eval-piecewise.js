@@ -30,7 +30,7 @@ define(function(require) {
     if (vs.length === 0) { return () => 0 }
     if (is.length !== vs.length) { throw `is.length ${is} !== vs.length ${vs}` }
     if (ss.length !== vs.length) { throw `ss.length ${ss} !== vs.length ${vs}` }
-    let totalSize = ss.reduce((a, x) => a + x, 0)
+    let totalSize = ss.reduce((a,x) => a+x, 0)
     if (!Number.isFinite(totalSize)) { throw `invalid piecewise totalSize: ${totalSize}` }
     let result = (e,b, evalRecurse, modifiers) => {
       if (modifiers && modifiers.seed !== undefined) {
