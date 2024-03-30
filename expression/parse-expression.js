@@ -1306,7 +1306,20 @@ define(function(require) {
   assert(1, evalParamFrame(p, evt(0,0,1), 1/2))
   assert(1, evalParamFrame(p, evt(1,1,1), 1))
   
-  // Tests for p beign an expression
+  p = parseExpression("[2,3]{ (0,1).3 }")
+  assert(3, evalParamFrame(p, evt(0,0,1), 0))
+  assert(3, evalParamFrame(p, evt(1,1,1), 1))
+  
+  p = parseExpression("[2,3]{ [0,1]t1 }")
+  assert(2, evalParamFrame(p, evt(0,0,1), 0))
+  assert(3, evalParamFrame(p, evt(1,1,1), 1))
+  assert(2, evalParamFrame(p, evt(2,2,1), 2))
+  
+  p = parseExpression("[2,3]{ [0,1]t1/4@f }")
+  assert(2, evalParamFrame(p, evt(0,0,1), 0))
+  assert(3, evalParamFrame(p, evt(0,0,1), 1/4))
+  assert(2, evalParamFrame(p, evt(0,0,1), 1/2))
+  assert(2, evalParamFrame(p, evt(1,1,1), 1))
   
   console.log('Parse expression tests complete')
   }

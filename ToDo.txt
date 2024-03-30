@@ -224,7 +224,6 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Syntax for piecewise functions with lookup [ v1:i1s1, v2:i2s2 ]{p}
- More tests at bottom of parse-expression
  Mixed syntax eg  [0:/1/8,1:\1/4,1/2:-1:\1/4,0]e  or  [0:/6,1:\2]t
  Tidy up refactor in parse-piecewise, eval-timevars, eval-randoms etc
  ? Roll eval-timevars into parse-piecewise??

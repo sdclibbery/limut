@@ -145,7 +145,7 @@ define(function(require) {
       if (modifiers === undefined) { modifiers = {value: (e,b) => e.idx} } // Default to index with event index
       if (modifiers.value === undefined) { modifiers.value = (e,b) => e.idx } // Default to index with event index
       result = addModifiers(piecewise(vs, is, ss, modifiers.value), modifiers)
-      setInterval(result, parseInterval(state) || hoistInterval('event', vs))
+      setInterval(result, parseInterval(state) || hoistInterval('event', vs, modifiers))
     }
     return result
   }
