@@ -546,6 +546,26 @@ define((require) => {
   assert(1, p.getEventsForBeat({count:0})[0].value)
   assert(1, p.getEventsForBeat({count:0})[0].value) // Same when call again for same beat
 
+  p = player('p', 'test', '0', 'x=this.time')
+  p.play(p.getEventsForBeat({time:1, count:1, duration:1}))
+  assert(-1, evalParamFrame(p.currentEvent(1)[0].x,ev(1,1,1),0))
+  assert(0, evalParamFrame(p.currentEvent(1)[0].x,ev(1,1,1),1))
+  assert(1/2, evalParamFrame(p.currentEvent(1)[0].x,ev(1,1,1),1.5))
+  assert(1, evalParamFrame(p.currentEvent(1)[0].x,ev(1,1,1),2))
+  assert(2, evalParamFrame(p.currentEvent(1)[0].x,ev(1,1,1),3))
+  p.play(p.getEventsForBeat({time:2, count:2, duration:1}))
+  assert(0, evalParamFrame(p.currentEvent(2)[0].x,ev(2,2,1),2))
+
+  p = player('p', 'test', '0', 'x=time')
+  p.play(p.getEventsForBeat({time:1, count:1, duration:1}))
+  assert(0, evalParamFrame(p.currentEvent(1)[0].x,ev(1,1,1),0))
+  assert(1, evalParamFrame(p.currentEvent(1)[0].x,ev(1,1,1),1))
+  assert(3/2, evalParamFrame(p.currentEvent(1)[0].x,ev(1,1,1),1.5))
+  assert(2, evalParamFrame(p.currentEvent(1)[0].x,ev(1,1,1),2))
+  assert(3, evalParamFrame(p.currentEvent(1)[0].x,ev(1,1,1),3))
+  p.play(p.getEventsForBeat({time:2, count:2, duration:1}))
+  assert(2, evalParamFrame(p.currentEvent(2)[0].x,ev(2,2,1),2))
+
   console.log('Player tests complete')
   }
   

@@ -33,11 +33,14 @@ define(function(require) {
 
     // Return a lookup function
     let state = {} // Create a state store for this parse instance
-    let result = (event,b, evalRecurse, modifiers) => {
+    let result
+    result = (event,b, evalRecurse, modifiers) => {
+      if (result.preferString && modifiers === undefined) { return key }
       let vr = vars.get(key)
       let v
+      let hasArgs = modifiers && modifiers.value !== undefined
       if (typeof vr === 'function' && vr.isVarFunction) { // Var function
-        if (vr.isDirectFunction || (modifiers && modifiers.value !== undefined)) {
+        if (vr.isDirectFunction || hasArgs) {
           v = vr(modifiers, event,b, state) // Call var function immediately as the value is in the modifiers
         } else if (modifiers) {
           v = Object.assign({}, modifiers) // Make modifiers available as other arguments, in case this turns out to be a var function

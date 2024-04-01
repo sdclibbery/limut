@@ -1,7 +1,15 @@
 'use strict'
 define(function(require) {
-  let addVar = require('predefined-vars').add
+  let {add,addVarFunction} = require('predefined-vars')
   let parseExpression = require('expression/parse-expression')
+  let {mainParam} = require('player/sub-param')
+
+  let timeFunc = (args,e,b) => {
+    if (typeof mainParam(args) === 'string' && mainParam(args).toLowerCase() === 'this') { return b - e.count }
+    return b
+  }
+  timeFunc.isDirectFunction = true
+  addVarFunction('time', timeFunc)
 
   let defs = {
     'drop4_4': parseExpression('[1,0]t[4,4]'),
@@ -75,5 +83,5 @@ define(function(require) {
       
     'wow': parseExpression('[-0.3:0.3]n2'),
   }
-  for (let k in defs) { addVar(k, defs[k]) }
+  for (let k in defs) { add(k, defs[k]) }
 })

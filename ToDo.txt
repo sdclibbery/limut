@@ -223,12 +223,18 @@ shadertoy synth multiple channels
 
 ====
 ==== other ====
+
 Syntax for piecewise functions with lookup [ v1:i1s1, v2:i2s2 ]{p}
  Global 'time' var should be (e,b)=>b instead of just a number? Then modifiers could affect it...
   Also should have  this.time  as  (e,b)=>b-e.count
+  !preferString should still return the object with _state set?
+  !this.time{per:1/2} does not work
+  ?Anywhere else benefit from preferString?? Can we make isDirectFunction the default??
+  ?Pull time func out to its own module?
  Big regression test; aggregators, blend min/max, rand, timevars, time, randoms, piecewise, modifiers, compose stuff with visuals
  Docs for new syntax and breaking changes
   In []r, specifically mention the [1:4,2]r syntax for changing the probabilities
+  Docs for time and this.time and this.idx
  Release
   BREAKING CHANGES
     No more rand aggregator; replace with (1,2,3,4).(rand*4)

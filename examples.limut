@@ -3747,4 +3747,11 @@ r readout, add=rand@e
 r readout, add=rand{step:1/2}
 r readout, add=rand{seed:0,per:1/2,step:1/8}
 r readout, add=rand{step:1/2,seed:2,per:1}
+// piecewise index by time test
+r readout, add=time
+r readout, dur=4, add=this.time
+r readout, dur=2, add=[1:/4,5:|0]{time}
+r readout, dur=2, add=[1:/4,5:|0]{this.time}
+r readout, dur=2, add=[1:/4,5:|0]{this.idx}
+r readout, add=[1:_,2:_]{time,per:3/2}
 

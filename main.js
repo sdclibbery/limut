@@ -1,18 +1,17 @@
 'use strict'
 define(function(require) {
   require('polyfills')
+  require('predefined-var-defs')
   require('functions/rand')
   require('functions/aggregators')
   require('functions/envelope')
   require('functions/maths')
   require('functions/sliders')
-  require('predefined-var-defs')
   let mainVars = require('main-vars')
   let system = require('play/system')
   let drawSystem = require('draw/system')
   let metronome = require('metronome')
   let players = require('player/players')
-  let vars = require('vars')
   let consoleOut = require('console')
   require('editor-textarea')
   require('editor-codemirror')
@@ -114,7 +113,6 @@ define(function(require) {
     let beatTime = metronome.beatTime(now)
     let spectrum = system.spectrum()
     let pulse = spectrum[0]*spectrum[0] + spectrum[3]*spectrum[3]
-    vars.set('time', beatTime)
     if (beat) {
       mainVars.update(Math.floor(beatTime), beatTime)
       beatReadout.innerText = `${beat.count}`.padStart(4, ' ')

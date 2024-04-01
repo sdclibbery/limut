@@ -59,6 +59,9 @@ define(function(require) {
     if (isPrimitive(l) && isPrimitive(r)) {
       return op(l, r)
     }
+    if (op.preferStringRhs && typeof r ==='function') {
+      r.preferString = true
+    }
     let evalOp = (event,b,evalRecurse) => {
       let el = evalRecurse(l, event,b)
       let er = evalRecurse(r, event,b)
