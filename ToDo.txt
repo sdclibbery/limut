@@ -224,12 +224,11 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 
-Syntax for piecewise functions with lookup [ v1:i1s1, v2:i2s2 ]{p}
-  !preferString should still return the object with _state set?
-  ?Pull time func out to its own module?
 ?Also for refactor: have custom syntax parser for [:] instead of parse array  ?Anywhere else benefit from preferString?? Can we make isDirectFunction the default??
  Big regression test; aggregators, blend min/max, rand, timevars, time, randoms, piecewise, modifiers, compose stuff with visuals
- Docs for new syntax and breaking changes
+ Docs
+  New syntax [ v1:i1s1, v2:i2s2 ]{p}
+  Breaking changes
   In []r, specifically mention the [1:4,2]r syntax for changing the probabilities
   Docs for time and this.time and this.idx
  Release
