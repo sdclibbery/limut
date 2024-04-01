@@ -32,25 +32,27 @@ define(function(require) {
       }
     }
     if (typeof l === 'object') {
-      let result = l[r] // Map lookup
-      if (result === undefined && typeof r === 'number') { return l } // If numeric lookup failed, return the entire map. This is useful when a chord of objects optimises down to a single object but you still want to have an indexer on it.
+      let mr = mainParam(r)
+      let result = l[mr] // Map lookup
+      if (result === undefined && typeof mr === 'number') { return l } // If numeric lookup failed, return the entire map. This is useful when a chord of objects optimises down to a single object but you still want to have an indexer on it.
       return result
     }
     if (typeof l === 'string') {
+      let mr = mainParam(r)
       if (l.toLowerCase() === 'this') {
-        let v = event[r]
+        let v = event[mr]
         v = evalParamFrame(v, event,b) // Eval so that time modifiers get applied
         let result = (e,b,er) => v // Wrap into a function so we can set _thisVar to prevent doubling up of chords
         result._thisVar = true
         return result
       }
       let player = players.getById(l)
-      if (r === 'exists') { return !!player ? 1 : 0 }
+      if (mr === 'exists') { return !!player ? 1 : 0 }
       if (player) { // lookup a param on player events
         let originalB = evalRecurse((e,originalB) => originalB, event, b)
         let es = player.currentEvent(originalB)
-        if (r === 'playing') { return es.length>0 ? 1 : 0 }
-        let v = es.map(e => e[r])
+        if (mr === 'playing') { return es.length>0 ? 1 : 0 }
+        let v = es.map(e => e[mr])
         if (v.length === 0) { v = 0 }
         if (v.length === 1) { v = v[0] }
         return evalParamFrame(v, event,b) // Eval so that time modifiers get applied

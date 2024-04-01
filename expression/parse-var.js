@@ -35,7 +35,7 @@ define(function(require) {
     let state = {} // Create a state store for this parse instance
     let result
     result = (event,b, evalRecurse, modifiers) => {
-      if (result.preferString && modifiers === undefined) { return key }
+      if (result.preferString && modifiers === undefined) { return { value:key, _state:state, _modifiers:modifiers } }
       let vr = vars.get(key)
       let v
       let hasArgs = modifiers && modifiers.value !== undefined
@@ -49,7 +49,7 @@ define(function(require) {
         } else {
           v = {}
           v._state = state // Make state available to var function
-          v.value = key // If no modifiers, treat as a string value instead
+          v.value = key // If no modifiers/args, treat as a string value instead
         }
       } else if (mainVars.exists(key)) {
         throw `Reading main var ${key}`

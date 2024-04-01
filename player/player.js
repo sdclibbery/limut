@@ -566,6 +566,18 @@ define((require) => {
   p.play(p.getEventsForBeat({time:2, count:2, duration:1}))
   assert(2, evalParamFrame(p.currentEvent(2)[0].x,ev(2,2,1),2))
 
+  p = player('p', 'test', '0', 'x=time{per:1}')
+  p.play(p.getEventsForBeat({time:1, count:1, duration:1}))
+  assert(0, evalParamFrame(p.currentEvent(1)[0].x,ev(1,1,1),0))
+  assert(0, evalParamFrame(p.currentEvent(1)[0].x,ev(1,1,1),1))
+  assert(0, evalParamFrame(p.currentEvent(1)[0].x,ev(1,1,1),2))
+
+  p = player('p', 'test', '0', 'x=(this.time){per:1/2}')
+  p.play(p.getEventsForBeat({time:1, count:1, duration:1}))
+  assert(0, evalParamFrame(p.currentEvent(1)[0].x,ev(1,1,1),1))
+  assert(0.25, evalParamFrame(p.currentEvent(1)[0].x,ev(1,1,1),1.25))
+  assert(0, evalParamFrame(p.currentEvent(1)[0].x,ev(1,1,1),1.5))
+
   console.log('Player tests complete')
   }
   

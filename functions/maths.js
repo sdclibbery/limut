@@ -115,8 +115,8 @@ define(function(require) {
   assert([1,2], evalParamFrame(parseExpression("floor{(1.5,2.5)}"),ev(0,0,0),0))
   assert(1, evalParamFrame(parseExpression("1.5 .floor"),ev(0,0,0),0))
   assert(1.25, evalParamFrame(parseExpression("(1.3).floor{to:1/4}"),ev(0,0,0),0))
-  // assert([1,2], evalParamFrame(parseExpression("(1.5,2.5).floor"),ev(0,0,0),0))
-  // assert([4/3,7/3], evalParamFrame(parseExpression("(1.5,2.5).floor{to:1/3}"),ev(0,0,0),0))
+  assert([1,2], evalParamFrame(parseExpression("(1.5,2.5).floor"),ev(0,0,0),0))
+  assert([4/3,7/3], evalParamFrame(parseExpression("(1.5,2.5).floor{to:1/3}"),ev(0,0,0),0))
   assert(2.5, evalParamFrame(parseExpression("(1.5,2.5).floor{1.5}"),ev(0,0,0),0))
 
   assert(2, evalParamFrame(parseExpression('ceil{1.5}'), ev(0,0), 0))
