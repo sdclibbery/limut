@@ -8,15 +8,18 @@ define(function(require) {
   let step = () => 0
   let linear = (i) => i
 
+  let parseRangedRandom = (vs, is, ss) => {
+    let state = {} // Create a state store for this parse instance
+    let lo = param(vs[0], 0)
+    let hi = param(vs[1], 1)
+    let p = (e,b,er,m) => randFunction(m, e, b, state)
+    return piecewise([lo, hi], [linear, step], [1,0], p)
+  }
+
   let parseRandom = (vs, is, ss) => {
     let state = {} // Create a state store for this parse instance
     if (vs.length == 0) { // Default to random between 0 and 1
       return (e,b,er,m) => randFunction(m, e, b, state)
-    } else if (vs.separator == ':') { // Range syntax
-      let lo = param(vs[0], 0)
-      let hi = param(vs[1], 1)
-      let p = (e,b,er,m) => randFunction(m, e, b, state)
-      return piecewise([lo, hi], [linear, step], [1,0], p)
     } else { // Choose from a list
       is = is.map(i => i || step)
       ss = ss.map(s => s!==undefined ? s : 1)
@@ -110,11 +113,6 @@ define(function(require) {
     let {evalParamFrame} = require('player/eval-param')
     let ev = (c) => {return{count:c}}
     let p, r
-    let range = (lo,hi) => {
-      let vs = [lo,hi]
-      vs.separator = ':'
-      return vs
-    }
 
     p = parseRandom([], [], [])
     assertIsInRangeEveryTime(0,1, () => evalParamFrame(p,ev(0),0))
@@ -122,17 +120,17 @@ define(function(require) {
     p = parseRandom([3,5], [undefined,undefined], [undefined,undefined])
     assertIs1OfEveryTime([3,5], () => evalParamFrame(p,ev(0),0))
 
-    p = parseRandom(range(3,5), [undefined,undefined], [undefined,undefined])
+    p = parseRangedRandom([3,5], [undefined,undefined], [undefined,undefined])
     assertIsInRangeEveryTime(3,5, () => evalParamFrame(p,ev(0),0))
 
-    p = parseRandom(range(5,3), [undefined,undefined], [undefined,undefined])
+    p = parseRangedRandom([5,3], [undefined,undefined], [undefined,undefined])
     assertIsInRangeEveryTime(3,5, () => evalParamFrame(p,ev(0),0))
 
-    p = parseRandom(range(3), [undefined], [undefined])
+    p = parseRangedRandom([3], [undefined], [undefined])
     assertIsInRangeEveryTime(0,3, () => evalParamFrame(p,ev(0),0))
 
     // Give correct value even when evalled out of time order
-    p = parseRandom(range(-1,1), 1/4)
+    p = parseRangedRandom([-1,1], 1/4)
     evalParamFrame(p,ev(1),1) // equivalent to a later event being evalled per event
     assertIsDifferentEveryTime((i) => evalParamFrame(p,ev(i/4),i/4))
 
@@ -200,6 +198,7 @@ define(function(require) {
 
   return {
     parseRandom: parseRandom,
+    parseRangedRandom: parseRangedRandom,
     simpleNoise: simpleNoise,
   }
 })

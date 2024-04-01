@@ -1,19 +1,18 @@
 'use strict';
 define(function(require) {
-  let eatWhitespace = require('expression/eat-whitespace')
 
-  let doArray = (state, open, close, separator) => {
+  let array = (state, open, close) => {
     let result = []
     let char
     if (state.str.charAt(state.idx) !== open) {
-      return undefined
+      return []
     }
     while (char = state.str.charAt(state.idx)) {
       if (char == open) {
         state.idx += 1
         let v = state.expression(state)
         if (v !== undefined) { result.push(v) }
-      } else if (char == separator) {
+      } else if (char == ',') {
         state.idx += 1
         let v = state.expression(state)
         if (v !== undefined) { result.push(v) }
@@ -21,24 +20,10 @@ define(function(require) {
         state.idx += 1
         break
       } else {
-        return undefined
+        return []
       }
     }
     return result
-  }
-
-  let array = (state, open, close) => {
-    let tryState = Object.assign({}, state)
-    let commaArray = doArray(tryState, open, close, ',')
-    if (commaArray != undefined) {
-      Object.assign(state, tryState)
-      commaArray.separator = ','
-      return commaArray
-    }
-    let colonArray = doArray(state, open, close, ':')
-    if (colonArray == undefined) { return [] }
-    colonArray.separator = ':'
-    return colonArray
   }
 
   // TESTS
@@ -57,11 +42,6 @@ define(function(require) {
     assert([], array({str:'a',idx:0,expression:number}, '[', ']'))
     assert([1], array({str:'[1]',idx:0,expression:number}, '[', ']'))
     assert([1,2,3], array({str:'[1,2,3]',idx:0,expression:number}, '[', ']'))
-    assert([1,2,3], array({str:'[1:2:3]',idx:0,expression:number}, '[', ']'))
-    assert(',', array({str:'[1,2]',idx:0,expression:number}, '[', ']').separator)
-    assert(':', array({str:'[1:2]',idx:0,expression:number}, '[', ']').separator)
-    assert([], array({str:'[1,2:3]',idx:0,expression:number}, '[', ']'))
-    assert([1,2,3], array({str:'[1:2:3]',idx:0,expression:number}, '[', ']'))
     assert([1,2,3], array({str:'(1,2,3)',idx:0,expression:number}, '(', ')'))
     assert([], array({str:'[1,2,3]',idx:0,expression:number}, '(', ')'))
     assert([1,2,3], array({str:'[1,2,3',idx:0,expression:number}, '[', ']'))

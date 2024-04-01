@@ -224,7 +224,7 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 
-?Also for refactor: have custom syntax parser for [:] instead of parse array  ?Anywhere else benefit from preferString?? Can we make isDirectFunction the default??
+Syntax for piecewise functions with lookup 
  Big regression test; aggregators, blend min/max, rand, timevars, time, randoms, piecewise, modifiers, compose stuff with visuals
  Docs
   New syntax [ v1:i1s1, v2:i2s2 ]{p}

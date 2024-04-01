@@ -2,13 +2,13 @@
 define(function(require) {
   let eatWhitespace = require('expression/eat-whitespace')
   let {hoistInterval,parseInterval,setInterval} = require('expression/intervals')
-  let {parseRandom, simpleNoise} = require('expression/eval-randoms')
-  let {timeVar, rangeTimeVar, linearTimeVar, smoothTimeVar, eventTimeVar} = require('expression/eval-timevars')
+  let {parseRandom, parseRangedRandom, simpleNoise} = require('expression/eval-randoms')
+  let {timeVar, rangeTimeVar, eventTimeVar} = require('expression/eval-timevars')
   let addModifiers = require('expression/time-modifiers').addModifiers
   let parseMap = require('expression/parse-map')
-  let parseArray = require('expression/parse-array')
   let number = require('expression/parse-number')
   let {piecewise} = require('expression/eval-piecewise')
+  let parseArray = require('expression/parse-array')
 
   let iOperators = {
     '_': (i) => 0, // step
@@ -74,12 +74,39 @@ define(function(require) {
     return (n !== undefined) ? n : 4
   }
 
+  let parseRangeArray = (state) => {
+    let result = []
+    let char
+    let colons = 0
+    if (state.str.charAt(state.idx) !== '[') { return undefined }
+    state.idx += 1
+    let v = state.expression(state)
+    if (v !== undefined) { result.push(v) }
+    while (char = state.str.charAt(state.idx)) {
+      if (char == ':') {
+        if (result.length > 2) { return undefined }
+        state.idx += 1
+        let v = state.expression(state)
+        if (v !== undefined) { result.push(v) }
+        colons += 1
+      } else if (char == ']') {
+        state.idx += 1
+        break
+      } else {
+        return undefined
+      }
+    }
+    if (colons === 0) { return undefined } // Must have had a colon for it to be a ranged array
+    return result
+  }
+
   let parsePiecewise = (state) => {
     if (state.str.charAt(state.idx) !== '[') { return undefined }
     let rState = Object.assign({}, state)
-    let rvs = parseArray(rState, '[', ']')
+    let rvs = parseRangeArray(rState)
     let {vs,is,ss} = parsePiecewiseArray(state)
-    if (rvs.separator === ':') { // Use parseArray to keep old style [1:4] range syntax going
+    let ranged = rvs !== undefined
+    if (ranged) { // Use parseRangeArray to keep old style [1:4] range syntax going
       Object.assign(state, rState)
       vs = rvs
       is = rvs.map(() => undefined)
@@ -91,7 +118,7 @@ define(function(require) {
       let ds = numberOrArrayOrFour(state)
       let modifiers = parseMap(state)
       is = is.map(i => iOperators[i])
-      if (vs.separator == ':') {
+      if (ranged) {
         result = rangeTimeVar(vs, ds)
       } else {
         result = timeVar(vs, is, ss, ds, iOperators['_'])
@@ -135,7 +162,11 @@ define(function(require) {
         if (modifiers.seed === undefined) { modifiers.seed = Math.random()*99999 } // Must set a seed for hold, otherwise every event gets a different seed and the random isn't held across events
       }
       is = is.map(i => iOperators[i])
-      result = parseRandom(vs, is, ss)
+      if (ranged) {
+        result = parseRangedRandom(vs, is, ss)
+      } else {
+        result = parseRandom(vs, is, ss)
+      }
       result = addModifiers(result, modifiers)
       let interval = parseInterval(state) || hoistInterval('event', vs, modifiers)
       setInterval(result, interval)
