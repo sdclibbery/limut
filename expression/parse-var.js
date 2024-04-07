@@ -37,7 +37,9 @@ define(function(require) {
     result = (event,b, evalRecurse, modifiers) => {
       let hasArgs = modifiers && modifiers.value !== undefined
       if (result.preferString && !hasArgs) { // Requested to return a string instead of calling varfunc where possible
-        return { value:key, _state:state, _modifiers:modifiers }
+        let r = { value:key, _state:state }
+        if (modifiers !== undefined) { r._modifiers = modifiers }
+        return r
       }
       let vr = vars.get(key)
       let v

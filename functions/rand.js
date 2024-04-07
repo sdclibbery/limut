@@ -14,6 +14,8 @@ define(function(require) {
   }
 
   let rand = (args, e,b,state) => {
+    let arr = (typeof args === 'object' && args.value) || args
+    if (Array.isArray(arr)) { return arr[Math.floor(Math.random()*arr.length)] } // Aggregator; but Needs to use proper rand algo with seed etc; needs tests for this
     let seed = args && args.seed
     if (seed === undefined) {
       if (state.perParseSeed === undefined) {
@@ -27,6 +29,7 @@ define(function(require) {
     return xmur3(b - seed) / 4294967296
   }
   rand.isDirectFunction = true
+  rand._isAggregator = true
   addVarFunction('rand', rand)
 
   // TESTS // - Tests for rand function are in parse-expression

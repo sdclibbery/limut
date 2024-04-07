@@ -1503,7 +1503,7 @@ set scale=minor
 kd play x.
 set main amp=4
 set ch=[0,3,-2,-1]t16
-db dbass 0-7, dur=1/2, lpf={[100:[300:1000]n8@e,3000]e,q:[5,[10:30]l32]n1/4@f}, att=0, addc=wow, sus=1/2, rel=1, add=ch, amp=1+wow
+db dbass 0-7, dur=1/2, lpf={[[300:1000]n8@e,200]e,q:[5,[10:30]l32]n1/4@f}, att=0, addc=wow, sus=1/2, rel=1, add=ch, amp=1+wow
 ds dsaw 0[23]4_, dur=[3,3,2]*2, lpf=[100:[700:5000]s8]e, addc=wow, oct=(3,4), phaser=1/3, echo=1, room=0.7, add=ch, amp=1+wow
 dsf prophet follow ds
 no noise 0, dur=4, amp=[.05:.1]n19@f, hpf=[4000:8000]n23@f

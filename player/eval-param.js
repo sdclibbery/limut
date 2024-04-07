@@ -25,10 +25,10 @@ define((require) => {
     if (override !== undefined) { return override }
     let originalCount = event.count
     event.count = results.modCount
-    let result = value(event, results.modBeat, (v,e,b) => {
+    let result = value(event, results.modBeat, (v,e,b,o) => {
       let oldEc = e.count
       e.count = originalCount
-      let result = evalRecurse(v, e, beat)
+      let result = evalRecurse(v, e, beat,o)
       e.count = oldEc
       return result
     }, mods)
@@ -54,13 +54,14 @@ define((require) => {
     return result
   }
 
-  let evalParamValueForMemoisation = (evalRecurse, value, event, beat, {ignoreThisVars,evalToObjectOrPrimitive}) => {
+  let evalParamValueForMemoisation = (evalRecurse, value, event, beat, {ignoreThisVars,evalToObjectOrPrimitive,preferString}) => {
     if (Array.isArray(value)) { // chord, eval individual values
       let v = value.map(v => evalRecurse(v, event, beat))
       v = v.flat()
       return v
     } else if (typeof value == 'function') { // Call function to get current value
       if (ignoreThisVars && value._thisVar) { return 0 } // return 0 to hold a place in a chord
+      if (preferString) { value.preferString = true }
       let v = evalFunctionWithModifiers(value, event, beat, evalRecurse)
       return evalRecurse(v, event, beat)
     } else if (typeof value === 'object') { // Eval each field in the object
@@ -100,7 +101,11 @@ define((require) => {
   }
 
   let evalRecurseWithOptions = (er, options) => {
-    return (v,e,b) => {
+    return (v,e,b, moreOptions) => {
+      if (typeof moreOptions === 'object') {
+        if (typeof options === 'object') { Object.assign(options, moreOptions) }
+        else { options = moreOptions }
+      }
       return er(v,e,b,options)
     }
   }

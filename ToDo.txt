@@ -223,27 +223,24 @@ shadertoy synth multiple channels
 
 ====
 ==== other ====
-
 Syntax for piecewise functions with lookup
- Try never calling functions in parse-var
-  Functions should get modifiers and state off themselves, not passed in, so all functions are (e,b,er)
-  Prolly wont work with blend=max; but maybe there's a way to have an aggregator return the string name if it gets no args?
- ??? Can make rand back into an aggregator???
- Fix .rand, .(rand,) in examples
- Big regression test: Examples; [[
+ Need to really look for ways that the blanket, permanent setting of preferString on values could cause a problem...
+ rand aggregator should support seed etc
+ examples should drop the whole .(rand*999) thing and go back to how they were
+ Support rand{1,2,3}
+ More tests: player: Look for tests where nesting should cancel preferString...
+ !!! v readout 0, add=[0,(1,2)]r, loc=sparkle
+ Big regression test
+  Need to really look for ways that the blanket, permanent setting of preferString on values could cause a problem...
+  Examples
  Docs
   New syntax [ v1:i1s1, v2:i2s2 ]{p}
-  Breaking changes
+  Back In: rand{1,2,3}, ().rand
   In []r, specifically mention the [1:4,2]r syntax for changing the probabilities
   Docs for time and this.time and this.idx
- Release
-  Update examples and presets
-  BREAKING CHANGES
-    No more rand aggregator; replace with (1,2,3,4).(rand*4)
-    L, E and S timevars and R randoms handle chord lerping slightly differently[0,(1,2)]l now gives 0 not (0,0) at time 0
-  Update version in index.html
 Time values: 150ms parses into a per-event function that returns 0.15s in beats?
-rand should be able to take an arg? eg rand{2} same as rand*2? Eg for (1,2,3).rand?
+!!!! r readout, add=1, delay=(0,{3/4,add:this.add*2/3})
+Should be able to parse top heavy fractions; eg `1+1/4` is same as 5/4. Parse as number, not operator?
 Random rewrite to use piecewise
  []n:  []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
 ?Is it possible for addc=[0,[-12,-24]t1/8@f]r@e to still allow the per frame motion, while the r@e selects it per event?
@@ -251,6 +248,7 @@ Random rewrite to use piecewise
 Allow non const step sizes in piecewise?
 "time" modifier allowing user defined time manipulation
 Voice leading
+ !!!IDEA: each event should be able to access the previous event (in its voice), and others in its chord? Then could calculate leading?
  ? Very clever or just noodles with random walks? Experiment...
  --- Voice leading experiment
   set root=[0,2,3,1]t8
