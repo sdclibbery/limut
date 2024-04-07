@@ -22,7 +22,17 @@ define(function(require) {
         args.value = l
       }
       let state = subParam(r, '_state') // Extract state to support stateful var functions
-      return varFunc(args, event,b, state) // Var function, eg chord aggregator or maths function
+      let modifiers = subParam(r, '_modifiers') // Extract modifiers
+      if (typeof args === 'object') { Object.assign(args, modifiers) } // Copy modifiers into args in case theres extra args in there; eg (1.3).floor{to:1/4})
+      if (modifiers !== undefined) {
+        let f = (e,b,er) => {
+          return varFunc(args, e,b, state)
+        }
+        f.modifiers = modifiers
+        return f // Return wrapper so we can apply modifiers
+      } else {
+        return varFunc(args, event,b, state) // Var function, eg chord aggregator or maths function
+      }
     }
     if (Array.isArray(l)) {
       if (typeof r === 'number') {

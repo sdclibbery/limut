@@ -1052,6 +1052,8 @@ define(function(require) {
   assert(0.3853306171949953, evalParamFrame(p,ev(2,2),2))
   assert(0.19610000611282885, evalParamFrame(p,ev(3,3),3))
 
+  p = parseExpression('rand')
+  assertNumber(evalParamFrame(p,ev(0,0),0))
 
   p = parseExpression('rand{seed:[1,100]t1,per:1}')
   assert(0.3853306171949953, evalParamFrame(p,ev(0,0),0))
@@ -1109,6 +1111,8 @@ define(function(require) {
   assert(3, evalParamFrame(parseExpression('(1,2,[3,4]t1).max'),ev(0,0),0))
   assert(4, evalParamFrame(parseExpression('(1,2,[3,4]t1).max'),ev(1,1),1))
   assert(3, evalParamFrame(parseExpression('(1,(2,3)).max'),ev(0,0),0))
+  assert([1,3], evalParamFrame(parseExpression('(1,2,3).(min,max)'),ev(0,0),0))
+  assert(3, evalParamFrame(parseExpression('(1,2,3).[max]t'),ev(0,0),0))
 
   assert('frame', parseExpression('(0,[1,2]l1/2@f)').interval)
   assert('frame', parseExpression('(0,[1,2]l1/2@f).max').interval)
@@ -1357,6 +1361,9 @@ define(function(require) {
   assert([], evalParamFrame(p, ev(0,0,1), 0))
   assert(2, evalParamFrame(p, ev(1,1,1), 1))
 
+  p = parseExpression("(1,2,3).(rand*999)")
+  assertNumber(evalParamFrame(p, ev(0,0,1), 0))
+  
   console.log('Parse expression tests complete')
   }
 
