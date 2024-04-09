@@ -3765,3 +3765,8 @@ b reese .070.700, cutoff=[0:~3,3/4:/1]l, ring=523*0
 r robot 0247, dur=1/4, amp*=[0:/3/4,1:0]l
 s m1organ .70 crop 8, oct=3, ring={523/8,mix:1/3}, amp*=[1/4:~4,2:~4]l^2
 
+
+// set bar=foo
+r readout, add={foo:2,bar:3}.(this.foo), foo=bar
+
+

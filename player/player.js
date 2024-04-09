@@ -602,6 +602,10 @@ define((require) => {
   assert(0, evalParamFrame(p.currentEvent(1)[0].x,ev(1,1,1),1))
   assert(1, evalParamFrame(p.currentEvent(1)[0].x,ev(1,1,1),2))
 
+  p = player('p', 'test', '0', 'add={foo:2,bar:3}.(this.foo), foo=bar')
+  p.play(p.getEventsForBeat({time:1, count:1, duration:1}))
+  assert(3, evalParamFrame(p.currentEvent(1)[0].add,p.currentEvent(1)[0],1))
+
   console.log('Player tests complete')
   }
   

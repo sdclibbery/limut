@@ -225,6 +225,7 @@ shadertoy synth multiple channels
 ==== other ====
 Syntax for piecewise functions with lookup
  Need to really look for ways that the blanket, permanent setting of preferString on values could cause a problem...
+  Look for things on RHS of lookup that would NOT want prefer string
  rand aggregator should support seed etc
  examples should drop the whole .(rand*999) thing and go back to how they were
  Support rand{1,2,3}

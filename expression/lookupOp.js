@@ -41,24 +41,19 @@ define(function(require) {
         return l.map(lv => lookupOp(lv, r, event,b,evalRecurse)) // If RHS is a string, map lookup over the LHS
       }
     }
-    if (typeof l === 'object') {
+    let ml = mainParam(l)
+    if (typeof ml === 'string') {
       let mr = mainParam(r)
-      let result = l[mr] // Map lookup
-      if (result === undefined && typeof mr === 'number') { return l } // If numeric lookup failed, return the entire map. This is useful when a chord of objects optimises down to a single object but you still want to have an indexer on it.
-      return result
-    }
-    if (typeof l === 'string') {
-      let mr = mainParam(r)
-      if (l.toLowerCase() === 'this') {
+      if (ml.toLowerCase() === 'this') { // lookup on this event
         let v = event[mr]
         v = evalParamFrame(v, event,b) // Eval so that time modifiers get applied
         let result = (e,b,er) => v // Wrap into a function so we can set _thisVar to prevent doubling up of chords
         result._thisVar = true
         return result
       }
-      let player = players.getById(l)
+      let player = players.getById(ml)
       if (mr === 'exists') { return !!player ? 1 : 0 }
-      if (player) { // lookup a param on player events
+      if (player) { // lookup a param on another player's events
         let originalB = evalRecurse((e,originalB) => originalB, event, b)
         let es = player.currentEvent(originalB)
         if (mr === 'playing') { return es.length>0 ? 1 : 0 }
@@ -69,6 +64,12 @@ define(function(require) {
       } else {
         return 0 // Not found as a player - should really return undefined now we have '?' operator, but this could be a breaking change
       }
+    }
+    if (typeof l === 'object') {
+      let mr = mainParam(r)
+      let result = l[mr] // Map lookup
+      if (result === undefined && typeof mr === 'number') { return l } // If field lookup failed, return the entire map. This is useful when a chord of objects optimises down to a single object but you still want to have an indexer on it.
+      return result
     }
     return l // fallback: just return the LHS value
   }
