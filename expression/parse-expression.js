@@ -1361,15 +1361,16 @@ define(function(require) {
   assert([], evalParamFrame(p, ev(0,0,1), 0))
   assert(2, evalParamFrame(p, ev(1,1,1), 1))
 
-  p = parseExpression("(1,2,3).(rand*999)")
-  assertIn(1,3, evalParamFrame(p, ev(0,0,1), 0))
+  p = parseExpression("(1,1).(rand*999)")
+  assert(1, evalParamFrame(p, ev(0,0,1), 0))
 
-  p = parseExpression("(1,2,3).rand")
-  assertIn(1,3, evalParamFrame(p, ev(0,0,1), 0))
+  p = parseExpression("(1,1).rand")
+  assert(1, evalParamFrame(p, ev(0,0,1), 0))
 
-  p = parseExpression("(1,2,3).(rand,max)")
-  assertIn(1,3, evalParamFrame(p, ev(0,0,1), 0)[0])
-  assert(3, evalParamFrame(p, ev(0,0,1), 0)[1])  
+  p = parseExpression("(1,1).(rand,count,rand)")
+  assert(1, evalParamFrame(p, ev(0,0,1), 0)[0])
+  assert(2, evalParamFrame(p, ev(0,0,1), 0)[1])  
+  assert(1, evalParamFrame(p, ev(0,0,1), 0)[2])  
 
   // Tests like above with seed...
 

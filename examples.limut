@@ -2633,7 +2633,7 @@ set ch=[
 	(3,5),(1,4),(1,6,3),(2,7,5b)
 ]t2
 a ambi 0, add=ch, glide=2/3, amp=2, room, chorus, pan=[-1/2:1/2]r
-l sine 0, add=ch.rand.time, glide=1/4, oct=5, delay=1/4, amp=2/3, room, chorus
+l sine 0, add=ch.rand, glide=1/4, oct=5, delay=1/4, amp=2/3, room, chorus
 // set ch=(0,2,4,7)
 // set l add=0
 
