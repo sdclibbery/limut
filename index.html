@@ -471,10 +471,8 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>p1.amp</code> Lookup the value of param <code>amp</code> from player <code>p1</code>. Returns a chord of values from all currently playing events.</p>
 <p><code>p1.amp.0</code> Lookup the value of param <code>amp</code> from player <code>p1</code>, and if it contains a chord, extract the first element only from it.</p>
 <p><code>p1.pulse.max</code> Lookup the value of the <code>pulse</code> from player <code>p1</code>, and if it contains a chord, extract the largest element only from it. The pulse param gives a smoothed approximate envelope shaped value between 0 and 1 for each event.</p>
-<p><code>(pk,ps).pulse</code> If <code>pk</code> and <code>ps</code> are players, returns a chord of both their <code>pulse</code> values.</p>
-<p><code>(1,2).foo</code> Lookup a global var named <code>foo</code>, and call it as a function for each element in a chord.</p>
+<p><code>this.value</code> Get param <code>value</code> from the current event. Returns a single value (not generally a chord) from the event the expression is being evaluated on.</p>
 <p><code>([0,1]t1@f).accum</code> Smoothly accumulate 1 every other beat</p>
-<p><code>this.value</code> Get param <code>value</code> from the current event. Never returns a chord because <code>this</code> refers only to the single current event by definition.</p>
 <p><code>{foo:2}.foo</code> Returns a field in a map (returns 2 in this example)</p>
 <p><code>(3,1,2).0</code> Returns the nth element in a chord (returns 3 in the example)</p>
 <p><code>(3,1,2).3</code> Returns the nth element in a chord, wrapping around (returns 3 in the example)</p>

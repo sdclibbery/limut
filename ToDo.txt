@@ -237,6 +237,8 @@ Syntax for piecewise functions with lookup
   Back In: rand{1,2,3}, ().rand
   In []r, specifically mention the [1:4,2]r syntax for changing the probabilities
   Docs for time and this.time and this.idx
+ BREAKING change
+  Cannot map function call with lookupOp; ().floor, 1.2.floor etc
 Time values: 150ms parses into a per-event function that returns 0.15s in beats?
 !!!! r readout, add=1, delay=(0,{3/4,add:this.add*2/3})
 Should be able to parse top heavy fractions; eg `1+1/4` is same as 5/4. Parse as number, not operator?

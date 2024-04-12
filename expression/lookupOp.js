@@ -11,18 +11,33 @@ define(function(require) {
     if (Array.isArray(r)) {
       return r.map(rv => lookupOp(l, rv, event,b,evalRecurse)) // If RHS is a chord, map the lookup of each element
     }
+    let ml = mainParam(l)
     let varFunc = getVarFunction(mainParam(r))
     if (varFunc) {
-      if (!varFunc._isAggregator && Array.isArray(l)) { // If var function is NOT an aggregator...
-        return l.map(lv => lookupOp(lv, r, event,b,evalRecurse)) // then map it over LHS array instead of passing LHS array to it
+      let state = subParam(r, '_state')
+      let modifiers = subParam(r, '_modifiers')
+      if (!varFunc._isAggregator && typeof ml !== 'string') { // RHS function but not an aggregator
+        if (!Array.isArray(l)) { // LHS not array, do not index or call, just return LHS
+          return l
+        }
+        // LHS chord, but RHS not aggregator: index
+        if (modifiers !== undefined) {
+          let f = (e,b,er) => {
+            let v = varFunc(modifiers, e,b, state)
+            return l[Math.floor(v % l.length)] // Chord index
+          }
+          f.modifiers = modifiers
+          return f // Return wrapper so we can apply modifiers
+        } else {
+          let v = varFunc(modifiers, event,b, state)
+          return l[Math.floor(v % l.length)] // Chord index
+        }
       }
-      let args = l
+      let args = l // LHS chord and RHS is an aggregator: call aggregator with the chord
       if (typeof r === 'object') {
         args = Object.assign({}, r)
         args.value = l
       }
-      let state = subParam(r, '_state') // Extract state to support stateful var functions
-      let modifiers = subParam(r, '_modifiers') // Extract modifiers
       if (typeof args === 'object') { Object.assign(args, modifiers) } // Copy modifiers into args in case theres extra args in there; eg (1.3).floor{to:1/4})
       if (modifiers !== undefined) {
         let f = (e,b,er) => {
@@ -41,7 +56,6 @@ define(function(require) {
         return l.map(lv => lookupOp(lv, r, event,b,evalRecurse)) // If RHS is a string, map lookup over the LHS
       }
     }
-    let ml = mainParam(l)
     if (typeof ml === 'string') {
       let mr = mainParam(r)
       if (ml.toLowerCase() === 'this') { // lookup on this event
@@ -137,8 +151,8 @@ define(function(require) {
     assert(2, lookupOp(2, {value:'foo'}))
     remove('foo')
 
-    addVarFunction('foo', (v,e,b,s)=>s)
-    assert(5, lookupOp(2, {value:'foo',_state:5}))
+    addVarFunction('foo', (a,e,b,s)=>s)
+    assert(2, lookupOp([1,2], {value:'foo',_state:1}))
     remove('foo')
 
     players.instances.p1 = { currentEvent:()=>{ return [{foo:1}]} }
@@ -146,11 +160,11 @@ define(function(require) {
     assert([1,2], lookupOp(['p1','p2'], 'foo', {},0,(v)=>0))
     delete players.instances.p1
     delete players.instances.p2
-  
-    addVarFunction('foo', (v,e,b,s)=>mainParam(v)+1)
-    assert([2,3], lookupOp([1,2], 'foo'))
-    assert([2,3], lookupOp([1,2], {value:'foo'}))
-    assert([2,3], lookupOp([1,2], {value:'foo',_state:5}))
+
+    addVarFunction('foo', (a,e,b,s)=>1)
+    assert(2, lookupOp([1,2], 'foo'))
+    assert(2, lookupOp([1,2], {value:'foo'}))
+    assert(2, lookupOp([1,2], {value:'foo',_state:5}))
     remove('foo')
 
     console.log('lookupOp tests complete')

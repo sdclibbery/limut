@@ -1361,6 +1361,17 @@ define(function(require) {
   assert([], evalParamFrame(p, ev(0,0,1), 0))
   assert(2, evalParamFrame(p, ev(1,1,1), 1))
 
+  p = parseExpression("(1,2).time")
+  assert(1, evalParamFrame(p, ev(0,0,1), 0))
+  assert(1, evalParamFrame(p, ev(0,0,1), 0.1))
+  assert(2, evalParamFrame(p, ev(1,1,1), 1))
+  assert(2, evalParamFrame(p, ev(1,1,1), 1.1))
+  assert(1, evalParamFrame(p, ev(2,2,1), 2))
+
+  p = parseExpression("(1,2).time{per:1}")
+  assert(1, evalParamFrame(p, ev(0,0,1), 0))
+  assert(1, evalParamFrame(p, ev(1,1,1), 1))
+ 
   p = parseExpression("(1,1).(rand*999)")
   assert(1, evalParamFrame(p, ev(0,0,1), 0))
 
