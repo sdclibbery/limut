@@ -1,6 +1,5 @@
 'use strict'
 define((require) => {
-  let playerTypes = require('player/player-types')
   var player = require('player/player')
   let eatWhitespace = require('expression/eat-whitespace')
 

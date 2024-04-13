@@ -224,13 +224,11 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Syntax for piecewise functions with lookup
- Need to really look for ways that the blanket, permanent setting of preferString on values could cause a problem...
-  Look for things on RHS of lookup that would NOT want prefer string
- !!! v readout 0, add=[0,(1,2)]r, loc=sparkle
  rand aggregator should support seed etc - tests at end of parse-expression
- Support rand{1,2,3} - tests at end of parse-expression
+ Support rand{1,2,3} like for aggregators in genral - tests at end of parse-expression
  Big regression test
   Need to really look for ways that the blanket, permanent setting of preferString on values could cause a problem...
+   Look for things on RHS of lookup that would NOT want prefer string
   Examples
  Docs
   New syntax [ v1:i1s1, v2:i2s2 ]{p}
@@ -239,7 +237,13 @@ Syntax for piecewise functions with lookup
   Docs for time and this.time and this.idx
  BREAKING change
   Cannot map function call with lookupOp; ().floor, 1.2.floor etc
-Time values: 150ms parses into a per-event function that returns 0.15s in beats?
+Time values
+ 150ms parses into a per-event function that returns 0.15s in beats?
+  - For things in s/ms will then be converting twice, and second conversion may still be per frame
+  ? What about Hz etc?
+ Or parse to {1, units:'ms'}?
+  - Operators must handle units properly
+!!!! Fail cases at the end of player.js
 !!!! r readout, add=1, delay=(0,{3/4,add:this.add*2/3})
 Should be able to parse top heavy fractions; eg `1+1/4` is same as 5/4. Parse as number, not operator?
 Random rewrite to use piecewise

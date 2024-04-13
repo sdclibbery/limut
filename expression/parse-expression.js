@@ -181,7 +181,7 @@ define(function(require) {
   require('predefined-vars').apply(require('vars').all())
   let {evalParamFrame,preEvalParam} = require('player/eval-param')
   let ev = (i,c,d) => {return{idx:i, count:c, dur:d, _time:c, endTime:c+d, countToTime:x=>x}}
-  let e
+  let e, v
 
   assert(undefined, parseExpression())
   assert(undefined, parseExpression(''))

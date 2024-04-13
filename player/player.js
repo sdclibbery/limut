@@ -7,7 +7,6 @@ define((require) => {
   let standardPlayer = require('player/standard')
   let continuousPlayer = require('player/continuous')
   var followPlayer = require('player/follow')
-  var players = require('player/players')
   var expandChords = require('player/expand-chords')
   let {evalParamFrame,evalParamToObjectOrPrimitive} = require('player/eval-param')
   let {mainParam,subParam} = require('player/sub-param')
@@ -87,7 +86,7 @@ define((require) => {
       type: playerType,
       keepState: {},
     }
-    player.play = (es, beat) => {
+    player.play = (es) => {
       player.events ||= []
       let timeNow = metronome.timeNow()
       player.events = player.events.filter(e => {
@@ -173,6 +172,9 @@ define((require) => {
     let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(3) : v)
     let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(3) : v)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}${msg?'\n'+msg:''}`) }
+  }
+  let assertNotEqual = (expected, actual) => {
+    if (actual === expected) { console.trace(`Assertion failed.\n>>Expected ${expected}\n to be different than actual: ${actual}`) }
   }
   let assertHas = (expected, actual) => {
     for (let k in expected) {
@@ -523,18 +525,14 @@ define((require) => {
   playerTypes.foo = {play:()=>[], baseParams:{bar:3,amp:1}}
   p = player('p', 'foo', '0')
   assert(3, evalParamFrame(p.getEventsForBeat({count:0})[0].bar,ev(0,0),0))
-  delete players.instances.p
   p = player('p', 'foo', '0', 'bar=5')
   assert(5, evalParamFrame(p.getEventsForBeat({count:0})[0].bar,ev(0,0),0))
-  delete players.instances.p
   p = player('p', 'foo', '0', 'bar+=5')
   assert(8, evalParamFrame(p.getEventsForBeat({count:0})[0].bar,ev(0,0),0))
-  delete players.instances.p
   delete playerTypes.foo
 
   p = player('p', 'test', '0', 'amp=[0,1,0]e', 0)
   assert(1, evalParamFrame(p.getEventsForBeat({count:0})[0].amp, {_time:0,endTime:1,countToTime:(c)=>c},1/2))
-  delete players.instances.p
 
   p = player('p', 'test', '(000)', 'add=[-7:7]r')
   assertNotSame(p.getEventsForBeat({count:0}).map(e => evalParamFrame(e.add,ev(0,0),0)))
@@ -617,6 +615,20 @@ define((require) => {
   assert(1, p.currentEvent(1.1).length)
   assert(4, evalParamFrame(p.currentEvent(1.1)[0].x, p.currentEvent(1.1)[0], 1.1))
   assert(3, evalParamFrame(p.currentEvent(1.1)[0].x, p.currentEvent(1.1)[0], 2.1))
+
+  p = player('p', 'test', '0', 'add=rand, loc={ y:(-1/3,1/3) }')
+  p.play(p.getEventsForBeat({time:0, count:0, duration:1}))
+  es = p.currentEvent(0)
+  assertNotEqual(evalParamFrame(es[0].add, es[0], 0), evalParamFrame(es[1].add, es[1], 0))
+
+  // Ordering of players makes this fail; readout doesnt get a chord when it should
+  // r readout, add=p.add, loc={y:this.voice/2}
+  // p ping, oct=(4,4), add=floor{[]r*7}
+  // A separate problem here is that its not getting the SAME random values that the other player got; eg:
+  // p ping, oct=(3,3), add=floor{[0,14]r}, dur=2
+  // r readout, add=p.add, loc={y:this.voice/2}, dur=1/8
+
+  
 
   console.log('Player tests complete')
   }

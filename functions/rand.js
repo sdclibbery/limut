@@ -24,7 +24,8 @@ define(function(require) {
       if (e.perEventSeed === undefined) {
         e.perEventSeed = Math.random()
       }
-      seed = (state.perParseSeed + e.perEventSeed)*999999
+      let perVoiceSeed = e.voice || 0
+      seed = (state.perParseSeed + e.perEventSeed + perVoiceSeed)*999999
     }
     return xmur3(b - seed) / 4294967296
   }

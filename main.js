@@ -127,7 +127,7 @@ define(function(require) {
       Object.values(players.instances).forEach(player => {
         if (player !== undefined) {
           try {
-            player.play(player.getEventsForBeat(beat), beat)
+            player.play(player.getEventsForBeat(beat))
           } catch (e) {
             let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
             consoleOut('🔴 Run Error from player '+player.id+': ' + e + st)
