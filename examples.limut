@@ -3787,3 +3787,7 @@ r readout, add={foo:2,bar:3}.(this.foo), foo=bar
 // p ping, oct=(4,4), add=floor{[]r*7}
 
 
+// g glow, loc={x:[-1:2,1:0]l@f,y:rand{per:2,seed:0,step:1/2}*2-1}
+// g glow, loc={x:[-1:2,1:0]l@f,y:(-1,-1/2,0,1/2,1).rand{per:2,seed:0,step:1/2}}
+
+

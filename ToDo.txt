@@ -224,9 +224,10 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Syntax for piecewise functions with lookup
- rand aggregator should support seed etc - tests at end of parse-expression
  Support rand{1,2,3} like for aggregators in genral - tests at end of parse-expression
  Big regression test
+  !!!! Fail cases at the end of player.js
+  !!!! r readout, add=1, delay=(0,{3/4,add:this.add*2/3})
   Need to really look for ways that the blanket, permanent setting of preferString on values could cause a problem...
    Look for things on RHS of lookup that would NOT want prefer string
   Examples
@@ -243,8 +244,6 @@ Time values
   ? What about Hz etc?
  Or parse to {1, units:'ms'}?
   - Operators must handle units properly
-!!!! Fail cases at the end of player.js
-!!!! r readout, add=1, delay=(0,{3/4,add:this.add*2/3})
 Should be able to parse top heavy fractions; eg `1+1/4` is same as 5/4. Parse as number, not operator?
 Random rewrite to use piecewise
  []n:  []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1

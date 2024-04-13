@@ -14,8 +14,6 @@ define(function(require) {
   }
 
   let rand = (args, e,b,state) => {
-    let arr = (typeof args === 'object' && args.value) || args
-    if (Array.isArray(arr)) { return arr[Math.floor(Math.random()*arr.length)] } // Aggregator; but Needs to use proper rand algo with seed etc; needs tests for this
     let seed = args && args.seed
     if (seed === undefined) {
       if (state.perParseSeed === undefined) {
@@ -27,7 +25,12 @@ define(function(require) {
       let perVoiceSeed = e.voice || 0
       seed = (state.perParseSeed + e.perEventSeed + perVoiceSeed)*999999
     }
-    return xmur3(b - seed) / 4294967296
+    let r = xmur3(b - seed) / 4294967296
+    let arr = (typeof args === 'object' && args.value) || args
+    if (Array.isArray(arr)) { // Aggregator: index chord using random value
+      return arr[Math.floor(r*arr.length)]
+    }
+    return r // Not aggregator: just return random value
   }
   rand.isDirectFunction = true
   rand._isAggregator = true
