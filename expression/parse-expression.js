@@ -1398,6 +1398,11 @@ define(function(require) {
   assert(2, evalParamFrame(p, ev(0,0,1), 2))
   assert(1, evalParamFrame(p, ev(0,0,1), 3))
 
+  p = parseExpression("rand{[2,3]t1/2@f}")
+  assert(2, evalParamFrame(p, ev(0,0,1), 0))
+  assert(3, evalParamFrame(p, ev(0,0,1), 1/2))
+  assert(2, evalParamFrame(p, ev(0,0,1), 1))
+
   console.log('Parse expression tests complete')
   }
 
