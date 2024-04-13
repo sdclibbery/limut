@@ -13,6 +13,19 @@ define(function(require) {
     return (h ^= h >>> 16) >>> 0
   }
 
+  let getArrayFromValues = (args) => {
+    let result = [args.value]
+    let index = 1
+    let v
+    do {
+      let key = 'value'+index
+      index++
+      v = args[key]
+      if (v) { result.push(v) }
+    } while (v)
+    return result
+  }
+  
   let rand = (args, e,b,state) => {
     let seed = args && args.seed
     if (seed === undefined) {
@@ -26,8 +39,11 @@ define(function(require) {
       seed = (state.perParseSeed + e.perEventSeed + perVoiceSeed)*999999
     }
     let r = xmur3(b - seed) / 4294967296
-    let arr = (typeof args === 'object' && args.value) || args
-    if (Array.isArray(arr)) { // Aggregator: index chord using random value
+    let arr
+    if (Array.isArray(args)) { arr = args }
+    else if (args && Array.isArray(args.value)) { arr = args.value }
+    else if (args && args.value !== undefined) { arr = getArrayFromValues(args) }
+    if (arr !== undefined) { // Aggregator: index using random value
       return arr[Math.floor(r*arr.length)]
     }
     return r // Not aggregator: just return random value

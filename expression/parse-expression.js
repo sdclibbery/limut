@@ -1389,8 +1389,14 @@ define(function(require) {
   assert(2, evalParamFrame(p, ev(0,0,1), 2))
   assert(1, evalParamFrame(p, ev(0,0,1), 3))
 
-  // p = parseExpression("rand{1,2,3}")
-  // assertIn(1,3, evalParamFrame(p, ev(0,0,1), 0))
+  p = parseExpression("rand{1,2,3}")
+  assertIn(1,3, evalParamFrame(p, ev(0,0,1), 0))
+
+  p = parseExpression("rand{1,2,3,4,seed:1}")
+  assert(2, evalParamFrame(p, ev(0,0,1), 0))
+  assert(4, evalParamFrame(p, ev(0,0,1), 1))
+  assert(2, evalParamFrame(p, ev(0,0,1), 2))
+  assert(1, evalParamFrame(p, ev(0,0,1), 3))
 
   console.log('Parse expression tests complete')
   }

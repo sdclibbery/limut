@@ -2,7 +2,7 @@
 define(function(require) {
   let addVarFunction = require('predefined-vars').addVarFunction
 
-  let getChordFromValues = (args) => {
+  let getArrayFromValues = (args) => {
     let result = [args.value]
     let index = 1
     let v
@@ -21,7 +21,7 @@ define(function(require) {
       if (!args) { vs = [] }
       else if (Array.isArray(args)) { vs = args }
       else if (Array.isArray(args.value)) { vs = args.value }
-      else if (args.value !== undefined) { vs = getChordFromValues(args) }
+      else if (args.value !== undefined) { vs = getArrayFromValues(args) }
       else if (args !== undefined) { vs = [args] }
       else { vs = [] }
       vs = vs.flatMap(v => {

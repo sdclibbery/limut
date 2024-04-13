@@ -224,7 +224,7 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Syntax for piecewise functions with lookup
- Support rand{1,2,3} like for aggregators in genral - tests at end of parse-expression
+ rand{[2,3]t1/2@f}
  Big regression test
   !!!! Fail cases at the end of player.js
   !!!! r readout, add=1, delay=(0,{3/4,add:this.add*2/3})
