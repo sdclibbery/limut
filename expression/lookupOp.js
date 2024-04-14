@@ -12,6 +12,7 @@ define(function(require) {
       return r.map(rv => lookupOp(l, rv, event,b,evalRecurse)) // If RHS is a chord, map the lookup of each element
     }
     let ml = mainParam(l)
+    let mr = mainParam(r)
     let varFunc = getVarFunction(mainParam(r))
     if (varFunc) {
       let state = subParam(r, '_state')
@@ -50,14 +51,13 @@ define(function(require) {
       }
     }
     if (Array.isArray(l)) {
-      if (typeof r === 'number') {
-        return l[Math.floor(r % l.length)] // Chord index
-      } else if (typeof r === 'string') {
-        return l.map(lv => lookupOp(lv, r, event,b,evalRecurse)) // If RHS is a string, map lookup over the LHS
+      if (typeof mr === 'number') {
+        return l[Math.floor(mr % l.length)] // Chord index
+      } else if (typeof mr === 'string') {
+        return l.map(lv => lookupOp(lv, mr, event,b,evalRecurse)) // If RHS is a string, map lookup over the LHS
       }
     }
     if (typeof ml === 'string') {
-      let mr = mainParam(r)
       if (ml.toLowerCase() === 'this') { // lookup on this event
         let v = event[mr]
         v = evalParamFrame(v, event,b) // Eval so that time modifiers get applied

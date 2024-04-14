@@ -621,12 +621,22 @@ define((require) => {
   es = p.currentEvent(0)
   assertNotEqual(evalParamFrame(es[0].add, es[0], 0), evalParamFrame(es[1].add, es[1], 0))
 
-  // Ordering of players makes this fail; readout doesnt get a chord when it should
-  // r readout, add=p.add, loc={y:this.voice/2}
-  // p ping, oct=(4,4), add=floor{[]r*7}
-  // A separate problem here is that its not getting the SAME random values that the other player got; eg:
-  // p ping, oct=(3,3), add=floor{[0,14]r}, dur=2
-  // r readout, add=p.add, loc={y:this.voice/2}, dur=1/8
+  p1 = player('p1', 'test', '0', 'foo=(1,2)')
+  players.instances.p1 = p1
+  p2 = player('p2', 'test', '0', 'bar=p1.foo')
+  p1.play(p1.getEventsForBeat({count:0,duration:1,time:0}),{count:0})
+  assert(1, evalParamFrame(p2.getEventsForBeat({count:0})[0].bar,ev(0,0),0))
+  assert(2, evalParamFrame(p2.getEventsForBeat({count:0})[1].bar,ev(0,0),0))
+  delete players.instances.p1
+
+console.log('START')
+  p1 = player('p1', 'test', '0', 'foo={bar:(1,2)}')
+  players.instances.p1 = p1
+  p2 = player('p2', 'test', '0', 'bar=p1.foo.bar')
+  p1.play(p1.getEventsForBeat({count:0,duration:1,time:0}),{count:0})
+  assert(1, evalParamFrame(p2.getEventsForBeat({count:0})[0].bar,ev(0,0),0))
+  assert(2, evalParamFrame(p2.getEventsForBeat({count:0})[1].bar,ev(0,0),0))
+  delete players.instances.p1
 
   console.log('Player tests complete')
   }

@@ -226,7 +226,6 @@ shadertoy synth multiple channels
 Syntax for piecewise functions with lookup
  Big regression test
   !!!! Fail cases at the end of player.js
-  !!!! r readout, add=1, delay=(0,{3/4,add:this.add*2/3})
   Need to really look for ways that the blanket, permanent setting of preferString on values could cause a problem...
    Look for things on RHS of lookup that would NOT want prefer string
   Examples
@@ -250,6 +249,12 @@ Random rewrite to use piecewise
  []r used to select per event by fixing the seed per event rather than by stepping time, so it used to work
 Allow non const step sizes in piecewise?
 "time" modifier allowing user defined time manipulation
+!Ordering of players makes this fail; readout doesnt get a chord when it should
+  r readout, add=p.add, loc={y:this.voice/2}
+  p readout, oct=(4,4), add=floor{[]r*7}, fore=0
+!Not getting the SAME random values that the other player got; eg:
+  p ping, oct=(3,3), add=floor{[0,14]r}, dur=2
+  r readout, add=p.add, loc={y:this.voice/2}, dur=1/8
 Voice leading
  !!!IDEA: each event should be able to access the previous event (in its voice), and others in its chord? Then could calculate leading?
  ? Very clever or just noodles with random walks? Experiment...
@@ -260,22 +265,15 @@ Voice leading
   sp softpad, add=ch
   ld chime 070., add=ch.[0,rand,rand,rand], amp*=3/2
 More time modifiers
- ??? Or just allow user defined time mod function?
-  ? Or it doesn't even need to be a function; just pass in the new time value from a normal expresion?
-   Already have global time var to work from; would also need a way to access event params during eval
  offset
- step
- rate
- curve - apply a curve; ??within each event? or specific to the thing being modified?
  time - set time directly to an expression
- shuffle - for each block of 'per' beats, break time values into 'shuffle' sized pieces and randmoly shuffle them
- ?wait (pause?) modifier, pauses time at the start of the event?
 range function eg (0,2,4,6).range{0,to:riser*3}
  IOW range{a,to:b} === (a,a+1,a+2,...,b)
 !this var lookup failing in various ways:
  // m ping 0, bar={'tri',detune:(12,this.foo)}, foo=2
  // m ping 0, bar={'tri',detune:(12,-12)}, bar+={detune:this.foo}, foo=1
  r readout 0, add=m.bar.detune, loc=sparkle
+!Too much recursion: should we either prevent this or support it somehow?: r readout, add=1, delay=(0,{3/4,add:this.add*2/3})
 !Readout doesn't work here:  p ping 0, foo=[0,1,2,3]t1, add=this.foo \ r readout 0, add=p.add
  It's specifically the this.foo that makes it fail; it's using *r*'s event for this, not p's event
 !Duration should be calculated on every step, not every beat: cf play t, dur=[1/16:1/128]l[4,0]
