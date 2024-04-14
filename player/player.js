@@ -629,7 +629,6 @@ define((require) => {
   assert(2, evalParamFrame(p2.getEventsForBeat({count:0})[1].bar,ev(0,0),0))
   delete players.instances.p1
 
-console.log('START')
   p1 = player('p1', 'test', '0', 'foo={bar:(1,2)}')
   players.instances.p1 = p1
   p2 = player('p2', 'test', '0', 'bar=p1.foo.bar')
@@ -637,6 +636,18 @@ console.log('START')
   assert(1, evalParamFrame(p2.getEventsForBeat({count:0})[0].bar,ev(0,0),0))
   assert(2, evalParamFrame(p2.getEventsForBeat({count:0})[1].bar,ev(0,0),0))
   delete players.instances.p1
+
+  p = player('p', 'test', '0', 'x=(1,2).time')
+  p.play(p.getEventsForBeat({time:0, count:0, duration:2}))
+  assert(1, p.currentEvent(0).length)
+  assert(1, evalParamFrame(p.currentEvent(0)[0].x, p.currentEvent(0)[0], 0))
+  assert(2, evalParamFrame(p.currentEvent(0)[0].x, p.currentEvent(0)[0], 1))
+
+  // p = player('p', 'test', '0', 'x=(1,2).(time*1)')
+  // p.play(p.getEventsForBeat({time:0, count:0, duration:2}))
+  // assert(1, p.currentEvent(0).length)
+  // assert(1, evalParamFrame(p.currentEvent(0)[0].x, p.currentEvent(0)[0], 0))
+  // assert(2, evalParamFrame(p.currentEvent(0)[0].x, p.currentEvent(0)[0], 1))
 
   console.log('Player tests complete')
   }

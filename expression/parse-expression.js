@@ -1403,6 +1403,9 @@ define(function(require) {
   assert(3, evalParamFrame(p, ev(0,0,1), 1/2))
   assert(2, evalParamFrame(p, ev(0,0,1), 1))
 
+  // p = parseExpression("(1,2,3).(rand+1)")
+  // assert(2, evalParamFrame(p, ev(0,0,1), 0))
+
   console.log('Parse expression tests complete')
   }
 

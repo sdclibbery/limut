@@ -224,8 +224,45 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Syntax for piecewise functions with lookup
+ !Fix failing test: should still be able to lookup even via operator; is preferString kicking in?
+  The problem is, preferString affects time{}, but evalOp(*) doesn't know what to do with a string
+  Should set preferString only when its a string on the LHS of lookupOp? No, because that breaks rand aggregator
+  ?Should we get rid of preferString, and just name event time something else? Eg this.etime?
+   So the tension isn't just between time vs this.time, its also between rand as aggregator and rand as standalone function
+  Do we really need to split out lookupOp better, so it has different behaviours for different things?
+   Not sure this helps
+  CALL FUNCTION x x{} - call x{}
+  AGGREGATOR ().x - call x{LHS} ??? Could aggregators be rolled into indexing? If they were passed the LHS still, and returned an index or chord of indexes?
+  LOOKUP ().x {}.x this.x p.x - call x then use result to index LHS
+  MODIFIED LOOKUP ().(x+1) - could be agg or lookup
+  DISTRIBUTED LOOKUP ().(x,y) - could be aggregator, lookup, modified lookup...
+  The problem is beteen modified and preferString
+  Do we really solve it by requiring a call syntax for the callsite? So you have to put rand{} or time{} ?
+   CALL x{}
+   AGG ().x
+   LOOK ().x{} (this.x){} p.x
+   MOD ().(x{}+1)
+   DIST ().(x,y)
+   MODDIST ().(x{}+1,y{})
+   Logic becomes simple?
+   • parseVar always calls if any {} present, otherwise, return string
+   • lookupOp indexes if RHS is a primitive, or calls function with LHS
+   • Get rid of preferString, isDirectFunction, isAggregator
+  Or always defer call until value is needed? So eval to prim at end of evalParamFrame etc, or for operators, and lookup can choose?
+   CALL x
+   AGG ().x
+   LOOK ().x this.x p.x
+   MOD ().(x+1)
+   DIST ().(x,y)
+   MODDIST ().(x+1,y) ().((x,y)+1)
+  Logic
+  • parseVar always returns the function with string on a key - what is the representation for this??
+  • evalParamXx evals the function only at the end (could have special version that returns function without calling if needed)
+  • if lookupOp RHS is function then eval passing LHS, then do lookup (eg chord index); if LHS string, don't eval
+  • Get rid of preferString, isDirectFunction, isAggregator
+  • Commented out tests at bootom of parse-expression and player
+  TRY THIS
  Big regression test
-  !!!! Fail cases at the end of player.js
   Need to really look for ways that the blanket, permanent setting of preferString on values could cause a problem...
    Look for things on RHS of lookup that would NOT want prefer string
   Examples
