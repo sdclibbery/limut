@@ -9,7 +9,6 @@ define(function(require) {
     }
     return b // Global time function
   }
-  timeFunc.isDirectFunction = true
   addVarFunction('time', timeFunc)
 
   // TESTS // - Tests for time function are in player

@@ -5,8 +5,10 @@ define(function(require) {
 
   let roundWrapper = (fn) => {
     return (args) => {
+      let v = mainParam(args, 0)
+      if (typeof v !== 'number') { v = 0 }
       let to = subParam(args, 'to', 1)
-      return fn(mainParam(args, 0)/to)*to
+      return fn(v/to)*to
     }
   }
   addVarFunction('floor', roundWrapper(Math.floor))
@@ -100,6 +102,7 @@ define(function(require) {
   let ev = (i,c,d,v) => {return{idx:i,count:c,dur:d,_time:c,voice:v}}
   let p
 
+  assert(0, evalParamFrame(parseExpression('floor'), ev(0,0), 0))
   assert(1, evalParamFrame(parseExpression('floor{1.5}'), ev(0,0), 0))
   assert(-2, evalParamFrame(parseExpression('floor{-1.5}'), ev(0,0), 0))
   assert(1/2, evalParamFrame(parseExpression('floor{0.6,to:1/2}'), ev(0,0), 0))
@@ -114,11 +117,11 @@ define(function(require) {
   assert(1, evalParamFrame(parseExpression("floor{1.5,2.5}"),ev(0,0,0),0))
   assert([1,2], evalParamFrame(parseExpression("floor{(1.5,2.5)}"),ev(0,0,0),0))
 
-  assert(1.5, evalParamFrame(parseExpression("1.5 .floor"),ev(0,0,0),0)) // Cannot apply a function with lookupOp
-  assert(1.3, evalParamFrame(parseExpression("(1.3).floor{to:1/4}"),ev(0,0,0),0))
+  assert(1, evalParamFrame(parseExpression("1.5 .floor"),ev(0,0,0),0))
+  assert(1.25, evalParamFrame(parseExpression("(1.3).floor{to:1/4}"),ev(0,0,0),0))
   assert(1.5, evalParamFrame(parseExpression("(1.5,2.5).floor"),ev(0,0,0),0))
   assert(1.5, evalParamFrame(parseExpression("(1.5,2.5).floor{to:1/3}"),ev(0,0,0),0))
-  assert(2.5, evalParamFrame(parseExpression("(1.5,2.5).floor{1.5}"),ev(0,0,0),0))
+  assert(1.5, evalParamFrame(parseExpression("(1.5,2.5).floor{1.7}"),ev(0,0,0),0)) // Ignore args value when used as lookup on chord
 
   assert(2, evalParamFrame(parseExpression('ceil{1.5}'), ev(0,0), 0))
   assert(-1, evalParamFrame(parseExpression('ceil{-1.5}'), ev(0,0), 0))

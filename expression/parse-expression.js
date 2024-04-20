@@ -97,11 +97,12 @@ define(function(require) {
       // vars
       let parsed = parseVar(state)
       let modifiers = parseMap(state)
-      let v = varLookup(parsed, modifiers, state.context)
+      let interval = parseInterval(state) || 'frame'
+      let v = varLookup(parsed, modifiers, state.context, interval)
       if (v !== undefined) {
         result = addModifiers(v, modifiers)
         if (typeof result === 'function') {
-          result.interval = parseInterval(state) || 'frame'
+          result.interval = interval
         }
         continue
       }
@@ -857,12 +858,12 @@ define(function(require) {
 
   vars.foo = () => 5
   vars.foo.isVarFunction = true
-  assert({_state:{},value:'foo'}, evalParamFrame(parseExpression('foo'),ev(0,0),0))
+  assert(5, evalParamFrame(parseExpression('foo'),ev(0,0),0))
   delete vars.foo
 
   vars.foo = () => 5
   vars.foo.isVarFunction = true
-  assert({_state:{},value:'foo'}, evalParamFrame(parseExpression('foo{}'),ev(0,0),0))
+  assert(5, evalParamFrame(parseExpression('foo{}'),ev(0,0),0))
   delete vars.foo
 
   vars.foo = ({value}) => value
@@ -1116,7 +1117,10 @@ define(function(require) {
 
   assert('frame', parseExpression('(0,[1,2]l1/2@f)').interval)
   assert('frame', parseExpression('(0,[1,2]l1/2@f).max').interval)
-  assert({_state:{},value:'min'}, evalParamFrame(parseExpression('min'),ev(0,0),0))
+
+  assert('foo', evalParamFrame(parseExpression('foo'),ev(0,0),0))
+  assert('max', evalParamFrame(parseExpression('max'),ev(0,0),0))
+  assert('min', evalParamFrame(parseExpression('min'),ev(0,0),0))
 
   assert(1, evalParamFrame(parseExpression('[(1,2),(3,4)]t1 .0'),ev(0,0),0))
   assert(3, evalParamFrame(parseExpression('[(1,2),(3,4)]t1 .0'),ev(1,1),1))
@@ -1199,8 +1203,6 @@ define(function(require) {
   assert(2, evalParamFrame(parseExpression("(1,2).max"),ev(0,0,0),0))
   assert(2, evalParamFrame(parseExpression("max{1,2}"),ev(0,0,0),0))
   assert([1,2], evalParamFrame(parseExpression("max{(1,2)}"),ev(0,0,0),0))
-  assert(1, evalParamFrame(parseExpression("(1,2).max{0}"),ev(0,0,0),0))
-  assert({_state:{},value:'max'}, evalParamFrame(parseExpression("max"),ev(0,0,0),0))
 
   assert({value:{a:1},b:2}, evalParamFrame(parseExpression("{{a:1},b:2}"),ev(0,0,0),0))
   assert({value:440,q:50}, evalParamFrame(parseExpression("{max{440},q:50}"),ev(0,0,0),0))
@@ -1216,7 +1218,6 @@ define(function(require) {
 
   vars._time = (args,e,b)=>b
   vars._time.isVarFunction = true
-  vars._time.isDirectFunction = true
   assert(1, evalParamFrame(parseExpression("_time"),ev(0,0,4),1))
   assert(2, evalParamFrame(parseExpression("[0:4,4:4]{2}"),ev(0,0,4),0))
   assert(2, evalParamFrame(parseExpression("[0:4,4:4]{_time}"),ev(2,2,4),2))
@@ -1403,8 +1404,8 @@ define(function(require) {
   assert(3, evalParamFrame(p, ev(0,0,1), 1/2))
   assert(2, evalParamFrame(p, ev(0,0,1), 1))
 
-  // p = parseExpression("(1,2,3).(rand+1)")
-  // assert(2, evalParamFrame(p, ev(0,0,1), 0))
+  p = parseExpression("(1,2,3).(rand+1)")
+  assert(2, evalParamFrame(p, ev(0,0,1), 0))
 
   console.log('Parse expression tests complete')
   }

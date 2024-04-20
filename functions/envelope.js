@@ -46,7 +46,6 @@ define(function(require) {
     let timeScale = timeToBeats(1, units, e) // Get time scale factor for given units
     return scaledBeatEnv(args, e,b,state, timeScale)
   }
-  envelope.isDirectFunction = true
   addVarFunction('envelope', envelope)
 
 

@@ -48,7 +48,6 @@ define(function(require) {
     }
     return r // Not aggregator: just return random value
   }
-  rand.isDirectFunction = true
   rand._isAggregator = true
   addVarFunction('rand', rand)
 

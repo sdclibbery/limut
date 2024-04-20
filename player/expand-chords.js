@@ -114,7 +114,7 @@ define((require) => {
     assert({r:2,g:3}, evalParamFrame(p[2].x,e,b))
     assert({r:2,g:4}, evalParamFrame(p[3].x,e,b))
 
-    let pff = () => [3,4]
+    let pff = () => [3,4] // per frame func
     pff.interval = 'frame'
     p = expandChords([{x:[{r:1,g:pff},{r:2,g:pff}]}])
     assert({r:1,g:3}, evalParamFrame(p[0].x,e,b))
@@ -123,7 +123,7 @@ define((require) => {
     assert({r:2,g:4}, evalParamFrame(p[3].x,e,b))
     assert(undefined, p[4])
 
-    let tvf = (e) => e.f
+    let tvf = (e) => e.f // this var func
     tvf.interval = 'frame'
     tvf._thisVar = true
     p = expandChords([{x:tvf,f:1}])

@@ -31,6 +31,7 @@ define(function(require) {
       return fn(vs)
     }
     aggFunc._isAggregator = true
+    aggFunc._requiresValue = true
     addVarFunction(name, aggFunc)
     return aggFunc
   }

@@ -1,9 +1,9 @@
 'use strict';
 define(function(require) {
   let players = require('player/players')
-  let {mainParam, subParam} = require('player/sub-param')
-  let {evalParamFrame} = require('player/eval-param')
-  let {getVarFunction,addVarFunction,remove} = require('predefined-vars')
+  let {mainParam} = require('player/sub-param')
+  let {evalParamFrame,evalFunctionWithModifiers} = require('player/eval-param')
+  let {addVarFunction,remove} = require('predefined-vars')
 
   let lookupOp = (l,r, event,b,evalRecurse) => {
     if (l === undefined) { return undefined }
@@ -13,48 +13,21 @@ define(function(require) {
     }
     let ml = mainParam(l)
     let mr = mainParam(r)
-    let varFunc = getVarFunction(mainParam(r))
-    if (varFunc) {
-      let state = subParam(r, '_state')
-      let modifiers = subParam(r, '_modifiers')
-      if (!varFunc._isAggregator && typeof ml !== 'string') { // RHS function but not an aggregator
-        if (!Array.isArray(l)) { // LHS not array, do not index or call, just return LHS
-          return l
-        }
-        // LHS chord, but RHS not aggregator: index
-        if (modifiers !== undefined) {
-          let f = (e,b,er) => {
-            let v = varFunc(modifiers, e,b, state)
-            return l[Math.floor(v % l.length)] // Chord index
-          }
-          f.modifiers = modifiers
-          return f // Return wrapper so we can apply modifiers
-        } else {
-          let v = varFunc(modifiers, event,b, state)
-          return l[Math.floor(v % l.length)] // Chord index
-        }
+    let func
+    if (typeof r === 'function' && r.isDelayedVarFunc) { func = r }
+    if (func) {
+      func.args = l
+      let v = evalFunctionWithModifiers(func,event,b, evalRecurse)
+      if (Array.isArray(l) && !func._isAggregator) {
+        return l[Math.floor(v % l.length)] // Chord index with result of func call
       }
-      let args = l // LHS chord and RHS is an aggregator: call aggregator with the chord
-      if (typeof r === 'object') {
-        args = Object.assign({}, r)
-        args.value = l
-      }
-      if (typeof args === 'object') { Object.assign(args, modifiers) } // Copy modifiers into args in case theres extra args in there; eg (1.3).floor{to:1/4})
-      if (modifiers !== undefined) {
-        let f = (e,b,er) => {
-          return varFunc(args, e,b, state)
-        }
-        f.modifiers = modifiers
-        return f // Return wrapper so we can apply modifiers
-      } else {
-        return varFunc(args, event,b, state) // Var function, eg chord aggregator or maths function
-      }
+      return v // Just return func result
     }
     if (Array.isArray(l)) {
       if (typeof mr === 'number') {
         return l[Math.floor(mr % l.length)] // Chord index
-      } else if (typeof mr === 'string') {
-        return l.map(lv => lookupOp(lv, mr, event,b,evalRecurse)) // If RHS is a string, map lookup over the LHS
+      } else {
+        return l.map(lv => lookupOp(lv, mr, event,b,evalRecurse)) // Map lookup over the LHS
       }
     }
     if (typeof ml === 'string') {
@@ -143,16 +116,9 @@ define(function(require) {
   
     assert(1, lookupOp('this', 'foo', {foo:1},0,(v)=>0)())
 
-    assert(2, lookupOp([1,2], 'max'))
-    assert(2, lookupOp(2, 'max'))
-
     addVarFunction('foo', (v)=>mainParam(v))
     assert(1, lookupOp(1, 'foo'))
     assert(2, lookupOp(2, {value:'foo'}))
-    remove('foo')
-
-    addVarFunction('foo', (a,e,b,s)=>s)
-    assert(2, lookupOp([1,2], {value:'foo',_state:1}))
     remove('foo')
 
     players.instances.p1 = { currentEvent:()=>{ return [{foo:1}]} }
@@ -160,12 +126,6 @@ define(function(require) {
     assert([1,2], lookupOp(['p1','p2'], 'foo', {},0,(v)=>0))
     delete players.instances.p1
     delete players.instances.p2
-
-    addVarFunction('foo', (a,e,b,s)=>1)
-    assert(2, lookupOp([1,2], 'foo'))
-    assert(2, lookupOp([1,2], {value:'foo'}))
-    assert(2, lookupOp([1,2], {value:'foo',_state:5}))
-    remove('foo')
 
     console.log('lookupOp tests complete')
   }

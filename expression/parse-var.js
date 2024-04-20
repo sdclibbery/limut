@@ -22,7 +22,7 @@ define(function(require) {
     return key
   }
 
-  let varLookup = (key, args, context) => {
+  let varLookup = (key, args, context, interval) => {
     if (!key) { return }
 
     // look for static function call; call var immediately if present
@@ -35,26 +35,27 @@ define(function(require) {
     let state = {} // Create a state store for this parse instance
     let result
     result = (event,b, evalRecurse, modifiers) => {
-      let hasArgs = modifiers && modifiers.value !== undefined
-      if (result.preferString && !hasArgs) { // Requested to return a string instead of calling varfunc where possible
-        let r = { value:key, _state:state }
-        if (modifiers !== undefined) { r._modifiers = modifiers }
-        return r
-      }
       let vr = vars.get(key)
       let v
       if (typeof vr === 'function' && vr.isVarFunction) { // Var function
-        if (vr.isDirectFunction || hasArgs) {
-          v = vr(modifiers, event,b, state) // Call var function immediately as the value is in the modifiers
-        } else if (modifiers) {
-          v = Object.assign({}, modifiers) // Make modifiers available as other arguments, in case this turns out to be a var function
-          v._state = state // Make state available to var function
-          v.value = key // If value not in modifiers, treat as a string value instead, allowing lookup to find var function later if appropriate, or other params can use string directly (eg `min`, `max` etc)
-        } else {
-          v = {}
-          v._state = state // Make state available to var function
-          v.value = key // If no modifiers/args, treat as a string value instead
+        modifiers = modifiers || {}
+        Object.assign(modifiers, evalRecurse(args,event,b))
+        let wrapper = (e,b,er) => {
+          if (wrapper.modifiers) {
+            if (wrapper.args) { wrapper.modifiers.value = wrapper.args }
+            return vr(wrapper.modifiers, e,b, state)
+          } else {
+            return vr(wrapper.args, e,b, state)
+          }
         }
+        wrapper.string = key
+        wrapper.state = state
+        wrapper.modifiers = modifiers
+        wrapper.isDelayedVarFunc = true
+        wrapper.interval = interval
+        if (vr._isAggregator) { wrapper._isAggregator = true }
+        if (vr._requiresValue) { wrapper._requiresValue = true }
+        return wrapper
       } else if (mainVars.exists(key)) {
         throw `Reading main var ${key}`
       } else {
@@ -102,34 +103,35 @@ define(function(require) {
   vars.foo = () => 5
   vars.foo.isVarFunction = true
   state = {str:'foo',idx:0}
-  p = varLookup(parseVar(state), [], {})
+  p = varLookup(parseVar(state), {value:1}, {})
   assert(3, state.idx)
-  assert(5, p(ev(0,0),0,evalParamFrame,{value:1}))
+  assert(true, p(ev(0,0),0,evalParamFrame).isDelayedVarFunc)
+  assert('foo', p(ev(0,0),0,evalParamFrame).string)
+  assert(5, evalParamFrame(p,ev(0,0),0))
   delete vars.foo
 
   vars.foo = (args) => args.baz
   vars.foo.isVarFunction = true
-  vars.foo.isDirectFunction = true
   state = {str:'foo',idx:0}
-  p = varLookup(parseVar(state), [], {})
+  p = varLookup(parseVar(state), {baz:5}, {})
   assert(3, state.idx)
-  assert(5, p(ev(0,0),0,evalParamFrame,{baz:5}))
+  assert(5, evalParamFrame(p,ev(0,0),0))
   delete vars.foo
 
   vars.foo = () => 5
   vars.foo.isVarFunction = true
   state = {str:'foo',idx:0}
-  p = varLookup(parseVar(state), [], {})
+  p = varLookup(parseVar(state), undefined, {})
   assert(3, state.idx)
-  assert({_state:{},value:'foo'}, p(ev(0,0),0,evalParamFrame, undefined))
+  assert(5, p(ev(0,0),0,evalParamFrame)())
   delete vars.foo
 
-  vars.foo = () => 5
+  vars.foo = (args) => args.bar
   vars.foo.isVarFunction = true
   state = {str:'foo',idx:0}
-  p = varLookup(parseVar(state), [], {})
+  p = varLookup(parseVar(state), {bar:3}, {})
   assert(3, state.idx)
-  assert({bar:3,_state:{},value:'foo'}, p(ev(0,0),0,evalParamFrame, {bar:3}))
+  assert(3, p(ev(0,0),0,evalParamFrame)())
   delete vars.foo
 
   vars.foo = () => [1,2]

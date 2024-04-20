@@ -1,6 +1,7 @@
 'use strict';
 define(function(require) {
   let {combineIntervalsFrom} = require('expression/intervals')
+  let {evalFunctionWithModifiers} = require('player/eval-param')
 
   let objectMap = (obj, fn) => {
     if (obj.hasOwnProperty('value')) { // 'value' field implies this is an object with subparams instead of a normal object
@@ -55,17 +56,21 @@ define(function(require) {
     }
   }
 
+  let evalOperand = (v, event,b, evalRecurse, doNotEvalDelayed) => {
+    v = evalRecurse(v, event,b)
+    if (typeof v === 'function' && v.isDelayedVarFunc && !doNotEvalDelayed) {
+      v = evalFunctionWithModifiers(v,event,b, evalRecurse) // Will apply modifiers but not eval a delayed function
+    }
+    return v
+}
+
   let operator = (op, l, r) => {
     if (isPrimitive(l) && isPrimitive(r)) {
       return op(l, r)
     }
-    let mods
-    if (op.preferStringRhs) {
-      mods = {preferString: true}
-    }
     let evalOp = (event,b,evalRecurse) => {
-      let el = evalRecurse(l, event,b)
-      let er = evalRecurse(r, event,b, mods)
+      let el = evalOperand(l, event,b, evalRecurse, op.doNotEvalDelayed)
+      let er = evalOperand(r, event,b, evalRecurse, op.doNotEvalDelayed)
       if (op.raw) {
         return op(el, er, event,b,evalRecurse)
       } else {
@@ -100,11 +105,11 @@ define(function(require) {
 
   assert(3, operator(add, 1, 2))
   assert(8, operator(mul, 2, 4))
-  assert({r:2}, operator(mul, {r:1}, 2)(ev(0),0,evalParam))
-  assert({r:2}, operator(mul, 2, {r:1})(ev(0),0,evalParam))
-  assert({r:4,g:5}, operator(add, {r:1,g:2}, 3)(ev(0),0,evalParam))
-  assert({r:3}, operator(add, {r:1}, {r:2})(ev(0),0,evalParam))
-  assert({r:1,g:6,b:4}, operator(mul, {r:1,g:2}, {g:3,b:4})(ev(0),0,evalParam))
+  assert({r:2}, evalParam(operator(mul, {r:1}, 2), ev(0),0))
+  assert({r:2}, evalParam(operator(mul, 2, {r:1}), ev(0),0))
+  assert({r:4,g:5}, evalParam(operator(add, {r:1,g:2}, 3), ev(0),0))
+  assert({r:3}, evalParam(operator(add, {r:1}, {r:2}), ev(0),0))
+  assert({r:1,g:6,b:4}, evalParam(operator(mul, {r:1,g:2}, {g:3,b:4}), ev(0),0))
   assert('ab', operator(add, 'a', 'b'))
   assert('a3', operator(add, 'a', 3))
   assert(undefined, operator(add, fn(1), 2).interval)

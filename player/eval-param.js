@@ -25,7 +25,7 @@ define((require) => {
     if (override !== undefined) { return override }
     let originalCount = event.count
     event.count = results.modCount
-    let result = value(event, results.modBeat, (v,e,b,o) => {
+    let result = value(event, results.modBeat, (v,e,b,o) => { // Pass an evalRecurse that cancels the modifiers
       let oldEc = e.count
       e.count = originalCount
       let result = evalRecurse(v, e, beat,o)
@@ -54,24 +54,24 @@ define((require) => {
     return result
   }
 
-  let evalParamValueForMemoisation = (evalRecurse, value, event, beat, {ignoreThisVars,evalToObjectOrPrimitive,preferString}) => {
+  let evalParamValueForMemoisation = (evalRecurse, value, event, beat, {ignoreThisVars,evalToObjectOrPrimitive}) => {
     if (Array.isArray(value)) { // chord, eval individual values
       let v = value.map(v => evalRecurse(v, event, beat))
       v = v.flat()
       return v
     } else if (typeof value == 'function') { // Call function to get current value
       if (ignoreThisVars && value._thisVar) { return 0 } // return 0 to hold a place in a chord
-      if (preferString) { value.preferString = true }
+      if (value.isDelayedVarFunc) { return value } // Do not eval delayed function
       let v = evalFunctionWithModifiers(value, event, beat, evalRecurse)
       return evalRecurse(v, event, beat)
     } else if (typeof value === 'object') { // Eval each field in the object
       let result = {}
       for (let k in value) {
-        if (k === '_state' || evalToObjectOrPrimitive) {
-          result[k] = value[k] // Pass _state without evaluation
-        } else {
-          result[k] = evalRecurse(value[k], event, beat)
-        }
+       if (evalToObjectOrPrimitive) {
+         result[k] = value[k] // Pass without evaluation
+       } else {
+         result[k] = evalRecurse(value[k], event, beat)
+       }
       }
       let r = expandObjectChords(result) // and hoist chords up
       return r.length === 1 ? r[0] : r
@@ -110,24 +110,50 @@ define((require) => {
     }
   }
 
+  let evalDelayedFunc = (result, event, beat, evalRecurse, options) => {
+    if (Array.isArray(result)) {
+      return result.map(v => evalDelayedFunc(v, event, beat, evalRecurse, options))
+    }
+    if (typeof result == 'function' && result.isDelayedVarFunc) {
+      if (options.ignoreThisVars && result._thisVar) { return 0 }
+      if (result._requiresValue && (!result.modifiers || result.modifiers.value === undefined)) {
+        return result.string // If function requires value, return string instead to support blend=max etc
+      }
+      let v = evalFunctionWithModifiers(result, event, beat, evalRecurse)
+      if (result.interval === 'event') { beat = event.count } // Force per event if explicitly called for
+      return evalRecurse(v, event, beat)
+    }
+    if (typeof result === 'object') {
+      let v = {}
+      for (let k in result) {
+        v[k] = evalDelayedFunc(result[k], event, beat, evalRecurse, options)
+      }
+      return v
+    }
+    return result
+  }
+
+  let noOptions = {}
   let evalParamFrame = (value, event, beat) => {
     // Fully evaluate down to a primitive number/string etc, allowing the value to change every frame if it wants to
-    return evalParamValue(evalRecurseFull, value, event, beat, {})
+    return evalDelayedFunc(evalParamValue(evalRecurseFull, value, event, beat, noOptions), event, beat, evalRecurseFull, noOptions)
   }
 
   let evalParamFrameIgnoreThisVars = (value, event, beat) => {
     let options = {ignoreThisVars:true}
-    return evalParamValue(evalRecurseWithOptions(evalRecurseFull, options), value, event, beat, options)
+    let er = evalRecurseWithOptions(evalRecurseFull, options)
+    return evalDelayedFunc(evalParamValue(er, value, event, beat, options), event, beat, er, options)
   }
 
   let evalParamToObjectOrPrimitive = (value, event, beat) => {
     let options = {evalToObjectOrPrimitive:true}
-    return evalParamValue(evalRecurseWithOptions(evalRecurseFull, options), value, event, beat, options)
+    let er = evalRecurseWithOptions(evalRecurseFull, options)
+    return evalDelayedFunc(evalParamValue(er, value, event, beat, options), event, beat, er, options)
   }
 
   let evalParamEvent = (value, event) => {
     // Fully evaluate down to a primitive number/string etc, fixing the value for the life of the event it is part of
-    return evalParamValue(evalRecurseFull, value, event, event.count, {})
+    return evalDelayedFunc(evalParamValue(evalRecurseFull, value, event, event.count, noOptions), event, event.count, evalRecurseFull, noOptions)
   }
 
   // TESTS //
@@ -308,11 +334,6 @@ define((require) => {
   assert(0, evalParamFrame(getBWithMods, ev(0), 4))
   assert(2, evalParamFrame(getBWithMods, ev(0), 5))
 
-  let testState = {}
-  let v = evalParamFrame({foo:'bar',_state:testState}, ev(0), 0)
-  v._state.baz = 'doo'
-  assert({baz:'doo'}, testState)
-
   console.log('Eval param tests complete')
   }
 
@@ -321,6 +342,7 @@ define((require) => {
     evalParamFrame:evalParamFrame,
     evalParamFrameIgnoreThisVars:evalParamFrameIgnoreThisVars,
     evalParamToObjectOrPrimitive:evalParamToObjectOrPrimitive,
+    evalFunctionWithModifiers:evalFunctionWithModifiers,
   }
 
 })
