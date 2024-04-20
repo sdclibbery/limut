@@ -56,10 +56,10 @@ define(function(require) {
     }
   }
 
-  let evalOperand = (v, event,b, evalRecurse, doNotEvalDelayed) => {
+  let evalOperand = (v, event,b, evalRecurse, doNotEvalDeferred) => {
     v = evalRecurse(v, event,b)
-    if (typeof v === 'function' && v.isDelayedVarFunc && !doNotEvalDelayed) {
-      v = evalFunctionWithModifiers(v,event,b, evalRecurse) // Will apply modifiers but not eval a delayed function
+    if (typeof v === 'function' && v.isDeferredVarFunc && !doNotEvalDeferred) {
+      v = evalFunctionWithModifiers(v,event,b, evalRecurse) // Will apply modifiers but not eval a deferred function
     }
     return v
 }
@@ -69,8 +69,8 @@ define(function(require) {
       return op(l, r)
     }
     let evalOp = (event,b,evalRecurse) => {
-      let el = evalOperand(l, event,b, evalRecurse, op.doNotEvalDelayed)
-      let er = evalOperand(r, event,b, evalRecurse, op.doNotEvalDelayed)
+      let el = evalOperand(l, event,b, evalRecurse, op.doNotEvalDeferred)
+      let er = evalOperand(r, event,b, evalRecurse, op.doNotEvalDeferred)
       if (op.raw) {
         return op(el, er, event,b,evalRecurse)
       } else {

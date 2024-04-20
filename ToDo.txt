@@ -224,7 +224,6 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Syntax for piecewise functions with lookup
- !Rename delayed func to defer func everywhere
  ?Can get rid of wrapper from parse-var?
  Big regression test
   Look for problems from lack of evalling arguments etc

@@ -40,7 +40,7 @@ define(function(require) {
   }
   operators['|'].raw = true
   operators['.'].raw = true
-  operators['.'].doNotEvalDelayed = true
+  operators['.'].doNotEvalDeferred = true
   let precedence = {'.':1,'?':2,'|':3,'^':4,'%':5,'/':5,'*':5,'-':6,'+':6,} // MUST ALL BE > 0
 
   // TESTS //

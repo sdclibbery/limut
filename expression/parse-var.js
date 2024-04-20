@@ -51,7 +51,7 @@ define(function(require) {
         wrapper.string = key
         wrapper.state = state
         wrapper.modifiers = modifiers
-        wrapper.isDelayedVarFunc = true
+        wrapper.isDeferredVarFunc = true
         wrapper.interval = interval
         if (vr._isAggregator) { wrapper._isAggregator = true }
         if (vr._requiresValue) { wrapper._requiresValue = true }
@@ -105,7 +105,7 @@ define(function(require) {
   state = {str:'foo',idx:0}
   p = varLookup(parseVar(state), {value:1}, {})
   assert(3, state.idx)
-  assert(true, p(ev(0,0),0,evalParamFrame).isDelayedVarFunc)
+  assert(true, p(ev(0,0),0,evalParamFrame).isDeferredVarFunc)
   assert('foo', p(ev(0,0),0,evalParamFrame).string)
   assert(5, evalParamFrame(p,ev(0,0),0))
   delete vars.foo

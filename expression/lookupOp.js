@@ -14,7 +14,7 @@ define(function(require) {
     let ml = mainParam(l)
     let mr = mainParam(r)
     let func
-    if (typeof r === 'function' && r.isDelayedVarFunc) { func = r }
+    if (typeof r === 'function' && r.isDeferredVarFunc) { func = r }
     if (func) {
       func.args = l
       let v = evalFunctionWithModifiers(func,event,b, evalRecurse)
