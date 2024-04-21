@@ -1407,6 +1407,12 @@ define(function(require) {
   p = parseExpression("(1,2,3).(rand+1)")
   assert(2, evalParamFrame(p, ev(0,0,1), 0))
 
+  p = parseExpression("({g:1}*p.foo.max).g") // player p does not exist, so this should give 0
+  assert(0, evalParamFrame(p, ev(0,0,1), 0))
+
+  p = parseExpression("({g:1}*0.max).g")
+  assert(0, evalParamFrame(p, ev(0,0,1), 0))
+
   console.log('Parse expression tests complete')
   }
 

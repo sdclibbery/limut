@@ -2727,6 +2727,7 @@ b moroder 00-3-1, add=[0,[-7,7]]t[14,2]
 include 'preset/synthwave.limut'
 set bpm=64
 set root=4 // E
+set scale=major
 set main amp=2
 city image 0, url='https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Guatemala_City_at_Night.JPG/2560px-Guatemala_City_at_Night.JPG', zoom=[0.85:2]l192@f, fore=#aaaf
 room swirl follow beep, monochrome, add=0, back=#234f, fore=#bcea, sus=1, rate=1/8

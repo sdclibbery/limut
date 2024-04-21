@@ -42,7 +42,7 @@ define(function(require) {
         Object.assign(modifiers, evalRecurse(args,event,b))
         let wrapper = (e,b,er) => {
           if (wrapper.modifiers) {
-            if (wrapper.args) { wrapper.modifiers.value = wrapper.args }
+            if (wrapper.args !== undefined) { wrapper.modifiers.value = wrapper.args }
             return vr(wrapper.modifiers, e,b, state)
           } else {
             return vr(wrapper.args, e,b, state)

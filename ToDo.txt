@@ -224,9 +224,9 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Syntax for piecewise functions with lookup
- ?Can get rid of wrapper from parse-var?
  Big regression test
   Look for problems from lack of evalling arguments etc
+  Check examples
  Docs
   New syntax [ v1:i1s1, v2:i2s2 ]{p}
   Back In: rand{1,2,3}, ().rand
@@ -240,7 +240,7 @@ Time values
   ? What about Hz etc?
  Or parse to {1, units:'ms'}?
   - Operators must handle units properly
-Normalisation as a piecewise feature; []e and []r have it by default?
+Normalisation as a piecewise feature; []e and []r have it by default? Syntax?
 Should be able to parse top heavy fractions; eg `1+1/4` is same as 5/4. Parse as number, not operator?
 Random rewrite to use piecewise
  []n:  []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
@@ -254,6 +254,11 @@ Allow non const step sizes in piecewise?
 !Not getting the SAME random values that the other player got; eg:
   p ping, oct=(3,3), add=floor{[0,14]r}, dur=2
   r readout, add=p.add, loc={y:this.voice/2}, dur=1/8
+! Delayed events appear in the wrong getEventsForBeat, and get the wrong voice assigned
+ p readout, dur=1/4, delay|=[(),{1,add:5}]r, loc={y:this.voice/2}
+!!Dont get actual values from random on another player
+ p ping, oct=(3,3), add=[0,14]r, dur=2
+ r readout, add=p.add, loc={y:this.voice/2}
 Voice leading
  !!!IDEA: each event should be able to access the previous event (in its voice), and others in its chord? Then could calculate leading?
  ? Very clever or just noodles with random walks? Experiment...

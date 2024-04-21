@@ -22,7 +22,7 @@ define(function(require) {
       else if (Array.isArray(args)) { vs = args }
       else if (Array.isArray(args.value)) { vs = args.value }
       else if (args.value !== undefined) { vs = getArrayFromValues(args) }
-      else if (args !== undefined) { vs = [args] }
+      else if (typeof args === 'number') { vs = [args] }
       else { vs = [] }
       vs = vs.flatMap(v => {
         if (typeof(v) === 'object' && v.hasOwnProperty('value')) { return v.value }
