@@ -432,12 +432,18 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>[1,4,7]r</code> Select a different value every time, chosen randomly from the numbers 1, 4 and 7</p>
 <p><code>[:9]r</code> Select a different random float every time, between 0 and 9</p>
 <p><code>[0:9]r</code> Select a different random float every time, between 0 and 9. Note if this will be rounded to to an integer (eg for oct, add or sample params), then the upper limit is exclusive. eg <code>oct=[2:3]r</code> will give a float value between 2 and 2.9999...., so since oct rounds down to the nearest integer, it will always get <code>oct=2</code></p>
+<p><code>[0,1:7]r</code> Select a different random float every time, either 0 or 1. The 1 is 7 times more likely than the 0.</p>
 <p><code>[1,2]r4</code> Select a different value and hold for 4 beats, chosen randomly from the numbers 1, 2. The hold time must be a const number, it cannot be an expression.</p>
 <p><code>[1:3]r{seed:1,per:4}</code> Select a different determninistic random float every time, between 1 and 3; <code>seed</code> determines the random sequence; the sequence repeats every <code>per</code> beats. <code>seed</code> is also in beats, so adding 1 to seed pushes the sequence by 1 beat.</p>
 <p><code>[]n</code> Smoothly varying noise, moving between 0 and 1</p>
 <p><code>[1:2]n</code> Smoothly varying noise, moving between 1 and 2</p>
 <p><code>[1:2]n4</code> Smoothly varying noise, moving between 1 and 2, taking 4 beats to progress from one value to another. The timing must be a const number, it cannot be an expression.</p>
 <p><code>[]n{seed:1,per:4}</code> Smoothly varying deterministic noise, moving between 0 and 1; <code>seed</code> and <code>per</code> work the same as for <code>[]r</code></p>
+<p><code>[ v1:i1t1, v2:i2t2, ... ]{p}</code> Piecewise series. Allows interpolating between a set of values, specifying the interpolation and 'travel' between each pair of values, and allowing a custom parameter to control the interpolation. For example, <code>[0:_1,1:\]{time*2}</code> is controlled by double-speed time, starts at 0, stays constant at zero for 1 unit of double-speed time, then jumps to 1 and linearly falls back down to 0 for 1 unit of double-speed time.</p>
+<p class='sub'><code>v1 etc</code> Expressions giving the values to interpolate between</p>
+<p class='sub'><code>i1 etc</code> Interpolation operator</p>
+<p class='sub'><code>t1 etc</code> The amount of parameter p travel between this value and the next; note the sequence wraps round</p>
+<p class='sub'><code>p</code> Parameter expression giving the current point of travel through the piecewise series</p>
 <p><code>+</code> Add values together; eg [2,3]+4 is equivalent to [6,7]</p>
 <p><code>-</code> Subtract values; eg [2,3]-1 is equivalent to [1,2]</p>
 <p><code>-</code> Unary minus operator; eg <code>-[1,2]</code> is equivalent to <code>[-1,-2]</code></p>
@@ -586,9 +592,11 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>sus</code> Sustain time in beats. Note the 'sustain' in an ADSR envelope sets the sustain level, however this param sets the sustain time. The default is time required after attack and decay to take the note to the end of the duration.</p>
 <p><code>rate</code> Playback rate for 'play' samples, animation rate for visuals</p>
 <p><code>voice</code> READ ONLY param. This param is set to the voice index of an individual event within a chord. So for example: <code>p ping 0, add=(0,2)</code>. Here, there are two events within the chord, with <code>add</code> values of 0 and 2. The <code>voice</code> values for these events will be 0 and 1, since the <code>voice</code> increments. This can be used to change other values based on the voice index within the chord.</p>
-<p><code>exists</code> READ ONLY param. Set to one if the player is defined, even if its not currently playing any event.</p>
-<p><code>playing</code> READ ONLY param. Set to one if the player exists and is currently playing one or more events.</p>
-<p><code>player</code> READ ONLY param. Set to the name of the player currently playing. For a follow player, will be the name of the follow player (not the player it's following).</p>
+<p><code>time</code> READ ONLY param. The current time in beats this event has been playing for.</p>
+<p><code>idx</code> READ ONLY param. The pattern index of this event. The pattern index counts through the pattern, then resets when the pattern repeats.</p>
+<p><code>exists</code> READ ONLY param. One if the player is defined, even if its not currently playing any event.</p>
+<p><code>playing</code> READ ONLY param. One if the player exists and is currently playing one or more events.</p>
+<p><code>player</code> READ ONLY param. The name of the player currently playing. For a follow player, will be the name of the follow player (not the player it's following).</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-audio-params')" class="accordion"> Audio Params</h4>
 <div id="accordion-audio-params" class="closed">
@@ -891,6 +899,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>count{3,1,2}</code> Returns the number of arguments (3 in the example)</p>
 <p><code>sum{3,1,2}</code> Returns the sum of all arguments (6 in the example)</p>
 <p><code>avg{3,1,2}</code> Returns the mean average of all arguments (2 in the example)</p>
+<p><code>rand{3,1,2}</code> Returns one of the arguments at random</p>
 <p><code>euclid{3,from:8}</code> Euclidean rhythm generator. The example will evenly spread 3 events between 8 beats. For example <code>p ping 0, dur=euclid{3,from:8}</code> will make 3 notes of durations 3,2 and 3. Note this uses a Bresenham type algorithm to spread the events, rather than a classic Euclidean algorithm. This it may produce a slightly different ordering ("3 from 8" would give a 3,3,2 pattern in a classic Euclidean algorithm, but the Bresenham gives a 3,2,3 pattern. The offset subparam can be used to 'fix' this.</p>
 <p class='sub'><code>euclid{3,from:8,offset:1}</code> Offset rotates the pattern. The example will give a 3,3,2 pattern which is the default 3,2,3 pattern but rotated by one.</p>
 <p><code>envelope{}</code> Return a value that changes over the course of each event like an envelope generator.</p>

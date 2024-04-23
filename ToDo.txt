@@ -224,16 +224,9 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Syntax for piecewise functions with lookup
- Big regression test
-  Look for problems from lack of evalling arguments etc
-  Check examples
- Docs
-  New syntax [ v1:i1s1, v2:i2s2 ]{p}
-  Back In: rand{1,2,3}, ().rand
-  In []r, specifically mention the [1:4,2]r syntax for changing the probabilities
-  Docs for time and this.time and this.idx
- BREAKING change
-  Cannot always map function call with lookupOp; ().floor{time}
+ Release
+  BREAKING change: Cannot always map function call with lookupOp; ().floor{time}
+  Update index page link
 Time values
  150ms parses into a per-event function that returns 0.15s in beats?
   - For things in s/ms will then be converting twice, and second conversion may still be per frame
@@ -248,14 +241,15 @@ Random rewrite to use piecewise
  []r used to select per event by fixing the seed per event rather than by stepping time, so it used to work
 Allow non const step sizes in piecewise?
 "time" modifier allowing user defined time manipulation
+!([{x:[1,2]t1/4@f}]t2).x never get a 2 unless add @f to the []t2
+! Delayed events appear in the wrong getEventsForBeat, and get the wrong voice assigned
+ p readout, dur=1/4, delay|=[(),{1,add:5}]r, loc={y:this.voice/2}
 !Ordering of players makes this fail; readout doesnt get a chord when it should
   r readout, add=p.add, loc={y:this.voice/2}
   p readout, oct=(4,4), add=floor{[]r*7}, fore=0
 !Not getting the SAME random values that the other player got; eg:
   p ping, oct=(3,3), add=floor{[0,14]r}, dur=2
   r readout, add=p.add, loc={y:this.voice/2}, dur=1/8
-! Delayed events appear in the wrong getEventsForBeat, and get the wrong voice assigned
- p readout, dur=1/4, delay|=[(),{1,add:5}]r, loc={y:this.voice/2}
 !!Dont get actual values from random on another player
  p ping, oct=(3,3), add=[0,14]r, dur=2
  r readout, add=p.add, loc={y:this.voice/2}
