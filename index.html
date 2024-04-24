@@ -908,6 +908,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>envelope{a:1}</code> Attack time for the envelope, in the units specified by 'units' with the shaping of 'shape'.</p>
 <p class='sub'><code>envelope{d:1}</code> Decay time for the envelope, in the units specified by 'units' with the shaping of 'shape'.</p>
 <p><code>rand</code> Returns a pseudo random number between zero and one. Uses time-based hashing to provide consistent values. <code>rand@e</code> will provide a number that is different on each pattern event, but constant within each event. <code>rand{seed:0}</code> sets a specific seed for the randoms. Because the value comes from time-hashing, time based modifiers such as <code>step</code> and <code>per</code> are respected.</p>
+<p><code>time</code> Returns the current time in beats. Time modifiers such as <code>step</code> and <code>per</code> are respected.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-play-samples')" class="accordion"> Play Samples</h4>
 <div id="accordion-play-samples" class="closed">
