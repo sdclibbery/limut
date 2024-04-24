@@ -213,13 +213,13 @@ shadertoy synth multiple channels
 ==== things to test/consider ====
 // pattern features (), [], <>, #b, v^, single event pattern
 // (), follow, complex durs, simple durs, delay, stutter, overrides, +=, |=, []
-// [], []t, []l/s, []e, []n, []r
-// operators + - * / ^ % |
-// var, player.var, this.param, this.voice, var{params}, slider{}, floor{}, .floor{to:}, accum{}
+// [], []t, []l/s, []e, []n, []r []{}
+// operators + - * / ^ % | .
+// var, player.var, this.param, this.voice, var{params}, slider{}, floor{}, .floor{to:}, accum{}, this.time, time, rand, slider
 // (...).1, (...).max, max{...}, {foo:...}.foo, (pk,ps).pulse
 // modifiers {seed,per,step,0:0}, @e, @f
 // subparams {2,mix:1/2}, presets, buses, buffers
-!!!!Remember to update breaking changes link on this page when doing a release!!!!
+!!!!Remember to update breaking changes link on index when doing a release!!!!
 
 ====
 ==== other ====
