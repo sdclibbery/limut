@@ -469,7 +469,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <h5>Modifiers:</h5>
 <p><code>{per:8}</code> Repeat a sequence <code>[1,2,3]t1{per:8}</code> will give a sequence that repeats every 8 beats.</p>
 <p><code>{per:8,0:7,2:3}</code> Force the value to evaluate to 7 at the start of each repeat, and 3 on the second beat of every repeat. Note this only works if <code>per</code> is used to make a repeating sequence.</p>
-<p><code>{step:2}</code> Advance time in discrete steps only <code>[1,4]l4{per:1/2}@f</code> will give a sequence that changes value only every 1/2 beat.</p>
+<p><code>{step:2}</code> Advance time in discrete steps only <code>[1,4]l4{step:1/2}@f</code> will give a sequence that changes value only every 1/2 beat.</p>
 <h5>Intervals:</h5>
 <p><code>@e</code> Use <code>@e</code> to evaluate this value once per event</p>
 <p><code>@f</code> Use <code>@f</code> to evaluate once per frame (60 times a second). For example <code>lpf=[300:3000]l8@f</code> will update the lpf cutoff frequency continuously, while <code>lpf=[300:3000]l8</code> will be evaluated only once for each event played.</p>
@@ -781,7 +781,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>choke</code> Set a choke group. Notes played with a choke group will cut off other notes that are already playing if they have the same choke group. The choke group can be a string, and can apply across multiple players.</p>
 <p><code>echo</code> Echo time delay in beats</p>
 <p class='sub'><code>echo={1,feedback:0.8}</code> Echo feedback gain, 0 to 1, default 0.35. Higher value means the echo persists for longer.</p>
-<p class='max'><code>echo={1,max:2}</code> Echo max time delay. Only valid for bus echo. The bus echo time can be varied, but cannot be larger than this. Defaults to either 1 beat, or the initial value of the delay time, whichever is larger.</p>
+<p class='sub'><code>echo={1,max:2}</code> Echo max time delay. Only valid for bus echo. The bus echo time can be varied, but cannot be larger than this. Defaults to either 1 beat, or the initial value of the delay time, whichever is larger.</p>
 <p><code>chorus</code> Strength of lfo-delay based stereo chorus effect.</p>
 <p class='sub'><code>chorus={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>phaser</code> LFO frequency for phaser effect, in phase sweep cycles per beat.</p>

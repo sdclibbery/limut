@@ -223,17 +223,19 @@ shadertoy synth multiple channels
 
 ====
 ==== other ====
-Syntax for piecewise functions with lookup
- Release
-  BREAKING change: Cannot always map function call with lookupOp; ().floor{time}
-  Update index page link
 Time values
+ Default b: seed, per, step, dur, delay, att, dec, sus, rel, vib.delay, glide, echo, reverb, euclid{from}
+ Default s: start, compress.att, compress.rel
+ Default ms: envelope{a,d}, pitchedperc stuff
+ Default cpb: vib, phaser, flanger
+ Defaullt Hz: lpf, hpf, bpf, nf, apf, psf, low.freq, mid.freq, high.freq, ring, room.hpf, reverb.hpf, pitchedperc stuff
  150ms parses into a per-event function that returns 0.15s in beats?
   - For things in s/ms will then be converting twice, and second conversion may still be per frame
-  ? What about Hz etc?
+  ? What about Hz etc? 10Hz returns 0.1s in beats?
  Or parse to {1, units:'ms'}?
-  - Operators must handle units properly
+  - Then operators must handle units properly
 Normalisation as a piecewise feature; []e and []r have it by default? Syntax?
+stutter subparam, to squash or expand stutter timescale
 Should be able to parse top heavy fractions; eg `1+1/4` is same as 5/4. Parse as number, not operator?
 Random rewrite to use piecewise
  []n:  []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
