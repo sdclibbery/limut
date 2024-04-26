@@ -231,9 +231,13 @@ Time values
  Defaullt Hz: lpf, hpf, bpf, nf, apf, psf, low.freq, mid.freq, high.freq, ring, room.hpf, reverb.hpf, pitchedperc stuff
  150ms parses into a per-event function that returns 0.15s in beats?
   - For things in s/ms will then be converting twice, and second conversion may still be per frame
-  ? What about Hz etc? 10Hz returns 0.1s in beats?
+  - Everything has to have same default units then; eg have to specify Hz on lpf EVERY timne...
  Or parse to {1, units:'ms'}?
   - Then operators must handle units properly
+  - Everything must handle the possibility of values being {} with units - but they already should for #/b ??
+ TRY IT parsing to {v,units:} based on parsing for #/b treat b as both units and flat
+Exponential interpolator for piecewise
+ ?Retire envelope{}?
 Normalisation as a piecewise feature; []e and []r have it by default? Syntax?
 stutter subparam, to squash or expand stutter timescale
 Should be able to parse top heavy fractions; eg `1+1/4` is same as 5/4. Parse as number, not operator?
