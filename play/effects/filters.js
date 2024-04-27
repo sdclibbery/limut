@@ -15,16 +15,16 @@ define(function (require) {
     let qModifier = twoStage ? x=>x/2 : undefined
     let filter = system.audio.createBiquadFilter()
     filter.type = type
-    evalMainParamFrame(filter.frequency, params, freqParam)
-    evalSubParamFrame(filter.Q, params, freqParam, 'q', defaultResonance, qModifier)
+    evalMainParamFrame(filter.frequency, params, freqParam, undefined, 'hz')
+    evalSubParamFrame(filter.Q, params, freqParam, 'q', defaultResonance, undefined, qModifier)
     node.connect(filter)
     params._destructor.disconnect(filter, node)
     if (twoStage) { // Simulate a 4 pole 24 dB/octave filter
       node = filter
       filter = system.audio.createBiquadFilter()
       filter.type = type
-      evalMainParamFrame(filter.frequency, params, freqParam)
-      evalSubParamFrame(filter.Q, params, freqParam, 'q', defaultResonance, qModifier)
+      evalMainParamFrame(filter.frequency, params, freqParam, undefined, 'hz')
+      evalSubParamFrame(filter.Q, params, freqParam, 'q', defaultResonance, undefined, qModifier)
       node.connect(filter)
       params._destructor.disconnect(filter, node)
     }
@@ -36,7 +36,7 @@ define(function (require) {
     let filter = system.audio.createBiquadFilter()
     filter.type = type
     evalMainParamFrame(filter.gain, params, gainParam, undefined, x => Math.log10(Math.max(x,1e-6))*20) // Convert to dB for WebAudio
-    evalSubParamFrame(filter.frequency, params, gainParam, 'freq', defaultFreq)
+    evalSubParamFrame(filter.frequency, params, gainParam, 'freq', defaultFreq, 'hz')
     evalSubParamFrame(filter.Q, params, gainParam, 'q', defaultQ)
     node.connect(filter)
     params._destructor.disconnect(filter, node)
@@ -46,7 +46,7 @@ define(function (require) {
   let psf = (params, p, n, f, defaultFreq) => {
     let filter = system.audio.createBiquadFilter()
     filter.type = 'allpass'
-    evalSubParamFrame(filter.frequency, params, p, f, defaultFreq)
+    evalSubParamFrame(filter.frequency, params, p, f, defaultFreq, 'hz')
     evalSubParamFrame(filter.Q, params, p, 'q', 1)
     n.connect(filter)
     params._destructor.disconnect(filter, n)

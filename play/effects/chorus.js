@@ -58,7 +58,7 @@ define(function (require) {
       const maxDelay = 40/1000
       const lfoNormalise = 2*(1 + bias.offset.value + lfoHfGain)
       if (!!params) {
-        evalMainParamFrame(lfoGain.gain, params, 'chorus', 1, c => (c/8)*maxDelay/lfoNormalise)
+        evalMainParamFrame(lfoGain.gain, params, 'chorus', 1, undefined, c => (c/8)*maxDelay/lfoNormalise)
       } else {
         lfoGain.gain.value = (chorusAmount/8)*maxDelay/lfoNormalise
       }

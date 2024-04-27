@@ -18,7 +18,7 @@ define(function (require) {
     // vco
     let vco = system.audio.createOscillator()
     setWave(vco, wave)
-    evalSubParamFrame(vco.frequency, params, id, 'detune', 0, (d) => freq * Math.pow(2, d/12))
+    evalSubParamFrame(vco.frequency, params, id, 'detune', 0, undefined, (d) => freq * Math.pow(2, d/12))
     pitchEffects(vco.detune, params)
     vco.start(params._time)
     params._destructor.stop(vco)

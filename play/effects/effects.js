@@ -11,7 +11,7 @@ define(function (require) {
     if (!mainParam(params.chop, 0)) { return node }
     let lfo = system.audio.createOscillator()
     lfo.type = evalSubParamEvent(params, 'chop', 'wave', 'sine')
-    evalMainParamFrame(lfo.frequency, params, 'chop', 1, v => v / metronome.beatDuration())
+    evalMainParamFrame(lfo.frequency, params, 'chop', 1, undefined, v => v / metronome.beatDuration())
     let gain = system.audio.createGain()
     gain.gain.setValueAtTime(1, system.audio.currentTime)
     lfo.connect(gain.gain)

@@ -1,6 +1,5 @@
 'use strict'
 define(function(require) {
-  let {mainParam,subParam} = require('player/sub-param')
   let {beatDuration} = require('metronome')
 
   let timeScale = {
@@ -60,7 +59,9 @@ define(function(require) {
 
   let units = (v, targetUnts) => {
     if (v === null || v === undefined) { return v }
-    return convert(mainParam(v,0), subParam(v,'_units'), targetUnts, beatDuration)
+    if (typeof v !== 'object') { return v }
+    let units = v._units
+    return convert(v.value, units, targetUnts, beatDuration)
   }
 
   // TESTS
@@ -74,6 +75,8 @@ define(function(require) {
   
     assert(null, units(null))
     assert(undefined, units(undefined))
+    assert(undefined, units({}))
+    assert(undefined, units({_units:'s'}))
   
     assert(1, units(1))
     assert(1, units(1, 's'))

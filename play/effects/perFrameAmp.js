@@ -48,7 +48,7 @@ define(function (require) {
     node = choke(params, node)
     if (typeof mainParam(params.amp) !== 'function') { return node } // No per frame control required
     let vca = system.audio.createGain()
-    evalMainParamFrame(vca.gain, params, 'amp', 1, x => Math.max(x,0))
+    evalMainParamFrame(vca.gain, params, 'amp', 1, undefined, x => Math.max(x,0))
     node.connect(vca)
     params._destructor.disconnect(vca)
     return vca

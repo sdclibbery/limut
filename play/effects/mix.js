@@ -45,8 +45,8 @@ define(function (require) {
       let outGainNode = system.audio.createGain()
       wet.connect(outGainNode)
       dryGainNode.connect(outGainNode)
-      evalSubParamFrame(dryGainNode.gain, params, p, 'mix', def, mix => dryGain(mix))
-      evalSubParamFrame(outGainNode.gain, params, p, 'mix', def, mix => outGain(mix))
+      evalSubParamFrame(dryGainNode.gain, params, p, 'mix', def, undefined, mix => dryGain(mix))
+      evalSubParamFrame(outGainNode.gain, params, p, 'mix', def, undefined, mix => outGain(mix))
       params._destructor.disconnect(dryGainNode, outGainNode)
       return outGainNode
     }

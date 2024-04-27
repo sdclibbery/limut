@@ -2,17 +2,17 @@
 define(function(require) {
 
     let units = [
-        { keyword:'#', template:{'#':1} },
-        { keyword:'b', template:{b:1,_units:'b'} },
-        { keyword:'cpb', template:{_units:'cpb'} },
-        { keyword:'kcpb', template:{_units:'cpb'}, _unitscale:1000 },
-        { keyword:'s', template:{_units:'s'} },
-        { keyword:'ms', template:{_units:'s'}, _unitscale:1/1000 },
-        { keyword:'hz', template:{_units:'hz'} },
-        { keyword:'khz', template:{_units:'hz'}, _unitscale:1000 },
-        { keyword:'cps', template:{_units:'hz'} },
-        { keyword:'kcps', template:{_units:'hz'}, _unitscale:1000 },
-        { keyword:'bpm', template:{_units:'hz'}, _unitscale:1/60 },
+      { keyword:'bpm', template:{_units:'hz'}, _unitscale:1/60 },
+      { keyword:'#', template:{'#':1} },
+      { keyword:'b', template:{b:1,_units:'b'} },
+      { keyword:'cpb', template:{_units:'cpb'} },
+      { keyword:'kcpb', template:{_units:'cpb'}, _unitscale:1000 },
+      { keyword:'s', template:{_units:'s'} },
+      { keyword:'ms', template:{_units:'s'}, _unitscale:1/1000 },
+      { keyword:'hz', template:{_units:'hz'} },
+      { keyword:'khz', template:{_units:'hz'}, _unitscale:1000 },
+      { keyword:'cps', template:{_units:'hz'} },
+      { keyword:'kcps', template:{_units:'hz'}, _unitscale:1000 },
     ]
 
     let keyword = (state, kw) => {

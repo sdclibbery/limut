@@ -10,7 +10,7 @@ define((require) => {
     let initialDelay = evalMainParamEvent(params, 'echo', 0) * metronome.beatDuration()
     let maxDelay = evalSubParamEvent(params, 'echo', 'max', Math.max(1,initialDelay)) * metronome.beatDuration()
     let echo = system.audio.createDelay(maxDelay)
-    evalMainParamFrame(echo.delayTime, params, 'echo', 0, d => d * metronome.beatDuration())
+    evalMainParamFrame(echo.delayTime, params, 'echo', 0, undefined, d => d * metronome.beatDuration())
     let echoGain = system.audio.createGain()
     evalSubParamFrame(echoGain.gain, params, 'echo', 'feedback', 0.35)
     node.connect(echo)
