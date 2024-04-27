@@ -223,21 +223,23 @@ shadertoy synth multiple channels
 
 ====
 ==== other ====
-Time values
- Default b: seed, per, step, dur, delay, att, dec, sus, rel, vib.delay, glide, echo, reverb, euclid{from}
+Exponential interpolator for piecewise
+Time units
+ Default b: []{}, seed, per, step, dur, delay, att, dec, sus, rel, vib.delay, glide, echo, reverb, euclid{from}, time(visual)
  Default s: start, compress.att, compress.rel
  Default ms: envelope{a,d}, pitchedperc stuff
  Default cpb: vib, phaser, flanger
  Defaullt Hz: lpf, hpf, bpf, nf, apf, psf, low.freq, mid.freq, high.freq, ring, room.hpf, reverb.hpf, pitchedperc stuff
- 150ms parses into a per-event function that returns 0.15s in beats?
-  - For things in s/ms will then be converting twice, and second conversion may still be per frame
-  - Everything has to have same default units then; eg have to specify Hz on lpf EVERY timne...
- Or parse to {1, units:'ms'}?
-  - Then operators must handle units properly
-  - Everything must handle the possibility of values being {} with units - but they already should for #/b ??
  TRY IT parsing to {v,units:} based on parsing for #/b treat b as both units and flat
-Exponential interpolator for piecewise
- ?Retire envelope{}?
+  100Hz+50Hz test in parse-expression
+   Just special case for _units if both same for now?
+  test case: lpf - have to get evalMainParamFrame etc to handle the units§
+  Units for all things listed above
+  Main bpm param units
+  Treat db as units???
+  Docs for all params/things
+Allow non const step sizes in piecewise
+ Also use of units() should handle changes to beat duration - And at least it should be evalled at event start not parse time!
 Normalisation as a piecewise feature; []e and []r have it by default? Syntax?
 stutter subparam, to squash or expand stutter timescale
 Should be able to parse top heavy fractions; eg `1+1/4` is same as 5/4. Parse as number, not operator?
@@ -245,7 +247,6 @@ Random rewrite to use piecewise
  []n:  []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
 ?Is it possible for addc=[0,[-12,-24]t1/8@f]r@e to still allow the per frame motion, while the r@e selects it per event?
  []r used to select per event by fixing the seed per event rather than by stepping time, so it used to work
-Allow non const step sizes in piecewise?
 "time" modifier allowing user defined time manipulation
 !([{x:[1,2]t1/4@f}]t2).x never get a 2 unless add @f to the []t2
 ! Delayed events appear in the wrong getEventsForBeat, and get the wrong voice assigned
@@ -300,6 +301,7 @@ User defined functions
  ?What about chords eg {x} -> x*(1,2,3) ?
  !Should be able to access the default e and b params
  !Should be able to eval functions as well as pass them; eg ({}->3){}
+ Rewrite envelope{} as a user defined function
 Should be able to [0:1]n{per:'event',seed:0} ie so the sequence repeats on every event
 Pattern update
  Generative features:

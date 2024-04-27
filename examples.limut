@@ -3792,3 +3792,8 @@ r readout, add={foo:2,bar:3}.(this.foo), foo=bar
 // g glow, loc={x:[-1:2,1:0]l@f,y:(-1,-1/2,0,1/2,1).rand{per:2,seed:0,step:1/2}}
 
 
+/// units testing
+// set bpm=60*1
+// r readout, add=[0:2,1:2]s@f
+// r readout, add=[0:2b,1:2b]s@f
+// r readout, add=[0:2s,1:2s]s@f

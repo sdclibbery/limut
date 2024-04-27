@@ -3,7 +3,7 @@ define(function(require) {
   let {evalParamFrame} = require('player/eval-param')
   let consoleOut = require('console')
   let evalOperator = require('expression/eval-operator')
-  let {mainParam} = require('player/sub-param')
+  let {units} = require('units')
 
   let findPieceIdxWithFractional = (ss, p) => {
     let pos = 0
@@ -30,6 +30,7 @@ define(function(require) {
     if (vs.length === 0) { return () => 0 }
     if (is.length !== vs.length) { throw `is.length ${is} !== vs.length ${vs}` }
     if (ss.length !== vs.length) { throw `ss.length ${ss} !== vs.length ${vs}` }
+    ss = ss.map(s => units(s, 'b')) // Default to beats but accept s etc. Should not be parse time this gets evalled at though!
     let totalSize = ss.reduce((a,x) => a+x, 0)
     if (!Number.isFinite(totalSize)) { throw `invalid piecewise totalSize: ${totalSize}` }
     let result = (e,b, evalRecurse, modifiers) => {

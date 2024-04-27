@@ -13,6 +13,7 @@ define(function(require) {
   let parseColour = require('expression/parse-colour')
   let parseString = require('expression/parse-string')
   let parsePiecewise = require('expression/parse-piecewise')
+  let parseUnits = require('expression/parse-units')
 
   let expression = (state) => {
     let result
@@ -73,12 +74,7 @@ define(function(require) {
       // number
       let n = number(state)
       if (n !== undefined) {
-        let next = state.str.charAt(state.idx)
-        if (next === '#' || next === 'b') { // Allow sharp/flat notation immediately following a number
-          state.idx += 1
-          n = {value:n}
-          n[next] = 1
-        }
+        n = parseUnits(n, state)
         result = addModifiers(n, parseMap(state))
         continue
       }
@@ -1139,9 +1135,6 @@ define(function(require) {
 
   assert({foo:2,bar:3}, evalParamFrame(parseExpression("{foo:2,bar:3}.max"),ev(0,0),0))
 
-  assert({value:0,'#':1}, evalParamFrame(parseExpression("0#"),ev(0,0),0))
-  assert({value:2,b:1}, evalParamFrame(parseExpression("2b"),ev(0,0),0))
-
   vars.e = 1
   p = parseExpression('e')
   assert(1, p({},0,(v)=>v))
@@ -1412,6 +1405,20 @@ define(function(require) {
 
   p = parseExpression("({g:1}*0.max).g")
   assert(0, evalParamFrame(p, ev(0,0,1), 0))
+
+  assert({value:0,'#':1}, evalParamFrame(parseExpression("0#"),ev(0,0),0))
+  assert({value:2,b:1,_units:'b'}, evalParamFrame(parseExpression("2b"),ev(0,0),0))
+  assert({value:0.15,_units:'s'}, evalParamFrame(parseExpression("0.15s"),ev(0,0),0))
+  assert({value:0.15,_units:'s'}, evalParamFrame(parseExpression("150ms"),ev(0,0),0))
+  assert({value:150,_units:'hz'}, evalParamFrame(parseExpression("150hz"),ev(0,0),0))
+  assert({value:150,_units:'hz'}, evalParamFrame(parseExpression("50hz*3"),ev(0,0),0))
+  assert({value:150,_units:'hz'}, evalParamFrame(parseExpression("3*50hz"),ev(0,0),0))
+  assert({value:150,_units:'hz'}, evalParamFrame(parseExpression("[150hz]r"),ev(0,0),0))
+  assert({value:150,_units:'hz'}, evalParamFrame(parseExpression("3*[50hz]r"),ev(0,0),0))
+  // assert({value:150,_units:'hz'}, evalParamFrame(parseExpression("100hz+50hz"),ev(0,0),0))
+
+  assert(1, evalParamFrame(parseExpression("[0:1,1:1]t@f"),ev(0,0),1.1))
+  assert(0, evalParamFrame(parseExpression("[0:1s,1:1s]t@f"),ev(0,0),1.1))
 
   console.log('Parse expression tests complete')
   }

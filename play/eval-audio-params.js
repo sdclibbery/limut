@@ -214,6 +214,5 @@ define(function (require) {
     fixedPerFrame: fixedPerFrame,
     setAudioParamValue: setAudioParamValue,
     evalFuncFrame: evalFuncFrame,
-    rampAudioParamValue: rampAudioParamValue,
   }
 })

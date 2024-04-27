@@ -9,6 +9,7 @@ define(function(require) {
   let number = require('expression/parse-number')
   let {piecewise} = require('expression/eval-piecewise')
   let parseArray = require('expression/parse-array')
+  let parseUnits = require('expression/parse-units')
 
   let iOperators = {
     '_': (i) => 0, // step
@@ -34,6 +35,7 @@ define(function(require) {
       }
       eatWhitespace(state)
       s = number(state)
+      s = parseUnits(s, state)
     }
     vs.push(v)
     is.push(i)
