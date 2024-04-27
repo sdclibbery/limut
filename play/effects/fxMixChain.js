@@ -24,7 +24,7 @@ define(function (require) {
       phaserMix: quantise(evalSubParamEvent(params, 'phaser', 'mix', 1), 16),
       flangerRate: quantise(evalMainParamEvent(params, 'flanger', 0) / params.beat.duration, 16),
       flangerMix: quantise(evalSubParamEvent(params, 'flanger', 'mix', 1), 16),
-      echoDelay: quantise(evalMainParamEvent(params, 'echo', 0) * params.beat.duration, 16),
+      echoDelay: quantise(evalMainParamEvent(params, 'echo', 0, 'b') * params.beat.duration, 16),
       echoFeedback: quantise(Math.min(evalSubParamEvent(params, 'echo', 'feedback', 0.35), 0.95), 20),
       room: quantise(evalMainParamEvent(params, 'room', 0), 16),
       roomHpf: quantise(evalSubParamEvent(params, 'room', 'hpf', 0), 1),

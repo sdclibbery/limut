@@ -233,11 +233,7 @@ Time units
  Defaullt Hz: lpf, hpf, bpf, nf, apf, psf, low.freq, mid.freq, high.freq, ring, room.hpf, reverb.hpf, pitchedperc stuff
  Default bpm: bpm
  TRY IT parsing to {v,units:} based on parsing for #/b treat b as both units and flat
-  evalSubParamFrame
-   fixed
-   varying
-  evalMainParamEvent
-  evalSubParamEvent
+  !!Nasty crackle  p ping, amp*=[0:!50ms,1:!50ms,0]e
   test case: lpf - have to get evalMainParamFrame etc to handle the units
    try all variations of fixed/varying/nested etc values for the filter freq
   Units for all things listed above
