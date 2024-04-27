@@ -735,9 +735,9 @@ define(function(require) {
 
   p = parseExpression("[0:1]e")
   e = { idx:0, count:7, countToTime:b=>b, _time:1, endTime:3 }
-  assert(0, evalParamFrame(p,e,1))
-  assert(0.5, evalParamFrame(p,e,2))
-  assertApprox(1, evalParamFrame(p,e,3))
+  assert(0, evalParamFrame(p,e,7))
+  assert(0.5, evalParamFrame(p,e,8))
+  assertApprox(1, evalParamFrame(p,e,9))
 
   p = parseExpression("[0,1,0]e")
   e = { idx:0, count:7, countToTime:b=>b, _time:1, endTime:3 }
@@ -1405,6 +1405,13 @@ define(function(require) {
 
   p = parseExpression("({g:1}*0.max).g")
   assert(0, evalParamFrame(p, ev(0,0,1), 0))
+
+  p = parseExpression("2*[0:/1,1:/4,0:3]e -1")
+  assert(-1, evalParamFrame(p, ev(0,0,8), 0))
+  assert(1, evalParamFrame(p, ev(0,0,8), 1))
+  assert(0, evalParamFrame(p, ev(0,0,8), 3))
+  assert(-1, evalParamFrame(p, ev(0,0,8), 5))
+  assert(-1, evalParamFrame(p, ev(0,0,8), 7))
 
   assert({value:0,'#':1}, evalParamFrame(parseExpression("0#"),ev(0,0),0))
   assert({value:2,b:1,_units:'b'}, evalParamFrame(parseExpression("2b"),ev(0,0),0))

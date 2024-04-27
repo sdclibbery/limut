@@ -223,10 +223,6 @@ shadertoy synth multiple channels
 
 ====
 ==== other ====
-!!!envelope{} a doesn't work!!!
- !Will have to retune every usage of envelope to sound right now...
-[]e doesn't work with times
- ! Still doesn't agree with envelope{}!!!
 Exponential interpolator for piecewise
 Time units
  Default b: []{}, seed, per, step, dur, delay, att, dec, sus, rel, vib.delay, glide, echo, reverb, euclid{from}, time(visual)

@@ -44,7 +44,7 @@ define(function(require) {
       ss = ss.map(s => s/total) // Normalise sizes
       let p = (e,b) => {
         if (!e.countToTime) { return 0 }
-        return Math.min((e.countToTime(b) - e._time) / (e.endTime - e._time), 0.999999) // Hold at final value, don't keep repeating
+        return Math.min((b - e.count) / (e.endTime - e._time), 0.999999) // Hold at final value, don't keep repeating
       }
       return piecewise(vs, is, ss, p)
     } else { // Use durations provided
@@ -55,8 +55,7 @@ define(function(require) {
       is[is.length-1] = step // Last one is final value, not part of the event
       let totalDuration = ss.reduce((a,x) => a+x, 0)
       let p = (e,b) => {
-        if (!e.countToTime) { return 0 }
-        return Math.min(e.countToTime(b) - e._time, totalDuration-0.000001)
+        return Math.min(b - e.count, totalDuration-0.000001)
       }
       return piecewise(vs, is, ss, p)
     }
@@ -71,7 +70,6 @@ define(function(require) {
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`+(msg?'\n'+msg:'')) }
     }
     let ev = (c,d,i) => {return{idx:i||0, count:c||0, dur:d||1, _time:c, endTime:c+d, countToTime:x=>x}}
-    let ev120 = (c,d) => {return{idx:0, count:c, dur:d, _time:c/2, endTime:c/2+d/2, countToTime:(count) => c*0.5 + (count-c)*0.5}}
     let {evalParamFrame} = require('player/eval-param')
     let u2=[undefined,undefined]
     let u3=[undefined,undefined,undefined]
@@ -80,11 +78,6 @@ define(function(require) {
     assert(1.5, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(0,1), 0.5))
     assert(2, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(0,1), 1))
     assert(2, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(0,1), 2))
-
-    assert(1, evalParamFrame(eventTimeVar([1,2],u2,u2),ev120(0,1), 0))
-    assert(1.5, evalParamFrame(eventTimeVar([1,2],u2,u2),ev120(0,1), 0.5))
-    assert(2, evalParamFrame(eventTimeVar([1,2],u2,u2),ev120(0,1), 1))
-    assert(2, evalParamFrame(eventTimeVar([1,2],u2,u2),ev120(0,1), 2))
 
     assert(1, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 0))
     assert(9/8, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 1/4))
@@ -96,17 +89,6 @@ define(function(require) {
     assert(1.5, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 11))
     assert(2, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 12))
     assert(2, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 13))
-
-    assert(1, evalParamFrame(eventTimeVar([1,2],u2,u2),ev120(10,2), 0))
-    assert(9/8, evalParamFrame(eventTimeVar([1,2],u2,u2),ev120(10,2), 1/4))
-    assert(1.5, evalParamFrame(eventTimeVar([1,2],u2,u2),ev120(10,2), 1))
-    assert(1, evalParamFrame(eventTimeVar([1,2],u2,u2),ev120(10,2), 2))
-    assert(1, evalParamFrame(eventTimeVar([1,2],u2,u2),ev120(10,2), 8))
-    assert(1.5, evalParamFrame(eventTimeVar([1,2],u2,u2),ev120(10,2), 9))
-    assert(1, evalParamFrame(eventTimeVar([1,2],u2,u2),ev120(10,2), 10))
-    assert(1.5, evalParamFrame(eventTimeVar([1,2],u2,u2),ev120(10,2), 11))
-    assert(2, evalParamFrame(eventTimeVar([1,2],u2,u2),ev120(10,2), 12))
-    assert(2, evalParamFrame(eventTimeVar([1,2],u2,u2),ev120(10,2), 13))
 
     assert(1, evalParamFrame(eventTimeVar([1,2,3],u3,u3),ev(0,1), 0))
     assert(1.5, evalParamFrame(eventTimeVar([1,2,3],u3,u3),ev(0,1), 0.25))

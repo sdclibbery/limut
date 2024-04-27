@@ -531,9 +531,6 @@ define((require) => {
   assert(8, evalParamFrame(p.getEventsForBeat({count:0})[0].bar,ev(0,0),0))
   delete playerTypes.foo
 
-  p = player('p', 'test', '0', 'amp=[0,1,0]e', 0)
-  assert(1, evalParamFrame(p.getEventsForBeat({count:0})[0].amp, {_time:0,endTime:1,countToTime:(c)=>c},1/2))
-
   p = player('p', 'test', '(000)', 'add=[-7:7]r')
   assertNotSame(p.getEventsForBeat({count:0}).map(e => evalParamFrame(e.add,ev(0,0),0)))
 
