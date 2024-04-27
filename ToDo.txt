@@ -231,13 +231,12 @@ Time units
  Default cpb: vib, phaser, flanger
  Defaullt Hz: lpf, hpf, bpf, nf, apf, psf, low.freq, mid.freq, high.freq, ring, room.hpf, reverb.hpf, pitchedperc stuff
  TRY IT parsing to {v,units:} based on parsing for #/b treat b as both units and flat
-  100Hz+50Hz test in parse-expression
-   Just special case for _units if both same for now?
   test case: lpf - have to get evalMainParamFrame etc to handle the units§
   Units for all things listed above
   Main bpm param units
   Treat db as units???
   Docs for all params/things
+   For piecewise, say that it converts to beats, so if you do [0:1/2s]{rand} or whatever, its on you...
 Allow non const step sizes in piecewise
  Also use of units() should handle changes to beat duration - And at least it should be evalled at event start not parse time!
 Normalisation as a piecewise feature; []e and []r have it by default? Syntax?

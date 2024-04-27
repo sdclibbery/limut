@@ -46,7 +46,11 @@ define(function(require) {
         let result = {}
         for (let k in el) {
           let erv = er[k]
-          result[k] = (erv !== undefined) ? operator(op,el[k],erv) : el[k]
+          if (erv === undefined || k === '_units') { // should do clever stuff if there are units, but just pick one for now
+            result[k] = el[k]
+          } else {
+            result[k] = operator(op,el[k],erv)
+          } 
         }
         for (let k in er) {
           if (result[k] === undefined) { result[k] = er[k] }

@@ -1415,7 +1415,9 @@ define(function(require) {
   assert({value:150,_units:'hz'}, evalParamFrame(parseExpression("3*50hz"),ev(0,0),0))
   assert({value:150,_units:'hz'}, evalParamFrame(parseExpression("[150hz]r"),ev(0,0),0))
   assert({value:150,_units:'hz'}, evalParamFrame(parseExpression("3*[50hz]r"),ev(0,0),0))
-  // assert({value:150,_units:'hz'}, evalParamFrame(parseExpression("100hz+50hz"),ev(0,0),0))
+  assert({value:150,_units:'hz'}, evalParamFrame(parseExpression("100+50hz"),ev(0,0),0))
+  assert({value:150,_units:'hz'}, evalParamFrame(parseExpression("100hz+50"),ev(0,0),0))
+  assert({value:150,_units:'hz'}, evalParamFrame(parseExpression("100hz+50hz"),ev(0,0),0))
 
   assert(1, evalParamFrame(parseExpression("[0:1,1:1]t@f"),ev(0,0),1.1))
   assert(0, evalParamFrame(parseExpression("[0:1s,1:1s]t@f"),ev(0,0),1.1))
