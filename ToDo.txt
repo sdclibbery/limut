@@ -223,9 +223,6 @@ shadertoy synth multiple channels
 
 ====
 ==== other ====
-!!!!BUG with expression evaluation; compare:
-// r readout, add=[10]t1 * [2]t1@f
-// r readout, add=[{10}]t1 * [2]t1@f
 Time units
  Default b: []{}, seed, per, step, dur, delay, att, dec, sus, rel, vib.delay, glide, echo, reverb, euclid{from}, time(visual)
  Default s: start, compress.att, compress.rel, envelope{a,d}, pitchedperc stuff
@@ -234,18 +231,20 @@ Time units
  Default bpm: bpm
  TRY IT parsing to {v,units:} based on parsing for #/b treat b as both units and flat
   !!Nasty crackle  p ping, amp*=[0:!50ms,1:!50ms,0]e
-  test case: lpf - have to get evalMainParamFrame etc to handle the units
-   try all variations of fixed/varying/nested etc values for the filter freq
-  Units for all things listed above
-  Main bpm param units
-  Treat db as units???
-  Test ALL audio effects
-  Should have operator support; eg [0.001s,1hz]e
+  !!!!BUG with expression evaluation; compare:
+    // r readout, add=[10]t1 * [2]t1@f
+    // r readout, add=[{10}]t1 * [2]t1@f
+  Units for all things listed above AND TEST
+   And just review all files in play/, including synths
+  Exploratory test
   Docs for all params/things
    For piecewise, say that it converts to beats, so if you do [0:1/2s]{rand} or whatever, its on you...
 Allow non const step sizes in piecewise
  Also use of units() should handle changes to beat duration - And at least it should be evalled at event start not parse time!
  Replace envelope with piecewise in presets and validate
+?Treat db as units???
+Main bpm param units
+!Should have operator support; eg [0.001s,1hz]e
 Normalisation as a piecewise feature; []e and []r have it by default? Syntax?
 stutter subparam, to squash or expand stutter timescale
 Should be able to parse top heavy fractions; eg `1+1/4` is same as 5/4. Parse as number, not operator?

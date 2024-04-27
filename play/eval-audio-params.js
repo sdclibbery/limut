@@ -63,7 +63,7 @@ define(function (require) {
     try {
       if (v !== undefined) {
         if (typeof mod === 'function') { v = mod(v) }
-        audioParam.linearRampToValueAtTime(v, system.timeNow()+1/60)
+        audioParam.linearRampToValueAtTime(v, system.timeNow()+2/60)
       }
     } catch (e) {
       console.log(audioParam, e)
