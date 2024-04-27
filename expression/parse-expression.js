@@ -1325,6 +1325,12 @@ define(function(require) {
   assert(2, evalParamFrame(p, evt(2,2,1), 2))
   assert(3, evalParamFrame(p, evt(3,3,1), 3))
   assert(0, evalParamFrame(p, evt(4,4,1), 4))
+  
+  p = parseExpression("[0:!1,1:!1]l@f")
+  assert(0, evalParamFrame(p, evt(0,0,2), 0))
+  assertApprox(0.982, evalParamFrame(p, evt(0,0,2), 1/2))
+  assert(1, evalParamFrame(p, evt(0,0,2), 1))
+  assertApprox(0.018, evalParamFrame(p, evt(0,0,2), 3/2))
 
   p = parseExpression("[0:3,3:1]l")
   assert(0, evalParamFrame(p, evt(0,0,1), 0))

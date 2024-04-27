@@ -3792,6 +3792,15 @@ r readout, add={foo:2,bar:3}.(this.foo), foo=bar
 // g glow, loc={x:[-1:2,1:0]l@f,y:(-1,-1/2,0,1/2,1).rand{per:2,seed:0,step:1/2}}
 
 
+// set bpm=180
+// g glow, dur=8, loc={x:[-1:8,1:0]l@f, y:2*[0:1,1:4,0:3]l@f-1 }
+// g glow, dur=8, loc={x:[-1:8,1:0]l@f, y:2*[0:/1,1:/4,0:3]e -1 }
+// g glow, dur=8, loc={x:[-1:8,1:0]l@f, y:2*envelope{a:500,d:2000,shape:lin}-1 }
+// g glow, dur=8, loc={x:[-1:8,1:0]l@f, y:2*[0:/500ms,1:/2000ms,0]e -1 }
+// g1 glow, dur=8, loc={x:[-1:8,1:0]l@f, y:2*envelope{a:500,d:2000}-1 ,w:1/2,h:1/2}, fore=red
+// g2 glow, dur=8, loc={x:[-1:8,1:0]l@f, y:2*[0:!500ms,1:!2000ms,0]e -1 ,w:1/2,h:1/2 }, fore=green
+
+
 /// units testing
 // set bpm=60*1
 // r readout, add=[0:2,1:2]s@f
@@ -3800,3 +3809,4 @@ r readout, add={foo:2,bar:3}.(this.foo), foo=bar
 // r readout, add=[0:2000ms,1:2000ms]s@f
 // r readout, add=[0:2000ms,1:2000ms]{time}
 // r readout, add=[0:2000ms,1:2000ms]e
+

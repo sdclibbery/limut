@@ -16,7 +16,8 @@ define(function(require) {
     '|': (i) => 1, // jump
     '/': (i) => i, // linear
     '\\': (i) => i, // linear
-    '~': (i) => i*i*(3-2*i), // smooth bezier ease in/out,
+    '~': (i) => i*i*(3-2*i), // smooth bezier ease in/out
+    '!': (i) => 1-Math.exp(-8*i), // exponential
   }
 
   let parseEntry = (state, vs, is, ss) => {
