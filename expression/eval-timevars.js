@@ -2,6 +2,7 @@
 define(function(require) {
   let consoleOut = require('console')
   let {piecewise} = require('expression/eval-piecewise')
+  let {units} = require('units')
 
   let step = () => 0
   let linear = (i) => i
@@ -33,8 +34,8 @@ define(function(require) {
   let eventTimeVar = (vs, is, ss, ds) => {
     if (vs.length === 0) { return piecewise([]) }
     if (vs.length === 1) { return piecewise(vs, [step], [1], ()=>0) }
-    let haveSs = ss.reduce((a, s) => a||(s!==undefined), false)
-    if (ds === undefined && !haveSs) { // If no durations set, space out evenly through the event
+    let haveAnySs = ss.reduce((a, s) => a||(s!==undefined), false)
+    if (ds === undefined && !haveAnySs) { // If no durations set, space out evenly through the event
       is = is.map(i => i || linear)
       ss = ss.map(s => s!==undefined ? s : 1)
       is[is.length-1] = step // Last one is final value, not part of the event
@@ -49,6 +50,7 @@ define(function(require) {
     } else { // Use durations provided
       if (!Array.isArray(ds)) { ds = [ds || 1] }
       is = is.map(i => i || linear)
+      ss = ss.map(s => units(s, 'b')) // Default to beats but accept s etc. Should not be parse time this gets evalled at though!
       ss = ss.map((s,idx) => s!==undefined ? s : ds[idx % ds.length])
       is[is.length-1] = step // Last one is final value, not part of the event
       let totalDuration = ss.reduce((a,x) => a+x, 0)

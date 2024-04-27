@@ -10,12 +10,16 @@ define(function(require) {
     if (t > t1) { return v1 }
     return v0 + (v1-v0) * t/t1
   }
-  let exp = (v0, v1, t, t1) => {
+  let expDown = (v0, v1, t, t1) => {
     if (v0 <= 0) { return v0 }
     if (v1 <= 0) { v1 = 0.0001 }
     if (t < 0) { return v0 }
     if (t > t1) { return v1 }
     return v0 * Math.pow(v1/v0, t/t1)
+  }
+  let exp = (v0, v1, t, t1) => {
+    if (v0 > v1) { return expDown(v0,v1,t,t1) }
+    return v1 - expDown(v1,v0,t,t1)
   }
   let shapes = {
     'lin': lerp,
@@ -127,6 +131,10 @@ define(function(require) {
     assert(1/2, evalParamFrame(p, ev(1,2,2), 3.5))
     assert(0, evalParamFrame(p, ev(1,2,2), 4))
     assert(0, evalParamFrame(p, ev(1,2,2), 5))
+  
+    p = parseExpression("envelope{a:1000}")
+    assert(0, evalParamFrame(p, ev(1,2,2), 2))
+    assert(0.9, evalParamFrame(p, ev(1,2,2), 2.5))
 
     console.log('Envelope function tests complete')
   }

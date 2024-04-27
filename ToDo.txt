@@ -223,6 +223,10 @@ shadertoy synth multiple channels
 
 ====
 ==== other ====
+!!!envelope{} a doesn't work!!!
+ !Will have to retune every usage of envelope to sound right now...
+[]e doesn't work with times
+ ! Still doesn't agree with envelope{}!!!
 Exponential interpolator for piecewise
 Time units
  Default b: []{}, seed, per, step, dur, delay, att, dec, sus, rel, vib.delay, glide, echo, reverb, euclid{from}, time(visual)
@@ -232,6 +236,8 @@ Time units
  Defaullt Hz: lpf, hpf, bpf, nf, apf, psf, low.freq, mid.freq, high.freq, ring, room.hpf, reverb.hpf, pitchedperc stuff
  TRY IT parsing to {v,units:} based on parsing for #/b treat b as both units and flat
   test case: lpf - have to get evalMainParamFrame etc to handle the units§
+   Pass default units into evalMainParamFrame/evalSubParamFrame before mod
+    Do this refactor FIRST!
   Units for all things listed above
   Main bpm param units
   Treat db as units???

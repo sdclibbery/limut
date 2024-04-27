@@ -1421,6 +1421,10 @@ define(function(require) {
 
   assert(1, evalParamFrame(parseExpression("[0:1,1:1]t@f"),ev(0,0),1.1))
   assert(0, evalParamFrame(parseExpression("[0:1s,1:1s]t@f"),ev(0,0),1.1))
+  assert(0, evalParamFrame(parseExpression("[0:_0.1s,1:_0.1s,0]e"),ev(0,0),0.09*110/60))
+  assert(1, evalParamFrame(parseExpression("[0:_0.1s,1:_0.1s,0]e"),ev(0,0),0.11*110/60))
+  assert(1, evalParamFrame(parseExpression("[0:_0.1s,1:_0.1s,0]e"),ev(0,0),0.19*110/60))
+  assert(0, evalParamFrame(parseExpression("[0:_0.1s,1:_0.1s,0]e"),ev(0,0),0.21*110/60))
 
   console.log('Parse expression tests complete')
   }

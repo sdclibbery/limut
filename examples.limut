@@ -3797,3 +3797,6 @@ r readout, add={foo:2,bar:3}.(this.foo), foo=bar
 // r readout, add=[0:2,1:2]s@f
 // r readout, add=[0:2b,1:2b]s@f
 // r readout, add=[0:2s,1:2s]s@f
+// r readout, add=[0:2000ms,1:2000ms]s@f
+// r readout, add=[0:2000ms,1:2000ms]{time}
+// r readout, add=[0:2000ms,1:2000ms]e
