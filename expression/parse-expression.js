@@ -1444,6 +1444,18 @@ define(function(require) {
   assert({value:20}, evalParamFrame(p, e, 0))
   assert({value:20}, evalParamFrame(p, e, 0)) // Should stay the same, obviously, but it didn't :-)
 
+  let sInBeats = (t) => t*110/60
+  p = parseExpression("[1,2]t100ms@f")
+  assert(1, evalParamFrame(p, ev(0,0,1), sInBeats(0)))
+  assert(2, evalParamFrame(p, ev(0,0,1), sInBeats(0.1)))
+  assert(1, evalParamFrame(p, ev(0,0,1), sInBeats(0.2)))
+
+  p = parseExpression("[1,2]t[100ms,200ms]@f")
+  assert(1, evalParamFrame(p, ev(0,0,1), sInBeats(0)))
+  assert(2, evalParamFrame(p, ev(0,0,1), sInBeats(0.1)))
+  assert(2, evalParamFrame(p, ev(0,0,1), sInBeats(0.2)))
+  assert(1, evalParamFrame(p, ev(0,0,1), sInBeats(0.3)))
+
   console.log('Parse expression tests complete')
   }
 

@@ -61,6 +61,7 @@ define(function(require) {
   let numberOrArray = (state) => {
     let n = number(state)
     if (n !== undefined) {
+      n = parseUnits(n, state)
       return n
     } else {
       if (state.str.charAt(state.idx) == '[') {
@@ -158,6 +159,7 @@ define(function(require) {
     } else if (state.str.charAt(state.idx).toLowerCase() == 'r') { // random
       state.idx += 1
       let hold = number(state)
+      hold = parseUnits(hold, state)
       let modifiers = parseMap(state)
       if (hold !== undefined) {
         if (modifiers === undefined) { modifiers = {} }
@@ -176,6 +178,7 @@ define(function(require) {
     } else if (state.str.charAt(state.idx).toLowerCase() == 'n') { // simple noise
       state.idx += 1
       let period = number(state)
+      period = parseUnits(period, state)
       if (period === undefined) { period = 1 }
       let modifiers = parseMap(state)
       result = addModifiers(simpleNoise(vs, period), modifiers)

@@ -209,8 +209,7 @@ shadertoy synth multiple channels
 ==== other ====
 Time units
  Default units, TEST, DOCS for each of these:
-  Default b: []{} []t []l []s []e
-   What about []t100ms etc?
+  Default b: []{} []t []l []s []e []r []n
    Docs: For piecewise, say that it converts to beats, so if you do [0:1/2s]{rand} or whatever, its on you...
   Default b: seed, per, step, dur, delay, att, dec, sus, rel, vib.delay, glide, echo, reverb, euclid{from}, time(visual)
   Default s: start, compress.att, compress.rel, envelope{a,d}, pitchedperc stuff
