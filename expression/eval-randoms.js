@@ -4,6 +4,7 @@ define(function(require) {
   let param = require('player/default-param')
   let randFunction = require('functions/rand')
   let {piecewise} = require('expression/eval-piecewise')
+  let {units} = require('units')
 
   let step = () => 0
   let linear = (i) => i
@@ -58,6 +59,7 @@ define(function(require) {
       if (modifiers && modifiers.seed !== undefined) {
         seed = modifiers.seed
       }
+      period = units(period, 'b')
       let value = b + seed
       let result = (
           bnoise(value*1/period)*2

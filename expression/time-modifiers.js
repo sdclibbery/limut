@@ -1,6 +1,7 @@
 'use strict';
 define(function(require) {
   let number = require('expression/parse-number')
+  let {units} = require('units')
 
   let overrideKey = (v) => '@'+Math.round(v*16384)/16384
 
@@ -41,8 +42,9 @@ define(function(require) {
       modBeat = modBeat % mods.per
     }
     if (mods.step) {
-      modCount = makeStep(modCount, mods.step)
-      modBeat = makeStep(modBeat, mods.step)
+      let step = units(mods.step, 'b')
+      modCount = makeStep(modCount, step)
+      modBeat = makeStep(modBeat, step)
     }
     if (mods.overrides !== undefined) {
       let bc = interval === 'frame' ? modBeat : modCount // Note overrides will not really work for per frame values, because you're very unlikely to actually hit the exact right count to trigger the override.

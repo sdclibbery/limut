@@ -1456,6 +1456,12 @@ define(function(require) {
   assert(2, evalParamFrame(p, ev(0,0,1), sInBeats(0.2)))
   assert(1, evalParamFrame(p, ev(0,0,1), sInBeats(0.3)))
 
+  p = parseExpression("[0:1,1:0]l{step:300ms}@f")
+  assert(0, evalParamFrame(p, ev(0,0,1), sInBeats(0)))
+  assert(0, evalParamFrame(p, ev(0,0,1), sInBeats(0.1)))
+  assert(0, evalParamFrame(p, ev(0,0,1), sInBeats(0.2)))
+  assert(0.55, evalParamFrame(p, ev(0,0,1), sInBeats(0.3)))
+
   console.log('Parse expression tests complete')
   }
 
