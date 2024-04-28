@@ -1,5 +1,6 @@
 'use strict';
 define(function(require) {
+  let consoleOut = require('console')
   let {combineIntervalsFrom} = require('expression/intervals')
   let {evalFunctionWithModifiers} = require('player/eval-param')
 
@@ -48,12 +49,17 @@ define(function(require) {
       } else if (typeof er == 'object') {
         let result = {}
         for (let k in el) {
-          let erv = er[k]
-          if (erv === undefined || k === '_units') { // should do clever stuff if there are units, but just pick one for now
+          if (k === '_units') { // should do clever stuff if there are units, but just pick one for now
+            if (el[k] !== er[k]) { consoleOut(`🔴 Error: Mismatched units in operator '${el[k]}' '${er[k]}'`) }
             result[k] = el[k]
           } else {
-            result[k] = operator(op,el[k],erv)
-          } 
+            let erv = er[k]
+            if (erv === undefined) {
+              result[k] = el[k]
+            } else {
+              result[k] = operator(op,el[k],erv)
+            } 
+          }
         }
         for (let k in er) {
           if (result[k] === undefined) { result[k] = er[k] }
