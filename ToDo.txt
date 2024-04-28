@@ -208,7 +208,6 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Time units
- Docs: Base units syntax
  Default units, TEST, DOCS for each of these:
   Default b: []{} []t []l []s []e
    What about []t100ms etc?

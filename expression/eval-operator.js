@@ -50,7 +50,7 @@ define(function(require) {
         let result = {}
         for (let k in el) {
           if (k === '_units') { // should do clever stuff if there are units, but just pick one for now
-            if (el[k] !== er[k]) { consoleOut(`🔴 Error: Mismatched units in operator '${el[k]}' '${er[k]}'`) }
+            if (el[k] !== er[k]) { consoleOut(`🔴 Error: Mismatched units in operator '${el[k]}' '${er[k]}'. Conversion is not implemented yet.`) }
             result[k] = el[k]
           } else {
             let erv = er[k]

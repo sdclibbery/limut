@@ -419,6 +419,13 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>1</code> Single, constant numeric value</p>
 <p><code>0dB</code> Numeric values can be expressed in dB. These are immediately (at parse time) converted to gain numbers, so 0dB is a gain of 1, +20dB is a gain of 10 etc. Values can be specified in dB for any numeric values, however it may not make sense in all cases. <code>amp=6dB</code> is basically equivalent to <code>amp=2</code>; it doubles the output level of a player. But while <code>scroll=6dB</code> is still the same as <code>scroll=2</code>, it doesn't make much sense to write it way (especially since it is impossible to express negative numbers with dB: Eg <code>-20dB</code> is the same as <code>1/2</code>. Note that because dB is a relative scale, it must be multiplied. Eg to add +3dB to an amp, multiplication must still be used: <code>amp*=3db</code></p>
 <p><code>1#</code> <code>1b</code> For use with the audio <code>add</code> param, sharpen or flatten the value. This is parsed into <code>{1,#:1}</code> or <code>{1,b:1}</code></p>
+<p><code>100ms</code> Single, constant numeric value with time units. Time units are valid for any param which has a default time unit. In general time units will be automatically converted between beats and seconds (using the current bpm), and also between time and frequency; so <code>lpf=0.001s</code> is equivalent to <code>lpf=1000</code> because the default units for lpf is Hz.</p>
+<p class='sub'><code>1s</code> Time in seconds</p>
+<p class='sub'><code>1000ms</code> Time in milliseconds</p>
+<p class='sub'><code>1Hz</code> Frequency in Hertz (cycles per second). Also <code>1cps</code> is the same as <code>1Hz</code> and <code>1kHz</code> is <code>1000Hz</code>.</p>
+<p class='sub'><code>1cpm</code> Frequency in cycles per minute</p>
+<p class='sub'><code>1b</code> Time in beats</p>
+<p class='sub'><code>1cpb</code> Frequency in cycles per beat. Also <code>1kcpb</code> is <code>1000cpb</code></p>
 <p><code></code> No value: for a param, missing a value is the same as setting the param to <code>1</code>. Eg <code>monochrome</code> is the same as <code>monochrome=1</code></p>
 <p><code>(1,2)</code> A 'chord' or chord. Multiple values, all played together</p>
 <p><code>[1,2]</code> Sequence of values, one per event in the pattern, ignoring rests. For single length patterns only, all values will be expanded, so <code>p ping 0, add=[0,1,2]</code> will cycle through all three values.</p>
@@ -677,7 +684,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
   Note that values with hyphens must be enclosed in quotes. In addition, there may be a performance problem with using dynamic (per frame) pitch sweeps using these waveforms. This penalty does not apply to the basic waveforms (sine, sawtooth, triangle, square).
 </p>
 <p><code>detune</code> Amount of detune in semitones</p>
-<p><code>lpf</code> Low pass filter frequency in Hertz</p>
+<p><code>lpf</code> Low pass filter frequency. Default units: Hertz</p>
 <p class='sub'><code>lpf={400,q:20}</code> Low pass filter resonance. 10 is approximately the transition where resonance starts to kick in. Default: 5.</p>
 <p class='sub'><code>lpf={400,poles:4}</code> Filter poles. Default is a 2 pole filter giving 12 dB/octave. Alternatively, specify 4 for a Moog-like 4 pole filter giving 24 dB/octave.</p>
 <p><code>hpf</code> High pass filter frequency in Hertz</p>

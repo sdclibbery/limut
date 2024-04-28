@@ -7,6 +7,7 @@ define(function(require) {
       { keyword:'b', template:{b:1,_units:'b'} },
       { keyword:'cpb', template:{_units:'cpb'} },
       { keyword:'kcpb', template:{_units:'cpb'}, _unitscale:1000 },
+      { keyword:'cpm', template:{_units:'hz'}, _unitscale:1/60 },
       { keyword:'s', template:{_units:'s'} },
       { keyword:'ms', template:{_units:'s'}, _unitscale:1/1000 },
       { keyword:'hz', template:{_units:'hz'} },
