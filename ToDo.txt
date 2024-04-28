@@ -209,9 +209,7 @@ shadertoy synth multiple channels
 ==== other ====
 Time units
  Default units, TEST, DOCS for each of these:
-  Default b: []{}
-   Docs: For piecewise, say that it converts to beats, so if you do [0:1/2s]{rand} or whatever, its on you...
-  Default b: seed, per, dur, delay, att, dec, sus, rel, vib.delay, glide, echo, reverb, euclid{from}, time(visual)
+  Default b: dur, delay, att, dec, sus, rel, vib.delay, glide, echo, reverb, euclid{from}, time(visual)
   Default s: start, compress.att, compress.rel, envelope{a,d}, pitchedperc stuff
   Default cpb: vib, phaser, flanger, chop
   Defaullt Hz: lpf, hpf, bpf, nf, apf, psf, low.freq, mid.freq, high.freq, ring, room.hpf, reverb.hpf, pitchedperc stuff

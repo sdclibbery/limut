@@ -38,8 +38,9 @@ define(function(require) {
     let modBeat = beat
     let modCount = event.count
     if (mods.per !== undefined) {
-      modCount = modCount % mods.per
-      modBeat = modBeat % mods.per
+      let per = units(mods.per, 'b')
+      modCount = modCount % per
+      modBeat = modBeat % per
     }
     if (mods.step) {
       let step = units(mods.step, 'b')
