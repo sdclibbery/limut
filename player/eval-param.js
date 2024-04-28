@@ -54,7 +54,7 @@ define((require) => {
     return result
   }
 
-  let evalParamValueForMemoisation = (evalRecurse, value, event, beat, {ignoreThisVars,evalToObjectOrPrimitive}) => {
+  let evalParamValue = (evalRecurse, value, event, beat, {ignoreThisVars,evalToObjectOrPrimitive}) => {
     if (Array.isArray(value)) { // chord, eval individual values
       let v = value.map(v => evalRecurse(v, event, beat))
       v = v.flat()
@@ -80,12 +80,12 @@ define((require) => {
     }
   }
 
-  let evalParamValue = (evalRecurse, value, event, beat, options) => {
+  let evalParamValueWithMemoisation = (evalRecurse, value, event, beat, options) => {
     if (value === undefined) { return value }
     if (!!value.interval_memo && value.interval_memo.has(event)) {
       return value.interval_memo.get(event)
     }
-    let result = evalParamValueForMemoisation(evalRecurse, value, event, beat, options)
+    let result = evalParamValue(evalRecurse, value, event, beat, options)
     if (value.interval === 'event') {
       if (system.timeNow() >= event._time) { // Dont memoise until the event start time
         if (!value.interval_memo) { value.interval_memo = new WeakMap() }
@@ -97,7 +97,7 @@ define((require) => {
 
   let evalRecurseFull = (value, event, beat, options) => {
     options = options || {}
-    return evalParamValue(evalRecurseWithOptions(evalRecurseFull, options), value, event, beat, options)
+    return evalParamValueWithMemoisation(evalRecurseWithOptions(evalRecurseFull, options), value, event, beat, options)
   }
 
   let evalRecurseWithOptions = (er, options) => {
@@ -136,24 +136,24 @@ define((require) => {
   let noOptions = {}
   let evalParamFrame = (value, event, beat) => {
     // Fully evaluate down to a primitive number/string etc, allowing the value to change every frame if it wants to
-    return evalDeferredFunc(evalParamValue(evalRecurseFull, value, event, beat, noOptions), event, beat, evalRecurseFull, noOptions)
+    return evalDeferredFunc(evalParamValueWithMemoisation(evalRecurseFull, value, event, beat, noOptions), event, beat, evalRecurseFull, noOptions)
   }
 
   let evalParamFrameIgnoreThisVars = (value, event, beat) => {
     let options = {ignoreThisVars:true}
     let er = evalRecurseWithOptions(evalRecurseFull, options)
-    return evalDeferredFunc(evalParamValue(er, value, event, beat, options), event, beat, er, options)
+    return evalDeferredFunc(evalParamValueWithMemoisation(er, value, event, beat, options), event, beat, er, options)
   }
 
   let evalParamToObjectOrPrimitive = (value, event, beat) => {
     let options = {evalToObjectOrPrimitive:true}
     let er = evalRecurseWithOptions(evalRecurseFull, options)
-    return evalDeferredFunc(evalParamValue(er, value, event, beat, options), event, beat, er, options)
+    return evalDeferredFunc(evalParamValueWithMemoisation(er, value, event, beat, options), event, beat, er, options)
   }
 
   let evalParamEvent = (value, event) => {
     // Fully evaluate down to a primitive number/string etc, fixing the value for the life of the event it is part of
-    return evalDeferredFunc(evalParamValue(evalRecurseFull, value, event, event.count, noOptions), event, event.count, evalRecurseFull, noOptions)
+    return evalDeferredFunc(evalParamValueWithMemoisation(evalRecurseFull, value, event, event.count, noOptions), event, event.count, evalRecurseFull, noOptions)
   }
 
   // TESTS //

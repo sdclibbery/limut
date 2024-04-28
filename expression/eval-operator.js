@@ -5,8 +5,11 @@ define(function(require) {
 
   let objectMap = (obj, fn) => {
     if (obj.hasOwnProperty('value')) { // 'value' field implies this is an object with subparams instead of a normal object
-      obj.value = fn(obj.value)
-      return obj
+      if (obj.__evaluated === undefined) {
+        obj.__evaluated = Object.assign({}, obj) // Must still make a copy of tyhe object to avoid memoisation problems
+      }
+      obj.__evaluated.value = fn(obj.value)
+      return obj.__evaluated
     }
     obj.__evaluated = obj.__evaluated || {} // cache result object to avoid creating per-frame garbage
     for (let k in obj) {

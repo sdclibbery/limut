@@ -1439,6 +1439,11 @@ define(function(require) {
   assert(1, evalParamFrame(parseExpression("[0:_0.1s,1:_0.1s,0]e"),ev(0,0),0.19*110/60))
   assert(0, evalParamFrame(parseExpression("[0:_0.1s,1:_0.1s,0]e"),ev(0,0),0.21*110/60))
 
+  p = parseExpression("[{10}]t1 * [2]t1@f")
+  e = ev(0,0,1)
+  assert({value:20}, evalParamFrame(p, e, 0))
+  assert({value:20}, evalParamFrame(p, e, 0)) // Should stay the same, obviously, but it didn't :-)
+
   console.log('Parse expression tests complete')
   }
 
