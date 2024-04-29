@@ -599,7 +599,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <h4 onclick="toggleAccordion('accordion-event-params')" class="accordion"> Common Event Params</h4>
 <div id="accordion-event-params" class="closed">
 <p><code>dur</code> Pattern step duration. Timevars, random vars and index vars can be used to give variation in duration. Chords cannot be used with the dur param. Default time units: beats.</p>
-<p><code>delay</code> Event start time offset in beats</p>
+<p><code>delay</code> Event start time offset. Default time units: beats</p>
 <p class='sub'><code>delay={1/2,add:2}</code> subparams on delay will be used to override the event values. In the example given, the <code>add</code> param of the delayed event will be set to 2, but any params can be overridden this way. This is most useful with chords of delay values, as it allows individual delayed events to change their properties.</p>
 <p><code>stutter</code> Split each event into multiple events spaced evenly within the same time period. Eg with <code>stutter=2</code>, an event starting at time 0 with a duration of 1 will be split into two events of duration 1/2, starting at 0 and 1/2. Stutter of 0 or 1 has no effect and is the default. Stutter is rounded down to the nearest integer value.</p>
 <p><code>swing</code> Amount to swing alternating 1/4 beats, as a Linn LM-1 style percentage from <code>50</code> (no swing) to <code>66</code> (perfect triplet swing) to <code>75</code> (maximum dotted note swing). You can set swing for all players at once using (eg) <code>set * swing=60</code></p>

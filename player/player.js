@@ -9,7 +9,7 @@ define((require) => {
   var followPlayer = require('player/follow')
   var expandChords = require('player/expand-chords')
   let {evalParamFrame,evalParamToObjectOrPrimitive} = require('player/eval-param')
-  let {mainParam,subParam} = require('player/sub-param')
+  let {mainParam,mainParamUnits,subParam} = require('player/sub-param')
   let {applyOverrides,applyOverridesInPlace} = require('player/override-params')
 
   let swingPushAt = (count, swingPercent, swingPeriod) => {
@@ -38,7 +38,7 @@ define((require) => {
 
   let applyDelay = (event, beat) => {
     let dp = evalParamToObjectOrPrimitive(event.delay, event, event.count)
-    let d = evalParamFrame(mainParam(dp, 0), event, event.count)
+    let d = evalParamFrame(mainParamUnits(dp, 'b', 0), event, event.count)
     event._time += d*beat.duration
     event.count += d
     applyOverridesInPlace(event, dp)
@@ -644,6 +644,10 @@ define((require) => {
   p.play(p.getEventsForBeat({time:0, count:0, duration:1}))
   assert(0, p.currentEvent(0)[0].count)
   assert(0.55, p.currentEvent(1)[0].count)
+
+  p = player('p', 'test', '0', 'delay=300ms')
+  p.play(p.getEventsForBeat({time:0, count:0, duration:1}))
+  assert(0.55, p.currentEvent(0.6)[0].count)
 
   console.log('Player tests complete')
   }
