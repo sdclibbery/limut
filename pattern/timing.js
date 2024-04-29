@@ -1,6 +1,6 @@
 'use strict';
 define(function(require) {
-  let {mainParam} = require('player/sub-param')
+  let {mainParamUnits} = require('player/sub-param')
   let {evalParamFrame} = require('player/eval-param')
 
   let calculatePatternInfo = (pattern, dur, tc) => {
@@ -10,7 +10,7 @@ define(function(require) {
     tc.numNonRests = 0
     let numSteps = 0
     do {
-      let duration = mainParam(evalParamFrame(dur, {idx: idx, count: count}, count), 1)
+      let duration = mainParamUnits(evalParamFrame(dur, {idx: idx, count: count}, count), 'b', 1)
       if (duration <= 0) { throw 'Zero duration' }
       step = pattern.next()
       if (step !== undefined) {
@@ -35,7 +35,7 @@ define(function(require) {
     tc.idx = 0
     calculatePatternInfo(pattern, dur, tc)
     if (typeof dur !== 'number') { // Complex dur: init by counting up from zero. Slow but accurate for this case
-      let duration = mainParam(evalParamFrame(dur, {idx: 0, count: 0}, 0), 1)
+      let duration = mainParamUnits(evalParamFrame(dur, {idx: 0, count: 0}, 0), 'b', 1)
       if (duration < 1/8) {
         tc.patternCount = count-1 // If durations are very short, don't do full brute force init from count 0
       }
@@ -66,7 +66,7 @@ define(function(require) {
   let stepToCount = (count, dur, pattern, tc) => {
     let eventsForBeat = []
     while (tc.patternCount < count + 0.9999) {
-      let duration = mainParam(evalParamFrame(dur, {idx: tc.idx, count: tc.patternCount}, count), 1)
+      let duration = mainParamUnits(evalParamFrame(dur, {idx: tc.idx, count: tc.patternCount}, count), 'b', 1)
       if (duration <= 0) { throw 'Zero duration' }
       let chord = pattern.next()
       if (chord === undefined) { // End of pattern
