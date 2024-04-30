@@ -76,7 +76,7 @@ define(function (require) {
     if (hasPerFrameParam(params, 'addc') || hasParam(params, 'vib') || params._glideBaseEvent) {
       let vib = evalMainParamEvent(params, 'vib', 0)
       let vibdepth = evalSubParamEvent(params, 'vib', 'depth', 0.4)
-      let vibdelay = evalSubParamEvent(params, 'vib', 'delay', 1/2)
+      let vibdelay = evalSubParamEvent(params, 'vib', 'delay', 1/2, 'b')
       evalFuncFrame(audioParam, params, 'pitcheffects', (count) => {
         let detune = 0
         detune += evalMainPerFrame(params, 'addc', 0, count)

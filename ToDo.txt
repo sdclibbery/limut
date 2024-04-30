@@ -209,28 +209,27 @@ shadertoy synth multiple channels
 ==== other ====
 Time units
  Default units, TEST, DOCS, sprite! for each of these:
-  Default b: vib.delay, glide, echo, reverb, euclid{from}, time(visual)
-   att, dec, sus, rel
-    !Review, and docs still to do!!!
+  Default b: glide, echo, reverb, euclid{from}, time(visual)
   Default s: start, compress.att, compress.rel, envelope{a,d}, pitchedperc stuff
   Default cpb: vib, phaser, flanger, chop
   Defaullt Hz: lpf, hpf, bpf, nf, apf, psf, low.freq, mid.freq, high.freq, ring, room.hpf, reverb.hpf, pitchedperc stuff
-  Default bpm: bpm
   And just review all files in play/, including synths, for any more time params
   Also review sprite and other draw/ files
 Allow non const step sizes in piecewise
  Also use of units() should handle changes to beat duration - And at least it should be evalled at event start not parse time!
  Replace envelope with piecewise in presets and validate
 ?Treat db as units???
-Main bpm param units
+Main bpm param time units
 Normalisation as a piecewise feature; []e and []r have it by default? Syntax?
+More time modifiers
+ offset
+ rate
+ time - set time directly to an expression
 stutter subparam, to squash or expand stutter timescale
-Should be able to parse top heavy fractions; eg `1+1/4` is same as 5/4. Parse as number, not operator?
-Random rewrite to use piecewise
+Random noise rewrite to use piecewise
  []n:  []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
 ?Is it possible for addc=[0,[-12,-24]t1/8@f]r@e to still allow the per frame motion, while the r@e selects it per event?
  []r used to select per event by fixing the seed per event rather than by stepping time, so it used to work
-"time" modifier allowing user defined time manipulation
 !([{x:[1,2]t1/4@f}]t2).x never get a 2 unless add @f to the []t2
 ! Delayed events appear in the wrong getEventsForBeat, and get the wrong voice assigned
  p readout, dur=1/4, delay|=[(),{1,add:5}]r, loc={y:this.voice/2}
@@ -253,9 +252,7 @@ Voice leading
   b techbass .00 crop 16, add=root, cutoff/=4
   sp softpad, add=ch
   ld chime 070., add=ch.[0,rand,rand,rand], amp*=3/2
-More time modifiers
- offset
- time - set time directly to an expression
+Should be able to parse top heavy fractions; eg `1+1/4` is same as 5/4. Parse as number, not operator?
 range function eg (0,2,4,6).range{0,to:riser*3}
  IOW range{a,to:b} === (a,a+1,a+2,...,b)
 !this var lookup failing in various ways:
