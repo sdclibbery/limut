@@ -5,13 +5,13 @@ define(function (require) {
   let destructor = require('play/destructor')
 
   let fullEnvelope = (params, gainBase) => {
-    let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25)))
+    let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25, 'b'), 'b'))
     dur *= evalMainParamEvent(params, "long", 1)
-    let attack = evalMainParamEvent(params, 'att', 0.09) * params.beat.duration
-    let decay = evalMainParamEvent(params, 'dec', 0.08*dur) * params.beat.duration
-    let sustain = evalMainParamEvent(params, 'sus', dur) * params.beat.duration - decay
+    let attack = evalMainParamEvent(params, 'att', 0.09, 'b') * params.beat.duration
+    let decay = evalMainParamEvent(params, 'dec', 0.08*dur, 'b') * params.beat.duration
+    let sustain = evalMainParamEvent(params, 'sus', dur, 'b') * params.beat.duration - decay
     let susLevel = evalSubParamEvent(params, 'sus', 'level', 0.8)
-    let release = evalMainParamEvent(params, 'rel', 0.1*dur) * params.beat.duration
+    let release = evalMainParamEvent(params, 'rel', 0.1*dur, 'b') * params.beat.duration
     let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     let vca = system.audio.createGain();
     vca.gain.cancelScheduledValues(0)
@@ -27,11 +27,11 @@ define(function (require) {
   }
 
   let organEnvelope = (params, gainBase) => {
-    let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25)))
+    let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25, 'b'), 'b'))
     dur *= evalMainParamEvent(params, "long", 1)
-    let attack = evalMainParamEvent(params, 'att', 0.01) * params.beat.duration
+    let attack = evalMainParamEvent(params, 'att', 0.01, 'b') * params.beat.duration
     let sustain = dur * params.beat.duration
-    let release = evalMainParamEvent(params, 'rel', 0.1) * params.beat.duration
+    let release = evalMainParamEvent(params, 'rel', 0.1, 'b') * params.beat.duration
     let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     let vca = system.audio.createGain();
     vca.gain.cancelScheduledValues(0)
@@ -46,12 +46,12 @@ define(function (require) {
   }
 
   let simpleEnvelope = (params, gainBase) => {
-    let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25)))
+    let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25, 'b'), 'b'))
     dur *= evalMainParamEvent(params, "long", 1)
-    let attack = evalMainParamEvent(params, 'att', 0.09) * params.beat.duration
-    let decay = evalMainParamEvent(params, 'dec', 0.08*dur) * params.beat.duration
+    let attack = evalMainParamEvent(params, 'att', 0.09, 'b') * params.beat.duration
+    let decay = evalMainParamEvent(params, 'dec', 0.08*dur, 'b') * params.beat.duration
     let susLevel = evalSubParamEvent(params, 'sus', 'level', 0.8)
-    let release = evalMainParamEvent(params, 'rel', dur) * params.beat.duration
+    let release = evalMainParamEvent(params, 'rel', dur, 'b') * params.beat.duration
     let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     let vca = system.audio.createGain();
     vca.gain.cancelScheduledValues(0)
@@ -66,9 +66,9 @@ define(function (require) {
   }
 
   let percussionEnvelope = (params, gainBase) => {
-    let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25)))
+    let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25, 'b'), 'b'))
     dur *= evalMainParamEvent(params, "long", 1)
-    let decay = evalMainParamEvent(params, 'dec', evalMainParamEvent(params, 'rel', dur)) * params.beat.duration
+    let decay = evalMainParamEvent(params, 'dec', evalMainParamEvent(params, 'rel', dur, 'b'), 'b') * params.beat.duration
     let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     let vca = system.audio.createGain();
     vca.gain.cancelScheduledValues(0)
@@ -81,9 +81,9 @@ define(function (require) {
   }
 
   let exponentialPercussionEnvelope = (params, gainBase) => {
-    let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25)))
+    let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25, 'b'), 'b'))
     dur *= evalMainParamEvent(params, "long", 1)
-    let decay = evalMainParamEvent(params, 'dec', evalMainParamEvent(params, 'rel', dur)) * params.beat.duration
+    let decay = evalMainParamEvent(params, 'dec', evalMainParamEvent(params, 'rel', dur, 'b'), 'b') * params.beat.duration
     let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     let vca = system.audio.createGain();
     vca.gain.cancelScheduledValues(0)
@@ -121,10 +121,10 @@ define(function (require) {
       fadeUp = fadeUpLinear
       fadeDown = fadeDownLinear
     }
-    let dur = Math.max(evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25)), 0.01)
+    let dur = Math.max(evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25, 'b'), 'b'), 0.01)
     dur *= evalMainParamEvent(params, "long", 1)
-    let attack = Math.max(evalMainParamEvent(params, 'att', dur) * params.beat.duration, 0.001)
-    let release = Math.max(evalMainParamEvent(params, 'rel', dur) * params.beat.duration, 0.001)
+    let attack = Math.max(evalMainParamEvent(params, 'att', dur, 'b') * params.beat.duration, 0.001)
+    let release = Math.max(evalMainParamEvent(params, 'rel', dur, 'b') * params.beat.duration, 0.001)
     let sus = Math.max(dur*params.beat.duration - attack, 0)
     let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     let vca = system.audio.createGain()

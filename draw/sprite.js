@@ -5,46 +5,39 @@ define(function (require) {
   let shaders = require('draw/shaders')
   let param = require('player/default-param')
   let evalParam = require('player/eval-param')
-  let {subParam,mainParam} = require('player/sub-param')
+  let {subParam,subParamUnits,mainParamUnits} = require('player/sub-param')
   let texture = require('draw/texture')
   let textTexture = require('draw/text')
   let colour = require('draw/colour')
   let players = require('player/players')
 
-  let evalMainParamFrame = (params, p, def, count) => {
+  let evalMainParamFrame = (params, p, def, count, units) => {
     let v = params[p]
     if (v === undefined) { return def }
     v = evalParam.evalParamFrame(v, params, count)
     if (v === undefined) { return def }
-    return mainParam(v, def)
+    return mainParamUnits(v, units, def)
   }
-  let evalSubParamFrame = (params, p, sub, def, count) => {
+  let evalSubParamFrame = (params, p, sub, def, count, units) => {
     let v = params[p]
     if (v === undefined) { return def }
     v = evalParam.evalParamFrame(v, params, count)
     if (v === undefined) { return def }
-    return subParam(v, sub, def)
+    return subParamUnits(v, sub, units, def)
   }
-  let evalMainParamEvent = (params, p, def) => {
+  let evalMainParamEvent = (params, p, def, units) => {
     let v = params[p]
     if (v === undefined) { return def }
     v = evalParam.evalParamEvent(v, params)
     if (v === undefined) { return def }
-    return mainParam(v, def)
-  }
-  let evalSubParamEvent = (params, p, sub, def) => {
-    let v = params[p]
-    if (v === undefined) { return def }
-    v = evalParam.evalParamEvent(v, params)
-    if (v === undefined) { return def }
-    return subParam(v, sub, def)
+    return mainParamUnits(v, units, def)
   }
 
-let vtxData = {
-  vtx: new Float32Array(12),
-  tex: new Float32Array(12),
-}
-let verts = (loc, window, har, allowHarAdjust) => {
+  let vtxData = {
+    vtx: new Float32Array(12),
+    tex: new Float32Array(12),
+  }
+  let verts = (loc, window, har, allowHarAdjust) => {
     let l = loc.x - loc.w/2
     let r = l + loc.w
     let t = loc.y - loc.h/2
@@ -149,7 +142,7 @@ let verts = (loc, window, har, allowHarAdjust) => {
     }
     if (!s) { return () => {} }
     let startTime = params._time
-    let endTime = params._time + evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 1)) * params.beat.duration
+    let endTime = params._time + evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 1, 'b'), 'b') * params.beat.duration
     params.endTime = endTime
     let rate = evalMainParamEvent(params, 'rate', 1)
     let value = parseInt(evalMainParamEvent(params, 'value', '0'))

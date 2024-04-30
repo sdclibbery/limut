@@ -605,7 +605,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>swing</code> Amount to swing alternating 1/4 beats, as a Linn LM-1 style percentage from <code>50</code> (no swing) to <code>66</code> (perfect triplet swing) to <code>75</code> (maximum dotted note swing). You can set swing for all players at once using (eg) <code>set * swing=60</code></p>
 <p class='sub'><code>swing={66,period:1/2}</code> The period to apply the swing. Defaults to 1/4 of a beat (suitable for house music).</p>
 <p><code>amp</code> Player amplitude control</p>
-<p><code>sus</code> Sustain time in beats. Note the 'sustain' in an ADSR envelope sets the sustain level, however this param sets the sustain time. The default is time required after attack and decay to take the note to the end of the duration.</p>
+<p><code>sus</code> Sustain time. Note the 'sustain' in an ADSR envelope sets the sustain level, however this param sets the sustain time. The default is time required after attack and decay to take the note to the end of the duration. Default time units: beats.</p>
 <p><code>rate</code> Playback rate for 'play' samples, animation rate for visuals</p>
 <p><code>voice</code> READ ONLY param. This param is set to the voice index of an individual event within a chord. So for example: <code>p ping 0, add=(0,2)</code>. Here, there are two events within the chord, with <code>add</code> values of 0 and 2. The <code>voice</code> values for these events will be 0 and 1, since the <code>voice</code> increments. This can be used to change other values based on the voice index within the chord.</p>
 <p><code>time</code> READ ONLY param. The current time in beats this event has been playing for.</p>
@@ -622,11 +622,11 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>addc</code> Amount to add onto event pitch, in semitones. Evaluated per frame, and accepts fractional values, so <code>addc=[0:12]e</code> will slide the note from the starting pitch smoothly up a whole octave over the course of the note.</p>
 <p><code>oct</code> Octave; middle C is in octave 4</p>
 <p><code>envelope</code> Specify the envelope type to use: <code>'full'</code> (ADSR), <code>'simple'</code> (ADR), <code>'organ'</code> (ASR full volume while on like an organ), <code>'pad'</code> (uses a cosine roll on/off so consecutive notes maintain constant volume), <code>'linpad'</code> (uses a linear roll on/off, a better crossfade when the source is identical (including phase) between events), <code>'percussion'</code> (R - instant attack)</p>
-<p><code>att</code> Attack time in beats</p>
-<p><code>dec</code> Decay time in beats</p>
-<p><code>sus</code> Sustain time in beats. Note the 'sustain' in an ADSR envelope sets the sustain level, however this param sets the sustain time. The default is time required after attack and decay to take the note to the end of the duration.</p>
+<p><code>att</code> Attack time. Default time units: beats.</p>
+<p><code>dec</code> Decay time. Default time units: beats.</p>
+<p><code>sus</code> Sustain time. Note the 'sustain' in an ADSR envelope sets the sustain level, however this param sets the sustain time. The default is time required after attack and decay to take the note to the end of the duration. Default time units: beats.</p>
 <p class='sub'><code>sus={level:1/6}</code> Set the amplitude level for sustain. Note the 'sustain' in an ADSR envelope is the level, so it is this value not the main 'sus' value (which is actually the sustain time). Default: 0.8.</p>
-<p><code>rel</code> Release time in beats</p>
+<p><code>rel</code> Release time. Default time units: beats.</p>
 <p><code>wave</code> For audio synths that use a waveform, specify which waveform to use, from this list:
   <code>sine</code>, 
   <code>square</code>, 
