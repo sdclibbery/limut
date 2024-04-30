@@ -51,10 +51,8 @@ define(function (require) {
 
   return (audioParam, params) => {
     // Glide init
-    let glide = evalMainParamEvent(params, 'glide', 0)
+    let glide = evalMainParamEvent(params, 'glide', 0, 'b')
     let glideCurve = evalSubParamEvent(params, 'glide', 'curve', 1)
-    let glideUnits = evalSubParamEvent(params, 'glide', 'units', 'beats')
-    glide = timeToBeats(glide, glideUnits, params)
     if (glide) {
       let es = params._player.events // Find base events to glide from:
         .filter(e => e.voice === params.voice) // Find only events in the same voice

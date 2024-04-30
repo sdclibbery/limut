@@ -209,7 +209,7 @@ shadertoy synth multiple channels
 ==== other ====
 Time units
  Default units, TEST, DOCS, sprite! for each of these:
-  Default b: glide, echo, reverb, euclid{from}, time(visual)
+  Default b: echo, reverb, euclid{from}, time(visual)
   Default s: start, compress.att, compress.rel, envelope{a,d}, pitchedperc stuff
   Default cpb: vib, phaser, flanger, chop
   Defaullt Hz: lpf, hpf, bpf, nf, apf, psf, low.freq, mid.freq, high.freq, ring, room.hpf, reverb.hpf, pitchedperc stuff
