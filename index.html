@@ -795,9 +795,9 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>pan</code> pan from -1 (left) to 1 (right). default: 0</p>
 <p><code>mono</code> Force a signal to mono: the input signal appears equally in both left and right channels</p>
 <p><code>choke</code> Set a choke group. Notes played with a choke group will cut off other notes that are already playing if they have the same choke group. The choke group can be a string, and can apply across multiple players.</p>
-<p><code>echo</code> Echo time delay in beats</p>
+<p><code>echo</code> Echo time delay. Default time unit: beats.</p>
 <p class='sub'><code>echo={1,feedback:0.8}</code> Echo feedback gain, 0 to 1, default 0.35. Higher value means the echo persists for longer.</p>
-<p class='sub'><code>echo={1,max:2}</code> Echo max time delay. Only valid for bus echo. The bus echo time can be varied, but cannot be larger than this. Defaults to either 1 beat, or the initial value of the delay time, whichever is larger.</p>
+<p class='sub'><code>echo={1,max:2}</code> Echo max time delay. Only valid for bus echo. The bus echo time can be varied, but cannot be larger than this. Defaults to either 1 beat, or the initial value of the delay time, whichever is larger. Default time unit: beats.</p>
 <p><code>chorus</code> Strength of lfo-delay based stereo chorus effect.</p>
 <p class='sub'><code>chorus={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>phaser</code> LFO frequency for phaser effect, in phase sweep cycles per beat.</p>
@@ -807,7 +807,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>room</code> freeverb room size.</p>
 <p class='sub'><code>room={2,hpf:300}</code> HPF subparam Sets the cutoff frequency in Hz for a high pass filter placed before the freeverb. 0 disables the highpass filter altogether. default: 0</p>
 <p class='sub'><code>room={2,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1/2</p>
-<p><code>reverb</code> Convolution reverb duration. The value is a time in beats that the reverb tail will last for.</p>
+<p><code>reverb</code> Convolution reverb duration. The value is a time in beats that the reverb tail will last for. Default time unit: beats.</p>
 <p class='sub'><code>reverb={2,curve:3}</code> Decay curve power of the reverb tail. 1 is a linear decay, larger values make the tail decay faster. default: 5</p>
 <p class='sub'><code>reverb={2,hpf:300}</code> HPF subparam Sets the cutoff frequency in Hz for a high pass filter placed before the reverb. 0 disables the highpass filter altogether. default: 0</p>
 <p class='sub'><code>reverb={2,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1/2</p>

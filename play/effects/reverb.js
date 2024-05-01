@@ -46,7 +46,7 @@ define(function (require) {
 
   let reverb = (params, node) => {
     if (!mainParam(params.reverb, 0)) { return node }
-    let duration = evalMainParamEvent(params, 'reverb', 1/2) * metronome.beatDuration()
+    let duration = evalMainParamEvent(params, 'reverb', 1/2, 'b') * metronome.beatDuration()
     let curve = evalSubParamEvent(params, 'reverb', 'curve', 3)
     let hpf = evalSubParamEvent(params, 'reverb', 'hpf', 0)
     let rev = convolutionReverb(duration, curve)

@@ -29,7 +29,7 @@ define(function (require) {
       room: quantise(evalMainParamEvent(params, 'room', 0), 16),
       roomHpf: quantise(evalSubParamEvent(params, 'room', 'hpf', 0), 1),
       roomMix: quantise(evalSubParamEvent(params, 'room', 'mix', 1/2), 16),
-      reverb: quantise(evalMainParamEvent(params, 'reverb', 0) * params.beat.duration, 16),
+      reverb: quantise(evalMainParamEvent(params, 'reverb', 0, 'b') * params.beat.duration, 16),
       reverbCurve: quantise(evalSubParamEvent(params, 'reverb', 'curve', 3), 16),
       reverbHpf: quantise(evalSubParamEvent(params, 'reverb', 'hpf', 0), 1),
       reverbMix: quantise(evalSubParamEvent(params, 'reverb', 'mix', 1/3), 16),
