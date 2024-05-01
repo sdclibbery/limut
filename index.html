@@ -715,13 +715,13 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>ring={32,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>sample</code> With 'play' synth: number: choose which sample set to use. With 'sample' synth: string: url of online audio file to play (note: server must support cross origin requests for the file)</p>
 <p class='sub'><code>sample={32,pitch:261.6}</code> Specify the original pitch of the sample in Hz (eg default is 261.6 Hz for C4)</p>
-<p><code>start</code> For the 'sample' synth, specify the playback start time in seconds within the sample. </p>
+<p><code>start</code> For the 'sample' synth, specify the playback start time within the sample. Default time units: seconds.</p>
 <p><code>compress</code> Compression ratio, or the reduction in volume for signals above the compression threshold. A ratio of zero disables compression.</p>
 <p class='sub'><code>compress={12,gain:2}</code> Input gain; gain amp to apply to the signal before compression is applied</p>
 <p class='sub'><code>compress={12,threshold:-40dB}</code> Threshold at which the compression ratio kicks in. Default is <code>-50dB</code></p>
 <p class='sub'><code>compress={12,knee:10dB}</code> the 'knee' is a softening of the compression curve, so that there is no sudden changeover at the threshold. A value of <code>0dB</code> disables the knee and gives a sudden changeover. Other values are the range over which the knee should apply. Default is <code>40dB</code>.</p>
-<p class='sub'><code>compress={12,att:0.1}</code> Compressor attack time in seconds. The attack time is the time it takes for compression to 'kick in' once a signal crosses the threshold. Default is 0.01 (or 10ms).</p>
-<p class='sub'><code>compress={12,rel:0.2}</code> Compressor release time in seconds. The release time is the time it takes for compression to 'go away' once a signal falls back below the threshold. Default is 0.25.</p>
+<p class='sub'><code>compress={12,att:0.1}</code> Compressor attack time. The attack time is the time it takes for compression to 'kick in' once a signal crosses the threshold. Default is 0.01 (or 10ms). Default time units: seconds.</p>
+<p class='sub'><code>compress={12,rel:0.2}</code> Compressor release time. The release time is the time it takes for compression to 'go away' once a signal falls back below the threshold. Default is 0.25. Default time units: seconds.</p>
 <p><code>noisify</code> noisify: distort the signal into noise</p>
 <p class='sub'><code>noisify={12,gain:2}</code> Input gain; gain amp to apply to the signal before noisify is applied</p>
 <p class='sub'><code>noisify={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>

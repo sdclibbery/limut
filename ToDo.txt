@@ -209,7 +209,7 @@ shadertoy synth multiple channels
 ==== other ====
 Time units
  Default units, TEST, DOCS, sprite! for each of these:
-  Default s: start, compress.att, compress.rel, envelope{a,d}, pitchedperc stuff
+  Default s: envelope{a,d}, pitchedperc stuff
   Default cpb: vib, phaser, flanger, chop
   Defaullt Hz: lpf, hpf, bpf, nf, apf, psf, low.freq, mid.freq, high.freq, ring, room.hpf, reverb.hpf, pitchedperc stuff
   And just review all files in play/, including synths, for any more time params
@@ -217,7 +217,7 @@ Time units
 Allow non const step sizes in piecewise
  Also use of units() should handle changes to beat duration - And at least it should be evalled at event start not parse time!
  Replace envelope with piecewise in presets and validate
-?Treat db as units???
+?Treat db as units??? - compressor params in db; what else?
 Main bpm param time units
 Normalisation as a piecewise feature; []e and []r have it by default? Syntax?
 More time modifiers

@@ -21,8 +21,8 @@ define(function (require) {
     compressor.ratio.value = compress
     compressor.threshold.value = evalSubParamEvent(params, 'compress', 'threshold', -50, x => Math.log10(Math.max(x,1e-6))*20) // Convert to dB for WebAudio
     compressor.knee.value = evalSubParamEvent(params, 'compress', 'knee', 40, x => Math.log10(Math.max(x,1e-6))*20) // Convert to dB for WebAudio
-    compressor.attack.value = evalSubParamEvent(params, 'compress', 'att', 0.01)
-    compressor.release.value = evalSubParamEvent(params, 'compress', 'rel', 0.25)
+    compressor.attack.value = evalSubParamEvent(params, 'compress', 'att', 0.01, 's')
+    compressor.release.value = evalSubParamEvent(params, 'compress', 'rel', 0.25, 's')
     node.connect(compressor)
     params._destructor.disconnect(compressor, node)
     return compressor
