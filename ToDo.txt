@@ -209,7 +209,6 @@ shadertoy synth multiple channels
 ==== other ====
 Time units
  Default units, TEST, DOCS, sprite! for each of these:
-  Default s: pitchedperc stuff
   Default cpb: vib, phaser, flanger, chop
   Defaullt Hz: lpf, hpf, bpf, nf, apf, psf, low.freq, mid.freq, high.freq, ring, room.hpf, reverb.hpf, pitchedperc stuff
   And just review all files in play/, including synths, for any more time params
@@ -217,7 +216,8 @@ Time units
  Clean up old units code!
  Release
   Breaking changes
-   envelope a,d default to beats
+   envelope a,d default to beats; no units subparam
+   pitchedperc env defaults to seconds; no units subparam
 Allow non const step sizes in piecewise
  Also use of units() should handle changes to beat duration - And at least it should be evalled at event start not parse time!
  Replace envelope with piecewise in presets and validate

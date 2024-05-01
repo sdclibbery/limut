@@ -14,13 +14,13 @@ preset bd909 pitchedperc
   , hit= 0
 	, body={ 1 + this.accent
     , wave:'tri'
-    , att:10, dec:200+1800*this.decay
-    , freq:47, boost:120, pitchatt:4, pitchdec:10+200*this.tune
+    , att:10ms, dec:200ms+1800ms*this.decay
+    , freq:47, boost:120, pitchatt:4ms, pitchdec:10ms+200ms*this.tune
     , saturation:0.85
   }
   , rattle={ 3*(this.attack*3 + this.accent)
-    , dec:400
-    , freq:47, boost:153, pitchatt:4, pitchdec:10+200*this.tune
+    , dec:400ms
+    , freq:47, boost:153, pitchatt:4ms, pitchdec:10ms+200ms*this.tune
   }
 
 preset h909 sample
@@ -83,19 +83,19 @@ preset sd909 pitchedperc
   , hit= 0
 	, body={ 1 + this.accent
     , wave:'tri'
-    , att:10, dec:260
-    , freq:110+177*this.tune, boost:100, pitchatt:4, pitchdec:40
+    , att:10ms, dec:260ms
+    , freq:110+177*this.tune, boost:100, pitchatt:4ms, pitchdec:40ms
     , saturation:0.85
   }
 	, body2={ 1/2 + this.accent/2
     , wave:'tri'
-    , att:10, dec:260
-    , freq:139+107*this.tune, boost:133, pitchatt:4, pitchdec:40
+    , att:10ms, dec:260ms
+    , freq:139+107*this.tune, boost:133, pitchatt:4ms, pitchdec:40ms
     , saturation:0.85
   }
   , rattle={ 3/2*(this.snappy + this.accent)
-    , dec:200+600*this.tone
-    , filter:'bandpass', freq:[2500:4000]e0.4, boost:153, pitchatt:4, pitchdec:400, q:0.2 // Real 909 splits noise signal and has low and high pass not bandpass
+    , dec:200ms+600ms*this.tone
+    , filter:'bandpass', freq:[2500:4000]e0.4, boost:153, pitchatt:4ms, pitchdec:400ms, q:0.2 // Real 909 splits noise signal and has low and high pass not bandpass
   }
 
 preset t909 pitchedperc
@@ -113,19 +113,19 @@ preset t909 pitchedperc
   , hit= 0
 	, body={ 1 + this.accent
     , wave:'tri'
-    , att:10, dec:500*(1+this.decay)
-    , freq:this.freq, boost:this.freq, pitchatt:4, pitchdec:300
+    , att:10ms, dec:500ms*(1+this.decay)
+    , freq:this.freq, boost:this.freq, pitchatt:4ms, pitchdec:300ms
     , saturation:0.85
   }
 	, body2={ 1 + this.accent
     , wave:'tri'
-    , att:10, dec:200
-    , freq:this.freq*1.13, boost:this.freq*1.73, pitchatt:4, pitchdec:120
+    , att:10ms, dec:200ms
+    , freq:this.freq*1.13, boost:this.freq*1.73, pitchatt:4ms, pitchdec:120ms
     , saturation:1 // Real 909 has changing saturation over time
   } // Real 909 has a third body tone
   , rattle={ 1/2*(1 + this.accent)
-    , dec:100
-    , filter:'bandpass', freq:500, boost:200, pitchatt:0, pitchdec:60, q:[0.1:1]e0.05
+    , dec:100ms
+    , filter:'bandpass', freq:500, boost:200, pitchatt:0ms, pitchdec:60ms, q:[0.1:1]e0.05
   }
 
 preset rs909 impulse
