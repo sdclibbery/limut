@@ -173,7 +173,7 @@ define(function (require) {
       if (s.preRender) {
         s.preRender(state)
       }
-      let shaderTime = evalMainParamFrame(params, 'time', null, state.count)
+      let shaderTime = evalMainParamFrame(params, 'time', null, state.count, 'b')
       if (shaderTime === null) {
         shaderTime = state.count*rate + sway*state.pulse
       }
