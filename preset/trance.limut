@@ -12,7 +12,7 @@ preset trance multiwave
 	, wave8={'saw',detune:-12,amp:1/2}
   // filter
   , lpf={
-  	300+500*(1+7*envelope{d:100+300*this.decay^2})*2*this.cutoff
+  	300+500*(1+7*envelope{d:100ms+300ms*this.decay^2})*2*this.cutoff
     , poles:4, q:6
   }
 	, low={-12db,freq:80}

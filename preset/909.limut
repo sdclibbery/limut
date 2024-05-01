@@ -30,7 +30,7 @@ preset h909 sample
   , chdecay=1/2
   , ohdecay=1/2
   // Derived params
-  , decay=30 + ((this.ohdecay*1000+400)*this.o) + (this.chdecay*180*(1-this.o))
+  , decay=30ms + ((this.ohdecay*1000ms+400ms)*this.o) + (this.chdecay*180ms*(1-this.o))
   , accent=(this.value+this.add)/7
   // Sample synth params
   , dur=1/4, sus=max{this.dur,this.decay}, choke=this.player
@@ -185,7 +185,7 @@ preset sds909 sample
   , dur=1/4, choke=this.player, sus=1
   , rate=1
   , envelope='organ', att=0
-  , amp*=4*envelope{d:100+1200*(this.tone+this.snappy)}*(this.level + this.accent)
+  , amp*=4*envelope{d:100ms+1200ms*(this.tone+this.snappy)}*(this.level + this.accent)
 	, mid=0.2 + 0.8*(this.tone+this.snappy)
 	, high=0.2 + 3.2*this.tone*this.snappy
   , accent=(this.value+this.add)/9
@@ -201,7 +201,7 @@ preset ts909 sample
   , dur=1/4, choke=this.player, sus=1
   , rate=this.freq/80
   , envelope='organ', att=0
-  , amp*=1.8*(this.level+this.accent/2)*envelope{d:250*(1+20*this.decay)}
+  , amp*=1.8*(this.level+this.accent/2)*envelope{d:250ms*(1+20*this.decay)}
   // 909 Toms Controls
   , level=1/2
   , tune=1/2

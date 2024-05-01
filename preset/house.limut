@@ -7,8 +7,8 @@ preset m1organ multiwave
   , envelope='full', att=0, dec=1/8, sus={level:7/8}, rel=1/8, amp*=3
   , wave1={'sine',detune:-24}
   , wave2={'square',detune:7,amp:1/4}
-  , wave3={'noise',detune:-3*12,amp:envelope{d:10}/3}
-  , lpf={500*(1/2+this.cutoff)*(1+envelope{d:500}),poles:4,q:10}
+  , wave3={'noise',detune:-3*12,amp:envelope{d:10ms}/3}
+  , lpf={500*(1/2+this.cutoff)*(1+envelope{d:500ms}),poles:4,q:10}
   , cutoff=1/2
 
 preset didgeridoo square 0, dur=1, envelope='pad', amp=[0.25:0.5]n3/4@f^2 + [0:0.25]l1/3@f, oct=2, clip, phaser=1/7, ring=1/4, glide=this.dur/2

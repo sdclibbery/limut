@@ -1,8 +1,7 @@
 'use strict'
 define(function(require) {
   let addVarFunction = require('predefined-vars').addVarFunction
-  let timeToBeats = require('units').timeToBeats
-  let {subParam} = require('player/sub-param')
+  let {subParam,subParamUnits} = require('player/sub-param')
   let {evalParamFrame} = require('player/eval-param')
   
   let lerp = (v0, v1, t, t1) => {
@@ -27,28 +26,22 @@ define(function(require) {
     'exp': exp,
     'exponential': exp,
   }
-  let scaledBeatEnv = (args, e,b,state, scale) => {
+  let envelope = (args, e,b,state) => {
+    args = evalParamFrame(args, e,b) // Eval all args once
     let count = b - e.count
     if (count < 0) { count = 0 } // Clamp to get initial value if evalled early
     let shape = subParam(args, 'shape')
     let interp = shapes[shape] || exp
     // Attack
-    let a = subParam(args, 'a', 0) * scale
+    let a = subParamUnits(args, 'a', 'b', 0)
     if (count < a) { return interp(0,1, count,a) }
     count -= a
     // Decay
-    let d = subParam(args, 'd', 0) * scale
+    let d = subParamUnits(args, 'd', 'b', 0)
     if (count < d) { return interp(1,0, count,d) }
     count -= d
     // default
     return 0
-  }
-
-  let envelope = (args, e,b,state) => {
-    args = evalParamFrame(args, e,b) // Eval all args once
-    let units = subParam(args, 'units', 'ms').toLowerCase()
-    let timeScale = timeToBeats(1, units, e) // Get time scale factor for given units
-    return scaledBeatEnv(args, e,b,state, timeScale)
   }
   addVarFunction('envelope', envelope)
 
@@ -72,59 +65,31 @@ define(function(require) {
     assert(0, evalParamFrame(p, ev(0,0,4), 2))
     assert(0, evalParamFrame(p, ev(0,0,4), 3))
 
-    p = parseExpression("envelope{units:'s'}")
-    assert(0, evalParamFrame(p, ev(0,0,4), 0))
-    assert(0, evalParamFrame(p, ev(0,0,4), 1))
-    assert(0, evalParamFrame(p, ev(0,0,4), 2))
-    assert(0, evalParamFrame(p, ev(0,0,4), 3))
-
-    p = parseExpression("envelope{d:1,shape:'lin',units:'beats'}")
+    p = parseExpression("envelope{d:1,shape:'lin'}")
     assert(1, evalParamFrame(p, ev(1,2,2), 1))
     assert(1, evalParamFrame(p, ev(1,2,2), 2))
     assert(1/2, evalParamFrame(p, ev(1,2,2), 2.5))
     assert(0, evalParamFrame(p, ev(1,2,2), 3))
     assert(0, evalParamFrame(p, ev(1,2,2), 4))
 
-    p = parseExpression("envelope{d:1,shape:'exp',units:'beats'}")
+    p = parseExpression("envelope{d:1,shape:'exp'}")
     assert(1, evalParamFrame(p, ev(1,2,2), 2))
     assert(0.01, evalParamFrame(p, ev(1,2,2), 2.5))
     assert(0, evalParamFrame(p, ev(1,2,2), 3))
 
-    p = parseExpression("envelope{d:1,shape:'lin',units:'BEATS'}")
+    p = parseExpression("envelope{d:1,shape:'lin'}")
     assert(1, evalParamFrame(p, ev(1,2,2), 2))
     assert(1/2, evalParamFrame(p, ev(1,2,2), 2.5))
     assert(0, evalParamFrame(p, ev(1,2,2), 3))
 
-    p = parseExpression("envelope{d:1,shape:'lin',units:'s'}")
+    p = parseExpression("envelope{d:2,shape:'lin'}")
     assert(1, evalParamFrame(p, ev(1,2,2), 1))
     assert(1, evalParamFrame(p, ev(1,2,2), 2))
     assert(1/2, evalParamFrame(p, ev(1,2,2), 3))
     assert(0, evalParamFrame(p, ev(1,2,2), 4))
     assert(0, evalParamFrame(p, ev(1,2,2), 5))
 
-    p = parseExpression("envelope{d:1,shape:'lin',units:'S'}")
-    assert(1, evalParamFrame(p, ev(1,2,2), 2))
-    assert(1/2, evalParamFrame(p, ev(1,2,2), 3))
-    assert(0, evalParamFrame(p, ev(1,2,2), 4))
-
-    p = parseExpression("envelope{d:1,shape:'lin',units:'sEConDs'}")
-    assert(1, evalParamFrame(p, ev(1,2,2), 2))
-    assert(1/2, evalParamFrame(p, ev(1,2,2), 3))
-    assert(0, evalParamFrame(p, ev(1,2,2), 4))
-
-    p = parseExpression("envelope{d:1000,shape:'lin',units:'ms'}")
-    assert(1, evalParamFrame(p, ev(1,2,2), 2))
-    assert(1/2, evalParamFrame(p, ev(1,2,2), 3))
-    assert(0, evalParamFrame(p, ev(1,2,2), 4))
-    assert(0, evalParamFrame(p, ev(1,2,2), 5))
-
-    p = parseExpression("envelope{d:1000,shape:'lin',units:'MIllIS'}")
-    assert(1, evalParamFrame(p, ev(1,2,2), 2))
-    assert(1/2, evalParamFrame(p, ev(1,2,2), 3))
-    assert(0, evalParamFrame(p, ev(1,2,2), 4))
-    assert(0, evalParamFrame(p, ev(1,2,2), 5))
-  
-    p = parseExpression("envelope{a:1,d:1,shape:'lin',units:'beats'}")
+    p = parseExpression("envelope{a:1,d:1,shape:'lin'}")
     assert(0, evalParamFrame(p, ev(1,2,2), 2))
     assert(1/2, evalParamFrame(p, ev(1,2,2), 2.5))
     assert(1, evalParamFrame(p, ev(1,2,2), 3))
@@ -132,9 +97,9 @@ define(function(require) {
     assert(0, evalParamFrame(p, ev(1,2,2), 4))
     assert(0, evalParamFrame(p, ev(1,2,2), 5))
   
-    p = parseExpression("envelope{a:1000}")
+    p = parseExpression("envelope{a:{value:1,_units:'s'}")
     assert(0, evalParamFrame(p, ev(1,2,2), 2))
-    assert(0.9, evalParamFrame(p, ev(1,2,2), 2.5))
+    assert(0.92, evalParamFrame(p, ev(1,2,2), 2.5))
 
     console.log('Envelope function tests complete')
   }
