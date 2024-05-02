@@ -20,9 +20,9 @@ define(function (require) {
     return {
       chorusAmount: quantise(evalMainParamEvent(params, 'chorus', 0), 8),
       chorusMix: quantise(evalSubParamEvent(params, 'chorus', 'mix', 1), 16),
-      phaserRate: quantise(evalMainParamEvent(params, 'phaser', 0) / params.beat.duration, 16),
+      phaserRate: quantise(evalMainParamEvent(params, 'phaser', 0, 'cpb') / params.beat.duration, 16),
       phaserMix: quantise(evalSubParamEvent(params, 'phaser', 'mix', 1), 16),
-      flangerRate: quantise(evalMainParamEvent(params, 'flanger', 0) / params.beat.duration, 16),
+      flangerRate: quantise(evalMainParamEvent(params, 'flanger', 0, 'cpb') / params.beat.duration, 16),
       flangerMix: quantise(evalSubParamEvent(params, 'flanger', 'mix', 1), 16),
       echoDelay: quantise(evalMainParamEvent(params, 'echo', 0, 'b') * params.beat.duration, 16),
       echoFeedback: quantise(Math.min(evalSubParamEvent(params, 'echo', 'feedback', 0.35), 0.95), 20),
