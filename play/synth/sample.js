@@ -19,7 +19,7 @@ define(function (require) {
       if (isNaN(freq)) { return }
       source = system.audio.createBufferSource()
       source.buffer = getBuffer(evalMainParamEvent(params, 'sample', 'sample/salamander/C4v8.mp3'))
-      let samplePitch = evalSubParamEvent(params, 'sample', 'pitch', 261.6256)
+      let samplePitch = evalSubParamEvent(params, 'sample', 'pitch', 261.6256, 'hz')
       source.playbackRate.value = freq / samplePitch
     } else { // If rate is set, use it instead of value/add
       source = system.audio.createBufferSource()
