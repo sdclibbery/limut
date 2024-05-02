@@ -684,29 +684,29 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
   Note that values with hyphens must be enclosed in quotes. In addition, there may be a performance problem with using dynamic (per frame) pitch sweeps using these waveforms. This penalty does not apply to the basic waveforms (sine, sawtooth, triangle, square).
 </p>
 <p><code>detune</code> Amount of detune in semitones</p>
-<p><code>lpf</code> Low pass filter frequency. Default units: Hertz</p>
+<p><code>lpf</code> Low pass filter frequency. Default time units: Hertz</p>
 <p class='sub'><code>lpf={400,q:20}</code> Low pass filter resonance. 10 is approximately the transition where resonance starts to kick in. Default: 5.</p>
 <p class='sub'><code>lpf={400,poles:4}</code> Filter poles. Default is a 2 pole filter giving 12 dB/octave. Alternatively, specify 4 for a Moog-like 4 pole filter giving 24 dB/octave.</p>
-<p><code>hpf</code> High pass filter frequency in Hertz</p>
+<p><code>hpf</code> High pass filter frequency. Default time units: Hertz</p>
 <p class='sub'><code>hpf={400,q:20}</code> High pass filter resonance. Default: 5.</p>
 <p class='sub'><code>hpf={400,poles:4}</code> Filter poles. Default is a 2 pole filter giving 12 dB/octave. Alternatively, specify 4 for a Moog-like 4 pole filter giving 24 dB/octave.</p>
-<p><code>bpf</code> Band pass filter frequency in Hertz.</p>
+<p><code>bpf</code> Band pass filter frequency. Default time units: Hertz.</p>
 <p class='sub'><code>bpf={400,q:20}</code> Band pass filter resonance. Default: 1.</p>
 <p class='sub'><code>bpf={400,poles:4}</code> Filter poles. Default is a 2 pole filter giving 12 dB/octave. Alternatively, specify 4 for a Moog-like 4 pole filter giving 24 dB/octave.</p>
 <p><code>bpf1</code> Multiple, parallel bandpass filters are available using params <code>bpf1</code>, <code>bpf2</code> etc.</p>
-<p><code>nf</code> Notch filter frequency in Hertz</p>
+<p><code>nf</code> Notch filter frequency. Default time units: Hertz</p>
 <p class='sub'><code>nf={400,q:20}</code> Notch filter resonance. Default: 1.</p>
-<p><code>apf1</code> All pass filter frequency in Hertz. Multiple allpass filters can be specified with params <code>apf1</code>, <code>apf2</code> etc. They will operate in parallel so their outputs sum, allowing phase cancellation.</p>
+<p><code>apf1</code> All pass filter frequency. Default time units: Hertz. Multiple allpass filters can be specified with params <code>apf1</code>, <code>apf2</code> etc. They will operate in parallel so their outputs sum, allowing phase cancellation.</p>
 <p class='sub'><code>apf={400,q:2}</code> Allpass filter resonance. Default: 1.</p>
-<p><code>psf</code> Phaser stage filter consisting of two allpass filters in parallel. Multiple phaserstage filters can be specified with params <code>psf1</code>, <code>psf2</code> etc. The phaserstages will operate in series, allowing more complex phasers to be built up with multiple peaks and troughs in the frequency spectrum.</p>
+<p><code>psf</code> Phaser stage filter consisting of two allpass filters in parallel. Multiple phaserstage filters can be specified with params <code>psf1</code>, <code>psf2</code> etc. The phaserstages will operate in series, allowing more complex phasers to be built up with multiple peaks and troughs in the frequency spectrum. Default units: Hertz</p>
 <p class='sub'><code>psf={f1:300,f2:2300,q:0.7}</code> f1 and f2 are the frequencies in Hertz of the two allpass filters. Sweep these dynamically for the swirling phaser effect. q is filter resonance. Default: 1.</p>
 <p><code>low</code> Low shelf gain. Eg <code>low=-6dB</code> will act like a gain of 1/2 for the low frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
-<p class='sub'><code>low={-8db,freq:400}</code> Low shelf cutoff frequency in Hz. Default: 200Hz</p>
+<p class='sub'><code>low={-8db,freq:400}</code> Low shelf cutoff frequency. Default: 200Hz. Default units: Hertz</p>
 <p><code>mid</code> Mid gain. Eg <code>mid=-6dB</code> will act like a gain of 1/2 for the mid frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
-<p class='sub'><code>mid={-8db,freq:400}</code> Mid cutoff frequency in Hz. Default: 600Hz</p>
+<p class='sub'><code>mid={-8db,freq:400}</code> Mid cutoff frequency. Default: 600Hz. Default units: Hertz</p>
 <p class='sub'><code>mid={-8db,q:10}</code> Mid q defines the width of the mid frequency band; low q is wide. Default: 5</p>
 <p><code>high</code> High shelf gain. Eg <code>high=-6dB</code> will act like a gain of 1/2 for the high frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
-<p class='sub'><code>high={-8db,freq:400}</code> High shelf cutoff frequency in Hz. Default: 1100Hz</p>
+<p class='sub'><code>high={-8db,freq:400}</code> High shelf cutoff frequency. Default: 1100Hz. Default units: Hertz</p>
 <p><code>chop</code> Apply a tremolo effect that chops the audio signal, eg <code>chop=2cpb</code> chops the signal twice per beat. Default time units: cycles per beat</p>
 <p class='sub'><code>chop={2,wave:triangle}</code> chops twice per beat with a triangle waveform. The default waveform is sine; the options are sine, square, triangle, saw.</p>
 <p class='sub'><code>chop={4,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>

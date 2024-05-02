@@ -209,8 +209,7 @@ shadertoy synth multiple channels
 ==== other ====
 Time units
  Default units, TEST, DOCS, sprite! for each of these:
-  Default cpb: chop
-  Defaullt Hz: lpf, hpf, bpf, nf, apf, psf, low.freq, mid.freq, high.freq, ring, room.hpf, reverb.hpf, pitchedperc stuff
+  Defaullt Hz: ring, room.hpf, reverb.hpf, pitchedperc stuff
   And just review all files in play/, including synths, for any more time params. io808!?
   Also review sprite and other draw/ files
  Clean up old units code!
