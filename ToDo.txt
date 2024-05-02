@@ -209,7 +209,6 @@ shadertoy synth multiple channels
 ==== other ====
 Time units
  Default units, TEST, DOCS, sprite! for each of these:
-  Defaullt Hz: pitchedperc stuff
   And just review all files in play/, including synths, for any more time params. io808!?
   Also review sprite and other draw/ files
  Clean up old units code!
