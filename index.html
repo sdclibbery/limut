@@ -548,7 +548,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>ping</code> Sine wave ping preset</p>
 <p><code>swell</code> Swell pad - triangle wave</p>
 <p><code>fm</code> FM base synth; allows configuration of FM operators and envelopes. Each of up to 6 operators is specified using params <code>op1</code> to <code>op6</code>:</p>
-<p class='sub'><code>op1={ratio:5.19,target:3,wave:'saw',depth:0.8,att:0.01,rel:0.1}</code> ratio: frequency ratio for this operator relative to base event frequency. target: the number of the operator that this one should modulate (eg `1` to target `op1`); use 'out' to send this operator output to the synth output. wave: the waveform to use for this operator. Depth: the amount of modulation this operator should apply to the target (note this will be scaled by the note frequency). att/rel simple envelope attack and release for this operator.</p>
+<p class='sub'><code>op1={ratio:5.19,target:3,wave:'saw',depth:0.8,att:0.01,rel:0.1}</code> ratio: frequency ratio for this operator relative to base event frequency. target: the number of the operator that this one should modulate (eg `1` to target `op1`); use 'out' to send this operator output to the synth output. wave: the waveform to use for this operator. Depth: the amount of modulation this operator should apply to the target (note this will be scaled by the note frequency). att/rel simple envelope attack and release for this operator - default time units: beats</p>
 <p><code>bell</code> FM generated bell preset</p>
 <p><code>glock</code> FM generated glockenspiel preset</p>
 <p><code>glass</code> FM glass synth with a chiming sound preset</p>

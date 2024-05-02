@@ -209,7 +209,6 @@ shadertoy synth multiple channels
 ==== other ====
 Time units
  Default units, TEST, DOCS, sprite! for each of these:
-   FM envelopes etc
    Sample player sample pitch
    ?maths smooth etc functions?
    seed modifier!
