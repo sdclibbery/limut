@@ -1,5 +1,6 @@
 ====
 ==== audio ====
+Should be a mix subparam on echo!
 Mix param for all filters, want to  s saw .75 crop 6 + 68, lpf={100,mix:1-envelope{d:500}}
 Players can have an analyser
   Created on access
@@ -79,7 +80,6 @@ More options for setting up the convolution reverb
 !Chop/ring LFO Freq should be per frame
 Also use nonchord find: nf (series) and bpf (parallel) for all audio
  Docs
-!Should be a mix subparam on echo!
 !FM operator should support all wave types
 Pattern char to set glide?
 Percussion player for single sample; value is velocity Eg  p playv 90520070, sample=':'
@@ -209,9 +209,9 @@ shadertoy synth multiple channels
 ==== other ====
 Time units
  Default units, TEST, DOCS, sprite! for each of these:
-  Default cpb: vib, phaser, flanger, chop
+  Default cpb: phaser, flanger, chop
   Defaullt Hz: lpf, hpf, bpf, nf, apf, psf, low.freq, mid.freq, high.freq, ring, room.hpf, reverb.hpf, pitchedperc stuff
-  And just review all files in play/, including synths, for any more time params
+  And just review all files in play/, including synths, for any more time params. io808!?
   Also review sprite and other draw/ files
  Clean up old units code!
  Release
