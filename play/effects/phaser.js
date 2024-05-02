@@ -21,7 +21,7 @@ let phaser = (destructor, params, lfoFreq, node) => {
     destructor.disconnect(lfo)
     destructor.stop(lfo)
     if (!!params) {
-      evalMainParamFrame(lfo.frequency, params, 'phaser', 1)
+      evalMainParamFrame(lfo.frequency, params, 'phaser', 1, 'cpb')
     } else {
       lfo.frequency.value = lfoFreq
     }

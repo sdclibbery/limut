@@ -209,9 +209,10 @@ shadertoy synth multiple channels
 ==== other ====
 Time units
  Default units, TEST, DOCS, sprite! for each of these:
-   Flanger/phaser/freeverb/reverb(hpf) for bus (not from fxMixChain)
    FM envelopes etc
    Sample player sample pitch
+   ?maths smooth etc functions?
+   seed modifier!
  Clean up old units code!
  Release
   Breaking changes

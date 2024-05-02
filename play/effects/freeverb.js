@@ -123,7 +123,7 @@ define(function (require) {
   let mixedFreeverb = (params, node) => {
     let room = evalMainParamEvent(params, 'room', 0)
     if (!room) { return node }
-    let hpf = evalSubParamEvent(params, 'room', 'hpf', 0)
+    let hpf = evalSubParamEvent(params, 'room', 'hpf', 0, 'hz')
     let fv = fixedFreeverb(params._destructor, room, hpf, node)
     params._destroyWait += room*5
     return mix(params, 'room', node, fv, 1/2)

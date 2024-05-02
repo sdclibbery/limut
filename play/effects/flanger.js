@@ -10,7 +10,7 @@ define(function (require) {
     destructor.disconnect(lfo)
     destructor.stop(lfo)
     if (!!params) {
-      evalMainParamFrame(lfo.frequency, params, 'flanger', 1)
+      evalMainParamFrame(lfo.frequency, params, 'flanger', 1, 'cpb')
     } else {
       lfo.frequency.value = lfoFreq
     }

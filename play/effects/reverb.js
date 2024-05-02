@@ -48,7 +48,7 @@ define(function (require) {
     if (!mainParam(params.reverb, 0)) { return node }
     let duration = evalMainParamEvent(params, 'reverb', 1/2, 'b') * metronome.beatDuration()
     let curve = evalSubParamEvent(params, 'reverb', 'curve', 3)
-    let hpf = evalSubParamEvent(params, 'reverb', 'hpf', 0)
+    let hpf = evalSubParamEvent(params, 'reverb', 'hpf', 0, 'hz')
     let rev = convolutionReverb(duration, curve)
     let boost = system.audio.createGain()
     boost.gain.value = 6 // Boost the wet signal else the whole bus sounds quieter with a reverb in
