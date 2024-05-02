@@ -707,7 +707,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>mid={-8db,q:10}</code> Mid q defines the width of the mid frequency band; low q is wide. Default: 5</p>
 <p><code>high</code> High shelf gain. Eg <code>high=-6dB</code> will act like a gain of 1/2 for the high frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
 <p class='sub'><code>high={-8db,freq:400}</code> High shelf cutoff frequency in Hz. Default: 1100Hz</p>
-<p><code>chop</code> Chop the signal into a number of parts per beat, eg <code>chop=2</code> chops the signal twice per beat.</p>
+<p><code>chop</code> Apply a tremolo effect that chops the audio signal, eg <code>chop=2cpb</code> chops the signal twice per beat. Default time units: cycles per beat</p>
 <p class='sub'><code>chop={2,wave:triangle}</code> chops twice per beat with a triangle waveform. The default waveform is sine; the options are sine, square, triangle, saw.</p>
 <p class='sub'><code>chop={4,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>ring</code> Apply ring modulation at the given frequency in Hertz, eg <code>ring=32</code> apply ring modulation at 32Hz.</p>
