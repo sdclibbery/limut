@@ -27,11 +27,11 @@ define(function (require) {
       echoDelay: quantise(evalMainParamEvent(params, 'echo', 0, 'b') * params.beat.duration, 16),
       echoFeedback: quantise(Math.min(evalSubParamEvent(params, 'echo', 'feedback', 0.35), 0.95), 20),
       room: quantise(evalMainParamEvent(params, 'room', 0), 16),
-      roomHpf: quantise(evalSubParamEvent(params, 'room', 'hpf', 0), 1),
+      roomHpf: quantise(evalSubParamEvent(params, 'room', 'hpf', 0, 'hz'), 1),
       roomMix: quantise(evalSubParamEvent(params, 'room', 'mix', 1/2), 16),
       reverb: quantise(evalMainParamEvent(params, 'reverb', 0, 'b') * params.beat.duration, 16),
       reverbCurve: quantise(evalSubParamEvent(params, 'reverb', 'curve', 3), 16),
-      reverbHpf: quantise(evalSubParamEvent(params, 'reverb', 'hpf', 0), 1),
+      reverbHpf: quantise(evalSubParamEvent(params, 'reverb', 'hpf', 0, 'hz'), 1),
       reverbMix: quantise(evalSubParamEvent(params, 'reverb', 'mix', 1/3), 16),
       bus: evalMainParamEvent(params, 'bus'),
     }
