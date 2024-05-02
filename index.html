@@ -710,7 +710,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>chop</code> Apply a tremolo effect that chops the audio signal, eg <code>chop=2cpb</code> chops the signal twice per beat. Default time units: cycles per beat</p>
 <p class='sub'><code>chop={2,wave:triangle}</code> chops twice per beat with a triangle waveform. The default waveform is sine; the options are sine, square, triangle, saw.</p>
 <p class='sub'><code>chop={4,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
-<p><code>ring</code> Apply ring modulation at the given frequency in Hertz, eg <code>ring=32</code> apply ring modulation at 32Hz.</p>
+<p><code>ring</code> Apply ring modulation at the given frequency, eg <code>ring=32hz</code> apply ring modulation at 32Hz. Default time units: hz</p>
 <p class='sub'><code>ring={32,wave:saw}</code> 32Hz ring modulation with a sawtooth waveform. The default waveform is triangle; the options are sine, square, triangle, saw.</p>
 <p class='sub'><code>ring={32,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>sample</code> With 'play' synth: number: choose which sample set to use. With 'sample' synth: string: url of online audio file to play (note: server must support cross origin requests for the file)</p>

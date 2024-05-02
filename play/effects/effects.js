@@ -29,7 +29,7 @@ define(function (require) {
     if (!mainParam(params.ring, 0)) { return node }
     let lfo = system.audio.createOscillator()
     lfo.type = evalSubParamEvent(params, 'ring', 'wave', 'triangle')
-    evalMainParamFrame(lfo.frequency, params, 'ring', 1)
+    evalMainParamFrame(lfo.frequency, params, 'ring', 1, 'hz')
     let gain = system.audio.createGain()
     gain.gain.setValueAtTime(0, system.audio.currentTime)
     lfo.connect(gain.gain)
