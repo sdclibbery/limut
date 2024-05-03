@@ -1,7 +1,6 @@
 'use strict';
 define(function (require) {
   let {evalFuncFrame,evalMainPerFrame,evalMainParamEvent,evalSubParamEvent,setAudioParamValue} = require('play/eval-audio-params')
-  let timeToBeats = require('units').timeToBeats
 
   let hasParam = (params, p) => {
     return !!params[p]
