@@ -208,9 +208,6 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Time units
- Default units, TEST, DOCS, sprite! for each of these:
-   ?maths smooth etc functions?
-   seed modifier!
  Clean up old units code!
  Release
   Breaking changes

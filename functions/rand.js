@@ -1,6 +1,7 @@
 'use strict'
 define(function(require) {
   let addVarFunction = require('predefined-vars').addVarFunction
+  let {units} = require('units')
 
   let xmur3 = (x) => {
     let h = 1779033703
@@ -37,6 +38,8 @@ define(function(require) {
       }
       let perVoiceSeed = e.voice || 0
       seed = (state.perParseSeed + e.perEventSeed + perVoiceSeed)*999999
+    } else {
+      seed = units(seed, 'b')
     }
     let r = xmur3(b - seed) / 4294967296
     let arr

@@ -57,7 +57,7 @@ define(function(require) {
     let seed = Math.random()*10000
     return (e,b, evalRecurse, modifiers) => {
       if (modifiers && modifiers.seed !== undefined) {
-        seed = modifiers.seed
+        seed = units(modifiers.seed, 'b')
       }
       period = units(period, 'b')
       let value = b + seed
