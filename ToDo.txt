@@ -208,7 +208,6 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Time units
- Clean up old units code!
  Release
   Breaking changes
    envelope a,d default to beats; no units subparam
