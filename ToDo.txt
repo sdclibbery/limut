@@ -211,7 +211,6 @@ Allow non const step sizes in piecewise
  Core support in eval piecewise
   ?time{} should return value with units? And then use this as target units for ss?
   Clamp indexer
-   tests in eval-pievewise
    use for []e instead of []e own clamp
   Free indexer
    Use only when ss not all const

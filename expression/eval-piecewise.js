@@ -197,12 +197,21 @@ define(function(require) {
     assert(1, evalParamFrame(pw,ev(3),0))
     assert(0, evalParamFrame(pw,ev(4),0))
 
-    // pw = piecewise([0,2], [step,step], [()=>1,()=>1], getb, {})
-    // assert(0, evalParamFrame(pw,ev(0),0))
-    // assert(0, evalParamFrame(pw,ev(0),1/2))
-    // assert(2, evalParamFrame(pw,ev(0),1))
-    // assert(2, evalParamFrame(pw,ev(0),3/2))
-    // assert(0, evalParamFrame(pw,ev(0),2))
+    pw = piecewise([0,2], [step,step], [1,1], getb, {clamp:true})
+    assert(0, evalParamFrame(pw,ev(0),-1))
+    assert(0, evalParamFrame(pw,ev(0),0))
+    assert(0, evalParamFrame(pw,ev(0),1/2))
+    assert(2, evalParamFrame(pw,ev(0),1))
+    assert(2, evalParamFrame(pw,ev(0),3/2))
+    assert(2, evalParamFrame(pw,ev(0),2))
+    assert(2, evalParamFrame(pw,ev(0),3))
+
+    pw = piecewise([0,2], [step,step], [(e,b)=>Math.min(b+1,2),(e,b)=>1], getb, {clamp:true})
+    assert(0, evalParamFrame(pw,ev(0),-1))
+    assert(0, evalParamFrame(pw,ev(0),0))
+    assert(0, evalParamFrame(pw,ev(0),1))
+    assert(2, evalParamFrame(pw,ev(0),2))
+    assert(2, evalParamFrame(pw,ev(0),3))
 
     console.log('Piecewise tests complete')
   }
