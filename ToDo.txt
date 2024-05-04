@@ -209,7 +209,6 @@ shadertoy synth multiple channels
 ==== other ====
 Allow non const step sizes in piecewise
  Core support in eval piecewise
-  Use time units as target units for ss?
   Clamp indexer
    use for []e instead of []e own clamp
   Free indexer
@@ -267,6 +266,7 @@ range function eg (0,2,4,6).range{0,to:riser*3}
 root{chord} function that takes a chord and returns the root
 ?sound param can be overridden, so it defaults to pitch/oct/scale etc but you can override so the pattern can specify chord index etc
  ?Not necessary because [0,1,2] is effectively a pattern that can be used to select from chords?
+Really time{} and b and so on should all return values in beats, not unitless
 Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as needed. or  t trance 0, reverb.hpf=0
  Needs to work for overrides too eg  body.boost+=100
 !v readout 0, add=[0,(1,2)]r, loc={y:this.voice/2}

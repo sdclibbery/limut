@@ -16,12 +16,10 @@ define(function(require) {
   }
 
   let getConstIndexer = (ss) => {
-    ss = ss.map(s => units(s, 'b')) // Default to beats but accept s etc. Should not be parse time this gets evalled at though!
+    ss = ss.map(s => units(s, 'b')) // Assume beats for units. Really this should come from pieceParam instead of being hardcoded
     let totalSize = ss.reduce((a,x) => a+x, 0)
     if (!Number.isFinite(totalSize)) { throw `invalid piecewise totalSize: ${totalSize}` }
     return (pieceParam) => {
-      pieceParam = mainParam(pieceParam)
-      if (!Number.isFinite(pieceParam)) { consoleOut(`🟠 Warning invalid piecewise piece param: ${pieceParam}`); return 0; }
       let pMod = (pieceParam%totalSize + totalSize) % totalSize
       let pos = 0
       for (let i=0; i<ss.length; i++) {
@@ -37,11 +35,9 @@ define(function(require) {
 
   let getClampIndexer = (ss) => {
     return (pieceParam, e,b) => {
-      pieceParam = mainParam(pieceParam)
-      if (!Number.isFinite(pieceParam)) { consoleOut(`🟠 Warning invalid piecewise piece param: ${pieceParam}`); return 0; }
       let pos = 0
       for (let i=0; i<ss.length; i++) {
-        let s = units(evalParamFrame(ss[i], e,b), 'b') // Default to beats but accept s etc. Should not be parse time this gets evalled at though!
+        let s = units(evalParamFrame(ss[i], e,b), 'b') // Assume beats for units. Really this should come from pieceParam instead of being hardcoded
         if (pieceParam < pos + s) { return i }
       }
       return ss.length - 1
@@ -63,7 +59,8 @@ define(function(require) {
         if (!p.modifiers) { p.modifiers = {} }
         p.modifiers.seed = modifiers.seed
       }
-      let pieceParam = evalParamFrame(p, e,b) || 0
+      let pieceParam = mainParam(evalParamFrame(p, e,b) || 0)
+      if (!Number.isFinite(pieceParam)) { consoleOut(`🟠 Warning invalid piecewise piece param: ${pieceParam}`); return 0; }
       let piece = indexer(pieceParam, e,b)
       let idx = Math.floor(piece)
       let l = vs[idx % vs.length]
