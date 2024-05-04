@@ -209,7 +209,7 @@ shadertoy synth multiple channels
 ==== other ====
 Allow non const step sizes in piecewise
  Core support in eval piecewise
-  ?time{} should return value with units? And then use this as target units for ss?
+  Use time units as target units for ss?
   Clamp indexer
    use for []e instead of []e own clamp
   Free indexer

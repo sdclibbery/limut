@@ -4,6 +4,7 @@ define(function(require) {
   let consoleOut = require('console')
   let evalOperator = require('expression/eval-operator')
   let {units} = require('units')
+  let {mainParam} = require('player/sub-param')
 
   let add = (a,b) => a+b
   let mul = (a,b) => (typeof b === 'string') ? (a === 0 ? '' : b) : a*b
@@ -19,6 +20,8 @@ define(function(require) {
     let totalSize = ss.reduce((a,x) => a+x, 0)
     if (!Number.isFinite(totalSize)) { throw `invalid piecewise totalSize: ${totalSize}` }
     return (pieceParam) => {
+      pieceParam = mainParam(pieceParam)
+      if (!Number.isFinite(pieceParam)) { consoleOut(`🟠 Warning invalid piecewise piece param: ${pieceParam}`); return 0; }
       let pMod = (pieceParam%totalSize + totalSize) % totalSize
       let pos = 0
       for (let i=0; i<ss.length; i++) {
@@ -34,6 +37,8 @@ define(function(require) {
 
   let getClampIndexer = (ss) => {
     return (pieceParam, e,b) => {
+      pieceParam = mainParam(pieceParam)
+      if (!Number.isFinite(pieceParam)) { consoleOut(`🟠 Warning invalid piecewise piece param: ${pieceParam}`); return 0; }
       let pos = 0
       for (let i=0; i<ss.length; i++) {
         let s = units(evalParamFrame(ss[i], e,b), 'b') // Default to beats but accept s etc. Should not be parse time this gets evalled at though!
@@ -59,7 +64,6 @@ define(function(require) {
         p.modifiers.seed = modifiers.seed
       }
       let pieceParam = evalParamFrame(p, e,b) || 0
-      if (!Number.isFinite(pieceParam)) { consoleOut(`🟠 Warning invalid piecewise piece param: ${pieceParam}`); return 0; }
       let piece = indexer(pieceParam, e,b)
       let idx = Math.floor(piece)
       let l = vs[idx % vs.length]

@@ -1468,6 +1468,14 @@ define(function(require) {
   assert(0.55*2/3, evalParamFrame(p, ev(0,0,1), sInBeats(0.2)))
   assert(0, evalParamFrame(p, ev(0,0,1), sInBeats(0.3)))
 
+  p = parseExpression("[1,2]{time}")
+  assert(1, evalParamFrame(p, ev(0,0,1), 0))
+  assert(2, evalParamFrame(p, ev(0,0,1), 1))
+
+  p = parseExpression("[1,2]{this.time}")
+  assert(1, evalParamFrame(p, ev(0,0,1), 0))
+  assert(2, evalParamFrame(p, ev(0,0,1), 1))
+
   console.log('Parse expression tests complete')
   }
 

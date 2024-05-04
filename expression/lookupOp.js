@@ -19,7 +19,7 @@ define(function(require) {
       func.args = l
       let v = evalFunctionWithModifiers(func,event,b, evalRecurse)
       if (Array.isArray(l) && !func._isAggregator) {
-        return l[Math.floor(v % l.length)] // Chord index with result of func call
+        return l[Math.floor(mainParam(v,0) % l.length)] // Chord index with result of func call
       }
       return v // Just return func result
     }
