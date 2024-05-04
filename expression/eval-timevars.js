@@ -44,20 +44,17 @@ define(function(require) {
       ss = ss.map(s => s/total) // Normalise sizes
       let p = (e,b) => {
         if (!e.countToTime) { return 0 }
-        return Math.min((b - e.count) / (e.endTime - e._time), 0.999999) // Hold at final value, don't keep repeating
+        return (b - e.count) / (e.endTime - e._time) // Normalise param
       }
-      return piecewise(vs, is, ss, p, {})
+      return piecewise(vs, is, ss, p, {clamp:true})
     } else { // Use durations provided
       if (!Array.isArray(ds)) { ds = [ds || 1] }
       is = is.map(i => i || linear)
       ss = ss.map((s,idx) => s!==undefined ? s : ds[idx % ds.length])
       ss = ss.map(s => units(s, 'b')) // Default to beats but accept s etc. Should not be parse time this gets evalled at though!
       is[is.length-1] = step // Last one is final value, not part of the event
-      let totalDuration = ss.reduce((a,x) => a+x, 0)
-      let p = (e,b) => {
-        return Math.min(b - e.count, totalDuration-0.000001)
-      }
-      return piecewise(vs, is, ss, p, {})
+      let p = (e,b) => b - e.count
+      return piecewise(vs, is, ss, p, {clamp:true})
     }
   }
 
@@ -79,12 +76,7 @@ define(function(require) {
     assert(2, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(0,1), 1))
     assert(2, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(0,1), 2))
 
-    assert(1, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 0))
-    assert(9/8, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 1/4))
-    assert(1.5, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 1))
-    assert(1, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 2))
-    assert(1, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 8))
-    assert(1.5, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 9))
+    assert(1, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 9))
     assert(1, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 10))
     assert(1.5, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 11))
     assert(2, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 12))

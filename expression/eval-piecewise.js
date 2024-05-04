@@ -38,7 +38,9 @@ define(function(require) {
       let pos = 0
       for (let i=0; i<ss.length; i++) {
         let s = units(evalParamFrame(ss[i], e,b), 'b') // Assume beats for units. Really this should come from pieceParam instead of being hardcoded
-        if (pieceParam < pos + s) { return i }
+        if (pieceParam < 0) { return 0 }
+        if (pieceParam < pos + s) { return i + (pieceParam - pos)/s }
+        pos += s
       }
       return ss.length - 1
     }
@@ -61,7 +63,7 @@ define(function(require) {
       }
       let pieceParam = mainParam(evalParamFrame(p, e,b) || 0)
       if (!Number.isFinite(pieceParam)) { consoleOut(`🟠 Warning invalid piecewise piece param: ${pieceParam}`); return 0; }
-      let piece = indexer(pieceParam, e,b)
+      let piece = indexer(pieceParam, e,b) // "piece" integer part is an index into the segments; fractional part is the interpolator between segments
       let idx = Math.floor(piece)
       let l = vs[idx % vs.length]
       let r = vs[(idx+1) % vs.length]
@@ -207,12 +209,12 @@ define(function(require) {
     assert(2, evalParamFrame(pw,ev(0),2))
     assert(2, evalParamFrame(pw,ev(0),3))
 
-    pw = piecewise([0,2], [step,step], [(e,b)=>Math.min(b+1,2),(e,b)=>1], getb, {clamp:true})
-    assert(0, evalParamFrame(pw,ev(0),-1))
-    assert(0, evalParamFrame(pw,ev(0),0))
-    assert(0, evalParamFrame(pw,ev(0),1))
-    assert(2, evalParamFrame(pw,ev(0),2))
-    assert(2, evalParamFrame(pw,ev(0),3))
+    pw = piecewise([0,2], [lin,step], [(e,b)=>Math.min(b+1,2),(e,b)=>1], getb, {clamp:true})
+    assert(0, evalParamFrame(pw,ev(0,0,2),-1))
+    assert(0, evalParamFrame(pw,ev(0,0,2),0))
+    assert(1, evalParamFrame(pw,ev(0,0,2),1))
+    assert(2, evalParamFrame(pw,ev(0,0,2),2))
+    assert(2, evalParamFrame(pw,ev(0,0,2),3))
 
     console.log('Piecewise tests complete')
   }

@@ -719,7 +719,7 @@ define(function(require) {
 
   p = parseExpression("[0:1]e2")
   e = { idx:0, count:7, countToTime:b=>b, _time:7, endTime:8 }
-  assert(1, evalParamFrame(p,e,6))
+  assert(0, evalParamFrame(p,e,6))
   assert(0, evalParamFrame(p,e,7))
   assert(0.5, evalParamFrame(p,e,8))
   assert(1, evalParamFrame(p,e,9))
@@ -740,20 +740,20 @@ define(function(require) {
   assertApprox(1, evalParamFrame(p,e,9))
 
   p = parseExpression("[0,1,0]e")
-  e = { idx:0, count:7, countToTime:b=>b, _time:1, endTime:3 }
+  e = { idx:0, count:1, countToTime:b=>b, _time:1, endTime:3 }
   assert(0, evalParamFrame(p,e,1))
   assert(1, evalParamFrame(p,e,2))
   assertApprox(0, evalParamFrame(p,e,3))
 
   p = parseExpression("[1]e")
-  e = { idx:0, count:7, countToTime:b=>b, _time:1, endTime:2 }
+  e = { idx:0, count:1, countToTime:b=>b, _time:1, endTime:2 }
   assert(1, evalParamFrame(p,e,0))
   assert(1, evalParamFrame(p,e,1))
   assert(1, evalParamFrame(p,e,2))
   assert(1, evalParamFrame(p,e,3))
 
   p = parseExpression("[]e")
-  e = { idx:0, count:7, countToTime:b=>b, _time:1, endTime:2 }
+  e = { idx:0, count:1, countToTime:b=>b, _time:1, endTime:2 }
   assert(0, evalParamFrame(p,e,0))
   assert(0, evalParamFrame(p,e,1))
   assert(0, evalParamFrame(p,e,2))
@@ -763,7 +763,7 @@ define(function(require) {
   e = { idx:0, count:7, countToTime:b=>b, _time:7, endTime:8 }
   assert(0, evalParamFrame(p,e,6))
   assert(0, evalParamFrame(p,e,7))
-  assert(0.5, evalParamFrame(p,e,.25))
+  assert(0.5, evalParamFrame(p,e,7.25))
   assert(1, evalParamFrame(p,e,7.5))
   assert(1, evalParamFrame(p,e,8))
   assert(1, evalParamFrame(p,e,9))
@@ -780,7 +780,7 @@ define(function(require) {
   e = { idx:0, count:0, countToTime:b=>b, _time:0, endTime:1 }
   assert([0,2], evalParamFrame(p,e,0,evalParamFrame))
   assert([0.5,2.5], evalParamFrame(p,e,1/2,evalParamFrame))
-  assert([0.9999989999999999,2.999999], evalParamFrame(p,e,2,evalParamFrame))
+  assert([1,3], evalParamFrame(p,e,2,evalParamFrame))
 
   p = parseExpression("[0:1]e")
   let e1 = { idx:0, count:7, countToTime:b=>b, _time:7, endTime:70 }
