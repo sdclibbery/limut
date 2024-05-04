@@ -208,22 +208,19 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Allow non const step sizes in piecewise
- Core support in eval piecewise
-  Clamp indexer
-   use for []e instead of []e own clamp
-  Free indexer
-   Use only when ss not all const
- Try it out in []t []e []r []{} etc etc - tests in parse-expression for all these
- Also use of units() should handle changes to beat duration - And at least it should be evalled at event start not parse time!
+ Parsing supports variable sizes
+  Tests in parse-expression for []t []e []r []{} etc etc with varying step sizes
+  ! Current free indexer optimisation will likely fail when used on multiple events at once?
+ Also use of units() ought to handle changes to beat duration - And at least it should be evalled at event start not parse time!
  Replace envelope with piecewise in presets and validate
+Syntax to allow use of clamp indexer for []{}?
 Normalisation as a piecewise feature; []e and []r have it by default? Syntax?
- Syntax to use clamp indexer for []{}?
-Random noise rewrite to use piecewise
- []n:  []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
 More time modifiers
  offset
  rate
  time - set time directly to an expression
+ Random noise rewrite to use piecewise
+  []n:  []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
 ?Treat db as units??? - compressor params in db; what else?
 Main bpm param time units
 stutter subparam, to squash or expand stutter timescale

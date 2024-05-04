@@ -15,6 +15,9 @@ define(function(require) {
     )
   }
 
+  let allConst = (ss) => {
+    return ss.reduce((a,s) => a && (typeof mainParam(s) === 'number'), true)
+  }
   let getConstIndexer = (ss) => {
     ss = ss.map(s => units(s, 'b')) // Assume beats for units. Really this should come from pieceParam instead of being hardcoded
     let totalSize = ss.reduce((a,x) => a+x, 0)
@@ -35,10 +38,10 @@ define(function(require) {
 
   let getClampIndexer = (ss) => {
     return (pieceParam, e,b) => {
+      if (pieceParam < 0) { return 0 }
       let pos = 0
       for (let i=0; i<ss.length; i++) {
         let s = units(evalParamFrame(ss[i], e,b), 'b') // Assume beats for units. Really this should come from pieceParam instead of being hardcoded
-        if (pieceParam < 0) { return 0 }
         if (pieceParam < pos + s) { return i + (pieceParam - pos)/s }
         pos += s
       }
@@ -46,9 +49,25 @@ define(function(require) {
     }
   }
 
+  let getFreeIndexer = (ss) => {
+    let pos = 0 // Will probably have trouble with only storing these once per parse instance...
+    let i = 0
+    return (pieceParam, e,b) => {
+      if (pieceParam < 0) { return 0 }
+      while (true) {
+        let s = units(evalParamFrame(ss[i], e,b), 'b') // Assume beats for units. Really this should come from pieceParam instead of being hardcoded
+        if (pieceParam < pos + s) { return i + (pieceParam - pos)/s }
+        pos += s
+        i += 1
+        if (i >= ss.length) { i = 0 }
+      }
+    }
+  }
+
   let getIndexer = (ss, clamp)=> {
     if (clamp) { return getClampIndexer(ss) }
-    return getConstIndexer(ss)
+    if (allConst(ss)) { return getConstIndexer(ss) }
+    return getFreeIndexer(ss)
   }
 
   let piecewise = (vs, is, ss, p, {clamp}) => { // values, interpolators, sizes
@@ -103,7 +122,7 @@ define(function(require) {
 
     assertThrows('is.length', ()=>piecewise([0], [], [1], 0, {}))
     assertThrows('ss.length', ()=>piecewise([0], [lin], [], 0, {}))
-    assertThrows('invalid piecewise totalSize', ()=>piecewise([0], [lin], ['foo'], 0, {}))
+    assertThrows('invalid piecewise totalSize', ()=>piecewise([0], [lin], [Infinity], 0, {}))
 
     pw = piecewise([2], [step], [1], 1, {})
     assert(2, evalParamFrame(pw,ev(0),0))
@@ -209,12 +228,25 @@ define(function(require) {
     assert(2, evalParamFrame(pw,ev(0),2))
     assert(2, evalParamFrame(pw,ev(0),3))
 
-    pw = piecewise([0,2], [lin,step], [(e,b)=>Math.min(b+1,2),(e,b)=>1], getb, {clamp:true})
+    pw = piecewise([0,2], [lin,step], [(e,b)=>1+b%2,(e,b)=>1], getb, {clamp:true})
     assert(0, evalParamFrame(pw,ev(0,0,2),-1))
     assert(0, evalParamFrame(pw,ev(0,0,2),0))
     assert(1, evalParamFrame(pw,ev(0,0,2),1))
     assert(2, evalParamFrame(pw,ev(0,0,2),2))
     assert(2, evalParamFrame(pw,ev(0,0,2),3))
+
+    pw = piecewise([0,2], [step,step], [(e,b)=>1+b%3,(e,b)=>1], getb, {})
+    assert(0, evalParamFrame(pw,ev(0,0,1),0))
+    assert(0, evalParamFrame(pw,ev(0,0,1),1))
+    assert(0, evalParamFrame(pw,ev(0,0,1),2))
+    assert(2, evalParamFrame(pw,ev(0,0,1),3))
+    assert(0, evalParamFrame(pw,ev(0,0,1),4))
+    assert(0, evalParamFrame(pw,ev(0,0,1),5))
+    assert(0, evalParamFrame(pw,ev(0,0,1),6))
+    assert(0, evalParamFrame(pw,ev(0,0,1),7))
+    assert(0, evalParamFrame(pw,ev(0,0,1),8))
+    assert(2, evalParamFrame(pw,ev(0,0,1),9))
+    assert(0, evalParamFrame(pw,ev(0,0,1),10))
 
     console.log('Piecewise tests complete')
   }
