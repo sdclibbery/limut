@@ -5,18 +5,6 @@ define(function(require) {
   let evalOperator = require('expression/eval-operator')
   let {units} = require('units')
 
-  let findPieceIdxWithFractional = (ss, p) => {
-    let pos = 0
-    for (let i=0; i<ss.length; i++) {
-      let s = ss[i]
-      if (p < pos+s) {
-        return i + (p - pos)/s
-      }
-      pos += s
-    }
-    return 0
-  }
-
   let add = (a,b) => a+b
   let mul = (a,b) => (typeof b === 'string') ? (a === 0 ? '' : b) : a*b
   let lerpValue = (lerp, pre, post) => {
@@ -26,29 +14,60 @@ define(function(require) {
     )
   }
 
-  let piecewise = (vs, is, ss, p) => { // values, interpolators, sizes
-    if (vs.length === 0) { return () => 0 }
-    if (is.length !== vs.length) { throw `is.length ${is} !== vs.length ${vs}` }
-    if (ss.length !== vs.length) { throw `ss.length ${ss} !== vs.length ${vs}` }
+  let getConstIndexer = (ss) => {
     ss = ss.map(s => units(s, 'b')) // Default to beats but accept s etc. Should not be parse time this gets evalled at though!
     let totalSize = ss.reduce((a,x) => a+x, 0)
     if (!Number.isFinite(totalSize)) { throw `invalid piecewise totalSize: ${totalSize}` }
+    return (pieceParam) => {
+      let pMod = (pieceParam%totalSize + totalSize) % totalSize
+      let pos = 0
+      for (let i=0; i<ss.length; i++) {
+        let s = ss[i]
+        if (pMod < pos+s) {
+          return i + (pMod - pos)/s
+        }
+        pos += s
+      }
+      return 0
+    }
+  }
+
+  let getClampIndexer = (ss) => {
+    return (pieceParam, e,b) => {
+      let pos = 0
+      for (let i=0; i<ss.length; i++) {
+        let s = units(evalParamFrame(ss[i], e,b), 'b') // Default to beats but accept s etc. Should not be parse time this gets evalled at though!
+        if (pieceParam < pos + s) { return i }
+      }
+      return ss.length - 1
+    }
+  }
+
+  let getIndexer = (ss, clamp)=> {
+    if (clamp) { return getClampIndexer(ss) }
+    return getConstIndexer(ss)
+  }
+
+  let piecewise = (vs, is, ss, p, {clamp}) => { // values, interpolators, sizes
+    if (vs.length === 0) { return () => 0 }
+    if (is.length !== vs.length) { throw `is.length ${is} !== vs.length ${vs}` }
+    if (ss.length !== vs.length) { throw `ss.length ${ss} !== vs.length ${vs}` }
+    let indexer = getIndexer(ss, clamp)
     let result = (e,b, evalRecurse, modifiers) => {
       if (modifiers && modifiers.seed !== undefined) {
         if (!p.modifiers) { p.modifiers = {} }
         p.modifiers.seed = modifiers.seed
       }
-      let piecePos = evalParamFrame(p, e,b) || 0
-      if (!Number.isFinite(piecePos)) { consoleOut(`🟠 Warning invalid piecewise piece param: ${piecePos}`); return 0; }
-      let piece = findPieceIdxWithFractional(ss, (piecePos%totalSize + totalSize) % totalSize)
+      let pieceParam = evalParamFrame(p, e,b) || 0
+      if (!Number.isFinite(pieceParam)) { consoleOut(`🟠 Warning invalid piecewise piece param: ${pieceParam}`); return 0; }
+      let piece = indexer(pieceParam, e,b)
       let idx = Math.floor(piece)
       let l = vs[idx % vs.length]
       let r = vs[(idx+1) % vs.length]
       let interp = is[idx % is.length](piece%1)
       if (interp <= 0) { return l }
       if (interp >= 1) { return r }
-      let result = lerpValue(interp, l, r)
-      return result
+      return lerpValue(interp, l, r)
     }
     return result
   }
@@ -76,38 +95,38 @@ define(function(require) {
     let getb = (e,b) => b
     let pw
 
-    pw = piecewise([], [], [], 1)
+    pw = piecewise([], [], [], 1, {})
     assert(0, evalParamFrame(pw,ev(0),0))
 
-    assertThrows('is.length', ()=>piecewise([0],[],[1]))
-    assertThrows('ss.length', ()=>piecewise([0],[lin],[]))
-    assertThrows('invalid piecewise totalSize', ()=>piecewise([0],[lin],['foo']))
+    assertThrows('is.length', ()=>piecewise([0], [], [1], 0, {}))
+    assertThrows('ss.length', ()=>piecewise([0], [lin], [], 0, {}))
+    assertThrows('invalid piecewise totalSize', ()=>piecewise([0], [lin], ['foo'], 0, {}))
 
-    pw = piecewise([2], [step], [1], 1)
+    pw = piecewise([2], [step], [1], 1, {})
     assert(2, evalParamFrame(pw,ev(0),0))
 
-    pw = piecewise([0,2], [step,step], [1,1], getx)
+    pw = piecewise([0,2], [step,step], [1,1], getx, {})
     x = 0; assert(0, evalParamFrame(pw,ev(0),0))
     x = 1/2; assert(0, evalParamFrame(pw,ev(0),0))
     x = 1; assert(2, evalParamFrame(pw,ev(0),0))
     x = 3/2; assert(2, evalParamFrame(pw,ev(0),0))
     x = 2; assert(0, evalParamFrame(pw,ev(0),0))
 
-    pw = piecewise([0,2], [lin,lin], [1,1], getx)
+    pw = piecewise([0,2], [lin,lin], [1,1], getx, {})
     x = 0; assert(0, evalParamFrame(pw,ev(0),0))
     x = 1/2; assert(1, evalParamFrame(pw,ev(0),0))
     x = 1; assert(2, evalParamFrame(pw,ev(0),0))
     x = 3/2; assert(1, evalParamFrame(pw,ev(0),0))
     x = 2; assert(0, evalParamFrame(pw,ev(0),0))
 
-    pw = piecewise([0,2], [sqr,sqr], [2,2], getx)
+    pw = piecewise([0,2], [sqr,sqr], [2,2], getx, {})
     x = 0; assert(0, evalParamFrame(pw,ev(0),0))
     x = 1; assert(1/2, evalParamFrame(pw,ev(0),0))
     x = 2; assert(2, evalParamFrame(pw,ev(0),0))
     x = 3; assert(3/2, evalParamFrame(pw,ev(0),0))
     x = 4; assert(0, evalParamFrame(pw,ev(0),0))
 
-    pw = piecewise([0,2], [lin,lin], [2,2], getb)
+    pw = piecewise([0,2], [lin,lin], [2,2], getb, {})
     assert(0, evalParamFrame(pw,ev(0),-4))
     assert(1, evalParamFrame(pw,ev(0),-3))
     assert(2, evalParamFrame(pw,ev(0),-2))
@@ -126,7 +145,7 @@ define(function(require) {
     assert(1, evalParamFrame(pw,ev(0),11))
     assert(0, evalParamFrame(pw,ev(0),12))
 
-    pw = piecewise([0,2], [lin,lin], [2,4], getx)
+    pw = piecewise([0,2], [lin,lin], [2,4], getx, {})
     x = 0; assert(0, evalParamFrame(pw,ev(0),0))
     x = 1; assert(1, evalParamFrame(pw,ev(0),0))
     x = 2; assert(2, evalParamFrame(pw,ev(0),0))
@@ -135,7 +154,7 @@ define(function(require) {
     x = 5; assert(1/2, evalParamFrame(pw,ev(0),0))
     x = 6; assert(0, evalParamFrame(pw,ev(0),0))
 
-    pw = piecewise([0,2], [lin,lin], [2,0], getx)
+    pw = piecewise([0,2], [lin,lin], [2,0], getx, {})
     x = 0; assert(0, evalParamFrame(pw,ev(0),0))
     x = 1; assert(1, evalParamFrame(pw,ev(0),0))
     x = 2; assert(0, evalParamFrame(pw,ev(0),0))
@@ -143,40 +162,47 @@ define(function(require) {
     x = 4; assert(0, evalParamFrame(pw,ev(0),0))
     x = 5; assert(1, evalParamFrame(pw,ev(0),0))
 
-    pw = piecewise([0,2], [step,lin], [2,2], getx)
+    pw = piecewise([0,2], [step,lin], [2,2], getx, {})
     x = 0; assert(0, evalParamFrame(pw,ev(0),0))
     x = 1; assert(0, evalParamFrame(pw,ev(0),0))
     x = 2; assert(2, evalParamFrame(pw,ev(0),0))
     x = 3; assert(1, evalParamFrame(pw,ev(0),0))
     x = 4; assert(0, evalParamFrame(pw,ev(0),0))
 
-    pw = piecewise([()=>0,()=>2], [lin,lin], [2,2], getx)
+    pw = piecewise([()=>0,()=>2], [lin,lin], [2,2], getx, {})
     x = 0; assert(0, evalParamFrame(pw,ev(0),0))
     x = 1; assert(1, evalParamFrame(pw,ev(0),0))
     x = 2; assert(2, evalParamFrame(pw,ev(0),0))
     x = 3; assert(1, evalParamFrame(pw,ev(0),0))
     x = 4; assert(0, evalParamFrame(pw,ev(0),0))
 
-    pw = piecewise([0,2,3], [lin,step,lin], [2,0,2], getb) // step discontinuity using zero size step
+    pw = piecewise([0,2,3], [lin,step,lin], [2,0,2], getb, {}) // step discontinuity using zero size step
     assert(0, evalParamFrame(pw,ev(),0))
     assert(1, evalParamFrame(pw,ev(),1))
     assert(3, evalParamFrame(pw,ev(),2))
     assert(3/2, evalParamFrame(pw,ev(),3))
     assert(0, evalParamFrame(pw,ev(),4))
 
-    pw = piecewise([0,2], [step,lin], [2,2], getx)
+    pw = piecewise([0,2], [step,lin], [2,2], getx, {})
     x = 0; assert(0, evalParamFrame(pw,ev(0),0))
     x = 1; assert(0, evalParamFrame(pw,ev(0),0))
     x = 2; assert(2, evalParamFrame(pw,ev(0),0))
     x = 3; assert(1, evalParamFrame(pw,ev(0),0))
     x = 4; assert(0, evalParamFrame(pw,ev(0),0))
 
-    pw = piecewise([0,2], [step,lin], [2,2], (e,b) => e.idx)
+    pw = piecewise([0,2], [step,lin], [2,2], (e,b) => e.idx, {})
     assert(0, evalParamFrame(pw,ev(0),0))
     assert(0, evalParamFrame(pw,ev(1),0))
     assert(2, evalParamFrame(pw,ev(2),0))
     assert(1, evalParamFrame(pw,ev(3),0))
     assert(0, evalParamFrame(pw,ev(4),0))
+
+    // pw = piecewise([0,2], [step,step], [()=>1,()=>1], getb, {})
+    // assert(0, evalParamFrame(pw,ev(0),0))
+    // assert(0, evalParamFrame(pw,ev(0),1/2))
+    // assert(2, evalParamFrame(pw,ev(0),1))
+    // assert(2, evalParamFrame(pw,ev(0),3/2))
+    // assert(0, evalParamFrame(pw,ev(0),2))
 
     console.log('Piecewise tests complete')
   }

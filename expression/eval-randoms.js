@@ -14,7 +14,7 @@ define(function(require) {
     let lo = param(vs[0], 0)
     let hi = param(vs[1], 1)
     let p = (e,b,er,m) => randFunction(m, e, b, state)
-    return piecewise([lo, hi], [linear, step], [1,0], p)
+    return piecewise([lo, hi], [linear, step], [1,0], p, {})
   }
 
   let parseRandom = (vs, is, ss) => {
@@ -27,7 +27,7 @@ define(function(require) {
       let total = ss.reduce((a, x) => a + x, 0)
       ss = ss.map(s => s/total) // Normalise sizes
       let p = (e,b,er,m) => randFunction(m, e, b, state)
-      return piecewise(vs, is, ss, p)
+      return piecewise(vs, is, ss, p, {})
     }
   }
 

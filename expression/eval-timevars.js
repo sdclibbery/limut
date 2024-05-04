@@ -19,7 +19,7 @@ define(function(require) {
       if (!Array.isArray(ds)) { ds = [ds] }
       let is = vs.map(() => step)
       let ss = vs.map((_,i) => ds[i % ds.length])
-      return piecewise(vs, is, ss, (e,b) => b)
+      return piecewise(vs, is, ss, (e,b) => b, {})
     }
     return result
   }
@@ -28,12 +28,12 @@ define(function(require) {
     if (!Array.isArray(ds)) { ds = [ds] }
     is = is.map(i => i || defaultI)
     ss = ss.map((s,idx) => s!==undefined ? s : ds[idx % ds.length])
-    return piecewise(vs, is, ss, (e,b) => b)
+    return piecewise(vs, is, ss, (e,b) => b, {})
   }
 
   let eventTimeVar = (vs, is, ss, ds) => {
-    if (vs.length === 0) { return piecewise([]) }
-    if (vs.length === 1) { return piecewise(vs, [step], [1], ()=>0) }
+    if (vs.length === 0) { return piecewise([], [], [], 0, {}) }
+    if (vs.length === 1) { return piecewise(vs, [step], [1], ()=>0, {}) }
     let haveAnySs = ss.reduce((a, s) => a||(s!==undefined), false)
     if (ds === undefined && !haveAnySs) { // If no durations set, space out evenly through the event
       is = is.map(i => i || linear)
@@ -46,7 +46,7 @@ define(function(require) {
         if (!e.countToTime) { return 0 }
         return Math.min((b - e.count) / (e.endTime - e._time), 0.999999) // Hold at final value, don't keep repeating
       }
-      return piecewise(vs, is, ss, p)
+      return piecewise(vs, is, ss, p, {})
     } else { // Use durations provided
       if (!Array.isArray(ds)) { ds = [ds || 1] }
       is = is.map(i => i || linear)
@@ -57,7 +57,7 @@ define(function(require) {
       let p = (e,b) => {
         return Math.min(b - e.count, totalDuration-0.000001)
       }
-      return piecewise(vs, is, ss, p)
+      return piecewise(vs, is, ss, p, {})
     }
   }
 

@@ -207,24 +207,28 @@ shadertoy synth multiple channels
 
 ====
 ==== other ====
-Time units
- Release
-  Breaking changes
-   envelope a,d default to beats; no units subparam
-   pitchedperc env defaults to seconds; no units subparam
 Allow non const step sizes in piecewise
+ Core support in eval piecewise
+  ?time{} should return value with units? And then use this as target units for ss?
+  Clamp indexer
+   tests in eval-pievewise
+   use for []e instead of []e own clamp
+  Free indexer
+   Use only when ss not all const
+ Try it out in []t []e []r []{} etc etc - tests in parse-expression for all these
  Also use of units() should handle changes to beat duration - And at least it should be evalled at event start not parse time!
  Replace envelope with piecewise in presets and validate
-?Treat db as units??? - compressor params in db; what else?
-Main bpm param time units
 Normalisation as a piecewise feature; []e and []r have it by default? Syntax?
+ Syntax to use clamp indexer for []{}?
+Random noise rewrite to use piecewise
+ []n:  []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
 More time modifiers
  offset
  rate
  time - set time directly to an expression
+?Treat db as units??? - compressor params in db; what else?
+Main bpm param time units
 stutter subparam, to squash or expand stutter timescale
-Random noise rewrite to use piecewise
- []n:  []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
 ?Is it possible for addc=[0,[-12,-24]t1/8@f]r@e to still allow the per frame motion, while the r@e selects it per event?
  []r used to select per event by fixing the seed per event rather than by stepping time, so it used to work
 !([{x:[1,2]t1/4@f}]t2).x never get a 2 unless add @f to the []t2
