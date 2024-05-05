@@ -209,17 +209,13 @@ shadertoy synth multiple channels
 ==== other ====
 Allow non const step sizes in piecewise
  Parsing supports variable sizes
-  ! rewrite indexer: single process:
-   First, eval all ss elements, and calculate length
-   Then apply clamps
-   Then iterate
-   Finally, move normalisation in as an option, and do it after the eval
-  []r how to handle normalisation?
-   Make normalisation a piecewise feature now??
+  []r, []e normalise in piecewsie now
   Tests in parse-expression for []t []e []r []{} etc etc with varying step sizes
  Also use of units() ought to handle changes to beat duration - And at least it should be evalled at event start not parse time!
  Replace envelope with piecewise in presets and validate
- Docs for []r: note the piecewise :s can be used to set the relative probabaility
+ Docs
+  generally: say step size can  be varying
+  []r: note the piecewise :s can be used to set the relative probabaility
 Syntax to allow use of clamp indexer for []{}?
 Normalisation as a piecewise feature; []e and []r have it by default? Syntax?
 More time modifiers

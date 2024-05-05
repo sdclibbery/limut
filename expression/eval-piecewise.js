@@ -15,9 +15,13 @@ define(function(require) {
     )
   }
 
-  let indexer = (ss, {clamp}, pieceParam, e,b) => {
+  let indexer = (ss, {clamp, normalise}, pieceParam, e,b) => {
     let ess = ss.map(s => units(evalParamFrame(s, e,b), 'b'))
     let totalSize = ess.reduce((a,x) => a+x, 0)
+    if (normalise) {
+      ess = ess.map(s => s/totalSize)
+      totalSize = 1
+    }
     if (!Number.isFinite(totalSize)) { throw `invalid piecewise totalSize: ${totalSize}` }
     if (clamp) {
       if (pieceParam < 0) { return 0 }
@@ -198,6 +202,11 @@ define(function(require) {
     assert(1, evalParamFrame(pw,ev(0,0,2),1))
     assert(2, evalParamFrame(pw,ev(0,0,2),2))
     assert(2, evalParamFrame(pw,ev(0,0,2),3))
+
+    pw = piecewise([1,2], [step,step], [1,2], getb, {normalise:true})
+    assert(1, evalParamFrame(pw,ev(0,0,2),0))
+    assert(2, evalParamFrame(pw,ev(0,0,2),1/2))
+    assert(1, evalParamFrame(pw,ev(0,0,2),1))
 
     pw = piecewise([0,2], [step,step], [(e,b)=>1+b%3,(e,b)=>1], getb, {})
     assert(0, evalParamFrame(pw,ev(0,0,1),0))
