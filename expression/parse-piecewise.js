@@ -35,8 +35,7 @@ define(function(require) {
         i = char
       }
       eatWhitespace(state)
-      s = number(state)
-      s = parseUnits(s, state)
+      s = state.expression(state)
     }
     vs.push(v)
     is.push(i)

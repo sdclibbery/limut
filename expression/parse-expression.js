@@ -1476,6 +1476,26 @@ define(function(require) {
   assert(1, evalParamFrame(p, ev(0,0,1), 0))
   assert(2, evalParamFrame(p, ev(0,0,1), 1))
 
+  p = parseExpression("[1:_[1,2],2:_1]{this.time}")
+  assert(1, evalParamFrame(p, ev(0,0,1), 0))
+  assert(1, evalParamFrame(p, ev(1,0,1), 1))
+  assert(1, evalParamFrame(p, ev(2,0,1), 2))
+  assert(1, evalParamFrame(p, ev(3,0,1), 3))
+  assert(1, evalParamFrame(p, ev(4,0,1), 4))
+  assert(2, evalParamFrame(p, ev(5,0,1), 5))
+  assert(1, evalParamFrame(p, ev(6,0,1), 6))
+  assert(1, evalParamFrame(p, ev(7,0,1), 7))
+
+  p = parseExpression("[1:![500ms:100ms],0]e")
+  assertApprox(1, evalParamFrame(p, ev(0,0,1), sInBeats(0)))
+  assertApprox(0.202, evalParamFrame(p, ev(0,0,1), sInBeats(0.1)))
+  assertApprox(1, evalParamFrame(p, ev(1,0,1), sInBeats(0)))
+  assertApprox(0, evalParamFrame(p, ev(1,0,1), sInBeats(0.1)))
+
+  // p = parseExpression("[1:1,2:[0,1e10]]r")
+  // assert(1, evalParamFrame(p, ev(0,0,1), 0))
+  // assert(2, evalParamFrame(p, ev(1,0,1), 1))
+
   console.log('Parse expression tests complete')
   }
 

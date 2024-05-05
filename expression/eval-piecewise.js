@@ -15,66 +15,30 @@ define(function(require) {
     )
   }
 
-  let allConst = (ss) => {
-    return ss.reduce((a,s) => a && (typeof mainParam(s) === 'number'), true)
-  }
-  let getConstIndexer = (ss) => {
-    ss = ss.map(s => units(s, 'b')) // Assume beats for units. Really this should come from pieceParam instead of being hardcoded
-    let totalSize = ss.reduce((a,x) => a+x, 0)
+  let indexer = (ss, {clamp}, pieceParam, e,b) => {
+    let ess = ss.map(s => units(evalParamFrame(s, e,b), 'b'))
+    let totalSize = ess.reduce((a,x) => a+x, 0)
     if (!Number.isFinite(totalSize)) { throw `invalid piecewise totalSize: ${totalSize}` }
-    return (pieceParam) => {
-      let pMod = (pieceParam%totalSize + totalSize) % totalSize
-      let pos = 0
-      for (let i=0; i<ss.length; i++) {
-        let s = ss[i]
-        if (pMod < pos+s) {
-          return i + (pMod - pos)/s
-        }
-        pos += s
-      }
-      return 0
-    }
-  }
-
-  let getClampIndexer = (ss) => {
-    return (pieceParam, e,b) => {
+    if (clamp) {
       if (pieceParam < 0) { return 0 }
-      let pos = 0
-      for (let i=0; i<ss.length; i++) {
-        let s = units(evalParamFrame(ss[i], e,b), 'b') // Assume beats for units. Really this should come from pieceParam instead of being hardcoded
-        if (pieceParam < pos + s) { return i + (pieceParam - pos)/s }
-        pos += s
-      }
-      return ss.length - 1
+      if (pieceParam >= totalSize) { return ess.length-1 }
     }
-  }
-
-  let getFreeIndexer = (ss) => {
-    let pos = 0 // Will probably have trouble with only storing these once per parse instance...
-    let i = 0
-    return (pieceParam, e,b) => {
-      if (pieceParam < 0) { return 0 }
-      while (true) {
-        let s = units(evalParamFrame(ss[i], e,b), 'b') // Assume beats for units. Really this should come from pieceParam instead of being hardcoded
-        if (pieceParam < pos + s) { return i + (pieceParam - pos)/s }
-        pos += s
-        i += 1
-        if (i >= ss.length) { i = 0 }
+    let pMod = (pieceParam%totalSize + totalSize) % totalSize
+    let pos = 0
+    for (let i=0; i<ess.length; i++) {
+      let s = ess[i]
+      if (pMod < pos+s) {
+        return i + (pMod - pos)/s
       }
+      pos += s
     }
+    return 0
   }
 
-  let getIndexer = (ss, clamp)=> {
-    if (clamp) { return getClampIndexer(ss) }
-    if (allConst(ss)) { return getConstIndexer(ss) }
-    return getFreeIndexer(ss)
-  }
-
-  let piecewise = (vs, is, ss, p, {clamp}) => { // values, interpolators, sizes
+  let piecewise = (vs, is, ss, p, options) => { // values, interpolators, sizes
     if (vs.length === 0) { return () => 0 }
     if (is.length !== vs.length) { throw `is.length ${is} !== vs.length ${vs}` }
     if (ss.length !== vs.length) { throw `ss.length ${ss} !== vs.length ${vs}` }
-    let indexer = getIndexer(ss, clamp)
     let result = (e,b, evalRecurse, modifiers) => {
       if (modifiers && modifiers.seed !== undefined) {
         if (!p.modifiers) { p.modifiers = {} }
@@ -82,7 +46,7 @@ define(function(require) {
       }
       let pieceParam = mainParam(evalParamFrame(p, e,b) || 0)
       if (!Number.isFinite(pieceParam)) { consoleOut(`🟠 Warning invalid piecewise piece param: ${pieceParam}`); return 0; }
-      let piece = indexer(pieceParam, e,b) // "piece" integer part is an index into the segments; fractional part is the interpolator between segments
+      let piece = indexer(ss, options, pieceParam, e,b) // "piece" integer part is an index into the segments; fractional part is the interpolator between segments
       let idx = Math.floor(piece)
       let l = vs[idx % vs.length]
       let r = vs[(idx+1) % vs.length]
@@ -122,7 +86,7 @@ define(function(require) {
 
     assertThrows('is.length', ()=>piecewise([0], [], [1], 0, {}))
     assertThrows('ss.length', ()=>piecewise([0], [lin], [], 0, {}))
-    assertThrows('invalid piecewise totalSize', ()=>piecewise([0], [lin], [Infinity], 0, {}))
+    assertThrows('invalid piecewise totalSize', ()=>piecewise([0], [lin], [Infinity], 0, {})())
 
     pw = piecewise([2], [step], [1], 1, {})
     assert(2, evalParamFrame(pw,ev(0),0))
