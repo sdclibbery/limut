@@ -209,7 +209,6 @@ shadertoy synth multiple channels
 ==== other ====
 Allow non const step sizes in piecewise
  Parsing supports variable sizes
-  []r, []e normalise in piecewsie now
   Tests in parse-expression for []t []e []r []{} etc etc with varying step sizes
  Also use of units() ought to handle changes to beat duration - And at least it should be evalled at event start not parse time!
  Replace envelope with piecewise in presets and validate

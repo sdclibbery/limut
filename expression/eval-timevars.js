@@ -40,13 +40,8 @@ define(function(require) {
       ss = ss.map(s => s!==undefined ? s : 1)
       is[is.length-1] = step // Last one is final value, not part of the event
       ss[ss.length-1] = 0
-      let total = ss.reduce((a,x) => a+x, 0)
-      ss = ss.map(s => s/total) // Normalise sizes
-      let p = (e,b) => {
-        if (!e.countToTime) { return 0 }
-        return (b - e.count) / (e.endTime - e._time) // Normalise param
-      }
-      return piecewise(vs, is, ss, p, {clamp:true})
+      let p = (e,b) => (b - e.count) / (e.endTime - e._time) // Normalise param
+      return piecewise(vs, is, ss, p, {clamp:true,normalise:true})
     } else { // Use durations provided
       if (!Array.isArray(ds)) { ds = [ds || 1] }
       is = is.map(i => i || linear)

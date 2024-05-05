@@ -1492,9 +1492,9 @@ define(function(require) {
   assertApprox(1, evalParamFrame(p, ev(1,0,1), sInBeats(0)))
   assertApprox(0, evalParamFrame(p, ev(1,0,1), sInBeats(0.1)))
 
-  // p = parseExpression("[1:1,2:[0,1e10]]r")
-  // assert(1, evalParamFrame(p, ev(0,0,1), 0))
-  // assert(2, evalParamFrame(p, ev(1,0,1), 1))
+  p = parseExpression("[1:1,2:[0,1e10]]r")
+  assert(1, evalParamFrame(p, ev(0,0,1), 0))
+  assert(2, evalParamFrame(p, ev(1,0,1), 1))
 
   console.log('Parse expression tests complete')
   }

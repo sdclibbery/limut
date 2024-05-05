@@ -24,10 +24,8 @@ define(function(require) {
     } else { // Choose from a list
       is = is.map(i => i || step)
       ss = ss.map(s => s!==undefined ? s : 1)
-      let total = ss.reduce((a, x) => a + x, 0)
-      ss = ss.map(s => s/total) // Normalise sizes
       let p = (e,b,er,m) => randFunction(m, e, b, state)
-      return piecewise(vs, is, ss, p, {})
+      return piecewise(vs, is, ss, p, {normalise:true})
     }
   }
 
