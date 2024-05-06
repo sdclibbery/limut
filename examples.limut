@@ -3810,3 +3810,26 @@ r readout, add={foo:2,bar:3}.(this.foo), foo=bar
 // r readout, add=[0:2000ms,1:2000ms]{time}
 // r readout, add=[0:2000ms,1:2000ms]e
 
+
+// Industrial Techno Jam
+set bpm=130
+set main drive=1/32
+pk perc X.-.
+pp perc lL. crop 16, swing=58, amp*=1/2, drive=1/16
+pt perc O...c.. crop 32, swing=60, suck, pan=[-1,1]r, amp*=1/2
+set p* delay|=[():14,[1,3]r/4:2]t, amp*=[1:15,0:1]t, stutter=[1:29,2:1,3:1,0:1]t
+i impulse, low=+12db, stutter=[1,2], delay=(0,[1/4,3/4]r), swing=56, pan=[-1:1]r, amp*=[0:1,1:7]t
+r robot, amp*=[1.2:3,0:1]t, swing=54, add+=[0:2,[0,7]r:1]t, delay=(0,{3/4,oct:2})
+//e external, amp*=1/3, noisify={1/16,gain:6}, high=-3db, ring={pitch{}/8,mix:1/3}
+
+
+// Ambient Jam
+set scale='minor'
+set bpm=95
+p perc +, dur=4, echo=1/2, amp*=1/2, room
+h hollow, glide=2, dur=2
+v vambi, oct=2, amp*=4, low=+24db, glide=2, dur=2, pan=[-1/2:1/2]s8@f
+set !p* add=[0,3,0,-3]t16//, addc+=wow
+g glass 0210..........., amp*=1.2, oct-=1
+//e external, echo=1/4, reverb={2,mix:1/3}, chorus, room
+

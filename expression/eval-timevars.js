@@ -46,7 +46,6 @@ define(function(require) {
       if (!Array.isArray(ds)) { ds = [ds || 1] }
       is = is.map(i => i || linear)
       ss = ss.map((s,idx) => s!==undefined ? s : ds[idx % ds.length])
-      ss = ss.map(s => units(s, 'b')) // Default to beats but accept s etc. Should not be parse time this gets evalled at though!
       is[is.length-1] = step // Last one is final value, not part of the event
       let p = (e,b) => b - e.count
       return piecewise(vs, is, ss, p, {clamp:true})

@@ -208,15 +208,15 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 Allow non const step sizes in piecewise
- Parsing supports variable sizes
-  Tests in parse-expression for []t []e []r []{} etc etc with varying step sizes
  Also use of units() ought to handle changes to beat duration - And at least it should be evalled at event start not parse time!
  Replace envelope with piecewise in presets and validate
+  ? Do we need a clamp to zero mode??
  Docs
   generally: say step size can  be varying
   []r: note the piecewise :s can be used to set the relative probabaility
-Syntax to allow use of clamp indexer for []{}?
-Normalisation as a piecewise feature; []e and []r have it by default? Syntax?
+!Granular didnt work??
+Nice to have a unison param with stereo spread
+Syntax to allow use of clamp and normalise for []{}?
 More time modifiers
  offset
  rate
