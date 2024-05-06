@@ -36,7 +36,7 @@ preset h909 sample
   , dur=1/4, sus=max{this.dur,this.decay}, choke=this.player
   , rate=1
   , envelope='organ'
-  , amp*=envelope{d:this.decay}*(this.level+this.accent)*0.7/3
+  , amp*=[1:!this.decay,0]e*(this.level+this.accent)*0.7/3
 
 preset cp909 io808, type='cp', choke=this.player, amp*=2 // 909 uses similar handclap as 808
 
@@ -185,7 +185,7 @@ preset sds909 sample
   , dur=1/4, choke=this.player, sus=1
   , rate=1
   , envelope='organ', att=0
-  , amp*=4*envelope{d:100ms+1200ms*(this.tone+this.snappy)}*(this.level + this.accent)
+  , amp*=4*[1:!100ms+1200ms*(this.tone+this.snappy),0]e*(this.level + this.accent)
 	, mid=0.2 + 0.8*(this.tone+this.snappy)
 	, high=0.2 + 3.2*this.tone*this.snappy
   , accent=(this.value+this.add)/9
@@ -201,7 +201,7 @@ preset ts909 sample
   , dur=1/4, choke=this.player, sus=1
   , rate=this.freq/80
   , envelope='organ', att=0
-  , amp*=1.8*(this.level+this.accent/2)*envelope{d:250ms*(1+20*this.decay)}
+  , amp*=1.8*(this.level+this.accent/2)*[1:!250ms*(1+20*this.decay),0]e
   // 909 Toms Controls
   , level=1/2
   , tune=1/2
