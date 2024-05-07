@@ -427,18 +427,18 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>1b</code> Time in beats</p>
 <p class='sub'><code>1cpb</code> Frequency in cycles per beat. Also <code>1kcpb</code> is <code>1000cpb</code></p>
 <p><code></code> No value: for a param, missing a value is the same as setting the param to <code>1</code>. Eg <code>monochrome</code> is the same as <code>monochrome=1</code></p>
-<p><code>(1,2)</code> A 'chord' or chord. Multiple values, all played together</p>
-<p><code>[1,2]</code> Sequence of values, one per event in the pattern, ignoring rests. For single length patterns only, all values will be expanded, so <code>p ping 0, add=[0,1,2]</code> will cycle through all three values.</p>
-<p><code>[1,2]t3</code> Timed sequence, each value lasts for 3 beats. Default time unit: beats.</p>
-<p><code>[1,2]t[12,4]</code> Timed sequence with one timing per value. At present the timings must be const numbers, they cannot be expressions. Default time unit: beats.</p>
+<p><code>(1,2)</code> A chord. Multiple values, all played together at the same time</p>
+<p><code>[1,2]</code> Sequence of values, one after another, one per event in the pattern, ignoring rests. For single length patterns only, all values will be expanded, so <code>p ping 0, add=[0,1,2]</code> will cycle through all three values.</p>
+<p><code>[1,2]t3</code> Timed sequence, each value lasts for 3 beats. Duration must be a const number, cannot be an expression. Default time unit: beats.</p>
+<p><code>[1:12,2:4]t</code> Timed sequence with variable timing per value. Durations can be expressions. Default time unit: beats.</p>
 <p><code>[0:3]t1</code> Timed sequence, expanded. The example is equivalent to <code>[0,1,2,3]t1</code></p>
 <p><code>[1,2]l3</code> Timed linear interpolated sequence, each value takes 3 beats to change into the next. Default time unit: beats.</p>
-<p><code>[1,2]l[14,2]</code> Timed linear interpolated sequence, one timing per value. At present the timings must be const numbers, they cannot be expressions. Default time unit: beats.</p>
-<p><code>[1,2]s3</code> Timed smooth interpolated sequence, each value takes 3 beats to change into the next, using an 's' shaped ease in/out curve. Default time unit: beats.</p>
-<p><code>[1,2]s[14,2]</code> Timed smooth interpolated sequence, one timing per value. At present the timings must be const numbers, they cannot be expressions. Default time unit: beats.</p>
-<p><code>[1,2]e</code> Timed smooth interpolated sequence, each value is evenly spaced from beginning to end of the current event</p>
-<p><code>[1,2]e1</code> Timed smooth interpolated sequence starting at the beginning of the event, each value takes 1 beat to change to the next. Default time unit: beats.</p>
-<p><code>[1,2,3]e[1,2]</code> Timed smooth interpolated sequence starting at the beginning of the event, one timing per value. The timing for the last value is ignored and is effectively infinite. At present the timings must be const numbers, they cannot be expressions. Default time unit: beats.</p>
+<p><code>[1:12,2:4]l</code> Timed linear interpolated sequence with variable timing per value. Durations can be expressions. Default time unit: beats.</p>
+<p><code>[1,2]s3</code> Timed smooth interpolated sequence, each value takes 3 beats to change into the next, using an 's' shaped ease in/out curve. Duration must be a const number, cannot be an expression. Default time unit: beats.</p>
+<p><code>[1:12,2:4]s</code> Timed smooth interpolated sequence with variable timing per value. Durations can be expressions. Default time unit: beats.</p>
+<p><code>[1,2]e</code> Timed interpolated sequence, each value is evenly spaced from beginning to end of the current event</p>
+<p><code>[1,2]e1</code> Timed interpolated sequence starting at the beginning of the event, each value takes 1 beat to change to the next. Duration must be a const number, cannot be an expression. Default time unit: beats.</p>
+<p><code>[0:!300ms,1:_[1/4b:1/2b]r,0]e</code> Timed piecewise sequence starting at the beginning of the event. In this case it would provide an envelope for the event, with an exponential attack lasting 300ms, followed by a const sustain lasting between 1/4 and 1/2 a beat at random. Default time unit: beats.</p>
 <p><code>[]r</code> Select a different value every time, chosen randomly between 0 and 1</p>
 <p><code>[1,4,7]r</code> Select a different value every time, chosen randomly from the numbers 1, 4 and 7</p>
 <p><code>[:9]r</code> Select a different random float every time, between 0 and 9</p>
@@ -460,18 +460,18 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='subsub'><code>:!</code> Exponential interpolation operator: exponential growth/decay to target</p>
 <p class='sub'><code>t1 etc</code> The amount of parameter p travel between this value and the next; note the sequence wraps round. Default time unit: beats.</p>
 <p class='sub'><code>p</code> Parameter expression giving the current point of travel through the piecewise series</p>
-<p><code>+</code> Add values together; eg [2,3]+4 is equivalent to [6,7]</p>
-<p><code>-</code> Subtract values; eg [2,3]-1 is equivalent to [1,2]</p>
+<p><code>+</code> Add values together; eg <code>[2,3]+4</code> is equivalent to <code>[6,7]</code></p>
+<p><code>-</code> Subtract values; eg <code>[2,3]-1</code> is equivalent to <code>[1,2]</code></p>
 <p><code>-</code> Unary minus operator; eg <code>-[1,2]</code> is equivalent to <code>[-1,-2]</code></p>
-<p><code>/</code> Divide values; eg 1/2</p>
-<p><code>*</code> Multiply values; eg lpf=[1,2,3]*1000</p>
-<p><code>%</code> Take remainder; eg (0,4,7,9)%7 is equivalent to (0,4,0,2)</p>
+<p><code>/</code> Divide values; eg <code>[1,2,3]/2</code></p>
+<p><code>*</code> Multiply values; eg <code>[1,2,3]*1000</code></p>
+<p><code>%</code> Take remainder; eg <code>(0,4,7,9)%7</code> is equivalent to <code>(0,4,0,2)</code></p>
 <p><code>^</code> Raise to the power; eg <code>2^3</code> is 8. Imaginary results return 0; eg <code>-1^1/2</code> returns 0.</p>
 <p><code>|</code> Concatenate chords; eg <code>1|2</code> is the same as <code>(1,2)</code>, and <code>(1,2)|(3,4)</code> is <code>(1,2,3,4)</code></p>
 <p><code>?</code> Get a default if a value is missing. Eg <code>this.foo?5</code> will give the value of <code>this.foo</code> if present, or <code>5</code> if not.</p>
 <p><code>.</code> Lookup values in a player (with a param name), a chord (with an index or aggregator) or a map (with a field name). See Lookup Examples section below.</p>
 <p><code>{x:0,y:1}</code> Map, containing keys and values</p>
-<p><code>{2,y:1}</code> Map, containing keys and values, with a 'default' value of 2. The default value is used for some parameters; eg <code>chop={2,wave:triangle}</code> is the same as <code>chop=2</code>, but also supplies an additional 'wave' subparameter.</p>
+<p><code>{2,y:1}</code> Map, containing keys and values, with a main value of 2. The main value is the same as if no map was used; eg <code>chop={2,wave:'tri'}</code> is the same as <code>chop=2</code>, but also supplies an additional 'wave' subparameter.</p>
 <p><code>{r:1,g:0,b:0,a:1}</code> RGBA colour; component range is 0 - 1.</p>
 <p><code>{h:1,s:1,v:1,a:1}</code> HSV + alpha colour; component range is 0 - 1, including hue. Note RGB components can also be specified as overrides; eg <code>{h:1,b:1,a:1}</code> will be magenta not red.</p>
 <p><code>{labh:1,c:1,l:1,a:1}</code> LabLCH + alpha colour; component range is 0 - 1, including hue. Note RGB components can also be specified as overrides; eg <code>{labh:1,b:1,a:1}</code> will be magenta not red.</p>
@@ -918,7 +918,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>rand{3,1,2}</code> Returns one of the arguments at random</p>
 <p><code>euclid{3,from:8}</code> Euclidean rhythm generator. The example will evenly spread 3 events between 8 beats. For example <code>p ping 0, dur=euclid{3,from:8}</code> will make 3 notes of durations 3,2 and 3. Note this uses a Bresenham type algorithm to spread the events, rather than a classic Euclidean algorithm. This it may produce a slightly different ordering ("3 from 8" would give a 3,3,2 pattern in a classic Euclidean algorithm, but the Bresenham gives a 3,2,3 pattern. The offset subparam can be used to 'fix' this.</p>
 <p class='sub'><code>euclid{3,from:8,offset:1}</code> Offset rotates the pattern. The example will give a 3,3,2 pattern which is the default 3,2,3 pattern but rotated by one.</p>
-<p><code>envelope{}</code> Return a value that changes over the course of each event like an envelope generator.</p>
+<p><code>envelope{}</code> !DEPRECATED: prefer to use eg <code>[0:!200ms, 1:!400ms, 0:!]e</code> instead of <code>envelope{a:200ms,d:400ms}</code>. Return a value that changes over the course of each event like an envelope generator.</p>
 <p class='sub'><code>envelope{shape:'lin'}</code> Specify the shaping applied to envelope segments. Valid values 'exp' for an exponential trend to the new value, or 'lin' for linear'. The default is 'exp'.</p>
 <p class='sub'><code>envelope{a:1}</code> Attack time for the envelope, with the shaping of 'shape'. Default: time units: beats</p>
 <p class='sub'><code>envelope{d:1}</code> Decay time for the envelope, with the shaping of 'shape'. Default: time units: beats</p>

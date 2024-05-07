@@ -1,7 +1,16 @@
 ====
 ==== audio ====
+Should not do 60fps audio param update if it can be avoided
+ Ideally, have some way to pass back a piecewise so that it can be directkly implemented onto an audio param
+  Needs to support modification though; eg amp=3*[1:!1,0]e
+  Maybe []e passes back extra data: the time values at which piecewise transitions happen?
+   Can it be done for []t []s []l as well? Since they are all known to be time-based?
+ Replace all amp envelopes with []e in presets and examples
+ Deprecate envelope, att, dec, sus, rel etc params
+Nice to have a unison param with stereo spread
+?Treat db as units??? - compressor params in db; what else?
 Should be a mix subparam on echo!
-Mix param for all filters, want to  s saw .75 crop 6 + 68, lpf={100,mix:1-envelope{d:500}}
+ Mix param for all filters, want to  s saw .75 crop 6 + 68, lpf={100,mix:1-envelope{d:500}}
 Players can have an analyser
   Created on access
   All events connect to it (and disconnect)
@@ -207,22 +216,13 @@ shadertoy synth multiple channels
 
 ====
 ==== other ====
-Allow non const step sizes in piecewise
- Docs
-  generally: say step size can  be varying
-  []r: note the piecewise :s can be used to set the relative probabaility
-Replace actual envelopes with []e ??
- Amp envelope tends to click
-  ?Mechanism to turn piecewise directly into audioparam instructions rather than eval it at 60fps??
-Nice to have a unison param with stereo spread
-Syntax to allow use of clamp and normalise for []{}?
 More time modifiers
  offset
  rate
  time - set time directly to an expression
  Random noise rewrite to use piecewise
   []n:  []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
-?Treat db as units??? - compressor params in db; what else?
+Syntax to allow use of clamp and normalise for []{}?
 Main bpm param time units
 stutter subparam, to squash or expand stutter timescale
 ?Is it possible for addc=[0,[-12,-24]t1/8@f]r@e to still allow the per frame motion, while the r@e selects it per event?
