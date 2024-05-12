@@ -276,6 +276,10 @@ define((require) => {
   assert(2, players.overrides['!p'].amp)
   delete players.overrides['!p']
 
+  parseLine(' set !p* amp = 2 ')
+  assert(2, players.overrides['!p*'].amp)
+  delete players.overrides['!p*']
+
   parseLine(' set ( p1 , !p ) amp = 2 ')
   assert(2, players.overrides.p1.amp)
   assert(2, players.overrides['!p'].amp)

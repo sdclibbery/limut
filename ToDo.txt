@@ -1,6 +1,5 @@
 ====
 ==== audio ====
-!crackle should have filtering
 Should not do 60fps audio param update if it can be avoided
  Ideally, have some way to pass back a piecewise so that it can be directkly implemented onto an audio param
   Needs to support modification though; eg amp=3*[1:!1,0]e

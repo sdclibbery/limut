@@ -3843,3 +3843,13 @@ set p* delay|=[():14,[1,3]r/4:2]t
 ///
 // set y delay=0, echo=200ms
 
+
+// Testing wildcards with main bus
+// p1 saw 0..., dur=1/4, amp=1/4
+// p2 saw .0.., dur=1/4, amp=1/4
+// b saw ..0., dur=1/4, amp=1/4
+// c saw ...0, dur=1/4, amp=1/4
+// set !p* hpf=2000//, add=6
+// set main hpf=2000//, add=6
+
+

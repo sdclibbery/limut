@@ -44,6 +44,8 @@ define(function(require) {
     return players.instances[id.toLowerCase()]
   }
 
+  let isMain = o => o === 'main' // Main bus; we don't apply wildcards to it
+
   players.expandOverrides = () => {
     let newOverrides = {}
     for (let k in players.overrides) {
@@ -56,12 +58,12 @@ define(function(require) {
       let matches
       if (oid.includes('*')) {
         let re = new RegExp('^'+oid.replaceAll('*','.*')+'$')
-        matches = Object.keys(players.instances).filter(id => id.match(re))
+        matches = Object.keys(players.instances).filter(id => id.match(re) && !isMain(id))
       } else {
         matches = [oid]
       }
       if (invert) {
-        matches = Object.keys(players.instances).filter(id => !matches.includes(id))
+        matches = Object.keys(players.instances).filter(id => !matches.includes(id) && !isMain(id))
       }
       matches.forEach(m => {
         newOverrides[m] = combineOverrides(newOverrides[m] || {}, players.overrides[k])
@@ -107,6 +109,11 @@ define(function(require) {
     testOverrideWildcard(['p1','p2'], {'!p1':{foo:1}}, {p2:{foo:1}})
     testOverrideWildcard(['p1','p2','q1'], {'!p*':{foo:1}}, {q1:{foo:1}})
     testOverrideWildcard(['p1','p2','q1'], {'!*1':{foo:1}}, {p2:{foo:1}})
+
+    testOverrideWildcard(['p1','p2','r1','main'], {'!p*':{foo:1}}, {r1:{foo:1}})
+    testOverrideWildcard(['p1','p2','r1','main'], {'!p1':{foo:1}}, {p2:{foo:1},r1:{foo:1}})
+    testOverrideWildcard(['p1','p2','r1','main'], {'m*':{foo:1}}, {})
+    testOverrideWildcard(['p1','p2','r1','main'], {'main':{foo:1}}, {main:{foo:1}})
 
     players.instances = { pp: 5 }
     assert(5, players.getById('pp'))
