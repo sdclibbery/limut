@@ -1,6 +1,6 @@
 ====
 ==== audio ====
-Should not do 60fps audio param update if it can be avoided
+Should not do 60fps audio param update if it can be avoided; the quality is not good enough for fast changes
  Ideally, have some way to pass back a piecewise so that it can be directkly implemented onto an audio param
   Needs to support modification though; eg amp=3*[1:!1,0]e
   Maybe []e passes back extra data: the time values at which piecewise transitions happen?

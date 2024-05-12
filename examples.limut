@@ -3811,6 +3811,8 @@ r readout, add={foo:2,bar:3}.(this.foo), foo=bar
 
 
 // Industrial Techno Jam
+include 'preset/techno.limut'
+set scale='minor'
 set bpm=130
 set main drive=1/32
 pk perc X.-.
@@ -3823,6 +3825,8 @@ r robot, amp*=[1.2:3,0:1]t, swing=54, add+=[0:2,[0,7]r:1]t, delay=(0,{3/4,oct:2}
 
 
 // Ambient Jam
+include 'preset/synthwave.limut'
+include 'preset/techno.limut'
 set scale='minor'
 set bpm=95
 p perc +, dur=4, echo=1/2, amp*=1/2, room
