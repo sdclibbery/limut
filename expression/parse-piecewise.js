@@ -19,6 +19,12 @@ define(function(require) {
     '~': (i) => i*i*(3-2*i), // smooth bezier ease in/out
     '!': (i) => 1-Math.exp(-8*i), // exponential
   }
+  iOperators['_'].segmentPower = 0
+  iOperators['|'].segmentPower = 0
+  iOperators['/'].segmentPower = 1
+  iOperators['\\'].segmentPower = 1
+  iOperators['~'].segmentPower = 3
+  iOperators['!'].segmentPower = 2
 
   let parseEntry = (state, vs, is, ss) => {
     eatWhitespace(state)

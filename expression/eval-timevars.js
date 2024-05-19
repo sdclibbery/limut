@@ -2,10 +2,11 @@
 define(function(require) {
   let consoleOut = require('console')
   let {piecewise} = require('expression/eval-piecewise')
-  let {units} = require('units')
 
   let step = () => 0
+  step.segmentPower = 0
   let linear = (i) => i
+  linear.segmentPower = 1
 
   let rangeTimeVar = (vs, ds) => {
     let lo = vs[0] || 0
@@ -48,7 +49,7 @@ define(function(require) {
       ss = ss.map((s,idx) => s!==undefined ? s : ds[idx % ds.length])
       is[is.length-1] = step // Last one is final value, not part of the event
       let p = (e,b) => b - e.count
-      return piecewise(vs, is, ss, p, {clamp:true})
+      return piecewise(vs, is, ss, p, {clamp:true,addSegmentData:true})
     }
   }
 

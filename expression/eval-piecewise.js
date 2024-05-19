@@ -24,25 +24,47 @@ define(function(require) {
     }
     if (!Number.isFinite(totalSize)) { throw `invalid piecewise totalSize: ${totalSize}` }
     if (clamp) {
-      if (pieceParam < 0) { return 0 }
-      if (pieceParam >= totalSize) { return ess.length-1 }
+      if (pieceParam < 0) { return { piece: 0, next: ess[0] } }
+      if (pieceParam >= totalSize) { return { piece: ess.length-1 } }
     }
+    let repeatStart = Math.floor(pieceParam/totalSize) * totalSize
     let pMod = (pieceParam%totalSize + totalSize) % totalSize
     let pos = 0
     for (let i=0; i<ess.length; i++) {
       let s = ess[i]
       if (pMod < pos+s) {
-        return i + (pMod - pos)/s
+        return {
+          piece: i + (pMod - pos)/s,
+          next: repeatStart + pos + s
+        }
       }
       pos += s
     }
-    return 0
+    return { piece: 0, next: ess[0] }
+  }
+
+  let setSegmentData = (v, is, idx, next) => {
+    v._nextSegment = next
+    let p = is[idx % is.length].segmentPower
+    v._segmentPower = p!==undefined ? p : 1 // Default to power 1 for linear if not specified
+  }
+
+  let setSegment = (v, segmentWrapper, is, idx, next) => {
+    if (typeof v === 'object') {
+      setSegmentData(v, is, idx, next)
+    } else {
+      segmentWrapper.value = v
+      setSegmentData(segmentWrapper, is, idx, next)
+      v = segmentWrapper
+    }
+    return v
   }
 
   let piecewise = (vs, is, ss, p, options) => { // values, interpolators, sizes
     if (vs.length === 0) { return () => 0 }
     if (is.length !== vs.length) { throw `is.length ${is} !== vs.length ${vs}` }
     if (ss.length !== vs.length) { throw `ss.length ${ss} !== vs.length ${vs}` }
+    let segmentWrapper = {}
     let result = (e,b, evalRecurse, modifiers) => {
       if (modifiers && modifiers.seed !== undefined) {
         if (!p.modifiers) { p.modifiers = {} }
@@ -50,14 +72,27 @@ define(function(require) {
       }
       let pieceParam = mainParam(evalParamFrame(p, e,b) || 0)
       if (!Number.isFinite(pieceParam)) { consoleOut(`🟠 Warning invalid piecewise piece param: ${pieceParam}`); return 0; }
-      let piece = indexer(ss, options, pieceParam, e,b) // "piece" integer part is an index into the segments; fractional part is the interpolator between segments
+      let {piece,next} = indexer(ss, options, pieceParam, e,b) // "piece" integer part is an index into the segments; fractional part is the interpolator between segments
       let idx = Math.floor(piece)
       let l = vs[idx % vs.length]
       let r = vs[(idx+1) % vs.length]
       let interp = is[idx % is.length](piece%1)
-      if (interp <= 0) { return l }
-      if (interp >= 1) { return r }
-      return lerpValue(interp, l, r)
+      let v
+      if (interp <= 0) { v = l }
+      else if (interp >= 1) { v = r }
+      else { v = lerpValue(interp, l, r) }
+      if (options.addSegmentData) {
+        if (typeof v === 'function') {
+          let func = v
+          v = (e,b, evalRecurse) => {
+            let ev = evalRecurse(func, e,b) // Have to eval before setting the segment data
+            return setSegment(ev, segmentWrapper, is, idx, next)
+          }
+        } else {
+          v = setSegment(v, segmentWrapper, is, idx, next)
+        }
+      }
+      return v
     }
     return result
   }
@@ -78,8 +113,11 @@ define(function(require) {
     }
     let ev = (i,c,d) => {return{idx:i, count:c, dur:d, _time:c, endTime:c+d, countToTime:x=>x}}
     let step = (i) => 0
+    step.segmentPower = 0
     let lin = (i) => i
+    lin.segmentPower = 1
     let sqr = (i) => i*i
+    sqr.segmentPower = 2
     let x = 0
     let getx = (e,b) => x
     let getb = (e,b) => b
@@ -220,6 +258,39 @@ define(function(require) {
     assert(0, evalParamFrame(pw,ev(0,0,1),8))
     assert(2, evalParamFrame(pw,ev(0,0,1),9))
     assert(0, evalParamFrame(pw,ev(0,0,1),10))
+
+    pw = piecewise([1,2], [step,step], [1,2], getb, {addSegmentData:true})
+    assert({value:1,_nextSegment:1,_segmentPower:0}, evalParamFrame(pw,ev(0,0,2),0))
+    assert({value:2,_nextSegment:3,_segmentPower:0}, evalParamFrame(pw,ev(0,0,2),1))
+    assert({value:1,_nextSegment:4,_segmentPower:0}, evalParamFrame(pw,ev(3,3,2),3))
+    assert({value:2,_nextSegment:6,_segmentPower:0}, evalParamFrame(pw,ev(3,3,2),4))
+
+    pw = piecewise([{value:1,_units:'hz'},2], [step,step], [1,2], getb, {addSegmentData:true})
+    assert({value:1,_units:'hz',_nextSegment:1,_segmentPower:0}, evalParamFrame(pw,ev(0,0,2),0))
+    assert({value:2,_nextSegment:3,_segmentPower:0}, evalParamFrame(pw,ev(0,0,2),1))
+
+    let a = () => 1
+    let b = () => 2
+    pw = piecewise([a,b], [lin,step], [1,2], getb, {addSegmentData:true})
+    assert({value:1,_nextSegment:1,_segmentPower:1}, evalParamFrame(pw,ev(0,0,2),0))
+    assert({value:3/2,_nextSegment:1,_segmentPower:1}, evalParamFrame(pw,ev(0,0,2),1/2))
+    assert({value:2,_nextSegment:3,_segmentPower:0}, evalParamFrame(pw,ev(0,0,2),1))
+
+    a = () => { return {r:1,g:0} }
+    b = () => { return {r:0,g:1} }
+    pw = piecewise([a,b], [lin,step], [1,2], getb, {addSegmentData:true})
+    assert({r:1,g:0,_nextSegment:1,_segmentPower:1}, evalParamFrame(pw,ev(0,0,2),0))
+    assert({r:1/2,g:1/2,_nextSegment:1,_segmentPower:1}, evalParamFrame(pw,ev(0,0,2),1/2))
+    assert({r:0,g:1,_nextSegment:3,_segmentPower:0}, evalParamFrame(pw,ev(0,0,2),1))
+
+    pw = piecewise([{r:1,g:0},{r:0,g:1}], [lin,step], [1,2], getb, {addSegmentData:true})
+    assert({r:1,g:0,_nextSegment:1,_segmentPower:1}, evalParamFrame(pw,ev(0,0,2),0))
+    assert({r:1/2,g:1/2,_nextSegment:1,_segmentPower:1}, evalParamFrame(pw,ev(0,0,2),1/2))
+    assert({r:0,g:1,_nextSegment:3,_segmentPower:0}, evalParamFrame(pw,ev(0,0,2),1))
+
+    pw = piecewise([1,2], [lin,sqr], [1,2], getb, {addSegmentData:true})
+    assert({value:1,_nextSegment:1,_segmentPower:1}, evalParamFrame(pw,ev(0,0,2),0))
+    assert({value:2,_nextSegment:3,_segmentPower:2}, evalParamFrame(pw,ev(0,0,2),1))
 
     console.log('Piecewise tests complete')
   }

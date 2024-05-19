@@ -48,8 +48,24 @@ Should not do 60fps audio param update if it can be avoided; the quality is not 
      setValueAtTime(1170, 0)
      setTargetAtTime(170, 5b, tc) - where tc fits the three eval points best
   ?Check all OPERATORS and TIMEVARS: how will they work?
-  ?Should some things cancel _nextSegment? Eg smooth{}? []r@f?
+  ?Should some things cancel _nextSegment? Eg smooth{}? []r@f? Can cancel by setting _nextSegment to negative...
+  ?Could provide a _segmentPower hint that says how many interpolation points are needed to model the curve; operators take max of it
+ TRIAL THIS
+  New class that builds a timeline onto an AudioParam if _nextSegment is present
+   Techbass not working because of nested value {}
+   Tests with more segments and various powers
+  Operators combine _nextSegment (min) and _segmentPower (max)
+  !!!! Must handle termination better: how to know when to stop? Have to work out from max(dur, sus)??? What ahout rel? Is all naff...
+  handle power 3
+  ! s saw, dur=1/2, lpf=1000hz*[1:!200ms,0]e Gives mismatched units operator error
+  setSegment: What if the value already has segment data?? Need to handle this for nested use; eg [[]e]e etc
+  Set _nextSegment etc from []tlsn too
+  ? Some things set _nextSegment negative to cancel timeline: smooth{} etc, []r@f; what else? slider{}!
+  ? What other things could set _nextSegment? []{time}????
+  Optimise/refactor etc
+  TEST TEST TEST
  ?Replace all amp envelopes with []e in presets and examples
+  ?Can do envelope=[]e ??
   ?Deprecate envelope, att, dec, sus, rel etc params
    ??Also deprecate other att/rel params; eg in pitchedperc etc???
  Pitch effects to work this way too???

@@ -3,6 +3,7 @@ define(function (require) {
   let system = require('play/system')
   let evalParam = require('player/eval-param')
   let {mainParamUnits,subParamUnits} = require('player/sub-param')
+  let {segmentedAudioParam} = require('play/segmented-audioparam')
 
   let evalPerEvent = (params, p, def) => {
     let v = params[p]
@@ -78,6 +79,7 @@ define(function (require) {
       if (typeof mod === 'function') { v = mod(v) }
       audioParam.setValueAtTime(v, system.timeNow())
     } else {
+      if (segmentedAudioParam(audioParam, params, p, def, requiredUnits, mod)) { return } // Set up with a timeline
       setAudioParamValue(audioParam, evalMainPerFrame(params, p, def, params.count, requiredUnits), p, mod) // set now
       if (params._perFrame) {
         params._perFrame.push(state => rampAudioParamValue(audioParam, evalMainPerFrame(params, p, def, state.count, requiredUnits), p, mod))
@@ -103,6 +105,7 @@ define(function (require) {
       if (typeof mod === 'function') { v = mod(v) }
       audioParam.setValueAtTime(v, system.timeNow())
     } else {
+      if (segmentedAudioParam(audioParam, params, p, subParamName, def, requiredUnits, mod)) { return } // Set up with a timeline
       setAudioParamValue(audioParam, evalSubPerFrame(params, p, subParamName, def, params.count, requiredUnits), p, mod) // set now
       if (params._perFrame) {
         params._perFrame.push(state => rampAudioParamValue(audioParam, evalSubPerFrame(params, p, subParamName, def, state.count, requiredUnits), p, mod))
