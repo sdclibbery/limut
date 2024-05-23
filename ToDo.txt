@@ -1,64 +1,12 @@
 ====
 ==== audio ====
 Should not do 60fps audio param update if it can be avoided; the quality is not good enough for fast changes
- Ideally, have some way to pass back a piecewise so that it can be directkly implemented onto an audio param
-  Needs to support modification though; eg amp=3*[1:!1,0]e
-  Maybe []e passes back extra data: the time values at which piecewise transitions happen?
-   Can it be done for []t []s []l as well? Since they are all known to be time-based?
-  PROPOSAL:
-   []etlsn return {value:x,_nextSegment:b} b is the time in beats of the next segment in the piecewise
-   Normal operation (eg visuals) can ignore the extra data
-   Eval audio param checks for the _nextSegment subparam, and if present, instead of making a 60fps callback, it:
-    Creates an audioparam setTarget for each segment, by:
-     Evaluating the param again for the next segment time, and in between, and fitting a time constant
-   Operators have a special case for _nextSegment: they always take the minimum value if present
-   Worked examples; all eval audio param frame for event starting at count 5:
-    amp=[1:!1/2,0]e
-     evals at 5: gets {value:1,_nextSegment:5.5}
-     evals at 5.25: gets {value:0.2ish,_nextSegment:5.5}
-     evals at 5.5: gets 0
-     setValueAtTime(1, 0)
-     setTargetAtTime(0, 5b, tc) - where tc fits the three eval points best
-    lpf=100+1000*[1:!1/2,0]e
-     evals at 5 -> gets {value:1100,_nextSegment:5.5}
-     evals at 5.25 -> gets {value:300ish,_nextSegment:5.5}
-     evals at 5.5 -> gets 100
-     setValueAtTime(1, 1100)
-     setTargetAtTime(100, 5b, tc) - where tc fits the three eval points best
-    lpf=[100:500]s1/2@f
-     5 -> {100,_nextSegment:5.5}
-     5.25 -> {300,_nextSegment:5.5}
-     5.5 -> {500,_nextSegment:6}
-     5.75 -> {300,_nextSegment:6}
-     6 -> {100,_nextSegment:6.5}
-     setValueAtTime(100, 0)
-     setTargetAtTime(100, 5b, tc) - where tc is fit for three points: giving linear unless we add another point...
-     setTargetAtTime(500, 5.5b, tc)
-    lpf=[1:!1/2,0]e * [1000:2000]l10
-     5 -> {1500,_nextSegment:5.5}
-     5.25 -> {300ish,_nextSegment:5.5}
-     5.5 -> 0
-     setValueAtTime(1500, 0)
-     setTargetAtTime(0, 5b, tc) - where tc fits the three eval points best
-    lpf=[100:200]r+1000*[1:![1/4:1/2]l10]e
-     event eval => 170+1000*[1:!3/8]e
-     5 -> {1170,_nextSegment:5.375}
-     5+3/16 -> {370,_nextSegment:5.375}
-     5.375 -> 170
-     setValueAtTime(1170, 0)
-     setTargetAtTime(170, 5b, tc) - where tc fits the three eval points best
-  ?Check all OPERATORS and TIMEVARS: how will they work?
-  ?Should some things cancel _nextSegment? Eg smooth{}? []r@f? Can cancel by setting _nextSegment to negative...
-  ?Could provide a _segmentPower hint that says how many interpolation points are needed to model the curve; operators take max of it
- TRIAL THIS
-  New class that builds a timeline onto an AudioParam if _nextSegment is present
-   Techbass not working because of nested value {}
-   Tests with more segments and various powers
+  Tests with more segments and various powers and various data
   Operators combine _nextSegment (min) and _segmentPower (max)
   !!!! Must handle termination better: how to know when to stop? Have to work out from max(dur, sus)??? What ahout rel? Is all naff...
-  handle power 3
   ! s saw, dur=1/2, lpf=1000hz*[1:!200ms,0]e Gives mismatched units operator error
   setSegment: What if the value already has segment data?? Need to handle this for nested use; eg [[]e]e etc
+  handle power 3
   Set _nextSegment etc from []tlsn too
   ? Some things set _nextSegment negative to cancel timeline: smooth{} etc, []r@f; what else? slider{}!
   ? What other things could set _nextSegment? []{time}????

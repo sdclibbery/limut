@@ -13,49 +13,42 @@ define(function (require) {
     return v
   }
 
-  let getValue = (v, subP, def, requiredUnits) => {
-    if (subP === undefined) { return mainParamUnits(v, requiredUnits, def) }
-    if (typeof v !== 'object') { return def }
-    return subParamUnits(v, subP, requiredUnits, def)
+  let getValue = (param, def, requiredUnits) => {
+    return mainParamUnits(param, requiredUnits, def)
   }
 
-  let getNextSegment = (param, subP) => {
-    if (param === undefined) { return undefined }
-    if (param !== undefined && subP) { param = param[subP] }
-    if (param === undefined) { return undefined }
-    return param._nextSegment
-  }
-
-  let getSegmentPower = (param, subP) => {
-    if (param === undefined) { return undefined }
-    if (param !== undefined && subP) { param = param[subP] }
-    if (param === undefined) { return undefined }
-    return param._segmentPower
+  let empty = {}
+  let getParamValue = (param, subP) => {
+    if (param === undefined) { return empty }
+    if (param !== empty && subP) { param = param[subP] } // Get sub Param if required
+    if (param === undefined) { return empty }
+    if (typeof param.value === 'object') { return param.value } // Get value within main param if needed
+    return param
   }
 
   let applyMod = (v, mod) => mod === undefined ? v : mod(v)
 
   let segmentedAudioParam = (audioParam, params, p, subP, def, requiredUnits, mod) => { // !! ASSUME mod IS LINEAR
-    let param = evalParamPerFrame(params, p, params.count, undefined)
-    if (getNextSegment(param, subP) === undefined) { return false } // No segment data; we cant build a segment timeline here
+    let param = getParamValue(evalParamPerFrame(params, p, params.count, undefined), subP)
+    if (param._nextSegment === undefined) { return false } // No segment data; we cant build a segment timeline here
 // console.log(`Segmented AudioParam for ${p}`)
     let count = params.count
     let time = params._time
-    let currentValue = getValue(param, subP, def, requiredUnits)
+    let currentValue = getValue(param, def, requiredUnits)
     let nextValue = currentValue
-    let segmentPower = getSegmentPower(param, subP)
-    let nextSegment = params.count + getNextSegment(param, subP)
+    let segmentPower = param._segmentPower
+    let nextSegment = params.count + param._nextSegment
     audioParam.setValueAtTime(applyMod(currentValue, mod), 0)
     while (!!nextSegment && nextSegment !== count && count <= params.count + params.dur) { // !!!!!!!!!!SHOULDNT BE DUR!!!!!!!
-      param = evalParamPerFrame(params, p, nextSegment, undefined)
-      nextValue = getValue(param, subP, def, requiredUnits)
+      param = getParamValue(evalParamPerFrame(params, p, nextSegment, undefined), subP)
+      nextValue = getValue(param, def, requiredUnits)
       let nextTime = time + (nextSegment - count) * params.beat.duration
       // Setup segment
       if (segmentPower === 0) {
         audioParam.setValueAtTime(applyMod(nextValue, mod), time)
       } else if (segmentPower === 2) {
         let imCount = (count + nextSegment) / 2
-        let imValue = getValue(evalParamPerFrame(params, p, imCount, undefined), subP, def, requiredUnits)
+        let imValue = getValue(getParamValue(evalParamPerFrame(params, p, imCount, undefined), subP), def, requiredUnits)
         let imTime = (time + nextTime) / 2
         // Vt = V1 + (V0 - V1) * e ^ -((t-T0) / tc)    From Web Audio API spec for setTargetAtTime
         // tc = -(t - T0) / ln((Vt - V1) / (V0 - V1))   Rearrranged
@@ -69,8 +62,8 @@ define(function (require) {
       currentValue = nextValue
       time = nextTime
       count = nextSegment
-      nextSegment = params.count + getNextSegment(param, subP)
-      segmentPower = getSegmentPower(param, subP)
+      nextSegment = params.count + param._nextSegment
+      segmentPower = param._segmentPower
     }
     return true
   }
@@ -97,8 +90,8 @@ define(function (require) {
         setValueCurveAtTime: (...args) => calls.push(['setValueCurveAtTime'].concat(args)),
       }
     }
-    let pm = (exp) => { return { foo:exp, count:1, dur:4, _time:2, beat:{duration:2} } }
-    let ps = (exp) => { return { foo:{sub:exp}, count:1, dur:4, _time:2, beat:{duration:2} } }
+    let pm = (exp) => { return { foo:{value:exp,q:10}, count:1, dur:4, _time:2, beat:{duration:2} } }
+    let ps = (exp) => { return { foo:{value:10,sub:exp}, count:1, dur:4, _time:2, beat:{duration:2} } }
     let doubleIt = x => x*2
     let u2 = [undefined,undefined]
     let hz = (v) => { return {value:v,_units:'hz'} }
