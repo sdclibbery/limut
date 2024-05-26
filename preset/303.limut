@@ -20,5 +20,5 @@ preset tb303 wave
     q:this.resonance*25,
     poles:4
   }
-  , glide={(this.g+this.s)*88, units:'ms'}
+  , glide=(this.g+this.s)*88ms
 

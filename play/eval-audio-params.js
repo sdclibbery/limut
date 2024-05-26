@@ -81,6 +81,7 @@ define(function (require) {
     } else {
       if (segmentedAudioParam(audioParam, params, p, def, requiredUnits, mod)) { return } // Set up with a timeline
       setAudioParamValue(audioParam, evalMainPerFrame(params, p, def, params.count, requiredUnits), p, mod) // set now
+      if (params.player) { console.log(`Per frame audio update! ${params.player} ${p}`) }
       if (params._perFrame) {
         params._perFrame.push(state => rampAudioParamValue(audioParam, evalMainPerFrame(params, p, def, state.count, requiredUnits), p, mod))
       } else {
@@ -107,6 +108,7 @@ define(function (require) {
     } else {
       if (segmentedAudioParam(audioParam, params, p, subParamName, def, requiredUnits, mod)) { return } // Set up with a timeline
       setAudioParamValue(audioParam, evalSubPerFrame(params, p, subParamName, def, params.count, requiredUnits), p, mod) // set now
+      if (params.player) { console.log(`Per frame audio update! ${params.player} ${p} ${subParamName}`) }
       if (params._perFrame) {
         params._perFrame.push(state => rampAudioParamValue(audioParam, evalSubPerFrame(params, p, subParamName, def, state.count, requiredUnits), p, mod))
       } else {

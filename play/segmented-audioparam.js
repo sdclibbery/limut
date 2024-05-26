@@ -31,7 +31,7 @@ define(function (require) {
   let segmentedAudioParam = (audioParam, params, p, subP, def, requiredUnits, mod) => { // !! ASSUME mod IS LINEAR
     let param = getParamValue(evalParamPerFrame(params, p, params.count, undefined), subP)
     if (param._nextSegment === undefined) { return false } // No segment data; we cant build a segment timeline here
-// console.log(`Segmented AudioParam for ${p}`)
+console.log(`Segmented AudioParam for ${p}`)
     let count = params.count
     let time = params._time
     let currentValue = getValue(param, def, requiredUnits)
@@ -133,6 +133,15 @@ define(function (require) {
     assert(['setValueAtTime', 16,0], ap.calls[0])
     assert(['setTargetAtTime', 8,2,0.25], ap.calls[1])
     assert(['setValueAtTime', 8,4], ap.calls[2])
+
+    ap = mockAp()
+    assert(true, segmentedAudioParam(ap, ps( eventTimeVar([0,hz(8),4], [lin,exp,step], [1,2,3]) ), 'foo', 'sub', 99, 'hz', doubleIt))
+    assert(5, ap.calls.length)
+    assert(['setValueAtTime', 0,0], ap.calls[0])
+    assert(['setValueAtTime', 0,2], ap.calls[1])
+    assert(['linearRampToValueAtTime', 16,4], ap.calls[2])
+    assert(['setTargetAtTime', 8,4,0.5], ap.calls[3])
+    assert(['setValueAtTime', 8,8], ap.calls[4])
 
     console.log('Segmented audioParam tests complete')
   }

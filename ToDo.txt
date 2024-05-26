@@ -1,16 +1,24 @@
 ====
 ==== audio ====
 Should not do 60fps audio param update if it can be avoided; the quality is not good enough for fast changes
-  Tests with more segments and various powers and various data
+  What about time modifiers? How will this work with per? TESTS! Eg [0:1]e1{per:1/4}
+   Currently giving error; shouldn't do that
+    Suggest pull out all audio setting and do mod() and try/catch in helper method...
+   ? Need extra segmnets? What about offset or general time modiifier? Better to just ditch segments if time mods present???
   Operators combine _nextSegment (min) and _segmentPower (max)
+   Tests for []e+[]e etc
+  setSegment: What if the value already has segment data?? Need to handle this for nested use; eg [[]e]e etc
   !!!! Must handle termination better: how to know when to stop? Have to work out from max(dur, sus)??? What ahout rel? Is all naff...
   ! s saw, dur=1/2, lpf=1000hz*[1:!200ms,0]e Gives mismatched units operator error
-  setSegment: What if the value already has segment data?? Need to handle this for nested use; eg [[]e]e etc
   handle power 3
   Set _nextSegment etc from []tlsn too
+   Need to handle repeat and non-repeat correctly
   ? Some things set _nextSegment negative to cancel timeline: smooth{} etc, []r@f; what else? slider{}!
   ? What other things could set _nextSegment? []{time}????
-  Optimise/refactor etc
+  Optimise/refactor etc segmented audio-param
+  Minimise amountof per frame updates everywhere; especially for presets
+   Why do we ALWAYS get per frame update for []t, this.level etc even when forced to per event?
+    Find a way to stop this and force as much as possible to be per event
   TEST TEST TEST
  ?Replace all amp envelopes with []e in presets and examples
   ?Can do envelope=[]e ??
@@ -19,6 +27,7 @@ Should not do 60fps audio param update if it can be avoided; the quality is not 
  Pitch effects to work this way too???
 Nice to have a unison param with stereo spread
 ?Treat db as units??? - compressor params in db; what else?
+Delay or offset sub Param for glide
 Should be a mix subparam on echo!
  Mix param for all filters, want to  s saw .75 crop 6 + 68, lpf={100,mix:1-envelope{d:500}}
 Players can have an analyser
@@ -216,7 +225,7 @@ shadertoy synth multiple channels
 ==== things to test/consider ====
 // pattern features (), [], <>, #b, v^, single event pattern
 // (), follow, complex durs, simple durs, delay, stutter, overrides, +=, |=, []
-// [], []t, []l/s, []e, []n, []r []{}
+// [], []t, []l/s, []e, []n, []r []{}, segmented audioparams
 // operators + - * / ^ % | .
 // var, player.var, this.param, this.voice, var{params}, slider{}, floor{}, .floor{to:}, accum{}, this.time, time, rand, slider
 // (...).1, (...).max, max{...}, {foo:...}.foo, (pk,ps).pulse

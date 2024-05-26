@@ -3857,3 +3857,23 @@ set p* delay|=[():14,[1,3]r/4:2]t
 // set main hpf=2000//, add=6
 
 
+// Cyborg part 2
+include 'preset/synthwave.limut'
+include 'preset/techno.limut'
+include 'preset/house.limut'
+pv swirl 2, perspective=-1.45, contrast=1-t.exists, zoom=2, rate=1/4, fore=#b8f, mid=#b0f, back=0, loc={x:1,y:1,w:4,h:4}/3
+set scale='minor'
+set bpm=115
+set main drive=1/64, amp*=1.2
+// pk perc X...
+// ps perc ..s., amp=1/2
+// ph perc .=- crop 16, swing=62
+// b cybass 0.. crop 14 + 7., swing=58, reverb={1/2,curve:1,hpf:600,mix:1/4}, amp*=2, low=+3db, lpf={300+1000*[0:1]s16^3,q:7,poles:4}
+// c chime 7.......3040506., delay=(0,3/4), rel=1/3, sus=1/8, amp*=2
+h hollow (07), amp*=1/8, oct+=1
+set p* delay|=[():30,[1,3]r/4:2]t
+// set !p* add=[0:8,3:6,4:2]t
+// t trance (0246).. crop 16, add=[0:6,3:2]t, amp*=riser^2
+// s cyborg 76_0_ crop 16, amp*=3/2, glide=150ms
+
+
