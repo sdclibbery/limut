@@ -2,9 +2,8 @@
 ==== audio ====
 Should not do 60fps audio param update if it can be avoided; the quality is not good enough for fast changes
   What about time modifiers? How will this work with per? TESTS! Eg [0:1]e1{per:1/4}
-   Currently giving error; shouldn't do that
-    Suggest pull out all audio setting and do mod() and try/catch in helper method...
-   ? Need extra segmnets? What about offset or general time modiifier? Better to just ditch segments if time mods present???
+   Never segment if time modifiers present
+    Need to find an efficient way of killing segmentation without having to make EVERY value into an {} just in case it needs to kill segs
   Operators combine _nextSegment (min) and _segmentPower (max)
    Tests for []e+[]e etc
   setSegment: What if the value already has segment data?? Need to handle this for nested use; eg [[]e]e etc
@@ -19,12 +18,15 @@ Should not do 60fps audio param update if it can be avoided; the quality is not 
   Minimise amountof per frame updates everywhere; especially for presets
    Why do we ALWAYS get per frame update for []t, this.level etc even when forced to per event?
     Find a way to stop this and force as much as possible to be per event
+   When memoise per-event param, remove any segment info too?
   TEST TEST TEST
  ?Replace all amp envelopes with []e in presets and examples
   ?Can do envelope=[]e ??
   ?Deprecate envelope, att, dec, sus, rel etc params
    ??Also deprecate other att/rel params; eg in pitchedperc etc???
  Pitch effects to work this way too???
+ Docs
+  Time modifiers cancel segmenting, also smooth, slider etc
 Nice to have a unison param with stereo spread
 ?Treat db as units??? - compressor params in db; what else?
 Delay or offset sub Param for glide

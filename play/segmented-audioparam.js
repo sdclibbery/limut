@@ -26,7 +26,14 @@ define(function (require) {
     return param
   }
 
-  let applyMod = (v, mod) => mod === undefined ? v : mod(v)
+  let addSegment = (audioParam, type, v, mod, ...args) => {
+    let moddedV = mod === undefined ? v : mod(v)
+    try {
+      audioParam[type](moddedV, ...args)
+    } catch (e) {
+      console.log(`!!! Bad audioParam segment ${type} ${moddedV} ${args}`)
+    }
+  }
 
   let segmentedAudioParam = (audioParam, params, p, subP, def, requiredUnits, mod) => { // !! ASSUME mod IS LINEAR
     let param = getParamValue(evalParamPerFrame(params, p, params.count, undefined), subP)
@@ -38,25 +45,25 @@ console.log(`Segmented AudioParam for ${p}`)
     let nextValue = currentValue
     let segmentPower = param._segmentPower
     let nextSegment = params.count + param._nextSegment
-    audioParam.setValueAtTime(applyMod(currentValue, mod), 0)
+    addSegment(audioParam, 'setValueAtTime', currentValue, mod, 0)
     while (!!nextSegment && nextSegment !== count && count <= params.count + params.dur) { // !!!!!!!!!!SHOULDNT BE DUR!!!!!!!
       param = getParamValue(evalParamPerFrame(params, p, nextSegment, undefined), subP)
       nextValue = getValue(param, def, requiredUnits)
       let nextTime = time + (nextSegment - count) * params.beat.duration
       // Setup segment
       if (segmentPower === 0) {
-        audioParam.setValueAtTime(applyMod(nextValue, mod), time)
-      } else if (segmentPower === 2) {
+        addSegment(audioParam, 'setValueAtTime', nextValue, mod, time)
+      } else if (segmentPower === 2 && currentValue !== nextValue) {
         let imCount = (count + nextSegment) / 2
         let imValue = getValue(getParamValue(evalParamPerFrame(params, p, imCount, undefined), subP), def, requiredUnits)
         let imTime = (time + nextTime) / 2
         // Vt = V1 + (V0 - V1) * e ^ -((t-T0) / tc)    From Web Audio API spec for setTargetAtTime
         // tc = -(t - T0) / ln((Vt - V1) / (V0 - V1))   Rearrranged
         let tc = -(imTime - time) / Math.log((imValue - nextValue) / (currentValue - nextValue))
-        audioParam.setTargetAtTime(applyMod(nextValue, mod), time, tc)
-      } else {
-        audioParam.setValueAtTime(applyMod(currentValue, mod), time) // Set value at start so linear ramp is from correct start
-        audioParam.linearRampToValueAtTime(applyMod(nextValue, mod), nextTime) // Use linear for everything else
+        addSegment(audioParam, 'setTargetAtTime', nextValue, mod, time, tc)
+      } else { // Use linear for everything else
+        addSegment(audioParam, 'setValueAtTime', currentValue, mod, time) // Set value at start so linear ramp is from correct start
+        addSegment(audioParam, 'linearRampToValueAtTime', nextValue, mod, nextTime)
       }
       // Move on to next segment
       currentValue = nextValue
