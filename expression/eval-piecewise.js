@@ -81,7 +81,7 @@ define(function(require) {
       if (interp <= 0) { v = l }
       else if (interp >= 1) { v = r }
       else { v = lerpValue(interp, l, r) }
-      if (options.addSegmentData) {
+      if (options.addSegmentData && next !== undefined) {
         if (typeof v === 'function') {
           let func = v
           v = (e,b, evalRecurse) => {
@@ -264,6 +264,12 @@ define(function(require) {
     assert({value:2,_nextSegment:3,_segmentPower:0}, evalParamFrame(pw,ev(0,0,2),1))
     assert({value:1,_nextSegment:4,_segmentPower:0}, evalParamFrame(pw,ev(3,3,2),3))
     assert({value:2,_nextSegment:6,_segmentPower:0}, evalParamFrame(pw,ev(3,3,2),4))
+
+    pw = piecewise([1,2], [step,step], [1,2], getb, {addSegmentData:true,clamp:true})
+    assert({value:1,_nextSegment:1,_segmentPower:0}, evalParamFrame(pw,ev(0,0,2),0))
+    assert({value:2,_nextSegment:3,_segmentPower:0}, evalParamFrame(pw,ev(0,0,2),1))
+    assert(2, evalParamFrame(pw,ev(3,3,2),3))
+    assert(2, evalParamFrame(pw,ev(3,3,2),4))
 
     pw = piecewise([{value:1,_units:'hz'},2], [step,step], [1,2], getb, {addSegmentData:true})
     assert({value:1,_units:'hz',_nextSegment:1,_segmentPower:0}, evalParamFrame(pw,ev(0,0,2),0))

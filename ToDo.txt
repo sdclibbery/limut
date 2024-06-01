@@ -1,33 +1,30 @@
 ====
 ==== audio ====
 Should not do 60fps audio param update if it can be avoided; the quality is not good enough for fast changes
-  What about time modifiers? How will this work with per? TESTS! Eg [0:1]e1{per:1/4}
-   Never segment if time modifiers present
-    Need to find an efficient way of killing segmentation without having to make EVERY value into an {} just in case it needs to kill segs
-  Operators combine _nextSegment (min) and _segmentPower (max)
-   Tests for []e+[]e etc
   setSegment: What if the value already has segment data?? Need to handle this for nested use; eg [[]e]e etc
-  !!!! Must handle termination better: how to know when to stop? Have to work out from max(dur, sus)??? What ahout rel? Is all naff...
+  ! [1:1/2,0:0,1:1/2,0:0]e doesn't work properly; it nearly all gets set to 1
   ! s saw, dur=1/2, lpf=1000hz*[1:!200ms,0]e Gives mismatched units operator error
-  handle power 3
+  ? Some things cancel segmentation: smooth{} etc, []r@f; what else? slider{}! also time modifiers! eg [0:1]e1{per:1/4}
+   Need to find an efficient way of killing segmentation without having to make EVERY value into an {} just in case it needs to kill segs
+  !!!! Must handle termination better: how to know when to stop? Have to work out from max(dur, sus)??? What ahout rel? Is all naff...
   Set _nextSegment etc from []tlsn too
    Need to handle repeat and non-repeat correctly
-  ? Some things set _nextSegment negative to cancel timeline: smooth{} etc, []r@f; what else? slider{}!
-  ? What other things could set _nextSegment? []{time}????
-  Optimise/refactor etc segmented audio-param
-  Minimise amountof per frame updates everywhere; especially for presets
+   handle power 3 for []s
+   ? What other things could set _nextSegment? []{time}????
+  Optimise/refactor etc segmented audio-param code
+  Minimise amount of per frame updates everywhere; especially for presets
    Why do we ALWAYS get per frame update for []t, this.level etc even when forced to per event?
     Find a way to stop this and force as much as possible to be per event
-   When memoise per-event param, remove any segment info too?
+   When doing memoise per-event param in eval-params, remove any segment info there too?
   TEST TEST TEST
- ?Replace all amp envelopes with []e in presets and examples
-  ?Can do envelope=[]e ??
-  ?Deprecate envelope, att, dec, sus, rel etc params
-   ??Also deprecate other att/rel params; eg in pitchedperc etc???
- Pitch effects to work this way too???
- Docs
-  Time modifiers cancel segmenting, also smooth, slider etc
-Nice to have a unison param with stereo spread
+  ?Replace all amp envelopes with []e in presets and examples
+   ?Can do envelope=[]e ??
+   ?Deprecate att, dec, sus, rel etc params and prefer envelope=[]e??
+    ??Also deprecate other att/rel params; eg in pitchedperc etc???
+  Pitch effects to work this way too???
+  Docs
+   Time modifiers cancel segmenting, also smooth, slider etc
+Would be nice to have a unison param with stereo spread for many base synths?
 ?Treat db as units??? - compressor params in db; what else?
 Delay or offset sub Param for glide
 Should be a mix subparam on echo!

@@ -7,7 +7,7 @@ define(function(require) {
   let objectMap = (obj, fn) => {
     if (obj.hasOwnProperty('value')) { // 'value' field implies this is an object with subparams instead of a normal object
       if (obj.__evaluated === undefined) {
-        obj.__evaluated = Object.assign({}, obj) // Must still make a copy of tyhe object to avoid memoisation problems
+        obj.__evaluated = Object.assign({}, obj) // Must still make a copy of the object to avoid memoisation problems
       }
       obj.__evaluated.value = fn(obj.value)
       return obj.__evaluated
@@ -52,6 +52,10 @@ define(function(require) {
           if (k === '_units') { // should do clever stuff if there are units, but just pick one for now
             if (el[k] !== er[k]) { consoleOut(`🔴 Error: Mismatched units in operator '${el[k]}' '${er[k]}'. Conversion is not implemented yet.`) }
             result[k] = el[k]
+          } else if (k === '_nextSegment') {
+            result[k] = Math.min(el[k], er[k]||Infinity)
+          } else if (k === '_segmentPower') {
+            result[k] = Math.max(el[k], er[k]||0)
           } else {
             let erv = er[k]
             if (erv === undefined) {
@@ -170,6 +174,15 @@ define(function(require) {
 
   assert([1,3,2,4], evalParam(operator(cat, [1,2], [3,4]),ev(0),0))
   assert([1,2], evalParam(operator(cat, 1, 2),ev(0),0))
+
+  let segment = (v, n, p) => { return {value:v, _nextSegment:n, _segmentPower:p} }
+  assert(segment(10,6,7), evalParam(operator(mul, 2, segment(5,6,7)),ev(0),0))
+  assert(segment(4,3,4), evalParam(operator(mul, segment(2,3,4), 2),ev(0),0))
+  assert([segment(5,6,7),segment(10,6,7)], evalParam(operator(mul, [1,2], segment(5,6,7)),ev(0),0))
+  assert([segment(2,3,4),segment(4,3,4)], evalParam(operator(mul, segment(2,3,4), [1,2]),ev(0),0))
+  assert(segment(10,6,7), evalParam(operator(mul, {value:2}, segment(5,6,7)),ev(0),0))
+  assert(segment(4,3,4), evalParam(operator(mul, segment(2,3,4), {value:2}),ev(0),0))
+  assert(segment(10,3,7), evalParam(operator(mul, segment(2,3,4), segment(5,6,7)),ev(0),0))
 
   console.log('eval operator tests complete')
   }

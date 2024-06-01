@@ -30,6 +30,7 @@ define(function (require) {
     let moddedV = mod === undefined ? v : mod(v)
     try {
       audioParam[type](moddedV, ...args)
+      // console.log(`Segment: ${type} ${moddedV} ${args}`)
     } catch (e) {
       console.log(`!!! Bad audioParam segment ${type} ${moddedV} ${args}`)
     }
