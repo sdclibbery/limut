@@ -39,7 +39,7 @@ define(function (require) {
   let segmentedAudioParam = (audioParam, params, p, subP, def, requiredUnits, mod) => { // !! ASSUME mod IS LINEAR
     let param = getParamValue(evalParamPerFrame(params, p, params.count, undefined), subP)
     if (param._nextSegment === undefined) { return false } // No segment data; we cant build a segment timeline here
-console.log(`Segmented AudioParam for ${p}`)
+console.log(`Segmented AudioParam for ${params.player} ${p}`)
     let count = params.count
     let time = params._time
     let currentValue = getValue(param, def, requiredUnits)

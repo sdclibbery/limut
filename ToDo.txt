@@ -1,7 +1,6 @@
 ====
 ==== audio ====
 Should not do 60fps audio param update if it can be avoided; the quality is not good enough for fast changes
-  setSegment: What if the value already has segment data?? Need to handle this for nested use; eg [[]e]e etc
   ! [1:1/2,0:0,1:1/2,0:0]e doesn't work properly; it nearly all gets set to 1
   ! s saw, dur=1/2, lpf=1000hz*[1:!200ms,0]e Gives mismatched units operator error
   ? Some things cancel segmentation: smooth{} etc, []r@f; what else? slider{}! also time modifiers! eg [0:1]e1{per:1/4}
@@ -10,20 +9,20 @@ Should not do 60fps audio param update if it can be avoided; the quality is not 
   Set _nextSegment etc from []tlsn too
    Need to handle repeat and non-repeat correctly
    handle power 3 for []s
-   ? What other things could set _nextSegment? []{time}????
+   ? What other things could set _nextSegment? []{time}???? Nope.
   Optimise/refactor etc segmented audio-param code
   Minimise amount of per frame updates everywhere; especially for presets
    Why do we ALWAYS get per frame update for []t, this.level etc even when forced to per event?
     Find a way to stop this and force as much as possible to be per event
    When doing memoise per-event param in eval-params, remove any segment info there too?
   TEST TEST TEST
-  ?Replace all amp envelopes with []e in presets and examples
-   ?Can do envelope=[]e ??
-   ?Deprecate att, dec, sus, rel etc params and prefer envelope=[]e??
-    ??Also deprecate other att/rel params; eg in pitchedperc etc???
-  Pitch effects to work this way too???
   Docs
    Time modifiers cancel segmenting, also smooth, slider etc
+Pitch effects to use segments too???
+?Replace all amp envelopes with []e in presets and examples
+  ?Can do envelope=[]e ??
+  ?Deprecate att, dec, sus, rel etc params and prefer envelope=[]e??
+  ??Also deprecate other att/rel params; eg in pitchedperc etc???
 Would be nice to have a unison param with stereo spread for many base synths?
 ?Treat db as units??? - compressor params in db; what else?
 Delay or offset sub Param for glide

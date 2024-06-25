@@ -43,18 +43,19 @@ define(function(require) {
     return { piece: 0, next: ess[0] }
   }
 
-  let setSegmentData = (v, is, idx, next) => {
-    v._nextSegment = next
-    let p = is[idx % is.length].segmentPower
-    v._segmentPower = p!==undefined ? p : 1 // Default to power 1 for linear if not specified
-  }
-
   let setSegment = (v, segmentWrapper, is, idx, next) => {
+    let p = is[idx % is.length].segmentPower
+    let power = p!==undefined ? p : 1 // Default to power 1 for linear if not specified
+    next = Math.min(next, v._nextSegment||Infinity)
+    power = Math.max(power, v._segmentPower||0)
     if (typeof v === 'object') {
-      setSegmentData(v, is, idx, next)
+      v = Object.assign({}, v) // Cannot use v or segmentWrapper here because we'd be leaving _nextSegment etc set on them which would fail next frame
+      v._nextSegment = next
+      v._segmentPower = power
     } else {
       segmentWrapper.value = v
-      setSegmentData(segmentWrapper, is, idx, next)
+      segmentWrapper._nextSegment = next
+      segmentWrapper._segmentPower = power
       v = segmentWrapper
     }
     return v
@@ -297,6 +298,12 @@ define(function(require) {
     pw = piecewise([1,2], [lin,sqr], [1,2], getb, {addSegmentData:true})
     assert({value:1,_nextSegment:1,_segmentPower:1}, evalParamFrame(pw,ev(0,0,2),0))
     assert({value:2,_nextSegment:3,_segmentPower:2}, evalParamFrame(pw,ev(0,0,2),1))
+
+    pw = piecewise([{value:1,_nextSegment:2,_segmentPower:0},2], [lin,step], [1,2], getb, {addSegmentData:true})
+    assert({value:1,_nextSegment:1,_segmentPower:1}, evalParamFrame(pw,ev(0,0,2),0))
+
+    pw = piecewise([{value:1,_nextSegment:1/2,_segmentPower:3},2], [step,step], [1,2], getb, {addSegmentData:true})
+    assert({value:1,_nextSegment:1/2,_segmentPower:3}, evalParamFrame(pw,ev(0,0,2),0))
 
     console.log('Piecewise tests complete')
   }
