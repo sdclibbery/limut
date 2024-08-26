@@ -102,8 +102,8 @@ define(function(require) {
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
   
     let assert = (expected, actual, msg) => {
-      let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
-      let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
+      let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.000001).toFixed(4) : v)
+      let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.000001).toFixed(4) : v)
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`+(msg?'\n'+msg:'')) }
     }
     let assertThrows = async (expected, code) => {

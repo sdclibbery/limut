@@ -54,17 +54,21 @@ console.log(`Segmented AudioParam for ${params.player} ${p}`)
       // Setup segment
       if (segmentPower === 0) {
         addSegment(audioParam, 'setValueAtTime', nextValue, mod, time)
-      } else if (segmentPower === 2 && currentValue !== nextValue) {
-        let imCount = (count + nextSegment) / 2
-        let imValue = getValue(getParamValue(evalParamPerFrame(params, p, imCount, undefined), subP), def, requiredUnits)
-        let imTime = (time + nextTime) / 2
-        // Vt = V1 + (V0 - V1) * e ^ -((t-T0) / tc)    From Web Audio API spec for setTargetAtTime
-        // tc = -(t - T0) / ln((Vt - V1) / (V0 - V1))   Rearrranged
-        let tc = -(imTime - time) / Math.log((imValue - nextValue) / (currentValue - nextValue))
-        addSegment(audioParam, 'setTargetAtTime', nextValue, mod, time, tc)
-      } else { // Use linear for everything else
-        addSegment(audioParam, 'setValueAtTime', currentValue, mod, time) // Set value at start so linear ramp is from correct start
-        addSegment(audioParam, 'linearRampToValueAtTime', nextValue, mod, nextTime)
+      } else {
+        let endParam = getParamValue(evalParamPerFrame(params, p, nextSegment - 1e-4, undefined), subP)
+        let endValue = getValue(endParam, def, requiredUnits) // Calculate value inside end of segment to avoid problems with zero length segments
+        if (segmentPower === 2 && currentValue !== endValue) {
+          let imCount = (count + nextSegment) / 2
+          let imValue = getValue(getParamValue(evalParamPerFrame(params, p, imCount, undefined), subP), def, requiredUnits)
+          let imTime = (time + nextTime) / 2
+          // Vt = V1 + (V0 - V1) * e ^ -((t-T0) / tc)    From Web Audio API spec for setTargetAtTime
+          // tc = -(t - T0) / ln((Vt - V1) / (V0 - V1))   Rearrranged
+          let tc = -(imTime - time) / Math.log((imValue - endValue) / (currentValue - endValue))
+          addSegment(audioParam, 'setTargetAtTime', endValue, mod, time, tc)
+        } else { // Use linear for everything else
+          addSegment(audioParam, 'setValueAtTime', currentValue, mod, time) // Set value at start so linear ramp is from correct start
+          addSegment(audioParam, 'linearRampToValueAtTime', endValue, mod, nextTime)
+        }
       }
       // Move on to next segment
       currentValue = nextValue
@@ -150,6 +154,15 @@ console.log(`Segmented AudioParam for ${params.player} ${p}`)
     assert(['linearRampToValueAtTime', 16,4], ap.calls[2])
     assert(['setTargetAtTime', 8,4,0.5], ap.calls[3])
     assert(['setValueAtTime', 8,8], ap.calls[4])
+
+    ap = mockAp()
+    assert(true, segmentedAudioParam(ap, ps( eventTimeVar([1,0,1,0], [lin,lin,lin,step], [1/2,0,1/2,0]) ), 'foo', 'sub', 99, 'hz', doubleIt))
+    assert(5, ap.calls.length)
+    assert(['setValueAtTime', 2,0], ap.calls[0])
+    assert(['setValueAtTime', 2,2], ap.calls[1])
+    assert(['linearRampToValueAtTime', 0,3], ap.calls[2])
+    assert(['setValueAtTime', 2,3], ap.calls[3])
+    assert(['linearRampToValueAtTime', 0,4], ap.calls[4])
 
     console.log('Segmented audioParam tests complete')
   }
