@@ -50,7 +50,7 @@ define(function(require) {
         let result = {}
         for (let k in el) {
           if (k === '_units') { // should do clever stuff if there are units, but just pick one for now
-            if (el[k] !== er[k]) { consoleOut(`🔴 Error: Mismatched units in operator '${el[k]}' '${er[k]}'. Conversion is not implemented yet.`) }
+            if (el[k] && er[k] && el[k] !== er[k]) { consoleOut(`🔴 Error: Mismatched units in operator '${el[k]}' '${er[k]}'. Conversion is not implemented yet.`) }
             result[k] = el[k]
           } else if (k === '_nextSegment') {
             result[k] = Math.min(el[k], er[k]||Infinity)
@@ -183,6 +183,12 @@ define(function(require) {
   assert(segment(10,6,7), evalParam(operator(mul, {value:2}, segment(5,6,7)),ev(0),0))
   assert(segment(4,3,4), evalParam(operator(mul, segment(2,3,4), {value:2}),ev(0),0))
   assert(segment(10,3,7), evalParam(operator(mul, segment(2,3,4), segment(5,6,7)),ev(0),0))
+
+  assert({value:3,_units:'hz'}, evalParam(operator(add, {value:1,_units:'hz'}, 2),ev(0),0))
+  assert({value:3,_units:'hz'}, evalParam(operator(add, 2, {value:1,_units:'hz'}),ev(0),0))
+  assert({value:3,_units:'hz'}, evalParam(operator(add, {value:1,_units:'hz'}, {value:2}),ev(0),0))
+  assert({value:3,_units:'hz'}, evalParam(operator(add, {value:1}, {value:2,_units:'hz'}),ev(0),0))
+  assert({value:3,_units:'hz'}, evalParam(operator(add, {value:1,_units:'hz'}, {value:2,_units:'hz'}),ev(0),0))
 
   console.log('eval operator tests complete')
   }

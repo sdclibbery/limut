@@ -1,7 +1,6 @@
 ====
 ==== audio ====
 Should not do 60fps audio param update if it can be avoided; the quality is not good enough for fast changes
-  ! s saw, dur=1/2, lpf=1000hz*[1:!200ms,0]e Gives mismatched units operator error
   ? Some things cancel segmentation: smooth{} etc, []r@f; what else? slider{}! also time modifiers! eg [0:1]e1{per:1/4}
    Need to find an efficient way of killing segmentation without having to make EVERY value into an {} just in case it needs to kill segs
   !!!! Must handle termination better: how to know when to stop? Have to work out from max(dur, sus)??? What ahout rel? Is all naff...
@@ -233,6 +232,7 @@ shadertoy synth multiple channels
 
 ====
 ==== other ====
+!! floor doesn't work with delay:  r readout 1234, delay=floor{[0:1]l3@f,to:1/4}
 More time modifiers
  offset
  rate
