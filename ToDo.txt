@@ -1,13 +1,14 @@
 ====
 ==== audio ====
 Should not do 60fps audio param update if it can be avoided; the quality is not good enough for fast changes
+  ? What about power operator? [1:/200ms,0]e^2 etcetc? Needs to force to power 2? Unless both sides are currently power 0?
   ? Some things cancel segmentation: smooth{} etc, []r@f; what else? slider{}! also time modifiers! eg [0:1]e1{per:1/4}
    Need to find an efficient way of killing segmentation without having to make EVERY value into an {} just in case it needs to kill segs
-  !!!! Must handle termination better: how to know when to stop? Have to work out from max(dur, sus)??? What ahout rel? Is all naff...
   Set _nextSegment etc from []tlsn too
    Need to handle repeat and non-repeat correctly
    handle power 3 for []s
    ? What other things could set _nextSegment? []{time}???? Nope.
+  ? How will segments work on a bus???
   Does :| operator work? Compared to :_ ?
   Optimise/refactor etc segmented audio-param code
   Minimise amount of per frame updates everywhere; especially for presets

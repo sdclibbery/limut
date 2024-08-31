@@ -47,7 +47,14 @@ console.log(`Segmented AudioParam for ${params.player} ${p}`)
     let segmentPower = param._segmentPower
     let nextSegment = params.count + param._nextSegment
     addSegment(audioParam, 'setValueAtTime', currentValue, mod, 0)
-    while (!!nextSegment && nextSegment !== count && count <= params.count + params.dur) { // !!!!!!!!!!SHOULDNT BE DUR!!!!!!!
+    let dur
+    if (params.endTime) { // Duration from envelope-set endTime
+      let timeDur = params.endTime - params._time
+      dur = timeDur / params.beat.duration
+    } else { // Duration from intended event duration
+      dur = params.dur || 1
+    }
+    while (!!nextSegment && nextSegment !== count && count <= params.count + dur) {
       param = getParamValue(evalParamPerFrame(params, p, nextSegment, undefined), subP)
       nextValue = getValue(param, def, requiredUnits)
       let nextTime = time + (nextSegment - count) * params.beat.duration
@@ -104,6 +111,7 @@ console.log(`Segmented AudioParam for ${params.player} ${p}`)
     }
     let pm = (exp) => { return { foo:{value:exp,q:10}, count:1, dur:4, _time:2, beat:{duration:2} } }
     let ps = (exp) => { return { foo:{value:10,sub:exp}, count:1, dur:4, _time:2, beat:{duration:2} } }
+    let pe = (exp) => { return { foo:{value:10,sub:exp}, count:1, dur:4, _time:2, endTime:10, beat:{duration:2} } }
     let doubleIt = x => x*2
     let u2 = [undefined,undefined]
     let hz = (v) => { return {value:v,_units:'hz'} }
@@ -138,6 +146,22 @@ console.log(`Segmented AudioParam for ${params.player} ${p}`)
     assert(['setValueAtTime', 16,2], ap.calls[1])
     assert(['linearRampToValueAtTime', 18,4], ap.calls[2])
     assert(['setValueAtTime', 18,4], ap.calls[3])
+
+    ap = mockAp()
+    assert(true, segmentedAudioParam(ap, pe( eventTimeVar([hz(8),hz(9)], u2, u2, 1) ), 'foo', 'sub', 99, 'hz', doubleIt))
+    assert(4, ap.calls.length)
+    assert(['setValueAtTime', 16,0], ap.calls[0])
+    assert(['setValueAtTime', 16,2], ap.calls[1])
+    assert(['linearRampToValueAtTime', 18,4], ap.calls[2])
+    assert(['setValueAtTime', 18,4], ap.calls[3])
+
+    ap = mockAp()
+    assert(true, segmentedAudioParam(ap, pe( eventTimeVar([hz(8),hz(9)], u2, u2, 4) ), 'foo', 'sub', 99, 'hz', doubleIt))
+    assert(4, ap.calls.length)
+    assert(['setValueAtTime', 16,0], ap.calls[0])
+    assert(['setValueAtTime', 16,2], ap.calls[1])
+    assert(['linearRampToValueAtTime', 18,10], ap.calls[2])
+    assert(['setValueAtTime', 18,10], ap.calls[3])
 
     ap = mockAp()
     assert(true, segmentedAudioParam(ap, ps( eventTimeVar([hz(8),hz(4)], [exp,step], u2, 1) ), 'foo', 'sub', 99, 'hz', doubleIt))
