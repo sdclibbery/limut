@@ -8,7 +8,7 @@ define(function(require) {
   let linear = (i) => i
   linear.segmentPower = 1
 
-  let rangeTimeVar = (vs, ds) => {
+  let rangeTimeVar = (vs, ds, addSegmentData) => {
     let lo = vs[0] || 0
     let hi = vs[1] || lo+1
     let result = (e,b,evalRecurse) => {
@@ -20,16 +20,16 @@ define(function(require) {
       if (!Array.isArray(ds)) { ds = [ds] }
       let is = vs.map(() => step)
       let ss = vs.map((_,i) => ds[i % ds.length])
-      return piecewise(vs, is, ss, (e,b) => b, {})
+      return piecewise(vs, is, ss, (e,b) => b, {addSegmentData:addSegmentData})
     }
     return result
   }
 
-  let timeVar = (vs, is, ss, ds, defaultI) => {
+  let timeVar = (vs, is, ss, ds, defaultI, addSegmentData) => {
     if (!Array.isArray(ds)) { ds = [ds] }
     is = is.map(i => i || defaultI)
     ss = ss.map((s,idx) => s!==undefined ? s : ds[idx % ds.length])
-    return piecewise(vs, is, ss, (e,b) => b, {})
+    return piecewise(vs, is, ss, (e,b) => b, {addSegmentData:addSegmentData})
   }
 
   let eventTimeVar = (vs, is, ss, ds) => {
@@ -42,14 +42,16 @@ define(function(require) {
       is[is.length-1] = step // Last one is final value, not part of the event
       ss[ss.length-1] = 0
       let p = (e,b) => (b - e.count) / (e.endTime - e._time) // Normalise param
-      return piecewise(vs, is, ss, p, {clamp:true,normalise:true})
+      let m = (v,e,b) => v + e.count // Map back to absolute count
+      return piecewise(vs, is, ss, p, {clamp:true,normalise:true,nextSegmentMapper:m})
     } else { // Use durations provided
       if (!Array.isArray(ds)) { ds = [ds || 1] }
       is = is.map(i => i || linear)
       ss = ss.map((s,idx) => s!==undefined ? s : ds[idx % ds.length])
       is[is.length-1] = step // Last one is final value, not part of the event
-      let p = (e,b) => b - e.count
-      return piecewise(vs, is, ss, p, {clamp:true,addSegmentData:true})
+      let p = (e,b) => b - e.count // Paramn is event count
+      let m = (v,e,b) => v + e.count // Map back to absolute count
+      return piecewise(vs, is, ss, p, {clamp:true,addSegmentData:true,nextSegmentMapper:m})
     }
   }
 

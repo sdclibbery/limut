@@ -30,7 +30,7 @@ define(function (require) {
     let moddedV = mod === undefined ? v : mod(v)
     try {
       audioParam[type](moddedV, ...args)
-      // console.log(`Segment: ${type} ${moddedV} ${args}`)
+// console.log(`Segment: ${type} ${moddedV} ${args}`)
     } catch (e) {
       console.log(`!!! Bad audioParam segment ${type} ${moddedV} ${args}`)
     }
@@ -45,7 +45,7 @@ console.log(`Segmented AudioParam for ${params.player} ${p}`)
     let currentValue = getValue(param, def, requiredUnits)
     let nextValue = currentValue
     let segmentPower = param._segmentPower
-    let nextSegment = params.count + param._nextSegment
+    let nextSegment = param._nextSegment
     addSegment(audioParam, 'setValueAtTime', currentValue, mod, 0)
     let dur
     if (params.endTime) { // Duration from envelope-set endTime
@@ -55,6 +55,7 @@ console.log(`Segmented AudioParam for ${params.player} ${p}`)
       dur = params.dur || 1
     }
     while (!!nextSegment && nextSegment !== count && count <= params.count + dur) {
+// console.log(`Segment start ${count} end ${nextSegment} event start ${params.count} dur ${dur}`)
       param = getParamValue(evalParamPerFrame(params, p, nextSegment, undefined), subP)
       nextValue = getValue(param, def, requiredUnits)
       let nextTime = time + (nextSegment - count) * params.beat.duration
@@ -81,7 +82,7 @@ console.log(`Segmented AudioParam for ${params.player} ${p}`)
       currentValue = nextValue
       time = nextTime
       count = nextSegment
-      nextSegment = params.count + param._nextSegment
+      nextSegment = param._nextSegment
       segmentPower = param._segmentPower
     }
     return true

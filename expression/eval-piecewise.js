@@ -43,7 +43,7 @@ define(function(require) {
     return { piece: 0, next: ess[0] }
   }
 
-  let setSegment = (v, segmentWrapper, is, idx, next) => {
+  let setSegment = (v, segmentWrapper, is, idx, next, nextSegmentMapper,e,b) => {
     let p = is[idx % is.length].segmentPower
     let power = p!==undefined ? p : 1 // Default to power 1 for linear if not specified
     next = Math.min(next, v._nextSegment||Infinity)
@@ -57,6 +57,9 @@ define(function(require) {
       segmentWrapper._nextSegment = next
       segmentWrapper._segmentPower = power
       v = segmentWrapper
+    }
+    if (nextSegmentMapper) {
+      v._nextSegment = nextSegmentMapper(v._nextSegment, e,b)
     }
     return v
   }
@@ -87,10 +90,10 @@ define(function(require) {
           let func = v
           v = (e,b, evalRecurse) => {
             let ev = evalRecurse(func, e,b) // Have to eval before setting the segment data
-            return setSegment(ev, segmentWrapper, is, idx, next)
+            return setSegment(ev, segmentWrapper, is, idx, next, options.nextSegmentMapper,e,b)
           }
         } else {
-          v = setSegment(v, segmentWrapper, is, idx, next)
+          v = setSegment(v, segmentWrapper, is, idx, next, options.nextSegmentMapper,e,b)
         }
       }
       return v
@@ -266,6 +269,12 @@ define(function(require) {
     assert({value:1,_nextSegment:4,_segmentPower:0}, evalParamFrame(pw,ev(3,3,2),3))
     assert({value:2,_nextSegment:6,_segmentPower:0}, evalParamFrame(pw,ev(3,3,2),4))
 
+    pw = piecewise([1,2], [step,step], [1,2], getb, {addSegmentData:true,nextSegmentMapper: x=>x*10})
+    assert({value:1,_nextSegment:10,_segmentPower:0}, evalParamFrame(pw,ev(0,0,2),0))
+    assert({value:2,_nextSegment:30,_segmentPower:0}, evalParamFrame(pw,ev(0,0,2),1))
+    assert({value:1,_nextSegment:40,_segmentPower:0}, evalParamFrame(pw,ev(3,3,2),3))
+    assert({value:2,_nextSegment:60,_segmentPower:0}, evalParamFrame(pw,ev(3,3,2),4))
+
     pw = piecewise([1,2], [step,step], [1,2], getb, {addSegmentData:true,clamp:true})
     assert({value:1,_nextSegment:1,_segmentPower:0}, evalParamFrame(pw,ev(0,0,2),0))
     assert({value:2,_nextSegment:3,_segmentPower:0}, evalParamFrame(pw,ev(0,0,2),1))
@@ -304,6 +313,28 @@ define(function(require) {
 
     pw = piecewise([{value:1,_nextSegment:1/2,_segmentPower:3},2], [step,step], [1,2], getb, {addSegmentData:true})
     assert({value:1,_nextSegment:1/2,_segmentPower:3}, evalParamFrame(pw,ev(0,0,2),0))
+
+    pw = piecewise([1,2], [step,step], [1,2], getb, {addSegmentData:true})
+    assert({value:1,_nextSegment:4,_segmentPower:0}, evalParamFrame(pw,ev(0,3,10),3))
+    assert({value:2,_nextSegment:6,_segmentPower:0}, evalParamFrame(pw,ev(0,3,10),4))
+    assert({value:2,_nextSegment:6,_segmentPower:0}, evalParamFrame(pw,ev(0,3,10),5))
+    assert({value:1,_nextSegment:7,_segmentPower:0}, evalParamFrame(pw,ev(0,3,10),6))
+
+    pw = piecewise([1,2], [step,step], [1,2], getb, {addSegmentData:true})
+    assert({value:2,_nextSegment:6,_segmentPower:0}, evalParamFrame(pw,ev(0,4,10),4))
+
+    pw = piecewise([1,2], [step,step], [1,2], getb, {addSegmentData:true, clamp:true})
+    assert({value:1,_nextSegment:1,_segmentPower:0}, evalParamFrame(pw,ev(0,0,10),0))
+    assert({value:2,_nextSegment:3,_segmentPower:0}, evalParamFrame(pw,ev(0,0,10),1))
+    assert({value:2,_nextSegment:3,_segmentPower:0}, evalParamFrame(pw,ev(0,0,10),2))
+    assert(2, evalParamFrame(pw,ev(0,0,10),3))
+
+    let getec = (e,b) => b - e.count
+    pw = piecewise([1,2], [step,step], [1,2], getec, {addSegmentData:true, clamp:true})
+    assert({value:1,_nextSegment:1,_segmentPower:0}, evalParamFrame(pw,ev(0,3,10),3))
+    assert({value:2,_nextSegment:3,_segmentPower:0}, evalParamFrame(pw,ev(0,3,10),4))
+    assert({value:2,_nextSegment:3,_segmentPower:0}, evalParamFrame(pw,ev(0,3,10),5))
+    assert(2, evalParamFrame(pw,ev(0,3,10),6))
 
     console.log('Piecewise tests complete')
   }

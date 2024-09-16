@@ -180,6 +180,7 @@ define(function(require) {
   let {evalParamFrame} = require('player/eval-param')
   let ev = (i,c,d) => {return{idx:i, count:c, dur:d, _time:c, endTime:c+d, countToTime:x=>x}}
   let e, v
+  let val = v => v.value
 
   assert(undefined, parseExpression())
   assert(undefined, parseExpression(''))
@@ -228,23 +229,23 @@ define(function(require) {
   assert(6, parseExpression('1+2+3'))
 
   p = parseExpression('[1,2]T1@f')
-  assert(1, evalParamFrame(p,ev(0),0))
-  assert(1, evalParamFrame(p,ev(0),1/2))
-  assert(2, evalParamFrame(p,ev(0),1))
-  assert(2, evalParamFrame(p,ev(0),3/2))
-  assert(1, evalParamFrame(p,ev(0),2))
+  assert(1, val(evalParamFrame(p,ev(0),0)))
+  assert(1, val(evalParamFrame(p,ev(0),1/2)))
+  assert(2, val(evalParamFrame(p,ev(0),1)))
+  assert(2, val(evalParamFrame(p,ev(0),3/2)))
+  assert(1, val(evalParamFrame(p,ev(0),2)))
 
   p = parseExpression('[1,2]T@f')
-  assert(1, evalParamFrame(p,ev(0),0))
-  assert(1, evalParamFrame(p,ev(0),3.9))
-  assert(2, evalParamFrame(p,ev(0),4))
+  assert(1, val(evalParamFrame(p,ev(0),0)))
+  assert(1, val(evalParamFrame(p,ev(0),3.9)))
+  assert(2, val(evalParamFrame(p,ev(0),4)))
 
   p = parseExpression('[1,2,3]t[1,2]@f')
-  assert(1, evalParamFrame(p,ev(0),0))
-  assert(2, evalParamFrame(p,ev(0),1))
-  assert(2, evalParamFrame(p,ev(0),2))
-  assert(3, evalParamFrame(p,ev(0),3))
-  assert(1, evalParamFrame(p,ev(0),4))
+  assert(1, val(evalParamFrame(p,ev(0),0)))
+  assert(2, val(evalParamFrame(p,ev(0),1)))
+  assert(2, val(evalParamFrame(p,ev(0),2)))
+  assert(3, val(evalParamFrame(p,ev(0),3)))
+  assert(1, val(evalParamFrame(p,ev(0),4)))
 
   p = parseExpression('[0:2]t1')
   assert(0, evalParamFrame(p,ev(0,0),0))

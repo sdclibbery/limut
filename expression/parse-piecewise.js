@@ -126,14 +126,15 @@ define(function(require) {
       state.idx += 1
       let ds = numberOrArrayOrFour(state)
       let modifiers = parseMap(state)
+      let interval = parseInterval(state) || hoistInterval('event', vs)
+      let addSegmentData = interval === 'frame'
       is = is.map(i => iOperators[i])
       if (ranged) {
-        result = rangeTimeVar(vs, ds)
+        result = rangeTimeVar(vs, ds, addSegmentData)
       } else {
-        result = timeVar(vs, is, ss, ds, iOperators['_'])
+        result = timeVar(vs, is, ss, ds, iOperators['_'], addSegmentData)
       }
       result = addModifiers(result, modifiers)
-      let interval = parseInterval(state) || hoistInterval('event', vs)
       setInterval(result, interval)
     } else if (state.str.charAt(state.idx).toLowerCase() == 'l') { // linearly interpolated timevar
       state.idx += 1

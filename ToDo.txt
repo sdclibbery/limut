@@ -1,21 +1,31 @@
 ====
 ==== audio ====
 Should not do 60fps audio param update if it can be avoided; the quality is not good enough for fast changes
-  ? What about power operator? [1:/200ms,0]e^2 etcetc? Needs to force to power 2? Unless both sides are currently power 0?
-  ? Some things cancel segmentation: smooth{} etc, []r@f; what else? slider{}! also time modifiers! eg [0:1]e1{per:1/4}
-   Need to find an efficient way of killing segmentation without having to make EVERY value into an {} just in case it needs to kill segs
+ EXISTING PLANNING
   Set _nextSegment etc from []tlsn too
-   Need to handle repeat and non-repeat correctly
-   handle power 3 for []s
-   ? What other things could set _nextSegment? []{time}???? Nope.
+   []t
+    @f only
+    Need to handle repeat and non-repeat correctly
+   []l@f
+   []s@f
+    handle power 3 for []s
+   []n
+  !!!s saw, oct=2, lpf=[300,100]e  does not get segmented?? It needs to explicitly specify times to get segmented
+  ? When evalling per event only, remove segment data?
+  Does :| operator work with segments??? Compared to :_ ?
   ? How will segments work on a bus???
-  Does :| operator work? Compared to :_ ?
+  ? What about power operator? [1:/200ms,0]e^2 etcetc? Needs to force to >= power 2? Unless both sides are currently power 0?
+  ? Things that might break when combined with segmentation: smooth{} etc, []r@f; slider{}! also time modifiers! eg [0:1]e1{per:1/4}
   Optimise/refactor etc segmented audio-param code
   Minimise amount of per frame updates everywhere; especially for presets
    Why do we ALWAYS get per frame update for []t, this.level etc even when forced to per event?
     Find a way to stop this and force as much as possible to be per event
    When doing memoise per-event param in eval-params, remove any segment info there too?
   TEST TEST TEST
+   time modifiers
+   var/player lookups
+   functions
+   all visuals
   Docs
    Time modifiers cancel segmenting, also smooth, slider etc
 Pitch effects to use segments too???
@@ -23,6 +33,7 @@ Pitch effects to use segments too???
   ?Can do envelope=[]e ??
   ?Deprecate att, dec, sus, rel etc params and prefer envelope=[]e??
   ??Also deprecate other att/rel params; eg in pitchedperc etc???
+Hpf for chorus
 Would be nice to have a unison param with stereo spread for many base synths?
 ?Treat db as units??? - compressor params in db; what else?
 Delay or offset sub Param for glide
@@ -163,6 +174,7 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 
 ====
 ==== visual ====
+?Chromatic aberration hack  col.rgb += dFdx(col.rgb)*vec3(3,0,-3);
 !Buffer freezes on code update
 ?Proper detailed gradients, not just fore/mid/back
  ?Based on user defined functions populating a lookup texture? or piecewise translating into gradient segments?
