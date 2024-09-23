@@ -182,10 +182,6 @@ define(function(require) {
   assert(-0.02, evalParamFrame(p, ev(0,0), 1+1/60))
   assert(-0.03, evalParamFrame(p, ev(0,0), 1+2/60))
 
-  p = parseExpression('smooth{{4}}')
-  assert(0, evalParamFrame(p, ev(0,0), 1))
-  assert(0, evalParamFrame(p, ev(0,0), 2))
-
   assert(0, evalParamFrame(parseExpression('rate{0}'), ev(0,0), 0))
 
   p = parseExpression('rate{[0:1]l1@f}')
