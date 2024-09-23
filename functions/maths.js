@@ -3,9 +3,11 @@ define(function(require) {
   let addVarFunction = require('predefined-vars').addVarFunction
   let {mainParam,subParam} = require('player/sub-param')
 
+  let argParam = v => mainParam(mainParam(v)) // One for getting the value from args, other for getting the value from the param
+
   let roundWrapper = (fn) => {
     return (args) => {
-      let v = mainParam(args, 0)
+      let v = argParam(args, 0)
       if (typeof v !== 'number') { v = 0 }
       let to = subParam(args, 'to', 1)
       return fn(v/to)*to
@@ -16,7 +18,7 @@ define(function(require) {
   addVarFunction('round', roundWrapper(Math.round))
 
   addVarFunction('euclid', (args, e) => {
-    let k = Math.floor(mainParam(args, 1)) // Distribute k beats...
+    let k = Math.floor(argParam(args, 1)) // Distribute k beats...
     let n = Math.floor(subParam(args, 'from', 1)) // ...between n steps
     let offset = Math.floor(subParam(args, 'offset', 0)) // ...rotated by offset
     n = Math.max(n, 1) // Must have at least one step
@@ -59,7 +61,7 @@ define(function(require) {
       let state = getVoiceState(fullState, e,b)
       let dt = state.dt
       if (dt === 0) { return state.v || 0 }
-      let value = (mainParam(args, 0) || 0)
+      let value = (argParam(args, 0) || 0)
       if (typeof value !== 'number') { value = 0 }
       state.v = fn(args, (state.v || 0), value, dt)
       return state.v
@@ -81,7 +83,7 @@ define(function(require) {
     let state = getVoiceState(fullState, e,b)
     let dt = state.dt
     if (dt === 0) { return 0 }
-    let x = (mainParam(args, 0) || 0)
+    let x = (argParam(args, 0) || 0)
     let last = state.last===undefined ? x : state.last
     let rate = (x - last)/dt
     state.last = x

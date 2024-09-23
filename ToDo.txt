@@ -4,8 +4,12 @@ Should not do 60fps audio param update if it can be avoided; the quality is not 
  EXISTING PLANNING
   Set _nextSegment etc from []tlsn too
    []t
-    @f only
+    Tests
+     Math failing
+    !!! Stops working at count 64:  s saw, oct=2, lpf=1000*[1:!200ms,0.01]e + [300,100]t1/4@f
+    !!! [300,100]t1/5@f with dur=1 events doesn't work
     Need to handle repeat and non-repeat correctly
+     ? What does this mean?
    []l@f
    []s@f
     handle power 3 for []s

@@ -3906,3 +3906,34 @@ b basspluck 07. crop 8, amp/=2
 a ambi (0246), oct=(3,4), amp*=[0:32,0.75:0]l@f^3, reverb, room, chorus
 e external, mono, amp*=-1db, lpf={[880*4,20]e,q:12}, echo=3/4, pan=[-1:1]l1@f/2, high=+4db // guitar
 
+
+// ambient guitar thing that turned into weird drumnbass
+set bpm=138
+set scale='minor'
+// pk perc X.-., amp*=-4db
+// pkk perc x.. crop 16, swing=56, amp*=+0db, pan=[-1,1]
+// pb perc ....*..., amp/=3
+// ph perc --=-, amp/=4
+// set p* delay|=[():14,[1,3]r/4:2]t
+// set (p*,bsub) delay=[0:1,[0,(1,3)/4]r:3]t, amp*=[0,1]r
+// bsub sine .000, drive=1/32, envelope='percussion', amp*=16, oct=1, sus=1, swing=52
+// bc cybass .0_ crop 8, amp*=-4db, hpf=300
+// s sweep (07), phaser=14b, addc=this.voice*wow*(1+time%2), amp*=0.9, glide=1, dur=1
+// s softpad (079), amp*=0.6, glide=3/4b, oct-=1
+// set !p* add+=[0:12,2:2,4:2]t
+// e external, mono, amp*=+0db//, flanger=8b
+
+
+// Heavy backing track
+preset heavybass dbass, dur=1/2, amp*=3.3, lpf={[12000:!200ms,500]e,poles:4}, att=0, addc=[1:!100ms,0]e, amp*=[1:14,[0,2]:2]t
+preset heavystrum synlead, dur=1/2, lpf=[10000:!500ms,0]e, amp*=0.9, oct=(2,3), drive={1/4,gain:8}, att=0, pan=1/2, room={1/2,hpf:300}
+set bpm=170
+pk perc X...x.<.X>., drive=1/16
+ps perc ....(Ol)..., pan=1/3, drive=1/16, delay|=[():3,{1/2,amp:1/2}:1]t, high=-6db
+ph perc --= crop 16, amp/=3, sample=3, pan=1/3, high=+2db
+set p* delay |=[():14,[2,3,4]r/4:2]t
+set ch=[(0,2,4,7),(-1,1,3,6),(-2,0,2,5),(-3,-1#,4,6#)]t4
+b heavybass, add=ch.0, pan=-1/2
+s heavystrum 0.. crop 14 + 02, add=ch.(1,2,3), pan=1/2
+e external, mono, drive={1,gain:8}, amp*=-14db, mid=+3db
+

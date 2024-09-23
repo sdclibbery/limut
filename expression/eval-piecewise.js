@@ -48,7 +48,7 @@ define(function(require) {
     let power = p!==undefined ? p : 1 // Default to power 1 for linear if not specified
     next = Math.min(next, v._nextSegment||Infinity)
     power = Math.max(power, v._segmentPower||0)
-    if (typeof v === 'object') {
+    if (typeof v === 'object' && !Array.isArray(v)) {
       v = Object.assign({}, v) // Cannot use v or segmentWrapper here because we'd be leaving _nextSegment etc set on them which would fail next frame
       v._nextSegment = next
       v._segmentPower = power
@@ -335,6 +335,10 @@ define(function(require) {
     assert({value:2,_nextSegment:3,_segmentPower:0}, evalParamFrame(pw,ev(0,3,10),4))
     assert({value:2,_nextSegment:3,_segmentPower:0}, evalParamFrame(pw,ev(0,3,10),5))
     assert(2, evalParamFrame(pw,ev(0,3,10),6))
+
+    pw = piecewise([[1,2],3], [step,step], [1,2], getb, {addSegmentData:true})
+    assert([{value:1,_nextSegment:1,_segmentPower:0},{value:2,_nextSegment:1,_segmentPower:0}], evalParamFrame(pw,ev(0,0,1),0))
+    assert({value:3,_nextSegment:3,_segmentPower:0}, evalParamFrame(pw,ev(1,1,1),1))
 
     console.log('Piecewise tests complete')
   }

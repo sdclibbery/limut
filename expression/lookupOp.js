@@ -15,6 +15,7 @@ define(function(require) {
     let mr = mainParam(r)
     let func
     if (typeof r === 'function' && r.isDeferredVarFunc) { func = r }
+    if (typeof mr === 'function' && mr.isDeferredVarFunc) { func = mr }
     if (func) {
       func.args = l
       let v = evalFunctionWithModifiers(func,event,b, evalRecurse)
