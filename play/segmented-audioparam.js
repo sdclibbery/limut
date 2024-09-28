@@ -55,7 +55,8 @@ console.log(`Segmented AudioParam for ${params.player} ${p}`)
       dur = params.dur || 1
     }
     while (!!nextSegment && nextSegment !== count && count <= params.count + dur) {
-      param = getParamValue(evalParamPerFrame(params, p, nextSegment+1e-6, undefined), subP)
+      let epsilon = 1e-4 // Apply an epsilon to make sure we get the _next_ segment not the current one
+      param = getParamValue(evalParamPerFrame(params, p, nextSegment + epsilon, undefined), subP)
       nextValue = getValue(param, def, requiredUnits)
       let nextTime = time + (nextSegment - count) * params.beat.duration
 // console.log(`count ${count} nextSegment ${nextSegment} / params.count ${params.count} dur ${dur} / time ${time} nextTime ${nextTime} / param ${JSON.stringify(param)}`)
@@ -63,7 +64,8 @@ console.log(`Segmented AudioParam for ${params.player} ${p}`)
       if (segmentPower === 0) {
         addSegment(audioParam, 'setValueAtTime', nextValue, mod, time)
       } else {
-        let endParam = getParamValue(evalParamPerFrame(params, p, nextSegment - 1e-4, undefined), subP)
+        let epsilon = 1e-4 // Apply an epsilon to detect and handle zero length segments
+        let endParam = getParamValue(evalParamPerFrame(params, p, nextSegment - epsilon, undefined), subP)
         let endValue = getValue(endParam, def, requiredUnits) // Calculate value inside end of segment to avoid problems with zero length segments
         if (segmentPower === 2 && currentValue !== endValue) {
           let imCount = (count + nextSegment) / 2
