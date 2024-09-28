@@ -4,7 +4,7 @@ Should not do 60fps audio param update if it can be avoided; the quality is not 
  EXISTING PLANNING
   Set _nextSegment etc from []tlsn too
    []t
-    !!! [300,100]t1/5@f with dur=1 events doesn't work
+    epsilon for imValue?
     Need to handle repeat and non-repeat correctly
      ? What does this mean?
    []l@f

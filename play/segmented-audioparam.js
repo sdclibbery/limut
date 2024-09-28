@@ -37,7 +37,8 @@ define(function (require) {
   }
 
   let segmentedAudioParam = (audioParam, params, p, subP, def, requiredUnits, mod) => { // !! ASSUME mod IS LINEAR
-    let param = getParamValue(evalParamPerFrame(params, p, params.count, undefined), subP)
+    let epsilon = 1e-5 // Apply an epsilon to ???
+    let param = getParamValue(evalParamPerFrame(params, p, params.count + epsilon, undefined), subP)
     if (param._nextSegment === undefined) { return false } // No segment data; we cant build a segment timeline here
 console.log(`Segmented AudioParam for ${params.player} ${p}`)
     let count = params.count
@@ -55,16 +56,17 @@ console.log(`Segmented AudioParam for ${params.player} ${p}`)
       dur = params.dur || 1
     }
     while (!!nextSegment && nextSegment !== count && count <= params.count + dur) {
-      let epsilon = 1e-4 // Apply an epsilon to make sure we get the _next_ segment not the current one
+      let epsilon = 1e-5 // Apply an epsilon to make sure we get the _next_ segment not the current one
       param = getParamValue(evalParamPerFrame(params, p, nextSegment + epsilon, undefined), subP)
       nextValue = getValue(param, def, requiredUnits)
       let nextTime = time + (nextSegment - count) * params.beat.duration
 // console.log(`count ${count} nextSegment ${nextSegment} / params.count ${params.count} dur ${dur} / time ${time} nextTime ${nextTime} / param ${JSON.stringify(param)}`)
+// console.log(`segment time delta ${(nextTime - time + 0.0001).toFixed(3)}`)
       // Setup segment
       if (segmentPower === 0) {
         addSegment(audioParam, 'setValueAtTime', nextValue, mod, time)
       } else {
-        let epsilon = 1e-4 // Apply an epsilon to detect and handle zero length segments
+        let epsilon = 1e-5 // Apply an epsilon to detect and handle zero length segments
         let endParam = getParamValue(evalParamPerFrame(params, p, nextSegment - epsilon, undefined), subP)
         let endValue = getValue(endParam, def, requiredUnits) // Calculate value inside end of segment to avoid problems with zero length segments
         if (segmentPower === 2 && currentValue !== endValue) {
@@ -209,6 +211,15 @@ console.log(`Segmented AudioParam for ${params.player} ${p}`)
     assert(['linearRampToValueAtTime', 16,264], ap.calls[2])
     assert(['setValueAtTime', 16,264], ap.calls[3])
     assert(['linearRampToValueAtTime', 18,266], ap.calls[4])
+
+    ap = mockAp()
+    assert(true, segmentedAudioParam(ap, pmc(1, 1, timeVar([hz(8),hz(9)], u2, u2, 0.7, lin, true) ), 'foo', undefined, 99, 'hz', doubleIt))
+    assert(5, ap.calls.length)
+    assert(['setValueAtTime', 17.14,0], ap.calls[0])
+    assert(['setValueAtTime', 17.14,2], ap.calls[1])
+    assert(['linearRampToValueAtTime', 16,2.8], ap.calls[2])
+    assert(['setValueAtTime', 16,2.8], ap.calls[3])
+    assert(['linearRampToValueAtTime', 18,4.2], ap.calls[4])
 
     console.log('Segmented audioParam tests complete')
   }
