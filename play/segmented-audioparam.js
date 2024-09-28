@@ -96,7 +96,7 @@ console.log(`Segmented AudioParam for ${params.player} ${p}`)
       let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
     }
-    let {eventTimeVar} = require('expression/eval-timevars')
+    let {eventTimeVar,timeVar} = require('expression/eval-timevars')
 
     let mockAp = () => {
       let calls = []
@@ -113,6 +113,7 @@ console.log(`Segmented AudioParam for ${params.player} ${p}`)
     let pm = (exp) => { return { foo:{value:exp,q:10}, count:1, dur:4, _time:2, beat:{duration:2} } }
     let ps = (exp) => { return { foo:{value:10,sub:exp}, count:1, dur:4, _time:2, beat:{duration:2} } }
     let pe = (exp) => { return { foo:{value:10,sub:exp}, count:1, dur:4, _time:2, endTime:10, beat:{duration:2} } }
+    let pmc = (count, dur, exp) => { return { foo:{value:exp,q:10}, count:count, dur:dur, _time:count*2, beat:{duration:2} } }
     let doubleIt = x => x*2
     let u2 = [undefined,undefined]
     let hz = (v) => { return {value:v,_units:'hz'} }
@@ -188,6 +189,24 @@ console.log(`Segmented AudioParam for ${params.player} ${p}`)
     assert(['linearRampToValueAtTime', 0,3], ap.calls[2])
     assert(['setValueAtTime', 2,3], ap.calls[3])
     assert(['linearRampToValueAtTime', 0,4], ap.calls[4])
+
+    ap = mockAp()
+    assert(true, segmentedAudioParam(ap, pmc(1, 1, timeVar([hz(8),hz(9)], u2, u2, 1, lin, true) ), 'foo', undefined, 99, 'hz', doubleIt))
+    assert(5, ap.calls.length)
+    assert(['setValueAtTime', 18,0], ap.calls[0])
+    assert(['setValueAtTime', 18,2], ap.calls[1])
+    assert(['linearRampToValueAtTime', 16,4], ap.calls[2])
+    assert(['setValueAtTime', 16,4], ap.calls[3])
+    assert(['linearRampToValueAtTime', 18,6], ap.calls[4])
+
+    ap = mockAp()
+    assert(true, segmentedAudioParam(ap, pmc(131, 1, timeVar([hz(8),hz(9)], u2, u2, 1, lin, true) ), 'foo', undefined, 99, 'hz', doubleIt))
+    assert(5, ap.calls.length)
+    assert(['setValueAtTime', 18,0], ap.calls[0])
+    assert(['setValueAtTime', 18,262], ap.calls[1])
+    assert(['linearRampToValueAtTime', 16,264], ap.calls[2])
+    assert(['setValueAtTime', 16,264], ap.calls[3])
+    assert(['linearRampToValueAtTime', 18,266], ap.calls[4])
 
     console.log('Segmented audioParam tests complete')
   }
