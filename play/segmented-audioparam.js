@@ -55,10 +55,10 @@ console.log(`Segmented AudioParam for ${params.player} ${p}`)
       dur = params.dur || 1
     }
     while (!!nextSegment && nextSegment !== count && count <= params.count + dur) {
-// console.log(`Segment start ${count} end ${nextSegment} event start ${params.count} dur ${dur}`)
-      param = getParamValue(evalParamPerFrame(params, p, nextSegment, undefined), subP)
+      param = getParamValue(evalParamPerFrame(params, p, nextSegment+1e-6, undefined), subP)
       nextValue = getValue(param, def, requiredUnits)
       let nextTime = time + (nextSegment - count) * params.beat.duration
+// console.log(`count ${count} nextSegment ${nextSegment} / params.count ${params.count} dur ${dur} / time ${time} nextTime ${nextTime} / param ${JSON.stringify(param)}`)
       // Setup segment
       if (segmentPower === 0) {
         addSegment(audioParam, 'setValueAtTime', nextValue, mod, time)
