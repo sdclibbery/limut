@@ -3877,20 +3877,6 @@ set p* delay|=[():30,[1,3]r/4:2]t
 // s cyborg 76_0_ crop 16, amp*=3/2, glide=150ms
 
 
-// m saw 0_., envelope='organ', amp=1/4, lpf=2000*[1:/1/2,0:0,1:/1/2,0:0]e
-// m saw 0_., envelope='organ', amp=1/4, lpf=2000*[1:/1/2,0:0,1:/1/2,0:0]e
-// m saw, lpf={10+1000*[1,3]t1*[1:!400ms,0]e,q:9}, envelope='percussion', dec=1/2, oct=2, dur=1/4
-// m saw 0_.., envelope='organ', amp=1/4, lpf=2000*[[1,0,1,0,1,0,1]e1/4:!4,0]e
-// m saw 0_.., envelope='organ', amp=1/4, lpf=2000*[1,0,1,0,1,0,1]e1/4*[1:!4,0]e
-
-// s saw, dur=1/2, lpf=1000*[1:!200ms,0]e
-// s saw, dur=1/2, lpf=1000hz*[1:!200ms,0]e
-// s saw, dur=1/2, lpf=0.001s/[1:!200ms,0]e
-// s saw, dur=1/2, lpf=1000*[1,1/8]l1@f
-// s saw, dur=1/2, lpf=1000hz*[1,1/8]l1@f
-// s saw, dur=1/2, lpf=0.001s/[1,1/8]l1@f
-
-
 // Nice guitar ambient chillout techo thing
 include 'preset/synthwave.limut'
 set bpm=130
@@ -3936,4 +3922,33 @@ set ch=[(0,2,4,7),(-1,1,3,6),(-2,0,2,5),(-3,-1#,4,6#)]t4
 b heavybass, add=ch.0, pan=-1/2
 s heavystrum 0.. crop 14 + 02, add=ch.(1,2,3), pan=1/2
 e external, mono, drive={1,gain:8}, amp*=-14db, mid=+3db
+
+
+/// Segmented audioparam tests
+//
+// m saw 0_., envelope='organ', amp=1/4, lpf=2000*[1:/1/2,0:0,1:/1/2,0:0]e
+// m saw 0_., envelope='organ', amp=1/4, lpf=2000*[1:/1/2,0:0,1:/1/2,0:0]e
+// m saw, lpf={10+1000*[1,3]t1*[1:!400ms,0]e,q:9}, envelope='percussion', dec=1/2, oct=2, dur=1/4
+// m saw 0_.., envelope='organ', amp=1/4, lpf=2000*[[1,0,1,0,1,0,1]e1/4:!4,0]e
+// m saw 0_.., envelope='organ', amp=1/4, lpf=2000*[1,0,1,0,1,0,1]e1/4*[1:!4,0]e
+//
+// s saw, dur=1/2, lpf=1000*[1:!200ms,0]e
+// s saw, dur=1/2, lpf=1000hz*[1:!200ms,0]e
+// s saw, dur=1/2, lpf=0.001s/[1:!200ms,0]e
+// s saw, dur=1/2, lpf=1000*[1,1/8]l1@f
+// s saw, dur=1/2, lpf=1000hz*[1,1/8]l1@f
+// s saw, dur=1/2, lpf=0.001s/[1,1/8]l1@f
+//
+// s saw, oct=2, lpf=1000*[1:!200ms,0.01]e + [300,100]t0.7@f
+// s saw, dur=4, oct=2, lpf=[600,200]t0.7@f, amp/=4, envelope='pad'
+// set bpm=60
+// s saw, oct=2, lpf=[600,200]t0.7@f, amp/=4
+//
+// s ping, add=[(0,2),(1,3)]t2@f, amp/=5
+// s ping, addc=[(0,3),(1,5)]t0.7@f, amp/=5, envelope='pad'
+// s saw, oct=2, lpf=[300,100]t0.7@f
+// s saw, oct=2, lpf=[300,100]e
+// s saw, oct=2, lpf=1000*[1:!200ms,0.01]e
+// s saw, oct=2, lpf=1000*[1:!200ms,0.01]e + [300,100]t1/4@f
+// s saw, oct=2, lpf=[1000:!200ms,10]e + [400,0]t0.7@f
 

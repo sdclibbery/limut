@@ -3,20 +3,18 @@
 Should not do 60fps audio param update if it can be avoided; the quality is not good enough for fast changes
  EXISTING PLANNING
   Set _nextSegment etc from []tlsn too
-   []t
-    epsilon for imValue?
-    Need to handle repeat and non-repeat correctly
-     ? What does this mean?
    []l@f
-   []s@f
-    handle power 3 for []s
-   []n
   !!!s saw, oct=2, lpf=[300,100]e  does not get segmented?? It needs to explicitly specify times to get segmented
-  ? When evalling per event only, remove segment data?
-  Does :| operator work with segments??? Compared to :_ ?
+  ? Per frame Amp doesnt get segmented??
+  ? When evalling per event only, remove any segment data?
+  ? Does :| piecewise shape operator work with segments??? Compared to :_ ?
   ? How will segments work on a bus???
   ? What about power operator? [1:/200ms,0]e^2 etcetc? Needs to force to >= power 2? Unless both sides are currently power 0?
   ? Things that might break when combined with segmentation: smooth{} etc, []r@f; slider{}! also time modifiers! eg [0:1]e1{per:1/4}
+  Set _nextSegment etc from []tlsn too
+   []s@f
+    handle power 3 for []s
+   []n
   Optimise/refactor etc segmented audio-param code
   Minimise amount of per frame updates everywhere; especially for presets
    Why do we ALWAYS get per frame update for []t, this.level etc even when forced to per event?
@@ -30,7 +28,7 @@ Should not do 60fps audio param update if it can be avoided; the quality is not 
    visual player looks up value on audio player using segmentation
   Docs
    Time modifiers cancel segmenting, also smooth, slider etc
-Pitch effects to use segments too???
+Pitch effects to use segments too??? Or do they already?
 ?Replace all amp envelopes with []e in presets and examples
   ?Can do envelope=[]e ??
   ?Deprecate att, dec, sus, rel etc params and prefer envelope=[]e??
