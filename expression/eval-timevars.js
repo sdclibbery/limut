@@ -43,7 +43,7 @@ define(function(require) {
       ss[ss.length-1] = 0
       let p = (e,b) => (b - e.count) / (e.endTime - e._time) // Normalise param
       let m = (v,e,b) => v + e.count // Map back to absolute count
-      return piecewise(vs, is, ss, p, {clamp:true,normalise:true,nextSegmentMapper:m})
+      return piecewise(vs, is, ss, p, {clamp:true,normalise:true,addSegmentData:true,nextSegmentMapper:m})
     } else { // Use durations provided
       if (!Array.isArray(ds)) { ds = [ds || 1] }
       is = is.map(i => i || linear)
@@ -67,22 +67,23 @@ define(function(require) {
     let {evalParamFrame} = require('player/eval-param')
     let u2=[undefined,undefined]
     let u3=[undefined,undefined,undefined]
+    let val = v => v.value
 
-    assert(1, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(0,1), 0))
-    assert(1.5, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(0,1), 0.5))
+    assert(1, val(evalParamFrame(eventTimeVar([1,2],u2,u2),ev(0,1), 0)))
+    assert(1.5, val(evalParamFrame(eventTimeVar([1,2],u2,u2),ev(0,1), 0.5)))
     assert(2, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(0,1), 1))
     assert(2, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(0,1), 2))
 
-    assert(1, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 9))
-    assert(1, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 10))
-    assert(1.5, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 11))
+    assert(1, val(evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 9)))
+    assert(1, val(evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 10)))
+    assert(1.5, val(evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 11)))
     assert(2, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 12))
     assert(2, evalParamFrame(eventTimeVar([1,2],u2,u2),ev(10,2), 13))
 
-    assert(1, evalParamFrame(eventTimeVar([1,2,3],u3,u3),ev(0,1), 0))
-    assert(1.5, evalParamFrame(eventTimeVar([1,2,3],u3,u3),ev(0,1), 0.25))
-    assert(2, evalParamFrame(eventTimeVar([1,2,3],u3,u3),ev(0,1), 0.5))
-    assert(2.5, evalParamFrame(eventTimeVar([1,2,3],u3,u3),ev(0,1), 0.75))
+    assert(1, val(evalParamFrame(eventTimeVar([1,2,3],u3,u3),ev(0,1), 0)))
+    assert(1.5, val(evalParamFrame(eventTimeVar([1,2,3],u3,u3),ev(0,1), 0.25)))
+    assert(2, val(evalParamFrame(eventTimeVar([1,2,3],u3,u3),ev(0,1), 0.5)))
+    assert(2.5, val(evalParamFrame(eventTimeVar([1,2,3],u3,u3),ev(0,1), 0.75)))
     assert(3, evalParamFrame(eventTimeVar([1,2,3],u3,u3),ev(0,1), 1))
 
     console.log('Eval timevar tests complete')
