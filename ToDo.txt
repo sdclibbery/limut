@@ -3,7 +3,6 @@
 Should not do 60fps audio param update if it can be avoided; the quality is not good enough for fast changes
  EXISTING PLANNING
   Set _nextSegment etc from []tlsn too
-   []l@f
   !!!s saw, oct=2, lpf=[300,100]e  does not get segmented?? It needs to explicitly specify times to get segmented
   ? Per frame Amp doesnt get segmented??
   ? When evalling per event only, remove any segment data?
@@ -11,6 +10,7 @@ Should not do 60fps audio param update if it can be avoided; the quality is not 
   ? How will segments work on a bus???
   ? What about power operator? [1:/200ms,0]e^2 etcetc? Needs to force to >= power 2? Unless both sides are currently power 0?
   ? Things that might break when combined with segmentation: smooth{} etc, []r@f; slider{}! also time modifiers! eg [0:1]e1{per:1/4}
+   ! [0:1]l4{per:4,0:100}@f the 100 has no segment data but the rest does
   Set _nextSegment etc from []tlsn too
    []s@f
     handle power 3 for []s

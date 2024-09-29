@@ -140,10 +140,11 @@ define(function(require) {
       state.idx += 1
       let ds = numberOrArrayOrFour(state)
       let modifiers = parseMap(state)
-      is = is.map(i => iOperators[i])
-      result = timeVar(vs, is, ss, ds, iOperators['/'])
-      result = addModifiers(result, modifiers)
       let interval = parseInterval(state) || hoistInterval('event', vs)
+      let addSegmentData = interval === 'frame'
+      is = is.map(i => iOperators[i])
+      result = timeVar(vs, is, ss, ds, iOperators['/'], addSegmentData)
+      result = addModifiers(result, modifiers)
       setInterval(result, interval)
     } else if (state.str.charAt(state.idx).toLowerCase() == 's') { // smoothstep interpolated timevar
       state.idx += 1

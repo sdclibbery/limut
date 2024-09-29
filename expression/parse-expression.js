@@ -288,14 +288,14 @@ define(function(require) {
   assert([1,3], evalParamFrame(p,ev(4,4),4).map(val))
 
   p = parseExpression('[(0,2),(1,3)]l2@f')
-  assert([0,2], evalParamFrame(p,ev(0,0),0))
-  assert([0.5,2.5], evalParamFrame(p,ev(1,1),1))
-  assert([1,3], evalParamFrame(p,ev(2,2),2))
+  assert([0,2], evalParamFrame(p,ev(0,0),0).map(val))
+  assert([0.5,2.5], evalParamFrame(p,ev(1,1),1).map(val))
+  assert([1,3], evalParamFrame(p,ev(2,2),2).map(val))
 
   p = parseExpression('[0,(1,2)]l2@f')
-  assert(0, evalParamFrame(p,ev(0,0),0))
-  assert([0.5,1], evalParamFrame(p,ev(1,1),1))
-  assert([1,2], evalParamFrame(p,ev(2,2),2))
+  assert(0, evalParamFrame(p,ev(0,0),0).value)
+  assert([0.5,1], evalParamFrame(p,ev(1,1),1).map(val))
+  assert([1,2], evalParamFrame(p,ev(2,2),2).map(val))
 
   p = parseExpression('[(0,2),(1,3)]s2@f')
   assert([0,2], evalParamFrame(p,ev(0,0),0))
@@ -395,27 +395,27 @@ define(function(require) {
   assert(3, val(evalParamFrame(p,ev(1,1),3,evalParamFrame)))
   
   p = parseExpression('[1,[2,3]t2@e]l1@f')
-  assert(1, evalParamFrame(p,ev(0,0),0,evalParamFrame))
-  assert(2, evalParamFrame(p,ev(0,0),1,evalParamFrame))
-  assert(1, evalParamFrame(p,ev(0,0),2,evalParamFrame))
-  assert(2, evalParamFrame(p,ev(0,0),3,evalParamFrame))
-  assert(1, evalParamFrame(p,ev(0,0),0,evalParamFrame))
-  assert(2, evalParamFrame(p,ev(1,1),1,evalParamFrame))
-  assert(1, evalParamFrame(p,ev(2,2),2,evalParamFrame))
-  assert(3, evalParamFrame(p,ev(3,3),3,evalParamFrame))
+  assert(1, val(evalParamFrame(p,ev(0,0),0,evalParamFrame)))
+  assert(2, val(evalParamFrame(p,ev(0,0),1,evalParamFrame)))
+  assert(1, val(evalParamFrame(p,ev(0,0),2,evalParamFrame)))
+  assert(2, val(evalParamFrame(p,ev(0,0),3,evalParamFrame)))
+  assert(1, val(evalParamFrame(p,ev(0,0),0,evalParamFrame)))
+  assert(2, val(evalParamFrame(p,ev(1,1),1,evalParamFrame)))
+  assert(1, val(evalParamFrame(p,ev(2,2),2,evalParamFrame)))
+  assert(3, val(evalParamFrame(p,ev(3,3),3,evalParamFrame)))
 
   p = parseExpression('[1,[2,3]l1@f]t2@e')
   assert(1, evalParamFrame(p,ev(0,0),0,evalParamFrame))
   assert(1, evalParamFrame(p,ev(0,0),1,evalParamFrame))
-  assert(2, evalParamFrame(p,ev(2,2),2,evalParamFrame))
-  assert(3, evalParamFrame(p,ev(2,2),3,evalParamFrame))
+  assert(2, val(evalParamFrame(p,ev(2,2),2,evalParamFrame)))
+  assert(3, val(evalParamFrame(p,ev(2,2),3,evalParamFrame)))
   
   p = parseExpression('[1,[2,3]l1@f]t2@e')
   assert(1, evalParamFrame(p,ev(0,0),0,evalParamFrame))
   assert(1, evalParamFrame(p,ev(0,0),1,evalParamFrame))
-  assert(2, evalParamFrame(p,ev(2,2),2,evalParamFrame))
-  assert(2.5, evalParamFrame(p,ev(2,2),2.5,evalParamFrame))
-  assert(3, evalParamFrame(p,ev(2,2),3,evalParamFrame))
+  assert(2, val(evalParamFrame(p,ev(2,2),2,evalParamFrame)))
+  assert(2.5, val(evalParamFrame(p,ev(2,2),2.5,evalParamFrame)))
+  assert(3, val(evalParamFrame(p,ev(2,2),3,evalParamFrame)))
   
   assert([4,5], parseExpression('(1,2)+3')(ev(0),0, evalParamFrame))
   assert([4,5], parseExpression('3+(1,2)')(ev(0),0, evalParamFrame))
@@ -446,16 +446,16 @@ define(function(require) {
   delete vars.foo
 
   p = parseExpression('[2:8]l[1,0]@f')
-  assert(2, evalParamFrame(p,ev(0,0,1),0,evalParamFrame))
-  assert(5, evalParamFrame(p,ev(0,0,1),0.5,evalParamFrame))
-  assert(2, evalParamFrame(p,ev(1,1,1),1,evalParamFrame))
-  assert(5, evalParamFrame(p,ev(1,1,1),1.5,evalParamFrame))
+  assert(2, val(evalParamFrame(p,ev(0,0,1),0,evalParamFrame)))
+  assert(5, val(evalParamFrame(p,ev(0,0,1),0.5,evalParamFrame)))
+  assert(2, val(evalParamFrame(p,ev(1,1,1),1,evalParamFrame)))
+  assert(5, val(evalParamFrame(p,ev(1,1,1),1.5,evalParamFrame)))
   
   p = parseExpression('[1:[2:8]l[1,0]@f]l1@e')
   assert(1, evalParamFrame(p,ev(0,0,1),0,evalParamFrame))
   assert(1, evalParamFrame(p,ev(0,0,1),0.5,evalParamFrame))
-  assert(2, evalParamFrame(p,ev(1,1,1),1,evalParamFrame))
-  assert(5, evalParamFrame(p,ev(1,1,1),1.5,evalParamFrame))
+  assert(2, val(evalParamFrame(p,ev(1,1,1),1,evalParamFrame)))
+  assert(5, val(evalParamFrame(p,ev(1,1,1),1.5,evalParamFrame)))
   
   p = parseExpression('foo')
   vars.foo = parseExpression('[1:[2:8]l[1,0]@f]l1@e')
@@ -463,8 +463,8 @@ define(function(require) {
   assert(1, evalParamFrame(p,e,0,evalParamFrame))
   assert(1, evalParamFrame(p,e,0.5,evalParamFrame))
   e = ev(1,1,1)
-  assert(2, evalParamFrame(p,e,1,evalParamFrame))
-  assert(5, evalParamFrame(p,e,1.5,evalParamFrame))
+  assert(2, val(evalParamFrame(p,e,1,evalParamFrame)))
+  assert(5, val(evalParamFrame(p,e,1.5,evalParamFrame)))
   delete vars.foo
 
   p = parseExpression('[1,2]+(3,4) ')
@@ -544,19 +544,19 @@ define(function(require) {
   assert(1, parseExpression('2-1'))
 
   p = parseExpression('[0,2]l2@f')
-  assert(0, evalParamFrame(p,ev(0),0))
-  assert(1/2, evalParamFrame(p,ev(1/2),1/2))
-  assert(1, evalParamFrame(p,ev(1),1))
-  assert(2, evalParamFrame(p,ev(2),2))
-  assert(1, evalParamFrame(p,ev(3),3))
-  assert(0, evalParamFrame(p,ev(4),4))
+  assert(0, val(evalParamFrame(p,ev(0),0)))
+  assert(1/2, val(evalParamFrame(p,ev(1/2),1/2)))
+  assert(1, val(evalParamFrame(p,ev(1),1)))
+  assert(2, val(evalParamFrame(p,ev(2),2)))
+  assert(1, val(evalParamFrame(p,ev(3),3)))
+  assert(0, val(evalParamFrame(p,ev(4),4)))
 
   p = parseExpression('[0:2]l2@f')
-  assert(0, evalParamFrame(p,ev(0),0))
-  assert(1, evalParamFrame(p,ev(1),1))
-  assert(2, evalParamFrame(p,ev(2),2))
-  assert(1, evalParamFrame(p,ev(3),3))
-  assert(0, evalParamFrame(p,ev(4),4))
+  assert(0, val(evalParamFrame(p,ev(0),0)))
+  assert(1, val(evalParamFrame(p,ev(1),1)))
+  assert(2, val(evalParamFrame(p,ev(2),2)))
+  assert(1, val(evalParamFrame(p,ev(3),3)))
+  assert(0, val(evalParamFrame(p,ev(4),4)))
 
   p = parseExpression('[0,1]s1@f')
   assert(0, p(ev(0),0,evalParamFrame))
@@ -684,14 +684,14 @@ define(function(require) {
   assert('frame', p.interval)
   delete vars.foo
 
-  assertApprox(0, evalParamFrame(parseExpression("[0,1]l0.1@f"),ev(0,0),0))
-  assertApprox(1, evalParamFrame(parseExpression("[0,1]l0.1@f"),ev(0,0),0.1))
-  assertApprox(0, evalParamFrame(parseExpression("[0,1]l0.1@f"),ev(0,0),1))
+  assertApprox(0, val(evalParamFrame(parseExpression("[0,1]l0.1@f"),ev(0,0),0)))
+  assertApprox(1, val(evalParamFrame(parseExpression("[0,1]l0.1@f"),ev(0,0),0.1)))
+  assertApprox(0, val(evalParamFrame(parseExpression("[0,1]l0.1@f"),ev(0,0),1)))
 
   assert(0, evalParamFrame(parseExpression("[0,1]t1@e"),ev(0,0),1))
   assert(1, val(evalParamFrame(parseExpression("[0,1]t1@f"),ev(0,0),1)))
   assert(0, evalParamFrame(parseExpression("[0,1]l1@e"),ev(0,0),1))
-  assert(1, evalParamFrame(parseExpression("[0,1]l1@f"),ev(0,0),1))
+  assert(1, val(evalParamFrame(parseExpression("[0,1]l1@f"),ev(0,0),1)))
   assert(0, evalParamFrame(parseExpression("[0,1]s1@e"),ev(0,0),1))
   assert(1, evalParamFrame(parseExpression("[0,1]s1@f"),ev(0,0),1))
 
@@ -971,8 +971,8 @@ define(function(require) {
   vars.red = parseExpression("{r:1}")
   vars.green = parseExpression("{g:1}")
   p = parseExpression("[red,green]l1")
-  assert({g:1}, evalParamFrame(p,ev(1,1),1))
-  assert({r:1/2,g:1/2}, evalParamFrame(p,ev(1,1/2),1/2))
+  assert({g:1,_nextSegment:2,_segmentPower:1}, evalParamFrame(p,ev(1,1),1))
+  assert({r:1/2,g:1/2,_nextSegment:1,_segmentPower:1}, evalParamFrame(p,ev(1,1/2),1/2))
   delete vars.red
   delete vars.green
 
@@ -1172,12 +1172,12 @@ define(function(require) {
   assert([0.1989616905192142, 0.31159096606000625], evalParamFrame(parseExpression("[0:1]n{per:2,seed:(0,10)}"),ev(0,1,1),1))
 
   p = parseExpression('([0:1]l4@f){per:1}')
-  assert(0, evalParamFrame(p,ev(0,0),0))
-  assert(0, evalParamFrame(p,ev(1,1),1))
-  assert(0, evalParamFrame(p,ev(2,2),2))
+  assert(0, val(evalParamFrame(p,ev(0,0),0)))
+  assert(0, val(evalParamFrame(p,ev(1,1),1)))
+  assert(0, val(evalParamFrame(p,ev(2,2),2)))
 
   assert(100, evalParamFrame(parseExpression("[0:1]l4{per:4,0:100}@f"),ev(0,0,4),0))
-  assert(1/4, evalParamFrame(parseExpression("[0:1]l4{per:4,0:100}@f"),ev(0,0,4),1))
+  assert(1/4, val(evalParamFrame(parseExpression("[0:1]l4{per:4,0:100}@f"),ev(0,0,4),1)))
 
   assert(64, evalParamFrame(parseExpression("2^3^2"),ev(0,0,0),0))
   assert(2, evalParamFrame(parseExpression("{a:{b:2}}.a.b"),ev(0,0,0),0))
@@ -1189,9 +1189,9 @@ define(function(require) {
   assert([1,3], evalParamFrame(p,ev(1,1),1))
 
   p = parseExpression('[0:1]l4{per:1}@f')
-  assert(0, evalParamFrame(p,ev(0,0),0))
-  assert(0, evalParamFrame(p,ev(1,1),1))
-  assert(0, evalParamFrame(p,ev(2,2),2))
+  assert(0, val(evalParamFrame(p,ev(0,0),0)))
+  assert(0, val(evalParamFrame(p,ev(1,1),1)))
+  assert(0, val(evalParamFrame(p,ev(2,2),2)))
 
   assert(2, evalParamFrame(parseExpression("max{2}"),ev(0,0,0),0))
   assert(2, evalParamFrame(parseExpression("2 .max"),ev(0,0,0),0))
@@ -1218,7 +1218,7 @@ define(function(require) {
   assert(2, evalParamFrame(parseExpression("[0:4,4:4]{_time}"),ev(2,2,4),2))
   assert(0, evalParamFrame(parseExpression("[0:4,4:4]{_time,per:1}"),ev(2,2,4),2))
   assert(0, evalParamFrame(parseExpression("[0:4,4:4]{_time{per:1}}"),ev(2,2,4),2))
-  assert(0, evalParamFrame(parseExpression("[0:4]l4{per:1}@f"),ev(2,2,4),2))
+  assert(0, val(evalParamFrame(parseExpression("[0:4]l4{per:1}@f"),ev(2,2,4),2)))
   delete vars._time
 
   p = parseExpression("[1:2]e")
@@ -1329,10 +1329,10 @@ define(function(require) {
   assert(0, evalParamFrame(p, evt(4,4,1), 4))
   
   p = parseExpression("[0:!1,1:!1]l@f")
-  assert(0, evalParamFrame(p, evt(0,0,2), 0))
-  assertApprox(0.982, evalParamFrame(p, evt(0,0,2), 1/2))
-  assert(1, evalParamFrame(p, evt(0,0,2), 1))
-  assertApprox(0.018, evalParamFrame(p, evt(0,0,2), 3/2))
+  assert(0, val(evalParamFrame(p, evt(0,0,2), 0)))
+  assertApprox(0.982, val(evalParamFrame(p, evt(0,0,2), 1/2)))
+  assert(1, val(evalParamFrame(p, evt(0,0,2), 1)))
+  assertApprox(0.018, val(evalParamFrame(p, evt(0,0,2), 3/2)))
 
   p = parseExpression("[0:3,3:1]l")
   assert(0, evalParamFrame(p, evt(0,0,1), 0))
@@ -1459,16 +1459,16 @@ define(function(require) {
   assert(1, val(evalParamFrame(p, ev(0,0,1), sInBeats(0.3))))
 
   p = parseExpression("[0:1,1:0]l{step:300ms}@f")
-  assert(0, evalParamFrame(p, ev(0,0,1), sInBeats(0)))
-  assert(0, evalParamFrame(p, ev(0,0,1), sInBeats(0.1)))
-  assert(0, evalParamFrame(p, ev(0,0,1), sInBeats(0.2)))
-  assert(0.55, evalParamFrame(p, ev(0,0,1), sInBeats(0.3)))
+  assert(0, val(evalParamFrame(p, ev(0,0,1), sInBeats(0))))
+  assert(0, val(evalParamFrame(p, ev(0,0,1), sInBeats(0.1))))
+  assert(0, val(evalParamFrame(p, ev(0,0,1), sInBeats(0.2))))
+  assert(0.55, val(evalParamFrame(p, ev(0,0,1), sInBeats(0.3))))
 
   p = parseExpression("[0:1,1:0]l{per:300ms}@f")
-  assert(0, evalParamFrame(p, ev(0,0,1), sInBeats(0)))
-  assert(0.55/3, evalParamFrame(p, ev(0,0,1), sInBeats(0.1)))
-  assert(0.55*2/3, evalParamFrame(p, ev(0,0,1), sInBeats(0.2)))
-  assert(0, evalParamFrame(p, ev(0,0,1), sInBeats(0.3)))
+  assert(0, val(evalParamFrame(p, ev(0,0,1), sInBeats(0))))
+  assert(0.55/3, val(evalParamFrame(p, ev(0,0,1), sInBeats(0.1))))
+  assert(0.55*2/3, val(evalParamFrame(p, ev(0,0,1), sInBeats(0.2))))
+  assert(0, val(evalParamFrame(p, ev(0,0,1), sInBeats(0.3))))
 
   p = parseExpression("[1,2]{time}")
   assert(1, evalParamFrame(p, ev(0,0,1), 0))

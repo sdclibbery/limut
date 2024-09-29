@@ -116,6 +116,7 @@ define(function(require) {
   let {evalParamFrame} = require('player/eval-param')
   let ev = (i,c) => {return{idx:i,count:c}}
   let p
+  let val = v => v.value
 
   assert({}, parseParams(''))
   assert({}, parseParams('=1'))
@@ -139,14 +140,14 @@ define(function(require) {
   assert('frame', parseParams("fore=[0,1]r@f").fore.interval)
 
   let exp = parseParams("amp=[0,1]t4@e+[2:3]l1@f").amp
-  assert(2, evalParamFrame(exp, ev(0,0), 0))
-  assert(3, evalParamFrame(exp, ev(0,0), 1))
-  assert(2, evalParamFrame(exp, ev(0,0), 2))
-  assert(3, evalParamFrame(exp, ev(0,0), 3))
-  assert(2, evalParamFrame(exp, ev(0,0), 4))
-  assert(3, evalParamFrame(exp, ev(0,0), 5))
-  assert(3, evalParamFrame(exp, ev(4,4), 4))
-  assert(4, evalParamFrame(exp, ev(4,4), 5))
+  assert(2, val(evalParamFrame(exp, ev(0,0), 0)))
+  assert(3, val(evalParamFrame(exp, ev(0,0), 1)))
+  assert(2, val(evalParamFrame(exp, ev(0,0), 2)))
+  assert(3, val(evalParamFrame(exp, ev(0,0), 3)))
+  assert(2, val(evalParamFrame(exp, ev(0,0), 4)))
+  assert(3, val(evalParamFrame(exp, ev(0,0), 5)))
+  assert(3, val(evalParamFrame(exp, ev(4,4), 4)))
+  assert(4, val(evalParamFrame(exp, ev(4,4), 5)))
 
   p = parseParams('add+=2')
   assert(true, Array.isArray(p.add))

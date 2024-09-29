@@ -194,6 +194,7 @@ define((require) => {
   let p,e,es,p1,p2
   let {evalParamFrame} = require('player/eval-param')
   let ev = (i,c,d) => {return{idx:i,count:c,dur:d}}
+  let val = v => v.value
 
   p = player('p', 'play', 'xo', 'amp=2', 0)
   assert('p', p.id)
@@ -503,7 +504,7 @@ define((require) => {
   assertHas({value:'c',add:1,voice:0}, es[4]) // Voice here (and below) should really be 4 (and 5), but that's a lot more complicated
   assertHas({value:'c',add:2,voice:1}, es[5])
 
-  p = player('p', 'test', '0', 'x=(this.f){per:2}, f=[0:1]l4@f')
+  p = player('p', 'test', '0', 'x=(this.f){per:2}, f=[0:1]l4')
   es = p.getEventsForBeat({count:0})
   assertHas({x:0,f:0}, evalParamFrame(es[0],es[0],0))
   es = p.getEventsForBeat({count:1})
@@ -511,7 +512,7 @@ define((require) => {
   es = p.getEventsForBeat({count:2})
   assertHas({x:0,f:1/2}, evalParamFrame(es[0],es[0],2))
 
-  p1 = player('p1', 'kal', '0', 'foo=[0:1]l4@f')
+  p1 = player('p1', 'kal', '0', 'foo=[0:1]l4')
   players.instances.p1 = p1
   p2 = player('p2', 'kal', '0', 'bar=(p1.foo){per:2}')
   p1.play(p1.getEventsForBeat({count:0,duration:1,time:0}),{count:0})
