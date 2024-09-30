@@ -79,7 +79,7 @@ define(function (require) {
       if (typeof mod === 'function') { v = mod(v) }
       audioParam.setValueAtTime(v, system.timeNow())
     } else {
-      if (segmentedAudioParam(audioParam, params, p, def, requiredUnits, mod)) { return } // Set up with a timeline
+      if (segmentedAudioParam(audioParam, params, p, undefined, def, requiredUnits, mod)) { return } // Set up with a timeline
       setAudioParamValue(audioParam, evalMainPerFrame(params, p, def, params.count, requiredUnits), p, mod) // set now
       if (params.player) { console.log(`Per frame audio update! ${params.player} ${p}`) }
       if (params._perFrame) {

@@ -3953,3 +3953,4 @@ e external, mono, drive={1,gain:8}, amp*=-14db, mid=+3db
 // s saw, oct=2, lpf=1000*[1:!200ms,0.01]e
 // s saw, oct=2, lpf=1000*[1:!200ms,0.01]e + [300,100]t1/4@f
 // s saw, oct=2, lpf=[1000:!200ms,10]e + [400,0]t0.7@f
+// s saw, oct=2, lpf={[600,200]e,q:12}

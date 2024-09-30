@@ -40,7 +40,7 @@ define(function (require) {
     let epsilon = 1e-5 // Apply an epsilon for the initial value
     let param = getParamValue(evalParamPerFrame(params, p, params.count + epsilon, undefined), subP)
     if (param._nextSegment === undefined) { return false } // No segment data; we cant build a segment timeline here
-console.log(`Segmented AudioParam for ${params.player} ${p}`)
+console.log(`Segmented AudioParam for ${params.player} ${p} ${subP}`)
     let count = params.count
     let time = params._time
     let currentValue = getValue(param, def, requiredUnits)

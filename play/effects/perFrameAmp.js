@@ -4,7 +4,6 @@ define(function (require) {
   let {mainParam} = require('player/sub-param')
   let {evalMainParamFrame,evalMainParamEvent} = require('play/eval-audio-params')
 
-
   let chokes = {}
   let chokeRelease = 0.01
   let chokeVca = (choke, time) => {
