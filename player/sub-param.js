@@ -17,13 +17,12 @@ define(function (require) {
     return param(p.value, def)
   }
 
-  let subParamUnits = (p, name, requiredUnits, def) => {
+  let subParamUnits = (p, subParamName, requiredUnits, def) => {
     if (typeof p !== 'object') { return def }
-    return units(param(p[name], def), requiredUnits)
+    return units(param(p[subParamName], def), requiredUnits)
   }
 
   let mainParamUnits = (p, requiredUnits, def) => {
-    if (typeof p !== 'object') { return param(p, def) }
     do {
       p = units(p, requiredUnits)
     } while (typeof p === 'object')

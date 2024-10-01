@@ -2,27 +2,29 @@
 ==== audio ====
 Should not do 60fps audio param update if it can be avoided; the quality is not good enough for fast changes
  EXISTING PLANNING
-  ? Per frame Amp doesnt get segmented??
+  !! Broken:  m saw 0_.., envelope='organ', amp=1/4, lpf=2000*[[1,0,1,0,1,0,1]e1/4:!4,0]e
   ? Things that might break when combined with segmentation
+   ??? Idea: cancel segmentation if modifiers; also cancel if one side of operator has no segmentation???
    time modifiers! eg [0:1]e1{per:1/4}
     ! [0:1]l4{per:4,0:100}@f the 100 has no segment data but the rest does
    smooth{} etc
-   []r@f
    slider{}
+   []r@f
   ? Does :| piecewise shape operator work with segments??? Compared to :_ ?
-  ? How will segments work on a bus???
+  ? How will segments work on a bus??? Is there even a problem? If so, maybe never segment on a bus?
   ? What about power operator? [1:/200ms,0]e^2 etcetc? Needs to force to >= power 2? Unless both sides are currently power 0?
   Segments for more timevars
    []s@f
     handle power 3 for []s
-   []n
+   []n?
+   []r@f???
   Minimise amount of per frame updates everywhere; especially for presets
    ? When evalling per event only, remove any segment data?
    Why do we ALWAYS get per frame update for []t, this.level etc even when forced to per event?
     Find a way to stop this and force as much as possible to be per event
    When doing memoise per-event param in eval-params, remove any segment info there too?
   Optimise/refactor etc segmented audio-param code
-  envelope or env can be a piecewise giving the actual envelope
+  envelope (or env?) param can be a piecewise giving the actual envelope
   TEST TEST TEST
    time modifiers
    var/player lookups
