@@ -1576,6 +1576,13 @@ define(function(require) {
   assert({"value":1,"_nextSegment":2,"_segmentPower":0}, evalParamFrame(p, ev(0,0,1), 1))
   assert(1, evalParamFrame(p, ev(0,0,1), 2))
 
+  p = parseExpression("2000*[[1,0,1,0,1]e,0]e")
+  assert({"value":2000,"_nextSegment":1/4,"_segmentPower":1}, evalParamFrame(p, ev(0,0,1), 0))
+  assert({"value":0,"_nextSegment":2/4,"_segmentPower":1}, evalParamFrame(p, ev(0,0,1), 1/4))
+  assert({"value":1000,"_nextSegment":3/4,"_segmentPower":1}, evalParamFrame(p, ev(0,0,1), 2/4))
+  assert({"value":0,"_nextSegment":4/4,"_segmentPower":1}, evalParamFrame(p, ev(0,0,1), 3/4))
+  assert(0, evalParamFrame(p, ev(0,0,1), 4/4))
+
   console.log('Parse expression tests complete')
   }
 

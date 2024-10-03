@@ -1,6 +1,36 @@
 ====
 ==== audio ====
 Should not do 60fps audio param update if it can be avoided; the quality is not good enough for fast changes
+
+Review
+
+* Carry on with "full" implementation
+ - Still wont handle everything properly; * operator etc
+ - Inconsistent: go back to dodgy envelopes if used with user controls etc
+
+* Revert entire segmentation idea and do nothing else
+ - Dodgy lpf and amp envelopes
+
+* Revert segmentation and have pre-created high resolution "per-frame" update for start of each event
+ - Has to be SUPER high res to hit fast attack transient peaks
+ - Ignores user-controlled things for initial period
+
+* Leave segmentation on []e only and cancel if combined with any function
+ - Inconsistent: go back to dodgy envelopes if used with LFOs / user controls / anything etc
+
+* Some new mechanism to implement envelopes; somehow separate the []e that delivers the segmented envelope from the per-frame
+ ? How to keep these separate through an operator/eval tree, while still applying the operator/eval actions?
+  ? Eg how to handle lpf=[1000:2000]l4@f*[1:!100ms,0]e + [600:200]l8
+ ? What if you use multiple envelopes?
+ ?IDEA: []e sets FULL segment data into the value when called at or before event start time
+  This can then be modified and combined in operators (what about evals??)
+  eval-audio-param then does a combination of static/per-frame and also a separate segmented envelope
+   ? How do we not "double-count" the envelope values when applying to the audioparam???
+
+
+
+
+
  EXISTING PLANNING
   !! Broken:  m saw 0_.., envelope='organ', amp=1/4, lpf=2000*[[1,0,1,0,1,0,1]e1/4:!4,0]e
   ? Things that might break when combined with segmentation
@@ -10,9 +40,10 @@ Should not do 60fps audio param update if it can be avoided; the quality is not 
    smooth{} etc
    slider{}
    []r@f
+  ? What about power operator? [1:/200ms,0]e^2 etcetc? Needs to force to >= power 2? Unless both sides are currently power 0?
+   ? ALSO []l*[]l is not linear, its quadratic..?!
   ? Does :| piecewise shape operator work with segments??? Compared to :_ ?
   ? How will segments work on a bus??? Is there even a problem? If so, maybe never segment on a bus?
-  ? What about power operator? [1:/200ms,0]e^2 etcetc? Needs to force to >= power 2? Unless both sides are currently power 0?
   Segments for more timevars
    []s@f
     handle power 3 for []s
@@ -512,7 +543,7 @@ Maybe use electron + supercollider ?
 Language features
  Signals for continuous time variation
  Events for discrete actions
- Routing
+ Nodes and routing
 User defined functions can be evaluated or translated (eg into shaders)
  So user functions for wave shaping, colour mapping, shader cores, convolution impulses, etc
 Debug any signal by visualising time or frequency domain
@@ -567,9 +598,88 @@ let scroll = effect.warp (in,v) -> in+v, priority=1
 
 // Audio preset and player
 let saw = source.wavetable wave=(x) -> [-1 ,/1; 1,;].x, f=pitch(note:this.value+this.add, oct:this.oct)+this.addc
-let b = bpm*4 >> `. 7 2` >> crop(16) >> saw, lpf=(env(r:100ms)*440Hz*tri(8beats)), add=[0,3,2,4].time/4
+play b = bpm*4 >> `. 7 2` >> crop(16) >> saw, lpf=(env(r:100ms)*440Hz*tri(8beats)), add=[0,3,2,4].time/4
 
 // Visual preset and player
 let lines = source.shader shader=(x,y) -> (r:1,g:1,b:1)*(x%0.1 < 0.05) + (a:1)
 play l = scroll=(x:time), bf=(back:(r:1,g:0,b:0,a:1),fore:#f0f)
 
+
+//----------------------------------------
+
+What if we just expose audio nodes, audio params, and make piecewise and patterns language features?
+
+s saw .070, dur=1/4, oct=2, lpf=[1000,2000]l8*[1:!200ms,0]e
+becomes (without any abstraction)
+pattern `.070` >> pitch{oct:2} >> osc{wave:'saw'} >> biquad{type:'lpf',freq:[1000,2000]l8*[1:!200ms,0]e} >> dest
+The expression is converted into a series of gain nodes with segmented audioparams that then feeds the control node on the biquad
+
+Thats not very exciting.
+Want to setup arbitrary node chains per event, per player, and globally. And then to parameterise them.
+And control those parameters easily. And provide abstraction mechanisms for all of this to build everything up.
+
+So a node(graph) must be a first class value
+
+Unabstracted:
+
+let s = bus{} // a player is just a bus to collect related event audio in this scenario
+>> reverb{2}
+>> dest
+play .00{cutoff:4}0 {dur:1/4,oct:(2,3),cutoff:[1,2]l8} // Set pattern dur etc and also params for events to use; can override params inside pattern
+>> delay{???}
+>> swing{56} // Modify time of events
+>> add{[0:8,1:8]t} // Modify value of events
+>> scale{'minor',oct:this.oct} // Chord in oct here duplicates the event
+>> gain{[-0.2:0.2]n,id:'wow'} // Modify pitch
+>> osc{wave:'saw'} // Default input for osc is freq (pitch)
+>> gain{[...]e} // Envelope
+>> biquad{'lpf',freq:500*this.cutoff*[1:!200ms,0]e}
+>> s
+
+\/ \/ \/ This looks better:
+
+OR??! more function based?
+Like (unabstracted):
+player s { // named player; sugar for "let s = player{...}"
+  ``, // Default param is the pattern, also a first class value, can be used in the onBeat function
+  , param:p // set params for use in below functions
+  , onBeat b -> ...generate events for beat (and pattern/delay/swing/pitch/glide are just helper libs you can use if you want)...
+  , onNote n -> setup node chain (and saw/fm/perc/effects etc are helper libs)
+  , onAudio a -> setup per player node chain (and reverb/room etc are libs)
+}
+
+So you could write:
+let saw = player{...} // setup default onXxx functions to play a saw
+
+Then:
+saw s { `.070`, dur:1/4 }
+...and the pattern and dur would be picked up in the onXxx functions to control the player actions.
+Still want the same param combining/overriding, so start with the lowest abstraction and work up to get param value
+
+---------------
+
+This is all nice, but doesn't answer the question of how to set audioparams in a generic, high resolution, but efficient way.
+How does [[1000,2000]l8:!200ms,0]e turn into calls on the audionode to actually set an lpf cutoff freq?
+
+Expressions should be parsed into a tree and not evaluated at all at parse time.
+Then events can pull them in with combining and overriding into new bigger trees, and partially evaluate everything that is per event.
+Then remaining constants can be folded down as far as possible, and what remains is the 'live' updating required.
+
+Eg [[1000,2000]l8:!200ms,0]e becomes [1500:!200ms,0]e in the event.
+
+What about [[1000,2000]l8@f:!200ms,0]e ?? How do we actually get an arbitrary (in fact user defined) function into an audioparam??
+• Custom defined audio node for piecewise, that takes all the values/times/param etc as audioparameters
+   So the expression actually gets built up into a corresponding audionode tree that gets evalled
+• Define piecewise as a node graph made out of raw gain nodes for * and +, with param (time) as an input via LinearRamp
+• Custom audionode that evaluates arbitrary expression - this does not require parsing to a tree but would be a LOT of evals
+• This all sounds very heavyweight and slow. Really need to come up with a segmentation approach for any of this to be worthwhile
+
+Ideas:
+• Parse into a single piecewise - is it even possible to combine this way?
+   100+[[1000,2000]l8:!200ms,0]e  :  this could be turned into one piecewise, but in general operators/power etc is a problem
+Separate into constant/envelope/oscillator/realtime joined with basic + * operators - is it even possible to separate this way?
+   100+[[1000,2000]l8:!200ms,0]e  :  100 + [1000,2000]l8 * [1:!200ms,0]e  in general this doesn't work
+• Come up with a syntax that forces separation of constant/envelope/oscillator/realtime that are then added together
+   Syntax would be pretty ugly and inexpressive
+• Syntax that reflects what can actually be done with audiiparams - more like supercollider
+   Would be a lot more restrictive than supercollider
