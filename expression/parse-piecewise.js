@@ -155,10 +155,15 @@ define(function(require) {
       setInterval(result, interval)
     } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
       state.idx += 1
+      let addSegmentData = false
+      if (state.str.charAt(state.idx).toLowerCase() == 's') { // []es segmented event timevar
+        state.idx += 1
+        addSegmentData = true
+      }
       let ds = numberOrArray(state)
       let modifiers = parseMap(state)
       is = is.map(i => iOperators[i])
-      result = eventTimeVar(vs, is, ss, ds)
+      result = eventTimeVar(vs, is, ss, ds, addSegmentData)
       result = addModifiers(result, modifiers)
       setInterval(result, parseInterval(state) || hoistInterval('frame', vs))
     } else if (state.str.charAt(state.idx).toLowerCase() == 'r') { // random

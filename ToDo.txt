@@ -1,23 +1,18 @@
 ====
 ==== audio ====
 Tighten up per frame update envelopes
-  • []e syntax does not add segmentation
-  • Have a new []es syntax that forces segmentation, and []e is not segmented
-      []es should be segmented, and anything else will be at the segmentation rate of the []es
-      OR!!! have a kind of pluck env subparam that is always segmented
-       This would be applied via an extra gain node feeding into the audioparam
-       I think []es is prefereable. It requires thought from the user either way, and []es probably keeps things cleaner overall
- Can per frame consistency be improved any further? Still seems odd that there is any inconsistency at all...
-  Also consider double update rate (or 1/90) for first 150ms???
- Minimise use of per frame update where it's not required
-  Eg pan=[-1/4:1/4]r should not be per frame; can this not have been boiled down to a const number for the event? If not, detect fixed better
  Update appropriate presets to use []es / pluck env
   techno
   303
   909/pitchedperc?
   other
  Deprecate and remove envelope{} function
- TEST TEST TEST with both []e and []es (or pluck env)
+ Minimise use of per frame update where it's not required
+  Eg pan=[-1/4:1/4]r should not be per frame; can this not have been boiled down to a const number for the event? If not, detect fixed better
+ Can per frame consistency be improved any further? Still seems odd that there is any inconsistency at all...
+  Also consider double update rate (or 1/90) for first 150ms???
+ Remove segment/per-frame logs
+ TEST TEST TEST with both []e and []es
    time modifiers
    var/player lookups
    functions
@@ -25,10 +20,13 @@ Tighten up per frame update envelopes
    visual player looks up value on audio player using segmentation
    slider
    smooth
+   glide/pitch effects
    buses
    303 all controls
+   EVERYTHING
+  Syntax highlight for []es
   Docs
-   []es / pluck env
+   []es
 ?Replace all amp envelopes with []e in presets and examples
   ?Can do envelope=[]e ??
   ?Deprecate att, dec, sus, rel etc params and prefer envelope=[]e??
