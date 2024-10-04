@@ -390,7 +390,7 @@ define((require) => {
 
   e = player('p', 'play', 'x', 'delay={1,add:[0,2]t1/4@f}').getEventsForBeat({time:0, count:0, duration:1})[0]
   assert(1, e._time)
-  assert(2, evalParamFrame(e.add,e,1.3).value)
+  assert(2, evalParamFrame(e.add,e,1.3))
 
   e = player('p', 'play', 'x', 'delay={1,add:5}').getEventsForBeat({time:0, count:0, duration:1})[0]
   assert(1, e._time)

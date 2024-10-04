@@ -1,70 +1,39 @@
 ====
 ==== audio ====
-Should not do 60fps audio param update if it can be avoided; the quality is not good enough for fast changes
-
-Review
-
-* Carry on with "full" implementation
- - Still wont handle everything properly; * operator etc
- - Inconsistent: go back to dodgy envelopes if used with user controls etc
-
-* Revert entire segmentation idea and do nothing else
- - Dodgy lpf and amp envelopes
-
-* Revert segmentation and have pre-created high resolution "per-frame" update for start of each event
- - Has to be SUPER high res to hit fast attack transient peaks
- - Ignores user-controlled things for initial period
-
-* Leave segmentation on []e only and cancel if combined with any function
- - Inconsistent: go back to dodgy envelopes if used with LFOs / user controls / anything etc
-
-* Some new mechanism to implement envelopes; somehow separate the []e that delivers the segmented envelope from the per-frame
- ? How to keep these separate through an operator/eval tree, while still applying the operator/eval actions?
-  ? Eg how to handle lpf=[1000:2000]l4@f*[1:!100ms,0]e + [600:200]l8
- ? What if you use multiple envelopes?
- ?IDEA: []e sets FULL segment data into the value when called at or before event start time
-  This can then be modified and combined in operators (what about evals??)
-  eval-audio-param then does a combination of static/per-frame and also a separate segmented envelope
-   ? How do we not "double-count" the envelope values when applying to the audioparam???
-
-
-
-
-
- EXISTING PLANNING
-  !! Broken:  m saw 0_.., envelope='organ', amp=1/4, lpf=2000*[[1,0,1,0,1,0,1]e1/4:!4,0]e
-  ? Things that might break when combined with segmentation
-   ??? Idea: cancel segmentation if modifiers; also cancel if one side of operator has no segmentation???
-   time modifiers! eg [0:1]e1{per:1/4}
-    ! [0:1]l4{per:4,0:100}@f the 100 has no segment data but the rest does
-   smooth{} etc
-   slider{}
-   []r@f
-  ? What about power operator? [1:/200ms,0]e^2 etcetc? Needs to force to >= power 2? Unless both sides are currently power 0?
-   ? ALSO []l*[]l is not linear, its quadratic..?!
-  ? Does :| piecewise shape operator work with segments??? Compared to :_ ?
-  ? How will segments work on a bus??? Is there even a problem? If so, maybe never segment on a bus?
-  Segments for more timevars
-   []s@f
-    handle power 3 for []s
-   []n?
-   []r@f???
-  Minimise amount of per frame updates everywhere; especially for presets
-   ? When evalling per event only, remove any segment data?
-   Why do we ALWAYS get per frame update for []t, this.level etc even when forced to per event?
-    Find a way to stop this and force as much as possible to be per event
-   When doing memoise per-event param in eval-params, remove any segment info there too?
-  Optimise/refactor etc segmented audio-param code
-  envelope (or env?) param can be a piecewise giving the actual envelope
-  TEST TEST TEST
+Tighten up per frame update envelopes
+ Its actually not too bad with this setup:
+  Initial SetToValue MUST be at exactly params._time
+  Every update after must be at exactly 1/60s in sequence; count it into the actual reqAnimFrame steps
+  Use setTargetAtTime with a TC that is 1/4 the time step (so 1/60 / 4)
+ SUGGESTION
+  • Make the changes above to the per-frame update in a consistent, clean way; they are improvements no matter what
+  • []e syntax does not add segmentation
+  • Have a new []es syntax that forces segmentation, and []e is not segmented
+      []es should be segmented, and anything else will be at the segmentation rate of the []es
+      OR!!! have a kind of pluck env subparam that is always segmented
+       This would be applied via an extra gain node feeding into the audioparam
+       I think []es is prefereable. It requires thought from the user either way, and []es probably keeps things cleaner overall
+ Can per frame consistency be improved any further? Still seems odd that there is any inconsistency at all...
+  Also consider double update rate (or 1/90) for first 150ms???
+ Minimise use of per frame update where it's not required
+ Update appropriate presets to use []es / pluck env
+  techno
+  303
+  909/pitchedperc?
+  other
+ Deprecate and remove envelope{} function
+ TEST TEST TEST with both []e and []es (or pluck env)
    time modifiers
    var/player lookups
    functions
    all visuals
    visual player looks up value on audio player using segmentation
+   slider
+   smooth
+   buses
+   303 all controls
   Docs
-   Time modifiers cancel segmenting, also smooth, slider etc
-Pitch effects to use segments too?
+   []es / pluck env
 ?Replace all amp envelopes with []e in presets and examples
   ?Can do envelope=[]e ??
   ?Deprecate att, dec, sus, rel etc params and prefer envelope=[]e??
@@ -281,6 +250,17 @@ shadertoy synth multiple channels
 
 ====
 ==== other ====
+User defined functions
+ Eg shape={x}->sgn{x}*max{abs{x}-1/2,0}
+  !But the default behaviour for our existing functions is to be evalled even without {}, so how to pass the functions as values?
+   ?Can we default to non eval without {}, but do the eval if necessary in context? Eg operators can't act on function, so eval? etc
+ Or set riser={dur}->(time%dur)/dur
+  Allow riser={dur?32}->(time%dur)/dur ?
+ ?If functions are values, how do they interact with other values? What if you add functions etc? Eg ({}->0) + ({}->1) ?
+ ?What about chords eg {x} -> x*(1,2,3) ?
+ !Should be able to access the default e and b params
+ !Should be able to eval functions as well as pass them; eg ({}->3){}
+ Rewrite envelope{} as a user defined function
 !! floor doesn't work with delay:  r readout 1234, delay=floor{[0:1]l3@f,to:1/4}
 More time modifiers
  offset
@@ -336,17 +316,6 @@ Should be able to:  v gradient 0, fore.g=0  And it navigates or creates maps as 
 !v readout 0, add=[0,(1,2)]r, loc={y:this.voice/2}
  Should get either 1 event with `0` OR 2 events with `1` and `2`, but get all kinds of mixtures
 ?New timevar for "advance every time its read" eg  p ping (00), add=[0,2,1,3]??  same as  p ping (02)(13)  ?
-User defined functions
- Eg shape={x}->sgn{x}*max{abs{x}-1/2,0}
-  !But the default behaviour for our existing functions is to be evalled even without {}, so how to pass the functions as values?
-   ?Can we default to non eval without {}, but do the eval if necessary in context? Eg operators can't act on function, so eval? etc
- Or set riser={dur}->(time%dur)/dur
-  Allow riser={dur?32}->(time%dur)/dur ?
- ?If functions are values, how do they interact with other values? What if you add functions etc? Eg ({}->0) + ({}->1) ?
- ?What about chords eg {x} -> x*(1,2,3) ?
- !Should be able to access the default e and b params
- !Should be able to eval functions as well as pass them; eg ({}->3){}
- Rewrite envelope{} as a user defined function
 Should be able to [0:1]n{per:'event',seed:0} ie so the sequence repeats on every event
 Pattern update
  Generative features:

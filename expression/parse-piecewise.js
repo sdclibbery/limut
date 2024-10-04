@@ -127,12 +127,11 @@ define(function(require) {
       let ds = numberOrArrayOrFour(state)
       let modifiers = parseMap(state)
       let interval = parseInterval(state) || hoistInterval('event', vs)
-      let addSegmentData = interval === 'frame'
       is = is.map(i => iOperators[i])
       if (ranged) {
-        result = rangeTimeVar(vs, ds, addSegmentData)
+        result = rangeTimeVar(vs, ds)
       } else {
-        result = timeVar(vs, is, ss, ds, iOperators['_'], addSegmentData)
+        result = timeVar(vs, is, ss, ds, iOperators['_'])
       }
       result = addModifiers(result, modifiers)
       setInterval(result, interval)
@@ -141,9 +140,8 @@ define(function(require) {
       let ds = numberOrArrayOrFour(state)
       let modifiers = parseMap(state)
       let interval = parseInterval(state) || hoistInterval('event', vs)
-      let addSegmentData = interval === 'frame'
       is = is.map(i => iOperators[i])
-      result = timeVar(vs, is, ss, ds, iOperators['/'], addSegmentData)
+      result = timeVar(vs, is, ss, ds, iOperators['/'])
       result = addModifiers(result, modifiers)
       setInterval(result, interval)
     } else if (state.str.charAt(state.idx).toLowerCase() == 's') { // smoothstep interpolated timevar
