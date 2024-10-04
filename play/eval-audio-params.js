@@ -53,7 +53,6 @@ define(function (require) {
     try {
       if (v !== undefined) {
         if (typeof mod === 'function') { v = mod(v) }
-v = Math.abs(v)
         audioParam.setValueAtTime(v, t !== undefined ? t : system.timeNow())
       }
     } catch (e) {
@@ -74,7 +73,6 @@ v = Math.abs(v)
       let v = evalAt(count)
       if (v !== undefined) {
         if (typeof mod === 'function') { v = mod(v) }
-v = Math.abs(v)
         try {
           audioParam.setTargetAtTime(v, audioParam.lastTime, updateStep/4)
         } catch (e) {
@@ -94,7 +92,7 @@ v = Math.abs(v)
     } else {
       setAudioParamValue(audioParam, evalMainPerFrame(params, p, def, params.count, requiredUnits), p, mod, params._time) // Set now
       if (segmentedAudioParam(audioParam, params, p, undefined, def, requiredUnits, mod)) { return } // Set up with a segmented timeline
-      if (params.player) { console.log(`Per frame audio update! ${params.player} ${p}`) }
+      if (params) { console.log(`Per frame audio update! ${params.player} ${p}`) }
       if (params._perFrame) { // Update callback for buses
         params._perFrame.push((state) => perFrameUpdate(audioParam, state, undefined, (count) => evalMainPerFrame(params, p, def, count, requiredUnits), mod, p))
       } else { // Update callback for normal players
@@ -121,7 +119,7 @@ v = Math.abs(v)
     } else {
       setAudioParamValue(audioParam, evalSubPerFrame(params, p, subParamName, def, params.count, requiredUnits), p, mod, params._time) // set now
       if (segmentedAudioParam(audioParam, params, p, subParamName, def, requiredUnits, mod)) { return } // Set up with a segmented timeline
-      if (params.player) { console.log(`Per frame audio update! ${params.player} ${p} ${subParamName}`) }
+      if (params) { console.log(`Per frame audio update! ${params.player} ${p} ${subParamName}`) }
       if (params._perFrame) { // Update callback for buses
         params._perFrame.push(state => perFrameUpdate(audioParam, state, undefined, (count) => evalSubPerFrame(params, p, subParamName, def, count, requiredUnits), mod, p))
       } else { // Update callback for normal players

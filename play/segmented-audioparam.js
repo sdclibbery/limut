@@ -43,8 +43,7 @@ define(function (require) {
     let count = params.count
     let time = params._time
     let currentValue = getValue(param, def, requiredUnits)
-if (currentValue < 0) { return false } // temp hack so -ve is per frame, +ve is segmented
-console.log(`Segmented AudioParam for ${params.player} ${p} ${subP?subP:''}`)
+    if (params) { console.log(`Segmented AudioParam for ${params.player} ${p} ${subP?subP:''}`) }
     let nextValue = currentValue
     let segmentPower = param._segmentPower
     let nextSegment = param._nextSegment

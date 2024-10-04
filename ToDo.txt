@@ -10,6 +10,7 @@ Tighten up per frame update envelopes
  Can per frame consistency be improved any further? Still seems odd that there is any inconsistency at all...
   Also consider double update rate (or 1/90) for first 150ms???
  Minimise use of per frame update where it's not required
+  Eg pan=[-1/4:1/4]r should not be per frame; can this not have been boiled down to a const number for the event? If not, detect fixed better
  Update appropriate presets to use []es / pluck env
   techno
   303
