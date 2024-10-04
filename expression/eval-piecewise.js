@@ -64,10 +64,12 @@ define(function(require) {
     return v
   }
 
+  let emptyOptions = {}
   let piecewise = (vs, is, ss, p, options) => { // values, interpolators, sizes
     if (vs.length === 0) { return () => 0 }
     if (is.length !== vs.length) { throw `is.length ${is} !== vs.length ${vs}` }
     if (ss.length !== vs.length) { throw `ss.length ${ss} !== vs.length ${vs}` }
+    if (options === undefined) { options = emptyOptions }
     let segmentWrapper = {}
     let result = (e,b, evalRecurse, modifiers) => {
       if (modifiers && modifiers.seed !== undefined) {
