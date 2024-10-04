@@ -49,11 +49,12 @@ define(function (require) {
     return subParamUnits(v, subParamName, requiredUnits, def)
   }
 
-  let setAudioParamValue = (audioParam, v, p, mod) => {
+  let setAudioParamValue = (audioParam, v, p, mod, t) => {
     try {
       if (v !== undefined) {
         if (typeof mod === 'function') { v = mod(v) }
-        audioParam.setValueAtTime(v, system.timeNow())
+v = Math.abs(v)
+        audioParam.setValueAtTime(v, t !== undefined ? t : system.timeNow())
       }
     } catch (e) {
       console.log(audioParam, e)
@@ -61,60 +62,43 @@ define(function (require) {
     }
   }
 
-  let rampAudioParamValue = (audioParam, v, p, mod) => {
-    try {
+  let updateStep = 1/60
+  let perFrameUpdate = (audioParam, state, params, evalAt, mod, p) => {
+    if (params && state.time > params.endTime) { return false }
+    if (params && state.time < params._time) { return true }
+    if (audioParam.lastTime === undefined) {
+      audioParam.lastTime = params ? params._time : system.timeNow()
+    }
+    while (audioParam.lastTime < state.time) {
+      let count = metronome.beatTime(audioParam.lastTime+updateStep);
+      let v = evalAt(count)
       if (v !== undefined) {
         if (typeof mod === 'function') { v = mod(v) }
 v = Math.abs(v)
-        // audioParam.setTargetAtTime(v, system.timeNow(), 1/240)
-        audioParam.linearRampToValueAtTime(v, system.timeNow()+2/60)
-}    } catch (e) {
-      console.log(audioParam, e)
-      throw `Failed setting audio param ${p} to ${v}`
+        try {
+          audioParam.setTargetAtTime(v, audioParam.lastTime, updateStep/4)
+        } catch (e) {
+          console.log(audioParam, e)
+          throw `Failed updating audio param ${p} to ${v}`
+        }
+      }
+      audioParam.lastTime += updateStep
     }
+    return true
   }
 
   let evalMainParamFrame = (audioParam, params, p, def, requiredUnits, mod) => {
     let v = mainParamUnits(params[p], requiredUnits, def)
-    if (typeof v === 'number') {
-      // single value; no need for regular per frame update
-      if (typeof mod === 'function') { v = mod(v) }
-      audioParam.setValueAtTime(v, system.timeNow())
+    if (typeof v === 'number') { // single value; no need for regular per frame update
+      setAudioParamValue(audioParam, v, p, mod, params._time)
     } else {
+      setAudioParamValue(audioParam, evalMainPerFrame(params, p, def, params.count, requiredUnits), p, mod, params._time) // Set now
       if (segmentedAudioParam(audioParam, params, p, undefined, def, requiredUnits, mod)) { return } // Set up with a segmented timeline
-
-      // setAudioParamValue(audioParam, evalMainPerFrame(params, p, def, params.count, requiredUnits), p, mod) // set now
-      let v = evalMainPerFrame(params, p, def, params.count, requiredUnits)
-      if (v !== undefined) {
-        if (typeof mod === 'function') { v = mod(v) }
-v = Math.abs(v)
-        audioParam.setValueAtTime(v, params._time) // Set at start time, not current time
-      }
-
       if (params.player) { console.log(`Per frame audio update! ${params.player} ${p}`) }
-      if (params._perFrame) {
-        params._perFrame.push(state => rampAudioParamValue(audioParam, evalMainPerFrame(params, p, def, state.count, requiredUnits), p, mod))
-      } else {
-        let lastTime = params._time
-        let updateStep = 1/60
-        system.add(params._time, state => { // per frame update
-          if (state.time > params.endTime) { return false }
-          // rampAudioParamValue(audioParam, evalMainPerFrame(params, p, def, state.count, requiredUnits), p, mod)
-
-          if (state.time < params._time) { return true }
-          while (lastTime < state.time) {
-            let count = metronome.beatTime(lastTime+updateStep);
-            let v = evalMainPerFrame(params, p, def, count, requiredUnits)
-            if (v !== undefined) {
-              if (typeof mod === 'function') { v = mod(v) }
-v = Math.abs(v)
-              audioParam.setTargetAtTime(v, lastTime, updateStep/16)
-            }
-            lastTime += updateStep
-          }
-
-          return true
-        })
+      if (params._perFrame) { // Update callback for buses
+        params._perFrame.push((state) => perFrameUpdate(audioParam, state, undefined, (count) => evalMainPerFrame(params, p, def, count, requiredUnits), mod, p))
+      } else { // Update callback for normal players
+        system.add(params._time, (state) => perFrameUpdate(audioParam, state, params, (count) => evalMainPerFrame(params, p, def, count, requiredUnits), mod, p))
       }
     }
   }
@@ -131,35 +115,26 @@ v = Math.abs(v)
   }
 
   let evalSubParamFrame = (audioParam, params, p, subParamName, def, requiredUnits, mod) => {
-    if (fixedPerFrame(params, p, subParamName, def, requiredUnits)) {
-      // single value; no need for regular per frame update
+    if (fixedPerFrame(params, p, subParamName, def, requiredUnits)) { // single value; no need for regular per frame update
       let v = subParamUnits(params[p], subParamName, requiredUnits, def)
-      if (typeof mod === 'function') { v = mod(v) }
-      audioParam.setValueAtTime(v, system.timeNow())
+      setAudioParamValue(audioParam, v, p, mod, params._time)
     } else {
-      if (segmentedAudioParam(audioParam, params, p, subParamName, def, requiredUnits, mod)) { return } // Set up with a timeline
-      setAudioParamValue(audioParam, evalSubPerFrame(params, p, subParamName, def, params.count, requiredUnits), p, mod) // set now
+      setAudioParamValue(audioParam, evalSubPerFrame(params, p, subParamName, def, params.count, requiredUnits), p, mod, params._time) // set now
+      if (segmentedAudioParam(audioParam, params, p, subParamName, def, requiredUnits, mod)) { return } // Set up with a segmented timeline
       if (params.player) { console.log(`Per frame audio update! ${params.player} ${p} ${subParamName}`) }
-      if (params._perFrame) {
-        params._perFrame.push(state => rampAudioParamValue(audioParam, evalSubPerFrame(params, p, subParamName, def, state.count, requiredUnits), p, mod))
-      } else {
-        system.add(params._time, state => { // per frame update
-          if (state.time > params.endTime) { return false }
-          rampAudioParamValue(audioParam, evalSubPerFrame(params, p, subParamName, def, state.count, requiredUnits), p, mod)
-          return true
-        })
+      if (params._perFrame) { // Update callback for buses
+        params._perFrame.push(state => perFrameUpdate(audioParam, state, undefined, (count) => evalSubPerFrame(params, p, subParamName, def, count, requiredUnits), mod, p))
+      } else { // Update callback for normal players
+        system.add(params._time, (state) => perFrameUpdate(audioParam, state, params, (count) => evalSubPerFrame(params, p, subParamName, def, count, requiredUnits), mod, p))
       }
     }
   }
 
   let evalFuncFrame = (audioParam, params, name, fn) => {
-    setAudioParamValue(audioParam, fn(params.count), name) // set now
-    system.add(params._time, state => { // per frame update
-      if (state.time > params.endTime) { return false }
-      rampAudioParamValue(audioParam, fn(state.count), name)
-      return true
-    })
-}
+    setAudioParamValue(audioParam, fn(params.count), name, params._time) // set now
+    if (params.player) { console.log(`Per frame audio update! ${params.player} ${name}`) }
+    system.add(params._time, (state) => perFrameUpdate(audioParam, state, params, fn, undefined, name))
+  }
 
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {

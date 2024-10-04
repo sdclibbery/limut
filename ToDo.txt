@@ -1,12 +1,6 @@
 ====
 ==== audio ====
 Tighten up per frame update envelopes
- Its actually not too bad with this setup:
-  Initial SetToValue MUST be at exactly params._time
-  Every update after must be at exactly 1/60s in sequence; count it into the actual reqAnimFrame steps
-  Use setTargetAtTime with a TC that is 1/4 the time step (so 1/60 / 4)
- SUGGESTION
-  • Make the changes above to the per-frame update in a consistent, clean way; they are improvements no matter what
   • []e syntax does not add segmentation
   • Have a new []es syntax that forces segmentation, and []e is not segmented
       []es should be segmented, and anything else will be at the segmentation rate of the []es
