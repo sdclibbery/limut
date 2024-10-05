@@ -1,15 +1,6 @@
 ====
 ==== audio ====
-!!!! Comment pp in and out messes with the other two
- pk perc X..., drive=1/24
- ps perc ..s.
- pp perc -, swing=56
 Tighten up per frame update envelopes
- Deprecate and remove envelope{} function
- Minimise use of per frame update where it's not required
-  Eg pan=[-1/4:1/4]r should not be per frame; can this not have been boiled down to a const number for the event? If not, detect fixed better
- Can per frame consistency be improved any further? Still seems odd that there is any inconsistency at all...
-  Also consider double update rate (or 1/90) for first 150ms???
  TEST TEST TEST with both []e and []es
    time modifiers
    var/player lookups
@@ -22,14 +13,22 @@ Tighten up per frame update envelopes
    buses
    303 all controls
    EVERYTHING
-  Syntax highlight for []es
-  Remove segment/per-frame logs
-  Docs
-   []es  :  provides more accurate and consistent timing for fast or plucky envelopes but other things will not be fully per frame
-?Replace all amp envelopes with []e in presets and examples
-  ?Can do envelope=[]e ??
-  ?Deprecate att, dec, sus, rel etc params and prefer envelope=[]e??
-  ??Also deprecate other att/rel params; eg in pitchedperc etc???
+ Syntax highlight for []es
+ Remove segment/per-frame logs
+ Deprecate and remove envelope{} function
+ Docs
+  []es  :  provides more accurate and consistent timing for fast or plucky envelopes but other things will not be fully per frame
+?Replace all amp envelopes with []e / []es in presets and examples
+ ?Can do envelope=[]e ??
+ ?Deprecate att, dec, sus, rel etc params and prefer envelope=[]e??
+ ??Also deprecate other att/rel params; eg in pitchedperc, fm operator etc???
+Can per-frame consistency be improved any further? Still seems odd that there is any inconsistency at all...
+ Also consider double update rate (or 1/90) for first 150ms???
+! Minimise use of audio per frame update where it's not required. `this.` is still causing a problem. Is there a way to decide whether it really needs to be per frame?
+!!!! s causes the k to get filtered somehow! But then p restores to normal!!!
+ k perc X...
+ s perc ...s, amp=1/64
+ p perc ...-, amp=1/64
 !!?Limiter permanently showing on???
 Hpf for chorus
 Would be nice to have a unison param with stereo spread for many base synths?

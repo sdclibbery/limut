@@ -91,6 +91,7 @@ define(function (require) {
       setAudioParamValue(audioParam, v, p, mod, params._time)
     } else {
       setAudioParamValue(audioParam, evalMainPerFrame(params, p, def, params.count, requiredUnits), p, mod, params._time) // Set now
+      if (typeof v === 'function' && v.interval === 'event') { return } // If it can't vary per frame, drop out here
       if (segmentedAudioParam(audioParam, params, p, undefined, def, requiredUnits, mod)) { return } // Set up with a segmented timeline
       if (params) { console.log(`Per frame audio update! ${params.player} ${p}`) }
       if (params._perFrame) { // Update callback for buses
@@ -113,11 +114,12 @@ define(function (require) {
   }
 
   let evalSubParamFrame = (audioParam, params, p, subParamName, def, requiredUnits, mod) => {
+    let v = subParamUnits(params[p], subParamName, requiredUnits, def)
     if (fixedPerFrame(params, p, subParamName, def, requiredUnits)) { // single value; no need for regular per frame update
-      let v = subParamUnits(params[p], subParamName, requiredUnits, def)
       setAudioParamValue(audioParam, v, p, mod, params._time)
     } else {
       setAudioParamValue(audioParam, evalSubPerFrame(params, p, subParamName, def, params.count, requiredUnits), p, mod, params._time) // set now
+      if (typeof v === 'function' && v.interval === 'event') { return } // If it can't vary per frame, drop out here
       if (segmentedAudioParam(audioParam, params, p, subParamName, def, requiredUnits, mod)) { return } // Set up with a segmented timeline
       if (params) { console.log(`Per frame audio update! ${params.player} ${p} ${subParamName}`) }
       if (params._perFrame) { // Update callback for buses
