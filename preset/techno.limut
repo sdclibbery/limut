@@ -26,7 +26,7 @@ preset robot wave
 
 preset techbass saw
   , envelope='percussion', dec=1/4+this.decay/2, pan=[-1/4:1/4]r
-  , lpf={10+3000*[1:!200ms+1000ms*this.decay^2,0]e*(0.15+2*this.cutoff^3),q:9}, oct=2, dur=1/4
+  , lpf={10+3000*[1:!200ms+1000ms*this.decay^2,0]es*(0.15+2*this.cutoff^3),q:9}, oct=2, dur=1/4
   , chorus=1/3
   // Controls
   , decay=[1/8:3/4]l8
@@ -39,3 +39,5 @@ preset psy multiwave
 	, bpf={250+2250*this.cutoff^2,q:3,poles:4}, high=-3db
   , drive=1/8, delay=1/8, room={1,hpf:500,mix:1/2}, glide=this.dur/10
   , cutoff=[2/3:0]e + [0:1/3]l1/2@f + [0:1/3]l2@f
+
+preset sub sine, dur=1/4, oct=1, envelope='organ', amp*=2, amp*=[1:!400ms,0]es, drive=1/48, low=2

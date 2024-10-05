@@ -1,17 +1,15 @@
 ====
 ==== audio ====
+!!!! Comment pp in and out messes with the other two
+ pk perc X..., drive=1/24
+ ps perc ..s.
+ pp perc -, swing=56
 Tighten up per frame update envelopes
- Update appropriate presets to use []es / pluck env
-  techno
-  303
-  909/pitchedperc?
-  other
  Deprecate and remove envelope{} function
  Minimise use of per frame update where it's not required
   Eg pan=[-1/4:1/4]r should not be per frame; can this not have been boiled down to a const number for the event? If not, detect fixed better
  Can per frame consistency be improved any further? Still seems odd that there is any inconsistency at all...
   Also consider double update rate (or 1/90) for first 150ms???
- Remove segment/per-frame logs
  TEST TEST TEST with both []e and []es
    time modifiers
    var/player lookups
@@ -25,16 +23,19 @@ Tighten up per frame update envelopes
    303 all controls
    EVERYTHING
   Syntax highlight for []es
+  Remove segment/per-frame logs
   Docs
-   []es
+   []es  :  provides more accurate and consistent timing for fast or plucky envelopes but other things will not be fully per frame
 ?Replace all amp envelopes with []e in presets and examples
   ?Can do envelope=[]e ??
   ?Deprecate att, dec, sus, rel etc params and prefer envelope=[]e??
   ??Also deprecate other att/rel params; eg in pitchedperc etc???
+!!?Limiter permanently showing on???
 Hpf for chorus
 Would be nice to have a unison param with stereo spread for many base synths?
-?Treat db as units??? - compressor params in db; what else?
-Delay or offset sub Param for glide
+?Treat db as units??? - compressor params in db; what else? This may not even be a good idea; would want to do amp+=3db or 3db+2...
+ Either way, document clearly
+Delay or offset sub-param for glide?
 Should be a mix subparam on echo!
  Mix param for all filters, want to  s saw .75 crop 6 + 68, lpf={100,mix:1-envelope{d:500}}
 Players can have an analyser
@@ -243,6 +244,7 @@ shadertoy synth multiple channels
 
 ====
 ==== other ====
+Cooler effect when update code
 User defined functions
  Eg shape={x}->sgn{x}*max{abs{x}-1/2,0}
   !But the default behaviour for our existing functions is to be evalled even without {}, so how to pass the functions as values?
