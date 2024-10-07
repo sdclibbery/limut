@@ -4,7 +4,6 @@ define(function(require) {
   require('functions/time')
   require('functions/rand')
   require('functions/aggregators')
-  require('functions/envelope')
   require('functions/maths')
   require('functions/sliders')
   require('predefined-var-defs')

@@ -93,7 +93,7 @@ define(function (require) {
       setAudioParamValue(audioParam, evalMainPerFrame(params, p, def, params.count, requiredUnits), p, mod, params._time) // Set now
       if (typeof v === 'function' && v.interval === 'event') { return } // If it can't vary per frame, drop out here
       if (segmentedAudioParam(audioParam, params, p, undefined, def, requiredUnits, mod)) { return } // Set up with a segmented timeline
-      if (params) { console.log(`Per frame audio update! ${params.player} ${p}`) }
+      // if (params) { console.log(`Per frame audio update! ${params.player} ${p}`) }
       if (params._perFrame) { // Update callback for buses
         params._perFrame.push((state) => perFrameUpdate(audioParam, state, undefined, (count) => evalMainPerFrame(params, p, def, count, requiredUnits), mod, p))
       } else { // Update callback for normal players
@@ -121,7 +121,7 @@ define(function (require) {
       setAudioParamValue(audioParam, evalSubPerFrame(params, p, subParamName, def, params.count, requiredUnits), p, mod, params._time) // set now
       if (typeof v === 'function' && v.interval === 'event') { return } // If it can't vary per frame, drop out here
       if (segmentedAudioParam(audioParam, params, p, subParamName, def, requiredUnits, mod)) { return } // Set up with a segmented timeline
-      if (params) { console.log(`Per frame audio update! ${params.player} ${p} ${subParamName}`) }
+      // if (params) { console.log(`Per frame audio update! ${params.player} ${p} ${subParamName}`) }
       if (params._perFrame) { // Update callback for buses
         params._perFrame.push(state => perFrameUpdate(audioParam, state, undefined, (count) => evalSubPerFrame(params, p, subParamName, def, count, requiredUnits), mod, p))
       } else { // Update callback for normal players
@@ -132,7 +132,7 @@ define(function (require) {
 
   let evalFuncFrame = (audioParam, params, name, fn) => {
     setAudioParamValue(audioParam, fn(params.count), name, params._time) // set now
-    if (params.player) { console.log(`Per frame audio update! ${params.player} ${name}`) }
+    // if (params.player) { console.log(`Per frame audio update! ${params.player} ${name}`) }
     system.add(params._time, (state) => perFrameUpdate(audioParam, state, params, fn, undefined, name))
   }
 

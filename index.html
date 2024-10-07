@@ -918,10 +918,6 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>rand{3,1,2}</code> Returns one of the arguments at random</p>
 <p><code>euclid{3,from:8}</code> Euclidean rhythm generator. The example will evenly spread 3 events between 8 beats. For example <code>p ping 0, dur=euclid{3,from:8}</code> will make 3 notes of durations 3,2 and 3. Note this uses a Bresenham type algorithm to spread the events, rather than a classic Euclidean algorithm. This it may produce a slightly different ordering ("3 from 8" would give a 3,3,2 pattern in a classic Euclidean algorithm, but the Bresenham gives a 3,2,3 pattern. The offset subparam can be used to 'fix' this.</p>
 <p class='sub'><code>euclid{3,from:8,offset:1}</code> Offset rotates the pattern. The example will give a 3,3,2 pattern which is the default 3,2,3 pattern but rotated by one.</p>
-<p><code>envelope{}</code> !DEPRECATED: prefer to use eg <code>[0:!200ms, 1:!400ms, 0:!]es</code> instead of <code>envelope{a:200ms,d:400ms}</code>. Return a value that changes over the course of each event like an envelope generator.</p>
-<p class='sub'><code>envelope{shape:'lin'}</code> Specify the shaping applied to envelope segments. Valid values 'exp' for an exponential trend to the new value, or 'lin' for linear'. The default is 'exp'.</p>
-<p class='sub'><code>envelope{a:1}</code> Attack time for the envelope, with the shaping of 'shape'. Default: time units: beats</p>
-<p class='sub'><code>envelope{d:1}</code> Decay time for the envelope, with the shaping of 'shape'. Default: time units: beats</p>
 <p><code>rand</code> Returns a pseudo random number between zero and one. Uses time-based hashing to provide consistent values. <code>rand@e</code> will provide a number that is different on each pattern event, but constant within each event. <code>rand{seed:0}</code> sets a specific seed for the randoms. Because the value comes from time-hashing, time based modifiers such as <code>step</code> and <code>per</code> are respected.</p>
 <p><code>time</code> Returns the current time in beats. Time modifiers such as <code>step</code> and <code>per</code> are respected.</p>
 </div>

@@ -3390,9 +3390,9 @@ b saw 01-706g-706g, dur=1/4, oct=2, lpf=[1500:200]e, glide=this.g*this.dur/2
 // p8 io808 (x-)---(x*-)-=-(x=)---(x*-)(x=)-(x-), dur=1/4, type='all', choke='808'
 
 
-// g glow 0a0a00, loc={x:(time%4)/2-1,y:this.seg}, seg=smooth{this.eg*this.a*10,att:1,dec:1/2+(1-this.a)*100}, eg=envelope{d:100ms,shape:'lin',units:'ms'}, fade=0
-// r readout 00.., add=smooth{this.eg,att:8,dec:1}, eg=envelope{a:10,d:10,shape:'lin',units:'ms'}
-// r readout 0..., add=this.eg, eg=envelope{a:10,d:10,shape:'lin',units:'ms'}
+// g glow 0a0a00, loc={x:(time%4)/2-1,y:this.seg}, seg=smooth{this.eg*this.a*10,att:1,dec:1/2+(1-this.a)*100}, eg=[1:/100ms,0]e
+// r readout 00.., add=smooth{this.eg,att:8,dec:1}, eg=[0:10ms,1:10ms,0]e
+// r readout 0..., add=this.eg, eg=[0:10ms,1:10ms,0]e
 
 // p ping 070., glide={1/4,units:'beats'}
 // p ping 070., glide={1/4,units:'s'}
@@ -3433,7 +3433,7 @@ preset lately fm
   , envelope='simple', att=1/16, dec=1/2
   , op1={ratio:1,wave:'saw',target:'out'}
   , op2={ratio:0.5,target:1,depth:1,att:0,rel:1/4}
-  , lpf={10+800*envelope{a:70,d:500},q:8}
+  , lpf={10+800*[0:!70ms,1:!500ms,0]e,q:8}
 
 
 set bpm=137
@@ -3794,9 +3794,7 @@ r readout, add={foo:2,bar:3}.(this.foo), foo=bar
 // set bpm=180
 // g glow, dur=8, loc={x:[-1:8,1:0]l@f, y:2*[0:1,1:4,0:3]l@f-1 }
 // g glow, dur=8, loc={x:[-1:8,1:0]l@f, y:2*[0:/1,1:/4,0:3]e -1 }
-// g glow, dur=8, loc={x:[-1:8,1:0]l@f, y:2*envelope{a:500,d:2000,shape:lin}-1 }
 // g glow, dur=8, loc={x:[-1:8,1:0]l@f, y:2*[0:/500ms,1:/2000ms,0]e -1 }
-// g1 glow, dur=8, loc={x:[-1:8,1:0]l@f, y:2*envelope{a:500,d:2000}-1 ,w:1/2,h:1/2}, fore=red
 // g2 glow, dur=8, loc={x:[-1:8,1:0]l@f, y:2*[0:!500ms,1:!2000ms,0]e -1 ,w:1/2,h:1/2 }, fore=green
 
 
