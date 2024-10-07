@@ -63,7 +63,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
     } else if (ch == "#" && stream.match(/^[0-9a-fA-F]{1,8}/)) {
       return ret("colour", "colour");
     } else if (ch == ']') {
-      stream.match(/[tslenr]?/);
+      stream.match(/es|[tslenr]?/);
       return ret("bracket","bracket");
     } else if (/[\[\]{}\(\)\<\>]/.test(ch)) {
       return ret("bracket","bracket");

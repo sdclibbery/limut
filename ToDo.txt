@@ -1,7 +1,6 @@
 ====
 ==== audio ====
 Tighten up per frame update envelopes
- Syntax highlight for []es
  ! Minimise use of audio per frame update where it's not required
   ! `this.` is still causing a problem. Is there a way to decide whether it really needs to be per frame?
    This is a big problem for presets like ambi, where tons of things are derived params
