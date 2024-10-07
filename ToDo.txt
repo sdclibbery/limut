@@ -1,7 +1,5 @@
 ====
 ==== audio ====
-Tighten up per frame update envelopes
- Release: removed envelope{}
 ?Replace all amp envelopes with []e / []es in presets and examples
  ?Can do envelope=[]e ??
  ?Deprecate att, dec, sus, rel etc params and prefer envelope=[]e??
