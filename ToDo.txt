@@ -1,9 +1,6 @@
 ====
 ==== audio ====
 Tighten up per frame update envelopes
- Docs
-  []es  :  provides more accurate and consistent timing for fast or plucky envelopes but other things will not be fully per frame
-   Also may not handle time modifiers correctly
  Release: removed envelope{}
 ?Replace all amp envelopes with []e / []es in presets and examples
  ?Can do envelope=[]e ??

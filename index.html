@@ -439,6 +439,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>[1,2]e</code> Timed interpolated sequence, each value is evenly spaced from beginning to end of the current event</p>
 <p><code>[1,2]e1</code> Timed interpolated sequence starting at the beginning of the event, each value takes 1 beat to change to the next. Duration must be a const number, cannot be an expression. Default time unit: beats.</p>
 <p><code>[0:!300ms,1:_[1/4b:1/2b]r,0]e</code> Timed piecewise sequence starting at the beginning of the event. In this case it would provide an envelope for the event, with an exponential attack lasting 300ms, followed by a const sustain lasting between 1/4 and 1/2 a beat at random. Default time unit: beats.</p>
+<p><code>[1:!200ms,0]es</code> []es is the same as []e, except when used for an audioparam (eg amp or lpf), it will create segments instead of regular updates. This will provide more accurate and consistent timing (for example, for pluck envelopes). However, it will block other per frame expressions, and also time modifiers, from working correctly.</p>
 <p><code>[]r</code> Select a different value every time, chosen randomly between 0 and 1</p>
 <p><code>[1,4,7]r</code> Select a different value every time, chosen randomly from the numbers 1, 4 and 7</p>
 <p><code>[:9]r</code> Select a different random float every time, between 0 and 9</p>
