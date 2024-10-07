@@ -1581,6 +1581,9 @@ define(function(require) {
   assert({"value":0,"_nextSegment":4/4,"_segmentPower":1}, evalParamFrame(p, ev(0,0,1), 3/4))
   assert(0, evalParamFrame(p, ev(0,0,1), 4/4))
 
+  p = parseExpression("2000*[[1,0,1]es1/2:4,0]es")
+  assert({"value":0,"_nextSegment":2+2/2,"_segmentPower":1}, evalParamFrame(p, ev(0,2,1), 2+2/4))
+  
   console.log('Parse expression tests complete')
   }
 

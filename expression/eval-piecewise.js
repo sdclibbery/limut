@@ -46,6 +46,9 @@ define(function(require) {
   let setSegment = (v, segmentWrapper, is, idx, next, nextSegmentMapper,e,b) => {
     let p = is[idx % is.length].segmentPower
     let power = p!==undefined ? p : 1 // Default to power 1 for linear if not specified
+    if (nextSegmentMapper) {
+      next = nextSegmentMapper(next, e,b)
+    }
     next = Math.min(next, v._nextSegment||Infinity)
     power = Math.max(power, v._segmentPower||0)
     if (typeof v === 'object' && !Array.isArray(v)) {
@@ -57,9 +60,6 @@ define(function(require) {
       segmentWrapper._nextSegment = next
       segmentWrapper._segmentPower = power
       v = segmentWrapper
-    }
-    if (nextSegmentMapper) {
-      v._nextSegment = nextSegmentMapper(v._nextSegment, e,b)
     }
     return v
   }
