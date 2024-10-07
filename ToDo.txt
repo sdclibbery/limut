@@ -2,15 +2,6 @@
 ==== audio ====
 Tighten up per frame update envelopes
  TEST TEST TEST with both []e and []es
-   time modifiers
-   var/player lookups
-   functions
-   all visuals
-   visual player looks up value on audio player using segmentation
-   slider
-   smooth
-   glide/pitch effects
-   buses
    303 all controls
    EVERYTHING
  Syntax highlight for []es
@@ -18,13 +9,16 @@ Tighten up per frame update envelopes
  Deprecate and remove envelope{} function
  Docs
   []es  :  provides more accurate and consistent timing for fast or plucky envelopes but other things will not be fully per frame
+   Also may not handle time modifiers correctly
 ?Replace all amp envelopes with []e / []es in presets and examples
  ?Can do envelope=[]e ??
  ?Deprecate att, dec, sus, rel etc params and prefer envelope=[]e??
  ??Also deprecate other att/rel params; eg in pitchedperc, fm operator etc???
+! Minimise use of audio per frame update where it's not required. `this.` is still causing a problem. Is there a way to decide whether it really needs to be per frame?
+ This is a big problem for presets like ambi, where tons of things are derived params
+Can pitch effects be segmented? Currently always go per-frame. EG  s saw, oct=2, addc=[36:!400ms,0]es, lpf=1000, amp/=4
 Can per-frame consistency be improved any further? Still seems odd that there is any inconsistency at all...
  Also consider double update rate (or 1/90) for first 150ms???
-! Minimise use of audio per frame update where it's not required. `this.` is still causing a problem. Is there a way to decide whether it really needs to be per frame?
 !!!! s causes the k to get filtered somehow! But then p restores to normal!!!
  k perc X...
  s perc ...s, amp=1/64

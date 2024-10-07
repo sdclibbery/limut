@@ -38,6 +38,7 @@ define(function (require) {
 
   let segmentedAudioParam = (audioParam, params, p, subP, def, requiredUnits, mod) => { // !! ASSUME mod IS LINEAR
     let epsilon = 1e-5 // Apply an epsilon for the initial value
+    if (params.beat === undefined) { return } // Bus does not have normal event data; not worth trying to segment
     let param = getParamValue(evalParamPerFrame(params, p, params.count + epsilon, undefined), subP)
     if (param._nextSegment === undefined) { return false } // No segment data; we cant build a segment timeline here
     let count = params.count
