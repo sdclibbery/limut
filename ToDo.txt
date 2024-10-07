@@ -1,10 +1,11 @@
 ====
 ==== audio ====
 Tighten up per frame update envelopes
- TEST TEST TEST with both []e and []es
-   303 all controls
-   EVERYTHING
  Syntax highlight for []es
+ ! Minimise use of audio per frame update where it's not required
+  ! `this.` is still causing a problem. Is there a way to decide whether it really needs to be per frame?
+   This is a big problem for presets like ambi, where tons of things are derived params
+  ! Also  s saw, dur=1/4, oct=2, amp/=10, lpf=1000*[0,1]l1/4@e  is getting per frame on the q!
  Remove segment/per-frame logs
  Deprecate and remove envelope{} function
  Docs
@@ -14,8 +15,6 @@ Tighten up per frame update envelopes
  ?Can do envelope=[]e ??
  ?Deprecate att, dec, sus, rel etc params and prefer envelope=[]e??
  ??Also deprecate other att/rel params; eg in pitchedperc, fm operator etc???
-! Minimise use of audio per frame update where it's not required. `this.` is still causing a problem. Is there a way to decide whether it really needs to be per frame?
- This is a big problem for presets like ambi, where tons of things are derived params
 Can pitch effects be segmented? Currently always go per-frame. EG  s saw, oct=2, addc=[36:!400ms,0]es, lpf=1000, amp/=4
 Can per-frame consistency be improved any further? Still seems odd that there is any inconsistency at all...
  Also consider double update rate (or 1/90) for first 150ms???

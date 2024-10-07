@@ -2,7 +2,7 @@ preset tb303 wave
 	, wave='saw', oct=2+this.u-this.d, choke=this.player
 	, dur=1/4 // 1/16th notes
   , envelope='organ', sus={this.dur-(1-this.a)*5/48, level:1} // Gate
-  , amp*=[1:!1000ms,0]es*3/4 // VCA envelope: slow exponential decay
+  , amp*=[1:!1000ms,0]es*3/4 // VCA envelope: fixed slow exponential decay
   // 303 Controls
   , cutoff=1/2
   , resonance=1/2
@@ -12,7 +12,7 @@ preset tb303 wave
   // Derived params
   , amp*=3/4 + this.a*this.accent/3
   , meg=[1:!340ms+(this.decay^2)*(1-this.a)*2000ms,0]es // 303 Main Envelope Generator
-  , smoothedmeg=smooth{this.meg*this.a*128,att:2^-6,dec:2^-16+(1-this.a)*100}*this.resonance + this.meg*(1-this.resonance) // Smoothed meg for the accent sweep, based on resonance
+  , smoothedmeg=smooth{this.meg*this.a*128,att:2^-6,dec:2^-16+(1-this.a)*100}*this.resonance + this.meg*(1.01-this.resonance) // Smoothed meg for the accent sweep, based on resonance
   , accentedmeg=this.smoothedmeg*this.a*this.accent + this.meg*(1-this.a*this.accent) // Accent sweep uses smoothed meg
   , appliedmeg=(this.envmod+1)*this.accentedmeg + 1-this.envmod // Apply envmod
   , lpf={
