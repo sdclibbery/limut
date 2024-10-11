@@ -1,8 +1,8 @@
 ====
 ==== audio ====
-?Replace all amp envelopes with []e / []es in presets and examples
- ?Can do envelope=[]e ??
- ?Deprecate att, dec, sus, rel etc params and prefer envelope=[]e??
+Use []e / []es for all envelopes?
+ ?Support envelope=[]e etc ??
+  ?Deprecate att, dec, sus, rel etc params and prefer envelope=[]e??
  ??Also deprecate other att/rel params; eg in pitchedperc, fm operator etc???
 ! Minimise use of audio per frame update where it's not required
  ! `this.` is still causing a problem. Is there a way to decide whether it really needs to be per frame?
@@ -12,18 +12,18 @@ Can pitch effects be segmented? Currently always go per-frame. EG  s saw, oct=2,
  See evalFuncFrame. Problem is all pitch effects are combined into one function
 Can per-frame consistency be improved any further? Still seems odd that there is any inconsistency at all...
  Also consider double update rate (or 1/90) for first 150ms???
-!!!! s causes the k to get filtered somehow! But then p restores to normal!!!
+!!!! s causes the k to get filtered somehow! But then p restores to normal!!! Something to do with the `X`?? Reencode sample???
  k perc X...
  s perc ...s, amp=1/64
  p perc ...-, amp=1/64
-!!?Limiter permanently showing on???
+!!?Limiter permanently showing on??? Only on firefox??
 Hpf for chorus
 Would be nice to have a unison param with stereo spread for many base synths?
 ?Treat db as units??? - compressor params in db; what else? This may not even be a good idea; would want to do amp+=3db or 3db+2...
  Either way, document clearly
 Delay or offset sub-param for glide?
-Should be a mix subparam on echo!
- Mix param for all filters, want to  s saw .75 crop 6 + 68, lpf={100,mix:1-envelope{d:500}}
+Should be a mix subparam on echo?
+Mix param for all filters, want to  s saw .75 crop 6 + 68, lpf={100,mix:1-envelope{d:500}}
 Players can have an analyser
   Created on access
   All events connect to it (and disconnect)
