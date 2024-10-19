@@ -40,4 +40,4 @@ preset psy multiwave
   , drive=1/8, delay=1/8, room={1,hpf:500,mix:1/2}, glide=this.dur/10
   , cutoff=[2/3:0]e + [0:1/3]l1/2@f + [0:1/3]l2@f
 
-preset sub sine, dur=1/4, oct=1, envelope='organ', amp*=2, amp*=[1:!400ms,0]es, drive=1/48, low=2
+preset sub sine, dur=1/4, sus=1/6, oct=1, envelope='organ', amp*=3, amp*=[1:!400ms,0]es, drive={1/32,mix:1/6}
