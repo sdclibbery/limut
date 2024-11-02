@@ -12,6 +12,8 @@
  ! `this.` is still causing a problem. Is there a way to decide whether it really needs to be per frame?
   This is a big problem for presets like ambi, where tons of things are derived params
  ! Also  s saw, dur=1/4, oct=2, amp/=10, lpf=1000*[0,1]l1/4@e  is getting per frame on the q!
+Start oscillator at a whole number of cycles after time zero
+ To avoid phasing when using pad envelopes, and/or to control the starting phase of an oscillator
 Use []e / []es for all envelopes?
  ?Support envelope=[]e etc ??
   ?Deprecate att, dec, sus, rel etc params and prefer envelope=[]e??
