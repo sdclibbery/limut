@@ -1,5 +1,18 @@
 ====
 ==== audio ====
+WebAudio node graphs as first class values
+ Params; eg playBus=biquad{400hz,q:10} >> shape{tanh{}}    or   playerBus=delay{[0:100ms,1]l@f}    or    playBus>>=gain{[1:!200ms,0]e}
+ ? How to define node loops? Eg echo with feedback? Or parallel nodes, eg multiple bandpass and sum?
+    set echoLoop = gain{0.9} >> echo
+    set echo = delay{1/4b} >> echoLoop
+ ? Can you do playBus=[drive,lpf]r? What if its per frame? Presumably playBus is @e only, and playerBus is parse time only??
+ ? How to add something new into the middle of a chain? Eg I want to add another filter in before the pan
+  ? Have multiple chains with priority somehow?
+ ? Is there a default playBus/playerBus that supports all current effects, and you can replace (or extend) it?
+  ? Rewrite all existing effects this way?
+  ? Also have genBus and replace all JS synths?
+ ? How do these values interact? Does it even make sense for them to use any operator other than >> ?
+  ???? Maybe drive * 3 is literally a x3 gain node?? Heading into SC territory...
 !!?Limiter permanently showing on??? Only on firefox desktop??
 !!!! s causes the k to get filtered somehow! But then p restores to normal!!! Something to do with the `X`?? Reencode sample???
  k perc X...
@@ -236,24 +249,29 @@ shadertoy synth multiple channels
 
 ====
 ==== other ====
-Cooler effect when update code
 User defined functions
  Eg shape={x}->sgn{x}*max{abs{x}-1/2,0}
   !But the default behaviour for our existing functions is to be evalled even without {}, so how to pass the functions as values?
    ?Can we default to non eval without {}, but do the eval if necessary in context? Eg operators can't act on function, so eval? etc
  Or set riser={dur}->(time%dur)/dur
-  Allow riser={dur?32}->(time%dur)/dur ?
+  Allow riser={dur?:32}->(time%dur)/dur ? Or {dur:32} to make parse easier?
  ?If functions are values, how do they interact with other values? What if you add functions etc? Eg ({}->0) + ({}->1) ?
  ?What about chords eg {x} -> x*(1,2,3) ?
- !Should be able to access the default e and b params
+ !Should be able to access the default e and b params. Can get rid of time global??? And `this.` ?????????
  !Should be able to eval functions as well as pass them; eg ({}->3){}
+ !?efficient tail recursion?
 !! floor doesn't work with delay:  r readout 1234, delay=floor{[0:1]l3@f,to:1/4}
+Cooler effect when update code
 More time modifiers
  offset
  rate
  time - set time directly to an expression
  Random noise rewrite to use piecewise
   []n:  []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
+Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7]r, delay=(0,{1/2,add+:2})
+ !Actually, this is already possible using  delay=(0,{1/2,add:this.add+2}) . but this is ugly :-/
+ But not sure of syntax
+  The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
 Syntax to allow use of clamp and normalise for []{}?
 Main bpm param time units
 stutter subparam, to set time between stutter events
@@ -352,10 +370,6 @@ Follow player sort-out
 !add=(0,2,4,6)[rand]{per:2,seed:0} doesn't work; rand chord indexer needs to respect time modifiers and seed etc
 !Really need a complete audit of time vs count. Need the code to be clear and unambiguous which is which. There will be issues to fix. Look at []e and []e{per}
 !Pattern does not have correct timing: <3[45]>_
-Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7]r, delay=(0,{1/2,add+:2})
- !Actually, this is already possible using  delay=(0,{1/2,add:this.add+2}) . but this is ugly :-/
- But not sure of syntax
-  The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
 "on next 4 " / "on next 28 of 32 " syntax to execute a line on the next beat count
   - but how not to repeat this if rerun? replace now/next in source with actual count?
 "every 4 " / "every 28 of 32 "
