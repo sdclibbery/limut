@@ -1,14 +1,19 @@
 ====
 ==== audio ====
 WebAudio node graphs as first class values
- Params; eg playBus=biquad{400hz,q:10} >> shape{tanh{}}    or   playerBus=delay{[0:100ms,1]l@f}    or    playBus>>=gain{[1:!200ms,0]e}
+ Params; eg playBus=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerBus=delay{[0:100ms,1]l@f}    or    playBus>>=gain{[1:!200ms,0]e}
+ ? Naming for params :-/
  ? How to define node loops? Eg echo with feedback? Or parallel nodes, eg multiple bandpass and sum?
-    set echoLoop = gain{0.9} >> echo
-    set echo = delay{1/4b} >> echoLoop
+  Arrays? Eg playBus = shape{tanh} >> {biquad{110},biquad{220}} >> gain{2}
+  And placeholders? playBus = _in >> delay{1/4b} >> {out, gain{0.9} >> _echoLoop >> _in}   Can use _echoLoop as a way to insert more?
+ ? How to control audioparams with nodes instead of expressions?
+  Just pass more nodes in instead of value expression
+  Eg playerBus=delay{wave{'saw',freq:1hz}}
+   ? What if you want to use the same LFO to control multiple things? Use placeholders somehow?
  ? Can you do playBus=[drive,lpf]r? What if its per frame? Presumably playBus is @e only, and playerBus is parse time only??
  ? How to add something new into the middle of a chain? Eg I want to add another filter in before the pan
-  ? Have multiple chains with priority somehow?
- ? Is there a default playBus/playerBus that supports all current effects, and you can replace (or extend) it?
+  Use placeholders. So define playBus=_filters >> biquad{} >> _pans >> stereo{} and can then insert extra chains at the placeholder
+ ? Have a default playBus/playerBus that supports all current effects, and you can replace (or extend) it?
   ? Rewrite all existing effects this way?
   ? Also have genBus and replace all JS synths?
  ? How do these values interact? Does it even make sense for them to use any operator other than >> ?
