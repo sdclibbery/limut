@@ -39,7 +39,11 @@ define(function(require) {
       let v
       if (typeof vr === 'function' && vr.isVarFunction) { // Var function
         modifiers = modifiers || {}
-        Object.assign(modifiers, evalRecurse(args,event,b))
+        if (vr.dontEvalArgs) { // AudioNode functions cannot do per frame update if the args are already evalled
+          Object.assign(modifiers, args)
+        } else {
+          Object.assign(modifiers, evalRecurse(args,event,b))
+        }
         let wrapper = (e,b,er) => {
           if (wrapper.modifiers) {
             if (wrapper.args !== undefined) { wrapper.modifiers.value = wrapper.args }

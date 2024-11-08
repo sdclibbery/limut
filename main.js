@@ -6,6 +6,7 @@ define(function(require) {
   require('functions/aggregators')
   require('functions/maths')
   require('functions/sliders')
+  require('play/nodes')
   require('predefined-var-defs')
   let mainVars = require('main-vars')
   let system = require('play/system')

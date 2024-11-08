@@ -8,7 +8,7 @@ define(function(require) {
 
   let findInterval = (v) => {
     let result = v&&v.interval
-    if (result === undefined && typeof v === 'object') {
+    if (result === undefined && typeof v === 'object' && !(v instanceof AudioNode)) {
       result = v.interval
       for (let k in v) {
         result = combine(result, v[k].interval)

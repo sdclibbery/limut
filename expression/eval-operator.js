@@ -20,7 +20,7 @@ define(function(require) {
     }
     return obj.__evaluated
   }
-  let isPrimitive = v => (typeof v == 'number' || typeof v == 'string' || v === undefined)
+  let isPrimitive = v => (typeof v == 'number' || typeof v == 'string' || v === undefined || v instanceof AudioNode)
 
   let applyOperator = (op, el, er) => {
     if (isPrimitive(el)) {

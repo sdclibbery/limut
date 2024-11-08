@@ -53,7 +53,7 @@ define(function(require) {
         return 0 // Not found as a player - should really return undefined now we have '?' operator, but this could be a breaking change
       }
     }
-    if (typeof l === 'object') {
+    if (typeof l === 'object' && !(l instanceof AudioNode)) {
       let mr = mainParam(r)
       let result = l[mr] // Map lookup
       if (result === undefined && typeof mr === 'number') { return l } // If field lookup failed, return the entire map. This is useful when a chord of objects optimises down to a single object but you still want to have an indexer on it.

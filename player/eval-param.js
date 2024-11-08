@@ -64,7 +64,7 @@ define((require) => {
       if (value.isDeferredVarFunc) { return value } // Do not eval delayed function
       let v = evalFunctionWithModifiers(value, event, beat, evalRecurse)
       return evalRecurse(v, event, beat)
-    } else if (typeof value === 'object') { // Eval each field in the object
+    } else if (typeof value === 'object' && !(value instanceof AudioNode)) { // Eval each field in the object
       let result = {}
       for (let k in value) {
        if (evalToObjectOrPrimitive) {
@@ -123,7 +123,7 @@ define((require) => {
       if (result.interval === 'event') { beat = event.count } // Force per event if explicitly called for
       return evalRecurse(v, event, beat)
     }
-    if (typeof result === 'object') {
+    if (typeof result === 'object' && !(result instanceof AudioNode)) {
       let v = {}
       for (let k in result) {
         v[k] = evalDeferredFunc(result[k], event, beat, evalRecurse, options)

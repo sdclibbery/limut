@@ -51,7 +51,7 @@ define(function(require) {
     }
     next = Math.min(next, v._nextSegment||Infinity)
     power = Math.max(power, v._segmentPower||0)
-    if (typeof v === 'object' && !Array.isArray(v)) {
+    if (typeof v === 'object' && !(v instanceof AudioNode) && !Array.isArray(v)) {
       v = Object.assign({}, v) // Cannot use v or segmentWrapper here because we'd be leaving _nextSegment etc set on them which would fail next frame
       v._nextSegment = next
       v._segmentPower = power

@@ -23,7 +23,7 @@ define((require) => {
           if (Array.isArray(v)) { // Was a literal chord even before being evalled
             e[k] = v.flat()[i] // chord in a chord
             if (e[k] === undefined) { continue }
-          } else if (typeof v == 'function' || typeof v == 'object') {
+          } else if (typeof v == 'function' || (typeof v == 'object' && !(v instanceof AudioNode))) {
             e[k] = (e,b,evalRecurse) => chordIndex(evalRecurse(v, e,b),i) // Get correct value out of a function that returns a chord
             e[k].interval = v.interval
             e[k].__alreadyExpanded = true

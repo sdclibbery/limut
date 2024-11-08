@@ -72,6 +72,7 @@ define(function (require) {
     return (3 + a) * x * Math.PI * 0.333 / (Math.PI + a * Math.abs(x));
   }
 
+let {evalParamEvent} = require('player/eval-param')
   return (params, node) => {
     node = shapeEffect(params, 'noisify', node, 16383, noisify, '4x')
     node = shapeEffect(params, 'bits', node, 255, (x, b) => Math.pow(Math.round(Math.pow(x,1/2)*b)/b,2))
@@ -81,6 +82,15 @@ define(function (require) {
     node = shapeEffect(params, 'suck', node, 255, (x, a) => Math.abs(x)<a ? x*Math.abs(x)/a : x)
     node = shapeEffect(params, 'linearshape', node, 7, (x) => x) // For testing purposes; applies clipping at -1 and 1, so can be used to test synth intermediate levels
     node = compressor(params, node)
+
+// node/chain experiment
+if (params.playchain) {
+  let chain = evalParamEvent(params.playchain, params)
+  node.connect(chain)
+  params._destructor.disconnect(chain)
+  node = chain
+}
+
     return node
   }
 })
