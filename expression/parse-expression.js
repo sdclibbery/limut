@@ -61,6 +61,14 @@ define(function(require) {
           operatorList.push(char)
           continue
         }
+        let nextChar = state.str.charAt(state.idx+1)
+        if (operators.hasOwnProperty(char+nextChar)) {
+          state.idx += 2
+          operatorList.push(result)
+          result = undefined
+          operatorList.push(char+nextChar)
+          continue
+        }
       }
       // unary minus operator
       let digitChar = (char) => (char >= '0' && char <= '9') || char == '.' || char == 'e'
@@ -1583,7 +1591,11 @@ define(function(require) {
 
   p = parseExpression("2000*[[1,0,1]es1/2:4,0]es")
   assert({"value":0,"_nextSegment":2+2/2,"_segmentPower":1}, evalParamFrame(p, ev(0,2,1), 2+2/4))
-  
+
+  assert(true, evalParamFrame(parseExpression("gain>>gain"), ev(),0) instanceof AudioNode)
+  assert(true, evalParamFrame(parseExpression("(gain>>gain)>>gain"), ev(),0) instanceof AudioNode)
+  assert(true, evalParamFrame(parseExpression("gain>>(gain>>gain)"), ev(),0) instanceof AudioNode)
+
   console.log('Parse expression tests complete')
   }
 

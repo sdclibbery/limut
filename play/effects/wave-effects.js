@@ -86,7 +86,7 @@ let {evalParamEvent} = require('player/eval-param')
 // node/chain experiment
 if (params.playchain) {
   let chain = evalParamEvent(params.playchain, params)
-  node.connect(chain)
+  node.connect(chain.target ? chain.target : chain) // Use target property for composite AudioNode
   params._destructor.disconnect(chain)
   node = chain
 }

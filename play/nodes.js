@@ -17,6 +17,7 @@ define(function(require) {
       args._time = e._time
       args.endTime = e.endTime
       args.dur = e.dur
+      args.idx = e.idx
     }
   }
 

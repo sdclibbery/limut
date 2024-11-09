@@ -1,6 +1,7 @@
 'use strict';
 define(function(require) {
   let lookupOp = require('expression/lookupOp')
+  let connectOp = require('expression/connectOp')
 
   let defaultUndefined = (op, l,r) => {
     if (l === undefined) { l = 0 }
@@ -35,13 +36,15 @@ define(function(require) {
     '%': (l,r)=>defaultUndefined((l,r)=>l%r, l,r),
     '^': (l,r)=>defaultUndefined((l,r)=>Math.pow(l,r), l,r),
     '|': (l,r)=>concatOp(l,r),
+    '>>': (l,r)=>connectOp(l,r),
     '.': (l,r, e,b,er)=>lookupOp(l,r, e,b,er),
     '?': (l,r)=>defaultOp(l,r),
   }
   operators['|'].raw = true
+  operators['>>'].raw = true
   operators['.'].raw = true
   operators['.'].doNotEvalDeferred = true
-  let precedence = {'.':1,'?':2,'|':3,'^':4,'%':5,'/':5,'*':5,'-':6,'+':6,} // MUST ALL BE > 0
+  let precedence = {'.':1,'?':2,'>>':3,'|':4,'^':5,'%':6,'/':6,'*':6,'-':7,'+':7,} // MUST ALL BE > 0
 
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
