@@ -4070,4 +4070,13 @@ v swirl 4, recol='neon', loc=tile_tr, rate=1/14, contrast, zoom=3
 // bt tb303, cutoff=riser^2, resonance=riser^2, room={2,mix:1/16}, reverb={2,curve:1,mix:1/16}, u=[0:1,1:riser^3]r
 // a ambi (09), amp/=4, oct=3, room, reverb
 
+//// AudioNode chain examples
+// s saw, dur=1/4, oct=2, lpf=[1000:!200ms,10]es, playchain=gain{[0.1,1]}
+// s saw, oct=2, lpf=500, playchain=gain{[0.1,1]l1/2@f}
+// s saw, dur=1/4, oct=2, playchain=biquad{'lowpass',freq:[200,1000],q:10}
+// s saw, oct=2, playchain=biquad{'lowpass',freq:[1000:!200ms,10]es}
+// s saw, dur=1/4, oct=2, lpf=[1000:!200ms,10]es, playchain=gain{[0.1,0.5]t2}>>gain{[1,2]t1}
+// s saw, dur=1/4, oct=2, playchain=gain{[0.1,0.5]t2}>>gain{[1,2]t1}>>biquad{'lowpass',freq:[1000:!200ms,10]es}
+// s saw, dur=1/4, oct=2, playchain=gain{[0.1,0.5]t2}>>gain{[1,2]t1}, playchain>>=biquad{'lowpass',freq:[1000:!200ms,10]es}
+
 

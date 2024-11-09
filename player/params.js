@@ -18,6 +18,9 @@ define(function(require) {
         if (!isComment && operators.hasOwnProperty(prevChar)) {
           return {name:name.slice(0,-1), operator:operators[prevChar]}
         }
+        if (!isComment && operators.hasOwnProperty(prevChar+prevPrevChar)) {
+          return {name:name.slice(0,-2), operator:operators[prevChar+prevPrevChar]}
+        }
         return {name:name}
       } else if (char == ',') {
         state.valueless = true
@@ -162,6 +165,8 @@ define(function(require) {
   assert({add:2}, applyOverrides({}, parseParams('add+=2')))
   assert({add:3}, applyOverrides({}, parseParams('add=1, add+=2')))
   assert({add:2}, applyOverrides({}, parseParams('add+=1, add=2')))
+
+  assert(true, evalParamFrame(applyOverrides({}, parseParams('chain>>=gain')).chain, ev(),0) instanceof AudioNode)
 
   console.log("Params tests complete")
   }
