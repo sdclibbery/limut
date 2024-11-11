@@ -3,13 +3,17 @@ define(function(require) {
   let system = require('play/system');
 
   let audioNodeProto
+  let getAudioNodeProto = () => {
+    if (audioNodeProto === undefined) { audioNodeProto = Object.getPrototypeOf(Object.getPrototypeOf(system.audio.createGain())) }
+    return audioNodeProto
+  }
+
   let connectOp = (l,r) => {
     if (l === undefined) { return r }
     if (r === undefined) { return l }
     if (!(l instanceof AudioNode)) { throw `>> failed: ${l} is not an AudioNode` }
     if (!(r instanceof AudioNode)) { throw `>> failed: ${r} is not an AudioNode` }
-    if (!audioNodeProto) { audioNodeProto = Object.getPrototypeOf(Object.getPrototypeOf(system.audio.createGain())) }
-    let composite = Object.create(audioNodeProto) // Create object that satisfies instancof AudioNode
+    let composite = Object.create(getAudioNodeProto()) // Create object that satisfies instancof AudioNode
     composite.l = l
     composite.r = r
     l.connect(r.target ? r.target : r) // r might also be a composite with a target
@@ -19,7 +23,9 @@ define(function(require) {
     }
     composite.disconnect = () => {
       l.disconnect()
+      if (l.target) { l.target.disconnect() }
       r.disconnect()
+      if (r.target) { r.target.disconnect() }
     }
     return composite
   }
@@ -39,20 +45,27 @@ define(function(require) {
     finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
   }
   let mockAn = () => {
-    if (!audioNodeProto) { audioNodeProto = Object.getPrototypeOf(Object.getPrototypeOf(system.audio.createGain())) }
-    let an = Object.create(audioNodeProto)
+    let an = Object.create(getAudioNodeProto())
     an.connect = () => {}
-    an.disconnect = () => {}
+    an.disconnect = () => { an.disconnected = true }
     return an
   }
-
-  let an = mockAn()
+  let l, r
+  let an
+  
+  an = mockAn()
   assert(an, connectOp(an, undefined))
   assert(an, connectOp(undefined, an))
 
   assertThrows('not an AudioNode', () => connectOp(1,2))
 
-  assert(true, connectOp(mockAn(), mockAn()) instanceof AudioNode)
+  l = mockAn()
+  r = mockAn()
+  an = connectOp(l, r)
+  assert(true, an instanceof AudioNode)
+  an.disconnect()
+  assert(true, l.disconnected)
+  assert(true, r.disconnected)
 
   console.log("connectOp tests complete")
   }

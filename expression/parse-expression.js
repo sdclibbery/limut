@@ -54,7 +54,7 @@ define(function(require) {
       }
       // operator
       if (result !== undefined) {
-        if (operators.hasOwnProperty(char)) {
+        if (operators.hasOwnProperty(char)) { // Single char operators
           state.idx += 1
           operatorList.push(result)
           result = undefined
@@ -62,7 +62,7 @@ define(function(require) {
           continue
         }
         let nextChar = state.str.charAt(state.idx+1)
-        if (operators.hasOwnProperty(char+nextChar)) {
+        if (operators.hasOwnProperty(char+nextChar)) { // Two char operators
           state.idx += 2
           operatorList.push(result)
           result = undefined
@@ -1592,9 +1592,17 @@ define(function(require) {
   p = parseExpression("2000*[[1,0,1]es1/2:4,0]es")
   assert({"value":0,"_nextSegment":2+2/2,"_segmentPower":1}, evalParamFrame(p, ev(0,2,1), 2+2/4))
 
-  assert(true, evalParamFrame(parseExpression("gain>>gain"), ev(),0) instanceof AudioNode)
-  assert(true, evalParamFrame(parseExpression("(gain>>gain)>>gain"), ev(),0) instanceof AudioNode)
-  assert(true, evalParamFrame(parseExpression("gain>>(gain>>gain)"), ev(),0) instanceof AudioNode)
+  v = evalParamFrame(parseExpression("gain>>gain"), ev(),0)
+  assert(true, v instanceof AudioNode)
+  v.disconnect()
+
+  v = evalParamFrame(parseExpression("(gain>>gain)>>gain"), ev(),0)
+  assert(true, v instanceof AudioNode)
+  v.disconnect()
+
+  v = evalParamFrame(parseExpression("gain>>(gain>>gain)"), ev(),0)
+  assert(true, v instanceof AudioNode)
+  v.disconnect()
 
   console.log('Parse expression tests complete')
   }

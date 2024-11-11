@@ -15,10 +15,10 @@ define(function(require) {
         let prevChar = state.str.charAt(state.idx - 2)
         let prevPrevChar = state.str.charAt(state.idx - 3)
         let isComment = prevChar == '/' && prevPrevChar == '/'
-        if (!isComment && operators.hasOwnProperty(prevChar)) {
+        if (!isComment && operators.hasOwnProperty(prevChar)) { // Single char operators
           return {name:name.slice(0,-1), operator:operators[prevChar]}
         }
-        if (!isComment && operators.hasOwnProperty(prevChar+prevPrevChar)) {
+        if (!isComment && operators.hasOwnProperty(prevChar+prevPrevChar)) { // Two char operators
           return {name:name.slice(0,-2), operator:operators[prevChar+prevPrevChar]}
         }
         return {name:name}

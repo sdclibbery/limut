@@ -3,24 +3,17 @@
 WebAudio node graphs as first class values
  EXAMPLES Params; eg playChain=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    playChain>>=gain{[1:!200ms,0]e}
  •PLAN
- >> operator for connecting AudioNodes together
-  Creates composite AudioNode-like object
-   Can be disconnected and disconnects sub-nodes
-    Verify: where to put tests?
-    Verify: check it doesn't actually leak nodes in practice
-  ??Can we get rid of target and make the composite connectable to??
-  ? Cleaner way to handle two-char operators?
  Placeholders
    ? Syntax? Representation? Register themself somehow a bit like disconnect?
  Inserting into an existing chain at a placeholder location
    ? Syntax? `>>`? New operator??
  delay{} function
  Arrays: splitting, combining, loops
- ? playchain playerchain are still crap names
+ ? playchain / playerchain are still crap names
   ? How should this _really_ work?
  playerChain
-  Eval once at parse time
-  Desconnect
+  Eval once at parse time - does it just work (tm) from wave effects?
+  Disconnect
  Existing operators/eval (and anything else with a type based if/else chain) ignore/error AudioNodes
  Support for using a node chain to control an audioparam instead of an expression
  Support for named outputs; eg for stereo splitter
@@ -35,7 +28,7 @@ WebAudio node graphs as first class values
  ? How to make operators do something useful with node chains; eg + * etc
  ? analyser node with output that can be read from limut somehow
  TEST!!!!!!!
-  >>  >>=  >>[gain,biquad]
+  >>  >>=  >>[gain,biquad] bus
  Docs...
  •QUESTIONS
  ? When do AuidioNodes get created? playChain can be eval time? playerChain needs to be special?
