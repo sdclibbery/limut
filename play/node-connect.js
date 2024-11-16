@@ -2,17 +2,37 @@
 define(function (require) {
   let system = require('play/system');
 
-  let getTarget = (v) => {
-    while (v.target) { v = v.target }
+  let getAudioNode = (v, field) => {
+    while (v[field]) { v = v[field] }
     return v
   }
 
-  let connect = (l, r, destructor) => {
-    getTarget(l).connect(getTarget(r))
-    if (destructor) {
-      destructor.disconnect(getTarget(l))
-      destructor.disconnect(getTarget(r))
+  let resolveAudioNodes = (v, field) => {
+    if (typeof v !== 'object') { return [] }
+    if (v.value === undefined) { return [getAudioNode(v, field)]}
+    let vs = []
+    let idx = 0
+    vs[idx] = getAudioNode(v.value, field)
+    idx++
+    while (v['value'+idx] !== undefined) {
+      vs[idx] = getAudioNode(v['value'+idx], field)
+      idx++
     }
+    return vs
+  }
+
+  let connect = (l, r, destructor) => {
+    let ls = resolveAudioNodes(l, 'r')
+    let rs = resolveAudioNodes(r, 'l')
+    ls.forEach(lv => {
+      rs.forEach(rv => {
+        lv.connect(rv)
+        if (destructor) {
+          destructor.disconnect(lv)
+          destructor.disconnect(rv)
+        }
+      })
+    })
     return r
   }
 
@@ -34,20 +54,31 @@ define(function (require) {
     return an
   }
   let l = mockAn()
+  let l2 = mockAn()
   let r = mockAn()
 
-  connect(l,r)
+  connect(l,r) // Direct audionodes
   assert(r, l.connected)
+  assert(undefined, r.connected)
 
-  let lc = {target:l}; l.reset()
-  let rc = {target:r}; r.reset()
+  let lc = {r:l}; l.reset() // Composites with audionode as target
+  let rc = {l:r}; r.reset()
   connect(lc,rc)
   assert(r, l.connected)
+  assert(undefined, r.connected)
 
-  let lcc = {target:lc}; l.reset()
-  let rcc = {target:rc}; r.reset()
+  let lcc = {r:lc}; l.reset() // Nested composites
+  let rcc = {l:rc}; r.reset()
   connect(lcc,rcc)
   assert(r, l.connected)
+  assert(undefined, r.connected)
+
+  let para = {value:l,value1:l2}; l.reset(); l2.reset() // Array of audionodes for parallel connection
+  r.reset()
+  connect(para,r)
+  assert(r, l.connected)
+  assert(r, l2.connected)
+  assert(undefined, r.connected)
 
   console.log("node-connect tests complete")
   }

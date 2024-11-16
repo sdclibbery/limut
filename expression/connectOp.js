@@ -20,7 +20,6 @@ define(function(require) {
     composite.r = r
     composite.destructor = destructor()
     connect(l, r, composite.destructor)
-    composite.target = l // connect to this
     composite.connect = (destination) => {
       return connect(composite.r, destination, composite.destructor)
     }

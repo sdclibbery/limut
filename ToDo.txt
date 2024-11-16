@@ -4,10 +4,8 @@ WebAudio node graphs as first class values
  EXAMPLES Params; eg playChain=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    playChain>>=gain{[1:!200ms,0]e}
  •PLAN
  Arrays: splitting, combining, loops
-  playchain={gain,gain}
-   Get audionode array from value
-   Extract helper to a module
   gain>>{gain.gain}, {gain.gain}>>gain, {gain.gain}>>{gain.gain} 
+  parse-expression test gain>>{gain.gain}>>gain
  ? playchain / playerchain are still crap names
   ? How should this _really_ work?
  delay{} function

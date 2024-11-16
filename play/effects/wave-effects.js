@@ -88,6 +88,7 @@ let {connect} = require('play/node-connect')
 if (params.playchain) {
   let chain = evalParamEvent(params.playchain, params)
   node = connect(node, chain, params._destructor)
+  node = connect(node, system.audio.createGain(), params._destructor) // Temp hack: force down to a single node to allow later connection to be made if the rhs of the chain is an array
 }
 
     return node
