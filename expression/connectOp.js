@@ -1,6 +1,8 @@
 'use strict';
 define(function(require) {
   let system = require('play/system');
+  let {connect} = require('play/node-connect');
+  let destructor = require('play/destructor')
 
   let audioNodeProto
   let getAudioNodeProto = () => {
@@ -16,17 +18,13 @@ define(function(require) {
     let composite = Object.create(getAudioNodeProto()) // Create object that satisfies instancof AudioNode
     composite.l = l
     composite.r = r
-    l.connect(r.target ? r.target : r) // r might also be a composite with a target
-    composite.target = l.target ? l.target : l // l might also be a composite with a target
-    composite.connect = (destination, outputIndex, inputIndex) => {
-      return r.connect(destination, outputIndex, inputIndex)
+    composite.destructor = destructor()
+    connect(l, r, composite.destructor)
+    composite.target = l // connect to this
+    composite.connect = (destination) => {
+      return connect(composite.r, destination, composite.destructor)
     }
-    composite.disconnect = () => {
-      l.disconnect()
-      if (l.target) { l.target.disconnect() }
-      r.disconnect()
-      if (r.target) { r.target.disconnect() }
-    }
+    composite.disconnect = () => { composite.destructor.destroy() }
     return composite
   }
 

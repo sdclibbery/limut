@@ -73,6 +73,7 @@ define(function (require) {
   }
 
 let {evalParamEvent} = require('player/eval-param')
+let {connect} = require('play/node-connect')
   return (params, node) => {
     node = shapeEffect(params, 'noisify', node, 16383, noisify, '4x')
     node = shapeEffect(params, 'bits', node, 255, (x, b) => Math.pow(Math.round(Math.pow(x,1/2)*b)/b,2))
@@ -86,9 +87,7 @@ let {evalParamEvent} = require('player/eval-param')
 // node/chain experiment
 if (params.playchain) {
   let chain = evalParamEvent(params.playchain, params)
-  node.connect(chain.target ? chain.target : chain) // Use target property for composite AudioNode
-  params._destructor.disconnect(chain)
-  node = chain
+  node = connect(node, chain, params._destructor)
 }
 
     return node

@@ -3,21 +3,26 @@
 WebAudio node graphs as first class values
  EXAMPLES Params; eg playChain=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    playChain>>=gain{[1:!200ms,0]e}
  •PLAN
- Placeholders
-   ? Syntax? Representation? Register themself somehow a bit like disconnect?
- Inserting into an existing chain at a placeholder location
-   ? Syntax? `>>`? New operator??
- delay{} function
  Arrays: splitting, combining, loops
+  playchain={gain,gain}
+   Get audionode array from value
+   Extract helper to a module
+  gain>>{gain.gain}, {gain.gain}>>gain, {gain.gain}>>{gain.gain} 
  ? playchain / playerchain are still crap names
   ? How should this _really_ work?
+ delay{} function
+ Placeholders
+   ? Syntax? Representation? Register themself somehow a bit like disconnect?
+   loops
+ Inserting into an existing chain at a placeholder location
+   ? Syntax? `>>`? New operator??
  playerChain
   Eval once at parse time - does it just work (tm) from wave effects?
   Disconnect
  Existing operators/eval (and anything else with a type based if/else chain) ignore/error AudioNodes
  Support for using a node chain to control an audioparam instead of an expression
  Support for named outputs; eg for stereo splitter
- More basic node type functions - all AudioNode types
+ Basic node functions for all AudioNode types
  Derived node type values (defined in limut); eg lpf, drive
    Driven from this. params; do we need to make them more efficient?? Don't want lpf=10 to be evalled per frame...
  Support for chains on buses
