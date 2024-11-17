@@ -35,10 +35,10 @@ define(function(require) {
     '/': (l,r)=>defaultUndefined((l,r)=>(l/r), l,r),
     '%': (l,r)=>defaultUndefined((l,r)=>l%r, l,r),
     '^': (l,r)=>defaultUndefined((l,r)=>Math.pow(l,r), l,r),
-    '|': (l,r)=>concatOp(l,r),
-    '>>': (l,r)=>connectOp(l,r),
-    '.': (l,r, e,b,er)=>lookupOp(l,r, e,b,er),
-    '?': (l,r)=>defaultOp(l,r),
+    '|': concatOp,
+    '>>': connectOp,
+    '.': lookupOp,
+    '?': defaultOp,
   }
   operators['|'].raw = true
   operators['>>'].raw = true

@@ -3,6 +3,7 @@ define(function(require) {
   let system = require('play/system');
   let {connect} = require('play/node-connect');
   let destructor = require('play/destructor')
+  let {evalParamFrame} = require('player/eval-param')
 
   let audioNodeProto
   let getAudioNodeProto = () => {
@@ -10,11 +11,11 @@ define(function(require) {
     return audioNodeProto
   }
 
-  let connectOp = (l,r) => {
+  let connectOp = (l,r, e,b,evalRecurse) => {
     if (l === undefined) { return r }
     if (r === undefined) { return l }
-    if (!(l instanceof AudioNode)) { throw `>> failed: ${l} is not an AudioNode` }
-    if (!(r instanceof AudioNode)) { throw `>> failed: ${r} is not an AudioNode` }
+    if (typeof l === 'object' && l.value) { l = evalParamFrame(l,e,b,evalRecurse) } // Fully eval args
+    if (typeof r === 'object' && r.value) { r = evalParamFrame(r,e,b,evalRecurse) }
     let composite = Object.create(getAudioNodeProto()) // Create object that satisfies instancof AudioNode
     composite.l = l
     composite.r = r
@@ -35,12 +36,6 @@ define(function(require) {
     let a = JSON.stringify(actual)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
-  let assertThrows = async (expected, code) => {
-    let got
-    try {await code()}
-    catch (e) { if (e.includes(expected)) {got=true} else {console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: ${e}`)} }
-    finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
-  }
   let mockAn = () => {
     let an = Object.create(getAudioNodeProto())
     an.connect = () => {}
@@ -53,8 +48,6 @@ define(function(require) {
   an = mockAn()
   assert(an, connectOp(an, undefined))
   assert(an, connectOp(undefined, an))
-
-  assertThrows('not an AudioNode', () => connectOp(1,2))
 
   l = mockAn()
   r = mockAn()

@@ -21,6 +21,15 @@ define(function(require) {
     }
   }
 
+  let audioNodeProto
+  addNodeFunction('mockaudionode', (args,e,b) => { // For tests to run without creating an actual AudioNode
+    if (audioNodeProto === undefined) { audioNodeProto = Object.getPrototypeOf(Object.getPrototypeOf(system.audio.createGain())) }
+    let an = Object.create(audioNodeProto)
+    an.connect = (v) => { an.connected = v }
+    an.disconnect = () => { an.disconnected }
+    return an
+  })
+
   addNodeFunction('gain', (args,e,b) => {
     let node = system.audio.createGain()
     addEventTimingData(args, e)

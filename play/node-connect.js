@@ -3,13 +3,13 @@ define(function (require) {
   let system = require('play/system');
 
   let getAudioNode = (v, field) => {
-    while (v[field]) { v = v[field] }
+    while (v[field]) { v = v[field] } // Go through all composites to get to the actual AudioNode
     return v
   }
 
   let resolveAudioNodes = (v, field) => {
     if (typeof v !== 'object') { return [] }
-    if (v.value === undefined) { return [getAudioNode(v, field)]}
+    if (v.value === undefined) { return [getAudioNode(v, field)]} // Not an array
     let vs = []
     let idx = 0
     vs[idx] = getAudioNode(v.value, field)
@@ -26,6 +26,8 @@ define(function (require) {
     let rs = resolveAudioNodes(r, 'l')
     ls.forEach(lv => {
       rs.forEach(rv => {
+        if (!(lv instanceof AudioNode)) { throw `l ${lv} is not an AudioNode` }
+        if (!(rv instanceof AudioNode)) { throw `r ${rv} is not an AudioNode` }
         lv.connect(rv)
         if (destructor) {
           destructor.disconnect(lv)
@@ -73,8 +75,8 @@ define(function (require) {
   assert(r, l.connected)
   assert(undefined, r.connected)
 
-  let para = {value:l,value1:l2}; l.reset(); l2.reset() // Array of audionodes for parallel connection
-  r.reset()
+  let para = {value:l,value1:l2} // Array of audionodes for parallel connection
+  l.reset(); l2.reset(); r.reset()
   connect(para,r)
   assert(r, l.connected)
   assert(r, l2.connected)

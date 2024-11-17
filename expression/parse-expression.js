@@ -1592,17 +1592,42 @@ define(function(require) {
   p = parseExpression("2000*[[1,0,1]es1/2:4,0]es")
   assert({"value":0,"_nextSegment":2+2/2,"_segmentPower":1}, evalParamFrame(p, ev(0,2,1), 2+2/4))
 
-  v = evalParamFrame(parseExpression("gain>>gain"), ev(),0)
+  v = evalParamFrame(parseExpression("mockaudionode>>mockaudionode"), ev(),0)
   assert(true, v instanceof AudioNode)
-  v.disconnect()
+  assert(true, v.l instanceof AudioNode)
+  assert(true, v.r instanceof AudioNode)
 
-  v = evalParamFrame(parseExpression("(gain>>gain)>>gain"), ev(),0)
+  v = evalParamFrame(parseExpression("(mockaudionode>>mockaudionode)>>mockaudionode"), ev(),0)
   assert(true, v instanceof AudioNode)
-  v.disconnect()
+  assert(true, v.l instanceof AudioNode)
+  assert(true, v.l.l instanceof AudioNode)
+  assert(true, v.l.r instanceof AudioNode)
+  assert(true, v.r instanceof AudioNode)
 
-  v = evalParamFrame(parseExpression("gain>>(gain>>gain)"), ev(),0)
+  v = evalParamFrame(parseExpression("mockaudionode>>(mockaudionode>>mockaudionode)"), ev(),0)
   assert(true, v instanceof AudioNode)
-  v.disconnect()
+  assert(true, v.l instanceof AudioNode)
+  assert(true, v.r instanceof AudioNode)
+  assert(true, v.r.l instanceof AudioNode)
+  assert(true, v.r.r instanceof AudioNode)
+
+  v = evalParamFrame(parseExpression("{mockaudionode,mockaudionode}"), ev(),0)
+  assert(true, v.value instanceof AudioNode)
+  assert(true, v.value1 instanceof AudioNode)
+
+  v = evalParamFrame(parseExpression("mockaudionode>>{mockaudionode,mockaudionode}"), ev(),0)
+  assert(true, v instanceof AudioNode)
+  assert(true, v.l instanceof AudioNode)
+  assert(true, v.r.value instanceof AudioNode) // array contents is not getting evalled for some reason
+  assert(true, v.r.value1 instanceof AudioNode)
+
+  v = evalParamFrame(parseExpression("{mockaudionode,mockaudionode>>mockaudionode}>>mockaudionode"), ev(),0)
+  assert(true, v instanceof AudioNode)
+  assert(true, v.l.value instanceof AudioNode)
+  assert(true, v.l.value1 instanceof AudioNode)
+  assert(true, v.l.value1.l instanceof AudioNode)
+  assert(true, v.l.value1.r instanceof AudioNode)
+  assert(true, v.r instanceof AudioNode)
 
   console.log('Parse expression tests complete')
   }
