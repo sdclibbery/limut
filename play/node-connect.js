@@ -26,8 +26,8 @@ define(function (require) {
     let rs = resolveAudioNodes(r, 'l')
     ls.forEach(lv => {
       rs.forEach(rv => {
-        if (!(lv instanceof AudioNode)) { throw `l ${lv} is not an AudioNode` }
-        if (!(rv instanceof AudioNode)) { throw `r ${rv} is not an AudioNode` }
+        if (!(lv instanceof AudioNode)) { throw `Connect: l ${lv} is not an AudioNode` }
+        if (!(rv instanceof AudioNode)) { throw `Connect: r ${rv} is not an AudioNode` }
         lv.connect(rv)
         if (destructor) {
           destructor.disconnect(lv)
@@ -46,6 +46,12 @@ define(function (require) {
     let a = JSON.stringify(actual)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
+  let assertThrows = async (expected, code) => {
+    let got
+    try {await code()}
+    catch (e) { if (e.includes(expected)) {got=true} else {console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: ${e}`)} }
+    finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
+  }
 
   let audioNodeProto
   let mockAn = () => {
@@ -58,6 +64,9 @@ define(function (require) {
   let l = mockAn()
   let l2 = mockAn()
   let r = mockAn()
+
+  assertThrows('is not an AudioNode', () => connect({value:1},{value:2}))
+  assertThrows('is not an AudioNode', () => connect(l,{value:2})); l.reset()
 
   connect(l,r) // Direct audionodes
   assert(r, l.connected)
