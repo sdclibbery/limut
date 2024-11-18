@@ -20,6 +20,7 @@ define((require) => {
   let multiwave = require('play/synth/multiwave')
   let pitchedPerc = require('play/synth/pitchedperc')
   let impulse = require('play/synth/impulse')
+  let audiosynth = require('play/synth/audiosynth')
 
   let white = {r:1,g:1,b:1,a:1}
   let black = {r:0,g:0,b:0,a:1}
@@ -81,6 +82,7 @@ define((require) => {
     wave: { play: wave, baseParams:{ amp:1, delay:0, oct:4 } },
     fm: { play: fm, baseParams:{ amp:1, delay:0, oct:4 } },
     multiwave: { play: multiwave, baseParams:{ amp:1, delay:0, oct:4 } },
+    audiosynth: { play: audiosynth, baseParams:{ amp:1, delay:0, oct:4 } },
   }
 
   return playerTypes

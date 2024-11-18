@@ -21,7 +21,7 @@ define(function (require) {
     return vs
   }
 
-  let connect = (l, r, destructor) => {
+  let connect = (l, r, destructor, options) => {
     let ls = resolveAudioNodes(l, 'r')
     let rs = resolveAudioNodes(r, 'l')
     ls.forEach(lv => {
@@ -31,7 +31,7 @@ define(function (require) {
         lv.connect(rv)
         if (destructor) {
           destructor.disconnect(lv)
-          destructor.disconnect(rv)
+          if (!options || !options.dont_disconnect_r) { destructor.disconnect(rv) }
         }
       })
     })

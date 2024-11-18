@@ -2,8 +2,8 @@
 define(function(require) {
   let addVarFunction = require('predefined-vars').addVarFunction
   let system = require('play/system');
-  let {evalParamEvent} = require('player/eval-param')
-  let {evalMainParamFrame} = require('play/eval-audio-params')
+  let {evalMainParamEvent,evalMainParamFrame} = require('play/eval-audio-params')
+  let setWave = require('play/synth/waveforms/set-wave')
 
   let addNodeFunction = (k, v) => {
     v.dontEvalArgs = true
@@ -18,6 +18,7 @@ define(function(require) {
       args.endTime = e.endTime
       args.dur = e.dur
       args.idx = e.idx
+      args._destructor = e._destructor
     }
   }
 
@@ -30,6 +31,16 @@ define(function(require) {
     return an
   })
 
+  addNodeFunction('osc', (args,e,b) => {
+    let node = system.audio.createOscillator()
+    addEventTimingData(args, e)
+    setWave(node, evalMainParamEvent(args, 'value', 'sawtooth'))
+    evalMainParamFrame(node.frequency, args, 'freq', 440, 'hz')
+    node.start(args._time)
+    args._destructor.stop(node)
+    return node
+  })
+
   addNodeFunction('gain', (args,e,b) => {
     let node = system.audio.createGain()
     addEventTimingData(args, e)
@@ -40,7 +51,7 @@ define(function(require) {
   addNodeFunction('biquad', (args,e,b) => {
     let node = system.audio.createBiquadFilter()
     addEventTimingData(args, e)
-    node.type = evalParamEvent(args.value, e) || 'lowpass'
+    node.type = evalMainParamEvent(args, 'value', 'lowpass')
     evalMainParamFrame(node.frequency, args, 'freq', 1, 'hz')
     evalMainParamFrame(node.Q, args, 'q', 5)
     evalMainParamFrame(node.gain, args, 'gain', 1)

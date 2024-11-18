@@ -3,10 +3,17 @@
 WebAudio node graphs as first class values
  EXAMPLES Params; eg playChain=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    playChain>>=gain{[1:!200ms,0]e}
  •PLAN
- Arrays: splitting, combining, loops
-  {gain>>gain}
-  gain>>{gain,gain}
-  parse-expression test gain>>{gain>>gain,gain}>>gain
+ New synth with no osc, only chains
+  OscillatorNode
+   ! disconnect error on {}
+ More audionode functions including oscillators
+  ConstantSoureNode
+  DelayNode
+  StereoPannerNode
+  WaveShaperNode
+  IIRFilterNode
+  ConvolverNode
+  DynamicsCompressorNode
  ? playchain / playerchain are still crap names
   ? How should this _really_ work?
    ? In the v2 plan, its pattern>>eventchain>>playerchain>>mainchain
@@ -28,7 +35,12 @@ WebAudio node graphs as first class values
  Support for chains on buses
  Replace existing effect chains with node chains
   Efficiency: Provide some kind of "null" identity AudioNode if eg biquad frequency is const zero or gain is const 1?
- Osc node functions
+ Monophonic synth with oscillator on the player chain, affected by event params somehow
+ Trickier node types
+  MediaElementAudioSourceNode, MediaStreamAudioSourceNode
+  ChannelMergerNode
+  ChannelSplitterNode
+  AudioBufferSourceNode
  Replace existing synths with node chains
  ? How to make operators do something useful with node chains; eg + * etc
  ? analyser node with output that can be read from limut somehow
