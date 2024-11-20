@@ -3,14 +3,7 @@
 WebAudio node graphs as first class values
  EXAMPLES Params; eg playChain=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    playChain>>=gain{[1:!200ms,0]e}
  •PLAN
- More audionode functions including oscillators
-  StereoPannerNode
-  WaveShaperNode
-  IIRFilterNode
-  ConvolverNode
-  DynamicsCompressorNode
- Mechanism to provide effect mix easily
-  eg playchain=mix{1/2,wet:biquad{'lowpass',freq:440}}
+ Support for using a node chain to control an audioparam instead of an expression
  ? playchain / playerchain are still crap names
   ? How should this _really_ work?
    ? In the v2 plan, it was pattern>>eventchain>>playerchain>>mainchain
@@ -18,18 +11,28 @@ WebAudio node graphs as first class values
    ? Syntax? Representation? Register themself somehow a bit like disconnect?
     playchain=id{'delay-in'}>>delay{1/4}>>{gain{0.8}>>'delay-in,???what???}
     id{} node is identity; can be connected by just passes the connection through. But it can also be named
+   Delay with feedback will need increased disconnect time...
+ More audionode functions including oscillators
+  WaveShaperNode
+  StereoPannerNode
+  IIRFilterNode
+  ConvolverNode
+  DynamicsCompressorNode
+  AudioBufferSourceNode
+  MediaStreamAudioSourceNode
  Inserting into an existing chain at a placeholder location
   Requires not just connecting into a placeholder, but breaking the existing chain
    ? New Syntax? New operator?? Or not?
  playerChain
   Eval once at parse time - does it just work (tm) from wave effects?
-  Disconnect
- Existing operators/eval (and anything else with a type based if/else chain) ignore/error AudioNodes
- Support for using a node chain to control an audioparam instead of an expression
- Support for named outputs; eg for stereo splitter
- Basic node functions for all AudioNode types
+  Disconnect: how? when?
+ Mechanism to provide effect mix easily; mix function defined in limut
+  eg playchain=mix{1/2,wet:biquad{'lowpass',freq:440}}
  Derived node type values (defined in limut); eg lpf, drive
    Driven from this. params; do we need to make them more efficient?? Don't want lpf=10 to be evalled per frame...
+ Existing operators/eval (and anything else with a type based if/else chain) ignore/error AudioNodes
+ Support for named outputs; eg for stereo splitter
+ Basic node functions for all AudioNode types
  Support for chains on buses
  Replace existing effect chains with node chains
   Efficiency: Provide some kind of "null" identity AudioNode if eg biquad frequency is const zero or gain is const 1?
