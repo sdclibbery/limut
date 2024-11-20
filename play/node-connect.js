@@ -3,7 +3,8 @@ define(function (require) {
   let system = require('play/system');
 
   let getAudioNode = (v, field) => {
-    while (v[field]) { v = v[field] } // Go through all composites to get to the actual AudioNode
+    while (v[field]) { v = v[field] } // Go through all composites
+    if (v.value !== undefined) { return resolveAudioNodes(v, field) } // Might be a nested array
     return v
   }
 
@@ -22,8 +23,8 @@ define(function (require) {
   }
 
   let connect = (l, r, destructor, options) => {
-    let ls = resolveAudioNodes(l, 'r')
-    let rs = resolveAudioNodes(r, 'l')
+    let ls = resolveAudioNodes(l, 'r').flat()
+    let rs = resolveAudioNodes(r, 'l').flat()
     ls.forEach(lv => {
       rs.forEach(rv => {
         if (!(lv instanceof AudioNode)) { throw `Connect: l ${lv} is not an AudioNode` }

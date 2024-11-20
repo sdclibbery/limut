@@ -4,6 +4,7 @@ define(function(require) {
   let system = require('play/system');
   let {evalMainParamEvent,evalMainParamFrame} = require('play/eval-audio-params')
   let setWave = require('play/synth/waveforms/set-wave')
+  var metronome = require('metronome')
 
   let addNodeFunction = (k, v) => {
     v.dontEvalArgs = true
@@ -41,6 +42,15 @@ define(function(require) {
     return node
   })
 
+  addNodeFunction('const', (args,e,b) => {
+    let node = system.audio.createConstantSource()
+    addEventTimingData(args, e)
+    evalMainParamFrame(node.offset, args, 'value', 1)
+    node.start(args._time)
+    args._destructor.stop(node)
+    return node
+  })
+
   addNodeFunction('gain', (args,e,b) => {
     let node = system.audio.createGain()
     addEventTimingData(args, e)
@@ -55,6 +65,14 @@ define(function(require) {
     evalMainParamFrame(node.frequency, args, 'freq', 1, 'hz')
     evalMainParamFrame(node.Q, args, 'q', 5)
     evalMainParamFrame(node.gain, args, 'gain', 1)
+    return node
+  })
+
+  addNodeFunction('delay', (args,e,b) => {
+    let maxDelay = evalMainParamEvent(args, 'max', 1, 'b') * metronome.beatDuration()
+    let node = system.audio.createDelay(maxDelay)
+    addEventTimingData(args, e)
+    evalMainParamFrame(node.delayTime, args, 'value', 1/4, 'b', d => d * metronome.beatDuration())
     return node
   })
 

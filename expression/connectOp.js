@@ -26,8 +26,6 @@ define(function(require) {
     }
     composite.disconnect = () => {
       composite.destructor.destroy()
-      composite.l.disconnect()
-      composite.r.disconnect()
     }
     if (e && e._destructor) { e._destructor.disconnect(composite) }
     return composite
