@@ -73,6 +73,7 @@ define(function(require) {
     let node = system.audio.createDelay(maxDelay)
     addEventTimingData(args, e)
     evalMainParamFrame(node.delayTime, args, 'value', 1/4, 'b', d => d * metronome.beatDuration())
+    e._disconnectTime += maxDelay
     return node
   })
 

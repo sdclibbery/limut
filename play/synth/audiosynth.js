@@ -13,6 +13,7 @@ define(function (require) {
     duration *= evalMainParamEvent(params, "long", 1)
     duration *= params.beat.duration
     params.endTime = params._time + duration
+    params._disconnectTime = 0.1+(params.endTime - system.audio.currentTime)
     let chain = evalParamEvent(params.playchain, params) // Audionode chain
     let busId = params.bus
     if (!busId) { busId = 'main' } // Default to main bus if not specified
@@ -23,7 +24,7 @@ define(function (require) {
     connect(chain, bus._input, params._destructor, {dont_disconnect_r:true}) // Connect end of chain to bus
     setTimeout( // Cleanup
       () => params._destructor.destroy(),
-      100+(params.endTime - system.audio.currentTime)*1000
+      params._disconnectTime*1000
     )
   }
 });
