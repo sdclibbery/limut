@@ -40,12 +40,14 @@ define(function (require) {
   let evalMainPerFrame = (params, p, def, b, requiredUnits) => {
     let v = evalPerFrame(params, p, b || params.count, def)
     if (typeof v !== 'object') { return v }
+    if (v instanceof AudioNode) { return v }
     return mainParamUnits(v, requiredUnits, def)
   }
 
   let evalSubPerFrame = (params, p, subParamName, def, b, requiredUnits) => {
     let v = evalPerFrame(params, p, b || params.count, def)
     if (typeof v !== 'object') { return def }
+    if (v instanceof AudioNode) { return v }
     return subParamUnits(v, subParamName, requiredUnits, def)
   }
 
@@ -90,7 +92,12 @@ define(function (require) {
     if (typeof v === 'number') { // single value; no need for regular per frame update
       setAudioParamValue(audioParam, v, p, mod, params._time)
     } else {
-      setAudioParamValue(audioParam, evalMainPerFrame(params, p, def, params.count, requiredUnits), p, mod, params._time) // Set now
+      let evalled = evalMainPerFrame(params, p, def, params.count, requiredUnits)
+      if (evalled instanceof AudioNode) { // Value is a node chain, just connect it
+        evalled.connect(audioParam)
+        return
+      }
+      setAudioParamValue(audioParam, evalled, p, mod, params._time) // Set now
       if (typeof v === 'function' && v.interval === 'event') { return } // If it can't vary per frame, drop out here
       if (segmentedAudioParam(audioParam, params, p, undefined, def, requiredUnits, mod)) { return } // Set up with a segmented timeline
       // if (params) { console.log(`Per frame audio update! ${params.player} ${p}`) }

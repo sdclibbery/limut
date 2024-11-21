@@ -2,15 +2,19 @@
 define(function (require) {
   let system = require('play/system');
 
+  let isNode = v => v instanceof AudioNode
+  let isParam = v => v instanceof AudioParam
+  let isNodeArray = v => typeof v === 'object' && v.value !== undefined && !isParam(v)
+  
   let getAudioNode = (v, field) => {
     while (v[field]) { v = v[field] } // Go through all composites
-    if (v.value !== undefined) { return resolveAudioNodes(v, field) } // Might be a nested array
+    if (isNodeArray(v)) { return resolveAudioNodes(v, field) } // Might be a nested array
     return v
   }
 
   let resolveAudioNodes = (v, field) => {
     if (typeof v !== 'object') { return [] }
-    if (v.value === undefined) { return [getAudioNode(v, field)]} // Not an array
+    if (!isNodeArray(v)) { return [getAudioNode(v, field)]} // Not an array
     let vs = []
     let idx = 0
     vs[idx] = getAudioNode(v.value, field)
@@ -27,12 +31,14 @@ define(function (require) {
     let rs = resolveAudioNodes(r, 'l').flat()
     ls.forEach(lv => {
       rs.forEach(rv => {
-        if (!(lv instanceof AudioNode)) { throw `Connect: l ${lv} is not an AudioNode` }
-        if (!(rv instanceof AudioNode)) { throw `Connect: r ${rv} is not an AudioNode` }
+        if (!(lv instanceof AudioNode) && !(lv instanceof AudioParam)) { throw `Connect: l ${lv} is not an AudioNode/AudioParam` }
+        if (!(rv instanceof AudioNode) && !(rv instanceof AudioParam)) { throw `Connect: r ${rv} is not an AudioNode/AudioParam` }
         lv.connect(rv)
         if (destructor) {
           destructor.disconnect(lv)
-          if (!options || !options.dont_disconnect_r) { destructor.disconnect(rv) }
+          if (!options || !options.dont_disconnect_r) {
+            if (rv instanceof AudioNode) { destructor.disconnect(rv) }
+          }
         }
       })
     })
