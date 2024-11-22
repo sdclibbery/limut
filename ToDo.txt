@@ -7,6 +7,8 @@ WebAudio node graphs as first class values
   nodes: unit tests
   chains: unit tests
   arrays: unit tests
+   ! osc{freq:{const:200,osc{'sine',freq:2}>>gain{100}}}>>gain{0.01}
+  ! biquad{'lowpass',freq:const{[1000:!200ms,10]es}}  not working; not getting any biquad
  ? playchain / playerchain are still crap names
   ? How should this _really_ work?
    ? In the v2 plan, it was pattern>>eventchain>>playerchain>>mainchain
@@ -46,9 +48,10 @@ WebAudio node graphs as first class values
   ChannelMergerNode
   ChannelSplitterNode
   AudioBufferSourceNode
+  ? analyser node with output that can be read from limut somehow
  Replace existing synths with node chains
  ? How to make operators do something useful with node chains; eg + * etc
- ? analyser node with output that can be read from limut somehow
+  + becomes an array both feeding into the next node, * becomes a gain?
  TEST!!!!!!!
   >>  >>=  >>[gain,biquad] bus
  Docs...
