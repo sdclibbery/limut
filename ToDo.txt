@@ -10,6 +10,7 @@ WebAudio node graphs as first class values
  ? playchain / playerchain are still crap names
   ? How should this _really_ work?
    ? In the v2 plan, it was pattern>>eventchain>>playerchain>>mainchain
+  ? Can we ditch the "chain" part? Especially if its only audiosynth that will have them..?
  Placeholders for feedback
    ? Syntax? Representation? Register themself somehow a bit like disconnect?
     playchain=id{'delay-in'}>>delay{1/4}>>{gain{0.8}>>'delay-in,???what???}
