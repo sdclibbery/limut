@@ -1,70 +1,72 @@
 ====
 ==== audio ====
 WebAudio node graphs as first class values
- EXAMPLES Params; eg playChain=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    playChain>>=gain{[1:!200ms,0]e}
+ EXAMPLES Params; eg play=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    play>>=gain{[1:!200ms,0]e}
  •PLAN
- ? playchain / playerchain are still crap names
-  ? How should this _really_ work?
-   ? In the v2 plan, it was pattern>>eventchain>>playerchain>>mainchain
-  ? Can we ditch the "chain" part? Especially if its only audiosynth that will have them..?
+ ?Var lookup should just return the var directly at parse time if it already exists, especially if its a var function
+ ?Maybe we need user defined functions soon?
+ ?!play=gain{this.foo}, foo=osc{...}  - seems the osc will get evalled in expand-chords when it shouldn't??
+ Should be able to  set lpf=biquad{'loqpas',freq:this.lpf,etc}
+  !Doesnt work because it can't read this.lpf to get param data
+  Rquirements: can provide data as args or via this param, with default fallback
+   Better to define lpf{} that takes args with defaults, and wrap with lpfp that uses this. params for the args?
+    !Don't want lpf=10 to be evalled per frame...
  Placeholders for feedback
    ? Syntax? Representation? Register themself somehow a bit like disconnect?
-    playchain=id{'delay-in'}>>delay{1/4}>>{gain{0.8}>>'delay-in,???what???}
+    play=id{'delay-in'}>>delay{1/4}>>{gain{0.8}>>'delay-in,???what???}
     id{} node is identity; can be connected by just passes the connection through. But it can also be named
    Delay with feedback will need increased disconnect time...
- More audionode functions including oscillators
+ Mechanism to provide effect mix easily; mix function defined in limut
+  eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
+ Monophonic synths with oscillator on the player chain, affected by event params somehow
+ More audionode functions
   WaveShaperNode
-  StereoPannerNode
-  IIRFilterNode
   ConvolverNode
+  StereoPannerNode
   DynamicsCompressorNode
   AudioBufferSourceNode
   MediaStreamAudioSourceNode
  Inserting into an existing chain at a placeholder location
   Requires not just connecting into a placeholder, but breaking the existing chain
    ? New Syntax? New operator?? Or not?
- playerChain
-  Eval once at parse time - does it just work (tm) from wave effects?
+ playerChain: what to call this? 'audio'? 'effects'? 'player'? 'instrument'? 'common'?
+  Eval once at parse time
   Disconnect: how? when?
- Mechanism to provide effect mix easily; mix function defined in limut
-  eg playchain=mix{1/2,wet:biquad{'lowpass',freq:440}}
- Derived node type values (defined in limut); eg lpf, drive
-   Driven from this. params; do we need to make them more efficient?? Don't want lpf=10 to be evalled per frame...
+  Should provide support for monophonix synths with no play chain set
+  Support for chains on buses: should be monophonic
  Existing operators/eval (and anything else with a type based if/else chain) ignore/error AudioNodes
- Support for named outputs; eg for stereo splitter
- Basic node functions for all AudioNode types
- Support for chains on buses
- Replace existing effect chains with node chains
+ Reimplement existing per-event and per-player effect chains with node chains
   Efficiency: Provide some kind of "null" identity AudioNode if eg biquad frequency is const zero or gain is const 1?
- Monophonic synth with oscillator on the player chain, affected by event params somehow
  Trickier node types
-  MediaElementAudioSourceNode, MediaStreamAudioSourceNode
-  ChannelMergerNode
-  ChannelSplitterNode
-  AudioBufferSourceNode
+  IIRFilterNode
+  ChannelSplitterNode/ChannelMergerNode
+   Support for named outputs; eg for stereo splitter
   ? analyser node with output that can be read from limut somehow
+  Basic node functions for all AudioNode types: check all are done
  Replace existing synths with node chains
+  Use monophonic where appropriate
+  ?How will glide work?
  ? How to make operators do something useful with node chains; eg + * etc
   + becomes an array both feeding into the next node, * becomes a gain?
  TEST!!!!!!!
-  >>  >>=  >>[gain,biquad] bus
+  >>  >>=  >>[gain,biquad] bus freq:osc{} var/this-lookups
  Docs...
  •QUESTIONS
- ? When do AuidioNodes get created? playChain can be eval time? playerChain needs to be special?
+ ? When do AuidioNodes get created? play can be eval time? playerChain needs to be special?
  ? How to define node loops? Eg echo with feedback? Or parallel nodes, eg multiple bandpass and sum?
-  Arrays and placeholders? Eg playChain = shape{tanh} >> {biquad{110},biquad{220}} >> gain{2}
-   playChain = _in >> delay{1/4b} >> {out, gain{0.9} >> _echoLoop >> _in}   Can use _echoLoop as a way to insert more?
+  Arrays and placeholders? Eg play = shape{tanh} >> {biquad{110},biquad{220}} >> gain{2}
+   play = _in >> delay{1/4b} >> {out, gain{0.9} >> _echoLoop >> _in}   Can use _echoLoop as a way to insert more?
  ? How to control audioparams with nodes instead of expressions?
   Just pass more nodes in instead of value expression
   Eg playerChain=delay{saw{1hz}}
    ? What if you want to use the same LFO to control multiple things?
     Can define with set or something; concise syntax is less important for this stuff
- ? Can you do playChain=[drive,lpf]r? What if its per frame? Presumably playChain is @e only, and playerChain is parse time only??
+ ? Can you do play=[drive,lpf]r? What if its per frame? Presumably play is @e only, and playerChain is parse time only??
  ? How to add something new into the middle of a chain? Eg I want to add another filter in before the pan
-  Use placeholders. So define playChain=_filters >> biquad{} >> _pans >> stereo{} and can then insert extra chains at the placeholder
-  ? What is the syntax for inserting? playChain._pans >>= gain{0.9} ???
+  Use placeholders. So define play=_filters >> biquad{} >> _pans >> stereo{} and can then insert extra chains at the placeholder
+  ? What is the syntax for inserting? play._pans >>= gain{0.9} ???
    Or >>> operator?
- ? Have a default playChain/playerChain that supports all current effects, and you can replace (or extend) it?
+ ? Have a default play/playerChain that supports all current effects, and you can replace (or extend) it?
   ? Rewrite all existing effects this way?
   ? Also have osc nodes and fully replace all JS synths
  ? Make envelopes (SetTarget etc) into first class citizens???
@@ -307,13 +309,13 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 User defined functions
- Eg shape={x}->sgn{x}*max{abs{x}-1/2,0}
+ Eg shape={x}=>sgn{x}*max{abs{x}-1/2,0}
   !But the default behaviour for our existing functions is to be evalled even without {}, so how to pass the functions as values?
    ?Can we default to non eval without {}, but do the eval if necessary in context? Eg operators can't act on function, so eval? etc
- Or set riser={dur}->(time%dur)/dur
-  Allow riser={dur?:32}->(time%dur)/dur ? Or {dur:32} to make parse easier?
- ?If functions are values, how do they interact with other values? What if you add functions etc? Eg ({}->0) + ({}->1) ?
- ?What about chords eg {x} -> x*(1,2,3) ?
+ Or set riser={dur}=>(time%dur)/dur
+  Allow riser={dur?32}=>(time%dur)/dur
+ ?If functions are values, how do they interact with other values? What if you add functions etc? Eg ({}=>0) + ({}=>1) ?
+ ?What about chords eg {x} => x*(1,2,3) ?
  !Should be able to access the default e and b params. Can get rid of time global??? And `this.` ?????????
  !Should be able to eval functions as well as pass them; eg ({}->3){}
  !?efficient tail recursion?

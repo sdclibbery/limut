@@ -12,7 +12,7 @@ define((require) => {
 
   let multiplyEvents = (event) => {
     for (let k in event) {
-      if (k === 'beat' || k === 'playchain') { continue } // beat should never have chords, playchain should not be evalled any more than needed as it creates AudioNodes
+      if (k === 'beat' || k === 'play') { continue } // beat should never have chords, play is for node graphs and should not be evalled any more than needed as it creates AudioNodes
       let v = event[k]
       if (v && v.__alreadyExpanded) { continue }
       let evaled = evalParamFrameIgnoreThisVars(v, event, event.count)

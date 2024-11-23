@@ -14,7 +14,7 @@ define(function (require) {
     duration *= params.beat.duration
     params.endTime = params._time + duration
     params._disconnectTime = 0.1+(params.endTime - system.audio.currentTime)
-    let chain = evalParamEvent(params.playchain, params) // Audionode chain
+    let chain = evalParamEvent(params.play, params) // Audionode chain
     let busId = params.bus
     if (!busId) { busId = 'main' } // Default to main bus if not specified
     let bus = players.getById(busId)
