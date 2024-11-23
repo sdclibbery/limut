@@ -3,12 +3,6 @@
 WebAudio node graphs as first class values
  EXAMPLES Params; eg playChain=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    playChain>>=gain{[1:!200ms,0]e}
  •PLAN
- Support for using a node chain to control an audioparam instead of an expression
-  nodes: unit tests
-  chains: unit tests
-  arrays: unit tests
-   ! osc{freq:{const:200,osc{'sine',freq:2}>>gain{100}}}>>gain{0.01}
-  ! biquad{'lowpass',freq:const{[1000:!200ms,10]es}}  not working; not getting any biquad
  ? playchain / playerchain are still crap names
   ? How should this _really_ work?
    ? In the v2 plan, it was pattern>>eventchain>>playerchain>>mainchain

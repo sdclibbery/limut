@@ -62,7 +62,7 @@ define(function(require) {
     let node = system.audio.createBiquadFilter()
     addEventTimingData(args, e)
     node.type = evalMainParamEvent(args, 'value', 'lowpass')
-    evalMainParamFrame(node.frequency, args, 'freq', 1, 'hz')
+    evalMainParamFrame(node.frequency, args, 'freq', 440, 'hz')
     evalMainParamFrame(node.Q, args, 'q', 5)
     evalMainParamFrame(node.gain, args, 'gain', 1)
     return node

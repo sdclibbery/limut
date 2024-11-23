@@ -5,6 +5,7 @@ define(function (require) {
   let {mainParamUnits,subParamUnits} = require('player/sub-param')
   let {segmentedAudioParam} = require('play/segmented-audioparam')
   let metronome = require('metronome')
+  let {connect,isConnectable} = require('play/node-connect');
 
   let evalPerEvent = (params, p, def) => {
     let v = params[p]
@@ -31,6 +32,7 @@ define(function (require) {
     let v = params[p]
     v =  evalParam.evalParamFrame(v, params, b) // Room for optimisation here: only eval objects the specific sub (or main) param thats needed for this call
     if (Array.isArray(v)) { v = v[0] } // Bus chords end up as arrays here so handle it by just picking the first value
+    if (isConnectable(v)) { return v } // Dont eval any further if this is a node chain
     if (typeof v !== 'number' && !v) {
       return def
     }
@@ -40,14 +42,14 @@ define(function (require) {
   let evalMainPerFrame = (params, p, def, b, requiredUnits) => {
     let v = evalPerFrame(params, p, b || params.count, def)
     if (typeof v !== 'object') { return v }
-    if (v instanceof AudioNode) { return v }
+    if (isConnectable(v)) { return v } // Dont eval any further if this is a node chain
     return mainParamUnits(v, requiredUnits, def)
   }
 
   let evalSubPerFrame = (params, p, subParamName, def, b, requiredUnits) => {
     let v = evalPerFrame(params, p, b || params.count, def)
     if (typeof v !== 'object') { return def }
-    if (v instanceof AudioNode) { return v }
+    if (isConnectable(v)) { return v } // Dont eval any further if this is a node chain
     return subParamUnits(v, subParamName, requiredUnits, def)
   }
 
@@ -93,8 +95,9 @@ define(function (require) {
       setAudioParamValue(audioParam, v, p, mod, params._time)
     } else {
       let evalled = evalMainPerFrame(params, p, def, params.count, requiredUnits)
-      if (evalled instanceof AudioNode) { // Value is a node chain, just connect it
-        evalled.connect(audioParam)
+      if (isConnectable(evalled)) { // Value is a node chain, just connect it
+        audioParam.value = 0 // Remove any default value so we only get tye value from the connection
+        connect(evalled, audioParam, params._destructor, {dont_disconnect_r:true})
         return
       }
       setAudioParamValue(audioParam, evalled, p, mod, params._time) // Set now
@@ -182,7 +185,7 @@ define(function (require) {
       let called = false
       let valueSet = undefined
       system.add = () => called=true
-      let ap = {linearRampToValueAtTime:(v) => valueSet=v,setValueAtTime:(v) => valueSet=v}
+      let ap = {linearRampToValueAtTime:(v) => valueSet=v, setValueAtTime:(v) => valueSet=v, cancelScheduledValues:()=>{}}
       test(ap, mod)
       assert(expectedSystemAddCalled, called)
       assert(expected, valueSet)

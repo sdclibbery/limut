@@ -5,6 +5,19 @@ define(function (require) {
   let isNode = v => v instanceof AudioNode
   let isParam = v => v instanceof AudioParam
   let isNodeArray = v => typeof v === 'object' && v.value !== undefined && !isParam(v)
+  let isConnectable = v => {
+    if (typeof v !== 'object') { return false }
+    if (isNode(v)) { return true }
+    if (isParam(v)) { return true }
+    if (v.value === undefined) { return false }
+    if (isConnectable(v.value)) { return true }
+    let idx = 1
+    while (v['value'+idx] !== undefined) { // Have to recursively check array values to see if its connectable
+      if (isConnectable(v['value'+idx])) { return true }
+      idx++
+    }
+    return false
+  }
   
   let getAudioNode = (v, field) => {
     while (v[field]) { v = v[field] } // Go through all composites
@@ -102,6 +115,10 @@ define(function (require) {
   }
 
   return {
-    connect: connect,
+      isNode: isNode,
+      isParam: isParam,
+      isNodeArray: isNodeArray,
+      isConnectable: isConnectable,
+      connect: connect,
   }
 })

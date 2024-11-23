@@ -4073,8 +4073,11 @@ v swirl 4, recol='neon', loc=tile_tr, rate=1/14, contrast, zoom=3
 //// AudioNode chain examples
 // s audiosynth, playchain=osc{freq:pitch{oct:[2,3]}}>>gain{0.05*[0:20ms,1,0]e}>>biquad{'lowpass',freq:[1000:!200ms,10]es}
 // s audiosynth, playchain={osc{freq:pitch{oct:2}},osc{freq:pitch{oct:4}}}>>gain{0.05}>>biquad{'lowpass',freq:[1000:!200ms,10]es}
-// s audiosynth, playchain=const{0.0}
+// s audiosynth, playchain=const{0.05}
 // s audiosynth, playchain=osc{freq:pitch{oct:[2,3]}}>>gain{0.05*[0:20ms,1,0]e}>>biquad{'lowpass',freq:[1000:!200ms,10]es}>>delay{1/4}
 // s audiosynth, playchain=osc{freq:pitch{oct:[2,3]}}>>gain{0.05*[0:20ms,1,0]e}>>biquad{'lowpass',freq:[1000:!200ms,10]es}>>{gain,delay{1/4}}
 // s audiosynth, dur=2, playchain=osc{freq:220}>>gain{osc{'sine',freq:1b}}>>gain{0.01}
+// s audiosynth, playchain=osc{freq:osc{'sine',freq:2}>>gain{300}}>>gain{0.01}
+// s audiosynth, playchain=osc{freq:{const{200},osc{'sine',freq:2}>>gain{100}}}>>gain{0.01}
+// s audiosynth, playchain=osc{freq:pitch{oct:2}}>>gain{0.05}>>biquad{'lowpass',freq:const{[1000:!200ms,10]es}}
 
