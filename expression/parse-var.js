@@ -22,13 +22,19 @@ define(function(require) {
     return key
   }
 
-  let varLookup = (key, args, context, interval) => {
+  let varLookup = (key, args, context, interval, userFunctionArgs) => {
     if (!key) { return }
 
     // look for static function call; call var immediately if present
     let f = vars.get(key)
     if (typeof f === 'function' && f.isStaticVarFunction) {
       return f(args, context)
+    }
+
+    if (userFunctionArgs !== undefined && userFunctionArgs[key] !== undefined) {
+      return () => {
+        return vars.__functionArgs[key] // Yuck. Get arg from global function args
+      }
     }
 
     // Return a lookup function
@@ -45,8 +51,11 @@ define(function(require) {
           Object.assign(modifiers, evalRecurse(args,event,b))
         }
         let wrapper = (e,b,er) => {
+          if (vr.isUserFunction) {
+            vars.__functionArgs = wrapper.modifiers // Yuck; set function args into a global var for access later
+          }
           if (wrapper.modifiers) {
-            if (wrapper.args !== undefined) { wrapper.modifiers.value = wrapper.args }
+          if (wrapper.args !== undefined) { wrapper.modifiers.value = wrapper.args }
             return vr(wrapper.modifiers, e,b, state)
           } else {
             return vr(wrapper.args, e,b, state)
@@ -90,9 +99,10 @@ define(function(require) {
   let p
   let ev = (i,c,d) => {return{idx:i,count:c,dur:d}}
   let vars = require('vars').all()
+  let state
 
   vars.foo = 'bar'
-  let state = {str:'foo',idx:0}
+  state = {str:'foo',idx:0}
   p = varLookup(parseVar(state), [])
   assert(3, state.idx)
   vars.foo = 'baz'

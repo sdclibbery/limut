@@ -47,8 +47,24 @@ define(function(require) {
       }
       // map (object)
       if (char == '{') {
-        result = parseMap(state)
-        result = addModifiers(result, parseMap(state))
+        let map = parseMap(state)
+        eatWhitespace(state)
+        if (state.str.charAt(state.idx) === '=' && state.str.charAt(state.idx+1) === '>') { // user defined function
+          state.idx+=2
+          eatWhitespace(state)
+          let oldArgs = state.userFunctionArgs
+          state.userFunctionArgs = map
+          let body = state.expression(state)
+          state.userFunctionArgs = oldArgs
+          result = (e,b,er,args) => {
+            // But somehow, look up args in map...
+            return body
+          }
+          result.isUserFunction = true
+          result.isVarFunction = true
+          continue
+        }
+        result = addModifiers(map, parseMap(state)) // A map can still have modifiers
         parseInterval(state) // Ignore
         continue
       }
@@ -102,7 +118,7 @@ define(function(require) {
       let parsed = parseVar(state)
       let modifiers = parseMap(state)
       let interval = parseInterval(state) || 'frame'
-      let v = varLookup(parsed, modifiers, state.context, interval)
+      let v = varLookup(parsed, modifiers, state.context, interval, state.userFunctionArgs)
       if (v !== undefined) {
         result = addModifiers(v, modifiers)
         if (typeof result === 'function') {
@@ -1628,6 +1644,31 @@ define(function(require) {
   assert(true, v.l.value1.l instanceof AudioNode)
   assert(true, v.l.value1.r instanceof AudioNode)
   assert(true, v.r instanceof AudioNode)
+
+  vars.foo = parseExpression('{} => 1')
+  p = parseExpression('foo')
+  assert(1, evalParamFrame(p, ev(), 0))
+  delete vars.foo
+
+  vars.foo = parseExpression('{value} => value^2')
+  p = parseExpression('foo{3}')
+  assert(9, evalParamFrame(p, ev(), 0))
+  delete vars.foo
+
+  // vars.foo = parseExpression('{x} => x^2')
+  // p = parseExpression('foo{x:3}')
+  // assert(9, evalParamFrame(p, ev(), 0))
+  // delete vars.foo
+
+  // vars.foo = parseExpression('{value,x} => value*x')
+  // p = parseExpression('foo{3,x:4}')
+  // assert(12, evalParamFrame(p, ev(), 0))
+  // delete vars.foo
+
+  // vars.foo = parseExpression('{x?3} => x^2')
+  // p = parseExpression('foo{}')
+  // assert(9, evalParamFrame(p, ev(), 0))
+  // delete vars.foo
 
   console.log('Parse expression tests complete')
   }

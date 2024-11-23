@@ -3,22 +3,26 @@
 WebAudio node graphs as first class values
  EXAMPLES Params; eg play=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    play>>=gain{[1:!200ms,0]e}
  •PLAN
- ?Var lookup should just return the var directly at parse time if it already exists, especially if its a var function
- ?Maybe we need user defined functions soon?
- ?!play=gain{this.foo}, foo=osc{...}  - seems the osc will get evalled in expand-chords when it shouldn't??
+ -> Need user defined functions now if we are to experiment with abstraction. That or we need breaking changes to var lookup
  Should be able to  set lpf=biquad{'loqpas',freq:this.lpf,etc}
   !Doesnt work because it can't read this.lpf to get param data
   Rquirements: can provide data as args or via this param, with default fallback
    Better to define lpf{} that takes args with defaults, and wrap with lpfp that uses this. params for the args?
     !Don't want lpf=10 to be evalled per frame...
+ ?! s audiosynth, play=osc{}>>gain{this.foo}>>gain{0.01}, foo=osc{'sine',freq:2b}
+ Mechanism to provide effect mix easily; mix function defined in limut
+  eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
  Placeholders for feedback
    ? Syntax? Representation? Register themself somehow a bit like disconnect?
     play=id{'delay-in'}>>delay{1/4}>>{gain{0.8}>>'delay-in,???what???}
     id{} node is identity; can be connected by just passes the connection through. But it can also be named
    Delay with feedback will need increased disconnect time...
- Mechanism to provide effect mix easily; mix function defined in limut
-  eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
- Monophonic synths with oscillator on the player chain, affected by event params somehow
+ playerChain: what to call this? 'audio'? 'effects'? 'player'? 'instrument'? 'common'?
+  Eval once at parse time
+  Disconnect: how? when?
+  Should provide support for monophonic synths with no play chain set
+  Support for chains on buses: should be monophonic
+   ? Are buses based on audioSynth too??? IE can a player connect to another player as output?
  More audionode functions
   WaveShaperNode
   ConvolverNode
@@ -29,11 +33,6 @@ WebAudio node graphs as first class values
  Inserting into an existing chain at a placeholder location
   Requires not just connecting into a placeholder, but breaking the existing chain
    ? New Syntax? New operator?? Or not?
- playerChain: what to call this? 'audio'? 'effects'? 'player'? 'instrument'? 'common'?
-  Eval once at parse time
-  Disconnect: how? when?
-  Should provide support for monophonix synths with no play chain set
-  Support for chains on buses: should be monophonic
  Existing operators/eval (and anything else with a type based if/else chain) ignore/error AudioNodes
  Reimplement existing per-event and per-player effect chains with node chains
   Efficiency: Provide some kind of "null" identity AudioNode if eg biquad frequency is const zero or gain is const 1?
@@ -309,6 +308,8 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 User defined functions
+ Basic parsing: syntax `=>` following {}: {args} => expression
+ Arguments: varLookup finds in args first
  Eg shape={x}=>sgn{x}*max{abs{x}-1/2,0}
   !But the default behaviour for our existing functions is to be evalled even without {}, so how to pass the functions as values?
    ?Can we default to non eval without {}, but do the eval if necessary in context? Eg operators can't act on function, so eval? etc
