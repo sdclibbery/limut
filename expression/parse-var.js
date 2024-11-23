@@ -31,9 +31,10 @@ define(function(require) {
       return f(args, context)
     }
 
-    if (userFunctionArgs !== undefined && userFunctionArgs[key] !== undefined) {
+    if (userFunctionArgs !== undefined) {
       return () => {
-        return vars.__functionArgs[key] // Yuck. Get arg from global function args
+        let v = vars.__functionArgs[key] // Yuck. Get arg from global function args
+        return v
       }
     }
 

@@ -53,14 +53,12 @@ define(function(require) {
           state.idx+=2
           eatWhitespace(state)
           let oldArgs = state.userFunctionArgs
-          state.userFunctionArgs = map
+          state.userFunctionArgs = {}
+          // if (map.value !== undefined) { state.userFunctionArgs[map.value()] = 0 }
           let body = state.expression(state)
           state.userFunctionArgs = oldArgs
-          result = (e,b,er,args) => {
-            // But somehow, look up args in map...
-            return body
-          }
-          result.isUserFunction = true
+          result = (e,b,er,args) => body
+          result.isUserFunction = true // Will cause vars to lookups from function args where possible
           result.isVarFunction = true
           continue
         }
@@ -1655,15 +1653,25 @@ define(function(require) {
   assert(9, evalParamFrame(p, ev(), 0))
   delete vars.foo
 
-  // vars.foo = parseExpression('{x} => x^2')
-  // p = parseExpression('foo{x:3}')
-  // assert(9, evalParamFrame(p, ev(), 0))
-  // delete vars.foo
+  vars.foo = parseExpression('{x} => x^2')
+  p = parseExpression('foo{x:3}')
+  assert(9, evalParamFrame(p, ev(), 0))
+  delete vars.foo
 
-  // vars.foo = parseExpression('{value,x} => value*x')
-  // p = parseExpression('foo{3,x:4}')
-  // assert(12, evalParamFrame(p, ev(), 0))
-  // delete vars.foo
+  vars.foo = parseExpression('{value,x} => value*x')
+  p = parseExpression('foo{3,x:4}')
+  assert(12, evalParamFrame(p, ev(), 0))
+  delete vars.foo
+
+  vars.foo = parseExpression('{value,value1} => value*value1')
+  p = parseExpression('foo{3,4}')
+  assert(12, evalParamFrame(p, ev(), 0))
+  delete vars.foo
+
+  vars.foo = parseExpression('{x,y} => x*y')
+  p = parseExpression('foo{x:3,y:4}')
+  assert(12, evalParamFrame(p, ev(), 0))
+  delete vars.foo
 
   // vars.foo = parseExpression('{x?3} => x^2')
   // p = parseExpression('foo{}')
