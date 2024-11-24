@@ -33,7 +33,8 @@ define(function(require) {
 
     // Lookup argument if inside a user defined function
     if (userFunctionArgs !== undefined && userFunctionArgs[key] !== undefined) {
-      return () => {
+      return (e,b,er) => {
+        // if (vars.__functionArgs === undefined) { throw `Missing function args in var ${key} lookup in user defined function call` }
         let v = vars.__functionArgs[key] // Yuck. Get arg from global function args
         return v
       }
@@ -52,7 +53,7 @@ define(function(require) {
         } else {
           Object.assign(modifiers, evalRecurse(args,event,b))
         }
-        let wrapper = (e,b,er) => {
+        let varLookupWrapper = (e,b,er) => {
           let argsToUse
           if (wrapper.modifiers) {
             if (wrapper.args !== undefined) { wrapper.modifiers.value = wrapper.args }
@@ -66,6 +67,7 @@ define(function(require) {
             return vr(argsToUse, e,b, state)
           }
         }
+        let wrapper = varLookupWrapper
         wrapper.string = key
         wrapper.state = state
         wrapper.modifiers = modifiers

@@ -58,13 +58,14 @@ define(function(require) {
           for (let k in map) { state.userFunctionArgs[map[k]()] = 0 }
           let body = state.expression(state)
           state.userFunctionArgs = oldArgs
-          result = (e,b,er,args) => {
+          let userDefinedFunctionWrapper = (e,b,er,args) => {
             let oldArgs = vars.__functionArgs
             vars.__functionArgs = args // Yuck; set function args into a global var for access later
-            let r = er(body,e,b)
+            let r = evalParamFrame(body,e,b)
             vars.__functionArgs = oldArgs
             return r
           }
+          result = userDefinedFunctionWrapper
           result.isVarFunction = true
           result.isNormalCallFunction = true
           continue
@@ -1650,7 +1651,7 @@ define(function(require) {
   assert(true, v.l.value1.r instanceof AudioNode)
   assert(true, v.r instanceof AudioNode)
 
-  vars.foo = parseExpression('{} -> 1')
+  vars.foo = parseExpression('{}->1')
   p = parseExpression('foo')
   assert(1, evalParamFrame(p, ev(), 0))
   delete vars.foo
@@ -1676,11 +1677,11 @@ define(function(require) {
   assert(12, evalParamFrame(parseExpression('({x,y} -> x*y){x:3,y:4}'), ev(), 0))
   // assert(9, evalParamFrame(parseExpression('({x} -> x^2){3}'), ev(), 0))
   // assert(9, evalParamFrame(parseExpression('({x?3} -> x^2){}'), ev(), 0))
-  // Still not actually working with audionodes :-/
-  // per event / per frame
+  // per event / per frame bodies
   // piecewise inside function body
-  // timevar args passed in
+  // timevar args passed in or used inside body
   // this var passed in or used inside body
+  // function in one param called from another (this.sine){220}
   // {value}->value*2{3} : get nasty error not helpful error
 
   console.log('Parse expression tests complete')

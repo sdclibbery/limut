@@ -308,6 +308,10 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 User defined functions
+ !! When it should be per frame, the per frame eval is going to fail because it won't have vars.__functionArgs
+  Need to bind functions args properly; eval with args?
+ !! Even simple sine{freq} function gets per frame freq, because freq is now a var lookup to the function arg :-/
+  Need to pass interval through properly
  Eg shape={x}=>sgn{x}*max{abs{x}-1/2,0}
   !But the default behaviour for our existing functions is to be evalled even without {}, so how to pass the functions as values?
    ?Can we default to non eval without {}, but do the eval if necessary in context? Eg operators can't act on function, so eval? etc

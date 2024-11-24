@@ -174,6 +174,7 @@ define((require) => {
   let vars = require('vars').all()
   let {evalParamFrame} = require('player/eval-param')
   let ev = (i,c,d) => {return{idx:i, count:c, dur:d, _time:c, endTime:c+d, countToTime:x=>x}}
+  let v
 
   assert(true, isLineStart('foo bar'))
   assert(false, isLineStart('set '))
@@ -370,6 +371,14 @@ define((require) => {
   assert(6, evalParamFrame(players.instances.r.getEventsForBeat({count:0})[0].add, ev(),0))
   delete players.instances.r
   delete vars.foo
+
+  parseLine("set sine={value}->mockaudionode{'sine',test:value}")
+  parseLine('s audiosynth, play=sine{220}')
+  v = evalParamFrame(players.instances.s.getEventsForBeat({count:0})[0].play, ev(),0)
+  assert(true, v instanceof AudioNode)
+  assert(220, v.test.value)
+  delete players.instances.s
+  delete vars.sine
 
   let included
   parseLine("include 'preset/test.limut'", 0, (l) => included=l, true)
