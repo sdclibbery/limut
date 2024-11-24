@@ -14,6 +14,7 @@ define(function(require) {
   let parseString = require('expression/parse-string')
   let parsePiecewise = require('expression/parse-piecewise')
   let parseUnits = require('expression/parse-units')
+  let vars = require('vars')
 
   let expression = (state) => {
     let result
@@ -45,21 +46,27 @@ define(function(require) {
         }
         continue
       }
-      // map (object)
+      // map (object) or user defined function
       if (char == '{') {
         let map = parseMap(state)
         eatWhitespace(state)
-        if (state.str.charAt(state.idx) === '=' && state.str.charAt(state.idx+1) === '>') { // user defined function
+        if (state.str.charAt(state.idx) === '-' && state.str.charAt(state.idx+1) === '>') { // user defined function
           state.idx+=2
           eatWhitespace(state)
           let oldArgs = state.userFunctionArgs
           state.userFunctionArgs = {}
-          // if (map.value !== undefined) { state.userFunctionArgs[map.value()] = 0 }
+          for (let k in map) { state.userFunctionArgs[map[k]()] = 0 }
           let body = state.expression(state)
           state.userFunctionArgs = oldArgs
-          result = (e,b,er,args) => body
-          result.isUserFunction = true // Will cause vars to lookups from function args where possible
+          result = (e,b,er,args) => {
+            let oldArgs = vars.__functionArgs
+            vars.__functionArgs = args // Yuck; set function args into a global var for access later
+            let r = er(body,e,b)
+            vars.__functionArgs = oldArgs
+            return r
+          }
           result.isVarFunction = true
+          result.isNormalCallFunction = true
           continue
         }
         result = addModifiers(map, parseMap(state)) // A map can still have modifiers
@@ -1643,40 +1650,38 @@ define(function(require) {
   assert(true, v.l.value1.r instanceof AudioNode)
   assert(true, v.r instanceof AudioNode)
 
-  vars.foo = parseExpression('{} => 1')
+  vars.foo = parseExpression('{} -> 1')
   p = parseExpression('foo')
   assert(1, evalParamFrame(p, ev(), 0))
   delete vars.foo
 
-  vars.foo = parseExpression('{value} => value^2')
+  vars.foo = parseExpression('{value} -> value^2')
   p = parseExpression('foo{3}')
   assert(9, evalParamFrame(p, ev(), 0))
   delete vars.foo
 
-  vars.foo = parseExpression('{x} => x^2')
-  p = parseExpression('foo{x:3}')
-  assert(9, evalParamFrame(p, ev(), 0))
-  delete vars.foo
-
-  vars.foo = parseExpression('{value,x} => value*x')
-  p = parseExpression('foo{3,x:4}')
+  vars.bar = parseExpression('3')
+  vars.foo = parseExpression('{value} -> value*bar')
+  p = parseExpression('foo{4}')
   assert(12, evalParamFrame(p, ev(), 0))
   delete vars.foo
+  delete vars.bar
 
-  vars.foo = parseExpression('{value,value1} => value*value1')
-  p = parseExpression('foo{3,4}')
-  assert(12, evalParamFrame(p, ev(), 0))
-  delete vars.foo
-
-  vars.foo = parseExpression('{x,y} => x*y')
-  p = parseExpression('foo{x:3,y:4}')
-  assert(12, evalParamFrame(p, ev(), 0))
-  delete vars.foo
-
-  // vars.foo = parseExpression('{x?3} => x^2')
-  // p = parseExpression('foo{}')
-  // assert(9, evalParamFrame(p, ev(), 0))
-  // delete vars.foo
+  assert(1, evalParamFrame(parseExpression('{}->1'), ev(), 0))
+  assert(1, evalParamFrame(parseExpression('({}->1){}'), ev(), 0))
+  assert(9, evalParamFrame(parseExpression('({value} -> value^2){3}'), ev(), 0))
+  assert(9, evalParamFrame(parseExpression('({x} -> x^2){x:3}'), ev(), 0))
+  assert(12, evalParamFrame(parseExpression('({value,x} -> value*x){3,x:4}'), ev(), 0))
+  assert(12, evalParamFrame(parseExpression('({value,value1} -> value*value1){3,4}'), ev(), 0))
+  assert(12, evalParamFrame(parseExpression('({x,y} -> x*y){x:3,y:4}'), ev(), 0))
+  // assert(9, evalParamFrame(parseExpression('({x} -> x^2){3}'), ev(), 0))
+  // assert(9, evalParamFrame(parseExpression('({x?3} -> x^2){}'), ev(), 0))
+  // Still not actually working with audionodes :-/
+  // per event / per frame
+  // piecewise inside function body
+  // timevar args passed in
+  // this var passed in or used inside body
+  // {value}->value*2{3} : get nasty error not helpful error
 
   console.log('Parse expression tests complete')
   }

@@ -172,6 +172,8 @@ define((require) => {
     finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
   }
   let vars = require('vars').all()
+  let {evalParamFrame} = require('player/eval-param')
+  let ev = (i,c,d) => {return{idx:i, count:c, dur:d, _time:c, endTime:c+d, countToTime:x=>x}}
 
   assert(true, isLineStart('foo bar'))
   assert(false, isLineStart('set '))
@@ -358,6 +360,16 @@ define((require) => {
   delete players.instances.r
   delete playerTypes.myro2
   delete playerTypes.myro
+
+  parseLine('r readout, add=({}->1){}')
+  assert(1, evalParamFrame(players.instances.r.getEventsForBeat({count:0})[0].add, ev(),0))
+  delete players.instances.r
+
+  parseLine('set foo={value}->value*2')
+  parseLine('r readout, add=foo{3}')
+  assert(6, evalParamFrame(players.instances.r.getEventsForBeat({count:0})[0].add, ev(),0))
+  delete players.instances.r
+  delete vars.foo
 
   let included
   parseLine("include 'preset/test.limut'", 0, (l) => included=l, true)

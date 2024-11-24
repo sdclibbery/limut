@@ -308,7 +308,6 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 User defined functions
- !Not working in practice, for values or nodes
  Eg shape={x}=>sgn{x}*max{abs{x}-1/2,0}
   !But the default behaviour for our existing functions is to be evalled even without {}, so how to pass the functions as values?
    ?Can we default to non eval without {}, but do the eval if necessary in context? Eg operators can't act on function, so eval? etc

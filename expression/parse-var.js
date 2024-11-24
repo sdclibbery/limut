@@ -31,7 +31,8 @@ define(function(require) {
       return f(args, context)
     }
 
-    if (userFunctionArgs !== undefined) {
+    // Lookup argument if inside a user defined function
+    if (userFunctionArgs !== undefined && userFunctionArgs[key] !== undefined) {
       return () => {
         let v = vars.__functionArgs[key] // Yuck. Get arg from global function args
         return v
@@ -52,14 +53,17 @@ define(function(require) {
           Object.assign(modifiers, evalRecurse(args,event,b))
         }
         let wrapper = (e,b,er) => {
-          if (vr.isUserFunction) {
-            vars.__functionArgs = wrapper.modifiers // Yuck; set function args into a global var for access later
-          }
+          let argsToUse
           if (wrapper.modifiers) {
-          if (wrapper.args !== undefined) { wrapper.modifiers.value = wrapper.args }
-            return vr(wrapper.modifiers, e,b, state)
+            if (wrapper.args !== undefined) { wrapper.modifiers.value = wrapper.args }
+            argsToUse = wrapper.modifiers
           } else {
-            return vr(wrapper.args, e,b, state)
+            argsToUse = wrapper.args
+          }
+          if (vr.isNormalCallFunction) { // Used by user defined functions which need evalRecurse but not state
+            return vr(e,b, er, argsToUse)
+          } else {
+            return vr(argsToUse, e,b, state)
           }
         }
         wrapper.string = key
