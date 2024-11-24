@@ -68,6 +68,7 @@ define(function(require) {
           result = userDefinedFunctionWrapper
           result.isVarFunction = true
           result.isNormalCallFunction = true
+          result.interval = parseInterval(state) || body.interval || 'event'
           continue
         }
         result = addModifiers(map, parseMap(state)) // A map can still have modifiers
@@ -123,13 +124,10 @@ define(function(require) {
       // vars
       let parsed = parseVar(state)
       let modifiers = parseMap(state)
-      let interval = parseInterval(state) || 'frame'
+      let interval = parseInterval(state)
       let v = varLookup(parsed, modifiers, state.context, interval, state.userFunctionArgs)
       if (v !== undefined) {
         result = addModifiers(v, modifiers)
-        if (typeof result === 'function') {
-          result.interval = interval
-        }
         continue
       }
       break
@@ -464,13 +462,19 @@ define(function(require) {
   p = parseExpression('foo + (0,2)')
   vars.foo = parseExpression('[1,2]t1@f')
   assert([1,3], evalParamFrame(p,ev(0),0))
-  assert([2,4], evalParamFrame(p,ev(1),1))
+  assert([2,4], evalParamFrame(p,ev(0),1))
+  delete vars.foo
+
+  p = parseExpression('foo + (0,2)')
+  vars.foo = parseExpression('[1,2]t1@e')
+  assert([1,3], evalParamFrame(p,ev(0),0))
+  assert([1,3], evalParamFrame(p,ev(0),1))
   delete vars.foo
 
   p = parseExpression('(foo,[3,4]t1@f)')
   vars.foo = parseExpression('1')
   assert([1,3], evalParamFrame(p,ev(0),0))
-  assert([1,4], evalParamFrame(p,ev(1),1))
+  assert([1,4], evalParamFrame(p,ev(0),1))
   delete vars.foo
 
   p = parseExpression('[2:8]l[1,0]@f')
@@ -1675,9 +1679,11 @@ define(function(require) {
   assert(12, evalParamFrame(parseExpression('({value,x} -> value*x){3,x:4}'), ev(), 0))
   assert(12, evalParamFrame(parseExpression('({value,value1} -> value*value1){3,4}'), ev(), 0))
   assert(12, evalParamFrame(parseExpression('({x,y} -> x*y){x:3,y:4}'), ev(), 0))
+  assert('event', parseExpression('{}->1').interval)
+  assert('event', parseExpression('{}->[]r@e').interval)
+  assert('frame', parseExpression('{}->[]r@f').interval)
   // assert(9, evalParamFrame(parseExpression('({x} -> x^2){3}'), ev(), 0))
   // assert(9, evalParamFrame(parseExpression('({x?3} -> x^2){}'), ev(), 0))
-  // per event / per frame bodies
   // piecewise inside function body
   // timevar args passed in or used inside body
   // this var passed in or used inside body

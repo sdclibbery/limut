@@ -308,6 +308,7 @@ shadertoy synth multiple channels
 ====
 ==== other ====
 User defined functions
+ !! Per frame function args are not per frame; eg sine{[]r@f} - unit test!
  !! When it should be per frame, the per frame eval is going to fail because it won't have vars.__functionArgs
   Need to bind functions args properly; eval with args?
  !! Even simple sine{freq} function gets per frame freq, because freq is now a var lookup to the function arg :-/

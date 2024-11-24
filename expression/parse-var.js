@@ -33,16 +33,19 @@ define(function(require) {
 
     // Lookup argument if inside a user defined function
     if (userFunctionArgs !== undefined && userFunctionArgs[key] !== undefined) {
-      return (e,b,er) => {
-        // if (vars.__functionArgs === undefined) { throw `Missing function args in var ${key} lookup in user defined function call` }
+      let parseVarUserFunctionResult = (e,b,er) => {
         let v = vars.__functionArgs[key] // Yuck. Get arg from global function args
+        parseVarUserFunctionResult.interval = (typeof v === 'function') ? v.interval : 'event' // Keep things per event when possible
         return v
       }
+      return parseVarUserFunctionResult
     }
 
     // Return a lookup function
     let state = {} // Create a state store for this parse instance
     let result
+    if (interval === undefined && typeof vars.get(key) === 'function') { interval = vars.get(key).interval }
+    interval = interval || 'frame'
     result = (event,b, evalRecurse, modifiers) => {
       let vr = vars.get(key)
       let v
@@ -86,6 +89,7 @@ define(function(require) {
       if (v === undefined) { v = 0 } // If not found at all, assume its for a currently unavailable player and default to zero
       return v
     }
+    result.interval = interval
     return result
   }
 
