@@ -38,7 +38,7 @@ define((require) => {
 
   let evalFunctionWithModifiers = (value, event, beat, evalRecurse) => {
     if (value.interval === 'event') { beat = event.count } // Force per event if explicitly called for
-    if (value.modifiers === undefined) {
+    if (typeof value.modifiers !== 'object') {
       return value(event, beat, evalRecurse) // No modifiers
     }
     let mods = evalParamFrame(value.modifiers, event, beat)

@@ -46,7 +46,7 @@ define(function(require) {
     let result
     if (interval === undefined && typeof vars.get(key) === 'function') { interval = vars.get(key).interval }
     interval = interval || 'frame'
-    result = (event,b, evalRecurse, modifiers) => {
+    let parseVarLookup = (event,b, evalRecurse, modifiers) => {
       let vr = vars.get(key)
       let v
       if (typeof vr === 'function' && vr.isVarFunction) { // Var function
@@ -89,6 +89,7 @@ define(function(require) {
       if (v === undefined) { v = 0 } // If not found at all, assume its for a currently unavailable player and default to zero
       return v
     }
+    result = parseVarLookup
     result.interval = interval
     return result
   }

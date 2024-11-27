@@ -1,4 +1,6 @@
-====
+=================================================================================================================================
+=================================================================================================================================
+=================================================================================================================================
 ==== audio ====
 WebAudio node graphs as first class values
  EXAMPLES Params; eg play=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    play>>=gain{[1:!200ms,0]e}
@@ -10,6 +12,12 @@ WebAudio node graphs as first class values
    Better to define lpf{} that takes args with defaults, and wrap with lpfp that uses this. params for the args?
     !Don't want lpf=10 to be evalled per frame...
  ?! s audiosynth, play=osc{}>>gain{this.foo}>>gain{0.01}, foo=osc{'sine',freq:2b}
+ playerChain: what to call this? 'audio'? 'effects'? 'player'? 'instrument'? 'common'?
+  Eval once at parse time
+  Disconnect: how? when?
+  Should provide support for monophonic synths with no play chain set
+  Support for chains on buses: should be monophonic
+   ? Are buses based on audioSynth too??? IE can a player connect to another player as output?
  Mechanism to provide effect mix easily; mix function defined in limut
   eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
  Placeholders for feedback
@@ -17,12 +25,6 @@ WebAudio node graphs as first class values
     play=id{'delay-in'}>>delay{1/4}>>{gain{0.8}>>'delay-in,???what???}
     id{} node is identity; can be connected by just passes the connection through. But it can also be named
    Delay with feedback will need increased disconnect time...
- playerChain: what to call this? 'audio'? 'effects'? 'player'? 'instrument'? 'common'?
-  Eval once at parse time
-  Disconnect: how? when?
-  Should provide support for monophonic synths with no play chain set
-  Support for chains on buses: should be monophonic
-   ? Are buses based on audioSynth too??? IE can a player connect to another player as output?
  More audionode functions
   WaveShaperNode
   ConvolverNode
@@ -234,7 +236,9 @@ FM ambient synth - https://www.youtube.com/watch?v=_xL3qr-9-ZE
 FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 
 
-====
+=================================================================================================================================
+=================================================================================================================================
+=================================================================================================================================
 ==== visual ====
 ?Chromatic aberration hack  col.rgb += dFdx(col.rgb)*vec3(3,0,-3);
 !Buffer freezes on code update
@@ -292,23 +296,30 @@ shadertoy synth support textures - MtGSzh
  NO CORS!! https://www.shadertoy.com/media/a/f735bee5b64ef98879dc618b016ecf7939a5756040c2cde21ccb15e69a6e1cfb.png
 shadertoy synth multiple channels
 
-
-====
+=================================================================================================================================
+=================================================================================================================================
+=================================================================================================================================
 ==== things to test/consider ====
 // pattern features (), [], <>, #b, v^, single event pattern
-// (), follow, complex durs, simple durs, delay, stutter, overrides, +=, |=, []
-// [], []t, []l/s, []e, []n, []r []{}, segmented audioparams
-// operators + - * / ^ % | .
+// (), follow, complex durs, simple durs, delay, stutter, overrides, +=, |=, >>=, []
+// [], []t, []l/s, []e, []n, []r []{}, []es segmented audioparams
+// operators + - * / ^ % | . >>
 // var, player.var, this.param, this.voice, var{params}, slider{}, floor{}, .floor{to:}, accum{}, this.time, time, rand, slider
 // (...).1, (...).max, max{...}, {foo:...}.foo, (pk,ps).pulse
 // modifiers {seed,per,step,0:0}, @e, @f
 // subparams {2,mix:1/2}, presets, buses, buffers
+// Audionodes osc{} >>
 !!!!Remember to update breaking changes link on index when doing a release!!!!
 
-====
+=================================================================================================================================
+=================================================================================================================================
+=================================================================================================================================
 ==== other ====
 User defined functions
  !! Per frame function args are not per frame; eg sine{[]r@f} - unit test!
+  vars.__functionArgs has already been fully evalled so it looks like a const value
+   Do we finally need something better than __functionArgs?
+    But that still doesn't solve the problem. We always eval function modifiers, so eval-audio-param will never know it can vary per frame
  !! When it should be per frame, the per frame eval is going to fail because it won't have vars.__functionArgs
   Need to bind functions args properly; eval with args?
  !! Even simple sine{freq} function gets per frame freq, because freq is now a var lookup to the function arg :-/
@@ -734,3 +745,24 @@ player s { // named player; sugar for "let s = player{...}"
   , onAudio: a -> define per player audio processing (and reverb/room etc are libs)
 }
 With abstraction such that this can be written as a preset and then instantiated as a player with only params getting set
+
+=================================================================================================================================
+=================================================================================================================================
+=================================================================================================================================
+
+Change requirements:
+* Tag current version as 0.1-final; publish to a separate URL
+* Global, player, this, function-arg, var lookups are all resolved at a post-parse time, including their interval
+* User defined functions can be passed without getting evalled
+* Replace time modifiers with a single function (??Could that handle seed too???) - can have helper functions for 'per' etc
+* Only eval modifiers at the time they're needed, not always?
+* this. and p1. get you the player parameters, not the event; you can get array of active events too if you want
+* All user functions can access event/b args if they want; get rid of time global var
+* Drop blend=max . blend='max' is absolutely fine!
+* Add a conditional expression; if/else or ?: or pref some kind of matching
+* Add some kind of let expression to define local vars in functions
+* What can be cleaned up in eval-params?
+
+
+
+

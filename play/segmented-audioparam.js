@@ -44,7 +44,6 @@ define(function (require) {
     let count = params.count
     let time = params._time
     let currentValue = getValue(param, def, requiredUnits)
-    // if (params) { console.log(`Segmented AudioParam for ${params.player} ${p} ${subP?subP:''}`) }
     let nextValue = currentValue
     let segmentPower = param._segmentPower
     let nextSegment = param._nextSegment
