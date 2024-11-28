@@ -128,6 +128,7 @@ define(function(require) {
       let v = varLookup(parsed, modifiers, state.context, interval, state.userFunctionArgs)
       if (v !== undefined) {
         result = addModifiers(v, modifiers)
+        result.interval = hoistInterval(result.interval, typeof modifiers === 'object' ? Object.values(modifiers) : undefined)
         continue
       }
       break
@@ -1682,6 +1683,13 @@ define(function(require) {
   assert('event', parseExpression('{}->1').interval)
   assert('event', parseExpression('{}->[]r@e').interval)
   assert('frame', parseExpression('{}->[]r@f').interval)
+  e = ev()
+  assert(2, evalParamFrame(parseExpression('({value}->value*2){[1,3]t1@e}'), e, 0))
+  assert(2, evalParamFrame(parseExpression('({value}->value*2){[1,3]t1@e}'), e, 1))
+  // e = ev()
+  // assert(2, evalParamFrame(parseExpression('({value}->value*2){[1,3]t1@f}'), e, 0))
+  // assert(6, evalParamFrame(parseExpression('({value}->value*2){[1,3]t1@f}'), e, 1))
+
   // assert(9, evalParamFrame(parseExpression('({x} -> x^2){3}'), ev(), 0))
   // assert(9, evalParamFrame(parseExpression('({x?3} -> x^2){}'), ev(), 0))
   // piecewise inside function body

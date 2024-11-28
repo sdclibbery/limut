@@ -71,7 +71,7 @@ define(function(require) {
     if (ss.length !== vs.length) { throw `ss.length ${ss} !== vs.length ${vs}` }
     if (options === undefined) { options = emptyOptions }
     let segmentWrapper = {}
-    let result = (e,b, evalRecurse, modifiers) => {
+    let piecewiseResult = (e,b, evalRecurse, modifiers) => {
       if (modifiers && modifiers.seed !== undefined) {
         if (!p.modifiers) { p.modifiers = {} }
         p.modifiers.seed = modifiers.seed
@@ -100,6 +100,7 @@ define(function(require) {
       }
       return v
     }
+    let result = piecewiseResult
     return result
   }
 
