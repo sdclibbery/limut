@@ -380,13 +380,6 @@ define((require) => {
   delete players.instances.s
   delete vars.sine
 
-  // parseLine('set foo={value}->value*2')
-  // parseLine('r readout, add=foo{[1,3]t1@f}')
-  // assert(2, evalParamFrame(players.instances.r.getEventsForBeat({count:0})[0].add, ev(),0))
-  // assert(6, evalParamFrame(players.instances.r.getEventsForBeat({count:0})[0].add, ev(),1))
-  // delete players.instances.r
-  // delete vars.foo
-
   let included
   parseLine("include 'preset/test.limut'", 0, (l) => included=l, true)
     .then(() => { assert('includetest preset none', included) })

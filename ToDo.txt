@@ -316,7 +316,8 @@ shadertoy synth multiple channels
 =================================================================================================================================
 ==== other ====
 User defined functions
- !!IDEA: evalParamFrameWithInterval; returns the result wrapped in {value:xxx,_interval:'frame'}
+ !!IDEA: evalParamFrameWithInterval
+  returns the result wrapped in {value:xxx,_interval:'frame'}
   eval-audio-params uses this to make sure it always gets the correct interval
  OK so there is an issue with var lookup intervals
   Historically we assumed var lookups are 'frame', which is safe but inefficient, and will be badly so for node args

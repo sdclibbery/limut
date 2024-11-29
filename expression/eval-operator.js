@@ -79,7 +79,7 @@ define(function(require) {
       v = evalFunctionWithModifiers(v,event,b, evalRecurse) // Will apply modifiers but not eval a deferred function
     }
     return v
-}
+  }
 
   let operator = (op, l, r) => {
     if (isPrimitive(l) && isPrimitive(r)) {
@@ -88,11 +88,13 @@ define(function(require) {
     let evalOp = (event,b,evalRecurse) => {
       let el = evalOperand(l, event,b, evalRecurse, op.doNotEvalDeferred)
       let er = evalOperand(r, event,b, evalRecurse, op.doNotEvalDeferred)
+      let result
       if (op.raw) {
-        return op(el, er, event,b,evalRecurse)
+        result = op(el, er, event,b,evalRecurse)
       } else {
-        return applyOperator(op, el, er)
+        result = applyOperator(op, el, er)
       }
+      return result
     }
     evalOp.interval = combineIntervalsFrom(l, r)
     return evalOp

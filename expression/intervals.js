@@ -84,6 +84,7 @@ define(function(require) {
   }
   
   return {
+    combineIntervals:combine,
     combineIntervalsFrom: combineIntervalsFrom,
     hoistInterval: hoistInterval,
     parseInterval: parseInterval,

@@ -2,6 +2,7 @@
 define((require) => {
   let {overrideKey,applyModifiers} = require('expression/time-modifiers')
   let system = require('play/system')
+  let {combineIntervals} = require('expression/intervals')
 
   let expandObjectChords = (o) => {
     for (let k in o) {
@@ -54,7 +55,7 @@ define((require) => {
     return result
   }
 
-  let evalParamValue = (evalRecurse, value, event, beat, {ignoreThisVars,evalToObjectOrPrimitive}) => {
+  let evalParamValue = (evalRecurse, value, event, beat, {ignoreThisVars,evalToObjectOrPrimitive,withInterval}) => {
     if (Array.isArray(value)) { // chord, eval individual values
       let v = value.map(v => evalRecurse(v, event, beat))
       v = v.flat()
@@ -63,19 +64,34 @@ define((require) => {
       if (ignoreThisVars && value._thisVar) { return 0 } // return 0 to hold a place in a chord
       if (value.isDeferredVarFunc) { return value } // Do not eval delayed function
       let v = evalFunctionWithModifiers(value, event, beat, evalRecurse)
-      return evalRecurse(v, event, beat)
-    } else if (typeof value === 'object' && !(value instanceof AudioNode)) { // Eval each field in the object
+      v = evalRecurse(v, event, beat)
+      if (withInterval) { v.__interval = combineIntervals(value.interval, v.__interval) }
+      return v
+    } else if (typeof value === 'object' && !(value instanceof AudioNode) && value.__interval === undefined) {
       let result = {}
-      for (let k in value) {
+      let interval = 'const'
+      for (let k in value) { // Eval each field in the object
        if (evalToObjectOrPrimitive) {
          result[k] = value[k] // Pass without evaluation
        } else {
          result[k] = evalRecurse(value[k], event, beat)
        }
+       if (withInterval) {
+        if (typeof result[k] === 'object' && result[k].__interval !== undefined)
+          interval = combineIntervals(interval, result[k].__interval)
+          result[k] = result[k].value
+       }
       }
       let r = expandObjectChords(result) // and hoist chords up
-      return r.length === 1 ? r[0] : r
+      r = r.length === 1 ? r[0] : r
+      if (withInterval) {
+        return {value:r, __interval:interval}
+      }
+      return r
     } else {
+      if (withInterval && (typeof value !== 'object' || value.__interval === undefined)) {
+        return {value:value, __interval:'const'}
+      }
       return value
     }
   }
@@ -137,6 +153,12 @@ define((require) => {
   let evalParamFrame = (value, event, beat) => {
     // Fully evaluate down to a primitive number/string etc, allowing the value to change every frame if it wants to
     return evalDeferredFunc(evalParamValueWithMemoisation(evalRecurseFull, value, event, beat, noOptions), event, beat, evalRecurseFull, noOptions)
+  }
+
+  let evalParamFrameWithInterval = (value, event, beat) => {
+    let options = {withInterval:true}
+    let er = evalRecurseWithOptions(evalRecurseFull, options)
+    return evalDeferredFunc(evalParamValueWithMemoisation(er, value, event, beat, options), event, beat, er, options)
   }
 
   let evalParamFrameIgnoreThisVars = (value, event, beat) => {
@@ -341,6 +363,7 @@ define((require) => {
     evalParamEvent:evalParamEvent,
     evalParamFrame:evalParamFrame,
     evalParamFrameIgnoreThisVars:evalParamFrameIgnoreThisVars,
+    evalParamFrameWithInterval:evalParamFrameWithInterval,
     evalParamToObjectOrPrimitive:evalParamToObjectOrPrimitive,
     evalFunctionWithModifiers:evalFunctionWithModifiers,
   }
