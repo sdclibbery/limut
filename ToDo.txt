@@ -317,16 +317,38 @@ shadertoy synth multiple channels
 =================================================================================================================================
 ==== other ====
 User defined functions
+!!!!!!!!!
+The PLAN:
+• Undo the evalToInterval etc etc
+• Get back to a working system
+• Keep the current parse-time interval field on functions, and keep using it for forcing @e
+• Anything that is per frame gets immediately wrapped in {value:x,__interval:'frame'}
+• Operators combine any __interval fields they find, a bit like with the segment stuff
+• eval-audio-params uses __interval field for interval
+!!!!!!!!! Interval system requirements
+* Values have an associated interval, which how often the value can change: const, event, segment, frame
+* Defined by the type of value 1, [], []es, []e etc
+* Composite values combine take highest interval; eg interval(1+[]e) is frame
+* Can be overridden: @f allows the value to change within an event; @e prevents a value from changing within an event
+* Used to efficiently set audio params
+* Used to memoise value evaluation for efficiency and correctness (force not to change per event for @e)
+!!!!!!!!!
  !!IDEA: evalParamFrameWithInterval
   Need a proper understanding of exactly what this should do and how it should be used in each case
    memoisation: want to get value exactly as normal PLUS interval
    eval-audio-param: need to know interval, possibly of subparam, 
-   ??Do we really want a separate method that gets ONLY the interval? then done have to worry about whole object wrapper __interval thing
+   ??Do we really want a separate method that gets ONLY the interval? then dont have to worry about whole object wrapper __interval thing
     I think the answer is we have to maintain the object structure, and each primitive becomes a {value,__interval}
      So no point having a separate method??
      The alternative is same interval for whole param with all subparams
     ??OR, have a separate method that returns interval string INSTEAD of primitive but maintains structure?
      After all, for eval-audio, theres no use returning actual primitives for segments or frames...
+!!!!!! Intervals
+* parse time: no way to know the interval on a var lookup or certainly on a function arg
+* return interval in wrapper object: everything gets wrapped, big change
+* method returns interval with structures: operators etc have to pass interval on correctly; big change
+* frame/segment gets wrapped immediately the interval is known, and this persists through operators etc. const/event are not wrapped
+!!!!!!
   returns the result wrapped in {value:xxx,_interval:'frame'}
   eval-audio-params uses this to make sure it always gets the correct interval
  OK so there is an issue with var lookup intervals
@@ -365,6 +387,7 @@ User defined functions
  !Should be able to access the default e and b params. Can get rid of time global??? And `this.` ?????????
  !Should be able to eval functions as well as pass them; eg ({}->3){}
  !?efficient tail recursion?
+!! []es shouldn't be the syntax for segmenting. It should be []e@s! And then you could have []t@s if you wanted...
 !! floor doesn't work with delay:  r readout 1234, delay=floor{[0:1]l3@f,to:1/4}
 Cooler effect when update code
 More time modifiers

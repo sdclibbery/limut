@@ -1696,59 +1696,7 @@ define(function(require) {
   // timevar args passed in or used inside body
   // this var passed in or used inside body
   // function in one param called from another (this.sine){220}
-  // {value}->value*2{3} : get nasty error not helpful error
-
-  assert({value:1,__interval:'const'}, evalParamFrameWithInterval(parseExpression('1'), ev(),0))
-  assert({value:'s',__interval:'const'}, evalParamFrameWithInterval(parseExpression("'s'"), ev(),0))
-  assert({value:{test:{value:440}},__interval:'const'}, evalParamFrameWithInterval(parseExpression('mockaudionode{}'), ev(),0))
-  assert({value:2,__interval:'const'}, evalParamFrameWithInterval(parseExpression('1+1'), ev(),0))
-  assert({foo:{value:1,__interval:'const'}}, evalParamFrameWithInterval(parseExpression('{foo:1}'), ev(),0))
-  assert({value:1,__interval:'event'}, evalParamFrameWithInterval(parseExpression('[1,2]l1'), ev(0,0,2),1))
-  assert({value:1,__interval:'event'}, evalParamFrameWithInterval(parseExpression('[1,2]l1@e'), ev(0,0,2),1))
-  assert({value:2,__interval:'frame'}, evalParamFrameWithInterval(parseExpression('[1,2]l1@f'), ev(0,0,2),1))
-  assert({value:1.5,__interval:'frame'}, evalParamFrameWithInterval(parseExpression('[1,2]l2@f'), ev(0,0,2),1))
-  assert({value:2.5,__interval:'frame'}, evalParamFrameWithInterval(parseExpression('[1,2]l2@f + 1'), ev(0,0,2),1))
-  assert({value:2.5,__interval:'frame'}, evalParamFrameWithInterval(parseExpression('[1,2]l2@f + [1,2]l2@e'), ev(0,0,2),1))
-  assert({value:{value:1.5,_nextSegment:1,_segmentPower:1},__interval:'frame'}, evalParamFrameWithInterval(parseExpression('[1,2]es'), ev(0,0,2),1))
-  assert([{value:1,__interval:'const'},{value:2,__interval:'const'}], evalParamFrameWithInterval(parseExpression('(1,2)'), ev(),0))
-  assert([{value:1,__interval:'const'},{value:2,__interval:'frame'}], evalParamFrameWithInterval(parseExpression('(1,[2]t@f)'), ev(),0))
-
-  vars.foo = parseExpression('[2]t@f')
-  assert({value:8,__interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo*4'), ev(), 0))
-  assert({value:8,__interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo*[4]'), ev(), 0))
-  assert({value:8,__interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo*[4]t@f'), ev(), 0))
-  delete vars.foo
-
-  // vars.foo = parseExpression('2')
-  // assert({value:8,__interval:'const'}, evalParamFrameWithInterval(parseExpression('foo*4'), ev(), 0))
-  // assert({value:8,__interval:'event'}, evalParamFrameWithInterval(parseExpression('foo*[4]'), ev(), 0))
-  // assert({value:8,__interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo*[4]t@f'), ev(), 0))
-  // delete vars.foo
-
-  // eval param memoisation should be based on withinterval??
-   // Can do this, but memoisation needs to remember if its per frame so it doesnt have to recalc interval every time
-    //!!!!!!!!!!!!See if this can be made to work...
-
-    // let evalParamValueWithMemoisation = (evalRecurse, value, event, beat, options) => {
-    //   if (value === undefined) { return value }
-    //   if (!!value.interval_memo && value.interval_memo.has(event)) {
-    //     return value.interval_memo.get(event)
-    //   }
-    //   if (system.timeNow() < event._time) { // Dont memoise until the event start time
-    //                                         // Later, should also just call through if its previously been evalled and is 'frame'
-    //     return evalParamValue(evalRecurse, value, event, beat, options)
-    //   }
-    //   let modOptions = {}
-    //   Object.assign(modOptions, options)
-    //   modOptions.withInterval = true
-    //   let result = evalParamValue(evalRecurseWithOptions(evalRecurseFull, modOptions), value, event, beat, modOptions)
-    //   if (result.__interval === 'event') {
-    //     if (!value.interval_memo) { value.interval_memo = new WeakMap() }
-    //     value.interval_memo.set(event, result)
-    //   }
-    //   return result.value
-    // }
-  
+  // {value}->value*2{3} : get nasty error not helpful error  
 
   // modifiers
   // more nested combinations; [{([]t@f)}]t etc etc
