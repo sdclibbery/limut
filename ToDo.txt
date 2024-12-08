@@ -18,6 +18,7 @@ WebAudio node graphs as first class values
   Should provide support for monophonic synths with no play chain set
   Support for chains on buses: should be monophonic
    ? Are buses based on audioSynth too??? IE can a player connect to another player as output?
+  ?Also have output Param that can connect audio to other players, instead of bus param..??
  Mechanism to provide effect mix easily; mix function defined in limut
   eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
  Placeholders for feedback
@@ -317,6 +318,15 @@ shadertoy synth multiple channels
 ==== other ====
 User defined functions
  !!IDEA: evalParamFrameWithInterval
+  Need a proper understanding of exactly what this should do and how it should be used in each case
+   memoisation: want to get value exactly as normal PLUS interval
+   eval-audio-param: need to know interval, possibly of subparam, 
+   ??Do we really want a separate method that gets ONLY the interval? then done have to worry about whole object wrapper __interval thing
+    I think the answer is we have to maintain the object structure, and each primitive becomes a {value,__interval}
+     So no point having a separate method??
+     The alternative is same interval for whole param with all subparams
+    ??OR, have a separate method that returns interval string INSTEAD of primitive but maintains structure?
+     After all, for eval-audio, theres no use returning actual primitives for segments or frames...
   returns the result wrapped in {value:xxx,_interval:'frame'}
   eval-audio-params uses this to make sure it always gets the correct interval
  OK so there is an issue with var lookup intervals

@@ -1702,7 +1702,7 @@ define(function(require) {
   assert({value:'s',__interval:'const'}, evalParamFrameWithInterval(parseExpression("'s'"), ev(),0))
   assert({value:{test:{value:440}},__interval:'const'}, evalParamFrameWithInterval(parseExpression('mockaudionode{}'), ev(),0))
   assert({value:2,__interval:'const'}, evalParamFrameWithInterval(parseExpression('1+1'), ev(),0))
-  assert({value:{foo:1},__interval:'const'}, evalParamFrameWithInterval(parseExpression('{foo:1}'), ev(),0))
+  assert({foo:{value:1,__interval:'const'}}, evalParamFrameWithInterval(parseExpression('{foo:1}'), ev(),0))
   assert({value:1,__interval:'event'}, evalParamFrameWithInterval(parseExpression('[1,2]l1'), ev(0,0,2),1))
   assert({value:1,__interval:'event'}, evalParamFrameWithInterval(parseExpression('[1,2]l1@e'), ev(0,0,2),1))
   assert({value:2,__interval:'frame'}, evalParamFrameWithInterval(parseExpression('[1,2]l1@f'), ev(0,0,2),1))
