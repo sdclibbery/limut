@@ -1756,9 +1756,9 @@ define(function(require) {
   assert({value:15,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{[4,5]t1@f}'), e, 1))
   delete vars.foo
 
-  // assert({value:1,interval:'frame'}, evalParamFrameWithInterval(parseExpression('[1]t{per:[1]t@f}'), ev(0),0)) // ??
-  // assert(1, evalParamFrameWithInterval(parseExpression('[1]r@e{seed:[1]t@f}'), ev(0),0)) // ??
-  // assert(1, evalParamFrameWithInterval(parseExpression('[1]t@e{per:[1]t@f}'), ev(0),0)) // ??
+  assert(1, evalParamFrameWithInterval(parseExpression('[1]r{seed:[1]t@f}@e'), ev(0),0))
+  assert(1, evalParamFrameWithInterval(parseExpression('[1]t{per:[1]t@f}@e'), ev(0),0))
+  // assert({value:1,interval:'frame'}, evalParamFrameWithInterval(parseExpression('[1]t{per:[1]t@f}'), ev(0),0)) // Probably should hoist interval up from modifiers..?
 
   assert(1, evalParamFrame(parseExpression('{}->1'), ev(), 0))
   assert(1, evalParamFrame(parseExpression('({}->1){}'), ev(), 0))
@@ -1773,9 +1773,9 @@ define(function(require) {
   e = ev()
   assert(2, evalParamFrame(parseExpression('({value}->value*2){[1,3]t1@e}'), e, 0))
   assert(2, evalParamFrame(parseExpression('({value}->value*2){[1,3]t1@e}'), e, 1))
-  // e = ev()
-  // assert(2, evalParamFrame(parseExpression('({value}->value*2){[1,3]t1@f}'), e, 0))
-  // assert(6, evalParamFrame(parseExpression('({value}->value*2){[1,3]t1@f}'), e, 1))
+  e = ev()
+  assert(2, evalParamFrame(parseExpression('({value}->value*2){[1,3]t1@f}'), e, 0))
+  assert(6, evalParamFrame(parseExpression('({value}->value*2){[1,3]t1@f}'), e, 1))
 
   // assert(9, evalParamFrame(parseExpression('({x} -> x^2){3}'), ev(), 0))
   // assert(9, evalParamFrame(parseExpression('({x?3} -> x^2){}'), ev(), 0))
@@ -1784,10 +1784,8 @@ define(function(require) {
   // this var passed in or used inside body
   // function in one param called from another (this.sine){220}
   // {value}->value*2{3} : get nasty error not helpful error  
-
   // modifiers
   // more nested combinations; [{([]t@f)}]t etc etc
-
 
   console.log('Parse expression tests complete')
   }
