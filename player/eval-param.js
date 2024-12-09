@@ -55,6 +55,19 @@ define((require) => {
     return result
   }
 
+  let wrapWithInterval = (v, value) => {
+    if (value.interval === 'frame' && typeof v !== 'object' && (!v || !v.isDeferredVarFunc)) {
+      v = {value:v, interval:value.interval} // Wrap to provide interval
+    }
+    if (value.interval === 'frame' && (typeof v === 'object' || v.interval === undefined)) {
+      if (v._nextSegment === undefined) { v.interval = value.interval } // Set interval
+    }
+    if (value.interval === 'event' && (typeof v === 'object' || v.interval === 'frame')) { // [[1]t@f]t@e case; remove frame wrapper
+      v = v.value // Extract value; remove interval wrapper
+    }
+    return v
+  }
+
   let evalParamValue = (evalRecurse, value, event, beat, {ignoreThisVars,evalToObjectOrPrimitive,withInterval}) => {
     if (Array.isArray(value)) { // chord, eval individual values
       let v = value.map(v => evalRecurse(v, event, beat))
@@ -62,20 +75,10 @@ define((require) => {
       return v
     } else if (typeof value == 'function') { // Call function to get current value
       if (ignoreThisVars && value._thisVar) { return 0 } // return 0 to hold a place in a chord
-      if (value.isDeferredVarFunc) { return value } // Do not eval delayed function
+      if (value.isDeferredVarFunc) { return value } // Do not eval deferred function
       let v = evalFunctionWithModifiers(value, event, beat, evalRecurse)
       v = evalRecurse(v, event, beat)
-      if (withInterval) {
-        if (value.interval === 'frame' && typeof v !== 'object') {
-          v = {value:v, interval:value.interval}
-        }
-        if (value.interval === 'frame' && (typeof v === 'object' || v.interval === undefined)) {
-          if (v._nextSegment === undefined) { v.interval = value.interval }
-        }
-        if (value.interval === 'event' && (typeof v === 'object' || v.interval === 'frame')) { // [[1]t@f]t@e case
-          v = v.value
-        }
-      }
+      if (withInterval) { v = wrapWithInterval(v, value) }
       return v
     } else if (typeof value === 'object' && !(value instanceof AudioNode)) {
       let result = {}
@@ -135,7 +138,9 @@ define((require) => {
       }
       let v = evalFunctionWithModifiers(result, event, beat, evalRecurse)
       if (result.interval === 'event') { beat = event.count } // Force per event if explicitly called for
-      return evalRecurse(v, event, beat)
+      v = evalRecurse(v, event, beat)
+      if (options.withInterval) { v = wrapWithInterval(v, result) }
+      return v
     }
     if (typeof result === 'object' && !(result instanceof AudioNode)) {
       let v = {}
