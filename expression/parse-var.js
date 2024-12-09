@@ -35,7 +35,6 @@ define(function(require) {
     if (userFunctionArgs !== undefined && userFunctionArgs[key] !== undefined) {
       let parseVarUserFunctionResult = (e,b,er) => {
         let v = vars.__functionArgs[key] // Yuck. Get arg from global function args
-        parseVarUserFunctionResult.interval = (typeof v === 'function') ? v.interval : 'event' // Keep things per event when possible
         return v
       }
       return parseVarUserFunctionResult

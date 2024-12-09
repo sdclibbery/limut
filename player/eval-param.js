@@ -2,7 +2,6 @@
 define((require) => {
   let {overrideKey,applyModifiers} = require('expression/time-modifiers')
   let system = require('play/system')
-  let {combineIntervals} = require('expression/intervals')
 
   let expandObjectChords = (o) => {
     for (let k in o) {
@@ -18,6 +17,19 @@ define((require) => {
       }
     }
     return [o]
+  }
+
+  let wrapWithInterval = (v, value) => {
+    if (value.interval === 'frame' && typeof v !== 'object' && (!v || !v.isDeferredVarFunc)) {
+      v = {value:v, interval:value.interval} // Wrap to provide interval
+    }
+    if (value.interval === 'frame' && (typeof v === 'object' || v.interval === undefined)) {
+      if (v._nextSegment === undefined) { v.interval = value.interval } // Set interval
+    }
+    if (value.interval === 'event' && (typeof v === 'object' || v.interval === 'frame')) { // [[1]t@f]t@e case; remove frame wrapper
+      v = v.value // Extract value; remove interval wrapper
+    }
+    return v
   }
 
   let results = {}
@@ -37,8 +49,10 @@ define((require) => {
     return result
   }
 
+  let shouldForcePerEvent = (value) => value.interval === 'event'
+  
   let evalFunctionWithModifiers = (value, event, beat, evalRecurse) => {
-    if (value.interval === 'event') { beat = event.count } // Force per event if explicitly called for
+    if (shouldForcePerEvent(value)) { beat = event.count } // Force per event if explicitly called for
     if (typeof value.modifiers !== 'object') {
       return value(event, beat, evalRecurse) // No modifiers
     }
@@ -53,19 +67,6 @@ define((require) => {
       })
     }
     return result
-  }
-
-  let wrapWithInterval = (v, value) => {
-    if (value.interval === 'frame' && typeof v !== 'object' && (!v || !v.isDeferredVarFunc)) {
-      v = {value:v, interval:value.interval} // Wrap to provide interval
-    }
-    if (value.interval === 'frame' && (typeof v === 'object' || v.interval === undefined)) {
-      if (v._nextSegment === undefined) { v.interval = value.interval } // Set interval
-    }
-    if (value.interval === 'event' && (typeof v === 'object' || v.interval === 'frame')) { // [[1]t@f]t@e case; remove frame wrapper
-      v = v.value // Extract value; remove interval wrapper
-    }
-    return v
   }
 
   let evalParamValue = (evalRecurse, value, event, beat, {ignoreThisVars,evalToObjectOrPrimitive,withInterval}) => {
@@ -103,7 +104,7 @@ define((require) => {
       return value.interval_memo.get(event)
     }
     let result = evalParamValue(evalRecurse, value, event, beat, options)
-    if (value.interval === 'event') {
+    if (shouldForcePerEvent(value)) {
       if (system.timeNow() >= event._time) { // Dont memoise until the event start time
         if (!value.interval_memo) { value.interval_memo = new WeakMap() }
         value.interval_memo.set(event, result)
@@ -137,7 +138,7 @@ define((require) => {
         return result.string // If function requires value, return string instead to support blend=max etc
       }
       let v = evalFunctionWithModifiers(result, event, beat, evalRecurse)
-      if (result.interval === 'event') { beat = event.count } // Force per event if explicitly called for
+      if (shouldForcePerEvent(result)) { beat = event.count } // Force per event if explicitly called for
       v = evalRecurse(v, event, beat)
       if (options.withInterval) { v = wrapWithInterval(v, result) }
       return v
