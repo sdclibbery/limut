@@ -318,11 +318,20 @@ shadertoy synth multiple channels
 ==== other ====
 User defined functions
 !!!!!!!!!
+The NEW PLAN:
+• DO want a new function after all, but it should only wrap frame things
+• Add new function ___with tests___
+  • Anything that is per frame gets immediately wrapped in {value:x,__interval:'frame'} in eval-param
+• Remove parse-var `interval = interval || 'frame'`
+• Operators combine any interval fields they find, a bit like with the segment stuff
+• eval-audio-params uses interval field for interval
+!!!!!!!!!
 The PLAN:
-• Undo the evalToInterval etc etc
-• Get back to a working system
 • Keep the current parse-time interval field on functions, and keep using it for forcing @e
 • Anything that is per frame gets immediately wrapped in {value:x,__interval:'frame'}
+   Should this be done inside (eg) the timevar? Or in eval-params based on the function interval field?
+   This will cause a ton of changes in tests; have to use a 'val' function probably
+• Remove parse-var `interval = interval || 'frame'`
 • Operators combine any __interval fields they find, a bit like with the segment stuff
 • eval-audio-params uses __interval field for interval
 !!!!!!!!! Interval system requirements

@@ -1,7 +1,7 @@
 'use strict';
 define(function(require) {
   let consoleOut = require('console')
-  let {combineIntervalsFrom} = require('expression/intervals')
+  let {combineIntervalsFrom,combineIntervals} = require('expression/intervals')
   let {evalFunctionWithModifiers} = require('player/eval-param')
 
   let objectMap = (obj, fn) => {
@@ -56,6 +56,8 @@ define(function(require) {
             result[k] = Math.min(el[k], er[k]||Infinity)
           } else if (k === '_segmentPower') {
             result[k] = Math.max(el[k], er[k]||0)
+          } else if (k === 'interval') {
+            result[k] = combineIntervals(el[k], er[k])
           } else {
             let erv = er[k]
             if (erv === undefined) {

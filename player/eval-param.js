@@ -55,7 +55,7 @@ define((require) => {
     return result
   }
 
-  let evalParamValue = (evalRecurse, value, event, beat, {ignoreThisVars,evalToObjectOrPrimitive}) => {
+  let evalParamValue = (evalRecurse, value, event, beat, {ignoreThisVars,evalToObjectOrPrimitive,withInterval}) => {
     if (Array.isArray(value)) { // chord, eval individual values
       let v = value.map(v => evalRecurse(v, event, beat))
       v = v.flat()
@@ -65,10 +65,20 @@ define((require) => {
       if (value.isDeferredVarFunc) { return value } // Do not eval delayed function
       let v = evalFunctionWithModifiers(value, event, beat, evalRecurse)
       v = evalRecurse(v, event, beat)
+      if (withInterval) {
+        if (value.interval === 'frame' && typeof v !== 'object') {
+          v = {value:v, interval:value.interval}
+        }
+        if (value.interval === 'frame' && (typeof v === 'object' || v.interval === undefined)) {
+          if (v._nextSegment === undefined) { v.interval = value.interval }
+        }
+        if (value.interval === 'event' && (typeof v === 'object' || v.interval === 'frame')) { // [[1]t@f]t@e case
+          v = v.value
+        }
+      }
       return v
-    } else if (typeof value === 'object' && !(value instanceof AudioNode) && value.__interval === undefined) {
+    } else if (typeof value === 'object' && !(value instanceof AudioNode)) {
       let result = {}
-      let interval = 'const'
       for (let k in value) { // Eval each field in the object
        if (evalToObjectOrPrimitive) {
          result[k] = value[k] // Pass without evaluation
@@ -143,6 +153,12 @@ define((require) => {
     return evalDeferredFunc(evalParamValueWithMemoisation(evalRecurseFull, value, event, beat, noOptions), event, beat, evalRecurseFull, noOptions)
   }
 
+  let evalParamFrameWithInterval = (value, event, beat) => {
+    let options = {withInterval:true}
+    let er = evalRecurseWithOptions(evalRecurseFull, options)
+    return evalDeferredFunc(evalParamValueWithMemoisation(er, value, event, beat, options), event, beat, er, options)
+  }
+
   let evalParamFrameIgnoreThisVars = (value, event, beat) => {
     let options = {ignoreThisVars:true}
     let er = evalRecurseWithOptions(evalRecurseFull, options)
@@ -169,6 +185,7 @@ define((require) => {
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
   let ev = (n,t) => {return{idx:n,count:n,_time:t}}
+  let val = v => typeof v === 'object' && v.value !== undefined ? v.value : v
 
   assert(undefined, evalParamEvent(undefined, ev(0)))
   assert(1, evalParamEvent(1, ev(0)))
@@ -200,9 +217,9 @@ define((require) => {
   assert(4, evalParamFrame(perEventValue, ev(0), 0))
 
   assert({a:4}, evalParamFrame({a:perEventValue}, ev(0), 0))
-  assert({a:3}, evalParamFrame({a:perFrameValue}, ev(0), 0))
-  assert({a:4}, evalParamEvent({a:perEventValue}, ev(0)))
-  assert({a:3}, evalParamEvent({a:perFrameValue}, ev(0)))
+  assert(3, evalParamFrame({a:perFrameValue}, ev(0), 0).a)
+  assert(4, evalParamEvent({a:perEventValue}, ev(0)).a)
+  assert(3, evalParamEvent({a:perFrameValue}, ev(0)).a)
   assert({r:1}, evalParamFrame(()=>{return({r:1})}, ev(0), 0))
   assert([{r:1,g:3},{r:2,g:3}], evalParamFrame(()=>{return({r:()=>[1,2],g:3})}, ev(0), 0))
 
@@ -219,15 +236,18 @@ define((require) => {
   perFrameValueGetB.interval= 'frame'
   let perEventThenFrameChord = [perFrameValueGetB,perFrameValueGetB]
   perEventThenFrameChord.interval = 'event'
-  assert([0,0], evalParamEvent(perEventThenFrameChord, ev(0), 1))
+  assert([0,0], evalParamEvent(perEventThenFrameChord, ev(0)).map(val))
   delete perEventThenFrameChord.interval_memo
-  assert([1,1], evalParamFrame(perEventThenFrameChord, ev(0), 1))
+  assert([1,1], evalParamFrame(perEventThenFrameChord, ev(0), 1).map(val))
 
   let perEventThenFrameObject = {foo:perFrameValueGetB}
   perEventThenFrameObject.interval = 'event'
-  assert({foo:0,interval:'event'}, evalParamEvent(perEventThenFrameObject, ev(0), 1))
+  assert({foo:0,interval:'event'}, evalParamEvent(perEventThenFrameObject, ev(0)))
   delete perEventThenFrameObject.interval_memo
   assert({foo:1,interval:'event'}, evalParamFrame(perEventThenFrameObject, ev(0), 1))
+
+  delete perEventThenFrameObject.interval_memo
+  assert({foo:{value:1,interval:'frame'},interval:'event'}, evalParamFrameWithInterval(perEventThenFrameObject, ev(0), 1))
 
   let perEventThenFrameValueGetB = (e,b,er) => er(perFrameValueGetB,e,b)
   perEventThenFrameValueGetB.interval = 'event'
@@ -344,6 +364,7 @@ define((require) => {
   return {
     evalParamEvent:evalParamEvent,
     evalParamFrame:evalParamFrame,
+    evalParamFrameWithInterval:evalParamFrameWithInterval,
     evalParamFrameIgnoreThisVars:evalParamFrameIgnoreThisVars,
     evalParamToObjectOrPrimitive:evalParamToObjectOrPrimitive,
     evalFunctionWithModifiers:evalFunctionWithModifiers,
