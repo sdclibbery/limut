@@ -45,7 +45,6 @@ define(function(require) {
     let state = {} // Create a state store for this parse instance
     let result
     if (interval === undefined && typeof vars.get(key) === 'function') { interval = vars.get(key).interval }
-    interval = interval || 'frame'
     let parseVarLookup = (event,b, evalRecurse, modifiers) => {
       let vr = vars.get(key)
       let v

@@ -11,7 +11,9 @@ define(function(require) {
     if (result === undefined && typeof v === 'object' && !(v instanceof AudioNode)) {
       result = v.interval
       for (let k in v) {
-        result = combine(result, v[k].interval)
+        if (v[k] !== undefined) {
+          result = combine(result, v[k].interval)
+        }
       }
     }
     return result

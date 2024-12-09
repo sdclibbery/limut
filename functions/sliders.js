@@ -86,6 +86,7 @@ define(function(require) {
   }
 
   newSlider.isStaticVarFunction = true
+  newSlider.interval = 'frame'
   addVar('slider', newSlider)
   return {
     gc_reset: gc_reset,

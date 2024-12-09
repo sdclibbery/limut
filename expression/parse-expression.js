@@ -7,7 +7,7 @@ define(function(require) {
   let operatorTree = require('expression/parse-operator')
   let {operators} = require('expression/operators')
   let {parseVar,varLookup} = require('expression/parse-var')
-  let {hoistInterval,parseInterval,setInterval} = require('expression/intervals')
+  let {hoistInterval,parseInterval} = require('expression/intervals')
   let addModifiers = require('expression/time-modifiers').addModifiers
   let {evalParamFrame,evalParamFrameWithInterval} = require('player/eval-param')
   let parseColour = require('expression/parse-colour')
@@ -40,7 +40,7 @@ define(function(require) {
         } else if (Array.isArray(vs)) {
           result = vs
           result = addModifiers(result, parseMap(state))
-          result.interval = parseInterval(state) || hoistInterval('event', vs)
+          result.interval = parseInterval(state) || hoistInterval(undefined, vs)
         } else {
           result = vs
         }
@@ -68,7 +68,7 @@ define(function(require) {
           result = userDefinedFunctionWrapper
           result.isVarFunction = true
           result.isNormalCallFunction = true
-          result.interval = parseInterval(state) || body.interval || 'event'
+          result.interval = parseInterval(state) || body.interval
           continue
         }
         result = addModifiers(map, parseMap(state)) // A map can still have modifiers
@@ -467,6 +467,13 @@ define(function(require) {
   delete vars.foo
 
   p = parseExpression('foo + (0,2)')
+  vars.foo = parseExpression('[1,2]t1@f')
+  e = ev(0)
+  assert([1,3], evalParamFrame(p,e,0))
+  assert([2,4], evalParamFrame(p,e,1))
+  delete vars.foo
+
+  p = parseExpression('foo + (0,2)')
   vars.foo = parseExpression('[1,2]t1@e')
   assert([1,3], evalParamFrame(p,ev(0),0))
   assert([1,3], evalParamFrame(p,ev(0),1))
@@ -691,7 +698,7 @@ define(function(require) {
   assert('frame', parseExpression("[0,1]s4@f").interval)
   assert('event', parseExpression("[0,1]s4@e").interval)
 
-  assert('event', parseExpression("(0,1)").interval)
+  assert(undefined, parseExpression("(0,1)").interval)
   assert(undefined, parseExpression("(0,[0:1]r@f)")[0].interval)
   assert('frame', parseExpression("(0,[0:1]r@f)").interval)
   assert('frame', parseExpression("(0,[0:1]r@f)")[1].interval)
@@ -704,7 +711,7 @@ define(function(require) {
 
   p = parseExpression('foo')
   vars.foo = parseExpression('0')
-  assert('frame', p.interval)
+  assert(undefined, p.interval)
   delete vars.foo
 
   p = parseExpression('foo@e')
@@ -1503,13 +1510,27 @@ define(function(require) {
   assert(0.55*2/3, evalParamFrame(p, ev(0,0,1), sInBeats(0.2)))
   assert(0, evalParamFrame(p, ev(0,0,1), sInBeats(0.3)))
 
+  p = parseExpression("[1,2]{[0,1]t1@f}")
+  e = ev(0,0,1)
+  assert(1, evalParamFrame(p, e, 0))
+  assert(2, evalParamFrame(p, e, 1))
+
+  vars.foo = parseExpression('[0,1]t1@f')
+  p = parseExpression("[1,2]{foo}")
+  e = ev(0,0,1)
+  assert(1, evalParamFrame(p, e, 0))
+  assert(2, evalParamFrame(p, e, 1))
+  delete vars.foo
+
   p = parseExpression("[1,2]{time}")
-  assert(1, evalParamFrame(p, ev(0,0,1), 0))
-  assert(2, evalParamFrame(p, ev(0,0,1), 1))
+  e = ev(0,0,1)
+  assert(1, evalParamFrame(p, e, 0))
+  assert(2, evalParamFrame(p, e, 1))
 
   p = parseExpression("[1,2]{this.time}")
-  assert(1, evalParamFrame(p, ev(0,0,1), 0))
-  assert(2, evalParamFrame(p, ev(0,0,1), 1))
+  e = ev(0,0,1)
+  assert(1, evalParamFrame(p, e, 0))
+  assert(2, evalParamFrame(p, e, 1))
 
   p = parseExpression("[1:_[1,2],2:_1]{time}")
   assert(1, evalParamFrame(p, ev(0,0,1), 0))
@@ -1701,25 +1722,26 @@ define(function(require) {
   assert({value:1,interval:'frame'}, evalParamFrameWithInterval(parseExpression('[[1]t@e]t@f'), ev(0),0))
   assert(1, evalParamFrameWithInterval(parseExpression('[[1]t@f]t@e'), ev(0),0))
   assert({"value":1,"_nextSegment":1,"_segmentPower":1}, evalParamFrameWithInterval(parseExpression('[1,0]es1'), ev(0,0,1),0))
-  assert({"value":{"test":{"value":440}},"interval":"frame"}, evalParamFrameWithInterval(parseExpression('mockaudionode'), ev(0),0)) // Var functions play safe and are always per frame. Doesn't matter for audionodes as they will be recognised and connected in eval-audio-params instead of per-frame updated anyway.
+  assert({"test":{"value":440}}, evalParamFrameWithInterval(parseExpression('mockaudionode'), ev(0),0))
   assert(1, evalParamFrameWithInterval(parseExpression('[1]r'), ev(0),0))
   assert({value:1,interval:'frame'}, evalParamFrameWithInterval(parseExpression('[1]r@f'), ev(0),0))
   assert({value:1,interval:'frame'}, evalParamFrameWithInterval(parseExpression('[1]r{seed:[1]t@f}'), ev(0),0))
-  // assert(1, evalParamFrameWithInterval(parseExpression('[1]r@e{seed:[1]t@f}'), ev(0),0))
-  // assert({value:1,interval:'frame'}, evalParamFrameWithInterval(parseExpression('[1]t{per:[1]t@f}'), ev(0),0))
-  // assert(1, evalParamFrameWithInterval(parseExpression('[1]t@e{per:[1]t@f}'), ev(0),0))
+  // assert(1, evalParamFrameWithInterval(parseExpression('[1]r@e{seed:[1]t@f}'), ev(0),0)) // ??
+  // assert({value:1,interval:'frame'}, evalParamFrameWithInterval(parseExpression('[1]t{per:[1]t@f}'), ev(0),0)) // ??
+  // assert(1, evalParamFrameWithInterval(parseExpression('[1]t@e{per:[1]t@f}'), ev(0),0)) // ??
+  vars.foo = parseExpression('1'); assert(1, evalParamFrameWithInterval(parseExpression('foo'), ev(), 0)); delete vars.foo
+  vars.foo = parseExpression('[1]t@f'); assert({value:1,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo'), ev(), 0)); delete vars.foo
+  vars.fooe = parseExpression('[1]t@e'); assert(1, evalParamFrameWithInterval(parseExpression('fooe'), ev(), 0)); delete vars.foo
+  vars.foo = parseExpression('[1]t@f'); assert({value:2,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo+1'), ev(), 0)); delete vars.foo
+  vars.foo = parseExpression('1'); assert({value:2,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo+[1]t@f'), ev(), 0)); delete vars.foo
+  vars.foo = parseExpression('[1]t@f'); assert({value:1,interval:'frame'}, evalParamFrameWithInterval(parseExpression('[foo]t@f'), ev(), 0)); delete vars.foo
+  vars.foo = parseExpression('[1]t@f'); assert({value:1,interval:'frame'}, evalParamFrameWithInterval(parseExpression('[foo]t'), ev(), 0)); delete vars.foo
+  vars.fooe = parseExpression('[1]t@e'); assert(1, evalParamFrameWithInterval(parseExpression('[fooe]t'), ev(), 0)); delete vars.foo
+  assert(1, evalParamFrameWithInterval(parseExpression('{foo:1}.foo'), ev(0),0))
+  assert({value:1,interval:'frame'}, evalParamFrameWithInterval(parseExpression('{foo:[1]t@f}.foo'), ev(0),0))
+  assert({value:1,interval:'frame'}, evalParamFrameWithInterval(parseExpression('time'), ev(0),1))
 
-  // Need to delete parse-var line 48 to make these work; that will require changing how memoisation works
-// vars.foo = parseExpression('1'); assert(1, evalParamFrame(parseExpression('foo'), ev(), 0)); delete vars.foo
-// vars.foo = parseExpression('[1]t@f'); assert({value:1,interval:'frame'}, evalParamFrame(parseExpression('foo'), ev(), 0)); delete vars.foo
-// vars.fooe = parseExpression('[1]t@e'); assert(1, evalParamFrame(parseExpression('fooe'), ev(), 0)); delete vars.foo
-// vars.foo = parseExpression('[1]t@f'); assert({value:2,interval:'frame'}, evalParamFrame(parseExpression('foo+1'), ev(), 0)); delete vars.foo
-// vars.foo = parseExpression('1'); assert({value:2,interval:'frame'}, evalParamFrame(parseExpression('foo+[1]t@f'), ev(), 0)); delete vars.foo
-// vars.foo = parseExpression('[1]t@f'); assert({value:1,interval:'frame'}, evalParamFrame(parseExpression('[foo]t@f'), ev(), 0)); delete vars.foo
-// vars.foo = parseExpression('[1]t@f'); assert({value:1,interval:'frame'}, evalParamFrame(parseExpression('[foo]t'), ev(), 0)); delete vars.foo
-// vars.fooe = parseExpression('[1]t@e'); assert(1, evalParamFrame(parseExpression('[fooe]t'), ev(), 0)); delete vars.foo
-// assert(1, evalParamFrameWithInterval(parseExpression('{foo:1}.foo'), ev(0),0))
-// assert({value:1,interval:'frame'}, evalParamFrameWithInterval(parseExpression('{foo:[1]t@f}.foo'), ev(0),0))
+//[1,2]{time}
 
   // vars.foo = parseExpression('{value} -> value*2')
   // assert(8, evalParamFrameWithInterval(parseExpression('foo{4}'), ev(), 0))
@@ -1740,7 +1762,7 @@ define(function(require) {
   assert(12, evalParamFrame(parseExpression('({value,x} -> value*x){3,x:4}'), ev(), 0))
   assert(12, evalParamFrame(parseExpression('({value,value1} -> value*value1){3,4}'), ev(), 0))
   assert(12, evalParamFrame(parseExpression('({x,y} -> x*y){x:3,y:4}'), ev(), 0))
-  assert('event', parseExpression('{}->1').interval)
+  assert(undefined, parseExpression('{}->1').interval)
   assert('event', parseExpression('{}->[]r@e').interval)
   assert('frame', parseExpression('{}->[]r@f').interval)
   e = ev()

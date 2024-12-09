@@ -57,7 +57,7 @@ define(function(require) {
     return state
   }
   let statefulWrapper = (fn) => {
-    return (args, e,b, fullState) => { // fullState is state per parse instance of the function
+    let r = (args, e,b, fullState) => { // fullState is state per parse instance of the function
       let state = getVoiceState(fullState, e,b)
       let dt = state.dt
       if (dt === 0) { return state.v || 0 }
@@ -66,6 +66,8 @@ define(function(require) {
       state.v = fn(args, (state.v || 0), value, dt)
       return state.v
     }
+    r.interval = 'frame'
+    return r
   }
 
   addVarFunction('accum', statefulWrapper( (args, v, x, dt) => v + Math.max(x,0)*dt ))
@@ -79,7 +81,7 @@ define(function(require) {
       return Math.max(v + (x-v)*dec*dt, x)
     }
   }))
-  addVarFunction('rate', (args, e,b, fullState) => {
+  let rateFunc = (args, e,b, fullState) => {
     let state = getVoiceState(fullState, e,b)
     let dt = state.dt
     if (dt === 0) { return 0 }
@@ -88,8 +90,10 @@ define(function(require) {
     let rate = (x - last)/dt
     state.last = x
     return rate || 0
-  })
-
+  }
+  rateFunc.interval = 'frame'
+  addVarFunction('rate', rateFunc)
+ 
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
