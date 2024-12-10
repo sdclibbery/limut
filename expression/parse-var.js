@@ -34,8 +34,10 @@ define(function(require) {
     // Lookup argument if inside a user defined function
     if (userFunctionArgs !== undefined && userFunctionArgs[key] !== undefined) {
       let parseVarUserFunctionResult = (e,b,er) => {
-        let v = vars.__functionArgs[key] // Yuck. Get arg from global function args
-        return v
+        if (!Object.hasOwn(parseVarUserFunctionResult, '__functionArg')) { // Cache the arg on this object so it can be evalled later for per frame update
+          parseVarUserFunctionResult.__functionArg = vars.__functionArgs[key] // Yuck. Get arg from global function args
+        }
+        return er(parseVarUserFunctionResult.__functionArg, e,b) // Eval arg now
       }
       return parseVarUserFunctionResult
     }

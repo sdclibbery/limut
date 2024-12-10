@@ -95,22 +95,22 @@ define(function (require) {
       setAudioParamValue(audioParam, v, p, mod, params._time)
     } else {
       if (segmentedAudioParam(audioParam, params, p, undefined, def, requiredUnits, mod)) { // Set up with a segmented timeline
-        // if (params) { console.log(`Segmented audio update! ${params.player} ${p}`) }
+        if (params) { console.log(`Segmented audio update! ${params.player} ${p}`) }
         return
       }
       let evalled = evalPerFrame(params, p, params.count, def)
       if (isConnectable(evalled)) { // Value is a node chain, just connect it
-        // if (params) { console.log(`Connectable audio update! ${params.player} ${p}`) }
+        if (params) { console.log(`Connectable audio update! ${params.player} ${p}`) }
         audioParam.value = 0 // Remove any default value so we only get the value from the connection
         connect(evalled, audioParam, params._destructor, {dont_disconnect_r:true})
         return
       }
       setAudioParamValue(audioParam, mainParamUnits(evalled, requiredUnits, def), p, mod, params._time) // Set now
       if (typeof v === 'function' && v.interval === 'event') { // If it can't vary per frame, drop out here
-        // if (params) { console.log(`Fixed audio update! ${params.player} ${p}`) }
+        if (params) { console.log(`Fixed audio update! ${params.player} ${p}`) }
         return
       }
-      // if (params) { console.log(`Per frame audio update! ${params.player} ${p}`) }
+      if (params) { console.log(`Per frame audio update! ${params.player} ${p}`) }
       if (params._perFrame) { // Update callback for buses
         params._perFrame.push((state) => perFrameUpdate(audioParam, state, undefined, (count) => evalMainPerFrame(params, p, def, count, requiredUnits), mod, p))
       } else { // Update callback for normal players

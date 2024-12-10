@@ -68,6 +68,7 @@ define(function(require) {
           result = userDefinedFunctionWrapper
           result.isVarFunction = true
           result.isNormalCallFunction = true
+          result.dontEvalArgs = true
           result.interval = parseInterval(state) || body.interval
           continue
         }

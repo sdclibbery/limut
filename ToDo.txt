@@ -317,75 +317,11 @@ shadertoy synth multiple channels
 =================================================================================================================================
 ==== other ====
 User defined functions
-!!!!!!!!!
-The NEW PLAN:
-• DO want a new function after all, but it should only wrap frame things
-• Add new function ___with tests___
-  • Anything that is per frame gets immediately wrapped in {value:x,__interval:'frame'} in eval-param
-• Remove parse-var `interval = interval || 'frame'`
-• Operators combine any interval fields they find, a bit like with the segment stuff
-• eval-audio-params uses interval field for interval
-!!!!!!!!!
-The PLAN:
-• Keep the current parse-time interval field on functions, and keep using it for forcing @e
-• Anything that is per frame gets immediately wrapped in {value:x,__interval:'frame'}
-   Should this be done inside (eg) the timevar? Or in eval-params based on the function interval field?
-   This will cause a ton of changes in tests; have to use a 'val' function probably
-• Remove parse-var `interval = interval || 'frame'`
-• Operators combine any __interval fields they find, a bit like with the segment stuff
-• eval-audio-params uses __interval field for interval
-!!!!!!!!! Interval system requirements
-* Values have an associated interval, which how often the value can change: const, event, segment, frame
-* Defined by the type of value 1, [], []es, []e etc
-* Composite values combine take highest interval; eg interval(1+[]e) is frame
-* Can be overridden: @f allows the value to change within an event; @e prevents a value from changing within an event
-* Used to efficiently set audio params
-* Used to memoise value evaluation for efficiency and correctness (force not to change per event for @e)
-!!!!!!!!!
- !!IDEA: evalParamFrameWithInterval
-  Need a proper understanding of exactly what this should do and how it should be used in each case
-   memoisation: want to get value exactly as normal PLUS interval
-   eval-audio-param: need to know interval, possibly of subparam, 
-   ??Do we really want a separate method that gets ONLY the interval? then dont have to worry about whole object wrapper __interval thing
-    I think the answer is we have to maintain the object structure, and each primitive becomes a {value,__interval}
-     So no point having a separate method??
-     The alternative is same interval for whole param with all subparams
-    ??OR, have a separate method that returns interval string INSTEAD of primitive but maintains structure?
-     After all, for eval-audio, theres no use returning actual primitives for segments or frames...
-!!!!!! Intervals
-* parse time: no way to know the interval on a var lookup or certainly on a function arg
-* return interval in wrapper object: everything gets wrapped, big change
-* method returns interval with structures: operators etc have to pass interval on correctly; big change
-* frame/segment gets wrapped immediately the interval is known, and this persists through operators etc. const/event are not wrapped
-!!!!!!
-  returns the result wrapped in {value:xxx,_interval:'frame'}
-  eval-audio-params uses this to make sure it always gets the correct interval
- OK so there is an issue with var lookup intervals
-  Historically we assumed var lookups are 'frame', which is safe but inefficient, and will be badly so for node args
-  Global vars may not exist at parse time, so var lookups would have to get interval at post parse or runtime
-  Func args definitely dont exist at the parse time for the function. They might at the parse time of the callsite though!
-  ?Look at exactly what behaviour is wanted for func arg intervals; is it possible to satisfy at parse time??
-   Currently, no, because we do the icky thing with vars.__functionArgs at runtime
-    But that has to change anyway. Is there another way? NO because multople callsites
- ??!! Before doing all crazy stuff, can we just hoist the modifier intervals into the parse var interval???
-  ONLY if we can do parse time var lookup, at least to get the interval
- ! interval processing and hoisting should be performed during eval time NOT parse time
-  Then eval audio params can just use the result of evalling to know the interval and everything gets simpler
-  But this has to be done even if the end result is a number; eg [0,1]r@f could give {value:0.31, interval:'frame'}
-   Eval-param: for functions, if function is 'frame', result must be wrapped in {interval:'frame'}
-  ?? Possible to do this on the inverse? So results have to be marked as 'event' otherwise they are 'frame'??
-  ?HOW does this transfer between values? EG with operators, or from piecewise values or function args etcetc??
-  This is all related to _nextSegment (which is itself really a type of interval..?)
- !! Per frame function args are not per frame; eg sine{[]r@f} - unit test!
-  vars.__functionArgs has already been fully evalled so it looks like a const value
-   But not evalling modifiers in eval-param doesn't help??
-   How to write a test that it won't be fixed in eval-audio-params?
-    ?Need some kind of user-def-func level test (not an audionode test) that args are not evalled?
-  !!parseVarUserFunctionResult sets interval from inside, but if the same func was called from multiple places it would be wrong
- !! When it should be per frame, the per frame eval is going to fail because it won't have vars.__functionArgs
-  Need to bind functions args properly; eval with args?
- !! Even simple sine{freq} function gets per frame freq, because freq is now a var lookup to the function arg :-/
-  Need to pass interval through properly
+ eval-audio-params should use evalParamFrameWithInterval
+  Main param
+  Sub param
+ !! Failing parse-expression tests!
+ !! Gotta replace __functionArgs
  Eg shape={x}=>sgn{x}*max{abs{x}-1/2,0}
   !But the default behaviour for our existing functions is to be evalled even without {}, so how to pass the functions as values?
    ?Can we default to non eval without {}, but do the eval if necessary in context? Eg operators can't act on function, so eval? etc
