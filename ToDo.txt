@@ -5,10 +5,9 @@
 WebAudio node graphs as first class values
  EXAMPLES Params; eg play=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    play>>=gain{[1:!200ms,0]e}
  •PLAN
- -> Need user defined functions now if we are to experiment with abstraction. That or we need breaking changes to var lookup
- Should be able to  set lpf=biquad{'loqpas',freq:this.lpf,etc}
+ Should be able to   set lpf=biquad{'lowpass',freq:this.lpf,etc}
   !Doesnt work because it can't read this.lpf to get param data
-  Rquirements: can provide data as args or via this param, with default fallback
+  Requirements: can provide data as args or via this param, with default fallback
    Better to define lpf{} that takes args with defaults, and wrap with lpfp that uses this. params for the args?
     !Don't want lpf=10 to be evalled per frame...
  ?! s audiosynth, play=osc{}>>gain{this.foo}>>gain{0.01}, foo=osc{'sine',freq:2b}
@@ -317,12 +316,9 @@ shadertoy synth multiple channels
 =================================================================================================================================
 ==== other ====
 User defined functions
- eval-audio-params should use evalParamFrameWithInterval
-  Main param
-  Sub param
  !! Failing parse-expression tests!
- !! Gotta replace __functionArgs
- Eg shape={x}=>sgn{x}*max{abs{x}-1/2,0}
+ !! __functionArgs is really ugly; set onto the parse-var wrapper instead??
+ Support for passing functions to params: eg shape={x}=>sgn{x}*max{abs{x}-1/2,0}
   !But the default behaviour for our existing functions is to be evalled even without {}, so how to pass the functions as values?
    ?Can we default to non eval without {}, but do the eval if necessary in context? Eg operators can't act on function, so eval? etc
  Or set riser={dur}=>(time%dur)/dur

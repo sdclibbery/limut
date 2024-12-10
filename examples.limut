@@ -4081,3 +4081,38 @@ v swirl 4, recol='neon', loc=tile_tr, rate=1/14, contrast, zoom=3
 // s audiosynth, play=osc{freq:{const{200},osc{'sine',freq:2}>>gain{100}}}>>gain{0.01}
 // s audiosynth, play=osc{freq:pitch{oct:2}}>>gain{0.05}>>biquad{'lowpass',freq:const{[1000:!200ms,10]es}}
 
+// r readout, add=({value}->value*2){3}
+
+// set foo={value}->value*2
+// r readout, add=foo{3}
+
+// s audiosynth, play=({}->osc{'sine',freq:220}){}>>gain{0.01}
+
+// set sine=osc{'sine',freq:220}
+// s audiosynth, play=sine>>gain{0.01}
+
+// set foo={value}->value*2
+// s audiosynth, play=osc{'sine',freq:foo{110}}>>gain{0.002}
+
+// s audiosynth, play=osc{'sine',freq:[880,110]e}>>gain{0.002}
+
+// s audiosynth, play=osc{'sine',freq:[880,110]es}>>gain{0.002}
+
+// set foo={value}->value*2
+// r readout, add=foo{[1,3]t1/4@f}
+
+// set sine={value}->osc{'sine',freq:value}
+// s audiosynth, play=sine{[880,110]e}>>gain{0.002}
+
+// set lpf={value,q}->biquad{'lowpass',freq:value,q:q}
+// s audiosynth, play=osc{freq:220}>>lpf{713,q:[40:!4,0.1]e}>>gain{0.001}
+
+// s saw, oct=2, lpf={713,q:[40:!4,0.1]e}, amp/=16
+
+// set sine={value}->osc{'sine',freq:value}
+// s audiosynth, play=sine{[880,110]es}>>gain{0.002}
+
+// set sine={value}->osc{'sine',freq:value}
+// s audiosynth, play=sine{[100:400]l8@f}>>gain{0.002}
+
+
