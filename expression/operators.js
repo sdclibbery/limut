@@ -43,7 +43,7 @@ define(function(require) {
   operators['|'].raw = true
   operators['>>'].raw = true
   operators['.'].raw = true
-  operators['.'].doNotEvalDeferred = true
+  operators['.'].doNotEvalArgs = true
   let precedence = {'.':1,'?':2,'>>':3,'|':4,'^':5,'%':6,'/':6,'*':6,'-':7,'+':7,} // MUST ALL BE > 0
 
   // TESTS //
@@ -54,7 +54,8 @@ define(function(require) {
       let a = JSON.stringify(actual)
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
     }
-
+    let er = v=>v
+    
     assert(3, operators['+'](1,2))
     assert('12', operators['+']('1','2'))
     assert(1, operators['+'](1,undefined))
@@ -97,13 +98,13 @@ define(function(require) {
     assert(undefined, lookupOp())
     assert(1, lookupOp(1, undefined))
     assert(undefined, lookupOp(undefined, 1))
-    assert(2, lookupOp([1,2], 1))
-    assert(2, lookupOp([1,2], 1.5))
-    assert(1, lookupOp([1,2], 2))
-    assert([2,3], lookupOp([1,[2,3]], 1))
-    assert(1, lookupOp({v:1}, 'v'))
-    assert({b:1}, lookupOp({a:{b:1}}, 'a'))
-    assert(1, lookupOp(lookupOp({a:{b:1}}, 'a'), 'b'))
+    assert(2, lookupOp([1,2], 1, {},0,er))
+    assert(2, lookupOp([1,2], 1.5, {},0,er))
+    assert(1, lookupOp([1,2], 2, {},0,er))
+    assert([2,3], lookupOp([1,[2,3]], 1, {},0,er))
+    assert(1, lookupOp({v:1}, 'v', {},0,er))
+    assert({b:1}, lookupOp({a:{b:1}}, 'a', {},0,er))
+    assert(1, lookupOp(lookupOp({a:{b:1}}, 'a', {},0,er), 'b', {},0,er))
 
     console.log('operators tests complete')
   }

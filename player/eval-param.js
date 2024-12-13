@@ -20,7 +20,7 @@ define((require) => {
   }
 
   let wrapWithInterval = (v, value) => {
-    if (value.interval === 'frame' && typeof v !== 'object' && (!v || !v.isDeferredVarFunc)) {
+    if (value.interval === 'frame' && typeof v !== 'object') {
       v = {value:v, interval:value.interval} // Wrap to provide interval
     }
     if (value.interval === 'frame' && (typeof v === 'object' || v.interval === undefined)) {
@@ -52,7 +52,9 @@ define((require) => {
   let shouldForcePerEvent = (value) => value.interval === 'event'
   
   let evalFunctionWithModifiers = (value, event, beat, evalRecurse) => {
-    if (shouldForcePerEvent(value)) { beat = event.count } // Force per event if explicitly called for
+    if (shouldForcePerEvent(value)) { // Force per event if explicitly called for
+      beat = event.count
+    }
     if (typeof value.modifiers !== 'object') {
       return value(event, beat, evalRecurse) // No modifiers
     }
@@ -76,7 +78,6 @@ define((require) => {
       return v
     } else if (typeof value == 'function') { // Call function to get current value
       if (ignoreThisVars && value._thisVar) { return 0 } // return 0 to hold a place in a chord
-      if (value.isDeferredVarFunc) { return value } // Do not eval deferred function
       let v = evalFunctionWithModifiers(value, event, beat, evalRecurse)
       v = evalRecurse(v, event, beat)
       if (withInterval) { v = wrapWithInterval(v, value) }
@@ -110,6 +111,9 @@ define((require) => {
         value.interval_memo.set(event, result)
       }
     }
+    if (typeof result === 'object' && result._finalResult) { // If result is final and hasn't been unwrapped, do it now
+      result = result.value
+    }
     return result
   }
 
@@ -128,58 +132,33 @@ define((require) => {
     }
   }
 
-  let evalDeferredFunc = (result, event, beat, evalRecurse, options) => {
-    if (Array.isArray(result)) {
-      return result.map(v => evalDeferredFunc(v, event, beat, evalRecurse, options))
-    }
-    if (typeof result == 'function' && result.isDeferredVarFunc) {
-      if (options.ignoreThisVars && result._thisVar) { return 0 }
-      if (result._requiresValue && (!result.modifiers || result.modifiers.value === undefined)) {
-        return result.string // If function requires value, return string instead to support blend=max etc
-      }
-      let v = evalFunctionWithModifiers(result, event, beat, evalRecurse)
-      if (shouldForcePerEvent(result)) { beat = event.count } // Force per event if explicitly called for
-      v = evalRecurse(v, event, beat)
-      if (options.withInterval) { v = wrapWithInterval(v, result) }
-      return v
-    }
-    if (typeof result === 'object' && !(result instanceof AudioNode)) {
-      let v = {}
-      for (let k in result) {
-        v[k] = evalDeferredFunc(result[k], event, beat, evalRecurse, options)
-      }
-      return v
-    }
-    return result
-  }
-
   let noOptions = {}
   let evalParamFrame = (value, event, beat) => {
     // Fully evaluate down to a primitive number/string etc, allowing the value to change every frame if it wants to
-    return evalDeferredFunc(evalParamValueWithMemoisation(evalRecurseFull, value, event, beat, noOptions), event, beat, evalRecurseFull, noOptions)
+    return evalParamValueWithMemoisation(evalRecurseFull, value, event, beat, noOptions)
   }
 
   let evalParamFrameWithInterval = (value, event, beat) => {
     let options = {withInterval:true}
     let er = evalRecurseWithOptions(evalRecurseFull, options)
-    return evalDeferredFunc(evalParamValueWithMemoisation(er, value, event, beat, options), event, beat, er, options)
+    return evalParamValueWithMemoisation(er, value, event, beat, options)
   }
 
   let evalParamFrameIgnoreThisVars = (value, event, beat) => {
     let options = {ignoreThisVars:true}
     let er = evalRecurseWithOptions(evalRecurseFull, options)
-    return evalDeferredFunc(evalParamValueWithMemoisation(er, value, event, beat, options), event, beat, er, options)
+    return evalParamValueWithMemoisation(er, value, event, beat, options)
   }
 
   let evalParamToObjectOrPrimitive = (value, event, beat) => {
     let options = {evalToObjectOrPrimitive:true}
     let er = evalRecurseWithOptions(evalRecurseFull, options)
-    return evalDeferredFunc(evalParamValueWithMemoisation(er, value, event, beat, options), event, beat, er, options)
+    return evalParamValueWithMemoisation(er, value, event, beat, options)
   }
 
   let evalParamEvent = (value, event) => {
     // Fully evaluate down to a primitive number/string etc, fixing the value for the life of the event it is part of
-    return evalDeferredFunc(evalParamValueWithMemoisation(evalRecurseFull, value, event, event.count, noOptions), event, event.count, evalRecurseFull, noOptions)
+    return evalParamValueWithMemoisation(evalRecurseFull, value, event, event.count, noOptions)
   }
 
   // TESTS //

@@ -33,11 +33,12 @@ define(function(require) {
 
     // Lookup argument if inside a user defined function
     if (userFunctionArgs !== undefined && userFunctionArgs[key] !== undefined) {
+      let cachedValue
       let parseVarUserFunctionResult = (e,b,er) => {
-        if (!Object.hasOwn(parseVarUserFunctionResult, '__functionArg')) { // Cache the arg on this object so it can be evalled later for per frame update
-          parseVarUserFunctionResult.__functionArg = vars.__functionArgs[key] // Yuck. Get arg from global function args
+        if (cachedValue === undefined) { // Cache the arg so it can be evalled later for per frame update
+          cachedValue = vars.__functionArgs[key] // Yuck. Get arg from global function args
         }
-        return er(parseVarUserFunctionResult.__functionArg, e,b) // Eval arg now
+        return er(cachedValue, e,b) // Eval arg now
       }
       return parseVarUserFunctionResult
     }
@@ -56,29 +57,22 @@ define(function(require) {
         } else {
           Object.assign(modifiers, evalRecurse(args,event,b))
         }
-        let varLookupWrapper = (e,b,er) => {
-          let argsToUse
-          if (wrapper.modifiers) {
-            if (wrapper.args !== undefined) { wrapper.modifiers.value = wrapper.args }
-            argsToUse = wrapper.modifiers
-          } else {
-            argsToUse = wrapper.args
-          }
-          if (vr.isNormalCallFunction) { // Used by user defined functions which need evalRecurse but not state
-            return vr(e,b, er, argsToUse)
-          } else {
-            return vr(argsToUse, e,b, state)
+        if (modifiers) {
+          if (parseVarLookup.args !== undefined) { modifiers.value = parseVarLookup.args }
+        } else {
+          modifiers = parseVarLookup.args
+        }
+        if (vr.isNormalCallFunction) { // Used by user defined functions which need evalRecurse but not state
+          v = vr(event,b, evalRecurse, modifiers)
+        } else {
+          v = vr(modifiers, event,b, state)
+        }
+        if (typeof v === 'object' && v._finalResult) {
+          if (typeof modifiers !== 'object' || Object.keys(modifiers).length === 0) {
+            return key // It was an aggregator, but it was passed no args. Return the string for min/max etc
           }
         }
-        let wrapper = varLookupWrapper
-        wrapper.string = key
-        wrapper.state = state
-        wrapper.modifiers = modifiers
-        wrapper.isDeferredVarFunc = true
-        wrapper.interval = interval
-        if (vr._isAggregator) { wrapper._isAggregator = true }
-        if (vr._requiresValue) { wrapper._requiresValue = true }
-        return wrapper
+        return v
       } else if (mainVars.exists(key)) {
         throw `Reading main var ${key}`
       } else {
@@ -131,8 +125,6 @@ define(function(require) {
   state = {str:'foo',idx:0}
   p = varLookup(parseVar(state), {value:1}, {})
   assert(3, state.idx)
-  assert(true, p(ev(0,0),0,evalParamFrame).isDeferredVarFunc)
-  assert('foo', p(ev(0,0),0,evalParamFrame).string)
   assert(5, evalParamFrame(p,ev(0,0),0))
   delete vars.foo
 
@@ -149,7 +141,7 @@ define(function(require) {
   state = {str:'foo',idx:0}
   p = varLookup(parseVar(state), undefined, {})
   assert(3, state.idx)
-  assert(5, p(ev(0,0),0,evalParamFrame)())
+  assert(5, p(ev(0,0),0,evalParamFrame))
   delete vars.foo
 
   vars.foo = (args) => args.bar
@@ -157,7 +149,7 @@ define(function(require) {
   state = {str:'foo',idx:0}
   p = varLookup(parseVar(state), {bar:3}, {})
   assert(3, state.idx)
-  assert(3, p(ev(0,0),0,evalParamFrame)())
+  assert(3, p(ev(0,0),0,evalParamFrame))
   delete vars.foo
 
   vars.foo = () => [1,2]

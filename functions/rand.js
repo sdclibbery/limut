@@ -47,7 +47,7 @@ define(function(require) {
     else if (args && Array.isArray(args.value)) { arr = args.value }
     else if (args && args.value !== undefined) { arr = getArrayFromValues(args) }
     if (arr !== undefined) { // Aggregator: index using random value
-      return arr[Math.floor(r*arr.length)]
+      return {value:arr[Math.floor(r*arr.length)],_finalResult:true} // This is the final result if used in lookup op; do not do a further lookup
     }
     return r // Not aggregator: just return random value
   }

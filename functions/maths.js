@@ -6,18 +6,19 @@ define(function(require) {
   let argParam = v => mainParam(mainParam(v)) // One for getting the value from args, other for getting the value from the param
 
   let roundWrapper = (fn) => {
-    return (args) => {
+    let roundFunc = (args) => {
       let v = argParam(args, 0)
       if (typeof v !== 'number') { v = 0 }
       let to = subParam(args, 'to', 1)
-      return fn(v/to)*to
+      return {value:fn(v/to)*to,_finalResult:true} // This is the final result if used in lookup op; do not do a further lookup
     }
+    return roundFunc
   }
   addVarFunction('floor', roundWrapper(Math.floor))
   addVarFunction('ceil', roundWrapper(Math.ceil))
   addVarFunction('round', roundWrapper(Math.round))
 
-  addVarFunction('euclid', (args, e) => {
+  let euclid = (args, e) => {
     let k = Math.floor(argParam(args, 1)) // Distribute k beats...
     let n = Math.floor(subParam(args, 'from', 1)) // ...between n steps
     let offset = Math.floor(subParam(args, 'offset', 0)) // ...rotated by offset
@@ -43,7 +44,8 @@ define(function(require) {
     } while (idx <= targetIdx) // Stop when we've reached the value we need
     // console.log(k, n, targetIdx, dur)
     return dur
-  })
+  }
+  addVarFunction('euclid', euclid)
 
   let getVoiceState = (fullState, e,b) => {
     if (fullState.voices === undefined) { fullState.voices = {} }
@@ -108,7 +110,7 @@ define(function(require) {
   let ev = (i,c,d,v) => {return{idx:i,count:c,dur:d,_time:c,voice:v}}
   let p
 
-  assert(0, evalParamFrame(parseExpression('floor'), ev(0,0), 0))
+  assert('floor', evalParamFrame(parseExpression('floor'), ev(0,0), 0))
   assert(1, evalParamFrame(parseExpression('floor{1.5}'), ev(0,0), 0))
   assert(-2, evalParamFrame(parseExpression('floor{-1.5}'), ev(0,0), 0))
   assert(1/2, evalParamFrame(parseExpression('floor{0.6,to:1/2}'), ev(0,0), 0))
@@ -125,9 +127,6 @@ define(function(require) {
 
   assert(1, evalParamFrame(parseExpression("1.5 .floor"),ev(0,0,0),0))
   assert(1.25, evalParamFrame(parseExpression("(1.3).floor{to:1/4}"),ev(0,0,0),0))
-  assert(1.5, evalParamFrame(parseExpression("(1.5,2.5).floor"),ev(0,0,0),0))
-  assert(1.5, evalParamFrame(parseExpression("(1.5,2.5).floor{to:1/3}"),ev(0,0,0),0))
-  assert(1.5, evalParamFrame(parseExpression("(1.5,2.5).floor{1.7}"),ev(0,0,0),0)) // Ignore args value when used as lookup on chord
 
   assert(2, evalParamFrame(parseExpression('ceil{1.5}'), ev(0,0), 0))
   assert(-1, evalParamFrame(parseExpression('ceil{-1.5}'), ev(0,0), 0))

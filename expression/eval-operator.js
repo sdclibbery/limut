@@ -75,21 +75,17 @@ define(function(require) {
     }
   }
 
-  let evalOperand = (v, event,b, evalRecurse, doNotEvalDeferred) => {
-    v = evalRecurse(v, event,b)
-    if (typeof v === 'function' && v.isDeferredVarFunc && !doNotEvalDeferred) {
-      v = evalFunctionWithModifiers(v,event,b, evalRecurse) // Will apply modifiers but not eval a deferred function
-    }
-    return v
-  }
-
   let operator = (op, l, r) => {
     if (isPrimitive(l) && isPrimitive(r)) {
       return op(l, r)
     }
     let evalOp = (event,b,evalRecurse) => {
-      let el = evalOperand(l, event,b, evalRecurse, op.doNotEvalDeferred)
-      let er = evalOperand(r, event,b, evalRecurse, op.doNotEvalDeferred)
+      let el = l
+      let er = r
+      if (!op.doNotEvalArgs) { // Lookup op needs to eval its own args otherwise aggregators are not possible
+        el = evalRecurse(l, event,b)
+        er = evalRecurse(r, event,b)
+      }
       let result
       if (op.raw) {
         result = op(el, er, event,b,evalRecurse)

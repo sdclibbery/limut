@@ -5,7 +5,7 @@ define(function(require) {
 
   let timeFunc = (args,e,b) => {
     if (typeof mainParam(args) === 'string' && mainParam(args).toLowerCase() === 'this') { // Per event time
-        return b - e.count
+        return {value: b - e.count, _finalResult:true} // This is the final result if used in lookup op; do not do a further lookup
     }
     return b // Global time function
   }

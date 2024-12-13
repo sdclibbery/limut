@@ -28,7 +28,7 @@ define(function(require) {
         if (typeof(v) === 'object' && v.hasOwnProperty('value')) { return v.value }
         return v
       }).map(v => v===undefined?0:v)
-      return fn(vs)
+      return {value:fn(vs),_finalResult:true} // This is the final result if used in lookup op; do not do a further lookup
     }
     aggFunc._isAggregator = true
     aggFunc._requiresValue = true
@@ -67,28 +67,28 @@ define(function(require) {
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
     }
 
-    assert(0, getAggregator('count')([]))
-    assert(0, getAggregator('count')())
-    assert(3, getAggregator('count')([1,1,1]))
-    assert(3, getAggregator('count')({value:[1,1,1]}))
-    assert(3, getAggregator('count')({value:1,value1:1,value2:1}))
-    assert(3, getAggregator('count')([1,1,1]))
-    assert(3, getAggregator('count')([{value:[1,1,1]}]))
-    assert(3, getAggregator('count')([{value:1},{value:1},{value:1}]))
+    assert(0, getAggregator('count')([]).value)
+    assert(0, getAggregator('count')().value)
+    assert(3, getAggregator('count')([1,1,1]).value)
+    assert(3, getAggregator('count')({value:[1,1,1]}).value)
+    assert(3, getAggregator('count')({value:1,value1:1,value2:1}).value)
+    assert(3, getAggregator('count')([1,1,1]).value)
+    assert(3, getAggregator('count')([{value:[1,1,1]}]).value)
+    assert(3, getAggregator('count')([{value:1},{value:1},{value:1}]).value)
 
-    assert(6, getAggregator('sum')([1,2,3]))
-    assert(1, getAggregator('first')([1,2,3]))
-    assert(3, getAggregator('last')([1,2,3]))
-    assert(2, getAggregator('avg')([1,2,3]))
+    assert(6, getAggregator('sum')([1,2,3]).value)
+    assert(1, getAggregator('first')([1,2,3]).value)
+    assert(3, getAggregator('last')([1,2,3]).value)
+    assert(2, getAggregator('avg')([1,2,3]).value)
 
-    assert(0, getAggregator('min')([]))
-    assert(0, getAggregator('max')([]))
-    assert(2, getAggregator('max')(2))
-    assert(0, getAggregator('first')([]))
-    assert(0, getAggregator('last')([]))
-    assert(0, getAggregator('count')([]))
-    assert(0, getAggregator('sum')([]))
-    assert(0, getAggregator('avg')([]))
+    assert(0, getAggregator('min')([]).value)
+    assert(0, getAggregator('max')([]).value)
+    assert(2, getAggregator('max')(2).value)
+    assert(0, getAggregator('first')([]).value)
+    assert(0, getAggregator('last')([]).value)
+    assert(0, getAggregator('count')([]).value)
+    assert(0, getAggregator('sum')([]).value)
+    assert(0, getAggregator('avg')([]).value)
 
     console.log('Aggregator tests complete')
   }

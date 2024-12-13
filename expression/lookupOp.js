@@ -8,22 +8,19 @@ define(function(require) {
   let lookupOp = (l,r, event,b,evalRecurse) => {
     if (l === undefined) { return undefined }
     if (r === undefined) { return l }
+    l = evalRecurse(l, event,b)
+    let ml = mainParam(l)
+    if (typeof r === 'function') {
+      r.args = l
+      let v = evalFunctionWithModifiers(r,event,b, evalRecurse)
+      if (typeof v === 'object' && v._finalResult) { return v.value } // This is the final result (eg aggregator), no further lookup needed
+      r = v
+    }
+    r = evalRecurse(r, event,b)
     if (Array.isArray(r)) {
       return r.map(rv => lookupOp(l, rv, event,b,evalRecurse)) // If RHS is a chord, map the lookup of each element
     }
-    let ml = mainParam(l)
     let mr = mainParam(r)
-    let func
-    if (typeof r === 'function' && r.isDeferredVarFunc) { func = r }
-    if (typeof mr === 'function' && mr.isDeferredVarFunc) { func = mr }
-    if (func) {
-      func.args = l
-      let v = evalFunctionWithModifiers(func,event,b, evalRecurse)
-      if (Array.isArray(l) && !func._isAggregator) {
-        return l[Math.floor(mainParam(v,0) % l.length)] // Chord index with result of func call
-      }
-      return v // Just return func result
-    }
     if (Array.isArray(l)) {
       if (typeof mr === 'number') {
         return l[Math.floor(mr % l.length)] // Chord index
@@ -54,7 +51,6 @@ define(function(require) {
       }
     }
     if (typeof l === 'object' && !(l instanceof AudioNode)) {
-      let mr = mainParam(r)
       let result = l[mr] // Map lookup
       if (result === undefined && typeof mr === 'number') { return l } // If field lookup failed, return the entire map. This is useful when a chord of objects optimises down to a single object but you still want to have an indexer on it.
       return result
@@ -70,25 +66,26 @@ define(function(require) {
       let a = JSON.stringify(actual)
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
     }
+    let er = v => v
 
     assert(undefined, lookupOp())
     assert(1, lookupOp(1, undefined))
-    assert(undefined, lookupOp(undefined, 1))
-    assert(2, lookupOp([1,2], 1))
-    assert(2, lookupOp([1,2], 1.5))
-    assert(1, lookupOp([1,2], 2))
-    assert([2,3], lookupOp([1,[2,3]], 1))
+    assert(undefined, lookupOp(undefined, 1, {},0,er))
+    assert(2, lookupOp([1,2], 1, {},0,er))
+    assert(2, lookupOp([1,2], 1.5, {},0,er))
+    assert(1, lookupOp([1,2], 2, {},0,er))
+    assert([2,3], lookupOp([1,[2,3]], 1, {},0,er))
 
-    assert([1,4], lookupOp([1,2,3,4], [0,3]))
+    assert([1,4], lookupOp([1,2,3,4], [0,3], {},0,er))
 
-    assert(1, lookupOp({v:1}, 'v'))
-    assert({b:1}, lookupOp({a:{b:1}}, 'a'))
-    assert(1, lookupOp(lookupOp({a:{b:1}}, 'a'), 'b'))
-    assert({foo:1}, lookupOp({foo:1}, 0))
-    assert(undefined, lookupOp({foo:1}, 'bar'))
+    assert(1, lookupOp({v:1}, 'v', {},0,er))
+    assert({b:1}, lookupOp({a:{b:1}}, 'a', {},0,er))
+    assert(1, lookupOp(lookupOp({a:{b:1}}, 'a', {},0,er), 'b', {},0,er))
+    assert({foo:1}, lookupOp({foo:1}, 0, {},0,er))
+    assert(undefined, lookupOp({foo:1}, 'bar', {},0,er))
 
     players.instances.p1 = { currentEvent:(b)=>{ return []} }
-    assert(0, lookupOp('p1', 'foo', {},0,(v)=>v()))
+    assert(0, lookupOp('p1', 'foo', {},0,er))
     delete players.instances.p1
   
     players.instances.p1 = { currentEvent:(b)=>{ return [{foo:b}]} }
@@ -97,34 +94,34 @@ define(function(require) {
     delete players.instances.p1
   
     players.instances.p1 = { currentEvent:(b)=>{ return [{foo:b},{foo:b}]} }
-    assert([0,0], lookupOp('p1', 'foo', {},0,(v)=>0))
-    assert([2,2], lookupOp('p1', 'foo', {},2,(v)=>2))
+    assert([0,0], lookupOp('p1', 'foo', {},0,er))
+    assert([2,2], lookupOp('p1', 'foo', {},2,er))
     delete players.instances.p1
   
-    assert(0, lookupOp('p1', 'exists', {},0,(v)=>v()))
+    assert(0, lookupOp('p1', 'exists', {},0,er))
     players.instances.p1 = { currentEvent:(b)=>{ return []} }
-    assert(1, lookupOp('p1', 'exists', {},0,(v)=>v()))
+    assert(1, lookupOp('p1', 'exists', {},0,er))
     delete players.instances.p1
   
     players.instances.p1 = { currentEvent:(b)=>{ return []} }
-    assert(0, lookupOp('p1', 'playing', {},0,(v)=>v()))
+    assert(0, lookupOp('p1', 'playing', {},0,er))
     delete players.instances.p1
     players.instances.p1 = { currentEvent:(b)=>{ return [{}]} }
-    assert(1, lookupOp('p1', 'playing', {},0,(v)=>v()))
+    assert(1, lookupOp('p1', 'playing', {},0,er))
     delete players.instances.p1
   
-    assert(0, lookupOp('p1', 'foo', {},2,(v)=>2))
+    assert(0, lookupOp('p1', 'foo', {},2,er))
   
-    assert(1, lookupOp('this', 'foo', {foo:1},0,(v)=>0)())
+    assert(1, lookupOp('this', 'foo', {foo:1},0,er)())
 
     addVarFunction('foo', (v)=>mainParam(v))
-    assert(1, lookupOp(1, 'foo'))
-    assert(2, lookupOp(2, {value:'foo'}))
+    assert(1, lookupOp(1, 'foo', {},0,er))
+    assert(2, lookupOp(2, {value:'foo'}, {},0,er))
     remove('foo')
 
     players.instances.p1 = { currentEvent:()=>{ return [{foo:1}]} }
     players.instances.p2 = { currentEvent:()=>{ return [{foo:2}]} }
-    assert([1,2], lookupOp(['p1','p2'], 'foo', {},0,(v)=>0))
+    assert([1,2], lookupOp(['p1','p2'], 'foo', {},0,er))
     delete players.instances.p1
     delete players.instances.p2
 

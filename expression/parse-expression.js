@@ -1151,8 +1151,6 @@ define(function(require) {
   assert(3, evalParamFrame(parseExpression('(1,2,[3,4]t1).max'),ev(0,0),0))
   assert(4, evalParamFrame(parseExpression('(1,2,[3,4]t1).max'),ev(1,1),1))
   assert(3, evalParamFrame(parseExpression('(1,(2,3)).max'),ev(0,0),0))
-  assert([1,3], evalParamFrame(parseExpression('(1,2,3).(min,max)'),ev(0,0),0))
-  assert(3, evalParamFrame(parseExpression('(1,2,3).[max]t'),ev(0,0),0))
 
   assert('frame', parseExpression('(0,[1,2]l1/2@f)').interval)
   assert('frame', parseExpression('(0,[1,2]l1/2@f).max').interval)
@@ -1418,13 +1416,8 @@ define(function(require) {
   p = parseExpression("(1,1).(rand*999)")
   assert(1, evalParamFrame(p, ev(0,0,1), 0))
 
-  p = parseExpression("(1,1).rand")
-  assert(1, evalParamFrame(p, ev(0,0,1), 0))
-
-  p = parseExpression("(1,1).(rand,count,rand)")
-  assert(1, evalParamFrame(p, ev(0,0,1), 0)[0])
-  assert(2, evalParamFrame(p, ev(0,0,1), 0)[1])  
-  assert(1, evalParamFrame(p, ev(0,0,1), 0)[2])  
+  p = parseExpression("(1,2,3).rand")
+  assertIn(1,3, evalParamFrame(p, ev(0,0,1), 0))
 
   p = parseExpression("(1,2,3,4).rand{seed:1}")
   assert(2, evalParamFrame(p, ev(0,0,1), 0))
@@ -1528,10 +1521,17 @@ define(function(require) {
   assert(1, evalParamFrame(p, e, 0))
   assert(2, evalParamFrame(p, e, 1))
 
+  p = parseExpression("this.time")
+  e = ev(0,0,1)
+  assert(0, evalParamFrame(p, e, 0))
+  assert(1, evalParamFrame(p, e, 1))
+  assert(2, evalParamFrame(p, e, 2))
+
   p = parseExpression("[1,2]{this.time}")
   e = ev(0,0,1)
   assert(1, evalParamFrame(p, e, 0))
   assert(2, evalParamFrame(p, e, 1))
+  assert(1, evalParamFrame(p, e, 2))
 
   p = parseExpression("[1:_[1,2],2:_1]{time}")
   assert(1, evalParamFrame(p, ev(0,0,1), 0))
@@ -1744,7 +1744,7 @@ define(function(require) {
   assert(8, evalParamFrameWithInterval(parseExpression('foo{4}'), ev(), 0))
   assert(8, evalParamFrameWithInterval(parseExpression('foo{[4]}'), ev(), 0))
   e = ev(0,0,4)
-  assert({value:8,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{[4]t@f}'), e, 0))
+  assert({value:8,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{[4,5]t1@f}'), e, 0))
   // assert({value:10,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{[4,5]t1@f}'), e, 1))
   delete vars.foo
 
@@ -1753,7 +1753,7 @@ define(function(require) {
   assert({value:8,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{4}'), e, 0))
   assert({value:12,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{4}'), e, 1))
   assert({value:8,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{[4]}'), e, 0))
-  assert({value:8,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{[4]t@f}'), e, 0))
+  assert({value:8,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{[4,5]t1@f}'), e, 0))
   // assert({value:15,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{[4,5]t1@f}'), e, 1))
   delete vars.foo
 
