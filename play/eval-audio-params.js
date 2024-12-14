@@ -101,7 +101,7 @@ define(function (require) {
       }
       let evalled = evalParam.evalParamFrameWithInterval(v, params,params.count)
       let interval
-      if (typeof evalled === 'object' && evalled.interval !== undefined) {
+      if (typeof evalled === 'object' && evalled.interval !== undefined && !isConnectable(evalled)) {
         interval = evalled.interval
         evalled = evalled.value
       }
