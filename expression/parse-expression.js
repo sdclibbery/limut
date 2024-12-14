@@ -54,8 +54,17 @@ define(function(require) {
           state.idx+=2
           eatWhitespace(state)
           let oldArgs = state.userFunctionArgs
-          state.userFunctionArgs = {}
-          for (let k in map) { state.userFunctionArgs[map[k]()] = 0 }
+          state.userFunctionArgs = {} // Pass function arguments through to the body parse
+          Object.keys(map).forEach(k =>{
+            if (k.startsWith('value')) {
+              let v = map[k]
+              if (typeof v === 'function') { v = v() }
+              if (typeof v === 'string') { state.userFunctionArgs[v] = false } // Arg has no default value
+            }
+            if (state.userFunctionArgs[k] === undefined) {
+              state.userFunctionArgs[k] = map[k] // Arg includes default value
+            }
+          })
           let body = state.expression(state)
           state.userFunctionArgs = oldArgs
           let userDefinedFunctionWrapper = (e,b,er,args) => {
@@ -1797,8 +1806,13 @@ define(function(require) {
   assert(2, evalParamFrame(parseExpression('({value}->value*2){[1,3]t1@f}'), e, 0))
   assert(6, evalParamFrame(parseExpression('({value}->value*2){[1,3]t1@f}'), e, 1))
 
-  // assert(9, evalParamFrame(parseExpression('({x} -> x^2){3}'), ev(), 0))
-  // assert(9, evalParamFrame(parseExpression('({x:3} -> x^2){}'), ev(), 0))
+  assert(25, evalParamFrame(parseExpression('({x} -> x^2){x:5}'), ev(), 0))
+  assert(9, evalParamFrame(parseExpression('({x:3} -> x^2){}'), ev(), 0))
+  assert(25, evalParamFrame(parseExpression('({x:3} -> x^2){x:5}'), ev(), 0))
+  assert(9, evalParamFrame(parseExpression('({x} -> x^2){3}'), ev(), 0))
+  assert(9, evalParamFrame(parseExpression('({x} -> x^2){3}'), ev(), 0))
+
+  // nested var functions, foo, bar,   set foo = ()->{}   set bar = ()->{foo}   ...
   // piecewise inside function body
   // timevar args passed in or used inside body
   // this var passed in or used inside body

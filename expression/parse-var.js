@@ -33,8 +33,12 @@ define(function(require) {
 
     // Lookup argument if inside a user defined function
     if (userFunctionArgs !== undefined && userFunctionArgs[key] !== undefined) {
+      let defaultValue = userFunctionArgs[key]
       let userFunctionArgumentLookup = (e,b,er) => {
-        return vars.__functionArgs[key]
+        let value = vars.__functionArgs[key]
+        if (value === undefined) { value = defaultValue } // If no arg passed in, use default value from prototype
+        if (value === false) { value = vars.__functionArgs['value'] } // If still no value, try for unnamed arg
+        return value
       }
       return userFunctionArgumentLookup
     }

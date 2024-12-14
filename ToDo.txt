@@ -317,10 +317,10 @@ shadertoy synth multiple channels
 =================================================================================================================================
 ==== other ====
 User defined functions
- !! Commented parse-expression tests!
- !! vars.__functionArgs is super ugly; even if it stays global, at least make a module instead of using vars...
+ !! More tests
  !!!!Do a release: lost functionality like (1,2,3).(min,max)   (1,2,3).[min,max]  etc...
   TEST!!!!!!!!
+ !! vars.__functionArgs is super ugly; even if it stays global, at least make a module instead of using vars...
  Support for passing functions to params: eg shape={x}=>sgn{x}*max{abs{x}-1/2,0}
   !But the default behaviour for our existing functions is to be evalled even without {}, so how to pass the functions as values?
    ?Can we default to non eval without {}, but do the eval if necessary in context? Eg operators can't act on function, so eval? etc
