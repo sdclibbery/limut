@@ -33,14 +33,10 @@ define(function(require) {
 
     // Lookup argument if inside a user defined function
     if (userFunctionArgs !== undefined && userFunctionArgs[key] !== undefined) {
-      let cachedValue
-      let parseVarUserFunctionResult = (e,b,er) => {
-        if (cachedValue === undefined) { // Cache the arg so it can be evalled later for per frame update
-          cachedValue = vars.__functionArgs[key] // Yuck. Get arg from global function args
-        }
-        return er(cachedValue, e,b) // Eval arg now
+      let userFunctionArgumentLookup = (e,b,er) => {
+        return vars.__functionArgs[key]
       }
-      return parseVarUserFunctionResult
+      return userFunctionArgumentLookup
     }
 
     // Return a lookup function

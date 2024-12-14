@@ -6,7 +6,7 @@ var metronome = {}
 var beatDuration = 60 / 110
 var lastBeatAt = 0
 var count = 0
-var nextBeatAt = 0
+var nextBeatAt = beatDuration
 let beatReadouts
 let time = 0
 

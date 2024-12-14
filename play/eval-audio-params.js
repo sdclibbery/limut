@@ -6,6 +6,7 @@ define(function (require) {
   let {segmentedAudioParam} = require('play/segmented-audioparam')
   let metronome = require('metronome')
   let {connect,isConnectable} = require('play/node-connect');
+  let vars = require('vars')
 
   let evalPerEvent = (params, p, def) => {
     let v = params[p]
@@ -116,10 +117,18 @@ define(function (require) {
         return
       }
       // if (params) { console.log(`Per frame audio update! Main ${params.player} ${p}`) }
+      let args = vars.__functionArgs // Remember the function args so they can be looked up later during per frame callback
+      let evalAt = (count) => {
+        let oldArgs = vars.__functionArgs
+        vars.__functionArgs = args // Yuck; set function args into a global var for access later
+        let r = evalMainPerFrame(params, p, def, count, requiredUnits)
+        vars.__functionArgs = oldArgs
+        return r
+      }
       if (params._perFrame) { // Update callback for buses
-        params._perFrame.push((state) => perFrameUpdate(audioParam, state, undefined, (count) => evalMainPerFrame(params, p, def, count, requiredUnits), mod, p))
+        params._perFrame.push((state) => perFrameUpdate(audioParam, state, params, evalAt, mod, p))
       } else { // Update callback for normal players
-        system.add(params._time, (state) => perFrameUpdate(audioParam, state, params, (count) => evalMainPerFrame(params, p, def, count, requiredUnits), mod, p))
+        system.add(params._time, (state) => perFrameUpdate(audioParam, state, params, evalAt, mod, p))
       }
     }
   }
@@ -151,10 +160,11 @@ define(function (require) {
         return
       }
       // if (params) { console.log(`Per frame audio update! Sub ${params.player} ${p} ${subParamName}`) }
+      let evalAt = (count) => evalSubPerFrame(params, p, subParamName, def, count, requiredUnits)
       if (params._perFrame) { // Update callback for buses
-        params._perFrame.push(state => perFrameUpdate(audioParam, state, undefined, (count) => evalSubPerFrame(params, p, subParamName, def, count, requiredUnits), mod, p))
+        params._perFrame.push(state => perFrameUpdate(audioParam, state, undefined, evalAt, mod, p))
       } else { // Update callback for normal players
-        system.add(params._time, (state) => perFrameUpdate(audioParam, state, params, (count) => evalSubPerFrame(params, p, subParamName, def, count, requiredUnits), mod, p))
+        system.add(params._time, (state) => perFrameUpdate(audioParam, state, params, evalAt, mod, p))
       }
     }
   }

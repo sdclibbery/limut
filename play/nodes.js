@@ -28,7 +28,7 @@ define(function(require) {
     if (audioNodeProto === undefined) { audioNodeProto = Object.getPrototypeOf(Object.getPrototypeOf(system.audio.createGain())) }
     let node = Object.create(audioNodeProto)
     addEventTimingData(args, e)
-    node.test = {setValueAtTime:(v)=>node.test.value=v,value:0}
+    node.test = { setValueAtTime:(v)=>node.test.value=v, setTargetAtTime:(v)=>node.test.value=v, value:0}
     evalMainParamFrame(node.test, args, 'test', 440, 'hz')
     node.connect = (v) => { node.connected = v }
     node.disconnect = () => { node.disconnected }

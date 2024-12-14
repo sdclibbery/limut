@@ -5,6 +5,7 @@
 WebAudio node graphs as first class values
  EXAMPLES Params; eg play=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    play>>=gain{[1:!200ms,0]e}
  •PLAN
+ !!!!!! not treating const as connectable s audiosynth, play=osc{freq:pitch{oct:2}}>>gain{0.05}>>biquad{'lowpass',freq:const{[1000:!200ms,10]es}}
  TEST multiple callsites for the same method, make sure args dont get confused  {sine{220},sine{880}}>>gain
   DOESNT WORK!
  Should be able to   set saw={value}->osc{'sine',freq:value}   /   s audiosynth 0123, play=saw{pitch{this.value,oct:2}}>>...
@@ -316,17 +317,16 @@ shadertoy synth multiple channels
 =================================================================================================================================
 ==== other ====
 User defined functions
- Do a release: lost functionality like (1,2,3).(min,max)   (1,2,3).[min,max]  etc...
-  TEST!!!!!!!!
+ !! Pitch bend ends before end of event?? s audiosynth, play=osc{'sine',freq:[880,110]e}>>gain{0.002}
+ !! Setting param to node fails?? s audiosynth, play=osc{freq:pitch{oct:2}}>>gain{0.05}>>biquad{'lowpass',freq:const{[1000:!200ms,10]es}}
  !! Commented parse-expression tests!
-  THE PROBLEM is the caching on parseVarUserFunctionResult
-   DOH! parseVarUserFunctionResult is parsed within the user func, NOT the callsite!
-   We need something related to the callsite to store args
+ !! vars.__functionArgs is super ugly; even if it stays global, at least make a module instead of using vars...
+ !!!!Do a release: lost functionality like (1,2,3).(min,max)   (1,2,3).[min,max]  etc...
+  TEST!!!!!!!!
  Support for passing functions to params: eg shape={x}=>sgn{x}*max{abs{x}-1/2,0}
   !But the default behaviour for our existing functions is to be evalled even without {}, so how to pass the functions as values?
    ?Can we default to non eval without {}, but do the eval if necessary in context? Eg operators can't act on function, so eval? etc
    Probably just want an evalParamToUserFunction...
- !! __functionArgs is really ugly; set onto the parse-var wrapper instead??
  !! User function args are first evalled as modifiers in eval-param, then overwritten with the unevalled args in parse-var
    Then evalled again in deferred evaluation :-/
   eg set foo = {value} -> value*2  /  foo{[4,5]t1@f}   ; The timevar gets evalled multiple times

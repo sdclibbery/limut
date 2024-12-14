@@ -1745,7 +1745,7 @@ define(function(require) {
   assert(8, evalParamFrameWithInterval(parseExpression('foo{[4]}'), ev(), 0))
   e = ev(0,0,4)
   assert({value:8,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{[4,5]t1@f}'), e, 0))
-  // assert({value:10,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{[4,5]t1@f}'), e, 1))
+  assert({value:10,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{[4,5]t1@f}'), e, 1))
   delete vars.foo
 
   vars.foo = parseExpression('{value} -> value*[2,3]t1@f')
@@ -1754,9 +1754,21 @@ define(function(require) {
   assert({value:12,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{4}'), e, 1))
   assert({value:8,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{[4]}'), e, 0))
   assert({value:8,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{[4,5]t1@f}'), e, 0))
-  // assert({value:15,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{[4,5]t1@f}'), e, 1))
+  assert({value:15,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{[4,5]t1@f}'), e, 1))
   delete vars.foo
 
+  vars.foo = parseExpression('{value} -> mockaudionode{test:value}')
+  p = parseExpression('foo{[4,5]t1@f}')
+  e = ev(0,0,4)
+  v = evalParamFrame(p, e,0) // Creates mockaudionode and sets up per-frame callback, which evals the value arg, which is [4,5]t1@f
+  assert(4, v.test.value)
+  let system = require('play/system')
+  assert(1, system.queued.length)
+  system.queued[0].update({count:1,time:1}) // Call the per-frame callback; should update mockaudionode test value
+  assert(5, v.test.value)
+  system.queued = []
+  delete vars.foo
+  
   assert(1, evalParamFrameWithInterval(parseExpression('[1]r{seed:[1]t@f}@e'), ev(0),0))
   assert(1, evalParamFrameWithInterval(parseExpression('[1]t{per:[1]t@f}@e'), ev(0),0))
   // assert({value:1,interval:'frame'}, evalParamFrameWithInterval(parseExpression('[1]t{per:[1]t@f}'), ev(0),0)) // Probably should hoist interval up from modifiers..?
@@ -1779,7 +1791,7 @@ define(function(require) {
   assert(6, evalParamFrame(parseExpression('({value}->value*2){[1,3]t1@f}'), e, 1))
 
   // assert(9, evalParamFrame(parseExpression('({x} -> x^2){3}'), ev(), 0))
-  // assert(9, evalParamFrame(parseExpression('({x?3} -> x^2){}'), ev(), 0))
+  // assert(9, evalParamFrame(parseExpression('({x:3} -> x^2){}'), ev(), 0))
   // piecewise inside function body
   // timevar args passed in or used inside body
   // this var passed in or used inside body
