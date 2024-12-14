@@ -317,7 +317,6 @@ shadertoy synth multiple channels
 =================================================================================================================================
 ==== other ====
 User defined functions
- !! Pitch bend ends before end of event?? s audiosynth, play=osc{'sine',freq:[880,110]e}>>gain{0.002}
  !! Setting param to node fails?? s audiosynth, play=osc{freq:pitch{oct:2}}>>gain{0.05}>>biquad{'lowpass',freq:const{[1000:!200ms,10]es}}
  !! Commented parse-expression tests!
  !! vars.__functionArgs is super ugly; even if it stays global, at least make a module instead of using vars...

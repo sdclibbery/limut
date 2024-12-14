@@ -41,7 +41,7 @@ define(function(require) {
       ss = ss.map(s => s!==undefined ? s : 1)
       is[is.length-1] = step // Last one is final value, not part of the event
       ss[ss.length-1] = 0
-      let p = (e,b) => (b - e.count) / (e.endTime - e._time) // Normalise param
+      let p = (e,b) => (b - e.count) / (e.dur) // Normalise param
       let m = (v,e,b) => v + e.count // Map back to absolute count
       return piecewise(vs, is, ss, p, {clamp:true,normalise:true,addSegmentData:addSegmentData,nextSegmentMapper:m})
     } else { // Use durations provided
@@ -49,7 +49,7 @@ define(function(require) {
       is = is.map(i => i || linear)
       ss = ss.map((s,idx) => s!==undefined ? s : ds[idx % ds.length])
       is[is.length-1] = step // Last one is final value, not part of the event
-      let p = (e,b) => b - e.count // Paramn is event count
+      let p = (e,b) => b - e.count // Param is event count
       let m = (v,e,b) => v + e.count // Map back to absolute count
       return piecewise(vs, is, ss, p, {clamp:true,addSegmentData:addSegmentData,nextSegmentMapper:m})
     }
