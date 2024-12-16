@@ -58,7 +58,7 @@ define((require) => {
     if (typeof value.modifiers !== 'object') {
       return value(event, beat, evalRecurse) // No modifiers
     }
-    let mods = evalParamFrame(value.modifiers, event, beat)
+    let mods = evalRecurse(value.modifiers, event, beat)
     let result
     if (!Array.isArray(mods)) {
       result = evalFunction(value, mods, event, beat, evalRecurse)

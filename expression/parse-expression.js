@@ -1773,6 +1773,10 @@ define(function(require) {
   assert({value:15,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{[4,5]t1@f}'), e, 1))
   delete vars.foo
 
+  e = ev(0,0,4); e.bar = parseExpression('[4,5]t1@f')
+  assert({value:8,interval:'frame'}, evalParamFrameWithInterval(parseExpression('({v} -> v*2){this.bar}'), e, 0))
+  assert({value:10,interval:'frame'}, evalParamFrameWithInterval(parseExpression('({v} -> v*2){this.bar}'), e, 1))
+
   vars.foo = parseExpression('{value} -> mockaudionode{test:value}')
   p = parseExpression('foo{[4,5]t1@f}')
   e = ev(0,0,4)
@@ -1788,6 +1792,10 @@ define(function(require) {
   assert(1, evalParamFrameWithInterval(parseExpression('[1]r{seed:[1]t@f}@e'), ev(0),0))
   assert(1, evalParamFrameWithInterval(parseExpression('[1]t{per:[1]t@f}@e'), ev(0),0))
   // assert({value:1,interval:'frame'}, evalParamFrameWithInterval(parseExpression('[1]t{per:[1]t@f}'), ev(0),0)) // Probably should hoist interval up from modifiers..?
+
+  e = ev(0,0,4); e.bar = parseExpression('[4,5]t1@f')
+  assert({value:8,interval:'frame'}, evalParamFrameWithInterval(parseExpression('({v} -> v*2){this.bar}'), e, 0))
+  assert({value:10,interval:'frame'}, evalParamFrameWithInterval(parseExpression('({v} -> v*2){this.bar}'), e, 1))
 
   assert(1, evalParamFrame(parseExpression('{}->1'), ev(), 0))
   assert(1, evalParamFrame(parseExpression('({}->1){}'), ev(), 0))
@@ -1811,6 +1819,29 @@ define(function(require) {
   assert(25, evalParamFrame(parseExpression('({x:3} -> x^2){x:5}'), ev(), 0))
   assert(9, evalParamFrame(parseExpression('({x} -> x^2){3}'), ev(), 0))
   assert(9, evalParamFrame(parseExpression('({x} -> x^2){3}'), ev(), 0))
+
+  e = ev(); e.foo=3
+  assert(6, evalParamFrame(parseExpression('({x}->x*2){this.foo}'), e, 0))
+  assert(6, evalParamFrame(parseExpression('({x}->x*this.foo){2}'), e, 0))
+
+  e = ev(); e.bar=3
+  vars.foo = parseExpression('{v} -> mockaudionode{test:v}')
+  assert({"test":{"value":3}}, evalParamFrame(parseExpression('foo{v:this.bar}'), e, 0))
+  delete vars.foo
+
+  vars.foo = parseExpression('{v} -> mockaudionode{test:v}')
+  p = parseExpression('foo{v:this.bar}')
+  e = ev(0,0,4); e.bar=parseExpression('[4,5]t1@f')
+  v = evalParamFrame(p, e,0)
+  assert(4, v.test.value)
+  assert(1, system.queued.length)
+  system.queued[0].update({count:1,time:1})
+  assert(5, v.test.value)
+  system.queued = []
+  delete vars.foo
+  
+  // s audiosynth, play=({f}->osc{'sine',freq:f}){this.myfreq}>>gain{0.004}, myfreq=[800:100]e
+  // ^^ Not per frame!!!!!!!!
 
   // nested var functions, foo, bar,   set foo = ()->{}   set bar = ()->{foo}   ...
   // piecewise inside function body

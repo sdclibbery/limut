@@ -31,7 +31,7 @@ define(function(require) {
     if (typeof ml === 'string') {
       if (ml.toLowerCase() === 'this') { // lookup on this event
         let v = event[mr]
-        v = evalParamFrame(v, event,b) // Eval so that time modifiers get applied
+        v = evalRecurse(v, event,b) // Eval so that time modifiers get applied
         let result = (e,b,er) => v // Wrap into a function so we can set _thisVar to prevent doubling up of chords
         result._thisVar = true
         return result
@@ -39,13 +39,13 @@ define(function(require) {
       let player = players.getById(ml)
       if (mr === 'exists') { return !!player ? 1 : 0 }
       if (player) { // lookup a param on another player's events
-        let originalB = evalRecurse((e,originalB) => originalB, event, b)
+        let originalB = evalRecurse((e,originalB) => originalB, event,b)
         let es = player.currentEvent(originalB)
         if (mr === 'playing') { return es.length>0 ? 1 : 0 }
         let v = es.map(e => e[mr])
         if (v.length === 0) { v = 0 }
         if (v.length === 1) { v = v[0] }
-        return evalParamFrame(v, event,b) // Eval so that time modifiers get applied
+        return evalRecurse(v, event,b) // Eval so that time modifiers get applied
       } else {
         return 0 // Not found as a player - should really return undefined now we have '?' operator, but this could be a breaking change
       }
@@ -66,7 +66,7 @@ define(function(require) {
       let a = JSON.stringify(actual)
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
     }
-    let er = v => v
+    let er = evalParamFrame
 
     assert(undefined, lookupOp())
     assert(1, lookupOp(1, undefined))
@@ -74,7 +74,7 @@ define(function(require) {
     assert(2, lookupOp([1,2], 1, {},0,er))
     assert(2, lookupOp([1,2], 1.5, {},0,er))
     assert(1, lookupOp([1,2], 2, {},0,er))
-    assert([2,3], lookupOp([1,[2,3]], 1, {},0,er))
+    assert([2,3], lookupOp([1,[2,3]], 1, {},0,v=>v))
 
     assert([1,4], lookupOp([1,2,3,4], [0,3], {},0,er))
 

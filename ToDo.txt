@@ -5,11 +5,6 @@
 WebAudio node graphs as first class values
  EXAMPLES Params; eg play=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    play>>=gain{[1:!200ms,0]e}
  •PLAN
- !!!!!! not treating const as connectable s audiosynth, play=osc{freq:pitch{oct:2}}>>gain{0.05}>>biquad{'lowpass',freq:const{[1000:!200ms,10]es}}
- TEST multiple callsites for the same method, make sure args dont get confused  {sine{220},sine{880}}>>gain
-  DOESNT WORK!
- Should be able to   set saw={value}->osc{'sine',freq:value}   /   s audiosynth 0123, play=saw{pitch{this.value,oct:2}}>>...
-  Should really also be able to   set saw={}->osc{'sine',freq:>>>this.<<<value}    too
  Try to make techbass
  ?! s audiosynth, play=osc{}>>gain{this.foo}>>gain{0.01}, foo=osc{'sine',freq:2b}
  playerChain: what to call this? 'audio'? 'effects'? 'player'? 'instrument'? 'common'?
@@ -318,7 +313,10 @@ shadertoy synth multiple channels
 ==== other ====
 User defined functions
  !! More tests
+  !! Should be able to   set saw={value}->osc{'sine',freq:value}   /   s audiosynth 0123, play=saw{pitch{this.value,oct:2}}>>...
+    Should really also be able to   set saw={}->osc{'sine',freq:>>>this.<<<value}    too
  !!!!Do a release: lost functionality like (1,2,3).(min,max)   (1,2,3).[min,max]  etc...
+  Also lost `x=(this.f){per:2}, f=[0:1]l4`; ie you can no longer set time modifiers on a lookup
   TEST!!!!!!!!
  !! vars.__functionArgs is super ugly; even if it stays global, at least make a module instead of using vars...
  Support for passing functions to params: eg shape={x}=>sgn{x}*max{abs{x}-1/2,0}

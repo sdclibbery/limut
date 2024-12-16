@@ -35,6 +35,7 @@ define(function (require) {
   }
 
   return (osc, wave) => {
+    if (typeof wave !== 'string') { throw `Invalid wave ${wave}` }
     wave = wave.toLowerCase()
     if (wave === 'pulse') { osc.setPeriodicWave(pulse()) }
     else if (wave === 'saw') { osc.type = 'sawtooth' }

@@ -11,25 +11,19 @@ define(function(require) {
     addVarFunction(k, v)
   }
 
-  let addEventTimingData = (args, e) => {
-    if (args.count === undefined) {
-      args.count = e.count
-      args.beat = e.beat
-      args._time = e._time
-      args.endTime = e.endTime
-      args.dur = e.dur
-      args.idx = e.idx
-      args._destructor = e._destructor
-    }
+  let combineParams = (args, e) => {
+    let params = {}
+    Object.assign(params, e, args)
+    return params
   }
 
   let audioNodeProto
   addNodeFunction('mockaudionode', (args,e,b) => { // For tests to run without creating an actual AudioNode
     if (audioNodeProto === undefined) { audioNodeProto = Object.getPrototypeOf(Object.getPrototypeOf(system.audio.createGain())) }
     let node = Object.create(audioNodeProto)
-    addEventTimingData(args, e)
-    node.test = { setValueAtTime:(v)=>node.test.value=v, setTargetAtTime:(v)=>node.test.value=v, value:0}
-    evalMainParamFrame(node.test, args, 'test', 440, 'hz')
+    let params = combineParams(args, e)
+    node.test = { setValueAtTime:(v)=>node.test.value=v, setTargetAtTime:(v)=>node.test.value=v, value:0} // Mock AudioParam
+    evalMainParamFrame(node.test, params, 'test', 440, 'hz')
     node.connect = (v) => { node.connected = v }
     node.disconnect = () => { node.disconnected }
     return node
@@ -37,45 +31,45 @@ define(function(require) {
 
   addNodeFunction('osc', (args,e,b) => {
     let node = system.audio.createOscillator()
-    addEventTimingData(args, e)
+    let params = combineParams(args, e)
     setWave(node, evalMainParamEvent(args, 'value', 'sawtooth'))
-    evalMainParamFrame(node.frequency, args, 'freq', 440, 'hz')
-    node.start(args._time)
-    args._destructor.stop(node)
+    evalMainParamFrame(node.frequency, params, 'freq', 440, 'hz')
+    node.start(params._time)
+    params._destructor.stop(node)
     return node
   })
 
   addNodeFunction('const', (args,e,b) => {
     let node = system.audio.createConstantSource()
-    addEventTimingData(args, e)
-    evalMainParamFrame(node.offset, args, 'value', 1)
-    node.start(args._time)
-    args._destructor.stop(node)
+    let params = combineParams(args, e)
+    evalMainParamFrame(node.offset, params, 'value', 1)
+    node.start(params._time)
+    params._destructor.stop(node)
     return node
   })
 
   addNodeFunction('gain', (args,e,b) => {
     let node = system.audio.createGain()
-    addEventTimingData(args, e)
-    evalMainParamFrame(node.gain, args, 'value', 1)
+    let params = combineParams(args, e)
+    evalMainParamFrame(node.gain, params, 'value', 1)
     return node
   })
 
   addNodeFunction('biquad', (args,e,b) => {
     let node = system.audio.createBiquadFilter()
-    addEventTimingData(args, e)
+    let params = combineParams(args, e)
     node.type = evalMainParamEvent(args, 'value', 'lowpass')
-    evalMainParamFrame(node.frequency, args, 'freq', 440, 'hz')
-    evalMainParamFrame(node.Q, args, 'q', 5)
-    evalMainParamFrame(node.gain, args, 'gain', 1)
+    evalMainParamFrame(node.frequency, params, 'freq', 440, 'hz')
+    evalMainParamFrame(node.Q, params, 'q', 5)
+    evalMainParamFrame(node.gain, params, 'gain', 1)
     return node
   })
 
   addNodeFunction('delay', (args,e,b) => {
     let maxDelay = evalMainParamEvent(args, 'max', 1, 'b') * metronome.beatDuration()
     let node = system.audio.createDelay(maxDelay)
-    addEventTimingData(args, e)
-    evalMainParamFrame(node.delayTime, args, 'value', 1/4, 'b', d => d * metronome.beatDuration())
+    let params = combineParams(args, e)
+    evalMainParamFrame(node.delayTime, params, 'value', 1/4, 'b', d => d * metronome.beatDuration())
     e._disconnectTime += maxDelay
     return node
   })
