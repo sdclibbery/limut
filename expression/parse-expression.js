@@ -14,7 +14,7 @@ define(function(require) {
   let parseString = require('expression/parse-string')
   let parsePiecewise = require('expression/parse-piecewise')
   let parseUnits = require('expression/parse-units')
-  let vars = require('vars')
+  let {withEvalState} = require('player/eval-state')
 
   let expression = (state) => {
     let result
@@ -68,11 +68,7 @@ define(function(require) {
           let body = state.expression(state)
           state.userFunctionArgs = oldArgs
           let userDefinedFunctionWrapper = (e,b,er,args) => {
-            let oldArgs = vars.__functionArgs
-            vars.__functionArgs = args // Yuck; set function args into a global var for access later
-            let r = evalParamFrame(body,e,b)
-            vars.__functionArgs = oldArgs
-            return r
+            return withEvalState('__functionArgs', args, ()=>evalParamFrame(body,e,b))
           }
           result = userDefinedFunctionWrapper
           result.isVarFunction = true

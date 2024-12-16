@@ -3,6 +3,7 @@ define(function(require) {
   let vars = require('vars')
   let mainVars = require('main-vars')
   let {evalParamFrame} = require('player/eval-param')
+  let {getEvalState} = require('player/eval-state')
 
   let isVarChar = (char) => {
     return (char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || (char == '_')
@@ -35,9 +36,10 @@ define(function(require) {
     if (userFunctionArgs !== undefined && userFunctionArgs[key] !== undefined) {
       let defaultValue = userFunctionArgs[key]
       let userFunctionArgumentLookup = (e,b,er) => {
-        let value = vars.__functionArgs[key]
+        let __functionArgs = getEvalState('__functionArgs')
+        let value = __functionArgs[key]
         if (value === undefined) { value = defaultValue } // If no arg passed in, use default value from prototype
-        if (value === false) { value = vars.__functionArgs['value'] } // If still no value, try for unnamed arg
+        if (value === false) { value = __functionArgs['value'] } // If still no value, try for unnamed arg
         return value
       }
       return userFunctionArgumentLookup
