@@ -313,8 +313,6 @@ shadertoy synth multiple channels
 ==== other ====
 User defined functions
  !! More tests
-  !! Should be able to   set saw={value}->osc{'sine',freq:value}   /   s audiosynth 0123, play=saw{pitch{this.value,oct:2}}>>...
-    Should really also be able to   set saw={}->osc{'sine',freq:>>>this.<<<value}    too
  !!!!Do a release: lost functionality like (1,2,3).(min,max)   (1,2,3).[min,max]  etc...
   Also lost `x=(this.f){per:2}, f=[0:1]l4`; ie you can no longer set time modifiers on a lookup
   TEST!!!!!!!!

@@ -4139,4 +4139,10 @@ v swirl 4, recol='neon', loc=tile_tr, rate=1/14, contrast, zoom=3
 // set sine={value}->osc{'sine',freq:value}
 // s audiosynth, play={sine{220},sine{880}}>>gain{0.004}
 
+// s audiosynth, play=osc{freq:110}>>biquad{'lowpass',freq:const{[1000:!200ms,10]es}}>>gain{0.01}
 
+// set sine={f}->osc{'sine',freq:f}
+// s audiosynth, play=sine{this.myfreq}>>gain{0.004}, myfreq=[800:100]e
+
+// set sine={}->osc{'sine',freq:this.myfreq}
+// s audiosynth, play=sine{}>>gain{0.004}, myfreq=[800:100]e

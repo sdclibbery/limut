@@ -1839,9 +1839,6 @@ define(function(require) {
   assert(5, v.test.value)
   system.queued = []
   delete vars.foo
-  
-  // s audiosynth, play=({f}->osc{'sine',freq:f}){this.myfreq}>>gain{0.004}, myfreq=[800:100]e
-  // ^^ Not per frame!!!!!!!!
 
   // nested var functions, foo, bar,   set foo = ()->{}   set bar = ()->{foo}   ...
   // piecewise inside function body
