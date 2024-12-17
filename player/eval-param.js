@@ -1,7 +1,6 @@
 'use strict';
 define((require) => {
   let {overrideKey,applyModifiers} = require('expression/time-modifiers')
-  let system = require('play/system')
 
   let expandObjectChords = (o) => {
     for (let k in o) {
@@ -101,18 +100,18 @@ define((require) => {
 
   let evalParamValueWithMemoisation = (evalRecurse, value, event, beat, options) => {
     if (value === undefined) { return value }
-    if (!!value.interval_memo && value.interval_memo.has(event)) {
-      return value.interval_memo.get(event)
+    let memoKey = JSON.stringify(options) + beat
+    if (typeof value === 'function' && value.__memo_event && value.__memo_event.has(event) && value.__memo_event.get(event).hasOwnProperty(memoKey)) {
+      return value.__memo_event.get(event)[memoKey] // Return memoised result
     }
     let result = evalParamValue(evalRecurse, value, event, beat, options)
-    if (shouldForcePerEvent(value)) {
-      if (system.timeNow() >= event._time) { // Dont memoise until the event start time
-        if (!value.interval_memo) { value.interval_memo = new WeakMap() }
-        value.interval_memo.set(event, result)
-      }
-    }
     if (typeof result === 'object' && result._finalResult) { // If result is final and hasn't been unwrapped, do it now
       result = result.value
+    }
+    if (typeof value === 'function') { // Set memoised result
+      if (value.__memo_event === undefined) { value.__memo_event = new WeakMap() }
+      if (!value.__memo_event.has(event)) { value.__memo_event.set(event, {}) }
+      value.__memo_event.get(event)[memoKey] = result
     }
     return result
   }
@@ -233,29 +232,6 @@ define((require) => {
 
   delete perEventThenFrameObject.interval_memo
   assert({foo:{value:1,interval:'frame'},interval:'event'}, evalParamFrameWithInterval(perEventThenFrameObject, ev(0), 1))
-
-  let perEventThenFrameValueGetB = (e,b,er) => er(perFrameValueGetB,e,b)
-  perEventThenFrameValueGetB.interval = 'event'
-  let e = ev(10,10) // when run at startup, the current system time should be less than this
-  assert(10, evalParamEvent(perEventThenFrameValueGetB, e, 0.1))
-  assert(10, evalParamEvent(perEventThenFrameValueGetB, e, 0.2))
-  e._time = 0 // System time should be at least zero
-  assert(10, evalParamEvent(perEventThenFrameValueGetB, e, 0.3))
-  e._time = 10 // System time should be less again
-  e.count = 20 // This new value should be ignored
-  assert(10, evalParamEvent(perEventThenFrameValueGetB, e, 0.4))
-  assert(10, evalParamEvent(perEventThenFrameValueGetB, e, 0.5))
-
-  // Do not memoise if per frame, even if after event time
-  e = ev(10,10) // when run at startup, the current system time should be less than this
-  assert(10, evalParamEvent(perFrameValueGetB, e, 0.1))
-  assert(10, evalParamEvent(perFrameValueGetB, e, 0.2))
-  e._time = 0 // System time should be at least zero
-  assert(10, evalParamEvent(perFrameValueGetB, e, 0.3))
-  e._time = 10 // System time should be less again
-  e.count = 20 // This new value should not be ignored, because we shouldn't memoise per frame values
-  assert(20, evalParamEvent(perFrameValueGetB, e, 0.4))
-  assert(20, evalParamEvent(perFrameValueGetB, e, 0.5))
 
   let constWithMods = () => 1
   constWithMods.modifiers = {}

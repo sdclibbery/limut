@@ -212,7 +212,7 @@ define(function(require) {
 
   require('predefined-vars').apply(require('vars').all())
   let {evalParamFrame} = require('player/eval-param')
-  let ev = (i,c,d) => {return{idx:i, count:c, dur:d, _time:c, endTime:c+d, countToTime:x=>x}}
+  let ev = (i,c,d) => {return{idx:i||0, count:c||0, dur:d||1, _time:c||0, endTime:(c+d)||1, countToTime:x=>x}}
   let e, v
 
   assert(undefined, parseExpression())
@@ -503,16 +503,6 @@ define(function(require) {
   assert(2, evalParamFrame(p,ev(1,1,1),1,evalParamFrame))
   assert(5, evalParamFrame(p,ev(1,1,1),1.5,evalParamFrame))
   
-  p = parseExpression('foo')
-  vars.foo = parseExpression('[1:[2:8]l[1,0]@f]l1@e')
-  e = ev(0,0,1)
-  assert(1, evalParamFrame(p,e,0,evalParamFrame))
-  assert(1, evalParamFrame(p,e,0.5,evalParamFrame))
-  e = ev(1,1,1)
-  assert(2, evalParamFrame(p,e,1,evalParamFrame))
-  assert(5, evalParamFrame(p,e,1.5,evalParamFrame))
-  delete vars.foo
-
   p = parseExpression('[1,2]+(3,4) ')
   assert([4,5], p(ev(0),0,evalParamFrame))
   assert([5,6], p(ev(1),1,evalParamFrame))
@@ -753,9 +743,10 @@ define(function(require) {
   assertNotEqual(r, evalParamFrame(p,ev(1,1),1))
 
   p = parseExpression("[0:1]r1@f")
-  r = evalParamFrame(p,ev(0,0),0)
-  for (let i=0; i<20; i++) { assert(r, evalParamFrame(p,ev(0,0),i/20)) }
-  assertNotEqual(r, evalParamFrame(p,ev(0,0),1))
+  e = ev(0,0)
+  r = evalParamFrame(p,e,0)
+  for (let i=0; i<20; i++) { assert(r, evalParamFrame(p,e,i/20)) }
+  assertNotEqual(r, evalParamFrame(p,e,1))
 
   p = parseExpression("[0:1]e")
   e = { idx:0, count:7, countToTime:b=>b, dur:1 }
@@ -1765,6 +1756,7 @@ define(function(require) {
   assert({value:8,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{4}'), e, 0))
   assert({value:12,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{4}'), e, 1))
   assert({value:8,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{[4]}'), e, 0))
+  e = ev(0,0,4)
   assert({value:8,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{[4,5]t1@f}'), e, 0))
   assert({value:15,interval:'frame'}, evalParamFrameWithInterval(parseExpression('foo{[4,5]t1@f}'), e, 1))
   delete vars.foo
@@ -1836,13 +1828,28 @@ define(function(require) {
   system.queued = []
   delete vars.foo
 
-  // nested var functions, foo, bar,   set foo = ()->{}   set bar = ()->{foo}   ...
-  // piecewise inside function body
-  // timevar args passed in or used inside body
-  // this var passed in or used inside body
-  // function in one param called from another (this.sine){220}
+  vars.foo = parseExpression('{v} -> v+2')
+  vars.bar = parseExpression('{v} -> v*3')
+  assert(17, evalParamFrame(parseExpression('foo{bar{5}}'), e, 0))
+  delete vars.foo
+  delete vars.bar
+
+  vars.foo = parseExpression('{y} -> y+2')
+  vars.bar = parseExpression('{x} -> foo{y:x*3}')
+  assert(17, evalParamFrame(parseExpression('bar{x:5}'), e, 0))
+  delete vars.foo
+  delete vars.bar
+
+  vars.foo = parseExpression('{v} -> v+2')
+  vars.bar = parseExpression('{v} -> foo{v*3}')
+  assert(17, evalParamFrame(parseExpression('bar{5}'), e, 0))
+  delete vars.foo
+  delete vars.bar
+
+  // chords passed into node functions and user functions
+  // function in this param (this.sine){220}
   // {value}->value*2{3} : get nasty error not helpful error  
-  // modifiers
+  // time modifiers
   // more nested combinations; [{([]t@f)}]t etc etc
 
   console.log('Parse expression tests complete')

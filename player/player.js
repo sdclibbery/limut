@@ -194,7 +194,6 @@ define((require) => {
   let p,e,es,p1,p2
   let {evalParamFrame} = require('player/eval-param')
   let ev = (i,c,d) => {return{idx:i,count:c,dur:d}}
-  let val = v => v.value
 
   p = player('p', 'play', 'xo', 'amp=2', 0)
   assert('p', p.id)

@@ -1,6 +1,6 @@
 'use strict';
 define(function(require) {
-  let {evalParamFrame} = require('player/eval-param')
+  let {evalParamFrame,evalFunctionWithModifiers} = require('player/eval-param')
   let consoleOut = require('console')
   let evalOperator = require('expression/eval-operator')
   let {units} = require('units')
@@ -76,8 +76,12 @@ define(function(require) {
         if (!p.modifiers) { p.modifiers = {} }
         p.modifiers.seed = modifiers.seed
       }
-      let pieceParam = mainParam(evalParamFrame(p, e,b) || 0)
-      if (!Number.isFinite(pieceParam)) { consoleOut(`🟠 Warning invalid piecewise piece param: ${pieceParam}`); return 0; }
+      p = mainParam(p) || 0
+      let pieceParam = typeof p !== 'function' ? p : evalFunctionWithModifiers(p, e,b,evalRecurse)
+      if (!Number.isFinite(pieceParam)) {
+        consoleOut(`🟠 Warning invalid piecewise piece param: ${p} ${b} ${pieceParam}`)
+        return 0
+      }
       let {piece,next} = indexer(ss, options, pieceParam, e,b) // "piece" integer part is an index into the segments; fractional part is the interpolator between segments
       let idx = Math.floor(piece)
       let l = vs[idx % vs.length]
@@ -135,7 +139,7 @@ define(function(require) {
 
     assertThrows('is.length', ()=>piecewise([0], [], [1], 0, {}))
     assertThrows('ss.length', ()=>piecewise([0], [lin], [], 0, {}))
-    assertThrows('invalid piecewise totalSize', ()=>piecewise([0], [lin], [Infinity], 0, {})())
+    assertThrows('invalid piecewise totalSize', ()=>piecewise([0], [lin], [Infinity], 0, {})({},0,v=>v))
 
     pw = piecewise([2], [step], [1], 1, {})
     assert(2, evalParamFrame(pw,ev(0),0))

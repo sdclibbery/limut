@@ -312,6 +312,13 @@ shadertoy synth multiple channels
 =================================================================================================================================
 ==== other ====
 User defined functions
+ !Better memoisation
+  ???Should clean up old memoised values; dont want to accumulate vast garbage on long running events?
+   Delete anything with beat older than 1 below current??
+   What about old events? Are they going to accumulate??
+  TEST!!!!
+ !More parse expression unit tests; definitely need nested functions!!!
+ !How to avoid evalling function call args repeatedly due to them also being treated as modifiers?
  !!!!Do a release: lost functionality like (1,2,3).(min,max)   (1,2,3).[min,max]  etc...
   Also lost `x=(this.f){per:2}, f=[0:1]l4`; ie you can no longer set time modifiers on a lookup
   TEST!!!!!!!!
@@ -319,9 +326,7 @@ User defined functions
   !But the default behaviour for our existing functions is to be evalled even without {}, so how to pass the functions as values?
    ?Can we default to non eval without {}, but do the eval if necessary in context? Eg operators can't act on function, so eval? etc
    Probably just want an evalParamToUserFunction...
- !! User function args are first evalled as modifiers in eval-param, then overwritten with the unevalled args in parse-var
-   Then evalled again in deferred evaluation :-/
-  eg set foo = {value} -> value*2  /  foo{[4,5]t1@f}   ; The timevar gets evalled multiple times
+ Short circuiting condional operator, if/else or ?:
  Or set riser={dur}=>(time%dur)/dur
   Allow riser={dur?32}=>(time%dur)/dur
  ?If functions are values, how do they interact with other values? What if you add functions etc? Eg ({}=>0) + ({}=>1) ?
@@ -744,8 +749,6 @@ player s { // named player; sugar for "let s = player{...}"
 With abstraction such that this can be written as a preset and then instantiated as a player with only params getting set
 
 =================================================================================================================================
-=================================================================================================================================
-=================================================================================================================================
 
 Change requirements:
 * Tag current version as 0.1-final; publish to a separate URL
@@ -760,6 +763,16 @@ Change requirements:
 * Add some kind of let expression to define local vars in functions
 * What can be cleaned up in eval-params?
 
+=================================================================================================================================
 
+Things that make limut trickier than just implementing a bog standard programming language
+* Time aware
+* Intervals; per frame update
+* Time modification
+* Hoisting chords from params
+* Piecewise syntax
+* Event generation
+* Node graph syntax
 
-
+Do we really need better, smarter memoisation? Memoise even for per frame? Eg memoise key is {event,b,options}??
+ How does that work for function args? Need to also memoise against function args?????
