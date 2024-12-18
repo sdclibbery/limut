@@ -313,10 +313,17 @@ shadertoy synth multiple channels
 ==== other ====
 User defined functions
  !Better memoisation
+  TEST!!!!
+set sine={value}->osc{'sine',freq:value}
+s audiosynth, play={sine{220},sine{880}}>>gain{0.004}
+--
+s audiosynth, play=osc{freq:{const{200},osc{'sine',freq:2}>>gain{100}}}>>gain{0.01}
+--
+set lpf={}->biquad{'lowpass',freq:this.lpf.value,q:this.lpf.q}
+s audiosynth, play=osc{freq:220}>>lpf{713,q:[40:!4,0.1]e}>>gain{0.001}, lpf={713,q:[40:!4,0.1]e}
   ???Should clean up old memoised values; dont want to accumulate vast garbage on long running events?
    Delete anything with beat older than 1 below current??
    What about old events? Are they going to accumulate??
-  TEST!!!!
  !More parse expression unit tests; definitely need nested functions!!!
  !How to avoid evalling function call args repeatedly due to them also being treated as modifiers?
  !!!!Do a release: lost functionality like (1,2,3).(min,max)   (1,2,3).[min,max]  etc...

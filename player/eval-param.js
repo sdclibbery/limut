@@ -1,6 +1,7 @@
 'use strict';
 define((require) => {
   let {overrideKey,applyModifiers} = require('expression/time-modifiers')
+  let {getEvalState} = require('player/eval-state')
 
   let expandObjectChords = (o) => {
     for (let k in o) {
@@ -101,6 +102,8 @@ define((require) => {
   let evalParamValueWithMemoisation = (evalRecurse, value, event, beat, options) => {
     if (value === undefined) { return value }
     let memoKey = JSON.stringify(options) + beat
+    let __functionArgs = getEvalState('__functionArgs')
+    // if (__functionArgs) { memoKey += __functionArgs.__functionContext }
     if (typeof value === 'function' && value.__memo_event && value.__memo_event.has(event) && value.__memo_event.get(event).hasOwnProperty(memoKey)) {
       return value.__memo_event.get(event)[memoKey] // Return memoised result
     }

@@ -23,6 +23,7 @@ define(function(require) {
     return key
   }
 
+  let callsiteId = 0
   let varLookup = (key, args, context, interval, userFunctionArgs) => {
     if (!key) { return }
 
@@ -48,6 +49,7 @@ define(function(require) {
     // Return a lookup function
     let state = {} // Create a state store for this parse instance
     let result
+    let thisCallsiteId = 'cs' + callsiteId++
     if (interval === undefined && typeof vars.get(key) === 'function') { interval = vars.get(key).interval }
     let parseVarLookup = (event,b, evalRecurse, modifiers) => {
       let vr = vars.get(key)
@@ -63,6 +65,9 @@ define(function(require) {
           if (parseVarLookup.args !== undefined) { modifiers.value = parseVarLookup.args }
         } else {
           modifiers = parseVarLookup.args
+        }
+        if (vr.passCallsiteId && modifiers) {
+          modifiers.__functionContext = thisCallsiteId // Add the id of this callsite as an extra arg, for memoisation
         }
         if (vr.isNormalCallFunction) { // Used by user defined functions which need evalRecurse but not state
           v = vr(event,b, evalRecurse, modifiers)
