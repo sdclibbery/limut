@@ -315,8 +315,6 @@ User defined functions
  !Better memoisation
   TEST!!!!
 set sine={value}->osc{'sine',freq:value}
-s audiosynth, play={sine{220},sine{880}}>>gain{0.004}
---
 s audiosynth, play=osc{freq:{const{200},osc{'sine',freq:2}>>gain{100}}}>>gain{0.01}
 --
 set lpf={}->biquad{'lowpass',freq:this.lpf.value,q:this.lpf.q}

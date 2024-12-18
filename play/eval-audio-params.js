@@ -6,7 +6,7 @@ define(function (require) {
   let {segmentedAudioParam} = require('play/segmented-audioparam')
   let metronome = require('metronome')
   let {connect,isConnectable} = require('play/node-connect');
-  let {getEvalState,withEvalState} = require('player/eval-state')
+  let {getCallContext,pushCallContext,popCallContext} = require('player/callstack')
 
   let evalPerEvent = (params, p, def) => {
     let v = params[p]
@@ -117,9 +117,12 @@ define(function (require) {
         return
       }
       // if (params) { console.log(`Per frame audio update! Main ${params.player} ${p}`) }
-      let args = getEvalState('__functionArgs') // Remember the function args so they can be looked up later during per frame callback
+      let args = getCallContext() // Remember the function args so they can be looked up later during per frame callback
       let evalAt = (count) => {
-        return withEvalState('__functionArgs', args, ()=>evalMainPerFrame(params, p, def, count, requiredUnits))
+        pushCallContext(args)
+        let r = evalMainPerFrame(params, p, def, count, requiredUnits)
+        popCallContext()
+        return r
       }
       if (params._perFrame) { // Update callback for buses
         params._perFrame.push((state) => perFrameUpdate(audioParam, state, params, evalAt, mod, p))

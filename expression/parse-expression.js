@@ -14,7 +14,7 @@ define(function(require) {
   let parseString = require('expression/parse-string')
   let parsePiecewise = require('expression/parse-piecewise')
   let parseUnits = require('expression/parse-units')
-  let {withEvalState} = require('player/eval-state')
+  let {pushCallContext,popCallContext} = require('player/callstack')
 
   let expression = (state) => {
     let result
@@ -68,7 +68,10 @@ define(function(require) {
           let body = state.expression(state)
           state.userFunctionArgs = oldArgs
           let userDefinedFunctionWrapper = (e,b,er,args) => {
-            return withEvalState('__functionArgs', args, ()=>evalParamFrame(body,e,b))
+            pushCallContext(args)
+            let r = evalParamFrame(body,e,b)
+            popCallContext()
+            return r
           }
           result = userDefinedFunctionWrapper
           result.isVarFunction = true
@@ -1840,19 +1843,6 @@ define(function(require) {
   assert(17, evalParamFrame(parseExpression('bar{x:5}'), e, 0))
   delete vars.foo
   delete vars.bar
-  // foo:245 bar:246
-  // Because the args are passed unevalled (modifiers are evalled but then that's thrown away)
-  // they get evalled reaching all the way up the callstack, but all within the context of the leaf function, foo
-  // So to eval `y+2` we have to eval `x*3`, and to eval that we have to get `x`. But x is not present in foo's context
-  // This used to work because x*3 would have been memoised without the foo context
-  // What we need is to somehow walk back up the stack of __functionArgs as we evaluate each arg lookup
-  // So evalling the `y` in `y+2` would change to bars __functionArgs context
-  // This would have to be arranged in eval-state, which could be renamed to callstack????
-  // Should memoise against both callsite id AND also callstack level then? - This would be needed for recursive functions anyway...
-  // TODO
-  // Refactor eval-state into callstack
-  // userFunctionArgumentLookup slides up the callstack and then back after eval
-  //  ?????Will this still work from a per-frame callback???
 
   vars.foo = parseExpression('{v} -> v+2')
   vars.bar = parseExpression('{v} -> foo{v*3}')
