@@ -1770,7 +1770,7 @@ define(function(require) {
   assert({value:10,interval:'frame'}, evalParamFrameWithInterval(parseExpression('({v} -> v*2){this.bar}'), e, 1))
 
   vars.foo = parseExpression('{value} -> mockaudionode{test:value}')
-  p = parseExpression('foo{[4,5]t1@f}')
+  p = parseExpression('foo{[4hz,5hz]t1@f}')
   e = ev(0,0,4)
   v = evalParamFrame(p, e,0) // Creates mockaudionode and sets up per-frame callback, which evals the value arg, which is [4,5]t1@f
   assert(4, v.test.value)
@@ -1823,7 +1823,7 @@ define(function(require) {
 
   vars.foo = parseExpression('{v} -> mockaudionode{test:v}')
   p = parseExpression('foo{v:this.bar}')
-  e = ev(0,0,4); e.bar=parseExpression('[4,5]t1@f')
+  e = ev(0,0,4); e.bar=parseExpression('[4hz,5hz]t1@f')
   v = evalParamFrame(p, e,0)
   assert(4, v.test.value)
   assert(1, system.queued.length)
@@ -1854,7 +1854,7 @@ define(function(require) {
   assert(3, evalParamFrame(parseExpression('foo{1}+foo{2}'), e, 0))
   delete vars.foo
 
-  v = evalParamFrame(parseExpression('mockaudionode{test:mockaudionode{test:7}}'), ev(), 0)
+  v = evalParamFrame(parseExpression('mockaudionode{test:mockaudionode{test:7hz}}'), ev(), 0)
   assert(1, v.test.connected.length)
   assert(7, v.test.connected[0].test.value)
 
@@ -1863,7 +1863,6 @@ define(function(require) {
   assert(7, v.test.connected[0].test.value)
   assert(9, v.test.connected[1].test.value)
 
-  // UNITS!!
   // chords passed into node functions and user functions
   // function in this param (this.sine){220}
   // {value}->value*2{3} : get nasty error not helpful error  
