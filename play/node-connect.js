@@ -1,10 +1,10 @@
 'use strict';
 define(function (require) {
-  let system = require('play/system');
+  let system = require('play/system')
 
   let isNode = v => v instanceof AudioNode
   let isParam = v => v instanceof AudioParam
-  let isNodeArray = v => typeof v === 'object' && v.value !== undefined && !isParam(v)
+  let isNodeArray = v => typeof v === 'object' && v.value instanceof AudioNode && !isParam(v)
   let isConnectable = v => {
     if (typeof v !== 'object') { return false }
     if (isNode(v)) { return true }
@@ -27,6 +27,7 @@ define(function (require) {
 
   let resolveAudioNodes = (v, field) => {
     if (typeof v !== 'object') { return [] }
+    if (isParam(v)) { return [v] }
     if (!isNodeArray(v)) { return [getAudioNode(v, field)]} // Not an array
     let vs = []
     let idx = 0

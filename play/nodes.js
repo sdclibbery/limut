@@ -18,13 +18,26 @@ define(function(require) {
   }
 
   let audioNodeProto
+  let audioParamProto
   addNodeFunction('mockaudionode', (args,e,b) => { // For tests to run without creating an actual AudioNode
     if (audioNodeProto === undefined) { audioNodeProto = Object.getPrototypeOf(Object.getPrototypeOf(system.audio.createGain())) }
+    if (audioParamProto === undefined) { audioParamProto = Object.getPrototypeOf(system.audio.createGain().gain) }
     let node = Object.create(audioNodeProto)
     let params = combineParams(args, e)
-    node.test = { setValueAtTime:(v)=>node.test.value=v, setTargetAtTime:(v)=>node.test.value=v, value:0} // Mock AudioParam
+    node.test = Object.create(audioParamProto) // Mock AudioParam
+    Object.defineProperty(node.test, "value", {
+      set(v) { node.test._value = v },
+      get() { return node.test._value },
+    })
+    node.test.value = 0
+    node.test.setValueAtTime = (v)=>node.test.value=v
+    node.test.setTargetAtTime = (v)=>node.test.value=v
+    node.test.connected = []
     evalMainParamFrame(node.test, params, 'test', 440, 'hz')
-    node.connect = (v) => { node.connected = v }
+    node.connect = (v) => {
+      node.connected = v
+      if (Array.isArray(v.connected)) { v.connected.push(node) }
+    }
     node.disconnect = () => { node.disconnected }
     return node
   })

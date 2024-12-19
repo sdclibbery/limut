@@ -1730,7 +1730,7 @@ define(function(require) {
   assert({value:1,interval:'frame'}, evalParamFrameWithInterval(parseExpression('[[1]t@e]t@f'), ev(0),0))
   assert(1, evalParamFrameWithInterval(parseExpression('[[1]t@f]t@e'), ev(0),0))
   assert({"value":1,"_nextSegment":1,"_segmentPower":1}, evalParamFrameWithInterval(parseExpression('[1,0]es1'), ev(0,0,1),0))
-  assert({"test":{"value":440}}, evalParamFrameWithInterval(parseExpression('mockaudionode'), ev(0),0))
+  assert(440, evalParamFrameWithInterval(parseExpression('mockaudionode'), ev(0),0).test.value)
   assert(1, evalParamFrameWithInterval(parseExpression('[1]r'), ev(0),0))
   assert({value:1,interval:'frame'}, evalParamFrameWithInterval(parseExpression('[1]r@f'), ev(0),0))
   assert({value:1,interval:'frame'}, evalParamFrameWithInterval(parseExpression('[1]r{seed:[1]t@f}'), ev(0),0))
@@ -1818,7 +1818,7 @@ define(function(require) {
 
   e = ev(); e.bar=3
   vars.foo = parseExpression('{v} -> mockaudionode{test:v}')
-  assert({"test":{"value":3}}, evalParamFrame(parseExpression('foo{v:this.bar}'), e, 0))
+  assert(3, evalParamFrame(parseExpression('foo{v:this.bar}'), e, 0).test.value)
   delete vars.foo
 
   vars.foo = parseExpression('{v} -> mockaudionode{test:v}')
@@ -1854,6 +1854,16 @@ define(function(require) {
   assert(3, evalParamFrame(parseExpression('foo{1}+foo{2}'), e, 0))
   delete vars.foo
 
+  v = evalParamFrame(parseExpression('mockaudionode{test:mockaudionode{test:7}}'), ev(), 0)
+  assert(1, v.test.connected.length)
+  assert(7, v.test.connected[0].test.value)
+
+  v = evalParamFrame(parseExpression('mockaudionode{test:{mockaudionode{test:7},mockaudionode{test:9}}}'), ev(), 0)
+  assert(2, v.test.connected.length)
+  assert(7, v.test.connected[0].test.value)
+  assert(9, v.test.connected[1].test.value)
+
+  // UNITS!!
   // chords passed into node functions and user functions
   // function in this param (this.sine){220}
   // {value}->value*2{3} : get nasty error not helpful error  

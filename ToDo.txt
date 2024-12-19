@@ -314,11 +314,8 @@ shadertoy synth multiple channels
 User defined functions
  !Better memoisation
   TEST!!!!
-set sine={value}->osc{'sine',freq:value}
-s audiosynth, play=osc{freq:{const{200},osc{'sine',freq:2}>>gain{100}}}>>gain{0.01}
---
-set lpf={}->biquad{'lowpass',freq:this.lpf.value,q:this.lpf.q}
-s audiosynth, play=osc{freq:220}>>lpf{713,q:[40:!4,0.1]e}>>gain{0.001}, lpf={713,q:[40:!4,0.1]e}
+set foo=this.foo
+r readout, add=foo, foo=7
   ???Should clean up old memoised values; dont want to accumulate vast garbage on long running events?
    Delete anything with beat older than 1 below current??
    What about old events? Are they going to accumulate??
@@ -778,6 +775,7 @@ Things that make limut trickier than just implementing a bog standard programmin
 * Piecewise syntax
 * Event generation
 * Node graph syntax
+* Units
 
 Do we really need better, smarter memoisation? Memoise even for per frame? Eg memoise key is {event,b,options}??
  How does that work for function args? Need to also memoise against function args?????
