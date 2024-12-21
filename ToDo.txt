@@ -5,12 +5,12 @@
 WebAudio node graphs as first class values
  EXAMPLES Params; eg play=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    play>>=gain{[1:!200ms,0]e}
  •PLAN
- Try to make techbass
  ?! s audiosynth, play=osc{}>>gain{this.foo}>>gain{0.01}, foo=osc{'sine',freq:2b}
- playerChain: what to call this? 'audio'? 'effects'? 'player'? 'instrument'? 'common'?
+ playerChain: what to call this? 'audio'? 'player'?
   Eval once at parse time
   Disconnect: how? when?
   Should provide support for monophonic synths with no play chain set
+   But also can receive input from play chains
   Support for chains on buses: should be monophonic
    ? Are buses based on audioSynth too??? IE can a player connect to another player as output?
   ?Also have output Param that can connect audio to other players, instead of bus param..??
@@ -22,11 +22,11 @@ WebAudio node graphs as first class values
     id{} node is identity; can be connected by just passes the connection through. But it can also be named
    Delay with feedback will need increased disconnect time...
  More audionode functions
-  WaveShaperNode
+  WaveShaperNode - params: user function shape, sample count, oversampling
   ConvolverNode
   StereoPannerNode
   DynamicsCompressorNode
-  AudioBufferSourceNode
+  AudioBufferSourceNode - Also allow user def function to create sample
   MediaStreamAudioSourceNode
  Inserting into an existing chain at a placeholder location
   Requires not just connecting into a placeholder, but breaking the existing chain
@@ -311,33 +311,25 @@ shadertoy synth multiple channels
 =================================================================================================================================
 =================================================================================================================================
 ==== other ====
+Short circuiting condional operator, if/else or ?: or && || or case/of?
 User defined functions
- !Better memoisation
-  TEST!!!!
-set foo=this.foo
-r readout, add=foo, foo=7
-  ???Should clean up old memoised values; dont want to accumulate vast garbage on long running events?
-   Delete anything with beat older than 1 below current??
-   What about old events? Are they going to accumulate??
- !More parse expression unit tests; definitely need nested functions!!!
- !How to avoid evalling function call args repeatedly due to them also being treated as modifiers?
+ !More parse expression unit tests
+ Test: Or set riser={dur}->(time%dur)/dur Allow riser={dur:32}->(time%dur)/dur
+ TEST!!!!
  !!!!Do a release: lost functionality like (1,2,3).(min,max)   (1,2,3).[min,max]  etc...
   Also lost `x=(this.f){per:2}, f=[0:1]l4`; ie you can no longer set time modifiers on a lookup
   TEST!!!!!!!!
+ !! This should work but gets confused between this.foo and foo:  set foo=this.foo  ;  r readout, add=foo, foo=7
+ ?How to avoid evalling function call args repeatedly due to them also being treated as modifiers?
  Support for passing functions to params: eg shape={x}=>sgn{x}*max{abs{x}-1/2,0}
   !But the default behaviour for our existing functions is to be evalled even without {}, so how to pass the functions as values?
    ?Can we default to non eval without {}, but do the eval if necessary in context? Eg operators can't act on function, so eval? etc
-   Probably just want an evalParamToUserFunction...
- Short circuiting condional operator, if/else or ?:
- Or set riser={dur}=>(time%dur)/dur
-  Allow riser={dur?32}=>(time%dur)/dur
+   Or just have evalParamToUserFunction? But then can't pass functions as first class values to other user def functions
  ?If functions are values, how do they interact with other values? What if you add functions etc? Eg ({}=>0) + ({}=>1) ?
- ?What about chords eg {x} => x*(1,2,3) ?
+  If functions are not being evalled, then should just error
  !Should be able to access the default e and b params. Can get rid of time global??? And `this.` ?????????
- !Should be able to eval functions as well as pass them; eg ({}->3){}
- !?efficient tail recursion?
 Show matching brackets in editor
-!! []es shouldn't be the syntax for segmenting. It should be []e@s! And then you could have []t@s if you wanted...
+!? []es shouldn't be the syntax for segmenting. It should be []e@s! And then you could have []t@s if you wanted...
 !! floor doesn't work with delay:  r readout 1234, delay=floor{[0:1]l3@f,to:1/4}
 Cooler effect when update code
 More time modifiers

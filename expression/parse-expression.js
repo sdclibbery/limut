@@ -1799,6 +1799,9 @@ define(function(require) {
   assert(undefined, parseExpression('{}->1').interval)
   assert('event', parseExpression('{}->[]r@e').interval)
   assert('frame', parseExpression('{}->[]r@f').interval)
+  assert([1,2], evalParamFrame(parseExpression('{}->(1,2)'), ev(), 0))
+  assert([1,2], evalParamFrame(parseExpression('({}->(1,2)){}'), ev(), 0))
+
   e = ev()
   assert(2, evalParamFrame(parseExpression('({value}->value*2){[1,3]t1@e}'), e, 0))
   assert(2, evalParamFrame(parseExpression('({value}->value*2){[1,3]t1@e}'), e, 1))
@@ -1863,8 +1866,34 @@ define(function(require) {
   assert(7, v.test.connected[0].test.value)
   assert(9, v.test.connected[1].test.value)
 
-  // chords passed into node functions and user functions
-  // function in this param (this.sine){220}
+  vars.foo = parseExpression('{v} -> v*3')
+  // assert([3,6], evalParamFrame(parseExpression('foo{(1,2)}'), ev(), 0))
+  delete vars.foo
+  // So we expand chords once at play time, then again at eval time? How does it work for this vars?
+
+  vars.foo = parseExpression('{v} -> mockaudionode{test:v*3}')
+  // assert([3,6], evalParamFrame(parseExpression('foo{v:(1,2)}'), ev(), 0).map(v=>v.test.value))
+  delete vars.foo
+
+  vars.foo = parseExpression('{v} -> v*5')
+  vars.bar = parseExpression('{v} -> v*3')
+  // assert([15,30], evalParamFrame(parseExpression('foo{bar{(1,2)}}'), e, 0))
+  delete vars.foo
+  delete vars.bar
+
+  // vars.foo = parseExpression('{v} -> v*(1,2)')
+  // assert([3,6], evalParamFrame(parseExpression('foo{3}'), ev(), 0))
+  // delete vars.foo
+
+  // vars.foo = parseExpression('mockaudionode{test:(1,2)}')
+  // assert([3,6], evalParamFrame(parseExpression('foo'), ev(), 0).map(v=>v.test.value))
+  // delete vars.foo
+  // !!Eval audio param is not expecting a chord; it should already have been hoisted and expanded but it hasnt been
+  // Due to dontEvalArgs??
+
+  // e = ev(); e.foo=parseExpression('{x}->x*2')
+  // assert(6, evalParamFrame(parseExpression('(this.foo){3}'), e, 0))
+
   // {value}->value*2{3} : get nasty error not helpful error  
   // time modifiers
   // more nested combinations; [{([]t@f)}]t etc etc
