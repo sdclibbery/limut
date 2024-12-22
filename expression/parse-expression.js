@@ -1244,12 +1244,6 @@ define(function(require) {
   assert({value:4,rotate:1}, evalParamFrame(parseExpression("{4,rotate:1}"),ev(0,0,0),0))
   assert({value:4,rotate:2}, evalParamFrame(parseExpression("{4,rotate:max{1,2}}"),ev(0,0,0),0))
 
-  assert(1, evalParamFrame(parseExpression("1?2"),ev(0,0,0),0))
-  assert(2, evalParamFrame(parseExpression("this.foo?2"),ev(0,0,0),0))
-  assert(2, evalParamFrame(parseExpression("this.foo ? 2"),ev(0,0,0),0))
-  assert(2, evalParamFrame(parseExpression("{a:this.foo}.a?2"),ev(0,0,0),0))
-  assert(2, evalParamFrame(parseExpression("{}.foo?2"),ev(0,0,0),0))
-
   vars._time = (args,e,b)=>b
   vars._time.isVarFunction = true
   assert(1, evalParamFrame(parseExpression("_time"),ev(0,0,4),1))
@@ -1701,6 +1695,62 @@ define(function(require) {
   assert(12, evalParamFrame(p, ev(), 0))
   delete vars.foo
   delete vars.bar
+
+  assert(1, evalParamFrame(parseExpression("1?:2"),ev(0,0,4),0))
+  assert(0, evalParamFrame(parseExpression("0?:2"),ev(0,0,4),0))
+  assert('', evalParamFrame(parseExpression("''?:2"),ev(0,0,4),0))
+  assert({}, evalParamFrame(parseExpression("{}?:2"),ev(0,0,4),0))
+  assert([], evalParamFrame(parseExpression("()?:2"),ev(0,0,4),0))
+  assert(0, evalParamFrame(parseExpression("[]?:2"),ev(0,0,4),0))
+  assert(2, evalParamFrame(parseExpression("this.foo?:2"),ev(0,0,4),0))
+  assert(2, evalParamFrame(parseExpression("this.foo ?: 2"),ev(0,0,4),0))
+  assert(2, evalParamFrame(parseExpression("{a:this.foo}.a?:2"),ev(0,0,4),0))
+  assert(2, evalParamFrame(parseExpression("{2:3}.foo?:2"),ev(0,0,4),0))
+  assert(2, evalParamFrame(parseExpression("{}.a ?: [2,3]t1@f"),ev(0,0,4),0))
+  assert(3, evalParamFrame(parseExpression("{}.a ?: [2,3]t1@f"),ev(0,0,4),1))
+  assert(2, evalParamFrame(parseExpression("[2,{}.a]t1@f ?: 1"),ev(0,0,4),0))
+  assert(1, evalParamFrame(parseExpression("[2,{}.a]t1@f ?: 1"),ev(0,0,4),1))
+  vars.foo = () => { vars.foo.evalled = true; return 7 }
+  assert(1, evalParamFrame(parseExpression("1 ?: foo"),ev(0,0,1),0)); assert(undefined, vars.foo.evalled)
+  assert(7, evalParamFrame(parseExpression("{}.a ?: foo"),ev(0,0,1),0)); assert(true, vars.foo.evalled)
+  delete vars.foo
+
+  assert(undefined, evalParamFrame(parseExpression('0??2'), ev(0),0))
+  assert(2, evalParamFrame(parseExpression('1??2'), ev(0),0))
+  assert(undefined, evalParamFrame(parseExpression("''??2"),ev(0,0,4),0))
+  assert(undefined, evalParamFrame(parseExpression('()??2'), ev(0),0))
+  assert(undefined, evalParamFrame(parseExpression('[]??2'), ev(0),0))
+  assert(2, evalParamFrame(parseExpression('{}??2'), ev(0),0))
+  assert(undefined, evalParamFrame(parseExpression("''??2"), ev(0),0))
+  assert(2, evalParamFrame(parseExpression('(1)??2'), ev(0),0))
+  assert(2, evalParamFrame(parseExpression("'a'??2"), ev(0),0))
+  assert(2, evalParamFrame(parseExpression('1??[2,3]t1@f'), ev(0,0,4),0))
+  assert(3, evalParamFrame(parseExpression('1??[2,3]t1@f'), ev(0,0,4),1))
+  assert(undefined, evalParamFrame(parseExpression('[0,1]t1@f??2'), ev(0,0,4),0))
+  assert(2, evalParamFrame(parseExpression('[0,1]t1@f??2'), ev(0,0,4),1))
+  vars.foo = () => { vars.foo.evalled = true; return 7 }
+  assert(undefined, evalParamFrame(parseExpression("0 ?? foo"),ev(0,0,1),0)); assert(undefined, vars.foo.evalled)
+  assert(7, evalParamFrame(parseExpression("1 ?? foo"),ev(0,0,1),0)); assert(true, vars.foo.evalled)
+  delete vars.foo
+
+  assert(3, evalParamFrame(parseExpression('0 ?? 2 ?: 3'), ev(0),0))
+  assert(2, evalParamFrame(parseExpression('1 ?? 2 ?: 3'), ev(0),0))
+  assert(3, evalParamFrame(parseExpression('{}.a ?? 2 ?: 3'), ev(0),0))
+  assert(3, evalParamFrame(parseExpression('[0,1]t1@f ?? 2 ?: 3'), ev(0,0,4),0))
+  assert(2, evalParamFrame(parseExpression('[0,1]t1@f ?? 2 ?: 3'), ev(0,0,4),1))
+  vars.foo = () => { vars.foo.evalled = true; return 7 }
+  assert(2, evalParamFrame(parseExpression("1 ?? 2 ?: foo"),ev(0,0,1),0)); assert(undefined, vars.foo.evalled)
+  assert(7, evalParamFrame(parseExpression("0 ?? 2 ?: foo"),ev(0,0,1),0)); assert(true, vars.foo.evalled)
+  delete vars.foo
+  assert(44, evalParamFrame(parseExpression('0 ?? 22 ?: 0 ?? 33 ?: 44'), ev(0),0))
+  assert(33, evalParamFrame(parseExpression('0 ?? 22 ?: 1 ?? 33 ?: 44'), ev(0),0))
+  assert(22, evalParamFrame(parseExpression('1 ?? 22 ?: 0 ?? 33 ?: 44'), ev(0),0))
+  vars.foo = () => { vars.foo.evalled = true; return 7 }
+  assert(44, evalParamFrame(parseExpression("0 ?? foo ?: 0 ?? foo ?: 44"),ev(0,0,1),0)); assert(undefined, vars.foo.evalled)
+  assert(44, evalParamFrame(parseExpression("0 ?? foo ?: 1 ?? 44 ?: foo"),ev(0,0,1),0)); assert(undefined, vars.foo.evalled)
+  assert(44, evalParamFrame(parseExpression("1 ?? 44 ?: 0 ?? foo ?: foo"),ev(0,0,1),0)); assert(undefined, vars.foo.evalled)
+  assert(33, evalParamFrame(parseExpression("1 ?? 33 ?: 1 ?? 44 ?: foo"),ev(0,0,1),0)); assert(undefined, vars.foo.evalled)
+  delete vars.foo
 
   assert(1, evalParamFrameWithInterval(parseExpression('1'), ev(0),0))
   assert(1, evalParamFrameWithInterval(parseExpression('1@e'), ev(0),0))

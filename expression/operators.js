@@ -11,9 +11,20 @@ define(function(require) {
     return !Number.isFinite(result) ? 0 : result // Don't allow infinities
   }
 
-  let defaultOp = (l,r) => {
+  let ifThenOp = (l,r,event,b,evalRecurse) => {
+    if (l === undefined) { return undefined }
+    if (Array.isArray(l)) { return l.length > 0 ? r : undefined }
+    if (typeof l !== 'function') { return l ? r : undefined }
+    let el = evalRecurse(l, event,b)
+    return el ? r : undefined
+  }
+
+  let orElseOp = (l,r,event,b,evalRecurse) => {
     if (l === undefined) { return r }
-    return l
+    if (typeof l !== 'function') { return l }
+    let el = evalRecurse(l, event,b)
+    if (el === undefined) { return r }
+    return el
   }
 
   let concatOp = (l,r) => {
@@ -38,13 +49,27 @@ define(function(require) {
     '|': concatOp,
     '>>': connectOp,
     '.': lookupOp,
-    '?': defaultOp,
+    '??': ifThenOp,
+    '?:': orElseOp,
   }
   operators['|'].raw = true
   operators['>>'].raw = true
   operators['.'].raw = true
   operators['.'].doNotEvalArgs = true
-  let precedence = {'.':1,'?':2,'>>':3,'|':4,'^':5,'%':6,'/':6,'*':6,'-':7,'+':7,} // MUST ALL BE > 0
+  operators['?:'].raw = true
+  operators['?:'].doNotEvalArgs = true
+  operators['??'].raw = true
+  operators['??'].doNotEvalArgs = true
+  let precedence = { // MUST ALL BE > 0
+    '.':1,
+    '>>':2,
+    '|':3,
+    '^':4,
+    '%':5, '/':5, '*':5,
+    '-':6, '+':6,
+    '??':7,
+    '?:':8,
+  }
 
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
@@ -89,11 +114,16 @@ define(function(require) {
     assert([1,2], concatOp(1, 2))
     assert([1], concatOp(1, undefined))
 
-    assert(1, defaultOp(1, 2))
-    assert(1, defaultOp(1, undefined))
-    assert(2, defaultOp(undefined, 2))
-    assert(undefined, defaultOp(undefined, undefined))
-    assert(0, defaultOp(0, 2))
+    assert(1, orElseOp(1, 2, {},0,v=>v))
+    assert(1, orElseOp(1, undefined, {},0,v=>v))
+    assert(2, orElseOp(undefined, 2, {},0,v=>v))
+    assert(undefined, orElseOp(undefined, undefined, {},0,v=>v))
+    assert(0, orElseOp(0, 2, {},0,v=>v))
+
+    assert(2, ifThenOp(1, 2, {},0,v=>v))
+    assert(undefined, ifThenOp(1, undefined, {},0,v=>v))
+    assert(undefined, ifThenOp(0, 2, {},0,v=>v))
+    assert(undefined, ifThenOp(undefined, undefined, {},0,v=>v))
 
     assert(undefined, lookupOp())
     assert(1, lookupOp(1, undefined))

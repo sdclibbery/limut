@@ -16,7 +16,7 @@ WebAudio node graphs as first class values
   ?Also have output Param that can connect audio to other players, instead of bus param..??
  Mechanism to provide effect mix easily; mix function defined in limut
   eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
-  set mix={chain,wet} -> wet ? {gain{wet},chain>>gain{1-wet}} : chain
+  set mix={chain,wet} -> wet ?? {gain{wet},chain>>gain{1-wet}} ?: chain
    !! Really want to check that wet is @e zero, not just zero at the start. Expose a function to allow this
  Placeholders for feedback
    ? Syntax? Representation? Register themself somehow a bit like disconnect?
@@ -314,15 +314,8 @@ shadertoy synth multiple channels
 =================================================================================================================================
 ==== other ====
 Short circuiting conditional operators
- Change `?` operator to select RHS if LHS is truthy, otherwise undefined, and not eval RHS at all if returning undefined
-  !! Check what happens if the undefined from this operator propagates out...
- Add `:` operator to select RHS if LHS is undefined, otherwise LHS, and not eval RHS if not returning it
- Priority: lower priority than all(?) others? `:` just lower than `?` so a?b:c works
-  x<2 ? foo : x>5 ? bar : baz
-  ((x<2) ? foo) : ((x>5) ? bar) : baz
- Replace current usage of `?` with `:` in examples etc
- Documentation
- Release with breaking changes (`?` operator change and also the ones from the deferred function rewrite below)
+ !! Check what happens if the undefined from operator ?? propagates out...
+ Release with breaking changes (`?` operator gone (use ?: )), and also the changes from the deferred function rewrite below
 User defined functions
  !More parse expression unit tests
  Test: Or set riser={dur}->(time%dur)/dur Allow riser={dur:32}->(time%dur)/dur
