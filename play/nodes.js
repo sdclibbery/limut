@@ -39,6 +39,7 @@ define(function(require) {
       if (Array.isArray(v.connected)) { v.connected.push(node) }
     }
     node.disconnect = () => { node.disconnected }
+    if (!params._destructor) { throw `mockaudionode: No destructor` }
     return node
   })
 

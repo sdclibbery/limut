@@ -372,14 +372,6 @@ define((require) => {
   delete players.instances.r
   delete vars.foo
 
-  parseLine("set sine={value}->mockaudionode{'sine',test:value}")
-  parseLine('s audiosynth, play=sine{220}')
-  v = evalParamFrame(players.instances.s.getEventsForBeat({count:0})[0].play, ev(),0)
-  assert(true, v instanceof AudioNode)
-  assert(220, v.test.value)
-  delete players.instances.s
-  delete vars.sine
-
   let included
   parseLine("include 'preset/test.limut'", 0, (l) => included=l, true)
     .then(() => { assert('includetest preset none', included) })

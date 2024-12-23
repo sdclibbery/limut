@@ -217,6 +217,7 @@ define(function(require) {
   require('predefined-vars').apply(require('vars').all())
   let {evalParamFrame} = require('player/eval-param')
   let ev = (i,c,d) => {return{idx:i||0, count:c||0, dur:d||1, _time:c||0, endTime:(c+d)||1, countToTime:x=>x}}
+  let evd = (i,c,d) => { let e = ev(i,c,d); e._destructor = require('play/destructor')(); return e }
   let e, v
 
   assert(undefined, parseExpression())
@@ -1642,36 +1643,38 @@ define(function(require) {
   assert(3/4, evalParamFrame(p, e,3/4))
   assert(1, evalParamFrame(p, e,1))
 
-  v = evalParamFrame(parseExpression("mockaudionode>>mockaudionode"), ev(),0)
+  assert(true, evalParamFrame(parseExpression("mockaudionode"), evd(),0) instanceof AudioNode)
+
+  v = evalParamFrame(parseExpression("mockaudionode>>mockaudionode"), evd(),0)
   assert(true, v instanceof AudioNode)
   assert(true, v.l instanceof AudioNode)
   assert(true, v.r instanceof AudioNode)
 
-  v = evalParamFrame(parseExpression("(mockaudionode>>mockaudionode)>>mockaudionode"), ev(),0)
+  v = evalParamFrame(parseExpression("(mockaudionode>>mockaudionode)>>mockaudionode"), evd(),0)
   assert(true, v instanceof AudioNode)
   assert(true, v.l instanceof AudioNode)
   assert(true, v.l.l instanceof AudioNode)
   assert(true, v.l.r instanceof AudioNode)
   assert(true, v.r instanceof AudioNode)
 
-  v = evalParamFrame(parseExpression("mockaudionode>>(mockaudionode>>mockaudionode)"), ev(),0)
+  v = evalParamFrame(parseExpression("mockaudionode>>(mockaudionode>>mockaudionode)"), evd(),0)
   assert(true, v instanceof AudioNode)
   assert(true, v.l instanceof AudioNode)
   assert(true, v.r instanceof AudioNode)
   assert(true, v.r.l instanceof AudioNode)
   assert(true, v.r.r instanceof AudioNode)
 
-  v = evalParamFrame(parseExpression("{mockaudionode,mockaudionode}"), ev(),0)
+  v = evalParamFrame(parseExpression("{mockaudionode,mockaudionode}"), evd(),0)
   assert(true, v.value instanceof AudioNode)
   assert(true, v.value1 instanceof AudioNode)
 
-  v = evalParamFrame(parseExpression("mockaudionode>>{mockaudionode,mockaudionode}"), ev(),0)
+  v = evalParamFrame(parseExpression("mockaudionode>>{mockaudionode,mockaudionode}"), evd(),0)
   assert(true, v instanceof AudioNode)
   assert(true, v.l instanceof AudioNode)
   assert(true, v.r.value instanceof AudioNode) // array contents is not getting evalled for some reason
   assert(true, v.r.value1 instanceof AudioNode)
 
-  v = evalParamFrame(parseExpression("{mockaudionode,mockaudionode>>mockaudionode}>>mockaudionode"), ev(),0)
+  v = evalParamFrame(parseExpression("{mockaudionode,mockaudionode>>mockaudionode}>>mockaudionode"), evd(),0)
   assert(true, v instanceof AudioNode)
   assert(true, v.l.value instanceof AudioNode)
   assert(true, v.l.value1 instanceof AudioNode)
@@ -1780,7 +1783,7 @@ define(function(require) {
   assert({value:1,interval:'frame'}, evalParamFrameWithInterval(parseExpression('[[1]t@e]t@f'), ev(0),0))
   assert(1, evalParamFrameWithInterval(parseExpression('[[1]t@f]t@e'), ev(0),0))
   assert({"value":1,"_nextSegment":1,"_segmentPower":1}, evalParamFrameWithInterval(parseExpression('[1,0]es1'), ev(0,0,1),0))
-  assert(440, evalParamFrameWithInterval(parseExpression('mockaudionode'), ev(0),0).test.value)
+  assert(440, evalParamFrameWithInterval(parseExpression('mockaudionode'), evd(0),0).test.value)
   assert(1, evalParamFrameWithInterval(parseExpression('[1]r'), ev(0),0))
   assert({value:1,interval:'frame'}, evalParamFrameWithInterval(parseExpression('[1]r@f'), ev(0),0))
   assert({value:1,interval:'frame'}, evalParamFrameWithInterval(parseExpression('[1]r{seed:[1]t@f}'), ev(0),0))
@@ -1821,7 +1824,7 @@ define(function(require) {
 
   vars.foo = parseExpression('{value} -> mockaudionode{test:value}')
   p = parseExpression('foo{[4hz,5hz]t1@f}')
-  e = ev(0,0,4)
+  e = evd(0,0,4)
   v = evalParamFrame(p, e,0) // Creates mockaudionode and sets up per-frame callback, which evals the value arg, which is [4,5]t1@f
   assert(4, v.test.value)
   let system = require('play/system')
@@ -1869,14 +1872,14 @@ define(function(require) {
   assert(6, evalParamFrame(parseExpression('({x}->x*2){this.foo}'), e, 0))
   assert(6, evalParamFrame(parseExpression('({x}->x*this.foo){2}'), e, 0))
 
-  e = ev(); e.bar=3
+  e = evd(); e.bar=3
   vars.foo = parseExpression('{v} -> mockaudionode{test:v}')
   assert(3, evalParamFrame(parseExpression('foo{v:this.bar}'), e, 0).test.value)
   delete vars.foo
 
   vars.foo = parseExpression('{v} -> mockaudionode{test:v}')
   p = parseExpression('foo{v:this.bar}')
-  e = ev(0,0,4); e.bar=parseExpression('[4hz,5hz]t1@f')
+  e = evd(0,0,4); e.bar=parseExpression('[4hz,5hz]t1@f')
   v = evalParamFrame(p, e,0)
   assert(4, v.test.value)
   assert(1, system.queued.length)
@@ -1907,11 +1910,11 @@ define(function(require) {
   assert(3, evalParamFrame(parseExpression('foo{1}+foo{2}'), e, 0))
   delete vars.foo
 
-  v = evalParamFrame(parseExpression('mockaudionode{test:mockaudionode{test:7hz}}'), ev(), 0)
+  v = evalParamFrame(parseExpression('mockaudionode{test:mockaudionode{test:7hz}}'), evd(), 0)
   assert(1, v.test.connected.length)
   assert(7, v.test.connected[0].test.value)
 
-  v = evalParamFrame(parseExpression('mockaudionode{test:{mockaudionode{test:7},mockaudionode{test:9}}}'), ev(), 0)
+  v = evalParamFrame(parseExpression('mockaudionode{test:{mockaudionode{test:7},mockaudionode{test:9}}}'), evd(), 0)
   assert(2, v.test.connected.length)
   assert(7, v.test.connected[0].test.value)
   assert(9, v.test.connected[1].test.value)
@@ -1922,7 +1925,7 @@ define(function(require) {
   // So we expand chords once at play time, then again at eval time? How does it work for this vars?
 
   vars.foo = parseExpression('{v} -> mockaudionode{test:v*3}')
-  // assert([3,6], evalParamFrame(parseExpression('foo{v:(1,2)}'), ev(), 0).map(v=>v.test.value))
+  // assert([3,6], evalParamFrame(parseExpression('foo{v:(1,2)}'), evd(), 0).map(v=>v.test.value))
   delete vars.foo
 
   vars.foo = parseExpression('{v} -> v*5')
@@ -1936,7 +1939,7 @@ define(function(require) {
   // delete vars.foo
 
   // vars.foo = parseExpression('mockaudionode{test:(1,2)}')
-  // assert([3,6], evalParamFrame(parseExpression('foo'), ev(), 0).map(v=>v.test.value))
+  // assert([3,6], evalParamFrame(parseExpression('foo'), evd(), 0).map(v=>v.test.value))
   // delete vars.foo
   // !!Eval audio param is not expecting a chord; it should already have been hoisted and expanded but it hasnt been
   // Due to dontEvalArgs??

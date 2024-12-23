@@ -5,8 +5,7 @@
 WebAudio node graphs as first class values
  EXAMPLES Params; eg play=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    play>>=gain{[1:!200ms,0]e}
  •PLAN
- ?! s audiosynth, play=osc{}>>gain{this.foo}>>gain{0.01}, foo=osc{'sine',freq:2b}
- playerChain: what to call this? 'audio'? 'player'?
+ playerChain: what to call this? 'audio'? 'player', 'process'?
   Eval once at parse time
   Disconnect: how? when?
   Should provide support for monophonic synths with no play chain set
@@ -19,7 +18,10 @@ WebAudio node graphs as first class values
   set mix={chain,wet} -> (1-wet) ?? {gain{1-wet},chain>>gain{wet}} ?: chain
   s audiosynth, play=osc{freq:150}>>mix{biquad{freq:200},wet:[0,1]l1/4@f}>>gain{0.01}
   !! Really want to check that wet is @e zero, not just zero at the start. Expose a function to allow this
- Placeholders for feedback
+  !! const wet=1 should also have a custom chain with no gains
+ !NEXT step: build a replacement for fxMixChain with new node based setup
+  chorus, phaser, flanger, echo, room, reverb, bus
+ Placeholders for feedback / loops
    ? Syntax? Representation? Register themself somehow a bit like disconnect?
     play=id{'delay-in'}>>delay{1/4}>>{gain{0.8}>>'delay-in,???what???}
     id{} node is identity; can be connected by just passes the connection through. But it can also be named
@@ -48,6 +50,10 @@ WebAudio node graphs as first class values
   ?How will glide work?
  ? How to make operators do something useful with node chains; eg + * etc
   + becomes an array both feeding into the next node, * becomes a gain?
+ !! s audiosynth, play=osc{}>>gain{this.foo}>>gain{0.01}, foo=osc{'sine',freq:2b}
+  e = ev(0,0,4); e.foo = parseExpression('mockaudionode{test:17}')
+  assert(17, evalParamFrame(parseExpression('mockaudionode{test:this.foo}'), e, 0).test.connected[0].test.value)
+  !! So foo is evalling without any context where a destructor makes sense :-/
  TEST!!!!!!!
   >>  >>=  >>[gain,biquad] bus freq:osc{} var/this-lookups
  Docs...
@@ -314,11 +320,6 @@ shadertoy synth multiple channels
 =================================================================================================================================
 =================================================================================================================================
 ==== other ====
-Short circuiting conditional operators
- Release
-  `?` operator gone (use ?: )
-  Lost functionality like (1,2,3).(min,max)   (1,2,3).[min,max]  etc...
-  Also lost `x=(this.f){per:2}, f=[0:1]l4`; ie you can no longer set time modifiers on a lookup
 User defined functions
  !More parse expression unit tests
  Test: Or set riser={dur}->(time%dur)/dur Allow riser={dur:32}->(time%dur)/dur
