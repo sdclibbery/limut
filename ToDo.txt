@@ -16,8 +16,9 @@ WebAudio node graphs as first class values
   ?Also have output Param that can connect audio to other players, instead of bus param..??
  Mechanism to provide effect mix easily; mix function defined in limut
   eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
-  set mix={chain,wet} -> wet ?? {gain{wet},chain>>gain{1-wet}} ?: chain
-   !! Really want to check that wet is @e zero, not just zero at the start. Expose a function to allow this
+  set mix={chain,wet} -> (1-wet) ?? {gain{1-wet},chain>>gain{wet}} ?: chain
+  s audiosynth, play=osc{freq:150}>>mix{biquad{freq:200},wet:[0,1]l1/4@f}>>gain{0.01}
+  !! Really want to check that wet is @e zero, not just zero at the start. Expose a function to allow this
  Placeholders for feedback
    ? Syntax? Representation? Register themself somehow a bit like disconnect?
     play=id{'delay-in'}>>delay{1/4}>>{gain{0.8}>>'delay-in,???what???}
@@ -314,14 +315,14 @@ shadertoy synth multiple channels
 =================================================================================================================================
 ==== other ====
 Short circuiting conditional operators
- !! Check what happens if the undefined from operator ?? propagates out...
- Release with breaking changes (`?` operator gone (use ?: )), and also the changes from the deferred function rewrite below
+ Release
+  `?` operator gone (use ?: )
+  Lost functionality like (1,2,3).(min,max)   (1,2,3).[min,max]  etc...
+  Also lost `x=(this.f){per:2}, f=[0:1]l4`; ie you can no longer set time modifiers on a lookup
 User defined functions
  !More parse expression unit tests
  Test: Or set riser={dur}->(time%dur)/dur Allow riser={dur:32}->(time%dur)/dur
  TEST!!!!
- !!!!Do a release: lost functionality like (1,2,3).(min,max)   (1,2,3).[min,max]  etc...
-  Also lost `x=(this.f){per:2}, f=[0:1]l4`; ie you can no longer set time modifiers on a lookup
  !! This should work but gets confused between this.foo and foo:  set foo=this.foo  ;  r readout, add=foo, foo=7
  ?How to avoid evalling function call args repeatedly due to them also being treated as modifiers?
  Support for passing functions to params: eg shape={x}=>sgn{x}*max{abs{x}-1/2,0}
