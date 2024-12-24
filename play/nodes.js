@@ -88,5 +88,23 @@ define(function(require) {
     return node
   })
 
+  addNodeFunction('shape', (args,e,b) => {
+    let node = system.audio.createWaveShaper()
+    let count = evalMainParamEvent(args, 'samples', 257)
+    let oversample = evalMainParamEvent(args, 'oversample', '2x')
+    let func = args.value//evalParamToUserFunction(args.value, e,b)
+    let curve = new Float32Array(count)
+    let callArgs = {}
+    for (let i = 1; i <= count; i++) {
+      let x = (i/count)*2 - 1
+      callArgs.value = x
+      let y = func(e,b,undefined,callArgs) // This is memoising :-/
+      curve[i] = y
+    }
+    node.curve = curve
+    node.oversample = oversample
+    return node
+  })
+
 })
   

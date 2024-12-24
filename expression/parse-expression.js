@@ -69,12 +69,13 @@ define(function(require) {
           state.userFunctionArgs = oldArgs
           let userDefinedFunctionWrapper = (e,b,er,args) => {
             pushCallContext(args)
-            let r = evalParamFrame(body,e,b)
+            let r = er(body,e,b)
             popCallContext()
             return r
           }
           result = userDefinedFunctionWrapper
           result.isVarFunction = true
+          result.isUserFunction = true
           result.isNormalCallFunction = true
           result.passCallsiteId = true
           result.dontEvalArgs = true

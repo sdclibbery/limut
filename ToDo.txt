@@ -5,7 +5,14 @@
 WebAudio node graphs as first class values
  EXAMPLES Params; eg play=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    play>>=gain{[1:!200ms,0]e}
  •PLAN
- playerChain: what to call this? 'audio'? 'player', 'process'?
+ !!Do shaper{}
+ Start a library
+  wave synth
+  filters lpf, hpf, bpf, notch, apf, psf, lowshelf, highshelf, peaking
+  chop, ring, mono, pan, shaper, compressor
+  pitch control: pitch{}, addc, vib, glide
+  chorus, phaser, flanger, echo, room, reverb, bus
+ playerChain: what to call this? 'audio'? 'player'? 'process'?
   Eval once at parse time
   Disconnect: how? when?
   Should provide support for monophonic synths with no play chain set
@@ -20,6 +27,7 @@ WebAudio node graphs as first class values
   !! Really want to check that wet is @e zero, not just zero at the start. Expose a function to allow this
   !! const wet=1 should also have a custom chain with no gains
  !NEXT step: build a replacement for fxMixChain with new node based setup
+  !!But! its not so easy; current functionality includes mulitple cached effect chains as needed...
   chorus, phaser, flanger, echo, room, reverb, bus
  Placeholders for feedback / loops
    ? Syntax? Representation? Register themself somehow a bit like disconnect?
