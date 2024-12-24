@@ -8,7 +8,7 @@ define((require) => {
   let continuousPlayer = require('player/continuous')
   var followPlayer = require('player/follow')
   var expandChords = require('player/expand-chords')
-  let {evalParamFrame,evalParamToObjectOrPrimitive} = require('player/eval-param')
+  let {evalParamFrame} = require('player/eval-param')
   let {mainParam,mainParamUnits,subParam} = require('player/sub-param')
   let {applyOverrides,applyOverridesInPlace} = require('player/override-params')
 
@@ -37,7 +37,7 @@ define((require) => {
   }
 
   let applyDelay = (event, beat) => {
-    let dp = evalParamToObjectOrPrimitive(event.delay, event, event.count)
+    let dp = evalParamFrame(event.delay, event, event.count, {evalToObjectOrPrimitive:true})
     let d = evalParamFrame(mainParamUnits(dp, 'b', 0), event, event.count)
     event._time += d*beat.duration
     event.count += d

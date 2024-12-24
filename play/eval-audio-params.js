@@ -1,17 +1,17 @@
 'use strict';
 define(function (require) {
   let system = require('play/system')
-  let evalParam = require('player/eval-param')
+  let {evalParamEvent,evalParamFrame} = require('player/eval-param')
   let {mainParamUnits,subParamUnits} = require('player/sub-param')
   let {segmentedAudioParam} = require('play/segmented-audioparam')
   let metronome = require('metronome')
-  let {connect,isConnectable,isNode,isNodeArray} = require('play/node-connect');
+  let {connect,isConnectable} = require('play/node-connect');
   let {getCallContext,pushCallContext,popCallContext} = require('player/callstack')
 
   let evalPerEvent = (params, p, def) => {
     let v = params[p]
     if (typeof v !== 'number' && !v) { return def }
-    v =  evalParam.evalParamEvent(v, params) // Room for optimisation here: only eval objects the specific sub (or main) param thats needed for this call
+    v =  evalParamEvent(v, params) // Room for optimisation here: only eval objects the specific sub (or main) param thats needed for this call
     if (Array.isArray(v)) { v = v[0] } // Bus chords end up as arrays here so handle it by just picking the first value
     if (typeof v !== 'number' && !v) { return def }
     return v
@@ -31,7 +31,7 @@ define(function (require) {
 
   let evalPerFrame = (params, p, b, def) => {
     let v = params[p]
-    v =  evalParam.evalParamFrame(v, params, b) // Room for optimisation here: only eval objects the specific sub (or main) param thats needed for this call
+    v =  evalParamFrame(v, params, b) // Room for optimisation here: only eval objects the specific sub (or main) param thats needed for this call
     if (Array.isArray(v)) { v = v[0] } // Bus chords end up as arrays here so handle it by just picking the first value
     if (isConnectable(v)) { return v } // Dont eval any further if this is a node chain
     if (typeof v !== 'number' && !v) {
@@ -99,7 +99,7 @@ define(function (require) {
         // if (params) { console.log(`Segmented audio update! Main ${params.player} ${p}`) }
         return
       }
-      let evalled = evalParam.evalParamFrameWithInterval(params[p], params,params.count)
+      let evalled = evalParamFrame(params[p], params,params.count, {withInterval:true})
       let interval
       if (typeof evalled === 'object' && evalled.interval !== undefined && !isConnectable(evalled)) {
         interval = evalled.interval
@@ -135,7 +135,7 @@ define(function (require) {
   let fixedPerFrame = (params, p, subParamName, def, requiredUnits) => {
     let v = params[p]
     if (typeof v === 'function') {
-      v = evalParam.evalParamToObjectOrPrimitive(v, params, params.count)
+      v = evalParamFrame(v, params, params.count, {evalToObjectOrPrimitive:true})
       if (typeof v === 'object') { v = v[subParamName] }
       return v === undefined // If the whole param can vary, then only call this subparam fixed if its not set at all. Otherwise have to use per frame update
     }

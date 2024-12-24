@@ -135,27 +135,13 @@ define((require) => {
   }
 
   let noOptions = {}
-  let evalParamFrame = (value, event, beat) => {
-    // Fully evaluate down to a primitive number/string etc, allowing the value to change every frame if it wants to
-    return evalParamValueWithMemoisation(evalRecurseFull, value, event, beat, noOptions)
-  }
-
-  let evalParamFrameWithInterval = (value, event, beat) => {
-    let options = {withInterval:true}
-    let er = evalRecurseWithOptions(evalRecurseFull, options)
-    return evalParamValueWithMemoisation(er, value, event, beat, options)
-  }
-
-  let evalParamFrameIgnoreThisVars = (value, event, beat) => {
-    let options = {ignoreThisVars:true}
-    let er = evalRecurseWithOptions(evalRecurseFull, options)
-    return evalParamValueWithMemoisation(er, value, event, beat, options)
-  }
-
-  let evalParamToObjectOrPrimitive = (value, event, beat) => {
-    let options = {evalToObjectOrPrimitive:true}
-    let er = evalRecurseWithOptions(evalRecurseFull, options)
-    return evalParamValueWithMemoisation(er, value, event, beat, options)
+  let evalParamFrame = (value, event, beat, options) => {
+    if (options !== undefined) {
+      let er = evalRecurseWithOptions(evalRecurseFull, options)
+      return evalParamValueWithMemoisation(er, value, event, beat, options)
+    } else {
+      return evalParamValueWithMemoisation(evalRecurseFull, value, event, beat, noOptions)
+    }
   }
 
   let evalParamEvent = (value, event) => {
@@ -234,7 +220,7 @@ define((require) => {
   assert({foo:1,interval:'event'}, evalParamFrame(perEventThenFrameObject, ev(0), 1))
 
   delete perEventThenFrameObject.interval_memo
-  assert({foo:{value:1,interval:'frame'},interval:'event'}, evalParamFrameWithInterval(perEventThenFrameObject, ev(0), 1))
+  assert({foo:{value:1,interval:'frame'},interval:'event'}, evalParamFrame(perEventThenFrameObject, ev(0), 1, {withInterval:true}))
 
   let constWithMods = () => 1
   constWithMods.modifiers = {}
@@ -328,9 +314,9 @@ define((require) => {
   return {
     evalParamEvent:evalParamEvent,
     evalParamFrame:evalParamFrame,
-    evalParamFrameWithInterval:evalParamFrameWithInterval,
-    evalParamFrameIgnoreThisVars:evalParamFrameIgnoreThisVars,
-    evalParamToObjectOrPrimitive:evalParamToObjectOrPrimitive,
+    // evalParamFrameWithInterval:evalParamFrameWithInterval,
+    // evalParamFrameIgnoreThisVars:evalParamFrameIgnoreThisVars,
+    // evalParamToObjectOrPrimitive:evalParamToObjectOrPrimitive,
     evalFunctionWithModifiers:evalFunctionWithModifiers,
   }
 

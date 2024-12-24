@@ -9,7 +9,7 @@ define(function(require) {
   let {parseVar,varLookup} = require('expression/parse-var')
   let {hoistInterval,parseInterval} = require('expression/intervals')
   let addModifiers = require('expression/time-modifiers').addModifiers
-  let {evalParamFrame,evalParamFrameWithInterval} = require('player/eval-param')
+  let {evalParamFrame} = require('player/eval-param')
   let parseColour = require('expression/parse-colour')
   let parseString = require('expression/parse-string')
   let parsePiecewise = require('expression/parse-piecewise')
@@ -823,9 +823,9 @@ define(function(require) {
 
   p = parseExpression('[(0,2),(1,3)]e')
   e = { idx:0, count:0, countToTime:b=>b, dur:1 }
-  assert([0,2], evalParamFrame(p,e,0,evalParamFrame))
-  assert([0.5,2.5], evalParamFrame(p,e,1/2,evalParamFrame))
-  assert([1,3], evalParamFrame(p,e,2,evalParamFrame))
+  assert([0,2], evalParamFrame(p,e,0))
+  assert([0.5,2.5], evalParamFrame(p,e,1/2))
+  assert([1,3], evalParamFrame(p,e,2))
 
   p = parseExpression("[0:1]e")
   let e1 = { idx:0, count:7, countToTime:b=>b, dur:63 }
@@ -1756,6 +1756,7 @@ define(function(require) {
   assert(33, evalParamFrame(parseExpression("1 ?? 33 ?: 1 ?? 44 ?: foo"),ev(0,0,1),0)); assert(undefined, vars.foo.evalled)
   delete vars.foo
 
+  let evalParamFrameWithInterval = (v,e,b) => evalParamFrame(v,e,b, {withInterval:true})
   assert(1, evalParamFrameWithInterval(parseExpression('1'), ev(0),0))
   assert(1, evalParamFrameWithInterval(parseExpression('1@e'), ev(0),0))
   assert(1, evalParamFrameWithInterval(parseExpression('1@f'), ev(0),0))

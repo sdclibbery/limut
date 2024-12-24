@@ -1,6 +1,6 @@
 'use strict'
 define((require) => {
-  let {evalParamFrame,evalParamFrameIgnoreThisVars} = require('player/eval-param')
+  let {evalParamFrame} = require('player/eval-param')
 
   let chordIndex = (v, i) => {
     if (Array.isArray(v)) {
@@ -15,7 +15,7 @@ define((require) => {
       if (k === 'beat' || k === 'play') { continue } // beat should never have chords, play is for node graphs and should not be evalled any more than needed as it creates AudioNodes
       let v = event[k]
       if (v && v.__alreadyExpanded) { continue }
-      let evaled = evalParamFrameIgnoreThisVars(v, event, event.count)
+      let evaled = evalParamFrame(v, event, event.count, {ignoreThisVars:true})
       if (Array.isArray(evaled)) { // If param k is going to eval to a chord at the start of the event, expand it out
         let es = []
         for (let i=0; i<evaled.length; i++) {
