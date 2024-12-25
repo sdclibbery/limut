@@ -1949,6 +1949,19 @@ define(function(require) {
   // e = ev(); e.foo=parseExpression('{x}->x*2')
   // assert(6, evalParamFrame(parseExpression('(this.foo){3}'), e, 0))
 
+  // Error on line 50: TypeError: WeakMap key undefined must be an object
+  // set bar={wow}->wow+2
+  // r readout, add=bar{3}
+
+  // Gets global foo not arg foo
+  // set foo=5
+  // set bar={foo}->foo+2
+  // r readout, add=bar{3}
+
+  // Fails when global foo is set
+  // set foo=5
+  // r readout, add={foo:2}.foo
+  
   // {value}->value*2{3} : get nasty error not helpful error  
   // time modifiers
   // more nested combinations; [{([]t@f)}]t etc etc

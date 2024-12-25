@@ -5,13 +5,16 @@
 WebAudio node graphs as first class values
  EXAMPLES Params; eg play=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    play>>=gain{[1:!200ms,0]e}
  •PLAN
- !!Do shaper{}
  Start a library
+  !! need < > <= >= == != operators and use them
+  !! resonant{} should default to nonode{} if freq is 0 or missing
+  !! if envelope takes longer than dur, the synth will simply cutoff
   wave synth
   filters lpf, hpf, bpf, notch, apf, psf, lowshelf, highshelf, peaking
   chop, ring, mono, pan, shaper, compressor
   pitch control: pitch{}, addc, vib, glide
   chorus, phaser, flanger, echo, room, reverb, bus
+  envelope types
  playerChain: what to call this? 'audio'? 'player'? 'process'?
   Eval once at parse time
   Disconnect: how? when?

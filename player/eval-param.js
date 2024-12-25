@@ -101,17 +101,20 @@ define((require) => {
 
   let evalParamValueWithMemoisation = (evalRecurse, value, event, beat, options) => {
     if (value === undefined) { return value }
-    let memoKey = JSON.stringify(options) + beat
-    let args = getCallContext()
-    if (args) { memoKey += args.__functionContext }
-    if (typeof value === 'function' && value.__memo_event && value.__memo_event.has(event) && value.__memo_event.get(event).hasOwnProperty(memoKey)) {
-      return value.__memo_event.get(event)[memoKey] // Return memoised result
+    let memoKey
+    if (!options.doNotMemoise) {
+      memoKey = JSON.stringify(options) + beat
+      let args = getCallContext()
+      if (args) { memoKey += args.__functionContext }
+      if (typeof value === 'function' && value.__memo_event && value.__memo_event.has(event) && value.__memo_event.get(event).hasOwnProperty(memoKey)) {
+        return value.__memo_event.get(event)[memoKey] // Return memoised result
+      }
     }
     let result = evalParamValue(evalRecurse, value, event, beat, options)
     if (typeof result === 'object' && result._finalResult) { // If result is final and hasn't been unwrapped, do it now
       result = result.value
     }
-    if (typeof value === 'function') { // Set memoised result
+    if (typeof value === 'function' && !options.doNotMemoise) { // Set memoised result
       if (value.__memo_event === undefined) { value.__memo_event = new WeakMap() }
       if (!value.__memo_event.has(event)) { value.__memo_event.set(event, {}) }
       value.__memo_event.get(event)[memoKey] = result
@@ -145,7 +148,6 @@ define((require) => {
   }
 
   let evalParamEvent = (value, event) => {
-    // Fully evaluate down to a primitive number/string etc, fixing the value for the life of the event it is part of
     return evalParamValueWithMemoisation(evalRecurseFull, value, event, event.count, noOptions)
   }
 
@@ -314,9 +316,6 @@ define((require) => {
   return {
     evalParamEvent:evalParamEvent,
     evalParamFrame:evalParamFrame,
-    // evalParamFrameWithInterval:evalParamFrameWithInterval,
-    // evalParamFrameIgnoreThisVars:evalParamFrameIgnoreThisVars,
-    // evalParamToObjectOrPrimitive:evalParamToObjectOrPrimitive,
     evalFunctionWithModifiers:evalFunctionWithModifiers,
   }
 
