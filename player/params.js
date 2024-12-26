@@ -15,11 +15,11 @@ define(function(require) {
         let prevChar = state.str.charAt(state.idx - 2)
         let prevPrevChar = state.str.charAt(state.idx - 3)
         let isComment = prevChar == '/' && prevPrevChar == '/'
-        if (!isComment && operators.hasOwnProperty(prevChar)) { // Single char operators
-          return {name:name.slice(0,-1), operator:operators[prevChar]}
-        }
         if (!isComment && operators.hasOwnProperty(prevChar+prevPrevChar)) { // Two char operators
           return {name:name.slice(0,-2), operator:operators[prevChar+prevPrevChar]}
+        }
+        if (!isComment && operators.hasOwnProperty(prevChar)) { // Single char operators
+          return {name:name.slice(0,-1), operator:operators[prevChar]}
         }
         return {name:name}
       } else if (char == ',') {
@@ -39,7 +39,6 @@ define(function(require) {
     '[': ']',
     '(': ')',
     '{': '}',
-    '<': '>',
   }
 
   let parseValue = (state) => {
@@ -166,7 +165,12 @@ define(function(require) {
   assert({add:3}, applyOverrides({}, parseParams('add=1, add+=2')))
   assert({add:2}, applyOverrides({}, parseParams('add+=1, add=2')))
 
-  assert(true, evalParamFrame(applyOverrides({}, parseParams('chain>>=gain')).chain, ev(),0) instanceof AudioNode)
+  let e = ev(); e._destructor = require('play/destructor')()
+  assert(true, evalParamFrame(applyOverrides({}, parseParams('chain>>=mockaudionode')).chain, e,0) instanceof AudioNode)
+
+  assert({foo:0,bar:1}, applyOverrides({}, parseParams('foo=1==2, bar=3==3')))
+  assert({foo:0,bar:1}, applyOverrides({}, parseParams('foo=1>=2, bar=3>=3')))
+  assert({foo:0,bar:2}, applyOverrides({}, parseParams('foo=7<=5, bar=2')))
 
   console.log("Params tests complete")
   }

@@ -11,6 +11,13 @@ define(function(require) {
     return !Number.isFinite(result) ? 0 : result // Don't allow infinities
   }
 
+  let comparison = (op) => {
+    let comparisonOp = (l,r,e,b,er) => {
+      return op(l,r) ? 1 : 0
+    }
+    return comparisonOp
+  }
+
   let ifThenOp = (l,r,event,b,evalRecurse) => {
     if (l === undefined) { return undefined }
     if (Array.isArray(l)) { return l.length > 0 ? r : undefined }
@@ -49,6 +56,12 @@ define(function(require) {
     '|': concatOp,
     '>>': connectOp,
     '.': lookupOp,
+    '==': comparison((l,r)=>l==r),
+    '!=': comparison((l,r)=>l!=r),
+    '<=': comparison((l,r)=>l<=r),
+    '>=': comparison((l,r)=>l>=r),
+    '<': comparison((l,r)=>l<r),
+    '>': comparison((l,r)=>l>r),
     '??': ifThenOp,
     '?:': orElseOp,
   }
@@ -67,8 +80,9 @@ define(function(require) {
     '^':4,
     '%':5, '/':5, '*':5,
     '-':6, '+':6,
-    '??':7,
-    '?:':8,
+    '==':7, '!=':7, '<=':7, '>=':7, '<':7, '>':7,
+    '??':8,
+    '?:':9,
   }
 
   // TESTS //
@@ -135,6 +149,11 @@ define(function(require) {
     assert(1, lookupOp({v:1}, 'v', {},0,er))
     assert({b:1}, lookupOp({a:{b:1}}, 'a', {},0,er))
     assert(1, lookupOp(lookupOp({a:{b:1}}, 'a', {},0,er), 'b', {},0,er))
+
+    assert(0, comparison((l,r)=>l==r)(1, 2))
+    assert(1, comparison((l,r)=>l==r)(2, 2))
+    assert(1, comparison((l,r)=>l!=r)(1, 2))
+    assert(0, comparison((l,r)=>l!=r)(2, 2))
 
     console.log('operators tests complete')
   }

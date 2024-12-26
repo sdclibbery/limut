@@ -88,19 +88,19 @@ define(function(require) {
       }
       // operator
       if (result !== undefined) {
-        if (operators.hasOwnProperty(char)) { // Single char operators
-          state.idx += 1
-          operatorList.push(result)
-          result = undefined
-          operatorList.push(char)
-          continue
-        }
         let nextChar = state.str.charAt(state.idx+1)
         if (operators.hasOwnProperty(char+nextChar)) { // Two char operators
           state.idx += 2
           operatorList.push(result)
           result = undefined
           operatorList.push(char+nextChar)
+          continue
+        }
+        if (operators.hasOwnProperty(char)) { // Single char operators
+          state.idx += 1
+          operatorList.push(result)
+          result = undefined
+          operatorList.push(char)
           continue
         }
       }
@@ -1754,6 +1754,38 @@ define(function(require) {
   assert(44, evalParamFrame(parseExpression("0 ?? foo ?: 1 ?? 44 ?: foo"),ev(0,0,1),0)); assert(undefined, vars.foo.evalled)
   assert(44, evalParamFrame(parseExpression("1 ?? 44 ?: 0 ?? foo ?: foo"),ev(0,0,1),0)); assert(undefined, vars.foo.evalled)
   assert(33, evalParamFrame(parseExpression("1 ?? 33 ?: 1 ?? 44 ?: foo"),ev(0,0,1),0)); assert(undefined, vars.foo.evalled)
+  delete vars.foo
+
+  assert(1, evalParamFrame(parseExpression("1==1"),ev(),0))
+  assert(0, evalParamFrame(parseExpression("2==1"),ev(),0))
+  assert(0, evalParamFrame(parseExpression("1!=1"),ev(),0))
+  assert(1, evalParamFrame(parseExpression("2!=1"),ev(),0))
+  assert(1, evalParamFrame(parseExpression("1<2"),ev(),0))
+  assert(0, evalParamFrame(parseExpression("1<1"),ev(),0))
+  assert(1, evalParamFrame(parseExpression("2>1"),ev(),0))
+  assert(0, evalParamFrame(parseExpression("1>1"),ev(),0))
+  assert(1, evalParamFrame(parseExpression("1<=2"),ev(),0))
+  assert(1, evalParamFrame(parseExpression("1<=1"),ev(),0))
+  assert(0, evalParamFrame(parseExpression("1>=2"),ev(),0))
+  assert(0, evalParamFrame(parseExpression("1>=2"),ev(),0))
+  assert(1, evalParamFrame(parseExpression("1>=1"),ev(),0))
+  assert(1, evalParamFrame(parseExpression("1<=2"),ev(),0))
+  assert(0, evalParamFrame(parseExpression("1 < [0,2]t1@f"),ev(0,0,4),0))
+  assert(1, evalParamFrame(parseExpression("1 < [0,2]t1@f"),ev(0,0,4),1))
+  assert({foo:1,bar:0}, evalParamFrame(parseExpression("{foo:1,bar:3}<2"),ev(),0))
+  assert([1,0,0], evalParamFrame(parseExpression("(1,2,3)<2"),ev(),0))
+  assert(1, evalParamFrame(parseExpression("'a'=='a'"),ev(),0))
+  assert(0, evalParamFrame(parseExpression("'a'=='b'"),ev(),0))
+  assert(1, evalParamFrame(parseExpression("a==a"),ev(),0))
+  assert(0, evalParamFrame(parseExpression("a==b"),ev(),0))
+  assert(2, evalParamFrame(parseExpression('0<1 ?? 2 ?: 3'), ev(0),0))
+  assert(3, evalParamFrame(parseExpression('0>1 ?? 2 ?: 3'), ev(0),0))
+  e = ev()
+  e.foo=2; assert(2, evalParamFrame(parseExpression("this.foo<5 ?? this.foo ?: 17"),e,0))
+  e.foo=6; assert(17, evalParamFrame(parseExpression("this.foo<5 ?? this.foo ?: 17"),e,0))
+  vars.foo = parseExpression('{bar} -> bar<5 ?? bar ?: 17')
+  assert(1, evalParamFrame(parseExpression("foo{1}"),ev(),0))
+  assert(17, evalParamFrame(parseExpression("foo{6}"),ev(),0))
   delete vars.foo
 
   let evalParamFrameWithInterval = (v,e,b) => evalParamFrame(v,e,b, {withInterval:true})

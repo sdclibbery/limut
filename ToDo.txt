@@ -5,16 +5,20 @@
 WebAudio node graphs as first class values
  EXAMPLES Params; eg play=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    play>>=gain{[1:!200ms,0]e}
  •PLAN
- Start a library
-  !! need < > <= >= == != operators and use them
-  !! resonant{} should default to nonode{} if freq is 0 or missing
-  !! if envelope takes longer than dur, the synth will simply cutoff
-  wave synth
-  filters lpf, hpf, bpf, notch, apf, psf, lowshelf, highshelf, peaking
-  chop, ring, mono, pan, shaper, compressor
-  pitch control: pitch{}, addc, vib, glide
-  chorus, phaser, flanger, echo, room, reverb, bus
-  envelope types
+ NEW PLAN!!!
+  Leave the fixed function stuff in place
+  Add new params that can be chains to add in at various places
+  Create a helper lib with useful functions
+   Expose the mix function, don't write it in limut?
+   filters lpf, hpf, bpf, notch, apf, psf, lowshelf, highshelf, peaking
+   chop, ring, mono, pan, shaper, compressor
+    pitch control: pitch{}, addc, vib, glide
+   chorus, phaser, flanger, echo, room, reverb, bus
+   envelope types
+    Maybe refactor existing envelope stuff actually
+  Add the new per player chain
+  Audiosynth should work the same as normal synths, but the osc voicing should be a new chain on a new param
+   Then can actually replace all synths with this
  playerChain: what to call this? 'audio'? 'player'? 'process'?
   Eval once at parse time
   Disconnect: how? when?

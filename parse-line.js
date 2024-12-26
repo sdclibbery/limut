@@ -58,7 +58,7 @@ define((require) => {
   let splitOnFirst = (str, ch) => {
     if (!str) { return [] }
     let parts = splitOnAll(str, ch)
-    return [parts[0], parts.slice(1).join()]
+    return [parts[0], parts.slice(1).join(ch)]
   }
 
   let parseLine = async (line, linenum, parseCode, suppressLogs) => {
@@ -74,7 +74,7 @@ define((require) => {
     if (startsWithSet(line)) {
       line = line.slice(4).trim()
       // Set global vars and settings
-      let [k,v] = line.split('=').map(p => p.trim()).filter(p => p != '')
+      let [k,v] = splitOnFirst(line, '=')
       k = k.toLowerCase()
       if (k.match(/^[a-z][a-z0-9_\.]*$/) && !!v) {
         if (mainVars.exists(k)) {
@@ -370,6 +370,18 @@ define((require) => {
   parseLine('r readout, add=foo{3}')
   assert(6, evalParamFrame(players.instances.r.getEventsForBeat({count:0})[0].add, ev(),0))
   delete players.instances.r
+  delete vars.foo
+
+  parseLine('set foo=1<2'); assert(1, evalParamFrame(vars.foo, ev(),0))
+  parseLine('set foo=3<2'); assert(0, evalParamFrame(vars.foo, ev(),0))
+  parseLine('set foo=1<=2'); assert(1, evalParamFrame(vars.foo, ev(),0))
+  parseLine('set foo=3<=2'); assert(0, evalParamFrame(vars.foo, ev(),0))
+  parseLine('set foo=1==2'); assert(0, evalParamFrame(vars.foo, ev(),0))
+  parseLine('set foo=2==2'); assert(1, evalParamFrame(vars.foo, ev(),0))
+  parseLine('set foo=3==2'); assert(0, evalParamFrame(vars.foo, ev(),0))
+  parseLine('set foo=1!=2'); assert(1, evalParamFrame(vars.foo, ev(),0))
+  parseLine('set foo=2!=2'); assert(0, evalParamFrame(vars.foo, ev(),0))
+  parseLine('set foo=3!=2'); assert(1, evalParamFrame(vars.foo, ev(),0))
   delete vars.foo
 
   let included
