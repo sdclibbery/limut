@@ -12,6 +12,7 @@ define(function (require) {
   let consoleOut = require('console')
   let {fixedEcho} = require('play/effects/echo')
   let destructor = require('play/destructor')
+  let {connectFromParam} = require('play/node-connect')
 
   let quantise = (v, step) =>{
     return Math.round(v*step)/step
@@ -79,6 +80,7 @@ define(function (require) {
   }
 
   let fxMixChain = (params, node) => {
+    node = connectFromParam(params, 'postenv', node)
     let chainParams = getParams(params)
     let key = JSON.stringify(chainParams)
     if (!chains[key]) {

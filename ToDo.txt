@@ -6,42 +6,34 @@ WebAudio node graphs as first class values
  EXAMPLES Params; eg play=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    play>>=gain{[1:!200ms,0]e}
  •PLAN
  NEW PLAN!!!: Leave the fixed function stuff in place
-  Add new params that can be chains to add in at various places
-  Create a helper lib with useful functions
-   Expose the mix function, don't write it in limut?
+ playerChain: what to call this? 'process'?
+   Eval once at parse time
+   Disconnect: how? when?
+   Should provide support for monophonic synths with no play chain set
+    But also can receive input from play chains
+ Audiosynth should work the same as normal synths (effects, waveeffects, fxmixchain etc), but the osc voicing should be a new chain on the play param
+   Then can actually replace all synths with this..?
+ Create a helper lib with useful functions (think about namespacing)
+   mix function: ?Expose from js, don't write in limut?
+    Mechanism to provide effect mix easily; mix function defined in limut
+      eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
+      set mix={chain,wet} -> (1-wet) ?? {gain{1-wet},chain>>gain{wet}} ?: chain
+      s audiosynth, play=osc{freq:150}>>mix{biquad{freq:200},wet:[0,1]l1/4@f}>>gain{0.01}
+      !! Really want to check that wet is @e zero, not just zero at the start. Expose a function to allow this
+      !! const wet=1 should also have a custom chain with no gains
    filters lpf, hpf, bpf, notch, apf, psf, lowshelf, highshelf, peaking
-   chop, ring, mono, pan, shaper, compressor
-    pitch control: pitch{}, addc, vib, glide
-   chorus, phaser, flanger, echo, room, reverb, bus
-   envelope types
-    Maybe refactor existing envelope stuff actually
-  Add the new per player chain
-  Audiosynth should work the same as normal synths, but the osc voicing should be a new chain on a new param
-   Then can actually replace all synths with this
- playerChain: what to call this? 'audio'? 'player'? 'process'?
-  Eval once at parse time
-  Disconnect: how? when?
-  Should provide support for monophonic synths with no play chain set
-   But also can receive input from play chains
-  Support for chains on buses: should be monophonic
+   chop, ring, mono, pan, shapers, compressor
+   chorus, phaser, flanger, echo, room, reverb
+   maybe refactor existing envelope stuff actually??
+ Support for chains on buses: should be monophonic
    ? Are buses based on audioSynth too??? IE can a player connect to another player as output?
-  ?Also have output Param that can connect audio to other players, instead of bus param..??
- Mechanism to provide effect mix easily; mix function defined in limut
-  eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
-  set mix={chain,wet} -> (1-wet) ?? {gain{1-wet},chain>>gain{wet}} ?: chain
-  s audiosynth, play=osc{freq:150}>>mix{biquad{freq:200},wet:[0,1]l1/4@f}>>gain{0.01}
-  !! Really want to check that wet is @e zero, not just zero at the start. Expose a function to allow this
-  !! const wet=1 should also have a custom chain with no gains
- !NEXT step: build a replacement for fxMixChain with new node based setup
-  !!But! its not so easy; current functionality includes mulitple cached effect chains as needed...
-  chorus, phaser, flanger, echo, room, reverb, bus
+ ?Also have output Param that can connect audio to other players, instead of bus param..??
  Placeholders for feedback / loops
    ? Syntax? Representation? Register themself somehow a bit like disconnect?
     play=id{'delay-in'}>>delay{1/4}>>{gain{0.8}>>'delay-in,???what???}
     id{} node is identity; can be connected by just passes the connection through. But it can also be named
    Delay with feedback will need increased disconnect time...
  More audionode functions
-  WaveShaperNode - params: user function shape, sample count, oversampling
   ConvolverNode
   StereoPannerNode
   DynamicsCompressorNode
@@ -70,7 +62,11 @@ WebAudio node graphs as first class values
   !! So foo is evalling without any context where a destructor makes sense :-/
  TEST!!!!!!!
   >>  >>=  >>[gain,biquad] bus freq:osc{} var/this-lookups
- Docs...
+ DOCS
+   nodes functions
+   lib functions
+   connect op >>
+   New params to add in chains: prefx, prewave, preenv, postenv, pitch
  •QUESTIONS
  ? When do AuidioNodes get created? play can be eval time? playerChain needs to be special?
  ? How to define node loops? Eg echo with feedback? Or parallel nodes, eg multiple bandpass and sum?
@@ -334,18 +330,9 @@ shadertoy synth multiple channels
 =================================================================================================================================
 =================================================================================================================================
 ==== other ====
+!Commented parse expression unit tests
 User defined functions
- !More parse expression unit tests
- Test: Or set riser={dur}->(time%dur)/dur Allow riser={dur:32}->(time%dur)/dur
- TEST!!!!
- !! This should work but gets confused between this.foo and foo:  set foo=this.foo  ;  r readout, add=foo, foo=7
  ?How to avoid evalling function call args repeatedly due to them also being treated as modifiers?
- Support for passing functions to params: eg shape={x}=>sgn{x}*max{abs{x}-1/2,0}
-  !But the default behaviour for our existing functions is to be evalled even without {}, so how to pass the functions as values?
-   ?Can we default to non eval without {}, but do the eval if necessary in context? Eg operators can't act on function, so eval? etc
-   Or just have evalParamToUserFunction? But then can't pass functions as first class values to other user def functions
- ?If functions are values, how do they interact with other values? What if you add functions etc? Eg ({}=>0) + ({}=>1) ?
-  If functions are not being evalled, then should just error
  !Should be able to access the default e and b params. Can get rid of time global??? And `this.` ?????????
 Show matching brackets in editor
 !? []es shouldn't be the syntax for segmenting. It should be []e@s ??
@@ -779,14 +766,12 @@ Change requirements:
 =================================================================================================================================
 
 Things that make limut trickier than just implementing a bog standard programming language
-* Time aware
+* Time aware, Piecewise syntax, Time modification
 * Intervals; per frame update
-* Time modification
 * Hoisting chords from params
-* Piecewise syntax
-* Event generation
 * Node graph syntax
 * Units
+* Event generation
 
 Do we really need better, smarter memoisation? Memoise even for per frame? Eg memoise key is {event,b,options}??
  How does that work for function args? Need to also memoise against function args?????

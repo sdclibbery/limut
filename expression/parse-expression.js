@@ -1956,7 +1956,7 @@ define(function(require) {
   vars.foo = parseExpression('{v} -> v*3')
   // assert([3,6], evalParamFrame(parseExpression('foo{(1,2)}'), ev(), 0))
   delete vars.foo
-  // So we expand chords once at play time, then again at eval time? How does it work for this vars?
+  // Breaks because we expand chords once at play time, then again at eval time? How does it work for this vars?
 
   vars.foo = parseExpression('{v} -> mockaudionode{test:v*3}')
   // assert([3,6], evalParamFrame(parseExpression('foo{v:(1,2)}'), evd(), 0).map(v=>v.test.value))
@@ -1990,13 +1990,11 @@ define(function(require) {
   // set bar={foo}->foo+2
   // r readout, add=bar{3}
 
-  // Fails when global foo is set
+  // Gets global foo not field foo
   // set foo=5
   // r readout, add={foo:2}.foo
   
   // {value}->value*2{3} : get nasty error not helpful error  
-  // time modifiers
-  // more nested combinations; [{([]t@f)}]t etc etc
 
   console.log('Parse expression tests complete')
   }

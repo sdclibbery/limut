@@ -6,6 +6,7 @@ define(function (require) {
   let {evalMainParamFrame,evalSubParamEvent} = require('play/eval-audio-params')
   let filters = require('play/effects/filters')
   let {mix} = require('play/effects/mix')
+  let {connectFromParam} = require('play/node-connect')
 
   let chop = (params, node) => {
     if (!mainParam(params.chop, 0)) { return node }
@@ -59,6 +60,7 @@ define(function (require) {
   }
 
   return (params, node) => {
+    node = connectFromParam(params, 'prefx', node)
     node = chop(params, node)
     node = ring(params, node)
     node = filters(params, node)

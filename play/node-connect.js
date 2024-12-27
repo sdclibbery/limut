@@ -1,6 +1,7 @@
 'use strict';
 define(function (require) {
   let system = require('play/system')
+  let {evalParamEvent} = require('player/eval-param')
 
   let isNode = v => v instanceof AudioNode
   let isParam = v => v instanceof AudioParam
@@ -57,6 +58,12 @@ define(function (require) {
       })
     })
     return r
+  }
+
+  let connectFromParam = (params, p, node) => {
+    if (params[p] === undefined) { return node }
+    let chain = evalParamEvent(params[p], params)
+    return connect(node, chain, params._destructor)
   }
 
   // TESTS //
@@ -121,5 +128,6 @@ define(function (require) {
       isNodeArray: isNodeArray,
       isConnectable: isConnectable,
       connect: connect,
+      connectFromParam: connectFromParam,
   }
 })
