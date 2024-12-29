@@ -6,7 +6,13 @@ WebAudio node graphs as first class values
  EXAMPLES Params; eg play=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    play>>=gain{[1:!200ms,0]e}
  •PLAN
  NEW PLAN!!!: Leave the fixed function stuff in place
+ nonode{} that just connects through but is not a webaudio node at all
+ Placeholders for feedback / loops
+   ? Syntax? Representation? Register themself somehow a bit like disconnect?
+    play=delay{1/4,id:'delay'}>>{gain{0.8}>>'delay',nonode}
+   Delay with feedback will need increased disconnect time...
  playerChain: what to call this? 'process'?
+   How to connect to this from frxMixChain? What bus does it connect to? Can it only be used INSTEAD of an fxMixChain?
    Eval once at parse time
    Disconnect: how? when?
    Should provide support for monophonic synths with no play chain set
@@ -28,11 +34,6 @@ WebAudio node graphs as first class values
  Support for chains on buses: should be monophonic
    ? Are buses based on audioSynth too??? IE can a player connect to another player as output?
  ?Also have output Param that can connect audio to other players, instead of bus param..??
- Placeholders for feedback / loops
-   ? Syntax? Representation? Register themself somehow a bit like disconnect?
-    play=id{'delay-in'}>>delay{1/4}>>{gain{0.8}>>'delay-in,???what???}
-    id{} node is identity; can be connected by just passes the connection through. But it can also be named
-   Delay with feedback will need increased disconnect time...
  More audionode functions
   ConvolverNode
   StereoPannerNode
@@ -334,6 +335,9 @@ shadertoy synth multiple channels
 User defined functions
  ?How to avoid evalling function call args repeatedly due to them also being treated as modifiers?
  !Should be able to access the default e and b params. Can get rid of time global??? And `this.` ?????????
+Give each event a unique ID
+ Use it for ememoisation instead if weak map
+ And use it for seeding rand for per-event; then follow player can get the same randoms by using the same IDs?
 Show matching brackets in editor
 !? []es shouldn't be the syntax for segmenting. It should be []e@s ??
 !! floor doesn't work with delay:  r readout 1234, delay=floor{[0:1]l3@f,to:1/4}

@@ -1994,7 +1994,10 @@ define(function(require) {
   // set foo=5
   // r readout, add={foo:2}.foo
   
-  // {value}->value*2{3} : get nasty error not helpful error  
+  // {value}->value*2{3} : get nasty error not helpful error
+
+  // set countit = {x,acc:0} -> x<=0 ?? acc ?: countit{x:x-1,acc:acc+x}
+  // r readout, add=countit{x:2}
 
   console.log('Parse expression tests complete')
   }
