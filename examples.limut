@@ -4147,6 +4147,8 @@ v swirl 4, recol='neon', loc=tile_tr, rate=1/14, contrast, zoom=3
 // set sine={}->osc{'sine',freq:this.myfreq}
 // s audiosynth, play=sine{}>>gain{0.004}, myfreq=[800:100]e
 
+// s saw, oct=2, preenv=idnode>>gain{4}>>{idnode,idnode}>>{gain{1/4},gain{0}}>>idnode
+
 // Shaper tests
 // s audiosynth, play=osc{freq:523/4}>>gain{0.01}
 // s audiosynth, play=osc{freq:523/4}>>shaper{{x}->x}>>gain{0.01}

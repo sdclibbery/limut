@@ -35,12 +35,32 @@ define(function(require) {
     node.test.setTargetAtTime = (v)=>node.test.value=v
     node.test.connected = []
     evalMainParamFrame(node.test, params, 'test', 440, 'hz')
+    node.connected = []
     node.connect = (v) => {
-      node.connected = v
+      node.connected.push(v)
       if (Array.isArray(v.connected)) { v.connected.push(node) }
     }
     node.disconnect = () => { node.disconnected }
     if (!params._destructor) { throw `mockaudionode: No destructor` }
+    return node
+  })
+  addNodeFunction('idnode', (args,e,b) => { // identity node; passes webaudio connections through without creating an actual node
+    if (audioNodeProto === undefined) { audioNodeProto = Object.getPrototypeOf(Object.getPrototypeOf(system.audio.createGain())) }
+    let node = Object.create(audioNodeProto)
+    node.ls = []
+    node.rs = []
+    node.passthrough = (l) => {
+      node.ls.push(l)
+      node.rs.forEach(r => l.connect(r))
+    }
+    node.connect = (r) => {
+      node.rs.push(r)
+      node.ls.forEach(l => l.connect(r))
+    }
+    node.disconnect = () => {
+      delete node.ls
+      delete node.rs
+    }
     return node
   })
 

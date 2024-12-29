@@ -1953,6 +1953,16 @@ define(function(require) {
   assert(7, v.test.connected[0].test.value)
   assert(9, v.test.connected[1].test.value)
 
+  v = evalParamFrame(parseExpression('idnode'), evd(), 0)
+  assert(0, v.ls.length)
+  assert(0, v.rs.length)
+
+  v = evalParamFrame(parseExpression("(mockaudionode>>idnode)>>mockaudionode"), evd(),0)
+  assert(true, v.l.l.connected[0] instanceof AudioNode)
+  assert(1, v.l.r.ls.length)
+  assert(1, v.l.r.ls.length)
+  assert(true, v.r.connected[0] instanceof AudioNode)
+
   vars.foo = parseExpression('{v} -> v*3')
   // assert([3,6], evalParamFrame(parseExpression('foo{(1,2)}'), ev(), 0))
   delete vars.foo

@@ -48,7 +48,8 @@ define(function (require) {
       rs.forEach(rv => {
         if (!(lv instanceof AudioNode) && !(lv instanceof AudioParam)) { throw `Connect: l ${lv} is not an AudioNode/AudioParam` }
         if (!(rv instanceof AudioNode) && !(rv instanceof AudioParam)) { throw `Connect: r ${rv} is not an AudioNode/AudioParam` }
-        lv.connect(rv)
+        if (rv.passthrough !== undefined) { rv.passthrough(lv) } // Passthrough is for nodes that dont want to create an actual webaudio node
+        else { lv.connect(rv) }
         if (destructor) {
           destructor.disconnect(lv)
           if (!options || !options.dont_disconnect_r) {

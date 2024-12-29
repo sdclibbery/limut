@@ -12,7 +12,7 @@ WebAudio node graphs as first class values
     play=delay{1/4,id:'delay'}>>{gain{0.8}>>'delay',nonode}
    Delay with feedback will need increased disconnect time...
  playerChain: what to call this? 'process'?
-   How to connect to this from frxMixChain? What bus does it connect to? Can it only be used INSTEAD of an fxMixChain?
+   How to connect to this from fxMixChain? What bus does it connect to? Can it only be used INSTEAD of an fxMixChain?
    Eval once at parse time
    Disconnect: how? when?
    Should provide support for monophonic synths with no play chain set
