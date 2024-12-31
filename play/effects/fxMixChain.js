@@ -1,6 +1,7 @@
 'use strict';
 define(function (require) {
   let system = require('play/system')
+  let {evalParamEvent} = require('player/eval-param')
   let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
   let {fixedFreeverb} = require('play/effects/freeverb')
   let {fixedReverb} = require('play/effects/reverb')
@@ -18,6 +19,9 @@ define(function (require) {
     return Math.round(v*step)/step
   }
   let getParams = (params) => {
+    let output
+    if (params.process !== undefined) { output = params._player.id }
+    else { output = evalMainParamEvent(params, 'bus') }
     return {
       chorusAmount: quantise(evalMainParamEvent(params, 'chorus', 0), 8),
       chorusMix: quantise(evalSubParamEvent(params, 'chorus', 'mix', 1), 16),
@@ -34,7 +38,7 @@ define(function (require) {
       reverbCurve: quantise(evalSubParamEvent(params, 'reverb', 'curve', 3), 16),
       reverbHpf: quantise(evalSubParamEvent(params, 'reverb', 'hpf', 0, 'hz'), 1),
       reverbMix: quantise(evalSubParamEvent(params, 'reverb', 'mix', 1/3), 16),
-      bus: evalMainParamEvent(params, 'bus'),
+      output: output,
     }
   }
 
@@ -58,18 +62,6 @@ define(function (require) {
     return c
   }
 
-  let connectChain = (c, playerId) => {
-    let busId = c.params.bus
-    if (!busId) { busId = 'main' } // Default to main bus if not specified
-    let bus = players.getById(busId)
-    if (!bus || !bus._input) { // Do nothing if bus not present
-      consoleOut(`🟠 Player ${playerId} failed to connect to destination bus ${busId}`)
-      return
-    }
-    c.out.disconnect()
-    c.out.connect(bus._input)
-  }
-
   let disconnectAll = () => {
     Object.values(chains).forEach(c => c.connected = false)
   }
@@ -77,6 +69,32 @@ define(function (require) {
   let destroyChain = (chain) => {
     chain.destructor.destroy()
     delete chains[chain.key]
+  }
+
+  let connectChain = (c, params) => {
+    let outPlayerId = c.params.output
+    if (!outPlayerId) { outPlayerId = 'main' } // Default to main bus if not specified
+    let outPlayer = players.getById(outPlayerId)
+    if (!outPlayer) { // Do nothing if bus not present
+      consoleOut(`🟠 Player ${params._player.id} audio out failed to connect to destination player ${outPlayerId}`)
+      return
+    }
+    c.out.disconnect()
+    if (outPlayer._input !== undefined)  { // Bus player
+      c.out.connect(outPlayer._input)
+    } else { // Normal player process chain
+      if (outPlayer._process === undefined) {
+        outPlayer._process = evalParamEvent(params.process, params) // Get the Audionode chain for this event
+        let busPlayerId = evalMainParamEvent(params, 'bus')
+        if (!busPlayerId) { busPlayerId = 'main' } // Default to main bus if not specified
+        let bus = players.getById(busPlayerId)
+        if (!bus || !bus._input) {
+          consoleOut(`🟠 Player ${params._player.id} process failed to connect to destination bus ${busPlayerId}`)
+        }
+        outPlayer._process.connect(bus._input)
+      }
+      c.out.connect(outPlayer._process)
+    }
   }
 
   let fxMixChain = (params, node) => {
@@ -94,7 +112,7 @@ define(function (require) {
     chain.timeoutID = setTimeout(() => destroyChain(chain), TTL)
     node.connect(chain.in)
     chain.destructor.disconnect(node)
-    connectChain(chain, params._player.id)
+    connectChain(chain, params)
   }
 
   return {

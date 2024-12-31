@@ -7,22 +7,15 @@ WebAudio node graphs as first class values
  •PLAN
  NEW PLAN!!!: Leave the fixed function stuff in place
  playerChain: what to call this? 'process'?
-   fxMixChain sends to the player chain if the process param is set (otherwise sends to bus as now)
-    This needs to be included in the caching for fxMixChain though, currently they can be shared between players
-    Must be one single thing representing fxMixChain output, whether its a bus or the player process chain
-     And the player id must be included!
-   player chain sends to the bus param, and this is evalled and set once per parse
-    How to rebuild on reparse?
-    How to disconnect?
-   Should provide support for monophonic synths with no play chain set
+  _process must be disconnected/deleted on reparse, like a bus player
+   _process must be setup with params with a player-scoped destructor
+  Should support monophonic audiosynths with no play chain set
  Placeholders for feedback / loops
    ? Syntax? Representation? Register themself somehow a bit like disconnect?
     play=delay{1/4,id:'delay'}>>{gain{0.8}>>'delay',idnode}
     Should be scoped with the current chain?
    Delay with feedback will need increased disconnect time...
    Write an echo{} function that takes a chain to put in the feedback loop...
- Audiosynth should work the same as normal synths (effects, waveeffects, fxmixchain etc), but the osc voicing should be a new chain on the play param
-  ? Pitch effects?
  Create a helper lib with useful functions (think about namespacing)
    mix function: ?Expose from js, don't write in limut?
     Mechanism to provide effect mix easily; mix function defined in limut
@@ -93,24 +86,24 @@ WebAudio node graphs as first class values
  ? Make envelopes (SetTarget etc) into first class citizens???
  ? How do these values interact? Does it even make sense for them to use any operator other than >> ?
   ???? Maybe drive * 3 is literally a x3 gain node?? Heading into SC territory...
+Monophonic synths can get event info somehow; eg for pitch or envelopes etc
 !!?Limiter permanently showing on??? Only on firefox desktop??
 !!!! s causes the k to get filtered somehow! But then p restores to normal!!! Something to do with the `X`?? Reencode sample???
  k perc X...
  s perc ...s, amp=1/64
  p perc ...-, amp=1/64
  ??Is this also firefox only??
-Can now rewrite all JS synths using audiosynth?
 !!! amp=1-pk.playing causes clickyness even when there is no pk
  !Need a better way to do sidechain/ducking
 ! Minimise use of audio per frame update where it's not required
  ! `this.` is still causing a problem. Is there a way to decide whether it really needs to be per frame?
   This is a big problem for presets like ambi, where tons of things are derived params
  ! Also  s saw, dur=1/4, oct=2, amp/=10, lpf=1000*[0,1]l1/4@e  is getting per frame on the q!
+Can now rewrite all JS synths using audiosynth? ? Pitch effects tho??
 Start oscillator at a whole number of cycles after time zero
  To avoid phasing when using pad envelopes, and/or to control the starting phase of an oscillator
 Use []e / []es for all envelopes?
- ?Support envelope=[]e etc ??
-  ?Deprecate att, dec, sus, rel etc params and prefer envelope=[]e??
+ ?Deprecate att, dec, sus, rel etc params and prefer envelope=[]e??
  ??Also deprecate other att/rel params; eg in pitchedperc, fm operator etc???
 Can pitch effects be segmented? Currently always go per-frame. EG  s saw, oct=2, addc=[36:!400ms,0]es, lpf=1000, amp/=4
  See evalFuncFrame. Problem is all pitch effects are combined into one function
