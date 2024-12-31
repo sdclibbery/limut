@@ -96,6 +96,17 @@ define(function (require) {
     return vca
   }
 
+  let noneEnvelope = (params, gainBase) => {
+    let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25, 'b'), 'b'))
+    dur *= evalMainParamEvent(params, "long", 1)
+    let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
+    let vca = system.audio.createGain();
+    vca.gain.value = gain
+    params.endTime = params._time + dur
+    params._destructor.disconnect(vca)
+    return vca
+  }
+
   let fadeUpCosine = (gain) => {
     return (new Float32Array(16)).map((_,i) => {
       return Math.sin(i/15 * 0.5*Math.PI)*gain
@@ -151,6 +162,7 @@ define(function (require) {
       case 'linpad': env = padEnvelope(params, gainbase, 'linear'); break
       case 'percussion': env = percussionEnvelope(params, gainbase); break
       case 'exp': env = exponentialPercussionEnvelope(params, gainbase); break
+      case 'none': env = noneEnvelope(params, gainbase); break
       default: env = fullEnvelope(params, gainbase); break
     }
     setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)

@@ -6,19 +6,23 @@ WebAudio node graphs as first class values
  EXAMPLES Params; eg play=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    play>>=gain{[1:!200ms,0]e}
  •PLAN
  NEW PLAN!!!: Leave the fixed function stuff in place
- nonode{} that just connects through but is not a webaudio node at all
+ playerChain: what to call this? 'process'?
+   fxMixChain sends to the player chain if the process param is set (otherwise sends to bus as now)
+    This needs to be included in the caching for fxMixChain though, currently they can be shared between players
+    Must be one single thing representing fxMixChain output, whether its a bus or the player process chain
+     And the player id must be included!
+   player chain sends to the bus param, and this is evalled and set once per parse
+    How to rebuild on reparse?
+    How to disconnect?
+   Should provide support for monophonic synths with no play chain set
  Placeholders for feedback / loops
    ? Syntax? Representation? Register themself somehow a bit like disconnect?
-    play=delay{1/4,id:'delay'}>>{gain{0.8}>>'delay',nonode}
+    play=delay{1/4,id:'delay'}>>{gain{0.8}>>'delay',idnode}
+    Should be scoped with the current chain?
    Delay with feedback will need increased disconnect time...
- playerChain: what to call this? 'process'?
-   How to connect to this from fxMixChain? What bus does it connect to? Can it only be used INSTEAD of an fxMixChain?
-   Eval once at parse time
-   Disconnect: how? when?
-   Should provide support for monophonic synths with no play chain set
-    But also can receive input from play chains
+   Write an echo{} function that takes a chain to put in the feedback loop...
  Audiosynth should work the same as normal synths (effects, waveeffects, fxmixchain etc), but the osc voicing should be a new chain on the play param
-   Then can actually replace all synths with this..?
+  ? Pitch effects?
  Create a helper lib with useful functions (think about namespacing)
    mix function: ?Expose from js, don't write in limut?
     Mechanism to provide effect mix easily; mix function defined in limut
@@ -95,6 +99,7 @@ WebAudio node graphs as first class values
  s perc ...s, amp=1/64
  p perc ...-, amp=1/64
  ??Is this also firefox only??
+Can now rewrite all JS synths using audiosynth?
 !!! amp=1-pk.playing causes clickyness even when there is no pk
  !Need a better way to do sidechain/ducking
 ! Minimise use of audio per frame update where it's not required
