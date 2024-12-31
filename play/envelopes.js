@@ -1,7 +1,7 @@
 'use strict';
 define(function (require) {
   let system = require('play/system');
-  let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
+  let {evalMainParamEvent,evalMainParamFrame,evalSubParamEvent} = require('play/eval-audio-params')
   let destructor = require('play/destructor')
 
   let fullEnvelope = (params, gainBase) => {
@@ -149,21 +149,36 @@ define(function (require) {
     return vca
   }
 
+  let customEnvelope = (params, gainBase) => {
+    let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25, 'b'), 'b'))
+    dur *= evalMainParamEvent(params, "long", 1)
+    let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
+    let vca = system.audio.createGain()
+    evalMainParamFrame(vca.gain, params, 'envelope', 1, undefined, g => g*gain)
+    params.endTime = params._time + dur
+    params._destructor.disconnect(vca)
+    return vca
+  }
+
   return (params, gainbase, defaultEnvelope) => {
     params._destructor = destructor()
     gainbase *= evalMainParamEvent(params, "loud", 1)
     let envelope = evalMainParamEvent(params, "envelope", defaultEnvelope)
     let env
-    switch (envelope) {
-      case 'full': env = fullEnvelope(params, gainbase); break
-      case 'organ': env = organEnvelope(params, gainbase); break
-      case 'simple': env = simpleEnvelope(params, gainbase); break
-      case 'pad': env = padEnvelope(params, gainbase, 'cosine'); break
-      case 'linpad': env = padEnvelope(params, gainbase, 'linear'); break
-      case 'percussion': env = percussionEnvelope(params, gainbase); break
-      case 'exp': env = exponentialPercussionEnvelope(params, gainbase); break
-      case 'none': env = noneEnvelope(params, gainbase); break
-      default: env = fullEnvelope(params, gainbase); break
+    if (typeof envelope === 'string') {
+      switch (envelope) {
+        case 'full': env = fullEnvelope(params, gainbase); break
+        case 'organ': env = organEnvelope(params, gainbase); break
+        case 'simple': env = simpleEnvelope(params, gainbase); break
+        case 'pad': env = padEnvelope(params, gainbase, 'cosine'); break
+        case 'linpad': env = padEnvelope(params, gainbase, 'linear'); break
+        case 'percussion': env = percussionEnvelope(params, gainbase); break
+        case 'exp': env = exponentialPercussionEnvelope(params, gainbase); break
+        case 'none': env = noneEnvelope(params, gainbase); break
+        default: env = fullEnvelope(params, gainbase); break
+      }
+    } else {
+      env = customEnvelope(params, gainbase)
     }
     setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
     return env
