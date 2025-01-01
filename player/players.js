@@ -18,9 +18,8 @@ define(function(require) {
   players.gc_sweep = () => {
     for (let id in players.instances) {
       if (!players.instances[id].marked) {
-        if (players.instances[id].destroy) {
-          players.instances[id].destroy()
-        }
+        if (players.instances[id].destroy) { players.instances[id].destroy() }
+        if (players.instances[id]._process && players.instances[id]._process.destroy) { players.instances[id]._process.destroy() }
         delete players.instances[id]
       }
     }
@@ -29,10 +28,9 @@ define(function(require) {
   players.stopAll = () => {
     for (let id in players.instances) {
       if (id === 'main') { continue } // Preserve main bus so reverb tails keep playing
-      if (players.instances[id].destroy) {
-        players.instances[id].destroy()
-      }
-    }
+      if (players.instances[id].destroy) { players.instances[id].destroy() }
+      if (players.instances[id]._process && players.instances[id]._process.destroy) { players.instances[id]._process.destroy() }
+  }
     players.instances = {
       main: players.instances.main // Preserve main bus so it can be cleaned up when it gets recreated on code update
     }

@@ -7,12 +7,12 @@ WebAudio node graphs as first class values
  •PLAN
  NEW PLAN!!!: Leave the fixed function stuff in place
  playerChain: what to call this? 'process'?
-  On player stop/delete, cleanup process
-   destroy not getting called, even though in players:22 it should be 
+  On player stop/delete, cleanup process chain
   On reparse, delete old process chain and crossfade
   Verify all scoping and cleanup
   Nodes connected to param fails with lack of destructor eg process=biquad{freq:osc{freq:1/4}}
   Audiosynth should be able to have no play chain set, and oscs in the process chain
+  process chain for bus player
  Create a helper lib with useful functions (think about namespacing)
    mix function: ?Expose from js, don't write in limut?
     Mechanism to provide effect mix easily; mix function defined in limut

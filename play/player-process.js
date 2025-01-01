@@ -36,13 +36,14 @@ define((require) => {
       return true
     })
 
-// console.log('create', params._player.id)
+console.log('create', params._player.id)
     // Destruction
     process.destroy = () => {
-// console.log('destroy', params._player.id)
+console.log('destroy', params._player.id)
       setTimeout(() => process.cleanup(), process.destroyWait*1000)
     }
     process.cleanup = () => {
+console.log('cleanup', params._player.id)
       process.stopped = true
       process._perFrame = []
       process.destructor.destroy()
@@ -59,7 +60,7 @@ define((require) => {
       consoleOut(`🟠 Player ${params._player.id} process failed to connect to destination bus ${busPlayerId}`)
       return
     }
-    connect(process.chain, bus._input, process.destructor)
+    connect(process.chain, bus._input, process.destructor, {dont_disconnect_r:true})
 
     return process
 }
