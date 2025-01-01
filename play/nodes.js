@@ -10,6 +10,7 @@ define(function(require) {
 
   let addNodeFunction = (k, v) => {
     v.dontEvalArgs = true
+    v._thisVar = true // Do not evaluating node functions during expand-chords; should rename _thisVar really
     addVarFunction(k, v)
   }
 

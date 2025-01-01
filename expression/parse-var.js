@@ -96,6 +96,7 @@ define(function(require) {
     }
     result = parseVarLookup
     result.interval = interval
+    if (typeof vars.get(key) === 'function' && vars.get(key)._thisVar) { result._thisVar = true } // For node vars: pass this through to prevent the node function getting evalled during expand-chords
     return result
   }
 
