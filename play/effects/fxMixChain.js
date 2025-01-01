@@ -12,7 +12,7 @@ define(function (require) {
   let consoleOut = require('console')
   let {fixedEcho} = require('play/effects/echo')
   let destructor = require('play/destructor')
-  let {connectFromParam} = require('play/node-connect')
+  let {connect,connectFromParam} = require('play/node-connect')
   let createProcessChain = require('play/player-process')
 
   let quantise = (v, step) =>{
@@ -86,7 +86,7 @@ define(function (require) {
       if (outPlayer._process === undefined) {
         outPlayer._process = createProcessChain(params)
       }
-      c.out.connect(outPlayer._process.chain)
+      connect(c.out, outPlayer._process.chain, c.destructor)
     }
   }
 

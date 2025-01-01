@@ -8,15 +8,11 @@ WebAudio node graphs as first class values
  NEW PLAN!!!: Leave the fixed function stuff in place
  playerChain: what to call this? 'process'?
   On player stop/delete, cleanup process
-  On reparse, delete old process and crossfade
+   destroy not getting called, even though in players:22 it should be 
+  On reparse, delete old process chain and crossfade
   Verify all scoping and cleanup
+  Nodes connected to param fails with lack of destructor eg process=biquad{freq:osc{freq:1/4}}
   Audiosynth should be able to have no play chain set, and oscs in the process chain
- Placeholders for feedback / loops
-   ? Syntax? Representation? Register themself somehow a bit like disconnect?
-    play=delay{1/4,id:'delay'}>>{gain{0.8}>>'delay',idnode}
-    Should be scoped with the current chain?
-   Delay with feedback will need increased disconnect time...
-   Write an echo{} function that takes a chain to put in the feedback loop...
  Create a helper lib with useful functions (think about namespacing)
    mix function: ?Expose from js, don't write in limut?
     Mechanism to provide effect mix easily; mix function defined in limut
@@ -29,37 +25,40 @@ WebAudio node graphs as first class values
    chop, ring, mono, pan, shapers, compressor
    chorus, phaser, flanger, echo, room, reverb
    maybe refactor existing envelope stuff actually??
- Support for a pitch chain?
  Support for chains on buses: should be monophonic
    ? Are buses based on audioSynth too??? IE can a player connect to another player as output?
- ?Also have output Param that can connect audio to other players, instead of bus param..??
+  ?Also have output Param that can connect audio to other players, instead of bus param..??
+  Support for a pitch chain?
  More audionode functions
-  ConvolverNode
+  ConvolverNode. Can also have a feedback chain, like delay does??
   StereoPannerNode
   DynamicsCompressorNode
   AudioBufferSourceNode - Also allow user def function to create sample
   MediaStreamAudioSourceNode
- Inserting into an existing chain at a placeholder location
-  Requires not just connecting into a placeholder, but breaking the existing chain
-   ? New Syntax? New operator?? Or not?
- Existing operators/eval (and anything else with a type based if/else chain) ignore/error AudioNodes
- Reimplement existing per-event and per-player effect chains with node chains
-  Efficiency: Provide some kind of "null" identity AudioNode if eg biquad frequency is const zero or gain is const 1?
- Trickier node types
   IIRFilterNode
   ChannelSplitterNode/ChannelMergerNode
    Support for named outputs; eg for stereo splitter
   ? analyser node with output that can be read from limut somehow
   Basic node functions for all AudioNode types: check all are done
- Replace existing synths with node chains
-  Use monophonic where appropriate
-  ?How will glide work?
  ? How to make operators do something useful with node chains; eg + * etc
   + becomes an array both feeding into the next node, * becomes a gain?
  !! s audiosynth, play=osc{}>>gain{this.foo}>>gain{0.01}, foo=osc{'sine',freq:2b}
   e = ev(0,0,4); e.foo = parseExpression('mockaudionode{test:17}')
   assert(17, evalParamFrame(parseExpression('mockaudionode{test:this.foo}'), e, 0).test.connected[0].test.value)
   !! So foo is evalling without any context where a destructor makes sense :-/
+ Placeholders for loops/insertions
+   ?? Do we even need this now? 
+    DONT really need to insert now we still have a fixed function chain
+    AND the only place you could want a loop is for feedback chains, which can be done as node params..?? 
+   ? Syntax? Representation? Register themself somehow a bit like disconnect?
+    play=delay{1/4,id:'delay'}>>{gain{0.8}>>'delay',idnode}
+    Should be scoped with the current chain?
+   Delay with feedback will need increased disconnect time...
+   Write an echo{} function that takes a chain to put in the feedback loop...
+ Inserting into an existing chain at a placeholder location
+  Requires not just connecting into a placeholder, but breaking the existing chain
+   ? New Syntax? New operator?? Or not?
+ Existing operators/eval (and anything else with a type based if/else chain) ignore/error AudioNodes
  TEST!!!!!!!
   >>  >>=  >>[gain,biquad] bus freq:osc{} var/this-lookups
  DOCS

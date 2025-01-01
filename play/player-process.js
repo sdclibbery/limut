@@ -7,6 +7,7 @@ define((require) => {
   let destructor = require('play/destructor')
   let players = require('player/players')
   let consoleOut = require('console')
+  let {connect} = require('play/node-connect')
 
   let createProcessChain = (eventParams) => {
     // Setup for continuous running
@@ -35,7 +36,7 @@ define((require) => {
       return true
     })
 
-// console.log('create', params._player.id, params)
+// console.log('create', params._player.id)
     // Destruction
     process.destroy = () => {
 // console.log('destroy', params._player.id)
@@ -58,7 +59,7 @@ define((require) => {
       consoleOut(`🟠 Player ${params._player.id} process failed to connect to destination bus ${busPlayerId}`)
       return
     }
-    process.chain.connect(bus._input)
+    connect(process.chain, bus._input, process.destructor)
 
     return process
 }

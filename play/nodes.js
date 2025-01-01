@@ -3,9 +3,10 @@ define(function(require) {
   let addVarFunction = require('predefined-vars').addVarFunction
   let system = require('play/system');
   let {evalMainParamEvent,evalMainParamFrame} = require('play/eval-audio-params')
-  let {evalParamFrame} = require('player/eval-param')
+  let {evalParamFrame,evalParamEvent} = require('player/eval-param')
   let setWave = require('play/synth/waveforms/set-wave')
   var metronome = require('metronome')
+  let {connect} = require('play/node-connect')
 
   let addNodeFunction = (k, v) => {
     v.dontEvalArgs = true
@@ -96,7 +97,7 @@ define(function(require) {
     node.type = evalMainParamEvent(args, 'value', 'lowpass')
     evalMainParamFrame(node.frequency, params, 'freq', 440, 'hz')
     evalMainParamFrame(node.Q, params, 'q', 5)
-    evalMainParamFrame(node.gain, params, 'gain', 1)
+    evalMainParamFrame(node.gain, params, 'gain', undefined, undefined, x => Math.log10(Math.max(x,1e-6))*20) // Convert to dB for WebAudio
     return node
   })
 
@@ -106,6 +107,11 @@ define(function(require) {
     let params = combineParams(args, e)
     evalMainParamFrame(node.delayTime, params, 'value', 1/4, 'b', d => d * metronome.beatDuration())
     e._disconnectTime += maxDelay
+    let feedback = evalParamEvent(params['feedback'], params)
+    if (feedback !== undefined) {
+      connect(node, feedback, params._destructor)
+      connect(feedback, node, params._destructor)
+    }
     return node
   })
 
