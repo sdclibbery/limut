@@ -1,7 +1,6 @@
 'use strict';
 define(function (require) {
   let system = require('play/system')
-  let {evalParamEvent} = require('player/eval-param')
   let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
   let {fixedFreeverb} = require('play/effects/freeverb')
   let {fixedReverb} = require('play/effects/reverb')
@@ -14,6 +13,7 @@ define(function (require) {
   let {fixedEcho} = require('play/effects/echo')
   let destructor = require('play/destructor')
   let {connectFromParam} = require('play/node-connect')
+  let createProcessChain = require('play/player-process')
 
   let quantise = (v, step) =>{
     return Math.round(v*step)/step
@@ -82,18 +82,11 @@ define(function (require) {
     c.out.disconnect()
     if (outPlayer._input !== undefined)  { // Bus player
       c.out.connect(outPlayer._input)
-    } else { // Normal player process chain
+    } else { // Player process chain
       if (outPlayer._process === undefined) {
-        outPlayer._process = evalParamEvent(params.process, params) // Get the Audionode chain for this event
-        let busPlayerId = evalMainParamEvent(params, 'bus')
-        if (!busPlayerId) { busPlayerId = 'main' } // Default to main bus if not specified
-        let bus = players.getById(busPlayerId)
-        if (!bus || !bus._input) {
-          consoleOut(`🟠 Player ${params._player.id} process failed to connect to destination bus ${busPlayerId}`)
-        }
-        outPlayer._process.connect(bus._input)
+        outPlayer._process = createProcessChain(params)
       }
-      c.out.connect(outPlayer._process)
+      c.out.connect(outPlayer._process.chain)
     }
   }
 

@@ -7,9 +7,10 @@ WebAudio node graphs as first class values
  •PLAN
  NEW PLAN!!!: Leave the fixed function stuff in place
  playerChain: what to call this? 'process'?
-  _process must be disconnected/deleted on reparse, like a bus player
-   _process must be setup with params with a player-scoped destructor
-  Should support monophonic audiosynths with no play chain set
+  On player stop/delete, cleanup process
+  On reparse, delete old process and crossfade
+  Verify all scoping and cleanup
+  Audiosynth should be able to have no play chain set, and oscs in the process chain
  Placeholders for feedback / loops
    ? Syntax? Representation? Register themself somehow a bit like disconnect?
     play=delay{1/4,id:'delay'}>>{gain{0.8}>>'delay',idnode}
@@ -28,6 +29,7 @@ WebAudio node graphs as first class values
    chop, ring, mono, pan, shapers, compressor
    chorus, phaser, flanger, echo, room, reverb
    maybe refactor existing envelope stuff actually??
+ Support for a pitch chain?
  Support for chains on buses: should be monophonic
    ? Are buses based on audioSynth too??? IE can a player connect to another player as output?
  ?Also have output Param that can connect audio to other players, instead of bus param..??
@@ -64,7 +66,7 @@ WebAudio node graphs as first class values
    nodes functions
    lib functions
    connect op >>
-   New params to add in chains: prefx, prewave, preenv, postenv, pitch
+   New params to add in chains: prefx, prewave, preenv, postenv, process
  •QUESTIONS
  ? When do AuidioNodes get created? play can be eval time? playerChain needs to be special?
  ? How to define node loops? Eg echo with feedback? Or parallel nodes, eg multiple bandpass and sum?
