@@ -43,6 +43,7 @@ define(function(require) {
       if (Array.isArray(v.connected)) { v.connected.push(node) }
     }
     node.disconnect = () => { node.disconnected }
+    Object.defineProperty(node, "numberOfInputs", { get() { return 1 } })
     if (!params._destructor) { throw `mockaudionode: No destructor` }
     return node
   })
@@ -63,6 +64,7 @@ define(function(require) {
       delete node.ls
       delete node.rs
     }
+    Object.defineProperty(node, "numberOfInputs", { get() { return 1 } })
     return node
   })
 

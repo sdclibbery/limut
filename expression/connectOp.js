@@ -43,6 +43,7 @@ define(function(require) {
     let an = Object.create(getAudioNodeProto())
     an.connect = () => {}
     an.disconnect = () => { an.disconnected = true }
+    Object.defineProperty(an, "numberOfInputs", { get() { return 1 } })
     return an
   }
   let l, r

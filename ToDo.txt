@@ -7,24 +7,18 @@ WebAudio node graphs as first class values
  •PLAN
  NEW PLAN!!!: Leave the fixed function stuff in place
  playerChain: what to call this? 'process'?
-  Audiosynth should be able to have no play chain set, and oscs in the process chain
-  process chain for bus player
+  Failing example
+  ? Is this really working on reparse? Without crossfade? How is it not cutting off? Is the delayWait magic enough? Is it OK?
  Create a helper lib with useful functions (think about namespacing)
-   mix function: ?Expose from js, don't write in limut?
-    Mechanism to provide effect mix easily; mix function defined in limut
-      eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
-      set mix={chain,wet} -> (1-wet) ?? {gain{1-wet},chain>>gain{wet}} ?: chain
-      s audiosynth, play=osc{freq:150}>>mix{biquad{freq:200},wet:[0,1]l1/4@f}>>gain{0.01}
-      !! Really want to check that wet is @e zero, not just zero at the start. Expose a function to allow this
-      !! const wet=1 should also have a custom chain with no gains
+   mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
+    ?Expose from js, don't write in limut?
+    Must used node-connect
+    Really want to check that wet is @e zero, not just zero at the start. Expose a function to allow this
+    const wet=1 should also have a custom chain with no gains
    filters lpf, hpf, bpf, notch, apf, psf, lowshelf, highshelf, peaking
    chop, ring, mono, pan, shapers, compressor
    chorus, phaser, flanger, echo, room, reverb
    maybe refactor existing envelope stuff actually??
- Support for chains on buses: should be monophonic
-   ? Are buses based on audioSynth too??? IE can a player connect to another player as output?
-  ?Also have output Param that can connect audio to other players, instead of bus param..??
-  Support for a pitch chain?
  More audionode functions
   ConvolverNode. Can also have a feedback chain, like delay does??
   StereoPannerNode
@@ -36,6 +30,9 @@ WebAudio node graphs as first class values
    Support for named outputs; eg for stereo splitter
   ? analyser node with output that can be read from limut somehow
   Basic node functions for all AudioNode types: check all are done
+ Support for chains on buses in the usual places: prefx, prewave, preenv, postenv, process
+  ?Rewrite all synths using audiosynth?
+  !?Pitch: Support for a pitch chain?
  ? How to make operators do something useful with node chains; eg + * etc
   + becomes an array both feeding into the next node, * becomes a gain?
  !! s audiosynth, play=osc{}>>gain{this.foo}>>gain{0.01}, foo=osc{'sine',freq:2b}

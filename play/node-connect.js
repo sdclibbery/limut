@@ -48,6 +48,7 @@ define(function (require) {
       rs.forEach(rv => {
         if (!(lv instanceof AudioNode) && !(lv instanceof AudioParam)) { throw `Connect: l ${lv} is not an AudioNode/AudioParam` }
         if (!(rv instanceof AudioNode) && !(rv instanceof AudioParam)) { throw `Connect: r ${rv} is not an AudioNode/AudioParam` }
+        if (rv.numberOfInputs === 0) { return } // Dont connect to nodes that dont have inputs
         if (rv.passthrough !== undefined) { rv.passthrough(lv) } // Passthrough is for nodes that dont want to create an actual webaudio node
         else { lv.connect(rv) }
         if (destructor) {
@@ -88,6 +89,7 @@ define(function (require) {
     let an = Object.create(audioNodeProto)
     an.connect = (v) => { an.connected = v }
     an.reset = () => an.connected = undefined
+    Object.defineProperty(an, "numberOfInputs", { get() { return 1 } })
     return an
   }
   let l = mockAn()
