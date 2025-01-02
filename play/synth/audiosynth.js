@@ -9,16 +9,14 @@ define(function (require) {
   let system = require('play/system')
 
   return (params) => {
+    let vca = envelope(params, 0.06, 'none')
     let playChain = evalParamEvent(params.play, params) // Get the Audionode chain for this event
     if (playChain === undefined) {
-      let nullGain = system.audio.createGain()
-      fxMixChain(params, nullGain) // Just connect an empty node as there is no play chain, only process
-      params._destructor.disconnect(nullGain)
-      return
+      fxMixChain(params, vca) // No play chain, eg monosynth with oscillator in the process chain
+    } else {
+      fxMixChain(params, perFrameAmp(params, vca))
+      waveEffects(params, effects(params, playChain)).connect(vca)
     }
-    let vca = envelope(params, 0.06, 'none')
-    fxMixChain(params, perFrameAmp(params, vca))
-    waveEffects(params, effects(params, playChain)).connect(vca)
     params._destructor.disconnect(vca)
   }
 });
