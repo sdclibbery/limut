@@ -8,8 +8,7 @@ WebAudio node graphs as first class values
  NEW PLAN!!!: Leave the fixed function stuff in place
  playerChain: what to call this? 'process'?
   !Leave old process chain running if update process code not stop/restart
-   OK now needs crossfade etc
-  ?Failing example : a audiosynth, play=osc{}>>gain{osc{freq:4}}
+    OK now needs crossfade etc
   !Cannot read properties of undefined (reading 'disconnect') in chrome with process
   !Can't get current player event sound param per frame in process  ? Is this really working on reparse? Without crossfade? How is it not cutting off? Is the delayWait magic enough? Is it OK?
   ?Rename to playchain and playerchain???

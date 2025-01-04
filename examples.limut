@@ -4159,4 +4159,16 @@ v swirl 4, recol='neon', loc=tile_tr, rate=1/14, contrast, zoom=3
 // s audiosynth, play=osc{freq:523/4}>>shaper{{x}->floor{x*2}??x?:x*40%1/40}>>biquad{freq:220*[20:!400ms,1/4]es}>>gain{0.01}
 // vs scope 0, additive, fore=#fa0f, zoom={y:3}
 
+// bp techbass, process=delay{{const{1},osc{freq:9.3}}>>gain{0.107},max:4}>>biquad{freq:2000,q:20}>>delay{3/16,feedback:biquad{freq:300}>>gain{-0.45}}
+// gp supersaw 0-7<.6> crop 8, oct-=4, process=
+// delay{{const{1},osc{freq:1}}>>gain{3.79},max:4}
+//  >>shaper{{x}->((x*30)^3)/100}
+//  >>delay{5/16,feedback:biquad{freq:490}>>gain{-0.45}}
+
+// bp techbass, process=delay{{const{1},osc{freq:1/2}}>>gain{3/4},max:4}>>delay{3/16,feedback:biquad{freq:300}>>gain{-0.45}}
+// gp hollow 0-7<.6> crop 8, process=
+// delay{{const{1},osc{'square',freq:1/4}>>biquad{freq:1/8,q:1}}>>gain{1.2},max:4}
+//   >>shaper{{x}->((x*20)^4)/100}
+//   >>delay{5/16,feedback:biquad{'highpass',freq:290}>>gain{-0.45}}
+
 
