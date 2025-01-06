@@ -1,0 +1,11 @@
+
+set lpf = {freq,q} -> biquad{'lowpass',freq:freq,q:q}
+set hpf = {freq,q} -> biquad{'highpass',freq:freq,q:q}
+set bpf = {freq,q} -> biquad{'bandpass',freq:freq,q:q}
+set apf = {freq,q} -> biquad{'allpass',freq:freq,q:q}
+
+set lfo = {freq,wave:'triangle',rmin:0,rmax:1} -> {
+		const{(rmin+rmax)/2},
+		osc{wave,freq:freq}>>gain{(rmax-rmin)/2}
+  }
+

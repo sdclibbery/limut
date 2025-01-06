@@ -9,9 +9,12 @@ WebAudio node graphs as first class values
  playerChain: what to call this? 'process'?
   !Leave old process chain running if update process code not stop/restart
     OK now needs crossfade etc
+     !!!Dont need crossfade, just slow enough fade out of old chain???
   !Cannot read properties of undefined (reading 'disconnect') in chrome with process
   !Can't get current player event sound param per frame in process  ? Is this really working on reparse? Without crossfade? How is it not cutting off? Is the delayWait magic enough? Is it OK?
   ?Rename to playchain and playerchain???
+ ? How to make operators do something useful with node chains; eg + * etc
+  + becomes an array both feeding into the next node, * becomes a gain?
  Create a helper lib with useful functions (think about namespacing)
    mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
     ?Expose from js, don't write in limut?
@@ -21,6 +24,8 @@ WebAudio node graphs as first class values
    filters lpf, hpf, bpf, notch, apf, psf, lowshelf, highshelf, peaking
    chop, ring, mono, pan, shapers, compressor
    chorus, phaser, flanger, echo, room, reverb
+   stereoflip, pitchshift
+   oscillators
    maybe refactor existing envelope stuff actually??
  More audionode functions
   ConvolverNode. Can also have a feedback chain, like delay does??
@@ -36,8 +41,6 @@ WebAudio node graphs as first class values
  Support for chains on buses in the usual places: prefx, prewave, preenv, postenv, process
   ?Rewrite all synths using audiosynth?
   !?Pitch: Support for a pitch chain?
- ? How to make operators do something useful with node chains; eg + * etc
-  + becomes an array both feeding into the next node, * becomes a gain?
  !! s audiosynth, play=osc{}>>gain{this.foo}>>gain{0.01}, foo=osc{'sine',freq:2b}
   e = ev(0,0,4); e.foo = parseExpression('mockaudionode{test:17}')
   assert(17, evalParamFrame(parseExpression('mockaudionode{test:this.foo}'), e, 0).test.connected[0].test.value)
@@ -96,6 +99,7 @@ Monophonic synths can get event info somehow; eg for pitch or envelopes etc
  ! `this.` is still causing a problem. Is there a way to decide whether it really needs to be per frame?
   This is a big problem for presets like ambi, where tons of things are derived params
  ! Also  s saw, dur=1/4, oct=2, amp/=10, lpf=1000*[0,1]l1/4@e  is getting per frame on the q!
+!!phaser (and psf?) should mix in dry signal, not just 2 allpasses!!!!
 Can now rewrite all JS synths using audiosynth? ? Pitch effects tho??
 Start oscillator at a whole number of cycles after time zero
  To avoid phasing when using pad envelopes, and/or to control the starting phase of an oscillator
