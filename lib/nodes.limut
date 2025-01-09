@@ -4,8 +4,11 @@ set hpf = {freq,q} -> biquad{'highpass',freq:freq,q:q}
 set bpf = {freq,q} -> biquad{'bandpass',freq:freq,q:q}
 set apf = {freq,q} -> biquad{'allpass',freq:freq,q:q}
 
-set lfo = {freq,wave:'triangle',rmin:0,rmax:1} -> {
-		const{(rmin+rmax)/2},
-		osc{wave,freq:freq}>>gain{(rmax-rmin)/2}
+set lfo = {freq,wave:'triangle',lo:0,hi:1} -> {
+		const{(lo+hi)/2},
+		osc{wave,freq:freq}>>gain{(hi-lo)/2}
   }
 
+set flanger = {c,feedback:0,lo:0.0002,hi:0.007} -> feedback>0
+	?? {delay{0.01},delay{0.01+lo+c*hi,feedback:gain{feedback}}}
+  ?: {idnode,delay{lo+c*hi}}

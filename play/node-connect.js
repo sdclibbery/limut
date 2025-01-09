@@ -42,12 +42,16 @@ define(function (require) {
   }
 
   let connect = (l, r, destructor, options) => {
-    let ls = resolveAudioNodes(l, 'r').flat()
-    let rs = resolveAudioNodes(r, 'l').flat()
+    let ls = resolveAudioNodes(l, 'r').flat(999)
+    let rs = resolveAudioNodes(r, 'l').flat(999)
     ls.forEach(lv => {
       rs.forEach(rv => {
-        if (!(lv instanceof AudioNode) && !(lv instanceof AudioParam)) { throw `Connect: l ${lv} is not an AudioNode/AudioParam` }
-        if (!(rv instanceof AudioNode) && !(rv instanceof AudioParam)) { throw `Connect: r ${rv} is not an AudioNode/AudioParam` }
+        if (!(lv instanceof AudioNode) && !(lv instanceof AudioParam)) {
+          throw `Connect: l ${lv} is not an AudioNode/AudioParam`
+        }
+        if (!(rv instanceof AudioNode) && !(rv instanceof AudioParam)) {
+          throw `Connect: r ${rv} is not an AudioNode/AudioParam`
+        }
         if (rv.numberOfInputs === 0) { return } // Dont connect to nodes that dont have inputs
         if (rv.passthrough !== undefined) { rv.passthrough(lv) } // Passthrough is for nodes that dont want to create an actual webaudio node
         else { lv.connect(rv) }
