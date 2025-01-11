@@ -1,33 +1,37 @@
 'use strict';
 define((require) => {
 
-  let stack = []
-  let accessLevel = -1
+  let root = { children:[] }
+  let current = root
 
   let pushCallContext = (context) => {
-    stack.push(context)
+    let newNode = {
+      context: context,
+      children: [],
+      parent: current
+    }
+    if (current) { current.children.push(newNode) }
+    current = newNode
   }
+
   let popCallContext = () => {
-    if (stack.length <= 0) { throw 'Cannot pop; callstack is empty' }
-    stack.pop()
+    if (current === root) { throw `Cant pop, already at root` }
+    current.parent.children = current.parent.children.filter((child) => child !== current)
+    current = current.parent
   }
 
   let getCallContext = () => {
-    let level = stack.length + accessLevel
-    if (level === -1)  { return undefined } // Global context; no call context to return
-    if (level < -1 || level >= stack.length) {
-      throw `Stack access at level ${level}; stack.length ${stack.length} accessLevel ${accessLevel}`
-    }
-    return stack[level]
+    return current ? current.context : undefined
   }
 
   let unPushCallContext = () => {
-    if (accessLevel < -stack.length) { throw 'Cannot unpush, already at end of callstack' }
-    accessLevel--
+    if (current === root) { throw `Cant unpush, already at root` }
+    current = current.parent
   }
+
   let unPopCallContext = () => {
-    if (accessLevel >=  -1) { throw 'Cannot unpop, already at end of callstack' }
-    accessLevel++
+    if (current.children.length === 0) { throw `Cant unpop, no children` }
+    current = current.children[0] // ToDo
   }
 
   // TESTS //
@@ -63,10 +67,24 @@ define((require) => {
     assert(undefined, getCallContext())
 
     // Branched callstack with unpush and repush
+    pushCallContext('cc1')
+    pushCallContext('cc2')
+    unPushCallContext()
+    assert('cc1', getCallContext())
+    pushCallContext('cc3')
+    assert('cc3', getCallContext())
+    popCallContext()
+    assert('cc1', getCallContext())
+    unPopCallContext()
+    assert('cc2', getCallContext())
+    popCallContext()
+    assert('cc1', getCallContext())
+    popCallContext()
+
+    // Unpop with multiple children
 
     // Should all be back to cleared by the end of the tests
-    assert(0, stack.length)
-    assert(-1, accessLevel)
+    assert(true, current === root)
 
     console.log('Callstack tests complete')
   }
