@@ -7,10 +7,7 @@ WebAudio node graphs as first class values
  •PLAN
  playerChain: what to call this? 'process'?
   !!! Callstack level failure
-   ? fix memoisation: evalMainParamFrame use real event, and  eval modifiers with withInterval as well
-   ? fix callstack: have to somehow push calls from function args onto the bottom of the stack?????
-   ? Start a new callstack for each call to evalParamFrame?? IE push and pop callSTACKS!?!
-   ? evalMainParamFrame shouldnt use evalParamFrame, only evalRecurse?
+   ! The callstaxck will have to be a tree. if ytou push when accessLevel is not the top, the tree must split
   !evalMainParamFrame (and what it calls) should use the REAL event, not the params object
   ?In evalParamValue for function, do we need to evalRecurse there? Could it be more efficient at the root level somewhere?
   !Shouldnt bother with evalRecurse to cancel time modifiers if there weren't any time modifiers (only other modifiers)

@@ -1969,6 +1969,13 @@ define(function(require) {
   delete vars.foo
   delete vars.bar
 
+  vars.foo = parseExpression('{x} -> x')
+  vars.bar = parseExpression('{y} -> mockaudionode{test:y}')
+  vars.baz = parseExpression('{z} -> z')
+  assert(2, evalParamFrame(parseExpression('baz{z:bar{y:foo{x:2}}}'), evd(), 0).test.value)
+  delete vars.foo
+  delete vars.bar
+
   vars.foo = parseExpression('{v} -> v*3')
   // assert([3,6], evalParamFrame(parseExpression('foo{(1,2)}'), ev(), 0))
   delete vars.foo
