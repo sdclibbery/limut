@@ -42,7 +42,7 @@ define(function(require) {
         let value = args[key]
         if (value === undefined) { value = defaultValue } // If no arg passed in, use default value from prototype
         if (value === false) { value = args['value'] } // If still no value, try for unnamed arg
-        unPushCallContext()
+        unPushCallContext() // Need to look outside the current callstack level when evalling the arg
         value = er(value,e,b)
         unPopCallContext()
         return value

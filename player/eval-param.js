@@ -38,7 +38,7 @@ define((require) => {
     if (override !== undefined) { return override }
     let originalCount = event.count
     event.count = results.modCount
-    let result = value(event, results.modBeat, (v,e,b,o) => { // Pass an evalRecurse that cancels the modifiers
+    let resultWrapper = value(event, results.modBeat, (v,e,b,o) => { // Pass an evalRecurse that cancels the modifiers
       let oldEc = e.count
       e.count = originalCount
       let result = evalRecurse(v, e, beat,o)
@@ -46,7 +46,7 @@ define((require) => {
       return result
     }, mods)
     event.count = originalCount
-    return result
+    return resultWrapper
   }
 
   let shouldForcePerEvent = (value) => value.interval === 'event'

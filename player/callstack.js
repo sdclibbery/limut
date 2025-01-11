@@ -4,7 +4,9 @@ define((require) => {
   let stack = []
   let accessLevel = -1
 
-  let pushCallContext = (context) => stack.push(context)
+  let pushCallContext = (context) => {
+    stack.push(context)
+  }
   let popCallContext = () => {
     if (stack.length <= 0) { throw 'Cannot pop; callstack is empty' }
     stack.pop()

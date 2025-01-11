@@ -22,7 +22,7 @@ define(function(require) {
 
   let audioNodeProto
   let audioParamProto
-  addNodeFunction('mockaudionode', (args,e,b) => { // For tests to run without creating an actual AudioNode
+  let mockaudionode = (args,e,b) => { // For tests to run without creating an actual AudioNode
     if (audioNodeProto === undefined) { audioNodeProto = Object.getPrototypeOf(Object.getPrototypeOf(system.audio.createGain())) }
     if (audioParamProto === undefined) { audioParamProto = Object.getPrototypeOf(system.audio.createGain().gain) }
     let node = Object.create(audioNodeProto)
@@ -46,8 +46,10 @@ define(function(require) {
     Object.defineProperty(node, "numberOfInputs", { get() { return 1 } })
     if (!params._destructor) { throw `mockaudionode: No destructor` }
     return node
-  })
-  addNodeFunction('idnode', (args,e,b) => { // identity node; passes webaudio connections through without creating an actual node
+  }
+  addNodeFunction('mockaudionode', mockaudionode)
+  
+  let idnode = (args,e,b) => { // identity node; passes webaudio connections through without creating an actual node
     if (audioNodeProto === undefined) { audioNodeProto = Object.getPrototypeOf(Object.getPrototypeOf(system.audio.createGain())) }
     let node = Object.create(audioNodeProto)
     node.ls = []
@@ -66,36 +68,39 @@ define(function(require) {
     }
     Object.defineProperty(node, "numberOfInputs", { get() { return 1 } })
     return node
-  })
+  }
+  addNodeFunction('idnode', idnode)
 
-  addNodeFunction('osc', (args,e,b) => {
+  let osc = (args,e,b) => {
     let node = system.audio.createOscillator()
     let params = combineParams(args, e)
     setWave(node, evalMainParamEvent(args, 'value', 'sawtooth'))
-// console.log(evalParamFrame(params.freq,e,b))
     evalMainParamFrame(node.frequency, params, 'freq', 440, 'hz')
     node.start(params._time)
     params._destructor.stop(node)
     return node
-  })
+  }
+  addNodeFunction('osc', osc)
 
-  addNodeFunction('const', (args,e,b) => {
+  let constNode = (args,e,b) => {
     let node = system.audio.createConstantSource()
     let params = combineParams(args, e)
     evalMainParamFrame(node.offset, params, 'value', 1)
     node.start(params._time)
     params._destructor.stop(node)
     return node
-  })
+  }
+  addNodeFunction('const', constNode)
 
-  addNodeFunction('gain', (args,e,b) => {
+  let gain = (args,e,b) => {
     let node = system.audio.createGain()
     let params = combineParams(args, e)
     evalMainParamFrame(node.gain, params, 'value', 1)
     return node
-  })
+  }
+  addNodeFunction('gain', gain)
 
-  addNodeFunction('biquad', (args,e,b) => {
+  let biquad = (args,e,b) => {
     let node = system.audio.createBiquadFilter()
     let params = combineParams(args, e)
     node.type = evalMainParamEvent(args, 'value', 'lowpass')
@@ -103,9 +108,10 @@ define(function(require) {
     evalMainParamFrame(node.Q, params, 'q', 5)
     evalMainParamFrame(node.gain, params, 'gain', undefined, undefined, x => Math.log10(Math.max(x,1e-6))*20) // Convert to dB for WebAudio
     return node
-  })
+  }
+  addNodeFunction('biquad', biquad)
 
-  addNodeFunction('delay', (args,e,b) => {
+  let delay = (args,e,b) => {
     let maxDelay = evalMainParamEvent(args, 'max', 1, 'b') * metronome.beatDuration()
     let node = system.audio.createDelay(maxDelay)
     let params = combineParams(args, e)
@@ -117,9 +123,10 @@ define(function(require) {
       connect(feedback, node, params._destructor)
     }
     return node
-  })
+  }
+  addNodeFunction('delay', delay)
 
-  addNodeFunction('shaper', (args,e,b) => {
+  let shaper = (args,e,b) => {
     let node = system.audio.createWaveShaper()
     let count = evalMainParamEvent(args, 'samples', 257)
     let oversample = evalMainParamEvent(args, 'oversample', '2x')
@@ -134,7 +141,8 @@ define(function(require) {
     node.curve = curve
     node.oversample = oversample
     return node
-  })
+  }
+  addNodeFunction('shaper', shaper)
 
 })
   
