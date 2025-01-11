@@ -14,6 +14,7 @@ WebAudio node graphs as first class values
   ?What about node function namespacing? Both builtin and lib??
  ? How to make operators do something useful with node chains; eg + * etc
   + becomes an array both feeding into the next node, * becomes a gain?
+  Also 1>>gain... should work by rewriting to const{1}>>gain... etc
  Create a helper lib with useful functions (think about namespacing)
    mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
     ?Expose from js, don't write in limut?

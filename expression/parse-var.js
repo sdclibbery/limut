@@ -38,7 +38,7 @@ define(function(require) {
       let defaultValue = userFunctionArgs[key]
       let userFunctionArgumentLookup = (e,b,er) => {
         let args = getCallContext()
-        if (args === undefined) { return undefined } 
+        if (args === undefined) { return undefined }
         let value = args[key]
         if (value === undefined) { value = defaultValue } // If no arg passed in, use default value from prototype
         if (value === false) { value = args['value'] } // If still no value, try for unnamed arg

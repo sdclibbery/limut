@@ -47,9 +47,11 @@ define(function (require) {
     ls.forEach(lv => {
       rs.forEach(rv => {
         if (!(lv instanceof AudioNode) && !(lv instanceof AudioParam)) {
+          console.log(`Connect: lv is not an AudioNode/AudioParam`, lv, ' rv: ', rv, ' lr: ', l, r)
           throw `Connect: l ${lv} is not an AudioNode/AudioParam`
         }
         if (!(rv instanceof AudioNode) && !(rv instanceof AudioParam)) {
+          console.log(`Connect: rv is not an AudioNode/AudioParam`, rv, ' lv: ', lv, ' lr: ', l, r)
           throw `Connect: r ${rv} is not an AudioNode/AudioParam`
         }
         if (rv.numberOfInputs === 0) { return } // Dont connect to nodes that dont have inputs

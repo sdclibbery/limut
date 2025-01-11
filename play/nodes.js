@@ -72,6 +72,7 @@ define(function(require) {
     let node = system.audio.createOscillator()
     let params = combineParams(args, e)
     setWave(node, evalMainParamEvent(args, 'value', 'sawtooth'))
+// console.log(evalParamFrame(params.freq,e,b))
     evalMainParamFrame(node.frequency, params, 'freq', 440, 'hz')
     node.start(params._time)
     params._destructor.stop(node)
