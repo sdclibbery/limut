@@ -31,7 +31,7 @@ define((require) => {
 
   let unPopCallContext = () => {
     if (current.children.length === 0) { throw `Cant unpop, no children` }
-    current = current.children[0] // ToDo
+    current = current.children[current.children.length - 1]
   }
 
   // TESTS //
@@ -68,22 +68,40 @@ define((require) => {
 
     // Branched callstack with unpush and repush
     pushCallContext('cc1')
-    pushCallContext('cc2')
+    pushCallContext('cc2a')
     unPushCallContext()
     assert('cc1', getCallContext())
-    pushCallContext('cc3')
-    assert('cc3', getCallContext())
+    pushCallContext('cc2b')
+    assert('cc2b', getCallContext())
     popCallContext()
     assert('cc1', getCallContext())
     unPopCallContext()
-    assert('cc2', getCallContext())
+    assert('cc2a', getCallContext())
     popCallContext()
     assert('cc1', getCallContext())
     popCallContext()
 
     // Unpop with multiple children
+    pushCallContext('cc1')
+    pushCallContext('cc2a')
+    unPushCallContext()
+    pushCallContext('cc2b')
+    unPushCallContext()
+    pushCallContext('cc2c')
+    assert('cc2c', getCallContext())
+    popCallContext()
+    assert('cc1', getCallContext())
+    unPopCallContext()
+    assert('cc2b', getCallContext())
+    popCallContext()
+    assert('cc1', getCallContext())
+    unPopCallContext()
+    assert('cc2a', getCallContext())
+    popCallContext()
+    assert('cc1', getCallContext())
+    popCallContext()
 
-    // Should all be back to cleared by the end of the tests
+    // Should be cleared back to root by the end of all tests
     assert(true, current === root)
 
     console.log('Callstack tests complete')
