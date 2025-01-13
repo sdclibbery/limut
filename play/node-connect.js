@@ -20,22 +20,15 @@ define(function (require) {
     return false
   }
   
-  let getAudioNode = (v, field) => {
-    while (v[field]) { v = v[field] } // Go through all composites
-    if (isNodeArray(v)) { return resolveAudioNodes(v, field) } // Might be a nested array
-    return v
-  }
-
-  let resolveAudioNodes = (v, field) => {
-    if (typeof v !== 'object') { return [] }
+  let resolveAudioNodes = (v, side) => {
+    if (typeof v !== 'object') { return v === 0 ? [] : [v] } // Zero is the placeholder for expand-chords
+    if (v[side]) { return resolveAudioNodes(v[side], side) } // Recurse into components
+    if (isNode(v)) { return [v] }
     if (isParam(v)) { return [v] }
-    if (!isNodeArray(v)) { return [getAudioNode(v, field)]} // Not an array
     let vs = []
     let idx = 0
-    vs[idx] = getAudioNode(v.value, field)
-    idx++
-    while (v['value'+idx] !== undefined) {
-      vs[idx] = getAudioNode(v['value'+idx], field)
+    while (v['value'+(idx>0?idx:'')] !== undefined) {
+      vs.push(resolveAudioNodes(v['value'+(idx>0?idx:'')], side))
       idx++
     }
     return vs
