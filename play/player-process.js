@@ -9,6 +9,18 @@ define((require) => {
   let consoleOut = require('console')
   let {connect} = require('play/node-connect')
 
+  let fadeIn = (node, fadeTime) => {
+    node.gain.cancelScheduledValues(0)
+    node.gain.setValueAtTime(0, system.timeNow())
+    node.gain.linearRampToValueAtTime(1, system.timeNow()+fadeTime)
+  }
+  let fadeOut = (node, destroy, fadeTime) => {
+    node.gain.cancelScheduledValues(0)
+    node.gain.setValueAtTime(1, system.timeNow())
+    node.gain.linearRampToValueAtTime(0, system.timeNow()+fadeTime)
+    setTimeout(destroy, fadeTime*1000)
+  }
+
   let createProcessChain = (eventParams) => {
     // Setup for continuous running
     let process = {
@@ -38,7 +50,7 @@ define((require) => {
 
     // Destruction
     process.destroy = () => {
-      setTimeout(() => process.cleanup(), process.destroyWait*1000)
+      fadeOut(process.fadeOutGain, process.cleanup, process.destroyWait+3)
     }
     process.cleanup = () => {
       process.stopped = true
@@ -57,7 +69,15 @@ define((require) => {
       consoleOut(`🟠 Player ${params._player.id} process failed to connect to destination bus ${busPlayerId}`)
       return
     }
-    connect(process.chain, bus._input, process.destructor, {dont_disconnect_r:true})
+    process.fadeOutGain = system.audio.createGain()
+    connect(process.chain, process.fadeOutGain, process.destructor)
+    process.fadeOutGain.connect(bus._input)
+    process.destructor.disconnect(process.fadeOutGain)
+
+    // Input via fade in
+    process.chainInput = system.audio.createGain()
+    connect(process.chainInput, process.chain, process.destructor)
+    fadeIn(process.chainInput, 0.1)
 
     return process
 }

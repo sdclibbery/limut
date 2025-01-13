@@ -6,12 +6,9 @@ WebAudio node graphs as first class values
  EXAMPLES Params; eg play=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    play>>=gain{[1:!200ms,0]e}
  •PLAN
  playerChain: what to call this? 'process'?
-  !Leave old process chain running if update process code not stop/restart
-   OK now needs crossfade etc
-    !!!Dont need crossfade, just slow enough fade out of old chain???
-   !Get a scream sometimes when reload instead of stop/start?
   ?Rename to playchain and playerchain???
    prefx is a bad name. FX implies mixchain effects more than filters etc
+   SUGGESTION: Play -> osc,  Process -> fx,  Then filter, shaper, envelope etc
   !evalMainParamFrame (and what it calls) should use the REAL event, not the params object
   ?In evalParamValue for function, do we need to evalRecurse there? Could it be more efficient at the root level somewhere?
   !Shouldnt bother with evalRecurse to cancel time modifiers if there weren't any time modifiers (only other modifiers)

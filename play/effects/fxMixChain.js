@@ -86,7 +86,8 @@ define(function (require) {
       if (outPlayer._process === undefined) {
         outPlayer._process = createProcessChain(params)
       }
-      connect(c.out, outPlayer._process.chain, c.destructor)
+      c.out.connect(outPlayer._process.chainInput)
+      c.destructor.disconnect(c.out)
     }
   }
 
