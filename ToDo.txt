@@ -5,10 +5,6 @@
 WebAudio node graphs as first class values
  EXAMPLES Params; eg play=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    play>>=gain{[1:!200ms,0]e}
  •PLAN
- playerChain: what to call this? 'process'?
-  ?Rename to playchain and playerchain???
-   prefx is a bad name. FX implies mixchain effects more than filters etc
-   SUGGESTION: Play -> osc,  Process -> fx,  Then filter, shaper, envelope etc
   !evalMainParamFrame (and what it calls) should use the REAL event, not the params object
   ?In evalParamValue for function, do we need to evalRecurse there? Could it be more efficient at the root level somewhere?
   !Shouldnt bother with evalRecurse to cancel time modifiers if there weren't any time modifiers (only other modifiers)
@@ -46,26 +42,18 @@ WebAudio node graphs as first class values
    Support for named outputs; eg for stereo splitter
   ? analyser node with output that can be read from limut somehow
   Basic node functions for all AudioNode types: check all are done
- Support for chains on buses in the usual places: prefx, prewave, preenv, postenv, process
-  ?Rewrite all synths using audiosynth?
-  !?Pitch: Support for a pitch chain?
+ Support for process chain on buses
+ ?Rewrite all synths using audiosynth?
+ !?Pitch: Support for a pitch chain?
  !! s audiosynth, play=osc{}>>gain{this.foo}>>gain{0.01}, foo=osc{'sine',freq:2b}
   e = ev(0,0,4); e.foo = parseExpression('mockaudionode{test:17}')
   assert(17, evalParamFrame(parseExpression('mockaudionode{test:this.foo}'), e, 0).test.connected[0].test.value)
   !! So foo is evalling without any context where a destructor makes sense :-/
- Placeholders for loops/insertions
-   ?? Do we even need this now? 
-    DONT really need to insert now we still have a fixed function chain
-    AND the only place you could want a loop is for feedback chains, which can be done as node params..?? 
+ Placeholders for generalised loops
    ? Syntax? Representation? Register themself somehow a bit like disconnect?
     play=delay{1/4,id:'delay'}>>{gain{0.8}>>'delay',idnode}
     Should be scoped with the current chain?
-   Delay with feedback will need increased disconnect time...
-   Write an echo{} function that takes a chain to put in the feedback loop...
- Inserting into an existing chain at a placeholder location
-  Requires not just connecting into a placeholder, but breaking the existing chain
-   ? New Syntax? New operator?? Or not?
- Existing operators/eval (and anything else with a type based if/else chain) ignore/error AudioNodes
+   flanger with proper feedback
  TEST!!!!!!!
   >>  >>=  >>[gain,biquad] bus freq:osc{} var/this-lookups
  DOCS
@@ -73,28 +61,16 @@ WebAudio node graphs as first class values
    lib functions
    connect op >>
    Other ops support nodes +-*, and mixture of nodes and values
-   New params to add in chains: prefx, prewave, preenv, postenv, process
+   process param
+   audiosynth; play param
+   user functions(?)
  •QUESTIONS
- ? When do AuidioNodes get created? play can be eval time? playerChain needs to be special?
- ? How to define node loops? Eg echo with feedback? Or parallel nodes, eg multiple bandpass and sum?
-  Arrays and placeholders? Eg play = shape{tanh} >> {biquad{110},biquad{220}} >> gain{2}
-   play = _in >> delay{1/4b} >> {out, gain{0.9} >> _echoLoop >> _in}   Can use _echoLoop as a way to insert more?
  ? How to control audioparams with nodes instead of expressions?
   Just pass more nodes in instead of value expression
   Eg playerChain=delay{saw{1hz}}
    ? What if you want to use the same LFO to control multiple things?
     Can define with set or something; concise syntax is less important for this stuff
- ? Can you do play=[drive,lpf]r? What if its per frame? Presumably play is @e only, and playerChain is parse time only??
- ? How to add something new into the middle of a chain? Eg I want to add another filter in before the pan
-  Use placeholders. So define play=_filters >> biquad{} >> _pans >> stereo{} and can then insert extra chains at the placeholder
-  ? What is the syntax for inserting? play._pans >>= gain{0.9} ???
-   Or >>> operator?
- ? Have a default play/playerChain that supports all current effects, and you can replace (or extend) it?
-  ? Rewrite all existing effects this way?
-  ? Also have osc nodes and fully replace all JS synths
  ? Make envelopes (SetTarget etc) into first class citizens???
- ? How do these values interact? Does it even make sense for them to use any operator other than >> ?
-  ???? Maybe drive * 3 is literally a x3 gain node?? Heading into SC territory...
 Monophonic synths can get event info somehow; eg for pitch or envelopes etc
 !!?Limiter permanently showing on??? Only on firefox desktop??
 !!!! s causes the k to get filtered somehow! But then p restores to normal!!! Something to do with the `X`?? Reencode sample???

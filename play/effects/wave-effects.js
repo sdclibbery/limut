@@ -3,7 +3,6 @@ define(function (require) {
   let system = require('play/system')
   let {evalMainParamEvent,evalSubParamEvent,evalSubParamFrame} = require('play/eval-audio-params')
   let {mix} = require('play/effects/mix')
-  let {connectFromParam} = require('play/node-connect')
 
   let inputGain = (params, p, node) => {
     if (params[p].gain === undefined) { return node }
@@ -74,7 +73,6 @@ define(function (require) {
   }
 
   return (params, node) => {
-    node = connectFromParam(params, 'prewave', node)
     node = shapeEffect(params, 'noisify', node, 16383, noisify, '4x')
     node = shapeEffect(params, 'bits', node, 255, (x, b) => Math.pow(Math.round(Math.pow(x,1/2)*b)/b,2))
     node = shapeEffect(params, 'fold', node, 255, fold)
@@ -83,7 +81,6 @@ define(function (require) {
     node = shapeEffect(params, 'suck', node, 255, (x, a) => Math.abs(x)<a ? x*Math.abs(x)/a : x)
     node = shapeEffect(params, 'linearshape', node, 7, (x) => x) // For testing purposes; applies clipping at -1 and 1, so can be used to test synth intermediate levels
     node = compressor(params, node)
-    node = connectFromParam(params, 'preenv', node)
     return node
   }
 })

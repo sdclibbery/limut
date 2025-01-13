@@ -6,7 +6,6 @@ define(function (require) {
   let {fxMixChain} = require('play/effects/fxMixChain')
   let waveEffects = require('play/effects/wave-effects')
   let perFrameAmp = require('play/effects/perFrameAmp')
-  let system = require('play/system')
 
   return (params) => {
     let vca = envelope(params, 0.06, 'none')
