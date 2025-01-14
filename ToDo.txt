@@ -5,20 +5,16 @@
 WebAudio node graphs as first class values
  EXAMPLES Params; eg play=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    play>>=gain{[1:!200ms,0]e}
  •PLAN
-  !evalMainParamFrame (and what it calls) should use the REAL event, not the params object
-  ?In evalParamValue for function, do we need to evalRecurse there? Could it be more efficient at the root level somewhere?
-  !Shouldnt bother with evalRecurse to cancel time modifiers if there weren't any time modifiers (only other modifiers)
-  !Can't get current player event sound param per frame in process  ? Is this really working on reparse? Without crossfade? How is it not cutting off? Is the delayWait magic enough? Is it OK?
-  ?What about node function namespacing? Both builtin and lib??
- More operators support nodes
-  + becomes an array
-  * becomes a gain
-  unary - becomes gain{-1}
-  - becomes l + -r etc
-  For all these and >> too, if only one operand is a node, then wrap the other in const{}
-  Docs
- ?pitchshift very clicky still, and wrong freqs?? And cant control ratio with timevar??
- !!!Actually flanger feedback should be from the mixed signal not just from the delay: so do need full feedback loops??
+  Debug log function that prints args and passes through
+   ? Better if it adds a UI readout element???
+  ?pitchshift very clicky still, and wrong freqs?? And cant control ratio with timevar??
+  !Can't get current player event sound param per frame in process
+  More operators support nodes
+   + becomes an array
+   * becomes a gain
+   unary - becomes gain{-1}
+   - becomes l + -r etc
+   For all these and >> too, if only one operand is a node, then wrap the other in const{}
  Create a helper lib with useful functions (think about namespacing)
    mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
     ?Expose from js, don't write in limut?
@@ -32,16 +28,21 @@ WebAudio node graphs as first class values
    oscillators
    maybe refactor existing envelope stuff actually??
  More audionode functions
-  ConvolverNode. Can also have a feedback chain, like delay does??
+  ConvolverNode. Can also have a feedback param, like delay does??
   StereoPannerNode
   DynamicsCompressorNode
   AudioBufferSourceNode - Also allow user def function to create sample
-  MediaStreamAudioSourceNode
+  MediaStreamAudioSourceNode - rewrite external as an audiosynth
   IIRFilterNode
   ChannelSplitterNode/ChannelMergerNode
    Support for named outputs; eg for stereo splitter
   ? analyser node with output that can be read from limut somehow
   Basic node functions for all AudioNode types: check all are done
+ !Better fade out time. If you dont have any delays/reverbs etc you want to stop sooner; eg a audiosynth, process=osc>>gain{0.02}
+ ?What about node function namespacing? Both builtin and lib??
+ !evalMainParamFrame (and what it calls) should use the REAL event, not the params object
+ ?In evalParamValue for function, do we need to evalRecurse there? Could it be more efficient at the root level somewhere?
+ !Shouldnt bother with evalRecurse to cancel time modifiers if there weren't any time modifiers (only other modifiers)
  Support for process chain on buses
  ?Rewrite all synths using audiosynth?
  !?Pitch: Support for a pitch chain?
@@ -50,19 +51,19 @@ WebAudio node graphs as first class values
   assert(17, evalParamFrame(parseExpression('mockaudionode{test:this.foo}'), e, 0).test.connected[0].test.value)
   !! So foo is evalling without any context where a destructor makes sense :-/
  Placeholders for generalised loops
+  !!!Actually flanger feedback should be from the mixed signal not just from the delay: so do need full feedback loops??
    ? Syntax? Representation? Register themself somehow a bit like disconnect?
     play=delay{1/4,id:'delay'}>>{gain{0.8}>>'delay',idnode}
     Should be scoped with the current chain?
    flanger with proper feedback
- TEST!!!!!!!
-  >>  >>=  >>[gain,biquad] bus freq:osc{} var/this-lookups
  DOCS
    nodes functions
    lib functions
    connect op >>
-   Other ops support nodes +-*, and mixture of nodes and values
+   (other) ops support nodes +-*, and mixture of nodes and values
    process param
    audiosynth; play param
+   log function
    user functions(?)
  •QUESTIONS
  ? How to control audioparams with nodes instead of expressions?
