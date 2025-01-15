@@ -5,9 +5,8 @@
 WebAudio node graphs as first class values
  EXAMPLES Params; eg play=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    play>>=gain{[1:!200ms,0]e}
  •PLAN
-  Debug log function that prints args and passes through
-   ? Better if it adds a UI readout element???
   ?pitchshift very clicky still, and wrong freqs?? And cant control ratio with timevar??
+   Do pitch shifter again from scratch, maybe built on a granular thing that pulls grains out of a delay with envelope?
   !Can't get current player event sound param per frame in process
   More operators support nodes
    + becomes an array

@@ -22,7 +22,7 @@ define(function (require) {
   
   let resolveAudioNodes = (v, side) => {
     if (typeof v !== 'object') { return v === 0 ? [] : [v] } // Zero is the placeholder for expand-chords
-    if (v[side]) { return resolveAudioNodes(v[side], side) } // Recurse into components
+    if (v[side] !== undefined) { return resolveAudioNodes(v[side], side) } // Recurse into components
     if (isNode(v)) { return [v] }
     if (isParam(v)) { return [v] }
     let vs = []
