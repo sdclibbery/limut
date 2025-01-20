@@ -5,27 +5,20 @@
 WebAudio node graphs as first class values
  EXAMPLES Params; eg play=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    play>>=gain{[1:!200ms,0]e}
  •PLAN
-  ?pitchshift very clicky still, and wrong freqs?? And cant control ratio with timevar??
-   Do pitch shifter again from scratch, maybe built on a granular thing that pulls grains out of a delay with envelope?
-  !Can't get current player event sound param per frame in process
   More operators support nodes
+   unary - becomes gain{-1}
    + becomes an array
    * becomes a gain
-   unary - becomes gain{-1}
    - becomes l + -r etc
-   For all these and >> too, if only one operand is a node, then wrap the other in const{}
- Create a helper lib with useful functions (think about namespacing)
-   mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
-    ?Expose from js, don't write in limut?
-    Must used node-connect
-    Really want to check that wet is @e zero, not just zero at the start. Expose a function to allow this
-    const wet=1 should also have a custom chain with no gains
-   filters lpf, hpf, bpf, notch, apf, psf, lowshelf, highshelf, peaking
-   chop, ring, mono, pan, shapers, compressor
-   chorus, phaser, flanger, echo, room, reverb
-   stereoflip, pitchshift
-   oscillators
-   maybe refactor existing envelope stuff actually??
+   For all these and >> too, if only one operand is a node, then wrap the other in const{}, then carry on
+  Feedback param: if passed non-connectable, wrap into a gain node
+  Do pitch shifter again from scratch, maybe built on a granular thing that pulls grains out of a delay with envelope?
+  !Can't get current player event sound param per frame in process
+ mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
+  Expose from js, don't write in limut
+  Must use node-connect
+  Const wet=0 or wet=1 should have a custom chain with no gains
+   Really want to check that wet is @e zero or one, not just zero at the start
  More audionode functions
   ConvolverNode. Can also have a feedback param, like delay does??
   StereoPannerNode
@@ -37,6 +30,13 @@ WebAudio node graphs as first class values
    Support for named outputs; eg for stereo splitter
   ? analyser node with output that can be read from limut somehow
   Basic node functions for all AudioNode types: check all are done
+ Create a helper lib with useful functions (think about namespacing)
+   filters lpf, hpf, bpf, notch, apf, psf, lowshelf, highshelf, peaking
+   chop, ring, mono, pan, shapers, compressor
+   chorus, phaser, flanger, echo, room, reverb
+   stereoflip, pitchshift
+   oscillators
+   maybe refactor existing envelope stuff actually??
  !Better fade out time. If you dont have any delays/reverbs etc you want to stop sooner; eg a audiosynth, process=osc>>gain{0.02}
  ?What about node function namespacing? Both builtin and lib??
  !evalMainParamFrame (and what it calls) should use the REAL event, not the params object

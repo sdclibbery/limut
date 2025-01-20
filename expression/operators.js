@@ -53,15 +53,17 @@ define(function(require) {
     '/': (l,r)=>defaultUndefined((l,r)=>(l/r), l,r),
     '%': (l,r)=>defaultUndefined((l,r)=>l%r, l,r),
     '^': (l,r)=>defaultUndefined((l,r)=>Math.pow(l,r), l,r),
-    '|': concatOp,
-    '>>': connectOp,
-    '.': lookupOp,
+
     '==': comparison((l,r)=>l==r),
     '!=': comparison((l,r)=>l!=r),
     '<=': comparison((l,r)=>l<=r),
     '>=': comparison((l,r)=>l>=r),
     '<': comparison((l,r)=>l<r),
     '>': comparison((l,r)=>l>r),
+
+    '|': concatOp,
+    '>>': connectOp,
+    '.': lookupOp,
     '??': ifThenOp,
     '?:': orElseOp,
   }
