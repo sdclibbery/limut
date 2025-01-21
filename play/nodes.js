@@ -144,5 +144,8 @@ define(function(require) {
   }
   addNodeFunction('shaper', shaper)
 
+  return {
+    gain:gain
+  }
 })
   

@@ -2,7 +2,7 @@
 define(function(require) {
   let consoleOut = require('console')
   let {combineIntervalsFrom,combineIntervals} = require('expression/intervals')
-  let {evalFunctionWithModifiers} = require('player/eval-param')
+  let {isConnectable} = require('play/node-connect')
 
   let objectMap = (obj, fn) => {
     if (obj.hasOwnProperty('value')) { // 'value' field implies this is an object with subparams instead of a normal object
@@ -85,6 +85,9 @@ define(function(require) {
       if (!op.doNotEvalArgs) { // Lookup op needs to eval its own args otherwise aggregators are not possible
         el = evalRecurse(l, event,b)
         er = evalRecurse(r, event,b)
+      }
+      if (op.connectableOp && (isConnectable(el) || isConnectable(er))) {
+        return op.connectableOp(l, r)
       }
       let result
       if (op.raw) {

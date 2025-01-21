@@ -1980,6 +1980,8 @@ define(function(require) {
   delete vars.foo
   delete vars.bar
 
+  assert(5, evalParamFrame(parseExpression('mockaudionode * 5'), evd(), 0).r.gain.value)
+
   vars.foo = parseExpression('{v} -> v*3')
   // assert([3,6], evalParamFrame(parseExpression('foo{(1,2)}'), ev(), 0))
   delete vars.foo
