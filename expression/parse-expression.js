@@ -1980,7 +1980,14 @@ define(function(require) {
   delete vars.foo
   delete vars.bar
 
+  let oldVarsGain = vars.gain
+  vars.gain = vars.mockgainnode // Mock out the gain creator function so these tests don't really create audio nodes
   assert(5, evalParamFrame(parseExpression('mockaudionode * 5'), evd(), 0).r.gain.value)
+  assert(5, evalParamFrame(parseExpression('5 * mockaudionode'), evd(), 0).l.gain.value)
+  assert(5, evalParamFrame(parseExpression('mockaudionode * [3,5]'), evd(1), 0).r.gain.value)
+  assert(5, evalParamFrame(parseExpression('mockaudionode * [3,5]t1'), evd(1,1,1), 1).r.gain.value)
+  assert(5, evalParamFrame(parseExpression('mockaudionode * mockaudionode{test:5}'), evd(), 0).r.gain.connected[0].test.value)
+  vars.gain = oldVarsGain
 
   vars.foo = parseExpression('{v} -> v*3')
   // assert([3,6], evalParamFrame(parseExpression('foo{(1,2)}'), ev(), 0))

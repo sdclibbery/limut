@@ -86,8 +86,10 @@ define(function(require) {
         el = evalRecurse(l, event,b)
         er = evalRecurse(r, event,b)
       }
-      if (op.connectableOp && (isConnectable(el) || isConnectable(er))) {
-        return op.connectableOp(l, r)
+      let elIsConnectable = isConnectable(el)
+      let erIsConnectable = isConnectable(er)
+      if (op.connectableOp && (elIsConnectable || erIsConnectable)) {
+        return op.connectableOp(l, el, elIsConnectable, r, er, erIsConnectable, event,b,evalRecurse)
       }
       let result
       if (op.raw) {

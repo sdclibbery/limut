@@ -49,6 +49,23 @@ define(function(require) {
   }
   addNodeFunction('mockaudionode', mockaudionode)
   
+  let mockgainnode = (args,e,b) => { // mock of a gain node for testing
+    let node = mockaudionode(args,e,b)
+    let params = combineParams(args, e)
+    node.gain = Object.create(audioParamProto) // Mock AudioParam; add a gain param to the mock node
+    Object.defineProperty(node.gain, "value", {
+      set(v) { node.gain._value = v },
+      get() { return node.gain._value },
+    })
+    node.gain.value = 1
+    node.gain.setValueAtTime = (v)=>node.gain.value=v
+    node.gain.setTargetAtTime = (v)=>node.gain.value=v
+    node.gain.connected = []
+    evalMainParamFrame(node.gain, params, 'value', 1)
+    return node
+  }
+  addNodeFunction('mockgainnode', mockgainnode)
+  
   let idnode = (args,e,b) => { // identity node; passes webaudio connections through without creating an actual node
     if (audioNodeProto === undefined) { audioNodeProto = Object.getPrototypeOf(Object.getPrototypeOf(system.audio.createGain())) }
     let node = Object.create(audioNodeProto)

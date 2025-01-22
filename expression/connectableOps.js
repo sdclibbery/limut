@@ -1,15 +1,15 @@
 'use strict';
 define(function(require) {
   let connectOp = require('expression/connectOp')
-  let {gain} = require('play/nodes')
+  let vars = require('vars').all()
 
-  let connectableMul = (l, r) => {
-    let evalConnectableMulOp = (e,b,evalRecurse) => {
-      let node = gain({value:r}, e,b)
-      let el = evalRecurse(l, e,b)
-      return connectOp(el, node, e,b,evalRecurse)
+  let connectableMul = (l, el, elIsConnectable, r, er, erIsConnectable, e,b,evalRecurse) => {
+    if (!elIsConnectable) {
+      let node = vars.gain({value:l}, e,b)
+      return connectOp(node, er, e,b,evalRecurse)
     }
-    return evalConnectableMulOp
+    let node = vars.gain({value:r}, e,b)
+    return connectOp(el, node, e,b,evalRecurse)
   }
     
   return {
