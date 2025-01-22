@@ -6,7 +6,6 @@ WebAudio node graphs as first class values
  EXAMPLES Params; eg play=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    play>>=gain{[1:!200ms,0]e}
  •PLAN
   More operators support nodes
-   + becomes an array
    - becomes l + -r etc
    ?? / becomes l >>gain{1/r} but only if r is not connectable...
    Should >> be Lower priority than *+ etc? Eg osc*2>>shaper*1/2

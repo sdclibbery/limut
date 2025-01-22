@@ -66,6 +66,23 @@ define(function(require) {
   }
   addNodeFunction('mockgainnode', mockgainnode)
   
+  let mockconstnode = (args,e,b) => { // mock of a const node for testing
+    let node = mockaudionode(args,e,b)
+    let params = combineParams(args, e)
+    node.offset = Object.create(audioParamProto) // Mock AudioParam; add a offset param to the mock node
+    Object.defineProperty(node.offset, "value", {
+      set(v) { node.offset._value = v },
+      get() { return node.offset._value },
+    })
+    node.offset.value = 1
+    node.offset.setValueAtTime = (v)=>node.offset.value=v
+    node.offset.setTargetAtTime = (v)=>node.offset.value=v
+    node.offset.connected = []
+    evalMainParamFrame(node.offset, params, 'value', 1)
+    return node
+  }
+  addNodeFunction('mockconstnode', mockconstnode)
+  
   let idnode = (args,e,b) => { // identity node; passes webaudio connections through without creating an actual node
     if (audioNodeProto === undefined) { audioNodeProto = Object.getPrototypeOf(Object.getPrototypeOf(system.audio.createGain())) }
     let node = Object.create(audioNodeProto)

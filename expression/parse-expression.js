@@ -1982,12 +1982,24 @@ define(function(require) {
 
   let oldVarsGain = vars.gain
   vars.gain = vars.mockgainnode // Mock out the gain creator function so these tests don't really create audio nodes
-  assert(5, evalParamFrame(parseExpression('mockaudionode * 5'), evd(), 0).r.gain.value)
+  assert(7, evalParamFrame(parseExpression('mockaudionode{test:7} * 5'), evd(), 0).l.test.value)
+  assert(5, evalParamFrame(parseExpression('mockaudionode{test:7} * 5'), evd(), 0).r.gain.value)
   assert(5, evalParamFrame(parseExpression('5 * mockaudionode'), evd(), 0).l.gain.value)
   assert(5, evalParamFrame(parseExpression('mockaudionode * [3,5]'), evd(1), 0).r.gain.value)
   assert(5, evalParamFrame(parseExpression('mockaudionode * [3,5]t1'), evd(1,1,1), 1).r.gain.value)
   assert(5, evalParamFrame(parseExpression('mockaudionode * mockaudionode{test:5}'), evd(), 0).r.gain.connected[0].test.value)
   vars.gain = oldVarsGain
+
+  let oldVarsConst = vars.const
+  vars.const = vars.mockconstnode // Mock out the const creator function so these tests don't really create audio nodes
+  assert(7, evalParamFrame(parseExpression('mockaudionode{test:7} + 5'), evd(), 0).value.test.value)
+  assert(5, evalParamFrame(parseExpression('mockaudionode{test:7} + 5'), evd(), 0).value1.offset.value)
+  assert(5, evalParamFrame(parseExpression('5 + mockaudionode'), evd(), 0).value.offset.value)
+  assert(5, evalParamFrame(parseExpression('mockaudionode + [3,5]'), evd(1), 0).value1.offset.value)
+  assert(5, evalParamFrame(parseExpression('mockaudionode + [3,5]t1'), evd(1,1,1), 1).value1.offset.value)
+  assert(7, evalParamFrame(parseExpression('mockaudionode{test:7} + mockaudionode{test:5}'), evd(), 0).value.test.value)
+  assert(5, evalParamFrame(parseExpression('mockaudionode{test:7} + mockaudionode{test:5}'), evd(), 0).value1.test.value)
+  vars.const = oldVarsConst
 
   vars.foo = parseExpression('{v} -> v*3')
   // assert([3,6], evalParamFrame(parseExpression('foo{(1,2)}'), ev(), 0))
