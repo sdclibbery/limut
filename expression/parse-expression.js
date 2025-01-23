@@ -214,6 +214,12 @@ define(function(require) {
       old = next
     }
   }
+  let assertThrows = async (expected, code) => {
+    let got
+    try {await code()}
+    catch (e) { if (e.includes(expected)) {got=true} else {console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: ${e}`)} }
+    finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
+  }
 
   require('predefined-vars').apply(require('vars').all())
   let {evalParamFrame} = require('player/eval-param')
@@ -1988,6 +1994,9 @@ define(function(require) {
   assert(5, evalParamFrame(parseExpression('mockaudionode * [3,5]'), evd(1), 0).r.gain.value)
   assert(5, evalParamFrame(parseExpression('mockaudionode * [3,5]t1'), evd(1,1,1), 1).r.gain.value)
   assert(5, evalParamFrame(parseExpression('mockaudionode * mockaudionode{test:5}'), evd(), 0).r.gain.connected[0].test.value)
+  assert(7, evalParamFrame(parseExpression('mockaudionode{test:7} / 5'), evd(), 0).l.test.value)
+  assert(1/5, evalParamFrame(parseExpression('mockaudionode{test:7} / 5'), evd(), 0).r.gain.value)
+  assertThrows('Cannot divide', () => evalParamFrame(parseExpression('5 / mockaudionode'), evd(), 0))
   vars.gain = oldVarsGain
 
   let oldVarsConst = vars.const

@@ -2,7 +2,7 @@
 define(function(require) {
   let lookupOp = require('expression/lookupOp')
   let connectOp = require('expression/connectOp')
-  let {connectableMul,connectableAdd} = require('expression/connectableOps')
+  let {connectableAdd,connectableMul,connectableDiv} = require('expression/connectableOps')
 
   let defaultUndefined = (op, l,r) => {
     if (l === undefined) { l = 0 }
@@ -78,6 +78,7 @@ define(function(require) {
   operators['??'].doNotEvalArgs = true
   operators['+'].connectableOp = connectableAdd
   operators['*'].connectableOp = connectableMul
+  operators['/'].connectableOp = connectableDiv
 
   let precedence = { // MUST ALL BE > 0
     '.':1,
