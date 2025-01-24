@@ -4,7 +4,7 @@ define(function(require) {
   let {connect} = require('play/node-connect');
   let destructor = require('play/destructor')
   let {evalParamFrame} = require('player/eval-param')
-  let {isConnectable} = require('play/node-connect')
+  let {isConnectableOrPlaceholder} = require('play/node-connect')
   let vars = require('vars')
 
   let audioNodeProto
@@ -19,10 +19,10 @@ define(function(require) {
     if (typeof l === 'object' && l.value) { l = evalParamFrame(l,e,b,evalRecurse) } // Fully eval args
     if (typeof r === 'object' && r.value) { r = evalParamFrame(r,e,b,evalRecurse) }
     let el = evalRecurse(l, e,b)
-    if (!isConnectable(el)) {
+    if (!isConnectableOrPlaceholder(el)) {
       l = vars.all().const({value:l}, e,b) // Allow connecting from a value by wrapping into const
     }
-    let composite = Object.create(getAudioNodeProto()) // Create object that satisfies instancof AudioNode
+    let composite = Object.create(getAudioNodeProto()) // Create object that satisfies instanceof AudioNode
     composite.l = l
     composite.r = r
     composite.destructor = destructor()

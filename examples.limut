@@ -4190,3 +4190,11 @@ set !p* add+=[0:24,2:6,5:2]t, addc=wow
 // set e reverb={2,mix:1/3}
 
 
+// a audiosynth, process={osc,osc>>gain{-1}} >> gain{0.001}
+// a audiosynth, process={osc,osc*-1} >> gain{0.001}
+// a audiosynth, process=(osc + osc*-1) >> gain{0.001}
+// a audiosynth, process=(osc - osc) >> gain{0.001}
+// a audiosynth, process={osc,-osc} >> gain{0.001}
+// a audiosynth, process=(osc + -osc) >> gain{0.001}
+
+

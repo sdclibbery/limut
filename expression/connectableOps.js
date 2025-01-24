@@ -10,10 +10,24 @@ define(function(require) {
     return { value:el, value1:er }
   }
 
+  let connectableSub = (l, el, elIsConnectable, r, er, erIsConnectable, e,b,evalRecurse) => {
+    if (!elIsConnectable) { // Wrap l in a const if it's not connectable
+      el = vars.all().const({value:l}, e,b)
+    }
+    if (erIsConnectable) { // Mul r by -1 in appropriate way
+      let node = vars.all().gain({value:-1}, e,b)
+      er = connectOp(er, node, e,b,evalRecurse)
+    } else {
+      let negativeR = evalOperator((l,r)=>l*r, -1, r)
+      er = vars.all().const({value:negativeR}, e,b)
+    }
+    return { value:el, value1:er } // add
+  }
+
   let connectableMul = (l, el, elIsConnectable, r, er, erIsConnectable, e,b,evalRecurse) => {
     if (!elIsConnectable) {
       let node = vars.all().gain({value:l}, e,b)
-      return connectOp(node, er, e,b,evalRecurse)
+      return connectOp(er, node, e,b,evalRecurse) // Still connect the gain on the RHS in case l is a source node eg osc
     }
     let node = vars.all().gain({value:r}, e,b)
     return connectOp(el, node, e,b,evalRecurse)
@@ -30,6 +44,7 @@ define(function(require) {
     
   return {
     connectableAdd: connectableAdd,
+    connectableSub: connectableSub,
     connectableMul: connectableMul,
     connectableDiv: connectableDiv
   }

@@ -6,6 +6,20 @@ define(function (require) {
   let isNode = v => v instanceof AudioNode
   let isParam = v => v instanceof AudioParam
   let isNodeArray = v => typeof v === 'object' && v.value instanceof AudioNode && !isParam(v)
+  let isConnectableOrPlaceholder = v => {
+    if (v === 0) { return true } // Placeholder for expand chords
+    if (typeof v !== 'object') { return false }
+    if (isNode(v)) { return true }
+    if (isParam(v)) { return true }
+    if (v.value === undefined) { return false }
+    if (isConnectableOrPlaceholder(v.value)) { return true }
+    let idx = 1
+    while (v['value'+idx] !== undefined) { // Have to recursively check array values to see if its connectable
+      if (isConnectableOrPlaceholder(v['value'+idx])) { return true }
+      idx++
+    }
+    return false
+  }
   let isConnectable = v => {
     if (typeof v !== 'object') { return false }
     if (isNode(v)) { return true }
@@ -129,6 +143,7 @@ define(function (require) {
       isParam: isParam,
       isNodeArray: isNodeArray,
       isConnectable: isConnectable,
+      isConnectableOrPlaceholder: isConnectableOrPlaceholder,
       connect: connect,
       connectFromParam: connectFromParam,
   }

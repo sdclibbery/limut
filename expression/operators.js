@@ -2,7 +2,7 @@
 define(function(require) {
   let lookupOp = require('expression/lookupOp')
   let connectOp = require('expression/connectOp')
-  let {connectableAdd,connectableMul,connectableDiv} = require('expression/connectableOps')
+  let {connectableAdd,connectableSub,connectableMul,connectableDiv} = require('expression/connectableOps')
 
   let defaultUndefined = (op, l,r) => {
     if (l === undefined) { l = 0 }
@@ -77,6 +77,7 @@ define(function(require) {
   operators['??'].raw = true
   operators['??'].doNotEvalArgs = true
   operators['+'].connectableOp = connectableAdd
+  operators['-'].connectableOp = connectableSub
   operators['*'].connectableOp = connectableMul
   operators['/'].connectableOp = connectableDiv
 
