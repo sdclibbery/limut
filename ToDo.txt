@@ -6,7 +6,6 @@ WebAudio node graphs as first class values
  EXAMPLES Params; eg play=biquad{'lowpass',freq:this.lpf,q:10} >> shape{tanh{}}    or   playerChain=delay{[0:100ms,1]l@f}    or    play>>=gain{[1:!200ms,0]e}
  •PLAN
   More operators support nodes
-   For >>, if only one operand is a node, then wrap the other in const{}, then carry on
    - becomes l + -r etc
    Tests for unary minus
    Rewrite lfo etc using this

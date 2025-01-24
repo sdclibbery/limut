@@ -2008,6 +2008,7 @@ define(function(require) {
   assert(5, evalParamFrame(parseExpression('mockaudionode + [3,5]t1'), evd(1,1,1), 1).value1.offset.value)
   assert(7, evalParamFrame(parseExpression('mockaudionode{test:7} + mockaudionode{test:5}'), evd(), 0).value.test.value)
   assert(5, evalParamFrame(parseExpression('mockaudionode{test:7} + mockaudionode{test:5}'), evd(), 0).value1.test.value)
+  assert(5, evalParamFrame(parseExpression('5 >> mockaudionode'), evd(), 0).l.offset.value)
   vars.const = oldVarsConst
 
   vars.foo = parseExpression('{v} -> v*3')

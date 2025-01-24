@@ -4,6 +4,8 @@ define(function(require) {
   let {connect} = require('play/node-connect');
   let destructor = require('play/destructor')
   let {evalParamFrame} = require('player/eval-param')
+  let {isConnectable} = require('play/node-connect')
+  let vars = require('vars').all()
 
   let audioNodeProto
   let getAudioNodeProto = () => {
@@ -16,6 +18,10 @@ define(function(require) {
     if (r === undefined) { return l }
     if (typeof l === 'object' && l.value) { l = evalParamFrame(l,e,b,evalRecurse) } // Fully eval args
     if (typeof r === 'object' && r.value) { r = evalParamFrame(r,e,b,evalRecurse) }
+    let el = evalRecurse(l, e,b)
+    if (!isConnectable(el)) {
+      l = vars.const({value:l}, e,b) // Allow connecting from a value by wrapping into const
+    }
     let composite = Object.create(getAudioNodeProto()) // Create object that satisfies instancof AudioNode
     composite.l = l
     composite.r = r
@@ -50,12 +56,12 @@ define(function(require) {
   let an
   
   an = mockAn()
-  assert(an, connectOp(an, undefined))
-  assert(an, connectOp(undefined, an))
+  assert(an, connectOp(an, undefined, {},0,x=>x))
+  assert(an, connectOp(undefined, an, {},0,x=>x))
 
   l = mockAn()
   r = mockAn()
-  an = connectOp(l, r)
+  an = connectOp(l, r, {},0,x=>x)
   assert(true, an instanceof AudioNode)
   an.disconnect()
   assert(true, l.disconnected)
