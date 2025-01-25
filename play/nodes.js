@@ -110,7 +110,11 @@ define(function(require) {
     let params = combineParams(args, e)
     setWave(node, evalMainParamEvent(args, 'value', 'sawtooth'))
     evalMainParamFrame(node.frequency, params, 'freq', 440, 'hz')
-    node.start(params._time)
+    let freq = node.frequency.value
+    let phase = evalParamEvent(params['phase'], e)
+    let offset = 0
+    if (typeof freq === 'number' && typeof phase === 'number') { offset = phase / freq }
+    node.start(params._time + offset)
     params._destructor.stop(node)
     return node
   }

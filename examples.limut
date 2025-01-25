@@ -4196,5 +4196,6 @@ set !p* add+=[0:24,2:6,5:2]t, addc=wow
 // a audiosynth, process=(osc - osc) >> gain{0.001}
 // a audiosynth, process={osc,-osc} >> gain{0.001}
 // a audiosynth, process=(osc + -osc) >> gain{0.001}
+// a audiosynth, process=(osc{'sine'} + osc{'sine',phase:0.5}) * 0.001
 
 
