@@ -4199,3 +4199,16 @@ set !p* add+=[0:24,2:6,5:2]t, addc=wow
 // a audiosynth, process=(osc{'sine'} + osc{'sine',phase:0.5}) * 0.001
 
 
+set scale='minor'
+set root=2
+set bpm=87
+set main amp*=+3db
+// s sweep, process=hpf{[200:5000]l25@f}+delay{[0.01:0.1]l100/3@f}, amp*=1/2, pan=-1/2
+// b cybass <00v>..-7<.2> crop 8, dur=1/4, lpf=[3000:!120ms,200]es, amp*=-3db, pan=1/2
+// m cybass 0.2-7<.2>. crop 16, dur=1/4, lpf={[10000:!50ms,300]es,q:10}, amp*=-9db, oct+=1, pan=1/3
+// sp synpluck 09.7 + . * 12, pan=[-1,1], chorus, room={1,mix:1/4}, amp*=-6db, oct-=1
+// e external, amp*=2, mono, reverb={4,curve:1,mix:1/4}, echo={1/32,feedback:0.9,mix:1/4}, flanger=8b, low=-3db
+// o oxy (027), oct+=1, amp=1/[128:20]l12@f, pan=[-1,1]s8@f, chorus
+n noise, dur=[8,10,16]r, envelope='percussion', sus=[1,2]r, pan=[-2/3:2/3]r, amp=1/16, room=2, reverb=4, chorus, flanger=12b, lpf={[400:3000]r,q:10}
+
+

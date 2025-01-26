@@ -4,6 +4,7 @@
 ==== audio ====
 WebAudio node graphs as first class values
  Do pitch shifter again from scratch, maybe built on a granular thing that pulls grains out of a delay with envelope?
+ !!!Syntax error when use "rate" as arg!!!!!  set grain = {rate} -> gain{rate}
  mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
   Expose from js, don't write in limut
   Must use node-connect

@@ -108,8 +108,13 @@ define(function(require) {
   let osc = (args,e,b) => {
     let node = system.audio.createOscillator()
     let params = combineParams(args, e)
-    setWave(node, evalMainParamEvent(args, 'value', 'sawtooth'))
-    evalMainParamFrame(node.frequency, params, 'freq', 440, 'hz')
+    let value = evalParamEvent(params.value, e,b)
+    setWave(node, (typeof value === 'string') ? value :  'sawtooth')
+    if (typeof value === 'number') {
+      evalMainParamFrame(node.frequency, params, 'value', 440, 'hz')
+    } else {
+      evalMainParamFrame(node.frequency, params, 'freq', 440, 'hz')
+    }
     let freq = node.frequency.value
     let phase = evalParamEvent(params['phase'], e)
     let offset = 0

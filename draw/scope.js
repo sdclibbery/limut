@@ -9,11 +9,12 @@ define(function (require) {
   in vec2 fragCoord;
   uniform sampler2D l_image;
   uniform vec2 l_extents;
+  uniform float l_value;
   ${common.commonProcessors}
   void main() {
     vec2 pos = preprocess(fragCoord);
     pos = (pos / 2.0) + 0.5;
-    float value = texture(l_image, vec2(pos.x,0.0)).r;
+    float value = texture(l_image, vec2(pos.x,0.0)).r * max(l_value, 1.0);
     float f = pow(1.0-abs(pos.y - (value*3.0+0.5)), 200.0);
     postprocess(vec4(f,f,f,1.0), 1.0);
   }
