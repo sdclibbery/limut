@@ -76,7 +76,7 @@ define(function(require) {
         if (vr.isNormalCallFunction) { // Used by user defined functions which need evalRecurse but not state
           v = vr(event,b, evalRecurse, modifiers)
         } else {
-          v = vr(modifiers, event,b, state)
+          v = vr(modifiers, event,b, state, evalRecurse)
         }
         if (typeof v === 'object' && v._finalResult) {
           if (typeof modifiers !== 'object' || Object.keys(modifiers).length === 0) {

@@ -7,6 +7,7 @@ define(function(require) {
   let setWave = require('play/synth/waveforms/set-wave')
   var metronome = require('metronome')
   let {connect} = require('play/node-connect')
+  let connectOp = require('expression/connectOp')
 
   let addNodeFunction = (k, v) => {
     v.dontEvalArgs = true
@@ -187,8 +188,24 @@ define(function(require) {
   }
   addNodeFunction('shaper', shaper)
 
-  return {
-    gain:gain
-  }
+  let loop = (args,e,b,_,er) => {
+    let mainChain = evalParamEvent(args['value'], e)
+    let feedbackChain = evalParamEvent(args['feedback'], e)
+    if (mainChain === undefined) {
+      mainChain = idnode(args,e,b)
+      if (feedbackChain === undefined) { return mainChain }
+    }
+    let gain = system.audio.createGain()
+    e._destructor.disconnect(gain)
+    mainChain = connectOp(mainChain, gain, e,b,er) // Attach a placeholder gain node to force a mixdown of arrays and prevent idnode loops
+    if (feedbackChain === undefined) {
+      connect(mainChain, mainChain, e._destructor)
+    } else {
+      connect(mainChain, feedbackChain, e._destructor)
+      connect(feedbackChain, mainChain, e._destructor)
+    }
+    return mainChain
+ }
+  addNodeFunction('loop', loop)
 })
   
