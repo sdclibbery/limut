@@ -111,12 +111,14 @@ define(function(require) {
     let params = combineParams(args, e)
     let value = evalParamEvent(params.value, e,b)
     setWave(node, (typeof value === 'string') ? value :  'sawtooth')
+    let freq = 440
     if (typeof value === 'number') {
       evalMainParamFrame(node.frequency, params, 'value', 440, 'hz')
+      freq = evalParamEvent(params['value'], e)
     } else {
       evalMainParamFrame(node.frequency, params, 'freq', 440, 'hz')
+      freq = evalParamEvent(params['freq'], e)
     }
-    let freq = node.frequency.value
     let phase = evalParamEvent(params['phase'], e)
     let offset = 0
     if (typeof freq === 'number' && typeof phase === 'number') { offset = phase / freq }
