@@ -112,7 +112,7 @@ define(function(require) {
     let value = evalParamEvent(params.value, e,b)
     setWave(node, (typeof value === 'string') ? value :  'sawtooth')
     let freq = 440
-    if (typeof value === 'number') {
+    if (typeof value === 'number' && value !== 0) {
       evalMainParamFrame(node.frequency, params, 'value', 440, 'hz')
       freq = evalParamEvent(params['value'], e)
     } else {
@@ -178,8 +178,8 @@ define(function(require) {
     let oversample = evalMainParamEvent(args, 'oversample', '2x')
     let curve = new Float32Array(count)
     args.value.modifiers = args.value.modifiers || {}
-    for (let i = 1; i <= count; i++) {
-      let x = (i/count)*2 - 1
+    for (let i = 0; i < count; i++) {
+      let x = (i/(count-1))*2 - 1
       args.value.modifiers.value = x
       let y = evalParamFrame(args.value,e,b, {doNotMemoise:true}) // It will memoise the same result across all x if allowed to
       curve[i] = y

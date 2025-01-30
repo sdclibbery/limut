@@ -1,6 +1,6 @@
 'use strict'
 define(function(require) {
-  let addVarFunction = require('predefined-vars').addVarFunction
+  let {addVarFunction,add} = require('predefined-vars')
   let {mainParam,subParam} = require('player/sub-param')
 
   let argParam = v => mainParam(mainParam(v)) // One for getting the value from args, other for getting the value from the param
@@ -17,6 +17,19 @@ define(function(require) {
   addVarFunction('floor', roundWrapper(Math.floor))
   addVarFunction('ceil', roundWrapper(Math.ceil))
   addVarFunction('round', roundWrapper(Math.round))
+
+  let trigWrapper = (fn) => {
+    let trigFunc = (args) => {
+      let v = argParam(args, 0)
+      if (typeof v !== 'number') { v = 0 }
+      return fn(v)
+    }
+    return trigFunc
+  }
+  addVarFunction('sin', trigWrapper(Math.sin))
+  addVarFunction('cos', trigWrapper(Math.cos))
+  addVarFunction('tan', trigWrapper(Math.tan))
+  add('pi', Math.PI)
 
   let euclid = (args, e) => {
     let k = Math.floor(argParam(args, 1)) // Distribute k beats...
