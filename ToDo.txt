@@ -3,19 +3,22 @@
 =================================================================================================================================
 ==== audio ====
 WebAudio node graphs as first class values
- Rename 'process' to 'fx'? It seems more intuitive really
- !!! Too much recursion???!!!  s saw, fx=gain{osc{}}
+ !Too much recursion???!!!  s saw, fx=gain{osc{}}
+  ! osc thinks its value param is another call to osc...
  !The rest in this pattern somehow causes a terrible blare, but only with pitchshift in the feedback, even muted:
   b tb303 .0, fx=1/4*delay{1/4,feedback:pitchshift{1}*0}
   The preset doesn't matter but the dur must be 1/4
- ConvolverNode
+ ConvolverNode, taking a user function to provide the impulse response - what about stereo??
+ pitchshift
+  experiment with better length default; experiment with more overlapping grains?
+  try out tone.js pitch shifter; does it have same issues with audio rate length causing ringing?
+ ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
+ !!!Syntax error when use "rate" as arg!!!!!  set grain = {rate} -> gain{rate}
  mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
   Expose from js, don't write in limut
   Must use node-connect
   Const wet=0 or wet=1 should have a custom chain with no gains
    Really want to check that wet is @e zero or one, not just zero at the start
- ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
- !!!Syntax error when use "rate" as arg!!!!!  set grain = {rate} -> gain{rate}
  More audionode functions
   StereoPannerNode
   DynamicsCompressorNode
