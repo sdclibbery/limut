@@ -12,14 +12,14 @@ define(function (require) {
   let consoleOut = require('console')
   let {fixedEcho} = require('play/effects/echo')
   let destructor = require('play/destructor')
-  let createProcessChain = require('play/player-process')
+  let createPlayerFxChain = require('play/player-fx')
 
   let quantise = (v, step) =>{
     return Math.round(v*step)/step
   }
   let getParams = (params) => {
     let output
-    if (params.process !== undefined) { output = params._player.id }
+    if (params.fx !== undefined) { output = params._player.id }
     else { output = evalMainParamEvent(params, 'bus') }
     return {
       chorusAmount: quantise(evalMainParamEvent(params, 'chorus', 0), 8),
@@ -81,11 +81,11 @@ define(function (require) {
     c.out.disconnect()
     if (outPlayer._input !== undefined)  { // Bus player
       c.out.connect(outPlayer._input)
-    } else { // Player process chain
-      if (outPlayer._process === undefined) {
-        outPlayer._process = createProcessChain(params)
+    } else { // Player fx chain
+      if (outPlayer._fx === undefined) {
+        outPlayer._fx = createPlayerFxChain(params)
       }
-      c.out.connect(outPlayer._process.chainInput)
+      c.out.connect(outPlayer._fx.chainInput)
       c.destructor.disconnect(c.out)
     }
   }

@@ -21,17 +21,17 @@ define((require) => {
     setTimeout(destroy, fadeTime*1000)
   }
 
-  let createProcessChain = (eventParams) => {
+  let createPlayerFxChain = (eventParams) => {
     // Setup for continuous running
-    let process = {
+    let fx = {
       _perFrame: [],
       destructor: destructor(),
       stopped: false,
       destroyWait: 0.1,
     }
     let params = Object.assign({}, eventParams)
-    params._perFrame = process._perFrame
-    params._destructor = process.destructor
+    params._perFrame = fx._perFrame
+    params._destructor = fx.destructor
     delete params.beat
     delete params.endTime
     let offset = 0
@@ -43,44 +43,44 @@ define((require) => {
       get() { return metronome.beatTime(metronome.timeNow())%2 },
     })
     system.add(metronome.timeNow(), state => { // Per frame update
-      if (process.stopped) { return false }
-      process._perFrame.forEach(pf => pf(state))
+      if (fx.stopped) { return false }
+      fx._perFrame.forEach(pf => pf(state))
       return true
     })
 
     // Destruction
-    process.destroy = () => {
-      fadeOut(process.fadeOutGain, process.cleanup, process.destroyWait+3)
+    fx.destroy = () => {
+      fadeOut(fx.fadeOutGain, fx.cleanup, fx.destroyWait+3)
     }
-    process.cleanup = () => {
-      process.stopped = true
-      process._perFrame = []
-      process.destructor.destroy()
+    fx.cleanup = () => {
+      fx.stopped = true
+      fx._perFrame = []
+      fx.destructor.destroy()
     }
     
     // Create the chain
-    process.chain = evalParamEvent(params.process, params) // Get the Audionode process chain
+    fx.chain = evalParamEvent(params.fx, params) // Get the Audionode fx chain
 
     // Output to bus
     let busPlayerId = evalMainParamEvent(params, 'bus')
     if (!busPlayerId) { busPlayerId = 'main' } // Default to main bus if not specified
     let bus = players.getById(busPlayerId)
     if (!bus || !bus._input) {
-      consoleOut(`🟠 Player ${params._player.id} process failed to connect to destination bus ${busPlayerId}`)
+      consoleOut(`🟠 Player ${params._player.id} fx failed to connect to destination bus ${busPlayerId}`)
       return
     }
-    process.fadeOutGain = system.audio.createGain()
-    connect(process.chain, process.fadeOutGain, process.destructor)
-    process.fadeOutGain.connect(bus._input)
-    process.destructor.disconnect(process.fadeOutGain)
+    fx.fadeOutGain = system.audio.createGain()
+    connect(fx.chain, fx.fadeOutGain, fx.destructor)
+    fx.fadeOutGain.connect(bus._input)
+    fx.destructor.disconnect(fx.fadeOutGain)
 
     // Input via fade in
-    process.chainInput = system.audio.createGain()
-    connect(process.chainInput, process.chain, process.destructor)
-    fadeIn(process.chainInput, 0.1)
+    fx.chainInput = system.audio.createGain()
+    connect(fx.chainInput, fx.chain, fx.destructor)
+    fadeIn(fx.chainInput, 0.1)
 
-    return process
+    return fx
 }
 
-  return createProcessChain
+  return createPlayerFxChain
 })

@@ -3,10 +3,10 @@
 =================================================================================================================================
 ==== audio ====
 WebAudio node graphs as first class values
- !!! Too much recursion???!!!  s saw, process=gain{osc{}}
- ? Rename 'process' to 'fx'? It seems more intuitive really
+ Rename 'process' to 'fx'? It seems more intuitive really
+ !!! Too much recursion???!!!  s saw, fx=gain{osc{}}
  !The rest in this pattern somehow causes a terrible blare, but only with pitchshift in the feedback, even muted:
-  b tb303 .0, process=1/4*delay{1/4,feedback:pitchshift{1}*0}
+  b tb303 .0, fx=1/4*delay{1/4,feedback:pitchshift{1}*0}
   The preset doesn't matter but the dur must be 1/4
  ConvolverNode
  mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
@@ -35,12 +35,12 @@ WebAudio node graphs as first class values
    maybe refactor existing envelope stuff actually??
  ?What about node function namespacing? Both builtin and lib??
  Feedback param: if passed non-connectable, wrap into a gain node
- !Can't get current player event sound param per frame in process
- !Better fade out time. If you dont have any delays/reverbs etc you want to stop sooner; eg a audiosynth, process=osc>>gain{0.02}
+ !Can't get current player event sound param per frame in fx
+ !Better fade out time. If you dont have any delays/reverbs etc you want to stop sooner; eg a audiosynth, fx=osc>>gain{0.02}
  !evalMainParamFrame (and what it calls) should use the REAL event, not the params object
  ?In evalParamValue for function, do we need to evalRecurse there? Could it be more efficient at the root level somewhere?
  !Shouldnt bother with evalRecurse to cancel time modifiers if there weren't any time modifiers (only other modifiers)
- Support for process chain on buses
+ Support for fx chain on buses
  ?Rewrite all synths using audiosynth?
  !?Pitch: Support for a pitch chain?
  !! s audiosynth, play=osc{}>>gain{this.foo}>>gain{0.01}, foo=osc{'sine',freq:2b}
@@ -59,7 +59,7 @@ WebAudio node graphs as first class values
    trig maths functions
    connect op >>
    (other) ops support nodes +-*, and mixture of nodes and values
-   process param
+   fx param
    audiosynth; play param
    log function
    user functions(?)

@@ -4159,14 +4159,14 @@ v swirl 4, recol='neon', loc=tile_tr, rate=1/14, contrast, zoom=3
 // s audiosynth, play=osc{freq:523/4}>>shaper{{x}->floor{x*2}??x?:x*40%1/40}>>biquad{freq:220*[20:!400ms,1/4]es}>>gain{0.01}
 // vs scope 0, additive, fore=#fa0f, zoom={y:3}
 
-// bp techbass, process=delay{{const{1},osc{freq:9.3}}>>gain{0.107},max:4}>>biquad{freq:2000,q:20}>>delay{3/16,feedback:biquad{freq:300}>>gain{-0.45}}
-// gp supersaw 0-7<.6> crop 8, oct-=4, process=
+// bp techbass, fx=delay{{const{1},osc{freq:9.3}}>>gain{0.107},max:4}>>biquad{freq:2000,q:20}>>delay{3/16,feedback:biquad{freq:300}>>gain{-0.45}}
+// gp supersaw 0-7<.6> crop 8, oct-=4, fx=
 // delay{{const{1},osc{freq:1}}>>gain{3.79},max:4}
 //  >>shaper{{x}->((x*30)^3)/100}
 //  >>delay{5/16,feedback:biquad{freq:490}>>gain{-0.45}}
 
-// bp techbass, process=delay{{const{1},osc{freq:1/2}}>>gain{3/4},max:4}>>delay{3/16,feedback:biquad{freq:300}>>gain{-0.45}}
-// gp hollow 0-7<.6> crop 8, process=
+// bp techbass, fx=delay{{const{1},osc{freq:1/2}}>>gain{3/4},max:4}>>delay{3/16,feedback:biquad{freq:300}>>gain{-0.45}}
+// gp hollow 0-7<.6> crop 8, fx=
 // delay{{const{1},osc{'square',freq:1/4}>>biquad{freq:1/8,q:1}}>>gain{1.2},max:4}
 //   >>shaper{{x}->((x*20)^4)/100}
 //   >>delay{5/16,feedback:biquad{'highpass',freq:290}>>gain{-0.45}}
@@ -4180,7 +4180,7 @@ po perc ....;...
 pp perc murph: crop 16, amp/=7, swing=58, lpf=4000, pan=[-1,0,1]{per:4}
 c cybass 0_....-2<.-1>, lpf=100+1000*[0:!20ms,1:!1/2,0]es
 o softpad, reverb=1/2, amp/=1, oct-=1, amp*=1/4+[1:0]s8@f^1/4, pan=[-1,1]s12@f/2, glide=1/2
-e external, mono, amp*=1.7, room={1,mix:1/4}, flanger=16b, process={idnode,delay{1/4,feedback:{idnode,delay{1/8,feedback:gain{0.3}>>lpf{[10:3000]s1/8@f,q:0.1}}}>>gain{0.1}}}
+e external, mono, amp*=1.7, room={1,mix:1/4}, flanger=16b, fx={idnode,delay{1/4,feedback:{idnode,delay{1/8,feedback:gain{0.3}>>lpf{[10:3000]s1/8@f,q:0.1}}}>>gain{0.1}}}
 set p* delay|=[():14,{[1,3]r/4,rate:2,stutter:[1,2]r}:2]t
 set !p* add+=[0:24,2:6,5:2]t, addc=wow
 ////
@@ -4190,20 +4190,20 @@ set !p* add+=[0:24,2:6,5:2]t, addc=wow
 // set e reverb={2,mix:1/3}
 
 
-// a audiosynth, process={osc,osc>>gain{-1}} >> gain{0.001}
-// a audiosynth, process={osc,osc*-1} >> gain{0.001}
-// a audiosynth, process=(osc + osc*-1) >> gain{0.001}
-// a audiosynth, process=(osc - osc) >> gain{0.001}
-// a audiosynth, process={osc,-osc} >> gain{0.001}
-// a audiosynth, process=(osc + -osc) >> gain{0.001}
-// a audiosynth, process=(osc{'sine'} + osc{'sine',phase:0.5}) * 0.001
+// a audiosynth, fx={osc,osc>>gain{-1}} >> gain{0.001}
+// a audiosynth, fx={osc,osc*-1} >> gain{0.001}
+// a audiosynth, fx=(osc + osc*-1) >> gain{0.001}
+// a audiosynth, fx=(osc - osc) >> gain{0.001}
+// a audiosynth, fx={osc,-osc} >> gain{0.001}
+// a audiosynth, fx=(osc + -osc) >> gain{0.001}
+// a audiosynth, fx=(osc{'sine'} + osc{'sine',phase:0.5}) * 0.001
 
 
 set scale='minor'
 set root=2
 set bpm=87
 set main amp*=+3db
-// s sweep, process=hpf{[200:5000]l25@f}+delay{[0.01:0.1]l100/3@f}, amp*=1/2, pan=-1/2
+// s sweep, fx=hpf{[200:5000]l25@f}+delay{[0.01:0.1]l100/3@f}, amp*=1/2, pan=-1/2
 // b cybass <00v>..-7<.2> crop 8, dur=1/4, lpf=[3000:!120ms,200]es, amp*=-3db, pan=1/2
 // m cybass 0.2-7<.2>. crop 16, dur=1/4, lpf={[10000:!50ms,300]es,q:10}, amp*=-9db, oct+=1, pan=1/3
 // sp synpluck 09.7 + . * 12, pan=[-1,1], chorus, room={1,mix:1/4}, amp*=-6db, oct-=1
@@ -4216,11 +4216,11 @@ set bpm=119
 set main amp*=-3db
 pk perc V..., pan=-1/2
 pi impulse 0.. crop 16, dur=1/4, lpf={pitch{oct:4},q:5}, amp*=5, swing=56, pan=1/2
-ph perc s<.->a crop 16, rate=2/3, process=pitchshift{3/4}, swing=56, chorus, amp/=10, pan=[-1/2,0,1/2], delay=-0.07
+ph perc s<.->a crop 16, rate=2/3, fx=pitchshift{3/4}, swing=56, chorus, amp/=10, pan=[-1/2,0,1/2], delay=-0.07
 set p* delay|=[():14,{[1,3]r/4,rate:5/4}:2]t
-rm noise, delay=1/4, pan=(-1,1), envelope='percussion', process=lpf{pitch{oct:2},q:10}>>lpf{pitch{oct:3},q:5}*10
+rm noise, delay=1/4, pan=(-1,1), envelope='percussion', fx=lpf{pitch{oct:2},q:10}>>lpf{pitch{oct:3},q:5}*10
 br reese 00(0<7779>)0, dur=1/2, cutoff=[0.8:!200ms,1/3]es, oct+=(0,1)
-s dsaw ...0, oct+=6, dur=4, att=1, rel=4, room=2, reverb=2, echo=1/8, chorus, addc=wow, pan=[-1,1]s1/8@f, process=pitchshift{1/8}
+s dsaw ...0, oct+=6, dur=4, att=1, rel=4, room=2, reverb=2, echo=1/8, chorus, addc=wow, pan=[-1,1]s1/8@f, fx=pitchshift{1/8}
 set !p* add+=[0:24,2:6,1:2]t
 
 

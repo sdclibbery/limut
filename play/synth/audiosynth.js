@@ -11,7 +11,7 @@ define(function (require) {
     let vca = envelope(params, 0.06, 'none')
     let playChain = evalParamEvent(params.play, params) // Get the Audionode chain for this event
     if (playChain === undefined) {
-      fxMixChain(params, vca) // No play chain, eg monosynth with oscillator in the process chain
+      fxMixChain(params, vca) // No play chain, eg monosynth with oscillator in the fx chain
     } else {
       fxMixChain(params, perFrameAmp(params, vca))
       waveEffects(params, effects(params, playChain)).connect(vca)
