@@ -4,20 +4,11 @@
 ==== audio ====
 WebAudio node graphs as first class values
  !!! Too much recursion???!!!  s saw, process=gain{osc{}}
- pitchshift
-  !Ratio cant be on timevar :-/
-   Try rewriting repro lfotest -> osc without func call, does it make a difference?
-    YES it works without the function call to lfotest
-   Try rewriting lfotest to >> only, without + - * / etc
-    YES also works
-   ALSO works if a const is passed into lfotest and then scaled afterwards
-   ALSO works if the @f time var is passed into lfotest directly
-   SO it only fails when an @f arg is passed through two function calls AND used in an operator
-   Log shows it has the correct value during setup, but then the per frame update gets NO value
+ ? Rename 'process' to 'fx'? It seems more intuitive really
  !The rest in this pattern somehow causes a terrible blare, but only with pitchshift in the feedback, even muted:
   b tb303 .0, process=1/4*delay{1/4,feedback:pitchshift{1}*0}
   The preset doesn't matter but the dur must be 1/4
- ? Rename 'process' to 'fx'? It seems more intuitive really
+ ConvolverNode
  mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
   Expose from js, don't write in limut
   Must use node-connect
@@ -25,9 +16,7 @@ WebAudio node graphs as first class values
    Really want to check that wet is @e zero or one, not just zero at the start
  ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
  !!!Syntax error when use "rate" as arg!!!!!  set grain = {rate} -> gain{rate}
- Do pitch shifter again from scratch, maybe built on a granular thing that pulls grains out of a delay with envelope?
  More audionode functions
-  ConvolverNode. Can also have a feedback param, like delay does??
   StereoPannerNode
   DynamicsCompressorNode
   AudioBufferSourceNode - Also allow user def function to create sample

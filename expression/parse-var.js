@@ -39,6 +39,8 @@ define(function(require) {
       let userFunctionArgumentLookup = (e,b,er) => {
         let args = getCallContext()
         if (args === undefined) { return undefined }
+        // if (args === undefined) { console.trace(`No call context for user function argument ${key} lookup`) }
+        // if (args === undefined) { throw `No call context for user function argument ${key} lookup` }
         let value = args[key]
         if (value === undefined) { value = defaultValue } // If no arg passed in, use default value from prototype
         if (value === false) { value = args['value'] } // If still no value, try for unnamed arg

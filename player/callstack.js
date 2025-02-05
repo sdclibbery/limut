@@ -2,36 +2,64 @@
 define((require) => {
 
   let root = { children:[] }
-  let current = root
+  root.current = root
 
   let pushCallContext = (context) => {
+    if (root.current === undefined) { throw `Cant push, no current!` }
     let newNode = {
       context: context,
       children: [],
-      parent: current
+      parent: root.current
     }
-    if (current) { current.children.push(newNode) }
-    current = newNode
+    root.current.children.push(newNode)
+    root.current = newNode
   }
 
   let popCallContext = () => {
-    if (current === root) { throw `Cant pop, already at root` }
-    current.parent.children = current.parent.children.filter((child) => child !== current)
-    current = current.parent
+    if (root.current === root) { throw `Cant pop, already at root` }
+    root.current.parent.children = root.current.parent.children.filter((child) => child !== root.current)
+    root.current = root.current.parent
   }
 
   let getCallContext = () => {
-    return current ? current.context : undefined
+    return root.current ? root.current.context : undefined
   }
 
   let unPushCallContext = () => {
-    if (current === root) { throw `Cant unpush, already at root` }
-    current = current.parent
+    if (root.current === root) { throw `Cant unpush, already at root` }
+    if (root.current.parent === undefined) { throw `Cant unpush, no parent!` }
+    root.current = root.current.parent
   }
 
   let unPopCallContext = () => {
-    if (current.children.length === 0) { throw `Cant unpop, no children` }
-    current = current.children[current.children.length - 1]
+    if (root.current.children.length === 0) { throw `Cant unpop, no children` }
+    root.current = root.current.children[root.current.children.length - 1]
+  }
+
+  let deepCopyCallTree = (realRoot, copyRoot, realNode, copyNode, copyParent) => {
+    if (realNode.context !== undefined) { copyNode.context = realNode.context }
+    copyNode.children = realNode.children.map((child) => {
+      let childCopy = {}
+      deepCopyCallTree(realRoot, copyRoot, child, childCopy, copyNode)
+      return childCopy
+    })
+    if (copyParent !== undefined) { copyNode.parent = copyParent }
+    if (realRoot.current === realNode) { copyRoot.current = copyNode }
+  }
+  let getCallTree = () => {
+    let copy = {}
+    deepCopyCallTree(root, copy, root, copy, undefined)
+    return copy
+  }
+
+  let setCallTree = (tree) => {
+    if (root.children.length > 0) { throw `Cant set call tree, current call tree is not empty` }
+    root = tree
+  }
+
+  let clearCallTree = () => {
+    root = { children:[] }
+    root.current = root
   }
 
   // TESTS //
@@ -101,8 +129,23 @@ define((require) => {
     assert('cc1', getCallContext())
     popCallContext()
 
+    // Deep copy call tree
+    pushCallContext('cc1')
+    assert(1, root.children.length)
+    assert('cc1', root.children[0].context)
+    assert(true, root.current === root.children[0])
+    assert(true, root.children[0].parent === root)
+    let copy = getCallTree()
+    popCallContext()
+    setCallTree(copy)
+    assert(1, root.children.length)
+    assert('cc1', root.children[0].context)
+    assert(true, root.current === root.children[0])
+    assert(true, root.children[0].parent === root)
+    clearCallTree()
+
     // Should be cleared back to root by the end of all tests
-    assert(true, current === root)
+    assert(true, root.current === root)
 
     console.log('Callstack tests complete')
   }
@@ -112,7 +155,10 @@ define((require) => {
     popCallContext: popCallContext,
     getCallContext: getCallContext,
     unPushCallContext: unPushCallContext,
-    unPopCallContext: unPopCallContext
+    unPopCallContext: unPopCallContext,
+    getCallTree: getCallTree,
+    setCallTree: setCallTree,
+    clearCallTree: clearCallTree
   }
 
 })
