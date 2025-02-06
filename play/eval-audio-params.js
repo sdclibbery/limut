@@ -30,8 +30,9 @@ define(function (require) {
   }
 
   let evalPerFrame = (params, p, b, def) => {
+    let __event = params !== undefined && params.__event ? params.__event : params
     let v = params[p]
-    v =  evalParamFrame(v, params, b) // Room for optimisation here: only eval objects the specific sub (or main) param thats needed for this call
+    v =  evalParamFrame(v, __event, b) // Room for optimisation here: only eval objects the specific sub (or main) param thats needed for this call
     if (Array.isArray(v)) { v = v[0] } // Bus chords end up as arrays here so handle it by just picking the first value
     if (isConnectable(v)) { return v } // Dont eval any further if this is a node chain
     if (typeof v !== 'number' && !v) {
@@ -41,7 +42,8 @@ define(function (require) {
   }
 
   let evalMainPerFrame = (params, p, def, b, requiredUnits) => {
-    let v = evalPerFrame(params, p, b || params.count, def)
+    let __event = params !== undefined && params.__event ? params.__event : params
+    let v = evalPerFrame(params, p, b || __event.count, def)
     if (typeof v !== 'object') { return v }
     if (isConnectable(v)) { return v } // Dont eval any further if this is a node chain
     return mainParamUnits(v, requiredUnits, def)
@@ -68,10 +70,11 @@ define(function (require) {
 
   let updateStep = 1/60
   let perFrameUpdate = (audioParam, state, params, evalAt, mod, p) => {
-    if (params && state.time > params.endTime) { return false }
-    if (params && state.time < params._time) { return true }
+    let __event = params !== undefined && params.__event ? params.__event : params
+    if (__event && state.time > __event.endTime) { return false }
+    if (__event && state.time < __event._time) { return true }
     if (audioParam.lastTime === undefined) {
-      audioParam.lastTime = params ? params._time : system.timeNow()
+      audioParam.lastTime = __event ? __event._time : system.timeNow()
     }
     while (audioParam.lastTime < state.time) {
       let count = metronome.beatTime(audioParam.lastTime+updateStep);
@@ -91,6 +94,7 @@ define(function (require) {
   }
 
   let evalMainParamFrame = (audioParam, params, p, def, requiredUnits, mod) => {
+    let __event = params !== undefined && params.__event ? params.__event : params
     let vmp = mainParamUnits(params[p], requiredUnits, def)
     if (typeof vmp === 'number') { // single value; no need for regular per frame update
       setAudioParamValue(audioParam, vmp, p, mod, params._time)
@@ -99,7 +103,7 @@ define(function (require) {
         // if (params) { console.log(`Segmented audio update! Main ${params.player} ${p}`) }
         return
       }
-      let evalled = evalParamFrame(params[p], params,params.count, {withInterval:true})
+      let evalled = evalParamFrame(params[p], __event,__event.count, {withInterval:true})
       let interval
       if (typeof evalled === 'object' && evalled.interval !== undefined && !isConnectable(evalled)) {
         interval = evalled.interval
@@ -108,10 +112,10 @@ define(function (require) {
       if (isConnectable(evalled)) { // Value is a node chain, just connect it
         // if (params) { console.log(`Connectable audio update! Main ${params.player} ${p}`) }
         audioParam.value = 0 // Remove any default value so we only get the value from the connection
-        connect(evalled, audioParam, params._destructor, {dont_disconnect_r:true})
+        connect(evalled, audioParam, __event._destructor, {dont_disconnect_r:true})
         return
       }
-      setAudioParamValue(audioParam, mainParamUnits(evalled, requiredUnits, def), p, mod, params._time) // Set now
+      setAudioParamValue(audioParam, mainParamUnits(evalled, requiredUnits, def), p, mod, __event._time) // Set now
       if (interval === undefined) { // If it can't vary per frame, drop out here
         // if (params) { console.log(`Fixed audio update! Main ${params.player} ${p}`) }
         return

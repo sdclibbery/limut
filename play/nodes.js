@@ -18,7 +18,7 @@ define(function(require) {
   let combineParams = (args, e) => {
     let params = {}
     Object.assign(params, e, args)
-    if (args.value === undefined) { delete params.value } // event value was getting used as args value
+    params.__event = e // For eval audio params to access the 'real' event
     return params
   }
 
@@ -123,8 +123,8 @@ define(function(require) {
     let phase = evalParamEvent(params['phase'], e)
     let offset = 0
     if (typeof freq === 'number' && typeof phase === 'number') { offset = phase / freq }
-    node.start(params._time + offset)
-    params._destructor.stop(node)
+    node.start(e._time + offset)
+    e._destructor.stop(node)
     return node
   }
   addNodeFunction('osc', osc)
@@ -133,8 +133,8 @@ define(function(require) {
     let node = system.audio.createConstantSource()
     let params = combineParams(args, e)
     evalMainParamFrame(node.offset, params, 'value', 1)
-    node.start(params._time)
-    params._destructor.stop(node)
+    node.start(e._time)
+    e._destructor.stop(node)
     return node
   }
   addNodeFunction('const', constNode)
@@ -166,8 +166,8 @@ define(function(require) {
     e._disconnectTime += maxDelay
     let feedback = evalParamEvent(params['feedback'], e)
     if (feedback !== undefined) {
-      connect(node, feedback, params._destructor)
-      connect(feedback, node, params._destructor)
+      connect(node, feedback, e._destructor)
+      connect(feedback, node, e._destructor)
     }
     return node
   }
