@@ -3,8 +3,6 @@
 =================================================================================================================================
 ==== audio ====
 WebAudio node graphs as first class values
- !Too much recursion???!!!  s saw, fx=gain{osc{}}
-  ! osc thinks its value param is another call to osc...
  !The rest in this pattern somehow causes a terrible blare, but only with pitchshift in the feedback, even muted:
   b tb303 .0, fx=1/4*delay{1/4,feedback:pitchshift{1}*0}
   The preset doesn't matter but the dur must be 1/4
@@ -73,6 +71,7 @@ WebAudio node graphs as first class values
    ? What if you want to use the same LFO to control multiple things?
     Can define with set or something; concise syntax is less important for this stuff
  ? Make envelopes (SetTarget etc) into first class citizens???
+Fade in/out params for player; Only apply when player is started or stopped, not just reparsed. Specify a time to fade over
 Monophonic synths can get event info somehow; eg for pitch or envelopes etc
 !!?Limiter permanently showing on??? Only on firefox desktop??
 !!!! s causes the k to get filtered somehow! But then p restores to normal!!! Something to do with the `X`?? Reencode sample???

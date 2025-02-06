@@ -18,6 +18,7 @@ define(function(require) {
   let combineParams = (args, e) => {
     let params = {}
     Object.assign(params, e, args)
+    if (args.value === undefined) { delete params.value } // event value was getting used as args value
     return params
   }
 
