@@ -10,7 +10,7 @@ set flanger = {c,feedback:0,lo:0.0002,hi:0.007} -> feedback>0
   ?? {delay{0.01},delay{0.01+lo+c*hi,feedback:gain{feedback}}}
   ?: {idnode,delay{lo+c*hi}}
 
-set grain = {ratio, length:0.2, phase:0} ->
+set grain = {ratio, length:0.03, phase:0} ->
 delay{ lfo{
 	freq: 1/length,
   wave: 'sawtooth',
@@ -23,8 +23,7 @@ delay{ lfo{
 	>>shaper{{x}->cos{pi*x*0.6},oversample:'none'}
 }
 
-set pitchshift = {ratio, length:0.2} ->(
+set pitchshift = {ratio, length:0.03} ->(
 	grain{ratio,length:length,phase:0/2}
   +grain{ratio,length:length,phase:1/2}
-)*1
-
+)
