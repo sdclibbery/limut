@@ -4224,4 +4224,9 @@ s dsaw ...0, oct+=6, dur=4, att=1, rel=4, room=2, reverb=2, echo=1/8, chorus, ad
 set !p* add+=[0:24,2:6,1:2]t
 
 
+// i impulse, fx=convolver{{x}->sin{x*2000}*(1-x)^3}/10
+// i impulse, fx=convolver{{x}->sin{cos{x*200000}*200000}*(1-x)^3}/2
+// i impulse, fx=convolver{{x}->(rand{seed:x}-1/2)*(1-x)^3}
+// p play x:o:, fx=convolver{{x}->(rand{seed:x}-1/2)*(1-x)^1}
+
 

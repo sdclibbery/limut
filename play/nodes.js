@@ -191,6 +191,23 @@ define(function(require) {
   }
   addNodeFunction('shaper', shaper)
 
+  let convolver = (args,e,b) => {
+    let node = system.audio.createConvolver()
+    var rate = system.audio.sampleRate
+    let length = evalMainParamEvent(args, 'length', 1, 's')
+    var size = rate * length
+    var buffer = system.audio.createBuffer(1, size, rate)
+    var impulse = buffer.getChannelData(0)
+    args.value.modifiers = args.value.modifiers || {}
+    for (var i = 0; i < size; i++) {
+      args.value.modifiers.value = i / size
+      impulse[i] = evalParamFrame(args.value,e,b, {doNotMemoise:true}) // It will memoise the same result across all x if allowed to
+    }
+    node.buffer = buffer
+    return node
+  }
+  addNodeFunction('convolver', convolver)
+
   let loop = (args,e,b,_,er) => {
     let mainChain = evalParamEvent(args['value'], e)
     let feedbackChain = evalParamEvent(args['feedback'], e)

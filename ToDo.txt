@@ -7,7 +7,10 @@ WebAudio node graphs as first class values
   b tb303 .0, fx=1/4*delay{1/4,feedback:pitchshift{1}*0}
   The preset doesn't matter but the dur must be 1/4
  ConvolverNode, taking a user function to provide the impulse response - what about stereo??
+  'l/r' params for stereo
+  reverb{} in lib
  pitchshift
+  !rename to shifter
   experiment with better length default; experiment with more overlapping grains?
   try out tone.js pitch shifter; does it have same issues with audio rate length causing ringing?
  ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
