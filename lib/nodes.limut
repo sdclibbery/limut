@@ -6,24 +6,30 @@ set hpf = {freq,q:5} -> biquad{'highpass',freq:freq,q:q}
 set bpf = {freq,q:1} -> biquad{'bandpass',freq:freq,q:q}
 set apf = {freq,q:1} -> biquad{'allpass',freq:freq,q:q}
 
-set flanger = {c,feedback:0,lo:0.0002,hi:0.007} -> feedback>0
+set flanger = {c,feedback:0,lo:0.0002,hi:0.007} ->
+  feedback>0
   ?? {delay{0.01},delay{0.01+lo+c*hi,feedback:gain{feedback}}}
   ?: {idnode,delay{lo+c*hi}}
 
 set grain = {ratio, length:0.03, phase:0} ->
-delay{ lfo{
-	freq: 1/length,
+delay{ lfo{ // Moving delay to change the pitch
   wave: 'sawtooth',
+	freq: 1/length,
   lo: ratio>=1 ?? length*(ratio-1)*1.2 ?: 0,
   hi: ratio>=1 ?? 0 ?: length*(1-ratio)*1.2,
   phase: phase
 } }
->> gain{
+>> gain{ // cosine envelope to silence the distortion when the delay has to reset
 	osc{'saw',freq:1/length,phase:phase }
 	>>shaper{{x}->cos{pi*x*0.6},oversample:'none'}
 }
 
-set pitchshift = {ratio, length:0.03} ->(
+set pitchshift = {ratio, length:0.03} ->( // Multiple overlapping pitch shifting grains
 	grain{ratio,length:length,phase:0/2}
-  +grain{ratio,length:length,phase:1/2}
+  + grain{ratio,length:length,phase:1/2}
 )
+
+set reverb = {length:1b,curve:3} -> convolver{
+	{x,c:curve} -> (rand{seed:x}*2-1)*(1-x)^c,
+  length:length
+}
