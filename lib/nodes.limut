@@ -24,12 +24,13 @@ delay{ lfo{ // Moving delay to change the pitch
 	>>shaper{{x}->cos{pi*x*0.6},oversample:'none'}
 }
 
-set pitchshift = {ratio, length:0.03} ->( // Multiple overlapping pitch shifting grains
+set shifter = {ratio, length:0.03} ->( // Multiple overlapping pitch shifting grains
 	grain{ratio,length:length,phase:0/2}
   + grain{ratio,length:length,phase:1/2}
 )
 
 set reverb = {length:1b,curve:3} -> convolver{
-	{x,c:curve} -> (rand{seed:x}*2-1)*(1-x)^c,
+	l: {x,c:curve} -> (rand{seed:x}*2-1)*(1-x)^c,
+	r: {x,c:curve} -> (rand{seed:x+100}*2-1)*(1-x)^c,
   length:length
 }

@@ -4216,11 +4216,11 @@ set bpm=119
 set main amp*=-3db
 pk perc V..., pan=-1/2
 pi impulse 0.. crop 16, dur=1/4, lpf={pitch{oct:4},q:5}, amp*=5, swing=56, pan=1/2
-ph perc s<.->a crop 16, rate=2/3, fx=pitchshift{3/4}, swing=56, chorus, amp/=10, pan=[-1/2,0,1/2], delay=-0.07
+ph perc s<.->a crop 16, rate=2/3, fx=shifter{3/4}, swing=56, chorus, amp/=10, pan=[-1/2,0,1/2], delay=-0.07
 set p* delay|=[():14,{[1,3]r/4,rate:5/4}:2]t
 rm noise, delay=1/4, pan=(-1,1), envelope='percussion', fx=lpf{pitch{oct:2},q:10}>>lpf{pitch{oct:3},q:5}*10
 br reese 00(0<7779>)0, dur=1/2, cutoff=[0.8:!200ms,1/3]es, oct+=(0,1)
-s dsaw ...0, oct+=6, dur=4, att=1, rel=4, room=2, reverb=2, echo=1/8, chorus, addc=wow, pan=[-1,1]s1/8@f, fx=pitchshift{1/8}
+s dsaw ...0, oct+=6, dur=4, att=1, rel=4, room=2, reverb=2, echo=1/8, chorus, addc=wow, pan=[-1,1]s1/8@f, fx=shifter{1/8}
 set !p* add+=[0:24,2:6,1:2]t
 
 
@@ -4228,5 +4228,21 @@ set !p* add+=[0:24,2:6,1:2]t
 // i impulse, fx=convolver{{x}->sin{cos{x*200000}*200000}*(1-x)^3}/2
 // i impulse, fx=convolver{{x}->(rand{seed:x}-1/2)*(1-x)^3}
 // p play x:o:, fx=convolver{{x}->(rand{seed:x}-1/2)*(1-x)^1}
+
+
+set bpm=118
+p perc X.:-, swing=56, high=-3db
+pp perc tyu crop 8, swing=56, amp/=6
+i reese .07^0, cutoff=[]r{per:8,seed:10}, fx={
+	idnode,
+  delay{1/4b}
+    >>shifter{[1:2]s4@f^1}
+    >>convolver{length:0.9b, {x}->(rand{seed:x}-1/2)*cos{x*pi/2}}
+    *5
+}
+s sub .000
+h ambi (479), amp/=8, reverb, room, chorus
+set !p* add=[0:16,4:16]t
+set p* delay|=[():14,[1,3]r/4:2]t
 
 

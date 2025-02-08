@@ -3,14 +3,11 @@
 =================================================================================================================================
 ==== audio ====
 WebAudio node graphs as first class values
- !The rest in this pattern somehow causes a terrible blare, but only with pitchshift in the feedback, even muted:
-  b tb303 .0, fx=1/4*delay{1/4,feedback:pitchshift{1}*0}
+ !!BROKEN examples
+ !The rest in this pattern somehow causes a terrible blare, but only with shifter in the feedback, even muted:
+  b tb303 .0, fx=1/4*delay{1/4,feedback:shifter{1}*0}
   The preset doesn't matter but the dur must be 1/4
- ConvolverNode, taking a user function to provide the impulse response - what about stereo??
-  'l/r' params for stereo
-  reverb{} in lib: make it stereo
-pitchshift
-  !rename to shifter
+ shifter
   experiment with more overlapping grains?
   try out tone.js pitch shifter; does it have same issues with audio rate length causing ringing?
  ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
@@ -34,7 +31,7 @@ pitchshift
    filters lpf, hpf, bpf, notch, apf, psf, lowshelf, highshelf, peaking
    chop, ring, mono, pan, shapers, compressor
    chorus, phaser, flanger, echo, room, reverb
-   stereoflip, pitchshift
+   stereoflip, shifter
    oscillators
    maybe refactor existing envelope stuff actually??
  ?What about node function namespacing? Both builtin and lib??
@@ -192,11 +189,11 @@ Percussion player for single sample; value is velocity Eg  p playv 90520070, sam
   Eg  P saw {\0246\, oct=5, lpf=\3<52>4\*1000}  or something?
 303 synth preset
 Pitch shifter effect
- Can use https://github.com/Tonejs/Tone.js/blob/c313bc672bcc09a8cee4df97a07ba80155fd1946/Tone/effect/PitchShift.ts
+ Can use https://github.com/Tonejs/Tone.js/blob/c313bc672bcc09a8cee4df97a07ba80155fd1946/Tone/effect/shifter.ts
  See http://msp.ucsd.edu/techniques/v0.11/book-html/node115.html
  Should also be able to insert this into the reverb loop...
 Allow adding filters in the room/echo loops eg echo={3/4,lpf:523} - but dont use existing filter handlers as must be per event only!
- Pitch shift up an octave to give shimmer reverb (pitch shifter: https://tonejs.github.io/docs/14.7.77/PitchShift.html)
+ Pitch shift up an octave to give shimmer reverb (pitch shifter: https://tonejs.github.io/docs/14.7.77/shifter.html)
 Stereo widener effect: https://www.soundonsound.com/techniques/classic-stereo-widening
 envelope exp (exponent) subparam, eg att={1/2,exp:2} ?? Or name it 'pow'? Default to nonzero?
 ?Really/ideally, everything that uses an lfo (ambi, phaser, prophet etc) etc should just use a parameter so the lfo behaviour is defined in the code

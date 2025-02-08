@@ -196,12 +196,21 @@ define(function(require) {
     var rate = system.audio.sampleRate
     let length = evalMainParamEvent(args, 'length', 1, 's')
     var size = rate * length
-    var buffer = system.audio.createBuffer(1, size, rate)
-    var impulse = buffer.getChannelData(0)
-    args.value.modifiers = args.value.modifiers || {}
+    var channels = (args.l !== undefined) || (args.r !== undefined) ? 2 : 1
+    var buffer = system.audio.createBuffer(channels, size, rate)
+    let argL = args.l || args.value || args.r
+    let argR = args.r || args.value || args.l
+    argL.modifiers = argL.modifiers || {}
+    argR.modifiers = argR.modifiers || {}
     for (var i = 0; i < size; i++) {
-      args.value.modifiers.value = i / size
-      impulse[i] = evalParamFrame(args.value,e,b, {doNotMemoise:true}) // It will memoise the same result across all x if allowed to
+      argL.modifiers.value = i / size
+      let l = evalParamFrame(argL,e,b, {doNotMemoise:true}) // It will memoise the same result across all x if allowed to
+      buffer.getChannelData(0)[i] = l
+      if (channels === 2) {
+        argR.modifiers.value = i / size
+        let r = evalParamFrame(argR,e,b, {doNotMemoise:true}) // It will memoise the same result across all x if allowed to
+        buffer.getChannelData(1)[i] = r
+      }
     }
     node.buffer = buffer
     return node
