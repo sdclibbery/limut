@@ -4230,6 +4230,16 @@ set !p* add+=[0:24,2:6,1:2]t
 // p play x:o:, fx=convolver{{x}->(rand{seed:x}-1/2)*(1-x)^1}
 
 
+// set flangey = {c,lo:0.0002,hi:0.007} -> {idnode,delay{lo+c*hi}}
+// set tf = {f,s} -> flangey{f,lo:0.0002*s,hi:0.007*s}
+// s square .000, amp/=16, oct=2, dur=1/4, fx=tf{[]n@f,s:3}-tf{[]n@f,s:2}
+
+// set flangey = {c,lo:0.0002,hi:0.007} -> {idnode,delay{lo+c*hi}}
+// set tf = {f,s} -> flangey{f,lo:0.0002*s,hi:0.007*s}
+// set sq4 = {f} -> tf{f,s:3}>>tf{f,s:2}
+// s square .000, amp/=16, oct=2, dur=1/4, fx=sq4{[0:!1,1:/2,0:1/2,1:!1/2]l@f}
+
+
 set bpm=118
 p perc X.:-, swing=56, high=-3db
 pp perc tyu crop 8, swing=56, amp/=6

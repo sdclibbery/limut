@@ -3,7 +3,6 @@
 =================================================================================================================================
 ==== audio ====
 WebAudio node graphs as first class values
- !!BROKEN examples
  !The rest in this pattern somehow causes a terrible blare, but only with shifter in the feedback, even muted:
   b tb303 .0, fx=1/4*delay{1/4,feedback:shifter{1}*0}
   The preset doesn't matter but the dur must be 1/4
@@ -12,6 +11,8 @@ WebAudio node graphs as first class values
   try out tone.js pitch shifter; does it have same issues with audio rate length causing ringing?
  ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
  !!!Syntax error when use "rate" as arg!!!!!  set grain = {rate} -> gain{rate}
+ flanger should have option to repeat in series to strengthen the effect
+  Or just have a series{chain,count} function to repeat the same chain in series?
  mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
   Expose from js, don't write in limut
   Must use node-connect

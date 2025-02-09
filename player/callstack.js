@@ -52,6 +52,16 @@ define((require) => {
     return copy
   }
 
+  let getCallTreeString = () => {
+    let result = ''
+    let node = root.current
+    do {
+      result += node.context ? node.context.__functionContext : ''
+      node = node.parent
+    } while (node !== undefined)
+    return result
+  }
+
   let setCallTree = (tree) => {
     if (root.children.length > 0) { throw `Cant set call tree, current call tree is not empty` }
     root = tree
@@ -158,7 +168,8 @@ define((require) => {
     unPopCallContext: unPopCallContext,
     getCallTree: getCallTree,
     setCallTree: setCallTree,
-    clearCallTree: clearCallTree
+    clearCallTree: clearCallTree,
+    getCallTreeString: getCallTreeString
   }
 
 })

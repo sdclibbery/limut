@@ -1,7 +1,7 @@
 'use strict';
 define((require) => {
   let {overrideKey,applyModifiers} = require('expression/time-modifiers')
-  let {getCallContext} = require('player/callstack')
+  let {getCallTreeString} = require('player/callstack')
 
   let expandObjectChords = (o) => {
     for (let k in o) {
@@ -102,10 +102,10 @@ define((require) => {
   let evalParamValueWithMemoisation = (evalRecurse, value, event, beat, options) => {
     if (value === undefined) { return value }
     let memoKey
-    if (!options.doNotMemoise) {
+    if (!options.doNotMemoise) { // Note: Memoisation is not just a performance optimisation, it actually implements @e
       memoKey = JSON.stringify(options) + beat
-      let args = getCallContext()
-      if (args) { memoKey += args.__functionContext }
+      let callTreeString = getCallTreeString()
+      if (callTreeString) { memoKey += callTreeString }
       if (typeof value === 'function' && value.__memo_event && value.__memo_event.has(event) && value.__memo_event.get(event).hasOwnProperty(memoKey)) {
         return value.__memo_event.get(event)[memoKey] // Return memoised result
       }
