@@ -7,10 +7,11 @@ WebAudio node graphs as first class values
   b tb303 .0, fx=1/4*delay{1/4,feedback:shifter{1}*0}
   The preset doesn't matter but the dur must be 1/4
  shifter
-  experiment with more overlapping grains?
+  experiment with more overlapping grains? How to avoid ringing?
   try out tone.js pitch shifter; does it have same issues with audio rate length causing ringing?
- ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
+  Gain staging, get the levels right
  !!!Syntax error when use "rate" as arg!!!!!  set grain = {rate} -> gain{rate}
+ ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
  flanger should have option to repeat in series to strengthen the effect
   Or just have a series{chain,count} function to repeat the same chain in series?
  mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
@@ -19,8 +20,8 @@ WebAudio node graphs as first class values
   Const wet=0 or wet=1 should have a custom chain with no gains
    Really want to check that wet is @e zero or one, not just zero at the start
  More audionode functions
-  StereoPannerNode
   DynamicsCompressorNode
+  StereoPannerNode
   AudioBufferSourceNode - Also allow user def function to create sample
   MediaStreamAudioSourceNode - rewrite external as an audiosynth
   IIRFilterNode

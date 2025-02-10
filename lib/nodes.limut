@@ -8,8 +8,8 @@ set apf = {freq,q:1} -> biquad{'allpass',freq:freq,q:q}
 
 set flanger = {c,feedback:0,lo:0.0002,hi:0.007} ->
   feedback>0
-  ?? {delay{0.01},delay{0.01+lo+c*hi,feedback:gain{feedback}}}
-  ?: {idnode,delay{lo+c*hi}}
+  ?? {delay{0.01},delay{0.01+lo+c*hi,feedback:gain{feedback}}}/2
+  ?: {idnode,delay{lo+c*hi}}/2
 
 set grain = {ratio, length:0.03, phase:0} ->
 delay{ lfo{ // Moving delay to change the pitch
@@ -24,10 +24,10 @@ delay{ lfo{ // Moving delay to change the pitch
 	>>shaper{{x}->cos{pi*x*0.6},oversample:'none'}
 }
 
-set shifter = {ratio, length:0.03} ->( // Multiple overlapping pitch shifting grains
-	grain{ratio,length:length,phase:0/2}
-  + grain{ratio,length:length,phase:1/2}
-)
+set shifter = {ratio, length:0.03} ->{ // Multiple overlapping pitch shifting grains
+	grain{ratio,length:length,phase:0/2},
+  grain{ratio,length:length,phase:1/2}
+}*0.825
 
 set reverb = {length:1b,curve:3} -> convolver{
 	l: {x,c:curve} -> (rand{seed:x}*2-1)*(1-x)^c,
