@@ -10,7 +10,7 @@ Documentation is available in the page itself, underneath the console.
 
 Try it at https://sdclibbery.github.io/limut/
 
-Example limut code can be pasted into the editor to see what Limut can do; this can be found on the page under the editor and console windows, or there are many examples (including some technical tests) at https://github.com/sdclibbery/limut/blob/master/examples.txt
+Example limut code can be pasted into the editor to see what Limut can do; this can be found on the page under the editor and console windows, or there are many examples (including some technical tests) at https://github.com/sdclibbery/limut/blob/master/examples.limut
 
 Please report problems / bugs / browser issues etc as github issues at https://github.com/sdclibbery/limut/issues
 
