@@ -4259,3 +4259,22 @@ set p* delay|=[():14,[1,3]r/4:2]t
 // a audiosynth, fx=osc{}>>{idnode,-flanger{0}}*0.01
 // a audiosynth, fx=osc{}>>{idnode,-shifter{1}}*0.01
 
+
+set grumbler = {shift:2} -> {idnode,
+delay{1/16,feedback:
+  delay{osc{1/8b}/[5:12]l4@f}
+    >>convolver{ {x} -> (rand{seed:x}*2-1+sin{x^2*880})*(1-x)^2 }
+    >>shifter{shift}
+    >>hpf{[10:2,500:0]l@f,q:4}
+    >>lpf{[2000,3500]l4@f,q:0.1}
+    *0.5
+  }*3
+}*0.7
+set bpm=87
+set root=-1
+set scale=minor
+// p play tt+hs crop 16, pan=[-1,1]/2, amp/=5, amp*=[0,1:4]r, stutter=[1:2,2,4:0.2]r, fx=grumbler
+// a ambi .020, oct=2, pan=(-1,1), fx=grumbler{shift:2}
+c cyborg .0<76> crop 8, amp/=2.5, delay=(0,{3/4,add:9}), fx=grumbler{shift:1+wow*16}
+
+

@@ -6,6 +6,8 @@ WebAudio node graphs as first class values
  !The rest in this pattern somehow causes a terrible blare, but only with shifter in the feedback, even muted:
   b tb303 .0, fx=1/4*delay{1/4,feedback:shifter{1}*0}
   The preset doesn't matter but the dur must be 1/4
+ !convolver is very VERY slow to setup at (re)parse time, causes an audible lag
+ !lots of fx things are slow at parse time eg shifter causes slow beat latency message :-/
  shifter
   experiment with more overlapping grains? How to avoid ringing?
   try out tone.js pitch shifter; does it have same issues with audio rate length causing ringing?
