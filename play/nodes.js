@@ -234,7 +234,18 @@ define(function(require) {
       connect(feedbackChain, mainChain, e._destructor)
     }
     return mainChain
- }
+  }
   addNodeFunction('loop', loop)
+
+  let series = (args,e,b,_,er) => {
+    let count = evalParamEvent(args['count'], e)
+    let node
+    for (let i = 0; i<count; i++) {
+      let chain = evalParamFrame(args['value'], e,b, {doNotMemoise:true}) // Must get new nodes for every repeat
+      if (node === undefined) { node = chain }
+      else { node = connectOp(node, chain, e,b,er) }
+    }
+    return node
+  }
+  addNodeFunction('series', series)
 })
-  

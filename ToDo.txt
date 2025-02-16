@@ -3,19 +3,22 @@
 =================================================================================================================================
 ==== audio ====
 WebAudio node graphs as first class values
+ !Non resonant filters helper funcs are not working!
+  Cannot have a param called gain; I guess it finds the node function first?
+  Can it use the function arg in preference if it exists?
+ !set lpf2 = lpf etc does not work!!! I think the args do not get passed in anymore??
+  I guess there is an extra parse-var in there. 
  !The rest in this pattern somehow causes a terrible blare, but only with shifter in the feedback, even muted:
   b tb303 .0, fx=1/4*delay{1/4,feedback:shifter{1}*0}
   The preset doesn't matter but the dur must be 1/4
  !convolver is very VERY slow to setup at (re)parse time, causes an audible lag
- !lots of fx things are slow at parse time eg shifter causes slow beat latency message :-/
+  !lots of fx things are slow at parse time eg shifter causes slow beat latency message :-/
  shifter
   experiment with more overlapping grains? How to avoid ringing?
   try out tone.js pitch shifter; does it have same issues with audio rate length causing ringing?
   Gain staging, get the levels right
  !!!Syntax error when use "rate" as arg!!!!!  set grain = {rate} -> gain{rate}
  ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
- flanger should have option to repeat in series to strengthen the effect
-  Or just have a series{chain,count} function to repeat the same chain in series?
  mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
   Expose from js, don't write in limut
   Must use node-connect
