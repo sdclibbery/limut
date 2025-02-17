@@ -238,7 +238,10 @@ define(function(require) {
   addNodeFunction('loop', loop)
 
   let series = (args,e,b,_,er) => {
-    let count = evalParamEvent(args['count'], e)
+    let count = evalMainParamEvent(args, 'count', 2)
+    if (typeof count !== 'number') { throw `series: count ${count} must numeric` }
+    if (count < 0) { throw `series: count ${count} must be non-negative` }
+    if (count === 0) { return idnode(args,e,b) }
     let node
     for (let i = 0; i<count; i++) {
       let chain = evalParamFrame(args['value'], e,b, {doNotMemoise:true}) // Must get new nodes for every repeat
