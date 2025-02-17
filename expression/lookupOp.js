@@ -1,11 +1,13 @@
 'use strict';
 define(function(require) {
   let players = require('player/players')
+  let vars = require('vars')
   let {mainParam} = require('player/sub-param')
   let {evalParamFrame,evalFunctionWithModifiers} = require('player/eval-param')
   let {addVarFunction,remove} = require('predefined-vars')
 
   let lookupOp = (l,r, event,b,evalRecurse) => {
+    let originalR = r
     if (l === undefined) { return undefined }
     if (r === undefined) { return l }
     l = evalRecurse(l, event,b)
@@ -29,6 +31,11 @@ define(function(require) {
       }
     }
     if (typeof ml === 'string') {
+      if (ml.toLowerCase() === 'global') { // lookup on global vars
+        let key = mr
+        if (typeof originalR._name == 'string') { key = originalR._name } // Use the string name not the parse-var evalled value for preference for global lookups (so you can use global.foo not global.'foo')
+        return vars.get(key)
+      }
       if (ml.toLowerCase() === 'this') { // lookup on this event
         let v = event[mr]
         v = evalRecurse(v, event,b) // Eval so that time modifiers get applied

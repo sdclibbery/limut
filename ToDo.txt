@@ -3,21 +3,21 @@
 =================================================================================================================================
 ==== audio ====
 WebAudio node graphs as first class values
- !Non resonant filters helper funcs are not working!
-  Cannot have a param called gain; I guess it finds the node function first?
-  Can it use the function arg in preference if it exists?
- !set lpf2 = lpf etc does not work!!! I think the args do not get passed in anymore??
-  I guess there is an extra parse-var in there. 
+ !!!Syntax error when use "rate" as arg!!!!!  set grain = {rate} -> gain{rate}
+ ?What about node function namespacing? Both builtin and lib??
  !The rest in this pattern somehow causes a terrible blare, but only with shifter in the feedback, even muted:
   b tb303 .0, fx=1/4*delay{1/4,feedback:shifter{1}*0}
   The preset doesn't matter but the dur must be 1/4
  !convolver is very VERY slow to setup at (re)parse time, causes an audible lag
   !lots of fx things are slow at parse time eg shifter causes slow beat latency message :-/
+ !Get callstack desync if an exception gets caught?
+ !set lpf2 = lpf etc does not work!!! I think the args do not get passed in anymore??
+  I guess there is an extra parse-var in there. 
  shifter
   experiment with more overlapping grains? How to avoid ringing?
   try out tone.js pitch shifter; does it have same issues with audio rate length causing ringing?
   Gain staging, get the levels right
- !!!Syntax error when use "rate" as arg!!!!!  set grain = {rate} -> gain{rate}
+ Make a looper effect that uses gain switches to select a chunk of audio a then loop it a given number of times before taking the next chunk
  ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
  mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
   Expose from js, don't write in limut
@@ -41,7 +41,6 @@ WebAudio node graphs as first class values
    stereoflip, shifter
    oscillators
    maybe refactor existing envelope stuff actually??
- ?What about node function namespacing? Both builtin and lib??
  Feedback param: if passed non-connectable, wrap into a gain node
  !Can't get current player event sound param per frame in fx
  !Better fade out time. If you dont have any delays/reverbs etc you want to stop sooner; eg a audiosynth, fx=osc>>gain{0.02}

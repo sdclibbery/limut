@@ -49,6 +49,7 @@ define(function(require) {
         unPopCallContext()
         return value
       }
+      userFunctionArgumentLookup._name = key
       return userFunctionArgumentLookup
     }
 
@@ -98,6 +99,7 @@ define(function(require) {
     }
     result = parseVarLookup
     result.interval = interval
+    result._name = key
     if (typeof vars.get(key) === 'function' && vars.get(key)._thisVar) { result._thisVar = true } // For node vars: pass this through to prevent the node function getting evalled during expand-chords
     return result
   }

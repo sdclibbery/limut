@@ -58,7 +58,7 @@ define(function(require) {
           Object.keys(map).forEach(k =>{
             if (k.startsWith('value')) {
               let v = map[k]
-              if (typeof v === 'function') { v = v() }
+              if (typeof v._name === 'string') { v = v._name }
               if (typeof v === 'string') { state.userFunctionArgs[v] = false } // Arg has no default value
             }
             if (state.userFunctionArgs[k] === undefined) {
@@ -1915,6 +1915,14 @@ define(function(require) {
   e = evd(); e.bar=3
   vars.foo = parseExpression('{v} -> mockaudionode{test:v}')
   assert(3, evalParamFrame(parseExpression('foo{v:this.bar}'), e, 0).test.value)
+  delete vars.foo
+
+  vars.foo = parseExpression('7')
+  assert(3, evalParamFrame(parseExpression('({foo}->foo){foo:3}'), e, 0)) // Named function arg should "hide" global var
+  delete vars.foo
+
+  vars.foo = parseExpression('7')
+  assert(7, evalParamFrame(parseExpression("({foo}->global.foo){foo:3}"), e, 0)) // Use `global` to unhide global var
   delete vars.foo
 
   vars.foo = parseExpression('{v} -> mockaudionode{test:v}')
