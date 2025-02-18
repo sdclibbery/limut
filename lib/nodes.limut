@@ -5,7 +5,7 @@ set lfo = {freq,wave:'triangle',lo:0,hi:1,phase:0} -> (lo+hi)/2 + osc{wave,freq:
 // Resonant filters
 set lpf = {freq, q:5} -> biquad{'lowpass', freq:freq, q:q}
 // set lpf2 = lpf
-set lpf4 = {freq, q:5} -> biquad{'lowpass', freq:freq, q:q/2}>>biquad{'lowpass', freq:freq, q:q/2}
+set lpf4 = {freq, q:5} -> series{biquad{'lowpass', freq:freq, q:q/2}, count:2}
 set hpf = {freq, q:5} -> biquad{'highpass', freq:freq, q:q}
 set bpf = {freq, q:1} -> biquad{'bandpass', freq:freq, q:q}
 set nf = {freq, q:1} -> biquad{'notch', freq:freq, q:q}

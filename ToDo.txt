@@ -3,8 +3,6 @@
 =================================================================================================================================
 ==== audio ====
 WebAudio node graphs as first class values
- !!!Syntax error when use "rate" as arg!!!!!  set grain = {rate} -> gain{rate}
- ?What about node function namespacing? Both builtin and lib??
  !The rest in this pattern somehow causes a terrible blare, but only with shifter in the feedback, even muted:
   b tb303 .0, fx=1/4*delay{1/4,feedback:shifter{1}*0}
   The preset doesn't matter but the dur must be 1/4
@@ -16,14 +14,10 @@ WebAudio node graphs as first class values
  shifter
   experiment with more overlapping grains? How to avoid ringing?
   try out tone.js pitch shifter; does it have same issues with audio rate length causing ringing?
-  Gain staging, get the levels right
- Make a looper effect that uses gain switches to select a chunk of audio a then loop it a given number of times before taking the next chunk
+  Check gain staging, get the levels right
+ Make a looper effect that uses gain switches to take a chunk of audio then loop it a given number of times before taking the next chunk
  ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
- mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
-  Expose from js, don't write in limut
-  Must use node-connect
-  Const wet=0 or wet=1 should have a custom chain with no gains
-   Really want to check that wet is @e zero or one, not just zero at the start
+  Or should all take same default units as params for consistency?
  More audionode functions
   DynamicsCompressorNode
   StereoPannerNode
@@ -47,11 +41,17 @@ WebAudio node graphs as first class values
  !evalMainParamFrame (and what it calls) should use the REAL event, not the params object
  ?In evalParamValue for function, do we need to evalRecurse there? Could it be more efficient at the root level somewhere?
  !Shouldnt bother with evalRecurse to cancel time modifiers if there weren't any time modifiers (only other modifiers)
+ ?What about node function namespacing? Both builtin and lib??
  Support for fx chain on buses
  ?Rewrite all synths using audiosynth?
  !?Pitch: Support for a pitch chain?
+ mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
+  Expose from js, don't write in limut
+  Must use node-connect
+  Const wet=0 or wet=1 should have a custom chain with no gains
+   Really want to check that wet is @e zero or one, not just zero at the start
  !! s audiosynth, play=osc{}>>gain{this.foo}>>gain{0.01}, foo=osc{'sine',freq:2b}
-  e = ev(0,0,4); e.foo = parseExpression('mockaudionode{test:17}')
+ e = ev(0,0,4); e.foo = parseExpression('mockaudionode{test:17}')
   assert(17, evalParamFrame(parseExpression('mockaudionode{test:this.foo}'), e, 0).test.connected[0].test.value)
   !! So foo is evalling without any context where a destructor makes sense :-/
  Placeholders for generalised loops
@@ -70,13 +70,6 @@ WebAudio node graphs as first class values
    audiosynth; play param
    log function
    user functions(?)
- •QUESTIONS
- ? How to control audioparams with nodes instead of expressions?
-  Just pass more nodes in instead of value expression
-  Eg playerChain=delay{saw{1hz}}
-   ? What if you want to use the same LFO to control multiple things?
-    Can define with set or something; concise syntax is less important for this stuff
- ? Make envelopes (SetTarget etc) into first class citizens???
 Fade in/out params for player; Only apply when player is started or stopped, not just reparsed. Specify a time to fade over
 Monophonic synths can get event info somehow; eg for pitch or envelopes etc
 !!?Limiter permanently showing on??? Only on firefox desktop??
