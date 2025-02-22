@@ -4278,3 +4278,14 @@ set scale=minor
 c cyborg .0<76> crop 8, amp/=2.5, delay=(0,{3/4,add:9}), fx=grumbler{shift:1+wow*16}
 
 
+// Blare testing
+// set bpm=60
+// b tb303 .0, fx=delay{1/4,feedback:shifter{2}*0.4}
+// b sine ...0, dur=1/4, amp*=16, fx=1/256 *delay{1/4,feedback:shifter{1}*0}
+// b sine 0, delay=1, dur=1/4, amp/=16, fx=4*delay{1/4,feedback:shifter{1}*0}
+// b sine 0, delay=1, dur=1/4, amp/=16, fx=4*delay{1/4,feedback:{delay{0.01},delay{0.01}}*0}
+// b sine 0, delay=1, dur=1/4, amp/=16, fx=4*loop{delay{1/4},feedback:{delay{0.01},delay{0.01}}*0}
+// a audiosynth, fx=osc{'sine',freq:pitch{oct:4}}*[0:3/4,1:1/4]t@f*0.01>>delay{1/4,feedback:shifter{1}*0}
+// b techbass, fx=delay{1/4,feedback:{delay{0.01},delay{0.01}}*0}
+
+

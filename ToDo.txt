@@ -6,8 +6,46 @@ WebAudio node graphs as first class values
  !The rest in this pattern somehow causes a terrible blare, but only with shifter in the feedback, even muted:
   b tb303 .0, fx=1/4*delay{1/4,feedback:shifter{1}*0}
   The preset doesn't matter but the dur must be 1/4
+  FX fade in time makes zero difference (apart from to fade in the blare); same for fade out
+  Makes no difference if its coming via an fxMixChain
+  Old version of player must have an fx, new one must have fx with delay
+  ??What actually happens when reparse?? Thats the only time you ever get a blare
+  The fxMixChain connect is per event
+  ??Is there a small (~ 0.001) DC signal coming from fxMixChain somehow???
+  OK SO a 100ms delay _before_ fade in stops the blare, but there are still clicks when connect/disconnect
+   Doesn't work in general though; need to delay by the full blare time which depends on note start time
+  Longer rest equals longer blare; but NO blare with audiosynth-only
+  So is the problem just something about having no osc source at the front of the chain??
+   NO!! adding an osc at the front of the fx chain ADDS an extra blare when first start the player???
+  Blare goes away if there are too many or too few rests, or if its all rests, or if the sound is at the start of the beat
+   Is it related to if there is a sound already scheduled that hasn't played yet???
+    Long delay gives long blare
+     Long delay gives blare even with no rests, and seem to build up a large DC offset that doesn't recover if delay > 1
+   The fx chain only gets created whena  sound plays though, doesn't it? So where does the blare come from if theres no fx chain?
+    OR do we play the sound immediately, but dont start the osc till the sound start time???
+     YES, we do play the sound but queue up the osc start, but starting the osc immediately makes no difference
+      If never start the osc, get no blare
+    DO NOT get blare if wait until sound start time to connect the fxMixChain (per frame amp is fine)
+    IF build the whole fxMixChain, and the fx chain, but dont connect them until start time, it also works fine no blare
+    To get the blare you need 2 delays in parallel in feedback; this blares: fx=4*delay{1/4,feedback:{delay{0.01},delay{0.01}}*0}
+    The fxMixChain is cached, so the same fxMixChain is connected to both old AND new fx chains...
+    WHY does it not blare on first start, only on reparse??
+    !!!If turn off fxMixChain caching, GET NO BLARE!!!
+    First note: create note, create fxMixChain and connect, create fx chain and connect
+    Next note: create note, connect to cached fxMixChain, disconnect and reconnect to existing fx chain
+    Reparse first note: create note, connect to cached fxMixChain, create fx chain and connect
+    Reparse next note
+  OPTIONS for fix
+   * fxMixChain delay connect when have to create the fx chain
+    !!!!!!!!!!Need to delay connect when DONT create fx!!!!!!!!!!!
+     How can this be? Is this the SECOND note on the new fx? Or the last note on the OLD fx?
+ fxMixChain should push fade out TTL to fx chain so it doesn't cut off delayed notes
  !convolver is very VERY slow to setup at (re)parse time, causes an audible lag
-  !lots of fx things are slow at parse time eg shifter causes slow beat latency message :-/
+  convolver{'noise',env:{x}->[0:!1/8,1:!,0]{x}}
+   IE specify a high frequency component as an enum, and an envelope to shape it that can be sampled at a much lower rate
+    Use segments? Or no need?
+  !lots of fx things are slow at parse time eg even shifter causes slow beat latency message :-/
+  ?Dont recreate fx chain if the param string hasnt changed?
  !Get callstack desync if an exception gets caught?
  !set lpf2 = lpf etc does not work!!! I think the args do not get passed in anymore??
   I guess there is an extra parse-var in there. 

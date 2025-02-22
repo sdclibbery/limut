@@ -42,10 +42,12 @@ define(function (require) {
   }
 
   let chains = {}
+  let id = 0
 
-  let createChain = (chainParams) => {
+  let createChain = (chainParams, params) => {
     let c = {
       params: chainParams,
+      id: id++,
     }
     c.destructor = destructor()
     c.in = system.audio.createGain()
@@ -58,6 +60,7 @@ define(function (require) {
     node = fixedMix(c.destructor, c.params.roomMix, node, fixedFreeverb(c.destructor, c.params.room, c.params.roomHpf, node))
     node = fixedMix(c.destructor, c.params.reverbMix, node, fixedReverb(c.destructor, c.params.reverb, c.params.reverbCurve, c.params.reverbHpf, node))
     c.out = node
+    c.destructor.disconnect(c.out)
     return c
   }
 
@@ -78,15 +81,17 @@ define(function (require) {
       consoleOut(`🟠 Player ${params._player.id} audio out failed to connect to destination player ${outPlayerId}`)
       return
     }
-    c.out.disconnect()
-    if (outPlayer._input !== undefined)  { // Bus player
+    if (outPlayer._input !== undefined)  { // Output to bus player
+      c.out.disconnect()
       c.out.connect(outPlayer._input)
-    } else { // Player fx chain
+    } else { // Output to player fx chain
       if (outPlayer._fx === undefined) {
         outPlayer._fx = createPlayerFxChain(params)
+        setTimeout(()=> { // Pause until last moment before connecting to avoid loud blare with parallel delay feedback
+          c.out.disconnect()
+          c.out.connect(outPlayer._fx.chainInput)
+        }, (params._time - system.timeNow()) * 1000 - 10)
       }
-      c.out.connect(outPlayer._fx.chainInput)
-      c.destructor.disconnect(c.out)
     }
   }
 
@@ -94,13 +99,13 @@ define(function (require) {
     let chainParams = getParams(params)
     let key = JSON.stringify(chainParams)
     if (!chains[key]) {
-      let chain = createChain(chainParams)
+      let chain = createChain(chainParams, params)
       chain.key = key
       chains[key] = chain
     }
     let chain = chains[key]
     clearTimeout(chain.timeoutID)
-    let TTL = 1000*(params.endTime-params._time + chainParams.room*5 + chainParams.echoDelay*chainParams.echoFeedback*10 + 2)
+    let TTL = 1000*(params.endTime-params._time + chainParams.room*5 + chainParams.reverb + chainParams.echoDelay*chainParams.echoFeedback*10 + 2)
     chain.timeoutID = setTimeout(() => destroyChain(chain), TTL)
     node.connect(chain.in)
     chain.destructor.disconnect(node)

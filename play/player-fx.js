@@ -10,17 +10,19 @@ define((require) => {
   let {connect} = require('play/node-connect')
 
   let fadeIn = (node, fadeTime) => {
+    node.gain.value = 0
     node.gain.cancelScheduledValues(0)
-    node.gain.setValueAtTime(0, system.timeNow())
+    node.gain.setValueAtTime(0, 0)
     node.gain.linearRampToValueAtTime(1, system.timeNow()+fadeTime)
   }
   let fadeOut = (node, destroy, fadeTime) => {
     node.gain.cancelScheduledValues(0)
-    node.gain.setValueAtTime(1, system.timeNow())
+    node.gain.setValueAtTime(1, 0)
     node.gain.linearRampToValueAtTime(0, system.timeNow()+fadeTime)
     setTimeout(destroy, fadeTime*1000)
   }
 
+  let id = 0
   let createPlayerFxChain = (eventParams) => {
     // Setup for continuous running
     let fx = {
@@ -28,6 +30,7 @@ define((require) => {
       destructor: destructor(),
       stopped: false,
       destroyWait: 0.1,
+      id: id++,
     }
     let params = Object.assign({}, eventParams)
     params._perFrame = fx._perFrame
@@ -76,8 +79,8 @@ define((require) => {
 
     // Input via fade in
     fx.chainInput = system.audio.createGain()
-    connect(fx.chainInput, fx.chain, fx.destructor)
     fadeIn(fx.chainInput, 0.1)
+    connect(fx.chainInput, fx.chain, fx.destructor)
 
     return fx
 }
