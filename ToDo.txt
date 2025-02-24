@@ -3,16 +3,20 @@
 =================================================================================================================================
 ==== audio ====
 WebAudio node graphs as first class values
- fxMixChain should push fade out TTL to fx chain so it doesn't cut off delayed notes
+  Flanger should default to an 8b lfo
  !convolver is very VERY slow to setup at (re)parse time, causes an audible lag
-  convolver{'noise',env:{x}->[0:!1/8,1:!,0]{x}}
-   IE specify a high frequency component as an enum, and an envelope to shape it that can be sampled at a much lower rate
-    Use segments? Or no need?
-  !lots of fx things are slow at parse time eg even shifter causes slow beat latency message :-/
+  convolver{env:{x}->[0:!1/8,1:!,0]{x}}
+  If value/l/r is missing, provide a default hf noise signal like reverb
+  Add env param thats evalled much less often to shape the signal
+   Use segments for env? Or no need? Maybe later?
+   env = {l:,r:}
+ !fxMixChain should push fade out TTL to fx chain so it doesn't cut off delayed notes
+ !Callstack desync if an exception gets caught?
+  Clear callstack on catch? And also on every eval???
+ !lots of fx things are slow at parse time eg even shifter causes slow beat latency message :-/
   ?Dont recreate fx chain if the param string hasnt changed?
- !Get callstack desync if an exception gets caught?
  !set lpf2 = lpf etc does not work!!! I think the args do not get passed in anymore??
-  I guess there is an extra parse-var in there. 
+  I guess there is an extra parse-var in there; can it be short circuited at parse time??
  shifter
   experiment with more overlapping grains? How to avoid ringing?
   try out tone.js pitch shifter; does it have same issues with audio rate length causing ringing?

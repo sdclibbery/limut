@@ -73,7 +73,7 @@ define(function (require) {
     delete chains[chain.key]
   }
 
-  let connectChain = (c, params) => {
+  let connectChain = (c, params, createdChain) => {
     let outPlayerId = c.params.output
     if (!outPlayerId) { outPlayerId = 'main' } // Default to main bus if not specified
     let outPlayer = players.getById(outPlayerId)
@@ -85,12 +85,15 @@ define(function (require) {
       c.out.disconnect()
       c.out.connect(outPlayer._input)
     } else { // Output to player fx chain
-      if (outPlayer._fx === undefined) {
+      if (outPlayer._fx === undefined) { // Create fx chain and connect to it if not present
         outPlayer._fx = createPlayerFxChain(params)
-        setTimeout(()=> { // Pause until last moment before connecting to avoid loud blare with parallel delay feedback
+        setTimeout(()=> { // Pause until last moment before connecting to avoid loud blare with parallel delay feedbacks
           c.out.disconnect()
           c.out.connect(outPlayer._fx.chainInput)
-        }, (params._time - system.timeNow()) * 1000 - 10)
+        }, (params._time - system.timeNow()) * 1000 - 1)
+      } else if (createdChain) { // If the fxMixChain is new, connect to it
+        c.out.disconnect()
+        c.out.connect(outPlayer._fx.chainInput)
       }
     }
   }
@@ -98,10 +101,12 @@ define(function (require) {
   let fxMixChain = (params, node) => {
     let chainParams = getParams(params)
     let key = JSON.stringify(chainParams)
+    let createdChain = false
     if (!chains[key]) {
       let chain = createChain(chainParams, params)
       chain.key = key
       chains[key] = chain
+      createdChain = true
     }
     let chain = chains[key]
     clearTimeout(chain.timeoutID)
@@ -109,7 +114,7 @@ define(function (require) {
     chain.timeoutID = setTimeout(() => destroyChain(chain), TTL)
     node.connect(chain.in)
     chain.destructor.disconnect(node)
-    connectChain(chain, params)
+    connectChain(chain, params, createdChain)
   }
 
   return {
