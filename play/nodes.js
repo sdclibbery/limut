@@ -8,6 +8,7 @@ define(function(require) {
   var metronome = require('metronome')
   let {connect} = require('play/node-connect')
   let connectOp = require('expression/connectOp')
+  let convolver = require('play/node-convolver')
 
   let addNodeFunction = (k, v) => {
     v.dontEvalArgs = true
@@ -191,30 +192,6 @@ define(function(require) {
   }
   addNodeFunction('shaper', shaper)
 
-  let convolver = (args,e,b) => {
-    let node = system.audio.createConvolver()
-    var rate = system.audio.sampleRate
-    let length = evalMainParamEvent(args, 'length', 1, 's')
-    var size = rate * length
-    var channels = (args.l !== undefined) || (args.r !== undefined) ? 2 : 1
-    var buffer = system.audio.createBuffer(channels, size, rate)
-    let argL = args.l || args.value || args.r
-    let argR = args.r || args.value || args.l
-    argL.modifiers = argL.modifiers || {}
-    argR.modifiers = argR.modifiers || {}
-    for (var i = 0; i < size; i++) {
-      argL.modifiers.value = i / size
-      let l = evalParamFrame(argL,e,b, {doNotMemoise:true}) // It will memoise the same result across all x if allowed to
-      buffer.getChannelData(0)[i] = l
-      if (channels === 2) {
-        argR.modifiers.value = i / size
-        let r = evalParamFrame(argR,e,b, {doNotMemoise:true}) // It will memoise the same result across all x if allowed to
-        buffer.getChannelData(1)[i] = r
-      }
-    }
-    node.buffer = buffer
-    return node
-  }
   addNodeFunction('convolver', convolver)
 
   let loop = (args,e,b,_,er) => {

@@ -25,8 +25,10 @@ set shifter = {ratio, length:0.03} ->{ // Multiple overlapping pitch shifting gr
   grain{ratio,length:length,phase:1/2}
 }*0.825
 
-set reverb = {length:1b,curve:3} -> convolver{
-	l: {x,c:curve} -> (rand{seed:x}*2-1)*(1-x)^c,
-	r: {x,c:curve} -> (rand{seed:x+100}*2-1)*(1-x)^c,
-  length:length
+set reverb = {value:1b,curve:3} -> convolver{
+  env: {
+    l:{x,c:curve} -> (1-x)^c,
+    r:{x,c:curve} -> (1-x)^c
+  },
+  length:value
 }
