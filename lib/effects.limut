@@ -2,10 +2,10 @@ include 'lib/nodes.limut'
 
 // This library includes more complex effect units
 
-set flanger = {c,feedback:0,lo:0.0002,hi:0.007} ->
+set flanger = {value:[0,1]l8@f,feedback:0,lo:0.0002,hi:0.007} ->
   feedback>0
-  ?? {delay{0.01},delay{0.01+lo+c*hi,feedback:gain{feedback}}}/2
-  ?: {idnode,delay{lo+c*hi}}/2
+  ?? {delay{0.01},delay{0.01+lo+value*hi,feedback:gain{feedback*0.8}}}/2
+  ?: {idnode,delay{lo+value*hi}}/2
 
 set grain = {ratio, length:0.03, phase:0} ->
 delay{ lfo{ // Moving delay to change the pitch

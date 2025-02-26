@@ -1925,6 +1925,12 @@ define(function(require) {
   assert(7, evalParamFrame(parseExpression("({foo}->global.foo){foo:3}"), e, 0)) // Use `global` to unhide global var
   delete vars.foo
 
+  assert(3, evalParamFrame(parseExpression("({c}->c){3}"), e, 0))
+  assert(3, evalParamFrame(parseExpression("({c:2}->c){c:3}"), e, 0))
+  assert(3, evalParamFrame(parseExpression("({value:2}->value){3}"), e, 0))
+  assert(15, evalParamFrame(parseExpression("({c,d}->c+d){3,d:12}"), e, 0))
+  assert(15, evalParamFrame(parseExpression("({value:2,d:12}->value+d){3}"), e, 0))
+
   vars.foo = parseExpression('{v} -> mockaudionode{test:v}')
   p = parseExpression('foo{v:this.bar}')
   e = evd(0,0,4); e.bar=parseExpression('[4hz,5hz]t1@f')
