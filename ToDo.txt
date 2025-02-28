@@ -319,7 +319,7 @@ User defined functions
  ?How to avoid evalling function call args repeatedly due to them also being treated as modifiers?
  !Should be able to access the default e and b params. Can get rid of time global??? And `this.` ?????????
 Give each event a unique ID
- Use it for ememoisation instead if weak map
+ Use it for memoisation instead of weak map
  And use it for seeding rand for per-event; then follow player can get the same randoms by using the same IDs?
 Show matching brackets in editor
 !? []es shouldn't be the syntax for segmenting. It should be []e@s ??

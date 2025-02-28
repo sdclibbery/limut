@@ -55,13 +55,14 @@ define(function(require) {
           eatWhitespace(state)
           let oldArgs = state.userFunctionArgs
           state.userFunctionArgs = {} // Pass function arguments through to the body parse
-          Object.keys(map).forEach(k =>{
+          Object.keys(map).forEach((k) =>{
             if (k.startsWith('value')) {
               let v = map[k]
               if (typeof v._name === 'string') { v = v._name }
-              if (typeof v === 'string') { state.userFunctionArgs[v] = false } // Arg has no default value
-            }
-            if (state.userFunctionArgs[k] === undefined) {
+              if (typeof v === 'string') {
+                state.userFunctionArgs[v] = false // Arg has no default value
+              }
+            } else if (state.userFunctionArgs[k] === undefined) {
               state.userFunctionArgs[k] = map[k] // Arg includes default value
             }
           })
@@ -1925,12 +1926,6 @@ define(function(require) {
   assert(7, evalParamFrame(parseExpression("({foo}->global.foo){foo:3}"), e, 0)) // Use `global` to unhide global var
   delete vars.foo
 
-  assert(3, evalParamFrame(parseExpression("({c}->c){3}"), e, 0))
-  assert(3, evalParamFrame(parseExpression("({c:2}->c){c:3}"), e, 0))
-  assert(3, evalParamFrame(parseExpression("({value:2}->value){3}"), e, 0))
-  assert(15, evalParamFrame(parseExpression("({c,d}->c+d){3,d:12}"), e, 0))
-  assert(15, evalParamFrame(parseExpression("({value:2,d:12}->value+d){3}"), e, 0))
-
   vars.foo = parseExpression('{v} -> mockaudionode{test:v}')
   p = parseExpression('foo{v:this.bar}')
   e = evd(0,0,4); e.bar=parseExpression('[4hz,5hz]t1@f')
@@ -2029,20 +2024,38 @@ define(function(require) {
   vars.gain = oldVarsGain
   vars.const = oldVarsConst
 
-  vars.foo = parseExpression('{v} -> v*3')
+  assert(0, evalParamFrame(parseExpression("({c,d}->c+d^2){}"), e, 0))
+  assert(4, evalParamFrame(parseExpression("({c,d}->c+d^2){c:4}"), e, 0))
+  assert(64, evalParamFrame(parseExpression("({c,d}->c+d^2){d:8}"), e, 0))
+  assert(68, evalParamFrame(parseExpression("({c,d}->c+d^2){c:4,d:8}"), e, 0))
+  assert(4, evalParamFrame(parseExpression("({c,d}->c+d^2){4}"), e, 0))
+  assert(68, evalParamFrame(parseExpression("({c,d}->c+d^2){4,8}"), e, 0))
+  assert(24, evalParamFrame(parseExpression("({d,c}->c+d^2){4,8}"), e, 0))
+  assert(68, evalParamFrame(parseExpression("({c,d}->c+d^2){4,d:8}"), e, 0))
+  assert(4, evalParamFrame(parseExpression("({c,d}->c+d^2){c:4,8}"), e, 0))
+  assert(5, evalParamFrame(parseExpression("({c:1,d:2}->c+d^2){}"), e, 0))
+  assert(8, evalParamFrame(parseExpression("({c:1,d:2}->c+d^2){c:4}"), e, 0))
+  assert(65, evalParamFrame(parseExpression("({c:1,d:2}->c+d^2){d:8}"), e, 0))
+  assert(68, evalParamFrame(parseExpression("({c:1,d:2}->c+d^2){c:4,d:8}"), e, 0))
+  assert(8, evalParamFrame(parseExpression("({c:1,d:2}->c+d^2){4}"), e, 0))
+  assert(68, evalParamFrame(parseExpression("({c:1,d:2}->c+d^2){4,8}"), e, 0))
+  assert(68, evalParamFrame(parseExpression("({c:1,d:2}->c+d^2){4,d:8}"), e, 0))
+  assert(8, evalParamFrame(parseExpression("({c:1,d:2}->c+d^2){c:4,8}"), e, 0))
+
+  // vars.foo = parseExpression('{v} -> v*3')
   // assert([3,6], evalParamFrame(parseExpression('foo{(1,2)}'), ev(), 0))
-  delete vars.foo
+  // delete vars.foo
   // Breaks because we expand chords once at play time, then again at eval time? How does it work for this vars?
 
-  vars.foo = parseExpression('{v} -> mockaudionode{test:v*3}')
+  // vars.foo = parseExpression('{v} -> mockaudionode{test:v*3}')
   // assert([3,6], evalParamFrame(parseExpression('foo{v:(1,2)}'), evd(), 0).map(v=>v.test.value))
-  delete vars.foo
+  // delete vars.foo
 
-  vars.foo = parseExpression('{v} -> v*5')
-  vars.bar = parseExpression('{v} -> v*3')
+  // vars.foo = parseExpression('{v} -> v*5')
+  // vars.bar = parseExpression('{v} -> v*3')
   // assert([15,30], evalParamFrame(parseExpression('foo{bar{(1,2)}}'), e, 0))
-  delete vars.foo
-  delete vars.bar
+  // delete vars.foo
+  // delete vars.bar
 
   // vars.foo = parseExpression('{v} -> v*(1,2)')
   // assert([3,6], evalParamFrame(parseExpression('foo{3}'), ev(), 0))
@@ -2060,15 +2073,6 @@ define(function(require) {
   // Error on line 50: TypeError: WeakMap key undefined must be an object
   // set bar={wow}->wow+2
   // r readout, add=bar{3}
-
-  // Gets global foo not arg foo
-  // set foo=5
-  // set bar={foo}->foo+2
-  // r readout, add=bar{3}
-
-  // Gets global foo not field foo
-  // set foo=5
-  // r readout, add={foo:2}.foo
   
   // {value}->value*2{3} : get nasty error not helpful error
 

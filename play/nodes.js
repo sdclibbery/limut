@@ -215,7 +215,7 @@ define(function(require) {
   addNodeFunction('loop', loop)
 
   let series = (args,e,b,_,er) => {
-    let count = evalMainParamEvent(args, 'count', 2)
+    let count = evalMainParamEvent(args, 'count', evalMainParamEvent(args, 'value1', 2))
     if (typeof count !== 'number') { throw `series: count ${count} must numeric` }
     if (count < 0) { throw `series: count ${count} must be non-negative` }
     if (count === 0) { return idnode(args,e,b) }

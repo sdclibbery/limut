@@ -2,10 +2,10 @@ include 'lib/nodes.limut'
 
 // This library includes more complex effect units
 
-set flanger = {value:[0,1]l8@f,feedback:0,lo:0.0002,hi:0.007} ->
+set flanger = {control:[0,1]l8@f,feedback:0,lo:0.0002,hi:0.007} ->
   feedback>0
-  ?? {delay{0.01},delay{0.01+lo+value*hi,feedback:gain{feedback*0.8}}}/2
-  ?: {idnode,delay{lo+value*hi}}/2
+  ?? {delay{0.01},delay{0.01+lo+control*hi,feedback:gain{feedback*0.8}}}/2
+  ?: {idnode,delay{lo+control*hi}}/2
 
 set grain = {ratio, length:0.03, phase:0} ->
 delay{ lfo{ // Moving delay to change the pitch
@@ -25,10 +25,10 @@ set shifter = {ratio, length:0.03} ->{ // Multiple overlapping pitch shifting gr
   grain{ratio,length:length,phase:1/2}
 }*0.825
 
-set reverb = {value:1b,curve:3} -> convolver{
+set reverb = {length:1b,curve:3} -> convolver{
   env: {
     l:{x,c:curve} -> (1-x)^c,
     r:{x,c:curve} -> (1-x)^c
   },
-  length:value
+  length:length
 }

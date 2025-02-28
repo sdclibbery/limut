@@ -36,14 +36,17 @@ define(function(require) {
     // Lookup argument if inside a user defined function
     if (userFunctionArgs !== undefined && userFunctionArgs[key] !== undefined) {
       let defaultValue = userFunctionArgs[key]
+      let position
+      Object.getOwnPropertyNames(userFunctionArgs).forEach((k,i) => {
+        if (k === key) { position = i }
+      })
       let userFunctionArgumentLookup = (e,b,er) => {
         let args = getCallContext()
         if (args === undefined) { return undefined }
-        // if (args === undefined) { console.trace(`No call context for user function argument ${key} lookup`) }
-        // if (args === undefined) { throw `No call context for user function argument ${key} lookup` }
-        let value = args[key]
+        let value = args[key] // Get arg by direct lookup by name
+        if (value === undefined) { value = args['value'+(position || '')] } // Get arg by position
         if (value === undefined) { value = defaultValue } // If no arg passed in, use default value from prototype
-        if (value === false) { value = args['value'] } // If still no value, try for unnamed arg
+        if (value === false) { value = undefined } // No default arg either
         unPushCallContext() // Need to look outside the current callstack level when evalling the arg
         value = er(value,e,b)
         unPopCallContext()
