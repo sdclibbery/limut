@@ -3,9 +3,6 @@
 =================================================================================================================================
 ==== audio ====
 WebAudio node graphs as first class values
- !fxMixChain should push fade out TTL to fx chain so it doesn't cut off delayed notes
- !Callstack desync if an exception gets caught?
-  Clear callstack on catch? And also on every eval???
  !lots of fx things are slow at parse time eg even shifter causes slow beat latency message :-/
   ?Dont recreate fx chain if the param string hasnt changed?
  !set lpf2 = lpf etc does not work!!! I think the args do not get passed in anymore??
@@ -35,6 +32,7 @@ WebAudio node graphs as first class values
    oscillators
    maybe refactor existing envelope stuff actually??
  Feedback param: if passed non-connectable, wrap into a gain node
+ !fxMixChain should push fade out TTL to fx chain so it doesn't cut off delayed notes
  !Can't get current player event sound param per frame in fx
  !Better fade out time. If you dont have any delays/reverbs etc you want to stop sooner; eg a audiosynth, fx=osc>>gain{0.02}
  !evalMainParamFrame (and what it calls) should use the REAL event, not the params object
@@ -60,7 +58,7 @@ WebAudio node graphs as first class values
     Should be scoped with the current chain?
    flanger with proper feedback
  DOCS
-   nodes functions, inc loop
+   nodes functions, inc loop, also series (note, count arg can be positional)
    lib functions
    trig maths functions
    connect op >>

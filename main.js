@@ -7,7 +7,7 @@ define(function(require) {
   require('functions/aggregators')
   require('functions/maths')
   require('functions/sliders')
-  require('functions/log')
+  require('functions/debug')
   require('predefined-var-defs')
   let mainVars = require('main-vars')
   let system = require('play/system')
@@ -18,6 +18,7 @@ define(function(require) {
   require('editor-textarea')
   require('editor-codemirror')
   let {parseCode} = require('update-code')
+  let {clearCallTree} = require('player/callstack')
 
   // Load presets
   let loadPresetCollection = (name) => {
@@ -110,6 +111,7 @@ define(function(require) {
   let lastVisualsActive
   let tickCount = 0
   let tick = (t) => {
+    clearCallTree()
     let now = system.timeNow()
     let beat = metronome.update(now)
     let beatTime = metronome.beatTime(now)
@@ -132,7 +134,7 @@ define(function(require) {
           } catch (e) {
             let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
             consoleOut('🔴 Run Error from player '+player.id+': ' + e + st)
-            console.log(e)
+            clearCallTree()
           }
         }
       })
@@ -148,7 +150,7 @@ define(function(require) {
     } catch (e) {
       let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
       consoleOut('🔴 Run Error from audio updating: ' + e + st)
-      console.log(e)
+      clearCallTree()
     }
     tickCount++
     if (ctxGl) {
@@ -161,7 +163,7 @@ define(function(require) {
       } catch (e) {
         let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
         consoleOut('🔴 Run Error from drawing: ' + e + st)
-        console.log(e)
+        clearCallTree()
       }
     }
     vuMeterStyle(vuMeterL.style, system.meter('L'), -30, 0)
