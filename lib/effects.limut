@@ -4,8 +4,16 @@ include 'lib/nodes.limut'
 
 set flanger = {control:[0,1]l8@f,feedback:0,lo:0.0002,hi:0.007} ->
   feedback>0
-  ?? {delay{0.01},delay{0.01+lo+control*hi,feedback:gain{feedback*0.8}}}/2
-  ?: {idnode,delay{lo+control*hi}}/2
+  ?? {delay{0.01},delay{0.01+lo+control^2*(hi-lo),feedback:gain{feedback*0.8}}}/2
+  ?: {idnode,delay{lo+control^2*(hi-lo)}}/2
+
+set phaser = {control:[0,1]l4@f,lo:300,hi:2600,stages:4,q:1/2} -> {
+  idnode,
+  series{
+   	apf{freq:lo+control^2*(hi-lo),q:q},
+    stages
+  }
+}/2
 
 set grain = {ratio, length:0.03, phase:0} ->
 delay{ lfo{ // Moving delay to change the pitch

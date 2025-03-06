@@ -197,6 +197,7 @@ define(function(require) {
   let loop = (args,e,b,_,er) => {
     let mainChain = evalParamEvent(args['value'], e)
     let feedbackChain = evalParamEvent(args['feedback'], e)
+    if (feedbackChain === undefined) { feedbackChain = evalParamEvent(args['value1'], e) }
     if (mainChain === undefined) {
       mainChain = idnode(args,e,b)
       if (feedbackChain === undefined) { return mainChain }

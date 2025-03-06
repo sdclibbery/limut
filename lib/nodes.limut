@@ -10,7 +10,6 @@ set hpf = {freq, q:5} -> biquad{'highpass', freq:freq, q:q}
 set bpf = {freq, q:1} -> biquad{'bandpass', freq:freq, q:q}
 set nf = {freq, q:1} -> biquad{'notch', freq:freq, q:q}
 set apf = {freq, q:1} -> biquad{'allpass', freq:freq, q:q}
-set psf = {f1:200, f2:800, q:1} -> { biquad{'allpass', freq:f1, q:q}, biquad{'allpass', freq:f2, q:q} }
 
 // Non resonant filters
 set hsf = {gain, freq:1100} -> biquad{'highshelf', freq:freq, gain:gain}
