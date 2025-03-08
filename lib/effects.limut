@@ -2,10 +2,10 @@ include 'lib/nodes.limut'
 
 // This library includes more complex effect units
 
-set flanger = {control:[0,1]l8@f,feedback:0,lo:0.0002,hi:0.007} ->
+set flanger = {control:[0,1]l8@f,feedback:0,lo:0.0005,hi:0.007} ->
   feedback>0
-  ?? {delay{0.01},delay{0.01+lo+control^2*(hi-lo),feedback:gain{feedback*0.8}}}/2
-  ?: {idnode,delay{lo+control^2*(hi-lo)}}/2
+  ?? {delay{0.01,max:0.01},delay{0.01+lo+control^2*(hi-lo),feedback:gain{feedback*0.8},max:0.1}}/2
+  ?: {idnode,delay{lo+control^2*(hi-lo),max:0.1}}/2
 
 set phaser = {control:[0,1]l4@f,lo:300,hi:2600,stages:4,q:1/2} -> {
   idnode,
@@ -22,7 +22,7 @@ delay{ lfo{ // Moving delay to change the pitch
   lo: ratio>=1 ?? length*(ratio-1)*1.2 ?: 0,
   hi: ratio>=1 ?? 0 ?: length*(1-ratio)*1.2,
   phase: phase
-} }
+}, max:0.1 }
 >> gain{ // cosine envelope to silence the distortion when the delay has to reset
 	osc{'saw',freq:1/length,phase:phase }
 	>>shaper{{x}->cos{pi*x*0.6},oversample:'none'}
@@ -33,6 +33,15 @@ set shifter = {ratio, length:0.03} ->{ // Multiple overlapping pitch shifting gr
   grain{ratio,length:length,phase:1/2}
 }*0.825
 
+s square, oct=2, fx=ultracomb{smooth{[]r1@f,att:1},smooth{[]r2/3@f,att:1},smooth{[]r1/2@f,att:1},stages:6}
+
+set ultracomb = {f:smooth{[]r1@f,att:1},p:smooth{[]r2/3@f,att:1},s:smooth{[]r1/2@f,att:1},stages:6} -> series{{
+  idnode,
+  delay{0.0002 + f^2*0.007,max:0.1} - delay{0.004 + f^2*0.01,max:0.1}, // Flanger part
+  series{apf{300 + p^2*2000},6}, // Phaser part
+  shifter{0.95 + s*0.1} // Shifter part
+}/3.3,stages}
+
 set reverb = {length:1b,curve:3} -> convolver{
   env: {
     l:{x,c:curve} -> (1-x)^c,
@@ -40,3 +49,4 @@ set reverb = {length:1b,curve:3} -> convolver{
   },
   length:length
 }
+

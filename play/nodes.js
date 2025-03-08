@@ -159,21 +159,6 @@ define(function(require) {
   }
   addNodeFunction('biquad', biquad)
 
-  let delay = (args,e,b) => {
-    let maxDelay = evalMainParamEvent(args, 'max', 1, 'b') * metronome.beatDuration()
-    let node = system.audio.createDelay(maxDelay)
-    let params = combineParams(args, e)
-    evalMainParamFrame(node.delayTime, params, 'value', 1/4, 'b', d => d * metronome.beatDuration())
-    e._disconnectTime += maxDelay
-    let feedback = evalParamEvent(params['feedback'], e)
-    if (feedback !== undefined) {
-      connect(node, feedback, e._destructor)
-      connect(feedback, node, e._destructor)
-    }
-    return node
-  }
-  addNodeFunction('delay', delay)
-
   let shaper = (args,e,b) => {
     let node = system.audio.createWaveShaper()
     let count = evalMainParamEvent(args, 'samples', 257)
@@ -193,6 +178,21 @@ define(function(require) {
   addNodeFunction('shaper', shaper)
 
   addNodeFunction('convolver', convolver)
+
+  let delay = (args,e,b) => {
+    let maxDelay = evalMainParamEvent(args, 'max', 1, 'b') * metronome.beatDuration()
+    let node = system.audio.createDelay(maxDelay)
+    let params = combineParams(args, e)
+    evalMainParamFrame(node.delayTime, params, 'value', 1/4, 'b', d => d * metronome.beatDuration())
+    e._disconnectTime += maxDelay
+    let feedback = evalParamEvent(params['feedback'], e)
+    if (feedback !== undefined) {
+      connect(node, feedback, e._destructor)
+      connect(feedback, node, e._destructor)
+    }
+    return node
+  }
+  addNodeFunction('delay', delay)
 
   let loop = (args,e,b,_,er) => {
     let mainChain = evalParamEvent(args['value'], e)
