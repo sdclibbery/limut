@@ -186,6 +186,7 @@ define(function(require) {
     evalMainParamFrame(node.delayTime, params, 'value', 1/4, 'b', d => d * metronome.beatDuration())
     e._disconnectTime += maxDelay
     let feedback = evalParamEvent(params['feedback'], e)
+    if (feedback === undefined) { feedback = evalParamEvent(params['value1'], e) }
     if (feedback !== undefined) {
       connect(node, feedback, e._destructor)
       connect(feedback, node, e._destructor)

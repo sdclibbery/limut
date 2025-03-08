@@ -33,8 +33,6 @@ set shifter = {ratio, length:0.03} ->{ // Multiple overlapping pitch shifting gr
   grain{ratio,length:length,phase:1/2}
 }*0.825
 
-s square, oct=2, fx=ultracomb{smooth{[]r1@f,att:1},smooth{[]r2/3@f,att:1},smooth{[]r1/2@f,att:1},stages:6}
-
 set ultracomb = {f:smooth{[]r1@f,att:1},p:smooth{[]r2/3@f,att:1},s:smooth{[]r1/2@f,att:1},stages:6} -> series{{
   idnode,
   delay{0.0002 + f^2*0.007,max:0.1} - delay{0.004 + f^2*0.01,max:0.1}, // Flanger part
@@ -49,4 +47,6 @@ set reverb = {length:1b,curve:3} -> convolver{
   },
   length:length
 }
+
+// set echo = {time:1/4b,feedback:0.7,max} -> {idnode,delay{time,feedback:feedback,max:max}}
 
