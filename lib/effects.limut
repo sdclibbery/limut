@@ -48,5 +48,5 @@ set reverb = {length:1b,curve:3} -> convolver{
   length:length
 }
 
-// set echo = {time:1/4b,feedback:0.7,max} -> {idnode,delay{time,feedback:feedback,max:max}}
+set echo = {time:1/8b,feedback:0.7,max} -> {idnode,delay{time,feedback:feedback,max:max}}
 

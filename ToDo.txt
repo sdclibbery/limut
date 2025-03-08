@@ -3,8 +3,6 @@
 =================================================================================================================================
 ==== audio ====
 WebAudio node graphs as first class values
- all node and lib function feedback params should allow taking just a number to specify a feedback gain
- set echo = {time:1/4b,feedback:0.7,max} -> {idnode,delay{time,feedback:feedback,max:max}}
  !set lpf2 = lpf etc does not work!!! I think the args do not get passed in anymore??
   I guess there is an extra parse-var in there; can it be short circuited at parse time??
    Sounds dangerous. But this should really work anyway, shouldn;'t it?

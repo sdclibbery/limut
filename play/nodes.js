@@ -6,7 +6,7 @@ define(function(require) {
   let {evalParamFrame,evalParamEvent} = require('player/eval-param')
   let setWave = require('play/synth/waveforms/set-wave')
   var metronome = require('metronome')
-  let {connect} = require('play/node-connect')
+  let {connect,isConnectable} = require('play/node-connect')
   let connectOp = require('expression/connectOp')
   let convolver = require('play/node-convolver')
 
@@ -185,11 +185,12 @@ define(function(require) {
     let params = combineParams(args, e)
     evalMainParamFrame(node.delayTime, params, 'value', 1/4, 'b', d => d * metronome.beatDuration())
     e._disconnectTime += maxDelay
-    let feedback = evalParamEvent(params['feedback'], e)
-    if (feedback === undefined) { feedback = evalParamEvent(params['value1'], e) }
-    if (feedback !== undefined) {
-      connect(node, feedback, e._destructor)
-      connect(feedback, node, e._destructor)
+    let unevalledFeedback = args['feedback'] || args['value1']
+    let feedbackChain = evalParamEvent(unevalledFeedback, e)
+    if (feedbackChain !== undefined) {
+      if (!isConnectable(feedbackChain)) { feedbackChain = gain({value:unevalledFeedback}, e,b) }
+      connect(node, feedbackChain, e._destructor)
+      connect(feedbackChain, node, e._destructor)
     }
     return node
   }
@@ -197,18 +198,19 @@ define(function(require) {
 
   let loop = (args,e,b,_,er) => {
     let mainChain = evalParamEvent(args['value'], e)
-    let feedbackChain = evalParamEvent(args['feedback'], e)
-    if (feedbackChain === undefined) { feedbackChain = evalParamEvent(args['value1'], e) }
+    let unevalledFeedback = args['feedback'] || args['value1']
+    let feedbackChain = evalParamEvent(unevalledFeedback, e)
     if (mainChain === undefined) {
       mainChain = idnode(args,e,b)
       if (feedbackChain === undefined) { return mainChain }
     }
-    let gain = system.audio.createGain()
-    e._destructor.disconnect(gain)
-    mainChain = connectOp(mainChain, gain, e,b,er) // Attach a placeholder gain node to force a mixdown of arrays and prevent idnode loops
+    let mixdownGain = system.audio.createGain()
+    e._destructor.disconnect(mixdownGain)
+    mainChain = connectOp(mainChain, mixdownGain, e,b,er) // Attach a placeholder gain node to force a mixdown of arrays and prevent idnode loops
     if (feedbackChain === undefined) {
       connect(mainChain, mainChain, e._destructor)
     } else {
+      if (!isConnectable(feedbackChain)) { feedbackChain = gain({value:unevalledFeedback}, e,b) }
       connect(mainChain, feedbackChain, e._destructor)
       connect(feedbackChain, mainChain, e._destructor)
     }
