@@ -41,24 +41,21 @@ define((require) => {
     setTimeout(destroy, fadeTime*1000)
   }
 
-  let connectToFxChain = (outPlayer, params, bus) => {
-    if (outPlayer._fx === undefined) { // Create fx chain and connect to it if not present
-      outPlayer._fx = createPlayerFxChain(params, bus.id === 'main')
+  let connectToFxChain = (params, bus) => {
+    if (params._fx === undefined) { // Create fx chain and connect to it if not present
+      params._fx = createPlayerFxChain(params, bus.id === 'main')
       setTimeout(()=> { // Pause until last moment before connecting to avoid loud blare with parallel delay feedbacks
-        bus.output.connect(outPlayer._fx.chainInput)
+        bus.output.connect(params._fx.chainInput)
       }, (params._time - system.timeNow()) * 1000 - 1)
     } else {
-      bus.output.connect(outPlayer._fx.chainInput)
+      bus.output.connect(params._fx.chainInput)
     }
   }
 
   let connectToDestination = (bus, params) => {
-    // * Need to sort out the actual main connection to dest when no fx
-    // * Need to make fx chain work in all cases; createPlayerFxChain not defined??
-    // * Need to sort out the actual main connection to dest when main has an fx
     if (bus.id === 'main') { // If this is the main bus, it must mix direct to system
       if (params.fx !== undefined) {
-        connectToFxChain(players.getById('main'), params, bus)
+        connectToFxChain(params, bus)
       } else {
         system.mix(bus.output)
       }
@@ -72,7 +69,7 @@ define((require) => {
       return
     }
     if (params.fx !== undefined) {
-      connectToFxChain(outPlayer, params, bus)
+      connectToFxChain(params, bus)
     } else {
       if (outPlayer._input !== undefined)  {
         bus.output.connect(outPlayer._input)
