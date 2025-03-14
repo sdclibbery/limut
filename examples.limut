@@ -4307,3 +4307,18 @@ b tb303 0__0__0_ crop 16//, add=[0,0,1,6]t8,
   }*3/2
 
 
+// Industrial
+v xor, loc=tile_tr, add=time%2, rate=8, vhs
+set bpm=120
+set scale='phrygian'
+// pk bds909 0..., attack
+// pp perc ..O., amp/=2, room=0.2
+// ph hs909 0o20 crop 8, swing=54
+// ps perc ....(XIi)..., room={1.1,mix:1/4}, amp/=2
+pc perc (#D;), dur=8, drive, amp/=9, rate=1/2, lpf={[20000:\[2,3,2,4],10]es,q:[20,10]}, pan=(-1,1), room, flanger=7b
+set p* delay|=[():14,(4/8,5/8):2]t
+h hollow, fx=ultracomb>>reverb{2}/4
+// b saw 0_.0..02..0..01., dur=1/4, glide=1/16, oct=2, reverb={2,hpf:200,mix:1/8}, lpf={[20000:!200ms,4000:!200ms,10]es,q:0.1}, addc=(0,0.1), amp*=3db
+// t cybass 0__0__21__01__28, addc=(0,0.1), glide=1/8, add=[0:24,-2:8]t, drive={1,mix:1/16}, delay=(0,{3/2,add:7}), lpf={[10000:!220ms,200]es,q:10,poles:4}
+// d cydist 0__743_4_, dur=[1/2,1], room={2,mix:1/8,hpf:200}, oct+=(-1,0,1), fx=series{flanger{lfo{4b}},3}
+// set !p* add=[0:32,7:0,0:32]l

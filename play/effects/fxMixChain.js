@@ -19,7 +19,7 @@ define(function (require) {
   }
   let getParams = (params) => {
     let output
-    if (params.fx !== undefined) { output = params._player.id }
+    if (params.fx !== undefined) { output = params._player.id } // Output to _this_ player to route through the fx chain if there is one
     else { output = evalMainParamEvent(params, 'bus') }
     return {
       chorusAmount: quantise(evalMainParamEvent(params, 'chorus', 0), 8),
@@ -74,7 +74,7 @@ define(function (require) {
   }
 
   let connectChain = (c, params, createdChain) => {
-    let outPlayerId = c.params.output
+    let outPlayerId = c.params.output // If this player has an fx chain, outPlayerId will be _this_ player!
     if (!outPlayerId) { outPlayerId = 'main' } // Default to main bus if not specified
     let outPlayer = players.getById(outPlayerId)
     if (!outPlayer) { // Do nothing if bus not present

@@ -54,12 +54,12 @@ define(function (require) {
     ls.forEach(lv => {
       rs.forEach(rv => {
         if (!(lv instanceof AudioNode) && !(lv instanceof AudioParam)) {
-          console.log(`Connect: lv is not an AudioNode/AudioParam`, lv, ' rv: ', rv, ' lr: ', l, r)
-          throw `Connect: l ${lv} is not an AudioNode/AudioParam`
+          // console.log(`Connect: lv is not an AudioNode/AudioParam`, lv, ' rv: ', rv, ' lr: ', l, r)
+          throw new Error(`Connect: l ${lv} is not an AudioNode/AudioParam`)
         }
         if (!(rv instanceof AudioNode) && !(rv instanceof AudioParam)) {
-          console.log(`Connect: rv is not an AudioNode/AudioParam`, rv, ' lv: ', lv, ' lr: ', l, r)
-          throw `Connect: r ${rv} is not an AudioNode/AudioParam`
+          // console.log(`Connect: rv is not an AudioNode/AudioParam`, rv, ' lv: ', lv, ' lr: ', l, r)
+          throw new Error(`Connect: r ${rv} is not an AudioNode/AudioParam`)
         }
         if (rv.numberOfInputs === 0) { return } // Dont connect to nodes that dont have inputs
         if (rv.passthrough !== undefined) { rv.passthrough(lv) } // Passthrough is for nodes that dont want to create an actual webaudio node
@@ -92,7 +92,7 @@ define(function (require) {
   let assertThrows = async (expected, code) => {
     let got
     try {await code()}
-    catch (e) { if (e.includes(expected)) {got=true} else {console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: ${e}`)} }
+    catch (e) { if (e.message.includes(expected)) {got=true} else {console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: ${e.message}`)} }
     finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
   }
 

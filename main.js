@@ -132,8 +132,8 @@ define(function(require) {
           try {
             player.play(player.getEventsForBeat(beat))
           } catch (e) {
-            let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
-            consoleOut('🔴 Run Error from player '+player.id+': ' + e + st)
+            console.log(e)
+            consoleOut('🔴 Run Error from player '+player.id+': ' + e)
             clearCallTree()
           }
         }

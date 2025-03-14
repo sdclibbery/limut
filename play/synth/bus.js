@@ -14,6 +14,7 @@ define((require) => {
   let players = require('player/players')
   let consoleOut = require('console')
   let {echo} = require('play/effects/echo')
+  let createPlayerFxChain = require('play/player-fx')
 
   let effectChain = (params, node) => {
     node = effects(params, node)
@@ -40,18 +41,42 @@ define((require) => {
     setTimeout(destroy, fadeTime*1000)
   }
 
+  let connectToFxChain = (outPlayer, params, bus) => {
+    if (outPlayer._fx === undefined) { // Create fx chain and connect to it if not present
+      outPlayer._fx = createPlayerFxChain(params, bus.id === 'main')
+      setTimeout(()=> { // Pause until last moment before connecting to avoid loud blare with parallel delay feedbacks
+        bus.output.connect(outPlayer._fx.chainInput)
+      }, (params._time - system.timeNow()) * 1000 - 1)
+    } else {
+      bus.output.connect(outPlayer._fx.chainInput)
+    }
+  }
+
   let connectToDestination = (bus, params) => {
+    // * Need to sort out the actual main connection to dest when no fx
+    // * Need to make fx chain work in all cases; createPlayerFxChain not defined??
+    // * Need to sort out the actual main connection to dest when main has an fx
     if (bus.id === 'main') { // If this is the main bus, it must mix direct to system
-      system.mix(bus.output)
+      if (params.fx !== undefined) {
+        connectToFxChain(players.getById('main'), params, bus)
+      } else {
+        system.mix(bus.output)
+      }
       return
     }
-    let destBusId = evalMainParamEvent(params, 'bus')
-    if (!destBusId) { destBusId = 'main' } // Default to main bus if not specified
-    let destBus = players.getById(destBusId)
-    if (destBus && destBus._input) { // Do nothing if bus not present
-      bus.output.connect(destBus._input)
+    let outPlayerId = evalMainParamEvent(params, 'bus')
+    if (!outPlayerId) { outPlayerId = 'main' } // Default to main bus if not specified
+    let outPlayer = players.getById(outPlayerId)
+    if (!outPlayer) { // Do nothing if output not present
+      consoleOut(`🟠 Bus ${params._player.id} audio out failed to connect to destination player ${outPlayerId}`)
+      return
+    }
+    if (params.fx !== undefined) {
+      connectToFxChain(outPlayer, params, bus)
     } else {
-      consoleOut(`🟠 Bus ${bus.id} failed to connect to destination bus ${destBusId}`)
+      if (outPlayer._input !== undefined)  {
+        bus.output.connect(outPlayer._input)
+      }  
     }
   }
 

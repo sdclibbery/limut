@@ -23,7 +23,7 @@ define((require) => {
   }
 
   let id = 0
-  let createPlayerFxChain = (eventParams) => {
+  let createPlayerFxChain = (eventParams, connectToAudioDest) => {
     // Setup for continuous running
     let fx = {
       _perFrame: [],
@@ -64,17 +64,21 @@ define((require) => {
     // Create the chain
     fx.chain = evalParamEvent(params.fx, params) // Get the Audionode fx chain
 
-    // Output to bus
-    let busPlayerId = evalMainParamEvent(params, 'bus')
-    if (!busPlayerId) { busPlayerId = 'main' } // Default to main bus if not specified
-    let bus = players.getById(busPlayerId)
-    if (!bus || !bus._input) {
-      consoleOut(`🟠 Player ${params._player.id} fx failed to connect to destination bus ${busPlayerId}`)
-      return
-    }
+    // Output
     fx.fadeOutGain = system.audio.createGain()
     connect(fx.chain, fx.fadeOutGain, fx.destructor)
-    fx.fadeOutGain.connect(bus._input)
+    if (connectToAudioDest) {
+      system.mix(fx.fadeOutGain)
+    } else {
+      let busPlayerId = evalMainParamEvent(params, 'bus')
+      if (!busPlayerId) { busPlayerId = 'main' } // Default to main bus if not specified
+      let bus = players.getById(busPlayerId)
+      if (!bus || !bus._input) {
+        consoleOut(`🟠 Player ${params._player.id} fx failed to connect to destination bus ${busPlayerId}`)
+        return
+      }
+      fx.fadeOutGain.connect(bus._input)
+    }
     fx.destructor.disconnect(fx.fadeOutGain)
 
     // Input via fade in

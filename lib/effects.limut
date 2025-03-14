@@ -22,7 +22,7 @@ delay{ lfo{ // Moving delay to change the pitch
   lo: ratio>=1 ?? length*(ratio-1)*1.2 ?: 0,
   hi: ratio>=1 ?? 0 ?: length*(1-ratio)*1.2,
   phase: phase
-}, max:0.1 }
+}, max:1 }
 >> gain{ // cosine envelope to silence the distortion when the delay has to reset
 	osc{'saw',freq:1/length,phase:phase }
 	>>shaper{{x}->cos{pi*x*0.6},oversample:'none'}
@@ -33,7 +33,7 @@ set shifter = {ratio, length:0.03} ->{ // Multiple overlapping pitch shifting gr
   grain{ratio,length:length,phase:1/2}
 }*0.825
 
-set ultracomb = {f:smooth{[]r1@f,att:1},p:smooth{[]r2/3@f,att:1},s:smooth{[]r1/2@f,att:1},stages:6} -> series{{
+set ultracomb = {f:smooth{[]r1@f,att:1}, p:smooth{[]r2/3@f,att:1}, s:smooth{[]r1/2@f,att:1}, stages:6} -> series{{
   idnode,
   delay{0.0002 + f^2*0.007,max:0.1} - delay{0.004 + f^2*0.01,max:0.1}, // Flanger part
   series{apf{300 + p^2*2000},6}, // Phaser part
