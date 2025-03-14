@@ -84,7 +84,8 @@ define((require) => {
     let bus = {
       id: busId,
       oldBus: oldBus,
-      _perFrame: [], destructor: destructor(),
+      _perFrame: [],
+      destructor: destructor(),
       destroyWait: 0.1,
      }
 

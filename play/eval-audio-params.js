@@ -74,7 +74,7 @@ define(function (require) {
     if (__event && state.time > __event.endTime) { return false }
     if (__event && state.time < __event._time) { return true }
     if (audioParam.lastTime === undefined) {
-      audioParam.lastTime = __event ? __event._time : system.timeNow()
+      audioParam.lastTime = (__event && __event._time) ? __event._time : system.timeNow()
     }
     while (audioParam.lastTime < state.time) {
       let count = metronome.beatTime(audioParam.lastTime+updateStep);

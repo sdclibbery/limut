@@ -4,7 +4,7 @@
 ==== audio ====
 WebAudio node graphs as first class values
  Support for fx chain on buses
-  !! Working but bus fx chain @f params not working
+  If main has fx chain, then intermediate bus fx doesn't work
  ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
   Or should all take same default units as params for consistency?
  ?What about node function namespacing? Both builtin and lib??

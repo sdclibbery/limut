@@ -47,7 +47,9 @@ define((require) => {
     })
     system.add(metronome.timeNow(), state => { // Per frame update
       if (fx.stopped) { return false }
-      fx._perFrame.forEach(pf => pf(state))
+      fx._perFrame.forEach(pf => {
+        return pf(state)
+    })
       return true
     })
 
