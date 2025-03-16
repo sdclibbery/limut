@@ -196,6 +196,14 @@ define(function(require) {
   }
   addNodeFunction('delay', delay)
 
+  let panner = (args,e,b) => {
+    let node = system.audio.createStereoPanner()
+    let params = combineParams(args, e)
+    evalMainParamFrame(node.pan, params, 'value', 0)
+    return node
+  }
+  addNodeFunction('panner', panner)
+
   let loop = (args,e,b,_,er) => {
     let mainChain = evalParamEvent(args['value'], e)
     let unevalledFeedback = args['feedback'] || args['value1']

@@ -4322,3 +4322,27 @@ h hollow, fx=ultracomb>>reverb{2}/4
 // t cybass 0__0__21__01__28, addc=(0,0.1), glide=1/8, add=[0:24,-2:8]t, drive={1,mix:1/16}, delay=(0,{3/2,add:7}), lpf={[10000:!220ms,200]es,q:10,poles:4}
 // d cydist 0__743_4_, dur=[1/2,1], room={2,mix:1/8,hpf:200}, oct+=(-1,0,1), fx=series{flanger{lfo{4b}},3}
 // set !p* add=[0:32,7:0,0:32]l
+
+
+preset hard saw, dur=1/4, oct=2, fx=shaper{ {x} -> x%0.033, samples:16385 }>>hsf{-3db}
+set scale='phrygian'
+set bpm=130
+n noise 0, envelope='percussion', lpf={[500:!200ms,45]es,q:20}, amp*=2
+i impulse ..0 crop 16, echo
+c noise ..0 crop 8, dur=1/2, envelope='percussion', amp/=2, high=-3db, echo
+h hard 0<.1-11><..2> crop 8 crop 14 + 89, lpf=[10000:!200ms,200]es, fx>>={idnode,shifter{1+riser{per:[1:8,4:16,16:8]t}*16}>>echo{1/32}/4}*2
+
+
+v neonshapes, loc=tile_tr
+set bpm=101
+// pi impulse 0, echo=3/4, amp*=2
+// pk noise, lpf={[600:!300ms,45]es,q:10}, envelope='percussion', amp*=2
+// pn noise ..0 crop 16, dur=1/2, envelope='percussion', sus=1/2, echo=1/2, amp/=3
+ls blips, amp*=[0:14,1/2:2]t, add=[0,4]t1
+// s softpad (049), amp=[1/6:1/3]n16, oct-=1
+// b basspluck 0-7. crop 8, lpf*=2
+c cyborg 0__4__ crop 8, amp*=3/2, vib=[0,1/3b]t1
+// c cyborg 0_[76]8_ crop 32, amp*=3/2, vib=[0,1/3b]t1
+// set !p* add=[0:16,2:8,8:8]t
+
+

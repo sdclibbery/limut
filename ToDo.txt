@@ -3,29 +3,30 @@
 =================================================================================================================================
 ==== audio ====
 WebAudio node graphs as first class values
- ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
-  Or should all take same default units as params for consistency?
- ?What about node function namespacing? Both builtin and lib??
-  Is `global.` enough to not worry about this (for now at least?)
  More audionode functions
-  StereoPannerNode
-  ChannelSplitterNode/ChannelMergerNode
-   Support for named outputs? eg for stereo splitter
   DynamicsCompressorNode
+  AudioBufferSourceNode - Also allow user def function to create sample
  mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
   Expose from js, don't write in limut; must use node-connect
   Const wet=0 or wet=1 should have a custom chain with no gains
    Really want to check that wet is @e zero or one, not just zero at the start
+ ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
+  Or should all take same default units as params for consistency?
  shifter
   Check gain staging, make sure the levels are right
   How to avoid crackling?
  !set lpf2 = lpf etc does not work!!! I think the args do not get passed in anymore??
   I guess there is an extra parse-var in there; can it be short circuited at parse time??
    Sounds dangerous; this should really work anyway, shouldn't it?
+ !slider doesn't work with fx nodes
+  ?What about buses?
+  ?What about other functions, eg smooth?
  More audionode functions
-  AudioBufferSourceNode - Also allow user def function to create sample
   MediaStreamAudioSourceNode - rewrite external as an audiosynth?
   IIRFilterNode
+  ChannelSplitterNode/ChannelMergerNode
+   ?Suggest a single node function that splits to l/r and provides a chain param for each, then merges??
+    ?But what if you wanted to ping pong? https://stackoverflow.com/a/20686936
   ? analyser node with output that can be read from limut somehow
   Basic node functions for all AudioNode types: check all are done
  Make a looper effect that uses gain switches to take a chunk of audio then loop it a given number of times before taking the next chunk
@@ -33,7 +34,7 @@ WebAudio node graphs as first class values
  Create a helper lib with useful functions (think about namespacing)
    filters: lpf, hpf, bpf, notch, apf, psf, lowshelf, highshelf, peaking
    chop, ring, mono, pan, shapers (drive, tanh, etc...), compressor
-   chorus, phaser, flanger, echo, room, reverb, ultracomb
+   chorus, phaser, flanger, echo, room, reverb, ultracomb, shimmer
    stereoflip, shifter
    oscillators
    maybe refactor existing envelope stuff actually??
