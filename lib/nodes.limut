@@ -18,3 +18,11 @@ set pkf = {gain, freq:600, q:5} -> biquad{'peaking', freq:freq, gain:gain, q:q}
 // set high = hsf
 // set mid = pkf
 // set low = lsf
+
+// Dynamics
+set compressor = {threshold:-50db, ratio:3db, attack:1ms, release:50ms, knee:2db} -> compress{
+  threshold:threshold, attack:attack, release:release, knee:knee, ratio:ratio
+}
+set limiter = {threshold:0db, attack:0, release:50ms, knee:0db, ratio:20db} -> compress{
+  threshold:threshold, attack:attack, release:release, knee:knee, ratio:ratio
+}

@@ -4,7 +4,6 @@
 ==== audio ====
 WebAudio node graphs as first class values
  More audionode functions
-  DynamicsCompressorNode
   AudioBufferSourceNode - Also allow user def function to create sample
  mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
   Expose from js, don't write in limut; must use node-connect
@@ -19,7 +18,7 @@ WebAudio node graphs as first class values
   I guess there is an extra parse-var in there; can it be short circuited at parse time??
    Sounds dangerous; this should really work anyway, shouldn't it?
  !slider doesn't work with fx nodes
-  ?What about buses?
+  ?What about with buses?
   ?What about other functions, eg smooth?
  More audionode functions
   MediaStreamAudioSourceNode - rewrite external as an audiosynth?

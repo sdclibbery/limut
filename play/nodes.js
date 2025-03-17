@@ -204,6 +204,18 @@ define(function(require) {
   }
   addNodeFunction('panner', panner)
 
+  let compress = (args,e,b) => {
+    let node = system.audio.createDynamicsCompressor()
+    let params = combineParams(args, e)
+    evalMainParamFrame(node.ratio, params, 'ratio', 0, undefined, x => Math.log10(Math.max(x,1e-6))*20) // Convert to dB for webaudio
+    evalMainParamFrame(node.threshold, params, 'threshold', -50, undefined, x => Math.log10(Math.max(x,1e-6))*20) // Convert to dB for webaudio
+    evalMainParamFrame(node.knee, params, 'knee', 40, undefined, x => Math.log10(Math.max(x,1e-6))*20) // Convert to dB for webaudio
+    evalMainParamFrame(node.attack, params, 'attack', 0.01, 's')
+    evalMainParamFrame(node.release, params, 'release', 0.25, 's')
+    return node
+  }
+  addNodeFunction('compress', compress) // There is a wrapper in the libs actually called 'compressor'
+
   let loop = (args,e,b,_,er) => {
     let mainChain = evalParamEvent(args['value'], e)
     let unevalledFeedback = args['feedback'] || args['value1']
