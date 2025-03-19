@@ -3,8 +3,9 @@
 =================================================================================================================================
 ==== audio ====
 WebAudio node graphs as first class values
- More audionode functions
-  AudioBufferSourceNode - Also allow user def function to create sample
+ AudioBufferSourceNode
+  Allow user def function to create sample
+   Support stereo
  mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
   Expose from js, don't write in limut; must use node-connect
   Const wet=0 or wet=1 should have a custom chain with no gains

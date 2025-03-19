@@ -9,6 +9,7 @@ define(function(require) {
   let {connect,isConnectable} = require('play/node-connect')
   let connectOp = require('expression/connectOp')
   let convolver = require('play/node-convolver')
+  let {getBuffer,getUrl} = require('play/samples')
 
   let addNodeFunction = (k, v) => {
     v.dontEvalArgs = true
@@ -129,6 +130,36 @@ define(function(require) {
     return node
   }
   addNodeFunction('osc', osc)
+
+  let sample = (args,e,b) => {
+    let node = system.audio.createBufferSource()
+    let params = combineParams(args, e)
+    let value = params.sample !== undefined ? params.sample : args.value
+    let startTime = 0
+    if (typeof value === 'string' || value === undefined) {
+      if (value === undefined) { value = 'sample/salamander/C4v8.mp3' }
+      node.buffer = getBuffer(value)
+      startTime = evalMainParamEvent(params, 'start', 0, 's')
+    } else {
+      const length = evalMainParamEvent(params, 'length', 0.2, 's')
+      const sampleRate = system.audio.sampleRate
+      let buffer = system.audio.createBuffer(1, length*sampleRate, sampleRate)
+      let data = buffer.getChannelData(0)
+      args.value.modifiers = args.value.modifiers || {}
+      for (var i = 0; i < data.length; i++) {
+        args.value.modifiers.value = i / data.length
+        let y = evalParamFrame(args.value,e,b, {doNotMemoise:true}) // It will memoise the same result across all x if allowed to
+        data[i] = y
+      }
+      node.buffer = buffer
+    }
+    evalMainParamFrame(node.playbackRate, params, 'rate', 1)
+    node.loop = params.loop === undefined || params.loop === true ? true : false // Default to looping if not set
+    node.start(e._time, startTime)
+    e._destructor.stop(node)
+    return node
+  }
+  addNodeFunction('sample', sample)
 
   let constNode = (args,e,b) => {
     let node = system.audio.createConstantSource()
