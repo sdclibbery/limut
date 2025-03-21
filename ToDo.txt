@@ -4,10 +4,8 @@
 ==== audio ====
 WebAudio node graphs as first class values
  AudioBufferSourceNode
-  Split more out of nodes.js: id/loop/series, also mocks
   Allow user def function to create sample
    Support stereo
- alias `thru` and `dry` for idnode?
  mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
   Expose from js, don't write in limut; must use node-connect
   Const wet=0 or wet=1 should have a custom chain with no gains

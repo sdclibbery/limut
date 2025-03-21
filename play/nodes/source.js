@@ -29,6 +29,16 @@ define(function(require) {
   }
   addNodeFunction('osc', osc)
 
+  let constNode = (args,e,b) => {
+    let node = system.audio.createConstantSource()
+    let params = combineParams(args, e)
+    evalMainParamFrame(node.offset, params, 'value', 1)
+    node.start(e._time)
+    e._destructor.stop(node)
+    return node
+  }
+  addNodeFunction('const', constNode)
+
   let sample = (args,e,b) => {
     let node = system.audio.createBufferSource()
     let params = combineParams(args, e)
@@ -58,15 +68,4 @@ define(function(require) {
     return node
   }
   addNodeFunction('sample', sample)
-
-  let constNode = (args,e,b) => {
-    let node = system.audio.createConstantSource()
-    let params = combineParams(args, e)
-    evalMainParamFrame(node.offset, params, 'value', 1)
-    node.start(e._time)
-    e._destructor.stop(node)
-    return node
-  }
-  addNodeFunction('const', constNode)
-
 })
