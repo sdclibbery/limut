@@ -7,6 +7,7 @@ define(function(require) {
   var metronome = require('metronome')
   let {connect,isConnectable} = require('play/nodes/connect')
   let connectOp = require('expression/connectOp')
+  require('play/nodes/mocks')
   require('play/nodes/convolver')
   require('play/nodes/source')
 
