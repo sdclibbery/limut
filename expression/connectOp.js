@@ -1,10 +1,9 @@
 'use strict';
 define(function(require) {
   let system = require('play/system');
-  let {connect} = require('play/node-connect');
+  let {connect,isConnectableOrPlaceholder} = require('play/nodes/connect');
   let destructor = require('play/destructor')
   let {evalParamFrame} = require('player/eval-param')
-  let {isConnectableOrPlaceholder} = require('play/node-connect')
   let vars = require('vars')
 
   let audioNodeProto

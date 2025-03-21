@@ -6,10 +6,10 @@ define(function(require) {
   let {evalParamFrame,evalParamEvent} = require('player/eval-param')
   let setWave = require('play/synth/waveforms/set-wave')
   var metronome = require('metronome')
-  let {connect,isConnectable} = require('play/node-connect')
+  let {connect,isConnectable} = require('play/nodes/connect')
   let connectOp = require('expression/connectOp')
-  let convolver = require('play/node-convolver')
-  let {getBuffer,getUrl} = require('play/samples')
+  let {getBuffer} = require('play/samples')
+  let convolver = require('play/nodes/convolver')
 
   let addNodeFunction = (k, v) => {
     v.dontEvalArgs = true

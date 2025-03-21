@@ -1,7 +1,7 @@
 'use strict'
 define(function(require) {
   require('polyfills')
-  require('play/nodes')
+  require('play/nodes/nodes')
   require('functions/time')
   require('functions/rand')
   require('functions/aggregators')

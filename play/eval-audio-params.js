@@ -5,7 +5,7 @@ define(function (require) {
   let {mainParamUnits,subParamUnits} = require('player/sub-param')
   let {segmentedAudioParam} = require('play/segmented-audioparam')
   let metronome = require('metronome')
-  let {connect,isConnectable} = require('play/node-connect');
+  let {connect,isConnectable} = require('play/nodes/connect');
   let {getCallTree,setCallTree,clearCallTree} = require('player/callstack')
 
   let evalPerEvent = (params, p, def) => {

@@ -10,34 +10,19 @@ WebAudio node graphs as first class values
   Expose from js, don't write in limut; must use node-connect
   Const wet=0 or wet=1 should have a custom chain with no gains
    Really want to check that wet is @e zero or one, not just zero at the start
- ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
-  Or should all take same default units as params for consistency?
  shifter
   Check gain staging, make sure the levels are right
   How to avoid crackling?
+ flipper node function, swaps l and r channels
+  pingponger delay that forces to one side then flips on each delay
+ ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
+  Or should all take same default units as params for consistency?
  !set lpf2 = lpf etc does not work!!! I think the args do not get passed in anymore??
   I guess there is an extra parse-var in there; can it be short circuited at parse time??
    Sounds dangerous; this should really work anyway, shouldn't it?
  !slider doesn't work with fx nodes
   ?What about with buses?
   ?What about other functions, eg smooth?
- More audionode functions
-  MediaStreamAudioSourceNode - rewrite external as an audiosynth?
-  IIRFilterNode
-  ChannelSplitterNode/ChannelMergerNode
-   ?Suggest a single node function that splits to l/r and provides a chain param for each, then merges??
-    ?But what if you wanted to ping pong? https://stackoverflow.com/a/20686936
-  ? analyser node with output that can be read from limut somehow
-  Basic node functions for all AudioNode types: check all are done
- Make a looper effect that uses gain switches to take a chunk of audio then loop it a given number of times before taking the next chunk
-  Need to avoid clicks on the gain switches
- Create a helper lib with useful functions (think about namespacing)
-   filters: lpf, hpf, bpf, notch, apf, psf, lowshelf, highshelf, peaking
-   chop, ring, mono, pan, shapers (drive, tanh, etc...), compressor
-   chorus, phaser, flanger, echo, room, reverb, ultracomb, shimmer
-   stereoflip, shifter
-   oscillators
-   maybe refactor existing envelope stuff actually??
  !fxMixChain should push fade out TTL to fx chain so it doesn't cut off delayed notes
   !Better fade out time. If you dont have any delays/reverbs etc you want to stop sooner; eg a audiosynth, fx=osc>>gain{0.02}
  ?Dont recreate fx chain if the param string hasnt changed?
@@ -46,7 +31,6 @@ WebAudio node graphs as first class values
  ?In evalParamValue for function, do we need to evalRecurse there? Could it be more efficient at the root level somewhere?
  !Shouldnt bother with evalRecurse to cancel time modifiers if there weren't any time modifiers (only other modifiers)
  !?Pitch: Support for a pitch chain?
- ?Rewrite all synths using audiosynth?
  !Commented tests in parse-expression
  e = ev(0,0,4); e.foo = parseExpression('mockaudionode{test:17}')
   assert(17, evalParamFrame(parseExpression('mockaudionode{test:this.foo}'), e, 0).test.connected[0].test.value)
@@ -63,6 +47,23 @@ WebAudio node graphs as first class values
    debug log function
 Fade in/out params for player; Only apply when player is started or stopped, not just reparsed. Specify a time to fade over
 Monophonic synths can get event info somehow; eg for pitch or envelopes etc
+Make a looper effect that uses gain switches to take a chunk of audio then loop it a given number of times before taking the next chunk
+ Need to avoid clicks on the gain switches
+More audionode functions
+ MediaStreamAudioSourceNode - rewrite external as an audiosynth?
+ IIRFilterNode
+ ChannelSplitterNode/ChannelMergerNode
+  ?Suggest a single node function that splits to l/r and provides a chain param for each, then merges??
+  ?But what if you wanted to ping pong? https://stackoverflow.com/a/20686936
+ ? analyser node with output that can be read from limut somehow
+ Basic node functions for all AudioNode types: check all are done
+Create a helper lib with useful functions (think about namespacing)
+  filters: lpf, hpf, bpf, notch, apf, psf, lowshelf, highshelf, peaking
+  chop, ring, mono, pan, shapers (drive, tanh, etc...), compressor
+  chorus, phaser, flanger, echo, room, reverb, ultracomb, shimmer
+  stereoflip, shifter
+  oscillators
+  maybe refactor existing envelope stuff actually??
 !!?Limiter permanently showing on??? Only on firefox desktop??
 !!!! s causes the k to get filtered somehow! But then p restores to normal!!! Something to do with the `X`?? Reencode sample???
  k perc X...
@@ -75,7 +76,8 @@ Monophonic synths can get event info somehow; eg for pitch or envelopes etc
  ! `this.` is still causing a problem. Is there a way to decide whether it really needs to be per frame?
   This is a big problem for presets like ambi, where tons of things are derived params
  ! Also  s saw, dur=1/4, oct=2, amp/=10, lpf=1000*[0,1]l1/4@e  is getting per frame on the q!
-!!phaser (and psf?) should mix in dry signal, not just 2 allpasses!!!!
+!!phaser (and psf) are not doing normal phaser things. Rewrite them as multiple allpass in series at same freq, mixed with dry
+?Rewrite all synths using audiosynth?
 Can now rewrite all JS synths using audiosynth? ? Pitch effects tho??
 Start oscillator at a whole number of cycles after time zero
  To avoid phasing when using pad envelopes, and/or to control the starting phase of an oscillator

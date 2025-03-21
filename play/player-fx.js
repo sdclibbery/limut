@@ -7,7 +7,7 @@ define((require) => {
   let destructor = require('play/destructor')
   let players = require('player/players')
   let consoleOut = require('console')
-  let {connect} = require('play/node-connect')
+  let {connect} = require('play/nodes/connect')
 
   let fadeIn = (node, fadeTime) => {
     node.gain.value = 0

@@ -2,7 +2,7 @@
 define(function(require) {
   let consoleOut = require('console')
   let {combineIntervalsFrom,combineIntervals} = require('expression/intervals')
-  let {isConnectable} = require('play/node-connect')
+  let {isConnectable} = require('play/nodes/connect')
 
   let objectMap = (obj, fn) => {
     if (obj.hasOwnProperty('value')) { // 'value' field implies this is an object with subparams instead of a normal object
