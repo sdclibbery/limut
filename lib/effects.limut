@@ -48,6 +48,6 @@ set reverb = {length:1b,curve:3} -> convolver{
   length:length
 }
 
-set echo = {time:1/8b,feedback:0.7,max} -> {dry,delay{time,feedback:feedback,max:max??max?:time*2}}
+set echo = {time:1/8b,feedback:0.7,max} -> delay{time,feedback:feedback,max:max??max?:time*2}
 
-set pingpong = {time:1/4b,feedback:0.7} -> {dry,panner{1}>>delay{time,feedback:flipper*feedback}}
+set pingpong = {time:1/4b,feedback:0.7} -> panner{1}>>delay{time,feedback:flipper*feedback}

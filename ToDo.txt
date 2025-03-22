@@ -5,6 +5,7 @@
 WebAudio node graphs as first class values
  mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
   Expose from js, don't write in limut; must use node-connect
+  Wet param can be positional
   Const wet=0 or wet=1 should have a custom chain with no gains
    Really want to check that wet is @e zero or one, not just zero at the start
  ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
@@ -31,14 +32,15 @@ WebAudio node graphs as first class values
   assert(17, evalParamFrame(parseExpression('mockaudionode{test:this.foo}'), e, 0).test.connected[0].test.value)
   !! So foo is evalling without any context where a destructor makes sense :-/
  DOCS
-   all nodes functions, inc loop, series etc (note, count/feedback args can be positional)
-   lib functions, nodes, effects
+   all nodes/ js functions etc (note, count/feedback args can be positional)
+   all lib functions: nodes, effects
+   description of node as a value type
    connect op >>
    (other) ops support nodes +-*, and mixture of nodes and values
    fx param
-   user defined function syntax
-   trig maths functions
    audiosynth; play param
+   user defined function syntax, inc argument syntax plus default args, plus positional args
+   trig maths functions
    debug log function
 Fade in/out params for player; Only apply when player is started or stopped, not just reparsed. Specify a time to fade over
 Monophonic synths can get event info somehow; eg for pitch or envelopes etc
