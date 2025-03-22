@@ -89,7 +89,7 @@ define(function(require) {
   let flipper = (args,e,b) => {
     let splitter = system.audio.createChannelSplitter(2)
     let merger = system.audio.createChannelMerger(2)
-    splitter.connect(merger, 0, 1)
+    splitter.connect(merger, 0, 1) // Swap left woth right channel
     splitter.connect(merger, 1, 0)
     if (audioNodeProto === undefined) { audioNodeProto = Object.getPrototypeOf(Object.getPrototypeOf(system.audio.createGain())) }
     let composite = Object.create(audioNodeProto) // Create a composite to wrap the pair of nodes
