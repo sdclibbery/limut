@@ -84,4 +84,26 @@ define(function(require) {
     return node
   }
   addNodeFunction('compress', compress) // There is a wrapper in the libs actually called 'compressor'
+
+  let audioNodeProto
+  let flipper = (args,e,b) => {
+    let splitter = system.audio.createChannelSplitter(2)
+    let merger = system.audio.createChannelMerger(2)
+    splitter.connect(merger, 0, 1)
+    splitter.connect(merger, 1, 0)
+    if (audioNodeProto === undefined) { audioNodeProto = Object.getPrototypeOf(Object.getPrototypeOf(system.audio.createGain())) }
+    let composite = Object.create(audioNodeProto) // Create a composite to wrap the pair of nodes
+    composite.l = splitter
+    composite.r = merger
+    composite.connect = (destination) => {
+      return connect(composite.r, destination, e._destructor)
+    }
+    composite.disconnect = () => {
+      composite.l.disconnect()
+      composite.r.disconnect()
+    }
+    e._destructor.disconnect(composite)
+    return composite
+  }
+  addNodeFunction('flipper', flipper)
 })

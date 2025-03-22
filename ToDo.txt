@@ -3,23 +3,18 @@
 =================================================================================================================================
 ==== audio ====
 WebAudio node graphs as first class values
- AudioBufferSourceNode
-  Allow user def function to create sample
-   Support stereo
+ flipper node function, swaps l and r channels
+  pingponger delay that flips on each delay; user can add a pan before if needed
  mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
   Expose from js, don't write in limut; must use node-connect
   Const wet=0 or wet=1 should have a custom chain with no gains
    Really want to check that wet is @e zero or one, not just zero at the start
- shifter
-  Check gain staging, make sure the levels are right
-  How to avoid crackling?
- flipper node function, swaps l and r channels
-  pingponger delay that forces to one side then flips on each delay
  ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
   Or should all take same default units as params for consistency?
  !set lpf2 = lpf etc does not work!!! I think the args do not get passed in anymore??
   I guess there is an extra parse-var in there; can it be short circuited at parse time??
    Sounds dangerous; this should really work anyway, shouldn't it?
+ MediaStreamAudioSourceNode - rewrite external as an audiosynth? - would lose fixed func stuff though?
  !slider doesn't work with fx nodes
   ?What about with buses?
   ?What about other functions, eg smooth?
@@ -31,6 +26,8 @@ WebAudio node graphs as first class values
  ?In evalParamValue for function, do we need to evalRecurse there? Could it be more efficient at the root level somewhere?
  !Shouldnt bother with evalRecurse to cancel time modifiers if there weren't any time modifiers (only other modifiers)
  !?Pitch: Support for a pitch chain?
+ ! a ping, fx=dry+(dry>>dry)  connectableAdd(8) -> constNode(37) e._destructor is undefined
+ ! a ping, fx=gain+(gain>>gain)  too much recursion
  !Commented tests in parse-expression
  e = ev(0,0,4); e.foo = parseExpression('mockaudionode{test:17}')
   assert(17, evalParamFrame(parseExpression('mockaudionode{test:this.foo}'), e, 0).test.connected[0].test.value)
@@ -50,7 +47,6 @@ Monophonic synths can get event info somehow; eg for pitch or envelopes etc
 Make a looper effect that uses gain switches to take a chunk of audio then loop it a given number of times before taking the next chunk
  Need to avoid clicks on the gain switches
 More audionode functions
- MediaStreamAudioSourceNode - rewrite external as an audiosynth?
  IIRFilterNode
  ChannelSplitterNode/ChannelMergerNode
   ?Suggest a single node function that splits to l/r and provides a chain param for each, then merges??
@@ -64,6 +60,7 @@ Create a helper lib with useful functions (think about namespacing)
   stereoflip, shifter
   oscillators
   maybe refactor existing envelope stuff actually??
+!shifter still has some crackling/artifacts, eg:  s sine, envelope=pad, fx=shifter{1}
 !!?Limiter permanently showing on??? Only on firefox desktop??
 !!!! s causes the k to get filtered somehow! But then p restores to normal!!! Something to do with the `X`?? Reencode sample???
  k perc X...
@@ -81,6 +78,7 @@ Create a helper lib with useful functions (think about namespacing)
 Can now rewrite all JS synths using audiosynth? ? Pitch effects tho??
 Start oscillator at a whole number of cycles after time zero
  To avoid phasing when using pad envelopes, and/or to control the starting phase of an oscillator
+AudioBufferSourceNode: Support stereo for user functions
 Use []e / []es for all envelopes?
  ?Deprecate att, dec, sus, rel etc params and prefer envelope=[]e??
  ??Also deprecate other att/rel params; eg in pitchedperc, fm operator etc???
