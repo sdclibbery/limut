@@ -4346,3 +4346,7 @@ c cyborg 0__4__ crop 8, amp*=3/2, vib=[0,1/3b]t1
 // set !p* add=[0:16,2:8,8:8]t
 
 
+// Demon voice
+e external, mono, suck=1/4, fx={shifter{3/4},shifter{1/2}}>>{idnode,ultracomb*0.7}*0.7
+
+
