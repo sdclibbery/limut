@@ -92,8 +92,8 @@ define(function(require) {
     // Actual mix, equivalent to:  { gain{cos{mix*pi/2}}, wet>>gain{sin{mix*pi/2}} }
     let dryGain = system.audio.createGain()
     let wetGain = system.audio.createGain()
-    evalMainParamFrame(dryGain.gain, params, mixParam, 1, undefined, mix => Math.cos(mix * Math.PI/2))
-    evalMainParamFrame(wetGain.gain, params, mixParam, 0, undefined, mix => Math.sin(mix * Math.PI/2))
+    evalMainParamFrame(dryGain.gain, params, mixParam, 1/2, undefined, mix => Math.cos(mix * Math.PI/2))
+    evalMainParamFrame(wetGain.gain, params, mixParam, 1/2, undefined, mix => Math.sin(mix * Math.PI/2))
     return { // Add
       value: dryGain, // Dry part
       value1: connectOp(wetChain, wetGain, e,b,er) // Wet part

@@ -3,8 +3,7 @@
 =================================================================================================================================
 ==== audio ====
 WebAudio node graphs as first class values
- mix function eg play=mix{1/2,wet:biquad{'lowpass',freq:440}}
- set toleft = panner{-1}  etc?
+ ?set toleft = panner{-1}  etc?
  ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
   Or should all take same default units as params for consistency?
  !set lpf2 = lpf etc does not work!!! I think the args do not get passed in anymore??
