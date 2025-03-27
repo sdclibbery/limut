@@ -4350,3 +4350,10 @@ c cyborg 0__4__ crop 8, amp*=3/2, vib=[0,1/3b]t1
 e external, mono, suck=1/4, fx={shifter{3/4},shifter{1/2}}>>{idnode,ultracomb*0.7}*0.7
 
 
+// Mix tests
+// a audiosynth, fx=osc{110}>>mix{osc{400},0}*0.01
+// a audiosynth, fx=osc{110}>>mix{osc{400},1/2}*0.01
+// a audiosynth, fx=osc{110}>>mix{osc{400},1}*0.01
+// a audiosynth, fx=osc{110}>>mix{osc{400},[0:1]l1@f}*0.01
+// a audiosynth, fx=osc{110}>>mix{osc{400},[0]l1@f}*0.01
+

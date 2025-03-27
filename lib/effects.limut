@@ -51,3 +51,5 @@ set reverb = {length:1b,curve:3} -> convolver{
 set echo = {time:1/8b,feedback:0.7,max} -> delay{time,feedback:feedback,max:max??max?:time*2}
 
 set pingpong = {time:1/4b,feedback:0.7} -> panner{1}>>delay{time,feedback:flipper*feedback}
+
+set demon = {} -> {shifter{3/4},shifter{1/2}}>>{idnode,ultracomb*0.7}*0.7
