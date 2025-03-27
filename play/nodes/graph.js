@@ -1,8 +1,8 @@
 'use strict'
 define(function(require) {
-  let {addNodeFunction} = require('play/nodes/node-var')
+  let {addNodeFunction,combineParams} = require('play/nodes/node-var')
   let system = require('play/system');
-  let {evalMainParamEvent} = require('play/eval-audio-params')
+  let {evalMainParamEvent,evalMainParamFrame} = require('play/eval-audio-params')
   let {evalParamFrame,evalParamEvent} = require('player/eval-param')
   let {connect,isConnectable} = require('play/nodes/connect')
   let connectOp = require('expression/connectOp')
@@ -71,4 +71,34 @@ define(function(require) {
     return node
   }
   addNodeFunction('series', series)
+
+  let mix = (args,e,b,_,er) => {
+    let params = combineParams(args, e)
+    let wetChain = evalParamEvent(params.value, e)
+    if (wetChain === undefined) { return idnode(params,e,b) }
+    let mixParam = params.mix !== undefined ? 'mix' : 'value1'
+    let mixValue = evalParamFrame(params[mixParam], e,e.count, {withInterval:true})
+    let interval
+    if (typeof mixValue === 'object' && mixValue.interval !== undefined && !isConnectable(mixValue)) {
+      interval = mixValue.interval
+      mixValue = mixValue.value
+    }
+    if (interval === undefined && mixValue <= 0.0001) { // dry only
+      return idnode(params,e,b)
+    }
+    if (interval === undefined && mixValue >= 0.9999) { // wet only
+      return wetChain
+    }
+    // Actual mix, equivalent to:  { gain{cos{mix*pi/2}}, wet>>gain{sin{mix*pi/2}} }
+    let dryGain = system.audio.createGain()
+    let wetGain = system.audio.createGain()
+    evalMainParamFrame(dryGain.gain, params, mixParam, 1, undefined, mix => Math.cos(mix * Math.PI/2))
+    evalMainParamFrame(wetGain.gain, params, mixParam, 0, undefined, mix => Math.sin(mix * Math.PI/2))
+    return { // Add
+      value: dryGain, // Dry part
+      value1: connectOp(wetChain, wetGain, e,b,er) // Wet part
+    }
+    return node
+  }
+  addNodeFunction('mix', mix)
 })

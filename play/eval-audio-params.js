@@ -136,7 +136,7 @@ define(function (require) {
     }
   }
 
-  let fixedPerFrame = (params, p, subParamName, def, requiredUnits) => {
+  let fixedPerFrame = (params, p, subParamName, def, requiredUnits) => { // ???Should this use {withInterval:true}?
     let v = params[p]
     if (typeof v === 'function') {
       v = evalParamFrame(v, params, params.count, {evalToObjectOrPrimitive:true})

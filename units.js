@@ -32,11 +32,11 @@ define(function(require) {
     return value // unknown, just return the value
   }
 
-  let units = (v, targetUnts) => {
+  let units = (v, targetUnits) => {
     if (v === null || v === undefined) { return v }
     if (typeof v !== 'object') { return v }
     let units = v._units
-    return convert(v.value, units, targetUnts, beatDuration)
+    return convert(v.value, units, targetUnits, beatDuration)
   }
 
   // TESTS
