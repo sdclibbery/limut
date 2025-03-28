@@ -118,3 +118,7 @@ preset hiss noise, dur=1/2, amp=1/4, envelope='percussion', pan=[-1/2,1/2], low=
 preset bloom dbass, dur=2, noisify=1/8, drive=2/8, fold=1, room=2, addc=wow/2, pan=[-1/2:1/2]r,
   chorus=2, att=1/2, rel=3, amp=2/3, psf1={f1:200*[0.3:2.2]e,f2:1700*[0.3:2.2]e,q:2}
   
+preset pick saw, dur=1/4, sus=1/8, envelope='percussion',
+	lpf={[(this.freq+200)*(this.cutoff+0.15)*10:!200ms,10]es,poles:4},
+  fx=mix{flanger>>pingpong{1/2}>>reverb{3},7/8}*+10db,
+  cutoff=[0:1]l16
