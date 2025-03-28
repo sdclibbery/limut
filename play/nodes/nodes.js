@@ -77,8 +77,8 @@ define(function(require) {
     let node = system.audio.createDynamicsCompressor()
     let params = combineParams(args, e)
     evalMainParamFrame(node.ratio, params, 'ratio', 0, undefined, x => Math.log10(Math.max(x,1e-6))*20) // Convert to dB for webaudio
-    evalMainParamFrame(node.threshold, params, 'threshold', -50, undefined, x => Math.log10(Math.max(x,1e-6))*20) // Convert to dB for webaudio
-    evalMainParamFrame(node.knee, params, 'knee', 40, undefined, x => Math.log10(Math.max(x,1e-6))*20) // Convert to dB for webaudio
+    evalMainParamFrame(node.threshold, params, 'threshold', 1/316, undefined, x => Math.log10(Math.max(x,1e-6))*20) // Convert to dB for webaudio
+    evalMainParamFrame(node.knee, params, 'knee', 100, undefined, x => Math.log10(Math.max(x,1e-6))*20) // Convert to dB for webaudio
     evalMainParamFrame(node.attack, params, 'attack', 0.01, 's')
     evalMainParamFrame(node.release, params, 'release', 0.25, 's')
     return node

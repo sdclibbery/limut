@@ -929,6 +929,34 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>rand</code> Returns a pseudo random number between zero and one. Uses time-based hashing to provide consistent values. <code>rand@e</code> will provide a number that is different on each pattern event, but constant within each event. <code>rand{seed:0}</code> sets a specific seed for the randoms. Because the value comes from time-hashing, time based modifiers such as <code>step</code> and <code>per</code> are respected.</p>
 <p><code>time</code> Returns the current time in beats. Time modifiers such as <code>step</code> and <code>per</code> are respected.</p>
 </div>
+<h4 onclick="toggleAccordion('accordion-node-functions')" class="accordion"> Node Functions</h4>
+<div id="accordion-node-functions" class="closed">
+<p><code>biquad{'lowpass',freq:440Hz,q:5,gain}</code> Create a biquad filter node of type 'lowpass', 'highpass', 'bandpass', 'notch', 'lowshelf', 'highshelf' or 'peaking'.</p>
+<p><code>compress{ratio:0, threshold:1/316, knee:100, attack:0.01s, release:0.25s}</code> Create a compressor node.</p>
+<p><code>const{1}</code> Create a node that always outputs a given constant value.</p>
+<p><code>convolver{env:{x}->...,length:1s}</code> Create a convolver node with the given length, and an environment shaping user defined function. The main impulse response will be random noise, shaped by the envelope function.</p>
+<p class='sub'><code>convolver{env:{l:{x}->...,r:{x}->...},length:1s}</code> Create a stereo convolver node with separate left and right envelopes.</p>
+<p class='sub'><code>convolver{{x}->...,length:1s}</code> Create a convolver node with the impulse response defined directly by a user defined function. Note this can be slow to create as the user defined function may be called many thousands of times depending on the length.</p>
+<p class='sub'><code>convolver{l:{x}->...,r:{x}->...,length:1s}</code> Create a stereo convolver node with separate left and right impulse responses.</p>
+<p><code>delay{1/4b, feedback:..., max:1b}</code> Create a delay node with a given delay time, a max delay time, and an optional feedback chain.</p>
+<p class='sub'><code>delay{1/4b, ..., max:1b}</code> The feedback arg can be positional instead of being named.</p>
+<p><code>flipper</code> Create a node that flips the left and right stereo channels.</p>
+<p><code>gain{1}</code> Create a gain node with a gain ratio given by the main parameter.</p>
+<p><code>idnode</code> Create an identity node that passes signals through unchanged.</p>
+<p class='sub'><code>dry</code> An alias for idnode.</p>
+<p class='sub'><code>thru</code> An alias for idnode.</p>
+<p><code>loop{..., feedback:...}</code> Create an audiograph loop, with a signal passing through the main node chain, and fed back through the feedback node chain. Note the feedback node chain must contain a delay node otherwise it will not function.</p>
+<p class='sub'><code>loop{..., ...}</code> The feedback arg can be positional instead of being named.</p>
+<p><code>mix{..., mix:1/2}</code> Provide a mix between a dry signal and a et signal processed through the given node chain. Mix 0 is full dry, mix 1 is full wet.</p>
+<p class='sub'><code>mix{..., 1/2}</code> The mix arg can be positional instead of being named.</p>
+<p><code>osc{'sawtooth', freq:440, phase:0}</code> Create an oscillator node with the given waveform and frequency. Some control of starting phase is available; this is achieved by controlling the start time of the oscillator as all webaudio oscillators start with phase 0.</p>
+<p><code>panner{0}</code> Create a stereo panner that can push a signal to the left (-1) or right (1).</p>
+<p><code>sample{sample:..., start:0s, rate:1}</code> Create a sample player node that loads a sample from a URL and plays with the given start point and rate.</p>
+<p class='sub'><code>sample{sample:{x}->..., length:0.2s, rate:1}</code> Create a sample player that creates a sample of given length from a user defined function and plays it at the given rate.</p>
+<p><code>series{..., count:2}</code> Repeat the given node chain in series count times.</p>
+<p class='sub'><code>series{..., 2}</code> The count arg can be positional instead of being named.</p>
+<p><code>shaper{{x}->..., samples:2, oversample:'2x'}</code> Create a wave shaper node, using a user defined function to create the wave shape. Oversmaple can be '2x', '4x', or 'none'. Note oversample other than 'none' may result in a signal delay.</p>
+</div>
 <h4 onclick="toggleAccordion('accordion-play-samples')" class="accordion"> Play Samples</h4>
 <div id="accordion-play-samples" class="closed">
 <p>
