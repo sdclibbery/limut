@@ -29,7 +29,7 @@ WebAudio node graphs as first class values
   assert(17, evalParamFrame(parseExpression('mockaudionode{test:this.foo}'), e, 0).test.connected[0].test.value)
   !! So foo is evalling without any context where a destructor makes sense :-/
  DOCS
-   all lib functions: nodes, effects
+   libraries: nodes, effects
    description of node as a value type
    connect op >>
    (other) ops support nodes +-*, and mixture of nodes and values

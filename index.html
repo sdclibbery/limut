@@ -1033,6 +1033,23 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <code>4</code> Vocals (Four)<br/>
 </p>
 </div>
+<h4 onclick="toggleAccordion('accordion-nodes-library')" class="accordion"> Nodes Library</h4>
+<div id="accordion-nodes-library" class="closed">
+<h5>Nodes library: <code>include 'lib/nodes.limut'</code></h5>
+<p>This library contains basic helper functions wrapping node functions. As these afre user defined functions, all arguments can be positional.</p>
+<p><code>apf{freq, q:5}</code> All pass filter, 2 pole. q is resonance.</p>
+<p><code>bpf{freq, q:5}</code> Bandpass pass filter, 2 pole. q is resonance.</p>
+<p><code>compressor{threshold:-50db, ratio:3db, attack:1ms, release:50ms, knee:2db}</code> Dynamics compressor.</p>
+<p><code>hpf{freq, q:5}</code> High pass filter, 2 pole. q is resonance.</p>
+<p><code>hsf{gain, freq:1100Hz}</code> High shelf filter.</p>
+<p><code>lfo{freq,wave:'triangle',lo:0,hi:1,phase:0}</code> Oscillator wrapper for use as an LFO. It can run at any frequency (including audio frequency). The output range is controlled with the lo and hi arguments.</p>
+<p><code>limiter{threshold:-50db, ratio:3db, attack:1ms, release:50ms, knee:2db}</code> Dynamics limiter.</p>
+<p><code>lpf{freq, q:5}</code> Low pass filter, 2 pole. q is resonance.</p>
+<p><code>lpf4{freq, q:5}</code> Low pass filter, 4 pole. q is resonance.</p>
+<p><code>lsf{gain, freq:1100Hz}</code> Low shelf filter.</p>
+<p><code>nf{freq, q:5}</code> Notch filter, 2 pole. q is resonance.</p>
+<p><code>pkf{gain, freq:1100Hz}</code> Peaking (mid shelf) filter.</p>
+</div>
 <h4 onclick="toggleAccordion('accordion-synthwave-libraries')" class="accordion"> Synthwave Library</h4>
 <div id="accordion-synthwave-libraries" class="closed">
 <h5>Synthwave library: <code>include 'preset/synthwave.limut'</code></h5>
