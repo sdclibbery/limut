@@ -3,6 +3,8 @@
 =================================================================================================================================
 ==== audio ====
 WebAudio node graphs as first class values
+ !Pick low cutoff range is too low, and doesnt support oct=2, also fx chain is too loud
+  ALSO remove fx altogether as a separate effect
  !Error: set main fx=shifter
  stereo{} takes 2 chains, and splits then merges with one chain each for l and r channel
  ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
@@ -29,7 +31,6 @@ WebAudio node graphs as first class values
   assert(17, evalParamFrame(parseExpression('mockaudionode{test:this.foo}'), e, 0).test.connected[0].test.value)
   !! So foo is evalling without any context where a destructor makes sense :-/
  DOCS
-   libraries: nodes, effects
    description of node as a value type
    connect op >>
    (other) ops support nodes +-*, and mixture of nodes and values

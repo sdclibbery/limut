@@ -1050,6 +1050,20 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>nf{freq, q:5}</code> Notch filter, 2 pole. q is resonance.</p>
 <p><code>pkf{gain, freq:1100Hz}</code> Peaking (mid shelf) filter.</p>
 </div>
+<h4 onclick="toggleAccordion('accordion-effects-library')" class="accordion"> Effects Library</h4>
+<div id="accordion-effects-library" class="closed">
+<h5>Effects library: <code>include 'lib/effects.limut'</code></h5>
+<p>This library contains more sophisticated effects. As these are user defined functions, all arguments can be positional. In general, these effects are the wet path only; you can wrap them in the mix{} function to provide a dry signal as well.</p>
+<p><code>demon{}</code> Demon voice effect for use with vocal audio (eg through a microphone and the external synth).</p>
+<p><code>echo{time:1/8b, feedback:0.7, max}</code> Echo effect wraps delay with feedback and a dry path to give a complete echo effect.</p>
+<p><code>flanger{control:[0,1]l8@f, feedback:0, lo:0.0005, hi:0.007}</code> Flanger effect.</p>
+<p><code>grain{ratio, length:0.03, phase:0}</code> Granular resynthesis grain. Plays a recent part of the audio stream of given length, with a cosine envelope, at a given pitch ratio. Phase allows multiple grains to be overlapped.</p>
+<p><code>phaser{control:[0,1]l4@f, lo:300Hz, hi:2600Hz, stages:4, q:1/2}</code> Phaser effect.</p>
+<p><code>pingpong{time:1/4b, feedback:0.7}</code> Ping pong echo; the echoes alternate stereo sides.</p>
+<p><code>reverb{length:1b, curve:3}</code> Reverb effect with given length and power falloff curve.</p>
+<p><code>shifter{ratio, length:0.03}</code> Pitch shifter effect.</p>
+<p><code>ultracomb{f:smooth{[]r1@f,att:1}, p:smooth{[]r2/3@f,att:1}, s:smooth{[]r1/2@f,att:1}, stages:6}</code> Ultracomb filter; combination flanger, phaser and pitch shifter to create growling sounds. f, p and s are the control parameters.</p>
+</div>
 <h4 onclick="toggleAccordion('accordion-synthwave-libraries')" class="accordion"> Synthwave Library</h4>
 <div id="accordion-synthwave-libraries" class="closed">
 <h5>Synthwave library: <code>include 'preset/synthwave.limut'</code></h5>
