@@ -1054,6 +1054,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <div id="accordion-effects-library" class="closed">
 <h5>Effects library: <code>include 'lib/effects.limut'</code></h5>
 <p>This library contains more sophisticated effects. As these are user defined functions, all arguments can be positional. In general, these effects are the wet path only; you can wrap them in the mix{} function to provide a dry signal as well.</p>
+<p><code>airverb{delay:1/2b}</code> Haunting airy reverb with flanger and stereo pingpong with given delay.</p>
 <p><code>demon{}</code> Demon voice effect for use with vocal audio (eg through a microphone and the external synth).</p>
 <p><code>echo{time:1/8b, feedback:0.7, max}</code> Echo effect wraps delay with feedback and a dry path to give a complete echo effect.</p>
 <p><code>flanger{control:[0,1]l8@f, feedback:0, lo:0.0005, hi:0.007}</code> Flanger effect.</p>
@@ -1096,7 +1097,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>moroder</code> Moroder bass preset with a 1/16 note delay echo with stereo pan, broadly in the style of the I Feel Love bass. Eg <code>b moroder 00-3-1b</code></p>
 <p><code>oxy</code> Attempt at the Solina strings from an Eminent organ, with a phaser and delay effect. Eg <code>o oxy -7-3-50-3264, dur=1/2, sus=1/4</code></p>
 <p><code>pick</code> Staccato pluck sound with a haunting reverb <br/>
-  <code>cutoff</code> Base filter cutoff control from 0 to 1.<br/>
+  <code>cutoff</code> Filter cutoff control from 0 to 1.<br/>
 </p>
 <p><code>play80s</code> Percussion preset with a punch 80s style </p>
 <p><code>softpad</code> Soft swirly pad preset with phaser </p>

@@ -3,8 +3,6 @@
 =================================================================================================================================
 ==== audio ====
 WebAudio node graphs as first class values
- !Pick low cutoff range is too low, and doesnt support oct=2, also fx chain is too loud
-  ALSO remove fx altogether as a separate effect
  !Error: set main fx=shifter
  stereo{} takes 2 chains, and splits then merges with one chain each for l and r channel
  ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
