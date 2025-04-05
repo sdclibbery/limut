@@ -28,7 +28,12 @@ define(function(require) {
       delete node.ls
       delete node.rs
     }
-    Object.defineProperty(node, "numberOfInputs", { get() { return 1 } })
+    Object.defineProperty(node, "numberOfInputs", { get() {
+      return node.ls.reduce(Math.max, 1)
+    } })
+    Object.defineProperty(node, "numberOfOutputs", { get() {
+      return node.rs.reduce(Math.max, 1)
+    } })
     return node
   }
   addNodeFunction('idnode', idnode)
@@ -98,7 +103,41 @@ define(function(require) {
       value: dryGain, // Dry part
       value1: connectOp(wetChain, wetGain, e,b,er) // Wet part
     }
-    return node
   }
   addNodeFunction('mix', mix)
+
+  let stereo = (args,e,b,_,er) => {
+    let params = combineParams(args, e)
+    let lChainParam = 'l'
+    let lChain = evalParamEvent(params.l, e)
+    if (lChain === undefined) { lChain = evalParamEvent(params.value, e); lChainParam = 'value' }
+    if (!isConnectable(lChain)) {
+      lChain = system.audio.createGain()
+      if (lChain !== undefined) { evalMainParamFrame(lChain.gain, params, lChainParam, 1) }
+    }
+    let rChainParam = 'r'
+    let rChain = evalParamEvent(params.r, e)
+    if (rChain === undefined) { rChain = evalParamEvent(params.value1, e); rChainParam = 'value1' }
+    if (rChain === undefined) { rChain = evalParamEvent(params.value, e); rChainParam = 'value' }
+    if (!isConnectable(rChain)) {
+      rChain = system.audio.createGain()
+      if (rChain !== undefined) { evalMainParamFrame(rChain.gain, params, rChainParam, 1) }
+    }
+    // splitter >> l/r chains >> merger
+    let splitter = system.audio.createChannelSplitter(2)
+    let merger = system.audio.createChannelMerger(2)
+    connect(connect(splitter, lChain, e._destructor, {channel:0}), merger, e._destructor, {channel:0})
+    connect(connect(splitter, rChain, e._destructor, {channel:1}), merger, e._destructor, {channel:1})
+    // Make and return a composite with splitter as l and merger as r
+    if (audioNodeProto === undefined) { audioNodeProto = Object.getPrototypeOf(Object.getPrototypeOf(system.audio.createGain())) }
+    let composite = Object.create(audioNodeProto)
+    composite.l = splitter
+    composite.r = merger
+    composite.destructor = e._destructor
+    composite.connect = (destination) => {
+      return connect(composite.r, destination, e._destructor)
+    }
+    return composite
+  }
+  addNodeFunction('stereo', stereo)
 })

@@ -11,6 +11,7 @@ define(function(require) {
   let combineParams = (args, e) => {
     let params = {}
     Object.assign(params, e, args)
+    params.value = args.value // Do not take "value" from the event, it will be set to the pattern value which we won't want
     params.__event = e // For eval audio params to access the 'real' event
     return params
   }

@@ -956,6 +956,8 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>series{..., count:2}</code> Repeat the given node chain in series count times.</p>
 <p class='sub'><code>series{..., 2}</code> The count arg can be positional instead of being named.</p>
 <p><code>shaper{{x}->..., samples:2, oversample:'2x'}</code> Create a wave shaper node, using a user defined function to create the wave shape. Oversmaple can be '2x', '4x', or 'none'. Note oversample other than 'none' may result in a signal delay.</p>
+<p><code>stereo{l:...,r:...}</code> Split the incoming signal into left and right channels, process each through a separate node chain given by the 'l' and 'r' arguments, and then join them back together into a single, stereo, signal.</p>
+<p class='sub'><code>stereo{...,...}</code> The l and r arguments can be positional.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-play-samples')" class="accordion"> Play Samples</h4>
 <div id="accordion-play-samples" class="closed">

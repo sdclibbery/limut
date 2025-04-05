@@ -51,6 +51,7 @@ define(function (require) {
   let connect = (l, r, destructor, options) => {
     let ls = resolveAudioNodes(l, 'r').flat(999)
     let rs = resolveAudioNodes(r, 'l').flat(999)
+    let channel = options && options.channel
     ls.forEach(lv => {
       rs.forEach(rv => {
         if (!(lv instanceof AudioNode) && !(lv instanceof AudioParam)) {
@@ -63,7 +64,17 @@ define(function (require) {
         }
         if (rv.numberOfInputs === 0) { return } // Dont connect to nodes that dont have inputs
         if (rv.passthrough !== undefined) { rv.passthrough(lv) } // Passthrough is for nodes that dont want to create an actual webaudio node
-        else { lv.connect(rv) }
+        else {
+          if (channel !== undefined) {
+            let channelIn = channel
+            let channelOut = channel
+            if (lv.numberOfOutputs <= channelOut) { channelOut = 0 }
+            if (rv.numberOfInputs <= channelIn) { channelIn = 0 }
+            lv.connect(rv, channelOut, channelIn)
+          } else {
+            lv.connect(rv)
+          }
+        }
         if (destructor) {
           destructor.disconnect(lv)
           if (!options || !options.dont_disconnect_r) {
@@ -73,12 +84,6 @@ define(function (require) {
       })
     })
     return r
-  }
-
-  let connectFromParam = (params, p, node) => {
-    if (params[p] === undefined) { return node }
-    let chain = evalParamEvent(params[p], params)
-    return connect(node, chain, params._destructor)
   }
 
   // TESTS //
@@ -145,6 +150,5 @@ define(function (require) {
       isConnectable: isConnectable,
       isConnectableOrPlaceholder: isConnectableOrPlaceholder,
       connect: connect,
-      connectFromParam: connectFromParam,
   }
 })
