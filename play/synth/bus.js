@@ -99,6 +99,7 @@ define((require) => {
     // Create rest of bus later, when param overrides are available
     let stopped = false
     bus.start = (params) => {
+      if (params._time === undefined) { params._time = system.timeNow() }
       params._perFrame = bus._perFrame
       params._destructor = bus.destructor
       let offset = 0

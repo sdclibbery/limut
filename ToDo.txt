@@ -3,7 +3,6 @@
 =================================================================================================================================
 ==== audio ====
 WebAudio node graphs as first class values
- !Error: set main fx=shifter
  stereo{} takes 2 chains, and splits then merges with one chain each for l and r channel
  ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
   Or should all take same default units as params for consistency?
