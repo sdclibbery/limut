@@ -55,3 +55,5 @@ set pingpong = {time:1/4b,feedback:0.7} -> panner{1}>>delay{time,feedback:flippe
 set demon = {} -> {shifter{3/4},shifter{1/2}}>>{idnode,ultracomb*0.7}*0.7
 
 set airverb = {delay:1/2b} ->  flanger>>{dry,pingpong{delay}}>>reverb{3b}
+
+set shimmer = {ratio:2,length:2s} -> shifter{ratio}>>reverb{length}*+3db

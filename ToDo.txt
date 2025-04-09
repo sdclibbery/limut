@@ -3,17 +3,24 @@
 =================================================================================================================================
 ==== audio ====
 WebAudio node graphs as first class values
- ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
-  Or should all take same default units as params for consistency?
+ shimmer{}
+ MediaStreamAudioSourceNode
+ eq{} takes variable number of params and defines crossovers as needed
+  Eg eq{0db, 10db, 0db} would be a three band 
+  Multi band compression? - ie can supply a chain for each band instead of just a gain value
+ Limiter, compressor should have makeup gain param
+  And good useful defaults
  !set lpf2 = lpf etc does not work!!! I think the args do not get passed in anymore??
   I guess there is an extra parse-var in there; can it be short circuited at parse time??
    Sounds dangerous; this should really work anyway, shouldn't it?
- MediaStreamAudioSourceNode
+ ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
+  Or should all take same default units as params for consistency?
  !slider doesn't work with fx nodes
   ?What about with buses?
   ?What about other functions, eg smooth?
  !fxMixChain should push fade out TTL to fx chain so it doesn't cut off delayed notes
   !Better fade out time. If you dont have any delays/reverbs etc you want to stop sooner; eg a audiosynth, fx=osc>>gain{0.02}
+ ! a audiosynth, play={osc,osc}  TypeError: waveEffects(...).connect is not a function
  ?Dont recreate fx chain if the param string hasnt changed?
  !Can't get current player event sound param per frame in fx
  !evalMainParamFrame (and what it calls) should use the REAL event, not the params object

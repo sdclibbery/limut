@@ -4365,3 +4365,15 @@ e external, mono, suck=1/4, fx={shifter{3/4},shifter{1/2}}>>{idnode,ultracomb*0.
 // n noise, amp/=4, fx=stereo{l:[0,1]l1@f,r:[0,1]l4@f}
 
 
+v kal, loc=tile_tr, contrast=2, scroll=2/3,zoom=4, rate=1/4, sway, pulse=1/4
+set bpm=123
+set root=2
+set scale='minor'
+set main drive=1/48, amp*=-2db
+// pk perc X.n<.d>, swing=54
+// pp perc x<ne>s crop 16, swing=54, amp/=2, stutter=[1,7], pan=[-1/2,1/2]
+set p* delay|=[():14,[1,3]r/4:2]t
+// b sub ..07vv, drive=1/4
+k pick 
+// h hollow 00<.2>.4 crop 8, envelope='percussion', fx={dry,airverb}, glide=1/2//, delay=(0,{[1,3/2]r,add:[8,9]})
+// t techbass .73<.9>0<89> crop 32, fx={dry,delay{1}>>ultracomb>>airverb/2}, pan=[-1/2,1/2]
