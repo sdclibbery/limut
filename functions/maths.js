@@ -30,6 +30,7 @@ define(function(require) {
   addVarFunction('cos', trigWrapper(Math.cos))
   addVarFunction('tan', trigWrapper(Math.tan))
   add('pi', Math.PI)
+  addVarFunction('abs', trigWrapper(Math.abs))
 
   let euclid = (args, e) => {
     let k = Math.floor(argParam(args, 1)) // Distribute k beats...

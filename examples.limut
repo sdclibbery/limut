@@ -4377,3 +4377,32 @@ set p* delay|=[():14,[1,3]r/4:2]t
 k pick 
 // h hollow 00<.2>.4 crop 8, envelope='percussion', fx={dry,airverb}, glide=1/2//, delay=(0,{[1,3/2]r,add:[8,9]})
 // t techbass .73<.9>0<89> crop 32, fx={dry,delay{1}>>ultracomb>>airverb/2}, pan=[-1/2,1/2]
+
+
+v kal, loc=tile_tr, contrast=2, scroll=2/3, zoom=4, rate=6, sway=4, pulse=1/2, monochrome=[-1,1,2]t1{per:8}
+set bpm=150
+set scale='minor'
+set main drive=1/48, amp*=-2db
+pk bd909 0..., attack, level
+ph perc -n=n * 3 + n==n, pan=[-1,1]/4
+pc cp909 ....0...
+bs sub ..0., drive=1/4
+b tb303 0a96 crop 14 + 9a8a, resonance, envmod, decay=this.a, cutoff=3/4+[]n8 /4//, drive=riser/4
+m1 m1organ 096 crop 28 + 0496, addc=(0,3,7), add=[0,2,4,6]t1, amp/=2, fx={dry,airverb}
+
+
+// Technician
+v scope, loc=tile_tr, fore=rainbow, vhs
+set url='https://upload.wikimedia.org/wikipedia/commons/b/bf/LL-Q1860_%28eng%29-Wodencafe-technician.wav'
+set bpm=115
+set scale='minor'
+set main drive=1/48
+// s sample, dur=2, sample=url//, sus=1/8, start=slider
+pk sample, sample=url, sus=1/8, oct-=6, amp*=20, start=0.22, lpf=[1000:!100ms,100]es, addc=[12:!,0]es
+ph sample 040 crop 16, dur=1/4, sample=url, sus=1/8, start=0.55, swing=54, amp*=-3db
+pp sample 07040 crop 14 + 62, dur=1/4, sample=url, sus=1/8, start=[0.2:0.8]r, pan=[-1,1]/4, amp*=+6db, oct-=2
+set p* delay|=[():14,[1,3]r/4:2]t
+b sample 040 crop 16, dur=1/4, sample=url, oct-=4, amp*=2, start=0.6, lpf=[1000:!200ms,100]es
+l sample 07202 crop 14 crop 64, dur=1/4, sample=url, start=[0.2:0.9]r, fx={dry,airverb}, oct+=1, amp*=2, pan=[-1,1]/2
+set l add=[0:16,3:8,4:8]t, delay=(0,{3/4,add:14})
+

@@ -42,4 +42,4 @@ preset psy multiwave
 
 preset sub sine, dur=1/4, sus=1/6, oct=1, envelope='organ', amp*=3, amp*=[1:!400ms,0]es, drive={1/32,mix:1/6}
 
-preset growl square, dur=4, sus=2, oct=2, envelope='percussion', fx=ultracomb>>{dry,flanger>>pingpong>>reverb{2}}*1.3
+preset growl square, dur=1, oct=2, envelope='percussion', fx=ultracomb>>{dry,flanger>>pingpong>>reverb{2}}*1.3
