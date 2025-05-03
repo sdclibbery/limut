@@ -1,7 +1,7 @@
 'use strict';
 define(function (require) {
   let evalParam = require('player/eval-param')
-  let {mainParamUnits} = require('player/sub-param')
+  let {mainParamUnits,subParamUnits} = require('player/sub-param')
 
   let evalParamPerFrame = (params, p, b, def) => {
     let v = params[p]
@@ -36,15 +36,16 @@ define(function (require) {
     }
   }
 
-  let buildSegment = ({time, nextTime, count, nextSegment, segmentPower, currentValue, nextValue, getValueAtTime, audioParam, mod}) => {
+  let buildSegment = (audioParam, params, p, subP, def, requiredUnits, mod, {time, nextTime, count, nextSegment, segmentPower, currentValue, nextValue}) => {
     if (segmentPower === 0) {
       addSegment(audioParam, 'setValueAtTime', nextValue, mod, time)
     } else {
       let epsilon = 1e-5 // Apply an epsilon to detect and handle zero length segments
-      let endValue = getValueAtTime(nextSegment - epsilon) // Calculate value inside end of segment to avoid problems with zero length segments
+      let endParam = getParamValue(evalParamPerFrame(params, p, nextSegment - epsilon, undefined), subP)
+      let endValue = getValue(endParam, def, requiredUnits) // Calculate value inside end of segment to avoid problems with zero length segments
       if (segmentPower === 2 && currentValue !== endValue) {
         let imCount = (count + nextSegment) / 2
-        let imValue = getValueAtTime(imCount)
+        let imValue = getValue(getParamValue(evalParamPerFrame(params, p, imCount, undefined), subP), def, requiredUnits)
         let imTime = (time + nextTime) / 2
         // Vt = V1 + (V0 - V1) * e ^ -((t-T0) / tc)    From Web Audio API spec for setTargetAtTime
         // tc = -(t - T0) / ln((Vt - V1) / (V0 - V1))   Rearrranged
@@ -69,11 +70,6 @@ define(function (require) {
     segmentState.nextValue = segmentState.currentValue
     segmentState.segmentPower = segmentState.param._segmentPower
     segmentState.nextSegment = segmentState.param._nextSegment
-    segmentState.getValueAtTime = (count) => {
-      return getValue(getParamValue(evalParamPerFrame(params, p, count, undefined), subP), def, requiredUnits)
-    }
-    segmentState.audioParam = audioParam
-    segmentState.mod = mod
     addSegment(audioParam, 'setValueAtTime', segmentState.currentValue, mod, 0)
     if (params.endTime) { // Duration from envelope-set endTime
       let timeDur = params.endTime - params._time
@@ -88,7 +84,7 @@ define(function (require) {
       segmentState.nextTime = segmentState.time + (segmentState.nextSegment - segmentState.count) * params.beat.duration
 // console.log(`count ${segmentState.count} nextSegment ${segmentState.nextSegment} / params.count ${params.count} dur ${segmentState.dur} / time ${time} nextTime ${nextTime} / param ${JSON.stringify(param)}`)
 // console.log(`segment time delta ${(segmentState.nextTime - segmentState.time + 0.0001).toFixed(3)}`)
-      buildSegment(segmentState)
+      buildSegment(audioParam, params, p, subP, def, requiredUnits, mod, segmentState)
       segmentState.currentValue = segmentState.nextValue
       segmentState.time = segmentState.nextTime
       segmentState.count = segmentState.nextSegment

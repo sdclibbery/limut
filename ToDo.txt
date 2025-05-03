@@ -3,13 +3,16 @@
 =================================================================================================================================
 ==== audio ====
 !!support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
-  eval-audio-params: deal with segmented values in the per frame callback, not in a special path
-   If value is segmented, then per frame callback creates next segment, then waits until the following segment is needed
-   Handle zero length segments
-  []ts etc syntax... (docs)
+  Refactor to separate segment creation from stepping
+   Extract stepping method too
+  []ts etc syntax
+   Needs to indicate this is looping segment data, []es does not have this flag
+   Docs (note: NOT audio rate)
+  Segmented code creates a per frame callback if segment data is looping, and adds segments bit by bit
   set duck = {} -> gain{[0:/1/4,1:_3/4]ts@f}
    Or, better: set duck = {} -> gain{[1:!1/8,0:/1/8,1:_3/4]ts@f}
    Also have a duck level param and maybe a duck length param
+  Test segmented works on fx and also on buses
 WebAudio node graphs as first class values
  Should be able to  fx=[]n  And also  fx=echo>>[]n
  !!Parallel nodes should surely be round brackets???
@@ -56,7 +59,6 @@ Fade in/out params for player; Only apply when player is started or stopped, not
 Monophonic synths can get event info somehow; eg for pitch or envelopes etc
 Make a looper effect that uses gain switches to take a chunk of audio then loop it a given number of times before taking the next chunk
  Need to avoid clicks on the gain switches
-! Segmented audioparams should work on buses
 More audionode functions
  IIRFilterNode
  ChannelSplitterNode/ChannelMergerNode
