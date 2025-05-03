@@ -4406,3 +4406,30 @@ b sample 040 crop 16, dur=1/4, sample=url, oct-=4, amp*=2, start=0.6, lpf=[1000:
 l sample 07202 crop 14 crop 64, dur=1/4, sample=url, start=[0.2:0.9]r, fx={dry,airverb}, oct+=1, amp*=2, pan=[-1,1]/2
 set l add=[0:16,3:8,4:8]t, delay=(0,{3/4,add:14})
 
+
+// Lost my rag
+set bpm=120
+set scale='major'
+// set ch=[7,1,3,4]t8
+set main drive=1/48
+set * swing=62, add+=ch
+b piano 0., dur=1/2, oct=2
+t piano .(049), dur=1/2, oct=3
+// a piano 049 crop 32, dur=1/4, amp*=[1:3,0:1]t, amp+=[1,0,0,0]t1/4
+// s piano 0249[49][49] crop 32, dur=1/2, oct+=1, amp*=+5db, add+=[0,0,0,1]t1/2
+
+// Corrosion
+v webcam, loc=tile_tr, vhs, pixellate={x:15,y:100}, recol=neon, contrast
+set corrosion='https://upload.wikimedia.org/wikipedia/commons/a/ae/De-Korrosion.ogg'
+set bpm=97
+set scale='phrygian'
+set main drive=1/48
+// pk perc X...
+// pw perc .w. crop 16, rate=1/4, amp/=4, pan=[-1/2:1/2]n
+// pa perc aaaa, amp/=4, high=+6db, amp*=[]r*[0:16,1:0]l, pan=[-1,1]
+// b saw, envelope='pad', oct=1, addc=(0,[-0.1,0.1]n8), lpf={400+6000*[]n24^2,poles:4}
+// bb saw 0780787 crop 30 + 9-1, dur=1/4, oct=1, addc=(0,[-0.1,0.1]n8), lpf={[4000:!300ms,100]es,poles:4}, pan=[-1,1]/2, drive=1/8
+// n play 4321, dur=4, fx=demon>>{dry,pingpong}
+c sample, dur=[1/40:1/80]r, envelope='pad', sample=corrosion, start=[0:8,4:0]l, fx=demon>>{dry,pingpong}
+
+

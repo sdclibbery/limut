@@ -2,20 +2,17 @@
 =================================================================================================================================
 =================================================================================================================================
 ==== audio ====
-WebAudio node graphs as first class values
- !!support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
-  []ts etc syntax
+!!support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   eval-audio-params: deal with segmented values in the per frame callback, not in a special path
    If value is segmented, then per frame callback creates next segment, then waits until the following segment is needed
    Handle zero length segments
+  []ts etc syntax... (docs)
   set duck = {} -> gain{[0:/1/4,1:_3/4]ts@f}
    Or, better: set duck = {} -> gain{[1:!1/8,0:/1/8,1:_3/4]ts@f}
    Also have a duck level param and maybe a duck length param
- eq{} takes variable number of params and defines crossovers as needed
-  Eg eq{0db, 10db, 0db} would be a three band 
-  Multi band compression? - ie can supply a chain for each band instead of just a gain value
- Limiter, compressor should have makeup gain param
-  And good useful defaults
+WebAudio node graphs as first class values
+ Should be able to  fx=[]n  And also  fx=echo>>[]n
+ !!Parallel nodes should surely be round brackets???
  !set lpf2 = lpf etc does not work!!! I think the args do not get passed in anymore??
   I guess there is an extra parse-var in there; can it be short circuited at parse time??
    Sounds dangerous; this should really work anyway, shouldn't it?
@@ -50,10 +47,16 @@ WebAudio node graphs as first class values
    user defined function syntax, inc argument syntax plus default args, plus positional args
    trig maths functions
    debug log function
+eq{} takes variable number of params and defines crossovers as needed
+  Eg eq{0db, 10db, 0db} would be a three band 
+  Multi band compression? - ie can supply a chain for each band instead of just a gain value
+Limiter, compressor should have makeup gain param
+  And good useful defaults
 Fade in/out params for player; Only apply when player is started or stopped, not just reparsed. Specify a time to fade over
 Monophonic synths can get event info somehow; eg for pitch or envelopes etc
 Make a looper effect that uses gain switches to take a chunk of audio then loop it a given number of times before taking the next chunk
  Need to avoid clicks on the gain switches
+! Segmented audioparams should work on buses
 More audionode functions
  IIRFilterNode
  ChannelSplitterNode/ChannelMergerNode
