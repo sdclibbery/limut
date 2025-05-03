@@ -5,6 +5,7 @@
 !!support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   Refactor to separate segment creation from stepping
    Extract stepping method too
+   Use metronome for beat duration
   []ts etc syntax
    Needs to indicate this is looping segment data, []es does not have this flag
    Docs (note: NOT audio rate)

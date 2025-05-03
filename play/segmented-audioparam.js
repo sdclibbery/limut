@@ -2,6 +2,7 @@
 define(function (require) {
   let evalParam = require('player/eval-param')
   let {mainParamUnits} = require('player/sub-param')
+  let metronome = require('metronome')
 
   let evalParamPerFrame = (params, p, b, def) => {
     let v = params[p]
@@ -57,35 +58,12 @@ define(function (require) {
     }
   }
 
-  let segmentedAudioParam = (audioParam, params, p, subP, def, requiredUnits, mod) => { // !! ASSUME mod IS LINEAR
-    let epsilon = 1e-5 // Apply an epsilon for the initial value
-    if (params.beat === undefined) { return } // Bus does not have normal event data; not worth trying to segment
-    let segmentState = {}
-    segmentState.param = getParamValue(evalParamPerFrame(params, p, params.count + epsilon, undefined), subP)
-    if (segmentState.param._nextSegment === undefined) { return false } // No segment data; we cant build a segment timeline here
-    segmentState.count = params.count
-    segmentState.time = params._time
-    segmentState.currentValue = getValue(segmentState.param, def, requiredUnits)
-    segmentState.nextValue = segmentState.currentValue
-    segmentState.segmentPower = segmentState.param._segmentPower
-    segmentState.nextSegment = segmentState.param._nextSegment
-    segmentState.getValueAtTime = (count) => {
-      return getValue(getParamValue(evalParamPerFrame(params, p, count, undefined), subP), def, requiredUnits)
-    }
-    segmentState.audioParam = audioParam
-    segmentState.mod = mod
-    addSegment(audioParam, 'setValueAtTime', segmentState.currentValue, mod, 0)
-    if (params.endTime) { // Duration from envelope-set endTime
-      let timeDur = params.endTime - params._time
-      segmentState.dur = timeDur / params.beat.duration
-    } else { // Duration from intended event duration
-      segmentState.dur = params.dur || 1
-    }
-    while (!!segmentState.nextSegment && segmentState.nextSegment !== segmentState.count && segmentState.count <= params.count + segmentState.dur) {
+  let segmentStepper = (segmentState, endCount) => {
+    while (!!segmentState.nextSegment && segmentState.nextSegment !== segmentState.count && segmentState.count <= endCount) {
       let epsilon = 1e-5 // Apply an epsilon to make sure we get the _next_ segment not the current one
-      segmentState.param = getParamValue(evalParamPerFrame(params, p, segmentState.nextSegment + epsilon, undefined), subP)
-      segmentState.nextValue = getValue(segmentState.param, def, requiredUnits)
-      segmentState.nextTime = segmentState.time + (segmentState.nextSegment - segmentState.count) * params.beat.duration
+      segmentState.param = segmentState.getParamAtTime(segmentState.nextSegment + epsilon)
+      segmentState.nextValue = segmentState.getValueFromParam(segmentState.param)
+      segmentState.nextTime = segmentState.time + (segmentState.nextSegment - segmentState.count) * metronome.beatDuration()
 // console.log(`count ${segmentState.count} nextSegment ${segmentState.nextSegment} / params.count ${params.count} dur ${segmentState.dur} / time ${time} nextTime ${nextTime} / param ${JSON.stringify(param)}`)
 // console.log(`segment time delta ${(segmentState.nextTime - segmentState.time + 0.0001).toFixed(3)}`)
       buildSegment(segmentState)
@@ -95,6 +73,40 @@ define(function (require) {
       segmentState.nextSegment = segmentState.param._nextSegment
       segmentState.segmentPower = segmentState.param._segmentPower
     }
+  }
+
+  let segmentedAudioParam = (audioParam, params, p, subP, def, requiredUnits, mod) => { // !! ASSUME mod IS LINEAR
+    let epsilon = 1e-5 // Apply an epsilon for the initial value
+    let segmentState = {}
+    segmentState.getParamAtTime = (count) => {
+      return getParamValue(evalParamPerFrame(params, p, count, undefined), subP)
+    }
+    segmentState.getValueFromParam = (param) => {
+      return getValue(param, def, requiredUnits)
+    }
+    segmentState.getValueAtTime = (count) => {
+      return segmentState.getValueFromParam(segmentState.getParamAtTime(count))
+    }
+    segmentState.param = segmentState.getParamAtTime(params.count + epsilon)
+    if (segmentState.param._nextSegment === undefined) { return false } // No segment data; we cant build a segment timeline here
+    segmentState.count = params.count
+    segmentState.time = params._time
+    segmentState.currentValue = segmentState.getValueFromParam(segmentState.param)
+    segmentState.nextValue = segmentState.currentValue
+    segmentState.segmentPower = segmentState.param._segmentPower
+    segmentState.nextSegment = segmentState.param._nextSegment
+    segmentState.audioParam = audioParam
+    segmentState.mod = mod
+    addSegment(audioParam, 'setValueAtTime', segmentState.currentValue, mod, 0) // Initial value
+    // Run to end of event
+    let dur
+    if (params.endTime) { // Duration from envelope-set endTime
+      let timeDur = params.endTime - params._time
+      dur = timeDur / metronome.beatDuration()
+    } else { // Duration from intended event duration
+      dur = params.dur || 1
+    }
+    segmentStepper(segmentState, params.count + dur)
     return true
   }
 
@@ -120,6 +132,8 @@ define(function (require) {
         setValueCurveAtTime: (...args) => calls.push(['setValueCurveAtTime'].concat(args)),
       }
     }
+    let oldBeatDuration = metronome.beatDuration()
+    metronome.beatDuration(2)
     let pm = (exp) => { return { foo:{value:exp,q:10}, count:1, dur:4, _time:2, beat:{duration:2} } }
     let ps = (exp) => { return { foo:{value:10,sub:exp}, count:1, dur:4, _time:2, beat:{duration:2} } }
     let pe = (exp) => { return { foo:{value:10,sub:exp}, count:1, dur:4, _time:2, endTime:10, beat:{duration:2} } }
@@ -199,6 +213,7 @@ define(function (require) {
     assert(['setValueAtTime', 2,3], ap.calls[3])
     assert(['linearRampToValueAtTime', 0,4], ap.calls[4])
 
+    metronome.beatDuration(oldBeatDuration)
     console.log('Segmented audioParam tests complete')
   }
 
