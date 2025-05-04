@@ -3,7 +3,10 @@ define(function(require) {
   let eatWhitespace = require('expression/eat-whitespace')
 
   let combine = (l, r) => {
-    return l === 'frame' ? 'frame' : (r === 'frame' ? 'frame' : (l || r))
+    if (l === 'segment' || r === 'segment') { return 'segment' }
+    if (l === 'frame' || r === 'frame') { return 'frame' }
+    if (l === 'event' || r === 'event') { return 'event' }
+    return undefined
   }
 
   let findInterval = (v) => {
@@ -46,6 +49,9 @@ define(function(require) {
       } else if (state.str.charAt(state.idx) == 'e') {
         state.idx += 1
         result = 'event'
+      } else if (state.str.charAt(state.idx) == 's') {
+        state.idx += 1
+        result = 'segment'
       }
     }
     return result
@@ -72,11 +78,29 @@ define(function(require) {
     perEventFunc.interval = 'event'
     let perFrameFunc = () => 0
     perFrameFunc.interval = 'frame'
+    let perSegmentFunc = () => 0
+    perSegmentFunc.interval = 'segment'
 
     assert(undefined, combineIntervalsFrom(0, 1))
+
     assert('event', combineIntervalsFrom(perEventFunc, perEventFunc))
-    assert('frame', combineIntervalsFrom(perEventFunc, perFrameFunc))
     assert('frame', combineIntervalsFrom(perFrameFunc, perFrameFunc))
+    assert('segment', combineIntervalsFrom(perSegmentFunc, perSegmentFunc))
+
+    assert('event', combineIntervalsFrom(perEventFunc, 0))
+    assert('event', combineIntervalsFrom(0, perEventFunc))
+    assert('frame', combineIntervalsFrom(perFrameFunc, 0))
+    assert('frame', combineIntervalsFrom(0, perFrameFunc))
+    assert('segment', combineIntervalsFrom(perSegmentFunc, 0))
+    assert('segment', combineIntervalsFrom(0, perSegmentFunc))
+
+    assert('frame', combineIntervalsFrom(perEventFunc, perFrameFunc))
+    assert('segment', combineIntervalsFrom(perEventFunc, perSegmentFunc))
+    assert('segment', combineIntervalsFrom(perFrameFunc, perSegmentFunc))
+    assert('frame', combineIntervalsFrom(perFrameFunc, perEventFunc))
+    assert('segment', combineIntervalsFrom(perSegmentFunc, perEventFunc))
+    assert('segment', combineIntervalsFrom(perSegmentFunc, perFrameFunc))
+
     assert('event', combineIntervalsFrom(0, {foo:perEventFunc}))
     assert('frame', combineIntervalsFrom(0, {foo:perFrameFunc}))
     assert('event', combineIntervalsFrom({foo:perEventFunc}, 0))

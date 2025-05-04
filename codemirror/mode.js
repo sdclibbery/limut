@@ -78,7 +78,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
         stream.eat("=");
         return ret("operator", "operator", stream.current());
       }
-    } else if (ch == "@" && stream.match(/[ef]/)) {
+    } else if (ch == "@" && stream.match(/[efs]/)) {
       return ret("meta", "meta");
     } else if (isOperatorChar.test(ch)) {
       return ret("operator", "operator", stream.current());

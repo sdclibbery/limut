@@ -3,17 +3,25 @@
 =================================================================================================================================
 ==== audio ====
 !!support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
-  Refactor to separate segment creation from stepping
-   Extract stepping method too
-   Use metronome for beat duration
-  []ts etc syntax
-   Needs to indicate this is looping segment data, []es does not have this flag
-   Docs (note: NOT audio rate)
+  Segmented []t etc syntax
+   Support []e@s syntax
+    Leave []es as sugar for []e@s
+   []e@e or []e@f should NOT be Segmented
+    Also []es@e or []es@f should NOT be segmented
+   Support for looping segmented values: _loopSegment value; must be handled in operators etc etc
+    []e@s is NOT looping
+    For now segmented audio code drops out if loping flag is set
+   []t@s support, also []l@s []s@s []n@s?? []r@s???
+    Sets looping flag
+   Docs (note: segments are NOT audio rate)
   Segmented code creates a per frame callback if segment data is looping, and adds segments bit by bit
+   ???OR?? is it easier to always do segments from the per frame update??
   set duck = {} -> gain{[0:/1/4,1:_3/4]ts@f}
    Or, better: set duck = {} -> gain{[1:!1/8,0:/1/8,1:_3/4]ts@f}
    Also have a duck level param and maybe a duck length param
   Test segmented works on fx and also on buses
+  Delete that segmented-audioparams backup file
+  Test []es that ends before end of event
 WebAudio node graphs as first class values
  Should be able to  fx=[]n  And also  fx=echo>>[]n
  !!Parallel nodes should surely be round brackets???
