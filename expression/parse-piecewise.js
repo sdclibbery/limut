@@ -162,10 +162,14 @@ define(function(require) {
       }
       let ds = numberOrArray(state)
       let modifiers = parseMap(state)
+      let interval = parseInterval(state) || hoistInterval('frame', vs)
+      if (interval === 'segment')  { // @s: add segment data
+        addSegmentData = true
+      }
       is = is.map(i => iOperators[i])
       result = eventTimeVar(vs, is, ss, ds, addSegmentData)
       result = addModifiers(result, modifiers)
-      setInterval(result, parseInterval(state) || hoistInterval('frame', vs))
+      setInterval(result, interval)
     } else if (state.str.charAt(state.idx).toLowerCase() == 'r') { // random
       state.idx += 1
       let hold = number(state)

@@ -4,10 +4,6 @@
 ==== audio ====
 !!support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   Segmented []t etc syntax
-   Support []e@s syntax
-    Leave []es as sugar for []e@s
-   []e@e or []e@f should NOT be Segmented
-    Also []es@e or []es@f should NOT be segmented
    Support for looping segmented values: _loopSegment value; must be handled in operators etc etc
     []e@s is NOT looping
     For now segmented audio code drops out if loping flag is set

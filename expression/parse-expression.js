@@ -1597,10 +1597,10 @@ define(function(require) {
   assert({"value":1/2,"_nextSegment":1,"_segmentPower":1}, evalParamFrame(p, ev(0,0,1), 1/2))
   assert({"value":0,"_nextSegment":2,"_segmentPower":0}, evalParamFrame(p, ev(0,0,1), 1))
 
-  // p = parseExpression("[1,0]e1@s")
-  // assert({"value":1,"_nextSegment":1,"_segmentPower":1}, evalParamFrame(p, ev(0,0,1), 0))
-  // assert({"value":1/2,"_nextSegment":1,"_segmentPower":1}, evalParamFrame(p, ev(0,0,1), 1/2))
-  // assert({"value":0,"_nextSegment":2,"_segmentPower":0}, evalParamFrame(p, ev(0,0,1), 1))
+  p = parseExpression("[1,0]e1@s")
+  assert({"value":1,"_nextSegment":1,"_segmentPower":1}, evalParamFrame(p, ev(0,0,1), 0))
+  assert({"value":1/2,"_nextSegment":1,"_segmentPower":1}, evalParamFrame(p, ev(0,0,1), 1/2))
+  assert({"value":0,"_nextSegment":2,"_segmentPower":0}, evalParamFrame(p, ev(0,0,1), 1))
 
   p = parseExpression("2*[1,0]es1")
   assert({"value":2,"_nextSegment":1,"_segmentPower":1}, evalParamFrame(p, ev(0,0,1), 0))
