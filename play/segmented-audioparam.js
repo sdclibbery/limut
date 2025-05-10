@@ -1,12 +1,11 @@
 'use strict';
 define(function (require) {
-  let evalParam = require('player/eval-param')
   let {mainParamUnits} = require('player/sub-param')
+  let {evalParamFrame} = require('player/eval-param')
   let metronome = require('metronome')
 
-  let evalParamPerFrame = (params, p, b, def) => {
-    let v = params[p]
-    v =  evalParam.evalParamFrame(v, params, b) // Room for optimisation here: only eval objects the specific sub (or main) param thats needed for this call
+  let evalParamPerFrame = (evalAt, b, def) => {
+    let v =  evalAt(b) // Room for optimisation here: only eval objects the specific sub (or main) param thats needed for this call
     if (Array.isArray(v)) { v = v[0] } // Bus chords end up as arrays here so handle it by just picking the first value
     if (typeof v !== 'number' && !v) {
       return def
@@ -64,7 +63,6 @@ define(function (require) {
       segmentState.param = segmentState.getParamAtTime(segmentState.nextSegment + epsilon)
       segmentState.nextValue = segmentState.getValueFromParam(segmentState.param)
       segmentState.nextTime = segmentState.time + (segmentState.nextSegment - segmentState.count) * metronome.beatDuration()
-// console.log(`count ${segmentState.count} nextSegment ${segmentState.nextSegment} / params.count ${params.count} dur ${segmentState.dur} / time ${time} nextTime ${nextTime} / param ${JSON.stringify(param)}`)
 // console.log(`segment time delta ${(segmentState.nextTime - segmentState.time + 0.0001).toFixed(3)}`)
       buildSegment(segmentState)
       segmentState.currentValue = segmentState.nextValue
@@ -75,11 +73,11 @@ define(function (require) {
     }
   }
 
-  let segmentedAudioParam = (audioParam, params, p, subP, def, requiredUnits, mod) => { // !! ASSUME mod IS LINEAR
+  let segmentedAudioParam = (audioParam, evalAt, params, subP, def, requiredUnits, mod) => { // !! ASSUME mod IS LINEAR
     let epsilon = 1e-5 // Apply an epsilon for the initial value
     let segmentState = {}
     segmentState.getParamAtTime = (count) => {
-      return getParamValue(evalParamPerFrame(params, p, count, undefined), subP)
+      return getParamValue(evalParamPerFrame(evalAt, count, undefined), subP)
     }
     segmentState.getValueFromParam = (param) => {
       return getValue(param, def, requiredUnits)
@@ -134,9 +132,9 @@ define(function (require) {
     }
     let oldBeatDuration = metronome.beatDuration()
     metronome.beatDuration(2)
-    let pm = (exp) => { return { foo:{value:exp,q:10}, count:1, dur:4, _time:2, beat:{duration:2} } }
-    let ps = (exp) => { return { foo:{value:10,sub:exp}, count:1, dur:4, _time:2, beat:{duration:2} } }
-    let pe = (exp) => { return { foo:{value:10,sub:exp}, count:1, dur:4, _time:2, endTime:10, beat:{duration:2} } }
+    let params = { count:1, dur:4, _time:2, endTime:10 }
+    let evalAtMain = (exp) => (count) => { return {value:evalParamFrame(exp, params, count),q:10} }
+    let evalAtSub = (exp) => (count) => { return {value:10,sub:evalParamFrame(exp, params, count)} }
     let doubleIt = x => x*2
     let u2 = [undefined,undefined]
     let hz = (v) => { return {value:v,_units:'hz'} }
@@ -150,14 +148,15 @@ define(function (require) {
     let smooth = (i) => i*i*(3-2*i)
     smooth.segmentPower = 3
   
-    assert(false, segmentedAudioParam(mockAp(), pm(1), 'foo', undefined, 99, 'hz', doubleIt))
-    assert(false, segmentedAudioParam(mockAp(), ps(1), 'foo', 'sub', 99, 'hz', doubleIt))
-    assert(false, segmentedAudioParam(mockAp(), ps({value:1}), 'foo', 'sub', 99, 'hz', doubleIt))
-    assert(false, segmentedAudioParam(mockAp(), ps({value:1,_units:'hz'}), 'foo', 'sub', 99, 'hz', doubleIt))
-    assert(false, segmentedAudioParam(mockAp(), ps(() => {return {value:1}}), 'foo', 'sub', 99, 'hz', doubleIt))
+    assert(false, segmentedAudioParam(mockAp(), evalAtMain(1), params, undefined, 99, 'hz', doubleIt))
+    assert(false, segmentedAudioParam(mockAp(), evalAtSub(1), params, 'sub', 99, 'hz', doubleIt))
+    assert(false, segmentedAudioParam(mockAp(), evalAtSub({value:1}), params, 'sub', 99, 'hz', doubleIt))
+    assert(false, segmentedAudioParam(mockAp(), evalAtSub({value:1,_units:'hz'}), params, 'sub', 99, 'hz', doubleIt))
+    assert(false, segmentedAudioParam(mockAp(), evalAtSub(() => {return {value:1}}), params, 'sub', 99, 'hz', doubleIt))
+    assert(false, segmentedAudioParam(mockAp(), evalAtMain( eventTimeVar([hz(8),hz(9)], u2, u2, 1, false) ), params, undefined, 99, 'hz', doubleIt))
 
     ap = mockAp()
-    assert(true, segmentedAudioParam(ap, pm( eventTimeVar([hz(8),hz(9)], u2, u2, 1, true) ), 'foo', undefined, 99, 'hz', doubleIt))
+    assert(true, segmentedAudioParam(ap, evalAtMain( eventTimeVar([hz(8),hz(9)], u2, u2, 1, true) ), params, undefined, 99, 'hz', doubleIt))
     assert(4, ap.calls.length)
     assert(['setValueAtTime', 16,0], ap.calls[0])
     assert(['setValueAtTime', 16,2], ap.calls[1])
@@ -165,7 +164,7 @@ define(function (require) {
     assert(['setValueAtTime', 18,4], ap.calls[3])
 
     ap = mockAp()
-    assert(true, segmentedAudioParam(ap, ps( eventTimeVar([hz(8),hz(9)], u2, u2, 1, true) ), 'foo', 'sub', 99, 'hz', doubleIt))
+    assert(true, segmentedAudioParam(ap, evalAtSub( eventTimeVar([hz(8),hz(9)], u2, u2, 1, true) ), params, 'sub', 99, 'hz', doubleIt))
     assert(4, ap.calls.length)
     assert(['setValueAtTime', 16,0], ap.calls[0])
     assert(['setValueAtTime', 16,2], ap.calls[1])
@@ -173,7 +172,7 @@ define(function (require) {
     assert(['setValueAtTime', 18,4], ap.calls[3])
 
     ap = mockAp()
-    assert(true, segmentedAudioParam(ap, pe( eventTimeVar([hz(8),hz(9)], u2, u2, 1, true) ), 'foo', 'sub', 99, 'hz', doubleIt))
+    assert(true, segmentedAudioParam(ap, evalAtSub( eventTimeVar([hz(8),hz(9)], u2, u2, 1, true) ), params, 'sub', 99, 'hz', doubleIt))
     assert(4, ap.calls.length)
     assert(['setValueAtTime', 16,0], ap.calls[0])
     assert(['setValueAtTime', 16,2], ap.calls[1])
@@ -181,7 +180,7 @@ define(function (require) {
     assert(['setValueAtTime', 18,4], ap.calls[3])
 
     ap = mockAp()
-    assert(true, segmentedAudioParam(ap, pe( eventTimeVar([hz(8),hz(9)], u2, u2, 4, true) ), 'foo', 'sub', 99, 'hz', doubleIt))
+    assert(true, segmentedAudioParam(ap, evalAtSub( eventTimeVar([hz(8),hz(9)], u2, u2, 4, true) ), params, 'sub', 99, 'hz', doubleIt))
     assert(4, ap.calls.length)
     assert(['setValueAtTime', 16,0], ap.calls[0])
     assert(['setValueAtTime', 16,2], ap.calls[1])
@@ -189,14 +188,14 @@ define(function (require) {
     assert(['setValueAtTime', 18,10], ap.calls[3])
 
     ap = mockAp()
-    assert(true, segmentedAudioParam(ap, ps( eventTimeVar([hz(8),hz(4)], [exp,step], u2, 1, true) ), 'foo', 'sub', 99, 'hz', doubleIt))
+    assert(true, segmentedAudioParam(ap, evalAtSub( eventTimeVar([hz(8),hz(4)], [exp,step], u2, 1, true) ), params, 'sub', 99, 'hz', doubleIt))
     assert(3, ap.calls.length)
     assert(['setValueAtTime', 16,0], ap.calls[0])
     assert(['setTargetAtTime', 8,2,0.25], ap.calls[1])
     assert(['setValueAtTime', 8,4], ap.calls[2])
 
     ap = mockAp()
-    assert(true, segmentedAudioParam(ap, ps( eventTimeVar([0,hz(8),4], [lin,exp,step], [1,2,3], undefined, true) ), 'foo', 'sub', 99, 'hz', doubleIt))
+    assert(true, segmentedAudioParam(ap, evalAtSub( eventTimeVar([0,hz(8),4], [lin,exp,step], [1,2,3], undefined, true) ), params, 'sub', 99, 'hz', doubleIt))
     assert(5, ap.calls.length)
     assert(['setValueAtTime', 0,0], ap.calls[0])
     assert(['setValueAtTime', 0,2], ap.calls[1])
@@ -205,7 +204,7 @@ define(function (require) {
     assert(['setValueAtTime', 8,8], ap.calls[4])
 
     ap = mockAp()
-    assert(true, segmentedAudioParam(ap, ps( eventTimeVar([1,0,1,0], [lin,lin,lin,step], [1/2,0,1/2,0], undefined, true) ), 'foo', 'sub', 99, 'hz', doubleIt))
+    assert(true, segmentedAudioParam(ap, evalAtSub( eventTimeVar([1,0,1,0], [lin,lin,lin,step], [1/2,0,1/2,0], undefined, true) ), params, 'sub', 99, 'hz', doubleIt))
     assert(5, ap.calls.length)
     assert(['setValueAtTime', 2,0], ap.calls[0])
     assert(['setValueAtTime', 2,2], ap.calls[1])

@@ -3,21 +3,26 @@
 =================================================================================================================================
 ==== audio ====
 !!support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
-  Segmented []t etc syntax
-   Support for looping segmented values: _loopSegment value; must be handled in operators etc etc
-    []e@s is NOT looping
-    For now segmented audio code drops out if loping flag is set
-   []t@s support, also []l@s []s@s []n@s?? []r@s???
-    Sets looping flag
-   Docs (note: segments are NOT audio rate)
-  Segmented code creates a per frame callback if segment data is looping, and adds segments bit by bit
-   ???OR?? is it easier to always do segments from the per frame update??
+  Handle segmented values from the per frame callback
+   ?? Would need to use SAME evalAt for both per frame and segmented for this to work?
+    Can this be done? If not, will have to add a per frame to segmented instead
+   ?Can probably move the callout for segmented handling to the top of perFrameUpdate?
+   !! TEST with lots of user functions etc
   set duck = {} -> gain{[0:/1/4,1:_3/4]ts@f}
    Or, better: set duck = {} -> gain{[1:!1/8,0:/1/8,1:_3/4]ts@f}
    Also have a duck level param and maybe a duck length param
+  []t@s support, also []l@s []s@s []n@s?? []r@s???
   Test segmented works on fx and also on buses
   Delete that segmented-audioparams backup file
   Test []es that ends before end of event
+  Update docs, examples, etc to use []e@s instead of []es
+  Docs
+   @s as an interval (note: segments are NOT audio rate)
+   []e@s
+   Deprecate or remove []es
+   []t@s etc
+includes should include things they need; eg synthwave.limut should include effects.limut etc etc
+ Do not include the same file multiple times; if its already included, then nop
 WebAudio node graphs as first class values
  Should be able to  fx=[]n  And also  fx=echo>>[]n
  !!Parallel nodes should surely be round brackets???

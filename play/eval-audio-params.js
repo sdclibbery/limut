@@ -99,10 +99,19 @@ define(function (require) {
     if (typeof vmp === 'number') { // single value; no need for regular per frame update
       setAudioParamValue(audioParam, vmp, p, mod, params._time)
     } else {
-      if (segmentedAudioParam(audioParam, params, p, undefined, def, requiredUnits, mod)) { // Set up with a segmented timeline
+      let initial = true // When evalling from this callstack, no need to set the call tree
+      let args = getCallTree() // Remember the entire call tree at this point so it can be used for the per frame update
+      let segEvalAt = (count) => {
+        if (!initial) { setCallTree(args) }
+        let r = evalPerFrame(params, p, count, def)
+        if (!initial) { clearCallTree() }
+        return r
+      }
+      if (segmentedAudioParam(audioParam, segEvalAt, params, undefined, def, requiredUnits, mod)) { // Set up with a segmented timeline
         // if (params) { console.log(`Segmented audio update! Main ${params.player} ${p}`) }
         return
       }
+      initial = false
       let evalled = evalParamFrame(params[p], __event,__event.count, {withInterval:true})
       let interval
       if (typeof evalled === 'object' && evalled.interval !== undefined && !isConnectable(evalled)) {
@@ -121,7 +130,6 @@ define(function (require) {
         return
       }
       // if (params) { console.log(`Per frame audio update! Main ${params.player} ${p}`) }
-      let args = getCallTree() // Remember the entire call tree at this point so it can be used for the per frame update
       let evalAt = (count) => {
         setCallTree(args)
         let r = evalMainPerFrame(params, p, def, count, requiredUnits)
@@ -152,7 +160,8 @@ define(function (require) {
     if (fixedPerFrame(params, p, subParamName, def, requiredUnits)) { // single value; no need for regular per frame update
       setAudioParamValue(audioParam, v, p, mod, params._time)
     } else {
-      if (segmentedAudioParam(audioParam, params, p, subParamName, def, requiredUnits, mod)) { // Set up with a segmented timeline
+      let evalAt = (count) => evalSubPerFrame(params, p, subParamName, def, count, requiredUnits)
+      if (segmentedAudioParam(audioParam, evalAt, params, undefined, def, requiredUnits, mod)) { // Set up with a segmented timeline
         // if (params) { console.log(`Segmented audio update! Sub ${params.player} ${p} ${subParamName}`) }
         return
       }
@@ -163,7 +172,6 @@ define(function (require) {
         return
       }
       // if (params) { console.log(`Per frame audio update! Sub ${params.player} ${p} ${subParamName}`) }
-      let evalAt = (count) => evalSubPerFrame(params, p, subParamName, def, count, requiredUnits)
       if (params._perFrame) { // Update callback for buses
         params._perFrame.push(state => perFrameUpdate(audioParam, state, undefined, evalAt, mod, p))
       } else { // Update callback for normal players
