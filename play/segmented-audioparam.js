@@ -73,8 +73,13 @@ define(function (require) {
     }
   }
 
+  let isSegmented = (param) => {
+    if (typeof param !== 'object') { return false }
+    return param._nextSegment !== undefined
+  }
+
+  let epsilon = 1e-5 // Apply an epsilon for the initial value
   let segmentedAudioParam = (audioParam, evalAt, params, subP, def, requiredUnits, mod) => { // !! ASSUME mod IS LINEAR
-    let epsilon = 1e-5 // Apply an epsilon for the initial value
     let segmentState = {}
     segmentState.getParamAtTime = (count) => {
       return getParamValue(evalParamPerFrame(evalAt, count, undefined), subP)
@@ -86,7 +91,6 @@ define(function (require) {
       return segmentState.getValueFromParam(segmentState.getParamAtTime(count))
     }
     segmentState.param = segmentState.getParamAtTime(params.count + epsilon)
-    if (segmentState.param._nextSegment === undefined) { return false } // No segment data; we cant build a segment timeline here
     segmentState.count = params.count
     segmentState.time = params._time
     segmentState.currentValue = segmentState.getValueFromParam(segmentState.param)
@@ -105,7 +109,7 @@ define(function (require) {
       dur = params.dur || 1
     }
     segmentStepper(segmentState, params.count + dur)
-    return true
+    return false
   }
 
   // TESTS //
@@ -148,15 +152,16 @@ define(function (require) {
     let smooth = (i) => i*i*(3-2*i)
     smooth.segmentPower = 3
   
-    assert(false, segmentedAudioParam(mockAp(), evalAtMain(1), params, undefined, 99, 'hz', doubleIt))
-    assert(false, segmentedAudioParam(mockAp(), evalAtSub(1), params, 'sub', 99, 'hz', doubleIt))
-    assert(false, segmentedAudioParam(mockAp(), evalAtSub({value:1}), params, 'sub', 99, 'hz', doubleIt))
-    assert(false, segmentedAudioParam(mockAp(), evalAtSub({value:1,_units:'hz'}), params, 'sub', 99, 'hz', doubleIt))
-    assert(false, segmentedAudioParam(mockAp(), evalAtSub(() => {return {value:1}}), params, 'sub', 99, 'hz', doubleIt))
-    assert(false, segmentedAudioParam(mockAp(), evalAtMain( eventTimeVar([hz(8),hz(9)], u2, u2, 1, false) ), params, undefined, 99, 'hz', doubleIt))
+    assert(false, isSegmented(1))
+    assert(false, isSegmented(1))
+    assert(false, isSegmented({value:1}))
+    assert(false, isSegmented({value:1,_units:'hz'}))
+    assert(false, isSegmented(() => {return {value:1}}))
+    assert(false, isSegmented( eventTimeVar([hz(8),hz(9)], u2, u2, 1, false) ))
+    assert(true, isSegmented(eventTimeVar([hz(8),hz(9)], u2, u2, 1, true)(params,0)))
 
     ap = mockAp()
-    assert(true, segmentedAudioParam(ap, evalAtMain( eventTimeVar([hz(8),hz(9)], u2, u2, 1, true) ), params, undefined, 99, 'hz', doubleIt))
+    segmentedAudioParam(ap, evalAtMain( eventTimeVar([hz(8),hz(9)], u2, u2, 1, true) ), params, undefined, 99, 'hz', doubleIt)
     assert(4, ap.calls.length)
     assert(['setValueAtTime', 16,0], ap.calls[0])
     assert(['setValueAtTime', 16,2], ap.calls[1])
@@ -164,7 +169,7 @@ define(function (require) {
     assert(['setValueAtTime', 18,4], ap.calls[3])
 
     ap = mockAp()
-    assert(true, segmentedAudioParam(ap, evalAtSub( eventTimeVar([hz(8),hz(9)], u2, u2, 1, true) ), params, 'sub', 99, 'hz', doubleIt))
+    segmentedAudioParam(ap, evalAtSub( eventTimeVar([hz(8),hz(9)], u2, u2, 1, true) ), params, 'sub', 99, 'hz', doubleIt)
     assert(4, ap.calls.length)
     assert(['setValueAtTime', 16,0], ap.calls[0])
     assert(['setValueAtTime', 16,2], ap.calls[1])
@@ -172,7 +177,7 @@ define(function (require) {
     assert(['setValueAtTime', 18,4], ap.calls[3])
 
     ap = mockAp()
-    assert(true, segmentedAudioParam(ap, evalAtSub( eventTimeVar([hz(8),hz(9)], u2, u2, 1, true) ), params, 'sub', 99, 'hz', doubleIt))
+    segmentedAudioParam(ap, evalAtSub( eventTimeVar([hz(8),hz(9)], u2, u2, 1, true) ), params, 'sub', 99, 'hz', doubleIt)
     assert(4, ap.calls.length)
     assert(['setValueAtTime', 16,0], ap.calls[0])
     assert(['setValueAtTime', 16,2], ap.calls[1])
@@ -180,7 +185,7 @@ define(function (require) {
     assert(['setValueAtTime', 18,4], ap.calls[3])
 
     ap = mockAp()
-    assert(true, segmentedAudioParam(ap, evalAtSub( eventTimeVar([hz(8),hz(9)], u2, u2, 4, true) ), params, 'sub', 99, 'hz', doubleIt))
+    segmentedAudioParam(ap, evalAtSub( eventTimeVar([hz(8),hz(9)], u2, u2, 4, true) ), params, 'sub', 99, 'hz', doubleIt)
     assert(4, ap.calls.length)
     assert(['setValueAtTime', 16,0], ap.calls[0])
     assert(['setValueAtTime', 16,2], ap.calls[1])
@@ -188,14 +193,14 @@ define(function (require) {
     assert(['setValueAtTime', 18,10], ap.calls[3])
 
     ap = mockAp()
-    assert(true, segmentedAudioParam(ap, evalAtSub( eventTimeVar([hz(8),hz(4)], [exp,step], u2, 1, true) ), params, 'sub', 99, 'hz', doubleIt))
+    segmentedAudioParam(ap, evalAtSub( eventTimeVar([hz(8),hz(4)], [exp,step], u2, 1, true) ), params, 'sub', 99, 'hz', doubleIt)
     assert(3, ap.calls.length)
     assert(['setValueAtTime', 16,0], ap.calls[0])
     assert(['setTargetAtTime', 8,2,0.25], ap.calls[1])
     assert(['setValueAtTime', 8,4], ap.calls[2])
 
     ap = mockAp()
-    assert(true, segmentedAudioParam(ap, evalAtSub( eventTimeVar([0,hz(8),4], [lin,exp,step], [1,2,3], undefined, true) ), params, 'sub', 99, 'hz', doubleIt))
+    segmentedAudioParam(ap, evalAtSub( eventTimeVar([0,hz(8),4], [lin,exp,step], [1,2,3], undefined, true) ), params, 'sub', 99, 'hz', doubleIt)
     assert(5, ap.calls.length)
     assert(['setValueAtTime', 0,0], ap.calls[0])
     assert(['setValueAtTime', 0,2], ap.calls[1])
@@ -204,7 +209,7 @@ define(function (require) {
     assert(['setValueAtTime', 8,8], ap.calls[4])
 
     ap = mockAp()
-    assert(true, segmentedAudioParam(ap, evalAtSub( eventTimeVar([1,0,1,0], [lin,lin,lin,step], [1/2,0,1/2,0], undefined, true) ), params, 'sub', 99, 'hz', doubleIt))
+    segmentedAudioParam(ap, evalAtSub( eventTimeVar([1,0,1,0], [lin,lin,lin,step], [1/2,0,1/2,0], undefined, true) ), params, 'sub', 99, 'hz', doubleIt)
     assert(5, ap.calls.length)
     assert(['setValueAtTime', 2,0], ap.calls[0])
     assert(['setValueAtTime', 2,2], ap.calls[1])
@@ -217,6 +222,7 @@ define(function (require) {
   }
 
   return {
+    isSegmented: isSegmented,
     segmentedAudioParam: segmentedAudioParam,
   }
 })

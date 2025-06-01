@@ -2,11 +2,12 @@
 define(function (require) {
   let system = require('play/system')
   let {evalParamEvent,evalParamFrame} = require('player/eval-param')
-  let {mainParamUnits,subParamUnits} = require('player/sub-param')
-  let {segmentedAudioParam} = require('play/segmented-audioparam')
+  let {mainParamUnits,subParamUnits,mainParam,subParam} = require('player/sub-param')
+  let {segmentedAudioParam,isSegmented} = require('play/segmented-audioparam')
   let metronome = require('metronome')
   let {connect,isConnectable} = require('play/nodes/connect');
   let {getCallTree,setCallTree,clearCallTree} = require('player/callstack')
+  let {convertUnits,units} = require('units')
 
   let evalPerEvent = (params, p, def) => {
     let v = params[p]
@@ -56,20 +57,7 @@ define(function (require) {
     return subParamUnits(v, subParamName, requiredUnits, def)
   }
 
-  let setAudioParamValue = (audioParam, v, p, mod, t) => {
-    try {
-      if (v !== undefined) {
-        if (typeof mod === 'function') { v = mod(v) }
-        audioParam.setValueAtTime(v, t !== undefined ? t : system.timeNow())
-      }
-    } catch (e) {
-      console.log(audioParam, e)
-      throw `Failed setting audio param ${p} to ${v}`
-    }
-  }
-
-  let updateStep = 1/60
-  let perFrameUpdate = (audioParam, state, params, evalAt, mod, p) => {
+  let perFrameUpdate = (audioParam, state, params, evalAt, p) => {
     let __event = params !== undefined && params.__event ? params.__event : params
     if (__event && state.time > __event.endTime) { return false }
     if (__event && state.time < __event._time) { return true }
@@ -80,7 +68,6 @@ define(function (require) {
       let count = metronome.beatTime(audioParam.lastTime+updateStep);
       let v = evalAt(count)
       if (v !== undefined) {
-        if (typeof mod === 'function') { v = mod(v) }
         try {
           audioParam.setTargetAtTime(v, audioParam.lastTime, updateStep/4)
         } catch (e) {
@@ -91,57 +78,12 @@ define(function (require) {
       audioParam.lastTime += updateStep
     }
     return true
-  }
+  }              
 
-  let evalMainParamFrame = (audioParam, params, p, def, requiredUnits, mod) => {
-    let __event = params !== undefined && params.__event ? params.__event : params
-    let vmp = mainParamUnits(params[p], requiredUnits, def)
-    if (typeof vmp === 'number') { // single value; no need for regular per frame update
-      setAudioParamValue(audioParam, vmp, p, mod, params._time)
-    } else {
-      let initial = true // When evalling from this callstack, no need to set the call tree
-      let args = getCallTree() // Remember the entire call tree at this point so it can be used for the per frame update
-      let segEvalAt = (count) => {
-        if (!initial) { setCallTree(args) }
-        let r = evalPerFrame(params, p, count, def)
-        if (!initial) { clearCallTree() }
-        return r
-      }
-      if (segmentedAudioParam(audioParam, segEvalAt, params, undefined, def, requiredUnits, mod)) { // Set up with a segmented timeline
-        // if (params) { console.log(`Segmented audio update! Main ${params.player} ${p}`) }
-        return
-      }
-      initial = false
-      let evalled = evalParamFrame(params[p], __event,__event.count, {withInterval:true})
-      let interval
-      if (typeof evalled === 'object' && evalled.interval !== undefined && !isConnectable(evalled)) {
-        interval = evalled.interval
-        evalled = evalled.value
-      }
-      if (isConnectable(evalled)) { // Value is a node chain, just connect it
-        // if (params) { console.log(`Connectable audio update! Main ${params.player} ${p}`) }
-        audioParam.value = 0 // Remove any default value so we only get the value from the connection
-        connect(evalled, audioParam, __event._destructor, {dont_disconnect_r:true})
-        return
-      }
-      setAudioParamValue(audioParam, mainParamUnits(evalled, requiredUnits, def), p, mod, __event._time) // Set now
-      if (interval === undefined) { // If it can't vary per frame, drop out here
-        // if (params) { console.log(`Fixed audio update! Main ${params.player} ${p}`) }
-        return
-      }
-      // if (params) { console.log(`Per frame audio update! Main ${params.player} ${p}`) }
-      let evalAt = (count) => {
-        setCallTree(args)
-        let r = evalMainPerFrame(params, p, def, count, requiredUnits)
-        clearCallTree()
-        return r
-      }
-      if (params._perFrame) { // Update callback for buses
-        params._perFrame.push((state) => perFrameUpdate(audioParam, state, params, evalAt, mod, p))
-      } else { // Update callback for normal players
-        system.add(params._time, (state) => perFrameUpdate(audioParam, state, params, evalAt, mod, p))
-      }
-    }
+  let evalFuncFrame = (audioParam, params, name, fn) => {
+    setAudioParamValue(audioParam, fn(params.count), name, params._time) // set now
+    // if (params.player) { console.log(`Per frame audio update! ${params.player} ${name}`) }
+    system.add(params._time, (state) => perFrameUpdate(audioParam, state, params, fn, name))
   }
 
   let fixedPerFrame = (params, p, subParamName, def, requiredUnits) => { // ???Should this use {withInterval:true}?
@@ -155,44 +97,138 @@ define(function (require) {
     return typeof v === 'number' || v === undefined
   }
 
-  let evalSubParamFrame = (audioParam, params, p, subParamName, def, requiredUnits, mod) => {
-    let v = subParamUnits(params[p], subParamName, requiredUnits, def)
-    if (fixedPerFrame(params, p, subParamName, def, requiredUnits)) { // single value; no need for regular per frame update
-      setAudioParamValue(audioParam, v, p, mod, params._time)
-    } else {
-      let evalAt = (count) => evalSubPerFrame(params, p, subParamName, def, count, requiredUnits)
-      if (segmentedAudioParam(audioParam, evalAt, params, undefined, def, requiredUnits, mod)) { // Set up with a segmented timeline
-        // if (params) { console.log(`Segmented audio update! Sub ${params.player} ${p} ${subParamName}`) }
-        return
+  let setAudioParamValue = (audioParam, v, p, mod, t) => {
+    try {
+      if (v !== undefined) {
+        if (typeof mod === 'function') { v = mod(v) }
+        audioParam.setValueAtTime(v, t !== undefined ? t : system.timeNow())
       }
-      let evalled = evalPerFrame(params, p, params.count, def)
-      setAudioParamValue(audioParam, subParamUnits(evalled, subParamName, requiredUnits, def), p, mod, params._time) // set now
-      if (typeof v === 'function' && v.interval === 'event') { // If it can't vary per frame, drop out here
-        // if (params) { console.log(`Fixed audio update! Sub ${params.player} ${p} ${subParamName}`) }
-        return
-      }
-      // if (params) { console.log(`Per frame audio update! Sub ${params.player} ${p} ${subParamName}`) }
-      if (params._perFrame) { // Update callback for buses
-        params._perFrame.push(state => perFrameUpdate(audioParam, state, undefined, evalAt, mod, p))
-      } else { // Update callback for normal players
-        system.add(params._time, (state) => perFrameUpdate(audioParam, state, params, evalAt, mod, p))
-      }
+    } catch (e) {
+      console.log(audioParam, v, t, e)
+      throw `Failed setting audio param ${p} to ${v}`
     }
   }
 
-  let evalFuncFrame = (audioParam, params, name, fn) => {
-    setAudioParamValue(audioParam, fn(params.count), name, params._time) // set now
-    // if (params.player) { console.log(`Per frame audio update! ${params.player} ${name}`) }
-    system.add(params._time, (state) => perFrameUpdate(audioParam, state, params, fn, undefined, name))
+  let updateStep = 1/60
+  let doPerFrame = (audioParam, __event, params, p, isParamSegmented, def, requiredUnits, subParamName, mod) => {
+    let initial = true // When evalling from this callstack, no need to set the call tree
+    let args = getCallTree() // Remember the entire call tree at this point so it can be used for the per frame update
+    let evalAt = (count) => {
+      if (!initial) { setCallTree(args) } // Use call tree if this involves a user defined function
+      let v =  evalParamFrame(params[p], __event, count)
+      if (!initial) { clearCallTree() }
+      return v
+    }
+    let perFrame // The actual per frame callback
+    if (isParamSegmented) {
+      segmentedAudioParam(audioParam, evalAt, __event, subParamName, def, requiredUnits, mod) // Give it a call right now
+      perFrame = (state) => false//segmentedAudioParam(audioParam, evalAt, __event, undefined, def, requiredUnits, mod)
+    } else {
+      perFrame = (state) => {
+        if (__event && state.time > __event.endTime) { return false } // Finished
+        if (__event && state.time < __event._time) { return true } // Not started yet
+        if (audioParam.lastTime === undefined) {
+          audioParam.lastTime = (__event && __event._time) ? __event._time : system.timeNow()
+        }
+        while (audioParam.lastTime < state.time) { // Make a fixed size timestep
+          let count = metronome.beatTime(audioParam.lastTime+updateStep)
+          let v = evalAt(count)
+          let unit
+          if (typeof v === 'object') {
+            if (subParamName) {
+              v = v[subParamName]
+            } else {
+              if (v._units) { unit = v._units }
+              if (v.value !== undefined) { v = v.value }
+            }
+          }
+          if (typeof v === 'object') {
+            if (v._units) { unit = v._units }
+            if (v.value !== undefined) { v = v.value }
+          }
+          if (unit) { v = convertUnits(v, unit, requiredUnits) }
+          if (v === undefined) { v = def }
+          if (typeof mod === 'function') { v = mod(v) }
+          try {
+            audioParam.setTargetAtTime(v, audioParam.lastTime+updateStep, updateStep/4)
+          } catch (e) {
+            console.log(audioParam, v, e)
+            throw `Failed updating audio param ${p} to ${v}`
+          }
+          audioParam.lastTime += updateStep
+        }
+        return true
+      }
+    }
+    if (params._perFrame) { // Update callback for buses
+      params._perFrame.push(perFrame)
+    } else { // Update callback for normal players
+      system.add(params._time, perFrame)
+    }
+    initial = false
+  }
+
+  let evalParamPerFrame = (audioParam, params, p, def, requiredUnits, subParamName, mod) => {
+    let __event = params !== undefined && params.__event ? params.__event : params
+    let value = params[p]
+    value = evalParamFrame(params[p], __event,__event.count, {withInterval:true})
+    let isParamSegmented = isSegmented(value)
+    let interval
+    let unit
+// console.log('1', p, value, subParamName, params)
+    if (typeof value === 'object') {
+      if (!subParamName && value.interval) { interval = value.interval }
+      if (isSegmented(value)) { isParamSegmented = true }
+      if (subParamName) {
+        value = value[subParamName]
+      } else {
+        if (value._units) { unit = value._units }
+        if (value.value !== undefined && value.value1 === undefined) { value = value.value }
+      }
+    } else {
+      if (subParamName) { value = undefined } // If its not an object, there can't be a subparam
+    }
+// console.log('2', value)
+    if (typeof value === 'object') {
+      if (value.interval) { interval = value.interval }
+      if (isSegmented(value)) { isParamSegmented = true }
+      if (value._units) { unit = value._units }
+      if (value.value !== undefined && value.value1 === undefined) { value = value.value }
+    }
+// console.log('3', value, isConnectable(value))
+    if (isConnectable(value)) { // Value is a node chain, just connect it
+      audioParam.value = 0 // Remove any default value so we only get the value from the connection
+      connect(value, audioParam, __event._destructor, {dont_disconnect_r:true})
+      return
+    }
+// console.log('4', value, unit, interval, requiredUnits, isParamSegmented)
+    if (unit) { value = convertUnits(value, unit, requiredUnits) }
+    if (value === undefined) { value = def }
+// console.log('5', value)
+    if (!isParamSegmented)  {
+      setAudioParamValue(audioParam, value, p, mod, params._time) // Set value now
+    }
+    if (interval === 'frame' || isParamSegmented) {
+      doPerFrame(audioParam, __event, params, p, isParamSegmented, def, requiredUnits, subParamName, mod)
+      return
+    }
+  }
+
+  let evalMainParamFrame = (audioParam, params, p, def, requiredUnits, mod) => {
+    return evalParamPerFrame(audioParam, params, p, def, requiredUnits, undefined, mod)
+  }
+
+  let evalSubParamFrame = (audioParam, params, p, subParamName, def, requiredUnits, mod) => {
+    return evalParamPerFrame(audioParam, params, p, def, requiredUnits, subParamName, mod)
   }
 
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
-    let assert = (expected, actual) => {
-      let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
-      let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
-      if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
+    let assert = (expected, actual, message) => {
+      let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.00001).toFixed(4) : v)
+      let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.00001).toFixed(4) : v)
+      if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}\n ${message || ''}`) }
     }
 
     assert(2, evalMainParamEvent({}, 'foo', 2))
@@ -220,60 +256,169 @@ define(function (require) {
     assert(4, evalSubParamEvent({foo:()=>{return {value:3,sub:()=>4}}}, 'foo', 'sub', 2))
     assert(2, evalSubParamEvent({foo:()=>{return {value:3,sub:()=>undefined}}}, 'foo', 'sub', 2))
   
-    let assertAudioParamTest = (expected, expectedSystemAddCalled, test, mod) => {
-      let systemAdd = system.add
-      let called = false
-      let valueSet = undefined
-      system.add = () => called=true
-      let ap = {linearRampToValueAtTime:(v) => valueSet=v, setValueAtTime:(v) => valueSet=v, cancelScheduledValues:()=>{}}
-      test(ap, mod)
-      assert(expectedSystemAddCalled, called)
-      assert(expected, valueSet)
-      system.add = systemAdd
+    let mockAp = () => {
+      let calls = []
+      return {
+        calls: calls,
+        cancelScheduledValues: (...args) => calls.push(['cancelScheduledValues'].concat(args)),
+        setValueAtTime: (...args) => calls.push(['setValueAtTime'].concat(args)),
+        linearRampToValueAtTime: (...args) => calls.push(['linearRampToValueAtTime'].concat(args)),
+        exponentialRampToValueAtTime: (...args) => calls.push(['exponentialRampToValueAtTime'].concat(args)),
+        setTargetAtTime: (...args) => calls.push(['setTargetAtTime'].concat(args)),
+        setValueCurveAtTime: (...args) => calls.push(['setValueCurveAtTime'].concat(args)),
+      }
     }
-    let assertAudioParam = (expected, expectedSystemAddCalled, test) => {
-      assertAudioParamTest(expected, expectedSystemAddCalled, test, x => x)
-      assertAudioParamTest(2*expected, expectedSystemAddCalled, test, x => 2*x)
+    let assertApCalls = (expected, ap) => {
+      assert(expected.length, ap.calls.length)
+      for (let i = 0; i < expected.length; i++) {
+        assert(expected[i], ap.calls[i], `index: ${i}`)
+      }
     }
-    let perF = (v) => { return {value:v,interval:'frame'}}
+    let ap
+    let pf
+    let f
+    let hz = (v) => { return {value:v,_units:'hz'} }
+    let s = (v) => { return {value:v,_units:'s'} }
+    let oldBeatDuration = metronome.beatDuration()
+    metronome.beatDuration(2)
 
-    assertAudioParam(2, false, (ap,mod)=>evalMainParamFrame(ap, {}, 'foo', 2, undefined, mod))
-    assertAudioParam(3, false, (ap,mod)=>evalMainParamFrame(ap, {foo:3}, 'foo', 2, undefined, mod))
-    assertAudioParam(2, false, (ap,mod)=>evalMainParamFrame(ap, {foo:undefined}, 'foo', 2, undefined, mod))
-    assertAudioParam(3, false, (ap,mod)=>evalMainParamFrame(ap, {foo:{value:3,sub:4}}, 'foo', 2, undefined, mod))
-    assertAudioParam(2, false, (ap,mod)=>evalMainParamFrame(ap, {foo:{value:undefined,sub:4}}, 'foo', 2, undefined, mod))
-    assertAudioParam(3, true, (ap,mod)=>evalMainParamFrame(ap, {foo:()=>perF(3)}, 'foo', 2, undefined, mod))
-    assertAudioParam(2, true, (ap,mod)=>evalMainParamFrame(ap, {foo:()=>perF(undefined)}, 'foo', 2, undefined, mod))
-    assertAudioParam(3, true, (ap,mod)=>evalMainParamFrame(ap, {foo:()=>{return perF({value:3,sub:4})}}, 'foo', 2, undefined, mod))
-    assertAudioParam(2, true, (ap,mod)=>evalMainParamFrame(ap, {foo:()=>{return perF({value:undefined,sub:4})}}, 'foo', 2, undefined, mod))
-    assertAudioParam(3, true, (ap,mod)=>evalMainParamFrame(ap, {foo:()=>{return perF({value:()=>3,sub:4})}}, 'foo', 2, undefined, mod))
-    assertAudioParam(2, true, (ap,mod)=>evalMainParamFrame(ap, {foo:()=>{return perF({value:()=>undefined,sub:4})}}, 'foo', 2, undefined, mod))
+    // const number
+    ap = mockAp(); evalMainParamFrame(ap, {}, 'foo', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 6,0]], ap)
+    ap = mockAp(); evalMainParamFrame(ap, {foo:2}, 'foo', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 4,0]], ap)
+    ap = mockAp(); evalMainParamFrame(ap, {foo:{value:2,bar:0}}, 'foo', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 4,0]], ap)
+    ap = mockAp(); evalMainParamFrame(ap, {foo:{value:2,bar:s(0)}}, 'foo', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 4,0]], ap)
+    ap = mockAp(); evalSubParamFrame(ap, {}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 6,0]], ap)
+    ap = mockAp(); evalSubParamFrame(ap, {foo:0}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 6,0]], ap)
+    ap = mockAp(); evalSubParamFrame(ap, {foo:{value:0}}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 6,0]], ap)
+    ap = mockAp(); evalSubParamFrame(ap, {foo:{value:0,bar:2}}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 4,0]], ap)
+    ap = mockAp(); evalSubParamFrame(ap, {foo:{value:0,_units:'s',bar:2}}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 4,0]], ap)
 
-    assertAudioParam(2, false, (ap,mod)=>evalSubParamFrame(ap, {}, 'foo', 'sub', 2, undefined, mod))
-    assertAudioParam(2, false, (ap,mod)=>evalSubParamFrame(ap, {foo:3}, 'foo', 'sub', 2, undefined, mod))
-    assertAudioParam(2, false, (ap,mod)=>evalSubParamFrame(ap, {foo:undefined}, 'foo', 'sub', 2, undefined, mod))
-    assertAudioParam(4, false, (ap,mod)=>evalSubParamFrame(ap, {foo:{value:3,sub:4}}, 'foo', 'sub', 2, undefined, mod))
-    assertAudioParam(2, false, (ap,mod)=>evalSubParamFrame(ap, {foo:{value:3,sub:undefined}}, 'foo', 'sub', 2, undefined, mod))
-    assertAudioParam(2, true, (ap,mod)=>evalSubParamFrame(ap, {foo:()=>3}, 'foo', 'sub', 2, undefined, mod))
-    assertAudioParam(2, false, (ap,mod)=>evalSubParamFrame(ap, {foo:()=>undefined}, 'foo', 'sub', 2, undefined, mod))
-    assertAudioParam(4, true, (ap,mod)=>evalSubParamFrame(ap, {foo:{value:3,sub:()=>4}}, 'foo', 'sub', 2, undefined, mod))
-    assertAudioParam(4, true, (ap,mod)=>evalSubParamFrame(ap, {foo:()=>{return {value:3,sub:4}}}, 'foo', 'sub', 2, undefined, mod))
-    assertAudioParam(2, false, (ap,mod)=>evalSubParamFrame(ap, {foo:()=>{return {value:3,sub:undefined}}}, 'foo', 'sub', 2, undefined, mod))
-    assertAudioParam(4, true, (ap,mod)=>evalSubParamFrame(ap, {foo:()=>{return {value:3,sub:()=>4}}}, 'foo', 'sub', 2, undefined, mod))
-    assertAudioParam(2, true, (ap,mod)=>evalSubParamFrame(ap, {foo:()=>{return {value:3,sub:()=>undefined}}}, 'foo', 'sub', 2, undefined, mod))
+    // const number with units
+    ap = mockAp(); evalMainParamFrame(ap, {foo:{value:2,_units:'s'}}, 'foo', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 1,0]], ap)
+    ap = mockAp(); evalMainParamFrame(ap, {foo:{value:2,_units:'s',bar:s(0)}}, 'foo', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 1,0]], ap)
+    ap = mockAp(); evalSubParamFrame(ap, {foo:{value:0,_units:'s',bar:{value:2,_units:'s'}}}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 1,0]], ap)
 
-    assertAudioParam(3, false, (ap,mod)=>evalMainParamFrame(ap, {foo:3}, 'foo', 2, 'hz', mod))
-    assertAudioParam(3, false, (ap,mod)=>evalMainParamFrame(ap, {foo:{value:3}}, 'foo', 2, 'hz', mod))
-    assertAudioParam(1/3, false, (ap,mod)=>evalMainParamFrame(ap, {foo:{value:3,_units:'s'}}, 'foo', 2, 'hz', mod))
-    assertAudioParam(3, true, (ap,mod)=>evalMainParamFrame(ap, {foo:()=>{return perF({value:3})}}, 'foo', 2, 'hz', mod))
-    assertAudioParam(1/3, true, (ap,mod)=>evalMainParamFrame(ap, {foo:()=>{return perF({value:3,_units:'s'})}}, 'foo', 2, 'hz', mod))
+    // function returns const number
+    ap = mockAp(); evalMainParamFrame(ap, {foo:()=>undefined}, 'foo', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 6,0]], ap)
+    ap = mockAp(); evalMainParamFrame(ap, {foo:()=>2}, 'foo', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 4,0]], ap)
+    ap = mockAp(); evalMainParamFrame(ap, {foo:()=>()=>2}, 'foo', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 4,0]], ap)
+    ap = mockAp(); evalMainParamFrame(ap, {foo:()=>{return{value:2,bar:0}}}, 'foo', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 4,0]], ap)
+    ap = mockAp(); evalMainParamFrame(ap, {foo:()=>{return{value:2,bar:s(0)}}}, 'foo', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 4,0]], ap)
+    ap = mockAp(); evalMainParamFrame(ap, {foo:()=>{return{value:()=>2,bar:s(0)}}}, 'foo', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 4,0]], ap)
+    ap = mockAp(); evalSubParamFrame(ap, {foo:()=>undefined}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 6,0]], ap)
+    ap = mockAp(); evalSubParamFrame(ap, {foo:()=>s(0)}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 6,0]], ap)
+    ap = mockAp(); evalSubParamFrame(ap, {foo:{value:0,_units:'s',bar:()=>undefined}}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 6,0]], ap)
+    ap = mockAp(); evalSubParamFrame(ap, {foo:{value:0,_units:'s',bar:()=>2}}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 4,0]], ap)
+    ap = mockAp(); evalSubParamFrame(ap, {foo:()=>{return{value:0,bar:()=>2}}}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 4,0]], ap)
+    ap = mockAp(); evalSubParamFrame(ap, {foo:()=>{return{value:0,_units:'s',bar:()=>2}}}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 4,0]], ap)
 
-    assertAudioParam(3, false, (ap,mod)=>evalSubParamFrame(ap, {foo:{sub:3}}, 'foo', 'sub', 2, 'hz', mod))
-    assertAudioParam(3, false, (ap,mod)=>evalSubParamFrame(ap, {foo:{sub:{value:3}}}, 'foo', 'sub', 2, 'hz', mod))
-    assertAudioParam(1/3, false, (ap,mod)=>evalSubParamFrame(ap, {foo:{sub:{value:3,_units:'s'}}}, 'foo', 'sub', 2, 'hz', mod))
-    assertAudioParam(3, true, (ap,mod)=>evalSubParamFrame(ap, {foo:()=>{return{sub:{value:3}}}}, 'foo', 'sub', 2, 'hz', mod))
-    assertAudioParam(1/3, true, (ap,mod)=>evalSubParamFrame(ap, {foo:()=>{return{sub:{value:3,_units:'s'}}}}, 'foo', 'sub', 2, 'hz', mod))
+    // function returns const number with units
+    ap = mockAp(); evalMainParamFrame(ap, {foo:()=>s(2)}, 'foo', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 1,0]], ap)
+    ap = mockAp(); evalMainParamFrame(ap, {foo:()=>()=>s(2)}, 'foo', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 1,0]], ap)
+    ap = mockAp(); evalMainParamFrame(ap, {foo:()=>{return{value:2,_units:'s',bar:s(0)}}}, 'foo', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 1,0]], ap)
+    ap = mockAp(); evalMainParamFrame(ap, {foo:()=>{return{value:()=>s(2),bar:s(0)}}}, 'foo', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 1,0]], ap)
+    ap = mockAp(); evalSubParamFrame(ap, {foo:{value:0,_units:'s',bar:()=>s(2)}}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 1,0]], ap)
+    ap = mockAp(); evalSubParamFrame(ap, {foo:()=>{return{value:0,_units:'s',bar:()=>s(2)}}}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    assertApCalls([['setValueAtTime', 1,0]], ap)
 
+    // function returns segmented value
+    let {eventTimeVar} = require('expression/eval-timevars')
+    let u2 = [undefined,undefined]
+    let e = eventTimeVar([hz(8),hz(9)], u2, u2, 1, true)
+    ap = mockAp(); pf = []; evalMainParamFrame(ap, {foo:e, _perFrame:pf, count:1, dur:4, _time:2, endTime:10}, 'foo', 3, 'hz', (v) => v * 2)
+    pf[0]({time:2})
+    assertApCalls([
+      ['setValueAtTime', 16,0], ['setValueAtTime', 16,2],
+      ['linearRampToValueAtTime', 18,4], ['setValueAtTime',18,4]
+    ], ap)
+    ap = mockAp(); pf = []; evalMainParamFrame(ap, {foo:{value:e,poles:4}, _perFrame:pf, count:1, dur:4, _time:2, endTime:10}, 'foo', 3, 'hz', (v) => v * 2)
+    pf[0]({time:2})
+    assertApCalls([
+      ['setValueAtTime', 16,0], ['setValueAtTime', 16,2],
+      ['linearRampToValueAtTime', 18,4], ['setValueAtTime',18,4]
+    ], ap)
+    ap = mockAp(); pf = []; evalSubParamFrame(ap, {foo:{value:0,_units:'hz',bar:e}, _perFrame:pf, count:1, dur:4, _time:2, endTime:10}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    pf[0]({time:2})
+    assertApCalls([
+      ['setValueAtTime', 16,0], ['setValueAtTime', 16,2],
+      ['linearRampToValueAtTime', 18,4], ['setValueAtTime',18,4]
+    ], ap)
+
+    // function returns segmented value with units
+    e = eventTimeVar([s(8),s(9)], u2, u2, 1, true)
+    ap = mockAp(); pf = []; evalMainParamFrame(ap, {foo:e, _perFrame:pf, count:1, dur:4, _time:2, endTime:10}, 'foo', 3, 'hz', (v) => v * 2)
+    pf[0]({time:2})
+    assertApCalls([
+      ['setValueAtTime', 1/4,0], ['setValueAtTime', 1/4,2],
+      ['linearRampToValueAtTime', 2/9,4], ["setValueAtTime",2/9,4]
+    ], ap)
+    ap = mockAp(); pf = []; evalSubParamFrame(ap, {foo:{value:0,_units:'hz',bar:e}, _perFrame:pf, count:1, dur:4, _time:2, endTime:10}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    pf[0]({time:2})
+    assertApCalls([
+      ['setValueAtTime', 1/4,0], ['setValueAtTime', 1/4,2],
+      ['linearRampToValueAtTime', 2/9,4], ["setValueAtTime",2/9,4]
+    ], ap)
+
+    // function returns per frame value
+    f = () => 2
+    f.interval = 'frame'
+    ap = mockAp(); pf = []; evalMainParamFrame(ap, {foo:f,_perFrame:pf}, 'foo', 3, 'hz', (v) => v * 2)
+    pf[0]({time:1/60}); assertApCalls([ ['setValueAtTime', 4,0], ['setTargetAtTime', 4,1/60,1/240] ], ap)
+    ap = mockAp(); pf = []; evalSubParamFrame(ap, {foo:f,_perFrame:pf}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    assert(0, pf.length)
+    assertApCalls([ ['setValueAtTime', 6,0] ], ap)
+    ap = mockAp(); pf = []; evalSubParamFrame(ap, {foo:{value:0,_units:'s',bar:f},_perFrame:pf}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    pf[0]({time:1/60}); assertApCalls([ ['setValueAtTime', 4,0], ['setTargetAtTime', 4,1/60,1/240] ], ap)
+
+    // function returns per frame value with units
+    f = () => s(2)
+    f.interval = 'frame'
+    ap = mockAp(); pf = []; evalMainParamFrame(ap, {foo:f,_perFrame:pf}, 'foo', 3, 'hz', (v) => v * 2)
+    pf[0]({time:1/60}); assertApCalls([ ['setValueAtTime', 1,0], ['setTargetAtTime', 1,1/60,1/240] ], ap)
+    ap = mockAp(); pf = []; evalSubParamFrame(ap, {foo:{value:0,_units:'s',bar:f},_perFrame:pf}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    pf[0]({time:1/60}); assertApCalls([ ['setValueAtTime', 1,0], ['setTargetAtTime', 1,1/60,1/240] ], ap)
+
+    // per frame function returns value
+
+    // per frame function returns value with units
+
+  // !!!tests for units getting applied seperately, like [100,10]l@f*1hz - for per frame and const and segmented
+  // Might have to do these in parse-expression
+
+    // functions that require a call tree to be saved - tested in parse-expression tests
+
+    // connectables - tested in parse-expression tests
+
+    metronome.beatDuration(oldBeatDuration)
     console.log('Eval audio param tests complete')
   }
 

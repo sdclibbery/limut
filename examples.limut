@@ -4433,3 +4433,44 @@ set main drive=1/48
 c sample, dur=[1/40:1/80]r, envelope='pad', sample=corrosion, start=[0:8,4:0]l, fx=demon>>{dry,pingpong}
 
 
+// NiN vibe
+set bpm=122
+set scale='minor'
+set root=2
+set main drive=1/48, amp*=+1db
+pk perc X...
+ph perc n--n, amp/=4, swing=50, pan=[-1,1]/4, drive={1/2,mix:[1:!50ms,1/8]es}
+pp perc ..s., amp/=8, rate=(1,1/2), room=3/2, pan=(-1,1)
+set p* delay|=[():14,1/4:2]t
+bi saw 076069 crop 16, dur=1/2, oct=1, addc=(0,wow), amp/=2, lpf={[10000:!400ms,400]es,poles:4}
+bs sub ..0_, amp/=2, drive=1/16
+k saw ...<.7>0..<.9.>0 crop 16, oct=5, amp/=14, dur=1/4, addc=(0,wow*2), room, pan=[-1,1]/2, lpf=[9000:\1/4,800]es
+// e external, mono, amp=1/10, suck=1/4, drive={1,gain:64}, phaser=8b, high=-8db
+
+//// Testing eval-audio-params rewrite
+// s saw, dur=1/2, oct=2, lpf={[10000:!1/10,10]e, poles:4}
+// s saw, dur=1/2, oct=2, lpf={[10000:!1/10,10]e@s, poles:4}
+// s saw, dur=1/2, oct=2, lpf={[10000:!1/10,10]es, poles:4}
+// s saw, dur=1/2, oct=2, lpf={[10000:!1/10,10:_4/10]t@f, poles:4}
+// s saw, dur=1/2, oct=2, lpf={[10000:!1/10,10:_4/10]t@s, poles:4}
+// s saw, envelope='pad', oct=2, lpf={100+10000*[]n8 ^3, poles:4,q:20}
+//
+// s saw 07, glide=1, oct=2
+// b blues 0123
+// s saw, hpf=[0:10000]l8@f
+// pk bd
+//
+// s saw, lpf={300,q:[40b,0b]e}
+// s saw, lpf={300,q:[40b,0b]e@s}
+// s saw, lpf=[{300,q:40b},100]e@s
+// s saw, lpf={300,q:[0b:40b]l1/4{per:4}@f}
+// s saw, lpf={300,q:[0b,40b]l1/4@f}
+// s saw, lpf=[{300,q:40b},100]l@f
+// s saw, lpf={[3000:100]l1/4@f,q:20}, oct=2, amp/=4
+// s saw, lpf={400,q:[0:40]l1/4@f}, oct=2, amp/=4
+//
+// m multiwave, dur=1/4, oct=2, wave1={'noise',amp:[1:!150ms,0]es}
+// m wave, dur=1/4, oct=2, wave={'noise'}, amp=[1:!150ms,0]es
+// g growl
+
+

@@ -36,7 +36,7 @@ define(function(require) {
     if (v === null || v === undefined) { return v }
     if (typeof v !== 'object') { return v }
     let units = v._units
-    return convert(v.value, units, targetUnits, beatDuration)
+    return convert(v.value, units, targetUnits)
   }
 
   // TESTS
@@ -55,6 +55,7 @@ define(function(require) {
   
     assert(1, units(1))
     assert(1, units(1, 's'))
+    assert(1, units({value:1}))
     assert(1, units({value:1,_units:'s'}))
     assert(1, units({value:1,_units:'s'}, 's'))
     
@@ -86,5 +87,6 @@ define(function(require) {
     
     return {
     units: units,
+    convertUnits: convert,
   }
 })

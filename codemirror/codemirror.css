@@ -2,7 +2,7 @@
 
 .CodeMirror {
   /* Set height, width, borders, and global font properties here */
-  font-family: monospace, 'Courier New', Courier;
+  font-family: courier, mono, monospace;
   color: #e0e0e0;
   direction: ltr;
   background: transparent;

@@ -2,12 +2,36 @@
 =================================================================================================================================
 =================================================================================================================================
 ==== audio ====
-!!support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
+tape delay effect set tape = {} -> delay{[0,20ms]n1+[0,2ms]n0.1,max:300ms>>hsf{-10db,freq:7000hz}>>lsf{-10db,freq:200hz}
+decay param for pick
+donk!
+preset donk fm, dur=1/4, envelope='percussion', oct=2, sus=500ms, amp*=2,
+  op1={ratio:1/2,target:'out'}, // Sub
+  op2={ratio:1,target:'out'}, // Carrier
+  op3={ratio:2,target:2,depth:1,att:0,rel:250ms},
+  op4={ratio:4,target:2,depth:1/2,att:0,rel:200ms},
+ !!Need to give it some control params; decay and ??cutoff
+support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   Handle segmented values from the per frame callback
-   ?? Would need to use SAME evalAt for both per frame and segmented for this to work?
-    Can this be done? If not, will have to add a per frame to segmented instead
-   ?Can probably move the callout for segmented handling to the top of perFrameUpdate?
+   !!not getting any per frame if there are subparams
+  ***
+  Rewrite evalMainParamFrame and evalSubParamFrame and evalFuncFrame from scratch
+  Data cases relevant to audioparams
+  Number - set as const
+  String, Boolean - invalid
+  Array - invalid, take the first value?
+  Function - eval it and recurse
+  Connectable - connect it
+  Object without interval or units - Take main or sub param as required
+  Object with interval - recurse value and apply according to interval
+  Object with segment data - apply segmentation per frame
+  Object with units - apply units
+  evalMainParamFrame / evalSubParamFrame: these should share an implememntation.
+  FULL test (update test notes for user def functions, connectables, segments etc)
+  ***
+   Segments should be added bit by bit not all at the beginning
    !! TEST with lots of user functions etc
+   ??Does it work for subparams?? IE can segment subparams??
   set duck = {} -> gain{[0:/1/4,1:_3/4]ts@f}
    Or, better: set duck = {} -> gain{[1:!1/8,0:/1/8,1:_3/4]ts@f}
    Also have a duck level param and maybe a duck length param
@@ -21,6 +45,7 @@
    []e@s
    Deprecate or remove []es
    []t@s etc
+Rerwite pitch effects so it doesn't need all those methods from eval-audio-params, and so addc at least supports segments
 includes should include things they need; eg synthwave.limut should include effects.limut etc etc
  Do not include the same file multiple times; if its already included, then nop
 WebAudio node graphs as first class values

@@ -132,8 +132,8 @@ define(function(require) {
           try {
             player.play(player.getEventsForBeat(beat))
           } catch (e) {
-            console.log(e)
             consoleOut('🔴 Run Error from player '+player.id+': ' + e)
+            console.log(e)
             clearCallTree()
           }
         }
@@ -150,6 +150,7 @@ define(function(require) {
     } catch (e) {
       let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
       consoleOut('🔴 Run Error from audio updating: ' + e + st)
+      console.log(e)
       clearCallTree()
     }
     tickCount++
@@ -163,6 +164,7 @@ define(function(require) {
       } catch (e) {
         let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
         consoleOut('🔴 Run Error from drawing: ' + e + st)
+        console.log(e)
         clearCallTree()
       }
     }
