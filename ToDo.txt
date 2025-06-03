@@ -2,7 +2,7 @@
 =================================================================================================================================
 =================================================================================================================================
 ==== audio ====
-tape delay effect set tape = {} -> delay{[0,20ms]n1+[0,2ms]n0.1,max:300ms>>hsf{-10db,freq:7000hz}>>lsf{-10db,freq:200hz}
+tape delay effect set tape = {} -> delay{[0,20ms]n1+[0,2ms]n0.1,max:300ms}>>hsf{-10db,freq:7000hz}>>lsf{-10db,freq:200hz}
 decay param for pick
 donk!
 preset donk fm, dur=1/4, envelope='percussion', oct=2, sus=500ms, amp*=2,
@@ -11,11 +11,18 @@ preset donk fm, dur=1/4, envelope='percussion', oct=2, sus=500ms, amp*=2,
   op3={ratio:2,target:2,depth:1,att:0,rel:250ms},
   op4={ratio:4,target:2,depth:1/2,att:0,rel:200ms},
  !!Need to give it some control params; decay and ??cutoff
+!!Setup some guitar presets; test with acoustic sample
+  CHILLED: e external, mono, suck=1/32, amp*=24, flanger=8b, room, fx=mix{airverb}
+  Shimmer echo: e external, mono, suck=1/32, amp*=48, fx=mix{airverb>>delay{lfo{4}/4},0.75}*2
+  Echo: e external, mono, suck=1/32, amp*=4, drive={1,mix:1/8}, compress=2, fx={dry,phaser>>echo{3/4b}}>>mix{airverb}
+  Find the one from the reggae track, maybe others?
 support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
+ !! shifter not working right ??? Yes it is?? Test on a guitar sample; compare to prod
+ !! airverb errors for curve thing: how to replicate?
   Finish eval-audio-params test suite
   FULL test (update test notes for user def functions, connectables, segments etc)
   Segments should be added bit by bit not all at the beginning
-   !! TEST with lots of user functions etc
+   !! TEST with lots of user functions / sub params etc
    ??Does it work for subparams?? IE can segment subparams??
   []t@s support, also []l@s []s@s []n@s?? []r@s???
   Test segmented works on fx and also on buses

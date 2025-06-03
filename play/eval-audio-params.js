@@ -394,8 +394,7 @@ define(function (require) {
     ap = mockAp(); pf = []; evalMainParamFrame(ap, {foo:f,_perFrame:pf}, 'foo', 3, 'hz', (v) => v * 2)
     pf[0]({time:1/60}); assertApCalls([ ['setValueAtTime', 4,0], ['setTargetAtTime', 4,1/60,1/240] ], ap)
     ap = mockAp(); pf = []; evalSubParamFrame(ap, {foo:f,_perFrame:pf}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
-    assert(0, pf.length)
-    assertApCalls([ ['setValueAtTime', 6,0] ], ap)
+    assert(0, pf.length); assertApCalls([ ['setValueAtTime', 6,0] ], ap)
     ap = mockAp(); pf = []; evalSubParamFrame(ap, {foo:{value:0,_units:'s',bar:f},_perFrame:pf}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
     pf[0]({time:1/60}); assertApCalls([ ['setValueAtTime', 4,0], ['setTargetAtTime', 4,1/60,1/240] ], ap)
 
@@ -407,14 +406,16 @@ define(function (require) {
     ap = mockAp(); pf = []; evalSubParamFrame(ap, {foo:{value:0,_units:'s',bar:f},_perFrame:pf}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
     pf[0]({time:1/60}); assertApCalls([ ['setValueAtTime', 1,0], ['setTargetAtTime', 1,1/60,1/240] ], ap)
 
-    // per frame function returns value
-
-    // per frame function returns value with units
+    // per frame function returns param
+    f = () => { return {value:0,_units:'s',bar:2} }
+    f.interval = 'frame'
+    ap = mockAp(); pf = []; evalSubParamFrame(ap, {foo:f,_perFrame:pf}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    assert(0, pf.length); assertApCalls([ ['setValueAtTime', 4,0] ], ap)
 
   // !!!tests for units getting applied seperately, like [100,10]l@f*1hz - for per frame and const and segmented
   // Might have to do these in parse-expression
 
-    // functions that require a call tree to be saved - tested in parse-expression tests
+    // user functions that require a call tree to be saved - tested in parse-expression tests
 
     // connectables - tested in parse-expression tests
 
