@@ -23,3 +23,11 @@ preset reese multiwave
   , reverb={1,hpf:300,mix:1/8}
   , detune=2/3
   , cutoff=1/2
+
+preset donk fm, dur=1/4, oct=2, amp*=2,
+	envelope='percussion', sus=(this.decay+0.1)*500ms,
+  op1={ratio:1/2,target:'out'}, // Sub
+  op2={ratio:1,target:'out'}, // Carrier
+  op3={ratio:2,target:2,depth:2*this.cutoff,att:0,rel:(this.decay+0.1)*250ms},
+  op4={ratio:4,target:2,depth:1*this.cutoff,att:0,rel:this.decay*200ms},
+  decay=1/2, cutoff=1/2

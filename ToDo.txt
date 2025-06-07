@@ -2,14 +2,8 @@
 =================================================================================================================================
 =================================================================================================================================
 ==== audio ====
-donk!
-preset donk fm, dur=1/4, envelope='percussion', oct=2, sus=500ms, amp*=2,
-  op1={ratio:1/2,target:'out'}, // Sub
-  op2={ratio:1,target:'out'}, // Carrier
-  op3={ratio:2,target:2,depth:1,att:0,rel:250ms},
-  op4={ratio:4,target:2,depth:1/2,att:0,rel:200ms},
- !!Need to give it some control params; decay and ??cutoff
 !!Setup some guitar presets; test with acoustic sample
+  https://upload.wikimedia.org/wikipedia/commons/6/67/AcousticGuitarSample.ogg
   CHILLED: e external, mono, suck=1/32, amp*=24, flanger=8b, room, fx=mix{airverb}
   Shimmer echo: e external, mono, suck=1/32, amp*=48, fx=mix{airverb>>delay{lfo{4}/4},0.75}*2
   Echo: e external, mono, suck=1/32, amp*=4, drive={1,mix:1/8}, compress=2, fx={dry,phaser>>echo{3/4b}}>>mix{airverb}
