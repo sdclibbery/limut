@@ -2,7 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 ==== audio ====
-tape delay effect set tape = {} -> delay{[0,20ms]n1+[0,2ms]n0.1,max:300ms}>>hsf{-10db,freq:7000hz}>>lsf{-10db,freq:200hz}
 decay param for pick
 donk!
 preset donk fm, dur=1/4, envelope='percussion', oct=2, sus=500ms, amp*=2,
@@ -17,8 +16,6 @@ preset donk fm, dur=1/4, envelope='percussion', oct=2, sus=500ms, amp*=2,
   Echo: e external, mono, suck=1/32, amp*=4, drive={1,mix:1/8}, compress=2, fx={dry,phaser>>echo{3/4b}}>>mix{airverb}
   Find the one from the reggae track, maybe others?
 support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
- !! shifter not working right ??? Yes it is?? Test on a guitar sample; compare to prod
- !! airverb errors for curve thing: how to replicate?
   Finish eval-audio-params test suite
   FULL test (update test notes for user def functions, connectables, segments etc)
   Segments should be added bit by bit not all at the beginning
@@ -32,6 +29,7 @@ support for segmented values in per-frame update. So the per frame update pulls 
   Delete that segmented-audioparams backup file
   Test []es that ends before end of event
   Update docs, examples, test notes, etc to use []e@s instead of []es
+ !! errors for audioparam setting (curve thing): how to replicate?
   Docs
    @s as an interval (note: segments are NOT audio rate)
    []e@s
