@@ -17,8 +17,10 @@ define(function(require) {
       get() { return node.test._value },
     })
     node.test.value = 0
+    node.test.target_value = 0
     node.test.setValueAtTime = (v)=>node.test.value=v
     node.test.setTargetAtTime = (v)=>node.test.value=v
+    node.test.linearRampToValueAtTime = (v)=>node.test.target_value=v
     node.test.connected = []
     evalMainParamFrame(node.test, params, 'test', 440, 'hz')
     node.connected = []

@@ -26,7 +26,7 @@ define((require) => {
     if (value.interval === 'frame' && (typeof v === 'object' || v.interval === undefined)) {
       if (v._nextSegment === undefined) { v.interval = value.interval } // Set interval
     }
-    if (value.interval === 'event' && (typeof v === 'object' || v.interval === 'frame')) { // [[1]t@f]t@e case; remove frame wrapper
+    if (value.interval === 'event' && v.interval === 'frame') { // [[1]t@f]t@e case; remove frame wrapper
       v = v.value // Extract value; remove interval wrapper
     }
     return v

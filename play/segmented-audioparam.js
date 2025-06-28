@@ -33,6 +33,7 @@ define(function (require) {
 // console.log(`Segment: ${type} ${moddedV} ${args}`)
     } catch (e) {
       console.log(`!!! Bad audioParam segment ${type} ${moddedV} ${args}`)
+      console.trace(e)
     }
   }
 

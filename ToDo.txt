@@ -2,36 +2,34 @@
 =================================================================================================================================
 =================================================================================================================================
 ==== audio ====
+Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
+  FULL test (and update test notes for user def functions, connectables, segments etc)
+  Segments should be added bit by bit not all at the beginning
+   !! TEST with lots of user functions / sub params etc
+   ??Does it work for subparams?? IE can segment subparams??
+  Delete that segmented-audioparams backup file
+  []t@s support, also []l@s []s@s []n@s?? []r@s???
+  Test segmented works on fx and also on buses
+  set duck = {} -> gain{[0:/1/4,1:_3/4]ts@f}
+   Or, better: set duck = {} -> gain{[1:!1/8,0:/1/8,1:_3/4]ts@f}
+   Also have a duck level param and maybe a duck length param
+  Test []es that ends before end of event
+  Update docs, examples, test notes, etc to use []e@s instead of []es
+  !! errors for audioparam setting (curve thing): how to replicate?
+  Docs
+   @s as an interval (note: segments are NOT audio rate)
+   []e@s
+   Deprecate or remove []es
+   []t@s etc
+Rewrite pitch effects so it doesn't need all those methods from eval-audio-params, and so addc at least supports segments
 !!Setup some guitar presets; test with acoustic sample
   https://upload.wikimedia.org/wikipedia/commons/6/67/AcousticGuitarSample.ogg
   CHILLED: e external, mono, suck=1/32, amp*=24, flanger=8b, room, fx=mix{airverb}
   Shimmer echo: e external, mono, suck=1/32, amp*=48, fx=mix{airverb>>delay{lfo{4}/4},0.75}*2
   Echo: e external, mono, suck=1/32, amp*=4, drive={1,mix:1/8}, compress=2, fx={dry,phaser>>echo{3/4b}}>>mix{airverb}
   Find the one from the reggae track, maybe others?
-support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
-  Finish eval-audio-params test suite
-  FULL test (update test notes for user def functions, connectables, segments etc)
-  Segments should be added bit by bit not all at the beginning
-   !! TEST with lots of user functions / sub params etc
-   ??Does it work for subparams?? IE can segment subparams??
-  []t@s support, also []l@s []s@s []n@s?? []r@s???
-  Test segmented works on fx and also on buses
-  set duck = {} -> gain{[0:/1/4,1:_3/4]ts@f}
-   Or, better: set duck = {} -> gain{[1:!1/8,0:/1/8,1:_3/4]ts@f}
-   Also have a duck level param and maybe a duck length param
-  Delete that segmented-audioparams backup file
-  Test []es that ends before end of event
-  Update docs, examples, test notes, etc to use []e@s instead of []es
- !! errors for audioparam setting (curve thing): how to replicate?
-  Docs
-   @s as an interval (note: segments are NOT audio rate)
-   []e@s
-   Deprecate or remove []es
-   []t@s etc
-Rerwite pitch effects so it doesn't need all those methods from eval-audio-params, and so addc at least supports segments
-includes should include things they need; eg synthwave.limut should include effects.limut etc etc
- Do not include the same file multiple times; if its already included, then nop
 WebAudio node graphs as first class values
+ ???? {} for parallel nodes should be (), no???
  Should be able to  fx=[]n  And also  fx=echo>>[]n
  !!Parallel nodes should surely be round brackets???
  !set lpf2 = lpf etc does not work!!! I think the args do not get passed in anymore??
@@ -68,7 +66,9 @@ WebAudio node graphs as first class values
    user defined function syntax, inc argument syntax plus default args, plus positional args
    trig maths functions
    debug log function
-eq{} takes variable number of params and defines crossovers as needed
+includes should include things they need; eg synthwave.limut should include effects.limut etc etc
+ Do not include the same file multiple times; if its already included, then nop
+eq{}: takes variable number of params and defines crossovers as needed
   Eg eq{0db, 10db, 0db} would be a three band 
   Multi band compression? - ie can supply a chain for each band instead of just a gain value
 Limiter, compressor should have makeup gain param
@@ -791,3 +791,12 @@ Things that make limut trickier than just implementing a bog standard programmin
 
 Do we really need better, smarter memoisation? Memoise even for per frame? Eg memoise key is {event,b,options}??
  How does that work for function args? Need to also memoise against function args?????
+
+===
+
+s saw 007 crop 8, dur=1/2, oct=2, lpf={[1000:!100ms,10]e@s, poles:4}
+s=met(1/2).`0070`.crop(8).saw(oct:2).lpf([1000:!100ms,10]e@s,poles:4)*[0.06:!500ms,0]e@s
+...this is weak for presets and overriding. EG how to define dur as a preset and then override it? How to insert 
+
+As per every time we look at this kind of thing, the conculsion is the current setup is better even if it feels complicated
+

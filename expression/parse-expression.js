@@ -1948,6 +1948,30 @@ define(function(require) {
   system.queued = []
   delete vars.foo
 
+  p = parseExpression('mockaudionode{test:[1,10]t1@f*2s}')
+  e = evd(0,0,1)
+  v = evalParamFrame(p, e,0)
+  assert(0.5, v.test.value)
+  assert(1, system.queued.length)
+  system.queued[0].update({count:1,time:1})
+  assert(0.05, v.test.value)
+  system.queued = []
+
+  p = parseExpression('mockaudionode{test:[1,10]e@s*2s}')
+  e = evd(0,0,1)
+  v = evalParamFrame(p, e,0)
+  assertApprox(0.5, v.test.value)
+  assertApprox(0.05, v.test.target_value)
+  system.queued = []
+
+  assert({value:2,_units:'s'}, evalParamFrame(parseExpression('[1]*2s'), evd(0,0,1),0, {withInterval:true}))  
+
+  p = parseExpression('mockaudionode{test:[1]*2s}')
+  assert(0.5, evalParamFrame(p, evd(0,0,1),0).test.value)
+
+  p = parseExpression('mockaudionode{test:[1]t@f*2s}')
+  assert(0.5, evalParamFrame(p, evd(0,0,1),0).test.value)
+
   vars.foo = parseExpression('{v} -> v+2')
   vars.bar = parseExpression('{v} -> v*3')
   assert(17, evalParamFrame(parseExpression('foo{bar{5}}'), e, 0))

@@ -412,9 +412,6 @@ define(function (require) {
     ap = mockAp(); pf = []; evalSubParamFrame(ap, {foo:f,_perFrame:pf}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
     assert(0, pf.length); assertApCalls([ ['setValueAtTime', 4,0] ], ap)
 
-  // !!!tests for units getting applied seperately, like [100,10]l@f*1hz - for per frame and const and segmented
-  // Might have to do these in parse-expression
-
     // user functions that require a call tree to be saved - tested in parse-expression tests
 
     // connectables - tested in parse-expression tests
