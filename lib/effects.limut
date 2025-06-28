@@ -28,7 +28,7 @@ delay{ lfo{ // Moving delay to change the pitch
 	>>shaper{{x}->cos{pi*x*0.6},oversample:'none'}
 }
 
-set shifter = {ratio, length:0.03} ->{ // Multiple overlapping pitch shifting grains
+set shifter = {ratio, length:0.14} ->{ // Multiple overlapping pitch shifting grains
 	grain{ratio,length:length,phase:0/2},
   grain{ratio,length:length,phase:1/2}
 }*0.825
