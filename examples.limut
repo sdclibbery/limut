@@ -4474,3 +4474,18 @@ k saw ...<.7>0..<.9.>0 crop 16, oct=5, amp/=14, dur=1/4, addc=(0,wow*2), room, p
 // g growl
 
 
+set bpm=122
+set scale='minor'
+// i impulse, lpf=[400:!100ms,80]es
+// pk perc X...
+// ps perc .y(*u)<..e>, amp/=4
+// pp perc nusnn. crop 8, swing=54, amp/=6, echo=1/4, pan=-1/3
+// ph perc Mn:n, amp/=7, swing=56, pan=1/3
+// bs saw 0700, dur=1/4, oct=1, lpf=[[8,2,4,3,5,9,3,0]*200:!300ms,100]es, addc=(0,wow), amp*=[1/8,1,1,1]t1/4, swing=52
+// bu sub ...5.6.7, drive=1/8
+// h hollow, oct=1, amp=4, drive=riser^3 /4
+n noise, dur=[8,12,14]r, sus=2, fx=series{flanger,4}>>mix{airverb>>ultracomb}
+// l blips, amp*=[]r*[0:6,1:2]t, fx=mix{airverb}
+// t techbass 0vv707, amp/=3, swing=54
+
+

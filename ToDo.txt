@@ -3,7 +3,6 @@
 =================================================================================================================================
 ==== audio ====
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
-  FULL test (and update test notes for user def functions, connectables, segments etc)
   Segments should be added bit by bit not all at the beginning
    !! TEST with lots of user functions / sub params etc
    ??Does it work for subparams?? IE can segment subparams??
@@ -16,11 +15,17 @@ Support for segmented values in per-frame update. So the per frame update pulls 
   Test []es that ends before end of event
   Update docs, examples, test notes, etc to use []e@s instead of []es
   !! errors for audioparam setting (curve thing): how to replicate?
+  FULL test (and update test notes for user def functions, connectables, segments etc)
   Docs
    @s as an interval (note: segments are NOT audio rate)
    []e@s
    Deprecate or remove []es
    []t@s etc
+More node topology functions
+ parallel{} - takes a number and a callback function to create chains for each, then runs them all in parallel
+ series{} should also be able to take a callback function to create each chain
+ multiband{} - takes a set of cutoff freqs, separates the signal into those bands, and applies a chain for each band based on a callback function
+ serallel{} - takes a set of chains (or a number and a callback function to create the chains), and runs then all in series, but collects all the outputs together as well for the final output - ??Do we need this for anything?
 Rewrite pitch effects so it doesn't need all those methods from eval-audio-params, and so addc at least supports segments
 !!Setup some guitar presets; test with acoustic sample
   https://upload.wikimedia.org/wikipedia/commons/6/67/AcousticGuitarSample.ogg
