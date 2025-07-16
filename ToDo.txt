@@ -2,6 +2,18 @@
 =================================================================================================================================
 =================================================================================================================================
 ==== audio ====
+midi controller support
+ pattern syntax eg "b techbass midi 0"
+  new player type for midi input
+  setup web midi
+  generate events
+  pitch conversion
+  perc sample conversion
+  velocity
+ controller knob support, eg  cutoff=midi{70}
+  setup web midi
+  keep latest value and return it when evalled, like a UI slider
+drive{} and tanh{}
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   Segments should be added bit by bit not all at the beginning
    !! TEST with lots of user functions / sub params etc
@@ -21,6 +33,7 @@ Support for segmented values in per-frame update. So the per frame update pulls 
    []e@s
    Deprecate or remove []es
    []t@s etc
+Use segmented timevars in shifter, to implement smaller grains and random offsets
 More node topology functions
  parallel{} - takes a number and a callback function to create chains for each, then runs them all in parallel
  series{} should also be able to take a callback function to create each chain

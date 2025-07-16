@@ -4489,3 +4489,28 @@ n noise, dur=[8,12,14]r, sus=2, fx=series{flanger,4}>>mix{airverb>>ultracomb}
 // t techbass 0vv707, amp/=3, swing=54
 
 
+set bpm=132
+set scale='minor'
+set root=-3
+set main drive=1/32
+p perc X-:-, swing=52
+pp perc duf crop 14 + KD, swing=52, amp/=4
+bs sub .000, drive=1/16
+b tb303 0a0000.0a0000.7a7a7a., addc=(0,wow), resonance, envmod, cutoff=1/2+riser^4 /2, accent, drive={1/4,mix:1/8}, fx=mix{pingpong}
+// b tb303 0a.....0a.....7a7a7a., addc=(0,wow), resonance, envmod, cutoff=1/2+riser^4 /2, accent, fx=mix{pingpong}
+set !c amp*=[1:28,0:4]t
+c play 321[(XO)(XO)(XO)], dur=1, amp=[0:28,1:4]t
+
+
+//// shifter testing// t techbass 0123, oct+=(0,2)
+// t techbass 0123, fx=mix{shifter{4}}
+// t techbass 0123, fx=mix{shimmer{4}}
+// c cyborg 0123, fx=mix{shifter{4}}
+// c cyborg 0123, fx=mix{shimmer{4}}
+////
+// p ping 0123, oct=(3,5)
+// p ping 0123, oct=3, fx=mix{shifter{4}}
+////
+// g saw 0123, oct=(3,4)
+// g saw 0123, oct=3, fx=mix{shifter{2}}
+
