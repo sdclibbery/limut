@@ -4513,4 +4513,6 @@ c play 321[(XO)(XO)(XO)], dur=1, amp=[0:28,1:4]t
 ////
 // g saw 0123, oct=(3,4)
 // g saw 0123, oct=3, fx=mix{shifter{2}}
+////
+// s sample, sample='https://upload.wikimedia.org/wikipedia/commons/6/67/AcousticGuitarSample.ogg', start=17, dur=2, fx=mix{shifter{2^(12/12)}}
 
