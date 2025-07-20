@@ -2,6 +2,14 @@
 =================================================================================================================================
 =================================================================================================================================
 ==== audio ====
+midi controller support
+ pattern syntax eg "b techbass midi 0"
+  new player type for midi input
+  setup web midi
+  generate events
+  pitch conversion
+  perc sample conversion
+  velocity
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   Segments should be added bit by bit not all at the beginning
    !! TEST with lots of user functions / sub params etc
@@ -23,17 +31,6 @@ Support for segmented values in per-frame update. So the per frame update pulls 
    []t@s etc
 ! Fix shifter: use segmented timevars instead of lfo/osc, to implement smaller grains and random offsets
   Test tuning with guitar sample: https://upload.wikimedia.org/wikipedia/commons/6/67/AcousticGuitarSample.ogg
-midi controller support
- pattern syntax eg "b techbass midi 0"
-  new player type for midi input
-  setup web midi
-  generate events
-  pitch conversion
-  perc sample conversion
-  velocity
- controller knob support, eg  cutoff=midi{70}
-  setup web midi
-  keep latest value and return it when evalled, like a UI slider
 drive{} and tanh{}
 More node topology functions
  parallel{} - takes a number and a callback function to create chains for each, then runs them all in parallel
