@@ -4,7 +4,9 @@ define(function(require) {
   let consoleOut = require('console')
   let addVar = require('predefined-vars').add
 
+  let blankArgs = {}
   let newMidiKnob = (args, context) => {
+    args = args || blankArgs
     let portNumber = args.port
     let controlId = args.control || args.value
     let noteNumber = args.note || args.value

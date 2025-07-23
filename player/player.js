@@ -7,6 +7,7 @@ define((require) => {
   let standardPlayer = require('player/standard')
   let continuousPlayer = require('player/continuous')
   var followPlayer = require('player/follow')
+  var midiPlayer = require('player/midi')
   var expandChords = require('player/expand-chords')
   let {evalParamFrame} = require('player/eval-param')
   let {mainParam,mainParamUnits,subParam} = require('player/sub-param')
@@ -126,6 +127,11 @@ define((require) => {
       // Follow player
       let params = parseParams(paramsStr, playerId)
       player.getEventsForBeatBase = followPlayer(patternStr.slice(6).trim(), params, player, playerFactory.baseParams)
+    } else if (patternStr.startsWith('midi')) {
+      // Midi player
+      let params = parseParams(paramsStr, playerId)
+      player.getEventsForBeatBase = () => [] // Cannot predict events for the next beat so nothing here
+      midiPlayer(patternStr.slice(4).trim(), params, player, playerFactory.baseParams)
     } else if (playerFactory.stopped) {
       player.getEventsForBeatBase = () => []
     } else {
@@ -141,6 +147,17 @@ define((require) => {
       player.lastRawEventCount = beat.count
       return events
     }
+    player.processEvents = (events) => {
+      events.forEach(e => e.linenum = player.linenum)
+      let overrides = players.overrides[player.id] || {}
+      events = events.map(e => applyOverrides(e, overrides))
+      events = expandChords(events)
+      events.forEach(e => applyDelay(e, e.beat))
+      events = expandStutter(events)
+      events.forEach(e => applySwing(e, e.beat))
+      events.forEach(e => e.player = player.id)
+      return events
+    }
     player.getEventsForBeat = (beat) => {
       let events = player.getEventsForBeatRaw(beat)
       events = events.map(event => {
@@ -152,15 +169,7 @@ define((require) => {
         eventToPlay._time = beat.time + event._time*beat.duration
         return eventToPlay
       })
-      events.forEach(e => e.linenum = player.linenum)
-      let overrides = players.overrides[player.id] || {}
-      events = events.map(e => applyOverrides(e, overrides))
-      events = expandChords(events)
-      events.forEach(e => applyDelay(e, beat))
-      events = expandStutter(events)
-      events.forEach(e => applySwing(e, beat))
-      events.forEach(e => e.player = player.id)
-      return events
+      return player.processEvents(events)
     }
     return player
   }

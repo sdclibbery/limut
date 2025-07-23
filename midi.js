@@ -2,6 +2,13 @@
 define(function(require) {
   let consoleOut = require('console')
 
+  let createinputChannel = () => { return {
+    controller: {},
+    bend: 0,
+    note: {},
+    listeners: [],
+  } }
+
   let midi
   let connecting = false
   let inputs = []
@@ -22,11 +29,7 @@ define(function(require) {
               var cmd = msg.data[0] >> 4
               var channelNumber = msg.data[0] & 0xf
               if (inputs[idx][channelNumber] === undefined) {
-                inputs[idx][channelNumber] = {
-                  controller: {},
-                  bend: 0,
-                  note: {},
-                }
+                inputs[idx][channelNumber] = createinputChannel()
               }
               let channel = inputs[idx][channelNumber]
               // console.log(cmd, channelNumber, msg.data)
@@ -46,6 +49,11 @@ define(function(require) {
                 var velocity = msg.data[2]
                 channel.note[noteNumber] = (velocity || 0) / 127
                 lastInput = `Port ${idx} Channel ${channelNumber} Note ${noteNumber}`
+                if (cmd === 9) {
+                  channel.listeners.forEach((listener) => {
+                    listener(noteNumber || 0, (velocity || 0) / 127)
+                  })
+                }
               }
               if (cmd === 13) { // Aftertouch
                 var velocity = msg.data[1]
@@ -81,9 +89,18 @@ define(function(require) {
     return lastInput
   }
 
+  let midiListen = (portNumber, channelNumber, callback) => {
+    if (!midi) { midiConnect() }
+    if (inputs[portNumber] === undefined) { inputs[portNumber] = {} }
+    if (inputs[portNumber][channelNumber] === undefined) { inputs[portNumber][channelNumber] = createinputChannel() }
+    let channel = inputs[portNumber][channelNumber]
+    channel.listeners.push(callback)
+  }
+
   return {
     midiValue: midiValue,
     midiConnect: midiConnect,
     midiLastInput: midiLastInput,
+    midiListen: midiListen,
   }
 })
