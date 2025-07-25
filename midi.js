@@ -13,7 +13,7 @@ define(function(require) {
   let connecting = false
   let inputs = []
   let lastInput
-  let midiConnect = () => {
+  let connect = () => {
     if (connecting) { return }
     connecting = true
     navigator.requestMIDIAccess().then(
@@ -74,8 +74,8 @@ define(function(require) {
     )
   }
 
-  let midiValue = (portNumber, channelNumber, controlId, noteNumber) => {
-    if (!midi) { midiConnect() }
+  let getValue = (portNumber, channelNumber, controlId, noteNumber) => {
+    if (!midi) { connect() }
     let port = inputs[portNumber]
     if (!port) { return 0 }
     let channel = port[channelNumber]
@@ -85,13 +85,13 @@ define(function(require) {
     return channel.note[noteNumber] || 0
   }
 
-  let midiLastInput = () => {
-    if (!midi) { midiConnect() }
+  let getLastInputString = () => {
+    if (!midi) { connect() }
     return lastInput
   }
 
-  let midiListen = (portNumber, channelNumber, id, callback) => {
-    if (!midi) { midiConnect() }
+  let listen = (portNumber, channelNumber, id, callback) => {
+    if (!midi) { connect() }
     if (inputs[portNumber] === undefined) { inputs[portNumber] = {} }
     if (inputs[portNumber][channelNumber] === undefined) { inputs[portNumber][channelNumber] = createinputChannel() }
     let channel = inputs[portNumber][channelNumber]
@@ -106,10 +106,10 @@ define(function(require) {
   }
 
   return {
-    midiValue: midiValue,
-    midiConnect: midiConnect,
-    midiLastInput: midiLastInput,
-    midiListen: midiListen,
-    midiIgnore: midIgnore,
+    getValue: getValue,
+    connect: connect,
+    getLastInputString: getLastInputString,
+    listen: listen,
+    stopListening: midIgnore,
   }
 })
