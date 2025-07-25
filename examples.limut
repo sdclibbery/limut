@@ -4539,3 +4539,15 @@ c play 321[(XO)(XO)(XO)], dur=1, amp=[0:28,1:4]t
 // v kal, zoom=4, scroll=1/2, monochrome=midi{'bend'}*2, contrast = midi{1}
 // t techbass, cutoff=midi{70}, decay=midi{71}
 
+
+// First midi Jam
+set scale='minor'
+set * add+=[0,3]t16
+pp perc x.<+..>., amp/=4
+ph perc ..t crop 16, amp/=12, pan=[-1,1]/2
+m sine midi, glide=1/4, rel=1, drive={1,mix:this.vel/8}, fx=mix{airverb}, amp*=1+this.vel, att=10ms, envelope='percussion', echo=3/4
+b basspluck [00]., lpf=[200+600*midi{1}^2:!2,100]e@s
+h hollow, oct=1, amp*=8, fx=airverb
+k pick 072 crop 16, dur=1/2, oct=[2,3], amp/=4, cutoff=midi{'bend'}, pan=[-1,1]/2
+o oxy (049), amp/=24
+

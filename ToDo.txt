@@ -4,16 +4,16 @@
 ==== audio ====
 midi controller support
  pattern syntax eg "b techbass midi 0"
-  pitch conversion
-   relative: midi%12, white notes to value; black notes add sharp=1
-   absolute: convert actual midi note into root/scale/oct for player; what about add???
-   addc from bend? - no user can do this themself
-  perc sample conversion
+  value conversion
+   abs
+   rel
   live envelope
  vel
+  should update with aftertouch, at the moment you only get the vel at the time of note-on (see percussion pads)
   all players default to 1/2 (or to 1??)
   presets use it??
   piano synth with vel??
+ bend range -1 to 1 ??
  DOCS: midi pattern, syntax, vel param
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   Segments should be added bit by bit not all at the beginning
