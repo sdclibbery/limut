@@ -6,7 +6,7 @@ define(function(require) {
     controller: {},
     bend: 0,
     note: {},
-    listeners: [],
+    listeners: {},
   } }
 
   let midi
@@ -50,9 +50,10 @@ define(function(require) {
                 channel.note[noteNumber] = (velocity || 0) / 127
                 lastInput = `Port ${idx} Channel ${channelNumber} Note ${noteNumber}`
                 if (cmd === 9) {
-                  channel.listeners.forEach((listener) => {
+                  for (let k in channel.listeners) {
+                    let listener = channel.listeners[k]
                     listener(noteNumber || 0, (velocity || 0) / 127)
-                  })
+                  }
                 }
               }
               if (cmd === 13) { // Aftertouch
@@ -89,12 +90,19 @@ define(function(require) {
     return lastInput
   }
 
-  let midiListen = (portNumber, channelNumber, callback) => {
+  let midiListen = (portNumber, channelNumber, id, callback) => {
     if (!midi) { midiConnect() }
     if (inputs[portNumber] === undefined) { inputs[portNumber] = {} }
     if (inputs[portNumber][channelNumber] === undefined) { inputs[portNumber][channelNumber] = createinputChannel() }
     let channel = inputs[portNumber][channelNumber]
-    channel.listeners.push(callback)
+    channel.listeners[id] = callback
+  }
+
+  let midIgnore = (portNumber, channelNumber, id) => {
+    if (inputs[portNumber] === undefined) { return }
+    if (inputs[portNumber][channelNumber] === undefined) { return }
+    let channel = inputs[portNumber][channelNumber]
+    delete channel.listeners[id]
   }
 
   return {
@@ -102,5 +110,6 @@ define(function(require) {
     midiConnect: midiConnect,
     midiLastInput: midiLastInput,
     midiListen: midiListen,
+    midiIgnore: midIgnore,
   }
 })

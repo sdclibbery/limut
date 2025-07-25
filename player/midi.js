@@ -1,6 +1,6 @@
 'use strict';
 define(function(require) {
-  let {midiListen} = require('midi')
+  let {midiListen,midiIgnore} = require('midi')
   let metronome = require('metronome')
   let {combineOverrides,applyOverrides} = require('player/override-params')
 
@@ -16,12 +16,11 @@ define(function(require) {
         channel = parseInt(patternArgs[1], 10) || 0
       }
       // Listen to given midi port/channel, create appropriate event and call player.play()
-      midiListen(port, channel, (note, velocity) => {
+      midiListen(port, channel, player.id, (note, velocity) => {
         let event = {
           value: note-60, // if channel 9, convert to percussion samples, else midi to scale
           dur: 1,
           vel: velocity,
-          // loud: velocity,
           _time: metronome.timeNow(),
           count: metronome.lastBeat().count,
           idx: metronome.lastBeat().count,
@@ -32,7 +31,11 @@ define(function(require) {
         event = applyOverrides(event, params)
         player.play(player.processEvents([event]))
       })
-      // !!! Need to disconnect midi listener on player cleanup
+      // Disconnect midi listener on player cleanup
+      if (player.destroy !== undefined) { throw `Player ${player.id} already has destroy?!` }
+      player.destroy = () => {
+        midiIgnore(port, channel, player.id)
+      }
   }
 
   return midiPlayer
