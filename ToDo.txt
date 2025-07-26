@@ -3,11 +3,19 @@
 =================================================================================================================================
 ==== audio ====
 midi controller support
+ !!!r readout, foo=midi (but no midi devices, also chrome) Error on line 7: TypeError: Cannot read properties of undefined (reading 'port') at newMidiKnob (midi-knob.js:8:27)
  pattern syntax eg "b techbass midi 0"
   value conversion
    abs
+    try with add, addc, chords
+    apply any override root/scale
+   root
+    same as abs but without accounting for root, so its as if any key is in C
    rel
+    ?? Could make it so midi white notes map to scale degrees as closely as possible without regard to anything except scale length?
   live envelope
+ ! addc=midi{'notes'} : want to be able to use a pattern as a sequence and transpose with midi input
+  And/or 'play' a continuous synth
  vel
   should update with aftertouch, at the moment you only get the vel at the time of note-on (see percussion pads)
   all players default to 1/2 (or to 1??)

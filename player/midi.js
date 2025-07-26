@@ -3,6 +3,14 @@ define(function(require) {
   let midi = require('midi')
   let metronome = require('metronome')
   let {combineOverrides,applyOverrides} = require('player/override-params')
+  let scale = require('music/scale')
+
+  let midiNoteToOctave = (note) => {
+    return Math.floor(note / 12) - 1
+  }
+  let midiNoteToChromatic = (note) => {
+    return note % 12
+  }
 
   let applyMapping = (event, note, mapping) => {
     if (mapping === 'perc') {
@@ -10,17 +18,20 @@ define(function(require) {
         35:'x', 36:'X', 37:'t', 38:'o', 39:'H', 40:'u', 41:'m', 42:'-', 43:'M',
         46:'o', 49:'#', 54:'S', 56:'T', 
       }[note] || '-'
-    } else if (mapping === 'abs') {
-      event.addc = note-60 // Not actually absolute; either need a new param or rescale to root/scale/oct
+    } else if (mapping === 'rel') {
+      event.sharp = note-60
     } else {
-      event.sharp = note-60 // Doesn't play well with add=() chords, will have to do a proper inverse mapping?
+      let root = scale.root || 0
+      event.oct = midiNoteToOctave(note - root)
+      let chromatic = midiNoteToChromatic(note - root) // Correct for root (key)
+      scale.chromaticToScale(event, chromatic, scale.current) // Should set value/sharp in event
     }
   }
 
   let midiPlayer = (patternStr, params, player, baseParams) => {
       // parse pattern string to get port/channel
       let patternArgs = patternStr.split(/\s+/)
-      let mapping = 'rel'
+      let mapping = 'abs'
       let port, channel
       patternArgs = patternArgs
         .map(arg => arg.trim())
@@ -52,9 +63,11 @@ define(function(require) {
           beat: metronome.lastBeat(),
         }
         applyMapping(event, note, mapping)
+        let oct = event.oct
         event.sound = event.value
         event = combineOverrides(event, baseParams)
         event = applyOverrides(event, params)
+        event.oct = oct // Ignore params and overrides and use the midi supplied octave
         player.play(player.processEvents([event]))
       })
       // Disconnect midi listener on player cleanup
