@@ -3,12 +3,7 @@
 =================================================================================================================================
 ==== audio ====
 midi controller support
- !!!r readout, foo=midi (but no midi devices, also chrome) Error on line 7: TypeError: Cannot read properties of undefined (reading 'port') at newMidiKnob (midi-knob.js:8:27)
- pattern syntax eg "b techbass midi 0"
-  value conversion mapping
-   root? Does not account for root, so can always play in c?
-   rel?
-    white notes map to scale degrees? Do you want to include sharp too? That will break add?
+ pattern syntax
   live envelope
  ! addc=midi{'notes'} : want to be able to use a pattern as a sequence and transpose with midi input
   And/or 'play' a continuous synth
@@ -97,6 +92,10 @@ WebAudio node graphs as first class values
    debug log function
 includes should include things they need; eg synthwave.limut should include effects.limut etc etc
  Do not include the same file multiple times; if its already included, then nop
+more midi value conversion mapping
+  root? Does not account for root, so can always play in c?
+  rel? white notes map to scale degrees? Do you want to include sharp too? That will break add?
+  custom perc mappings? syntax?
 eq{}: takes variable number of params and defines crossovers as needed
   Eg eq{0db, 10db, 0db} would be a three band 
   Multi band compression? - ie can supply a chain for each band instead of just a gain value
