@@ -20,11 +20,12 @@ define(function(require) {
       }[note] || '-'
     } else if (mapping === 'rel') {
       event.sharp = note-60
-    } else {
+    } else { // 'abs': absolute  chromatic note value
       let root = scale.root || 0
       event.oct = midiNoteToOctave(note - root)
       let chromatic = midiNoteToChromatic(note - root) // Correct for root (key)
-      scale.chromaticToScale(event, chromatic, scale.current) // Should set value/sharp in event
+      event.value = chromatic
+      event.scale = 'chromatic' // Force to chromatic scale
     }
   }
 
@@ -66,8 +67,8 @@ define(function(require) {
         let oct = event.oct
         event.sound = event.value
         event = combineOverrides(event, baseParams)
+        event.oct = oct // Ignore base params and use the midi supplied octave
         event = applyOverrides(event, params)
-        event.oct = oct // Ignore params and overrides and use the midi supplied octave
         player.play(player.processEvents([event]))
       })
       // Disconnect midi listener on player cleanup

@@ -5,14 +5,10 @@
 midi controller support
  !!!r readout, foo=midi (but no midi devices, also chrome) Error on line 7: TypeError: Cannot read properties of undefined (reading 'port') at newMidiKnob (midi-knob.js:8:27)
  pattern syntax eg "b techbass midi 0"
-  value conversion
-   abs
-    try with add, addc, chords
-    apply any override root/scale
-   root
-    same as abs but without accounting for root, so its as if any key is in C
-   rel
-    ?? Could make it so midi white notes map to scale degrees as closely as possible without regard to anything except scale length?
+  value conversion mapping
+   root? Does not account for root, so can always play in c?
+   rel?
+    white notes map to scale degrees? Do you want to include sharp too? That will break add?
   live envelope
  ! addc=midi{'notes'} : want to be able to use a pattern as a sequence and transpose with midi input
   And/or 'play' a continuous synth
@@ -22,7 +18,7 @@ midi controller support
   presets use it??
   piano synth with vel??
  bend range -1 to 1 ??
- DOCS: midi pattern, syntax, vel param
+ DOCS: midi patterns, perc, abs is chromatic, vel param
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   Segments should be added bit by bit not all at the beginning
    !! TEST with lots of user functions / sub params etc

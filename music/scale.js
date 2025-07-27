@@ -116,26 +116,6 @@ define(function (require) {
     return freq
   }
 
-  scale.chromaticToScale = (out, chromaticDegree, scaleName) => {
-    let targetScale = scales[scaleName || scale.current]
-    for (let idx = 0; idx < targetScale.length; idx++) {
-      let targetDegree = targetScale[idx]
-      if (targetDegree === chromaticDegree) {
-        out.value = idx
-        out.sharp = 0
-        return
-      }
-      if (targetDegree > chromaticDegree) {
-        targetDegree = targetScale[idx-1]
-        out.value = idx - 1
-        out.sharp = chromaticDegree - targetDegree
-        return
-      }
-    }
-    out.value = targetScale.length - 1
-    out.sharp = chromaticDegree - targetScale[targetScale.length - 1]
-  }
-
   let pitchFunc = (args, e,b) => {
     args = args || {}
     let value = args.value || 0
@@ -175,27 +155,6 @@ define(function (require) {
   assert(261.6/2, pitchFunc({value:{value:0,"#":-12}}))
   assert(261.6/2, pitchFunc({value:{value:0,"b":12}}))
   assert(261.6/4, pitchFunc({value:{value:0,"b":12},sharp:-12}))
-
-  let out
-  out = {}; scale.chromaticToScale(out, 0, undefined); assert({value:0,sharp:0}, out)
-  out = {}; scale.chromaticToScale(out, 0, 'major'); assert({value:0,sharp:0}, out)
-  out = {}; scale.chromaticToScale(out, 0, 'pentatonic'); assert({value:0,sharp:0}, out)
-  out = {}; scale.chromaticToScale(out, 2, 'major'); assert({value:1,sharp:0}, out)
-  out = {}; scale.chromaticToScale(out, 1, 'major'); assert({value:0,sharp:1}, out)
-  out = {}; scale.chromaticToScale(out, 4, 'major'); assert({value:2,sharp:0}, out)
-  out = {}; scale.chromaticToScale(out, 3, 'minor'); assert({value:2,sharp:0}, out)
-  out = {}; scale.chromaticToScale(out, 4, 'minor'); assert({value:2,sharp:1}, out)
-  out = {}; scale.chromaticToScale(out, 11, 'major'); assert({value:6,sharp:0}, out)
-  out = {}; scale.chromaticToScale(out, 11, 'minor'); assert({value:6,sharp:1}, out)
-  out = {}; scale.chromaticToScale(out, 4, 'pentatonic'); assert({value:2,sharp:0}, out)
-  out = {}; scale.chromaticToScale(out, 5, 'pentatonic'); assert({value:2,sharp:1}, out)
-  out = {}; scale.chromaticToScale(out, 6, 'pentatonic'); assert({value:2,sharp:2}, out)
-  out = {}; scale.chromaticToScale(out, 7, 'pentatonic'); assert({value:3,sharp:0}, out)
-  out = {}; scale.chromaticToScale(out, 11, 'pentatonic'); assert({value:4,sharp:2}, out)
-  out = {}; scale.chromaticToScale(out, 0, 'chromatic'); assert({value:0,sharp:0}, out)
-  out = {}; scale.chromaticToScale(out, 1, 'chromatic'); assert({value:1,sharp:0}, out)
-  out = {}; scale.chromaticToScale(out, 2, 'chromatic'); assert({value:2,sharp:0}, out)
-  out = {}; scale.chromaticToScale(out, 11, 'chromatic'); assert({value:11,sharp:0}, out)
 
   console.log('Scale tests complete')
   }
