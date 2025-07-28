@@ -894,11 +894,11 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <h4 onclick="toggleAccordion('accordion-controls')" class="accordion"> Controls</h4>
 <div id="accordion-controls" class="closed">
 <p><code>midi{}</code> Take input from an external midi controller. When called with no args, it will log inputs to the console to help identify which midi control is on which port, channel, and control/note number.</p>
-<p class='sub'><code>midi{70}</code> Take input from control 70 (or note 70 if there is no control 70). Defaults to port 0 and channel 0.</p>
-<p class='sub'><code>midi{36,9}</code> Take input from control or note 36 on channel 9. Defaults to port 0.</p>
-<p class='sub'><code>midi{'bend'}</code> Take input from the pitch bend control. Defaults to port 0 and channel 0.</p>
-<p class='sub'><code>midi{port:0,channel:0,control:70}</code> Take input from the given controller. The range is zero to one.</p>
-<p class='sub'><code>midi{port:0,channel:9,note:36}</code> Take input from the given note. The value is the velocity then the aftertouch, or zero if the note is not pressed. The range is zero to one.</p>
+<p class='sub'><code>midi{70}</code> Take input from control 70 (or note 70 if there is no control 70). Range 0 to 1 based on controller value or velocity and aftertouch. Defaults to port 0 and channel 0.</p>
+<p class='sub'><code>midi{36,9}</code> Take input from control or note 36 on channel 9. Range 0 to 1 based on controller value or velocity and aftertouch. Defaults to port 0.</p>
+<p class='sub'><code>midi{'bend'}</code> Take input from the pitch bend control, range -1 to +1. Defaults to port 0 and channel 0.</p>
+<p class='sub'><code>midi{port:0,channel:0,control:70}</code> Take input from the given controller. The range is 0 to 1.</p>
+<p class='sub'><code>midi{port:0,channel:9,note:36}</code> Take input from the given note. The value is the velocity then the aftertouch, or 0 if the note is not pressed. The range is 0 to 1.</p>
 <p><code>slider{}</code> Create a new slider control on the page, which can be used for live control of live coded expressions. The value dynamically updates to reflect the current position of the slider control.</p>
 <p class='sub'><code>slider{0.1}</code> Initial value for the slider control when it is first created. Default is 0.</p>
 <p class='sub'><code>slider{name:'Foo'}</code> Name to display with the slider. The name uniquely identifies the slider. Multiple <code>slider</code> usages in the source code with the same name will be treated as all referencing the same slider. Default is a name constructed from the player and param names.</p>

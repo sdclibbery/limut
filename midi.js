@@ -40,8 +40,10 @@ define(function(require) {
                 lastInput = `Port ${idx} Channel ${channelNumber} Controller ${controlNumber}`
               }
               if (cmd === 14) { // Bend
-                var value = msg.data[2]
-                channel.bend = (value || 0) / 127
+                var ms = msg.data[2]
+                var ls = msg.data[1]
+                var value = (ms << 7) + ls
+                channel.bend = (value - 8192) / 8191
                 lastInput = `Port ${idx} Bend ${channelNumber}`
               }
               if (cmd === 8 || cmd === 9) { // Note

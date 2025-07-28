@@ -3,13 +3,13 @@
 =================================================================================================================================
 ==== audio ====
 midi controller support
- pattern syntax
-  live envelope
  ! addc=midi{'notes'} : want to be able to use a pattern as a sequence and transpose with midi input
   And/or 'play' a continuous synth
+ pattern syntax
+  live envelope
  vel
   should update with aftertouch, at the moment you only get the vel at the time of note-on (see percussion pads)
-  all players default to 1/2 (or to 1??)
+  all players default to 1/2 (or to 1??) even without midi
   presets use it??
   piano synth with vel??
  bend range -1 to 1 ??
