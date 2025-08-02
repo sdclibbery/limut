@@ -4551,3 +4551,10 @@ h hollow, oct=1, amp*=8, fx=airverb
 k pick 072 crop 16, dur=1/2, oct=[2,3], amp/=4, cutoff=midi{'bend'}, pan=[-1,1]/2
 o oxy (049), amp/=24
 
+a ambi, oct=(1,3), drive={1/8,mix:1/32}
+s saw, oct=(2,3), addc=(0,wow,-wow), chorus, fx=reverb>>airverb, addc+=midi{1}*3
+p space midi, fx=echo{[9.5ms:10.5ms]r@f}>>airverb, amp*=this.vel*2, addc+=midi{'bend'}*2, glide=midi{1}/2
+h hollow, amp=midi{36,9}, fx=airverb, oct=(3,5), add=[0,2]r, dur=3, chorus, room, amp*=2
+h1 hollow 1, amp=midi{37,9}, fx=airverb, oct=(3,5), add=[0,2]r, dur=3, chorus, room, amp*=2
+
+

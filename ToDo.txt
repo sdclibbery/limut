@@ -3,17 +3,26 @@
 =================================================================================================================================
 ==== audio ====
 midi controller support
- ! addc=midi{'notes'} : want to be able to use a pattern as a sequence and transpose with midi input
-  And/or 'play' a continuous synth
- pattern syntax
+ pattern midi syntax
   live envelope
- vel
-  should update with aftertouch, at the moment you only get the vel at the time of note-on (see percussion pads)
+  DOCS: midi patterns, perc, abs is chromatic
+ ! addc=midi{'notes'}
+  ?? Can we do midi.notes{} instead of midi{'notes'} etc??
+  TEST: 'play' a continuous synth
+   !! doesnt update live at all:  a audiosynth, fx=osc{110}*midi{1}*0.06
+       Function is called once per beat, not once per frame
+       It's being cached?? NO its not
+   !! Plays a 0 note when note off, if new notes are played by the synth inside the beat
+       kinda makes sense, the notes are scheduled before the beat when there is still a chord of notes
+       amp*=midi{'vel'} should fix this, but it doesn't?
+  DOCS midi{'notes'} midi{'vel'}
+ velocity
+  this.vel should update with aftertouch, at the moment you only get the vel at the time of note-on (see percussion pads)
+  midi{'vel'} should include aftertouch?
   all players default to 1/2 (or to 1??) even without midi
-  presets use it??
+  presets to use this.vel; check setting param `vel=midi{'vel'}` works as expected
   piano synth with vel??
- bend range -1 to 1 ??
- DOCS: midi patterns, perc, abs is chromatic, vel param
+  DOCS
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   Segments should be added bit by bit not all at the beginning
    !! TEST with lots of user functions / sub params etc

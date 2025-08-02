@@ -13,7 +13,8 @@ define(function(require) {
     let channelNumber = args.channel || args.value1
     let lastLastInput
     return () => {
-      if (portNumber === undefined && channelNumber === undefined && controlId === undefined && noteNumber === undefined) { // If no args, dump last input to help identify
+      if (portNumber === undefined && channelNumber === undefined && controlId === undefined && noteNumber === undefined) {
+        // If no args, dump last input to help identify
         let lastInput = midi.getLastInputString()
         if (lastInput !== lastLastInput) { consoleOut(lastInput) }
         lastLastInput = lastInput

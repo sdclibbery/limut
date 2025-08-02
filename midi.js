@@ -1,12 +1,15 @@
 'use strict'
 define(function(require) {
   let consoleOut = require('console')
+  let scale = require('music/scale')
 
   let createinputChannel = () => { return {
     controller: {},
     bend: 0,
     note: {},
     listeners: {},
+    notes: [],
+    vel: 0,
   } }
 
   let midi
@@ -51,11 +54,16 @@ define(function(require) {
                 var velocity = msg.data[2]
                 channel.note[noteNumber] = (velocity || 0) / 127
                 lastInput = `Port ${idx} Channel ${channelNumber} Note ${noteNumber}`
-                if (cmd === 9) {
+                if (cmd === 9) { // Note on
+                  channel.notes.push(noteNumber)
+                  channel.vel = (velocity || 0) / 127
                   for (let k in channel.listeners) {
                     let listener = channel.listeners[k]
                     listener(noteNumber || 0, (velocity || 0) / 127)
                   }
+                } else { // Note off
+                  channel.notes = channel.notes.filter((n) => n !== noteNumber)
+                  if (channel.notes.length === 0) { channel.vel = 0 }
                 }
               }
               if (cmd === 13) { // Aftertouch
@@ -65,6 +73,7 @@ define(function(require) {
                     channel.note[n] = (velocity || 0) / 127
                   }
                 }                
+                channel.vel = (velocity || 0) / 127
                 lastInput = `Port ${idx} Channel ${channelNumber} Aftertouch`
               }
             }
@@ -83,6 +92,12 @@ define(function(require) {
     let channel = port[channelNumber]
     if (!channel) { return 0 }
     if (controlId === 'bend') { return channel.bend || 0 }
+    if (controlId === 'notes') {
+      let root = scale.root || 0
+      return (channel.notes || [])
+        .map(n => n - 60 - root)
+    }
+    if (controlId === 'vel') { return channel.vel || 0 }
     if (!!controlId && channel.controller[controlId]) { return channel.controller[controlId] }
     return channel.note[noteNumber] || 0
   }
