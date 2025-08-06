@@ -64,6 +64,10 @@ define(function(require) {
                 } else { // Note off
                   channel.notes = channel.notes.filter((n) => n !== noteNumber)
                   if (channel.notes.length === 0) { channel.vel = 0 }
+                  for (let k in channel.listeners) {
+                    let listener = channel.listeners[k]
+                    listener(noteNumber || 0, undefined) // Note off notified with undefined velocity
+                  }
                 }
               }
               if (cmd === 13) { // Aftertouch

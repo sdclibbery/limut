@@ -18,8 +18,6 @@ define(function(require) {
         35:'x', 36:'X', 37:'t', 38:'o', 39:'H', 40:'u', 41:'m', 42:'-', 43:'M',
         46:'o', 49:'#', 54:'S', 56:'T', 
       }[note] || '-'
-    } else if (mapping === 'rel') {
-      event.sharp = note-60
     } else { // 'abs': absolute  chromatic note value
       let root = scale.root || 0
       event.oct = midiNoteToOctave(note - root)
@@ -54,7 +52,17 @@ define(function(require) {
       }
       // Listen to given midi port/channel, create appropriate event and call player.play()
       midi.listen(port, channel, player.id, (note, velocity) => {
+        if (velocity === undefined) { // Note off
+          for (let k in player.events) {
+            let e = player.events[k]
+            if (!!e._noteOff && e._midiNote === note) {
+              e._noteOff() // Call note off callback so sustain envelopes can move to release phase
+            }
+          }
+          return
+        }
         let event = {
+          _midiNote: note,
           value: 0,
           dur: 1,
           vel: velocity,
@@ -69,7 +77,9 @@ define(function(require) {
         event = combineOverrides(event, baseParams)
         event.oct = oct // Ignore base params and use the midi supplied octave
         event = applyOverrides(event, params)
-        player.play(player.processEvents([event]))
+        let events = player.processEvents([event])
+        events.forEach(e => { e._noteOff = () => {} }) // Default _noteOff callback does nothing
+        player.play(events)
       })
       // Disconnect midi listener on player cleanup
       if (player.destroy !== undefined) { throw `Player ${player.id} already has destroy?!` }

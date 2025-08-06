@@ -4,8 +4,6 @@
 ==== audio ====
 midi controller support
  pattern midi syntax
-  live envelope
-  DOCS: midi patterns, perc, abs is chromatic
  ! addc=midi{'notes'}
   ?? Can we do midi.notes{} instead of midi{'notes'} etc??
   TEST: 'play' a continuous synth
@@ -49,6 +47,7 @@ Can filter an audio signal down into a control signal that can be used for ducki
 ! Fix shifter: use segmented timevars instead of lfo/osc, to implement smaller grains and random offsets
   Test tuning with guitar sample: https://upload.wikimedia.org/wikipedia/commons/6/67/AcousticGuitarSample.ogg
 drive{} and tanh{}
+rel mode for midi player and midi{'notes'}; convert to nearest diatonic note with no sharp/flat
 More node topology functions
  parallel{} - takes a number and a callback function to create chains for each, then runs them all in parallel
  series{} should also be able to take a callback function to create each chain
