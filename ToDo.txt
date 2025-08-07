@@ -3,17 +3,7 @@
 =================================================================================================================================
 ==== audio ====
 midi controller support
- pattern midi syntax
- ! addc=midi{'notes'}
-  ?? Can we do midi.notes{} instead of midi{'notes'} etc??
-  TEST: 'play' a continuous synth
-   !! doesnt update live at all:  a audiosynth, fx=osc{110}*midi{1}*0.06
-       Function is called once per beat, not once per frame
-       It's being cached?? NO its not
-   !! Plays a 0 note when note off, if new notes are played by the synth inside the beat
-       kinda makes sense, the notes are scheduled before the beat when there is still a chord of notes
-       amp*=midi{'vel'} should fix this, but it doesn't?
-  DOCS midi{'notes'} midi{'vel'}
+ ?What happens if: midi{[1,2]t4} ??
  velocity
   this.vel should update with aftertouch, at the moment you only get the vel at the time of note-on (see percussion pads)
   midi{'vel'} should include aftertouch?

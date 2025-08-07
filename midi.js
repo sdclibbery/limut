@@ -102,7 +102,7 @@ define(function(require) {
         .map(n => n - 60 - root)
     }
     if (controlId === 'vel') { return channel.vel || 0 }
-    if (!!controlId && channel.controller[controlId]) { return channel.controller[controlId] }
+    if (controlId !== undefined && channel.controller[controlId] !== undefined) { return channel.controller[controlId] }
     return channel.note[noteNumber] || 0
   }
 

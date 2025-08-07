@@ -12,7 +12,7 @@ define(function(require) {
     let noteNumber = args.note || args.value
     let channelNumber = args.channel || args.value1
     let lastLastInput
-    return () => {
+    let midiKnobValue = () => {
       if (portNumber === undefined && channelNumber === undefined && controlId === undefined && noteNumber === undefined) {
         // If no args, dump last input to help identify
         let lastInput = midi.getLastInputString()
@@ -21,9 +21,10 @@ define(function(require) {
       }
       return midi.getValue(portNumber || 0, channelNumber || 0, controlId || 0, noteNumber || 0)
     }
+    midiKnobValue.interval = 'frame'
+    return midiKnobValue
   }
 
   newMidiKnob.isStaticVarFunction = true
-  newMidiKnob.interval = 'frame'
   addVar('midi', newMidiKnob)
 })
