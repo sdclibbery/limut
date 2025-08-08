@@ -3,13 +3,16 @@
 =================================================================================================================================
 ==== audio ====
 midi controller support
+ ??How does everything work for specifying midi port and/or channel?
+  pattern, notes/vel, controls
  ?What happens if: midi{[1,2]t4} ??
+  Is it worth worrying about? Error at least? Or just do it?
  velocity
+  ?remap velocity to run 1/2 to 2, with centre as 1? vel = v^2 + v/2 + 1/2
+  all players default to vel=1 even without midi
+  all presets to use this.vel; check setting param `vel=midi{'vel'}` works as expected
   this.vel should update with aftertouch, at the moment you only get the vel at the time of note-on (see percussion pads)
   midi{'vel'} should include aftertouch?
-  all players default to 1/2 (or to 1??) even without midi
-  presets to use this.vel; check setting param `vel=midi{'vel'}` works as expected
-  piano synth with vel??
   DOCS
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   Segments should be added bit by bit not all at the beginning
@@ -30,14 +33,13 @@ Support for segmented values in per-frame update. So the per frame update pulls 
    []e@s
    Deprecate or remove []es
    []t@s etc
-! Should work but breaks with error: a audiosynth, fx=(1-osc{}>>shaper{{x}->x})*0.01
-constNode 37 can't access property "stop", e._destructor is undefined
-Can filter an audio signal down into a control signal that can be used for ducking like this:
- shaper{{x}->abs{x}}>>lpf{10}
 ! Fix shifter: use segmented timevars instead of lfo/osc, to implement smaller grains and random offsets
   Test tuning with guitar sample: https://upload.wikimedia.org/wikipedia/commons/6/67/AcousticGuitarSample.ogg
+! Should work but breaks with error: a audiosynth, fx=(1-osc{}>>shaper{{x}->x})*0.01
+ constNode 37 can't access property "stop", e._destructor is undefined
+Can filter an audio signal down into a control signal that can be used for ducking like this:
+ shaper{{x}->abs{x}}>>lpf{10}
 drive{} and tanh{}
-rel mode for midi player and midi{'notes'}; convert to nearest diatonic note with no sharp/flat
 More node topology functions
  parallel{} - takes a number and a callback function to create chains for each, then runs them all in parallel
  series{} should also be able to take a callback function to create each chain
@@ -91,11 +93,13 @@ WebAudio node graphs as first class values
 includes should include things they need; eg synthwave.limut should include effects.limut etc etc
  Do not include the same file multiple times; if its already included, then nop
 more midi value conversion mapping
-  root? Does not account for root, so can always play in c?
-  rel? white notes map to scale degrees? Do you want to include sharp too? That will break add?
+  rel mode for midi player and midi{'notes'}; convert to nearest diatonic note with no sharp/flat; do not force chromatic scale
+  root? Does not account for scale root, so can always play in c?
   custom perc mappings? syntax?
+piano with velocity
 eq{}: takes variable number of params and defines crossovers as needed
-  Eg eq{0db, 10db, 0db} would be a three band 
+  Eg eq{0db, 10db, 0db} would be a three band
+  How to arrange filters for this? clean crossover, minimum phase distortion
   Multi band compression? - ie can supply a chain for each band instead of just a gain value
 Limiter, compressor should have makeup gain param
   And good useful defaults
@@ -117,7 +121,6 @@ Create a helper lib with useful functions (think about namespacing)
   stereoflip, shifter
   oscillators
   maybe refactor existing envelope stuff actually??
-!shifter still has some crackling/artifacts, eg:  s sine, envelope=pad, fx=shifter{1}
 !!?Limiter permanently showing on??? Only on firefox desktop??
 !!!! s causes the k to get filtered somehow! But then p restores to normal!!! Something to do with the `X`?? Reencode sample???
  k perc X...
@@ -131,8 +134,7 @@ Create a helper lib with useful functions (think about namespacing)
   This is a big problem for presets like ambi, where tons of things are derived params
  ! Also  s saw, dur=1/4, oct=2, amp/=10, lpf=1000*[0,1]l1/4@e  is getting per frame on the q!
 !!phaser (and psf) are not doing normal phaser things. Rewrite them as multiple allpass in series at same freq, mixed with dry
-?Rewrite all synths using audiosynth?
-Can now rewrite all JS synths using audiosynth? ? Pitch effects tho??
+?Rewrite all synths using audiosynth? Can now rewrite all JS synths using audiosynth? ? Pitch effects tho??
 Start oscillator at a whole number of cycles after time zero
  To avoid phasing when using pad envelopes, and/or to control the starting phase of an oscillator
 AudioBufferSourceNode: Support stereo for user functions
@@ -141,13 +143,8 @@ Use []e / []es for all envelopes?
  ??Also deprecate other att/rel params; eg in pitchedperc, fm operator etc???
 Can pitch effects be segmented? Currently always go per-frame. EG  s saw, oct=2, addc=[36:!400ms,0]es, lpf=1000, amp/=4
  See evalFuncFrame. Problem is all pitch effects are combined into one function
-Can per-frame consistency be improved any further? Still seems odd that there is any inconsistency at all...
- Also consider double update rate (or 1/90) for first 150ms???
-Pitch shifter
 Hpf for chorus
 Would be nice to have a unison param with stereo spread for many base synths?
-?Treat db as units??? - compressor params in db; what else? This may not even be a good idea; would want to do amp+=3db or 3db+2...
- Either way, document clearly
 Delay or offset sub-param for glide?
 Should be a mix subparam on echo?
 Mix param for all filters, want to  s saw .75 crop 6 + 68, lpf={100,mix:1-envelope{d:500}}
