@@ -9,6 +9,7 @@ midi controller support
   Is it worth worrying about? Error at least? Or just do it?
  velocity
   ?remap velocity to run 1/2 to 2, with centre as 1? vel = v^2 + v/2 + 1/2
+   DOCS
   all players default to vel=1 even without midi
   all presets to use this.vel; check setting param `vel=midi{'vel'}` works as expected
   this.vel should update with aftertouch, at the moment you only get the vel at the time of note-on (see percussion pads)
