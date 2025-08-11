@@ -217,6 +217,7 @@ define(function (require) {
         case 'pad': env = padEnvelope(params, gainbase, 'cosine'); break
         case 'linpad': env = padEnvelope(params, gainbase, 'linear'); break
         case 'percussion': env = percussionEnvelope(params, gainbase); break
+        case 'perc': env = percussionEnvelope(params, gainbase); break
         case 'exp': env = exponentialPercussionEnvelope(params, gainbase); break
         case 'none': env = noneEnvelope(params, gainbase); break
         default: env = fullEnvelope(params, gainbase); break

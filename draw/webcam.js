@@ -47,6 +47,7 @@ define(function (require) {
             resolve(video)
           }
         }).catch(err => {
+          consoleOut(`🔴 Webcam error: '${err.message}'`)
           reject(err)
         })
       }
