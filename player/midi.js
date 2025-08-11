@@ -51,16 +51,21 @@ define(function(require) {
         channel = 0
       }
       // Listen to given midi port/channel, create appropriate event and call player.play()
-      midi.listen(port, channel, player.id, (note, velocity) => {
+      midi.listen(port, channel, player.id+player._num, (note, velocity) => {
         if (velocity === undefined) { // Note off
           for (let k in player.events) {
             let e = player.events[k]
             if (!!e._noteOff && e._midiNote === note) {
               e._noteOff() // Call note off callback so sustain envelopes can move to release phase
+              e._stopping = true
             }
+          }
+          if (!!player._shouldUnlisten && (!player.events || player.events.filter(e => !e._stopping).length === 0)) {
+            midi.stopListening(port, channel, player.id+player._num) // Nothing left playing, cleanup listener
           }
           return
         }
+        if (player._shouldUnlisten) { return } // Dont play any new events if player is being cleaned up!
         let event = {
           _midiNote: note,
           value: 0,
@@ -84,7 +89,10 @@ define(function(require) {
       // Disconnect midi listener on player cleanup
       if (player.destroy !== undefined) { throw `Player ${player.id} already has destroy?!` }
       player.destroy = () => {
-        midi.stopListening(port, channel, player.id)
+        player._shouldUnlisten = true
+        if (!!player.events && player.events.length === 0) {
+          midi.stopListening(port, channel, player.id+player._num)
+        }
       }
   }
 

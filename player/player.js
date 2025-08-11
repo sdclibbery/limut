@@ -66,6 +66,7 @@ define((require) => {
     return result
   }
 
+  let playerNumber = 0
   let player = (playerId, playerType, patternStr, paramsStr, linenum) => {
     if (!patternStr) { patternStr = '0' } // Default to '0' if missing pattern string
     if (!paramsStr) { paramsStr = '' } // Default if missing params string
@@ -85,9 +86,11 @@ define((require) => {
     // Normal player
     let player = {
       id: playerId,
+      _num: playerNumber,
       type: playerType,
       keepState: {},
     }
+    playerNumber++
     player.play = (es) => {
       player.events ||= []
       let timeNow = metronome.timeNow()

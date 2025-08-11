@@ -3,13 +3,18 @@
 =================================================================================================================================
 ==== audio ====
 midi controller support
+ !!! electropn version not doing webcam? webcam:62/95 "Could not start video source"
  ??How does everything work for specifying midi port and/or channel?
   pattern, notes/vel, controls
+  Must be consistent order for everything
+   midi-knob: control/note/thing, channel, port:port
+   midi pattern: mapping, port, channel
+   !! PORT IS NOT CONSISTENT!
  ?What happens if: midi{[1,2]t4} ??
   Is it worth worrying about? Error at least? Or just do it?
  velocity
   ?remap velocity to run 1/2 to 2, with centre as 1? vel = v^2 + v/2 + 1/2
-   DOCS
+   !!DOCS!
   all players default to vel=1 even without midi
   all presets to use this.vel; check setting param `vel=midi{'vel'}` works as expected
   this.vel should update with aftertouch, at the moment you only get the vel at the time of note-on (see percussion pads)
