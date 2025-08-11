@@ -3,8 +3,6 @@
 =================================================================================================================================
 ==== audio ====
 midi controller support
- !!! electropn version not doing webcam? webcam:62/95 "Could not start video source"
-  In use by other app? But that doesn't seem to fix it? How to find what app its in use by???
  ??How does everything work for specifying midi port and/or channel?
   pattern, notes/vel, controls
   Must be consistent order for everything
