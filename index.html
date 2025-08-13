@@ -900,9 +900,10 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>midi{}</code> Take input from an external midi controller. When called with no args, it will log inputs to the console to help identify which midi control is on which port, channel, and control/note number.</p>
 <p class='sub'><code>midi{70}</code> Take input from control 70 (or note 70 if there is no control 70). Range 0 to 1 based on controller value or velocity and aftertouch. Defaults to port 0 and channel 0.</p>
 <p class='sub'><code>midi{36,9}</code> Take input from control or note 36 on channel 9. Range 0 to 1 based on controller value or velocity and aftertouch. Defaults to port 0.</p>
+<p class='sub'><code>midi{36,9,1}</code> Take input from control or note 36 on channel 9 of port (device) 1. Range 0 to 1 based on controller value, or velocity and aftertouch for a note.</p>
 <p class='sub'><code>midi{'bend'}</code> Take input from the pitch bend control, range -1 to +1. Defaults to port 0 and channel 0.</p>
-<p class='sub'><code>midi{port:0,channel:0,control:70}</code> Take input from the given controller. The range is 0 to 1.</p>
-<p class='sub'><code>midi{port:0,channel:9,note:36}</code> Take input from the given note. The value is the velocity then the aftertouch, or 0 if the note is not pressed. The range is 0 to 1.</p>
+<p class='sub'><code>midi{control:70,channel:0,port:0}</code> Take input from the given controller. The range is 0 to 1.</p>
+<p class='sub'><code>midi{note:36,channel:9,port:0}</code> Take input from the given note. The value is the velocity then the aftertouch, or 0 if the note is not pressed. The range is 0 to 1.</p>
 <p class='sub'><code>midi{'notes'}</code> Chord of currently playing notes, in chromatic semitones from the currently set root, from middle C. Defaults to port 0 and channel 0.</p>
 <p class='sub'><code>midi{'vel'}</code> Velocity/aftertouch of the current playing notes. Defaults to port 0 and channel 0.</p>
 <p><code>slider{}</code> Create a new slider control on the page, which can be used for live control of live coded expressions. The value dynamically updates to reflect the current position of the slider control.</p>
