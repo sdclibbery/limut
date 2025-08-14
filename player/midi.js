@@ -44,8 +44,8 @@ define(function(require) {
         port = 0
         channel = parseInt(patternArgs[0], 10) || 0
       } else if (patternArgs.length === 2) {
-        port = parseInt(patternArgs[0], 10) || 0
-        channel = parseInt(patternArgs[1], 10) || 0
+        channel = parseInt(patternArgs[0], 10) || 0
+        port = parseInt(patternArgs[1], 10) || 0
       } else {
         port = 0
         channel = 0

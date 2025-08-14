@@ -3,9 +3,6 @@
 =================================================================================================================================
 ==== audio ====
 midi controller support
- ??How does everything work for specifying midi port and/or channel?
-  pattern: should allow `channel port` and also `mapping channel port`
-   DOCS
  ?What happens if: midi{[1,2]t4} ??
   Is it worth worrying about? Error at least? Or just do it?
  velocity
