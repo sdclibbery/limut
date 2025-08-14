@@ -8,6 +8,7 @@ define(function(require) {
   require('functions/maths')
   require('functions/sliders')
   require('functions/midi-knob')
+  require('functions/gamepad')
   require('functions/debug')
   require('predefined-var-defs')
   let mainVars = require('main-vars')
