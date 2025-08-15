@@ -7,10 +7,10 @@ define(function(require) {
   let blankArgs = {}
   let newMidiKnob = (args, context) => {
     args = args || blankArgs
-    let controlId = args.control || args.value
-    let noteNumber = args.note || args.value
-    let channelNumber = args.channel || args.value1
-    let portNumber = args.port || args.value2
+    let controlId = args.control !== undefined ? args.control : args.value
+    let noteNumber = args.note !== undefined ? args.note : args.value
+    let channelNumber = args.channel !== undefined ? args.channel : args.value1
+    let portNumber = args.port !== undefined ? args.port : args.value2
     let lastLastInput
     let midiKnobValue = () => {
       if (portNumber === undefined && channelNumber === undefined && controlId === undefined && noteNumber === undefined) {

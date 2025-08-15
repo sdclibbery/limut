@@ -3,10 +3,12 @@
 =================================================================================================================================
 ==== audio ====
 gamepad support
- pad function
-  buttons? how?
-  value mapping: vel is 1/2 to 2 ...
+ gamepad{}
   DOCS
+ gamepad player
+  buttons only, just map direct to values, will have to poll
+  DOCS
+gamepad{} value mapping: helper function to map 0->1 to 1/2->2 ?
 midi controller support
  ?What happens if: midi{[1,2]t4} ??
   Is it worth worrying about? Error at least? Or just do it?

@@ -6,11 +6,12 @@ define(function(require) {
   let blankArgs = {}
   let newGamepad = (args, context) => {
     args = args || blankArgs
-    let controlNumber = args.axes || args.value
-    let padNumber = args.pad || args.value1
+    let buttonNumber = args.button
+    let axisNumber = args.axis !== undefined ? args.axis : args.value
+    let padNumber = args.pad !== undefined ? args.pad : args.value1
     let lastStr
     let gamepadValue = () => {
-      if (padNumber === undefined && controlNumber === undefined) {
+      if (padNumber === undefined && axisNumber === undefined && buttonNumber === undefined) {
         let str = 'Gamepads:\n'
         navigator.getGamepads().forEach((pad, i) => {
             str += `Pad ${i}: `
@@ -23,7 +24,8 @@ define(function(require) {
         return 0
       }
       let gamepad = navigator.getGamepads()[padNumber || 0]
-      return gamepad && gamepad.axes[controlNumber || 0]
+      if (buttonNumber !== undefined) { return gamepad && gamepad.buttons[buttonNumber].value }
+      return gamepad && gamepad.axes[axisNumber || 0]
     }
     gamepadValue.interval = 'frame'
     return gamepadValue
