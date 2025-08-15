@@ -9,6 +9,7 @@ define(function(require) {
   require('functions/sliders')
   require('functions/midi-knob')
   require('functions/gamepad')
+  var gamepad = require('player/gamepad')
   require('functions/debug')
   require('predefined-var-defs')
   let mainVars = require('main-vars')
@@ -119,6 +120,13 @@ define(function(require) {
     let beatTime = metronome.beatTime(now)
     let spectrum = system.spectrum()
     let pulse = spectrum[0]*spectrum[0] + spectrum[3]*spectrum[3]
+    try {
+      gamepad.perFrameUpdate(now)
+    } catch (e) {
+      consoleOut('🔴 Frame update Error from gamepads: ' + e)
+      console.log(e)
+      clearCallTree()
+    }
     if (beat) {
       mainVars.update(Math.floor(beatTime), beatTime)
       beatReadout.innerText = `${beat.count}`.padStart(4, ' ')

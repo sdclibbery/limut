@@ -6,7 +6,6 @@ gamepad support
  gamepad{}
   DOCS
  gamepad player
-  buttons only, just map direct to values, will have to poll
   DOCS
 gamepad{} value mapping: helper function to map 0->1 to 1/2->2 ?
 midi controller support

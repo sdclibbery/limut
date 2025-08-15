@@ -8,6 +8,7 @@ define((require) => {
   let continuousPlayer = require('player/continuous')
   var followPlayer = require('player/follow')
   var midiPlayer = require('player/midi')
+  var {gamepadPlayer} = require('player/gamepad')
   var expandChords = require('player/expand-chords')
   let {evalParamFrame} = require('player/eval-param')
   let {mainParam,mainParamUnits,subParam} = require('player/sub-param')
@@ -135,6 +136,11 @@ define((require) => {
       let params = parseParams(paramsStr, playerId)
       player.getEventsForBeatBase = () => [] // Cannot predict events for the next beat so nothing here
       midiPlayer(patternStr.slice(4).trim(), params, player, playerFactory.baseParams)
+    } else if (patternStr.startsWith('gamepad')) {
+      // Gamepad player
+      let params = parseParams(paramsStr, playerId)
+      player.getEventsForBeatBase = () => [] // Cannot predict events for the next beat so nothing here
+      gamepadPlayer(patternStr.slice(4).trim(), params, player, playerFactory.baseParams)
     } else if (playerFactory.stopped) {
       player.getEventsForBeatBase = () => []
     } else {
