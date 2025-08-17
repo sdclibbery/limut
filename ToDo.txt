@@ -3,15 +3,13 @@
 =================================================================================================================================
 ==== audio ====
 gamepad support
- gamepad{}
-  DOCS
- gamepad player
-  ? Update vel dynamically from button input - eg triggers on chromium
-  DOCS
-gamepad{} value mapping: helper function to map 0->1 to 1/2->2 ?
+ gamepad player: Update vel dynamically from button input - eg triggers on chromium
+ ?gamepad{} value mapping: helper function to map 0->1 to 1/2->2 ?
+ ?allow custom button -> degree mapping?
 midi controller support
  ?What happens if: midi{[1,2]t4} ??
   Is it worth worrying about? Error at least? Or just do it?
+ ?Same for gamepads!
  velocity
   ?remap velocity to run 1/2 to 2, with centre as 1? vel = v^2 + v/2 + 1/2
    !!DOCS!

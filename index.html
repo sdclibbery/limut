@@ -408,6 +408,8 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>1 * 2</code> Repeat a pattern; the first pattern plays a given number of times. For example, <code>12 * 2</code> is the same as <code>1212</code></p>
 <p><code>now 01</code> Play the pattern starting on the next beat, rather than as if it had been playing from beat 0. In the example, the pattern <code>0123</code> will play starting from the <code>0</code> whatever beat the player is started on.</p>
 <p><code>follow p1</code> Use <code>follow</code> to follow another player (named 'p1' in the example) pattern</p>
+<p><code>gamepad</code> Use <code>gamepad</code> to generate notes from a gamepad controller rather than a pattern. The gamepad buttons will be mapped to note degrees in some arbitrary way.</p>
+<p class='sub'><code>gamepad 1</code> use input from gamepad 1 (default is 0)</p>
 <p><code>midi</code> Use <code>midi</code> to generate notes from a midi controller rather than a pattern. By default the player will be set to a chromatic scale and the note value and oct will be such as to map the keyboard note played to the same note played in limut.</p>
 <p class='sub'><code>midi 9</code> use input from midi channel 9 (default is 0)</p>
 <p class='sub'><code>midi 9 1</code> use input from midi channel 9 on port (device) 1 (default is 0)</p>
@@ -897,6 +899,12 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 </div>
 <h4 onclick="toggleAccordion('accordion-controls')" class="accordion"> Controls</h4>
 <div id="accordion-controls" class="closed">
+<p><code>gamepad{}</code> Take input from an external gamepad controller. When called with no args, it will log inputs to the console to help identify which gamepad control is on which button or axis number.</p>
+<p class='sub'><code>gamepad{1}</code> Take input from axis 1 on the gamepad. Range -1 to 1 based on axis value. Defaults to gamepad 0.</p>
+<p class='sub'><code>gamepad{2,1}</code> Take input from axis 2 on gamepad 1. Range -1 to 1 based on axis value.</p>
+<p class='sub'><code>gamepad{button:0}</code> Take input from button 0 on the gamepad. Range 0 to 1 based on button press value. Defaults to gamepad 0.</p>
+<p class='sub'><code>gamepad{axis:1}</code> Take input from axis 1 on the gamepad. Range -1 to 1 based on axis value. Defaults to gamepad 0.</p>
+<p class='sub'><code>gamepad{pad:1}</code> Take input from gamepad 1. Defaults to axis 0.</p>
 <p><code>midi{}</code> Take input from an external midi controller. When called with no args, it will log inputs to the console to help identify which midi control is on which port, channel, and control/note number.</p>
 <p class='sub'><code>midi{70}</code> Take input from control 70 (or note 70 if there is no control 70). Range 0 to 1 based on controller value or velocity and aftertouch. Defaults to port 0 and channel 0.</p>
 <p class='sub'><code>midi{36,9}</code> Take input from control or note 36 on channel 9. Range 0 to 1 based on controller value or velocity and aftertouch. Defaults to port 0.</p>
