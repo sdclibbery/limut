@@ -14,10 +14,11 @@ define(function(require) {
       if (padNumber === undefined && axisNumber === undefined && buttonNumber === undefined) {
         let str = 'Gamepads:\n'
         navigator.getGamepads().forEach((pad, i) => {
-            str += `Pad ${i}: `
-            str += `axes: ${pad.axes.join(', ')} `
-            str += `buttons: ${pad.buttons.map(b => b.value).join(', ')}`
-            str += '\n'
+          if (!pad) { return }
+          str += `Pad ${i}: `
+          str += `axes: ${pad.axes.join(', ')} `
+          str += `buttons: ${pad.buttons.map(b => b.value).join(', ')}`
+          str += '\n'
         })
         if (lastStr != str) { consoleOut(str) }
         lastStr = str
