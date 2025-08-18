@@ -2,7 +2,9 @@
 =================================================================================================================================
 =================================================================================================================================
 ==== audio ====
+!!!!!!! Electron crashes on any sample play...
 gamepad support
+ !!feedback: dpad notes were a nuisance
  gamepad player: Update vel dynamically from button input - eg triggers on chromium
  ?gamepad{} value mapping: helper function to map 0->1 to 1/2->2 ?
  ?allow custom button -> degree mapping?
