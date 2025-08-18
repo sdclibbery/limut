@@ -410,7 +410,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>follow p1</code> Use <code>follow</code> to follow another player (named 'p1' in the example) pattern</p>
 <p><code>gamepad</code> Use <code>gamepad</code> to generate notes from a gamepad controller rather than a pattern. The gamepad buttons will be mapped to note degrees in some arbitrary way.</p>
 <p class='sub'><code>gamepad 1</code> use input from gamepad 1 (default is 0)</p>
-<p><code>midi</code> Use <code>midi</code> to generate notes from a midi controller rather than a pattern. By default the player will be set to a chromatic scale and the note value and oct will be such as to map the keyboard note played to the same note played in limut.</p>
+<p><code>midi</code> Use <code>midi</code> to generate notes from a midi controller rather than a pattern. By default the player will be set to a chromatic scale and the note value and oct will be such as to map the keyboard note played to the same note played in limut. <code>this.vel</code> will include the note velocity, mapped from 1/2 to 2.</p>
 <p class='sub'><code>midi 9</code> use input from midi channel 9 (default is 0)</p>
 <p class='sub'><code>midi 9 1</code> use input from midi channel 9 on port (device) 1 (default is 0)</p>
 <p class='sub'><code>midi perc 9 0</code> use input from midi channel 9 port 0 and treat it as percussion, so instead of mapping to a chromatic note scale value, map to limut percussion samples. For example, midi note 36 (Bass drum 1) maps to 'X' (Heavy kick)</p>
@@ -913,7 +913,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>midi{control:70,channel:0,port:0}</code> Take input from the given controller. The range is 0 to 1.</p>
 <p class='sub'><code>midi{note:36,channel:9,port:0}</code> Take input from the given note. The value is the velocity then the aftertouch, or 0 if the note is not pressed. The range is 0 to 1.</p>
 <p class='sub'><code>midi{'notes'}</code> Chord of currently playing notes, in chromatic semitones from the currently set root, from middle C. Defaults to port 0 and channel 0.</p>
-<p class='sub'><code>midi{'vel'}</code> Velocity/aftertouch of the current playing notes. Defaults to port 0 and channel 0.</p>
+<p class='sub'><code>midi{'vel'}</code> Velocity/aftertouch of the current playing notes, mapped from 1/2 to 2. Defaults to port 0 and channel 0.</p>
 <p><code>slider{}</code> Create a new slider control on the page, which can be used for live control of live coded expressions. The value dynamically updates to reflect the current position of the slider control.</p>
 <p class='sub'><code>slider{0.1}</code> Initial value for the slider control when it is first created. Default is 0.</p>
 <p class='sub'><code>slider{name:'Foo'}</code> Name to display with the slider. The name uniquely identifies the slider. Multiple <code>slider</code> usages in the source code with the same name will be treated as all referencing the same slider. Default is a name constructed from the player and param names.</p>
