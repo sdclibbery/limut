@@ -4,19 +4,23 @@
 ==== audio ====
 gamepad support
  nodpad option: if standard mapping, then ignore buttons 12,13,14,15
- gamepad player: Update vel dynamically from button input - eg triggers on chromium
+  Should be case insensitive
+  Also test on firefox, should log warning if not standard mapping
+  DOCS
+ ??gamepad player: Update vel dynamically from button input - eg triggers on chromium
+velocity
+  all players default to vel=1 even without midi
+  ALL presets to use this.vel; check setting param `vel=midi{'vel'}` works as expected
+   And give them cutoff etc too where possible
+  this.vel should update with aftertouch, at the moment you only get the vel at the time of note-on (see percussion pads)
+  midi{'vel'} should include aftertouch?
+  DOCS
+webcam: can choose device if do getUserMedia then enumerateDevices then getUserMedia AGAIN asking for the specific label
+ Setup webcam synth to support multiple cameras
 midi controller support
  ?What happens if: midi{[1,2]t4} ??
   Is it worth worrying about? Error at least? Or just do it?
   ?Same for gamepads!
- velocity
-  ?remap velocity to run 1/2 to 2, with centre as 1? vel = v^2 + v/2 + 1/2
-   !!DOCS!
-  all players default to vel=1 even without midi
-  all presets to use this.vel; check setting param `vel=midi{'vel'}` works as expected
-  this.vel should update with aftertouch, at the moment you only get the vel at the time of note-on (see percussion pads)
-  midi{'vel'} should include aftertouch?
-  DOCS
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   Segments should be added bit by bit not all at the beginning
    !! TEST with lots of user functions / sub params etc

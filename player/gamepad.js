@@ -41,7 +41,15 @@ define(function(require) {
 
   let gamepadPlayer = (patternStr, params, player, baseParams) => {
     // parse pattern string to get pad
-    let padNumber = parseInt(patternStr.trim(),10) || 0
+    let nodpad = false
+    let patternArgs = patternStr.split(/\s+/)
+    patternArgs = patternArgs
+      .map(arg => arg.trim())
+      .filter(arg => arg !== '')
+      .map(arg => !isNaN(parseInt(arg,10)) ? parseInt(arg,10) : arg)
+    if (patternArgs.filter(a => a === 'nodpad').length > 0) { nodpad = true }
+    patternArgs = patternArgs.filter(a => typeof a === 'number')
+    let padNumber = patternArgs.length > 0 ? patternArgs[0] : 0
     // listen for presses
     addListener(padNumber, player.id+player._num, (buttonIdx, value) => {
       if (value === undefined) { // Note off
@@ -58,6 +66,7 @@ define(function(require) {
         return
       }
       if (player._shouldUnlisten) { return } // Dont play any new events if player is being cleaned up!
+      if (nodpad && buttonIdx >= 12 && buttonIdx <= 15) { return } // Ignore dpad buttons if nodpad
       let event = {
         _gamepadNote: buttonIdx,
         value: buttonIdx,
