@@ -3,8 +3,7 @@
 =================================================================================================================================
 ==== audio ====
 gamepad support
- ?allow custom button -> degree mapping?
-  !!feedback: dpad notes were a nuisance
+ nodpad option: if standard mapping, then ignore buttons 12,13,14,15
  gamepad player: Update vel dynamically from button input - eg triggers on chromium
 midi controller support
  ?What happens if: midi{[1,2]t4} ??

@@ -15,7 +15,7 @@ define(function(require) {
         let str = 'Gamepads:\n'
         navigator.getGamepads().forEach((pad, i) => {
           if (!pad) { return 0 }
-          str += `Pad ${i}: `
+          str += `Pad ${i} ${pad.id} ${pad.mapping}:\n`
           str += `axes: ${pad.axes.join(', ')} `
           str += `buttons: ${pad.buttons.map(b => b.value).join(', ')}`
           str += '\n'
