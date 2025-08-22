@@ -100,6 +100,9 @@ define((require) => {
   }
 
   let evalParamValueWithMemoisation = (evalRecurse, value, event, beat, options) => {
+    if (typeof value === 'function' && value.isNonTemporal && shouldForcePerEvent(value)) { // static var functions include user input like slider, midi, gamepad etc which can't be forced per event just by forcing the beat time to the event time when evalling. So force them here too by memoising.
+      beat = event.count
+    }
     if (value === undefined) { return value }
     let memoKey
     if (!options.doNotMemoise) { // Note: Memoisation is not just a performance optimisation, it actually implements @e

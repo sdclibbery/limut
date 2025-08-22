@@ -21,7 +21,7 @@ define(function(require) {
       }
       return midi.getValue(portNumber || 0, channelNumber || 0, controlId || 0, noteNumber || 0)
     }
-    midiKnobValue.interval = 'frame'
+    midiKnobValue.isNonTemporal = true
     return midiKnobValue
   }
 

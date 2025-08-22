@@ -11,7 +11,7 @@ define(function(require) {
     let padNumber = args.pad !== undefined ? args.pad : args.value1
     let lastStr
     let gamepadValue = () => {
-      if (padNumber === undefined && axisNumber === undefined && buttonNumber === undefined) {
+      if (padNumber === undefined && axisNumber === undefined && buttonNumber === undefined) { // log gamepad info if no params
         let str = 'Gamepads:\n'
         navigator.getGamepads().forEach((pad, i) => {
           if (!pad) { return 0 }
@@ -28,7 +28,7 @@ define(function(require) {
       if (buttonNumber !== undefined) { return gamepad && gamepad.buttons[buttonNumber].value || 0 }
       return gamepad && gamepad.axes[axisNumber || 0] || 0
     }
-    gamepadValue.interval = 'frame'
+    gamepadValue.isNonTemporal = true
     return gamepadValue
   }
   newGamepad.isStaticVarFunction = true

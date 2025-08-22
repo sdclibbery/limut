@@ -4557,4 +4557,21 @@ p space midi, fx=echo{[9.5ms:10.5ms]r@f}>>airverb, amp*=this.vel*2, addc+=midi{'
 h hollow, amp=midi{36,9}, fx=airverb, oct=(3,5), add=[0,2]r, dur=3, chorus, room, amp*=2
 h1 hollow 1, amp=midi{37,9}, fx=airverb, oct=(3,5), add=[0,2]r, dur=3, chorus, room, amp*=2
 
-
+/// Gamepad testing
+// r readout gamepad
+// r readout, add=gamepad{}
+// r readout, add=gamepad{0}
+// r readout, add=gamepad{0}@e
+// r readout, add=gamepad{0,0}
+// r readout, add=gamepad{axis:0}
+// r readout, add=gamepad{button:0,pad:0}
+// r ping gamepad, envelope='full', addc=gamepad{0}
+// r ping gamepad 0, oct=3
+///
+// r ping, addc=12*gamepad{0}@e, oct=3, dur=2
+// r readout, add=gamepad{0}
+// r readout, add=gamepad{0}@e
+// r readout, add=gamepad{0}@f
+// r readout, dur=2, fade, add=gamepad{0}@e
+// r readout, dur=2, fade, add=midi{1}@e
+// r readout, dur=2, fade, add=slider@e

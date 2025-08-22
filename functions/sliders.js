@@ -66,9 +66,11 @@ define(function(require) {
     }
     updateSliderUI(slider)
     slider.marked = true
-    return () => {
+    let sliderValue = () => {
       return slider.value || 0
     }
+    sliderValue.isNonTemporal = true
+    return sliderValue
   }
 
   let gc_reset = () => {
