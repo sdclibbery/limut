@@ -3,11 +3,6 @@ define(function(require) {
   let consoleOut = require('console')
   let scale = require('music/scale')
 
-  let velocityMapping = (v) => {
-    let vf = (v/127) || 0
-    return vf*(vf + 1/2) + 1/2 // So vel 0->127 runs from 1/2 to 2 with 63 giving 1
-  }
-
   let createinputChannel = () => { return {
     controller: {},
     bend: 0,
@@ -56,15 +51,15 @@ define(function(require) {
               }
               if (cmd === 8 || cmd === 9) { // Note
                 var noteNumber = msg.data[1]
-                var velocity = velocityMapping(msg.data[2])
-                channel.note[noteNumber] = velocity
+                var velocity = msg.data[2] / 127
+                channel.note[noteNumber] = velocity || 0
                 lastInput = `Port ${idx} Channel ${channelNumber} Note ${noteNumber}`
                 if (cmd === 9) { // Note on
                   channel.notes.push(noteNumber)
-                  channel.vel = velocity
+                  channel.vel = velocity || 0
                   for (let k in channel.listeners) {
                     let listener = channel.listeners[k]
-                    listener(noteNumber || 0, velocity)
+                    listener(noteNumber || 0, velocity || 0)
                   }
                 } else { // Note off
                   channel.notes = channel.notes.filter((n) => n !== noteNumber)
@@ -76,13 +71,13 @@ define(function(require) {
                 }
               }
               if (cmd === 13) { // Aftertouch
-                var velocity = velocityMapping(msg.data[1])
+                var aftertouch = msg.data[1] / 127
                 for (let n in channel.note) {
                   if (channel.note[n] > 0) {
-                    channel.note[n] = velocity
+                    channel.note[n] = aftertouch || 0
                   }
-                }                
-                channel.vel = velocity
+                }
+                channel.vel = aftertouch || 0
                 lastInput = `Port ${idx} Channel ${channelNumber} Aftertouch`
               }
             }
