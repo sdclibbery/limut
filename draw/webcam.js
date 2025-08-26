@@ -3,6 +3,7 @@ define(function (require) {
   let system = require('draw/system')
   let common = require('draw/shadercommon')
   let consoleOut = require('console')
+  let {evalParamEvent} = require('player/eval-param')
 
   let fragSource = `#version 300 es
   precision highp float;
@@ -28,7 +29,7 @@ define(function (require) {
   `
 
   let accessWebcam = async (deviceIdx) => {
-    await navigator.mediaDevices.getUserMedia({ video: true }) // ask for user permission
+    await navigator.mediaDevices.getUserMedia({ video: true }) // Ask for user permission
     let devices = await navigator.mediaDevices.enumerateDevices() // Enumerate all devices
     devices = devices.filter(device => device.kind === 'videoinput')
     devices.forEach((device,idx) => { consoleOut(`: Found Webcam: ${idx}: ${device.label}`) })
@@ -46,11 +47,10 @@ define(function (require) {
     }
     return video
   }
-  
-  let texture
-  let lastUpdateTime
+
   let getWebcamTexture = (deviceIdx) => {
-    if (texture) { return texture }
+    let texture
+    let lastUpdateTime
     texture = {}
     texture.tex = system.gl.createTexture()
     let video
@@ -70,29 +70,30 @@ define(function (require) {
     return texture
   }
 
-  let vtxCompiled
-  let shader
+  let devices = {}
   return (params) => {
-    let deviceIdx = params.device || 0
-    if (shader === undefined) {
-      if (!vtxCompiled) {
-        vtxCompiled = system.loadShader(common.vtxShader, system.gl.VERTEX_SHADER)
+    let deviceIdx = evalParamEvent(params.device, params) || 0
+    if (devices[deviceIdx] === undefined) {
+      devices[deviceIdx] = {}
+      let device = devices[deviceIdx]
+      if (!device.vtxCompiled) {
+        device.vtxCompiled = system.loadShader(common.vtxShader, system.gl.VERTEX_SHADER)
       }
       let program
       try {
         program = system.loadProgram([
-          vtxCompiled,
+          device.vtxCompiled,
           system.loadShader(fragSource, system.gl.FRAGMENT_SHADER)
         ])
       } catch (e) {
-        shader.program = null
+        device.shader.program = null
         throw e
       }
-      shader = {}
-      shader.program = program || null
-      common.getCommonUniforms(shader)
-      shader.texture = getWebcamTexture(deviceIdx)
+      device.shader = {}
+      device.shader.program = program || null
+      common.getCommonUniforms(device.shader)
+      device.shader.texture = getWebcamTexture(deviceIdx)
     }
-    return shader
+    return devices[deviceIdx].shader
   }
 })

@@ -3,9 +3,7 @@
 =================================================================================================================================
 ==== audio ====
 webcam: can choose device if do getUserMedia then enumerateDevices then getUserMedia AGAIN asking for the specific label
- Allow choosing webcam by index
- Allow switching webcam while running
- Allow setting texture resolution? Allow non square??
+ ?Use mirror texture wrap mode??
  Allow multiple webcams at once; texture per device?
 dmx lighting support
 velocity
