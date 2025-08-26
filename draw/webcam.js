@@ -27,45 +27,42 @@ define(function (require) {
   }
   `
 
-  let video
-  let accessWebcam = () => {
-    video = document.createElement('video')
+  let accessWebcam = async (deviceIdx) => {
+    await navigator.mediaDevices.getUserMedia({ video: true }) // ask for user permission
+    let devices = await navigator.mediaDevices.enumerateDevices() // Enumerate all devices
+    devices = devices.filter(device => device.kind === 'videoinput')
+    devices.forEach((device,idx) => { consoleOut(`: Found Webcam: ${idx}: ${device.label}`) })
+    let deviceId = devices[deviceIdx % devices.length].deviceId
+    let constraints = { video: { deviceId:{exact: deviceId}, width:{ideal: 512}, height:{ideal: 512} } }
+    let mediaStream = await navigator.mediaDevices.getUserMedia(constraints) // Request specific device
+    consoleOut(`: Using Webcam: ${mediaStream.getTracks()[0].label}`)
+    let video = document.createElement('video')
+    video.ready = false
     video.addEventListener('playing', () => { video.ready = true })
-    return new Promise((resolve, reject) => {
-      const mediaConstraints = { audio: false, video: { 
-          width: {ideal: 512}, 
-          height: {ideal: 512},
-        }
-      }
-      navigator.mediaDevices.getUserMedia(
-        mediaConstraints).then(mediaStream => {
-          consoleOut(`: Using Webcam: ${mediaStream.getTracks()[0].label}`)
-          video.srcObject = mediaStream
-          video.setAttribute('playsinline', true)
-          video.onloadedmetadata = (e) => {
-            video.play()
-            resolve(video)
-          }
-        }).catch(err => {
-          consoleOut(`🔴 Webcam error: '${err.message}'`)
-          reject(err)
-        })
-      }
-    )
+    video.srcObject = mediaStream
+    video.setAttribute('playsinline', true)
+    video.onloadedmetadata = (e) => {
+      video.play()
+    }
+    return video
   }
   
   let texture
   let lastUpdateTime
-  let getWebcamTexture = () => {
+  let getWebcamTexture = (deviceIdx) => {
     if (texture) { return texture }
     texture = {}
     texture.tex = system.gl.createTexture()
-    accessWebcam().then(v => {
-      texture.width = v.videoWidth
-      texture.height = v.videoHeight
+    let video
+    accessWebcam(deviceIdx).then(v => {
+      video = v
+    }).catch(err => {
+      consoleOut(`🔴 Webcam error: '${err.message}'`)
     })
     texture.update = (state) => {
-      if (!video.ready || state.time === lastUpdateTime) { return }
+      if (!video || !video.ready || state.time === lastUpdateTime) { return }
+      texture.width = video.videoWidth
+      texture.height = video.videoHeight
       lastUpdateTime = state.time
       system.gl.bindTexture(system.gl.TEXTURE_2D, texture.tex)
       system.gl.texImage2D(system.gl.TEXTURE_2D, 0, system.gl.RGBA, texture.width, texture.height, 0, system.gl.RGBA, system.gl.UNSIGNED_BYTE, video)
@@ -76,6 +73,7 @@ define(function (require) {
   let vtxCompiled
   let shader
   return (params) => {
+    let deviceIdx = params.device || 0
     if (shader === undefined) {
       if (!vtxCompiled) {
         vtxCompiled = system.loadShader(common.vtxShader, system.gl.VERTEX_SHADER)
@@ -93,7 +91,7 @@ define(function (require) {
       shader = {}
       shader.program = program || null
       common.getCommonUniforms(shader)
-      shader.texture = getWebcamTexture()
+      shader.texture = getWebcamTexture(deviceIdx)
     }
     return shader
   }

@@ -2,8 +2,13 @@
 =================================================================================================================================
 =================================================================================================================================
 ==== audio ====
+webcam: can choose device if do getUserMedia then enumerateDevices then getUserMedia AGAIN asking for the specific label
+ Allow choosing webcam by index
+ Allow switching webcam while running
+ Allow setting texture resolution? Allow non square??
+ Allow multiple webcams at once; texture per device?
+dmx lighting support
 velocity
-  ??vel should be 0-1, and there should be a very easy way to map 0-1 to 1/2-2??
   all players default to vel=1 even without midi
   ALL presets to use this.vel; check setting param `vel=midi{'vel'}` works as expected
    And give them cutoff etc too where possible
@@ -16,12 +21,6 @@ gamepad support
   Also test on firefox, should log warning if not standard mapping
   DOCS
  ??gamepad player: Update vel dynamically from button input - eg triggers on chromium
-webcam: can choose device if do getUserMedia then enumerateDevices then getUserMedia AGAIN asking for the specific label
- Setup webcam synth to support multiple cameras - https://github.com/tony-xlh/getUserMedia-multiple-camera
-midi controller support
- ?What happens if: midi{[1,2]t4} ??
-  Is it worth worrying about? Error at least? Or just do it?
-  ?Same for gamepads!
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   Segments should be added bit by bit not all at the beginning
    !! TEST with lots of user functions / sub params etc
@@ -100,6 +99,10 @@ WebAudio node graphs as first class values
    debug log function
 includes should include things they need; eg synthwave.limut should include effects.limut etc etc
  Do not include the same file multiple times; if its already included, then nop
+midi controller support
+ ?What happens if: midi{[1,2]t4} ??
+  Is it worth worrying about? Error at least? Or just support it?
+  ?Same for gamepads!
 more midi value conversion mapping
   rel mode for midi player and midi{'notes'}; convert to nearest diatonic note with no sharp/flat; do not force chromatic scale
   root? Does not account for scale root, so can always play in c?
