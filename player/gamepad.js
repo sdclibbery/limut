@@ -3,6 +3,8 @@ define(function(require) {
   let metronome = require('metronome')
   let {combineOverrides,applyOverrides} = require('player/override-params')
 
+  let pressThreshold = 0.95 // For analogue button, have to press it this far before it triggers
+
   let gamepads = []
   let perFrameUpdate = (now) => {
     navigator.getGamepads().forEach((pad,i) => {
@@ -16,10 +18,10 @@ define(function(require) {
       let gamepad = gamepads[i]
       let buttons = pad.buttons.map(b => b.value)
       buttons.forEach((b,i) => {
-          if (b > 0 && (gamepad.lastButtons === undefined || gamepad.lastButtons[i] <= 0)) { // Button press
+          if (b > pressThreshold && (gamepad.lastButtons === undefined || gamepad.lastButtons[i] <= pressThreshold)) { // Button press
               for (let id in gamepad.listeners) { gamepad.listeners[id](i, b) }
           }
-          if (b <= 0 && gamepad.lastButtons !== undefined && gamepad.lastButtons[i] > 0) { // Button release
+          if (b <= pressThreshold && gamepad.lastButtons !== undefined && gamepad.lastButtons[i] > pressThreshold) { // Button release
               for (let id in gamepad.listeners) { gamepad.listeners[id](i, undefined) }
           }
       })
