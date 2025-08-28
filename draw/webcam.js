@@ -28,12 +28,17 @@ define(function (require) {
   }
   `
 
+  let firstTime = true
+  let videoDevices
   let accessWebcam = async (deviceIdx) => {
     await navigator.mediaDevices.getUserMedia({ video: true }) // Ask for user permission
-    let devices = await navigator.mediaDevices.enumerateDevices() // Enumerate all devices
-    devices = devices.filter(device => device.kind === 'videoinput')
-    devices.forEach((device,idx) => { consoleOut(`: Found Webcam: ${idx}: ${device.label}`) })
-    let deviceId = devices[deviceIdx % devices.length].deviceId
+    videoDevices = await navigator.mediaDevices.enumerateDevices() // Enumerate all devices
+    videoDevices = videoDevices.filter(device => device.kind === 'videoinput')
+    if (firstTime) {
+      firstTime = false
+      videoDevices.forEach((device,idx) => { consoleOut(`: Found Webcam: ${idx}: ${device.label}`) })
+    }
+    let deviceId = videoDevices[deviceIdx].deviceId
     let constraints = { video: { deviceId:{exact: deviceId}, width:{ideal: 512}, height:{ideal: 512} } }
     let mediaStream = await navigator.mediaDevices.getUserMedia(constraints) // Request specific device
     consoleOut(`: Using Webcam: ${mediaStream.getTracks()[0].label}`)
@@ -61,6 +66,7 @@ define(function (require) {
     })
     texture.update = (state) => {
       if (!video || !video.ready || state.time === lastUpdateTime) { return }
+      texture.video = video
       texture.width = video.videoWidth
       texture.height = video.videoHeight
       lastUpdateTime = state.time
@@ -73,6 +79,7 @@ define(function (require) {
   let devices = {}
   return (params) => {
     let deviceIdx = evalParamEvent(params.device, params) || 0
+    if (videoDevices === undefined) { deviceIdx = 0 } else { deviceIdx = deviceIdx % videoDevices.length }
     if (devices[deviceIdx] === undefined) {
       devices[deviceIdx] = {}
       let device = devices[deviceIdx]
