@@ -2,10 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 ==== audio ====
-webcam: can choose device if do getUserMedia then enumerateDevices then getUserMedia AGAIN asking for the specific label
- High Res flag?
- ??Don't update textures when not being displayed
- Check performance in various scenarios: cpu load; try with different resolutions
 gamepad support
  nodpad option: if standard mapping, then ignore buttons 12,13,14,15
   Should be case insensitive
@@ -304,6 +300,9 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 =================================================================================================================================
 ==== visual ====
 dmx lighting support
+webcam: can choose device if do getUserMedia then enumerateDevices then getUserMedia AGAIN asking for the specific label
+ ??Don't update textures when not being displayed
+ Check performance in various scenarios: cpu load; try with different resolutions
 !Buffer freezes on code update
 Nodes for visuals
  Visual synth with a play param that takes a node graph, from xy to rgba
