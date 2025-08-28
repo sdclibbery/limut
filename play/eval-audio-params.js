@@ -128,7 +128,7 @@ define(function (require) {
         if (__event && state.time > __event.endTime) { return false } // Finished
         if (__event && state.time < __event._time) { return true } // Not started yet
         if (audioParam.lastTime === undefined) {
-          audioParam.lastTime = (__event && __event._time) ? __event._time : system.timeNow()
+          audioParam.lastTime = (__event && __event._time !== undefined) ? __event._time : system.timeNow()
         }
         while (audioParam.lastTime < state.time) { // Make a fixed size timestep
           let count = metronome.beatTime(audioParam.lastTime+updateStep)
@@ -269,11 +269,12 @@ define(function (require) {
       }
     }
     let assertApCalls = (expected, ap) => {
-      assert(expected.length, ap.calls.length)
+      assert(expected.length, ap.calls.length, `Expected ${expected}, but got ${ap.calls}`)
       for (let i = 0; i < expected.length; i++) {
         assert(expected[i], ap.calls[i], `index: ${i}`)
       }
     }
+    let p = (params) => { params._time = 0; return params }
     let ap
     let pf
     let f
@@ -283,71 +284,71 @@ define(function (require) {
     metronome.beatDuration(2)
 
     // const number
-    ap = mockAp(); evalMainParamFrame(ap, {}, 'foo', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalMainParamFrame(ap, p({}), 'foo', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 6,0]], ap)
-    ap = mockAp(); evalMainParamFrame(ap, {foo:2}, 'foo', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalMainParamFrame(ap, p({foo:2}), 'foo', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 4,0]], ap)
-    ap = mockAp(); evalMainParamFrame(ap, {foo:{value:2,bar:0}}, 'foo', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalMainParamFrame(ap, p({foo:{value:2,bar:0}}), 'foo', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 4,0]], ap)
-    ap = mockAp(); evalMainParamFrame(ap, {foo:{value:2,bar:s(0)}}, 'foo', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalMainParamFrame(ap, p({foo:{value:2,bar:s(0)}}), 'foo', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 4,0]], ap)
-    ap = mockAp(); evalSubParamFrame(ap, {}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalSubParamFrame(ap, p({}), 'foo', 'bar', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 6,0]], ap)
-    ap = mockAp(); evalSubParamFrame(ap, {foo:0}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalSubParamFrame(ap, p({foo:0}), 'foo', 'bar', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 6,0]], ap)
-    ap = mockAp(); evalSubParamFrame(ap, {foo:{value:0}}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalSubParamFrame(ap, p({foo:{value:0}}), 'foo', 'bar', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 6,0]], ap)
-    ap = mockAp(); evalSubParamFrame(ap, {foo:{value:0,bar:2}}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalSubParamFrame(ap, p({foo:{value:0,bar:2}}), 'foo', 'bar', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 4,0]], ap)
-    ap = mockAp(); evalSubParamFrame(ap, {foo:{value:0,_units:'s',bar:2}}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalSubParamFrame(ap, p({foo:{value:0,_units:'s',bar:2}}), 'foo', 'bar', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 4,0]], ap)
 
     // const number with units
-    ap = mockAp(); evalMainParamFrame(ap, {foo:{value:2,_units:'s'}}, 'foo', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalMainParamFrame(ap, p({foo:{value:2,_units:'s'}}), 'foo', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 1,0]], ap)
-    ap = mockAp(); evalMainParamFrame(ap, {foo:{value:2,_units:'s',bar:s(0)}}, 'foo', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalMainParamFrame(ap, p({foo:{value:2,_units:'s',bar:s(0)}}), 'foo', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 1,0]], ap)
-    ap = mockAp(); evalSubParamFrame(ap, {foo:{value:0,_units:'s',bar:{value:2,_units:'s'}}}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalSubParamFrame(ap, p({foo:{value:0,_units:'s',bar:{value:2,_units:'s'}}}), 'foo', 'bar', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 1,0]], ap)
 
     // function returns const number
-    ap = mockAp(); evalMainParamFrame(ap, {foo:()=>undefined}, 'foo', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalMainParamFrame(ap, p({foo:()=>undefined}), 'foo', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 6,0]], ap)
-    ap = mockAp(); evalMainParamFrame(ap, {foo:()=>2}, 'foo', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalMainParamFrame(ap, p({foo:()=>2}), 'foo', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 4,0]], ap)
-    ap = mockAp(); evalMainParamFrame(ap, {foo:()=>()=>2}, 'foo', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalMainParamFrame(ap, p({foo:()=>()=>2}), 'foo', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 4,0]], ap)
-    ap = mockAp(); evalMainParamFrame(ap, {foo:()=>{return{value:2,bar:0}}}, 'foo', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalMainParamFrame(ap, p({foo:()=>{return{value:2,bar:0}}}), 'foo', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 4,0]], ap)
-    ap = mockAp(); evalMainParamFrame(ap, {foo:()=>{return{value:2,bar:s(0)}}}, 'foo', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalMainParamFrame(ap, p({foo:()=>{return{value:2,bar:s(0)}}}), 'foo', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 4,0]], ap)
-    ap = mockAp(); evalMainParamFrame(ap, {foo:()=>{return{value:()=>2,bar:s(0)}}}, 'foo', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalMainParamFrame(ap, p({foo:()=>{return{value:()=>2,bar:s(0)}}}), 'foo', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 4,0]], ap)
-    ap = mockAp(); evalSubParamFrame(ap, {foo:()=>undefined}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalSubParamFrame(ap, p({foo:()=>undefined}), 'foo', 'bar', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 6,0]], ap)
-    ap = mockAp(); evalSubParamFrame(ap, {foo:()=>s(0)}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalSubParamFrame(ap, p({foo:()=>s(0)}), 'foo', 'bar', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 6,0]], ap)
-    ap = mockAp(); evalSubParamFrame(ap, {foo:{value:0,_units:'s',bar:()=>undefined}}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalSubParamFrame(ap, p({foo:{value:0,_units:'s',bar:()=>undefined}}), 'foo', 'bar', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 6,0]], ap)
-    ap = mockAp(); evalSubParamFrame(ap, {foo:{value:0,_units:'s',bar:()=>2}}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalSubParamFrame(ap, p({foo:{value:0,_units:'s',bar:()=>2}}), 'foo', 'bar', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 4,0]], ap)
-    ap = mockAp(); evalSubParamFrame(ap, {foo:()=>{return{value:0,bar:()=>2}}}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalSubParamFrame(ap, p({foo:()=>{return{value:0,bar:()=>2}}}), 'foo', 'bar', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 4,0]], ap)
-    ap = mockAp(); evalSubParamFrame(ap, {foo:()=>{return{value:0,_units:'s',bar:()=>2}}}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalSubParamFrame(ap, p({foo:()=>{return{value:0,_units:'s',bar:()=>2}}}), 'foo', 'bar', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 4,0]], ap)
 
     // function returns const number with units
-    ap = mockAp(); evalMainParamFrame(ap, {foo:()=>s(2)}, 'foo', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalMainParamFrame(ap, p({foo:()=>s(2)}), 'foo', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 1,0]], ap)
-    ap = mockAp(); evalMainParamFrame(ap, {foo:()=>()=>s(2)}, 'foo', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalMainParamFrame(ap, p({foo:()=>()=>s(2)}), 'foo', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 1,0]], ap)
-    ap = mockAp(); evalMainParamFrame(ap, {foo:()=>{return{value:2,_units:'s',bar:s(0)}}}, 'foo', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalMainParamFrame(ap, p({foo:()=>{return{value:2,_units:'s',bar:s(0)}}}), 'foo', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 1,0]], ap)
-    ap = mockAp(); evalMainParamFrame(ap, {foo:()=>{return{value:()=>s(2),bar:s(0)}}}, 'foo', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalMainParamFrame(ap, p({foo:()=>{return{value:()=>s(2),bar:s(0)}}}), 'foo', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 1,0]], ap)
-    ap = mockAp(); evalSubParamFrame(ap, {foo:{value:0,_units:'s',bar:()=>s(2)}}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalSubParamFrame(ap, p({foo:{value:0,_units:'s',bar:()=>s(2)}}), 'foo', 'bar', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 1,0]], ap)
-    ap = mockAp(); evalSubParamFrame(ap, {foo:()=>{return{value:0,_units:'s',bar:()=>s(2)}}}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); evalSubParamFrame(ap, p({foo:()=>{return{value:0,_units:'s',bar:()=>s(2)}}}), 'foo', 'bar', 3, 'hz', (v) => v * 2)
     assertApCalls([['setValueAtTime', 1,0]], ap)
 
     // function returns segmented value
@@ -391,25 +392,25 @@ define(function (require) {
     // function returns per frame value
     f = () => 2
     f.interval = 'frame'
-    ap = mockAp(); pf = []; evalMainParamFrame(ap, {foo:f,_perFrame:pf}, 'foo', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); pf = []; evalMainParamFrame(ap, p({foo:f,_perFrame:pf}), 'foo', 3, 'hz', (v) => v * 2)
     pf[0]({time:1/60}); assertApCalls([ ['setValueAtTime', 4,0], ['setTargetAtTime', 4,1/60,1/240] ], ap)
-    ap = mockAp(); pf = []; evalSubParamFrame(ap, {foo:f,_perFrame:pf}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); pf = []; evalSubParamFrame(ap, p({foo:f,_perFrame:pf}), 'foo', 'bar', 3, 'hz', (v) => v * 2)
     assert(0, pf.length); assertApCalls([ ['setValueAtTime', 6,0] ], ap)
-    ap = mockAp(); pf = []; evalSubParamFrame(ap, {foo:{value:0,_units:'s',bar:f},_perFrame:pf}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); pf = []; evalSubParamFrame(ap, p({foo:{value:0,_units:'s',bar:f},_perFrame:pf}), 'foo', 'bar', 3, 'hz', (v) => v * 2)
     pf[0]({time:1/60}); assertApCalls([ ['setValueAtTime', 4,0], ['setTargetAtTime', 4,1/60,1/240] ], ap)
 
     // function returns per frame value with units
     f = () => s(2)
     f.interval = 'frame'
-    ap = mockAp(); pf = []; evalMainParamFrame(ap, {foo:f,_perFrame:pf}, 'foo', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); pf = []; evalMainParamFrame(ap, p({foo:f,_perFrame:pf}), 'foo', 3, 'hz', (v) => v * 2)
     pf[0]({time:1/60}); assertApCalls([ ['setValueAtTime', 1,0], ['setTargetAtTime', 1,1/60,1/240] ], ap)
-    ap = mockAp(); pf = []; evalSubParamFrame(ap, {foo:{value:0,_units:'s',bar:f},_perFrame:pf}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); pf = []; evalSubParamFrame(ap, p({foo:{value:0,_units:'s',bar:f},_perFrame:pf}), 'foo', 'bar', 3, 'hz', (v) => v * 2)
     pf[0]({time:1/60}); assertApCalls([ ['setValueAtTime', 1,0], ['setTargetAtTime', 1,1/60,1/240] ], ap)
 
     // per frame function returns param
     f = () => { return {value:0,_units:'s',bar:2} }
     f.interval = 'frame'
-    ap = mockAp(); pf = []; evalSubParamFrame(ap, {foo:f,_perFrame:pf}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
+    ap = mockAp(); pf = []; evalSubParamFrame(ap, p({foo:f,_perFrame:pf}), 'foo', 'bar', 3, 'hz', (v) => v * 2)
     assert(0, pf.length); assertApCalls([ ['setValueAtTime', 4,0] ], ap)
 
     // user functions that require a call tree to be saved - tested in parse-expression tests

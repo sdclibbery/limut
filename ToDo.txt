@@ -3,9 +3,22 @@
 =================================================================================================================================
 ==== audio ====
 webcam: can choose device if do getUserMedia then enumerateDevices then getUserMedia AGAIN asking for the specific label
- ?Use mirror texture wrap mode??
- Allow multiple webcams at once; texture per device?
-dmx lighting support
+ !!Get flash of device 0 at start now
+ High Res flag?
+ ??Don't update textures when not being displayed
+ Check performance in various scenarios: cpu load; try with different resolutions
+gamepad support
+ nodpad option: if standard mapping, then ignore buttons 12,13,14,15
+  Should be case insensitive
+  Also test on firefox, should log warning if not standard mapping
+  DOCS
+ !!Not defaulting to @f; eg:   p softpad, amp*=gamepad{0}
+ more options and syntax
+  gamepad{'a0-'} - gives axis 0, but the negative part only but projected to 0-1
+  gamepad{'ald'} - axis left stick down part
+  gamepad{'lt'} - left trigger
+  DOCS
+ ??gamepad player: Update vel dynamically from button input - eg triggers on chromium
 velocity
   all players default to vel=1 even without midi
   ALL presets to use this.vel; check setting param `vel=midi{'vel'}` works as expected
@@ -13,12 +26,9 @@ velocity
   this.vel should update with aftertouch, at the moment you only get the vel at the time of note-on (see percussion pads)
   midi{'vel'} should include aftertouch?
   DOCS
-gamepad support
- nodpad option: if standard mapping, then ignore buttons 12,13,14,15
-  Should be case insensitive
-  Also test on firefox, should log warning if not standard mapping
-  DOCS
- ??gamepad player: Update vel dynamically from button input - eg triggers on chromium
+electron performance
+ make sure the build is arm64
+ game mode https://g.co/gemini/share/2d402c47eda2
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   Segments should be added bit by bit not all at the beginning
    !! TEST with lots of user functions / sub params etc
@@ -294,6 +304,7 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 =================================================================================================================================
 =================================================================================================================================
 ==== visual ====
+dmx lighting support
 !Buffer freezes on code update
 Nodes for visuals
  Visual synth with a play param that takes a node graph, from xy to rgba
