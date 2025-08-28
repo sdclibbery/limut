@@ -30,7 +30,7 @@ define(function (require) {
 
   let firstTime = true
   let videoDevices
-  let accessWebcam = async (deviceIdx) => {
+  let getDevices = async () => {
     await navigator.mediaDevices.getUserMedia({ video: true }) // Ask for user permission
     videoDevices = await navigator.mediaDevices.enumerateDevices() // Enumerate all devices
     videoDevices = videoDevices.filter(device => device.kind === 'videoinput')
@@ -38,6 +38,9 @@ define(function (require) {
       firstTime = false
       videoDevices.forEach((device,idx) => { consoleOut(`: Found Webcam: ${idx}: ${device.label}`) })
     }
+  }
+
+  let accessWebcam = async (deviceIdx) => {
     let deviceId = videoDevices[deviceIdx].deviceId
     let constraints = { video: { deviceId:{exact: deviceId}, width:{ideal: 512}, height:{ideal: 512} } }
     let mediaStream = await navigator.mediaDevices.getUserMedia(constraints) // Request specific device
@@ -79,7 +82,11 @@ define(function (require) {
   let devices = {}
   return (params) => {
     let deviceIdx = evalParamEvent(params.device, params) || 0
-    if (videoDevices === undefined) { deviceIdx = 0 } else { deviceIdx = deviceIdx % videoDevices.length }
+    if (videoDevices === undefined) {
+      getDevices()
+      return
+    }
+    deviceIdx = deviceIdx % videoDevices.length
     if (devices[deviceIdx] === undefined) {
       devices[deviceIdx] = {}
       let device = devices[deviceIdx]
