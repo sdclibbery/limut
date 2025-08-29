@@ -2,6 +2,7 @@
 define(function(require) {
   let metronome = require('metronome')
   let {combineOverrides,applyOverrides} = require('player/override-params')
+  let consoleOut = require('console')
 
   let pressThreshold = 0.95 // For analogue button, have to press it this far before it triggers
 
@@ -16,6 +17,7 @@ define(function(require) {
         }
       }
       let gamepad = gamepads[i]
+      gamepad.mapping = pad.mapping
       let buttons = pad.buttons.map(b => b.value)
       buttons.forEach((b,i) => {
           if (b > pressThreshold && (gamepad.lastButtons === undefined || gamepad.lastButtons[i] <= pressThreshold)) { // Button press
@@ -69,6 +71,7 @@ define(function(require) {
         return
       }
       if (player._shouldUnlisten) { return } // Dont play any new events if player is being cleaned up!
+      if (gamepads[padNumber].mapping !== 'standard' && nodpad) { consoleOut('🔴 nodpad will not work correctly on non-standard mapping gamepad!') }
       if (nodpad && buttonIdx >= 12 && buttonIdx <= 15) { return } // Ignore dpad buttons if nodpad
       let event = {
         _gamepadNote: buttonIdx,
