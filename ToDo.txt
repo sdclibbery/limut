@@ -3,7 +3,6 @@
 =================================================================================================================================
 ==== audio ====
 gamepad support
- !!Not defaulting to @f; eg:   p softpad, amp*=gamepad{0}
  more options and syntax
   gamepad{'a0-'} - gives axis 0, but the negative part only but projected to 0-1
   gamepad{'ald'} - axis left stick down part

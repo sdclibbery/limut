@@ -140,7 +140,7 @@ define(function(require) {
       let v = varLookup(parsed, modifiers, state.context, interval, state.userFunctionArgs)
       if (v !== undefined) {
         result = addModifiers(v, modifiers)
-        result.interval = hoistInterval(result.interval || interval, typeof modifiers === 'object' ? Object.values(modifiers) : undefined)
+        result.interval = hoistInterval(interval || result.interval, typeof modifiers === 'object' ? Object.values(modifiers) : undefined)
         continue
       }
       break

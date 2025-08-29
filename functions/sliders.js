@@ -70,6 +70,7 @@ define(function(require) {
       return slider.value || 0
     }
     sliderValue.isNonTemporal = true
+    sliderValue.interval = 'frame'
     return sliderValue
   }
 
@@ -88,7 +89,6 @@ define(function(require) {
   }
 
   newSlider.isStaticVarFunction = true
-  newSlider.interval = 'frame'
   addVar('slider', newSlider)
   return {
     gc_reset: gc_reset,

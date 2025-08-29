@@ -29,6 +29,7 @@ define(function(require) {
       return gamepad && gamepad.axes[axisNumber || 0] || 0
     }
     gamepadValue.isNonTemporal = true
+    gamepadValue.interval = 'frame'
     return gamepadValue
   }
   newGamepad.isStaticVarFunction = true

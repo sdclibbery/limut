@@ -105,7 +105,7 @@ define((require) => {
     }
     if (value === undefined) { return value }
     let memoKey
-    if (!options.doNotMemoise) { // Note: Memoisation is not just a performance optimisation, it actually implements @e
+    if (!options.doNotMemoise) {
       memoKey = JSON.stringify(options) + beat
       let callTreeString = getCallTreeString()
       if (callTreeString) { memoKey += callTreeString }
