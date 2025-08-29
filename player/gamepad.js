@@ -14,10 +14,10 @@ define(function(require) {
         gamepads[i] = {
           lastButtons: undefined,
           listeners: {},
+          mapping: pad.mapping,
         }
       }
       let gamepad = gamepads[i]
-      gamepad.mapping = pad.mapping
       let buttons = pad.buttons.map(b => b.value)
       buttons.forEach((b,i) => {
           if (b > pressThreshold && (gamepad.lastButtons === undefined || gamepad.lastButtons[i] <= pressThreshold)) { // Button press
