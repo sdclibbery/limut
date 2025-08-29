@@ -2,13 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 ==== audio ====
-gamepad support
- more options and syntax
-  gamepad{'a0-'} - gives axis 0, but the negative part only but projected to 0-1
-  gamepad{'ald'} - axis left stick down part
-  gamepad{'lt'} - left trigger
-  DOCS
- ??gamepad player: Update vel dynamically from button input - eg triggers on chromium
 velocity
   all players default to vel=1 even without midi
   ALL presets to use this.vel; check setting param `vel=midi{'vel'}` works as expected
@@ -52,12 +45,6 @@ More node topology functions
  multiband{} - takes a set of cutoff freqs, separates the signal into those bands, and applies a chain for each band based on a callback function
  serallel{} - takes a set of chains (or a number and a callback function to create the chains), and runs then all in series, but collects all the outputs together as well for the final output - ??Do we need this for anything?
 Rewrite pitch effects so it doesn't need all those methods from eval-audio-params, and so addc at least supports segments
-!!Setup some guitar presets; test with acoustic sample
-  https://upload.wikimedia.org/wikipedia/commons/6/67/AcousticGuitarSample.ogg
-  CHILLED: e external, mono, suck=1/32, amp*=24, flanger=8b, room, fx=mix{airverb}
-  Shimmer echo: e external, mono, suck=1/32, amp*=48, fx=mix{airverb>>delay{lfo{4}/4},0.75}*2
-  Echo: e external, mono, suck=1/32, amp*=4, drive={1,mix:1/8}, compress=2, fx={dry,phaser>>echo{3/4b}}>>mix{airverb}
-  Find the one from the reggae track, maybe others?
 WebAudio node graphs as first class values
  ???? {} for parallel nodes should be (), no???
  Should be able to  fx=[]n  And also  fx=echo>>[]n
@@ -144,6 +131,12 @@ Create a helper lib with useful functions (think about namespacing)
   This is a big problem for presets like ambi, where tons of things are derived params
  ! Also  s saw, dur=1/4, oct=2, amp/=10, lpf=1000*[0,1]l1/4@e  is getting per frame on the q!
 !!phaser (and psf) are not doing normal phaser things. Rewrite them as multiple allpass in series at same freq, mixed with dry
+!!Setup some guitar presets; test with acoustic sample
+  https://upload.wikimedia.org/wikipedia/commons/6/67/AcousticGuitarSample.ogg
+  CHILLED: e external, mono, suck=1/32, amp*=24, flanger=8b, room, fx=mix{airverb}
+  Shimmer echo: e external, mono, suck=1/32, amp*=48, fx=mix{airverb>>delay{lfo{4}/4},0.75}*2
+  Echo: e external, mono, suck=1/32, amp*=4, drive={1,mix:1/8}, compress=2, fx={dry,phaser>>echo{3/4b}}>>mix{airverb}
+  Find the one from the reggae track, maybe others?
 ?Rewrite all synths using audiosynth? Can now rewrite all JS synths using audiosynth? ? Pitch effects tho??
 Start oscillator at a whole number of cycles after time zero
  To avoid phasing when using pad envelopes, and/or to control the starting phase of an oscillator

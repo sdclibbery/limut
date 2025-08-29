@@ -898,7 +898,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>rainbow</code> For colour visual params. Colour changing through the rainbow</p>
 <p><code>wow</code> Predefined time var: Randomly but smoothly varying signal, good for simulating analog 'wow' pitch distortion; eg <code>addc=wow</code></p>
 </div>
-<h4 onclick="toggleAccordion('accordion-controls')" class="accordion"> Controls</h4>
+<h4 onclick="toggleAccordion('accordion-controls')" class="accordion"> User Input</h4>
 <div id="accordion-controls" class="closed">
 <p><code>gamepad{}</code> Take input from an external gamepad controller. When called with no args, it will log inputs to the console to help identify which gamepad control is on which button or axis number.</p>
 <p class='sub'><code>gamepad{1}</code> Take input from axis 1 on the gamepad. Range -1 to 1 based on axis value. Defaults to gamepad 0.</p>
@@ -906,6 +906,8 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>gamepad{button:0}</code> Take input from button 0 on the gamepad. Range 0 to 1 based on button press value. Defaults to gamepad 0.</p>
 <p class='sub'><code>gamepad{axis:1}</code> Take input from axis 1 on the gamepad. Range -1 to 1 based on axis value. Defaults to gamepad 0.</p>
 <p class='sub'><code>gamepad{pad:1}</code> Take input from gamepad 1. Defaults to axis 0.</p>
+<p class='sub'><code>gamepad{'lsl'}</code> Take input from the left stick, left direction, mapped to 0 to 1. ls is left stick, rs is right stick, then u/d/l/r for the directions.</p>
+<p class='sub'><code>gamepad{'lt'}</code> Take input from the left trigger, mapped to 0 to 1. lt is left trigger, rt is right trigger.</p>
 <p><code>midi{}</code> Take input from an external midi controller. When called with no args, it will log inputs to the console to help identify which midi control is on which port, channel, and control/note number.</p>
 <p class='sub'><code>midi{70}</code> Take input from control 70 (or note 70 if there is no control 70). Range 0 to 1 based on controller value or velocity and aftertouch. Defaults to port 0 and channel 0.</p>
 <p class='sub'><code>midi{36,9}</code> Take input from control or note 36 on channel 9. Range 0 to 1 based on controller value or velocity and aftertouch. Defaults to port 0.</p>
