@@ -4582,3 +4582,13 @@ preset dirt multiwave, dur=1/4, oct=2, envelope='perc',
   fold=1/2, drive=1/2, chorus, amp*=2,
   fx=delay{[10ms,12ms]n1/2}>>lpf{[5000:3/16,800:1/16,200:0]l1/4@f}
 
+
+// w webcam, loc=(tile_tl,tile_bl,tile_tr,tile_br), device=this.voice
+// w webcam
+// w webcam, device=1, res=120
+// w webcam, device=[0,1,2]
+// w webcam, device=time
+// w webcam, fore=1/2, back=1/2
+// w webcam, contrast=3
+// w webcam, contrast=2, fore=3/4, back=1
+

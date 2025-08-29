@@ -4,7 +4,6 @@
 ==== audio ====
 gamepad support
  nodpad option: if standard mapping, then ignore buttons 12,13,14,15
-  Should be case insensitive
   Also test on firefox, should log warning if not standard mapping
   DOCS
  !!Not defaulting to @f; eg:   p softpad, amp*=gamepad{0}
@@ -22,8 +21,9 @@ velocity
   midi{'vel'} should include aftertouch?
   DOCS
 electron performance
- make sure the build is arm64
  game mode https://g.co/gemini/share/2d402c47eda2
+  Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
+  BrowserWindow.setFullScreen(true) for fullscreen
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   Segments should be added bit by bit not all at the beginning
    !! TEST with lots of user functions / sub params etc

@@ -48,6 +48,7 @@ define(function(require) {
     patternArgs = patternArgs
       .map(arg => arg.trim())
       .filter(arg => arg !== '')
+      .map(arg => typeof arg === 'string' ? arg.trim().toLowerCase() : arg)
       .map(arg => !isNaN(parseInt(arg,10)) ? parseInt(arg,10) : arg)
     if (patternArgs.filter(a => a === 'nodpad').length > 0) { nodpad = true }
     patternArgs = patternArgs.filter(a => typeof a === 'number')
