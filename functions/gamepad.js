@@ -16,6 +16,10 @@ define(function(require) {
       let str = args.value.toLowerCase().trim()
       if (str === 'lt') { buttonNumber = 6 } // left trigger
       else if (str === 'rt') { buttonNumber = 7 } // right trigger
+      else if (str === 'lsh') { axisNumber = 0 } // left stick horizontal
+      else if (str === 'lsv') { axisNumber = 1 } // left stick vertical
+      else if (str === 'rsh') { axisNumber = 2 } // right stick horizontal
+      else if (str === 'rsv') { axisNumber = 3 } // right stick vertical
       else if (str === 'lsl') { axisNumber = 0; axisRange = 'neg' } // left stick left
       else if (str === 'lsr') { axisNumber = 0; axisRange = 'pos' } // left stick right
       else if (str === 'lsd') { axisNumber = 1; axisRange = 'neg' } // left stick up
