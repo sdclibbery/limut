@@ -22,6 +22,7 @@ define(function(require) {
   require('editor-codemirror')
   let {parseCode} = require('update-code')
   let {clearCallTree} = require('player/callstack')
+  let dmx = require('dmx')
 
   // Load presets
   let loadPresetCollection = (name) => {
@@ -124,6 +125,13 @@ define(function(require) {
       gamepad.perFrameUpdate(now)
     } catch (e) {
       consoleOut('🔴 Frame update Error from gamepads: ' + e)
+      console.log(e)
+      clearCallTree()
+    }
+    try {
+      dmx.perFrameUpdate(now)
+    } catch (e) {
+      consoleOut('🔴 Frame update Error from DMX: ' + e)
       console.log(e)
       clearCallTree()
     }

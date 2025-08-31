@@ -1,6 +1,22 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
+=== DMX ===
+DMX lighting module
+ Per frame update
+  Every frame, eval each channel slot at the current time
+  If the last packet would take more than the time since last send, drop this packet (maybe warn too)
+DMX player
+ Player type
+ Params for channel and value
+  ...names? types?
+ Send data to the DMX module for display
+When got actual hardware:
+ electron-main needs to find correct port
+ dmx.js needs to use correct vendor id
+?Consider allowing full 512 channels and dropping updates, but only if that many channels actually in use??
+ ??Subtract one from every channel value after every write? And then prune subscript channels that are zero from the array?
+
 ==== audio ====
 velocity
   all players default to vel=1 even without midi
@@ -288,7 +304,6 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 =================================================================================================================================
 =================================================================================================================================
 ==== visual ====
-dmx lighting support
 webcam: can choose device if do getUserMedia then enumerateDevices then getUserMedia AGAIN asking for the specific label
  ??Don't update textures when not being displayed
  Check performance in various scenarios: cpu load; try with different resolutions

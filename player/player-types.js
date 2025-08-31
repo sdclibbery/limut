@@ -4,6 +4,7 @@ define((require) => {
   let shadertoy = require('draw/shadertoy')
   let image = require('draw/image')
   let webcam = require('draw/webcam')
+  let dmx = require('draw/dmx')
   let scope = require('draw/scope')
   let scopefft = require('draw/scopefft')
   let buffer = require('draw/buffer')
@@ -62,6 +63,7 @@ define((require) => {
     lights: { play: sprite('lights'), baseParams:{ amp:1, delay:0, rate:1, zoom:1, fore:white, back:{r:0.5,g:0.4,b:0.3,a:0}, additive:1 } },
     julia: { play: sprite('julia'), baseParams:{ amp:1, delay:0, rate:1, zoom:1, fore:offWhite, back:offBlack } },
     bars: { play: sprite('bars'), baseParams:{ amp:1, delay:0, rate:1, zoom:1, fore:white, back:black, additive:1 } },
+    dmx: { play: dmx, baseParams:{ amp:1, delay:0 } },
     // audio
     bus: { create: bus, baseParams:{ amp:1 } },
     drums: { play: play, baseParams:{ amp:1, delay:0, dur:1/2 } },
