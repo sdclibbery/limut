@@ -2,18 +2,18 @@
 =================================================================================================================================
 =================================================================================================================================
 === DMX ===
-DMX lighting module
- Per frame update
-  Every frame, eval each channel slot at the current time
-  If the last packet would take more than the time since last send, drop this packet (maybe warn too)
 DMX player
- Player type
- Params for channel and value
-  ...names? types?
+ Params for channel and value  ...names? types?
  Send data to the DMX module for display
 When got actual hardware:
  electron-main needs to find correct port
  dmx.js needs to use correct vendor id
+ ???Need to have correct timing on the setSignals break calls?
+  ?? Need to move onto a WebWorker just because it will need to spin wait for proper timing?
+   Currently the whole thing (2 x setSignals + write) takes between 0.3ms and 1ms even without any timing waits
+    is that too long to block the main thread?
+     But wait; It isn't blocking the main thread? Because its using await?
+      So as long as we don't need to busy-wait, there is no problem?
 ?Consider allowing full 512 channels and dropping updates, but only if that many channels actually in use??
  ??Subtract one from every channel value after every write? And then prune subscript channels that are zero from the array?
 

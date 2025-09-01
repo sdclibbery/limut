@@ -1,6 +1,7 @@
 'use strict';
 define(function(require) {
   let consoleOut = require('console')
+  let {evalParamFrame} = require('player/eval-param')
 
   let inited = false
   let port
@@ -31,18 +32,32 @@ define(function(require) {
   }
 
   let channels = []
-  let setChannel = (channel, value) => {
-    if (typeof channel !== 'number' || channel < 0 || channel > 320) {
+  let setChannel = (channel, value, event) => {
+    if (typeof channel !== 'number' || channel < 1 || channel > 320) {
       consoleOut(`🔴 DMX channel ${channel} out of range (1-320)`) // For now going to limit to 320 channels to guarantee 60hz
       return
     }
-    channels[channel] = value
+    let channelIdx = channel - 1 // channel numbers are one-based, but the channels array is zero based
+    if (channels[channelIdx] === undefined) {
+      channels[channelIdx] = {}
+    }
+    channels[channelIdx].value = value
+    channels[channelIdx].event = event
   }
 
-  let doWrite = async (data) => {
+  let writing = false
+  let sendData = async (data) => {
+    // console.log('DMX sending:', Array.from(data.subarray(0,4)))
+    writing = true
+    // let t1 = performance.now()
     await port.setSignals({break: true, requestToSend: false})
+    // let t2 = performance.now()
     await port.setSignals({break: false, requestToSend: false})
+    // let t3 = performance.now()
     await writer.write(data)
+    // let t4 = performance.now()
+    // console.log(t2-t1, t3-t2, t4-t3)
+    writing = false
   }
 
   let buffer = new Uint8Array(321)
@@ -53,10 +68,13 @@ define(function(require) {
     if (!port) { return }
     if (!writer) { console.log('DMX writer not inited'); return }
     if (!writer.ready) { console.log('DMX writer not ready'); return }
-    channels.forEach((v, idx) => {
-      buffer[idx + 1] = Math.floor(v * 255) % 256
+    if (writing) { consoleOut('🟠 Warning: DMX send overrun'); return } // Still writing the last packet, ignore this one
+    channels.forEach(({value,event}, idx) => {
+      let v = evalParamFrame(value || 0, event, timeNow) || 0
+      let bufferIdx = idx + 1 // channels array is zero based, but the data buffer has one start byte first
+      buffer[bufferIdx] = Math.floor(v * 255) % 256
     })
-    doWrite(buffer)
+    sendData(buffer)
   }
 
   return {

@@ -3,7 +3,8 @@ define(function (require) {
   let {setChannel} = require('dmx')
 
   return (params) => {
-    setChannel(0, 1)
-    setChannel(3, 1/2)
+    setChannel(1, 1, params)
+    setChannel(2, 1/2, params)
+    setChannel(3, params.foo, params)
   }
 })
