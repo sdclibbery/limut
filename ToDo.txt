@@ -4,7 +4,11 @@
 === DMX ===
 DMX player
  Params for channel and value  ...names? types?
+  Want to be able to set one value onto multiple channels (color, vector etc)
+  Want to be able to set one value onto multiple lights
+  Want to be able to modify subests; eg set rainbow onto a light then override just the green channel, or set multiple lights then add to one
  Send data to the DMX module for display
+ DOCS
 When got actual hardware:
  electron-main needs to find correct port
  dmx.js needs to use correct vendor id

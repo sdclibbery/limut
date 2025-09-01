@@ -3,6 +3,28 @@ define(function(require) {
   let consoleOut = require('console')
   let {evalParamFrame} = require('player/eval-param')
 
+  let numbeArray = [0]
+  let convertValues = (v) => {
+    if (Array.isArray(v)) { return v.filter(av => typeof av === 'number') }
+    if (typeof v === 'object') {
+      let values = []
+      if (typeof v.value === 'number') { values[0] = v.value }
+      if (typeof v.value1 === 'number') { values[1] = v.value1 }
+      if (typeof v.value2 === 'number') { values[2] = v.value2 }
+      if (typeof v.value3 === 'number') { values[3] = v.value3 }
+      if (typeof v.r === 'number') { values[0] = v.r }
+      if (typeof v.g === 'number') { values[1] = v.g }
+      if (typeof v.b === 'number') { values[2] = v.b }
+      if (typeof v.w === 'number') { values[3] = v.w }
+      if (typeof v.x === 'number') { values[0] = v.x }
+      if (typeof v.y === 'number') { values[1] = v.y }
+      if (typeof v.z === 'number') { values[2] = v.z }
+      return values
+    }
+    if (typeof v === 'number') { numbeArray[0] = v; return numbeArray }
+    return []
+  }
+
   let inited = false
   let port
   let writer
@@ -47,7 +69,6 @@ define(function(require) {
 
   let writing = false
   let sendData = async (data) => {
-    // console.log('DMX sending:', Array.from(data.subarray(0,4)))
     writing = true
     // let t1 = performance.now()
     await port.setSignals({break: true, requestToSend: false})
@@ -57,6 +78,7 @@ define(function(require) {
     await writer.write(data)
     // let t4 = performance.now()
     // console.log(t2-t1, t3-t2, t4-t3)
+    // console.log('DMX sending:', Array.from(data.subarray(1,5)))
     writing = false
   }
 
@@ -70,9 +92,11 @@ define(function(require) {
     if (!writer.ready) { console.log('DMX writer not ready'); return }
     if (writing) { consoleOut('🟠 Warning: DMX send overrun'); return } // Still writing the last packet, ignore this one
     channels.forEach(({value,event}, idx) => {
-      let v = evalParamFrame(value || 0, event, timeNow) || 0
       let bufferIdx = idx + 1 // channels array is zero based, but the data buffer has one start byte first
-      buffer[bufferIdx] = Math.floor(v * 255) % 256
+      let evalled = evalParamFrame(value || 0, event, timeNow) || 0
+      convertValues(evalled).forEach((v,valueIdx) => {
+        buffer[bufferIdx+valueIdx] = Math.floor(Math.min(Math.max(v,0),1) * 255)
+      })
     })
     sendData(buffer)
   }
