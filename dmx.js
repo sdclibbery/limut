@@ -56,7 +56,7 @@ define(function(require) {
   let channels = []
   let setChannel = (channel, value, event) => {
     if (typeof channel !== 'number' || channel < 1 || channel > 320) {
-      consoleOut(`🔴 DMX channel ${channel} out of range (1-320)`) // For now going to limit to 320 channels to guarantee 60hz
+      consoleOut(`🔴 DMX channel ${channel} out of range (1-320)`) // For now going to limit to 320 channels to "guarantee" 60hz
       return
     }
     let channelIdx = channel - 1 // channel numbers are one-based, but the channels array is zero based
@@ -70,16 +70,19 @@ define(function(require) {
   let writing = false
   let sendData = async (data) => {
     writing = true
-    // let t1 = performance.now()
-    await port.setSignals({break: true, requestToSend: false})
-    // let t2 = performance.now()
-    await port.setSignals({break: false, requestToSend: false})
-    // let t3 = performance.now()
-    await writer.write(data)
-    // let t4 = performance.now()
-    // console.log(t2-t1, t3-t2, t4-t3)
-    // console.log('DMX sending:', Array.from(data.subarray(1,5)))
-    writing = false
+    try {
+      // let t1 = performance.now()
+      await port.setSignals({break: true, requestToSend: false})
+      // let t2 = performance.now()
+      await port.setSignals({break: false, requestToSend: false})
+      // let t3 = performance.now()
+      await writer.write(data)
+      // let t4 = performance.now()
+      // console.log(t2-t1, t3-t2, t4-t3)
+      // console.log('DMX sending:', Array.from(data.subarray(1,5)))
+    } finally {
+      writing = false
+    }
   }
 
   let buffer = new Uint8Array(321)
@@ -90,11 +93,11 @@ define(function(require) {
     if (!port) { return }
     if (!writer) { console.log('DMX writer not inited'); return }
     if (!writer.ready) { console.log('DMX writer not ready'); return }
-    if (writing) { consoleOut('🟠 Warning: DMX send overrun'); return } // Still writing the last packet, ignore this one
+    if (writing) { console.log(`Warning: DMX send overrun`); return } // Still writing the last packet, ignore this one
     channels.forEach(({value,event}, idx) => {
       let bufferIdx = idx + 1 // channels array is zero based, but the data buffer has one start byte first
       let evalled = evalParamFrame(value || 0, event, timeNow) || 0
-      convertValues(evalled).forEach((v,valueIdx) => {
+      convertValues(evalled).forEach((v,valueIdx) => { // If evalled was a colour or something, write all values
         buffer[bufferIdx+valueIdx] = Math.floor(Math.min(Math.max(v,0),1) * 255)
       })
     })
