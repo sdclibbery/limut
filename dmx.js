@@ -59,12 +59,11 @@ define(function(require) {
       consoleOut(`🔴 DMX channel ${channel} out of range (1-320) for player ${event.player}`) // For now going to limit to 320 channels to "guarantee" 60hz
       return
     }
-    let channelIdx = channel - 1 // channel numbers are one-based, but the channels array is zero based
-    if (channels[channelIdx] === undefined) {
-      channels[channelIdx] = {}
-    }
-    channels[channelIdx].value = value
-    channels[channelIdx].event = event
+    channels.push({
+      channel: channel,
+      value: value,
+      event: event
+    })
   }
 
   let writing = false
@@ -94,14 +93,15 @@ define(function(require) {
     if (!writer) { console.log('DMX writer not inited'); return }
     if (!writer.ready) { console.log('DMX writer not ready'); return }
     if (writing) { console.log(`Warning: DMX send overrun`); return } // Still writing the last packet, ignore this one
-    channels = channels.filter(({value,event}, idx) => {
-      if (timeNow > event.endTime) { return false }
-      let bufferIdx = idx + 1 // channels array is zero based, but the data buffer has one start byte first
+    channels = channels.filter(({channel,value,event}) => {
+      let finished = timeNow > event.endTime
+      let bufferIdx = channel // channel is one based, but the data buffer has one start byte first
       let evalled = evalParamFrame(value || 0, event, timeNow) || 0
       convertValues(evalled).forEach((v,valueIdx) => { // If evalled was a colour or something, write all values
+        if (finished) { v = 0 }
         buffer[bufferIdx+valueIdx] = Math.floor(Math.min(Math.max(v,0),1) * 255)
       })
-      return true
+      return !finished
     })
     sendData(buffer)
   }
