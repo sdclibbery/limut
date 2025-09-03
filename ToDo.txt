@@ -3,12 +3,13 @@
 =================================================================================================================================
 === DMX ===
 DMX player
- !Whatever values were set keep being evalled even when the player events have finished...
-  ...need to be able to comment out lights and use patterns etc
-   So dmx needs to reset all channels to 0 after event end time?
  base param to add to channel
   ??Should c1 etc be zero-based if base is one-based??
   ??Need to track each event in dmx, along with overrides, per channel???
+   EG if have a long event that is then overridden by a short event, the long event will be lost currently
+    Could this also allow += etc??
+    NEED to think what the correct interface to the dmx module is...
+ amp param for dmx player?
 When got actual hardware:
  electron-main needs to find correct port
  dmx.js needs to use correct vendor id
@@ -23,6 +24,9 @@ When got actual hardware:
 DOCS
 
 ==== audio ====
+? What happens if a visual synth uses the gamepad pattern? Or a visual synth follows a player using gamepad?
+ It will fail, right? Because sprite needs to handle unknown end time
+ Same for dmx player... needs to handle unknown end time
 velocity
   all players default to vel=1 even without midi
   ALL presets to use this.vel; check setting param `vel=midi{'vel'}` works as expected

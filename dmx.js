@@ -94,12 +94,14 @@ define(function(require) {
     if (!writer) { console.log('DMX writer not inited'); return }
     if (!writer.ready) { console.log('DMX writer not ready'); return }
     if (writing) { console.log(`Warning: DMX send overrun`); return } // Still writing the last packet, ignore this one
-    channels.forEach(({value,event}, idx) => {
+    channels = channels.filter(({value,event}, idx) => {
+      if (timeNow > event.endTime) { return false }
       let bufferIdx = idx + 1 // channels array is zero based, but the data buffer has one start byte first
       let evalled = evalParamFrame(value || 0, event, timeNow) || 0
       convertValues(evalled).forEach((v,valueIdx) => { // If evalled was a colour or something, write all values
         buffer[bufferIdx+valueIdx] = Math.floor(Math.min(Math.max(v,0),1) * 255)
       })
+      return true
     })
     sendData(buffer)
   }
