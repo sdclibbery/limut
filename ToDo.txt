@@ -6,6 +6,9 @@ DMX player
  !Whatever values were set keep being evalled even when the player events have finished...
   ...need to be able to comment out lights and use patterns etc
    So dmx needs to reset all channels to 0 after event end time?
+ base param to add to channel
+  ??Should c1 etc be zero-based if base is one-based??
+  ??Need to track each event in dmx, along with overrides, per channel???
 When got actual hardware:
  electron-main needs to find correct port
  dmx.js needs to use correct vendor id

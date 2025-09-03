@@ -56,7 +56,7 @@ define(function(require) {
   let channels = []
   let setChannel = (channel, value, event) => {
     if (typeof channel !== 'number' || channel < 1 || channel > 320) {
-      consoleOut(`🔴 DMX channel ${channel} out of range (1-320)`) // For now going to limit to 320 channels to "guarantee" 60hz
+      consoleOut(`🔴 DMX channel ${channel} out of range (1-320) for player ${event.player}`) // For now going to limit to 320 channels to "guarantee" 60hz
       return
     }
     let channelIdx = channel - 1 // channel numbers are one-based, but the channels array is zero based
