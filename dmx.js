@@ -2,28 +2,7 @@
 define(function(require) {
   let consoleOut = require('console')
   let {evalParamFrame} = require('player/eval-param')
-
-  let numbeArray = [0]
-  let convertValues = (v) => {
-    if (Array.isArray(v)) { return v.filter(av => typeof av === 'number') }
-    if (typeof v === 'object') {
-      let values = []
-      if (typeof v.value === 'number') { values[0] = v.value }
-      if (typeof v.value1 === 'number') { values[1] = v.value1 }
-      if (typeof v.value2 === 'number') { values[2] = v.value2 }
-      if (typeof v.value3 === 'number') { values[3] = v.value3 }
-      if (typeof v.r === 'number') { values[0] = v.r }
-      if (typeof v.g === 'number') { values[1] = v.g }
-      if (typeof v.b === 'number') { values[2] = v.b }
-      if (typeof v.w === 'number') { values[3] = v.w }
-      if (typeof v.x === 'number') { values[0] = v.x }
-      if (typeof v.y === 'number') { values[1] = v.y }
-      if (typeof v.z === 'number') { values[2] = v.z }
-      return values
-    }
-    if (typeof v === 'number') { numbeArray[0] = v; return numbeArray }
-    return []
-  }
+  let newRenderList = require('draw/render-list')
 
   let inited = false
   let port
@@ -53,17 +32,19 @@ define(function(require) {
     writer = await port.writable.getWriter()
   }
 
-  let channels = []
-  let setChannel = (channel, value, event) => {
+  let renderList = newRenderList()
+  let addRenderer = (startTime, render, zorder) => {
+    renderList.add(startTime, render, zorder || 0)
+  }
+
+  let buffer = new Uint8Array(321)
+  buffer[0] = 0x00 // DMX start code
+  let setChannel = (channel, callback) => {
     if (typeof channel !== 'number' || channel < 1 || channel > 320) {
-      consoleOut(`🔴 DMX channel ${channel} out of range (1-320) for player ${event.player}`) // For now going to limit to 320 channels to "guarantee" 60hz
+      consoleOut(`🔴 DMX channel ${channel} out of range (1-320)`) // For now going to limit to 320 channels to "guarantee" 60hz
       return
     }
-    channels.push({
-      channel: channel,
-      value: value,
-      event: event
-    })
+    buffer[channel] = callback // channel is 1-based, buffer has a start code at 0
   }
 
   let writing = false
@@ -84,29 +65,22 @@ define(function(require) {
     }
   }
 
-  let buffer = new Uint8Array(321)
-  buffer[0] = 0x00 // DMX start code
+  let renderState = {time:0}
   let perFrameUpdate = (timeNow) => {
-    if (channels.length === 0) { return } // do nothing at all if noone is even asking for dmx
+    if (renderList.isEmpty()) { return }
     if (!inited) { init() }
     if (!port) { return }
     if (!writer) { console.log('DMX writer not inited'); return }
     if (!writer.ready) { console.log('DMX writer not ready'); return }
     if (writing) { console.log(`Warning: DMX send overrun`); return } // Still writing the last packet, ignore this one
     buffer.fill(0,1,-1) // Clear buffer to zero before collecting values
-    channels = channels.filter(({channel,value,event}) => {
-      if (timeNow > event.endTime) { return false }
-      let bufferIdx = channel // channel is one based, but the data buffer has one start byte first
-      let evalled = evalParamFrame(value || 0, event, timeNow) || 0
-      convertValues(evalled).forEach((v,valueIdx) => { // If evalled was a colour or something, write all values
-        buffer[bufferIdx+valueIdx] = Math.floor(Math.min(Math.max(v,0),1) * 255)
-      })
-      return true
-    })
+    renderState.time = timeNow
+    renderList.render(renderState)
     sendData(buffer)
   }
 
   return {
+    addRenderer: addRenderer,
     setChannel: setChannel,
     perFrameUpdate: perFrameUpdate,
   }

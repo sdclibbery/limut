@@ -1,7 +1,7 @@
 'use strict';
 define(function (require) {
-  let {setChannel} = require('dmx')
-  let {evalParamEvent} = require('player/eval-param')
+  let {addRenderer,setChannel} = require('dmx')
+  let {evalParamEvent,evalParamFrame} = require('player/eval-param')
   let {mainParamUnits} = require('player/sub-param')
 
   let evalMainParamEvent = (params, p, def, units) => {
@@ -10,6 +10,28 @@ define(function (require) {
     v = evalParamEvent(v, params)
     if (v === undefined) { return def }
     return mainParamUnits(v, units, def)
+  }
+
+  let numbeArray = [0]
+  let convertValues = (v) => {
+    if (Array.isArray(v)) { return v.filter(av => typeof av === 'number') }
+    if (typeof v === 'object') {
+      let values = []
+      if (typeof v.value === 'number') { values[0] = v.value }
+      if (typeof v.value1 === 'number') { values[1] = v.value1 }
+      if (typeof v.value2 === 'number') { values[2] = v.value2 }
+      if (typeof v.value3 === 'number') { values[3] = v.value3 }
+      if (typeof v.r === 'number') { values[0] = v.r }
+      if (typeof v.g === 'number') { values[1] = v.g }
+      if (typeof v.b === 'number') { values[2] = v.b }
+      if (typeof v.w === 'number') { values[3] = v.w }
+      if (typeof v.x === 'number') { values[0] = v.x }
+      if (typeof v.y === 'number') { values[1] = v.y }
+      if (typeof v.z === 'number') { values[2] = v.z }
+      return values
+    }
+    if (typeof v === 'number') { numbeArray[0] = v; return numbeArray }
+    return []
   }
 
   return (params) => {
@@ -22,7 +44,15 @@ define(function (require) {
         let channel = parseInt(p.substring(1))
         if (!isNaN(channel)) {
           channel += baseChannel - 1 // Base channel is 1-based
-          setChannel(channel, params[p], params)
+          let zOrder = 0
+          addRenderer(params._time, ({time}) => {
+            if (time > params.endTime) { return false }
+            let evalled = evalParamFrame(params[p] || 0, params, time) || 0
+            convertValues(evalled).forEach((v,valueIdx) => { // If evalled was a colour or something, write all values
+              setChannel(channel+valueIdx, Math.floor(Math.min(Math.max(v,0),1) * 255))
+            })
+            return true
+          }, zOrder)
         }
       }
     }

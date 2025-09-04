@@ -4,11 +4,10 @@
 === DMX ===
 DMX player
  ? Switch to a callback approach?
-  Use a renderList
   Each event registers a callback with the DMX 'system', and they set or add to the channel data directly in the buffer
    Maybe switch to {1:rainbow} syntax???
    Consider adding addToChannel etc
- Need to decode colours: hsl etc
+ Need to decode colours: hsl etc: how does sprite do it?
  Only send channels up to last non-zero channel to minimise overruns
  Try out a web worker to avoid slow updates / flickering
  base param to add to channel
