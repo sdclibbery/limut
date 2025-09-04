@@ -4,10 +4,13 @@
 === DMX ===
 DMX player
  ? Switch to a callback approach?
+  Use a renderList
   Each event registers a callback with the DMX 'system', and they set or add to the channel data directly in the buffer
-   TEST this!!!!!!!
-   Maybe switch to {1:rainbow}???
-   Conaider adding addToChannel etc
+   Maybe switch to {1:rainbow} syntax???
+   Consider adding addToChannel etc
+ Need to decode colours: hsl etc
+ Only send channels up to last non-zero channel to minimise overruns
+ Try out a web worker to avoid slow updates / flickering
  base param to add to channel
   ??Should c1 etc be zero-based if base is one-based??
   ??Need to track each event in dmx, along with overrides, per channel???
@@ -23,8 +26,6 @@ When got actual hardware:
     is that too long to block the main thread?
      But wait; It isn't blocking the main thread? Because its using await?
       So as long as we don't need to busy-wait, there is no problem?
-?Consider allowing full 512 channels and dropping updates, but only if that many channels actually in use??
- ??Subtract one from every channel value after every write? And then prune subscript channels that are zero from the array?
 DOCS
 
 ==== audio ====
