@@ -93,15 +93,15 @@ define(function(require) {
     if (!writer) { console.log('DMX writer not inited'); return }
     if (!writer.ready) { console.log('DMX writer not ready'); return }
     if (writing) { console.log(`Warning: DMX send overrun`); return } // Still writing the last packet, ignore this one
+    buffer.fill(0,1,-1) // Clear buffer to zero before collecting values
     channels = channels.filter(({channel,value,event}) => {
-      let finished = timeNow > event.endTime
+      if (timeNow > event.endTime) { return false }
       let bufferIdx = channel // channel is one based, but the data buffer has one start byte first
       let evalled = evalParamFrame(value || 0, event, timeNow) || 0
       convertValues(evalled).forEach((v,valueIdx) => { // If evalled was a colour or something, write all values
-        if (finished) { v = 0 }
         buffer[bufferIdx+valueIdx] = Math.floor(Math.min(Math.max(v,0),1) * 255)
       })
-      return !finished
+      return true
     })
     sendData(buffer)
   }

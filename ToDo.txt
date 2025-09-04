@@ -3,6 +3,11 @@
 =================================================================================================================================
 === DMX ===
 DMX player
+ ? Switch to a callback approach?
+  Each event registers a callback with the DMX 'system', and they set or add to the channel data directly in the buffer
+   TEST this!!!!!!!
+   Maybe switch to {1:rainbow}???
+   Conaider adding addToChannel etc
  base param to add to channel
   ??Should c1 etc be zero-based if base is one-based??
   ??Need to track each event in dmx, along with overrides, per channel???
@@ -11,8 +16,7 @@ DMX player
     NEED to think what the correct interface to the dmx module is...
  amp param for dmx player?
 When got actual hardware:
- electron-main needs to find correct port
- dmx.js needs to use correct vendor id
+ ???dmx.js needs to use correct vendor id??? No need?
  ???Need to have correct timing on the setSignals break calls?
   ?? Need to move onto a WebWorker just because it will need to spin wait for proper timing?
    Currently the whole thing (2 x setSignals + write) takes between 0.3ms and 1ms even without any timing waits

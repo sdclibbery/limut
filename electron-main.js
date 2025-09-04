@@ -8,10 +8,10 @@ app.on('ready', () => {
     event.preventDefault()
     console.log('Available serial ports:', portList)
     if (portList.length > 0) {
-      let portNameTarget = 'cu.debug-console'//'dmx'
+      let portNameTarget = 'cu.usbserial'//'cu.debug-console'
       const selectedPort = portList.filter(p => p.portName.toLowerCase().includes(portNameTarget))[0] // First port that includes the target string
       if (!!selectedPort) {
-        console.log(`Programmatically selecting port: ${selectedPort.portName} ${selectedPort.portId}`)
+        console.log(`DMX using serial port: ${selectedPort.portName} ${selectedPort.portId}`)
         callback(selectedPort.portId)
         return
       }
