@@ -1,7 +1,6 @@
 'use strict';
 define(function(require) {
   let consoleOut = require('console')
-  let {evalParamFrame} = require('player/eval-param')
   let newRenderList = require('draw/render-list')
 
   let inited = false
@@ -40,12 +39,12 @@ define(function(require) {
   let buffer = new Uint8Array(513) // 1 start code + 512 channels
   buffer[0] = 0x00 // DMX start code
   let maxChannel = 0
-  let setChannel = (channel, callback) => {
+  let addToChannel = (channel, callback) => {
     if (typeof channel !== 'number' || channel < 1 || channel > 512) {
       consoleOut(`🔴 DMX channel ${channel} out of range (1-512)`)
       return
     }
-    buffer[channel] = callback // channel is 1-based, buffer has a start code at 0
+    buffer[channel] += callback // channel is 1-based, buffer has a start code at 0
     maxChannel = Math.max(maxChannel, channel)
   }
 
@@ -83,7 +82,7 @@ define(function(require) {
 
   return {
     addRenderer: addRenderer,
-    setChannel: setChannel,
+    addToChannel: addToChannel,
     perFrameUpdate: perFrameUpdate,
   }
 })

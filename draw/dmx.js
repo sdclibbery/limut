@@ -1,6 +1,6 @@
 'use strict';
 define(function (require) {
-  let {addRenderer,setChannel} = require('dmx')
+  let {addRenderer,addToChannel} = require('dmx')
   let {evalParamEvent,evalParamFrame} = require('player/eval-param')
   let {mainParamUnits} = require('player/sub-param')
 
@@ -49,7 +49,7 @@ define(function (require) {
             if (time > params.endTime) { return false }
             let evalled = evalParamFrame(params[p] || 0, params, time) || 0
             convertValues(evalled).forEach((v,valueIdx) => { // If evalled was a colour or something, write all values
-              setChannel(channel+valueIdx, Math.floor(Math.min(Math.max(v,0),1) * 255))
+              addToChannel(channel+valueIdx, Math.floor(Math.min(Math.max(v,0),1) * 255))
             })
             return true
           }, zOrder)
