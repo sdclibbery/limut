@@ -3,13 +3,14 @@
 =================================================================================================================================
 === DMX ===
 DMX player
+ Only send channels up to last non-zero channel to minimise overruns
  ? Switch to a callback approach?
   Each event registers a callback with the DMX 'system', and they set or add to the channel data directly in the buffer
    Maybe switch to {1:rainbow} syntax???
    Consider adding addToChannel etc
  Need to decode colours: hsl etc: how does sprite do it?
- Only send channels up to last non-zero channel to minimise overruns
  Try out a web worker to avoid slow updates / flickering
+  worker should push at max rate, using whatever the latest data is, not trying to eval at the moment of send
  base param to add to channel
   ??Should c1 etc be zero-based if base is one-based??
   ??Need to track each event in dmx, along with overrides, per channel???

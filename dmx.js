@@ -37,14 +37,16 @@ define(function(require) {
     renderList.add(startTime, render, zorder || 0)
   }
 
-  let buffer = new Uint8Array(321)
+  let buffer = new Uint8Array(513) // 1 start code + 512 channels
   buffer[0] = 0x00 // DMX start code
+  let maxChannel = 0
   let setChannel = (channel, callback) => {
-    if (typeof channel !== 'number' || channel < 1 || channel > 320) {
-      consoleOut(`🔴 DMX channel ${channel} out of range (1-320)`) // For now going to limit to 320 channels to "guarantee" 60hz
+    if (typeof channel !== 'number' || channel < 1 || channel > 512) {
+      consoleOut(`🔴 DMX channel ${channel} out of range (1-512)`)
       return
     }
     buffer[channel] = callback // channel is 1-based, buffer has a start code at 0
+    maxChannel = Math.max(maxChannel, channel)
   }
 
   let writing = false
@@ -59,7 +61,7 @@ define(function(require) {
       await writer.write(data)
       // let t4 = performance.now()
       // console.log(t2-t1, t3-t2, t4-t3)
-      // console.log('DMX sending:', Array.from(data.subarray(1,5)))
+      // console.log('DMX sending:', data)
     } finally {
       writing = false
     }
@@ -76,7 +78,7 @@ define(function(require) {
     buffer.fill(0,1,-1) // Clear buffer to zero before collecting values
     renderState.time = timeNow
     renderList.render(renderState)
-    sendData(buffer)
+    sendData(buffer.subarray(0, maxChannel+1)) // +1 to make end inclusive
   }
 
   return {
