@@ -75,6 +75,7 @@ define(function(require) {
     if (!writer.ready) { console.log('DMX writer not ready'); return }
     if (writing) { console.log(`Warning: DMX send overrun`); return } // Still writing the last packet, ignore this one
     buffer.fill(0,1,-1) // Clear buffer to zero before collecting values
+    maxChannel = 1
     renderState.time = timeNow
     renderList.render(renderState)
     sendData(buffer.subarray(0, maxChannel+1)) // +1 to make end inclusive

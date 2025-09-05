@@ -3,7 +3,6 @@
 =================================================================================================================================
 === DMX ===
 DMX player
- Switch to {1:rainbow} syntax
  Try out a web worker to avoid slow updates / flickering
   worker should push at max rate, using whatever the latest data is, not trying to eval at the moment of send
  Need to decode colours: hsl etc: how does sprite do it?
