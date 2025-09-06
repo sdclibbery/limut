@@ -498,6 +498,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>foo</code> Lookup a global var named <code>foo</code>. If there is no var, predefined var, or var function named foo, then the string <code>'foo'</code> will be returned instead. If there is a var named foo, but no arguments are provided, then the string <code>'foo'</code> will be returned instead.</p>
 <p><code>foo{x:2}</code> Lookup a global var named <code>foo</code>, and call it as a function passing in named parameters.</p>
 <h5>Modifiers:</h5>
+<p><code>{time:time}</code> Provide an expression to give the modified time value. For example <code>value{time:time*2+8}</code> will run time at double speed, with an offset of 8.</p>
 <p><code>{per:8}</code> Repeat a sequence <code>[1,2,3]t1{per:8}</code> will give a sequence that repeats every 8 beats.</p>
 <p><code>{per:8,0:7,2:3}</code> Force the value to evaluate to 7 at the start of each repeat, and 3 on the second beat of every repeat. Note this only works if <code>per</code> is used to make a repeating sequence. Default time units: beats.</p>
 <p><code>{step:2}</code> Advance time in discrete steps only <code>[1,4]l4{step:1/2}@f</code> will give a sequence that changes value only every 1/2 beat. Default units: beats.</p>

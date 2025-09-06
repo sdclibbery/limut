@@ -34,7 +34,7 @@ define((require) => {
 
   let results = {}
   let evalFunction = (value, mods, event, beat, evalRecurse) => {
-    let override = applyModifiers(results, mods, event, beat, value.interval)
+    let override = applyModifiers(results, mods, event, beat, value.interval, evalParamEvent,evalParamFrame)
     if (override !== undefined) { return override }
     let originalCount = event.count
     event.count = results.modCount

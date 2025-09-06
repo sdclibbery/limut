@@ -34,9 +34,13 @@ define(function(require) {
   }
 
   let makeStep = (x, step) => Math.floor(x/step)*step
-  let applyModifiers = (results, mods, event, beat, interval) => {
+  let applyModifiers = (results, mods, event, beat, interval, evalParamEvent,evalParamFrame) => {
     let modBeat = beat
     let modCount = event.count
+    if (mods.time) { // Generic time manipulation: supply expression that returns new time value
+      modCount = evalParamEvent(mods.time, event)
+      modBeat = evalParamFrame(mods.time, event, modBeat)
+    }
     if (mods.per !== undefined) {
       let per = units(mods.per, 'b')
       modCount = modCount % per

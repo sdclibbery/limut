@@ -4592,3 +4592,15 @@ preset dirt multiwave, dur=1/4, oct=2, envelope='perc',
 // w webcam, contrast=3
 // w webcam, contrast=2, fore=3/4, back=1
 
+
+g gradient, loc={w:1/2,x:1/4+(-2,-1,0,1)/2}, fore=rainbow{time:(time-this.voice)}
+
+
+// pk perc x.x.. crop 16, amp/=16
+// d dmx, lights={1:1,2:pk.playing}
+///
+// v gradient, loc=tile_tr, amp=[0,0,0,1], dur=1/4
+// d dmx, lights={1:1,2:#fff}, channel=[1,8,15,22], dur=1/4
+///
+// d dmx, lights={1,rainbow}, channel=(1,8)
+

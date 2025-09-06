@@ -14,14 +14,15 @@ DMX player
     Could this also allow += etc??
     NEED to think what the correct interface to the dmx module is...
  amp param for dmx player?
-When got actual hardware:
- ???dmx.js needs to use correct vendor id??? No need?
- ???Need to have correct timing on the setSignals break calls?
-  ?? Need to move onto a WebWorker just because it will need to spin wait for proper timing?
-   Currently the whole thing (2 x setSignals + write) takes between 0.3ms and 1ms even without any timing waits
-    is that too long to block the main thread?
-     But wait; It isn't blocking the main thread? Because its using await?
-      So as long as we don't need to busy-wait, there is no problem?
+ When got actual hardware:
+  ???dmx.js needs to use correct vendor id??? No need?
+  ???Need to have correct timing on the setSignals break calls?
+   ?? Need to move onto a WebWorker just because it will need to spin wait for proper timing?
+    Currently the whole thing (2 x setSignals + write) takes between 0.3ms and 1ms even without any timing waits
+     is that too long to block the main thread?
+      But wait; It isn't blocking the main thread? Because its using await?
+       So as long as we don't need to busy-wait, there is no problem?
+ try it in chrome...
 DOCS: dmx synth, lights{1:}, lights{,}, channel
 ? What happens if a visual synth uses the gamepad pattern? Or a visual synth follows a player using gamepad?
  It will fail, right? Because sprite needs to handle unknown end time
