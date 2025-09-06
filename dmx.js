@@ -2,6 +2,7 @@
 define(function(require) {
   let consoleOut = require('console')
   let newRenderList = require('draw/render-list')
+  let metronome = require('metronome')
 
   let inited = false
   let port
@@ -78,6 +79,7 @@ define(function(require) {
     buffer.fill(0,1,-1) // Clear buffer to zero before collecting values
     maxChannel = 1
     renderState.time = timeNow
+    renderState.count = metronome.beatTime(timeNow)
     renderList.render(renderState)
     let maxChannelToUse = Math.max(maxChannel, lastMaxChannel) // Make sure we always send at least as many channels as last time, so that if a channel was on and is now off it gets turned off
     lastMaxChannel = maxChannel

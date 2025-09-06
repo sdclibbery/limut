@@ -3,26 +3,12 @@
 =================================================================================================================================
 === DMX ===
 DMX player
- Try out a web worker to avoid slow updates / flickering
-  worker should push at max rate, using whatever the latest data is, not trying to eval at the moment of send
- !!pk.pulse, pk.playing, etc not working?? - works for visual synths - not working for dmx :-/
- !!suprising amount of latency/delay given its running at 60fps, where is it coming from?
  Need to decode colours: hsl etc: how does sprite do it?
- base param to add to channel
-  ??Need to track each event in dmx, along with overrides, per channel???
-   EG if have a long event that is then overridden by a short event, the long event will be lost currently
-    Could this also allow += etc??
-    NEED to think what the correct interface to the dmx module is...
- amp param for dmx player?
- When got actual hardware:
-  ???dmx.js needs to use correct vendor id??? No need?
-  ???Need to have correct timing on the setSignals break calls?
-   ?? Need to move onto a WebWorker just because it will need to spin wait for proper timing?
-    Currently the whole thing (2 x setSignals + write) takes between 0.3ms and 1ms even without any timing waits
-     is that too long to block the main thread?
-      But wait; It isn't blocking the main thread? Because its using await?
-       So as long as we don't need to busy-wait, there is no problem?
  try it in chrome...
+ !?suprising amount of latency/delay given its running at 60fps, where is it coming from?
+ Try out a web worker to avoid slow updates / flickering
+   worker should push at max rate, using whatever the latest data is, not trying to eval at the moment of send
+ ?!currently everything ADDs to the dmx buffer. So any overlapping events will add. Is that good or a problem?
 DOCS: dmx synth, lights{1:}, lights{,}, channel
 ? What happens if a visual synth uses the gamepad pattern? Or a visual synth follows a player using gamepad?
  It will fail, right? Because sprite needs to handle unknown end time
@@ -393,7 +379,7 @@ shadertoy synth multiple channels
 // operators + - * / ^ % | . >>
 // var, player.var, this.param, this.voice, var{params}, slider{}, floor{}, .floor{to:}, accum{}, this.time, time, rand, slider
 // (...).1, (...).max, max{...}, {foo:...}.foo, (pk,ps).pulse
-// modifiers {seed,per,step,0:0}, @e, @f
+// modifiers {seed,time,per,step,0:0}, @e, @f
 // subparams {2,mix:1/2}, presets, buses, buffers
 // Audionodes osc{} >>
 !!!!Remember to update breaking changes link on index when doing a release!!!!
@@ -416,7 +402,7 @@ Cooler effect when update code
 More time modifiers
  offset
  rate
- time - set time directly to an expression
+ time - set time directly to an expression - DONE
  Random noise rewrite to use piecewise
   []n:  []n1  =>  [ rand{step:2} ,~1; rand{step:2,offset:1} ,~1; ]time*1
 Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7]r, delay=(0,{1/2,add+:2})

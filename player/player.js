@@ -121,7 +121,8 @@ define((require) => {
       if (!es) { return [] }
       es = es.filter(e => {
         let t = e.countToTime(b)
-        let endTime = e._time + e.dur*e.beat.duration
+        let endTime = e.endTime
+        if (!endTime) { endTime = e._time + e.dur*e.beat.duration }
         return (t > e._time-0.0001) && (t < endTime)
       })
       return es

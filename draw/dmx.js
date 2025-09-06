@@ -40,9 +40,9 @@ define(function (require) {
     params.endTime = params._time + sus * params.beat.duration
     let baseChannel = evalParamEvent(params.channel, params) || 1 // Base channel offset (which must also be 1-based)
     let zOrder = 0
-    addRenderer(params._time, ({time}) => {
+    addRenderer(params._time, ({time, count}) => {
       if (time > params.endTime) { return false }
-      let lights = evalParamFrame(params.lights, params, time)
+      let lights = evalParamFrame(params.lights, params, count)
       if (typeof lights === 'object') {
         for (let key in lights) {
           let channel
