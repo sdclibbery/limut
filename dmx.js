@@ -66,6 +66,7 @@ define(function(require) {
     }
   }
 
+  let lastMaxChannel = 1
   let renderState = {time:0}
   let perFrameUpdate = (timeNow) => {
     if (renderList.isEmpty()) { return }
@@ -78,7 +79,10 @@ define(function(require) {
     maxChannel = 1
     renderState.time = timeNow
     renderList.render(renderState)
-    sendData(buffer.subarray(0, maxChannel+1)) // +1 to make end inclusive
+    let maxChannelToUse = Math.max(maxChannel, lastMaxChannel) // Make sure we always send at least as many channels as last time, so that if a channel was on and is now off it gets turned off
+    lastMaxChannel = maxChannel
+    let endChannel = Math.ceil(maxChannelToUse/16)*16 // Round up to multiple of 16 to make sure entire dmx "block" gets sent
+    sendData(buffer.subarray(0, endChannel-1+1+1)) // -1 because 1-based, +1 for start byte, +1 to make end inclusive
   }
 
   return {

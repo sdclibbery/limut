@@ -3,10 +3,14 @@
 =================================================================================================================================
 === DMX ===
 DMX player
+ Should allow lights={1,rainbow}
  Try out a web worker to avoid slow updates / flickering
   worker should push at max rate, using whatever the latest data is, not trying to eval at the moment of send
+ !!pk.pulse, pk.playing, etc not working?? - works for visual synths - not working for dmx :-/
+ !!suprising amount of latency/delay given its running at 60fps, where is it coming from?
  Need to decode colours: hsl etc: how does sprite do it?
  base param to add to channel
+  ?Rename base to channel?
   ??Should c1 etc be zero-based if base is one-based??
   ??Need to track each event in dmx, along with overrides, per channel???
    EG if have a long event that is then overridden by a short event, the long event will be lost currently
@@ -22,11 +26,18 @@ When got actual hardware:
      But wait; It isn't blocking the main thread? Because its using await?
       So as long as we don't need to busy-wait, there is no problem?
 DOCS
-
-==== audio ====
 ? What happens if a visual synth uses the gamepad pattern? Or a visual synth follows a player using gamepad?
  It will fail, right? Because sprite needs to handle unknown end time
  Same for dmx player... needs to handle unknown end time
+electron performance
+ game mode https://g.co/gemini/share/2d402c47eda2
+  Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
+  BrowserWindow.setFullScreen(true) for fullscreen
+
+==== audio ====
+dirt preset
+ooo pad preset
+fm elec piano preset
 velocity
   all players default to vel=1 even without midi
   ALL presets to use this.vel; check setting param `vel=midi{'vel'}` works as expected
@@ -34,10 +45,6 @@ velocity
   this.vel should update with aftertouch, at the moment you only get the vel at the time of note-on (see percussion pads)
   midi{'vel'} should include aftertouch?
   DOCS
-electron performance
- game mode https://g.co/gemini/share/2d402c47eda2
-  Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
-  BrowserWindow.setFullScreen(true) for fullscreen
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   Segments should be added bit by bit not all at the beginning
    !! TEST with lots of user functions / sub params etc
