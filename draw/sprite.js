@@ -8,7 +8,7 @@ define(function (require) {
   let {subParam,subParamUnits,mainParamUnits} = require('player/sub-param')
   let texture = require('draw/texture')
   let textTexture = require('draw/text')
-  let colour = require('draw/colour')
+  let {colour} = require('draw/colour')
   let players = require('player/players')
 
   let evalMainParamFrame = (params, p, def, count, units) => {

@@ -31,7 +31,7 @@ define(function (require) {
         vca.gain.linearRampToValueAtTime(gain*susLevel*0.8, system.audio.currentTime)
         vca.gain.linearRampToValueAtTime(0, system.audio.currentTime+release)
         params.endTime = system.audio.currentTime+release
-          setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
+        setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
       }
     }
 

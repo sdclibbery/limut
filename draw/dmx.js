@@ -3,6 +3,7 @@ define(function (require) {
   let {addRenderer,addToChannel} = require('dmx')
   let {evalParamEvent,evalParamFrame} = require('player/eval-param')
   let {mainParamUnits} = require('player/sub-param')
+  let {colourRgb} = require('draw/colour')
 
   let evalMainParamEvent = (params, p, def, units) => {
     let v = params[p]
@@ -13,21 +14,26 @@ define(function (require) {
   }
 
   let numbeArray = [0]
+  let values = []
+  let black = {r:0,g:0,b:0,a:1}
   let convertValues = (v) => {
     if (Array.isArray(v)) { return v.filter(av => typeof av === 'number') }
     if (typeof v === 'object') {
-      let values = []
+      let col = colourRgb(v, black, 'lights')
+      if (Array.isArray(col)) {
+        values[0] = col[0]
+        values[1] = col[1]
+        values[2] = col[2]
+        return values
+      }
       if (typeof v.value === 'number') { values[0] = v.value }
       if (typeof v.value1 === 'number') { values[1] = v.value1 }
       if (typeof v.value2 === 'number') { values[2] = v.value2 }
       if (typeof v.value3 === 'number') { values[3] = v.value3 }
-      if (typeof v.r === 'number') { values[0] = v.r }
-      if (typeof v.g === 'number') { values[1] = v.g }
-      if (typeof v.b === 'number') { values[2] = v.b }
-      if (typeof v.w === 'number') { values[3] = v.w }
       if (typeof v.x === 'number') { values[0] = v.x }
       if (typeof v.y === 'number') { values[1] = v.y }
       if (typeof v.z === 'number') { values[2] = v.z }
+      if (typeof v.w === 'number') { values[3] = v.w }
       return values
     }
     if (typeof v === 'number') { numbeArray[0] = v; return numbeArray }

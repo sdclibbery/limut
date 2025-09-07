@@ -37,16 +37,12 @@ define(function (require) {
   }
 
   let cachedObjects = {}
-  let ca = (n) => {
+  let cached = (n) => {
     if (cachedObjects[n] === undefined) { cachedObjects[n] = [] }
     return cachedObjects[n]
   }
-  let colour = (v, d, name) => {
-    let ar = ca(name)
-    if (typeof v === 'number') {
-      ar[0] = ar[1] = ar[2] = ar[3] = v
-      return ar
-    }
+  let colourToArray = (v, d, name) => {
+    let ar = cached(name)
     let labh = subParam(v, 'labh', undefined)
     let h = subParam(v, 'h', undefined)
     let r = subParam(v, 'r', d.r)
@@ -71,6 +67,20 @@ define(function (require) {
     return ar
   }
 
+  let colour = (v, d, name) => { // Convert a colour number or object to an RGBA array
+    if (typeof v === 'number') {
+      let ar = cached(name)
+      ar[0] = ar[1] = ar[2] = ar[3] = v
+      return ar
+    }
+    return colourToArray(v, d, name)
+  }
+
+  let colourRgb = (v, d, name) => { // Convert a colour number or object to an RGB array
+    if (typeof v !== 'object') { return v }
+    return colourToArray(v, d, name)
+  }
+
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
     let assert = (expected, actual) => {
@@ -80,6 +90,7 @@ define(function (require) {
     }
     let white = () => { return {r:1,g:1,b:1,a:1} }
     let red = () => { return {r:1,g:0,b:0,a:1} }
+    let black = () => { return {r:0,g:0,b:0,a:1} }
 
     assert([0,0,0,0], colour(0, red(), 'blah'))
     assert([1,1,1,1], colour(1, red(), 'blah'))
@@ -98,8 +109,14 @@ define(function (require) {
     assert([0,1,1/2,1], colour({h:1/3,b:1/2}, white(), 'blah'))
     assert([0.9582161268492856,-0.16725554410511348,0.07878618934675646,1], colour({labh:0}, white(), 'blah'))
 
+    assert(0, colourRgb(0, red(), 'blah'))
+    assert([0,1,0,1], colourRgb({g:1}, black(), 'blah'))
+
     console.log('colour tests complete')
   }
   
-  return colour
+  return {
+    colour: colour,
+    colourRgb: colourRgb,
+  }
 })
