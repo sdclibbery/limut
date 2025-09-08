@@ -2,17 +2,15 @@
 =================================================================================================================================
 =================================================================================================================================
 === DMX ===
+!!TEST seom visual synth colours from examples...
 DMX player
- Need to decode colours: hsl etc: how does sprite do it?
-  Need new colour function to return object not array, and not accept a single number
-   ?What does sprite use the d (default) colour param for?
- try it in chrome...
  !?suprising amount of latency/delay given its running at 60fps, where is it coming from?
   TEST with 512 channels and an actual light
    CUrrently: works up to 320 channels ish, then flicker or fail; have to try web worker with correct timings to fix?
   Try out a web worker to avoid slow updates / flickering
    worker should push at max rate, using whatever the latest data is, not trying to eval at the moment of send
- ?!currently everything ADDs to the dmx buffer. So any overlapping events will add. Is that good or a problem?
+ blend mode: whether to add or set
+ try it in chrome...
 DOCS: dmx synth, lights{1:}, lights{,}, channel
 ? What happens if a visual synth uses the gamepad pattern? Or a visual synth follows a player using gamepad?
  It will fail, right? Because sprite needs to handle unknown end time
