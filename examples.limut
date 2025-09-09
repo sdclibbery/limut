@@ -4596,11 +4596,22 @@ preset dirt multiwave, dur=1/4, oct=2, envelope='perc',
 g gradient, loc={w:1/2,x:1/4+(-2,-1,0,1)/2}, fore=rainbow{time:(time-this.voice)}
 
 
-// pk perc x.x.. crop 16, amp/=16
-// d dmx, lights={1:1,2:pk.playing}
-///
+// d1 dmx, lights={1,rainbow_fast}
+// d2 dmx, lights={1,[1,-1]*white*[1:!,0]e}
+
+// d dmx, lights={1,rainbow_fast, 512:1}
+
+// d dmx, channel=(1,2), lights=1
+
+// pk perc x.x.. crop 16, amp*=-30db
+// d dmx, lights={1,pk.pulse}
+// d dmx, lights={1,pk.playing}
+// r readout, add={pk.playing}
+// d dmx follow pk, lights={1}
+// d dmx, lights={ pk.pulse, {labh:time/8} }
+
 // v gradient, loc=tile_tr, amp=[0,0,0,1], dur=1/4
 // d dmx, lights={1:1,2:#fff}, channel=[1,8,15,22], dur=1/4
-///
+
 // d dmx, lights={1,rainbow}, channel=(1,8)
 

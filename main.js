@@ -22,7 +22,7 @@ define(function(require) {
   require('editor-codemirror')
   let {parseCode} = require('update-code')
   let {clearCallTree} = require('player/callstack')
-  let dmx = require('dmx')
+  let dmx = require('draw/dmx-system')
 
   // Load presets
   let loadPresetCollection = (name) => {

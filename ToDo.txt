@@ -2,16 +2,11 @@
 =================================================================================================================================
 =================================================================================================================================
 === DMX ===
-!!TEST seom visual synth colours from examples...
 DMX player
- !?suprising amount of latency/delay given its running at 60fps, where is it coming from?
-  TEST with 512 channels and an actual light
-   CUrrently: works up to 320 channels ish, then flicker or fail; have to try web worker with correct timings to fix?
-  Try out a web worker to avoid slow updates / flickering
-   worker should push at max rate, using whatever the latest data is, not trying to eval at the moment of send
  blend mode: whether to add or set
  try it in chrome...
-DOCS: dmx synth, lights{1:}, lights{,}, channel
+DOCS: dmx synth, lights{1:}, lights{,}, channel, blend
+!!TEST some visual synth colours from examples...
 ? What happens if a visual synth uses the gamepad pattern? Or a visual synth follows a player using gamepad?
  It will fail, right? Because sprite needs to handle unknown end time
  Same for dmx player... needs to handle unknown end time

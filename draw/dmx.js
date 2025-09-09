@@ -1,6 +1,6 @@
 'use strict';
 define(function (require) {
-  let {addRenderer,addToChannel} = require('dmx')
+  let {addRenderer,addToChannel} = require('draw/dmx-system')
   let {evalParamEvent,evalParamFrame} = require('player/eval-param')
   let {mainParamUnits} = require('player/sub-param')
   let {colourRgb} = require('draw/colour')
@@ -13,7 +13,7 @@ define(function (require) {
     return mainParamUnits(v, units, def)
   }
 
-  let numbeArray = [0]
+  let numberArray = [0]
   let values = []
   let black = {r:0,g:0,b:0,a:1}
   let convertValues = (v) => {
@@ -36,7 +36,7 @@ define(function (require) {
       if (typeof v.w === 'number') { values[3] = v.w }
       return values
     }
-    if (typeof v === 'number') { numbeArray[0] = v; return numbeArray }
+    if (typeof v === 'number') { numberArray[0] = v; return numberArray }
     return []
   }
 
@@ -60,10 +60,12 @@ define(function (require) {
           if (!isNaN(channel)) {
             channel += baseChannel - 1 // Base channel is 1-based
             convertValues(lights[key]).forEach((v, valueIdx) => { // If evalled was a colour or something, write all values
-              addToChannel(channel + valueIdx, Math.floor(Math.min(Math.max(v, 0), 1) * 255))
+              addToChannel(channel + valueIdx, v)
             })
           }
         }
+      } else if (typeof lights === 'number') {
+        addToChannel(baseChannel, lights)
       }
       return true
     }, zOrder)
