@@ -2,12 +2,14 @@
 =================================================================================================================================
 =================================================================================================================================
 === DMX ===
+!!!flickering using web worker
+!!!Make sure adding/removing light with additional players works properly
 DMX player
  blend mode: whether to add or set
  try it in chrome...
  ?Should go back to just sending up to maxChannel again? minimise work in the common case?
+  ?For what though? just to minimise web worker comms? Or to try to address the flickering??
 DOCS: dmx synth, lights{1:}, lights{,}, channel, blend
-!!TEST some visual synth colours from examples...
 ? What happens if a visual synth uses the gamepad pattern? Or a visual synth follows a player using gamepad?
  It will fail, right? Because sprite needs to handle unknown end time
  Same for dmx player... needs to handle unknown end time
@@ -18,8 +20,6 @@ electron performance
 
 ==== audio ====
 dirt preset
-oooh vocal pad preset
-fm elec piano preset
 velocity
   all players default to vel=1 even without midi
   ALL presets to use this.vel; check setting param `vel=midi{'vel'}` works as expected
@@ -27,6 +27,7 @@ velocity
   this.vel should update with aftertouch, at the moment you only get the vel at the time of note-on (see percussion pads)
   midi{'vel'} should include aftertouch?
   DOCS
+cyber presets
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   Segments should be added bit by bit not all at the beginning
    !! TEST with lots of user functions / sub params etc

@@ -34,7 +34,7 @@ let waitUntil = async (time) => {
 
 let lastSendTime = 0
 let sendData = async (data) => {
-  await waitUntil(lastSendTime + 25) // wait till 25 milliseconds after last send to give max 40hz updates
+  await waitUntil(lastSendTime + 27) // wait till more than 25 milliseconds after last send to give max 40hz updates
   lastSendTime = performance.now()
   
   port.setSignals({break: true, requestToSend: false}) // Break
