@@ -5,6 +5,7 @@
 DMX player
  blend mode: whether to add or set
  try it in chrome...
+ ?Should go back to just sending up to maxChannel again? minimise work in the common case?
 DOCS: dmx synth, lights{1:}, lights{,}, channel, blend
 !!TEST some visual synth colours from examples...
 ? What happens if a visual synth uses the gamepad pattern? Or a visual synth follows a player using gamepad?
