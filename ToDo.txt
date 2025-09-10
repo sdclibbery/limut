@@ -2,14 +2,9 @@
 =================================================================================================================================
 =================================================================================================================================
 === DMX ===
-!!!flickering using web worker
-!!!Make sure adding/removing light with additional players works properly
 DMX player
- blend mode: whether to add or set
  try it in chrome...
- ?Should go back to just sending up to maxChannel again? minimise work in the common case?
-  ?For what though? just to minimise web worker comms? Or to try to address the flickering??
-DOCS: dmx synth, lights{1:}, lights{,}, channel, blend
+DOCS: dmx synth, lights{1:}, lights{,}, channel, set/add/min/max/mul
 ? What happens if a visual synth uses the gamepad pattern? Or a visual synth follows a player using gamepad?
  It will fail, right? Because sprite needs to handle unknown end time
  Same for dmx player... needs to handle unknown end time

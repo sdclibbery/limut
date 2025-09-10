@@ -1,6 +1,6 @@
 'use strict';
 define(function (require) {
-  let {addRenderer,addToChannel} = require('draw/dmx-system')
+  let {addRenderer,blendChannel} = require('draw/dmx-system')
   let {evalParamEvent,evalParamFrame} = require('player/eval-param')
   let {mainParamUnits} = require('player/sub-param')
   let {colourRgb} = require('draw/colour')
@@ -40,6 +40,28 @@ define(function (require) {
     return []
   }
 
+  let applyParam = (value, baseChannel, blend) => {
+    if (!value) { return }
+    if (typeof value === 'object') {
+      for (let key in value) {
+        let channel
+        if (key.startsWith('value')) {
+          channel = (parseInt(key.slice(5)) || 0) + 1 // Force to 1-based
+        } else {
+          channel = parseInt(key) // Numeric keys
+        }
+        if (!isNaN(channel)) {
+          channel += baseChannel - 1 // Base channel is 1-based
+          convertValues(value[key]).forEach((v, valueIdx) => { // If evalled was a colour or something, write all values
+            blendChannel(channel + valueIdx, v, blend)
+          })
+        }
+      }
+    } else if (typeof value === 'number') {
+      blendChannel(baseChannel, value, blend.toLowerCase())
+    }
+}
+
   return (params) => {
     let dur = evalMainParamEvent(params, 'dur', 1, 'b')
     let sus = evalMainParamEvent(params, 'sus', dur, 'b')
@@ -48,25 +70,13 @@ define(function (require) {
     let zOrder = 0
     addRenderer(params._time, ({time, count}) => {
       if (time > params.endTime) { return false }
-      let lights = evalParamFrame(params.lights, params, count)
-      if (typeof lights === 'object') {
-        for (let key in lights) {
-          let channel
-          if (key.startsWith('value')) {
-            channel = (parseInt(key.slice(5)) || 0) + 1 // Force to 1-based
-          } else {
-            channel = parseInt(key) // Numeric keys
-          }
-          if (!isNaN(channel)) {
-            channel += baseChannel - 1 // Base channel is 1-based
-            convertValues(lights[key]).forEach((v, valueIdx) => { // If evalled was a colour or something, write all values
-              addToChannel(channel + valueIdx, v)
-            })
-          }
-        }
-      } else if (typeof lights === 'number') {
-        addToChannel(baseChannel, lights)
-      }
+      applyParam(evalParamFrame(params.lights, params, count), baseChannel, 'add')
+      applyParam(evalParamFrame(params.add, params, count), baseChannel, 'add')
+      applyParam(evalParamFrame(params.sub, params, count), baseChannel, 'sub')
+      applyParam(evalParamFrame(params.set, params, count), baseChannel, 'set')
+      applyParam(evalParamFrame(params.mul, params, count), baseChannel, 'mul')
+      applyParam(evalParamFrame(params.min, params, count), baseChannel, 'min')
+      applyParam(evalParamFrame(params.max, params, count), baseChannel, 'max')
       return true
     }, zOrder)
   }

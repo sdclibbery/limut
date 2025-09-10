@@ -13,12 +13,20 @@ define(function(require) {
 
   let buffer = new Uint8Array(513) // 1 start code + 512 channels
   buffer[0] = 0x00 // DMX start code
-  let addToChannel = (channel, value) => {
+  let blendChannel = (channel, value, blend) => {
     if (typeof channel !== 'number' || channel < 1 || channel > 512) {
       consoleOut(`🔴 DMX channel ${channel} out of range (1-512)`)
       return
     }
-    let newValue = buffer[channel] + value*0xff // Accumulate into buffer
+    let newValue
+    if (blend === 'set') { newValue = value*0xff }
+    else if (blend.startsWith('sub')) { newValue = buffer[channel] - value*0xff }
+    else if (blend === 'invert') { newValue = buffer[channel] + (1 - value)*0xff }
+    else if (blend === 'average') { newValue = (buffer[channel] + value*0xff) / 2 }
+    else if (blend.startsWith('mul')) { newValue = (buffer[channel] * value*0xff) / 0xff }
+    else if (blend === 'max') { newValue = Math.max(buffer[channel], value*0xff) }
+    else if (blend === 'min') { newValue = Math.min(buffer[channel], value*0xff) }
+    else { newValue = buffer[channel] + value*0xff } // default to additive
     buffer[channel] = toByte(newValue) // channel is 1-based, buffer has a start code at 0
   }
 
@@ -48,7 +56,7 @@ define(function(require) {
 
   return {
     addRenderer: addRenderer,
-    addToChannel: addToChannel,
+    blendChannel: blendChannel,
     perFrameUpdate: perFrameUpdate,
   }
 })
