@@ -46,12 +46,12 @@ define(function (require) {
       for (let key in value) {
         let channel
         if (key.startsWith('value')) {
-          channel = (parseInt(key.slice(5)) || 0) + 1 // Force to 1-based
+          channel = (parseInt(key.slice(5)) || 0) // Offset onto base channel, so zero based
         } else {
           channel = parseInt(key) // Numeric keys
         }
         if (!isNaN(channel)) {
-          channel += baseChannel - 1 // Base channel is 1-based
+          channel += baseChannel // Base channel is 1-based, so channel becomes an absolute 1-based dmx channel number after this
           convertValues(value[key]).forEach((v, valueIdx) => { // If evalled was a colour or something, write all values
             blendChannel(channel + valueIdx, v, blend)
           })
@@ -66,7 +66,7 @@ define(function (require) {
     let dur = evalMainParamEvent(params, 'dur', 1, 'b')
     let sus = evalMainParamEvent(params, 'sus', dur, 'b')
     params.endTime = params._time + sus * params.beat.duration
-    let baseChannel = evalParamEvent(params.channel, params) || 1 // Base channel offset (which must also be 1-based)
+    let baseChannel = evalParamEvent(params.channel, params) || 1 // Base channel offset: dmx is 1-based
     let zOrder = 0
     addRenderer(params._time, ({time, count}) => {
       if (time > params.endTime) { return false }

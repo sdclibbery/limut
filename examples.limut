@@ -4611,7 +4611,12 @@ g gradient, loc={w:1/2,x:1/4+(-2,-1,0,1)/2}, fore=rainbow{time:(time-this.voice)
 // d dmx, lights={ pk.pulse, {labh:time/8} }
 
 // v gradient, loc=tile_tr, amp=[0,0,0,1], dur=1/4
-// d dmx, lights={1:1,2:#fff}, channel=[1,8,15,22], dur=1/4
+// d dmx, lights={0:1,1:#fff}, channel=[1,8,15,22], dur=1/4
 
 // d dmx, lights={1,rainbow}, channel=(1,8)
+// d dmx, channel=(1,8,15,22), lights={[1:!1,0]e,[]n^4,[]n^4,[]n^4}
+
+// d dmx, channel=(1,8,15,22), lights={1,white/4}, mul={1:#02f}
+// set !p* add=-7
+
 

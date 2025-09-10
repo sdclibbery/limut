@@ -3,9 +3,8 @@
 =================================================================================================================================
 === DMX ===
 DMX player
-?Make lights={0:1} zero based, and only the channel param is one based. This is more logical really
 Allow  lights=white  etc; currently gets treated as having no channels/lights in
-DOCS: dmx synth, set/lights/addl/min/max/mul/lights, lights{1:}, lights{,}, channel=(1,8)
+DOCS: dmx synth, set/lights/addl/min/max/mul/lights, lights{0:}, lights{,}, channel=(1,8)
 ? What happens if a visual synth uses the gamepad pattern? Or a visual synth follows a player using gamepad?
  It will fail, right? Because sprite needs to handle unknown end time
  Same for dmx player... needs to handle unknown end time
