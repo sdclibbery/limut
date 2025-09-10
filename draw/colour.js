@@ -81,6 +81,13 @@ define(function (require) {
     return colourToArray(v, d, name)
   }
 
+  let isColour = (v) => {
+    if (typeof v !== 'object') { return false }
+    return (v.r !== undefined || v.g !== undefined || v.b !== undefined || v.a !== undefined ||
+            v.h !== undefined || v.s !== undefined || v.v !== undefined ||
+            v.l !== undefined || v.c !== undefined || v.labh !== undefined)
+  }
+
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
     let assert = (expected, actual) => {
@@ -116,6 +123,7 @@ define(function (require) {
   }
   
   return {
+    isColour: isColour,
     colour: colour,
     colourRgb: colourRgb,
   }

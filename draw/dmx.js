@@ -3,7 +3,7 @@ define(function (require) {
   let {addRenderer,blendChannel} = require('draw/dmx-system')
   let {evalParamEvent,evalParamFrame} = require('player/eval-param')
   let {mainParamUnits} = require('player/sub-param')
-  let {colourRgb} = require('draw/colour')
+  let {isColour,colourRgb} = require('draw/colour')
 
   let evalMainParamEvent = (params, p, def, units) => {
     let v = params[p]
@@ -43,6 +43,12 @@ define(function (require) {
   let applyParam = (value, baseChannel, blend) => {
     if (!value) { return }
     if (typeof value === 'object') {
+      if (isColour(value)) { // param is just a colour
+        convertValues(value).forEach((v, valueIdx) => {
+          blendChannel(baseChannel + valueIdx, v, blend)
+        })
+        return
+      }
       for (let key in value) {
         let channel
         if (key.startsWith('value')) {

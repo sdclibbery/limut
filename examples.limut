@@ -4619,4 +4619,7 @@ g gradient, loc={w:1/2,x:1/4+(-2,-1,0,1)/2}, fore=rainbow{time:(time-this.voice)
 // d dmx, channel=(1,8,15,22), lights={1,white/4}, mul={1:#02f}
 // set !p* add=-7
 
+d dmx, channel=1, lights=1
+d2 dmx, channel=2, lights=rainbow
+
 
