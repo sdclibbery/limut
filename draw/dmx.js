@@ -71,7 +71,7 @@ define(function (require) {
     addRenderer(params._time, ({time, count}) => {
       if (time > params.endTime) { return false }
       applyParam(evalParamFrame(params.lights, params, count), baseChannel, 'add')
-      applyParam(evalParamFrame(params.add, params, count), baseChannel, 'add')
+      applyParam(evalParamFrame(params.addl, params, count), baseChannel, 'add')
       applyParam(evalParamFrame(params.sub, params, count), baseChannel, 'sub')
       applyParam(evalParamFrame(params.set, params, count), baseChannel, 'set')
       applyParam(evalParamFrame(params.mul, params, count), baseChannel, 'mul')
