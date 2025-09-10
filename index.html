@@ -611,6 +611,14 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>scope</code> Display the current audio waveform</p>
 <p><code>scopefft</code> Display the frequency spectrum of the current audio waveform</p>
 <p><code>readout</code> Display the current value as a digital display</p>
+<p><code>dmx</code> Output to a DMX universe to control lighting fixtures. Requires web serial support to function (Chromium based browsers only currently), and a USB to DMX interface (tested with Enttec OpenDMX). For example, if there are two DMX lights on DMX channels 1 and 8, that each take a master dimmer channel followed by red, green and blue channels, then <code>d dmx, channel=(1,8), set={1,rainbow}</code> will output a rainbow colour to both lights.</p>
+<p class='sub'><code>channel</code> Set the base DMX channel number. DMX channels are 1-based, so this should be one or more, never zero.</p>
+<p class='sub'><code>set</code> Set DMX channels to the supplied values. For example <code>set={0.1,0.2}</code> sets the first channel to 0.1 and the second channel to 0.2. The channel offsets can also be supplied explicitly, eg <code>set={0:0.1, 1:0.2}</code></p>
+<p class='sub'><code>lights</code> Add values into DMX channel(s). Can be used in the same player or another to add value(s) to whatever is already set.</p>
+<p class='sub'><code>addl</code> Add values into DMX channel(s).</p>
+<p class='sub'><code>mul</code> Multiply values into DMX channel(s).</p>
+<p class='sub'><code>min</code> Take the minimum of the supplied value(s) with the current DMX channel value(s).</p>
+<p class='sub'><code>max</code> Take the maximum of the supplied value(s) with the current DMX channel value(s).</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-event-params')" class="accordion"> Common Event Params</h4>
 <div id="accordion-event-params" class="closed">
