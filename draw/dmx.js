@@ -4,6 +4,7 @@ define(function (require) {
   let {evalParamEvent,evalParamFrame} = require('player/eval-param')
   let {mainParamUnits} = require('player/sub-param')
   let {isColour,colourRgb} = require('draw/colour')
+  let system = require('draw/system')
 
   let evalMainParamEvent = (params, p, def, units) => {
     let v = params[p]
@@ -71,7 +72,12 @@ define(function (require) {
   return (params) => {
     let dur = evalMainParamEvent(params, 'dur', 1, 'b')
     let sus = evalMainParamEvent(params, 'sus', dur, 'b')
-    params.endTime = params._time + sus * params.beat.duration
+    if (params._noteOff === undefined) {
+      params.endTime = params._time + sus * params.beat.duration
+    } else { // "live" envelope, use note off to determine when to release
+      params.endTime = params._time + 1e6
+      params._noteOff = () => { params.endTime = system.time+0.01 } // Set real end time to end the event
+    }
     let baseChannel = evalParamEvent(params.channel, params) || 1 // Base channel offset: dmx is 1-based
     let zOrder = 0
     addRenderer(params._time, ({time, count}) => {

@@ -142,8 +142,12 @@ define(function (require) {
     }
     if (!s) { return () => {} }
     let startTime = params._time
-    let endTime = params._time + evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 1, 'b'), 'b') * params.beat.duration
-    params.endTime = endTime
+    if (params._noteOff === undefined) {
+      params.endTime = params._time + evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 1, 'b'), 'b') * params.beat.duration
+    } else { // "live" envelope, use note off to determine when to release
+      params.endTime = params._time + 1e6
+      params._noteOff = () => { params.endTime = system.time+0.01 } // Set real end time to end the event
+    }
     let rate = evalMainParamEvent(params, 'rate', 1)
     let value = parseInt(evalMainParamEvent(params, 'value', '0'))
     if (value > 10) { value = value/5 }
@@ -163,7 +167,7 @@ define(function (require) {
     }
     let targetBufferPlayerId = evalMainParamEvent(params, 'buffer')
     return state => { // per frame
-      if (state.time > endTime) { return false }
+      if (state.time > params.endTime) { return false }
       let bufferPlayer = players.getById(targetBufferPlayerId)
       let buffer = undefined
       if (bufferPlayer && bufferPlayer.buffer && bufferPlayer.buffer.target && bufferPlayer.buffer.target.framebuffer) {
@@ -181,7 +185,7 @@ define(function (require) {
       let amp = Math.min(evalMainParamFrame(params, 'amp', 1, state.count), 5)
       if (amp <= 0.0001) { return true }
       let add = evalMainParamFrame(params, 'add', 0, state.count)
-      let eventTime = ((state.time-startTime)/(endTime-startTime))
+      let eventTime = ((state.time-startTime)/(params.endTime-startTime))
       let brightness = 1
       if (fade > 0) {
         brightness = brightness - (eventTime*eventTime)*fade
