@@ -2,8 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 === DMX ===
-? What happens if a visual synth uses the gamepad pattern? Or a follows a player using gamepad?
- follow player still doesn't work: need to copy _noteOff?
 electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
@@ -363,11 +361,11 @@ shadertoy synth multiple channels
 =================================================================================================================================
 =================================================================================================================================
 ==== things to test/consider ====
-// pattern features (), [], <>, #b, v^, single event pattern
+// pattern features (), [], <>, #b, v^, single event pattern, gamepad/midi/keyboard
 // (), follow, complex durs, simple durs, delay, stutter, overrides, +=, |=, >>=, []
 // [], []t, []l/s, []e, []n, []r []{}, []es segmented audioparams
 // operators + - * / ^ % | . >>
-// var, player.var, this.param, this.voice, var{params}, slider{}, floor{}, .floor{to:}, accum{}, this.time, time, rand, slider
+// var, player.var, this.param, this.voice, var{params}, slider{}/gamepad{}/midi{}, floor{}, .floor{to:}, accum{}, this.time, time, rand
 // (...).1, (...).max, max{...}, {foo:...}.foo, (pk,ps).pulse
 // modifiers {seed,time,per,step,0:0}, @e, @f
 // subparams {2,mix:1/2}, presets, buses, buffers
@@ -378,6 +376,8 @@ shadertoy synth multiple channels
 =================================================================================================================================
 =================================================================================================================================
 ==== other ====
+!! cannot use follow player on gamepad/midi/keyboard player, because they do not use getEventsForBeat
+ Would have to rewrite follow player somehow: shadow the play() method maybe??
 !Commented parse expression unit tests
 User defined functions:
  ?How to avoid evalling function call args repeatedly due to them also being treated as modifiers?
