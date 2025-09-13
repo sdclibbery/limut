@@ -2,8 +2,8 @@
 =================================================================================================================================
 =================================================================================================================================
 === Other ===
-Tempo change
- Docs
+drive{} doesn't work: it can't access the outer shape argument??
+ set drive = {shape:1} -> shaper{ {x}->sgn{x}*(abs{x}^(1-shape*0.9)) }
 electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games

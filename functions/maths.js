@@ -31,6 +31,8 @@ define(function(require) {
   addVarFunction('tan', trigWrapper(Math.tan))
   add('pi', Math.PI)
   addVarFunction('abs', trigWrapper(Math.abs))
+  addVarFunction('sgn', trigWrapper(Math.sign))
+  addVarFunction('sign', trigWrapper(Math.sign))
 
   let euclid = (args, e) => {
     let k = Math.floor(argParam(args, 1)) // Distribute k beats...
