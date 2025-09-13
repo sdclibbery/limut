@@ -458,7 +458,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>[1:2]n</code> Smoothly varying noise, moving between 1 and 2</p>
 <p><code>[1:2]n4</code> Smoothly varying noise, moving between 1 and 2, taking 4 beats to progress from one value to another. The timing must be a const number, it cannot be an expression. Default time unit: beats.</p>
 <p><code>[]n{seed:1,per:4}</code> Smoothly varying deterministic noise, moving between 0 and 1; <code>seed</code> and <code>per</code> work the same as for <code>[]r</code></p>
-<p><code>[ v1:i1t1, v2:i2t2, ... ]{p}</code> Piecewise series. Allows interpolating between a set of values, specifying the interpolation and 'travel' between each pair of values, and allowing a custom parameter to control the interpolation. For example, <code>[0:_1,1:\]{time*2}</code> is controlled by double-speed time, starts at 0, stays constant at zero for 1 unit of double-speed time, then jumps to 1 and linearly falls back down to 0 for 1 unit of double-speed time.</p>
+<p><code>[ v1:i1t1, v2:i2t2, ... ]{p,repeat:0}</code> Piecewise series. Allows interpolating between a set of values, specifying the interpolation and 'travel' between each pair of values, and allowing a custom parameter to control the interpolation. For example, <code>[0:_1,1:\]{time*2}</code> is controlled by double-speed time, starts at 0, stays constant at zero for 1 unit of double-speed time, then jumps to 1 and linearly falls back down to 0 for 1 unit of double-speed time.</p>
 <p class='sub'><code>v1 etc</code> Expressions giving the values to interpolate between</p>
 <p class='sub'><code>i1 etc</code> Interpolation operator</p>
 <p class='subsub'><code>:/  :\</code> Linear interpolation operators; both do the same, but the two can be used to indicate direction</p>
@@ -468,6 +468,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='subsub'><code>:!</code> Exponential interpolation operator: exponential growth/decay to target</p>
 <p class='sub'><code>t1 etc</code> The amount of parameter p travel between this value and the next; note the sequence wraps round. Default time unit: beats.</p>
 <p class='sub'><code>p</code> Parameter expression giving the current point of travel through the piecewise series</p>
+<p class='sub'><code>repeat</code> Optional repeat parameter. Leave out for a repeating pattern, set to zero to disable repeat and clamp the value when the parameter is less than zero or greater than the full length of the piecewise.</p>
 <p><code>+</code> Add values together; eg <code>[2,3]+4</code> is equivalent to <code>[6,7]</code></p>
 <p><code>-</code> Subtract values; eg <code>[2,3]-1</code> is equivalent to <code>[1,2]</code></p>
 <p><code>-</code> Unary minus operator; eg <code>-[1,2]</code> is equivalent to <code>[-1,-2]</code></p>

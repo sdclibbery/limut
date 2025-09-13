@@ -2085,6 +2085,14 @@ define(function(require) {
   assert(1/2, evalParamFrame(parseExpression("[0,1]l8{time:time+4}@e"), e, 0))
   assert(1/2, evalParamFrame(parseExpression("[0,1]l8{time:time+4}@e"), e, 4))
 
+  assert(0, evalParamFrame(parseExpression("[0,1]{time-1,repeat:0}"), e, 0))
+  assert(0, evalParamFrame(parseExpression("[0,1]{time-1,repeat:0}"), e, 1))
+  assert(1/2, evalParamFrame(parseExpression("[0,1]{time-1,repeat:0}"), e, 3/2))
+  assert(1, evalParamFrame(parseExpression("[0,1]{time-1,repeat:0}"), e, 2))
+  assert(1, evalParamFrame(parseExpression("[0,1]{time-1,repeat:0}"), e, 2.9))
+  assert(1, evalParamFrame(parseExpression("[0,1]{time-1,repeat:0}"), e, 3))
+  assert(1, evalParamFrame(parseExpression("[0,1]{time-1,repeat:0}"), e, 4))
+
   // vars.foo = parseExpression('{v} -> v*3')
   // assert([3,6], evalParamFrame(parseExpression('foo{(1,2)}'), ev(), 0))
   // delete vars.foo

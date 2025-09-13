@@ -3,7 +3,7 @@
 =================================================================================================================================
 === Other ===
 Tempo change
- Want to be able to something like write this at count 1000 (say)  set bpm=[110:/512,140]{time-1024,clamp}
+ Docs
 electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games

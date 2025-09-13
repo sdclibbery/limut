@@ -199,12 +199,17 @@ define(function(require) {
       let interval = parseInterval(state) || hoistInterval('frame', modifiers)
       setInterval(result, interval)
     } else { // Piecewise as a function not an expression
-      is = is.map(i => iOperators[i || '/']) // Default to linear interpolation
-      ss = ss.map(s => s!==undefined ? s : 1) // Default to size 1
       let modifiers = parseMap(state)
       if (modifiers === undefined) { modifiers = {value: (e,b) => e.idx} } // Default to index with event index
       if (modifiers.value === undefined) { modifiers.value = (e,b) => e.idx } // Default to index with event index
-      result = addModifiers(piecewise(vs, is, ss, modifiers.value, {}), modifiers)
+      is = is.map(i => iOperators[i || '/']) // Default to linear interpolation
+      let options = {}
+      if (modifiers.repeat !== undefined && !modifiers.repeat) {
+        options.clamp = true
+        if (ss[ss.length-1] === undefined) { ss[ss.length-1] = 0 } // If not repeating, last segment should end at zero unless specified otherwise
+      }
+      ss = ss.map(s => s!==undefined ? s : 1) // Default to size 1
+      result = addModifiers(piecewise(vs, is, ss, modifiers.value, options), modifiers)
       setInterval(result, parseInterval(state) || hoistInterval('event', vs, modifiers))
     }
     return result
