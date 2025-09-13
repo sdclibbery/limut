@@ -81,10 +81,13 @@ define(function (require) {
 
   let devices = {}
   return (params) => {
-    let deviceIdx = evalParamEvent(params.device, params) || 0
     if (videoDevices === undefined) {
       getDevices()
       return
+    }
+    let deviceIdx = evalParamEvent(params.device, params) || 0
+    if (typeof deviceIdx === 'string') {
+      deviceIdx = videoDevices.findIndex(d => d.label.includes(deviceIdx)) || 0
     }
     deviceIdx = deviceIdx % videoDevices.length
     if (devices[deviceIdx] === undefined) {
