@@ -122,3 +122,8 @@ preset pick saw, dur=1/4, sus=1/8, envelope='percussion', amp*=2,
 	lpf={[(this.freq+500)*(this.cutoff+0.1)*10:!(100ms*(3*this.decay^2+0.7)),10]es,poles:4},
   fx=mix{airverb, 6/8},
   cutoff=[1/4:2/4]l16, decay=[0.4:0.6]l24
+
+preset dirt multiwave, dur=1/4, oct=2, envelope='perc',
+	wave1={'saw'}, wave2={'tri',detune:0.1}, wave3={'sine',detune:-12},
+  fold=1/2, drive=1/2, chorus, amp*=2,
+  fx=delay{[10ms,12ms]n1/2}>>lpf{[5000:3/16,800:1/16,200:0]l1/4@f}

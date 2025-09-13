@@ -1,21 +1,16 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-=== DMX ===
+=== Other ===
+Tempo change
+ Want to be able to something like write this at count 1000 (say)  set bpm=[110:/512,140]{time-1024,clamp}
 electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
   BrowserWindow.setFullScreen(true) for fullscreen
 
 ==== audio ====
-dirt preset
-velocity
-  all players default to vel=1 even without midi
-  ALL presets to use this.vel; check setting param `vel=midi{'vel'}` works as expected
-   And give them cutoff etc too where possible
-  this.vel should update with aftertouch, at the moment you only get the vel at the time of note-on (see percussion pads)
-  midi{'vel'} should include aftertouch?
-  DOCS
+review all preset; add cutoff control wherever practical
 cyber presets
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   Segments should be added bit by bit not all at the beginning
@@ -89,6 +84,13 @@ WebAudio node graphs as first class values
    debug log function
 includes should include things they need; eg synthwave.limut should include effects.limut etc etc
  Do not include the same file multiple times; if its already included, then nop
+velocity
+  all players default to vel=1 even without midi
+  ALL presets to use this.vel; check setting param `vel=midi{'vel'}` works as expected
+   And give them cutoff etc too where possible
+  this.vel should update with aftertouch, at the moment you only get the vel at the time of note-on (see percussion pads)
+  midi{'vel'} should include aftertouch?
+  DOCS
 midi controller support
  ?What happens if: midi{[1,2]t4} ??
   Is it worth worrying about? Error at least? Or just support it?
