@@ -2,9 +2,14 @@
 =================================================================================================================================
 =================================================================================================================================
 === Other ===
-floor{x,1/8} should work without the "to"
-Got to get []e working in FX even if it's rough
 /* */ comments
+ !!Should support multiline comments!!!!
+  Docs
+Got to get []e working in FX even if it's rough
+ ?How to get an event passed into things that eval per frame?
+ ?What to do with things that eval per event?
+  ?Do they have to become per frame somehow so they can change event?
+  ?Or re-eval every time the event changes?
 drive/saturate/overdrive/tubedrive/fuzz
  Docs
 electron performance
@@ -40,7 +45,7 @@ Support for segmented values in per-frame update. So the per frame update pulls 
 ! Should work but breaks with error: a audiosynth, fx=(1-osc{}>>shaper{{x}->x})*0.01
  constNode 37 can't access property "stop", e._destructor is undefined
 Can filter an audio signal down into a control signal that can be used for ducking like this:
- shaper{{x}->abs{x}}>>lpf{10}
+ shaper{{x}->abs{x}}>>lpf{10} - This is an envelope follower basically
 drive{} and tanh{}
 More node topology functions
  parallel{} - takes a number and a callback function to create chains for each, then runs them all in parallel
@@ -61,6 +66,7 @@ WebAudio node graphs as first class values
  ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
   Or should all take same default units as params for consistency?
  !slider doesn't work with fx nodes
+  ?Fixed now??
   ?What about with buses?
   ?What about other functions, eg smooth?
  !fxMixChain should push fade out TTL to fx chain so it doesn't cut off delayed notes

@@ -71,7 +71,10 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
       stream.match(/^[\d_]*(?:n|(?:\.[\d_]*)?(?:[eE][+\-]?[\d_]+)?)?(\/[\d]+)?([dD][bB])?/);
       return ret("number", "number");
     } else if (ch == "/") {
-      if (stream.eat("/")) {
+      if (stream.eat("*")) {
+        state.tokenize = tokenComment;
+        return tokenComment(stream, state);
+      } else if (stream.eat("/")) {
         stream.skipToEnd();
         return ret("comment", "comment");
       } else {

@@ -15,20 +15,30 @@ define((require) => {
     let state = {
       str: line,
       idx: 0,
+      inComment: false,
+      commentStart: -1,
     }
     let char
     while (char = state.str.charAt(state.idx)) {
       if (char == '\'') { // String - skip over
         state.idx += 1
         if (parseString(state) === undefined) { throw `Unterminated string. Note, multiline strings are not supported.` }
-      } else if (char == '/' && state.str.charAt(state.idx+1) == '/') { // Comment
-        let result = line.slice(0, state.idx).trim()
+      } else if (char == '/' && state.str.charAt(state.idx+1) == '/') { // // Comment
+        let result = state.str.slice(0, state.idx).trim()
         return result
+      } else if (char == '/' && state.str.charAt(state.idx+1) == '*') { // /* Comment
+        state.commentStart = state.idx
+        state.inComment = true
+        state.idx += 2
+      } else if (state.inComment && char == '*' && state.str.charAt(state.idx+1) == '/') { // /* Comment end
+        state.idx += 2
+        state.inComment = false
+        state.str = state.str.slice(0, state.commentStart) + state.str.slice(state.idx)
       } else {
         state.idx += 1
       }
     }
-    return line.trimStart()
+    return state.str.trimStart()
   }
 
   let parseCommand = async (lines, i) => {
@@ -174,6 +184,19 @@ define((require) => {
     assertOverrides("set pad window//, rate=2", 'pad', {window:1})
     assertOverrides("set pae add//+=2", 'pae', {add:1})
     assertOverrides("set paf add+//=2", 'paf', {'add+':1})
+
+    assertOverrides("set pca s=1, t=2", 'pca', {s:1,t:2})
+    assertOverrides("set pcb /*s=1*/, t=2", 'pcb', {t:2})
+    assertOverrides("set pcc /* s=1 */, t=2", 'pcc', {t:2})
+    assertOverrides("set pcd/* s=1*/, t=2", 'pcd', {t:2})
+    assertOverrides("set pce s/*='abc'*/, ", 'pce', {s:1})
+    assertOverrides("set pcf s='abc/*def*/'", 'pcf', {s:'abc/*def*/'})
+    assertOverrides("set pcg s='abc/*def'", 'pcg', {s:'abc/*def'})
+    assertOverrides("set pch s='abc*/def'", 'pch', {s:'abc*/def'})
+    assertOverrides("set pci s=1//, /*t=2*/", 'pci', {s:1})
+    assertOverrides("set pcj s=1, ///*t=2*/", 'pcj', {s:1})
+    assertOverrides("set pck s=1, //*t=2*/", 'pck', {s:1})
+    assertOverrides("set pcl s=1, /*t//=2*/", 'pcl', {s:1})
 
     assertThrows('Unterminated string', async () => preParseLine('set pag bar=\'FOO'))
 
