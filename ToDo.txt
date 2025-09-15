@@ -2,8 +2,11 @@
 =================================================================================================================================
 =================================================================================================================================
 === Other ===
-drive{} doesn't work: it can't access the outer shape argument??
- set drive = {shape:1} -> shaper{ {x}->sgn{x}*(abs{x}^(1-shape*0.9)) }
+floor{x,1/8} should work without the "to"
+Got to get []e working in FX even if it's rough
+/* */ comments
+drive/saturate/overdrive/tubedrive/fuzz
+ Docs
 electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
@@ -12,6 +15,7 @@ electron performance
 ==== audio ====
 review all preset; add cutoff control wherever practical
 cyber presets
+ More lead presets?
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   Segments should be added bit by bit not all at the beginning
    !! TEST with lots of user functions / sub params etc
@@ -46,6 +50,7 @@ More node topology functions
 Rewrite pitch effects so it doesn't need all those methods from eval-audio-params, and so addc at least supports segments
 WebAudio node graphs as first class values
  ???? {} for parallel nodes should be (), no???
+  And should hoist, eg fx=osc{(108,110,112)}>>lpf{400}*0.06
  Should be able to  fx=[]n  And also  fx=echo>>[]n
  !!Parallel nodes should surely be round brackets???
  !set lpf2 = lpf etc does not work!!! I think the args do not get passed in anymore??

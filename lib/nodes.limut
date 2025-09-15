@@ -7,7 +7,9 @@ set lpf = {freq, q:5} -> biquad{'lowpass', freq:freq, q:q}
 // set lpf2 = lpf
 set lpf4 = {freq, q:5} -> series{biquad{'lowpass', freq:freq, q:q/2}, count:2}
 set hpf = {freq, q:5} -> biquad{'highpass', freq:freq, q:q}
+set hpf4 = {freq, q:5} -> series{biquad{'highpass', freq:freq, q:q/2}, count:2}
 set bpf = {freq, q:1} -> biquad{'bandpass', freq:freq, q:q}
+set bpf4 = {freq, q:1} -> series{biquad{'bandpass', freq:freq, q:q/2}, count:2}
 set nf = {freq, q:1} -> biquad{'notch', freq:freq, q:q}
 set apf = {freq, q:1} -> biquad{'allpass', freq:freq, q:q}
 
@@ -18,6 +20,9 @@ set pkf = {gain, freq:600, q:5} -> biquad{'peaking', freq:freq, gain:gain, q:q}
 // set high = hsf
 // set mid = pkf
 // set low = lsf
+
+// Wave shapers
+// set drive = {shape:1} -> shaper{ {x,s:shape}->sgn{x}*(abs{x}^(1-s*0.9)) }
 
 // Dynamics
 set compressor = {threshold:-50db, ratio:3db, attack:1ms, release:50ms, knee:2db} -> compress{
