@@ -11,34 +11,64 @@ define((require) => {
   let vars = require('vars')
   let mainBus = require('play/main-bus')
 
-  let preParseLine = (line) => {
+  let parseLinesAndComments = (code) => {
     let state = {
-      str: line,
+      str: code,
       idx: 0,
+      lastLineStart: 0,
       inComment: false,
       commentStart: -1,
+      inLineComment: false,
+      lineCommentStart: -1,
     }
+    let lines = []
     let char
-    while (char = state.str.charAt(state.idx)) {
-      if (char == '\'') { // String - skip over
+    while (true) {
+      char = state.str.charAt(state.idx)
+      if (char === '\n' || char === '') {
+        let lineStart = state.lastLineStart
+        let lineEnd = state.idx
+        if (state.inLineComment) { // // comment end
+          lineEnd = state.lineCommentStart
+          state.inLineComment = false
+        }
+        if (state.inComment) {
+          if (state.commentStart !== -1) { // /* comment started on this line
+            lineEnd = state.commentStart
+            state.commentStart = -1
+          } else {
+            lineStart = state.idx // Entire line is in comment
+          }
+        }
+        let line = state.str.slice(lineStart, lineEnd).trim()+' '
+        lines.push(line)
         state.idx += 1
-        if (parseString(state) === undefined) { throw `Unterminated string. Note, multiline strings are not supported.` }
-      } else if (char == '/' && state.str.charAt(state.idx+1) == '/') { // // Comment
-        let result = state.str.slice(0, state.idx).trim()
-        return result
-      } else if (char == '/' && state.str.charAt(state.idx+1) == '*') { // /* Comment
+        state.lastLineStart = state.idx
+        if (char === '') { break }
+      } else if (char === '\'') { // String - skip over
+        state.idx += 1
+        parseString(state)
+      } else if (char === '/' && state.str.charAt(state.idx+1) === '/' && !state.inLineComment && !state.inComment) { // // Comment start
+        state.lineCommentStart = state.idx
+        state.inLineComment = true
+        state.idx += 2
+      } else if (char === '/' && state.str.charAt(state.idx+1) === '*' && !state.inLineComment && !state.inComment) { // /* Comment start
         state.commentStart = state.idx
         state.inComment = true
         state.idx += 2
-      } else if (state.inComment && char == '*' && state.str.charAt(state.idx+1) == '/') { // /* Comment end
+      } else if (state.inComment && char === '*' && state.str.charAt(state.idx+1) === '/') { // /* Comment end
         state.idx += 2
         state.inComment = false
-        state.str = state.str.slice(0, state.commentStart) + state.str.slice(state.idx)
+        if (state.commentStart !== -1) { // Comment started on this line
+          state.str = state.str.slice(0, state.commentStart) + state.str.slice(state.idx) // Trim out commented section
+        } else {
+          state.str = state.str.slice(0, state.lastLineStart) + state.str.slice(state.idx) // Trim out commented section on this line
+        }
       } else {
         state.idx += 1
       }
     }
-    return state.str.trimStart()
+    return lines
   }
 
   let parseCommand = async (lines, i) => {
@@ -53,22 +83,9 @@ define((require) => {
     return i
   }
 
-  let reportError = (e, i) => {
-    let st = e.stack ? '\n'+e.stack.split('\n')[0] : ''
-    consoleOut(`🔴 Error on line ${i+1}: ${e} ${st}`)
-    console.log(e)
-  }
-
   let parseCode = async (code) => {
-    let lines = code.split('\n')
-      .map((line, i) => {
-        try {
-          return preParseLine(line)
-        } catch (e) {
-          reportError(e, i)
-          return line
-        }
-      })
+    let lines
+    lines = parseLinesAndComments(code)
     for (let i = 0; i<lines.length; i++) {
       try {
         i = await parseCommand(lines, i) // Will skip lines that were accumulated
@@ -186,7 +203,7 @@ define((require) => {
     assertOverrides("set paf add+//=2", 'paf', {'add+':1})
 
     assertOverrides("set pca s=1, t=2", 'pca', {s:1,t:2})
-    assertOverrides("set pcb /*s=1*/, t=2", 'pcb', {t:2})
+    assertOverrides("set pcb /*s=1,*/ t=2", 'pcb', {t:2})
     assertOverrides("set pcc /* s=1 */, t=2", 'pcc', {t:2})
     assertOverrides("set pcd/* s=1*/, t=2", 'pcd', {t:2})
     assertOverrides("set pce s/*='abc'*/, ", 'pce', {s:1})
@@ -198,7 +215,8 @@ define((require) => {
     assertOverrides("set pck s=1, //*t=2*/", 'pck', {s:1})
     assertOverrides("set pcl s=1, /*t//=2*/", 'pcl', {s:1})
 
-    assertThrows('Unterminated string', async () => preParseLine('set pag bar=\'FOO'))
+    assertOverrides("set pmca \n s=1, \n t=2", 'pmca', {s:1,t:2})
+    assertOverrides("set pmcb /* \n s=1, \n */ t=2", 'pmcb', {t:2})
 
     console.log('Update code tests complete')
   }

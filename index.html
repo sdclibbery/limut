@@ -342,7 +342,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p>Limut is case insensitive; <code>piano</code>, <code>Piano</code>, and <code>PIANO</code> are all treated the same; <code>[1:4]t4</code> is the same as <code>[1:4]T4</code> etc.</p>
 <h5>Comments</h5>
 <p>Anything after <code>//</code> on a line is ignored</p>
-<p>Anything within <code>/* ... */</code> on a line is ignored</p>
+<p>Anything within a <code>/* ... */</code> comments is ignored</p>
 <h5>Commands</h5>
 <p>A command defines a player or preset, or sets player overrides, or sets global variables, or includes a limut source file. Commands may span multiple lines; a new command is started whenever the beginning of a command is recognised at the start of a new line. So any line that begins with <code>set </code> keyword for setting vars or overrides, or with the <code>id type pattern</code> syntax for defining a player, will begin a new command.</p>
 <p>Example:

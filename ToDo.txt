@@ -3,7 +3,6 @@
 =================================================================================================================================
 === Other ===
 /* */ comments
- !!Should support multiline comments!!!!
   Docs
 Got to get []e working in FX even if it's rough
  ?How to get an event passed into things that eval per frame?
@@ -12,6 +11,8 @@ Got to get []e working in FX even if it's rough
   ?Or re-eval every time the event changes?
 drive/saturate/overdrive/tubedrive/fuzz
  Docs
+303 has envelope errors when run like this with riser^4 :
+ b tb303 00a, accent, resonance=1/2*(1+riser^4)
 electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
