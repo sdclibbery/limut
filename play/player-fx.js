@@ -35,7 +35,7 @@ define((require) => {
     let params = Object.assign({}, eventParams)
     params._perFrame = fx._perFrame
     params._destructor = fx.destructor
-    let getOverrideEvent = (b) => {
+    let getOverrideEvent = (b) => { // If the player has a current event, use it
       let player = players.getById(params.player)
       if (!player) { return undefined }
       let es = player.currentEvent(b)
@@ -61,10 +61,10 @@ define((require) => {
         },
       })
     }
-    setEventParam('idx', (e,b) => e.idx, (b) => b)
+    setEventParam('idx', (e,b) => e.idx, (b) => Math.floor(b))
     setEventParam('dur', (e,b) => e.dur, (b) => 1)
-    setEventParam('_time', (e,b) => e._time, (b) => Math.floor(b))
-    setEventParam('endTime', (e,b) => e.endTime, (b) => Math.floor(b) + 1)
+    setEventParam('_time', (e,b) => e._time, (b) => 0)
+    setEventParam('endTime', (e,b) => e.endTime, (b) => 1)
     delete params.beat
     Object.defineProperty(params, 'beat', { get() { return metronome.lastBeat() } })
     setEventParam('value', (e,b) => e.value, (b) => 0)
