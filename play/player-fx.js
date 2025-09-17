@@ -49,7 +49,7 @@ define((require) => {
         let e = getOverrideEvent(b)
         if (!!e) { return e.count } else { return Math.floor(b) }
       },
-      set(c) { }, // Ignore for now; used to apply time modifiers
+      set(c) { }, // Ignore for now; used to apply time modifiers for per event, which we don't really support anyway?
     })
     let setEventParam = (p, v, d) => { // Override event timing values to be relative to represent a current event if possible
       delete params[p]

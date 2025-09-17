@@ -2,9 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 === Other ===
-Got to get []e working in FX even if it's rough
- []e@s doesn't work
- Time modifiers probably wont work currently due to 'count' property not handling setter
 drive/saturate/overdrive/tubedrive/fuzz
  Docs
 303 has envelope errors when run like this with riser^4 :
@@ -31,6 +28,7 @@ Support for segmented values in per-frame update. So the per frame update pulls 
   Test []es that ends before end of event
   Update docs, examples, test notes, etc to use []e@s instead of []es
   !! errors for audioparam setting (curve thing): how to replicate?
+  Check []e@s in fx chain; eg:  a audiosynth , fx=osc{110}>>lpf{[3000:!1/2,10:0]e@s}*0.03
   FULL test (and update test notes for user def functions, connectables, segments etc)
   Docs
    @s as an interval (note: segments are NOT audio rate)
