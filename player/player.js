@@ -102,7 +102,7 @@ define((require) => {
       })
       return es
         .filter(e => e.amp === undefined || typeof e.amp === 'function' || e.amp > 0)
-        .map(e => {
+        .forEach(e => {
           e._player = player
           playerFactory.play(e)
           e.countToTime = (count) => e.beat.time + (count-e.beat.count)*e.beat.duration

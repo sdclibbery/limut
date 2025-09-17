@@ -35,21 +35,46 @@ define((require) => {
     let params = Object.assign({}, eventParams)
     params._perFrame = fx._perFrame
     params._destructor = fx.destructor
+    let getOverrideEvent = (b) => {
+      let player = players.getById(params.player)
+      if (!player) { return undefined }
+      let es = player.currentEvent(b)
+      if (!es || !es.length) { return undefined }
+      return es[es.length - 1]
+    }
+    delete params.count
+    Object.defineProperty(params, 'count', {
+      get() {
+        let b = metronome.beatTime(metronome.timeNow())
+        let e = getOverrideEvent(b)
+        if (!!e) { return e.count } else { return Math.floor(b) }
+      },
+      set(c) { }, // Ignore for now; used to apply time modifiers
+    })
+    let setEventParam = (p, v, d) => { // Override event timing values to be relative to represent a current event if possible
+      delete params[p]
+      Object.defineProperty(params, p, {
+        get() {
+          let b = metronome.beatTime(metronome.timeNow())
+          let e = getOverrideEvent(b)
+          if (!!e) { return v(e,b) } else { return d(b) }
+        },
+      })
+    }
+    setEventParam('idx', (e,b) => e.idx, (b) => b)
+    setEventParam('dur', (e,b) => e.dur, (b) => 1)
+    setEventParam('_time', (e,b) => e._time, (b) => Math.floor(b))
+    setEventParam('endTime', (e,b) => e.endTime, (b) => Math.floor(b) + 1)
     delete params.beat
-    delete params.endTime
-    let offset = 0
-    Object.defineProperty(params, "count", { // Params must define count so that evalParamEvent works, but use a dynamic getter so we can give it the current time (this effectively forces all values to per-frame interval)
-      get() { return offset + metronome.beatTime(metronome.timeNow()) },
-      set(c) { offset = c - metronome.beatTime(metronome.timeNow()) },
-    })
-    Object.defineProperty(params, "idx", { // Also define idx to allow [] index timevar to sort of work
-      get() { return metronome.beatTime(metronome.timeNow())%2 },
-    })
+    Object.defineProperty(params, 'beat', { get() { return metronome.lastBeat() } })
+    setEventParam('value', (e,b) => e.value, (b) => 0)
+    setEventParam('playing', (e,b) => 1, (b) => 0)
+    setEventParam('pulse', (e,b) => e.pulse(e,b), (b) => 0)
     system.add(metronome.timeNow(), state => { // Per frame update
       if (fx.stopped) { return false }
       fx._perFrame.forEach(pf => {
         return pf(state)
-    })
+      })
       return true
     })
 

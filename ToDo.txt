@@ -2,13 +2,28 @@
 =================================================================================================================================
 =================================================================================================================================
 === Other ===
-/* */ comments
-  Docs
 Got to get []e working in FX even if it's rough
- ?How to get an event passed into things that eval per frame?
- ?What to do with things that eval per event?
-  ?Do they have to become per frame somehow so they can change event?
-  ?Or re-eval every time the event changes?
+ ??POSSIBLE APPROACHES??
+  1. fx simply does not support anything event based at all. params is as blank as Possible
+   Nothing works, but it's all logical and consistent
+  2. this. uses the most current event instead of the original params, and override params timing stuff
+   need to make all this. per frame somehow
+   probably need to add .playing as well
+   []e works, can get all params with latest event values
+  3. Just override params timing stuff and provide this.value and this.playing
+   []e works, value/playing work only
+   Need to make value and playing per frame somehow
+  4. params has getOverrideEvent() which returns the current event if there is one
+ Try updating/adding fx params getters
+  !too many things are getting forced per event
+   a audiosynth 014, fx=osc{220}*this.value@f*0.02 - have to explicitly mark @f
+   ! It is nothing to do with memoisation OR forcing to per event apparently
+    ! It is because the eval-audio-param is identifying it as a fixed per event value and just setting it const
+     ! Could fix by wrapping value to force per interval...
+     ??Force everything to be explicitly per frame for fx evaluation??
+  []e@s doesn't work
+  Time modifiers probably wont work currently due to 'count' property not handling setter
+  Anything @e doesn't work...
 drive/saturate/overdrive/tubedrive/fuzz
  Docs
 303 has envelope errors when run like this with riser^4 :

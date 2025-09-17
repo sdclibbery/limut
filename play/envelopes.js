@@ -128,10 +128,10 @@ define(function (require) {
     let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25, 'b'), 'b'))
     dur *= evalMainParamEvent(params, "long", 1)
     let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
-    let vca = system.audio.createGain();
+    let vca = system.audio.createGain()
     vca.gain.value = gain
-    params.endTime = params._time + dur
     params._destructor.disconnect(vca)
+    params.endTime = params._time + dur
     setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
     return vca
   }
