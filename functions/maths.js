@@ -29,6 +29,8 @@ define(function(require) {
   addVarFunction('sin', trigWrapper(Math.sin))
   addVarFunction('cos', trigWrapper(Math.cos))
   addVarFunction('tan', trigWrapper(Math.tan))
+  addVarFunction('tanh', trigWrapper(Math.tanh))
+  addVarFunction('atan', trigWrapper(Math.atan))
   add('pi', Math.PI)
   addVarFunction('abs', trigWrapper(Math.abs))
   addVarFunction('sgn', trigWrapper(Math.sign))

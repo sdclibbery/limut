@@ -35,6 +35,7 @@ define(function(require) {
     let count = evalMainParamEvent(args, 'samples', 257)
     let oversample = evalMainParamEvent(args, 'oversample', '2x')
     let curve = new Float32Array(count)
+    if (args.value === undefined) { throw 'No shape function provided to shaper node!' }
     args.value.modifiers = args.value.modifiers || {}
     for (let i = 0; i < count; i++) {
       let x = (i/(count-1))*2 - 1

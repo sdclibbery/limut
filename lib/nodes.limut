@@ -1,8 +1,17 @@
-// This library includes basic wrappers around the core nodes
+//// This library includes basic wrappers around the core nodes
 
+//// oscillators
 set lfo = {freq,wave:'triangle',lo:0,hi:1,phase:0} -> (lo+hi)/2 + osc{wave,freq:freq,phase:phase}*(hi-lo)/2
+set osin = {freq:pitch{}} -> osc{'sine', freq:freq}
+set osine = {freq:pitch{}} -> osc{'sine', freq:freq}
+set osaw = {freq:pitch{}} -> osc{'saw', freq:freq}
+set osawtooth = {freq:pitch{}} -> osc{'saw', freq:freq}
+set osquare = {freq:pitch{}} -> osc{'square', freq:freq}
+set otri = {freq:pitch{}} -> osc{'tri', freq:freq}
+set otriangle = {freq:pitch{}} -> osc{'tri', freq:freq}
+set opulse = {freq:pitch{}} -> osc{'pulse', freq:freq}
 
-// Resonant filters
+//// Resonant filters
 set lpf = {freq, q:5} -> biquad{'lowpass', freq:freq, q:q}
 // set lpf2 = lpf
 set lpf4 = {freq, q:5} -> series{biquad{'lowpass', freq:freq, q:q/2}, count:2}
@@ -13,7 +22,7 @@ set bpf4 = {freq, q:1} -> series{biquad{'bandpass', freq:freq, q:q/2}, count:2}
 set nf = {freq, q:1} -> biquad{'notch', freq:freq, q:q}
 set apf = {freq, q:1} -> biquad{'allpass', freq:freq, q:q}
 
-// Non resonant filters
+//// Non resonant filters
 set hsf = {gain, freq:1100} -> biquad{'highshelf', freq:freq, gain:gain}
 set lsf = {gain, freq:200} -> biquad{'lowshelf', freq:freq, gain:gain}
 set pkf = {gain, freq:600, q:5} -> biquad{'peaking', freq:freq, gain:gain, q:q}
@@ -21,10 +30,16 @@ set pkf = {gain, freq:600, q:5} -> biquad{'peaking', freq:freq, gain:gain, q:q}
 // set mid = pkf
 // set low = lsf
 
-// Wave shapers
-// set drive = {shape:1} -> shaper{ {x,s:shape}->sgn{x}*(abs{x}^(1-s*0.9)) }
+//// Wave shapers
+set spow = {curve:0.9} -> shaper{ {x,c:curve} -> sgn{x}*(abs{x}^c) }
+set stanh = {gain:3/2} -> shaper{ {x,g:gain} -> tanh{x*g} }
+set sasym = {gain:3/2,bias:1/2} -> shaper{ {x,b:bias,g:gain} -> tanh{x*g + b} - tanh{b} }
+set satan = {gain:3/2} -> shaper{ {x,g:gain} -> atan{x*g}*(2/pi) }
+set spoly = {gain:1} -> shaper{ {x,g:gain} -> (g*x - ((g*x)^3)/3) }
+set sdiode = {gain:5/4,pos:0.9,neg:-0.3} -> shaper{ {x,g:gain,p:pos,n:neg} -> min{max{g*x, n}, p}/g }
+set drive = {amount:1/2} -> shaper{ {x,a:amount*100} -> (3 + a) * x * (pi/3) / (pi + a * abs(x)) }
 
-// Dynamics
+//// Dynamics
 set compressor = {threshold:-50db, ratio:3db, attack:1ms, release:50ms, knee:2db} -> compress{
   threshold:threshold, attack:attack, release:release, knee:knee, ratio:ratio
 }
