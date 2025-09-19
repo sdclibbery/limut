@@ -2,7 +2,8 @@
 =================================================================================================================================
 =================================================================================================================================
 === Other ===
-!! inline comment fails: a audiosynth, fx=osc{'sine',freq:220} /* >>shaper{tanh} */ *0.005
+Want a reverse ! piecewise interpolation operator, which stays on the current value then sweeps to the next at the end
+ Plus a way of specifying a power curve...
 electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games

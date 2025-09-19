@@ -31,6 +31,7 @@ define((require) => {
         if (state.inLineComment) { // // comment end
           lineEnd = state.lineCommentStart
           state.inLineComment = false
+          state.lineCommentStart = -1
         }
         if (state.inComment) {
           if (state.commentStart !== -1) { // /* comment started on this line
@@ -61,9 +62,12 @@ define((require) => {
         state.inComment = false
         if (state.commentStart !== -1) { // Comment started on this line
           state.str = state.str.slice(0, state.commentStart) + state.str.slice(state.idx) // Trim out commented section
+          state.idx -= state.idx - state.commentStart
         } else {
           state.str = state.str.slice(0, state.lastLineStart) + state.str.slice(state.idx) // Trim out commented section on this line
+          state.idx -= state.idx - state.lastLineStart
         }
+        state.commentStart = -1
       } else {
         state.idx += 1
       }
@@ -214,6 +218,7 @@ define((require) => {
     assertOverrides("set pcj s=1, ///*t=2*/", 'pcj', {s:1})
     assertOverrides("set pck s=1, //*t=2*/", 'pck', {s:1})
     assertOverrides("set pcl s=1, /*t//=2*/", 'pcl', {s:1})
+    assertOverrides("set pcm add=1/*+2*/+3\n//+5", 'pcm', {add:4})
 
     assertOverrides("set pmca \n s=1, \n t=2", 'pmca', {s:1,t:2})
     assertOverrides("set pmcb /* \n s=1, \n */ t=2", 'pmcb', {t:2})
