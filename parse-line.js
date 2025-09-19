@@ -83,8 +83,10 @@ define((require) => {
           v = parseExpression(v, undefined, k)
           let [ns,nsk] = splitOnFirst(k, '.') // For other vars, a dot implies a namespace
           if (nsk) {
-            if (!vars.get(ns)) { vars.set(ns, {}) } // Create empty object for namespace if needed
-            vars.get(ns)[nsk] = v
+            if (vars.get(ns) === undefined) { vars.set(ns, {}) } // Create empty object for namespace if needed
+            let namespace = vars.get(ns)
+            if (typeof namespace !== 'object' && typeof namespace !== 'function') { throw `Invalid namespace '${ns}' type '${typeof namespace}' when trying to set namespace field '${nsk}'` }
+            namespace[nsk] = v
           } else {
             vars.set(k, v)
           }
@@ -393,6 +395,10 @@ define((require) => {
   parseLine('set foo={}')
   parseLine('set foo.bar=7')
   assert(7, evalParamFrame(vars.foo.bar, ev(),0))
+  delete vars.foo
+
+  parseLine('set foo=0')
+  assertThrows("Invalid namespace", () => parseLine('set foo.bar=7'))
   delete vars.foo
 
   parseLine('set foo={}=>5')
