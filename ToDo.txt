@@ -3,7 +3,7 @@
 =================================================================================================================================
 === Other ===
 fields
- x osc.sin lookup works if LHS is a function that has the field, and has no modifiers/args, and field is a function
+ x oscs.sin lookup works if LHS is a function or object that has the field, and has no modifiers/args, and field is a function
  set osc.sin=(freq)->osc{'sine',freq:freq} works when osc is a map or (static or user defined) function
  fx=osc.sin*0.01 works when osc is a map or function; also fx=osc.sin>>gain{0.01}, also fx=osc.sin{110}*0.01
 shaper and osc nodes
@@ -15,7 +15,7 @@ shaper and osc nodes
    2. fixed namespaces: osc.sin, shaper.tanh - doesn't work currently (either to define in linut, or to actually use)?
    3. user namespaces: eg include 'effects.limut' as fx - will probably never be changed anyway, so whats the point?
    4. pass in: osc{'sine'}, shaper{tanh} - klunky osc strings, shaper cannot apply gain in the same way
- Docs for both shaper and osc nodes
+ Docs for both shaper and osc namespaces
 !! inline comment fails: a audiosynth, fx=osc{'sine',freq:220} /* >>shaper{tanh} */ *0.005
 303 has envelope errors when run like this with riser^4 :
  b tb303 00a, accent, resonance=1/2*(1+riser^4)

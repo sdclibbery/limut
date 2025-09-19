@@ -50,7 +50,7 @@ define(function(require) {
       if (char == '{') {
         let map = parseMap(state)
         eatWhitespace(state)
-        if (state.str.charAt(state.idx) === '-' && state.str.charAt(state.idx+1) === '>') { // user defined function
+        if (state.str.charAt(state.idx) === '-' && state.str.charAt(state.idx+1) === '>') { // user defined function definition
           state.idx+=2
           eatWhitespace(state)
           let oldArgs = state.userFunctionArgs
@@ -2092,6 +2092,18 @@ define(function(require) {
   assert(1, evalParamFrame(parseExpression("[0,1]{time-1,repeat:0}"), e, 2.9))
   assert(1, evalParamFrame(parseExpression("[0,1]{time-1,repeat:0}"), e, 3))
   assert(1, evalParamFrame(parseExpression("[0,1]{time-1,repeat:0}"), e, 4))
+
+  vars.foo = () => 3
+  vars.foo.isVarfunction = true
+  vars.foo.bar = () => 5
+  assert(3, evalParamFrame(parseExpression('foo'), ev(), 0))
+  assert(5, evalParamFrame(parseExpression('foo.bar'), ev(), 0))
+  assert(3, evalParamFrame(parseExpression('foo{}.bar'), ev(), 0))
+  delete vars.foo
+
+  vars.foo = parseExpression('{ bar: {x}->x }')
+  assert(7, evalParamFrame(parseExpression('foo.bar{7}'), ev(), 0))
+  delete vars.foo
 
   // vars.foo = parseExpression('{v} -> v*3')
   // assert([3,6], evalParamFrame(parseExpression('foo{(1,2)}'), ev(), 0))

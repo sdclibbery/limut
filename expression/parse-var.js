@@ -62,7 +62,13 @@ define(function(require) {
     let thisCallsiteId = 'cs' + callsiteId++
     if (interval === undefined && typeof vars.get(key) === 'function') { interval = vars.get(key).interval }
     let parseVarLookup = (event,b, evalRecurse, modifiers) => {
-      let vr = vars.get(key)
+      let vr
+      if (parseVarLookup.namespace) { // Get the var using a namespace
+        let ns = vars.get(parseVarLookup.namespace)
+        if (!!ns) { vr = ns[key] }
+      } else {
+        vr = vars.get(key)
+      }
       let v
       if (typeof vr === 'function' && vr.isVarFunction) { // Var function
         modifiers = modifiers || {}

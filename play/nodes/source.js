@@ -11,7 +11,7 @@ define(function(require) {
     let node = system.audio.createOscillator()
     let params = combineParams(args, e)
     let value = evalParamEvent(params.value, e,b)
-    setWave(node, (typeof value === 'string') ? value :  'sawtooth')
+    setWave(node, (typeof value === 'string') ? value : 'sawtooth')
     let freq = 440
     if (typeof value === 'number' && value !== 0) {
       evalMainParamFrame(node.frequency, params, 'value', 440, 'hz')

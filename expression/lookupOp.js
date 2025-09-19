@@ -10,6 +10,13 @@ define(function(require) {
     let originalR = r
     if (l === undefined) { return undefined }
     if (r === undefined) { return l }
+    if (typeof l === 'function' && typeof l._name === 'string' && typeof r === 'function' && typeof r._name === 'string' && l.modifiers === undefined) {
+      let vl = vars.get(l._name) // Namespace type thing; eg osc.sin
+      if ((typeof vl === 'object' || typeof vl === 'function') && vl[r._name] !== undefined) {
+        r.namespace = l._name
+        return r // Call the original RHS parse var function call, but using the LHS namespace the namespace
+      }
+    }
     l = evalRecurse(l, event,b)
     let ml = mainParam(l)
     if (typeof r === 'function') {
