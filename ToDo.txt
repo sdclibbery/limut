@@ -2,8 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 === Other ===
-shaper and osc nodes
- Docs for both shaper and osc namespaces
 !! inline comment fails: a audiosynth, fx=osc{'sine',freq:220} /* >>shaper{tanh} */ *0.005
 303 has envelope errors when run like this with riser^4 :
  b tb303 00a, accent, resonance=1/2*(1+riser^4)

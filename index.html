@@ -1084,6 +1084,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>apf{freq, q:5}</code> All pass filter, 2 pole. q is resonance.</p>
 <p><code>bpf{freq, q:5}</code> Bandpass pass filter, 2 pole. q is resonance.</p>
 <p><code>compressor{threshold:-50db, ratio:3db, attack:1ms, release:50ms, knee:2db}</code> Dynamics compressor.</p>
+<p><code>drive{amount:1/2}</code> Waveshaper providing overdrive/distortion by applying an x/(1+x) based function. Use amount to push the distortion harder.</p>
 <p><code>hpf{freq, q:5}</code> High pass filter, 2 pole. q is resonance.</p>
 <p><code>hsf{gain, freq:1100Hz}</code> High shelf filter.</p>
 <p><code>lfo{freq,wave:'triangle',lo:0,hi:1,phase:0}</code> Oscillator wrapper for use as an LFO. It can run at any frequency (including audio frequency). The output range is controlled with the lo and hi arguments.</p>
@@ -1092,7 +1093,21 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>lpf4{freq, q:5}</code> Low pass filter, 4 pole. q is resonance.</p>
 <p><code>lsf{gain, freq:1100Hz}</code> Low shelf filter.</p>
 <p><code>nf{freq, q:5}</code> Notch filter, 2 pole. q is resonance.</p>
+<p><code>osc.pulse{freq}</code> Pulse wave oscillator.</p>
+<p><code>osc.sin{freq}</code> Sine wave oscillator.</p>
+<p><code>osc.sine{freq}</code> Sine wave oscillator.</p>
+<p><code>osc.saw{freq}</code> Sawtooth wave oscillator.</p>
+<p><code>osc.sawtooth{freq}</code> Sawtooth wave oscillator.</p>
+<p><code>osc.square{freq}</code> Square wave oscillator.</p>
+<p><code>osc.tri{freq}</code> Triangle wave oscillator.</p>
+<p><code>osc.triangle{freq}</code> Triangle wave oscillator.</p>
 <p><code>pkf{gain, freq:1100Hz}</code> Peaking (mid shelf) filter.</p>
+<p><code>shaper.asym{gain:3/2,bias:1/2}</code> Waveshaper providing saturation/distortion by applying an asymmetrical tanh. Use gain to push the distortion harder, and bias to push the asymmetry.</p>
+<p><code>shaper.atan{gain:3/2}</code> Waveshaper providing saturation/distortion by applying an arctan function. Use gain to push the distortion harder.</p>
+<p><code>shaper.diode{gain:5/4,pos:0.9,neg:-0.3}</code> Waveshaper providing saturation/distortion by applying assymmetrical cutoffs like a diode based fuzz.</p>
+<p><code>shaper.poly{gain:1}</code> Waveshaper providing saturation/distortion by applying a polynomial distortion. Use gain to push the distortion harder</p>
+<p><code>shaper.pow{curve:0.9}</code> Waveshaper providing saturation/distortion by applying a power curve. A curve of 1 is linear and has no effect, less than one applies distortion</p>
+<p><code>shaper.tanh{gain:3/2}</code> Waveshaper providing saturation/distortion by applying a tanh function. Use gain to push the distortion harder</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-effects-library')" class="accordion"> Effects Library</h4>
 <div id="accordion-effects-library" class="closed">
