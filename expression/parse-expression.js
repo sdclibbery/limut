@@ -2098,11 +2098,13 @@ define(function(require) {
   vars.foo.bar = () => 5
   assert(3, evalParamFrame(parseExpression('foo'), ev(), 0))
   assert(5, evalParamFrame(parseExpression('foo.bar'), ev(), 0))
+  assert(5, evalParamFrame(parseExpression('foo.bar{}'), ev(), 0))
   assert(3, evalParamFrame(parseExpression('foo{}.bar'), ev(), 0))
   delete vars.foo
 
-  vars.foo = parseExpression('{ bar: {x}->x }')
+  vars.foo = parseExpression('{ bar: {x:1}->x }')
   assert(7, evalParamFrame(parseExpression('foo.bar{7}'), ev(), 0))
+  assert(1, evalParamFrame(parseExpression('foo.bar'), ev(), 0))
   delete vars.foo
 
   // vars.foo = parseExpression('{v} -> v*3')

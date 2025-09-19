@@ -6,7 +6,7 @@ define((require) => {
   var parseParams = require('player/params')
   let parseExpression = require('expression/parse-expression')
   let {combineOverrides,applyOverrides,isOverride} = require('player/override-params')
-  let setVar = require('vars').set
+  let vars = require('vars')
   let mainVars = require('main-vars')
   let getInclude = require('includes')
 
@@ -78,10 +78,16 @@ define((require) => {
       k = k.toLowerCase()
       if (k.match(/^[a-z][a-z0-9_\.]*$/) && !!v) {
         if (mainVars.exists(k)) {
-          mainVars.set(k, parseExpression(v, undefined, k))
+          mainVars.set(k, parseExpression(v, undefined, k)) // For main vars the dot is part of the var name, eg "beat.readouts"
         } else {
           v = parseExpression(v, undefined, k)
-          setVar(k, v)
+          let [ns,nsk] = splitOnFirst(k, '.') // For other vars, a dot implies a namespace
+          if (nsk) {
+            if (!vars.get(ns)) { vars.set(ns, {}) } // Create empty object for namespace if needed
+            vars.get(ns)[nsk] = v
+          } else {
+            vars.set(k, v)
+          }
         }
         return
       }
@@ -382,6 +388,20 @@ define((require) => {
   parseLine('set foo=1!=2'); assert(1, evalParamFrame(vars.foo, ev(),0))
   parseLine('set foo=2!=2'); assert(0, evalParamFrame(vars.foo, ev(),0))
   parseLine('set foo=3!=2'); assert(1, evalParamFrame(vars.foo, ev(),0))
+  delete vars.foo
+
+  parseLine('set foo={}')
+  parseLine('set foo.bar=7')
+  assert(7, evalParamFrame(vars.foo.bar, ev(),0))
+  delete vars.foo
+
+  parseLine('set foo={}=>5')
+  parseLine('set foo.bar=7')
+  assert(7, evalParamFrame(vars.foo.bar, ev(),0))
+  delete vars.foo
+
+  parseLine('set foo.bar=7')
+  assert(7, evalParamFrame(vars.foo.bar, ev(),0))
   delete vars.foo
 
   let included
