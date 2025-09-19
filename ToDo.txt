@@ -3,8 +3,6 @@
 =================================================================================================================================
 === Other ===
 !! inline comment fails: a audiosynth, fx=osc{'sine',freq:220} /* >>shaper{tanh} */ *0.005
-303 has envelope errors when run like this with riser^4 :
- b tb303 00a, accent, resonance=1/2*(1+riser^4)
 electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
@@ -14,6 +12,8 @@ electron performance
 review all preset; add cutoff control wherever practical
 cyber presets
  More lead presets?
+303 has envelope errors when run like this with riser^4 :
+ b tb303 00a, accent, resonance=1/2*(1+riser^4)
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   Segments should be added bit by bit not all at the beginning
    !! TEST with lots of user functions / sub params etc
@@ -38,24 +38,12 @@ Support for segmented values in per-frame update. So the per frame update pulls 
   Test tuning with guitar sample: https://upload.wikimedia.org/wikipedia/commons/6/67/AcousticGuitarSample.ogg
 ! Should work but breaks with error: a audiosynth, fx=(1-osc{}>>shaper{{x}->x})*0.01
  constNode 37 can't access property "stop", e._destructor is undefined
-Can filter an audio signal down into a control signal that can be used for ducking like this:
- shaper{{x}->abs{x}}>>lpf{10} - This is an envelope follower basically
-drive{} and tanh{}
-More node topology functions
- parallel{} - takes a number and a callback function to create chains for each, then runs them all in parallel
- series{} should also be able to take a callback function to create each chain
- multiband{} - takes a set of cutoff freqs, separates the signal into those bands, and applies a chain for each band based on a callback function
- serallel{} - takes a set of chains (or a number and a callback function to create the chains), and runs then all in series, but collects all the outputs together as well for the final output - ??Do we need this for anything?
 Rewrite pitch effects so it doesn't need all those methods from eval-audio-params, and so addc at least supports segments
 WebAudio node graphs as first class values
- ???? {} for parallel nodes should be (), no???
+ !!Parallel nodes should surely be round brackets???
+  ???? {} for parallel nodes should be (), no???
   And should hoist, eg fx=osc{(108,110,112)}>>lpf{400}*0.06
  Should be able to  fx=[]n  And also  fx=echo>>[]n
- !!Parallel nodes should surely be round brackets???
- !set lpf2 = lpf etc does not work!!! I think the args do not get passed in anymore??
-  I guess there is an extra parse-var in there; can it be short circuited at parse time??
-   Sounds dangerous; this should really work anyway, shouldn't it?
- MediaStreamAudioSourceNode
  mono{}
  ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
   Or should all take same default units as params for consistency?
@@ -63,11 +51,8 @@ WebAudio node graphs as first class values
   ?Fixed now??
   ?What about with buses?
   ?What about other functions, eg smooth?
- !fxMixChain should push fade out TTL to fx chain so it doesn't cut off delayed notes
-  !Better fade out time. If you dont have any delays/reverbs etc you want to stop sooner; eg a audiosynth, fx=osc>>gain{0.02}
  ! a audiosynth, play={osc,osc}  TypeError: waveEffects(...).connect is not a function
  ?Dont recreate fx chain if the param string hasnt changed?
- !Can't get current player event sound param per frame in fx
  !evalMainParamFrame (and what it calls) should use the REAL event, not the params object
  ?In evalParamValue for function, do we need to evalRecurse there? Could it be more efficient at the root level somewhere?
  !Shouldnt bother with evalRecurse to cancel time modifiers if there weren't any time modifiers (only other modifiers)
@@ -89,6 +74,19 @@ WebAudio node graphs as first class values
    debug log function
 includes should include things they need; eg synthwave.limut should include effects.limut etc etc
  Do not include the same file multiple times; if its already included, then nop
+!fxMixChain should push fade out TTL to fx chain so it doesn't cut off delayed notes
+ !Better fade out time. If you dont have any delays/reverbs etc you want to stop sooner; eg a audiosynth, fx=osc>>gain{0.02}
+!set lpf2 = lpf etc does not work!!! I think the args do not get passed in anymore??
+ I guess there is an extra parse-var in there; can it be short circuited at parse time??
+  Sounds dangerous; this should really work anyway, shouldn't it?
+MediaStreamAudioSourceNode node source function
+Note: Can filter an audio signal down into a control signal that can be used for ducking like this:
+ shaper{{x}->abs{x}}>>lpf{10} - This is an envelope follower basically
+More node topology functions
+ parallel{} - takes a number and a callback function to create chains for each, then runs them all in parallel
+ series{} should also be able to take a callback function to create each chain
+ multiband{} - takes a set of cutoff freqs, separates the signal into those bands, and applies a chain for each band based on a callback function
+ serallel{} - takes a set of chains (or a number and a callback function to create the chains), and runs then all in series, but collects all the outputs together as well for the final output - ??Do we need this for anything?
 velocity
   all players default to vel=1 even without midi
   ALL presets to use this.vel; check setting param `vel=midi{'vel'}` works as expected
