@@ -2,6 +2,15 @@
 =================================================================================================================================
 =================================================================================================================================
 === Other ===
+!trance gate stops when event is complete, leaving reverb tails dead, for gamepad etc players?
+!bpm transition didn't seem to clamp correctly
+!dmx addL is ugly
+<player>.trigger, chase{}, count{}
+? d dmx, fixture={0:'dimmer',1:'red',2:'green',3:'blue'}, fore=purple, amp=[1,0]e
+Work out how to do lighting effects:
+ background with spatial and temporal variation
+ flash on player, single or multiple in groups
+ chase on player, single or multiple in groups
 Want a reverse ! piecewise interpolation operator, which stays on the current value then sweeps to the next at the end
  Plus a way of specifying a power curve...
 electron performance
@@ -13,8 +22,6 @@ electron performance
 review all preset; add cutoff control wherever practical
 cyber presets
  More lead presets?
-303 has envelope errors when run like this with riser^4 :
- b tb303 00a, accent, resonance=1/2*(1+riser^4)
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   Segments should be added bit by bit not all at the beginning
    !! TEST with lots of user functions / sub params etc
@@ -80,6 +87,8 @@ includes should include things they need; eg synthwave.limut should include effe
 !set lpf2 = lpf etc does not work!!! I think the args do not get passed in anymore??
  I guess there is an extra parse-var in there; can it be short circuited at parse time??
   Sounds dangerous; this should really work anyway, shouldn't it?
+!!303 has envelope errors when run like this with riser^4 :
+ b tb303 00a, accent, resonance=1/2*(1+riser^4)
 MediaStreamAudioSourceNode node source function
 Note: Can filter an audio signal down into a control signal that can be used for ducking like this:
  shaper{{x}->abs{x}}>>lpf{10} - This is an envelope follower basically

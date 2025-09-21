@@ -23,7 +23,7 @@ define(function (require) {
     vec4 c = texture(l_image, fract(uv));
     float foreback = c.a*(c.r+c.g+c.b)/3.0;
     c.a = 1.0;
-    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) { foreback = 0.0; }
+    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) { foreback = 0.0; c.a = 0.0; }
     postprocess(c, foreback);
   }
   `
@@ -40,9 +40,9 @@ define(function (require) {
     }
   }
 
-  let accessWebcam = async (deviceIdx) => {
+  let accessWebcam = async (deviceIdx, width, height) => {
     let deviceId = videoDevices[deviceIdx].deviceId
-    let constraints = { video: { deviceId:{exact: deviceId}, width:{ideal: 512}, height:{ideal: 512} } }
+    let constraints = { video: { deviceId:{exact: deviceId}, width:{ideal: width}, height:{ideal: height} } }
     let mediaStream = await navigator.mediaDevices.getUserMedia(constraints) // Request specific device
     consoleOut(`: Using Webcam: ${mediaStream.getTracks()[0].label}`)
     let video = document.createElement('video')
@@ -56,13 +56,13 @@ define(function (require) {
     return video
   }
 
-  let getWebcamTexture = (deviceIdx) => {
+  let getWebcamTexture = (deviceIdx, width, height) => {
     let texture
     let lastUpdateTime
     texture = {}
     texture.tex = system.gl.createTexture()
     let video
-    accessWebcam(deviceIdx).then(v => {
+    accessWebcam(deviceIdx, width, height).then(v => {
       video = v
     }).catch(err => {
       consoleOut(`🔴 Webcam error: '${err.message}'`)
@@ -87,10 +87,19 @@ define(function (require) {
     }
     let deviceIdx = evalParamEvent(params.device, params) || 0
     if (typeof deviceIdx === 'string') {
-      deviceIdx = videoDevices.findIndex(d => d.label.includes(deviceIdx)) || 0
+      let deviceLabel = deviceIdx
+      deviceIdx = videoDevices.findIndex(d => d.label.toLowerCase().includes(deviceLabel.toLowerCase()))
+      if (deviceIdx === -1) {
+        deviceIdx = 0
+        if (devices[deviceIdx] === undefined) {
+          consoleOut(`🟠 Unable to find webcam with label containing ${deviceLabel}`)
+        }
+      }
     }
     deviceIdx = deviceIdx % videoDevices.length
     if (devices[deviceIdx] === undefined) {
+      let width = evalParamEvent(params.width, params) || 640
+      let height = evalParamEvent(params.height, params) || 480
       devices[deviceIdx] = {}
       let device = devices[deviceIdx]
       if (!device.vtxCompiled) {
@@ -109,7 +118,7 @@ define(function (require) {
       device.shader = {}
       device.shader.program = program || null
       common.getCommonUniforms(device.shader)
-      device.shader.texture = getWebcamTexture(deviceIdx)
+      device.shader.texture = getWebcamTexture(deviceIdx, width, height)
     }
     return devices[deviceIdx].shader
   }
