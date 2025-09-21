@@ -79,10 +79,12 @@ define((require) => {
     let line = lines[i]
     if (line === '') { return i }
     if (line.startsWith('//') === '') { return i }
+    let acc = [line]
     while ((i+1)<lines.length && !isLineStart(lines[i+1])) {
-      line = line + lines[i+1] // Accumulate all lines that aren't a new line start together into one new line
+      acc.push(lines[i+1])
       i++
     }
+    line = acc.join('')
     await parseLine(line, i, parseCode)
     return i
   }

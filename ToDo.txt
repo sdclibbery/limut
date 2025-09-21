@@ -2,8 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 === Other ===
-!update code performance
-gp{} as alias for gamepad{}
 !fx chain do not recreate if string hasn't changed
 !trance gate stops when event is complete, leaving reverb tails dead, for gamepad etc players?
 Includes

@@ -59,4 +59,5 @@ define(function(require) {
   }
   newGamepad.isStaticVarFunction = true
   addVar('gamepad', newGamepad)
+  addVar('gp', newGamepad) // Alias for ease of access
 })
