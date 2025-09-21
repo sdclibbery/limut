@@ -2,7 +2,16 @@
 =================================================================================================================================
 =================================================================================================================================
 === Other ===
+!update code performance
+gp{} as alias for gamepad{}
+!fx chain do not recreate if string hasn't changed
 !trance gate stops when event is complete, leaving reverb tails dead, for gamepad etc players?
+Includes
+ Do not include the same file multiple times; if its already included, then nop
+ includes should include things they need; eg synthwave.limut should include effects.limut etc etc
+ everything.limut include
+ cyber.limut include
+!tinbass nonsense
 ??Should allow []l@f{} as well as []l{}@f ? IE allow modifiers/interval in either order??
 !dmx addL is ugly and confusing...
 <player>.trigger, chase{}, count{}
@@ -80,8 +89,6 @@ WebAudio node graphs as first class values
    user defined function syntax, inc argument syntax plus default args, plus positional args
    trig maths functions
    debug log function
-includes should include things they need; eg synthwave.limut should include effects.limut etc etc
- Do not include the same file multiple times; if its already included, then nop
 !fxMixChain should push fade out TTL to fx chain so it doesn't cut off delayed notes
  !Better fade out time. If you dont have any delays/reverbs etc you want to stop sooner; eg a audiosynth, fx=osc>>gain{0.02}
 !set lpf2 = lpf etc does not work!!! I think the args do not get passed in anymore??
