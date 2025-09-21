@@ -109,6 +109,15 @@ define(function(require) {
     return result
   }
 
+  let maybeClamp = (modifiers, ss, options) => {
+    if (!!modifiers && modifiers.repeat !== undefined && !modifiers.repeat) {
+      if (options === undefined) { options = {} }
+      options.clamp = true
+      if (ss[ss.length-1] === undefined) { ss[ss.length-1] = 0 } // If not repeating, last segment should end at zero unless specified otherwise
+    }
+    return options
+  }
+
   let parsePiecewise = (state) => {
     if (state.str.charAt(state.idx) !== '[') { return undefined }
     let rState = Object.assign({}, state)
@@ -129,9 +138,9 @@ define(function(require) {
       let interval = parseInterval(state) || hoistInterval('event', vs)
       is = is.map(i => iOperators[i])
       if (ranged) {
-        result = rangeTimeVar(vs, ds)
+        result = rangeTimeVar(vs, ds, maybeClamp(modifiers, ss))
       } else {
-        result = timeVar(vs, is, ss, ds, iOperators['_'])
+        result = timeVar(vs, is, ss, ds, iOperators['_'], maybeClamp(modifiers, ss))
       }
       result = addModifiers(result, modifiers)
       setInterval(result, interval)
@@ -141,7 +150,7 @@ define(function(require) {
       let modifiers = parseMap(state)
       let interval = parseInterval(state) || hoistInterval('event', vs)
       is = is.map(i => iOperators[i])
-      result = timeVar(vs, is, ss, ds, iOperators['/'])
+      result = timeVar(vs, is, ss, ds, iOperators['/'], maybeClamp(modifiers, ss))
       result = addModifiers(result, modifiers)
       setInterval(result, interval)
     } else if (state.str.charAt(state.idx).toLowerCase() == 's') { // smoothstep interpolated timevar
@@ -149,7 +158,7 @@ define(function(require) {
       let ds = numberOrArrayOrFour(state)
       let modifiers = parseMap(state)
       is = is.map(i => iOperators[i])
-      result = timeVar(vs, is, ss, ds, iOperators['~'])
+      result = timeVar(vs, is, ss, ds, iOperators['~'], maybeClamp(modifiers, ss))
       result = addModifiers(result, modifiers)
       let interval = parseInterval(state) || hoistInterval('event', vs)
       setInterval(result, interval)
@@ -203,11 +212,7 @@ define(function(require) {
       if (modifiers === undefined) { modifiers = {value: (e,b) => e.idx} } // Default to index with event index
       if (modifiers.value === undefined) { modifiers.value = (e,b) => e.idx } // Default to index with event index
       is = is.map(i => iOperators[i || '/']) // Default to linear interpolation
-      let options = {}
-      if (modifiers.repeat !== undefined && !modifiers.repeat) {
-        options.clamp = true
-        if (ss[ss.length-1] === undefined) { ss[ss.length-1] = 0 } // If not repeating, last segment should end at zero unless specified otherwise
-      }
+      let options = maybeClamp(modifiers, ss)
       ss = ss.map(s => s!==undefined ? s : 1) // Default to size 1
       result = addModifiers(piecewise(vs, is, ss, modifiers.value, options), modifiers)
       setInterval(result, parseInterval(state) || hoistInterval('event', vs, modifiers))

@@ -2093,6 +2093,15 @@ define(function(require) {
   assert(1, evalParamFrame(parseExpression("[0,1]{time-1,repeat:0}"), e, 3))
   assert(1, evalParamFrame(parseExpression("[0,1]{time-1,repeat:0}"), e, 4))
 
+  assert(0, evalParamFrame(parseExpression("[0,1]{repeat:0}"), ev(0), 0))
+  assert(1, evalParamFrame(parseExpression("[0,1]{repeat:0}"), ev(2), 0))
+  assert(0, evalParamFrame(parseExpression("[0,1]t1{repeat:0}@f"), ev(), 1/2))
+  assert(1, evalParamFrame(parseExpression("[0,1]t1{repeat:0}@f"), ev(), 3/2))
+  assert(1/2, evalParamFrame(parseExpression("[0,1]l1{repeat:0}@f"), ev(), 1/2))
+  assert(1, evalParamFrame(parseExpression("[0,1]l1{repeat:0}@f"), ev(), 3/2))
+  assert(1/2, evalParamFrame(parseExpression("[0,1]s1{repeat:0}@f"), ev(), 1/2))
+  assert(1, evalParamFrame(parseExpression("[0,1]s1{repeat:0}@f"), ev(), 3/2))
+
   vars.foo = () => 3
   vars.foo.isVarfunction = true
   vars.foo.bar = () => 5

@@ -3,8 +3,8 @@
 =================================================================================================================================
 === Other ===
 !trance gate stops when event is complete, leaving reverb tails dead, for gamepad etc players?
-!bpm transition didn't seem to clamp correctly
-!dmx addL is ugly
+??Should allow []l@f{} as well as []l{}@f ? IE allow modifiers/interval in either order??
+!dmx addL is ugly and confusing...
 <player>.trigger, chase{}, count{}
 ? d dmx, fixture={0:'dimmer',1:'red',2:'green',3:'blue'}, fore=purple, amp=[1,0]e
 Work out how to do lighting effects:

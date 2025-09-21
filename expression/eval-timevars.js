@@ -8,7 +8,7 @@ define(function(require) {
   let linear = (i) => i
   linear.segmentPower = 1
 
-  let rangeTimeVar = (vs, ds) => {
+  let rangeTimeVar = (vs, ds, options) => {
     let lo = vs[0] || 0
     let hi = vs[1] || lo+1
     let result = (e,b,evalRecurse) => {
@@ -20,16 +20,16 @@ define(function(require) {
       if (!Array.isArray(ds)) { ds = [ds] }
       let is = vs.map(() => step)
       let ss = vs.map((_,i) => ds[i % ds.length])
-      return piecewise(vs, is, ss, (e,b) => b)
+      return piecewise(vs, is, ss, (e,b) => b, options)
     }
     return result
   }
 
-  let timeVar = (vs, is, ss, ds, defaultI) => {
+  let timeVar = (vs, is, ss, ds, defaultI, options) => {
     if (!Array.isArray(ds)) { ds = [ds] }
     is = is.map(i => i || defaultI)
     ss = ss.map((s,idx) => s!==undefined ? s : ds[idx % ds.length])
-    return piecewise(vs, is, ss, (e,b) => b)
+    return piecewise(vs, is, ss, (e,b) => b, options)
   }
 
   let eventTimeVar = (vs, is, ss, ds, addSegmentData) => {
