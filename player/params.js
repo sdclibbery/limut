@@ -71,7 +71,6 @@ define(function(require) {
       return true
     }
     let {name, operator} = parseName(state)
-    let startIdx = state.idx
     let value
     if (state.valueless) {
       value = '1'
@@ -84,11 +83,15 @@ define(function(require) {
       if (operator) {
         v = newOverride(v, operator)
       }
-      let paramValue = combineOverride(state.params[name], v)
-      if (name === 'dur' && typeof paramValue === 'function') { // Save the dur expression as a string so that the pattern can reset the timing context if it changes
-        let durParamString = state.str.slice(startIdx, state.idx)
-        paramValue._durParamString = durParamString
+      if (name === 'fx') {  // Remember actual string value to use as a cache key so the whole fx chain doesan't have to be regenerated on every code update
+        if (state.params._fxString !== undefined && operator !== undefined) {
+          state.params._fxString += operator.name === 'connectOp' ? '>>' : operator.name
+          state.params._fxString += value
+        } else {
+          state.params._fxString = value
+        }
       }
+      let paramValue = combineOverride(state.params[name], v)
       state.params[name] = paramValue
       return true
     }
@@ -171,6 +174,13 @@ define(function(require) {
   assert({foo:0,bar:1}, applyOverrides({}, parseParams('foo=1==2, bar=3==3')))
   assert({foo:0,bar:1}, applyOverrides({}, parseParams('foo=1>=2, bar=3>=3')))
   assert({foo:0,bar:2}, applyOverrides({}, parseParams('foo=7<=5, bar=2')))
+
+  assert({_fxString:'2',fx:2}, applyOverrides({}, parseParams('fx=2')))
+  assert({_fxString:'3',fx:3}, applyOverrides({}, parseParams('fx=2,fx=3')))
+  assert({_fxString:'2',fx:2}, applyOverrides({}, parseParams('fx>>=2')))
+  assert({_fxString:'2+3',fx:5}, applyOverrides({}, parseParams('fx=2,fx+=3')))
+  e = ev(); e._destructor = require('play/destructor')()
+  assert('mockaudionode>>mockaudionode', evalParamFrame(applyOverrides({}, parseParams('fx=mockaudionode,fx>>=mockaudionode'))._fxString, e,0))
 
   console.log("Params tests complete")
   }

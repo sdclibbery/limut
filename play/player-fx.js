@@ -22,6 +22,10 @@ define((require) => {
     setTimeout(destroy, fadeTime*1000)
   }
 
+  let getPlayerFxChainKey = (params, connectToAudioDest) => {
+    return params._player.id + params._fxString + params.bus + connectToAudioDest
+  }
+
   let id = 0
   let createPlayerFxChain = (eventParams, connectToAudioDest) => {
     // Setup for continuous running
@@ -31,6 +35,7 @@ define((require) => {
       stopped: false,
       destroyWait: 0.1,
       id: id++,
+      key: getPlayerFxChainKey(eventParams, connectToAudioDest), // Key to identify whether this chain needs to be recreated or can be transferred to the new player on code update
     }
     let params = Object.assign({}, eventParams)
     params._perFrame = fx._perFrame
@@ -116,5 +121,5 @@ define((require) => {
     return fx
 }
 
-  return createPlayerFxChain
+  return {createPlayerFxChain,getPlayerFxChainKey}
 })

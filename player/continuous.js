@@ -18,6 +18,7 @@ define(function(require) {
       if (played) { return }
       let overrides = players.overrides[playerId] || {}
       params = applyOverrides(params, overrides)
+      params._player = player
       player.start(params)
       played = true
     }

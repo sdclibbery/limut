@@ -3,6 +3,13 @@
 =================================================================================================================================
 === Other ===
 !fx chain do not recreate if string hasn't changed
+ x when parse params, add a string version of the fx param in _fxString
+ x When creating new player, instead of deleting old _fx chain, will have to store it on the new player along with the old string
+  x Then, when considering creating the new chain, will have to either keep it, or destory and recreate
+   x update bus as well
+ what other combineOverride usages need to handle _fxString ??? set ...
+  ??seems to work???
+ TEST!!! a lot!!!
 !trance gate stops when event is complete, leaving reverb tails dead, for gamepad etc players?
 Includes
  Do not include the same file multiple times; if its already included, then nop

@@ -76,12 +76,14 @@ define((require) => {
     let playerFactory = playerTypes[playerType.toLowerCase()]
     if (!playerFactory) { throw 'Player type "'+playerType+'" not found' }
     let oldPlayer = players.getById(playerId)
-    if (oldPlayer && oldPlayer._fx && oldPlayer._fx.destroy) { oldPlayer._fx.destroy() } // Cleanup old process chain
+    let transferFxChain = !!oldPlayer ? oldPlayer._fx : undefined
     // Continuous player, no events
     if (playerFactory.create) {
       let player = continuousPlayer(playerFactory, paramsStr, playerId, playerFactory.baseParams)
+      player.id = playerId
       player.type = playerType
       player.keepState = {}
+      player._fx = transferFxChain
       return player
     }
     if (oldPlayer && oldPlayer.destroy) { oldPlayer.destroy() } // If new player is not continuous, make sure old one still gets destroyed
@@ -91,6 +93,7 @@ define((require) => {
       _num: playerNumber,
       type: playerType,
       keepState: {},
+      _fx: transferFxChain,
     }
     playerNumber++
     player.play = (es) => {

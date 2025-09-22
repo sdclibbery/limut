@@ -14,7 +14,7 @@ define((require) => {
   let players = require('player/players')
   let consoleOut = require('console')
   let {echo} = require('play/effects/echo')
-  let createPlayerFxChain = require('play/player-fx')
+  let {createPlayerFxChain,getPlayerFxChainKey} = require('play/player-fx')
 
   let effectChain = (params, node) => {
     node = effects(params, node)
@@ -42,7 +42,9 @@ define((require) => {
   }
 
   let connectToFxChain = (params, bus) => {
-    if (params._fx === undefined) { // Create fx chain and connect to it if not present
+    let newKey = getPlayerFxChainKey(params)
+    if (params._fx === undefined || newKey !== params._fx.key) { // Create fx chain and connect to it if not present or out of date
+      if (params._fx !== undefined) { params._fx.destroy() }
       params._fx = createPlayerFxChain(params, bus.id === 'main')
       setTimeout(()=> { // Pause until last moment before connecting to avoid loud blare with parallel delay feedbacks
         bus.output.connect(params._fx.chainInput)

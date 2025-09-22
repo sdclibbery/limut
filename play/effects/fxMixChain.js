@@ -12,7 +12,7 @@ define(function (require) {
   let consoleOut = require('console')
   let {fixedEcho} = require('play/effects/echo')
   let destructor = require('play/destructor')
-  let createPlayerFxChain = require('play/player-fx')
+  let {createPlayerFxChain,getPlayerFxChainKey} = require('play/player-fx')
 
   let quantise = (v, step) =>{
     return Math.round(v*step)/step
@@ -85,7 +85,9 @@ define(function (require) {
       c.out.disconnect()
       c.out.connect(outPlayer._input)
     } else { // Output to player fx chain
-      if (outPlayer._fx === undefined) { // Create fx chain and connect to it if not present
+      let newKey = getPlayerFxChainKey(params)
+      if (outPlayer._fx === undefined || newKey !== outPlayer._fx.key) { // Create fx chain and connect to it if not present or out of date
+        if (outPlayer._fx !== undefined) { outPlayer._fx.destroy() }
         outPlayer._fx = createPlayerFxChain(params)
         setTimeout(()=> { // Pause until last moment before connecting to avoid loud blare with parallel delay feedbacks
           c.out.disconnect()
