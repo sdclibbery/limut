@@ -23,6 +23,7 @@ define((require) => {
   }
 
   let getPlayerFxChainKey = (params, connectToAudioDest) => {
+    // console.log(params._player.id, params._fxString, params.bus, connectToAudioDest)
     return params._player.id + params._fxString + params.bus + connectToAudioDest
   }
 

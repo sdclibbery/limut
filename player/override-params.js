@@ -4,11 +4,10 @@ define(function(require) {
 
   let isOverride = (v) => Array.isArray(v) && v._override
 
-  let newOverride = (value, operator) => {
-    if (!operator) {
-      operator = (l,r) => r // Replace previous value if no combining operator specified
-    }
-    let ov = [{value:value,operator:operator}]
+  let setOp = (l,r) => r
+  let newOverride = (value, operator, string) => {
+    if (!operator) { operator = setOp } // Replace previous value if no combining operator specified
+    let ov = [{value:value,operator:operator,string:string}]
     ov._override = true
     return ov
   }
@@ -22,7 +21,7 @@ define(function(require) {
     }
     oldO.push(...newO) // Combine override arrays
     return oldO
-}
+  }
 
   let combineOverrides = (oldOverrides, newOverrides) => {
     let result = Object.assign({}, oldOverrides)
@@ -32,34 +31,49 @@ define(function(require) {
     return result
   }
 
-  let applyOverride = (original, override) => {
+  let applyOverride = (params, param, override) => {
     if (isOverride(override)) {
+      if (param === 'fx') {
+        params._fxString = override.reduce((orig, over) => {
+          let opName = !!over.operator ? over.operator.name : ''
+          if (opName === 'setOp') {
+            return over.string
+          } else {
+            if (orig === undefined) { return over.string }
+            if (opName === 'connectOp') { opName = '>>' }
+            return orig + opName + over.string
+          }
+        }, params._fxString || params.fx)
+      }
       return override.reduce((orig, over) => {
+        if (orig === undefined) { return over.value }
+        if (over.operator.name === 'setOp') { return over.value }
         return applyOperator(over.operator, orig, over.value)
-      }, original)
+      }, params[param])
     } else {
+        if (param === 'fx') { params._fxString = ''+override }
         return override
     }
-}
-
-  let collapseOverrides = (overrides) => {
-    for (let k in overrides) {
-      overrides[k] = applyOverride(undefined, overrides[k])
-    }
-    return overrides
   }
 
   let applyOverridesInPlace = (params, overrides) => {
     for (let k in overrides) {
       if (k === '_time' || k === 'value') { continue } // Do not override these values
-      params[k] = applyOverride(params[k], overrides[k])
+      params[k] = applyOverride(params, k, overrides[k])
     }
   }
 
   let applyOverrides = (params, overrides) => {
     let result = Object.assign({}, params)
-    applyOverridesInPlace(result,overrides)
+    applyOverridesInPlace(result, overrides)
     return result
+  }
+
+  let collapseOverrides = (overrides) => {
+    for (let k in overrides) {
+      overrides[k] = applyOverride(overrides, undefined, overrides[k])
+    }
+    return overrides
   }
 
   // TESTS //
@@ -72,9 +86,14 @@ define(function(require) {
   }
   let ev = ps => Object.assign({idx:0, count:0, value:'1'}, ps)
   let overrides
-  let opAdd = (l,r) => l+r
-  let opMul = (l,r) => l*r
-  let opDiv = (l,r) => l/r
+  let ops = {
+    '+': (l,r) => l+r,
+    '*': (l,r) => l*r,
+    '/': (l,r) => l/r,
+  }
+  let opAdd = ops['+']
+  let opMul = ops['*']
+  let opDiv = ops['/']
   let evalParam = require('player/eval-param').evalParamFrame
 
   assert(ev(), applyOverrides(ev(), {}))
@@ -126,6 +145,18 @@ define(function(require) {
   overrides = {add:combineOverride(1, newOverride(2, opAdd))}
   assert({add:3}, collapseOverrides(overrides))
 
+  assert({fx:2,_fxString:'2'}, applyOverrides({fx:2,_fxString:'2'}, {}))
+  assert({_fxString:'2',fx:2}, applyOverrides({}, {fx:2}))
+  assert({_fxString:'2',fx:2}, applyOverrides({}, {fx:2,_fxString:'2'}))
+  assert({_fxString:'2',fx:2}, applyOverrides({}, {fx:newOverride(2,undefined,'2')}))
+  assert({fx:3,_fxString:'3'}, applyOverrides({fx:2}, {fx:3}))
+  assert({fx:3,_fxString:'3'}, applyOverrides({fx:2,_fxString:'2'}, {fx:3}))
+  assert({fx:3,_fxString:'3'}, applyOverrides({fx:2}, {fx:newOverride(3,undefined,'3')}))
+  assert({fx:3,_fxString:'3'}, applyOverrides({fx:2,_fxString:'2'}, {fx:newOverride(3,undefined,'3')}))
+  assert({_fxString:'3',fx:3}, applyOverrides({}, {fx:newOverride(3,opAdd,'3')}))
+  assert({fx:5,_fxString:'2+3'}, applyOverrides({fx:2}, {fx:newOverride(3,opAdd,'3')}))
+  assert({fx:5,_fxString:'2+3'}, applyOverrides({fx:2,_fxString:'2'}, {fx:newOverride(3,opAdd,'3')}))
+
   console.log('Override params tests complete')
   }
 
@@ -134,7 +165,6 @@ define(function(require) {
     combineOverride: combineOverride,
     combineOverrides: combineOverrides,
     collapseOverrides: collapseOverrides,
-    applyOverride: applyOverride,
     applyOverrides: applyOverrides,
     applyOverridesInPlace: applyOverridesInPlace,
     isOverride: isOverride,

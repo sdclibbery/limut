@@ -80,19 +80,9 @@ define(function(require) {
     name = name.trim().toLowerCase()
     if (name) {
       let v = parseExpression(value, (state.context?state.context+'.':'')+name)
-      if (operator) {
-        v = newOverride(v, operator)
-      }
-      if (name === 'fx') {  // Remember actual string value to use as a cache key so the whole fx chain doesan't have to be regenerated on every code update
-        if (state.params._fxString !== undefined && operator !== undefined) {
-          state.params._fxString += operator.name === 'connectOp' ? '>>' : operator.name
-          state.params._fxString += value
-        } else {
-          state.params._fxString = value
-        }
-      }
-      let paramValue = combineOverride(state.params[name], v)
-      state.params[name] = paramValue
+      if (operator) { v = newOverride(v, operator, value) }
+      else if (name === 'fx') { v = newOverride(v, undefined, value) } // Force override object so that _fxString is correctly set
+      state.params[name] = combineOverride(state.params[name], v)
       return true
     }
     return false

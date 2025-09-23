@@ -4622,7 +4622,7 @@ g gradient, loc={w:1/2,x:1/4+(-2,-1,0,1)/2}, fore=rainbow{time:(time-this.voice)
 d dmx, channel=1, lights=1
 d2 dmx, channel=2, lights=rainbow
 
-// Testing using event data in fx chain
+/// Testing using event data in fx chain
 // a audiosynth, fx=osc{'sine',freq:110}*0.001
 // a audiosynth 123, fx=osc{'sine',freq:110*this.value@f}*0.001
 // a audiosynth 014, fx=osc{'sine',freq:220}*this.value@f*0.002
@@ -4635,5 +4635,14 @@ d2 dmx, channel=2, lights=rainbow
 // a audiosynth 0.. crop 8, dur=1/4, fx=osc{'saw',freq:523/8}>>lpf{[3000:!200ms,10:0]e@s}*this.playing@f*0.03
 //
 // a audiosynth 0.. crop 8, dur=1/4, fx=osc{'saw',freq:110}*[1:!,0:0]e*this.playing@f*0.03
+
+/// Testing _fxString to avoid recreating fx chain when not needed
+// k pick 0..., amp/=4, fx=gain{1}//>>shifter{[1/2:2]r}
+//
+// k pick 0..., amp/=4//, fx=gain{0}
+// set k fx=shifter{[1/2:2]r}
+// set k fx>>=shifter{[1/2:2]r}
+//
+// a audiosynth, fx=osc.sin{[300:1000]r}*0.001, fx>>=shifter{[1/2:2]r}
 
 

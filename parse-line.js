@@ -410,6 +410,20 @@ define((require) => {
   assert(7, evalParamFrame(vars.foo.bar, ev(),0))
   delete vars.foo
 
+  parseLine('preset myp play, fx=2')
+  parseLine('lp myp 0, fx+=3')
+  assert(5, players.instances.lp.getEventsForBeat({count:0})[0].fx)
+  assert('2+3', players.instances.lp.getEventsForBeat({count:0})[0]._fxString)
+  delete players.instances.lp
+  delete playerTypes.myp
+
+  parseLine('preset myp play, fx=2')
+  parseLine('lp myp 0, fx=3')
+  assert(3, players.instances.lp.getEventsForBeat({count:0})[0].fx)
+  assert('3', players.instances.lp.getEventsForBeat({count:0})[0]._fxString)
+  delete players.instances.lp
+  delete playerTypes.myp
+
   let included
   parseLine("include 'preset/test.limut'", 0, (l) => included=l, true)
     .then(() => { assert('includetest preset none', included) })
