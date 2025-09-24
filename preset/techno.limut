@@ -4,9 +4,9 @@ include 'preset/trance.limut'
 
 preset tinbass dbass
   , dur=1/4, att=0.01, rel=0.01, pan=[-1/2:1/2]r
-  , amp=[0:1]r{per:4,0:2,1:0,2:0,seed:101}
-  , lpf={this.freq*[20,5]e*[1:2]s10,q:10}
+  , lpf={(this.cutoff+1/2)*this.freq*[20,5]e*[1:2]s10,q:10}
   , echo=1.01, room=1, flanger=1/16
+  , cutoff=1/2
 
 preset hollow tri
   , envelope='pad', addc=wow
