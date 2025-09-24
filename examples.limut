@@ -4644,5 +4644,12 @@ d2 dmx, channel=2, lights=rainbow
 // set k fx>>=shifter{[1/2:2]r}
 //
 // a audiosynth, fx=osc.sin{[300:1000]r}*0.001, fx>>=shifter{[1/2:2]r}
+//
+// k pick 0..., amp/=4, fx=gain{1}, bus='b'
+// 
+// preset airbus bus, fx=mix{airverb,3/4}
+// b airbus, fx>>=gain{1}>>shifter{[1/2:2]r}
+// 
+// b bus, fx=mix{airverb,3/4}>>gain{1}>>shifter{[1/2:2]r}
 
 

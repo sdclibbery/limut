@@ -2,20 +2,15 @@
 =================================================================================================================================
 =================================================================================================================================
 === Other ===
-!fx chain do not recreate if string hasn't changed
- x when parse params, add a string version of the fx param in _fxString
- x When creating new player, instead of deleting old _fx chain, will have to store it on the new player along with the old string
-  x Then, when considering creating the new chain, will have to either keep it, or destory and recreate
-   x update bus as well
- x applyOverrides should concat the _fxString
- TEST!!! a lot!!!
 !trance gate stops when event is complete, leaving reverb tails dead, for gamepad etc players?
+!tinbass nonsense
+?? []tc []c etc to clamp instead of (or as well as) {repeat:0}
 Includes
+ Do not clear out or reload already loaded includes on code-update
  Do not include the same file multiple times; if its already included, then nop
  includes should include things they need; eg synthwave.limut should include effects.limut etc etc
  everything.limut include
  cyber.limut include
-!tinbass nonsense
 ??Should allow []l@f{} as well as []l{}@f ? IE allow modifiers/interval in either order??
 !dmx addL is ugly and confusing...
 <player>.trigger, chase{}, count{}

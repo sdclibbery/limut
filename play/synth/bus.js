@@ -42,15 +42,15 @@ define((require) => {
   }
 
   let connectToFxChain = (params, bus) => {
-    let newKey = getPlayerFxChainKey(params)
-    if (params._fx === undefined || newKey !== params._fx.key) { // Create fx chain and connect to it if not present or out of date
-      if (params._fx !== undefined) { params._fx.destroy() }
-      params._fx = createPlayerFxChain(params, bus.id === 'main')
+    let newKey = getPlayerFxChainKey(params, bus.id === 'main')
+    if (bus._fx === undefined || newKey !== bus._fx.key) { // Create fx chain and connect to it if not present or out of date
+      if (bus._fx !== undefined) { bus._fx.destroy() }
+      bus._fx = createPlayerFxChain(params, bus.id === 'main')
       setTimeout(()=> { // Pause until last moment before connecting to avoid loud blare with parallel delay feedbacks
-        bus.output.connect(params._fx.chainInput)
+        bus.output.connect(bus._fx.chainInput)
       }, (params._time - system.timeNow()) * 1000 - 1)
     } else {
-      bus.output.connect(params._fx.chainInput)
+      bus.output.connect(bus._fx.chainInput)
     }
   }
 
@@ -86,6 +86,7 @@ define((require) => {
       _perFrame: [],
       destructor: destructor(),
       destroyWait: 0.1,
+      _fx: oldBus && oldBus._fx,
      }
 
     // Input
