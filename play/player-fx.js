@@ -39,6 +39,7 @@ define((require) => {
       key: getPlayerFxChainKey(eventParams, connectToAudioDest), // Key to identify whether this chain needs to be recreated or can be transferred to the new player on code update
     }
     let params = Object.assign({}, eventParams)
+    params.chainEndTime = 1e10 // Keep eval-audio-params per-frame callbacks going for the lifetime of the chain
     params._perFrame = fx._perFrame
     params._destructor = fx.destructor
     let getOverrideEvent = (b) => { // If the player has a current event, use it

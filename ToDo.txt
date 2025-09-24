@@ -2,9 +2,7 @@
 =================================================================================================================================
 =================================================================================================================================
 === Other ===
-!trance gate stops when event is complete, leaving reverb tails dead, for gamepad etc players?
-  s sine keyboard, fx=mix{airverb}*[1:1/16,0:7/16]t@f
-?? []tc []c etc to clamp instead of (or as well as) {repeat:0}
+?? []lc []c etc to clamp instead of (or as well as) {repeat:0}
 Includes
  Do not clear out or reload already loaded includes on code-update
  Do not include the same file multiple times; if its already included, then nop

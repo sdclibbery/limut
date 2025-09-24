@@ -125,8 +125,11 @@ define(function (require) {
       perFrame = (state) => false//segmentedAudioParam(audioParam, evalAt, __event, undefined, def, requiredUnits, mod)
     } else {
       perFrame = (state) => {
-        if (__event && state.time > __event.endTime) { return false } // Finished
-        if (__event && state.time < __event._time) { return true } // Not started yet
+        if (__event) {
+          let endTime = __event.chainEndTime ? __event.chainEndTime : __event.endTime
+          if (state.time > endTime) { return false } // Finished
+          if (state.time < __event._time) { return true } // Not started yet
+        }
         if (audioParam.lastTime === undefined) {
           audioParam.lastTime = (__event && __event._time !== undefined) ? __event._time : system.timeNow()
         }
