@@ -2,6 +2,12 @@
 =================================================================================================================================
 =================================================================================================================================
 === Other ===
+!! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
+  a audiosynth, fx=osc.sin{this.f}*0.01, f=[100:300]l@f
+  !!Also, when it does update, its super slow and also clicky, but ONLY with this. vars
+   !Not just slow with this vars :-(
+    Probably just slow with GC???
+Do an ACTUAL profile of where the time goes during code update...
 ?? []lc []c etc to clamp instead of (or as well as) {repeat:0}
 Includes
  Do not clear out or reload already loaded includes on code-update
