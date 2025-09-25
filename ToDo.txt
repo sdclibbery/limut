@@ -2,19 +2,14 @@
 =================================================================================================================================
 =================================================================================================================================
 === Other ===
-!! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
-  a audiosynth, fx=osc.sin{this.f}*0.01, f=[100:300]l@f
-  !!Also, when it does update, its super slow and also clicky, but ONLY with this. vars
-   !Not just slow with this vars :-(
-    Probably just slow with GC???
-Do an ACTUAL profile of where the time goes during code update...
 ?? []lc []c etc to clamp instead of (or as well as) {repeat:0}
 Includes
- Do not clear out or reload already loaded includes on code-update
+ Do not clear out or reload already loaded includes on code-update - !! This IS worth doing
  Do not include the same file multiple times; if its already included, then nop
  includes should include things they need; eg synthwave.limut should include effects.limut etc etc
  everything.limut include
  cyber.limut include
+Do an ACTUAL profile of where the time goes during code update...
 ??Should allow []l@f{} as well as []l{}@f ? IE allow modifiers/interval in either order??
 !dmx addL is ugly and confusing...
 <player>.trigger, chase{}, count{}
@@ -29,6 +24,8 @@ electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
   BrowserWindow.setFullScreen(true) for fullscreen
+!! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
+  a audiosynth, fx=osc.sin{this.f}*0.01, f=[100:300]l@f
 
 ==== audio ====
 review all preset; add cutoff control wherever practical

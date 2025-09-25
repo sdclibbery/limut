@@ -138,25 +138,17 @@ define((require) => {
     return
   }
 
-  let startsWithInclude = (str) => {
-    let r = new RegExp(/^\s*include\s+/, 'i')
-    return r.test(str)
-  }
+  let includeRegex = new RegExp(/^\s*include\s+/, 'i')
+  let startsWithInclude = (str) => includeRegex.test(str)
 
-  let startsWithSet = (str) => {
-    let r = new RegExp(/^\s*set\s+[\(\*\w\!]+/, 'i')
-    return r.test(str)
-  }
+  let setRegex = new RegExp(/^\s*set\s+[\(\*\w\!]+/, 'i')
+  let startsWithSet = (str) => setRegex.test(str)
 
-  let startsWithPreset = (str) => {
-    let r = new RegExp(/^\s*preset\s+[_a-zA-Z]\w*\s+[_a-zA-Z]\w*/, 'i')
-    return r.test(str)
-  }
+  let presetRegex = new RegExp(/^\s*preset\s+[_a-zA-Z]\w*\s+[_a-zA-Z]\w*/, 'i')
+  let startsWithPreset = (str) => presetRegex.test(str)
 
-  let startsWithPlayer = (str) => {
-    let r = new RegExp(/^\s*[_a-zA-Z]\w*\s+[_a-zA-Z]\w*/, 'i')
-    return r.test(str)
-  }
+  let playerRegex = new RegExp(/^\s*[_a-zA-Z]\w*\s+[_a-zA-Z]\w*/, 'i')
+  let startsWithPlayer = (str) => playerRegex.test(str)
 
   let isLineStart = (str) => {
     if (startsWithInclude(str)) { return true }
