@@ -1,3 +1,4 @@
+include 'lib/effects.limut'
 include 'preset/909.limut'
 include 'preset/303.limut'
 include 'preset/trance.limut'

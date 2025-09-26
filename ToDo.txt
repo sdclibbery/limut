@@ -2,24 +2,19 @@
 =================================================================================================================================
 =================================================================================================================================
 === Other ===
-?? []lc []c etc to clamp instead of (or as well as) {repeat:0}
 Includes
- Do not clear out or reload already loaded includes on code-update - !! This IS worth doing
  Do not include the same file multiple times; if its already included, then nop
- includes should include things they need; eg synthwave.limut should include effects.limut etc etc
- everything.limut include
  cyber.limut include
-Do an ACTUAL profile of where the time goes during code update...
 ??Should allow []l@f{} as well as []l{}@f ? IE allow modifiers/interval in either order??
 !dmx addL is ugly and confusing...
-<player>.trigger, chase{}, count{}
-? d dmx, fixture={0:'dimmer',1:'red',2:'green',3:'blue'}, fore=purple, amp=[1,0]e
 Work out how to do lighting effects:
  background with spatial and temporal variation
  flash on player, single or multiple in groups
  chase on player, single or multiple in groups
+ ? <player>.trigger, chase{}, count{}
+ ? d dmx, fixture={0:'dimmer',1:'red',2:'green',3:'blue'}, fore=purple, amp=[1,0]e
 Want a reverse ! piecewise interpolation operator, which stays on the current value then sweeps to the next at the end
- Plus a way of specifying a power curve...
+ And/or a way of specifying a power curve...
 electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games

@@ -1,3 +1,5 @@
+include 'lib/effects.limut'
+
 set crt={1/3,aspect:4/3,cutoff:0.96}
 preset sunsetsky gradient, loc=tile_t, back=#004f, mid=#206f, fore=#a08f, amp=3/2
 preset sun shadertoy, id='ml2XWt', loc={x:0,y:0.35,w:1,h:1}, blend='max', rate=1/8, fore=0.9
@@ -129,11 +131,11 @@ preset dirt multiwave, dur=1/4, oct=2, envelope='perc',
   fx=delay{[10ms,12ms]n1/2}>>lpf4{(0.1+this.cutoff)*[5000:3/16,800:1/16,200:0]l1/4@f},
   cutoff=[0,1]l8
 
-preset machine multiwave, dur=2, oct=2, envelope='pad',
+preset machine multiwave, dur=2, oct=1, envelope='pad',
 	lpf={(1/2+this.cutoff*2)*[150:400]l4@f,q:1},
-	drive={1/32,mix:1/8}, reverb={1,mix:1/4},
-	wave1={'sine',amp:3,detune:0},
-	wave2={'square',amp:1/8,detune:7+[-1/4,1/4]n11},
+	drive={1/8,mix:1/6}, glide=1/2,// reverb={1,mix:1/4},
+	wave1={'sine',amp:3/2,detune:[-1/8,1/8]n11},
+	wave2={'square',amp:1/8,detune:7+[-1/4,1/4]n19},
   cutoff=1/2
 
 preset glitch wave, wave='noise', envelope='organ', oct=3,

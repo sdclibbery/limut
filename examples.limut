@@ -4653,3 +4653,6 @@ d2 dmx, channel=2, lights=rainbow
 // b bus, fx=mix{airverb,3/4}>>gain{1}>>shifter{[1/2:2]r}
 
 
+set bpm=[110:_100,110:/128,140:_1e6]
+
+
