@@ -134,8 +134,9 @@ define(function(require) {
     if (state.str.charAt(state.idx).toLowerCase() == 't') { // timevar; values per time interval
       state.idx += 1
       let ds = numberOrArrayOrFour(state)
+      let interval = parseInterval(state)
       let modifiers = parseMap(state)
-      let interval = parseInterval(state) || hoistInterval('event', vs)
+      interval = interval || parseInterval(state) || hoistInterval('event', vs)
       is = is.map(i => iOperators[i])
       if (ranged) {
         result = rangeTimeVar(vs, ds, maybeClamp(modifiers, ss))
@@ -147,8 +148,9 @@ define(function(require) {
     } else if (state.str.charAt(state.idx).toLowerCase() == 'l') { // linearly interpolated timevar
       state.idx += 1
       let ds = numberOrArrayOrFour(state)
+      let interval = parseInterval(state)
       let modifiers = parseMap(state)
-      let interval = parseInterval(state) || hoistInterval('event', vs)
+      interval = interval || parseInterval(state) || hoistInterval('event', vs)
       is = is.map(i => iOperators[i])
       result = timeVar(vs, is, ss, ds, iOperators['/'], maybeClamp(modifiers, ss))
       result = addModifiers(result, modifiers)
@@ -156,11 +158,12 @@ define(function(require) {
     } else if (state.str.charAt(state.idx).toLowerCase() == 's') { // smoothstep interpolated timevar
       state.idx += 1
       let ds = numberOrArrayOrFour(state)
+      let interval = parseInterval(state)
       let modifiers = parseMap(state)
       is = is.map(i => iOperators[i])
       result = timeVar(vs, is, ss, ds, iOperators['~'], maybeClamp(modifiers, ss))
       result = addModifiers(result, modifiers)
-      let interval = parseInterval(state) || hoistInterval('event', vs)
+      interval = interval || parseInterval(state) || hoistInterval('event', vs)
       setInterval(result, interval)
     } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
       state.idx += 1
@@ -170,8 +173,9 @@ define(function(require) {
         addSegmentData = true
       }
       let ds = numberOrArray(state)
+      let interval = parseInterval(state)
       let modifiers = parseMap(state)
-      let interval = parseInterval(state) || hoistInterval('frame', vs)
+      interval = interval || parseInterval(state) || hoistInterval('frame', vs)
       if (interval === 'segment')  { // @s: add segment data
         addSegmentData = true
       }
@@ -183,6 +187,7 @@ define(function(require) {
       state.idx += 1
       let hold = number(state)
       hold = parseUnits(hold, state)
+      let interval = parseInterval(state)
       let modifiers = parseMap(state)
       if (hold !== undefined) {
         if (modifiers === undefined) { modifiers = {} }
@@ -196,18 +201,20 @@ define(function(require) {
         result = parseRandom(vs, is, ss)
       }
       result = addModifiers(result, modifiers)
-      let interval = parseInterval(state) || hoistInterval('event', vs, modifiers)
+      interval = interval || parseInterval(state) || hoistInterval('event', vs, modifiers)
       setInterval(result, interval)
     } else if (state.str.charAt(state.idx).toLowerCase() == 'n') { // simple noise
       state.idx += 1
       let period = number(state)
       period = parseUnits(period, state)
       if (period === undefined) { period = 1 }
+      let interval = parseInterval(state)
       let modifiers = parseMap(state)
       result = addModifiers(simpleNoise(vs, period), modifiers)
-      let interval = parseInterval(state) || hoistInterval('frame', modifiers)
+      interval = interval || parseInterval(state) || hoistInterval('frame', modifiers)
       setInterval(result, interval)
     } else { // Piecewise as a function not an expression
+      let interval = parseInterval(state)
       let modifiers = parseMap(state)
       if (modifiers === undefined) { modifiers = {value: (e,b) => e.idx} } // Default to index with event index
       if (modifiers.value === undefined) { modifiers.value = (e,b) => e.idx } // Default to index with event index
@@ -215,7 +222,7 @@ define(function(require) {
       let options = maybeClamp(modifiers, ss)
       ss = ss.map(s => s!==undefined ? s : 1) // Default to size 1
       result = addModifiers(piecewise(vs, is, ss, modifiers.value, options), modifiers)
-      setInterval(result, parseInterval(state) || hoistInterval('event', vs, modifiers))
+      setInterval(result, interval || parseInterval(state) || hoistInterval('event', vs, modifiers))
     }
     return result
   }

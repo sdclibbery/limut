@@ -34,13 +34,15 @@ define(function(require) {
         eatWhitespace(state)
         if (vs.length == 1) {
           result = vs[0]
-          result = addModifiers(result, parseMap(state))
           let interval = parseInterval(state)
+          result = addModifiers(result, parseMap(state))
+          interval = interval || parseInterval(state)
           if (interval && typeof result === 'function') { result.interval = interval }
         } else if (Array.isArray(vs)) {
           result = vs
+          let interval = parseInterval(state)
           result = addModifiers(result, parseMap(state))
-          result.interval = parseInterval(state) || hoistInterval(undefined, vs)
+          result.interval = interval || parseInterval(state) || hoistInterval(undefined, vs)
         } else {
           result = vs
         }
@@ -83,6 +85,7 @@ define(function(require) {
           result.interval = parseInterval(state) || body.interval
           continue
         }
+        parseInterval(state) // Ignore
         result = addModifiers(map, parseMap(state)) // A map can still have modifiers
         parseInterval(state) // Ignore
         continue
@@ -135,8 +138,9 @@ define(function(require) {
       }
       // vars
       let parsed = parseVar(state)
-      let modifiers = parseMap(state)
       let interval = parseInterval(state)
+      let modifiers = parseMap(state)
+      interval = interval || parseInterval(state)
       let v = varLookup(parsed, modifiers, state.context, interval, state.userFunctionArgs)
       if (v !== undefined) {
         result = addModifiers(v, modifiers)
@@ -2115,6 +2119,59 @@ define(function(require) {
   assert(7, evalParamFrame(parseExpression('foo.bar{7}'), ev(), 0))
   assert(1, evalParamFrame(parseExpression('foo.bar'), ev(), 0))
   delete vars.foo
+
+  assert('frame', parseExpression('[]t{foo:7}@f').interval)
+  assert(7, parseExpression('[]t{foo:7}@f').modifiers.foo)
+  assert('frame', parseExpression('[]t@f{foo:7}').interval)
+  assert(7, parseExpression('[]t@f{foo:7}').modifiers.foo)
+
+  assert('frame', parseExpression('[]l{foo:7}@f').interval)
+  assert(7, parseExpression('[]l{foo:7}@f').modifiers.foo)
+  assert('frame', parseExpression('[]l@f{foo:7}').interval)
+  assert(7, parseExpression('[]l@f{foo:7}').modifiers.foo)
+
+  assert('frame', parseExpression('[]s{foo:7}@f').interval)
+  assert(7, parseExpression('[]s{foo:7}@f').modifiers.foo)
+  assert('frame', parseExpression('[]s@f{foo:7}').interval)
+  assert(7, parseExpression('[]s@f{foo:7}').modifiers.foo)
+
+  assert('frame', parseExpression('[]e{foo:7}@f').interval)
+  assert(7, parseExpression('[]e{foo:7}@f').modifiers.foo)
+  assert('frame', parseExpression('[]e@f{foo:7}').interval)
+  assert(7, parseExpression('[]e@f{foo:7}').modifiers.foo)
+
+  assert('frame', parseExpression('[]r{foo:7}@f').interval)
+  assert(7, parseExpression('[]r{foo:7}@f').modifiers.foo)
+  assert('frame', parseExpression('[]r@f{foo:7}').interval)
+  assert(7, parseExpression('[]r@f{foo:7}').modifiers.foo)
+
+  assert('frame', parseExpression('[]n{foo:7}@f').interval)
+  assert(7, parseExpression('[]n{foo:7}@f').modifiers.foo)
+  assert('frame', parseExpression('[]n@f{foo:7}').interval)
+  assert(7, parseExpression('[]n@f{foo:7}').modifiers.foo)
+
+  assert('frame', parseExpression('[]{foo:7}@f').interval)
+  assert(7, parseExpression('[]{foo:7}@f').modifiers.foo)
+  assert('frame', parseExpression('[]@f{foo:7}').interval)
+  assert(7, parseExpression('[]@f{foo:7}').modifiers.foo)
+
+  assert('frame', parseExpression('(1){foo:7}@f').interval)
+  assert(7, parseExpression('(1){foo:7}@f').modifiers.foo)
+  assert('frame', parseExpression('(1)@f{foo:7}').interval)
+  assert(7, parseExpression('(1)@f{foo:7}').modifiers.foo)
+
+  assert('frame', parseExpression('(1,2){foo:7}@f').interval)
+  assert(7, parseExpression('(1,2){foo:7}@f').modifiers.foo)
+  assert('frame', parseExpression('(1,2)@f{foo:7}').interval)
+  assert(7, parseExpression('(1,2)@f{foo:7}').modifiers.foo)
+
+  assert(7, parseExpression('{baz:1}{foo:7}@f').modifiers.foo)
+  assert(7, parseExpression('{baz:1}@f{foo:7}').modifiers.foo)
+
+  assert('frame', parseExpression('baz{foo:7}@f').interval)
+  assert(7, parseExpression('baz{foo:7}@f').modifiers.foo)
+  assert('frame', parseExpression('baz@f{foo:7}').interval)
+  assert(7, parseExpression('baz@f{foo:7}').modifiers.foo)
 
   // vars.foo = parseExpression('{v} -> v*3')
   // assert([3,6], evalParamFrame(parseExpression('foo{(1,2)}'), ev(), 0))

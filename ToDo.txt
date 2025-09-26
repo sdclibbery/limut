@@ -2,8 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 === Other ===
-??Should allow []l@f{} as well as []l{}@f ? IE allow modifiers/interval in either order??
- YES!
 !dmx addL is ugly and confusing...
 Work out how to do lighting effects:
  background with spatial and temporal variation

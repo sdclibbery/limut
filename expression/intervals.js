@@ -53,6 +53,7 @@ define(function(require) {
         state.idx += 1
         result = 'segment'
       }
+      if (result === undefined) { state.idx -= 1 } // Not an interval after all
     }
     return result
   }
@@ -80,6 +81,29 @@ define(function(require) {
     perFrameFunc.interval = 'frame'
     let perSegmentFunc = () => 0
     perSegmentFunc.interval = 'segment'
+    let st = (str) => {
+      return {
+        str:str,
+        idx:0,
+      }
+    }
+
+    assert(undefined, parseInterval(st('')))
+    assert(undefined, parseInterval(st('{}')))
+    assert(undefined, parseInterval(st(', ')))
+    assert(undefined, parseInterval(st('0')))
+    assert(undefined, parseInterval(st('@,')))
+    assert(undefined, parseInterval(st('@')))
+    assert('frame', parseInterval(st('@f')))
+    assert('event', parseInterval(st('@e')))
+    assert('segment', parseInterval(st('@s')))
+    let s
+    s = st(''); parseInterval(s); assert(0, s.idx)
+    s = st('@f'); parseInterval(s); assert(2, s.idx)
+    s = st('@f{}'); parseInterval(s); assert(2, s.idx)
+    s = st('{}'); parseInterval(s); assert(0, s.idx)
+    s = st('@,'); parseInterval(s); assert(0, s.idx)
+    s = st('0'); parseInterval(s); assert(0, s.idx)
 
     assert(undefined, combineIntervalsFrom(0, 1))
 

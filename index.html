@@ -420,6 +420,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <h4 onclick="toggleAccordion('accordion-value-syntax')" class="accordion"> Values</h4>
 <div id="accordion-value-syntax" class="closed">
 <p>Basic structure <code>value{modifiers}@interval</code></p>
+<p>Note: the order of interval and modifier can be swapped if desired. For example, <code>[]r@f{seed:1}</code> is the same as <code>[]r{seed:1}@f</code>.</p>
 <p><code>value</code> Actual value (which may include subparameters); see below</p>
 <p><code>{modifiers}</code> Map of modifiers and/or arguments. Modifiers may modify the time passed to the value expression, or the value it returns, or provide additional data for a parameter. For example, <code>[1,2,3]t1{0:0,per:8}</code> will give a sequence that repeats every 8 beats, forced to the value 0 at the start of each repeat. In other words, the repeating sequence: 0,2,3,1,2,3,1,2. See "Modifiers" below.</p>
 <p><code>@interval</code> Intervals specify how often the value should be evaluated, for example once per event (then the same value through the event), or continuously varying. See "Intervals" below.</p>
