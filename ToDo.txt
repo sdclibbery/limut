@@ -2,10 +2,8 @@
 =================================================================================================================================
 =================================================================================================================================
 === Other ===
-Includes
- Do not include the same file multiple times; if its already included, then nop
- cyber.limut include
 ??Should allow []l@f{} as well as []l{}@f ? IE allow modifiers/interval in either order??
+ YES!
 !dmx addL is ugly and confusing...
 Work out how to do lighting effects:
  background with spatial and temporal variation
@@ -25,6 +23,7 @@ electron performance
 ==== audio ====
 review all preset; add cutoff control wherever practical
 cyber presets
+ cyber.limut include
  More lead presets?
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   Segments should be added bit by bit not all at the beginning

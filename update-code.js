@@ -96,6 +96,8 @@ define((require) => {
       try {
         i = await parseCommand(lines, i) // Will skip lines that were accumulated
       } catch (e) {
+        consoleOut('🔴 Parse error: ' + e)
+        console.log(e)
         reportError(e, i)
       }
     }
