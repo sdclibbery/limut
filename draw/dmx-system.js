@@ -3,6 +3,8 @@ define(function(require) {
   let consoleOut = require('console')
   let newRenderList = require('draw/render-list')
   let metronome = require('metronome')
+  let addVar = require('predefined-vars').add
+  let {evalParamFrame} = require('player/eval-param')
 
   let toByte = (v) => Math.floor(Math.min(Math.max(v, 0), 0xff))
 
@@ -53,6 +55,19 @@ define(function(require) {
     renderList.render(renderState)
     worker.postMessage(buffer)
   }
+
+  let dmxAccess = (args, context) => {
+    if (typeof args !== 'object') { return 0 }
+    let channel = args.value || 0
+    let dmxValue = (e,b) => {
+      return (buffer[evalParamFrame(channel, e,b)] || 0)/255
+    }
+    dmxValue.isNonTemporal = true
+    dmxValue.interval = 'frame'
+    return dmxValue
+  }
+  dmxAccess.isStaticVarFunction = true
+  addVar('dmx', dmxAccess)
 
   return {
     addRenderer: addRenderer,

@@ -2,13 +2,15 @@
 =================================================================================================================================
 =================================================================================================================================
 === Other ===
-!dmx addL is ugly and confusing...
 Work out how to do lighting effects:
+ dmxsim
  background with spatial and temporal variation
  flash on player, single or multiple in groups
  chase on player, single or multiple in groups
  ? <player>.trigger, chase{}, count{}
  ? d dmx, fixture={0:'dimmer',1:'red',2:'green',3:'blue'}, fore=purple, amp=[1,0]e
+!dmx addL is ugly and confusing...
+ consider lights={add:{}} rather than add={} ???
 Want a reverse ! piecewise interpolation operator, which stays on the current value then sweeps to the next at the end
  And/or a way of specifying a power curve...
 electron performance

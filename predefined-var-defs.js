@@ -71,7 +71,7 @@ define(function(require) {
     'rainbow': parseExpression('{r:[0.8,0,0]l6@f,g:[0,0.7,0]l6@f,b:[0,0,1]l6@f,a:1}'),
     'rainbow_slow': parseExpression('{r:[0.8,0,0]l12@f,g:[0,0.7,0]l12@f,b:[0,0,1]l12@f,a:1}'),
     'rainbow_fast': parseExpression('{r:[0.8,0,0]l2@f,g:[0,0.7,0]l2@f,b:[0,0,1]l2@f,a:1}'),
-    'random': parseExpression('{r:[0:0.8]n4,g:[0:0.7]n4,b:[0.1:0.9]n4,a:1}'),
+    'random': parseExpression('{r:[0:0.8]n3,g:[0:0.7]n4,b:[0.1:0.9]n5,a:1}'),
       
     'wow': parseExpression('[-0.3:0.3]n2'),
   }

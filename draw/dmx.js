@@ -78,10 +78,10 @@ define(function (require) {
       params.endTime = params._time + 1e6
       params._noteOff = () => { params.endTime = system.time+0.01 } // Set real end time to end the event
     }
-    let baseChannel = evalParamEvent(params.channel, params) || 1 // Base channel offset: dmx is 1-based
     let zOrder = 0
     addRenderer(params._time, ({time, count}) => {
       if (time > params.endTime) { return false }
+      let baseChannel = evalParamFrame(params.channel, params, count) || 1 // Base channel offset: dmx is 1-based
       applyParam(evalParamFrame(params.lights, params, count), baseChannel, 'add')
       applyParam(evalParamFrame(params.addl, params, count), baseChannel, 'add')
       applyParam(evalParamFrame(params.sub, params, count), baseChannel, 'sub')
