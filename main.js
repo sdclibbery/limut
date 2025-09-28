@@ -11,8 +11,11 @@ define(function(require) {
   require('functions/gamepad')
   var gamepad = require('player/gamepad')
   require('functions/debug')
+  let dmx = require('draw/dmx-system')
   require('predefined-var-defs')
+  let vars = require('vars')
   let mainVars = require('main-vars')
+  let predefinedVars = require('predefined-vars')
   let system = require('play/system')
   let drawSystem = require('draw/system')
   let metronome = require('metronome')
@@ -22,7 +25,6 @@ define(function(require) {
   require('editor-codemirror')
   let {parseCode} = require('update-code')
   let {clearCallTree} = require('player/callstack')
-  let dmx = require('draw/dmx-system')
 
   // Load presets
   let loadPresetCollection = (name) => {
@@ -33,6 +35,7 @@ define(function(require) {
       parseCode(data)
     })
   }
+  predefinedVars.apply(vars.all()) // apply predefined vars so they're available during preset parsing
   loadPresetCollection('percussion')
   loadPresetCollection('synth')
 

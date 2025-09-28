@@ -48,11 +48,11 @@ define(function(require) {
   let perFrameUpdate = (timeNow) => {
     if (renderList.isEmpty()) { return } // Do nothing if no dmx is ever called for
     if (!inited) { init() }
-    if (!worker) { return }
     buffer.fill(0,1,-1) // Clear buffer to zero before collecting values
     renderState.time = timeNow
     renderState.count = metronome.beatTime(timeNow)
-    renderList.render(renderState)
+    renderList.render(renderState) // Run renderers even if there is no worker so that the dmxsim can be used
+    if (!worker) { return }
     worker.postMessage(buffer)
   }
 
@@ -60,7 +60,7 @@ define(function(require) {
     if (typeof args !== 'object') { return 0 }
     let channel = args.value || 0
     let dmxValue = (e,b) => {
-      return (buffer[evalParamFrame(channel, e,b)] || 0)/255
+      return (buffer[evalParamFrame(channel, e,b)||0] || 0)/255 // channel is 1-based, buffer has a start code at 0
     }
     dmxValue.isNonTemporal = true
     dmxValue.interval = 'frame'

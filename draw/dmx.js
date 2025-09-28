@@ -67,7 +67,7 @@ define(function (require) {
     } else if (typeof value === 'number') {
       blendChannel(baseChannel, value, blend.toLowerCase())
     }
-}
+  }
 
   return (params) => {
     let dur = evalMainParamEvent(params, 'dur', 1, 'b')
