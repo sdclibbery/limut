@@ -1880,12 +1880,12 @@ define(function(require) {
 
   vars.foo = parseExpression('{value} -> mockaudionode{test:value}')
   p = parseExpression('foo{[4hz,5hz]t1@f}')
-  e = evd(0,0,4)
-  v = evalParamFrame(p, e,0) // Creates mockaudionode and sets up per-frame callback, which evals the value arg, which is [4,5]t1@f
+  e = evd(0,2,4)
+  v = evalParamFrame(p, e,2) // Creates mockaudionode and sets up per-frame callback, which evals the value arg, which is [4,5]t1@f
   assert(4, v.test.value)
   let system = require('play/system')
   assert(1, system.queued.length)
-  system.queued[0].update({count:1,time:1}) // Call the per-frame callback; should update mockaudionode test value
+  system.queued[0].update({count:3,time:3}) // Call the per-frame callback; should update mockaudionode test value
   assert(5, v.test.value)
   system.queued = []
   delete vars.foo
@@ -1943,21 +1943,21 @@ define(function(require) {
 
   vars.foo = parseExpression('{v} -> mockaudionode{test:v}')
   p = parseExpression('foo{v:this.bar}')
-  e = evd(0,0,4); e.bar=parseExpression('[4hz,5hz]t1@f')
-  v = evalParamFrame(p, e,0)
+  e = evd(0,2,4); e.bar=parseExpression('[4hz,5hz]t1@f')
+  v = evalParamFrame(p, e,2)
   assert(4, v.test.value)
   assert(1, system.queued.length)
-  system.queued[0].update({count:1,time:1})
+  system.queued[0].update({count:3,time:3})
   assert(5, v.test.value)
   system.queued = []
   delete vars.foo
 
   p = parseExpression('mockaudionode{test:[1,10]t1@f*2s}')
-  e = evd(0,0,1)
-  v = evalParamFrame(p, e,0)
+  e = evd(0,2,1)
+  v = evalParamFrame(p, e,2)
   assert(0.5, v.test.value)
   assert(1, system.queued.length)
-  system.queued[0].update({count:1,time:1})
+  system.queued[0].update({count:3,time:3})
   assert(0.05, v.test.value)
   system.queued = []
 
