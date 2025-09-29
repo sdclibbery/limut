@@ -131,7 +131,7 @@ define(function (require) {
           if (state.time < __event._time) { return true } // Not started yet
         }
         if (audioParam.lastTime === undefined) {
-          audioParam.lastTime = (__event && __event._time !== undefined) ? __event._time : system.timeNow()
+          audioParam.lastTime = (__event && __event._time) ? __event._time : state.time
         }
         while (audioParam.lastTime < state.time) { // Make a fixed size timestep
           let count = metronome.beatTime(audioParam.lastTime+updateStep)
