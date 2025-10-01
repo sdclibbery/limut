@@ -18,6 +18,7 @@ define(function(require) {
     '\\': (i) => i, // linear
     '~': (i) => i*i*(3-2*i), // smooth bezier ease in/out
     '!': (i) => 1-Math.exp(-8*i), // exponential
+    '^': (p) => (i) => Math.pow(i, p||2), // power
   }
   iOperators['_'].segmentPower = 0
   iOperators['|'].segmentPower = 0
@@ -25,23 +26,50 @@ define(function(require) {
   iOperators['\\'].segmentPower = 1
   iOperators['~'].segmentPower = 3
   iOperators['!'].segmentPower = 2
+  iOperators['^'].segmentPower = 2
+  iOperators['^'].isParameterised = true
 
   let parseEntry = (state, vs, is, ss) => {
     eatWhitespace(state)
     let v = state.expression(state)
     if (v === undefined) { return false }
+    let n1 = undefined
+    let n2 = undefined
     let i = undefined
-    let s = undefined
     eatWhitespace(state)
     if (state.str.charAt(state.idx) === ':') {
       state.idx+=1
-      let char = state.str.charAt(state.idx)
+      let char = state.str.charAt(state.idx) // interpolation operator
       if (iOperators[char]) {
         state.idx+=1
         i = char
       }
       eatWhitespace(state)
-      s = state.expression(state)
+      n1 = state.expression(state) // Parameter for operator, or, segment size
+      eatWhitespace(state)
+      if (state.str.charAt(state.idx) === ':') { // Second colon to support parameterised interpolators
+        state.idx+=1
+        eatWhitespace(state)
+        n2 = state.expression(state) // Segment size
+        eatWhitespace(state)
+      }
+    }
+    let s = undefined
+    if (n2 !== undefined) {
+      s = n2
+      if (n1 !== undefined) {
+        if (typeof n1 !== 'number') { throw `Piecewise interpolator ${i} parameter must be a number, was ${n1}` }
+        i += n1
+      }
+    } else if (n1 !== undefined) {
+      if (!!iOperators[i] && iOperators[i].isParameterised) {
+        if (n1 !== undefined) {
+          if (typeof n1 !== 'number') { throw `Piecewise interpolator ${i} parameter must be a number, was ${n1}` }
+          i += n1
+        }
+      } else {
+        s = n1
+      }
     }
     vs.push(v)
     is.push(i)
@@ -118,6 +146,14 @@ define(function(require) {
     return options
   }
 
+  let getOperator = (i) => {
+    if (i === undefined) { return undefined }
+    let op = iOperators[i.charAt(0)]
+    if (!op) { return undefined }
+    if (!op.isParameterised) { return op }
+    return op(parseFloat(i.slice(1)))
+  }
+
   let parsePiecewise = (state) => {
     if (state.str.charAt(state.idx) !== '[') { return undefined }
     let rState = Object.assign({}, state)
@@ -137,7 +173,7 @@ define(function(require) {
       let interval = parseInterval(state)
       let modifiers = parseMap(state)
       interval = interval || parseInterval(state) || hoistInterval('event', vs)
-      is = is.map(i => iOperators[i])
+      is = is.map(i => getOperator(i))
       if (ranged) {
         result = rangeTimeVar(vs, ds, maybeClamp(modifiers, ss))
       } else {
@@ -151,7 +187,7 @@ define(function(require) {
       let interval = parseInterval(state)
       let modifiers = parseMap(state)
       interval = interval || parseInterval(state) || hoistInterval('event', vs)
-      is = is.map(i => iOperators[i])
+      is = is.map(i => getOperator(i))
       result = timeVar(vs, is, ss, ds, iOperators['/'], maybeClamp(modifiers, ss))
       result = addModifiers(result, modifiers)
       setInterval(result, interval)
@@ -160,7 +196,7 @@ define(function(require) {
       let ds = numberOrArrayOrFour(state)
       let interval = parseInterval(state)
       let modifiers = parseMap(state)
-      is = is.map(i => iOperators[i])
+      is = is.map(i => getOperator(i))
       result = timeVar(vs, is, ss, ds, iOperators['~'], maybeClamp(modifiers, ss))
       result = addModifiers(result, modifiers)
       interval = interval || parseInterval(state) || hoistInterval('event', vs)
@@ -179,7 +215,7 @@ define(function(require) {
       if (interval === 'segment')  { // @s: add segment data
         addSegmentData = true
       }
-      is = is.map(i => iOperators[i])
+      is = is.map(i => getOperator(i))
       result = eventTimeVar(vs, is, ss, ds, addSegmentData)
       result = addModifiers(result, modifiers)
       setInterval(result, interval)
@@ -194,7 +230,7 @@ define(function(require) {
         modifiers.step = hold
         if (modifiers.seed === undefined) { modifiers.seed = Math.random()*99999 } // Must set a seed for hold, otherwise every event gets a different seed and the random isn't held across events
       }
-      is = is.map(i => iOperators[i])
+      is = is.map(i => getOperator(i))
       if (ranged) {
         result = parseRangedRandom(vs, is, ss)
       } else {
@@ -218,7 +254,7 @@ define(function(require) {
       let modifiers = parseMap(state)
       if (modifiers === undefined) { modifiers = {value: (e,b) => e.idx} } // Default to index with event index
       if (modifiers.value === undefined) { modifiers.value = (e,b) => e.idx } // Default to index with event index
-      is = is.map(i => iOperators[i || '/']) // Default to linear interpolation
+      is = is.map(i => getOperator(i || '/')) // Default to linear interpolation
       let options = maybeClamp(modifiers, ss)
       ss = ss.map(s => s!==undefined ? s : 1) // Default to size 1
       result = addModifiers(piecewise(vs, is, ss, modifiers.value, options), modifiers)
@@ -235,8 +271,21 @@ define(function(require) {
       let a = JSON.stringify(actual)
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
     }
+    let assertThrows = async (expected, code) => {
+      let got
+      try {code()}
+      catch (e) { if (e.includes(expected)) {got=true} else {console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: ${e}`)} }
+      finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
+    }
     let number = require('expression/parse-number') // Expressions should only be numbers in these tests for simplicity
-    let st = (str) => { return {str:str, idx:0, expression:number} }
+    let numberOrFoo = (state) => {
+      if (state.str.slice(state.idx, state.idx+3) === 'foo') {
+        state.idx += 3
+        return 'foo'
+      }
+      return number(state)
+    }
+    let st = (str) => { return {str:str, idx:0, expression:numberOrFoo} }
     let s
 
     assert(undefined, parsePiecewiseArray(st('')))
@@ -280,6 +329,22 @@ define(function(require) {
     assert({vs:[5,6],is:['/','_'],ss:[1,2]}, parsePiecewiseArray(st('[5:/1,6:_2,]')))
     assert({vs:[5,6],is:[undefined,undefined],ss:[1,2]}, parsePiecewiseArray(st('[5:1,6:2,]')))
     assert({vs:[5,6,7],is:['/','_',undefined],ss:[1,2,undefined]}, parsePiecewiseArray(st('[5:/1,6:_2,7]')))
+
+    assert({vs:[5,6],is:[undefined,undefined],ss:[1,undefined]}, parsePiecewiseArray(st('[5::1,6]')))
+    assert({vs:[5,6],is:[undefined,undefined],ss:[1,undefined]}, parsePiecewiseArray(st('[5 : : 1,6]')))
+    assert({vs:[5,6],is:['/',undefined],ss:[1,undefined]}, parsePiecewiseArray(st('[5:/:1,6]')))
+    assert({vs:[5,6],is:['/',undefined],ss:[1,undefined]}, parsePiecewiseArray(st('[5 :/ : 1,6]')))
+    assert({vs:[5,6],is:['^',undefined],ss:[1,undefined]}, parsePiecewiseArray(st('[5:^:1,6]')))
+    assert({vs:[5,6],is:['^',undefined],ss:[1,undefined]}, parsePiecewiseArray(st('[5 :^ : 1,6]')))
+    assert({vs:[5,6],is:['^3',undefined],ss:[1,undefined]}, parsePiecewiseArray(st('[5:^3:1,6]')))
+    assert({vs:[5,6],is:['^3',undefined],ss:[1,undefined]}, parsePiecewiseArray(st('[5 :^ 3 : 1,6]')))
+    assert({vs:[5,6],is:['^0.5',undefined],ss:[1,undefined]}, parsePiecewiseArray(st('[5:^1/2:1,6]')))
+    assert({vs:[5,6],is:['^0.5',undefined],ss:[1,undefined]}, parsePiecewiseArray(st('[5 :^ 1/2 : 1,6]')))
+    assert({vs:[5,6],is:['^3',undefined],ss:[undefined,undefined]}, parsePiecewiseArray(st('[5:^3,6]')))
+    assert({vs:[5,6],is:['^3',undefined],ss:[undefined,undefined]}, parsePiecewiseArray(st('[5 :^ 3,6]')))
+
+    assertThrows('must be a number', () => parsePiecewiseArray(st('[5:^foo,6]')))
+    assertThrows('must be a number', () => parsePiecewiseArray(st('[5:^foo:1,6]')))
 
     console.log('Parse piecewise tests complete')
   }
