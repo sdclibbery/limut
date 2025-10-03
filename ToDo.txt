@@ -3,7 +3,15 @@
 =================================================================================================================================
 Can we support piecewise power interpolation? Eg [0:^2,1]t for square 
  ?What segment power to specify? Will segment processing handle it well enough? - use segment power 2 and test/check
+  Looks like using power 2 to give setTargetAtTime will never work properly. 
+   Options:
+    1. Use setValueCurveAtTime with segments
+    2. Use multiple linearRampToValueAtTime with segments
+    3. Force to a single linear segmment for power segments
+  TRY option 2
+   need more steps: how many??
  Docs
+? Would be nice to write gp.lsr or gp.0.lsr and midi.0 etc too
 Work out how to do lighting effects:
  mood background with spatial and temporal variation
  flash on player event, single or multiple in groups
@@ -25,6 +33,9 @@ cyber presets
  cyber.limut include
  More lead presets?
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
+  ??? the line         let tc = -(imTime - time) / Math.log((imValue - endValue) / (currentValue - endValue))
+    Should take mod() into account on the values, no???
+  ??segment powers should add? / + ! should give power 3, which is basically "fit any shape"
   Segments should be added bit by bit not all at the beginning
    !! TEST with lots of user functions / sub params etc
    ??Does it work for subparams?? IE can segment subparams??

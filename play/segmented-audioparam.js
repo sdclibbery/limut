@@ -31,8 +31,8 @@ define(function (require) {
   let addSegment = (audioParam, type, v, mod, ...args) => {
     let moddedV = mod === undefined ? v : mod(v)
     try {
-      audioParam[type](moddedV, ...args)
 // console.log(`Segment: ${type} ${moddedV} ${args}`)
+      audioParam[type](moddedV, ...args)
     } catch (e) {
       console.log(`!!! Bad audioParam segment ${type} ${moddedV} ${args}`)
       console.trace(e)
@@ -40,19 +40,26 @@ define(function (require) {
   }
 
   let buildSegment = ({time, nextTime, count, nextSegment, segmentPower, currentValue, nextValue, getValueAtTime, audioParam, mod}) => {
-    if (segmentPower === 0) {
+    if (segmentPower === 0) { // Power 0 is fixed value over the segment
       addSegment(audioParam, 'setValueAtTime', nextValue, mod, time)
     } else {
       let epsilon = 1e-5 // Apply an epsilon to detect and handle zero length segments
       let endValue = getValueAtTime(nextSegment - epsilon) // Calculate value inside end of segment to avoid problems with zero length segments
-      if (segmentPower === 2 && currentValue !== endValue) {
+      if (segmentPower === 2 && currentValue !== endValue) { // Power 2 for exponential curve
         let imCount = (count + nextSegment) / 2
-        let imValue = getValueAtTime(imCount)
+        let imValue = getValueAtTime(imCount) // Get a halfway value
         let imTime = (time + nextTime) / 2
         // Vt = V1 + (V0 - V1) * e ^ -((t-T0) / tc)    From Web Audio API spec for setTargetAtTime
         // tc = -(t - T0) / ln((Vt - V1) / (V0 - V1))   Rearrranged
         let tc = -(imTime - time) / Math.log((imValue - endValue) / (currentValue - endValue))
         addSegment(audioParam, 'setTargetAtTime', endValue, mod, time, tc)
+      } else if (segmentPower >= 3) { // Power 3 to fit a series of linear steps to approximate the function
+        let imCount = (count + nextSegment) / 2
+        let imValue = getValueAtTime(imCount) // Get a halfway value
+        let imTime = (time + nextTime) / 2
+        addSegment(audioParam, 'setValueAtTime', currentValue, mod, time) // Set value at start so linear ramp is from correct start
+        addSegment(audioParam, 'linearRampToValueAtTime', imValue, mod, imTime)
+        addSegment(audioParam, 'linearRampToValueAtTime', endValue, mod, nextTime)
       } else { // Use linear for everything else
         addSegment(audioParam, 'setValueAtTime', currentValue, mod, time) // Set value at start so linear ramp is from correct start
         addSegment(audioParam, 'linearRampToValueAtTime', endValue, mod, nextTime)
@@ -154,6 +161,8 @@ define(function (require) {
     exp.segmentPower = 2
     let smooth = (i) => i*i*(3-2*i)
     smooth.segmentPower = 3
+    let pow = (i) => Math.pow(i,2)
+    pow.segmentPower = 3
   
     assert(false, isSegmented(1))
     assert(false, isSegmented(1))
@@ -224,6 +233,21 @@ define(function (require) {
     assert(['linearRampToValueAtTime', 0,3], ap.calls[2])
     assert(['setValueAtTime', 2,3], ap.calls[3])
     assert(['linearRampToValueAtTime', 0,4], ap.calls[4])
+
+    ap = mockAp()
+    assert(false, segmentedAudioParam(ap, evalAtMain( eventTimeVar([1,50], [lin,undefined], u2, undefined, true) ), params, undefined, 99, 'hz', doubleIt))
+    assert(3, ap.calls.length)
+    assert(['setValueAtTime', 2,0], ap.calls[0])
+    assert(['setValueAtTime', 2,2], ap.calls[1])
+    assert(['linearRampToValueAtTime', 100,10], ap.calls[2])
+
+    ap = mockAp()
+    assert(false, segmentedAudioParam(ap, evalAtMain( eventTimeVar([1,50], [pow,undefined], u2, undefined, true) ), params, undefined, 99, 'hz', doubleIt))
+    assert(4, ap.calls.length)
+    assert(['setValueAtTime', 2, 0], ap.calls[0])
+    assert(['setValueAtTime', 2, 2], ap.calls[1])
+    assert(['linearRampToValueAtTime', 26.5, 6], ap.calls[2])
+    assert(['linearRampToValueAtTime', 100, 10], ap.calls[3])
 
     metronome.beatDuration(oldBeatDuration)
     console.log('Segmented audioParam tests complete')

@@ -42,7 +42,7 @@ define(function(require) {
       is[is.length-1] = step // Last one is final value, not part of the event
       ss[ss.length-1] = 0
       let p = (e,b) => (b - e.count) / (e.dur) // Normalise param
-      let m = (v,e,b) => v + e.count // Map back to absolute count
+      let m = (v,e,b) => v * e.dur + e.count // Map back to absolute count
       return piecewise(vs, is, ss, p, {clamp:true,normalise:true,addSegmentData:addSegmentData,nextSegmentMapper:m})
     } else { // Use durations provided
       if (!Array.isArray(ds)) { ds = [ds || 1] }

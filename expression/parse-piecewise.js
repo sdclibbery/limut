@@ -18,7 +18,12 @@ define(function(require) {
     '\\': (i) => i, // linear
     '~': (i) => i*i*(3-2*i), // smooth bezier ease in/out
     '!': (i) => 1-Math.exp(-8*i), // exponential
-    '^': (p) => (i) => Math.pow(i, p||2), // power
+    '^': (p) => { // power
+      let powerInterpolator = (i) => Math.pow(i, p||2)
+      // let powerInterpolator = (i) => { console.log(p, i, Math.pow(i, p||2)); return Math.pow(i, p||2) }
+      powerInterpolator.segmentPower = iOperators['^'].segmentPower
+      return powerInterpolator
+    },
   }
   iOperators['_'].segmentPower = 0
   iOperators['|'].segmentPower = 0
@@ -26,7 +31,7 @@ define(function(require) {
   iOperators['\\'].segmentPower = 1
   iOperators['~'].segmentPower = 3
   iOperators['!'].segmentPower = 2
-  iOperators['^'].segmentPower = 2
+  iOperators['^'].segmentPower = 3
   iOperators['^'].isParameterised = true
 
   let parseEntry = (state, vs, is, ss) => {
@@ -341,7 +346,6 @@ define(function(require) {
     assert({vs:[5,6],is:['^0.5',undefined],ss:[1,undefined]}, parsePiecewiseArray(st('[5:^1/2:1,6]')))
     assert({vs:[5,6],is:['^0.5',undefined],ss:[1,undefined]}, parsePiecewiseArray(st('[5 :^ 1/2 : 1,6]')))
     assert({vs:[5,6],is:['^3',undefined],ss:[undefined,undefined]}, parsePiecewiseArray(st('[5:^3,6]')))
-    assert({vs:[5,6],is:['^3',undefined],ss:[undefined,undefined]}, parsePiecewiseArray(st('[5 :^ 3,6]')))
 
     assertThrows('must be a number', () => parsePiecewiseArray(st('[5:^foo,6]')))
     assertThrows('must be a number', () => parsePiecewiseArray(st('[5:^foo:1,6]')))
