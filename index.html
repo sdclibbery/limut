@@ -468,6 +468,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='subsub'><code>:_</code> Step interpolation operator: immediately jump to new value from start of step</p>
 <p class='subsub'><code>:~</code> Smoothed interpolation operator: bezier ease in/out s-shaped smooth transition through step</p>
 <p class='subsub'><code>:!</code> Exponential interpolation operator: exponential growth/decay to target</p>
+<p class='subsub'><code>:^4:</code> Power interpolation operator: power curve interpolation. In this example, the interpolation is raised to power 4, so it will move slowly to start with the quickly reach the target. <code>:^1/4:</code> would quickly move toward the target, then slow down.</p>
 <p class='sub'><code>t1 etc</code> The amount of parameter p travel between this value and the next; note the sequence wraps round. Default time unit: beats.</p>
 <p class='sub'><code>p</code> Parameter expression giving the current point of travel through the piecewise series</p>
 <p class='sub'><code>repeat</code> Optional repeat parameter. Leave out for a repeating pattern, set to zero to disable repeat and clamp the value when the parameter is less than zero or greater than the full length of the piecewise.</p>

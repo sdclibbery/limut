@@ -54,11 +54,14 @@ define(function (require) {
         let tc = -(imTime - time) / Math.log((imValue - endValue) / (currentValue - endValue))
         addSegment(audioParam, 'setTargetAtTime', endValue, mod, time, tc)
       } else if (segmentPower >= 3) { // Power 3 to fit a series of linear steps to approximate the function
-        let imCount = (count + nextSegment) / 2
-        let imValue = getValueAtTime(imCount) // Get a halfway value
-        let imTime = (time + nextTime) / 2
         addSegment(audioParam, 'setValueAtTime', currentValue, mod, time) // Set value at start so linear ramp is from correct start
-        addSegment(audioParam, 'linearRampToValueAtTime', imValue, mod, imTime)
+        let numSteps = 16
+        for (let i=1; i<numSteps; i++) {
+          let imCount = count + (nextSegment-count) * i/numSteps
+          let imValue = getValueAtTime(imCount) // Get a halfway value
+          let imTime = time + (nextTime-time) * i/numSteps
+          addSegment(audioParam, 'linearRampToValueAtTime', imValue, mod, imTime)
+        }
         addSegment(audioParam, 'linearRampToValueAtTime', endValue, mod, nextTime)
       } else { // Use linear for everything else
         addSegment(audioParam, 'setValueAtTime', currentValue, mod, time) // Set value at start so linear ramp is from correct start
@@ -243,11 +246,12 @@ define(function (require) {
 
     ap = mockAp()
     assert(false, segmentedAudioParam(ap, evalAtMain( eventTimeVar([1,50], [pow,undefined], u2, undefined, true) ), params, undefined, 99, 'hz', doubleIt))
-    assert(4, ap.calls.length)
+    assert(18, ap.calls.length)
     assert(['setValueAtTime', 2, 0], ap.calls[0])
     assert(['setValueAtTime', 2, 2], ap.calls[1])
-    assert(['linearRampToValueAtTime', 26.5, 6], ap.calls[2])
-    assert(['linearRampToValueAtTime', 100, 10], ap.calls[3])
+    assert(['linearRampToValueAtTime', 2.38, 2.50], ap.calls[2])
+    //...
+    assert(['linearRampToValueAtTime', 100, 10], ap.calls[17])
 
     metronome.beatDuration(oldBeatDuration)
     console.log('Segmented audioParam tests complete')
