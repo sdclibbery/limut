@@ -1,7 +1,11 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-? Would be nice to write gp.lsr or gp.0.lsr and midi.0 etc too
+? Would be nice to write midi.0 etc
+ ? Maybe extend namespace lookup so if lhs is namespace function, but rhs is not found, then call lhs with {value:rhs}??
+  Would allow  midi.70  etc without having to create the whole damn hierarchy...
+  ?Try for gp.lsr etc first..?
+ DOCS
 Work out how to do lighting effects:
  mood background with spatial and temporal variation
  flash on player event, single or multiple in groups

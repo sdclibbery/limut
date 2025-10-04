@@ -22,12 +22,12 @@ define(function(require) {
       else if (str === 'rsv') { axisNumber = 3 } // right stick vertical
       else if (str === 'lsl') { axisNumber = 0; axisRange = 'neg' } // left stick left
       else if (str === 'lsr') { axisNumber = 0; axisRange = 'pos' } // left stick right
-      else if (str === 'lsd') { axisNumber = 1; axisRange = 'neg' } // left stick up
-      else if (str === 'lsu') { axisNumber = 1; axisRange = 'pos' } // left stick down
+      else if (str === 'lsd') { axisNumber = 1; axisRange = 'pos' } // left stick down
+      else if (str === 'lsu') { axisNumber = 1; axisRange = 'neg' } // left stick up
       else if (str === 'rsl') { axisNumber = 2; axisRange = 'neg' } // right stick left
       else if (str === 'rsr') { axisNumber = 2; axisRange = 'pos' } // right stick right
-      else if (str === 'rsd') { axisNumber = 3; axisRange = 'neg' } // right stick up
-      else if (str === 'rsu') { axisNumber = 3; axisRange = 'pos' } // right stick down
+      else if (str === 'rsd') { axisNumber = 3; axisRange = 'pos' } // right stick down
+      else if (str === 'rsu') { axisNumber = 3; axisRange = 'neg' } // right stick up
     } else if (axisNumber === undefined) { axisNumber = args.value }
     let lastStr
     let gamepadValue = () => {
@@ -55,9 +55,28 @@ define(function(require) {
     }
     gamepadValue.isNonTemporal = true
     gamepadValue.interval = 'frame'
+    gamepadValue._name = 'gamepad'
     return gamepadValue
   }
   newGamepad.isStaticVarFunction = true
+  newGamepad._name = 'gamepad'
+
+  // Handy shortcuts so you can just write `gp.lsr` etc
+  newGamepad.lt = newGamepad.bind(null, {value: 'lt'})
+  newGamepad.rt = newGamepad.bind(null, {value: 'rt'})
+  newGamepad.lsh = newGamepad.bind(null, {value: 'lsh'})
+  newGamepad.lsv = newGamepad.bind(null, {value: 'lsv'})
+  newGamepad.rsh = newGamepad.bind(null, {value: 'rsh'})
+  newGamepad.rsv = newGamepad.bind(null, {value: 'rsv'})
+  newGamepad.lsl = newGamepad.bind(null, {value: 'lsl'})
+  newGamepad.lsr = newGamepad.bind(null, {value: 'lsr'})
+  newGamepad.lsu = newGamepad.bind(null, {value: 'lsu'})
+  newGamepad.lsd = newGamepad.bind(null, {value: 'lsd'})
+  newGamepad.rsl = newGamepad.bind(null, {value: 'rsl'})
+  newGamepad.rsr = newGamepad.bind(null, {value: 'rsr'})
+  newGamepad.rsu = newGamepad.bind(null, {value: 'rsu'})
+  newGamepad.rsd = newGamepad.bind(null, {value: 'rsd'})
+
   addVar('gamepad', newGamepad)
   addVar('gp', newGamepad) // Alias for ease of access
 })
