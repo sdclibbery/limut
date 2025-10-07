@@ -1,11 +1,14 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-? Would be nice to write midi.0 etc
- ? Maybe extend namespace lookup so if lhs is namespace function, but rhs is not found, then call lhs with {value:rhs}??
-  Would allow  midi.70  etc without having to create the whole damn hierarchy...
-  ?Try for gp.lsr etc first..?
- DOCS
+NOTE: lt for lead amp+cutoff - this should be vel???
+ !! c cyborg gamepad ltvel, ...
+DO want to get all presets with cutoff/vel
+!For keys sounds on gamepad etc, would be nice for the env to finish the attack and decay and release phases and just have zero sustain, instead of just cutting out completely when user lets go
+Make a nice keys preset
+!XBox gamepad stick up/down is actually inverted to what the standard says on electron
+!The lights cut out on every code reload! - Seems OK with dmxsim, need to test with hardware, and/or heavy audio load?
+??should `this` be a keyword and never get parsed as a parseVar?
 Work out how to do lighting effects:
  mood background with spatial and temporal variation
  flash on player event, single or multiple in groups

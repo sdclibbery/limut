@@ -137,6 +137,11 @@
       height: 50%;
       background-color: black;
     }
+    .clock {
+      font-family: courier, mono, monospace;
+      font-size: 0.9em;
+      text-align: right;
+    }
     .info h4 {
       cursor: pointer;
     }
@@ -193,7 +198,12 @@
 <body>
   <canvas id="canvas" class="fullscreen" style="width:100%; height:100%; background: #000f; display:none"></canvas>
   <div class="widget">
-    <h3>Limut live coding</h3>
+    <div style="display:flex; flex-wrap: wrap;">
+      <h3>Limut live coding</h3>
+      <div style="margin-top:2px; margin-left: auto; margin-right: 8px;">
+        <span id="clock" class="clock"> </span>
+      </div>
+    </div>
     <p style="display: flex; flex-flow: row nowrap;">
       Level:&nbsp;&nbsp;
       <span class="vu-meter-base"><span id="vu-meter-l" class="vu-meter"></span><span id="vu-meter-r" class="vu-meter"></span></span>

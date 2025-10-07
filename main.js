@@ -113,6 +113,8 @@ define(function(require) {
   let visualReadout = document.getElementById('visual-readout')
   let beatReadout = document.getElementById('beat-readout')
   let beatReadouts = [document.getElementById('beat1-readout'),document.getElementById('beat2-readout'),document.getElementById('beat3-readout')]
+  let clock = document.getElementById('clock')
+  let clockFormat = {hourCycle: 'h23', hour: '2-digit', minute:'2-digit'}
   let lastBeatTime = 0 
   let beatLatency = 0
   let lastVisualsActive
@@ -165,6 +167,7 @@ define(function(require) {
       if (beatLatency > 0.03 && beat.count > 2) {
         console.log(`slow beatLatency ${beatLatency} at ${beat.count}`)
       }
+      clock.innerText = new Date().toLocaleTimeString('en-GB', clockFormat)
     }
     try {
       system.frame(now, beatTime)
