@@ -1,4 +1,4 @@
 'use strict'
 define(function(require) {
-  return () => 'main bus 0, amp=3/2'
+  return () => 'main bus 0, amp=2'
 })

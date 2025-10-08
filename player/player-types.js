@@ -22,6 +22,7 @@ define((require) => {
   let pitchedPerc = require('play/synth/pitchedperc')
   let impulse = require('play/synth/impulse')
   let audiosynth = require('play/synth/audiosynth')
+  let parseExpression = require('expression/parse-expression')
 
   let white = {r:1,g:1,b:1,a:1}
   let black = {r:0,g:0,b:0,a:1}
@@ -65,26 +66,26 @@ define((require) => {
     bars: { play: sprite('bars'), baseParams:{ amp:1, delay:0, rate:1, zoom:1, fore:white, back:black, additive:1 } },
     dmx: { play: dmx, baseParams:{ amp:1, delay:0 } },
     // audio
-    bus: { create: bus, baseParams:{ amp:1 } },
-    drums: { play: play, baseParams:{ amp:1, delay:0, dur:1/2 } },
-    io808: { play: io808, baseParams:{ amp:1, delay:0, dur:1/4 } },
-    play: { play: play, baseParams:{ amp:1, delay:0, dur:1/2, rate:1 } },
-    pitchedperc: { play: pitchedPerc, baseParams:{ amp:1, delay:0, dur:1/2, sus:1/3,
+    bus: { create: bus, baseParams:{ vel:3/4, amp:parseExpression('this.vel') } },
+    drums: { play: play, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, dur:1/2 } },
+    io808: { play: io808, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, dur:1/4 } },
+    play: { play: play, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, dur:1/2, rate:1 } },
+    pitchedperc: { play: pitchedPerc, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, dur:1/2, sus:1/3,
         click:{ value:1, dur:0.2, cutoff:1500, q:5 },
         hit:{ value:1, sample:'^', index:1, rate:1.5, cutoff:250, q:1 },
         body:{ value:1, freq:55, boost:150, curve:3, wave:'sine', cutoff:2, q:10 },
         rattle:{ value:1, rate:1, freq:55, boost:205, curve:8, q:18 }
       } },
-    impulse: { play: impulse, baseParams:{ amp:1, delay:0 } },
-    external: { play: external, baseParams:{ amp:1, delay:0 } },
-    noise: { play: noise, baseParams:{ amp:1, delay:0 } },
-    sample: { play: sample, baseParams:{ amp:1, delay:0, oct:4 } },
-    piano: { play: piano, baseParams:{ amp:1, delay:0, oct:4 } },
-    pwm: { play: pwm, baseParams:{ amp:1, delay:0, oct:4, pwm:0.5 } },
-    wave: { play: wave, baseParams:{ amp:1, delay:0, oct:4 } },
-    fm: { play: fm, baseParams:{ amp:1, delay:0, oct:4 } },
-    multiwave: { play: multiwave, baseParams:{ amp:1, delay:0, oct:4 } },
-    audiosynth: { play: audiosynth, baseParams:{ amp:1, delay:0, oct:4 } },
+    impulse: { play: impulse, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0 } },
+    external: { play: external, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0 } },
+    noise: { play: noise, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0 } },
+    sample: { play: sample, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4 } },
+    piano: { play: piano, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4 } },
+    pwm: { play: pwm, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4, pwm:0.5 } },
+    wave: { play: wave, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4 } },
+    fm: { play: fm, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4 } },
+    multiwave: { play: multiwave, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4 } },
+    audiosynth: { play: audiosynth, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4 } },
   }
 
   return playerTypes
