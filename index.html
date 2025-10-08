@@ -643,7 +643,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>stutter</code> Split each event into multiple events spaced evenly within the same time period. Eg with <code>stutter=2</code>, an event starting at time 0 with a duration of 1 will be split into two events of duration 1/2, starting at 0 and 1/2. Stutter of 0 or 1 has no effect and is the default. Stutter is rounded down to the nearest integer value.</p>
 <p><code>swing</code> Amount to swing alternating 1/4 beats, as a Linn LM-1 style percentage from <code>50</code> (no swing) to <code>66</code> (perfect triplet swing) to <code>75</code> (maximum dotted note swing). You can set swing for all players at once using (eg) <code>set * swing=60</code></p>
 <p class='sub'><code>swing={66,period:1/2}</code> The period to apply the swing. Defaults to 1/4 of a beat (suitable for house music).</p>
-<p><code>amp</code> Player amplitude control</p>
+<p><code>amp</code> Player amplitude control. For audio players, this defaults to the event <code>vel</code> so that velocity controls the player volume.</p>
 <p><code>sus</code> Sustain time. Note the 'sustain' in an ADSR envelope sets the sustain level, however this param sets the sustain time. The default is time required after attack and decay to take the note to the end of the duration. Default time units: beats.</p>
 <p><code>rate</code> Playback rate for 'play' samples, animation rate for visuals</p>
 <p><code>voice</code> READ ONLY param. This param is set to the voice index of an individual event within a chord. So for example: <code>p ping 0, add=(0,2)</code>. Here, there are two events within the chord, with <code>add</code> values of 0 and 2. The <code>voice</code> values for these events will be 0 and 1, since the <code>voice</code> increments. This can be used to change other values based on the voice index within the chord.</p>
@@ -655,6 +655,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 </div>
 <h4 onclick="toggleAccordion('accordion-audio-params')" class="accordion"> Audio Params</h4>
 <div id="accordion-audio-params" class="closed">
+<p><code>vel</code> Event velocity. Default is 3/4. By default velocity controls the event amp (volume) and usually the cutoff or brightness of the sound (where applicable). <code>vel</code> is set per event by the gamepad or midi player, but can also be set or overridden by player params.</p>
 <p><code>add</code> Amount to add onto event scale degree, in degrees. Evaluated per event only.</p>
 <p class='sub'><code>add={0,#:1}</code> Sharpen the scale degree (add a given number of semitones)</p>
 <p class='sub'><code>add={0,b:1}</code> Flatten the scale degree (subtract a given number of semitones)</p>

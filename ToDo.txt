@@ -2,14 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 Cutoff and Vel
- vel
-  Parse this as a keyword string never a parseVar, and pre optimise lookup op to a simple function
-   Docs
-  check: if vel is primitive number, must be no per frame update cost for amp or lpf
-   but if vel is @f must work
-  check: vel can be modified/overridden by player/preset/set params
-  TEST a lot
-  Docs for vel/amp
  gamepad ltvel
   per frame velocity from lt
   lt does not play note when ltvel used
@@ -23,7 +15,9 @@ Cutoff and Vel
 Make a nice keys preset
 !XBox gamepad stick up/down is actually inverted to what the standard says on electron
 !The lights cut out on every code reload! - Seems OK with dmxsim, need to test with hardware, and/or heavy audio load?
-??should `this` be a keyword and never get parsed as a parseVar?
+Parse this as a keyword string never a parseVar, and pre optimise lookup op to a simple function
+ Have to do it at the top of eval-operator operator() function
+ Docs
 Work out how to do lighting effects:
  mood background with spatial and temporal variation
  flash on player event, single or multiple in groups
