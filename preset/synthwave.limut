@@ -16,65 +16,75 @@ preset vhsbuffer buffer, rez=1, vhs, vignette=crt
 preset moroder multiwave, dur=1/2, oct=3, pan=[-1/4:1/4]r,
   att=0.01, sus={1/4,level:1/2}, addc=wow,
 	delay=({0,pan:-1/3},{1/4,pan:2/3}),
-	lpf={[2/3:1]s8*[700,400]e, q:12},
-  wave1={'saw',detune:-0.05,amp:2}, wave2={'saw',detune:0.05,amp:2}, wave3={'square',detune:-12,amp:2}
+	lpf={(1/4+this.cutoff*this.vel)*[700,400]e, q:12},
+  wave1={'saw',detune:-0.05,amp:2}, wave2={'saw',detune:0.05,amp:2}, wave3={'square',detune:-12,amp:2},
+  cutoff=[1/4:3/4]s8
 
 preset blade multiwave, att=2/3, rel=2, pan=[-1/4:1/4]n,
   wave1={'saw',detune:0.04}, wave2={'saw',detune:-0.04},
   vib={2,depth:0.1}, addc=wow/4,
-  lpf=[800,2000,700,400]e, room=1
+  lpf=(1/2+this.cutoff*this.vel)*[800,2000,700,400]e, room=1,
+  cutoff=1/2
 
 preset laserharp pwm 0, pan=[-1/4:1/4]r
 	, att=0.01, dec=3/2, sus={level:2/3}
 	, addc=wow+(-1,1)*0.04
   , oct=(1,2,3)
-  , lpf=[3000,1600,1200]e[2/3,4]
+  , lpf=(1/2+this.cutoff*this.vel)*[3000,1600,1200]e[2/3,4]
   , pwm=[0.1,0.5,0.9]e[1,2]
+  , cutoff=1/2
 
 preset oxy multiwave, echo=3/4, room={1.3,mix:1/3}, chorus=3/2, oct=5, pan=[-3/4:3/4]r,
 	att=0.1, sus={level:1}, rel=0.2,
 	psf1={f1:200*[0.3:2.2]l3@f,f2:1700*[0.3:2.2]l3@f,q:2},
 	psf2={f1:500*[0.3:2.2]l3@f,f2:4300*[0.3:2.2]l3@f,q:1}, //  This phaser has four frequency dips, where a smallstone only has two, but hey
-  lpf=8000, hpf={this.freq,q:0.7},
-	wave1={'saw',detune:0}, wave2={'saw',detune:-0.037}, wave3={'saw',detune:0.033}, wave4={'saw',detune:-0.053}, wave5={'saw',detune:0.057}
+  lpf=(1/2+this.cutoff*this.vel)*8000, hpf={this.freq,q:0.7},
+	wave1={'saw',detune:0}, wave2={'saw',detune:-0.037}, wave3={'saw',detune:0.033}, wave4={'saw',detune:-0.053}, wave5={'saw',detune:0.057},
+  cutoff=1/2
 
 preset vambi wave, envelope='pad', oct=(2,3), addc=wow, amp*=1/4, pan=[-1/4:1/4]s4@f, wave='pulse',
   room=2, chorus, addc=wow,
   psf={f1:[100:300]l4@f,f2:[900:2500]l4@f,q:0.5},
   high={-48db,freq:4200}, low={-24db,freq:250}
 
-preset blues saw, vib={3,depth:0.1}, lpf={this.freq*[5,15,10,4,3]e,q:1}, addc=wow/2, rel=8, room=2,
-  amp*=1/2, dur=2, glide=1/4, pan=[-1/4:1/4]n8
+preset blues saw, vib={3,depth:0.1}, lpf={(1/2+this.cutoff*this.vel)*this.freq*[5,15,10,4,3]e,q:1}, addc=wow/2, rel=8, room=2,
+  amp*=1/2, dur=2, glide=1/4, pan=[-1/4:1/4]n8,
+  cutoff=1/2
 
 preset synlead multiwave, oct=4, glide=this.dur/8, amp*=3/2,
 	att=1/32, dec=1/4, sus={level:1/2}, rel=1,
 	wave1={'saw',detune:12}, wave2={'saw',detune:-0.04}, wave3={'saw',detune:0.04}, 
 	vib={3,delay:1/2}, addc=wow, room=1.1, drive=1/8,
-  lpf=this.freq*[8,17,10,5,3,2]e*[1:3]s3@f,
+  lpf=(1/2+this.cutoff*this.vel)*this.freq*[8,17,10,5,3,2]e*[1:3]s3@f,
+  cutoff=1/2
 
 preset synpluck multiwave, oct=4, amp*=3/2, dur=1/2, pan=[-1/2:1/4]r,
 	envelope='simple', att=1/32, rel=1,
 	delay=({0,pan:-1/3},{3/4,pan:2/3}),
 	wave1={'saw',detune:0.04}, wave2={'square',detune:-0.04},
 	wave3={'saw',detune:-12+0.04}, wave4={'square',detune:-12-0.04},
-  lpf={this.freq*[5,2,1]e1/6*[1/3:2/3]s8,q:2}, high=-2db
+  lpf={(1/2+this.cutoff*this.vel)*this.freq*[5,2,1]e1/6*[1/3:2/3]s8,q:2}, high=-2db,
+  cutoff=1/2
 
 preset stringpad multiwave, envelope='pad', dur=2, pan=[-1:1]r,
-	lpf={this.freq*4,q:1}, room, chorus=5/4, drive=1/8,
+	lpf={(1/2+this.cutoff*this.vel)*this.freq*4,q:1}, room, chorus=5/4, drive=1/8,
   phaser={1/12,mix:1/8}, low=-4db,high=3db,
   wave1={'saw',detune:0.04}, wave2={'saw',detune:0}, wave3={'saw',detune:-12.04}, 
-  oct=4, pan=(-1/2,-1/4,0,1/4,1/2), amp*=1/16
+  oct=4, pan=(-1/2,-1/4,0,1/4,1/2), amp*=1/16,
+  cutoff=1/2
 
 preset lushpad multiwave, envelope='full', dur=4, pan=[-1:1]r,
 	att=1/3, dec=1/3, sus={level:2/3}, rel=1,
-	lpf={this.freq*3/2*[1,2,1]e1/3,q:10}, room, chorus,
+	lpf={(1/2+this.cutoff*this.vel)*this.freq*3/2*[1,2,1]e1/3,q:10}, room, chorus,
   wave1={'saw',detune:-0.04}, wave2={'saw',detune:0}, wave3={'square',detune:-12.04}, 
-  oct=4, pan=(-1/2,-1/4,0,1/4,1/2), amp*=1/12
+  oct=4, pan=(-1/2,-1/4,0,1/4,1/2), amp*=1/12,
+  cutoff=1/2
 
 preset synbass multiwave, oct=2, envelope='simple', dur=1/2, rel=3/4,
-	lpf={180*[6,3,2,3/2]e1/20,q:9},
+	lpf={(1/2+this.cutoff*this.vel)*180*[6,3,2,3/2]e1/20@s,q:9},
   wave1={'pulse',detune:-12+0.01}, wave2={'saw',detune:0.01,amp:2},
-  wave3={'pulse',detune:-12-0.01}, wave4={'saw',detune:-0.01,amp:2}
+  wave3={'pulse',detune:-12-0.01}, wave4={'saw',detune:-0.01,amp:2},
+  cutoff=1/2
 
 preset chiparp multiwave, dur=1/4, oct=4, envelope='simple', pan=[-1/4:1/4]r,
 	att=0.01, rel=0.03, addc=wow, room=1/4,
@@ -88,8 +98,9 @@ preset space ethereal, vib=3, att=0, sus=2, rel=1, phaser=1/4, oct=5, room={2,mi
 preset play80s play, room=1/8, low=16db, pan=[-1/8:1/8]r
 
 preset basspluck dbass, dur=1/2, pan=[-1/8:1/8]r,
-  lpf={[100:[300:1000]n8@e,3000]e,q:[5,[10:30]l32]n1/4@f},
-  att=0, addc=wow, sus=1/2, rel=1, amp*=3/2+wow
+  lpf={(1/2+this.cutoff*this.vel)*[100:[300:1000]n8@e,3000]e,q:[5,[10:30]l32]n1/4@f},
+  att=0, addc=wow, sus=1/2, rel=1, amp*=3/2+wow,
+  cutoff=1/2
 
 preset blips ping, dur=1/8, oct=[6,7], echo=3/4, add=[0:7]n, addc=wow, pan=[-1:1]r
 
@@ -99,22 +110,25 @@ preset cyborg multiwave, dur=2, lpf=[100,700+4000*this.cutoff*this.vel]e, addc=w
 	oct=(3,4), phaser=1/3, echo=1, room=0.7, amp*=1.2+wow,
   cutoff=[0,1]s8
 
-preset chime dsaw, dur=1/2, oct=(4,5,6), rel=1, echo=3/2, att=0.01, lpf={660*[2:4]l8,q:20},
-  room=1, pan=[-1/4,0,1/4]r, amp*=1/3
+preset chime dsaw, dur=1/2, oct=(4,5,6), rel=1, echo=3/2, att=0.01, lpf={(1/2+this.cutoff*this.vel)*660*[2:4]l8,q:20},
+  room=1, pan=[-1/4,0,1/4]r, amp*=1/3,
+  cutoff=1/2
 
 preset cybass multiwave, dur=1/4, att=0.01, rel=1/8, amp*=3/2, envelope='full',
-	lpf={[[2500:3500]l16:500]e}, oct=2, pan=[-1/2:1/2]r,
+	lpf={(1/2+this.cutoff*this.vel)*[[2500:3500]l16:500]e@s}, oct=2, pan=[-1/2:1/2]r,
 	wave1={'square',detune:-0.3}, wave2={'square',detune:0.3},
-	wave3={'saw',detune:-0.2}, wave4={'saw',detune:0}, wave5={'saw',detune:-0.2}
+	wave3={'saw',detune:-0.2}, wave4={'saw',detune:0}, wave5={'saw',detune:-0.2},
+  cutoff=1/2
 
-preset cydist fm, lpf=[1200:200]e, oct=4, glide=this.dur/6, pan=[-1/2:1/2]n,
+preset cydist fm, lpf=(1/2+this.cutoff*this.vel)*[1200:200]e, oct=4, glide=this.dur/6, pan=[-1/2:1/2]n,
 	envelope=full, att=0.01, dec=1/4, sus={level:3/4}, rel:1, noisify=1/2,
   room={1,mix:1/3}, amp*=2/3,
   op1={ratio:1,target:'out',wave:'square'},
   op2={ratio:3/4,target:1,depth:0.8,wave:'sine',att:0,rel:4},
   op3={ratio:5/4,target:2,depth:0.8,wave:'square',att:0,rel:1},
   op4={ratio:1.8735,target:1,depth:1,wave:'sine',att:0,rel:1/4},
-  op5={ratio:1,target:'out',wave:'saw'}
+  op5={ratio:1,target:'out',wave:'saw'},
+  cutoff=1/2
 
 preset hiss noise, dur=1/2, amp*=1/4, envelope='percussion', pan=[-1/2,1/2], low=-8db
 
@@ -122,24 +136,24 @@ preset bloom dbass, dur=2, noisify=1/8, drive=2/8, fold=1, room=2, addc=wow/2, p
   chorus=2, att=1/2, rel=3, amp*=2/3, psf1={f1:200*[0.3:2.2]e,f2:1700*[0.3:2.2]e,q:2}
   
 preset pick saw, dur=1/4, sus=1/8, envelope='percussion', amp*=2,
-	lpf={[(this.freq+500)*(this.cutoff+0.1)*10:!(100ms*(3*this.decay^2+0.7)),10]es,poles:4},
+	lpf={[(this.freq+500)*(this.cutoff*this.vel+0.1)*10:!(100ms*(3*this.decay^2+0.7)),10]es,poles:4},
   fx=mix{airverb, 6/8},
   cutoff=[1/4:2/4]l16, decay=[0.4:0.6]l24
 
 preset dirt multiwave, dur=1/4, oct=2, envelope='perc',
 	wave1={'saw'}, wave2={'tri',detune:0.1}, wave3={'sine',detune:-12},
   fold=1/2, drive=1/2, chorus, amp*=2,
-  fx=delay{[10ms,12ms]n1/2}>>lpf4{(0.1+this.cutoff)*[5000:3/16,800:1/16,200:0]l1/4@f},
+  fx=delay{[10ms,12ms]n1/2}>>lpf4{(0.1+this.cutoff*this.vel)*[5000:3/16,800:1/16,200:0]l1/4@f},
   cutoff=[0,1]l8
 
 preset machine multiwave, dur=2, oct=1, envelope='pad',
-	lpf={(1/2+this.cutoff*2)*[150:400]l4@f,q:1},
+	lpf={(1/2+this.cutoff*this.vel*2)*[150:400]l4@f,q:1},
 	drive={1/8,mix:1/6}, glide=1/2,// reverb={1,mix:1/4},
 	wave1={'sine',amp:3/2,detune:[-1/8,1/8]n11},
 	wave2={'square',amp:1/8,detune:7+[-1/4,1/4]n19},
   cutoff=1/2
 
 preset glitch wave, wave='noise', envelope='organ', oct=3,
-	hpf={[100:300]r1/8@f,poles:4}, lpf=(1/2+this.cutoff*4)*1000,
+	hpf={[100:300]r1/8@f,poles:4}, lpf=(1/2+this.cutoff*this.vel*4)*1000,
   bits={8,mix:2/3}, amp*=[1/2:1]r1/8@f,
 	cutoff=1/2

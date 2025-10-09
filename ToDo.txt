@@ -3,10 +3,6 @@
 =================================================================================================================================
 Cutoff and Vel
  cutoff
-  this.cutoff multiplied into all preset lpfs for all presets
-   Multiply vel into the lpf in the preset, separate to cutoff
-   But add cutoff param at same time if needed
-  NO:??  cutoff defaults to vel for everything
   double check preset lpfs are not per frame if they shouldnt be, based on both cutoff and vel and whatever...
    ? do we lose @s if using gp for cutoff/vel?
  check midi player vel
