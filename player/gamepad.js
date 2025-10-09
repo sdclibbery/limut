@@ -61,6 +61,7 @@ define(function(require) {
     let padNumber = patternArgs.length > 0 ? patternArgs[0] : 0
     // listen for presses
     addListener(padNumber, player.id+player._num, (buttonIdx, value) => {
+      if (ltvel && buttonIdx === 6) { return } // Ignore left trigger button presses if ltvel
       if (value === undefined) { // Note off
         for (let k in player.events) {
           let e = player.events[k]
