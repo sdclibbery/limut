@@ -2,10 +2,10 @@
 =================================================================================================================================
 =================================================================================================================================
 Cutoff and Vel
- gamepad ltvel
-  docs
  cutoff
   this.cutoff multiplied into all preset lpfs for all presets
+   Multiply vel into the lpf in the preset, separate to cutoff
+   But add cutoff param at same time if needed
   NO:??  cutoff defaults to vel for everything
   double check preset lpfs are not per frame if they shouldnt be, based on both cutoff and vel and whatever...
    ? do we lose @s if using gp for cutoff/vel?
@@ -26,6 +26,7 @@ Work out how to do lighting effects:
  ? d dmx, fixture={0:'dimmer',1:'red',2:'green',3:'blue'}, fore=purple, amp=[1,0]e
 !dmx addL is ugly and confusing...
  consider lights={add:{}} rather than add={} ???
+?cutoff controls (and vel input) for fm synth presets
 electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games

@@ -1,4 +1,6 @@
-preset prophet pwm, oct=3, lpf={[6000:this.freq*2]e,q:0.4}, pwm=[0.5,0.9,0.5,0.1,0.5,0.9,0.5,0.1]e1
+preset prophet pwm, oct=3, lpf={[1000+8000*this.cutoff*this.vel:!4,this.freq*2]e@s,q:this.resonance},
+  pwm=[0.5,0.9,0.5,0.1,0.5,0.9,0.5,0.1]e1,
+  cutoff=1/2, resonance=0.4
 
 preset ping wave, wave='sine', oct=5, envelope='simple'
 preset pulse wave, wave='pulse', oct=3, envelope='full'
