@@ -1,13 +1,13 @@
 include 'lib/effects.limut'
 
 set crt={1/3,aspect:4/3,cutoff:0.96}
-preset sunsetsky gradient, loc=tile_t, back=#004f, mid=#206f, fore=#a08f, amp=3/2
+preset sunsetsky gradient, loc=tile_t, back=#004f, mid=#206f, fore=#a08f, amp*=3/2
 preset sun shadertoy, id='ml2XWt', loc={x:0,y:0.35,w:1,h:1}, blend='max', rate=1/8, fore=0.9
-preset skybars bars, fore=#000a, additive=0, back=0, rotate=1/4, perspective=-0.7, scroll={x:time/16}, zoom=1/4, amp=1, loc=tile_t, add=9
+preset skybars bars, fore=#000a, additive=0, back=0, rotate=1/4, perspective=-0.7, scroll={x:time/16}, zoom=1/4, amp*=1, loc=tile_t, add=9
 preset neongrid shadertoy, id='dt2SDt', loc=tile_b+{h:0.1}, rate=2/3
 preset neonbars gradient, loc=tile_b, perspective={-0.9,shade:0.7}, repeat=1, scroll={y:time/4}, zoom=1/2, fore=neonpink, mid=#214f, back=neongreen, ripple=0.1
 preset neonbits bits, loc=tile_b, perspective={-1.1,shade:0.7}, repeat=1, scroll={y:time/8}, zoom=1, fore=neonpink*1.1, mid=#214f, back=#0aff, time=(([1,1,0]s[14,1,1]@f)^64)/2, contrast=1/2
-preset neonlines lines, loc=tile_b, amp=5, recol='neon', fore*=6, zoom={x:2,y:1}, rate=1/8, perspective={-1,shade:1}, scroll={y:time/4}, repeat=1.2, add=9
+preset neonlines lines, loc=tile_b, amp*=5, recol='neon', fore*=6, zoom={x:2,y:1}, rate=1/8, perspective={-1,shade:1}, scroll={y:time/4}, repeat=1.2, add=9
 preset neonsine shadertoy, id='ls3Xzn', vhs, time=floor{time*4}/16, vignette=crt
 preset neonheart shadertoy, id='7l3GDS', vhs, time=floor{time*3}/48, vignette=crt
 preset neonshapes shadertoy, id='NsB3zK', vhs, time=floor{time*3}/16, vignette=crt
@@ -38,21 +38,21 @@ preset oxy multiwave, echo=3/4, room={1.3,mix:1/3}, chorus=3/2, oct=5, pan=[-3/4
   lpf=8000, hpf={this.freq,q:0.7},
 	wave1={'saw',detune:0}, wave2={'saw',detune:-0.037}, wave3={'saw',detune:0.033}, wave4={'saw',detune:-0.053}, wave5={'saw',detune:0.057}
 
-preset vambi wave, envelope='pad', oct=(2,3), addc=wow, amp=1/4, pan=[-1/4:1/4]s4@f, wave='pulse',
+preset vambi wave, envelope='pad', oct=(2,3), addc=wow, amp*=1/4, pan=[-1/4:1/4]s4@f, wave='pulse',
   room=2, chorus, addc=wow,
   psf={f1:[100:300]l4@f,f2:[900:2500]l4@f,q:0.5},
   high={-48db,freq:4200}, low={-24db,freq:250}
 
 preset blues saw, vib={3,depth:0.1}, lpf={this.freq*[5,15,10,4,3]e,q:1}, addc=wow/2, rel=8, room=2,
-  amp=1/2, dur=2, glide=1/4, pan=[-1/4:1/4]n8
+  amp*=1/2, dur=2, glide=1/4, pan=[-1/4:1/4]n8
 
-preset synlead multiwave, oct=4, glide=this.dur/8, amp=3/2,
+preset synlead multiwave, oct=4, glide=this.dur/8, amp*=3/2,
 	att=1/32, dec=1/4, sus={level:1/2}, rel=1,
 	wave1={'saw',detune:12}, wave2={'saw',detune:-0.04}, wave3={'saw',detune:0.04}, 
 	vib={3,delay:1/2}, addc=wow, room=1.1, drive=1/8,
   lpf=this.freq*[8,17,10,5,3,2]e*[1:3]s3@f,
 
-preset synpluck multiwave, oct=4, amp=3/2, dur=1/2, pan=[-1/2:1/4]r,
+preset synpluck multiwave, oct=4, amp*=3/2, dur=1/2, pan=[-1/2:1/4]r,
 	envelope='simple', att=1/32, rel=1,
 	delay=({0,pan:-1/3},{3/4,pan:2/3}),
 	wave1={'saw',detune:0.04}, wave2={'square',detune:-0.04},
@@ -63,13 +63,13 @@ preset stringpad multiwave, envelope='pad', dur=2, pan=[-1:1]r,
 	lpf={this.freq*4,q:1}, room, chorus=5/4, drive=1/8,
   phaser={1/12,mix:1/8}, low=-4db,high=3db,
   wave1={'saw',detune:0.04}, wave2={'saw',detune:0}, wave3={'saw',detune:-12.04}, 
-  oct=4, pan=(-1/2,-1/4,0,1/4,1/2), amp=1/16
+  oct=4, pan=(-1/2,-1/4,0,1/4,1/2), amp*=1/16
 
 preset lushpad multiwave, envelope='full', dur=4, pan=[-1:1]r,
 	att=1/3, dec=1/3, sus={level:2/3}, rel=1,
 	lpf={this.freq*3/2*[1,2,1]e1/3,q:10}, room, chorus,
   wave1={'saw',detune:-0.04}, wave2={'saw',detune:0}, wave3={'square',detune:-12.04}, 
-  oct=4, pan=(-1/2,-1/4,0,1/4,1/2), amp=1/12
+  oct=4, pan=(-1/2,-1/4,0,1/4,1/2), amp*=1/12
 
 preset synbass multiwave, oct=2, envelope='simple', dur=1/2, rel=3/4,
 	lpf={180*[6,3,2,3/2]e1/20,q:9},
@@ -81,7 +81,7 @@ preset chiparp multiwave, dur=1/4, oct=4, envelope='simple', pan=[-1/4:1/4]r,
 	wave1={'square',amp:3/4,detune:-0.04}, wave2={'square',amp:3/4,detune:0.04},
   add=[0,4,7,2]
 
-preset softpad supersaw, envelope=pad, amp=1/2, phaser=1/9, oct=(3,5), pan=[-1:1]r, dur=2
+preset softpad supersaw, envelope=pad, amp*=1/2, phaser=1/9, oct=(3,5), pan=[-1:1]r, dur=2
 
 preset space ethereal, vib=3, att=0, sus=2, rel=1, phaser=1/4, oct=5, room={2,mix:1/3}, pan=[-3/4:3/4]r
 
@@ -89,36 +89,36 @@ preset play80s play, room=1/8, low=16db, pan=[-1/8:1/8]r
 
 preset basspluck dbass, dur=1/2, pan=[-1/8:1/8]r,
   lpf={[100:[300:1000]n8@e,3000]e,q:[5,[10:30]l32]n1/4@f},
-  att=0, addc=wow, sus=1/2, rel=1, amp=3/2+wow
+  att=0, addc=wow, sus=1/2, rel=1, amp*=3/2+wow
 
 preset blips ping, dur=1/8, oct=[6,7], echo=3/4, add=[0:7]n, addc=wow, pan=[-1:1]r
 
 preset cyborg multiwave, dur=2, lpf=[100:[700:5000]s8]e, addc=wow, pan=[-1/4:1/4]r,
 	wave1={'saw',detune:-0.04}, wave2={'saw',detune:0.04},
 	wave3={'pulse',detune:-0.04}, wave4={'pulse',detune:0.04},
-	oct=(3,4), phaser=1/3, echo=1, room=0.7, amp=1.2+wow
+	oct=(3,4), phaser=1/3, echo=1, room=0.7, amp*=1.2+wow
 
 preset chime dsaw, dur=1/2, oct=(4,5,6), rel=1, echo=3/2, att=0.01, lpf={660*[2:4]l8,q:20},
-  room=1, pan=[-1/4,0,1/4]r, amp=1/3
+  room=1, pan=[-1/4,0,1/4]r, amp*=1/3
 
-preset cybass multiwave, dur=1/4, att=0.01, rel=1/8, amp=3/2, envelope='full',
+preset cybass multiwave, dur=1/4, att=0.01, rel=1/8, amp*=3/2, envelope='full',
 	lpf={[[2500:3500]l16:500]e}, oct=2, pan=[-1/2:1/2]r,
 	wave1={'square',detune:-0.3}, wave2={'square',detune:0.3},
 	wave3={'saw',detune:-0.2}, wave4={'saw',detune:0}, wave5={'saw',detune:-0.2}
 
 preset cydist fm, lpf=[1200:200]e, oct=4, glide=this.dur/6, pan=[-1/2:1/2]n,
 	envelope=full, att=0.01, dec=1/4, sus={level:3/4}, rel:1, noisify=1/2,
-  room={1,mix:1/3}, amp=2/3,
+  room={1,mix:1/3}, amp*=2/3,
   op1={ratio:1,target:'out',wave:'square'},
   op2={ratio:3/4,target:1,depth:0.8,wave:'sine',att:0,rel:4},
   op3={ratio:5/4,target:2,depth:0.8,wave:'square',att:0,rel:1},
   op4={ratio:1.8735,target:1,depth:1,wave:'sine',att:0,rel:1/4},
   op5={ratio:1,target:'out',wave:'saw'}
 
-preset hiss noise, dur=1/2, amp=1/4, envelope='percussion', pan=[-1/2,1/2], low=-8db
+preset hiss noise, dur=1/2, amp*=1/4, envelope='percussion', pan=[-1/2,1/2], low=-8db
 
 preset bloom dbass, dur=2, noisify=1/8, drive=2/8, fold=1, room=2, addc=wow/2, pan=[-1/2:1/2]r,
-  chorus=2, att=1/2, rel=3, amp=2/3, psf1={f1:200*[0.3:2.2]e,f2:1700*[0.3:2.2]e,q:2}
+  chorus=2, att=1/2, rel=3, amp*=2/3, psf1={f1:200*[0.3:2.2]e,f2:1700*[0.3:2.2]e,q:2}
   
 preset pick saw, dur=1/4, sus=1/8, envelope='percussion', amp*=2,
 	lpf={[(this.freq+500)*(this.cutoff+0.1)*10:!(100ms*(3*this.decay^2+0.7)),10]es,poles:4},

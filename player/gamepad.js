@@ -15,11 +15,13 @@ define(function(require) {
           lastButtons: undefined,
           listeners: {},
           mapping: pad.mapping,
+          lt: 0,
         }
       }
       let gamepad = gamepads[i]
       let buttons = pad.buttons.map(b => b.value)
       buttons.forEach((b,i) => {
+          if (i === 6) { gamepad.lt = b } // Left trigger value for ltvel
           if (b > pressThreshold && (gamepad.lastButtons === undefined || gamepad.lastButtons[i] <= pressThreshold)) { // Button press
               for (let id in gamepad.listeners) { gamepad.listeners[id](i, b) }
           }
@@ -46,6 +48,7 @@ define(function(require) {
   let gamepadPlayer = (patternStr, params, player, baseParams) => {
     // parse pattern string to get pad
     let nodpad = false
+    let ltvel = false
     let patternArgs = patternStr.split(/\s+/)
     patternArgs = patternArgs
       .map(arg => arg.trim())
@@ -53,6 +56,7 @@ define(function(require) {
       .map(arg => typeof arg === 'string' ? arg.trim().toLowerCase() : arg)
       .map(arg => !isNaN(parseInt(arg,10)) ? parseInt(arg,10) : arg)
     if (patternArgs.filter(a => a === 'nodpad').length > 0) { nodpad = true }
+    if (patternArgs.filter(a => a === 'ltvel').length > 0) { ltvel = true }
     patternArgs = patternArgs.filter(a => typeof a === 'number')
     let padNumber = patternArgs.length > 0 ? patternArgs[0] : 0
     // listen for presses
@@ -73,18 +77,27 @@ define(function(require) {
       if (player._shouldUnlisten) { return } // Dont play any new events if player is being cleaned up!
       if (gamepads[padNumber].mapping !== 'standard' && nodpad) { consoleOut('🔴 nodpad will not work correctly on non-standard mapping gamepad!') }
       if (nodpad && buttonIdx >= 12 && buttonIdx <= 15) { return } // Ignore dpad buttons if nodpad
+      let vel = value
+      if (ltvel) {
+        vel = () => {
+          if (gamepads[padNumber] === undefined || gamepads[padNumber].lt === undefined) { return 0 }
+          return gamepads[padNumber].lt || 0 // Button 6 is left trigger
+        }
+        vel.interval = 'frame'
+        vel.isNonTemporal = true
+      }
       let event = {
         _gamepadNote: buttonIdx,
         value: buttonIdx,
         dur: 1,
-        vel: value,
+        vel: vel,
         _time: metronome.timeNow(),
         count: metronome.lastBeat().count,
         idx: metronome.lastBeat().count,
         beat: metronome.lastBeat(),
       }
       event.sound = event.value
-      event = combineOverrides(event, baseParams)
+      event = combineOverrides(baseParams, event)
       event = applyOverrides(event, params)
       let events = player.processEvents([event])
       events.forEach(e => { e._noteOff = () => {} }) // Default _noteOff callback does nothing
