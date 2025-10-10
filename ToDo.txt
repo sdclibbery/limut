@@ -6,7 +6,6 @@ Cutoff and Vel
   double check preset lpfs are not per frame if they shouldnt be, based on both cutoff and vel and whatever...
    ? do we lose @s if using gp for cutoff/vel?
  check midi player vel and make per frame?
-Make a nice keys preset
 !basspluck envelope is very clicky with gamepad
 !For keys sounds on gamepad etc, would be nice for env to finish the attack and decay and release phases and just have zero sustain
  instead of just cutting out completely when user lets go
