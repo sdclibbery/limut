@@ -136,7 +136,7 @@ preset bloom dbass, dur=2, noisify=1/8, drive=2/8, fold=1, room=2, addc=wow/2, p
   chorus=2, att=1/2, rel=3, amp*=2/3, psf1={f1:200*[0.3:2.2]e,f2:1700*[0.3:2.2]e,q:2}
   
 preset pick saw, dur=1/4, sus=1/8, envelope='percussion', amp*=2,
-	lpf={[(this.freq+500)*(this.cutoff*this.vel+0.1)*10:!(100ms*(3*this.decay^2+0.7)),10]es,poles:4},
+	lpf={[(this.freq+500)*(this.cutoff*this.vel+0.1)*10:!(100ms*(3*this.decay^2+0.7)),10]e@s,poles:4},
   fx=mix{airverb, 6/8},
   cutoff=[1/4:2/4]l16, decay=[0.4:0.6]l24
 

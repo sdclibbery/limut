@@ -121,10 +121,12 @@ define(function (require) {
     }
     let perFrame // The actual per frame callback
     if (isParamSegmented) {
+// console.log('segmented', params.player, p, subParamName)
       segmentedAudioParam(audioParam, evalAt, __event, subParamName, def, requiredUnits, mod) // Give it a call right now
       perFrame = (state) => false//segmentedAudioParam(audioParam, evalAt, __event, undefined, def, requiredUnits, mod)
     } else {
       perFrame = (state) => {
+// console.log('per frame', params.player, p, subParamName)
         if (__event) {
           let endTime = __event.chainEndTime ? __event.chainEndTime : __event.endTime
           if (state.time > endTime) { return false } // Finished

@@ -1,10 +1,6 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-Cutoff and Vel
- cutoff
-  double check preset lpfs are not per frame if they shouldnt be, based on both cutoff and vel and whatever...
-   ? do we lose @s if using gp for cutoff/vel?
 !XBox gamepad stick up/down is actually inverted to what the standard says on electron
 !The lights cut out on every code reload! - Seems OK with dmxsim, need to test with hardware, and/or heavy audio load?
 Parse this as a keyword string never a parseVar, and pre optimise lookup op to a simple function
