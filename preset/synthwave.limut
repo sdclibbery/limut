@@ -162,3 +162,7 @@ preset softkeys multiwave, amp*=3*[1:!1,1/6]e@s, envelope='organ', rel=2,  choru
   wave1={'sine'},
   wave2={'tri',amp:this.vel*[1/3:1/2,0]e@s,detune:7},
   wave3={'square',amp:this.vel*[1/3:2,1/6]e@s,detune:12}
+
+preset darkpad supersaw, dur=4, oct=2, envelope='pad', amp*=3,
+  bpf={1100,q:2,poles:4}, lpf={(1/2+this.vel*this.cutoff)*1200,q:1,poles:4}, high=-18db,
+  cutoff=[1/3,2/3]l8@f

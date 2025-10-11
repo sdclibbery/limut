@@ -1,8 +1,8 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!XBox gamepad stick up/down is actually inverted to what the standard says on electron
 !The lights cut out on every code reload! - Seems OK with dmxsim, need to test with hardware, and/or heavy audio load?
+!XBox gamepad stick up/down is actually inverted to what the standard says on electron
 Parse this as a keyword string never a parseVar, and pre optimise lookup op to a simple function
  Have to do it at the top of eval-operator operator() function
  Docs
