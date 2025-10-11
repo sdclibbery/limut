@@ -21,17 +21,18 @@ define(function (require) {
     vca.gain.linearRampToValueAtTime(gain, params._time + attack)
     vca.gain.linearRampToValueAtTime(gain*susLevel, params._time + attack+decay)
     if (sustain !== undefined) {
-      vca.gain.linearRampToValueAtTime(gain*susLevel*0.8, params._time + attack+decay+sustain)
+      vca.gain.linearRampToValueAtTime(gain*susLevel, params._time + attack+decay+sustain)
       vca.gain.linearRampToValueAtTime(0, params._time + attack+decay+sustain+release)
       params.endTime = params._time + attack+decay+sustain+release
       setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
     } else {
       params.endTime = params._time + 1e6
       params._noteOff = () => {
-        vca.gain.linearRampToValueAtTime(gain*susLevel*0.8, system.audio.currentTime)
-        vca.gain.linearRampToValueAtTime(0, system.audio.currentTime+release)
-        params.endTime = system.audio.currentTime+release
-        setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
+        let releaseTime = Math.max(system.audio.currentTime, params._time + attack+decay+0.001)
+        vca.gain.linearRampToValueAtTime(gain*susLevel, releaseTime)
+        vca.gain.linearRampToValueAtTime(0, releaseTime+release)
+        params.endTime = releaseTime+release
+        setTimeout(() => params._destructor.destroy(), 100+(params.endTime - releaseTime)*1000)
       }
     }
 
@@ -182,7 +183,7 @@ define(function (require) {
     } else {
       params.endTime = params._time + 1e6
       params._noteOff = () => {
-        let relTime = Math.max(params._time + attack, system.audio.currentTime) + 0.1
+        let relTime = Math.max(params._time + attack, system.audio.currentTime) + 0.001
         fadeDownAtTime(vca, gain, relTime, release)
         params.endTime = relTime+release
         setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)

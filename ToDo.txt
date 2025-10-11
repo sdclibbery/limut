@@ -5,10 +5,6 @@ Cutoff and Vel
  cutoff
   double check preset lpfs are not per frame if they shouldnt be, based on both cutoff and vel and whatever...
    ? do we lose @s if using gp for cutoff/vel?
- check midi player vel and make per frame?
-!basspluck envelope is very clicky with gamepad
-!For keys sounds on gamepad etc, would be nice for env to finish the attack and decay and release phases and just have zero sustain
- instead of just cutting out completely when user lets go
 !XBox gamepad stick up/down is actually inverted to what the standard says on electron
 !The lights cut out on every code reload! - Seems OK with dmxsim, need to test with hardware, and/or heavy audio load?
 Parse this as a keyword string never a parseVar, and pre optimise lookup op to a simple function
@@ -29,6 +25,8 @@ electron performance
   BrowserWindow.setFullScreen(true) for fullscreen
 !! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
   a audiosynth, fx=osc.sin{this.f}*0.01, f=[100:300]l@f
+?check midi player vel and make per frame?
+!click if start a new keyboard player note before last one has finished attack/decay?
 
 ==== audio ====
 review all preset; add cutoff control wherever practical

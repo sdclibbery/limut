@@ -98,7 +98,7 @@ preset space ethereal, vib=3, att=0, sus=2, rel=1, phaser=1/4, oct=5, room={2,mi
 preset play80s play, room=1/8, low=16db, pan=[-1/8:1/8]r
 
 preset basspluck dbass, dur=1/2, pan=[-1/8:1/8]r,
-  lpf={(1/2+this.cutoff*this.vel)*[100:[300:1000]n8@e,3000]e,q:[5,[10:30]l32]n1/4@f},
+  lpf={(1/2+this.cutoff*this.vel)*[500:!1/2,140]e@s,q:[5,[10:30]l32]n1/4@f},
   att=0, addc=wow, sus=1/2, rel=1, amp*=3/2+wow,
   cutoff=1/2
 
