@@ -4660,3 +4660,24 @@ ds dmxsimwash, channel=(1,8,15,22), loc+={x:this.voice/2 - 3/4}
 d dmx, lights={1,{h:[2/6:5/6]r1/4@f}}, channel=[1,8,15,22]t1/4@f
 
 
+// Demon
+include 'lib/everything.limut'
+// w webcam, device='5MP', loc={x:1/5}, contrast=3/2, pixellate=100
+do dmx, channel=(1,22), lights={1,red/64 + white/16*[riser,0]t1/8@f*h.playing.0}
+di dmx, channel=(8,15), lights={1/128,blue}*(1-pk.pulse.0)
+set main fx=shaper.tanh
+set scale='phrygian'
+set bpm=106
+set p* delay |=[():29,[1,3]r/4:3]t
+set !p* add=[0:16,2:8,3:8]t
+// pkk perc x...
+// pk perc X.. crop 14 + .X, fx=shaper.tanh*-3db
+// ps perc ....i..., room=1/2, rate=1/2
+// d dirt, vel*=(1-pk.pulse.0)*3/2, cutoff+=gp.lsr*2, decay=gp.lsu
+// g saw 0., oct=1, lpf=5000*this.vel, fx=ultracomb{1/4+gp.rsr/4, 1/4+gp.rsu/4, 1/4+gp.rsd/4}>>mix{airverb}*2, vel=gp.rt
+// r reese, vel=gp.rt, cutoff=gp.rsu*[0:/2,3/2:0]l@f, drive={1/16,mix:gp.rsr}
+// c cydist gamepad lt:vel, fx=mix{airverb}*[1,this.vel>0.95??0?:1]t1/8@f, drive={1,mix:[1,1/4]e}, delay|=(0,{1/2,addc:12})
+///
+// h hollow (09), oct=1, vel=riser+1/16, drive={1/4,mix:riser^4}, amp*=4*[1:28,[2,0]t1/8@f:4]t
+
+
