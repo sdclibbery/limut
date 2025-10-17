@@ -166,3 +166,9 @@ preset softkeys multiwave, amp*=3*[1:!1,1/6]e@s, envelope='organ', rel=2,  choru
 preset darkpad supersaw, dur=4, oct=2, envelope='pad', amp*=3,
   bpf={1100,q:2,poles:4}, lpf={(1/2+this.vel*this.cutoff)*1200,q:1,poles:4}, high=-18db,
   cutoff=[1/3,2/3]l8@f
+
+preset sting multiwave, lpf={[0:^1/2:25ms,(1/40+this.vel*this.cutoff^2)*20000+2*this.freq:!(1/12+this.vel*this.decay)*2000ms,10]e@s, poles:4, q:2},
+	wave1={'saw'}, wave2={'saw',detune:12,amp:1/4},
+  dur=1/4, oct=2, amp*=3/2, envelope='full', att=27ms,
+  drive={1,mix:1/16}, chorus=1/2, echo={34ms,feedback:0.4},
+  cutoff=3/4, decay=1/2

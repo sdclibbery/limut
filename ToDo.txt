@@ -2,22 +2,31 @@
 =================================================================================================================================
 =================================================================================================================================
 !Take the note play off the two stick clicks
-!the vel95% trance gate needs to be simpler. topvel param? top{} function? trance gate function??
-!XBox gamepad stick up/down is actually inverted to what the standard says on electron
-!blade down an octave (or two!), also oxy??
-? envelope on cydist
+!the vel>95% trance gate needs to be simpler
+ !! g gradient, vel=slider, fore=white*[1:_0.95,[1,0]t1/8@f]{this.vel}
+  Simplest repro:  r readout, vel=0, add=[1]{this.vel}
+  Invalid piecewise piece param
+ ? topvel param? top{} function? trance gate function?? gate param like vib? tremolo param? chop??? combo?
+  []{} should do it, and/or just this.vel^8 ?
+   Test this.vel^8 with lt
 !sweep and basspluck: lower resonance
-!The lights cut out on every code reload! - Seems OK with dmxsim, need to test with hardware, and/or heavy audio load?
- Its due to use of main.pulse, r.playing etc etc
+!blade down an octave (or two!) and louder/bigger, also oxy down octave??
+!XBox gamepad stick up/down is actually inverted to what the standard says on electron
+? envelope on cydist
+!The lights cut out on every code reload! - Its due to use of main.pulse, r.playing etc etc
+!dmx addL is ugly and confusing...
+ consider lights={add:{}} rather than add={} ???
 Work out how to do lighting effects:
  mood background with spatial and temporal variation
  flash on player event, single or multiple in groups
  chase on player event, single or multiple in groups
  ? <player>.trigger, chase{}, count{}
  ? d dmx, fixture={0:'dimmer',1:'red',2:'green',3:'blue'}, fore=purple, amp=[1,0]e
-!dmx addL is ugly and confusing...
- consider lights={add:{}} rather than add={} ???
-!click if start a new keyboard etc player note before last one has finished attack/decay?
+!! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
+  a audiosynth, fx=osc.sin{this.f}*0.01, f=[100:300]l@f
+Gamepad: when notes are missing (stick clicks, lt: rt: etc) then don't leave gaps in value played
+ Full remapping to handle this? What about gp.notes then?
+!get a click if start a new keyboard etc player note before last one has finished attack/decay?
 Parse 'this' as a keyword string never a parseVar, and pre optimise lookup op to a simple function
  Have to do it at the top of eval-operator operator() function
  Docs
@@ -25,8 +34,6 @@ electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
   BrowserWindow.setFullScreen(true) for fullscreen
-!! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
-  a audiosynth, fx=osc.sin{this.f}*0.01, f=[100:300]l@f
 ?check midi player vel and make per frame?
 
 ==== audio ====
