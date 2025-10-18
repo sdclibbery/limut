@@ -78,6 +78,7 @@ define(function(require) {
       }
       p = mainParam(p) || 0
       let pieceParam = typeof p !== 'function' ? p : evalFunctionWithModifiers(p, e,b,evalRecurse)
+      if (typeof pieceParam === 'function') { pieceParam = evalRecurse(pieceParam, e,b) } // If its still a function, eval it
       if (!Number.isFinite(pieceParam)) {
         consoleOut(`🟠 Warning invalid piecewise piece param: ${p} ${b} ${pieceParam}`)
         return 0

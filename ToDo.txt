@@ -1,14 +1,6 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!Take the note play off the two stick clicks
-!the vel>95% trance gate needs to be simpler
- !! g gradient, vel=slider, fore=white*[1:_0.95,[1,0]t1/8@f]{this.vel}
-  Simplest repro:  r readout, vel=0, add=[1]{this.vel}
-  Invalid piecewise piece param
- ? topvel param? top{} function? trance gate function?? gate param like vib? tremolo param? chop??? combo?
-  []{} should do it, and/or just this.vel^8 ?
-   Test this.vel^8 with lt
 !sweep and basspluck: lower resonance
 !blade down an octave (or two!) and louder/bigger, also oxy down octave??
 !XBox gamepad stick up/down is actually inverted to what the standard says on electron

@@ -46,9 +46,9 @@ define(function(require) {
       if (ml.toLowerCase() === 'this') { // lookup on this event
         let v = event[mr]
         v = evalRecurse(v, event,b) // Eval so that time modifiers get applied
-        let result = (e,b,er) => v // Wrap into a function so we can set _thisVar to prevent doubling up of chords
-        result._thisVar = true
-        return result
+        let lookupOpResult = (e,b,er) => v // Wrap into a function so we can set _thisVar to prevent doubling up of chords
+        lookupOpResult._thisVar = true
+        return lookupOpResult
       }
       let player = players.getById(ml)
       if (mr === 'exists') { return !!player ? 1 : 0 }

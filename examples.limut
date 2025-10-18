@@ -4681,3 +4681,7 @@ set !p* add=[0:16,2:8,3:8]t
 // h hollow (09), oct=1, vel=riser+1/16, drive={1/4,mix:riser^4}, amp*=4*[1:28,[2,0]t1/8@f:4]t
 
 
+//// Ways to do something at the end of vel range (eg trance gate)
+// g gradient, vel=slider, fore=white*[1:_0.95,[1,0]t1/8@f]{this.vel}
+// g gradient, vel=slider, fore=white*(1-[0,1]t1/8@f*this.vel^64)
+
