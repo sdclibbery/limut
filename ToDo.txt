@@ -1,11 +1,8 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!sweep and basspluck: lower resonance
-!blade down an octave (or two!) and louder/bigger, also oxy down octave??
 !XBox gamepad stick up/down is actually inverted to what the standard says on electron
-? envelope on cydist
-human param for perc preset, applies some slight vel, rate, delay variations
+?human param for perc preset, applies some slight vel, rate, delay variations
 !The lights cut out on every code reload! - Its due to use of main.pulse, r.playing etc etc
 !dmx addL is ugly and confusing...
  consider lights={add:{}} rather than add={} ???
