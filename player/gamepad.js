@@ -68,6 +68,7 @@ define(function(require) {
     addListener(padNumber, player.id+player._num, (buttonIdx, value) => {
       if (ltParam && buttonIdx === 6) { return } // Ignore left trigger button presses if ltParam
       if (rtParam && buttonIdx === 7) { return } // Ignore right trigger button presses if rtParam
+      if (buttonIdx === 10 || buttonIdx === 11) { return } // Ignore stick presses
       if (value === undefined) { // Note off
         for (let k in player.events) {
           let e = player.events[k]
