@@ -74,6 +74,7 @@ define(function(require) {
     'random': parseExpression('{r:[0:0.8]n3,g:[0:0.7]n4,b:[0.1:0.9]n5,a:1}'),
       
     'wow': parseExpression('[-0.3:0.3]n2'),
+    'tg': parseExpression('[1,0]t1/8@f'),
   }
   for (let k in defs) { add(k, defs[k]) }
 })

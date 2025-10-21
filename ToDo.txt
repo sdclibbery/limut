@@ -1,7 +1,6 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================? echo{} delay time default to 3/4?
-tg, stanh, mix3 ... mix8
 !The lights cut out on every code reload! - Its due to use of main.pulse, r.playing etc etc
  ? Possible to pass events over from old player to new when reload?
 ?? Should player pulse be premultiplied by vel???

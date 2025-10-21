@@ -1,5 +1,14 @@
 //// This library includes basic wrappers around the core nodes
 
+//// Mix shortcuts
+set mix2 = {chain} -> mix{chain,1/2}
+set mix3 = {chain} -> mix{chain,1/3}
+set mix4 = {chain} -> mix{chain,1/4}
+set mix5 = {chain} -> mix{chain,1/5}
+set mix6 = {chain} -> mix{chain,1/6}
+set mix7 = {chain} -> mix{chain,1/7}
+set mix8 = {chain} -> mix{chain,1/8}
+
 //// oscillators
 set lfo = {freq,wave:'triangle',lo:0,hi:1,phase:0} -> (lo+hi)/2 + osc{wave,freq:freq,phase:phase}*(hi-lo)/2
 set osc.sin = {freq:pitch{}} -> osc{'sine', freq:freq}
@@ -33,6 +42,7 @@ set pkf = {gain, freq:600, q:5} -> biquad{'peaking', freq:freq, gain:gain, q:q}
 //// Wave shapers
 set shaper.pow = {curve:0.9} -> shaper{ {x,c:curve} -> sgn{x}*(abs{x}^c) }
 set shaper.tanh = {gain:3/2} -> shaper{ {x,g:gain} -> tanh{x*g} }
+set stanh = {gain:3/2} -> shaper{ {x,g:gain} -> tanh{x*g} }
 set shaper.asym = {gain:3/2,bias:1/2} -> shaper{ {x,b:bias,g:gain} -> tanh{x*g + b} - tanh{b} }
 set shaper.atan = {gain:3/2} -> shaper{ {x,g:gain} -> atan{x*g}*(2/pi) }
 set shaper.poly = {gain:1} -> shaper{ {x,g:gain} -> (g*x - ((g*x)^3)/3) }
