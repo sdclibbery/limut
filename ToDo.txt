@@ -1,16 +1,11 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================? echo{} delay time default to 3/4?
+!!! echo param has unnecessary limit on min delay due to the fx chain quantisation!
+ new dark presets with echo=50ms should tweak with headphones
 !The lights cut out on every code reload! - Its due to use of main.pulse, r.playing etc etc
  ? Possible to pass events over from old player to new when reload?
 ?? Should player pulse be premultiplied by vel???
-!!! echo param has unnecessary limit on min delay due to the fx chain quantisation!
- Min delay should be 2.9ms
-!Sting echo shorter time for longer feedback tail thats still smooth
- ?? Should echo time be related to frequency>? Or not?
-? tgvel = 1-[0,1]t1/8@f*this.vel^8 ??
-? dubdelay{control,delayTime:3/4}
- ??? trigger{control,time:1} to drive it; eg dubdelay{trigger{gp.rt}}
 !dmx addL is ugly and confusing...
  consider lights={add:{}} rather than add={} ??? plus={} not add={} ???
 Work out how to do lighting effects:
@@ -20,7 +15,6 @@ Work out how to do lighting effects:
  ? <player>.trigger, chase{}, count{}
  ? d dmx, fixture={0:'dimmer',1:'red',2:'green',3:'blue'}, fore=purple, amp=[1,0]e
 !XBox gamepad stick up/down is actually inverted to what the standard says on electron
-?human param for perc preset, applies some slight vel, rate, delay variations
 Gamepad: when notes are missing (stick clicks, lt: rt: etc) then don't leave gaps in value played
  Full remapping to handle this? What about gp.notes then?
 !! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
@@ -32,6 +26,9 @@ electron performance
   BrowserWindow.setFullScreen(true) for fullscreen
 
 ==== audio ====
+?human param for perc preset, applies some slight vel, rate, delay variations
+? dubdelay{control,delayTime:3/4}
+ ??? trigger{control,time:1} to drive it; eg dubdelay{trigger{gp.rt}}
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   ??? the line         let tc = -(imTime - time) / Math.log((imValue - endValue) / (currentValue - endValue))
     Should take mod() into account on the values, no???

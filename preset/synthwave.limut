@@ -180,7 +180,7 @@ preset darkbass saw,
   decay=0, cutoff=1/2
 
 preset blare saw,
-  oct=2, envelope='pad',
+  oct=2, envelope='pad', amp*=-2db,
   lpf={(1/2+this.cutoff*this.vel)*[300:1,5000:4,700]e+[0,1000]n1/4,poles:4,q:10},
   addc=wow, chorus, echo=50ms, reverb={3,hpf:300},
   cutoff=1/2

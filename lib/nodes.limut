@@ -47,6 +47,7 @@ set shaper.asym = {gain:3/2,bias:1/2} -> shaper{ {x,b:bias,g:gain} -> tanh{x*g +
 set shaper.atan = {gain:3/2} -> shaper{ {x,g:gain} -> atan{x*g}*(2/pi) }
 set shaper.poly = {gain:1} -> shaper{ {x,g:gain} -> (g*x - ((g*x)^3)/3) }
 set shaper.diode = {gain:5/4,pos:0.9,neg:-0.3} -> shaper{ {x,g:gain,p:pos,n:neg} -> min{max{g*x, n}, p}/g }
+set shaper.drive = {amount:1/2} -> shaper{ {x,a:amount*100} -> (3 + a) * x * (pi/3) / (pi + a * abs(x)) }
 set drive = {amount:1/2} -> shaper{ {x,a:amount*100} -> (3 + a) * x * (pi/3) / (pi + a * abs(x)) }
 
 //// Dynamics
