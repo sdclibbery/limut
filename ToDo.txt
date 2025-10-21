@@ -1,30 +1,36 @@
 =================================================================================================================================
 =================================================================================================================================
-=================================================================================================================================
-!XBox gamepad stick up/down is actually inverted to what the standard says on electron
-?human param for perc preset, applies some slight vel, rate, delay variations
+=================================================================================================================================? echo{} delay time default to 3/4?
+tg, stanh, mix3 ... mix8
 !The lights cut out on every code reload! - Its due to use of main.pulse, r.playing etc etc
+ ? Possible to pass events over from old player to new when reload?
+?? Should player pulse be premultiplied by vel???
+!!! echo param has unnecessary limit on min delay due to the fx chain quantisation!
+ Min delay should be 2.9ms
+!Sting echo shorter time for longer feedback tail thats still smooth
+ ?? Should echo time be related to frequency>? Or not?
+? tgvel = 1-[0,1]t1/8@f*this.vel^8 ??
+? dubdelay{control,delayTime:3/4}
+ ??? trigger{control,time:1} to drive it; eg dubdelay{trigger{gp.rt}}
 !dmx addL is ugly and confusing...
- consider lights={add:{}} rather than add={} ???
+ consider lights={add:{}} rather than add={} ??? plus={} not add={} ???
 Work out how to do lighting effects:
  mood background with spatial and temporal variation
  flash on player event, single or multiple in groups
  chase on player event, single or multiple in groups
  ? <player>.trigger, chase{}, count{}
  ? d dmx, fixture={0:'dimmer',1:'red',2:'green',3:'blue'}, fore=purple, amp=[1,0]e
-!! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
-  a audiosynth, fx=osc.sin{this.f}*0.01, f=[100:300]l@f
+!XBox gamepad stick up/down is actually inverted to what the standard says on electron
+?human param for perc preset, applies some slight vel, rate, delay variations
 Gamepad: when notes are missing (stick clicks, lt: rt: etc) then don't leave gaps in value played
  Full remapping to handle this? What about gp.notes then?
+!! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
+  a audiosynth, fx=osc.sin{this.f}*0.01, f=[100:300]l@f
 !get a click if start a new keyboard etc player note before last one has finished attack/decay?
-Parse 'this' as a keyword string never a parseVar, and pre optimise lookup op to a simple function
- Have to do it at the top of eval-operator operator() function
- Docs
 electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
   BrowserWindow.setFullScreen(true) for fullscreen
-?check midi player vel and make per frame?
 
 ==== audio ====
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
@@ -400,6 +406,10 @@ shadertoy synth multiple channels
 !! cannot use follow player on gamepad/midi/keyboard player, because they do not use getEventsForBeat
  Would have to rewrite follow player somehow: shadow the play() method maybe??
 !Commented parse expression unit tests
+?check midi player vel and make per frame?
+Parse 'this' as a keyword string never a parseVar, and pre optimise lookup op to a simple function
+ Have to do it at the top of eval-operator operator() function
+ Docs
 User defined functions:
  ?How to avoid evalling function call args repeatedly due to them also being treated as modifiers?
  !Should be able to access the default e and b params. Can get rid of time global??? And `this.` ?????????

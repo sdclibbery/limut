@@ -4685,3 +4685,27 @@ set !p* add=[0:16,2:8,3:8]t
 // g gradient, vel=slider, fore=white*[1:_0.95,[1,0]t1/8@f]{this.vel}
 // g gradient, vel=slider, fore=white*(1-[0,1]t1/8@f*this.vel^64)
 
+
+/// Filament Failure 2025/10/19
+include 'lib/everything.limut'
+w webcam, device='5MP', loc={x:1/5}, contrast=3/2, pixellate=100
+// ds dmxsimwash, channel=(1,8,15,22), loc+={x:this.voice/2 - 3/4}
+dm dmx, channel=(1,8,15), lights={1/3*[0.1,1]l2@f,{labh:-0.01+this.voice*0.01}}
+dl dmx, channel=22, lights={1/2,ls.vel.0*ls.playing.0*#2f2}, addl={0,dp.vel.0*#00a + as.vel.0*#800 + de.vel.0*#222}
+set main fx=shaper.tanh
+set scale='phrygian'
+set !p* add=[0:28,-3:4]t
+set p* fx=shaper.tanh/2, delay|=[():29,[1,3]r/4:3]t
+// pk perc Xx.x.X.<.X>
+// ps perc ....O..., rate=3/4, room=3/4, pan=(-1,1), amp*=-6db
+// ph perc --n crop 6 + :n, swing=52, echo=1/8, pan=[-1,1]/4
+// pt perc u, vel*=[0:^8:8,1:0]t, rate=[1/2:1]r, swing=54
+// bd dirt 0vv010, cutoff=1/4+gp.rsr
+dp darkpad (09), fx=airverb, vel=gp.lsr, drive={1,mix:gp.lsu}
+de ethereal (09), fx=airverb*2, vel=gp.lsl, drive={1,mix:gp.lsd}, addc=wow
+as sting  0..6.1 crop 14 + 98, fx=mix{echo{1/2},1/6}, vel=gp.rsu, cutoff
+ls cydist gamepad lt:vel, fx=mix{echo{1/2},1/6}, drive=this.vel^4, echo={40ms,feedback:0.5}, vel*=1-[0,1]t1/8@f*gp.lt^8, att=1
+// p perc v...
+// n noise, bpf=10+5000*riser^4, vel*=riser^2
+// set dp vel+=1/2+riser^4
+
