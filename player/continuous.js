@@ -4,7 +4,7 @@ define(function(require) {
   var players = require('player/players')
   let {applyOverrides,collapseOverrides} = require('player/override-params')
 
-  return (playerFactory, paramsStr, playerId, baseParams, transferFxChain) => {
+  return (playerFactory, paramsStr, playerId, baseParams, transferFxChain, transferEvents) => {
     let params = parseParams(paramsStr, playerId)
     params = applyOverrides(baseParams, params)
     params = collapseOverrides(params)
@@ -12,6 +12,7 @@ define(function(require) {
     let oldPlayer = players.getById(playerId)
     let player = playerFactory.create(playerId, oldPlayer)
     player._fx = transferFxChain
+    player.events = transferEvents
 
     player.getEventsForBeat = () => []
     let started = false

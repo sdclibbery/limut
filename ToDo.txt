@@ -1,11 +1,11 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================? echo{} delay time default to 3/4?
+?? a.playing never returns a chord, right?
+?? Should player pulse be premultiplied by vel???
+!Root change happens After the beat it's on?
 !!! echo param has unnecessary limit on min delay due to the fx chain quantisation!
  new dark presets with echo=50ms should tweak with headphones
-!The lights cut out on every code reload! - Its due to use of main.pulse, r.playing etc etc
- ? Possible to pass events over from old player to new when reload?
-?? Should player pulse be premultiplied by vel???
 !dmx addL is ugly and confusing...
  consider lights={add:{}} rather than add={} ??? plus={} not add={} ???
 Work out how to do lighting effects:

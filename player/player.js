@@ -77,9 +77,10 @@ define((require) => {
     if (!playerFactory) { throw 'Player type "'+playerType+'" not found' }
     let oldPlayer = players.getById(playerId)
     let transferFxChain = !!oldPlayer ? oldPlayer._fx : undefined
+    let transferEvents = !!oldPlayer ? oldPlayer.events : undefined
     // Continuous player, no events
     if (playerFactory.create) {
-      let player = continuousPlayer(playerFactory, paramsStr, playerId, playerFactory.baseParams, transferFxChain)
+      let player = continuousPlayer(playerFactory, paramsStr, playerId, playerFactory.baseParams, transferFxChain, transferEvents)
       player.id = playerId
       player.type = playerType
       player.keepState = {}
@@ -93,10 +94,11 @@ define((require) => {
       type: playerType,
       keepState: {},
       _fx: transferFxChain,
+      events: transferEvents,
     }
     playerNumber++
     player.play = (es) => {
-      player.events ||= []
+      if (player.events === undefined) { player.events = [] }
       let timeNow = metronome.timeNow()
       player.events = player.events.filter(e => {
         if (e.endTime === undefined) { return timeNow < e._time + 10 } // Filter out events with no endTime but only if they've been hanging around for ages
