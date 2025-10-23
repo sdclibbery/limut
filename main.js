@@ -141,7 +141,7 @@ define(function(require) {
       clearCallTree()
     }
     if (beat) {
-      mainVars.update(Math.floor(beatTime), beatTime)
+      mainVars.update(Math.floor(beat.count), beat.count)
       beatReadout.innerText = `${beat.count}`.padStart(4, ' ')
       let bc = metronome.getBeatReadouts()
       if (typeof bc === 'number') { bc = [bc] }

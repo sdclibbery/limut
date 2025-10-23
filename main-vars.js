@@ -32,7 +32,7 @@ define((require) => {
   let update = (step, beat) => {
     for (let k in mainVars) {
       let value = mainVars[k].value
-      if (value) {
+      if (value !== undefined) {
         let v = evalParamFrame(value, {idx:step,count:beat}, beat)
         mainVars[k].setter(v)
       }

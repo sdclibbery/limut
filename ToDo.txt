@@ -1,11 +1,8 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================? echo{} delay time default to 3/4?
-?? a.playing never returns a chord, right?
 ?? Should player pulse be premultiplied by vel???
 !Root change happens After the beat it's on?
-!!! echo param has unnecessary limit on min delay due to the fx chain quantisation!
- new dark presets with echo=50ms should tweak with headphones
 !dmx addL is ugly and confusing...
  consider lights={add:{}} rather than add={} ??? plus={} not add={} ???
 Work out how to do lighting effects:
@@ -26,6 +23,7 @@ electron performance
   BrowserWindow.setFullScreen(true) for fullscreen
 
 ==== audio ====
+!!! echo param has unnecessary limit on min delay due to the fx chain quantisation!
 ?human param for perc preset, applies some slight vel, rate, delay variations
 ? dubdelay{control,delayTime:3/4}
  ??? trigger{control,time:1} to drive it; eg dubdelay{trigger{gp.rt}}
