@@ -4709,3 +4709,9 @@ ls cydist gamepad lt:vel, fx=mix{echo{1/2},1/6}, drive=this.vel^4, echo={40ms,fe
 // n noise, bpf=10+5000*riser^4, vel*=riser^2
 // set dp vel+=1/2+riser^4
 
+
+// w webcam, device='5MP', loc={x:1/5}, contrast=3/2, pixellate=100
+// ds dmxsimwash, channel=(1,8,15,22), loc+={x:this.voice/2 - 3/4}
+// dm dmx, channel=(1,8,15), lights={1/5*[0.1,1]l4@f,{labh:0.63+this.voice*0.15}}
+// dl dmx, channel=22, lights={1/8, pk.pulse/8, 0, lb.pulse*lb.vel}
+

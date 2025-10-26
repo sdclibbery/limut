@@ -3,6 +3,7 @@ define(function(require) {
   let consoleOut = require('console')
   let addVar = require('predefined-vars').add
 
+  let invertY = true
   let blankArgs = {}
   let newGamepad = (args, context) => {
     args = args || blankArgs
@@ -49,6 +50,7 @@ define(function(require) {
       if (requireStandardMapping && gamepad.mapping !== 'standard') { consoleOut('🔴 named gamepad axes will not work correctly on non-standard mapping gamepad!') }
       if (buttonNumber !== undefined) { return gamepad.buttons[buttonNumber].value || 0 }
       let axisValue = gamepad.axes[axisNumber || 0] || 0
+      if (invertY && (axisNumber === 1 || axisNumber === 3)) { axisValue = -axisValue }
       if (axisRange === 'neg') { axisValue = Math.max(0, -axisValue) }
       else if (axisRange === 'pos') { axisValue = Math.max(0, axisValue) }
       return axisValue

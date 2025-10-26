@@ -1,8 +1,12 @@
 =================================================================================================================================
 =================================================================================================================================
-=================================================================================================================================? echo{} delay time default to 3/4?
+=================================================================================================================================
+?lsud and lsdu etc: 0-1 whether up or down
+Have own libs separate from main project
+ With some dmx light presets
+ dmxsimwash!!
+ Also move some dark synth presets there?
 ?? Should player pulse be premultiplied by vel???
-!Root change happens After the beat it's on?
 !dmx addL is ugly and confusing...
  consider lights={add:{}} rather than add={} ??? plus={} not add={} ???
 Work out how to do lighting effects:
@@ -11,7 +15,6 @@ Work out how to do lighting effects:
  chase on player event, single or multiple in groups
  ? <player>.trigger, chase{}, count{}
  ? d dmx, fixture={0:'dimmer',1:'red',2:'green',3:'blue'}, fore=purple, amp=[1,0]e
-!XBox gamepad stick up/down is actually inverted to what the standard says on electron
 Gamepad: when notes are missing (stick clicks, lt: rt: etc) then don't leave gaps in value played
  Full remapping to handle this? What about gp.notes then?
 !! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
@@ -23,6 +26,7 @@ electron performance
   BrowserWindow.setFullScreen(true) for fullscreen
 
 ==== audio ====
+? echo{} delay time default to 3/4?
 !!! echo param has unnecessary limit on min delay due to the fx chain quantisation!
 ?human param for perc preset, applies some slight vel, rate, delay variations
 ? dubdelay{control,delayTime:3/4}
