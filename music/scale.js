@@ -95,14 +95,15 @@ define(function (require) {
     return scale.root
   }
 
-  scale.degreeToFreq = (degree, octave, scaleOverride, sharp) => {
+  scale.degreeToFreq = (degree, octave, scaleOverride, rootOverride, sharp) => {
     if (typeof degree !== 'number') { degree = 0 }
     degree = Math.floor(degree) // Has to be floor not round; round gives an uneven distribution for randoms
     octave = Math.floor(octave)
     let currentScale = scales[scaleOverride || scale.current]
     let octDelta = Math.floor(degree / currentScale.length)
     let oct = octave - 4 + octDelta
-    let chromatic = currentScale[(degree + currentScale.length*100) % currentScale.length] + oct*12 + scale.root + sharp
+    let root = typeof(rootOverride) === 'number' ? rootOverride :  scale.root
+    let chromatic = currentScale[(degree + currentScale.length*100) % currentScale.length] + oct*12 + root + sharp
     return 261.6256 * Math.pow(2, chromatic/12)
   }
 
@@ -111,7 +112,7 @@ define(function (require) {
     if (isNaN(parseInt(degree))) { return }
     let octave = evalMainParamEvent(params, 'oct', defaultOctave)
     let sharp = evalMainParamEvent(params, 'sharp', 0) + evalSubParamEvent(params, 'add', '#', 0) - evalSubParamEvent(params, 'add', 'b', 0)
-    let freq = scale.degreeToFreq(degree, octave, evalMainParamEvent(params, 'scale'), sharp)
+    let freq = scale.degreeToFreq(degree, octave, evalMainParamEvent(params, 'scale'), evalMainParamEvent(params, 'root'), sharp)
     params.freq = freq
     return freq
   }
@@ -122,7 +123,7 @@ define(function (require) {
     let degree = evalMainParamEvent(args, 'value', 0)
     let octave = evalMainParamEvent(args, 'oct', 4)
     let sharp = evalMainParamEvent(args, 'sharp', 0) + evalMainParamEvent(value, '#', 0) - evalMainParamEvent(value, 'b', 0)
-    return scale.degreeToFreq(degree, octave, args.scale, sharp)
+    return scale.degreeToFreq(degree, octave, args.scale, args.root, sharp)
   }
   addVarFunction('pitch', pitchFunc)
 
@@ -134,20 +135,22 @@ define(function (require) {
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
 
-  assert(261.6, scale.degreeToFreq(0, 4, 'major', 0))
-  assert(261.6, scale.degreeToFreq(0.4, 4.4, 'major', 0))
-  assert(261.6, scale.degreeToFreq(0.6, 4.6, 'major', 0))
-  assert(130.8, scale.degreeToFreq(0, 3, 'major', 0))
-  assert(523.3, scale.degreeToFreq(0, 5, 'major', 0))
-  assert(440.0, scale.degreeToFreq(5, 4, 'major', 0))
-  assert(246.9, scale.degreeToFreq(-1, 4, 'major', 0))
-  assert(246.9, scale.degreeToFreq(0, 4, 'major', -1))
+  assert(261.6, scale.degreeToFreq(0, 4, 'major', 0, 0))
+  assert(261.6, scale.degreeToFreq(0.4, 4.4, 'major', 0, 0))
+  assert(261.6, scale.degreeToFreq(0.6, 4.6, 'major', 0, 0))
+  assert(130.8, scale.degreeToFreq(0, 3, 'major', 0, 0))
+  assert(523.3, scale.degreeToFreq(0, 5, 'major', 0, 0))
+  assert(440.0, scale.degreeToFreq(5, 4, 'major', 0, 0))
+  assert(246.9, scale.degreeToFreq(-1, 4, 'major', 0, 0))
+  assert(246.9, scale.degreeToFreq(0, 4, 'major', 0, -1))
 
-  assert(261.6, scale.degreeToFreq(0, 4, 'chromatic', 0))
-  assert(415.3, scale.degreeToFreq(8, 4, 'chromatic', 0))
+  assert(246.9, scale.degreeToFreq(0, 4, undefined, undefined, -1))
 
-  assert(261.6, scale.degreeToFreq('x', 4, 'major', 0))
-  assert(261.6, scale.degreeToFreq('-', 4, 'major', 0))
+  assert(261.6, scale.degreeToFreq(0, 4, 'chromatic', 0, 0))
+  assert(415.3, scale.degreeToFreq(8, 4, 'chromatic', 0, 0))
+
+  assert(261.6, scale.degreeToFreq('x', 4, 'major', 0, 0))
+  assert(261.6, scale.degreeToFreq('-', 4, 'major', 0, 0))
 
   assert(261.6, pitchFunc({value:'x'}))
   assert(261.6, pitchFunc({value:0}))

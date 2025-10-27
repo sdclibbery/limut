@@ -784,6 +784,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>suck</code> suck smaller amplitudes even smaller, but leave large amplitudes alone; value is a limit amplitude: when the waveform is within this limit, it is scaled down. This can provide an unusual form of distortion, or for samples with a long tail, can give a 'gated' effect.</p>
 <p class='sub'><code>suck={12,gain:2}</code> Input gain; gain amp to apply to the signal before suck is applied</p>
 <p class='sub'><code>suck={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
+<p><code>root</code> override root for this player; used instead of main root for this player only. </p>
 <p><code>scale</code> override scale for this player; set to one of these strings: 
   <code>chromatic</code>, 
   <code>major</code>, 
@@ -965,6 +966,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>pitch{4#}</code> Calculate a frequency in Hz for a given scale degree with sharpening (#) or flattening.</p>
 <p class='sub'><code>pitch{0,oct:3}</code> Calculate a frequency in Hz for a given scale degree on a given octave. Default octave is 4.</p>
 <p class='sub'><code>pitch{0,scale:minor}</code> Calculate a frequency in Hz for a given scale degree using a given scale. Default scale is the current global var <code>scale</code></p>
+<p class='sub'><code>pitch{0,root:2}</code> Calculate a frequency in Hz for a given scale degree using a given root. Default root is the current global var <code>root</code></p>
 <p><code>floor{1.5}</code> Returns the rounded down value (returns 1 in the example)</p>
 <p class='sub'><code>floor{1.7,to:1/2}</code> Precision to round to, so the example rounds 1.7 down to the nearest 1/2, which is 1.5. Defaults to 1, which rounds down to the nearest integer below.</p>
 <p><code>ceil{1.5}</code> Returns the rounded up value (returns 2 in the example)</p>

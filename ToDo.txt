@@ -1,21 +1,27 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
+!Docs: css class 'sub' is not indented now!
+!!gp.lsv is still upside down, even though lsu lsd is not!
+Salamander Piano upgrades
+ More pitches?
+ Velocity
 Have own libs separate from main project
  With some dmx light presets
  dmxsimwash!!
- Also move some dark synth presets there?
-?? Should player pulse be premultiplied by vel???
+ Also move some dark synth presets there??
+  If not, move them into a new lib anyway
+?? Should player pulse be premultiplied by vel??? - probably not??
 !dmx addL is ugly and confusing...
  consider lights={add:{}} rather than add={} ??? plus={} not add={} ???
+Gamepad: when notes are missing (stick clicks, lt: rt: etc) then don't leave gaps in value played
+ Full remapping to handle this? What about gp.notes then?
 Work out how to do lighting effects:
  mood background with spatial and temporal variation
  flash on player event, single or multiple in groups
  chase on player event, single or multiple in groups
  ? <player>.trigger, chase{}, count{}
  ? d dmx, fixture={0:'dimmer',1:'red',2:'green',3:'blue'}, fore=purple, amp=[1,0]e
-Gamepad: when notes are missing (stick clicks, lt: rt: etc) then don't leave gaps in value played
- Full remapping to handle this? What about gp.notes then?
 !! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
   a audiosynth, fx=osc.sin{this.f}*0.01, f=[100:300]l@f
 !get a click if start a new keyboard etc player note before last one has finished attack/decay?

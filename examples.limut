@@ -4715,3 +4715,29 @@ ls cydist gamepad lt:vel, fx=mix{echo{1/2},1/6}, drive=this.vel^4, echo={40ms,fe
 // dm dmx, channel=(1,8,15), lights={1/5*[0.1,1]l4@f,{labh:0.63+this.voice*0.15}}
 // dl dmx, channel=22, lights={1/8, pk.pulse/8, 0, lb.pulse*lb.vel}
 
+
+// The Dark Arps
+include 'lib/everything.limut' // ls bass/arp rs vibe/pad
+w webcam, device='5MP', loc={x:1/5}, contrast=3/2, pixellate=100
+dm dmx, channel=(1,8,22), lights={1/5*[0.1,1]l4@f,{labh:0.63+this.voice*0.15}}
+dl dmx, channel=15, lights={1/8, []n*vs.vel.0 /16, vd.vel/16, lb.vel.0*lb.playing.0 /4 + bd.pulse.0 /8}
+set main fx=stanh{1.8}
+set scale='phrygian'
+set bpm=108
+set root=[0,3,0,-2]t16
+set p* delay|=[():14,[1,3]r/4:2]t
+pk perc X..., amp*=-3db
+ph perc .-n-, amp/=4, pan=-1/3
+ps perc ....o..., rate=0.6, room=1/2, amp*=-4db
+pp perc .x^^s, amp/=3, pan=1/3
+bd darkbass, vel=1/2+gp.lsl, cutoff=gp.lsud, drive={1/2,mix:smooth{gp.lsd}/2}
+as sting 0060708 crop 14 + 41, vel=gp.lsr, cutoff=gp.lsud, fx=mix{phaser,gp.lsd}>>mix{airverb}, decay=1/3+this.vel, pan=[-1/2,1/2]n1
+vd darkpad (049), vel=gp.rsr, cutoff=gp.rsud, drive={1/2,mix:smooth{gp.rsd}/2}, fx=mix{airverb}
+vs space, vel=gp.rsl, fx=airverb*(1-tg*this.vel.0 ^32), addc=-gp.rsv*4, root=0
+lb blare gamepad lt:vel, fx=mix{airverb}
+///
+// set p* vel=0
+// n noise, flanger, vel=riser^4, bpf=2000*riser^3
+// dm dmx, channel=(1,8,15,22), lights={[0.1,1]l2@f,#004+#f00*tg*riser^6}
+// dl dmx
+
