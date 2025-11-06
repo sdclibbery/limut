@@ -4741,3 +4741,33 @@ lb blare gamepad lt:vel, fx=mix{airverb}
 // dm dmx, channel=(1,8,15,22), lights={[0.1,1]l2@f,#004+#f00*tg*riser^6}
 // dl dmx
 
+
+// 
+include 'lib/everything.limut' // ls: bass, rs: go nuts
+w webcam, device='5MP', loc={x:1/5}, contrast=3/2, width=1280
+dv dmx, channel=(1,22), lights={1/2*[0.2,1]n7,[#2f0,#0f2]n}
+dl dmx, channel=(8,15), lights={[1/2:1]n, #010400*lb.pulse*lb.vel + #040*main.pulse^2 + #111*vn.vel * #400*vc.vel}
+set main fx=stanh{1.7}
+set scale='phrygian'
+set bpm=106
+set p* delay|=[():29,[1,3]r/4:3]t
+set !p* add+=[0:24,5:4,6:4]t
+pk perc X..., vel=1/2
+pkk perc .x. crop 16
+ph perc -n- crop 14 + =-, vel=1/6, room=1/4, swing=52
+ps perc ....o..., rate=1/3, room=1/4, vel=1/4
+pp perc dmx crop 8, vel=1/16, pan=[-1,1], swing=54, rate=1/2
+pb sub .000
+fm machine
+bd darkbass 004010 crop 14 + 06, dur=1/2, vel=gp.lslr, cutoff=gp.lsl, decay=gp.lsd, drive={1/8,mix:gp.lsu/4}, fx=mix3{delay{0.77}}
+vd darkpad (09), vel=gp.rsr, fx=mix{airverb}*(1-tg*this.vel^8)*+3db, oct+=1
+vn noise, vel=gp.rsd^3/2, lpf={100+2000*gp.rsd,poles:4,q:25}, fx=airverb*-6db, envelope='pad'
+as sting 0080706 crop 14 + 18, vel=gp.rsu, cutoff=gp.rsl, decay=gp.rsl
+vc cydist, envelope='pad', vel=gp.rsl^3/2, fx=mix{airverb}>>echo{3/4}, vel*=1+wow*3, glide=1/2
+lb softkeys gamepad lt:vel, fx=shifter{[0.98,1.02]n}>>mix{airverb}*-3db
+//
+set p* vel=0
+set !p* add+=[0:29,2:3]t
+dv dmx, channel=(1,22), lights={[0,0.2]n2,#10f}
+dl dmx, channel=(8,15), lights={[1/2:1]n, #010400*lb.pulse*lb.vel + #040*smooth{main.pulse^2} + #111*vn.vel * #400*vc.vel}
+f perc u, vel=1/2*riser^12, rate=1/3, room=1/2

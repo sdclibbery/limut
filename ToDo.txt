@@ -1,16 +1,21 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!Docs: css class 'sub' is not indented now!
+!!! DMX colours not processing properly: #abc should work, also {0,1,0}, also red etc; should all give rgb 3 channels
+gp radial pos... what to call it? lso?
+Syntax highliting bright for gp. whatever
 !!gp.lsv is still upside down, even though lsu lsd is not!
-Salamander Piano upgrades
- More pitches?
- Velocity
+!!Drive with gp mix caused crackle
+[] should all default to 0,1 eg []t []l etc
 Have own libs separate from main project
  With some dmx light presets
  dmxsimwash!!
  Also move some dark synth presets there??
   If not, move them into a new lib anyway
+Salamander Piano upgrades
+ More pitches?
+ Velocity
+ Make sure addc works
 ?? Should player pulse be premultiplied by vel??? - probably not??
 !dmx addL is ugly and confusing...
  consider lights={add:{}} rather than add={} ??? plus={} not add={} ???
