@@ -1,10 +1,9 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!!! DMX colours not processing properly: #abc should work, also {0,1,0}, also red etc; should all give rgb 3 channels
-gp radial pos... what to call it? lso?
-Syntax highliting bright for gp. whatever
-!!gp.lsv is still upside down, even though lsu lsd is not!
+GAMEPAD TESTING
+ !!Need to test lsx and rsx
+ !!gp.lsv is still upside down, even though lsu lsd is not!
 !!Drive with gp mix caused crackle
 [] should all default to 0,1 eg []t []l etc
 Have own libs separate from main project

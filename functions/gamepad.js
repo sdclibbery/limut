@@ -29,14 +29,16 @@ define(function(require) {
       else if (str === 'lsdu') { axisNumber = 1; axisRange = 'both' } // left stick up or down
       else if (str === 'lslr') { axisNumber = 0; axisRange = 'both' } // left stick left or right
       else if (str === 'lsrl') { axisNumber = 0; axisRange = 'both' } // left stick left or right
+      else if (str === 'lsx') { axisNumber = 0; axisRange = 'radial' } // left stick radial
       else if (str === 'rsl') { axisNumber = 2; axisRange = 'neg' } // right stick left
       else if (str === 'rsr') { axisNumber = 2; axisRange = 'pos' } // right stick right
       else if (str === 'rsd') { axisNumber = 3; axisRange = 'pos' } // right stick down
       else if (str === 'rsu') { axisNumber = 3; axisRange = 'neg' } // right stick up
       else if (str === 'rsud') { axisNumber = 3; axisRange = 'both' } // right stick up or down
       else if (str === 'rsdu') { axisNumber = 3; axisRange = 'both' } // right stick up or down
-      else if (str === 'rslr') { axisNumber = 0; axisRange = 'both' } // right stick left or right
-      else if (str === 'rsrl') { axisNumber = 0; axisRange = 'both' } // right stick left or right
+      else if (str === 'rslr') { axisNumber = 2; axisRange = 'both' } // right stick left or right
+      else if (str === 'rsrl') { axisNumber = 2; axisRange = 'both' } // right stick left or right
+      else if (str === 'rsx') { axisNumber = 2; axisRange = 'radial' } // right stick radial
     } else if (axisNumber === undefined) { axisNumber = args.value }
     let lastStr
     let gamepadValue = () => {
@@ -62,6 +64,10 @@ define(function(require) {
       if (axisRange === 'neg') { axisValue = Math.max(0, -axisValue) }
       else if (axisRange === 'pos') { axisValue = Math.max(0, axisValue) }
       else if (axisRange === 'both') { axisValue = Math.abs(axisValue) }
+      else if (axisRange === 'radial') {
+        let perpAxisValue = gamepad.axes[(axisNumber || 0)+1] || 0
+        axisValue = Math.sqrt(axisValue*axisValue + perpAxisValue*perpAxisValue)
+      }
       return axisValue
     }
     gamepadValue.isNonTemporal = true
@@ -87,6 +93,7 @@ define(function(require) {
   newGamepad.lsdu = newGamepad.bind(null, {value: 'lsdu'})
   newGamepad.lslr = newGamepad.bind(null, {value: 'lslr'})
   newGamepad.lsrl = newGamepad.bind(null, {value: 'lsrl'})
+  newGamepad.lsx = newGamepad.bind(null, {value: 'lsx'})
   newGamepad.rsl = newGamepad.bind(null, {value: 'rsl'})
   newGamepad.rsr = newGamepad.bind(null, {value: 'rsr'})
   newGamepad.rsu = newGamepad.bind(null, {value: 'rsu'})
@@ -95,6 +102,7 @@ define(function(require) {
   newGamepad.rsdu = newGamepad.bind(null, {value: 'rsdu'})
   newGamepad.rslr = newGamepad.bind(null, {value: 'rslr'})
   newGamepad.rsrl = newGamepad.bind(null, {value: 'rsrl'})
+  newGamepad.rsx = newGamepad.bind(null, {value: 'rsx'})
 
   addVar('gamepad', newGamepad)
   addVar('gp', newGamepad) // Alias for ease of access
