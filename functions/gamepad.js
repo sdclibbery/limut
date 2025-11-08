@@ -23,8 +23,8 @@ define(function(require) {
       else if (str === 'rsv') { axisNumber = 3 } // right stick vertical
       else if (str === 'lsl') { axisNumber = 0; axisRange = 'neg' } // left stick left
       else if (str === 'lsr') { axisNumber = 0; axisRange = 'pos' } // left stick right
-      else if (str === 'lsd') { axisNumber = 1; axisRange = 'pos' } // left stick down
-      else if (str === 'lsu') { axisNumber = 1; axisRange = 'neg' } // left stick up
+      else if (str === 'lsd') { axisNumber = 1; axisRange = 'neg' } // left stick down
+      else if (str === 'lsu') { axisNumber = 1; axisRange = 'pos' } // left stick up
       else if (str === 'lsud') { axisNumber = 1; axisRange = 'both' } // left stick up or down
       else if (str === 'lsdu') { axisNumber = 1; axisRange = 'both' } // left stick up or down
       else if (str === 'lslr') { axisNumber = 0; axisRange = 'both' } // left stick left or right
@@ -32,8 +32,8 @@ define(function(require) {
       else if (str === 'lsx') { axisNumber = 0; axisRange = 'radial' } // left stick radial
       else if (str === 'rsl') { axisNumber = 2; axisRange = 'neg' } // right stick left
       else if (str === 'rsr') { axisNumber = 2; axisRange = 'pos' } // right stick right
-      else if (str === 'rsd') { axisNumber = 3; axisRange = 'pos' } // right stick down
-      else if (str === 'rsu') { axisNumber = 3; axisRange = 'neg' } // right stick up
+      else if (str === 'rsd') { axisNumber = 3; axisRange = 'neg' } // right stick down
+      else if (str === 'rsu') { axisNumber = 3; axisRange = 'pos' } // right stick up
       else if (str === 'rsud') { axisNumber = 3; axisRange = 'both' } // right stick up or down
       else if (str === 'rsdu') { axisNumber = 3; axisRange = 'both' } // right stick up or down
       else if (str === 'rslr') { axisNumber = 2; axisRange = 'both' } // right stick left or right
@@ -60,13 +60,13 @@ define(function(require) {
       if (requireStandardMapping && gamepad.mapping !== 'standard') { consoleOut('🔴 named gamepad axes will not work correctly on non-standard mapping gamepad!') }
       if (buttonNumber !== undefined) { return gamepad.buttons[buttonNumber].value || 0 }
       let axisValue = gamepad.axes[axisNumber || 0] || 0
-      if (invertY && (axisNumber === 1 || axisNumber === 3)) { axisValue = -axisValue }
+      // if (invertY && (axisNumber === 1 || axisNumber === 3)) { axisValue = -axisValue }
       if (axisRange === 'neg') { axisValue = Math.max(0, -axisValue) }
       else if (axisRange === 'pos') { axisValue = Math.max(0, axisValue) }
       else if (axisRange === 'both') { axisValue = Math.abs(axisValue) }
       else if (axisRange === 'radial') {
         let perpAxisValue = gamepad.axes[(axisNumber || 0)+1] || 0
-        axisValue = Math.sqrt(axisValue*axisValue + perpAxisValue*perpAxisValue)
+        axisValue = Math.max(Math.abs(axisValue), Math.abs(perpAxisValue))
       }
       return axisValue
     }
