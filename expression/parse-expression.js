@@ -256,10 +256,6 @@ define(function(require) {
   p = parseExpression('(1,2)')
   assert([1,2], p)
 
-  p = parseExpression('[]')
-  assert(0, evalParamFrame(p,ev(0,0),0))
-  assert(0, evalParamFrame(p,ev(1,1),1))
-
   p = parseExpression('[1,2]')
   assert(1, evalParamFrame(p,ev(0,0),0))
   assert(2, evalParamFrame(p,ev(1,1),1))
@@ -2189,6 +2185,22 @@ define(function(require) {
   assert(7, parseExpression('baz{foo:7}@f').modifiers.foo)
   assert('frame', parseExpression('baz@f{foo:7}').interval)
   assert(7, parseExpression('baz@f{foo:7}').modifiers.foo)
+
+  assert(0, evalParamFrame(parseExpression('[]'), ev(0), 0))
+  assert(1, evalParamFrame(parseExpression('[]'), ev(1), 0))
+  assert(0, evalParamFrame(parseExpression('[]'), ev(2), 0))
+
+  assert(0, evalParamFrame(parseExpression('[]t1@f'), ev(), 0))
+  assert(1, evalParamFrame(parseExpression('[]t1@f'), ev(), 1))
+  assert(0, evalParamFrame(parseExpression('[]t1@f'), ev(), 2))
+
+  assert(0, evalParamFrame(parseExpression('[]l1@f'), ev(), 0))
+  assert(1/2, evalParamFrame(parseExpression('[]l1@f'), ev(), 1/2))
+  assert(1, evalParamFrame(parseExpression('[]l1@f'), ev(), 1))
+
+  assert(0, evalParamFrame(parseExpression('[]s1@f'), ev(), 0))
+  assert(1/2, evalParamFrame(parseExpression('[]s1@f'), ev(), 1/2))
+  assert(1, evalParamFrame(parseExpression('[]s1@f'), ev(), 1))
 
   // vars.foo = parseExpression('{v} -> v*3')
   // assert([3,6], evalParamFrame(parseExpression('foo{(1,2)}'), ev(), 0))

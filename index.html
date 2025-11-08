@@ -450,12 +450,16 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code></code> No value: for a param, missing a value is the same as setting the param to <code>1</code>. Eg <code>monochrome</code> is the same as <code>monochrome=1</code></p>
 <p><code>(1,2)</code> A chord. Multiple values, all played together at the same time</p>
 <p><code>[1,2]</code> Sequence of values, one after another, one per event in the pattern, ignoring rests. For single length patterns only, all values will be expanded, so <code>p ping 0, add=[0,1,2]</code> will cycle through all three values.</p>
+<p><code>[]</code> Equivalent to [0,1].</p>
 <p><code>[1,2]t3</code> Timed sequence, each value lasts for 3 beats. Duration must be a const number, cannot be an expression. Default time unit: beats.</p>
+<p><code>[]t</code> Equivalent to [0,1]t.</p>
 <p><code>[1:12,2:4]t</code> Timed sequence with variable timing per value. Durations can be expressions. Default time unit: beats.</p>
 <p><code>[0:3]t1</code> Timed sequence, expanded. The example is equivalent to <code>[0,1,2,3]t1</code></p>
 <p><code>[1,2]l3</code> Timed linear interpolated sequence, each value takes 3 beats to change into the next. Default time unit: beats.</p>
+<p><code>[]l</code> Equivalent to [0,1]l.</p>
 <p><code>[1:12,2:4]l</code> Timed linear interpolated sequence with variable timing per value. Durations can be expressions. Default time unit: beats.</p>
 <p><code>[1,2]s3</code> Timed smooth interpolated sequence, each value takes 3 beats to change into the next, using an 's' shaped ease in/out curve. Duration must be a const number, cannot be an expression. Default time unit: beats.</p>
+<p><code>[]s</code> Equivalent to [0,1]s.</p>
 <p><code>[1:12,2:4]s</code> Timed smooth interpolated sequence with variable timing per value. Durations can be expressions. Default time unit: beats.</p>
 <p><code>[1,2]e</code> Timed interpolated sequence, each value is evenly spaced from beginning to end of the current event</p>
 <p><code>[1,2]e1</code> Timed interpolated sequence starting at the beginning of the event, each value takes 1 beat to change to the next. Duration must be a const number, cannot be an expression. Default time unit: beats.</p>

@@ -5,12 +5,12 @@ GAMEPAD TESTING
  !!Need to test lsx and rsx
  !!gp.lsv is still upside down, even though lsu lsd is not!
 !!Drive with gp mix caused crackle
-[] should all default to 0,1 eg []t []l etc
 Have own libs separate from main project
  With some dmx light presets
  dmxsimwash!!
  Also move some dark synth presets there??
   If not, move them into a new lib anyway
+ Make some dmx strip presets
 Salamander Piano upgrades
  More pitches?
  Velocity

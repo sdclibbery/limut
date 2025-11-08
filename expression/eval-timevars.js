@@ -27,6 +27,7 @@ define(function(require) {
 
   let timeVar = (vs, is, ss, ds, defaultI, options) => {
     if (!Array.isArray(ds)) { ds = [ds] }
+    if (vs.length === 0) { return piecewise([0,1], [defaultI,defaultI], [ds[0],ds[1]||ds[0]], (e,b) => b, options) }
     is = is.map(i => i || defaultI)
     ss = ss.map((s,idx) => s!==undefined ? s : ds[idx % ds.length])
     return piecewise(vs, is, ss, (e,b) => b, options)

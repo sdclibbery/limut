@@ -262,7 +262,11 @@ define(function(require) {
       is = is.map(i => getOperator(i || '/')) // Default to linear interpolation
       let options = maybeClamp(modifiers, ss)
       ss = ss.map(s => s!==undefined ? s : 1) // Default to size 1
-      result = addModifiers(piecewise(vs, is, ss, modifiers.value, options), modifiers)
+      if (vs.length === 0) {
+        result = addModifiers(piecewise([0,1], [getOperator('/'),getOperator('/')], [1,1], modifiers.value, options), modifiers)
+      } else {
+        result = addModifiers(piecewise(vs, is, ss, modifiers.value, options), modifiers)
+      }
       setInterval(result, interval || parseInterval(state) || hoistInterval('event', vs, modifiers))
     }
     return result
