@@ -52,18 +52,17 @@ define(function (require) {
       }
       let cumulativeChannel = 0
       for (let key in value) {
-        let channel
         if (key.startsWith('value')) { // Treat as an array; assign channels on a cumulative basis
           convertValues(value[key]).forEach((v, valueIdx) => { // If evalled was a colour or something, write all values
             blendChannel(cumulativeChannel + baseChannel, v, blend) // Base channel is 1-based, so channel becomes an absolute 1-based dmx channel number after this
             cumulativeChannel += 1
           })
         } else {
-          channel = parseInt(key) // Specific numeric keys
-          if (!isNaN(channel)) { continue }
-          channel += baseChannel // Base channel is 1-based, so channel becomes an absolute 1-based dmx channel number after this
+          let channel = parseInt(key) // Specific numeric keys
+          if (isNaN(channel)) { continue }
           convertValues(value[key]).forEach((v, valueIdx) => { // If evalled was a colour or something, write all values
-            blendChannel(channel + valueIdx, v, blend)
+            blendChannel(channel + valueIdx + baseChannel, v, blend) // Base channel is 1-based, so channel becomes an absolute 1-based dmx channel number after this
+            cumulativeChannel = channel + valueIdx
           })
         }
       }
