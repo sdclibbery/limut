@@ -56,6 +56,11 @@ define(function(require) {
         let originalB = evalRecurse((e,originalB) => originalB, event,b)
         let es = player.currentEvent(originalB)
         if (mr === 'playing') { return es.length>0 ? 1 : 0 }
+        if (mr === 'pulsevel') {
+          let pulse = Math.max(...es.map(e => evalRecurse(e.pulse, event,b)), 0) || 0
+          let vel = Math.max(...es.map(e => evalRecurse(e.vel, event,b)), 0) ||0
+          return pulse * vel
+        }
         let v = es.map(e => e[mr])
         if (v.length === 0) { v = 0 }
         if (v.length === 1) { v = v[0] }
