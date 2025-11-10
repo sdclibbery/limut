@@ -22,13 +22,12 @@ define(function(require) {
     let keydownListener = ({key, repeat}) => {
       if (repeat) { return }
       let buttonIdx = parseInt(key) || 0
-      let value = 1
       if (player._shouldUnlisten) { return } // Dont play any new events if player is being cleaned up!
       let event = {
         _keyboardNote: buttonIdx,
         value: buttonIdx,
         dur: 1,
-        vel: value,
+        vel: 3/4,
         _time: metronome.timeNow(),
         count: metronome.lastBeat().count,
         idx: metronome.lastBeat().count,

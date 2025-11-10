@@ -89,6 +89,7 @@ define(function(require) {
         _gamepadNote: buttonIdx,
         value: buttonIdx,
         dur: 1,
+        vel: 3/4,
         _time: metronome.timeNow(),
         count: metronome.lastBeat().count,
         idx: metronome.lastBeat().count,
