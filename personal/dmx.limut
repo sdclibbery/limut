@@ -1,0 +1,21 @@
+//
+// UKing dmx wash light
+//
+
+preset dmxsimwash gradient, loc={w:3/2,h:3/2}, blend='additive', channel=1, vignette={2,cutoff:1/4},
+  dimmer=dmx{this.channel+0}, strobe=[0:_3/4,1:_1/4]{time * dmx{this.channel+4}*8},
+  fore={ r:dmx{this.channel+1}*this.dimmer+this.strobe, g:dmx{this.channel+2}*this.dimmer+this.strobe, b:dmx{this.channel+3}*this.dimmer+this.strobe}, back=this.fore
+
+preset dmxwash dmx, lights={0:this.dimmer, 1:this.fore, 4:this.strobe, 5:0, 6:0},
+	dimmer=1, fore=rainbow, strobe=0
+
+
+//
+// My DMX ESP32 LED strip light
+//
+preset dmxstrip dmx, channel=1, lights={
+    0:this.mode/255, 1:this.palette/255,
+    2:this.control, 3:this.smoothing,
+    4:this.back, 7:this.fore
+  }, mode=61, palette=1, control=[]l2@f, smoothing=1/4, back=rainbow/2, fore=white
+
