@@ -659,8 +659,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>idx</code> READ ONLY param. The pattern index of this event. The pattern index counts through the pattern, then resets when the pattern repeats.</p>
 <p><code>exists</code> READ ONLY param. One if the player is defined, even if its not currently playing any event.</p>
 <p><code>playing</code> READ ONLY param. One if the player exists and is currently playing one or more events.</p>
-<p><code>pulse</code> READ ONLY param. A value that rises and falls as a note plays on the player. If multiple notes are playing, the value will be a chord.</p>
-<p><code>pulsevel</code> READ ONLY param. The event pulse multiplied by the event vel (velocity) for all currently playing events on the player. Note this is the max value across all events playing for the player, so this is never a chord.</p>
+<p><code>pulse</code> READ ONLY param. A value that rises and falls as a note plays on the player. If multiple notes are playing, the value will be a chord. The value is pre-multiplied by the note velocity (the <code>vel</code> param).</p>
 <p><code>player</code> READ ONLY param. The name of the player currently playing. For a follow player, will be the name of the follow player (not the player it's following).</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-audio-params')" class="accordion"> Audio Params</h4>

@@ -110,13 +110,14 @@ define((require) => {
           e._player = player
           playerFactory.play(e)
           e.countToTime = (count) => e.beat.time + (count-e.beat.count)*e.beat.duration
-          e.pulse = (ev,b) => {
+          e.pulse = (ev,b, evalRecurse) => {
             let t = e.countToTime(b)
             if (t<e._time || t>e.endTime) { return 0 }
             let l = e.endTime - e._time
             let x = (t - e._time) / l
-            let v = x < 1/5 ? x*5 : 1-(x*6/5-1/5)
-            return Math.pow(v, 1/2)
+            let pulse = Math.pow(x < 1/5 ? x*5 : 1-(x*6/5-1/5), 1/2)
+            let vel = evalRecurse(ev.vel, ev,b) || 0
+            return pulse*vel
           }
           player.events.push(e)
         })
@@ -297,13 +298,13 @@ define((require) => {
   assert([0,3/8,3/4,7/8], es.map(e => e.count))
   assert([3/8,3/8,1/8,1/8], es.map(e => e.dur))
 
-  p = player('p', 'test', 'x(op)', 'dur=1/2')
+  p = player('p', 'test', 'x(op)', 'dur=1/2, vel=1')
   p.play(p.getEventsForBeat({time:0, count:0, duration:1}))
   assert('x', p.currentEvent(0)[0].value)
   assert('o', p.currentEvent(1/2)[0].value)
   assert('p', p.currentEvent(1/2)[1].value)
-  assert(0, p.currentEvent(0)[0].pulse(0,0))
-  assert(0.775, p.currentEvent(0)[0].pulse(0,1/4))
+  assert(0, p.currentEvent(0)[0].pulse(p.currentEvent(0)[0],0,(v)=>v))
+  assert(0.775, p.currentEvent(0)[0].pulse(p.currentEvent(0)[0],1/4,(v)=>v))
 
   p = player('p', 'test', '0', 'amp=2')
   p.play(p.getEventsForBeat({time:0, count:0, duration:1}))

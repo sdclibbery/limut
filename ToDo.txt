@@ -1,7 +1,7 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!lead pulse and vel not working well? Flashy, not stable?
+!lead pulse and vel not working well? Flashy, not stable? Seems OK?
 !!this.smooth fails because there is a smooth{} function
 !!Drive with gp mix caused crackle
 Have own libs separate from main project
