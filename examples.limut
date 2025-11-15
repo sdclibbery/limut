@@ -4771,3 +4771,8 @@ set !p* add+=[0:29,2:3]t
 dv dmx, channel=(1,22), lights={[0,0.2]n2,#10f}
 dl dmx, channel=(8,15), lights={[1/2:1]n, #010400*lb.pulse*lb.vel + #040*smooth{main.pulse^2} + #111*vn.vel * #400*vc.vel}
 f perc u, vel=1/2*riser^12, rate=1/3, room=1/2
+
+
+r readout, smooth=smooth{[]r}, add=this.smooth
+
+

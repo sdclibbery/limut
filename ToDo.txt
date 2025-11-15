@@ -2,12 +2,12 @@
 =================================================================================================================================
 =================================================================================================================================
 Make some dmx strip presets
-!!Drive with gp mix caused crackle
-!!this.smooth fails because there is a smooth{} function
+ ? make a standard input param that can be used to control them
+ dmxstrip should allow mode specification by name
 Salamander Piano upgrades
  More pitches?
  Velocity
- Make sure addc works
+ Make sure addc works - it currently doesn't
 ?? Should player pulse be premultiplied by vel??? - probably not??
 !dmx addL is ugly and confusing...
  consider lights={add:{}} rather than add={} ??? plus={} not add={} ???

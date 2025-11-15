@@ -19,7 +19,7 @@ define(function(require) {
     }
     l = evalRecurse(l, event,b)
     let ml = mainParam(l)
-    if (typeof r === 'function') {
+    if (typeof r === 'function' && typeof ml !== 'string') { // If LHS is a string, its either a player or 'this' or 'global', so aggregators (or any kind of calling a function on it) dont make sense
       r.args = l
       let v = evalFunctionWithModifiers(r,event,b, evalRecurse)
       if (typeof v === 'object' && v._finalResult) { return v.value } // This is the final result (eg aggregator), no further lookup needed
@@ -38,25 +38,30 @@ define(function(require) {
       }
     }
     if (typeof ml === 'string') {
+      let key = mr
+      if (typeof originalR._name == 'string') { key = originalR._name } // Use the string name not the parse-var evalled value for preference for global lookups (so you can use global.foo not global.'foo')
       if (ml.toLowerCase() === 'global') { // lookup on global vars
-        let key = mr
-        if (typeof originalR._name == 'string') { key = originalR._name } // Use the string name not the parse-var evalled value for preference for global lookups (so you can use global.foo not global.'foo')
         return vars.get(key)
       }
       if (ml.toLowerCase() === 'this') { // lookup on this event
-        let v = event[mr]
+        if (key === 'time') { // Special case for per event time
+          let eventTime = (me,mb) => mb - me.count
+          eventTime.modifiers = originalR.modifiers // Carry over any time modifiers
+          return evalFunctionWithModifiers(eventTime, event,b, evalRecurse) // Time relative to the start of this event
+        }
+        let v = event[key]
         v = evalRecurse(v, event,b) // Eval so that time modifiers get applied
         let lookupOpResult = (e,b,er) => v // Wrap into a function so we can set _thisVar to prevent doubling up of chords
         lookupOpResult._thisVar = true
         return lookupOpResult
       }
       let player = players.getById(ml)
-      if (mr === 'exists') { return !!player ? 1 : 0 }
+      if (key === 'exists') { return !!player ? 1 : 0 }
       if (player) { // lookup a param on another player's events
         let originalB = evalRecurse((e,originalB) => originalB, event,b)
         let es = player.currentEvent(originalB)
-        if (mr === 'playing') { return es.length>0 ? 1 : 0 }
-        let v = es.map(e => evalRecurse(e[mr], e,b)) // Eval so that time modifiers get applied
+        if (key === 'playing') { return es.length>0 ? 1 : 0 }
+        let v = es.map(e => evalRecurse(e[key], e,b)) // Eval so that time modifiers get applied
         if (v.length === 0) { return 0 }
         if (v.length === 1) { return v[0] }
         return v
