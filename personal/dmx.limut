@@ -20,9 +20,9 @@ preset dmxstrip dmx, channel=1, lights={
   }, mode=61, palette=1, control=[]l2@f, smooth=1/4, back=rainbow/2, fore=white
 
 preset dmatrix dmxstrip, mode=81, control=[]r@f, smooth=[1,0:0]l3@f, fore=green, back=black, palette=0
-preset dcyber dmxstrip, mode=53, control=[]r@f, smooth=1/2, palette=13
-preset dheat dmxstrip, mode=12, palette=11, control=[0,1:0]l8@f, smooth=0
+preset dcyber dmxstrip, mode=53, control=[]r@f, smooth=1/2, palette=243
+preset dheat dmxstrip, mode=12, palette=241, control=[0,1:0]l8@f, smooth=0
 preset dsweep dmxstrip, mode=61, control=[]l2@f, smooth=1/2
-preset doil dmxstrip, mode=13, control=[]l8@f, smooth=1, palette=12
+preset doil dmxstrip, mode=13, control=[]l8@f, smooth=1, palette=242
 preset dflame dmxstrip, mode=20, control=0, smooth=([]n2/3+[]n1.1)/2, fore=[#fc0,#f10]n, back=#400
 preset dpulse dmxstrip, mode=12, control=[0:4,1:0]l@f, smooth=1/4

@@ -3,7 +3,7 @@
 =================================================================================================================================
 Make some dmx strip presets
  ? make a standard input param that can be used to control them
- dmxstrip should allow mode specification by name
+ dmxstrip should allow mode specification by name, and palette
 Salamander Piano upgrades
  More pitches?
  Velocity
