@@ -2,24 +2,13 @@
 =================================================================================================================================
 =================================================================================================================================
 Make some dmx strip presets
- dmxstrip should allow mode specification by name, and palette
-Salamander Piano upgrades
- More pitches?
- Velocity
- Make sure addc works - it currently doesn't
-?? Should player pulse be premultiplied by vel??? - probably not??
+ dmxstrip should allow mode specification by name, also palette
+!! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
+  a audiosynth, fx=osc.sin{this.f}*0.01, f=[100:300]l@f
 !dmx addL is ugly and confusing...
  consider lights={add:{}} rather than add={} ??? plus={} not add={} ???
 Gamepad: when notes are missing (stick clicks, lt: rt: etc) then don't leave gaps in value played
  Full remapping to handle this? What about gp.notes then?
-Work out how to do lighting effects:
- mood background with spatial and temporal variation
- flash on player event, single or multiple in groups
- chase on player event, single or multiple in groups
- ? <player>.trigger, chase{}, count{}
- ? d dmx, fixture={0:'dimmer',1:'red',2:'green',3:'blue'}, fore=purple, amp=[1,0]e
-!! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
-  a audiosynth, fx=osc.sin{this.f}*0.01, f=[100:300]l@f
 !get a click if start a new keyboard etc player note before last one has finished attack/decay?
 electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
@@ -27,6 +16,10 @@ electron performance
   BrowserWindow.setFullScreen(true) for fullscreen
 
 ==== audio ====
+Salamander Piano upgrades
+ More pitches?
+ Velocity
+ Make sure addc works - it currently doesn't
 ? echo{} delay time default to 3/4?
 !!! echo param has unnecessary limit on min delay due to the fx chain quantisation!
 ?human param for perc preset, applies some slight vel, rate, delay variations
@@ -108,14 +101,9 @@ More node topology functions
  series{} should also be able to take a callback function to create each chain
  multiband{} - takes a set of cutoff freqs, separates the signal into those bands, and applies a chain for each band based on a callback function
  serallel{} - takes a set of chains (or a number and a callback function to create the chains), and runs then all in series, but collects all the outputs together as well for the final output - ??Do we need this for anything?
-velocity
-  all players default to vel=1 even without midi
-  ALL presets to use this.vel; check setting param `vel=midi{'vel'}` works as expected
-   And give them cutoff etc too where possible
-  this.vel should update with aftertouch, at the moment you only get the vel at the time of note-on (see percussion pads)
-  midi{'vel'} should include aftertouch?
-  DOCS
 midi controller support
+ this.vel should update with aftertouch for midi, at the moment you only get the vel at the time of note-on (see percussion pads)
+ midi{'vel'} should include aftertouch?
  ?What happens if: midi{[1,2]t4} ??
   Is it worth worrying about? Error at least? Or just support it?
   ?Same for gamepads!
@@ -123,7 +111,6 @@ more midi value conversion mapping
   rel mode for midi player and midi{'notes'}; convert to nearest diatonic note with no sharp/flat; do not force chromatic scale
   root? Does not account for scale root, so can always play in c?
   custom perc mappings? syntax?
-piano with velocity
 eq{}: takes variable number of params and defines crossovers as needed
   Eg eq{0db, 10db, 0db} would be a three band
   How to arrange filters for this? clean crossover, minimum phase distortion
@@ -324,8 +311,8 @@ webcam: can choose device if do getUserMedia then enumerateDevices then getUserM
 !Buffer freezes on code update
 Nodes for visuals
  Visual synth with a play param that takes a node graph, from xy to rgba
- Visua node values are 4 component vectors
- Define some visual nodes: sin, cos, noise, random, brightness, contrast
+ Visual node values are 4 component vectors
+ Define some visual nodes: sin, cos etc - basically whatever is a builtin glsl function
  Operators work on visual nodes
  Define visual node libs for all existing synths and params
 ?Chromatic aberration hack  col.rgb += dFdx(col.rgb)*vec3(3,0,-3);
