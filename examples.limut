@@ -4776,3 +4776,8 @@ f perc u, vel=1/2*riser^12, rate=1/3, room=1/2
 r readout, smooth=smooth{[]r}, add=this.smooth
 
 
+// r readout, add=dmxstrip_palettes.(this.palette) ?: -1, palette=neon
+// r readout, add=dmxstrip_palettes.(this.palette) ?: -1, palette='NEON'
+// r readout, add=dmxstrip_palettes.(this.palette) ?: this.palette, palette=176//'neon'
+
+

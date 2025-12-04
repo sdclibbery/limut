@@ -13,8 +13,35 @@ preset dmxwash dmx, lights={0:this.dimmer, 1:this.fore, 4:this.strobe, 5:0, 6:0}
 //
 // My DMX ESP32 LED strip light
 //
+set dmxstrip_palettes = {
+  'bf':0, 'obf':1, 'bfo':2, 'bof':3, 'ofb':4, 'bfbf':5, 'bfbfbf':6, 'obfbf':7, 'obfbfbf':8,
+  'hsvbf':10, 'hsvobf':11, 'hsvbfo':12, 'hsvbof':13, 'hsvofb':14, 'hsvbfbf':15, 'hsvbfbfbf':16, 'hsvobfbf':17, 'hsvobfbfbf':18,
+  'nonlinearbf':20, 'nonlinearobf':21, 'nonlinearbfo':22, 'nonlinearbof':23, 'nonlinearofb':24, 'nonlinearbfbf':25, 'nonlinearbfbfbf':26, 'nonlinearobfbf':27, 'nonlinearobfbfbf':28,
+  'scaledsumbf':30, 'scaledsumobf':31, 'scaledsumbfo':32, 'scaledsumbof':33, 'scaledsumofb':34, 'scaledsumbfbf':35, 'scaledsumbfbfbf':36, 'scaledsumobfbf':37, 'scaledsumobfbfbf':38,
+  'subbf':40, 'subobf':41, 'subbfo':42, 'subbof':43, 'subofb':44, 'subbfbf':45, 'subbfbfbf':46, 'subobfbf':47, 'subobfbfbf':48,
+  'stepbf':50, 'stepobf':51, 'stepbfo':52, 'stepbof':53, 'stepofb':54, 'stepbfbf':55, 'stepbfbfbf':56, 'stepobfbf':57, 'stepobfbfbf':58,
+  'ditherbf':100, 'ditherobf':101, 'ditherbfo':102, 'ditherbof':103, 'ditherofb':104, 'ditherbfbf':105, 'ditherbfbfbf':106, 'ditherobfbf':107, 'ditherobfbfbf':108,
+  'fizzlebf':110, 'fizzleobf':111, 'fizzlebfo':112, 'fizzlebof':113, 'fizzleofb':114, 'fizzlebfbf':115, 'fizzlebfbfbf':116, 'fizzleobfbf':117, 'fizzleobfbfbf':118,
+  'wizzlebf':120, 'wizzleobf':121, 'wizzlebfo':122, 'wizzlebof':123, 'wizzleofb':124, 'wizzlebfbf':125, 'wizzlebfbfbf':126, 'wizzleobfbf':127, 'wizzleobfbfbf':128,
+  'rainbow':240, 'blackbody':241, 'oil':242, 'neon':243, 'fire':244, heat:'245',
+}
+set dmxstrip_modes = {
+  'fade':0, 'fizzle':1, 'scroll':2, 'blur':3,
+  'solid':10, 'gradient':11, 'droplet':12, 'xor':13,
+  'noise':20, 'perlin':20, 'sine':21, 'sin':21, 'saw':22, 'sawtooth':22, 'tri':23, 'triangle':23,
+  'startgradient':50, 'endgradient':51, 'midgradient':52, 'endsgradient':53,
+  'startfade':60, 'endfade':61, 'midfade':62, 'endsfade':63,
+  'startfizzle':70, 'endfizzle':71, 'midfizzle':72, 'endsfizzle':73,
+  'startblur':80, 'endblur':81, 'midblur':82, 'endsblur':83,
+  'startwave':90, 'endwave':91, 'midwave':92, 'endswave':93,
+  'startticker':100, 'endticker':101, 'midticker':102, 'endsticker':103,
+  'starttickerfade':110, 'endtickerfade':111, 'midtickerfade':112, 'endstickerfade':113,
+  'plot':150, 'plotfade':151, 'plotscrollfade':152, 'plotscroll':152, 'plotfizzle':153,
+  'line':160, 'linefade':161, 'linescrollfade':162, 'linescroll':162, 'linefizzle':163,
+}
 preset dmxstrip dmx, channel=1, lights={
-    0:this.mode/255, 1:this.palette/255,
+    0:(dmxstrip_modes.(this.mode) ?: this.mode)/255,
+    1:(dmxstrip_palettes.(this.palette) ?: this.palette)/255,
     2:this.control, 3:this.smooth,
     4:this.back, 7:this.fore
   }, mode=161, palette=1, control=[]l2@f, smooth=1/4, back=rainbow/2, fore=white, input=[1:1,0:0]l@f

@@ -2,7 +2,9 @@
 =================================================================================================================================
 =================================================================================================================================
 Make some dmx strip presets
- dmxstrip should allow mode specification by name, also palette
+ dmxstrip should allow mode/palette specification by name if use a string, otherwise just use number value
+  Use mode/palette names in presets...
+   !TEST!
 !! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
   a audiosynth, fx=osc.sin{this.f}*0.01, f=[100:300]l@f
 !dmx addL is ugly and confusing...

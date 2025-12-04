@@ -70,9 +70,8 @@ define(function(require) {
       }
     }
     if (typeof l === 'object' && !(l instanceof AudioNode)) {
-      let result = l[mr] // Map lookup
-      if (result === undefined && typeof mr === 'number') { return l } // If field lookup failed, return the entire map. This is useful when a chord of objects optimises down to a single object but you still want to have an indexer on it.
-      return result
+      if (typeof mr === 'string') { mr = mr.toLowerCase() } // Case insensitive map lookup
+      return l[mr] // Map lookup
     }
     return l // fallback: just return the LHS value
   }
@@ -100,8 +99,9 @@ define(function(require) {
     assert(1, lookupOp({v:1}, 'v', {},0,er))
     assert({b:1}, lookupOp({a:{b:1}}, 'a', {},0,er))
     assert(1, lookupOp(lookupOp({a:{b:1}}, 'a', {},0,er), 'b', {},0,er))
-    assert({foo:1}, lookupOp({foo:1}, 0, {},0,er))
     assert(undefined, lookupOp({foo:1}, 'bar', {},0,er))
+    assert(undefined, lookupOp({foo:1}, 170, {},0,er))
+    assert(1, lookupOp({foo:1}, 'Foo', {},0,er))
 
     players.instances.p1 = { currentEvent:(b)=>{ return []} }
     assert(0, lookupOp('p1', 'foo', {},0,er))
