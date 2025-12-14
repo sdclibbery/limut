@@ -1,6 +1,8 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
+Right stick click to lock in place
+Allow fx=+6db etc, same for mix{2} etc
 Make some dmx strip presets
  dmxstrip should allow mode/palette specification by name if use a string, otherwise just use number value
   Use mode/palette names in presets...

@@ -44,12 +44,12 @@ preset dmxstrip dmx, channel=1, lights={
     1:(dmxstrip_palettes.(this.palette) ?: this.palette)/255,
     2:this.control, 3:this.smooth,
     4:this.back, 7:this.fore
-  }, mode=161, palette=1, control=[]l2@f, smooth=1/4, back=rainbow/2, fore=white, input=[1:1,0:0]l@f
+  }, mode='linefade', palette='OBF', control=[]l2@f, smooth=1/4, back=rainbow/2, fore=white, input=[1:1,0:0]l@f
 
-preset dmatrix dmxstrip, mode=111, control=[]r@f*this.input, smooth=[1,0:0]l3@f, fore=green, back=black, palette=0
-preset dcyber dmxstrip, mode=153, control=[]r@f*this.input, smooth=1/2, palette=243
-preset dheat dmxstrip, mode=21, palette=241, control=[0,1:0]l8@f, smooth=*this.input/8
-preset dsweep dmxstrip, mode=161, control=[]l2@f, smooth=1/2, fore*=this.input
-preset doil dmxstrip, mode=20, control=[]l8@f, smooth=1, palette=242, fore*=this.input
-preset dflame dmxstrip, mode=50, control=0, smooth=this.input*([]n2/3+[]n1.1)/2, fore=[#fc0,#f10]n, back=#400
-preset dpulse dmxstrip, mode=21, control=[0:4,1:0]l@f, smooth=1/4*this.input
+preset dmatrix dmxstrip, mode='endtickerfade', control=[]r@f*this.input, smooth=[1,0:0]l3@f, fore=green, back=black, palette='BF'
+preset dcyber dmxstrip, mode='plotfizzle', control=[]r@f*this.input, smooth=1/2, palette='neon'
+preset dheat dmxstrip, mode='sine', palette='blackbody', control=[0,1:0]l8@f, smooth=*this.input/8
+preset dsweep dmxstrip, mode='linefade', control=[]l2@f, smooth=1/2, fore*=this.input
+preset doil dmxstrip, mode='noise', control=[]l8@f, smooth=1, palette='oil', fore*=this.input
+preset dflame dmxstrip, mode='startgradient', control=0, smooth=this.input*([]n2/3+[]n1.1)/2, fore=[#fc0,#f10]n, back=#400
+preset dpulse dmxstrip, mode='sine', control=[0:4,1:0]l@f, smooth=1/4*this.input
