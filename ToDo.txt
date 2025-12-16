@@ -2,11 +2,15 @@
 =================================================================================================================================
 =================================================================================================================================
 Right stick click to lock in place
-Allow fx=+6db etc, same for mix{2} etc
+ Click locks that stick values in place; click again to unlock
+ After 1 second, any change out of stick centre pos also unlocks
+ Only allow locking if using standard gamepad
+ ? Lock stick directions independently; allow locking a value for u/r then allow direct control of d/l ???
 Make some dmx strip presets
  dmxstrip should allow mode/palette specification by name if use a string, otherwise just use number value
   Use mode/palette names in presets...
    !TEST!
+!! Allow fx=+6db etc, also fx>>=+6db, same for fx=mix{2} etc
 !! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
   a audiosynth, fx=osc.sin{this.f}*0.01, f=[100:300]l@f
 !dmx addL is ugly and confusing...
