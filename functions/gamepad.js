@@ -1,6 +1,7 @@
 'use strict'
 define(function(require) {
   let consoleOut = require('console')
+  let metronome = require('metronome')
   let addVar = require('predefined-vars').add
 
   let namedAxes = {
@@ -28,6 +29,27 @@ define(function(require) {
     rslr : { axis: 2, range: 'both' }, // right stick left or right
     rsrl : { axis: 2, range: 'both' }, // right stick left or right
     rsx : { axis: 2, range: 'radial' }, // right stick radial
+  }
+
+  let locks = {}
+  let axisLocking = (gamepad, padNumber, axisNumber) => {
+    let axisValue = gamepad.axes[axisNumber] || 0
+    if (gamepad.mapping !== 'standard') { return axisValue }
+    if (axisNumber < 2 || axisNumber > 3)  { return axisValue } // Only support right stick for now
+    let stickPressed = gamepad.buttons[11].value > 0.5 // Right stick button
+    if (locks[padNumber] === undefined) { locks[padNumber] = { locked: false, pressed: false } }
+    let lock = locks[padNumber]
+    if (stickPressed && !lock.pressed) {
+      lock.locked = !lock.locked
+      if (lock.locked) { lock.lockTime = metronome.timeNow() }
+    }
+    if (lock.locked && metronome.timeNow() > lock.lockTime+2) { // After 2 second, any movement unlocks
+      if (Math.abs(axisValue) > 0.01) { lock.locked = false }
+    }
+    lock.pressed = stickPressed
+    if (lock.locked) { axisValue = lock[axisNumber] || 0 } // Use stored value if locked
+    else { lock[axisNumber] = axisValue } // Store new value if not locked
+    return axisValue
   }
 
   let blankArgs = {}
@@ -66,11 +88,14 @@ define(function(require) {
       if (requireStandardMapping && gamepad.mapping !== 'standard') { consoleOut('🔴 named gamepad axes will not work correctly on non-standard mapping gamepad!') }
       if (buttonNumber !== undefined) { return gamepad.buttons[buttonNumber].value || 0 }
       let axisValue = gamepad.axes[axisNumber || 0] || 0
+      if (gamepad.mapping === 'standard' && (axisNumber === 2 || axisNumber === 3)) {
+        axisValue = axisLocking(gamepad, padNumber, axisNumber)
+      }
       if (axisRange === 'neg') { axisValue = Math.max(0, -axisValue) }
       else if (axisRange === 'pos') { axisValue = Math.max(0, axisValue) }
       else if (axisRange === 'both') { axisValue = Math.abs(axisValue) }
       else if (axisRange === 'radial') {
-        let perpAxisValue = gamepad.axes[(axisNumber || 0)+1] || 0
+        let perpAxisValue = axisLocking(gamepad, padNumber, (axisNumber || 0)+1)
         axisValue = Math.max(Math.abs(axisValue), Math.abs(perpAxisValue))
       }
       return axisValue
