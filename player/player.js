@@ -113,7 +113,9 @@ define((require) => {
           e.pulse = (ev,b, evalRecurse) => {
             let t = e.countToTime(b)
             if (t<e._time || t>e.endTime) { return 0 }
-            let l = e.endTime - e._time
+            let endTime = e.endTime
+            if (endTime > t+1) { endTime = t+1 } // Limit endTime for pulse calculation
+            let l = endTime - e._time
             let x = (t - e._time) / l
             let pulse = Math.pow(x < 1/5 ? x*5 : 1-(x*6/5-1/5), 1/2)
             let vel = evalRecurse(ev.vel, ev,b) || 0

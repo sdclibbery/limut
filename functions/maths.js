@@ -93,11 +93,12 @@ define(function(require) {
   addVarFunction('accum', statefulWrapper( (args, v, x, dt) => v + Math.max(x,0)*dt ))
   addVarFunction('smooth', statefulWrapper( (args, v, x, dt) => {
     dt = Math.min(dt, 1/30) // Limit dt to prevent excessive large changes when there's a time gap (eg a pattern rest)
+    let attDec = subParam(args, 'value1', undefined)
     if (x > v) {
-      let att = subParam(args, 'att', 8)
+      let att = subParam(args, 'att', attDec) || 8
       return Math.min(v + (x-v)*att*dt, x)
     } else {
-      let dec = subParam(args, 'dec', 4)
+      let dec = subParam(args, 'dec', attDec) || 4
       return Math.max(v + (x-v)*dec*dt, x)
     }
   }))

@@ -980,9 +980,10 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>round{1.5}</code> Returns the rounded value (returns 2 in the example)</p>
 <p class='sub'><code>round{1.7,to:1/2}</code> Precision to round to, so the example rounds 1.7 to the nearest 1/2, which is 1.5. Defaults to 1, which rounds to the nearest integer.</p>
 <p><code>accum{1}</code> Accumulates a value over time. In the example, the result will be 1 after the first beat, 2 after the second etc, 3 after the third etc. Note that negative values are ignored; the accum value will only ever rise over time.</p>
-<p><code>smooth{1}</code> Smooths a value over time. In the example, the result will rise towards 1.</p>
-<p class='sub'><code>smooth{1,att:4}</code> Smoothing attack rate; higher rate means the value will converge to the target faster when the target is above the current value. Default is 8.</p>
-<p class='sub'><code>smooth{1,dec:4}</code> Smoothing decay rate; higher rate means the value will converge to the target faster when the target is below the current value. Default is 4.</p>
+<p><code>smooth{[]r@f}</code> Smooths a value over time. In the example, the result will rise towards 1. Uses default attack and decay.</p>
+<p class='sub'><code>smooth{[]r@f,att:4}</code> Smoothing attack rate; higher rate means the value will converge to the target faster when the target is above the current value. Default is 8.</p>
+<p class='sub'><code>smooth{[]r@f,dec:4}</code> Smoothing decay rate; higher rate means the value will converge to the target faster when the target is below the current value. Default is 4.</p>
+<p class='sub'><code>smooth{[]r@f,2}</code> Smoothing with combined attack and decay rate; higher rate means the value will converge to the target faster.</p>
 <p><code>rate{[0:1]l1@f}</code> Calculate a rate of change of a value over time, in units per beat. In the example, the expression <code>[0:1]l1@f</code> rises from 0 to 1 over the course of the first beat, so the rate will be approximately 1 for the first beat. It then falls so the rate will be approximately -1. The rates will have jitter due to measurement inaccuracies, so it can be useful to <code>smooth{}</code> the result.</p>
 <p><code>first{3,1,2}</code> Returns the first argument (3 in the example)</p>
 <p><code>last{3,1,2}</code> Returns the last argument (2 in the example)</p>

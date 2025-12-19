@@ -31,14 +31,20 @@ define(function(require) {
     rsx : { axis: 2, range: 'radial' }, // right stick radial
   }
 
-  let locks = {}
+  let stickLocks = {}
   let axisLocking = (gamepad, padNumber, axisNumber) => {
     let axisValue = gamepad.axes[axisNumber] || 0
     if (gamepad.mapping !== 'standard') { return axisValue }
-    if (axisNumber < 2 || axisNumber > 3)  { return axisValue } // Only support right stick for now
-    let stickPressed = gamepad.buttons[11].value > 0.5 // Right stick button
-    if (locks[padNumber] === undefined) { locks[padNumber] = { locked: false, pressed: false } }
-    let lock = locks[padNumber]
+    if (axisNumber > 3) { return axisValue }
+    if (stickLocks[padNumber] === undefined) { // Need to create locks for pad
+      stickLocks[padNumber] = {}
+    }
+    let stick = axisNumber < 2 ? 'left' : 'right'
+    if (stickLocks[padNumber][stick] === undefined) { // Need to create locks for stick
+      stickLocks[padNumber][stick] = { locked: false, pressed: false }
+    }
+    let lock = stickLocks[padNumber][stick]
+    let stickPressed = gamepad.buttons[stick === 'left' ? 10 : 11].value > 0.5 // Stick button pressed?
     if (stickPressed && !lock.pressed) {
       lock.locked = !lock.locked
       if (lock.locked) { lock.lockTime = metronome.timeNow() }
@@ -65,7 +71,7 @@ define(function(require) {
       let str = args.value.toLowerCase().trim()
       let axis = namedAxes[str]
       if (axis && axis.axis !== undefined) { axisNumber = axis.axis } else { axisNumber = args.value }
-      if (axis && axis.button !== undefined) { axisButton = axis.button }
+      if (axis && axis.button !== undefined) { buttonNumber = axis.button }
       if (axis && axis.range !== undefined) { axisRange = axis.range }
     }
     let lastStr
@@ -88,9 +94,7 @@ define(function(require) {
       if (requireStandardMapping && gamepad.mapping !== 'standard') { consoleOut('🔴 named gamepad axes will not work correctly on non-standard mapping gamepad!') }
       if (buttonNumber !== undefined) { return gamepad.buttons[buttonNumber].value || 0 }
       let axisValue = gamepad.axes[axisNumber || 0] || 0
-      if (gamepad.mapping === 'standard' && (axisNumber === 2 || axisNumber === 3)) {
-        axisValue = axisLocking(gamepad, padNumber, axisNumber)
-      }
+      axisValue = axisLocking(gamepad, padNumber, axisNumber)
       if (axisRange === 'neg') { axisValue = Math.max(0, -axisValue) }
       else if (axisRange === 'pos') { axisValue = Math.max(0, axisValue) }
       else if (axisRange === 'both') { axisValue = Math.abs(axisValue) }
