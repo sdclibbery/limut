@@ -936,7 +936,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 </div>
 <h4 onclick="toggleAccordion('accordion-controls')" class="accordion"> User Input</h4>
 <div id="accordion-controls" class="closed">
-<p><code>gamepad{}</code> Take input from an external gamepad controller. When called with no args, it will log inputs to the console to help identify which gamepad control is on which button or axis number. Clicking the left and right sticks does not generate a note as this is hard to control while also using the sticks as analogue controllers.</p>
+<p><code>gamepad{}</code> Take input from an external gamepad controller. When called with no args, it will log inputs to the console to help identify which gamepad control is on which button or axis number. Clicking the left and right sticks locks the stick values in place, allowing the stick to be released without losing the locked position. Click again to unlock, or, after 2 seconds, any movement of the stick away from the centre will also unlock.</p>
 <p class='sub'><code>gp{}</code> <code>gp</code> is an alias for <code>gamepad</code> for easier access.</p>
 <p class='sub'><code>gamepad{1}</code> Take input from axis 1 on the gamepad. Range -1 to 1 based on axis value. Defaults to gamepad 0.</p>
 <p class='sub'><code>gamepad{2,1}</code> Take input from axis 2 on gamepad 1. Range -1 to 1 based on axis value.</p>
