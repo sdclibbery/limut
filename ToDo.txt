@@ -1,6 +1,8 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
+Preset for setting dmxstrip global values
+ ?Also, should other presets also set global values??? - They cant do this unless the presets are specifically for all THREE strips
 !! [#f00,#00f]{b.pulse.0} didn't seem to work??
 !! Look at removal of JSON.stringify and string concatenation, maybe eg when making fx keys..?
 !! Allow fx=+6db etc, also fx>>=+6db, same for fx=mix{2} etc

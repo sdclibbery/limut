@@ -20,6 +20,7 @@ set dmxstrip_palettes = {
   'scaledsumbf':30, 'scaledsumobf':31, 'scaledsumbfo':32, 'scaledsumbof':33, 'scaledsumofb':34, 'scaledsumbfbf':35, 'scaledsumbfbfbf':36, 'scaledsumobfbf':37, 'scaledsumobfbfbf':38,
   'subbf':40, 'subobf':41, 'subbfo':42, 'subbof':43, 'subofb':44, 'subbfbf':45, 'subbfbfbf':46, 'subobfbf':47, 'subobfbfbf':48,
   'stepbf':50, 'stepobf':51, 'stepbfo':52, 'stepbof':53, 'stepofb':54, 'stepbfbf':55, 'stepbfbfbf':56, 'stepobfbf':57, 'stepobfbfbf':58,
+  'channelbf':60, 'channelobf':61, 'channelbfo':62, 'channelbof':63, 'channelofb':64, 'channelbfbf':65, 'channelbfbfbf':66, 'channelobfbf':67, 'channelobfbfbf':68,
   'ditherbf':100, 'ditherobf':101, 'ditherbfo':102, 'ditherbof':103, 'ditherofb':104, 'ditherbfbf':105, 'ditherbfbfbf':106, 'ditherobfbf':107, 'ditherobfbfbf':108,
   'fizzlebf':110, 'fizzleobf':111, 'fizzlebfo':112, 'fizzlebof':113, 'fizzleofb':114, 'fizzlebfbf':115, 'fizzlebfbfbf':116, 'fizzleobfbf':117, 'fizzleobfbfbf':118,
   'wizzlebf':120, 'wizzleobf':121, 'wizzlebfo':122, 'wizzlebof':123, 'wizzleofb':124, 'wizzlebfbf':125, 'wizzlebfbfbf':126, 'wizzleobfbf':127, 'wizzleobfbfbf':128,
