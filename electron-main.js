@@ -1,6 +1,8 @@
 const {app, BrowserWindow} = require('electron')
 
 app.commandLine.appendSwitch('disable-serial-blocklist')
+app.commandLine.appendSwitch('disable-renderer-backgrounding')
+app.commandLine.appendSwitch('enable-exclusive-audio');
 
 app.on('ready', () => {
   mainWindow = new BrowserWindow({width: 1280, height: 800})

@@ -29,6 +29,7 @@ define(function (require) {
     let vca = system.audio.createGain()
     evalSubParamFrame(vca.gain, params, id, 'amp', 1)
     vco.connect(vca)
+    params._destructor.disconnect(vco, vca)
     return vca
   }
 
@@ -42,12 +43,11 @@ define(function (require) {
     let vcos = findNonChordParams(params, 'wave')
       .map(id => createWave(params, id, freq))
       .filter(o => !!o)
-    // console.log(vcos.length) // Use the length to prove that the array is coming through as a non-chord array
 
     let multiosc = system.audio.createGain()
     multiosc.gain.value = Math.pow(1/Math.max(vcos.length,1), 1/4)
     vcos.forEach(vco => vco.connect(multiosc))
     waveEffects(params, effects(params, multiosc)).connect(vca)
-    params._destructor.disconnect(vca, multiosc, vcos)
+    params._destructor.disconnect(vca, multiosc)
   }
 });

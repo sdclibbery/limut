@@ -3,37 +3,27 @@
 =================================================================================================================================
 Preset for setting dmxstrip global values
  ?Also, should other presets also set global values??? - They cant do this unless the presets are specifically for all THREE strips
+!! Allow fx=+6db etc, also fx>>=+6db, same for fx=mix{2} etc
 !! [#f00,#00f]{b.pulse.0} didn't seem to work??
 !! Look at removal of JSON.stringify and string concatenation, maybe eg when making fx keys..?
-!! Allow fx=+6db etc, also fx>>=+6db, same for fx=mix{2} etc
+ Also setTimeout, esp from fxMixChain is now the main profile issue...
 !! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
   a audiosynth, fx=osc.sin{this.f}*0.01, f=[100:300]l@f
 !dmx addL is ugly and confusing...
  consider lights={add:{}} rather than add={} ??? plus={} not add={} ???
-Gamepad: when notes are missing (stick clicks, lt: rt: etc) then don't leave gaps in value played
+!Gamepad: when notes are missing (stick clicks, lt: rt: etc) then don't leave gaps in value played
  Full remapping to handle this? What about gp.notes then?
 !get a click if start a new keyboard etc player note before last one has finished attack/decay?
+main volume slider should be killed; just do  set main amp*=slider  if you want one...
 electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
   BrowserWindow.setFullScreen(true) for fullscreen
- os-utils or node-priority to force a higher CPU priority
- Modify gc behaviour, eg app.commandLine.appendSwitch('js-flags','--max-old-space-size=4096 --harmony-sharedarraybuffer')
-  also app.commandLine.appendSwitch('disable-renderer-backgrounding') ??
- ??? Is there any benefit from not thrashing audionodes? From keeping a pool, ideally a pool of voices not just nodes??
+ ??? Is there any perf/glitch benefit from not thrashing audionodes? From keeping a pool, ideally a pool of voices not just nodes??
  ?? Move to a web worker for the player.play logic??
  ?? Move to offscreen canvas in a worker for visuals???
 
 ==== audio ====
-Salamander Piano upgrades
- More pitches?
- Velocity
- Make sure addc works - it currently doesn't
-? echo{} delay time default to 3/4?
-!!! echo param has unnecessary limit on min delay due to the fx chain quantisation!
-?human param for perc preset, applies some slight vel, rate, delay variations
-? dubdelay{control,delayTime:3/4}
- ??? trigger{control,time:1} to drive it; eg dubdelay{trigger{gp.rt}}
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   ??? the line         let tc = -(imTime - time) / Math.log((imValue - endValue) / (currentValue - endValue))
     Should take mod() into account on the values, no???
@@ -102,6 +92,16 @@ WebAudio node graphs as first class values
   Sounds dangerous; this should really work anyway, shouldn't it?
 !!303 has envelope errors when run like this with riser^4 :
  b tb303 00a, accent, resonance=1/2*(1+riser^4)
+Wavetable synthesis: Adventure Kid Waveforms
+Salamander Piano upgrades
+ More pitches?
+ Velocity
+ Make sure addc works - it currently doesn't
+? echo{} delay time default to 3/4?
+! echo param has unnecessary limit on min delay due to the fx chain quantisation!
+?human param for perc preset, applies some slight vel, rate, delay variations
+? dubdelay{control,delayTime:3/4}
+ ??? trigger{control,time:1} to drive it; eg dubdelay{trigger{gp.rt}}
 MediaStreamAudioSourceNode node source function
 Note: Can filter an audio signal down into a control signal that can be used for ducking like this:
  shaper{{x}->abs{x}}>>lpf{10} - This is an envelope follower basically
