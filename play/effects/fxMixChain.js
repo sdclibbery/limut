@@ -102,18 +102,24 @@ define(function (require) {
 
   let fxMixChain = (params, node) => {
     let chainParams = getParams(params)
-    let key = JSON.stringify(chainParams)
+    let key = ''
+    for (let k in chainParams) { key += chainParams[k] }
     let createdChain = false
     if (!chains[key]) {
       let chain = createChain(chainParams, params)
       chain.key = key
+      chain.destroyTime = 0
       chains[key] = chain
       createdChain = true
     }
     let chain = chains[key]
-    clearTimeout(chain.timeoutID)
-    let TTL = 1000*(params.endTime-params._time + chainParams.room*5 + chainParams.reverb + chainParams.echoDelay*chainParams.echoFeedback*10 + 2)
-    chain.timeoutID = setTimeout(() => destroyChain(chain), TTL)
+    let TTL = params.endTime-params._time + chainParams.room*5 + chainParams.reverb + chainParams.echoDelay*chainParams.echoFeedback*10 + 2
+    let destroyTime = system.timeNow() + TTL
+    if (destroyTime > chain.destroyTime) { // Only reset timeout when actually needed
+      clearTimeout(chain.timeoutID)
+      chain.timeoutID = setTimeout(() => destroyChain(chain), 1000*TTL)
+      chain.destroyTime = destroyTime
+    }
     node.connect(chain.in)
     chain.destructor.disconnect(node)
     connectChain(chain, params, createdChain)

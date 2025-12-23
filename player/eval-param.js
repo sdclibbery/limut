@@ -106,7 +106,9 @@ define((require) => {
     }
     let memoKey
     if (!options.doNotMemoise) {
-      memoKey = JSON.stringify(options) + beat
+      memoKey = ''
+      for (let k in options) { if (options[k]) { memoKey += k } }
+      memoKey += beat
       let callTreeString = getCallTreeString()
       if (callTreeString) { memoKey += callTreeString }
       if (typeof value === 'function' && value.__memo_event && value.__memo_event.has(event) && value.__memo_event.get(event).hasOwnProperty(memoKey)) {

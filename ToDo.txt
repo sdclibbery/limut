@@ -3,10 +3,8 @@
 =================================================================================================================================
 Preset for setting dmxstrip global values
  ?Also, should other presets also set global values??? - They cant do this unless the presets are specifically for all THREE strips
-!! Allow fx=+6db etc, also fx>>=+6db, same for fx=mix{2} etc
+!! Allow fx=tg etc, also fx>>=tg, same for fx=mix{tg} etc
 !! [#f00,#00f]{b.pulse.0} didn't seem to work??
-!! Look at removal of JSON.stringify and string concatenation, maybe eg when making fx keys..?
- Also setTimeout, esp from fxMixChain is now the main profile issue...
 !! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
   a audiosynth, fx=osc.sin{this.f}*0.01, f=[100:300]l@f
 !dmx addL is ugly and confusing...
@@ -19,9 +17,10 @@ electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
   BrowserWindow.setFullScreen(true) for fullscreen
- ??? Is there any perf/glitch benefit from not thrashing audionodes? From keeping a pool, ideally a pool of voices not just nodes??
- ?? Move to a web worker for the player.play logic??
- ?? Move to offscreen canvas in a worker for visuals???
+ ?? Perf/glitch issue from thrashing audionodes? Try keeping a pool of nodes, and/or a pool of voices??
+  Need to experiment and see if it makes any difference
+  Audionode creation is definitely high on the per-beat profile now...
+ !! We also seem to be leaking 1 js event listener per beat???
 
 ==== audio ====
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
