@@ -3,7 +3,6 @@
 =================================================================================================================================
 Preset for setting dmxstrip global values
  ?Also, should other presets also set global values??? - They cant do this unless the presets are specifically for all THREE strips
-!! Allow fx=tg etc, also fx>>=tg, same for fx=mix{tg} etc
 !! [#f00,#00f]{b.pulse.0} didn't seem to work??
 !! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
   a audiosynth, fx=osc.sin{this.f}*0.01, f=[100:300]l@f

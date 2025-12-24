@@ -70,6 +70,7 @@ define(function(require) {
   }
   operators['|'].raw = true
   operators['>>'].raw = true
+  operators['>>'].doNotEvalArgs = true
   operators['.'].raw = true
   operators['.'].doNotEvalArgs = true
   operators['?:'].raw = true

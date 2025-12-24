@@ -4780,4 +4780,15 @@ r readout, smooth=smooth{[]r}, add=this.smooth
 // r readout, add=dmxstrip_palettes.(this.palette) ?: -1, palette='NEON'
 // r readout, add=dmxstrip_palettes.(this.palette) ?: this.palette, palette=176//'neon'
 
+//// Testing out use of simple values (tg is just a []t@f) in various audionode contexts
+// t sine, fx=tg
+// t sine, fx>>=tg
+// t sine, fx*=tg
+// t sine, fx=gain>>tg
+// t sine, fx=tg*gain
+// t sine, fx=gain*tg
+// t sine, fx=mix{tg}
+// t sine, fx=loop{tg,delay{1/8}}
+// set t vel=1/32
+
 

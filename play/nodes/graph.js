@@ -4,11 +4,12 @@ define(function(require) {
   let system = require('play/system');
   let {evalMainParamEvent,evalMainParamFrame} = require('play/eval-audio-params')
   let {evalParamFrame,evalParamEvent} = require('player/eval-param')
-  let {connect,isConnectable} = require('play/nodes/connect')
+  let {connect,isConnectable,isConnectableOrPlaceholder} = require('play/nodes/connect')
   let connectOp = require('expression/connectOp')
   require('play/nodes/mocks')
   require('play/nodes/convolver')
   require('play/nodes/source')
+  let vars = require('vars')
 
   let audioNodeProto
   let idnode = (args,e,b) => { // identity node; passes webaudio connections through without creating an actual node
@@ -42,15 +43,17 @@ define(function(require) {
 
   let loop = (args,e,b,_,er) => {
     let mainChain = evalParamEvent(args['value'], e)
+    if (!isConnectableOrPlaceholder(mainChain)) { mainChain = vars.all().gain({value:args['value']}, e,b) }
     let unevalledFeedback = args['feedback'] || args['value1']
     let feedbackChain = evalParamEvent(unevalledFeedback, e)
+    if (!isConnectableOrPlaceholder(feedbackChain)) { feedbackChain = vars.all().gain({value:unevalledFeedback}, e,b) }
     if (mainChain === undefined) {
       mainChain = idnode(args,e,b)
       if (feedbackChain === undefined) { return mainChain }
     }
     let mixdownGain = system.audio.createGain()
     e._destructor.disconnect(mixdownGain)
-    mainChain = connectOp(mainChain, mixdownGain, e,b,er) // Attach a placeholder gain node to force a mixdown of arrays and prevent idnode loops
+    mainChain = connectOp(mainChain, mixdownGain, e,b,er, true) // Attach a placeholder gain node to force a mixdown of arrays and prevent idnode loops
     if (feedbackChain === undefined) {
       connect(mainChain, mainChain, e._destructor)
     } else {
@@ -71,7 +74,7 @@ define(function(require) {
     for (let i = 0; i<count; i++) {
       let chain = evalParamFrame(args['value'], e,b, {doNotMemoise:true}) // Must get new nodes for every repeat
       if (node === undefined) { node = chain }
-      else { node = connectOp(node, chain, e,b,er) }
+      else { node = connectOp(node, chain, e,b,er, true) }
     }
     return node
   }
@@ -81,6 +84,7 @@ define(function(require) {
     let params = combineParams(args, e)
     let wetChain = evalParamEvent(params.value, e)
     if (wetChain === undefined) { return idnode(params,e,b) }
+    if (!isConnectableOrPlaceholder(wetChain)) { wetChain = vars.all().gain({value:params.value}, e,b) }
     let mixParam = params.mix !== undefined ? 'mix' : 'value1'
     let mixValue = evalParamFrame(params[mixParam], e,e.count, {withInterval:true})
     let interval
@@ -101,7 +105,7 @@ define(function(require) {
     evalMainParamFrame(wetGain.gain, params, mixParam, 1/2, undefined, mix => Math.sin(mix * Math.PI/2))
     return { // Add
       value: dryGain, // Dry part
-      value1: connectOp(wetChain, wetGain, e,b,er) // Wet part
+      value1: connectOp(wetChain, wetGain, e,b,er, true) // Wet part
     }
   }
   addNodeFunction('mix', mix)

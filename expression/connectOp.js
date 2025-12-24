@@ -12,20 +12,26 @@ define(function(require) {
     return audioNodeProto
   }
 
-  let connectOp = (l,r, e,b,evalRecurse) => {
+  let connectOp = (l,r, e,b,evalRecurse, willConnectToL) => {
     if (l === undefined) { return r }
     if (r === undefined) { return l }
-    if (typeof l === 'object' && l.value) { l = evalParamFrame(l,e,b,evalRecurse) } // Fully eval args
-    if (typeof r === 'object' && r.value) { r = evalParamFrame(r,e,b,evalRecurse) }
+    let composite = Object.create(getAudioNodeProto()) // Create object that satisfies instanceof AudioNode
+    composite.destructor = destructor()
     let el = evalRecurse(l, e,b)
     if (!isConnectableOrPlaceholder(el)) {
-      l = vars.all().const({value:l}, e,b) // Allow connecting from a value by wrapping into const
+      if (willConnectToL) {
+        el = vars.all().gain({value:l}, e,b) // Allow connecting to/from l value by wrapping into gain
+      } else {
+        el = vars.all().const({value:l}, e,b) // Allow connecting from l value by wrapping into const
+      }
     }
-    let composite = Object.create(getAudioNodeProto()) // Create object that satisfies instanceof AudioNode
-    composite.l = l
-    composite.r = r
-    composite.destructor = destructor()
-    connect(l, r, composite.destructor)
+    let er = evalRecurse(r, e,b)
+    if (!isConnectableOrPlaceholder(er)) {
+      er = vars.all().gain({value:r}, e,b) // Allow connecting to r value by wrapping into gain
+    }
+    composite.l = el
+    composite.r = er
+    connect(composite.l, composite.r, composite.destructor)
     composite.connect = (destination) => {
       return connect(composite.r, destination, composite.destructor)
     }
