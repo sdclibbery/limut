@@ -33,7 +33,7 @@ define((require) => {
   let warm = {r:1.0,g:0.8,b:0.6,a:1}
   let nullPlayer = { play: () => {}, stopped: true }
   let playerTypes = {
-    test: { play: (e) => { e.endTime = e._time + e.dur; return {} }, baseParams:{ amp:1 } },
+    test: { play: (e) => { e.endTime = e._time + e.dur; return {} }, baseParams:{ amp:1, vel:3/4 } },
     // stop
     none: nullPlayer,
     stop: nullPlayer,

@@ -662,6 +662,14 @@ define((require) => {
   assert(2, evalParamFrame(p.currentEvent(0)[0].smooth, p.currentEvent(0)[0], 0))
   assert(1, evalParamFrame(p.currentEvent(0)[0].add, p.currentEvent(0)[0], 0))
 
+  p1 = player('p1', 'test', '', '')
+  players.instances.p1 = p1
+  p2 = player('p2', 'test', '0', 'foo=[0,1]{p1.pulse.0}')
+  p1.play(p1.getEventsForBeat({count:0,duration:1,time:0}),{count:0})
+  assert(0, evalParamFrame(p2.getEventsForBeat({count:0})[0].foo,ev(0,0),0))
+  assert(0.581, evalParamFrame(p2.getEventsForBeat({count:0})[0].foo,ev(0,0),1/2))
+  delete players.instances.p1
+
   console.log('Player tests complete')
   }
   

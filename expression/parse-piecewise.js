@@ -267,7 +267,7 @@ define(function(require) {
       } else {
         result = addModifiers(piecewise(vs, is, ss, modifiers.value, options), modifiers)
       }
-      setInterval(result, interval || parseInterval(state) || hoistInterval('event', vs, modifiers))
+      setInterval(result, interval || parseInterval(state) || hoistInterval(vs, modifiers))
     }
     return result
   }

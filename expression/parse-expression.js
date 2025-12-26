@@ -697,7 +697,7 @@ define(function(require) {
   assert('event', parseExpression("[0,1]r@e").interval)
   assert('event', parseExpression("[0:1]r@e").interval)
 
-  assert('event', parseExpression("[0,1]").interval)
+  assert(undefined, parseExpression("[0,1]").interval)
   assert('event', parseExpression("[0,1]t4").interval)
   assert('frame', parseExpression("[0,1]t4@f").interval)
   assert('frame', parseExpression("[0,1]t1/4@f").interval)
@@ -970,7 +970,7 @@ define(function(require) {
   assert('frame', parseExpression("[0,[0,24]s]e").interval)
   assert('event', parseExpression("[0,[0,24]e]s@e").interval)
   assert('event', parseExpression("[0,[0,24]s]e@e").interval)
-  assert('frame', parseExpression("[0,[0,24]e]").interval)
+  assert(undefined, parseExpression("[0,[0,24]e]").interval)
   assert('frame', parseExpression("[0,[0,24]]e").interval)
   assert('event', parseExpression("[0,[0,24]e]@e").interval)
   assert('frame', parseExpression("[0,[0,24]e]@f").interval)
