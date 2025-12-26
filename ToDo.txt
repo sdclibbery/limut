@@ -6,12 +6,6 @@ Preset for setting dmxstrip global values
 !! [#f00,#00f]{b.pulse.0} didn't seem to work??
 !! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
   a audiosynth, fx=osc.sin{this.f}*0.01, f=[100:300]l@f
-!dmx addL is ugly and confusing...
- consider lights={add:{}} rather than add={} ??? plus={} not add={} ???
-!Gamepad: when notes are missing (stick clicks, lt: rt: etc) then don't leave gaps in value played
- Full remapping to handle this? What about gp.notes then?
-!get a click if start a new keyboard etc player note before last one has finished attack/decay?
-main volume slider should be killed; just do  set main amp*=slider  if you want one...
 electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
@@ -22,6 +16,10 @@ electron performance
  !! We also seem to be leaking 1 js event listener per beat???
 
 ==== audio ====
+?main volume slider should be killed; just do  set main amp*=slider  if you want one...
+!get a click if start a new keyboard etc player note before last one has finished attack/decay?
+!Gamepad: when notes are missing (stick clicks, lt: rt: etc) then don't leave gaps in value played
+ Full remapping to handle this? What about gp.notes then?
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   ??? the line         let tc = -(imTime - time) / Math.log((imValue - endValue) / (currentValue - endValue))
     Should take mod() into account on the values, no???
@@ -312,6 +310,8 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 =================================================================================================================================
 =================================================================================================================================
 ==== visual ====
+!dmx addL is ugly and confusing...
+ consider lights={add:{}} rather than add={} ??? plus={} not add={} ???
 webcam: can choose device if do getUserMedia then enumerateDevices then getUserMedia AGAIN asking for the specific label
  ??Don't update textures when not being displayed
  Check performance in various scenarios: cpu load; try with different resolutions

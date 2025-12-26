@@ -12,18 +12,14 @@ define(function(require) {
     return audioNodeProto
   }
 
-  let connectOp = (l,r, e,b,evalRecurse, willConnectToL) => {
+  let connectOp = (l,r, e,b,evalRecurse) => {
     if (l === undefined) { return r }
     if (r === undefined) { return l }
     let composite = Object.create(getAudioNodeProto()) // Create object that satisfies instanceof AudioNode
     composite.destructor = destructor()
     let el = evalRecurse(l, e,b)
     if (!isConnectableOrPlaceholder(el)) {
-      if (willConnectToL) {
-        el = vars.all().gain({value:l}, e,b) // Allow connecting to/from l value by wrapping into gain
-      } else {
-        el = vars.all().const({value:l}, e,b) // Allow connecting from l value by wrapping into const
-      }
+      el = vars.all().gain({value:l}, e,b) // Allow connecting to/from l value by wrapping into gain
     }
     let er = evalRecurse(r, e,b)
     if (!isConnectableOrPlaceholder(er)) {

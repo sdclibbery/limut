@@ -53,7 +53,7 @@ define(function(require) {
     }
     let mixdownGain = system.audio.createGain()
     e._destructor.disconnect(mixdownGain)
-    mainChain = connectOp(mainChain, mixdownGain, e,b,er, true) // Attach a placeholder gain node to force a mixdown of arrays and prevent idnode loops
+    mainChain = connectOp(mainChain, mixdownGain, e,b,er) // Attach a placeholder gain node to force a mixdown of arrays and prevent idnode loops
     if (feedbackChain === undefined) {
       connect(mainChain, mainChain, e._destructor)
     } else {
@@ -74,7 +74,7 @@ define(function(require) {
     for (let i = 0; i<count; i++) {
       let chain = evalParamFrame(args['value'], e,b, {doNotMemoise:true}) // Must get new nodes for every repeat
       if (node === undefined) { node = chain }
-      else { node = connectOp(node, chain, e,b,er, true) }
+      else { node = connectOp(node, chain, e,b,er) }
     }
     return node
   }
@@ -105,7 +105,7 @@ define(function(require) {
     evalMainParamFrame(wetGain.gain, params, mixParam, 1/2, undefined, mix => Math.sin(mix * Math.PI/2))
     return { // Add
       value: dryGain, // Dry part
-      value1: connectOp(wetChain, wetGain, e,b,er, true) // Wet part
+      value1: connectOp(wetChain, wetGain, e,b,er) // Wet part
     }
   }
   addNodeFunction('mix', mix)

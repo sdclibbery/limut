@@ -4788,7 +4788,13 @@ r readout, smooth=smooth{[]r}, add=this.smooth
 // t sine, fx=tg*gain
 // t sine, fx=gain*tg
 // t sine, fx=mix{tg}
+// t sine, fx=mix{tg*gain}
+// t sine, fx=tg*mix{gain}
+// t sine, fx=mix{gain}*tg
+// t sine, fx=mix{gain}>>tg
+// t sine, fx=mix{gain>>tg}
+// t sine, fx=mix{tg>>gain}
+// t sine, fx=tg>>mix{gain}
 // t sine, fx=loop{tg,delay{1/8}}
-// set t vel=1/32
 
 
