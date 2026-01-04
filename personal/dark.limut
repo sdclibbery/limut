@@ -43,3 +43,9 @@ preset croak saw,
   lpf={500+(1/2+this.cutoff*this.vel)*1500*[1:12,0:0]l@f^3/2,poles:4,q:12},
   room, hpf=400,
   cutoff=1/2
+
+preset wind noise, room, oct=4, amp*=2*[5:^2:,3]e, envelope='full', att=1, rel=2, dur=2,
+  bpf={pitch{this.value+this.add,oct:this.oct},q:[50:^2,12]e}
+
+preset chant sample, dur=[40ms:80ms]r, start=2.5+[0:0.05]r, sus=100ms, envelope='pad', chorus, amp/=2, fx=airverb,
+  sample={'https://upload.wikimedia.org/wikipedia/commons/a/a7/Wa_nosse_h%C3%A2ye_mame.ogg', pitch:267.35}

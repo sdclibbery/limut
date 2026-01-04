@@ -4798,3 +4798,38 @@ r readout, smooth=smooth{[]r}, add=this.smooth
 // t sine, fx=loop{tg,delay{1/8}}
 
 
+// F1uid
+include 'personal/everything.limut'
+dg dmx, channel=63, lights={0:8/64}
+// dw dmxwash, channel=(1,8,15,22), fore=#246*smooth{main.pulse,1}
+ds dmxstrip, channel=(33,43,53), mode='saw', control=smooth{accum{main.pulse*4}}%1, smooth=this.voice/4, fore={h:[[1/2:1]l4@f],s:3/4}, back=this.fore+{v:1/4}, palette='obf'
+w webcam, device=['5mp':24,'web':8]t
+set ds fore=#080*l.pulse.0 + #f00*vb.pulse.0 + #00f*smooth{main.pulse.0,16}, back=this.fore/5+#111
+set main fx=stanh
+set bpm=127
+set scale='phrygian'
+set p* delay|=[():14,[1,3]r/4:2]t
+set !p* add+=[0:16,1:8,4:8]t
+// pk perc x.-., fx=stanh{2}, low=+2db
+// ps perc xvm crop 16, vel=1/8, swing=56, pan=[-1,1]n
+// ph perc -n= crop 8, vel=1/10, fx=stanh, swing=54, pan=[-1,1]/4
+// pb perc ....u.y., vel=1/10, fx=stanh{2}, room=1/4
+// b darkbass -7vvv0vvv00, dur=1/4, vel=gp.lsx*-4db, cutoff=gp.lsu, decay=gp.lsr, drive={1/4,mix:smooth{gp.lsd,1}}, swing=53
+vb blare ..07, dur=1/2, vel=gp.rsr, cutoff=gp.rsx, fx=mix{airverb}, delay=(0,{[3,5]r/4,add:8})
+vp darkpad (049), vel=gp.rsu, cutoff=gp.rsx, fx=mix{airverb}
+vw wave (049), fx=mix{airverb}>>mix{tg,gp.rsu}*-9db, pan=[-1,1]r/2, wave='ooh', envelope='pad', glide=1/4, room, oct=3, vel=gp.rsl, add+=[0,2]t4
+vb blips, vel=gp.rsd, fx=pingpong*[]n>>mix{airverb}, oct+=[0,-1,-2]r
+l sine gamepad lt:vel, drive={1,mix:[]n2@f}, fx=mix{airverb}*tg>>delay{[9ms:11ms]n1/2+[7ms:13ms]n1}, oct=2, echo=60ms, room, reverb, addc=(0,wow)
+//// l softkeys gamepad lt:vel, fx=mix{airverb}>>mix{tg,gp.lt}*+3db
+// set scale='locrian'
+// set (pk,ph,pb) vel=0
+// set ps drive={1/4,mix:riser^4}
+// set b vel*=[]n2, dur=1/2
+// set !p* add=-1
+a ambi (049), drive={1/2,mix:riser^4}, fx=airverb, oct-=1
+// dw dmxwash, channel=(1,8,15,22), fore=#84f*(smooth{main.pulse,2} + 1/10)
+// set ds smooth=riser^3
+// f perc u, vel=riser^16, room
+// set w device=['5mp':8,'web':8]t
+
+
