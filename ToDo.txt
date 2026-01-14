@@ -2,12 +2,15 @@
 =================================================================================================================================
 =================================================================================================================================
 ?? Should dmxstrip presets be for all 3 strips, plus the globals??
-! Way to print out list of presets to console
- You can type into the console, so maybe that could take a `list` command?
- ? Group presets by lowest level player type? Or better by audio/visual/dmx? Or by the lib they are in? Or by all this in a hierarchy?
- ? And/or filter, eg `list personal/dark`??
+Way to print out list of presets to console
+ Append the lib filepath to the type (lowercase)
+  Filter by string contains not full match on type
+ Docs
 buttons player
 !! set bpm*=2 doesn't work
+? Reedy/flutey lead preset; tri with drive? fm?
+? Sting based lead preset
+? Epiano preset
 ?? Webcam exposure npx uvcc --vendor 13028 ranges ; getUserMedia {exposureMode:'manual',exposureCompensation:-3}
 ? lead preset based on sting?
 ? Granular base preset using audiosynth, allowing playing of notes

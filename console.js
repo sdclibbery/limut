@@ -1,6 +1,5 @@
 'use strict';
 define(function (require) {
-
   let cons = document.getElementById('console')
   cons.value = ''
   let lastStr
@@ -11,7 +10,17 @@ define(function (require) {
     cons.value += '\n'+str
     cons.scrollTop = cons.scrollHeight
   }
-  consoleOut('\n Welcome to Limut')
+  consoleOut('\n Welcome to Limut\n')
 
-  return consoleOut
+  let commands = {}
+  cons.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      let line = event.target.value.split('\n').pop().trim().toLowerCase()
+      let args = line.split(' ')
+      if (commands[args[0]]) { commands[args[0]](args.slice(1)) }
+    }
+  })
+  consoleOut.addCommand = (name, func) => { commands[name] = func }
+
+return consoleOut
 })

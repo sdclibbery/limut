@@ -120,6 +120,7 @@ define((require) => {
       playerTypes[presetName] = {
         play: playerTypes[baseType].play,
         create: playerTypes[baseType].create,
+        type: playerTypes[baseType].type
       }
       let baseBaseParams = playerTypes[baseType].baseParams || {}
       playerTypes[presetName].baseParams = applyOverrides(baseBaseParams, parseParams(params))
