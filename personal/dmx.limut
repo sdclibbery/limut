@@ -47,7 +47,8 @@ preset dmxstrip dmx, channel=33, lights={
     4:this.back*this.dimmer, 7:this.fore*this.dimmer
   }, mode='linefade', palette='OBF', control=[]l2@f, smooth=1/4, back=rainbow/2, fore=white, input=[1:1,0:0]l@f, dimmer=1
 
-preset dmatrix dmxstrip, mode='endtickerfade', control=[]r@f^2*(1/3+smooth{this.input}^1/2), smooth=[1,0:0]l3@f, fore=green, back=green/4, palette='obf'
+preset dmatrix dmxstrip, mode='xor', palette='obf', control=main.pulse, smooth=[1:20,0:0]l@f{time:time+this.voice}, back=#010, fore=#2f2
+preset dmatrix2 dmxstrip, mode='endtickerfade', control=[]r@f^2*(1/3+smooth{this.input}^1/2), smooth=[1,0:0]l3@f, fore=green, back=green/4, palette='obf'
 preset dcyber dmxstrip, mode='plotfizzle', control=[]r@f, smooth=[]r@f^2*(1/3+smooth{this.input}^1/2), palette='neon'
 preset dneon dmxstrip, mode='sine', palette='neon', control=[0,1:0]l8@f{time:time-this.voice/4}, smooth=smooth{this.input,2}
 preset dheat dmxstrip, mode='sine', palette='blackbody', control=[0,1:0]l8@f

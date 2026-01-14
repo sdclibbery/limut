@@ -1,18 +1,27 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-Preset for setting dmxstrip global values
- ?Also, should other presets also set global values??? - They cant do this unless the presets are specifically for all THREE strips
+?? Should dmxstrip presets be for all 3 strips, plus the globals??
+! Way to print out list of presets to console
+ You can type into the console, so maybe that could take a `list` command?
+ ? Group presets by lowest level player type? Or better by audio/visual/dmx? Or by the lib they are in? Or by all this in a hierarchy?
+ ? And/or filter, eg `list personal/dark`??
+buttons player
+!! set bpm*=2 doesn't work
+?? Webcam exposure npx uvcc --vendor 13028 ranges ; getUserMedia {exposureMode:'manual',exposureCompensation:-3}
+? lead preset based on sting?
+? Granular base preset using audiosynth, allowing playing of notes
+ ? Maybe practice by making a playable blips preset??
 !! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
   a audiosynth, fx=osc.sin{this.f}*0.01, f=[100:300]l@f
 electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
   BrowserWindow.setFullScreen(true) for fullscreen
- ?? Perf/glitch issue from thrashing audionodes? Try keeping a pool of nodes, and/or a pool of voices??
+ Perf/glitch issue from thrashing audionodes? Try keeping a pool of nodes, and/or a pool of voices??
   Need to experiment and see if it makes any difference
   Audionode creation is definitely high on the per-beat profile now...
- !! We also seem to be leaking 1 js event listener per beat???
+ !We also seem to be leaking 1 js event listener per beat???
 
 ==== audio ====
 !get a click if start a new keyboard etc player note before last one has finished attack/decay?
