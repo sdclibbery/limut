@@ -17,7 +17,10 @@ define(function (require) {
     if (event.key === 'Enter' && !event.shiftKey) {
       let line = event.target.value.split('\n').pop().trim().toLowerCase()
       let args = line.split(' ')
-      if (commands[args[0]]) { commands[args[0]](args.slice(1)) }
+      if (commands[args[0]]) {
+        console.log('Console Command: ' + line)
+        commands[args[0]](args.slice(1))
+      }
     }
   })
   consoleOut.addCommand = (name, func) => { commands[name] = func }

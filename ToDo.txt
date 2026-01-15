@@ -2,10 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 ?? Should dmxstrip presets be for all 3 strips, plus the globals??
-Way to print out list of presets to console
- Append the lib filepath to the type (lowercase)
-  Filter by string contains not full match on type
- Docs
 buttons player
 !! set bpm*=2 doesn't work
 ? Reedy/flutey lead preset; tri with drive? fm?

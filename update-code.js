@@ -75,7 +75,7 @@ define((require) => {
     return lines
   }
 
-  let parseCommand = async (lines, i) => {
+  let parseCommand = async (lines, i, url) => {
     let line = lines[i]
     if (line === '') { return i }
     if (line.startsWith('//') === '') { return i }
@@ -85,16 +85,16 @@ define((require) => {
       i++
     }
     line = acc.join('')
-    await parseLine(line, i, parseCode)
+    await parseLine(line, i, parseCode, undefined, url)
     return i
   }
 
-  let parseCode = async (code) => {
+  let parseCode = async (code, url) => {
     let lines
     lines = parseLinesAndComments(code)
     for (let i = 0; i<lines.length; i++) {
       try {
-        i = await parseCommand(lines, i) // Will skip lines that were accumulated
+        i = await parseCommand(lines, i, url) // Will skip lines that were accumulated
       } catch (e) {
         consoleOut('🔴 Parse error: ' + e)
         console.log(e)

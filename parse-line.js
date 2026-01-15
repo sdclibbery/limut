@@ -61,14 +61,14 @@ define((require) => {
     return [parts[0], parts.slice(1).join(ch)]
   }
 
-  let parseLine = async (line, linenum, parseCode, suppressLogs) => {
+  let parseLine = async (line, linenum, parseCode, suppressLogs, url) => {
     line = line.trim()
     if (!line) { return }
     if (startsWithInclude(line)) {
       // Include external limut source file
       let url = line.trim().slice(7).trim().replace(/^'/, '').replace(/'$/, '')
       let code = await getInclude(url, suppressLogs)
-      await parseCode(code)
+      await parseCode(code, url)
       return
     }
     if (startsWithSet(line)) {
@@ -117,10 +117,15 @@ define((require) => {
       let baseType = parts[1].toLowerCase()
       if (!baseType) { throw `Missing base type for preset ${presetName}` }
       if (playerTypes[baseType] === undefined) { throw `Invalid base type ${baseType} for preset ${presetName}` }
+      let type = playerTypes[baseType]._type
+      if (!!url && !!type) {
+        let typeUrl = url.toLowerCase().replace('.limut','')
+        if (!type.includes(typeUrl)) { type = type + (typeUrl ? ' ' + typeUrl : '') }
+      }
       playerTypes[presetName] = {
         play: playerTypes[baseType].play,
         create: playerTypes[baseType].create,
-        type: playerTypes[baseType].type
+        _type: type
       }
       let baseBaseParams = playerTypes[baseType].baseParams || {}
       playerTypes[presetName].baseParams = applyOverrides(baseBaseParams, parseParams(params))

@@ -339,6 +339,12 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
   <p><b>Visual</b> Visual lag; green when the framerate is keeping up to 60 fps; turns red when the system is struggling, which may lead to visual glitching</p>
   <p><b>Limiter</b> Audio limiter: turns red when the internal Limut limiter is active, implying the combined audio sources are too loud. Note this limiter is before the <code>main amp</code> control and vu meter, it makes sure the levels from individual synths do not go so loud as to distort. So if it is lighting up, lower the <code>amp</code> on individual synths, and if necessary, raise the <code>main amp</code> level to compensate.</p>
 </div>
+<h4 onclick="toggleAccordion('accordion-console')" class="accordion"> Console</h4>
+<div id="accordion-console" class="closed">
+  <p>The console is the text window below the main code editing area. Use the console to see information, warnings and command output. Type a command and press enter to execute it.</p>
+  <p><code>list</code> List all player base types, including presets, grouped by player base type and the include file that defined the preset</p>
+  <p><code>list audio</code> List all player base types, filtered to those where the base type contains the given string</p>
+</div>
 <h4 onclick="toggleAccordion('accordion-syntax-principles')" class="accordion"> Syntax Principles for Expressions</h4>
 <div id="accordion-syntax-principles" class="closed">
   <p><code>()</code> Round brackets define chords in both patterns and expressions; that is, mutltiple events or values at the same time. Chord indexers and aggregators can be used to extract various values from chords.</p>
