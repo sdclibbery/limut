@@ -1,18 +1,18 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
+! epiano preset is clicky
 ?? Should dmxstrip presets be for all 3 strips, plus the globals??
-buttons player
 !! set bpm*=2 doesn't work
 ? Reedy/flutey lead preset; tri with drive? fm?
 ? Sting based lead preset
-? Epiano preset
 ?? Webcam exposure npx uvcc --vendor 13028 ranges ; getUserMedia {exposureMode:'manual',exposureCompensation:-3}
 ? lead preset based on sting?
 ? Granular base preset using audiosynth, allowing playing of notes
  ? Maybe practice by making a playable blips preset??
 !! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
   a audiosynth, fx=osc.sin{this.f}*0.01, f=[100:300]l@f
+buttons player
 electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
