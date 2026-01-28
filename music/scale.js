@@ -116,6 +116,10 @@ define(function (require) {
     params.freq = freq
     return freq
   }
+  let eventPitchFunc = (args, e,b) => {
+    return scale.paramsToFreq(e, 4)
+  }
+  addVarFunction('eventpitch', eventPitchFunc)
 
   let pitchFunc = (args, e,b) => {
     args = args || {}

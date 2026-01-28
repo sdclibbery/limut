@@ -85,7 +85,10 @@ define((require) => {
     wave: { play: wave, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4 }, _type:'audio' },
     fm: { play: fm, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4 }, _type:'audio' },
     multiwave: { play: multiwave, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4 }, _type:'audio' },
-    audiosynth: { play: audiosynth, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4 }, _type:'audio' },
+    audiosynth: { play: audiosynth, baseParams:{
+      vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4,
+      freq:parseExpression('eventpitch'),
+    }, _type:'audio' },
   }
 
   let consoleOut = require('console')

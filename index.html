@@ -588,6 +588,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>dbass</code> Detuned saw bass preset - multiple sawtooth waves slightly out of tune for a fuller sound</p>
 <p><code>fmbass</code> Funky FM bass preset</p>
 <p><code>ping</code> Sine wave ping preset</p>
+<p><code>audiosynth</code> Base type with no defined audionode graph. The play param takes an audionode graph for each note. Note the player freq param is predefined for this player type as the note pitch derived from the pattern and other usual player params (add, oct, scale etc).</p>
 <p><code>swell</code> Swell pad - triangle wave</p>
 <p><code>fm</code> FM base synth; allows configuration of FM operators and envelopes. Each of up to 6 operators is specified using params <code>op1</code> to <code>op6</code>:</p>
 <p class='sub'><code>op1={ratio:5.19,target:3,wave:'saw',depth:0.8,att:0.01,rel:0.1}</code> ratio: frequency ratio for this operator relative to base event frequency. target: the number of the operator that this one should modulate (eg `1` to target `op1`); use 'out' to send this operator output to the synth output. wave: the waveform to use for this operator. Depth: the amount of modulation this operator should apply to the target (note this will be scaled by the note frequency). att/rel simple envelope attack and release for this operator - default time units: beats</p>
@@ -975,6 +976,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <div id="accordion-functions" class="closed">
 <p><code>abs{-1}</code> Returns the absolute of the given value, so flips negative numbers to positive.</p>
 <p><code>sign{-1}</code> Returns the sign of the given value, -1 for negative, 0 for zero, and 1 for positive. Can also use <code>sgn</code>.</p>
+<p><code>eventpitch{}</code> Calculate a frequency in Hz based on the event params, including sound, add, oct, sharp, and scale.</p>
 <p><code>pitch{1}</code> Calculate a frequency in Hz for a given scale degree.</p>
 <p class='sub'><code>pitch{4#}</code> Calculate a frequency in Hz for a given scale degree with sharpening (#) or flattening.</p>
 <p class='sub'><code>pitch{0,oct:3}</code> Calculate a frequency in Hz for a given scale degree on a given octave. Default octave is 4.</p>

@@ -74,9 +74,9 @@ preset crackle impulse, dur=[120ms:400ms]r, amp*=[3/16:8/16]r^2, bpf={[300:9000]
 
 preset noisefloor noise, lpf=[600:800]n8, amp*=1/8
 
-preset epiano audiosynth, pitch=pitch{this.sound,oct:this.oct},
-	envelope='full', att=0, sus={level:0.9}, rel=1,
+preset epiano audiosynth,
+	envelope='full', att=0, dec=1/2, sus={level:0.9}, rel=1,
 	play={
-  	osc.sine{this.pitch + 14.263*this.pitch*osc.sine{14.263*this.pitch}*[1:!1,0]e@s*this.vel^2},
-  	osc.sine{this.pitch + 1*this.pitch*osc.sine{1*this.pitch}*[1:!4,0]e@s},
-  }*[1:!8,0]e@s
+  	osc.sine{this.freq + 14.263*this.freq*osc.sine{14.263*this.freq}*[1:!1/2s,0]e@s*this.vel},
+  	osc.sine{this.freq + 1*this.freq*osc.sine{1*this.freq}*[1:!3s,0]e@s},
+  }*[1:!10s,0]e@s
