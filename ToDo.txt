@@ -3,10 +3,8 @@
 =================================================================================================================================
 ?? Should dmxstrip presets be for all 3 strips, plus the globals??
 !! set bpm*=2 doesn't work
-? Reedy/flutey lead preset; tri with drive? fm?
 ? Sting based lead preset
 ?? Webcam exposure npx uvcc --vendor 13028 ranges ; getUserMedia {exposureMode:'manual',exposureCompensation:-3}
-? lead preset based on sting?
 ? Granular base preset using audiosynth, allowing playing of notes
  ? Maybe practice by making a playable blips preset??
 !! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(

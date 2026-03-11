@@ -49,3 +49,11 @@ preset wind noise, room, oct=4, amp*=2*[5:^2:,3]e, envelope='full', att=1, rel=2
 
 preset chant sample, dur=[40ms:80ms]r, start=2.5+[0:0.05]r, sus=100ms, envelope='pad', chorus, amp/=2, fx=airverb,
   sample={'https://upload.wikimedia.org/wikipedia/commons/a/a7/Wa_nosse_h%C3%A2ye_mame.ogg', pitch:267.35}
+
+preset doombass audiosynth, oct=1, dur=1/4,
+	envelope='full', att=0, rel=1/2,
+	play={
+  	osc.sine{this.freq + 16*this.freq*osc.sine{16*this.freq + 4*this.freq*osc.sine{4*this.freq}*[1/2:!1s*(0.2+this.decay),0]e@s}*[1:!1s*(0.2+this.decay*2/3),0]e@s*(0.7+this.cutoff*4)},
+  	osc.sine{this.freq + 3*this.freq*osc.sine{3*this.freq}*[1:!4s*(0.2+this.decay),0]e@s*(0.7+this.cutoff*4)},
+  }*[1:!8s,0]e@s,
+  decay=this.vel, cutoff=this.vel
