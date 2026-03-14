@@ -4948,3 +4948,10 @@ p3 perc flutter crop 13 crop 32, swing=58, rate=1/8+gp.rsl/2, vel=1/2-gp.rsr/2, 
 set p* stutter=10*gp.rsr^3, sample=1, delay=[0,(0,2)]r/4)
 b reese, vel=gp.lsx, cutoff=gp.lsr, fx=mix{shaper.diode,smooth{gp.lsu}}
 l darkpad gamepad lt:vel, fx=mix{airverb}>>mix{tg,this.vel^3}*4, envelope='full', pan=[-1,1]
+
+
+set scale='phrygian'
+bd doombass 000060007008..9.
+pk perc X...
+pp perc x.n crop 16, swing=54
+
