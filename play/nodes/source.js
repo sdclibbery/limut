@@ -6,6 +6,7 @@ define(function(require) {
   let {evalParamFrame,evalParamEvent} = require('player/eval-param')
   let setWave = require('play/synth/waveforms/set-wave')
   let {getBuffer} = require('play/samples')
+  let {mainParamUnits} = require('player/sub-param')
 
   let osc = (args,e,b) => {
     let node = system.audio.createOscillator()
@@ -44,6 +45,8 @@ define(function(require) {
     let params = combineParams(args, e)
     let value = params.sample !== undefined ? params.sample : args.value
     let startTime = 0
+    let evalledValue = evalParamEvent(value, e,b)
+    if (typeof evalledValue === 'string') { value = evalledValue }
     if (typeof value === 'string' || value === undefined) {
       if (value === undefined) { value = 'sample/salamander/C4v8.mp3' }
       node.buffer = getBuffer(value)
@@ -63,6 +66,19 @@ define(function(require) {
     }
     evalMainParamFrame(node.playbackRate, params, 'rate', 1)
     node.loop = params.loop === undefined || params.loop === true ? true : false // Default to looping if not set
+    if (params.loopstart !== undefined && params.looplen !== undefined) {
+      node.loopStart = mainParamUnits(evalParamFrame(params.loopstart,params,e.count), 0, 's')
+      node.loopEnd = node.loopStart + mainParamUnits(evalParamFrame(params.looplen,params,e.count), 1, 's')
+      node.loop = true
+      system.add(params._time, (state) => {
+        let __event = params !== undefined && params.__event ? params.__event : params
+        if (__event && state.time > __event.endTime) { return false }
+        if (__event && state.time < __event._time) { return true }
+          node.loopStart = mainParamUnits(evalParamFrame(params.loopstart,params,state.count), 0, 's')
+          node.loopEnd = node.loopStart + mainParamUnits(evalParamFrame(params.looplen,params,state.count), 1, 's')
+        return true
+      })
+    }
     node.start(e._time, startTime)
     e._destructor.stop(node)
     return node

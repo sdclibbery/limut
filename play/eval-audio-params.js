@@ -2,12 +2,12 @@
 define(function (require) {
   let system = require('play/system')
   let {evalParamEvent,evalParamFrame} = require('player/eval-param')
-  let {mainParamUnits,subParamUnits,mainParam,subParam} = require('player/sub-param')
+  let {mainParamUnits,subParamUnits} = require('player/sub-param')
   let {segmentedAudioParam,isSegmented} = require('play/segmented-audioparam')
   let metronome = require('metronome')
   let {connect,isConnectable} = require('play/nodes/connect');
   let {getCallTree,setCallTree,clearCallTree} = require('player/callstack')
-  let {convertUnits,units} = require('units')
+  let {convertUnits} = require('units')
 
   let evalPerEvent = (params, p, def) => {
     let v = params[p]

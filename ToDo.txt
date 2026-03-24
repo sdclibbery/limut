@@ -1,8 +1,28 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-?? Should dmxstrip presets be for all 3 strips, plus the globals??
+!! When use sample in fx not play, sometimes it doesn't play. Due to not having loaded yet? Needs to retry somehow?
+!! Get 'connect is not a function' error if do play={osc,osc}
+!! fx=mix{echo{[49ms:51ms]n16}}  causes ""maxDelayTime" (0) is not in the range (0,180)"
 !! set bpm*=2 doesn't work
+!! Should be able to  set b dur=1  but can't
+Wavetable oscillator that crossfades between arbitrary sample waveforms
+ ! wtlerp must handle wt values out of range by clamping or modding
+ ? Equal power crossfade? Or lpf/hpf crossfade?
+ ? Drop the @f in wtlerp? Don't really want to force it to always be per-frame?
+ osc.wt
+  clean simple interface for taking the wavetable samples
+   ? how? pass a {} value array? Then map it somehow?
+   	waves.map{ {k,v,i} -> v*multilerp{i, waves.count, wt} }
+   Find a way to let it take a variable number of samples without having to tell it how many
+ ? Allow specifying nonuniform spacing of samples within the wt?
+ wt preset with default samples
+ DOCS: wtlerp, osc.wt, akwfsample, akwf waveform samples
+Wavetable oscillator that loads a 64 cycle wavetable as a single source and switches between cycles inside it
+ ?Is there clicking when switching cycles? What to do if so?
+ More wavetables: https://kimurataro.com/products/wt-free/
+Wavetable oscillator that crossfades between 4 arbitrary samples but in 2D (??Or 5, with one in the middle??)
+?? Should dmxstrip presets be for all 3 strips, plus the globals??
 ? Sting based lead preset
 ?? Webcam exposure npx uvcc --vendor 13028 ranges ; getUserMedia {exposureMode:'manual',exposureCompensation:-3}
 ? Granular base preset using audiosynth, allowing playing of notes

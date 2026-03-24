@@ -50,6 +50,10 @@ If you feel I've used a sample where I shouldn't have, please get in touch!
 
 Some waveform tables are taken from the Web Audio Samples repo, under the Apache license: https://github.com/GoogleChromeLabs/web-audio-samples
 
+The Adventure Kid WaveForms are included for use as wavetable samples.
+
+The WaveEdit Online wave tables are included.
+
 # Shaders
 
 Many shaders are based on ones from https://www.shadertoy.com/ , and the shadertoy synth uses the Shadertoy.com API to load shaders directly from shadertoy.

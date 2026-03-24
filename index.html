@@ -1038,8 +1038,9 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>mix8{...}</code> Provide a fixed mix of 1/8 wet.</p>
 <p><code>osc{'sawtooth', freq:440, phase:0}</code> Create an oscillator node with the given waveform and frequency. Some control of starting phase is available; this is achieved by controlling the start time of the oscillator as all webaudio oscillators start with phase 0.</p>
 <p><code>panner{0}</code> Create a stereo panner that can push a signal to the left (-1) or right (1).</p>
-<p><code>sample{sample:..., start:0s, rate:1}</code> Create a sample player node that loads a sample from a URL and plays with the given start point and rate.</p>
+<p><code>sample{sample:'...', start:0s, rate:1}</code> Create a sample player node that loads a sample from a URL and plays with the given start point and rate.</p>
 <p class='sub'><code>sample{sample:{x}->..., length:0.2s, rate:1}</code> Create a sample player that creates a sample of given length from a user defined function and plays it at the given rate.</p>
+<p class='sub'><code>sample{sample:'...', loopstart:1, looplen:2, rate:1}</code> Create a sample player that plays a section from the given sample as a loop.</p>
 <p><code>series{..., count:2}</code> Repeat the given node chain in series count times.</p>
 <p class='sub'><code>series{..., 2}</code> The count arg can be positional instead of being named.</p>
 <p><code>shaper{{x}->..., samples:2, oversample:'2x'}</code> Create a wave shaper node, using a user defined function to create the wave shape. Oversmaple can be '2x', '4x', or 'none'. Note oversample other than 'none' may result in a signal delay.</p>
