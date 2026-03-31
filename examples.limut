@@ -4987,3 +4987,25 @@ l epiano gamepad lt:vel, room, fx=tape{1/2}>>mix{airverb}*-6db*tg
 c chant (049), fx=tape{1/2}>>mix{airverb}*-3db, vel=gp.rsr, oct+=4
 
 
+/// Mechanical Decay
+include 'personal/everything.limut'
+// dg dmx, channel=63, lights={0:12/64}
+dw dmxwash, channel=(1,15), fore=#400*[1:!1/2,0:1/2]n2
+dw2 dmxwash, channel=(8,22), fore=#210*[1:!1/4,0:1/2]n1
+ds dflame, channel=(33,43,53), input=main.pulse.0, back=#f20*main.pulse, fore=#864*l.pulse.0+#400*[]n
+w webcam, device='5mp', contrast=1/2
+set scale='phrygian'
+set bpm=106
+set main fx=stanh
+set !p* add+=gp.rt*3
+// set p* delay|=[():29,[1,3]r/4:3]t, lpf=200
+// pk perc X.:., fx=stanh*-3db
+// pk2 perc x.s crop 16, fx=stanh, sample=2, swing=52, stutter=[1:6,2,4]r
+// pc perc ....D..., vel=1/2, room=1/3, rate=1/2
+b reese, dur=1, vel=gp.lsx, cutoff=gp.lsu+gp.lsx/2, drive={1/2,mix:smooth{gp.lsr,1}}, fx=mix{shifter{2},gp.lsl}>>mix{hpf{440}>>echo{80ms}>>airverb}, glide=1
+a sting 0 crop 13 + <614>-18^, oct=3, fx=mix{tape>>airverb,2/3}*2, decay=1/8, vel=gp.rsr, cutoff=gp.rsu, echo=50ms
+vp chant (049), vel=gp.rsl, drive={1/2,mix:smooth{gp.rsd,1}}, fx=airverb/8
+l piano gamepad lt:vel, echo={400ms}, fx=mix{tape>>airverb}*4, add+=this.foo, delay=(0,{3/4,foo:3})
+// l blare gamepad lt:vel, echo={400ms}, fx=mix{tape>>airverb}*+3db, oct-=1
+
+
