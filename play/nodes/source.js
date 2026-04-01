@@ -25,7 +25,7 @@ define(function(require) {
     let offset = 0
     if (typeof freq === 'number' && typeof phase === 'number') { offset = phase / freq }
     node.start(e._time + offset)
-    e._destructor.stop(node)
+    if (e && e._destructor) { e._destructor.stop(node) } else { node.stop() }
     return node
   }
   addNodeFunction('osc', osc)
@@ -35,7 +35,7 @@ define(function(require) {
     let params = combineParams(args, e)
     evalMainParamFrame(node.offset, params, 'value', 1)
     node.start(e._time)
-    e._destructor.stop(node)
+    if (e && e._destructor) { e._destructor.stop(node) } else { node.stop() }
     return node
   }
   addNodeFunction('const', constNode)
@@ -80,7 +80,7 @@ define(function(require) {
       })
     }
     node.start(e._time, startTime)
-    e._destructor.stop(node)
+    if (e && e._destructor) { e._destructor.stop(node) } else { node.stop() }
     return node
   }
   addNodeFunction('sample', sample)

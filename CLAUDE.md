@@ -114,3 +114,74 @@ Player/visual state persists across code updates — players are updated in-plac
 | `play/system.js` | Web Audio context setup |
 | `draw/system.js` | WebGL context and render loop |
 | `electron-main.js` | Electron desktop wrapper (adds serial/DMX) |
+
+## Internals: Audio Node Graph & Lifecycle
+
+### `_destructor` object
+
+Every per-event audio context has `params._destructor` set on it before audio nodes are created. It tracks nodes that need cleanup:
+
+- `destructor.stop(node)` — registers a node to be stopped when the event ends
+- `destructor.disconnect(node)` — registers a node to be disconnected
+- `destructor.destroy()` — called at event end; stops and disconnects all registered nodes
+
+**For per-event players** (e.g. `audiosynth`), `_destructor` is set inside `envelope()` in `play/envelopes.js`.
+**For persistent fx chains**, `_destructor` is set inside `createPlayerFxChain()` in `play/player-fx.js` (using the fx chain's own long-lived destructor).
+
+A missing `_destructor` (`e._destructor is undefined`) means an audio node is being created in a context where lifecycle tracking hasn't been set up — e.g. during arithmetic/connectable evaluation in an `fx=` expression, or in test code that passes a bare `{}` event.
+
+**`stop` vs `disconnect` — both matter, but differently:**
+- **Source nodes** (`OscillatorNode`, `ConstantSourceNode`, `AudioBufferSourceNode`) need **both** `stop()` and `disconnect()`. A disconnected-but-not-stopped source node becomes silent but keeps consuming audio rendering CPU and is held in destructor lists, preventing GC. It will run until the tab closes.
+- **Processing nodes** (`GainNode`, `StereoPannerNode`, filters, etc.) only need `disconnect()`. They have no running state; once disconnected from the graph they become inert.
+
+**Safe guard pattern for source nodes** — stop immediately as fallback so nodes are never leaked:
+```js
+if (e && e._destructor) { e._destructor.stop(node) } else { node.stop() }
+```
+
+**Safe guard pattern for processing nodes** (used in `expression/connectOp.js`) — disconnect is sufficient:
+```js
+if (e && e._destructor) { e._destructor.disconnect(node) }
+// No else needed: a disconnected GainNode etc. is inert with no running state to clean up
+```
+
+`node.stop()` with no argument stops at `currentTime`. If called before `start()` fires (e.g. if `start()` was scheduled in the future), the node produces no audio — safe and correct.
+
+### Expression operator precedence
+
+Defined in `expression/operators.js`. Lower number = tighter binding (evaluated first):
+
+| Precedence | Operators |
+|---|---|
+| 1 | `.` (property/subparam lookup) |
+| 2 | `\|` |
+| 3 | `^` |
+| 4 | `%`, `/`, `*` |
+| 5 | `-`, `+` |
+| 6 | `==`, `!=`, `<`, `>`, `<=`, `>=` |
+| 7 | `>>` (audio node connect) |
+| 8 | `??` |
+| 9 | `?:` |
+
+So `(1+osc.saw>>gain)*0.003` parses as `((1+(osc.saw))>>gain)*0.003` — `.` first, then `+`, then `>>`, then `*`.
+
+### AudioNode connect operator (`>>`)
+
+Defined in `expression/connectOp.js`. Has `doNotEvalArgs=true` and `raw=true` — it receives raw AST nodes and evaluates them itself via `evalRecurse`. This allows it to build the Web Audio signal chain (`.connect()`) between nodes. Already guards `_destructor` usage at line 37.
+
+### Connectable arithmetic (`connectableOps.js`)
+
+When arithmetic operators (`+`, `*`, etc.) produce or consume an AudioNode, they dispatch to connectable variants in `expression/connectableOps.js`. `connectableAdd` (and similar) wrap non-AudioNode operands in a `ConstantSource` node via `vars.all().const(...)`. This means expressions like `1+osc.saw` cause a `constNode` to be created — so `_destructor` guards are needed in node creation functions too.
+
+### Audio node creation (`play/nodes/source.js`)
+
+Contains `osc`, `constNode`, and `sample` node functions. These are callable from DSL expressions (e.g. `osc.saw`, `sample:'foo'`). All three are source nodes — they need both `stop()` and `disconnect()`. Guard pattern: `if (e && e._destructor) { e._destructor.stop(node) } else { node.stop() }`. The `else { node.stop() }` is critical: without it, nodes created in a missing-destructor context (e.g. connectable arithmetic, tests) would be disconnected eventually but never stopped, leaking audio rendering resources.
+
+### `audiosynth` player flow
+
+1. `envelope(params)` → sets `params._destructor`, creates VCA gain node
+2. `evalParamEvent(params.play, params)` → evaluates `play=` expression to get source AudioNode chain
+3. If no `play=` param: `fxMixChain(params, vca)` — fx chain connects directly to VCA
+4. If `play=` present: `waveEffects → effects → playChain → vca`, and `fxMixChain` wraps VCA with per-frame amp
+
+`fxMixChain` (`play/effects/fxMixChain.js`) manages the persistent per-player fx chain, calling `createPlayerFxChain` (`play/player-fx.js`) which evaluates the `fx=` expression with its own long-lived destructor.
