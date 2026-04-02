@@ -50,7 +50,7 @@ define(function(require) {
   addNodeFunction('shaper', shaper)
 
   let delay = (args,e,b) => {
-    let maxDelay = evalMainParamEvent(args, 'max', 1, 'b') * metronome.beatDuration()
+    let maxDelay = Math.max(0.001, evalMainParamEvent(args, 'max', 1, 'b') * metronome.beatDuration())
     let node = system.audio.createDelay(maxDelay)
     let params = combineParams(args, e)
     evalMainParamFrame(node.delayTime, params, 'value', 1/4, 'b', d => d * metronome.beatDuration())

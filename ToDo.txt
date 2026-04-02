@@ -1,8 +1,6 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!! fx=(1+osc.saw>>gain)*0.003  Type error cannot read properties of undefined reading 'stop'
-!! fx=mix{echo{[49ms:51ms]n16}}  causes ""maxDelayTime" (0) is not in the range (0,180)"
 !! set bpm*=2 doesn't work
 !! Should be able to  set b dur=1  but can't
 !! When use sample in fx not play, sometimes it doesn't play. Due to not having loaded yet? Needs to retry somehow?
