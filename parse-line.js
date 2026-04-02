@@ -9,6 +9,7 @@ define((require) => {
   let vars = require('vars')
   let mainVars = require('main-vars')
   let {operators} = require('expression/operators')
+  let operator = require('expression/eval-operator')
   let getInclude = require('includes')
 
   let identifierWithWildcards = (state) => {
@@ -89,7 +90,7 @@ define((require) => {
           if (compoundOp) {
             let op = operators[compoundOp]
             let prev = mainVars.get(k)
-            mainVars.set(k, op(prev, newValue))
+            mainVars.set(k, operator(op, prev, newValue))
           } else {
             mainVars.set(k, newValue) // For main vars the dot is part of the var name, eg "beat.readouts"
           }
@@ -100,10 +101,10 @@ define((require) => {
             let [ns,nsk] = splitOnFirst(k, '.')
             if (nsk) {
               let namespace = vars.get(ns)
-              if (namespace !== undefined) { v = op(namespace[nsk], v) }
+              if (namespace !== undefined) { v = operator(op, namespace[nsk], v) }
               namespace[nsk] = v
             } else {
-              v = op(vars.get(k), v)
+              v = operator(op, vars.get(k), v)
               vars.set(k, v)
             }
           } else {
@@ -292,9 +293,10 @@ define((require) => {
   parseLine('set bpm=100')
   parseLine('set bpm*=2')
   assert(200, metronome.bpm())
-
   parseLine('set bpm+=50')
   assert(250, metronome.bpm())
+  parseLine('set bpm*=[2]t')
+  assert(500, metronome.bpm())
 
   parseLine('p play xo, amp=2')
   assert('function', typeof players.instances.p.getEventsForBeat)
