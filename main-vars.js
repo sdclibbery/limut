@@ -23,6 +23,13 @@ define((require) => {
     return mainVars[name] !== undefined
   }
 
+  let get = (name) => {
+    let v = mainVars[name].value
+    if (v === undefined) { return mainVars[name].default }
+    let beat = metronome.beatTime(system.timeNow())
+    return evalParamFrame(v, {idx:beat,count:beat}, beat)
+  }
+
   let set = (name, value) => {
     let beat = metronome.beatTime(system.timeNow())
     mainVars[name].value = value
@@ -41,6 +48,7 @@ define((require) => {
 
   return {
     exists: exists,
+    get: get,
     set: set,
     update: update,
     reset: reset,

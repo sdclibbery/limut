@@ -8,6 +8,7 @@ define((require) => {
   let {combineOverrides,applyOverrides,isOverride} = require('player/override-params')
   let vars = require('vars')
   let mainVars = require('main-vars')
+  let {operators} = require('expression/operators')
   let getInclude = require('includes')
 
   let identifierWithWildcards = (state) => {
@@ -76,19 +77,45 @@ define((require) => {
       // Set global vars and settings
       let [k,v] = splitOnFirst(line, '=')
       k = k.toLowerCase()
+      let compoundOp
+      let compoundMatch = k.match(/^([a-z][a-z0-9_\.]*)([+\-*\/])$/)
+      if (compoundMatch) {
+        k = compoundMatch[1]
+        compoundOp = compoundMatch[2]
+      }
       if (k.match(/^[a-z][a-z0-9_\.]*$/) && !!v) {
         if (mainVars.exists(k)) {
-          mainVars.set(k, parseExpression(v, undefined, k)) // For main vars the dot is part of the var name, eg "beat.readouts"
+          let newValue = parseExpression(v, undefined, k)
+          if (compoundOp) {
+            let op = operators[compoundOp]
+            let prev = mainVars.get(k)
+            mainVars.set(k, op(prev, newValue))
+          } else {
+            mainVars.set(k, newValue) // For main vars the dot is part of the var name, eg "beat.readouts"
+          }
         } else {
           v = parseExpression(v, undefined, k)
-          let [ns,nsk] = splitOnFirst(k, '.') // For other vars, a dot implies a namespace
-          if (nsk) {
-            if (vars.get(ns) === undefined) { vars.set(ns, {}) } // Create empty object for namespace if needed
-            let namespace = vars.get(ns)
-            if (typeof namespace !== 'object' && typeof namespace !== 'function') { throw `Invalid namespace '${ns}' type '${typeof namespace}' when trying to set namespace field '${nsk}'` }
-            namespace[nsk] = v
+          if (compoundOp) {
+            let op = operators[compoundOp]
+            let [ns,nsk] = splitOnFirst(k, '.')
+            if (nsk) {
+              let namespace = vars.get(ns)
+              if (namespace !== undefined) { v = op(namespace[nsk], v) }
+              namespace[nsk] = v
+            } else {
+              v = op(vars.get(k), v)
+              vars.set(k, v)
+            }
           } else {
-            vars.set(k, v)
+            let [ns,nsk] = splitOnFirst(k, '.') // For other vars, a dot implies a namespace
+            if (nsk) {
+              if (vars.get(ns) === undefined) { vars.set(ns, {}) } // Create empty object for namespace if needed
+              let namespace = vars.get(ns)
+              if (typeof namespace !== 'object' && typeof namespace !== 'function') { throw `Invalid namespace '${ns}' type '${typeof namespace}' when trying to set namespace field '${nsk}'` }
+              namespace[nsk] = v
+            } else {
+              vars.set(k, v)
+            }
           }
         }
         return
@@ -179,6 +206,7 @@ define((require) => {
     finally { if (!got) console.trace(`Assertion failed.\n>>Expected throw: ${expected}\n>>Actual: none` ) }
   }
   let vars = require('vars').all()
+  let metronome = require('metronome')
   let {evalParamFrame} = require('player/eval-param')
   let ev = (i,c,d) => {return{idx:i, count:c, dur:d, _time:c, endTime:c+d, countToTime:x=>x}}
   let v
@@ -240,6 +268,33 @@ define((require) => {
   parseLine(' \tset foo = 1 + 2 ')
   assert(3, vars.foo)
   delete vars.foo
+
+  parseLine('set foo=10')
+  parseLine('set foo*=2')
+  assert(20, vars.foo)
+  delete vars.foo
+
+  parseLine('set foo=10')
+  parseLine('set foo+=5')
+  assert(15, vars.foo)
+  delete vars.foo
+
+  parseLine('set foo=10')
+  parseLine('set foo-=3')
+  assert(7, vars.foo)
+  delete vars.foo
+
+  parseLine('set foo=10')
+  parseLine('set foo/=2')
+  assert(5, vars.foo)
+  delete vars.foo
+
+  parseLine('set bpm=100')
+  parseLine('set bpm*=2')
+  assert(200, metronome.bpm())
+
+  parseLine('set bpm+=50')
+  assert(250, metronome.bpm())
 
   parseLine('p play xo, amp=2')
   assert('function', typeof players.instances.p.getEventsForBeat)
