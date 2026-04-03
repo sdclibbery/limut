@@ -165,6 +165,7 @@ define(function(require) {
     combineOverride: combineOverride,
     combineOverrides: combineOverrides,
     collapseOverrides: collapseOverrides,
+    applyOverride: applyOverride,
     applyOverrides: applyOverrides,
     applyOverridesInPlace: applyOverridesInPlace,
     isOverride: isOverride,

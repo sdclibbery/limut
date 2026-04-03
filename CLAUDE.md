@@ -210,3 +210,18 @@ Two evaluation modes, each with main/sub variants:
 - **Per-frame** (`evalMainParamFrame`, `evalSubParamFrame`): sets up ongoing `setTargetAtTime` updates on an AudioParam, enabling time-varying parameters.
 
 `evalPerEvent` returns the default only when the value is falsy AND not a number. **Zero is not treated as missing** — `typeof 0 !== 'number'` is false, so `0` passes through as a valid value rather than falling back to the default. This is correct for most params but means node creation code must handle 0 explicitly where the Web Audio API forbids it.
+
+### `set` overrides and pattern timing (`player/standard.js`, `player/player.js`)
+
+Player overrides (`set p1 amp=2`) are stored in `players.overrides` by `parse-line.js` and applied to events in `player.processEvents()` via `applyOverrides()`. This happens **after** the pattern has already generated events with their timing.
+
+The `dur` param is special — it controls both **pattern timing** (when events are scheduled, how many fit per beat) and **envelope sustain** (how long a note sounds). Pattern timing reads `dur` from `result.params.dur` in `pattern/pattern.js:32`. For standard players, `player/standard.js` merges the `dur` override into the pattern params so it affects timing. To prevent double-application (which would corrupt compound overrides like `dur+=1`), `processEvents` in `player.js` skips the `dur` override for standard players (`player._standardPlayer = true`).
+
+**Event generation pipeline for standard players:**
+1. `standard.js` merges `dur` from `players.overrides` into pattern params
+2. `pattern/pattern.js` generates events with correct timing and `event.dur` from timing math
+3. Pattern copies non-dur params from `result.params` to events (line 44-46 skips `dur`, `_time`, `value`)
+4. `player.getEventsForBeat()` adds `beat` info and computes `_time` from beat clock
+5. `player.processEvents()` applies remaining overrides (excluding `dur` for standard players), expands chords, applies delay/stutter/swing
+
+**Why `dur` needs special handling:** Other overridden params (like `amp`) are simply set on the event in step 5. But `dur` must be known at step 2 to generate correctly-timed events. If only applied at step 5, the pattern timing uses the old `dur` while the envelope uses the new one — notes sound shorter/longer but still fire at the old rate.

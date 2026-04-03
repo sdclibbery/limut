@@ -304,6 +304,27 @@ define((require) => {
   assert(2, players.instances.p.getEventsForBeat({count:0})[0].amp)
   delete players.instances.p
 
+  // set dur override should affect pattern timing
+  let beat = (count) => ({count:count, time:count, duration:1})
+  parseLine('p test 01')
+  parseLine('set p dur=2')
+  assert(1, players.instances.p.getEventsForBeat(beat(0)).length) // One event per beat when dur=2
+  assert(2, players.instances.p.getEventsForBeat(beat(0))[0].dur) // dur on event should be 2
+  assert(0, players.instances.p.getEventsForBeat(beat(1)).length) // No event on beat 1 (next event at beat 2)
+  assert(1, players.instances.p.getEventsForBeat(beat(2)).length) // Next event at beat 2
+  delete players.instances.p
+  delete players.overrides.p
+
+  // set dur override with compound operator
+  parseLine('p test 01, dur=1')
+  parseLine('set p dur+=1')
+  assert(1, players.instances.p.getEventsForBeat(beat(0)).length) // dur=1+1=2, one event per beat
+  assert(2, players.instances.p.getEventsForBeat(beat(0))[0].dur)
+  assert(0, players.instances.p.getEventsForBeat(beat(1)).length)
+  assert(1, players.instances.p.getEventsForBeat(beat(2)).length)
+  delete players.instances.p
+  delete players.overrides.p
+
   parseLine('set p amp=2')
   assert(2, players.overrides.p.amp)
   delete players.overrides.p

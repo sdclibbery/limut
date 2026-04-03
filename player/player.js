@@ -155,6 +155,7 @@ define((require) => {
       player.getEventsForBeatBase = () => []
     } else {
       player.getEventsForBeatBase = standardPlayer(patternStr, paramsStr, player, playerFactory.baseParams)
+      player._standardPlayer = true
     }
     player.linenum = linenum
     player.getEventsForBeatRaw = (beat) => {
@@ -169,6 +170,10 @@ define((require) => {
     player.processEvents = (events) => {
       events.forEach(e => e.linenum = player.linenum)
       let overrides = players.overrides[player.id] || {}
+      if (player._standardPlayer && overrides.dur !== undefined) {
+        overrides = Object.assign({}, overrides)
+        delete overrides.dur // dur override already applied to pattern timing in standard player
+      }
       events = events.map(e => applyOverrides(e, overrides))
       events = expandChords(events)
       events.forEach(e => applyDelay(e, e.beat))
