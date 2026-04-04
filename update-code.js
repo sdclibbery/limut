@@ -197,6 +197,7 @@ define((require) => {
     assertVars('set fooj= \n 1', {fooj:1})
     assertVars('set fook= //Cmnt \n 1', {fook:1})
     assertVars('set fool= //Cmnt\n 1', {fool:1})
+    assertVars("set foom= //Cm'nt\n 1", {foom:1})
 
     assertOverrides("set pv //s='abc'", 'pv', {})
     assertOverrides("set pw s//='abc'", 'pw', {s:1})
