@@ -46,7 +46,7 @@ define((require) => {
         state.idx += 1
         state.lastLineStart = state.idx
         if (char === '') { break }
-      } else if (char === '\'') { // String - skip over
+      } else if (char === '\'' && !state.inLineComment && !state.inComment) { // String - skip over
         state.idx += 1
         parseString(state)
       } else if (char === '/' && state.str.charAt(state.idx+1) === '/' && !state.inLineComment && !state.inComment) { // // Comment start
