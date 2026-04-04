@@ -5009,3 +5009,16 @@ l piano gamepad lt:vel, echo={400ms}, fx=mix{tape>>airverb}*4, add+=this.foo, de
 // l blare gamepad lt:vel, echo={400ms}, fx=mix{tape>>airverb}*+3db, oct-=1
 
 
+// Claude's fugue
+set bpm=96
+set scale=minor
+// Three-voice Fugue in Minor
+// Subject: rising scalar motif with falling resolution
+// Soprano — subject, countersubject, episode, return
+s epiano `0.243.10` + `76546532` + `4.576.45` + `76898756` + `0.243.10`, dur=1/2, oct=5, room=0.5, amp=3/4
+// Alto — rest, tonal answer (+4), countersubject, episode, answer
+a epiano `........` + `4.687.54` + `32101213` + `3.454.32` + `4.687.54`, dur=1/2, oct=4, room=0.5, amp=3/4
+// Bass — rest, rest, subject, free counterpoint, subject return
+b epiano `........` + `........` + `0.243.10` + `0.120.17` + `0.240.10`, dur=1/2, oct=3, room=0.5, amp=3/4
+
+
