@@ -442,7 +442,6 @@ Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7
  But not sure of syntax
   The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
 Syntax to allow use of clamp and normalise for []{}?
-Main bpm param time units
 stutter subparam, to set time between stutter events
 ?Is it possible for addc=[0,[-12,-24]t1/8@f]r@e to still allow the per frame motion, while the r@e selects it per event?
  []r used to select per event by fixing the seed per event rather than by stepping time, so it used to work

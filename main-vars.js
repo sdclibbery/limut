@@ -4,9 +4,17 @@ define((require) => {
   let {evalParamFrame} = require('player/eval-param')
   let system = require('play/system')
   let scale = require('music/scale')
+  let {units} = require('units')
+
+  let toBpm = (v) => {
+    if (typeof v === 'object' && v._units !== undefined) {
+      return units(v, 'hz') * 60
+    }
+    return v
+  }
 
   let mainVars = {
-    bpm: { setter: (v) => metronome.bpm(v), default:110 },
+    bpm: { setter: (v) => metronome.bpm(toBpm(v)), default:110 },
     scale: { setter: (v) => { if (typeof v === 'string') { scale.set(v.toLowerCase()) } }, default:'major' },
     root: { setter: (v) => { scale.setRoot(v) }, default:0 },
     'beat.readouts': { setter: (v) => metronome.setBeatReadouts(v), default:[16,32] },
