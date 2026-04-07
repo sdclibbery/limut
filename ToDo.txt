@@ -20,7 +20,6 @@ Wavetable oscillator that loads a 64 cycle wavetable as a single source and swit
 Wavetable oscillator that crossfades between 4 arbitrary samples but in 2D (??Or 5, with one in the middle??)
 ?? Should dmxstrip presets be for all 3 strips, plus the globals??
 ? Sting based lead preset
-?? Webcam exposure npx uvcc --vendor 13028 ranges ; getUserMedia {exposureMode:'manual',exposureCompensation:-3}
 ? Granular base preset using audiosynth, allowing playing of notes
  ? Maybe practice by making a playable blips preset??
 !! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
@@ -429,7 +428,6 @@ User defined functions:
 Give each event a unique ID
  Use it for memoisation instead of weak map
  And use it for seeding rand for per-event; then follow player can get the same randoms by using the same IDs?
-Show matching brackets in editor
 !? []es shouldn't be the syntax for segmenting. It should be []e@s ??
 !! floor doesn't work with delay:  r readout 1234, delay=floor{[0:1]l3@f,to:1/4}
 Cooler effect when update code

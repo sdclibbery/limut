@@ -16,6 +16,7 @@ define(function(require) {
     tabSize: 2,
     inputStyle: "textarea",
     smartIndent: false,
+    matchBrackets: true,
   })
   editor.setValue(localStorage.getItem('limut-code') || '')
   editor.on('change', () => localStorage.setItem('limut-code', editor.getValue()))
