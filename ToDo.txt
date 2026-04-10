@@ -1,6 +1,10 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
+Some way for claude to run the tests
+stutter subparams
+ dur sets time between stutter events
+ other subparams get applied as overrides, like with dur
 !! When use sample in fx not play, sometimes it doesn't play. Due to not having loaded yet? Needs to retry somehow?
 Wavetable oscillator that crossfades between arbitrary sample waveforms
  ! wtlerp must handle wt values out of range by clamping or modding
@@ -442,7 +446,6 @@ Really REALLY want to be able to modify from delay overrides:  p saw 0, add=[0:7
  But not sure of syntax
   The only other syntax option is to switch to (or allow) = and += for map entries; but this is visually confusing?
 Syntax to allow use of clamp and normalise for []{}?
-stutter subparam, to set time between stutter events
 ?Is it possible for addc=[0,[-12,-24]t1/8@f]r@e to still allow the per frame motion, while the r@e selects it per event?
  []r used to select per event by fixing the seed per event rather than by stepping time, so it used to work
 !([{x:[1,2]t1/4@f}]t2).x never get a 2 unless add @f to the []t2
@@ -478,7 +481,6 @@ range function eg (0,2,4,6).range{0,to:riser*3}
 !Readout doesn't work here:  p ping 0, foo=[0,1,2,3]t1, add=this.foo \ r readout 0, add=p.add
  It's specifically the this.foo that makes it fail; it's using *r*'s event for this, not p's event
 !Duration should be calculated on every step, not every beat: cf play t, dur=[1/16:1/128]l[4,0]
-!Cannot override dur using `set`, it only changes the sus
 root{chord} function that takes a chord and returns the root
 ?sound param can be overridden, so it defaults to pitch/oct/scale etc but you can override so the pattern can specify chord index etc
  ?Not necessary because [0,1,2] is effectively a pattern that can be used to select from chords?
@@ -597,10 +599,6 @@ Sliders
  Remember last value even when not shown
  Display slider value on UI, instead of logging
 Support range overrides? Eg add=[0,1]l2{per:4,0-1:0}
-WebMidi
- Outputs (to control external synths)
- Inputs (like sliders)
- Beat sync input?
 Have a [0,1][2,3] syntax to apply values to multiple events in a row
 Tutorials
  ? Can automate the copy to clipboard paraphernalia?

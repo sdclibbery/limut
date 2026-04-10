@@ -51,6 +51,33 @@ if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
 Run by opening `http://localhost:8000?test` and checking the browser console. There is no separate test runner.
 
+### Running tests headlessly (from a shell)
+
+Headless Chrome can run the test suite and forward `console.log` to stderr:
+
+```sh
+sh server.sh > /tmp/limut-server.log 2>&1 &       # start server in background
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --headless=new --disable-gpu \
+  --enable-logging=stderr --v=1 \
+  --virtual-time-budget=30000 \
+  "http://localhost:8000/?test" 2> /tmp/limut-test.log &
+CHROME_PID=$!
+sleep 25
+kill $CHROME_PID 2>/dev/null
+grep "INFO:CONSOLE" /tmp/limut-test.log \
+  | sed -E 's|.*CONSOLE[^"]*"||; s|", source:.*||'
+```
+
+Notes:
+- `--enable-logging=stderr --v=1` is what surfaces page `console.*` lines. Without it nothing is printed.
+- `--virtual-time-budget=30000` advances Chrome's clock so async test bootstraps complete. With the default, only the first ~3 test files finish before the page is killed.
+- Chrome won't exit on its own; kill the PID after sleeping long enough for tests to run.
+- The `sed` strips Chrome's `[pid:tid:date:INFO:CONSOLE:line]` prefix and the trailing `, source: ...` so each test message is one clean line.
+- A passing test file prints `"<Name> tests complete"`. There are ~48 such files; expect ~43 to report under headless. Look for any line that isn't `tests complete` and isn't `console.js (7)` (that's the empty-line spacer) — those are failures or load errors.
+- The 5 `draw/*` modules (`shadercommon`, `shaders`, `texture`, `text`, `colour`) fail to load under plain headless because their WebGL deps aren't satisfied — their tests are skipped, not failing. To run them too, add `--use-gl=swiftshader` for software WebGL.
+- Remember to kill the background server (`kill <pid>`) when done.
+
 ## DSL Reference
 
 ### Line types
