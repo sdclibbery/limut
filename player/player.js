@@ -50,13 +50,18 @@ define((require) => {
   let expandStutter = (es) => {
     let result = []
     es.forEach(event => {
-      let sp = evalParamFrame(event.stutter, event, event.count)
+      let sp = evalParamFrame(event.stutter, event, event.count, {evalToObjectOrPrimitive:true})
       let s = Math.max(Math.floor(mainParam(sp, 1)), 1)
       if (s == 1) {
         result.push(event)
         return
       }
-      let dur = event.dur / s
+      let durOverride = undefined
+      if (typeof sp === 'object' && sp.dur !== undefined) {
+        let d = evalParamFrame(sp.dur, event, event.count)
+        durOverride = mainParamUnits(d, 'b', 0)
+      }
+      let dur = durOverride !== undefined ? durOverride : event.dur / s
       for (let i = 0; i < s; i++) {
         let e = Object.assign({}, event)
         e.dur = dur
@@ -493,6 +498,41 @@ define((require) => {
   assert([0,3/8,1/2,7/8], es.map(e => e._time))
   assert([0,3/8,1/2,7/8], es.map(e => e.count))
   assert([3/8,1/8,3/8,1/8], es.map(e => e.dur))
+
+  es = player('p', 'test', '0', 'stutter={2,dur:1/4}').getEventsForBeat({time:0, count:0, duration:1})
+  assert(2, es.length)
+  assertEvent(0,0,1/4, es[0])
+  assertEvent(1/4,1/4,1/4, es[1])
+
+  es = player('p', 'test', '0', 'dur=2, stutter={3,dur:1/2}').getEventsForBeat({time:0, count:0, duration:1})
+  assert(3, es.length)
+  assertEvent(0,0,1/2, es[0])
+  assertEvent(1/2,1/2,1/2, es[1])
+  assertEvent(1,1,1/2, es[2])
+
+  {
+    let oldBeatDuration = metronome.beatDuration()
+    metronome.beatDuration(1)
+    es = player('p', 'test', '0', 'stutter={2,dur:1/4s}').getEventsForBeat({time:0, count:0, duration:1})
+    assert(2, es.length)
+    assertEvent(0,0,1/4, es[0])
+    assertEvent(1/4,1/4,1/4, es[1])
+    metronome.beatDuration(1/2)
+    es = player('p', 'test', '0', 'stutter={2,dur:1/4s}').getEventsForBeat({time:0, count:0, duration:1})
+    assert(2, es.length)
+    assertEvent(0,0,1/2, es[0])
+    assertEvent(1/2,1/2,1/2, es[1])
+    metronome.beatDuration(oldBeatDuration)
+  }
+
+  es = player('p', 'test', '0', 'stutter={2,dur:[0,1]r}').getEventsForBeat({time:0, count:0, duration:1})
+  assert(2, es.length)
+  {
+    let d = es[0].dur
+    if (typeof d !== 'number' || d < 0 || d > 1) { console.trace('stutter dur expression did not evaluate to a number in [0,1]: '+d) }
+    assertEvent(0, 0, d, es[0])
+    assertEvent(d, d, d, es[1])
+  }
 
   p = player('p', 'test', '0', 'delay=({0,stutter:[1,2]})')
   es = p.getEventsForBeat({time:0, count:0, duration:1})
