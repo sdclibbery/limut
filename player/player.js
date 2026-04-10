@@ -64,6 +64,9 @@ define((require) => {
       let dur = durOverride !== undefined ? durOverride : event.dur / s
       for (let i = 0; i < s; i++) {
         let e = Object.assign({}, event)
+        if (i > 0 && typeof sp === 'object') {
+          applyOverridesInPlace(e, sp)
+        }
         e.dur = dur
         e.count += i*dur
         e._time += i*dur*event.beat.duration
@@ -524,6 +527,17 @@ define((require) => {
     assertEvent(1/2,1/2,1/2, es[1])
     metronome.beatDuration(oldBeatDuration)
   }
+
+  es = player('p', 'test', '0', 'stutter={2,amp:1/4}').getEventsForBeat({time:0, count:0, duration:1})
+  assert(2, es.length)
+  assertEvent(0,0,1/2, es[0])
+  assertEvent(1/2,1/2,1/2, es[1])
+  assert(1, es[0].amp) // first event keeps default amp
+  assert(1/4, es[1].amp) // only extra stutter events get the subparam
+
+  es = player('p', 'test', '0', 'stutter={1,amp:1/4}').getEventsForBeat({time:0, count:0, duration:1})
+  assert(1, es.length)
+  assert(1, es[0].amp) // stutter subparams not applied when s==1 (original event unchanged)
 
   es = player('p', 'test', '0', 'stutter={2,dur:[0,1]r}').getEventsForBeat({time:0, count:0, duration:1})
   assert(2, es.length)
