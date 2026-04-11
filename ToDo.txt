@@ -3,6 +3,7 @@
 =================================================================================================================================
 !! e epiano, delay|={1/2,add:4}  doesn't work, the add is ignored. oct also gets ignored, but not other params. Works for other presets...
 !! When use sample in fx not play, sometimes it doesn't play. Due to not having loaded yet? Needs to retry somehow?
+Should be able to crop a pattern by an expression (random/timevar)
 Wavetable oscillator that crossfades between arbitrary sample waveforms
  ! wtlerp must handle wt values out of range by clamping or modding
  ? Equal power crossfade? Or lpf/hpf crossfade?

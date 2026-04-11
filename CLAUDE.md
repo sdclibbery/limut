@@ -41,6 +41,8 @@ index.html → require.js → main.js
 
 ## Tests
 
+When adding or changing behavior, write or update tests alongside the code whenever it's reasonably testable — the inline test blocks are cheap to extend and catch regressions early.
+
 Tests are inline in source files, gated behind a URL param check:
 
 ```js
@@ -77,6 +79,10 @@ Notes:
 - A passing test file prints `"<Name> tests complete"`. There are ~48 such files; expect ~43 to report under headless. Look for any line that isn't `tests complete` and isn't `console.js (7)` (that's the empty-line spacer) — those are failures or load errors.
 - The 5 `draw/*` modules (`shadercommon`, `shaders`, `texture`, `text`, `colour`) fail to load under plain headless because their WebGL deps aren't satisfied — their tests are skipped, not failing. To run them too, add `--use-gl=swiftshader` for software WebGL.
 - Remember to kill the background server (`kill <pid>`) when done.
+
+## Documentation
+
+User-facing DSL docs live in `index.html` (the in-app reference panel). When you add, change, or remove a DSL feature — new params, subparams, player types, expression syntax, etc. — update the matching section in `index.html` so the docs stay in sync with the code.
 
 ## DSL Reference
 
