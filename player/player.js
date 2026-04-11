@@ -51,7 +51,7 @@ define((require) => {
     let result = []
     es.forEach(event => {
       let sp = evalParamFrame(event.stutter, event, event.count, {evalToObjectOrPrimitive:true})
-      let s = Math.max(Math.floor(mainParam(sp, 1)), 1)
+      let s = Math.max(Math.floor(evalParamFrame(mainParam(sp, 1), event, event.count)), 1)
       if (s == 1) {
         result.push(event)
         return
@@ -538,6 +538,11 @@ define((require) => {
   es = player('p', 'test', '0', 'stutter={1,amp:1/4}').getEventsForBeat({time:0, count:0, duration:1})
   assert(1, es.length)
   assert(1, es[0].amp) // stutter subparams not applied when s==1 (original event unchanged)
+
+  es = player('p', 'test', '0', 'stutter={[1,2]}').getEventsForBeat({time:1, count:1, duration:1})
+  assert(2, es.length) // main param as expression evaluates (range at count=1 -> 2)
+  assertEvent(1,1,1/2, es[0])
+  assertEvent(3/2,3/2,1/2, es[1])
 
   es = player('p', 'test', '0', 'stutter={2,dur:[0,1]r}').getEventsForBeat({time:0, count:0, duration:1})
   assert(2, es.length)
