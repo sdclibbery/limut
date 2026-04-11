@@ -77,8 +77,8 @@ preset noisefloor noise, lpf=[600:800]n8, amp*=1/8
 preset epiano audiosynth,
 	envelope='full', att=0, dec=1/2, sus={level:0.9}, rel=1,
 	play={
-  	osc.sine{this.freq + 14.263*this.freq*osc.sine{14.263*this.freq}*[1:!1/2s,0]e@s*this.vel},
-  	osc.sine{this.freq + 1*this.freq*osc.sine{1*this.freq}*[1:!3s,0]e@s},
+  	osc.sine{eventpitch + 14.263*eventpitch*osc.sine{14.263*eventpitch}*[1:!1/2s,0]e@s*this.vel},
+  	osc.sine{eventpitch + 1*eventpitch*osc.sine{1*eventpitch}*[1:!3s,0]e@s},
   }*[1:!10s,0]e@s
 
 preset lately fm, envelope='full', oct=2, att=0, dec=1/8, sus={level:3/4}, rel=1/4,
