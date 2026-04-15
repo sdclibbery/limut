@@ -51,7 +51,7 @@ define(function (require) {
         let imTime = (time + nextTime) / 2
         // Vt = V1 + (V0 - V1) * e ^ -((t-T0) / tc)    From Web Audio API spec for setTargetAtTime
         // tc = -(t - T0) / ln((Vt - V1) / (V0 - V1))   Rearrranged
-        let tc = -(imTime - time) / Math.log((imValue - endValue) / (currentValue - endValue))
+        let tc = -(imTime - time) / Math.log((imValue - endValue) / (currentValue - endValue)) // !! Should probably apply mod before doing this calculation...
         if (isNaN(tc)) { // If tc is NaN then fall back to exp; can happen when a segment is multiplied by another value with a discontinuity, eg riser when it rolls over back to zero...
           addSegment(audioParam, 'setValueAtTime', currentValue, mod, time) // Set value at start so linear ramp is from correct start
           addSegment(audioParam, 'exponentialRampToValueAtTime', endValue, mod, nextTime)
