@@ -1,7 +1,6 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-Should be able to crop a pattern by an expression (random/timevar)
 !! When use sample in fx not play, sometimes it doesn't play. Due to not having loaded yet? Needs to retry somehow?
 Wavetable oscillator that crossfades between arbitrary sample waveforms
  ! wtlerp must handle wt values out of range by clamping or modding
@@ -19,7 +18,6 @@ Wavetable oscillator that loads a 64 cycle wavetable as a single source and swit
  ?Is there clicking when switching cycles? What to do if so?
  More wavetables: https://kimurataro.com/products/wt-free/
 Wavetable oscillator that crossfades between 4 arbitrary samples but in 2D (??Or 5, with one in the middle??)
-?? Should dmxstrip presets be for all 3 strips, plus the globals??
 ? Sting based lead preset
 ? Granular base preset using audiosynth, allowing playing of notes
  ? Maybe practice by making a playable blips preset??

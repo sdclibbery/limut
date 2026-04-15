@@ -708,3 +708,140 @@ b saw .0, dur=1/2, oct=2, lpf={[200:1500]l8,q:12}, flanger=1/7, amp=3/2
 12. **Amp variation**: `amp=[0:1]n4` for perlin noise dynamics, `amp=[]r` for random.
 13. **Chop/gate**: `chop=2` or `chop=4` for rhythmic gating on pads.
 14. **Follow**: `dsf dsquare follow ds` - layer the same pattern with a different synth.
+
+## Production Idioms (from real pieces)
+
+### Mastering chain on `main` bus
+Almost every finished piece ends with one of these on `set main`:
+```
+set main compress={2,gain:2}, drive=1/32                     // gentle glue + warmth
+set main compress={2,gain:2}, drive=1/64, reverb={1,mix:1/4} // + tail
+set main compress={3/2,gain:3/2}, drive=1/96, amp=3/2        // heavy techno glue
+```
+`drive` 1/96 → 1/16 trades subtle warmth for audible saturation. `compress` ratio 2-3 with `gain:2-3` is the sweet spot.
+
+### Multi-bus organization (techno/house template)
+Separate buses per stem so each can be shaped independently:
+```
+set p* bus='bp'                                 // all perc → bp
+set !p* bus='blead'                              // everything else → blead
+bp bus 0, compress={2,gain:2}, drive=1/32, amp=2/3
+blead bus 0, compress={2,gain:2}, reverb={2,mix:1/3}, amp=1/2
+```
+Common bus names: `bp`/`bperc`, `bb`/`bbass`, `blead`/`bl`, `be` (external).
+
+### Sparse delay idiom (`delay|=[...]t[N,M]`)
+Adds occasional delay throws without changing every event:
+```
+set p* delay|=[(),[1,3]r/4]t[14,2]    // 14 bars dry, 2 bars random throws
+set p* delay|=[(),[1,3,5]r/4]t[13,3]
+delay=[0,(0,[1/4,3/4]r)]t[7,1]        // single-player form
+```
+`|=` (concat-assign) appends to existing delay rather than overwriting.
+
+### Pattern variation with `crop` and `+`
+```
+b reese 0_7 crop 14 + 89             // 14 beats of 0_7, then 89
+ps sd909 ..0 crop 16
+t trance 72. crop 14 + 89
+```
+
+### Sidechain-style ducking via `pulse`
+```
+amp=2/3+kd.pulse.0/3                       // pad swells with kick
+contrast=3-2*bs.pulse.max                   // visual reacts to bass
+zoom=1+smooth{main.pulse,att:1/2,dec:1/2}   // smoothed pulse for visuals
+```
+
+### Visual + buffer feedback (canonical setup)
+```
+vk kal 1, buffer='vb', blend=max, contrast=3, fore=neonpink
+vb buffer 0, feedback={fore:0.95,zoom:1.01,rotate:0.001}
+```
+Common feedback knobs: `fore:0.85-0.97` (decay), `zoom:1.001-1.05`, `rotate`, `ripple`, `scroll`, `mirror`. Reactive: `feedback={fore:0.85+0.15*pk.pulse.0,zoom:1.02}`.
+
+### Webcam + recolor
+```
+vw webcam 0, vignette=0, buffer='vb', recol=neon, blend=max
+vb buffer 0, loc=tile_tr, feedback={fore:0.9,zoom:1.02}
+```
+
+### VHS retro look
+```
+v kal 0, vhs, vignette={1/2,aspect:4/3}, contrast
+vb vhsbuffer 0, feedback={fore:0.85}
+```
+
+### Build/drop arrangement via `riser`
+`riser` is typically a slider ramp. Pieces stash a "drop" block as comments:
+```
+// set (b*,p*) hpf=10000-10000*riser^3    // sweep filters open
+// set t cutoff=riser^3                    // open lead filter
+// f sd909 2, level=riser^6                 // snare roll fades in
+```
+Define with `set riser=slider{0,name:'Riser'}`.
+
+### Euclidean rhythms
+```
+ph h909 0, o=euclid{16,from:[19,23]t4}-1     // open-hat pattern
+b tb303 0, amp=euclid{32,from:53}-7/8         // sparse 303 line
+o m1organ 0, dur=euclid{7,from:16}/4          // polymeter via dur
+```
+
+### One-shots with `now ... loop 1`
+```
+boom play now [(vx)(vX)(VXM)] loop 1, room=2, echo=0.46
+whoosh dsaw now (047) loop 1, envelope=simple, att=1/2, rel=3
+```
+`now` starts on next beat (not beat 0); `loop 1` plays once.
+
+### Layered delay copies via subparams
+Layer a delayed copy with different params on the same event:
+```
+delay=(0,{1/4,oct:3})                     // dry + delayed-up-an-octave
+delay=(0,{3/4,oct:2,addc:19})             // detuned/octave-shifted
+delay=(0,{1/2,add:1,stutter:2})           // multiple overrides
+```
+
+### Shared chord progressions via `set ch=...`
+```
+set ch=[(0,2,4,7),(0,3,5,7),(1,3,5b,7),(1,3,4,6#)]t4
+p dsaw 0, add=ch, glide=2/3
+l sine 0, add=ch.rand, oct=5      // .rand picks a voice
+b bass 0, add=ch.0                 // .0 picks first voice
+```
+
+### Non-percussion targeting with `set !p*`
+```
+set !p* add+=[2,-1,1,0]t4
+set !p* bus='blead'
+```
+
+### Drum preset notes
+- **909 synth** (`bd909`, `sd909`, `h909`, `cp909`, `t909`, `rs909`, `cc909`, `rc909`): pass `attack` flag to `bd909` for pitch-envelope click. Params: `level`, `tune`, `decay`, `tone`, `snappy`.
+- **909 sampled** (`bds909`, `sds909`, `hs909`, `cps909`, `ts909`, `rss909`, `ccs909`, `rcs909`): much lighter CPU — prefer for dense patterns.
+- **`h909`/`hs909`**: pattern char `o` = open hat. Drum char letters in patterns also pick variations.
+- **`tb303`** flags: `a`=accent, `u`=up oct, `d`=down oct, `s`=slide.
+
+### Live-coding scaffold
+Typical improv file:
+```
+include 'preset/synthwave.limut'        // or techno/house
+set scale=minor
+set bpm=120
+set main compress={2,gain:2}, drive=1/64
+
+vk kal 0, buffer='vb', blend=max, contrast
+vb buffer 0, feedback={fore:0.95,zoom:1.01}
+
+pk bd909 0..., attack
+ph h909 ..0, swing=54
+ps sd909 ..0., swing=58
+
+b tb303 0, cutoff=[0:1]n4, resonance=7/8
+
+// l trance 0_7, decay=5, reverb=2          // bring in lead
+// pad softpad (024), dur=4
+// set (p*,b) amp=0                         // drop block
+// set t cutoff=riser^3
+```

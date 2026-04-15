@@ -472,6 +472,7 @@ define(function(require) {
     assertSamePattern(root('1 * 2 + 3 loop 2 + 4', {}), root('11 + 3 loop 2 + 4', {}))
 
     assertSamePattern(root('01234567 crop 4', {}), root('0123', {}))
+    assertSamePattern(root('01234567 crop 3 crop 8', {}), root('01201201', {}))
     assertSamePattern(root('0.. crop 16', {}), root('0..0..0..0..0..0', {}))
     assertSamePattern(root('0.. crop 14 + 0.', {}), root('0..0..0..0..0.0.', {}))
     assertSamePattern(root('21 + 0.. crop 14', {}), root('210..0..0..0..0.', {}))
