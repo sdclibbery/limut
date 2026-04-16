@@ -4,8 +4,6 @@ define(function (require) {
   let {evalParamFrame} = require('player/eval-param')
   let metronome = require('metronome')
 
-  let segmentTImestep = 1/8
-
   let evalParamPerFrame = (evalAt, b, def) => {
     let v =  evalAt(b) // Room for optimisation here: only eval objects the specific sub (or main) param thats needed for this call
     if (Array.isArray(v)) { v = v[0] } // Bus chords end up as arrays here so handle it by just picking the first value
@@ -31,7 +29,7 @@ define(function (require) {
   let addSegment = (audioParam, type, v, mod, ...args) => {
     let moddedV = mod === undefined ? v : mod(v)
     try {
-// console.log(`Segment: ${type} ${moddedV} ${args}`)
+// console.log(`Segment: ${type} ${moddedV} ${args} ${metronome.timeNow()}`)
       audioParam[type](moddedV, ...args)
     } catch (e) {
       console.log(`!!! Bad audioParam segment ${type} ${moddedV} ${args}`)
@@ -118,16 +116,21 @@ define(function (require) {
     segmentState.audioParam = audioParam
     segmentState.mod = mod
     addSegment(audioParam, 'setValueAtTime', segmentState.currentValue, mod, 0) // Initial value
-    // Run to end of event
     let dur
     if (params.endTime) { // Duration from envelope-set endTime
-      let timeDur = params.endTime - params._time
-      dur = timeDur / metronome.beatDuration()
+      dur = (params.endTime - params._time) / metronome.beatDuration()
     } else { // Duration from intended event duration
       dur = params.dur || 1
     }
-    segmentStepper(segmentState, params.count + dur)
-    return false
+    let endCount = params.count + dur
+    return (upToAudioTime) => { // Build segments incrementally up to given audio time (undefined = build all)
+      if (!segmentState.nextSegment) { return false }
+      let upToCount = (upToAudioTime !== undefined)
+        ? params.count + (upToAudioTime - params._time) / metronome.beatDuration()
+        : endCount
+      segmentStepper(segmentState, Math.min(upToCount, endCount))
+      return !!segmentState.nextSegment && segmentState.count < endCount
+    }
   }
 
   // TESTS //
@@ -180,13 +183,22 @@ define(function (require) {
     assert(false, isSegmented( eventTimeVar([hz(8),hz(9)], u2, u2, 1, false) ))
     assert(true, isSegmented(eventTimeVar([hz(8),hz(9)], u2, u2, 1, true)(params,0)))
 
+    let buildAll = (ap, ev) => {
+      let advance = segmentedAudioParam(ap, ev, params, 'sub', 99, 'hz', doubleIt)
+      assert(false, advance()) // undefined = build all
+    }
+    let buildAllMain = (ap, ev) => {
+      let advance = segmentedAudioParam(ap, ev, params, undefined, 99, 'hz', doubleIt)
+      assert(false, advance())
+    }
+
     ap = mockAp()
-    assert(false, segmentedAudioParam(ap, evalAtMain( eventTimeVar([hz(8)], u2, u2, 1, true) ), params, undefined, 99, 'hz', doubleIt))
+    buildAllMain(ap, evalAtMain( eventTimeVar([hz(8)], u2, u2, 1, true) ))
     assert(1, ap.calls.length)
     assert(['setValueAtTime', 16,0], ap.calls[0])
 
     ap = mockAp()
-    assert(false, segmentedAudioParam(ap, evalAtMain( eventTimeVar([hz(8),hz(9)], u2, u2, 1, true) ), params, undefined, 99, 'hz', doubleIt))
+    buildAllMain(ap, evalAtMain( eventTimeVar([hz(8),hz(9)], u2, u2, 1, true) ))
     assert(4, ap.calls.length)
     assert(['setValueAtTime', 16,0], ap.calls[0])
     assert(['setValueAtTime', 16,2], ap.calls[1])
@@ -194,7 +206,7 @@ define(function (require) {
     assert(['setValueAtTime', 18,4], ap.calls[3])
 
     ap = mockAp()
-    assert(false, segmentedAudioParam(ap, evalAtSub( eventTimeVar([hz(8),hz(9)], u2, u2, 1, true) ), params, 'sub', 99, 'hz', doubleIt))
+    buildAll(ap, evalAtSub( eventTimeVar([hz(8),hz(9)], u2, u2, 1, true) ))
     assert(4, ap.calls.length)
     assert(['setValueAtTime', 16,0], ap.calls[0])
     assert(['setValueAtTime', 16,2], ap.calls[1])
@@ -202,7 +214,7 @@ define(function (require) {
     assert(['setValueAtTime', 18,4], ap.calls[3])
 
     ap = mockAp()
-    assert(false, segmentedAudioParam(ap, evalAtSub( eventTimeVar([hz(8),hz(9)], u2, u2, 1, true) ), params, 'sub', 99, 'hz', doubleIt))
+    buildAll(ap, evalAtSub( eventTimeVar([hz(8),hz(9)], u2, u2, 1, true) ))
     assert(4, ap.calls.length)
     assert(['setValueAtTime', 16,0], ap.calls[0])
     assert(['setValueAtTime', 16,2], ap.calls[1])
@@ -210,7 +222,7 @@ define(function (require) {
     assert(['setValueAtTime', 18,4], ap.calls[3])
 
     ap = mockAp()
-    assert(false, segmentedAudioParam(ap, evalAtSub( eventTimeVar([hz(8),hz(9)], u2, u2, 4, true) ), params, 'sub', 99, 'hz', doubleIt))
+    buildAll(ap, evalAtSub( eventTimeVar([hz(8),hz(9)], u2, u2, 4, true) ))
     assert(4, ap.calls.length)
     assert(['setValueAtTime', 16,0], ap.calls[0])
     assert(['setValueAtTime', 16,2], ap.calls[1])
@@ -218,14 +230,14 @@ define(function (require) {
     assert(['setValueAtTime', 18,10], ap.calls[3])
 
     ap = mockAp()
-    assert(false, segmentedAudioParam(ap, evalAtSub( eventTimeVar([hz(8),hz(4)], [exp,step], u2, 1, true) ), params, 'sub', 99, 'hz', doubleIt))
+    buildAll(ap, evalAtSub( eventTimeVar([hz(8),hz(4)], [exp,step], u2, 1, true) ))
     assert(3, ap.calls.length)
     assert(['setValueAtTime', 16,0], ap.calls[0])
     assert(['setTargetAtTime', 8,2,0.25], ap.calls[1])
     assert(['setValueAtTime', 8,4], ap.calls[2])
 
     ap = mockAp()
-    assert(false, segmentedAudioParam(ap, evalAtSub( eventTimeVar([0,hz(8),4], [lin,exp,step], [1,2,3], undefined, true) ), params, 'sub', 99, 'hz', doubleIt))
+    buildAll(ap, evalAtSub( eventTimeVar([0,hz(8),4], [lin,exp,step], [1,2,3], undefined, true) ))
     assert(5, ap.calls.length)
     assert(['setValueAtTime', 0,0], ap.calls[0])
     assert(['setValueAtTime', 0,2], ap.calls[1])
@@ -234,7 +246,7 @@ define(function (require) {
     assert(['setValueAtTime', 8,8], ap.calls[4])
 
     ap = mockAp()
-    assert(false, segmentedAudioParam(ap, evalAtSub( eventTimeVar([1,0,1,0], [lin,lin,lin,step], [1/2,0,1/2,0], undefined, true) ), params, 'sub', 99, 'hz', doubleIt))
+    buildAll(ap, evalAtSub( eventTimeVar([1,0,1,0], [lin,lin,lin,step], [1/2,0,1/2,0], undefined, true) ))
     assert(5, ap.calls.length)
     assert(['setValueAtTime', 2,0], ap.calls[0])
     assert(['setValueAtTime', 2,2], ap.calls[1])
@@ -243,20 +255,37 @@ define(function (require) {
     assert(['linearRampToValueAtTime', 0,4], ap.calls[4])
 
     ap = mockAp()
-    assert(false, segmentedAudioParam(ap, evalAtMain( eventTimeVar([1,50], [lin,undefined], u2, undefined, true) ), params, undefined, 99, 'hz', doubleIt))
+    buildAllMain(ap, evalAtMain( eventTimeVar([1,50], [lin,undefined], u2, undefined, true) ))
     assert(3, ap.calls.length)
     assert(['setValueAtTime', 2,0], ap.calls[0])
     assert(['setValueAtTime', 2,2], ap.calls[1])
     assert(['linearRampToValueAtTime', 100,10], ap.calls[2])
 
     ap = mockAp()
-    assert(false, segmentedAudioParam(ap, evalAtMain( eventTimeVar([1,50], [pow,undefined], u2, undefined, true) ), params, undefined, 99, 'hz', doubleIt))
+    buildAllMain(ap, evalAtMain( eventTimeVar([1,50], [pow,undefined], u2, undefined, true) ))
     assert(18, ap.calls.length)
     assert(['setValueAtTime', 2, 0], ap.calls[0])
     assert(['setValueAtTime', 2, 2], ap.calls[1])
     assert(['linearRampToValueAtTime', 2.38, 2.50], ap.calls[2])
     //...
     assert(['linearRampToValueAtTime', 100, 10], ap.calls[17])
+
+    // Incremental build: advance only builds segments whose start count is within the given audio time
+    ap = mockAp()
+    {
+      let advance = segmentedAudioParam(ap, evalAtMain( eventTimeVar([hz(8),hz(9)], u2, u2, 1, true) ), params, undefined, 99, 'hz', doubleIt)
+      assert(1, ap.calls.length) // Only initial setValueAtTime so far
+      assert(['setValueAtTime', 16,0], ap.calls[0])
+      assert(true, advance(1.9)) // Before event start; no segments yet
+      assert(1, ap.calls.length)
+      assert(true, advance(3)) // Triggers first segment (count 1→2)
+      assert(3, ap.calls.length)
+      assert(['setValueAtTime', 16,2], ap.calls[1])
+      assert(['linearRampToValueAtTime', 18,4], ap.calls[2])
+      assert(false, advance(100)) // Finishes remaining
+      assert(4, ap.calls.length)
+      assert(['setValueAtTime', 18,4], ap.calls[3])
+    }
 
     metronome.beatDuration(oldBeatDuration)
     console.log('Segmented audioParam tests complete')

@@ -122,8 +122,14 @@ define(function (require) {
     let perFrame // The actual per frame callback
     if (isParamSegmented) {
 // console.log('segmented', params.player, p, subParamName)
-      segmentedAudioParam(audioParam, evalAt, __event, subParamName, def, requiredUnits, mod) // Give it a call right now
-      perFrame = (state) => false//segmentedAudioParam(audioParam, evalAt, __event, undefined, def, requiredUnits, mod)
+      let segmentLookahead = 1/15 // seconds of audio-time to schedule ahead
+      let advance = segmentedAudioParam(audioParam, evalAt, __event, subParamName, def, requiredUnits, mod)
+      advance(__event._time + segmentLookahead) // Build initial segments
+      perFrame = (state) => {
+        advance(state.time + segmentLookahead)
+        if (__event && state.time > __event.endTime) { return false }
+        return true
+      }
     } else {
       perFrame = (state) => {
 // console.log('per frame', params.player, p, subParamName)
@@ -361,19 +367,19 @@ define(function (require) {
     let u2 = [undefined,undefined]
     let e = eventTimeVar([hz(8),hz(9)], u2, u2, 1, true)
     ap = mockAp(); pf = []; evalMainParamFrame(ap, {foo:e, _perFrame:pf, count:1, dur:4, _time:2, endTime:10}, 'foo', 3, 'hz', (v) => v * 2)
-    pf[0]({time:2})
+    pf[0]({time:10})
     assertApCalls([
       ['setValueAtTime', 16,0], ['setValueAtTime', 16,2],
       ['linearRampToValueAtTime', 18,4], ['setValueAtTime',18,4]
     ], ap)
     ap = mockAp(); pf = []; evalMainParamFrame(ap, {foo:{value:e,poles:4}, _perFrame:pf, count:1, dur:4, _time:2, endTime:10}, 'foo', 3, 'hz', (v) => v * 2)
-    pf[0]({time:2})
+    pf[0]({time:10})
     assertApCalls([
       ['setValueAtTime', 16,0], ['setValueAtTime', 16,2],
       ['linearRampToValueAtTime', 18,4], ['setValueAtTime',18,4]
     ], ap)
     ap = mockAp(); pf = []; evalSubParamFrame(ap, {foo:{value:0,_units:'hz',bar:e}, _perFrame:pf, count:1, dur:4, _time:2, endTime:10}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
-    pf[0]({time:2})
+    pf[0]({time:10})
     assertApCalls([
       ['setValueAtTime', 16,0], ['setValueAtTime', 16,2],
       ['linearRampToValueAtTime', 18,4], ['setValueAtTime',18,4]
@@ -382,13 +388,13 @@ define(function (require) {
     // function returns segmented value with units
     e = eventTimeVar([s(8),s(9)], u2, u2, 1, true)
     ap = mockAp(); pf = []; evalMainParamFrame(ap, {foo:e, _perFrame:pf, count:1, dur:4, _time:2, endTime:10}, 'foo', 3, 'hz', (v) => v * 2)
-    pf[0]({time:2})
+    pf[0]({time:10})
     assertApCalls([
       ['setValueAtTime', 1/4,0], ['setValueAtTime', 1/4,2],
       ['linearRampToValueAtTime', 2/9,4], ["setValueAtTime",2/9,4]
     ], ap)
     ap = mockAp(); pf = []; evalSubParamFrame(ap, {foo:{value:0,_units:'hz',bar:e}, _perFrame:pf, count:1, dur:4, _time:2, endTime:10}, 'foo', 'bar', 3, 'hz', (v) => v * 2)
-    pf[0]({time:2})
+    pf[0]({time:10})
     assertApCalls([
       ['setValueAtTime', 1/4,0], ['setValueAtTime', 1/4,2],
       ['linearRampToValueAtTime', 2/9,4], ["setValueAtTime",2/9,4]

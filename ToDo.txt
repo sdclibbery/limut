@@ -40,6 +40,7 @@ electron performance
 ==== audio ====
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   Segments should be added bit by bit not all at the beginning
+   !!!!!!!!!TEST - seems like Claude has done it????
    !! TEST with lots of user functions / sub params etc
    ??Does it work for subparams?? IE can segment subparams??
   []t@s support, also []l@s []s@s []n@s?? []r@s???
