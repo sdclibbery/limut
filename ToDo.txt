@@ -40,10 +40,9 @@ electron performance
 ==== audio ====
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
   Segments should be added bit by bit not all at the beginning
-   !!!!!!!!!TEST - seems like Claude has done it????
-   !! TEST with lots of user functions / sub params etc
-   ??Does it work for subparams?? IE can segment subparams??
-  []t@s support, also []l@s []s@s []n@s?? []r@s???
+   !!Doesn't work in fx=gain{[]e@s}
+    !Looks like something is mixing up event time with beat time in this case; it keeps trying to set the audioparam at times in the past
+  []t@s support, also []l@s []s@s
   Test segmented works on fx and also on buses
   set duck = {} -> gain{[0:/1/4,1:_3/4]ts@f}
    Or, better: set duck = {} -> gain{[1:!1/8,0:/1/8,1:_3/4]ts@f}
@@ -53,6 +52,7 @@ Support for segmented values in per-frame update. So the per frame update pulls 
   ??segment powers should add? / + ! should give power 3, which is basically "fit any shape"
   !! errors for audioparam setting (curve thing): how to replicate?
   Check []e@s in fx chain; eg:  a audiosynth , fx=osc{110}>>lpf{[3000:!1/2,10:0]e@s}*0.03
+  []n@s?? []r@s???
   ??? the line         let tc = -(imTime - time) / Math.log((imValue - endValue) / (currentValue - endValue))
     Should take mod() into account on the values, no???
   FULL test (and update test notes for user def functions, connectables, segments etc)

@@ -3,6 +3,7 @@ define(function (require) {
   let {mainParamUnits} = require('player/sub-param')
   let {evalParamFrame} = require('player/eval-param')
   let metronome = require('metronome')
+  let system = require('play/system')
 
   let evalParamPerFrame = (evalAt, b, def) => {
     let v =  evalAt(b) // Room for optimisation here: only eval objects the specific sub (or main) param thats needed for this call
@@ -106,9 +107,13 @@ define(function (require) {
     segmentState.getValueAtTime = (count) => {
       return segmentState.getValueFromParam(segmentState.getParamAtTime(count))
     }
-    segmentState.param = segmentState.getParamAtTime(params.count + epsilon)
-    segmentState.count = params.count
-    segmentState.time = params._time
+    // Snapshot timing so advance() stays internally consistent even if params are live getters (eg. persistent fx chains)
+    let startCount = params.count
+    let startTime = params._time
+    if (!startTime) { startTime = system.timeNow() } // Stale default (eg. fx chain with no current event) — anchor scheduling to now
+    segmentState.param = segmentState.getParamAtTime(startCount + epsilon)
+    segmentState.count = startCount
+    segmentState.time = startTime
     segmentState.currentValue = segmentState.getValueFromParam(segmentState.param)
     segmentState.nextValue = segmentState.currentValue
     segmentState.segmentPower = segmentState.param._segmentPower
@@ -122,11 +127,11 @@ define(function (require) {
     } else { // Duration from intended event duration
       dur = params.dur || 1
     }
-    let endCount = params.count + dur
+    let endCount = startCount + dur
     return (upToAudioTime) => { // Build segments incrementally up to given audio time (undefined = build all)
       if (!segmentState.nextSegment) { return false }
       let upToCount = (upToAudioTime !== undefined)
-        ? params.count + (upToAudioTime - params._time) / metronome.beatDuration()
+        ? startCount + (upToAudioTime - startTime) / metronome.beatDuration()
         : endCount
       segmentStepper(segmentState, Math.min(upToCount, endCount))
       return !!segmentState.nextSegment && segmentState.count < endCount
