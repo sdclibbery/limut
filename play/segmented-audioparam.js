@@ -103,39 +103,31 @@ define(function (require) {
     segmentState.getValueAtTime = (count) => segmentState.getValueFromParam(segmentState.getParamAtTime(count))
     segmentState.audioParam = audioParam
     segmentState.mod = mod
-    let startCount, startTime, endCount, lastEventTime
-    // Snapshot timing so advance() stays internally consistent even if params are live getters (eg. persistent fx chains).
-    // Called on initial setup and re-called when a new event starts (detected via params._time change) so segmented patterns re-trigger per event on persistent fx chains.
-    let initSegmentation = () => {
-      startCount = params.count
-      startTime = params._time
-      lastEventTime = params._time
-      if (!startTime) { startTime = system.timeNow() } // Stale default (eg. fx chain with no current event) — anchor scheduling to now
-      segmentState.param = segmentState.getParamAtTime(startCount + epsilon)
-      segmentState.count = startCount
-      segmentState.time = startTime
-      segmentState.currentValue = segmentState.getValueFromParam(segmentState.param)
-      segmentState.nextValue = segmentState.currentValue
-      segmentState.segmentPower = segmentState.param._segmentPower
-      segmentState.nextSegment = segmentState.param._nextSegment
-      addSegment(audioParam, 'setValueAtTime', segmentState.currentValue, mod, 0) // Initial value
-      let dur
-      if (params.endTime) { // Duration from envelope-set endTime
-        dur = (params.endTime - params._time) / metronome.beatDuration()
-      } else { // Duration from intended event duration
-        dur = params.dur || 1
-      }
-      endCount = startCount + dur
+    let startCount = params.count
+    let startTime = params._time
+    if (!startTime) { startTime = system.timeNow() } // Stale default (eg. fx chain with no current event) — anchor scheduling to now
+    segmentState.param = segmentState.getParamAtTime(startCount + epsilon)
+    segmentState.count = startCount
+    segmentState.time = startTime
+    segmentState.currentValue = segmentState.getValueFromParam(segmentState.param)
+    segmentState.nextValue = segmentState.currentValue
+    segmentState.segmentPower = segmentState.param._segmentPower
+    segmentState.nextSegment = segmentState.param._nextSegment
+    addSegment(audioParam, 'setValueAtTime', segmentState.currentValue, mod, 0) // Initial value
+    let dur
+    let endTime = params.chainEndTime ? params.chainEndTime : params.endTime
+    if (endTime) { // Duration from envelope-set endTime
+      dur = (endTime - params._time) / metronome.beatDuration()
+    } else { // Duration from intended event duration
+      dur = params.dur || 1
     }
-    initSegmentation()
+    let endCount = startCount + dur
     return (upToAudioTime) => { // Build segments incrementally up to given audio time (undefined = build all)
-      if (params._time && params._time !== lastEventTime) { initSegmentation() } // New event started on a persistent fx chain — restart pattern
-      if (!segmentState.nextSegment) { return false }
       let upToCount = (upToAudioTime !== undefined)
         ? startCount + (upToAudioTime - startTime) / metronome.beatDuration()
         : endCount
       segmentStepper(segmentState, Math.min(upToCount, endCount))
-      return !!segmentState.nextSegment && segmentState.count < endCount
+      return !!segmentState.nextSegment && segmentState.count <= endCount
     }
   }
 

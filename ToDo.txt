@@ -39,18 +39,10 @@ electron performance
 
 ==== audio ====
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
-  Test segmented works on fx and also on buses
-   !!Works on every alternate event only in fx chain...
-  set duck = [0:/1/4,1:_3/4]t@s
-   Or, better: set duck = [1:!1/8,0:/1/8,1:_3/4]t@s
-    Still needs to better, and controllable
-   Also have a duck level param and maybe a duck length param
-  Test []es that ends before end of event
-  Update docs, examples, test notes, etc to use []e@s instead of []es
+  Update docs, examples, test notes, etc to use []e@s instead of []es and include []t@s etc
   ??segment powers should add? / + ! should give power 3, which is basically "fit any shape"
-  !! errors for audioparam setting (curve thing): how to replicate?
-  Check []e@s in fx chain; eg:  a audiosynth , fx=osc{110}>>lpf{[3000:!1/2,10:0]e@s}*0.03
-  []n@s?? []r@s???
+  ![]e@s  in fx works on first event when player plays but not after
+   !Same for buses, and also even normal params for buses
   ??? the line         let tc = -(imTime - time) / Math.log((imValue - endValue) / (currentValue - endValue))
     Should take mod() into account on the values, no???
   FULL test (and update test notes for user def functions, connectables, segments etc)
@@ -59,6 +51,10 @@ Support for segmented values in per-frame update. So the per frame update pulls 
    []e@s
    Deprecate or remove []es
    []t@s etc
+set duck = [0:/1/4,1:_3/4]t@s
+  Or, better: set duck = [1:!1/8,0:/1/8,1:_3/4]t@s
+  Still needs to better, and controllable
+  Also have a duck level param and maybe a duck length param
 ! Fix shifter: use segmented timevars instead of lfo/osc, to implement smaller grains and random offsets
   Test tuning with guitar sample: https://upload.wikimedia.org/wikipedia/commons/6/67/AcousticGuitarSample.ogg
 ! Should work but breaks with error: a audiosynth, fx=(1-osc{}>>shaper{{x}->x})*0.01
