@@ -39,11 +39,9 @@ electron performance
 
 ==== audio ====
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
-  Segments should be added bit by bit not all at the beginning
-   !!Doesn't work in fx=gain{[]e@s}
-    !Looks like something is mixing up event time with beat time in this case; it keeps trying to set the audioparam at times in the past
-  []t@s support, also []l@s []s@s
+  []t@s []l@s []s@s
   Test segmented works on fx and also on buses
+   !!Works on every alternate event in fx chain...
   set duck = {} -> gain{[0:/1/4,1:_3/4]ts@f}
    Or, better: set duck = {} -> gain{[1:!1/8,0:/1/8,1:_3/4]ts@f}
    Also have a duck level param and maybe a duck length param

@@ -127,7 +127,10 @@ define(function (require) {
       advance(__event._time + segmentLookahead) // Build initial segments
       perFrame = (state) => {
         advance(state.time + segmentLookahead)
-        if (__event && state.time > __event.endTime) { return false }
+        if (__event) {
+          let endTime = __event.chainEndTime ? __event.chainEndTime : __event.endTime
+          if (state.time > endTime) { return false } // Finished
+        }
         return true
       }
     } else {
