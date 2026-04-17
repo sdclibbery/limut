@@ -151,6 +151,13 @@ define(function(require) {
     return options
   }
 
+  let maybeAddSegmentData = (options, interval) => {
+    if (interval !== 'segment') { return options }
+    if (options === undefined) { options = {} }
+    options.addSegmentData = true
+    return options
+  }
+
   let getOperator = (i) => {
     if (i === undefined) { return undefined }
     let op = iOperators[i.charAt(0)]
@@ -179,10 +186,11 @@ define(function(require) {
       let modifiers = parseMap(state)
       interval = interval || parseInterval(state) || hoistInterval('event', vs)
       is = is.map(i => getOperator(i))
+      let options = maybeAddSegmentData(maybeClamp(modifiers, ss), interval)
       if (ranged) {
-        result = rangeTimeVar(vs, ds, maybeClamp(modifiers, ss))
+        result = rangeTimeVar(vs, ds, options)
       } else {
-        result = timeVar(vs, is, ss, ds, iOperators['_'], maybeClamp(modifiers, ss))
+        result = timeVar(vs, is, ss, ds, iOperators['_'], options)
       }
       result = addModifiers(result, modifiers)
       setInterval(result, interval)
@@ -193,7 +201,8 @@ define(function(require) {
       let modifiers = parseMap(state)
       interval = interval || parseInterval(state) || hoistInterval('event', vs)
       is = is.map(i => getOperator(i))
-      result = timeVar(vs, is, ss, ds, iOperators['/'], maybeClamp(modifiers, ss))
+      let options = maybeAddSegmentData(maybeClamp(modifiers, ss), interval)
+      result = timeVar(vs, is, ss, ds, iOperators['/'], options)
       result = addModifiers(result, modifiers)
       setInterval(result, interval)
     } else if (state.str.charAt(state.idx).toLowerCase() == 's') { // smoothstep interpolated timevar
@@ -202,9 +211,10 @@ define(function(require) {
       let interval = parseInterval(state)
       let modifiers = parseMap(state)
       is = is.map(i => getOperator(i))
-      result = timeVar(vs, is, ss, ds, iOperators['~'], maybeClamp(modifiers, ss))
-      result = addModifiers(result, modifiers)
       interval = interval || parseInterval(state) || hoistInterval('event', vs)
+      let options = maybeAddSegmentData(maybeClamp(modifiers, ss), interval)
+      result = timeVar(vs, is, ss, ds, iOperators['~'], options)
+      result = addModifiers(result, modifiers)
       setInterval(result, interval)
     } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
       state.idx += 1

@@ -5041,3 +5041,15 @@ pp perc kn- crop 14 + kh, rate=1.75, vel=1/12, fx=mix{airverb,[1/8,1/2]l8@f}, pa
 t trance 027026 crop 16, cutoff=[]r, fx=mix{airverb}, vel=[0:14,1/5:2]t
 
 
+// s saw 00_0__, amp/=8, oct=2, lpf=1000*[1,0,1,0,1,0]e@s
+// i sine 00_0__, oct=2, drive={1,mix:[1,0,1,0,1,0]e@s/4}, amp/=4
+// a audiosynth 00_0__, fx=osc{100}>>gain{[1,0,1,0,1,0]e@s}*0.003
+// s saw 00_0__, amp/=4, oct=2, lpf=1000*[0:!1/4,1:!1/4]l@s
+// i sine 00_0__, oct=2, drive={1,mix:[0:!1/4,1:!1/4]l@s/4}, amp/=4
+// a audiosynth 00_0__, fx=osc{100}>>gain{[0:!1/4,1:!1/4]l@s}*0.003
+// s saw 00_0__, amp/=4, oct=2, lpf=1000*[]t1/4@s
+// s saw 00_0__, amp/=4, oct=2, lpf=1000*[]l1/4@s
+// s saw 00_0__, amp/=4, oct=2, lpf=1000*[]s1/4@s
+// s saw 00_0__, amp/=4, oct=2, lpf=1000*[0:^9:1,1:^1/9:1]t@s
+
+

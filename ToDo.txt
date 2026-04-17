@@ -39,11 +39,10 @@ electron performance
 
 ==== audio ====
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
-  []t@s []l@s []s@s
   Test segmented works on fx and also on buses
-   !!Works on every alternate event in fx chain...
-  set duck = {} -> gain{[0:/1/4,1:_3/4]ts@f}
-   Or, better: set duck = {} -> gain{[1:!1/8,0:/1/8,1:_3/4]ts@f}
+   !!Works on every alternate event only in fx chain...
+  set duck = {} -> gain{[0:/1/4,1:_3/4]t@s}
+   Or, better: set duck = {} -> gain{[1:!1/8,0:/1/8,1:_3/4]t@s}
    Also have a duck level param and maybe a duck length param
   Test []es that ends before end of event
   Update docs, examples, test notes, etc to use []e@s instead of []es
