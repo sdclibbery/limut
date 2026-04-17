@@ -98,15 +98,9 @@ define(function (require) {
   let epsilon = 1e-5 // Apply an epsilon for the initial value
   let segmentedAudioParam = (audioParam, evalAt, params, subP, def, requiredUnits, mod) => { // !! ASSUME mod IS LINEAR
     let segmentState = {}
-    segmentState.getParamAtTime = (count) => {
-      return getParamValue(evalParamPerFrame(evalAt, count, undefined), subP)
-    }
-    segmentState.getValueFromParam = (param) => {
-      return getValue(param, def, requiredUnits)
-    }
-    segmentState.getValueAtTime = (count) => {
-      return segmentState.getValueFromParam(segmentState.getParamAtTime(count))
-    }
+    segmentState.getParamAtTime = (count) => getParamValue(evalParamPerFrame(evalAt, count, undefined), subP)
+    segmentState.getValueFromParam = (param) => getValue(param, def, requiredUnits)
+    segmentState.getValueAtTime = (count) => segmentState.getValueFromParam(segmentState.getParamAtTime(count))
     segmentState.audioParam = audioParam
     segmentState.mod = mod
     let startCount, startTime, endCount, lastEventTime
