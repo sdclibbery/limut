@@ -3922,7 +3922,7 @@ s heavystrum 0.. crop 14 + 02, add=ch.(1,2,3), pan=1/2
 e external, mono, drive={1,gain:8}, amp*=-14db, mid=+3db
 
 
-preset sub sine, oct=1, dur=1/4, envelope='organ', drive=1/48, low=2, amp*=2, amp*=[1:!400ms,0]es
+preset sub sine, oct=1, dur=1/4, envelope='organ', drive=1/48, low=2, amp*=2, amp*=[1:!400ms,0]e@s
 set bpm=130
 set scale='minor'
 pk perc (Xx)..., drive=1/48, amp/=2
@@ -3940,7 +3940,7 @@ bs sub ..00
 // t trance ..0.9 crop 8, amp/=2, oct=3, amp*=1/2+riser^3
 
 
-preset sub sine, oct=1, dur=1/4, envelope='organ', drive=1/48, low=2, amp*=2, amp*=[1:!400ms,0]es
+preset sub sine, oct=1, dur=1/4, envelope='organ', drive=1/48, low=2, amp*=2, amp*=[1:!400ms,0]e@s
 set bpm=130
 set scale='minor'
 pk perc x...x..xx.x....x, amp*=+3db, swing=54
@@ -3972,20 +3972,20 @@ e external 0-79 crop 14 + 48, dur=1/4, envelope='percussion', mono, reverb={2/3,
 
 /// Segmented audioparam tests
 //
-// m saw 0_., envelope='organ', amp=1/4, lpf=2000*[1:/1/2,0:0,1:/1/2,0:0]es
-// m saw 0_., envelope='organ', amp=1/4, lpf=2000*[1:/1/2,0:0,1:/1/2,0:0]es
-// m saw, lpf={10+1000*[1,3]t1*[1:!400ms,0]es,q:9}, envelope='percussion', dec=1/2, oct=2, dur=1/4
-// m saw 0_.., envelope='organ', amp=1/4, lpf=2000*[[1,0,1,0,1,0,1]es1/4:!4,0]es
-// m saw 0_.., envelope='organ', amp=1/4, lpf=2000*[1,0,1,0,1,0,1]es1/4*[1:!4,0]es
+// m saw 0_., envelope='organ', amp=1/4, lpf=2000*[1:/1/2,0:0,1:/1/2,0:0]e@s
+// m saw 0_., envelope='organ', amp=1/4, lpf=2000*[1:/1/2,0:0,1:/1/2,0:0]e@s
+// m saw, lpf={10+1000*[1,3]t1*[1:!400ms,0]e@s,q:9}, envelope='percussion', dec=1/2, oct=2, dur=1/4
+// m saw 0_.., envelope='organ', amp=1/4, lpf=2000*[[1,0,1,0,1,0,1]e@s1/4:!4,0]e@s
+// m saw 0_.., envelope='organ', amp=1/4, lpf=2000*[1,0,1,0,1,0,1]e@s1/4*[1:!4,0]e@s
 //
-// s saw, dur=1/2, lpf=1000*[1:!200ms,0]es
-// s saw, dur=1/2, lpf=1000hz*[1:!200ms,0]es
-// s saw, dur=1/2, lpf=0.001s/[1:!200ms,0]es
+// s saw, dur=1/2, lpf=1000*[1:!200ms,0]e@s
+// s saw, dur=1/2, lpf=1000hz*[1:!200ms,0]e@s
+// s saw, dur=1/2, lpf=0.001s/[1:!200ms,0]e@s
 // s saw, dur=1/2, lpf=1000*[1,1/8]l1@f
 // s saw, dur=1/2, lpf=1000hz*[1,1/8]l1@f
 // s saw, dur=1/2, lpf=0.001s/[1,1/8]l1@f
 //
-// s saw, oct=2, lpf=1000*[1:!200ms,0.01]es + [300,100]t0.7@f
+// s saw, oct=2, lpf=1000*[1:!200ms,0.01]e@s + [300,100]t0.7@f
 // s saw, dur=4, oct=2, lpf=[600,200]t0.7@f, amp/=4, envelope='pad'
 // s saw, dur=4, oct=2, lpf={[600,200]l0.7@f,q:12}, amp/=4, envelope='pad'
 //
@@ -3995,16 +3995,16 @@ e external 0-79 crop 14 + 48, dur=1/4, envelope='percussion', mono, reverb={2/3,
 // s ping, add=[(0,2),(1,3)]t2@f, amp/=5
 // s ping, addc=[(0,3),(1,5)]t0.7@f, amp/=5, envelope='pad'
 // s saw, oct=2, lpf=[300,100]t0.7@f
-// s saw, oct=2, lpf=[300,100]es
-// s saw, oct=2, lpf=1000*[1:!200ms,0.01]es
-// s saw, oct=2, lpf=1000*[1:!200ms,0.01]es + [300,100]t1/4@f
-// s saw, oct=2, lpf=[1000:!200ms,10]es + [400,0]t0.7@f
-// s saw, oct=2, lpf={[600,200]es,q:12}
+// s saw, oct=2, lpf=[300,100]e@s
+// s saw, oct=2, lpf=1000*[1:!200ms,0.01]e@s
+// s saw, oct=2, lpf=1000*[1:!200ms,0.01]e@s + [300,100]t1/4@f
+// s saw, oct=2, lpf=[1000:!200ms,10]e@s + [400,0]t0.7@f
+// s saw, oct=2, lpf={[600,200]e@s,q:12}
 //
-// s saw, oct=2, lpf=[600,200]es1, amp/=4
-// s saw, oct=2, lpf={[600,200]es,q:20}, amp/=4
+// s saw, oct=2, lpf=[600,200]e@s1, amp/=4
+// s saw, oct=2, lpf={[600,200]e@s,q:20}, amp/=4
 // s saw, oct=2, lpf={440,q:[1,40]l4@f}, amp/=4
-// s saw, oct=2, lpf={[600,200]es,q:[1,40]l4@f}, amp/=4
+// s saw, oct=2, lpf={[600,200]e@s,q:[1,40]l4@f}, amp/=4
 // s saw, oct=2, lpf=[{600,q:30},{200,q:1}]l2@f, amp/=8
 
 
@@ -4071,15 +4071,15 @@ v swirl 4, recol='neon', loc=tile_tr, rate=1/14, contrast, zoom=3
 // a ambi (09), amp/=4, oct=3, room, reverb
 
 //// AudioNode chain and User def function examples
-// s audiosynth, play=osc{freq:pitch{oct:[2,3]}}>>gain{0.05*[0:20ms,1,0]e}>>biquad{'lowpass',freq:[1000:!200ms,10]es}
-// s audiosynth, play={osc{freq:pitch{oct:2}},osc{freq:pitch{oct:4}}}>>gain{0.05}>>biquad{'lowpass',freq:[1000:!200ms,10]es}
+// s audiosynth, play=osc{freq:pitch{oct:[2,3]}}>>gain{0.05*[0:20ms,1,0]e}>>biquad{'lowpass',freq:[1000:!200ms,10]e@s}
+// s audiosynth, play={osc{freq:pitch{oct:2}},osc{freq:pitch{oct:4}}}>>gain{0.05}>>biquad{'lowpass',freq:[1000:!200ms,10]e@s}
 // s audiosynth, play=const{0.05}
-// s audiosynth, play=osc{freq:pitch{oct:[2,3]}}>>gain{0.05*[0:20ms,1,0]e}>>biquad{'lowpass',freq:[1000:!200ms,10]es}>>delay{1/4}
-// s audiosynth, play=osc{freq:pitch{oct:[2,3]}}>>gain{0.05*[0:20ms,1,0]e}>>biquad{'lowpass',freq:[1000:!200ms,10]es}>>{gain,delay{1/4}}
+// s audiosynth, play=osc{freq:pitch{oct:[2,3]}}>>gain{0.05*[0:20ms,1,0]e}>>biquad{'lowpass',freq:[1000:!200ms,10]e@s}>>delay{1/4}
+// s audiosynth, play=osc{freq:pitch{oct:[2,3]}}>>gain{0.05*[0:20ms,1,0]e}>>biquad{'lowpass',freq:[1000:!200ms,10]e@s}>>{gain,delay{1/4}}
 // s audiosynth, dur=2, play=osc{freq:220}>>gain{osc{'sine',freq:1b}}>>gain{0.01}
 // s audiosynth, play=osc{freq:osc{'sine',freq:2}>>gain{300}}>>gain{0.01}
 // s audiosynth, play=osc{freq:{const{200},osc{'sine',freq:2}>>gain{100}}}>>gain{0.01}
-// s audiosynth, play=osc{freq:pitch{oct:2}}>>gain{0.05}>>biquad{'lowpass',freq:const{[1000:!200ms,10]es}}
+// s audiosynth, play=osc{freq:pitch{oct:2}}>>gain{0.05}>>biquad{'lowpass',freq:const{[1000:!200ms,10]e@s}}
 
 // r readout, add=({value}->value*2){3}
 
@@ -4096,7 +4096,7 @@ v swirl 4, recol='neon', loc=tile_tr, rate=1/14, contrast, zoom=3
 
 // s audiosynth, play=osc{'sine',freq:[880,110]e}>>gain{0.002}
 
-// s audiosynth, play=osc{'sine',freq:[880,110]es}>>gain{0.002}
+// s audiosynth, play=osc{'sine',freq:[880,110]e@s}>>gain{0.002}
 
 // set foo={value}->value*2
 // r readout, add=foo{[1,3]t1/4@f}
@@ -4113,7 +4113,7 @@ v swirl 4, recol='neon', loc=tile_tr, rate=1/14, contrast, zoom=3
 // s saw, oct=2, lpf={713,q:[40:!4,0.1]e}, amp/=16
 
 // set sine={value}->osc{'sine',freq:value}
-// s audiosynth, play=sine{[880,110]es}>>gain{0.002}
+// s audiosynth, play=sine{[880,110]e@s}>>gain{0.002}
 
 // set sine={value}->osc{'sine',freq:value}
 // s audiosynth, play=sine{[100:400]l8@f}>>gain{0.002}
@@ -4122,8 +4122,8 @@ v swirl 4, recol='neon', loc=tile_tr, rate=1/14, contrast, zoom=3
 // set lpf={value,q}->biquad{'lowpass',freq:value,q:q}
 // s audiosynth, dur=1/4,
 //   play=saw{pitch{[0,0,[-7,0,4]t2,7],oct:2}}
-// 	  >>lpf{[400:!300ms,10]es}
-// 	  >>gain{0.1*[0:!10ms,1:!200ms,0]es}
+// 	  >>lpf{[400:!300ms,10]e@s}
+// 	  >>gain{0.1*[0:!10ms,1:!200ms,0]e@s}
 
 // set foo={value}->value*2
 // s audiosynth, play=osc{'sine',freq:foo{[880,110]e}}>>gain{0.002}
@@ -4134,12 +4134,12 @@ v swirl 4, recol='neon', loc=tile_tr, rate=1/14, contrast, zoom=3
 // set lpf={}->biquad{'lowpass',freq:this.lpf.value,q:this.lpf.q}
 // s audiosynth, play=osc{freq:220}>>lpf{713,q:[40:!4,0.1]e}>>gain{0.001}, lpf={713,q:[40:!4,0.1]e}
 
-// s audiosynth, play=osc{freq:pitch{oct:2}}>>gain{0.05}>>biquad{'lowpass',freq:const{[1000:!200ms,10]es}}
+// s audiosynth, play=osc{freq:pitch{oct:2}}>>gain{0.05}>>biquad{'lowpass',freq:const{[1000:!200ms,10]e@s}}
 
 // set sine={value}->osc{'sine',freq:value}
 // s audiosynth, play={sine{220},sine{880}}>>gain{0.004}
 
-// s audiosynth, play=osc{freq:110}>>biquad{'lowpass',freq:const{[1000:!200ms,10]es}}>>gain{0.01}
+// s audiosynth, play=osc{freq:110}>>biquad{'lowpass',freq:const{[1000:!200ms,10]e@s}}>>gain{0.01}
 
 // set sine={f}->osc{'sine',freq:f}
 // s audiosynth, play=sine{this.myfreq}>>gain{0.004}, myfreq=[800:100]e
@@ -4153,10 +4153,10 @@ v swirl 4, recol='neon', loc=tile_tr, rate=1/14, contrast, zoom=3
 // s audiosynth, play=osc{freq:523/4}>>gain{0.01}
 // s audiosynth, play=osc{freq:523/4}>>shaper{{x}->x}>>gain{0.01}
 // s audiosynth, play=osc{freq:523/4}>>shaper{{x}->x^5}>>gain{0.01}
-// s audiosynth, play=osc{freq:523/4}>>biquad{freq:220*[20:!400ms,1/4]es}>>gain{0.01}
-// s audiosynth, play=osc{freq:523/4}>>shaper{{x}->[x^2:_,x^3:,0:0]{x}}>>biquad{freq:220*[20:!400ms,1/4]es}>>gain{0.01}
-// s audiosynth, play=osc{freq:523/4}>>shaper{{x}->floor{x*2}??x?:rand{seed:x}}>>biquad{freq:220*[20:!400ms,1/4]es}>>gain{0.01}
-// s audiosynth, play=osc{freq:523/4}>>shaper{{x}->floor{x*2}??x?:x*40%1/40}>>biquad{freq:220*[20:!400ms,1/4]es}>>gain{0.01}
+// s audiosynth, play=osc{freq:523/4}>>biquad{freq:220*[20:!400ms,1/4]e@s}>>gain{0.01}
+// s audiosynth, play=osc{freq:523/4}>>shaper{{x}->[x^2:_,x^3:,0:0]{x}}>>biquad{freq:220*[20:!400ms,1/4]e@s}>>gain{0.01}
+// s audiosynth, play=osc{freq:523/4}>>shaper{{x}->floor{x*2}??x?:rand{seed:x}}>>biquad{freq:220*[20:!400ms,1/4]e@s}>>gain{0.01}
+// s audiosynth, play=osc{freq:523/4}>>shaper{{x}->floor{x*2}??x?:x*40%1/40}>>biquad{freq:220*[20:!400ms,1/4]e@s}>>gain{0.01}
 // vs scope 0, additive, fore=#fa0f, zoom={y:3}
 
 // bp techbass, fx=delay{{const{1},osc{freq:9.3}}>>gain{0.107},max:4}>>biquad{freq:2000,q:20}>>delay{3/16,feedback:biquad{freq:300}>>gain{-0.45}}
@@ -4178,7 +4178,7 @@ set bpm=106
 pk perc x.. crop 8 crop 14 + xv
 po perc ....;...
 pp perc murph: crop 16, amp/=7, swing=58, lpf=4000, pan=[-1,0,1]{per:4}
-c cybass 0_....-2<.-1>, lpf=100+1000*[0:!20ms,1:!1/2,0]es
+c cybass 0_....-2<.-1>, lpf=100+1000*[0:!20ms,1:!1/2,0]e@s
 o softpad, reverb=1/2, amp/=1, oct-=1, amp*=1/4+[1:0]s8@f^1/4, pan=[-1,1]s12@f/2, glide=1/2
 e external, mono, amp*=1.7, room={1,mix:1/4}, flanger=16b, fx={idnode,delay{1/4,feedback:{idnode,delay{1/8,feedback:gain{0.3}>>lpf{[10:3000]s1/8@f,q:0.1}}}>>gain{0.1}}}
 set p* delay|=[():14,{[1,3]r/4,rate:2,stutter:[1,2]r}:2]t
@@ -4204,8 +4204,8 @@ set root=2
 set bpm=87
 set main amp*=+3db
 // s sweep, fx=hpf{[200:5000]l25@f}+delay{[0.01:0.1]l100/3@f}, amp*=1/2, pan=-1/2
-// b cybass <00v>..-7<.2> crop 8, dur=1/4, lpf=[3000:!120ms,200]es, amp*=-3db, pan=1/2
-// m cybass 0.2-7<.2>. crop 16, dur=1/4, lpf={[10000:!50ms,300]es,q:10}, amp*=-9db, oct+=1, pan=1/3
+// b cybass <00v>..-7<.2> crop 8, dur=1/4, lpf=[3000:!120ms,200]e@s, amp*=-3db, pan=1/2
+// m cybass 0.2-7<.2>. crop 16, dur=1/4, lpf={[10000:!50ms,300]e@s,q:10}, amp*=-9db, oct+=1, pan=1/3
 // sp synpluck 09.7 + . * 12, pan=[-1,1], chorus, room={1,mix:1/4}, amp*=-6db, oct-=1
 // e external, amp*=2, mono, reverb={4,curve:1,mix:1/4}, echo={1/32,feedback:0.9,mix:1/4}, flanger=8b, low=-3db
 // o oxy (027), oct+=1, amp=1/[128:20]l12@f, pan=[-1,1]s8@f, chorus
@@ -4219,7 +4219,7 @@ pi impulse 0.. crop 16, dur=1/4, lpf={pitch{oct:4},q:5}, amp*=5, swing=56, pan=1
 ph perc s<.->a crop 16, rate=2/3, fx=shifter{3/4}, swing=56, chorus, amp/=10, pan=[-1/2,0,1/2], delay=-0.07
 set p* delay|=[():14,{[1,3]r/4,rate:5/4}:2]t
 rm noise, delay=1/4, pan=(-1,1), envelope='percussion', fx=lpf{pitch{oct:2},q:10}>>lpf{pitch{oct:3},q:5}*10
-br reese 00(0<7779>)0, dur=1/2, cutoff=[0.8:!200ms,1/3]es, oct+=(0,1)
+br reese 00(0<7779>)0, dur=1/2, cutoff=[0.8:!200ms,1/3]e@s, oct+=(0,1)
 s dsaw ...0, oct+=6, dur=4, att=1, rel=4, room=2, reverb=2, echo=1/8, chorus, addc=wow, pan=[-1,1]s1/8@f, fx=shifter{1/8}
 set !p* add+=[0:24,2:6,1:2]t
 
@@ -4315,11 +4315,11 @@ set scale='phrygian'
 // pp perc ..O., amp/=2, room=0.2
 // ph hs909 0o20 crop 8, swing=54
 // ps perc ....(XIi)..., room={1.1,mix:1/4}, amp/=2
-pc perc (#D;), dur=8, drive, amp/=9, rate=1/2, lpf={[20000:\[2,3,2,4],10]es,q:[20,10]}, pan=(-1,1), room, flanger=7b
+pc perc (#D;), dur=8, drive, amp/=9, rate=1/2, lpf={[20000:\[2,3,2,4],10]e@s,q:[20,10]}, pan=(-1,1), room, flanger=7b
 set p* delay|=[():14,(4/8,5/8):2]t
 h hollow, fx=ultracomb>>reverb{2}/4
-// b saw 0_.0..02..0..01., dur=1/4, glide=1/16, oct=2, reverb={2,hpf:200,mix:1/8}, lpf={[20000:!200ms,4000:!200ms,10]es,q:0.1}, addc=(0,0.1), amp*=3db
-// t cybass 0__0__21__01__28, addc=(0,0.1), glide=1/8, add=[0:24,-2:8]t, drive={1,mix:1/16}, delay=(0,{3/2,add:7}), lpf={[10000:!220ms,200]es,q:10,poles:4}
+// b saw 0_.0..02..0..01., dur=1/4, glide=1/16, oct=2, reverb={2,hpf:200,mix:1/8}, lpf={[20000:!200ms,4000:!200ms,10]e@s,q:0.1}, addc=(0,0.1), amp*=3db
+// t cybass 0__0__21__01__28, addc=(0,0.1), glide=1/8, add=[0:24,-2:8]t, drive={1,mix:1/16}, delay=(0,{3/2,add:7}), lpf={[10000:!220ms,200]e@s,q:10,poles:4}
 // d cydist 0__743_4_, dur=[1/2,1], room={2,mix:1/8,hpf:200}, oct+=(-1,0,1), fx=series{flanger{lfo{4b}},3}
 // set !p* add=[0:32,7:0,0:32]l
 
@@ -4327,16 +4327,16 @@ h hollow, fx=ultracomb>>reverb{2}/4
 preset hard saw, dur=1/4, oct=2, fx=shaper{ {x} -> x%0.033, samples:16385 }>>hsf{-3db}
 set scale='phrygian'
 set bpm=130
-n noise 0, envelope='percussion', lpf={[500:!200ms,45]es,q:20}, amp*=2
+n noise 0, envelope='percussion', lpf={[500:!200ms,45]e@s,q:20}, amp*=2
 i impulse ..0 crop 16, echo
 c noise ..0 crop 8, dur=1/2, envelope='percussion', amp/=2, high=-3db, echo
-h hard 0<.1-11><..2> crop 8 crop 14 + 89, lpf=[10000:!200ms,200]es, fx>>={idnode,shifter{1+riser{per:[1:8,4:16,16:8]t}*16}>>echo{1/32}/4}*2
+h hard 0<.1-11><..2> crop 8 crop 14 + 89, lpf=[10000:!200ms,200]e@s, fx>>={idnode,shifter{1+riser{per:[1:8,4:16,16:8]t}*16}>>echo{1/32}/4}*2
 
 
 v neonshapes, loc=tile_tr
 set bpm=101
 // pi impulse 0, echo=3/4, amp*=2
-// pk noise, lpf={[600:!300ms,45]es,q:10}, envelope='percussion', amp*=2
+// pk noise, lpf={[600:!300ms,45]e@s,q:10}, envelope='percussion', amp*=2
 // pn noise ..0 crop 16, dur=1/2, envelope='percussion', sus=1/2, echo=1/2, amp/=3
 ls blips, amp*=[0:14,1/2:2]t, add=[0,4]t1
 // s softpad (049), amp=[1/6:1/3]n16, oct-=1
@@ -4398,11 +4398,11 @@ set bpm=115
 set scale='minor'
 set main drive=1/48
 // s sample, dur=2, sample=url//, sus=1/8, start=slider
-pk sample, sample=url, sus=1/8, oct-=6, amp*=20, start=0.22, lpf=[1000:!100ms,100]es, addc=[12:!,0]es
+pk sample, sample=url, sus=1/8, oct-=6, amp*=20, start=0.22, lpf=[1000:!100ms,100]e@s, addc=[12:!,0]e@s
 ph sample 040 crop 16, dur=1/4, sample=url, sus=1/8, start=0.55, swing=54, amp*=-3db
 pp sample 07040 crop 14 + 62, dur=1/4, sample=url, sus=1/8, start=[0.2:0.8]r, pan=[-1,1]/4, amp*=+6db, oct-=2
 set p* delay|=[():14,[1,3]r/4:2]t
-b sample 040 crop 16, dur=1/4, sample=url, oct-=4, amp*=2, start=0.6, lpf=[1000:!200ms,100]es
+b sample 040 crop 16, dur=1/4, sample=url, oct-=4, amp*=2, start=0.6, lpf=[1000:!200ms,100]e@s
 l sample 07202 crop 14 crop 64, dur=1/4, sample=url, start=[0.2:0.9]r, fx={dry,airverb}, oct+=1, amp*=2, pan=[-1,1]/2
 set l add=[0:16,3:8,4:8]t, delay=(0,{3/4,add:14})
 
@@ -4428,7 +4428,7 @@ set main drive=1/48
 // pw perc .w. crop 16, rate=1/4, amp/=4, pan=[-1/2:1/2]n
 // pa perc aaaa, amp/=4, high=+6db, amp*=[]r*[0:16,1:0]l, pan=[-1,1]
 // b saw, envelope='pad', oct=1, addc=(0,[-0.1,0.1]n8), lpf={400+6000*[]n24^2,poles:4}
-// bb saw 0780787 crop 30 + 9-1, dur=1/4, oct=1, addc=(0,[-0.1,0.1]n8), lpf={[4000:!300ms,100]es,poles:4}, pan=[-1,1]/2, drive=1/8
+// bb saw 0780787 crop 30 + 9-1, dur=1/4, oct=1, addc=(0,[-0.1,0.1]n8), lpf={[4000:!300ms,100]e@s,poles:4}, pan=[-1,1]/2, drive=1/8
 // n play 4321, dur=4, fx=demon>>{dry,pingpong}
 c sample, dur=[1/40:1/80]r, envelope='pad', sample=corrosion, start=[0:8,4:0]l, fx=demon>>{dry,pingpong}
 
@@ -4439,18 +4439,18 @@ set scale='minor'
 set root=2
 set main drive=1/48, amp*=+1db
 pk perc X...
-ph perc n--n, amp/=4, swing=50, pan=[-1,1]/4, drive={1/2,mix:[1:!50ms,1/8]es}
+ph perc n--n, amp/=4, swing=50, pan=[-1,1]/4, drive={1/2,mix:[1:!50ms,1/8]e@s}
 pp perc ..s., amp/=8, rate=(1,1/2), room=3/2, pan=(-1,1)
 set p* delay|=[():14,1/4:2]t
-bi saw 076069 crop 16, dur=1/2, oct=1, addc=(0,wow), amp/=2, lpf={[10000:!400ms,400]es,poles:4}
+bi saw 076069 crop 16, dur=1/2, oct=1, addc=(0,wow), amp/=2, lpf={[10000:!400ms,400]e@s,poles:4}
 bs sub ..0_, amp/=2, drive=1/16
-k saw ...<.7>0..<.9.>0 crop 16, oct=5, amp/=14, dur=1/4, addc=(0,wow*2), room, pan=[-1,1]/2, lpf=[9000:\1/4,800]es
+k saw ...<.7>0..<.9.>0 crop 16, oct=5, amp/=14, dur=1/4, addc=(0,wow*2), room, pan=[-1,1]/2, lpf=[9000:\1/4,800]e@s
 // e external, mono, amp=1/10, suck=1/4, drive={1,gain:64}, phaser=8b, high=-8db
 
 //// Testing eval-audio-params rewrite
 // s saw, dur=1/2, oct=2, lpf={[10000:!1/10,10]e, poles:4}
 // s saw, dur=1/2, oct=2, lpf={[10000:!1/10,10]e@s, poles:4}
-// s saw, dur=1/2, oct=2, lpf={[10000:!1/10,10]es, poles:4}
+// s saw, dur=1/2, oct=2, lpf={[10000:!1/10,10]e@s, poles:4}
 // s saw, dur=1/2, oct=2, lpf={[10000:!1/10,10:_4/10]t@f, poles:4}
 // s saw, dur=1/2, oct=2, lpf={[10000:!1/10,10:_4/10]t@s, poles:4}
 // s saw, envelope='pad', oct=2, lpf={100+10000*[]n8 ^3, poles:4,q:20}
@@ -4469,19 +4469,19 @@ k saw ...<.7>0..<.9.>0 crop 16, oct=5, amp/=14, dur=1/4, addc=(0,wow*2), room, p
 // s saw, lpf={[3000:100]l1/4@f,q:20}, oct=2, amp/=4
 // s saw, lpf={400,q:[0:40]l1/4@f}, oct=2, amp/=4
 //
-// m multiwave, dur=1/4, oct=2, wave1={'noise',amp:[1:!150ms,0]es}
-// m wave, dur=1/4, oct=2, wave={'noise'}, amp=[1:!150ms,0]es
+// m multiwave, dur=1/4, oct=2, wave1={'noise',amp:[1:!150ms,0]e@s}
+// m wave, dur=1/4, oct=2, wave={'noise'}, amp=[1:!150ms,0]e@s
 // g growl
 
 
 set bpm=122
 set scale='minor'
-// i impulse, lpf=[400:!100ms,80]es
+// i impulse, lpf=[400:!100ms,80]e@s
 // pk perc X...
 // ps perc .y(*u)<..e>, amp/=4
 // pp perc nusnn. crop 8, swing=54, amp/=6, echo=1/4, pan=-1/3
 // ph perc Mn:n, amp/=7, swing=56, pan=1/3
-// bs saw 0700, dur=1/4, oct=1, lpf=[[8,2,4,3,5,9,3,0]*200:!300ms,100]es, addc=(0,wow), amp*=[1/8,1,1,1]t1/4, swing=52
+// bs saw 0700, dur=1/4, oct=1, lpf=[[8,2,4,3,5,9,3,0]*200:!300ms,100]e@s, addc=(0,wow), amp*=[1/8,1,1,1]t1/4, swing=52
 // bu sub ...5.6.7, drive=1/8
 // h hollow, oct=1, amp=4, drive=riser^3 /4
 n noise, dur=[8,12,14]r, sus=2, fx=series{flanger,4}>>mix{airverb>>ultracomb}

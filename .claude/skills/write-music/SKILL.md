@@ -233,7 +233,7 @@ Basic structure: `value{modifiers}@interval`
 - `[1,2]e` - interpolated over event duration
 - `[1,2]e1` - interpolated starting at event start, 1 beat per value
 - `[0:!300ms,1:_[1/4b:1/2b]r,0]e` - piecewise envelope with mixed timing
-- `[1:!200ms,0]es` - segment-based (more accurate timing for envelopes)
+- `[1:!200ms,0]e@s` - segment-based (more accurate timing for envelopes)
 
 ### Random and noise
 - `[]r` - random 0 to 1 each event
@@ -332,7 +332,7 @@ Basic structure: `value{modifiers}@interval`
 - `dec` - decay time
 - `sus` - sustain time. `sus={level:0.5}` for sustain level (default 0.8)
 - `rel` - release time
-- `envelope` - type: `'full'` (ADSR), `'simple'` (ADR), `'organ'` (ASR), `'pad'` (cosine crossfade), `'linpad'` (linear crossfade), `'percussion'` (R only). Or custom expression: `envelope=[1:!300ms,0]es`
+- `envelope` - type: `'full'` (ADSR), `'simple'` (ADR), `'organ'` (ASR), `'pad'` (cosine crossfade), `'linpad'` (linear crossfade), `'percussion'` (R only). Or custom expression: `envelope=[1:!300ms,0]e@s`
 
 ### Pitch & Tuning
 - `oct=N` - octave (1=sub bass, 2=bass, 3=low, 4=mid, 5=high)

@@ -219,7 +219,7 @@ define(function(require) {
     } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
       state.idx += 1
       let addSegmentData = false
-      if (state.str.charAt(state.idx).toLowerCase() == 's') { // []es segmented event timevar
+      if (state.str.charAt(state.idx).toLowerCase() == 's') { // []e@s segmented event timevar
         state.idx += 1
         addSegmentData = true
       }

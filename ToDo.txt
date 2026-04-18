@@ -39,12 +39,13 @@ electron performance
 
 ==== audio ====
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
-  Update docs, examples, test notes, etc to use []e@s instead of []es and include []t@s etc
   ??segment powers should add? / + ! should give power 3, which is basically "fit any shape"
+   ! +- ops should take max, others should add??
   ![]e@s  in fx works on first event when player plays but not after
-   !Same for buses, and also even normal params for buses
+  !Bus normal param doesn't work, eg   bs bus, amp=[]t1/8@s
   ??? the line         let tc = -(imTime - time) / Math.log((imValue - endValue) / (currentValue - endValue))
     Should take mod() into account on the values, no???
+    Write a test?
   FULL test (and update test notes for user def functions, connectables, segments etc)
   Docs
    @s as an interval (note: segments are NOT audio rate)
@@ -175,10 +176,10 @@ Create a helper lib with useful functions (think about namespacing)
 Start oscillator at a whole number of cycles after time zero
  To avoid phasing when using pad envelopes, and/or to control the starting phase of an oscillator
 AudioBufferSourceNode: Support stereo for user functions
-Use []e / []es for all envelopes?
+Use []e / []e@s for all envelopes?
  ?Deprecate att, dec, sus, rel etc params and prefer envelope=[]e??
  ??Also deprecate other att/rel params; eg in pitchedperc, fm operator etc???
-Can pitch effects be segmented? Currently always go per-frame. EG  s saw, oct=2, addc=[36:!400ms,0]es, lpf=1000, amp/=4
+Can pitch effects be segmented? Currently always go per-frame. EG  s saw, oct=2, addc=[36:!400ms,0]e@s, lpf=1000, amp/=4
  See evalFuncFrame. Problem is all pitch effects are combined into one function
 Hpf for chorus
 Would be nice to have a unison param with stereo spread for many base synths?
@@ -395,11 +396,11 @@ shadertoy synth multiple channels
 ==== things to test/consider ====
 // pattern features (), [], <>, #b, v^, single event pattern, gamepad/midi/keyboard
 // (), follow, complex durs, simple durs, delay, stutter, overrides, +=, |=, >>=, []
-// [], []t, []l/s, []e, []n, []r []{}, []es segmented audioparams
+// [], []t, []l/s, []e, []n, []r []{}, []e
 // operators + - * / ^ % | . >>
 // var, player.var, this.param, this.voice, var{params}, slider{}/gamepad{}/midi{}, floor{}, .floor{to:}, accum{}, this.time, time, rand
 // (...).1, (...).max, max{...}, {foo:...}.foo, (pk,ps).pulse
-// modifiers {seed,time,per,step,0:0}, @e, @f
+// modifiers {seed,time,per,step,0:0}, @e, @f, @s
 // subparams {2,mix:1/2}, presets, buses, buffers
 // Audionodes osc{} >>
 !!!!Remember to update breaking changes link on index when doing a release!!!!
@@ -421,7 +422,6 @@ User defined functions:
 Give each event a unique ID
  Use it for memoisation instead of weak map
  And use it for seeding rand for per-event; then follow player can get the same randoms by using the same IDs?
-!? []es shouldn't be the syntax for segmenting. It should be []e@s ??
 !! floor doesn't work with delay:  r readout 1234, delay=floor{[0:1]l3@f,to:1/4}
 Cooler effect when update code
 More time modifiers
