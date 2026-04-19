@@ -55,7 +55,14 @@ define(function(require) {
           } else if (k === '_nextSegment') {
             result[k] = Math.min(el[k], er[k]||Infinity)
           } else if (k === '_segmentPower') {
-            result[k] = Math.max(el[k], er[k]||0)
+            let a = el[k]||0, b = er[k]||0
+            if (op.segmentPowerCombine === 'add') {
+              result[k] = Math.min(3, a + b)
+            } else if (op.segmentPowerCombine === 'force3') {
+              result[k] = (a > 0 || b > 0) ? 3 : 0
+            } else {
+              result[k] = Math.max(a, b)
+            }
           } else if (k === 'interval') {
             result[k] = combineIntervals(el[k], er[k])
           } else {
@@ -187,7 +194,16 @@ define(function(require) {
   assert([segment(2,3,4),segment(4,3,4)], evalParam(operator(mul, segment(2,3,4), [1,2]),ev(0),0))
   assert(segment(10,6,7), evalParam(operator(mul, {value:2}, segment(5,6,7)),ev(0),0))
   assert(segment(4,3,4), evalParam(operator(mul, segment(2,3,4), {value:2}),ev(0),0))
-  assert(segment(10,3,7), evalParam(operator(mul, segment(2,3,4), segment(5,6,7)),ev(0),0))
+  assert(segment(10,3,7), evalParam(operator(mul, segment(2,3,4), segment(5,6,7)),ev(0),0)) // default 'max' combine
+
+  // segmentPowerCombine modes
+  let mulAdd = (l,r)=>l*r; mulAdd.segmentPowerCombine = 'add'
+  let modFor3 = (l,r)=>l%r; modFor3.segmentPowerCombine = 'force3'
+  assert(segment(10,3,3), evalParam(operator(mulAdd, segment(2,3,1), segment(5,6,2)),ev(0),0)) // 1+2=3
+  assert(segment(10,3,3), evalParam(operator(mulAdd, segment(2,3,2), segment(5,6,2)),ev(0),0)) // 2+2=4 capped to 3
+  assert(segment(10,3,1), evalParam(operator(mulAdd, segment(2,3,0), segment(5,6,1)),ev(0),0)) // 0+1=1
+  assert(segment(2,3,3), evalParam(operator(modFor3, segment(2,3,0), segment(5,6,1)),ev(0),0)) // force3 when any nonzero
+  assert(segment(2,3,0), evalParam(operator(modFor3, segment(2,3,0), segment(5,6,0)),ev(0),0)) // both zero stays 0
 
   assert({value:3,_units:'hz'}, evalParam(operator(add, {value:1,_units:'hz'}, 2),ev(0),0))
   assert({value:3,_units:'hz'}, evalParam(operator(add, 2, {value:1,_units:'hz'}),ev(0),0))

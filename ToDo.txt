@@ -39,19 +39,12 @@ electron performance
 
 ==== audio ====
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
-  ??segment powers should add? / + ! should give power 3, which is basically "fit any shape"
-   ! +- ops should take max, others should add??
+  !Bus normal param works on first event when bus plays but not after, eg   bs bus, amp=[]t1/8@s
   ![]e@s  in fx works on first event when player plays but not after
-  !Bus normal param doesn't work, eg   bs bus, amp=[]t1/8@s
   ??? the line         let tc = -(imTime - time) / Math.log((imValue - endValue) / (currentValue - endValue))
     Should take mod() into account on the values, no???
     Write a test?
   FULL test (and update test notes for user def functions, connectables, segments etc)
-  Docs
-   @s as an interval (note: segments are NOT audio rate)
-   []e@s
-   Deprecate or remove []es
-   []t@s etc
 set duck = [0:/1/4,1:_3/4]t@s
   Or, better: set duck = [1:!1/8,0:/1/8,1:_3/4]t@s
   Still needs to better, and controllable

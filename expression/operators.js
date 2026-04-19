@@ -82,6 +82,17 @@ define(function(require) {
   operators['*'].connectableOp = connectableMul
   operators['/'].connectableOp = connectableDiv
 
+  operators['*'].segmentPowerCombine = 'add'
+  operators['/'].segmentPowerCombine = 'add'
+  operators['%'].segmentPowerCombine = 'force3'
+  operators['^'].segmentPowerCombine = 'force3'
+  operators['=='].segmentPowerCombine = 'force3'
+  operators['!='].segmentPowerCombine = 'force3'
+  operators['<'].segmentPowerCombine = 'force3'
+  operators['>'].segmentPowerCombine = 'force3'
+  operators['<='].segmentPowerCombine = 'force3'
+  operators['>='].segmentPowerCombine = 'force3'
+
   let precedence = { // MUST ALL BE > 0
     '.':1,
     '|':2,

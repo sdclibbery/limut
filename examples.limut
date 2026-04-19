@@ -5051,5 +5051,11 @@ t trance 027026 crop 16, cutoff=[]r, fx=mix{airverb}, vel=[0:14,1/5:2]t
 // s saw 00_0__, amp/=4, oct=2, lpf=1000*[]l1/4@s
 // s saw 00_0__, amp/=4, oct=2, lpf=1000*[]s1/4@s
 // s saw 00_0__, amp/=4, oct=2, lpf=1000*[0:^9:1,1:^1/9:1]t@s
+// s saw 00_0__, amp/=8, oct=2, lpf=700*[1:!400ms,0]e@s*[1/2,3]l8@s^2+[10,300]l8@s
+
+// set duck = {length:1/4,depth:3/4,attack:1/16} -> 
+// 	[1:!(attack), (1-depth):^4:(length-attack), 1:^16:(1-length)]t@s
+// p perc X...
+// b techbass, fx*=duck
 
 

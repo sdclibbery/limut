@@ -39,6 +39,7 @@ define(function (require) {
   }
 
   let buildSegment = ({time, nextTime, count, nextSegment, segmentPower, currentValue, nextValue, getValueAtTime, audioParam, mod}) => {
+    // console.log(`segmentPower ${segmentPower}`)
     if (segmentPower === 0) { // Power 0 is fixed value over the segment
       addSegment(audioParam, 'setValueAtTime', nextValue, mod, time)
     } else {
