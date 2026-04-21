@@ -114,6 +114,7 @@ define((require) => {
         get() { return metronome.beatTime(metronome.timeNow())%2 },
       })
       params._destroyWait = 0
+      params.chainEndTime = 1e10 // Keep eval-audio-params per-frame callbacks going for the lifetime of the chain
       // output
       bus.output = system.audio.createGain()
       connectToDestination(bus, params)

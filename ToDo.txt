@@ -39,21 +39,18 @@ electron performance
 
 ==== audio ====
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
-  !Bus normal param works on first event when bus plays but not after, eg   bs bus, amp=[]t1/8@s
   ![]e@s  in fx works on first event when player plays but not after
   ??? the line         let tc = -(imTime - time) / Math.log((imValue - endValue) / (currentValue - endValue))
     Should take mod() into account on the values, no???
     Write a test?
   FULL test (and update test notes for user def functions, connectables, segments etc)
+Rewrite pitch effects so it doesn't need all those methods from eval-audio-params, and so addc at least supports segments
+! Fix shifter: use segmented timevars instead of lfo/osc, to implement smaller grains and random offsets
+  Test tuning with guitar sample: https://upload.wikimedia.org/wikipedia/commons/6/67/AcousticGuitarSample.ogg
 set duck = [0:/1/4,1:_3/4]t@s
   Or, better: set duck = [1:!1/8,0:/1/8,1:_3/4]t@s
   Still needs to better, and controllable
   Also have a duck level param and maybe a duck length param
-! Fix shifter: use segmented timevars instead of lfo/osc, to implement smaller grains and random offsets
-  Test tuning with guitar sample: https://upload.wikimedia.org/wikipedia/commons/6/67/AcousticGuitarSample.ogg
-! Should work but breaks with error: a audiosynth, fx=(1-osc{}>>shaper{{x}->x})*0.01
- constNode 37 can't access property "stop", e._destructor is undefined
-Rewrite pitch effects so it doesn't need all those methods from eval-audio-params, and so addc at least supports segments
 WebAudio node graphs as first class values
  !!Parallel nodes should surely be round brackets???
   ???? {} for parallel nodes should be (), no???
