@@ -39,10 +39,6 @@ electron performance
 
 ==== audio ====
 Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
-  ![]e@s  in fx works on first event when player plays but not after
-  ??? the line         let tc = -(imTime - time) / Math.log((imValue - endValue) / (currentValue - endValue))
-    Should take mod() into account on the values, no???
-    Write a test?
   FULL test (and update test notes for user def functions, connectables, segments etc)
 Rewrite pitch effects so it doesn't need all those methods from eval-audio-params, and so addc at least supports segments
 ! Fix shifter: use segmented timevars instead of lfo/osc, to implement smaller grains and random offsets
@@ -392,7 +388,8 @@ shadertoy synth multiple channels
 // (...).1, (...).max, max{...}, {foo:...}.foo, (pk,ps).pulse
 // modifiers {seed,time,per,step,0:0}, @e, @f, @s
 // subparams {2,mix:1/2}, presets, buses, buffers
-// Audionodes osc{} >>
+// Audionodes osc{} >> connectables {,}
+// User defined functions {} -> ...
 !!!!Remember to update breaking changes link on index when doing a release!!!!
 
 =================================================================================================================================

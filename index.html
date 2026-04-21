@@ -552,6 +552,41 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>(3,1,2).sum</code> Returns the sum of all elements in a chord (returns 6 in the example)</p>
 <p><code>(3,1,2).avg</code> Returns the mean average of all elements in a chord (returns 2 in the example)</p>
 </div>
+<h4 onclick="toggleAccordion('accordion-user-functions')" class="accordion"> User Defined Functions</h4>
+<div id="accordion-user-functions" class="closed">
+<p>Basic structure: <code>{args} -> body</code></p>
+<p>User defined functions (also called lambdas) let you build reusable expressions. The <code>{args}</code> declares the parameters, and the expression after <code>-></code> is the function body. Functions are values like any other, so they are usually stored in a global var with <code>set</code> and then called by name.</p>
+<h5>Defining a function</h5>
+<p><code>set double = {value} -> value*2</code> Define a function called <code>double</code> with one argument called <code>value</code>, which returns the argument doubled.</p>
+<p><code>set square = {x} -> x^2</code> Argument names can be anything; they are referenced by name inside the body.</p>
+<p><code>set add = {x,y} -> x+y</code> Multiple arguments are separated by commas.</p>
+<p><code>set hello = {} -> 'hi'</code> A function with no arguments still needs the empty <code>{}</code> on the left.</p>
+<p><code>set lpf = {freq, q:5} -> biquad{'lowpass', freq:freq, q:q}</code> Arguments can have default values using <code>name:default</code>. If the caller does not supply that argument, the default is used. Arguments without a default are required.</p>
+<h5>Calling a function</h5>
+<p><code>double{3}</code> Call with a single positional argument. Returns 6.</p>
+<p><code>add{3,4}</code> Call with multiple positional arguments. Returns 7.</p>
+<p><code>add{x:3,y:4}</code> Call with named arguments. Order does not matter; <code>add{y:4,x:3}</code> gives the same result.</p>
+<p><code>add{3,y:4}</code> Positional and named arguments can be mixed.</p>
+<p><code>hello{}</code> No-argument calls can optionally include the {}</p>
+<p><code>hello</code> A user function can still be called without an arg list.</p>
+<h5>Positional argument names</h5>
+<p>Positional arguments are looked up by the names <code>value</code>, <code>value1</code>, <code>value2</code> etc, in order. So <code>{value,value1} -> value*value1</code> can be called as <code>foo{3,4}</code> to get 12. This means that the first argument name <code>value</code> is special: if you declare <code>{value} -> ...</code> then the first positional arg fills <code>value</code>, and you can also pass it by name as <code>foo{value:3}</code>.</p>
+<p>A consequence is that a function with a first argument named <code>value</code> can be called very concisely. This is how many library functions (for example <code>mix2</code>, <code>echo</code>, and the shapers in <code>lib/nodes.limut</code>) accept their main argument positionally without the caller writing any name.</p>
+<h5>Inline (anonymous) functions</h5>
+<p><code>({x} -> x^2){3}</code> A function can be called immediately without storing it in a var, by wrapping the definition in round brackets and applying arguments. Returns 9.</p>
+<p><code>convolver{{x} -> (1-x)^3, length:1s}</code> Anonymous functions are often passed directly as arguments to other functions (for example to node functions such as <code>convolver</code> and <code>shaper</code>) to provide a shape or envelope.</p>
+<h5>Scope and global vars</h5>
+<p>Inside a function body, argument names take priority over global vars with the same name. So in <code>{foo} -> foo</code>, the <code>foo</code> in the body refers to the argument, not to any global var called <code>foo</code>.</p>
+<p><code>global.foo</code> Use the <code>global.</code> prefix inside a function body to force a lookup of the global var, bypassing any argument of the same name. For example <code>{foo} -> global.foo</code> ignores the passed argument and returns the global <code>foo</code>.</p>
+<p>Global vars that are not shadowed by an argument are visible inside the body as normal. So <code>set gain = 2</code> followed by <code>set amp = {x} -> x*gain</code> will multiply <code>x</code> by whatever <code>gain</code> is when <code>amp</code> is called.</p>
+<h5>What a function can return</h5>
+<p>The body is a normal expression, so it can return anything an expression can produce: numbers, chords, timevars, maps, strings, or audio node chains. For example <code>{freq} -> osc{'sine', freq:freq}</code> returns an audio node; <code>{} -> []r@f</code> returns a per-frame random value. Interval markers (<code>@e</code>, <code>@f</code>, <code>@s</code>) inside the body carry through to the caller as expected.</p>
+<p>Passing a timevar as an argument works naturally: <code>double{[4,5]t1@f}</code> evaluates the timevar on each frame and doubles each value.</p>
+<h5>Examples</h5>
+<p><code>set clamp = {x, lo:0, hi:1} -> min{max{x,lo},hi}</code> Define, then call as <code>clamp{0.7}</code>, <code>clamp{1.5, hi:2}</code>, etc.</p>
+<p><code>set mix2 = {chain} -> mix{chain, 1/2}</code> A thin wrapper around a node function (as used in <code>lib/nodes.limut</code>).</p>
+<p><code>set echo = {time:1/8b, feedback:0.7, max} -> delay{time, feedback:feedback, max:max??max?:time*2}</code> A library effect built from the <code>delay</code> node function (as used in <code>lib/effects.limut</code>).</p>
+</div>
 <h4 onclick="toggleAccordion('accordion-audio-synths')" class="accordion"> Audio Synths</h4>
 <div id="accordion-audio-synths" class="closed">
 <p><code>! / stop / none</code> </p>
