@@ -30,62 +30,6 @@ define(function (require) {
     return subParamUnits(v, subParamName, requiredUnits, def)
   }
 
-  let evalPerFrame = (params, p, b, def) => {
-    let __event = params !== undefined && params.__event ? params.__event : params
-    let v = params[p]
-    v =  evalParamFrame(v, __event, b) // Room for optimisation here: only eval objects the specific sub (or main) param thats needed for this call
-    if (Array.isArray(v)) { v = v[0] } // Bus chords end up as arrays here so handle it by just picking the first value
-    if (isConnectable(v)) { return v } // Dont eval any further if this is a node chain
-    if (typeof v !== 'number' && !v) {
-      return def
-    }
-    return v
-  }
-
-  let evalMainPerFrame = (params, p, def, b, requiredUnits) => {
-    let __event = params !== undefined && params.__event ? params.__event : params
-    let v = evalPerFrame(params, p, b || __event.count, def)
-    if (typeof v !== 'object') { return v }
-    if (isConnectable(v)) { return v } // Dont eval any further if this is a node chain
-    return mainParamUnits(v, requiredUnits, def)
-  }
-
-  let evalSubPerFrame = (params, p, subParamName, def, b, requiredUnits) => {
-    let v = evalPerFrame(params, p, b || params.count, def)
-    if (typeof v !== 'object') { return def }
-    if (isConnectable(v)) { return v } // Dont eval any further if this is a node chain
-    return subParamUnits(v, subParamName, requiredUnits, def)
-  }
-
-  let perFrameUpdate = (audioParam, state, params, evalAt, p) => {
-    let __event = params !== undefined && params.__event ? params.__event : params
-    if (__event && state.time > __event.endTime) { return false }
-    if (__event && state.time < __event._time) { return true }
-    if (audioParam.lastTime === undefined) {
-      audioParam.lastTime = (__event && __event._time) ? __event._time : system.timeNow()
-    }
-    while (audioParam.lastTime < state.time) {
-      let count = metronome.beatTime(audioParam.lastTime+updateStep);
-      let v = evalAt(count)
-      if (v !== undefined) {
-        try {
-          audioParam.setTargetAtTime(v, audioParam.lastTime, updateStep/4)
-        } catch (e) {
-          console.log(audioParam, e)
-          throw `Failed updating audio param ${p} to ${v}`
-        }
-      }
-      audioParam.lastTime += updateStep
-    }
-    return true
-  }              
-
-  let evalFuncFrame = (audioParam, params, name, fn) => {
-    setAudioParamValue(audioParam, fn(params.count), name, params._time) // set now
-    // if (params.player) { console.log(`Per frame audio update! ${params.player} ${name}`) }
-    system.add(params._time, (state) => perFrameUpdate(audioParam, state, params, fn, name))
-  }
-
   let fixedPerFrame = (params, p, subParamName, def, requiredUnits) => { // ???Should this use {withInterval:true}?
     let v = params[p]
     if (typeof v === 'function') {
@@ -440,10 +384,6 @@ define(function (require) {
     evalSubParamEvent: evalSubParamEvent,
     evalMainParamFrame: evalMainParamFrame,
     evalSubParamFrame: evalSubParamFrame,
-    evalMainPerFrame: evalMainPerFrame,
-    evalSubPerFrame: evalSubPerFrame,
     fixedPerFrame: fixedPerFrame,
-    setAudioParamValue: setAudioParamValue,
-    evalFuncFrame: evalFuncFrame,
   }
 })
