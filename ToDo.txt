@@ -1,6 +1,27 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
+?main volume slider should be killed; just do  set main amp*=slider if you want one...
+ ??Time to review the UI generally? make smaller / tidy up?
+electron performance
+ game mode https://g.co/gemini/share/2d402c47eda2
+  Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
+  BrowserWindow.setFullScreen(true) for fullscreen
+ Perf/glitch issue from thrashing audionodes? Try keeping a pool of nodes, and/or a pool of voices??
+  Need to experiment and see if it makes any difference
+  Audionode creation is definitely high on the per-beat profile now...
+ !We also seem to be leaking 1 js event listener per beat???
+!get a click if start a new keyboard etc player note before last one has finished attack/decay?
+!Gamepad: when notes are missing (stick clicks, lt: rt: etc) then don't leave gaps in value played
+ Full remapping to handle this? What about gp.notes then?
+
+==== audio ====
+!Fix shifter: use segmented timevars instead of lfo/osc, to implement smaller grains and random offsets
+  Test tuning with guitar sample: https://upload.wikimedia.org/wikipedia/commons/6/67/AcousticGuitarSample.ogg
+set duck = [0:/1/4,1:_3/4]t@s
+  Or, better: set duck = [1:!1/8,0:/1/8,1:_3/4]t@s
+  Still needs to better, and controllable
+  Also have a duck level param and maybe a duck length param
 !! When use sample in fx not play, sometimes it doesn't play. Due to not having loaded yet? Needs to retry somehow?
 Wavetable oscillator that crossfades between arbitrary sample waveforms
  ! wtlerp must handle wt values out of range by clamping or modding
@@ -23,32 +44,6 @@ Wavetable oscillator that crossfades between 4 arbitrary samples but in 2D (??Or
  ? Maybe practice by making a playable blips preset??
 !! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
   a audiosynth, fx=osc.sin{this.f}*0.01, f=[100:300]l@f
-?main volume slider should be killed; just do  set main amp*=slider if you want one...
- ??Time to review the UI generally? make smaller / tidy up?
-electron performance
- game mode https://g.co/gemini/share/2d402c47eda2
-  Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
-  BrowserWindow.setFullScreen(true) for fullscreen
- Perf/glitch issue from thrashing audionodes? Try keeping a pool of nodes, and/or a pool of voices??
-  Need to experiment and see if it makes any difference
-  Audionode creation is definitely high on the per-beat profile now...
- !We also seem to be leaking 1 js event listener per beat???
-!get a click if start a new keyboard etc player note before last one has finished attack/decay?
-!Gamepad: when notes are missing (stick clicks, lt: rt: etc) then don't leave gaps in value played
- Full remapping to handle this? What about gp.notes then?
-
-==== audio ====
-Rewrite pitch-effects so it doesn't need all those special methods from eval-audio-params, and so at least addc supports segments
- ? What did Claude do?
- Do ALL the pitch effects features still work?
- Doc updates needed?
- Remove unused functions from eval-audio-params
-!Fix shifter: use segmented timevars instead of lfo/osc, to implement smaller grains and random offsets
-  Test tuning with guitar sample: https://upload.wikimedia.org/wikipedia/commons/6/67/AcousticGuitarSample.ogg
-set duck = [0:/1/4,1:_3/4]t@s
-  Or, better: set duck = [1:!1/8,0:/1/8,1:_3/4]t@s
-  Still needs to better, and controllable
-  Also have a duck level param and maybe a duck length param
 WebAudio node graphs as first class values
  !!Parallel nodes should surely be round brackets???
   ???? {} for parallel nodes should be (), no???
@@ -217,7 +212,6 @@ TB303 realism
 Half wave rectifier shaper
  Symmetric but center half at zero then rise up
  Really want user functions and define your own shape
-Try a convolution reverb with an envelope where the sound builds then fades instead of just dying away
 ??can set high/mid/low params on reverb to EQ signal prior to reverb - Also on entry to all waveeffects?
 Legato Eg on a 303, When 2 notes slide they are legato, and the amp and filter envelopes do Not reset for the second note...
 ? Feedback for chorus?
@@ -234,59 +228,21 @@ Impulse destructor should be snappier? It probably waits too long to clean up
 Allow non-chord multiple bus outputs from one player; (bus1, bus2) etc
  Bus subparam for mix level (per frame); eg   p ping 0, bus={bus1,mix:1/2}
   Also want to be able to split multiband too
-In-page example with percussion bus
 Cache/transfer bus effect nodes if unchanged?
 Should be able to have multiple bandpass and notch filters
 ?Inline bus param Eg p ping 0, bus={reverb:1}
 ?Setting to push analyser node FFT size up from 1024
-Synthwave preset buses?
 External player should be a bus-like player, with no events ?? Will this still have an fxMixChain??
-More options for setting up the convolution reverb
- Mono/stereo: how much difference between L and R
- Some real impulse responses as options??
-??? Could use very short loop that moves stepwise on a carefully prepared sample to do wave table synthesis???
 !echo={1,feedback:0} should still produce a single delayed echo
-!Chop/ring LFO Freq should be per frame
-Also use nonchord find: nf (series) and bpf (parallel) for all audio
- Docs
-!FM operator should support all wave types
-Pattern char to set glide?
-Percussion player for single sample; value is velocity Eg  p playv 90520070, sample=':'
- ?Or go whole hog and patterns should become expressions and all params should be {} 'info' on the player?
-  Eg  P saw {\0246\, oct=5, lpf=\3<52>4\*1000}  or something?
-303 synth preset
-Pitch shifter effect
- Can use https://github.com/Tonejs/Tone.js/blob/c313bc672bcc09a8cee4df97a07ba80155fd1946/Tone/effect/shifter.ts
- See http://msp.ucsd.edu/techniques/v0.11/book-html/node115.html
- Should also be able to insert this into the reverb loop...
-Allow adding filters in the room/echo loops eg echo={3/4,lpf:523} - but dont use existing filter handlers as must be per event only!
- Pitch shift up an octave to give shimmer reverb (pitch shifter: https://tonejs.github.io/docs/14.7.77/shifter.html)
 Stereo widener effect: https://www.soundonsound.com/techniques/classic-stereo-widening
-envelope exp (exponent) subparam, eg att={1/2,exp:2} ?? Or name it 'pow'? Default to nonzero?
-?Really/ideally, everything that uses an lfo (ambi, phaser, prophet etc) etc should just use a parameter so the lfo behaviour is defined in the code
-Can specify media stream device
- Print list of all devices with IDs
- device param to specify required device ID to be used - need to store one stream per device
- Same for webcam
-echo={1/2,pingpong:1} for stereo ping pong echo; use splitter and merger
 Convert pwm and ?noise to webassembly, performance is terrible compared to native oscs
 Reverb gate: room={1,gate:1/4}
 Multiple unnecessary gain nodes even from default effects chain (that has no effects)
-this.freq should also respond to addc
 Envelope follower? Pitch follower? for external synth
-choke param for play synth to choke one sound off when the next plays (eg hihats)
-Env=reverse (slow attack / fast release)
 formant/vowel effects for vocal aaa/ooo/choir effects
 Is it possible to control rate per frame?
-fmpluck
- test fm 070604_[21], att=0, dur=1/2, echo=0, oct=4, amp=1, op1target='out', op1ratio=1, op2target=1, op2ratio=1, op2depth=1024, op2att=0, op2rel=8, op3target=1, op3ratio=2, op3depth=768, op3att=0, op3rel=8, op4target=1, op4ratio=3, op4depth=3072, op4att=0, op4rel=1/4, op4wave='sawtooth'
-Is play rate per frame?
-Allow setting main reverb room size
 Look into improving quality of samples playing at slow rates?
-AudioWorklet freeverb with webassembly
 Drive should be per frame
-Constant envelope type to allow specifying per frame envelope with amp?
-reverb param allowing to use a convolution reverb with specified duration (at users own risk :-)
 Pluck/guitar synths
  https://fazli.sapuan.org/blog/electric-guitar-synth-in-html5/
  https://github.com/ronkot/ks-guitar-synth/blob/master/src/js/guitar-string.js
@@ -294,8 +250,6 @@ Pluck/guitar synths
 Nice gentle pads
 FM krunchy bass - https://www.youtube.com/watch?v=1XbrTC0NndM
 Preload samples immediately after parsing
-'add' param for play synth?
-AudioWorklet FM operator supporting feedback with webassembly
 speech synth
 soprano synth - use vib effect - aaah synth: https://github.com/AppGeo/web-audio-examples/blob/master/formant.html
 support -ve rate for reverse playback
@@ -445,7 +399,6 @@ Voice leading
   b techbass .00 crop 16, add=root, cutoff/=4
   sp softpad, add=ch
   ld chime 070., add=ch.[0,rand,rand,rand], amp*=3/2
-Should be able to parse top heavy fractions; eg `1+1/4` is same as 5/4. Parse as number, not operator?
 range function eg (0,2,4,6).range{0,to:riser*3}
  IOW range{a,to:b} === (a,a+1,a+2,...,b)
 !this var lookup failing in various ways:
@@ -539,9 +492,6 @@ Some sort of matching or booleans would be handy; eg  rel=2+6*(this.value<0)  or
 !v glow 0, loc=sparkle, fore=(red,blue)[max]
 Allow mixing , and :   Eg  [0,2:4,5]r  meaning 0 or 2 to 4 or 5  Or  [0:4,7,9:10]t1  meaning [0,1,2,3,4,7,9,10]t1
 !root change using []t is 1 beat late in changing
-stutter={4,amp:1/2}  - apply overrides
- ?How to provide overrides per stuttured notes?
-  stutter={4,dur:1/8,i=>{amp:1/i}}
 ?Do delayed events have any cost? Do we process them per frame?
  I guess we might process any per-frame callbacks every frame while waiting for the event?
 allow root param on player to override global root (add or replace?)
@@ -561,9 +511,8 @@ Need an additional eval interval; eg @i for 'per instance', so for each individu
  Useful for providing variation between (1,2,3,4) multiplied out sub-events without having to go full-on per frame, expecially for eg []r
  ? Isn't that what @e should be? And then we could have @t for 'eval once for all chord values'
 Better syntax highlighting for {} brackets; maybe bracket match highlighting??
-Weighted random: nice syntax?:  [1,2,{3,weight:1/2}]r
 ma{v,window:1} - calculate the moving average of a value over a given time window
-Can specify params for all players except those in group 'set !bass amp=0' 'set ![kd,sd] amp=0'
+Can specify params for all players except those in group 'set !bass amp=0' 'set !(kd,sd) amp=0'
 ? rl, rt (==r), rs (==n); el (==e), es, et ?
  ?[1,3,5]n syntax to smoothly transition between randomly chosen values or should be [1,3,5]rs?
  []w for random walk?
@@ -847,5 +796,5 @@ s saw 007 crop 8, dur=1/2, oct=2, lpf={[1000:!100ms,10]e@s, poles:4}
 s=met(1/2).`0070`.crop(8).saw(oct:2).lpf([1000:!100ms,10]e@s,poles:4)*[0.06:!500ms,0]e@s
 ...this is weak for presets and overriding. EG how to define dur as a preset and then override it? How to insert 
 
-As per every time we look at this kind of thing, the conculsion is the current setup is better even if it feels complicated
+As per every time we look at this kind of thing, the conclusion is the current setup is better even if it feels complicated
 
