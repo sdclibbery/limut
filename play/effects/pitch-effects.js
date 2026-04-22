@@ -1,97 +1,115 @@
 'use strict';
 define(function (require) {
-  let {evalFuncFrame,evalMainPerFrame,evalMainParamEvent,evalSubParamEvent,setAudioParamValue} = require('play/eval-audio-params')
+  let system = require('play/system')
+  let metronome = require('metronome')
+  let {evalMainParamEvent,evalSubParamEvent,evalMainParamFrame} = require('play/eval-audio-params')
 
-  let hasParam = (params, p) => {
-    return !!params[p]
-  }
+  let semisToCents = (v) => v * 100
 
-  let hasPerFrameParam = (params, p) => {
-    let v = params[p]
-    if (typeof v === 'function') { return true }
-    return false
-  }
-
-  let vibrato = (vib, vibdepth, vibdelay, start, count) => {
-    if (!vib) { return 0 }
-    let t = count - start
-    let v = Math.sin(2*Math.PI*t*vib)
-    if (t < vibdelay) {
-      let lerp = 1 - (vibdelay-t)/vibdelay
-      v *= Math.pow(lerp, 8)
+  // Ramp detune from baseFreq to targetFreq, scheduled in cents relative to refFreq.
+  // Freq is linearly interpolated then log2'd, so approximate with multiple linearRamps.
+  let scheduleGlide = (audioParam, startTime, glideDur, baseFreq, targetFreq, refFreq, glideCurve) => {
+    let curvePower = 1/(glideCurve+1)
+    let steps = 24
+    let startCents = 12 * Math.log2(baseFreq / refFreq) * 100
+    audioParam.setValueAtTime(startCents, startTime)
+    for (let i = 1; i <= steps; i++) {
+      let lerp = i/steps
+      let appliedLerp = Math.pow(lerp, curvePower)
+      let glideFreq = targetFreq*appliedLerp + baseFreq*(1-appliedLerp)
+      let cents = 12 * Math.log2(glideFreq / refFreq) * 100
+      audioParam.linearRampToValueAtTime(cents, startTime + lerp*glideDur)
     }
-    return v * vibdepth
   }
 
-  let glideTarget = (params, count, glide, glideCurve) => {
-    if (!params._glideBaseEvent) { return 0 }
-    let lerp = (count - params.count) / glide
-    if (lerp > 1 || lerp < 0) { return 0 }
-    lerp = Math.pow(lerp, 1/(glideCurve+1))
-    let baseFreq = params._glideBaseEvent.freq
-    if (!baseFreq) { return 0 }
-    let targetFreq = params.freq
-    let glideFreq = targetFreq*lerp + baseFreq*(1-lerp)
-    return 12 * Math.log2(glideFreq / targetFreq)
+  let setupAddc = (audioParam, params) => {
+    if (params.addc === undefined) { return }
+    let csn = system.audio.createConstantSource()
+    csn.offset.value = 0
+    evalMainParamFrame(csn.offset, params, 'addc', 0, undefined, semisToCents)
+    csn.connect(audioParam)
+    csn.start(params._time)
+    params._destructor.stop(csn)
+    params._destructor.disconnect(csn)
   }
 
-  let glideBase = (params, count) => {
-    if (!params._glideTargetEvent) { return 0 }
-    let lerp = (count - params._glideTargetEvent.count) / params._glide
-    if (lerp < 0) { return 0 }
-    if (lerp > 1) { lerp = 1 }
-    lerp = Math.pow(lerp, 1/(params._glideCurve+1))
-    let baseFreq = params.freq
-    let targetFreq = params._glideTargetEvent.freq
-    if (!targetFreq) { return 0 }
-    let glideFreq = targetFreq*lerp + baseFreq*(1-lerp)
-    return 12 * Math.log2(glideFreq / baseFreq)
+  let setupVib = (audioParam, params) => {
+    if (params.vib === undefined) { return }
+    let vibCpb = evalMainParamEvent(params, 'vib', 0, 'cpb')
+    if (!vibCpb) { return }
+    let vibdepth = evalSubParamEvent(params, 'vib', 'depth', 0.4)
+    let vibdelay = evalSubParamEvent(params, 'vib', 'delay', 1/2, 'b')
+    let beatDur = metronome.beatDuration()
+
+    let osc = system.audio.createOscillator()
+    osc.type = 'sine'
+    osc.frequency.value = vibCpb / beatDur // cpb -> hz
+
+    let gain = system.audio.createGain()
+    let targetCents = vibdepth * 100
+    let delaySec = Math.max(0, vibdelay) * beatDur
+    if (delaySec < 1e-4) {
+      gain.gain.setValueAtTime(targetCents, params._time)
+    } else {
+      gain.gain.setValueAtTime(0, params._time)
+      let steps = 16
+      for (let i = 1; i <= steps; i++) {
+        let lerp = i/steps
+        gain.gain.linearRampToValueAtTime(targetCents * Math.pow(lerp, 8), params._time + lerp*delaySec)
+      }
+    }
+
+    osc.connect(gain)
+    gain.connect(audioParam)
+    osc.start(params._time)
+    params._destructor.stop(osc)
+    params._destructor.disconnect(osc)
+    params._destructor.disconnect(gain)
+  }
+
+  let setupGlide = (audioParam, params) => {
+    // Register this audioParam so that future glide-target events can retrofit a glide onto it
+    if (!params._pitchAudioParams) { params._pitchAudioParams = [] }
+    params._pitchAudioParams.push(audioParam)
+
+    let glide = evalMainParamEvent(params, 'glide', 0, 'b')
+    if (!glide) { return }
+    let glideCurve = evalSubParamEvent(params, 'glide', 'curve', 1)
+    let beatDur = metronome.beatDuration()
+    let glideDur = glide * beatDur
+
+    // Look up base events once per event. Cache on params so multiple pitchEffects calls
+    // (e.g. fm ops, multiwave oscillators) share the same base event lookup.
+    let bases = params._glideBases
+    if (bases === undefined) {
+      bases = (params._player && params._player.events)
+        ? params._player.events.filter(e => e.voice === params.voice)
+        : []
+      params._glideBases = bases
+    }
+    if (bases.length === 0 || !params.freq) { return }
+
+    let lastBase = bases.reduce((a,b) => (a.endTime >= b.endTime ? a : b))
+    if (!lastBase.freq) { return }
+
+    scheduleGlide(audioParam, params._time, glideDur, lastBase.freq, params.freq, params.freq, glideCurve)
+
+    // Retrofit glide onto every still-alive base event's audioParams. Guard against
+    // double-scheduling if this event has multiple pitchEffects calls (fm ops etc).
+    bases.forEach(base => {
+      if (base._glidedToEvent === params) { return }
+      base._glidedToEvent = params
+      if (!base.freq || !base._pitchAudioParams) { return }
+      base._pitchAudioParams.forEach(baseAp => {
+        scheduleGlide(baseAp, params._time, glideDur, base.freq, params.freq, base.freq, glideCurve)
+      })
+    })
   }
 
   return (audioParam, params) => {
-    // Glide init
-    let glide = evalMainParamEvent(params, 'glide', 0, 'b')
-    let glideCurve = evalSubParamEvent(params, 'glide', 'curve', 1)
-    if (glide) {
-      let es = params._player.events // Find base events to glide from:
-        .filter(e => e.voice === params.voice) // Find only events in the same voice
-        .sort((a,b) => a.endTime - b.endTime) // If there are multiple possible base events, choose the one that ends latest
-      es.forEach(e => { // Glide these events to the new events freq
-        e._glideTargetEvent = params
-        e._glide = glide
-        e._glideCurve = glideCurve
-        if (e._setupGlideBase) { e._setupGlideBase() } // If the base event has no per frame update, then set one up
-      })
-      let glideBaseEvent = es[es.length - 1]
-      params._glideBaseEvent = glideBaseEvent // The new event glides _from_ this one base events freq
-    }
-    // Per event
-    let detune = 0
-    detune += evalMainParamEvent(params, 'addc', 0)
-    setAudioParamValue(audioParam, detune*100, 'pitcheffects')
-    // Per frame
-    if (hasPerFrameParam(params, 'addc') || hasParam(params, 'vib') || params._glideBaseEvent) {
-      let vib = evalMainParamEvent(params, 'vib', 0, 'cpb')
-      let vibdepth = evalSubParamEvent(params, 'vib', 'depth', 0.4)
-      let vibdelay = evalSubParamEvent(params, 'vib', 'delay', 1/2, 'b')
-      evalFuncFrame(audioParam, params, 'pitcheffects', (count) => {
-        let detune = 0
-        detune += evalMainPerFrame(params, 'addc', 0, count)
-        detune += vibrato(vib, vibdepth, vibdelay, params.count, count)
-        detune += glideTarget(params, count, glide, glideCurve)
-        detune += glideBase(params, count)
-        if (Number.isNaN(detune)) { console.log('detune NaN', detune, count, vib, vibdepth, vibdelay, glide, glideCurve, params) }
-        return detune*100 // Convert to cents for the detune audioParam
-      })
-    } else if (params.glide !== undefined) {
-      // No per frame update needed, but allow setting one up if this event becomes a glide base event
-      params._setupGlideBase = () => {
-        evalFuncFrame(audioParam, params, 'pitcheffects', (count) => {
-          return glideBase(params, count)*100
-        })
-        delete params._setupGlideBase
-      }
-    }
+    setupGlide(audioParam, params)
+    setupAddc(audioParam, params)
+    setupVib(audioParam, params)
   }
 
 })

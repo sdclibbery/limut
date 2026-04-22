@@ -38,10 +38,12 @@ electron performance
  Full remapping to handle this? What about gp.notes then?
 
 ==== audio ====
-Support for segmented values in per-frame update. So the per frame update pulls the next segment and sets that up, then waits
-  FULL test (and update test notes for user def functions, connectables, segments etc)
-Rewrite pitch effects so it doesn't need all those methods from eval-audio-params, and so addc at least supports segments
-! Fix shifter: use segmented timevars instead of lfo/osc, to implement smaller grains and random offsets
+Rewrite pitch-effects so it doesn't need all those special methods from eval-audio-params, and so at least addc supports segments
+ ? What did Claude do?
+ Do ALL the pitch effects features still work?
+ Doc updates needed?
+ Remove unused functions from eval-audio-params
+!Fix shifter: use segmented timevars instead of lfo/osc, to implement smaller grains and random offsets
   Test tuning with guitar sample: https://upload.wikimedia.org/wikipedia/commons/6/67/AcousticGuitarSample.ogg
 set duck = [0:/1/4,1:_3/4]t@s
   Or, better: set duck = [1:!1/8,0:/1/8,1:_3/4]t@s
@@ -51,7 +53,6 @@ WebAudio node graphs as first class values
  !!Parallel nodes should surely be round brackets???
   ???? {} for parallel nodes should be (), no???
   And should hoist, eg fx=osc{(108,110,112)}>>lpf{400}*0.06
- Should be able to  fx=[]n  And also  fx=echo>>[]n
  mono{}
  ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
   Or should all take same default units as params for consistency?
@@ -165,8 +166,6 @@ AudioBufferSourceNode: Support stereo for user functions
 Use []e / []e@s for all envelopes?
  ?Deprecate att, dec, sus, rel etc params and prefer envelope=[]e??
  ??Also deprecate other att/rel params; eg in pitchedperc, fm operator etc???
-Can pitch effects be segmented? Currently always go per-frame. EG  s saw, oct=2, addc=[36:!400ms,0]e@s, lpf=1000, amp/=4
- See evalFuncFrame. Problem is all pitch effects are combined into one function
 Hpf for chorus
 Would be nice to have a unison param with stereo spread for many base synths?
 Delay or offset sub-param for glide?
