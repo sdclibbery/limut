@@ -1,7 +1,5 @@
 'use strict'
 define(function(require) {
-  if ((new URLSearchParams(window.location.search)).get('textarea') !== null) { return }
-
   let system = require('play/system')
   let players = require('player/players')
   let {updateCode} = require('update-code')

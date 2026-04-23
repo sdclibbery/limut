@@ -10,7 +10,6 @@ sh server.sh   # starts Python HTTP server on port 8000
 
 Open `http://localhost:8000` in a browser. URL params:
 - `?test` — run in-browser unit tests (output in browser console)
-- `?textarea` — use plain textarea editor instead of CodeMirror (mobile fallback)
 
 ## Module System
 

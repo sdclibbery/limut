@@ -26,7 +26,7 @@ Limut can be run as a website, or packaged into a desktop web app. With npm inst
 
 # Code Editor
 
-Limut uses the CodeMirror editor by default (https://codemirror.net). This provides syntax coloring. However, on some devices (eg mobile) a better experience may result from using a basic textarea editor; this can be enabled by using the `?textarea` url parameter.
+Limut uses the CodeMirror editor (https://codemirror.net). This provides syntax coloring.
 
 # Development
 
