@@ -2,8 +2,10 @@
 =================================================================================================================================
 =================================================================================================================================
 WebRTC comms
+ !! Extract to own module!
  Send entire editor window contents from server to client on connection
  Send play and stop button/shortcut actions
+ Sync metronomes regularly
  Send changes to editor window contents
  Send gamepad events
  Send midi events

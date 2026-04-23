@@ -21,6 +21,7 @@ define(function(require) {
   let metronome = require('metronome')
   let players = require('player/players')
   let consoleOut = require('console')
+  require('collaboration')
   require('editor-textarea')
   require('editor-codemirror')
   let {parseCode} = require('update-code')
