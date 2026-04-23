@@ -1,6 +1,14 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
+WebRTC comms
+ Send entire editor window contents from server to client on connection
+ Send play and stop button/shortcut actions
+ Send changes to editor window contents
+ Send gamepad events
+ Send midi events
+ Send slider events
+ Send keyboard player events
 ?main volume slider should be killed; just do  set main amp*=slider if you want one...
  ??Time to review the UI generally? make smaller / tidy up?
 electron performance
@@ -18,6 +26,7 @@ electron performance
 ==== audio ====
 !Fix shifter: use segmented timevars instead of lfo/osc, to implement smaller grains and random offsets
   Test tuning with guitar sample: https://upload.wikimedia.org/wikipedia/commons/6/67/AcousticGuitarSample.ogg
+  Needs rebuilding from scratch; claude cant really do it
 set duck = [0:/1/4,1:_3/4]t@s
   Or, better: set duck = [1:!1/8,0:/1/8,1:_3/4]t@s
   Still needs to better, and controllable
