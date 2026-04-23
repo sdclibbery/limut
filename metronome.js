@@ -56,6 +56,17 @@ metronome.update = function (now) {
 
 metronome.timeNow = () => time
 
+metronome.sync = (serverBeatTime, serverBpm) => {
+  if (serverBpm) {
+    beatDuration = 60/serverBpm
+    if (window.bpmChanged) { window.bpmChanged(60/beatDuration) }
+  }
+  count = Math.floor(serverBeatTime)
+  let fraction = serverBeatTime - count
+  lastBeatAt = time - fraction * beatDuration
+  nextBeatAt = lastBeatAt + beatDuration
+}
+
 metronome.setBeatReadouts = (v) => beatReadouts = v
 metronome.getBeatReadouts = () => beatReadouts
 

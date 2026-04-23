@@ -21,7 +21,7 @@ define(function(require) {
   let metronome = require('metronome')
   let players = require('player/players')
   let consoleOut = require('console')
-  require('collaboration')
+  let collaboration = require('collaboration')
   require('editor-codemirror')
   let {parseCode} = require('update-code')
   let {clearCallTree} = require('player/callstack')
@@ -168,6 +168,7 @@ define(function(require) {
         console.log(`slow beatLatency ${beatLatency} at ${beat.count}`)
       }
       clock.innerText = new Date().toLocaleTimeString('en-GB', clockFormat)
+      collaboration.broadcastSync()
     }
     try {
       system.frame(now, beatTime)

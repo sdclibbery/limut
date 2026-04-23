@@ -2,7 +2,10 @@
 define(function (require) {
   let consoleOut = require('console')
   let editor = require('editor-codemirror')
+  let metronome = require('metronome')
+  let system = require('play/system')
 
+  let isServer = false
   let connections = new Set()
   let registerConnection = (conn, sendCodeOnOpen) => {
     conn.on('open', () => {
@@ -18,6 +21,8 @@ define(function (require) {
       } else if (data && typeof data === 'object' && data.type === 'code') {
         editor.setValue(data.code)
         consoleOut('📝 Code received from ' + conn.peer)
+      } else if (data && typeof data === 'object' && data.type === 'sync') {
+        metronome.sync(data.beatTime, data.bpm)
       }
     })
     conn.on('close', () => {
@@ -46,6 +51,7 @@ define(function (require) {
 
   consoleOut.addCommand('server', () => {
     consoleOut('> Starting peer.js server...')
+    isServer = true
     loadPeerScript().then(() => {
       let peer = new window.Peer()
       peer.on('open', (id) => {
@@ -106,5 +112,18 @@ define(function (require) {
     consoleOut('You: ' + message)
   })
 
-  return {}
+  let broadcastSync = () => {
+    if (!isServer) { return }
+    if (connections.size === 0) { return }
+    let msg = {
+      type: 'sync',
+      beatTime: metronome.beatTime(system.timeNow()),
+      bpm: metronome.bpm(),
+    }
+    connections.forEach((conn) => {
+      if (conn.open) { conn.send(msg) }
+    })
+  }
+
+  return { broadcastSync: broadcastSync }
 })

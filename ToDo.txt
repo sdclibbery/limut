@@ -2,10 +2,10 @@
 =================================================================================================================================
 =================================================================================================================================
 WebRTC comms
- Send play and stop button/shortcut actions
  Sync metronomes regularly
  Send changes to editor window contents
  Send gamepad events
+ Do not save code to localstorage while connected as a client
  Send midi events
  Send slider events
  Send keyboard player events
