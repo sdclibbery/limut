@@ -1,16 +1,23 @@
 'use strict';
 define(function (require) {
   let consoleOut = require('console')
+  let editor = require('editor-codemirror')
 
   let connections = new Set()
-  let registerConnection = (conn) => {
+  let registerConnection = (conn, sendCodeOnOpen) => {
     conn.on('open', () => {
       connections.add(conn)
       consoleOut('🟢 Peer connected: ' + conn.peer)
+      if (sendCodeOnOpen) {
+        conn.send({ type: 'code', code: editor.getValue() })
+      }
     })
     conn.on('data', (data) => {
       if (data && typeof data === 'object' && data.type === 'say') {
         consoleOut(conn.peer + ': ' + data.message)
+      } else if (data && typeof data === 'object' && data.type === 'code') {
+        editor.setValue(data.code)
+        consoleOut('📝 Code received from ' + conn.peer)
       }
     })
     conn.on('close', () => {
@@ -45,7 +52,7 @@ define(function (require) {
         consoleOut('Peer session id: ' + id)
       })
       peer.on('connection', (conn) => {
-        registerConnection(conn)
+        registerConnection(conn, true)
       })
       peer.on('error', (err) => {
         consoleOut('🔴 Peer error: ' + err)
@@ -67,7 +74,7 @@ define(function (require) {
     loadPeerScript().then(() => {
       let peer = new window.Peer()
       peer.on('open', () => {
-        registerConnection(peer.connect(targetId))
+        registerConnection(peer.connect(targetId), false)
       })
       peer.on('error', (err) => {
         consoleOut('🔴 Peer error: ' + err)

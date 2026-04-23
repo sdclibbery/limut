@@ -50,4 +50,8 @@ define(function(require) {
     editor.toggleComment()
   }
 
+  return {
+    getValue: () => editor.getValue(),
+    setValue: (v) => editor.setValue(v),
+  }
 })

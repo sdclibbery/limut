@@ -2,7 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 WebRTC comms
- Send entire editor window contents from server to client on connection
  Send play and stop button/shortcut actions
  Sync metronomes regularly
  Send changes to editor window contents
