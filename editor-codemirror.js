@@ -18,8 +18,10 @@ define(function(require) {
     smartIndent: false,
     matchBrackets: true,
   })
-  editor.setValue(localStorage.getItem('limut-code') || '')
-  editor.on('change', () => localStorage.setItem('limut-code', editor.getValue()))
+  if ((new URLSearchParams(window.location.search)).get('nosave') === null) {
+    editor.setValue(localStorage.getItem('limut-code') || '')
+    editor.on('change', () => localStorage.setItem('limut-code', editor.getValue()))
+  }
   let ctrlCode = (event, keys) => {
     if (event.isComposing || event.keyCode === 229) { return false }
     return ((event.ctrlKey || event.metaKey) && (keys.includes(event.keyCode) || keys.includes(event.key)))
