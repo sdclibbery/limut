@@ -20,6 +20,13 @@ define(function(require) {
     editor.setValue(localStorage.getItem('limut-code') || '')
     editor.on('change', () => localStorage.setItem('limut-code', editor.getValue()))
   }
+  let changeListeners = []
+  let applyingRemote = false
+  editor.on('change', (cm, changeObj) => {
+    if (applyingRemote) { return }
+    if (changeListeners.length === 0) { return }
+    for (let i = 0; i < changeListeners.length; i++) { changeListeners[i](changeObj) }
+  })
   let ctrlCode = (event, keys) => {
     if (event.isComposing || event.keyCode === 229) { return false }
     return ((event.ctrlKey || event.metaKey) && (keys.includes(event.keyCode) || keys.includes(event.key)))
@@ -52,6 +59,14 @@ define(function(require) {
 
   return {
     getValue: () => editor.getValue(),
-    setValue: (v) => editor.setValue(v),
+    setValue: (v) => {
+      applyingRemote = true
+      try { editor.setValue(v) } finally { applyingRemote = false }
+    },
+    onChange: (cb) => { changeListeners.push(cb) },
+    applyChange: (change) => {
+      applyingRemote = true
+      try { editor.replaceRange(change.text, change.from, change.to) } finally { applyingRemote = false }
+    },
   }
 })

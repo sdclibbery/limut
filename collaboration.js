@@ -21,6 +21,8 @@ define(function (require) {
       } else if (data && typeof data === 'object' && data.type === 'code') {
         editor.setValue(data.code)
         consoleOut('📝 Code received from ' + conn.peer)
+      } else if (data && typeof data === 'object' && data.type === 'codechange') {
+        editor.applyChange(data)
       } else if (data && typeof data === 'object' && data.type === 'sync') {
         metronome.sync(data.beatTime, data.bpm)
       }
@@ -49,9 +51,26 @@ define(function (require) {
     return peerScriptLoading
   }
 
+  let codeChangeListenerRegistered = false
+  let registerCodeChangeListener = () => {
+    if (codeChangeListenerRegistered) { return }
+    codeChangeListenerRegistered = true
+    editor.onChange((change) => {
+      if (connections.size === 0) { return }
+      let msg = {
+        type: 'codechange',
+        from: { line: change.from.line, ch: change.from.ch },
+        to: { line: change.to.line, ch: change.to.ch },
+        text: change.text,
+      }
+      connections.forEach((conn) => { if (conn.open) { conn.send(msg) } })
+    })
+  }
+
   consoleOut.addCommand('server', () => {
     consoleOut('> Starting peer.js server...')
     isServer = true
+    registerCodeChangeListener()
     loadPeerScript().then(() => {
       let peer = new window.Peer()
       peer.on('open', (id) => {

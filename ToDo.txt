@@ -2,11 +2,11 @@
 =================================================================================================================================
 =================================================================================================================================
 WebRTC comms
- Sync metronomes regularly
  Send changes to editor window contents
  Send gamepad events
- Do not save code to localstorage while connected as a client
  Send midi events
+ Do not save code to localstorage while connected as a client
+ Do not allow client code update while connected? Or if not, send client changes instead
  Send slider events
  Send keyboard player events
 ?main volume slider should be killed; just do  set main amp*=slider if you want one...
