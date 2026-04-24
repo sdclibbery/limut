@@ -4,9 +4,22 @@ define(function (require) {
   let editor = require('editor-codemirror')
   let metronome = require('metronome')
   let system = require('play/system')
+  let gamepads = require('player/gamepad')
 
   let isServer = false
   let connections = new Set()
+
+  let snapshotPad = (pad) => {
+    if (!pad) { return null }
+    return {
+      id: pad.id,
+      mapping: pad.mapping,
+      axes: Array.from(pad.axes),
+      buttons: Array.from(pad.buttons).map(b => ({ value: b.value, pressed: b.pressed, touched: b.touched })),
+      connected: true,
+    }
+  }
+
   let registerConnection = (conn, sendCodeOnOpen) => {
     conn.on('open', () => {
       connections.add(conn)
@@ -14,6 +27,13 @@ define(function (require) {
       if (sendCodeOnOpen) {
         conn.send({ type: 'code', code: editor.getValue() })
       }
+      let localPads = (typeof navigator !== 'undefined' && navigator.getGamepads) ? Array.from(navigator.getGamepads()) : []
+      let initial = []
+      localPads.forEach((pad, i) => {
+        let snap = snapshotPad(pad)
+        if (snap) { initial.push({ idx: i, pad: snap }) }
+      })
+      if (initial.length > 0) { conn.send({ type: 'gamepad', pads: initial }) }
     })
     conn.on('data', (data) => {
       if (data && typeof data === 'object' && data.type === 'say') {
@@ -25,10 +45,19 @@ define(function (require) {
         editor.applyChange(data)
       } else if (data && typeof data === 'object' && data.type === 'sync') {
         metronome.sync(data.beatTime, data.bpm)
+      } else if (data && typeof data === 'object' && data.type === 'gamepad') {
+        if (Array.isArray(data.pads)) {
+          data.pads.forEach((entry) => {
+            if (entry && typeof entry.idx === 'number') {
+              gamepads.setRemotePad(conn.peer, entry.idx, entry.pad || null)
+            }
+          })
+        }
       }
     })
     conn.on('close', () => {
       connections.delete(conn)
+      gamepads.clearPeer(conn.peer)
       consoleOut('⚪ Peer disconnected: ' + conn.peer)
     })
     conn.on('error', (err) => {
@@ -67,12 +96,13 @@ define(function (require) {
     })
   }
 
-  consoleOut.addCommand('server', () => {
+  consoleOut.addCommand('server', (args) => {
+    let requestedId = args[0]
     consoleOut('> Starting peer.js server...')
     isServer = true
     registerCodeChangeListener()
     loadPeerScript().then(() => {
-      let peer = new window.Peer()
+      let peer = requestedId ? new window.Peer(requestedId) : new window.Peer()
       peer.on('open', (id) => {
         consoleOut('Peer session id: ' + id)
       })
@@ -144,5 +174,40 @@ define(function (require) {
     })
   }
 
-  return { broadcastSync: broadcastSync }
+  let lastSentPads = []
+  let padSnapshotsEqual = (a, b) => {
+    if (!a && !b) { return true }
+    if (!a || !b) { return false }
+    if (a.mapping !== b.mapping || a.id !== b.id) { return false }
+    if (a.axes.length !== b.axes.length) { return false }
+    for (let i = 0; i < a.axes.length; i++) {
+      if (Math.abs(a.axes[i] - b.axes[i]) > 0.001) { return false }
+    }
+    if (a.buttons.length !== b.buttons.length) { return false }
+    for (let i = 0; i < a.buttons.length; i++) {
+      if (Math.abs(a.buttons[i].value - b.buttons[i].value) > 0.001) { return false }
+      if (!!a.buttons[i].pressed !== !!b.buttons[i].pressed) { return false }
+    }
+    return true
+  }
+  let broadcastGamepads = () => {
+    if (connections.size === 0) { return }
+    let pads = (typeof navigator !== 'undefined' && navigator.getGamepads) ? Array.from(navigator.getGamepads()) : []
+    let len = Math.max(pads.length, lastSentPads.length)
+    let changes = []
+    for (let i = 0; i < len; i++) {
+      let snap = snapshotPad(pads[i])
+      if (!padSnapshotsEqual(snap, lastSentPads[i])) {
+        changes.push({ idx: i, pad: snap })
+        lastSentPads[i] = snap
+      }
+    }
+    if (changes.length === 0) { return }
+    let msg = { type: 'gamepad', pads: changes }
+    connections.forEach((conn) => {
+      if (conn.open) { conn.send(msg) }
+    })
+  }
+
+  return { broadcastSync: broadcastSync, broadcastGamepads: broadcastGamepads }
 })

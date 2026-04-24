@@ -6,9 +6,43 @@ define(function(require) {
 
   let pressThreshold = 0.95 // For analogue button, have to press it this far before it triggers
 
+  // Remote gamepads received from connected peers. Map<peerId, Map<padIdx, padSnapshot>>.
+  // padSnapshot has the shape { id, mapping, axes, buttons:[{value,...}], connected }.
+  let remotePads = new Map()
+
+  let setRemotePad = (peerId, padIdx, padData) => {
+    let peerMap = remotePads.get(peerId)
+    if (padData === null || padData === undefined) {
+      if (peerMap) {
+        peerMap.delete(padIdx)
+        if (peerMap.size === 0) { remotePads.delete(peerId) }
+      }
+      return
+    }
+    if (!peerMap) { peerMap = new Map(); remotePads.set(peerId, peerMap) }
+    peerMap.set(padIdx, padData)
+  }
+
+  let clearPeer = (peerId) => { remotePads.delete(peerId) }
+
+  let getGamepads = () => {
+    let local = (typeof navigator !== 'undefined' && navigator.getGamepads) ? Array.from(navigator.getGamepads()) : []
+    let merged = local.slice()
+    let placeAt = (pad) => {
+      for (let i = 0; i < merged.length; i++) {
+        if (!merged[i]) { merged[i] = pad; return }
+      }
+      merged.push(pad)
+    }
+    remotePads.forEach((peerMap) => {
+      peerMap.forEach((padData) => { placeAt(padData) })
+    })
+    return merged
+  }
+
   let gamepads = []
   let perFrameUpdate = (now) => {
-    navigator.getGamepads().forEach((pad,i) => {
+    getGamepads().forEach((pad,i) => {
       if (!pad) { return }
       if (gamepads[i] === undefined) { // New pad, add it
         gamepads[i] = {
@@ -130,5 +164,8 @@ define(function(require) {
   return {
     perFrameUpdate: perFrameUpdate,
     gamepadPlayer: gamepadPlayer,
+    getGamepads: getGamepads,
+    setRemotePad: setRemotePad,
+    clearPeer: clearPeer,
   }
 })

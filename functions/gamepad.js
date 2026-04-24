@@ -3,6 +3,7 @@ define(function(require) {
   let consoleOut = require('console')
   let metronome = require('metronome')
   let addVar = require('predefined-vars').add
+  let gamepads = require('player/gamepad')
 
   let namedAxes = {
     lt : { button: 6 }, // left trigger
@@ -78,7 +79,7 @@ define(function(require) {
     let gamepadValue = () => {
       if (padNumber === undefined && axisNumber === undefined && buttonNumber === undefined) { // log gamepad info if no params
         let str = 'Gamepads:\n'
-        navigator.getGamepads().forEach((pad, i) => {
+        gamepads.getGamepads().forEach((pad, i) => {
           if (!pad) { return 0 }
           str += `Pad ${i} ${pad.id} ${pad.mapping}:\n`
           str += `axes: ${pad.axes.join(', ')} `
@@ -89,7 +90,7 @@ define(function(require) {
         lastStr = str
         return 0
       }
-      let gamepad = navigator.getGamepads()[padNumber || 0]
+      let gamepad = gamepads.getGamepads()[padNumber || 0]
       if (!gamepad) { return 0 }
       if (requireStandardMapping && gamepad.mapping !== 'standard') { consoleOut('🔴 named gamepad axes will not work correctly on non-standard mapping gamepad!') }
       if (buttonNumber !== undefined) { return gamepad.buttons[buttonNumber].value || 0 }

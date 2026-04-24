@@ -134,6 +134,13 @@ define(function(require) {
       clearCallTree()
     }
     try {
+      collaboration.broadcastGamepads()
+    } catch (e) {
+      consoleOut('🔴 Frame update Error from gamepad broadcast: ' + e)
+      console.log(e)
+      clearCallTree()
+    }
+    try {
       dmx.perFrameUpdate(now)
     } catch (e) {
       consoleOut('🔴 Frame update Error from DMX: ' + e)
