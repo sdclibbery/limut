@@ -1990,7 +1990,7 @@ define(function(require) {
   e = evd(0,0,1)
   v = evalParamFrame(p, e,0)
   assertApprox(0.5, v.test.value)
-  assertApprox(0.05, v.test.target_value)
+  assertApprox(0.05, v.test.target_value) // One time, this assertion only randomly failed. The actual value was 0.
   system.queued = []
 
   assert({value:2,_units:'s'}, evalParamFrame(parseExpression('[1]*2s'), evd(0,0,1),0, {withInterval:true}))  

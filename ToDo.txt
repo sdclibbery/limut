@@ -3,7 +3,6 @@
 =================================================================================================================================
 WebRTC comms - collaboration
  !Connection is flaky, sometimes it just comes and goes
- !client is playing too many events when running?? Is metronome jitter causing it?
  !DO need to send event to update code and run from server, so also send stop event too
   And client should immediately run if the server is already running
  ?Drop 'server' and just use connect for all? If session doesn't already exist, then create it?
