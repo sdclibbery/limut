@@ -66,6 +66,17 @@ define(function (require) {
     })
   }
 
+  let peerOptions = {
+    config: {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+        { urls: 'turns:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
+      ],
+      iceCandidatePoolSize: 2,
+    },
+  }
+
   let peerScriptLoading
   let loadPeerScript = () => {
     if (window.Peer) { return Promise.resolve() }
@@ -102,7 +113,7 @@ define(function (require) {
     isServer = true
     registerCodeChangeListener()
     loadPeerScript().then(() => {
-      let peer = requestedId ? new window.Peer(requestedId) : new window.Peer()
+      let peer = requestedId ? new window.Peer(requestedId, peerOptions) : new window.Peer(peerOptions)
       peer.on('open', (id) => {
         consoleOut('Peer session id: ' + id)
       })
@@ -127,7 +138,7 @@ define(function (require) {
     }
     consoleOut('> Connecting to ' + targetId + '...')
     loadPeerScript().then(() => {
-      let peer = new window.Peer()
+      let peer = new window.Peer(peerOptions)
       peer.on('open', () => {
         registerConnection(peer.connect(targetId), false)
       })
