@@ -5,6 +5,7 @@ define(function (require) {
   let metronome = require('metronome')
   let system = require('play/system')
   let gamepads = require('player/gamepad')
+  let sliders = require('functions/sliders')
 
   let isServer = false
   let connections = new Set()
@@ -35,6 +36,8 @@ define(function (require) {
         if (snap) { initial.push({ idx: i, pad: snap }) }
       })
       if (initial.length > 0) { conn.send({ type: 'gamepad', pads: initial }) }
+      let sliderState = sliders.getSliderValues()
+      if (sliderState.length > 0) { conn.send({ type: 'sliders', sliders: sliderState }) }
     })
     conn.on('data', (data) => {
       if (data && typeof data === 'object' && data.type === 'say') {
@@ -55,6 +58,12 @@ define(function (require) {
               gamepads.setRemotePad(conn.peer, entry.idx, entry.pad || null)
             }
           })
+        }
+      } else if (data && typeof data === 'object' && data.type === 'slider') {
+        sliders.setSliderValue(data.name, data.value)
+      } else if (data && typeof data === 'object' && data.type === 'sliders') {
+        if (Array.isArray(data.sliders)) {
+          data.sliders.forEach((s) => { sliders.setSliderValue(s.name, s.value) })
         }
       }
     })
@@ -113,6 +122,12 @@ define(function (require) {
       connections.forEach((conn) => { if (conn.open) { conn.send(msg) } })
     })
   }
+
+  sliders.onSliderChange((name, value) => {
+    if (connections.size === 0) { return }
+    let msg = { type: 'slider', name: name, value: value }
+    connections.forEach((conn) => { if (conn.open) { conn.send(msg) } })
+  })
 
   consoleOut.addCommand('server', (args) => {
     let requestedId = args[0]

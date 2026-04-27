@@ -2,12 +2,7 @@
 =================================================================================================================================
 =================================================================================================================================
 WebRTC comms - collaboration
- DO need to send event to update code and run from server, so also send stop event too
-  And client should immediately run if the server is already running
-  !Cant run without collaborating now
-   !Only on firefox??!!
- !Connection is flaky, sometimes it just comes and goes?
- Send slider changes
+ ?Connection is flaky, sometimes it just comes and goes?
  Send keyboard player events
  Do not save code to localstorage while connected as a client; do reload saved code after disconnecting
  ?Do not allow client code update while connected

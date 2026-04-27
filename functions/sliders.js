@@ -4,6 +4,7 @@ define(function(require) {
   let consoleOut = require('console')
 
   let sliders = {}
+  let sliderChangeListeners = []
 
   let inputFromSlider = (slider, x) => {
     let lerp = (x-slider.min) / (slider.max-slider.min)
@@ -41,7 +42,26 @@ define(function(require) {
     input.oninput = ({target}) => {
       slider.value = sliderFromInput(slider, target.value)
       consoleOut(`Slider '${slider.name}': ${slider.value}`)
+      sliderChangeListeners.forEach(cb => cb(slider.name, slider.value))
     }
+  }
+
+  let setSliderValue = (name, value) => {
+    let slider = sliders[name]
+    if (!slider) { return }
+    slider.value = value
+    let input = document.querySelector('#'+idFromName(slider.name))
+    if (input) { input.value = inputFromSlider(slider, value) }
+  }
+
+  let getSliderValues = () => {
+    let result = []
+    for (let name in sliders) {
+      if (sliders[name].value !== undefined) {
+        result.push({ name: name, value: sliders[name].value })
+      }
+    }
+    return result
   }
 
   let newSlider = (args, context) => {
@@ -93,5 +113,8 @@ define(function(require) {
   return {
     gc_reset: gc_reset,
     gc_sweep: gc_sweep,
+    onSliderChange: (cb) => { sliderChangeListeners.push(cb) },
+    setSliderValue: setSliderValue,
+    getSliderValues: getSliderValues,
   }
 })
