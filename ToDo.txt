@@ -2,13 +2,15 @@
 =================================================================================================================================
 =================================================================================================================================
 WebRTC comms - collaboration
- !Connection is flaky, sometimes it just comes and goes
- !DO need to send event to update code and run from server, so also send stop event too
+ DO need to send event to update code and run from server, so also send stop event too
   And client should immediately run if the server is already running
- ?Drop 'server' and just use connect for all? If session doesn't already exist, then create it?
- ?Allow client to specify their id when they connect
- Do not save code to localstorage while connected as a client
- Do not allow client code update while connected? Or if not, send client changes instead
+  !Cant run without collaborating now
+   !Only on firefox??!!
+ !Connection is flaky, sometimes it just comes and goes?
+ Send slider changes
+ Send keyboard player events
+ Do not save code to localstorage while connected as a client; do reload saved code after disconnecting
+ ?Do not allow client code update while connected
  Docs
 ?main volume slider should be killed; just do  set main amp*=slider if you want one...
  ??Time to review the UI generally? make smaller / tidy up?

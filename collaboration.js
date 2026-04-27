@@ -26,6 +26,7 @@ define(function (require) {
       consoleOut('🟢 Peer connected: ' + conn.peer)
       if (sendCodeOnOpen) {
         conn.send({ type: 'code', code: editor.getValue() })
+        conn.send({ type: 'runstate', running: editor.isRunning() })
       }
       let localPads = (typeof navigator !== 'undefined' && navigator.getGamepads) ? Array.from(navigator.getGamepads()) : []
       let initial = []
@@ -45,6 +46,8 @@ define(function (require) {
         editor.applyChange(data)
       } else if (data && typeof data === 'object' && data.type === 'sync') {
         metronome.sync(data.beatTime, data.bpm)
+      } else if (data && typeof data === 'object' && data.type === 'runstate') {
+        if (data.running) { window.go() } else { window.stop() }
       } else if (data && typeof data === 'object' && data.type === 'gamepad') {
         if (Array.isArray(data.pads)) {
           data.pads.forEach((entry) => {
@@ -70,10 +73,8 @@ define(function (require) {
     config: {
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
-        { urls: 'turns:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
+        { urls: 'stun:stun.cloudflare.com:3478' },
       ],
-      iceCandidatePoolSize: 2,
     },
   }
 
@@ -103,6 +104,12 @@ define(function (require) {
         to: { line: change.to.line, ch: change.to.ch },
         text: change.text,
       }
+      connections.forEach((conn) => { if (conn.open) { conn.send(msg) } })
+    })
+    editor.onRunStateChange((running) => {
+      if (!isServer) { return }
+      if (connections.size === 0) { return }
+      let msg = { type: 'runstate', running: running }
       connections.forEach((conn) => { if (conn.open) { conn.send(msg) } })
     })
   }

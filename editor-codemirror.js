@@ -40,11 +40,18 @@ define(function(require) {
   editorDiv.addEventListener("keydown", event => {
     if (ctrlCode(event, ['/', 191])) { window.comment() }
   })
+  let isRunning = false
+  let runStateListeners = []
+  let notifyRunState = () => {
+    for (let i = 0; i < runStateListeners.length; i++) { runStateListeners[i](isRunning) }
+  }
   window.stop = () => {
     system.resume()
     fxMixChain.disconnectAll()
     players.stopAll()
     consoleOut('> Stop all players')
+    isRunning = false
+    notifyRunState()
   }
   window.go = () => {
     updateCode(editor.getValue())
@@ -52,6 +59,8 @@ define(function(require) {
       editorDiv.style.backgroundColor = '#d9d9d980'
       setTimeout(() => editorDiv.style.backgroundColor = 'transparent', 150)
     }
+    isRunning = true
+    notifyRunState()
   }
   window.comment = () => {
     editor.toggleComment()
@@ -68,5 +77,7 @@ define(function(require) {
       applyingRemote = true
       try { editor.replaceRange(change.text, change.from, change.to) } finally { applyingRemote = false }
     },
+    isRunning: () => isRunning,
+    onRunStateChange: (cb) => { runStateListeners.push(cb) },
   }
 })

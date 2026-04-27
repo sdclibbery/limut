@@ -30,10 +30,10 @@ define(function(require) {
       if (id === 'main') { continue } // Preserve main bus so reverb tails keep playing
       if (players.instances[id].destroy) { players.instances[id].destroy() }
       if (players.instances[id]._fx && players.instances[id]._fx.destroy) { players.instances[id]._fx.destroy() }
-  }
-    players.instances = {
-      main: players.instances.main // Preserve main bus so it can be cleaned up when it gets recreated on code update
     }
+    let preserved = {}
+    if (players.instances.main) { preserved.main = players.instances.main } // Preserve main bus so it can be cleaned up when it gets recreated on code update
+    players.instances = preserved
     players.overrides = {}
   }
 

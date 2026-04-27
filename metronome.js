@@ -82,7 +82,12 @@ metronome.setTime = (t) => time=t
 
 // TESTS //
 if ((new URLSearchParams(window.location.search)).get('test') !== null) {
-  let oldBpm = metronome.bpm()
+  let savedBpm = metronome.bpm()
+  let savedLastBeatAt = lastBeatAt
+  let savedNextBeatAt = nextBeatAt
+  let savedCount = count
+  let savedLastFiredCount = lastFiredCount
+  let savedTime = time
 
   // A sync arriving just after a beat has fired, with serverBeatTime slightly
   // below the count we just fired, must not cause that count to fire a second
@@ -121,9 +126,12 @@ if ((new URLSearchParams(window.location.search)).get('test') !== null) {
     console.trace(`Expected catch-up beat to fire as count 21, got: ${JSON.stringify(catchUpBeat)}`)
   }
 
-  metronome.bpm(oldBpm)
-  metronome.setCount(0)
-  metronome.setTime(0)
+  metronome.bpm(savedBpm)
+  lastBeatAt = savedLastBeatAt
+  nextBeatAt = savedNextBeatAt
+  count = savedCount
+  lastFiredCount = savedLastFiredCount
+  time = savedTime
 
   console.log('Metronome tests complete')
 }
