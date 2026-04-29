@@ -81,8 +81,33 @@ define(function (require) {
   let peerOptions = {
     config: {
       iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun.cloudflare.com:3478' },
+      ],
+      iceServers: [
+        {
+          urls: "stun:stun.relay.metered.ca:80",
+        },
+        {
+          urls: "turn:global.relay.metered.ca:80",
+          username: "ecf2ce1bc418cf798111c457",
+          credential: "6OaZrpbvpfC/ra5H",
+        },
+        {
+          urls: "turn:global.relay.metered.ca:80?transport=tcp",
+          username: "ecf2ce1bc418cf798111c457",
+          credential: "6OaZrpbvpfC/ra5H",
+        },
+        {
+          urls: "turn:global.relay.metered.ca:443",
+          username: "ecf2ce1bc418cf798111c457",
+          credential: "6OaZrpbvpfC/ra5H",
+        },
+        {
+          urls: "turns:global.relay.metered.ca:443?transport=tcp",
+          username: "ecf2ce1bc418cf798111c457",
+          credential: "6OaZrpbvpfC/ra5H",
+        },
+        // { urls: 'stun:stun.l.google.com:19302' },
+        // { urls: 'stun:stun.cloudflare.com:3478' },
       ],
     },
   }

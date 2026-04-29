@@ -2,10 +2,14 @@
 =================================================================================================================================
 =================================================================================================================================
 WebRTC comms - collaboration
- ?Connection is flaky, sometimes it just comes and goes?
+ Also broadcast client code changes
+  ?Show all connected cursor positions?
+ ?Still getting double event flashes on client?
+ ?Clients should stop on disconnect
+ ?Client metronome can be unstable; sync should allow for variation in latency; should be slew limited? Use UTC timestamp??
  Send keyboard player events
- Do not save code to localstorage while connected as a client; do reload saved code after disconnecting
- ?Do not allow client code update while connected
+ Send midi data
+ ?Do not save code to localstorage while connected as a client; do reload saved code after disconnecting
  Docs
 ?main volume slider should be killed; just do  set main amp*=slider if you want one...
  ??Time to review the UI generally? make smaller / tidy up?
