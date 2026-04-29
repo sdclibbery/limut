@@ -1,6 +1,9 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
+!Why does trance sound out of tune with lately?
+!Cydist needs more motion, and to default to a much longer release tail
+ And also shorter (or longer) attack and maybe more transient?
 WebRTC comms - collaboration
  Also broadcast client code changes
   ?Show all connected cursor positions?
