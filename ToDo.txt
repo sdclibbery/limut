@@ -1,12 +1,9 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!Why does trance sound out of tune with lately?
-!Cydist needs more motion, and to default to a much longer release tail
- And also shorter (or longer) attack and maybe more transient?
 WebRTC comms - collaboration
  Also broadcast client code changes
-  ?Show all connected cursor positions?
+ ?Show all connected cursor positions?
  ?Still getting double event flashes on client?
  ?Clients should stop on disconnect
  ?Client metronome can be unstable; sync should allow for variation in latency; should be slew limited? Use UTC timestamp??
