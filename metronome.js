@@ -62,15 +62,25 @@ metronome.update = function (now) {
 
 metronome.timeNow = () => time
 
+let syncSlewFactor = 0.1
+let syncSnapThresholdBeats = 1.0
 metronome.sync = (serverBeatTime, serverBpm) => {
   if (serverBpm) {
     beatDuration = 60/serverBpm
     if (window.bpmChanged) { window.bpmChanged(60/beatDuration) }
   }
-  count = Math.floor(serverBeatTime)
-  let fraction = serverBeatTime - count
-  lastBeatAt = time - fraction * beatDuration
-  nextBeatAt = lastBeatAt + beatDuration
+  let localBeatTime = metronome.beatTime(time)
+  let errorBeats = serverBeatTime - localBeatTime
+  if (Math.abs(errorBeats) > syncSnapThresholdBeats) {
+    count = Math.floor(serverBeatTime)
+    let fraction = serverBeatTime - count
+    lastBeatAt = time - fraction * beatDuration
+    nextBeatAt = lastBeatAt + beatDuration
+  } else {
+    let shiftSeconds = errorBeats * beatDuration * syncSlewFactor
+    lastBeatAt -= shiftSeconds
+    nextBeatAt -= shiftSeconds
+  }
 }
 
 metronome.setBeatReadouts = (v) => beatReadouts = v
@@ -124,6 +134,37 @@ if ((new URLSearchParams(window.location.search)).get('test') !== null) {
   let catchUpBeat = metronome.update(21.0)
   if (!catchUpBeat || catchUpBeat.count !== 21) {
     console.trace(`Expected catch-up beat to fire as count 21, got: ${JSON.stringify(catchUpBeat)}`)
+  }
+
+  // Slewing: small errors should nudge the local clock partway, not snap.
+  // A jittery sync within ±1 beat should move the local beatTime by only a fraction
+  // of the error so network latency variance doesn't yank the metronome around.
+  metronome.bpm(60)
+  metronome.setCount(30)
+  metronome.setTime(30.5)
+  lastBeatAt = 30
+  nextBeatAt = 31
+  let beforeSlew = metronome.beatTime(30.5) // 30.5
+  metronome.sync(30.6, 60) // server 0.1 beats ahead — small error, should slew
+  let afterSlew = metronome.beatTime(30.5)
+  let slewMovement = afterSlew - beforeSlew
+  if (slewMovement <= 0 || slewMovement >= 0.1) {
+    console.trace(`Expected slew movement in (0, 0.1), got ${slewMovement}`)
+  }
+  if (count !== 30) {
+    console.trace(`Slew should not change count, expected 30 got ${count}`)
+  }
+
+  // Slew direction: server behind should pull local clock backward.
+  metronome.setCount(40)
+  metronome.setTime(40.5)
+  lastBeatAt = 40
+  nextBeatAt = 41
+  let beforeSlewBack = metronome.beatTime(40.5) // 40.5
+  metronome.sync(40.4, 60) // server 0.1 beats behind
+  let afterSlewBack = metronome.beatTime(40.5)
+  if (afterSlewBack >= beforeSlewBack) {
+    console.trace(`Expected backward slew, got ${beforeSlewBack} -> ${afterSlewBack}`)
   }
 
   metronome.bpm(savedBpm)
