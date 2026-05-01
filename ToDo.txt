@@ -2,8 +2,10 @@
 =================================================================================================================================
 =================================================================================================================================
 WebRTC comms - collaboration
- ?Show all connected cursor positions?
  Docs
+!Trance sounds out of tune
+ Trance q should be lower to keep in tune?
+ toscale{} function: takes a Freq and quantises to a scale, default to current global scale/root. Try using it for trance cutoff
 ?main volume slider should be killed; just do  set main amp*=slider if you want one...
  ??Time to review the UI generally? make smaller / tidy up?
 electron performance

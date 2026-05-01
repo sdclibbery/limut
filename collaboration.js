@@ -10,6 +10,7 @@ define(function (require) {
   let isServer = false
   let connections = new Set()
   let peerCursorPositions = new Map()
+  let applyingRemoteRunState = false
 
   let peerColor = (peerId) => {
     let hash = 0
@@ -71,7 +72,11 @@ define(function (require) {
       } else if (data && typeof data === 'object' && data.type === 'sync') {
         metronome.sync(data.beatTime, data.bpm)
       } else if (data && typeof data === 'object' && data.type === 'runstate') {
-        if (data.running) { window.go() } else { window.stop() }
+        applyingRemoteRunState = true
+        try { if (data.running) { window.go() } else { window.stop() } } finally { applyingRemoteRunState = false }
+        if (isServer) {
+          connections.forEach((c) => { if (c !== conn && c.open) { c.send(data) } })
+        }
       } else if (data && typeof data === 'object' && data.type === 'gamepad') {
         if (Array.isArray(data.pads)) {
           data.pads.forEach((entry) => {
@@ -181,7 +186,7 @@ define(function (require) {
       connections.forEach((conn) => { if (conn.open) { conn.send(msg) } })
     })
     editor.onRunStateChange((running) => {
-      if (!isServer) { return }
+      if (applyingRemoteRunState) { return }
       if (connections.size === 0) { return }
       let msg = { type: 'runstate', running: running }
       connections.forEach((conn) => { if (conn.open) { conn.send(msg) } })
