@@ -27,6 +27,57 @@ define(function(require) {
     if (changeListeners.length === 0) { return }
     for (let i = 0; i < changeListeners.length; i++) { changeListeners[i](changeObj) }
   })
+  let cursorListeners = []
+  editor.on('cursorActivity', () => {
+    if (cursorListeners.length === 0) { return }
+    let pos = editor.getCursor()
+    for (let i = 0; i < cursorListeners.length; i++) { cursorListeners[i]({ line: pos.line, ch: pos.ch }) }
+  })
+
+  let peerCursors = new Map()
+  let buildCursorWidget = (peerName, color) => {
+    let el = document.createElement('span')
+    el.className = 'remote-cursor'
+    el.style.position = 'relative'
+    el.style.display = 'inline-block'
+    el.style.width = '0'
+    el.style.height = '1em'
+    el.style.borderLeft = '2px solid ' + color
+    el.style.marginLeft = '-1px'
+    el.style.verticalAlign = 'text-top'
+    el.style.zIndex = '5'
+    el.style.pointerEvents = 'none'
+    let label = document.createElement('span')
+    label.textContent = peerName
+    label.style.position = 'absolute'
+    label.style.top = '-0.95em'
+    label.style.left = '-1px'
+    label.style.background = color
+    label.style.color = 'white'
+    label.style.padding = '0 3px'
+    label.style.fontSize = '0.7em'
+    label.style.lineHeight = '1.1em'
+    label.style.fontFamily = 'sans-serif'
+    label.style.borderRadius = '2px'
+    label.style.whiteSpace = 'nowrap'
+    el.appendChild(label)
+    return el
+  }
+  let setPeerCursor = (peerId, peerName, pos, color) => {
+    let existing = peerCursors.get(peerId)
+    if (existing) { existing.clear() }
+    let lastLine = editor.lastLine()
+    let line = Math.max(0, Math.min(pos.line, lastLine))
+    let ch = Math.max(0, Math.min(pos.ch, editor.getLine(line) ? editor.getLine(line).length : 0))
+    let widget = buildCursorWidget(peerName, color)
+    let bookmark = editor.setBookmark({ line: line, ch: ch }, { widget: widget, insertLeft: true })
+    peerCursors.set(peerId, bookmark)
+  }
+  let removePeerCursor = (peerId) => {
+    let existing = peerCursors.get(peerId)
+    if (existing) { existing.clear() }
+    peerCursors.delete(peerId)
+  }
   let ctrlCode = (event, keys) => {
     if (event.isComposing || event.keyCode === 229) { return false }
     return ((event.ctrlKey || event.metaKey) && (keys.includes(event.keyCode) || keys.includes(event.key)))
@@ -79,5 +130,12 @@ define(function(require) {
     },
     isRunning: () => isRunning,
     onRunStateChange: (cb) => { runStateListeners.push(cb) },
+    onCursorChange: (cb) => { cursorListeners.push(cb) },
+    getCursor: () => {
+      let pos = editor.getCursor()
+      return { line: pos.line, ch: pos.ch }
+    },
+    setPeerCursor: setPeerCursor,
+    removePeerCursor: removePeerCursor,
   }
 })

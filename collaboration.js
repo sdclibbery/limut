@@ -9,6 +9,17 @@ define(function (require) {
 
   let isServer = false
   let connections = new Set()
+  let peerCursorPositions = new Map()
+
+  let peerColor = (peerId) => {
+    let hash = 0
+    for (let i = 0; i < peerId.length; i++) {
+      hash = ((hash << 5) - hash) + peerId.charCodeAt(i)
+      hash = hash & hash
+    }
+    let hue = Math.abs(hash) % 360
+    return 'hsl(' + hue + ', 70%, 45%)'
+  }
 
   let snapshotPad = (pad) => {
     if (!pad) { return null }
@@ -38,6 +49,13 @@ define(function (require) {
       if (initial.length > 0) { conn.send({ type: 'gamepad', pads: initial }) }
       let sliderState = sliders.getSliderValues()
       if (sliderState.length > 0) { conn.send({ type: 'sliders', sliders: sliderState }) }
+      let cursor = editor.getCursor()
+      conn.send({ type: 'cursor', pos: cursor })
+      if (isServer) {
+        peerCursorPositions.forEach((pos, peerId) => {
+          if (peerId !== conn.peer) { conn.send({ type: 'cursor', from: peerId, pos: pos }) }
+        })
+      }
     })
     conn.on('data', (data) => {
       if (data && typeof data === 'object' && data.type === 'say') {
@@ -68,11 +86,30 @@ define(function (require) {
         if (Array.isArray(data.sliders)) {
           data.sliders.forEach((s) => { sliders.setSliderValue(s.name, s.value) })
         }
+      } else if (data && typeof data === 'object' && data.type === 'cursor') {
+        let from = data.from || conn.peer
+        if (data.pos) {
+          editor.setPeerCursor(from, from, data.pos, peerColor(from))
+          peerCursorPositions.set(from, data.pos)
+        } else {
+          editor.removePeerCursor(from)
+          peerCursorPositions.delete(from)
+        }
+        if (isServer) {
+          let relay = { type: 'cursor', from: from, pos: data.pos }
+          connections.forEach((c) => { if (c !== conn && c.open) { c.send(relay) } })
+        }
       }
     })
     conn.on('close', () => {
       connections.delete(conn)
       gamepads.clearPeer(conn.peer)
+      editor.removePeerCursor(conn.peer)
+      peerCursorPositions.delete(conn.peer)
+      if (isServer) {
+        let relay = { type: 'cursor', from: conn.peer, pos: null }
+        connections.forEach((c) => { if (c !== conn && c.open) { c.send(relay) } })
+      }
       consoleOut('⚪ Peer disconnected: ' + conn.peer)
     })
     conn.on('error', (err) => {
@@ -147,6 +184,11 @@ define(function (require) {
       if (!isServer) { return }
       if (connections.size === 0) { return }
       let msg = { type: 'runstate', running: running }
+      connections.forEach((conn) => { if (conn.open) { conn.send(msg) } })
+    })
+    editor.onCursorChange((pos) => {
+      if (connections.size === 0) { return }
+      let msg = { type: 'cursor', pos: pos }
       connections.forEach((conn) => { if (conn.open) { conn.send(msg) } })
     })
   }
