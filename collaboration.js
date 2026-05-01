@@ -182,14 +182,15 @@ define(function (require) {
 
   consoleOut.addCommand('connect', (args) => {
     let targetId = args[0]
+    let myName = args[1]
     if (!targetId) {
-      consoleOut('🔴 Usage: connect <guid>')
+      consoleOut('🔴 Usage: connect <guid> [name]')
       return
     }
     consoleOut('> Connecting to ' + targetId + '...')
     registerCodeChangeListener()
     loadPeerScript().then(() => {
-      let peer = new window.Peer(peerOptions)
+      let peer = myName ? new window.Peer(myName, peerOptions) : new window.Peer(peerOptions)
       peer.on('open', () => {
         registerConnection(peer.connect(targetId), false)
       })
