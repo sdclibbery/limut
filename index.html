@@ -345,6 +345,28 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
   <p><code>list</code> List all player base types, including presets, grouped by player base type and the include file that defined the preset</p>
   <p><code>list audio</code> List all player base types, filtered to those where the base type contains the given string</p>
 </div>
+<h4 onclick="toggleAccordion('accordion-collaboration')" class="accordion"> Collaboration</h4>
+<div id="accordion-collaboration" class="closed">
+  <p>Limut supports live collaboration between two or more browsers using a peer-to-peer connection (WebRTC via <a href="https://peerjs.com/" target="_blank">peer.js</a>). One peer acts as the server (host) and the others connect to it as clients. The server relays messages between connected clients so they all stay in sync. Connections are made directly between browsers; no Limut-specific server is involved, but a public peer.js signalling server and TURN relay are used to establish the connection.</p>
+  <h5>Console commands</h5>
+  <p><code>server</code> Start hosting a session. The console will print a <i>Peer session id</i>; share that id with anyone who wants to join. The server's current code, run state, slider values, gamepad state and cursor are sent to each client when they connect.</p>
+  <p><code>server <i>id</i></code> Start hosting using <i>id</i> as the session id rather than a randomly assigned one. Useful for stable, memorable session names. The id must be unique on the peer.js network at the time the server starts.</p>
+  <p><code>connect <i>id</i></code> Connect to an existing session by its peer session id. On connect, the client receives the host's current code and run state and from then on stays synchronised.</p>
+  <p><code>connect <i>id</i> <i>name</i></code> Connect using <i>name</i> as your peer id rather than a randomly assigned one. Other peers will see this name in cursor labels, chat messages and connect/disconnect notifications. The name must be unique on the peer.js network.</p>
+  <p><code>say '<i>message</i>'</code> Send a short chat message to all connected peers. The message is shown in the console of each peer, prefixed with the sender's peer id. Quotes around the message are optional.</p>
+  <h5>What is shared</h5>
+  <p><b>Code</b> When a client connects, the host's current code is sent in full and replaces the client's code. After that, code edits made by any peer are sent as incremental changes and applied to all other peers in real-time. Either side can edit the code.</p>
+  <p><b>Run state</b> Pressing run/stop on any peer starts or stops the code on all peers.</p>
+  <p><b>Cursors</b> Each peer's text cursor position is shown as a coloured caret with their peer id as a label in every other peer's editor. Each peer is assigned a stable colour derived from their peer id.</p>
+  <p><b>Sliders</b> Slider value changes (see the <code>slider</code> function) are broadcast to all peers, so every peer sees the same slider values.</p>
+  <p><b>Gamepads</b> Gamepad axis and button state from each peer's locally connected gamepads is shared with every other peer. Remote gamepads are made available to <code>gamepad</code> functions alongside any local ones, so any peer's controller can drive the music. </p>
+  <p><b>Metronome</b> The host periodically broadcasts its current beat time and bpm; clients gently slew their metronome to match, so all peers stay in time even if the host changes the bpm.</p>
+  <p><b>Chat</b> The <code>say</code> command shares short text messages between peers in the console.</p>
+  <h5>Notes</h5>
+  <p>The connection is peer-to-peer and end-to-end between browsers; code and chat are not sent through any Limut-specific server. However, the public peer.js signalling server and a public TURN relay are used to establish and (if direct connection fails) relay the WebRTC connection.</p>
+  <p>Audio is rendered locally on each peer using their own synthesised output. The shared code, run state and metronome timing keep the audio in sync rather than streaming audio over the network.</p>
+  <p>If the host (server) disconnects, clients lose the session. Clients can disconnect and reconnect at any time without affecting the host or other clients.</p>
+</div>
 <h4 onclick="toggleAccordion('accordion-syntax-principles')" class="accordion"> Syntax Principles for Expressions</h4>
 <div id="accordion-syntax-principles" class="closed">
   <p><code>()</code> Round brackets define chords in both patterns and expressions; that is, mutltiple events or values at the same time. Chord indexers and aggregators can be used to extract various values from chords.</p>
