@@ -1,13 +1,13 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-WebRTC comms - collaboration
- Docs
 !Trance sounds out of tune
  Trance q should be lower to keep in tune?
  toscale{} function: takes a Freq and quantises to a scale, default to current global scale/root. Try using it for trance cutoff
+ ?Pick sounded a bit out of tune too, had to increase decay?
 ?main volume slider should be killed; just do  set main amp*=slider if you want one...
  ??Time to review the UI generally? make smaller / tidy up?
+?Ducking for echoes, reverbs etc
 electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
