@@ -13,6 +13,15 @@ preset m1organ multiwave
 
 preset didgeridoo square 0, dur=1, envelope='pad', amp*=[0.25:0.5]n3/4@f^2 + [0:0.25]l1/3@f, oct=2, clip, phaser=1/7, ring=1/4, glide=this.dur/2
 
+preset oreese multiwave
+  , oct=2, dur=1, envelope='pad', att=1/12, choke=this.player, glide=this.dur/4, amp*=3
+  , wave1={'saw',detune:-this.detune*(this.freq/180)^3/2,amp:1}
+  , wave2={'saw',detune:this.detune*(this.freq/180)^3/2,amp:1}
+  , lpf={100+1100*this.vel*this.cutoff^3,q:9,poles:4}
+  , reverb={1,hpf:300,mix:1/8}
+  , detune=2/3
+  , cutoff=1/2
+
 preset reese multiwave
   , oct=2, dur=1/4, envelope='organ', att=1/12, choke=this.player, glide=this.dur/4, amp*=3
   , wave1={'saw',detune:0,amp:1}
