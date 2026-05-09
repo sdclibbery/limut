@@ -1,13 +1,19 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!Trance sounds out of tune
- Trance q should be lower to keep in tune?
- toscale{} function: takes a Freq and quantises to a scale, default to current global scale/root. Try using it for trance cutoff
- ?Pick sounded a bit out of tune too, had to increase decay?
+!this. params never update when used in fx  i impulse, foo=[0,1], fx=lpf{100+400*this.foo}
+Phase disperser
+ Disperser based kick
+!when client refreshes and reconnects, the old peer is not removed and their gamepad gets 'stuck'
+!client joined and had to wait for server beat to catch up before it would play
+!Delay inside stutter does nothing
 ?main volume slider should be killed; just do  set main amp*=slider if you want one...
  ??Time to review the UI generally? make smaller / tidy up?
+ Will be a breaking change...
 ?Ducking for echoes, reverbs etc
+!Trance can sound out of tune
+ toscale{} function: takes a Freq and quantises to a scale, default to current global scale/root. Try using it for trance cutoff
+ ?Pick sounded a bit out of tune too, had to increase decay? Is this at lower octaves?
 electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
@@ -87,9 +93,6 @@ WebAudio node graphs as first class values
 !set lpf2 = lpf etc does not work!!! I think the args do not get passed in anymore??
  I guess there is an extra parse-var in there; can it be short circuited at parse time??
   Sounds dangerous; this should really work anyway, shouldn't it?
-!!303 has envelope errors when run like this with riser^4 :
- b tb303 00a, accent, resonance=1/2*(1+riser^4)
-Wavetable synthesis: Adventure Kid Waveforms
 Salamander Piano upgrades
  More pitches?
  Velocity

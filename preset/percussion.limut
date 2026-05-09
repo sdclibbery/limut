@@ -1,3 +1,5 @@
+include 'lib/effects.limut'
+
 preset perc play, dur=1/4, choke=this.player, drive=1/64
 
 preset bd pitchedperc,
@@ -18,3 +20,7 @@ preset bd pitchedperc,
   	(1+2^(this.accent/8))/2,
   },
   lpf=1000+(this.accent+this.tone)*30
+
+preset dbd impulse, dur=1/4,
+  fx=hpf{this.freq}>>stanh{4}/2>>disperser{this.freq,0.4+this.decay/2}>>lpf{1900}>>stanh{4},
+  freq=45, decay=1/3

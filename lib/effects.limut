@@ -40,6 +40,8 @@ set ultracomb = {f:smooth{[]r1@f,att:1}, p:smooth{[]r2/3@f,att:1}, s:smooth{[]r1
   shifter{0.95 + s*0.1} // Shifter part
 }/3.3,stages}
 
+set disperser = {freq:440,q:3,stages:24} -> series{apf{freq,q}, stages}
+
 set reverb = {length:1b,curve:3} -> convolver{
   env: {
     l:{x,c:curve} -> (1-x)^c,
