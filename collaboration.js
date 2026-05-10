@@ -126,11 +126,10 @@ define(function (require) {
   let peerOptions = {
     config: {
       iceServers: [
-      ],
-      iceServers: [
-        {
-          urls: "stun:stun.relay.metered.ca:80",
-        },
+        { urls: "stun:stun.relay.metered.ca:80" },
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302" },
+        { urls: "stun:stun.cloudflare.com:3478" },
         {
           urls: "turn:global.relay.metered.ca:80",
           username: "ecf2ce1bc418cf798111c457",
@@ -151,8 +150,6 @@ define(function (require) {
           username: "ecf2ce1bc418cf798111c457",
           credential: "6OaZrpbvpfC/ra5H",
         },
-        // { urls: 'stun:stun.l.google.com:19302' },
-        // { urls: 'stun:stun.cloudflare.com:3478' },
       ],
     },
   }
