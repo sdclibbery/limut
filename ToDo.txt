@@ -1,9 +1,6 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!this. params never update when used in fx  i impulse, foo=[0,1], fx=lpf{100+400*this.foo}
-Phase disperser
- Disperser based kick
 !when client refreshes and reconnects, the old peer is not removed and their gamepad gets 'stuck'
 !client joined and had to wait for server beat to catch up before it would play
 !Delay inside stutter does nothing

@@ -76,6 +76,7 @@ metronome.sync = (serverBeatTime, serverBpm) => {
     let fraction = serverBeatTime - count
     lastBeatAt = time - fraction * beatDuration
     nextBeatAt = lastBeatAt + beatDuration
+    lastFiredCount = count // snap moved the clock; allow beats at the new position to fire even if we previously fired higher counts
   } else {
     let shiftSeconds = errorBeats * beatDuration * syncSlewFactor
     lastBeatAt -= shiftSeconds
@@ -134,6 +135,21 @@ if ((new URLSearchParams(window.location.search)).get('test') !== null) {
   let catchUpBeat = metronome.update(21.0)
   if (!catchUpBeat || catchUpBeat.count !== 21) {
     console.trace(`Expected catch-up beat to fire as count 21, got: ${JSON.stringify(catchUpBeat)}`)
+  }
+
+  // Backward snap: if a client joins with a count higher than the server's,
+  // sync snaps count down. Subsequent beats at the new (lower) count must still
+  // fire — otherwise no events play until the server catches up.
+  metronome.bpm(60)
+  metronome.setCount(100)
+  metronome.setTime(100.5)
+  lastBeatAt = 100
+  nextBeatAt = 101
+  metronome.update(101.0) // fires beat 101, lastFiredCount=101, advances time to 101.0
+  metronome.sync(50.0, 60) // server far behind: snap count down to 50
+  let postBackSnap = metronome.update(102.0) // real-world time keeps moving forward
+  if (!postBackSnap || postBackSnap.count !== 51) {
+    console.trace(`Expected beat 51 to fire after backward snap, got: ${JSON.stringify(postBackSnap)}`)
   }
 
   // Slewing: small errors should nudge the local clock partway, not snap.
