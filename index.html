@@ -354,6 +354,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
   <p><code>connect <i>id</i></code> Connect to an existing session by its peer session id. On connect, the client receives the host's current code and run state and from then on stays synchronised.</p>
   <p><code>connect <i>id</i> <i>name</i></code> Connect using <i>name</i> as your peer id rather than a randomly assigned one. Other peers will see this name in cursor labels, chat messages and connect/disconnect notifications. The name must be unique on the peer.js network.</p>
   <p><code>say '<i>message</i>'</code> Send a short chat message to all connected peers. The message is shown in the console of each peer, prefixed with the sender's peer id. Quotes around the message are optional.</p>
+  <p><code>disconnect <i>peer-id</i></code> Server only: forcibly remove the named peer from the session. Useful when a peer has gone away without cleanly disconnecting (e.g. closed their browser or lost network) and the server still has the stale connection. Has no effect on clients.</p>
   <h5>What is shared</h5>
   <p><b>Code</b> When a client connects, the host's current code is sent in full and replaces the client's code. After that, code edits made by any peer are sent as incremental changes and applied to all other peers in real-time. Either side can edit the code.</p>
   <p><b>Run state</b> Pressing run/stop on any peer starts or stops the code on all peers.</p>

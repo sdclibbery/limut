@@ -248,6 +248,26 @@ define(function (require) {
     })
   })
 
+  consoleOut.addCommand('disconnect', (args) => {
+    let peerId = args[0]
+    if (!peerId) {
+      consoleOut('🔴 Usage: disconnect <peer-id>')
+      return
+    }
+    if (!isServer) {
+      consoleOut('🔴 disconnect can only be used by the server')
+      return
+    }
+    let target = null
+    connections.forEach((c) => { if (c.peer === peerId) { target = c } })
+    if (!target) {
+      consoleOut('🔴 No connected peer with id: ' + peerId)
+      return
+    }
+    consoleOut('> Disconnecting peer: ' + peerId)
+    target.close()
+  })
+
   consoleOut.addCommand('say', (args, line) => {
     let message = line.slice(line.indexOf(' ') + 1).trim()
     if ((message.startsWith("'") && message.endsWith("'")) ||
