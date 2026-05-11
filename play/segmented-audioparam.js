@@ -106,7 +106,7 @@ define(function (require) {
     segmentState.mod = mod
     let startCount = params.count
     let startTime = params._time
-    if (!startTime) { startTime = system.timeNow() } // Stale default (eg. fx chain with no current event) — anchor scheduling to now
+    if (startTime === undefined) { startTime = system.timeNow() } // Stale default (eg. fx chain with no current event) — anchor scheduling to now
     segmentState.param = segmentState.getParamAtTime(startCount + epsilon)
     segmentState.count = startCount
     segmentState.time = startTime

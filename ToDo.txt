@@ -1,7 +1,6 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!when client refreshes and reconnects, the old peer is not removed and their gamepad gets 'stuck'
 !Delay inside stutter does nothing
 ?main volume slider should be killed; just do  set main amp*=slider if you want one...
  ??Time to review the UI generally? make smaller / tidy up?
