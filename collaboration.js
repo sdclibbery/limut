@@ -22,6 +22,24 @@ define(function (require) {
     return 'hsl(' + hue + ', 70%, 45%)'
   }
 
+  let reportNatType = (conn, attempt) => {
+    let pc = conn.peerConnection
+    if (!pc || !pc.getStats) { return }
+    pc.getStats().then((stats) => {
+      let pair
+      stats.forEach((r) => {
+        if (r.type === 'candidate-pair' && r.nominated && r.state === 'succeeded') { pair = r }
+      })
+      if (!pair) {
+        if ((attempt || 0) < 3) { setTimeout(() => reportNatType(conn, (attempt || 0) + 1), 500) }
+        return
+      }
+      let local = stats.get(pair.localCandidateId)
+      let remote = stats.get(pair.remoteCandidateId)
+      console.log('🌐 ' + conn.peer + ' via local=' + (local && local.candidateType) + ' remote=' + (remote && remote.candidateType))
+    })
+  }
+
   let snapshotPad = (pad) => {
     if (!pad) { return null }
     return {
@@ -37,6 +55,7 @@ define(function (require) {
     conn.on('open', () => {
       connections.add(conn)
       consoleOut('🟢 Peer connected: ' + conn.peer)
+      reportNatType(conn)
       if (sendCodeOnOpen) {
         conn.send({ type: 'code', code: editor.getValue() })
         conn.send({ type: 'runstate', running: editor.isRunning() })
