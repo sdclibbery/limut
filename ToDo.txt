@@ -1,7 +1,8 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!Delay inside stutter does nothing
+?quantise param to push event onto the grid - default to 1/16 notes but have subparam to control. It should be processed AFTER stutter
+!Delay inside stutter does nothing - it should add an EXTRA delay if present on top of what "delay" already did
 ?main volume slider should be killed; just do  set main amp*=slider if you want one...
  ??Time to review the UI generally? make smaller / tidy up?
  Will be a breaking change...
@@ -24,7 +25,8 @@ electron performance
 ==== audio ====
 !Fix shifter: use segmented timevars instead of lfo/osc, to implement smaller grains and random offsets
   Test tuning with guitar sample: https://upload.wikimedia.org/wikipedia/commons/6/67/AcousticGuitarSample.ogg
-  Needs rebuilding from scratch; claude cant really do it
+  Needs rebuilding from scratch; claude cant really do it?
+   Try asking Claude to build a granular delay based on a normal delay but with random overlapping grains
 set duck = [0:/1/4,1:_3/4]t@s
   Or, better: set duck = [1:!1/8,0:/1/8,1:_3/4]t@s
   Still needs to better, and controllable
@@ -266,18 +268,20 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 =================================================================================================================================
 =================================================================================================================================
 ==== visual ====
+Nodes for visuals
+ Visual synth with a play param that takes a node graph, from xy to rgba
+  Implicit `uv>>` at the start of px
+  v visualsynth, px=zoom{2}>>kal>>pal{[#000:0.5,#800:0.4,#f12:0.1,#fff]}
+ Visual node values are 4 component vectors
+ Define some visual nodes: sin, cos etc - basically whatever is a builtin glsl function
+ Operators work on visual nodes
+ Define visual node libs for all existing synths and params
 !dmx addL is ugly and confusing...
  consider lights={add:{}} rather than add={} ??? plus={} not add={} ???
 webcam: can choose device if do getUserMedia then enumerateDevices then getUserMedia AGAIN asking for the specific label
  ??Don't update textures when not being displayed
  Check performance in various scenarios: cpu load; try with different resolutions
 !Buffer freezes on code update
-Nodes for visuals
- Visual synth with a play param that takes a node graph, from xy to rgba
- Visual node values are 4 component vectors
- Define some visual nodes: sin, cos etc - basically whatever is a builtin glsl function
- Operators work on visual nodes
- Define visual node libs for all existing synths and params
 ?Chromatic aberration hack  col.rgb += dFdx(col.rgb)*vec3(3,0,-3);
 ?Proper detailed gradients, not just fore/mid/back
  ?Based on user defined functions populating a lookup texture? or piecewise translating into gradient segments?
