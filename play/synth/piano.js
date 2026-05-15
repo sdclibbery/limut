@@ -10,8 +10,15 @@ define(function (require) {
   let perFrameAmp = require('play/effects/perFrameAmp')
   let destructor = require('play/destructor')
 
-  let getNoteUrl = (note) => {
-    return 'sample/salamander/'+note+'v8.mp3'
+  let velLayer = (vel) => {
+    // gain compensates for the sample's inherent loudness so amp controls
+    // perceived loudness uniformly. Normalised so v8 matches the prior behaviour.
+    if (vel < 1/3) { return { name:'v3', gain:8/3 } }
+    if (vel < 2/3) { return { name:'v8', gain:1 } }
+    return { name:'v13', gain:8/13 }
+  }
+  let getNoteUrl = (note, vel) => {
+    return 'sample/salamander/'+note+velLayer(vel).name+'.mp3'
   }
   let getHarmonicsUrl = (note) => {
     return 'sample/salamander/harmS'+note+'.mp3'
@@ -27,11 +34,11 @@ define(function (require) {
     params._destructor.stop(source)
 }
 
-  let findNearestSample = (freq, loadedOnly) => {
+  let findNearestSample = (freq, vel, loadedOnly) => {
     let sample
     let diff = Infinity
     Object.keys(samples).forEach(s => {
-      if (loadedOnly && !isLoaded(getNoteUrl(s))) { return }
+      if (loadedOnly && !isLoaded(getNoteUrl(s, vel))) { return }
       let newDiff = Math.abs(freq - samples[s])
       if (newDiff < diff) {
         sample = s
@@ -40,8 +47,8 @@ define(function (require) {
     })
     return sample
   }
-  let findNearestLoadedSample = (sample) => {
-    let loadedSample = findNearestSample(samples[sample], true)
+  let findNearestLoadedSample = (sample, vel) => {
+    let loadedSample = findNearestSample(samples[sample], vel, true)
     return loadedSample || sample
   }
 
@@ -63,8 +70,9 @@ define(function (require) {
     params._destructor = destructor()
     setTimeout(() => params._destructor.destroy(), 1100+(params.endTime - system.audio.currentTime)*1000)
 
+    let vel = evalMainParamEvent(params, 'vel', 3/4)
     let vca = system.audio.createGain()
-    let gain = Math.max(0, 0.25 * (typeof params.amp === 'number' ? params.amp : 1))
+    let gain = Math.max(0, 0.25 * velLayer(vel).gain * (typeof params.amp === 'number' ? params.amp : 1))
     vca.gain.cancelScheduledValues(params._time)
     vca.gain.setValueAtTime(gain, params._time)
     vca.gain.linearRampToValueAtTime(gain, params.endTime-0.01)
@@ -72,11 +80,11 @@ define(function (require) {
     vca.gain.linearRampToValueAtTime(gain, params.endTime+0.01)
     fxMixChain(params, perFrameAmp(params, vca))
 
-    let sample = findNearestSample(freq)
-    getBuffer(getNoteUrl(sample))
-    sample = findNearestLoadedSample(sample)
+    let sample = findNearestSample(freq, vel)
+    getBuffer(getNoteUrl(sample, vel))
+    sample = findNearestLoadedSample(sample, vel)
     let rate = freq/samples[sample]
-    playBuffer(params, getNoteUrl(sample), rate, vca)
+    playBuffer(params, getNoteUrl(sample, vel), rate, vca)
     getBuffer(getHarmonicsUrl(sample))
     playBuffer(params, getHarmonicsUrl(sample), rate, vca, params.endTime)
     params._destructor.disconnect(vca)
