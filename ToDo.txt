@@ -1,7 +1,6 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-?quantise param to push event onto the 'grid' - default to 1/16 notes but have subparam to control. It should be processed AFTER stutter
 !Delay inside stutter does nothing - it should add an EXTRA delay if present on top of what "delay" already did
 ?main volume slider should be killed; just do  set main amp*=slider if you want one...
  ??Time to review the UI generally? make smaller / tidy up?

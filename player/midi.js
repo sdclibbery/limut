@@ -66,15 +66,18 @@ define(function(require) {
           return
         }
         if (player._shouldUnlisten) { return } // Dont play any new events if player is being cleaned up!
+        let now = metronome.timeNow()
+        let currentCount = metronome.beatTime(now)
+        let lastBeat = metronome.lastBeat()
         let event = {
           _midiNote: note,
           value: 0,
           dur: 1,
           vel: velocity,
-          _time: metronome.timeNow(),
-          count: metronome.lastBeat().count,
-          idx: metronome.lastBeat().count,
-          beat: metronome.lastBeat(),
+          _time: now,
+          count: currentCount,
+          idx: lastBeat.count,
+          beat: Object.assign({}, lastBeat, {count: currentCount, time: now}),
         }
         applyMapping(event, note, mapping)
         let oct = event.oct

@@ -39,6 +39,17 @@ define((require) => {
     event.dur += swingBeatPushAtEnd - swingBeatPushAtStart
   }
 
+  let applyQuantise = (event, beat) => {
+    let q = evalParamFrame(event.quantise, event, event.count)
+    let grid = mainParam(q, 0)
+    if (!grid || grid <= 0) { return }
+    let newCount = Math.round(event.count / grid) * grid
+    if (newCount < beat.count) { newCount = Math.ceil(event.count / grid) * grid }
+    let push = newCount - event.count
+    event._time += push * beat.duration
+    event.count = newCount
+  }
+
   let applyDelay = (event, beat) => {
     let dp = evalParamFrame(event.delay, event, event.count, {evalToObjectOrPrimitive:true})
     let d = evalParamFrame(mainParamUnits(dp, 'b', 0), event, event.count)
@@ -186,6 +197,7 @@ define((require) => {
       events = expandChords(events)
       events.forEach(e => applyDelay(e, e.beat))
       events = expandStutter(events)
+      events.forEach(e => applyQuantise(e, e.beat))
       events.forEach(e => applySwing(e, e.beat))
       events.forEach(e => e.player = player.id)
       return events
@@ -561,6 +573,37 @@ define((require) => {
   assert(2, es.length)
   assertEvent(1,1,1/2, es[0])
   assertEvent(3/2,3/2,1/2, es[1])
+
+  // quantise: snap event count to nearest grid point
+  es = player('p', 'test', '0', 'delay=0.1, quantise=1/4').getEventsForBeat({time:0, count:0, duration:1})
+  assertEvent(0, 0, 1, es[0]) // 0.1 rounds back to 0 (still >= beat.count)
+  es = player('p', 'test', '0', 'delay=0.2, quantise=1/4').getEventsForBeat({time:0, count:0, duration:1})
+  assertEvent(1/4, 1/4, 1, es[0]) // 0.2 rounds up to 0.25
+  es = player('p', 'test', '0', 'delay=0.4, quantise=1/4').getEventsForBeat({time:0, count:0, duration:1})
+  assertEvent(1/2, 1/2, 1, es[0]) // 0.4 rounds up to 0.5
+  // grid sizes
+  es = player('p', 'test', '0', 'delay=0.3, quantise=1/2').getEventsForBeat({time:0, count:0, duration:1})
+  assertEvent(1/2, 1/2, 1, es[0])
+  es = player('p', 'test', '0', 'delay=0.6, quantise=1').getEventsForBeat({time:0, count:0, duration:1})
+  assertEvent(1, 1, 1, es[0])
+  // quantise=0 disables
+  es = player('p', 'test', '0', 'delay=0.1, quantise=0').getEventsForBeat({time:0, count:0, duration:1})
+  assertEvent(0.1, 0.1, 1, es[0])
+  // non-zero beat: _time and count are absolute
+  es = player('p', 'test', '0', 'delay=0.2, quantise=1/4').getEventsForBeat({time:10, count:10, duration:1})
+  assertEvent(10.25, 10.25, 1, es[0])
+  // past-prevention: at beat count=13, grid=4, naive round → 12 (in past); push to 16
+  es = player('p', 'test', '0', 'quantise=4').getEventsForBeat({time:13, count:13, duration:1})
+  assertEvent(16, 16, 1, es[0])
+  es = player('p', 'test', '0', 'delay=0.1, quantise=4').getEventsForBeat({time:13, count:13, duration:1})
+  assertEvent(16, 16, 1, es[0])
+  // Quantise after stutter: stuttered events get snapped to grid
+  es = player('p', 'test', '0', 'stutter=3, quantise=1/4').getEventsForBeat({time:0, count:0, duration:1})
+  assert(3, es.length)
+  // stutter: dur=1/3 → counts 0, 1/3, 2/3; quantised to 1/4 → 0, 1/4 (round 1.33→1), 3/4 (round 2.67→3)
+  assertEvent(0, 0, 1/3, es[0])
+  assertEvent(1/4, 1/4, 1/3, es[1])
+  assertEvent(3/4, 3/4, 1/3, es[2])
 
   p = player('p', 'test', 'a', 'add=(1,2)')
   es = p.getEventsForBeat({time:0, count:0, duration:1})

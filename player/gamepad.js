@@ -119,15 +119,18 @@ define(function(require) {
       if (player._shouldUnlisten) { return } // Dont play any new events if player is being cleaned up!
       if (gamepads[padNumber].mapping !== 'standard' && nodpad) { consoleOut('🔴 nodpad will not work correctly on non-standard mapping gamepad!') }
       if (nodpad && buttonIdx >= 12 && buttonIdx <= 15) { return } // Ignore dpad buttons if nodpad
+      let now = metronome.timeNow()
+      let currentCount = metronome.beatTime(now)
+      let lastBeat = metronome.lastBeat()
       let event = {
         _gamepadNote: buttonIdx,
         value: buttonIdx,
         dur: 1,
         vel: 3/4,
-        _time: metronome.timeNow(),
-        count: metronome.lastBeat().count,
-        idx: metronome.lastBeat().count,
-        beat: metronome.lastBeat(),
+        _time: now,
+        count: currentCount,
+        idx: lastBeat.count,
+        beat: Object.assign({}, lastBeat, {count: currentCount, time: now}),
       }
       event.sound = event.value
       event = combineOverrides(event, baseParams) // Apply base params before lt/rt so they can override base if needed

@@ -23,15 +23,18 @@ define(function(require) {
       if (repeat) { return }
       let buttonIdx = parseInt(key) || 0
       if (player._shouldUnlisten) { return } // Dont play any new events if player is being cleaned up!
+      let now = metronome.timeNow()
+      let currentCount = metronome.beatTime(now)
+      let lastBeat = metronome.lastBeat()
       let event = {
         _keyboardNote: buttonIdx,
         value: buttonIdx,
         dur: 1,
         vel: 3/4,
-        _time: metronome.timeNow(),
-        count: metronome.lastBeat().count,
-        idx: metronome.lastBeat().count,
-        beat: metronome.lastBeat(),
+        _time: now,
+        count: currentCount,
+        idx: lastBeat.count,
+        beat: Object.assign({}, lastBeat, {count: currentCount, time: now}),
       }
       event.sound = event.value
       event = combineOverrides(event, baseParams)
