@@ -1,5 +1,5 @@
 preset trance multiwave
-	, dur=1/4, envelope='simple', att=0.01, rel=1
+	, dur=1/4, envelope='simple', att=this.decay^2*10ms, rel=1
   , oct=4, amp*=3/2, pan=[-1/2:1/2]r, add=(0,2)
   // supersaw plus sub
   , wave1={'saw',detune:0.18546*3*this.detune}
@@ -12,8 +12,8 @@ preset trance multiwave
 	, wave8={'saw',detune:-12,amp:1/2}
   // filter
   , lpf={
-  	300+500*(1+7*[1:!100ms+300ms*this.decay^2,0]e@s)*2*this.cutoff*this.vel
-    , poles:4, q:6
+  	300+500*(1+7*[1:!100ms+500ms*this.decay^2,0]e@s)*2*this.cutoff*this.vel
+    , poles:4, q:4
   }
 	, low={-12db,freq:80}
   , high=3db

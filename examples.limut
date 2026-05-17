@@ -5096,3 +5096,45 @@ set dw* fore=#111
 ds dcyber
 
 
+// Nebula Drift
+include 'personal/everything.limut'
+dg dmx, channel=63, lights={0:4/64}
+ds dvoice, channel=(33,43,53), input=smooth{main.pulse*3,8}, fore={labh:[]s12@f,l:1/2,c:1/2}
+dw dmxwash, channel=(1,15), fore={labh:-1/3,l:1/64}*smooth{l.pulse.sum/3}
+dw2 dmxwash, channel=(8,22), fore={labh:-1/2,l:1/64}*smooth{s.pulse.0}
+w webcam, device=['5mp':24,'2mp':8]t, fore=[1:24,-1/4:8]t
+set bpm=109
+set scale='minor'
+set main fx=stanh*+7db
+set !p* add+=[0:24,2:8]t
+set p* delay|={[():15,[1,3]r/4:1]t,swing:60}, compress={2,gain:3/2}
+pi impulse, room=1/16, pan=(-1,1), lpf=4000
+// ph noise .0, dur=1/2, bpf={1200,q:0.1}, vel=1/8, sus=1/8, envelope='perc', pan=[-1,1]/2
+// pc noise .0, bpf={500,q:0.1}, vel=1/4, sus=2/3, envelope='perc', fx=mix{airverb}
+bk pick 007 crop 16, dur=1, oct=2, decay=gp.lsr, vel=gp.lsx, cutoff=gp.lsu
+s softpad (049), vel=gp.rsr/2, cutoff=gp.rsu, fx=mix{tape{1/12}}>>mix{airverb}, oct-=1
+l piano gamepad lt:vel, fx=mix{tape{1/12}}>>mix{echo{1/2},1/4}>>mix{airverb}, quantise=1/2, delay|={1,oct:3}
+l2 darkpad gamepad lt:vel, delay:1, fx=mix{tape{1/4}>>airverb}/2
+// l3 chime keyboard, quantise:1/2, fx=mix{tape{1/8}}>>mix{airverb}>>mix{echo{3/4},1/4}*+4db
+
+
+// Construct Zero
+include 'personal/everything.limut'
+dg dmx, channel=63, lights={0:4/64}
+ds dvoice, channel=(33,43,53), input=smooth{main.pulse,8}, fore=#848*(1-tg/3), back=#488*tg/2
+dw dmxwash, channel=(1,15), fore=#104*smooth{l.pulse.0+b.pulse.0}*(tg+1/4)
+dw2 dmxwash, channel=(8,22), fore=#004*smooth{cr.pulse.0}*(tg+1/4)
+w webcam, device=['5mp':24,'2mp':8]t, fore=[1:24,0:8]t
+set bpm=107
+set scale='phrygian'
+set main fx=stanh
+set p* fx>>=stanh, delay|=[():30,[1,3]r/4:2]t
+// pk perc X..., sample=3
+// pkk perc .X. crop 16, swing=54, vel=1/3, rate=1.2, hpf=80
+// ph perc ..-., sample=4, vel=1/3, fx=stanh
+// pc perc ....O..., rate=2/3, fx=stanh{2}, vel=1/8, room=1/6
+b reese ..0., sus=1/2, vel=gp.lsx, cutoff=gp.lsu, drive={1/4,mix:smooth{gp.lsl}}
+bb techbass .077, vel=gp.lsx/3, cutoff=gp.lsu, drive={1/4,mix:smooth{gp.lsr}}, fx=stanh, swing=52
+cr croak, dur=8, vel=gp.rsx, fx=stanh>>mix{tape{1/4}}>>mix{airverb}>>echo{80ms}>>stanh>>mix{tg,gp.rsl}, addc=12*gp.rsv
+l cyborg keyboard, fx=stanh>>mix{tape{1/2}}>>mix{airverb}>>echo{80ms}>>stanh*tg
+

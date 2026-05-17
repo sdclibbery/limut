@@ -1,6 +1,10 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
+!!Only get stuttered notes while the first one is playing?!  l sting keyboard, stutter={4,dur:1/2,add:[0:7]r}
+ not pick/darkbass/softkeys/chime/xylo, but cyborg/oxy also do it. epiano cuts off half way
+ Its the same with delay; delayed versions only play when the main note is still playing
+Good dark sounding effect chain:  stanh>>mix{tape{1/2}}>>mix{airverb}>>echo{80ms}>>stanh
 !Delay inside stutter does nothing - it should add an EXTRA delay if present on top of what "delay" already did
 ?main volume slider should be killed; just do  set main amp*=slider if you want one...
  ??Time to review the UI generally? make smaller / tidy up?
@@ -9,6 +13,8 @@
 !Trance can sound out of tune
  toscale{} function: takes a Freq and quantises to a scale, default to current global scale/root. Try using it for trance cutoff
  ?Pick sounded a bit out of tune too, had to increase decay? Is this at lower octaves?
+ ALSO: Trance needs a param to soften the pluckiness: maybe attack as well as decay? Or decay affects both?
+   att=this.decay^2*100ms  works pretty well??
 electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
