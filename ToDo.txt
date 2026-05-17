@@ -6,6 +6,7 @@
  Its the same with delay; delayed versions only play when the main note is still playing
 Good dark sounding effect chain:  stanh>>mix{tape{1/2}}>>mix{airverb}>>echo{80ms}>>stanh
 !Delay inside stutter does nothing - it should add an EXTRA delay if present on top of what "delay" already did
+!dbd is weak
 ?main volume slider should be killed; just do  set main amp*=slider if you want one...
  ??Time to review the UI generally? make smaller / tidy up?
  Will be a breaking change...
