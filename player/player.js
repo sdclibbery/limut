@@ -68,16 +68,35 @@ define((require) => {
         return
       }
       let durOverride = undefined
-      if (typeof sp === 'object' && sp.dur !== undefined) {
-        let d = evalParamFrame(sp.dur, event, event.count)
-        durOverride = mainParamUnits(d, 'b', 0)
+      let lambdas = []
+      let overrides = sp
+      if (typeof sp === 'object') {
+        if (sp.dur !== undefined) {
+          let d = evalParamFrame(sp.dur, event, event.count)
+          durOverride = mainParamUnits(d, 'b', 0)
+        }
+        overrides = {}
+        for (let k in sp) {
+          let v = sp[k]
+          if (typeof v === 'function' && v.isUserFunction) {
+            lambdas.push(v)
+          } else {
+            overrides[k] = v
+          }
+        }
       }
       let dur = durOverride !== undefined ? durOverride : event.dur / s
       for (let i = 0; i < s; i++) {
         let e = Object.assign({}, event)
         if (i > 0 && typeof sp === 'object') {
-          applyOverridesInPlace(e, sp)
+          applyOverridesInPlace(e, overrides)
         }
+        lambdas.forEach(fn => {
+          let lambdaResult = fn(e, e.count, evalParamFrame, {value: i})
+          if (lambdaResult && typeof lambdaResult === 'object' && !Array.isArray(lambdaResult)) {
+            applyOverridesInPlace(e, lambdaResult)
+          }
+        })
         e.dur = dur
         e.count += i*dur
         e._time += i*dur*event.beat.duration
@@ -555,6 +574,33 @@ define((require) => {
   assert(2, es.length) // main param as expression evaluates (range at count=1 -> 2)
   assertEvent(1,1,1/2, es[0])
   assertEvent(3/2,3/2,1/2, es[1])
+
+  // Stutter with user-defined function: index passed as value/positional arg, result map applied to every stutter event
+  es = player('p', 'test', '0', 'stutter={4,{i}->{oct:2+i}}').getEventsForBeat({time:0, count:0, duration:1})
+  assert(4, es.length)
+  assertEvent(0,0,1/4, es[0])
+  assertEvent(1/4,1/4,1/4, es[1])
+  assertEvent(1/2,1/2,1/4, es[2])
+  assertEvent(3/4,3/4,1/4, es[3])
+  assert(2, es[0].oct) // lambda applies to ALL stutters including i=0
+  assert(3, es[1].oct)
+  assert(4, es[2].oct)
+  assert(5, es[3].oct)
+
+  // Stutter lambda combined with dur subparam
+  es = player('p', 'test', '0', 'stutter={3,dur:1/4,{i}->{amp:0.25+i*0.25}}').getEventsForBeat({time:0, count:0, duration:1})
+  assert(3, es.length)
+  assertEvent(0,0,1/4, es[0])
+  assertEvent(1/4,1/4,1/4, es[1])
+  assertEvent(1/2,1/2,1/4, es[2])
+  assert(0.25, es[0].amp)
+  assert(0.50, es[1].amp)
+  assert(0.75, es[2].amp)
+
+  // Stutter lambda with s=1 has no effect (no stutter)
+  es = player('p', 'test', '0', 'stutter={1,{i}->{oct:2+i}}').getEventsForBeat({time:0, count:0, duration:1})
+  assert(1, es.length)
+  assert(undefined, es[0].oct) // lambda not applied when s==1
 
   es = player('p', 'test', '0', 'stutter={2,dur:[0,1]r}').getEventsForBeat({time:0, count:0, duration:1})
   assert(2, es.length)

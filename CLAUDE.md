@@ -243,6 +243,43 @@ Two evaluation modes, each with main/sub variants:
 
 `evalPerEvent` returns the default only when the value is falsy AND not a number. **Zero is not treated as missing** — `typeof 0 !== 'number'` is false, so `0` passes through as a valid value rather than falling back to the default. This is correct for most params but means node creation code must handle 0 explicitly where the Web Audio API forbids it.
 
+### User-defined functions / lambdas (`expression/parse-expression.js`, `expression/parse-var.js`, `player/callstack.js`)
+
+DSL lambda syntax: `{args}->body`. Eg `{value}->value*2`, `{x,y}->x+y`, `{x:3}->x^2` (default arg). The parser sees `{`, parses a map, then checks for `->` — if present, treats the map's keys as argument names and parses the body.
+
+Keyless map values get keys `value`, `value1`, `value2`, etc. (see `expression/parse-map.js`). So `{i}->...` declares one positional arg `i`; calling `f{3}` passes `{value: 3}` and the body can reference `i` by name or `value` by position.
+
+**Parsed lambda is a wrapper function** (`parse-expression.js:73-86`):
+```js
+let userDefinedFunctionWrapper = (e,b,er,args) => {
+  pushCallContext(args)
+  let r = er(body,e,b)
+  popCallContext()
+  return r
+}
+```
+With flags `.isUserFunction = true`, `.isVarFunction = true`, `.isNormalCallFunction = true`, `.passCallsiteId = true`, `.dontEvalArgs = true`.
+
+**Calling a lambda from JS code** (e.g. inside `expandStutter` to pass an index per event):
+```js
+let result = wrapper(event, event.count, evalParamFrame, {value: i})
+```
+- Arg name `i` is looked up first; if not found, falls back to positional `value`/`value1`/etc.
+- `args` values are passed as-is; the wrapper just pushes them onto the call context.
+- If the body is a map literal (e.g. `{oct:2+i}`), `er(body,e,b)` evaluates each map value, yielding `{oct: 5}` for `i=3`. That return value can be fed straight into `applyOverridesInPlace`.
+
+**Args flow via callstack, not closure** (`player/callstack.js`): references to lambda args inside the body become `userFunctionArgumentLookup` (`parse-var.js:43-56`), which reads from `getCallContext()` at eval time. This is why nested lambda calls work and why `pushCallContext`/`popCallContext` bracket each invocation.
+
+`unPushCallContext`/`unPopCallContext` exist so that when an arg's *value* is itself an expression captured from an outer scope, evaluating that value temporarily steps out of the current frame so its own free variables resolve in the right scope.
+
+### `evalParamFrame` options
+
+`evalParamFrame(value, event, beat, options)` where `options` controls evaluation:
+- **default (no options)**: full evaluation — functions called, objects iterated and each field evaluated via evalRecurse, arrays mapped and flattened.
+- **`{evalToObjectOrPrimitive: true}`**: object fields pass through *unevaluated*. Used when you want to inspect the map structure (e.g. find subparams) without forcing evaluation. The `stutter` and `delay` param handlers use this to access `.dur`, `.add`, etc. as raw expressions.
+- **`{withInterval: true}`**: wraps per-frame results with their interval metadata; used by per-frame audio param scheduling.
+- **`{ignoreThisVars: true}`**: returns 0 for `this.*` lookups (used during chord expansion to avoid premature this-evaluation).
+
 ### `set` overrides and pattern timing (`player/standard.js`, `player/player.js`)
 
 Player overrides (`set p1 amp=2`) are stored in `players.overrides` by `parse-line.js` and applied to events in `player.processEvents()` via `applyOverrides()`. This happens **after** the pattern has already generated events with their timing.
