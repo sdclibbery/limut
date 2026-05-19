@@ -1,8 +1,6 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-Want to be able to write:  stutter={4,dur:1/4,{i}->{oct:2+i}}
- !The function is forcing the params for the main note too, but that is not how normal stutter params work
 !!Only get stuttered notes while the first one is playing?!  l sting keyboard, stutter={4,dur:1/2,add:[0:7]r}
  not pick/darkbass/softkeys/chime/xylo, but cyborg/oxy also do it. epiano cuts off half way
  Its the same with delay; delayed versions only play when the main note is still playing

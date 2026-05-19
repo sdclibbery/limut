@@ -88,15 +88,17 @@ define((require) => {
       let dur = durOverride !== undefined ? durOverride : event.dur / s
       for (let i = 0; i < s; i++) {
         let e = Object.assign({}, event)
-        if (i > 0 && typeof sp === 'object') {
-          applyOverridesInPlace(e, overrides)
-        }
-        lambdas.forEach(fn => {
-          let lambdaResult = fn(e, e.count, evalParamFrame, {value: i})
-          if (lambdaResult && typeof lambdaResult === 'object' && !Array.isArray(lambdaResult)) {
-            applyOverridesInPlace(e, lambdaResult)
+        if (i > 0) {
+          if (typeof sp === 'object') {
+            applyOverridesInPlace(e, overrides)
           }
-        })
+          lambdas.forEach(fn => {
+            let lambdaResult = fn(e, e.count, evalParamFrame, {value: i})
+            if (lambdaResult && typeof lambdaResult === 'object' && !Array.isArray(lambdaResult)) {
+              applyOverridesInPlace(e, lambdaResult)
+            }
+          })
+        }
         e.dur = dur
         e.count += i*dur
         e._time += i*dur*event.beat.duration
@@ -575,25 +577,25 @@ define((require) => {
   assertEvent(1,1,1/2, es[0])
   assertEvent(3/2,3/2,1/2, es[1])
 
-  // Stutter with user-defined function: index passed as value/positional arg, result map applied to every stutter event
+  // Stutter with user-defined function: lambda only applied to extra stutter events (i>0), original event unchanged
   es = player('p', 'test', '0', 'stutter={4,{i}->{oct:2+i}}').getEventsForBeat({time:0, count:0, duration:1})
   assert(4, es.length)
   assertEvent(0,0,1/4, es[0])
   assertEvent(1/4,1/4,1/4, es[1])
   assertEvent(1/2,1/2,1/4, es[2])
   assertEvent(3/4,3/4,1/4, es[3])
-  assert(2, es[0].oct) // lambda applies to ALL stutters including i=0
+  assert(undefined, es[0].oct) // original event unchanged
   assert(3, es[1].oct)
   assert(4, es[2].oct)
   assert(5, es[3].oct)
 
-  // Stutter lambda combined with dur subparam
+  // Stutter lambda combined with dur subparam — lambda only applies to i>0
   es = player('p', 'test', '0', 'stutter={3,dur:1/4,{i}->{amp:0.25+i*0.25}}').getEventsForBeat({time:0, count:0, duration:1})
   assert(3, es.length)
   assertEvent(0,0,1/4, es[0])
   assertEvent(1/4,1/4,1/4, es[1])
   assertEvent(1/2,1/2,1/4, es[2])
-  assert(0.25, es[0].amp)
+  assert(1, es[0].amp) // original event keeps default amp
   assert(0.50, es[1].amp)
   assert(0.75, es[2].amp)
 
