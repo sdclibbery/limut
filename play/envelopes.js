@@ -32,7 +32,7 @@ define(function (require) {
         vca.gain.linearRampToValueAtTime(gain*susLevel, releaseTime)
         vca.gain.linearRampToValueAtTime(0, releaseTime+release)
         params.endTime = releaseTime+release
-        setTimeout(() => params._destructor.destroy(), 100+(params.endTime - releaseTime)*1000)
+        setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
       }
     }
 
@@ -61,9 +61,10 @@ define(function (require) {
     } else {
       params.endTime = params._time + 1e6
       params._noteOff = () => {
-        vca.gain.setValueAtTime(gain, system.audio.currentTime)
-        vca.gain.linearRampToValueAtTime(0.00001, system.audio.currentTime+release)
-        params.endTime = system.audio.currentTime+release
+        let relTime = Math.max(system.audio.currentTime, params._time + attack + 0.001)
+        vca.gain.setValueAtTime(gain, relTime)
+        vca.gain.linearRampToValueAtTime(0.00001, relTime+release)
+        params.endTime = relTime+release
         setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
       }
     }

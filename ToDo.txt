@@ -1,10 +1,7 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!!Only get stuttered notes while the first one is playing?!  l sting keyboard, stutter={4,dur:1/2,add:[0:7]r}
- not pick/darkbass/softkeys/chime/xylo, but cyborg/oxy also do it. epiano cuts off half way
- Its the same with delay; delayed versions only play when the main note is still playing
- !!This will be due to ull envelopes having the callback to stop them. Stutter will duplicate this callback and stop the stuttered notes before they even play
+Get Claude to make itself some skills
 Good dark sounding effect chain:  stanh>>mix{tape{1/2}}>>mix{airverb}>>echo{80ms}>>stanh
 !Delay inside stutter does nothing - it should add an EXTRA delay if present on top of what "delay" already did
 !dbd is weak
