@@ -25,15 +25,42 @@ define((require) => {
     return root.current ? root.current.context : undefined
   }
 
-  let unPushCallContext = () => {
-    if (root.current === root) { throw `Cant unpush, already at root` }
-    if (root.current.parent === undefined) { throw `Cant unpush, no parent!` }
-    root.current = root.current.parent
+  let unPushCallContext = (n) => {
+    if (n === undefined) { n = 1 }
+    for (let i = 0; i < n; i++) {
+      if (root.current === root) { throw `Cant unpush, already at root` }
+      if (root.current.parent === undefined) { throw `Cant unpush, no parent!` }
+      root.current = root.current.parent
+    }
   }
 
-  let unPopCallContext = () => {
-    if (root.current.children.length === 0) { throw `Cant unpop, no children` }
-    root.current = root.current.children[root.current.children.length - 1]
+  let unPopCallContext = (n) => {
+    if (n === undefined) { n = 1 }
+    for (let i = 0; i < n; i++) {
+      if (root.current.children.length === 0) { throw `Cant unpop, no children` }
+      root.current = root.current.children[root.current.children.length - 1]
+    }
+  }
+
+  // Walk up the call chain from the current frame looking for a context with
+  // a defined value at `key`. Returns a shared scratch result {context, depth}
+  // on hit, or undefined on miss. The scratch object is reused — callers must
+  // read it synchronously before any other call to findInCallChainByKey.
+  let _findScratch = { context: undefined, depth: 0 }
+  let findInCallChainByKey = (key) => {
+    let node = root.current
+    let depth = 0
+    while (node !== root) {
+      let ctx = node.context
+      if (ctx !== undefined && ctx[key] !== undefined) {
+        _findScratch.context = ctx
+        _findScratch.depth = depth
+        return _findScratch
+      }
+      node = node.parent
+      depth += 1
+    }
+    return undefined
   }
 
   let deepCopyCallTree = (realRoot, copyRoot, realNode, copyNode, copyParent) => {
@@ -154,6 +181,34 @@ define((require) => {
     assert(true, root.children[0].parent === root)
     clearCallTree()
 
+    // findInCallChainByKey finds the nearest frame holding `key` and reports depth
+    pushCallContext({a: 1})
+    pushCallContext({b: 2})
+    pushCallContext({c: 3})
+    let found = findInCallChainByKey('a')
+    assert({a:1}, found.context)
+    assert(2, found.depth)
+    found = findInCallChainByKey('c')
+    assert({c:3}, found.context)
+    assert(0, found.depth)
+    found = findInCallChainByKey('nope')
+    assert(undefined, found)
+    popCallContext()
+    popCallContext()
+    popCallContext()
+
+    // N-step unPush/unPop
+    pushCallContext('cc1')
+    pushCallContext('cc2')
+    pushCallContext('cc3')
+    unPushCallContext(2)
+    assert('cc1', getCallContext())
+    unPopCallContext(2)
+    assert('cc3', getCallContext())
+    popCallContext()
+    popCallContext()
+    popCallContext()
+
     // Should be cleared back to root by the end of all tests
     assert(true, root.current === root)
 
@@ -166,6 +221,7 @@ define((require) => {
     getCallContext: getCallContext,
     unPushCallContext: unPushCallContext,
     unPopCallContext: unPopCallContext,
+    findInCallChainByKey: findInCallChainByKey,
     getCallTree: getCallTree,
     setCallTree: setCallTree,
     clearCallTree: clearCallTree,

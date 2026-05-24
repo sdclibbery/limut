@@ -56,21 +56,43 @@ define(function(require) {
           state.idx+=2
           eatWhitespace(state)
           let oldArgs = state.userFunctionArgs
-          state.userFunctionArgs = {} // Pass function arguments through to the body parse
+          let oldInherited = state.inheritedArgs
+          state.userFunctionArgs = {} // Own args (used for positional numbering)
+          // Inherited args: outer lambdas' own args plus whatever they inherited.
+          // Looked up by name only at runtime (no positional fallback).
+          state.inheritedArgs = Object.assign({}, oldInherited || {}, oldArgs || {})
           Object.keys(map).forEach((k) =>{
             if (k.startsWith('value')) {
               let v = map[k]
               if (typeof v._name === 'string') { v = v._name }
               if (typeof v === 'string') {
                 state.userFunctionArgs[v] = false // Arg has no default value
+                delete state.inheritedArgs[v] // own arg shadows inherited
               }
             } else if (state.userFunctionArgs[k] === undefined) {
               state.userFunctionArgs[k] = map[k] // Arg includes default value
+              delete state.inheritedArgs[k] // own arg shadows inherited
             }
           })
           let body = state.expression(state)
+          // Precomputed at parse time so the wrapper has zero per-call allocations.
+          let argNames = Object.keys(state.userFunctionArgs)
+          let argSlots = argNames.map((_, i) => 'value' + (i || ''))
           state.userFunctionArgs = oldArgs
+          state.inheritedArgs = oldInherited
           let userDefinedFunctionWrapper = (e,b,er,args) => {
+            // Alias keyless slots to declared names in place. Safe because all
+            // current callers (chord, stutter, parse-var modifier chain) pass a
+            // fresh args object per invocation.
+            if (args !== undefined) {
+              for (let i = 0; i < argNames.length; i++) {
+                let name = argNames[i]
+                if (args[name] === undefined) {
+                  let v = args[argSlots[i]]
+                  if (v !== undefined) { args[name] = v }
+                }
+              }
+            }
             pushCallContext(args)
             let r = er(body,e,b)
             popCallContext()
@@ -141,7 +163,7 @@ define(function(require) {
       let interval = parseInterval(state)
       let modifiers = parseMap(state)
       interval = interval || parseInterval(state)
-      let v = varLookup(parsed, modifiers, state.context, interval, state.userFunctionArgs)
+      let v = varLookup(parsed, modifiers, state.context, interval, state.userFunctionArgs, state.inheritedArgs)
       if (v !== undefined) {
         result = addModifiers(v, modifiers)
         result.interval = hoistInterval(interval || result.interval, typeof modifiers === 'object' ? Object.values(modifiers) : undefined)

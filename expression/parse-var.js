@@ -3,7 +3,7 @@ define(function(require) {
   let vars = require('vars')
   let mainVars = require('main-vars')
   let {evalParamFrame} = require('player/eval-param')
-  let {getCallContext,unPushCallContext,unPopCallContext} = require('player/callstack')
+  let {getCallContext,unPushCallContext,unPopCallContext,findInCallChainByKey} = require('player/callstack')
 
   let isVarChar = (char) => {
     return (char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || (char == '_')
@@ -24,7 +24,7 @@ define(function(require) {
   }
 
   let callsiteId = 0
-  let varLookup = (key, args, context, interval, userFunctionArgs) => {
+  let varLookup = (key, args, context, interval, userFunctionArgs, inheritedArgs) => {
     if (!key) { return }
 
     // look for static function call; call var immediately if present
@@ -54,6 +54,34 @@ define(function(require) {
       }
       userFunctionArgumentLookup._name = key
       return userFunctionArgumentLookup
+    }
+
+    // Inherited arg from an enclosing lambda: walk the call chain by name.
+    // The wrapper aliases keyless slots to declared names at push time, so a
+    // name lookup in each frame is sufficient (no positional fallback).
+    if (inheritedArgs !== undefined && inheritedArgs[key] !== undefined) {
+      let defaultValue = inheritedArgs[key]
+      let inheritedLookup = (e,b,er) => {
+        let found = findInCallChainByKey(key)
+        let value, depth
+        if (found !== undefined) {
+          value = found.context[key]
+          depth = found.depth + 1
+        } else {
+          value = defaultValue
+          depth = 1
+        }
+        if (value === false) { value = undefined } // No default arg either
+        if (value === undefined) { return undefined }
+        // Step out past every frame between us and the binding frame, so the
+        // captured expression evaluates in the scope where it was captured.
+        unPushCallContext(depth)
+        value = er(value,e,b)
+        unPopCallContext(depth)
+        return value
+      }
+      inheritedLookup._name = key
+      return inheritedLookup
     }
 
     // Return a lookup function

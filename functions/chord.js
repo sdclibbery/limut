@@ -83,6 +83,31 @@ define(function(require) {
     assert([{value:0,add:0},{value:1/4,add:2},{value:2/4,add:4},{value:3/4,add:6}],
       evalParamFrame(parseExpression('chord{4,{i}->{i/4,add:i*2}}'), ev(0,0), 0, {evalToObjectOrPrimitive:true}))
 
+    // Inherited args: inner lambda sees outer lambda's arg
+    let vars = require('vars').all()
+    vars.foo = parseExpression('{i} -> chord{2, {j} -> i+j}')
+    assert([3,4], evalParamFrame(parseExpression('foo{3}'), ev(0,0), 0))
+    delete vars.foo
+
+    // Inner own arg shadows outer (chord{2} passes j=0,1; inner i shadows outer)
+    vars.foo = parseExpression('{i} -> chord{2, {i} -> i}')
+    assert([0,1], evalParamFrame(parseExpression('foo{99}'), ev(0,0), 0))
+    delete vars.foo
+
+    // Inherited arg whose value is itself an expression captured from outer scope
+    vars.bar = parseExpression('{x} -> x*100')
+    vars.foo = parseExpression('{i} -> chord{1, {j} -> i+j}')
+    assert([300], evalParamFrame(parseExpression('foo{bar{3}}'), ev(0,0), 0))
+    delete vars.foo
+    delete vars.bar
+
+    // Inner lambda returning a map with field referring to inherited arg
+    // (matches the user-reported pattern: chord{N, {j}->{j, add:i+j}} inside {i}->...)
+    vars.foo = parseExpression('{i} -> chord{2, {j} -> {j, add:i+j}}')
+    assert([{value:0,add:5},{value:1,add:6}],
+      evalParamFrame(parseExpression('foo{5}'), ev(0,0), 0))
+    delete vars.foo
+
     console.log('Chord function tests complete')
   }
 })
