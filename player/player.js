@@ -55,57 +55,71 @@ define((require) => {
     let d = evalParamFrame(mainParamUnits(dp, 'b', 0), event, event.count)
     event._time += d*beat.duration
     event.count += d
+    event.delay = undefined // prevent the just-fired delay from re-firing; override map below can set a new value
     applyOverridesInPlace(event, dp)
   }
 
-  let expandStutter = (es) => {
+  let expandSingleStutterEvent = (event) => {
+    let sp = evalParamFrame(event.stutter, event, event.count, {evalToObjectOrPrimitive:true})
+    let s = Math.max(Math.floor(evalParamFrame(mainParam(sp, 1), event, event.count)), 1)
+    if (s == 1) {
+      event.stutter = undefined // prevent re-firing on subsequent recursive passes
+      return [event]
+    }
+    let durOverride = undefined
+    let lambdas = []
+    let overrides = sp
+    if (typeof sp === 'object') {
+      if (sp.dur !== undefined) {
+        let d = evalParamFrame(sp.dur, event, event.count)
+        durOverride = mainParamUnits(d, 'b', 0)
+      }
+      overrides = {}
+      for (let k in sp) {
+        let v = sp[k]
+        if (typeof v === 'function' && v.isUserFunction) {
+          lambdas.push(v)
+        } else {
+          overrides[k] = v
+        }
+      }
+    }
+    let dur = durOverride !== undefined ? durOverride : event.dur / s
     let result = []
-    es.forEach(event => {
-      let sp = evalParamFrame(event.stutter, event, event.count, {evalToObjectOrPrimitive:true})
-      let s = Math.max(Math.floor(evalParamFrame(mainParam(sp, 1), event, event.count)), 1)
-      if (s == 1) {
-        result.push(event)
-        return
-      }
-      let durOverride = undefined
-      let lambdas = []
-      let overrides = sp
-      if (typeof sp === 'object') {
-        if (sp.dur !== undefined) {
-          let d = evalParamFrame(sp.dur, event, event.count)
-          durOverride = mainParamUnits(d, 'b', 0)
+    for (let i = 0; i < s; i++) {
+      let e = Object.assign({}, event)
+      e.stutter = undefined // clear before overrides; an override map / lambda result can then set a new stutter for the next recursive pass
+      if (i > 0) {
+        if (typeof sp === 'object') {
+          applyOverridesInPlace(e, overrides)
         }
-        overrides = {}
-        for (let k in sp) {
-          let v = sp[k]
-          if (typeof v === 'function' && v.isUserFunction) {
-            lambdas.push(v)
-          } else {
-            overrides[k] = v
+        lambdas.forEach(fn => {
+          let lambdaResult = fn(e, e.count, evalParamFrame, {value: i})
+          if (lambdaResult && typeof lambdaResult === 'object' && !Array.isArray(lambdaResult)) {
+            applyOverridesInPlace(e, lambdaResult)
           }
-        }
+        })
       }
-      let dur = durOverride !== undefined ? durOverride : event.dur / s
-      for (let i = 0; i < s; i++) {
-        let e = Object.assign({}, event)
-        if (i > 0) {
-          if (typeof sp === 'object') {
-            applyOverridesInPlace(e, overrides)
-          }
-          lambdas.forEach(fn => {
-            let lambdaResult = fn(e, e.count, evalParamFrame, {value: i})
-            if (lambdaResult && typeof lambdaResult === 'object' && !Array.isArray(lambdaResult)) {
-              applyOverridesInPlace(e, lambdaResult)
-            }
-          })
-        }
-        e.dur = dur
-        e.count += i*dur
-        e._time += i*dur*event.beat.duration
-        result.push(e)
-      }
-    })
+      e.dur = dur
+      e.count += i*dur
+      e._time += i*dur*event.beat.duration
+      result.push(e)
+    }
     return result
+  }
+
+  let MAX_EXPAND_DEPTH = 8
+  let processDelayAndStutter = (event, depth) => {
+    if (depth > MAX_EXPAND_DEPTH) {
+      console.warn('Stutter/delay nesting exceeded depth', MAX_EXPAND_DEPTH)
+      return [event]
+    }
+    applyDelay(event, event.beat)
+    let copies = expandSingleStutterEvent(event)
+    if (copies.length === 1 && copies[0].stutter === undefined && copies[0].delay === undefined) {
+      return copies
+    }
+    return copies.flatMap(e => processDelayAndStutter(e, depth + 1))
   }
 
   let playerNumber = 0
@@ -216,8 +230,7 @@ define((require) => {
       }
       events = events.map(e => applyOverrides(e, overrides))
       events = expandChords(events)
-      events.forEach(e => applyDelay(e, e.beat))
-      events = expandStutter(events)
+      events = events.flatMap(e => processDelayAndStutter(e, 0))
       events.forEach(e => applyQuantise(e, e.beat))
       events.forEach(e => applySwing(e, e.beat))
       events.forEach(e => e.player = player.id)
@@ -621,6 +634,29 @@ define((require) => {
   assert(2, es.length)
   assertEvent(1,1,1/2, es[0])
   assertEvent(3/2,3/2,1/2, es[1])
+
+  // Nested stutter: outer stutter sets a=2 and inner stutter={2,a:3} on i=1 of outer.
+  // Recurse on i=1: inner i=0 keeps a=2, inner i=1 gets a=3. Yields 3 events: a=1, 2, 3.
+  es = player('p', 'test', '0', 'a=1, stutter={2, a:2, stutter:{2, a:3}}').getEventsForBeat({time:0, count:0, duration:1})
+  assert(3, es.length)
+  assert([1, 2, 3], es.map(e => e.a))
+  assertEvent(0,    0,    1/2, es[0])
+  assertEvent(1/2,  1/2,  1/4, es[1])
+  assertEvent(3/4,  3/4,  1/4, es[2])
+
+  // Stutter override sets delay on i>0 copies; delay then fires on the new event
+  es = player('p', 'test', '0', 'stutter={2, delay:1}').getEventsForBeat({time:0, count:0, duration:1})
+  assert(2, es.length)
+  assertEvent(0,    0,    1/2, es[0])
+  assertEvent(3/2,  3/2,  1/2, es[1])
+
+  // delay nested inside a delay override map: total shift = outer + inner
+  e = player('p', 'play', 'x', 'delay={1, delay:1}').getEventsForBeat({time:0, count:0, duration:1})[0]
+  assert(2, e._time)
+
+  // Self-perpetuating-looking stutter override terminates because sp=2 is primitive: only i=1 of outer gets stutter=2, inner expansion has no further override
+  es = player('p', 'test', '0', 'stutter={2, stutter:2}').getEventsForBeat({time:0, count:0, duration:1})
+  assert(3, es.length)
 
   // quantise: snap event count to nearest grid point
   es = player('p', 'test', '0', 'delay=0.1, quantise=1/4').getEventsForBeat({time:0, count:0, duration:1})

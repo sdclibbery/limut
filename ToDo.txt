@@ -1,10 +1,13 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
+Support recursive delay and stutter
+ !!REVIEW Claudes implementation
+ ??Is it an issue that the events will not have delay or stutter on them? Eg a visual player cannot access them? Could it anyway?
 Get Claude to make itself some skills
-Good dark sounding effect chain:  stanh>>mix{tape{1/2}}>>mix{airverb}>>echo{80ms}>>stanh
-!Delay inside stutter does nothing - it should add an EXTRA delay if present on top of what "delay" already did
-!dbd is weak
+Good dark sounding effect chain:  set darkfx={}->stanh>>mix{tape{1/2}}>>mix{airverb}>>echo{80ms}>>stanh
+ ?? control param? hpf for reverb/echo?
+!dbd is weak :-/
 ?main volume slider should be killed; just do  set main amp*=slider if you want one...
  ??Time to review the UI generally? make smaller / tidy up?
  Will be a breaking change...
