@@ -6,6 +6,7 @@ define(function(require) {
   require('functions/rand')
   require('functions/aggregators')
   require('functions/maths')
+  require('functions/chord')
   require('functions/sliders')
   require('functions/midi-knob')
   require('functions/gamepad')

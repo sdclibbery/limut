@@ -2,11 +2,15 @@
 =================================================================================================================================
 =================================================================================================================================
 Support recursive delay and stutter
- !!REVIEW Claudes implementation
- ??Is it an issue that the events will not have delay or stutter on them? Eg a visual player cannot access them? Could it anyway?
+ ?? should just have chord{} method and use it with delay anyway???
+  should support recursive
+   !!! fail: `delay=(0,chord{2,{{i}->{i,chord{i,{j}->{i/j,add:i+j}}}}})`
+    !Its a user defined function issue. Nested lambdas cannot see params from the parent lambda
+ !Docs for stutter/delay to note they get removed from the event and so are not available on this. or p. etc
 Get Claude to make itself some skills
 Good dark sounding effect chain:  set darkfx={}->stanh>>mix{tape{1/2}}>>mix{airverb}>>echo{80ms}>>stanh
- ?? control param? hpf for reverb/echo?
+ ?? control param(s)? hpf for reverb/echo?
+Duck function; provides on beat ducking by default, configurable length/depth. can provide a player to duck to
 !dbd is weak :-/
 ?main volume slider should be killed; just do  set main amp*=slider if you want one...
  ??Time to review the UI generally? make smaller / tidy up?
