@@ -57,3 +57,5 @@ preset doombass audiosynth, oct=1, dur=1/4,
   	osc.sine{this.freq + 3*this.freq*osc.sine{3*this.freq}*[1:!4s*(0.2+this.decay),0]e@s*(0.7+this.cutoff*4)},
   }*0.7*[1:!8s,0]e@s,
   decay=this.vel, cutoff=this.vel
+
+set darkfx = {depth:1} -> stanh>>mix{tape{depth/3}}>>echo{80ms*(1+[-0.1,0.1]n3)}>>mix{bpf{500}>>airverb,1/4}>>stanh*-4db
