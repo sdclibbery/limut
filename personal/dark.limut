@@ -58,4 +58,4 @@ preset doombass audiosynth, oct=1, dur=1/4,
   }*0.7*[1:!8s,0]e@s,
   decay=this.vel, cutoff=this.vel
 
-set darkfx = {depth:1} -> stanh>>mix{tape{depth/3}}>>echo{80ms*(1+[-0.1,0.1]n3)}>>mix{bpf{500}>>airverb,1/4}>>stanh*-4db
+set darkverb = {depth:3/4} -> stanh>>mix{tape{depth/3}}>>echo{80ms*(1+0.05*depth*[-1,1]n3@f)}>>mix{bpf{500}>>airverb,1/3}>>stanh*-4db
