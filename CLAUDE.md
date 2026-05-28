@@ -54,6 +54,8 @@ Run by opening `http://localhost:8000?test` and checking the browser console. Th
 
 To run tests from a shell via headless Chrome, see the `headless-tests` skill.
 
+For audio-graph wiring changes (fx chains, connectable construction, node-function output), the inline tests don't cover graph construction. Use the `verifier-audio-wiring` skill to drive the running app in headless Chrome and inspect the constructed Web Audio graph.
+
 ## Documentation
 
 User-facing DSL docs live in `index.html` (the in-app reference panel). When you add, change, or remove a DSL feature — new params, subparams, player types, expression syntax, etc. — update the matching section in `index.html` so the docs stay in sync with the code.

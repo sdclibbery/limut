@@ -7,7 +7,7 @@ define((require) => {
   let destructor = require('play/destructor')
   let players = require('player/players')
   let consoleOut = require('console')
-  let {connect,isConnectableOrPlaceholder} = require('play/nodes/connect');
+  let {connect,isConnectable} = require('play/nodes/connect');
   let vars = require('vars')
 
   let fadeIn = (node, fadeTime) => {
@@ -98,7 +98,7 @@ define((require) => {
     
     // Create the chain
     fx.chain = evalParamEvent(params.fx, params) // Get the Audionode fx chain
-    if (!isConnectableOrPlaceholder(fx.chain)) {
+    if (!isConnectable(fx.chain)) {
       fx.chain = vars.all().gain({value:params.fx}, params,metronome.timeNow())
     }
 

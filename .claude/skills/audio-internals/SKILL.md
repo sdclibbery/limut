@@ -127,3 +127,27 @@ Two evaluation modes, each with main/sub variants:
 - **`{evalToObjectOrPrimitive: true}`**: object fields pass through *unevaluated*. Used when you want to inspect the map structure (e.g. find subparams) without forcing evaluation. The `stutter` and `delay` param handlers use this to access `.dur`, `.add`, etc. as raw expressions.
 - **`{withInterval: true}`**: wraps per-frame results with their interval metadata; used by per-frame audio param scheduling.
 - **`{ignoreThisVars: true}`**: returns 0 for `this.*` lookups (used during chord expansion to avoid premature this-evaluation).
+
+## `isConnectable` vs `isConnectableOrPlaceholder` (`play/nodes/connect.js`)
+
+Two near-identical predicates with one critical difference: `isConnectableOrPlaceholder(0) === true` (the `0` placeholder branch); `isConnectable(0) === false`. The placeholder branch exists for *per-chord-slot* wiring in `expression/connectOp.js:21,25`, where a `0` legitimately means "this slot of the chord has no audio chain — emit nothing here."
+
+**Don't use `isConnectableOrPlaceholder` at single-chain construction sites.** The common pattern
+
+```js
+chain = evalParamEvent(expr, params)
+if (!isConnectable(chain)) { chain = vars.all().gain({value:expr}, params, b) }
+```
+
+decides whether the evaluated value is already a wired audio graph, or a scalar/timevar that needs wrapping in a gain node whose `.gain` automates against `expr`. A timevar like `[0,1]t1/8@f` evaluates at event time to its starting sample (here `0`). With `isConnectableOrPlaceholder`, the `0` is wrongly accepted as a "connectable placeholder" and the gain-wrap fallback is skipped → `chain` stays the bare number `0` → `connect()` resolves it to `[]` (chord-empty-slot semantics, `connect.js:38`) → no audio connections are made → silence.
+
+Rule of thumb:
+
+- **Per-chord-slot wiring** (`expression/connectOp.js`, where each operand may legitimately be a "no-op for this slot"): `isConnectableOrPlaceholder`.
+- **Single-chain construction** (player-fx, loop/mix node functions, anything that wraps "if it's not already a node, make one"): `isConnectable`.
+
+When the values flowing in could be scalars (including `0`) — i.e. always with timevars — the placeholder branch silences output. Live sites using the correct predicate: `play/player-fx.js:101`, `play/nodes/graph.js:46,49,87,118,126`.
+
+## Verifying audio-graph wiring at runtime
+
+Audio output is not observable in headless Chrome — listening tests aren't possible. But the *constructed graph* is observable: after driving the app's update-code path, you can inspect `players.getById('p1')._fx.chain` and check whether it's an `AudioNode`, a scalar, or a wrapped object. For non-trivial fx/connect/wiring changes, this is the only meaningful runtime check beyond the inline test suite. See the `verifier-audio-wiring` skill for the harness pattern.

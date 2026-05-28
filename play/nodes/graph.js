@@ -4,7 +4,7 @@ define(function(require) {
   let system = require('play/system');
   let {evalMainParamEvent,evalMainParamFrame} = require('play/eval-audio-params')
   let {evalParamFrame,evalParamEvent} = require('player/eval-param')
-  let {connect,isConnectable,isConnectableOrPlaceholder} = require('play/nodes/connect')
+  let {connect,isConnectable} = require('play/nodes/connect')
   let connectOp = require('expression/connectOp')
   require('play/nodes/mocks')
   require('play/nodes/convolver')
@@ -43,10 +43,10 @@ define(function(require) {
 
   let loop = (args,e,b,_,er) => {
     let mainChain = evalParamEvent(args['value'], e)
-    if (!isConnectableOrPlaceholder(mainChain)) { mainChain = vars.all().gain({value:args['value']}, e,b) }
+    if (!isConnectable(mainChain)) { mainChain = vars.all().gain({value:args['value']}, e,b) }
     let unevalledFeedback = args['feedback'] || args['value1']
     let feedbackChain = evalParamEvent(unevalledFeedback, e)
-    if (!isConnectableOrPlaceholder(feedbackChain)) { feedbackChain = vars.all().gain({value:unevalledFeedback}, e,b) }
+    if (!isConnectable(feedbackChain)) { feedbackChain = vars.all().gain({value:unevalledFeedback}, e,b) }
     if (mainChain === undefined) {
       mainChain = idnode(args,e,b)
       if (feedbackChain === undefined) { return mainChain }
@@ -84,7 +84,7 @@ define(function(require) {
     let params = combineParams(args, e)
     let wetChain = evalParamEvent(params.value, e)
     if (wetChain === undefined) { return idnode(params,e,b) }
-    if (!isConnectableOrPlaceholder(wetChain)) { wetChain = vars.all().gain({value:params.value}, e,b) }
+    if (!isConnectable(wetChain)) { wetChain = vars.all().gain({value:params.value}, e,b) }
     let mixParam = params.mix !== undefined ? 'mix' : 'value1'
     let mixValue = evalParamFrame(params[mixParam], e,e.count, {withInterval:true})
     let interval
