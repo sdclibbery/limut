@@ -61,3 +61,9 @@ set airverb = {delay:1/2b} ->  flanger>>{dry,pingpong{delay}}>>reverb{3b}
 set shimmer = {ratio:2,length:2s} -> shifter{ratio}>>reverb{length}*+3db
 
 set tape = {wow:1, cut:-10db} -> delay{wow*([0,20ms]n2+[0,2ms]n0.2),max:500ms}>>hsf{cut,freq:7000hz}>>lsf{cut,freq:200hz}
+
+set duck = {length:0.5, depth:1, period:1, attack:0.1} -> [
+  (1-depth):^3:length,
+  1:_(period-length-attack),
+  1:\attack
+]t@s

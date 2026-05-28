@@ -2,7 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 Duck function; provides on beat ducking by default, configurable length/depth. can provide a player to duck to
- Should allow negative depth to emphasise the beat
  DOCS
 gp0, gp1 etc as well as just gp
 !dbd is weak?
