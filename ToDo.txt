@@ -1,8 +1,10 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
+!!! fx=[]t@f not working..? eg  fx=[0:1/4,1:3/4]t@s
 Duck function; provides on beat ducking by default, configurable length/depth. can provide a player to duck to
  Should allow negative depth to emphasise the beat
+ DOCS
 gp0, gp1 etc as well as just gp
 !dbd is weak?
 ?main volume slider should be killed; just do  set main amp*=slider if you want one...

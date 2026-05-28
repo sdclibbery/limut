@@ -38,10 +38,10 @@ define(function (require) {
     }
   }
 
-  let buildSegment = ({time, nextTime, count, nextSegment, segmentPower, currentValue, nextValue, getValueAtTime, audioParam, mod}) => {
+  let buildSegment = ({time, nextTime, count, nextSegment, segmentPower, currentValue, getValueAtTime, audioParam, mod}) => {
     // console.log(`segmentPower ${segmentPower}`)
     if (segmentPower === 0) { // Power 0 is fixed value over the segment
-      addSegment(audioParam, 'setValueAtTime', nextValue, mod, time)
+      addSegment(audioParam, 'setValueAtTime', currentValue, mod, time)
     } else {
       let epsilon = 1e-5 // Apply an epsilon to detect and handle zero length segments
       let endValue = getValueAtTime(nextSegment - epsilon) // Calculate value inside end of segment to avoid problems with zero length segments
@@ -140,7 +140,7 @@ define(function (require) {
       let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
     }
-    let {eventTimeVar} = require('expression/eval-timevars')
+    let {eventTimeVar, timeVar} = require('expression/eval-timevars')
 
     let mockAp = () => {
       let calls = []
@@ -285,6 +285,23 @@ define(function (require) {
       assert(4, ap.calls.length)
       assert(['setValueAtTime', 18,4], ap.calls[3])
     }
+
+    // Repeating, non-terminal step time-var (eg `[0:1/4,1:3/4]t@s`): each segment must
+    // hold its own value, not be shifted one segment early. Param'd by beat, so segments
+    // repeat every beat: value 0 over the first 1/4 beat, value 1 over the remaining 3/4.
+    ap = mockAp()
+    buildAllMain(ap, evalAtMain( timeVar([0,1], [step,step], [1/4,3/4], undefined, step, {addSegmentData:true}) ))
+    assert(10, ap.calls.length)
+    assert(['setValueAtTime', 0,0], ap.calls[0]) // Initial value (count 1 = start of a 0 segment)
+    assert(['setValueAtTime', 0,2], ap.calls[1]) // count 1 (time 2): low for first quarter-beat
+    assert(['setValueAtTime', 2,2.5], ap.calls[2]) // count 1.25 (time 2.5): high (1 doubled) for rest of beat
+    assert(['setValueAtTime', 0,4], ap.calls[3]) // count 2 (time 4): low again
+    assert(['setValueAtTime', 2,4.5], ap.calls[4]) // count 2.25 (time 4.5): high
+    assert(['setValueAtTime', 0,6], ap.calls[5])
+    assert(['setValueAtTime', 2,6.5], ap.calls[6])
+    assert(['setValueAtTime', 0,8], ap.calls[7])
+    assert(['setValueAtTime', 2,8.5], ap.calls[8])
+    assert(['setValueAtTime', 0,10], ap.calls[9])
 
     metronome.beatDuration(oldBeatDuration)
     console.log('Segmented audioParam tests complete')
