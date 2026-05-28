@@ -106,7 +106,10 @@ define(function (require) {
     segmentState.mod = mod
     let startCount = params.count
     let startTime = params._time
-    if (startTime === undefined) { startTime = system.timeNow() } // Stale default (eg. fx chain with no current event) — anchor scheduling to now
+    if (startTime === undefined) { // No event time (eg. persistent fx/bus chain) — anchor to now, and keep startCount consistent so we don't backfill segments from the past
+      startTime = system.timeNow()
+      startCount = metronome.beatTime(startTime)
+    }
     segmentState.param = segmentState.getParamAtTime(startCount + epsilon)
     segmentState.count = startCount
     segmentState.time = startTime

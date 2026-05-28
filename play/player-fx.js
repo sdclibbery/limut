@@ -71,7 +71,7 @@ define((require) => {
     }
     setEventParam('idx', (e,b) => e.idx, (b) => Math.floor(b))
     setEventParam('dur', (e,b) => e.dur, (b) => 1)
-    setEventParam('_time', (e,b) => e._time, (b) => 0)
+    setEventParam('_time', (e,b) => e._time, (b) => system.timeNow())
     setEventParam('endTime', (e,b) => e.endTime, (b) => 1)
     delete params.beat
     Object.defineProperty(params, 'beat', { get() { return metronome.lastBeat() } })

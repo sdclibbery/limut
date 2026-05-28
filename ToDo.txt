@@ -2,6 +2,7 @@
 =================================================================================================================================
 =================================================================================================================================
 Duck function; provides on beat ducking by default, configurable length/depth. can provide a player to duck to
+ !! TEST if change bpm while its running
  DOCS
 gp0, gp1 etc as well as just gp
 !dbd is weak?
