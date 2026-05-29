@@ -15,7 +15,7 @@ define((require) => {
       if (k === 'beat' || k === 'play') { continue } // beat should never have chords, play is for node graphs and should not be evalled any more than needed as it creates AudioNodes
       let v = event[k]
       if (v && v.__alreadyExpanded) { continue }
-      let evaled = evalParamFrame(v, event, event.count, {ignoreThisVars:true})
+      let evaled = evalParamFrame(v, event, event.count, {expandingChords:true})
       if (Array.isArray(evaled)) { // If param k is going to eval to a chord at the start of the event, expand it out
         let es = []
         for (let i=0; i<evaled.length; i++) {
@@ -125,7 +125,7 @@ define((require) => {
 
     let tvf = (e) => e.f // this var func
     tvf.interval = 'frame'
-    tvf._thisVar = true
+    tvf._chordPlaceholder = true
     p = expandChords([{x:tvf,f:1}])
     assert(1, p.length)
     assert(1, evalParamFrame(p[0].x,p[0],b))

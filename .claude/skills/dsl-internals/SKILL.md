@@ -71,7 +71,7 @@ let result = wrapper(event, event.count, evalParamFrame, {value: i})
 - **default (no options)**: full evaluation — functions called, objects iterated and each field evaluated via evalRecurse, arrays mapped and flattened.
 - **`{evalToObjectOrPrimitive: true}`**: object fields pass through *unevaluated*. Used when you want to inspect the map structure (e.g. find subparams) without forcing evaluation. The `stutter` and `delay` param handlers use this to access `.dur`, `.add`, etc. as raw expressions.
 - **`{withInterval: true}`**: wraps per-frame results with their interval metadata; used by per-frame audio param scheduling.
-- **`{ignoreThisVars: true}`**: returns 0 for `this.*` lookups (used during chord expansion to avoid premature this-evaluation).
+- **`{expandingChords: true}`**: returns `0` (a chord-slot placeholder) for any value marked `_chordPlaceholder` — node functions, node-valued vars, and `this.*` lookups — so chord expansion can detect array structure without prematurely building audio nodes or realising this-references. Set only by `player/expand-chords.js`. (Formerly `ignoreThisVars`; the flag it gates was formerly `_thisVar`.)
 
 ## `set` overrides and pattern timing
 

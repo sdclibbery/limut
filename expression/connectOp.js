@@ -15,13 +15,13 @@ define(function(require) {
   let connectOp = (l,r, e,b,evalRecurse) => {
     if (l === undefined) { return r }
     if (r === undefined) { return l }
-    // A 0 is only a real "empty chord slot" placeholder during chord expansion (ignoreThisVars).
+    // A 0 is only a real "empty chord slot" placeholder during chord expansion (expandingChords).
     // In normal playback a value that resolves to 0 (eg a timevar like duck at its start) is genuine
     // and must be wrapped in a gain node, otherwise connect() resolves it to [] and the chain goes
     // silent. So use the strict isConnectable in normal playback, and only accept placeholders while
     // expanding chords. (cf 01a8372c, which made the same fix in player-fx.js and graph.js)
-    let ignoreThisVars = evalRecurse && evalRecurse.options && evalRecurse.options.ignoreThisVars
-    let connectable = ignoreThisVars ? isConnectableOrPlaceholder : isConnectable
+    let expandingChords = evalRecurse && evalRecurse.options && evalRecurse.options.expandingChords
+    let connectable = expandingChords ? isConnectableOrPlaceholder : isConnectable
     let composite = Object.create(getAudioNodeProto()) // Create object that satisfies instanceof AudioNode
     composite.destructor = destructor()
     let el = evalRecurse(l, e,b)
@@ -89,9 +89,9 @@ define(function(require) {
   an = connectOp(mockAn(), 'segZero', {},0, erZero)
   assert(true, an.r instanceof AudioNode) // duck-style {value:0,...} wrapped, not dropped to silence
 
-  // But during chord expansion (ignoreThisVars), a 0 IS a placeholder and must be preserved.
+  // But during chord expansion (expandingChords), a 0 IS a placeholder and must be preserved.
   let erZeroExpand = (v,e,b) => v === 'bareZero' ? 0 : v
-  erZeroExpand.options = {ignoreThisVars:true}
+  erZeroExpand.options = {expandingChords:true}
   an = connectOp(mockAn(), 'bareZero', {},0, erZeroExpand)
   assert(0, an.r) // placeholder kept
   vars.all().gain = savedGain

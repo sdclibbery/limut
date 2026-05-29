@@ -4,7 +4,7 @@ define(function(require) {
 
   let addNodeFunction = (k, v) => {
     v.dontEvalArgs = true
-    v._thisVar = true // Do not evaluate node functions during expand-chords; should rename _thisVar really
+    v._chordPlaceholder = true // Don't evaluate node functions during chord expansion; hold a placeholder slot instead
     addVarFunction(k, v)
   }
 

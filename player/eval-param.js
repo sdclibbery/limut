@@ -71,13 +71,13 @@ define((require) => {
     return result
   }
 
-  let evalParamValue = (evalRecurse, value, event, beat, {ignoreThisVars,evalToObjectOrPrimitive,withInterval}) => {
+  let evalParamValue = (evalRecurse, value, event, beat, {expandingChords,evalToObjectOrPrimitive,withInterval}) => {
     if (Array.isArray(value)) { // chord, eval individual values
       let v = value.map(v => evalRecurse(v, event, beat))
       v = v.flat()
       return v
     } else if (typeof value == 'function') { // Call function to get current value
-      if (ignoreThisVars && value._thisVar) { return 0 } // return 0 to hold a place in a chord
+      if (expandingChords && value._chordPlaceholder) { return 0 } // return 0 to hold a place in a chord
       let v = evalFunctionWithModifiers(value, event, beat, evalRecurse)
       v = evalRecurse(v, event, beat)
       if (withInterval) { v = wrapWithInterval(v, value) }
@@ -140,7 +140,7 @@ define((require) => {
       }
       return er(v,e,b,options)
     }
-    f.options = options // expose mode (eg ignoreThisVars) to raw operators like >>
+    f.options = options // expose mode (eg expandingChords) to raw operators like >>
     return f
   }
 

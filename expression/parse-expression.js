@@ -2064,9 +2064,9 @@ define(function(require) {
   assert(1, v.l.r.ls.length)
   assert(true, v.r.connected[0] instanceof AudioNode)
 
-  evalParamFrame(parseExpression("idnode>>{idnode,idnode}"), evd(),0, {ignoreThisVars:true})
-  evalParamFrame(parseExpression("{idnode,idnode}>>idnode"), evd(),0, {ignoreThisVars:true})
-  evalParamFrame(parseExpression("{idnode,idnode}>>{idnode,idnode}"), evd(),0, {ignoreThisVars:true})
+  evalParamFrame(parseExpression("idnode>>{idnode,idnode}"), evd(),0, {expandingChords:true})
+  evalParamFrame(parseExpression("{idnode,idnode}>>idnode"), evd(),0, {expandingChords:true})
+  evalParamFrame(parseExpression("{idnode,idnode}>>{idnode,idnode}"), evd(),0, {expandingChords:true})
  
   vars.foo = parseExpression('{x} -> x')
   vars.bar = parseExpression('{y} -> mockaudionode{test:y}')

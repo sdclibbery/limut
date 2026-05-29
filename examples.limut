@@ -5138,3 +5138,32 @@ bb techbass .077, vel=gp.lsx/3, cutoff=gp.lsu, drive={1/4,mix:smooth{gp.lsr}}, f
 cr croak, dur=8, vel=gp.rsx, fx=stanh>>mix{tape{1/4}}>>mix{airverb}>>echo{80ms}>>stanh>>mix{tg,gp.rsl}, addc=12*gp.rsv
 l cyborg keyboard, fx=stanh>>mix{tape{1/2}}>>mix{airverb}>>echo{80ms}>>stanh*tg
 
+
+i ping, oct=3, fx=gain>>duck
+
+// set bpm=100
+// set main fx=1/4
+// pk perc X.-.
+// br reese, cutoff, dur, fx=duck
+
+// set bpm=130
+// set main fx=stanh*2
+// pk perc X.-.
+// pk dbd 0...
+// pp perc nxl crop 16, swing=54, fx=duck/4
+// pc perc ....*..., vel=1/4
+// br reese, fx=duck{2/3}, cutoff=[]n4, dur=1, drive={1/4,mix:[]s2@f^2}
+// bt techbass, fx=duck{2/3}/4
+// sp chant, fx=mix{airverb}*duck{1/3,3/4}/2
+// o oxy 07, dur=4, fx=tg>>panner{[-1,1]l2@s}>>mix{airverb}, amp*=[]t16
+// s pick 07264, amp*=duck{1.2,1,1.5}, vel=3/2, pan=[-1,1], echo=1/2
+// l cyborg keyboard, quantise, fx=duck{1/8,2/3}*mix{airverb}
+
+// p perc x...
+// p perc -.
+// s stringpad, fx=(1-p.pulse.0}/4
+// s stringpad, fx=duck{}/4
+// s stringpad, fx=duck{1/2,-1}/4
+// s stringpad, fx=duck{1,1,2}/4
+// s stringpad, amp*=duck{}/4
+

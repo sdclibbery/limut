@@ -51,8 +51,8 @@ define(function(require) {
         }
         let v = event[key]
         v = evalRecurse(v, event,b) // Eval so that time modifiers get applied
-        let lookupOpResult = (e,b,er) => v // Wrap into a function so we can set _thisVar to prevent doubling up of chords
-        lookupOpResult._thisVar = true
+        let lookupOpResult = (e,b,er) => v // Wrap into a function so we can set _chordPlaceholder to prevent doubling up of chords
+        lookupOpResult._chordPlaceholder = true
         return lookupOpResult
       }
       let player = players.getById(ml)

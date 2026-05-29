@@ -137,7 +137,7 @@ define(function(require) {
     result = parseVarLookup
     result.interval = interval
     result._name = key
-    if (typeof vars.get(key) === 'function' && vars.get(key)._thisVar) { result._thisVar = true } // For node vars: pass this through to prevent the node function getting evalled during expand-chords
+    if (typeof vars.get(key) === 'function' && vars.get(key)._chordPlaceholder) { result._chordPlaceholder = true } // For node vars: pass this through to prevent the node function getting evalled during chord expansion
     return result
   }
 

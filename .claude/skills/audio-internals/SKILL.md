@@ -126,11 +126,11 @@ Two evaluation modes, each with main/sub variants:
 - **default (no options)**: full evaluation — functions called, objects iterated and each field evaluated via evalRecurse, arrays mapped and flattened.
 - **`{evalToObjectOrPrimitive: true}`**: object fields pass through *unevaluated*. Used when you want to inspect the map structure (e.g. find subparams) without forcing evaluation. The `stutter` and `delay` param handlers use this to access `.dur`, `.add`, etc. as raw expressions.
 - **`{withInterval: true}`**: wraps per-frame results with their interval metadata; used by per-frame audio param scheduling.
-- **`{ignoreThisVars: true}`**: returns 0 for `this.*` lookups (used during chord expansion to avoid premature this-evaluation).
+- **`{expandingChords: true}`**: returns `0` (a chord-slot placeholder) for any value marked `_chordPlaceholder` — node functions, node-valued vars, and `this.*` lookups — so chord expansion can detect array structure without prematurely building audio nodes or realising this-references. Set only by `player/expand-chords.js`. (Formerly `ignoreThisVars`; the flag it gates was formerly `_thisVar`.)
 
 ## `isConnectable` vs `isConnectableOrPlaceholder` (`play/nodes/connect.js`)
 
-Two near-identical predicates with one critical difference: `isConnectableOrPlaceholder(0) === true` (the `0` placeholder branch); `isConnectable(0) === false`. The placeholder branch exists for *per-chord-slot* wiring in `expression/connectOp.js:21,25`, where a `0` legitimately means "this slot of the chord has no audio chain — emit nothing here."
+Two near-identical predicates with one critical difference: `isConnectableOrPlaceholder(0) === true` (the `0` placeholder branch); `isConnectable(0) === false`. The placeholder branch exists for *per-chord-slot* wiring, where a `0` legitimately means "this slot of the chord has no audio chain — emit nothing here." `expression/connectOp.js` (the `>>` operator) selects between the two by mode: it uses `isConnectableOrPlaceholder` **only while expanding chords** (`evalRecurse.options.expandingChords`), and the strict `isConnectable` in normal playback — otherwise a value that resolves to `0` (eg a `duck`-style timevar at its start) would be misread as an empty slot and the chain would go silent.
 
 **Don't use `isConnectableOrPlaceholder` at single-chain construction sites.** The common pattern
 
@@ -143,8 +143,8 @@ decides whether the evaluated value is already a wired audio graph, or a scalar/
 
 Rule of thumb:
 
-- **Per-chord-slot wiring** (`expression/connectOp.js`, where each operand may legitimately be a "no-op for this slot"): `isConnectableOrPlaceholder`.
-- **Single-chain construction** (player-fx, loop/mix node functions, anything that wraps "if it's not already a node, make one"): `isConnectable`.
+- **Per-chord-slot wiring** (`expression/connectOp.js` *while* `expandingChords`, where each operand may legitimately be a "no-op for this slot"): `isConnectableOrPlaceholder`.
+- **Single-chain construction** (player-fx, loop/mix node functions, connectOp in normal playback — anything that wraps "if it's not already a node, make one"): `isConnectable`.
 
 When the values flowing in could be scalars (including `0`) — i.e. always with timevars — the placeholder branch silences output. Live sites using the correct predicate: `play/player-fx.js:101`, `play/nodes/graph.js:46,49,87,118,126`.
 
