@@ -1,9 +1,6 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-Duck function; provides on beat ducking by default, configurable length/depth. can provide a player to duck to
- !! TEST if change bpm while its running
- DOCS
 !!Cannot write fx=gain>>duck (get silence) but can write fx=gain*duck      i ping, oct=3, fx=gain>>duck
 gp0, gp1 etc as well as just gp
 !dbd is weak?

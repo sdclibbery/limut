@@ -1233,6 +1233,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>airverb{delay:1/2b}</code> Haunting airy reverb with flanger and stereo pingpong with given delay.</p>
 <p><code>demon{}</code> Demon voice effect for use with vocal audio (eg through a microphone and the external synth).</p>
 <p><code>disperser{freq:440Hz, q:3, stages:24}</code> Series chain of allpass filters that smears transients into a frequency-swept tail. Useful for creating dub-style boom kicks and resonant clicks. freq is the resonant frequency, q is the allpass Q, stages is the number of allpass filters in series.</p>
+<p><code>duck{length:0.5, depth:1, period:1, attack:0.1}</code> Sidechain-style ducking gain envelope. Periodically dips the volume to simulate the pumping effect of sidechain compression against a kick drum. period is the time between dips, length is how long the dip takes to reach its lowest point, depth is how far the volume drops (1 = full duck to silence), attack is how quickly the volume recovers afterwards.</p>
 <p><code>echo{time:1/8b, feedback:0.7, max}</code> Echo effect wraps delay with feedback and a dry path to give a complete echo effect.</p>
 <p><code>flanger{control:[0,1]l8@f, feedback:0, lo:0.0005, hi:0.007}</code> Flanger effect.</p>
 <p><code>grain{ratio, length:0.03, phase:0}</code> Granular resynthesis grain. Plays a recent part of the audio stream of given length, with a cosine envelope, at a given pitch ratio. Phase allows multiple grains to be overlapped.</p>
