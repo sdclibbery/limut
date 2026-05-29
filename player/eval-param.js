@@ -133,13 +133,15 @@ define((require) => {
   }
 
   let evalRecurseWithOptions = (er, options) => {
-    return (v,e,b, moreOptions) => {
+    let f = (v,e,b, moreOptions) => {
       if (typeof moreOptions === 'object') {
         if (typeof options === 'object') { Object.assign(options, moreOptions) }
         else { options = moreOptions }
       }
       return er(v,e,b,options)
     }
+    f.options = options // expose mode (eg ignoreThisVars) to raw operators like >>
+    return f
   }
 
   let noOptions = {}
