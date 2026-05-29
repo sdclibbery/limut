@@ -80,7 +80,7 @@ define(function (require) {
       let epsilon = 1e-5 // Apply an epsilon to make sure we get the _next_ segment not the current one
       segmentState.param = segmentState.getParamAtTime(segmentState.nextSegment + epsilon)
       segmentState.nextValue = segmentState.getValueFromParam(segmentState.param)
-      segmentState.nextTime = segmentState.time + (segmentState.nextSegment - segmentState.count) * metronome.beatDuration()
+      segmentState.nextTime = segmentState.countToTime(segmentState.nextSegment)
 // console.log(`segment time delta ${(segmentState.nextTime - segmentState.time + 0.0001).toFixed(3)}`)
       buildSegment(segmentState)
       segmentState.currentValue = segmentState.nextValue
@@ -110,6 +110,11 @@ define(function (require) {
       startTime = system.timeNow()
       startCount = metronome.beatTime(startTime)
     }
+    // Sub-beat timing offset (eg. an event's delay/swing) expressed in beats, frozen at construction.
+    // Folding it into the count rather than adding seconds preserves the offset while letting it scale
+    // with tempo. ~0 for on-grid events and chains.
+    let constructionBeat = params.beat || { count: startCount, time: startTime, duration: metronome.beatDuration() }
+    let offsetBeats = (startTime - (constructionBeat.time + (startCount - constructionBeat.count) * constructionBeat.duration)) / constructionBeat.duration
     segmentState.param = segmentState.getParamAtTime(startCount + epsilon)
     segmentState.count = startCount
     segmentState.time = startTime
@@ -127,8 +132,19 @@ define(function (require) {
     }
     let endCount = startCount + dur
     return (upToAudioTime) => { // Build segments incrementally up to given audio time (undefined = build all)
+      // Pivot the count<->time mapping on the live beat (params.beat is a live getter for persistent
+      // fx/bus chains, a frozen object for scheduled events), re-read each call, instead of a frozen
+      // construction anchor. This keeps both tempo AND phase locked to the metronome across bpm changes
+      // mid-chain. Under constant tempo it is identical to a frozen anchor. The fallback reproduces the
+      // old frozen behaviour when no beat is available. Note: because segments are built a little ahead,
+      // a large instantaneous tempo jump can shift the next segment's time slightly relative to already
+      // committed automation; the adjustment is bounded by the build-ahead window and Web Audio clamps
+      // any sub-now time.
+      let beat = params.beat || { count: startCount, time: startTime, duration: metronome.beatDuration() }
+      segmentState.countToTime = (c) => beat.time + (c + offsetBeats - beat.count) * beat.duration
+      segmentState.time = segmentState.countToTime(segmentState.count) // Re-sync cursor to the live beat
       let upToCount = (upToAudioTime !== undefined)
-        ? startCount + (upToAudioTime - startTime) / metronome.beatDuration()
+        ? beat.count + (upToAudioTime - beat.time) / beat.duration - offsetBeats
         : endCount
       segmentStepper(segmentState, Math.min(upToCount, endCount))
       return !!segmentState.nextSegment && segmentState.count <= endCount
@@ -305,6 +321,36 @@ define(function (require) {
     assert(['setValueAtTime', 0,8], ap.calls[7])
     assert(['setValueAtTime', 2,8.5], ap.calls[8])
     assert(['setValueAtTime', 0,10], ap.calls[9])
+
+    // bpm (tempo) change mid-chain. A long-lived fx/bus chain pivots its count<->time mapping on the
+    // live beat (params.beat — a live getter for persistent chains), so a tempo change keeps it locked
+    // to the beat grid in both rate AND phase, instead of stalling or drifting from a frozen anchor.
+    {
+      // Live beat anchor, as player-fx surfaces via metronome.lastBeat(); mutated below to emulate the
+      // metronome re-anchoring to the new tempo at the most recent beat.
+      let beat = { count:0, time:0, duration:1 } // 1 beat = 1 second
+      let chainParams = { count:0, _time:0, endTime:1e6, get beat() { return beat } } // persistent-style
+      // Repeating step var: value 0 for the first 1/4 of each beat, value 1 (doubled -> 2) for the rest.
+      let evalAt = evalAtMain( timeVar([0,1], [step,step], [1/4,3/4], undefined, step, {addSegmentData:true}) )
+      metronome.beatDuration(1)
+      ap = mockAp()
+      let advance = segmentedAudioParam(ap, evalAt, chainParams, undefined, 99, 'hz', doubleIt)
+      advance(2.5) // build the first couple of beats at the original tempo
+      let callsBeforeChange = ap.calls.length
+      assert(true, callsBeforeChange > 1) // sanity: scheduling happened before the change
+
+      // Tempo drops to a quarter: the metronome's last beat (count 2 at time 2) now lasts 4 seconds.
+      beat = { count:2, time:2, duration:4 }
+      metronome.beatDuration(4)
+      for (let t = 3; t <= 8; t += 0.5) { advance(t) } // keep the chain running past the change
+
+      assert(true, ap.calls.length > callsBeforeChange) // kept scheduling: did not stall
+      // Phase preserved on the new grid: integer beat 3 (value 0) lands at time 6, and its following
+      // 1/4-beat point (count 3.25, value 1 -> doubled 2) at time 7 (a quarter of the new 4s beat).
+      let onGrid = (v, t) => ap.calls.some(c => c[0]==='setValueAtTime' && c[1]===v && Math.abs(c[2]-t)<1e-6)
+      assert(true, onGrid(0, 6)) // beat 3 low, on the new beat grid
+      assert(true, onGrid(2, 7)) // its 1/4-beat high, spaced at the new tempo
+    }
 
     metronome.beatDuration(oldBeatDuration)
     console.log('Segmented audioParam tests complete')
