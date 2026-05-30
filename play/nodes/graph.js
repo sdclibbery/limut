@@ -80,6 +80,62 @@ define(function(require) {
   }
   addNodeFunction('series', series)
 
+  // Perceptually even (log-spaced) crossover/centre frequencies across the audio
+  // spectrum. Band i passes [lo,hi]; centre is the geometric mean used for the
+  // callback. The lowest band's lo (20Hz) and the top band's hi (20kHz) sit at
+  // the edges of hearing so those filters are effectively transparent.
+  let bandFrequencies = (count, fmin, fmax) => {
+    let ratio = fmax / fmin
+    let bands = []
+    for (let i = 0; i < count; i++) {
+      bands.push({
+        lo: fmin * Math.pow(ratio, i/count),
+        hi: fmin * Math.pow(ratio, (i+1)/count),
+        centre: fmin * Math.pow(ratio, (i+0.5)/count),
+      })
+    }
+    return bands
+  }
+
+  let butterworth = (type, freq, e) => { // Non-resonant (maximally flat) filter for splitting bands
+    let node = system.audio.createBiquadFilter()
+    node.type = type
+    node.frequency.value = freq
+    node.Q.value = Math.SQRT1_2 // Butterworth Q: no resonant peak at the corner
+    if (e && e._destructor) { e._destructor.disconnect(node) }
+    return node
+  }
+
+  // multiband{bands, {i,centre}->chain} : split the input into `bands` perceptually
+  // even frequency bands with non-resonant filters, run each through the chain the
+  // callback builds for it (given the band index and its centre frequency), then
+  // sum all bands back together. Returning a {value,value1,...} map makes connect()
+  // fan the input out to every band's input and sum every band's output.
+  let multiband = (args,e,b,_,er) => {
+    let count = Math.floor(evalMainParamEvent(args, 'value', evalMainParamEvent(args, 'bands', 3)))
+    if (typeof count !== 'number' || isNaN(count)) { throw `multiband: bands count must be numeric` }
+    if (count < 1) { return idnode(args,e,b) }
+    let callback = args['value1'] || args['chain']
+    let isLambda = typeof callback === 'function' && callback.isUserFunction
+    let result = {}
+    bandFrequencies(count, 20, 20000).forEach((band, i) => {
+      let split = connectOp(butterworth('highpass', band.lo, e), butterworth('lowpass', band.hi, e), e,b,er)
+      let proc
+      if (isLambda) {
+        let ev = Object.assign({}, e) // Distinct event so per-function memoisation doesn't collapse every band to band 0
+        proc = callback(ev, b, evalParamFrame, {value:i, value1:band.centre})
+      } else if (callback !== undefined) {
+        proc = evalParamFrame(callback, e,b, {doNotMemoise:true})
+      }
+      if (!isConnectable(proc)) {
+        proc = (proc === undefined) ? idnode(args,e,b) : vars.all().gain({value:proc}, e,b)
+      }
+      result[i===0 ? 'value' : 'value'+i] = connectOp(split, proc, e,b,er)
+    })
+    return result
+  }
+  addNodeFunction('multiband', multiband)
+
   let mix = (args,e,b,_,er) => {
     let params = combineParams(args, e)
     let wetChain = evalParamEvent(params.value, e)
@@ -144,4 +200,52 @@ define(function(require) {
     return composite
   }
   addNodeFunction('stereo', stereo)
+
+  // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+
+  let assert = (expected, actual) => {
+    let x = JSON.stringify(expected)
+    let a = JSON.stringify(actual)
+    if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
+  }
+  let close = (a,b) => Math.abs(a-b) < 1e-6
+
+  // bandFrequencies: perceptually even (log) spacing across the audio spectrum
+  let bands = bandFrequencies(4, 20, 20000)
+  assert(4, bands.length)
+  assert(true, close(bands[0].lo, 20))        // lowest band starts at fmin
+  assert(true, close(bands[3].hi, 20000))     // top band ends at fmax
+  bands.forEach((band,i) => {                 // adjacent bands share crossover points
+    if (i>0) { assert(true, close(band.lo, bands[i-1].hi)) }
+    assert(true, close(band.centre, Math.sqrt(band.lo*band.hi))) // centre is geometric mean
+  })
+  let ratio = bands[1].centre/bands[0].centre // log spacing -> constant ratio between centres
+  assert(true, close(bands[2].centre/bands[1].centre, ratio))
+  assert(true, close(bands[3].centre/bands[2].centre, ratio))
+
+  // multiband: callback is invoked once per band with index + centre frequency,
+  // and the result is a {value,value1,...} map that connect() treats as parallel.
+  let dest = require('play/destructor')()
+  let ev = {_destructor:dest}
+  let er = (v) => v // passthrough evalRecurse: operands here are already real nodes
+  let calls = []
+  let cb = (e,b,erFn,a) => { calls.push(a); return system.audio.createGain() }
+  cb.isUserFunction = true
+  let res = multiband({value:3, value1:cb}, ev, 0, undefined, er)
+  assert(3, calls.length)
+  assert([0,1,2], calls.map(a => a.value)) // band indices passed in order
+  let bf = bandFrequencies(3, 20, 20000)
+  assert(true, close(calls[0].value1, bf[0].centre)) // centre frequency passed alongside index
+  assert(true, close(calls[2].value1, bf[2].centre))
+  assert(true, isConnectable(res))
+  assert(true, res.value !== undefined && res.value1 !== undefined && res.value2 !== undefined && res.value3 === undefined)
+
+  // No callback -> bands are split and recombined through identity nodes
+  let res2 = multiband({value:2}, {_destructor:require('play/destructor')()}, 0, undefined, er)
+  assert(true, isConnectable(res2))
+  assert(true, res2.value !== undefined && res2.value1 !== undefined && res2.value2 === undefined)
+
+  console.log('Graph (multiband) tests complete')
+  }
 })

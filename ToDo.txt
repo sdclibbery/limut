@@ -1,6 +1,12 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
+Multiband function...
+  Split into parallel{} plus limut butterworth and multiband?
+  Docs
+Dmxstrip presets...
+!! Not working:  i noise, fx=multiband{16,{i}->gain{[]n{seed:i}}}/8
+ !! Also not working:  i noise, fx=multiband{16,{i}->[1:1,0:15]t@f{time:4*time+i}}/8
 gp0, gp1 etc as well as just gp
 !dbd is weak?
 ?main volume slider should be killed; just do  set main amp*=slider if you want one...
