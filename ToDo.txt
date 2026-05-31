@@ -2,8 +2,11 @@
 =================================================================================================================================
 =================================================================================================================================
 Multiband function...
-  Split into parallel{} plus limut butterworth and multiband?
   Docs
+parallel
+ Make sure it can be wrapped in limut and the callback passed through (and added to)
+butterworth
+Reimplement multiband using parallel and butterworth
 Dmxstrip presets...
 !! Not working:  i noise, fx=multiband{16,{i}->gain{[]n{seed:i}}}/8
  !! Also not working:  i noise, fx=multiband{16,{i}->[1:1,0:15]t@f{time:4*time+i}}/8

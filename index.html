@@ -1106,6 +1106,9 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>mix6{...}</code> Provide a fixed mix of 1/6 wet.</p>
 <p><code>mix7{...}</code> Provide a fixed mix of 1/7 wet.</p>
 <p><code>mix8{...}</code> Provide a fixed mix of 1/8 wet.</p>
+<p><code>multiband{bands:3, {i,centre}->...}</code> Split the input into a number of perceptually even (log-spaced) frequency bands using non-resonant filters, process each band through the node chain built by the callback, then sum the bands back together. The callback is given the band index <code>i</code> and the band's centre frequency <code>centre</code>, so each band can be processed differently (eg per-band gain, distortion, or compression).</p>
+<p class='sub'><code>multiband{3, {i,centre}->...}</code> The bands count arg can be positional instead of being named.</p>
+<p class='sub'><code>multiband{bands:3}</code> With no callback the bands are simply split and recombined (a no-op), useful as a starting point.</p>
 <p><code>osc{'sawtooth', freq:440, phase:0}</code> Create an oscillator node with the given waveform and frequency. Some control of starting phase is available; this is achieved by controlling the start time of the oscillator as all webaudio oscillators start with phase 0.</p>
 <p><code>panner{0}</code> Create a stereo panner that can push a signal to the left (-1) or right (1).</p>
 <p><code>sample{sample:'...', start:0s, rate:1}</code> Create a sample player node that loads a sample from a URL and plays with the given start point and rate.</p>
