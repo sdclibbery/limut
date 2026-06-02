@@ -19,8 +19,9 @@ define(function(require) {
       }
     }
     addEventListener("keyup", keyupListener)
-    let keydownListener = ({key, repeat}) => {
+    let keydownListener = ({key, repeat, ctrlKey, shiftKey}) => {
       if (repeat) { return }
+      if (key === "Shift" || key === "Control") { return } // Modifier keys set velocity, dont play a note
       let buttonIdx = parseInt(key) || 0
       if (player._shouldUnlisten) { return } // Dont play any new events if player is being cleaned up!
       let now = metronome.timeNow()
@@ -38,6 +39,9 @@ define(function(require) {
       }
       event.sound = event.value
       event = combineOverrides(event, baseParams)
+      // Set velocity from modifier keys after baseParams (whose default vel would otherwise clobber it)
+      if (ctrlKey) { event.vel = 1/2 } // Half velocity when control is held
+      if (shiftKey) { event.vel = 1 } // Full velocity when shift is held
       event = applyOverrides(event, params)
       let events = player.processEvents([event])
       events.forEach(e => { e._noteOff = () => {} }) // Default _noteOff callback does nothing

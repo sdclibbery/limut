@@ -4,6 +4,7 @@
 !! Also not working:  i noise, fx=multiband{16,{i}->[1:1,0:15]t@f{time:4*time+i}}/8
 ?? When multiband's second argument is a lambda, it builds a distinct event per band (so per-function memoisation doesn't collapse every band into band 0) 
  ?? SO why doesnt it just eval with no memoisation????
+?! series has count as second param; multiband has it as first?!
 butterworth - lp and hp - also 4 pole version
 parallel
  Make sure it can be wrapped in limut and the callback passed through (and added to)
