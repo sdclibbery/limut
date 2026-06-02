@@ -122,7 +122,7 @@ define(function(require) {
       let split = connectOp(butterworth('highpass', band.lo, e), butterworth('lowpass', band.hi, e), e,b,er)
       let proc
       if (isLambda) {
-        let ev = Object.assign({}, e) // Distinct event so per-function memoisation doesn't collapse every band to band 0
+        let ev = Object.create(Object.getPrototypeOf(e), Object.getOwnPropertyDescriptors(e)) // Distinct event so per-function memoisation doesn't collapse every band to band 0; clone descriptors so non-enumerable getters (count, _time, ...) from the fx-chain event survive
         proc = callback(ev, b, evalParamFrame, {value:i, value1:band.centre})
       } else if (callback !== undefined) {
         proc = evalParamFrame(callback, e,b, {doNotMemoise:true})

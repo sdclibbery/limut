@@ -1945,6 +1945,16 @@ define(function(require) {
   assert({value:8,interval:'frame'}, evalParamFrameWithInterval(parseExpression('({v} -> v*2){this.bar}'), e, 0))
   assert({value:10,interval:'frame'}, evalParamFrameWithInterval(parseExpression('({v} -> v*2){this.bar}'), e, 1))
 
+  { // multiband lambda body must see live event getters (count etc) - regression for NaN audio param
+    // The real fx-chain event defines count/_time/... as NON-enumerable getters; a clone that drops
+    // them leaves the band's chain evaluating against count=undefined, which NaNs noise/timevars.
+    let realFxEvent = { dur:1, _time:0, endTime:1, chainEndTime:1e10, _destructor:require('play/destructor')(), countToTime:x=>x }
+    Object.defineProperty(realFxEvent, 'count', { get(){ return 7 }, set(c){} }) // mimic player-fx
+    let mb = evalParamFrame(parseExpression('multiband{2,{i}->gain{[]n}}'), realFxEvent, 7)
+    assert(true, mb !== undefined && mb.value !== undefined && mb.value1 !== undefined)
+    require('play/system').queued = [] // []n schedules per-frame callbacks; don't leak into later tests
+  }
+
   assert(1, evalParamFrame(parseExpression('{}->1'), ev(), 0))
   assert(1, evalParamFrame(parseExpression('({}->1){}'), ev(), 0))
   assert(9, evalParamFrame(parseExpression('({value} -> value^2){3}'), ev(), 0))
