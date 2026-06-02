@@ -45,10 +45,13 @@ Drop a file at `verify-<thing>.html` at the repo root, alongside `index.html`. R
 
 2. **Force-load the node-function registrations.** A bare `require(['update-code'])` loads enough for parsing but *not* the modules that register `gain`, `delay`, effects, etc. via `addNodeFunction`. Without them, the gain-wrap fallback at `player-fx.js:102` throws `TypeError: vars.all(...).gain is not a function`. Include these explicitly:
 
+   The `update-code` module exports `{parseCode, updateCode}` — it is **not** the function itself, so grab `const updateCode = uc.updateCode` (a bare `updateCode(src)` on the module object throws `updateCode is not a function`).
+
    ```js
    require(['update-code', 'player/players', 'play/system', 'metronome', 'play/main-bus',
             'play/nodes/nodes', 'play/nodes/graph', 'play/effects/effects',
-            'expression/connectableOps', 'expression/connectOp'], (uc, players, system, metronome) => { … });
+            'expression/connectableOps', 'expression/connectOp'], (uc, players, system, metronome) => {
+     const updateCode = uc.updateCode; … });
    ```
 
 3. **Replicate `main.js:tick` minimally** — without this no events fire:

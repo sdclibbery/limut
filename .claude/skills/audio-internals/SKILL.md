@@ -148,6 +148,27 @@ Rule of thumb:
 
 When the values flowing in could be scalars (including `0`) — i.e. always with timevars — the placeholder branch silences output. Live sites using the correct predicate: `play/player-fx.js:101`, `play/nodes/graph.js:46,49,87,118,126`.
 
+### Wrapping a *lambda* result in a gain — wrap the lambda, not the probe value
+
+A subtle variant of the single-chain pattern arises in node functions that take a per-item lambda — e.g. `multiband{n, {i}->...}` in `play/nodes/graph.js`. The chain is built once, so the code calls the lambda to find out whether it produced a node chain or a plain value:
+
+```js
+proc = callback(ev, b, evalParamFrame, {value:i, value1:band.centre}) // probe
+```
+
+That probe **eagerly evaluates the lambda body**, collapsing a time-varying expression (e.g. `[]n{seed:i}`, interval `'frame'`) to a single frozen number. So you must **not** wrap the probe result (`gain({value:proc})` → static gain, never moves). Instead, when the probe is not connectable, hand the *lambda itself* to gain as the value param and let gain's `evalMainParamFrame` re-derive the interval at runtime:
+
+```js
+if (!isConnectable(proc)) {
+  let bandGain = (e2,b2,er2) => callback(ev, b2, er2, {value:i, value1:band.centre})
+  proc = vars.all().gain({value:bandGain}, e,b)
+}
+```
+
+Because gain evaluates its `value` with `{withInterval:true}` and that flag threads through the nested lambda body (`evalRecurseWithOptions`, `player/eval-param.js`), a frame-varying body gets `doPerFrame` updates while a genuinely static body (`{i}->0.5`) stays a constant gain with no per-frame callback — i.e. it behaves exactly like `gain{<body>}` with the lambda's arg bound. **Don't** decide per-frame-vs-static from the lambda's static `.interval` property: with conditionals like `{i}->i%2==0?[]n:0.5` the effective interval is only known by evaluating, which is precisely what the `withInterval` path does.
+
+Re-use the same per-band cloned event (`ev`) inside the wrapper: param memoisation is keyed by `(event, beat)` and ignores the lambda's args, so passing the shared fx event collapses every item to item 0's value. The probe (no `withInterval`) and gain's eval (`withInterval`) memoise under distinct keys, so they don't collide.
+
 ## Verifying audio-graph wiring at runtime
 
 Audio output is not observable in headless Chrome — listening tests aren't possible. But the *constructed graph* is observable: after driving the app's update-code path, you can inspect `players.getById('p1')._fx.chain` and check whether it's an `AudioNode`, a scalar, or a wrapped object. For non-trivial fx/connect/wiring changes, this is the only meaningful runtime check beyond the inline test suite. See the `verifier-audio-wiring` skill for the harness pattern.

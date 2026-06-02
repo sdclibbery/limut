@@ -12,6 +12,7 @@ Reimplement multiband using parallel and butterworth
  Also, the extremeties should not be filtered. Eg the lowest band should not have a 20hz highpass etc?
 Dmxstrip presets...
 gp0, gp1 etc as well as just gp
+!when collaborating, gamepad and midi numbers must be consistent for all peers
 !dbd is weak?
 ?main volume slider should be killed; just do  set main amp*=slider if you want one...
  ??Time to review the UI generally? make smaller / tidy up?

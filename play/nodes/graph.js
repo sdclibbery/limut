@@ -124,6 +124,16 @@ define(function(require) {
       if (isLambda) {
         let ev = Object.create(Object.getPrototypeOf(e), Object.getOwnPropertyDescriptors(e)) // Distinct event so per-function memoisation doesn't collapse every band to band 0; clone descriptors so non-enumerable getters (count, _time, ...) from the fx-chain event survive
         proc = callback(ev, b, evalParamFrame, {value:i, value1:band.centre})
+        if (!isConnectable(proc)) {
+          // The body evaluated to an amplitude, not a node chain (eg `{i}->[]n{seed:i}`).
+          // Calling it once above freezes that value, so instead hand the lambda itself to
+          // gain as its value param and let gain's evalMainParamFrame (withInterval) decide
+          // from the body's runtime interval: a frame-varying body gets per-frame updates,
+          // a static body stays a constant gain with no per-frame callback - exactly like
+          // gain{<body>}. Reuse the per-band `ev` so the inner lambda stays memoisation-isolated.
+          let bandGain = (e2,b2,er2) => callback(ev, b2, er2, {value:i, value1:band.centre})
+          proc = vars.all().gain({value:bandGain}, e,b)
+        }
       } else if (callback !== undefined) {
         proc = evalParamFrame(callback, e,b, {doNotMemoise:true})
       }
