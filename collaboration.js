@@ -6,6 +6,7 @@ define(function (require) {
   let system = require('play/system')
   let gamepads = require('player/gamepad')
   let sliders = require('functions/sliders')
+  let keyboard = require('player/keyboard')
 
   let isServer = false
   let connections = new Set()
@@ -103,6 +104,13 @@ define(function (require) {
               gamepads.setRemotePad(conn.peer, entry.idx, entry.pad || null)
             }
           })
+        }
+      } else if (data && typeof data === 'object' && data.type === 'keyboard') {
+        let from = data.from || conn.peer
+        keyboard.handleRemoteKey(data.key, data.action, data.ctrlKey, data.shiftKey, from)
+        if (isServer) {
+          let relay = { type: 'keyboard', from: from, key: data.key, action: data.action, ctrlKey: data.ctrlKey, shiftKey: data.shiftKey }
+          connections.forEach((c) => { if (c !== conn && c.open) { c.send(relay) } })
         }
       } else if (data && typeof data === 'object' && data.type === 'slider') {
         sliders.setSliderValue(data.name, data.value)
@@ -217,6 +225,12 @@ define(function (require) {
   sliders.onSliderChange((name, value) => {
     if (connections.size === 0) { return }
     let msg = { type: 'slider', name: name, value: value }
+    connections.forEach((conn) => { if (conn.open) { conn.send(msg) } })
+  })
+
+  keyboard.onKeyEvent((key, action, ctrlKey, shiftKey) => {
+    if (connections.size === 0) { return }
+    let msg = { type: 'keyboard', key: key, action: action, ctrlKey: ctrlKey, shiftKey: shiftKey }
     connections.forEach((conn) => { if (conn.open) { conn.send(msg) } })
   })
 

@@ -14,33 +14,76 @@ define(function(require) {
     let note = rowNotes[(key || '').toLowerCase()]
     return note !== undefined ? note : (parseInt(key) || 0)
   }
-  
+
+  // Module-level registry of active keyboard players. Each entry is {noteOn, noteOff}.
+  // A single pair of global window listeners dispatches each physical key press to
+  // every active player (so a press broadcasts exactly once) and lets remote peer
+  // events be injected via handleRemoteKey.
+  let activePlayers = new Set()
+  let keyEventListeners = []
+  let onKeyEvent = (cb) => keyEventListeners.push(cb)
+
+  let globalKeydown = ({key, repeat, ctrlKey, shiftKey}) => {
+    if (repeat) { return }
+    if (key === "Shift" || key === "Control") { return } // Modifier keys set velocity, dont play a note
+    activePlayers.forEach(entry => entry.noteOn(key, ctrlKey, shiftKey, 'local'))
+    keyEventListeners.forEach(cb => cb(key, 'down', ctrlKey, shiftKey))
+  }
+  let globalKeyup = ({key}) => {
+    if (key === "Shift" || key === "Control") { return }
+    activePlayers.forEach(entry => entry.noteOff(key, 'local'))
+    keyEventListeners.forEach(cb => cb(key, 'up'))
+  }
+  let listenersAttached = false
+  let ensureListeners = () => {
+    if (listenersAttached) { return }
+    addEventListener("keydown", globalKeydown)
+    addEventListener("keyup", globalKeyup)
+    listenersAttached = true
+  }
+  let removePlayer = (entry) => {
+    activePlayers.delete(entry)
+    if (activePlayers.size === 0 && listenersAttached) {
+      removeEventListener("keydown", globalKeydown)
+      removeEventListener("keyup", globalKeyup)
+      listenersAttached = false
+    }
+  }
+
+  // Apply a remote peer's key event to every active player, namespaced by source
+  // (the peer id) so peers' note-offs dont collide. Does not re-notify listeners.
+  let handleRemoteKey = (key, action, ctrlKey, shiftKey, source) => {
+    if (action === 'down') {
+      activePlayers.forEach(entry => entry.noteOn(key, ctrlKey, shiftKey, source))
+    } else {
+      activePlayers.forEach(entry => entry.noteOff(key, source))
+    }
+  }
+
   let keyboardPlayer = (params, player, baseParams) => {
-    let keyupListener = ({key}) => {
+    let entry
+    let noteOff = (key, source) => {
       let buttonIdx = keyToNote(key)
+      let noteId = source + ':' + buttonIdx
       for (let k in player.events) {
         let e = player.events[k]
-        if (!!e._noteOff && e._keyboardNote === buttonIdx) {
+        if (!!e._noteOff && e._keyboardNote === noteId) {
           e._noteOff() // Call note off callback so sustain envelopes can move to release phase
           e._stopping = true
         }
       }
       if (!!player._shouldUnlisten && (!player.events || player.events.filter(e => !e._stopping).length === 0)) {
-        removeEventListener("keydown", keydownListener)
-        removeEventListener("keyup", keyupListener)
+        removePlayer(entry)
       }
     }
-    addEventListener("keyup", keyupListener)
-    let keydownListener = ({key, repeat, ctrlKey, shiftKey}) => {
-      if (repeat) { return }
-      if (key === "Shift" || key === "Control") { return } // Modifier keys set velocity, dont play a note
+    let noteOn = (key, ctrlKey, shiftKey, source) => {
       let buttonIdx = keyToNote(key)
       if (player._shouldUnlisten) { return } // Dont play any new events if player is being cleaned up!
       let now = metronome.timeNow()
       let currentCount = metronome.beatTime(now)
       let lastBeat = metronome.lastBeat()
       let event = {
-        _keyboardNote: buttonIdx,
+        _keyboardNote: source + ':' + buttonIdx, // Namespaced by source so peers' note-offs dont collide
         value: buttonIdx,
         dur: 1,
         vel: 3/4,
@@ -59,16 +102,21 @@ define(function(require) {
       events.forEach(e => { e._noteOff = () => {} }) // Default _noteOff callback does nothing
       player.play(events)
     }
-    addEventListener("keydown", keydownListener)
+    entry = {noteOn, noteOff}
+    activePlayers.add(entry)
+    ensureListeners()
     if (player.destroy !== undefined) { throw `Player ${player.id} already has destroy?!` }
     player.destroy = () => {
       player._shouldUnlisten = true
       if (!!player.events && player.events.length === 0) {
-        removeEventListener("keydown", keydownListener)
-        removeEventListener("keyup", keyupListener)
+        removePlayer(entry)
       }
     }
   }
 
-  return keyboardPlayer
+  return {
+    keyboardPlayer: keyboardPlayer,
+    onKeyEvent: onKeyEvent,
+    handleRemoteKey: handleRemoteKey,
+  }
 })
