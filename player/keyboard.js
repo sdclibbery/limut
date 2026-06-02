@@ -3,9 +3,21 @@ define(function(require) {
   let metronome = require('metronome')
   let {combineOverrides,applyOverrides} = require('player/override-params')
 
+  // Map alphabet keys to notes, row by row. Home row starts at 0 (a=0..l=8),
+  // top row starts an octave up at 7 (q=7..), bottom row starts at -7 (z=-7..).
+  let rowNotes = {}
+  let addRow = (keys, start) => keys.split('').forEach((k, i) => rowNotes[k] = start + i)
+  addRow("asdfghjkl", 0)
+  addRow("qwertyuiop", 7)
+  addRow("zxcvbnm", -7)
+  let keyToNote = (key) => {
+    let note = rowNotes[(key || '').toLowerCase()]
+    return note !== undefined ? note : (parseInt(key) || 0)
+  }
+  
   let keyboardPlayer = (params, player, baseParams) => {
     let keyupListener = ({key}) => {
-      let buttonIdx = parseInt(key) || 0
+      let buttonIdx = keyToNote(key)
       for (let k in player.events) {
         let e = player.events[k]
         if (!!e._noteOff && e._keyboardNote === buttonIdx) {
@@ -22,7 +34,7 @@ define(function(require) {
     let keydownListener = ({key, repeat, ctrlKey, shiftKey}) => {
       if (repeat) { return }
       if (key === "Shift" || key === "Control") { return } // Modifier keys set velocity, dont play a note
-      let buttonIdx = parseInt(key) || 0
+      let buttonIdx = keyToNote(key)
       if (player._shouldUnlisten) { return } // Dont play any new events if player is being cleaned up!
       let now = metronome.timeNow()
       let currentCount = metronome.beatTime(now)
