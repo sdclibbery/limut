@@ -1950,7 +1950,7 @@ define(function(require) {
     // them leaves the band's chain evaluating against count=undefined, which NaNs noise/timevars.
     let realFxEvent = { dur:1, _time:0, endTime:1, chainEndTime:1e10, _destructor:require('play/destructor')(), countToTime:x=>x }
     Object.defineProperty(realFxEvent, 'count', { get(){ return 7 }, set(c){} }) // mimic player-fx
-    let mb = evalParamFrame(parseExpression('multiband{2,{i}->gain{[]n}}'), realFxEvent, 7)
+    let mb = evalParamFrame(parseExpression('multiband{{i}->gain{[]n},2}'), realFxEvent, 7)
     assert(true, mb !== undefined && mb.value !== undefined && mb.value1 !== undefined)
     require('play/system').queued = [] // []n schedules per-frame callbacks; don't leak into later tests
   }

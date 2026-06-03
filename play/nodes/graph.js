@@ -106,16 +106,16 @@ define(function(require) {
     return node
   }
 
-  // multiband{bands, {i,centre}->chain} : split the input into `bands` perceptually
-  // even frequency bands with non-resonant filters, run each through the chain the
-  // callback builds for it (given the band index and its centre frequency), then
+  // multiband{{i,centre}->chain, count} : split the input into `count` perceptually
+  // even frequency bands (default 3) with non-resonant filters, run each through the
+  // chain the callback builds for it (given the band index and its centre frequency), then
   // sum all bands back together. Returning a {value,value1,...} map makes connect()
   // fan the input out to every band's input and sum every band's output.
   let multiband = (args,e,b,_,er) => {
-    let count = Math.floor(evalMainParamEvent(args, 'value', evalMainParamEvent(args, 'bands', 3)))
-    if (typeof count !== 'number' || isNaN(count)) { throw `multiband: bands count must be numeric` }
+    let count = Math.floor(evalMainParamEvent(args, 'value1', evalMainParamEvent(args, 'count', 3)))
+    if (typeof count !== 'number' || isNaN(count)) { throw `multiband: count must be numeric` }
     if (count < 1) { return idnode(args,e,b) }
-    let callback = args['value1'] || args['chain']
+    let callback = args['value'] || args['chain']
     let isLambda = typeof callback === 'function' && callback.isUserFunction
     let result = {}
     bandFrequencies(count, 20, 20000).forEach((band, i) => {
@@ -242,7 +242,7 @@ define(function(require) {
   let calls = []
   let cb = (e,b,erFn,a) => { calls.push(a); return system.audio.createGain() }
   cb.isUserFunction = true
-  let res = multiband({value:3, value1:cb}, ev, 0, undefined, er)
+  let res = multiband({value:cb, value1:3}, ev, 0, undefined, er)
   assert(3, calls.length)
   assert([0,1,2], calls.map(a => a.value)) // band indices passed in order
   let bf = bandFrequencies(3, 20, 20000)
@@ -252,9 +252,13 @@ define(function(require) {
   assert(true, res.value !== undefined && res.value1 !== undefined && res.value2 !== undefined && res.value3 === undefined)
 
   // No callback -> bands are split and recombined through identity nodes
-  let res2 = multiband({value:2}, {_destructor:require('play/destructor')()}, 0, undefined, er)
+  let res2 = multiband({value1:2}, {_destructor:require('play/destructor')()}, 0, undefined, er)
   assert(true, isConnectable(res2))
   assert(true, res2.value !== undefined && res2.value1 !== undefined && res2.value2 === undefined)
+
+  // Band count defaults to 3 when unspecified
+  let res3 = multiband({}, {_destructor:require('play/destructor')()}, 0, undefined, er)
+  assert(true, res3.value !== undefined && res3.value2 !== undefined && res3.value3 === undefined)
 
   console.log('Graph (multiband) tests complete')
   }
