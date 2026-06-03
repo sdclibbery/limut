@@ -23,6 +23,7 @@ define(function(require) {
   let players = require('player/players')
   let consoleOut = require('console')
   let collaboration = require('collaboration')
+  let keyboard = require('player/keyboard')
   require('editor-codemirror')
   let {parseCode} = require('update-code')
   let {clearCallTree} = require('player/callstack')
@@ -91,6 +92,11 @@ define(function(require) {
       efs.call(document);
     }
   }
+
+  // keyboard player: only play local notes while hovering the keyboard icon
+  let keyboardIcon = document.getElementById('keyboard-icon')
+  keyboardIcon.addEventListener('mouseenter', () => keyboard.setLocalEnabled(true))
+  keyboardIcon.addEventListener('mouseleave', () => keyboard.setLocalEnabled(false))
 
   // webgl canvas
   var canvas = document.getElementById("canvas")

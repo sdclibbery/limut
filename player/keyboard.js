@@ -23,9 +23,16 @@ define(function(require) {
   let keyEventListeners = []
   let onKeyEvent = (cb) => keyEventListeners.push(cb)
 
+  // Local key presses only play (and broadcast to peers) while this is true; the UI
+  // sets it when the mouse hovers the keyboard icon. Note-off is never gated, so a key
+  // held while leaving the icon still releases cleanly.
+  let localEnabled = false
+  let setLocalEnabled = (enabled) => { localEnabled = !!enabled }
+
   let globalKeydown = ({key, repeat, ctrlKey, shiftKey}) => {
     if (repeat) { return }
     if (key === "Shift" || key === "Control") { return } // Modifier keys set velocity, dont play a note
+    if (!localEnabled) { return } // Only play local notes while hovering the keyboard icon
     activePlayers.forEach(entry => entry.noteOn(key, ctrlKey, shiftKey, 'local'))
     keyEventListeners.forEach(cb => cb(key, 'down', ctrlKey, shiftKey))
   }
@@ -118,5 +125,6 @@ define(function(require) {
     keyboardPlayer: keyboardPlayer,
     onKeyEvent: onKeyEvent,
     handleRemoteKey: handleRemoteKey,
+    setLocalEnabled: setLocalEnabled,
   }
 })

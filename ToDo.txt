@@ -1,8 +1,7 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-?! series has count as second param; multiband has it as first?!
- !! Also rename bands to count
+keyboard: only play notes when mouse is hovering an element in the UI
 multiband has dips at the crossovers
 butterworth - lp and hp - also 4 pole version
 parallel
