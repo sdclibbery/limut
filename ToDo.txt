@@ -1,28 +1,25 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-multiband has dips at the crossovers
- DONE!!
-butterworth - lp and hp - also 4 pole version
-parallel
- implement like multiband...
- Make sure it can be wrapped in limut and the callback passed through (and added to)
-Reimplement multiband using parallel and butterworth
- Also, the extremeties should not be filtered. Eg the lowest band should not have a 20hz highpass etc?
-series should be able to take a user defined function for the chain
-Dmxstrip presets...
-gp0, gp1 etc as well as just gp
-!when collaborating, gamepad and midi numbers must be consistent for all peers
+!get a click if start a new keyboard etc player note before last one has finished attack/decay?
 !dbd is weak?
-?main volume slider should be killed; just do  set main amp*=slider if you want one...
- ??Time to review the UI generally? make smaller / tidy up?
- Will be a breaking change...
 !Trance can sound out of tune
  toscale{} function: takes a Freq and quantises to a scale, default to current global scale/root. Try using it for trance cutoff
  ?Pick sounded a bit out of tune too, had to increase decay? Is this at lower octaves?
  ALSO: Trance needs a param to soften the pluckiness: maybe attack as well as decay? Or decay affects both?
    att=this.decay^2*100ms  works pretty well??
-!get a click if start a new keyboard etc player note before last one has finished attack/decay?
+gp0, gp1 etc as well as just gp
+parallel{}
+ implement like multiband...
+ Make sure it can be wrapped in limut and the callback passed through (and added to)
+series{} should be able to take a user defined function for the chain
+Dmxstrip presets...
+!when collaborating, gamepad and midi numbers must be consistent for all peers
+?main volume slider should be killed; just do  set main amp*=slider if you want one...
+ ??Time to review the UI generally? make smaller / tidy up?
+ Will be a breaking change...
+multiband should have option for 4 pole crossovers, and also option for difference-of-lowpass vs bandpass
+ ? Should be all in limut then?
 electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
