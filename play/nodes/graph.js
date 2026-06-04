@@ -106,11 +106,48 @@ define(function(require) {
     return node
   }
 
+  // One band of a complementary (difference-of-lowpasses) crossover. Each band is fed
+  // the same input x and built so the band transfer functions telescope to 1:
+  //   band 0   = +LP(hi)               first band, no lower crossover
+  //   band k   = +LP(hi) -LP(lo)       middle band
+  //   top band = +x      -LP(lo)       last band, passes x straight on the + path
+  // The LP(hi) in band k and the LP(lo) in band k+1 share the same crossover frequency,
+  // so (fed identical x) they produce identical signals that cancel when the bands are
+  // summed - the bands reconstruct x exactly, with no crossover dips and no level loss,
+  // regardless of filter Q/order. Returns a {l,r} composite (input idnode, summing gain).
+  let complementaryBand = (band, isFirst, isLast, e,b) => {
+    let input = idnode({}, e, b) // fan-in point for x; also sets audioNodeProto lazily
+    let sum = system.audio.createGain()
+    sum.gain.value = 1
+    if (e && e._destructor) { e._destructor.disconnect(sum) }
+    if (isLast) {
+      connect(input, sum) // top band: pass the signal straight through (+x)
+    } else {
+      connect(connect(input, butterworth('lowpass', band.hi, e)), sum) // +LP(upper crossover)
+    }
+    if (!isFirst) { // subtract everything below this band: -LP(lower crossover)
+      let inv = system.audio.createGain()
+      inv.gain.value = -1
+      if (e && e._destructor) { e._destructor.disconnect(inv) }
+      connect(connect(input, butterworth('lowpass', band.lo, e)), inv)
+      connect(inv, sum)
+    }
+    let composite = Object.create(Object.getPrototypeOf(input)) // satisfies instanceof AudioNode
+    composite.l = input
+    composite.r = sum
+    composite.connect = (dest) => connect(sum, dest)
+    composite.disconnect = () => {}
+    if (e && e._destructor) { e._destructor.disconnect(composite) }
+    return composite
+  }
+
   // multiband{{i,centre}->chain, count} : split the input into `count` perceptually
-  // even frequency bands (default 3) with non-resonant filters, run each through the
-  // chain the callback builds for it (given the band index and its centre frequency), then
-  // sum all bands back together. Returning a {value,value1,...} map makes connect()
-  // fan the input out to every band's input and sum every band's output.
+  // even frequency bands (default 3) using a complementary crossover (see complementaryBand),
+  // run each band through the chain the callback builds for it (given the band index and its
+  // centre frequency), then sum all bands back together. The bands reconstruct the input
+  // exactly when unprocessed, so multiband{1} - and any uniform processing - is transparent.
+  // Returning a {value,value1,...} map makes connect() fan the input out to every band's
+  // input and sum every band's output.
   let multiband = (args,e,b,_,er) => {
     let count = Math.floor(evalMainParamEvent(args, 'value1', evalMainParamEvent(args, 'count', 3)))
     if (typeof count !== 'number' || isNaN(count)) { throw `multiband: count must be numeric` }
@@ -119,7 +156,7 @@ define(function(require) {
     let isLambda = typeof callback === 'function' && callback.isUserFunction
     let result = {}
     bandFrequencies(count, 20, 20000).forEach((band, i) => {
-      let split = connectOp(butterworth('highpass', band.lo, e), butterworth('lowpass', band.hi, e), e,b,er)
+      let split = complementaryBand(band, i===0, i===count-1, e,b)
       let proc
       if (isLambda) {
         let ev = Object.create(Object.getPrototypeOf(e), Object.getOwnPropertyDescriptors(e)) // Distinct event so per-function memoisation doesn't collapse every band to band 0; clone descriptors so non-enumerable getters (count, _time, ...) from the fx-chain event survive
@@ -233,6 +270,15 @@ define(function(require) {
   let ratio = bands[1].centre/bands[0].centre // log spacing -> constant ratio between centres
   assert(true, close(bands[2].centre/bands[1].centre, ratio))
   assert(true, close(bands[3].centre/bands[2].centre, ratio))
+
+  // complementaryBand: builds a {l,r} composite for one band of the crossover
+  let cbE = {_destructor:require('play/destructor')()}
+  let cbBands = bandFrequencies(3, 20, 20000)
+  let cbMid = complementaryBand(cbBands[1], false, false, cbE, 0)
+  assert(true, isConnectable(cbMid))
+  assert(true, cbMid.l !== undefined && cbMid.r !== undefined)
+  assert(true, isConnectable(complementaryBand(cbBands[0], true, false, cbE, 0)))  // first band
+  assert(true, isConnectable(complementaryBand(cbBands[2], false, true, cbE, 0)))  // top band
 
   // multiband: callback is invoked once per band with index + centre frequency,
   // and the result is a {value,value1,...} map that connect() treats as parallel.
