@@ -74,7 +74,7 @@ define(function(require) {
       let noteId = source + ':' + buttonIdx
       for (let k in player.events) {
         let e = player.events[k]
-        if (!!e._noteOff && e._keyboardNote === noteId) {
+        if (!!e._noteOff && !e._stopping && e._keyboardNote === noteId) { // Skip voices already releasing, else re-triggering _noteOff jumps the gain back up (click) and races the original destroy timeout
           e._noteOff() // Call note off callback so sustain envelopes can move to release phase
           e._stopping = true
         }
