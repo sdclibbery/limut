@@ -65,14 +65,32 @@ define(function(require) {
   }
   addNodeFunction('loop', loop)
 
+  // series{chain, count} : repeat the chain count times in series. The chain may be a
+  // user defined function given the repeat index (eg {i}->lpf{600*(i+1)}) so each
+  // repeat can differ.
   let series = (args,e,b,_,er) => {
     let count = evalMainParamEvent(args, 'count', evalMainParamEvent(args, 'value1', 2))
     if (typeof count !== 'number') { throw `series: count ${count} must numeric` }
     if (count < 0) { throw `series: count ${count} must be non-negative` }
     if (count === 0) { return idnode(args,e,b) }
+    let callback = args['value']
+    let isLambda = typeof callback === 'function' && callback.isUserFunction
     let node
     for (let i = 0; i<count; i++) {
-      let chain = evalParamFrame(args['value'], e,b, {doNotMemoise:true}) // Must get new nodes for every repeat
+      let chain
+      if (isLambda) {
+        let ev = Object.create(Object.getPrototypeOf(e), Object.getOwnPropertyDescriptors(e)) // Distinct event so per-function memoisation doesn't collapse every repeat to repeat 0; clone descriptors so non-enumerable getters from the fx-chain event survive
+        chain = callback(ev, b, evalParamFrame, {value:i})
+        if (!isConnectable(chain)) {
+          // The body evaluated to an amplitude, not a node chain. Hand the lambda itself to
+          // gain as its value param (reusing the per-repeat ev so memoisation stays isolated)
+          // so a frame-varying body gets per-frame updates - same pattern as multiband below
+          let repeatGain = (e2,b2,er2) => callback(ev, b2, er2, {value:i})
+          chain = vars.all().gain({value:repeatGain}, e,b)
+        }
+      } else {
+        chain = evalParamFrame(callback, e,b, {doNotMemoise:true}) // Must get new nodes for every repeat
+      }
       if (node === undefined) { node = chain }
       else { node = connectOp(node, chain, e,b,er) }
     }
@@ -296,6 +314,21 @@ define(function(require) {
   assert(true, close(calls[2].value1, bf[2].centre))
   assert(true, isConnectable(res))
   assert(true, res.value !== undefined && res.value1 !== undefined && res.value2 !== undefined && res.value3 === undefined)
+
+  // series: a user defined function chain is invoked once per repeat with the repeat index
+  let sCalls = []
+  let sCb = (e,b,erFn,a) => { sCalls.push(a.value); return system.audio.createGain() }
+  sCb.isUserFunction = true
+  let sRes = series({value:sCb, value1:3}, {_destructor:require('play/destructor')()}, 0, undefined, er)
+  assert([0,1,2], sCalls) // repeat indices passed in order
+  assert(true, isConnectable(sRes))
+
+  // series: each repeat gets a distinct event so memoisation can't collapse repeats together
+  let sEvents = []
+  let sCb2 = (e,b,erFn,a) => { sEvents.push(e); return system.audio.createGain() }
+  sCb2.isUserFunction = true
+  series({value:sCb2, value1:2}, {_destructor:require('play/destructor')()}, 0, undefined, er)
+  assert(true, sEvents[0] !== sEvents[1])
 
   // No callback -> bands are split and recombined through identity nodes
   let res2 = multiband({value1:2}, {_destructor:require('play/destructor')()}, 0, undefined, er)

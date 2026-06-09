@@ -85,4 +85,7 @@ preset dmeterwave dmxstrip, mode=92, palette='hsvobf', control=smooth{this.input
 preset drainbowflow dmxstrip, mode=11, palette=240, control=[0:1]l8@f{time:time-this.voice/4}, smooth=([0:1]l8@f+0.4)%1, back=#000, fore=#fff
 // EndsFade (63): bars punch in from both ends on the beat, length scaled by velocity
 preset dpulsebars dmxstrip, mode=63, palette='obf', control=this.input, smooth=1/8, back=#001, fore=#0af
+// StartGradient (50) + hsvbf palette (10): a VU bar rising from the bottom, HSV gradient from
+// back (#08f) up to fore; fore lerps from #08f at zero input to #f80 at full input
+preset dhsvbar dmxstrip, mode='startgradient', palette='hsvobf', control=smooth{this.input,2}, smooth=1/2, fore=#04f, back={h:0.578-0.489*this.input, s:1, v:1}
 

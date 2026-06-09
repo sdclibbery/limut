@@ -1119,6 +1119,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>sample{sample:'...', loopstart:1, looplen:2, rate:1}</code> Create a sample player that plays a section from the given sample as a loop.</p>
 <p><code>series{..., count:2}</code> Repeat the given node chain in series count times.</p>
 <p class='sub'><code>series{..., 2}</code> The count arg can be positional instead of being named.</p>
+<p class='sub'><code>series{{i}->..., 4}</code> The chain can be a user defined function, given the repeat index <code>i</code>, so each repeat can differ. For example <code>series{{i}->lpf{600*(i+1)}, 4}</code> chains four lowpass filters at increasing frequencies.</p>
 <p><code>shaper{{x}->..., samples:2, oversample:'2x'}</code> Create a wave shaper node, using a user defined function to create the wave shape. Oversmaple can be '2x', '4x', or 'none'. Note oversample other than 'none' may result in a signal delay.</p>
 <p><code>stereo{l:...,r:...}</code> Split the incoming signal into left and right channels, process each through a separate node chain given by the 'l' and 'r' arguments, and then join them back together into a single, stereo, signal.</p>
 <p class='sub'><code>stereo{...,...}</code> The l and r arguments can be positional.</p>
