@@ -40,7 +40,8 @@ define(function(require) {
       Object.getOwnPropertyNames(userFunctionArgs).forEach((k,i) => {
         if (k === key) { position = i }
       })
-      let userFunctionArgumentLookup = (e,b,er) => {
+      let argCallsiteId = 'cs' + callsiteId++
+      let userFunctionArgumentLookup = (e,b,er,mods) => {
         let args = getCallContext()
         if (args === undefined) { return undefined }
         let value = args[key] // Get arg by direct lookup by name
@@ -48,7 +49,12 @@ define(function(require) {
         if (value === undefined) { value = defaultValue } // If no arg passed in, use default value from prototype
         if (value === false) { value = undefined } // No default arg either
         unPushCallContext() // Need to look outside the current callstack level when evalling the arg
-        value = er(value,e,b)
+        if (typeof value === 'function' && value.isUserFunction && mods !== undefined) {
+          mods.__functionContext = argCallsiteId // Distinguish calls from different callsites for memoisation
+          value = value(e,b,er,mods) // The arg holds a lambda and this is a call: pass the callsite args through
+        } else {
+          value = er(value,e,b)
+        }
         unPopCallContext()
         return value
       }
@@ -61,7 +67,8 @@ define(function(require) {
     // name lookup in each frame is sufficient (no positional fallback).
     if (inheritedArgs !== undefined && inheritedArgs[key] !== undefined) {
       let defaultValue = inheritedArgs[key]
-      let inheritedLookup = (e,b,er) => {
+      let inheritedCallsiteId = 'cs' + callsiteId++
+      let inheritedLookup = (e,b,er,mods) => {
         let found = findInCallChainByKey(key)
         let value, depth
         if (found !== undefined) {
@@ -76,7 +83,12 @@ define(function(require) {
         // Step out past every frame between us and the binding frame, so the
         // captured expression evaluates in the scope where it was captured.
         unPushCallContext(depth)
-        value = er(value,e,b)
+        if (typeof value === 'function' && value.isUserFunction && mods !== undefined) {
+          mods.__functionContext = inheritedCallsiteId // Distinguish calls from different callsites for memoisation
+          value = value(e,b,er,mods) // The arg holds a lambda and this is a call: pass the callsite args through
+        } else {
+          value = er(value,e,b)
+        }
         unPopCallContext(depth)
         return value
       }

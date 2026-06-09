@@ -600,6 +600,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <h5>Inline (anonymous) functions</h5>
 <p><code>({x} -> x^2){3}</code> A function can be called immediately without storing it in a var, by wrapping the definition in round brackets and applying arguments. Returns 9.</p>
 <p><code>convolver{{x} -> (1-x)^3, length:1s}</code> Anonymous functions are often passed directly as arguments to other functions (for example to node functions such as <code>convolver</code> and <code>shaper</code>) to provide a shape or envelope.</p>
+<p><code>set twice = {f,x} -> f{f{x}}</code> An argument that holds a function can itself be called with arguments inside the body. For example <code>twice{{v}->v*2, 3}</code> returns 12. This allows wrapper functions around node functions like <code>parallel</code> and <code>multiband</code>, for example <code>set wrapped = {chain,count} -> parallel{{i}->chain{i}, count}</code>.</p>
 <h5>Scope and global vars</h5>
 <p>Inside a function body, argument names take priority over global vars with the same name. So in <code>{foo} -> foo</code>, the <code>foo</code> in the body refers to the argument, not to any global var called <code>foo</code>.</p>
 <p><code>global.foo</code> Use the <code>global.</code> prefix inside a function body to force a lookup of the global var, bypassing any argument of the same name. For example <code>{foo} -> global.foo</code> ignores the passed argument and returns the global <code>foo</code>.</p>

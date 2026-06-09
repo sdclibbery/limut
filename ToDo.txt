@@ -1,11 +1,15 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-parallel{}
- implement like multiband...
- Make sure it can be wrapped in limut and the callback passed through (and added to)
+!! One pre-existing wart I noticed but didn't change: the eager modifier evaluation calls a lambda-valued argument once with no
+  args before the real call, which creates a small orphan node chain per event (two stray 350 Hz biquads in my probe). It's
+  harmless to the audible chain and predates this fix, but worth knowing about if you ever chase node counts.
+ With:
+   set wrap_parallel={callback,count} -> parallel{{i}->callback{log{i}}, count}
+   n noise, fx=wrap_parallel{{i}->bpf{[1/2:2]l4@f*(i+1)^2*50,q:10}, 8}/4
+Implement butterworth filters in limut, 2p and 4p
+Implement multiband in limut now
 multiband should have option for 4 pole crossovers, and also option for difference-of-lowpass vs bandpass
- ? Should be all in limut then?
 !dbd is weak?
 !Trance can sound out of tune
  toscale{} function: takes a Freq and quantises to a scale, default to current global scale/root. Try using it for trance cutoff

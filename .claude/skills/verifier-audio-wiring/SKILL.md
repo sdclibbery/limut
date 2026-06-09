@@ -94,6 +94,19 @@ Drop a file at `verify-<thing>.html` at the repo root, alongside `index.html`. R
 
 5. **Between cases, reset with `updateCode('')` and pump enough ticks** before the next `updateCode(src)` — otherwise the previous player/bus state leaks through the key-based fx-chain reuse in `bus.js`.
 
+6. **Node-creation intercept probe** — to verify per-copy/per-band params (e.g. `parallel{}`/`multiband{}` building N distinct filters), monkeypatch the factory before `updateCode` and read the collected nodes' AudioParams later:
+
+   ```js
+   const filters = []
+   const orig = system.audio.createBiquadFilter.bind(system.audio)
+   system.audio.createBiquadFilter = (...a) => { const n = orig(...a); filters.push(n); return n }
+   // later: filters.map(f => f.frequency.value)
+   ```
+
+   `AudioParam.value` reflects live automation (`setTargetAtTime` etc.), so sampling it twice ~1s apart in real time also proves a per-frame sweep is actually moving. Expect extra orphan nodes from the eager modifier evaluation of lambda-valued args (one bare call per event with args undefined — see `dsl-internals`, "Eager modifier evaluation wart"); they show up with default param values and are not in the audible chain.
+
+7. **DSL preludes**: `bpf`, `lpf` and friends are not built in — they're lambdas from `lib/nodes.limut` (loaded by `include`). In a harness, define what you need inline (e.g. `set bpf = {freq, q:1} -> biquad{'bandpass', freq:freq, q:q}`) rather than relying on async `include` timing.
+
 ## Running the harness
 
 `sh server.sh` must already be running (start it if not). Then:

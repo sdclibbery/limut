@@ -2033,6 +2033,42 @@ define(function(require) {
   p = parseExpression('mockaudionode{test:[1]t@f*2s}')
   assert(0.5, evalParamFrame(p, evd(0,0,1),0).test.value)
 
+  // Calling a lambda held in a function arg must pass the callsite args through to the lambda
+  vars.foo = parseExpression('{f} -> f{3}')
+  assert(6, evalParamFrame(parseExpression('foo{{x}->x*2}'), ev(), 0))
+  delete vars.foo
+
+  // ...with distinct results for calls from different callsites at the same event/beat
+  vars.foo = parseExpression('{f} -> f{3}+f{4}')
+  assert(14, evalParamFrame(parseExpression('foo{{x}->x*2}'), ev(), 0))
+  delete vars.foo
+
+  // ...and when the lambda arg is called from a nested lambda (inherited arg)
+  vars.foo = parseExpression('{f} -> ({i}->f{i+1}){2}')
+  assert(6, evalParamFrame(parseExpression('foo{{x}->x*2}'), ev(), 0))
+  delete vars.foo
+
+  // ...and when the call is nested through the same arg
+  vars.foo = parseExpression('{f,x} -> f{f{x}}')
+  assert(12, evalParamFrame(parseExpression('foo{{v}->v*2, 3}'), ev(), 0))
+  delete vars.foo
+
+  // Higher-order call: a per-frame audio param inside the lambda body must still see the
+  // call args on per-frame updates (call tree capture) - regression for parallel{} copies
+  // all collapsing to the same frequency when the chain lambda is called via a wrapper function
+  vars.foo = parseExpression('{f} -> f{3}')
+  p = parseExpression('foo{{x}->mockaudionode{test:[1,2]t1@f*x}}')
+  {
+    let e2 = evd(0,2,4)
+    system.queued = []
+    v = evalParamFrame(p, e2,2)
+    assert(3, v.test.value)
+    system.queued.forEach(q => q.update({count:3,time:3})) // Update all queued callbacks; the eager modifier eval also queues one for a discarded node
+    assert(6, v.test.value)
+    system.queued = []
+  }
+  delete vars.foo
+
   vars.foo = parseExpression('{v} -> v+2')
   vars.bar = parseExpression('{v} -> v*3')
   assert(17, evalParamFrame(parseExpression('foo{bar{5}}'), e, 0))

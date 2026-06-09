@@ -45,6 +45,8 @@ Remember to kill the background server (`kill <pid>`) when done.
 - A passing test file prints `"<Name> tests complete"`.
 - There are ~48 such files; expect ~43 to report under plain headless.
 - Look for any line that is **not** `tests complete` and **not** `console.js (7)` (that's the empty-line spacer) — those are failures or load errors.
+- `Assertion failed` traces only report the assert helper's line (e.g. `CONSOLE:202`), not the failing test line. To locate one, temporarily replace the suspect asserts with distinctive `console.log` markers and re-run.
+- Test blocks within a file share mutable state. In `parse-expression.js` the scratch vars `e`/`p`/`v` are reused across hundreds of asserts — reassigning `e` in an inserted test breaks later tests that assume e.g. `e.count === 0` (wrap new tests in `{ let e2 = ... }`). Per-frame callbacks also leak via `system.queued` (reset before and after). When failures appear in tests you didn't touch, run the suite with your changes stashed (`git stash`) to tell real regressions from state leakage.
 
 ## Running the WebGL/draw tests too
 

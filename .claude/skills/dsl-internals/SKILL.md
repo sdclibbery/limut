@@ -33,10 +33,11 @@ Keyless map values get keys `value`, `value1`, `value2`, etc. (see `expression/p
 
 ### Parsed lambda is a wrapper function
 
-(`parse-expression.js:73-86`):
+(`parse-expression.js`, lambda branch of `expression`):
 
 ```js
 let userDefinedFunctionWrapper = (e,b,er,args) => {
+  // aliases keyless slots (value, value1, ...) onto declared arg names in place
   pushCallContext(args)
   let r = er(body,e,b)
   popCallContext()
@@ -45,6 +46,24 @@ let userDefinedFunctionWrapper = (e,b,er,args) => {
 ```
 
 With flags `.isUserFunction = true`, `.isVarFunction = true`, `.isNormalCallFunction = true`, `.passCallsiteId = true`, `.dontEvalArgs = true`.
+
+### How DSL-level calls bind args (three paths)
+
+A call like `f{3}` reaches the wrapper differently depending on what `f` is:
+
+1. **Lambda literal**: `({v}->v*2){3}` — `addModifiers` attaches `{value:3}` as `.modifiers` on the wrapper itself; `evalFunctionWithModifiers` (player/eval-param.js) evaluates the modifiers and passes them as the wrapper's 4th arg.
+2. **Named var**: `foo{3}` where `set foo={v}->...` — `parseVarLookup` (parse-var.js) sees `dontEvalArgs` and passes the **raw unevaluated** args plus a `__functionContext` callsite id, calling `vr(event,b,evalRecurse,modifiers)`.
+3. **Lambda held in a function arg** (higher-order): `{f}->f{3}` or via inherited args from an enclosing lambda — resolved by `userFunctionArgumentLookup` / `inheritedLookup` (parse-var.js). These receive the **evaluated** mods as their 4th param and invoke `isUserFunction` values with them, tagging `mods.__functionContext` with a callsite id. (Before 2026-06 they ignored the 4th param and called the wrapper bare via `er(value,e,b)` — args were evaluated then silently dropped, so every param in the body was `undefined`. Symptom: `parallel{}`/`multiband{}` copies all collapsing to the same value when the chain lambda was called through a wrapper function.)
+
+Memoisation (`evalParamValueWithMemoisation`) keys on the function object, the event (WeakMap), and `options + beat + getCallTreeString()`. The call-tree string concatenates `__functionContext` ids up the chain — that's the only thing distinguishing `f{3}+f{4}` at the same event/beat, which is why every call path must supply a callsite id. Node functions (`parallel`, `series`, `multiband`) additionally clone the event per copy so memoisation can't collapse copies.
+
+### Per-frame evaluation inside lambda bodies
+
+`doPerFrame` (play/eval-audio-params.js) snapshots `getCallTree()` when an audio param is set up, and `setCallTree`/`clearCallTree` brackets each per-frame re-evaluation. This is how a frame-varying param inside a lambda body (e.g. `bpf{[1/2:2]l4@f*(i+1)*50}`) still sees `i` on every frame: the pushed call contexts are captured at construction time.
+
+### Eager modifier evaluation wart
+
+`evalFunctionWithModifiers` always does `mods = evalRecurse(value.modifiers, ...)` before calling the function. For a `dontEvalArgs` callee (named lambdas, node functions) the evaluated result is then discarded and the raw args used instead — but the evaluation's **side effects still run**: a lambda-valued arg gets called once bare (context undefined), which can build an orphan node chain per event, and `log{}` inside args prints even if the value is never used.
 
 ### Calling a lambda from JS code
 
@@ -60,7 +79,7 @@ let result = wrapper(event, event.count, evalParamFrame, {value: i})
 
 ### Args flow via callstack, not closure
 
-(`player/callstack.js`): references to lambda args inside the body become `userFunctionArgumentLookup` (`parse-var.js:43-56`), which reads from `getCallContext()` at eval time. This is why nested lambda calls work and why `pushCallContext`/`popCallContext` bracket each invocation.
+(`player/callstack.js`): references to lambda args inside the body become `userFunctionArgumentLookup` (own args, current frame only) or `inheritedLookup` (enclosing lambdas' args, walks the chain via `findInCallChainByKey`) in `parse-var.js`, which read from the call context at eval time. This is why nested lambda calls work and why `pushCallContext`/`popCallContext` bracket each invocation.
 
 `unPushCallContext`/`unPopCallContext` exist so that when an arg's *value* is itself an expression captured from an outer scope, evaluating that value temporarily steps out of the current frame so its own free variables resolve in the right scope.
 
