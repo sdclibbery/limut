@@ -98,6 +98,41 @@ define(function(require) {
   }
   addNodeFunction('series', series)
 
+  // parallel{{i}->chain, count} : run the chain count times in parallel (default 2):
+  // connect() fans the input out to every copy and sums the copies' outputs back
+  // together. The chain may be a user defined function given the copy index
+  // (eg {i}->lpf{600*(i+1)}) so each copy can differ.
+  let parallel = (args,e,b,_,er) => {
+    let count = Math.floor(evalMainParamEvent(args, 'count', evalMainParamEvent(args, 'value1', 2)))
+    if (typeof count !== 'number' || isNaN(count)) { throw `parallel: count must be numeric` }
+    if (count < 1) { return idnode(args,e,b) }
+    let callback = args['value'] || args['chain']
+    let isLambda = typeof callback === 'function' && callback.isUserFunction
+    let result = {}
+    for (let i = 0; i < count; i++) {
+      let proc
+      if (isLambda) {
+        let ev = Object.create(Object.getPrototypeOf(e), Object.getOwnPropertyDescriptors(e)) // Distinct event so per-function memoisation doesn't collapse every copy to copy 0; clone descriptors so non-enumerable getters from the fx-chain event survive
+        proc = callback(ev, b, evalParamFrame, {value:i})
+        if (!isConnectable(proc)) {
+          // The body evaluated to an amplitude, not a node chain. Hand the lambda itself to
+          // gain as its value param (reusing the per-copy ev so memoisation stays isolated)
+          // so a frame-varying body gets per-frame updates - same pattern as multiband below
+          let copyGain = (e2,b2,er2) => callback(ev, b2, er2, {value:i})
+          proc = vars.all().gain({value:copyGain}, e,b)
+        }
+      } else if (callback !== undefined) {
+        proc = evalParamFrame(callback, e,b, {doNotMemoise:true}) // Must get new nodes for every copy
+      }
+      if (!isConnectable(proc)) {
+        proc = (proc === undefined) ? idnode(args,e,b) : vars.all().gain({value:proc}, e,b)
+      }
+      result[i===0 ? 'value' : 'value'+i] = proc
+    }
+    return result
+  }
+  addNodeFunction('parallel', parallel)
+
   // Perceptually even (log-spaced) crossover/centre frequencies across the audio
   // spectrum. Band i passes [lo,hi]; centre is the geometric mean used for the
   // callback. The lowest band's lo (20Hz) and the top band's hi (20kHz) sit at
@@ -329,6 +364,33 @@ define(function(require) {
   sCb2.isUserFunction = true
   series({value:sCb2, value1:2}, {_destructor:require('play/destructor')()}, 0, undefined, er)
   assert(true, sEvents[0] !== sEvents[1])
+
+  // parallel: a user defined function chain is invoked once per copy with the copy index,
+  // and the result is a {value,value1,...} map that connect() treats as parallel.
+  let pCalls = []
+  let pCb = (e,b,erFn,a) => { pCalls.push(a.value); return system.audio.createGain() }
+  pCb.isUserFunction = true
+  let pRes = parallel({value:pCb, value1:3}, {_destructor:require('play/destructor')()}, 0, undefined, er)
+  assert([0,1,2], pCalls) // copy indices passed in order
+  assert(true, isConnectable(pRes))
+  assert(true, pRes.value !== undefined && pRes.value1 !== undefined && pRes.value2 !== undefined && pRes.value3 === undefined)
+
+  // parallel: each copy gets a distinct event so memoisation can't collapse copies together
+  let pEvents = []
+  let pCb2 = (e,b,erFn,a) => { pEvents.push(e); return system.audio.createGain() }
+  pCb2.isUserFunction = true
+  parallel({value:pCb2, value1:2}, {_destructor:require('play/destructor')()}, 0, undefined, er)
+  assert(true, pEvents[0] !== pEvents[1])
+
+  // parallel: count defaults to 2; no callback gives passthrough identity copies
+  let pRes2 = parallel({}, {_destructor:require('play/destructor')()}, 0, undefined, er)
+  assert(true, isConnectable(pRes2))
+  assert(true, pRes2.value !== undefined && pRes2.value1 !== undefined && pRes2.value2 === undefined)
+
+  // parallel: count of zero gives a single passthrough
+  let pRes3 = parallel({value1:0}, {_destructor:require('play/destructor')()}, 0, undefined, er)
+  assert(true, isConnectable(pRes3))
+  assert(true, pRes3.value === undefined) // idnode, not a parallel map
 
   // No callback -> bands are split and recombined through identity nodes
   let res2 = multiband({value1:2}, {_destructor:require('play/destructor')()}, 0, undefined, er)
