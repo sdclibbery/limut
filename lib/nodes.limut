@@ -31,6 +31,16 @@ set bpf4 = {freq, q:1} -> series{biquad{'bandpass', freq:freq, q:q/2}, count:2}
 set nf = {freq, q:1} -> biquad{'notch', freq:freq, q:q}
 set apf = {freq, q:1} -> biquad{'allpass', freq:freq, q:q}
 
+//// Butterworth filters (maximally flat, non-resonant)
+// WebAudio lowpass/highpass biquad q is in dB: stage i of a 2N-pole butterworth needs
+// linear Q 1/(2*cos((2i+1)*pi/(4N))), so 2 pole q = -3.01db; 4 pole stages -5.33db, 2.32db
+set bwlpf = {freq} -> biquad{'lowpass', freq:freq, q:-3.01}
+set bwlpf2 = bwlpf
+set bwlpf4 = {freq} -> biquad{'lowpass', freq:freq, q:-5.33} >> biquad{'lowpass', freq:freq, q:2.32}
+set bwhpf = {freq} -> biquad{'highpass', freq:freq, q:-3.01}
+set bwhpf2 = bwhpf
+set bwhpf4 = {freq} -> biquad{'highpass', freq:freq, q:-5.33} >> biquad{'highpass', freq:freq, q:2.32}
+
 //// Non resonant filters
 set hsf = {gain, freq:1100} -> biquad{'highshelf', freq:freq, gain:gain}
 set lsf = {gain, freq:200} -> biquad{'lowshelf', freq:freq, gain:gain}

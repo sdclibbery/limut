@@ -1,9 +1,11 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-Implement butterworth filters in limut, 2p and 4p
 Implement multiband in limut now
 multiband should have option for 4 pole crossovers, and also option for difference-of-lowpass vs bandpass
+!! The cos{}-in-node-params breakage looks like a latent evaluator bug (var functions work fine inside shaper lambdas but not as biquad subparams)
+ cos{...} doesn't evaluate correctly inside audio node params — my first version computed stage Qs with 1/(2*cos{(2*i+1)*pi/8}),
+  but that yields q=0, and a bare cos{pi/4} subparam broke the fx chain entirely (orphan nodes, undefined chain)
 !dbd is weak?
 !Trance can sound out of tune
  toscale{} function: takes a Freq and quantises to a scale, default to current global scale/root. Try using it for trance cutoff
@@ -32,10 +34,6 @@ electron performance
   Test tuning with guitar sample: https://upload.wikimedia.org/wikipedia/commons/6/67/AcousticGuitarSample.ogg
   Needs rebuilding from scratch; claude cant really do it?
    Try asking Claude to build a granular delay based on a normal delay but with random overlapping grains
-set duck = [0:/1/4,1:_3/4]t@s
-  Or, better: set duck = [1:!1/8,0:/1/8,1:_3/4]t@s
-  Still needs to better, and controllable
-  Also have a duck level param and maybe a duck length param
 !! When use sample in fx not play, sometimes it doesn't play. Due to not having loaded yet? Needs to retry somehow?
 Wavetable oscillator that crossfades between arbitrary sample waveforms
  ! wtlerp must handle wt values out of range by clamping or modding

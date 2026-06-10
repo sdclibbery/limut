@@ -1210,6 +1210,12 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p>This library contains basic helper functions wrapping node functions. As these afre user defined functions, all arguments can be positional.</p>
 <p><code>apf{freq, q:5}</code> All pass filter, 2 pole. q is resonance.</p>
 <p><code>bpf{freq, q:5}</code> Bandpass pass filter, 2 pole. q is resonance.</p>
+<p><code>bwhpf{freq}</code> Butterworth high pass filter, 2 pole. Maximally flat passband; no resonance.</p>
+<p><code>bwhpf2{freq}</code> Butterworth high pass filter, 2 pole. Alias of <code>bwhpf</code>.</p>
+<p><code>bwhpf4{freq}</code> Butterworth high pass filter, 4 pole. Maximally flat passband; no resonance.</p>
+<p><code>bwlpf{freq}</code> Butterworth low pass filter, 2 pole. Maximally flat passband; no resonance.</p>
+<p><code>bwlpf2{freq}</code> Butterworth low pass filter, 2 pole. Alias of <code>bwlpf</code>.</p>
+<p><code>bwlpf4{freq}</code> Butterworth low pass filter, 4 pole. Maximally flat passband; no resonance.</p>
 <p><code>compressor{threshold:-50db, ratio:3db, attack:1ms, release:50ms, knee:2db}</code> Dynamics compressor.</p>
 <p><code>drive{amount:1/2}</code> Waveshaper providing overdrive/distortion by applying an x/(1+x) based function. Use amount to push the distortion harder.</p>
 <p><code>hpf{freq, q:5}</code> High pass filter, 2 pole. q is resonance.</p>
