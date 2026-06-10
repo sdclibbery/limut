@@ -50,7 +50,25 @@ define((require) => {
   }
 
   let shouldForcePerEvent = (value) => value.interval === 'event'
-  
+
+  let evalModifiers = (modifiers, event, beat, evalRecurse) => {
+    let lambdas // Lambda-valued args must pass through unevaluated: calling them bare here would eval their body with no call context (orphan node chains, spurious side effects), and every callee that takes a lambda wants the raw function anyway
+    for (let k in modifiers) {
+      let v = modifiers[k]
+      if (typeof v === 'function' && v.isUserFunction) {
+        if (lambdas === undefined) { lambdas = {} }
+        lambdas[k] = v
+      }
+    }
+    if (lambdas === undefined) { return evalRecurse(modifiers, event, beat) }
+    let rest = {}
+    for (let k in modifiers) { if (lambdas[k] === undefined) { rest[k] = modifiers[k] } }
+    let mods = evalRecurse(rest, event, beat)
+    if (Array.isArray(mods)) { mods.forEach(m => Object.assign(m, lambdas)) } // Chord in a sibling arg
+    else { Object.assign(mods, lambdas) }
+    return mods
+  }
+
   let evalFunctionWithModifiers = (value, event, beat, evalRecurse) => {
     if (shouldForcePerEvent(value)) { // Force per event if explicitly called for
       beat = event.count
@@ -58,7 +76,7 @@ define((require) => {
     if (typeof value.modifiers !== 'object') {
       return value(event, beat, evalRecurse) // No modifiers
     }
-    let mods = evalRecurse(value.modifiers, event, beat)
+    let mods = evalModifiers(value.modifiers, event, beat, evalRecurse)
     let result
     if (!Array.isArray(mods)) {
       result = evalFunction(value, mods, event, beat, evalRecurse)
@@ -316,6 +334,23 @@ define((require) => {
   assert(0, evalParamFrame(getBWithMods, ev(0), 3))
   assert(0, evalParamFrame(getBWithMods, ev(0), 4))
   assert(2, evalParamFrame(getBWithMods, ev(0), 5))
+
+  { // Lambda-valued args pass through modifier evaluation uncalled
+    let lambdaCalls = 0
+    let fakeLambda = (e,b,er,args) => { lambdaCalls++; return 0 }
+    fakeLambda.isUserFunction = true
+    let received
+    let fnWithLambdaArg = (e,b,er,mods) => { received = mods; return mods.x }
+    fnWithLambdaArg.modifiers = {value:fakeLambda, x:3}
+    assert(3, evalParamFrame(fnWithLambdaArg, ev(0), 0))
+    assert(0, lambdaCalls)
+    assert(true, received.value === fakeLambda)
+
+    fnWithLambdaArg.modifiers = {value:fakeLambda, x:[1,2]} // Chord in a sibling arg still expands
+    assert([1,2], evalParamFrame(fnWithLambdaArg, ev(1), 1))
+    assert(0, lambdaCalls)
+    assert(true, received.value === fakeLambda)
+  }
 
   console.log('Eval param tests complete')
   }

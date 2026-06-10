@@ -61,9 +61,9 @@ Memoisation (`evalParamValueWithMemoisation`) keys on the function object, the e
 
 `doPerFrame` (play/eval-audio-params.js) snapshots `getCallTree()` when an audio param is set up, and `setCallTree`/`clearCallTree` brackets each per-frame re-evaluation. This is how a frame-varying param inside a lambda body (e.g. `bpf{[1/2:2]l4@f*(i+1)*50}`) still sees `i` on every frame: the pushed call contexts are captured at construction time.
 
-### Eager modifier evaluation wart
+### Eager modifier evaluation and lambda-valued args
 
-`evalFunctionWithModifiers` always does `mods = evalRecurse(value.modifiers, ...)` before calling the function. For a `dontEvalArgs` callee (named lambdas, node functions) the evaluated result is then discarded and the raw args used instead — but the evaluation's **side effects still run**: a lambda-valued arg gets called once bare (context undefined), which can build an orphan node chain per event, and `log{}` inside args prints even if the value is never used.
+`evalFunctionWithModifiers` evaluates `value.modifiers` before calling the function (needed for the time-modifier keys `time`/`per`/`step`/`overrides`, for chord-in-args expansion, and for the lambda-literal call path). But top-level modifier values flagged `isUserFunction` are **split out and reattached unevaluated** (`evalModifiers`, player/eval-param.js) — calling them bare would eval their body with no call context (orphan node chain per event, spurious `log{}` prints), and every callee that takes a lambda wants the raw function anyway (`dontEvalArgs` callees overwrite with raw args; node functions branch on `callback.isUserFunction`; `userFunctionArgumentLookup` invokes `isUserFunction` values itself). Limitations: a lambda nested inside a map-valued arg, or a *named* lambda passed by reference (`parallel{chain, 8}` — which doesn't work as a per-copy callback anyway), still gets called bare.
 
 ### Calling a lambda from JS code
 

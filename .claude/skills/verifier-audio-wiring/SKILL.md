@@ -103,7 +103,7 @@ Drop a file at `verify-<thing>.html` at the repo root, alongside `index.html`. R
    // later: filters.map(f => f.frequency.value)
    ```
 
-   `AudioParam.value` reflects live automation (`setTargetAtTime` etc.), so sampling it twice ~1s apart in real time also proves a per-frame sweep is actually moving. Expect extra orphan nodes from the eager modifier evaluation of lambda-valued args (one bare call per event with args undefined — see `dsl-internals`, "Eager modifier evaluation wart"); they show up with default param values and are not in the audible chain.
+   `AudioParam.value` reflects live automation (`setTargetAtTime` etc.), so sampling it twice ~1s apart in real time also proves a per-frame sweep is actually moving. Collected nodes with default param values (e.g. 350 Hz biquads) are orphans built outside the audible chain — treat them as a bug signal (lambda-valued args used to produce one per event via eager modifier evaluation; fixed by `evalModifiers` in player/eval-param.js).
 
 7. **DSL preludes**: `bpf`, `lpf` and friends are not built in — they're lambdas from `lib/nodes.limut` (loaded by `include`). In a harness, define what you need inline (e.g. `set bpf = {freq, q:1} -> biquad{'bandpass', freq:freq, q:q}`) rather than relying on async `include` timing.
 

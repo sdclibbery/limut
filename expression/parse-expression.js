@@ -2038,6 +2038,17 @@ define(function(require) {
   assert(6, evalParamFrame(parseExpression('foo{{x}->x*2}'), ev(), 0))
   delete vars.foo
 
+  { // A lambda-valued arg must not be called bare by the eager modifier evaluation: its body should run exactly once, for the real call
+    let probeCalls = 0
+    vars.probe = (args,e,b) => { probeCalls++; return 1 }
+    vars.probe.isVarFunction = true
+    vars.foo = parseExpression('{cb} -> cb{3}')
+    assert(3, evalParamFrame(parseExpression('foo{{x}->x*probe}'), ev(), 0))
+    assert(1, probeCalls)
+    delete vars.probe
+    delete vars.foo
+  }
+
   // ...with distinct results for calls from different callsites at the same event/beat
   vars.foo = parseExpression('{f} -> f{3}+f{4}')
   assert(14, evalParamFrame(parseExpression('foo{{x}->x*2}'), ev(), 0))
@@ -2063,7 +2074,7 @@ define(function(require) {
     system.queued = []
     v = evalParamFrame(p, e2,2)
     assert(3, v.test.value)
-    system.queued.forEach(q => q.update({count:3,time:3})) // Update all queued callbacks; the eager modifier eval also queues one for a discarded node
+    system.queued.forEach(q => q.update({count:3,time:3})) // Update all queued callbacks
     assert(6, v.test.value)
     system.queued = []
   }
