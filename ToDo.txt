@@ -1,7 +1,6 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!! lpf2 still doesn't work; can't do fx=lpf2{400,q:15}
 Implement butterworth filters in limut, 2p and 4p
 Implement multiband in limut now
 multiband should have option for 4 pole crossovers, and also option for difference-of-lowpass vs bandpass

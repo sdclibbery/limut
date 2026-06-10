@@ -109,6 +109,18 @@ define(function(require) {
       } else {
         vr = vars.get(key)
       }
+      // Dereference alias chains (eg `set lpf2 = lpf`): a stored value that is itself a bare
+      // argless var lookup stands for its target, so callsite args must reach the target function
+      let seenAliases
+      while (typeof vr === 'function' && vr.isVarLookup && !vr.hasOwnArgs
+          && vr.modifiers === undefined && vr.args === undefined && !vr.namespace) {
+        let target = vars.get(vr._name)
+        if (target === undefined) { break }
+        if (seenAliases === undefined) { seenAliases = [] }
+        if (target === vr || seenAliases.includes(target)) { vr = undefined; break } // Cyclic alias: fall through to the string value
+        seenAliases.push(vr)
+        vr = target
+      }
       let v
       if (typeof vr === 'function' && vr.isVarFunction) { // Var function
         modifiers = modifiers || {}
@@ -149,6 +161,8 @@ define(function(require) {
     result = parseVarLookup
     result.interval = interval
     result._name = key
+    result.isVarLookup = true
+    result.hasOwnArgs = args !== undefined && args !== null && Object.keys(args).length > 0
     if (typeof vars.get(key) === 'function' && vars.get(key)._chordPlaceholder) { result._chordPlaceholder = true } // For node vars: pass this through to prevent the node function getting evalled during chord expansion
     return result
   }
@@ -215,6 +229,40 @@ define(function(require) {
   p = varLookup(parseVar(state), {bar:3}, {})
   assert(3, state.idx)
   assert(3, p(ev(0,0),0,evalParamFrame))
+  delete vars.foo
+
+  // Alias (set foo2 = foo): callsite args must reach the target var function
+  vars.foo = (args) => args.bar
+  vars.foo.isVarFunction = true
+  vars.foo2 = varLookup(parseVar({str:'foo',idx:0}), undefined, {})
+  p = varLookup(parseVar({str:'foo2',idx:0}), {bar:3}, {})
+  assert(3, p(ev(0,0),0,evalParamFrame))
+  delete vars.foo
+  delete vars.foo2
+
+  // Alias of an alias
+  vars.foo = (args) => args.bar
+  vars.foo.isVarFunction = true
+  vars.foo2 = varLookup(parseVar({str:'foo',idx:0}), undefined, {})
+  vars.foo3 = varLookup(parseVar({str:'foo2',idx:0}), undefined, {})
+  p = varLookup(parseVar({str:'foo3',idx:0}), {bar:3}, {})
+  assert(3, p(ev(0,0),0,evalParamFrame))
+  delete vars.foo
+  delete vars.foo2
+  delete vars.foo3
+
+  // Cyclic alias must not blow the stack; falls back to the string value
+  vars.foo = varLookup(parseVar({str:'foo2',idx:0}), undefined, {})
+  vars.foo2 = varLookup(parseVar({str:'foo',idx:0}), undefined, {})
+  p = varLookup(parseVar({str:'foo',idx:0}), undefined, {})
+  assert('foo', p(ev(0,0),0,evalParamFrame))
+  delete vars.foo
+  delete vars.foo2
+
+  // Self alias must not blow the stack either
+  vars.foo = varLookup(parseVar({str:'foo',idx:0}), undefined, {})
+  p = varLookup(parseVar({str:'foo',idx:0}), undefined, {})
+  assert('foo', p(ev(0,0),0,evalParamFrame))
   delete vars.foo
 
   vars.foo = () => [1,2]

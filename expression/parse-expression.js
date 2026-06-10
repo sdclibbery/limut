@@ -2038,6 +2038,17 @@ define(function(require) {
   assert(6, evalParamFrame(parseExpression('foo{{x}->x*2}'), ev(), 0))
   delete vars.foo
 
+  // Calling an alias of a user-defined function (set foo2 = foo) must pass the callsite args through
+  vars.foo = parseExpression('{x,q:5}->x+q')
+  vars.foo2 = parseExpression('foo')
+  assert(18, evalParamFrame(parseExpression('foo2{3,q:15}'), ev(), 0))
+  assert(8, evalParamFrame(parseExpression('foo2{3}'), ev(), 0)) // default arg still applies
+  vars.foo3 = parseExpression('foo2') // alias of an alias
+  assert(18, evalParamFrame(parseExpression('foo3{3,q:15}'), ev(), 0))
+  delete vars.foo
+  delete vars.foo2
+  delete vars.foo3
+
   { // A lambda-valued arg must not be called bare by the eager modifier evaluation: its body should run exactly once, for the real call
     let probeCalls = 0
     vars.probe = (args,e,b) => { probeCalls++; return 1 }

@@ -22,7 +22,7 @@ set osc.pulse = {freq:pitch{}} -> osc{'pulse', freq:freq}
 
 //// Resonant filters
 set lpf = {freq, q:5} -> biquad{'lowpass', freq:freq, q:q}
-// set lpf2 = lpf
+set lpf2 = lpf
 set lpf4 = {freq, q:5} -> series{biquad{'lowpass', freq:freq, q:q/2}, count:2}
 set hpf = {freq, q:5} -> biquad{'highpass', freq:freq, q:q}
 set hpf4 = {freq, q:5} -> series{biquad{'highpass', freq:freq, q:q/2}, count:2}
@@ -35,9 +35,9 @@ set apf = {freq, q:1} -> biquad{'allpass', freq:freq, q:q}
 set hsf = {gain, freq:1100} -> biquad{'highshelf', freq:freq, gain:gain}
 set lsf = {gain, freq:200} -> biquad{'lowshelf', freq:freq, gain:gain}
 set pkf = {gain, freq:600, q:5} -> biquad{'peaking', freq:freq, gain:gain, q:q}
-// set high = hsf
-// set mid = pkf
-// set low = lsf
+set high = hsf
+set mid = pkf
+set low = lsf
 
 //// Wave shapers
 set shaper.pow = {curve:0.9} -> shaper{ {x,c:curve} -> sgn{x}*(abs{x}^c) }
