@@ -5226,4 +5226,6 @@ set (pk,pp,pc,br) bpf={220,q:10}, amp*=4
 
 // i impulse, fx=parallel{{i}->delay{(i+1)*40ms}*[]r1@f{seed:i},8}*0.1
 
+// i impulse 0..., oct=2, fx=multitap{{i}->delay{i*5ms}>>lpf{(33-i)*150},32}
+
 
