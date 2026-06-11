@@ -220,6 +220,11 @@ define(function (require) {
       let tunnel = evalMainParamFrame(params, 'tunnel', 0, state.count)
       let contrast = evalMainParamFrame(params, 'contrast', 0, state.count)
       let vhs = evalMainParamFrame(params, 'vhs', 0, state.count)
+      let jpeg = ca('jpeg',
+        evalMainParamFrame(params, 'jpeg', 0, state.count),
+        evalSubParamFrame(params, 'jpeg', 'size', 8, state.count),
+        0,0
+      )
       let ripple = ca('ripple',
         evalMainParamFrame(params, 'ripple', 0, state.count),
         evalSubParamFrame(params, 'ripple', 'scale', 1, state.count),
@@ -273,6 +278,8 @@ define(function (require) {
       gl.uniform1f(s.eventTimeUnif, eventTime)
       gl.uniform1f(s.contrastUnif, contrast)
       gl.uniform1f(s.vhsUnif, vhs)
+      jpeg[2] = jpeg[1]/har // keep macroblocks square on screen
+      gl.uniform4fv(s.jpegUnif, jpeg)
       if (s.textureUnif) {
         s.textureUnif.forEach((tu,i) => {
           let t = s.texture || (text !== undefined ? textTexture(text) : texture(url))

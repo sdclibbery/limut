@@ -979,6 +979,8 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>vignette={1/2,aspect:4/3}</code> aspect ratio of vignette effect. Defaults to 1.</p>
 <p class='sub'><code>vignette={1,cutoff:0.95}</code> cutoff for vignette; lower values provide a more gradual fade around the edges. Defaults to 0.9.</p>
 <p><code>vhs</code> Apply a VHS tape effect, including colour modification, horizontal bars, wobble, and noise.</p>
+<p><code>jpeg</code> Apply a JPEG/MPEG style digital glitch effect, including macroblock colour quantisation, chroma crush, blocky ringing, and displaced corrupted blocks of varying sizes arriving in clustered bursts. 0 for none, 1 for full effect.</p>
+<p class='sub'><code>jpeg={1,size:24}</code> number of macroblocks across the visual; smaller values give larger, chunkier blocks. Defaults to 8.</p>
 <p><code>recol</code> recolour the shader. Set to <code>oil</code> for oil film colours, <code>hue</code> for a hue spectrum, <code>fire</code> for a flame effect, <code>sunset</code> for dusk colours, <code>neon</code> for neon megenta and cyan, <code>titanium</code> for titanium anodisation colours</p>
 <p><code>contrast</code> apply a power based contrast curve. Default is zero meaning no contrast curve applied.</p>
 <p><code>buffer</code> send the output of this synth to a buffer player. For example, <code>buffer=vb</code> makes this synth render to the synth with id <code>vb</code>, which must be a synth of type <code>buffer</code>. The buffer synth can then render itself to the screen to display the output.</p>

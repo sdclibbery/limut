@@ -34,6 +34,7 @@ define(function (require) {
   uniform float l_contrast;
   uniform int l_recol;
   uniform float l_vhs;
+  uniform vec4 l_jpeg;
   vec2 origCoord;
   float rand(vec2 co) {
       return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
@@ -47,6 +48,10 @@ define(function (require) {
   float snPhase = 0.;
   float tcPhase = 0.;
   float outside = 0.;
+  vec2 jpegBlock = vec2(0.);
+  vec2 jpegInBlock = vec2(0.);
+  float jpegCorrupt = 0.;
+  float jpegAct = 0.;
   vec2 preprocess( vec2 coord ) {
     origCoord = coord;
     if (l_vhs != 0.) { /* from https://www.shadertoy.com/view/XtBXDt */
@@ -65,6 +70,33 @@ define(function (require) {
       if (uv.x - tcNoise*tcPhase*1.5 < -0.2) { outside = 1.0; }
       if (uv.x > 1.2) { outside = 1.0; }
       coord = mix(coord, uv*2.0 - 1.0, l_vhs);
+    }
+    if (l_jpeg.x != 0.) {
+      float amt = min(l_jpeg.x, 1.0);
+      vec2 uv = 0.5 + coord*0.5;
+      float tEpoch = floor(l_realTime*0.13);
+      /* jitter grid alignment so block positions don't repeat */
+      vec2 guv = uv + (vec2(rand(vec2(tEpoch*0.21, 0.7)), rand(vec2(tEpoch*0.17, 9.1))) - 0.5) * 8.0/l_jpeg.yz;
+      /* coarse cells each pick a block size and a re-roll speed:
+         some glitches flicker briefly, some stick around for several beats */
+      vec2 cell = floor(guv*l_jpeg.yz*0.25);
+      float speed = pow(4.0, 1.0 - floor(rand(cell*0.043 + vec2(tEpoch*0.07, 1.9))*3.0));
+      float t = floor(l_realTime*speed);
+      float scale = pow(2.0, floor(rand(cell*0.037 + vec2(t*0.011, 5.3))*3.0) - 1.0);
+      jpegBlock = floor(guv*l_jpeg.yz*scale);
+      jpegInBlock = fract(guv*l_jpeg.yz*scale);
+      /* clustered corruption: bursts of activity, grouped into cell-sized clumps */
+      jpegAct = rand(vec2(t*0.117, speed + 3.7));
+      jpegAct *= jpegAct;
+      float cellAct = rand(cell*0.031 + vec2(t*0.13, tEpoch*0.29));
+      float r = rand(jpegBlock*0.017 + vec2(t*0.37, t*0.53));
+      if (cellAct < jpegAct*amt && r < 0.7) {
+        /* macroblock displacement, like mpeg motion vector corruption */
+        jpegCorrupt = rand(jpegBlock*0.029 + vec2(t*0.23, t*0.41));
+        vec2 shift = vec2(rand(jpegBlock + vec2(t, 1.7)), rand(jpegBlock + vec2(3.1, t))) - 0.5;
+        uv -= shift * 0.25 * amt * jpegCorrupt / scale;
+        coord = uv*2.0 - 1.0;
+      }
     }
     if (l_pixellate.x != 0.) {
       coord = floor((coord+(0.5/l_pixellate.xy))*l_pixellate.xy)/l_pixellate.xy;
@@ -194,6 +226,28 @@ define(function (require) {
       res = yiq2rgb( res );
       col.rgb = mix(col.rgb, res, l_vhs);
     }
+    if (l_jpeg.x != 0.) {
+      float amt = min(l_jpeg.x, 1.0);
+      vec3 yiq = rgb2yiq(col.rgb);
+      /* dct basis ringing within some blocks, sampled on a hard 8x8 texel grid */
+      float fx = 1.0 + floor(rand(jpegBlock*0.073 + vec2(2.4, 9.2))*3.0);
+      float fy = 1.0 + floor(rand(jpegBlock*0.073 + vec2(7.7, 1.3))*3.0);
+      vec2 texel = (floor(jpegInBlock*8.0) + 0.5) / 8.0;
+      float basis = cos(texel.x*3.1416*fx) * cos(texel.y*3.1416*fy);
+      basis = floor(basis*3.0 + 0.5) / 3.0;
+      float ring = rand(jpegBlock*0.051 + vec2(4.9, 3.3));
+      yiq.x += basis * max(ring - 0.6, 0.0) * 0.6 * amt * (0.25 + 0.75*jpegAct);
+      /* quantise luma, crush chroma harder */
+      float levels = mix(64.0, 14.0, amt);
+      yiq.x = floor(yiq.x*levels + 0.5)/levels;
+      float clevels = mix(32.0, 7.0, amt);
+      yiq.yz = floor(yiq.yz*clevels + 0.5)/clevels;
+      if (jpegCorrupt > 0.) { /* colour garbage in displaced blocks */
+        yiq.x = clamp(yiq.x + (jpegCorrupt - 0.5)*0.6*amt, 0.0, 1.0);
+        yiq.yz = mix(yiq.yz, vec2(yiq.z, -yiq.y), amt);
+      }
+      col.rgb = yiq2rgb(yiq);
+    }
     float b = min(foreBack > 0.5 ? 0.0 : 1.0-2.0*foreBack, 1.0);
     float m = max(foreBack < 0.5 ? 2.0*foreBack : 2.0*(1.0-foreBack), 0.0);
     float f = min(foreBack < 0.5 ? 0.0 : 2.0*foreBack-1.0, 1.0);
@@ -240,6 +294,7 @@ define(function (require) {
     shader.extentsUnif = system.gl.getUniformLocation(program, "l_extents")
     shader.contrastUnif = system.gl.getUniformLocation(program, "l_contrast")
     shader.vhsUnif = system.gl.getUniformLocation(program, "l_vhs")
+    shader.jpegUnif = system.gl.getUniformLocation(program, "l_jpeg")
 }
 
   return {

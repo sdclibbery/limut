@@ -5228,4 +5228,9 @@ set (pk,pp,pc,br) bpf={220,q:10}, amp*=4
 
 // i impulse 0..., oct=2, fx=multitap{{i}->delay{i*5ms}>>lpf{(33-i)*150},32}
 
+// v swirl, jpeg
+// v webcam, jpeg=[]r1/4@f
+// v julia 4, jpeg, mid=rainbow_slow, rotate=time/128, mirror=6, zoom=2
+// v shadertoy 0, id='Xtf3zn', contrast=1/3, jpeg=[]r1/4@f
+
 
