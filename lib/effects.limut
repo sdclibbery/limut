@@ -67,3 +67,46 @@ set duck = {length:0.5, depth:1, period:1, attack:0.1} -> [
   1:_(period-length-attack),
   1:\attack
 ]t@s
+
+// Multiband processing: split into count perceptually even (log-spaced) frequency bands
+// with a complementary (difference-of-lowpasses) crossover, run each band through the chain
+// built by the callback (given the band index and the band's centre frequency), then sum
+// the bands back together. Band i of n passes 20*1000^(i/n) to 20*1000^((i+1)/n) Hz:
+//   band 0   = +LP(hi)              first band, no lower crossover
+//   band i   = +LP(hi) -LP(lo)      middle band
+//   top band = +input  -LP(lo)      last band, passes the input straight on the + path
+// The LP(hi) of band i and the LP(lo) of band i+1 are the same filter fed the same input,
+// so unprocessed bands cancel exactly on summing: multiband{1} (and any uniform processing)
+// is fully transparent, with no crossover dips or level loss, regardless of filter slope.
+set multiband = {chain:1, count:3} -> parallel{
+  {i} -> (
+    i==count-1
+    ?? (i==0 ?? dry ?: dry - bwlpf{20*1000^(i/count)})
+    ?: (i==0 ?? bwlpf{20*1000^((i+1)/count)} ?: bwlpf{20*1000^((i+1)/count)} - bwlpf{20*1000^(i/count)})
+  ) >> chain{i, 20*1000^((i+1/2)/count)},
+  count
+}
+set multiband2 = multiband
+
+// 4 pole variant: steeper crossovers, so less bleed between bands. Still complementary
+// (the cancellation between adjacent bands holds regardless of filter slope), so still
+// fully transparent when unprocessed.
+set multiband4 = {chain:1, count:3} -> parallel{
+  {i} -> (
+    i==count-1
+    ?? (i==0 ?? dry ?: dry - bwlpf4{20*1000^(i/count)})
+    ?: (i==0 ?? bwlpf4{20*1000^((i+1)/count)} ?: bwlpf4{20*1000^((i+1)/count)} - bwlpf4{20*1000^(i/count)})
+  ) >> chain{i, 20*1000^((i+1/2)/count)},
+  count
+}
+
+// Lowpass+highpass (bandpass) variant: each band is the input through a lowpass at its
+// upper edge and a highpass at its lower edge. Tighter bands than the complementary split
+// (no out-of-band leakage from the subtraction), but the bands do not sum back to the
+// input exactly: expect some level ripple and phase cancellation around the crossovers.
+// The lowest band's highpass (20Hz) and the top band's lowpass (20kHz) sit at the edges
+// of hearing so those filters are effectively transparent.
+set multibandbp = {chain:1, count:3} -> parallel{
+  {i} -> bwlpf{20*1000^((i+1)/count)} >> bwhpf{20*1000^(i/count)} >> chain{i, 20*1000^((i+1/2)/count)},
+  count
+}

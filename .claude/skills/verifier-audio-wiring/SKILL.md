@@ -54,6 +54,8 @@ Drop a file at `verify-<thing>.html` at the repo root, alongside `index.html`. R
      const updateCode = uc.updateCode; … });
    ```
 
+   **The require callback must NOT be an `async` function.** The bundled RequireJS (2.1.18) type-checks callbacks with `"[object Function]" === Object.prototype.toString.call(cb)`; an async function reports `[object AsyncFunction]`, so it is silently treated as a value export and **never invoked** — no error, no log, the page just stalls with an empty module registry. Use a plain function and put the async work in an inner IIFE: `function (uc, …) { (async () => { … })().catch(e => console.log('VERIFY: error', ''+e)) }`.
+
 3. **Replicate `main.js:tick` minimally** — without this no events fire:
 
    ```js

@@ -90,7 +90,7 @@ The `else { node.stop() }` is critical: without it, nodes created in a missing-d
 
 ## DSL-defined effect functions (`lib/effects.limut`)
 
-Many "effects" (`echo`, `pingpong`, `flanger`, `phaser`, `shifter`, `reverb`, `tape`, etc.) are **not JS code** — they are DSL functions defined via `set` in `lib/effects.limut`, loaded at startup via `include`. They are thin wrappers around lower-level node functions in `play/nodes/nodes.js`.
+Many "effects" (`echo`, `pingpong`, `flanger`, `phaser`, `shifter`, `reverb`, `tape`, `multiband`/`multiband4`/`multibandbp`, etc.) are **not JS code** — they are DSL functions defined via `set` in `lib/effects.limut`, loaded at startup via `include`. They are thin wrappers around lower-level node functions in `play/nodes/nodes.js` and `play/nodes/graph.js` (e.g. `multiband` builds its crossover from `parallel` + `bwlpf` and per-band connectable subtraction).
 
 For example, the DSL `echo` function wraps the `delay` node function. When debugging effect errors, check `lib/effects.limut` first to see how the DSL function maps parameters before passing them to the underlying node function.
 
@@ -146,30 +146,32 @@ Rule of thumb:
 - **Per-chord-slot wiring** (`expression/connectOp.js` *while* `expandingChords`, where each operand may legitimately be a "no-op for this slot"): `isConnectableOrPlaceholder`.
 - **Single-chain construction** (player-fx, loop/mix node functions, connectOp in normal playback — anything that wraps "if it's not already a node, make one"): `isConnectable`.
 
-When the values flowing in could be scalars (including `0`) — i.e. always with timevars — the placeholder branch silences output. Live sites using the correct predicate: `play/player-fx.js:101`, `play/nodes/graph.js:46,49,84,182,195`.
+When the values flowing in could be scalars (including `0`) — i.e. always with timevars — the placeholder branch silences output. Live sites using the correct predicate: `play/player-fx.js:101`, `play/nodes/graph.js:46,49,84,117,127`.
 
 ### Wrapping a *lambda* result in a gain — wrap the lambda, not the probe value
 
-A subtle variant of the single-chain pattern arises in node functions that take a per-item lambda — `multiband{{i,centre}->..., n}` and `series{{i}->..., n}` in `play/nodes/graph.js`. The chain is built once, so the code calls the lambda to find out whether it produced a node chain or a plain value:
+A subtle variant of the single-chain pattern arises in node functions that take a per-item lambda — `parallel{{i}->..., n}` and `series{{i}->..., n}` in `play/nodes/graph.js`. (The DSL `multiband` in `lib/effects.limut` is a wrapper over `parallel`, so it inherits all of this.) The chain is built once, so the code calls the lambda to find out whether it produced a node chain or a plain value:
 
 ```js
-proc = callback(ev, b, evalParamFrame, {value:i, value1:band.centre}) // probe
+proc = callback(ev, b, evalParamFrame, {value:i}) // probe
 ```
 
 That probe **eagerly evaluates the lambda body**, collapsing a time-varying expression (e.g. `[]n{seed:i}`, interval `'frame'`) to a single frozen number. So you must **not** wrap the probe result (`gain({value:proc})` → static gain, never moves). Instead, when the probe is not connectable, hand the *lambda itself* to gain as the value param and let gain's `evalMainParamFrame` re-derive the interval at runtime:
 
 ```js
 if (!isConnectable(proc)) {
-  let bandGain = (e2,b2,er2) => callback(ev, b2, er2, {value:i, value1:band.centre})
-  proc = vars.all().gain({value:bandGain}, e,b)
+  let copyGain = (e2,b2,er2) => callback(ev, b2, er2, {value:i})
+  proc = vars.all().gain({value:copyGain}, e,b)
 }
 ```
 
 Because gain evaluates its `value` with `{withInterval:true}` and that flag threads through the nested lambda body (`evalRecurseWithOptions`, `player/eval-param.js`), a frame-varying body gets `doPerFrame` updates while a genuinely static body (`{i}->0.5`) stays a constant gain with no per-frame callback — i.e. it behaves exactly like `gain{<body>}` with the lambda's arg bound. **Don't** decide per-frame-vs-static from the lambda's static `.interval` property: with conditionals like `{i}->i%2==0?[]n:0.5` the effective interval is only known by evaluating, which is precisely what the `withInterval` path does.
 
-Re-use the same per-band cloned event (`ev`) inside the wrapper: param memoisation is keyed by `(event, beat)` and ignores the lambda's args, so passing the shared fx event collapses every item to item 0's value. The probe (no `withInterval`) and gain's eval (`withInterval`) memoise under distinct keys, so they don't collide.
+(The same per-frame behaviour falls out for free in pure-DSL wrappers: when a lambda call like `chain{i}` evaluates to a plain value on the right of `>>`, `connectOp` wraps the **raw unevaluated AST** in `gain{value:<ast>}`, so gain's `withInterval` eval drives per-frame updates with the call context snapshot supplying `i`. This is how the DSL `multiband` supports amplitude-valued callbacks like `{i}->[]n{seed:i}` with no special handling.)
 
-**Why a distinct event rather than `{doNotMemoise:true}`?** It's a fair question — `series`' non-lambda branch (`graph.js:92`) *does* eval its chain with `doNotMemoise` to get fresh nodes per repeat (its lambda branch uses the cloned-event pattern, same as multiband), and `doNotMemoise` genuinely *does* propagate into a lambda body (when routed through `evalParamFrame`, `evalRecurseWithOptions` bakes the options into the `er` handed to the user-function wrapper, which then evals the body with it — cf. shaper at `play/nodes/nodes.js:43`, which samples a static scalar curve this way). So for multiband's **node-chain** branch, `doNotMemoise` would work. The blocker is the **amplitude/gain** branch above: that body can vary per frame, so multiband can't eval it once and freeze it — it hands the live lambda to `gain`, which re-evaluates it **every frame**. multiband doesn't own that eval call, so it can't inject `doNotMemoise` there (and wouldn't want to — per-frame memoisation should stay *on* so each frame computes once). The only seam to keep band *i* out of band 0's bucket inside gain's per-frame memoisation is the **event identity** (the WeakMap key) — which is exactly why `bandGain` hardcodes the captured `ev` and ignores the `e2` gain passes in. Given the amplitude branch forces event-identity isolation, the node-chain branch reuses the same `ev` for uniformity rather than switching to `doNotMemoise`. Takeaway: `doNotMemoise` is "never memoise, ever" (right for a one-shot static sample like shaper); a cloned event isolates *across* evaluations while leaving per-frame/intra-evaluation memoisation intact (right when something else owns the per-frame eval loop).
+Re-use the same per-copy cloned event (`ev`) inside the wrapper: param memoisation is keyed by `(event, beat)` and ignores the lambda's args, so passing the shared fx event collapses every item to item 0's value. The probe (no `withInterval`) and gain's eval (`withInterval`) memoise under distinct keys, so they don't collide.
+
+**Why a distinct event rather than `{doNotMemoise:true}`?** It's a fair question — `series`' non-lambda branch (`graph.js:92`) *does* eval its chain with `doNotMemoise` to get fresh nodes per repeat (its lambda branch uses the cloned-event pattern, same as parallel), and `doNotMemoise` genuinely *does* propagate into a lambda body (when routed through `evalParamFrame`, `evalRecurseWithOptions` bakes the options into the `er` handed to the user-function wrapper, which then evals the body with it — cf. shaper at `play/nodes/nodes.js:43`, which samples a static scalar curve this way). So for the **node-chain** branch, `doNotMemoise` would work. The blocker is the **amplitude/gain** branch above: that body can vary per frame, so the node function can't eval it once and freeze it — it hands the live lambda to `gain`, which re-evaluates it **every frame**. The node function doesn't own that eval call, so it can't inject `doNotMemoise` there (and wouldn't want to — per-frame memoisation should stay *on* so each frame computes once). The only seam to keep copy *i* out of copy 0's bucket inside gain's per-frame memoisation is the **event identity** (the WeakMap key) — which is exactly why `copyGain` hardcodes the captured `ev` and ignores the `e2` gain passes in. Given the amplitude branch forces event-identity isolation, the node-chain branch reuses the same `ev` for uniformity rather than switching to `doNotMemoise`. Takeaway: `doNotMemoise` is "never memoise, ever" (right for a one-shot static sample like shaper); a cloned event isolates *across* evaluations while leaving per-frame/intra-evaluation memoisation intact (right when something else owns the per-frame eval loop).
 
 ## Verifying audio-graph wiring at runtime
 

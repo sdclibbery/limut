@@ -600,7 +600,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <h5>Inline (anonymous) functions</h5>
 <p><code>({x} -> x^2){3}</code> A function can be called immediately without storing it in a var, by wrapping the definition in round brackets and applying arguments. Returns 9.</p>
 <p><code>convolver{{x} -> (1-x)^3, length:1s}</code> Anonymous functions are often passed directly as arguments to other functions (for example to node functions such as <code>convolver</code> and <code>shaper</code>) to provide a shape or envelope.</p>
-<p><code>set twice = {f,x} -> f{f{x}}</code> An argument that holds a function can itself be called with arguments inside the body. For example <code>twice{{v}->v*2, 3}</code> returns 12. This allows wrapper functions around node functions like <code>parallel</code> and <code>multiband</code>, for example <code>set wrapped = {chain,count} -> parallel{{i}->chain{i}, count}</code>.</p>
+<p><code>set twice = {f,x} -> f{f{x}}</code> An argument that holds a function can itself be called with arguments inside the body. For example <code>twice{{v}->v*2, 3}</code> returns 12. This allows wrapper functions around node functions like <code>parallel</code>, for example <code>set wrapped = {chain,count} -> parallel{{i}->chain{i}, count}</code> (the library <code>multiband</code> function is built this way).</p>
 <h5>Scope and global vars</h5>
 <p>Inside a function body, argument names take priority over global vars with the same name. So in <code>{foo} -> foo</code>, the <code>foo</code> in the body refers to the argument, not to any global var called <code>foo</code>.</p>
 <p><code>global.foo</code> Use the <code>global.</code> prefix inside a function body to force a lookup of the global var, bypassing any argument of the same name. For example <code>{foo} -> global.foo</code> ignores the passed argument and returns the global <code>foo</code>.</p>
@@ -1110,9 +1110,6 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>mix6{...}</code> Provide a fixed mix of 1/6 wet.</p>
 <p><code>mix7{...}</code> Provide a fixed mix of 1/7 wet.</p>
 <p><code>mix8{...}</code> Provide a fixed mix of 1/8 wet.</p>
-<p><code>multiband{{i,centre}->..., count:3}</code> Split the input into a number of perceptually even (log-spaced) frequency bands (default 3) using non-resonant filters, process each band through the node chain built by the callback, then sum the bands back together. The split is a complementary crossover, so the bands reconstruct the input exactly when left unprocessed - <code>multiband{1}</code> (and any uniform processing) is fully transparent, with no crossover dips or level loss. The callback is given the band index <code>i</code> and the band's centre frequency <code>centre</code>, so each band can be processed differently (eg per-band gain, distortion, or compression).</p>
-<p class='sub'><code>multiband{{i,centre}->..., 8}</code> The band count arg can be positional (second, as in <code>series</code>) instead of being named.</p>
-<p class='sub'><code>multiband{count:3}</code> With no callback the bands are simply split and recombined (a no-op), useful as a starting point.</p>
 <p><code>osc{'sawtooth', freq:440, phase:0}</code> Create an oscillator node with the given waveform and frequency. Some control of starting phase is available; this is achieved by controlling the start time of the oscillator as all webaudio oscillators start with phase 0.</p>
 <p><code>panner{0}</code> Create a stereo panner that can push a signal to the left (-1) or right (1).</p>
 <p><code>parallel{..., count:2}</code> Run the given node chain count times in parallel: the input is fanned out to every copy and the copies' outputs are summed back together.</p>
@@ -1255,6 +1252,12 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>echo{time:1/8b, feedback:0.7, max}</code> Echo effect wraps delay with feedback and a dry path to give a complete echo effect.</p>
 <p><code>flanger{control:[0,1]l8@f, feedback:0, lo:0.0005, hi:0.007}</code> Flanger effect.</p>
 <p><code>grain{ratio, length:0.03, phase:0}</code> Granular resynthesis grain. Plays a recent part of the audio stream of given length, with a cosine envelope, at a given pitch ratio. Phase allows multiple grains to be overlapped.</p>
+<p><code>multiband{{i,centre}->..., count:3}</code> Split the input into a number of perceptually even (log-spaced) frequency bands (default 3) using non-resonant butterworth filters, process each band through the node chain built by the callback, then sum the bands back together. The split is a complementary crossover, so the bands reconstruct the input exactly when left unprocessed - <code>multiband{1}</code> (and any uniform processing) is fully transparent, with no crossover dips or level loss. The callback is given the band index <code>i</code> and the band's centre frequency <code>centre</code>, so each band can be processed differently (eg per-band gain, distortion, or compression).</p>
+<p class='sub'><code>multiband{{i,centre}->..., 8}</code> The band count arg can be positional (second, as in <code>series</code>) instead of being named.</p>
+<p class='sub'><code>multiband{count:3}</code> With no callback the bands are simply split and recombined (a no-op), useful as a starting point.</p>
+<p><code>multiband2{{i,centre}->..., count:3}</code> Alias of <code>multiband</code> (2 pole crossover filters).</p>
+<p><code>multiband4{{i,centre}->..., count:3}</code> As <code>multiband</code> but with 4 pole crossover filters: steeper crossovers so less bleed between bands. Still fully transparent when left unprocessed.</p>
+<p><code>multibandbp{{i,centre}->..., count:3}</code> As <code>multiband</code> but each band passes through a lowpass at its upper edge and a highpass at its lower edge. Tighter bands than the complementary split, but the bands do not sum back to the input exactly: expect some level ripple and phase cancellation around the crossovers.</p>
 <p><code>phaser{control:[0,1]l4@f, lo:300Hz, hi:2600Hz, stages:4, q:1/2}</code> Phaser effect.</p>
 <p><code>pingpong{time:1/4b, feedback:0.7}</code> Ping pong echo; the echoes alternate stereo sides.</p>
 <p><code>reverb{length:1b, curve:3}</code> Reverb effect with given length and power falloff curve.</p>

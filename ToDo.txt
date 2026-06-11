@@ -1,12 +1,19 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-Implement multiband in limut now
-multiband should have option for 4 pole crossovers, and also option for difference-of-lowpass vs bandpass
+serallel{} - name?? takes a set of chains (or a number and a callback function to create the chains), and runs then all in series, but collects all the outputs together as well for the final output - ??Do we need this for anything?
 !! The cos{}-in-node-params breakage looks like a latent evaluator bug (var functions work fine inside shaper lambdas but not as biquad subparams)
  cos{...} doesn't evaluate correctly inside audio node params — my first version computed stage Qs with 1/(2*cos{(2*i+1)*pi/8}),
   but that yields q=0, and a bare cos{pi/4} subparam broke the fx chain entirely (orphan nodes, undefined chain)
+!! Get error when starting a multiband with time in it
+ i noise, fx=multiband{{i}->[1:1,0:15]t@f{time:4*time+i},16}/8
+ 🟠 Warning invalid piecewise piece param: (e,b) => b [object Object] [object Object]
+shifter rewrite
+!! When use sample in fx not play, sometimes it doesn't play. Due to not having loaded yet? Needs to retry somehow?
+wavetable synth
+'jpeg' visual param to give digital distortion - name??
 !dbd is weak?
+!! audionode caching and reuse to avoid GC glitch over time
 !Trance can sound out of tune
  toscale{} function: takes a Freq and quantises to a scale, default to current global scale/root. Try using it for trance cutoff
  ?Pick sounded a bit out of tune too, had to increase decay? Is this at lower octaves?
@@ -105,11 +112,6 @@ Salamander Piano upgrades
 MediaStreamAudioSourceNode node source function
 Note: Can filter an audio signal down into a control signal that can be used for ducking like this:
  shaper{{x}->abs{x}}>>lpf{10} - This is an envelope follower basically
-More node topology functions
- parallel{} - takes a number and a callback function to create chains for each, then runs them all in parallel
- series{} should also be able to take a callback function to create each chain
- multiband{} - takes a set of cutoff freqs, separates the signal into those bands, and applies a chain for each band based on a callback function
- serallel{} - takes a set of chains (or a number and a callback function to create the chains), and runs then all in series, but collects all the outputs together as well for the final output - ??Do we need this for anything?
 midi controller support
  this.vel should update with aftertouch for midi, at the moment you only get the vel at the time of note-on (see percussion pads)
  midi{'vel'} should include aftertouch?
@@ -272,7 +274,7 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 =================================================================================================================================
 ==== visual ====
 Nodes for visuals
- Visual synth with a play param that takes a node graph, from xy to rgba
+ Visual synth with a px param that takes a node graph, from xy to rgba
   Implicit `uv>>` at the start of px
   v visualsynth, px=zoom{2}>>kal>>pal{[#000:0.5,#800:0.4,#f12:0.1,#fff]}
  Visual node values are 4 component vectors
