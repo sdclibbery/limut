@@ -19,6 +19,7 @@ wavetable synth
  ?Pick sounded a bit out of tune too, had to increase decay? Is this at lower octaves?
  ALSO: Trance needs a param to soften the pluckiness: maybe attack as well as decay? Or decay affects both?
    att=this.decay^2*100ms  works pretty well??
+Support just intonation etc
 gp0, gp1 etc as well as just gp
 Dmxstrip presets...
 !when collaborating, gamepad and midi numbers must be consistent for all peers

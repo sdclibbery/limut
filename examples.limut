@@ -5190,6 +5190,22 @@ set (pk,pp,pc,br) bpf={220,q:10}, amp*=4
 // ch chime 0, dur=1-floor{riser^2,1/4}, fx=mix{darkverb{1/3},3/4}>>mix{echo}*2, quantise=1/2, oct=2+4*riser^2, vel=1/2+riser^2, drive={1/8,mix:riser^4}, pan=-1+2*(time*(riser^2*3+1)%1)
 
 
+// s saw, oct=2, vel=1/4, fx=lpf2{200,q:20}
+
+// set wrap_parallel={callback,count} -> parallel{{i}->callback{i}, count}
+// n noise, fx=wrap_parallel{{i}->bpf{[1/2:2]l4@f*(i+1)^2*50,q:10}, 8}/4
+
+// n noise, fx=parallel{{i}->bpf{[1/2:2]l4@f*(i+1)^2*50,q:10}, 8}/4
+
+// n noise, fx=series{{i}->nf{[1/2:2]l4@f*(i+1)^2*50,q:3}, 16}/4
+// n noise, fx=series{{i}->nf{[1/2:2]l4@f*(i+1)*500,q:5}, 16}/4
+// n noise, fx=series{flanger, 8}/4
+
+// l softkeys keyboard, quantise=1/4, fx>>=multibandbp{{i}->echo{[0:1/3]r@e{seed:i}},32}
+// l darkbass keyboard, quantise=1/4, fx>>=mix{multibandbp{{i}->echo{[0:2/3]r@e{seed:i}},16}}
+
+// i noise, fx=mix{multiband{1,3},0}/8
+// i noise, fx=multiband{{i}->gain{[]n{seed:i}}}/8
 // i noise, fx=multiband{{i}->gain{[]n{seed:i}},16}/8
 // i noise, fx=multiband{{i}->[]n{seed:i},16}/8
 // i noise, fx=multiband{{i}->[1:1,0:15]t@f{time:4*time+i},16}/8
@@ -5199,10 +5215,15 @@ set (pk,pp,pc,br) bpf={220,q:10}, amp*=4
 // i sting keyboard, sus=1/16, fx=mix{multiband{{i}->echo{(i+1)*80ms,feedback:0.6},16}}
 // i perc -... crop 14 + jx, rate=[1,3/4]t8, oct=4, fx=mix{multiband{{i}->echo{i*100ms,feedback:0.6},16}}
 // i saw, oct=2, fx=multiband{{i}->mix{shaper.diode,[]r@f{seed:i}},16}/4
-// i saw keyboard, oct=2, sus=1/16, fx=multiband{{i}-> i%2 ?? mix{echo{i*1/8,feedback:0.6}} ?: mix{reverb{(17-i)*500ms}},16}>>stanh, quantise=1/2, lpf=[10000:!1,10]e@s
+// i saw keyboard, oct=2, sus=1/16, fx=multibandbp{{i}-> i%2 ?? mix{echo{i*1/8,feedback:0.6}} ?: mix{reverb{(17-i)*500ms}},16}>>stanh, quantise=1/2, lpf=[10000:!1,10]e@s
 // i impulse, fx=multiband{{i}->delay{(i+1)*100ms},16}
 // i noise, fx=multiband{{i}->gain{(time/4-i/16)%1},16}/8
-// i noise, fx=multiband{{i}->gain{[1:1,0:15]t@f{time:4*time+i}},16}/8
+// i noise, fx=multiband{{i}->gain{[1:1,0:31]t@f{time:4*time+i}},32}/8
+// i noise, fx=multiband{{i}->i==2,4}/8
+// i noise, fx=multiband{{i}->i==4,8}/8
+// i noise, fx=multiband{{i}->i==8,16}/8
+// i noise, fx=multiband{{i}->i==16,32}/8
 
+// i impulse, fx=parallel{{i}->delay{(i+1)*40ms}*[]r1@f{seed:i},8}*0.1
 
 
