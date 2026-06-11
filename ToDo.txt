@@ -1,7 +1,8 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-serallel{} - name?? takes a set of chains (or a number and a callback function to create the chains), and runs then all in series, but collects all the outputs together as well for the final output - ??Do we need this for anything?
+multitap - takes a callback function to create chains, and a count of stages, and runs then all chains in series, but collects all the individual outputs together as well for the final output
+ !!TEST
 !! The cos{}-in-node-params breakage looks like a latent evaluator bug (var functions work fine inside shaper lambdas but not as biquad subparams)
  cos{...} doesn't evaluate correctly inside audio node params — my first version computed stage Qs with 1/(2*cos{(2*i+1)*pi/8}),
   but that yields q=0, and a bare cos{pi/4} subparam broke the fx chain entirely (orphan nodes, undefined chain)

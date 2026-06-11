@@ -98,6 +98,52 @@ define(function(require) {
   }
   addNodeFunction('series', series)
 
+  // multitap{{i}->chain, count} : run the chain count times in series like series{}, but
+  // tap each stage's output and sum all the taps together as the final output (a tapped
+  // line, eg multitap{{i}->echo{1/2}>>gain{0.7^i}, 4} for a decaying multi-tap echo).
+  let multitap = (args,e,b,_,er) => {
+    let count = Math.floor(evalMainParamEvent(args, 'count', evalMainParamEvent(args, 'value1', 2)))
+    if (typeof count !== 'number' || isNaN(count)) { throw `multitap: count must be numeric` }
+    if (count < 1) { return idnode(args,e,b) }
+    let callback = args['value'] || args['chain']
+    let isLambda = typeof callback === 'function' && callback.isUserFunction
+    let node
+    let taps = {}
+    for (let i = 0; i < count; i++) {
+      let chain
+      if (isLambda) {
+        let ev = Object.create(Object.getPrototypeOf(e), Object.getOwnPropertyDescriptors(e)) // Distinct event so per-function memoisation doesn't collapse every stage to stage 0; clone descriptors so non-enumerable getters from the fx-chain event survive
+        chain = callback(ev, b, evalParamFrame, {value:i})
+        if (!isConnectable(chain)) {
+          // The body evaluated to an amplitude, not a node chain. Hand the lambda itself to
+          // gain as its value param (reusing the per-stage ev so memoisation stays isolated)
+          // so a frame-varying body gets per-frame updates - same pattern as series above
+          let stageGain = (e2,b2,er2) => callback(ev, b2, er2, {value:i})
+          chain = vars.all().gain({value:stageGain}, e,b)
+        }
+      } else if (callback !== undefined) {
+        chain = evalParamFrame(callback, e,b, {doNotMemoise:true}) // Must get new nodes for every stage
+      }
+      if (!isConnectable(chain)) {
+        chain = (chain === undefined) ? idnode(args,e,b) : vars.all().gain({value:chain}, e,b)
+      }
+      node = (node === undefined) ? chain : connectOp(node, chain, e,b,er)
+      taps[i===0 ? 'value' : 'value'+i] = chain
+    }
+    // Composite: input enters the series chain start (l); output is every stage's chain (r),
+    // so connect() resolves each stage's output node and sums them into the destination
+    if (audioNodeProto === undefined) { audioNodeProto = Object.getPrototypeOf(Object.getPrototypeOf(system.audio.createGain())) }
+    let composite = Object.create(audioNodeProto)
+    composite.l = node
+    composite.r = taps
+    composite.destructor = e._destructor
+    composite.connect = (destination) => {
+      return connect(composite.r, destination, e._destructor)
+    }
+    return composite
+  }
+  addNodeFunction('multitap', multitap)
+
   // parallel{{i}->chain, count} : run the chain count times in parallel (default 2):
   // connect() fans the input out to every copy and sums the copies' outputs back
   // together. The chain may be a user defined function given the copy index
@@ -249,6 +295,49 @@ define(function(require) {
   let pRes3 = parallel({value1:0}, {_destructor:require('play/destructor')()}, 0, undefined, er)
   assert(true, isConnectable(pRes3))
   assert(true, pRes3.value === undefined) // idnode, not a parallel map
+
+  // multitap: a user defined function chain is invoked once per stage with the stage index
+  let mtCalls = []
+  let mtCb = (e,b,erFn,a) => { mtCalls.push(a.value); return system.audio.createGain() }
+  mtCb.isUserFunction = true
+  let mtRes = multitap({value:mtCb, value1:3}, {_destructor:require('play/destructor')()}, 0, undefined, er)
+  assert([0,1,2], mtCalls) // stage indices passed in order
+  assert(true, isConnectable(mtRes))
+
+  // multitap: each stage gets a distinct event so memoisation can't collapse stages together
+  let mtEvents = []
+  let mtCb2 = (e,b,erFn,a) => { mtEvents.push(e); return system.audio.createGain() }
+  mtCb2.isUserFunction = true
+  multitap({value:mtCb2, value1:2}, {_destructor:require('play/destructor')()}, 0, undefined, er)
+  assert(true, mtEvents[0] !== mtEvents[1])
+
+  // multitap: stages wire in series, input enters only the first stage, and every stage's
+  // output also connects to the destination (where connect() sums them)
+  let mtAnProto = Object.getPrototypeOf(Object.getPrototypeOf(system.audio.createGain()))
+  let mtMock = (name) => {
+    let an = Object.create(mtAnProto)
+    an.name = name
+    an.connected = []
+    an.connect = (v) => { an.connected.push(v.name) }
+    Object.defineProperty(an, "numberOfInputs", { get() { return 1 } })
+    return an
+  }
+  let mtStages = []
+  let mtCb3 = (e,b,erFn,a) => { let n = mtMock('stage'+a.value); mtStages.push(n); return n }
+  mtCb3.isUserFunction = true
+  let mtRes3 = multitap({value:mtCb3, value1:3}, {_destructor:require('play/destructor')()}, 0, undefined, er)
+  let mtSrc = mtMock('src')
+  connect(mtSrc, mtRes3, undefined)
+  assert(['stage0'], mtSrc.connected) // input does NOT fan out to the taps
+  connect(mtRes3, mtMock('dest'), undefined)
+  assert(['stage1','dest'], mtStages[0].connected) // feeds next stage, taps to dest
+  assert(['stage2','dest'], mtStages[1].connected)
+  assert(['dest'], mtStages[2].connected) // last stage just taps to dest
+
+  // multitap: count of zero gives a single passthrough, not a tap map
+  let mtRes4 = multitap({value1:0}, {_destructor:require('play/destructor')()}, 0, undefined, er)
+  assert(true, isConnectable(mtRes4))
+  assert(true, mtRes4.value === undefined) // idnode, not a parallel map
 
   console.log('Graph tests complete')
   }
