@@ -207,7 +207,7 @@ define(function (require) {
   }
 
   return (params, gainbase, defaultEnvelope) => {
-    params._destructor = destructor()
+    params._destructor = destructor(true)
     gainbase *= evalMainParamEvent(params, "loud", 1)
     let envelope = evalMainParamEvent(params, "envelope", defaultEnvelope)
     let env

@@ -49,7 +49,7 @@ define(function (require) {
                  'T':'cb', 'e':'cb', '*':'cp', 'H':'cp', 'm':'mt', 't':'rs', '~':'cy', '#':'cy', }
 
   return (params) => {
-    params._destructor = destructor()
+    params._destructor = destructor(true)
 
     let type = evalMainParamEvent(params, 'type')
     if (type === 'all') {

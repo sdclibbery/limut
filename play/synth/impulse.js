@@ -24,7 +24,7 @@ define(function (require) {
     let gainBase = 0.1
     let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     params.endTime = params._time + 0.01
-    params._destructor = destructor()
+    params._destructor = destructor(true)
     setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
 
     let vca = system.audio.createGain()

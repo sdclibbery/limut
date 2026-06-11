@@ -157,7 +157,7 @@ define(function (require) {
     let gainbase = 0.5 * evalMainParamEvent(params, "loud", 1)
     vca.gain.value = Math.max(0, gainbase * (typeof params.amp === 'number' ? params.amp : 1))
 
-    params._destructor = destructor()
+    params._destructor = destructor(true)
     params.endTime = params._time
     let components = [
       click(params),

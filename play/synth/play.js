@@ -17,7 +17,7 @@ define(function (require) {
     let eventDur = evalMainParamEvent(params, 'sus', 1e10) * params.beat.duration
     let bufferDur =  (source.buffer ? source.buffer.duration : 0.1)
     params.endTime = params._time + Math.min(eventDur, bufferDur)
-    params._destructor = destructor()
+    params._destructor = destructor(true)
     setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
 
     let vca = system.audio.createGain()

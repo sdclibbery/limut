@@ -23,7 +23,7 @@ define(function(require) {
     let expandingChords = evalRecurse && evalRecurse.options && evalRecurse.options.expandingChords
     let connectable = expandingChords ? isConnectableOrPlaceholder : isConnectable
     let composite = Object.create(getAudioNodeProto()) // Create object that satisfies instanceof AudioNode
-    composite.destructor = destructor()
+    composite.destructor = destructor(!!(e && e._destructor && e._destructor.canPool)) // Inherit poolability from the owning event's destructor
     let el = evalRecurse(l, e,b)
     if (!connectable(el)) {
       el = vars.all().gain({value:l}, e,b) // Allow connecting to/from l value by wrapping into gain

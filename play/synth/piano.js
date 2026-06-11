@@ -67,7 +67,7 @@ define(function (require) {
     if (isNaN(freq)) { return }
     let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25)))
     params.endTime = params._time + dur*params.beat.duration
-    params._destructor = destructor()
+    params._destructor = destructor(true)
     setTimeout(() => params._destructor.destroy(), 1100+(params.endTime - system.audio.currentTime)*1000)
 
     let vel = evalMainParamEvent(params, 'vel', 3/4)

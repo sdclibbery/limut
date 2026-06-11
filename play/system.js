@@ -9,6 +9,8 @@ var system = {
   active: [],
 }
 
+require('play/node-pool').main.install(system.audio)
+
 system.add = (startTime, update) => {
   system.queued.push({t:startTime, update:update})
 }
