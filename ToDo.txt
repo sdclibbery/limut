@@ -1,16 +1,19 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-shifter rewrite
+visual nodes...
 !! When use sample in fx not play, sometimes it doesn't play. Due to not having loaded yet? Needs to retry somehow?
 wavetable synth
-!dbd is weak?
-!! audionode caching and reuse to avoid GC glitch over time
 !!Error "AudioParam.setTargetAtTime: Argument 3 is not a finite floating-point value" "Bad audioParam segment setTargetAtTime 123.53378433702585 436.6550303030304,-Infinity"
  b saw, dur=1/4, oct=2, fx=disperser{[400:!400ms,100]e@s}
 !! Get error when starting a multiband with time in it
  i noise, fx=multiband{{i}->[1:1,0:15]t@f{time:4*time+i},16}/8
  🟠 Warning invalid piecewise piece param: (e,b) => b [object Object] [object Object]
+grain should have offset param, would allow more interesting effects; granular delays etc
+butterworth band filter
+envelope follower
+vocoder
+!dbd is weak?
 !Trance can sound out of tune
  toscale{} function: takes a Freq and quantises to a scale, default to current global scale/root. Try using it for trance cutoff
  ?Pick sounded a bit out of tune too, had to increase decay? Is this at lower octaves?

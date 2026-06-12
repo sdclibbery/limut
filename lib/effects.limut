@@ -15,23 +15,37 @@ set phaser = {control:[0,1]l4@f,lo:300,hi:2600,stages:4,q:1/2} -> {
   }
 }/2
 
-set grain = {ratio, length:0.03, phase:0} ->
-delay{ lfo{ // Moving delay to change the pitch
-  wave: 'sawtooth',
-	freq: 1/length,
-  lo: ratio>=1 ?? length*(ratio-1)*1.2 ?: 0,
-  hi: ratio>=1 ?? 0 ?: length*(1-ratio)*1.2,
-  phase: phase
-}, max:1 }
->> gain{ // cosine envelope to silence the distortion when the delay has to reset
-	osc{'saw',freq:1/length,phase:phase }
-	>>shaper{{x}->cos{pi*x*0.6},oversample:'none'}
-}
+// Linear sawtooth delay ramp for one grain: delayTime ramps between a and b seconds
+// over each period of length seconds with an instantaneous reset, giving an exact
+// playback rate of 1-(b-a)/length. phase (0..1) staggers overlapping grains' resets.
+set grainramp = {a, b, length, phase} -> [
+  (a+(b-a)*phase)*1s :\((1-phase)*length*1s),
+  b*1s :\0,
+  a*1s :\(phase*length*1s)
+]t@s
 
-set shifter = {ratio, length:0.2} -> { // Multiple overlapping pitch shifting grains
-	grain{ratio,length:length,phase:0/2},
-  grain{ratio,length:length,phase:1/2}
-}>>lpf{1000,q:0.1} // Lpf to reduce crackle
+// Smoothstep grain window, exactly zero at the grain's delay reset. Windows at
+// phase p and p+1/2 sum to exactly 1: paired grains crossfade with no amplitude modulation.
+set grainwindow = {length, phase} ->
+  phase<=1/2
+  ?? [4*phase^2*(3-4*phase):~((1/2-phase)*length*1s), 1:~(length/2*1s), 0:~(phase*length*1s)]t@s
+  ?: [4*(1-phase)^2*(4*phase-1):~((1-phase)*length*1s), 0:~(length/2*1s), 1:~((phase-1/2)*length*1s)]t@s
+
+set grain = {ratio, length:0.03, phase:0, max} ->
+delay{ // Sawtooth delay ramp resamples the audio to shift its pitch by exactly ratio
+  grainramp{
+    a: ratio>=1 ?? (ratio-1)*length ?: 0,
+    b: ratio>=1 ?? 0 ?: (1-ratio)*length,
+    length:length, phase:phase
+  },
+  max: max??max?:length*16*1s
+}
+>> gain{ grainwindow{length:length, phase:phase} } // Window out the delay reset
+
+set shifter = {ratio, length:0.1} -> { // Two overlapping grains; windows sum to one
+	grain{ratio, length:length, phase:0},
+  grain{ratio, length:length, phase:1/2}
+}
 
 set ultracomb = {f:smooth{[]r1@f,att:1}, p:smooth{[]r2/3@f,att:1}, s:smooth{[]r1/2@f,att:1}, stages:6} -> series{{
   dry,

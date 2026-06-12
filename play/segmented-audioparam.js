@@ -322,6 +322,25 @@ define(function (require) {
     assert(['setValueAtTime', 2,8.5], ap.calls[8])
     assert(['setValueAtTime', 0,10], ap.calls[9])
 
+    // Repeating linear timevar with a zero-size mid-cycle segment (eg a phase-shifted grain
+    // delay ramp `[d0:\s1, b:\0, a:\s2]t@s`): the zero-size segment must produce a clean
+    // discontinuity (jump) each cycle, with correct linear ramps either side. Values ramp
+    // 0 -> 0.75 over 3/4 beat, jump to 0, ramp 0 -> 0 (flat wrap) over the last 1/4 beat.
+    ap = mockAp()
+    buildAllMain(ap, evalAtMain( timeVar([0, 0.75, 0], [lin,lin,lin], [3/4, 0, 1/4], undefined, lin, {addSegmentData:true}) ))
+    assert(19, ap.calls.length)
+    assert(['setValueAtTime', 0,0], ap.calls[0]) // Initial value (count 1 = start of a ramp cycle)
+    assert(['setValueAtTime', 0,2], ap.calls[1]) // count 1 (time 2): ramp cycle start
+    assert(['linearRampToValueAtTime', 1.5,3.5], ap.calls[2]) // count 1.75: ramp peak (0.75 doubled)
+    assert(['setValueAtTime', 0,3.5], ap.calls[3]) // zero-size segment: instantaneous jump down
+    assert(['linearRampToValueAtTime', 0,4], ap.calls[4]) // flat wrap segment to count 2
+    assert(['setValueAtTime', 0,4], ap.calls[5]) // next cycle, same shape
+    assert(['linearRampToValueAtTime', 1.5,5.5], ap.calls[6])
+    assert(['setValueAtTime', 0,5.5], ap.calls[7])
+    assert(['linearRampToValueAtTime', 0,6], ap.calls[8])
+    assert(['setValueAtTime', 0,10], ap.calls[17]) // still going strong at the end of the event
+    assert(['linearRampToValueAtTime', 1.5,11.5], ap.calls[18])
+
     // bpm (tempo) change mid-chain. A long-lived fx/bus chain pivots its count<->time mapping on the
     // live beat (params.beat — a live getter for persistent chains), so a tempo change keeps it locked
     // to the beat grid in both rate AND phase, instead of stalling or drifting from a frozen anchor.
