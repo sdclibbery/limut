@@ -1,6 +1,10 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
+Nasty crackle when gain node pooling is in use, and the player has a filter eg:  p ping, oct=2, lpf=300, dur=1/100 
+Ask Claude for a good default mastering chain
+Access to player output audio from a node
+Should be able to write actual unit tests in limut for limut functions
 visual nodes...
 !! When use sample in fx not play, sometimes it doesn't play. Due to not having loaded yet? Needs to retry somehow?
 wavetable synth

@@ -5,7 +5,7 @@ description: Verify audio-graph wiring changes (fx chains, connectable construct
 
 # Verifying limut audio-graph wiring
 
-Audio output is unobservable in headless Chrome (no speakers, no recording). But the *constructed graph* is observable: after driving the app's `updateCode` path, you can read back `players.getById('p1')._fx.chain`, walk node connections, etc. For non-trivial wiring changes this is the only meaningful runtime evidence beyond the inline test suite — which doesn't cover audio-graph construction at all.
+Headless Chrome has no speakers, but it still *renders* audio to a null sink — so two things are observable: the *constructed graph* (read back `players.getById('p1')._fx.chain`, walk node connections, etc.) and the *rendered samples* (via the app's master `AnalyserNode`, see "Detecting audible glitches numerically" below). For non-trivial wiring changes these are the only meaningful runtime evidence beyond the inline test suite — which doesn't cover audio-graph construction at all.
 
 ## What this skill verifies
 
@@ -13,11 +13,12 @@ Audio output is unobservable in headless Chrome (no speakers, no recording). But
 - The fallback path in `player-fx.js`, `graph.js` (loop/mix), etc. runs when expected.
 - Connectable operator output (`>>`, `+` on nodes, etc.) is a real audio node.
 - Per-frame vs per-event scheduling produces the chain you expect (gain wraps with automated `.gain` vs static value).
+- Clicks/crackles/discontinuities in the rendered output — numerically, via the analyser (below). This caught the gain-pool crackle that graph inspection alone could never show.
 
 ## What this skill cannot verify
 
-- Whether the chain actually *sounds* right — headless Chrome has no audio output. For tonal/perceptual checks, the user has to listen in a real browser.
-- Anything that depends on real-time audio processing (envelope shapes, filter sweeps) — `system.audio.currentTime` advances in real wall-clock time, virtual-time doesn't help.
+- Whether the chain *sounds* musically right (tone, balance, perceptual quality) — for that the user has to listen in a real browser. But objectively-detectable defects (discontinuities, blasts, silence) ARE verifiable numerically.
+- Anything that depends on virtual time — `system.audio.currentTime` advances in real wall-clock time, virtual-time doesn't help. Measurement runs take real seconds.
 
 ## The harness
 
@@ -108,6 +109,35 @@ Drop a file at `verify-<thing>.html` at the repo root, alongside `index.html`. R
    `AudioParam.value` reflects live automation (`setTargetAtTime` etc.), so sampling it twice ~1s apart in real time also proves a per-frame sweep is actually moving. Collected nodes with default param values (e.g. 350 Hz biquads) are orphans built outside the audible chain — treat them as a bug signal (lambda-valued args used to produce one per event via eager modifier evaluation; fixed by `evalModifiers` in player/eval-param.js).
 
 7. **DSL preludes**: `bpf`, `lpf` and friends are not built in — they're lambdas from `lib/nodes.limut` (loaded by `include`). In a harness, define what you need inline (e.g. `set bpf = {freq, q:1} -> biquad{'bandpass', freq:freq, q:q}`) rather than relying on async `include` timing.
+
+## Detecting audible glitches numerically
+
+Headless Chrome renders the realtime `AudioContext` to a null sink, so the app's master analyser sees real rendered samples. To hunt clicks/crackles (proven on the June 2026 gain-pool crackle, which showed maxDelta 1.19 vs 0.0005 clean):
+
+```js
+system.analyser.fftSize = 32768                       // ~0.7s of history per grab
+const buf = new Float32Array(32768)
+// inside the tick loop, each frame:
+system.analyser.getFloatTimeDomainData(buf)
+for (let i = 1; i < buf.length; i++) {
+  const d = Math.abs(buf[i] - buf[i-1])
+  if (d > maxDelta) maxDelta = d
+  if (d > 0.05) bigJumps++; else if (d > 0.02) smallJumps++
+}
+```
+
+- Only deltas *within* one grab are valid (consecutive grabs overlap/gap at their boundary — but the loop above never crosses it).
+- Always run a **scenario matrix** (suspect condition on/off × cofactor on/off) in one page load and compare relative numbers; absolute thresholds depend on signal content. A legit low-frequency signal has per-sample deltas ≈ `amplitude·2πf/sampleRate` — for the repro tones used here that's ~0.005, so >0.02 is a real discontinuity.
+- Warm up ~2s after `updateCode` before measuring; drain ~1.5s with `updateCode('')` between scenarios. Repeat runs or shuffle scenario order before trusting a small count (~tens of samples over threshold can be one-off jank).
+- Single-sample isolated blips that don't reproduce across runs are noise; real bugs at per-event rates produce thousands of over-threshold samples.
+
+Useful knobs while bisecting:
+
+- **Toggle pooling without reloading**: `limutNodePool.enabled = false` works mid-session — the patched `createGain` keeps running but `release()` no-ops and the pool drains, which is equivalent to `?nopool` for A/B within one page load. Clear `pool.nodes.length = 0` (and `pool.quarantine.length = 0`) between scenarios.
+- **Attribute node creations to call sites**: wrap `system.audio.createGain` and bucket `new Error().stack` lines — instantly shows how many gains per event and from where (e.g. revealed `perFrameAmp` creates a second pooled gain per event because default `amp` is a function).
+- **Bisect lifecycle resets**: replace `limutNodePool.release` with a copy controlled by flags (`doCancel`, `doValue`, per-site `kinds`) to isolate which reset write and which node kind causes an artifact.
+
+**Caveat**: an `OfflineAudioContext` re-creation of the same call sequence (even with `suspend()`-exact op timing) can come back clean when the realtime app glitches — main-thread-vs-render-thread races (e.g. param writes applying before same-task disconnects) only exist in the realtime context. Test the real app, not a simulation, before concluding "no bug".
 
 ## Running the harness
 
