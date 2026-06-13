@@ -13,6 +13,7 @@ define(function (require) {
   let {fixedEcho} = require('play/effects/echo')
   let destructor = require('play/destructor')
   let {createPlayerFxChain,getPlayerFxChainKey} = require('play/player-fx')
+  let playerPre = require('play/player-pre')
 
   let quantise = (v, step) =>{
     return Math.round(v*step)/step
@@ -101,6 +102,8 @@ define(function (require) {
   }
 
   let fxMixChain = (params, node) => {
+    let pre = playerPre.get(params._player.id) // Tap the dry per-event voice for `id.pre` consumers; auto-cleans via the event destructor's no-arg disconnect
+    if (pre) { node.connect(pre) }
     let chainParams = getParams(params)
     let key = ''
     for (let k in chainParams) { key += chainParams[k] }

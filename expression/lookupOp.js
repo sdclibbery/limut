@@ -5,6 +5,7 @@ define(function(require) {
   let {mainParam} = require('player/sub-param')
   let {evalParamFrame,evalFunctionWithModifiers} = require('player/eval-param')
   let {addVarFunction,remove} = require('predefined-vars')
+  let playerPre = require('play/player-pre')
 
   let lookupOp = (l,r, event,b,evalRecurse) => {
     let originalR = r
@@ -57,6 +58,12 @@ define(function(require) {
       }
       let player = players.getById(ml)
       if (key === 'exists') { return !!player ? 1 : 0 }
+      if (key === 'pre') { // Tap this player's pre-fx audio output as a connectable node (works even before the player exists)
+        let id = ml.toLowerCase()
+        let result = (e,b,er) => playerPre.getConsumerTap(id, (e && e._destructor) || (event && event._destructor))
+        result._chordPlaceholder = true // Prevent chord expansion building audio nodes
+        return result
+      }
       if (player) { // lookup a param on another player's events
         let originalB = evalRecurse((e,originalB) => originalB, event,b)
         let es = player.currentEvent(originalB)
@@ -143,6 +150,20 @@ define(function(require) {
     assert([1,2], lookupOp(['p1','p2'], 'foo', {},0,er))
     delete players.instances.p1
     delete players.instances.p2
+
+    // .pre — tap a player's pre-fx audio as a connectable node (works with no matching player)
+    let preP1 = lookupOp('p1', 'pre', {},0,er)
+    assert('function', typeof preP1)
+    assert(true, !!preP1._chordPlaceholder) // Marked so chord expansion doesn't build nodes
+    let nodeP1 = preP1({},0,er) // No _destructor: the shared registry node itself
+    assert(true, nodeP1 instanceof AudioNode)
+    assert(true, nodeP1 === lookupOp('p1', 'pre', {},0,er)({},0,er)) // Same id -> same registry node
+    assert(true, nodeP1 !== lookupOp('p2', 'pre', {},0,er)({},0,er)) // Distinct id -> distinct node
+    let registered = []
+    let iso = preP1({_destructor:{ disconnect:(n)=>registered.push(n) }},0,er) // With a destructor: per-consumer isolation gain
+    assert(true, iso instanceof AudioNode)
+    assert(true, iso !== nodeP1) // Isolation gain, not the shared registry node
+    assert(1, registered.length) // One teardown shim registered
 
     console.log('lookupOp tests complete')
   }

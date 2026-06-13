@@ -15,6 +15,7 @@ define((require) => {
   let consoleOut = require('console')
   let {echo} = require('play/effects/echo')
   let {createPlayerFxChain,getPlayerFxChainKey} = require('play/player-fx')
+  let playerPre = require('play/player-pre')
 
   let effectChain = (params, node) => {
     node = effects(params, node)
@@ -123,6 +124,8 @@ define((require) => {
       bus.crossfade = system.audio.createGain() // Crossfade from old version of bus to new
       input.connect(bus.crossfade)
       bus.destructor.disconnect(bus.crossfade)
+      let pre = playerPre.get(bus.id) // Tap the bus's pre-effects input for `id.pre` consumers (idempotent: Web Audio dedups the repeated connect)
+      if (pre) { input.connect(pre) }
       if (bus.oldBus) {
         if (bus.oldBus.destroy) { bus.oldBus.destroy() } // Fade out old bus and destroy
         delete bus.oldBus
