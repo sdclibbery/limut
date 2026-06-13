@@ -25,14 +25,17 @@ define(function(require) {
     }
   }
 
+  let reservedBuses = ['main', 'silent'] // Always-present buses (see play/main-bus.js); preserved across stops and not matched by override wildcards
+  let isReservedBus = o => reservedBuses.includes(o)
+
   players.stopAll = () => {
     for (let id in players.instances) {
-      if (id === 'main') { continue } // Preserve main bus so reverb tails keep playing
+      if (isReservedBus(id)) { continue } // Preserve reserved buses so reverb tails keep playing
       if (players.instances[id].destroy) { players.instances[id].destroy() }
       if (players.instances[id]._fx && players.instances[id]._fx.destroy) { players.instances[id]._fx.destroy() }
     }
     let preserved = {}
-    if (players.instances.main) { preserved.main = players.instances.main } // Preserve main bus so it can be cleaned up when it gets recreated on code update
+    reservedBuses.forEach(id => { if (players.instances[id]) { preserved[id] = players.instances[id] } }) // Preserve reserved buses so they can be cleaned up when recreated on code update
     players.instances = preserved
     players.overrides = {}
   }
@@ -42,7 +45,7 @@ define(function(require) {
     return players.instances[id.toLowerCase()]
   }
 
-  let isMain = o => o === 'main' // Main bus; we don't apply wildcards to it
+  let isMain = o => isReservedBus(o) // Reserved buses; we don't apply wildcards to them
 
   players.expandOverrides = () => {
     let newOverrides = {}
@@ -112,6 +115,8 @@ define(function(require) {
     testOverrideWildcard(['p1','p2','r1','main'], {'!p1':{foo:1}}, {p2:{foo:1},r1:{foo:1}})
     testOverrideWildcard(['p1','p2','r1','main'], {'m*':{foo:1}}, {})
     testOverrideWildcard(['p1','p2','r1','main'], {'main':{foo:1}}, {main:{foo:1}})
+    testOverrideWildcard(['p1','silent'], {'*':{foo:1}}, {p1:{foo:1}}) // silent is a reserved bus, excluded from wildcards
+    testOverrideWildcard(['p1','silent'], {'silent':{foo:1}}, {silent:{foo:1}}) // but an explicit override still applies
 
     players.instances = { pp: 5 }
     assert(5, players.getById('pp'))
