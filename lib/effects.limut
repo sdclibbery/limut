@@ -82,6 +82,13 @@ set duck = {length:0.5, depth:1, period:1, attack:0.1} -> [
   1:\attack
 ]t@s
 
+// Envelope follower: rectify + smooth the input into a ~0..1 control signal tracking its
+// volume envelope, for driving a gain (sidechain / duck / gate). freq sets the response
+// speed (higher = snappier, lower = smoother). Symmetric smoothing (single speed) — pure
+// WebAudio nodes can't do asymmetric attack/release without a worklet. boost scales the
+// output; the default pi/2 restores a sine's peak level (full-wave rectified average = 2A/pi).
+set follower = {freq:20, boost:pi/2} -> shaper{ {x} -> abs{x} } >> bwlpf4{freq} >> gain{boost}
+
 // Multiband processing: split into count perceptually even (log-spaced) frequency bands
 // with a complementary (difference-of-lowpasses) crossover, run each band through the chain
 // built by the callback (given the band index and the band's centre frequency), then sum
