@@ -131,3 +131,25 @@ set multibandbp = {chain:1, count:3} -> parallel{
   {i} -> bwlpf{20*1000^((i+1)/count)} >> bwhpf{20*1000^(i/count)} >> chain{i, 20*1000^((i+1/2)/count)},
   count
 }
+
+// Vocoder: impose the spectral envelope of a modulator player onto the carrier
+// (the signal in this fx chain). Pass the modulator as a .pre tap, eg
+// vocoder{voice.pre}; route the modulator to the silent bus so it is heard only
+// as the control signal. The carrier should be harmonically rich AND bright
+// (detuned saws, pulse, or noise) so every band has carrier energy to pass.
+// count = number of bands. freq = envelope follower speed (higher = crisper
+// consonants). boost scales the overall level. tilt is pre-emphasis: it lifts
+// the higher bands (by tilt*6 dB/octave above 100Hz) to counteract the natural
+// high-frequency rolloff of most modulators - without it the output just
+// faithfully reproduces a dark modulator and sounds muffled, and adding bands
+// does not help. Raise tilt for brighter/more intelligible speech, tilt:0 for
+// a flat (un-emphasised) vocoder.
+// Each band: the carrier band (split out by multibandbp) is gain-modulated by
+// the follower of the modulator's same band (split with the same edges).
+set vocoder = {mod, count:16, freq:40, tilt:0.8, boost:pi/2} -> multibandbp{
+  {i, centre} -> gain{
+    mod >> bwlpf{20*1000^((i+1)/count)} >> bwhpf{20*1000^(i/count)}
+        >> follower{freq, boost:boost*(centre/100)^tilt}
+  },
+  count
+}
