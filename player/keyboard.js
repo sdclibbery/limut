@@ -14,6 +14,15 @@ define(function(require) {
     let note = rowNotes[(key || '').toLowerCase()]
     return note !== undefined ? note : (parseInt(key) || 0)
   }
+  // Derive a layout/modifier-stable key char from the physical key code. On macOS
+  // holding Alt/Option rewrites event.key to an accented char ('a' -> 'å'), which
+  // would map to note 0; event.code stays 'KeyA' regardless of held modifiers.
+  let eventToKey = (e) => {
+    let code = e.code || ''
+    if (code.startsWith('Key')) { return code.slice(3).toLowerCase() } // 'KeyA' -> 'a'
+    if (code.startsWith('Digit')) { return code.slice(5) } // 'Digit3' -> '3'
+    return e.key // Fall back to the logical key for anything else
+  }
 
   // Module-level registry of active keyboard players. Each entry is {noteOn, noteOff}.
   // A single pair of global window listeners dispatches each physical key press to
@@ -29,17 +38,20 @@ define(function(require) {
   let localEnabled = false
   let setLocalEnabled = (enabled) => { localEnabled = !!enabled }
 
-  let globalKeydown = ({key, repeat, ctrlKey, shiftKey}) => {
+  let globalKeydown = (e) => {
+    let {key, repeat, ctrlKey, shiftKey, altKey} = e
     if (repeat) { return }
-    if (key === "Shift" || key === "Control") { return } // Modifier keys set velocity, dont play a note
+    if (key === "Shift" || key === "Control" || key === "Alt") { return } // Modifier keys set velocity/sharpen, dont play a note
     if (!localEnabled) { return } // Only play local notes while hovering the keyboard icon
-    activePlayers.forEach(entry => entry.noteOn(key, ctrlKey, shiftKey, 'local'))
-    keyEventListeners.forEach(cb => cb(key, 'down', ctrlKey, shiftKey))
+    let noteKey = eventToKey(e)
+    activePlayers.forEach(entry => entry.noteOn(noteKey, ctrlKey, shiftKey, altKey, 'local'))
+    keyEventListeners.forEach(cb => cb(noteKey, 'down', ctrlKey, shiftKey, altKey))
   }
-  let globalKeyup = ({key}) => {
-    if (key === "Shift" || key === "Control") { return }
-    activePlayers.forEach(entry => entry.noteOff(key, 'local'))
-    keyEventListeners.forEach(cb => cb(key, 'up'))
+  let globalKeyup = (e) => {
+    if (e.key === "Shift" || e.key === "Control" || e.key === "Alt") { return }
+    let noteKey = eventToKey(e)
+    activePlayers.forEach(entry => entry.noteOff(noteKey, 'local'))
+    keyEventListeners.forEach(cb => cb(noteKey, 'up'))
   }
   let listenersAttached = false
   let ensureListeners = () => {
@@ -59,9 +71,9 @@ define(function(require) {
 
   // Apply a remote peer's key event to every active player, namespaced by source
   // (the peer id) so peers' note-offs dont collide. Does not re-notify listeners.
-  let handleRemoteKey = (key, action, ctrlKey, shiftKey, source) => {
+  let handleRemoteKey = (key, action, ctrlKey, shiftKey, altKey, source) => {
     if (action === 'down') {
-      activePlayers.forEach(entry => entry.noteOn(key, ctrlKey, shiftKey, source))
+      activePlayers.forEach(entry => entry.noteOn(key, ctrlKey, shiftKey, altKey, source))
     } else {
       activePlayers.forEach(entry => entry.noteOff(key, source))
     }
@@ -70,8 +82,8 @@ define(function(require) {
   let keyboardPlayer = (params, player, baseParams) => {
     let entry
     let noteOff = (key, source) => {
-      let buttonIdx = keyToNote(key)
-      let noteId = source + ':' + buttonIdx
+      let noteValue = keyToNote(key)
+      let noteId = source + ':' + noteValue
       for (let k in player.events) {
         let e = player.events[k]
         if (!!e._noteOff && !e._stopping && e._keyboardNote === noteId) { // Skip voices already releasing, else re-triggering _noteOff jumps the gain back up (click) and races the original destroy timeout
@@ -83,15 +95,15 @@ define(function(require) {
         removePlayer(entry)
       }
     }
-    let noteOn = (key, ctrlKey, shiftKey, source) => {
-      let buttonIdx = keyToNote(key)
+    let noteOn = (key, ctrlKey, shiftKey, altKey, source) => {
+      let noteValue = keyToNote(key)
       if (player._shouldUnlisten) { return } // Dont play any new events if player is being cleaned up!
       let now = metronome.timeNow()
       let currentCount = metronome.beatTime(now)
       let lastBeat = metronome.lastBeat()
       let event = {
-        _keyboardNote: source + ':' + buttonIdx, // Namespaced by source so peers' note-offs dont collide
-        value: buttonIdx,
+        _keyboardNote: source + ':' + noteValue, // Namespaced by source so peers' note-offs dont collide
+        value: noteValue,
         dur: 1,
         vel: 3/4,
         _time: now,
@@ -104,6 +116,7 @@ define(function(require) {
       // Set velocity from modifier keys after baseParams (whose default vel would otherwise clobber it)
       if (ctrlKey) { event.vel = 1/2 } // Half velocity when control is held
       if (shiftKey) { event.vel = 1 } // Full velocity when shift is held
+      if (altKey) { event.sharp = 1 } // Sharpen the note a semitone when alt/option is held
       event = applyOverrides(event, params)
       let events = player.processEvents([event])
       events.forEach(e => { e._noteOff = () => {} }) // Default _noteOff callback does nothing

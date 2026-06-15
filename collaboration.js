@@ -107,9 +107,9 @@ define(function (require) {
         }
       } else if (data && typeof data === 'object' && data.type === 'keyboard') {
         let from = data.from || conn.peer
-        keyboard.handleRemoteKey(data.key, data.action, data.ctrlKey, data.shiftKey, from)
+        keyboard.handleRemoteKey(data.key, data.action, data.ctrlKey, data.shiftKey, data.altKey, from)
         if (isServer) {
-          let relay = { type: 'keyboard', from: from, key: data.key, action: data.action, ctrlKey: data.ctrlKey, shiftKey: data.shiftKey }
+          let relay = { type: 'keyboard', from: from, key: data.key, action: data.action, ctrlKey: data.ctrlKey, shiftKey: data.shiftKey, altKey: data.altKey }
           connections.forEach((c) => { if (c !== conn && c.open) { c.send(relay) } })
         }
       } else if (data && typeof data === 'object' && data.type === 'slider') {
@@ -228,9 +228,9 @@ define(function (require) {
     connections.forEach((conn) => { if (conn.open) { conn.send(msg) } })
   })
 
-  keyboard.onKeyEvent((key, action, ctrlKey, shiftKey) => {
+  keyboard.onKeyEvent((key, action, ctrlKey, shiftKey, altKey) => {
     if (connections.size === 0) { return }
-    let msg = { type: 'keyboard', key: key, action: action, ctrlKey: ctrlKey, shiftKey: shiftKey }
+    let msg = { type: 'keyboard', key: key, action: action, ctrlKey: ctrlKey, shiftKey: shiftKey, altKey: altKey }
     connections.forEach((conn) => { if (conn.open) { conn.send(msg) } })
   })
 

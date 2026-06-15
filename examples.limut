@@ -5250,3 +5250,25 @@ c supersaw, fx=vocoder{m.pre}*10>>mix{reverb{1/2}}, oct=(2,3)
 // k pick -707 crop 8, fx>>=multiband{{i,f}->shifter{523/f},16}
 
 
+// HipHop backing track
+include 'personal/everything.limut'
+dg dmx, channel=63, lights={0:4/64}
+ds dpulse, channel=(33,43,53), input=smooth{main.pulse,8}, fore=green
+dw dmxwash, channel=(1,15), fore=#111*(ph.pulse.0) + #011*(b.pulse.0)
+dw2 dmxwash, channel=(8,22), fore=#020*(pk.pulse.0)
+w webcam, device=['5mp':24,'2mp':8]t, jpeg=[0:24,3/4:8]t
+set bpm=112
+set scale='minor'
+// set main fx=stanh
+set main amp=2, hpf={24,q:-3}, low={0.5dB,freq:120}, high={1dB,freq:8000}, drive=1/64, compress={2.5,threshold:-14dB,knee:12dB,att:0.05,rel:0.2}
+set p* swing={54,period:1/2}
+pk bd808 -2..... crop 16, fx=stanh{4}
+pb sd808 ....9..., fx=mix{reverb{1/2}}>>stanh{4}
+ph h808 000o_0 crop 12, dur=1/3, fx=stanh
+pr rs808 ....0, dur=1/2
+pm ma808 ...0, dur=1/2
+hey perc !, dur=7, fx=mix{echo>>airverb}, sample=[1,2,3]r, vel=gp.rsu
+r piano 02<-1-2>... crop 14 + 7., oct=2, fx=darkverb, vel=gp.rsx
+b reese gamepad lt:vel, cutoff=this.vel, fx=mix4{bwhpf{500}>>airverb}>>stanh*-3db, envelope='full'
+
+

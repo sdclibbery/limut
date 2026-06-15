@@ -1,8 +1,7 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-? sharp and flat for keyboard player?
-? vvocoder vocoder tuned for voices, instead of even bands
+?Make preset? // l supersaw keyboard, oct=(2,3), envelope='organ', fx=mix{airverb>>tape}, glide=1/2, lpf=[400:4000]n4
 Claude fable suggested good default mastering chain; try it out:
  set main amp=1.4, hpf={24,q:-3}, low={0.5dB,freq:120}, high={1dB,freq:8000}, drive=1/64, compress={2.5,threshold:-14dB,knee:12dB,att:0.05,rel:0.2}
   NOTE for heavy four-on-the-floor material the 50 ms attack with 0.2 s release can pump audibly if you push amp hard — raise rel to ~0.3 or back off amp if you hear it
@@ -21,6 +20,9 @@ wavetable synth
 visual nodes...
 Should be able to write actual unit tests in limut for limut functions? How would this work?
 !dbd is weak?
+? Can vocoder be used inside a single player? Eg a sample player with a vocal, and the fx chain applies it to a saw?
+ ? s sample, url='..', fx=osc.saw{eventpitch}>>vocoder{this.pre} ???
+? vvocoder vocoder tuned for voices, instead of even bands?
 ? duckp player .pre based sidechain duck using envelope follower
 !Trance can sound out of tune
  toscale{} function: takes a Freq and quantises to a scale, default to current global scale/root. Try using it for trance cutoff
