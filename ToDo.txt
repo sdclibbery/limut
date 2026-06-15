@@ -1,7 +1,9 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-?Make preset? // l supersaw keyboard, oct=(2,3), envelope='organ', fx=mix{airverb>>tape}, glide=1/2, lpf=[400:4000]n4
+Realtime players should assign voice to notes so glide handles chords properly
+Multiband effect that does spectral side chain ducking
+ Eg I have a lead that sometimes can't be heard over an arp. I want to duck the arp spectrally based on the lead
 Claude fable suggested good default mastering chain; try it out:
  set main amp=1.4, hpf={24,q:-3}, low={0.5dB,freq:120}, high={1dB,freq:8000}, drive=1/64, compress={2.5,threshold:-14dB,knee:12dB,att:0.05,rel:0.2}
   NOTE for heavy four-on-the-floor material the 50 ms attack with 0.2 s release can pump audibly if you push amp hard — raise rel to ~0.3 or back off amp if you hear it
