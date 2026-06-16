@@ -2,6 +2,7 @@
 define(function(require) {
   let number = require('expression/parse-number')
   let {units} = require('units')
+  let {mainParam} = require('player/sub-param')
 
   let overrideKey = (v) => '@'+Math.round(v*16384)/16384
 
@@ -37,9 +38,12 @@ define(function(require) {
   let applyModifiers = (results, mods, event, beat, interval, evalParamEvent,evalParamFrame) => {
     let modBeat = beat
     let modCount = event.count
-    if (mods.time) { // Generic time manipulation: supply expression that returns new time value
-      modCount = evalParamEvent(mods.time, event)
-      modBeat = evalParamFrame(mods.time, event, modBeat)
+    if (mods.time !== undefined) { // Generic time manipulation: supply expression that returns new time value (0 is a valid target time, so guard on !== undefined)
+      // The time expression can evaluate to an interval-wrapped value, eg {value, interval:'frame'} when it
+      // uses a per-frame var like `time` and is evaluated under withInterval (the per-frame fx/gain path). The
+      // warped time must be a scalar beat/count, so mainParam unwraps the wrapper before it reaches downstream timevars.
+      modCount = mainParam(evalParamEvent(mods.time, event))
+      modBeat = mainParam(evalParamFrame(mods.time, event, modBeat))
     }
     if (mods.per !== undefined) {
       let per = units(mods.per, 'b')
@@ -101,6 +105,27 @@ define(function(require) {
     v.modifiers = {bar:3}
     assert(2, addModifiers(v, {foo:2}).modifiers.foo)
     assert(3, addModifiers(v, {foo:2}).modifiers.bar)
+
+    // applyModifiers {time:} handling
+    let er = (val,e,b) => (typeof val === 'function') ? val(e,b) : val
+    let res
+
+    // No time modifier leaves beat (modBeat) and event count (modCount) untouched
+    res = {}; applyModifiers(res, {}, {count:3}, 5, 'frame', er, er)
+    assert(5, res.modBeat); assert(3, res.modCount)
+
+    // A {time:} value that resolves to an interval-wrapped object (eg {value, interval:'frame'} from a
+    // per-frame `time` var under withInterval) must be unwrapped to a scalar - this is the multiband bug.
+    res = {}; applyModifiers(res, {time:{value:12,interval:'frame'}}, {count:3}, 3, 'frame', er, er)
+    assert(12, res.modBeat); assert(12, res.modCount)
+
+    // A warped time of exactly 0 is a valid target time and must be honoured, not skipped as falsy
+    res = {}; applyModifiers(res, {time:0}, {count:3}, 3, 'frame', er, er)
+    assert(0, res.modBeat); assert(0, res.modCount)
+
+    // A plain numeric warped time passes through unchanged
+    res = {}; applyModifiers(res, {time:7}, {count:3}, 3, 'frame', er, er)
+    assert(7, res.modBeat); assert(7, res.modCount)
 
     console.log('Time modifiers tests complete')
   }

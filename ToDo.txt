@@ -1,9 +1,6 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!! Get error when starting a multiband with time in it
- i noise, fx=multiband{{i}->[1:1,0:15]t@f{time:4*time+i},16}/8
- 🟠 Warning invalid piecewise piece param: (e,b) => b [object Object] [object Object]
 !! When use sample in fx not play, sometimes it doesn't play. Due to not having loaded yet? Needs to retry somehow?
 Wavetable oscillator that crossfades between arbitrary sample waveforms
  ! wtlerp must handle wt values out of range by clamping or modding
