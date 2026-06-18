@@ -5272,3 +5272,33 @@ r piano 02<-1-2>... crop 14 + 7., oct=2, fx=darkverb, vel=gp.rsx
 b reese gamepad lt:vel, cutoff=this.vel, fx=mix4{bwhpf{500}>>airverb}>>stanh*-3db, envelope='full'
 
 
+// Construct One
+include 'personal/everything.limut'
+dg dmx, channel=63, lights={0:4/64}
+ds dmatrix2, channel=(33,43,53), input=smooth{main.pulse*3,8}, fore*=1-tg, back*=tg
+dw dmxwash, channel=(1,15), fore=#080*smooth{l.pulse.0+b.pulse.0}*(tg+1/4)
+dw2 dmxwash, channel=(8,22), fore=#020*smooth{cr.pulse.0}*(1-tg+1/4)+#001*pkk.pulse.0
+w webcam, device=['5mp':24,'2mp':8]t, jpeg=[[0,1/4]r1/4@f:24,[0:1]r1/4@f:8]t, mid=[1:24,[]r:8]t
+set bpm=120
+set scale='phrygian'
+set main amp=1.4, hpf={24,q:-3}, low={0.5dB,freq:120}, high={1dB,freq:8000}, drive=1/64, compress={2.5,threshold:-14dB,knee:12dB,att:0.05,rel:0.2}
+set p* fx>>=stanh, delay|=[():30,[1,3]r/4:2]t
+pk perc X..., sample=3
+pkk perc .X. crop 16, swing=54, vel=1/3, rate=1.2, hpf=80
+ph perc ..-., sample=4, vel=1/3, fx=stanh
+phh perc -=- crop 32, sample=4
+pc perc ....O..., rate=2/3, fx=stanh{2}, vel=1/8, room=1/6
+b reese ..0., sus=0.6, vel=gp.lsx, cutoff=gp.lsu, drive={1/4,mix:smooth{gp.lsl}}
+bb techbass 0077, vel=gp.lsx/3, cutoff=gp.lsu, drive={1/4,mix:smooth{gp.lsr}}, fx=duck>>stanh, swing=52, pan=[-1,1]/4
+cr croak, dur=8, vel=gp.rsx, fx=stanh>>mix{tape{1/4}}>>mix{airverb}>>echo{80ms}>>stanh>>mix{tg,gp.rsl}, addc=12*gp.rsv
+k pick 027. crop 14 + 68, vel=gp.rsx-gp.rsl, cutoff=gp.rsu, decay=gp.rsr, fx=mix{darkverb}>>mix{multiband{{i}->echo{i*1/8*[1,2,3]r{seed:i},feedback:0.6},12}}>>duck{depth:1/4}*-1db, oct+=[0,1], pan=[-1,1]/2
+preset swooplead blues, drive={1/4,mix:1/4}, fx=mix3{darkverb}>>mix{[1:!1/4,0:0]t@f*multiband{{i}->echo{i*1/8*[1,2,3]r{seed:i},feedback:0.6},12},3/4}>>duck{depth:1/4}*+5db, glide=1/2, oct+=1
+l swooplead gamepad lt:vel, fx>>=tg
+lk blare keyboard, fx=[1:_8,tg]e*darkverb*-5db, glide=1/2, pan=[-1,1]s4@f
+// set (p*,bb,cr,dw*) vel=0, fore=#000001
+// set ds input=riser^3
+// f perc o, vel=riser^6, fx=flanger{riser^4}>>darkverb, sample=2, rate=1/2, pan=-1/2
+// g glitch, dur=1, sus=1/8, fx=darkverb, oct=4, vel=1/2+1/2*riser^3, pan=1/2
+// set b lpf=200+5000*riser^3, drive=riser^16
+
+

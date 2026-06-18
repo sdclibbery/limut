@@ -1,6 +1,11 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
+vocode preset
+ !eventpitch does not pick up different note pitches because it evals per event, and this gets cached in the fx chain
+  At least want to be able to fix with eventpitch@f? Or @e?
+? vvocoder: vocoder tuned for voices, instead of even bands?
+!cant use duck on lights??
 !! When use sample in fx not play, sometimes it doesn't play. Due to not having loaded yet? Needs to retry somehow?
 Wavetable oscillator that crossfades between arbitrary sample waveforms
  ! wtlerp must handle wt values out of range by clamping or modding
@@ -18,6 +23,7 @@ Wavetable oscillator that loads a 64 cycle wavetable as a single source and swit
  ?Is there clicking when switching cycles? What to do if so?
  More wavetables: https://kimurataro.com/products/wt-free/
 Wavetable oscillator that crossfades between 4 arbitrary samples but in 2D (??Or 5, with one in the middle??)
+? Chebyshev shaper
 ?multitap should have second callback for chain to use on each tap before they get summed together
  ?OR, one callback but it can return a pair of chains somehow?
 Claude fable suggested good default mastering chain; try it out:
@@ -32,9 +38,6 @@ Multiband effect that does spectral side chain ducking
  Eg I have a lead that sometimes can't be heard over an arp. I want to duck the arp spectrally based on the lead
 Should be able to write actual unit tests in limut for limut functions? How would this work?
 !dbd is weak?
-? Can vocoder be used inside a single player? Eg a sample player with a vocal, and the fx chain applies it to a saw?
- ? s sample, url='..', fx=osc.saw{eventpitch}>>vocoder{this.pre} ???
-? vvocoder vocoder tuned for voices, instead of even bands?
 ? duckp player .pre based sidechain duck using envelope follower
 !Trance can sound out of tune
  toscale{} function: takes a Freq and quantises to a scale, default to current global scale/root. Try using it for trance cutoff
