@@ -86,3 +86,9 @@ preset lately fm, envelope='full', oct=2, att=0, dec=1/8, sus={level:3/4}, rel=1
   op2={ratio:1,target:1,wave:'triangle',depth:this.vel,att:0,rel:1/2},
   op3={ratio:1,target:'out',depth:1/2},
   op4={ratio:1,target:3,wave:'noise',depth:this.vel*2,att:0,rel:1/4},
+
+preset vocode sample,
+	sample='https://upload.wikimedia.org/wikipedia/commons/8/85/En-uk-revolution.ogg',
+  fx=vocodethis{wetmix:this.mix, wave:this.wave},
+  dur=3, oct=2, rate=1, mix=0.95, wave='saw'
+
