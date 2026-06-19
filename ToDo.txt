@@ -3,7 +3,8 @@
 =================================================================================================================================
 vocode preset
  !eventpitch does not pick up different note pitches because it evals per event, and this gets cached in the fx chain
-  At least want to be able to fix with eventpitch@f? Or @e?
+  !CLAUDE made a fix, REVIEW and test it!!
+ Add effect, preset, and docs
 ? vvocoder: vocoder tuned for voices, instead of even bands?
 !cant use duck on lights??
 !! When use sample in fx not play, sometimes it doesn't play. Due to not having loaded yet? Needs to retry somehow?

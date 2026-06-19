@@ -43,12 +43,18 @@ define((require) => {
     params.chainEndTime = 1e10 // Keep eval-audio-params per-frame callbacks going for the lifetime of the chain
     params._perFrame = fx._perFrame
     params._destructor = fx.destructor
+    let lastEvent // Remember the most recent event so per-event params (eg eventpitch) hold their last value through rests
     let getOverrideEvent = (b) => { // If the player has a current event, use it
       let player = players.getById(params.player)
       if (!player) { return undefined }
       let es = player.currentEvent(b)
       if (!es || !es.length) { return undefined }
-      return es[es.length - 1]
+      lastEvent = es[es.length - 1]
+      return lastEvent
+    }
+    let getCurrentOrLastEvent = (b) => { // Current event if playing, else the last one seen (hold last value through rests)
+      let e = getOverrideEvent(b)
+      return e !== undefined ? e : lastEvent
     }
     delete params.count
     Object.defineProperty(params, 'count', {
@@ -84,6 +90,28 @@ define((require) => {
         return pf(state)
       })
       return true
+    })
+
+    // Expose every event param dynamically: a continuous fx chain is built once, so reads of musical params
+    // (sound, add, oct, amp, this.*, ...) must reflect the currently-playing event rather than the build-time copy.
+    // These are real accessor getters (not a Proxy) so they survive Object.getOwnPropertyDescriptors cloning of the
+    // event - eg the per-copy event clone in graph.js parallel{} - which a Proxy get-trap would not.
+    // Chain-lifecycle fields stay bound to the chain; the timing accessors defined above keep their own semantics.
+    let chainLifecycleKeys = new Set(['_player','player','_destructor','_perFrame','chainEndTime','fx','_fxString','bus','key','id','linenum'])
+    Object.keys(params).forEach(key => {
+      if (chainLifecycleKeys.has(key)) { return }
+      if (Object.getOwnPropertyDescriptor(params, key).get) { return } // Timing accessors already handle themselves
+      let buildTimeValue = params[key]
+      delete params[key]
+      Object.defineProperty(params, key, {
+        enumerable: true,
+        get() {
+          let e = getCurrentOrLastEvent(metronome.beatTime(metronome.timeNow()))
+          if (e && key in e) { return e[key] } // Prefer the live event's value
+          return buildTimeValue // Fall back to the build-time copy
+        },
+        set(v) { buildTimeValue = v }, // Stay writable (eg scale.paramsToFreq caches params.freq); reads still prefer the live event
+      })
     })
 
     // Destruction
