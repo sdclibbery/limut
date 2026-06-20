@@ -164,10 +164,6 @@ set vocoder = {mod, count:16, freq:40, tilt:0.8, boost:pi/2, lo:150, hi:7000} ->
 }
 
 // Apply a vocoder using this player as the modulator and an oscillator as the carrier
-set vocodethis = {wetmix:0.95, wave:'saw'} ->
-	mix{
-		parallel{ {i} ->
-    	osc{wave, freq:eventpitch@f*(1+(i-1)*0.01)}, 3 }
-	    >>vocoder{this.player.pre*2, tilt:0.3, count:17}
-    , wetmix
-  }
+set vocodethis = {wave:'saw', unison:3} ->
+  parallel{ {i} -> osc{wave, freq:eventpitch@f*(1+(i-floor{unison/2})*0.01)}, unison }
+    >>vocoder{this.player.pre*2, tilt:0.3, count:17}
