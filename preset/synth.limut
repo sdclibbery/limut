@@ -90,5 +90,5 @@ preset lately fm, envelope='full', oct=2, att=0, dec=1/8, sus={level:3/4}, rel=1
 preset vocode sample,
 	sample='https://upload.wikimedia.org/wikipedia/commons/8/85/En-uk-revolution.ogg',
   fx=vocodethis{wetmix:this.mix, wave:this.wave},
-  dur=3, oct=2, rate=1, mix=0.95, wave='saw'
+  dur=3, oct=2, rate=1, mix=0.85, wave='saw'
 

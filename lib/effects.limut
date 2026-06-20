@@ -125,10 +125,14 @@ set multiband4 = {chain:1, count:3} -> parallel{
 // upper edge and a highpass at its lower edge. Tighter bands than the complementary split
 // (no out-of-band leakage from the subtraction), but the bands do not sum back to the
 // input exactly: expect some level ripple and phase cancellation around the crossovers.
-// The lowest band's highpass (20Hz) and the top band's lowpass (20kHz) sit at the edges
-// of hearing so those filters are effectively transparent.
-set multibandbp = {chain:1, count:3} -> parallel{
-  {i} -> bwlpf{20*1000^((i+1)/count)} >> bwhpf{20*1000^(i/count)} >> chain{i, 20*1000^((i+1/2)/count)},
+// The band range is lo..hi (default 20Hz..20kHz, the edges of hearing, so the lowest
+// band's highpass and the top band's lowpass are effectively transparent); narrow it to
+// pack the same count of bands into a region of interest (eg speech, see vocoder below).
+// The chain callback is given {i, centre, lo, hi}: the band index, its geometric centre,
+// and its lower/upper edges (so callbacks can reuse the exact same edges).
+set multibandbp = {chain:1, count:3, lo:20, hi:20000} -> parallel{
+  {i} -> bwlpf{lo*(hi/lo)^((i+1)/count)} >> bwhpf{lo*(hi/lo)^(i/count)}
+         >> chain{i, lo*(hi/lo)^((i+1/2)/count), lo*(hi/lo)^(i/count), lo*(hi/lo)^((i+1)/count)},
   count
 }
 
@@ -144,14 +148,19 @@ set multibandbp = {chain:1, count:3} -> parallel{
 // faithfully reproduces a dark modulator and sounds muffled, and adding bands
 // does not help. Raise tilt for brighter/more intelligible speech, tilt:0 for
 // a flat (un-emphasised) vocoder.
+// lo/hi set the band range: it defaults to a speech band (150Hz..7kHz) so the
+// bands pack into the formant/consonant region where speech information lives -
+// the sub-bass below the voiced fundamental and the extreme highs carry little
+// speech and are dropped. Widen to lo:20, hi:20000 for a full-range vocoder.
 // Each band: the carrier band (split out by multibandbp) is gain-modulated by
-// the follower of the modulator's same band (split with the same edges).
-set vocoder = {mod, count:16, freq:40, tilt:0.8, boost:pi/2} -> multibandbp{
-  {i, centre} -> gain{
-    mod >> bwlpf{20*1000^((i+1)/count)} >> bwhpf{20*1000^(i/count)}
+// the follower of the modulator's same band, split with the exact same edges
+// (the lo/hi passed into the callback).
+set vocoder = {mod, count:16, freq:40, tilt:0.8, boost:pi/2, lo:150, hi:7000} -> multibandbp{
+  {i, centre, lo, hi} -> gain{
+    mod >> bwlpf{hi} >> bwhpf{lo}
         >> follower{freq, boost:boost*(centre/100)^tilt}
   },
-  count
+  count, lo, hi
 }
 
 // Apply a vocoder using this player as the modulator and an oscillator as the carrier

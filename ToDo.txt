@@ -1,11 +1,9 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-vocode preset
- !eventpitch does not pick up different note pitches because it evals per event, and this gets cached in the fx chain
-  !CLAUDE made a fix, REVIEW and test it!!
- Add effect, preset, and docs
-? vvocoder: vocoder tuned for voices, instead of even bands?
+vocodethis: should not have mix built in. So put it in vocode preset instead. Update docs
+try some speech synthesis options
+ flite.js
 !cant use duck on lights??
 !! When use sample in fx not play, sometimes it doesn't play. Due to not having loaded yet? Needs to retry somehow?
 Wavetable oscillator that crossfades between arbitrary sample waveforms
