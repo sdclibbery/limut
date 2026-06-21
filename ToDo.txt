@@ -1,8 +1,12 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-try some speech synthesis options
- flite.js
+try some singing approaches
+ word linked to pitch
+ word at time
+ all words play, notes control pitch
+?need a tts function to use in fx etc?
+!keyboard/realtime player indexing is time based not event based
 !cant use duck on lights??
 !! When use sample in fx not play, sometimes it doesn't play. Due to not having loaded yet? Needs to retry somehow?
 Wavetable oscillator that crossfades between arbitrary sample waveforms

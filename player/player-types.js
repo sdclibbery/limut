@@ -22,6 +22,7 @@ define((require) => {
   let pitchedPerc = require('play/synth/pitchedperc')
   let impulse = require('play/synth/impulse')
   let audiosynth = require('play/synth/audiosynth')
+  let tts = require('play/synth/tts')
   let parseExpression = require('expression/parse-expression')
 
   let white = {r:1,g:1,b:1,a:1}
@@ -80,6 +81,7 @@ define((require) => {
     external: { play: external, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0 }, _type:'audio' },
     noise: { play: noise, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0 }, _type:'audio' },
     sample: { play: sample, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4 }, _type:'audio' },
+    speak: { play: tts, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4, text:'hello' }, _type:'audio' },
     piano: { play: piano, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4 }, _type:'audio' },
     pwm: { play: pwm, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4, pwm:0.5 }, _type:'audio' },
     wave: { play: wave, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4 }, _type:'audio' },

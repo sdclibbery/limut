@@ -5304,4 +5304,11 @@ lk blare keyboard, fx=[1:_8,tg]e*darkverb*-5db, glide=1/2, pan=[-1,1]s4@f
 
 // a audiosynth 024, fx=parallel{{i}->osc.sine{eventpitch@f}}*0.001
 
+// p1 speak 0, text='hello world', dur=4, fx=demon
+// p1 speak 0, text='hello world', dur=4, fx=mix{vocodethis,1/4}, oct-=1, speed=250
+// p1 speak 0, text='hello world', dur=4, pitch=99, speed=200, add=-4, fx=mix3{vocodethis}
+// p1 speak 0357, text='da'
+// p1 speak 0, text='hello', room=0.6, echo=1/2, lpf=800
+// p1 speak 0, text='fast', speed=300, pitch=80
+
 
