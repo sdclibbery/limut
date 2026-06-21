@@ -6,7 +6,9 @@ define(function(require) {
   let {evalParamFrame,evalParamEvent} = require('player/eval-param')
   let setWave = require('play/synth/waveforms/set-wave')
   let {getBuffer} = require('play/samples')
+  let {getTtsBuffer} = require('play/tts')
   let {mainParamUnits} = require('player/sub-param')
+  let metronome = require('metronome')
 
   let osc = (args,e,b) => {
     let node = system.audio.createOscillator()
@@ -84,4 +86,50 @@ define(function(require) {
     return node
   }
   addNodeFunction('sample', sample)
+
+  // The espeak voice options that change the synthesized audio. These form part of the
+  // cache key in play/tts.js; pitch shifting by note is applied later via playbackRate
+  // (like sample) and is intentionally NOT part of the key. Mirrors play/synth/tts.js.
+  let ttsVoiceOpts = (params) => {
+    let opts = {}
+    let add = (name) => {
+      let v = evalMainParamEvent(params, name, undefined)
+      if (v !== undefined) { opts[name] = v }
+    }
+    add('pitch')      // 0..99, espeak voice pitch (default 50)
+    add('speed')      // words per minute (default 175)
+    add('wordgap')    // pause between words, units of 10ms
+    add('amplitude')  // 0..200 (default 100)
+    add('variant')    // voice variant, eg 'f2', 'm3'
+    return opts
+  }
+
+  // Text-to-speech source node: synthesizes the given text to an AudioBuffer (cached in
+  // play/tts.js) and plays it through a buffer source, so speech can be wired into an fx
+  // chain like any other source (eg `tts{'hello'} >> lpf{800}`). Unlike `sample` it does
+  // not loop by default. The buffer source can't be re-buffered once started, so we defer
+  // node.start until the buffer exists: cached phrases start exactly on the event, while a
+  // first-use phrase synthesizes in the background and starts (rebased to now) as soon as
+  // its buffer lands, mirroring play/synth/tts.js.
+  let tts = (args,e,b) => {
+    let node = system.audio.createBufferSource()
+    let params = combineParams(args, e)
+    let value = params.text !== undefined ? params.text : args.value
+    let text = evalParamEvent(value, e,b)
+    if (typeof text !== 'string') { text = '' }
+    evalMainParamFrame(node.playbackRate, params, 'rate', 1)
+    node.loop = params.loop === true ? true : false // Speech plays once unless explicitly looped
+    let started = false
+    let begin = (buffer, when) => {
+      if (started || !buffer) { return }
+      started = true
+      node.buffer = buffer
+      node.start(when)
+      if (e && e._destructor) { e._destructor.stop(node) }
+    }
+    let buffer = getTtsBuffer(text, ttsVoiceOpts(params), (buf) => begin(buf, system.audio.currentTime + metronome.advance()))
+    if (buffer) { begin(buffer, e._time) }
+    return node
+  }
+  addNodeFunction('tts', tts)
 })
