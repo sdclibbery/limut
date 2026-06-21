@@ -10,6 +10,7 @@ define(function (require) {
   let envelope = require('play/envelopes')
   let pitchEffects = require('play/effects/pitch-effects')
   let perFrameAmp = require('play/effects/perFrameAmp')
+  let metronome = require('metronome')
 
   // Collect the espeak voice options that change the synthesized audio. These form
   // part of the cache key in play/tts.js; pitch shifting by note is applied later
@@ -32,38 +33,48 @@ define(function (require) {
     let text = evalMainParamEvent(params, 'text', '')
     if (!text) { return }
 
-    let buffer = getTtsBuffer(text, voiceOpts(params))
-    if (!buffer) { return } // engine/voice still loading, or this phrase not synthesized yet
+    // Builds the audio graph and starts the source. Reads params._time live, so
+    // rebasing params._time before calling this reschedules the whole chain.
+    let play = (buffer) => {
+      // Pitch: explicit rate wins, otherwise transpose the speech by the note (note 0
+      // at the default octave plays at rate 1), mirroring play/synth/sample.js.
+      let rate = evalMainParamEvent(params, 'rate')
+      let playbackRate
+      if (rate === undefined) {
+        let freq = scale.paramsToFreq(params, 4)
+        playbackRate = isNaN(freq) ? 1 : freq / 261.6256
+      } else {
+        playbackRate = rate
+      }
 
-    // Pitch: explicit rate wins, otherwise transpose the speech by the note (note 0
-    // at the default octave plays at rate 1), mirroring play/synth/sample.js.
-    let rate = evalMainParamEvent(params, 'rate')
-    let playbackRate
-    if (rate === undefined) {
-      let freq = scale.paramsToFreq(params, 4)
-      playbackRate = isNaN(freq) ? 1 : freq / 261.6256
-    } else {
-      playbackRate = rate
+      let source = system.audio.createBufferSource()
+      source.buffer = buffer
+      source.playbackRate.value = playbackRate
+
+      // Let the utterance play its full natural length: default the event duration to
+      // the speech length in beats so the (organ) envelope sustains the whole phrase.
+      if (params.dur === undefined) {
+        params.dur = (buffer.duration / playbackRate) / params.beat.duration
+      }
+
+      let vca = envelope(params, 0.3, 'organ')
+      waveEffects(params, effects(params, source)).connect(vca)
+      fxMixChain(params, perFrameAmp(params, vca))
+
+      pitchEffects(source.detune, params)
+
+      source.start(params._time)
+      params._destructor.disconnect(vca, source)
+      params._destructor.stop(source)
     }
 
-    let source = system.audio.createBufferSource()
-    source.buffer = buffer
-    source.playbackRate.value = playbackRate
-
-    // Let the utterance play its full natural length: default the event duration to
-    // the speech length in beats so the (organ) envelope sustains the whole phrase.
-    if (params.dur === undefined) {
-      params.dur = (buffer.duration / playbackRate) / params.beat.duration
-    }
-
-    let vca = envelope(params, 0.3, 'organ')
-    waveEffects(params, effects(params, source)).connect(vca)
-    fxMixChain(params, perFrameAmp(params, vca))
-
-    pitchEffects(source.detune, params)
-
-    source.start(params._time)
-    params._destructor.disconnect(vca, source)
-    params._destructor.stop(source)
+    // If the phrase is already synthesized, play it at the scheduled time. Otherwise
+    // synthesis kicks off in the background and onReady fires when the buffer lands;
+    // rebase to "now" so a first-use phrase still speaks instead of being dropped.
+    let buffer = getTtsBuffer(text, voiceOpts(params), (buf) => {
+      params._time = system.audio.currentTime + metronome.advance()
+      play(buf)
+    })
+    if (buffer) { play(buffer) }
   }
 });

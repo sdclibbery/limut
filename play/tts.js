@@ -7,6 +7,7 @@ define(function (require) {
   // so the synth can stay silent until the buffer exists (same contract as getBuffer).
 
   let buffers = {}
+  let pending = {} // key -> array of onReady callbacks waiting for synthesis to finish
   let nullBuffer = system.audio.createBuffer(1, 100, 22050)
 
   // meSpeak (an in-browser espeak port) is loaded from a CDN on first use. The engine
@@ -58,14 +59,18 @@ define(function (require) {
   // is applied later via playbackRate, so it is deliberately not part of the key.
   let cacheKey = (text, opts) => text + '|' + JSON.stringify(opts || {})
 
-  let getTtsBuffer = (text, opts) => {
+  // onReady (optional) is called with the AudioBuffer once synthesis+decode finish,
+  // so a caller whose buffer wasn't ready at event time can still play it as soon as
+  // it's processed (instead of being silent on first use of a phrase).
+  let getTtsBuffer = (text, opts, onReady) => {
     if (!text) { return null }
     let key = cacheKey(text, opts)
     let buffer = buffers[key]
-    if (buffer === nullBuffer) { return null }
-    if (buffer) { return buffer }
+    if (buffer && buffer !== nullBuffer) { return buffer } // ready: synchronous path
+    if (onReady) { (pending[key] || (pending[key] = [])).push(onReady) }
+    if (buffer === nullBuffer) { return null } // already synthesizing; callback now queued
     buffers[key] = nullBuffer // mark as synthesizing so we only kick off once
-    let clearOnFail = () => { if (buffers[key] === nullBuffer) { delete buffers[key] } }
+    let clearOnFail = () => { if (buffers[key] === nullBuffer) { delete buffers[key] }; delete pending[key] }
     loadMeSpeak().then((ms) => {
       if (!ms.isConfigLoaded() || !ms.getDefaultVoice()) {
         console.warn('meSpeak not ready (config=' + ms.isConfigLoaded() + ' voice=' + ms.getDefaultVoice() + ')')
@@ -78,6 +83,8 @@ define(function (require) {
       }
       system.audio.decodeAudioData(wav, (buf) => {
         buffers[key] = buf
+        let cbs = pending[key]; delete pending[key]
+        if (cbs) { cbs.forEach((cb) => cb(buf)) }
       }, (e) => { console.error('meSpeak decode failed', e); clearOnFail() })
     }).catch(clearOnFail)
     return null

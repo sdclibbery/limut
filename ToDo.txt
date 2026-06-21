@@ -6,8 +6,9 @@ try some singing approaches
  word at time
  all words play, notes control pitch
 ?need a tts function to use in fx etc?
-!keyboard/realtime player indexing is time based not event based
+!keyboard/realtime player indexing is time based not event based?
 !cant use duck on lights??
+!! darkverb with stanh>>..>>stanh failed with gamepad, didn't play anything on Paul's laptop
 !! When use sample in fx not play, sometimes it doesn't play. Due to not having loaded yet? Needs to retry somehow?
 Wavetable oscillator that crossfades between arbitrary sample waveforms
  ! wtlerp must handle wt values out of range by clamping or modding
