@@ -1,12 +1,8 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-try some singing approaches
- word linked to pitch
- word at time
-  !keyboard/realtime player indexing is time based not event based?
-   l speak keyboard, text=['hello', 'world'], fx=demon, speed=125
- all words play, notes control pitch
+singing
+ !Combined text and pitch lookup doesn't work?
 !cant use duck on lights??
 !! darkverb with stanh>>..>>stanh failed with gamepad, didn't play anything on Paul's laptop
 !! When use sample in fx not play, sometimes it doesn't play. Due to not having loaded yet? Needs to retry somehow?
