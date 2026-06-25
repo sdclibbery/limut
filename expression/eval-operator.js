@@ -47,6 +47,17 @@ define(function(require) {
       } else if (Array.isArray(er)) {
         return er.map(r => operator(op, el, r))
       } else if (typeof er == 'object') {
+        // A segment wrapper (@s timevar: {value,_nextSegment,...}) operated against a plain
+        // object (eg a colour {r,g,b,a}) applies its scalar value across that object's fields
+        // — like `red*0.5` — instead of merging key-by-key (which would leave the colour
+        // unchanged and just tack on a stray `value`). Mirrors objectMap treating a value-
+        // bearing object as a scalar (above). Gated to segments to keep the blast radius tiny.
+        if (er._nextSegment !== undefined && er.value !== undefined && el.value === undefined) {
+          return objectMap(el, (v) => operator(op, v, er.value))
+        }
+        if (el._nextSegment !== undefined && el.value !== undefined && er.value === undefined) {
+          return objectMap(er, (v) => operator(op, el.value, v))
+        }
         let result = {}
         for (let k in el) {
           if (k === '_units') { // should do clever stuff if there are units, but just pick one for now
@@ -195,6 +206,12 @@ define(function(require) {
   assert(segment(10,6,7), evalParam(operator(mul, {value:2}, segment(5,6,7)),ev(0),0))
   assert(segment(4,3,4), evalParam(operator(mul, segment(2,3,4), {value:2}),ev(0),0))
   assert(segment(10,3,7), evalParam(operator(mul, segment(2,3,4), segment(5,6,7)),ev(0),0)) // default 'max' combine
+
+  // A segment wrapper (eg duck) times a plain object (eg a colour) distributes its value
+  // across that object's fields, like a scalar, rather than leaving them unchanged.
+  assert({r:0.5,g:0,b:0,a:0.5}, evalParam(operator(mul, {r:1,g:0,b:0,a:1}, segment(0.5,6,7)),ev(0),0))
+  assert({r:0.5,g:0,b:0,a:0.5}, evalParam(operator(mul, segment(0.5,6,7), {r:1,g:0,b:0,a:1}),ev(0),0))
+  assert({r:1.5,g:0.5,b:0.5,a:1.5}, evalParam(operator(add, {r:1,g:0,b:0,a:1}, segment(0.5,6,7)),ev(0),0))
 
   // segmentPowerCombine modes
   let mulAdd = (l,r)=>l*r; mulAdd.segmentPowerCombine = 'add'
