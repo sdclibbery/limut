@@ -1,10 +1,7 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-vocoder singing preset: event value is lyric lookup, which controls both carrier pitch and text. speech rate=1
- !Combined text and pitch lookup doesn't work?
-!cant use duck on lights??
-!! darkverb with stanh>>..>>stanh failed with gamepad, didn't play anything on Paul's laptop
+!! darkverb with stanh>>..>>stanh failed with gamepad, didn't play anything on win laptop
 !! When use sample in fx not play, sometimes it doesn't play. Due to not having loaded yet? Needs to retry somehow?
 Wavetable oscillator that crossfades between arbitrary sample waveforms
  ! wtlerp must handle wt values out of range by clamping or modding

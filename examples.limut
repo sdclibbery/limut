@@ -5332,4 +5332,16 @@ lk blare keyboard, fx=[1:_8,tg]e*darkverb*-5db, glide=1/2, pan=[-1,1]s4@f
 // p1 audiosynth, play=noise{rate:0.5} >> lpf{1000}
 // p1 audiosynth, play=impulse{} >> mix{reverb{0.9}}
 
+// "singing"
+l speak keyboard, rate=1,
+	text=this.lyrics.t,
+	fx=mix{vocodethis{freq:pitch{this.lyrics.v,oct:2}@f},1/2},
+  lyrics=[
+  	{t:'welcome',v:0},
+    {t:'to the',v:4},
+    {t:'future',v:2},
+    {t:'end of the world',v:2}
+  ]{this.value}, 
+
+
 
