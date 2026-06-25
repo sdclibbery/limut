@@ -3,7 +3,7 @@ define(function (require) {
   let {addRenderer,blendChannel} = require('draw/dmx-system')
   let {evalParamEvent,evalParamFrame} = require('player/eval-param')
   let {mainParamUnits} = require('player/sub-param')
-  let {isColour,colourRgb} = require('draw/colour')
+  let {isColour,colourRgb,unwrapSegment} = require('draw/colour')
   let system = require('draw/system')
 
   let evalMainParamEvent = (params, p, def, units) => {
@@ -13,14 +13,6 @@ define(function (require) {
     if (v === undefined) { return def }
     return mainParamUnits(v, units, def)
   }
-
-  // A segmented (@s) timevar value arrives wrapped with segment metadata the audio scheduler
-  // uses but the per-frame renderer does not. When it wraps a scalar the real value is in
-  // .value; unwrap it so it isn't misread as a (black) colour by convertValues. The colour-
-  // merged shape ({r,g,b,_nextSegment}) has no .value and is left for the colour path.
-  let unwrapSegment = (v) =>
-    (v && typeof v === 'object' && v._nextSegment !== undefined && v.value !== undefined)
-      ? v.value : v
 
   let numberArray = [0]
   let values = []

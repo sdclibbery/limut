@@ -67,7 +67,17 @@ define(function (require) {
     return ar
   }
 
+  // A segmented (@s) timevar value arrives wrapped with segment metadata that only the audio
+  // scheduler needs. When it wraps a scalar the real (per-frame interpolated) value is in
+  // .value; unwrap it so a colour param like `fore=duck` is treated as a grey-brightness
+  // scalar instead of being read as a colour with no r/g/b (which falls back to the default).
+  // The colour-merged shape ({r,g,b,_nextSegment}) has no .value and is left untouched.
+  let unwrapSegment = (v) =>
+    (v && typeof v === 'object' && v._nextSegment !== undefined && v.value !== undefined)
+      ? v.value : v
+
   let colour = (v, d, name) => { // Convert a colour number or object to an RGBA array
+    v = unwrapSegment(v)
     if (typeof v === 'number') {
       let ar = cached(name)
       ar[0] = ar[1] = ar[2] = ar[3] = v
@@ -77,6 +87,7 @@ define(function (require) {
   }
 
   let colourRgb = (v, d, name) => { // Convert a colour number or object to an RGB array
+    v = unwrapSegment(v)
     if (typeof v !== 'object') { return v }
     return colourToArray(v, d, name)
   }
@@ -119,6 +130,13 @@ define(function (require) {
     assert(0, colourRgb(0, red(), 'blah'))
     assert([0,1,0,1], colourRgb({g:1}, black(), 'blah'))
 
+    // Segmented (@s) timevar scalar wrapper (eg duck) is treated as a grey-brightness scalar
+    assert([0.5,0.5,0.5,0.5], colour({value:0.5,_nextSegment:1,_segmentPower:3}, black(), 'blah'))
+    assert([0,0,0,0], colour({value:0,_nextSegment:1,_segmentPower:3}, white(), 'blah')) // 0 not lost
+    assert(0.5, colourRgb({value:0.5,_nextSegment:1,_segmentPower:3}, black(), 'blah'))
+    // Colour-merged segment shape (no top-level .value) is left for the colour path
+    assert([1,0,0,1], colour({r:1,g:0,b:0,a:1,_nextSegment:1,_segmentPower:1}, black(), 'blah'))
+
     console.log('colour tests complete')
   }
   
@@ -126,5 +144,6 @@ define(function (require) {
     isColour: isColour,
     colour: colour,
     colourRgb: colourRgb,
+    unwrapSegment: unwrapSegment,
   }
 })
