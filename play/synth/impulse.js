@@ -6,19 +6,7 @@ define(function (require) {
   let waveEffects = require('play/effects/wave-effects')
   let perFrameAmp = require('play/effects/perFrameAmp')
   let destructor = require('play/destructor')
-
-  let clickBuffer
-  let getClick = () => {
-    if (clickBuffer === undefined) {
-      const sampleRate = system.audio.sampleRate
-      clickBuffer = system.audio.createBuffer(1, 0.001*sampleRate, sampleRate);
-      let clickData = clickBuffer.getChannelData(0)
-      for (var i = 0; i < clickData.length; i++) {
-        clickData[i] = 1
-      }
-    }
-    return clickBuffer
-  }
+  let click = require('play/synth/waveforms/click')
 
   return (params) => {
     let gainBase = 0.1
@@ -31,12 +19,11 @@ define(function (require) {
     vca.gain.value = gain
     fxMixChain(params, perFrameAmp(params, vca))
 
-    let click = system.audio.createBufferSource()
-    click.buffer = getClick()
-    click.start(params._time)
+    let clickNode = click.click()
+    clickNode.start(params._time)
 
-    waveEffects(params, effects(params, click)).connect(vca)
-    params._destructor.disconnect(vca, click)
-    params._destructor.stop(click)
+    waveEffects(params, effects(params, clickNode)).connect(vca)
+    params._destructor.disconnect(vca, clickNode)
+    params._destructor.stop(clickNode)
   }
 })

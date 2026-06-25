@@ -5,6 +5,8 @@ define(function(require) {
   let {evalMainParamEvent,evalMainParamFrame} = require('play/eval-audio-params')
   let {evalParamFrame,evalParamEvent} = require('player/eval-param')
   let setWave = require('play/synth/waveforms/set-wave')
+  let whiteNoise = require('play/synth/waveforms/noise')
+  let click = require('play/synth/waveforms/click')
   let {getBuffer} = require('play/samples')
   let {getTtsBuffer} = require('play/tts')
   let {mainParamUnits} = require('player/sub-param')
@@ -41,6 +43,33 @@ define(function(require) {
     return node
   }
   addNodeFunction('const', constNode)
+
+  // Looping white-noise source node, so noise can be wired into an fx chain like any other
+  // source, eg `noise{} >> lpf{800}`. Uses the same cached white-noise buffer as the noise synth.
+  // `rate` changes playback speed/pitch like a sample. Starts at a random offset into the 2s
+  // buffer so repeated events don't phase-lock.
+  let noise = (args,e,b) => {
+    let node = whiteNoise.white()
+    let params = combineParams(args, e)
+    evalMainParamFrame(node.playbackRate, params, 'rate', 1)
+    node.start(e._time, Math.random()*2)
+    if (e && e._destructor) { e._destructor.stop(node) } else { node.stop() }
+    return node
+  }
+  addNodeFunction('noise', noise)
+
+  // One-shot click (1ms impulse) source node, eg `impulse{} >> reverb{room:0.9}` to excite an
+  // effect's impulse response. Uses the same cached click buffer as the impulse synth. `rate`
+  // changes playback speed like a sample. Does not loop.
+  let impulse = (args,e,b) => {
+    let node = click.click()
+    let params = combineParams(args, e)
+    evalMainParamFrame(node.playbackRate, params, 'rate', 1)
+    node.start(e._time)
+    if (e && e._destructor) { e._destructor.stop(node) } else { node.stop() }
+    return node
+  }
+  addNodeFunction('impulse', impulse)
 
   let sample = (args,e,b) => {
     let node = system.audio.createBufferSource()

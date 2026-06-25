@@ -1114,6 +1114,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>idnode</code> Create an identity node that passes signals through unchanged.</p>
 <p class='sub'><code>dry</code> An alias for idnode.</p>
 <p class='sub'><code>thru</code> An alias for idnode.</p>
+<p><code>impulse{rate:1}</code> Create a one-shot click (1ms impulse) source node, so an impulse can be wired into an fx chain like any other source, eg <code>impulse{} >> reverb{room:0.9}</code> to excite an effect's impulse response. <code>rate</code> changes playback speed like a sample. Does not loop.</p>
 <p><code>loop{..., feedback:...}</code> Create an audiograph loop, with a signal passing through the main node chain, and fed back through the feedback node chain. Note the feedback node chain must contain a delay node otherwise it will not function.</p>
 <p class='sub'><code>loop{..., ...}</code> The feedback arg can be positional instead of being named.</p>
 <p><code>mix{..., mix:1/2}</code> Provide a mix between a dry signal and a wet signal processed through the given node chain. Mix 0 is full dry, mix 1 is full wet.</p>
@@ -1127,6 +1128,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>multitap{..., count:2}</code> Run the given node chain count times in series like <code>series</code>, but also tap each stage's output and sum all the taps together into the final output.</p>
 <p class='sub'><code>multitap{..., 2}</code> The count arg can be positional instead of being named.</p>
 <p class='sub'><code>multitap{{i}->..., 4}</code> The chain can be a user defined function, given the stage index <code>i</code>, so each stage can differ. For example <code>multitap{{i}->echo{1/2}>>gain{0.7^i}, 4}</code> creates a decaying multi-tap echo.</p>
+<p><code>noise{rate:1}</code> Create a looping white-noise source node, so noise can be wired into an fx chain like any other source, eg <code>noise{} >> lpf{800}</code>. <code>rate</code> changes playback speed/pitch like a sample.</p>
 <p><code>osc{'sawtooth', freq:440, phase:0}</code> Create an oscillator node with the given waveform and frequency. Some control of starting phase is available; this is achieved by controlling the start time of the oscillator as all webaudio oscillators start with phase 0.</p>
 <p><code>panner{0}</code> Create a stereo panner that can push a signal to the left (-1) or right (1).</p>
 <p><code>parallel{..., count:2}</code> Run the given node chain count times in parallel: the input is fanned out to every copy and the copies' outputs are summed back together.</p>

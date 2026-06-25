@@ -5329,4 +5329,7 @@ lk blare keyboard, fx=[1:_8,tg]e*darkverb*-5db, glide=1/2, pan=[-1,1]s4@f
 
 // s external, fx=vocodethis
 
+// p1 audiosynth, play=noise{rate:0.5} >> lpf{1000}
+// p1 audiosynth, play=impulse{} >> mix{reverb{0.9}}
+
 
