@@ -67,25 +67,3 @@ preset dvoice2 dmxstrip, back=#28f, fore=#100, mode='midfizzle', control=(1/8+sm
 
 // Solid (10): whole strip flashes off->fore each beat, height scaled by note level
 preset dstrobe dmxstrip, mode=10, palette='obf', control=this.input, smooth=1, back=#404, fore=#fff
-// StartGradient (50): a VU bar rising from the start, length tracking the smoothed note level
-preset dvu dmxstrip, mode='startgradient', palette='obf', control=smooth{this.input,2}, smooth=1/2, back=#010, fore=#3f0
-// Droplet (12): a splash at a random spot on each beat, blurring out with a fresh random hue
-preset dbeatdrop dmxstrip, mode=12, palette=0, control=this.input, smooth=1/8, back=#000, fore={h:[]r@f{seed:this.voice},s:3/4,v:1}
-// LineFade (161): Knight-Rider scanner bouncing end to end, trail fading, brightness from input
-preset dscanner dmxstrip, mode='linefade', palette='obf', control=[0:1,1:0]l@f{time:time-this.voice/4}, smooth=1/6, back=#100, fore=#f60*(1/3+smooth{this.input})
-// StartTickerFade (110): injects a shifting neon colour at the start and scrolls it along the strip
-preset dchase dmxstrip, mode=110, palette='neon', control=[0:1]l4@f{time:time-this.voice/4}, smooth=accum{1/24}%1, back=#000, fore=#000
-// Solid (10): slow whole-strip breathing through an HSV blend, depth lifted by input
-preset dbreathe dmxstrip, mode=10, palette='hsvobf', control=[0,1:0]l16@f*(1/3+smooth{this.input,8}), smooth=1/2, back=#103, fore=#519
-// PlotFizzle (153): a spark at a random spot per note, fizzling out; louder notes spark brighter
-preset dspark dmxstrip, mode='plotfizzle', palette=0, control=[]r@f, smooth=1/10, back=#000, fore=#ff8*(1/2+smooth{this.input})
-// MidWave (92): a springy pixel pushed out from the centre, height/colour from input level
-preset dmeterwave dmxstrip, mode=92, palette='hsvobf', control=smooth{this.input}, smooth=1/3, back=#001, fore=#f0a
-// Gradient (11) + rainbow palette (240): a flowing rainbow window scrolling along the strip
-preset drainbowflow dmxstrip, mode=11, palette=240, control=[0:1]l8@f{time:time-this.voice/4}, smooth=([0:1]l8@f+0.4)%1, back=#000, fore=#fff
-// EndsFade (63): bars punch in from both ends on the beat, length scaled by velocity
-preset dpulsebars dmxstrip, mode=63, palette='obf', control=this.input, smooth=1/8, back=#001, fore=#0af
-// StartGradient (50) + hsvbf palette (10): a VU bar rising from the bottom, HSV gradient from
-// back (#08f) up to fore; fore lerps from #08f at zero input to #f80 at full input
-preset dhsvbar dmxstrip, mode='startgradient', palette='hsvobf', control=smooth{this.input,2}, smooth=1/2, fore=#04f, back={h:0.578-0.489*this.input, s:1, v:1}
-

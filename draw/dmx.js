@@ -14,10 +14,19 @@ define(function (require) {
     return mainParamUnits(v, units, def)
   }
 
+  // A segmented (@s) timevar value arrives wrapped with segment metadata the audio scheduler
+  // uses but the per-frame renderer does not. When it wraps a scalar the real value is in
+  // .value; unwrap it so it isn't misread as a (black) colour by convertValues. The colour-
+  // merged shape ({r,g,b,_nextSegment}) has no .value and is left for the colour path.
+  let unwrapSegment = (v) =>
+    (v && typeof v === 'object' && v._nextSegment !== undefined && v.value !== undefined)
+      ? v.value : v
+
   let numberArray = [0]
   let values = []
   let black = {r:0,g:0,b:0,a:1}
   let convertValues = (v) => {
+    v = unwrapSegment(v)
     if (Array.isArray(v)) { return v.filter(av => typeof av === 'number') }
     if (typeof v === 'object') {
       let col = colourRgb(v, black, 'lights')
@@ -43,6 +52,7 @@ define(function (require) {
 
   let applyParam = (value, baseChannel, blend) => {
     if (!value) { return }
+    value = unwrapSegment(value)
     if (typeof value === 'object') {
       if (isColour(value)) { // param is just a colour
         convertValues(value).forEach((v, valueIdx) => {
@@ -69,6 +79,24 @@ define(function (require) {
     } else if (typeof value === 'number') {
       blendChannel(baseChannel, value, blend)
     }
+  }
+
+  // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+    let assert = (expected, actual) => {
+      let x = JSON.stringify(expected)
+      let a = JSON.stringify(actual)
+      if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
+    }
+    // Scalar segment wrapper (@s timevar like duck) unwraps to its underlying value
+    assert(0.5, unwrapSegment({value:0.5,_nextSegment:1,_segmentPower:3}))
+    assert(0, unwrapSegment({value:0,_nextSegment:1,_segmentPower:3})) // 0 must not be lost
+    // Colour-merged segment shape has no .value: left untouched for the colour path
+    assert({r:1,g:0,b:0,_nextSegment:1,_segmentPower:1}, unwrapSegment({r:1,g:0,b:0,_nextSegment:1,_segmentPower:1}))
+    // Plain values pass through unchanged
+    assert(0.7, unwrapSegment(0.7))
+    assert({r:1,g:0}, unwrapSegment({r:1,g:0}))
+    console.log('DMX tests complete')
   }
 
   return (params) => {
