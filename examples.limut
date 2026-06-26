@@ -5343,5 +5343,54 @@ l speak keyboard, rate=1,
     {t:'end of the world',v:2}
   ]{this.value}, 
 
+// l speak gamepad lt:vel, text=('not really','do you believe in miracles?').(this.value), fx=mix{vocodethis,0.65}*2, rate=1, speed=150, oct=2
+
+
+// Be Still (my concrete heart)
+include 'personal/everything.limut'
+dg dmx, channel=63, lights={0:4/64}
+ds dmxstrip, channel=(33,43,53), mode='saw', control=smooth{main.pulse*3,8}, fore*=white, back*=black, smooth=this.voice/64+duck/3, dimmer=duck{depth:1/2}
+dw dmxwash, channel=(1,15), fore=#444*pk.pulse.0
+dw2 dmxwash, channel=(8,22), fore=#444*l.pulse.0
+w webcam, device=['5mp':24,'2mp':8]t, jpeg=[[0,1/4]r1/4@f:24,[0:1]r1/4@f:8]t, monochrome, pixellate=[100:24,60:8]t
+set bpm=107
+set scale='minor'
+set main fx=compress>>stanh
+// pk perc X..., sample=4
+// ph perc ..a., vel=1/4, sus=2/3
+// phh perc n, vel=[1/2:3/4]r, pan=[-1,1:0]l4, sus=1/32
+// bs sub ..0., fx=stanh
+// b saw, envelope='organ', dur=1/4, oct=2, fx=duck>>mix{disperser{[100hz:400hz]{gp.lsu}}}, vel=gp.lsx
+a pulse 072469 crop 16, dur=1/4, oct=3, envelope='perc', sus=1/8, pan=(-1,1), vel=3/2*gp.rsr, stutter={gp.rsd*4,dur:1/2,oct:[3,4]r,add:[0,2,4]r}
+v saw (049), envelope='pad', oct=5, fx=[0:5,1:2.5]t@f*mix{duck,gp.rsl}, pan=(-1,1), vel=gp.rsu/4
+l speak gamepad lt:vel, text=('my concrete heart','be still').(this.value), fx=mix{vocodethis,0.65}, rate=1, speed=150, oct=2
+l2 wave keyboard, wave='full', envelope='organ', glide=3, fx=duck{depth:1/3}
+//
+set main fx>>=mix{tape,2/3}
+set (p*,b) lpf=150, reverb={2,mix:riser}
+m machine, vel=4+4*riser^3
+c crackle, vel=8, fx=pingpong
+// n noise, sus=1/8, room=2, vel=2*riser^3, envelope='pad', lpf=1000+1000*riser^3
+// o perc (Of), vel=3/2*riser^6, rate=1/2
+
+
+// Into The Sunset
+include 'personal/everything.limut'
+dg dmx, channel=63, lights={0:4/64}
+ds dpulse, channel=(33,43,53), input=smooth{main.pulse*3,8}
+dw dmxwash, channel=(1,15), fore=#444*pk.pulse.0
+dw2 dmxwash, channel=(8,22), fore=#444*l.pulse.0
+w webcam, device=['5mp':24,'2mp':8]t, vignette=1/2, recol='sunset', vhs=1/4
+set bpm=101
+set scale='minorpentatonic'
+set main fx=compress>>stanh>>tape{1/8}*3
+set !p* add+=[0:16,2:8,3:8]t
+c crackle
+// p perc x....<.-fn> crop 32, swing=56, vel=1/16, rate=3/4, room={1/3,hpf:300,mix:1/4}
+s softpad (049), chorus, fx=mix{airverb,7/8}/3, oct-=1, vel=gp.lsx
+a chime 024 crop 8, fx=mix{airverb}/3, vel=gp.rsr
+cl tri, envelope='pad', vel=1-gp.rsr, addc=5*gp.rsv, fx=mix{airverb,7/8}/2
+l softkeys gamepad lt:vel, fx=mix{airverb}, delay=(0,{3/4,add:1})
+l2 speak keyboard, text=('into the sunset','into the ocean','into the blue','far away').(this.value), fx=mix{noise>>bpf{523/2,q:1}*2>>vocoder{this.player.pre}>>mix{airverb},0.95}>>mix{airverb}, rate=1.2, speed=1
 
 

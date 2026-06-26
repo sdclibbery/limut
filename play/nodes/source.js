@@ -76,12 +76,24 @@ define(function(require) {
     let params = combineParams(args, e)
     let value = params.sample !== undefined ? params.sample : args.value
     let startTime = 0
+    // A buffer source can't be re-buffered once started, and an fx chain is built once at
+    // event time, so when the sample is still loading we defer node.start until the buffer
+    // lands (rebased to now) rather than starting silent forever. Mirrors the tts node below.
+    let deferredBuffer
+    let started = false
+    let begin = (buffer, when) => {
+      if (started || !buffer) { return }
+      started = true
+      node.buffer = buffer
+      node.start(when, startTime)
+      if (e && e._destructor) { e._destructor.stop(node) } else { node.stop() }
+    }
     let evalledValue = evalParamEvent(value, e,b)
     if (typeof evalledValue === 'string') { value = evalledValue }
     if (typeof value === 'string' || value === undefined) {
       if (value === undefined) { value = 'sample/salamander/C4v8.mp3' }
-      node.buffer = getBuffer(value)
       startTime = evalMainParamEvent(params, 'start', 0, 's')
+      deferredBuffer = getBuffer(value, (buf) => begin(buf, system.audio.currentTime + metronome.advance()))
     } else {
       const length = evalMainParamEvent(params, 'length', 0.2, 's')
       const sampleRate = system.audio.sampleRate
@@ -93,7 +105,7 @@ define(function(require) {
         let y = evalParamFrame(args.value,e,b, {doNotMemoise:true}) // It will memoise the same result across all x if allowed to
         data[i] = y
       }
-      node.buffer = buffer
+      deferredBuffer = buffer
     }
     evalMainParamFrame(node.playbackRate, params, 'rate', 1)
     node.loop = params.loop === undefined || params.loop === true ? true : false // Default to looping if not set
@@ -110,8 +122,7 @@ define(function(require) {
         return true
       })
     }
-    node.start(e._time, startTime)
-    if (e && e._destructor) { e._destructor.stop(node) } else { node.stop() }
+    if (deferredBuffer) { begin(deferredBuffer, e._time) } // ready synchronously: start on the event
     return node
   }
   addNodeFunction('sample', sample)

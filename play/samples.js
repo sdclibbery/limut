@@ -3,25 +3,32 @@ define(function (require) {
   let system = require('play/system');
 
   let buffers = {}
+  let pending = {} // url -> array of onReady callbacks waiting for the load+decode to finish
   let nullBuffer = system.audio.createBuffer(2, 100, 22050);
 
-  let getBuffer = (url) => {
+  // onReady (optional) is called with the AudioBuffer once load+decode finish, so a caller
+  // whose buffer wasn't ready at event time can still play it as soon as it lands (instead
+  // of being silent until the player is restarted). Mirrors getTtsBuffer in play/tts.js.
+  let getBuffer = (url, onReady) => {
     let buffer = buffers[url]
-    if (buffer == nullBuffer) { return null }
-    if (!buffer) {
-      buffers[url] = nullBuffer
-      let request = new XMLHttpRequest()
-      request.open('GET', url, true)
-      request.responseType = 'arraybuffer'
-      request.onload = () => {
-        system.audio.decodeAudioData(request.response, (buf) => {
-          buffers[url] = buf
-        }, console.error)
-      }
-      request.send()
-      return null
+    if (buffer && buffer !== nullBuffer) { return buffer } // ready: synchronous path
+    if (onReady) { (pending[url] || (pending[url] = [])).push(onReady) }
+    if (buffer === nullBuffer) { return null } // already loading; callback now queued
+    buffers[url] = nullBuffer // mark as loading so we only kick off once
+    let clearOnFail = () => { if (buffers[url] === nullBuffer) { delete buffers[url] }; delete pending[url] }
+    let request = new XMLHttpRequest()
+    request.open('GET', url, true)
+    request.responseType = 'arraybuffer'
+    request.onload = () => {
+      system.audio.decodeAudioData(request.response, (buf) => {
+        buffers[url] = buf
+        let cbs = pending[url]; delete pending[url]
+        if (cbs) { cbs.forEach((cb) => cb(buf)) }
+      }, (e) => { console.error(e); clearOnFail() })
     }
-    return buffer
+    request.onerror = clearOnFail
+    request.send()
+    return null
   }
 
   let isLoaded = (url) => {
