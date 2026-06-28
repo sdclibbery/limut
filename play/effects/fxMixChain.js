@@ -102,8 +102,6 @@ define(function (require) {
   }
 
   let fxMixChain = (params, node) => {
-    let pre = playerPre.get(params._player.id) // Tap the dry per-event voice for `id.pre` consumers; auto-cleans via the event destructor's no-arg disconnect
-    if (pre) { node.connect(pre) }
     let chainParams = getParams(params)
     let key = ''
     for (let k in chainParams) { key += chainParams[k] }
@@ -126,6 +124,12 @@ define(function (require) {
     node.connect(chain.in)
     chain.destructor.disconnect(node)
     connectChain(chain, params, createdChain)
+    // Tap the dry per-event voice for `id.pre` consumers; auto-cleans via the event destructor's
+    // no-arg disconnect. Done *after* connectChain so a self-tapping fx chain (eg vocoder{this.player.pre})
+    // has already created the registry node on this same first event - otherwise the first voice is
+    // never fanned into `.pre` and the wet path is silent until the second trigger.
+    let pre = playerPre.get(params._player.id)
+    if (pre) { node.connect(pre) }
   }
 
   return {
