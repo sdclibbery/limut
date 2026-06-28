@@ -59,3 +59,18 @@ preset doombass audiosynth, oct=1, dur=1/4,
   decay=this.vel, cutoff=this.vel
 
 set darkverb = {depth:3/4} -> stanh>>mix{tape{depth/3}}>>echo{80ms*(1+0.05*depth*[-1,1]n3@f)}>>mix{bpf{500}>>airverb,1/3}>>stanh*-4db
+
+
+// Brutalist
+// The good
+// • Raw - simple synths, minimal presets, crackles and pops
+// • Geometric - patterns, polymeters, sharp envelopes, echoes, modularity
+// • Exposed materials - no filtering, no effects (minimal drive/reverb)
+// • Function over form, social democracy - monochrome, cold mix, reduced mids??
+// • Mass and weight - heavy percussion and bass
+// The bad
+// • Weathering, poverty, crime, dirt, decay - tape effects, distortion, noise, grit
+// • State supremacy, small individuals, bureaucratic coldness - loud, overwhelming, unfiltered; big beat? juggernaut beat, broken melody
+// • The cold war, the space race - sovietwave, horror
+// The renaissance
+// • Beauty: shadows, contrast, graphic lines, raw textures, social media - warm tinged mix, warm reverb, nostalgic effects

@@ -2,9 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 !!Vocodethis doesnt happen first time?? on speak??
-Wavetable oscillator that loads a 64 cycle wavetable as a single source and switches between cycles inside it
- ?Is there clicking when switching cycles? What to do if so?
- More wavetables: https://kimurataro.com/products/wt-free/
 Wavetable oscillator that crossfades between arbitrary sample waveforms
  ! wtlerp must handle wt values out of range by clamping or modding
  ? Equal power crossfade? Or lpf/hpf crossfade?
@@ -12,12 +9,14 @@ Wavetable oscillator that crossfades between arbitrary sample waveforms
  osc.wt
   clean simple interface for taking the wavetable samples
    ? how? pass a {} value array? Then map it somehow?
-   	waves.map{ {k,v,i} -> v*multilerp{i, waves.count, wt} }
+       waves.map{ {k,v,i} -> v*multilerp{i, waves.count, wt} }
    Find a way to let it take a variable number of samples without having to tell it how many
  ? Allow specifying nonuniform spacing of samples within the wt?
  wt preset with default samples
  DOCS: wtlerp, osc.wt, akwfsample, akwf waveform samples
 Wavetable oscillator that crossfades between 4 arbitrary samples but in 2D (??Or 5, with one in the middle??)
+??Wavetable worklet: phase-accumulator oscillator, dual linear interpolation for frame morphing, phase-warping
+More wavetables: https://kimurataro.com/products/wt-free/
 ? Chebyshev shaper
 ?multitap should have second callback for chain to use on each tap before they get summed together
  ?OR, one callback but it can return a pair of chains somehow?

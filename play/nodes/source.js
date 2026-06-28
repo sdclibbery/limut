@@ -76,7 +76,7 @@ define(function(require) {
     let params = combineParams(args, e)
     let value = params.sample !== undefined ? params.sample : args.value
     let startTime = 0
-    // A buffer source can't be re-buffered once started, and an fx chain is built once at
+    // A buffer source can't be re-buffered once started, and an fx chain is built one at
     // event time, so when the sample is still loading we defer node.start until the buffer
     // lands (rebased to now) rather than starting silent forever. Mirrors the tts node below.
     let deferredBuffer
@@ -117,8 +117,8 @@ define(function(require) {
         let __event = params !== undefined && params.__event ? params.__event : params
         if (__event && state.time > __event.endTime) { return false }
         if (__event && state.time < __event._time) { return true }
-          node.loopStart = mainParamUnits(evalParamFrame(params.loopstart,params,state.count), 0, 's')
-          node.loopEnd = node.loopStart + mainParamUnits(evalParamFrame(params.looplen,params,state.count), 1, 's')
+        node.loopStart = mainParamUnits(evalParamFrame(params.loopstart,params,state.count), 0, 's')
+        node.loopEnd = node.loopStart + mainParamUnits(evalParamFrame(params.looplen,params,state.count), 1, 's')
         return true
       })
     }
