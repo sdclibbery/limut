@@ -1,7 +1,6 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!!Vocodethis doesnt happen first time?? on speak??
 Wavetable oscillator that crossfades between arbitrary sample waveforms
  ! wtlerp must handle wt values out of range by clamping or modding
  ? Equal power crossfade? Or lpf/hpf crossfade?
@@ -18,6 +17,8 @@ Wavetable oscillator that crossfades between 4 arbitrary samples but in 2D (??Or
 ??Wavetable worklet: phase-accumulator oscillator, dual linear interpolation for frame morphing, phase-warping
 More wavetables: https://kimurataro.com/products/wt-free/
 ? Chebyshev shaper
+tts{} does not repeat, so its not useful in fx chain. Want to either trigger it, or set a repeat interval
+ // l supersaw 001236, fx=vocoder{tts{'take your place'}}*8, oct=2, dur=1/2
 ?multitap should have second callback for chain to use on each tap before they get summed together
  ?OR, one callback but it can return a pair of chains somehow?
 !! darkverb with stanh>>..>>stanh failed with gamepad, didn't play anything on win laptop

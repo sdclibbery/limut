@@ -64,7 +64,7 @@ set darkverb = {depth:3/4} -> stanh>>mix{tape{depth/3}}>>echo{80ms*(1+0.05*depth
 // Brutalist
 // The good
 // • Raw - simple synths, minimal presets, crackles and pops
-// • Geometric - patterns, polymeters, sharp envelopes, echoes, modularity
+// • Geometric - patterns, polymeters, sharp envelopes, echoes, modularity of musical structure
 // • Exposed materials, wood grain - no filtering, no effects (minimal drive/reverb)
 // • Function over form, social democracy - monochrome, cold mix, reduced mids??
 // • Mass and weight - heavy percussion and bass
