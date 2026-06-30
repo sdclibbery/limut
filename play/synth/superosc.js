@@ -11,6 +11,7 @@ define(function (require) {
   let waveEffects = require('play/effects/wave-effects')
   let {evalMainParamEvent} = require('play/eval-audio-params')
   let perFrameAmp = require('play/effects/perFrameAmp')
+  let {getBuffer} = require('play/samples')
 
   return (params) => {
     let freq = scale.paramsToFreq(params, 4)
@@ -23,6 +24,15 @@ define(function (require) {
     let vco = createSuperOsc()
     vco.parameters.get('frequency').value = freq * Math.pow(2, detuneSemis/12)
     pitchEffects(vco.parameters.get('detune'), params)
+
+    // The waveform is a sample buffer indexed by phase. With no wavetable set
+    // the oscillator stays silent; when the sample loads (sync or async via the
+    // samples cache) it is pushed to the worklet, which switches to it in place.
+    let wavetableUrl = evalMainParamEvent(params, 'wavetable', undefined)
+    if (wavetableUrl) {
+      let buf = getBuffer(wavetableUrl, (b) => vco.setWave(b.getChannelData(0)))
+      if (buf) { vco.setWave(buf.getChannelData(0)) }
+    }
 
     waveEffects(params, effects(params, vco)).connect(vca)
     vco.start(params._time)

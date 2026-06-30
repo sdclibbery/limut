@@ -2,9 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 Worklet oscillator node
- Is passed a waveform sample
- Tracks normalised phase; changes to freq modify phase
- Lerp between samples: cubic??
  Consider aliasing
  Can set starting phase
  Freq and detune params
@@ -15,7 +12,7 @@ Worklet oscillator node
   _warpPhase(phase, amt, mode) distorts the phase before table lookup — it's phase-shaping, not waveshaping the output.
   Modes (ASYM, MIRROR, BENDP/M, SYNC, QUANT, FOLD, PWM, ORBIT, SPIN, CHAOS, PRIMES, BINARY, BROWNIAN, RECIPROCAL, WORMHOLE, LOGISTIC, SIGMOID, FRACTAL, FLIP…)
   E.g. SYNC does (phase * ratio) % 1 for oscillator-sync effects; QUANT bit-crushes the phase.
-More wavetables: https://kimurataro.com/products/wt-free/
+ More wavetables: https://kimurataro.com/products/wt-free/
 ? Chebyshev shaper
 !tts{} does not repeat, so its not useful in fx chain. Want to either trigger it, or set a repeat interval
  // l supersaw 001236, fx=vocoder{tts{'take your place'}}*8, oct=2, dur=1/2

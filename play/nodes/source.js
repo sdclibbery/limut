@@ -50,6 +50,13 @@ define(function(require) {
       evalMainParamFrame(node.parameters.get('frequency'), params, 'freq', 440, 'hz')
     }
     evalMainParamFrame(node.parameters.get('detune'), params, 'detune', 0)
+    // Waveform sample buffer, indexed by phase; silent until the sample loads,
+    // then switched in via the worklet's message port. Mirrors the synth.
+    let wavetableUrl = evalMainParamEvent(params, 'wavetable', undefined)
+    if (wavetableUrl) {
+      let buf = getBuffer(wavetableUrl, (b) => node.setWave(b.getChannelData(0)))
+      if (buf) { node.setWave(buf.getChannelData(0)) }
+    }
     node.start(e._time)
     if (e && e._destructor) { e._destructor.stop(node) } else { node.stop() }
     return node
