@@ -2,7 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 Worklet oscillator node
- Consider aliasing
  Can set starting phase
  Freq and detune params
  Load multiple samples and lerp between them with a wt param
