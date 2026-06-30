@@ -2,15 +2,14 @@
 =================================================================================================================================
 =================================================================================================================================
 Worklet oscillator node
- Can set starting phase
- Freq and detune params
- Load multiple samples and lerp between them with a wt param
  Unison param with normalised amplitude ( 1/sqrt(count) )
   Params to control unison freq, phase and pan spread, and unison wt spread??
  Warp param that distorts the phase before it is lerped into the wavetable
   _warpPhase(phase, amt, mode) distorts the phase before table lookup — it's phase-shaping, not waveshaping the output.
   Modes (ASYM, MIRROR, BENDP/M, SYNC, QUANT, FOLD, PWM, ORBIT, SPIN, CHAOS, PRIMES, BINARY, BROWNIAN, RECIPROCAL, WORMHOLE, LOGISTIC, SIGMOID, FRACTAL, FLIP…)
   E.g. SYNC does (phase * ratio) % 1 for oscillator-sync effects; QUANT bit-crushes the phase.
+ Can set starting phase of oscillator
+ Load AKWF wavetables with one file per wave
  More wavetables: https://kimurataro.com/products/wt-free/
 ? Chebyshev shaper
 !tts{} does not repeat, so its not useful in fx chain. Want to either trigger it, or set a repeat interval

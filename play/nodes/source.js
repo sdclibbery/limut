@@ -35,10 +35,11 @@ define(function(require) {
   }
   addNodeFunction('osc', osc)
 
-  // Audio-worklet sine oscillator source node, so a superosc can be wired into an fx chain
+  // Audio-worklet wavetable oscillator source node, so a superosc can be wired into an fx chain
   // like any other source, eg `superosc{440} >> lpf{800}`. `value`/`freq` set the frequency
-  // in Hz and `detune` shifts it in cents, mirroring the native `osc` node. Intended to grow
-  // more functionality over time (hence "super").
+  // in Hz and `detune` shifts it in cents, mirroring the native `osc` node. `wavetable` is a
+  // sample URL sliced into `count` single-cycle frames (default 64), and `wt` (0..1) morphs
+  // across them. Intended to grow more functionality over time (hence "super").
   let superosc = (args,e,b) => {
     if (!window.AudioWorkletNode) { return }
     let node = createSuperOsc()
@@ -50,13 +51,16 @@ define(function(require) {
       evalMainParamFrame(node.parameters.get('frequency'), params, 'freq', 440, 'hz')
     }
     evalMainParamFrame(node.parameters.get('detune'), params, 'detune', 0)
-    // Waveform sample buffer, indexed by phase; silent until the sample loads,
-    // then switched in via the worklet's message port. Mirrors the synth.
+    // Wavetable sample buffer, sliced into `count` single-cycle frames (count is
+    // a sibling param, default 64); silent until the sample loads, then switched
+    // in via the worklet's message port. `wt` (0..1) morphs across the frames.
     let wavetableUrl = evalMainParamEvent(params, 'wavetable', undefined)
     if (wavetableUrl) {
-      let buf = getBuffer(wavetableUrl, (b) => node.setWave(b.getChannelData(0)))
-      if (buf) { node.setWave(buf.getChannelData(0)) }
+      let count = evalMainParamEvent(params, 'count', 64)
+      let buf = getBuffer(wavetableUrl, (b) => node.setWave(b.getChannelData(0), count))
+      if (buf) { node.setWave(buf.getChannelData(0), count) }
     }
+    evalMainParamFrame(node.parameters.get('wt'), params, 'wt', 0)
     node.start(e._time)
     if (e && e._destructor) { e._destructor.stop(node) } else { node.stop() }
     return node

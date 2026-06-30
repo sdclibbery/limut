@@ -9,7 +9,7 @@ define(function (require) {
   let {fxMixChain} = require('play/effects/fxMixChain')
   let pitchEffects = require('play/effects/pitch-effects')
   let waveEffects = require('play/effects/wave-effects')
-  let {evalMainParamEvent} = require('play/eval-audio-params')
+  let {evalMainParamEvent,evalSubParamEvent,evalMainParamFrame} = require('play/eval-audio-params')
   let perFrameAmp = require('play/effects/perFrameAmp')
   let {getBuffer} = require('play/samples')
 
@@ -25,14 +25,18 @@ define(function (require) {
     vco.parameters.get('frequency').value = freq * Math.pow(2, detuneSemis/12)
     pitchEffects(vco.parameters.get('detune'), params)
 
-    // The waveform is a sample buffer indexed by phase. With no wavetable set
-    // the oscillator stays silent; when the sample loads (sync or async via the
-    // samples cache) it is pushed to the worklet, which switches to it in place.
+    // The wavetable is a sample buffer sliced into `count` single-cycle frames
+    // (count is a subparam of wavetable, eg wavetable={'...', count:64}). With no
+    // wavetable set the oscillator stays silent; when the sample loads (sync or
+    // async via the samples cache) it is pushed to the worklet, which switches to
+    // it in place. `wt` (0..1) morphs across the frames.
     let wavetableUrl = evalMainParamEvent(params, 'wavetable', undefined)
     if (wavetableUrl) {
-      let buf = getBuffer(wavetableUrl, (b) => vco.setWave(b.getChannelData(0)))
-      if (buf) { vco.setWave(buf.getChannelData(0)) }
+      let count = evalSubParamEvent(params, 'wavetable', 'count', 64)
+      let buf = getBuffer(wavetableUrl, (b) => vco.setWave(b.getChannelData(0), count))
+      if (buf) { vco.setWave(buf.getChannelData(0), count) }
     }
+    evalMainParamFrame(vco.parameters.get('wt'), params, 'wt', 0)
 
     waveEffects(params, effects(params, vco)).connect(vca)
     vco.start(params._time)
