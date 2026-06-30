@@ -4,6 +4,7 @@ define(function(require) {
   let system = require('play/system');
   let {evalMainParamEvent,evalMainParamFrame} = require('play/eval-audio-params')
   let {evalParamFrame,evalParamEvent} = require('player/eval-param')
+  let createSuperOsc = require('play/superosc-source')
   let setWave = require('play/synth/waveforms/set-wave')
   let whiteNoise = require('play/synth/waveforms/noise')
   let click = require('play/synth/waveforms/click')
@@ -33,6 +34,27 @@ define(function(require) {
     return node
   }
   addNodeFunction('osc', osc)
+
+  // Audio-worklet sine oscillator source node, so a superosc can be wired into an fx chain
+  // like any other source, eg `superosc{440} >> lpf{800}`. `value`/`freq` set the frequency
+  // in Hz and `detune` shifts it in cents, mirroring the native `osc` node. Intended to grow
+  // more functionality over time (hence "super").
+  let superosc = (args,e,b) => {
+    if (!window.AudioWorkletNode) { return }
+    let node = createSuperOsc()
+    let params = combineParams(args, e)
+    let value = evalParamEvent(params.value, e,b)
+    if (typeof value === 'number' && value !== 0) {
+      evalMainParamFrame(node.parameters.get('frequency'), params, 'value', 440, 'hz')
+    } else {
+      evalMainParamFrame(node.parameters.get('frequency'), params, 'freq', 440, 'hz')
+    }
+    evalMainParamFrame(node.parameters.get('detune'), params, 'detune', 0)
+    node.start(e._time)
+    if (e && e._destructor) { e._destructor.stop(node) } else { node.stop() }
+    return node
+  }
+  addNodeFunction('superosc', superosc)
 
   let constNode = (args,e,b) => {
     let node = system.audio.createConstantSource()

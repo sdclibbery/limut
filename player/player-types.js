@@ -15,6 +15,7 @@ define((require) => {
   let piano = require('play/synth/piano')
   let noise = require('play/synth/noise')
   let pwm = require('play/synth/pwm')
+  let superosc = require('play/synth/superosc')
   let fm = require('play/synth/fm')
   let external = require('play/synth/external')
   let wave = require('play/synth/wave')
@@ -84,6 +85,7 @@ define((require) => {
     speak: { play: tts, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4, text:'hello' }, _type:'audio' },
     piano: { play: piano, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4 }, _type:'audio' },
     pwm: { play: pwm, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4, pwm:0.5 }, _type:'audio' },
+    superosc: { play: superosc, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4 }, _type:'audio' },
     wave: { play: wave, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4 }, _type:'audio' },
     fm: { play: fm, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4 }, _type:'audio' },
     multiwave: { play: multiwave, baseParams:{ vel:3/4, amp:parseExpression('this.vel'), delay:0, oct:4 }, _type:'audio' },
