@@ -1,15 +1,22 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-Worklet oscillator node
- Unison param with normalised amplitude ( 1/sqrt(count) )
-  Params to control unison freq, phase and pan spread, and unison wt spread??
- Warp param that distorts the phase before it is lerped into the wavetable
-  _warpPhase(phase, amt, mode) distorts the phase before table lookup — it's phase-shaping, not waveshaping the output.
-  Modes (ASYM, MIRROR, BENDP/M, SYNC, QUANT, FOLD, PWM, ORBIT, SPIN, CHAOS, PRIMES, BINARY, BROWNIAN, RECIPROCAL, WORMHOLE, LOGISTIC, SIGMOID, FRACTAL, FLIP…)
-  E.g. SYNC does (phase * ratio) % 1 for oscillator-sync effects; QUANT bit-crushes the phase.
+SuperOsc worklet
+ Unison count param with normalised amplitude ( 1/sqrt(count) )
+  Freq spread subparam
+  Phase spread
+  Pan spread
+  WT spread??
+ Params that modify the phase before table lookup
+  Sync (phase * ratio) % 1
+  Mirror with movable centre point
+  Bitcrush
+  Power
+  Noise/chaos
+ Cache the precomputed integral tables
  Can set starting phase of oscillator
- Load AKWF wavetables with one file per wave
+ Can load AKWF wavetables with one file per wave
+  ??Or better, can we get the AKWF as single wav tables?
  More wavetables: https://kimurataro.com/products/wt-free/
 ? Chebyshev shaper
 !tts{} does not repeat, so its not useful in fx chain. Want to either trigger it, or set a repeat interval

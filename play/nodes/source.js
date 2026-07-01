@@ -2,7 +2,7 @@
 define(function(require) {
   let {addNodeFunction,combineParams} = require('play/nodes/node-var')
   let system = require('play/system');
-  let {evalMainParamEvent,evalMainParamFrame} = require('play/eval-audio-params')
+  let {evalMainParamEvent,evalSubParamEvent,evalMainParamFrame} = require('play/eval-audio-params')
   let {evalParamFrame,evalParamEvent} = require('player/eval-param')
   let createSuperOsc = require('play/superosc-source')
   let setWave = require('play/synth/waveforms/set-wave')
@@ -52,11 +52,12 @@ define(function(require) {
     }
     evalMainParamFrame(node.parameters.get('detune'), params, 'detune', 0)
     // Wavetable sample buffer, sliced into `count` single-cycle frames (count is
-    // a sibling param, default 64); silent until the sample loads, then switched
-    // in via the worklet's message port. `wt` (0..1) morphs across the frames.
+    // a subparam of wavetable, eg wavetable:{'...', count:64}, default 64); silent
+    // until the sample loads, then switched in via the worklet's message port.
+    // `wt` (0..1) morphs across the frames.
     let wavetableUrl = evalMainParamEvent(params, 'wavetable', undefined)
     if (wavetableUrl) {
-      let count = evalMainParamEvent(params, 'count', 64)
+      let count = evalSubParamEvent(params, 'wavetable', 'count', 64)
       let buf = getBuffer(wavetableUrl, (b) => node.setWave(b.getChannelData(0), count))
       if (buf) { node.setWave(buf.getChannelData(0), count) }
     }
