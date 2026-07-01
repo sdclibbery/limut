@@ -3,11 +3,11 @@
 =================================================================================================================================
 SuperOsc worklet
  Unison count param with normalised amplitude ( 1/sqrt(count) )
-  Freq spread subparam
-  Phase spread
-  Pan spread
-  WT spread??
- Params that modify the phase before table lookup
+  Ratio subparam
+  Pan spread subparam
+  Phase spread subparam
+  WT spread subparam??
+ Phase modification before table lookup
   Sync (phase * ratio) % 1
   Mirror with movable centre point
   Bitcrush
@@ -15,7 +15,7 @@ SuperOsc worklet
   Noise/chaos
  Cache the precomputed integral tables
  Can set starting phase of oscillator
- Can load AKWF wavetables with one file per wave
+ ??Can load AKWF wavetables with one file per wave
   ??Or better, can we get the AKWF as single wav tables?
  More wavetables: https://kimurataro.com/products/wt-free/
 ? Chebyshev shaper

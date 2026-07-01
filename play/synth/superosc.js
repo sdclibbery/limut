@@ -9,7 +9,7 @@ define(function (require) {
   let {fxMixChain} = require('play/effects/fxMixChain')
   let pitchEffects = require('play/effects/pitch-effects')
   let waveEffects = require('play/effects/wave-effects')
-  let {evalMainParamEvent,evalSubParamEvent,evalMainParamFrame} = require('play/eval-audio-params')
+  let {evalMainParamEvent,evalSubParamEvent,evalMainParamFrame,evalSubParamFrame} = require('play/eval-audio-params')
   let perFrameAmp = require('play/effects/perFrameAmp')
   let {getBuffer} = require('play/samples')
 
@@ -37,6 +37,11 @@ define(function (require) {
       if (buf) { vco.setWave(buf.getChannelData(0), count) }
     }
     evalMainParamFrame(vco.parameters.get('wt'), params, 'wt', 0)
+
+    // unison: number of detuned voices; its `ratio` subparam is the max frequency
+    // ratio the voices spread across, evenly each side of the primary frequency.
+    evalMainParamFrame(vco.parameters.get('unison'), params, 'unison', 1)
+    evalSubParamFrame(vco.parameters.get('unisonRatio'), params, 'unison', 'ratio', 1.01)
 
     waveEffects(params, effects(params, vco)).connect(vca)
     vco.start(params._time)

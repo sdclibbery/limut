@@ -35,6 +35,22 @@ define(function (require) {
     return { wave: data, integral, totals, frameLen, count }
   }
 
+  // Per-voice frequency multipliers for `n` unison voices detuned by max
+  // frequency ratio `ratio`, spread evenly (geometrically, ie by pitch) each
+  // side of the primary frequency. Voice v gets exponent p in [-1,+1] spread
+  // evenly across the voices, and multiplier ratio^p: the extremes sit at
+  // ratio (top) and 1/ratio (bottom), the centre voice at 1 (the primary).
+  // n===1 gives [1] (no detune). Kept in sync with the same formula inlined in
+  // the worklet's process() (the worklet can't share this module's code).
+  const unisonMuls = (n, ratio) => {
+    const mul = new Float32Array(n)
+    for (let v = 0; v < n; v++) {
+      const p = n === 1 ? 0 : (2 * v / (n - 1) - 1)
+      mul[v] = Math.pow(ratio, p)
+    }
+    return mul
+  }
+
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
     let assert = (expected, actual, msg) => {
@@ -103,6 +119,20 @@ define(function (require) {
     assert(r.totals[0] / flen, boxMeanF(0.7, 0.7 + flen, 0), 'frame0 full-cycle mean')
     assert(r.totals[1] / flen, boxMeanF(2.3, 2.3 + flen, 1), 'frame1 full-cycle mean')
 
+    // unisonMuls: geometric detune spread each side of the primary
+    let m1 = unisonMuls(1, 1.1)
+    assert(1, m1.length, 'uni n=1 length'); assert(1, m1[0], 'uni n=1 centre')
+    let m2 = unisonMuls(2, 1.1)
+    assert(1 / 1.1, m2[0], 'uni n=2 low'); assert(1.1, m2[1], 'uni n=2 high')
+    let m3 = unisonMuls(3, 1.1)
+    assert(1 / 1.1, m3[0], 'uni n=3 low'); assert(1, m3[1], 'uni n=3 centre'); assert(1.1, m3[2], 'uni n=3 high')
+    // symmetry: mul[v] * mul[n-1-v] === 1 (geometric, so log-symmetric about primary)
+    let m5 = unisonMuls(5, 1.03)
+    for (let v = 0; v < 5; v++) { assert(1, m5[v] * m5[5 - 1 - v], 'uni n=5 symmetry ' + v) }
+    // ratio===1: no detune, all voices at the primary
+    let mr = unisonMuls(4, 1)
+    for (let v = 0; v < 4; v++) { assert(1, mr[v], 'uni ratio=1 voice ' + v) }
+
     console.log('superosc tests complete')
   }
 
@@ -147,6 +177,13 @@ class SuperOsc extends AudioWorkletProcessor {
       // wt: morph position across the wavetable's frames, normalised 0..1
       // (0 = first frame, 1 = last frame), lerping between adjacent frames.
       { name: 'wt', defaultValue: 0, minValue: 0, maxValue: 1, automationRate: 'a-rate' },
+      // unison: number of detuned voices (1..16) layered together. unisonRatio
+      // is the max frequency ratio the voices are detuned by, spread evenly
+      // (geometrically) each side of the primary freq. Both read k-rate (once
+      // per block, at [0]). unisonRatio's descriptor default is only a fallback;
+      // the synth/node-fn actually set 1.01 when unison>1.
+      { name: 'unison', defaultValue: 1, minValue: 1, maxValue: 16 },
+      { name: 'unisonRatio', defaultValue: 1.01, minValue: 1, maxValue: 4 },
       // start/stop gates, driven by the node's start()/stop() methods
       { name: 'start', defaultValue: 0, minValue: 0, maxValue: 1 },
       { name: 'stop', defaultValue: 0, minValue: 0, maxValue: 1 },
@@ -155,7 +192,12 @@ class SuperOsc extends AudioWorkletProcessor {
 
   constructor() {
     super();
-    this.t = 0; // phase, in cycles [0,1) within a single frame
+    // Per-voice phase (cycles [0,1) within a single frame), one per unison voice
+    // (up to 16). Voice 0 starts at 0 (so unison=1 is identical to a single
+    // oscillator); the rest start spread across the cycle so the voices don't
+    // begin perfectly coherent.
+    this.phases = new Float32Array(16);
+    for (let v = 1; v < 16; v++) { this.phases[v] = v / 16; }
     this.wave = null; // wavetable sample data (Float32Array of channel-0 samples, count frames end-to-end)
     this.integral = null; // per-frame running integrals (for band-limited reads)
     this.totals = null; // per-frame cycle sums (each frame's integral per-cycle increment)
@@ -188,6 +230,21 @@ class SuperOsc extends AudioWorkletProcessor {
     const frameLen = this.frameLen;
     const count = this.count;
     const haveWave = wave && frameLen > 0;
+
+    // Unison: n detuned voices summed together (read k-rate, once per block).
+    // mul[v] is voice v's frequency multiplier, spread geometrically each side
+    // of the primary by max ratio (extremes at ratio and 1/ratio, centre at 1).
+    // gain = 1/sqrt(n) keeps loudness roughly constant and unison=1 unchanged.
+    let n = Math.round(parameters.unison[0]);
+    if (n < 1) { n = 1 } else if (n > 16) { n = 16 }
+    const ratio = parameters.unisonRatio[0];
+    const mul = new Float32Array(n);
+    for (let v = 0; v < n; v++) {
+      const p = n === 1 ? 0 : (2 * v / (n - 1) - 1);
+      mul[v] = Math.pow(ratio, p);
+    }
+    const gain = 1 / Math.sqrt(n);
+    const phases = this.phases;
 
     // Ic: frame f's running integral, extended beyond one cycle. Each frame's
     // integral is quasi-periodic: I[k+frameLen] = I[k] + totals[f] (the per-cycle
@@ -239,36 +296,45 @@ class SuperOsc extends AudioWorkletProcessor {
       const frequency = getFrequency(i);
       const detune = getDetune(i);
       const freq = frequency * Math.pow(2, detune / 1200);
-      const inc = freq / sampleRate; // phase step, in cycles per sample
 
-      // Read the wavetable over the exact span the phase sweeps this sample: a
-      // box (moving-average) filter whose width grows with pitch, so harmonics
-      // that would alias at high notes are rolled off automatically. wt picks
-      // a position across the frames; the band-limited reads of the two adjacent
-      // frames are lerped to morph between them. Until a wavetable has loaded the
-      // output is silent, but phase still advances.
+      // Read the wavetable over the exact span each voice's phase sweeps this
+      // sample: a box (moving-average) filter whose width grows with pitch, so
+      // harmonics that would alias at high notes are rolled off automatically.
+      // wt picks a position across the frames (the same for every voice); the
+      // band-limited reads of the two adjacent frames are lerped to morph
+      // between them. The n detuned unison voices (each its own freq and phase)
+      // are summed and scaled by gain. Until a wavetable has loaded the output
+      // is silent, but every voice's phase still advances.
       let sample = 0;
       if (haveWave) {
-        const x0 = this.t * frameLen;
-        const x1 = x0 + inc * frameLen;
-        const span = x1 - x0;
         let wt = getWt(i);
         if (wt < 0) { wt = 0 } else if (wt > 1) { wt = 1 }
         const fp = wt * (count - 1);
         let fa = fp | 0;
         if (fa > count - 1) { fa = count - 1 }
         const fr = fp - fa;
-        sample = readFrame(fa, x0, x1, span);
-        if (fr > 0 && fa < count - 1) {
-          sample += (readFrame(fa + 1, x0, x1, span) - sample) * fr;
+        const lerp = fr > 0 && fa < count - 1;
+        for (let v = 0; v < n; v++) {
+          const incV = freq * mul[v] / sampleRate; // phase step, in cycles per sample
+          const x0 = phases[v] * frameLen;
+          const x1 = x0 + incV * frameLen;
+          const span = x1 - x0;
+          let s = readFrame(fa, x0, x1, span);
+          if (lerp) { s += (readFrame(fa + 1, x0, x1, span) - s) * fr; }
+          sample += s;
+          phases[v] += incV;
+          phases[v] -= (phases[v]) | 0;
+        }
+        sample *= gain;
+      } else {
+        // No wavetable yet: still advance each voice's phase.
+        for (let v = 0; v < n; v++) {
+          phases[v] += freq * mul[v] / sampleRate;
+          phases[v] -= (phases[v]) | 0;
         }
       }
       // write the same sample to every output channel
       for (let c = 0; c < output.length; c++) { output[c][i] = sample }
-
-      // advance phase (continues even while the wavetable is still loading)
-      this.t += inc;
-      this.t -= (this.t) | 0;
     }
     return true
   }

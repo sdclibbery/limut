@@ -2,7 +2,7 @@
 define(function(require) {
   let {addNodeFunction,combineParams} = require('play/nodes/node-var')
   let system = require('play/system');
-  let {evalMainParamEvent,evalSubParamEvent,evalMainParamFrame} = require('play/eval-audio-params')
+  let {evalMainParamEvent,evalSubParamEvent,evalMainParamFrame,evalSubParamFrame} = require('play/eval-audio-params')
   let {evalParamFrame,evalParamEvent} = require('player/eval-param')
   let createSuperOsc = require('play/superosc-source')
   let setWave = require('play/synth/waveforms/set-wave')
@@ -39,7 +39,8 @@ define(function(require) {
   // like any other source, eg `superosc{440} >> lpf{800}`. `value`/`freq` set the frequency
   // in Hz and `detune` shifts it in cents, mirroring the native `osc` node. `wavetable` is a
   // sample URL sliced into `count` single-cycle frames (default 64), and `wt` (0..1) morphs
-  // across them. Intended to grow more functionality over time (hence "super").
+  // across them. `unison` layers that many detuned voices (its `ratio` subparam is the max
+  // frequency ratio they spread across). Intended to grow more functionality over time.
   let superosc = (args,e,b) => {
     if (!window.AudioWorkletNode) { return }
     let node = createSuperOsc()
@@ -62,6 +63,10 @@ define(function(require) {
       if (buf) { node.setWave(buf.getChannelData(0), count) }
     }
     evalMainParamFrame(node.parameters.get('wt'), params, 'wt', 0)
+    // unison: number of detuned voices; `ratio` subparam is the max frequency
+    // ratio the voices spread across, evenly each side of the primary frequency.
+    evalMainParamFrame(node.parameters.get('unison'), params, 'unison', 1)
+    evalSubParamFrame(node.parameters.get('unisonRatio'), params, 'unison', 'ratio', 1.01)
     node.start(e._time)
     if (e && e._destructor) { e._destructor.stop(node) } else { node.stop() }
     return node
