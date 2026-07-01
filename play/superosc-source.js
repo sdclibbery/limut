@@ -133,6 +133,16 @@ define(function (require) {
     let mr = unisonMuls(4, 1)
     for (let v = 0; v < 4; v++) { assert(1, mr[v], 'uni ratio=1 voice ' + v) }
 
+    // unison clamp (mirrors the worklet's process()): round, then clamp to 1..16.
+    // Crucially a NaN unison must fall back to 1, not slip past both bounds as NaN.
+    let clampUnison = (x) => { let n = Math.round(x); if (!(n >= 1)) { n = 1 } else if (n > 16) { n = 16 } return n }
+    assert(1, clampUnison(NaN), 'uni clamp NaN -> 1')
+    assert(1, clampUnison(0), 'uni clamp 0 -> 1')
+    assert(1, clampUnison(-5), 'uni clamp negative -> 1')
+    assert(16, clampUnison(99), 'uni clamp >16 -> 16')
+    assert(4, clampUnison(4), 'uni clamp 4 -> 4')
+    assert(3, clampUnison(3.4), 'uni clamp rounds 3.4 -> 3')
+
     console.log('superosc tests complete')
   }
 
@@ -236,7 +246,9 @@ class SuperOsc extends AudioWorkletProcessor {
     // of the primary by max ratio (extremes at ratio and 1/ratio, centre at 1).
     // gain = 1/sqrt(n) keeps loudness roughly constant and unison=1 unchanged.
     let n = Math.round(parameters.unison[0]);
-    if (n < 1) { n = 1 } else if (n > 16) { n = 16 }
+    // Written as !(n >= 1) so a NaN unison (eg a bad param expression) falls back
+    // to 1 rather than slipping past both bounds and leaving n === NaN (silent).
+    if (!(n >= 1)) { n = 1 } else if (n > 16) { n = 16 }
     const ratio = parameters.unisonRatio[0];
     const mul = new Float32Array(n);
     for (let v = 0; v < n; v++) {
@@ -296,6 +308,11 @@ class SuperOsc extends AudioWorkletProcessor {
       const frequency = getFrequency(i);
       const detune = getDetune(i);
       const freq = frequency * Math.pow(2, detune / 1200);
+      // Hoist the /sampleRate out of the per-voice loop: with unison this saves
+      // one divide per voice per sample (n divides -> a single divide). mul[0] is
+      // exactly 1 for unison=1, so freqOverSr*mul[0] === freq/sampleRate, keeping
+      // the single-voice output bit-for-bit unchanged.
+      const freqOverSr = freq / sampleRate;
 
       // Read the wavetable over the exact span each voice's phase sweeps this
       // sample: a box (moving-average) filter whose width grows with pitch, so
@@ -315,7 +332,7 @@ class SuperOsc extends AudioWorkletProcessor {
         const fr = fp - fa;
         const lerp = fr > 0 && fa < count - 1;
         for (let v = 0; v < n; v++) {
-          const incV = freq * mul[v] / sampleRate; // phase step, in cycles per sample
+          const incV = freqOverSr * mul[v]; // phase step, in cycles per sample
           const x0 = phases[v] * frameLen;
           const x1 = x0 + incV * frameLen;
           const span = x1 - x0;
@@ -329,7 +346,7 @@ class SuperOsc extends AudioWorkletProcessor {
       } else {
         // No wavetable yet: still advance each voice's phase.
         for (let v = 0; v < n; v++) {
-          phases[v] += freq * mul[v] / sampleRate;
+          phases[v] += freqOverSr * mul[v];
           phases[v] -= (phases[v]) | 0;
         }
       }

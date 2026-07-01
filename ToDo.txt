@@ -2,6 +2,8 @@
 =================================================================================================================================
 =================================================================================================================================
 SuperOsc worklet
+ !nan bug - review changes
+ Ability to list sample folders
  Unison count param with normalised amplitude ( 1/sqrt(count) )
   Ratio subparam
   Pan spread subparam
@@ -18,6 +20,8 @@ SuperOsc worklet
  ??Can load AKWF wavetables with one file per wave
   ??Or better, can we get the AKWF as single wav tables?
  More wavetables: https://kimurataro.com/products/wt-free/
+!If you mix @s and @f then the @f doesn't work properly, eg [1,0]e@s+[]l2@f
+  - This example only updates the []l while the envelope is still playing. Needs something like keyboard player to show it]
 ? Chebyshev shaper
 !tts{} does not repeat, so its not useful in fx chain. Want to either trigger it, or set a repeat interval
  // l supersaw 001236, fx=vocoder{tts{'take your place'}}*8, oct=2, dur=1/2
