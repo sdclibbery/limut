@@ -2,7 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 SuperOsc worklet
- !nan bug - review changes
  Ability to list sample folders
  Unison count param with normalised amplitude ( 1/sqrt(count) )
   Ratio subparam
