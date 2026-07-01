@@ -63,6 +63,9 @@ define(function(require) {
       if (buf) { node.setWave(buf.getChannelData(0), count) }
     }
     evalMainParamFrame(node.parameters.get('wt'), params, 'wt', 0)
+    // sync: oscillator hard-sync ratio (0 = off); remaps the phase to restart
+    // `sync` times per fundamental cycle for the classic hard-sync timbre.
+    evalMainParamFrame(node.parameters.get('sync'), params, 'sync', 0)
     // unison: number of detuned voices; `ratio` subparam is the max frequency
     // ratio the voices spread across, evenly each side of the primary frequency.
     evalMainParamFrame(node.parameters.get('unison'), params, 'unison', 1)

@@ -38,6 +38,10 @@ define(function (require) {
     }
     evalMainParamFrame(vco.parameters.get('wt'), params, 'wt', 0)
 
+    // sync: oscillator hard-sync ratio (0 = off). Remaps the phase to restart
+    // `sync` times per fundamental cycle for the classic hard-sync timbre.
+    evalMainParamFrame(vco.parameters.get('sync'), params, 'sync', 0)
+
     // unison: number of detuned voices; its `ratio` subparam is the max frequency
     // ratio the voices spread across, evenly each side of the primary frequency.
     evalMainParamFrame(vco.parameters.get('unison'), params, 'unison', 1)

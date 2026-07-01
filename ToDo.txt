@@ -2,18 +2,17 @@
 =================================================================================================================================
 =================================================================================================================================
 SuperOsc worklet
- Ability to list sample folders
  Unison count param with normalised amplitude ( 1/sqrt(count) )
-  Ratio subparam
+  Amp spread subparam
   Pan spread subparam
   Phase spread subparam
   WT spread subparam??
  Phase modification before table lookup
-  Sync (phase * ratio) % 1
   Mirror with movable centre point
   Bitcrush
-  Power
+  Power/saturate
   Noise/chaos
+ It should force each individual wave to line up at the ends, to avoid distortion when importing a wavetable from a normal sample
  Cache the precomputed integral tables
  Can set starting phase of oscillator
  ??Can load AKWF wavetables with one file per wave

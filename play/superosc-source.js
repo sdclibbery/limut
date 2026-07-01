@@ -143,6 +143,14 @@ define(function (require) {
     assert(4, clampUnison(4), 'uni clamp 4 -> 4')
     assert(3, clampUnison(3.4), 'uni clamp rounds 3.4 -> 3')
 
+    // sync phase remap (mirrors the worklet's process()): sync>0 remaps the
+    // phase to (phase * sync) % 1; sync===0 leaves it untouched.
+    let syncPhase = (ph, sync) => (sync > 0 ? (ph * sync) % 1 : ph)
+    assert(0.25, syncPhase(0.25, 0), 'sync=0 no-op')
+    assert(0.5, syncPhase(0.25, 2), 'sync=2 wraps within cycle')
+    assert(0, syncPhase(0.5, 2), 'sync=2 restarts at boundary')
+    assert(0.25, syncPhase(0.75, 3), 'sync=3 second restart')
+
     console.log('superosc tests complete')
   }
 
@@ -187,6 +195,11 @@ class SuperOsc extends AudioWorkletProcessor {
       // wt: morph position across the wavetable's frames, normalised 0..1
       // (0 = first frame, 1 = last frame), lerping between adjacent frames.
       { name: 'wt', defaultValue: 0, minValue: 0, maxValue: 1, automationRate: 'a-rate' },
+      // sync: oscillator hard-sync ratio. 0 disables it (no effect); otherwise
+      // the accumulated phase is remapped phase -> (phase * sync) % 1 before the
+      // wavetable lookup, so the waveform restarts sync times per fundamental
+      // cycle (the classic hard-sync timbre). Read a-rate so it can be modulated.
+      { name: 'sync', defaultValue: 0, minValue: 0, maxValue: 32, automationRate: 'a-rate' },
       // unison: number of detuned voices (1..16) layered together. unisonRatio
       // is the max frequency ratio the voices are detuned by, spread evenly
       // (geometrically) each side of the primary freq. Both read k-rate (once
@@ -234,6 +247,7 @@ class SuperOsc extends AudioWorkletProcessor {
     const getFrequency = paramGetter(parameters.frequency);
     const getDetune = paramGetter(parameters.detune);
     const getWt = paramGetter(parameters.wt);
+    const getSync = paramGetter(parameters.sync);
     const wave = this.wave;
     const integral = this.integral;
     const totals = this.totals;
@@ -326,6 +340,11 @@ class SuperOsc extends AudioWorkletProcessor {
       if (haveWave) {
         let wt = getWt(i);
         if (wt < 0) { wt = 0 } else if (wt > 1) { wt = 1 }
+        // sync: hard-sync ratio. 0 leaves the phase untouched; otherwise the
+        // phase is remapped (phase * sync) % 1 for the lookup, and the read span
+        // is scaled by sync too so the box filter still band-limits the faster
+        // (restarting) waveform.
+        const sync = getSync(i);
         const fp = wt * (count - 1);
         let fa = fp | 0;
         if (fa > count - 1) { fa = count - 1 }
@@ -333,8 +352,11 @@ class SuperOsc extends AudioWorkletProcessor {
         const lerp = fr > 0 && fa < count - 1;
         for (let v = 0; v < n; v++) {
           const incV = freqOverSr * mul[v]; // phase step, in cycles per sample
-          const x0 = phases[v] * frameLen;
-          const x1 = x0 + incV * frameLen;
+          let ph = phases[v];
+          let incR = incV;
+          if (sync > 0) { ph = (ph * sync) % 1; incR = incV * sync; }
+          const x0 = ph * frameLen;
+          const x1 = x0 + incR * frameLen;
           const span = x1 - x0;
           let s = readFrame(fa, x0, x1, span);
           if (lerp) { s += (readFrame(fa + 1, x0, x1, span) - s) * fr; }
