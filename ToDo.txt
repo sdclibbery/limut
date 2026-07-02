@@ -3,7 +3,6 @@
 =================================================================================================================================
 SuperOsc worklet
  Unison count param with normalised amplitude ( 1/sqrt(count) )
-  Pan spread subparam
   Phase spread subparam
   WT spread subparam??
  Phase modification before table lookup

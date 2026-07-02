@@ -79,6 +79,30 @@ define(function (require) {
     return sumSq > 0 ? 1 / Math.sqrt(sumSq) : 0
   }
 
+  // Per-voice equal-power stereo pan gains for `n` unison voices spread across a
+  // stereo width `pan`. Voice v's pitch position p in [-1,+1] (as in unisonMuls)
+  // maps to a pan position pp = p*pan clamped to [-1,+1], so the outermost voices
+  // sit at ±pan (eg pan=1/2 -> 50% left..50% right) and the centre at 0. An
+  // equal-power law (angle = (pp+1)*PI/4) sets the left/right gains, scaled by
+  // sqrt(2) so a centred voice is exactly 1 in each channel (so pan=0, and
+  // unison=1, leave the output unchanged) while each voice's total power stays
+  // constant as it pans out (l^2+r^2 = 2 for every voice). Returns { l, r }
+  // Float32Arrays. Kept in sync with the same formula inlined in the worklet's
+  // process().
+  const unisonPans = (n, pan) => {
+    const l = new Float32Array(n)
+    const r = new Float32Array(n)
+    for (let v = 0; v < n; v++) {
+      const p = n === 1 ? 0 : (2 * v / (n - 1) - 1)
+      let pp = p * pan
+      if (pp < -1) { pp = -1 } else if (pp > 1) { pp = 1 }
+      const angle = (pp + 1) * Math.PI / 4
+      l[v] = Math.SQRT2 * Math.cos(angle)
+      r[v] = Math.SQRT2 * Math.sin(angle)
+    }
+    return { l, r }
+  }
+
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
     let assert = (expected, actual, msg) => {
@@ -184,6 +208,32 @@ define(function (require) {
     // single voice: weight `amp` cancels against the gain, so output is unchanged
     assert(1, unisonAmps(1, 3)[0] * unisonGain(unisonAmps(1, 3)), 'gain n=1 amp cancels')
 
+    // unisonPans: equal-power spread, centre = 1 in each channel, outers at ±pan
+    let p1 = unisonPans(1, 0.5)
+    assert(1, p1.l[0], 'pan n=1 left = 1'); assert(1, p1.r[0], 'pan n=1 right = 1')
+    // pan=0: every voice centred, so all gains are 1 (no spread)
+    let p0 = unisonPans(3, 0)
+    for (let v = 0; v < 3; v++) { assert(1, p0.l[v], 'pan=0 left ' + v); assert(1, p0.r[v], 'pan=0 right ' + v) }
+    // pan=1, n=3: extremes hard left/right (sqrt(2), 0), centre equal (1, 1)
+    let p3 = unisonPans(3, 1)
+    assert(Math.SQRT2, p3.l[0], 'pan n=3 v0 left'); assert(0, p3.r[0], 'pan n=3 v0 right')
+    assert(1, p3.l[1], 'pan n=3 centre left'); assert(1, p3.r[1], 'pan n=3 centre right')
+    assert(0, p3.l[2], 'pan n=3 v2 left'); assert(Math.SQRT2, p3.r[2], 'pan n=3 v2 right')
+    // pan=1/2: n=2 outermost voices sit at 50% left..50% right (voice0 p=-1 ->
+    // pp=-0.5, voice1 p=+1 -> pp=+0.5); the right voice leans right (R>L) and mirrors the left
+    let ph = unisonPans(2, 0.5)
+    let aHi = (0.5 + 1) * Math.PI / 4, aLo = (-0.5 + 1) * Math.PI / 4
+    assert(Math.SQRT2 * Math.sin(aHi), ph.r[1], 'pan=1/2 right voice R gain')
+    assert(Math.SQRT2 * Math.cos(aHi), ph.l[1], 'pan=1/2 right voice L gain')
+    assert(Math.SQRT2 * Math.sin(aLo), ph.r[0], 'pan=1/2 left voice R gain')
+    assert(Math.SQRT2 * Math.cos(aLo), ph.l[0], 'pan=1/2 left voice L gain')
+    // symmetry (l[v] === r[n-1-v]) and constant total power (l^2+r^2 === 2)
+    let p5 = unisonPans(5, 0.8)
+    for (let v = 0; v < 5; v++) {
+      assert(p5.l[v], p5.r[5 - 1 - v], 'pan n=5 symmetry ' + v)
+      assert(2, p5.l[v] * p5.l[v] + p5.r[v] * p5.r[v], 'pan n=5 constant power ' + v)
+    }
+
     // unison clamp (mirrors the worklet's process()): round, then clamp to 1..16.
     // Crucially a NaN unison must fall back to 1, not slip past both bounds as NaN.
     let clampUnison = (x) => { let n = Math.round(x); if (!(n >= 1)) { n = 1 } else if (n > 16) { n = 16 } return n }
@@ -278,6 +328,12 @@ class SuperOsc extends AudioWorkletProcessor {
       // overall loudness is held roughly constant via 1/sqrt(sum w^2). Read
       // k-rate (once per block, at [0]).
       { name: 'unisonAmp', defaultValue: 1, minValue: 0, maxValue: 8 },
+      // unisonPan: stereo width of the voice spread. Voice pitch position p in
+      // [-1,+1] maps to pan position p*pan (clamped to [-1,+1]): the outermost
+      // voices sit at ±pan (eg pan=1/2 -> 50% left..50% right), the centre at 0.
+      // Equal-power law, scaled so a centred voice is 1 in each channel. Read
+      // k-rate (once per block, at [0]).
+      { name: 'unisonPan', defaultValue: 0.5, minValue: -4, maxValue: 4 },
       // start/stop gates, driven by the node's start()/stop() methods
       { name: 'start', defaultValue: 0, minValue: 0, maxValue: 1 },
       { name: 'stop', defaultValue: 0, minValue: 0, maxValue: 1 },
@@ -335,6 +391,10 @@ class SuperOsc extends AudioWorkletProcessor {
     // interpolated linearly by pitch position (unisonAmp at centre, 1 at the
     // extremes). gain = 1/sqrt(sum amp^2) keeps loudness roughly constant; for
     // unisonAmp=1 that reduces to 1/sqrt(n), and unison=1 stays unchanged.
+    // panL[v]/panR[v] are voice v's equal-power stereo gains: pitch position p
+    // maps to pan position p*unisonPan (clamped to ±1), scaled so a centred voice
+    // is 1 in each channel (so pan=0, and unison=1, stay unchanged) and each
+    // voice's total power (l^2+r^2) is a constant 2 regardless of pan.
     let n = Math.round(parameters.unison[0]);
     // Written as !(n >= 1) so a NaN unison (eg a bad param expression) falls back
     // to 1 rather than slipping past both bounds and leaving n === NaN (silent).
@@ -343,8 +403,14 @@ class SuperOsc extends AudioWorkletProcessor {
     let ampRatio = parameters.unisonAmp[0];
     // NaN/negative amp ratio falls back to 1 (equal voices) rather than silence.
     if (!(ampRatio >= 0)) { ampRatio = 1 }
+    let pan = parameters.unisonPan[0];
+    // A non-finite pan (NaN from a bad expression, or Infinity zeroing the centre
+    // voice via 0*Infinity) falls back to the default spread rather than silence.
+    if (!Number.isFinite(pan)) { pan = 0.5 }
     const mul = new Float32Array(n);
     const amp = new Float32Array(n);
+    const panL = new Float32Array(n);
+    const panR = new Float32Array(n);
     let sumSq = 0;
     for (let v = 0; v < n; v++) {
       const p = n === 1 ? 0 : (2 * v / (n - 1) - 1);
@@ -352,6 +418,11 @@ class SuperOsc extends AudioWorkletProcessor {
       const w = 1 + (ampRatio - 1) * (1 - Math.abs(p));
       amp[v] = w;
       sumSq += w * w;
+      let pp = p * pan;
+      if (pp < -1) { pp = -1 } else if (pp > 1) { pp = 1 }
+      const angle = (pp + 1) * Math.PI / 4;
+      panL[v] = Math.SQRT2 * Math.cos(angle);
+      panR[v] = Math.SQRT2 * Math.sin(angle);
     }
     const gain = sumSq > 0 ? 1 / Math.sqrt(sumSq) : 0;
     const phases = this.phases;
@@ -418,9 +489,10 @@ class SuperOsc extends AudioWorkletProcessor {
       // wt picks a position across the frames (the same for every voice); the
       // band-limited reads of the two adjacent frames are lerped to morph
       // between them. The n detuned unison voices (each its own freq and phase)
-      // are summed and scaled by gain. Until a wavetable has loaded the output
-      // is silent, but every voice's phase still advances.
-      let sample = 0;
+      // are summed into the left/right accumulators via their equal-power pan
+      // gains and scaled by gain. Until a wavetable has loaded the output is
+      // silent, but every voice's phase still advances.
+      let sampleL = 0, sampleR = 0;
       if (haveWave) {
         let wt = getWt(i);
         if (wt < 0) { wt = 0 } else if (wt > 1) { wt = 1 }
@@ -450,11 +522,14 @@ class SuperOsc extends AudioWorkletProcessor {
           const span = x1 - x0;
           let s = readFrame(fa, x0, x1, span);
           if (lerp) { s += (readFrame(fa + 1, x0, x1, span) - s) * fr; }
-          sample += s * amp[v];
+          const sv = s * amp[v];
+          sampleL += sv * panL[v];
+          sampleR += sv * panR[v];
           phases[v] += incV;
           phases[v] -= (phases[v]) | 0;
         }
-        sample *= gain;
+        sampleL *= gain;
+        sampleR *= gain;
       } else {
         // No wavetable yet: still advance each voice's phase.
         for (let v = 0; v < n; v++) {
@@ -462,8 +537,10 @@ class SuperOsc extends AudioWorkletProcessor {
           phases[v] -= (phases[v]) | 0;
         }
       }
-      // write the same sample to every output channel
-      for (let c = 0; c < output.length; c++) { output[c][i] = sample }
+      // Write the panned stereo pair. The node forces a 2-channel output; if it
+      // is ever mono, fold the pair down so no voice is dropped.
+      if (output.length > 1) { output[0][i] = sampleL; output[1][i] = sampleR }
+      else { output[0][i] = (sampleL + sampleR) * 0.5 }
     }
     return true
   }
@@ -478,7 +555,9 @@ registerProcessor('superosc', SuperOsc);
   // WebAudio OscillatorNode, exposing start(time)/stop(time) methods that
   // gate the underlying start/stop audio params.
   return (audio = system.audio) => {
-    let node = new AudioWorkletNode(audio, "superosc")
+    // Force a 2-channel output so the unison `pan` spread is audible (the default
+    // output channel count would otherwise follow the unconnected input and be mono).
+    let node = new AudioWorkletNode(audio, "superosc", { outputChannelCount: [2] })
     node.start = (time = audio.currentTime) => {
       node.parameters.get('start').setValueAtTime(1, time)
     }

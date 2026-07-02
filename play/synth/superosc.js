@@ -49,9 +49,12 @@ define(function (require) {
     // unison: number of detuned voices; its `detune` subparam is the max frequency
     // ratio the voices spread across, evenly each side of the primary frequency.
     // The `amp` subparam is the centre-to-outer voice amplitude ratio (1 = equal).
+    // The `pan` subparam is the stereo width the voices spread across (1/2 = 50%
+    // left..50% right).
     evalMainParamFrame(vco.parameters.get('unison'), params, 'unison', 1)
     evalSubParamFrame(vco.parameters.get('unisonRatio'), params, 'unison', 'detune', 1.01)
     evalSubParamFrame(vco.parameters.get('unisonAmp'), params, 'unison', 'amp', 1)
+    evalSubParamFrame(vco.parameters.get('unisonPan'), params, 'unison', 'pan', 0.5)
 
     waveEffects(params, effects(params, vco)).connect(vca)
     vco.start(params._time)
