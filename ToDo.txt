@@ -4,6 +4,7 @@
 SuperOsc worklet
  Unison count param with normalised amplitude ( 1/sqrt(count) )
   Amp spread subparam
+  ?Should freq spread subparam be called freq not ratio??
   Pan spread subparam
   Phase spread subparam
   WT spread subparam??

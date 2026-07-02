@@ -40,7 +40,8 @@ define(function(require) {
   // in Hz and `detune` shifts it in cents, mirroring the native `osc` node. `wavetable` is a
   // sample URL sliced into `count` single-cycle frames (default 64), and `wt` (0..1) morphs
   // across them. `unison` layers that many detuned voices (its `ratio` subparam is the max
-  // frequency ratio they spread across). Intended to grow more functionality over time.
+  // frequency ratio they spread across, and its `amp` subparam the centre-to-outer voice
+  // amplitude ratio). Intended to grow more functionality over time.
   let superosc = (args,e,b) => {
     if (!window.AudioWorkletNode) { return }
     let node = createSuperOsc()
@@ -68,8 +69,10 @@ define(function(require) {
     evalMainParamFrame(node.parameters.get('sync'), params, 'sync', 0)
     // unison: number of detuned voices; `ratio` subparam is the max frequency
     // ratio the voices spread across, evenly each side of the primary frequency.
+    // `amp` subparam is the centre-to-outer voice amplitude ratio (1 = equal).
     evalMainParamFrame(node.parameters.get('unison'), params, 'unison', 1)
     evalSubParamFrame(node.parameters.get('unisonRatio'), params, 'unison', 'ratio', 1.01)
+    evalSubParamFrame(node.parameters.get('unisonAmp'), params, 'unison', 'amp', 1)
     node.start(e._time)
     if (e && e._destructor) { e._destructor.stop(node) } else { node.stop() }
     return node

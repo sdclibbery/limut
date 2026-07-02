@@ -51,6 +51,34 @@ define(function (require) {
     return mul
   }
 
+  // Per-voice amplitude weights for `n` unison voices, so the centre voice(s)
+  // can be louder or softer than the outer ones. `amp` is the ratio of the
+  // centre voice's amplitude to the outermost voices'; the weight interpolates
+  // linearly by |position| p (p in [-1,+1] as in unisonMuls): amp at the centre
+  // (p=0), 1 at the extremes (|p|=1). For even n no voice sits exactly at the
+  // centre, so the two innermost voices are the loudest (both near amp). amp===1
+  // gives all-ones (the plain unison sum). Loudness is held roughly constant by
+  // scaling the summed voices by 1/sqrt(sum(w^2)) (see unisonGain), which for
+  // amp===1 reduces to the previous 1/sqrt(n). Kept in sync with the same
+  // formula inlined in the worklet's process().
+  const unisonAmps = (n, amp) => {
+    const w = new Float32Array(n)
+    for (let v = 0; v < n; v++) {
+      const p = n === 1 ? 0 : (2 * v / (n - 1) - 1)
+      w[v] = 1 + (amp - 1) * (1 - Math.abs(p))
+    }
+    return w
+  }
+
+  // Overall output gain for a set of per-voice amplitude weights: 1/sqrt(sum w^2)
+  // keeps the incoherent-sum loudness constant as the weights change (guarding a
+  // zero/negative sum -> 0). For all-ones weights this is 1/sqrt(n).
+  const unisonGain = (w) => {
+    let sumSq = 0
+    for (let v = 0; v < w.length; v++) { sumSq += w[v] * w[v] }
+    return sumSq > 0 ? 1 / Math.sqrt(sumSq) : 0
+  }
+
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
     let assert = (expected, actual, msg) => {
@@ -133,6 +161,29 @@ define(function (require) {
     let mr = unisonMuls(4, 1)
     for (let v = 0; v < 4; v++) { assert(1, mr[v], 'uni ratio=1 voice ' + v) }
 
+    // unisonAmps: centre voice `amp`x the outer voices, linear by |position|
+    let a3 = unisonAmps(3, 2)
+    assert(1, a3[0], 'amp n=3 low'); assert(2, a3[1], 'amp n=3 centre'); assert(1, a3[2], 'amp n=3 high')
+    // amp===1: all voices equal weight (the plain unison sum)
+    let ae = unisonAmps(4, 1)
+    for (let v = 0; v < 4; v++) { assert(1, ae[v], 'amp amp=1 voice ' + v) }
+    // even n: the two innermost voices are the loudest and symmetric, the outer
+    // pair the quietest and symmetric
+    let a4 = unisonAmps(4, 3)
+    assert(a4[1], a4[2], 'amp n=4 centre pair equal')
+    assert(a4[0], a4[3], 'amp n=4 outer pair equal')
+    assert(1, a4[0], 'amp n=4 outer = 1')
+    if (!(a4[1] > a4[0])) { console.trace('amp n=4 centre louder than outer failed') }
+    // amp<1: centre softer than the outer voices
+    let as = unisonAmps(3, 0.5)
+    assert(0.5, as[1], 'amp<1 centre'); assert(1, as[0], 'amp<1 outer')
+
+    // unisonGain: 1/sqrt(sum w^2); all-ones reduces to 1/sqrt(n)
+    assert(1 / Math.sqrt(4), unisonGain(unisonAmps(4, 1)), 'gain amp=1 n=4 = 1/sqrt(n)')
+    assert(1, unisonGain(unisonAmps(1, 1)), 'gain n=1 = 1')
+    // single voice: weight `amp` cancels against the gain, so output is unchanged
+    assert(1, unisonAmps(1, 3)[0] * unisonGain(unisonAmps(1, 3)), 'gain n=1 amp cancels')
+
     // unison clamp (mirrors the worklet's process()): round, then clamp to 1..16.
     // Crucially a NaN unison must fall back to 1, not slip past both bounds as NaN.
     let clampUnison = (x) => { let n = Math.round(x); if (!(n >= 1)) { n = 1 } else if (n > 16) { n = 16 } return n }
@@ -207,6 +258,11 @@ class SuperOsc extends AudioWorkletProcessor {
       // the synth/node-fn actually set 1.01 when unison>1.
       { name: 'unison', defaultValue: 1, minValue: 1, maxValue: 16 },
       { name: 'unisonRatio', defaultValue: 1.01, minValue: 1, maxValue: 4 },
+      // unisonAmp: ratio of the centre voice's amplitude to the outermost
+      // voices' (1 = all equal). Weights interpolate linearly by pitch position;
+      // overall loudness is held roughly constant via 1/sqrt(sum w^2). Read
+      // k-rate (once per block, at [0]).
+      { name: 'unisonAmp', defaultValue: 1, minValue: 0, maxValue: 8 },
       // start/stop gates, driven by the node's start()/stop() methods
       { name: 'start', defaultValue: 0, minValue: 0, maxValue: 1 },
       { name: 'stop', defaultValue: 0, minValue: 0, maxValue: 1 },
@@ -258,18 +314,30 @@ class SuperOsc extends AudioWorkletProcessor {
     // Unison: n detuned voices summed together (read k-rate, once per block).
     // mul[v] is voice v's frequency multiplier, spread geometrically each side
     // of the primary by max ratio (extremes at ratio and 1/ratio, centre at 1).
-    // gain = 1/sqrt(n) keeps loudness roughly constant and unison=1 unchanged.
+    // amp[v] is voice v's amplitude weight, letting the centre voice(s) be
+    // louder/softer than the outer ones: unisonAmp is the centre-to-outer ratio,
+    // interpolated linearly by pitch position (unisonAmp at centre, 1 at the
+    // extremes). gain = 1/sqrt(sum amp^2) keeps loudness roughly constant; for
+    // unisonAmp=1 that reduces to 1/sqrt(n), and unison=1 stays unchanged.
     let n = Math.round(parameters.unison[0]);
     // Written as !(n >= 1) so a NaN unison (eg a bad param expression) falls back
     // to 1 rather than slipping past both bounds and leaving n === NaN (silent).
     if (!(n >= 1)) { n = 1 } else if (n > 16) { n = 16 }
     const ratio = parameters.unisonRatio[0];
+    let ampRatio = parameters.unisonAmp[0];
+    // NaN/negative amp ratio falls back to 1 (equal voices) rather than silence.
+    if (!(ampRatio >= 0)) { ampRatio = 1 }
     const mul = new Float32Array(n);
+    const amp = new Float32Array(n);
+    let sumSq = 0;
     for (let v = 0; v < n; v++) {
       const p = n === 1 ? 0 : (2 * v / (n - 1) - 1);
       mul[v] = Math.pow(ratio, p);
+      const w = 1 + (ampRatio - 1) * (1 - Math.abs(p));
+      amp[v] = w;
+      sumSq += w * w;
     }
-    const gain = 1 / Math.sqrt(n);
+    const gain = sumSq > 0 ? 1 / Math.sqrt(sumSq) : 0;
     const phases = this.phases;
 
     // Ic: frame f's running integral, extended beyond one cycle. Each frame's
@@ -360,7 +428,7 @@ class SuperOsc extends AudioWorkletProcessor {
           const span = x1 - x0;
           let s = readFrame(fa, x0, x1, span);
           if (lerp) { s += (readFrame(fa + 1, x0, x1, span) - s) * fr; }
-          sample += s;
+          sample += s * amp[v];
           phases[v] += incV;
           phases[v] -= (phases[v]) | 0;
         }
