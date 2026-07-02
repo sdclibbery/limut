@@ -21,7 +21,12 @@ define(function (require) {
     let vca = envelope(params, 0.06, 'full')
     fxMixChain(params, perFrameAmp(params, vca))
 
-    let vco = createSuperOsc()
+    // Stereo output only when there are 2+ unison voices AND a non-zero pan
+    // spread (evaluated once at note start); otherwise every voice is centred so
+    // a mono node is enough and keeps the downstream fx chain mono (cheaper).
+    let unison = evalMainParamEvent(params, 'unison', 1)
+    let pan = evalSubParamEvent(params, 'unison', 'pan', 0.5)
+    let vco = createSuperOsc(Math.round(unison) >= 2 && pan !== 0 ? 2 : 1)
     vco.parameters.get('frequency').value = freq * Math.pow(2, detuneSemis/12)
     pitchEffects(vco.parameters.get('detune'), params)
 

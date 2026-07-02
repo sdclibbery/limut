@@ -45,8 +45,13 @@ define(function(require) {
   // to grow more functionality over time.
   let superosc = (args,e,b) => {
     if (!window.AudioWorkletNode) { return }
-    let node = createSuperOsc()
     let params = combineParams(args, e)
+    // Stereo output only when there are 2+ unison voices AND a non-zero pan
+    // spread (evaluated once at note start); otherwise every voice is centred so
+    // a mono node is enough and keeps the downstream fx chain mono (cheaper).
+    let unison = evalMainParamEvent(params, 'unison', 1)
+    let pan = evalSubParamEvent(params, 'unison', 'pan', 0.5)
+    let node = createSuperOsc(Math.round(unison) >= 2 && pan !== 0 ? 2 : 1)
     let value = evalParamEvent(params.value, e,b)
     if (typeof value === 'number' && value !== 0) {
       evalMainParamFrame(node.parameters.get('frequency'), params, 'value', 440, 'hz')

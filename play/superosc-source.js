@@ -554,10 +554,12 @@ registerProcessor('superosc', SuperOsc);
   // Factory: build a superosc AudioWorkletNode that behaves like a normal
   // WebAudio OscillatorNode, exposing start(time)/stop(time) methods that
   // gate the underlying start/stop audio params.
-  return (audio = system.audio) => {
-    // Force a 2-channel output so the unison `pan` spread is audible (the default
-    // output channel count would otherwise follow the unconnected input and be mono).
-    let node = new AudioWorkletNode(audio, "superosc", { outputChannelCount: [2] })
+  return (channels = 2, audio = system.audio) => {
+    // `channels` fixes the output channel count. The default follows the
+    // unconnected input and is mono; the callers request 2 channels only when a
+    // note actually renders a stereo unison `pan` spread, and 1 otherwise so the
+    // downstream fx chain stays mono (cheaper) when there's nothing to pan.
+    let node = new AudioWorkletNode(audio, "superosc", { outputChannelCount: [channels] })
     node.start = (time = audio.currentTime) => {
       node.parameters.get('start').setValueAtTime(1, time)
     }
