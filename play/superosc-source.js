@@ -202,6 +202,15 @@ define(function (require) {
     assert(0, syncPhase(0.5, 2), 'sync=2 restarts at boundary')
     assert(0.25, syncPhase(0.75, 3), 'sync=3 second restart')
 
+    // crush phase quantisation (mirrors the worklet's process()): crush>0
+    // quantises the phase to floor(phase * crush) / crush; crush===0 is a no-op.
+    let crushPhase = (ph, crush) => (crush > 0 ? Math.floor(ph * crush) / crush : ph)
+    assert(0.37, crushPhase(0.37, 0), 'crush=0 no-op')
+    assert(0.25, crushPhase(0.37, 4), 'crush=4 quantises down')
+    assert(0.5, crushPhase(0.7, 4), 'crush=4 quantises 0.7')
+    assert(0.5, crushPhase(0.9, 2), 'crush=2 two steps')
+    assert(0, crushPhase(0.9, 1), 'crush=1 collapses to 0')
+
     console.log('superosc tests complete')
   }
 
@@ -251,6 +260,12 @@ class SuperOsc extends AudioWorkletProcessor {
       // wavetable lookup, so the waveform restarts sync times per fundamental
       // cycle (the classic hard-sync timbre). Read a-rate so it can be modulated.
       { name: 'sync', defaultValue: 0, minValue: 0, maxValue: 32, automationRate: 'a-rate' },
+      // crush: phase quantisation (a "bitcrush" of the phase). 0 disables it (no
+      // effect); otherwise the phase (after any sync remap) is quantised to
+      // crush discrete steps via floor(phase * crush) / crush before the
+      // wavetable lookup, stepping the waveform for a lo-fi/aliased timbre.
+      // Read a-rate so it can be modulated.
+      { name: 'crush', defaultValue: 0, minValue: 0, maxValue: 4096, automationRate: 'a-rate' },
       // unison: number of detuned voices (1..16) layered together. unisonRatio
       // is the max frequency ratio the voices are detuned by, spread evenly
       // (geometrically) each side of the primary freq. Both read k-rate (once
@@ -304,6 +319,7 @@ class SuperOsc extends AudioWorkletProcessor {
     const getDetune = paramGetter(parameters.detune);
     const getWt = paramGetter(parameters.wt);
     const getSync = paramGetter(parameters.sync);
+    const getCrush = paramGetter(parameters.crush);
     const wave = this.wave;
     const integral = this.integral;
     const totals = this.totals;
@@ -413,6 +429,11 @@ class SuperOsc extends AudioWorkletProcessor {
         // is scaled by sync too so the box filter still band-limits the faster
         // (restarting) waveform.
         const sync = getSync(i);
+        // crush: phase quantisation. 0 leaves the phase untouched; otherwise the
+        // phase (after the sync remap) is quantised to crush steps for a
+        // stepped, lo-fi timbre. The read span is left at the true increment so
+        // the box filter still band-limits between the quantised steps.
+        const crush = getCrush(i);
         const fp = wt * (count - 1);
         let fa = fp | 0;
         if (fa > count - 1) { fa = count - 1 }
@@ -423,6 +444,7 @@ class SuperOsc extends AudioWorkletProcessor {
           let ph = phases[v];
           let incR = incV;
           if (sync > 0) { ph = (ph * sync) % 1; incR = incV * sync; }
+          if (crush > 0) { ph = Math.floor(ph * crush) / crush; }
           const x0 = ph * frameLen;
           const x1 = x0 + incR * frameLen;
           const span = x1 - x0;

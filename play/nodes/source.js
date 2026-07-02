@@ -67,6 +67,9 @@ define(function(require) {
     // sync: oscillator hard-sync ratio (0 = off); remaps the phase to restart
     // `sync` times per fundamental cycle for the classic hard-sync timbre.
     evalMainParamFrame(node.parameters.get('sync'), params, 'sync', 0)
+    // crush: phase quantisation (0 = off); quantises the (post-sync) phase to
+    // `crush` steps before the wavetable lookup for a stepped, lo-fi timbre.
+    evalMainParamFrame(node.parameters.get('crush'), params, 'crush', 0)
     // unison: number of detuned voices; `ratio` subparam is the max frequency
     // ratio the voices spread across, evenly each side of the primary frequency.
     // `amp` subparam is the centre-to-outer voice amplitude ratio (1 = equal).

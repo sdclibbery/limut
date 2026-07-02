@@ -3,19 +3,17 @@
 =================================================================================================================================
 SuperOsc worklet
  Unison count param with normalised amplitude ( 1/sqrt(count) )
-  Amp spread subparam
-  ?Should freq spread subparam be called freq not ratio??
+  ?Should freq spread subparam be called freq not ratio?? ?? Or should they be ampratio and freqratio???
   Pan spread subparam
   Phase spread subparam
   WT spread subparam??
  Phase modification before table lookup
   Mirror with movable centre point
-  Bitcrush
   Power/saturate
-  Noise/chaos
- It should force each individual wave to line up at the ends, to avoid distortion when importing a wavetable from a normal sample
+  ?Noise/chaos
  Cache the precomputed integral tables
  Can set starting phase of oscillator
+ It should force each individual wave to line up at the ends, to avoid distortion when importing a wavetable from a normal sample
  ??Can load AKWF wavetables with one file per wave
   ??Or better, can we get the AKWF as single wav tables?
  More wavetables: https://kimurataro.com/products/wt-free/

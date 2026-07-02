@@ -42,6 +42,10 @@ define(function (require) {
     // `sync` times per fundamental cycle for the classic hard-sync timbre.
     evalMainParamFrame(vco.parameters.get('sync'), params, 'sync', 0)
 
+    // crush: phase quantisation (0 = off). Quantises the (post-sync) phase to
+    // `crush` discrete steps before the wavetable lookup for a stepped, lo-fi timbre.
+    evalMainParamFrame(vco.parameters.get('crush'), params, 'crush', 0)
+
     // unison: number of detuned voices; its `ratio` subparam is the max frequency
     // ratio the voices spread across, evenly each side of the primary frequency.
     // The `amp` subparam is the centre-to-outer voice amplitude ratio (1 = equal).
