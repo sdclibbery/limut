@@ -5413,6 +5413,6 @@ set p* delay|=[():14,{[1,3]r/4,rate:5/4}:2]t
 // a ambi (049), wave='tri', oct+=3, vel=1/24, fx=mix{airverb}>>duck, vel*=[0:96,1:32]t
 // g ping 02<6668>[41], addc=wow, sus=1/8, fx=mix{pingpong}>>duck{depth:1/4}, ring={pitch*[1:28,4:4]t,mix:1/4}, vel*=[1:96,0:32]t, oct+=2
 lb supersaw gamepad lt:vel, oct=2, envelope='organ', fx=stanh*-2db, addc=wow, drive={1/4,mix:1/2}, rel=1
-s superosc 0_1, oct=2, wavetable='sample/wt64/SAND_EYE.WAV', wt=1/2+gp.rsh/2, fx=mix{pingpong,1/4}*-4db, unison={1+gp.rsu*6,ratio:1.05}, vel=1-gp.rsd
+s superosc 0_1, oct=2, wavetable='sample/wt64/SAND_EYE.WAV', wt=1/2+gp.rsh/2, fx=mix{pingpong,1/4}*-4db, unison={1+gp.rsu*6,detune:1.05}, vel=1-gp.rsd
 // f perc u^^u, vel=riser^10, amp/=3, rate=1/4, dur=1/4, drive={1/4,mix:riser^4 /2}
 t speak keyboard, dur=4, text=['Know Your Place!','Show Your Face!']t16, fx=mix{vocodethis{pitch{[-1,2,[0,1]t8@f,0]t1@f,oct:3},tilt:0.15,unison:5},0.5}/2, speed=150, vel*=[1:96,0:32]t, rate=1

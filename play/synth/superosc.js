@@ -46,11 +46,11 @@ define(function (require) {
     // `crush` discrete steps before the wavetable lookup for a stepped, lo-fi timbre.
     evalMainParamFrame(vco.parameters.get('crush'), params, 'crush', 0)
 
-    // unison: number of detuned voices; its `ratio` subparam is the max frequency
+    // unison: number of detuned voices; its `detune` subparam is the max frequency
     // ratio the voices spread across, evenly each side of the primary frequency.
     // The `amp` subparam is the centre-to-outer voice amplitude ratio (1 = equal).
     evalMainParamFrame(vco.parameters.get('unison'), params, 'unison', 1)
-    evalSubParamFrame(vco.parameters.get('unisonRatio'), params, 'unison', 'ratio', 1.01)
+    evalSubParamFrame(vco.parameters.get('unisonRatio'), params, 'unison', 'detune', 1.01)
     evalSubParamFrame(vco.parameters.get('unisonAmp'), params, 'unison', 'amp', 1)
 
     waveEffects(params, effects(params, vco)).connect(vca)
