@@ -39,7 +39,8 @@ define(function(require) {
   // like any other source, eg `superosc{440} >> lpf{800}`. `value`/`freq` set the frequency
   // in Hz and `detune` shifts it in cents, mirroring the native `osc` node. `wavetable` is a
   // sample URL sliced into `count` single-cycle frames (default 64), and `wt` (0..1) morphs
-  // across them. `unison` layers that many detuned voices (its `detune` subparam is the max
+  // across them. `pwm` power-warps the phase (2^pwm), skewing the waveform toward its start
+  // or end like a generalised pulse width (0 = off). `unison` layers that many detuned voices (its `detune` subparam is the max
   // frequency ratio they spread across, its `amp` subparam the centre-to-outer voice
   // amplitude ratio, and its `pan` subparam the stereo width they spread across). Intended
   // to grow more functionality over time.
@@ -76,6 +77,10 @@ define(function(require) {
     // crush: phase quantisation (0 = off); quantises the (post-sync) phase to
     // `crush` steps before the wavetable lookup for a stepped, lo-fi timbre.
     evalMainParamFrame(node.parameters.get('crush'), params, 'crush', 0)
+    // pwm: phase power-warp (0 = off); raises the (post-sync) phase to the power
+    // 2^pwm before the lookup, skewing the waveform toward its start (pwm>0) or
+    // end (pwm<0) like a generalised pulse width.
+    evalMainParamFrame(node.parameters.get('pwm'), params, 'pwm', 0)
     // unison: number of detuned voices; `detune` subparam is the max frequency
     // ratio the voices spread across, evenly each side of the primary frequency.
     // `amp` subparam is the centre-to-outer voice amplitude ratio (1 = equal).

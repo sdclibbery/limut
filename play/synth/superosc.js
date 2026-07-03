@@ -51,6 +51,11 @@ define(function (require) {
     // `crush` discrete steps before the wavetable lookup for a stepped, lo-fi timbre.
     evalMainParamFrame(vco.parameters.get('crush'), params, 'crush', 0)
 
+    // pwm: phase power-warp (0 = off). Raises the (post-sync) phase to the power
+    // 2^pwm before the lookup, skewing the waveform toward its start (pwm>0) or
+    // end (pwm<0) like a generalised pulse width.
+    evalMainParamFrame(vco.parameters.get('pwm'), params, 'pwm', 0)
+
     // unison: number of detuned voices; its `detune` subparam is the max frequency
     // ratio the voices spread across, evenly each side of the primary frequency.
     // The `amp` subparam is the centre-to-outer voice amplitude ratio (1 = equal).

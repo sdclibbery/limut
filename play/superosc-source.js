@@ -261,6 +261,13 @@ define(function (require) {
     assert(0.5, crushPhase(0.9, 2), 'crush=2 two steps')
     assert(0, crushPhase(0.9, 1), 'crush=1 collapses to 0')
 
+    // pwm phase power-warp (mirrors the worklet's process()): the phase is
+    // raised to the power 2^pwm; pwm===0 is a no-op (exponent 2^0 = 1).
+    let pwmPhase = (ph, pwm) => (pwm !== 0 ? Math.pow(ph, Math.pow(2, pwm)) : ph)
+    assert(0.37, pwmPhase(0.37, 0), 'pwm=0 no-op')
+    assert(0.25, pwmPhase(0.5, 1), 'pwm=1 squares (0.5^2)')
+    assert(0.5, pwmPhase(0.25, -1), 'pwm=-1 sqrt (0.25^0.5)')
+
     console.log('superosc tests complete')
   }
 
@@ -316,6 +323,11 @@ class SuperOsc extends AudioWorkletProcessor {
       // wavetable lookup, stepping the waveform for a lo-fi/aliased timbre.
       // Read a-rate so it can be modulated.
       { name: 'crush', defaultValue: 0, minValue: 0, maxValue: 4096, automationRate: 'a-rate' },
+      // pwm: phase power-warp ("generalised PWM"). The phase (after any sync
+      // remap) is raised to the power 2^pwm before the wavetable lookup,
+      // skewing the waveform toward its start (pwm>0) or end (pwm<0). 0 is a
+      // no-op (exponent 2^0 = 1). Read a-rate so it can be modulated.
+      { name: 'pwm', defaultValue: 0, minValue: -8, maxValue: 8, automationRate: 'a-rate' },
       // unison: number of detuned voices (1..16) layered together. unisonRatio
       // is the max frequency ratio the voices are detuned by, spread evenly
       // (geometrically) each side of the primary freq. Both read k-rate (once
@@ -376,6 +388,7 @@ class SuperOsc extends AudioWorkletProcessor {
     const getWt = paramGetter(parameters.wt);
     const getSync = paramGetter(parameters.sync);
     const getCrush = paramGetter(parameters.crush);
+    const getPwm = paramGetter(parameters.pwm);
     const wave = this.wave;
     const integral = this.integral;
     const totals = this.totals;
@@ -506,6 +519,13 @@ class SuperOsc extends AudioWorkletProcessor {
         // stepped, lo-fi timbre. The read span is left at the true increment so
         // the box filter still band-limits between the quantised steps.
         const crush = getCrush(i);
+        // pwm: phase power-warp. The (post-sync) phase is raised to the power
+        // 2^pwm before the lookup, skewing the waveform toward its start
+        // (pwm>0) or end (pwm<0). pwr>0 acts as the "on" flag; pwm===0 -> pwr 0
+        // -> skip (exponent would be 1). Like crush, the read span is left at
+        // the true increment.
+        const pwm = getPwm(i);
+        const pwr = pwm !== 0 ? Math.pow(2, pwm) : 0;
         const fp = wt * (count - 1);
         let fa = fp | 0;
         if (fa > count - 1) { fa = count - 1 }
@@ -516,6 +536,7 @@ class SuperOsc extends AudioWorkletProcessor {
           let ph = phases[v];
           let incR = incV;
           if (sync > 0) { ph = (ph * sync) % 1; incR = incV * sync; }
+          if (pwr > 0) { ph = Math.pow(ph, pwr); }
           if (crush > 0) { ph = Math.floor(ph * crush) / crush; }
           const x0 = ph * frameLen;
           const x1 = x0 + incR * frameLen;
