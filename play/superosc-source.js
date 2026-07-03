@@ -244,13 +244,43 @@ define(function (require) {
     assert(4, clampUnison(4), 'uni clamp 4 -> 4')
     assert(3, clampUnison(3.4), 'uni clamp rounds 3.4 -> 3')
 
-    // sync phase remap (mirrors the worklet's process()): sync>0 remaps the
-    // phase to (phase * sync) % 1; sync===0 leaves it untouched.
-    let syncPhase = (ph, sync) => (sync > 0 ? (ph * sync) % 1 : ph)
+    // sync phase remap (mirrors the worklet's process()): sync !== 0 remaps the
+    // steady-state phase to (phase * |sync|) % 1 (negative sync uses the same
+    // ratio magnitude, only the reset is crossfaded); sync === 0 is a no-op.
+    let syncPhase = (ph, sync) => (sync !== 0 ? (ph * Math.abs(sync)) % 1 : ph)
     assert(0.25, syncPhase(0.25, 0), 'sync=0 no-op')
     assert(0.5, syncPhase(0.25, 2), 'sync=2 wraps within cycle')
     assert(0, syncPhase(0.5, 2), 'sync=2 restarts at boundary')
     assert(0.25, syncPhase(0.75, 3), 'sync=3 second restart')
+    // negative sync: identical magnitude remap in steady state as the positive ratio
+    assert(0.5, syncPhase(0.25, -2), 'sync=-2 steady state matches +2')
+    assert(0, syncPhase(0.5, -2), 'sync=-2 boundary matches +2')
+    assert(0.25, syncPhase(0.75, -3), 'sync=-3 steady state matches +3')
+
+    // soft-sync crossfade weight (mirrors the worklet): raised cosine of the
+    // new-phase progress g in [0,1]; 0 at the reset (fully old), 1 at the fade
+    // end (fully new), 1/2 at the midpoint. The sample-to-sample fade progression
+    // is stateful across process() and is not covered by these pure helpers.
+    let softFadeWeight = (g) => 0.5 - 0.5 * Math.cos(Math.PI * g)
+    assert(0, softFadeWeight(0), 'soft fade w(0) = old')
+    assert(1, softFadeWeight(1), 'soft fade w(1) = new')
+    assert(0.5, softFadeWeight(0.5), 'soft fade w(1/2) = half')
+
+    // soft-sync old-phase seed (mirrors the worklet): at a fundamental wrap the
+    // continued old slave phase ((wrappedPhase + 1) * |sync|) % 1 stays continuous
+    // with the pre-reset slave phase advanced by one increment (so no click).
+    let seedOld = (phWrapped, sync) => ((phWrapped + 1) * Math.abs(sync)) % 1
+    let sInc = 0.01, sMag = 3, phPre = 0.994    // pre-wrap fundamental phase
+    let phPost = (phPre + sInc) % 1             // wrapped fundamental phase (0.004)
+    let contPre = ((phPre + sInc) * sMag) % 1   // old slave phase, continued
+    assert(contPre, seedOld(phPost, -sMag), 'soft sync seed continuous across wrap')
+
+    // soft-sync fade length (mirrors the worklet): about maxK samples, capped to a
+    // quarter of the fundamental cycle 1/incV, guarding incV === 0 -> 0.
+    let syncFadeLen = (incV, maxK) => { let cyc = incV > 0 ? 1 / incV : 0; let k = Math.round(Math.min(maxK, 0.25 * cyc)); return k > 0 ? k : 0 }
+    assert(96, syncFadeLen(0.0001, 96), 'soft fade len low note -> maxK')
+    assert(0, syncFadeLen(0, 96), 'soft fade len incV=0 guard -> 0')
+    assert(25, syncFadeLen(0.01, 96), 'soft fade len high note -> quarter cycle')
 
     // crush phase quantisation (mirrors the worklet's process()): crush>0
     // quantises the phase to floor(phase * crush) / crush; crush===0 is a no-op.
@@ -313,10 +343,13 @@ class SuperOsc extends AudioWorkletProcessor {
       // (0 = first frame, 1 = last frame), lerping between adjacent frames.
       { name: 'wt', defaultValue: 0, minValue: 0, maxValue: 1, automationRate: 'a-rate' },
       // sync: oscillator hard-sync ratio. 0 disables it (no effect); otherwise
-      // the accumulated phase is remapped phase -> (phase * sync) % 1 before the
-      // wavetable lookup, so the waveform restarts sync times per fundamental
-      // cycle (the classic hard-sync timbre). Read a-rate so it can be modulated.
-      { name: 'sync', defaultValue: 0, minValue: 0, maxValue: 32, automationRate: 'a-rate' },
+      // the phase is remapped phase -> (phase * |sync|) % 1 before the wavetable
+      // lookup, so the waveform restarts |sync| times per fundamental cycle.
+      // sync > 0 is the classic hard-sync timbre (a value discontinuity, ie a
+      // click, at the fundamental boundary for non-integer sync). sync < 0 uses
+      // the same ratio magnitude but softens that reset with a short raised-
+      // cosine crossfade (a "soft sync"). Read a-rate so it can be modulated.
+      { name: 'sync', defaultValue: 0, minValue: -32, maxValue: 32, automationRate: 'a-rate' },
       // crush: phase quantisation (a "bitcrush" of the phase). 0 disables it (no
       // effect); otherwise the phase (after any sync remap) is quantised to
       // crush discrete steps via floor(phase * crush) / crush before the
@@ -360,6 +393,15 @@ class SuperOsc extends AudioWorkletProcessor {
     // begin perfectly coherent.
     this.phases = new Float32Array(16);
     for (let v = 1; v < 16; v++) { this.phases[v] = v / 16; }
+    // Soft-sync (negative sync) per-voice crossfade state. When a fundamental
+    // cycle wraps we arm a short raised-cosine crossfade between the OLD slave
+    // phase (continued past the reset) and the NEW reset slave phase, softening
+    // the hard-sync click. syncFade[v] is the samples remaining in the current
+    // fade (0 = not fading), syncK[v] the length it was armed with, syncOldPh[v]
+    // the continuing old slave-phase accumulator. All default to 0 (not fading).
+    this.syncOldPh = new Float32Array(16);
+    this.syncFade = new Float32Array(16);
+    this.syncK = new Float32Array(16);
     this.wave = null; // wavetable sample data (Float32Array of channel-0 samples, count frames end-to-end)
     this.integral = null; // per-frame running integrals (for band-limited reads)
     this.totals = null; // per-frame cycle sums (each frame's integral per-cycle increment)
@@ -439,6 +481,12 @@ class SuperOsc extends AudioWorkletProcessor {
     }
     const gain = sumSq > 0 ? 1 / Math.sqrt(sumSq) : 0;
     const phases = this.phases;
+    const syncOldPh = this.syncOldPh;
+    const syncFade = this.syncFade;
+    const syncK = this.syncK;
+    // Soft-sync fade-length ceiling: about 2ms, later capped per voice to a
+    // quarter of the fundamental cycle so a fade never overruns the next reset.
+    const fadeSamplesMax = Math.round(sampleRate * 0.002);
 
     // Ic: frame f's running integral, extended beyond one cycle. Each frame's
     // integral is quasi-periodic: I[k+frameLen] = I[k] + totals[f] (the per-cycle
@@ -535,7 +583,11 @@ class SuperOsc extends AudioWorkletProcessor {
           const incV = freqOverSr * mul[v]; // phase step, in cycles per sample
           let ph = phases[v];
           let incR = incV;
+          // sync > 0: classic hard sync (unchanged). sync < 0: same |sync| ratio,
+          // but the reset click is softened by a short crossfade (fading below).
+          const fading = sync < 0 && syncFade[v] > 0;
           if (sync > 0) { ph = (ph * sync) % 1; incR = incV * sync; }
+          else if (sync < 0) { const sm = -sync; ph = (ph * sm) % 1; incR = incV * sm; }
           if (pwr > 0) { ph = Math.pow(ph, pwr); }
           if (crush > 0) { ph = Math.floor(ph * crush) / crush; }
           const x0 = ph * frameLen;
@@ -543,11 +595,46 @@ class SuperOsc extends AudioWorkletProcessor {
           const span = x1 - x0;
           let s = readFrame(fa, x0, x1, span);
           if (lerp) { s += (readFrame(fa + 1, x0, x1, span) - s) * fr; }
+          if (fading) {
+            // Second read of the OLD slave phase, continued as if the reset had
+            // not happened, warped by the same pwr/crush and read over the same
+            // span. Crossfade OLD -> NEW with a raised-cosine window so the reset
+            // discontinuity is smeared over syncK[v] samples instead of clicking.
+            let po = syncOldPh[v];
+            if (pwr > 0) { po = Math.pow(po, pwr); }
+            if (crush > 0) { po = Math.floor(po * crush) / crush; }
+            const x0o = po * frameLen;
+            const x1o = x0o + incR * frameLen;
+            const spano = x1o - x0o;
+            let so = readFrame(fa, x0o, x1o, spano);
+            if (lerp) { so += (readFrame(fa + 1, x0o, x1o, spano) - so) * fr; }
+            const g = 1 - (syncFade[v] - 1) / syncK[v]; // new-weight progress 0..1
+            const w = 0.5 - 0.5 * Math.cos(Math.PI * g);
+            s = so + (s - so) * w;
+            syncOldPh[v] += incR;
+            syncOldPh[v] -= (syncOldPh[v]) | 0;
+            syncFade[v] -= 1;
+          }
           const sv = s * amp[v];
           sampleL += sv * panL[v];
           sampleR += sv * panR[v];
           phases[v] += incV;
+          const wrapped = phases[v] >= 1;
           phases[v] -= (phases[v]) | 0;
+          if (wrapped && sync < 0) {
+            // A fundamental cycle just completed: arm the soft-sync crossfade for
+            // the upcoming reset sample. Seed the old-phase accumulator with the
+            // slave phase continued past the reset (phases[v] is the just-wrapped
+            // fundamental phase, so + 1 undoes the wrap), and pick a fade length
+            // of ~2ms capped to a quarter of the fundamental cycle.
+            const sm = -sync;
+            syncOldPh[v] = ((phases[v] + 1) * sm) % 1;
+            const cyc = incV > 0 ? 1 / incV : 0;
+            let k = Math.round(Math.min(fadeSamplesMax, 0.25 * cyc));
+            if (k < 1) { k = 0; }
+            syncFade[v] = k;
+            syncK[v] = k;
+          }
         }
         sampleL *= gain;
         sampleR *= gain;

@@ -44,7 +44,8 @@ define(function (require) {
     evalMainParamFrame(vco.parameters.get('wt'), params, 'wt', 0)
 
     // sync: oscillator hard-sync ratio (0 = off). Remaps the phase to restart
-    // `sync` times per fundamental cycle for the classic hard-sync timbre.
+    // |sync| times per fundamental cycle for the classic hard-sync timbre;
+    // negative sync uses the same ratio but crossfades the reset (soft sync).
     evalMainParamFrame(vco.parameters.get('sync'), params, 'sync', 0)
 
     // crush: phase quantisation (0 = off). Quantises the (post-sync) phase to
