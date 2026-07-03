@@ -532,6 +532,20 @@ class SuperOsc extends AudioWorkletProcessor {
       const c = p2 - p0;
       return p1 + 0.5 * frac * (c + frac * (b + frac * a));
     };
+    // readWarped: band-limited, wt-morphed read for a slave phase p. Applies the
+    // pwr/crush phase warps, spans one increment (incR), and lerps the fa/fa+1
+    // frames. Shared by the normal read and the soft-sync crossfade's old read so
+    // the warp order and span math cannot drift between them.
+    const readWarped = (p, incR, fa, fr, lerp, pwr, crush) => {
+      if (pwr > 0) { p = Math.pow(p, pwr); }
+      if (crush > 0) { p = Math.floor(p * crush) / crush; }
+      const x0 = p * frameLen;
+      const x1 = x0 + incR * frameLen;
+      const span = x1 - x0;
+      let s = readFrame(fa, x0, x1, span);
+      if (lerp) { s += (readFrame(fa + 1, x0, x1, span) - s) * fr; }
+      return s;
+    };
 
     const channel0 = output[0];
     for (let i = 0; i < channel0.length; i++) {
@@ -588,26 +602,13 @@ class SuperOsc extends AudioWorkletProcessor {
           const fading = sync < 0 && syncFade[v] > 0;
           if (sync > 0) { ph = (ph * sync) % 1; incR = incV * sync; }
           else if (sync < 0) { const sm = -sync; ph = (ph * sm) % 1; incR = incV * sm; }
-          if (pwr > 0) { ph = Math.pow(ph, pwr); }
-          if (crush > 0) { ph = Math.floor(ph * crush) / crush; }
-          const x0 = ph * frameLen;
-          const x1 = x0 + incR * frameLen;
-          const span = x1 - x0;
-          let s = readFrame(fa, x0, x1, span);
-          if (lerp) { s += (readFrame(fa + 1, x0, x1, span) - s) * fr; }
+          let s = readWarped(ph, incR, fa, fr, lerp, pwr, crush);
           if (fading) {
             // Second read of the OLD slave phase, continued as if the reset had
             // not happened, warped by the same pwr/crush and read over the same
             // span. Crossfade OLD -> NEW with a raised-cosine window so the reset
             // discontinuity is smeared over syncK[v] samples instead of clicking.
-            let po = syncOldPh[v];
-            if (pwr > 0) { po = Math.pow(po, pwr); }
-            if (crush > 0) { po = Math.floor(po * crush) / crush; }
-            const x0o = po * frameLen;
-            const x1o = x0o + incR * frameLen;
-            const spano = x1o - x0o;
-            let so = readFrame(fa, x0o, x1o, spano);
-            if (lerp) { so += (readFrame(fa + 1, x0o, x1o, spano) - so) * fr; }
+            let so = readWarped(syncOldPh[v], incR, fa, fr, lerp, pwr, crush);
             const g = 1 - (syncFade[v] - 1) / syncK[v]; // new-weight progress 0..1
             const w = 0.5 - 0.5 * Math.cos(Math.PI * g);
             s = so + (s - so) * w;
