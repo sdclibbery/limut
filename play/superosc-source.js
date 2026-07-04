@@ -35,6 +35,21 @@ define(function (require) {
     return { wave: data, integral, totals, frameLen, count }
   }
 
+  // Cache built wavetables by (data buffer identity, frame count) so a wavetable
+  // used by many notes computes its per-frame integral table once, not per note.
+  // WeakMap-keyed on the sample data (a stable getChannelData(0) reference, cached
+  // per url in play/samples.js) so entries are freed when the AudioBuffer is
+  // collected. buildWavetable itself stays uncached (still used directly by tests).
+  const wavetableCache = new WeakMap() // data -> Map(count -> built wavetable)
+  const buildWavetableCached = (data, count) => {
+    count = Math.max(1, Math.floor(count) || 1) // normalise to match the cache key + buildWavetable
+    let byCount = wavetableCache.get(data)
+    if (!byCount) { byCount = new Map(); wavetableCache.set(data, byCount) }
+    let wt = byCount.get(count)
+    if (!wt) { wt = buildWavetable(data, count); byCount.set(count, wt) }
+    return wt
+  }
+
   // Per-voice frequency multipliers for `n` unison voices detuned by max
   // frequency ratio `ratio`, spread evenly (geometrically, ie by pitch) each
   // side of the primary frequency. Voice v gets exponent p in [-1,+1] spread
@@ -156,6 +171,22 @@ define(function (require) {
     assert(w.length, r1.frameLen, 'count1 frameLen')
     assert(bi.total, r1.totals[0], 'count1 total')
     for (let k = 0; k < w.length; k++) { assert(bi.integral[k], r1.integral[k], 'count1 I[' + k + ']') }
+
+    // buildWavetableCached: same (data, count) returns the identical cached object;
+    // a different count is a distinct object; the cached result matches buildWavetable.
+    let cd = new Float32Array([1, 2, 3, 4, 10, 20, 30, 40])
+    let c1 = buildWavetableCached(cd, 2)
+    let c1b = buildWavetableCached(cd, 2)
+    if (c1 !== c1b) { console.trace('buildWavetableCached same (data,count) should be cached') }
+    let c2 = buildWavetableCached(cd, 4)
+    if (c1 === c2) { console.trace('buildWavetableCached different count should differ') }
+    // equivalent counts (2 vs 2.4) normalise to the same cache slot
+    if (buildWavetableCached(cd, 2.4) !== c1) { console.trace('buildWavetableCached equivalent count should share slot') }
+    let cdirect = buildWavetable(cd, 2)
+    assert(cdirect.frameLen, c1.frameLen, 'cached frameLen matches direct')
+    assert(cdirect.totals[0], c1.totals[0], 'cached total0 matches direct')
+    assert(cdirect.totals[1], c1.totals[1], 'cached total1 matches direct')
+    for (let k = 0; k < cdirect.integral.length; k++) { assert(cdirect.integral[k], c1.integral[k], 'cached I[' + k + '] matches direct') }
 
     // per-frame box-mean identity: averaging a frame's interpolated integral over
     // a whole cycle gives that frame's mean (totals[f]/frameLen), as the worklet relies on.
@@ -725,7 +756,7 @@ registerProcessor('superosc', SuperOsc);
     // transfer list so the arrays are structure-cloned (copied), leaving the
     // caller's shared buffer intact.
     node.setWave = (data, count = 64) => {
-      let wt = buildWavetable(data, count)
+      let wt = buildWavetableCached(data, count)
       node.port.postMessage({ wave: wt.wave, integral: wt.integral, totals: wt.totals, frameLen: wt.frameLen, count: wt.count })
     }
     return node
