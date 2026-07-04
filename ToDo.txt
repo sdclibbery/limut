@@ -6,9 +6,6 @@ SuperOsc worklet
  Audio still dies sometimes if theres too much going on?
  Can set starting phase of oscillator
  Randomised unison phase spread
- Phase modification before table lookup
-  Mirror with movable centre point
-  ?Noise/chaos?
  It should force each individual wave to line up at the ends, to avoid distortion when importing a wavetable from a normal sample
  ??Can load AKWF wavetables with one file per wave
   ??Or better, can we get the AKWF as single wav tables?

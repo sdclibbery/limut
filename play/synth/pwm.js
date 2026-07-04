@@ -27,9 +27,16 @@ define(function (require) {
     pitchEffects(vco.parameters.get('detune'), params)
     vco.parameters.get('start').setValueAtTime(1, params._time)
     vco.parameters.get('stop').setValueAtTime(0, system.audio.currentTime)
-    vco.parameters.get('stop').setValueAtTime(1, params.endTime)
+    // Stop the worklet via the destructor at the real destroy time rather than
+    // scheduling it against endTime here: for live (keyboard/gamepad) notes
+    // endTime is a _time+1e6 placeholder at build time, so a build-time stop
+    // never fires and the worklet's process() runs forever after release,
+    // leaking render capacity. The raw AudioWorkletNode has no stop() method, so
+    // give it the same stop shim the superosc factory uses before registering it.
+    vco.stop = (t = system.audio.currentTime) => vco.parameters.get('stop').setValueAtTime(1, t)
     waveEffects(params, effects(params, vco)).connect(vca)
 
     params._destructor.disconnect(vca, vco)
+    params._destructor.stop(vco)
   }
 });

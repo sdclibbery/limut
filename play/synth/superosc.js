@@ -75,7 +75,13 @@ define(function (require) {
 
     waveEffects(params, effects(params, vco)).connect(vca)
     vco.start(params._time)
-    vco.stop(params.endTime)
+    // Register the worklet with the destructor (like every other source synth,
+    // eg wave.js) rather than scheduling stop() against endTime here: for live
+    // (keyboard/gamepad) notes endTime is a _time+1e6 placeholder at build time,
+    // so a build-time vco.stop(endTime) never fires and the worklet's process()
+    // runs forever after release, leaking render capacity. The destructor stops
+    // it at the real destroy time (release for live notes), so it self-terminates.
     params._destructor.disconnect(vca, vco)
+    params._destructor.stop(vco)
   }
 });
