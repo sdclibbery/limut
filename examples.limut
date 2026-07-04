@@ -5416,3 +5416,5 @@ lb supersaw gamepad lt:vel, oct=2, envelope='organ', fx=stanh*-2db, addc=wow, dr
 s superosc 0_1, oct=2, wavetable='sample/wt64/SAND_EYE.WAV', wt=1/2+gp.rsh/2, fx=mix{pingpong,1/4}*-4db, unison={1+gp.rsu*6,detune:1.05}, vel=1-gp.rsd
 // f perc u^^u, vel=riser^10, amp/=3, rate=1/4, dur=1/4, drive={1/4,mix:riser^4 /2}
 t speak keyboard, dur=4, text=['Know Your Place!','Show Your Face!']t16, fx=mix{vocodethis{pitch{[-1,2,[0,1]t8@f,0]t1@f,oct:3},tilt:0.15,unison:5},0.5}/2, speed=150, vel*=[1:96,0:32]t, rate=1
+
+

@@ -298,6 +298,23 @@ define(function (require) {
     assert(0.25, pwmPhase(0.5, 1), 'pwm=1 squares (0.5^2)')
     assert(0.5, pwmPhase(0.25, -1), 'pwm=-1 sqrt (0.25^0.5)')
 
+    // formant read phase (mirrors the worklet's process()): formant !== 0
+    // compresses the read phase to (phase * 2^formant) % 1; formant === 0 is a
+    // no-op. The read span is scaled by the same 2^formant (not covered here).
+    let formantReadPhase = (ph, formant) => (formant !== 0 ? (ph * Math.pow(2, formant)) % 1 : ph)
+    assert(0.3, formantReadPhase(0.3, 0), 'formant=0 read no-op')
+    assert(0.6, formantReadPhase(0.3, 1), 'formant=1 doubles read phase')
+    assert(0.2, formantReadPhase(0.6, 1), 'formant=1 wraps read phase')
+    assert(0.15, formantReadPhase(0.3, -1), 'formant=-1 halves read phase')
+    // formant window (mirrors the worklet): raised cosine over the fundamental
+    // phase, 0 at the cycle boundaries and 1 at mid-cycle; formant === 0 is a
+    // no-op (window 1), so the read passes through untouched.
+    let formantWindow = (phFund, formant) => (formant !== 0 ? 0.5 - 0.5 * Math.cos(2 * Math.PI * phFund) : 1)
+    assert(1, formantWindow(0.25, 0), 'formant=0 window no-op')
+    assert(0, formantWindow(0, 1), 'formant window zero at cycle start')
+    assert(1, formantWindow(0.5, 1), 'formant window peak at mid-cycle')
+    assert(0, formantWindow(1, 1), 'formant window zero at cycle end')
+
     console.log('superosc tests complete')
   }
 
@@ -361,6 +378,15 @@ class SuperOsc extends AudioWorkletProcessor {
       // skewing the waveform toward its start (pwm>0) or end (pwm<0). 0 is a
       // no-op (exponent 2^0 = 1). Read a-rate so it can be modulated.
       { name: 'pwm', defaultValue: 0, minValue: -8, maxValue: 8, automationRate: 'a-rate' },
+      // formant: formant/warp shift (a-rate). 0 disables it (no effect). Otherwise
+      // the waveform is resampled within each fundamental cycle: read at 2^formant
+      // times the rate (wrapped within the cycle, and the box-filter span scaled to
+      // match, like sync) and multiplied by a raised-cosine window over the
+      // fundamental phase. The window forces the signal to zero at every cycle
+      // boundary, so the fundamental period (the pitch) is preserved while the
+      // spectral formants shift up (formant > 0) or down (formant < 0), the way
+      // Serum/Vital formant warp behaves.
+      { name: 'formant', defaultValue: 0, minValue: -4, maxValue: 4, automationRate: 'a-rate' },
       // unison: number of detuned voices (1..16) layered together. unisonRatio
       // is the max frequency ratio the voices are detuned by, spread evenly
       // (geometrically) each side of the primary freq. Both read k-rate (once
@@ -431,6 +457,7 @@ class SuperOsc extends AudioWorkletProcessor {
     const getSync = paramGetter(parameters.sync);
     const getCrush = paramGetter(parameters.crush);
     const getPwm = paramGetter(parameters.pwm);
+    const getFormant = paramGetter(parameters.formant);
     const wave = this.wave;
     const integral = this.integral;
     const totals = this.totals;
@@ -588,6 +615,13 @@ class SuperOsc extends AudioWorkletProcessor {
         // the true increment.
         const pwm = getPwm(i);
         const pwr = pwm !== 0 ? Math.pow(2, pwm) : 0;
+        // formant: formant/warp shift. 0 leaves the read untouched; otherwise the
+        // read phase is compressed by fmt = 2^formant (wrapped within the cycle,
+        // with the read span scaled to match so the box filter still band-limits
+        // the faster local waveform) and the sample windowed by a raised cosine
+        // over the fundamental phase, shifting the formants while keeping the pitch.
+        const formant = getFormant(i);
+        const fmt = formant !== 0 ? Math.pow(2, formant) : 0;
         const fp = wt * (count - 1);
         let fa = fp | 0;
         if (fa > count - 1) { fa = count - 1 }
@@ -596,19 +630,25 @@ class SuperOsc extends AudioWorkletProcessor {
         for (let v = 0; v < n; v++) {
           const incV = freqOverSr * mul[v]; // phase step, in cycles per sample
           let ph = phases[v];
+          const phFund = ph; // fundamental phase (pre-sync), for the formant window
           let incR = incV;
           // sync > 0: classic hard sync (unchanged). sync < 0: same |sync| ratio,
           // but the reset click is softened by a short crossfade (fading below).
           const fading = sync < 0 && syncFade[v] > 0;
           if (sync > 0) { ph = (ph * sync) % 1; incR = incV * sync; }
           else if (sync < 0) { const sm = -sync; ph = (ph * sm) % 1; incR = incV * sm; }
-          let s = readWarped(ph, incR, fa, fr, lerp, pwr, crush);
+          // formant: compress the read phase(s) by fmt and scale the read span to
+          // match (on top of any sync remap); the raised-cosine window over phFund
+          // is applied to the finished sample below. fmt === 0 leaves reads untouched.
+          let readPh = ph, readInc = incR, readOld = syncOldPh[v];
+          if (fmt > 0) { readPh = (ph * fmt) % 1; readInc = incR * fmt; readOld = (syncOldPh[v] * fmt) % 1; }
+          let s = readWarped(readPh, readInc, fa, fr, lerp, pwr, crush);
           if (fading) {
             // Second read of the OLD slave phase, continued as if the reset had
             // not happened, warped by the same pwr/crush and read over the same
             // span. Crossfade OLD -> NEW with a raised-cosine window so the reset
             // discontinuity is smeared over syncK[v] samples instead of clicking.
-            let so = readWarped(syncOldPh[v], incR, fa, fr, lerp, pwr, crush);
+            let so = readWarped(readOld, readInc, fa, fr, lerp, pwr, crush);
             const g = 1 - (syncFade[v] - 1) / syncK[v]; // new-weight progress 0..1
             const w = 0.5 - 0.5 * Math.cos(Math.PI * g);
             s = so + (s - so) * w;
@@ -616,6 +656,9 @@ class SuperOsc extends AudioWorkletProcessor {
             syncOldPh[v] -= (syncOldPh[v]) | 0;
             syncFade[v] -= 1;
           }
+          // formant window: raised cosine over the fundamental phase, zero at each
+          // cycle boundary so the fundamental period (pitch) is preserved.
+          if (fmt > 0) { s *= 0.5 - 0.5 * Math.cos(2 * Math.PI * phFund); }
           const sv = s * amp[v];
           sampleL += sv * panL[v];
           sampleR += sv * panR[v];

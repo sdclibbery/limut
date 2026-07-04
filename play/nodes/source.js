@@ -82,6 +82,10 @@ define(function(require) {
     // 2^pwm before the lookup, skewing the waveform toward its start (pwm>0) or
     // end (pwm<0) like a generalised pulse width.
     evalMainParamFrame(node.parameters.get('pwm'), params, 'pwm', 0)
+    // formant: formant/warp shift (0 = off); resamples the waveform within each
+    // cycle at 2^formant times the rate (windowed to keep the pitch), shifting the
+    // formants up (formant>0) or down (formant<0) like Serum/Vital's formant warp.
+    evalMainParamFrame(node.parameters.get('formant'), params, 'formant', 0)
     // unison: number of detuned voices; `detune` subparam is the max frequency
     // ratio the voices spread across, evenly each side of the primary frequency.
     // `amp` subparam is the centre-to-outer voice amplitude ratio (1 = equal).

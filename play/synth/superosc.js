@@ -57,6 +57,12 @@ define(function (require) {
     // end (pwm<0) like a generalised pulse width.
     evalMainParamFrame(vco.parameters.get('pwm'), params, 'pwm', 0)
 
+    // formant: formant/warp shift (0 = off). Resamples the waveform within each
+    // cycle at 2^formant times the rate (windowed to keep the pitch), shifting the
+    // spectral formants up (formant>0) or down (formant<0) like Serum/Vital's
+    // formant warp.
+    evalMainParamFrame(vco.parameters.get('formant'), params, 'formant', 0)
+
     // unison: number of detuned voices; its `detune` subparam is the max frequency
     // ratio the voices spread across, evenly each side of the primary frequency.
     // The `amp` subparam is the centre-to-outer voice amplitude ratio (1 = equal).
