@@ -38,8 +38,9 @@ define(function (require) {
     let wavetableUrl = evalMainParamEvent(params, 'wavetable', undefined)
     if (wavetableUrl) {
       let count = evalSubParamEvent(params, 'wavetable', 'count', 64)
-      let buf = getBuffer(wavetableUrl, (b) => vco.setWave(b.getChannelData(0), count))
-      if (buf) { vco.setWave(buf.getChannelData(0), count) }
+      let smooth = evalSubParamEvent(params, 'wavetable', 'smooth', 0)
+      let buf = getBuffer(wavetableUrl, (b) => vco.setWave(b.getChannelData(0), count, smooth))
+      if (buf) { vco.setWave(buf.getChannelData(0), count, smooth) }
     }
     evalMainParamFrame(vco.parameters.get('wt'), params, 'wt', 0)
 
@@ -48,8 +49,8 @@ define(function (require) {
     // negative sync uses the same ratio but crossfades the reset (soft sync).
     evalMainParamFrame(vco.parameters.get('sync'), params, 'sync', 0)
 
-    // crush: phase quantisation (0 = off). Quantises the (post-sync) phase to
-    // `crush` discrete steps before the wavetable lookup for a stepped, lo-fi timbre.
+    // crush: phase quantisation in bits (0 = off). Quantises the (post-sync) phase
+    // to `2^crush` steps before the wavetable lookup for a stepped, lo-fi timbre.
     evalMainParamFrame(vco.parameters.get('crush'), params, 'crush', 0)
 
     // pwm: phase power-warp (0 = off). Raises the (post-sync) phase to the power

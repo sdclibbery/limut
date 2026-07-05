@@ -67,16 +67,17 @@ define(function(require) {
     let wavetableUrl = evalMainParamEvent(params, 'wavetable', undefined)
     if (wavetableUrl) {
       let count = evalSubParamEvent(params, 'wavetable', 'count', 64)
-      let buf = getBuffer(wavetableUrl, (b) => node.setWave(b.getChannelData(0), count))
-      if (buf) { node.setWave(buf.getChannelData(0), count) }
+      let smooth = evalSubParamEvent(params, 'wavetable', 'smooth', 0)
+      let buf = getBuffer(wavetableUrl, (b) => node.setWave(b.getChannelData(0), count, smooth))
+      if (buf) { node.setWave(buf.getChannelData(0), count, smooth) }
     }
     evalMainParamFrame(node.parameters.get('wt'), params, 'wt', 0)
     // sync: oscillator hard-sync ratio (0 = off); remaps the phase to restart
     // |sync| times per fundamental cycle for the classic hard-sync timbre;
     // negative sync uses the same ratio but crossfades the reset (soft sync).
     evalMainParamFrame(node.parameters.get('sync'), params, 'sync', 0)
-    // crush: phase quantisation (0 = off); quantises the (post-sync) phase to
-    // `crush` steps before the wavetable lookup for a stepped, lo-fi timbre.
+    // crush: phase quantisation in bits (0 = off); quantises the (post-sync) phase
+    // to `2^crush` steps before the wavetable lookup for a stepped, lo-fi timbre.
     evalMainParamFrame(node.parameters.get('crush'), params, 'crush', 0)
     // pwm: phase power-warp (0 = off); raises the (post-sync) phase to the power
     // 2^pwm before the lookup, skewing the waveform toward its start (pwm>0) or
