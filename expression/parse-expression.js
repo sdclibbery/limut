@@ -15,6 +15,7 @@ define(function(require) {
   let parsePiecewise = require('expression/parse-piecewise')
   let parseUnits = require('expression/parse-units')
   let {pushCallContext,popCallContext} = require('player/callstack')
+  require('play/nodes/nodes') // Side-effect: register node functions (gain, idnode, parallel, mockaudionode...). The inline tests below use them, so this guarantees they are registered before this module's test block runs, rather than relying on async module load order.
 
   let expression = (state) => {
     let result
