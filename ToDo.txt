@@ -1,10 +1,23 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================Pitch fx to support @s
+
+console.trace() Assertion failed.
+>>Expected:
+  true
+>>Actual:
+  false parse-expression.js:202:28
+    assert http://localhost:8000/expression/parse-expression.js:202
+    <anonymous> http://localhost:8000/expression/parse-expression.js:1954
+Uncaught TypeError: can't access property "length", v.ls is undefined
+    <anonymous> http://localhost:8000/expression/parse-expression.js:2126
+    
+
 SuperOsc worklet
- ?Is it worth extracting the integral wavetable creation to another module? 
- It should force each individual wave to line up at the ends, to avoid distortion when importing a wavetable from a normal sample
- ?Superosc single waveforms, and default to saw?
+ Superosc single waveforms, and default to saw
+ Compare render usage 7 unison Vs supersaw 7 osc
+ ?Noise oscillator?
+ Granular mode?
  Can set starting phase of oscillator
 !If you mix @s and @f then the @f doesn't work properly, eg [1,0]e@s+[]l2@f
   - This example only updates the []l while the envelope is still playing. Needs something like keyboard player to show it]

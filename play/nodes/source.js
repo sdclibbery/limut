@@ -63,14 +63,15 @@ define(function(require) {
     // Wavetable sample buffer, sliced into `count` single-cycle frames (count is
     // a subparam of wavetable, eg wavetable:{'...', count:64}, default 64); silent
     // until the sample loads, then switched in via the worklet's message port.
-    // `wt` (0..1) morphs across the frames.
+    // `wt` (0..1) morphs across the frames. With no wavetable set it defaults to a
+    // single-cycle saw (sample/wave/SAW.WAV, count 1) so a bare superosc makes sound.
     let wavetableUrl = evalMainParamEvent(params, 'wavetable', undefined)
-    if (wavetableUrl) {
-      let count = evalSubParamEvent(params, 'wavetable', 'count', 64)
-      let smooth = evalSubParamEvent(params, 'wavetable', 'smooth', 0)
-      let buf = getBuffer(wavetableUrl, (b) => node.setWave(b.getChannelData(0), count, smooth))
-      if (buf) { node.setWave(buf.getChannelData(0), count, smooth) }
-    }
+    let defaultCount = 64
+    if (!wavetableUrl) { wavetableUrl = 'sample/wave/SAW.WAV'; defaultCount = 1 }
+    let count = evalSubParamEvent(params, 'wavetable', 'count', defaultCount)
+    let smooth = evalSubParamEvent(params, 'wavetable', 'smooth', 0)
+    let buf = getBuffer(wavetableUrl, (b) => node.setWave(b.getChannelData(0), count, smooth))
+    if (buf) { node.setWave(buf.getChannelData(0), count, smooth) }
     evalMainParamFrame(node.parameters.get('wt'), params, 'wt', 0)
     // sync: oscillator hard-sync ratio (0 = off); remaps the phase to restart
     // |sync| times per fundamental cycle for the classic hard-sync timbre;

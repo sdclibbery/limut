@@ -32,16 +32,17 @@ define(function (require) {
 
     // The wavetable is a sample buffer sliced into `count` single-cycle frames
     // (count is a subparam of wavetable, eg wavetable={'...', count:64}). With no
-    // wavetable set the oscillator stays silent; when the sample loads (sync or
-    // async via the samples cache) it is pushed to the worklet, which switches to
-    // it in place. `wt` (0..1) morphs across the frames.
+    // wavetable set it defaults to a single-cycle saw (sample/wave/SAW.WAV, count 1)
+    // so a bare superosc makes sound. When the sample loads (sync or async via the
+    // samples cache) it is pushed to the worklet, which switches to it in place.
+    // `wt` (0..1) morphs across the frames.
     let wavetableUrl = evalMainParamEvent(params, 'wavetable', undefined)
-    if (wavetableUrl) {
-      let count = evalSubParamEvent(params, 'wavetable', 'count', 64)
-      let smooth = evalSubParamEvent(params, 'wavetable', 'smooth', 0)
-      let buf = getBuffer(wavetableUrl, (b) => vco.setWave(b.getChannelData(0), count, smooth))
-      if (buf) { vco.setWave(buf.getChannelData(0), count, smooth) }
-    }
+    let defaultCount = 64
+    if (!wavetableUrl) { wavetableUrl = 'sample/wave/SAW.WAV'; defaultCount = 1 }
+    let count = evalSubParamEvent(params, 'wavetable', 'count', defaultCount)
+    let smooth = evalSubParamEvent(params, 'wavetable', 'smooth', 0)
+    let buf = getBuffer(wavetableUrl, (b) => vco.setWave(b.getChannelData(0), count, smooth))
+    if (buf) { vco.setWave(buf.getChannelData(0), count, smooth) }
     evalMainParamFrame(vco.parameters.get('wt'), params, 'wt', 0)
 
     // sync: oscillator hard-sync ratio (0 = off). Remaps the phase to restart
