@@ -23,9 +23,10 @@ define(function (require) {
   // jumps back to data[off], so the reconstructed slope kinks every cycle -> a
   // click/buzz at the fundamental (plus aliasing). Returns a NEW Float32Array
   // (never mutates `data`, which is the shared getChannelData(0) buffer). Each
-  // frame is (1) DC-removed, (2) linearly detrended so its endpoints match, and
-  // (3) given a cubic seam bridge that matches value AND slope across the wrap so
-  // the looped cycle is C1-continuous. `smooth` (0..1) dry/wet-blends the
+  // frame is (1) linearly detrended so its endpoints match, (2) given a cubic seam
+  // bridge that matches value AND slope across the wrap so the looped cycle is
+  // C1-continuous, and (3) DC-removed last (subtracting a constant, which preserves
+  // the detrend/bridge) so the mean is truly ~0. `smooth` (0..1) dry/wet-blends the
   // conditioned frame against the raw frame.
   const conditionWave = (data, count, frameLen, smooth) => {
     const N = frameLen
@@ -35,17 +36,13 @@ define(function (require) {
     const L = Math.max(1, Math.min(Math.round(N / 32), N >> 2))
     for (let f = 0; f < count; f++) {
       const off = f * N
-      // 1. DC removal (per frame)
-      let sum = 0
-      for (let k = 0; k < N; k++) { sum += data[off + k] }
-      const mean = sum / N
-      for (let k = 0; k < N; k++) { cond[k] = data[off + k] - mean }
-      // 2. linear endpoint detrend: subtract a ramp so cond[N-1] meets cond[0]
+      for (let k = 0; k < N; k++) { cond[k] = data[off + k] }
+      // 1. linear endpoint detrend: subtract a ramp so cond[N-1] meets cond[0]
       if (N > 1) {
         const d = cond[N - 1] - cond[0]
         for (let k = 0; k < N; k++) { cond[k] -= d * k / (N - 1) }
       }
-      // 3. cubic (Hermite) seam bridge: replace the 2L samples straddling the wrap
+      // 2. cubic (Hermite) seam bridge: replace the 2L samples straddling the wrap
       // with a curve matching the value and interior slope at each anchor (index
       // N-1-L and index L, both left untouched), giving C1 continuity at the seam.
       if (N > 4) {
@@ -60,6 +57,13 @@ define(function (require) {
           cond[idx] = h
         }
       }
+      // 3. DC removal (per frame) — done last so the detrend ramp and seam bridge
+      // can't reintroduce an offset. Subtracting a constant preserves slope,
+      // endpoint-matching, and seam continuity, so it only zeroes the mean.
+      let sum = 0
+      for (let k = 0; k < N; k++) { sum += cond[k] }
+      const mean = sum / N
+      for (let k = 0; k < N; k++) { cond[k] -= mean }
       // dry/wet blend against the raw frame
       for (let k = 0; k < N; k++) { out[off + k] = data[off + k] + (cond[k] - data[off + k]) * smooth }
     }
