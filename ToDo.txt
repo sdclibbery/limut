@@ -1,11 +1,8 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================Pitch fx to support @s
-SuperOsc worklet
- Compare render usage 7 unison Vs supersaw 7 osc
- ?Noise oscillator?
- ?Granular mode?
- Can set starting phase of oscillator
+Chaos oscillator worklet
+Cheap tilt filter
 !If you mix @s and @f then the @f doesn't work properly, eg [1,0]e@s+[]l2@f
   - This example only updates the []l while the envelope is still playing. Needs something like keyboard player to show it]
 ? Chebyshev shaper
@@ -21,6 +18,7 @@ Claude fable suggested good default mastering chain; try it out:
 !!Error "AudioParam.setTargetAtTime: Argument 3 is not a finite floating-point value" "Bad audioParam segment setTargetAtTime 123.53378433702585 436.6550303030304,-Infinity"
  b saw, dur=1/4, oct=2, fx=disperser{[400:!400ms,100]e@s}
 grain should have offset param, would allow more interesting effects; granular delays etc
+?Granular synth?
 visual nodes...
 Multiband effect that does spectral side chain ducking
  Eg I have a lead that sometimes can't be heard over an arp. I want to duck the arp spectrally based on the lead
