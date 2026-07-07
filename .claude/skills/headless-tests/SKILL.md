@@ -17,7 +17,14 @@ Open `http://localhost:8000?test` in a browser and look at the console — or ru
 
 ## The procedure
 
+**Reuse an already-running server.** Before starting one, check whether the server
+is already up (e.g. `curl -sf http://localhost:8000/ >/dev/null` or
+`lsof -i :8000`). If it is, use it and **do not kill it when done** — the user is
+likely relying on it. Only start your own server if none is running, and in that
+case kill it afterwards.
+
 ```sh
+# only if nothing is already listening on :8000
 sh server.sh > /tmp/limut-server.log 2>&1 &       # start server in background
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
   --headless=new --disable-gpu \
@@ -31,7 +38,8 @@ grep "INFO:CONSOLE" /tmp/limut-test.log \
   | sed -E 's|.*CONSOLE[^"]*"||; s|", source:.*||'
 ```
 
-Remember to kill the background server (`kill <pid>`) when done.
+Kill the background server (`kill <pid>`) when done **only if you started it**. If
+it was already running before you began, leave it running.
 
 ## Why each flag matters
 

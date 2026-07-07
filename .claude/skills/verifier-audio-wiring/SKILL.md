@@ -141,7 +141,10 @@ Useful knobs while bisecting:
 
 ## Running the harness
 
-`sh server.sh` must already be running (start it if not). Then:
+`sh server.sh` must already be running (start it if not — check with
+`curl -sf http://localhost:8000/ >/dev/null` or `lsof -i :8000` first). If it was
+already running, leave it running when done; only kill a server you started
+yourself. Then:
 
 ```sh
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \

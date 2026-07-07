@@ -13,11 +13,33 @@ define(function (require) {
   // ratio (top) and 1/ratio (bottom), the centre voice at 1 (the primary).
   // n===1 gives [1] (no detune). Kept in sync with the same formula inlined in
   // the worklet's process() (the worklet can't share this module's code).
+  //
+  // The exponents are additionally perturbed by unisonDetuneOffset (below): a
+  // perfectly even (linear) spread makes the inter-voice beat frequencies
+  // commensurate, so the whole stack periodically re-converges in phase — an
+  // audible pulse. The offset takes the interior voices off that grid.
+  const PHI = 0.6180339887498949 // golden-ratio fractional part (low-discrepancy)
+  const frac = (x) => x - Math.floor(x)
+  // Small antisymmetric offset added to voice v's detune exponent to break the
+  // even spacing. Zero at the two endpoints and the exact centre voice, and
+  // antisymmetric about the centre (off(n-1-v) === -off(v)), so log-symmetry
+  // (mul[v]*mul[n-1-v]===1) and the documented extremes/centre stay exact; only
+  // interior voices of n>=4 move. Deterministic (no per-note randomness).
+  // Kept in sync with the same formula inlined in the worklet's process().
+  const DETUNE_SPREAD = 0.2 // exponent perturbation magnitude, ear-tunable
+  const unisonDetuneOffset = (n, v) => {
+    const half = (n - 1) / 2
+    if (v === 0 || v === n - 1 || v === half) { return 0 }
+    const k = Math.min(v, n - 1 - v)
+    const g = 2 * frac(k * PHI) - 1
+    return DETUNE_SPREAD * g * (v < half ? -1 : 1)
+  }
+
   const unisonMuls = (n, ratio) => {
     const mul = new Float32Array(n)
     for (let v = 0; v < n; v++) {
       const p = n === 1 ? 0 : (2 * v / (n - 1) - 1)
-      mul[v] = Math.pow(ratio, p)
+      mul[v] = Math.pow(ratio, p + unisonDetuneOffset(n, v))
     }
     return mul
   }
@@ -95,6 +117,23 @@ define(function (require) {
     // ratio===1: no detune, all voices at the primary
     let mr = unisonMuls(4, 1)
     for (let v = 0; v < 4; v++) { assert(1, mr[v], 'uni ratio=1 voice ' + v) }
+
+    // detune perturbation: the antisymmetric offset takes interior voices off the
+    // even geometric grid (breaking the periodic phase re-convergence) while keeping
+    // log-symmetry and the endpoints/centre exact.
+    let m7 = unisonMuls(7, 1.05)
+    for (let v = 0; v < 7; v++) { assert(1, m7[v] * m7[7 - 1 - v], 'uni n=7 symmetry ' + v) }
+    assert(1 / 1.05, m7[0], 'uni n=7 low endpoint exact'); assert(1.05, m7[6], 'uni n=7 high endpoint exact')
+    assert(1, m7[3], 'uni n=7 centre exact')
+    // at least one interior voice is moved off the pure-geometric value
+    let moved7 = false
+    for (let v = 1; v < 6; v++) { if (Math.abs(m7[v] - Math.pow(1.05, 2 * v / 6 - 1)) > 1e-4) { moved7 = true } }
+    if (!moved7) { console.trace('superosc uni n=7 interior perturbation Assertion failed: no interior voice moved') }
+    // offset is exactly zero at endpoints and the exact centre for odd n
+    assert(0, unisonDetuneOffset(7, 0), 'off n=7 v=0'); assert(0, unisonDetuneOffset(7, 6), 'off n=7 v=6'); assert(0, unisonDetuneOffset(7, 3), 'off n=7 centre')
+    // amp/pan positions are NOT perturbed (they must stay on the linear grid)
+    let a7 = unisonAmps(7, 3)
+    assert(3, a7[3], 'amp n=7 centre stays exact'); assert(1, a7[0], 'amp n=7 endpoint stays exact')
 
     // unisonAmps: centre voice `amp`x the outer voices, linear by |position|
     let a3 = unisonAmps(3, 2)
@@ -333,11 +372,14 @@ class SuperOsc extends AudioWorkletProcessor {
   constructor() {
     super();
     // Per-voice phase (cycles [0,1) within a single frame), one per unison voice
-    // (up to 16). Voice 0 starts at 0 (so unison=1 is identical to a single
-    // oscillator); the rest start spread across the cycle so the voices don't
-    // begin perfectly coherent.
+    // (up to 16). Spread the starting phases around the full cycle with a golden-
+    // ratio low-discrepancy sequence: well-distributed for any voice count (unlike
+    // v/16, which only spreads well near 16 and clustered the first few voices into
+    // a narrow arc, letting them re-converge coherently). A distinct irrational
+    // from the detune offset's PHI keeps phase and detune sequences uncorrelated.
+    // frac(0)=0, so voice 0 starts at 0 and unison=1 is identical to a single osc.
     this.phases = new Float32Array(16);
-    for (let v = 1; v < 16; v++) { this.phases[v] = v / 16; }
+    for (let v = 0; v < 16; v++) { const x = v * 0.7548776662466927; this.phases[v] = x - Math.floor(x); }
     // Soft-sync (negative sync) per-voice crossfade state. When a fundamental
     // cycle wraps we arm a short raised-cosine crossfade between the OLD slave
     // phase (continued past the reset) and the NEW reset slave phase, softening
@@ -413,9 +455,22 @@ class SuperOsc extends AudioWorkletProcessor {
     const panL = new Float32Array(n);
     const panR = new Float32Array(n);
     let sumSq = 0;
+    const half = (n - 1) / 2;
     for (let v = 0; v < n; v++) {
       const p = n === 1 ? 0 : (2 * v / (n - 1) - 1);
-      mul[v] = Math.pow(ratio, p);
+      // Antisymmetric golden-ratio offset on the detune exponent only: breaks the
+      // even (linear) spacing whose commensurate beats make the unison stack
+      // periodically re-converge in phase (an audible pulse). Zero at the endpoints
+      // and exact centre; only interior voices of n>=4 move. amp/pan keep the
+      // un-perturbed linear p. Kept in sync with unisonDetuneOffset() above.
+      let off = 0;
+      if (v !== 0 && v !== n - 1 && v !== half) {
+        const k = Math.min(v, n - 1 - v);
+        const kp = k * 0.6180339887498949;
+        const g = 2 * (kp - Math.floor(kp)) - 1;
+        off = 0.2 * g * (v < half ? -1 : 1);
+      }
+      mul[v] = Math.pow(ratio, p + off);
       const w = 1 + (ampRatio - 1) * (1 - Math.abs(p));
       amp[v] = w;
       sumSq += w * w;

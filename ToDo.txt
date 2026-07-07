@@ -1,7 +1,7 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================Pitch fx to support @s
-Chaos oscillator worklet
+Chaos oscillator worklet?
 Cheap tilt filter
 !If you mix @s and @f then the @f doesn't work properly, eg [1,0]e@s+[]l2@f
   - This example only updates the []l while the envelope is still playing. Needs something like keyboard player to show it]
