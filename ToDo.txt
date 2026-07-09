@@ -1,10 +1,10 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================Pitch fx to support @s
-Chaos oscillator worklet?
-Cheap tilt filter
+!! Doesnt work properly:  fx=tilt{+10db*[-1,1]l4@f}  but this works:   fx=tilt{[-10db,+10db]l4@f}
 !If you mix @s and @f then the @f doesn't work properly, eg [1,0]e@s+[]l2@f
   - This example only updates the []l while the envelope is still playing. Needs something like keyboard player to show it]
+Chaos oscillator worklet?
 ? Chebyshev shaper
 !tts{} does not repeat, so its not useful in fx chain. Want to either trigger it, or set a repeat interval
  // l supersaw 001236, fx=vocoder{tts{'take your place'}}*8, oct=2, dur=1/2

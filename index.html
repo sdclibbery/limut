@@ -1271,6 +1271,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>shaper.pow{curve:0.9}</code> Waveshaper providing saturation/distortion by applying a power curve. A curve of 1 is linear and has no effect, less than one applies distortion</p>
 <p><code>shaper.tanh{gain:3/2}</code> Waveshaper providing saturation/distortion by applying a tanh function. Use gain to push the distortion harder</p>
 <p><code>stanh{gain:3/2}</code> Convenience alias for shaper.tanh. Waveshaper providing saturation/distortion by applying a tanh function. Use gain to push the distortion harder</p>
+<p><code>tilt{gain, freq:700Hz}</code> Tilt EQ: a low shelf and high shelf with opposite gains around the pivot <code>freq</code>, so one control seesaws the spectrum (darker/brighter). <code>gain</code> is symmetric &mdash; <code>tilt{3db}</code> boosts highs +3dB and cuts lows -3dB; <code>tilt{1}</code> is flat. Built from <code>lsf</code>+<code>hsf</code>.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-effects-library')" class="accordion"> Effects Library</h4>
 <div id="accordion-effects-library" class="closed">

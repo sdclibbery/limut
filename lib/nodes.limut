@@ -49,6 +49,9 @@ set high = hsf
 set mid = pkf
 set low = lsf
 
+//// Tilt EQ (opposite low+high shelves around a pivot; symmetric ±gain)
+set tilt = {gain, freq:700} -> lsf{1/gain, freq:freq} >> hsf{gain, freq:freq}
+
 //// Wave shapers
 set shaper.pow = {curve:0.9} -> shaper{ {x,c:curve} -> sgn{x}*(abs{x}^c) }
 set shaper.tanh = {gain:3/2} -> shaper{ {x,g:gain} -> tanh{x*g} }
