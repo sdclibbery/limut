@@ -1,9 +1,6 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================Pitch fx to support @s
-!If you mix @s and @f then the @f doesn't work properly, eg [1,0]e@s+[]l2@f
-For example lpf=100+300*([10:!1,0]e@s+[]l1@f)
-  - This example only updates the []l while the envelope is still playing
 Chaos oscillator worklet?
 ? Chebyshev shaper
 !tts{} does not repeat, so its not useful in fx chain. Want to either trigger it, or set a repeat interval

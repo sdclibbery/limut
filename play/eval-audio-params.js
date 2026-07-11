@@ -395,6 +395,17 @@ define(function (require) {
     assert(true, stillRunning) // the @f term keeps updating
     assert(true, ap.calls.some(c => c[0] === 'setTargetAtTime')) // per-frame scheduling, not segment ramps
 
+    // nested @f inside @s (eg lpf=[8:!1,[]l@f]e@s): the segmented event timevar is tagged 'frame'
+    // (parse upgrades it), so wrapWithInterval stamps the frame interval onto the segment wrapper
+    // and it routes through the per-frame branch rather than freezing when the @s envelope ends.
+    let nested = eventTimeVar([hz(8),hz(9)], u2, u2, 1, true) // carries segment data
+    nested.interval = 'frame' // as the parser sets it when a value nested in the @s is @f
+    ap = mockAp(); pf = []; evalMainParamFrame(ap, {foo:nested, _perFrame:pf, count:1, dur:4, _time:2, endTime:10}, 'foo', 3, 'hz', (v) => v * 2)
+    assert(1, ap.calls.length) // per-frame branch: only the initial value set, no pre-built segments
+    assert('setValueAtTime', ap.calls[0][0])
+    assert(true, pf[0]({time:3})) // keeps updating
+    assert(true, ap.calls.some(c => c[0] === 'setTargetAtTime')) // per-frame scheduling, not segment ramps
+
     // user functions that require a call tree to be saved - tested in parse-expression tests
 
     // connectables - tested in parse-expression tests

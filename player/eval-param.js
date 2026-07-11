@@ -24,7 +24,7 @@ define((require) => {
       v = {value:v, interval:value.interval} // Wrap to provide interval
     }
     if (value.interval === 'frame' && (typeof v === 'object' || v.interval === undefined)) {
-      if (v._nextSegment === undefined) { v.interval = value.interval } // Set interval
+      v.interval = value.interval // Set interval (incl. on segment wrappers, so nested @s+@f routes per-frame)
     }
     if (value.interval === 'event' && v.interval === 'frame') { // [[1]t@f]t@e case; remove frame wrapper
       v = v.value // Extract value; remove interval wrapper
@@ -248,6 +248,12 @@ define((require) => {
 
   delete perEventThenFrameObject.interval_memo
   assert({foo:{value:1,interval:'frame'},interval:'event'}, evalParamFrame(perEventThenFrameObject, ev(0), 1, {withInterval:true}))
+
+  // a frame-tagged value that evaluates to a segment wrapper (a nested @f inside an @s timevar)
+  // still gets the frame interval stamped, so audio-param routing can send it per frame
+  let perFrameSegment = () => { return {value:5, _nextSegment:3, _segmentPower:1} }
+  perFrameSegment.interval = 'frame'
+  assert({value:5,_nextSegment:3,_segmentPower:1,interval:'frame'}, evalParamFrame(perFrameSegment, ev(0), 1, {withInterval:true}))
 
   let constWithMods = () => 1
   constWithMods.modifiers = {}

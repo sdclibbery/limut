@@ -340,6 +340,12 @@ define(function(require) {
   assert({"value":1,"_nextSegment":1,"_segmentPower":3}, evalParamFrame(p,ev(0,0),1/2))
   assert({"value":2,"_nextSegment":2,"_segmentPower":3}, evalParamFrame(p,ev(0,0),1))
 
+  // a per-frame (@f) value nested inside an @s timevar upgrades the whole timevar to 'frame', so
+  // it is evaluated per frame (the nested @f keeps updating) instead of frozen at the segment end
+  assert('segment', parseExpression('[0,2]l1@s').interval) // pure @s stays segment-scheduled
+  assert('frame', parseExpression('[0,[1,2]t1@f]l1@s').interval) // nested @f upgrades it to frame
+  assert('frame', parseExpression('[10:!1,[1,2]l1@f]e@s').interval) // the reported e@s form
+
   p = parseExpression('[-1:1]t1')
   assert(-1, evalParamFrame(p,ev(0,0),0))
   assert(0, evalParamFrame(p,ev(1,1),1))

@@ -158,6 +158,12 @@ define(function(require) {
     return options
   }
 
+  // A per-frame (@f) value nested inside a segmented (@s) timevar forces the whole timevar to be
+  // evaluated per frame (so the @f keeps updating). Segment data is still attached; the
+  // eval-audio-params routing guard then keeps it off the segment scheduler. (frame > segment.)
+  let frameIfNestedFrame = (interval, addSegmentData, vs) =>
+    (addSegmentData && hoistInterval(undefined, vs) === 'frame') ? 'frame' : interval
+
   let getOperator = (i) => {
     if (i === undefined) { return undefined }
     let op = iOperators[i.charAt(0)]
@@ -193,6 +199,7 @@ define(function(require) {
         result = timeVar(vs, is, ss, ds, iOperators['_'], options)
       }
       result = addModifiers(result, modifiers)
+      interval = frameIfNestedFrame(interval, options && options.addSegmentData, vs)
       setInterval(result, interval)
     } else if (state.str.charAt(state.idx).toLowerCase() == 'l') { // linearly interpolated timevar
       state.idx += 1
@@ -204,6 +211,7 @@ define(function(require) {
       let options = maybeAddSegmentData(maybeClamp(modifiers, ss), interval)
       result = timeVar(vs, is, ss, ds, iOperators['/'], options)
       result = addModifiers(result, modifiers)
+      interval = frameIfNestedFrame(interval, options && options.addSegmentData, vs)
       setInterval(result, interval)
     } else if (state.str.charAt(state.idx).toLowerCase() == 's') { // smoothstep interpolated timevar
       state.idx += 1
@@ -215,6 +223,7 @@ define(function(require) {
       let options = maybeAddSegmentData(maybeClamp(modifiers, ss), interval)
       result = timeVar(vs, is, ss, ds, iOperators['~'], options)
       result = addModifiers(result, modifiers)
+      interval = frameIfNestedFrame(interval, options && options.addSegmentData, vs)
       setInterval(result, interval)
     } else if (state.str.charAt(state.idx).toLowerCase() == 'e') { // interpolate through the event duration
       state.idx += 1
@@ -233,6 +242,7 @@ define(function(require) {
       is = is.map(i => getOperator(i))
       result = eventTimeVar(vs, is, ss, ds, addSegmentData)
       result = addModifiers(result, modifiers)
+      interval = frameIfNestedFrame(interval, addSegmentData, vs)
       setInterval(result, interval)
     } else if (state.str.charAt(state.idx).toLowerCase() == 'r') { // random
       state.idx += 1
