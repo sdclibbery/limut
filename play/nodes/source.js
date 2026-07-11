@@ -5,6 +5,7 @@ define(function(require) {
   let {evalMainParamEvent,evalSubParamEvent,evalMainParamFrame,evalSubParamFrame} = require('play/eval-audio-params')
   let {evalParamFrame,evalParamEvent} = require('player/eval-param')
   let createSuperOsc = require('play/superosc-source')
+  let createChaos = require('play/chaos-source')
   let setWave = require('play/synth/waveforms/set-wave')
   let whiteNoise = require('play/synth/waveforms/noise')
   let click = require('play/synth/waveforms/click')
@@ -140,6 +141,46 @@ define(function(require) {
   }
   addNodeFunction('impulse', impulse)
 
+  // Chaos oscillator source node (AudioWorklet): a strange-attractor / chaotic-map
+  // generator emitting a deterministic-but-non-repeating signal, usable as both a
+  // control-rate LFO and an audio-rate modulator - eg `lpf{ 400 + chaos{freq=6}*300 }`
+  // (slow filter wobble) or `osc{ freq= 110 + chaos{110}*40 }` (organic FM). `freq`
+  // (the default positional param, so `chaos{6}`/`chaos{440Hz}` work) sets the evolution
+  // speed in Hz. `type` picks the algorithm (lorenz default, plus rossler, thomas,
+  // logistic, duffing). `chaos` (0..1) is the character macro mapped to each algorithm's
+  // bifurcation parameter (order->chaos). `axis` (x/y/z) selects the output dimension of
+  // the 3D attractors - correlated-but-distinct mod streams. `smooth` (0..1) lowpasses the
+  // output (tames logistic's sample-and-hold steps). `seed` offsets the initial condition
+  // so multiple instances diverge and never phase-lock (organic supersaw stacks).
+  let chaos = (args,e,b) => {
+    if (!window.AudioWorkletNode) { return }
+    let params = combineParams(args, e)
+    let seed = evalMainParamEvent(params, 'seed', 0)
+    let node = createChaos(seed)
+    // freq: default positional `value` sets it (like osc), else the `freq` param; in Hz
+    let value = evalParamEvent(params.value, e,b)
+    if (typeof value === 'number' && value !== 0) {
+      evalMainParamFrame(node.parameters.get('freq'), params, 'value', 440, 'hz')
+    } else {
+      evalMainParamFrame(node.parameters.get('freq'), params, 'freq', 440, 'hz')
+    }
+    // type: algorithm name -> the worklet's k-rate algo index (default lorenz)
+    let typeName = evalMainParamEvent(params, 'type', 'lorenz')
+    let algo = createChaos.CHAOS_TYPES[typeName]
+    if (algo === undefined) { algo = 0 }
+    node.parameters.get('algo').value = algo
+    // axis: output dimension x/y/z (default x); accepts a name or 0/1/2
+    let axisVal = evalMainParamEvent(params, 'axis', 0)
+    let axis = typeof axisVal === 'string' ? ({x:0,y:1,z:2}[axisVal] || 0) : axisVal
+    node.parameters.get('axis').value = axis
+    evalMainParamFrame(node.parameters.get('chaos'), params, 'chaos', 0.5)
+    evalMainParamFrame(node.parameters.get('smooth'), params, 'smooth', 0)
+    node.start(e._time)
+    if (e && e._destructor) { e._destructor.stop(node) } else { node.stop() }
+    return node
+  }
+  addNodeFunction('chaos', chaos)
+
   let sample = (args,e,b) => {
     let node = system.audio.createBufferSource()
     let params = combineParams(args, e)
@@ -241,4 +282,22 @@ define(function(require) {
     return node
   }
   addNodeFunction('tts', tts)
+
+  // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+    let assert = (expected, actual, msg) => {
+      let x = JSON.stringify(expected), a = JSON.stringify(actual)
+      if (x !== a) { console.trace(`Assertion failed ${msg||''}.\n>>Expected: ${x}\n>>Actual:   ${a}`) }
+    }
+    // chaos type name -> worklet algo index (the mapping the node function relies on)
+    if (createChaos && createChaos.CHAOS_TYPES) {
+      assert(0, createChaos.CHAOS_TYPES['lorenz'], 'chaos lorenz index')
+      assert(1, createChaos.CHAOS_TYPES['rossler'], 'chaos rossler index')
+      assert(2, createChaos.CHAOS_TYPES['thomas'], 'chaos thomas index')
+      assert(3, createChaos.CHAOS_TYPES['logistic'], 'chaos logistic index')
+      assert(4, createChaos.CHAOS_TYPES['duffing'], 'chaos duffing index')
+      assert(undefined, createChaos.CHAOS_TYPES['nope'], 'chaos unknown type')
+      console.log('Chaos source tests complete')
+    }
+  }
 })

@@ -1,7 +1,7 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================Pitch fx to support @s
-Chaos oscillator worklet?
+!superosc cant take positional freq; should be able to play=superosc{440}
 ? Chebyshev shaper
 !tts{} does not repeat, so its not useful in fx chain. Want to either trigger it, or set a repeat interval
  // l supersaw 001236, fx=vocoder{tts{'take your place'}}*8, oct=2, dur=1/2
