@@ -5418,3 +5418,27 @@ s superosc 0_1, oct=2, wavetable='sample/wt64/SAND_EYE.WAV', wt=1/2+gp.rsh/2, fx
 t speak keyboard, dur=4, text=['Know Your Place!','Show Your Face!']t16, fx=mix{vocodethis{pitch{[-1,2,[0,1]t8@f,0]t1@f,oct:3},tilt:0.15,unison:5},0.5}/2, speed=150, vel*=[1:96,0:32]t, rate=1
 
 
+// Neural Interconnect
+include 'personal/everything.limut'
+dg dmx, channel=63, lights={0:4/64}
+ds dvoice, channel=(33,43,53), fore=#088*2, back=#804, input=smooth{main.pulse*3/2,8}*tg
+dw dmxwash, channel=(1,15), fore=#444*duck*pk.playing
+dw2 dmxwash, channel=(8,22), fore=#102*l.pulse.0*tg
+w webcam, device=['5mp':24,'2mp':8]t, jpeg=1/2*[]r1/8@f^1/4, mid=#68d+#89a*l.pulse.0*duck, pixellate={x:100,y:1000-997*(pk.playing)}
+set bpm=114
+set scale='phrygian'
+set main fx=stanh{3}>>compress*-1db
+set p* delay|=[():14,[1,3]r/4:2]t
+set !p* add+=[0:28,4:4]t+[0,3]t32
+// pk tri 0.. crop 8, addc=[60:\250ms,0]e@s, oct=0, dur=1/4, vel=1
+// pk2 bd909 follow pk, vel=3/4
+// ps perc ....u..., vel=1/6, room, rate=1/2, fx=stanh
+// ph perc .-:-n crop 32, vel*=[]n, pan=[-1:1]r/2
+// bs sub .0_ crop 16, fx=stanh{8}
+// d darkpad (049), vel=1-gp.rsd, cutoff=gp.rsu, fx>>=mix{shifter{2},gp.rsr}>>mix{airverb}>>mix{tg,gp.rsl}*+3db
+// sw sweep, wave='pulse', oct=[4,5]t8, fx=stanh{2}>>mix{airverb}>>mix{1-tg,gp.lsl}, vel=1-gp.lsd, oct-=gp.lsr
+// l superosc gamepad lt:vel, wavetable={'sample/wt64/MS2K.WAV'}, sync=[8:!300ms,1]e@s, rel=1/4, oct=2, wt=[]l32@f, fx=mix{airverb}*+3db, sus={level:1/2}
+l superosc keyboard, wavetable={'sample/wt64/MS2K.WAV'}, sync=[8:!300ms,1]e@s, rel=1/4, oct=2, wt=[]l32@f, fx=mix{airverb}*+3db, sus={level:1/2}
+// t speak keyboard, text=('neural interconnect','synaptic drain','system overload','warning','40%','80%').{this.value}, fx=mix{osc.saw{freq:pitch{oct:2}}>>vocoder{this.player.pre},0.75}>>mix{airverb}*+5db, oct=2, rate=1.1, echo=3/4
+
+

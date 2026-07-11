@@ -1,9 +1,9 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================Pitch fx to support @s
-!! Doesnt work properly:  fx=tilt{+10db*[-1,1]l4@f}  but this works:   fx=tilt{[-10db,+10db]l4@f}
 !If you mix @s and @f then the @f doesn't work properly, eg [1,0]e@s+[]l2@f
-  - This example only updates the []l while the envelope is still playing. Needs something like keyboard player to show it]
+For example lpf=100+300*([10:!1,0]e@s+[]l1@f)
+  - This example only updates the []l while the envelope is still playing
 Chaos oscillator worklet?
 ? Chebyshev shaper
 !tts{} does not repeat, so its not useful in fx chain. Want to either trigger it, or set a repeat interval
@@ -33,6 +33,9 @@ Should be able to write actual unit tests in limut for limut functions? How woul
 Support just intonation etc
 gp0, gp1 etc as well as just gp
 Dmxstrip presets...
+!! Doesnt work properly:  fx=tilt{+10db*[-1,1]l4@f}  but this works:   fx=tilt{[-10db,+10db]l4@f}
+ THIS is because +10db is immediately converted to a scalar, then multiplied by -1/+1 which is invalid for the filter
+ Only real solution is to change the whole way units work - and for dB thats much more complicated because non linear (but worth it??)
 !when collaborating, gamepad and midi numbers must be consistent for all peers
 ?main volume slider should be killed; just do  set main amp*=slider if you want one...
  ??Time to review the UI generally? make smaller / tidy up?

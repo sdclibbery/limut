@@ -163,6 +163,7 @@ define(function (require) {
     if (unit) { value = convertUnits(value, unit, requiredUnits) }
     if (value === undefined) { value = def }
 // console.log('5', value)
+    if (interval === 'frame' && isParamSegmented) { isParamSegmented = false } // Mixed @s+@f: evaluate the whole expression per-frame so the @f term keeps updating
     if (!isParamSegmented)  {
       setAudioParamValue(audioParam, value, p, mod, params._time) // Set value now
     }
@@ -370,6 +371,29 @@ define(function (require) {
     f.interval = 'frame'
     ap = mockAp(); pf = []; evalSubParamFrame(ap, p({foo:f,_perFrame:pf}), 'foo', 'bar', 3, 'hz', (v) => v * 2)
     assert(0, pf.length); assertApCalls([ ['setValueAtTime', 4,1] ], ap)
+
+    // mixing @s and @f (eg lpf=[..]e@s+[]l@f): the summed value carries both _nextSegment and
+    // interval:'frame', so it must go down the per-frame branch (whole expression re-evaluated
+    // each frame) rather than the segment scheduler which would freeze the @f term when the @s
+    // envelope ends. See intervals.js combine (frame > segment) and the guard in evalParamPerFrame.
+    let operator = require('expression/eval-operator')
+    let add = (l,r) => l + r
+    let seg = eventTimeVar([hz(8),hz(9)], u2, u2, 1, true) // @s side
+    seg.interval = 'segment'
+    let frm = () => 2 // @f side
+    frm.interval = 'frame'
+    let mixed = operator(add, seg, frm)
+    // the merged value is tagged 'frame' (not 'segment') and still carries segment data
+    let mv = evalParamFrame(mixed, {count:1,_time:2,dur:4}, 1, {withInterval:true})
+    assert('frame', mv.interval)
+    assert(true, mv._nextSegment !== undefined)
+    // and it is routed through the per-frame branch, not the segment scheduler
+    ap = mockAp(); pf = []; evalMainParamFrame(ap, {foo:mixed, _perFrame:pf, count:1, dur:4, _time:2, endTime:10}, 'foo', 3, 'hz', (v) => v * 2)
+    assert(1, ap.calls.length) // per-frame branch: only the initial value set, no pre-built segments
+    assert('setValueAtTime', ap.calls[0][0])
+    let stillRunning = pf[0]({time:3}) // a frame within the event, after the @s envelope's segments
+    assert(true, stillRunning) // the @f term keeps updating
+    assert(true, ap.calls.some(c => c[0] === 'setTargetAtTime')) // per-frame scheduling, not segment ramps
 
     // user functions that require a call tree to be saved - tested in parse-expression tests
 

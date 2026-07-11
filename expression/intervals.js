@@ -3,8 +3,10 @@ define(function(require) {
   let eatWhitespace = require('expression/eat-whitespace')
 
   let combine = (l, r) => {
-    if (l === 'segment' || r === 'segment') { return 'segment' }
+    // frame dominates segment: if any part of an expression must be re-evaluated every
+    // frame in JS, the whole expression must be (a frame component can't be scheduled ahead)
     if (l === 'frame' || r === 'frame') { return 'frame' }
+    if (l === 'segment' || r === 'segment') { return 'segment' }
     if (l === 'event' || r === 'event') { return 'event' }
     return undefined
   }
@@ -120,10 +122,10 @@ define(function(require) {
 
     assert('frame', combineIntervalsFrom(perEventFunc, perFrameFunc))
     assert('segment', combineIntervalsFrom(perEventFunc, perSegmentFunc))
-    assert('segment', combineIntervalsFrom(perFrameFunc, perSegmentFunc))
+    assert('frame', combineIntervalsFrom(perFrameFunc, perSegmentFunc))
     assert('frame', combineIntervalsFrom(perFrameFunc, perEventFunc))
     assert('segment', combineIntervalsFrom(perSegmentFunc, perEventFunc))
-    assert('segment', combineIntervalsFrom(perSegmentFunc, perFrameFunc))
+    assert('frame', combineIntervalsFrom(perSegmentFunc, perFrameFunc))
 
     assert('event', combineIntervalsFrom(0, {foo:perEventFunc}))
     assert('frame', combineIntervalsFrom(0, {foo:perFrameFunc}))
