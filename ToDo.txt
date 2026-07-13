@@ -12,11 +12,6 @@ p perc x-s-
 b techbass 0070, cutoff-=drop.fall/2
 
 Musical Structure
- Need a section system that tracks current/next section and moves on
-  Sections have a length, defaults to 32, can be set with length param on section eg  foo section, length=16
-  Current active section, and next section. Sections can automatically lead onto others (with random for markov)
-  Default section, length 32, does nothing, repeats
-  If next is not a valid section, then return to the default section
   If section repeat param is truthy, then repeat
   When a section becomes current, it sets its next section into 'next'
  Can access section params like player params, eg  drop section, foo=1/2  /  vel=drop.foo

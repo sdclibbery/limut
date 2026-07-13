@@ -21,6 +21,7 @@ define(function(require) {
   let drawSystem = require('draw/system')
   let metronome = require('metronome')
   let players = require('player/players')
+  let sections = require('section/sections')
   let consoleOut = require('console')
   let collaboration = require('collaboration')
   let keyboard = require('player/keyboard')
@@ -156,6 +157,13 @@ define(function(require) {
     }
     if (beat) {
       mainVars.update(Math.floor(beat.count), beat.count)
+      try {
+        sections.update(beat.count)
+      } catch (e) {
+        consoleOut('🔴 Run Error from sections: ' + e)
+        console.log(e)
+        clearCallTree()
+      }
       beatReadout.innerText = `${beat.count}`.padStart(4, ' ')
       let bc = metronome.getBeatReadouts()
       if (typeof bc === 'number') { bc = [bc] }
