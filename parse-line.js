@@ -1,6 +1,7 @@
 'use strict'
 define((require) => {
   let players = require('player/players')
+  let sections = require('section/sections')
   let playerTypes = require('player/player-types')
   var parsePlayer = require('player/parse-player')
   var parseParams = require('player/params')
@@ -159,6 +160,17 @@ define((require) => {
       playerTypes[presetName].baseParams = applyOverrides(baseBaseParams, parseParams(params))
       return
     }
+    if (startsWithSection(line)) {
+      // Define a section
+      let [head, paramsStr] = splitOnFirst(line, ',')
+      let name = head.split(/\s+/)[0].toLowerCase()
+      let section = { name: name }
+      let params = parseParams(paramsStr, name)
+      for (let k in params) { section[k] = params[k] }
+      sections.instances[name] = section
+      sections.gc_mark(name)
+      return
+    }
     // Define a player
     let player = parsePlayer(line, linenum)
     if (player) {
@@ -180,6 +192,9 @@ define((require) => {
 
   let presetRegex = new RegExp(/^\s*preset\s+[_a-zA-Z]\w*\s+[_a-zA-Z]\w*/, 'i')
   let startsWithPreset = (str) => presetRegex.test(str)
+
+  let sectionRegex = new RegExp(/^\s*[_a-zA-Z]\w*\s+section\s*(,|\s|$)/, 'i')
+  let startsWithSection = (str) => sectionRegex.test(str)
 
   let playerRegex = new RegExp(/^\s*[_a-zA-Z]\w*\s+[_a-zA-Z]\w*/, 'i')
   let startsWithPlayer = (str) => playerRegex.test(str)
@@ -402,6 +417,36 @@ define((require) => {
   assert(2, playerTypes.foo.baseParams.a)
   assert(3, playerTypes.foo.baseParams.b)
   delete playerTypes.foo
+
+  assert(true, isLineStart('foo section, bar=2')) // Matches via the player line start rules
+
+  parseLine('foo section, bar=2')
+  assert('foo', sections.instances.foo.name)
+  assert(2, sections.instances.foo.bar)
+  assert(true, sections.instances.foo.marked)
+  delete sections.instances.foo
+
+  parseLine('foo section')
+  assert('foo', sections.instances.foo.name)
+  delete sections.instances.foo
+
+  parseLine('FOO SECTION, Bar=2')
+  assert(2, sections.instances.foo.bar)
+  delete sections.instances.foo
+
+  parseLine('foo section, bar=2, baz=1+2')
+  assert(2, sections.instances.foo.bar)
+  assert(3, sections.instances.foo.baz)
+  delete sections.instances.foo
+
+  parseLine('foo section, bar=2')
+  parseLine('foo section, baz=3')
+  assert(undefined, sections.instances.foo.bar) // Redefinition replaces the section
+  assert(3, sections.instances.foo.baz)
+  delete sections.instances.foo
+
+  assertThrows('not found', async () => parseLine('foo sections 0')) // Not a section; falls through to player parsing
+  assert(undefined, sections.instances.foo)
 
   parseLine('r1 test 1')
   parseLine('r2 test follow r1')
