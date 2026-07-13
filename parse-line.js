@@ -164,7 +164,7 @@ define((require) => {
       // Define a section
       let [head, paramsStr] = splitOnFirst(line, ',')
       let name = head.split(/\s+/)[0].toLowerCase()
-      let section = { name: name }
+      let section = { name: name, length: 32 } // default length 32 beats
       let params = parseParams(paramsStr, name)
       for (let k in params) { section[k] = params[k] }
       sections.instances[name] = section
@@ -428,6 +428,16 @@ define((require) => {
 
   parseLine('foo section')
   assert('foo', sections.instances.foo.name)
+  assert(32, sections.instances.foo.length) // Length defaults to 32 beats
+  delete sections.instances.foo
+
+  parseLine('foo section, length=16')
+  assert(16, sections.instances.foo.length) // Length param overrides the default
+  delete sections.instances.foo
+
+  parseLine('foo section, bar=2')
+  assert(32, sections.instances.foo.length) // Default length coexists with other params
+  assert(2, sections.instances.foo.bar)
   delete sections.instances.foo
 
   parseLine('FOO SECTION, Bar=2')
