@@ -8,9 +8,31 @@ define(function(require) {
   sections.default = { name: 'default', length: 32 }
   sections.active = undefined
   sections.next = undefined
+  sections.pendingActive = undefined
   sections.activeStartBeat = 0
 
+  // Queue a named section to become active when the current one finishes
+  sections.forceNext = (name) => {
+    let s = sections.getByName(name)
+    if (!s) { console.log(`Section '${name}' not found (set section.next)`); return }
+    sections.next = s
+  }
+  // Force a named section to become active now (applied on the next update)
+  sections.forceActive = (name) => {
+    let s = sections.getByName(name)
+    if (!s) { console.log(`Section '${name}' not found (set section.active)`); return }
+    sections.pendingActive = s
+  }
+
   sections.update = (beatCount) => {
+    if (sections.pendingActive) {
+      // A forced section switch takes precedence over normal advancement
+      sections.active = sections.pendingActive
+      sections.pendingActive = undefined
+      sections.activeStartBeat = beatCount // Always restart from now
+      console.log(`Section '${sections.active.name}' forced (beat ${beatCount})`)
+      return
+    }
     if (!sections.active) {
       // First run — start the default section
       sections.active = sections.default
@@ -119,9 +141,39 @@ define(function(require) {
     assert(true, sections.active === sections.default)
     assert(72, sections.activeStartBeat)
 
+    // forceNext queues a named section; unknown name leaves next unchanged
+    sections.instances = { b: b }
+    sections.next = undefined
+    sections.forceNext('b')
+    assert(true, sections.next === b)
+    sections.forceNext('nope')
+    assert(true, sections.next === b) // Unchanged, no throw
+
+    // forceActive queues pendingActive; next update switches and restarts from now
+    sections.pendingActive = undefined
+    sections.forceActive('b')
+    assert(true, sections.pendingActive === b)
+    sections.update(80)
+    assert(true, sections.active === b)
+    assert(80, sections.activeStartBeat)
+    assert(undefined, sections.pendingActive)
+
+    // Pending force wins over the boundary-advance path
+    let advanced = false
+    let realLog2 = console.log
+    console.log = () => { advanced = true }
+    sections.forceActive('b') // Already active, but still restarts
+    sections.update(200) // Well past b's length (8), yet pending force applies, not advancement
+    console.log = realLog2
+    assert(true, sections.active === b)
+    assert(200, sections.activeStartBeat) // Restarted from now, not advanced away
+
+    sections.instances = {}
+
     // Restore so it doesn't leak into the running app
     sections.active = undefined
     sections.next = undefined
+    sections.pendingActive = undefined
     sections.activeStartBeat = 0
 
     console.log('Sections tests complete')

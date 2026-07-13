@@ -85,6 +85,12 @@ define((require) => {
         k = compoundMatch[1]
         compoundOp = compoundMatch[2]
       }
+      if ((k === 'section.active' || k === 'section.next') && !compoundOp && !!v) {
+        // Force the current or next section to a named section (the raw name; getByName lowercases)
+        let name = v.trim()
+        if (k === 'section.active') { sections.forceActive(name) } else { sections.forceNext(name) }
+        return
+      }
       if (k.match(/^[a-z][a-z0-9_\.]*$/) && !!v) {
         if (mainVars.exists(k)) {
           let newValue = parseExpression(v, undefined, k)
@@ -457,6 +463,16 @@ define((require) => {
 
   assertThrows('not found', async () => parseLine('foo sections 0')) // Not a section; falls through to player parsing
   assert(undefined, sections.instances.foo)
+
+  parseLine('foo section')
+  parseLine('set section.next=foo')
+  assert(true, sections.next === sections.instances.foo) // Queues the named section as next
+  parseLine('set section.active=foo')
+  assert(true, sections.pendingActive === sections.instances.foo) // Forces the named section active
+  delete sections.instances.foo
+  sections.next = undefined
+  sections.pendingActive = undefined
+  sections.active = undefined
 
   parseLine('r1 test 1')
   parseLine('r2 test follow r1')

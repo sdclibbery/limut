@@ -12,14 +12,13 @@ p perc x-s-
 b techbass 0070, cutoff-=drop.fall/2
 
 Musical Structure
-  If section repeat param is truthy, then repeat
-  When a section becomes current, it sets its next section into 'next'
+ Can force the current section, and/or next section to go to after current finishes eg  set section.next=drop
+ If section repeat param is truthy, then repeat
+ When a section becomes current, it sets its next section into 'next'
  Can access section params like player params, eg  drop section, foo=1/2  /  vel=drop.foo
  Sections define .playing .exists .riser .fall .time .in etc
  Can control player/fx etc params based on current section and progress through it
   Just need to be able to look up params on sections as if they were players; eg drop.riser etc
- Can force the current section, and/or next section to go to after current finishes
-  set section.next=drop
  Can define players in sections
   Syntax:  drop section { // lines with set, players, preset etc // }, params
   ? Reparse code when section changes? Or at least, rebuild players and overrides?
