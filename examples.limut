@@ -1060,7 +1060,6 @@ swp supersaw ..7(74)(742)[(0-7)7......].., dur=4, room, amp=2/3, pan=[-3/4,3/4]l
 
 set bpm=90
 set scale=minorpentatonic
-set beat.readouts=32
 set root=[0,[2,3,7]r32]t32
 vj julia 0, zoom=1+(time^4)/200000, scroll=0.08811, time=0.3, mid={r:root+[0:1/2]r32,g:root+[0:1/3]r32,b:root+[0:1]r32,a:1}/((time/16)^1/4)
 a ambi 0, dur=[1/2,1,2], room=2, envelope=simple, att=2, rel=3, add=[-5:5]r, lpf=[300:5000]s12@f, pan=[-1:1]r
@@ -2203,7 +2202,6 @@ h piano 0[2][472]_[..][_0][...]., room, addc=wow,
 
 set bpm=130
 set * swing=61
-set beat.readouts=(16,28,32)
 v1 xor 0, time=accum{rate{pk.pulse.min}}*8, ripple=f.pulse.min/4, fore=gray, back=black, tunnel, zoom=1/4
 v2 xor 7, time=7+accum{h.playing.max*16}, ripple=f.pulse.min/4, fore=rainbow, tunnel, zoom=1/4
 pk bd 0., amp=2
@@ -2221,7 +2219,6 @@ ba wave 7-30, dur=1/4, wave='bass', oct=2, amp=2-(rate{pk.pulse.max},-3).max, lp
 
 // Running
 set bpm=132
-set beat.readouts=(32,64)
 set scale=phrygian
 set (ph,pp) swing=52
 vs streetlight 0, time=fs.pulse.min/16+ba.playing.min*time/4+this.idx*7, idx=(0,1,2,3), additive, fore={labh:time/16+this.idx/16,c:1/3,l:pt.pulse.min*this.idx/3}, mirror=5, rotate=s.pulse.min*[0:1/8]n, zoom=3/2
@@ -2840,7 +2837,6 @@ set * add+=[0,-2,0,1]t8
 // r readout 1234, dur=2
 // r readout <5678>
 ///
-// set beat.readouts=4
 // r play 1234, dur=1
 // r readout 1234
 // r readout <1234>
@@ -3586,7 +3582,6 @@ p ping 0, delay={0,add:[0,5]}
 
 
 // set bpm=60
-// set beat.readouts=5
 // set p* level=1, snappy=1, decay=1, attack=1, tone=1
 // pk bd909 0...., dur=1
 // pc cp909 .0..., dur=1

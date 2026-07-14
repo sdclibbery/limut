@@ -120,7 +120,7 @@ define(function(require) {
   let beatLatencyReadout = document.getElementById('beat-latency-readout')
   let visualReadout = document.getElementById('visual-readout')
   let beatReadout = document.getElementById('beat-readout')
-  let beatReadouts = [document.getElementById('beat1-readout'),document.getElementById('beat2-readout'),document.getElementById('beat3-readout')]
+  let sectionReadout = document.getElementById('section-readout')
   let clock = document.getElementById('clock')
   let clockFormat = {hourCycle: 'h23', hour: '2-digit', minute:'2-digit'}
   let lastBeatTime = 0 
@@ -165,13 +165,11 @@ define(function(require) {
         clearCallTree()
       }
       beatReadout.innerText = `${beat.count}`.padStart(4, ' ')
-      let bc = metronome.getBeatReadouts()
-      if (typeof bc === 'number') { bc = [bc] }
-      beatReadouts.forEach((r,i) => {
-        let c = bc[i]
-        r.style.display = !c ? 'none' : 'inline'
-        r.innerText = ((beat.count%c + 1) + '/' + c).padStart(5, ' ')
-      })
+      if (sections.active) {
+        let beatsIn = beat.count - sections.activeStartBeat + 1
+        let next = sections.next ? sections.next.name : sections.default.name
+        sectionReadout.innerText = `${sections.active.name} ${beatsIn}/${sections.active.length} -> ${next}`
+      }
       Object.values(players.instances).forEach(player => {
         if (player !== undefined) {
           try {

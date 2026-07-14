@@ -17,7 +17,6 @@ define((require) => {
     bpm: { setter: (v) => metronome.bpm(toBpm(v)), default:110 },
     scale: { setter: (v) => { if (typeof v === 'string') { scale.set(v.toLowerCase()) } }, default:'major' },
     root: { setter: (v) => { scale.setRoot(v) }, default:0 },
-    'beat.readouts': { setter: (v) => metronome.setBeatReadouts(v), default:[16,32] },
   }
 
   let reset = () => {

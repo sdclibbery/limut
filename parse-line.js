@@ -99,7 +99,7 @@ define((require) => {
             let prev = mainVars.get(k)
             mainVars.set(k, operator(op, prev, newValue))
           } else {
-            mainVars.set(k, newValue) // For main vars the dot is part of the var name, eg "beat.readouts"
+            mainVars.set(k, newValue) // For main vars any dot is part of the var name, not a namespace
           }
         } else {
           v = parseExpression(v, undefined, k)

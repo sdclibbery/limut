@@ -12,13 +12,14 @@ p perc x-s-
 b techbass 0070, cutoff-=drop.fall/2
 
 Musical Structure
- Can force the current section, and/or next section to go to after current finishes eg  set section.next=drop
- If section repeat param is truthy, then repeat
- When a section becomes current, it sets its next section into 'next'
+ Readouts
  Can access section params like player params, eg  drop section, foo=1/2  /  vel=drop.foo
+  How to access active section params? Syntax??
  Sections define .playing .exists .riser .fall .time .in etc
  Can control player/fx etc params based on current section and progress through it
   Just need to be able to look up params on sections as if they were players; eg drop.riser etc
+ When a section becomes current, it sets its next section into 'next'
+ Repeats with count, readout, can set repeats
  Can define players in sections
   Syntax:  drop section { // lines with set, players, preset etc // }, params
   ? Reparse code when section changes? Or at least, rebuild players and overrides?
@@ -29,8 +30,7 @@ Musical Structure
     Or, its by position in source? So for section to override global, global set must come before section definitions?
  Can control player play/stop
  Can control patterns too...
- Sections can have any params you want
- Display for current section, next, and time progress through current section
+ DOCS for section system, including section readout
 !superosc cant take positional freq; should be able to play=superosc{440}
 ? Chebyshev shaper
 !tts{} does not repeat, so its not useful in fx chain. Want to either trigger it, or set a repeat interval

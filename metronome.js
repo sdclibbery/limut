@@ -7,7 +7,6 @@ var beatDuration = 60 / 110
 var lastBeatAt = 0
 var count = 0
 var nextBeatAt = beatDuration
-let beatReadouts
 let time = 0
 let lastFiredCount = -Infinity
 
@@ -83,9 +82,6 @@ metronome.sync = (serverBeatTime, serverBpm) => {
     nextBeatAt -= shiftSeconds
   }
 }
-
-metronome.setBeatReadouts = (v) => beatReadouts = v
-metronome.getBeatReadouts = () => beatReadouts
 
 // For debugging/testing
 metronome.setCount = (c) => { count = c; lastFiredCount = c - 1 }
