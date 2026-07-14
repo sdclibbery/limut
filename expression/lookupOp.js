@@ -63,7 +63,7 @@ define(function(require) {
         return 0
       }
       let player = players.getById(ml)
-      if (key === 'exists') { return !!player ? 1 : 0 }
+      if (key === 'exists') { return (!!player || !!sections.getByName(ml)) ? 1 : 0 }
       if (key === 'pre') { // Tap this player's pre-fx audio output as a connectable node (works even before the player exists)
         let id = ml.toLowerCase()
         let result = (e,b,er) => playerPre.getConsumerTap(id, (e && e._destructor) || (event && event._destructor))
@@ -145,6 +145,12 @@ define(function(require) {
     delete players.instances.p1
   
     assert(0, lookupOp('p1', 'foo', {},2,er))
+
+    // A named section counts as existing (even with no matching player)
+    sections.instances.verse = { name:'verse' }
+    assert(1, lookupOp('verse', 'exists', {},0,er))
+    assert(0, lookupOp('nosuchsection', 'exists', {},0,er))
+    delete sections.instances.verse
 
     // Named-section param lookup
     sections.instances.drop = { name:'drop', foo:0.5 }

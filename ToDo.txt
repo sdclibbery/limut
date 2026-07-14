@@ -12,17 +12,10 @@ p perc x-s-
 b techbass 0070, cutoff-=drop.fall/2
 
 Musical Structure
- Sections define some standard functions:
-  .active: 1 when section is active
-  .in: same as active
-  .exists: 1 for any created section
-  .time: the current count of beats through the section. 0 if the section is not active.
-  .riser: starts at 0 at beginning of section and rises to value 1 at end. 0 if the section is not active
-  .fall: starts at 1 at beginning of section and drops to value 0 at end. 1 if the section is not active
- Can control player/fx etc params based on current section and progress through it
-  Just need to be able to look up params on sections as if they were players; eg drop.riser etc
- When a section becomes current, it sets its next section into 'next'
- Repeats with count, readout, can set repeats
+ Can set section params as overrides, including length, including for default section
+ When a section becomes current, it sets its .next section into 'next'
+ Section repeats with count, readout, can set repeats
+ Section .next and .repeat are evalled, so can use []r etc
  Can define players in sections
   Syntax:  drop section { // lines with set, players, preset etc // }, params
   ? Reparse code when section changes? Or at least, rebuild players and overrides?

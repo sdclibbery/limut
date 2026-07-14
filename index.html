@@ -431,6 +431,15 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>name</code> The name for the section, used to refer to it from <code>set section.next</code> / <code>set section.active</code> and from param lookups (eg <code>drop.riser</code>). Must contain only alphanumeric characters from the basic Latin alphabet or underscore, and must not start with a digit.</p>
 <p><code>params</code> Comma separated list of params (eg <code>riser=[0:1]l16@f</code>), evaluated the same way as player params. Any param can be looked up from the section; see 'Value Syntax' below.</p>
 <p class='sub'><code>length</code> The length of the section in beats. Defaults to 32. When the active section has been playing for this many beats it ends and the next section starts.</p>
+<h6>Standard section functions:</h6>
+<p>Every section (including the built in <code>default</code>) automatically defines these functions, so you can drive players and vars off which section is playing and how far through it we are without any extra setup. Look them up with <code>section.name</code> (the active section) or <code>drop.name</code> (a named section). You can override any of them by giving the section a param of the same name.</p>
+<p class='sub'><code>active</code> 1 when the section is the active section, 0 otherwise.</p>
+<p class='sub'><code>in</code> Alias for <code>active</code>.</p>
+<p class='sub'><code>exists</code> 1 for any section that has been defined, 0 otherwise (eg <code>drop.exists</code>).</p>
+<p class='sub'><code>time</code> The number of beats elapsed through the section, starting at 0. 0 when the section is not active.</p>
+<p class='sub'><code>riser</code> Ramps from 0 at the start of the section to 1 at its end. 0 when the section is not active.</p>
+<p class='sub'><code>rise</code> Alias for <code>riser</code>.</p>
+<p class='sub'><code>fall</code> Ramps from 1 at the start of the section to 0 at its end. 1 when the section is not active.</p>
 <h6>Section timing:</h6>
 <p>There is always exactly one active section. Before you define or select any section, a built in <code>default</code> section (length 32) is active and repeats forever, so section param lookups always resolve.</p>
 <p>When the active section reaches its <code>length</code>, playback advances to the queued next section (or back to the <code>default</code> section if none is queued). Queuing a next section consumes it; once it becomes active there is again no next queued, so unless you queue another the piece falls back to the default section after it.</p>

@@ -5,11 +5,43 @@ define(function(require) {
     instances: {},
   }
 
+  // Define the standard functions every section carries by default (active/timing/existence).
+  // They close over the section object and the sections module state, and read section.length
+  // dynamically so a later length override is honoured.
+  sections.addStandardParams = (section) => {
+    let active = () => sections.active === section
+    let through = (b) => b - sections.activeStartBeat            // beats elapsed through this section
+    let frac = (b) => Math.max(0, Math.min(1, through(b) / section.length))
+    let mk = (fn) => { fn.interval = 'frame'; return fn }        // re-eval every frame, don't memoise
+    section.active = mk((e,b) => active() ? 1 : 0)
+    section.in     = section.active                              // alias
+    section.exists = mk((e,b) => 1)
+    section.time   = mk((e,b) => active() ? through(b) : 0)
+    section.riser  = mk((e,b) => active() ? frac(b) : 0)
+    section.rise   = section.riser                              // alias
+    section.fall   = mk((e,b) => active() ? 1 - frac(b) : 1)
+  }
+
   sections.default = { name: 'default', length: 32 }
+  sections.addStandardParams(sections.default)
   sections.active = undefined
   sections.next = undefined
   sections.pendingActive = undefined
   sections.activeStartBeat = 0
+
+  // Register (or replace) a named section. Rebinds any live pointers (active/next/pendingActive)
+  // from the old object to the new one, so a code update that redefines the running section keeps
+  // it active with its timing intact instead of leaving those pointers on the stale object.
+  sections.define = (name, section) => {
+    let old = sections.instances[name]
+    sections.instances[name] = section
+    if (old) {
+      if (sections.active === old) { sections.active = section }
+      if (sections.next === old) { sections.next = section }
+      if (sections.pendingActive === old) { sections.pendingActive = section }
+    }
+    sections.gc_mark(name)
+  }
 
   // Queue a named section to become active when the current one finishes
   sections.forceNext = (name) => {
@@ -102,6 +134,78 @@ define(function(require) {
     assert(undefined, sections.getByName(''))
     assert(undefined, sections.getByName())
     sections.instances = {}
+
+    // Standard params: active/timing/existence
+    let savedActive = sections.active, savedStart = sections.activeStartBeat
+    let s = { name:'s', length:8 }
+    sections.addStandardParams(s)
+
+    // Inactive
+    sections.active = undefined
+    sections.activeStartBeat = 0
+    assert(0, s.active({},4))
+    assert(0, s.in({},4))
+    assert(1, s.exists({},4))
+    assert(0, s.time({},4))
+    assert(0, s.riser({},4))
+    assert(0, s.rise({},4))
+    assert(1, s.fall({},4))
+
+    // Active, started at beat 0
+    sections.active = s
+    sections.activeStartBeat = 0
+    assert(1, s.active({},0))
+    assert(1, s.in({},0))
+    assert(0, s.time({},0))
+    assert(0, s.riser({},0))
+    assert(1, s.fall({},0))
+    assert(4, s.time({},4))
+    assert(0.5, s.riser({},4))
+    assert(0.5, s.rise({},4))
+    assert(0.5, s.fall({},4))
+    assert(8, s.time({},8))
+    assert(1, s.riser({},8))
+    assert(0, s.fall({},8))
+    assert(1, s.riser({},12)) // Clamped past the end
+    assert(0, s.fall({},12))
+
+    // length override is read live
+    s.length = 4
+    assert(1, s.riser({},4))
+    assert(0.5, s.riser({},2))
+
+    // interval flag set for per-frame re-evaluation
+    assert('frame', s.riser.interval)
+    assert('frame', s.time.interval)
+
+    sections.active = savedActive
+    sections.activeStartBeat = savedStart
+
+    // define() rebinds live pointers when the running section is redefined (eg on code update)
+    sections.instances = {}
+    sections.active = sections.next = sections.pendingActive = undefined
+    let d1 = { name:'drop', length:8 }
+    sections.define('drop', d1)
+    assert(true, sections.instances.drop === d1)
+    assert(true, d1.marked)
+    sections.active = d1; sections.next = d1; sections.pendingActive = d1
+    let d2 = { name:'drop', length:16 }
+    sections.define('drop', d2)
+    assert(true, sections.instances.drop === d2)
+    assert(true, sections.active === d2)        // active pointer follows the redefinition
+    assert(true, sections.next === d2)
+    assert(true, sections.pendingActive === d2)
+
+    // reported bug: redefining the active section must keep its standard functions live
+    sections.next = sections.pendingActive = undefined
+    let e1 = { name:'e', length:8 }; sections.addStandardParams(e1); sections.define('e', e1)
+    sections.active = e1; sections.activeStartBeat = 0
+    assert(1, sections.instances.e.active({},2))
+    let e2 = { name:'e', length:8 }; sections.addStandardParams(e2); sections.define('e', e2)
+    assert(1, sections.instances.e.active({},2)) // still active (not 0) after the redefinition
+    assert(2, sections.instances.e.time({},2))   // timing intact
+    sections.instances = {}
+    sections.active = sections.activeStartBeat = undefined
 
     // Advancement / active-next-default tracking
     sections.active = undefined

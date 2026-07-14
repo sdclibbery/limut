@@ -171,10 +171,10 @@ define((require) => {
       let [head, paramsStr] = splitOnFirst(line, ',')
       let name = head.split(/\s+/)[0].toLowerCase()
       let section = { name: name, length: 32 } // default length 32 beats
+      sections.addStandardParams(section) // standard active/timing functions; overridable by params below
       let params = parseParams(paramsStr, name)
       for (let k in params) { section[k] = params[k] }
-      sections.instances[name] = section
-      sections.gc_mark(name)
+      sections.define(name, section) // register, rebinding active/next pointers if redefining the live section
       return
     }
     // Define a player
