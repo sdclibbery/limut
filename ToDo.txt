@@ -12,10 +12,9 @@ p perc x-s-
 b techbass 0070, cutoff-=drop.fall/2
 
 Musical Structure
- Readouts
- Can access section params like player params, eg  drop section, foo=1/2  /  vel=drop.foo
-  How to access active section params? Syntax??
+ Can access section params like player params, eg  drop section, foo=1/2  /n  set b vel=drop.foo
  Sections define .playing .exists .riser .fall .time .in etc
+ How to access section params for whatever xection is active? Syntax?? active.foo? current.foo? activesection.foo? s.foo? sec.foo? as.foo?
  Can control player/fx etc params based on current section and progress through it
   Just need to be able to look up params on sections as if they were players; eg drop.riser etc
  When a section becomes current, it sets its next section into 'next'
@@ -30,6 +29,7 @@ Musical Structure
     Or, its by position in source? So for section to override global, global set must come before section definitions?
  Can control player play/stop
  Can control patterns too...
+ Can base one section on another, and add more stuff on top
  DOCS for section system, including section readout
 !superosc cant take positional freq; should be able to play=superosc{440}
 ? Chebyshev shaper

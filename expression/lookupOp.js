@@ -1,6 +1,7 @@
 'use strict';
 define(function(require) {
   let players = require('player/players')
+  let sections = require('section/sections')
   let vars = require('vars')
   let {mainParam} = require('player/sub-param')
   let {evalParamFrame,evalFunctionWithModifiers} = require('player/eval-param')
@@ -56,6 +57,11 @@ define(function(require) {
         lookupOpResult._chordPlaceholder = true
         return lookupOpResult
       }
+      if (ml.toLowerCase() === 'section') { // lookup a param on the currently active section
+        let section = sections.active
+        if (section && section[key] !== undefined) { return evalRecurse(section[key], event,b) }
+        return 0
+      }
       let player = players.getById(ml)
       if (key === 'exists') { return !!player ? 1 : 0 }
       if (key === 'pre') { // Tap this player's pre-fx audio output as a connectable node (works even before the player exists)
@@ -73,6 +79,8 @@ define(function(require) {
         if (v.length === 1) { return v[0] }
         return v
       } else {
+        let section = sections.getByName(ml) // lookup a param on a named section
+        if (section && section[key] !== undefined) { return evalRecurse(section[key], event,b) }
         return 0 // Not found as a player - should really return undefined now we have '?' operator, but this could be a breaking change
       }
     }
@@ -137,7 +145,23 @@ define(function(require) {
     delete players.instances.p1
   
     assert(0, lookupOp('p1', 'foo', {},2,er))
-  
+
+    // Named-section param lookup
+    sections.instances.drop = { name:'drop', foo:0.5 }
+    assert(0.5, lookupOp('drop', 'foo', {},0,er))
+    assert(0, lookupOp('drop', 'nope', {},0,er)) // Unknown param
+    assert(0, lookupOp('nosuchsection', 'foo', {},0,er)) // Unknown section
+    sections.instances.drop = { name:'drop', foo:(e,b)=>b } // Function-valued param
+    assert(2, lookupOp('drop', 'foo', {},2,er))
+    delete sections.instances.drop
+
+    // Active-section keyword lookup
+    sections.active = { name:'drop', foo:0.5 }
+    assert(0.5, lookupOp('section', 'foo', {},0,er))
+    assert(0, lookupOp('section', 'nope', {},0,er)) // Unknown param
+    sections.active = undefined
+    assert(0, lookupOp('section', 'foo', {},0,er)) // No active section
+
     assert(1, lookupOp('this', 'foo', {foo:1},0,er)())
 
     addVarFunction('foo', (v)=>mainParam(v))
