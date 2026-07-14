@@ -335,7 +335,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <h4 onclick="toggleAccordion('accordion-indicators')" class="accordion"> Indicators</h4>
 <div id="accordion-indicators" class="closed">
   <p><b>Level</b> VU meter for current output signal level. Use this when adjusting the output level, using either <code>set main amp</code> or the level slider, so it is just touching the red at its loudest. Only one active channel is shown if the mix is fully mono.</p>
-  <p><b>Beat</b> Current audio system beat count, followed by beat counts out of 12, 16 and 32 beats (useful for synchronising changes to various size musical bars and progressions)</p>
+  <p><b>Beat</b> Current audio system beat count, plus section info (current active section, count through active section, and next queued up section<./p>
   <p><b>Audio</b> Audio lag; green when the browser audio system is keeping up; turns red when the system is struggling, which may lead to audio glitching</p>
   <p><b>Visual</b> Visual lag; green when the framerate is keeping up to 60 fps; turns red when the system is struggling, which may lead to visual glitching</p>
   <p><b>Limiter</b> Audio limiter: turns red when the internal Limut limiter is active, implying the combined audio sources are too loud. Note this limiter is before the <code>main amp</code> control and vu meter, it makes sure the levels from individual synths do not go so loud as to distort. So if it is lighting up, lower the <code>amp</code> on individual synths, and if necessary, raise the <code>main amp</code> level to compensate.</p>
@@ -393,6 +393,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
     kick play x., amp=2,             // Start of a command that defines the player called 'kick', of type `play`, with an amp (volume) of 2
       drive=1/2                      // Continuation of the kick player definition, setting its drive param to 1/2
     set kick drive=0                 // New command defining an override for the kick player, setting its drive param to zero. Overrides like this take precedence over params set on the player itself.
+    drop section, length=8           // Command that defines a section called 'drop', with a length of 8 beats. Players and vars can look up the current section and its params.
   </pre>
 </p>
 <h5>Defining a player</h5>
@@ -423,6 +424,17 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p>Basic structure: <code>include 'url'</code></p>
 <p>Include a limut source file. The file will be downloaded from the given URL and then executed as limut code. The file will only be downloaded once, but will be executed every time the code is updated.</p>
 <p><code>url</code> The URL of the limut source file to include. Must be in single quotes as a limut string. Include standard limut libraries from eg <code>'preset/synthwave.limut'</code>. Include limut source from anywhere on the web (CORS permitting) using the full URL; eg <code>'https://sdclibbery.github.io/limut/preset/synthwave.limut'</code></p>
+<h5>Defining a section:</h5>
+<p>Basic structure: <code>name section, params</code></p>
+<p>Sections describe the large scale structure of a piece (intro, build, drop, breakdown etc). A section is just a named bag of params that is active for a span of beats. Players and vars can look up those params (see 'Lookup examples' below) so that the whole piece can respond to which section is currently playing and how far through it we are.</p>
+<p>A section command begins when <code>name section</code> begins a new line, optionally followed by a comma and params. The params may follow on subsequent lines.</p>
+<p><code>name</code> The name for the section, used to refer to it from <code>set section.next</code> / <code>set section.active</code> and from param lookups (eg <code>drop.riser</code>). Must contain only alphanumeric characters from the basic Latin alphabet or underscore, and must not start with a digit.</p>
+<p><code>params</code> Comma separated list of params (eg <code>riser=[0:1]l16@f</code>), evaluated the same way as player params. Any param can be looked up from the section; see 'Value Syntax' below.</p>
+<p class='sub'><code>length</code> The length of the section in beats. Defaults to 32. When the active section has been playing for this many beats it ends and the next section starts.</p>
+<h6>Section timing:</h6>
+<p>There is always exactly one active section. Before you define or select any section, a built in <code>default</code> section (length 32) is active and repeats forever, so section param lookups always resolve.</p>
+<p>When the active section reaches its <code>length</code>, playback advances to the queued next section (or back to the <code>default</code> section if none is queued). Queuing a next section consumes it; once it becomes active there is again no next queued, so unless you queue another the piece falls back to the default section after it.</p>
+<p>The readout in the top bar shows the active section, how many beats into it we are, its length, and the next section; eg <code>drop 5/16 -&gt; default</code>.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-pattern-syntax')" class="accordion"> Patterns</h4>
 <div id="accordion-pattern-syntax" class="closed">
@@ -1015,6 +1027,8 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>bpm</code> Beats per minute. Value resets unless set every time the code is updated.</p>
 <p><code>scale</code> Scale eg minor, major, chromatic, majorpentatonic, lydian etc etc. Value resets unless set every time the code is updated.</p>
 <p><code>root</code> Main root pitch offset; default <code>0</code> roots the pitches on middle c; <code>1</code> pitches up by one semitone etc. This is fractional, so can be used to 'nudge' the tuning to match other instruments; eg <code>root=0.135</code> </p>
+<p><code>set section.next=name</code> Queue the named section to become active when the current section finishes. This is the normal way to sequence a piece; each section can queue the one that should follow it.</p>
+<p><code>set section.active=name</code> Force the named section active immediately (applied on the next beat), restarting its timing from now. Useful for jumping straight to a section while performing live.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-predefined-vars')" class="accordion"> Predefined Vars</h4>
 <div id="accordion-predefined-vars" class="closed">

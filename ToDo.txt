@@ -12,9 +12,13 @@ p perc x-s-
 b techbass 0070, cutoff-=drop.fall/2
 
 Musical Structure
- Can access section params like player params, eg  drop section, foo=1/2  /n  set b vel=drop.foo
- Sections define .playing .exists .riser .fall .time .in etc
- How to access section params for whatever xection is active? Syntax?? active.foo? current.foo? activesection.foo? s.foo? sec.foo? as.foo?
+ Sections define some standard functions:
+  .active: 1 when section is active
+  .in: same as active
+  .exists: 1 for any created section
+  .time: the current count of beats through the section. 0 if the section is not active.
+  .riser: starts at 0 at beginning of section and rises to value 1 at end. 0 if the section is not active
+  .fall: starts at 1 at beginning of section and drops to value 0 at end. 1 if the section is not active
  Can control player/fx etc params based on current section and progress through it
   Just need to be able to look up params on sections as if they were players; eg drop.riser etc
  When a section becomes current, it sets its next section into 'next'
@@ -30,7 +34,6 @@ Musical Structure
  Can control player play/stop
  Can control patterns too...
  Can base one section on another, and add more stuff on top
- DOCS for section system, including section readout
 !superosc cant take positional freq; should be able to play=superosc{440}
 ? Chebyshev shaper
 !tts{} does not repeat, so its not useful in fx chain. Want to either trigger it, or set a repeat interval
