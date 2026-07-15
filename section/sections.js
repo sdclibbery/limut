@@ -56,12 +56,23 @@ define(function(require) {
     sections.pendingActive = s
   }
 
+  // When a section becomes current, schedule its declared follow-on (its `next` param) as the next
+  // section, so the piece sequences itself. Runs after sections.next has been consumed by an advance,
+  // so a section that names its own successor (verse->chorus->verse...) keeps looping.
+  sections.applyNext = (section) => {
+    if (!section || !section.nextName) { return }
+    let s = sections.getByName(section.nextName)
+    if (s) { sections.next = s }
+    else { console.log(`Section '${section.nextName}' not found (${section.name}.next)`) }
+  }
+
   sections.update = (beatCount) => {
     if (sections.pendingActive) {
       // A forced section switch takes precedence over normal advancement
       sections.active = sections.pendingActive
       sections.pendingActive = undefined
       sections.activeStartBeat = beatCount // Always restart from now
+      sections.applyNext(sections.active)
       console.log(`Section '${sections.active.name}' forced (beat ${beatCount})`)
       return
     }
@@ -69,6 +80,7 @@ define(function(require) {
       // First run — start the default section
       sections.active = sections.default
       sections.activeStartBeat = beatCount
+      sections.applyNext(sections.active)
       console.log(`Section '${sections.active.name}' starting (beat ${beatCount})`)
       return
     }
@@ -78,6 +90,7 @@ define(function(require) {
       sections.next = undefined
       sections.active = next
       sections.activeStartBeat = beatCount
+      sections.applyNext(sections.active)
       console.log(`Section '${ended.name}' ended, section '${next.name}' starting (beat ${beatCount})`)
     }
   }
@@ -271,6 +284,56 @@ define(function(require) {
     console.log = realLog2
     assert(true, sections.active === b)
     assert(200, sections.activeStartBeat) // Restarted from now, not advanced away
+
+    sections.instances = {}
+
+    // `next` param: when a section becomes current it queues its declared follow-on
+    let verse = { name:'verse', length:8, nextName:'chorus' }
+    let chorus = { name:'chorus', length:8, nextName:'verse' }
+    sections.instances = { verse: verse, chorus: chorus }
+    sections.active = undefined
+    sections.next = undefined
+    sections.pendingActive = undefined
+    sections.activeStartBeat = 0
+
+    // Force verse active -> it queues chorus as next
+    sections.forceActive('verse')
+    sections.update(0)
+    assert(true, sections.active === verse)
+    assert(true, sections.next === chorus)   // verse.next queued
+
+    // verse ends -> chorus becomes active and queues verse (the loop continues)
+    sections.update(8)
+    assert(true, sections.active === chorus)
+    assert(true, sections.next === verse)    // chorus.next queued, not left as the just-consumed value
+
+    // chorus ends -> back to verse, which re-queues chorus
+    sections.update(16)
+    assert(true, sections.active === verse)
+    assert(true, sections.next === chorus)
+
+    // A section with no next param leaves next unset -> falls back to default
+    let solo = { name:'solo', length:8 }
+    sections.instances = { solo: solo }
+    sections.next = undefined
+    sections.pendingActive = solo
+    sections.update(24)
+    assert(true, sections.active === solo)
+    assert(undefined, sections.next)         // no next declared
+    sections.update(32)
+    assert(true, sections.active === sections.default)
+
+    // Unknown next name is reported and leaves next unset (no throw)
+    let dangling = { name:'dangling', length:8, nextName:'ghost' }
+    sections.instances = { dangling: dangling }
+    sections.next = undefined
+    sections.pendingActive = dangling
+    let realLog3 = console.log
+    console.log = () => {}
+    sections.update(40)
+    console.log = realLog3
+    assert(true, sections.active === dangling)
+    assert(undefined, sections.next)
 
     sections.instances = {}
 

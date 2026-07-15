@@ -173,6 +173,10 @@ define((require) => {
       let section = { name: name, length: 32 } // default length 32 beats
       sections.addStandardParams(section) // standard active/timing functions; overridable by params below
       let params = parseParams(paramsStr, name)
+      // `next` names the section to queue when this one becomes current; keep the raw name (like
+      // set section.next=X), not an evalled expression, so section verse, next=chorus follows on to chorus.
+      let nextMatch = paramsStr && paramsStr.match(/(?:^|,)\s*next\s*=\s*([_a-zA-Z]\w*)/i)
+      if (nextMatch) { section.nextName = nextMatch[1].toLowerCase(); delete params.next }
       for (let k in params) { section[k] = params[k] }
       sections.define(name, section) // register, rebinding active/next pointers if redefining the live section
       return
@@ -453,6 +457,16 @@ define((require) => {
   parseLine('foo section, bar=2, baz=1+2')
   assert(2, sections.instances.foo.bar)
   assert(3, sections.instances.foo.baz)
+  delete sections.instances.foo
+
+  parseLine('foo section, next=bar')
+  assert('bar', sections.instances.foo.nextName) // next stored as the raw section name, not evalled
+  assert(undefined, sections.instances.foo.next) // not left as a param
+  delete sections.instances.foo
+
+  parseLine('foo section, length=8, next=Bar') // next name is lowercased; coexists with other params
+  assert('bar', sections.instances.foo.nextName)
+  assert(8, sections.instances.foo.length)
   delete sections.instances.foo
 
   parseLine('foo section, bar=2')
