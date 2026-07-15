@@ -80,7 +80,6 @@ define(function(require) {
       sections.pendingActive = undefined
       sections.activeStartBeat = beatCount // Always restart from now
       sections.applyNext(sections.active)
-      console.log(`Section '${sections.active.name}' forced (beat ${beatCount})`)
       return sections.active !== previous
     }
     if (!sections.active) {
@@ -88,7 +87,6 @@ define(function(require) {
       sections.active = sections.default
       sections.activeStartBeat = beatCount
       sections.applyNext(sections.active)
-      console.log(`Section '${sections.active.name}' starting (beat ${beatCount})`)
       return true
     }
     if (beatCount >= sections.activeStartBeat + sections.active.length) {
@@ -98,7 +96,6 @@ define(function(require) {
       sections.active = next
       sections.activeStartBeat = beatCount
       sections.applyNext(sections.active)
-      console.log(`Section '${ended.name}' ended, section '${next.name}' starting (beat ${beatCount})`)
       return sections.active !== ended
     }
     return false
@@ -245,13 +242,8 @@ define(function(require) {
     assert(true, sections.active === sections.default)
     assert(0, sections.activeStartBeat)
 
-    // End -> fallback to default (no next set); logs even for same section, but reports no change
-    let logged = false
-    let realLog = console.log
-    console.log = () => { logged = true }
+    // End -> fallback to default (no next set); reports no change for same section
     let selfAdvanceChanged = sections.update(32)
-    console.log = realLog
-    assert(true, logged)
     assert(false, selfAdvanceChanged) // default -> default is not a change
     assert(true, sections.active === sections.default)
     assert(32, sections.activeStartBeat)
@@ -287,12 +279,8 @@ define(function(require) {
     assert(undefined, sections.pendingActive)
 
     // Pending force wins over the boundary-advance path
-    let advanced = false
-    let realLog2 = console.log
-    console.log = () => { advanced = true }
     sections.forceActive('b') // Already active, but still restarts
     let forceSameChanged = sections.update(200) // Well past b's length (8), yet pending force applies, not advancement
-    console.log = realLog2
     assert(true, sections.active === b)
     assert(200, sections.activeStartBeat) // Restarted from now, not advanced away
     assert(false, forceSameChanged) // Forcing the already-active section is not a change

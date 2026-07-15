@@ -2,19 +2,13 @@
 =================================================================================================================================
 =================================================================================================================================Pitch fx to support @s
 Musical Structure
- Can put code lines in sections
-  Syntax:  drop section { // lines with set, players, preset etc // }, params
-  ? Reparse code when section changes? Or at least, rebuild players and overrides?
- Can *set* player params and global vars directly from sections as overrides (not by the player using the current section)
-  ? Syntax?
-  Override priorities? Eg want to allow section to override chords, but also want to allow user to override things defined in sections...
-   Probably best for user set to win over section set, and section cant override global set chords
-    Or, its by position in source? So for section to override global, global set must come before section definitions?
+ !!section changes keep happening when code has been stopped, and it recreates all players
+ ?Can set next section once without having to comment out? Eg  once set section.next=drop  ??
+ Can set section params as overrides, including length, including for default section
  Section repeats with count, readout, can set repeats
  Section .next and .repeat are evalled, so can use []r etc
- Can set section params as overrides, including length, including for default section
- ?Can set next section once without having to comment out? Eg  once set section.next=drop  ??
  Can base one section on another, and add more stuff on top
+ ?Can define transitions between two given sections, with extra players etc
  ?Can control patterns too..??
 !superosc cant take positional freq; should be able to play=superosc{440}
 ? Chebyshev shaper
