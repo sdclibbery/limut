@@ -441,6 +441,18 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>riser</code> Ramps from 0 at the start of the section to 1 at its end. 0 when the section is not active.</p>
 <p class='sub'><code>rise</code> Alias for <code>riser</code>.</p>
 <p class='sub'><code>fall</code> Ramps from 1 at the start of the section to 0 at its end. 1 when the section is not active.</p>
+<h6>Section-scoped code:</h6>
+<p>Block structure:
+  <pre>
+    drop section {
+      set p* vel=0
+      f perc f, vel=drop.riser^3
+    }, length=16
+  </pre>
+</p>
+<p>A section can carry a block of code lines that are only active while it is the active section. Open the block with <code>{</code> at the end of the section line, put ordinary commands (players, <code>set</code> overrides and vars, presets) on their own lines inside it, and close it with <code>}</code> at the start of a line, optionally followed by a comma and the section's params. Sections cannot be defined inside a block.</p>
+<p>Whenever the active section changes, the code is automatically re-run: lines in the newly active section's block take effect, and lines in every other section's block are ignored. Players defined in a block are created when their section starts and removed when it ends (like deleting the line and updating), so the same player id can be given a different definition in different sections. <code>set</code> overrides in a block only apply while the section is active. The section itself (its <code>length</code>, <code>next</code> and other params) is always defined regardless of which section is active; only the block lines are conditional.</p>
+<p><code>set section.active=name</code> and <code>set section.next=name</code> lines are ignored during these automatic re-runs (otherwise they would refire on every section change); they still apply on a normal code update.</p>
 <h6>Section timing:</h6>
 <p>There is always exactly one active section. Before you define or select any section, a built in <code>default</code> section (length 32) is active and repeats forever, so section param lookups always resolve.</p>
 <p>When the active section reaches its <code>length</code>, playback advances to the queued next section (or back to the <code>default</code> section if none is queued). Queuing a next section consumes it; once it becomes active there is again no next queued, so unless you queue another the piece falls back to the default section after it.</p>

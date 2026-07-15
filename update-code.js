@@ -76,16 +76,41 @@ define((require) => {
     return lines
   }
 
+  let sectionBlockStartRegex = /^\s*([_a-zA-Z]\w*)\s+section\s*\{\s*$/i
+  let sectionBlockEndRegex = /^\s*\}/
+
   let parseCommand = async (lines, i, url) => {
     let line = lines[i]
     if (line === '') { return i }
     if (line.startsWith('//') === '') { return i }
-    let acc = [line]
-    while ((i+1)<lines.length && !isLineStart(lines[i+1])) {
-      acc.push(lines[i+1])
-      i++
+    let blockMatch = line.match(sectionBlockStartRegex)
+    if (blockMatch) {
+      // Section block: accumulate raw lines up to the closing `}` line, preserving newlines so
+      // parse-line can treat each body line as its own command
+      let acc = [line]
+      let closed = false
+      while ((i+1)<lines.length) {
+        i++
+        acc.push(lines[i])
+        if (sectionBlockEndRegex.test(lines[i])) { closed = true; break }
+      }
+      if (!closed) { // Report and consume the lines; throwing would leave the body lines to be parsed as normal commands
+        consoleOut(`🔴 Parse error: Missing } to close section block '${blockMatch[1]}'`)
+        return i
+      }
+      while ((i+1)<lines.length && !isLineStart(lines[i+1])) { // Params after the closing `}` may span lines like any command
+        acc[acc.length-1] += lines[i+1]
+        i++
+      }
+      line = acc.join('\n')
+    } else {
+      let acc = [line]
+      while ((i+1)<lines.length && !isLineStart(lines[i+1])) {
+        acc.push(lines[i+1])
+        i++
+      }
+      line = acc.join('')
     }
-    line = acc.join('')
     await parseLine(line, i, parseCode, undefined, url)
     return i
   }
@@ -99,13 +124,14 @@ define((require) => {
       } catch (e) {
         consoleOut('🔴 Parse error: ' + e)
         console.log(e)
-        reportError(e, i)
       }
     }
   }
 
-  let updateCode = async (code) => {
+  let latestCode
+  let updateCode = async (code, options = {}) => {
     system.resume()
+    if (!options.auto) { latestCode = code } // Remember for automatic reruns on section change
     players.gc_reset()
     sections.gc_reset()
     mainVars.reset()
@@ -113,13 +139,29 @@ define((require) => {
     sliders.gc_reset()
     vars.clear()
     predefinedVars.apply(vars.all())
-    consoleOut('> Update code')
-    await parseCode(mainBus())
-    await parseCode(code)
+    if (options.auto) {
+      consoleOut(`> Section '${sections.active ? sections.active.name : '?'}': update code`)
+    } else {
+      consoleOut('> Update code')
+    }
+    sections.suppressForce = !!options.auto // set section.active/next lines must not refire on automatic reruns
+    try {
+      await parseCode(mainBus())
+      await parseCode(code)
+    } finally {
+      sections.suppressForce = false
+    }
     players.gc_sweep()
     sections.gc_sweep()
     sliders.gc_sweep()
     players.expandOverrides()
+  }
+
+  // Rerun the last code after the active section changed, so section-scoped lines
+  // (section blocks) take effect for the newly active section
+  let rerunForSectionChange = async () => {
+    if (latestCode === undefined) { return }
+    await updateCode(latestCode, {auto: true})
   }
 
   // TESTS //
@@ -231,7 +273,13 @@ define((require) => {
     assertOverrides("set pmca \n s=1, \n t=2", 'pmca', {s:1,t:2})
     assertOverrides("set pmcb /* \n s=1, \n */ t=2", 'pmcb', {t:2})
 
-    ;(async () => { // Sections are swept on code update if no longer present
+    // Sections and section blocks. All async tests that touch the shared sections state
+    // (active, instances, hasBlocks) must be sequenced in this one IIFE — separate async
+    // test blocks interleave at the awaits and clobber each other's section state.
+    ;(async () => {
+      let savedActive = sections.active
+
+      // Sections are swept on code update if no longer present
       await parseCode('sca section, a=1')
       assert(1, sections.instances.sca.a)
       sections.gc_reset()
@@ -240,7 +288,93 @@ define((require) => {
       assert(undefined, sections.instances.sca)
       assert('scb', sections.instances.scb.name)
       delete sections.instances.scb
-    })()
+
+      // Inactive section: block params parse, body lines skipped, hasBlocks flagged
+      sections.active = undefined
+      sections.hasBlocks = false
+      await parseCode('sba section {\nset sbax=1+1\n}, length=16, bar=3')
+      assert(16, sections.instances.sba.length)
+      assert(3, sections.instances.sba.bar)
+      assert(true, sections.hasBlocks)
+      assert(undefined, vars.sbax)
+
+      // Active section: body lines parsed
+      sections.active = sections.instances.sba
+      await parseCode('sba section {\nset sbax=1+1\n}, length=16')
+      assert(2, vars.sbax)
+      delete vars.sbax
+
+      // No params after the closing brace
+      await parseCode('sba section {\nset sbaw=5\n}')
+      assert(5, vars.sbaw)
+      assert(32, sections.instances.sba.length)
+      delete vars.sbaw
+
+      // Comments and continuations inside the body; params after } may span lines
+      await parseCode('sba section {\nset sbay=( //cmt\n1,\n2)\n}, length=8,\nfoo=3')
+      assert([1,2], vars.sbay)
+      assert(8, sections.instances.sba.length)
+      assert(3, sections.instances.sba.foo)
+      delete vars.sbay
+
+      // Player overrides in the body
+      await parseCode('sba section {\nset sbap amp=2\n}')
+      assert(2, players.overrides.sbap && players.overrides.sbap.amp)
+      delete players.overrides.sbap
+
+      // Multiple body commands
+      await parseCode('sba section {\nset sbad=1\nset sbae=2\n}')
+      assert(1, vars.sbad)
+      assert(2, vars.sbae)
+      delete vars.sbad
+      delete vars.sbae
+
+      // next param after the closing brace stays a raw name
+      await parseCode('sba section {\n}, next=sbb')
+      assert('sbb', sections.instances.sba.nextName)
+
+      // Nested section definitions are not allowed (parseLine throws; parseCode would swallow it)
+      await assertThrows('inside a section block', () => parseLine('sba section {\nsbb section, length=8\n}'))
+
+      // The built-in default section matches by name
+      sections.active = sections.default
+      await parseCode('default section {\nset sbdf=7\n}')
+      assert(7, vars.sbdf)
+      delete vars.sbdf
+      delete sections.instances.default
+
+      // Unterminated block is a parse error; nothing is defined and the body lines don't leak out as commands
+      sections.active = undefined
+      let errored = false
+      let realLog = console.log
+      console.log = () => { errored = true } // Suppress the expected parse error output
+      await parseCode('sbz section {\nset sbzz=9')
+      console.log = realLog
+      assert(true, errored)
+      assert(undefined, sections.instances.sbz)
+      assert(undefined, vars.sbzz)
+      delete sections.instances.sba
+
+      // Section-scoped overrides swap when the code is re-parsed after a section change
+      let code = 'sca2 section {\nset scaa amp=1\n}, next=scb2\nscb2 section {\nset scaa amp=2\n}'
+      sections.active = undefined
+      await parseCode(code)
+      assert('scb2', sections.instances.sca2.nextName)
+      assert(undefined, players.overrides.scaa) // Neither section active; no overrides applied
+      sections.active = sections.instances.sca2
+      await parseCode(code)
+      assert(1, players.overrides.scaa && players.overrides.scaa.amp)
+      sections.active = sections.instances.scb2
+      delete players.overrides.scaa // Cleared by updateCode in real use
+      await parseCode(code)
+      assert(2, players.overrides.scaa && players.overrides.scaa.amp)
+      delete players.overrides.scaa
+      delete sections.instances.sca2
+      delete sections.instances.scb2
+
+      sections.active = savedActive
+      sections.hasBlocks = false
+    })().catch(e => console.trace('Assertion failed.\n>>Section block test error: ' + e))
 
     console.log('Update code tests complete')
   }
@@ -248,5 +382,6 @@ define((require) => {
   return {
     parseCode:parseCode,
     updateCode:updateCode,
+    rerunForSectionChange:rerunForSectionChange,
   }
 })

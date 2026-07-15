@@ -26,7 +26,7 @@ define(function(require) {
   let collaboration = require('collaboration')
   let keyboard = require('player/keyboard')
   require('editor-codemirror')
-  let {parseCode} = require('update-code')
+  let {parseCode,rerunForSectionChange} = require('update-code')
   let {clearCallTree} = require('player/callstack')
 
   // Load presets
@@ -157,8 +157,9 @@ define(function(require) {
     }
     if (beat) {
       mainVars.update(Math.floor(beat.count), beat.count)
+      let sectionChanged = false
       try {
-        sections.update(beat.count)
+        sectionChanged = sections.update(beat.count)
       } catch (e) {
         consoleOut('🔴 Run Error from sections: ' + e)
         console.log(e)
@@ -170,17 +171,32 @@ define(function(require) {
         let next = sections.next ? sections.next.name : sections.default.name
         sectionReadout.innerText = `${sections.active.name} ${beatsIn}/${sections.active.length} -> ${next}`
       }
-      Object.values(players.instances).forEach(player => {
-        if (player !== undefined) {
-          try {
-            player.play(player.getEventsForBeat(beat))
-          } catch (e) {
-            consoleOut('🔴 Run Error from player '+player.id+': ' + e)
+      let playBeat = () => {
+        Object.values(players.instances).forEach(player => {
+          if (player !== undefined) {
+            try {
+              player.play(player.getEventsForBeat(beat))
+            } catch (e) {
+              consoleOut('🔴 Run Error from player '+player.id+': ' + e)
+              console.log(e)
+              clearCallTree()
+            }
+          }
+        })
+      }
+      if (sectionChanged && sections.hasBlocks) {
+        // Rerun the code so section-scoped lines take effect, then play this beat's events
+        // so the new section's players still sound from its first beat
+        rerunForSectionChange()
+          .catch(e => {
+            consoleOut('🔴 Run Error updating code on section change: ' + e)
             console.log(e)
             clearCallTree()
-          }
-        }
-      })
+          })
+          .then(playBeat)
+      } else {
+        playBeat()
+      }
       let timeNow = (new Date()).getTime() / 1000
       beatLatency = ((timeNow - lastBeatTime) / beat.duration) - 1
       lastBeatTime = timeNow

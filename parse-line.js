@@ -167,9 +167,29 @@ define((require) => {
       return
     }
     if (startsWithSection(line)) {
-      // Define a section
-      let [head, paramsStr] = splitOnFirst(line, ',')
-      let name = head.split(/\s+/)[0].toLowerCase()
+      // Define a section; the block form `name section { ... }, params` scopes its body lines
+      // to the section, so they only take effect while it is the active section
+      let paramsStr
+      let bodyCommands = []
+      if (line.includes('\n')) {
+        // Block form, assembled by update-code parseCommand: header / body lines / `}, params`
+        let blockLines = line.split('\n')
+        let closer = blockLines[blockLines.length-1]
+        paramsStr = closer.replace(/^\s*\}\s*,?/, '')
+        let body = blockLines.slice(1, -1)
+        for (let i = 0; i < body.length; i++) { // Group body lines into commands, same continuation rule as parseCommand
+          if (body[i].trim() === '') { continue }
+          let acc = [body[i]]
+          while (i+1 < body.length && !isLineStart(body[i+1])) { acc.push(body[i+1]); i++ }
+          let cmd = acc.join('')
+          if (startsWithSection(cmd)) { throw `Cannot define a section inside a section block` }
+          bodyCommands.push(cmd)
+        }
+        sections.hasBlocks = true // Enables automatic code reruns on section change
+      } else {
+        ;[, paramsStr] = splitOnFirst(line, ',')
+      }
+      let name = line.split(/\s+/)[0].toLowerCase()
       let section = { name: name, length: 32 } // default length 32 beats
       sections.addStandardParams(section) // standard active/timing functions; overridable by params below
       let params = parseParams(paramsStr, name)
@@ -179,6 +199,11 @@ define((require) => {
       if (nextMatch) { section.nextName = nextMatch[1].toLowerCase(); delete params.next }
       for (let k in params) { section[k] = params[k] }
       sections.define(name, section) // register, rebinding active/next pointers if redefining the live section
+      if (sections.active && sections.active.name === name) { // Compare by name so the built-in default section matches too
+        for (let cmd of bodyCommands) {
+          await parseLine(cmd, linenum, parseCode, suppressLogs, url)
+        }
+      }
       return
     }
     // Define a player
@@ -487,6 +512,9 @@ define((require) => {
   sections.next = undefined
   sections.pendingActive = undefined
   sections.active = undefined
+
+  // Section block (multi-line) parsing is tested in update-code.js: all async tests that touch
+  // the shared sections.active state must live in one IIFE there, or they interleave and clobber each other
 
   parseLine('r1 test 1')
   parseLine('r2 test follow r1')

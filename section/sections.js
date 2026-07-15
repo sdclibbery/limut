@@ -28,6 +28,8 @@ define(function(require) {
   sections.next = undefined
   sections.pendingActive = undefined
   sections.activeStartBeat = 0
+  sections.hasBlocks = false // True if the latest parsed code contains any section { ... } block; gates auto reruns on section change
+  sections.suppressForce = false // Set during automatic section-change reruns so set section.active/next lines in the code don't refire
 
   // Register (or replace) a named section. Rebinds any live pointers (active/next/pendingActive)
   // from the old object to the new one, so a code update that redefines the running section keeps
@@ -45,12 +47,14 @@ define(function(require) {
 
   // Queue a named section to become active when the current one finishes
   sections.forceNext = (name) => {
+    if (sections.suppressForce) { return }
     let s = sections.getByName(name)
     if (!s) { console.log(`Section '${name}' not found (set section.next)`); return }
     sections.next = s
   }
   // Force a named section to become active now (applied on the next update)
   sections.forceActive = (name) => {
+    if (sections.suppressForce) { return }
     let s = sections.getByName(name)
     if (!s) { console.log(`Section '${name}' not found (set section.active)`); return }
     sections.pendingActive = s
@@ -66,15 +70,18 @@ define(function(require) {
     else { console.log(`Section '${section.nextName}' not found (${section.name}.next)`) }
   }
 
+  // Advance/switch the active section for this beat. Returns true if the active section
+  // changed to a different section (so callers can react, eg rerun section-scoped code).
   sections.update = (beatCount) => {
     if (sections.pendingActive) {
       // A forced section switch takes precedence over normal advancement
+      let previous = sections.active
       sections.active = sections.pendingActive
       sections.pendingActive = undefined
       sections.activeStartBeat = beatCount // Always restart from now
       sections.applyNext(sections.active)
       console.log(`Section '${sections.active.name}' forced (beat ${beatCount})`)
-      return
+      return sections.active !== previous
     }
     if (!sections.active) {
       // First run — start the default section
@@ -82,7 +89,7 @@ define(function(require) {
       sections.activeStartBeat = beatCount
       sections.applyNext(sections.active)
       console.log(`Section '${sections.active.name}' starting (beat ${beatCount})`)
-      return
+      return true
     }
     if (beatCount >= sections.activeStartBeat + sections.active.length) {
       let ended = sections.active
@@ -92,10 +99,13 @@ define(function(require) {
       sections.activeStartBeat = beatCount
       sections.applyNext(sections.active)
       console.log(`Section '${ended.name}' ended, section '${next.name}' starting (beat ${beatCount})`)
+      return sections.active !== ended
     }
+    return false
   }
 
   sections.gc_reset = () => {
+    sections.hasBlocks = false
     for (let name in sections.instances) {
       sections.instances[name].marked = false
     }
@@ -225,36 +235,37 @@ define(function(require) {
     sections.next = undefined
     sections.activeStartBeat = 0
 
-    // Init: adopts the default section
-    sections.update(0)
+    // Init: adopts the default section; reports a change
+    assert(true, sections.update(0))
     assert(true, sections.active === sections.default)
     assert(0, sections.activeStartBeat)
 
-    // Not yet ended (default length 32)
-    sections.update(31)
+    // Not yet ended (default length 32); no change
+    assert(false, sections.update(31))
     assert(true, sections.active === sections.default)
     assert(0, sections.activeStartBeat)
 
-    // End -> fallback to default (no next set); logs even for same section
+    // End -> fallback to default (no next set); logs even for same section, but reports no change
     let logged = false
     let realLog = console.log
     console.log = () => { logged = true }
-    sections.update(32)
+    let selfAdvanceChanged = sections.update(32)
     console.log = realLog
     assert(true, logged)
+    assert(false, selfAdvanceChanged) // default -> default is not a change
     assert(true, sections.active === sections.default)
     assert(32, sections.activeStartBeat)
 
-    // Switch to next, next consumed
+    // Switch to next, next consumed; reports a change
     let b = { name: 'b', length: 8 }
     sections.next = b
-    sections.update(64)
+    assert(true, sections.update(64))
     assert('b', sections.active.name)
     assert(undefined, sections.next)
     assert(64, sections.activeStartBeat)
 
-    // Next ends -> back to default
-    sections.update(72)
+    // Next ends -> back to default; reports a change
+    assert(true, sections.update(72))
     assert(true, sections.active === sections.default)
     assert(72, sections.activeStartBeat)
 
@@ -270,7 +281,7 @@ define(function(require) {
     sections.pendingActive = undefined
     sections.forceActive('b')
     assert(true, sections.pendingActive === b)
-    sections.update(80)
+    assert(true, sections.update(80))
     assert(true, sections.active === b)
     assert(80, sections.activeStartBeat)
     assert(undefined, sections.pendingActive)
@@ -280,10 +291,29 @@ define(function(require) {
     let realLog2 = console.log
     console.log = () => { advanced = true }
     sections.forceActive('b') // Already active, but still restarts
-    sections.update(200) // Well past b's length (8), yet pending force applies, not advancement
+    let forceSameChanged = sections.update(200) // Well past b's length (8), yet pending force applies, not advancement
     console.log = realLog2
     assert(true, sections.active === b)
     assert(200, sections.activeStartBeat) // Restarted from now, not advanced away
+    assert(false, forceSameChanged) // Forcing the already-active section is not a change
+
+    // suppressForce no-ops forceActive/forceNext (used during automatic section-change reruns)
+    sections.next = undefined
+    sections.pendingActive = undefined
+    sections.suppressForce = true
+    sections.forceNext('b')
+    assert(undefined, sections.next)
+    sections.forceActive('b')
+    assert(undefined, sections.pendingActive)
+    sections.suppressForce = false
+    sections.forceNext('b')
+    assert(true, sections.next === b)
+    sections.next = undefined
+
+    // gc_reset clears hasBlocks
+    sections.hasBlocks = true
+    sections.gc_reset()
+    assert(false, sections.hasBlocks)
 
     sections.instances = {}
 

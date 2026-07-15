@@ -1,19 +1,8 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================Pitch fx to support @s
-
-set !p* add+=[0,2]t8
-drop section {
-  set p* vel=0
-  f perc f, vel=drop.riser^3
-}, length=16
-// set section.next=drop // note; there is a default 32 beat section that repeats by default. So there is always an active section
-p perc x-s-
-b techbass 0070, cutoff-=drop.fall/2
-
 Musical Structure
- Update skills as needed with some notes about how sections are implemented
- Can define players in sections
+ Can put code lines in sections
   Syntax:  drop section { // lines with set, players, preset etc // }, params
   ? Reparse code when section changes? Or at least, rebuild players and overrides?
  Can *set* player params and global vars directly from sections as overrides (not by the player using the current section)
@@ -21,7 +10,6 @@ Musical Structure
   Override priorities? Eg want to allow section to override chords, but also want to allow user to override things defined in sections...
    Probably best for user set to win over section set, and section cant override global set chords
     Or, its by position in source? So for section to override global, global set must come before section definitions?
- Can control player play/stop
  Section repeats with count, readout, can set repeats
  Section .next and .repeat are evalled, so can use []r etc
  Can set section params as overrides, including length, including for default section
