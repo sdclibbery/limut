@@ -1,6 +1,6 @@
 ---
 name: dsl-internals
-description: Internals of the limut DSL parser, lambda/user-function machinery, player overrides, and pattern timing. Use when modifying anything under expression/ (especially parse-expression.js, parse-var.js, parse-map.js), player/callstack.js, player/standard.js, player/player.js, parse-line.js, or pattern/pattern.js — or when debugging issues with lambdas/user-defined functions, `set` overrides not taking effect, `dur` timing oddities, or chord/stutter/delay expansion.
+description: Internals of the limut DSL parser, lambda/user-function machinery, player overrides, pattern timing, and sections. Use when modifying anything under expression/ (especially parse-expression.js, parse-var.js, parse-map.js, lookupOp.js), section/sections.js, player/callstack.js, player/standard.js, player/player.js, parse-line.js, or pattern/pattern.js — or when debugging issues with lambdas/user-defined functions, `set` overrides not taking effect, `dur` timing oddities, chord/stutter/delay expansion, or sections (active/next tracking, section params).
 ---
 
 # limut DSL internals
@@ -115,3 +115,45 @@ For standard players, `player/standard.js` merges the `dur` override into the pa
 ### Why `dur` needs special handling
 
 Other overridden params (like `amp`) are simply set on the event in step 5. But `dur` must be known at step 2 to generate correctly-timed events. If only applied at step 5, the pattern timing uses the old `dur` while the envelope uses the new one — notes sound shorter/longer but still fire at the old rate.
+
+## Sections
+
+Sections are the large-scale-structure feature: named spans of the timeline (e.g. `intro`, `verse`, `drop`) that become active in sequence, exposing timing params (`riser`, `fall`, `time`) that DSL code reads to evolve a piece over its structure.
+
+Files: `section/sections.js` (all state + lifecycle), `parse-line.js` (DSL define + `set section.*` dispatch), `expression/lookupOp.js` (expression access), `main.js` (per-frame `sections.update` + header readout), `update-code.js` (gc bracketing).
+
+### DSL surface
+
+- `foo section, length=16, next=bar, myparam=2` — define/redefine a section. `length` defaults to 32 beats. `next` names the follow-on section. Any other params are stored on the section object and readable via expression lookup.
+- `set section.active=foo` / `set section.next=foo` — force `foo` to become active now / queued next. Dispatched specially in `parse-line.js` (before the general `set namespace.key` path) via `sections.forceActive`/`forceNext`.
+- Expression access (`lookupOp.js`): `section.riser` reads a param on the **currently active** section; `foo.riser` reads a param on the **named** section `foo`; `foo.exists` → 1 if a section (or player) named `foo` exists. Missing section / missing param / no active section all return `0`.
+
+### Module state (singleton)
+
+`sections.js` returns one shared object. Key fields: `instances` (name→section, lowercased keys), `active`, `next`, `pendingActive`, `activeStartBeat`, and `default` (`{name:'default', length:32}`, used when nothing else is queued). `getByName` lowercases its arg; all section names are stored lowercase.
+
+### Lifecycle — `sections.update(beatCount)`
+
+Called every frame from `main.js` (inside a try/catch that reports `Run Error from sections`). Precedence:
+
+1. **`pendingActive` set** (a forced switch) → becomes active, `activeStartBeat = beatCount` (always restarts from now), then `applyNext`. Wins even mid-section and even if already past the boundary.
+2. **No active section yet** (first run) → adopt `default`.
+3. **Boundary reached** (`beatCount >= activeStartBeat + active.length`) → advance to `next` (or `default` if none), consume `next` (set to undefined), restart `activeStartBeat`, then `applyNext`.
+
+`applyNext(section)` queues `section.nextName`'s section as `sections.next`. Because it runs *after* `next` is consumed, a section naming its own successor self-sequences: `verse`(next=chorus) → `chorus`(next=verse) → … loops forever. A section with no `next` falls back to `default` at its boundary.
+
+### `next` is stored as a raw name, not evalled
+
+`parse-line.js` extracts `next=` with a regex and stores it as `section.nextName` (lowercased), deleting it from the evalled params — same treatment as `set section.next=X`. This keeps `section verse, next=chorus` referring to the section literally rather than trying to evaluate `chorus` as an expression.
+
+### Standard params (`addStandardParams`)
+
+Every section gets default functions closing over the section + module state: `active`/`in` (1 if this is the active section), `exists` (always 1), `time` (beats elapsed, 0 if inactive), `riser`/`rise` (0→1 fraction through the section, clamped), `fall` (1→0 inverse). All are flagged `.interval = 'frame'` so they re-evaluate every frame and are **not memoised** — essential since their value depends on the live beat and which section is active. They read `section.length` dynamically, so a later length override is honoured. DSL params on the section line override these defaults (e.g. `section foo, riser=[0:1]l`).
+
+### Redefinition rebinds live pointers (gotcha)
+
+`sections.define(name, section)` replaces `instances[name]` with a **new object**. If the old object was `active`/`next`/`pendingActive`, those pointers are rebound to the new object — so editing and re-running the code while a section is playing keeps it active with its timing intact, rather than stranding the live pointers on the stale object (and its now-orphaned standard params). This was a reported bug; there's a regression test for it in `sections.js`.
+
+### GC (mark/sweep, like players)
+
+`update-code.js` brackets a code run with `sections.gc_reset()` (clear all `marked`) before parsing and `sections.gc_sweep()` (delete unmarked, calling their `destroy()` if any) after. `define()` calls `gc_mark`, so a section absent from the latest code is swept away — same lifecycle as player instances.
