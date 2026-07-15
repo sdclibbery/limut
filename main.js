@@ -25,7 +25,7 @@ define(function(require) {
   let consoleOut = require('console')
   let collaboration = require('collaboration')
   let keyboard = require('player/keyboard')
-  require('editor-codemirror')
+  let editor = require('editor-codemirror')
   let {parseCode,rerunForSectionChange} = require('update-code')
   let {clearCallTree} = require('player/callstack')
 
@@ -184,7 +184,7 @@ define(function(require) {
           }
         })
       }
-      if (sectionChanged && sections.hasBlocks) {
+      if (sectionChanged && sections.hasBlocks && editor.isRunning()) {
         // Rerun the code so section-scoped lines take effect, then play this beat's events
         // so the new section's players still sound from its first beat
         rerunForSectionChange()

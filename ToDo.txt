@@ -2,7 +2,7 @@
 =================================================================================================================================
 =================================================================================================================================Pitch fx to support @s
 Musical Structure
- !!section changes keep happening when code has been stopped, and it recreates all players
+ !!section changes keep happening after the user has stopped the code (ctrl-. or stop button), and it recreates all players and starts playing again
  ?Can set next section once without having to comment out? Eg  once set section.next=drop  ??
  Can set section params as overrides, including length, including for default section
  Section repeats with count, readout, can set repeats
