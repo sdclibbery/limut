@@ -22,7 +22,7 @@ define(function(require) {
     section.fall   = mk((e,b) => active() ? 1 - frac(b) : 1)
   }
 
-  sections.default = { name: 'default', length: 32 }
+  sections.default = { name: 'default', length: 4 }
   sections.addStandardParams(sections.default)
   sections.active = undefined
   sections.next = undefined
@@ -237,8 +237,8 @@ define(function(require) {
     assert(true, sections.active === sections.default)
     assert(0, sections.activeStartBeat)
 
-    // Not yet ended (default length 32); no change
-    assert(false, sections.update(31))
+    // Not yet ended (default length 3); no change
+    assert(false, sections.update(3))
     assert(true, sections.active === sections.default)
     assert(0, sections.activeStartBeat)
 

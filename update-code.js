@@ -347,9 +347,12 @@ define((require) => {
       sections.active = undefined
       let errored = false
       let realLog = console.log
+      let consEl = document.getElementById('console')
+      let savedConsVal = consEl.value // Suppress the expected parse error output in the on-page console too
       console.log = () => { errored = true } // Suppress the expected parse error output
       await parseCode('sbz section {\nset sbzz=9')
       console.log = realLog
+      consEl.value = savedConsVal
       assert(true, errored)
       assert(undefined, sections.instances.sbz)
       assert(undefined, vars.sbzz)

@@ -2,15 +2,15 @@
 =================================================================================================================================
 =================================================================================================================================Pitch fx to support @s
 Musical Structure
- !!section changes keep happening after the user has stopped the code (ctrl-. or stop button), and it recreates all players and starts playing again
+ Sections .next and .length are evalled (once only when section first becomes active), so can use []r etc
  ?Can set next section once without having to comment out? Eg  once set section.next=drop  ??
+ Section repeats with count, readout, can set repeats, .repeat is evalled
  Can set section params as overrides, including length, including for default section
- Section repeats with count, readout, can set repeats
- Section .next and .repeat are evalled, so can use []r etc
  Can base one section on another, and add more stuff on top
  ?Can define transitions between two given sections, with extra players etc
- ?Can control patterns too..??
 !superosc cant take positional freq; should be able to play=superosc{440}
+!superosc docs should have params on sepearte sub paragraphs
+?Can set/override pattern as a parameter on a standard player?
 ? Chebyshev shaper
 !tts{} does not repeat, so its not useful in fx chain. Want to either trigger it, or set a repeat interval
  // l supersaw 001236, fx=vocoder{tts{'take your place'}}*8, oct=2, dur=1/2
