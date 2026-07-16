@@ -22,8 +22,21 @@ define(function(require) {
     section.fall   = mk((e,b) => active() ? 1 - frac(b) : 1)
   }
 
-  sections.default = { name: 'default', length: 4 }
-  sections.addStandardParams(sections.default)
+  // The default section is an ordinary registry entry named 'default' (not a phantom object)
+  // so it can be referenced by name (set section.next=default, default.riser) and redefined
+  // like any other section. sections.default is a getter onto the live registry object so all
+  // existing reads keep resolving to it even after a redefinition swaps the instance.
+  sections.makeDefault = () => {
+    let d = { name: 'default', length: 4 }
+    sections.addStandardParams(d)
+    return d
+  }
+  sections.instances['default'] = sections.makeDefault()
+  Object.defineProperty(sections, 'default', { get: () => sections.instances['default'] })
+  // Refresh the default to a clean baseline; called per code update so a `default section`
+  // redefinition applies and a removed one reverts. define() rebinds live pointers and marks it,
+  // and leaves activeStartBeat untouched so timing stays continuous across the refresh.
+  sections.resetDefault = () => { sections.define('default', sections.makeDefault()) }
   sections.active = undefined
   sections.next = undefined
   sections.pendingActive = undefined
@@ -224,7 +237,22 @@ define(function(require) {
     let e2 = { name:'e', length:8 }; sections.addStandardParams(e2); sections.define('e', e2)
     assert(1, sections.instances.e.active({},2)) // still active (not 0) after the redefinition
     assert(2, sections.instances.e.time({},2))   // timing intact
-    sections.instances = {}
+    sections.instances = { default: sections.makeDefault() }
+    sections.active = sections.activeStartBeat = undefined
+
+    // The default section is a real registry entry that can be redefined, keeping active live
+    sections.active = sections.instances.default; sections.activeStartBeat = 0
+    assert(4, sections.default.length)          // baseline
+    assert(1, sections.default.active({},0))
+    let d8 = sections.makeDefault(); d8.length = 8; sections.define('default', d8)
+    assert(true, sections.active === d8)        // active follows the redefinition
+    assert(8, sections.default.length)          // new length in effect
+    assert(1, sections.default.active({},0))    // standard functions still live
+    assert(2, sections.default.time({},2))      // timing intact (start beat unchanged)
+    sections.resetDefault()                     // reverts to baseline, active still follows
+    assert(true, sections.active === sections.instances.default)
+    assert(4, sections.default.length)
+    sections.instances = { default: sections.makeDefault() }
     sections.active = sections.activeStartBeat = undefined
 
     // Advancement / active-next-default tracking
@@ -353,7 +381,7 @@ define(function(require) {
     assert(true, sections.active === dangling)
     assert(undefined, sections.next)
 
-    sections.instances = {}
+    sections.instances = { default: sections.makeDefault() } // Keep the built-in default registered
 
     // Restore so it doesn't leak into the running app
     sections.active = undefined

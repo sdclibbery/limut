@@ -134,6 +134,7 @@ define((require) => {
     if (!options.auto) { latestCode = code } // Remember for automatic reruns on section change
     players.gc_reset()
     sections.gc_reset()
+    sections.resetDefault() // Baseline default each update; a `default section` line then redefines it
     mainVars.reset()
     players.overrides = {}
     sliders.gc_reset()
@@ -336,12 +337,22 @@ define((require) => {
       // Nested section definitions are not allowed (parseLine throws; parseCode would swallow it)
       await assertThrows('inside a section block', () => parseLine('sba section {\nsbb section, length=8\n}'))
 
-      // The built-in default section matches by name
+      // The built-in default section matches by name. (Restore default first: the gc tests above
+      // call gc_sweep directly without resetDefault; real updateCode calls resetDefault so it survives.)
+      sections.resetDefault()
       sections.active = sections.default
       await parseCode('default section {\nset sbdf=7\n}')
       assert(7, vars.sbdf)
       delete vars.sbdf
-      delete sections.instances.default
+
+      // The default section can be redefined (length + body); resetDefault reverts to baseline
+      sections.active = sections.instances.default
+      await parseCode('default section {\nset dfx=1\n}, length=8')
+      assert(8, sections.instances.default.length)
+      assert(1, vars.dfx)
+      delete vars.dfx
+      sections.resetDefault() // What updateCode runs each update; removing the block reverts default
+      assert(4, sections.instances.default.length)
 
       // Unterminated block is a parse error; nothing is defined and the body lines don't leak out as commands
       sections.active = undefined

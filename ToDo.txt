@@ -2,16 +2,21 @@
 =================================================================================================================================
 =================================================================================================================================Pitch fx to support @s
 Musical Structure
- Sections .next and .length are evalled (once only when section first becomes active), so can use []r etc
+ Should be able to fully redefine the default section, including with lines of code
  ?Can set next section once without having to comment out? Eg  once set section.next=drop  ??
+ Sections .next and .length are evalled (once only when section first becomes active), so can use []r etc
  Section repeats with count, readout, can set repeats, .repeat is evalled
+ Can access repeat count on active section. And also total riser across all repeats. And also count of total number of times section has played
  Can set section params as overrides, including length, including for default section
+ !Can't do set section.next=default
  Can base one section on another, and add more stuff on top
  ?Can define transitions between two given sections, with extra players etc
 !superosc cant take positional freq; should be able to play=superosc{440}
 !superosc docs should have params on sepearte sub paragraphs
+!There is more than one page of tests now, even when they all pass. Have a single message at the end summarising results (with colour)
 ?Can set/override pattern as a parameter on a standard player?
 ? Chebyshev shaper
+?Thing like mix but press but puts dry on left and wet on right; eg for phaser
 !tts{} does not repeat, so its not useful in fx chain. Want to either trigger it, or set a repeat interval
  // l supersaw 001236, fx=vocoder{tts{'take your place'}}*8, oct=2, dur=1/2
 ?multitap should have second callback for chain to use on each tap before they get summed together

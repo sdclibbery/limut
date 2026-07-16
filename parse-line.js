@@ -190,7 +190,7 @@ define((require) => {
         ;[, paramsStr] = splitOnFirst(line, ',')
       }
       let name = line.split(/\s+/)[0].toLowerCase()
-      let section = { name: name, length: 32 } // default length 32 beats
+      let section = { name: name, length: name === 'default' ? 4 : 32 } // default length 32 beats (the built-in default stays 4)
       sections.addStandardParams(section) // standard active/timing functions; overridable by params below
       let params = parseParams(paramsStr, name)
       // `next` names the section to queue when this one becomes current; keep the raw name (like
