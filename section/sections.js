@@ -125,8 +125,16 @@ define(function(require) {
   }
   sections.gc_sweep = () => {
     for (let name in sections.instances) {
-      if (!sections.instances[name].marked) {
-        if (sections.instances[name].destroy) { sections.instances[name].destroy() }
+      if (name === 'default') { continue } // The default section can never be swept
+      let section = sections.instances[name]
+      if (!section.marked) {
+        // Fix up any live pointers that referenced the section being removed, so we never
+        // leave active/next/pendingActive dangling on an orphaned object. Active falls back
+        // to default (via re-init on the next update), next falls back to default too.
+        if (sections.active === section) { sections.active = undefined }
+        if (sections.next === section) { sections.next = undefined }
+        if (sections.pendingActive === section) { sections.pendingActive = undefined }
+        if (section.destroy) { section.destroy() }
         delete sections.instances[name]
       }
     }
@@ -158,6 +166,61 @@ define(function(require) {
     sections.gc_sweep()
     assert(true, destroyed)
     assert([], Object.keys(sections.instances))
+    sections.instances = {}
+
+    // Sweeping a section clears any live pointers that referenced it (falls back to default)
+    let gcSavedActive = sections.active, gcSavedNext = sections.next
+    let gcSavedPending = sections.pendingActive, gcSavedStart = sections.activeStartBeat
+    let gone = { name:'gone', length:8 }
+    let keep = { name:'keep', length:8 }
+    sections.instances = { gone: gone, keep: keep }
+    sections.active = gone
+    sections.next = gone
+    sections.pendingActive = gone
+    sections.gc_reset()
+    sections.gc_mark('keep')
+    sections.gc_sweep()
+    assert(undefined, sections.instances.gone)
+    assert(undefined, sections.active)          // active fell back (re-inits to default on next update)
+    assert(undefined, sections.next)            // next fell back to default
+    assert(undefined, sections.pendingActive)   // dangling pendingActive cleared
+
+    // A marked section keeps its pointers intact (no false clearing)
+    sections.instances = { keep: keep }
+    sections.active = keep
+    sections.next = keep
+    sections.pendingActive = keep
+    sections.gc_reset()
+    sections.gc_mark('keep')
+    sections.gc_sweep()
+    assert(true, sections.active === keep)
+    assert(true, sections.next === keep)
+    assert(true, sections.pendingActive === keep)
+
+    // After active is swept, the next update re-adopts default with a fresh start beat
+    sections.instances = { default: sections.makeDefault(), gone2: {name:'gone2', length:8} }
+    sections.active = sections.instances.gone2
+    sections.next = undefined
+    sections.pendingActive = undefined
+    sections.gc_reset()
+    sections.gc_mark('default')
+    sections.gc_sweep()
+    assert(undefined, sections.active)
+    let readopted = sections.update(20)
+    assert(true, readopted)                     // reports a change so section-scoped code reruns
+    assert(true, sections.active === sections.default)
+    assert(20, sections.activeStartBeat)        // fresh start from the current beat
+
+    // The default section is never swept, even when left unmarked
+    sections.instances = { default: sections.makeDefault() }
+    sections.gc_reset()
+    sections.gc_sweep()
+    assert(true, !!sections.instances.default)
+
+    sections.active = gcSavedActive
+    sections.next = gcSavedNext
+    sections.pendingActive = gcSavedPending
+    sections.activeStartBeat = gcSavedStart
     sections.instances = {}
 
     sections.instances = { foo: {name:'foo', bar:2} }
