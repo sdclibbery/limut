@@ -433,7 +433,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>length</code> The length of the section in beats. Defaults to 32. When the active section has been playing for this many beats it ends and the next section starts.</p>
 <p class='sub'><code>next</code> The name of the section to queue when this section becomes active, eg <code>verse section, next=chorus</code>. This lets each section declare its own successor, so the piece sequences itself; if two sections name each other (<code>verse</code>&rarr;<code>chorus</code>, <code>chorus</code>&rarr;<code>verse</code>) they alternate indefinitely. An explicit <code>set section.next=name</code> still overrides the declared next.</p>
 <h6>Standard section functions:</h6>
-<p>Every section (including the built in <code>default</code>) automatically defines these functions, so you can drive players and vars off which section is playing and how far through it we are without any extra setup. Look them up with <code>section.name</code> (the active section) or <code>drop.name</code> (a named section). You can override any of them by giving the section a param of the same name.</p>
+<p>Every section (including the built in <code>default</code>) automatically defines these functions, so you can drive players and vars off which section is playing and how far through it we are without any extra setup. Look them up with <code>section.name</code> (the active section) or <code>drop.name</code> (a named section). <code>sx</code> is a short alias for <code>section</code>, so <code>sx.riser</code> is the same as <code>section.riser</code>. You can override any of them by giving the section a param of the same name.</p>
 <p class='sub'><code>active</code> 1 when the section is the active section, 0 otherwise.</p>
 <p class='sub'><code>in</code> Alias for <code>active</code>.</p>
 <p class='sub'><code>exists</code> 1 for any section that has been defined, 0 otherwise (eg <code>drop.exists</code>).</p>
@@ -1051,6 +1051,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>root</code> Main root pitch offset; default <code>0</code> roots the pitches on middle c; <code>1</code> pitches up by one semitone etc. This is fractional, so can be used to 'nudge' the tuning to match other instruments; eg <code>root=0.135</code> </p>
 <p><code>set section.next=name</code> Queue the named section to become active when the current section finishes. This is the normal way to sequence a piece; each section can queue the one that should follow it.</p>
 <p><code>set section.active=name</code> Force the named section active immediately (applied on the next beat), restarting its timing from now. Useful for jumping straight to a section while performing live.</p>
+<p><code>sx</code> is a short alias for <code>section</code> &mdash; handy when live coding. Use it anywhere <code>section</code> works, both in param lookups (<code>sx.rise</code>, <code>sx.fall</code>) and in <code>set</code> (<code>set sx.next=name</code>, <code>set sx.active=name</code>).</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-predefined-vars')" class="accordion"> Predefined Vars</h4>
 <div id="accordion-predefined-vars" class="closed">

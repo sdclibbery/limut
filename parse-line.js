@@ -85,10 +85,11 @@ define((require) => {
         k = compoundMatch[1]
         compoundOp = compoundMatch[2]
       }
-      if ((k === 'section.active' || k === 'section.next') && !compoundOp && !!v) {
+      let [ns, field] = splitOnFirst(k, '.')
+      if (sections.isKeyword(ns) && (field === 'active' || field === 'next') && !compoundOp && !!v) {
         // Force the current or next section to a named section (the raw name; getByName lowercases)
         let name = v.trim()
-        if (k === 'section.active') { sections.forceActive(name) } else { sections.forceNext(name) }
+        if (field === 'active') { sections.forceActive(name) } else { sections.forceNext(name) }
         return
       }
       if (k.match(/^[a-z][a-z0-9_\.]*$/) && !!v) {
@@ -508,6 +509,12 @@ define((require) => {
   assert(true, sections.next === sections.instances.foo) // Queues the named section as next
   parseLine('set section.active=foo')
   assert(true, sections.pendingActive === sections.instances.foo) // Forces the named section active
+  sections.next = undefined
+  sections.pendingActive = undefined
+  parseLine('set sx.next=foo') // sx is an alias for section
+  assert(true, sections.next === sections.instances.foo)
+  parseLine('set sx.active=foo')
+  assert(true, sections.pendingActive === sections.instances.foo)
   delete sections.instances.foo
   sections.next = undefined
   sections.pendingActive = undefined

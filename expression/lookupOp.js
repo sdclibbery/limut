@@ -57,7 +57,7 @@ define(function(require) {
         lookupOpResult._chordPlaceholder = true
         return lookupOpResult
       }
-      if (ml.toLowerCase() === 'section') { // lookup a param on the currently active section
+      if (sections.isKeyword(ml.toLowerCase())) { // lookup a param on the currently active section (section / sx)
         let section = sections.active
         if (section && section[key] !== undefined) { return evalRecurse(section[key], event,b) }
         return 0
@@ -165,6 +165,8 @@ define(function(require) {
     sections.active = { name:'drop', foo:0.5 }
     assert(0.5, lookupOp('section', 'foo', {},0,er))
     assert(0, lookupOp('section', 'nope', {},0,er)) // Unknown param
+    assert(0.5, lookupOp('sx', 'foo', {},0,er)) // sx is an alias for section
+    assert(0, lookupOp('sx', 'nope', {},0,er))
     sections.active = undefined
     assert(0, lookupOp('section', 'foo', {},0,er)) // No active section
 

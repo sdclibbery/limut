@@ -5,6 +5,11 @@ define(function(require) {
     instances: {},
   }
 
+  // The active-section keyword and its short alias `sx`, recognised in expressions
+  // (section.rise / sx.rise) and in `set` (set section.next=X). Defined here so the
+  // alias lives in one place.
+  sections.isKeyword = (name) => name === 'section' || name === 'sx'
+
   // Define the standard functions every section carries by default (active/timing/existence).
   // They close over the section object and the sections module state, and read section.length
   // dynamically so a later length override is honoured.
@@ -152,6 +157,12 @@ define(function(require) {
       let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
     }
+
+    // isKeyword: the active-section keyword and its short alias
+    assert(true, sections.isKeyword('section'))
+    assert(true, sections.isKeyword('sx'))
+    assert(false, sections.isKeyword('sxx'))
+    assert(false, sections.isKeyword('foo'))
 
     sections.instances = { foo: {name:'foo'}, bar: {name:'bar'} }
     sections.gc_reset()
