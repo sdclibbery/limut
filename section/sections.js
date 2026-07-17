@@ -25,6 +25,7 @@ define(function(require) {
     section.riser  = mk((e,b) => active() ? frac(b) : 0)
     section.rise   = section.riser                              // alias
     section.fall   = mk((e,b) => active() ? 1 - frac(b) : 1)
+    section.count  = mk((e,b) => active() ? sections.activeCount : 0) // which repeat we're on (0-based)
   }
 
   // The default section is an ordinary registry entry named 'default' (not a phantom object)
@@ -46,6 +47,7 @@ define(function(require) {
   sections.next = undefined
   sections.pendingActive = undefined
   sections.activeStartBeat = 0
+  sections.activeCount = 0 // Number of times the active section has finished (reaches .length); resets to 0 when a section becomes active
   sections.hasBlocks = false // True if the latest parsed code contains any section { ... } block; gates auto reruns on section change
   sections.suppressForce = false // Set during automatic section-change reruns so set section.active/next lines in the code don't refire
 
@@ -97,6 +99,7 @@ define(function(require) {
       sections.active = sections.pendingActive
       sections.pendingActive = undefined
       sections.activeStartBeat = beatCount // Always restart from now
+      sections.activeCount = 0             // Reset the repeat counter on becoming active
       sections.applyNext(sections.active)
       return sections.active !== previous
     }
@@ -104,15 +107,25 @@ define(function(require) {
       // First run — start the default section
       sections.active = sections.default
       sections.activeStartBeat = beatCount
+      sections.activeCount = 0
       sections.applyNext(sections.active)
       return true
     }
     if (beatCount >= sections.activeStartBeat + sections.active.length) {
+      sections.activeCount += 1 // This section just finished one play
+      let repeat = sections.active.repeat
+      if (repeat !== undefined && sections.activeCount < repeat) {
+        // Repeat the same section: replay from the top (so time/riser/fall reset) but keep the
+        // queued next and don't report a change, so section-scoped block code is not re-run.
+        sections.activeStartBeat = beatCount
+        return false
+      }
       let ended = sections.active
       let next = sections.next || sections.default
       sections.next = undefined
       sections.active = next
       sections.activeStartBeat = beatCount
+      sections.activeCount = 0 // New section becomes active
       sections.applyNext(sections.active)
       return sections.active !== ended
     }
@@ -457,11 +470,68 @@ define(function(require) {
 
     sections.instances = { default: sections.makeDefault() } // Keep the built-in default registered
 
+    // repeat/count: a section repeats `repeat` times (activeCount 0..repeat-1) before advancing
+    let rep = { name:'rep', length:8, repeat:3 }
+    let after = { name:'after', length:8 }
+    sections.instances = { rep: rep, after: after, default: sections.makeDefault() }
+    sections.active = undefined
+    sections.next = undefined
+    sections.pendingActive = rep
+    sections.activeStartBeat = 0
+
+    // Becomes active -> count resets to 0
+    sections.update(0)
+    assert(true, sections.active === rep)
+    assert(0, sections.activeCount)
+    sections.next = after // queue what follows the final repeat
+
+    // 1st finish -> count 1, repeats (still active, next not consumed, no change reported, restart)
+    assert(false, sections.update(8))
+    assert(true, sections.active === rep)
+    assert(1, sections.activeCount)
+    assert(true, sections.next === after) // next preserved across repeats
+    assert(8, sections.activeStartBeat)   // replayed from the top
+
+    // 2nd finish -> count 2, still repeating
+    assert(false, sections.update(16))
+    assert(true, sections.active === rep)
+    assert(2, sections.activeCount)
+    assert(true, sections.next === after)
+
+    // 3rd finish -> count reaches repeat, advances to next; counter resets for the new section
+    assert(true, sections.update(24))
+    assert(true, sections.active === after)
+    assert(0, sections.activeCount)
+    assert(undefined, sections.next)      // next consumed on the final advance
+
+    // count standard param reads activeCount when active, 0 when inactive
+    let cs = { name:'cs', length:8 }
+    sections.addStandardParams(cs)
+    sections.active = cs
+    sections.activeCount = 2
+    assert(2, cs.count({},0))
+    sections.active = undefined
+    assert(0, cs.count({},0))
+
+    // A section without repeat advances after a single play (unchanged behaviour)
+    let once = { name:'once', length:8 }
+    sections.instances = { once: once, after: after, default: sections.makeDefault() }
+    sections.active = undefined
+    sections.next = after
+    sections.pendingActive = once
+    sections.update(0)
+    assert(true, sections.active === once)
+    assert(true, sections.update(8))
+    assert(true, sections.active === after) // advanced after one play, no repeat
+
+    sections.instances = { default: sections.makeDefault() } // Keep the built-in default registered
+
     // Restore so it doesn't leak into the running app
     sections.active = undefined
     sections.next = undefined
     sections.pendingActive = undefined
     sections.activeStartBeat = 0
+    sections.activeCount = 0
 
     console.log('Sections tests complete')
   }

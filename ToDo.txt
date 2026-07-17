@@ -2,15 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================Pitch fx to support @s
 Musical Structure
- !Sections should be cleaned up (GC) if they are no longer in the code.
-  If the active section is removed, fall back to default
-  If the next section is removed, go to default next
-  Default cannot be cleaned up
- Add sx as alias for the "section" global
- If you want to, eg, define the chords in a section, how to do it consistently given the section may start at any time?
-  []l{time:time=sx.start}
-  ???Patterns should always be relative to section start???? Or not??
- ?If you define sections within a section, they become their own thing with two levels of active section etc?
  Section repeats with count, readout, can set repeats, .repeat is evalled
  Sections .next, .repeat and .length are evalled (once only when section first becomes active), so can use []r etc
  Can access repeat count on active section. And also total riser across all repeats. And also count of total number of times section has played
@@ -18,6 +9,10 @@ Musical Structure
  Can set section params as overrides, including length, including for default section, eg set default length=8
  !Can't do set section.next=default ??
  ?Can base one section on another, and add more stuff on top? Can group sections into higher level structures??
+ ?If you want to, eg, define the chords in a section, how to do it consistently given the section may start at any time?
+  []l{time:time=sx.start}
+  ???Patterns should always be relative to section start???? Or not??
+ ?If you define sections within a section, they become their own thing with two levels of active section etc?
  ?Can define transitions between two given sections, with extra players etc
 !superosc cant take positional freq; should be able to play=superosc{440}
 !superosc docs should have params on sepearte sub paragraphs

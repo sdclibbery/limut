@@ -335,7 +335,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <h4 onclick="toggleAccordion('accordion-indicators')" class="accordion"> Indicators</h4>
 <div id="accordion-indicators" class="closed">
   <p><b>Level</b> VU meter for current output signal level. Use this when adjusting the output level, using either <code>set main amp</code> or the level slider, so it is just touching the red at its loudest. Only one active channel is shown if the mix is fully mono.</p>
-  <p><b>Beat</b> Current audio system beat count, plus section info (current active section, count through active section, and next queued up section<./p>
+  <p><b>Beat</b> Current audio system beat count, plus section info (current active section, count through active section, the current play out of the section's <code>repeat</code> if it has one, and next queued up section<./p>
   <p><b>Audio</b> Audio lag; green when the browser audio system is keeping up; turns red when the system is struggling, which may lead to audio glitching</p>
   <p><b>Visual</b> Visual lag; green when the framerate is keeping up to 60 fps; turns red when the system is struggling, which may lead to visual glitching</p>
   <p><b>Limiter</b> Audio limiter: turns red when the internal Limut limiter is active, implying the combined audio sources are too loud. Note this limiter is before the <code>main amp</code> control and vu meter, it makes sure the levels from individual synths do not go so loud as to distort. So if it is lighting up, lower the <code>amp</code> on individual synths, and if necessary, raise the <code>main amp</code> level to compensate.</p>
@@ -432,6 +432,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>params</code> Comma separated list of params (eg <code>riser=[0:1]l16@f</code>), evaluated the same way as player params. Any param can be looked up from the section; see 'Value Syntax' below.</p>
 <p class='sub'><code>length</code> The length of the section in beats. Defaults to 32. When the active section has been playing for this many beats it ends and the next section starts.</p>
 <p class='sub'><code>next</code> The name of the section to queue when this section becomes active, eg <code>verse section, next=chorus</code>. This lets each section declare its own successor, so the piece sequences itself; if two sections name each other (<code>verse</code>&rarr;<code>chorus</code>, <code>chorus</code>&rarr;<code>verse</code>) they alternate indefinitely. An explicit <code>set section.next=name</code> still overrides the declared next.</p>
+<p class='sub'><code>repeat</code> The number of times the section plays before advancing to <code>next</code>, eg <code>verse section, length=8, repeat=4, next=chorus</code> plays verse four times (32 beats) then moves to chorus. Each repeat replays from the top (so <code>time</code>/<code>riser</code>/<code>fall</code> reset), while section-scoped block players keep sounding continuously. With no <code>repeat</code> the section plays once.</p>
 <h6>Standard section functions:</h6>
 <p>Every section (including the built in <code>default</code>) automatically defines these functions, so you can drive players and vars off which section is playing and how far through it we are without any extra setup. Look them up with <code>section.name</code> (the active section) or <code>drop.name</code> (a named section). <code>sx</code> is a short alias for <code>section</code>, so <code>sx.riser</code> is the same as <code>section.riser</code>. You can override any of them by giving the section a param of the same name.</p>
 <p class='sub'><code>active</code> 1 when the section is the active section, 0 otherwise.</p>
@@ -441,6 +442,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>riser</code> Ramps from 0 at the start of the section to 1 at its end. 0 when the section is not active.</p>
 <p class='sub'><code>rise</code> Alias for <code>riser</code>.</p>
 <p class='sub'><code>fall</code> Ramps from 1 at the start of the section to 0 at its end. 1 when the section is not active.</p>
+<p class='sub'><code>count</code> Which repeat of the section is currently playing, counting from 0. Resets to 0 when the section becomes active and increases by 1 each time it reaches its <code>length</code>. Handy with <code>repeat</code>, eg <code>section.count==section.repeat-1</code> is 1 on the final repeat. 0 when the section is not active.</p>
 <h6>Section-scoped code:</h6>
 <p>Block structure:
   <pre>
@@ -455,8 +457,8 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>set section.active=name</code> and <code>set section.next=name</code> lines are ignored during these automatic re-runs (otherwise they would refire on every section change); they still apply on a normal code update.</p>
 <h6>Section timing:</h6>
 <p>There is always exactly one active section. Before you define or select any section, a built in <code>default</code> section (length 4) is active and repeats forever, so section param lookups always resolve. The <code>default</code> section is an ordinary section: you can redefine it like any other &mdash; give it a <code>length</code>, params, a <code>next</code>, or a <code>default section { ... }</code> code block &mdash; and refer to it by name (<code>default.riser</code>, <code>set section.next=default</code>). Redefining it with no explicit <code>length</code> keeps its 4 beat default; remove the redefinition and it reverts to the built in baseline.</p>
-<p>When the active section reaches its <code>length</code>, playback advances to the queued next section (or back to the <code>default</code> section if none is queued). Queuing a next section consumes it; once it becomes active there is again no next queued, so unless you queue another the piece falls back to the default section after it.</p>
-<p>The readout in the top bar shows the active section, how many beats into it we are, its length, and the next section; eg <code>drop 5/16 -&gt; default</code>.</p>
+<p>When the active section reaches its <code>length</code>, playback advances to the queued next section (or back to the <code>default</code> section if none is queued) &mdash; unless it has a <code>repeat</code> and has not yet played that many times, in which case it replays instead. Queuing a next section consumes it; once it becomes active there is again no next queued, so unless you queue another the piece falls back to the default section after it.</p>
+<p>The readout in the top bar shows the active section, how many beats into it we are, its length, and the next section; eg <code>drop 5/16 -&gt; default</code>. When the section has a <code>repeat</code> it also shows the current play, eg <code>drop 5/16 (2/4) -&gt; default</code>.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-pattern-syntax')" class="accordion"> Patterns</h4>
 <div id="accordion-pattern-syntax" class="closed">
