@@ -1,5 +1,7 @@
 'use strict'
 define(function(require) {
+  let {evalParamFrame} = require('player/eval-param')
+  let {mainParam} = require('player/sub-param')
 
   let sections = {
     instances: {},
@@ -58,7 +60,16 @@ define(function(require) {
     let old = sections.instances[name]
     sections.instances[name] = section
     if (old) {
-      if (sections.active === old) { sections.active = section }
+      if (sections.active === old) {
+        sections.active = section
+        // Redefining the *running* section (eg the section-change auto-rerun swaps the object)
+        // must not lose a length/repeat that was resolved from a random/time-var spec when the
+        // section became active. Carry the resolved value over so it holds for the whole run
+        // instead of reverting to the default and re-rolling. Constant params carry no spec, so a
+        // genuine length/repeat edit still takes effect immediately.
+        if (section.lengthSpec !== undefined) { section.length = old.length }
+        if (section.repeatSpec !== undefined && old.repeat !== undefined) { section.repeat = old.repeat }
+      }
       if (sections.next === old) { sections.next = section }
       if (sections.pendingActive === old) { sections.pendingActive = section }
     }
@@ -80,14 +91,41 @@ define(function(require) {
     sections.pendingActive = s
   }
 
+  // Evaluate the length/repeat specs (non-constant expressions like length=[4,8]r) into concrete
+  // numbers, held for this run. Called when a section becomes active so a random/time-var value
+  // is picked once at activation and stays fixed for the whole run (including its repeats).
+  // Constant params carry no spec, so this is a no-op for them.
+  sections.resolveActiveParams = (section, beatCount) => {
+    if (!section) { return }
+    let event = { count: beatCount, idx: 0, _time: beatCount }
+    if (section.lengthSpec !== undefined) {
+      let v = mainParam(evalParamFrame(section.lengthSpec, event, beatCount))
+      if (typeof v === 'number' && isFinite(v) && v > 0) { section.length = v }
+    }
+    if (section.repeatSpec !== undefined) {
+      let v = mainParam(evalParamFrame(section.repeatSpec, event, beatCount))
+      if (typeof v === 'number' && isFinite(v)) { section.repeat = v }
+    }
+  }
+
   // When a section becomes current, schedule its declared follow-on (its `next` param) as the next
   // section, so the piece sequences itself. Runs after sections.next has been consumed by an advance,
-  // so a section that names its own successor (verse->chorus->verse...) keeps looping.
-  sections.applyNext = (section) => {
-    if (!section || !section.nextName) { return }
-    let s = sections.getByName(section.nextName)
+  // so a section that names its own successor (verse->chorus->verse...) keeps looping. A `next`
+  // expression (nextSpec, eg next=(chorus,verse)r) is evaluated to a section name at activation.
+  sections.applyNext = (section, beatCount) => {
+    if (!section) { return }
+    let name = section.nextName
+    if (section.nextSpec !== undefined) {
+      let event = { count: beatCount, idx: 0, _time: beatCount }
+      let v = evalParamFrame(section.nextSpec, event, beatCount)
+      if (Array.isArray(v)) { v = v[0] } // A plain chord: take the first; use `r` to pick randomly
+      v = mainParam(v)
+      if (typeof v === 'string') { name = v.toLowerCase() }
+    }
+    if (!name) { return }
+    let s = sections.getByName(name)
     if (s) { sections.next = s }
-    else { console.log(`Section '${section.nextName}' not found (${section.name}.next)`) }
+    else { console.log(`Section '${name}' not found (${section.name}.next)`) }
   }
 
   // Advance/switch the active section for this beat. Returns true if the active section
@@ -100,7 +138,8 @@ define(function(require) {
       sections.pendingActive = undefined
       sections.activeStartBeat = beatCount // Always restart from now
       sections.activeCount = 0             // Reset the repeat counter on becoming active
-      sections.applyNext(sections.active)
+      sections.resolveActiveParams(sections.active, beatCount)
+      sections.applyNext(sections.active, beatCount)
       return sections.active !== previous
     }
     if (!sections.active) {
@@ -108,7 +147,8 @@ define(function(require) {
       sections.active = sections.default
       sections.activeStartBeat = beatCount
       sections.activeCount = 0
-      sections.applyNext(sections.active)
+      sections.resolveActiveParams(sections.active, beatCount)
+      sections.applyNext(sections.active, beatCount)
       return true
     }
     if (beatCount >= sections.activeStartBeat + sections.active.length) {
@@ -126,7 +166,8 @@ define(function(require) {
       sections.active = next
       sections.activeStartBeat = beatCount
       sections.activeCount = 0 // New section becomes active
-      sections.applyNext(sections.active)
+      sections.resolveActiveParams(sections.active, beatCount)
+      sections.applyNext(sections.active, beatCount)
       return sections.active !== ended
     }
     return false
@@ -315,6 +356,21 @@ define(function(require) {
     assert(true, sections.active === d2)        // active pointer follows the redefinition
     assert(true, sections.next === d2)
     assert(true, sections.pendingActive === d2)
+    assert(16, sections.active.length)          // a constant length edit takes effect immediately
+
+    // Redefining the running section carries a spec-resolved length/repeat over to the new object
+    // (so the auto-rerun swap doesn't revert to the default and re-roll a random length)
+    sections.instances = {}
+    sections.active = sections.next = sections.pendingActive = undefined
+    let r1 = { name:'r', length:6, repeat:2 } // resolved values from a previous activation
+    sections.define('r', r1)
+    sections.active = r1
+    let r2 = { name:'r', length:32, repeat:undefined, lengthSpec:(e,b)=>4, repeatSpec:(e,b)=>3 } // fresh reparse: default length, specs present
+    sections.define('r', r2)
+    assert(true, sections.active === r2)
+    assert(6, sections.active.length)           // resolved length carried over, not the default 32
+    assert(2, sections.active.repeat)           // resolved repeat carried over
+    sections.active = undefined
 
     // reported bug: redefining the active section must keep its standard functions live
     sections.next = sections.pendingActive = undefined
@@ -523,6 +579,60 @@ define(function(require) {
     assert(true, sections.active === once)
     assert(true, sections.update(8))
     assert(true, sections.active === after) // advanced after one play, no repeat
+
+    sections.instances = { default: sections.makeDefault() } // Keep the built-in default registered
+
+    // resolveActiveParams: length/repeat specs (non-constant expressions) resolve to concrete numbers
+    let rap = { name:'rap', length:32 }
+    rap.lengthSpec = (e,b) => 6
+    rap.repeatSpec = (e,b) => 2
+    sections.resolveActiveParams(rap, 0)
+    assert(6, rap.length)   // spec evaluated into length
+    assert(2, rap.repeat)   // spec evaluated into repeat
+    // A section with no specs is untouched
+    let noSpec = { name:'nospec', length:8 }
+    sections.resolveActiveParams(noSpec, 0)
+    assert(8, noSpec.length)
+    assert(undefined, noSpec.repeat)
+
+    // A length spec resolves once per activation and is held for the run (not re-evalled per repeat)
+    let vary = { name:'vary', length:32, repeat:3, lengthSpec:(e,b) => b < 10 ? 4 : 8 }
+    sections.instances = { vary: vary, default: sections.makeDefault() }
+    sections.active = undefined; sections.next = undefined; sections.pendingActive = vary
+    sections.activeStartBeat = 0; sections.activeCount = 0
+    sections.update(0)                        // becomes active at beat 0 -> length resolves to 4
+    assert(true, sections.active === vary)
+    assert(4, vary.length)
+    assert(false, sections.update(4))         // 1st finish: repeats, length unchanged (not re-resolved)
+    assert(4, vary.length)
+    assert(1, sections.activeCount)
+    sections.pendingActive = vary             // force a fresh activation later
+    sections.update(20)                       // re-resolves at beat 20 -> length 8
+    assert(8, vary.length)
+
+    // applyNext with a nextSpec evaluates to a named section
+    sections.instances = { chorus: {name:'chorus', length:8}, verse: {name:'verse', length:8} }
+    sections.next = undefined
+    sections.applyNext({ name:'ns', nextSpec:(e,b) => 'Chorus' }, 0) // name lowercased on lookup
+    assert(true, sections.next === sections.instances.chorus)
+
+    // A nextSpec returning an array (plain chord) queues its first element
+    sections.next = undefined
+    sections.applyNext({ name:'na', nextSpec:(e,b) => ['verse','chorus'] }, 0)
+    assert(true, sections.next === sections.instances.verse)
+
+    // A nextSpec that varies (eg a random pick) always queues a valid section, re-chosen per activation
+    let rnd = { name:'rnd', nextSpec:(e,b) => ['verse','chorus'][b % 2] }
+    for (let i=0; i<8; i++) {
+      sections.next = undefined
+      sections.applyNext(rnd, i)
+      assert(true, sections.next === sections.instances.verse || sections.next === sections.instances.chorus)
+    }
+
+    // Legacy nextName (no spec) still works
+    sections.next = undefined
+    sections.applyNext({ name:'legacy', nextName:'verse' }, 0)
+    assert(true, sections.next === sections.instances.verse)
 
     sections.instances = { default: sections.makeDefault() } // Keep the built-in default registered
 

@@ -194,11 +194,18 @@ define((require) => {
       let section = { name: name, length: name === 'default' ? 4 : 32 } // default length 32 beats (the built-in default stays 4)
       sections.addStandardParams(section) // standard active/timing functions; overridable by params below
       let params = parseParams(paramsStr, name)
-      // `next` names the section to queue when this one becomes current; keep the raw name (like
-      // set section.next=X), not an evalled expression, so section verse, next=chorus follows on to chorus.
-      let nextMatch = paramsStr && paramsStr.match(/(?:^|,)\s*next\s*=\s*([_a-zA-Z]\w*)/i)
+      // `next` names the section to queue when this one becomes current. A single bare identifier
+      // (next=chorus) is kept as the raw name (like set section.next=X). Anything else (next=(a,b)r)
+      // is stored as an expression spec, evaluated to a section name when the section becomes active.
+      let nextMatch = paramsStr && paramsStr.match(/(?:^|,)\s*next\s*=\s*([_a-zA-Z]\w*)\s*(?:,|$)/i)
       if (nextMatch) { section.nextName = nextMatch[1].toLowerCase(); delete params.next }
-      for (let k in params) { section[k] = params[k] }
+      else if (params.next !== undefined) { section.nextSpec = params.next; delete params.next }
+      // length/repeat expressions (eg length=[4,8]r) are held as specs and evaluated when the
+      // section becomes active; constants fold to numbers and are assigned straight through.
+      for (let k in params) {
+        if ((k === 'length' || k === 'repeat') && typeof params[k] === 'function') { section[k+'Spec'] = params[k] }
+        else { section[k] = params[k] }
+      }
       sections.define(name, section) // register, rebinding active/next pointers if redefining the live section
       if (sections.active && sections.active.name === name) { // Compare by name so the built-in default section matches too
         for (let cmd of bodyCommands) {
@@ -493,6 +500,21 @@ define((require) => {
   parseLine('foo section, length=8, next=Bar') // next name is lowercased; coexists with other params
   assert('bar', sections.instances.foo.nextName)
   assert(8, sections.instances.foo.length)
+  delete sections.instances.foo
+
+  // A non-constant length expression is held as a spec (evaluated when the section becomes active),
+  // leaving the default length in place until then
+  parseLine('foo section, length=[4,8]r')
+  assert('function', typeof sections.instances.foo.lengthSpec)
+  assert(32, sections.instances.foo.length) // default until first activation
+  sections.resolveActiveParams(sections.instances.foo, 0)
+  assert(true, [4,8].includes(sections.instances.foo.length)) // resolves to one of the choices
+  delete sections.instances.foo
+
+  // A non-constant next expression is held as a nextSpec, not the raw-name fast path
+  parseLine('foo section, next=(bar,baz)r')
+  assert('function', typeof sections.instances.foo.nextSpec)
+  assert(undefined, sections.instances.foo.nextName)
   delete sections.instances.foo
 
   parseLine('foo section, bar=2')
