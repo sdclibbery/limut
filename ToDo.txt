@@ -1,12 +1,19 @@
 =================================================================================================================================
 =================================================================================================================================
-=================================================================================================================================Pitch fx to support @s
+=================================================================================================================================
+Epic supersaw needs to be a preset; needs cutoff etc:
+  k audiosynth keyboard, play={osc.tri{eventpitch/2}*3/2,superosc{freq:eventpitch*(1+chaos{3.71Hz}*0.04+chaos{3.64Hz}*0.04),unison:15}}, oct=3, envelope='full', rel=1
+Also should do the sweepy thing
+  a audiosynth, fx=superosc{pitch{oct:1}, unison:{6,detune:1.02}, formant:[0.99,1.01]n19}>>lpf{800+8000*[]n23^3}*0.015>>mix{hpf{1000}>>airverb}
 Musical Structure
- Sections .next, .repeat and .length are evalled (once only when section first becomes active), so can use []r etc
+ ?Is there a clean way not to have to have the :99 ??
+   ?How about [1:2,3:]{sx.time}  means 1 for 2 beats, then 3 indefinitely, not repeating?
+ Add .rtime as (length-time), then you can  set p* delay|=[[1,3]r/4:_2,()]{sx.rtime}
+ Can do chords with  set !p* add+=[0:_8,2:_8,3:_8,0:]{sx.time}
  Can set section params as overrides, including length, including for default section, eg set default length=8
  ?If you want to, eg, define the chords in a section, how to do it consistently given the section may start at any time?
-  []l{time:time=sx.start}
-  ???Patterns should always be relative to section start???? Or not??
+  []l{time:time-sx.start} - ok but yuck
+ ???Pattern timing should always be relative to section start???? Or not??
  ?Can base one section on another, and add more stuff on top? Can group sections into higher level structures??
  ?If you define sections within a section, they become their own thing with two levels of active section etc?
  ?Can define transitions between two given sections, with extra players etc

@@ -5474,4 +5474,25 @@ a audiosynth 097 crop 14 + 68, dur=1/2, play=superosc{freq:eventpitch*(1+chaos{3
 
 // a audiosynth, fx=superosc{220, wavetable:'sample/wt64/CYBORG.WAV', wt:slider}*0.005
 
+default section {
+	r readout, add=[]r
+}, next=a
+a section {
+	r readout, add=sx.count, fore=red, fade
+}, length=[4,8]r, foo=3, next=[b,c]r
+b section {
+	r readout, add=sx.count, fore=green, fade
+}, length=4, foo=4, next=a, repeat=[1,2]r
+c section {
+	r readout, add=sx.count, fore=blue, fade
+}, length=4, foo=4, next=a
+// set sx.next=default
+
+// drop section, foo=2, length=8, next=bridge
+// bridge section, foo=4, length=8
+// set section.next=drop
+// r readout, add=section.foo
+
+// a audiosynth 097 crop 14 + 68, dur=1/2, play=superosc{freq:eventpitch*(1+chaos{3.71Hz}*0.06+chaos{3.64Hz}*0.06),unison:15}>>lpf4{[1/3,1]l8@s^2*[20000:!350ms,this.freq]e@s}, oct=3, envelope='full', rel=1, fx=mix{hpf{300}>>lpf{800}>>airverb}>>stanh
+
 

@@ -79,6 +79,7 @@ define(function(require) {
       p = mainParam(p) || 0
       let pieceParam = typeof p !== 'function' ? p : evalFunctionWithModifiers(p, e,b,evalRecurse)
       if (typeof pieceParam === 'function') { pieceParam = evalRecurse(pieceParam, e,b) } // If its still a function, eval it
+      pieceParam = mainParam(pieceParam) // Unwrap {value, interval} wrappers from frame-interval accessors (e.g. sx.time)
       if (!Number.isFinite(pieceParam)) {
         consoleOut(`🟠 Warning invalid piecewise piece param: ${p} ${b} ${pieceParam}`)
         return 0
@@ -158,6 +159,12 @@ define(function(require) {
     x = 1; assert(2, evalParamFrame(pw,ev(0),0))
     x = 3/2; assert(1, evalParamFrame(pw,ev(0),0))
     x = 2; assert(0, evalParamFrame(pw,ev(0),0))
+
+    let getWrapped = (e,b) => ({value: x, interval: 'frame'}) // mimics a frame-interval accessor (e.g. sx.time) wrapped under withInterval
+    pw = piecewise([0,2], [lin,lin], [1,1], getWrapped, {})
+    x = 0; assert(0, evalParamFrame(pw,ev(0),0))
+    x = 1/2; assert(1, evalParamFrame(pw,ev(0),0))
+    x = 1; assert(2, evalParamFrame(pw,ev(0),0))
 
     pw = piecewise([0,2], [sqr,sqr], [2,2], getx, {})
     x = 0; assert(0, evalParamFrame(pw,ev(0),0))
