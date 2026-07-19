@@ -34,15 +34,17 @@ define(function(require) {
   iOperators['^'].segmentPower = 3
   iOperators['^'].isParameterised = true
 
-  let parseEntry = (state, vs, is, ss) => {
+  let parseEntry = (state, vs, is, ss, hs) => {
     eatWhitespace(state)
     let v = state.expression(state)
     if (v === undefined) { return false }
     let n1 = undefined
     let n2 = undefined
     let i = undefined
+    let colonSeen = false
     eatWhitespace(state)
     if (state.str.charAt(state.idx) === ':') {
+      colonSeen = true
       state.idx+=1
       let char = state.str.charAt(state.idx) // interpolation operator
       if (iOperators[char]) {
@@ -76,9 +78,11 @@ define(function(require) {
         s = n1
       }
     }
+    let hold = colonSeen && (i === undefined) && (s === undefined) // A bare colon (no operator, no size) marks a "hold forever" (no repeat) segment
     vs.push(v)
     is.push(i)
     ss.push(s)
+    hs.push(hold)
     eatWhitespace(state)
     if (state.str.charAt(state.idx) === ',') { state.idx+=1 }
     return true
@@ -91,9 +95,12 @@ define(function(require) {
     let vs = []
     let is = []
     let ss = []
-    while (parseEntry(state, vs, is, ss)) {}
+    let hs = []
+    while (parseEntry(state, vs, is, ss, hs)) {}
     if (state.str.charAt(state.idx) === ']') { state.idx+=1 }
-    return {vs:vs,is:is,ss:ss}
+    let ret = {vs:vs,is:is,ss:ss}
+    if (hs.length && hs[hs.length-1]) { ret.hold = true } // Trailing colon on the last value => hold/clamp (see maybeClamp)
+    return ret
   }
 
   let numberOrArray = (state) => {
@@ -142,8 +149,9 @@ define(function(require) {
     return result
   }
 
-  let maybeClamp = (modifiers, ss, options) => {
-    if (!!modifiers && modifiers.repeat !== undefined && !modifiers.repeat) {
+  let maybeClamp = (modifiers, ss, hold, options) => {
+    let noRepeat = hold || (!!modifiers && modifiers.repeat !== undefined && !modifiers.repeat) // Trailing-colon "hold" or repeat:0 both clamp
+    if (noRepeat) {
       if (options === undefined) { options = {} }
       options.clamp = true
       if (ss[ss.length-1] === undefined) { ss[ss.length-1] = 0 } // If not repeating, last segment should end at zero unless specified otherwise
@@ -176,13 +184,14 @@ define(function(require) {
     if (state.str.charAt(state.idx) !== '[') { return undefined }
     let rState = Object.assign({}, state)
     let rvs = parseRangeArray(rState)
-    let {vs,is,ss} = parsePiecewiseArray(state)
+    let {vs,is,ss,hold} = parsePiecewiseArray(state)
     let ranged = rvs !== undefined
     if (ranged) { // Use parseRangeArray to keep old style [1:4] range syntax going
       Object.assign(state, rState)
       vs = rvs
       is = rvs.map(() => undefined)
       ss = rvs.map(() => undefined)
+      hold = false // Range-sweep path doesn't support the trailing-colon hold marker
     }
     let result
     if (state.str.charAt(state.idx).toLowerCase() == 't') { // timevar; values per time interval
@@ -192,7 +201,7 @@ define(function(require) {
       let modifiers = parseMap(state)
       interval = interval || parseInterval(state) || hoistInterval('event', vs)
       is = is.map(i => getOperator(i))
-      let options = maybeAddSegmentData(maybeClamp(modifiers, ss), interval)
+      let options = maybeAddSegmentData(maybeClamp(modifiers, ss, hold), interval)
       if (ranged) {
         result = rangeTimeVar(vs, ds, options)
       } else {
@@ -208,7 +217,7 @@ define(function(require) {
       let modifiers = parseMap(state)
       interval = interval || parseInterval(state) || hoistInterval('event', vs)
       is = is.map(i => getOperator(i))
-      let options = maybeAddSegmentData(maybeClamp(modifiers, ss), interval)
+      let options = maybeAddSegmentData(maybeClamp(modifiers, ss, hold), interval)
       result = timeVar(vs, is, ss, ds, iOperators['/'], options)
       result = addModifiers(result, modifiers)
       interval = frameIfNestedFrame(interval, options && options.addSegmentData, vs)
@@ -220,7 +229,7 @@ define(function(require) {
       let modifiers = parseMap(state)
       is = is.map(i => getOperator(i))
       interval = interval || parseInterval(state) || hoistInterval('event', vs)
-      let options = maybeAddSegmentData(maybeClamp(modifiers, ss), interval)
+      let options = maybeAddSegmentData(maybeClamp(modifiers, ss, hold), interval)
       result = timeVar(vs, is, ss, ds, iOperators['~'], options)
       result = addModifiers(result, modifiers)
       interval = frameIfNestedFrame(interval, options && options.addSegmentData, vs)
@@ -280,7 +289,7 @@ define(function(require) {
       if (modifiers === undefined) { modifiers = {value: (e,b) => e.idx} } // Default to index with event index
       if (modifiers.value === undefined) { modifiers.value = (e,b) => e.idx } // Default to index with event index
       is = is.map(i => getOperator(i || '/')) // Default to linear interpolation
-      let options = maybeClamp(modifiers, ss)
+      let options = maybeClamp(modifiers, ss, hold)
       ss = ss.map(s => s!==undefined ? s : 1) // Default to size 1
       if (vs.length === 0) {
         result = addModifiers(piecewise([0,1], [getOperator('/'),getOperator('/')], [1,1], modifiers.value, options), modifiers)
@@ -338,8 +347,8 @@ define(function(require) {
     assert({vs:[5],is:[undefined],ss:[undefined]}, parsePiecewiseArray(st('[5')))
     assert({vs:[5],is:[undefined],ss:[undefined]}, parsePiecewiseArray(st('[5]]')))
     assert({vs:[5],is:[undefined],ss:[undefined]}, parsePiecewiseArray(st('[5,]')))
-    assert({vs:[5],is:[undefined],ss:[undefined]}, parsePiecewiseArray(st('[5:]')))
-    assert({vs:[5],is:[undefined],ss:[undefined]}, parsePiecewiseArray(st('[5:,]')))
+    assert({vs:[5],is:[undefined],ss:[undefined],hold:true}, parsePiecewiseArray(st('[5:]'))) // bare trailing colon => hold/no-repeat marker
+    assert({vs:[5],is:[undefined],ss:[undefined],hold:true}, parsePiecewiseArray(st('[5:,]')))
     assert({vs:[5],is:[undefined],ss:[1]}, parsePiecewiseArray(st('[5:1]')))
     assert({vs:[5],is:[undefined],ss:[1]}, parsePiecewiseArray(st('[5:1,]')))
     assert({vs:[5],is:['/'],ss:[undefined]}, parsePiecewiseArray(st('[5:/]')))
@@ -358,6 +367,13 @@ define(function(require) {
     assert({vs:[5,6],is:['/','_'],ss:[1,2]}, parsePiecewiseArray(st('[5:/1,6:_2,]')))
     assert({vs:[5,6],is:[undefined,undefined],ss:[1,2]}, parsePiecewiseArray(st('[5:1,6:2,]')))
     assert({vs:[5,6,7],is:['/','_',undefined],ss:[1,2,undefined]}, parsePiecewiseArray(st('[5:/1,6:_2,7]')))
+
+    // Trailing-colon "hold" marker: only a bare colon on the LAST value sets hold
+    assert({vs:[5,6],is:[undefined,undefined],ss:[1,undefined],hold:true}, parsePiecewiseArray(st('[5:1,6:]')))
+    assert({vs:[5,6],is:[undefined,undefined],ss:[undefined,undefined]}, parsePiecewiseArray(st('[5,6]'))) // no colon => no hold
+    assert({vs:[5,6],is:[undefined,undefined],ss:[1,undefined]}, parsePiecewiseArray(st('[5:1,6]'))) // no trailing colon => no hold
+    assert({vs:[5,6],is:[undefined,undefined],ss:[undefined,undefined]}, parsePiecewiseArray(st('[5:,6]'))) // colon on a middle value => no hold (only last counts)
+    assert({vs:[5,6],is:['/','_'],ss:[undefined,undefined]}, parsePiecewiseArray(st('[5:/,6:_]'))) // trailing operator (no size) is NOT hold (preserves eg [0:_1,1:\])
 
     assert({vs:[5,6],is:[undefined,undefined],ss:[1,undefined]}, parsePiecewiseArray(st('[5::1,6]')))
     assert({vs:[5,6],is:[undefined,undefined],ss:[1,undefined]}, parsePiecewiseArray(st('[5 : : 1,6]')))

@@ -2229,6 +2229,27 @@ define(function(require) {
   assert(1/2, evalParamFrame(parseExpression("[0,1]s1{repeat:0}@f"), ev(), 1/2))
   assert(1, evalParamFrame(parseExpression("[0,1]s1{repeat:0}@f"), ev(), 3/2))
 
+  // A bare trailing colon on the last value is shorthand for repeat:0 (hold/clamp the final value)
+  assert(0, evalParamFrame(parseExpression("[0,1:]{time-1}"), e, 0))
+  assert(0, evalParamFrame(parseExpression("[0,1:]{time-1}"), e, 1))
+  assert(1/2, evalParamFrame(parseExpression("[0,1:]{time-1}"), e, 3/2))
+  assert(1, evalParamFrame(parseExpression("[0,1:]{time-1}"), e, 2))
+  assert(1, evalParamFrame(parseExpression("[0,1:]{time-1}"), e, 3))
+  assert(1, evalParamFrame(parseExpression("[0,1:]{time-1}"), e, 4))
+  assert(0, evalParamFrame(parseExpression("[0,1:]"), ev(0), 0))
+  assert(1, evalParamFrame(parseExpression("[0,1:]"), ev(2), 0))
+  assert(0, evalParamFrame(parseExpression("[0,1:]t1@f"), ev(), 1/2))
+  assert(1, evalParamFrame(parseExpression("[0,1:]t1@f"), ev(), 3/2))
+  assert(1/2, evalParamFrame(parseExpression("[0,1:]l1@f"), ev(), 1/2))
+  assert(1, evalParamFrame(parseExpression("[0,1:]l1@f"), ev(), 3/2))
+  assert(1/2, evalParamFrame(parseExpression("[0,1:]s1@f"), ev(), 1/2))
+  assert(1, evalParamFrame(parseExpression("[0,1:]s1@f"), ev(), 3/2))
+  // Headline case: ramp 1->3 over 2 beats then hold 3
+  assert(1, evalParamFrame(parseExpression("[1:\\2,3:]{time}"), e, 0))
+  assert(2, evalParamFrame(parseExpression("[1:\\2,3:]{time}"), e, 1))
+  assert(3, evalParamFrame(parseExpression("[1:\\2,3:]{time}"), e, 2))
+  assert(3, evalParamFrame(parseExpression("[1:\\2,3:]{time}"), e, 3))
+
   vars.foo = () => 3
   vars.foo.isVarfunction = true
   vars.foo.bar = () => 5

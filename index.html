@@ -558,6 +558,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>t1 etc</code> The amount of parameter p travel between this value and the next; note the sequence wraps round. Default time unit: beats.</p>
 <p class='sub'><code>p</code> Parameter expression giving the current point of travel through the piecewise series</p>
 <p class='sub'><code>repeat</code> Optional repeat parameter. Leave out for a repeating pattern, set to zero to disable repeat and clamp the value when the parameter is less than zero or greater than the full length of the piecewise.</p>
+<p class='sub'><code>vN:</code> A trailing colon with no size on the last value is shorthand for <code>repeat:0</code>; the final value holds forever instead of the series repeating. For example <code>[1:\2,3:]{x}</code> is equivalent to <code>[1:\2,3]{x,repeat:0}</code>: it ramps 1 to 3 over 2 units then stays at 3.</p>
 <p><code>+</code> Add values together; eg <code>[2,3]+4</code> is equivalent to <code>[6,7]</code></p>
 <p><code>-</code> Subtract values; eg <code>[2,3]-1</code> is equivalent to <code>[1,2]</code></p>
 <p><code>-</code> Unary minus operator; eg <code>-[1,2]</code> is equivalent to <code>[-1,-2]</code></p>
