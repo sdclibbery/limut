@@ -24,6 +24,7 @@ define(function(require) {
     section.in     = section.active                              // alias
     section.exists = mk((e,b) => 1)
     section.time   = mk((e,b) => active() ? through(b) : 0)
+    section.rtime  = mk((e,b) => active() ? section.length - through(b) : section.length) // inverse of .time: counts down from length to 0
     section.riser  = mk((e,b) => active() ? frac(b) : 0)
     section.rise   = section.riser                              // alias
     section.fall   = mk((e,b) => active() ? 1 - frac(b) : 1)
@@ -308,6 +309,7 @@ define(function(require) {
     assert(0, s.in({},4))
     assert(1, s.exists({},4))
     assert(0, s.time({},4))
+    assert(8, s.rtime({},4)) // inactive: full length remaining
     assert(0, s.riser({},4))
     assert(0, s.rise({},4))
     assert(1, s.fall({},4))
@@ -318,13 +320,16 @@ define(function(require) {
     assert(1, s.active({},0))
     assert(1, s.in({},0))
     assert(0, s.time({},0))
+    assert(8, s.rtime({},0)) // full length remaining at start
     assert(0, s.riser({},0))
     assert(1, s.fall({},0))
     assert(4, s.time({},4))
+    assert(4, s.rtime({},4)) // half elapsed, half remaining
     assert(0.5, s.riser({},4))
     assert(0.5, s.rise({},4))
     assert(0.5, s.fall({},4))
     assert(8, s.time({},8))
+    assert(0, s.rtime({},8)) // fully elapsed, zero remaining
     assert(1, s.riser({},8))
     assert(0, s.fall({},8))
     assert(1, s.riser({},12)) // Clamped past the end

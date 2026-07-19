@@ -439,6 +439,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>in</code> Alias for <code>active</code>.</p>
 <p class='sub'><code>exists</code> 1 for any section that has been defined, 0 otherwise (eg <code>drop.exists</code>).</p>
 <p class='sub'><code>time</code> The number of beats elapsed through the section, starting at 0. 0 when the section is not active.</p>
+<p class='sub'><code>rtime</code> The inverse of <code>time</code>: the number of beats remaining, counting down from the section <code>length</code> to 0 at its end. Equal to the section <code>length</code> when the section is not active.</p>
 <p class='sub'><code>riser</code> Ramps from 0 at the start of the section to 1 at its end. 0 when the section is not active.</p>
 <p class='sub'><code>rise</code> Alias for <code>riser</code>.</p>
 <p class='sub'><code>fall</code> Ramps from 1 at the start of the section to 0 at its end. 1 when the section is not active.</p>
