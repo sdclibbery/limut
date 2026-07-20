@@ -5,7 +5,7 @@ var metronome = {}
 
 var beatDuration = 60 / 110
 var lastBeatAt = 0
-var count = 0
+var count = -1 // first fired beat is count 0 (count += 1 runs before firing); patterns are 0-indexed, so step 0 lands on the first beat
 var nextBeatAt = beatDuration
 let time = 0
 let lastFiredCount = -Infinity
@@ -84,6 +84,7 @@ metronome.sync = (serverBeatTime, serverBpm) => {
 }
 
 // For debugging/testing
+metronome.getCount = () => count
 metronome.setCount = (c) => { count = c; lastFiredCount = c - 1 }
 metronome.setTime = (t) => time=t
 
@@ -95,6 +96,22 @@ if ((new URLSearchParams(window.location.search)).get('test') !== null) {
   let savedCount = count
   let savedLastFiredCount = lastFiredCount
   let savedTime = time
+
+  // Cold start: the very first fired beat must be count 0 (not 1), so that 0-indexed
+  // patterns line up step 0 with the first beat / section start.
+  metronome.bpm(60) // beatDuration = 1s
+  count = -1
+  lastFiredCount = -Infinity
+  lastBeatAt = 0
+  nextBeatAt = 1
+  let coldFirst = metronome.update(1.0)
+  if (!coldFirst || coldFirst.count !== 0) {
+    console.trace(`Expected first fired beat to be count 0, got: ${JSON.stringify(coldFirst)}`)
+  }
+  let coldSecond = metronome.update(2.0)
+  if (!coldSecond || coldSecond.count !== 1) {
+    console.trace(`Expected second fired beat to be count 1, got: ${JSON.stringify(coldSecond)}`)
+  }
 
   // A sync arriving just after a beat has fired, with serverBeatTime slightly
   // below the count we just fired, must not cause that count to fire a second

@@ -1932,6 +1932,15 @@ define(function(require) {
   assert({value:8,interval:'frame'}, evalParamFrameWithInterval(parseExpression('({v} -> v*2){this.bar}'), e, 0))
   assert({value:10,interval:'frame'}, evalParamFrameWithInterval(parseExpression('({v} -> v*2){this.bar}'), e, 1))
 
+  // The per-frame audio-param tests below drive real audioParam callbacks, which sample the
+  // timevar at metronome.beatTime(...) (play/eval-audio-params.js) — i.e. the *live* beat, not
+  // the count passed to update(). Pin the beat origin so these are deterministic regardless of
+  // ambient metronome state (the metronome's cold-start count is otherwise -1 until a beat fires).
+  // CRITICAL: save and restore the count (below) — running the app with ?test executes these
+  // tests before live playback begins, so leaving the count mutated would misalign the first
+  // beat (and thus every section-relative pattern) in the live session.
+  let savedCountForAudioParamTests = require('metronome').getCount()
+  require('metronome').setCount(0)
   vars.foo = parseExpression('{value} -> mockaudionode{test:value}')
   p = parseExpression('foo{[4hz,5hz]t1@f}')
   e = evd(0,2,4)
@@ -2369,6 +2378,8 @@ define(function(require) {
 
   // set countit = {x,acc:0} -> x<=0 ?? acc ?: countit{x:x-1,acc:acc+x}
   // r readout, add=countit{x:2}
+
+  require('metronome').setCount(savedCountForAudioParamTests) // restore cold-start count (see note above) so ?test doesn't misalign live playback
 
   console.log('Parse expression tests complete')
   }
