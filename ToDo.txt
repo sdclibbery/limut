@@ -5,11 +5,13 @@ Epic supersaw needs to be a preset; needs cutoff etc:
   k audiosynth keyboard, play={osc.tri{eventpitch/2}*3/2,superosc{freq:eventpitch*(1+chaos{3.71Hz}*0.04+chaos{3.64Hz}*0.04),unison:15}}, oct=3, envelope='full', rel=1
 Also should do the sweepy thing
   a audiosynth, fx=superosc{pitch{oct:1}, unison:{6,detune:1.02}, formant:[0.99,1.01]n19}>>lpf{800+8000*[]n23^3}*0.015>>mix{hpf{1000}>>airverb}
+Also do an acid superosc
+Envelope follower duck
+Multiband ducks
 Musical Structure
  Support for []tx []lxr etc syntax
- !Want to be able to do [1:\8,2:_]{x} at the moment, the 2:_ fails to parse as clamp. The _ is redundant but should be allowed
- Can do chords with  set !p* add+=[0:_8,2:_8,3:_8]{sx.time}
- Can set section params as overrides, including length, including for default section, eg set default length=8
+ Can do chords with  set !p* add+=[0,2,3]:_8{sx.time}
+ Can set section params as 'set' overrides, including length, including for default section, eg set default length=8
  ???Pattern timing should always be relative to section start???? Or not??
  ?Can base one section on another, and add more stuff on top? Can group sections into higher level structures??
  ?If you define sections within a section, they become their own thing with two levels of active section etc?

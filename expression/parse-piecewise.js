@@ -83,7 +83,10 @@ define(function(require) {
     if (v === undefined) { return false }
     eatWhitespace(state)
     let {i, s, colonSeen} = parseColonSpec(state)
-    let hold = colonSeen && (i === undefined) && (s === undefined) // A bare colon (no operator, no size) marks a "hold forever" (no repeat) segment
+    // A bare colon, or a redundant trailing step operator, marks a "hold forever" (no repeat) segment.
+    // Step (`_`) on the last value just means "stay here", so it is equivalent to a clamp; other
+    // interpolators (eg linear `\`) still repeat, preserving eg [0:_1,1:\].
+    let hold = colonSeen && (i === undefined || i === '_') && (s === undefined)
     vs.push(v)
     is.push(i)
     ss.push(s)
@@ -383,11 +386,11 @@ define(function(require) {
 
     assert({vs:[5,6],is:[undefined,undefined],ss:[1,undefined]}, parsePiecewiseArray(st('[5:1,6]')))
     assert({vs:[5,6],is:[undefined,undefined],ss:[undefined,1]}, parsePiecewiseArray(st('[5,6:1]')))
-    assert({vs:[5,6],is:['/','_'],ss:[undefined,undefined]}, parsePiecewiseArray(st('[5:/,6:_]')))
+    assert({vs:[5,6],is:['/','_'],ss:[undefined,undefined],hold:true}, parsePiecewiseArray(st('[5:/,6:_]'))) // trailing step (no size) => hold
     assert({vs:[5,6],is:['/','_'],ss:[1,2]}, parsePiecewiseArray(st('[5:/1,6:_2]')))
     assert({vs:[5,6],is:[undefined,undefined],ss:[1,undefined]}, parsePiecewiseArray(st('[5:1,6,]')))
     assert({vs:[5,6],is:[undefined,undefined],ss:[undefined,1]}, parsePiecewiseArray(st('[5,6:1,]')))
-    assert({vs:[5,6],is:['/','_'],ss:[undefined,undefined]}, parsePiecewiseArray(st('[5:/,6:_,]')))
+    assert({vs:[5,6],is:['/','_'],ss:[undefined,undefined],hold:true}, parsePiecewiseArray(st('[5:/,6:_,]')))
     assert({vs:[5,6],is:['/','_'],ss:[1,2]}, parsePiecewiseArray(st('[5:/1,6:_2,]')))
     assert({vs:[5,6],is:[undefined,undefined],ss:[1,2]}, parsePiecewiseArray(st('[5:1,6:2,]')))
     assert({vs:[5,6,7],is:['/','_',undefined],ss:[1,2,undefined]}, parsePiecewiseArray(st('[5:/1,6:_2,7]')))
@@ -397,7 +400,9 @@ define(function(require) {
     assert({vs:[5,6],is:[undefined,undefined],ss:[undefined,undefined]}, parsePiecewiseArray(st('[5,6]'))) // no colon => no hold
     assert({vs:[5,6],is:[undefined,undefined],ss:[1,undefined]}, parsePiecewiseArray(st('[5:1,6]'))) // no trailing colon => no hold
     assert({vs:[5,6],is:[undefined,undefined],ss:[undefined,undefined]}, parsePiecewiseArray(st('[5:,6]'))) // colon on a middle value => no hold (only last counts)
-    assert({vs:[5,6],is:['/','_'],ss:[undefined,undefined]}, parsePiecewiseArray(st('[5:/,6:_]'))) // trailing operator (no size) is NOT hold (preserves eg [0:_1,1:\])
+    assert({vs:[5,6],is:['/','_'],ss:[undefined,undefined],hold:true}, parsePiecewiseArray(st('[5:/,6:_]'))) // trailing step operator (no size) => hold (redundant step == clamp)
+    assert({vs:[5,6],is:['_','\\'],ss:[undefined,undefined]}, parsePiecewiseArray(st('[5:_,6:\\]'))) // trailing linear operator (no size) is NOT hold (preserves eg [0:_1,1:\])
+    assert({vs:[5,6],is:['/','_'],ss:[undefined,2]}, parsePiecewiseArray(st('[5:/,6:_2]'))) // trailing step WITH size opts out of hold
 
     assert({vs:[5,6],is:[undefined,undefined],ss:[1,undefined]}, parsePiecewiseArray(st('[5::1,6]')))
     assert({vs:[5,6],is:[undefined,undefined],ss:[1,undefined]}, parsePiecewiseArray(st('[5 : : 1,6]')))
