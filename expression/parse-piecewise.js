@@ -34,15 +34,13 @@ define(function(require) {
   iOperators['^'].segmentPower = 3
   iOperators['^'].isParameterised = true
 
-  let parseEntry = (state, vs, is, ss, hs) => {
-    eatWhitespace(state)
-    let v = state.expression(state)
-    if (v === undefined) { return false }
+  // Parses a ":<interp?><size?>" spec at the current index (a bare colon leaves both undefined).
+  // Shared by per-segment suffixes (parseEntry) and the bracket-level default suffix (parsePiecewise).
+  let parseColonSpec = (state) => {
     let n1 = undefined
     let n2 = undefined
     let i = undefined
     let colonSeen = false
-    eatWhitespace(state)
     if (state.str.charAt(state.idx) === ':') {
       colonSeen = true
       state.idx+=1
@@ -70,14 +68,21 @@ define(function(require) {
       }
     } else if (n1 !== undefined) {
       if (!!iOperators[i] && iOperators[i].isParameterised) {
-        if (n1 !== undefined) {
-          if (typeof n1 !== 'number') { throw `Piecewise interpolator ${i} parameter must be a number, was ${n1}` }
-          i += n1
-        }
+        if (typeof n1 !== 'number') { throw `Piecewise interpolator ${i} parameter must be a number, was ${n1}` }
+        i += n1
       } else {
         s = n1
       }
     }
+    return { i, s, colonSeen }
+  }
+
+  let parseEntry = (state, vs, is, ss, hs) => {
+    eatWhitespace(state)
+    let v = state.expression(state)
+    if (v === undefined) { return false }
+    eatWhitespace(state)
+    let {i, s, colonSeen} = parseColonSpec(state)
     let hold = colonSeen && (i === undefined) && (s === undefined) // A bare colon (no operator, no size) marks a "hold forever" (no repeat) segment
     vs.push(v)
     is.push(i)
@@ -193,6 +198,23 @@ define(function(require) {
       ss = rvs.map(() => undefined)
       hold = false // Range-sweep path doesn't support the trailing-colon hold marker
     }
+    // Optional bracket-level default suffix, eg [1,2]:_8 gives every segment interpolator '_' size 8.
+    // A ':' here can never precede a type letter (t/l/s/e/r/n), so this only applies to the function form.
+    let beforeDefault = state.idx
+    // The size is a full expression, but the following function param {..} must not be swallowed as a
+    // modifier on it (eg the {foo} of [1,2]:_8{foo}), so hide everything from the next '{' while parsing.
+    let savedStr = state.str
+    let braceIdx = state.str.indexOf('{', state.idx)
+    if (braceIdx !== -1) { state.str = state.str.slice(0, braceIdx) }
+    let {i: defaultI, s: defaultS} = parseColonSpec(state)
+    state.str = savedStr
+    // Guard against a range separator: for the inner [0,10] of [[0,10]:[9,19]] the ':' belongs to the
+    // enclosing range, not to us, so if the colon-spec is immediately followed by ']' we roll it back.
+    if (state.str.charAt(state.idx) === ']') {
+      state.idx = beforeDefault
+      defaultI = undefined
+      defaultS = undefined
+    }
     let result
     if (state.str.charAt(state.idx).toLowerCase() == 't') { // timevar; values per time interval
       state.idx += 1
@@ -288,6 +310,8 @@ define(function(require) {
       let modifiers = parseMap(state)
       if (modifiers === undefined) { modifiers = {value: (e,b) => e.idx} } // Default to index with event index
       if (modifiers.value === undefined) { modifiers.value = (e,b) => e.idx } // Default to index with event index
+      is = is.map(i => i !== undefined ? i : defaultI) // Fill unspecified interpolators from the bracket default
+      ss = ss.map(s => s !== undefined ? s : defaultS) // Fill unspecified sizes from the bracket default
       is = is.map(i => getOperator(i || '/')) // Default to linear interpolation
       let options = maybeClamp(modifiers, ss, hold)
       ss = ss.map(s => s!==undefined ? s : 1) // Default to size 1
@@ -389,6 +413,18 @@ define(function(require) {
 
     assertThrows('must be a number', () => parsePiecewiseArray(st('[5:^foo,6]')))
     assertThrows('must be a number', () => parsePiecewiseArray(st('[5:^foo:1,6]')))
+
+    // parseColonSpec: the shared ":<interp?><size?>" parser, used for both per-segment and bracket-level defaults
+    assert({i:undefined,s:undefined,colonSeen:false}, parseColonSpec(st('')))
+    assert({i:undefined,s:undefined,colonSeen:false}, parseColonSpec(st('8'))) // no colon => nothing consumed
+    assert({i:'_',s:8,colonSeen:true}, parseColonSpec(st(':_8')))
+    assert({i:'/',s:4,colonSeen:true}, parseColonSpec(st(':/4')))
+    assert({i:undefined,s:8,colonSeen:true}, parseColonSpec(st(':8'))) // size only
+    assert({i:'/',s:undefined,colonSeen:true}, parseColonSpec(st(':/'))) // interp only
+    assert({i:undefined,s:undefined,colonSeen:true}, parseColonSpec(st(':'))) // bare colon
+    assert({i:'^3',s:undefined,colonSeen:true}, parseColonSpec(st(':^3'))) // parameterised interp, no size
+    assert({i:'^3',s:2,colonSeen:true}, parseColonSpec(st(':^3:2'))) // parameterised interp + size
+    assertThrows('must be a number', () => parseColonSpec(st(':^foo')))
 
     console.log('Parse piecewise tests complete')
   }

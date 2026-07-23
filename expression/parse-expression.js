@@ -1376,6 +1376,24 @@ define(function(require) {
   assert(1/2, evalParamFrame(parseExpression("[0:/4,1]{2}"), evt(), 0))
   assert(1/2, evalParamFrame(parseExpression(" [ 0 :/ 4, 1 ] { 2 } "), evt(), 0))
 
+  // Bracket-level default interpolator/size: [1,2]:iN applies to every segment that doesn't set its own.
+  // Step interpolator (_) holds at the segment's start value, so it distinguishes a defaulted interpolator
+  // from the function form's built-in linear fallback.
+  assert(0, evalParamFrame(parseExpression("[0,4]:_4{2}"), evt(), 0)) // == [0:_4,4:_4]; p=2 in seg0 (step) => 0
+  assert(4, evalParamFrame(parseExpression("[0,4]:_4{5}"), evt(), 0)) // p=5 in seg1 (step) => 4
+  assert(0, evalParamFrame(parseExpression("[0:_4,4:_4]{2}"), evt(), 0)) // explicit equivalent
+  assert(4, evalParamFrame(parseExpression("[0:_4,4:_4]{5}"), evt(), 0))
+  // Per-field merge: [0,4:2]:_4 == [0:_4,4:_2] (seg1 keeps its size 2 but still inherits the '_' interpolator)
+  assert(0, evalParamFrame(parseExpression("[0,4:2]:_4{2}"), evt(), 0)) // seg0 step => 0
+  assert(4, evalParamFrame(parseExpression("[0,4:2]:_4{5}"), evt(), 0)) // p=5 in seg1 [4,6) step => 4
+  assert(4, evalParamFrame(parseExpression("[0:_4,4:_2]{5}"), evt(), 0)) // explicit equivalent
+  // Per-segment override wins: [0,4:/1]:_4 == [0:_4,4:/1] (seg1's own linear + size 1 beats the default)
+  assert(0, evalParamFrame(parseExpression("[0,4:/1]:_4{2}"), evt(), 0)) // seg0 step => 0
+  assert(2, evalParamFrame(parseExpression("[0,4:/1]:_4{4.5}"), evt(), 0)) // seg1 linear 4->0 over size 1, half way => 2
+  assert(2, evalParamFrame(parseExpression("[0:_4,4:/1]{4.5}"), evt(), 0)) // explicit equivalent
+  // Regression: nested-array range endpoints still parse (the ':' is the range separator, not a default)
+  assertIn(10, 19, evalParamFrame(parseExpression("[[0,10]:[9,19]]r"), ev(1), 1))
+
   p = parseExpression("[1:/4,2]{2}")
   assert(3/2, evalParamFrame(p, evt(), 0))
   assertIsSameEveryTime((x) => evalParamFrame(p, evt(), 0+x*2))

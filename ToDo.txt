@@ -6,9 +6,9 @@ Epic supersaw needs to be a preset; needs cutoff etc:
 Also should do the sweepy thing
   a audiosynth, fx=superosc{pitch{oct:1}, unison:{6,detune:1.02}, formant:[0.99,1.01]n19}>>lpf{800+8000*[]n23^3}*0.015>>mix{hpf{1000}>>airverb}
 Musical Structure
- ? Want to be able to use []tls etc with piecewise param eg [1:8,2:8]t{sx.time}
-   This avoids having to put _ everywhere??
- Can do chords with  set !p* add+=[0:_8,2:_8,3:_8,0:]{sx.time}
+ Support for []tx []lxr etc syntax
+ !Want to be able to do [1:\8,2:_]{x} at the moment, the 2:_ fails to parse as clamp. The _ is redundant but should be allowed
+ Can do chords with  set !p* add+=[0:_8,2:_8,3:_8]{sx.time}
  Can set section params as overrides, including length, including for default section, eg set default length=8
  ???Pattern timing should always be relative to section start???? Or not??
  ?Can base one section on another, and add more stuff on top? Can group sections into higher level structures??
