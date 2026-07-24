@@ -5,26 +5,34 @@ define(function(require) {
   let randFunction = require('functions/rand')
   let {piecewise} = require('expression/eval-piecewise')
   let {units} = require('units')
+  let sections = require('section/sections')
 
   let step = () => 0
   let linear = (i) => i
 
-  let parseRangedRandom = (vs, is, ss) => {
+  // `x` (sectionRelative) counts time from the start of the current section instead of from
+  // metronome time zero, so the random/noise sequence restarts at each section boundary. Clamped
+  // to >=0 so the sub-beat negative transient at a section boundary doesn't glitch the sequence.
+  let beatFn = (sectionRelative) => sectionRelative ? (b) => Math.max(0, b - sections.activeStartBeat) : (b) => b
+
+  let parseRangedRandom = (vs, is, ss, sectionRelative) => {
     let state = {} // Create a state store for this parse instance
     let lo = param(vs[0], 0)
     let hi = param(vs[1], 1)
-    let p = (e,b,er,m) => randFunction(m, e, b, state)
+    let bt = beatFn(sectionRelative)
+    let p = (e,b,er,m) => randFunction(m, e, bt(b), state)
     return piecewise([lo, hi], [linear, step], [1,0], p, {})
   }
 
-  let parseRandom = (vs, is, ss) => {
+  let parseRandom = (vs, is, ss, sectionRelative) => {
     let state = {} // Create a state store for this parse instance
+    let bt = beatFn(sectionRelative)
     if (vs.length == 0) { // Default to random between 0 and 1
-      return (e,b,er,m) => randFunction(m, e, b, state)
+      return (e,b,er,m) => randFunction(m, e, bt(b), state)
     } else { // Choose from a list
       is = is.map(i => i || step)
       ss = ss.map(s => s!==undefined ? s : 1)
-      let p = (e,b,er,m) => randFunction(m, e, b, state)
+      let p = (e,b,er,m) => randFunction(m, e, bt(b), state)
       return piecewise(vs, is, ss, p, {normalise:true})
     }
   }
@@ -51,14 +59,15 @@ define(function(require) {
     let r = f*(f-1.0)*((16.0*k-4.0)*f*(f-1.0)-1.0)
     return r
   }
-  let simpleNoise = (vs, period) => {
+  let simpleNoise = (vs, period, sectionRelative) => {
     let seed = Math.random()*10000
+    let bt = beatFn(sectionRelative)
     return (e,b, evalRecurse, modifiers) => {
       if (modifiers && modifiers.seed !== undefined) {
         seed = units(modifiers.seed, 'b')
       }
       period = units(period, 'b')
-      let value = b + seed
+      let value = bt(b) + seed
       let result = (
           bnoise(value*1/period)*2
           +(1-bnoise(value*2.3/period))*1
@@ -192,6 +201,28 @@ define(function(require) {
     p = simpleNoise([], 4)
     p.modifiers = {seed:1}
     assertIsCloseEveryTime((i)=>p(ev(i/11),i/11,evalParamFrame))
+
+    // Section-relative (x suffix): index from sections.activeStartBeat, not beat 0
+    let sections = require('section/sections')
+    let savedStart = sections.activeStartBeat
+    sections.activeStartBeat = 4
+    // Noise
+    let plainN = simpleNoise([], 1); plainN.modifiers = {seed:1}
+    let relN = simpleNoise([], 1, true); relN.modifiers = {seed:1}
+    assert(evalParamFrame(plainN,ev(0),0), evalParamFrame(relN,ev(4),4)) // section start reads as beat 0
+    // Random
+    let plainR = parseRandom([], [], []); plainR.modifiers = {seed:1}
+    let relR = parseRandom([], [], [], true); relR.modifiers = {seed:1}
+    assert(evalParamFrame(plainR,ev(0),0), evalParamFrame(relR,ev(4),4))
+    // Ranged random
+    let plainRR = parseRangedRandom([0,9], [undefined,undefined], [undefined,undefined]); plainRR.modifiers = {seed:1}
+    let relRR = parseRangedRandom([0,9], [undefined,undefined], [undefined,undefined], true); relRR.modifiers = {seed:1}
+    assert(evalParamFrame(plainRR,ev(0),0), evalParamFrame(relRR,ev(4),4))
+    // Sub-beat negative section-relative time (boundary transient) clamps to the section start
+    assert(evalParamFrame(relN,ev(4),4), evalParamFrame(relN,ev(3.9),3.9))
+    assert(evalParamFrame(relR,ev(4),4), evalParamFrame(relR,ev(3.9),3.9))
+    assert(evalParamFrame(relRR,ev(4),4), evalParamFrame(relRR,ev(3.9),3.9))
+    sections.activeStartBeat = savedStart
 
     console.log('Eval random tests complete')
   }

@@ -2,15 +2,24 @@
 define(function(require) {
   let consoleOut = require('console')
   let {piecewise} = require('expression/eval-piecewise')
+  let sections = require('section/sections')
 
   let step = () => 0
   step.segmentPower = 0
   let linear = (i) => i
   linear.segmentPower = 1
 
-  let rangeTimeVar = (vs, ds, options) => {
+  // The time value used to index a timevar. `x` (sectionRelative) counts from the start of the
+  // current section (b - sections.activeStartBeat) instead of from metronome time zero. Clamped
+  // to >=0 so the sub-beat negative transient at a section boundary (activeStartBeat snaps to the
+  // integer beat, which fires ~0.1 beat ahead of the fractional draw clock) doesn't wrap the
+  // piecewise index onto the last list element.
+  let timeFn = (sectionRelative) => sectionRelative ? (e,b) => Math.max(0, b - sections.activeStartBeat) : (e,b) => b
+
+  let rangeTimeVar = (vs, ds, options, sectionRelative) => {
     let lo = vs[0] || 0
     let hi = vs[1] || lo+1
+    let time = timeFn(sectionRelative)
     let result = (e,b,evalRecurse) => {
       let elo = evalRecurse(lo, e,b)
       let ehi = evalRecurse(hi, e,b)
@@ -20,17 +29,18 @@ define(function(require) {
       if (!Array.isArray(ds)) { ds = [ds] }
       let is = vs.map(() => step)
       let ss = vs.map((_,i) => ds[i % ds.length])
-      return piecewise(vs, is, ss, (e,b) => b, options)
+      return piecewise(vs, is, ss, time, options)
     }
     return result
   }
 
-  let timeVar = (vs, is, ss, ds, defaultI, options) => {
+  let timeVar = (vs, is, ss, ds, defaultI, options, sectionRelative) => {
+    let time = timeFn(sectionRelative)
     if (!Array.isArray(ds)) { ds = [ds] }
-    if (vs.length === 0) { return piecewise([0,1], [defaultI,defaultI], [ds[0],ds[1]||ds[0]], (e,b) => b, options) }
+    if (vs.length === 0) { return piecewise([0,1], [defaultI,defaultI], [ds[0],ds[1]||ds[0]], time, options) }
     is = is.map(i => i || defaultI)
     ss = ss.map((s,idx) => s!==undefined ? s : ds[idx % ds.length])
-    return piecewise(vs, is, ss, (e,b) => b, options)
+    return piecewise(vs, is, ss, time, options)
   }
 
   let eventTimeVar = (vs, is, ss, ds, addSegmentData) => {
@@ -88,6 +98,30 @@ define(function(require) {
     assert(2, val(evalParamFrame(eventTimeVar([1,2,3],u3,u3,undefined,true),ev(0,1), 0.5)))
     assert(2.5, val(evalParamFrame(eventTimeVar([1,2,3],u3,u3,undefined,true),ev(0,1), 0.75)))
     assert(3, evalParamFrame(eventTimeVar([1,2,3],u3,u3,undefined,true),ev(0,1), 1))
+
+    // Section-relative timevars (x suffix): index from sections.activeStartBeat, not beat 0
+    let savedStart = sections.activeStartBeat
+    let plainTV = timeVar([10,20],u2,u2,1,step,{})
+    let relTV = timeVar([10,20],u2,u2,1,step,{},true)
+    sections.activeStartBeat = 0
+    assert(evalParamFrame(plainTV,ev(0),0), evalParamFrame(relTV,ev(0),0))
+    assert(evalParamFrame(plainTV,ev(0),1), evalParamFrame(relTV,ev(0),1))
+    sections.activeStartBeat = 4
+    assert(evalParamFrame(plainTV,ev(0),0), evalParamFrame(relTV,ev(0),4)) // section start reads as beat 0
+    assert(evalParamFrame(plainTV,ev(0),1), evalParamFrame(relTV,ev(0),5))
+    let relRange = rangeTimeVar([0,3],1,{},true)
+    assert(evalParamFrame(rangeTimeVar([0,3],1,{}),ev(0),1), evalParamFrame(relRange,ev(0),5))
+
+    // A sub-beat negative section-relative time (draw clock lags activeStartBeat at a boundary)
+    // clamps to 0 -> first list element, instead of the modulo wrapping onto the last (bug: read 4)
+    let u4=[undefined,undefined,undefined,undefined]
+    let stepTV = timeVar([1,2,3,4],u4,u4,2,step,{},true)
+    sections.activeStartBeat = 4
+    assert(1, evalParamFrame(stepTV,ev(0),3.9)) // just before the boundary catches up: clamped, not 4
+    assert(1, evalParamFrame(stepTV,ev(0),4))   // section start
+    assert(1, evalParamFrame(stepTV,ev(0),4.1)) // just after
+    assert(2, evalParamFrame(stepTV,ev(0),6))   // second step within the 4-beat window
+    sections.activeStartBeat = savedStart
 
     console.log('Eval timevar tests complete')
   }

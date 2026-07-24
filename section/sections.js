@@ -17,7 +17,7 @@ define(function(require) {
   // dynamically so a later length override is honoured.
   sections.addStandardParams = (section) => {
     let active = () => sections.active === section
-    let through = (b) => b - sections.activeStartBeat            // beats elapsed through this section
+    let through = (b) => Math.max(0, b - sections.activeStartBeat) // beats elapsed (>=0; clamps the sub-beat negative transient at a section boundary)
     let frac = (b) => Math.max(0, Math.min(1, through(b) / section.length))
     let mk = (fn) => { fn.interval = 'frame'; return fn }        // re-eval every frame, don't memoise
     section.active = mk((e,b) => active() ? 1 : 0)
@@ -343,6 +343,13 @@ define(function(require) {
     // interval flag set for per-frame re-evaluation
     assert('frame', s.riser.interval)
     assert('frame', s.time.interval)
+
+    // A sub-beat negative time (fractional draw clock lags activeStartBeat at a boundary) clamps:
+    // time stays >=0 and rtime stays <=length rather than overshooting.
+    sections.activeStartBeat = 4
+    assert(0, s.time({},3.9))          // not negative
+    assert(s.length, s.rtime({},3.9))  // not over length
+    assert(0, s.riser({},3.9))
 
     sections.active = savedActive
     sections.activeStartBeat = savedStart

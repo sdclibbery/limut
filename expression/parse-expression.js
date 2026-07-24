@@ -346,6 +346,31 @@ define(function(require) {
   assert('frame', parseExpression('[0,[1,2]t1@f]l1@s').interval) // nested @f upgrades it to frame
   assert('frame', parseExpression('[10:!1,[1,2]l1@f]e@s').interval) // the reported e@s form
 
+  { // Section-relative timevars: the 'x' suffix (either side of the type letter) indexes from the
+    // start of the current section (sections.activeStartBeat) instead of from metronome time zero.
+    let sections = require('section/sections')
+    let savedStart = sections.activeStartBeat
+    sections.activeStartBeat = 4
+    // [10,20]tx at the section start (beat 4) reads like plain [10,20]t at beat 0, and beat 5 like beat 1
+    assert(evalParamFrame(parseExpression('[10,20]t1@f'),ev(0),0), evalParamFrame(parseExpression('[10,20]tx1@f'),ev(0),4))
+    assert(evalParamFrame(parseExpression('[10,20]t1@f'),ev(0),1), evalParamFrame(parseExpression('[10,20]tx1@f'),ev(0),5))
+    // tx and xt are equivalent
+    assert(evalParamFrame(parseExpression('[10,20]tx1@f'),ev(0),5), evalParamFrame(parseExpression('[10,20]xt1@f'),ev(0),5))
+    // l and s honour x too
+    assert(evalParamFrame(parseExpression('[10,20]l1@f'),ev(0),1/2), evalParamFrame(parseExpression('[10,20]lx1@f'),ev(0),9/2))
+    assert(evalParamFrame(parseExpression('[10,20]s1@f'),ev(0),1/2), evalParamFrame(parseExpression('[10,20]sx1@f'),ev(0),9/2))
+    // ranged t honours x
+    assert(evalParamFrame(parseExpression('[0:3]t1@f'),ev(0),1), evalParamFrame(parseExpression('[0:3]tx1@f'),ev(0),5))
+    // random and noise, seeded: x shifts the sequence so it restarts at the section start
+    let rnd = parseExpression('[1,5,7]r@f'); rnd.modifiers = {seed:1}
+    let rndx = parseExpression('[1,5,7]rx@f'); rndx.modifiers = {seed:1}
+    assert(evalParamFrame(rnd,ev(0),0), evalParamFrame(rndx,ev(0),4))
+    let nz = parseExpression('[1,2]n1'); nz.modifiers = {seed:1}
+    let nzx = parseExpression('[1,2]nx1'); nzx.modifiers = {seed:1}
+    assert(evalParamFrame(nz,ev(0),0), evalParamFrame(nzx,ev(0),4))
+    sections.activeStartBeat = savedStart
+  }
+
   p = parseExpression('[-1:1]t1')
   assert(-1, evalParamFrame(p,ev(0,0),0))
   assert(0, evalParamFrame(p,ev(1,1),1))

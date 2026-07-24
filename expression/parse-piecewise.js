@@ -218,9 +218,22 @@ define(function(require) {
       defaultI = undefined
       defaultS = undefined
     }
+    // Optional 'x' suffix (either side of the type letter): index relative to the current
+    // section start instead of metronome time zero. A leading 'x' is only consumed when the
+    // following char is a type letter that supports it (t/l/s/r/n), so it can't swallow 'e' or
+    // the function form.
+    let sectionRelative = false
+    if (state.str.charAt(state.idx).toLowerCase() == 'x' && ['t','l','s','r','n'].includes(state.str.charAt(state.idx+1).toLowerCase())) {
+      sectionRelative = true
+      state.idx += 1
+    }
+    let consumeTrailingX = () => {
+      if (state.str.charAt(state.idx).toLowerCase() == 'x') { sectionRelative = true; state.idx += 1 }
+    }
     let result
     if (state.str.charAt(state.idx).toLowerCase() == 't') { // timevar; values per time interval
       state.idx += 1
+      consumeTrailingX()
       let ds = numberOrArrayOrFour(state)
       let interval = parseInterval(state)
       let modifiers = parseMap(state)
@@ -228,34 +241,36 @@ define(function(require) {
       is = is.map(i => getOperator(i))
       let options = maybeAddSegmentData(maybeClamp(modifiers, ss, hold), interval)
       if (ranged) {
-        result = rangeTimeVar(vs, ds, options)
+        result = rangeTimeVar(vs, ds, options, sectionRelative)
       } else {
-        result = timeVar(vs, is, ss, ds, iOperators['_'], options)
+        result = timeVar(vs, is, ss, ds, iOperators['_'], options, sectionRelative)
       }
       result = addModifiers(result, modifiers)
       interval = frameIfNestedFrame(interval, options && options.addSegmentData, vs)
       setInterval(result, interval)
     } else if (state.str.charAt(state.idx).toLowerCase() == 'l') { // linearly interpolated timevar
       state.idx += 1
+      consumeTrailingX()
       let ds = numberOrArrayOrFour(state)
       let interval = parseInterval(state)
       let modifiers = parseMap(state)
       interval = interval || parseInterval(state) || hoistInterval('event', vs)
       is = is.map(i => getOperator(i))
       let options = maybeAddSegmentData(maybeClamp(modifiers, ss, hold), interval)
-      result = timeVar(vs, is, ss, ds, iOperators['/'], options)
+      result = timeVar(vs, is, ss, ds, iOperators['/'], options, sectionRelative)
       result = addModifiers(result, modifiers)
       interval = frameIfNestedFrame(interval, options && options.addSegmentData, vs)
       setInterval(result, interval)
     } else if (state.str.charAt(state.idx).toLowerCase() == 's') { // smoothstep interpolated timevar
       state.idx += 1
+      consumeTrailingX()
       let ds = numberOrArrayOrFour(state)
       let interval = parseInterval(state)
       let modifiers = parseMap(state)
       is = is.map(i => getOperator(i))
       interval = interval || parseInterval(state) || hoistInterval('event', vs)
       let options = maybeAddSegmentData(maybeClamp(modifiers, ss, hold), interval)
-      result = timeVar(vs, is, ss, ds, iOperators['~'], options)
+      result = timeVar(vs, is, ss, ds, iOperators['~'], options, sectionRelative)
       result = addModifiers(result, modifiers)
       interval = frameIfNestedFrame(interval, options && options.addSegmentData, vs)
       setInterval(result, interval)
@@ -280,6 +295,7 @@ define(function(require) {
       setInterval(result, interval)
     } else if (state.str.charAt(state.idx).toLowerCase() == 'r') { // random
       state.idx += 1
+      consumeTrailingX()
       let hold = number(state)
       hold = parseUnits(hold, state)
       let interval = parseInterval(state)
@@ -291,21 +307,22 @@ define(function(require) {
       }
       is = is.map(i => getOperator(i))
       if (ranged) {
-        result = parseRangedRandom(vs, is, ss)
+        result = parseRangedRandom(vs, is, ss, sectionRelative)
       } else {
-        result = parseRandom(vs, is, ss)
+        result = parseRandom(vs, is, ss, sectionRelative)
       }
       result = addModifiers(result, modifiers)
       interval = interval || parseInterval(state) || hoistInterval('event', vs, modifiers)
       setInterval(result, interval)
     } else if (state.str.charAt(state.idx).toLowerCase() == 'n') { // simple noise
       state.idx += 1
+      consumeTrailingX()
       let period = number(state)
       period = parseUnits(period, state)
       if (period === undefined) { period = 1 }
       let interval = parseInterval(state)
       let modifiers = parseMap(state)
-      result = addModifiers(simpleNoise(vs, period), modifiers)
+      result = addModifiers(simpleNoise(vs, period, sectionRelative), modifiers)
       interval = interval || parseInterval(state) || hoistInterval('frame', modifiers)
       setInterval(result, interval)
     } else { // Piecewise as a function not an expression

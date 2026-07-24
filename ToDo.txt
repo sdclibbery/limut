@@ -9,7 +9,9 @@ Also do an acid superosc
 Envelope follower duck
 Multiband ducks
 Musical Structure
- Support for []tx []lxr etc syntax
+ Support for []tx []lxr etc syntax...
+  Syntax coloring needs updating
+  Test with []r and []n
  Can do chords with  set !p* add+=[0,2,3]:_8{sx.time}
  Can set section params as 'set' overrides, including length, including for default section, eg set default length=8
  ???Pattern timing should always be relative to section start???? Or not??
