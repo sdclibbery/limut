@@ -127,10 +127,11 @@
 .cm-s-default .cm-number {color: #6ad;}
 .cm-s-default .cm-colour {color: #a64;}
 .cm-s-default .cm-def {color: #00f;}
-.cm-s-default .cm-playerid {color: rgb(228, 146, 106);}
+.cm-s-default .cm-playerid {color: rgb(158, 86, 206);}
+.cm-s-default .cm-pattern {color: rgb(82, 149, 60);}
 .cm-s-default .cm-variable {}
+.cm-s-default .cm-property {color: rgb(228, 116, 176);}
 .cm-s-default .cm-punctuation,
-.cm-s-default .cm-property,
 .cm-s-default .cm-operator {color: rgb(255, 211, 194);}
 .cm-s-default .cm-variable-2 {color: #05a;}
 .cm-s-default .cm-variable-3, .cm-s-default .cm-type {color: #085;}

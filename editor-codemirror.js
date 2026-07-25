@@ -9,6 +9,7 @@ define(function(require) {
   let editorDiv = document.getElementById('code-codemirror')
   editorDiv.style.display = 'block'
   let editor = CodeMirror(editorDiv, {
+    mode: "limut",
     lineNumbers: true,
     lineWrapping: true,
     tabSize: 2,
