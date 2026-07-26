@@ -110,7 +110,10 @@ define(function(require) {
   let ctxGl = canvas.getContext("webgl2", { alpha: false })
   if (!ctxGl) {
     console.error('WebGL2 not supported!')
-    alert('WebGL2 not supported in this browser; Limut cannot run. Try running in Chrome or Firefox.')
+    // The blocking alert is unhelpful (and freezes the event loop) under headless ?test runs.
+    if ((new URLSearchParams(window.location.search)).get('test') === null) {
+      alert('WebGL2 not supported in this browser; Limut cannot run. Try running in Chrome or Firefox.')
+    }
   }
 
   // Update

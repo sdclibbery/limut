@@ -9,10 +9,6 @@ Also do an acid superosc
 Envelope follower duck
 Multiband ducks
 Musical Structure
- Support for []tx []lxr etc syntax...
-  Syntax coloring needs updating
-  Test with []rx and []nx
- Can do chords with  set !p* add+=[0,2,3]:_8{sx.time}
  Can set section params as 'set' overrides, including length, including for default section, eg set default length=8
  ???Pattern timing should always be relative to section start???? Or not??
  ?Can base one section on another, and add more stuff on top? Can group sections into higher level structures??
@@ -21,8 +17,7 @@ Musical Structure
  ?Can access total riser across all repeats
  ?Can set next section once without having to comment out? Eg  once set section.next=drop  ??
 !superosc cant take positional freq; should be able to play=superosc{440}
-!superosc docs should have params on sepearte sub paragraphs
-!There is more than one page of tests now, even when they all pass. Have a single message at the end summarising results (with colour)
+!superosc docs should have params on separate sub paragraphs
 ?Can set/override pattern as a parameter on a standard player?
 ? Chebyshev shaper
 ?Thing like mix but press but puts dry on left and wet on right; eg for phaser

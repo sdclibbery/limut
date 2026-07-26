@@ -50,7 +50,7 @@ define((require) => {
     assert([2], filterInPlace([1,2], (x) => x==2))
     assert([2], filterInPlace([1,1,2], (x) => x==2))
     assert([2,2], filterInPlace([1,2,2], (x) => x==2))
-  }  
+  }
   
   return {
     move:move,
