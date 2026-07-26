@@ -50,6 +50,22 @@ it was already running before you began, leave it running.
 
 ## Interpreting output
 
+- **Fastest signal: the summary line.** `test-summary.js` (loaded from `index.html`'s
+  `<head>`, active only under `?test`) tallies every module and prints one line once
+  output goes quiet: `✓ ALL TESTS PASSED  N modules complete`, or
+  `✗ K FAILURES in M modules` followed by one `• <file>  ×count` line per offending
+  module. Grep for it to get a verdict without reading every line:
+
+  ```sh
+  grep "INFO:CONSOLE" /tmp/limut-test.log \
+    | sed -E 's|.*CONSOLE[^"]*"||; s|", source:.*||' \
+    | grep -iE "PASSED|FAILURE|•"
+  ```
+
+  The `%c` styling and CSS strings are only for a real browser's DevTools (colour);
+  in the headless capture they show as literal text after the message — ignore them.
+  If the summary line is **absent**, the run was cut short (budget too small, or the
+  page hung before the debounce fired) — treat that as inconclusive, not a pass.
 - A passing test file prints `"<Name> tests complete"`.
 - There are ~48 such files; expect ~43 to report under plain headless.
 - Look for any line that is **not** `tests complete` and **not** `console.js (7)` (that's the empty-line spacer) — those are failures or load errors.

@@ -20,7 +20,7 @@ Musical Structure
 !superosc docs should have params on separate sub paragraphs
 ?Can set/override pattern as a parameter on a standard player?
 ? Chebyshev shaper
-?Thing like mix but press but puts dry on left and wet on right; eg for phaser
+?Thing like mix but puts dry on left and wet on right; eg for phaser
 !tts{} does not repeat, so its not useful in fx chain. Want to either trigger it, or set a repeat interval
  // l supersaw 001236, fx=vocoder{tts{'take your place'}}*8, oct=2, dur=1/2
 ?multitap should have second callback for chain to use on each tap before they get summed together
