@@ -5389,7 +5389,7 @@ l softkeys gamepad lt:vel, fx=mix{airverb}, delay=(0,{3/4,add:1})
 l2 speak keyboard, text=('into the sunset','into the ocean','into the blue','far away').(this.value), fx=mix{noise>>bpf{523/2,q:1}*2>>vocoder{this.player.pre}>>mix{airverb},0.95}>>mix{airverb}, rate=1.2, speed=1
 
 
-// Know Your Pace!
+// Know Your Place!
 include 'personal/everything.limut'
 dg dmx, channel=63, lights={0:4/64}
 ds dpulse, channel=(33,43,53), fore=white, back=black, input=smooth{main.pulse*3,8}
@@ -5494,5 +5494,95 @@ c section {
 // r readout, add=section.foo
 
 // a audiosynth 097 crop 14 + 68, dur=1/2, play=superosc{freq:eventpitch*(1+chaos{3.71Hz}*0.06+chaos{3.64Hz}*0.06),unison:15}>>lpf4{[1/3,1]l8@s^2*[20000:!350ms,this.freq]e@s}, oct=3, envelope='full', rel=1, fx=mix{hpf{300}>>lpf{800}>>airverb}>>stanh
+
+
+// Modulo
+include 'personal/everything.limut'
+dg dmx, channel=63, lights={0:4/64}
+ds dvoice, channel=(33,43,53), fore=#088*2, back=#804, input=smooth{main.pulse*3/2,8}*tg
+dw dmxwash, channel=(1,15), fore=#201*pk.pulse.0
+dw2 dmxwash, channel=(8,22), fore=#012*l.pulse.0
+w webcam, device=['5mp':24,'2mp':8]t, pixellate=200-duck*160, mid=[1:24,1/3:8]t
+set bpm=125
+set scale='minor'
+set main fx=stanh>>compress*-1db
+default section {
+  set p* vel*=3/4
+}, length=8
+// pk perc x..., sample=3
+// phh perc ..n.
+// ph perc -, vel=[]n/2, swing=54
+// pc perc ....*..., vel=1/16
+// pp perc msn crop 16, sample=2, vel=1/8, pan=[-1,1]/2, swing=54
+set p* delay|=[[1,3]r/4,():]:_2{sx.rtime}
+// bs sub ..0_
+// br lately .0_7_-7 crop 16, dur=1/4, vel=1*+3db, swing=52
+v lushpad 049, fx=airverb}, dur=1/2, vel*=1/2
+a synpluck 04949 crop 14 + 86, fx=mix{airverb}, decay=gp.rsr, cutoff=gp.rsu, add+=[0,2]t4, sus=this.decay
+l piano gamepad lt:vel, fx=mix{tape{1/4},1/8}>>mix{airverb}
+l2 space keyboard, fx=mix{airverb}*-1db
+build section {
+	set * hpf=10+700*(sx.rise^3)
+  set a vel*=[]r
+  set !p* add+=[-1,1]tx16
+  set dw* fore*=sx.fall^2
+  fill perc u, rate=1/2, vel*=sx.rise^13, room=1/2
+}, length=32, next=drop
+drop section {
+  set !p* add+=[0,2,-1,3]tx8
+  set (pc,pp) vel=1/2
+  set !p* fx>>=duck{depth:2/3}
+  set dw fore=#214*tg
+//   set l2 fx*=tg
+}, length=64
+// set sx.next=build
+
+
+// Brutal Euphoria
+include 'personal/everything.limut'
+dg dmx, channel=63, lights={0:8/64}
+ds dmatrix, channel=(33,43,53), fore=#444*(1-duck), back=#222*(duck), input=smooth{main.pulse*3/2,8}
+dw2 dmxwash, channel=(8,22), fore=#128*pk.pulse.0
+w webcam, device=['5mp':24,'2mp':8]t, monochrome=0.7, pixellate=200-duck*120
+set bpm=125
+set scale='phrygian'
+set root=3
+set main fx=stanh>>compress*+1db
+default section, length=8
+// pk perc x...
+// ph perc ..-.
+ps hiss, dur=10, sus=1, fx=stanh>>mix{airverb}, vel=1.1, pan=[-1,1]/2
+set p* delay|=[[1,3]r/4:2,():]:_{sx.rtime}
+pf impulse, fx=mix{pingpong{1/2}}*4, bpf=[400:600]r, vel*=[1:1,0:]:_{sx.rtime}
+// b superosc .0_1_0_., dur=1/4, oct=2, pwm=[-1,1]l4@f, vel*=1-gp.lsd, swing=56, fx=duck{1/6,depth:1/3}*-8db, sync=-(1+gp.lsr), pwm=gp.lsl*2-1, vel*=1/4
+bs sub follow b
+a superosc 024, dur=1/2, sus=1/4, fx=mix{airverb,7/8}, vel=1-gp.rsd, oct=[3,4]r, formant=[]n8, pan=[-1,1]l4@f/2, add+=[0,-1]t6, vel*=[1:6,1/4:2]tx*2, sync=1+6*gp.rsr, pwm=gp.rsl*2-1, crush=4*gp.rsu
+l superosc gamepad lt:vel, wavetable='sample/wt64/VOXSYNTH.WAV', oct=3, wt=[]l32@f, unison=7, fx=mix{airverb,1/4}, att=1/6, rel=1/2
+l2 softpad keyboard, add+=(0,4,9), fx=mix{airverb}/3
+build section {
+  set !p* add+=-1
+  pk perc x...
+	a superosc 048, dur=1/2, sus=1/4, fx=mix{airverb,7/8}, vel=1-gp.rsd, oct=[3,4]r, formant=[]n8, pan=[-1,1]l4@f/2, add+=[0,-1]t6, vel*=[1:6,1/4:2]tx*2, sync=1+6*gp.rsr, pwm=gp.rsl*2-1, crush=4*gp.rsu
+  set * hpf=10+800*sx.rise^6, drive={1/4,mix:sx.rise^8}
+  f perc u, vel=1/4*sx.rise^8, rate=1/2, room=1/8
+	ds dmatrix2, channel=(33,43,53), fore=#444*(1-duck), back=#222*(duck), input=smooth{main.pulse*3/2,8}
+	dw2 dmxwash, channel=(8,22), fore=#246*tg*f.vel.0
+}, next=drop, length=32
+drop section {
+	set scale='minor'
+  set pk sample=3
+  pkk perc x.. crop 16, vel=1/3, swing=52
+  pc perc ....*..., vel=1/3
+  set !p* add+=[0,2,1,3]t8
+  set a unison=7
+  ph2 perc :-n, vel=[]n/2, sample=2
+  set l oct+=(0,1), vel*=-2db
+  set ps dur=4
+	dw dmxwash, channel=(1,15), fore=#224*pk.pulse.0
+	dw2 dmxwash, channel=(8,22), fore=#123*l.pulse.0*tg
+	ds dfireworks, channel=(33,43,53), fore=#888, input=smooth{main.pulse*3/2,8}*tg
+  set (l,l2) fx*=mix(tg)*+3db
+}, length=64
+// set sx.next=build
 
 

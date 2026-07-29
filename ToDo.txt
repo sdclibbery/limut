@@ -1,11 +1,9 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-Epic supersaw needs to be a preset; needs cutoff etc:
-  k audiosynth keyboard, play={osc.tri{eventpitch/2}*3/2,superosc{freq:eventpitch*(1+chaos{3.71Hz}*0.04+chaos{3.64Hz}*0.04),unison:15}}, oct=3, envelope='full', rel=1
-Also should do the sweepy thing
-  a audiosynth, fx=superosc{pitch{oct:1}, unison:{6,detune:1.02}, formant:[0.99,1.01]n19}>>lpf{800+8000*[]n23^3}*0.015>>mix{hpf{1000}>>airverb}
-Also do an acid superosc
+New synths need docs
+? super supersaw as node function?
+Also do a dark acid superosc
 Envelope follower duck
 Multiband ducks
 Musical Structure
