@@ -1,13 +1,14 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-New synths need docs
-? super supersaw as node function?
-Also do a dark acid superosc
+All presets should use @s not @f where possible
+Depth should be the default duck Param not length
 Envelope follower duck
 Multiband ducks
 Musical Structure
+ Should be able to write:  drop section, length="2"
  Can set section params as 'set' overrides, including length, including for default section, eg set default length=8
+ Can override pattern by setting a param on the player
  ???Pattern timing should always be relative to section start???? Or not??
  ?Can base one section on another, and add more stuff on top? Can group sections into higher level structures??
  ?If you define sections within a section, they become their own thing with two levels of active section etc?
@@ -33,6 +34,7 @@ Claude fable suggested good default mastering chain; try it out:
 grain should have offset param, would allow more interesting effects; granular delays etc
 ?Granular synth?
 visual nodes...
+Multiband compressor
 Multiband effect that does spectral side chain ducking
  Eg I have a lead that sometimes can't be heard over an arp. I want to duck the arp spectrally based on the lead
 Should be able to write actual unit tests in limut for limut functions? How would this work?
