@@ -1,14 +1,11 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-All presets should use @s not @f where possible
 Depth should be the default duck Param not length
-Envelope follower duck
-Multiband ducks
+Can override pattern by setting a param on the player
 Musical Structure
  Should be able to write:  drop section, length="2"
  Can set section params as 'set' overrides, including length, including for default section, eg set default length=8
- Can override pattern by setting a param on the player
  ???Pattern timing should always be relative to section start???? Or not??
  ?Can base one section on another, and add more stuff on top? Can group sections into higher level structures??
  ?If you define sections within a section, they become their own thing with two levels of active section etc?
@@ -17,7 +14,9 @@ Musical Structure
  ?Can set next section once without having to comment out? Eg  once set section.next=drop  ??
 !superosc cant take positional freq; should be able to play=superosc{440}
 !superosc docs should have params on separate sub paragraphs
-?Can set/override pattern as a parameter on a standard player?
+All presets should use @s not @f where possible
+Envelope follower duck
+Multiband ducks
 ? Chebyshev shaper
 ?Thing like mix but puts dry on left and wet on right; eg for phaser
 !tts{} does not repeat, so its not useful in fx chain. Want to either trigger it, or set a repeat interval

@@ -111,6 +111,6 @@ preset supersweep audiosynth, envelope='pad', oct=1, dur=4,
 preset acid superosc, dur=1/4, oct=(2+this.u-this.d), glide=20ms+this.s*50ms, att=0,
 	wavetable={'sample/wt64/VIRUS_SA.WAV'},
   wt=[0.45,0.65]l7@s, sync=1+this.accent*this.fenv/2, unison=3,
-  lpf={100+(0.45+this.cutoff*0.8)^2*this.fenv*6000, poles:4, q:this.resonance*18},
+  lpf={100+this.freq+(0.45+this.cutoff*0.8)^2*this.fenv*6000, poles:4, q:this.resonance*18},
   fenv=[1:!(200ms+1000ms*(this.decay*2+this.accent)/2),0]e@s*(1+this.vel+this.accent)/3,
   decay=1/2, cutoff=[]l8@s, accent=this.a, resonance=1/4+this.cutoff/4
