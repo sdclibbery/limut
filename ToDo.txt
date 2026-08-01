@@ -1,9 +1,6 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-Can override pattern by setting a param on the player
- If preset defines a pattern, then it should be overridden by a players default (non param) pattern
-  Suggest doing this by passing default pattern as the pattern Param...
 Musical Structure
  Should be able to write:  drop section, length*=2
  Default section to 8 beats?

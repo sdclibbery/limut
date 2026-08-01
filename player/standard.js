@@ -18,7 +18,13 @@ define(function(require) {
   }
 
   return (patternStr, paramsStr, player, baseParams) => {
+    let defaultPatternStr = patternStr || '0'
     let params = parseParams(paramsStr, player.id)
+    if (patternStr) {
+      // The pattern on the player line sits between the preset and the line's own params, so it
+      // overrides a pattern param from a preset, but is itself overridden by one on the line
+      baseParams = Object.assign({}, baseParams, {pattern: patternStr})
+    }
     params = applyOverrides(baseParams, params)
     params = collapseOverrides(params)
     return (beat) => {
@@ -32,7 +38,7 @@ define(function(require) {
         if (overrideDur !== undefined) { effectiveParams.dur = applyOverride(effectiveParams, 'dur', overrideDur) }
         if (overridePattern !== undefined) { effectiveParams.pattern = applyOverride(effectiveParams, 'pattern', overridePattern) }
       }
-      let effectivePatternStr = patternStrFromParams(effectiveParams, patternStr, beat.count)
+      let effectivePatternStr = patternStrFromParams(effectiveParams, defaultPatternStr, beat.count)
       if (ks._pattern === undefined || ks._patternStr !== effectivePatternStr) { // Reparse pattern only when source has changed
         ks._patternStr = effectivePatternStr // Set first so a bad pattern is not retried (and reported) every beat
         try {

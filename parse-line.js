@@ -431,6 +431,47 @@ define((require) => {
   assert(0, players.instances.p.getEventsForBeat(beat(4))[0].value)
   delete players.instances.p
 
+  // a pattern param can compound with the pattern on the player line
+  parseLine('p test 01, pattern+=`23`')
+  assert(0, players.instances.p.getEventsForBeat(beat(0))[0].value)
+  assert(1, players.instances.p.getEventsForBeat(beat(1))[0].value)
+  assert(2, players.instances.p.getEventsForBeat(beat(2))[0].value)
+  assert(3, players.instances.p.getEventsForBeat(beat(3))[0].value)
+  delete players.instances.p
+
+  // the pattern on the player line overrides a pattern param from a preset
+  parseLine('preset foo test, pattern=`123`')
+  parseLine('p foo 456')
+  assert(4, players.instances.p.getEventsForBeat(beat(0))[0].value)
+  assert(5, players.instances.p.getEventsForBeat(beat(1))[0].value)
+  assert(6, players.instances.p.getEventsForBeat(beat(2))[0].value)
+  delete players.instances.p
+
+  // with no pattern on the player line, the preset's pattern param is used
+  parseLine('p foo')
+  assert(1, players.instances.p.getEventsForBeat(beat(0))[0].value)
+  assert(2, players.instances.p.getEventsForBeat(beat(1))[0].value)
+  assert(3, players.instances.p.getEventsForBeat(beat(2))[0].value)
+  delete players.instances.p
+
+  // a pattern param on the player line wins over both the preset and the player line pattern
+  parseLine('p foo 456, pattern=`789`')
+  assert(7, players.instances.p.getEventsForBeat(beat(0))[0].value)
+  assert(8, players.instances.p.getEventsForBeat(beat(1))[0].value)
+  assert(9, players.instances.p.getEventsForBeat(beat(2))[0].value)
+  delete players.instances.p
+
+  // set pattern override wins over all of them, and removing it reverts to the player line pattern
+  parseLine('p foo 456')
+  parseLine('set p pattern=`789`')
+  assert(7, players.instances.p.getEventsForBeat(beat(0))[0].value)
+  assert(8, players.instances.p.getEventsForBeat(beat(1))[0].value)
+  delete players.overrides.p
+  assert(6, players.instances.p.getEventsForBeat(beat(2))[0].value) // Back to 456, staying aligned to the beat grid
+  assert(4, players.instances.p.getEventsForBeat(beat(3))[0].value)
+  delete players.instances.p
+  delete playerTypes.foo
+
   parseLine('set p amp=2')
   assert(2, players.overrides.p.amp)
   delete players.overrides.p

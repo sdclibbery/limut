@@ -124,7 +124,7 @@ define((require) => {
 
   let playerNumber = 0
   let player = (playerId, playerType, patternStr, paramsStr, linenum) => {
-    if (!patternStr) { patternStr = '0' } // Default to '0' if missing pattern string
+    if (!patternStr) { patternStr = '' } // Default pattern is applied in the standard player, so an absent pattern is distinguishable there
     if (!paramsStr) { paramsStr = '' } // Default if missing params string
     // Create player
     let playerFactory = playerTypes[playerType.toLowerCase()]
