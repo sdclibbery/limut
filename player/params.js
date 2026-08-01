@@ -41,11 +41,27 @@ define(function(require) {
     '{': '}',
   }
 
+  let quotes = { '\'':true, '`':true }
+
   let parseValue = (state) => {
     let value = ''
     let char
     while (char = state.str.charAt(state.idx)) {
-      if (brackets[char]) {
+      if (quotes[char]) { // Take quoted strings whole, so a comma inside one doesn't end the param
+        let quote = char
+        value = value+char
+        state.idx += 1
+        while (char = state.str.charAt(state.idx)) {
+          value = value+char
+          state.idx += 1
+          if (char === '\\') { // Escaped char; take the next one whatever it is
+            value = value+state.str.charAt(state.idx)
+            state.idx += 1
+          } else if (char === quote) {
+            break
+          }
+        }
+      } else if (brackets[char]) {
         value = value+char
         state.bracketStack.push(brackets[char])
         state.idx += 1

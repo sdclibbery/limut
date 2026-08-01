@@ -1,7 +1,8 @@
 'use strict';
 define(function(require) {
 
-  let parseString = (state) => {
+  let parseString = (state, terminator) => {
+    if (terminator === undefined) { terminator = '\'' }
     let result = ''
     let char
     while (char = state.str.charAt(state.idx)) {
@@ -13,7 +14,7 @@ define(function(require) {
         else if (char == 't') { result += '\t' }
         else if (char == 'r') { }
         else { result += char }
-      } else if (char == '\'') {
+      } else if (char == terminator) {
         state.idx += 1
         break
       } else {

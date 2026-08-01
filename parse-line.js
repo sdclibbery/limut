@@ -383,6 +383,54 @@ define((require) => {
   delete players.instances.p
   delete players.overrides.p
 
+  // pattern param overrides the pattern on the player line
+  parseLine('p test 01, pattern=`23`')
+  assert(2, players.instances.p.getEventsForBeat(beat(0))[0].value)
+  assert(3, players.instances.p.getEventsForBeat(beat(1))[0].value)
+  assert(undefined, players.instances.p.getEventsForBeat(beat(2))[0].pattern) // pattern is not passed on to events
+  delete players.instances.p
+
+  // set pattern override wins over the pattern param, and removing it reverts
+  parseLine('p test 01, pattern=`23`')
+  parseLine('set p pattern=`45`')
+  assert(4, players.instances.p.getEventsForBeat(beat(0))[0].value)
+  assert(5, players.instances.p.getEventsForBeat(beat(1))[0].value)
+  delete players.overrides.p
+  assert(2, players.instances.p.getEventsForBeat(beat(2))[0].value)
+  assert(3, players.instances.p.getEventsForBeat(beat(3))[0].value)
+  delete players.instances.p
+
+  // pattern operators work in a pattern param
+  parseLine('p test 0, pattern=`0123 crop 2`')
+  assert(0, players.instances.p.getEventsForBeat(beat(0))[0].value)
+  assert(1, players.instances.p.getEventsForBeat(beat(1))[0].value)
+  assert(0, players.instances.p.getEventsForBeat(beat(2))[0].value)
+  delete players.instances.p
+
+  // double quotes group whitespace inside a backtick pattern param
+  parseLine('p test 0, pattern=`"0 1" + "2 3"`')
+  assert(0, players.instances.p.getEventsForBeat(beat(0))[0].value)
+  assert(1, players.instances.p.getEventsForBeat(beat(1))[0].value)
+  assert(2, players.instances.p.getEventsForBeat(beat(2))[0].value)
+  assert(3, players.instances.p.getEventsForBeat(beat(3))[0].value)
+  delete players.instances.p
+
+  // pattern param is evaluated every beat, so it can be a timevar
+  parseLine('p test 0, pattern=[`01`,`23`]t2')
+  assert(0, players.instances.p.getEventsForBeat(beat(0))[0].value)
+  assert(1, players.instances.p.getEventsForBeat(beat(1))[0].value)
+  assert(2, players.instances.p.getEventsForBeat(beat(2))[0].value)
+  assert(3, players.instances.p.getEventsForBeat(beat(3))[0].value)
+  assert(0, players.instances.p.getEventsForBeat(beat(4))[0].value)
+  delete players.instances.p
+
+  // a bad pattern param is reported but does not throw, and a later valid value recovers
+  parseLine('p test 0, pattern=[`01`,`01 crop`]t2')
+  assert(0, players.instances.p.getEventsForBeat(beat(0))[0].value)
+  assert(0, players.instances.p.getEventsForBeat(beat(2)).length)
+  assert(0, players.instances.p.getEventsForBeat(beat(4))[0].value)
+  delete players.instances.p
+
   parseLine('set p amp=2')
   assert(2, players.overrides.p.amp)
   delete players.overrides.p

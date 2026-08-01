@@ -153,6 +153,12 @@ define(function(require) {
         result = addModifiers(parseString(state), parseMap(state))
         continue
       }
+      // pattern string; backticks are equivalent to quotes, but read better for pattern params eg pattern=`0123`
+      if (char == '`') {
+        state.idx += 1
+        result = addModifiers(parseString(state, '`'), parseMap(state))
+        continue
+      }
       // colour
       if (char == '#') {
         state.idx += 1
@@ -714,6 +720,19 @@ define(function(require) {
 
   assert('a', parseExpression("'a'"))
   assert(' a B c ', parseExpression("' a B c '"))
+
+  // Backticks are an equivalent string literal, used for pattern params eg pattern=`0123`
+  assert('0123', parseExpression('`0123`'))
+  assert('0 [12] 3', parseExpression('`0 [12] 3`'))
+  assert('0123 crop 3', parseExpression('`0123 crop 3`'))
+  assert('"0 1" "2 3"', parseExpression('`"0 1" "2 3"`'))
+  assert('ab', parseExpression('`a`+`b`'))
+  assert(undefined, parseExpression('`0123')) // Unterminated, does not parse
+  p = parseExpression('[`12`,`34`]t8@f')
+  assert('12', evalParamFrame(p,ev(0),0))
+  assert('12', evalParamFrame(p,ev(4),4))
+  assert('34', evalParamFrame(p,ev(8),8))
+  assert('12', evalParamFrame(p,ev(16),16))
 
   assert({r:0,g:0.2,b:0.4,a:1}, parseExpression("#036f"))
   assert({r:0,g:0.2,b:0.4,a:1}, parseExpression("#003366ff"))

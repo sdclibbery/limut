@@ -42,7 +42,7 @@ define(function(require) {
               .map(event => {
                 expandDefaultFlags(event)
                 for (let k in result.params) {
-                  if (k != '_time' && k != 'value' && k != 'dur') {
+                  if (k != '_time' && k != 'value' && k != 'dur' && k != 'pattern') {
                     event[k] = result.params[k]
                   }
                 }

@@ -403,7 +403,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p>A player command begins when something matching <code>id synth pattern</code> begins a new line. The params may follow on subsequent lines.</p>
 <p><code>id</code> Identifier for the player, so it can be referred to from other players etc. Must contain only alphanumeric characters from the basic Latin alphabet or underscore, and must not start with a digit. No player can be named <code>set</code> or <code>preset</code> as those are reserved keywords.</p>
 <p><code>synth</code> Name of the audio or visual synth to use; eg <code>piano</code></p>
-<p><code>pattern</code> Pattern of notes to play. Specifies the notes or sounds to play, and when to play them</p>
+<p><code>pattern</code> Pattern of notes to play. Specifies the notes or sounds to play, and when to play them. Ends at the first comma; it can also be supplied (or overridden) as the <code>pattern</code> param instead, eg <code>p ping 0, pattern=`0246`</code></p>
 <p><code>params</code> Comma separated list of params (eg <code>amp=1/2</code>) that affect how the player plays; see 'Value Syntax' and 'Params' sections below</p>
 <h5>Overriding player params:</h5>
 <p>Basic structure: <code>set id params</code></p>
@@ -467,7 +467,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <div id="accordion-pattern-syntax" class="closed">
 <p><code>x-o-</code> Sequence of events, each with duration given by the player's <code>dur</code> param, for use with <code>play</code></p>
 <p><code>0123</code> Sequence of events, each with duration given by the player's <code>dur</code> param, for use with tonal synths. Numbers are scale degrees</p>
-<p><code>`01 23`</code> Pattern literal; inside backticks, pattern elements can be separated by whitespace which will be ignored. Backticks force the contents to be treated as a literal, so for example <code>`01 loop 1`</code> is treated as the literal <code>01loop1</code> and the loop operator is ignored.</p>
+<p><code>`01 23`</code> Pattern literal; inside backticks, pattern elements can be separated by whitespace which will be ignored. Backticks force the contents to be treated as a literal, so for example <code>`01 loop 1`</code> is treated as the literal <code>01loop1</code> and the loop operator is ignored. Double quotes are an equivalent delimiter, so <code>"01 23"</code> means the same thing; use double quotes when the pattern is itself inside a backtick <code>pattern</code> param, eg <code>pattern=`"01 23" + "45 67"`</code></p>
 <p><code>0-1-2-3</code> Negative scale degrees allow tones below the synth root pitch</p>
 <p><code>x.</code> Use a dot for a rest</p>
 <p><code>0#</code> # following numeric event makes it sharp</p>
@@ -591,6 +591,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>#00336699</code> Hex colour value which becomes the colour map <code>{r:0,g:0.2,b:0.4,a:0.6}</code></p>
 <p><code>#003366</code> Hex colour value which becomes the colour map <code>{r:0,g:0.2,b:0.4,a:1}</code></p>
 <p><code>'abc'</code> String value. Strings must be defined on a single line; multiline strings are not supported. However, line breaks can be inserted with <code>\n</code></p>
+<p><code>`abc`</code> String value; backticks are exactly equivalent to quotes, but are highlighted as a pattern and read better where the string is a pattern, eg <code>pattern=`0123`</code></p>
 <p><code>foo</code> Lookup a global var named <code>foo</code>. If there is no var, predefined var, or var function named foo, then the string <code>'foo'</code> will be returned instead. If there is a var named foo, but no arguments are provided, then the string <code>'foo'</code> will be returned instead.</p>
 <p><code>foo{x:2}</code> Lookup a global var named <code>foo</code>, and call it as a function passing in named parameters.</p>
 <h5>Modifiers:</h5>
@@ -808,6 +809,9 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 </div>
 <h4 onclick="toggleAccordion('accordion-event-params')" class="accordion"> Common Event Params</h4>
 <div id="accordion-event-params" class="closed">
+<p><code>pattern</code> Pattern to play, replacing the pattern given on the player line; eg <code>p ping 0, pattern=`0246`</code>. The value is a string, so backticks (or quotes) are required, and the full pattern syntax including the pattern operators can be used, eg <code>set p pattern=`0123 crop 3`</code>. Because the pattern given on the player line is delimited by the first comma, this is also the way to use a pattern containing a comma.</p>
+<p class='sub'>The pattern param is evaluated once per beat, so it can be a timevar, a random var, or a var lookup, allowing the pattern itself to change as the player plays; eg <code>set p pattern=[`0246`,`1357`]t8</code> alternates between two patterns every 8 beats. A changed pattern stays aligned to the beat grid, just as it does when you edit the pattern on the player line; use <code>now</code> (eg <code>pattern=`now 0246`</code>) to restart it from the beginning instead.</p>
+<p class='sub'>Only players that play a pattern use this param, so it has no effect on <code>follow</code>, <code>midi</code>, <code>gamepad</code> and <code>keyboard</code> players, or on continuous players such as <code>bus</code> and the visual synths.</p>
 <p><code>dur</code> Pattern step duration. Timevars, random vars and index vars can be used to give variation in duration. Chords cannot be used with the dur param. Default time units: beats.</p>
 <p><code>delay</code> Event start time offset. Default time units: beats. Once applied, <code>delay</code> is removed from the event so it is not visible to expressions via <code>this.delay</code> or <code>player.delay</code>.</p>
 <p class='sub'><code>delay={1/2,add:2}</code> subparams on delay will be used to override the event values. In the example given, the <code>add</code> param of the delayed event will be set to 2, but any params can be overridden this way. This is most useful with chords of delay values, as it allows individual delayed events to change their properties.</p>

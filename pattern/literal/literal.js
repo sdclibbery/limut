@@ -8,6 +8,7 @@ define(function(require) {
   let isDigit = (char) => char >= '0' && char <= '9'
   let isNumericFlag = (char) => char !== '-' && char !== '_' && char !== '.' && !isDigit(char)
   let isNonNumericFlag = (char) => char === '^' // Only accent "^"" is valid for non numeric events
+  let isDelimiter = (char) => char === '`' || char === '"'
 
   let extendDur = (steps, dur) => {
     let step = steps[steps.length-1]
@@ -30,15 +31,21 @@ define(function(require) {
       }
       if (!char || isWhitespace(char)) { // End of literal
         if (expectedClosingBracket) { throw `Invalid pattern: Missing bracket, expecting ${expectedClosingBracket}` }
-        if (state._inDelimitedLiteral) { throw 'Invalid pattern: Missing closing literal delimiter `' }
+        if (state._inDelimitedLiteral) { throw `Invalid pattern: Missing closing literal delimiter ${state._inDelimitedLiteral}` }
         break
       }
 
-      if (char === '`') { // Backticks can delimit pattern literals
-        state.idx++
-        if (state._inDelimitedLiteral) { break } // End of delimited literal
-        state._inDelimitedLiteral = true // Start of delimited literal
-        continue
+      if (isDelimiter(char)) { // Backticks or double quotes can delimit pattern literals
+        if (!state._inDelimitedLiteral) {
+          state.idx++
+          state._inDelimitedLiteral = char // Start of delimited literal
+          continue
+        }
+        if (state._inDelimitedLiteral === char) {
+          state.idx++
+          break // End of delimited literal
+        }
+        throw `Invalid pattern: Mismatched literal delimiter ${char}, expecting ${state._inDelimitedLiteral}`
       }
 
       if (char === ']' || char === ')' || char === '>' || char ==='}') { // End of subpattern
@@ -129,7 +136,7 @@ define(function(require) {
   }
 
   let literal = (state) => {
-    state._inDelimitedLiteral = false
+    state._inDelimitedLiteral = undefined
     let steps = parseSteps(state)
     if (steps.initialContinuations > 0) { throw `Invalid pattern: Continuation "_" not valid at start of literal` }
     return subsequence(steps) // At the top level, a literal is like a subsequence
@@ -472,6 +479,24 @@ define(function(require) {
     assert([{value:0,dur:1}], p.next())
     assert([{value:1,dur:1}], p.next())
     assert(undefined, p.next())
+
+    p = literal(st('"0 1"')) // Double quotes are an equivalent delimiter, for use inside backtick pattern params
+    p.reset(0)
+    assert([{value:0,dur:1}], p.next())
+    assert([{value:1,dur:1}], p.next())
+    assert(undefined, p.next())
+
+    p = literal(st('"0 [12] 3"'))
+    p.reset(0)
+    assert([{value:0,dur:1}], p.next())
+    assert([{value:1,dur:1/2}], p.next())
+    assert([{value:2,dur:1/2}], p.next())
+    assert([{value:3,dur:1}], p.next())
+    assert(undefined, p.next())
+
+    assertThrows('Missing closing literal delimiter', () => literal(st('"01')))
+    assertThrows('Mismatched literal delimiter', () => literal(st('`01"')))
+    assertThrows('Mismatched literal delimiter', () => literal(st('"01`')))
 
     console.log("Pattern literal tests complete")
   }

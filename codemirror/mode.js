@@ -65,6 +65,14 @@ CodeMirror.defineMode("limut", function() {
       stream.next(); stream.eatWhile(wordRE); return "identifier";
     }
 
+    // A delimited literal: ` or " groups a run that may contain whitespace
+    if (ch == "`" || ch == '"') {
+      stream.next();
+      while (!stream.eol()) { if (stream.next() == ch) break; }
+      state.patExpect = "operator";
+      return "pattern";
+    }
+
     // A literal: a run up to whitespace, comma, or a comment start (brackets etc.
     // included), coloured green. `//` and `/*` end the literal so they start a comment.
     stream.next();
@@ -84,6 +92,12 @@ CodeMirror.defineMode("limut", function() {
     if (ch == "'") {
       while ((ch = stream.next()) != null) { if (ch == "'") break; }
       return "string";
+    }
+
+    // Backtick strings: a string, but conventionally a pattern (eg pattern=`0123`), so coloured as one
+    if (ch == "`") {
+      while ((ch = stream.next()) != null) { if (ch == "`") break; }
+      return "pattern";
     }
 
     // Hex colours: #036 #0369 #003366 #00336699
