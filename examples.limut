@@ -5474,22 +5474,22 @@ a audiosynth 097 crop 14 + 68, dur=1/2, play=superosc{freq:eventpitch*(1+chaos{3
 
 // a audiosynth, fx=superosc{220, wavetable:'sample/wt64/CYBORG.WAV', wt:slider}*0.005
 
-default section {
+section default {
 	r readout, add=[]r
 }, next=a
-a section {
+section a {
 	r readout, add=sx.count, fore=red, fade
 }, length=[4,8]r, foo=3, next=[b,c]r
-b section {
+section b {
 	r readout, add=sx.count, fore=green, fade
 }, length=4, foo=4, next=a, repeat=[1,2]r
-c section {
+section c {
 	r readout, add=sx.count, fore=blue, fade
 }, length=4, foo=4, next=a
 // set sx.next=default
 
-// drop section, foo=2, length=8, next=bridge
-// bridge section, foo=4, length=8
+// section drop, foo=2, length=8, next=bridge
+// section bridge, foo=4, length=8
 // set section.next=drop
 // r readout, add=section.foo
 
@@ -5506,7 +5506,7 @@ w webcam, device=['5mp':24,'2mp':8]t, pixellate=200-duck*160, mid=[1:24,1/3:8]t
 set bpm=125
 set scale='minor'
 set main fx=stanh>>compress*-1db
-default section {
+section default {
   set p* vel*=3/4
 }, length=8
 // pk perc x..., sample=3
@@ -5521,14 +5521,14 @@ v lushpad 049, fx=airverb}, dur=1/2, vel*=1/2
 a synpluck 04949 crop 14 + 86, fx=mix{airverb}, decay=gp.rsr, cutoff=gp.rsu, add+=[0,2]t4, sus=this.decay
 l piano gamepad lt:vel, fx=mix{tape{1/4},1/8}>>mix{airverb}
 l2 space keyboard, fx=mix{airverb}*-1db
-build section {
+section build {
 	set * hpf=10+700*(sx.rise^3)
   set a vel*=[]r
   set !p* add+=[-1,1]tx16
   set dw* fore*=sx.fall^2
   fill perc u, rate=1/2, vel*=sx.rise^13, room=1/2
 }, length=32, next=drop
-drop section {
+section drop {
   set !p* add+=[0,2,-1,3]tx8
   set (pc,pp) vel=1/2
   set !p* fx>>=duck{depth:2/3}
@@ -5548,7 +5548,7 @@ set bpm=125
 set scale='phrygian'
 set root=3
 set main fx=stanh>>compress*+1db
-default section, length=8
+section default, length=8
 // pk perc x...
 // ph perc ..-.
 ps hiss, dur=10, sus=1, fx=stanh>>mix{airverb}, vel=1.1, pan=[-1,1]/2
@@ -5559,7 +5559,7 @@ bs sub follow b
 a superosc 024, dur=1/2, sus=1/4, fx=mix{airverb,7/8}, vel=1-gp.rsd, oct=[3,4]r, formant=[]n8, pan=[-1,1]l4@f/2, add+=[0,-1]t6, vel*=[1:6,1/4:2]tx*2, sync=1+6*gp.rsr, pwm=gp.rsl*2-1, crush=4*gp.rsu
 l superosc gamepad lt:vel, wavetable='sample/wt64/VOXSYNTH.WAV', oct=3, wt=[]l32@f, unison=7, fx=mix{airverb,1/4}, att=1/6, rel=1/2
 l2 softpad keyboard, add+=(0,4,9), fx=mix{airverb}/3
-build section {
+section build {
   set !p* add+=-1
   pk perc x...
 	a superosc 048, dur=1/2, sus=1/4, fx=mix{airverb,7/8}, vel=1-gp.rsd, oct=[3,4]r, formant=[]n8, pan=[-1,1]l4@f/2, add+=[0,-1]t6, vel*=[1:6,1/4:2]tx*2, sync=1+6*gp.rsr, pwm=gp.rsl*2-1, crush=4*gp.rsu
@@ -5568,7 +5568,7 @@ build section {
 	ds dmatrix2, channel=(33,43,53), fore=#444*(1-duck), back=#222*(duck), input=smooth{main.pulse*3/2,8}
 	dw2 dmxwash, channel=(8,22), fore=#246*tg*f.vel.0
 }, next=drop, length=32
-drop section {
+section drop {
 	set scale='minor'
   set pk sample=3
   pkk perc x.. crop 16, vel=1/3, swing=52

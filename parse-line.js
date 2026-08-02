@@ -168,7 +168,8 @@ define((require) => {
       return
     }
     if (startsWithSection(line)) {
-      // Define a section; the block form `name section { ... }, params` scopes its body lines
+      line = line.slice(7).trim()
+      // Define a section; the block form `section name { ... }, params` scopes its body lines
       // to the section, so they only take effect while it is the active section
       let paramsStr
       let bodyCommands = []
@@ -190,7 +191,7 @@ define((require) => {
       } else {
         ;[, paramsStr] = splitOnFirst(line, ',')
       }
-      let name = line.split(/\s+/)[0].toLowerCase()
+      let name = line.match(/^[_a-zA-Z]\w*/)[0].toLowerCase() // The name is all that precedes the `,`, `{` or end of line
       let section = { name: name, length: name === 'default' ? 4 : 32 } // default length 32 beats (the built-in default stays 4)
       sections.addStandardParams(section) // standard active/timing functions; overridable by params below
       let params = parseParams(paramsStr, name)
@@ -236,7 +237,7 @@ define((require) => {
   let presetRegex = new RegExp(/^\s*preset\s+[_a-zA-Z]\w*\s+[_a-zA-Z]\w*/, 'i')
   let startsWithPreset = (str) => presetRegex.test(str)
 
-  let sectionRegex = new RegExp(/^\s*[_a-zA-Z]\w*\s+section\s*(,|\s|$)/, 'i')
+  let sectionRegex = new RegExp(/^\s*section\s+[_a-zA-Z]\w*\s*(,|\{|$)/, 'i')
   let startsWithSection = (str) => sectionRegex.test(str)
 
   let playerRegex = new RegExp(/^\s*[_a-zA-Z]\w*\s+[_a-zA-Z]\w*/, 'i')
@@ -246,6 +247,7 @@ define((require) => {
     if (startsWithInclude(str)) { return true }
     if (startsWithSet(str)) { return true }
     if (startsWithPreset(str)) { return true }
+    if (startsWithSection(str)) { return true }
     if (startsWithPlayer(str)) { return true }
     return false
   }
@@ -550,50 +552,50 @@ define((require) => {
   assert(3, playerTypes.foo.baseParams.b)
   delete playerTypes.foo
 
-  assert(true, isLineStart('foo section, bar=2')) // Matches via the player line start rules
+  assert(true, isLineStart('section foo, bar=2')) // Matches via the section line start rules
 
-  parseLine('foo section, bar=2')
+  parseLine('section foo, bar=2')
   assert('foo', sections.instances.foo.name)
   assert(2, sections.instances.foo.bar)
   assert(true, sections.instances.foo.marked)
   delete sections.instances.foo
 
-  parseLine('foo section')
+  parseLine('section foo')
   assert('foo', sections.instances.foo.name)
   assert(32, sections.instances.foo.length) // Length defaults to 32 beats
   delete sections.instances.foo
 
-  parseLine('foo section, length=16')
+  parseLine('section foo, length=16')
   assert(16, sections.instances.foo.length) // Length param overrides the default
   delete sections.instances.foo
 
-  parseLine('foo section, bar=2')
+  parseLine('section foo, bar=2')
   assert(32, sections.instances.foo.length) // Default length coexists with other params
   assert(2, sections.instances.foo.bar)
   delete sections.instances.foo
 
-  parseLine('FOO SECTION, Bar=2')
+  parseLine('SECTION FOO, Bar=2')
   assert(2, sections.instances.foo.bar)
   delete sections.instances.foo
 
-  parseLine('foo section, bar=2, baz=1+2')
+  parseLine('section foo, bar=2, baz=1+2')
   assert(2, sections.instances.foo.bar)
   assert(3, sections.instances.foo.baz)
   delete sections.instances.foo
 
-  parseLine('foo section, next=bar')
+  parseLine('section foo, next=bar')
   assert('bar', sections.instances.foo.nextName) // next stored as the raw section name, not evalled
   assert(undefined, sections.instances.foo.next) // not left as a param
   delete sections.instances.foo
 
-  parseLine('foo section, length=8, next=Bar') // next name is lowercased; coexists with other params
+  parseLine('section foo, length=8, next=Bar') // next name is lowercased; coexists with other params
   assert('bar', sections.instances.foo.nextName)
   assert(8, sections.instances.foo.length)
   delete sections.instances.foo
 
   // A non-constant length expression is held as a spec (evaluated when the section becomes active),
   // leaving the default length in place until then
-  parseLine('foo section, length=[4,8]r')
+  parseLine('section foo, length=[4,8]r')
   assert('function', typeof sections.instances.foo.lengthSpec)
   assert(32, sections.instances.foo.length) // default until first activation
   sections.resolveActiveParams(sections.instances.foo, 0)
@@ -601,21 +603,24 @@ define((require) => {
   delete sections.instances.foo
 
   // A non-constant next expression is held as a nextSpec, not the raw-name fast path
-  parseLine('foo section, next=(bar,baz)r')
+  parseLine('section foo, next=(bar,baz)r')
   assert('function', typeof sections.instances.foo.nextSpec)
   assert(undefined, sections.instances.foo.nextName)
   delete sections.instances.foo
 
-  parseLine('foo section, bar=2')
-  parseLine('foo section, baz=3')
+  parseLine('section foo, bar=2')
+  parseLine('section foo, baz=3')
   assert(undefined, sections.instances.foo.bar) // Redefinition replaces the section
   assert(3, sections.instances.foo.baz)
   delete sections.instances.foo
 
-  assertThrows('not found', async () => parseLine('foo sections 0')) // Not a section; falls through to player parsing
+  // Near misses are not sections; they fall through to player parsing
+  assertThrows('not found', async () => parseLine('sections foo 0')) // Keyword misspelt
+  assertThrows('not found', async () => parseLine('section foo bar')) // Junk after the section name
+  assertThrows('not found', async () => parseLine('foo section, bar=2')) // The old name-first syntax
   assert(undefined, sections.instances.foo)
 
-  parseLine('foo section')
+  parseLine('section foo')
   parseLine('set section.next=foo')
   assert(true, sections.next === sections.instances.foo) // Queues the named section as next
   parseLine('set section.active=foo')

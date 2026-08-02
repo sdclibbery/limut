@@ -1,7 +1,7 @@
 // Syntax highlighting mode for the limut DSL.
 // A line-oriented, token-based mode (no parser combinators). A small per-line state
 // machine drives the semantic colours:
-//   playerid  - the id at the start of a command line, and the id(s) after set/preset
+//   playerid  - the id at the start of a command line, and the id(s)/name after set/preset/section
 //   keyword   - set / preset / include / follow / gp / section
 //   property  - parameter / field names (`name=`, or `name:` inside a { } map)
 //   pattern   - the pattern literal of a player line (the note/sample/drum sequence),
@@ -141,14 +141,17 @@ CodeMirror.defineMode("limut", function() {
         return "property";
       }
       if (keywords[word]) {
-        state.region = word == "set" ? "setHead" : word == "preset" ? "presetName" : "body";
+        // `section` only names a definition at line start; elsewhere it is a lookup (`section.riser`)
+        // whose field must not be coloured as a name
+        var namesADefinition = word == "preset" || (word == "section" && state.region == "head");
+        state.region = word == "set" ? "setHead" : namesADefinition ? "defName" : "body";
         return "keyword";
       }
       var style = "identifier";
       if (state.region == "setList") {
         style = "playerid"; // an id in the `set (a, b, ...)` list; stays in the list until )
-      } else if (state.region == "setHead" || state.region == "presetName") {
-        style = "playerid"; state.region = "body"; // the id after `set`, or the name after `preset`
+      } else if (state.region == "setHead" || state.region == "defName") {
+        style = "playerid"; state.region = "body"; // the id after `set`, or the name after `preset`/`section`
       } else if (state.region == "afterId") {
         state.region = "pattern"; state.patExpect = "literal"; // the type word; its pattern follows
       } else if (state.region == "head") {
