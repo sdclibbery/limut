@@ -77,19 +77,25 @@ define(function(require) {
     sections.gc_mark(name)
   }
 
-  // Queue a named section to become active when the current one finishes
-  sections.forceNext = (name) => {
-    if (sections.suppressForce) { return }
+  // Queue a named section to become active when the current one finishes.
+  // fromUi bypasses suppressForce: a click is a deliberate one-off trigger, and the automatic
+  // section-change rerun is async so suppressForce may happen to be set when the click lands.
+  sections.forceNext = (name, fromUi) => {
+    if (sections.suppressForce && !fromUi) { return }
     let s = sections.getByName(name)
     if (!s) { console.log(`Section '${name}' not found (set section.next)`); return }
     sections.next = s
   }
   // Force a named section to become active now (applied on the next update)
-  sections.forceActive = (name) => {
-    if (sections.suppressForce) { return }
+  sections.forceActive = (name, fromUi) => {
+    if (sections.suppressForce && !fromUi) { return }
     let s = sections.getByName(name)
     if (!s) { console.log(`Section '${name}' not found (set section.active)`); return }
     sections.pendingActive = s
+  }
+  // Unqueue whatever was queued as next, so the piece falls back to the default section instead
+  sections.clearNext = () => {
+    sections.next = undefined
   }
 
   // Evaluate the length/repeat specs (non-constant expressions like length=[4,8]r) into concrete
@@ -480,6 +486,21 @@ define(function(require) {
     sections.forceNext('b')
     assert(true, sections.next === b)
     sections.next = undefined
+
+    // fromUi bypasses suppressForce, so a button click always applies
+    sections.suppressForce = true
+    sections.forceNext('b', true)
+    assert(true, sections.next === b)
+    sections.pendingActive = undefined
+    sections.forceActive('b', true)
+    assert(true, sections.pendingActive === b)
+    sections.suppressForce = false
+    sections.pendingActive = undefined
+
+    // clearNext unqueues
+    sections.next = b
+    sections.clearNext()
+    assert(undefined, sections.next)
 
     // gc_reset clears hasBlocks
     sections.hasBlocks = true

@@ -86,6 +86,28 @@
     span {
       font-weight: bold;
     }
+    p#section-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    p#section-buttons.closed { /* Beats the id selector above, which .closed alone would lose to */
+      display: none;
+    }
+    p#section-buttons button {
+      width: auto;
+      height: auto;
+      font-size: 1em;
+      padding: 2px 8px;
+      font-family: courier, mono, monospace;
+    }
+    p#section-buttons button.queued {
+      border-color: #80b0ff;
+    }
+    p#section-buttons button.active {
+      background: #80b0ff80;
+      border-color: #d0d0d0;
+    }
     span.beat-readout {
       padding-left: 24px;
       font-weight: normal;
@@ -217,6 +239,7 @@
       <span class="beat-readout">:</span>
       <span class="beat-readout" id="section-readout"></span>
     </p>
+    <p id="section-buttons" class="closed"></p>
     <p id="sliders">
       <template id="slider-template">
         <p style="display: flex; flex-flow: row nowrap;">
@@ -462,6 +485,9 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p>There is always exactly one active section. Before you define or select any section, a built in <code>default</code> section (length 8) is active and repeats forever, so section param lookups always resolve. The <code>default</code> section is an ordinary section: you can redefine it like any other &mdash; give it a <code>length</code>, params, a <code>next</code>, or a <code>section default { ... }</code> code block &mdash; and refer to it by name (<code>default.riser</code>, <code>set section.next=default</code>). Redefining it with no explicit <code>length</code> keeps its 8 beat default; remove the redefinition and it reverts to the built in baseline.</p>
 <p>When the active section reaches its <code>length</code>, playback advances to the queued next section (or back to the <code>default</code> section if none is queued) &mdash; unless it has a <code>repeat</code> and has not yet played that many times, in which case it replays instead. Queuing a next section consumes it; once it becomes active there is again no next queued, so unless you queue another the piece falls back to the default section after it.</p>
 <p>The readout in the top bar shows the active section, how many beats into it we are, its length, and the next section; eg <code>drop 5/16 -&gt; default</code>. When the section has a <code>repeat</code> it also shows the current play, eg <code>drop 5/16 (2/4) -&gt; default</code>.</p>
+<h6>Triggering a section:</h6>
+<p>Below the readout is a row of buttons, one per defined section, which is the easiest way to trigger a section while performing. Click a button to queue that section as the next one, so it starts when the current section reaches its <code>length</code>; click it again to unqueue it. Shift click to switch to the section immediately. The button of the section that is playing is highlighted, and the queued one is outlined. The row only appears once you have defined a section of your own; with just the built in <code>default</code> section there is nothing to choose between.</p>
+<p>Clicking is usually preferable to putting <code>set section.next=name</code> in the code, because the code lines are re-run every time you update the code, so they re-trigger the section on every update until you comment them out again. A button click happens exactly once.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-pattern-syntax')" class="accordion"> Patterns</h4>
 <div id="accordion-pattern-syntax" class="closed">

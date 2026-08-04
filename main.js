@@ -22,6 +22,7 @@ define(function(require) {
   let metronome = require('metronome')
   let players = require('player/players')
   let sections = require('section/sections')
+  let sectionButtons = require('section/section-buttons')
   let consoleOut = require('console')
   let collaboration = require('collaboration')
   let keyboard = require('player/keyboard')
@@ -233,6 +234,7 @@ define(function(require) {
         clearCallTree()
       }
     }
+    sectionButtons.update() // Per frame (not per beat) so new sections and clicks show immediately; diffs internally
     vuMeterStyle(vuMeterL.style, system.meter('L'), -30, 0)
     vuMeterStyle(vuMeterR.style, system.meter('R'), -30, 0)
     limiterReadout.style.backgroundColor = readoutColor(-system.limiterReduction(), 0, 10)

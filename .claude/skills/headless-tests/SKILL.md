@@ -86,6 +86,26 @@ The 5 `draw/*` modules (`shadercommon`, `shaders`, `texture`, `text`, `colour`) 
   "http://localhost:8000/?test" 2> /tmp/limut-test.log &
 ```
 
+## Driving the whole app (UI behaviour, not just the test suite)
+
+For behaviour that only exists in the running app — DOM readouts, buttons, section transitions over real beats — drive the real page rather than the `?test` suite. Confirmed working 2026-08-04:
+
+```sh
+python3 -c "s=open('index.html').read(); open('verify-app.html','w').write(s.replace('</body>','<script src=\"/verify-driver.js\"></script>\n</body>'))"
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --headless=new --disable-gpu --use-angle=swiftshader --enable-unsafe-swiftshader \
+  --autoplay-policy=no-user-gesture-required --enable-logging=stderr --v=1 \
+  "http://localhost:8000/verify-app.html?nosave" 2> /tmp/verify.log &
+PID=$!; sleep 30; kill $PID 2>/dev/null
+grep "CONSOLE" /tmp/verify.log | sed -E 's|.*CONSOLE[^"]*"||; s|", source:.*||'
+```
+
+- **Don't iframe `/index.html` from a harness page.** The parent frame's `setTimeout`/`setInterval` (and its console capture) go dead once the app loads in a child frame: the first synchronous log appears and then nothing, so an async driver silently stalls at its first `await` — with no error to explain it. Appending the driver to a *copy* of index.html sidesteps this entirely; async `console.log` from inside the app's own frame **is** captured (unlike the `?test` async-IIFE case above).
+- `--use-angle=swiftshader` now needs `--enable-unsafe-swiftshader` too (software WebGL fallback was deprecated). Without working WebGL2 the app's `alert()` blocks the whole renderer and nothing runs.
+- Driver shape: poll for `document.querySelector('.CodeMirror')` + `window.go`, wait ~2.5s for presets/includes, then `cmEl.CodeMirror.setValue(src)` + `window.go()` and read DOM (`#section-readout`, `#section-buttons`, …). Simulate input with real events (`el.dispatchEvent(new MouseEvent('mousedown', {bubbles:true, cancelable:true}))`); `dispatchEvent` returning `false` proves the handler called `preventDefault`.
+- Use a fast `set bpm=600`, and **poll for the state you want** (`while readout doesn't start with 'contrast'`) instead of sleeping a computed number of beats — rAF pacing is irregular under headless and a whole section can elapse inside one `wait()`, which reads as a failure that isn't one.
+- Delete `verify-app.html` / `verify-driver.js` afterwards; they are verification artifacts, not part of the diff.
+
 ## When adding behaviour
 
 Write or update an inline test alongside the code whenever it's reasonably testable — the inline test blocks are cheap to extend and catch regressions early. There is no separate test runner.
