@@ -36,7 +36,7 @@ define(function(require) {
   // like any other section. sections.default is a getter onto the live registry object so all
   // existing reads keep resolving to it even after a redefinition swaps the instance.
   sections.makeDefault = () => {
-    let d = { name: 'default', length: 4 }
+    let d = { name: 'default', length: 8 }
     sections.addStandardParams(d)
     return d
   }
@@ -397,16 +397,16 @@ define(function(require) {
 
     // The default section is a real registry entry that can be redefined, keeping active live
     sections.active = sections.instances.default; sections.activeStartBeat = 0
-    assert(4, sections.default.length)          // baseline
+    assert(8, sections.default.length)          // baseline
     assert(1, sections.default.active({},0))
-    let d8 = sections.makeDefault(); d8.length = 8; sections.define('default', d8)
-    assert(true, sections.active === d8)        // active follows the redefinition
-    assert(8, sections.default.length)          // new length in effect
+    let d16 = sections.makeDefault(); d16.length = 16; sections.define('default', d16)
+    assert(true, sections.active === d16)       // active follows the redefinition
+    assert(16, sections.default.length)         // new length in effect
     assert(1, sections.default.active({},0))    // standard functions still live
     assert(2, sections.default.time({},2))      // timing intact (start beat unchanged)
     sections.resetDefault()                     // reverts to baseline, active still follows
     assert(true, sections.active === sections.instances.default)
-    assert(4, sections.default.length)
+    assert(8, sections.default.length)
     sections.instances = { default: sections.makeDefault() }
     sections.active = sections.activeStartBeat = undefined
 

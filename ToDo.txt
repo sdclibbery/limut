@@ -2,15 +2,12 @@
 =================================================================================================================================
 =================================================================================================================================
 Musical Structure
- Should be able to write:  section drop, length*=2
- Default section to 8 beats length?
  Can set section params as 'set' overrides, including length, including for default section, eg set default length=8
+ Should be able to write:  section drop, length*=2
  ?Can set next section once without having to comment out? Eg  once set section.next=drop  ??
  ?Can base one section on another, and add more stuff on top? Can group sections into higher level structures??
  ?If you define sections within a section, they become their own thing with two levels of active section etc?
  ?Can define transitions between two given sections, with extra players etc
- ?Can access total riser across all repeats
- ???Pattern timing should always be relative to section start???? Or not??
 !superosc cant take positional freq; should be able to play=superosc{440}
 !superosc docs should have params on separate sub paragraphs
 All presets should use @s not @f where possible

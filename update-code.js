@@ -352,7 +352,7 @@ define((require) => {
       assert(1, vars.dfx)
       delete vars.dfx
       sections.resetDefault() // What updateCode runs each update; removing the block reverts default
-      assert(4, sections.instances.default.length)
+      assert(8, sections.instances.default.length)
 
       // Unterminated block is a parse error; nothing is defined and the body lines don't leak out as commands
       sections.active = undefined
