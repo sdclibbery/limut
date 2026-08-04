@@ -6,7 +6,7 @@ define((require) => {
   var parsePlayer = require('player/parse-player')
   var parseParams = require('player/params')
   let parseExpression = require('expression/parse-expression')
-  let {combineOverrides,applyOverrides,isOverride} = require('player/override-params')
+  let {combineOverrides,applyOverrides,applyOverride,isOverride} = require('player/override-params')
   let vars = require('vars')
   let mainVars = require('main-vars')
   let {operators} = require('expression/operators')
@@ -192,7 +192,8 @@ define((require) => {
         ;[, paramsStr] = splitOnFirst(line, ',')
       }
       let name = line.match(/^[_a-zA-Z]\w*/)[0].toLowerCase() // The name is all that precedes the `,`, `{` or end of line
-      let section = { name: name, length: name === 'default' ? 4 : 32 } // default length 32 beats (the built-in default stays 4)
+      let defaultLength = name === 'default' ? 8 : 32 // default length 32 beats (the built-in default section is 8)
+      let section = { name: name, length: defaultLength }
       sections.addStandardParams(section) // standard active/timing functions; overridable by params below
       let params = parseParams(paramsStr, name)
       // `next` names the section to queue when this one becomes current. A single bare identifier
@@ -200,13 +201,17 @@ define((require) => {
       // is stored as an expression spec, evaluated to a section name when the section becomes active.
       let nextMatch = paramsStr && paramsStr.match(/(?:^|,)\s*next\s*=\s*([_a-zA-Z]\w*)\s*(?:,|$)/i)
       if (nextMatch) { section.nextName = nextMatch[1].toLowerCase(); delete params.next }
-      else if (params.next !== undefined) { section.nextSpec = params.next; delete params.next }
-      // length/repeat expressions (eg length=[4,8]r) are held as specs and evaluated when the
-      // section becomes active; constants fold to numbers and are assigned straight through.
-      for (let k in params) {
-        if ((k === 'length' || k === 'repeat') && typeof params[k] === 'function') { section[k+'Spec'] = params[k] }
-        else { section[k] = params[k] }
+      else if (params.next !== undefined) { section.nextSpec = applyOverride({}, 'next', params.next); delete params.next }
+      // Params are applied over the section defaults, so a compound assignment (eg length*=2)
+      // combines with the default value. Against the defaults rather than any previous definition,
+      // so re-running the same code on every update is idempotent, as it is for player params.
+      for (let k in params) { section[k] = applyOverride(section, k, params[k]) }
+      // length/repeat expressions (eg length=[4,8]r, or length*=[1,2]r) are held as specs and
+      // evaluated when the section becomes active; constants fold to numbers and stay put.
+      for (let k of ['length', 'repeat']) {
+        if (typeof section[k] === 'function') { section[k+'Spec'] = section[k]; delete section[k] }
       }
+      if (section.length === undefined) { section.length = defaultLength } // Hold the default until a length spec resolves
       sections.define(name, section) // register, rebinding active/next pointers if redefining the live section
       if (sections.active && sections.active.name === name) { // Compare by name so the built-in default section matches too
         for (let cmd of bodyCommands) {
@@ -577,6 +582,44 @@ define((require) => {
   parseLine('SECTION FOO, Bar=2')
   assert(2, sections.instances.foo.bar)
   delete sections.instances.foo
+
+  // Compound assignments combine with the section defaults (and with earlier params on the line),
+  // so they give the same value however many times the code is re-run
+  parseLine('section foo, length*=2')
+  assert(64, sections.instances.foo.length) // 32 default doubled
+  parseLine('section foo, length*=2')
+  assert(64, sections.instances.foo.length) // Re-running the same line is idempotent
+  delete sections.instances.foo
+
+  parseLine('section foo, length+=8')
+  assert(40, sections.instances.foo.length)
+  delete sections.instances.foo
+
+  parseLine('section foo, length=16, length*=2')
+  assert(32, sections.instances.foo.length) // Combines with the explicit length earlier on the line
+  delete sections.instances.foo
+
+  parseLine('section foo, bar*=2')
+  assert(2, sections.instances.foo.bar) // No previous value: the compound op just takes the value
+  delete sections.instances.foo
+
+  // A compound assignment with a non-constant expression is still held as a spec
+  parseLine('section foo, length*=[1,2]r')
+  assert('function', typeof sections.instances.foo.lengthSpec)
+  assert(32, sections.instances.foo.length) // default until first activation
+  sections.resolveActiveParams(sections.instances.foo, 0)
+  assert(true, [32,64].includes(sections.instances.foo.length))
+  delete sections.instances.foo
+
+  parseLine('section foo, repeat*=2')
+  assert(2, sections.instances.foo.repeat) // repeat has no default to combine with
+  delete sections.instances.foo
+
+  parseLine('section default')
+  assert(8, sections.instances.default.length) // Redefining default keeps its 8 beat default length
+  parseLine('section default, length*=2')
+  assert(16, sections.instances.default.length)
+  sections.resetDefault()
 
   parseLine('section foo, bar=2, baz=1+2')
   assert(2, sections.instances.foo.bar)

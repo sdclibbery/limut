@@ -3,7 +3,6 @@
 =================================================================================================================================
 Musical Structure
  Can set section params as 'set' overrides, including length, including for default section, eg set default length=8
- Should be able to write:  section drop, length*=2
  ?Can base one section on another, and add more stuff on top? Can group sections into higher level structures??
  ?If you define sections within a section, they become their own thing with two levels of active section etc?
  ?Can define transitions between two given sections, with extra players etc
