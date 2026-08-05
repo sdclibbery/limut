@@ -1,9 +1,7 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-Should be able to set section params as 'set' overrides, including length, including for default section, eg set default length=4
 Remake cydist using superosc
-!There are random cutoff and resonance params in the docs for pwm synth
 !superosc cant take positional freq; should be able to play=superosc{440}
 !superosc docs should have params on separate sub paragraphs
 All presets should use @s not @f where possible
