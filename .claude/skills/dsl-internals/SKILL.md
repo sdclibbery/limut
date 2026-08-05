@@ -150,6 +150,35 @@ Called every frame from `main.js` (inside a try/catch that reports `Run Error fr
 
 Every section gets default functions closing over the section + module state: `active`/`in` (1 if this is the active section), `exists` (always 1), `time` (beats elapsed, 0 if inactive), `riser`/`rise` (0→1 fraction through the section, clamped), `fall` (1→0 inverse). All are flagged `.interval = 'frame'` so they re-evaluate every frame and are **not memoised** — essential since their value depends on the live beat and which section is active. They read `section.length` dynamically, so a later length override is honoured. DSL params on the section line override these defaults (e.g. `section foo, riser=[0:1]l`).
 
+### `set` overrides on sections
+
+`set drop length=4` / `set default length=4` / `set section length=4`. These parse as ordinary player
+overrides (`parse-line.js` writes `players.overrides[id]`) — routing to sections can't happen at parse
+time because a `set` line may precede its `section` line. So `updateCode` calls
+`sections.extractOverrides(players.overrides, playerExists)` **after** `expandOverrides` and
+`gc_sweep`, moving section-named keys into `sections.overrides[name]` and `section`/`sx` keys into
+`sections.activeOverrides`, returning what stays with players. `playerExists` is injected so
+`sections.js` needs no dependency on `player/players`.
+
+Precedence mirrors `lookupOp` exactly: a player of the same name wins; the `section`/`sx` keyword
+wins over a same-named player. Wildcards (`set p* ...`) only ever match players.
+
+Overrides are folded **at read time**, not resolved at activation the way `lengthSpec` is, so an edit
+takes effect immediately mid-section. `foldOverride(section, key, value)` applies the name override
+then the keyword one (keyword last: wins for `=`, composes for `+=`). Reads go through
+`sections.getParam`/`hasParam` (unevaluated, for lookupOp) and `sections.getLength`/`getRepeat`
+(evaluated numbers, same validity checks as `resolveActiveParams`). Rewired callers:
+`addStandardParams`' `frac`/`rtime`, `update()`'s boundary and repeat checks, `applyNext`, and the
+main.js readout. Cleared in `gc_reset`, so a deleted `set` line stops applying.
+
+**Gotcha:** don't use `combineOverrides` for a per-read merge — `combineOverride` *mutates* the stored
+array with `push`, so repeated reads would accumulate the override over and over. Hence the
+throwaway holder object in `foldOverride` (`applyOverride` reads its base from `params[param]`).
+
+A `next` override becomes the `nextSpec`: it went through the normal param parser, so it follows the
+expression rules (a bare name evaluates to its own text) rather than the bare-name literal shortcut
+the `section` line special-cases with a regex.
+
 ### Redefinition rebinds live pointers (gotcha)
 
 `sections.define(name, section)` replaces `instances[name]` with a **new object**. If the old object was `active`/`next`/`pendingActive`, those pointers are rebound to the new object — so editing and re-running the code while a section is playing keeps it active with its timing intact, rather than stranding the live pointers on the stale object (and its now-orphaned standard params). This was a reported bug; there's a regression test for it in `sections.js`.

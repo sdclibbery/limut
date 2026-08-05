@@ -59,7 +59,7 @@ define(function(require) {
       }
       if (sections.isKeyword(ml.toLowerCase())) { // lookup a param on the currently active section (section / sx)
         let section = sections.active
-        if (section && section[key] !== undefined) { return evalRecurse(section[key], event,b) }
+        if (sections.hasParam(section, key)) { return evalRecurse(sections.getParam(section, key), event,b) }
         return 0
       }
       let player = players.getById(ml)
@@ -80,7 +80,7 @@ define(function(require) {
         return v
       } else {
         let section = sections.getByName(ml) // lookup a param on a named section
-        if (section && section[key] !== undefined) { return evalRecurse(section[key], event,b) }
+        if (sections.hasParam(section, key)) { return evalRecurse(sections.getParam(section, key), event,b) }
         return 0 // Not found as a player - should really return undefined now we have '?' operator, but this could be a breaking change
       }
     }
@@ -169,6 +169,24 @@ define(function(require) {
     assert(0, lookupOp('sx', 'nope', {},0,er))
     sections.active = undefined
     assert(0, lookupOp('section', 'foo', {},0,er)) // No active section
+
+    // `set` overrides on a section are folded into both lookup forms
+    sections.instances.drop = { name:'drop', foo:0.5 }
+    sections.overrides = { drop: { foo: 2, bar: 3 } }
+    assert(2, lookupOp('drop', 'foo', {},0,er))    // overrides the section's own value
+    assert(3, lookupOp('drop', 'bar', {},0,er))    // a param that only exists as an override
+    assert(0, lookupOp('drop', 'nope', {},0,er))
+    sections.active = sections.instances.drop
+    assert(2, lookupOp('section', 'foo', {},0,er)) // same via the active-section keyword
+    assert(3, lookupOp('sx', 'bar', {},0,er))
+    sections.overrides = {}
+    sections.activeOverrides = { foo: 7 }          // set section foo=7 targets whichever is active
+    assert(7, lookupOp('section', 'foo', {},0,er))
+    assert(7, lookupOp('drop', 'foo', {},0,er))    // drop is the active section
+    sections.active = undefined
+    assert(0.5, lookupOp('drop', 'foo', {},0,er))  // not active: the keyword override doesn't apply
+    sections.activeOverrides = undefined
+    delete sections.instances.drop
 
     assert(1, lookupOp('this', 'foo', {foo:1},0,er)())
 

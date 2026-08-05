@@ -424,14 +424,14 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <h5>Defining a player</h5>
 <p>Basic structure: <code>id synth pattern, params</code></p>
 <p>A player command begins when something matching <code>id synth pattern</code> begins a new line. The params may follow on subsequent lines.</p>
-<p><code>id</code> Identifier for the player, so it can be referred to from other players etc. Must contain only alphanumeric characters from the basic Latin alphabet or underscore, and must not start with a digit. No player can be named <code>set</code>, <code>preset</code> or <code>section</code> as those are reserved keywords.</p>
+<p><code>id</code> Identifier for the player, so it can be referred to from other players etc. Must contain only alphanumeric characters from the basic Latin alphabet or underscore, and must not start with a digit. No player can be named <code>set</code>, <code>preset</code>, <code>section</code> or <code>sx</code> as those are reserved keywords.</p>
 <p><code>synth</code> Name of the audio or visual synth to use; eg <code>piano</code></p>
 <p><code>pattern</code> Pattern of notes to play. Specifies the notes or sounds to play, and when to play them. Ends at the first comma; it can also be supplied (or overridden) as the <code>pattern</code> param instead, eg <code>p ping 0, pattern=`0246`</code>. A <code>pattern</code> param given by a preset is only a default, overridden by the pattern on the player line</p>
 <p><code>params</code> Comma separated list of params (eg <code>amp=1/2</code>) that affect how the player plays; see 'Value Syntax' and 'Params' sections below</p>
 <h5>Overriding player params:</h5>
 <p>Basic structure: <code>set id params</code></p>
 <p>A set overrides command begins when <code>set </code> begins a new line. The id and params may follow on subsequent lines.</p>
-<p><code>id</code> Player identifier; the override params will be apllied to this player. Can also be a list of multiple players to apply the params to; eg <code>set (kd,sd) amp=0</code>. Can include wildcards, so <code>set p* ...</code> will apply the overrides to every player whose name starts with 'p'. <code>set * ...</code> will apply to all players. <code>set !p ...</code> will apply to all players _except_ 'p'.</p>
+<p><code>id</code> Player identifier; the override params will be apllied to this player. Can also be a list of multiple players to apply the params to; eg <code>set (kd,sd) amp=0</code>. Can include wildcards, so <code>set p* ...</code> will apply the overrides to every player whose name starts with 'p'. <code>set * ...</code> will apply to all players. <code>set !p ...</code> will apply to all players _except_ 'p'. It can also be the name of a section, or the <code>section</code> / <code>sx</code> keyword; see 'Overriding section params' below.</p>
 <p><code>params</code> Comma separated list of params (eg <code>amp=1/2</code>) that affect how the player plays; see 'Value Syntax' and 'Params' sections below</p>
 <p class='sub'><code>modification overrides</code> params can be defined using operators to modify existing values rather than override them; eg <code>add+=2</code> will increase the add parameter by an additional 2 on top of what it was already set to.</p>
 <h5>Setting global vars:</h5>
@@ -470,6 +470,13 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>rise</code> Alias for <code>riser</code>.</p>
 <p class='sub'><code>fall</code> Ramps from 1 at the start of the section to 0 at its end. 1 when the section is not active.</p>
 <p class='sub'><code>count</code> Which repeat of the section is currently playing, counting from 0. Resets to 0 when the section becomes active and increases by 1 each time it reaches its <code>length</code>. Handy with <code>repeat</code>, eg <code>section.count==section.repeat-1</code> is 1 on the final repeat. 0 when the section is not active.</p>
+<h6>Overriding section params:</h6>
+<p>Basic structure: <code>set name params</code></p>
+<p>Section params can be overridden after the fact, exactly as player params are: <code>set drop length=4</code>, <code>set drop riser*=2</code>, <code>set drop foo=3</code>. Any param works, including <code>length</code>, <code>repeat</code> and <code>next</code>, and including params the section never declared. Modification overrides combine with the section's value (or with its default if it has none), so <code>set drop length*=2</code> doubles the declared length. The built in <code>default</code> section can be overridden the same way, eg <code>set default length=4</code>.</p>
+<p>Overrides are read live, so unlike a <code>length</code> expression &mdash; which is fixed when the section becomes active &mdash; changing a <code>set</code> line takes effect as soon as you update the code, even part way through the section. Like player overrides, they only last as long as the line is in the code: remove it and the section goes back to its declared value.</p>
+<p><code>set section params</code> (or <code>set sx params</code>) overrides whichever section is currently active rather than a named one, matching how <code>section.riser</code> reads the active section. If a section also has an override by name, the keyword one is applied on top of it.</p>
+<p>If a player and a section share a name, the player wins and the override applies to the player &mdash; the same precedence param lookups use, where <code>drop.amp</code> reads the player <code>drop</code> if there is one. Wildcards (<code>set p* ...</code>) only ever match players.</p>
+<p><code>set drop next=chorus</code> follows the same rules as the expression form of <code>next</code> rather than the bare name on the section line, so a var of that name would be resolved first; <code>set drop next=(chorus,verse)r</code> works as you would expect.</p>
 <h6>Section-scoped code:</h6>
 <p>Block structure:
   <pre>

@@ -156,6 +156,10 @@ define((require) => {
     sections.gc_sweep()
     sliders.gc_sweep()
     players.expandOverrides()
+    // Route `set <name> ...` lines that name a section onto that section. After expandOverrides, so
+    // wildcards (which only ever match players) have already been resolved; and after gc_sweep, so
+    // only surviving sections are considered.
+    players.overrides = sections.extractOverrides(players.overrides, id => !!players.getById(id))
   }
 
   // Rerun the last code after the active section changed, so section-scoped lines
@@ -385,6 +389,41 @@ define((require) => {
       delete players.overrides.scaa
       delete sections.instances.sca2
       delete sections.instances.scb2
+
+      // `set <name> param=value` overrides a section of that name (what updateCode's
+      // extractOverrides call does after parsing; here on just the keys these lines produce)
+      let route = (id) => sections.extractOverrides({ [id]: players.overrides[id] }, i => !!players.getById(i))
+      sections.overrides = {}
+      await parseCode('section sov, length=8\nset sov length=4, foo=3')
+      assert(4, players.overrides.sov && players.overrides.sov.length) // parses as a player override...
+      assert({}, route('sov'))                                        // ...and routes to the section
+      assert(4, sections.getLength(sections.instances.sov, 0))
+      assert(3, sections.getParam(sections.instances.sov, 'foo'))
+      delete players.overrides.sov
+
+      // A player of the same name wins; the section is left alone
+      sections.overrides = {}
+      players.instances.sov = { currentEvent: () => [] }
+      await parseCode('section sov, length=8\nset sov length=4')
+      assert(4, route('sov').sov.length)                              // stays with the player
+      assert(8, sections.getLength(sections.instances.sov, 0))
+      delete players.instances.sov
+      delete players.overrides.sov
+      delete sections.instances.sov
+
+      // The built-in default section can be overridden, including compounding with its default length
+      sections.resetDefault()
+      sections.overrides = {}
+      await parseCode('set default length=4')
+      route('default')
+      assert(4, sections.getLength(sections.default, 0))
+      delete players.overrides.default
+      sections.overrides = {}
+      await parseCode('set default length+=4')
+      route('default')
+      assert(12, sections.getLength(sections.default, 0))
+      delete players.overrides.default
+      sections.overrides = {}
 
       sections.active = savedActive
       sections.hasBlocks = false

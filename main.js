@@ -173,8 +173,9 @@ define(function(require) {
       if (sections.active) {
         let beatsIn = beat.count - sections.activeStartBeat + 1
         let next = sections.next ? sections.next.name : sections.default.name
-        let repeat = sections.active.repeat !== undefined ? ` (${sections.activeCount + 1}/${sections.active.repeat})` : ''
-        sectionReadout.innerText = `${sections.active.name} ${beatsIn}/${sections.active.length}${repeat} -> ${next}`
+        let activeRepeat = sections.getRepeat(sections.active, beat.count) // includes any `set` override
+        let repeat = activeRepeat !== undefined ? ` (${sections.activeCount + 1}/${activeRepeat})` : ''
+        sectionReadout.innerText = `${sections.active.name} ${beatsIn}/${sections.getLength(sections.active, beat.count)}${repeat} -> ${next}`
       }
       let playBeat = () => {
         Object.values(players.instances).forEach(player => {

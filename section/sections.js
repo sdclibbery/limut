@@ -2,9 +2,12 @@
 define(function(require) {
   let {evalParamFrame} = require('player/eval-param')
   let {mainParam} = require('player/sub-param')
+  let {applyOverride,combineOverrides,newOverride} = require('player/override-params')
 
   let sections = {
     instances: {},
+    overrides: {},              // section name -> params overridden by `set <name> param=value` lines
+    activeOverrides: undefined, // params overridden by `set section param=value` / `set sx ...` (whichever section is active)
   }
 
   // The active-section keyword and its short alias `sx`, recognised in expressions
@@ -12,19 +15,80 @@ define(function(require) {
   // alias lives in one place.
   sections.isKeyword = (name) => name === 'section' || name === 'sx'
 
+  // Fold this section's `set` overrides onto a base value: first those set by the section's name
+  // (set drop length=4), then any set on the active-section keyword (set section length=4) when this
+  // is the active section — so the keyword wins for a plain assignment and composes for a compound
+  // one. applyOverride reads the base from a holder object, hence the throwaway wrapper.
+  let foldOverride = (section, key, value) => {
+    let holder = {}
+    holder[key] = value
+    let byName = sections.overrides[section.name]
+    if (byName && byName[key] !== undefined) { holder[key] = applyOverride(holder, key, byName[key]) }
+    if (section === sections.active && sections.activeOverrides && sections.activeOverrides[key] !== undefined) {
+      holder[key] = applyOverride(holder, key, sections.activeOverrides[key])
+    }
+    return holder[key]
+  }
+  let hasOverride = (section, key) => {
+    let byName = sections.overrides[section.name]
+    if (byName && byName[key] !== undefined) { return true }
+    return section === sections.active && !!sections.activeOverrides && sections.activeOverrides[key] !== undefined
+  }
+
+  // Read a section param with any `set` override applied. Returns the value unevaluated (params are
+  // usually expressions), just like reading section[key] direct, so callers evaluate it in their
+  // own context. hasParam reports a param that exists only as an override.
+  sections.getParam = (section, key) => section ? foldOverride(section, key, section[key]) : undefined
+  sections.hasParam = (section, key) => !!section && (section[key] !== undefined || hasOverride(section, key))
+
+  // Evaluate an overridable numeric param (length/repeat) to a number for this beat. Overrides are
+  // read live rather than resolved once at activation the way a length spec is, so editing a `set`
+  // line takes effect immediately. Same validity checks as resolveActiveParams.
+  let numericParam = (section, key, beatCount) => {
+    let base = section[key]
+    if (!hasOverride(section, key)) { return base }
+    let event = { count: beatCount, idx: 0, _time: beatCount }
+    let v = mainParam(evalParamFrame(foldOverride(section, key, base), event, beatCount))
+    if (typeof v !== 'number' || !isFinite(v)) { return base }
+    if (key === 'length' && v <= 0) { return base } // A zero or negative length would never end
+    return v
+  }
+  sections.getLength = (section, beatCount) => numericParam(section, 'length', beatCount)
+  sections.getRepeat = (section, beatCount) => numericParam(section, 'repeat', beatCount)
+
+  // Route the `set <name> param=value` overrides that name a section onto that section, returning
+  // those that stay with players. A player of the same name always wins, and the section/sx keyword
+  // wins over a same-named player — both matching the lookup precedence in lookupOp. playerExists is
+  // injected so this module keeps no dependency on the player registry.
+  sections.extractOverrides = (playerOverrides, playerExists) => {
+    let remaining = {}
+    for (let id in playerOverrides) {
+      if (sections.isKeyword(id)) {
+        sections.activeOverrides = combineOverrides(sections.activeOverrides || {}, playerOverrides[id])
+      } else if (!playerExists(id) && sections.getByName(id)) {
+        let name = id.toLowerCase()
+        sections.overrides[name] = combineOverrides(sections.overrides[name] || {}, playerOverrides[id])
+      } else {
+        remaining[id] = playerOverrides[id]
+      }
+    }
+    return remaining
+  }
+
   // Define the standard functions every section carries by default (active/timing/existence).
   // They close over the section object and the sections module state, and read section.length
   // dynamically so a later length override is honoured.
   sections.addStandardParams = (section) => {
     let active = () => sections.active === section
     let through = (b) => Math.max(0, b - sections.activeStartBeat) // beats elapsed (>=0; clamps the sub-beat negative transient at a section boundary)
-    let frac = (b) => Math.max(0, Math.min(1, through(b) / section.length))
+    let length = (b) => sections.getLength(section, b)           // the live length, including any `set` override
+    let frac = (b) => Math.max(0, Math.min(1, through(b) / length(b)))
     let mk = (fn) => { fn.interval = 'frame'; return fn }        // re-eval every frame, don't memoise
     section.active = mk((e,b) => active() ? 1 : 0)
     section.in     = section.active                              // alias
     section.exists = mk((e,b) => 1)
     section.time   = mk((e,b) => active() ? through(b) : 0)
-    section.rtime  = mk((e,b) => active() ? section.length - through(b) : section.length) // inverse of .time: counts down from length to 0
+    section.rtime  = mk((e,b) => active() ? length(b) - through(b) : length(b)) // inverse of .time: counts down from length to 0
     section.riser  = mk((e,b) => active() ? frac(b) : 0)
     section.rise   = section.riser                              // alias
     section.fall   = mk((e,b) => active() ? 1 - frac(b) : 1)
@@ -122,9 +186,13 @@ define(function(require) {
   sections.applyNext = (section, beatCount) => {
     if (!section) { return }
     let name = section.nextName
-    if (section.nextSpec !== undefined) {
+    // A `set drop next=chorus` override supersedes the declared next. It has been through the normal
+    // param parser, so it is an expression like next=(a,b)r rather than the bare-name literal the
+    // section line special cases — a bare name evaluates to its own text, so the spec path handles it.
+    let spec = hasOverride(section, 'next') ? foldOverride(section, 'next', section.nextSpec) : section.nextSpec
+    if (spec !== undefined) {
       let event = { count: beatCount, idx: 0, _time: beatCount }
-      let v = evalParamFrame(section.nextSpec, event, beatCount)
+      let v = evalParamFrame(spec, event, beatCount)
       if (Array.isArray(v)) { v = v[0] } // A plain chord: take the first; use `r` to pick randomly
       v = mainParam(v)
       if (typeof v === 'string') { name = v.toLowerCase() }
@@ -158,9 +226,9 @@ define(function(require) {
       sections.applyNext(sections.active, beatCount)
       return true
     }
-    if (beatCount >= sections.activeStartBeat + sections.active.length) {
+    if (beatCount >= sections.activeStartBeat + sections.getLength(sections.active, beatCount)) {
       sections.activeCount += 1 // This section just finished one play
-      let repeat = sections.active.repeat
+      let repeat = sections.getRepeat(sections.active, beatCount)
       if (repeat !== undefined && sections.activeCount < repeat) {
         // Repeat the same section: replay from the top (so time/riser/fall reset) but keep the
         // queued next and don't report a change, so section-scoped block code is not re-run.
@@ -182,6 +250,8 @@ define(function(require) {
 
   sections.gc_reset = () => {
     sections.hasBlocks = false
+    sections.overrides = {}          // `set` overrides are rebuilt from the code on every update,
+    sections.activeOverrides = undefined // so a deleted `set` line stops applying (as for players)
     for (let name in sections.instances) {
       sections.instances[name].marked = false
     }
@@ -666,6 +736,155 @@ define(function(require) {
     sections.next = undefined
     sections.applyNext({ name:'legacy', nextName:'verse' }, 0)
     assert(true, sections.next === sections.instances.verse)
+
+    sections.instances = { default: sections.makeDefault() } // Keep the built-in default registered
+
+    // `set` overrides on sections //
+    let opAdd = (l,r) => l+r
+    let opMul = (l,r) => l*r
+
+    // extractOverrides: `set <name> ...` lines naming a section are routed to it
+    sections.instances = { drop: {name:'drop', length:16}, verse: {name:'verse', length:8} }
+    sections.overrides = {}
+    sections.activeOverrides = undefined
+    let remaining = sections.extractOverrides({ drop:{length:4}, p1:{amp:2} }, id => id === 'p1')
+    assert({p1:{amp:2}}, remaining)                 // player overrides pass straight through
+    assert({drop:{length:4}}, sections.overrides)   // section override routed by name
+
+    // A player of the same name wins: the override stays with the player (as in lookupOp)
+    sections.overrides = {}
+    remaining = sections.extractOverrides({ drop:{length:4} }, id => id === 'drop')
+    assert({drop:{length:4}}, remaining)
+    assert({}, sections.overrides)
+
+    // An id that is neither a player nor a section is left alone
+    sections.overrides = {}
+    remaining = sections.extractOverrides({ nope:{length:4} }, () => false)
+    assert({nope:{length:4}}, remaining)
+    assert({}, sections.overrides)
+
+    // The section/sx keyword targets the active section, and wins over a same-named player
+    sections.overrides = {}
+    sections.activeOverrides = undefined
+    remaining = sections.extractOverrides({ section:{length:4}, sx:{foo:1} }, () => true)
+    assert({}, remaining)
+    assert({length:4, foo:1}, sections.activeOverrides)
+
+    // Several set lines for the same section accumulate
+    sections.overrides = {}
+    sections.activeOverrides = undefined
+    sections.extractOverrides({ drop:{length:4} }, () => false)
+    sections.extractOverrides({ drop:{foo:1} }, () => false)
+    assert({length:4, foo:1}, sections.overrides.drop)
+
+    // Names are lowercased on the way in, matching getByName
+    sections.overrides = {}
+    sections.extractOverrides({ 'Drop':{length:4} }, () => false)
+    assert({length:4}, sections.overrides.drop)
+
+    // getParam / hasParam: the override folds onto the section's own value
+    let ov = { name:'ov', length:16, foo:2 }
+    sections.instances = { ov: ov }
+    sections.active = undefined
+    sections.overrides = { ov: { foo: 5 } }
+    assert(5, sections.getParam(ov, 'foo'))
+    assert(true, sections.hasParam(ov, 'foo'))
+    assert(16, sections.getParam(ov, 'length'))    // an un-overridden param reads through
+    assert(false, sections.hasParam(ov, 'nope'))
+    assert(false, sections.hasParam(undefined, 'foo'))
+
+    // A param the section never declared exists once it is overridden
+    sections.overrides = { ov: { bar: 3 } }
+    assert(true, sections.hasParam(ov, 'bar'))
+    assert(3, sections.getParam(ov, 'bar'))
+
+    // A compound override combines with the section's value, and repeated reads don't accumulate
+    sections.overrides = { ov: { foo: newOverride(3, opAdd) } }
+    assert(5, sections.getParam(ov, 'foo'))
+    assert(5, sections.getParam(ov, 'foo'))
+
+    // The active-section keyword applies only to the active section, and layers over a name override
+    sections.overrides = { ov: { foo: 5 } }
+    sections.activeOverrides = { foo: 9 }
+    assert(5, sections.getParam(ov, 'foo'))        // not active: the keyword override doesn't apply
+    sections.active = ov
+    assert(9, sections.getParam(ov, 'foo'))        // active: a plain keyword assignment wins
+    sections.activeOverrides = { foo: newOverride(1, opAdd) }
+    assert(6, sections.getParam(ov, 'foo'))        // a compound one composes onto the name override
+    sections.active = undefined
+    sections.activeOverrides = undefined
+
+    // getLength / getRepeat: evaluated live, with the validity checks resolveActiveParams uses
+    let gl = { name:'gl', length:16, repeat:2 }
+    sections.overrides = {}
+    assert(16, sections.getLength(gl, 0))
+    assert(2, sections.getRepeat(gl, 0))
+    sections.overrides = { gl: { length: 4 } }
+    assert(4, sections.getLength(gl, 0))
+    sections.overrides = { gl: { length: newOverride(2, opMul) } }
+    assert(32, sections.getLength(gl, 0))
+    sections.overrides = { gl: { length: (e,b) => b } } // an expression is evaluated on each read
+    assert(8, sections.getLength(gl, 8))
+    sections.overrides = { gl: { length: 0 } }          // a zero/negative length would never end
+    assert(16, sections.getLength(gl, 0))
+    sections.overrides = { gl: { length: 'nope' } }
+    assert(16, sections.getLength(gl, 0))
+    sections.overrides = { gl: { repeat: 4 } }
+    assert(4, sections.getRepeat(gl, 0))
+
+    // An override layers over a length that a spec resolved at activation
+    let sp = { name:'sp', length:32, lengthSpec:(e,b)=>6 }
+    sections.resolveActiveParams(sp, 0)
+    assert(6, sp.length)
+    sections.overrides = { sp: { length: newOverride(2, opMul) } }
+    assert(12, sections.getLength(sp, 0))
+
+    // The active section advances on its overridden length, not its declared one
+    let ol = { name:'ol', length:16 }
+    sections.instances = { ol: ol, default: sections.makeDefault() }
+    sections.active = undefined; sections.next = undefined; sections.pendingActive = ol
+    sections.activeStartBeat = 0; sections.activeCount = 0
+    sections.overrides = { ol: { length: 4 } }
+    sections.update(0)
+    assert(true, sections.active === ol)
+    assert(false, sections.update(3))   // not yet at the overridden length
+    assert(true, sections.update(4))    // ends at 4, not 16
+    assert(true, sections.active === sections.default)
+
+    // Standard params read the overridden length live
+    let sl = { name:'sl', length:16 }
+    sections.addStandardParams(sl)
+    sections.instances = { sl: sl }
+    sections.active = sl
+    sections.next = undefined; sections.pendingActive = undefined
+    sections.activeStartBeat = 0
+    sections.overrides = {}
+    assert(0.25, sl.riser({},4))
+    sections.overrides = { sl: { length: 8 } }
+    assert(0.5, sl.riser({},4))
+    assert(4, sl.rtime({},4))
+    assert(0.5, sl.fall({},4))
+    sections.active = undefined
+
+    // A `next` override supersedes the declared next
+    let verseN = {name:'versen', length:8}, chorusN = {name:'chorusn', length:8}
+    sections.instances = { versen: verseN, chorusn: chorusN }
+    sections.overrides = { na: { next: (e,b) => 'chorusn' } }
+    sections.next = undefined
+    sections.applyNext({ name:'na', nextName:'versen' }, 0)
+    assert(true, sections.next === chorusN)
+    sections.overrides = {} // with no override the declared next still applies
+    sections.next = undefined
+    sections.applyNext({ name:'na', nextName:'versen' }, 0)
+    assert(true, sections.next === verseN)
+
+    // gc_reset clears the overrides, so a deleted set line stops applying
+    sections.overrides = { a: {length:4} }
+    sections.activeOverrides = { length: 4 }
+    sections.instances = {}
+    sections.gc_reset()
+    assert({}, sections.overrides)
+    assert(undefined, sections.activeOverrides)
 
     sections.instances = { default: sections.makeDefault() } // Keep the built-in default registered
 

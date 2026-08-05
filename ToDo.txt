@@ -1,11 +1,9 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-Musical Structure
- Can set section params as 'set' overrides, including length, including for default section, eg set default length=8
- ?Can base one section on another, and add more stuff on top? Can group sections into higher level structures??
- ?If you define sections within a section, they become their own thing with two levels of active section etc?
- ?Can define transitions between two given sections, with extra players etc
+Should be able to set section params as 'set' overrides, including length, including for default section, eg set default length=4
+Remake cydist using superosc
+!There are random cutoff and resonance params in the docs for pwm synth
 !superosc cant take positional freq; should be able to play=superosc{440}
 !superosc docs should have params on separate sub paragraphs
 All presets should use @s not @f where possible
@@ -50,6 +48,10 @@ Dmxstrip presets...
 ?main volume slider should be killed; just do  set main amp*=slider if you want one...
  ??Time to review the UI generally? make smaller / tidy up?
  Will be a breaking change...
+Musical Structure
+ ?Can base one section on another, and add more stuff on top? Can group sections into higher level structures??
+ ?If you define sections within a section, they become their own thing with two levels of active section etc?
+ ?Can define transitions between two given sections, with extra players etc
 electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
