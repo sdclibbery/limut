@@ -1,6 +1,6 @@
 'use strict'
 define(function(require) {
-  let {addNodeFunction,combineParams} = require('play/nodes/node-var')
+  let {addNodeFunction,combineParams,positionalParamKey} = require('play/nodes/node-var')
   let system = require('play/system');
   let {evalMainParamEvent,evalSubParamEvent,evalMainParamFrame,evalSubParamFrame} = require('play/eval-audio-params')
   let {evalParamFrame,evalParamEvent} = require('player/eval-param')
@@ -17,16 +17,14 @@ define(function(require) {
   let osc = (args,e,b) => {
     let node = system.audio.createOscillator()
     let params = combineParams(args, e)
-    let value = evalParamEvent(params.value, e,b)
+    let value = evalParamEvent(params.value, e)
     setWave(node, (typeof value === 'string') ? value : 'sawtooth')
-    let freq = 440
-    if (typeof value === 'number' && value !== 0) {
-      evalMainParamFrame(node.frequency, params, 'value', 440, 'hz')
-      freq = evalParamEvent(params['value'], e)
-    } else {
-      evalMainParamFrame(node.frequency, params, 'freq', 440, 'hz')
-      freq = evalParamEvent(params['freq'], e)
-    }
+    // The positional param doubles as the waveform name, so it only sets the frequency when
+    // its not a string; otherwise its the key to read that matters, not its value, so units
+    // (440Hz), connectables (osc{110+chaos{2}*40}) and timevars all work.
+    let freqParam = (typeof value === 'string') ? 'freq' : positionalParamKey(args, 'freq')
+    evalMainParamFrame(node.frequency, params, freqParam, 440, 'hz')
+    let freq = evalParamEvent(params[freqParam], e)
     let phase = evalParamEvent(params['phase'], e)
     let offset = 0
     if (typeof freq === 'number' && typeof phase === 'number') { offset = phase / freq }
@@ -54,12 +52,10 @@ define(function(require) {
     let unison = evalMainParamEvent(params, 'unison', 1)
     let pan = evalSubParamEvent(params, 'unison', 'pan', 0.5)
     let node = createSuperOsc(Math.round(unison) >= 2 && pan !== 0 ? 2 : 1)
-    let value = evalParamEvent(params.value, e,b)
-    if (typeof value === 'number' && value !== 0) {
-      evalMainParamFrame(node.parameters.get('frequency'), params, 'value', 440, 'hz')
-    } else {
-      evalMainParamFrame(node.parameters.get('frequency'), params, 'freq', 440, 'hz')
-    }
+    // frequency: the default positional param sets it (like osc), else the `freq` param. Its the
+    // key thats picked, not the value, so units (superosc{55Hz}), connectables
+    // (superosc{110+chaos{2}*40}) and timevars all work.
+    evalMainParamFrame(node.parameters.get('frequency'), params, positionalParamKey(args, 'freq'), 440, 'hz')
     evalMainParamFrame(node.parameters.get('detune'), params, 'detune', 0)
     // Wavetable sample buffer, sliced into `count` single-cycle frames (count is
     // a subparam of wavetable, eg wavetable:{'...', count:64}, default 64); silent
@@ -157,13 +153,9 @@ define(function(require) {
     let params = combineParams(args, e)
     let seed = evalMainParamEvent(params, 'seed', 0)
     let node = createChaos(seed)
-    // freq: default positional `value` sets it (like osc), else the `freq` param; in Hz
-    let value = evalParamEvent(params.value, e,b)
-    if (typeof value === 'number' && value !== 0) {
-      evalMainParamFrame(node.parameters.get('freq'), params, 'value', 440, 'hz')
-    } else {
-      evalMainParamFrame(node.parameters.get('freq'), params, 'freq', 440, 'hz')
-    }
+    // freq: default positional `value` sets it (like osc), else the `freq` param; in Hz. Its the
+    // key thats picked, not the value, so units (chaos{6Hz}), connectables and timevars all work.
+    evalMainParamFrame(node.parameters.get('freq'), params, positionalParamKey(args, 'freq'), 440, 'hz')
     // type: algorithm name -> the worklet's k-rate algo index (default lorenz)
     let typeName = evalMainParamEvent(params, 'type', 'lorenz')
     let algo = createChaos.CHAOS_TYPES[typeName]
