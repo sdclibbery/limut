@@ -114,3 +114,13 @@ preset acid superosc, dur=1/4, oct=(2+this.u-this.d), glide=20ms+this.s*50ms, at
   lpf={100+this.freq+(0.45+this.cutoff*0.8)^2*this.fenv*6000, poles:4, q:this.resonance*18},
   fenv=[1:!(200ms+1000ms*(this.decay*2+this.accent)/2),0]e@s*(1+this.vel+this.accent)/3,
   decay=1/2, cutoff=[]l8@s, accent=this.a, resonance=1/4+this.cutoff/4
+
+preset dlead superosc, oct=2,
+	envelope='full', att=0, dec=1/4, sus={level:2/3}, rel=1/4,
+  addc=wow/2+[1:!200ms,0]e@s, glide=100ms, vib={2.7,delay:1s,depth:0.2},
+  wavetable={'sample/wt64/VIRUS_SA.WAV'},
+  wt=[1:!8000ms,0]e@s/3+[]n2@s/3+[]r@e/3, unison={3,detune:1.006},
+  sync=1+this.dist*5*[1:\1000ms,0]e@s, pwm=[-1,1]l4@s*0.9,
+  lpf={1000+this.freq+(this.cutoff+this.vel)*3000*[1:!1000ms,0]e@s,q:0},
+  drive={this.dist*2,mix:smooth{this.dist}},
+  cutoff=1/2, dist=1/2
