@@ -267,7 +267,6 @@
   </div>
   <div id="code-codemirror" class="widget code" style="display:none;"></div>
   <textarea id="console" class="widget" rows="5"></textarea>
-</div>
 <div class="info">
 <h4 onclick="toggleAccordion('accordion-examples')" class="accordion"> Examples</h4>
 <div id="accordion-examples" class="closed">
@@ -360,7 +359,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <h4 onclick="toggleAccordion('accordion-indicators')" class="accordion"> Indicators</h4>
 <div id="accordion-indicators" class="closed">
   <p><b>Level</b> VU meter for current output signal level. Use this when adjusting the output level, using either <code>set main amp</code> or the level slider, so it is just touching the red at its loudest. Only one active channel is shown if the mix is fully mono.</p>
-  <p><b>Beat</b> Current audio system beat count, plus section info (current active section, count through active section, the current play out of the section's <code>repeat</code> if it has one, and next queued up section<./p>
+  <p><b>Beat</b> Current audio system beat count, plus section info (current active section, count through active section, the current play out of the section's <code>repeat</code> if it has one, and next queued up section.</p>
   <p><b>Audio</b> Audio lag; green when the browser audio system is keeping up; turns red when the system is struggling, which may lead to audio glitching</p>
   <p><b>Visual</b> Visual lag; green when the framerate is keeping up to 60 fps; turns red when the system is struggling, which may lead to visual glitching</p>
   <p><b>Limiter</b> Audio limiter: turns red when the internal Limut limiter is active, implying the combined audio sources are too loud. Note this limiter is before the <code>main amp</code> control and vu meter, it makes sure the levels from individual synths do not go so loud as to distort. So if it is lighting up, lower the <code>amp</code> on individual synths, and if necessary, raise the <code>main amp</code> level to compensate.</p>
@@ -698,21 +697,15 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <h4 onclick="toggleAccordion('accordion-audio-synths')" class="accordion"> Audio Synths</h4>
 <div id="accordion-audio-synths" class="closed">
 <p><code>! / stop / none</code> </p>
-<p><code>play</code> Play samples. Use letters, symbols and digits 1-4 in the pattern to choose the sample (see below for full list). Note duration defaults to 1/2.</p>
-<p><code>perc</code> Play sampled percussion. Similar to the play synth, and uses the same pattern values and samples, but defaults to 1/4 beat duration, and each player has a choke group.</p>
-<p><code>pitchedperc</code> Synthesised pitched percussion for kick drums, snare, toms etc. Note that as this synth is not sample based, it only accepts digits in the player pattern, unlike the play synth. The sound is made up of click, hit, body and rattle components. The synth has a number of unique params:</p>
-<p class='sub'><code>click={1}</code> The click is the initial impact sound. The main param is the loudness of the click. The default values are shown.</p>
-<p class='sub'><code>hit={0,sample:'^',index:1,rate:3/2}</code> The hit is a sample to be played with the initial impact sound. The main param is the loudness of the hit. Sample, index and rate control the sample playback (similar to the play synth). The default values are shown.</p>
-<p class='sub'><code>body={1,att:5ms,dec:400ms,freq:55hz,boost:150hz,pitchatt:0ms,pitchdec:50ms,wave:'sine',saturation:0}</code> The body is the resonant, pitched body of the sound. The main param is the loudness of the body. units is the time units for the various envelope attack and decay values. att is the attack time. dec is the decay time. freq is the base frequency in Hz, boost is the initial frequency boost in Hz. pitchatt is the attack time for the pitch sweep. pitchdec is the decay time for the pitch sweep. wave is the waveform to use. saturation is the gain for a tanh saturator applied to the body oscillator. The default values are shown. Default time units for envelopes: seconds.</p>
-<p class='sub'><code>body2={0,att:5ms,dec:400ms,freq:55hz,boost:150hz,pitchatt:0ms,pitchdec:50ms,wave:'sine',saturation:0}</code> Second body tone. May be useful for snares and toms etc.</p>
-<p class='sub'><code>rattle={1,att:0ms,dec:30ms,rate:1,filter:'lowpass',freq:55hz,boost:205hz,pitchatt:0ms,pitchdec:50ms,q:18}</code> The rattle is a noisy component of the sound. The main param is the loudness of the rattle. units is the time units for the various envelope attack and decay values. att is the attack time. dec is the decay time. Rate is the sample playback rate of the noise sample; adjusting this can provide some additional filtering. freq is the base filter frequency in Hz, boost is the initial filter frequency boost in Hz, pitchatt is the attack time for the filter sweep. pitchdec is the decay time for the filter sweep. Q sets the filter resonance. The default values are shown. . Default time units for envelopes: seconds.</p>
-<p><code>bd</code> Preset based on pitchedperc. Provides a basic synthesized kick drum. Note that as this synth is not sample based, it only accepts digits in the player pattern, unlike the play synth. Use sus or dec params to control the duration of the kick. Uses some unique params:</p>
-<p class='sub'><code>accent=0</code> Positive values accent the kick making it louder and stronger. Negative values diminish the kick. Default value is derived from the player pattern value and 'add' param.</p>
-<p class='sub'><code>tone=0</code> Tone control for the kick. Larger values will open the filters.</p>
-<p class='sub'><code>tune=55</code> Base frequency for the kick in Hz. Usually this should be between about 45 and 65 Hz. The pitch{} function can be used to calculate specific frequencies for tuning the kick to the current key; for example <code>tune=pitch{0,oct:2}</code></p>
-<p><code>dbd</code> Disperser kick drum preset based on impulse. A short impulse is fed through a disperser (allpass filter chain) to produce a deep dub-style boom kick. Uses params:</p>
-<p class='sub'><code>freq=45</code> Base frequency for the kick in Hz. Sets both the disperser resonance and an hpf cutoff. Default time units: hz.</p>
-<p class='sub'><code>decay=1/3</code> Controls the disperser Q (computed as <code>0.4+decay/2</code>); larger values give a longer, more pronounced boom tail.</p>
+<h6>Base synths</h6>
+<p><code>audiosynth</code> Base type with no defined audionode graph. The play param takes an audionode graph for each note. Note the player freq param is predefined for this player type as the note pitch derived from the pattern and other usual player params (add, oct, scale etc).</p>
+<p><code>bus</code> Audio mix bus. Plays continuously, can take a pattern but the pattern is ignored. As a result, all bus param values are evaluated per frame. Chords and []e are not valid for bus players. Audio players can use the <code>bus</code> param to choose which bus to mix into (by id). A bus player does not have pitch effects (addc, vib etc), but does have wave effects (compress, drive, fold etc). There is an implicit bus called <code>main</code> that exists at all times, and provides the final mix for all other players and buses. Overrides can be used to set params on the main bus; eg <code>set main echo=1/2</code>. There is also an implicit <code>silent</code> bus that exists at all times with <code>amp=0</code>: anything routed into it (<code>bus=silent</code>) is inaudible, but its <code>.pre</code> tap still carries the full summed signal &mdash; use it to make a player heard only as a modulator via <code>.pre</code>.</p>
+<p><code>external</code> take audio from microphone or line in. Use the <code>track</code> param to specify the track within the stream. If the input signal appears on only one stereo channel (or you only want the signal from one stereo channel), use the <code>channel</code> param to select the channel and force it to mono.</p>
+<p class='sub'><code>track=1</code> Select which audio track to use from the input.</p>
+<p class='sub'><code>channel=1</code> Select a single audio channel to use from the input.</p>
+<p><code>fm</code> FM base synth; allows configuration of FM operators and envelopes. Each of up to 6 operators is specified using params <code>op1</code> to <code>op6</code>:</p>
+<p class='sub'><code>op1={ratio:5.19,target:3,wave:'saw',depth:0.8,att:0.01,rel:0.1}</code> ratio: frequency ratio for this operator relative to base event frequency. target: the number of the operator that this one should modulate (eg `1` to target `op1`); use 'out' to send this operator output to the synth output. wave: the waveform to use for this operator. Depth: the amount of modulation this operator should apply to the target (note this will be scaled by the note frequency). att/rel simple envelope attack and release for this operator - default time units: beats</p>
+<p><code>impulse</code> Play an atonal impulse; that is a single pulse of millisecond duration.</p>
 <p><code>io808</code> TR-808 simulation based on <a href="https://github.com/vincentriemer/io-808">IO-808</a>. Eg <code>p io808 0.9, type='bd'</code> plays a pattern with two bass drum hits, one unaccented then one with maximum accent. Event duration is 1/4 beat (16th note) to correspond to 808 sequencer.</p>
 <p class='sub'><code>type='bd'</code> type of 808 sound: 'bd', 'sd', 'oh', 'ch', 'cb', 'cp', 'ma', 'ht', 'mt', 'lt', 'hc', 'mc', 'lc', 'cl', 'rs', 'cy'. The value from the pattern determines the level of accent placed on each event.</p>
 <p class='sub'><code>level=1</code> Output level. Used on all types.</p>
@@ -720,52 +713,21 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>decay=1/2</code> Decay time; used on bd, cy, and oh.</p>
 <p class='sub'><code>snappy=1/2</code> Snappy control for sd.</p>
 <p class='sub'><code>tuning=1/2</code> Tuning control for toms and congas ht, mt, lt, hc, mc, and lc.</p>
-<p><code>impulse</code> Play an atonal impulse; that is a single pulse of millisecond duration.</p>
-<p><code>sample</code> Pitched sample player. Use the 'sample' param, and then use it as a pitched synth. Use the <code>start</code> param to specify the playback start time within the original sample in seconds. Note: if the <code>rate</code> param is set, then this sets the sample playback rate and overrides the <code>value</code> and <code>add</code> params, which are ignored.</p>
-<p><code>speak</code> Robotic text-to-speech synth. Speaks the <code>text</code> param using an in-browser espeak engine (meSpeak), then plays the result like a pitched sample, so the speech runs through all the usual effects (room, echo, lpf etc) and is transposed by the note value (note 0 = natural pitch). The engine is fetched from a CDN on first use, so the very first phrase is silent while it loads/synthesizes and speaks on a later trigger; results are cached in memory per text+voice. Note: if the <code>rate</code> param is set it sets the playback rate and overrides the <code>value</code> and <code>add</code> params. Voice params: <code>text</code> (words to speak), <code>pitch</code> (0-99, default 50), <code>speed</code> (words per minute, default 175), <code>wordgap</code> (gap between words, units of 10ms), <code>amplitude</code> (0-200, default 100), <code>variant</code> (voice variant, eg 'f2', 'm3').</p>
-<p><code>saw</code> Sawtooth wave preset</p>
-<p><code>sine</code> Sine wave preset</p>
-<p><code>square</code> Square wave preset</p>
-<p><code>tri</code> Triangle wave preset</p>
-<p><code>pulse</code> Pulse wave preset</p>
-<p><code>wave</code> Synthesizer using a waveform specified by the <code>wave</code> param. Possible values <code>saw, square, sine, triangle, pulse</code></p>
-<p><code>dwave</code> Synthesizer preset using multiple detuned waveforms specified by the <code>wave</code> param. Possible values <code>saw, square, sine, triangle, pulse</code></p>
-<p><code>dsaw</code> Detuned saw preset - multiple sawtooth waves slightly out of tune for a fuller sound</p>
-<p><code>dsquare</code> Detuned square preset - multiple square waves slightly out of tune for a fuller sound</p>
-<p><code>dsine</code> Detuned sine pad preset - multiple sine waves slightly out of tune for a fuller sound</p>
-<p><code>dtri</code> Detuned tri preset - multiple triangle waves slightly out of tune for a fuller sound</p>
-<p><code>dbass</code> Detuned saw bass preset - multiple sawtooth waves slightly out of tune for a fuller sound</p>
-<p><code>fmbass</code> Funky FM bass preset</p>
-<p><code>ping</code> Sine wave ping preset</p>
-<p><code>audiosynth</code> Base type with no defined audionode graph. The play param takes an audionode graph for each note. Note the player freq param is predefined for this player type as the note pitch derived from the pattern and other usual player params (add, oct, scale etc).</p>
-<p><code>swell</code> Swell pad - triangle wave</p>
-<p><code>fm</code> FM base synth; allows configuration of FM operators and envelopes. Each of up to 6 operators is specified using params <code>op1</code> to <code>op6</code>:</p>
-<p class='sub'><code>op1={ratio:5.19,target:3,wave:'saw',depth:0.8,att:0.01,rel:0.1}</code> ratio: frequency ratio for this operator relative to base event frequency. target: the number of the operator that this one should modulate (eg `1` to target `op1`); use 'out' to send this operator output to the synth output. wave: the waveform to use for this operator. Depth: the amount of modulation this operator should apply to the target (note this will be scaled by the note frequency). att/rel simple envelope attack and release for this operator - default time units: beats</p>
-<p><code>bell</code> FM generated bell preset</p>
-<p><code>glock</code> FM generated glockenspiel preset</p>
-<p><code>glass</code> FM glass synth with a chiming sound preset</p>
-<p><code>xylo</code> FM xylophone preset</p>
-<p><code>piano</code> Sampled piano</p>
-<p><code>epiano</code> DX7 FM style electric piano</p>
-<p><code>lately</code> FM bass in the style of the "lately bass" </p>
-<p><code>vocode</code> Vocoder demo preset: a speech sample (loaded from a URL) is fed through the <code>vocodethis</code> effect so a tuned saw carrier &ldquo;speaks&rdquo; the words at the played pitch. Play it as a pitched pattern to make the voice sing.
-  The following custom control params are available:<br/>
-<p class='sub'><code>wave='saw'</code> Carrier waveform; a bright wave such as saw gives the most intelligible speech.<br/></p>
-<p class='sub'><code>mix=0.95</code> Wet/dry mix of the vocoded signal against the dry sample (1 = fully vocoded, 0 = dry).<br/></p>
-</p>
-<p><code>vocospeak</code> Singing text-to-speech preset: it synthesizes the <code>text</code> param with <code>tts</code> and makes it speak (or sing) at the played pitch, so a note pattern gives the voice a melody. The speech is used two ways at once &mdash; a quiet pitch-shifted copy of the voice itself (keeping its natural character), mixed with a saw carrier at the event pitch that the speech drives through <code>vocoder</code> (giving the tuned, synthetic vocoder tone). Since it is built on <code>tts</code>, the first use of a new phrase is synthesized in the background and may not sound until a later trigger; repeated phrases are cached.
-  The following custom control params are available:<br/>
-<p class='sub'><code>text='hello world'</code> The words the voice will say/sing. Set this to whatever you want spoken, eg <code>p1 vocospeak (0,3,5), text='limut is alive'</code>.<br/></p>
-<p class='sub'><code>rate=1</code> Playback rate of the speech, as for <code>tts</code>: it speeds up or slows down the delivery of the words (higher = faster). It does not change the sung pitch, which comes from the note pattern.<br/></p>
-</p>
-<p><code>ambi</code> Ambient drone preset; multiple sines with varying detunes</p>
-<p><code>ethereal</code> FM Ethereal pad preset</p>
+<p><code>multiwave</code> Synthesizer providing multiple waveform oscillators which can have their amp and detune controlled individually and  dynamically. The waves are specified using params <code>wave1</code>,  <code>wave2</code> etc:</p>
+<p class='sub'><code>wave1={'saw',amp:[0:1]n,detune:wow}</code> The main value is a string giving the waveform to use. amp is a per frame amplitude control. detune is a per frame detune control in semitones.</p>
 <p><code>noise</code> Noise pad. Note pattern value is not used; white noise is produced for all values (uses AudioWorklet so may use more audio render capacity than other synth types).</p>
-<p><code>prophet</code> Prophet style preset: pulse wave with lfo controlled pulse-width (uses AudioWorklet so may use more audio render capacity than other synth types)</p>
-<p class='sub'><code>cutoff=1/2</code> Filter cutoff control from 0 to 1; also scaled by <code>vel</code>.</p>
-<p class='sub'><code>resonance=0.4</code> Filter resonance q.</p>
+<p><code>piano</code> Sampled piano</p>
+<p><code>pitchedperc</code> Synthesised pitched percussion for kick drums, snare, toms etc. Note that as this synth is not sample based, it only accepts digits in the player pattern, unlike the play synth. The sound is made up of click, hit, body and rattle components. The synth has a number of unique params:</p>
+<p class='sub'><code>click={1}</code> The click is the initial impact sound. The main param is the loudness of the click. The default values are shown.</p>
+<p class='sub'><code>hit={0,sample:'^',index:1,rate:3/2}</code> The hit is a sample to be played with the initial impact sound. The main param is the loudness of the hit. Sample, index and rate control the sample playback (similar to the play synth). The default values are shown.</p>
+<p class='sub'><code>body={1,att:5ms,dec:400ms,freq:55hz,boost:150hz,pitchatt:0ms,pitchdec:50ms,wave:'sine',saturation:0}</code> The body is the resonant, pitched body of the sound. The main param is the loudness of the body. units is the time units for the various envelope attack and decay values. att is the attack time. dec is the decay time. freq is the base frequency in Hz, boost is the initial frequency boost in Hz. pitchatt is the attack time for the pitch sweep. pitchdec is the decay time for the pitch sweep. wave is the waveform to use. saturation is the gain for a tanh saturator applied to the body oscillator. The default values are shown. Default time units for envelopes: seconds.</p>
+<p class='sub'><code>body2={0,att:5ms,dec:400ms,freq:55hz,boost:150hz,pitchatt:0ms,pitchdec:50ms,wave:'sine',saturation:0}</code> Second body tone. May be useful for snares and toms etc.</p>
+<p class='sub'><code>rattle={1,att:0ms,dec:30ms,rate:1,filter:'lowpass',freq:55hz,boost:205hz,pitchatt:0ms,pitchdec:50ms,q:18}</code> The rattle is a noisy component of the sound. The main param is the loudness of the rattle. units is the time units for the various envelope attack and decay values. att is the attack time. dec is the decay time. Rate is the sample playback rate of the noise sample; adjusting this can provide some additional filtering. freq is the base filter frequency in Hz, boost is the initial filter frequency boost in Hz, pitchatt is the attack time for the filter sweep. pitchdec is the decay time for the filter sweep. Q sets the filter resonance. The default values are shown. . Default time units for envelopes: seconds.</p>
+<p><code>play</code> Play samples. Use letters, symbols and digits 1-4 in the pattern to choose the sample (see below for full list). Note duration defaults to 1/2.</p>
 <p><code>pwm</code> Pulse width modulation synth. A pulse wave with variable pulse width, from pulse to square. Note: uses AudioWorklet so may use more audio render capacity than other synth types. Also note there may be aliasing, so you may want to apply some filtering to cut harsh high frequencies.</p>
 <p class='sub'><code>pwm=1/2</code> Set the pulse width from 0 to 1. The default is 1/2, a square wave (50% duty cycle). values very close to 0 and 1 will produce no sound since the actual pulse width will become vanishingly small.</p>
+<p><code>sample</code> Pitched sample player. Use the 'sample' param, and then use it as a pitched synth. Use the <code>start</code> param to specify the playback start time within the original sample in seconds. Note: if the <code>rate</code> param is set, then this sets the sample playback rate and overrides the <code>value</code> and <code>add</code> params, which are ignored.</p>
+<p><code>speak</code> Robotic text-to-speech synth. Speaks the <code>text</code> param using an in-browser espeak engine (meSpeak), then plays the result like a pitched sample, so the speech runs through all the usual effects (room, echo, lpf etc) and is transposed by the note value (note 0 = natural pitch). The engine is fetched from a CDN on first use, so the very first phrase is silent while it loads/synthesizes and speaks on a later trigger; results are cached in memory per text+voice. Note: if the <code>rate</code> param is set it sets the playback rate and overrides the <code>value</code> and <code>add</code> params. Voice params: <code>text</code> (words to speak), <code>pitch</code> (0-99, default 50), <code>speed</code> (words per minute, default 175), <code>wordgap</code> (gap between words, units of 10ms), <code>amplitude</code> (0-200, default 100), <code>variant</code> (voice variant, eg 'f2', 'm3').</p>
 <p><code>superosc</code> A wavetable oscillator built on an AudioWorklet, intended to grow more functionality over time. Its wavetable is a sample buffer sliced into <code>count</code> single-cycle frames (default 64, the wt64 standard); the <code>wt</code> param morphs across the frames. Multi-frame wavetables under <code>sample/wt64/</code> work out of the box; for a single-cycle file set <code>count=1</code> (basic single-cycle waves &mdash; <code>sample/wave/SAW.WAV</code>, <code>SINE.WAV</code>, <code>SQUARE.WAV</code>, <code>TRI.WAV</code> &mdash; live under <code>sample/wave/</code>). To use an ordinary (non-wt64) sample as a wavetable without the clicking its unmatched frame boundaries cause, set the <code>smooth</code> subparam (see below). <code>sync</code> is an oscillator hard-sync ratio (0 = off): the phase restarts <code>sync</code> times per cycle for the classic hard-sync timbre. A negative <code>sync</code> uses the same ratio magnitude but softens the phase reset with a short crossfade (a "soft sync"), for a less clicky, less aggressive tone. <code>crush</code> quantises the phase in bits (0 = off): the phase is snapped to <code>2^crush</code> steps before the wavetable lookup for a stepped, lo-fi timbre, so <code>crush=3</code> gives 8 steps and each extra bit doubles the resolution (max 12). <code>pwm</code> power-warps the phase (0 = off): the phase is raised to the power <code>2^pwm</code> before the wavetable lookup, skewing the waveform toward its start (<code>pwm&gt;0</code>) or end (<code>pwm&lt;0</code>) like a generalised pulse width. <code>formant</code> is a formant-warp shift (0 = off): the waveform is resampled within each cycle at <code>2^formant</code> times the rate and windowed to keep the fundamental pitch fixed, shifting its spectral formants up (<code>formant&gt;0</code>) or down (<code>formant&lt;0</code>) for a vowel-like timbre, à la Serum/Vital's formant warp. With no <code>wavetable</code> set it defaults to a single-cycle saw (<code>sample/wave/SAW.WAV</code>, count 1). The oscillator is silent until the sample has loaded, then switches to it. Note: uses AudioWorklet so may use more audio render capacity than other synth types.</p>
 <p class='sub'><code>wavetable={'sample/wt64/SUPERSAW.WAV', count:64}</code> Sample URL for the wavetable, with a <code>count</code> subparam for the number of single-cycle frames packed in the file (default 64). A <code>smooth</code> subparam (0..1, default 0, eg <code>wavetable={'apollo11.wav', count:64, smooth:1}</code>) conditions each frame to loop seamlessly &mdash; per-frame DC removal, endpoint matching, and a smooth seam bridge &mdash; to reduce the clicking/buzz you get when loading an ordinary sample (not a purpose-built wt64 table) as a wavetable. Leave it at 0 for wt64 tables, which already loop cleanly. With no wavetable set it defaults to a single-cycle saw (<code>sample/wave/SAW.WAV</code>, count 1).</p>
 <p class='sub accordion' onclick="toggleAccordion('accordion-wt64')"> Available wt64 wavetables (256)</p>
@@ -780,10 +742,8 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>pwm=0</code> Phase power-warp amount (0 = off): the phase (after any sync remap) is raised to the power <code>2^pwm</code> before the wavetable lookup, skewing the waveform toward its start (<code>pwm&gt;0</code>) or end (<code>pwm&lt;0</code>) like a generalised pulse width.</p>
 <p class='sub'><code>formant=0</code> Formant-warp shift (0 = off): the waveform (after any sync remap) is resampled within each cycle at <code>2^formant</code> times the rate and windowed to keep the fundamental pitch fixed, shifting its spectral formants up (<code>formant&gt;0</code>) or down (<code>formant&lt;0</code>) for a vowel-like timbre, à la Serum/Vital's formant warp.</p>
 <p class='sub'><code>unison=1</code> Number of detuned voices (1 to 16) layered together for a supersaw-style sound, with a <code>detune</code> subparam (eg <code>unison={7, detune:1.02}</code>) giving the max frequency ratio the voices are detuned by. The voices are spread evenly (geometrically, ie by pitch) each side of the primary frequency: the outermost sit at <code>freq*detune</code> and <code>freq/detune</code>, the centre at the primary. The interior voices are nudged slightly off that perfectly even spacing, since exactly-even detuning makes the voices periodically re-converge in phase (an audible pulsing) &mdash; the nudge keeps the sound an evolving shimmer instead. <code>detune</code> defaults to 1.01 (a subtle detune) when <code>unison</code> is above 1. An <code>amp</code> subparam (eg <code>unison={7, amp:2}</code>) sets the ratio of the centre voice's amplitude to the outermost voices' (default 1 = all equal, above 1 for a stronger centre, below 1 for a scooped centre); voices in between are weighted smoothly, and overall loudness is held roughly constant. A <code>pan</code> subparam (eg <code>unison={7, pan:1/2}</code>) sets the stereo width the voices spread across: the outermost voices sit at <code>pan</code> to each side (so <code>pan=1/2</code> runs them from 50% left to 50% right, <code>pan=1</code> hard left to hard right), the centre voice stays centred, and <code>pan=0</code> stacks them all in the middle. Defaults to 0.5. Note: audio render cost scales with the number of voices.</p>
-<p><code>supersaw</code> supersaw lead synth preset; 7 detuned saws</p>
-<p><code>vox</code> Vocal-ish <code>superosc</code> pad preset: the <code>VOXSYNTH</code> wt64 wavetable played by 7 unison voices, with the <code>wt</code> morph sweeping slowly across the table's frames (over 24 beats) so the vowel-like timbre keeps shifting. Soft attack and release make it sit as a choir-like pad; override <code>wt</code> for a fixed vowel, or <code>wavetable</code> for a different table.</p>
-<p><code>superbass</code> Fat, unstable bass preset: a triangle sub an octave below the note, layered with a 15-voice <code>superosc</code> whose frequency is drifted by two slow <code>chaos</code> LFOs at slightly different rates, so the detuning never settles into a repeating pattern. Short decay to a sustained two-thirds level, with a moderate release.</p>
-<p><code>supersweep</code> Evolving <code>superosc</code> sweep pad preset: 6 widely detuned unison voices with a slowly wandering formant warp, run through a resonant lpf whose cutoff sweeps between 800&nbsp;Hz and around 9&nbsp;kHz on smooth noise (cubed, so it spends most of its time low and occasionally opens right up), plus a parallel high-passed <code>airverb</code> tail. Long <code>dur</code> and a pad envelope; play it low and sparsely.</p>
+<p><code>wave</code> Synthesizer using a waveform specified by the <code>wave</code> param. Possible values <code>saw, square, sine, triangle, pulse</code></p>
+<h6>Presets</h6>
 <p><code>acid</code> Dark acid bass preset built on <code>superosc</code>: the <code>VIRUS_SA</code> wt64 wavetable with 3 unison voices and an instant attack, run through a steep (4 pole) resonant lpf swept by a per-note exponential filter envelope, with the oscillator hard <code>sync</code> ratio pushed up by that same envelope on accented notes for the squelchy bite. Plays as a sixteenth-note bass line (<code>dur=1/4</code>, <code>oct=2</code>) &mdash; unlike <code>tb303</code> this is a wavetable synth, so <code>wavetable</code>, <code>wt</code> and <code>unison</code> can be overridden as usual.
   The following custom control params are available:<br/>
 <p class='sub'><code>cutoff</code> Filter cutoff control, 0 to 1; default is a ramp rising over 8 beats (<code>[]l8@s</code>), so the line opens up as it repeats. Set it to a constant for a fixed tone, eg <code>cutoff=1/4</code>, or pattern it for your own sweep. It scales into the lpf frequency non-linearly (squared), and also raises the default <code>resonance</code>.<br/></p>
@@ -797,41 +757,64 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>d</code> down octave. Makes the preceding note an octave lower.<br/></p>
   For example <code>b acid 0a0u3s0d, decay=3/4</code> plays four notes: accented, up an octave, slid into, then down an octave.
 </p>
-<p><code>external</code> take audio from microphone or line in. Use the <code>track</code> param to specify the track within the stream. If the input signal appears on only one stereo channel (or you only want the signal from one stereo channel), use the <code>channel</code> param to select the channel and force it to mono.</p>
-<p class='sub'><code>track=1</code> Select which audio track to use from the input.</p>
-<p class='sub'><code>channel=1</code> Select a single audio channel to use from the input.</p>
-<p><code>multiwave</code> Synthesizer providing multiple waveform oscillators which can have their amp and detune controlled individually and  dynamically. The waves are specified using params <code>wave1</code>,  <code>wave2</code> etc:</p>
-<p class='sub'><code>wave1={'saw',amp:[0:1]n,detune:wow}</code> The main value is a string giving the waveform to use. amp is a per frame amplitude control. detune is a per frame detune control in semitones.</p>
+<p><code>ambi</code> Ambient drone preset; multiple sines with varying detunes</p>
+<p><code>bd</code> Preset based on pitchedperc. Provides a basic synthesized kick drum. Note that as this synth is not sample based, it only accepts digits in the player pattern, unlike the play synth. Use sus or dec params to control the duration of the kick. Uses some unique params:</p>
+<p class='sub'><code>accent=0</code> Positive values accent the kick making it louder and stronger. Negative values diminish the kick. Default value is derived from the player pattern value and 'add' param.</p>
+<p class='sub'><code>tone=0</code> Tone control for the kick. Larger values will open the filters.</p>
+<p class='sub'><code>tune=55</code> Base frequency for the kick in Hz. Usually this should be between about 45 and 65 Hz. The pitch{} function can be used to calculate specific frequencies for tuning the kick to the current key; for example <code>tune=pitch{0,oct:2}</code></p>
+<p><code>bell</code> FM generated bell preset</p>
 <p><code>crackle</code> Crackly crackle sounds.</p>
+<p><code>dbass</code> Detuned saw bass preset - multiple sawtooth waves slightly out of tune for a fuller sound</p>
+<p><code>dbd</code> Disperser kick drum preset based on impulse. A short impulse is fed through a disperser (allpass filter chain) to produce a deep dub-style boom kick. Uses params:</p>
+<p class='sub'><code>freq=45</code> Base frequency for the kick in Hz. Sets both the disperser resonance and an hpf cutoff. Default time units: hz.</p>
+<p class='sub'><code>decay=1/3</code> Controls the disperser Q (computed as <code>0.4+decay/2</code>); larger values give a longer, more pronounced boom tail.</p>
+<p><code>dsaw</code> Detuned saw preset - multiple sawtooth waves slightly out of tune for a fuller sound</p>
+<p><code>dsine</code> Detuned sine pad preset - multiple sine waves slightly out of tune for a fuller sound</p>
+<p><code>dsquare</code> Detuned square preset - multiple square waves slightly out of tune for a fuller sound</p>
+<p><code>dtri</code> Detuned tri preset - multiple triangle waves slightly out of tune for a fuller sound</p>
+<p><code>dwave</code> Synthesizer preset using multiple detuned waveforms specified by the <code>wave</code> param. Possible values <code>saw, square, sine, triangle, pulse</code></p>
+<p><code>epiano</code> DX7 FM style electric piano</p>
+<p><code>ethereal</code> FM Ethereal pad preset</p>
+<p><code>fmbass</code> Funky FM bass preset</p>
+<p><code>glass</code> FM glass synth with a chiming sound preset</p>
+<p><code>glock</code> FM generated glockenspiel preset</p>
+<p><code>lately</code> FM bass in the style of the "lately bass" </p>
 <p><code>noisefloor</code> Provide a slowly varying noise floor.</p>
-<p><code>bus</code> Audio mix bus. Plays continuously, can take a pattern but the pattern is ignored. As a result, all bus param values are evaluated per frame. Chords and []e are not valid for bus players. Audio players can use the <code>bus</code> param to choose which bus to mix into (by id). A bus player does not have pitch effects (addc, vib etc), but does have wave effects (compress, drive, fold etc). There is an implicit bus called <code>main</code> that exists at all times, and provides the final mix for all other players and buses. Overrides can be used to set params on the main bus; eg <code>set main echo=1/2</code>. There is also an implicit <code>silent</code> bus that exists at all times with <code>amp=0</code>: anything routed into it (<code>bus=silent</code>) is inaudible, but its <code>.pre</code> tap still carries the full summed signal &mdash; use it to make a player heard only as a modulator via <code>.pre</code>.</p>
+<p><code>perc</code> Play sampled percussion. Similar to the play synth, and uses the same pattern values and samples, but defaults to 1/4 beat duration, and each player has a choke group.</p>
+<p><code>ping</code> Sine wave ping preset</p>
+<p><code>prophet</code> Prophet style preset: pulse wave with lfo controlled pulse-width (uses AudioWorklet so may use more audio render capacity than other synth types)</p>
+<p class='sub'><code>cutoff=1/2</code> Filter cutoff control from 0 to 1; also scaled by <code>vel</code>.</p>
+<p class='sub'><code>resonance=0.4</code> Filter resonance q.</p>
+<p><code>pulse</code> Pulse wave preset</p>
+<p><code>saw</code> Sawtooth wave preset</p>
+<p><code>sine</code> Sine wave preset</p>
+<p><code>square</code> Square wave preset</p>
+<p><code>superbass</code> Fat, unstable bass preset: a triangle sub an octave below the note, layered with a 15-voice <code>superosc</code> whose frequency is drifted by two slow <code>chaos</code> LFOs at slightly different rates, so the detuning never settles into a repeating pattern. Short decay to a sustained two-thirds level, with a moderate release.</p>
+<p><code>supersaw</code> supersaw lead synth preset; 7 detuned saws</p>
+<p><code>supersweep</code> Evolving <code>superosc</code> sweep pad preset: 6 widely detuned unison voices with a slowly wandering formant warp, run through a resonant lpf whose cutoff sweeps between 800&nbsp;Hz and around 9&nbsp;kHz on smooth noise (cubed, so it spends most of its time low and occasionally opens right up), plus a parallel high-passed <code>airverb</code> tail. Long <code>dur</code> and a pad envelope; play it low and sparsely.</p>
+<p><code>swell</code> Swell pad - triangle wave</p>
+<p><code>tri</code> Triangle wave preset</p>
+<p><code>vocode</code> Vocoder demo preset: a speech sample (loaded from a URL) is fed through the <code>vocodethis</code> effect so a tuned saw carrier &ldquo;speaks&rdquo; the words at the played pitch. Play it as a pitched pattern to make the voice sing.
+  The following custom control params are available:<br/>
+<p class='sub'><code>wave='saw'</code> Carrier waveform; a bright wave such as saw gives the most intelligible speech.<br/></p>
+<p class='sub'><code>mix=0.95</code> Wet/dry mix of the vocoded signal against the dry sample (1 = fully vocoded, 0 = dry).<br/></p>
+</p>
+<p><code>vocospeak</code> Singing text-to-speech preset: it synthesizes the <code>text</code> param with <code>tts</code> and makes it speak (or sing) at the played pitch, so a note pattern gives the voice a melody. The speech is used two ways at once &mdash; a quiet pitch-shifted copy of the voice itself (keeping its natural character), mixed with a saw carrier at the event pitch that the speech drives through <code>vocoder</code> (giving the tuned, synthetic vocoder tone). Since it is built on <code>tts</code>, the first use of a new phrase is synthesized in the background and may not sound until a later trigger; repeated phrases are cached.
+  The following custom control params are available:<br/>
+<p class='sub'><code>text='hello world'</code> The words the voice will say/sing. Set this to whatever you want spoken, eg <code>p1 vocospeak (0,3,5), text='limut is alive'</code>.<br/></p>
+<p class='sub'><code>rate=1</code> Playback rate of the speech, as for <code>tts</code>: it speeds up or slows down the delivery of the words (higher = faster). It does not change the sung pitch, which comes from the note pattern.<br/></p>
+</p>
+<p><code>vox</code> Vocal-ish <code>superosc</code> pad preset: the <code>VOXSYNTH</code> wt64 wavetable played by 7 unison voices, with the <code>wt</code> morph sweeping slowly across the table's frames (over 24 beats) so the vowel-like timbre keeps shifting. Soft attack and release make it sit as a choir-like pad; override <code>wt</code> for a fixed vowel, or <code>wavetable</code> for a different table.</p>
+<p><code>xylo</code> FM xylophone preset</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-visual-synths')" class="accordion"> Visual Synths</h4>
 <div id="accordion-visual-synths" class="closed">
 <p><code>! / stop / none</code> </p>
-<p><code>blank</code> Blank: sets every pixel to the <code>back</code> colour.</p>
-<p><code>clouds</code> Moving clouds</p>
-<p><code>kal</code> Changing kaleidoscope pattern</p>
-<p><code>swirl</code> Psychedelic swirl</p>
-<p><code>julia</code> Julia set fractal</p>
-<p><code>lines</code> Twisting lines</p>
-<p><code>blob</code> Morphing 3D blob</p>
-<p><code>streetlight</code> Looking up at the passing streetlights on a night drive</p>
-<p><code>grid</code> Square grid</p>
-<p><code>glow</code> Additive glow for lights, sparks etc</p>
-<p><code>stars</code> Exploding stars for fireworks etc</p>
 <p><code>bits</code> Bitwise operations giving fractal patterns</p>
-<p><code>xor</code> Bitwise xor with mod, giving changing pixellated patterns</p>
-<p><code>gradient</code> Simple gradient in the y direction</p>
-<p><code>shadertoy</code> Display a shadertoy synth. Use the <code>id</code> param to specify which shader. Only shaders published with the 'public+api' option are available, others will give error 'Shader not found'. At present, shaders that use textures or multiple channels will also not work.</p>
-<p><code>image</code> Display an online image. Use the <code>url</code> param to specify the image url. The image must be served using CORS. by default the image <code>back</code> is transparent.</p>
-<p><code>webcam</code> Display video feed from the attached webcam (if present). The browser will ask permission before allowing access to the webcam. Use the <code>device</code> param to sepcify the device as an index into the list of devices, or as part of the device label string (defaults to index 0). When a webcam synth is first used, the console will log the available devices and their indexes and labels. Use the <code>width</code> and <code>height</code> params to specify your ideal camera resolution (defaults to 640x480).</p>
-<p class='sub'><code>device</code> Device index or part of the device label string.</p>
-<p><code>text</code> Draw and display text. Use the text param; eg <code>text='Hello'</code>. Use <code>\n</code> to split to multiple lines: <code>text='Hello\nWorld'</code>. Use subparams to control the text rendering, eg: <code>text={'Hello',font:'times',size:'144',linesize:0.7,y:1/4,x:2/3,style:'bold italic'}</code>. Text is evaluated only per event, not per frame.</p>
+<p><code>blank</code> Blank: sets every pixel to the <code>back</code> colour.</p>
+<p><code>blob</code> Morphing 3D blob</p>
 <p><code>buffer</code> Maintain a render target, which other synths can render into. The render target is then drawn to the screen by this synth. Use the <code>buffer</code> param on another synth to direct its output to a <code>buffer</code> synth. Use the <code>rez</code> param on the buffer synth to set the render target texture resolution scale. Use the <code>feedback</code> param to provide video feedback by rendering this buffer on top of itself every frame. The subparams will modify the feedback render.</p>
-<p><code>scope</code> Display the current audio waveform</p>
-<p><code>scopefft</code> Display the frequency spectrum of the current audio waveform</p>
-<p><code>readout</code> Display the current value as a digital display</p>
+<p><code>clouds</code> Moving clouds</p>
 <p><code>dmx</code> Output to a DMX universe to control lighting fixtures. Requires web serial support to function (Chromium based browsers only currently), and a USB to DMX interface (tested with Enttec OpenDMX). For example, if there are two DMX lights on DMX channels 1 and 8, that each take a master dimmer channel followed by red, green and blue channels, then <code>d dmx, channel=(1,8), set={1,rainbow}</code> will output a rainbow colour to both lights.</p>
 <p class='sub'><code>channel</code> Set the base DMX channel number. DMX channels are 1-based, so this should be one or more, never zero.</p>
 <p class='sub'><code>set</code> Set DMX channels to the supplied values. For example <code>set={0.1,0.2}</code> sets the first channel to 0.1 and the second channel to 0.2. The channel offsets can also be supplied explicitly, eg <code>set={0:0.1, 1:0.2}</code></p>
@@ -840,48 +823,197 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>mul</code> Multiply values into DMX channel(s).</p>
 <p class='sub'><code>min</code> Take the minimum of the supplied value(s) with the current DMX channel value(s).</p>
 <p class='sub'><code>max</code> Take the maximum of the supplied value(s) with the current DMX channel value(s).</p>
+<p><code>glow</code> Additive glow for lights, sparks etc</p>
+<p><code>gradient</code> Simple gradient in the y direction</p>
+<p><code>grid</code> Square grid</p>
+<p><code>image</code> Display an online image. Use the <code>url</code> param to specify the image url. The image must be served using CORS. by default the image <code>back</code> is transparent.</p>
+<p><code>julia</code> Julia set fractal</p>
+<p><code>kal</code> Changing kaleidoscope pattern</p>
+<p><code>lines</code> Twisting lines</p>
+<p><code>readout</code> Display the current value as a digital display</p>
+<p><code>scope</code> Display the current audio waveform</p>
+<p><code>scopefft</code> Display the frequency spectrum of the current audio waveform</p>
+<p><code>shadertoy</code> Display a shadertoy synth. Use the <code>id</code> param to specify which shader. Only shaders published with the 'public+api' option are available, others will give error 'Shader not found'. At present, shaders that use textures or multiple channels will also not work.</p>
+<p><code>stars</code> Exploding stars for fireworks etc</p>
+<p><code>streetlight</code> Looking up at the passing streetlights on a night drive</p>
+<p><code>swirl</code> Psychedelic swirl</p>
+<p><code>text</code> Draw and display text. Use the text param; eg <code>text='Hello'</code>. Use <code>\n</code> to split to multiple lines: <code>text='Hello\nWorld'</code>. Use subparams to control the text rendering, eg: <code>text={'Hello',font:'times',size:'144',linesize:0.7,y:1/4,x:2/3,style:'bold italic'}</code>. Text is evaluated only per event, not per frame.</p>
+<p><code>webcam</code> Display video feed from the attached webcam (if present). The browser will ask permission before allowing access to the webcam. Use the <code>device</code> param to sepcify the device as an index into the list of devices, or as part of the device label string (defaults to index 0). When a webcam synth is first used, the console will log the available devices and their indexes and labels. Use the <code>width</code> and <code>height</code> params to specify your ideal camera resolution (defaults to 640x480).</p>
+<p class='sub'><code>device</code> Device index or part of the device label string.</p>
+<p><code>xor</code> Bitwise xor with mod, giving changing pixellated patterns</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-event-params')" class="accordion"> Common Event Params</h4>
 <div id="accordion-event-params" class="closed">
+<p><code>amp</code> Player amplitude control. For audio players, this defaults to the event <code>vel</code> so that velocity controls the player volume.</p>
+<p><code>delay</code> Event start time offset. Default time units: beats. Once applied, <code>delay</code> is removed from the event so it is not visible to expressions via <code>this.delay</code> or <code>player.delay</code>.</p>
+<p class='sub'><code>delay={1/2,add:2}</code> subparams on delay will be used to override the event values. In the example given, the <code>add</code> param of the delayed event will be set to 2, but any params can be overridden this way. This is most useful with chords of delay values, as it allows individual delayed events to change their properties.</p>
+<p><code>dur</code> Pattern step duration. Timevars, random vars and index vars can be used to give variation in duration. Chords cannot be used with the dur param. Default time units: beats.</p>
 <p><code>pattern</code> Pattern to play, replacing the pattern given on the player line; eg <code>p ping 0, pattern=`0246`</code>. The value is a string, so backticks (or quotes) are required, and the full pattern syntax including the pattern operators can be used, eg <code>set p pattern=`0123 crop 3`</code>. Because the pattern given on the player line is delimited by the first comma, this is also the way to use a pattern containing a comma.</p>
 <p class='sub'>The pattern param is evaluated once per beat, so it can be a timevar, a random var, or a var lookup, allowing the pattern itself to change as the player plays; eg <code>set p pattern=[`0246`,`1357`]t8</code> alternates between two patterns every 8 beats. A changed pattern stays aligned to the beat grid, just as it does when you edit the pattern on the player line; use <code>now</code> (eg <code>pattern=`now 0246`</code>) to restart it from the beginning instead.</p>
 <p class='sub'>The pattern given on the player line is itself the <code>pattern</code> param, layered over the preset and under the player's own params. So a <code>pattern</code> param from a preset acts as a default that the player line pattern overrides, a <code>pattern</code> param on the player line overrides both, and a <code>set</code> override wins over all of them. For example with <code>preset foo readout, pattern=`123`</code>, the player <code>r foo 456</code> plays <code>456</code> while <code>r foo</code> plays the preset's <code>123</code>. Compound operators combine with the player line pattern, so <code>p ping 01, pattern+=`23`</code> plays <code>0123</code>.</p>
 <p class='sub'>Only players that play a pattern use this param, so it has no effect on <code>follow</code>, <code>midi</code>, <code>gamepad</code> and <code>keyboard</code> players, or on continuous players such as <code>bus</code> and the visual synths.</p>
-<p><code>dur</code> Pattern step duration. Timevars, random vars and index vars can be used to give variation in duration. Chords cannot be used with the dur param. Default time units: beats.</p>
-<p><code>delay</code> Event start time offset. Default time units: beats. Once applied, <code>delay</code> is removed from the event so it is not visible to expressions via <code>this.delay</code> or <code>player.delay</code>.</p>
-<p class='sub'><code>delay={1/2,add:2}</code> subparams on delay will be used to override the event values. In the example given, the <code>add</code> param of the delayed event will be set to 2, but any params can be overridden this way. This is most useful with chords of delay values, as it allows individual delayed events to change their properties.</p>
+<p><code>quantise</code> Snap event count to a grid of the given size, in beats. Eg <code>quantise=1/4</code> snaps events to the nearest 1/16-note grid point. Applied after <code>stutter</code> so stuttered events can be quantised. If snapping back would put the event in the past, it is pushed forward to the next grid slot instead. Set to 0 to disable.</p>
+<p><code>rate</code> Playback rate for 'play' samples, animation rate for visuals</p>
 <p><code>stutter</code> Split each event into multiple events spaced evenly within the same time period. Eg with <code>stutter=2</code>, an event starting at time 0 with a duration of 1 will be split into two events of duration 1/2, starting at 0 and 1/2. Stutter of 0 or 1 has no effect and is the default. Stutter is rounded down to the nearest integer value. Once applied, <code>stutter</code> is removed from the event so it is not visible to expressions via <code>this.stutter</code> or <code>player.stutter</code>.</p>
 <p class='sub'><code>stutter={2,dur:1/4}</code> the <code>dur</code> subparam forces the time between stutter events rather than dividing the original event's duration evenly. Default time units: beats, eg <code>stutter={2,dur:1/4s}</code> for quarter-second spacing.</p>
 <p class='sub'>Any other subparam can be supplied and will be applied to the extra stutter events only — the first event keeps its original params. Eg <code>stutter={2,amp:1/4}</code> plays the first note at normal amp and the second at <code>amp=1/4</code>, useful for echo-like tails.</p>
 <p class='sub'>A user defined function can be supplied to control each stutter event individually, receiving the stutter index (0-based) and returning a map of param overrides. The lambda is applied to every stutter event including the first. Eg <code>stutter={4,{i}->{oct:2+i}}</code> plays 4 notes per pattern event with octaves 2, 3, 4 and 5.</p>
-<p><code>quantise</code> Snap event count to a grid of the given size, in beats. Eg <code>quantise=1/4</code> snaps events to the nearest 1/16-note grid point. Applied after <code>stutter</code> so stuttered events can be quantised. If snapping back would put the event in the past, it is pushed forward to the next grid slot instead. Set to 0 to disable.</p>
+<p><code>sus</code> Sustain time. Note the 'sustain' in an ADSR envelope sets the sustain level, however this param sets the sustain time. The default is time required after attack and decay to take the note to the end of the duration. Default time units: beats.</p>
 <p><code>swing</code> Amount to swing alternating 1/4 beats, as a Linn LM-1 style percentage from <code>50</code> (no swing) to <code>66</code> (perfect triplet swing) to <code>75</code> (maximum dotted note swing). You can set swing for all players at once using (eg) <code>set * swing=60</code></p>
 <p class='sub'><code>swing={66,period:1/2}</code> The period to apply the swing. Defaults to 1/4 of a beat (suitable for house music).</p>
-<p><code>amp</code> Player amplitude control. For audio players, this defaults to the event <code>vel</code> so that velocity controls the player volume.</p>
-<p><code>sus</code> Sustain time. Note the 'sustain' in an ADSR envelope sets the sustain level, however this param sets the sustain time. The default is time required after attack and decay to take the note to the end of the duration. Default time units: beats.</p>
-<p><code>rate</code> Playback rate for 'play' samples, animation rate for visuals</p>
-<p><code>voice</code> READ ONLY param. This param is set to the voice index of an individual event within a chord. So for example: <code>p ping 0, add=(0,2)</code>. Here, there are two events within the chord, with <code>add</code> values of 0 and 2. The <code>voice</code> values for these events will be 0 and 1, since the <code>voice</code> increments. This can be used to change other values based on the voice index within the chord.</p>
-<p><code>time</code> READ ONLY param. The current time in beats this event has been playing for.</p>
-<p><code>idx</code> READ ONLY param. The pattern index of this event. The pattern index counts through the pattern, then resets when the pattern repeats.</p>
+<h6>Read only params</h6>
 <p><code>exists</code> READ ONLY param. One if the player is defined, even if its not currently playing any event.</p>
+<p><code>idx</code> READ ONLY param. The pattern index of this event. The pattern index counts through the pattern, then resets when the pattern repeats.</p>
+<p><code>player</code> READ ONLY param. The name of the player currently playing. For a follow player, will be the name of the follow player (not the player it's following).</p>
 <p><code>playing</code> READ ONLY param. One if the player exists and is currently playing one or more events.</p>
 <p><code>pulse</code> READ ONLY param. A value that rises and falls as a note plays on the player. If multiple notes are playing, the value will be a chord. The value is pre-multiplied by the note velocity (the <code>vel</code> param).</p>
-<p><code>player</code> READ ONLY param. The name of the player currently playing. For a follow player, will be the name of the follow player (not the player it's following).</p>
+<p><code>time</code> READ ONLY param. The current time in beats this event has been playing for.</p>
+<p><code>voice</code> READ ONLY param. This param is set to the voice index of an individual event within a chord. So for example: <code>p ping 0, add=(0,2)</code>. Here, there are two events within the chord, with <code>add</code> values of 0 and 2. The <code>voice</code> values for these events will be 0 and 1, since the <code>voice</code> increments. This can be used to change other values based on the voice index within the chord.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-audio-params')" class="accordion"> Audio Params</h4>
 <div id="accordion-audio-params" class="closed">
-<p><code>vel</code> Event velocity. Default is 3/4. By default velocity controls the event amp (volume) and usually the cutoff or brightness of the sound (where applicable). <code>vel</code> is set per event by the gamepad or midi player, but can also be set or overridden by player params.</p>
 <p><code>add</code> Amount to add onto event scale degree, in degrees. Evaluated per event only.</p>
 <p class='sub'><code>add={0,#:1}</code> Sharpen the scale degree (add a given number of semitones)</p>
 <p class='sub'><code>add={0,b:1}</code> Flatten the scale degree (subtract a given number of semitones)</p>
 <p><code>addc</code> Amount to add onto event pitch, in semitones. Evaluated per frame, and accepts fractional values, so <code>addc=[0:12]e</code> will slide the note from the starting pitch smoothly up a whole octave over the course of the note.</p>
-<p><code>oct</code> Octave; middle C is in octave 4</p>
-<p><code>envelope</code> Specify the envelope type to use: <code>'full'</code> (ADSR), <code>'simple'</code> (ADR), <code>'organ'</code> (ASR full volume while on like an organ), <code>'pad'</code> (uses a cosine roll on/off so consecutive notes maintain constant volume), <code>'linpad'</code> (uses a linear roll on/off, a better crossfade when the source is identical (including phase) between events), <code>'percussion'</code> (R - instant attack). Or, specify an envelope directly as an expression, for example <code>envelope=[1:!300ms,0]e@s</code></p>
+<p><code>apf1</code> All pass filter frequency. Default time units: Hertz. Multiple allpass filters can be specified with params <code>apf1</code>, <code>apf2</code> etc. They will operate in parallel so their outputs sum, allowing phase cancellation.</p>
+<p class='sub'><code>apf={400,q:2}</code> Allpass filter resonance. Default: 1.</p>
 <p><code>att</code> Attack time. Default time units: beats.</p>
+<p><code>bits</code> bit crush effect; value is number of bits. 1 bit is very distorted to (eg) 32 bits is relatively clean. 0 disables the effect.</p>
+<p class='sub'><code>bits={12,gain:2}</code> Input gain; gain amp to apply to the signal before bits is applied</p>
+<p class='sub'><code>bits={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
+<p><code>bpf</code> Band pass filter frequency. Default time units: Hertz.</p>
+<p class='sub'><code>bpf={400,q:20}</code> Band pass filter resonance. Default: 1.</p>
+<p class='sub'><code>bpf={400,poles:4}</code> Filter poles. Default is a 2 pole filter giving 12 dB/octave. Alternatively, specify 4 for a Moog-like 4 pole filter giving 24 dB/octave.</p>
+<p><code>bpf1</code> Multiple, parallel bandpass filters are available using params <code>bpf1</code>, <code>bpf2</code> etc.</p>
+<p><code>bus</code> id of the bus that this player should mix to. If the sepcified player does not exist, this player will be silent. If the bus param is not specified, this player will be mixed to the global <code>main</code> bus.</p>
+<p><code>choke</code> Set a choke group. Notes played with a choke group will cut off other notes that are already playing if they have the same choke group. The choke group can be a string, and can apply across multiple players.</p>
+<p><code>chop</code> Apply a tremolo effect that chops the audio signal, eg <code>chop=2cpb</code> chops the signal twice per beat. Default time units: cycles per beat</p>
+<p class='sub'><code>chop={2,wave:triangle}</code> chops twice per beat with a triangle waveform. The default waveform is sine; the options are sine, square, triangle, saw.</p>
+<p class='sub'><code>chop={4,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
+<p><code>chorus</code> Strength of lfo-delay based stereo chorus effect.</p>
+<p class='sub'><code>chorus={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
+<p><code>clip</code> boost the signal then apply hard clipping</p>
+<p class='sub'><code>clip={12,gain:2}</code> Input gain; gain amp to apply to the signal before clip is applied</p>
+<p class='sub'><code>clip={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
+<p><code>compress</code> Compression ratio, or the reduction in volume for signals above the compression threshold. A ratio of zero disables compression.</p>
+<p class='sub'><code>compress={12,gain:2}</code> Input gain; gain amp to apply to the signal before compression is applied</p>
+<p class='sub'><code>compress={12,threshold:-40dB}</code> Threshold at which the compression ratio kicks in. Default is <code>-50dB</code></p>
+<p class='sub'><code>compress={12,knee:10dB}</code> the 'knee' is a softening of the compression curve, so that there is no sudden changeover at the threshold. A value of <code>0dB</code> disables the knee and gives a sudden changeover. Other values are the range over which the knee should apply. Default is <code>40dB</code>.</p>
+<p class='sub'><code>compress={12,att:0.1}</code> Compressor attack time. The attack time is the time it takes for compression to 'kick in' once a signal crosses the threshold. Default is 0.01 (or 10ms). Default time units: seconds.</p>
+<p class='sub'><code>compress={12,rel:0.2}</code> Compressor release time. The release time is the time it takes for compression to 'go away' once a signal falls back below the threshold. Default is 0.25. Default time units: seconds.</p>
 <p><code>dec</code> Decay time. Default time units: beats.</p>
+<p><code>detune</code> Amount of detune in semitones</p>
+<p><code>drive</code> overdrive by boosting the signal then applying soft clipping. Low values (eg 1/32, 1/16) give a gentle overdrive. Mid values (eg 1/8, 1/4) give a distortion effect. Higher values (eg 1/2, 1) give a full on fuzz.</p>
+<p class='sub'><code>drive={12,gain:2}</code> Input gain; gain amp to apply to the signal before drive is applied</p>
+<p class='sub'><code>drive={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
+<p><code>echo</code> Echo time delay. Default time unit: beats.</p>
+<p class='sub'><code>echo={1,feedback:0.8}</code> Echo feedback gain, 0 to 1, default 0.35. Higher value means the echo persists for longer.</p>
+<p class='sub'><code>echo={1,max:2}</code> Echo max time delay. Only valid for bus echo. The bus echo time can be varied, but cannot be larger than this. Defaults to either 1 beat, or the initial value of the delay time, whichever is larger. Default time unit: beats.</p>
+<p><code>envelope</code> Specify the envelope type to use: <code>'full'</code> (ADSR), <code>'simple'</code> (ADR), <code>'organ'</code> (ASR full volume while on like an organ), <code>'pad'</code> (uses a cosine roll on/off so consecutive notes maintain constant volume), <code>'linpad'</code> (uses a linear roll on/off, a better crossfade when the source is identical (including phase) between events), <code>'percussion'</code> (R - instant attack). Or, specify an envelope directly as an expression, for example <code>envelope=[1:!300ms,0]e@s</code></p>
+<p><code>flanger</code> LFO frequency for flanger effect. Default time units: cycles per beat.</p>
+<p class='sub'><code>flanger={1/3,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
+<p><code>fold</code> distort the signal by boosting then folding the overdriven part of the waveform</p>
+<p class='sub'><code>fold={12,gain:2}</code> Input gain; gain amp to apply to the signal before fold is applied</p>
+<p class='sub'><code>fold={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
+<p><code>glide</code> Glide from one note to the next (portamento). When a note plays with glide set, if there is a previous note playing on the same player in the same voice, then both notes will glide in pitch from the old note's pitch to the new. <code>glide=1/3</code> means it takes 1/3 of a beat to glide from the old note to the new. Default value is 0 (no glide). Default time units: beats.</p>
+<p class='sub'><code>glide={1/3,curve:4}</code> glide curve. Zero means no curve, or a linear frequency change. Positive curve means the frequency moves quickly to the target, then slows down as it approaches. Default is 1.</p>
+<p><code>high</code> High shelf gain. Eg <code>high=-6dB</code> will act like a gain of 1/2 for the high frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
+<p class='sub'><code>high={-8db,freq:400}</code> High shelf cutoff frequency. Default: 1100Hz. Default units: Hertz</p>
+<p><code>hpf</code> High pass filter frequency. Default time units: Hertz</p>
+<p class='sub'><code>hpf={400,q:20}</code> High pass filter resonance. Default: 5.</p>
+<p class='sub'><code>hpf={400,poles:4}</code> Filter poles. Default is a 2 pole filter giving 12 dB/octave. Alternatively, specify 4 for a Moog-like 4 pole filter giving 24 dB/octave.</p>
+<p><code>low</code> Low shelf gain. Eg <code>low=-6dB</code> will act like a gain of 1/2 for the low frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
+<p class='sub'><code>low={-8db,freq:400}</code> Low shelf cutoff frequency. Default: 200Hz. Default units: Hertz</p>
+<p><code>lpf</code> Low pass filter frequency. Default time units: Hertz</p>
+<p class='sub'><code>lpf={400,q:20}</code> Low pass filter resonance. 10 is approximately the transition where resonance starts to kick in. Default: 5.</p>
+<p class='sub'><code>lpf={400,poles:4}</code> Filter poles. Default is a 2 pole filter giving 12 dB/octave. Alternatively, specify 4 for a Moog-like 4 pole filter giving 24 dB/octave.</p>
+<p><code>mid</code> Mid gain. Eg <code>mid=-6dB</code> will act like a gain of 1/2 for the mid frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
+<p class='sub'><code>mid={-8db,freq:400}</code> Mid cutoff frequency. Default: 600Hz. Default units: Hertz</p>
+<p class='sub'><code>mid={-8db,q:10}</code> Mid q defines the width of the mid frequency band; low q is wide. Default: 5</p>
+<p><code>mono</code> Force a signal to mono: the input signal appears equally in both left and right channels</p>
+<p><code>nf</code> Notch filter frequency. Default time units: Hertz</p>
+<p class='sub'><code>nf={400,q:20}</code> Notch filter resonance. Default: 1.</p>
+<p><code>noisify</code> noisify: distort the signal into noise</p>
+<p class='sub'><code>noisify={12,gain:2}</code> Input gain; gain amp to apply to the signal before noisify is applied</p>
+<p class='sub'><code>noisify={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
+<p><code>oct</code> Octave; middle C is in octave 4</p>
+<p><code>pan</code> pan from -1 (left) to 1 (right). default: 0</p>
+<p><code>phaser</code> LFO frequency for phaser phase sweep effect. Default time units: cycles per beat.</p>
+<p class='sub'><code>phaser={1/3,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
+<p><code>psf</code> Phaser stage filter consisting of two allpass filters in parallel. Multiple phaserstage filters can be specified with params <code>psf1</code>, <code>psf2</code> etc. The phaserstages will operate in series, allowing more complex phasers to be built up with multiple peaks and troughs in the frequency spectrum. Default units: Hertz</p>
+<p class='sub'><code>psf={f1:300,f2:2300,q:0.7}</code> f1 and f2 are the frequencies in Hertz of the two allpass filters. Sweep these dynamically for the swirling phaser effect. q is filter resonance. Default: 1.</p>
+<p><code>rel</code> Release time. Default time units: beats.</p>
+<p><code>reverb</code> Convolution reverb duration. The value is a time in beats that the reverb tail will last for. Default time unit: beats.</p>
+<p class='sub'><code>reverb={2,curve:3}</code> Decay curve power of the reverb tail. 1 is a linear decay, larger values make the tail decay faster. default: 5</p>
+<p class='sub'><code>reverb={2,hpf:300}</code> HPF subparam Sets the cutoff frequency for a high pass filter placed before the reverb. 0 disables the highpass filter altogether. default: 0. Default time units: hz</p>
+<p class='sub'><code>reverb={2,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1/2</p>
+<p><code>ring</code> Apply ring modulation at the given frequency, eg <code>ring=32hz</code> apply ring modulation at 32Hz. Default time units: hz</p>
+<p class='sub'><code>ring={32,wave:saw}</code> 32Hz ring modulation with a sawtooth waveform. The default waveform is triangle; the options are sine, square, triangle, saw.</p>
+<p class='sub'><code>ring={32,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
+<p><code>room</code> freeverb room size.</p>
+<p class='sub'><code>room={2,hpf:300}</code> HPF subparam Sets the cutoff frequency for a high pass filter placed before the freeverb. 0 disables the highpass filter altogether. default: 0. Default time units: hz</p>
+<p class='sub'><code>room={2,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1/2</p>
+<p><code>root</code> override root for this player; used instead of main root for this player only. </p>
+<p><code>sample</code> With 'play' synth: number: choose which sample set to use. With 'sample' synth: string: url of online audio file to play (note: server must support cross origin requests for the file)</p>
+<p class='sub'><code>sample={32,pitch:261.6}</code> Specify the original pitch of the sample (eg default is 261.6 Hz for C4). Default time units: hz</p>
+<p><code>scale</code> override scale for this player; set to one of these strings: 
+  <code>chromatic</code>, 
+  <code>major</code>, 
+  <code>majorpentatonic</code>, 
+  <code>pentatonic</code>, 
+  <code>penta</code>, 
+  <code>minor</code>, 
+  <code>aeolian</code>, 
+  <code>minorpentatonic</code>, 
+  <code>minorpenta</code>, 
+  <code>mixolydian</code>, 
+  <code>melodicminor</code>, 
+  <code>melodicmajor</code>, 
+  <code>harmonicminor</code>, 
+  <code>harmonicmajor</code>, 
+  <code>dorian</code>, 
+  <code>dorian2</code>, 
+  <code>diminished</code>, 
+  <code>egyptian</code>, 
+  <code>yu</code>, 
+  <code>zhi</code>, 
+  <code>phrygian</code>, 
+  <code>prometheus</code>, 
+  <code>indian</code>, 
+  <code>locrian</code>, 
+  <code>locrianmajor</code>, 
+  <code>lydian</code>, 
+  <code>lydianminor</code>, 
+  <code>hungarianminor</code>, 
+  <code>romanianminor</code>, 
+  <code>chinese</code>, 
+  <code>wholetone</code>, 
+  <code>halfwhole</code>, 
+  <code>wholehalf</code>, 
+  <code>bebopmaj</code>, 
+  <code>bebopdorian</code>, 
+  <code>bebopdom</code>, 
+  <code>bebopmelmin</code>, 
+  <code>blues</code>, 
+  <code>minmaj</code>, 
+  <code>susb9</code>, 
+  <code>lydianaug</code>, 
+  <code>lydiandom</code>, 
+  <code>melmin5th</code>, 
+  <code>halfdim</code>, 
+  <code>altered</code>, 
+</p>
+<p><code>start</code> For the 'sample' synth, specify the playback start time within the sample. Default time units: seconds.</p>
+<p><code>suck</code> suck smaller amplitudes even smaller, but leave large amplitudes alone; value is a limit amplitude: when the waveform is within this limit, it is scaled down. This can provide an unusual form of distortion, or for samples with a long tail, can give a 'gated' effect.</p>
+<p class='sub'><code>suck={12,gain:2}</code> Input gain; gain amp to apply to the signal before suck is applied</p>
+<p class='sub'><code>suck={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>sus</code> Sustain time. Note the 'sustain' in an ADSR envelope sets the sustain level, however this param sets the sustain time. The default is time required after attack and decay to take the note to the end of the duration. Default time units: beats.</p>
 <p class='sub'><code>sus={level:1/6}</code> Set the amplitude level for sustain. Note the 'sustain' in an ADSR envelope is the level, so it is this value not the main 'sus' value (which is actually the sustain time). Default: 0.8.</p>
-<p><code>rel</code> Release time. Default time units: beats.</p>
+<p><code>vel</code> Event velocity. Default is 3/4. By default velocity controls the event amp (volume) and usually the cutoff or brightness of the sound (where applicable). <code>vel</code> is set per event by the gamepad or midi player, but can also be set or overridden by player params.</p>
+<p><code>vib</code> vibrato rate. Default time unit: cycles per beat</p>
+<p class='sub'><code>vib={2,depth:1}</code> vibrato depth in semitones (default 0.4)</p>
+<p class='sub'><code>vib={2,delay:1}</code> delay time before vibrato starts (default 1/2). Default time units: beats</p>
 <p><code>wave</code> For audio synths that use a waveform, specify which waveform to use, from this list:
   <code>sine</code>, 
   <code>square</code>, 
@@ -938,212 +1070,86 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
   <code>'wurlitzer-2'</code>
   Note that values with hyphens must be enclosed in quotes. In addition, there may be a performance problem with using dynamic (per frame) pitch sweeps using these waveforms. This penalty does not apply to the basic waveforms (sine, sawtooth, triangle, square).
 </p>
-<p><code>detune</code> Amount of detune in semitones</p>
-<p><code>lpf</code> Low pass filter frequency. Default time units: Hertz</p>
-<p class='sub'><code>lpf={400,q:20}</code> Low pass filter resonance. 10 is approximately the transition where resonance starts to kick in. Default: 5.</p>
-<p class='sub'><code>lpf={400,poles:4}</code> Filter poles. Default is a 2 pole filter giving 12 dB/octave. Alternatively, specify 4 for a Moog-like 4 pole filter giving 24 dB/octave.</p>
-<p><code>hpf</code> High pass filter frequency. Default time units: Hertz</p>
-<p class='sub'><code>hpf={400,q:20}</code> High pass filter resonance. Default: 5.</p>
-<p class='sub'><code>hpf={400,poles:4}</code> Filter poles. Default is a 2 pole filter giving 12 dB/octave. Alternatively, specify 4 for a Moog-like 4 pole filter giving 24 dB/octave.</p>
-<p><code>bpf</code> Band pass filter frequency. Default time units: Hertz.</p>
-<p class='sub'><code>bpf={400,q:20}</code> Band pass filter resonance. Default: 1.</p>
-<p class='sub'><code>bpf={400,poles:4}</code> Filter poles. Default is a 2 pole filter giving 12 dB/octave. Alternatively, specify 4 for a Moog-like 4 pole filter giving 24 dB/octave.</p>
-<p><code>bpf1</code> Multiple, parallel bandpass filters are available using params <code>bpf1</code>, <code>bpf2</code> etc.</p>
-<p><code>nf</code> Notch filter frequency. Default time units: Hertz</p>
-<p class='sub'><code>nf={400,q:20}</code> Notch filter resonance. Default: 1.</p>
-<p><code>apf1</code> All pass filter frequency. Default time units: Hertz. Multiple allpass filters can be specified with params <code>apf1</code>, <code>apf2</code> etc. They will operate in parallel so their outputs sum, allowing phase cancellation.</p>
-<p class='sub'><code>apf={400,q:2}</code> Allpass filter resonance. Default: 1.</p>
-<p><code>psf</code> Phaser stage filter consisting of two allpass filters in parallel. Multiple phaserstage filters can be specified with params <code>psf1</code>, <code>psf2</code> etc. The phaserstages will operate in series, allowing more complex phasers to be built up with multiple peaks and troughs in the frequency spectrum. Default units: Hertz</p>
-<p class='sub'><code>psf={f1:300,f2:2300,q:0.7}</code> f1 and f2 are the frequencies in Hertz of the two allpass filters. Sweep these dynamically for the swirling phaser effect. q is filter resonance. Default: 1.</p>
-<p><code>low</code> Low shelf gain. Eg <code>low=-6dB</code> will act like a gain of 1/2 for the low frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
-<p class='sub'><code>low={-8db,freq:400}</code> Low shelf cutoff frequency. Default: 200Hz. Default units: Hertz</p>
-<p><code>mid</code> Mid gain. Eg <code>mid=-6dB</code> will act like a gain of 1/2 for the mid frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
-<p class='sub'><code>mid={-8db,freq:400}</code> Mid cutoff frequency. Default: 600Hz. Default units: Hertz</p>
-<p class='sub'><code>mid={-8db,q:10}</code> Mid q defines the width of the mid frequency band; low q is wide. Default: 5</p>
-<p><code>high</code> High shelf gain. Eg <code>high=-6dB</code> will act like a gain of 1/2 for the high frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
-<p class='sub'><code>high={-8db,freq:400}</code> High shelf cutoff frequency. Default: 1100Hz. Default units: Hertz</p>
-<p><code>chop</code> Apply a tremolo effect that chops the audio signal, eg <code>chop=2cpb</code> chops the signal twice per beat. Default time units: cycles per beat</p>
-<p class='sub'><code>chop={2,wave:triangle}</code> chops twice per beat with a triangle waveform. The default waveform is sine; the options are sine, square, triangle, saw.</p>
-<p class='sub'><code>chop={4,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
-<p><code>ring</code> Apply ring modulation at the given frequency, eg <code>ring=32hz</code> apply ring modulation at 32Hz. Default time units: hz</p>
-<p class='sub'><code>ring={32,wave:saw}</code> 32Hz ring modulation with a sawtooth waveform. The default waveform is triangle; the options are sine, square, triangle, saw.</p>
-<p class='sub'><code>ring={32,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
-<p><code>sample</code> With 'play' synth: number: choose which sample set to use. With 'sample' synth: string: url of online audio file to play (note: server must support cross origin requests for the file)</p>
-<p class='sub'><code>sample={32,pitch:261.6}</code> Specify the original pitch of the sample (eg default is 261.6 Hz for C4). Default time units: hz</p>
-<p><code>start</code> For the 'sample' synth, specify the playback start time within the sample. Default time units: seconds.</p>
-<p><code>compress</code> Compression ratio, or the reduction in volume for signals above the compression threshold. A ratio of zero disables compression.</p>
-<p class='sub'><code>compress={12,gain:2}</code> Input gain; gain amp to apply to the signal before compression is applied</p>
-<p class='sub'><code>compress={12,threshold:-40dB}</code> Threshold at which the compression ratio kicks in. Default is <code>-50dB</code></p>
-<p class='sub'><code>compress={12,knee:10dB}</code> the 'knee' is a softening of the compression curve, so that there is no sudden changeover at the threshold. A value of <code>0dB</code> disables the knee and gives a sudden changeover. Other values are the range over which the knee should apply. Default is <code>40dB</code>.</p>
-<p class='sub'><code>compress={12,att:0.1}</code> Compressor attack time. The attack time is the time it takes for compression to 'kick in' once a signal crosses the threshold. Default is 0.01 (or 10ms). Default time units: seconds.</p>
-<p class='sub'><code>compress={12,rel:0.2}</code> Compressor release time. The release time is the time it takes for compression to 'go away' once a signal falls back below the threshold. Default is 0.25. Default time units: seconds.</p>
-<p><code>noisify</code> noisify: distort the signal into noise</p>
-<p class='sub'><code>noisify={12,gain:2}</code> Input gain; gain amp to apply to the signal before noisify is applied</p>
-<p class='sub'><code>noisify={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
-<p><code>fold</code> distort the signal by boosting then folding the overdriven part of the waveform</p>
-<p class='sub'><code>fold={12,gain:2}</code> Input gain; gain amp to apply to the signal before fold is applied</p>
-<p class='sub'><code>fold={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
-<p><code>clip</code> boost the signal then apply hard clipping</p>
-<p class='sub'><code>clip={12,gain:2}</code> Input gain; gain amp to apply to the signal before clip is applied</p>
-<p class='sub'><code>clip={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
-<p><code>drive</code> overdrive by boosting the signal then applying soft clipping. Low values (eg 1/32, 1/16) give a gentle overdrive. Mid values (eg 1/8, 1/4) give a distortion effect. Higher values (eg 1/2, 1) give a full on fuzz.</p>
-<p class='sub'><code>drive={12,gain:2}</code> Input gain; gain amp to apply to the signal before drive is applied</p>
-<p class='sub'><code>drive={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
-<p><code>bits</code> bit crush effect; value is number of bits. 1 bit is very distorted to (eg) 32 bits is relatively clean. 0 disables the effect.</p>
-<p class='sub'><code>bits={12,gain:2}</code> Input gain; gain amp to apply to the signal before bits is applied</p>
-<p class='sub'><code>bits={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
-<p><code>suck</code> suck smaller amplitudes even smaller, but leave large amplitudes alone; value is a limit amplitude: when the waveform is within this limit, it is scaled down. This can provide an unusual form of distortion, or for samples with a long tail, can give a 'gated' effect.</p>
-<p class='sub'><code>suck={12,gain:2}</code> Input gain; gain amp to apply to the signal before suck is applied</p>
-<p class='sub'><code>suck={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
-<p><code>root</code> override root for this player; used instead of main root for this player only. </p>
-<p><code>scale</code> override scale for this player; set to one of these strings: 
-  <code>chromatic</code>, 
-  <code>major</code>, 
-  <code>majorpentatonic</code>, 
-  <code>pentatonic</code>, 
-  <code>penta</code>, 
-  <code>minor</code>, 
-  <code>aeolian</code>, 
-  <code>minorpentatonic</code>, 
-  <code>minorpenta</code>, 
-  <code>mixolydian</code>, 
-  <code>melodicminor</code>, 
-  <code>melodicmajor</code>, 
-  <code>harmonicminor</code>, 
-  <code>harmonicmajor</code>, 
-  <code>dorian</code>, 
-  <code>dorian2</code>, 
-  <code>diminished</code>, 
-  <code>egyptian</code>, 
-  <code>yu</code>, 
-  <code>zhi</code>, 
-  <code>phrygian</code>, 
-  <code>prometheus</code>, 
-  <code>indian</code>, 
-  <code>locrian</code>, 
-  <code>locrianmajor</code>, 
-  <code>lydian</code>, 
-  <code>lydianminor</code>, 
-  <code>hungarianminor</code>, 
-  <code>romanianminor</code>, 
-  <code>chinese</code>, 
-  <code>wholetone</code>, 
-  <code>halfwhole</code>, 
-  <code>wholehalf</code>, 
-  <code>bebopmaj</code>, 
-  <code>bebopdorian</code>, 
-  <code>bebopdom</code>, 
-  <code>bebopmelmin</code>, 
-  <code>blues</code>, 
-  <code>minmaj</code>, 
-  <code>susb9</code>, 
-  <code>lydianaug</code>, 
-  <code>lydiandom</code>, 
-  <code>melmin5th</code>, 
-  <code>halfdim</code>, 
-  <code>altered</code>, 
-</p>
-<p><code>vib</code> vibrato rate. Default time unit: cycles per beat</p>
-<p class='sub'><code>vib={2,depth:1}</code> vibrato depth in semitones (default 0.4)</p>
-<p class='sub'><code>vib={2,delay:1}</code> delay time before vibrato starts (default 1/2). Default time units: beats</p>
-<p><code>glide</code> Glide from one note to the next (portamento). When a note plays with glide set, if there is a previous note playing on the same player in the same voice, then both notes will glide in pitch from the old note's pitch to the new. <code>glide=1/3</code> means it takes 1/3 of a beat to glide from the old note to the new. Default value is 0 (no glide). Default time units: beats.</p>
-<p class='sub'><code>glide={1/3,curve:4}</code> glide curve. Zero means no curve, or a linear frequency change. Positive curve means the frequency moves quickly to the target, then slows down as it approaches. Default is 1.</p>
-<p><code>pan</code> pan from -1 (left) to 1 (right). default: 0</p>
-<p><code>mono</code> Force a signal to mono: the input signal appears equally in both left and right channels</p>
-<p><code>choke</code> Set a choke group. Notes played with a choke group will cut off other notes that are already playing if they have the same choke group. The choke group can be a string, and can apply across multiple players.</p>
-<p><code>echo</code> Echo time delay. Default time unit: beats.</p>
-<p class='sub'><code>echo={1,feedback:0.8}</code> Echo feedback gain, 0 to 1, default 0.35. Higher value means the echo persists for longer.</p>
-<p class='sub'><code>echo={1,max:2}</code> Echo max time delay. Only valid for bus echo. The bus echo time can be varied, but cannot be larger than this. Defaults to either 1 beat, or the initial value of the delay time, whichever is larger. Default time unit: beats.</p>
-<p><code>chorus</code> Strength of lfo-delay based stereo chorus effect.</p>
-<p class='sub'><code>chorus={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
-<p><code>phaser</code> LFO frequency for phaser phase sweep effect. Default time units: cycles per beat.</p>
-<p class='sub'><code>phaser={1/3,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
-<p><code>flanger</code> LFO frequency for flanger effect. Default time units: cycles per beat.</p>
-<p class='sub'><code>flanger={1/3,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
-<p><code>room</code> freeverb room size.</p>
-<p class='sub'><code>room={2,hpf:300}</code> HPF subparam Sets the cutoff frequency for a high pass filter placed before the freeverb. 0 disables the highpass filter altogether. default: 0. Default time units: hz</p>
-<p class='sub'><code>room={2,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1/2</p>
-<p><code>reverb</code> Convolution reverb duration. The value is a time in beats that the reverb tail will last for. Default time unit: beats.</p>
-<p class='sub'><code>reverb={2,curve:3}</code> Decay curve power of the reverb tail. 1 is a linear decay, larger values make the tail decay faster. default: 5</p>
-<p class='sub'><code>reverb={2,hpf:300}</code> HPF subparam Sets the cutoff frequency for a high pass filter placed before the reverb. 0 disables the highpass filter altogether. default: 0. Default time units: hz</p>
-<p class='sub'><code>reverb={2,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1/2</p>
+<h6>Read only params</h6>
 <p><code>freq</code> READ ONLY param. This param is set by all tonal synths, to the frequency in Hz of the note being played. This value can then be read for other purposes; eg <code>lpf=this.freq*2</code> will set the low pass cutoff frequency to double the note frequency.</p>
 <p><code>pre</code> READ ONLY param. An audionode that taps off the players audio signal before shared effects like scho/reverb/chorus and any fx chain are applied.</p>
-<p><code>bus</code> id of the bus that this player should mix to. If the sepcified player does not exist, this player will be silent. If the bus param is not specified, this player will be mixed to the global <code>main</code> bus.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-visual-params')" class="accordion"> Visual Params</h4>
 <div id="accordion-visual-params" class="closed">
 <p><code>add</code> Amount to add onto pattern value</p>
-<p><code>zorder</code> order in which to draw visual synths; defaults to the 1/1000th of the source code line number for the player, so that visuals draw strictly in the order they appear in the source code; however, this param can be used to override this and force specific visuals to the front or rear of the draw order.</p>
+<p><code>additive</code> add this shaders output to those beneath instead of blending</p>
+<p><code>back</code> background colour; eg <code>{r:0,g:1,b:0,a:1}</code> for green or <code>#00ff</code> for orange.</p>
+<p><code>blend</code> set the blend mode which defines how this shaders output interacts with the color already present underneath. Possible values: <code>additive subtractive average multiply invert min max</code></p>
+<p><code>buffer</code> send the output of this synth to a buffer player. For example, <code>buffer=vb</code> makes this synth render to the synth with id <code>vb</code>, which must be a synth of type <code>buffer</code>. The buffer synth can then render itself to the screen to display the output.</p>
+<p><code>contrast</code> apply a power based contrast curve. Default is zero meaning no contrast curve applied.</p>
 <p><code>fade</code> brightness/transparent fadeout</p>
-<p><code>time</code> time value to use in the shader. If this is set, the <code>rate</code> and <code>sway</code> params have no effect. Default time unit: beats.</p>
-<p><code>rate</code> the rate that time should progress in the shader. If the <code>time</code> param is set, this has no effect</p>
-<p><code>pulse</code> extent to which the audio signal affects the value passed to visual synths</p>
-<p><code>sway</code> extent to which the audio signal affects the time passed to visual synths</p>
+<p><code>feedback</code> only for a <code>buffer</code> synth: use video feedback by rednering the buffer onto itself every frame. The subparams control that rendering. Any visual params can be used as <code>feedback</code> subparams. For example <code>feedback={zoom:1.01}</code> will render the feedback slightly zoomed, giving a classic video feedback effect.</p>
+<p><code>fore</code> foreground colour; eg <code>{r:0,g:1,b:0,a:1}</code> for green or <code>#fa0f</code> for orange.</p>
+<p><code>jpeg</code> Apply a JPEG/MPEG style digital glitch effect, including macroblock colour quantisation, chroma crush, blocky ringing, and displaced corrupted blocks of varying sizes arriving in clustered bursts. 0 for none, 1 for full effect.</p>
+<p class='sub'><code>jpeg={1,size:24}</code> number of macroblocks across the visual; smaller values give larger, chunkier blocks. Defaults to 8.</p>
 <p><code>loc</code> position and size. The visual coordinate system runs from (-1,-1) in the bottom left of the screen to (1,1) in the top right. x and y define the centre of the visual, and w and h are the full width and height; eg <code>{x:0,y:0,w:2,h:2}</code> covers the full screen.</p>
-<p><code>window</code> display the only part of the shader image appropriate to the location of the tile on the screen. This way, a tile moved around the screen will act like a window onto the overall shader image.</p>
-<p><code>scroll</code> scroll the shader; default: <code>{x:0,y:0}</code></p>
-<p><code>repeat</code> repeat a section of the shader image in both directions. Value is the size of the area to be repeated.</p>
-<p class='sub'><code>repeat={1/2,x:0.1,y:-0.05}</code> x/y offsets to apply to the area of the shader image being repeated.</p>
-<p><code>zoom</code> zoom the shader; default: <code>{x:1,y:1}</code></p>
-<p><code>rotate</code> rotate the shader; angle in full rotations so 1/2 is 180 degrees; default: <code>0</code></p>
+<p><code>mid</code> middleground colour; eg <code>{r:0,g:1,b:0,a:1}</code> for green or <code>#fa0f</code> for orange. If not specified, defaults to midway between fore and back.</p>
 <p><code>mirror</code> mirror the shader; number of mirror planes to apply; default: <code>0</code></p>
 <p class='sub'><code>mirror={10,rotate:1/4}</code> Rotation offset (0-1) to apply to the mirror planes. Defaults to 0.</p>
 <p class='sub'><code>mirror={10,fan:1}</code> fan out angle to apply to mirror segments, so each segment is taken from an incrementing portion of the original image. A fan of 1 moves each next segment by the size of one segment. Defaults to 0.</p>
-<p><code>fore</code> foreground colour; eg <code>{r:0,g:1,b:0,a:1}</code> for green or <code>#fa0f</code> for orange.</p>
-<p><code>mid</code> middleground colour; eg <code>{r:0,g:1,b:0,a:1}</code> for green or <code>#fa0f</code> for orange. If not specified, defaults to midway between fore and back.</p>
-<p><code>back</code> background colour; eg <code>{r:0,g:1,b:0,a:1}</code> for green or <code>#00ff</code> for orange.</p>
-<p><code>pixellate</code> number of pixels to pixellate to in x direction, or 0 to disable pixellation</p>
-<p class='sub'><code>pixellate={10,y:20}</code> number of pixels to pixellate to in y direction, or same as x if not present.</p>
+<p><code>monochrome</code> make the shader output monochrome; 0 for normal, 1 for monochrome</p>
 <p><code>perspective</code> perspective warp to apply to shader (negative to invert), or 0 to disable</p>
 <p class='sub'><code>perspective={-1,shade:1/2}</code> amount of darkening shade to apply to the part of the image 'in the distance'.</p>
-<p><code>tunnel</code> tunnel warp to apply to shader, or 0 to disable. Applies a slitscan type warp, where scrolling in the x direction will scroll the original shader through the tunnel.</p>
+<p><code>pixellate</code> number of pixels to pixellate to in x direction, or 0 to disable pixellation</p>
+<p class='sub'><code>pixellate={10,y:20}</code> number of pixels to pixellate to in y direction, or same as x if not present.</p>
+<p><code>pulse</code> extent to which the audio signal affects the value passed to visual synths</p>
+<p><code>rate</code> the rate that time should progress in the shader. If the <code>time</code> param is set, this has no effect</p>
+<p><code>recol</code> recolour the shader. Set to <code>oil</code> for oil film colours, <code>hue</code> for a hue spectrum, <code>fire</code> for a flame effect, <code>sunset</code> for dusk colours, <code>neon</code> for neon megenta and cyan, <code>titanium</code> for titanium anodisation colours</p>
+<p><code>repeat</code> repeat a section of the shader image in both directions. Value is the size of the area to be repeated.</p>
+<p class='sub'><code>repeat={1/2,x:0.1,y:-0.05}</code> x/y offsets to apply to the area of the shader image being repeated.</p>
+<p><code>rez</code> only for a <code>buffer</code> synth: sets the render target resolution scaling. For example, a <code>rez</code> of <code>1</code> will make a render target texture that is identical width and height to the display screen canvas. Default value is 1/2.</p>
 <p><code>ripple</code> Apply a ripple warp to the shader, to give the effect of waves of image distortion rippling out from the centre of the shader.</p>
 <p class='sub'><code>ripple={1,scale:1/4}</code> scale (size) of ripples. Defaults to 1.</p>
-<p><code>additive</code> add this shaders output to those beneath instead of blending</p>
-<p><code>blend</code> set the blend mode which defines how this shaders output interacts with the color already present underneath. Possible values: <code>additive subtractive average multiply invert min max</code></p>
-<p><code>monochrome</code> make the shader output monochrome; 0 for normal, 1 for monochrome</p>
+<p><code>rotate</code> rotate the shader; angle in full rotations so 1/2 is 180 degrees; default: <code>0</code></p>
+<p><code>scroll</code> scroll the shader; default: <code>{x:0,y:0}</code></p>
+<p><code>sway</code> extent to which the audio signal affects the time passed to visual synths</p>
+<p><code>time</code> time value to use in the shader. If this is set, the <code>rate</code> and <code>sway</code> params have no effect. Default time unit: beats.</p>
+<p><code>tunnel</code> tunnel warp to apply to shader, or 0 to disable. Applies a slitscan type warp, where scrolling in the x direction will scroll the original shader through the tunnel.</p>
+<p><code>vhs</code> Apply a VHS tape effect, including colour modification, horizontal bars, wobble, and noise.</p>
 <p><code>vignette</code> fade out the visual around the edges. The value controls the shape.</p>
 <p class='sub'><code>vignette={1/2,aspect:4/3}</code> aspect ratio of vignette effect. Defaults to 1.</p>
 <p class='sub'><code>vignette={1,cutoff:0.95}</code> cutoff for vignette; lower values provide a more gradual fade around the edges. Defaults to 0.9.</p>
-<p><code>vhs</code> Apply a VHS tape effect, including colour modification, horizontal bars, wobble, and noise.</p>
-<p><code>jpeg</code> Apply a JPEG/MPEG style digital glitch effect, including macroblock colour quantisation, chroma crush, blocky ringing, and displaced corrupted blocks of varying sizes arriving in clustered bursts. 0 for none, 1 for full effect.</p>
-<p class='sub'><code>jpeg={1,size:24}</code> number of macroblocks across the visual; smaller values give larger, chunkier blocks. Defaults to 8.</p>
-<p><code>recol</code> recolour the shader. Set to <code>oil</code> for oil film colours, <code>hue</code> for a hue spectrum, <code>fire</code> for a flame effect, <code>sunset</code> for dusk colours, <code>neon</code> for neon megenta and cyan, <code>titanium</code> for titanium anodisation colours</p>
-<p><code>contrast</code> apply a power based contrast curve. Default is zero meaning no contrast curve applied.</p>
-<p><code>buffer</code> send the output of this synth to a buffer player. For example, <code>buffer=vb</code> makes this synth render to the synth with id <code>vb</code>, which must be a synth of type <code>buffer</code>. The buffer synth can then render itself to the screen to display the output.</p>
-<p><code>rez</code> only for a <code>buffer</code> synth: sets the render target resolution scaling. For example, a <code>rez</code> of <code>1</code> will make a render target texture that is identical width and height to the display screen canvas. Default value is 1/2.</p>
-<p><code>feedback</code> only for a <code>buffer</code> synth: use video feedback by rednering the buffer onto itself every frame. The subparams control that rendering. Any visual params can be used as <code>feedback</code> subparams. For example <code>feedback={zoom:1.01}</code> will render the feedback slightly zoomed, giving a classic video feedback effect.</p>
+<p><code>window</code> display the only part of the shader image appropriate to the location of the tile on the screen. This way, a tile moved around the screen will act like a window onto the overall shader image.</p>
+<p><code>zoom</code> zoom the shader; default: <code>{x:1,y:1}</code></p>
+<p><code>zorder</code> order in which to draw visual synths; defaults to the 1/1000th of the source code line number for the player, so that visuals draw strictly in the order they appear in the source code; however, this param can be used to override this and force specific visuals to the front or rear of the draw order.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-main-vars')" class="accordion"> Main Vars</h4>
 <div id="accordion-main-vars" class="closed">
 <p>Main vars can be set, but not read.</p>
 <p><code>bpm</code> Beats per minute. Value resets unless set every time the code is updated.</p>
-<p><code>scale</code> Scale eg minor, major, chromatic, majorpentatonic, lydian etc etc. Value resets unless set every time the code is updated.</p>
 <p><code>root</code> Main root pitch offset; default <code>0</code> roots the pitches on middle c; <code>1</code> pitches up by one semitone etc. This is fractional, so can be used to 'nudge' the tuning to match other instruments; eg <code>root=0.135</code> </p>
-<p><code>set section.next=name</code> Queue the named section to become active when the current section finishes. This is the normal way to sequence a piece; each section can queue the one that should follow it.</p>
+<p><code>scale</code> Scale eg minor, major, chromatic, majorpentatonic, lydian etc etc. Value resets unless set every time the code is updated.</p>
+<h6>Sections</h6>
 <p><code>set section.active=name</code> Force the named section active immediately (applied on the next beat), restarting its timing from now. Useful for jumping straight to a section while performing live.</p>
+<p><code>set section.next=name</code> Queue the named section to become active when the current section finishes. This is the normal way to sequence a piece; each section can queue the one that should follow it.</p>
 <p><code>sx</code> is a short alias for <code>section</code> &mdash; handy when live coding. Use it in param lookups (<code>sx.rise</code>, <code>sx.fall</code>) and in <code>set</code> (<code>set sx.next=name</code>, <code>set sx.active=name</code>). Defining a section always uses the full <code>section</code> keyword.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-predefined-vars')" class="accordion"> Predefined Vars</h4>
 <div id="accordion-predefined-vars" class="closed">
 <p>Predefined vars are predefined values that may be useful as shortcuts when live coding.</p>
-<p><code>time</code> Time, counted in beats (including fractions of a beat)</p>
 <p><code>drop6_2</code> Predefined time var: equivalent to <code>[1,0]t[6.2]</code>. These are all the predefined drops: drop6_2, drop7_1, drop12_4, drop14_2, drop15_1, drop24_8, drop28_4, drop30_2, drop31_1, drop56_8, drop60_4, drop62_2, drop63_1</p>
-<p><code>tile_full</code> For <code>loc</code> visual param. Predefined loc param map to cover the full screen: equivalent to <code>{x:0,y:0,w:1,h:1}</code>. Other predefined locations: tile_tl/tr/bl/br/m, tile_h1/2/3/4/5, tile_v1/2/3/4/5</p>
-<p><code>fullscreen</code> For <code>loc</code> visual param. Tile covering the full screen</p>
-<p><code>tile_random</code> For <code>loc</code> visual param. Tile in a random location</p>
-<p><code>tile_rand</code> For <code>loc</code> visual param. Tile in a random location</p>
-<p><code>sparkle</code> For <code>loc</code> visual param. Small tile in a random location</p>
-<p><code>droplet</code> For <code>loc</code> visual param. Small tile in a random location, then falling down the screen</p>
-<p><code>spark</code> For <code>loc</code> visual param. Small tile flying outwards</p>
-<p><code>gravity</code> For <code>loc</code> visual param. Accelrating motion downwards. Best combined with other values; eg <code>spark+gravity</code></p>
-<p><code>firefly</code> For <code>loc</code> visual param. Random motion like a flying insect</p>
-<p><code>transparent</code> For colour visual params. Predefined colour. Others: black, darkgray, gray, lightgray, white, red, orange, yellow, green, blue, indigo, violet, neonpink, neongreen</p>
-<p><code>random</code> For colour visual params. Random colour</p>
-<p><code>rainbow</code> For colour visual params. Colour changing through the rainbow</p>
 <p><code>tg</code> Predefined time var: trance gate signal. Flips on/off every quarter beat.</p>
+<p><code>time</code> Time, counted in beats (including fractions of a beat)</p>
 <p><code>wow</code> Predefined time var: Randomly but smoothly varying signal, good for simulating analog 'wow' pitch distortion; eg <code>addc=wow</code></p>
+<h6>Loc params</h6>
+<p><code>droplet</code> For <code>loc</code> visual param. Small tile in a random location, then falling down the screen</p>
+<p><code>firefly</code> For <code>loc</code> visual param. Random motion like a flying insect</p>
+<p><code>fullscreen</code> For <code>loc</code> visual param. Tile covering the full screen</p>
+<p><code>gravity</code> For <code>loc</code> visual param. Accelrating motion downwards. Best combined with other values; eg <code>spark+gravity</code></p>
+<p><code>spark</code> For <code>loc</code> visual param. Small tile flying outwards</p>
+<p><code>sparkle</code> For <code>loc</code> visual param. Small tile in a random location</p>
+<p><code>tile_full</code> For <code>loc</code> visual param. Predefined loc param map to cover the full screen: equivalent to <code>{x:0,y:0,w:1,h:1}</code>. Other predefined locations: tile_tl/tr/bl/br/m, tile_h1/2/3/4/5, tile_v1/2/3/4/5</p>
+<p><code>tile_rand</code> For <code>loc</code> visual param. Tile in a random location</p>
+<p><code>tile_random</code> For <code>loc</code> visual param. Tile in a random location</p>
+<h6>Colour params</h6>
+<p><code>rainbow</code> For colour visual params. Colour changing through the rainbow</p>
+<p><code>random</code> For colour visual params. Random colour</p>
+<p><code>transparent</code> For colour visual params. Predefined colour. Others: black, darkgray, gray, lightgray, white, red, orange, yellow, green, blue, indigo, violet, neonpink, neongreen</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-controls')" class="accordion"> User Input</h4>
 <div id="accordion-controls" class="closed">
@@ -1178,47 +1184,54 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <h4 onclick="toggleAccordion('accordion-functions')" class="accordion"> Functions</h4>
 <div id="accordion-functions" class="closed">
 <p><code>abs{-1}</code> Returns the absolute of the given value, so flips negative numbers to positive.</p>
-<p><code>sign{-1}</code> Returns the sign of the given value, -1 for negative, 0 for zero, and 1 for positive. Can also use <code>sgn</code>.</p>
+<p><code>accum{1}</code> Accumulates a value over time. In the example, the result will be 1 after the first beat, 2 after the second etc, 3 after the third etc. Note that negative values are ignored; the accum value will only ever rise over time.</p>
+<p><code>avg{3,1,2}</code> Returns the mean average of all arguments (2 in the example)</p>
+<p><code>ceil{1.5}</code> Returns the rounded up value (returns 2 in the example)</p>
+<p class='sub'><code>ceil{1.2,to:1/2}</code> Precision to round to, so the example rounds 1.2 up to the nearest 1/2, which is 1.5. Defaults to 1, which rounds up to the nearest integer above.</p>
+<p><code>chord{2,3}</code> Build a chord of <code>size</code> members all set to <code>value</code>. The example is equivalent to <code>(3,3)</code> and will expand into two voices.</p>
+<p class='sub'><code>chord{3,{i}->i*2}</code> If <code>value</code> is a user-defined function, it is called once per chord member with the member index <code>i</code> (starting at 0). The example is equivalent to <code>(0,2,4)</code>.</p>
+<p class='sub'><code>chord{3,{i}->{i,add:2*i}}</code> A lambda can return a map to set per-voice subparams; the example is equivalent to <code>({0,add:0},{1,add:2},{2,add:4})</code>. Useful for staggering subparams like <code>delay</code> or <code>add</code> across the voices of a built chord.</p>
+<p><code>cos{time*pi}</code> Returns the cosine of the given value in radians</p>
+<p><code>count{3,1,2}</code> Returns the number of arguments (3 in the example)</p>
+<p><code>euclid{3,from:8}</code> Euclidean rhythm generator. The example will evenly spread 3 events between 8 beats. For example <code>p ping 0, dur=euclid{3,from:8}</code> will make 3 notes of durations 3,2 and 3. Note this uses a Bresenham type algorithm to spread the events, rather than a classic Euclidean algorithm. This it may produce a slightly different ordering ("3 from 8" would give a 3,3,2 pattern in a classic Euclidean algorithm, but the Bresenham gives a 3,2,3 pattern. The offset subparam can be used to 'fix' this.</p>
+<p class='sub'><code>euclid{3,from:8,offset:1}</code> Offset rotates the pattern. The example will give a 3,3,2 pattern which is the default 3,2,3 pattern but rotated by one.</p>
 <p><code>eventpitch{}</code> Calculate a frequency in Hz based on the event params, including sound, add, oct, sharp, and scale. Make it per-frame to allow updating inside a continuous <code>fx</code> chain, eg <code>fx=osc{'sine',freq:eventpitch@f}*0.01</code>.</p>
+<p><code>first{3,1,2}</code> Returns the first argument (3 in the example)</p>
+<p><code>floor{1.5}</code> Returns the rounded down value (returns 1 in the example)</p>
+<p class='sub'><code>floor{1.7,to:1/2}</code> Precision to round to, so the example rounds 1.7 down to the nearest 1/2, which is 1.5. Defaults to 1, which rounds down to the nearest integer below.</p>
+<p><code>last{3,1,2}</code> Returns the last argument (2 in the example)</p>
+<p><code>max{3,1,2}</code> Returns the largest argument (3 in the example)</p>
+<p><code>min{3,1,2}</code> Returns the smallest argument (1 in the example)</p>
 <p><code>pitch{1}</code> Calculate a frequency in Hz for a given scale degree.</p>
 <p class='sub'><code>pitch{4#}</code> Calculate a frequency in Hz for a given scale degree with sharpening (#) or flattening.</p>
 <p class='sub'><code>pitch{0,oct:3}</code> Calculate a frequency in Hz for a given scale degree on a given octave. Default octave is 4.</p>
 <p class='sub'><code>pitch{0,scale:minor}</code> Calculate a frequency in Hz for a given scale degree using a given scale. Default scale is the current global var <code>scale</code></p>
 <p class='sub'><code>pitch{0,root:2}</code> Calculate a frequency in Hz for a given scale degree using a given root. Default root is the current global var <code>root</code></p>
-<p><code>floor{1.5}</code> Returns the rounded down value (returns 1 in the example)</p>
-<p class='sub'><code>floor{1.7,to:1/2}</code> Precision to round to, so the example rounds 1.7 down to the nearest 1/2, which is 1.5. Defaults to 1, which rounds down to the nearest integer below.</p>
-<p><code>ceil{1.5}</code> Returns the rounded up value (returns 2 in the example)</p>
-<p class='sub'><code>ceil{1.2,to:1/2}</code> Precision to round to, so the example rounds 1.2 up to the nearest 1/2, which is 1.5. Defaults to 1, which rounds up to the nearest integer above.</p>
+<p><code>rand{3,1,2}</code> Returns one of the arguments at random</p>
+<p><code>rand</code> Returns a pseudo random number between zero and one. Uses time-based hashing to provide consistent values. <code>rand@e</code> will provide a number that is different on each pattern event, but constant within each event. <code>rand{seed:0}</code> sets a specific seed for the randoms. Because the value comes from time-hashing, time based modifiers such as <code>step</code> and <code>per</code> are respected.</p>
+<p><code>rate{[0:1]l1@f}</code> Calculate a rate of change of a value over time, in units per beat. In the example, the expression <code>[0:1]l1@f</code> rises from 0 to 1 over the course of the first beat, so the rate will be approximately 1 for the first beat. It then falls so the rate will be approximately -1. The rates will have jitter due to measurement inaccuracies, so it can be useful to <code>smooth{}</code> the result.</p>
 <p><code>round{1.5}</code> Returns the rounded value (returns 2 in the example)</p>
 <p class='sub'><code>round{1.7,to:1/2}</code> Precision to round to, so the example rounds 1.7 to the nearest 1/2, which is 1.5. Defaults to 1, which rounds to the nearest integer.</p>
-<p><code>accum{1}</code> Accumulates a value over time. In the example, the result will be 1 after the first beat, 2 after the second etc, 3 after the third etc. Note that negative values are ignored; the accum value will only ever rise over time.</p>
+<p><code>sign{-1}</code> Returns the sign of the given value, -1 for negative, 0 for zero, and 1 for positive. Can also use <code>sgn</code>.</p>
+<p><code>sin{time*pi}</code> Returns the sine of the given value in radians</p>
 <p><code>smooth{[]r@f}</code> Smooths a value over time. In the example, the result will rise towards 1. Uses default attack and decay.</p>
 <p class='sub'><code>smooth{[]r@f,att:4}</code> Smoothing attack rate; higher rate means the value will converge to the target faster when the target is above the current value. Default is 8.</p>
 <p class='sub'><code>smooth{[]r@f,dec:4}</code> Smoothing decay rate; higher rate means the value will converge to the target faster when the target is below the current value. Default is 4.</p>
 <p class='sub'><code>smooth{[]r@f,2}</code> Smoothing with combined attack and decay rate; higher rate means the value will converge to the target faster.</p>
-<p><code>rate{[0:1]l1@f}</code> Calculate a rate of change of a value over time, in units per beat. In the example, the expression <code>[0:1]l1@f</code> rises from 0 to 1 over the course of the first beat, so the rate will be approximately 1 for the first beat. It then falls so the rate will be approximately -1. The rates will have jitter due to measurement inaccuracies, so it can be useful to <code>smooth{}</code> the result.</p>
-<p><code>chord{2,3}</code> Build a chord of <code>size</code> members all set to <code>value</code>. The example is equivalent to <code>(3,3)</code> and will expand into two voices.</p>
-<p class='sub'><code>chord{3,{i}->i*2}</code> If <code>value</code> is a user-defined function, it is called once per chord member with the member index <code>i</code> (starting at 0). The example is equivalent to <code>(0,2,4)</code>.</p>
-<p class='sub'><code>chord{3,{i}->{i,add:2*i}}</code> A lambda can return a map to set per-voice subparams; the example is equivalent to <code>({0,add:0},{1,add:2},{2,add:4})</code>. Useful for staggering subparams like <code>delay</code> or <code>add</code> across the voices of a built chord.</p>
-<p><code>first{3,1,2}</code> Returns the first argument (3 in the example)</p>
-<p><code>last{3,1,2}</code> Returns the last argument (2 in the example)</p>
-<p><code>min{3,1,2}</code> Returns the smallest argument (1 in the example)</p>
-<p><code>max{3,1,2}</code> Returns the largest argument (3 in the example)</p>
-<p><code>count{3,1,2}</code> Returns the number of arguments (3 in the example)</p>
 <p><code>sum{3,1,2}</code> Returns the sum of all arguments (6 in the example)</p>
-<p><code>avg{3,1,2}</code> Returns the mean average of all arguments (2 in the example)</p>
-<p><code>rand{3,1,2}</code> Returns one of the arguments at random</p>
-<p><code>euclid{3,from:8}</code> Euclidean rhythm generator. The example will evenly spread 3 events between 8 beats. For example <code>p ping 0, dur=euclid{3,from:8}</code> will make 3 notes of durations 3,2 and 3. Note this uses a Bresenham type algorithm to spread the events, rather than a classic Euclidean algorithm. This it may produce a slightly different ordering ("3 from 8" would give a 3,3,2 pattern in a classic Euclidean algorithm, but the Bresenham gives a 3,2,3 pattern. The offset subparam can be used to 'fix' this.</p>
-<p class='sub'><code>euclid{3,from:8,offset:1}</code> Offset rotates the pattern. The example will give a 3,3,2 pattern which is the default 3,2,3 pattern but rotated by one.</p>
-<p><code>rand</code> Returns a pseudo random number between zero and one. Uses time-based hashing to provide consistent values. <code>rand@e</code> will provide a number that is different on each pattern event, but constant within each event. <code>rand{seed:0}</code> sets a specific seed for the randoms. Because the value comes from time-hashing, time based modifiers such as <code>step</code> and <code>per</code> are respected.</p>
-<p><code>time</code> Returns the current time in beats. Time modifiers such as <code>step</code> and <code>per</code> are respected.</p>
-<p><code>sin{time*pi}</code> Returns the sine of the given value in radians</p>
-<p><code>cos{time*pi}</code> Returns the cosine of the given value in radians</p>
 <p><code>tan{time*pi}</code> Returns the tangent of the given value in radians</p>
+<p><code>time</code> Returns the current time in beats. Time modifiers such as <code>step</code> and <code>per</code> are respected.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-node-functions')" class="accordion"> Node Functions</h4>
 <div id="accordion-node-functions" class="closed">
 <p><code>biquad{'lowpass',freq:440Hz,q:5,gain}</code> Create a biquad filter node of type 'lowpass', 'highpass', 'bandpass', 'notch', 'lowshelf', 'highshelf' or 'peaking'.</p>
+<p><code>chaos{freq:440, type:lorenz, chaos:0.5, axis:x, smooth:0, seed:0}</code> Create an AudioWorklet-based chaos oscillator source node: a strange-attractor / chaotic-map generator that emits a deterministic-but-non-repeating signal, inspired by Serum's chaos oscillators. Because it is a real audio node it works as both a control-rate LFO and an audio-rate modulator through the same mechanism &mdash; use it in a param expression and it connects straight into the target: <code>lpf{ 400 + chaos{freq:6}*300 }</code> is a slow, non-repeating filter wobble, while <code>osc{ freq: 110 + chaos{110}*40 }</code> is organic FM. The output is roughly bipolar (-1..1), so scale the modulation depth with <code>*</code>. Note: uses AudioWorklet so may use more audio render capacity than other synth types.</p>
+<p class='sub'><code>freq=440</code> Evolution speed in Hz (so <code>chaos{6}</code> or <code>chaos{440Hz}</code> both work), spanning slow LFO rates up through audio rate. <code>value</code>/<code>freq</code> both set it.</p>
+<p class='sub'><code>type=lorenz</code> Picks the algorithm: <code>lorenz</code> (default; a smooth signal that dwells in two lobes then jumps between them), <code>rossler</code> (a gentle spiral with occasional sharp spikes), <code>thomas</code> (very smooth and self-bounded, a safe slow-drift LFO), <code>logistic</code> (a stepped sample-and-hold whose steps fire at <code>freq</code> per second), and <code>duffing</code> (a driven, resonant, tonal-ish chaos good for gritty audio-rate use).</p>
+<p class='sub'><code>chaos=0.5</code> Character macro (0..1) mapped to each algorithm's bifurcation parameter, sweeping it from ordered toward fully chaotic.</p>
+<p class='sub'><code>axis=x</code> Selects which dimension of the 3D attractors to output (<code>x</code>/<code>y</code>/<code>z</code>, default x) &mdash; the axes give correlated-but-distinct modulation streams.</p>
+<p class='sub'><code>smooth=0</code> Lowpasses the output (0..1, default 0), taming the logistic map's steps and de-sharpening audio-rate attractor transitions.</p>
+<p class='sub'><code>seed=0</code> Offsets the initial condition; since chaotic systems diverge exponentially from nearby starts, giving each of several instances a different seed makes them never phase-lock &mdash; an organic version of the <code>superosc</code> unison detune spread, eg an Au5-style supersaw <code>osc{ freq: 110 + (chaos{freq:0.2,seed:1}+chaos{freq:0.3,seed:2}+chaos{freq:0.25,seed:3})*4 }</code>.</p>
 <p><code>compress{ratio:0, threshold:1/316, knee:100, attack:0.01s, release:0.25s}</code> Create a compressor node.</p>
 <p><code>const{1}</code> Create a node that always outputs a given constant value.</p>
 <p><code>convolver{env:{x}->...,length:1s}</code> Create a convolver node with the given length, and an environment shaping user defined function. The main impulse response will be random noise, shaped by the envelope function.</p>
@@ -1248,6 +1261,19 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>multitap{{i}->..., 4}</code> The chain can be a user defined function, given the stage index <code>i</code>, so each stage can differ. For example <code>multitap{{i}->echo{1/2}>>gain{0.7^i}, 4}</code> creates a decaying multi-tap echo.</p>
 <p><code>noise{rate:1}</code> Create a looping white-noise source node, so noise can be wired into an fx chain like any other source, eg <code>noise{} >> lpf{800}</code>. <code>rate</code> changes playback speed/pitch like a sample.</p>
 <p><code>osc{'sawtooth', freq:440, phase:0}</code> Create an oscillator node with the given waveform and frequency. The positional param is the waveform when its a string (<code>osc{'sine'}</code>) and the frequency otherwise, so <code>osc{440}</code>, <code>osc{55Hz}</code> and <code>osc{110 + chaos{2}*40}</code> all set the pitch. Some control of starting phase is available; this is achieved by controlling the start time of the oscillator as all webaudio oscillators start with phase 0.</p>
+<p><code>panner{0}</code> Create a stereo panner that can push a signal to the left (-1) or right (1).</p>
+<p><code>parallel{..., count:2}</code> Run the given node chain count times in parallel: the input is fanned out to every copy and the copies' outputs are summed back together.</p>
+<p class='sub'><code>parallel{..., 2}</code> The count arg can be positional instead of being named.</p>
+<p class='sub'><code>parallel{{i}->..., 4}</code> The chain can be a user defined function, given the copy index <code>i</code>, so each copy can differ. For example <code>parallel{{i}->bpf{300*(i+1)}, 4}</code> runs four bandpass filters at different frequencies in parallel.</p>
+<p><code>sample{sample:'...', start:0s, rate:1}</code> Create a sample player node that loads a sample from a URL and plays with the given start point and rate.</p>
+<p class='sub'><code>sample{sample:{x}->..., length:0.2s, rate:1}</code> Create a sample player that creates a sample of given length from a user defined function and plays it at the given rate.</p>
+<p class='sub'><code>sample{sample:'...', loopstart:1, looplen:2, rate:1}</code> Create a sample player that plays a section from the given sample as a loop.</p>
+<p><code>series{..., count:2}</code> Repeat the given node chain in series count times.</p>
+<p class='sub'><code>series{..., 2}</code> The count arg can be positional instead of being named.</p>
+<p class='sub'><code>series{{i}->..., 4}</code> The chain can be a user defined function, given the repeat index <code>i</code>, so each repeat can differ. For example <code>series{{i}->lpf{600*(i+1)}, 4}</code> chains four lowpass filters at increasing frequencies.</p>
+<p><code>shaper{{x}->..., samples:2, oversample:'2x'}</code> Create a wave shaper node, using a user defined function to create the wave shape. Oversmaple can be '2x', '4x', or 'none'. Note oversample other than 'none' may result in a signal delay.</p>
+<p><code>stereo{l:...,r:...}</code> Split the incoming signal into left and right channels, process each through a separate node chain given by the 'l' and 'r' arguments, and then join them back together into a single, stereo, signal.</p>
+<p class='sub'><code>stereo{...,...}</code> The l and r arguments can be positional.</p>
 <p><code>superosc{freq:440, detune:0, wavetable:{'sample/wt64/SUPERSAW.WAV', count:64, smooth:0}, wt:0, sync:0, crush:0, pwm:0, formant:0, unison:{1, detune:1.01, amp:1, pan:0.5}}</code> Create an AudioWorklet-based wavetable oscillator source node, so a superosc can be wired into an fx chain like any other source, eg <code>superosc{440, wavetable:'sample/wt64/SUPERSAW.WAV', wt:sine} >> lpf{800}</code>. The frequency is the default positional param, so <code>superosc{440}</code> and <code>superosc{55Hz}</code> both work. The node is silent until the sample loads (defaulting to a single-cycle saw if no wavetable is given). Intended to grow more functionality over time. Note: uses AudioWorklet so may use more audio render capacity than other synth types.</p>
 <p class='sub'><code>freq=440</code> Frequency in Hz. <code>value</code>/<code>freq</code> both set it, mirroring the native <code>osc</code> node, so <code>superosc{440}</code>, <code>superosc{55Hz}</code> and <code>superosc{2kHz}</code> are all fine. It takes a modulating node chain too, eg <code>superosc{110 + chaos{2}*40}</code>.</p>
 <p class='sub'><code>detune=0</code> Shift the frequency in cents, mirroring the native <code>osc</code> node.</p>
@@ -1258,27 +1284,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>pwm=0</code> Phase power-warp amount (0 = off): the phase (after any sync remap) is raised to the power <code>2^pwm</code> before the wavetable lookup, skewing the waveform toward its start (<code>pwm&gt;0</code>) or end (<code>pwm&lt;0</code>) like a generalised pulse width.</p>
 <p class='sub'><code>formant=0</code> Formant-warp shift (0 = off): the waveform (after any sync remap) is resampled within each cycle at <code>2^formant</code> times the rate (wrapped, with the band-limiting span scaled to match) and multiplied by a raised-cosine window over the fundamental phase, so the cycle length (the pitch) is preserved while the spectral formants shift up (<code>formant&gt;0</code>) or down (<code>formant&lt;0</code>) for a vowel-like timbre, à la Serum/Vital's formant warp.</p>
 <p class='sub'><code>unison={1, detune:1.01, amp:1, pan:0.5}</code> Layer that many detuned voices (1 to 16) with a <code>detune</code> subparam (max frequency ratio, default 1.01) spreading them evenly by pitch each side of the primary frequency (the interior voices nudged slightly off perfectly-even spacing so the stack doesn't periodically re-converge in phase into an audible pulse), an <code>amp</code> subparam (default 1) giving the centre-to-outer voice amplitude ratio at roughly constant overall loudness, and a <code>pan</code> subparam (default 0.5) giving the stereo width they spread across (the outermost voices sit that far to each side, eg <code>pan:1/2</code> = 50% left..50% right). The output is mono unless the note has 2 or more voices and a non-zero <code>pan</code>, so single-voice or un-panned notes keep the downstream chain mono.</p>
-<p><code>chaos{freq:440, type:lorenz, chaos:0.5, axis:x, smooth:0, seed:0}</code> Create an AudioWorklet-based chaos oscillator source node: a strange-attractor / chaotic-map generator that emits a deterministic-but-non-repeating signal, inspired by Serum's chaos oscillators. Because it is a real audio node it works as both a control-rate LFO and an audio-rate modulator through the same mechanism &mdash; use it in a param expression and it connects straight into the target: <code>lpf{ 400 + chaos{freq:6}*300 }</code> is a slow, non-repeating filter wobble, while <code>osc{ freq: 110 + chaos{110}*40 }</code> is organic FM. The output is roughly bipolar (-1..1), so scale the modulation depth with <code>*</code>. Note: uses AudioWorklet so may use more audio render capacity than other synth types.</p>
-<p class='sub'><code>freq=440</code> Evolution speed in Hz (so <code>chaos{6}</code> or <code>chaos{440Hz}</code> both work), spanning slow LFO rates up through audio rate. <code>value</code>/<code>freq</code> both set it.</p>
-<p class='sub'><code>type=lorenz</code> Picks the algorithm: <code>lorenz</code> (default; a smooth signal that dwells in two lobes then jumps between them), <code>rossler</code> (a gentle spiral with occasional sharp spikes), <code>thomas</code> (very smooth and self-bounded, a safe slow-drift LFO), <code>logistic</code> (a stepped sample-and-hold whose steps fire at <code>freq</code> per second), and <code>duffing</code> (a driven, resonant, tonal-ish chaos good for gritty audio-rate use).</p>
-<p class='sub'><code>chaos=0.5</code> Character macro (0..1) mapped to each algorithm's bifurcation parameter, sweeping it from ordered toward fully chaotic.</p>
-<p class='sub'><code>axis=x</code> Selects which dimension of the 3D attractors to output (<code>x</code>/<code>y</code>/<code>z</code>, default x) &mdash; the axes give correlated-but-distinct modulation streams.</p>
-<p class='sub'><code>smooth=0</code> Lowpasses the output (0..1, default 0), taming the logistic map's steps and de-sharpening audio-rate attractor transitions.</p>
-<p class='sub'><code>seed=0</code> Offsets the initial condition; since chaotic systems diverge exponentially from nearby starts, giving each of several instances a different seed makes them never phase-lock &mdash; an organic version of the <code>superosc</code> unison detune spread, eg an Au5-style supersaw <code>osc{ freq: 110 + (chaos{freq:0.2,seed:1}+chaos{freq:0.3,seed:2}+chaos{freq:0.25,seed:3})*4 }</code>.</p>
-<p><code>panner{0}</code> Create a stereo panner that can push a signal to the left (-1) or right (1).</p>
-<p><code>parallel{..., count:2}</code> Run the given node chain count times in parallel: the input is fanned out to every copy and the copies' outputs are summed back together.</p>
-<p class='sub'><code>parallel{..., 2}</code> The count arg can be positional instead of being named.</p>
-<p class='sub'><code>parallel{{i}->..., 4}</code> The chain can be a user defined function, given the copy index <code>i</code>, so each copy can differ. For example <code>parallel{{i}->bpf{300*(i+1)}, 4}</code> runs four bandpass filters at different frequencies in parallel.</p>
-<p><code>sample{sample:'...', start:0s, rate:1}</code> Create a sample player node that loads a sample from a URL and plays with the given start point and rate.</p>
-<p class='sub'><code>sample{sample:{x}->..., length:0.2s, rate:1}</code> Create a sample player that creates a sample of given length from a user defined function and plays it at the given rate.</p>
-<p class='sub'><code>sample{sample:'...', loopstart:1, looplen:2, rate:1}</code> Create a sample player that plays a section from the given sample as a loop.</p>
 <p><code>tts{'hello', rate:1, pitch:50, speed:175}</code> Create a text-to-speech source node that synthesizes the given text to speech and plays it through a buffer source, so speech can be wired into an fx chain like any other source, eg <code>tts{'hello world'} >> lpf{800}</code>. Voice options (<code>pitch</code> 0&ndash;99, <code>speed</code> words per minute, <code>wordgap</code>, <code>amplitude</code> 0&ndash;200, <code>variant</code> eg <code>'f2'</code>) tune the synthesized audio; <code>rate</code> changes playback speed/pitch like a sample. Unlike <code>sample</code> it does not loop by default. A first-use phrase is synthesized in the background and starts as soon as it is ready; repeated phrases are cached.</p>
-<p><code>series{..., count:2}</code> Repeat the given node chain in series count times.</p>
-<p class='sub'><code>series{..., 2}</code> The count arg can be positional instead of being named.</p>
-<p class='sub'><code>series{{i}->..., 4}</code> The chain can be a user defined function, given the repeat index <code>i</code>, so each repeat can differ. For example <code>series{{i}->lpf{600*(i+1)}, 4}</code> chains four lowpass filters at increasing frequencies.</p>
-<p><code>shaper{{x}->..., samples:2, oversample:'2x'}</code> Create a wave shaper node, using a user defined function to create the wave shape. Oversmaple can be '2x', '4x', or 'none'. Note oversample other than 'none' may result in a signal delay.</p>
-<p><code>stereo{l:...,r:...}</code> Split the incoming signal into left and right channels, process each through a separate node chain given by the 'l' and 'r' arguments, and then join them back together into a single, stereo, signal.</p>
-<p class='sub'><code>stereo{...,...}</code> The l and r arguments can be positional.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-play-samples')" class="accordion"> Play Samples</h4>
 <div id="accordion-play-samples" class="closed">
@@ -1380,10 +1386,10 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>lsf{gain, freq:1100Hz}</code> Low shelf filter.</p>
 <p><code>nf{freq, q:5}</code> Notch filter, 2 pole. q is resonance.</p>
 <p><code>osc.pulse{freq}</code> Pulse wave oscillator.</p>
-<p><code>osc.sin{freq}</code> Sine wave oscillator.</p>
-<p><code>osc.sine{freq}</code> Sine wave oscillator.</p>
 <p><code>osc.saw{freq}</code> Sawtooth wave oscillator.</p>
 <p><code>osc.sawtooth{freq}</code> Sawtooth wave oscillator.</p>
+<p><code>osc.sin{freq}</code> Sine wave oscillator.</p>
+<p><code>osc.sine{freq}</code> Sine wave oscillator.</p>
 <p><code>osc.square{freq}</code> Square wave oscillator.</p>
 <p><code>osc.tri{freq}</code> Triangle wave oscillator.</p>
 <p><code>osc.triangle{freq}</code> Triangle wave oscillator.</p>
@@ -1432,13 +1438,13 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <div id="accordion-synthwave-libraries" class="closed">
 <h5>Synthwave library: <code>include 'preset/synthwave.limut'</code></h5>
 <h6>Visual</h6>
-<p><code>neongrid</code> Visual preset of a pink neon perspective grid scrolling towards the viewer, in the lower half of the frame. Shader loaded from shadertoy.com</p>
 <p><code>neonbars</code> Visual preset of neon perspective bars scrolling towards the viewer, in the lower half of the frame</p>
 <p><code>neonbits</code> Visual preset of bit patterns, in the lower half of the frame </p>
-<p><code>neonlines</code> Visual preset of wavy neon lines, in the lower half of the frame </p>
-<p><code>neonsine</code> Visual preset of neon sine waves with a VHS TV effect. Shader loaded from shadertoy.com </p>
+<p><code>neongrid</code> Visual preset of a pink neon perspective grid scrolling towards the viewer, in the lower half of the frame. Shader loaded from shadertoy.com</p>
 <p><code>neonheart</code> Visual preset of a neon heart with a VHS TV effect. Shader loaded from shadertoy.com </p>
+<p><code>neonlines</code> Visual preset of wavy neon lines, in the lower half of the frame </p>
 <p><code>neonshapes</code> Visual preset of prismatic neon shapes with a VHS TV effect. Shader loaded from shadertoy.com </p>
+<p><code>neonsine</code> Visual preset of neon sine waves with a VHS TV effect. Shader loaded from shadertoy.com </p>
 <p><code>skybars</code> Visual preset of horizontal bars across the sky</p>
 <p><code>sun</code> Visual preset of a setting sun. Shader loaded from shadertoy.com</p>
 <p><code>sunsetsky</code> Visual preset of a sunset gradient sky in the top half of the frame</p>
@@ -1457,10 +1463,10 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>chiparp</code> Chip style preset that plays a simple arpeggio from the given note </p>
 <p><code>cybass</code> Cyberpunk bass preset </p>
 <p class='sub'><code>cutoff</code> Cutoff control 0 to 1; defaults to 1/2.<br/></p>
-<p><code>cydist</code> Cyberpunk distorted preset </p>
-<p class='sub'><code>cutoff</code> Cutoff control 0 to 1; defaults to 1/2.<br/></p>
 <p><code>cyborg</code> Wobbly synth lead preset </p>
 <p class='sub'><code>cutoff</code> Filter cutoff control from 0 to 1.<br/></p>
+<p><code>cydist</code> Cyberpunk distorted preset </p>
+<p class='sub'><code>cutoff</code> Cutoff control 0 to 1; defaults to 1/2.<br/></p>
 <p><code>hiss</code> Noise hiss synth preset; can be used for percussion </p>
 <p><code>laserharp</code> PWM preset vaguely in the style of the Elka Synthex laser harp sound. Eg <code>l laserharp [98]_7_____[6#6]_5_____</code></p>
 <p class='sub'><code>cutoff</code> Cutoff control 0 to 1; defaults to 1/2.<br/></p>
@@ -1490,25 +1496,27 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <h4 onclick="toggleAccordion('accordion-808-libraries')" class="accordion"> 808 Library</h4>
 <div id="accordion-808-libraries" class="closed">
 <h5>808 library: <code>include 'preset/808.limut'</code></h5>
+<h6>Individual sounds</h6>
 <p><code>bd808</code> Simulated 808 bd kick. Based on io808. </p>
-<p><code>sd808</code> Simulated 808 sd snare. Based on io808. </p>
-<p><code>oh808</code> Simulated 808 oh open hat. Based on io808. </p>
-<p><code>ch808</code> Simulated 808 ch closed hat. Based on io808. </p>
 <p><code>cb808</code> Simulated 808 cb cowbell. Based on io808. </p>
-<p><code>cp808</code> Simulated 808 cp clap. Based on io808. </p>
-<p><code>ma808</code> Simulated 808 ma maraca. Based on io808. </p>
-<p><code>ht808</code> Simulated 808 ht high tom. Based on io808. </p>
-<p><code>mt808</code> Simulated 808 mt mid tom. Based on io808. </p>
-<p><code>lt808</code> Simulated 808 lt low tom. Based on io808. </p>
-<p><code>hc808</code> Simulated 808 hc high conga. Based on io808. </p>
-<p><code>mc808</code> Simulated 808 mc mid conga. Based on io808. </p>
-<p><code>lc808</code> Simulated 808 lc low conga. Based on io808. </p>
+<p><code>ch808</code> Simulated 808 ch closed hat. Based on io808. </p>
 <p><code>cl808</code> Simulated 808 cl clave. Based on io808. </p>
-<p><code>rs808</code> Simulated 808 rs rimshot. Based on io808. </p>
+<p><code>cp808</code> Simulated 808 cp clap. Based on io808. </p>
 <p><code>cy808</code> Simulated 808 cy cymbal. Based on io808. </p>
-<p><code>t808</code> Combined 808 toms. Use 'h' and 'l' pattern flags to specify high and low toms; medium tom is default. Eg <code>p t808 .0h00l</code>. </p>
+<p><code>hc808</code> Simulated 808 hc high conga. Based on io808. </p>
+<p><code>ht808</code> Simulated 808 ht high tom. Based on io808. </p>
+<p><code>lc808</code> Simulated 808 lc low conga. Based on io808. </p>
+<p><code>lt808</code> Simulated 808 lt low tom. Based on io808. </p>
+<p><code>ma808</code> Simulated 808 ma maraca. Based on io808. </p>
+<p><code>mc808</code> Simulated 808 mc mid conga. Based on io808. </p>
+<p><code>mt808</code> Simulated 808 mt mid tom. Based on io808. </p>
+<p><code>oh808</code> Simulated 808 oh open hat. Based on io808. </p>
+<p><code>rs808</code> Simulated 808 rs rimshot. Based on io808. </p>
+<p><code>sd808</code> Simulated 808 sd snare. Based on io808. </p>
+<h6>Combined</h6>
 <p><code>c808</code> Combined 808 congas. Use 'h' and 'l' pattern flags to specify high and low congas; medium conga is default. Eg <code>p c808 .0h00l</code>. </p>
 <p><code>h808</code> Combined 808 hihat. Use 'o' pattern flag to specify open hihat; closed is the default. Eg <code>p h808 000o0</code>. </p>
+<p><code>t808</code> Combined 808 toms. Use 'h' and 'l' pattern flags to specify high and low toms; medium tom is default. Eg <code>p t808 .0h00l</code>. </p>
 <p><code>tr808</code> Combined 808, all in one. Here pattern value does not specify accent, it specifies which 808 sound to play (similar to the <code>play</code> synth. For example, <code>p tr808 xo</code> plays 808 'bd' then 'sd'. Use the '^' pattern flag for accent. For example <code>ss^</code> plays a 'ma', then an accented 'ma'. The following pattern values are supported (everything else defaults to closed hihat):<br/>
   <code>x v</code> : bd<br/>
   <code>o i u</code> : sd<br/>
@@ -1547,27 +1555,31 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <h4 onclick="toggleAccordion('accordion-909-libraries')" class="accordion"> 909 Library</h4>
 <div id="accordion-909-libraries" class="closed">
 <h5>909 library: <code>include 'preset/909.limut'</code></h5>
+<h6>Synthesised</h6>
 <p><code>bd909</code> Simulated 909 kick. The value of the event gives the accent. Control params:<br/>
 <p class='sub'><code>level</code> Volume level from 0 to 1, default 1/2.<br/></p>
 <p class='sub'><code>tune</code> BD tune from 0 to 1, default 1/2. Changes the pitch sweep decay time rather than the actual pitch<br/></p>
 <p class='sub'><code>attack</code> Attack level from 0 to 1, default 1/2. Changes the level of initial click and noise hit rather than the actual attack.<br/></p>
 <p class='sub'><code>decay</code> Decay from 0 to 1, default 1/2.<br/></p>
 </p>
+<p><code>cc909</code> Simulated 909 crash cymbal. The value of the event gives the accent. Control params:<br/>
+<p class='sub'><code>level</code> Volume level from 0 to 1, default 1/2.<br/></p>
+<p class='sub'><code>tune</code> Tune from 0 to 1, default 1/2.<br/></p>
+</p>
+<p><code>cp909</code> Simulated 909 handclap. The value of the event gives the accent. Control params:<br/>
+<p class='sub'><code>level</code> Volume level from 0 to 1, default 1/2.<br/></p>
+</p>
 <p><code>h909</code> Simulated 909 hihats. The value of the event gives the accent. Use an <code>o</code> pattern flag for an open hihat. A choke group is used so an open hihat will be cutoff by subsequent hihat hits. Control params:<br/>
 <p class='sub'><code>level</code> Volume level from 0 to 1, default 1/2.<br/></p>
 <p class='sub'><code>chdecay</code> Closed hihat decay from 0 to 1, default 1/2.<br/></p>
 <p class='sub'><code>ohdecay</code> Open hihat decay from 0 to 1, default 1/2.<br/></p>
 </p>
-<p><code>cp909</code> Simulated 909 handclap. The value of the event gives the accent. Control params:<br/>
-<p class='sub'><code>level</code> Volume level from 0 to 1, default 1/2.<br/></p>
-</p>
-<p><code>cc909</code> Simulated 909 crash cymbal. The value of the event gives the accent. Control params:<br/>
-<p class='sub'><code>level</code> Volume level from 0 to 1, default 1/2.<br/></p>
-<p class='sub'><code>tune</code> Tune from 0 to 1, default 1/2.<br/></p>
-</p>
 <p><code>rc909</code> Simulated 909 ride cymbal. The value of the event gives the accent. Control params:<br/>
 <p class='sub'><code>level</code> Volume level from 0 to 1, default 1/2.<br/></p>
 <p class='sub'><code>tune</code> Tune from 0 to 1, default 1/2.<br/></p>
+</p>
+<p><code>rs909</code> Simulated 909 rimshot. The value of the event gives the accent. Control params:<br/>
+<p class='sub'><code>level</code> Volume level from 0 to 1, default 1/2.<br/></p>
 </p>
 <p><code>sd909</code> Simulated 909 snare drum. The value of the event gives the accent. Control params:<br/>
 <p class='sub'><code>level</code> Volume level from 0 to 1, default 1/2.<br/></p>
@@ -1580,18 +1592,16 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>tune</code> Tune from 0 to 1, default 1/2.<br/></p>
 <p class='sub'><code>decay</code> Decay from 0 to 1, default 1/2.<br/></p>
 </p>
-<p><code>rs909</code> Simulated 909 rimshot. The value of the event gives the accent. Control params:<br/>
-<p class='sub'><code>level</code> Volume level from 0 to 1, default 1/2.<br/></p>
-</p>
+<h6>Sampled</h6>
 <p>There is also a sampled version of the 909 which does not sound quite as good, and is not as controllable, but which uses less processing power:</p>
 <p><code>bds909</code> Sampled 909 kick.</p>
-<p><code>hs909</code> Sampled 909 hihats.</p>
-<p><code>cps909</code> Sampled 909 handclap.</p>
 <p><code>ccs909</code> Sampled 909 crash cymbal.</p>
+<p><code>cps909</code> Sampled 909 handclap.</p>
+<p><code>hs909</code> Sampled 909 hihats.</p>
 <p><code>rcs909</code> Sampled 909 ride cymbal.</p>
+<p><code>rss909</code> Sampled 909 rimshot.</p>
 <p><code>sds909</code> Sampled 909 snare drum.</p>
 <p><code>ts909</code> Sampled 909 toms.</p>
-<p><code>rss909</code> Sampled 909 rimshot.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-trance-libraries')" class="accordion"> Trance Library</h4>
 <div id="accordion-trance-libraries" class="closed">
@@ -1609,18 +1619,18 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <h5>Techno library: <code>include 'preset/techno.limut'</code></h5>
 <h6>Audio</h6>
 <p>The Techno library also includes the 909, 303 and trance libraries.</p>
+<p><code>growl</code> Randomised growl/snarl sounds.<br/></p>
 <p><code>hollow</code> Hollow sounding pad</p>
-<p><code>tinbass</code> Flanged bass</p>
-<p class='sub'><code>cutoff</code> Cutoff control 0 to 1; defaults to 1/2.<br/></p>
+<p><code>robot</code> Metallic saw with a talk-y filter.<br/></p>
 <p><code>sweep</code> Slow saw bass with an LFO filter sweep.<br/></p>
 <p class='sub'><code>cutoff</code> Cutoff control 0 to 1; defaults to 1/2.<br/></p>
-<p><code>robot</code> Metallic saw with a talk-y filter.<br/></p>
 <p><code>techbass</code> Saw bass with a pluck filter envelope.
   The following custom control params are available:<br/>
 <p class='sub'><code>cutoff</code> Cutoff control 0 to 1; defaults to an LFO sweep. Set the filter cutoff. Higher values give a brighter sound.<br/></p>
 <p class='sub'><code>decay</code> Decay control 0 to 1; defaults to an LFO sweep. Set the filter envelope decay time. Higher values take longer to decay.<br/></p>
 </p>
-<p><code>growl</code> Randomised growl/snarl sounds.<br/></p>
+<p><code>tinbass</code> Flanged bass</p>
+<p class='sub'><code>cutoff</code> Cutoff control 0 to 1; defaults to 1/2.<br/></p>
 </div>
 <h4 onclick="toggleAccordion('accordion-house-libraries')" class="accordion"> House Library</h4>
 <div id="accordion-house-libraries" class="closed">
@@ -1655,6 +1665,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <hr>
 <p>Please report bugs, problems, issues and suggestions on <a href="https://github.com/sdclibbery/limut/issues" target="_blank">https://github.com/sdclibbery/limut/issues</a></p>
 <p>Latest release notes including breaking changes: <a href="https://github.com/sdclibbery/limut/releases/tag/v0.20.0-alpha" target="_blank">https://github.com/sdclibbery/limut/releases/tag/v0.20.0-alpha</a></p>
+</div>
 <canvas id="text-canvas" style="display: none;"></canvas>
 </body>
 <script data-main="main" src="require.js">
