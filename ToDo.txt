@@ -2,7 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 Remake cydist using superosc
-All presets should use @s not @f where possible
 !!Error "AudioParam.setTargetAtTime: Argument 3 is not a finite floating-point value" "Bad audioParam segment setTargetAtTime 123.53378433702585 436.6550303030304,-Infinity"
  b saw, dur=1/4, oct=2, fx=disperser{[400:!400ms,100]e@s}
 grain should have offset param, would allow more interesting effects; granular delays etc

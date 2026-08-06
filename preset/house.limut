@@ -11,7 +11,7 @@ preset m1organ multiwave
   , lpf={500*(1/2+this.cutoff*this.vel)*(1+[1:!500ms,0]e@s),poles:4,q:10}
   , cutoff=1/2
 
-preset didgeridoo square 0, dur=1, envelope='pad', amp*=[0.25:0.5]n3/4@f^2 + [0:0.25]l1/3@f, oct=2, clip, phaser=1/7, ring=1/4, glide=this.dur/2
+preset didgeridoo square 0, dur=1, envelope='pad', amp*=[0.25:0.5]n3/4@s^2 + [0:0.25]l1/3@s, oct=2, clip, phaser=1/7, ring=1/4, glide=this.dur/2
 
 preset oreese multiwave
   , oct=2, dur=1, envelope='pad', att=1/12, choke=this.player, glide=this.dur/4, amp*=3

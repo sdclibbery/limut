@@ -19,10 +19,10 @@ preset dtri dwave, wave='triangle', oct=4, envelope='full'
 preset dpulse dwave, wave='pulse', oct=3, envelope='full'
 
 preset ambi multiwave, wave='sine', envelope=pad, oct=4,
-  wave1={this.wave,detune:[-1/6:1/6]l3@f,amp:1/2},
-  wave2={this.wave,detune:[-1/3:1/3]l11@f},
-  wave3={this.wave,detune:[-1/3:1/3]l19@f},
-  wave4={this.wave,detune:[-1/3:1/3]l29@f}
+  wave1={this.wave,detune:[-1/6:1/6]l3@s,amp:1/2},
+  wave2={this.wave,detune:[-1/3:1/3]l11@s},
+  wave3={this.wave,detune:[-1/3:1/3]l19@s},
+  wave4={this.wave,detune:[-1/3:1/3]l29@s}
 
 preset supersaw multiwave, wave='sawtooth', oct=4, detune=1,
     wave1={this.wave,detune:0.18546*this.detune},
@@ -100,7 +100,7 @@ preset vocospeak audiosynth, oct=2, rate=1, envelope='full', play=
   },
   text='hello world'
 
-preset vox superosc, wavetable='sample/wt64/VOXSYNTH.WAV', oct=3, wt=[]l24@f, unison=7, att=1/6, rel=1/2, glide=50ms
+preset vox superosc, wavetable='sample/wt64/VOXSYNTH.WAV', oct=3, wt=[]l24@s, unison=7, att=1/6, rel=1/2, glide=50ms
 
 preset superbass audiosynth, dur=1/4, oct=3, envelope='full', rel=3/4, dec=1/4, sus={level:2/3},
   play={osc.tri{eventpitch/2}*3/2,superosc{freq:eventpitch*(1+chaos{3.71Hz}*0.04+chaos{3.64Hz}*0.04),unison:15}}
