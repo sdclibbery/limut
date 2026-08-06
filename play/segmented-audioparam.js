@@ -38,6 +38,15 @@ define(function (require) {
     }
   }
 
+  // exponentialRampToValueAtTime needs nonzero, same-signed endpoints; fall back to a linear ramp when
+  // the values (after mod, which is what actually reaches the audio param) can't support it.
+  let addRampToValue = (audioParam, currentValue, endValue, mod, nextTime) => {
+    let a = mod === undefined ? currentValue : mod(currentValue)
+    let b = mod === undefined ? endValue : mod(endValue)
+    let expOk = typeof a === 'number' && typeof b === 'number' && a !== 0 && b !== 0 && (a > 0) === (b > 0)
+    addSegment(audioParam, expOk ? 'exponentialRampToValueAtTime' : 'linearRampToValueAtTime', endValue, mod, nextTime)
+  }
+
   let buildSegment = ({time, nextTime, count, nextSegment, segmentPower, currentValue, getValueAtTime, audioParam, mod}) => {
     // console.log(`segmentPower ${segmentPower}`)
     if (segmentPower === 0) { // Power 0 is fixed value over the segment
@@ -52,9 +61,12 @@ define(function (require) {
         // Vt = V1 + (V0 - V1) * e ^ -((t-T0) / tc)    From Web Audio API spec for setTargetAtTime
         // tc = -(t - T0) / ln((Vt - V1) / (V0 - V1))   Rearrranged
         let tc = -(imTime - time) / Math.log((imValue - endValue) / (currentValue - endValue))
-        if (isNaN(tc)) { // If tc is NaN then fall back to exp; can happen when a segment is multiplied by another value with a discontinuity, eg riser when it rolls over back to zero...
-          addSegment(audioParam, 'setValueAtTime', currentValue, mod, time) // Set value at start so linear ramp is from correct start
-          addSegment(audioParam, 'exponentialRampToValueAtTime', endValue, mod, nextTime)
+        if (!Number.isFinite(tc) || tc < 0) { // Fall back to a ramp when the time constant degenerates: NaN when a segment
+          // is multiplied by another value with a discontinuity (eg riser rolling over back to zero); ±Infinity or negative
+          // when the halfway sample doesn't sit between the segment's endpoints (eg a persistent fx chain whose event-relative
+          // timevar is clamped part way through a segment, so the halfway value equals the start value but the end value doesn't)
+          addSegment(audioParam, 'setValueAtTime', currentValue, mod, time) // Set value at start so ramp is from correct start
+          addRampToValue(audioParam, currentValue, endValue, mod, nextTime)
         } else {
           addSegment(audioParam, 'setTargetAtTime', endValue, mod, time, tc)
         }
@@ -253,6 +265,29 @@ define(function (require) {
     assert(['setValueAtTime', 16,0], ap.calls[0])
     assert(['setTargetAtTime', 8,2,0.25], ap.calls[1])
     assert(['setValueAtTime', 8,4], ap.calls[2])
+
+    // Degenerate exponential segment: the halfway sample equals the segment start value, so the
+    // setTargetAtTime time constant works out as -Infinity (log of 1). Must fall back to a ramp
+    // rather than handing the audio param a non-finite time constant.
+    let lateExp = (i) => i < 0.6 ? 0 : (i-0.6)/0.4 // Flat over the first half, so imValue === currentValue
+    lateExp.segmentPower = 2
+    ap = mockAp()
+    buildAll(ap, evalAtSub( eventTimeVar([hz(8),hz(4)], [lateExp,step], u2, 1, true) ))
+    assert(4, ap.calls.length)
+    assert(['setValueAtTime', 16,0], ap.calls[0])
+    assert(['setValueAtTime', 16,2], ap.calls[1])
+    assert(['exponentialRampToValueAtTime', 8,4], ap.calls[2])
+    assert(['setValueAtTime', 8,4], ap.calls[3])
+
+    // Same degenerate case, but the endpoints can't take an exponential ramp (they straddle zero):
+    // fall back further to a linear ramp instead of throwing.
+    ap = mockAp()
+    buildAll(ap, evalAtSub( eventTimeVar([hz(8),-4], [lateExp,step], u2, 1, true) ))
+    assert(4, ap.calls.length)
+    assert(['setValueAtTime', 16,0], ap.calls[0])
+    assert(['setValueAtTime', 16,2], ap.calls[1])
+    assert(['linearRampToValueAtTime', -8,4], ap.calls[2])
+    assert(['setValueAtTime', -8,4], ap.calls[3])
 
     ap = mockAp()
     buildAll(ap, evalAtSub( eventTimeVar([0,hz(8),4], [lin,exp,step], [1,2,3], undefined, true) ))
