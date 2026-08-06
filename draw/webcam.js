@@ -79,24 +79,42 @@ define(function (require) {
     return texture
   }
 
-  let devices = {}
-  return (params) => {
-    if (videoDevices === undefined) {
-      getDevices()
-      return
-    }
-    let deviceIdx = evalParamEvent(params.device, params) || 0
+  let webcamTextures = {}
+  let resolveDeviceIdx = (device) => {
+    let deviceIdx = device || 0
     if (typeof deviceIdx === 'string') {
       let deviceLabel = deviceIdx
       deviceIdx = videoDevices.findIndex(d => d.label.toLowerCase().includes(deviceLabel.toLowerCase()))
       if (deviceIdx === -1) {
         deviceIdx = 0
-        if (devices[deviceIdx] === undefined) {
+        if (webcamTextures[deviceIdx] === undefined) {
           consoleOut(`🟠 Unable to find webcam with label containing ${deviceLabel}`)
         }
       }
     }
-    deviceIdx = deviceIdx % videoDevices.length
+    return deviceIdx % videoDevices.length
+  }
+
+  // Returns a per-device cached texture object, or undefined until device enumeration completes
+  let acquireTexture = (device, width, height) => {
+    if (videoDevices === undefined) {
+      getDevices()
+      return undefined
+    }
+    let deviceIdx = resolveDeviceIdx(device)
+    if (webcamTextures[deviceIdx] === undefined) {
+      webcamTextures[deviceIdx] = getWebcamTexture(deviceIdx, width || 640, height || 480)
+    }
+    return webcamTextures[deviceIdx]
+  }
+
+  let devices = {}
+  let renderer = (params) => {
+    if (videoDevices === undefined) {
+      getDevices()
+      return
+    }
+    let deviceIdx = resolveDeviceIdx(evalParamEvent(params.device, params) || 0)
     if (devices[deviceIdx] === undefined) {
       let width = evalParamEvent(params.width, params) || 640
       let height = evalParamEvent(params.height, params) || 480
@@ -105,6 +123,7 @@ define(function (require) {
       if (!device.vtxCompiled) {
         device.vtxCompiled = system.loadShader(common.vtxShader, system.gl.VERTEX_SHADER)
       }
+      device.shader = {}
       let program
       try {
         program = system.loadProgram([
@@ -115,11 +134,12 @@ define(function (require) {
         device.shader.program = null
         throw e
       }
-      device.shader = {}
       device.shader.program = program || null
       common.getCommonUniforms(device.shader)
-      device.shader.texture = getWebcamTexture(deviceIdx, width, height)
+      device.shader.texture = acquireTexture(deviceIdx, width, height)
     }
     return devices[deviceIdx].shader
   }
+  renderer.acquireTexture = acquireTexture
+  return renderer
 })

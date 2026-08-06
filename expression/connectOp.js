@@ -5,6 +5,7 @@ define(function(require) {
   let destructor = require('play/destructor')
   let {evalParamFrame} = require('player/eval-param')
   let vars = require('vars')
+  let {isShaderNode,composeShaderNodes,constShaderNode} = require('draw/visualsynth/shader-node')
 
   let audioNodeProto
   let getAudioNodeProto = () => {
@@ -15,6 +16,17 @@ define(function(require) {
   let connectOp = (l,r, e,b,evalRecurse) => {
     if (l === undefined) { return r }
     if (r === undefined) { return l }
+    let el = evalRecurse(l, e,b)
+    let er = evalRecurse(r, e,b)
+    // Visual synth chains: if either side is a shader node, compose GLSL emitters instead of
+    // wiring audio. A non-node operand becomes an animated uniform, wrapped from its raw AST
+    // (mirroring the gain{value:l} wrap below).
+    if (isShaderNode(el) || isShaderNode(er)) {
+      return composeShaderNodes(
+        isShaderNode(el) ? el : constShaderNode(l),
+        isShaderNode(er) ? er : constShaderNode(r)
+      )
+    }
     // A 0 is only a real "empty chord slot" placeholder during chord expansion (expandingChords).
     // In normal playback a value that resolves to 0 (eg a timevar like duck at its start) is genuine
     // and must be wrapped in a gain node, otherwise connect() resolves it to [] and the chain goes
@@ -24,11 +36,9 @@ define(function(require) {
     let connectable = expandingChords ? isConnectableOrPlaceholder : isConnectable
     let composite = Object.create(getAudioNodeProto()) // Create object that satisfies instanceof AudioNode
     composite.destructor = destructor(!!(e && e._destructor && e._destructor.canPool)) // Inherit poolability from the owning event's destructor
-    let el = evalRecurse(l, e,b)
     if (!connectable(el)) {
       el = vars.all().gain({value:l}, e,b) // Allow connecting to/from l value by wrapping into gain
     }
-    let er = evalRecurse(r, e,b)
     if (!connectable(er)) {
       er = vars.all().gain({value:r}, e,b) // Allow connecting to r value by wrapping into gain
     }
@@ -95,6 +105,24 @@ define(function(require) {
   an = connectOp(mockAn(), 'bareZero', {},0, erZeroExpand)
   assert(0, an.r) // placeholder kept
   vars.all().gain = savedGain
+
+  // Shader nodes: >> composes GLSL emitters instead of wiring audio
+  let mockShaderNode = (tag) => ({isShaderNode: true, build: (input, ctx) => { ctx.statements.push(tag); return input }})
+  let mockCtx = () => ({statements: [], uniforms: [], addStatement: function(x) { this.statements.push(x); return 'v1' }, addUniform: function(ast) { this.uniforms.push(ast); return 'u_vs0' }})
+  let sn
+  sn = connectOp(mockShaderNode('a'), mockShaderNode('b'), {},0, x=>x)
+  assert(true, sn.isShaderNode)
+  assert(false, sn instanceof AudioNode)
+  let sctx = mockCtx()
+  sn.build('v0', sctx)
+  assert(['a','b'], sctx.statements) // left emits first, right consumes
+  // A non-node operand next to a shader node becomes a const uniform wrapping the raw AST
+  let rawAst = 'theRawAst'
+  sn = connectOp(rawAst, mockShaderNode('b'), {},0, v => v === rawAst ? 0.5 : v)
+  assert(true, sn.isShaderNode)
+  sctx = mockCtx()
+  sn.build('v0', sctx)
+  assert([rawAst], sctx.uniforms) // raw AST registered as uniform, not the evaluated 0.5
 
   console.log("connectOp tests complete")
   }

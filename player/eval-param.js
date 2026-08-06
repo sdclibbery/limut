@@ -100,7 +100,7 @@ define((require) => {
       v = evalRecurse(v, event, beat)
       if (withInterval) { v = wrapWithInterval(v, value) }
       return v
-    } else if (typeof value === 'object' && !(value instanceof AudioNode)) {
+    } else if (typeof value === 'object' && !(value instanceof AudioNode) && !value.isShaderNode && !value.isVisualTextureSource) {
       let result = {}
       for (let k in value) { // Eval each field in the object
        if (evalToObjectOrPrimitive) {
@@ -204,6 +204,14 @@ define((require) => {
   assert([1,2,3], evalParamEvent([1,() => [2,3]], ev(0)))
   assert([1,2,3,4], evalParamEvent([[1,2],[3,4]], ev(0)))
   
+  // Shader nodes and texture sources pass through intact (like AudioNode): their fields
+  // (build, acquire) must not be walked and called by object evaluation
+  let shaderNode = {isShaderNode:true, build:()=>{ throw 'build must not be called' }}
+  assert(true, evalParamFrame(()=>shaderNode, ev(0), 0) === shaderNode)
+  assert(true, evalParamEvent(shaderNode, ev(0)) === shaderNode)
+  let texSource = {isVisualTextureSource:true, acquire:()=>{ throw 'acquire must not be called' }}
+  assert(true, evalParamFrame(()=>texSource, ev(0), 0) === texSource)
+
   let perFrameValue = () => 3
   perFrameValue.interval= 'frame'
   let perEventValue = () => 4

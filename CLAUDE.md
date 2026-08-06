@@ -82,7 +82,7 @@ Player/visual state persists across code updates — players are updated in-plac
 
 ### Visual player types
 
-`scope`, `scopefft`, `meter`, `readout`, `shadertoy`, `image`, `buffer`, `text`, `webcam`, `swirl`, `kal`, `clouds`, `lines`, `blob`, `stars`, `glow`, `lights`, `grid`, `bars`, `bits`, `xor`, `gradient`, `julia`, `blank`, `streetlight`
+`scope`, `scopefft`, `meter`, `readout`, `shadertoy`, `visualsynth`, `image`, `buffer`, `text`, `webcam`, `swirl`, `kal`, `clouds`, `lines`, `blob`, `stars`, `glow`, `lights`, `grid`, `bars`, `bits`, `xor`, `gradient`, `julia`, `blank`, `streetlight`
 
 ### Expression syntax
 

@@ -1,6 +1,7 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
+visual nodes...
 grain should have offset param, would allow more interesting effects; granular delays etc
 Multiband compressor
 Multiband effect that does spectral side chain ducking
@@ -28,7 +29,6 @@ Claude fable suggested good default mastering chain; try it out:
  set main amp=1.4, hpf={24,q:-3}, low={0.5dB,freq:120}, high={1dB,freq:8000}, drive=1/64, compress={2.5,threshold:-14dB,knee:12dB,att:0.05,rel:0.2}
   NOTE for heavy four-on-the-floor material the 50 ms attack with 0.2 s release can pump audibly if you push amp hard — raise rel to ~0.3 or back off amp if you hear it
  IF its good, can it be a preset somehow??
-visual nodes...
 Should be able to write actual unit tests in limut for limut functions? How would this work?
 Support just intonation etc
 gp0, gp1 etc as well as just gp
@@ -809,3 +809,12 @@ s=met(1/2).`0070`.crop(8).saw(oct:2).lpf([1000:!100ms,10]e@s,poles:4)*[0.06:!500
 
 As per every time we look at this kind of thing, the conclusion is the current setup is better even if it feels complicated
 
+=========================================
+
+Visual nodes Ideas
+
+set pixellate = {size} -> (id+(0.5/size))>>floor{1/size} // floor would need to handle visual nodes here
+set monochrome = {v:1} -> mix{ dot{#3b1}, v } // dot{} does dot product of input with value and puts result in all rgb channels
+w visualsynth, px=pixellate{40}>>tex{webcam{'5mp'}}>>monochrome{[]l1@f}
+
+w visualsynth, px=mul{[]n4}>>tex{webcam{'5mp'}} // mul multiplies each channel by the scalar or vector param

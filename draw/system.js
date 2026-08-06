@@ -82,9 +82,10 @@ system.loadShader = function(shaderSource, shaderType) {
 
   let compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS)
   if (!compiled) {
-    console.error("*** Error compiling shader :" + gl.getShaderInfoLog(shader) + "\nSource: " + shaderSource)
+    let infoLog = gl.getShaderInfoLog(shader)
+    console.error("*** Error compiling shader :" + infoLog + "\nSource: " + shaderSource)
     gl.deleteShader(shader)
-    throw('Shader compilation failure ' + shaderType)
+    throw('Shader compilation failure: ' + infoLog)
     return null
   }
 
