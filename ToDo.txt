@@ -2,6 +2,9 @@
 =================================================================================================================================
 =================================================================================================================================
 visual nodes...
+ maths functions floor/abs/sgn
+ trig functions
+ random/noise/perlin
 grain should have offset param, would allow more interesting effects; granular delays etc
 Multiband compressor
 Multiband effect that does spectral side chain ducking
@@ -10,6 +13,7 @@ Multiband effect that does spectral side chain ducking
 ? duckp player .pre based sidechain duck using envelope follower
 !Trance can sound out of tune
  toscale{} function: takes a Freq and quantises to a scale, default to current global scale/root. Try using it for trance cutoff
+  This probably isn't the problem. The problem is probably short decay times
  ?Pick sounded a bit out of tune too, had to increase decay? Is this at lower octaves?
  ALSO: Trance needs a param to soften the pluckiness: maybe attack as well as decay? Or decay affects both?
    att=this.decay^2*100ms  works pretty well??
@@ -277,7 +281,6 @@ Nodes for visuals
   v visualsynth, px=zoom{2}>>kal>>pal{[#000:0.5,#800:0.4,#f12:0.1,#fff]}
  Visual node values are 4 component vectors
  Define some visual nodes: sin, cos etc - basically whatever is a builtin glsl function
- Operators work on visual nodes
  Define visual node libs for all existing synths and params
 !dmx addL is ugly and confusing...
  consider lights={add:{}} rather than add={} ??? plus={} not add={} ???

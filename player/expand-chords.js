@@ -12,7 +12,7 @@ define((require) => {
 
   let multiplyEvents = (event) => {
     for (let k in event) {
-      if (k === 'beat' || k === 'play') { continue } // beat should never have chords, play is for node graphs and should not be evalled any more than needed as it creates AudioNodes
+      if (k === 'beat' || k === 'play' || k === 'px') { continue } // beat should never have chords, play is for node graphs and should not be evalled any more than needed as it creates AudioNodes. px is the visual node graph: node functions hold a _chordPlaceholder slot here, but an operator around one (eg px=mul{2}+#080) turns that placeholder into a plain value, which >> then wraps into a real gain node
       let v = event[k]
       if (v && v.__alreadyExpanded) { continue }
       let evaled = evalParamFrame(v, event, event.count, {expandingChords:true})
@@ -81,6 +81,7 @@ define((require) => {
     assert([{x:1,y:3,w:5,voice:0},{x:1,y:4,w:5,voice:1},{x:2,y:3,w:5,voice:2},{x:2,y:4,w:5,voice:3}], expandChords([{x:[1,2],y:[3,4],w:5}]))
 
     assert([{x:1,beat:[2,3],voice:0}], expandChords([{x:1,beat:[2,3]}]))
+    assert([{x:1,px:[2,3],voice:0}], expandChords([{x:1,px:[2,3]}])) // px is a visual node graph: never evalled here
     assert([{x:1,voice:0},{x:2,voice:1}], expandChords([{x:[1,2]}]))
 
     p = expandChords([{x:()=>[1,2]}])

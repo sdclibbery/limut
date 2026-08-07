@@ -6,6 +6,12 @@ define(function(require) {
   let texture = require('draw/texture')
   let webcam = require('draw/webcam')
 
+  // Pass the incoming value through unchanged. Seeds an operator-only chain, eg px=id/2+#080
+  let id = (args, e, b, state, evalRecurse) => {
+    return makeShaderNode((input, ctx) => ctx.addStatement(input))
+  }
+  addNodeFunction('id', id)
+
   // Multiply each channel of the incoming vec4 by the (animatable) param.
   // The arg stays a raw AST: it becomes a uniform re-evaluated per frame.
   let mul = (args, e, b, state, evalRecurse) => {
@@ -46,6 +52,7 @@ define(function(require) {
   addVarFunction('webcam', webcamSource)
 
   return {
+    id: id,
     mul: mul,
     tex: tex,
     webcam: webcamSource,

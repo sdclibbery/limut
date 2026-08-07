@@ -3,6 +3,7 @@ define(function(require) {
   let consoleOut = require('console')
   let {combineIntervalsFrom,combineIntervals} = require('expression/intervals')
   let {isConnectable} = require('play/nodes/connect')
+  let {isShaderNode} = require('draw/visualsynth/shader-node')
 
   let objectMap = (obj, fn) => {
     if (obj.hasOwnProperty('value')) { // 'value' field implies this is an object with subparams instead of a normal object
@@ -103,6 +104,9 @@ define(function(require) {
       if (!op.doNotEvalArgs) { // Lookup op needs to eval its own args otherwise aggregators are not possible
         el = evalRecurse(l, event,b)
         er = evalRecurse(r, event,b)
+      }
+      if (op.shaderNodeOp && (isShaderNode(el) || isShaderNode(er))) { // Visual synth nodes: compile to GLSL instead of evaluating
+        return op.shaderNodeOp(l, el, r, er)
       }
       let elIsConnectable = isConnectable(el)
       let erIsConnectable = isConnectable(er)
@@ -227,6 +231,25 @@ define(function(require) {
   assert({value:3,_units:'hz'}, evalParam(operator(add, {value:1,_units:'hz'}, {value:2}),ev(0),0))
   assert({value:3,_units:'hz'}, evalParam(operator(add, {value:1}, {value:2,_units:'hz'}),ev(0),0))
   assert({value:3,_units:'hz'}, evalParam(operator(add, {value:1,_units:'hz'}, {value:2,_units:'hz'}),ev(0),0))
+
+  { // Shader nodes route to op.shaderNodeOp instead of being key-merged as plain objects
+    let {shaderNodeOps} = require('expression/shaderNodeOps')
+    let node = {isShaderNode:true, build: (input, ctx) => input}
+    let shaderAdd = (l,r)=>l+r
+    shaderAdd.shaderNodeOp = shaderNodeOps['+']
+    let ctx = {statements:[], uniforms:[]}
+    ctx.addStatement = (expr) => { ctx.statements.push(expr); return 'v' + ctx.statements.length }
+    ctx.addUniform = (ast) => { ctx.uniforms.push(ast); return 'u_vs' + (ctx.uniforms.length-1) }
+
+    let r = evalParam(operator(shaderAdd, ()=>node, 2), ev(0),0)
+    assert(true, isShaderNode(r))
+    r.build('v0', ctx)
+    assert(['v0 + u_vs0'], ctx.statements)
+
+    r = evalParam(operator(shaderAdd, 2, ()=>node), ev(0),0) // Either side triggers it
+    assert(true, isShaderNode(r))
+    assert(3, evalParam(operator(shaderAdd, 1, ()=>2), ev(0),0)) // Non-shader operands unaffected
+  }
 
   console.log('eval operator tests complete')
   }

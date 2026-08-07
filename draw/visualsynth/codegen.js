@@ -60,7 +60,7 @@ void main() {
     let a = JSON.stringify(actual)
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
-  let {makeShaderNode, composeShaderNodes} = require('draw/visualsynth/shader-node')
+  let {makeShaderNode, composeShaderNodes, binaryShaderNode} = require('draw/visualsynth/shader-node')
 
   let mulNode = (ast) => makeShaderNode((input, ctx) => ctx.addStatement(`${input} * ${ctx.addUniform(ast)}`))
   let texNode = (t) => makeShaderNode((input, ctx) => {
@@ -98,6 +98,22 @@ void main() {
   let noTex = buildSource(mulNode(ast))
   assert(false, noTex.source.includes('sampler2D'))
   assert(0, noTex.textures.length)
+
+  // Operators on nodes, shaped like px=mul{1}/2+#080
+  let twoAst = () => 2
+  let colAst = {r:0,g:0.5,b:0,a:1}
+  let arith = binaryShaderNode((a,b) => `${a} + ${b}`,
+    undefined, binaryShaderNode((a,b) => `${a} / ${b}`, undefined, mulNode(ast), twoAst, 2),
+    colAst, colAst)
+  let arithBuilt = buildSource(arith)
+  assert(true, arithBuilt.source.includes('vec4 v1 = v0 * u_vs0;'))
+  assert(true, arithBuilt.source.includes('vec4 v2 = v1 / u_vs1;'))
+  assert(true, arithBuilt.source.includes('vec4 v3 = v2 + u_vs2;'))
+  assert(true, arithBuilt.source.includes('fragColor = v3;'))
+  assert(3, arithBuilt.uniforms.length)
+  assert(true, arithBuilt.uniforms[1].ast === twoAst) // raw ASTs, re-evaluated per frame
+  assert(true, arithBuilt.uniforms[2].ast === colAst)
+  assert(true, arithBuilt.source === buildSource(arith).source) // still byte-identical: cache key
 
   console.log('Visual synth codegen tests complete')
   }
