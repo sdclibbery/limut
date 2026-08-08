@@ -2275,6 +2275,21 @@ define(function(require) {
   assert(68, evalParamFrame(parseExpression("({c:1,d:2}->c+d^2){4,d:8}"), e, 0))
   assert(8, evalParamFrame(parseExpression("({c:1,d:2}->c+d^2){c:4,8}"), e, 0))
 
+  // >> pipes its left side into a call as the first argument, so foo>>bar{3} is bar{foo,3}.
+  // `.` does the same thing, and both shift any positional args at the callsite up a slot.
+  vars.pipefn = parseExpression("{c,d:1}->c*d")
+  assert(20, evalParamFrame(parseExpression("pipefn{4,5}"), e, 0))
+  assert(20, evalParamFrame(parseExpression("4>>pipefn{5}"), e, 0))
+  assert(20, evalParamFrame(parseExpression("(4).pipefn{5}"), e, 0)) // Same via `.` (bare 4. would parse as a number)
+  assert(20, evalParamFrame(parseExpression("4>>pipefn{d:5}"), e, 0))
+  assert(4, evalParamFrame(parseExpression("4>>pipefn"), e, 0)) // No args at the callsite
+  assert(40, evalParamFrame(parseExpression("4>>pipefn{5}>>pipefn{2}"), e, 0)) // Chained
+  assert(60, evalParamFrame(parseExpression("(4>>pipefn{5})+40"), e, 0)) // >> binds looser than arithmetic
+  assert(36, evalParamFrame(parseExpression("4>>pipefn{5+4}"), e, 0))
+  delete vars.pipefn
+  // Piping into the built in maths functions is tested in functions/maths.js, whose test block
+  // applies the predefined vars this one does not have yet
+
   assert(1/2, evalParamFrame(parseExpression("[0,1]l8{time:time+4}@f"), e, 0))
   assert(1, evalParamFrame(parseExpression("[0,1]l8{time:time+4}@f"), e, 4))
   assert(1/2, evalParamFrame(parseExpression("[0,1]l8{time:time+4}@f"), e, 8))

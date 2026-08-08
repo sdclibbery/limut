@@ -17,11 +17,33 @@ Defined in `expression/operators.js`. Lower number = tighter binding (evaluated 
 | 4 | `%`, `/`, `*` |
 | 5 | `-`, `+` |
 | 6 | `==`, `!=`, `<`, `>`, `<=`, `>=` |
-| 7 | `>>` (audio node connect) |
+| 7 | `>>` (audio node connect, and the general pipe) |
 | 8 | `??` |
 | 9 | `?:` |
 
 So `(1+osc.saw>>gain)*0.003` parses as `((1+(osc.saw))>>gain)*0.003` — `.` first, then `+`, then `>>`, then `*`.
+
+## `>>` as a pipe
+
+`>>` means "feed the left into the right": a wire when the right side is a node function, an argument otherwise. `expression/connectOp.js` decides from the **unevaluated** RHS, before evaluating it — so there is no double evaluation and no memoisation trap (`evalParamValueWithMemoisation` would hand back the un-piped result for a second call at the same beat).
+
+```
+l >> r
+  r is a node function call (audio or visual)  ->  connect / compose    (r._chordPlaceholder)
+  l evaluates to something connectable         ->  connect
+  r is any other callable var lookup           ->  call r with l as its first argument
+```
+
+Both guards matter. Node functions are marked `_chordPlaceholder` by `addNodeFunction` (`play/nodes/node-var.js`) and `parse-var.js` passes the mark onto the parsed lookup, which is what keeps `osc{}>>lpf{500}` a wire. The connectable-LHS guard is what keeps DSL-defined effects connecting — `>>` into a *lambda* is pervasive in `lib/effects.limut` (`shifter{r}>>reverb{len}`, `mod>>bwlpf{hi}>>follower{}`) and in every case the left side evaluates to an AudioNode. While `expandingChords`, the placeholder-aware `isConnectableOrPlaceholder` is used so a `0` placeholder counts as connectable and nothing is piped mid-expansion.
+
+The one behaviour change: `<non-connectable> >> <lambda>` used to gain-wrap and connect, and now calls. Nothing in `lib/`, `preset/` or `personal/` does that (they all have a node expression on the left), but `2>>lpf{500}` now means `lpf{2,500}`.
+
+**The piping mechanism is shared with `.`** (`expression/lookupOp.js`), which already did `r.args = l` → `parse-var.js` puts it in the callee's `value` slot. What changed is that positional args now **shift** instead of being clobbered: `x.foo{2}` / `x>>foo{2}` are `foo{x,2}`, not `foo{x}` with the 2 silently dropped (`shiftPositionalArgs` in parse-var.js). Two things to know about `.`:
+
+- `lookupOp` returns the call result only when the RHS is a `_finalResult` value **or** `isVarFunctionCall` — a var-function lookup *with* an argument list, and not a chord on the left. A bare `x.foo` (no args) still falls through to the map/player/chord lookup, and a chord LHS keeps its index-by-value meaning, which is what `(1,2,3,4).rand{seed:1}` and `(1,2).time{per:1}` rely on (there the `{...}` holds time modifiers, not call args).
+- That is also why the maths functions return `{value:…, _finalResult:true}` — without it `(1).sin` returns the LHS via lookupOp's final fallback.
+
+`connectOp` saves and restores `r.args` around the call: unlike lookupOp's use, the same parse instance is also reachable down paths that don't pipe, where a stale `args` would be applied.
 
 ## User-defined functions / lambdas
 
@@ -52,7 +74,7 @@ With flags `.isUserFunction = true`, `.isVarFunction = true`, `.isNormalCallFunc
 A call like `f{3}` reaches the wrapper differently depending on what `f` is:
 
 1. **Lambda literal**: `({v}->v*2){3}` — `addModifiers` attaches `{value:3}` as `.modifiers` on the wrapper itself; `evalFunctionWithModifiers` (player/eval-param.js) evaluates the modifiers and passes them as the wrapper's 4th arg.
-2. **Named var**: `foo{3}` where `set foo={v}->...` — `parseVarLookup` (parse-var.js) sees `dontEvalArgs` and passes the **raw unevaluated** args plus a `__functionContext` callsite id, calling `vr(event,b,evalRecurse,modifiers)`.
+2. **Named var**: `foo{3}` where `set foo={v}->...` — `parseVarLookup` (parse-var.js) sees `dontEvalArgs` and passes the **raw unevaluated** args plus a `__functionContext` callsite id, calling `vr(event,b,evalRecurse,modifiers)`. A function can also set `wantsRawArgs` to get the raw arg expressions as `modifiers.__rawArgs` *alongside* the evaluated ones (used by the visual maths functions, whose non-node args become uniforms re-evalled every frame); it is only added when there are args, so the empty-modifiers check that returns the bare key string still works.
 3. **Lambda held in a function arg** (higher-order): `{f}->f{3}` or via inherited args from an enclosing lambda — resolved by `userFunctionArgumentLookup` / `inheritedLookup` (parse-var.js). These receive the **evaluated** mods as their 4th param and invoke `isUserFunction` values with them, tagging `mods.__functionContext` with a callsite id. (Before 2026-06 they ignored the 4th param and called the wrapper bare via `er(value,e,b)` — args were evaluated then silently dropped, so every param in the body was `undefined`. Symptom: `parallel{}`/`multiband{}` copies all collapsing to the same value when the chain lambda was called through a wrapper function.)
 
 Memoisation (`evalParamValueWithMemoisation`) keys on the function object, the event (WeakMap), and `options + beat + getCallTreeString()`. The call-tree string concatenates `__functionContext` ids up the chain — that's the only thing distinguishing `f{3}+f{4}` at the same event/beat, which is why every call path must supply a callsite id. Node functions (`parallel`, `series`) additionally clone the event per copy so memoisation can't collapse copies (the DSL `multiband` wrappers in `lib/effects.limut` inherit this via `parallel`).

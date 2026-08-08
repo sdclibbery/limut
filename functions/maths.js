@@ -2,39 +2,63 @@
 define(function(require) {
   let {addVarFunction,add} = require('predefined-vars')
   let {mainParam,subParam} = require('player/sub-param')
+  let {shaderAware} = require('draw/visualsynth/shader-maths')
 
   let argParam = v => mainParam(mainParam(v)) // One for getting the value from args, other for getting the value from the param
+
+  // Every maths function is registered through shaderAware, so it emits GLSL when handed a visual
+  // node (px=floor{id*4} or px=id>>floor{1/40}) and is unchanged for numbers
+  let addMathsFunction = (name, fn) => addVarFunction(name, shaderAware(name, fn))
 
   let roundWrapper = (fn) => {
     let roundFunc = (args) => {
       let v = argParam(args, 0)
       if (typeof v !== 'number') { v = 0 }
-      let to = subParam(args, 'to', 1)
+      let to = subParam(args, 'to', subParam(args, 'value1', 1)) // Second positional arg is the precision too, so x>>floor{1/2} works
       return {value:fn(v/to)*to,_finalResult:true} // This is the final result if used in lookup op; do not do a further lookup
     }
     return roundFunc
   }
-  addVarFunction('floor', roundWrapper(Math.floor))
-  addVarFunction('ceil', roundWrapper(Math.ceil))
-  addVarFunction('round', roundWrapper(Math.round))
+  addMathsFunction('floor', roundWrapper(Math.floor))
+  addMathsFunction('ceil', roundWrapper(Math.ceil))
+  addMathsFunction('round', roundWrapper(Math.round))
 
   let trigWrapper = (fn) => {
     let trigFunc = (args) => {
       let v = argParam(args, 0)
       if (typeof v !== 'number') { v = 0 }
-      return fn(v)
+      return {value:fn(v),_finalResult:true} // Final result: no further lookup, so postfix (1).sin is the sine
     }
     return trigFunc
   }
-  addVarFunction('sin', trigWrapper(Math.sin))
-  addVarFunction('cos', trigWrapper(Math.cos))
-  addVarFunction('tan', trigWrapper(Math.tan))
-  addVarFunction('tanh', trigWrapper(Math.tanh))
-  addVarFunction('atan', trigWrapper(Math.atan))
+  addMathsFunction('sin', trigWrapper(Math.sin))
+  addMathsFunction('cos', trigWrapper(Math.cos))
+  addMathsFunction('tan', trigWrapper(Math.tan))
+  addMathsFunction('tanh', trigWrapper(Math.tanh))
+  addMathsFunction('atan', trigWrapper(Math.atan))
   add('pi', Math.PI)
-  addVarFunction('abs', trigWrapper(Math.abs))
-  addVarFunction('sgn', trigWrapper(Math.sign))
-  addVarFunction('sign', trigWrapper(Math.sign))
+  addMathsFunction('abs', trigWrapper(Math.abs))
+  addMathsFunction('sgn', trigWrapper(Math.sign))
+  addMathsFunction('sign', trigWrapper(Math.sign))
+
+  // Dot product of the rgb components. A plain number counts as all three, so a value means the
+  // same thing here as it does in a shader, where everything is a 4 component vector.
+  let rgbOf = (v) => {
+    while (typeof v === 'object' && v !== null && v.value !== undefined) { v = v.value } // Unwrap units/segment wrappers
+    if (typeof v === 'number') { return [v,v,v] }
+    if (typeof v === 'object' && v !== null) {
+      let c = (a,b) => v[a] !== undefined ? v[a] : (v[b] !== undefined ? v[b] : 0)
+      return [c('x','r'), c('y','g'), c('z','b')]
+    }
+    return [0,0,0]
+  }
+  let dotFunc = (args) => {
+    if (typeof args !== 'object' || args === null) { return {value:0,_finalResult:true} }
+    let a = rgbOf(args.value)
+    let b = args.value1 !== undefined ? rgbOf(args.value1) : a // One arg dots with itself
+    return {value:a[0]*b[0]+a[1]*b[1]+a[2]*b[2],_finalResult:true}
+  }
+  addMathsFunction('dot', dotFunc)
 
   let euclid = (args, e) => {
     let k = Math.floor(argParam(args, 1)) // Distribute k beats...
@@ -141,11 +165,32 @@ define(function(require) {
   assert(2, evalParamFrame(parseExpression('floor{[1.5,2.5]t1@f}'), ev(1,1), 1))
   assert([1,2], evalParamFrame(parseExpression('floor{(1.5,2.5)}'), ev(0,0), 0))
 
-  assert(1, evalParamFrame(parseExpression("floor{1.5,2.5}"),ev(0,0,0),0))
+  assert(0, evalParamFrame(parseExpression("floor{1.5,2.5}"),ev(0,0,0),0)) // Second positional arg is the precision
+  assert(1.5, evalParamFrame(parseExpression("floor{1.7,1/2}"),ev(0,0,0),0))
   assert([1,2], evalParamFrame(parseExpression("floor{(1.5,2.5)}"),ev(0,0,0),0))
 
   assert(1, evalParamFrame(parseExpression("1.5 .floor"),ev(0,0,0),0))
   assert(1.25, evalParamFrame(parseExpression("(1.3).floor{to:1/4}"),ev(0,0,0),0))
+
+  // >> pipes its left side in as the first argument
+  assert(1, evalParamFrame(parseExpression("1.5>>floor"),ev(0,0,0),0))
+  assert(1.5, evalParamFrame(parseExpression("1.7>>floor{to:1/2}"),ev(0,0,0),0))
+  assert(1.5, evalParamFrame(parseExpression("1.7>>floor{1/2}"),ev(0,0,0),0)) // Piped value takes the first slot
+  assert(3, evalParamFrame(parseExpression("(1,2,3)>>max"),ev(0,0,0),0)) // Aggregates, as (1,2,3).max does
+  assert(1/2, evalParamFrame(parseExpression("1>>min{1/2}"),ev(0,0,0),0))
+
+  // Trig and friends are the final result too, so a postfix call gives the value not the LHS
+  assert(Math.sin(1), evalParamFrame(parseExpression("(1).sin"),ev(0,0,0),0))
+  assert(1, evalParamFrame(parseExpression("(-1)>>abs"),ev(0,0,0),0))
+  assert(-1, evalParamFrame(parseExpression("(-2)>>sgn"),ev(0,0,0),0))
+
+  // Dot product over rgb; a plain number counts as all three components
+  assert(3, evalParamFrame(parseExpression("dot{1,1}"),ev(0,0), 0))
+  assert(1/3, evalParamFrame(parseExpression("dot{#f00,1/3}"),ev(0,0), 0))
+  assert(1, evalParamFrame(parseExpression("dot{#f00,#ff0}"),ev(0,0), 0))
+  assert(0, evalParamFrame(parseExpression("dot{#f00,#0f0}"),ev(0,0), 0))
+  assert(3, evalParamFrame(parseExpression("dot{1}"),ev(0,0), 0)) // One arg dots with itself
+  assert(1, evalParamFrame(parseExpression("#f00>>dot{#ff0}"),ev(0,0), 0))
 
   assert(2, evalParamFrame(parseExpression('ceil{1.5}'), ev(0,0), 0))
   assert(-1, evalParamFrame(parseExpression('ceil{-1.5}'), ev(0,0), 0))

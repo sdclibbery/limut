@@ -23,6 +23,16 @@ define(function(require) {
     return key
   }
 
+  // A piped value (the LHS of `.` or of `>>`) becomes the callee's first positional arg, so any
+  // positional args at the callsite shift up a slot: x>>foo{2} calls foo{x,2}, not foo{x}
+  let shiftPositionalArgs = (o) => {
+    let count = 0
+    while (o['value'+(count||'')] !== undefined) { count++ }
+    for (let i=count-1; i>=0; i--) { o['value'+(i+1)] = o['value'+(i||'')] }
+    delete o.value
+    return o
+  }
+
   let callsiteId = 0
   let varLookup = (key, args, context, interval, userFunctionArgs, inheritedArgs) => {
     if (!key) { return }
@@ -129,13 +139,24 @@ define(function(require) {
         } else {
           Object.assign(modifiers, evalRecurse(args,event,b))
         }
+        let piped = parseVarLookup.args !== undefined
         if (modifiers) {
-          if (parseVarLookup.args !== undefined) { modifiers.value = parseVarLookup.args }
+          if (piped) {
+            shiftPositionalArgs(modifiers)
+            modifiers.value = parseVarLookup.args
+          }
         } else {
           modifiers = parseVarLookup.args
         }
         if (vr.passCallsiteId && modifiers) {
           modifiers.__functionContext = thisCallsiteId // Add the id of this callsite as an extra arg, for memoisation
+        }
+        if (vr.wantsRawArgs && args !== undefined && Object.keys(args).length > 0) {
+          // Some functions need the unevalled arg expressions as well as the evalled values; eg
+          // visual node maths, where a non-node arg becomes a uniform re-evalled every frame.
+          // Copy before shifting: the raw map is the parsed AST and must not be mutated. Guarded
+          // on non-empty args so an argless call still leaves modifiers empty for the check below.
+          modifiers.__rawArgs = piped ? shiftPositionalArgs(Object.assign({}, args)) : args
         }
         if (vr.isNormalCallFunction) { // Used by user defined functions which need evalRecurse but not state
           v = vr(event,b, evalRecurse, modifiers)
@@ -229,6 +250,51 @@ define(function(require) {
   p = varLookup(parseVar(state), {bar:3}, {})
   assert(3, state.idx)
   assert(3, p(ev(0,0),0,evalParamFrame))
+  delete vars.foo
+
+  // A piped value (the LHS of `.` or `>>`) takes the first positional slot; existing positionals shift up
+  vars.foo = (args) => [args.value, args.value1, args.value2]
+  vars.foo.isVarFunction = true
+  p = varLookup(parseVar({str:'foo',idx:0}), {value:2,value1:3}, {})
+  p.args = 1
+  assert([1,2,3], p(ev(0,0),0,evalParamFrame))
+  p = varLookup(parseVar({str:'foo',idx:0}), {value:2}, {})
+  p.args = 1
+  assert([1,2,undefined], p(ev(0,0),0,evalParamFrame))
+  p = varLookup(parseVar({str:'foo',idx:0}), undefined, {})
+  p.args = 1
+  assert([1,undefined,undefined], p(ev(0,0),0,evalParamFrame))
+  p = varLookup(parseVar({str:'foo',idx:0}), {value:2,value1:3}, {}) // Not piped: no shift
+  assert([2,3,undefined], p(ev(0,0),0,evalParamFrame))
+  delete vars.foo
+
+  vars.foo = (args) => [args.value, args.to]
+  vars.foo.isVarFunction = true
+  p = varLookup(parseVar({str:'foo',idx:0}), {to:4}, {}) // Named args are not shifted
+  p.args = 1
+  assert([1,4], p(ev(0,0),0,evalParamFrame))
+  delete vars.foo
+
+  // wantsRawArgs: the unevalled arg expressions are passed alongside the evalled values
+  let rawSeen
+  vars.foo = (args) => { rawSeen = args.__rawArgs; return 0 }
+  vars.foo.isVarFunction = true
+  vars.foo.wantsRawArgs = true
+  let rawAst = () => 7
+  let rawArgs = {value:rawAst}
+  p = varLookup(parseVar({str:'foo',idx:0}), rawArgs, {})
+  p(ev(0,0),0,evalParamFrame)
+  assert(true, rawSeen.value === rawAst)
+  p = varLookup(parseVar({str:'foo',idx:0}), rawArgs, {})
+  p.args = 1
+  p(ev(0,0),0,evalParamFrame)
+  assert(true, rawSeen.value1 === rawAst) // Shifted in step with the evalled args
+  assert(true, rawSeen.value === undefined)
+  assert(true, rawArgs.value === rawAst) // The parsed AST map itself must not be mutated
+  rawSeen = undefined
+  p = varLookup(parseVar({str:'foo',idx:0}), undefined, {})
+  p(ev(0,0),0,evalParamFrame)
+  assert(undefined, rawSeen) // No args: nothing added, so the empty-modifiers check still works
   delete vars.foo
 
   // Alias (set foo2 = foo): callsite args must reach the target var function

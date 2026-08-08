@@ -6,6 +6,7 @@ define(function (require) {
   let {evalParamEvent, evalParamFrame} = require('player/eval-param')
   let {buildSource} = require('draw/visualsynth/codegen')
   let {isShaderNode, toVec4} = require('draw/visualsynth/shader-node')
+  let {getCallTree, setCallTree, clearCallTree} = require('player/callstack')
   require('draw/visualsynth/nodes') // Register mul/tex/webcam var functions at startup
 
   let vtxCompiled
@@ -58,7 +59,19 @@ define(function (require) {
       s.preRender = (state) => {
         system.gl.useProgram(cached.shader.program)
         built.uniforms.forEach((u, i) => {
-          let v = evalParamFrame(u.ast, params, state.count)
+          // Restore the call tree the arg was written in, so an AST from inside a user defined
+          // function (eg the `size` in `set pixellate = {in,size} -> floor{in,to:1/size}`) still
+          // resolves now that the call has long returned
+          let outer = getCallTree()
+          clearCallTree()
+          setCallTree(u.callTree)
+          let v
+          try {
+            v = evalParamFrame(u.ast, params, state.count)
+          } finally {
+            clearCallTree()
+            setCallTree(outer)
+          }
           system.gl.uniform4fv(cached.uniformLocs[i], toVec4(v))
         })
       }

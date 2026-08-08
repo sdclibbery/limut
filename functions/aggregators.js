@@ -1,6 +1,9 @@
 'use strict'
 define(function(require) {
   let addVarFunction = require('predefined-vars').addVarFunction
+  let {shaderAware} = require('draw/visualsynth/shader-maths')
+
+  let shaderMathsAggregators = ['min', 'max'] // These also work on visual nodes, compiling to GLSL
 
   let getArrayFromValues = (args) => {
     let result = [args.value]
@@ -32,7 +35,7 @@ define(function(require) {
     }
     aggFunc._isAggregator = true
     aggFunc._requiresValue = true
-    addVarFunction(name, aggFunc)
+    addVarFunction(name, shaderMathsAggregators.includes(name) ? shaderAware(name, aggFunc) : aggFunc)
     return aggFunc
   }
 

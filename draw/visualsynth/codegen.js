@@ -1,5 +1,6 @@
 'use strict'
 define(function(require) {
+  let {getCallTree} = require('player/callstack')
 
   // Builds the fragment shader source for a visual synth px chain. All generated names come
   // from per-context counters assigned during a single left-to-right build walk, so the same
@@ -7,7 +8,7 @@ define(function(require) {
   let makeContext = () => {
     let ctx = {
       statements: [],
-      uniforms: [], // {name, ast} — ast is the raw unevaluated arg, re-evaluated per frame
+      uniforms: [], // {name, ast, callTree} — ast is the raw unevaluated arg, re-evaluated per frame
       textures: [], // texture objects, parallel to sampler names u_vstex0, u_vstex1...
       notReady: false, // a texture source isn't available yet (eg webcam pre-enumeration)
     }
@@ -20,7 +21,9 @@ define(function(require) {
     ctx.addRaw = (stmt) => { ctx.statements.push(stmt) }
     ctx.addUniform = (ast) => {
       let name = 'u_vs' + ctx.uniforms.length
-      ctx.uniforms.push({name: name, ast: ast})
+      // The call tree current during this node's build is the one the AST was written in, so keep
+      // it: the per frame eval in draw/visualsynth.js has to restore it to resolve lambda args
+      ctx.uniforms.push({name: name, ast: ast, callTree: getCallTree()})
       return name
     }
     ctx.addTexture = (tex) => {
@@ -114,6 +117,19 @@ void main() {
   assert(true, arithBuilt.uniforms[1].ast === twoAst) // raw ASTs, re-evaluated per frame
   assert(true, arithBuilt.uniforms[2].ast === colAst)
   assert(true, arithBuilt.source === buildSource(arith).source) // still byte-identical: cache key
+
+  // Maths functions, shaped like px=id>>floor{1/40}>>tex{...}
+  let {shaderAware} = require('draw/visualsynth/shader-maths')
+  let idNode = makeShaderNode((input, ctx) => ctx.addStatement(input))
+  let toAst = () => 1/40
+  let quantised = shaderAware('floor', () => 0)({value:idNode, value1:1/40, __rawArgs:{value1:toAst}}).value
+  let mathsChain = composeShaderNodes(quantised, texNode(stubTex))
+  let mathsBuilt = buildSource(mathsChain)
+  assert(true, mathsBuilt.source.includes('vec4 v1 = v0;'))
+  assert(true, mathsBuilt.source.includes('vec4 v2 = floor(v1 / u_vs0) * u_vs0;'))
+  assert(true, mathsBuilt.source.includes('vec4 v3 = texture(u_vstex0, (v2).xy);'))
+  assert(true, mathsBuilt.uniforms[0].ast === toAst) // raw AST, so the precision stays animatable
+  assert(true, mathsBuilt.source === buildSource(mathsChain).source) // byte-identical: cache key
 
   console.log('Visual synth codegen tests complete')
   }

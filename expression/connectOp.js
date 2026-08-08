@@ -3,7 +3,7 @@ define(function(require) {
   let system = require('play/system');
   let {connect,isConnectable,isConnectableOrPlaceholder} = require('play/nodes/connect');
   let destructor = require('play/destructor')
-  let {evalParamFrame} = require('player/eval-param')
+  let {evalParamFrame,evalFunctionWithModifiers} = require('player/eval-param')
   let vars = require('vars')
   let {isShaderNode,composeShaderNodes,constShaderNode} = require('draw/visualsynth/shader-node')
 
@@ -13,10 +13,39 @@ define(function(require) {
     return audioNodeProto
   }
 
+  // A call that >> can pipe its left hand side into. Node functions are excluded: they are wired,
+  // not called, so `osc{}>>lpf{500}` stays a connection rather than becoming lpf{oscNode,500}.
+  // They are marked by addNodeFunction (play/nodes/node-var.js) and parse-var passes the mark on.
+  let isPipeTarget = (v) => {
+    if (typeof v !== 'function' || !v.isVarLookup || v._chordPlaceholder) { return false }
+    let target = vars.get(v._name)
+    return typeof target === 'function' && target.isVarFunction // A var function or a user defined one
+  }
+
   let connectOp = (l,r, e,b,evalRecurse) => {
     if (l === undefined) { return r }
     if (r === undefined) { return l }
     let el = evalRecurse(l, e,b)
+    // A 0 is only a real "empty chord slot" placeholder during chord expansion (expandingChords).
+    // In normal playback a value that resolves to 0 (eg a timevar like duck at its start) is genuine
+    // and must be wrapped in a gain node, otherwise connect() resolves it to [] and the chain goes
+    // silent. So use the strict isConnectable in normal playback, and only accept placeholders while
+    // expanding chords. (cf 01a8372c, which made the same fix in player-fx.js and graph.js)
+    let expandingChords = evalRecurse && evalRecurse.options && evalRecurse.options.expandingChords
+    let connectable = expandingChords ? isConnectableOrPlaceholder : isConnectable
+    // Pipe: >> feeds the left into the right, and for anything that isn't an audio node that means
+    // passing it as the first argument, so `a>>foo{2}` is foo{a,2}. Audio keeps its wire: a
+    // connectable left side means DSL defined effects like `shifter{2}>>reverb{1b}` still connect
+    // rather than calling reverb with an AudioNode for its length. Decided from the unevalled RHS so
+    // it is never evalled twice, which would return the memoised un-piped result anyway.
+    if (isPipeTarget(r) && !connectable(el)) {
+      let saved = r.args
+      r.args = el // Same mechanism as lookupOp (a.foo), but restore it: this parse instance is also
+      let v = evalFunctionWithModifiers(r, e,b, evalRecurse) // reachable down paths that don't pipe
+      r.args = saved
+      if (typeof v === 'object' && v !== null && v._finalResult) { v = v.value }
+      return evalRecurse(v, e,b)
+    }
     let er = evalRecurse(r, e,b)
     // Visual synth chains: if either side is a shader node, compose GLSL emitters instead of
     // wiring audio. A non-node operand becomes an animated uniform, wrapped from its raw AST
@@ -27,13 +56,6 @@ define(function(require) {
         isShaderNode(er) ? er : constShaderNode(r)
       )
     }
-    // A 0 is only a real "empty chord slot" placeholder during chord expansion (expandingChords).
-    // In normal playback a value that resolves to 0 (eg a timevar like duck at its start) is genuine
-    // and must be wrapped in a gain node, otherwise connect() resolves it to [] and the chain goes
-    // silent. So use the strict isConnectable in normal playback, and only accept placeholders while
-    // expanding chords. (cf 01a8372c, which made the same fix in player-fx.js and graph.js)
-    let expandingChords = evalRecurse && evalRecurse.options && evalRecurse.options.expandingChords
-    let connectable = expandingChords ? isConnectableOrPlaceholder : isConnectable
     let composite = Object.create(getAudioNodeProto()) // Create object that satisfies instanceof AudioNode
     composite.destructor = destructor(!!(e && e._destructor && e._destructor.canPool)) // Inherit poolability from the owning event's destructor
     if (!connectable(el)) {
@@ -123,6 +145,52 @@ define(function(require) {
   sctx = mockCtx()
   sn.build('v0', sctx)
   assert([rawAst], sctx.uniforms) // raw AST registered as uniform, not the evaluated 0.5
+
+  // Pipe: >> feeds the left side into a non-node call as its first argument
+  let {varLookup} = require('expression/parse-var')
+  let pipeArgs
+  vars.all().mockpipe = (args) => { pipeArgs = args; return 'piped' }
+  vars.all().mockpipe.isVarFunction = true
+  vars.all().mocknodefn = (args) => 'nodefn'
+  vars.all().mocknodefn.isVarFunction = true
+  vars.all().mocknodefn._chordPlaceholder = true // As set by addNodeFunction
+  let mockLookup = (args) => varLookup('mockpipe', args, {})
+
+  assert('piped', connectOp(2, mockLookup({value:3}), {},0, evalParamFrame))
+  assert([2,3], [pipeArgs.value, pipeArgs.value1]) // Left side becomes the first arg, existing args shift up
+
+  pipeArgs = undefined
+  sn = connectOp(mockShaderNode('a'), mockLookup({value:3}), {},0, evalParamFrame)
+  assert('piped', sn)
+  assert(true, pipeArgs.value !== undefined && pipeArgs.value.isShaderNode) // Visual node arrives as an arg
+
+  let lk = mockLookup({value:3}) // r.args must not be left set: the same parse instance is
+  connectOp(2, lk, {},0, evalParamFrame) // also reachable down paths that don't pipe
+  assert(undefined, lk.args)
+
+  vars.all().gain = (args) => { let n = mockAn(); n.value = args.value; return n }
+
+  // A connectable left side keeps the wire, so DSL defined effects (shifter{2}>>reverb{1b}) still connect
+  pipeArgs = undefined
+  an = connectOp(mockAn(), mockLookup({value:3}), {},0, evalParamFrame)
+  assert(true, an instanceof AudioNode)
+  assert([3,undefined], [pipeArgs.value, pipeArgs.value1]) // Called normally, not piped
+
+  // Node functions are wired, not called: osc{}>>lpf{500} must not become lpf{oscNode,500}
+  an = connectOp(2, varLookup('mocknodefn', undefined, {}), {},0, evalParamFrame)
+  assert(true, an instanceof AudioNode)
+
+  // No piping during chord expansion, where a 0 is a placeholder for a node that isn't built yet
+  pipeArgs = undefined
+  let erExpand = (v,e,b) => evalParamFrame(v,e,b)
+  erExpand.options = {expandingChords:true}
+  an = connectOp(0, mockLookup({value:3}), {},0, erExpand)
+  assert(true, an instanceof AudioNode)
+  assert([3,undefined], [pipeArgs.value, pipeArgs.value1])
+
+  vars.all().gain = savedGain
+  delete vars.all().mockpipe
+  delete vars.all().mocknodefn
 
   console.log("connectOp tests complete")
   }

@@ -2,9 +2,12 @@
 =================================================================================================================================
 =================================================================================================================================
 visual nodes...
- maths functions floor/abs/sgn
- trig functions
+ mix, add
+ ? {tex,#124} should do addition like in audio chain??
+ clamp
  random/noise/perlin
+ pixellate/monochrome etc etc
+ generate 1d, 2d, 3d textures from limut functions/piecewises
 grain should have offset param, would allow more interesting effects; granular delays etc
 Multiband compressor
 Multiband effect that does spectral side chain ducking
@@ -816,8 +819,9 @@ As per every time we look at this kind of thing, the conclusion is the current s
 
 Visual nodes Ideas
 
-set pixellate = {size} -> (id+(0.5/size))>>floor{1/size} // floor would need to handle visual nodes here
-set monochrome = {v:1} -> mix{ dot{#3b1}, v } // dot{} does dot product of input with value and puts result in all rgb channels
-w visualsynth, px=pixellate{40}>>tex{webcam{'5mp'}}>>monochrome{[]l1@f}
+DONE, as (>> pipes the lhs in as the first arg, so the input has to be a declared arg):
+set pixellate = {in,size:8} -> floor{in+(0.5/size),to:1/size}
+set monochrome = {in,v:1} -> dot{in,#3b1}*v
+w visualsynth, px=id>>pixellate{40}>>tex{webcam{'5mp'}}>>monochrome{[]l1@f}
 
 w visualsynth, px=mul{[]n4}>>tex{webcam{'5mp'}} // mul multiplies each channel by the scalar or vector param

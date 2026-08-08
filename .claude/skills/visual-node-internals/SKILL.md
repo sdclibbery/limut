@@ -49,9 +49,29 @@ Context helpers: `addStatement(expr)` emits `vec4 vN = expr;` and returns `vN`; 
 
 ## The `>>` seam (`expression/connectOp.js`)
 
-At the top of `connectOp`, both operands are evaluated first; if either `isShaderNode`, it returns `composeShaderNodes(...)` with non-node sides const-wrapped from their **raw ASTs**, and the audio path (composite creation, destructor, gain-wraps, connect) is never reached. During `expandingChords`, visual node lookups return `0` placeholders (`_chordPlaceholder`), `isShaderNode(0)` is false, so the audio placeholder path runs untouched.
+`connectOp` has two branches before the audio path:
 
-Mixing domains (`osc{} >> tex{}`) is undefined behaviour — the shader branch wins if either side is a shader node and the audio side gets const-wrapped into a meaningless uniform. Arithmetic operators (`+ - * /`) do **not** dispatch on shader nodes (`expression/connectableOps.js` and `eval-operator.js` are audio-only); using them on visual nodes produces garbage. If implementing them, follow the `connectableOp` dispatch pattern in `expression/eval-operator.js:107-111` with an `isShaderNode` check — and remember in GLSL `a*b` is free, so they should emit expressions, not extra chain stages.
+1. **Pipe** — if the RHS is a callable var lookup that is *not* a node function (`r.isVarLookup && !r._chordPlaceholder`, target `isVarFunction`) and the evaluated LHS is not `connectable`, `>>` calls the RHS with the LHS as its first argument (`r.args = el` then `evalFunctionWithModifiers`, the same mechanism `lookupOp` uses for `.`). This is how maths functions and user-defined visual functions join a chain: `tex{} >> floor{1/40}` is `floor{texNode, 1/40}`, and floor turns into a node by ordinary argument dispatch. `r.args` is saved/restored because the same parse instance is also reachable down non-piping paths.
+2. **Compose** — otherwise both operands are evaluated and, if either `isShaderNode`, it returns `composeShaderNodes(...)` with non-node sides const-wrapped from their **raw ASTs**; the audio path is never reached.
+
+The node-function exclusion is what keeps `osc{} >> lpf{500}` and `mul{2} >> tex{}` wires rather than calls, and the `!connectable(el)` guard keeps DSL-defined audio effects (`shifter{2} >> reverb{1b}`, where `reverb` is a lambda) connecting as before. During `expandingChords` the placeholder-aware `isConnectableOrPlaceholder` is used, so a `0` placeholder counts as connectable and no piping happens mid-expansion.
+
+Consequence for chains: a maths function on the **left** of `>>` has nothing to consume, so seed with `id` — `px=id>>floor{1/40}>>tex{}`, not `px=floor{1/40}>>tex{}` (which const-wraps a plain 0).
+
+Mixing domains (`osc{} >> tex{}`) is undefined behaviour — the shader branch wins if either side is a shader node and the audio side gets const-wrapped into a meaningless uniform. Arithmetic operators (`+ - * / % ^` and comparisons) **do** dispatch on shader nodes, via `expression/shaderNodeOps.js` wired onto `operators[k].shaderNodeOp` and dispatched in `eval-operator.js` ahead of the connectable check. They emit expressions, not extra chain stages, and get both the raw AST and evaluated value per side so a non-node side becomes an animated uniform. Unlike `>>`, they do not pipe: `id/2 + floor{1/8}` adds a constant, write `id/2 + floor{id,1/8}`.
+
+## Maths functions (`draw/visualsynth/shader-maths.js`)
+
+`shaderAware(name, numericFn)` wraps a registered var function so it emits GLSL when any argument `isShaderNode`, and calls `numericFn` unchanged otherwise — the same "dispatch on the value, not on a mode flag" rule as the operators, so scalar behaviour is untouched. Used by `functions/maths.js` (`addMathsFunction`) and for `min`/`max` in `functions/aggregators.js`. Each function has a spec of `{emit, operands}`; add a new one there, not in `nodes.js`.
+
+Two things a new spec must respect:
+
+- The shader path returns `{value: node, _finalResult: true}`. The wrapper is what makes postfix (`(id*4).floor`) work — `lookupOp` short-circuits on `_finalResult`, and `eval-param.js` unwraps it. Returning a bare node makes `.` fall through to a map lookup and yield `undefined`.
+- Non-node operands must register their **raw AST**, not the evaluated value, or they freeze at event time. `parse-var` supplies them as `modifiers.__rawArgs` when the function sets `wantsRawArgs` (guarded on non-empty args so an argless call still returns the bare key string), already shifted in step with the evaluated args when the call was piped.
+
+## Call context in uniforms
+
+Uniform ASTs are re-evaluated every frame, long after the expression that wrote them returned. If a node was created inside a user-defined function (`set pixellate = {in,size} -> floor{in,to:1/size}`), the AST `1/size` only resolves in that call context. So `makeShaderNode` snapshots `getCallTree()` at creation and reinstalls it around `build`; `ctx.addUniform` records whatever tree is current onto the uniform entry; and `draw/visualsynth.js`'s `preRender` brackets each per-frame eval with `setCallTree`/`clearCallTree`. This mirrors `doPerFrame` in `play/eval-audio-params.js`. Symptom if it regresses: a user-defined visual function renders black (the arg evaluates to 0, so a `to:` becomes 1/0).
 
 ## eval-param pass-through (critical)
 
@@ -72,12 +92,12 @@ Runs **once per visual event** (via `sprite.create`, `draw/sprite.js`). Flow: `e
 
 - Program cache is 3-state like shadertoy: `undefined` = not compiled, object = compiled, `null` = permanent failure (never retried, prevents per-event error spam).
 - `common.getCommonUniforms(shader)` is still called — it sets up the quad buffers/attrs (`posBuf`/`posAttr`/`fragCoordBuf`/`fragCoordAttr`) that sprite.js needs. Its ~30 uniform locations come back null against the generated shader; `gl.uniform*` with a null location is a silent no-op, which is why sprite.js's standard per-frame writes are harmless. `shader.textureUnif` is overridden to the `u_vstexN` locations (empty array when no textures — prevents sprite.js loading the default favicon texture).
-- **Per-frame animated uniforms**: `s.preRender(state)` (the hook sprite.js calls before each draw) does `gl.useProgram` then `evalParamFrame(u.ast, params, state.count)` → `toVec4` → `gl.uniform4fv`. This is the visual analogue of `play/eval-audio-params.js` per-frame scheduling. It does NOT snapshot the call tree (`player/callstack.js`) — lambdas inside px args won't see their arg bindings per frame. If user-defined visual nodes via `set` lambdas are implemented, per-frame uniform eval needs the `getCallTree()`/`setCallTree` bracket that `doPerFrame` uses.
+- **Per-frame animated uniforms**: `s.preRender(state)` (the hook sprite.js calls before each draw) does `gl.useProgram` then, per uniform, restores that uniform's captured call tree, `evalParamFrame(u.ast, params, state.count)` → `toVec4` → `gl.uniform4fv`. This is the visual analogue of `play/eval-audio-params.js` per-frame scheduling; see "Call context in uniforms" above.
 - Texture binding rides `sprite.js` (`s.texture`, `t.update(state)` per-frame video upload, `l_extents` from `t.width/height`). **sprite.js binds the same texture to every `textureUnif` slot** — that's the reason for the current one-texture-per-chain limit (🟠 warn). Multi-texture needs sprite.js to bind per-slot (e.g. `s.textures[i]` alongside `s.textureUnif[i]`).
 
 ## Known limitations (PoC scope, deliberate)
 
-Arithmetic ops on shader nodes; glsl-builtin nodes (`sin`, `floor`, `dot`...); `pal{}`; user-defined visual nodes via `set` lambdas (`set pixellate = {size} -> ...` per ToDo); >1 texture per chain; lambda call-context in per-frame uniforms; chords inside px args (placeholders keep them from crashing, results unspecified); no program-cache eviction (matches shadertoy).
+`pal{}`; random/noise/perlin nodes; >1 texture per chain; chords inside px args (placeholders keep them from crashing, results unspecified); no program-cache eviction (matches shadertoy). A maths function or lambda on the left of `>>` gets no implicit input (seed with `id`), and only a plain var-lookup callsite is piped — not a parenthesised expression (`id >> (floor{1/8}*2)`) or a lambda literal.
 
 ## Verifying changes
 

@@ -8,6 +8,17 @@ define(function(require) {
   let {addVarFunction,remove} = require('predefined-vars')
   let playerPre = require('play/player-pre')
 
+  // `x.foo{2}` with foo a var function is a call, not a map key lookup, so its result is the answer
+  // (the same pipe as `x>>foo{2}`). A bare `x.foo` still falls through to the lookup below, so
+  // map, player and section lookups are untouched. A chord on the left is excluded too: there the
+  // RHS is an index into the chord and its args are time modifiers, eg (1,2,3,4).rand{seed:1}.
+  let isVarFunctionCall = (l, r) => {
+    if (Array.isArray(l)) { return false }
+    if (typeof r !== 'function' || !r.isVarLookup || !r.hasOwnArgs) { return false }
+    let target = vars.get(r._name)
+    return typeof target === 'function' && target.isVarFunction
+  }
+
   let lookupOp = (l,r, event,b,evalRecurse) => {
     let originalR = r
     if (l === undefined) { return undefined }
@@ -25,6 +36,7 @@ define(function(require) {
       r.args = l
       let v = evalFunctionWithModifiers(r,event,b, evalRecurse)
       if (typeof v === 'object' && v._finalResult) { return v.value } // This is the final result (eg aggregator), no further lookup needed
+      if (isVarFunctionCall(l, originalR)) { return v } // An explicit callsite is a call: its result is the answer
       r = v
     }
     r = evalRecurse(r, event,b)
@@ -194,6 +206,15 @@ define(function(require) {
     assert(1, lookupOp(1, 'foo', {},0,er))
     assert(2, lookupOp(2, {value:'foo'}, {},0,er))
     remove('foo')
+
+    // An explicit callsite on a var function is a call, so its result is the answer: x.foo{3} is foo{x,3}
+    let {varLookup} = require('expression/parse-var')
+    let mainNum = (v) => typeof mainParam(v) === 'number' ? mainParam(v) : 0
+    vars.all().foo = (v) => mainNum(v)*10 + (v.value1||0) // Straight onto vars: varLookup reads it from there
+    vars.all().foo.isVarFunction = true
+    assert(23, lookupOp(2, varLookup('foo', {value:3}, {}), {},0,er)) // LHS takes the first slot, 3 shifts up
+    assert(4, lookupOp([1,2,3,4], varLookup('foo', {value:3}, {}), {},0,er)) // A chord LHS still indexes: 23%4
+    delete vars.all().foo
 
     players.instances.p1 = { currentEvent:()=>{ return [{foo:1}]} }
     players.instances.p2 = { currentEvent:()=>{ return [{foo:2}]} }

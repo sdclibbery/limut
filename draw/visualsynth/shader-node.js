@@ -1,11 +1,29 @@
 'use strict'
 define(function(require) {
+  let {getCallTree,setCallTree,clearCallTree} = require('player/callstack')
 
   // A shader node is a GLSL-emitting build step in a visual synth chain. Unlike audio nodes
   // (which eagerly construct a Web Audio graph), shader nodes are composed and only emit
   // code when the whole px chain is built into a single fragment shader.
+  //
+  // The call tree is snapshotted here, at creation, and put back for the build: a node created
+  // inside a user defined function (set pixellate = {in,size} -> ...) registers uniforms whose
+  // ASTs mention that function's args, and both the build and the per frame uniform eval happen
+  // long after the call returned. Same trick as doPerFrame in play/eval-audio-params.js.
   let makeShaderNode = (build) => {
-    return { isShaderNode: true, build: build }
+    let callTree = getCallTree()
+    let buildInCallContext = (input, ctx) => {
+      let outer = getCallTree()
+      clearCallTree()
+      setCallTree(callTree)
+      try {
+        return build(input, ctx)
+      } finally {
+        clearCallTree()
+        setCallTree(outer)
+      }
+    }
+    return { isShaderNode: true, build: buildInCallContext }
   }
 
   let isShaderNode = (v) => {
@@ -23,16 +41,21 @@ define(function(require) {
     return makeShaderNode((input, ctx) => ctx.addStatement(ctx.addUniform(rawAst)))
   }
 
-  // A binary operator (+ - * / etc) over shader nodes: both sides see the same input, and their
-  // outputs are combined in one emitted statement. A non-node side becomes an animated uniform
-  // wrapped from its raw AST (same discipline as constShaderNode). Left is always resolved before
-  // right, so generated names stay deterministic — the program cache key depends on it.
-  let binaryShaderNode = (emit, l, el, r, er) => {
+  // A function of N operands, each {raw, value}, emitted as one statement: an operand that is
+  // itself a node builds from the same input (they do not chain), and anything else becomes an
+  // animated uniform wrapped from its raw AST (same discipline as constShaderNode). Operands
+  // resolve left to right so generated names stay deterministic — the program cache key needs it.
+  let naryShaderNode = (emit, operands) => {
     return makeShaderNode((input, ctx) => {
-      let a = isShaderNode(el) ? el.build(input, ctx) : ctx.addUniform(l)
-      let b = isShaderNode(er) ? er.build(input, ctx) : ctx.addUniform(r)
-      return ctx.addStatement(emit(a, b))
+      let names = operands.map(o => isShaderNode(o.value) ? o.value.build(input, ctx) : ctx.addUniform(o.raw))
+      return ctx.addStatement(emit(...names))
     })
+  }
+
+  // A binary operator (+ - * / etc) over shader nodes: both sides see the same input, and their
+  // outputs are combined in one emitted statement.
+  let binaryShaderNode = (emit, l, el, r, er) => {
+    return naryShaderNode(emit, [{raw:l, value:el}, {raw:r, value:er}])
   }
 
   // Convert an evaluated uniform value to vec4 components. Reuses a scratch array: callers
@@ -109,6 +132,33 @@ define(function(require) {
   assert(['v0 * 2.0', 'v1 + u_vs0'], ctx.statements) // scalar on the right
   assert(true, ctx.uniforms[0] === rAst)
 
+  // naryShaderNode: any number of operands, same rules, resolved left to right
+  ctx = mockCtx()
+  let three = (x,y,z) => `${x} ? ${y} : ${z}`
+  let mAst = () => 3
+  out = naryShaderNode(three, [{raw:undefined, value:a}, {raw:mAst, value:3}, {raw:undefined, value:b}]).build('v0', ctx)
+  assert(['v0 * 2.0', 'v0 + 1.0', 'v1 ? u_vs0 : v2'], ctx.statements)
+  assert(true, ctx.uniforms[0] === mAst)
+  assert('v3', out)
+
+  ctx = mockCtx()
+  out = naryShaderNode(x => `-${x}`, [{raw:undefined, value:a}]).build('v0', ctx) // A single operand
+  assert(['v0 * 2.0', '-v1'], ctx.statements)
+
+  // A node created inside a user defined function's call context gets that context back for its
+  // build, so an arg lookup in a uniform AST (eg `size` in set pixellate = {in,size} -> ...)
+  // still resolves once the call has returned
+  let {pushCallContext,popCallContext,getCallContext} = require('player/callstack')
+  let seenDuringBuild
+  pushCallContext({size:20})
+  let inLambda = makeShaderNode((input, c) => { seenDuringBuild = getCallContext(); return c.addStatement(input) })
+  popCallContext()
+  assert(undefined, getCallContext()) // Out of the call now
+  ctx = mockCtx()
+  inLambda.build('v0', ctx)
+  assert({size:20}, seenDuringBuild)
+  assert(undefined, getCallContext()) // And the outer tree is put back afterwards
+
   assert([2,2,2,2], Array.from(toVec4(2))) // number splats all channels
   assert([1,2,3,4], Array.from(toVec4({x:1,y:2,z:3,w:4})))
   assert([1,2,3,1], Array.from(toVec4({r:1,g:2,b:3}))) // alpha defaults 1
@@ -127,6 +177,7 @@ define(function(require) {
     composeShaderNodes: composeShaderNodes,
     constShaderNode: constShaderNode,
     binaryShaderNode: binaryShaderNode,
+    naryShaderNode: naryShaderNode,
     toVec4: toVec4,
   }
 })
