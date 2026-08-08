@@ -19,6 +19,14 @@ define(function(require) {
   }
   addNodeFunction('mul', mul)
 
+  // Add the (animatable) param to each channel of the incoming vec4. Defaults to 0 when the arg is
+  // omitted: toVec4's fallback for a missing uniform is 1, which is neutral for mul but not for add.
+  let add = (args, e, b, state, evalRecurse) => {
+    let arg = args.value !== undefined ? args.value : 0
+    return makeShaderNode((input, ctx) => ctx.addStatement(`${input} + ${ctx.addUniform(arg)}`))
+  }
+  addNodeFunction('add', add)
+
   // Sample a texture at the incoming value's xy. Arg is a url string or a texture source like webcam{}.
   let tex = (args, e, b, state, evalRecurse) => {
     let src = evalRecurse(args.value, e, b)
@@ -51,9 +59,49 @@ define(function(require) {
   }
   addVarFunction('webcam', webcamSource)
 
+  // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+
+  let assert = (expected, actual) => {
+    let x = JSON.stringify(expected)
+    let a = JSON.stringify(actual)
+    if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
+  }
+  let mockCtx = () => {
+    let ctx = { statements: [], uniforms: [] }
+    ctx.addStatement = (expr) => { ctx.statements.push(expr); return 'v' + ctx.statements.length }
+    ctx.addUniform = (ast) => { ctx.uniforms.push(ast); return 'u_vs' + (ctx.uniforms.length-1) }
+    return ctx
+  }
+
+  let ast = () => 0.5
+
+  let ctx = mockCtx()
+  assert('v1', id({}).build('v0', ctx))
+  assert(['v0'], ctx.statements) // Passes its input straight through
+
+  ctx = mockCtx()
+  assert('v1', mul({value:ast}).build('v0', ctx))
+  assert(['v0 * u_vs0'], ctx.statements)
+  assert(true, ctx.uniforms[0] === ast) // Raw AST registered, so the param stays animatable
+
+  ctx = mockCtx()
+  assert('v1', add({value:ast}).build('v0', ctx))
+  assert(['v0 + u_vs0'], ctx.statements)
+  assert(true, ctx.uniforms[0] === ast)
+
+  ctx = mockCtx()
+  add({}).build('v0', ctx)
+  assert(['v0 + u_vs0'], ctx.statements)
+  assert(0, ctx.uniforms[0]) // No arg is neutral: add 0, not toVec4's missing-uniform fallback of 1
+
+  console.log('Visual synth nodes tests complete')
+  }
+
   return {
     id: id,
     mul: mul,
+    add: add,
     tex: tex,
     webcam: webcamSource,
   }

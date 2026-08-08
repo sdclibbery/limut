@@ -66,6 +66,7 @@ void main() {
   let {makeShaderNode, composeShaderNodes, binaryShaderNode} = require('draw/visualsynth/shader-node')
 
   let mulNode = (ast) => makeShaderNode((input, ctx) => ctx.addStatement(`${input} * ${ctx.addUniform(ast)}`))
+  let addNode = (ast) => makeShaderNode((input, ctx) => ctx.addStatement(`${input} + ${ctx.addUniform(ast)}`))
   let texNode = (t) => makeShaderNode((input, ctx) => {
     let sampler = ctx.addTexture(t)
     return ctx.addStatement(`texture(${sampler}, (${input}).xy)`)
@@ -101,6 +102,16 @@ void main() {
   let noTex = buildSource(mulNode(ast))
   assert(false, noTex.source.includes('sampler2D'))
   assert(0, noTex.textures.length)
+
+  // A mul then an add stage, shaped like px=mul{2}>>add{0.5}>>tex{...}
+  let offsetAst = () => 0.5
+  let offsetChain = composeShaderNodes(composeShaderNodes(mulNode(ast), addNode(offsetAst)), texNode(stubTex))
+  let offsetBuilt = buildSource(offsetChain)
+  assert(true, offsetBuilt.source.includes('vec4 v1 = v0 * u_vs0;'))
+  assert(true, offsetBuilt.source.includes('vec4 v2 = v1 + u_vs1;')) // Consumes the mul's output
+  assert(true, offsetBuilt.source.includes('vec4 v3 = texture(u_vstex0, (v2).xy);'))
+  assert(true, offsetBuilt.uniforms[1].ast === offsetAst) // Raw AST, so the offset stays animatable
+  assert(true, offsetBuilt.source === buildSource(offsetChain).source) // byte-identical: cache key
 
   // Operators on nodes, shaped like px=mul{1}/2+#080
   let twoAst = () => 2
