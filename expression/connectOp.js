@@ -5,7 +5,7 @@ define(function(require) {
   let destructor = require('play/destructor')
   let {evalParamFrame,evalFunctionWithModifiers} = require('player/eval-param')
   let vars = require('vars')
-  let {isShaderNode,composeShaderNodes,constShaderNode} = require('draw/visualsynth/shader-node')
+  let {isShaderNode,composeShaderNodes,constShaderNode,passthroughShaderNode} = require('draw/visualsynth/shader-node')
 
   let audioNodeProto
   let getAudioNodeProto = () => {
@@ -39,12 +39,21 @@ define(function(require) {
     // rather than calling reverb with an AudioNode for its length. Decided from the unevalled RHS so
     // it is never evalled twice, which would return the memoised un-piped result anyway.
     if (isPipeTarget(r) && !connectable(el)) {
+      // A visual chain piped into a call is handed a pass-through node rather than the chain
+      // itself, and the call's result is composed back on. The incoming value then reaches the
+      // result both ways: through the argument (dot{in,#3b1}) and as the segment's own input
+      // (the dry side of mix{wet,t}), so a user defined function really is a chain segment
+      // rather than a new chain starting from the raw coordinate. Substituting matters because
+      // composing the chain onto a result that already embeds it would apply it twice.
+      let piping = isShaderNode(el)
       let saved = r.args
-      r.args = el // Same mechanism as lookupOp (a.foo), but restore it: this parse instance is also
-      let v = evalFunctionWithModifiers(r, e,b, evalRecurse) // reachable down paths that don't pipe
-      r.args = saved
+      r.args = piping ? passthroughShaderNode() : el // Same mechanism as lookupOp (a.foo), but
+      let v = evalFunctionWithModifiers(r, e,b, evalRecurse) // restore it: this parse instance is
+      r.args = saved // also reachable down paths that don't pipe
       if (typeof v === 'object' && v !== null && v._finalResult) { v = v.value }
-      return evalRecurse(v, e,b)
+      v = evalRecurse(v, e,b)
+      if (piping && isShaderNode(v)) { return composeShaderNodes(el, v) }
+      return v
     }
     let er = evalRecurse(r, e,b)
     // Visual synth chains: if either side is a shader node, compose GLSL emitters instead of
@@ -161,8 +170,25 @@ define(function(require) {
 
   pipeArgs = undefined
   sn = connectOp(mockShaderNode('a'), mockLookup({value:3}), {},0, evalParamFrame)
-  assert('piped', sn)
+  assert('piped', sn) // A non-node result is returned as it stands, with nothing composed on
   assert(true, pipeArgs.value !== undefined && pipeArgs.value.isShaderNode) // Visual node arrives as an arg
+
+  // A visual chain is piped in as a pass-through node, and a visual result is composed back onto
+  // the chain: the incoming value reaches the result through the arg AND as the result's own
+  // input, and the chain is emitted once rather than once per use of the arg
+  let pipedArg
+  vars.all().mockpipe = (args) => { pipedArg = args.value; return mockShaderNode('b') }
+  vars.all().mockpipe.isVarFunction = true
+  sn = connectOp(mockShaderNode('a'), mockLookup({}), {},0, evalParamFrame)
+  assert(true, sn.isShaderNode)
+  sctx = mockCtx()
+  sn.build('v0', sctx)
+  assert(['a','b'], sctx.statements) // composed: the left side emits first, the result consumes it
+  let pctx = mockCtx()
+  pipedArg.build('v0', pctx)
+  assert(['v0'], pctx.statements) // what the callee got passes its input through; it is not the chain
+  vars.all().mockpipe = (args) => { pipeArgs = args; return 'piped' }
+  vars.all().mockpipe.isVarFunction = true
 
   let lk = mockLookup({value:3}) // r.args must not be left set: the same parse instance is
   connectOp(2, lk, {},0, evalParamFrame) // also reachable down paths that don't pipe

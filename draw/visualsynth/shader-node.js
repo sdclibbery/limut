@@ -35,6 +35,12 @@ define(function(require) {
     return makeShaderNode((input, ctx) => b.build(a.build(input, ctx), ctx))
   }
 
+  // Passes its input straight through. Backs the id node, and is what >> hands to a call it pipes
+  // a chain into, so the callee's result can be composed back onto the chain (see connectOp).
+  let passthroughShaderNode = () => {
+    return makeShaderNode((input, ctx) => ctx.addStatement(input))
+  }
+
   // Wraps a non-node >> operand. Takes the raw unevaluated AST (mirroring connectOp's
   // gain{value:l} wrap) so the value becomes a per-frame animated uniform.
   let constShaderNode = (rawAst) => {
@@ -45,10 +51,20 @@ define(function(require) {
   // itself a node builds from the same input (they do not chain), and anything else becomes an
   // animated uniform wrapped from its raw AST (same discipline as constShaderNode). Operands
   // resolve left to right so generated names stay deterministic — the program cache key needs it.
+  let buildOperands = (operands, input, ctx) => {
+    return operands.map(o => isShaderNode(o.value) ? o.value.build(input, ctx) : ctx.addUniform(o.raw))
+  }
   let naryShaderNode = (emit, operands) => {
     return makeShaderNode((input, ctx) => {
-      let names = operands.map(o => isShaderNode(o.value) ? o.value.build(input, ctx) : ctx.addUniform(o.raw))
-      return ctx.addStatement(emit(...names))
+      return ctx.addStatement(emit(...buildOperands(operands, input, ctx)))
+    })
+  }
+
+  // As naryShaderNode, but emit is also handed the incoming value, for a node whose dry side is
+  // whatever flows down the chain: mix{wet,t} is mix(input, wet, t).
+  let naryShaderNodeWithInput = (emit, operands) => {
+    return makeShaderNode((input, ctx) => {
+      return ctx.addStatement(emit(input, ...buildOperands(operands, input, ctx)))
     })
   }
 
@@ -145,6 +161,13 @@ define(function(require) {
   out = naryShaderNode(x => `-${x}`, [{raw:undefined, value:a}]).build('v0', ctx) // A single operand
   assert(['v0 * 2.0', '-v1'], ctx.statements)
 
+  // naryShaderNodeWithInput: same operand rules, but emit also sees the incoming value
+  ctx = mockCtx()
+  out = naryShaderNodeWithInput((input,x,y) => `${input} + ${x} + ${y}`, [{raw:mAst, value:3}, {raw:undefined, value:a}]).build('v0', ctx)
+  assert(['v0 * 2.0', 'v0 + u_vs0 + v1'], ctx.statements) // operands still see the same input
+  assert(true, ctx.uniforms[0] === mAst)
+  assert('v2', out)
+
   // A node created inside a user defined function's call context gets that context back for its
   // build, so an arg lookup in a uniform AST (eg `size` in set pixellate = {in,size} -> ...)
   // still resolves once the call has returned
@@ -175,9 +198,11 @@ define(function(require) {
     makeShaderNode: makeShaderNode,
     isShaderNode: isShaderNode,
     composeShaderNodes: composeShaderNodes,
+    passthroughShaderNode: passthroughShaderNode,
     constShaderNode: constShaderNode,
     binaryShaderNode: binaryShaderNode,
     naryShaderNode: naryShaderNode,
+    naryShaderNodeWithInput: naryShaderNodeWithInput,
     toVec4: toVec4,
   }
 })

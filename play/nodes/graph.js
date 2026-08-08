@@ -6,6 +6,7 @@ define(function(require) {
   let {evalParamFrame,evalParamEvent} = require('player/eval-param')
   let {connect,isConnectable} = require('play/nodes/connect')
   let connectOp = require('expression/connectOp')
+  let {mixShaderNode} = require('draw/visualsynth/shader-mix')
   require('play/nodes/mocks')
   require('play/nodes/convolver')
   require('play/nodes/source')
@@ -182,6 +183,11 @@ define(function(require) {
   let mix = (args,e,b,_,er) => {
     let params = combineParams(args, e)
     let wetChain = evalParamEvent(params.value, e)
+    // Visual node chain: compile to a GLSL mix() instead of wiring dry/wet gains. Dispatches on the
+    // evalled argument, the same rule the operators and maths functions use, and returns undefined
+    // for an ordinary audio mix so nothing below changes.
+    let shaderMix = mixShaderNode(params, wetChain, e)
+    if (shaderMix !== undefined) { return shaderMix }
     if (wetChain === undefined) { return idnode(params,e,b) }
     if (!isConnectable(wetChain)) { wetChain = vars.all().gain({value:params.value}, e,b) }
     let mixParam = params.mix !== undefined ? 'mix' : 'value1'
@@ -338,6 +344,14 @@ define(function(require) {
   let mtRes4 = multitap({value1:0}, {_destructor:require('play/destructor')()}, 0, undefined, er)
   assert(true, isConnectable(mtRes4))
   assert(true, mtRes4.value === undefined) // idnode, not a parallel map
+
+  // mix: a visual node argument compiles to a shader node instead of wiring dry/wet gains,
+  // while an audio chain still gets the gain pair
+  let mixEvent = {count:0, _destructor:require('play/destructor')()}
+  let mixNode = mix({value:{isShaderNode:true, build:(i)=>i}, value1:1/2}, mixEvent, 0, undefined, er)
+  assert(true, mixNode.isShaderNode)
+  let mixAudio = mix({value:mtMock('wet'), value1:1/2}, mixEvent, 0, undefined, er)
+  assert(true, isConnectable(mixAudio.value) && isConnectable(mixAudio.value1)) // dry and wet parts
 
   console.log('Graph tests complete')
   }

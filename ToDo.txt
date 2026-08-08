@@ -2,10 +2,10 @@
 =================================================================================================================================
 =================================================================================================================================
 visual nodes...
- mix, add
  ? {tex,#124} should do addition like in audio chain??
  clamp
  random/noise/perlin
+ !w visualsynth, px=tex{webcam}>>tex{webcam}. only one texture per chain supported for now
  pixellate/monochrome etc etc
  generate 1d, 2d, 3d textures from limut functions/piecewises
 grain should have offset param, would allow more interesting effects; granular delays etc

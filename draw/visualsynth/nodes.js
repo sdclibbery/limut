@@ -2,13 +2,13 @@
 define(function(require) {
   let {addNodeFunction} = require('play/nodes/node-var')
   let addVarFunction = require('predefined-vars').addVarFunction
-  let {makeShaderNode} = require('draw/visualsynth/shader-node')
+  let {makeShaderNode,passthroughShaderNode} = require('draw/visualsynth/shader-node')
   let texture = require('draw/texture')
   let webcam = require('draw/webcam')
 
   // Pass the incoming value through unchanged. Seeds an operator-only chain, eg px=id/2+#080
   let id = (args, e, b, state, evalRecurse) => {
-    return makeShaderNode((input, ctx) => ctx.addStatement(input))
+    return passthroughShaderNode()
   }
   addNodeFunction('id', id)
 
