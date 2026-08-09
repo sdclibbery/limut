@@ -74,20 +74,31 @@ define(function(require) {
     return naryShaderNode(emit, [{raw:l, value:el}, {raw:r, value:er}])
   }
 
+  // The names each of the 4 components answers to, in priority order: coordinates (xyzw), colours
+  // (rgba) and texture coordinates (uv, and GLSL's own stpq). Note w is xyzw's 4th component, not
+  // uvwq's 3rd — that one is p.
+  let channelNames = [['x','r','u','s'], ['y','g','v','t'], ['z','b','p'], ['w','a','q']]
+
+  // Unwrap units/timevar-segment wrappers, as an evaluated param may arrive inside several
+  let unwrapValue = (v) => {
+    while (typeof v === 'object' && v !== null && v.value !== undefined) { v = v.value }
+    return v
+  }
+
   // Convert an evaluated uniform value to vec4 components. Reuses a scratch array: callers
   // must consume the result (eg gl.uniform4fv) before the next call.
   let scratch = new Float32Array(4)
   let toVec4 = (v) => {
-    while (typeof v === 'object' && v !== null && v.value !== undefined) { v = v.value } // Unwrap units/timevar-segment wrappers
+    v = unwrapValue(v)
     if (typeof v === 'number') {
       scratch[0] = v; scratch[1] = v; scratch[2] = v; scratch[3] = v
       return scratch
     }
     if (typeof v === 'object' && v !== null) {
-      scratch[0] = v.x !== undefined ? v.x : (v.r !== undefined ? v.r : 0)
-      scratch[1] = v.y !== undefined ? v.y : (v.g !== undefined ? v.g : 0)
-      scratch[2] = v.z !== undefined ? v.z : (v.b !== undefined ? v.b : 0)
-      scratch[3] = v.w !== undefined ? v.w : (v.a !== undefined ? v.a : 1)
+      for (let i=0; i<4; i++) {
+        let name = channelNames[i].find(n => v[n] !== undefined)
+        scratch[i] = name !== undefined ? v[name] : (i === 3 ? 1 : 0) // Absent alpha defaults to 1, so a colour without one is opaque
+      }
       return scratch
     }
     scratch[0] = 1; scratch[1] = 1; scratch[2] = 1; scratch[3] = 1
@@ -186,6 +197,10 @@ define(function(require) {
   assert([1,2,3,4], Array.from(toVec4({x:1,y:2,z:3,w:4})))
   assert([1,2,3,1], Array.from(toVec4({r:1,g:2,b:3}))) // alpha defaults 1
   assert([0,5,0,1], Array.from(toVec4({y:5})))
+  assert([1,2,3,4], Array.from(toVec4({u:1,v:2,p:3,q:4}))) // texture coordinate names
+  assert([1,2,3,4], Array.from(toVec4({s:1,t:2,p:3,q:4}))) // and GLSL's own stpq spelling
+  assert([0,0,0,9], Array.from(toVec4({w:9}))) // w is the 4th component, not uvwq's 3rd
+  assert([1,0,0,1], Array.from(toVec4({x:1,u:5}))) // xyzw wins over the aliases
   assert([3,3,3,3], Array.from(toVec4({value:3, _nextSegment:1}))) // timevar segment wrapper unwraps
   assert([7,7,7,7], Array.from(toVec4({value:{value:7}}))) // nested wrappers unwrap
   assert([1,1,1,1], Array.from(toVec4('nonsense'))) // fallback is neutral
@@ -204,5 +219,7 @@ define(function(require) {
     naryShaderNode: naryShaderNode,
     naryShaderNodeWithInput: naryShaderNodeWithInput,
     toVec4: toVec4,
+    channelNames: channelNames,
+    unwrapValue: unwrapValue,
   }
 })

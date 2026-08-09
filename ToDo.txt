@@ -2,16 +2,16 @@
 =================================================================================================================================
 =================================================================================================================================
 visual nodes...
- Support missing components in colour literals eg #...f is {a:1}
- set method; eg tex{webcam}>>set{#.8.} forces green to 1/2
  !px=id>>sin*#0f0 should be same as px=id>>sin>>mul{#0f0} but isnt
  random/noise/perlin
- !w visualsynth, px=tex{webcam}>>tex{webcam}. only one texture per chain supported for now
+ !w visualsynth, px=tex{webcam}>>tex{webcam}. only one texture per chain supported for now ??
  pixellate/monochrome etc etc - limut coded versions of visual params
  generate 1d, 2d, 3d textures from limut functions/piecewises; tone mapping etc
+ sdf stuff?
  procedural buffers to genrate read from, eg px=tex{buffer{mul{1.01}>>webcam>>set{#...a},clear:false}} for temporal zoom-blur??
  hsl etc conversions
  clamp
+ 3d stuff?
  ? {tex,#124} should do addition like in audio chain??
 ?set bpm can have target time? eg set bpm={140,by;1000}
 grain should have offset param, would allow more interesting effects; granular delays etc
