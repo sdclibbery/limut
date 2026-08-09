@@ -736,6 +736,10 @@ define(function(require) {
 
   assert({r:0,g:0.2,b:0.4,a:1}, parseExpression("#036f"))
   assert({r:0,g:0.2,b:0.4,a:1}, parseExpression("#003366ff"))
+  assert({g:1,a:1}, parseExpression("#.f.")) // Absent channels are left off, so they keep their existing value
+  assert({b:0,a:1}, parseExpression("#..0f"))
+  assert({g:1,a:1}, parseExpression("#..ff.."))
+  assert(0.9333333333333333, evalParamFrame(parseExpression("#e000.r"),ev(0),0)) // The dot is still a lookup
 
   assert({r:2}, parseExpression("{r:1}*2")(ev(0,0),0,evalParamFrame))
 

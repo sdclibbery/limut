@@ -18,6 +18,31 @@
 })(function(CodeMirror) {
 "use strict";
 
+// How many chars of a `#...` run are the colour literal, mirroring expression/parse-colour.js:
+// a `.` stands for an absent channel, but only where it keeps the channels aligned and doesn't
+// swallow the dot of a following lookup (eg `#e000.r` is a 4 digit colour then a `.r` lookup).
+// `next` is the char following the run, needed to judge a dot at the very end of it.
+function colourLength(run, next) {
+  if (run.indexOf(".") < 0) { return Math.min(run.length, 8); } // No dots: as lenient as before
+  var lengths = [8, 6, 4, 3];
+  for (var l = 0; l < lengths.length; l++) {
+    var len = lengths[l];
+    if (len > run.length) { continue; }
+    var str = run.substr(0, len), width = len <= 4 ? 1 : 2, aligned = true;
+    for (var i = 0; i < len; i += width) {
+      var c = str.substr(i, width);
+      if (!/^[0-9a-fA-F]+$/.test(c) && !/^\.+$/.test(c)) { aligned = false; break; }
+    }
+    if (!aligned) { continue; }
+    if (str.charAt(len-1) == ".") { // A trailing dot belongs to a following lookup, not to us
+      var after = run.charAt(len) || next;
+      if (/[0-9a-z_{]/i.test(after)) { continue; }
+    }
+    return len;
+  }
+  return run.indexOf("."); // Nothing valid: colour just the hex prefix, leave the dot
+}
+
 CodeMirror.defineMode("limut", function() {
 
   // Highlighted as `keyword` wherever they appear
@@ -100,8 +125,14 @@ CodeMirror.defineMode("limut", function() {
       return "pattern";
     }
 
-    // Hex colours: #036 #0369 #003366 #00336699
-    if (ch == "#" && stream.match(/^[0-9a-fA-F]{1,8}/)) { return "colour"; }
+    // Hex colours: #036 #0369 #003366 #00336699, and with `.` for an absent channel: #.f. #..0f #..ff..
+    if (ch == "#") {
+      var run = stream.match(/^[0-9a-fA-F.]+/, false);
+      if (run) {
+        var len = colourLength(run[0], stream.string.charAt(stream.pos + run[0].length));
+        if (len > 0) { for (var i = 0; i < len; i++) { stream.next(); } return "colour"; }
+      }
+    }
 
     // Numbers: 1, 1.5, .5, 1/4, 1e3, 2db
     if (/\d/.test(ch) || (ch == "." && /\d/.test(stream.peek()))) {
@@ -186,5 +217,49 @@ CodeMirror.defineMode("limut", function() {
 });
 
 CodeMirror.defineMIME("text/x-limut", "limut");
+
+// TESTS //
+if (typeof window !== 'undefined' && (new URLSearchParams(window.location.search)).get('test') !== null) {
+
+  var assert = function(expected, actual) {
+    var x = JSON.stringify(expected);
+    var a = JSON.stringify(actual);
+    if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`); }
+  };
+  // Tokenise a line with the mode and return the text of every token given the style
+  var tokensOfStyle = function(line, wanted) {
+    var mode = CodeMirror.getMode({indentUnit:2}, "limut");
+    var state = CodeMirror.startState(mode);
+    var stream = new CodeMirror.StringStream(line, 2, null);
+    var found = [];
+    while (!stream.eol()) {
+      var style = mode.token(stream, state);
+      if (style == wanted) { found.push(stream.current()); }
+      stream.start = stream.pos;
+    }
+    return found;
+  };
+  var colours = function(line) { return tokensOfStyle(line, "colour"); };
+
+  assert(['#036'], colours("v1 blank, back=#036"));
+  assert(['#0369'], colours("v1 blank, back=#0369"));
+  assert(['#003366'], colours("v1 blank, back=#003366"));
+  assert(['#00336699'], colours("v1 blank, back=#00336699"));
+  assert(['#f00','#00f'], colours("v1 blank, back=#f00, fore=#00f"));
+
+  // Absent channels written as `.`
+  assert(['#.f.'], colours("v1 blank, fore=#.f."));
+  assert(['#..0f'], colours("v1 blank, fore=#..0f"));
+  assert(['#.f.','#000'], colours("v1 blank, fore=#.f., back=#000")); // Trailing dot before a delimiter is a channel
+  assert(['#..ff..'], colours("v1 blank, fore=#..ff.."));
+  assert(['#ff....80'], colours("v1 blank, fore=#ff....80"));
+
+  // A dot that is really the lookup operator is not coloured as part of the literal
+  assert(['#e000'], colours("v readout 0, add=#e000.r"));
+  assert(['#f00'], colours("v1 blank, fore=#f00.mix{1/2}"));
+  assert(['#ff0000'], colours("v1 blank, fore=#ff0000.r"));
+
+  console.log('Editor mode tests complete');
+}
 
 });

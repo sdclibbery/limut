@@ -119,6 +119,7 @@ define(function (require) {
     assert([1,1,1,0], colour({a:0}, white(), 'blah'))
     assert([0,1,1,1], colour({r:0}, white(), 'blah'))
     assert([0,1,1,0], colour({r:0,a:0}, white(), 'blah'))
+    assert([1,1,0,1], colour({g:1,a:1}, red(), 'blah')) // eg #.f. : only the given channels override
     assert([1,0,0,1], colour({h:0}, white(), 'blah'))
     assert([0,1,0,1], colour({h:1/3}, white(), 'blah'))
     assert([0,1/2,0,1], colour({h:1/3,v:1/2}, white(), 'blah'))
