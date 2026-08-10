@@ -7,6 +7,7 @@ define(function(require) {
   let {evalParamFrame,evalFunctionWithModifiers} = require('player/eval-param')
   let {addVarFunction,remove} = require('predefined-vars')
   let playerPre = require('play/player-pre')
+  let {isShaderNode,swizzleShaderNode} = require('draw/visualsynth/shader-node')
 
   // `x.foo{2}` with foo a var function is a call, not a map key lookup, so its result is the answer
   // (the same pipe as `x>>foo{2}`). A bare `x.foo` still falls through to the lookup below, so
@@ -17,6 +18,18 @@ define(function(require) {
     if (typeof r !== 'function' || !r.isVarLookup || !r.hasOwnArgs) { return false }
     let target = vars.get(r._name)
     return typeof target === 'function' && target.isVarFunction
+  }
+
+  // `in.v` reads a channel off a visual node (see swizzleShaderNode). Taken from the name as
+  // written, like the global lookup below, so it works even inside a lambda with an arg of the same
+  // name. A callsite with its own args (tex{}.floor{1/40}) is a call, and so is a name that is a
+  // var function: that is what keeps tex{}.abs the abs function rather than a swizzle of a,b,s.
+  let shaderSwizzle = (l, originalR) => {
+    if (!isShaderNode(l)) { return undefined }
+    if (typeof originalR !== 'function' || !originalR.isVarLookup || originalR.hasOwnArgs) { return undefined }
+    let target = vars.get(originalR._name)
+    if (typeof target === 'function' && target.isVarFunction) { return undefined }
+    return swizzleShaderNode(l, originalR._name)
   }
 
   let lookupOp = (l,r, event,b,evalRecurse) => {
@@ -31,6 +44,8 @@ define(function(require) {
       }
     }
     l = evalRecurse(l, event,b)
+    let swizzled = shaderSwizzle(l, originalR) // Checked before the call below, so a channel read never calls anything with the node as an argument
+    if (swizzled !== undefined) { return swizzled }
     let ml = mainParam(l)
     if (typeof r === 'function' && typeof ml !== 'string') { // If LHS is a string, its either a player or 'this' or 'global', so aggregators (or any kind of calling a function on it) dont make sense
       r.args = l
@@ -215,6 +230,32 @@ define(function(require) {
     assert(23, lookupOp(2, varLookup('foo', {value:3}, {}), {},0,er)) // LHS takes the first slot, 3 shifts up
     assert(4, lookupOp([1,2,3,4], varLookup('foo', {value:3}, {}), {},0,er)) // A chord LHS still indexes: 23%4
     delete vars.all().foo
+
+    // Channel reads on a visual node: `.v` is a swizzle, not a map lookup
+    let {passthroughShaderNode} = require('draw/visualsynth/shader-node')
+    let mockCtx = () => {
+      let ctx = { statements: [] }
+      ctx.addStatement = (expr) => { ctx.statements.push(expr); return 'v' + ctx.statements.length }
+      return ctx
+    }
+    let channelRead = (name, args) => lookupOp(passthroughShaderNode(), varLookup(name, args, {}), {},0,er)
+    let readSource = (name) => { let c = mockCtx(); channelRead(name).build('v0', c); return c.statements }
+    assert(true, isShaderNode(channelRead('v')))
+    assert(['v0', 'vec4((v1).y)'], readSource('v')) // One channel splats
+    assert(['v0', 'vec4((v1).y, (v1).x, (v1).z, (v1).w)'], readSource('vu')) // Several swizzle
+    assert(['v0', 'vec4((v1).z, (v1).y, (v1).x, (v1).w)'], readSource('bgr'))
+    assert(undefined, channelRead('nope')) // Not a swizzle: falls through to the map lookup
+
+    // A var function whose name is also a valid swizzle stays a call (as abs, ie a,b,s, really is).
+    // The shader maths functions answer with a final result, the same as abs does for a visual node
+    vars.all().ab = (v) => { return {value:7, _finalResult:true} }
+    vars.all().ab.isVarFunction = true
+    assert(7, channelRead('ab'))
+    delete vars.all().ab
+    vars.all().vu = (v) => 9 // And a callsite with its own args is a call whatever the name
+    vars.all().vu.isVarFunction = true
+    assert(9, channelRead('vu', {value:1}))
+    delete vars.all().vu
 
     players.instances.p1 = { currentEvent:()=>{ return [{foo:1}]} }
     players.instances.p2 = { currentEvent:()=>{ return [{foo:2}]} }

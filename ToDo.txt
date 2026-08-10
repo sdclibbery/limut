@@ -2,6 +2,7 @@
 =================================================================================================================================
 =================================================================================================================================
 visual nodes...
+ Implicit id>> at start of px chain?
  !px=id>>sin*#0f0 should be same as px=id>>sin>>mul{#0f0} but isnt
  random/noise/perlin
  pixellate/monochrome etc etc - limut coded versions of visual params

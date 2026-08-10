@@ -79,6 +79,27 @@ define(function(require) {
   // uvwq's 3rd — that one is p.
   let channelNames = [['x','r','u','s'], ['y','g','v','t'], ['z','b','p'], ['w','a','q']]
 
+  // GLSL's own spelling of the same four, for indexing a vec4
+  let components = ['x', 'y', 'z', 'w']
+  let channelIndex = (name) => channelNames.findIndex(names => names.includes(name))
+
+  // Read channels back off a node: in.v gives that channel in all four, so it behaves as a scalar
+  // in arithmetic and is still the right thing when taken as a single channel's value. Several at
+  // once map positionally and leave the channels they don't name as they were, so in.vu swaps the
+  // first two. Gives undefined when the name isn't a swizzle at all, so the caller (lookupOp) can
+  // fall through to whatever `.` means otherwise.
+  let swizzleShaderNode = (node, name) => {
+    if (typeof name !== 'string' || name.length < 1 || name.length > 4) { return undefined }
+    let idx = Array.from(name.toLowerCase()).map(channelIndex)
+    if (idx.some(i => i < 0)) { return undefined }
+    return makeShaderNode((input, ctx) => {
+      let v = node.build(input, ctx)
+      if (idx.length === 1) { return ctx.addStatement(`vec4((${v}).${components[idx[0]]})`) } // One channel splats across all four
+      let parts = components.map((c, i) => `(${v}).${components[i < idx.length ? idx[i] : i]}`) // The rest pass through
+      return ctx.addStatement(`vec4(${parts.join(', ')})`)
+    })
+  }
+
   // Unwrap units/timevar-segment wrappers, as an evaluated param may arrive inside several
   let unwrapValue = (v) => {
     while (typeof v === 'object' && v !== null && v.value !== undefined) { v = v.value }
@@ -206,6 +227,32 @@ define(function(require) {
   assert([1,1,1,1], Array.from(toVec4('nonsense'))) // fallback is neutral
   assert([1,1,1,1], Array.from(toVec4(undefined)))
 
+  // Channel reads. One channel splats across all four, so it acts as a scalar; several map
+  // positionally and leave the channels they don't name alone
+  let through = passthroughShaderNode()
+  ctx = mockCtx()
+  assert('v2', swizzleShaderNode(through, 'v').build('v0', ctx))
+  assert(['v0', 'vec4((v1).y)'], ctx.statements) // The operand builds from the same input first
+  ctx = mockCtx()
+  swizzleShaderNode(through, 'vu').build('v0', ctx)
+  assert(['v0', 'vec4((v1).y, (v1).x, (v1).z, (v1).w)'], ctx.statements) // Swap uv, keep the rest
+  ctx = mockCtx()
+  swizzleShaderNode(through, 'bgr').build('v0', ctx)
+  assert(['v0', 'vec4((v1).z, (v1).y, (v1).x, (v1).w)'], ctx.statements) // Swap red and blue, keep alpha
+  ctx = mockCtx()
+  swizzleShaderNode(through, 'XYZW').build('v0', ctx)
+  assert(['v0', 'vec4((v1).x, (v1).y, (v1).z, (v1).w)'], ctx.statements) // Case insensitive
+  ctx = mockCtx()
+  swizzleShaderNode(through, 'uu').build('v0', ctx)
+  assert(['v0', 'vec4((v1).x, (v1).x, (v1).z, (v1).w)'], ctx.statements) // A channel can be read twice
+
+  assert(undefined, swizzleShaderNode(through, '')) // Not a swizzle: no name
+  assert(undefined, swizzleShaderNode(through, 'xyzwx')) // More than four
+  assert(undefined, swizzleShaderNode(through, 'floor')) // Not all channel names
+  assert(undefined, swizzleShaderNode(through, 'xn'))
+  assert(undefined, swizzleShaderNode(through, undefined))
+  assert(undefined, swizzleShaderNode(through, 2))
+
   console.log('Shader node tests complete')
   }
 
@@ -220,6 +267,8 @@ define(function(require) {
     naryShaderNodeWithInput: naryShaderNodeWithInput,
     toVec4: toVec4,
     channelNames: channelNames,
+    components: components,
+    swizzleShaderNode: swizzleShaderNode,
     unwrapValue: unwrapValue,
   }
 })

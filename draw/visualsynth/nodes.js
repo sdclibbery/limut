@@ -2,12 +2,10 @@
 define(function(require) {
   let {addNodeFunction} = require('play/nodes/node-var')
   let addVarFunction = require('predefined-vars').addVarFunction
-  let {makeShaderNode,passthroughShaderNode,channelNames,unwrapValue} = require('draw/visualsynth/shader-node')
+  let {makeShaderNode,passthroughShaderNode,isShaderNode,channelNames,components,unwrapValue} = require('draw/visualsynth/shader-node')
   let texture = require('draw/texture')
   let webcam = require('draw/webcam')
   let {lutTexture,resolveSize,defaultSizes} = require('draw/visualsynth/lut')
-
-  let swizzle = ['x', 'y', 'z', 'w']
 
   // Pass the incoming value through unchanged. Seeds an operator-only chain, eg px=id/2+#080
   let id = (args, e, b, state, evalRecurse) => {
@@ -24,50 +22,69 @@ define(function(require) {
     return mask.some(m => m) ? mask : undefined
   }
 
-  // Work out where each channel's value comes from: the raw AST to make a uniform of, or undefined
+  // Work out where each channel's value comes from: the AST to take the value from, or undefined
   // for 'leave this channel alone'. Args may name channels directly (set{u:1/2}), each of which gets
   // its own uniform so it animates independently, and/or give one positional value (set{#.f..}) whose
   // channel keys say which channels it touches. A named channel wins over the positional one.
   //
-  // Only the *structure* is settled here, at event time: the values stay raw ASTs so they are still
-  // re-evaluated per frame. Reading the mask off a colour or map literal needs no evaluation at all,
-  // since both parse to a plain object; anything else is evaluated once, purely for its key set.
+  // Only the *structure* is settled here, at event time. Each distinct arg is evaluated once, so a
+  // param that turns out to be a visual node (set{u:in.v}) can be built into the chain; everything
+  // else keeps its raw AST and so is still re-evaluated per frame. Reading the mask off a colour or
+  // map literal needs no evaluation at all, since both parse to a plain object.
   let paramSources = (args, e, b, evalRecurse) => {
     let positional = args.value
-    let mask
-    if (positional !== undefined) {
-      let value = (typeof positional === 'object' && positional !== null) ? positional : evalRecurse(positional, e, b)
-      mask = channelMask(value)
+    let evalled = new Map()
+    let nodes = new Map()
+    let resolve = (ast) => {
+      if (!evalled.has(ast)) {
+        let value = (typeof ast === 'object' && ast !== null) ? ast : evalRecurse(ast, e, b)
+        evalled.set(ast, value)
+        if (isShaderNode(value)) { nodes.set(ast, value) }
+      }
+      return evalled.get(ast)
     }
+    let mask
+    if (positional !== undefined) { mask = channelMask(resolve(positional)) }
     let sources = channelNames.map((names, i) => {
       let named = names.find(n => args[n] !== undefined)
-      if (named !== undefined) { return args[named] }
+      if (named !== undefined) {
+        resolve(args[named]) // Evaluated for its own sake: is this channel's value a visual node?
+        return args[named]
+      }
       if (positional === undefined) { return undefined }
       return (mask === undefined || mask[i]) ? positional : undefined
     })
     // No channel named anywhere, and the positional value applies to every channel: the callers'
     // simple whole-vector form covers it, and keeps the generated shader source simpler
     let unmasked = mask === undefined && sources.every(s => s === positional) && positional !== undefined
-    return { sources: sources, positional: positional, unmasked: unmasked }
+    return { sources: sources, positional: positional, unmasked: unmasked, nodes: nodes }
   }
   let nothingNamed = (resolved) => resolved.sources.every(s => s === undefined)
 
-  // Emit one vec4 built per channel. Uniforms are allocated in a fixed order (the positional value
+  // The GLSL for one param: a visual node is built into the chain, reading the same incoming value
+  // the node it is a param of does; anything else becomes a uniform from its raw AST, so it animates.
+  let sourceExpr = (resolved, ast, input, ctx) => {
+    let node = resolved.nodes.get(ast)
+    if (node !== undefined) { return `(${node.build(input, ctx)})` }
+    return ctx.addUniform(ast)
+  }
+
+  // Emit one vec4 built per channel. Params are resolved in a fixed order (the positional value
   // first, then named channels in channel order) so the same expression always generates the same
   // source: the program cache is keyed on it.
   let emitChannels = (input, ctx, resolved, combine) => {
-    let uniforms = new Map()
-    let uniformFor = (ast) => {
-      if (!uniforms.has(ast)) { uniforms.set(ast, ctx.addUniform(ast)) }
-      return uniforms.get(ast)
+    let refs = new Map()
+    let refFor = (ast) => {
+      if (!refs.has(ast)) { refs.set(ast, sourceExpr(resolved, ast, input, ctx)) }
+      return refs.get(ast)
     }
-    if (resolved.positional !== undefined && resolved.sources.includes(resolved.positional)) { uniformFor(resolved.positional) }
-    let components = resolved.sources.map((ast, i) => {
-      let channel = `(${input}).${swizzle[i]}`
+    if (resolved.positional !== undefined && resolved.sources.includes(resolved.positional)) { refFor(resolved.positional) }
+    let parts = resolved.sources.map((ast, i) => {
+      let channel = `(${input}).${components[i]}`
       if (ast === undefined) { return channel }
-      return combine(channel, `${uniformFor(ast)}.${swizzle[i]}`)
+      return combine(channel, `${refFor(ast)}.${components[i]}`)
     })
-    return ctx.addStatement(`vec4(${components.join(', ')})`)
+    return ctx.addStatement(`vec4(${parts.join(', ')})`)
   }
 
   // Multiply each channel of the incoming vec4 by the (animatable) param.
@@ -77,7 +94,7 @@ define(function(require) {
     return makeShaderNode((input, ctx) => {
       // Whole vector at once when no channel is singled out: simpler source, and an absent param
       // leans on toVec4's fallback of 1, which is neutral for a multiply
-      if (resolved.unmasked || nothingNamed(resolved)) { return ctx.addStatement(`${input} * ${ctx.addUniform(resolved.positional)}`) }
+      if (resolved.unmasked || nothingNamed(resolved)) { return ctx.addStatement(`${input} * ${sourceExpr(resolved, resolved.positional, input, ctx)}`) }
       return emitChannels(input, ctx, resolved, (channel, param) => `${channel} * ${param}`)
     })
   }
@@ -88,7 +105,7 @@ define(function(require) {
   let add = (args, e, b, state, evalRecurse) => {
     let resolved = paramSources(args, e, b, evalRecurse)
     return makeShaderNode((input, ctx) => {
-      if (resolved.unmasked) { return ctx.addStatement(`${input} + ${ctx.addUniform(resolved.positional)}`) }
+      if (resolved.unmasked) { return ctx.addStatement(`${input} + ${sourceExpr(resolved, resolved.positional, input, ctx)}`) }
       if (nothingNamed(resolved)) { return ctx.addStatement(`${input} + ${ctx.addUniform(0)}`) }
       return emitChannels(input, ctx, resolved, (channel, param) => `${channel} + ${param}`)
     })
@@ -100,7 +117,7 @@ define(function(require) {
   let set = (args, e, b, state, evalRecurse) => {
     let resolved = paramSources(args, e, b, evalRecurse)
     return makeShaderNode((input, ctx) => {
-      if (resolved.unmasked) { return ctx.addStatement(ctx.addUniform(resolved.positional)) } // Every channel set: the param is the whole result
+      if (resolved.unmasked) { return ctx.addStatement(sourceExpr(resolved, resolved.positional, input, ctx)) } // Every channel set: the param is the whole result
       if (nothingNamed(resolved)) { return ctx.addStatement(input) } // Nothing named: pass through
       return emitChannels(input, ctx, resolved, (channel, param) => param)
     })
@@ -140,7 +157,7 @@ define(function(require) {
   let lutNode = (t, dims, size) => {
     return makeShaderNode((input, ctx) => {
       let sampler = ctx.addTexture(t, dims === 3 ? 'sampler3D' : 'sampler2D')
-      let coords = swizzle.slice(0, dims).map(c => lookupExpr(input, c, size))
+      let coords = components.slice(0, dims).map(c => lookupExpr(input, c, size))
       if (dims === 1) { coords.push('0.5') } // A 1d lut is a size x 1 texture: sample down its middle
       return ctx.addStatement(`texture(${sampler}, vec${dims === 3 ? 3 : 2}(${coords.join(', ')}))`)
     })
@@ -268,9 +285,41 @@ define(function(require) {
   assert(['vec4((v0).x + u_vs0.x, (v0).y, (v0).z, (v0).w)'], ctx.statements)
   assert(1, ctx.uniforms.length) // No pointless +0 uniforms for the untouched channels
 
+  // A channel's value can be a visual node instead of a param: it builds from the same incoming
+  // value the node it belongs to sees, and the matching channel of its result is taken
+  let {swizzleShaderNode} = require('draw/visualsynth/shader-node')
+  let swapUV = () => swizzleShaderNode(passthroughShaderNode(), 'vu') // As `in.vu` evaluates to
+  ctx = mockCtx()
+  node(set, {u:swapUV()}).build('v0', ctx)
+  assert(['v0', 'vec4((v1).y, (v1).x, (v1).z, (v1).w)', 'vec4((v2).x, (v0).y, (v0).z, (v0).w)'], ctx.statements)
+  assert(0, ctx.uniforms.length) // A node is built, not made a uniform
+
+  ctx = mockCtx()
+  node(set, {u:swapUV(), v:ast}).build('v0', ctx) // A node channel and an ordinary param channel
+  assert(['v0', 'vec4((v1).y, (v1).x, (v1).z, (v1).w)', 'vec4((v2).x, u_vs0.y, (v0).z, (v0).w)'], ctx.statements)
+  assert(true, ctx.uniforms[0] === ast) // The other channel still animates
+
+  ctx = mockCtx()
+  node(mul, {value:swapUV()}).build('v0', ctx) // A node as the whole param: eg mul{tex{'mask.png'}}
+  assert(['v0', 'vec4((v1).y, (v1).x, (v1).z, (v1).w)', 'v0 * (v2)'], ctx.statements)
+  ctx = mockCtx()
+  node(add, {value:swapUV()}).build('v0', ctx)
+  assert(['v0', 'vec4((v1).y, (v1).x, (v1).z, (v1).w)', 'v0 + (v2)'], ctx.statements)
+  ctx = mockCtx()
+  node(set, {value:swapUV()}).build('v0', ctx)
+  assert(['v0', 'vec4((v1).y, (v1).x, (v1).z, (v1).w)', '(v2)'], ctx.statements)
+
+  // An arg shared by two channels is evaluated and built once
+  ctx = mockCtx()
+  let shared = swapUV()
+  node(set, {u:shared, v:shared}).build('v0', ctx)
+  assert(['v0', 'vec4((v1).y, (v1).x, (v1).z, (v1).w)', 'vec4((v2).x, (v2).y, (v0).z, (v0).w)'], ctx.statements)
+
   // The same expression must always generate the same source: the program cache is keyed on it
   let build = () => { let c = mockCtx(); node(set, {value:{b:1}, x:ast}).build('v0', c); return c.statements.join('') }
   assert(build(), build())
+  let buildNode = () => { let c = mockCtx(); node(set, {u:swapUV(), g:ast}).build('v0', c); return c.statements.join('') }
+  assert(buildNode(), buildNode())
 
   // Lookup textures. The incoming channels index the lut, clamped, and mapped onto texel centres so
   // the sampled expression's 0 and 1 land exactly on the first and last texel
