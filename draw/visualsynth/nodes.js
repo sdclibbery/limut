@@ -349,6 +349,22 @@ define(function(require) {
   assert(buildLut(8), buildLut(8))
   assert(true, buildLut(8) !== buildLut(16))
 
+  // End to end: an arithmetic expression compiles to the same shader as the >> form it reads like,
+  // because the call at its head takes the incoming pixel value (expressionHead in connectOp.js).
+  // Both spellings are parsed and evalled here exactly as a px param is, seed and all.
+  require('functions/maths') // Side-effect: register floor/sin, used below
+  require('predefined-vars').apply(require('vars').all())
+  let parseExpression = require('expression/parse-expression')
+  let {evalParamEvent} = require('player/eval-param')
+  let {buildSource} = require('draw/visualsynth/codegen')
+  let pxSource = (text) => buildSource(evalParamEvent(parseExpression('id>>'+text), {idx:0,count:0})).source
+  assert(pxSource('floor{1/8}>>add{1/2}'), pxSource('floor{1/8}+1/2'))
+  assert(pxSource('sin>>add{1/4}'), pxSource('sin+1/4'))
+  // mul{#0f0} takes the masked-channel path where * does not, so these two are equivalent rather
+  // than identical: what matters is that sin is applied to the incoming value (v1, the pass-through
+  // of v0 that any piped call is handed) rather than being called with nothing
+  assert(true, pxSource('sin*#0f0').includes('sin(v1)'))
+
   console.log('Visual synth nodes tests complete')
   }
 

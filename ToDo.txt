@@ -2,11 +2,8 @@
 =================================================================================================================================
 =================================================================================================================================
 visual nodes...
- Implicit id>> at start of px chain?
- !px=floor{[]n}+1/2 should be same as px=floor{[]n}>>add{1/2} but isn't
- !px=id>>sin*#0f0 should be same as px=id>>sin>>mul{#0f0} but isnt
- channel split function with chain per channel
- random/noise/perlin
+ channel split function with chain/expression per channel eg px=split{}
+ random/noise/perlin in 1d, 2d, 3d with optional extra time dimension
  pixellate/monochrome/rotate etc etc - limut coded versions of visual params
  sdf stuff?
  render buffers to generate read from, eg px=tex{buffer{mul{1.01}>>webcam>>set{#...a},clear:false}} for temporal zoom-blur??

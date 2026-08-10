@@ -22,6 +22,16 @@ define(function(require) {
     return typeof target === 'function' && target.isVarFunction // A var function or a user defined one
   }
 
+  // The head of an arithmetic expression is its leftmost leaf: `id >> floor{[]n}+1/2` must feed
+  // floor, just as `id >> floor{[]n} >> add{1/2}` does. >> binds looser than arithmetic, so the
+  // whole expression arrives as the right hand side and the call that wants the incoming value is
+  // buried inside it. Only operators that compile to GLSL carry _shaderOpLhs (eval-operator.js),
+  // so this never walks into `.` (which would mean mutating p1 in `p1.amp`) or `|`.
+  let expressionHead = (r) => {
+    while (typeof r === 'function' && r._shaderOpLhs !== undefined) { r = r._shaderOpLhs }
+    return r
+  }
+
   // Call the right hand side with `arg` as its first argument (undefined for no piped argument at
   // all). Same mechanism as lookupOp (a.foo); r.args is restored because the same parse instance is
   // also reachable down paths that don't pipe.
@@ -86,6 +96,27 @@ define(function(require) {
       let v = callWithPipedArg(r, piping ? passthroughShaderNode() : el, e,b, evalRecurse)
       if (piping && isShaderNode(v)) { return composeShaderNodes(el, v) }
       return v
+    }
+    // Same thing one level in: a visual chain met by an arithmetic expression feeds the call at the
+    // head of that expression, so `px=floor{[]n}+1/2` means `px=floor{[]n}>>add{1/2}` and
+    // `px=id>>sin*#0f0` means `px=id>>sin>>mul{#0f0}`. The head takes the value the way any other
+    // piped call does (parse-var reads .args to shift its own args up), and the expression around it
+    // then evaluates as written. Visual only: audio >> keeps its wire.
+    if (isShaderNode(el)) {
+      let head = expressionHead(r)
+      // head === r is the plain call above; a head that isn't a call (a number, or `id` itself in
+      // `id/2+floor{1/8}`) wants nothing, which is what keeps that form adding a constant.
+      if (head !== r && isPipeTarget(head)
+          && !(el._implicitInput && hasShaderNodeArg(head, e,b, evalRecurse))) {
+        let saved = head.args
+        head.args = passthroughShaderNode()
+        let v = evalRecurse(r, e,b)
+        head.args = saved
+        // A head that isn't shader aware (eg `px=rand+1/2`) gives back a plain value: wrap the raw
+        // AST as a uniform, as the compose branch below would have done, rather than dropping out
+        // of the visual domain altogether.
+        return composeShaderNodes(el, isShaderNode(v) ? v : constShaderNode(r))
+      }
     }
     let er = evalRecurse(r, e,b)
     // Visual synth chains: if either side is a shader node, compose GLSL emitters instead of
@@ -264,6 +295,44 @@ define(function(require) {
   connectOp(implicitInputNode(), mockLookup({value: lambda}), {},0, evalParamFrame)
   assert(true, isShaderNode(calls[0].value)) // Piped: a lambda is not a node, so the input is wanted
 
+  // >> binds looser than arithmetic, so `px=floor{[]n}+1/2` arrives here as a whole expression. The
+  // call at its head takes the incoming value just as it would in `floor{[]n}>>add{1/2}`.
+  let operatorAst = require('expression/eval-operator')
+  let {shaderNodeOps} = require('expression/shaderNodeOps')
+  let shaderAdd = (l,r)=>l+r
+  shaderAdd.shaderNodeOp = shaderNodeOps['+']
+  calls = []
+  lk = mockLookup({value:3})
+  sn = connectOp(implicitInputNode(), operatorAst(shaderAdd, lk, 2), {},0, evalParamFrame)
+  assert(true, isShaderNode(sn))
+  assert(1, calls.length)
+  assert(true, isShaderNode(calls[0].value)) // The head is called as floor{id,[]n}
+  assert(3, calls[0].value1) // and its own args shift up
+  assert(undefined, lk.args) // .args restored: the parse instance is reachable down other paths
+  sctx = mockCtx()
+  sn.build('v0', sctx)
+  assert(['b', 'v0 + u_vs0'], sctx.statements) // The head emits once, then the operator combines
+
+  calls = [] // A head already holding a node keeps its args, as `px=abs{sin{id*4}}*2` must
+  lk = mockLookup({value: mockShaderNode('c'), value1: 3})
+  sn = connectOp(implicitInputNode(), operatorAst(shaderAdd, lk, 2), {},0, evalParamFrame)
+  assert(true, isShaderNode(sn))
+  assert([true, 3], [isShaderNode(calls[0].value), calls[0].value1])
+
+  calls = [] // Only the head of the expression is offered the value: `id/2+floor{1/8}` adds a constant
+  lk = mockLookup({})
+  sn = connectOp(implicitInputNode(), operatorAst(shaderAdd, 2, lk), {},0, evalParamFrame)
+  assert(true, isShaderNode(sn))
+  assert(undefined, calls[0].value) // Not piped: the head is the 2, which wants nothing
+
+  vars.all().mockpipe = (args) => { calls.push(args); return 'notanode' } // Not shader aware
+  vars.all().mockpipe.isVarFunction = true
+  calls = []
+  lk = mockLookup({})
+  sn = connectOp(implicitInputNode(), operatorAst(shaderAdd, lk, 2), {},0, evalParamFrame)
+  assert(true, isShaderNode(sn)) // Still visual: the whole expression becomes an animated uniform
+  assert(undefined, lk.args)
+
   vars.all().mockpipe = (args) => { pipeArgs = args; return 'piped' }
   vars.all().mockpipe.isVarFunction = true
 
@@ -272,6 +341,11 @@ define(function(require) {
   // A connectable left side keeps the wire, so DSL defined effects (shifter{2}>>reverb{1b}) still connect
   pipeArgs = undefined
   an = connectOp(mockAn(), mockLookup({value:3}), {},0, evalParamFrame)
+  assert(true, an instanceof AudioNode)
+  assert([3,undefined], [pipeArgs.value, pipeArgs.value1]) // Called normally, not piped
+
+  pipeArgs = undefined // Audio is untouched by the head rule too: an arithmetic right hand side stays a wire
+  an = connectOp(mockAn(), operatorAst(shaderAdd, mockLookup({value:3}), 2), {},0, evalParamFrame)
   assert(true, an instanceof AudioNode)
   assert([3,undefined], [pipeArgs.value, pipeArgs.value1]) // Called normally, not piped
 

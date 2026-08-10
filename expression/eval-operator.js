@@ -122,6 +122,11 @@ define(function(require) {
       return result
     }
     evalOp.interval = combineIntervalsFrom(l, r)
+    // The left operand of an operator that compiles to GLSL, for >> to walk down to the head of an
+    // arithmetic expression and pipe the visual chain input into it (see expressionHead in
+    // connectOp.js). Only set for shader capable operators, so `.`, `|`, `??` and `?:` are never
+    // descended into.
+    if (op.shaderNodeOp) { evalOp._shaderOpLhs = l }
     return evalOp
   }
 
@@ -249,6 +254,11 @@ define(function(require) {
     r = evalParam(operator(shaderAdd, 2, ()=>node), ev(0),0) // Either side triggers it
     assert(true, isShaderNode(r))
     assert(3, evalParam(operator(shaderAdd, 1, ()=>2), ev(0),0)) // Non-shader operands unaffected
+
+    // The left operand is exposed so >> can walk to the head of an arithmetic expression
+    let lhs = ()=>node
+    assert(true, operator(shaderAdd, lhs, 2)._shaderOpLhs === lhs)
+    assert(undefined, operator(add, lhs, 2)._shaderOpLhs) // Only for operators that compile to GLSL
   }
 
   console.log('eval operator tests complete')
