@@ -22,6 +22,35 @@ define(function(require) {
     return typeof target === 'function' && target.isVarFunction // A var function or a user defined one
   }
 
+  // Call the right hand side with `arg` as its first argument (undefined for no piped argument at
+  // all). Same mechanism as lookupOp (a.foo); r.args is restored because the same parse instance is
+  // also reachable down paths that don't pipe.
+  let callWithPipedArg = (r, arg, e,b, evalRecurse) => {
+    let saved = r.args
+    r.args = arg
+    let v = evalFunctionWithModifiers(r, e,b, evalRecurse)
+    r.args = saved
+    if (typeof v === 'object' && v !== null && v._finalResult) { v = v.value }
+    return evalRecurse(v, e,b)
+  }
+
+  // Was this call already handed a visual node of its own? That is what says whether it wants the
+  // chain input as well: `abs{sin{id*4}}` and `dot{tex{'a.png'},#3b1}` have their operand already,
+  // where `floor{[]n}`, `pixellate{40}` and a bare `swap` do not. Asking the call itself (does it
+  // return a node?) does not work — a function whose body is a node function, eg
+  // `set rot = {in,a} -> set{u:...}`, returns one however little sense its arguments made.
+  // Args are evalled in the caller's context, which is where they are written, and memoisation
+  // makes the call itself see the same values. Lambda args are left alone: calling one bare here
+  // would evaluate its body with no call context (see evalModifiers in eval-param.js).
+  let hasShaderNodeArg = (r, e,b, evalRecurse) => {
+    for (let k in r.ownArgs) {
+      let arg = r.ownArgs[k]
+      if (typeof arg === 'function' && arg.isUserFunction) { continue }
+      if (isShaderNode(evalRecurse(arg, e,b))) { return true }
+    }
+    return false
+  }
+
   let connectOp = (l,r, e,b,evalRecurse) => {
     if (l === undefined) { return r }
     if (r === undefined) { return l }
@@ -46,12 +75,15 @@ define(function(require) {
       // rather than a new chain starting from the raw coordinate. Substituting matters because
       // composing the chain onto a result that already embeds it would apply it twice.
       let piping = isShaderNode(el)
-      let saved = r.args
-      r.args = piping ? passthroughShaderNode() : el // Same mechanism as lookupOp (a.foo), but
-      let v = evalFunctionWithModifiers(r, e,b, evalRecurse) // restore it: this parse instance is
-      r.args = saved // also reachable down paths that don't pipe
-      if (typeof v === 'object' && v !== null && v._finalResult) { v = v.value }
-      v = evalRecurse(v, e,b)
+      // The chain seed (the id node, and so the implicit start of every px chain) is offered rather
+      // than forced: a call already holding a visual node keeps its own arguments, so the argument
+      // forms still mean what they say (abs{sin{id*4}}, dot{tex{'a.png'},#3b1}). A call with no node
+      // of its own (floor{[]n}, pixellate{40}, a bare swap) takes the incoming value as its first
+      // argument, which is what makes `px=X` mean `px=id>>X`.
+      if (piping && el._implicitInput && hasShaderNodeArg(r, e,b, evalRecurse)) {
+        return callWithPipedArg(r, undefined, e,b, evalRecurse)
+      }
+      let v = callWithPipedArg(r, piping ? passthroughShaderNode() : el, e,b, evalRecurse)
       if (piping && isShaderNode(v)) { return composeShaderNodes(el, v) }
       return v
     }
@@ -60,6 +92,11 @@ define(function(require) {
     // wiring audio. A non-node operand becomes an animated uniform, wrapped from its raw AST
     // (mirroring the gain{value:l} wrap below).
     if (isShaderNode(el) || isShaderNode(er)) {
+      // The chain seed does nothing to what follows it, so hand that back as it stands rather than
+      // composing. Composing would wrap it in an ordinary node, and `id>>id>>abs{sin{id*4}}` (ie an
+      // explicit id on a param that is seeded anyway) would then force the input into abs and drop
+      // its argument. Only for a node: `id>>#f00` still wraps the colour into a uniform.
+      if (isShaderNode(el) && el._implicitInput && isShaderNode(er)) { return er }
       return composeShaderNodes(
         isShaderNode(el) ? el : constShaderNode(l),
         isShaderNode(er) ? er : constShaderNode(r)
@@ -193,6 +230,42 @@ define(function(require) {
   let lk = mockLookup({value:3}) // r.args must not be left set: the same parse instance is
   connectOp(2, lk, {},0, evalParamFrame) // also reachable down paths that don't pipe
   assert(undefined, lk.args)
+
+  // The implicit chain seed (the id node, at the head of every px chain) is offered to the call
+  // rather than forced on it: a call already holding a visual node of its own keeps its arguments
+  let {implicitInputNode} = require('draw/visualsynth/shader-node')
+  let calls
+  vars.all().mockpipe = (args) => { calls.push(args); return mockShaderNode('b') }
+  vars.all().mockpipe.isVarFunction = true
+  calls = []
+  lk = mockLookup({value: mockShaderNode('c'), value1: 3})
+  sn = connectOp(implicitInputNode(), lk, {},0, evalParamFrame)
+  assert(true, sn.isShaderNode)
+  assert(1, calls.length) // Not piped, and its args don't shift: `px=abs{sin{id*4}}` keeps its operand
+  assert([true, 3], [isShaderNode(calls[0].value), calls[0].value1])
+  assert(undefined, lk.args)
+  sctx = mockCtx()
+  sn.build('v0', sctx)
+  assert(['b'], sctx.statements) // Nothing composed on either: the seed emits nothing
+
+  // A call with no visual node of its own gets the incoming value as its first argument
+  calls = []
+  lk = mockLookup({value:3})
+  sn = connectOp(implicitInputNode(), lk, {},0, evalParamFrame)
+  assert(true, sn.isShaderNode)
+  assert(1, calls.length)
+  assert(true, isShaderNode(calls[0].value)) // `px=floor{[]n}` becomes floor{id,[]n}
+  assert(3, calls[0].value1) // and the existing args shift up
+  assert(undefined, lk.args)
+
+  calls = [] // A lambda arg is skipped rather than called bare, so it still counts as 'no node'
+  let lambda = () => 0
+  lambda.isUserFunction = true
+  connectOp(implicitInputNode(), mockLookup({value: lambda}), {},0, evalParamFrame)
+  assert(true, isShaderNode(calls[0].value)) // Piped: a lambda is not a node, so the input is wanted
+
+  vars.all().mockpipe = (args) => { pipeArgs = args; return 'piped' }
+  vars.all().mockpipe.isVarFunction = true
 
   vars.all().gain = (args) => { let n = mockAn(); n.value = args.value; return n }
 

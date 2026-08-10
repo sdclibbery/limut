@@ -2,14 +2,16 @@
 define(function(require) {
   let {addNodeFunction} = require('play/nodes/node-var')
   let addVarFunction = require('predefined-vars').addVarFunction
-  let {makeShaderNode,passthroughShaderNode,isShaderNode,channelNames,components,unwrapValue} = require('draw/visualsynth/shader-node')
+  let {makeShaderNode,passthroughShaderNode,implicitInputNode,isShaderNode,channelNames,components,unwrapValue} = require('draw/visualsynth/shader-node')
   let texture = require('draw/texture')
   let webcam = require('draw/webcam')
   let {lutTexture,resolveSize,defaultSizes} = require('draw/visualsynth/lut')
 
-  // Pass the incoming value through unchanged. Seeds an operator-only chain, eg px=id/2+#080
+  // The incoming value, passed through unchanged. Every px chain is seeded with it (see
+  // player/params.js), so `id` is only needed by name to use the incoming value inside an
+  // expression, eg px=id/2+#080 or px=dot{id,#3b1}. `id>>X` and `X` mean the same thing.
   let id = (args, e, b, state, evalRecurse) => {
-    return passthroughShaderNode()
+    return implicitInputNode()
   }
   addNodeFunction('id', id)
 
@@ -207,8 +209,9 @@ define(function(require) {
   let node = (fn, args) => fn(args, undefined, undefined, undefined, ev)
 
   let ctx = mockCtx()
-  assert('v1', node(id, {}).build('v0', ctx))
-  assert(['v0'], ctx.statements) // Passes its input straight through
+  assert('v0', node(id, {}).build('v0', ctx))
+  assert([], ctx.statements) // Passes its input straight through, emitting nothing at all
+  assert(true, node(id, {})._implicitInput) // Marked as the chain seed, so >> knows it can withhold it
 
   ctx = mockCtx()
   assert('v1', node(mul, {value:ast}).build('v0', ctx))

@@ -95,6 +95,12 @@ define(function(require) {
     }
     name = name.trim().toLowerCase()
     if (name) {
+      // px is the visual node chain: seed it with the incoming pixel value so a call at the head of
+      // the chain has something to consume, ie px=floor{1/40}>>tex{} needs no explicit id. It goes
+      // in as source text rather than around the parsed expression because >> is left associative,
+      // so this lands at the head of the chain rather than on top of the whole tree. (An implicit
+      // seed is offered to that head call, not forced on it: see connectOp.)
+      if (name === 'px' && !operator) { value = 'id>>'+value }
       let v = parseExpression(value, (state.context?state.context+'.':'')+name)
       if (operator) { v = newOverride(v, operator, value) }
       else if (name === 'fx') { v = newOverride(v, undefined, value) } // Force override object so that _fxString is correctly set

@@ -35,10 +35,21 @@ define(function(require) {
     return makeShaderNode((input, ctx) => b.build(a.build(input, ctx), ctx))
   }
 
-  // Passes its input straight through. Backs the id node, and is what >> hands to a call it pipes
-  // a chain into, so the callee's result can be composed back onto the chain (see connectOp).
+  // Passes its input straight through. What >> hands to a call it pipes a chain into, so the
+  // callee's result can be composed back onto the chain (see connectOp).
   let passthroughShaderNode = () => {
     return makeShaderNode((input, ctx) => ctx.addStatement(input))
+  }
+
+  // The seed at the head of a px chain (the id node): the incoming value with nothing done to it.
+  // Emits no statement, so a seeded chain generates byte-identical source to an unseeded one — the
+  // program cache is keyed on that source, and every px param is seeded now (player/params.js).
+  // Marked so >> knows it is the chain input and may withhold it from a call that can build a node
+  // without it (see connectOp).
+  let implicitInputNode = () => {
+    let node = makeShaderNode((input, ctx) => input)
+    node._implicitInput = true
+    return node
   }
 
   // Wraps a non-node >> operand. Takes the raw unevaluated AST (mirroring connectOp's
@@ -253,6 +264,17 @@ define(function(require) {
   assert(undefined, swizzleShaderNode(through, undefined))
   assert(undefined, swizzleShaderNode(through, 2))
 
+  // The chain seed passes its input on without emitting anything, so seeding a chain leaves the
+  // generated source (and so the program cache key) exactly as it was
+  let seed = implicitInputNode()
+  assert(true, seed._implicitInput)
+  ctx = mockCtx()
+  assert('v0', seed.build('v0', ctx))
+  assert([], ctx.statements)
+  ctx = mockCtx()
+  assert('v1', composeShaderNodes(seed, passthroughShaderNode()).build('v0', ctx))
+  assert(['v0'], ctx.statements) // Only the passthrough emits; the seed is invisible
+
   console.log('Shader node tests complete')
   }
 
@@ -261,6 +283,7 @@ define(function(require) {
     isShaderNode: isShaderNode,
     composeShaderNodes: composeShaderNodes,
     passthroughShaderNode: passthroughShaderNode,
+    implicitInputNode: implicitInputNode,
     constShaderNode: constShaderNode,
     binaryShaderNode: binaryShaderNode,
     naryShaderNode: naryShaderNode,

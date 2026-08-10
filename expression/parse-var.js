@@ -184,6 +184,7 @@ define(function(require) {
     result._name = key
     result.isVarLookup = true
     result.hasOwnArgs = args !== undefined && args !== null && Object.keys(args).length > 0
+    result.ownArgs = args // The unevalled callsite args, for >> to see what the call was already given
     if (typeof vars.get(key) === 'function' && vars.get(key)._chordPlaceholder) { result._chordPlaceholder = true } // For node vars: pass this through to prevent the node function getting evalled during chord expansion
     return result
   }

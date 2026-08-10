@@ -3,12 +3,14 @@
 =================================================================================================================================
 visual nodes...
  Implicit id>> at start of px chain?
+ !px=floor{[]n}+1/2 should be same as px=floor{[]n}>>add{1/2} but isn't
  !px=id>>sin*#0f0 should be same as px=id>>sin>>mul{#0f0} but isnt
+ channel split function with chain per channel
  random/noise/perlin
- pixellate/monochrome etc etc - limut coded versions of visual params
+ pixellate/monochrome/rotate etc etc - limut coded versions of visual params
  sdf stuff?
- procedural buffers to genrate read from, eg px=tex{buffer{mul{1.01}>>webcam>>set{#...a},clear:false}} for temporal zoom-blur??
- hsl etc conversions
+ render buffers to generate read from, eg px=tex{buffer{mul{1.01}>>webcam>>set{#...a},clear:false}} for temporal zoom-blur??
+ hsl etc conversions?
  clamp
  3d stuff?
  ? {tex,#124} should do addition like in audio chain??
