@@ -282,20 +282,27 @@ define(function (require) {
       gl.uniform4fv(s.jpegUnif, jpeg)
       if (s.textureUnif) {
         s.textureUnif.forEach((tu,i) => {
-          let t = s.texture || (text !== undefined ? textTexture(text) : texture(url))
+          // s.textures gives a different texture per slot (visual synth chains with several
+          // texture nodes); every other shader has the one s.texture for all of them
+          let t = (s.textures && s.textures[i]) || s.texture || (text !== undefined ? textTexture(text) : texture(url))
           if (t.update) { t.update(state) }
+          let target = t.target || gl.TEXTURE_2D // A generated 3d lookup texture is TEXTURE_3D
           gl.activeTexture(gl['TEXTURE'+i])
-          gl.bindTexture(gl.TEXTURE_2D, t.tex)
+          gl.bindTexture(target, t.tex)
           gl.uniform1i(tu, i)
-          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-          if (s.extentsUnif && t.width && t.height) {
+          gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+          gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+          gl.texParameteri(target, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+          gl.texParameteri(target, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+          if (target === gl.TEXTURE_3D) { gl.texParameteri(target, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE) }
+          // Extents have to be written here rather than in preRender: t.update above is where a
+          // webcam texture first learns its size
+          let extentsUnif = (s.extentsUnifs && s.extentsUnifs[i]) || s.extentsUnif
+          if (extentsUnif && t.width && t.height) {
             let extents = ca('extents')
             extents[0] = t.width
             extents[1] = t.height
-            gl.uniform2fv(s.extentsUnif, extents)
+            gl.uniform2fv(extentsUnif, extents)
           }
           if (t.params) { t.params() }
         })

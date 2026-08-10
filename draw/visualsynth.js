@@ -39,6 +39,7 @@ define(function (require) {
         let shader = { program: program }
         common.getCommonUniforms(shader)
         shader.textureUnif = built.textures.map((t,i) => system.gl.getUniformLocation(program, 'u_vstex'+i))
+        shader.extentsUnifs = built.textures.map((t,i) => system.gl.getUniformLocation(program, 'u_vsex'+i)) // Per texture, so several can coexist. Null for a texture whose extents nothing reads (eg a lut)
         cached = {
           shader: shader,
           uniformLocs: built.uniforms.map(u => system.gl.getUniformLocation(program, u.name)),
@@ -53,8 +54,7 @@ define(function (require) {
     if (cached === null) { return }
     // Per-event wrapper over the shared compiled program: textures and uniform ASTs are per event
     let s = Object.create(cached.shader)
-    if (built.textures.length > 0) { s.texture = built.textures[0] }
-    if (built.textures.length > 1) { warnOnce(`🟠 visualsynth: only one texture per chain supported for now`) }
+    if (built.textures.length > 0) { s.textures = built.textures.map(t => t.texture) } // sprite.js binds each to its own slot
     if (built.uniforms.length > 0) {
       s.preRender = (state) => {
         system.gl.useProgram(cached.shader.program)

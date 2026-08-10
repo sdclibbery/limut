@@ -30,11 +30,12 @@ Audio's `>>` (`expression/connectOp.js`) is an **eager interpreter** — evaluat
 ```glsl
 #version 300 es
 precision highp float;
+precision highp sampler3D;       // only when a 3d lut is present: no default precision for it
 in vec2 fragCoord;
 out vec4 fragColor;
-uniform vec2 l_extents;
 uniform vec4 u_vs0; ...          // one per animated arg
-uniform sampler2D u_vstex0; ...  // one per texture node
+uniform sampler2D u_vstex0;      // one per texture node, with its own extents:
+uniform vec2 u_vsex0; ...        // width/height of that texture, written by sprite.js
 void main() {
   vec4 v0 = vec4(fragCoord, 0.0, 1.0);   // implicit uv seed
   <statements...>
@@ -46,7 +47,7 @@ void main() {
 
 **Determinism is cache correctness.** All generated names (`vN`, `u_vsN`, `u_vstexN`, and per-tex locals `uvN`/`arN`) come from per-context counters during the single build walk, so the same px expression yields byte-identical source. The compiled-program cache in `draw/visualsynth.js` is keyed on that source text. If you add a node type, derive every generated name from ctx counters — never from anything non-deterministic (object identity, Math.random, wall time), or identical expressions stop sharing programs (renderer runs once per event, so that means a compile per event).
 
-Context helpers: `addStatement(expr)` emits `vec4 vN = expr;` and returns `vN`; `addRaw(stmt)` for non-vec4 lines; `addUniform(rawAst)` → `u_vsN`; `addTexture(texObjOrUndefined)` → `u_vstexN` (undefined sets `ctx.notReady`). Codegen is GL-free on purpose — its tests run without a GL context.
+Context helpers: `addStatement(expr)` emits `vec4 vN = expr;` and returns `vN`; `addRaw(stmt)` for non-vec4 lines; `addUniform(rawAst)` → `u_vsN`; `addTexture(texObjOrUndefined, sampler)` → `u_vstexN` (undefined sets `ctx.notReady`; `sampler` defaults `'sampler2D'`, and `ctx.textures` holds `{texture, sampler}` entries). Codegen is GL-free on purpose — its tests run without a GL context.
 
 ## The `>>` seam (`expression/connectOp.js`)
 
@@ -91,18 +92,28 @@ Visual nodes register via the **audio** `addNodeFunction` (`play/nodes/node-var.
 - **Flat namespace warning**: visual nodes share one var namespace with audio nodes and every other var (`mul`, `tex`, `webcam` were verified free). Before adding a name, grep `addVarFunction`/`addNodeFunction` registrations, `predefined-var-defs.js`, and `lib/*.limut` `set` lines. A DSL name in `lib/nodes.limut` silently shadows/collides.
 - Texture sources are `{isVisualTextureSource: true, acquire: () => textureObjOrUndefined}` — `tex{}` calls `acquire()` at event time; undefined means "not ready yet" (e.g. webcam pre-enumeration) → `ctx.notReady` → the renderer returns nothing and the *next event* retries (same behaviour as the webcam visual). Webcam texture acquisition lives in `draw/webcam.js` `acquireTexture(device, w, h)` (exported as a property on the renderer function), with its own per-device texture cache separate from the webcam visual's shader cache.
 
+### Generated lookup textures (`draw/visualsynth/lut.js`)
+
+`tex1d`/`tex2d`/`tex3d` sample a limut expression over `[0,1]^dims` into a texture, then index it with the incoming value's `x` / `xy` / `xyz`. Sampling is deliberately split from the GL upload so `sampleLut` is testable with no GL context (same discipline as codegen).
+
+- **Sampling must pass `{doNotMemoise:true}`**, or every coordinate at the same beat returns the first sample. The protocol is the one `shaper` (`play/nodes/nodes.js`), `source.js` and `convolver.js` already use: set `arg.modifiers.value`/`value1`/`value2` to the coordinates, then `evalParamFrame(arg, e, b, {doNotMemoise:true})`. Setting the positional slots is also what feeds a `{x,y,z}->` lambda its args, and it works unchanged for a named function or a bare constant.
+- Values convert through `draw/colour.js`'s `colour()` (so `{labh:x}`, `{h:x}` and colour literals work), except a plain number, which becomes an **opaque** grey — unlike `toVec4`, which splats a number into alpha too.
+- **Built once, cached on the parsed arg's function identity** (`WeakMap`), by explicit user decision: editing the px line makes a fresh parse instance and rebuilds, but a slider or timevar inside the expression stays frozen at build time. Size is structural — settled at event time, baked into the GLSL as a literal (so it is part of the cache key), capped at ~1M texels.
+- `size` defaults 256 / 64 / 16. A 1d lut is an `N × 1` 2D texture (WebGL has no 1D textures); a 3d lut sets `t.target = gl.TEXTURE_3D` and needs **`precision highp sampler3D;`** in the preamble — GLSL ES 3.00 defaults a precision for `sampler2D` but not `sampler3D`, and without it the shader fails to compile.
+- Each axis maps onto texel centres (`(clamp(c,0,1)*(N-1)+0.5)/N`) so the expression's 0 and 1 land exactly on the first and last texel.
+
 ## Renderer (`draw/visualsynth.js`)
 
-Runs **once per visual event** (via `sprite.create`, `draw/sprite.js`). Flow: `evalParamEvent(params.px, params)` → shader node → `buildSource` → program cache lookup by source → per-event `s = Object.create(cached.shader)` carrying `s.texture` and `s.preRender`.
+Runs **once per visual event** (via `sprite.create`, `draw/sprite.js`). Flow: `evalParamEvent(params.px, params)` → shader node → `buildSource` → program cache lookup by source → per-event `s = Object.create(cached.shader)` carrying `s.textures` and `s.preRender`.
 
 - Program cache is 3-state like shadertoy: `undefined` = not compiled, object = compiled, `null` = permanent failure (never retried, prevents per-event error spam).
 - `common.getCommonUniforms(shader)` is still called — it sets up the quad buffers/attrs (`posBuf`/`posAttr`/`fragCoordBuf`/`fragCoordAttr`) that sprite.js needs. Its ~30 uniform locations come back null against the generated shader; `gl.uniform*` with a null location is a silent no-op, which is why sprite.js's standard per-frame writes are harmless. `shader.textureUnif` is overridden to the `u_vstexN` locations (empty array when no textures — prevents sprite.js loading the default favicon texture).
 - **Per-frame animated uniforms**: `s.preRender(state)` (the hook sprite.js calls before each draw) does `gl.useProgram` then, per uniform, restores that uniform's captured call tree, `evalParamFrame(u.ast, params, state.count)` → `toVec4` → `gl.uniform4fv`. This is the visual analogue of `play/eval-audio-params.js` per-frame scheduling; see "Call context in uniforms" above.
-- Texture binding rides `sprite.js` (`s.texture`, `t.update(state)` per-frame video upload, `l_extents` from `t.width/height`). **sprite.js binds the same texture to every `textureUnif` slot** — that's the reason for the current one-texture-per-chain limit (🟠 warn). Multi-texture needs sprite.js to bind per-slot (e.g. `s.textures[i]` alongside `s.textureUnif[i]`).
+- Texture binding rides `sprite.js`, **per slot**: it takes `s.textures[i]` when present (falling back to the single `s.texture`/url every other shader uses), binds `t.target || gl.TEXTURE_2D`, and writes that texture's own extents uniform from `s.extentsUnifs[i]`. Any number of texture nodes per chain therefore works. Two things that loop depends on: it runs *after* `t.update(state)`, which is when a webcam texture first learns its `width`/`height` (so extents cannot move into `preRender`, which runs too early); and a texture with no `width`/`height` — a lut — simply gets no extents written, which is right, since only `tex{}`'s aspect correction reads them.
 
 ## Known limitations (PoC scope, deliberate)
 
-`pal{}`; random/noise/perlin nodes; >1 texture per chain; chords inside px args (placeholders keep them from crashing, results unspecified); no program-cache eviction (matches shadertoy). A maths function or lambda on the left of `>>` gets no implicit input (seed with `id`), and only a plain var-lookup callsite is piped — not a parenthesised expression (`id >> (floor{1/8}*2)`) or a lambda literal.
+`pal{}`; random/noise/perlin nodes; chords inside px args (placeholders keep them from crashing, results unspecified); no program-cache eviction (matches shadertoy). A maths function or lambda on the left of `>>` gets no implicit input (seed with `id`), and only a plain var-lookup callsite is piped — not a parenthesised expression (`id >> (floor{1/8}*2)`) or a lambda literal.
 
 ## Verifying changes
 

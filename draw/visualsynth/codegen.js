@@ -9,7 +9,7 @@ define(function(require) {
     let ctx = {
       statements: [],
       uniforms: [], // {name, ast, callTree} — ast is the raw unevaluated arg, re-evaluated per frame
-      textures: [], // texture objects, parallel to sampler names u_vstex0, u_vstex1...
+      textures: [], // {texture, sampler} entries, parallel to sampler names u_vstex0, u_vstex1...
       notReady: false, // a texture source isn't available yet (eg webcam pre-enumeration)
     }
     let nextVar = 1 // v0 is the implicit uv seed
@@ -26,10 +26,12 @@ define(function(require) {
       ctx.uniforms.push({name: name, ast: ast, callTree: getCallTree()})
       return name
     }
-    ctx.addTexture = (tex) => {
+    // Each texture gets its own sampler and its own extents uniform (u_vsexN): one shared
+    // l_extents cannot serve several textures, and a lut texture wants no aspect correction at all
+    ctx.addTexture = (tex, sampler) => {
       if (tex === undefined) { ctx.notReady = true }
       let name = 'u_vstex' + ctx.textures.length
-      ctx.textures.push(tex)
+      ctx.textures.push({texture: tex, sampler: sampler || 'sampler2D'})
       return name
     }
     return ctx
@@ -40,13 +42,15 @@ define(function(require) {
   let buildSource = (shaderNode) => {
     let ctx = makeContext()
     let out = shaderNode.build('v0', ctx)
+    // GLSL ES 3.00 has a default precision for sampler2D but not sampler3D, so a 3d lookup
+    // texture has to declare one or the shader won't compile
+    let sampler3d = ctx.textures.some(t => t.sampler === 'sampler3D')
     let source = `#version 300 es
 precision highp float;
-in vec2 fragCoord;
+${sampler3d ? 'precision highp sampler3D;\n' : ''}in vec2 fragCoord;
 out vec4 fragColor;
-uniform vec2 l_extents;
 ${ctx.uniforms.map(u => `uniform vec4 ${u.name};`).join('\n')}
-${ctx.textures.map((t,i) => `uniform sampler2D u_vstex${i};`).join('\n')}
+${ctx.textures.map((t,i) => `uniform ${t.sampler} u_vstex${i};\nuniform vec2 u_vsex${i};`).join('\n')}
 void main() {
   vec4 v0 = vec4(fragCoord, 0.0, 1.0);
   ${ctx.statements.join('\n  ')}
@@ -88,7 +92,10 @@ void main() {
   assert(false, built.notReady)
   assert('u_vs0', built.uniforms[0].name)
   assert(true, built.uniforms[0].ast === ast)
-  assert(true, built.textures[0] === stubTex)
+  assert(true, built.textures[0].texture === stubTex)
+  assert('sampler2D', built.textures[0].sampler)
+  assert(true, built.source.includes('uniform vec2 u_vsex0;')) // Per texture extents, not one shared l_extents
+  assert(false, built.source.includes('l_extents'))
 
   // Same chain built twice yields byte-identical source: the program cache key property
   let rebuilt = buildSource(chain)
@@ -102,6 +109,27 @@ void main() {
   let noTex = buildSource(mulNode(ast))
   assert(false, noTex.source.includes('sampler2D'))
   assert(0, noTex.textures.length)
+
+  // Several textures in one chain each get their own sampler slot and extents uniform
+  let stubTex2 = {tex:'stub2'}
+  let twoTex = buildSource(composeShaderNodes(texNode(stubTex), texNode(stubTex2)))
+  assert(true, twoTex.source.includes('uniform sampler2D u_vstex0;'))
+  assert(true, twoTex.source.includes('uniform sampler2D u_vstex1;'))
+  assert(true, twoTex.source.includes('uniform vec2 u_vsex0;'))
+  assert(true, twoTex.source.includes('uniform vec2 u_vsex1;'))
+  assert(2, twoTex.textures.length)
+  assert(true, twoTex.textures[1].texture === stubTex2)
+
+  // A 3d lookup texture declares a sampler3D
+  let tex3dNode = makeShaderNode((input, ctx) => {
+    let sampler = ctx.addTexture(stubTex, 'sampler3D')
+    return ctx.addStatement(`texture(${sampler}, (${input}).xyz)`)
+  })
+  let built3d = buildSource(tex3dNode)
+  assert(true, built3d.source.includes('uniform sampler3D u_vstex0;'))
+  assert('sampler3D', built3d.textures[0].sampler)
+  assert(true, built3d.source.includes('precision highp sampler3D;')) // No default precision for it in GLSL ES 3.00
+  assert(false, built.source.includes('precision highp sampler3D;')) // Only declared where it is needed
 
   // A mul then an add stage, shaped like px=mul{2}>>add{0.5}>>tex{...}
   let offsetAst = () => 0.5
