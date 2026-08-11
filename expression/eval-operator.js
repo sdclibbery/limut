@@ -122,11 +122,12 @@ define(function(require) {
       return result
     }
     evalOp.interval = combineIntervalsFrom(l, r)
-    // The left operand of an operator that compiles to GLSL, for >> to walk down to the head of an
-    // arithmetic expression and pipe the visual chain input into it (see expressionHead in
-    // connectOp.js). Only set for shader capable operators, so `.`, `|`, `??` and `?:` are never
-    // descended into.
-    if (op.shaderNodeOp) { evalOp._shaderOpLhs = l }
+    // The left operand of an operator a visual chain can be fed through, for >> to walk down to the
+    // head of an expression and pipe the visual chain input into it (see expressionHead in
+    // connectOp.js). Set for the operators that compile to GLSL, and for >> itself so that a chain
+    // nested inside another one (`id>>(floor{1/8}>>add{1/2})`) is seeded like any other. So `.`,
+    // `|`, `??` and `?:` are never descended into.
+    if (op.shaderNodeOp || op.shaderChainOp) { evalOp._shaderOpLhs = l }
     return evalOp
   }
 

@@ -6,6 +6,8 @@ define(function(require) {
   let texture = require('draw/texture')
   let webcam = require('draw/webcam')
   let {lutTexture,resolveSize,defaultSizes} = require('draw/visualsynth/lut')
+  let connectOp = require('expression/connectOp')
+  let {evalParamFrame} = require('player/eval-param')
 
   // The incoming value, passed through unchanged. Every px chain is seeded with it (see
   // player/params.js), so `id` is only needed by name to use the incoming value inside an
@@ -125,6 +127,61 @@ define(function(require) {
     })
   }
   addNodeFunction('set', set)
+
+  // Which arg feeds each channel: the positional args in channel order (value, value1, value2,
+  // value3), with a named channel arg winning its own slot, as it does for set/add/mul.
+  let channelArgs = (args) => channelNames.map((names, i) => {
+    let named = names.find(n => args[n] !== undefined)
+    if (named !== undefined) { return args[named] }
+    return args['value'+(i||'')]
+  })
+
+  // Every arg of a call is evaluated once before the call itself, by the modifier machinery
+  // (evalFunctionWithModifiers in eval-param.js, since a lookup's args double as its time modifiers)
+  // — even for a node function, which asked not to have its args evalled. That evaluation is
+  // memoised on the event, so resolving an arg here has to opt out of memoisation, or >> gets that
+  // earlier un-piped value handed back instead of building the chain: `floor{1/8}+1/2` would compile
+  // to a constant rather than flooring the channel. Same protocol as the lut sampling in lut.js.
+  let unmemoised = (evalRecurse) => {
+    let options = Object.assign({}, evalRecurse.options, {doNotMemoise:true})
+    let er = (v, e, b, more) => evalParamFrame(v, e, b, more !== undefined ? Object.assign({}, options, more) : options)
+    er.options = options // >> reads expandingChords off here
+    return er
+  }
+
+  // Each arg is a px chain in its own right, fed that one channel: it is resolved by handing it to
+  // >> from the chain seed, exactly as player/params.js seeds a px param, so every rule px already
+  // has holds inside the arg too — `sin{id*2}` keeps its argument, a bare `sin` or a user defined
+  // function takes the channel implicitly, `floor{1/8}+1/2` feeds its head, and a plain value
+  // becomes an animated uniform. Gives undefined for an arg that isn't visual at all (channels{rand}),
+  // which the build then treats as a uniform so it still animates.
+  let channelChain = (ast, e, b, evalRecurse) => {
+    if (ast === undefined) { return undefined }
+    let v = connectOp(implicitInputNode(), ast, e, b, unmemoised(evalRecurse))
+    return isShaderNode(v) ? v : undefined
+  }
+
+  // Split the incoming value into its four channels, run an expression on each, and recombine;
+  // eg px=channels{sin{id*1},sin{id*2},sin{id*3}}. A channel with no expression passes through.
+  // Each channel is splatted across all four components on the way in, the same convention as a
+  // single channel read (in.v), so `id` inside the expression behaves as a scalar; the matching
+  // component of the result is taken back out, as it is for a channel param in emitChannels.
+  let channels = (args, e, b, state, evalRecurse) => {
+    let asts = channelArgs(args)
+    let nodes = asts.map(ast => channelChain(ast, e, b, evalRecurse)) // Resolved in channel order: the source must stay deterministic
+    return makeShaderNode((input, ctx) => {
+      if (asts.every(a => a === undefined)) { return ctx.addStatement(input) } // Nothing named: pass through
+      let parts = asts.map((ast, i) => {
+        let channel = `(${input}).${components[i]}`
+        if (ast === undefined) { return channel }
+        if (nodes[i] === undefined) { return `${ctx.addUniform(ast)}.${components[i]}` }
+        let splat = ctx.addStatement(`vec4(${channel})`)
+        return `(${nodes[i].build(splat, ctx)}).${components[i]}`
+      })
+      return ctx.addStatement(`vec4(${parts.join(', ')})`)
+    })
+  }
+  addNodeFunction('channels', channels)
 
   // Sample a texture at the incoming value's xy. Arg is a url string or a texture source like webcam{}.
   let tex = (args, e, b, state, evalRecurse) => {
@@ -365,6 +422,48 @@ define(function(require) {
   // of v0 that any piped call is handed) rather than being called with nothing
   assert(true, pxSource('sin*#0f0').includes('sin(v1)'))
 
+  // A chain nested inside another one is seeded like any other, so the call at its head takes the
+  // incoming value (expressionHead walks >> too). Bracketing a chain changes nothing.
+  assert(pxSource('floor{1/8}>>add{1/2}'), pxSource('(floor{1/8}>>add{1/2})'))
+
+  // channels{}: each channel is splatted in on its own, the arg's expression runs on it, and the
+  // matching component comes back out. Untouched channels are read straight off the input.
+  let src = pxSource('channels{sin{id*2}}')
+  assert(true, src.includes('vec4((v0).x)')) // Channel 0 splatted across all four
+  assert(true, src.includes('sin(')) // The expression compiled in
+  assert(true, /vec4\(\(v\d+\)\.x, \(v0\)\.y, \(v0\)\.z, \(v0\)\.w\)/.test(src)) // Recombined; the other three pass through
+  assert(false, src.includes('vec4((v0).y)')) // No arg for them, so nothing emitted for them either
+
+  // An arg follows the same rules a px value does, because it is resolved through >> from the chain
+  // seed: a bare call takes the channel, and an arithmetic expression feeds the call at its head
+  // (both of which would otherwise compile to nothing at all, having been called with no value)
+  src = pxSource('channels{sin}')
+  assert(true, src.includes('vec4((v0).x)') && src.includes('sin('))
+  src = pxSource('channels{floor{1/8}+1/2}')
+  assert(true, src.includes('vec4((v0).x)') && src.includes('floor('))
+  assert(pxSource('channels{floor{1/8}>>add{1/2}}'), src) // The >> spelling of the same thing
+  src = pxSource('channels{id^2}') // And an expression naming the channel with id
+  assert(true, src.includes('vec4((v0).x)') && src.includes('pow('))
+
+  src = pxSource('channels{sin{id},sin{id}}') // Two channels mapped, each with its own splat
+  assert(2, (src.match(/sin\(/g) || []).length)
+  assert(true, src.includes('vec4((v0).x)') && src.includes('vec4((v0).y)'))
+  assert(true, /vec4\(\(v\d+\)\.x, \(v\d+\)\.y, \(v0\)\.z, \(v0\)\.w\)/.test(src))
+
+  src = pxSource('channels{g:sin{id}}') // Named channel: only that one is touched
+  assert(true, src.includes('vec4((v0).y)'))
+  assert(true, /vec4\(\(v0\)\.x, \(v\d+\)\.y, \(v0\)\.z, \(v0\)\.w\)/.test(src))
+  assert(pxSource('channels{g:sin{id}}'), pxSource('channels{value1:sin{id}}')) // Same slot either way
+
+  src = pxSource('channels{1/2}') // Not visual: the raw expression becomes a uniform, so it still animates
+  assert(true, /vec4 v\d+ = u_vs0;/.test(src))
+  assert(true, /vec4\(\(v\d+\)\.x, \(v0\)\.y, \(v0\)\.z, \(v0\)\.w\)/.test(src))
+  assert(false, src.includes('sin(')) // Nothing else compiled in
+
+  assert(pxSource('set{}'), pxSource('channels{}')) // No args at all: straight through, as set{} is
+
+  assert(pxSource('channels{sin{id},g:id^2}'), pxSource('channels{sin{id},g:id^2}')) // Deterministic: the program cache is keyed on the source
+
   console.log('Visual synth nodes tests complete')
   }
 
@@ -373,6 +472,7 @@ define(function(require) {
     mul: mul,
     add: add,
     set: set,
+    channels: channels,
     tex: tex,
     tex1d: tex1d,
     tex2d: tex2d,

@@ -2,7 +2,7 @@
 =================================================================================================================================
 =================================================================================================================================
 visual nodes...
- channel split function with chain/expression per channel eg px=split{}
+ channel split function with chain/expression per channel eg px=split{sin{id*1},sin{id*2},sin{id*3}}
  random/noise/perlin in 1d, 2d, 3d with optional extra time dimension
  pixellate/monochrome/rotate etc etc - limut coded versions of visual params
  sdf stuff?
@@ -835,3 +835,10 @@ of texture nodes per chain (so tex{}>>tex{} works too):
 w visualsynth, px=tex{webcam{}}>>tex1d{{x}->{labh:x}}
 w visualsynth, px=id>>tex2d{{x,y}->{r:x,g:y}, size:128}
 w visualsynth, px=tex{webcam{}}>>tex3d{{r,g,b}->{r:b,g:g,b:r}}
+
+DONE, channels{} splits into the separate channels, runs an expression of its own on each (each one
+a px chain in its own right, fed that channel), and recombines; channels with no expression pass
+through:
+w visualsynth, px=channels{sin{id*1},sin{id*2},sin{id*3}}
+w visualsynth, px=tex{webcam{}}>>channels{tex1d{{x}->{h:x}}}
+w visualsynth, px=channels{r:id^2, b:1-id}

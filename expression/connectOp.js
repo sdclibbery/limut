@@ -153,6 +153,11 @@ define(function(require) {
     if (e && e._destructor) { e._destructor.disconnect(composite) }
     return composite
   }
+  // A visual chain may be fed through >> itself, so expressionHead can walk into a nested chain and
+  // seed its head: `id>>(floor{1/8}>>add{1/2})` means what `id>>floor{1/8}>>add{1/2}` does. Only
+  // reachable with a shader node on the left (parsing is left associative, so a >> only ever turns
+  // up on the right of another one via brackets, or as the arg of a call), so audio is untouched.
+  connectOp.shaderChainOp = true
 
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
