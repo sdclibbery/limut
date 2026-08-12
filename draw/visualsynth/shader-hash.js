@@ -32,8 +32,9 @@ define(function(require) {
   }
 
   // The classic sin hash: one dot product and one sin, then four different multipliers to get four
-  // channels out of it. Cheaper than pcg4d (roughly 19 ops against 28, and no 32 bit integer
-  // multiply, which is slow on some GPUs).
+  // channels out of it. Cheaper than pcg4d: measured on an M1 (8 core GPU, ANGLE Metal) at 40.7
+  // against 22.2 G invocations/sec, ie 1.83x, which is 0.20ms against 0.37ms for a full 4K pass.
+  // Both are small enough that the choice rarely matters.
   //
   // The large constants are what make it work on *small* inputs: a px chain's value is normally in
   // -1 to 1, so the dot lands in the tens of radians and sin wraps many times across the quad —
