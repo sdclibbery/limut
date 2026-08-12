@@ -1,7 +1,7 @@
 'use strict'
 define(function(require) {
   let {isShaderNode,naryShaderNode} = require('draw/visualsynth/shader-node')
-  let {pcg4dHelper,hash44Helper,hashSpec} = require('draw/visualsynth/shader-hash')
+  let {pcg4dHelper,sinHelper,hashSpec} = require('draw/visualsynth/shader-hash')
 
   // The maths functions work on visual nodes as well as numbers: when an argument is a shader node
   // the call compiles to GLSL instead of evaluating, the same dispatch the arithmetic operators use
@@ -92,7 +92,7 @@ define(function(require) {
     max: variadic('max'),
     dot: dot,
     pxhash: hash(pcg4dHelper),
-    pxhashf: hash(hash44Helper),
+    pxhashf: hash(sinHelper),
   }
 
   let hasShaderNode = (args) => {

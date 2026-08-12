@@ -31,17 +31,28 @@ define(function(require) {
 }`,
   }
 
-  // hash44, from Dave Hoskins' "Hash without Sine". Cheaper — all float, so it avoids 32 bit
-  // integer multiply, which is slow on some GPUs — but the four output channels are built from
-  // overlapping swizzles and so are correlated, and being fract() of float products it loses
-  // distribution as the input or seed magnitude grows. The seed can only be added here, which is
-  // exactly why a large or long running animated seed degrades where pcg4d's does not.
-  let hash44Helper = {
+  // The classic sin hash: one dot product and one sin, then four different multipliers to get four
+  // channels out of it. Cheaper than pcg4d (roughly 19 ops against 28, and no 32 bit integer
+  // multiply, which is slow on some GPUs).
+  //
+  // The large constants are what make it work on *small* inputs: a px chain's value is normally in
+  // -1 to 1, so the dot lands in the tens of radians and sin wraps many times across the quad —
+  // which is exactly the domain the sin hash was designed for. Note that Hoskins' hash44 (the
+  // obvious "hash without sine" choice) is NOT usable here: it mixes purely through fract(), and
+  // multiplies its input by ~0.103 first, so on a -1 to 1 input it never wraps and the output comes
+  // out smooth rather than random — visibly so, as arches rather than static. Scaling the input
+  // does not save it either: the usable window is narrow and it collapses on either side (on a
+  // value already scaled by 1000 it degenerated to 29 distinct colours across a 256x256 render).
+  //
+  // Two things this trades away against pcg4d, and the reason that one is the default:
+  // sin precision varies between drivers and fract(sin(x)*43758) amplifies the difference, so the
+  // pattern is not reproducible from GPU to GPU (it is still noise, just not the same noise); and
+  // as with any float hash the distribution decays once the input or seed grows large.
+  let sinHelper = {
     name: 'l_pxhashf',
     source: `vec4 l_pxhashf(vec4 p, vec4 s) {
-  vec4 p4 = fract((p + s) * vec4(0.1031, 0.1030, 0.0973, 0.1099));
-  p4 += dot(p4, p4.wzxy + 33.33);
-  return fract((p4.xxyz + p4.yzzw) * p4.zywx);
+  float a = sin(dot(p + s, vec4(12.9898, 78.233, 37.719, 4.581)));
+  return fract(a * vec4(43758.5453, 22578.1459, 19642.3490, 32764.1234));
 }`,
   }
 
@@ -59,7 +70,7 @@ define(function(require) {
 
   return {
     pcg4dHelper: pcg4dHelper,
-    hash44Helper: hash44Helper,
+    sinHelper: sinHelper,
     hashSpec: hashSpec,
   }
 })
