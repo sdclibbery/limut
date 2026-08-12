@@ -464,6 +464,55 @@ define(function(require) {
 
   assert(pxSource('channels{sin{id},g:id^2}'), pxSource('channels{sin{id},g:id^2}')) // Deterministic: the program cache is keyed on the source
 
+  // pxhash: a per pixel hash of the value coming down the chain, declared as a helper function and
+  // called on the incoming value. Random rgb with the incoming alpha kept, as dot does.
+  let declarations = (src, name) => (src.match(new RegExp('vec4 '+name+'\\(vec4 p, vec4 s\\)', 'g')) || []).length
+  src = pxSource('pxhash')
+  assert(true, src.includes('vec4 v2 = vec4(l_pxhash(v1, vec4(0.0)).rgb, (v1).a);'))
+  assert(1, declarations(src, 'l_pxhash'))
+  assert(true, src.indexOf('vec4 l_pxhash(') < src.indexOf('void main()')) // Declared before it is called
+  assert(pxSource('id>>pxhash'), src) // Writing the chain seed out changes nothing, as ever
+
+  // The argument form has the value already, so it is not piped one: no pass-through, and it hashes
+  // the incoming value directly
+  assert(true, pxSource('pxhash{id}').includes('vec4 v1 = vec4(l_pxhash(v0, vec4(0.0)).rgb, (v0).a);'))
+  src = pxSource('pxhash{id*3}') // And it can hash an expression of the incoming value
+  assert(true, src.includes('vec4 v1 = v0 * u_vs0;') && src.includes('l_pxhash(v1, vec4(0.0))'))
+
+  // Quantise the coordinates first for blocky noise: the floor comes before the hash. Compared
+  // within main, since the helper's own declaration necessarily comes before all of it
+  let body = (s) => s.slice(s.indexOf('void main()'))
+  src = body(pxSource('floor{1/8}>>pxhash'))
+  assert(true, src.indexOf('floor(v1 / u_vs0)') < src.indexOf('l_pxhash('))
+
+  // A seed becomes a uniform, so it animates; with none the shader gets a literal instead
+  assert(true, pxSource('pxhash{seed:2}').includes('l_pxhash(v1, u_vs0)'))
+  assert(pxSource('pxhash{seed:2}'), pxSource('id>>pxhash{2}')) // Named or second positional: same slot
+  assert(true, pxSource('pxhash') !== pxSource('pxhash{seed:2}'))
+
+  // Used twice the helper is still declared once; the two hashes each get their own call
+  src = pxSource('pxhash>>pxhash')
+  assert(1, declarations(src, 'l_pxhash'))
+  assert(2, (src.match(/l_pxhash\(v\d+,/g) || []).length)
+
+  // pxhashf is the same node with the cheaper hash, and the two coexist
+  assert(true, pxSource('pxhashf').includes('vec4 v2 = vec4(l_pxhashf(v1, vec4(0.0)).rgb, (v1).a);'))
+  src = pxSource('pxhash+pxhashf{id}')
+  assert(1, declarations(src, 'l_pxhash'))
+  assert(1, declarations(src, 'l_pxhashf'))
+
+  // As a param it must be given the value explicitly (params are not piped, unlike a chain), so
+  // mul{pxhash{id}} is a per pixel multiply where the bare mul{pxhash} is just a constant
+  src = pxSource('mul{pxhash{id}}')
+  assert(true, src.includes('vec4 v1 = vec4(l_pxhash(v0, vec4(0.0)).rgb, (v0).a);') && src.includes('vec4 v2 = v0 * (v1);'))
+  assert(false, pxSource('mul{pxhash}').includes('l_pxhash')) // Evaluates as a scalar: one value for the whole quad
+
+  // A channels{} arg is a px chain in its own right, so a bare pxhash does take the channel there
+  src = pxSource('channels{a:pxhash}')
+  assert(true, src.includes('vec4 v1 = vec4((v0).w);') && src.includes('l_pxhash(v2, vec4(0.0))'))
+
+  assert(pxSource('pxhash{seed:2}'), pxSource('pxhash{seed:2}')) // Deterministic: the program cache is keyed on the source
+
   console.log('Visual synth nodes tests complete')
   }
 

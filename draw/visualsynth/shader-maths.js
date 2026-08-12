@@ -1,6 +1,7 @@
 'use strict'
 define(function(require) {
   let {isShaderNode,naryShaderNode} = require('draw/visualsynth/shader-node')
+  let {pcg4dHelper,hash44Helper,hashSpec} = require('draw/visualsynth/shader-hash')
 
   // The maths functions work on visual nodes as well as numbers: when an argument is a shader node
   // the call compiles to GLSL instead of evaluating, the same dispatch the arithmetic operators use
@@ -25,6 +26,15 @@ define(function(require) {
     let ops = mainOperand(args, raw)
     let to = operand(args, raw, 'to') || operand(args, raw, 'value1')
     if (to !== undefined) { ops.push(to) }
+    return ops
+  }
+
+  // value, plus an optional seed: named as `seed`, or the second positional arg (which is where
+  // `>>pxhash{2}` puts it once the piped value has taken the first slot), as `to` works for floor
+  let seedOperands = (args, raw) => {
+    let ops = mainOperand(args, raw)
+    let seed = operand(args, raw, 'seed') || operand(args, raw, 'value1')
+    if (seed !== undefined) { ops.push(seed) }
     return ops
   }
 
@@ -63,6 +73,9 @@ define(function(require) {
     },
   }
 
+  // The hashes: the GLSL and the emit live in shader-hash.js, the operand shape is the local one
+  let hash = (helper) => Object.assign({operands: seedOperands}, hashSpec(helper))
+
   let specs = {
     floor: quantise('floor'),
     ceil: quantise('ceil'),
@@ -78,6 +91,8 @@ define(function(require) {
     min: variadic('min'),
     max: variadic('max'),
     dot: dot,
+    pxhash: hash(pcg4dHelper),
+    pxhashf: hash(hash44Helper),
   }
 
   let hasShaderNode = (args) => {
@@ -98,7 +113,7 @@ define(function(require) {
     if (spec === undefined) { throw `No visual node spec for maths function ${name}` }
     let shaderMathsFunc = (args, e,b, state, evalRecurse) => {
       if (hasShaderNode(args)) {
-        let node = naryShaderNode(spec.emit, spec.operands(args, args.__rawArgs))
+        let node = naryShaderNode(spec.emit, spec.operands(args, args.__rawArgs), spec.helpers)
         return {value:node, _finalResult:true} // Final: no further lookup, so postfix (id*4).floor works
       }
       return numericFn(args, e,b, state, evalRecurse)
@@ -117,9 +132,10 @@ define(function(require) {
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
   let mockCtx = () => {
-    let ctx = { statements: [], uniforms: [] }
+    let ctx = { statements: [], uniforms: [], functions: [] }
     ctx.addStatement = (expr) => { ctx.statements.push(expr); return 'v' + ctx.statements.length }
     ctx.addUniform = (ast) => { ctx.uniforms.push(ast); return 'u_vs' + (ctx.uniforms.length-1) }
+    ctx.addFunction = (name, source) => { if (!ctx.functions.some(f => f.name === name)) { ctx.functions.push({name:name, source:source}) } return name }
     return ctx
   }
   let node = {isShaderNode:true, build: (input, ctx) => input}
@@ -149,6 +165,35 @@ define(function(require) {
   assert('max(max(v0, u_vs0), u_vs1)', emitted('max', {value:node, value1:1/2, value2:1/4}))
   assert('vec4(vec3(dot((v0).rgb, (u_vs0).rgb)), (v0).a)', emitted('dot', {value:node, value1:{r:1,g:0,b:0}}))
   assert('vec4(vec3(dot((v0).rgb, (v0).rgb)), (v0).a)', emitted('dot', {value:node})) // One arg dots with itself
+
+  // The hashes: random rgb with the incoming alpha kept, as dot does. With no seed the shader gets
+  // a literal rather than a uniform, so an unseeded hash is a fixed field and costs nothing to feed
+  assert('vec4(l_pxhash(v0, vec4(0.0)).rgb, (v0).a)', emitted('pxhash', {value:node}))
+  assert('vec4(l_pxhashf(v0, vec4(0.0)).rgb, (v0).a)', emitted('pxhashf', {value:node}))
+  assert('vec4(l_pxhash(v0, u_vs0).rgb, (v0).a)', emitted('pxhash', {value:node, seed:2}))
+  assert('vec4(l_pxhash(v0, u_vs0).rgb, (v0).a)', emitted('pxhash', {value:node, value1:2})) // Positional seed, as >>pxhash{2}
+  assert('vec4(l_pxhashf(v0, u_vs0).rgb, (v0).a)', emitted('pxhashf', {value:node, seed:2}))
+
+  // Each declares its own GLSL helper, and only when it is used
+  let hctx = mockCtx()
+  shaderAware('pxhash', numeric)({value:node}).value.build('v0', hctx)
+  assert(['l_pxhash'], hctx.functions.map(f => f.name))
+  hctx = mockCtx()
+  shaderAware('pxhashf', numeric)({value:node}).value.build('v0', hctx)
+  assert(['l_pxhashf'], hctx.functions.map(f => f.name))
+  hctx = mockCtx()
+  shaderAware('floor', numeric)({value:node}).value.build('v0', hctx)
+  assert([], hctx.functions) // A function with no helpers declares none
+
+  // A seed registers its raw AST, so it animates per frame like any other param
+  let seedAst = () => 2
+  hctx = mockCtx()
+  shaderAware('pxhash', numeric)({value:node, seed:2, __rawArgs:{seed:seedAst}}).value.build('v0', hctx)
+  assert(true, hctx.uniforms[0] === seedAst)
+
+  // Off a visual node they are ordinary scalar functions
+  assert('numeric', shaderAware('pxhash', numeric)({value:3}))
+  assert('numeric', shaderAware('pxhashf', numeric)({value:3, seed:1}))
 
   // A non-node operand registers its raw AST, so it stays animated; the evalled value is only
   // used to decide whether it is a node

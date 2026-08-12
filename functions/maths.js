@@ -3,6 +3,7 @@ define(function(require) {
   let {addVarFunction,add} = require('predefined-vars')
   let {mainParam,subParam} = require('player/sub-param')
   let {shaderAware} = require('draw/visualsynth/shader-maths')
+  let {xmur3} = require('functions/rand')
 
   let argParam = v => mainParam(mainParam(v)) // One for getting the value from args, other for getting the value from the param
 
@@ -59,6 +60,20 @@ define(function(require) {
     return {value:a[0]*b[0]+a[1]*b[1]+a[2]*b[2],_finalResult:true}
   }
   addMathsFunction('dot', dotFunc)
+
+  // pxhash/pxhashf are for visual nodes: a per pixel hash of the value flowing down a px chain,
+  // where plain rand would give one number for the whole quad. Off a visual node there is no vector
+  // to hash, so they fall back to hashing the number, giving a deterministic value in [0,1) —
+  // the same seeding machinery rand itself uses.
+  let scalarHash = (args) => {
+    let v = argParam(args, 0)
+    if (typeof v !== 'number') { v = 0 }
+    let seed = subParam(args, 'seed', subParam(args, 'value1', 0)) // Second positional is the seed too
+    if (typeof seed !== 'number') { seed = 0 }
+    return {value:xmur3(v + seed)/4294967296,_finalResult:true} // Final result: no further lookup, so postfix (3).pxhash works
+  }
+  addMathsFunction('pxhash', scalarHash)
+  addMathsFunction('pxhashf', scalarHash)
 
   let euclid = (args, e) => {
     let k = Math.floor(argParam(args, 1)) // Distribute k beats...
@@ -191,6 +206,18 @@ define(function(require) {
   assert(0, evalParamFrame(parseExpression("dot{#f00,#0f0}"),ev(0,0), 0))
   assert(3, evalParamFrame(parseExpression("dot{1}"),ev(0,0), 0)) // One arg dots with itself
   assert(1, evalParamFrame(parseExpression("#f00>>dot{#ff0}"),ev(0,0), 0))
+
+  // pxhash/pxhashf are for visual nodes (see draw/visualsynth/shader-hash.js); off one there is no
+  // vector to hash, so they hash the number instead — deterministic, in [0,1), and seedable
+  let scalarOf = (src) => evalParamFrame(parseExpression(src), ev(0,0), 0)
+  assert(true, scalarOf('pxhash{3}') >= 0 && scalarOf('pxhash{3}') < 1)
+  assert(true, scalarOf('pxhash{3}') === scalarOf('pxhash{3}')) // Deterministic: it is a hash, not a random
+  assert(true, scalarOf('pxhash{3}') !== scalarOf('pxhash{4}'))
+  assert(true, scalarOf('pxhash{3}') !== scalarOf('pxhash{3,seed:1}'))
+  assert(true, scalarOf('pxhash{3,seed:1}') === scalarOf('pxhash{3,1}')) // Second positional is the seed too
+  assert(true, scalarOf('pxhashf{3}') === scalarOf('pxhash{3}')) // The algorithms only differ in the shader
+  assert(true, scalarOf('(3).pxhash') === scalarOf('pxhash{3}')) // Final result, so postfix gives the value
+  assert(true, scalarOf('3>>pxhash') === scalarOf('pxhash{3}'))
 
   assert(2, evalParamFrame(parseExpression('ceil{1.5}'), ev(0,0), 0))
   assert(-1, evalParamFrame(parseExpression('ceil{-1.5}'), ev(0,0), 0))

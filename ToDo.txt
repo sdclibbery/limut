@@ -2,15 +2,17 @@
 =================================================================================================================================
 =================================================================================================================================
 visual nodes...
- channel split function with chain/expression per channel eg px=split{sin{id*1},sin{id*2},sin{id*3}}
- random/noise/perlin in 1d, 2d, 3d with optional extra time dimension
+ pxhash
+ loop, parallel, series
+ clamp, length, cross
+ noise/perlin in 1d, 2d, 3d with optional extra time dimension?
  pixellate/monochrome/rotate etc etc - limut coded versions of visual params
- sdf stuff?
+ 2d sdf shapes and smoothmin
+ bitwise ops
+ ? {tex,#124} should do addition like in audio chain??
  render buffers to generate read from, eg px=tex{buffer{mul{1.01}>>webcam>>set{#...a},clear:false}} for temporal zoom-blur??
  hsl etc conversions?
- clamp
  3d stuff?
- ? {tex,#124} should do addition like in audio chain??
 ?set bpm can have target time? eg set bpm={140,by;1000}
 grain should have offset param, would allow more interesting effects; granular delays etc
 Multiband compressor
@@ -842,3 +844,13 @@ through:
 w visualsynth, px=channels{sin{id*1},sin{id*2},sin{id*3}}
 w visualsynth, px=tex{webcam{}}>>channels{tex1d{{x}->{h:x}}}
 w visualsynth, px=channels{r:id^2, b:1-id}
+
+DONE, pxhash{} is a per pixel vector hash: random rgb keyed on the incoming value, keeping its
+alpha, with an optional seed (fixed field with none, animate it for moving noise). pxhashf{} is the
+same with a cheaper, less well distributed float hash. Note a param is not piped, so pxhash needs
+the value handing to it there (mul{pxhash{id}}, not mul{pxhash}):
+w visualsynth, px=pxhash
+w visualsynth, px=floor{1/8}>>pxhash // blocky noise
+w visualsynth, px=pxhash{seed:[]l} // TV static
+w visualsynth, px=tex{webcam{}}>>mul{pxhash{id}}
+Still to do: smooth value noise / perlin, which needs interpolation between hashed lattice points

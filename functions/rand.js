@@ -56,6 +56,7 @@ define(function(require) {
 
   // TESTS // - Tests for rand function are in parse-expression
 
+  rand.xmur3 = xmur3 // Also the scalar side of pxhash (functions/maths.js)
   return rand
 })
   

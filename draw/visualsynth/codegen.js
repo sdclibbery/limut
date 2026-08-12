@@ -10,6 +10,7 @@ define(function(require) {
       statements: [],
       uniforms: [], // {name, ast, callTree} — ast is the raw unevaluated arg, re-evaluated per frame
       textures: [], // {texture, sampler} entries, parallel to sampler names u_vstex0, u_vstex1...
+      functions: [], // {name, source} GLSL helper declarations, emitted before main
       notReady: false, // a texture source isn't available yet (eg webcam pre-enumeration)
     }
     let nextVar = 1 // v0 is the implicit uv seed
@@ -24,6 +25,14 @@ define(function(require) {
       // The call tree current during this node's build is the one the AST was written in, so keep
       // it: the per frame eval in draw/visualsynth.js has to restore it to resolve lambda args
       ctx.uniforms.push({name: name, ast: ast, callTree: getCallTree()})
+      return name
+    }
+    // A GLSL helper function declared before main, for a node whose emitted expression is more than
+    // one line of maths (eg the pxhash hashes). Deduped by name, so a chain using the same node
+    // several times declares it once. Names are fixed literals rather than counters, and the l_
+    // prefix keeps them clear of the generated vN/u_vsN/uvN names.
+    ctx.addFunction = (name, source) => {
+      if (!ctx.functions.some(f => f.name === name)) { ctx.functions.push({name: name, source: source}) }
       return name
     }
     // Each texture gets its own sampler and its own extents uniform (u_vsexN): one shared
@@ -51,12 +60,13 @@ ${sampler3d ? 'precision highp sampler3D;\n' : ''}in vec2 fragCoord;
 out vec4 fragColor;
 ${ctx.uniforms.map(u => `uniform vec4 ${u.name};`).join('\n')}
 ${ctx.textures.map((t,i) => `uniform ${t.sampler} u_vstex${i};\nuniform vec2 u_vsex${i};`).join('\n')}
+${ctx.functions.map(f => f.source).join('\n')}
 void main() {
   vec4 v0 = vec4(fragCoord, 0.0, 1.0);
   ${ctx.statements.join('\n  ')}
   fragColor = ${out};
 }`
-    return { source: source, uniforms: ctx.uniforms, textures: ctx.textures, notReady: ctx.notReady }
+    return { source: source, uniforms: ctx.uniforms, textures: ctx.textures, functions: ctx.functions, notReady: ctx.notReady }
   }
 
   // TESTS //
@@ -130,6 +140,36 @@ void main() {
   assert('sampler3D', built3d.textures[0].sampler)
   assert(true, built3d.source.includes('precision highp sampler3D;')) // No default precision for it in GLSL ES 3.00
   assert(false, built.source.includes('precision highp sampler3D;')) // Only declared where it is needed
+
+  // Helper functions: declared once each, before main, whatever the chain does with them
+  let helperNode = (name) => makeShaderNode((input, ctx) => {
+    ctx.addFunction(name, `vec4 ${name}(vec4 p) { return p; }`)
+    return ctx.addStatement(`${name}(${input})`)
+  })
+  let helped = buildSource(helperNode('l_stub'))
+  assert(true, helped.source.includes('vec4 l_stub(vec4 p) { return p; }'))
+  assert(true, helped.source.indexOf('vec4 l_stub(vec4 p)') < helped.source.indexOf('void main()')) // Declared before it is called
+  assert(1, helped.functions.length)
+  assert('l_stub', helped.functions[0].name)
+
+  // Declarations land after the uniforms, so a helper could refer to one
+  let withUniform = buildSource(composeShaderNodes(mulNode(ast), helperNode('l_stub')))
+  assert(true, withUniform.source.indexOf('uniform vec4 u_vs0;') < withUniform.source.indexOf('vec4 l_stub(vec4 p)'))
+
+  // The same helper used twice is declared once: dedupe is by name
+  let twice = buildSource(composeShaderNodes(helperNode('l_stub'), helperNode('l_stub')))
+  assert(1, (twice.source.match(/vec4 l_stub\(vec4 p\)/g) || []).length)
+  assert(1, twice.functions.length)
+  assert(2, (twice.source.match(/l_stub\(v\d+\)/g) || []).length) // But called twice
+
+  // Two different helpers both get declared, in build order
+  let two = buildSource(composeShaderNodes(helperNode('l_a'), helperNode('l_b')))
+  assert(['l_a','l_b'], two.functions.map(f => f.name))
+  assert(true, two.source.indexOf('vec4 l_a(') < two.source.indexOf('vec4 l_b('))
+  assert(true, two.source === buildSource(composeShaderNodes(helperNode('l_a'), helperNode('l_b'))).source) // Still byte-identical
+
+  // A chain that declares none has none
+  assert(0, buildSource(mulNode(ast)).functions.length)
 
   // A mul then an add stage, shaped like px=mul{2}>>add{0.5}>>tex{...}
   let offsetAst = () => 0.5

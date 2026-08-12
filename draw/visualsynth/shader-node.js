@@ -65,8 +65,15 @@ define(function(require) {
   let buildOperands = (operands, input, ctx) => {
     return operands.map(o => isShaderNode(o.value) ? o.value.build(input, ctx) : ctx.addUniform(o.raw))
   }
-  let naryShaderNode = (emit, operands) => {
+  // Any GLSL helper functions the emitted expression calls, as {name, source}, are declared before
+  // the operands resolve. addFunction dedupes by name, so using the same node twice in a chain
+  // declares its helper once (see codegen.js).
+  let addHelpers = (helpers, ctx) => {
+    if (helpers !== undefined) { helpers.forEach(h => ctx.addFunction(h.name, h.source)) }
+  }
+  let naryShaderNode = (emit, operands, helpers) => {
     return makeShaderNode((input, ctx) => {
+      addHelpers(helpers, ctx)
       return ctx.addStatement(emit(...buildOperands(operands, input, ctx)))
     })
   }
@@ -146,9 +153,10 @@ define(function(require) {
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
   let mockCtx = () => {
-    let ctx = { statements: [], uniforms: [] }
+    let ctx = { statements: [], uniforms: [], functions: [] }
     ctx.addStatement = (expr) => { ctx.statements.push(expr); return 'v' + ctx.statements.length }
     ctx.addUniform = (ast) => { ctx.uniforms.push(ast); return 'u_vs' + (ctx.uniforms.length-1) }
+    ctx.addFunction = (name, source) => { if (!ctx.functions.some(f => f.name === name)) { ctx.functions.push({name:name, source:source}) } return name }
     return ctx
   }
 
@@ -203,6 +211,22 @@ define(function(require) {
   ctx = mockCtx()
   out = naryShaderNode(x => `-${x}`, [{raw:undefined, value:a}]).build('v0', ctx) // A single operand
   assert(['v0 * 2.0', '-v1'], ctx.statements)
+
+  // A node can declare GLSL helper functions its emitted expression calls
+  let helper = {name:'l_stub', source:'vec4 l_stub(vec4 p) { return p; }'}
+  ctx = mockCtx()
+  out = naryShaderNode(x => `l_stub(${x})`, [{raw:undefined, value:a}], [helper]).build('v0', ctx)
+  assert(['v0 * 2.0', 'l_stub(v1)'], ctx.statements)
+  assert([helper], ctx.functions)
+
+  ctx = mockCtx() // The same helper twice over is declared once: addFunction dedupes by name
+  composeShaderNodes(naryShaderNode(x => `l_stub(${x})`, [{raw:undefined, value:a}], [helper]),
+                     naryShaderNode(x => `l_stub(${x})`, [{raw:undefined, value:b}], [helper])).build('v0', ctx)
+  assert(1, ctx.functions.length)
+
+  ctx = mockCtx() // And no helpers at all is fine
+  naryShaderNode(x => `-${x}`, [{raw:undefined, value:a}]).build('v0', ctx)
+  assert([], ctx.functions)
 
   // naryShaderNodeWithInput: same operand rules, but emit also sees the incoming value
   ctx = mockCtx()
