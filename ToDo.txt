@@ -2,15 +2,15 @@
 =================================================================================================================================
 =================================================================================================================================
 visual nodes...
- loop, parallel, series
- pixellate/monochrome/rotate etc etc - limut coded versions of visual params
  2d sdf shapes and smoothmin
+ visual lib functions for old style visual params (monochrome, picellate, rotate, mirror, vhs etc etc)
  voronoi
  bitwise ops
- ? {tex,#124} should do addition like in audio chain??
+ ? {tex,#124} should do split/join like in audio chain??
  render buffers to generate read from, eg px=tex{buffer{mul{1.01}>>webcam>>set{#...a},clear:false}} for temporal zoom-blur??
  hsl etc conversions?
  3d stuff?
+ loop, parallel, series
 ?set bpm can have target time? eg set bpm={140,by;1000}
 grain should have offset param, would allow more interesting effects; granular delays etc
 Multiband compressor

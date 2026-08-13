@@ -103,3 +103,14 @@ set turb2 = {in:id, scale:4, seed:0} ->
   + abs{noise2{in, scale*4, seed}*2-1}*2
   + abs{noise2{in, scale*8, seed}*2-1}
   )/15
+
+//// Colour
+// Cosine palette from Inigo Quilez: a single value in becomes a cycling colour out. a is the level
+// the colours swing about, b how far they swing, c how many cycles the incoming 0 to 1 covers and d
+// the phase; they are colours rather than numbers, so each channel gets its own cosine, and it is
+// the phase spread between them that makes it a palette rather than a grey ramp. The args are in
+// reverse order after in, so the phase is the first positional: cospal{#05a} is the full rainbow.
+//   px=fbm2>>cospal
+//   px=length>>cospal{#05a}
+// Note it wants a single value in: px=cospal bare runs red off x and green off y, ie a plaid.
+set cospal = {in,d:#012,c:1,b:1/2,a:1/2} -> (a+b*cos{6.28318*(c*in+d)})
