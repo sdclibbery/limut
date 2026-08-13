@@ -1,5 +1,6 @@
 include 'lib/nodes.limut'
 include 'lib/effects.limut'
+include 'lib/visual.limut'
 
 include 'preset/303.limut'
 include 'preset/808.limut'

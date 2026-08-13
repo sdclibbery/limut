@@ -10,20 +10,37 @@ define(function(require) {
   // inside a user defined function (set pixellate = {in,size} -> ...) registers uniforms whose
   // ASTs mention that function's args, and both the build and the per frame uniform eval happen
   // long after the call returned. Same trick as doPerFrame in play/eval-audio-params.js.
+  //
+  // Each node emits once per (node, input): the same node object reached twice — a lambda arg used
+  // several times, as smooth noise does with its coordinate — would otherwise re-emit its whole
+  // subtree and allocate a fresh uniform for every duplicated constant, which is what makes an
+  // octave noise run out of uniforms. Safe because build is contractually a pure string emitter,
+  // and keying on the input keeps channels{} (one node built from four different inputs) intact.
+  // ctx.built is per build walk (codegen.js), so nothing survives between shaders.
   let makeShaderNode = (build) => {
     let callTree = getCallTree()
+    let node
     let buildInCallContext = (input, ctx) => {
+      let byInput = ctx.built !== undefined ? ctx.built.get(node) : undefined
+      if (byInput !== undefined && byInput.has(input)) { return byInput.get(input) }
       let outer = getCallTree()
       clearCallTree()
       setCallTree(callTree)
+      let out
       try {
-        return build(input, ctx)
+        out = build(input, ctx)
       } finally {
         clearCallTree()
         setCallTree(outer)
       }
+      if (ctx.built !== undefined) {
+        if (byInput === undefined) { byInput = new Map(); ctx.built.set(node, byInput) }
+        byInput.set(input, out)
+      }
+      return out
     }
-    return { isShaderNode: true, build: buildInCallContext }
+    node = { isShaderNode: true, build: buildInCallContext }
+    return node
   }
 
   let isShaderNode = (v) => {
@@ -153,7 +170,7 @@ define(function(require) {
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
   let mockCtx = () => {
-    let ctx = { statements: [], uniforms: [], functions: [] }
+    let ctx = { statements: [], uniforms: [], functions: [], built: new Map() }
     ctx.addStatement = (expr) => { ctx.statements.push(expr); return 'v' + ctx.statements.length }
     ctx.addUniform = (ast) => { ctx.uniforms.push(ast); return 'u_vs' + (ctx.uniforms.length-1) }
     ctx.addFunction = (name, source) => { if (!ctx.functions.some(f => f.name === name)) { ctx.functions.push({name:name, source:source}) } return name }
@@ -186,6 +203,38 @@ define(function(require) {
   out = binaryShaderNode(add, undefined, a, undefined, b).build('v0', ctx)
   assert(['v0 * 2.0', 'v0 + 1.0', 'v1 + v2'], ctx.statements) // node/node: both see v0, no chaining
   assert('v3', out)
+
+  // The same node object reached twice emits once: both operands get the same variable, and its
+  // uniforms are registered once. This is what keeps a value used several times (a lambda arg, as
+  // smooth noise does with its coordinate) from re-emitting its whole subtree each time.
+  ctx = mockCtx()
+  let uAst = () => 2
+  let uniformNode = makeShaderNode((input, c) => c.addStatement(`${input} * ${c.addUniform(uAst)}`))
+  out = binaryShaderNode(add, undefined, uniformNode, undefined, uniformNode).build('v0', ctx)
+  assert(['v0 * u_vs0', 'v1 + v1'], ctx.statements)
+  assert(1, ctx.uniforms.length)
+  assert('v2', out)
+
+  ctx = mockCtx() // Nested: a node shared between an operand and one of its own ancestors' operands
+  let sum = binaryShaderNode(add, undefined, uniformNode, undefined, uniformNode)
+  binaryShaderNode(add, undefined, sum, undefined, uniformNode).build('v0', ctx)
+  assert(['v0 * u_vs0', 'v1 + v1', 'v2 + v1'], ctx.statements)
+  assert(1, ctx.uniforms.length)
+
+  ctx = mockCtx() // But the input is part of the key: the same node on two different inputs is two different values
+  composeShaderNodes(a, uniformNode).build('v0', ctx)
+  uniformNode.build('v0', ctx)
+  assert(['v0 * 2.0', 'v1 * u_vs0', 'v0 * u_vs1'], ctx.statements)
+  assert(2, ctx.uniforms.length)
+
+  ctx = mockCtx() // Two structurally identical but distinct nodes are not shared: dedupe is by identity
+  binaryShaderNode(add, undefined, makeShaderNode((i,c) => c.addStatement(`${i} * 2.0`)), undefined, a).build('v0', ctx)
+  assert(['v0 * 2.0', 'v0 * 2.0', 'v1 + v2'], ctx.statements)
+
+  let noMemoCtx = mockCtx() // A context with no built map still works, just without the sharing
+  delete noMemoCtx.built
+  binaryShaderNode(add, undefined, a, undefined, a).build('v0', noMemoCtx)
+  assert(['v0 * 2.0', 'v0 * 2.0', 'v1 + v2'], noMemoCtx.statements)
 
   ctx = mockCtx()
   let lAst = () => 2

@@ -20,21 +20,28 @@ define(function(require) {
 
   let mainOperand = (args, raw) => [operand(args, raw, 'value')]
 
-  // value, plus an optional precision to quantise to: named as `to`, or the second positional arg
-  // (which is where `>>floor{1/40}` puts it once the piped value has taken the first slot)
-  let quantiseOperands = (args, raw) => {
+  // value, plus an optional second operand: named, or the second positional arg (which is where
+  // `>>floor{1/40}` puts it once the piped value has taken the first slot). A name of undefined
+  // means positional only, as dot and cross are.
+  let optionalSecond = (name) => (args, raw) => {
     let ops = mainOperand(args, raw)
-    let to = operand(args, raw, 'to') || operand(args, raw, 'value1')
-    if (to !== undefined) { ops.push(to) }
+    let b = (name !== undefined ? operand(args, raw, name) : undefined) || operand(args, raw, 'value1')
+    if (b !== undefined) { ops.push(b) }
     return ops
   }
+  let quantiseOperands = optionalSecond('to') // floor{v,to:1/2}, and >>floor{1/2}
+  let seedOperands = optionalSecond('seed') // pxhash{v,seed:2}, and >>pxhash{2}
 
-  // value, plus an optional seed: named as `seed`, or the second positional arg (which is where
-  // `>>pxhash{2}` puts it once the piped value has taken the first slot), as `to` works for floor
-  let seedOperands = (args, raw) => {
+  // value, plus an optional lo/hi pair: named, or the second and third positional args. Giving only
+  // one still emits both (the other from its default) so the pair stays positional in the emit;
+  // giving neither emits no operands at all, so the defaults become literals rather than uniforms.
+  let rangeOperands = (loKey, hiKey, loDefault, hiDefault) => (args, raw) => {
     let ops = mainOperand(args, raw)
-    let seed = operand(args, raw, 'seed') || operand(args, raw, 'value1')
-    if (seed !== undefined) { ops.push(seed) }
+    let lo = operand(args, raw, loKey) || operand(args, raw, 'value1')
+    let hi = operand(args, raw, hiKey) || operand(args, raw, 'value2')
+    if (lo === undefined && hi === undefined) { return ops }
+    ops.push(lo !== undefined ? lo : {value: loDefault, raw: loDefault})
+    ops.push(hi !== undefined ? hi : {value: hiDefault, raw: hiDefault})
     return ops
   }
 
@@ -61,17 +68,28 @@ define(function(require) {
     emit: (...names) => names.reduce((acc, n) => `${glslFn}(${acc}, ${n})`),
     operands: allOperands,
   })
-  // Dot product of the rgb components, splatted back into rgb with the input's alpha kept, so a
-  // monochrome chain (dot{id,#3b1}) comes out opaque rather than see through. One arg dots with itself.
+  // A range function (clamp, smoothstep): the lo/hi pair is a literal when neither was given, so
+  // the common `smoothstep{f}` fade curve costs no uniforms at all
+  let ranged = (emit, loDefault, hiDefault) => ({
+    emit: (a, lo, hi) => lo === undefined
+      ? emit(a, `vec4(${loDefault.toFixed(1)})`, `vec4(${hiDefault.toFixed(1)})`)
+      : emit(a, lo, hi),
+    operands: rangeOperands('lo', 'hi', loDefault, hiDefault),
+  })
+
+  // The rgb of a vector operation, with the input's alpha kept, so a chain stays opaque rather than
+  // see through. dot and length collapse to a scalar and so splat it across rgb the way a single
+  // channel read does; normalize and cross keep their three components.
   let dot = {
     emit: (a, b) => `vec4(vec3(dot((${a}).rgb, (${b === undefined ? a : b}).rgb)), (${a}).a)`,
-    operands: (args, raw) => {
-      let ops = mainOperand(args, raw)
-      let b = operand(args, raw, 'value1')
-      if (b !== undefined) { ops.push(b) }
-      return ops
-    },
+    operands: optionalSecond(),
   }
+  let cross = {
+    emit: (a, b) => `vec4(cross((${a}).rgb, (${b === undefined ? a : b}).rgb), (${a}).a)`,
+    operands: optionalSecond(),
+  }
+  let length = { emit: (a) => `vec4(vec3(length((${a}).rgb)), (${a}).a)`, operands: mainOperand }
+  let normalize = { emit: (a) => `vec4(normalize((${a}).rgb), (${a}).a)`, operands: mainOperand }
 
   // The hashes: the GLSL and the emit live in shader-hash.js, the operand shape is the local one
   let hash = (helper) => Object.assign({operands: seedOperands}, hashSpec(helper))
@@ -87,10 +105,23 @@ define(function(require) {
     cos: unary('cos'),
     tan: unary('tan'),
     tanh: unary('tanh'),
-    atan: unary('atan'),
+    // atan{y} is the one argument arctangent; atan{y,x} (named x, or the second positional) is the
+    // two argument one, ie the angle of the vector x,y, which is what a polar coordinate wants
+    atan: { emit: (a, b) => b === undefined ? `atan(${a})` : `atan(${a}, ${b})`, operands: optionalSecond('x') },
+    fract: unary('fract'),
+    sqrt: unary('sqrt'),
+    exp: unary('exp'),
+    // Unlike the ^ operator this does not clamp the base to zero first, so a negative base with a
+    // non integer exponent is undefined in GLSL, as it is in GLSL's own pow
+    pow: { emit: (a, b) => `pow(${a}, ${b === undefined ? 'vec4(2.0)' : b})`, operands: optionalSecond('by') },
+    clamp: ranged((a, lo, hi) => `clamp(${a}, ${lo}, ${hi})`, 0, 1),
+    smoothstep: ranged((a, lo, hi) => `smoothstep(${lo}, ${hi}, ${a})`, 0, 1),
     min: variadic('min'),
     max: variadic('max'),
     dot: dot,
+    cross: cross,
+    length: length,
+    normalize: normalize,
     pxhash: hash(pcg4dHelper),
     pxhashf: hash(sinHelper),
   }
@@ -165,6 +196,37 @@ define(function(require) {
   assert('max(max(v0, u_vs0), u_vs1)', emitted('max', {value:node, value1:1/2, value2:1/4}))
   assert('vec4(vec3(dot((v0).rgb, (u_vs0).rgb)), (v0).a)', emitted('dot', {value:node, value1:{r:1,g:0,b:0}}))
   assert('vec4(vec3(dot((v0).rgb, (v0).rgb)), (v0).a)', emitted('dot', {value:node})) // One arg dots with itself
+
+  assert('fract(v0)', emitted('fract', {value:node}))
+  assert('sqrt(v0)', emitted('sqrt', {value:node}))
+  assert('exp(v0)', emitted('exp', {value:node}))
+  assert('atan(v0, u_vs0)', emitted('atan', {value:node, x:1})) // Two argument arctangent
+  assert('atan(v0, u_vs0)', emitted('atan', {value:node, value1:1})) // Positional x too, as >>atan{1}
+  assert('pow(v0, u_vs0)', emitted('pow', {value:node, by:3}))
+  assert('pow(v0, u_vs0)', emitted('pow', {value:node, value1:3}))
+  assert('pow(v0, vec4(2.0))', emitted('pow', {value:node})) // Squaring by default
+
+  // The lo/hi pair: literals when neither was given, so the plain fade curve costs no uniforms
+  assert('clamp(v0, vec4(0.0), vec4(1.0))', emitted('clamp', {value:node}))
+  assert('clamp(v0, u_vs0, u_vs1)', emitted('clamp', {value:node, lo:-1, hi:2}))
+  assert('clamp(v0, u_vs0, u_vs1)', emitted('clamp', {value:node, value1:-1, value2:2})) // Positional, as >>clamp{-1,2}
+  assert('clamp(v0, u_vs0, u_vs1)', emitted('clamp', {value:node, hi:2})) // One of the pair still emits both
+  assert('smoothstep(vec4(0.0), vec4(1.0), v0)', emitted('smoothstep', {value:node}))
+  assert('smoothstep(u_vs0, u_vs1, v0)', emitted('smoothstep', {value:node, lo:1/4, hi:3/4}))
+
+  // Vector operations work on rgb and keep the incoming alpha, as dot does
+  assert('vec4(vec3(length((v0).rgb)), (v0).a)', emitted('length', {value:node}))
+  assert('vec4(normalize((v0).rgb), (v0).a)', emitted('normalize', {value:node}))
+  assert('vec4(cross((v0).rgb, (u_vs0).rgb), (v0).a)', emitted('cross', {value:node, value1:{r:0,g:0,b:1}}))
+  assert('vec4(cross((v0).rgb, (v0).rgb), (v0).a)', emitted('cross', {value:node})) // One arg crosses with itself
+
+  // A defaulted end of the pair is a plain value, not a raw AST, so it still becomes a uniform
+  let hiAst = () => 2
+  let rctx = mockCtx()
+  shaderAware('clamp', numeric)({value:node, hi:2, __rawArgs:{hi:hiAst}}).value.build('v0', rctx)
+  assert(2, rctx.uniforms.length)
+  assert(0, rctx.uniforms[0]) // lo defaulted
+  assert(true, rctx.uniforms[1] === hiAst) // hi kept its AST, so it animates
 
   // The hashes: random rgb with the incoming alpha kept, as dot does. With no seed the shader gets
   // a literal rather than a uniform, so an unseeded hash is a fixed field and costs nothing to feed

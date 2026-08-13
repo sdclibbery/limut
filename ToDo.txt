@@ -3,8 +3,6 @@
 =================================================================================================================================
 visual nodes...
  loop, parallel, series
- clamp, length, cross
- noise/perlin in 1d, 2d, 3d with optional extra time dimension?
  pixellate/monochrome/rotate etc etc - limut coded versions of visual params
  2d sdf shapes and smoothmin
  voronoi
@@ -853,4 +851,20 @@ w visualsynth, px=pxhash
 w visualsynth, px=floor{1/8}>>pxhash // blocky noise
 w visualsynth, px=pxhash{seed:[]l} // TV static
 w visualsynth, px=tex{webcam{}}>>mul{pxhash{id}}
-Still to do: smooth value noise / perlin, which needs interpolation between hashed lattice points
+
+DONE, smooth noise and perlin, written as limut functions rather than js: lib/visual.limut has
+noise1/2/3 (value noise), perlin1/2/3 (gradient noise, with signed perlin1s/2s/3s forms) and the
+octave sums fbm2/fbm3/turb2. scale is how many lattice cells the space is divided into, seed picks
+a different field, and the 3d ones take their third dimension from the incoming z:
+w visualsynth, px=noise2{scale:16}
+w visualsynth, px=perlin2{scale:8}
+w visualsynth, px=fbm2>>tex1d{{x}->{labh:x}}
+w visualsynth, px=fbm3{id>>set{z:[]l8}} // Noise that moves rather than scrolls
+Nothing was missing to make this possible, but two things were needed to make it practical:
+- Shader nodes now emit once per (node, input) rather than once per reference (shader-node.js),
+  so a value used several times costs what using it once costs. Without it fbm3 came to 435
+  statements and 196 uniforms, up against the 224 vec4 GLES3 floor; with it, 176 and 72.
+- The maths nodes gained fract, clamp, smoothstep, sqrt, exp, pow, length, cross, normalize and
+  the two argument atan.
+There is still no loop in a chain, so the octaves are written out as four terms (see loop/parallel/
+series above).

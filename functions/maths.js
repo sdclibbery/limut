@@ -36,11 +36,57 @@ define(function(require) {
   addMathsFunction('cos', trigWrapper(Math.cos))
   addMathsFunction('tan', trigWrapper(Math.tan))
   addMathsFunction('tanh', trigWrapper(Math.tanh))
-  addMathsFunction('atan', trigWrapper(Math.atan))
   add('pi', Math.PI)
   addMathsFunction('abs', trigWrapper(Math.abs))
   addMathsFunction('sgn', trigWrapper(Math.sign))
   addMathsFunction('sign', trigWrapper(Math.sign))
+  addMathsFunction('fract', trigWrapper(v => v - Math.floor(v))) // As GLSL fract, so negatives come back positive
+  addMathsFunction('sqrt', trigWrapper(Math.sqrt))
+  addMathsFunction('exp', trigWrapper(Math.exp))
+
+  // atan{y} is the one argument arctangent; atan{y,x} is atan2, ie the angle of the vector x,y
+  let atanFunc = (args) => {
+    let v = argParam(args, 0)
+    if (typeof v !== 'number') { v = 0 }
+    let x = subParam(args, 'x', subParam(args, 'value1', undefined))
+    if (typeof x !== 'number') { return {value:Math.atan(v),_finalResult:true} }
+    return {value:Math.atan2(v, x),_finalResult:true}
+  }
+  addMathsFunction('atan', atanFunc)
+
+  // Unlike the ^ operator this does not clamp the base to zero first
+  let powFunc = (args) => {
+    let v = argParam(args, 0)
+    if (typeof v !== 'number') { v = 0 }
+    let by = subParam(args, 'by', subParam(args, 'value1', 2)) // Squares by default
+    if (typeof by !== 'number') { by = 2 }
+    return {value:Math.pow(v, by),_finalResult:true}
+  }
+  addMathsFunction('pow', powFunc)
+
+  // lo/hi: named, or the second and third positional args
+  let rangeOf = (args, loDefault, hiDefault) => {
+    let lo = subParam(args, 'lo', subParam(args, 'value1', loDefault))
+    let hi = subParam(args, 'hi', subParam(args, 'value2', hiDefault))
+    if (typeof lo !== 'number') { lo = loDefault }
+    if (typeof hi !== 'number') { hi = hiDefault }
+    return [lo, hi]
+  }
+  let rangeWrapper = (fn) => {
+    let rangeFunc = (args) => {
+      let v = argParam(args, 0)
+      if (typeof v !== 'number') { v = 0 }
+      let [lo, hi] = rangeOf(args, 0, 1)
+      return {value:fn(v, lo, hi),_finalResult:true}
+    }
+    return rangeFunc
+  }
+  addMathsFunction('clamp', rangeWrapper((v, lo, hi) => Math.min(Math.max(v, lo), hi)))
+  addMathsFunction('smoothstep', rangeWrapper((v, lo, hi) => {
+    if (hi === lo) { return 0 } // Undefined in GLSL too; zero rather than a NaN
+    let t = Math.min(Math.max((v-lo)/(hi-lo), 0), 1)
+    return t*t*(3-2*t)
+  }))
 
   // Dot product of the rgb components. A plain number counts as all three, so a value means the
   // same thing here as it does in a shader, where everything is a 4 component vector.
@@ -60,6 +106,30 @@ define(function(require) {
     return {value:a[0]*b[0]+a[1]*b[1]+a[2]*b[2],_finalResult:true}
   }
   addMathsFunction('dot', dotFunc)
+
+  // The rest of the vector operations, over rgb as dot is. length collapses to a number; cross and
+  // normalize keep their three components, so they come back as a map.
+  let lengthOf = (a) => Math.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2])
+  let lengthFunc = (args) => {
+    if (typeof args !== 'object' || args === null) { return {value:0,_finalResult:true} }
+    return {value:lengthOf(rgbOf(args.value)),_finalResult:true}
+  }
+  addMathsFunction('length', lengthFunc)
+  let normalizeFunc = (args) => {
+    if (typeof args !== 'object' || args === null) { return {value:{x:0,y:0,z:0},_finalResult:true} }
+    let a = rgbOf(args.value)
+    let l = lengthOf(a)
+    if (l === 0) { return {value:{x:0,y:0,z:0},_finalResult:true} }
+    return {value:{x:a[0]/l, y:a[1]/l, z:a[2]/l},_finalResult:true}
+  }
+  addMathsFunction('normalize', normalizeFunc)
+  let crossFunc = (args) => {
+    if (typeof args !== 'object' || args === null) { return {value:{x:0,y:0,z:0},_finalResult:true} }
+    let a = rgbOf(args.value)
+    let b = args.value1 !== undefined ? rgbOf(args.value1) : a // One arg crosses with itself, ie zero
+    return {value:{x:a[1]*b[2]-a[2]*b[1], y:a[2]*b[0]-a[0]*b[2], z:a[0]*b[1]-a[1]*b[0]},_finalResult:true}
+  }
+  addMathsFunction('cross', crossFunc)
 
   // pxhash/pxhashf are for visual nodes: a per pixel hash of the value flowing down a px chain,
   // where plain rand would give one number for the whole quad. Off a visual node there is no vector
@@ -206,6 +276,46 @@ define(function(require) {
   assert(0, evalParamFrame(parseExpression("dot{#f00,#0f0}"),ev(0,0), 0))
   assert(3, evalParamFrame(parseExpression("dot{1}"),ev(0,0), 0)) // One arg dots with itself
   assert(1, evalParamFrame(parseExpression("#f00>>dot{#ff0}"),ev(0,0), 0))
+
+  // The rest of the vector functions, over rgb like dot
+  assert(Math.sqrt(3), evalParamFrame(parseExpression("length{1}"),ev(0,0), 0)) // A number counts as all three
+  assert(1, evalParamFrame(parseExpression("length{#f00}"),ev(0,0), 0))
+  assert(5, evalParamFrame(parseExpression("length{{x:3,y:4}}"),ev(0,0), 0))
+  assert({x:1,y:0,z:0}, evalParamFrame(parseExpression("normalize{{x:2,y:0,z:0}}"),ev(0,0), 0))
+  assert({x:0,y:0,z:0}, evalParamFrame(parseExpression("normalize{0}"),ev(0,0), 0)) // No direction: zero, not a NaN
+  assert({x:0,y:0,z:1}, evalParamFrame(parseExpression("cross{{x:1},{y:1}}"),ev(0,0), 0))
+  assert({x:0,y:0,z:0}, evalParamFrame(parseExpression("cross{{x:1}}"),ev(0,0), 0)) // One arg crosses with itself
+
+  assert(0.25, evalParamFrame(parseExpression("fract{1.25}"),ev(0,0), 0))
+  assert(0.75, evalParamFrame(parseExpression("fract{-1.25}"),ev(0,0), 0)) // As GLSL, not as JS %
+  assert(3, evalParamFrame(parseExpression("sqrt{9}"),ev(0,0), 0))
+  assert(1, evalParamFrame(parseExpression("exp{0}"),ev(0,0), 0))
+  assert(Math.E, evalParamFrame(parseExpression("exp{1}"),ev(0,0), 0))
+
+  assert(9, evalParamFrame(parseExpression("pow{3}"),ev(0,0), 0)) // Squares by default
+  assert(8, evalParamFrame(parseExpression("pow{2,3}"),ev(0,0), 0))
+  assert(8, evalParamFrame(parseExpression("pow{2,by:3}"),ev(0,0), 0))
+  assert(8, evalParamFrame(parseExpression("2>>pow{3}"),ev(0,0), 0))
+  assert(-8, evalParamFrame(parseExpression("pow{-2,3}"),ev(0,0), 0)) // No max{,0} on the base, unlike ^
+
+  assert(Math.atan(1), evalParamFrame(parseExpression("atan{1}"),ev(0,0), 0))
+  assert(Math.atan2(1,-1), evalParamFrame(parseExpression("atan{1,-1}"),ev(0,0), 0)) // Two args is atan2
+  assert(Math.atan2(1,-1), evalParamFrame(parseExpression("atan{1,x:-1}"),ev(0,0), 0))
+
+  assert(1/2, evalParamFrame(parseExpression("clamp{1/2}"),ev(0,0), 0))
+  assert(1, evalParamFrame(parseExpression("clamp{2}"),ev(0,0), 0)) // Defaults are 0 to 1
+  assert(0, evalParamFrame(parseExpression("clamp{-2}"),ev(0,0), 0))
+  assert(2, evalParamFrame(parseExpression("clamp{5,-2,2}"),ev(0,0), 0))
+  assert(-2, evalParamFrame(parseExpression("clamp{-5,lo:-2,hi:2}"),ev(0,0), 0))
+  assert(2, evalParamFrame(parseExpression("5>>clamp{-2,2}"),ev(0,0), 0))
+
+  assert(0, evalParamFrame(parseExpression("smoothstep{0}"),ev(0,0), 0))
+  assert(1/2, evalParamFrame(parseExpression("smoothstep{1/2}"),ev(0,0), 0))
+  assert(1, evalParamFrame(parseExpression("smoothstep{1}"),ev(0,0), 0))
+  assert(0, evalParamFrame(parseExpression("smoothstep{-1}"),ev(0,0), 0)) // Clamped outside the range
+  assert(1, evalParamFrame(parseExpression("smoothstep{2}"),ev(0,0), 0))
+  assert(1/2, evalParamFrame(parseExpression("smoothstep{3,2,4}"),ev(0,0), 0))
+  assert(1/2, evalParamFrame(parseExpression("smoothstep{3,lo:2,hi:4}"),ev(0,0), 0))
 
   // pxhash/pxhashf are for visual nodes (see draw/visualsynth/shader-hash.js); off one there is no
   // vector to hash, so they hash the number instead — deterministic, in [0,1), and seedable

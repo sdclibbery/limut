@@ -12,6 +12,7 @@ define(function(require) {
       textures: [], // {texture, sampler} entries, parallel to sampler names u_vstex0, u_vstex1...
       functions: [], // {name, source} GLSL helper declarations, emitted before main
       notReady: false, // a texture source isn't available yet (eg webcam pre-enumeration)
+      built: new Map(), // node -> Map(input -> varName): emit each node once, see makeShaderNode
     }
     let nextVar = 1 // v0 is the implicit uv seed
     ctx.addStatement = (expr) => {
@@ -110,6 +111,14 @@ void main() {
   // Same chain built twice yields byte-identical source: the program cache key property
   let rebuilt = buildSource(chain)
   assert(true, built.source === rebuilt.source)
+
+  // A node reached twice emits once and registers its uniform once, so a value reused several
+  // times (a lambda arg, as smooth noise does) costs what using it once costs
+  let shared = mulNode(ast)
+  let reused = buildSource(binaryShaderNode((a,b) => `${a} + ${b}`, undefined, shared, undefined, shared))
+  assert(1, (reused.source.match(/v0 \* u_vs0/g) || []).length)
+  assert(1, reused.uniforms.length)
+  assert(true, reused.source.includes('vec4 v2 = v1 + v1;'))
 
   // Undefined texture flags notReady
   let notReady = buildSource(texNode(undefined))

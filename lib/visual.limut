@@ -1,0 +1,105 @@
+// This library includes smooth noise for visualsynth px chains, built entirely out of the shader
+// nodes: pxhash for the randomness, floor/fract for the lattice, smoothstep for the fade curve and
+// mix for the interpolation. Nothing here is implemented in javascript.
+//
+// pxhash gives an independent random value per pixel, ie white noise. Smooth noise instead hashes
+// the corners of a lattice cell and interpolates between them, so neighbouring pixels get
+// neighbouring values. Value noise interpolates the corner values themselves; perlin (gradient)
+// noise interpolates a random gradient at each corner, which looks less blocky and is signed.
+//
+// All of them take the incoming px value as their first argument, so they pipe:
+//   v1 visualsynth, px=noise2{scale:16}
+//   v1 visualsynth, px=fbm2>>tex1d{{x}->{labh:x}}
+// Note two plain user function calls back to back (px=noise2>>colourise) evaluates the head as a
+// scalar; put a node function or an explicit id>> between them.
+
+//// Shared machinery
+// Only the channels a noise is over may vary: the rest are forced flat so a lattice point hashes
+// the same all the way along them. w is forced to zero everywhere, since pxhash hashes all four
+// components and the incoming w is 1, which scaling would otherwise turn into a stray dimension.
+set noiseflat1 = {in, scale} -> in*scale >> set{y:0, z:0, w:0}
+set noiseflat2 = {in, scale} -> in*scale >> set{z:0, w:0}
+set noiseflat3 = {in, scale} -> in*scale >> set{w:0}
+
+// One square of value noise: bilinear between the four corner hashes of lattice cell i, using the
+// already faded fractional position f. The offsets carry w:0 because an absent alpha reads as 1.
+set noiseface = {i, f, seed} -> mix{
+  mix{ pxhash{i, seed}.x,               pxhash{i+{x:1,w:0}, seed}.x,     f.x },
+  mix{ pxhash{i+{y:1,w:0}, seed}.x,     pxhash{i+{x:1,y:1,w:0}, seed}.x, f.x },
+  f.y
+}
+
+// One corner's gradient contribution: a random vector in -1 to 1 dotted with the offset from that
+// corner. dot works on xyz, and the unused dimensions are flat, so one definition covers 1d/2d/3d.
+set perlingrad = {i, d, o, seed} -> dot{ pxhash{i+o, seed}*2-1, d-o }
+
+set perlinface = {i, d, f, seed} -> mix{
+  mix{ perlingrad{i, d, {w:0}, seed},       perlingrad{i, d, {x:1,w:0}, seed},     f.x },
+  mix{ perlingrad{i, d, {y:1,w:0}, seed},   perlingrad{i, d, {x:1,y:1,w:0}, seed}, f.x },
+  f.y
+}
+
+//// Value noise, 0 to 1
+// scale is how many lattice cells the coordinate space is divided into. noise3 takes its third
+// dimension from the incoming z, which is zero unless you put something there: drive it off a
+// timevar for noise that moves rather than one that scrolls, eg px=noise3{id>>set{z:[]l8}}
+set noise1lerp = {i, f, seed} -> mix{ pxhash{i, seed}.x, pxhash{i+{x:1,w:0}, seed}.x, f.x }
+set noise1at = {p, seed} -> noise1lerp{floor{p}, smoothstep{fract{p}}, seed}
+set noise1 = {in:id, scale:4, seed:0} -> noise1at{noiseflat1{in, scale}, seed}
+
+set noise2at = {p, seed} -> noiseface{floor{p}, smoothstep{fract{p}}, seed}
+set noise2 = {in:id, scale:4, seed:0} -> noise2at{noiseflat2{in, scale}, seed}
+
+set noise3lerp = {i, f, seed} -> mix{ noiseface{i, f, seed}, noiseface{i+{z:1,w:0}, f, seed}, f.z }
+set noise3at = {p, seed} -> noise3lerp{floor{p}, smoothstep{fract{p}}, seed}
+set noise3 = {in:id, scale:4, seed:0} -> noise3at{noiseflat3{in, scale}, seed}
+
+//// Perlin (gradient) noise
+// The s versions are signed, roughly -1 to 1, which is what displacing a coordinate wants. The
+// plain ones are shifted and clamped into 0 to 1 so they compose like everything else.
+set perlin1d = {i, d, seed} -> mix{ perlingrad{i, d, {w:0}, seed}, perlingrad{i, d, {x:1,w:0}, seed}, smoothstep{d}.x }
+set perlin1at = {p, seed} -> perlin1d{floor{p}, fract{p}, seed}
+set perlin1s = {in:id, scale:4, seed:0} -> perlin1at{noiseflat1{in, scale}, seed}
+set perlin1 = {in:id, scale:4, seed:0} -> clamp{ perlin1s{in, scale, seed}*3/4 + 1/2 }
+
+set perlin2d = {i, d, seed} -> perlinface{i, d, smoothstep{d}, seed}
+set perlin2at = {p, seed} -> perlin2d{floor{p}, fract{p}, seed}
+set perlin2s = {in:id, scale:4, seed:0} -> perlin2at{noiseflat2{in, scale}, seed}
+set perlin2 = {in:id, scale:4, seed:0} -> clamp{ perlin2s{in, scale, seed}*3/4 + 1/2 }
+
+set perlin3lerp = {i, d, f, seed} -> mix{
+  perlinface{i, d, f, seed},
+  perlinface{i+{z:1,w:0}, d-{z:1,w:0}, f, seed},
+  f.z
+}
+set perlin3d = {i, d, seed} -> perlin3lerp{i, d, smoothstep{d}, seed}
+set perlin3at = {p, seed} -> perlin3d{floor{p}, fract{p}, seed}
+set perlin3s = {in:id, scale:4, seed:0} -> perlin3at{noiseflat3{in, scale}, seed}
+set perlin3 = {in:id, scale:4, seed:0} -> clamp{ perlin3s{in, scale, seed}*3/4 + 1/2 }
+
+//// Octave noise
+// Four octaves of value noise, each at twice the frequency and half the amplitude, normalised back
+// to 0 to 1. There is no loop in a px chain, so the octaves are written out; add or drop terms (and
+// fix up the divisor, which is their weights summed) for more or fewer.
+set fbm2 = {in:id, scale:4, seed:0} ->
+  ( noise2{in, scale,   seed}*8
+  + noise2{in, scale*2, seed}*4
+  + noise2{in, scale*4, seed}*2
+  + noise2{in, scale*8, seed}
+  )/15
+
+set fbm3 = {in:id, scale:4, seed:0} ->
+  ( noise3{in, scale,   seed}*8
+  + noise3{in, scale*2, seed}*4
+  + noise3{in, scale*4, seed}*2
+  + noise3{in, scale*8, seed}
+  )/15
+
+// Turbulence: the same sum over the absolute value of each signed octave, giving the creased,
+// billowy look that suits smoke and marble
+set turb2 = {in:id, scale:4, seed:0} ->
+  ( abs{noise2{in, scale,   seed}*2-1}*8
+  + abs{noise2{in, scale*2, seed}*2-1}*4
+  + abs{noise2{in, scale*4, seed}*2-1}*2
+  + abs{noise2{in, scale*8, seed}*2-1}
+  )/15
