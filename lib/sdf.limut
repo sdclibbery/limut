@@ -1,0 +1,204 @@
+// 2d signed distance fields for visualsynth px chains, converted into limut DSL from the GLSL on
+// Inigo Quilez's page: https://iquilezles.org/articles/distfunctions2d/
+//
+// A signed distance field is a function giving, for every pixel, the distance to the nearest edge
+// of a shape: negative inside, zero on the edge, positive outside. That one number is enough to
+// draw the shape (threshold it), outline it (threshold its absolute value), round its corners
+// (subtract), hollow it out, or combine two shapes with min and max. So a shape here is not a
+// picture: it is a distance, and the drawing is a separate step.
+//
+//   v1 visualsynth, px=sdcircle{r:1/2}>>sdfill
+//   v1 visualsynth, px=sdstar{r:3/4}>>sdbands
+//   v1 visualsynth, px=min{sdcircle{r:1/3}, sdbox{b:{x:3/4,y:1/8}}}>>sdfill
+//
+// Everything here is an ordinary user defined function built out of the visual nodes; nothing is
+// implemented in javascript. The incoming px coordinate has y up and spans -1 to 1 vertically
+// (and wider than that horizontally, by the aspect ratio), so radii are fractions of half the
+// frame height.
+//
+// The incoming value being the first argument means a positional argument only lands where you
+// expect when the call is being piped one: px=sdcircle{1/2} at the head of a chain is a radius,
+// but px=sdfill{sdcircle{1/2}} reads that 1/2 as the coordinate. Name the arguments, or pass the
+// coordinate yourself (sdcircle{id, 1/2}), wherever a shape is not at the head of a chain.
+//
+// Two things about the shader shape all of this: there is nowhere to put a local variable, so
+// intermediate results are passed on to a helper function instead; and there are no branches, so
+// every `if` in the original becomes the ternary `cond ?? a ?: b`, which compiles to a mix between
+// both results rather than taking one path.
+
+//// Machinery
+
+// A distance is a single number, so every shape ends by splatting one channel across all four,
+// the way length{} and the other maths functions do.
+set sdval = {v} -> v.x
+
+// Flatten the incoming value into a 2d point: z and w have to be zero, since length{} and dot{}
+// work on xyz and the incoming w is 1.
+set sdflat = {in} -> in >> set{z:0, w:0}
+
+// Build a 2d point out of two computed values. Each of those arrives splatted across all four
+// channels (as everything here gives back), so the masks pick one channel out of each; this is
+// how a folded coordinate gets put back together without a local variable to hold it.
+set sdvec = {a, b} -> {x:1,w:0}*a + {y:1,w:0}*b
+
+// The same value in x and y, ie a scalar to subtract off a point
+set sdbcast = {a} -> {x:1,y:1,w:0}*a
+
+// 0 below zero, 1 above. The shapes use the ternary rather than this, but it is still the way to
+// select between two values without a condition, eg as the t of a mix{}.
+set sdstep = {v} -> max{sgn{v}, 0}
+
+// The endings the folded shapes share: the distance from the folded corner, signed by which side
+// of the mirror line the point ended up on
+set sdlensx = {p} -> sdval{length{p} * sgn{p.x}}
+set sdlensy = {p} -> sdval{length{p} * sgn{p.y}}
+
+// One mirror fold, about the line through the origin whose normal is n. Reflecting the plane onto
+// itself is what lets one corner's distance stand for all of them.
+set sdfold = {p, n} -> p - n*2*min{dot{p,n}, 0}
+
+// Mirror in x only
+set sdabsx = {p} -> sdvec{abs{p.x}, p.y}
+
+// The shared ending of the regular polygons: slide along the flat edge (half width hx, at height
+// ry) and take the distance from wherever on it we end up
+set sdtrim = {p, hx, ry} -> sdlensy{sdvec{p.x - clamp{p.x, 0-hx, hx}, p.y - ry}}
+
+//// Shapes
+// All of them take the incoming px value as their first argument, so they pipe like any other
+// chain segment and can equally be handed a coordinate of their own; eg px=sdcircle{id*2, 1/4}.
+
+// Distance from the origin, less the radius: the simplest field there is
+set sdcircle = {in:id, r:1/2} -> sdval{length{sdflat{in}} - r}
+
+// Box of half extents b. The outside distance is the length of the positive part of |p|-b (which
+// is the corner case as much as the edge case), and the inside distance is the largest of the two
+// negative components; only one of the two terms is ever non zero.
+set sdbox1 = {d} -> sdval{length{max{d,0}} + min{max{d.x, d.y}, 0}}
+set sdbox = {in:id, b:1/2} -> sdbox1{abs{sdflat{in}} - b}
+
+// Distance to the line from a to b: project the point onto the segment, clamp the projection into
+// the segment, and measure from there
+set sdsegment1 = {pa, ba} -> sdval{length{pa - ba*clamp{dot{pa,ba}/dot{ba,ba}}}}
+set sdsegment = {in:id, ax:-1/2, ay:0, bx:1/2, by:0} ->
+  sdsegment1{sdflat{in} - {x:ax, y:ay, w:0}, {x:bx-ax, y:by-ay, w:0}}
+
+// Equilateral triangle of radius r, pointing up. Mirror in x, then fold the remaining half about
+// the 60 degree line so that one edge stands for all three, then slide along that edge.
+// 1.7320508 is the square root of 3.
+set sdtriangle0 = {p, r} -> sdvec{abs{p.x} - r, p.y + r/1.7320508}
+set sdtriangle2 = {p, r} -> sdval{0 - length{sdvec{p.x - clamp{p.x, 0-2*r, 0}, p.y}} * sgn{p.y}}
+set sdtriangle1 = {q, r} -> sdtriangle2{
+  q.x + 1.7320508*q.y > 0 ?? sdvec{(q.x - 1.7320508*q.y)/2, (0 - 1.7320508*q.x - q.y)/2} ?: q,
+  r
+}
+set sdtriangle = {in:id, r:1/2} -> sdtriangle1{sdtriangle0{sdflat{in}, r}, r}
+
+// Regular hexagon of inradius r: mirror into one quadrant, one fold, then the shared trim
+set sdhexagon = {in:id, r:1/2} ->
+  sdtrim{sdfold{abs{sdflat{in}}, {x:-0.866025404, y:1/2, w:0}}, 0.577350269*r, r}
+
+// Regular pentagon of inradius r: mirror in x, then two folds. y is flipped on the way in so that
+// it points up; the original has its flat edge at the top, like the hexagon, and mirroring a
+// coordinate leaves the distances it measures untouched.
+set sdpentagon = {in:id, r:1/2} -> sdtrim{sdfold{
+  sdfold{sdabsx{sdflat{in}*{x:1, y:-1, w:0}}, {x:-0.809016994, y:0.587785252, w:0}},
+  {x:0.809016994, y:0.587785252, w:0}
+}, 0.726542528*r, r}
+
+// Regular star with n points of radius r. This one works in polar coordinates: the angle is folded
+// into one wedge of 180/n degrees, which leaves a single edge to measure from. m controls how deep
+// the points are cut: it runs from 2, where the edges are flat and the shape is a regular n sided
+// polygon, up to n, where the notches reach the middle and the points are needles. It need not be
+// a whole number, and the classic five pointed star is n:5 with m a shade over 3. Since n and m are
+// plain numbers their sines and cosines are worked out once rather than per pixel.
+set sdstarbn = {l, bn} -> sdvec{l*cos{bn}, l*abs{sin{bn}}}
+set sdstar0 = {p, an} -> sdstarbn{length{p}, (atan{p.x, p.y} % (2*an)) - an}
+set sdstar2 = {p, ecs, hi} -> sdlensx{p + ecs*clamp{0 - dot{p, ecs}, 0, hi}}
+set sdstar1 = {p, r, an, en} -> sdstar2{
+  sdstar0{p, an} - {x:r*cos{an}, y:r*sin{an}, w:0},
+  {x:cos{en}, y:sin{en}, w:0},
+  r*sin{an}/sin{en}
+}
+set sdstar = {in:id, r:1/2, n:5, m:10/3} -> sdstar1{sdflat{in}, r, 3.1415927/n, 3.1415927/m}
+
+// Heart of half height r. The original is written in its own unit space with the point of the
+// heart at the origin, so the coordinate is scaled and shifted on the way in and the distance
+// scaled back on the way out. The cleft between the lobes is a corner, which is the branch: above
+// the diagonal the nearest point is that corner, below it is one of the two arcs.
+set sdheart2 = {q} -> sqrt{dot{q - {x:1/4, y:3/4, w:0}}} - 0.35355339
+set sdheart3 = {q} -> sqrt{min{
+  dot{q - {y:1, w:0}},
+  dot{q - sdbcast{max{(q.x+q.y)/2, 0}}}
+}} * sgn{q.x - q.y}
+set sdheart1 = {p, s} -> sdval{(p.y + p.x > 1 ?? sdheart2{p} ?: sdheart3{p}) * s}
+set sdheart = {in:id, r:1/2} -> sdheart1{sdabsx{sdflat{in}}*(3/5)/r + {y:3/5, w:0}, r*5/3}
+
+// Greek cross with arms of half length arm and half thickness thick, optionally rounded by r.
+// Mirror into one quadrant and then swap x and y so that only one arm has to be measured.
+set sdcross3 = {w, k, r} -> sdval{sgn{k} * length{max{w, 0}} + r}
+set sdcross2 = {p, q, thick, r} -> sdcross3{
+  max{q.y, q.x} > 0 ?? q ?: sdvec{thick - p.x, 0 - max{q.y, q.x}},
+  max{q.y, q.x},
+  r
+}
+set sdcross1 = {p, arm, thick, r} -> sdcross2{p, p - {x:arm, y:thick, w:0}, thick, r}
+set sdcross0 = {p} -> p.y > p.x ?? p.yx ?: p
+set sdcross = {in:id, arm:1/2, thick:1/6, r:0} -> sdcross1{sdcross0{abs{sdflat{in}}}, arm, thick, r}
+
+// A wave of arcs of radius ra repeating along x, tb setting how much of each circle is used: from
+// nearly 0 (a flat line of shallow scallops), through 1/2 (half circles, ie a proper wave), to 1
+// (whole circles strung together). Each period is measured against two arcs, one from each side,
+// and the nearer wins.
+set sdcwd = {q, cox, coy, ra} ->
+  coy*q.x > cox*q.y ?? length{q - {x:cox, y:coy, w:0}} ?: abs{length{q} - ra}
+set sdcw1 = {p, cox, coy, ra} -> sdval{min{
+  sdcwd{p, cox, coy, ra},
+  sdcwd{sdvec{abs{p.x - cox*2}, coy*2 - p.y}, cox, coy, ra}
+}}
+set sdcw0 = {p, cox, coy, ra} -> sdcw1{sdvec{abs{(p.x % (cox*4)) - cox*2}, p.y}, cox, coy, ra}
+// The wave runs from y=0 up to twice coy, so the coordinate is lifted by coy on the way in to
+// centre it on the origin like everything else here
+set sdcw = {p, ra, a} -> sdcw0{p + {y:ra*cos{a}, w:0}, ra*sin{a}, ra*cos{a}, ra}
+set sdcirclewave = {in:id, tb:1/2, ra:1/4} -> sdcw{sdflat{in}, ra, 2.6179939*max{tb, 0.0001}}
+
+//// Combining
+// Union and intersection are just min{} and max{} of two distances, which work on visual nodes
+// already, so only the ones that are not already spelt are here.
+
+// Round off every corner by r, which also grows the shape by r
+set sdround = {d, r:1/16} -> d - r
+
+// Hollow the shape out into an outline of half thickness w, keeping it a distance field
+set sdannular = {d, w:1/32} -> abs{d} - w
+
+// Cut shape b out of shape a
+set sdsub = {a, b} -> max{a, 0-b}
+
+// Union with a smooth blend of width k, so the two shapes flow into each other rather than
+// crossing. The distance is only approximate near the join, but it looks like liquid.
+set sdblendh = {a, b, k} -> clamp{1/2 + (b-a)/(k*2)}
+set sdblend = {a, b, k:1/8} ->
+  mix{b, a, sdblendh{a,b,k}} - sdblendh{a,b,k}*(1 - sdblendh{a,b,k})*k
+
+//// Drawing
+// A distance on its own renders as a grey ramp, so these turn one into a picture. They take the
+// distance as their first argument, so they can be called around a shape (sdfill{sdcircle{}}) or
+// piped one (sdcircle{}>>sdfill). soft is the width of the antialiasing ramp.
+
+// Fill the inside with col, the outside with bg
+set sdfill = {d, col:#fff, bg:#000, soft:0.01} -> mix{col, bg, smoothstep{d, 0-soft, soft}}
+
+// Draw the edge only, w either side of it
+set sdstroke = {d, w:0.01, col:#fff, bg:#000, soft:0.01} ->
+  mix{col, bg, smoothstep{abs{d} - w, 0-soft, soft}}
+
+// Inigo Quilez's own way of showing a distance field: one colour inside and another outside, both
+// fading with distance and banded with concentric stripes, and the zero isoline picked out in
+// white. Worth reaching for while building a shape, since it shows the whole field rather than
+// just where it changes sign. k is how fast the fade is, n how many bands.
+set sdbands = {d, outside:#e93, inside:#adf, k:6, n:150, soft:0.01} -> mix{
+  mix{outside, inside, sdstep{0-d}} * (1 - exp{0 - k*abs{d}}) * (0.8 + 0.2*cos{n*d}),
+  #fff,
+  1 - smoothstep{abs{d}, 0, soft}
+}

@@ -3,14 +3,15 @@
 =================================================================================================================================
 visual nodes...
  2d sdf shapes and smoothmin
+ want to be able to get original uv coords at any point in the px chain?
  visual lib functions for old style visual params (monochrome, picellate, rotate, mirror, vhs etc etc)
  voronoi
- bitwise ops
+ loop, parallel, series - and use for octave param in perlin etc?
  ? {tex,#124} should do split/join like in audio chain??
- render buffers to generate read from, eg px=tex{buffer{mul{1.01}>>webcam>>set{#...a},clear:false}} for temporal zoom-blur??
- hsl etc conversions?
+ ?bitwise ops
+ ?render buffers to generate read from, eg px=tex{buffer{mul{1.01}>>webcam>>set{#...a},clear:false}} for temporal zoom-blur??
+ ?hsl etc conversions?
  3d stuff?
- loop, parallel, series
 ?set bpm can have target time? eg set bpm={140,by;1000}
 grain should have offset param, would allow more interesting effects; granular delays etc
 Multiband compressor

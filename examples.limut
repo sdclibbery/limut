@@ -5623,3 +5623,46 @@ section drop {
 }, length*=2
 
 
+// w visualsynth, px=set{z:time/32+accum{[]n/4}}>>(perlin3-turb2+fbm2)^2%0.7>>cospal{#312}^[1/8,8]n>>set{a:1}
+// w visualsynth, px=add{(id>>pxhash{[]r@f}-1/2)*[3:!,0.02]e@s}>>set{z:[]r@e+time/16}>>perlin3{scale:[1/2:6]r}>>cospal%0.9*2
+// w visualsynth, px=tex{webcam}>>dot/3>>cospal{#420}
+// w visualsynth, px=cospal{length{id}-time/2,#30d}
+// w visualsynth, px=tex{webcam}>>tex1d{{x}->[0,#f00,0,#00f,3/2]{x*4}}
+// w visualsynth, px=set{z:time}>>add{u:perlin3/8,v:perlin3{seed:1}/8}>>tex{webcam}^2
+// w visualsynth, px=turb2>>cospal
+// w visualsynth, px=set{z:time/8}>>perlin3>>cospal{#036}
+// w visualsynth, px=set{y:time/8}>>perlin2>>cospal{#003,#48d}
+// w visualsynth, px=pxhashf{[]r@f}^2
+// w visualsynth, px=add{id>>pxhash{[]r@f}/12}>>tex{webcam}^2
+// w visualsynth, px=min{id>>add{time/16}>>floor{to:1/64}>>pxhash>>dot*#f42,tex{webcam}^3}
+// w visualsynth, px=tex{webcam}>>channels{id^([]n*2),id^([]n*2),id^([]n*2)}
+// w visualsynth, px=floor{[]n}+1/2
+// w visualsynth, px=floor{[]n/3}>>tex{webcam}
+// w visualsynth, px=abs{sin{id*4-time}%1/4}*4>>mix{id>>dot{#824},[]n^2/3}
+// w visualsynth, px=set{id.vu}>>tex{webcam}
+// set rotate = {in,a} -> set{u:in.u*cos{a}-in.v*sin{a}, v:in.u*sin{a}+in.v*cos{a}}
+// w visualsynth, px=id>>rotate{time/16}>>tex{webcam}
+// w visualsynth, px=tex{webcam}>>tex1d{{x}->{labh:x.r},size:16}
+// w visualsynth, px=tex{webcam}>>tex{webcam}
+// w visualsynth, px=id>>set{u:1/2}>>tex{webcam}
+// w visualsynth, px=tex{webcam}>>set{#.8.}
+// w visualsynth, px=id>>#f8f*#..0
+// r readout, add=#2...r
+// set pixellate = {in,size:8} -> floor{in+(0.5/size),to:1/size}
+// set monochrome = {in,v:1} -> mix{dot{in,#3b1},v}
+// w visualsynth, px=tex{webcam}>>monochrome{[]l1/2@f}
+// w visualsynth, px=id>>pixellate{1+50*[]n4}>>tex{webcam{'5mp'}}>>monochrome{[]l1/2@f}
+// w visualsynth, px=id>>monochrome{[]l1/2@f}>>tex{webcam{'5mp'}}
+// w visualsynth, px=mul{16*[]n}>>sin
+// w visualsynth, px=sin{id*16+time+tex{webcam}*3}
+// w visualsynth, px=tex{webcam}>>mul{8}>>sin
+// w visualsynth, px=sin{id*4+time+tex{webcam}*3}>>tex{webcam}>>mul{7*duck}>>cos
+// w visualsynth, px=tex{webcam}>>tex{webcam}
+// w visualsynth, px=(#00f+id%1/3*3)/2
+// w visualsynth, px=id%[]n/[]n+#00f*[]n
+// w visualsynth, px=id>>mul{[]n4}>>tex{webcam{'5mp'}}
+// w visualsynth, px=mul{[1:2]l4}>>tex{'favicon-32x32.png'}
+// w visualsynth, px=mul{[0:2]l1@f}
+// w visualsynth, px=mul{[2:!2,0]e@s}
+
+
