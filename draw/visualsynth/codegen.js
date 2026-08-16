@@ -14,7 +14,11 @@ define(function(require) {
       notReady: false, // a texture source isn't available yet (eg webcam pre-enumeration)
       built: new Map(), // node -> Map(input -> varName): emit each node once, see makeShaderNode
     }
-    let nextVar = 1 // v0 is the implicit uv seed
+    // v0 is the implicit uv seed: the value the whole chain starts with. It is a local of main()
+    // and every generated statement lands in main(), so it stays in scope for the whole shader —
+    // which is what lets the uv node (nodes.js) name it from anywhere in the chain.
+    ctx.rootInput = 'v0'
+    let nextVar = 1
     ctx.addStatement = (expr) => {
       let name = 'v' + (nextVar++)
       ctx.statements.push(`vec4 ${name} = ${expr};`)
@@ -51,7 +55,7 @@ define(function(require) {
   // the px chain IS the shader. Each pixel starts as its own coordinate in v0.
   let buildSource = (shaderNode) => {
     let ctx = makeContext()
-    let out = shaderNode.build('v0', ctx)
+    let out = shaderNode.build(ctx.rootInput, ctx)
     // GLSL ES 3.00 has a default precision for sampler2D but not sampler3D, so a 3d lookup
     // texture has to declare one or the shader won't compile
     let sampler3d = ctx.textures.some(t => t.sampler === 'sampler3D')
@@ -63,7 +67,7 @@ ${ctx.uniforms.map(u => `uniform vec4 ${u.name};`).join('\n')}
 ${ctx.textures.map((t,i) => `uniform ${t.sampler} u_vstex${i};\nuniform vec2 u_vsex${i};`).join('\n')}
 ${ctx.functions.map(f => f.source).join('\n')}
 void main() {
-  vec4 v0 = vec4(fragCoord, 0.0, 1.0);
+  vec4 ${ctx.rootInput} = vec4(fragCoord, 0.0, 1.0);
   ${ctx.statements.join('\n  ')}
   fragColor = ${out};
 }`
@@ -86,6 +90,10 @@ void main() {
     let sampler = ctx.addTexture(t)
     return ctx.addStatement(`texture(${sampler}, (${input}).xy)`)
   })
+
+  // The seed variable is named on the context, so a node can refer to it from anywhere in the
+  // chain (the uv node, nodes.js) rather than hard coding it
+  assert('v0', makeContext().rootInput)
 
   let ast = () => 0.5
   let stubTex = {tex:'stub'}

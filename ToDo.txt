@@ -2,11 +2,9 @@
 =================================================================================================================================
 =================================================================================================================================
 visual nodes...
- 2d sdf shapes and smoothmin
- want to be able to get original uv coords at any point in the px chain?
- visual lib functions for old style visual params (monochrome, picellate, rotate, mirror, vhs etc etc)
- voronoi
  loop, parallel, series - and use for octave param in perlin etc?
+ visual lib functions for old style visual params (monochrome, pixellate, rotate, mirror, vhs etc etc)
+ voronoi
  ? {tex,#124} should do split/join like in audio chain??
  ?bitwise ops
  ?render buffers to generate read from, eg px=tex{buffer{mul{1.01}>>webcam>>set{#...a},clear:false}} for temporal zoom-blur??

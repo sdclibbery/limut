@@ -17,6 +17,17 @@ define(function(require) {
   }
   addNodeFunction('id', id)
 
+  // The value the whole chain started with — the pixel coordinate — still available after nodes
+  // downstream have replaced the value flowing through them, eg px=perlin2>>mul{y:uv.v}. Emits no
+  // statement: the seed is a local of main() and every generated statement lands in main(), so it
+  // is in scope everywhere, including inside a channels{} arg or a user defined visual function.
+  // Not marked _implicitInput — that flag means 'this is the chain seed and >> may withhold it
+  // from a call', where uv is a value in its own right.
+  let uv = (args, e, b, state, evalRecurse) => {
+    return makeShaderNode((input, ctx) => ctx.rootInput)
+  }
+  addNodeFunction('uv', uv)
+
   // Which of the 4 channels a param names, or undefined when it names none (a plain number, or
   // anything we can't read channels off), meaning it applies to all four.
   let channelMask = (v) => {
@@ -252,7 +263,7 @@ define(function(require) {
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
   let mockCtx = () => {
-    let ctx = { statements: [], uniforms: [], textures: [] }
+    let ctx = { statements: [], uniforms: [], textures: [], rootInput: 'v0' }
     ctx.addStatement = (expr) => { ctx.statements.push(expr); return 'v' + ctx.statements.length }
     ctx.addUniform = (ast) => { ctx.uniforms.push(ast); return 'u_vs' + (ctx.uniforms.length-1) }
     ctx.addTexture = (tex, sampler) => { ctx.textures.push({texture:tex, sampler:sampler||'sampler2D'}); return 'u_vstex' + (ctx.textures.length-1) }
@@ -269,6 +280,13 @@ define(function(require) {
   assert('v0', node(id, {}).build('v0', ctx))
   assert([], ctx.statements) // Passes its input straight through, emitting nothing at all
   assert(true, node(id, {})._implicitInput) // Marked as the chain seed, so >> knows it can withhold it
+
+  // uv ignores the value flowing into it and gives the one the whole chain started with, emitting
+  // nothing at all: the seed is in scope for the whole shader
+  ctx = mockCtx()
+  assert('v0', node(uv, {}).build('v3', ctx))
+  assert([], ctx.statements)
+  assert(undefined, node(uv, {})._implicitInput) // A value in its own right, not the chain seed
 
   ctx = mockCtx()
   assert('v1', node(mul, {value:ast}).build('v0', ctx))
@@ -464,6 +482,29 @@ define(function(require) {
 
   assert(pxSource('channels{sin{id},g:id^2}'), pxSource('channels{sin{id},g:id^2}')) // Deterministic: the program cache is keyed on the source
 
+  // uv: the value the whole chain started with, still reachable once nodes downstream have
+  // replaced the value flowing through them. At the head of a chain it is exactly what id is.
+  assert(pxSource('uv'), pxSource('id'))
+  assert(true, pxSource('uv').includes('fragColor = v0;')) // And neither emits anything at all
+
+  src = pxSource('mul{2}>>mul{y:uv.v}') // The coordinates, not the multiplied value
+  assert(true, src.includes('vec4 v1 = v0 * u_vs0;'))
+  assert(true, src.includes('vec4 v2 = vec4((v0).y);')) // Read off the seed
+  assert(false, src.includes('vec4((v1).y);')) // Not off what is coming down the chain
+  assert(true, src.includes('vec4 v3 = vec4((v1).x, (v1).y * (v2).y, (v1).z, (v1).w);'))
+
+  // It works anywhere an expression does, so a 0 to 1 ramp is uv.v/2+1/2
+  src = pxSource('pxhash>>mul{uv.v/2+1/2}')
+  assert(true, src.includes('vec4((v0).y)') && src.includes('l_pxhash('))
+
+  // And inside a channels{} arg it is still the whole chain's coordinates, where id there is the
+  // one channel: that is the whole point of having it
+  src = pxSource('mul{2}>>channels{g:uv.u}')
+  assert(true, src.includes('vec4((v1).y)')) // The channel splatted in, off the chain value
+  assert(true, src.includes('vec4((v0).x)')) // uv, off the seed
+
+  assert(pxSource('mul{y:uv.v}'), pxSource('mul{y:uv.v}')) // Deterministic: the program cache is keyed on the source
+
   // pxhash: a per pixel hash of the value coming down the chain, declared as a helper function and
   // called on the incoming value. Random rgb with the incoming alpha kept, as dot does.
   let declarations = (src, name) => (src.match(new RegExp('vec4 '+name+'\\(vec4 p, vec4 s\\)', 'g')) || []).length
@@ -518,6 +559,7 @@ define(function(require) {
 
   return {
     id: id,
+    uv: uv,
     mul: mul,
     add: add,
     set: set,
