@@ -191,3 +191,16 @@ Related facts:
 ## Verifying audio-graph wiring and audible output at runtime
 
 Headless Chrome has no speakers but still renders the realtime context to a null sink. Two runtime checks are possible: inspect the *constructed graph* (`players.getById('p1')._fx.chain` — an `AudioNode`, a scalar, or a wrapped object?), and scan the *rendered samples* for discontinuities via the master `AnalyserNode` (`system.analyser` time-domain deltas) — the way to catch clicks/crackles numerically. Note that `OfflineAudioContext` re-creations of a call sequence do **not** reproduce realtime main-thread/render-thread races; test the real app. See the `verifier-audio-wiring` skill for both harness patterns.
+
+## Audio thread load and dropouts are NOT observable from JS
+
+Do not go looking for an audio-load or underrun metric — there isn't one, and the search has already been done (Aug 2026, against Chrome 151 and Electron 36; the findings are also recorded in a comment in `play/system.js`):
+
+- **`AudioContext.renderCapacity`** — the API designed for exactly this (`averageLoad`, `peakLoad`, `underrunRatio`) — has never shipped unflagged. Absent from `AudioContext.prototype` in both.
+- **`AudioWorkletGlobalScope` has no `performance`**, so a monitor worklet cannot time itself. It only gets `sampleRate`, `currentTime` and `currentFrame`.
+- **`currentTime` and `getOutputTimestamp()` both track the output device buffer**, and stay flat even when the audio thread is deliberately driven past its deadline. Their difference is just the fixed device buffer (~20ms), not a headroom signal.
+- **Electron's `app.getAppMetrics()`** does expose real CPU, but AudioWorklets run in the *renderer* process (the Audio Service process only does device I/O), so it conflates the audio thread with the main thread and the WebGL work.
+
+What exists instead: `system.voiceCount()` / `limutAudio.stats()` — a live count of worklet voices (superosc, chaos, pwm), incremented at construction and decremented on `stop()`. Those are the expensive things on the audio thread, so the count plus a known per-voice cost is the usable proxy. Measure per-voice cost offline with the `worklet-dsp` skill.
+
+**The UI readout labelled "Timing" is a main-thread meter, not an audio one.** It is `beatLatency` in `main.js` — wall-clock jitter between beat firings — and beats fire from the `requestAnimationFrame` loop, so heavy visuals or a busy machine turn it red while the synths are fine. It was labelled "Audio" until Aug 2026 and the docs described it as an audio-health indicator, which it has never been. A real render underrun produces *no* change in it.
