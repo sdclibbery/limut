@@ -1,6 +1,8 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
+superbass weird on keyboard
+get live working from OBS
 visual nodes...
  loop, parallel, series - and use for octave param in perlin etc?
  visual lib functions for old style visual params (monochrome, pixellate, rotate, mirror, vhs etc etc)

@@ -260,7 +260,7 @@
       <button id="keyboard-icon" title="Hover here to play the keyboard player from your keys">⌨️</button>
     </div>
     <div style="margin-top:8px;">
-      Audio: <span id="beat-latency-readout" class="meter"> </span>
+      Timing: <span id="beat-latency-readout" class="meter"> </span>
       Visual: <span id="visual-readout" class="meter"> </span>
       Limiter: <span id="compressor-readout" class="meter"> </span>
     </div>
@@ -360,7 +360,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <div id="accordion-indicators" class="closed">
   <p><b>Level</b> VU meter for current output signal level. Use this when adjusting the output level, using either <code>set main amp</code> or the level slider, so it is just touching the red at its loudest. Only one active channel is shown if the mix is fully mono.</p>
   <p><b>Beat</b> Current audio system beat count, plus section info (current active section, count through active section, the current play out of the section's <code>repeat</code> if it has one, and next queued up section.</p>
-  <p><b>Audio</b> Audio lag; green when the browser audio system is keeping up; turns red when the system is struggling, which may lead to audio glitching</p>
+  <p><b>Timing</b> Beat scheduling jitter: how late each beat fired compared to when it was due. This was previously labelled "Audio", but it is measured on the main thread along with the visuals, so it turns red when the browser cannot keep up with <em>drawing and scheduling</em> — not when the audio itself is too expensive. Heavy visuals, or something else on the machine such as screen recording, will turn this red while the synths are perfectly happy. There is no indicator for audio thread load because no browser API exposes it; to check whether the synths are the problem, type <code>limutAudio.stats()</code> in the browser console for the live count of audio worklet voices (<code>superosc</code>, <code>chaos</code>, <code>pwm</code>) — those are the most expensive things Limut can run, they all share a <em>single</em> audio thread no matter how many CPU cores the machine has, and <code>superosc</code>'s <code>unison</code> multiplies the cost of every one of its notes.</p>
   <p><b>Visual</b> Visual lag; green when the framerate is keeping up to 60 fps; turns red when the system is struggling, which may lead to visual glitching</p>
   <p><b>Limiter</b> Audio limiter: turns red when the internal Limut limiter is active, implying the combined audio sources are too loud. Note this limiter is before the <code>main amp</code> control and vu meter, it makes sure the levels from individual synths do not go so loud as to distort. So if it is lighting up, lower the <code>amp</code> on individual synths, and if necessary, raise the <code>main amp</code> level to compensate.</p>
 </div>

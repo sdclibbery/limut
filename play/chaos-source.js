@@ -168,8 +168,13 @@ registerProcessor('chaos', ChaosOsc);
   // is baked in at construction (via processorOptions) so instances diverge.
   let factory = (seed = 0, audio = system.audio) => {
     let node = new AudioWorkletNode(audio, "chaos", { outputChannelCount: [1], processorOptions: { seed } })
+    system.voiceStarted() // counted for system.voiceCount(); see superosc-source.js
+    let stopped = false
     node.start = (time = audio.currentTime) => { node.parameters.get('start').setValueAtTime(1, time) }
-    node.stop  = (time = audio.currentTime) => { node.parameters.get('stop').setValueAtTime(1, time) }
+    node.stop  = (time = audio.currentTime) => {
+      node.parameters.get('stop').setValueAtTime(1, time)
+      if (!stopped) { stopped = true; system.voiceStopped() }
+    }
     return node
   }
   factory.CHAOS_TYPES = CHAOS_TYPES

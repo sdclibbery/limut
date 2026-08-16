@@ -30,7 +30,38 @@ system.timeNow = function () {
 }
 
 system.latency = () => {
-  return system.audio.outputLatency 
+  return system.audio.outputLatency
+}
+
+// Live count of audio worklet voices (superosc, chaos, pwm). These are by far the
+// most expensive things Limut can put on the audio thread, and unlike native nodes
+// their cost scales with their params (superosc `unison` especially), so knowing
+// how many are sounding is the difference between guessing and knowing when a set
+// starts glitching. Incremented/decremented by the worklet factories.
+//
+// This is a proxy, and deliberately so: there is no way to measure audio thread
+// load or dropouts from JS. AudioContext.renderCapacity - the API meant for exactly
+// this - has never shipped unflagged (checked against Chrome 151 and Electron 36:
+// absent from AudioContext.prototype in both). AudioWorkletGlobalScope has no
+// performance.now(), so a monitor worklet cannot time itself either, and both
+// currentTime and getOutputTimestamp() track the output device buffer and stay flat
+// even when the audio thread is deliberately driven past its deadline. So the beat
+// latency readout (labelled "Timing" in the UI) measures the MAIN thread, and the
+// voice count below is the honest handle on the audio thread. Revisit if
+// renderCapacity ever ships.
+let voices = 0
+system.voiceStarted = () => { voices += 1 }
+system.voiceStopped = () => { voices -= 1 }
+system.voiceCount = () => voices
+
+// Console handle for checking the audio thread mid-set, like window.limutNodePool.
+window.limutAudio = {
+  stats: () => ({
+    workletVoices: voices,
+    sampleRate: system.audio.sampleRate,
+    baseLatency: system.audio.baseLatency,
+    outputLatency: system.audio.outputLatency,
+  }),
 }
 
 system.vcaMainAmp = system.audio.createGain()

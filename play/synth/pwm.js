@@ -22,6 +22,8 @@ define(function (require) {
     fxMixChain(params, perFrameAmp(params, vca))
 
     let vco = new AudioWorkletNode(system.audio, "pwm-oscillator")
+    system.voiceStarted() // counted for system.voiceCount(); see superosc-source.js
+    let stopped = false
     vco.parameters.get('frequency').value = freq * Math.pow(2, detuneSemis/12)
     evalMainParamFrame(vco.parameters.get('pulseWidth'), params, "pwm", 1/2, undefined, x=>Math.max(Math.min(x,1),0))
     pitchEffects(vco.parameters.get('detune'), params)
@@ -33,7 +35,10 @@ define(function (require) {
     // never fires and the worklet's process() runs forever after release,
     // leaking render capacity. The raw AudioWorkletNode has no stop() method, so
     // give it the same stop shim the superosc factory uses before registering it.
-    vco.stop = (t = system.audio.currentTime) => vco.parameters.get('stop').setValueAtTime(1, t)
+    vco.stop = (t = system.audio.currentTime) => {
+      vco.parameters.get('stop').setValueAtTime(1, t)
+      if (!stopped) { stopped = true; system.voiceStopped() }
+    }
     waveEffects(params, effects(params, vco)).connect(vca)
 
     params._destructor.disconnect(vca, vco)

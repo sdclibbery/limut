@@ -129,29 +129,37 @@ class PwmOscillator extends AudioWorkletProcessor {
     if (parameters.stop[0] > 0.5) { return false }
 
     const output = outputs[0];
-    const getFrequency = paramGetter(parameters.frequency);
-    const getDetune = paramGetter(parameters.detune);
-    const getPulseWidth = paramGetter(parameters.pulseWidth);
+    // An a-rate param arrives as either a length-1 array (constant for the block)
+    // or a length-128 one. Testing that once per block and indexing directly drops
+    // three closure allocations per block and an indirect call per sample; a
+    // constant pitch also gets its Math.pow done once instead of 128 times.
+    const pFrequency = parameters.frequency, cFrequency = pFrequency.length === 1;
+    const pDetune = parameters.detune, cDetune = pDetune.length === 1;
+    const pPulseWidth = parameters.pulseWidth, cPulseWidth = pPulseWidth.length === 1;
+    const constFreq = cFrequency && cDetune;
+    const kFreq = constFreq ? Math.abs(pFrequency[0] * Math.pow(2, pDetune[0] / 1200)) : 0;
 
-    output.forEach((channel) => {
+    for (let ch = 0; ch < output.length; ch++) {
+      const channel = output[ch];
       for (let i = 0; i < channel.length; i++) {
         // get our current param values
-        const frequency = getFrequency(i);
-        const detune = getDetune(i);
-        const pulseWidth = getPulseWidth(i);
+        const pulseWidth = cPulseWidth ? pPulseWidth[0] : pPulseWidth[i];
 
         // calculate frequency
-        const freq = Math.abs(frequency * Math.pow(2, detune / 1200));
-      
+        const freq = constFreq ? kFreq
+          : Math.abs(pFrequency[cFrequency ? 0 : i] * Math.pow(2, pDetune[cDetune ? 0 : i] / 1200));
+
         // set new phase
         let freqInHz = this.freqInSecondsPerSample * sampleRate;
-        let sine = this.amplitude * Math.sin(TWOPI * this.t);
         if (this.freq !== freq) {
           this.freq = freq;
           this.freqInSecondsPerSample = freq / sampleRate;
         }
+        // The sine is only used above the quarter-Nyquist crossover, so compute it
+        // there rather than every sample (it reads this.t and this.amplitude, which
+        // nothing above touches, so the value is unchanged).
         const out = (freqInHz >= sampleRate / 4)
-          ? sine
+          ? this.amplitude * Math.sin(TWOPI * this.t)
           : this.rect(pulseWidth);
         channel[i] = out
 
@@ -159,7 +167,7 @@ class PwmOscillator extends AudioWorkletProcessor {
         this.t += this.freqInSecondsPerSample;
         this.t -= (this.t) | 0;
       }
-    });
+    }
     return true
   }
 }
