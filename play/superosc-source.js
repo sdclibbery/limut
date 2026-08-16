@@ -305,15 +305,22 @@ const FADE_SAMPLES_MAX = Math.round(sampleRate * 0.002);
 // is safe because process() calls never interleave: the audio thread renders one
 // processor, one block, at a time. Every process() sets these before reading them.
 //
-// Measured on an M1, per sounding note, as % of one core (the whole set of changes
-// in this file: this hoist, the cached unison tables, direct param indexing, and
-// the shared-tap read below). Web Audio renders on a SINGLE thread, so these are
-// the numbers that matter no matter how many cores the machine has:
-//   unison=15   9.6% -> 5.8% at 65Hz,  9.9% -> 8.2% at 220Hz,  9.7% -> 8.1% at 440Hz
-//   unison=7    4.6% -> 2.9% at 65Hz,  4.6% -> 3.9% at 220Hz,  4.6% -> 3.8% at 440Hz
+// Measured on an M1, per sounding note, as % of one core, for the whole set of
+// optimisations in this file (this hoist, the cached unison tables, direct param
+// indexing, the shared-tap read below, and the in-frame tap fast path in interpI).
+// Web Audio renders on a SINGLE thread, so these are the numbers that matter no
+// matter how many cores the machine has:
+//   unison=15   9.6% -> 4.6% at 65Hz,  9.9% -> 4.6% at 220Hz,  9.7% -> 4.6% at 440Hz
+//   unison=7    4.6% -> 2.2% at 220Hz
 // Output is bit-identical throughout - verified by rendering 20 scenarios (every
-// branch of the per-voice loop, a-rate and constant params) through process()
-// before and after and comparing sample by sample.
+// branch of the per-voice loop, a-rate and constant params, sync/crush/pwm/formant,
+// NaN fallbacks, mono and stereo) through process() before and after and comparing
+// sample by sample.
+//
+// Benchmark these in SEPARATE PROCESSES, one variant per process. Loading two copies
+// of the processor in one process makes the shared p.process(...) call site
+// megamorphic and deoptimises everything, which silently produces garbage numbers
+// (it reported one variant as 30% faster when it was in fact 3% slower).
 let gWave = null;
 let gIntegral = null;
 let gTotals = null;
@@ -329,16 +336,34 @@ const Ic = (idx, f) => {
 };
 // interpI: Catmull-Rom interpolation of frame f's integral at fractional x,
 // with all taps offset by 'base' to keep magnitudes small (float32 precision).
-// (Deriving the four taps' cycle counts incrementally to save three divisions
-// was measured slightly SLOWER than just dividing - the scattered integral loads
-// dominate here, not the arithmetic. Left as the simpler form deliberately.)
+//
+// The four taps are adjacent, and ~99.5% of the time all four are inside the frame
+// (x0 is always in [0,frameLen), so only i0 at the very ends wraps). Checking that
+// ONCE and then issuing four consecutive loads is worth a lot: -30% on its own,
+// because the run has no control flow or arithmetic between the loads, so they
+// overlap. What does NOT work is pushing the same check down into Ic, so each load
+// is guarded individually - measured 2-10% SLOWER, since the branch delays every
+// load and the extra return path discourages inlining Ic into here. Two earlier
+// attempts to speed up Ic's arithmetic (reciprocal multiply, incremental cycle
+// carry) were also neutral-to-slower. The lesson, three times over: this loop is
+// bound by the scattered integral LOADS, not the arithmetic, so optimise for
+// issuing loads early and contiguously, never for saving an operation.
 const interpI = (x, base, f) => {
   const i0 = Math.floor(x);
   const frac = x - i0;
-  const p0 = Ic(i0 - 1, f) - base;
-  const p1 = Ic(i0, f) - base;
-  const p2 = Ic(i0 + 1, f) - base;
-  const p3 = Ic(i0 + 2, f) - base;
+  let p0, p1, p2, p3;
+  if (i0 >= 1 && i0 + 2 < gFrameLen) {
+    const fb = f * gFrameLen + i0;
+    p0 = gIntegral[fb - 1] - base;
+    p1 = gIntegral[fb] - base;
+    p2 = gIntegral[fb + 1] - base;
+    p3 = gIntegral[fb + 2] - base;
+  } else {
+    p0 = Ic(i0 - 1, f) - base;
+    p1 = Ic(i0, f) - base;
+    p2 = Ic(i0 + 1, f) - base;
+    p3 = Ic(i0 + 2, f) - base;
+  }
   const a = 3 * (p1 - p2) + p3 - p0;
   const b = 2 * p0 - 5 * p1 + 4 * p2 - p3;
   const c = p2 - p0;
@@ -359,10 +384,21 @@ const readFrame = (f, x0, x1, span) => {
     // evaluating the cubic at both fractions is the identical arithmetic in the
     // identical order, for half the (scattered, cache-missing) loads.
     if (Math.floor(x1) === i0) {
-      const p0 = Ic(i0 - 1, f) - base;
-      const p1 = Ic(i0, f) - base;
-      const p2 = Ic(i0 + 1, f) - base;
-      const p3 = Ic(i0 + 2, f) - base;
+      // Same four adjacent taps, so the same in-frame fast path as interpI (see
+      // the comment there for why the check belongs here and not inside Ic).
+      let p0, p1, p2, p3;
+      if (i0 >= 1 && i0 + 2 < gFrameLen) {
+        const fbi = f * gFrameLen + i0;
+        p0 = gIntegral[fbi - 1] - base;
+        p1 = gIntegral[fbi] - base;
+        p2 = gIntegral[fbi + 1] - base;
+        p3 = gIntegral[fbi + 2] - base;
+      } else {
+        p0 = Ic(i0 - 1, f) - base;
+        p1 = Ic(i0, f) - base;
+        p2 = Ic(i0 + 1, f) - base;
+        p3 = Ic(i0 + 2, f) - base;
+      }
       const a = 3 * (p1 - p2) + p3 - p0;
       const b = 2 * p0 - 5 * p1 + 4 * p2 - p3;
       const c = p2 - p0;
