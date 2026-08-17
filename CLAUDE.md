@@ -39,6 +39,14 @@ index.html → require.js → main.js
 - `functions/` — built-in DSL functions (time, rand, math, sliders, midi-knob)
 - `preset/` — pre-built sound definitions loaded at startup
 
+## Sub-projects
+
+- `draw/hub75/` — **HUB75 LED display project**. A self-contained sub-project: a HUB75 panel
+  display driven by a Colorlight 5A-75B receiving card, fed over ethernet by a Raspberry Pi 3B+
+  that renders shaders sent from limut. Anything to do with hub75 lives there — see
+  `draw/hub75/CLAUDE.md`. This folder is not part of the browser app and nothing else imports
+  from it, so do not read or search it unless the task is specifically about the hub75 project.
+
 ## Tests
 
 When adding or changing behavior, write or update tests alongside the code whenever it's reasonably testable — the inline test blocks are cheap to extend and catch regressions early.

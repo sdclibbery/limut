@@ -103,7 +103,7 @@ preset vocospeak audiosynth, oct=2, rate=1, envelope='full', play=
 preset vox superosc, wavetable='sample/wt64/VOXSYNTH.WAV', oct=3, wt=[]l24@s, unison=7, att=1/6, rel=1/2, glide=50ms
 
 preset superbass audiosynth, dur=1/4, oct=3, envelope='full', rel=3/4, dec=1/4, sus={level:2/3},
-  play={osc.tri{eventpitch/2}*3/2,superosc{freq:eventpitch*(1+chaos{3.71Hz}*0.04+chaos{3.64Hz}*0.04),unison:15}}
+  play={osc.tri{eventpitch/2}*3/2,superosc{freq:eventpitch*(1+chaos{3.71Hz}*0.007+chaos{3.64Hz}*0.007),unison:15}}
 
 preset supersweep audiosynth, envelope='pad', oct=1, dur=4,
   play=superosc{eventpitch, unison:{6,detune:1.02}, formant:[0.99,1.01]n19}>>lpf{800+8000*[]n23^3,q:10}>>mix{hpf{1000}>>airverb}
