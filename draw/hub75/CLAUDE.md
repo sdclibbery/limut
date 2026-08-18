@@ -43,8 +43,9 @@ Eventually every layer of software in this system is ours to design:
 
 1. **Host side (in limut)** — how a limut visual is nominated for HUB75 output, how its shader
    and textures are extracted, and the transport that ships shader/textures/uniforms to the Pi.
-2. **Wire protocol (limut → Pi)** — setup messages (shader, textures, display geometry) vs.
-   the 60Hz uniform stream; framing, ordering, and what happens on packet loss or a late frame.
+2. **Wire protocol (limut → Pi)** — **specified in `PROTOCOL.md`**, with a working reference
+   display in `mock/`. Setup messages (shader, textures, geometry) vs. the 60Hz uniform stream;
+   framing, ordering, and what happens on packet loss or a late frame.
 3. **Pi renderer** — receive, compile, render offscreen at the panel resolution, read back
    pixels, and hand them to the output stage with a stable 60Hz cadence.
 4. **Pi → 5A-75B output** — the Colorlight protocol: frame packets, per-row addressing, colour
@@ -61,12 +62,27 @@ capped at OpenGL ES 2.0, and a "gigabit" port sitting behind USB 2.0. **We are u
 instead, and both limits go away.** Recording why, since it explains design choices that would
 otherwise look over-cautious:
 
-**GPU: OpenGL ES 3.1.** The 4B has a VideoCore VI driven by Mesa's `v3d` driver. Limut is WebGL2
-throughout — `main.js:111` requests a `webgl2` context and every shader in `draw/` is
-`#version 300 es` — so limut's GLSL should run essentially unmodified, with no translation layer.
-3D textures exist, so the 3D LUTs in `draw/visualsynth/lut.js` are supported. GLES 3.0+ also
-brings pixel buffer objects, which means frame readback can be asynchronous rather than a
-blocking `glReadPixels` stall.
+**GPU: OpenGL ES 3.1 — verified on hardware.** The 4B has a VideoCore VI driven by Mesa's
+`v3d` driver. Measured on the actual board (2026-08-18):
+
+| | |
+|---|---|
+| `GL_VERSION` | OpenGL ES 3.1 Mesa 26.2.0 |
+| `GL_RENDERER` | V3D 4.2.14.0 |
+| `GL_SHADING_LANGUAGE_VERSION` | OpenGL ES GLSL ES 3.10 |
+| `GL_MAX_TEXTURE_SIZE` | 4096 |
+| `GL_MAX_3D_TEXTURE_SIZE` | 4096 |
+| `GL_MAX_RENDERBUFFER_SIZE` | 4096 |
+
+`draw/hub75/tools/egl-probe.c` is the probe that established this, and it is worth re-running
+after any OS upgrade. It creates a GBM/EGL context on `/dev/dri/renderD128` with **no surface
+at all** (`EGL_NO_SURFACE`, so no X and no Wayland), compiles a `#version 300 es` shader pair
+that uses `in`/`out`, `texture()` and a `sampler3D`, renders a fullscreen triangle to an FBO,
+reads it back with `glReadPixels` and checks the pixel values. All checks pass.
+
+That settles the project's riskiest assumption: limut's shaders are `#version 300 es`
+throughout and need no translation layer, and the 3D LUTs in `draw/visualsynth/lut.js` are
+supported. **The 4096 texture limit is the one real constraint to design around.**
 
 **Ethernet: native gigabit.** The 4B's MAC is on the SoC rather than hanging off USB, so real
 throughput is close to line rate. At roughly 3 bytes per pixel per frame at 60Hz, a gigabit link
@@ -171,7 +187,9 @@ key-based SSH login works, `pi` is in `video` and `render`, and `/dev/dri/card0`
 
 ### Moving the card to the 4B
 
-Checked and portable — no reflash needed:
+Done 2026-08-18: the card was moved from the stand-in 3B+ straight into the 4B and **booted
+first time**, same hostname, same IP, same SSH host key, WiFi associated without intervention.
+No reflash was needed. The checks that predicted this:
 
 - SD host drivers (`sdhci-iproc`, `sdhci-brcmstb`, `bcm2835`) are **kernel built-ins**, not
   modules, so the initramfs is board-independent and `MODULES=dep` is a non-issue on Pi kernels.
@@ -183,16 +201,80 @@ Checked and portable — no reflash needed:
 
 The SSH host key carries over too, so no `known_hosts` churn after the swap.
 
-Still to do on the 4B: verify a trivial EGL/GBM program can compile a GLES 3 shader and read
-back a frame. That is the cheapest test of the project's riskiest assumption, and it cannot be
-done on the 3B+, which caps out at GLES 2.0.
+Board as running: **Raspberry Pi 4 Model B Rev 1.5, 1GB RAM** (`free` reports 905Mi). Worth
+knowing — this is the smallest 4B variant, so the renderer should not assume headroom for large
+host-side texture staging.
 
-Once key login is confirmed there, turn off SSH password authentication.
+**Power is clean on the 4B**: `vcgencmd get_throttled` returns `0x0` with zero undervoltage
+events in the kernel log, on the same supply that was still browning out the 3B+ at idle. That
+retrospectively points at the 3B+'s own micro-USB input rather than the supply, and closes out
+the problem that cost most of first bring-up.
+
+Remaining: turn off SSH password authentication now that key login is confirmed.
+
+## Protocol
+
+Specified in **`PROTOCOL.md`** (version 1), with a zero-dependency reference display in
+**`mock/`** that the host side can be developed against before the panels arrive.
+
+The decisive fact behind the design: a **visualsynth px chain compiles to a completely
+self-contained shader**. `draw/visualsynth/codegen.js` emits `#version 300 es` with no common
+processors, no `preprocess`/`postprocess`, and none of the ~30 standard `l_*` uniforms — against a
+generated program every one of those locations resolves `null`. So the whole shippable state of a
+visual is a fragment source string, N `vec4` uniforms named `u_vs0..`, and M textures. Per frame
+that is `16 × N` bytes; at N=8 and 60Hz, 8.6 kB/s. **Bandwidth is not a constraint anywhere in
+this system** — the design problems are all framing, caching, error reporting and lifecycle.
+
+Shape of it:
+
+| | |
+|---|---|
+| Transport | one WebSocket, one port (7575), `/info` for discovery + `/session` for the session. WebSocket because it is the only bidirectional binary transport a plain browser has; usage is constrained to a minimal subset (no extensions, no fragmentation, ≤ 60 KB messages) so the Pi's own server stays ~150 lines of C |
+| Discovery | avahi advertises `_limut-hub75._tcp`; the browser resolves `<name>.local` and probes `GET /info`. Real enumeration would need a Node/Electron helper and is not in v1 |
+| Host binding | new `display` param on `visualsynth`: `v1 visualsynth px=..., display='hub75-01'` sends that player to the panel instead of the main canvas |
+| Layer lifetime | **one persistent layer per player**, not per event. The wall shows continuous output; animation comes from the uniform stream |
+| Compositing | one player per display in v1; the frame packet reserves a layer count so multi-layer is a later extension, not a framing change |
+| Setup vs. frames | JSON text frames for control, binary for the 60Hz uniform packets and asset chunks, on the same socket. Assets are chunked at 16 KB and interleaved so a 1 MB image cannot stall the uniform stream |
+| Caching | programs and textures are content-addressed by SHA-256, so a reconnect costs a `have` round trip rather than a re-upload |
+| Errors | typed `error` messages (`compile`/`link`/`asset`/`render`/`protocol`) carrying the driver info log. Compile failures are **permanent** for that source hash, mirroring `draw/visualsynth.js` setting `programs[src] = null` |
+| Dimmer | an `f32` in every frame packet (so `dim=[0:1]l` works as a timevar), plus a `dim` message for when no frames are flowing. Applied pre-gamma in the output stage, so it works even with a broken or absent shader |
+| Frame pacing | last-write-wins: a frame superseded before it was drawn is dropped, not queued. Same decoupling `draw/dmx-worker.js` already does for DMX |
+
+### Two things worth remembering
+
+**Textures bind to the layer, not to the program.** The program id is the hash of the shader
+source, and a lut's *contents never appear in the source* — only its size does, baked in as a
+literal by `lookupExpr` in `draw/visualsynth/nodes.js`. So `tex1d{{x}->x}` and `tex1d{{x}->1-x}`
+generate byte-identical GLSL and share a program id while needing entirely different texture data.
+Hanging textures off the program would silently render the second chain with the first one's lut.
+This was found by a mock selftest written to check something else.
+
+**The uniform list is positional on the wire.** Slot index is the index into `prog.uniforms`, so a
+declared list that disagrees with the shader source is a silent wrong-picture bug rather than a
+crash. The mock checks for it on every `prog`, and the real display should too.
+
+### Host-side prerequisite for the next step
+
+`draw/visualsynth/lut.js` `uploadLut()` **discards the sampled `Uint8Array` after upload**.
+Shipping a lut to a display needs those bytes kept (`t.data`, `t.dims`, `t.size`). Small change,
+but it is a real dependency of the host side.
 
 ## Status
 
-Pi OS flashed and configured; not yet booted. No renderer code, no protocol decisions, no
-language choice yet for the Pi side.
+Render node is up and validated. The Pi 4B boots headless, joins WiFi, is reachable as
+`hub75-01.local` over SSH with key auth, and has been **proven to compile and run limut-grade
+GLSL ES 3.00 offscreen with pixel readback** (see `tools/egl-probe.c`). The riskiest technical
+assumption in the project is now settled in our favour.
+
+The **wire protocol is specified** (`PROTOCOL.md`) and has a **working reference display**
+(`mock/`, 63 passing protocol assertions). Verified 2026-08-18: the hand-rolled RFC 6455 server
+completes a handshake with real headless Chrome and round-trips JSON, binary frame packets and
+replies; a 180-frame 60Hz drive against a display configured to lose 20% of packets rendered 138,
+dropped 42, and stayed up and accounted for.
+
+Not started: any Pi renderer code, the limut host side, the Colorlight output stage, and the panel
+mapping. No language chosen for the Pi side yet, though the protocol was shaped to keep a C
+implementation small.
 
 ## Open questions
 
@@ -202,9 +284,23 @@ language choice yet for the Pi side.
   approach, but it needs measuring.
 - Whether limut's shaders really do run unmodified on Mesa `v3d`, or whether there are gaps
   between WebGL2's GLSL ES 3.00 dialect and native GLES 3.1 that need a compatibility pass.
-- Transport from limut to the Pi, given the browser sandbox — what the host can actually open
-  (WebSocket, WebRTC, or a small local relay process) and the latency that implies.
 - Whether the Pi can sustain render + readback + Colorlight output at 60Hz for the target
   panel resolution, and what degrades first if it cannot.
-- Time sync: how the Pi's frame cadence relates to limut's metronome/beat clock.
+- Frame pacing: the protocol has the display render on packet arrival, self-pacing to the host's
+  rAF. That needs revisiting once the Colorlight output stage exists and has its own cadence.
+- Gamma and colour: the dimmer is specified as a linear multiply applied pre-gamma, but the gamma
+  curve itself belongs to the output stage and is not designed yet.
+- Time sync: how the Pi's frame cadence relates to limut's metronome/beat clock. The frame packet
+  carries `beat` and `hostTime` so this can be worked out later without a framing change.
+- Live texture sources: `webcam{}` is local-only and unsupported in protocol v1. Streaming it (or
+  the scope/FFT textures) would need a per-frame texture path that does not exist yet.
 - Physical display size and panel arrangement.
+- USB: the intended path is USB-C gadget mode (`dwc2` + `g_ether`/NCM), which makes the link an
+  ordinary network interface and needs no protocol change. Pi-side configuration is not done.
+
+## Answered since
+
+- *Transport from limut to the Pi, given the browser sandbox* — a plain WebSocket works from an
+  unmodified browser page, verified against headless Chrome. No relay process, no WebRTC, no
+  Electron requirement. The one constraint: serving limut over `https` would make `ws://`
+  unreachable.
