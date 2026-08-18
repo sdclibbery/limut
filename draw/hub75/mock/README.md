@@ -30,9 +30,11 @@ client rather than against a matching hand-rolled one.
 | file | what it is |
 |---|---|
 | `ws-server.js` | minimal RFC 6455 server: handshake, unmasking, text/binary/ping/close |
-| `codec.js` | binary frame and chunk encode/decode (`PROTOCOL.md` §12). Dual AMD/CommonJS, so the limut host side can require the same file rather than keeping a second copy of the byte layout |
 | `display.js` | the display: `/info`, `/session`, session state machine, caches, error paths, dimmer, 60Hz consume-and-drop |
 | `selftest.js` | scripted client covering every path, including the ones that only happen when something is wrong |
+
+`../codec.js` is shared rather than mock-specific: it is the one copy of the §12 byte layout, dual
+AMD/CommonJS so the limut host side (`../host/`) requires the same file.
 
 ## Flags
 

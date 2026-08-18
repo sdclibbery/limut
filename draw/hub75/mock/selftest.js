@@ -10,7 +10,7 @@
 
 let crypto = require('node:crypto')
 let { start } = require('./display')
-let codec = require('./codec')
+let codec = require('../codec')
 
 let passed = 0
 let failed = 0

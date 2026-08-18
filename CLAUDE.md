@@ -41,11 +41,13 @@ index.html → require.js → main.js
 
 ## Sub-projects
 
-- `draw/hub75/` — **HUB75 LED display project**. A self-contained sub-project: a HUB75 panel
-  display driven by a Colorlight 5A-75B receiving card, fed over ethernet by a Raspberry Pi 3B+
+- `draw/hub75/` — **HUB75 LED display project**. A near self-contained sub-project: a HUB75 panel
+  display driven by a Colorlight 5A-75B receiving card, fed over ethernet by a Raspberry Pi 4B
   that renders shaders sent from limut. Anything to do with hub75 lives there — see
-  `draw/hub75/CLAUDE.md`. This folder is not part of the browser app and nothing else imports
-  from it, so do not read or search it unless the task is specifically about the hub75 project.
+  `draw/hub75/CLAUDE.md`. The one part of it that *is* in the browser app is `draw/hub75/host/`,
+  the limut end of the wire protocol, required by `draw/visualsynth.js` (for the `display` param)
+  and `main.js` (for the per-frame uniform stream). Nothing else imports from the folder, so do not
+  read or search the rest of it unless the task is specifically about the hub75 project.
 
 ## Tests
 

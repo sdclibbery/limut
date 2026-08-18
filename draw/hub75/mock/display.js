@@ -16,7 +16,7 @@ let crypto = require('node:crypto')
 let os = require('node:os')
 let { spawnSync } = require('node:child_process')
 let ws = require('./ws-server')
-let codec = require('./codec')
+let codec = require('../codec')
 
 let PROTO = 1
 

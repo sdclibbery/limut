@@ -19,6 +19,7 @@ define(function(require) {
   let predefinedVars = require('predefined-vars')
   let system = require('play/system')
   let drawSystem = require('draw/system')
+  let hub75 = require('draw/hub75/host/hub75')
   let metronome = require('metronome')
   let players = require('player/players')
   let sections = require('section/sections')
@@ -234,6 +235,16 @@ define(function(require) {
         console.log(e)
         clearCallTree()
       }
+    }
+    try {
+      // After frameStart, so a layer bound by this frame's events gets its first packet this frame
+      hub75.perFrameUpdate(now, beatTime)
+    } catch (e) {
+      // clearCallTree matters here: the uniform loop swaps the call tree per uniform, so an
+      // exception part way through would otherwise poison every later evaluation in the frame
+      consoleOut('🔴 Frame update Error from HUB75: ' + e)
+      console.log(e)
+      clearCallTree()
     }
     sectionButtons.update() // Per frame (not per beat) so new sections and clicks show immediately; diffs internally
     vuMeterStyle(vuMeterL.style, system.meter('L'), -30, 0)

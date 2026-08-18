@@ -4,9 +4,10 @@
 Hub75 display
  Hardware: MacBook/Limut -> wifi -> Raspberry Pi 3B+ -> ethernet -> 5A-75B -> 6 p5 indoor panels <- 5v 200W PSU
  Need to flash the 5A-75B with a correct setup for the panels, supporting a global dimmer
- Custom protocol design (web socket based?) to send shaders, textures, and 60Hz uniform updates from limut to the Pi, and errors back
- OS + Software for the Pi to receive the new protocol, render with the GPU, and send frame data to the 5A-75B
- Limut changes to be able to send a visualsynth to a named Hub75 display instead of the MacBook display using the new protocol
+ DONE Custom protocol design (web socket based) to send shaders, textures, and 60Hz uniform updates from limut to the Pi, and errors back -- draw/hub75/PROTOCOL.md, with a reference display in draw/hub75/mock/
+ DONE Limut changes to be able to send a visualsynth to a named Hub75 display instead of the MacBook display using the new protocol -- draw/hub75/host/, the display= and dim= params on visualsynth
+ Software for the Pi to receive the new protocol, render with the GPU, and send frame data to the 5A-75B (OS is done)
+ Image textures (tex{'url'}) over the protocol: needs the encoded file bytes fetching host side
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================

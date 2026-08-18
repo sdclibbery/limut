@@ -90,9 +90,15 @@ define(function(require) {
   // 2d texture (WebGL has no 1d textures); a 3d lut needs the TEXTURE_3D target, which sprite.js
   // reads off .target. Deliberately no width/height: those drive the extents uniform, which only
   // tex{}'s aspect correction wants.
+  //
+  // The sampled bytes are kept on the texture (with the shape needed to interpret them) rather than
+  // discarded after upload: a lut bound for a hub75 display has to be sent over the wire, and the
+  // lut's contents never appear in the shader source, so there is nowhere else to recover them from
+  // (draw/hub75/PROTOCOL.md §7.2). Cost is bounded by maxTexels above: 4MB worst case, 1-16KB for
+  // the default sizes.
   let uploadLut = (data, dims, size) => {
     let gl = system.gl
-    let t = { tex: gl.createTexture() }
+    let t = { tex: gl.createTexture(), data: data, dims: dims, size: size }
     if (dims === 3) {
       t.target = gl.TEXTURE_3D
       gl.bindTexture(gl.TEXTURE_3D, t.tex)

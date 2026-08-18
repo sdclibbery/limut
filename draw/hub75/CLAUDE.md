@@ -1,8 +1,10 @@
 # HUB75 Display Project
 
-A sub-project of limut, self-contained in `draw/hub75`. It is **not** part of the browser
-limut app: nothing in the main limut codebase imports from here, and this folder should only
-be opened when working on the HUB75 project itself.
+A sub-project of limut, in `draw/hub75`. All of it except `host/` is outside the browser app and
+should only be opened when working on the HUB75 project itself. **`draw/hub75/host/` is the
+exception**: it is the limut end of the wire protocol and runs in the browser, required by
+`draw/visualsynth.js` (the `display` param) and `main.js` (the per-frame uniform stream).
+`codec.js` sits at the top level because both ends use it.
 
 ## Goal
 
@@ -253,11 +255,74 @@ This was found by a mock selftest written to check something else.
 declared list that disagrees with the shader source is a silent wrong-picture bug rather than a
 crash. The mock checks for it on every `prog`, and the real display should too.
 
-### Host-side prerequisite for the next step
+## Host side (limut end)
 
-`draw/visualsynth/lut.js` `uploadLut()` **discards the sampled `Uint8Array` after upload**.
-Shipping a lut to a display needs those bytes kept (`t.data`, `t.dims`, `t.size`). Small change,
-but it is a real dependency of the host side.
+Built 2026-08-18, in `host/`, against the mock. `v1 visualsynth, px=..., display='hub75-01'` now
+sends that player to the panel instead of the canvas, with `dim=` for the wall's brightness.
+
+| file | |
+|---|---|
+| `host/hub75.js` | the registry. `setLayer`/`releaseFor` from visualsynth, `perFrameUpdate` from main.js, the `hub75` console commands |
+| `host/session.js` | one display: endpoint resolution, `/info` probe, socket lifecycle, the reconcile state machine, caches, backoff |
+| `host/assets.js` | classify a visualsynth texture into a wire asset; chunk maths. Pure, no GL |
+| `host/sha256.js` | content addressing, with a plain JS fallback |
+| `codec.js` | shared with the mock: the one copy of the §12 byte layout |
+
+Four things worth knowing before touching it:
+
+**The host is a tap, not a second renderer.** `buildSource()` in `draw/visualsynth/codegen.js`
+already returns everything shippable — the source, the ordered uniform ASTs, the textures — so
+`draw/visualsynth.js` hands that object straight over and returns nothing. `draw/sprite.js` turns a
+falsy renderer result into a task that removes itself, so no local drawing happens and no code
+there needed changing.
+
+**Layers are keyed on source *and* texture identity, not on the shader alone.** This is §7.2 made
+concrete: `tex1d{{x}->x}` and `tex1d{{x}->1-x}` generate byte-identical GLSL, so they share a
+program id while needing different lut data. `layerKey()` mixes in a per-texture-object id from a
+WeakMap. The `edit` scenario in `mock/host-check.js` is that exact case end to end.
+
+**A webcam texture is identified by `update()`, not by `.video`.** `draw/webcam.js` attaches
+`.video` inside `update()`, which `draw/sprite.js` calls — and sprite.js never runs for a display
+bound player. Classifying on `.video` reports a webcam as an image.
+
+**The display's cache is asked about, never assumed.** Every layer change sends `have` for the full
+id list rather than filtering by what the host thinks the display holds. Caches survive a session
+change (§5.1) but not a power cycle, and a host that assumed otherwise binds a layer naming a
+program the display never received — a session-closing protocol error it would then reconnect
+straight back into, forever. The `restart` scenario in `mock/host-check.js` is that case.
+
+**Frame packets carry the *bound* layer's uniforms, never the newest ones.** While a new chain is
+still uploading the display is still showing the old program, and a uniform count that disagrees
+with it is a session-closing protocol error (§12.1). `host/hub75.js` keeps a small map of live
+params per layer key for exactly this window.
+
+`crypto.subtle` is undefined outside a secure context, so opening limut over the LAN
+(`http://192.168.x.x:8000`) rather than `localhost` would break content addressing with an
+unrelated-looking TypeError. `host/sha256.js` falls back to plain JS instead.
+
+### Testing the host side
+
+`mock/host-check.js` drives the *real app in real Chrome* against the mock and asserts on what the
+display observed — 56 assertions over seven scenarios: happy path, compile failure, packet loss,
+reconnect, display restart, live edit, webcam refusal.
+
+```sh
+sh server.sh                                  # limut on :8000
+node draw/hub75/mock/host-check.js            # all scenarios
+node draw/hub75/mock/host-check.js edit       # just one
+```
+
+`mock/harness.html` is how it gets in: limut in a same-origin iframe, code seeded through
+localStorage, the app's own `go()` called. There is no CDP route — Chrome 148's `Runtime.evaluate`
+hangs. Each run gets a **fresh Chrome profile**: a shared one caches the app's modules (the dev
+server sends no `Cache-Control`) and a scenario then quietly tests the previous edit's code.
+
+Two traps found while writing the restart scenario, both worth knowing before adding another:
+`display.stop()` closes the listener but **leaves live sockets open**, so a scenario that wants the
+host to notice must close the session's connection too — and it must do so *after* stopping the
+listener, or the host's 250 ms retry reconnects to the display that is about to vanish and then
+sits contentedly on a socket nothing is serving. And `/connected/` matches `disconnected`, which
+made an assertion pass for the wrong reason; match `: connected` instead.
 
 ## Status
 
@@ -272,9 +337,13 @@ completes a handshake with real headless Chrome and round-trips JSON, binary fra
 replies; a 180-frame 60Hz drive against a display configured to lose 20% of packets rendered 138,
 dropped 42, and stayed up and accounted for.
 
-Not started: any Pi renderer code, the limut host side, the Colorlight output stage, and the panel
-mapping. No language chosen for the Pi side yet, though the protocol was shaped to keep a C
-implementation small.
+The **limut host side is built and verified end to end** against the mock (`host/`, 46 assertions in
+`mock/host-check.js` plus inline `?test` blocks). A real browser running the real app uploads the
+lut, compiles the program, binds the layer and holds a 60Hz uniform stream, and recovers from a
+dropped socket with a `have` round trip rather than a re-upload.
+
+Not started: any Pi renderer code, the Colorlight output stage, and the panel mapping. No language
+chosen for the Pi side yet, though the protocol was shaped to keep a C implementation small.
 
 ## Open questions
 
@@ -293,7 +362,11 @@ implementation small.
 - Time sync: how the Pi's frame cadence relates to limut's metronome/beat clock. The frame packet
   carries `beat` and `hostTime` so this can be worked out later without a framing change.
 - Live texture sources: `webcam{}` is local-only and unsupported in protocol v1. Streaming it (or
-  the scope/FFT textures) would need a per-frame texture path that does not exist yet.
+  the scope/FFT textures) would need a per-frame texture path that does not exist yet. The host
+  refuses to bind a chain containing one.
+- Image textures (`tex{'url'}`) are specified but not implemented host side: `draw/texture.js` keeps
+  only the GL handle, so the encoded file bytes would have to be fetched separately. The host
+  refuses to bind a chain containing one, and `assets.classify` has the seam for it.
 - Physical display size and panel arrangement.
 - USB: the intended path is USB-C gadget mode (`dwc2` + `g_ether`/NCM), which makes the link an
   ordinary network interface and needs no protocol change. Pi-side configuration is not done.

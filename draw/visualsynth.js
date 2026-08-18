@@ -7,6 +7,7 @@ define(function (require) {
   let {buildSource} = require('draw/visualsynth/codegen')
   let {isShaderNode, toVec4} = require('draw/visualsynth/shader-node')
   let {getCallTree, setCallTree, clearCallTree} = require('player/callstack')
+  let hub75 = require('draw/hub75/host/hub75')
   require('draw/visualsynth/nodes') // Register mul/tex/webcam var functions at startup
 
   let vtxCompiled
@@ -26,6 +27,15 @@ define(function (require) {
     }
     let built = buildSource(node)
     if (built.notReady) { return } // eg webcam not enumerated yet; the next event retries
+    // A named display takes the whole chain instead of the canvas. Everything shippable is already
+    // in `built` - the generated shader is self contained - so this is a tap on the existing seam
+    // rather than a second rendering path. See draw/hub75/PROTOCOL.md.
+    let display = evalParamEvent(params.display, params)
+    if (display !== undefined) {
+      hub75.setLayer(String(display), params, built)
+      return // nothing drawn locally; sprite.js turns a falsy result into a task that removes itself
+    }
+    hub75.releaseFor(params._player && params._player.id) // eg display= edited back off the line
     let cached = programs[built.source]
     if (cached === undefined) {
       try {

@@ -33,7 +33,10 @@ v1 visualsynth px=tex3d{{x,y,z}->{r:x,g:y,b:z}}, display='hub75-01'
 
 When `display` is set, that player's output goes to the named panel **instead of** the main limut
 canvas. Players without `display` are unaffected and keep drawing locally. Several players MAY
-name different displays; in version 1 a display accepts **one** player (see §7).
+name different displays; in version 1 a display accepts **one** player (see §7). A companion `dim`
+param carries the global dimmer (§9), evaluated per frame like any other limut param.
+
+Implemented in `draw/hub75/host/`; see `CLAUDE.md` in this folder.
 
 ## 3. Transport
 
@@ -429,9 +432,17 @@ Room already reserved in version 1: `layerCount` and per-layer `layerId` in the 
 the `flags` word — multi-layer compositing with z-order and blend modes can be added without a
 framing change.
 
-## 15. Reference implementation
+## 15. Implementations
 
-`draw/hub75/mock/` is a zero-dependency Node implementation of the display side, including a
+`draw/hub75/mock/` is a zero-dependency Node implementation of the **display** side, including a
 hand-rolled RFC 6455 server. It exists so the limut host side can be built and tested before the
 Colorlight card and panels arrive, and it doubles as a demonstration that the display side needs
 only a small subset of WebSocket. See `draw/hub75/mock/README.md`.
+
+`draw/hub75/host/` is the **host** side, in limut itself. `draw/hub75/mock/host-check.js` drives it
+in a real browser against the mock and asserts on what the display observed.
+
+`draw/hub75/codec.js` is the binary packet codec of §12, shared by both: dual AMD/CommonJS so the
+byte layout lives in exactly one place.
+
+Not yet implemented anywhere: the Pi renderer, and `kind:"image"` assets on the host side.

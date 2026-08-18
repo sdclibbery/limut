@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>hub75 host check harness</title>
+</head>
+<body>
+<!--
+  Drives the real limut app against the mock display, for draw/hub75/mock/host-check.js.
+
+  It has to be served from the same origin as limut (http://localhost:8000) for two reasons: the
+  editor takes its code from localStorage, which is per origin, and the harness calls go() on the
+  app's own window, which same origin lets it do. Loading limut in an iframe rather than
+  scripting it from outside is the pattern that works here - Chrome 148's Runtime.evaluate hangs,
+  so there is no CDP route in.
+-->
+<h1>hub75 host check</h1>
+<p>Driving limut against the mock display. Watch the console.</p>
+<iframe id="app" width="1000" height="700" style="border:1px solid #ccc"></iframe>
+<script>
+  let code = decodeURIComponent((new URLSearchParams(location.search)).get('code') || '')
+  let runAfter = parseInt((new URLSearchParams(location.search)).get('runafter') || '3000', 10)
+  console.log('HARNESS: seeding code: ' + code)
+  localStorage.setItem('limut-code', code)
+
+  // An optional second edit, so a scenario can prove what happens when a live coder changes the px
+  // line while the display is already showing the first one
+  let code2 = decodeURIComponent((new URLSearchParams(location.search)).get('code2') || '')
+  let runAfter2 = parseInt((new URLSearchParams(location.search)).get('runafter2') || '0', 10)
+
+  let frame = document.getElementById('app')
+  let go = (src) => {
+    try {
+      if (src !== undefined) {
+        // CodeMirror 5 hangs its instance off the wrapper element, which is the way in to the
+        // editor from outside without adding a global to the app just for the test
+        frame.contentWindow.document.querySelector('.CodeMirror').CodeMirror.setValue(src)
+      }
+      frame.contentWindow.go()
+      console.log('HARNESS: go() called' + (src !== undefined ? ' after edit' : ''))
+    } catch (e) {
+      console.log('HARNESS: go() failed: ' + e)
+    }
+  }
+  frame.onload = () => {
+    console.log('HARNESS: app loaded')
+    // The app needs a moment to require its modules and get its audio clock running before the
+    // editor's go() will produce any events
+    setTimeout(() => {
+      go()
+      if (code2 && runAfter2 > 0) { setTimeout(() => go(code2), runAfter2) }
+    }, runAfter)
+  }
+  frame.src = '/'
+</script>
+</body>
+</html>
