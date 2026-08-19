@@ -114,7 +114,9 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    printf("limut HUB75 display \"%s\" %dx%d on port %d\n", d.name, d.w, d.h, d.port);
+    printf("limut HUB75 display \"%s\" %dx%d on port %d (%s)\n", d.name, d.w, d.h, d.port,
+           net.dualStack ? "IPv6 and IPv4"
+                         : "IPv4 only — a browser preferring the AAAA record will not connect");
     printf("  info    http://localhost:%d/info\n", d.port);
     printf("  session ws://localhost:%d/session\n", d.port);
     printf("  frame   http://localhost:%d/frame.raw   (debug, not part of the protocol)\n", d.port);

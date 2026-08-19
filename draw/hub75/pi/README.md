@@ -84,7 +84,36 @@ Vendored rather than linked: SHA-1, SHA-256, base64 and the JSON parser. It keep
 as short as `../tools/egl-probe.c`'s, and the JSON parser is 300 lines because the message set is
 tiny and entirely flat except for `layer.textures`.
 
-## Three things worth knowing before touching it
+## If a browser cannot reach the display
+
+Check **macOS Privacy & Security → Local Network** for that browser first, before anything here.
+Without it the browser cannot reach any other device on the LAN, and limut reports
+`CORS request did not succeed, status code (null)` — which is not a CORS problem. The tells: the
+failure takes 1-2 ms rather than a round trip, and `mode: 'no-cors'` fails too, which no header
+problem can cause. `localhost` and the machine's own LAN address keep working, because neither is
+another device. Restart the browser after granting it.
+
+## Five things worth knowing before touching it
+
+**The connection table has to tolerate sockets that never send anything.** A browser opens
+speculative connections it may never use — Firefox preconnects several per origin and holds them
+open. The first version of this had eight slots, no idle timeout, and refused new connections
+when full, so a handful of preconnects made the display permanently unreachable: *eight idle
+sockets, and `/info` stops answering entirely*. From the browser that is indistinguishable from
+the display being down, and it surfaces as `CORS request did not succeed, status code (null)` —
+which sends you looking at headers. Now: 32 slots, connections that have not completed a request
+reaped after 10 s, and a full table evicts the oldest non-session connection rather than refusing
+the new one. The live session is never evicted. `app-check.js` holds 40 idle sockets and checks
+the display still answers, because every other check here uses one connection at a time and would
+never notice.
+
+**The listening socket must be dual stack.** avahi publishes both an A and an AAAA record, so
+`<name>.local` resolves to both and a browser is free to prefer either. An IPv4-only bind means
+Firefox connects over IPv6, is refused, and reports
+`CORS request did not succeed, status code (null)` — a message that points squarely at headers
+when the actual problem is that nothing is listening. Chrome reaching IPv4 first is what hid it
+through every check. One `AF_INET6` socket with `IPV6_V6ONLY` off serves both; the startup line
+says which families are bound, so a regression is visible immediately.
 
 **`ws_feed` must dispatch a message before consuming it from the buffer.** `payload` points into
 the inbound buffer, and consuming shifts the remainder down over exactly that region — so

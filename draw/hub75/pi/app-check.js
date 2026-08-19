@@ -17,6 +17,7 @@
 
 let fs = require('node:fs')
 let http = require('node:http')
+let net = require('node:net')
 let { spawn } = require('node:child_process')
 
 let EP = process.argv[2] || 'hub75-01.local:7575'
@@ -60,6 +61,45 @@ let run = async () => {
   }
   let info = await (await fetch(`http://${EP}/info`)).json()
   console.log(`${info.name} at ${EP}: ${info.display.w}x${info.display.h}, ${info.gl.renderer}`)
+
+  // A display serves one session at a time and `takeover` is the norm, so a browser tab left
+  // pointing at it will fight this check for the display and each will get about half the
+  // frames. That shows up as a frame rate assertion failing for a reason nothing in the output
+  // explains, so say it plainly rather than letting it look like a regression.
+  if (info.busy) {
+    console.log('\n  ⚠️  something is already holding a session on this display.')
+    console.log('      Close any browser tab pointing at it — otherwise the two take it from')
+    console.log('      each other and the frame rate check below sees roughly half the frames.\n')
+  }
+
+  // A browser opens speculative connections it may never use — Firefox preconnects several per
+  // origin and holds them. A display whose connection table a handful of idle sockets can fill
+  // stops answering, and from the browser that is indistinguishable from it being down: the app
+  // reports `CORS request did not succeed, status code (null)`. Every other check in this repo
+  // uses one connection at a time and would never notice.
+  console.log('\nconnection pressure')
+  {
+    let host = EP.replace(/:\d+$/, '').replace(/^\[|\]$/g, '')
+    let port = parseInt(EP.slice(EP.lastIndexOf(':') + 1), 10)
+    let socks = []
+    for (let i = 0; i < 40; i++) {
+      let k = net.connect(port, host)
+      k.on('error', () => {})
+      socks.push(k)
+    }
+    await sleep(1500)
+    let ok = false
+    try {
+      let c = new AbortController()
+      let t = setTimeout(() => c.abort(), 5000)
+      ok = (await fetch(`http://${EP}/info`, { signal: c.signal, cache: 'no-store' })).ok
+      clearTimeout(t)
+    } catch (e) { ok = false }
+    check('still answers while 40 idle sockets are held', ok)
+    socks.forEach(k => k.destroy())
+    await sleep(500)
+  }
+  console.log('')
 
   // A chain with a lut in it, so the asset path is exercised and not just the shader, and a dim
   // timevar, so the dimmer is proven to arrive frame by frame rather than once

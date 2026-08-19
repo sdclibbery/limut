@@ -9,12 +9,23 @@
 
 #include "display.h"
 
-#define MAX_CLIENTS 8
+/* Generous, because a browser opens speculative connections it may never use: Firefox preconnects
+ * several sockets per origin and holds them open. A table that a handful of idle sockets can fill
+ * is a table that stops answering. */
+#define MAX_CLIENTS 32
+
+/* A connection that has not finished sending a request is a preconnect or a stall, and either way
+ * it is not worth a slot for long. */
+#define HTTP_IDLE_SECONDS 10.0
+/* An upgraded socket that never became the session — it lost a takeover, or sent no hello. */
+#define WS_IDLE_SECONDS   30.0
 
 typedef struct {
     int      inUse;
     int      fd;
     int      upgraded;
+    double   acceptedAt;
+    double   lastRead;
     buf      http;      /* request bytes, until the headers are complete */
     ws_conn  ws;
     display *d;
@@ -22,6 +33,7 @@ typedef struct {
 
 typedef struct {
     int      listenFd;
+    int      dualStack;   /* 1 if IPv6 and IPv4 are both served; 0 if IPv4 only */
     display *d;
     client   c[MAX_CLIENTS];
 } netserver;

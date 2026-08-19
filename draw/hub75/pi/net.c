@@ -247,27 +247,71 @@ static int handle_http(client *cl) {
 
 /* ---- server -------------------------------------------------------------------------------- */
 
-int net_start(netserver *n, display *d, int port, char *err, size_t errCap) {
+/* IPv4 only, as a fallback for a kernel built without IPv6. */
+static int listen_v4(int port, int *fd, char *err, size_t errCap) {
     struct sockaddr_in addr;
-    int one = 1, i;
+    int one = 1;
+    *fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (*fd < 0) { snprintf(err, errCap, "socket: %s", strerror(errno)); return -1; }
+    setsockopt(*fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof one);
+    memset(&addr, 0, sizeof addr);
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    addr.sin_port = htons((uint16_t)port);
+    if (bind(*fd, (struct sockaddr *)&addr, sizeof addr) < 0) {
+        snprintf(err, errCap, "bind port %d: %s", port, strerror(errno));
+        close(*fd);
+        *fd = -1;
+        return -1;
+    }
+    return 0;
+}
+
+/* Dual stack: one AF_INET6 socket with IPV6_V6ONLY off accepts IPv6 and IPv4 alike, the latter
+ * as v4-mapped addresses.
+ *
+ * This is not optional. avahi publishes both an A and an AAAA record for the display, so
+ * <name>.local resolves to both, and a browser is free to prefer either. Listening on IPv4 only
+ * means Firefox connects over IPv6, is refused, and reports it as
+ * "CORS request did not succeed, status code (null)" — a message that points at headers when the
+ * problem is that nothing is listening. Chrome reaching IPv4 first is what hid it. */
+int net_start(netserver *n, display *d, int port, char *err, size_t errCap) {
+    struct sockaddr_in6 addr6;
+    int one = 1, zero = 0, i;
 
     memset(n, 0, sizeof *n);
     n->d = d;
     for (i = 0; i < MAX_CLIENTS; i++) n->c[i].fd = -1;
 
-    n->listenFd = socket(AF_INET, SOCK_STREAM, 0);
-    if (n->listenFd < 0) { snprintf(err, errCap, "socket: %s", strerror(errno)); return -1; }
-    setsockopt(n->listenFd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof one);
-    memset(&addr, 0, sizeof addr);
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_port = htons((uint16_t)port);
-    if (bind(n->listenFd, (struct sockaddr *)&addr, sizeof addr) < 0) {
-        snprintf(err, errCap, "bind port %d: %s", port, strerror(errno));
-        close(n->listenFd);
-        n->listenFd = -1;
-        return -1;
+    n->listenFd = socket(AF_INET6, SOCK_STREAM, 0);
+    if (n->listenFd >= 0) {
+        setsockopt(n->listenFd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof one);
+        if (setsockopt(n->listenFd, IPPROTO_IPV6, IPV6_V6ONLY, &zero, sizeof zero) < 0) {
+            /* A kernel that will not turn v6only off would serve IPv6 only, which is worse than
+             * the IPv4 fallback below. */
+            close(n->listenFd);
+            n->listenFd = -1;
+        }
     }
+    if (n->listenFd >= 0) {
+        memset(&addr6, 0, sizeof addr6);
+        addr6.sin6_family = AF_INET6;
+        addr6.sin6_addr = in6addr_any;
+        addr6.sin6_port = htons((uint16_t)port);
+        if (bind(n->listenFd, (struct sockaddr *)&addr6, sizeof addr6) < 0) {
+            int e = errno;
+            close(n->listenFd);
+            n->listenFd = -1;
+            /* Only a missing IPv6 stack is worth falling back for; a port already in use would
+             * fail again on IPv4 and the second error message would be the confusing one. */
+            if (e != EAFNOSUPPORT && e != EADDRNOTAVAIL) {
+                snprintf(err, errCap, "bind port %d: %s", port, strerror(e));
+                return -1;
+            }
+        }
+    }
+    n->dualStack = (n->listenFd >= 0);
+    if (n->listenFd < 0 && listen_v4(port, &n->listenFd, err, errCap) < 0) return -1;
     if (listen(n->listenFd, 8) < 0) {
         snprintf(err, errCap, "listen: %s", strerror(errno));
         close(n->listenFd);
@@ -285,17 +329,38 @@ void net_stop(netserver *n) {
     n->listenFd = -1;
 }
 
+/* The oldest connection that is not the live session, or -1. Used to make room rather than
+ * refuse: a refused connection is what the user sees as "the display is down", while dropping a
+ * stale speculative socket costs nothing. */
+static int oldest_evictable(netserver *n) {
+    int i, best = -1;
+    for (i = 0; i < MAX_CLIENTS; i++) {
+        client *cl = &n->c[i];
+        if (!cl->inUse) continue;
+        if (cl->upgraded && n->d->conn == &cl->ws) continue;
+        if (best < 0 || cl->acceptedAt < n->c[best].acceptedAt) best = i;
+    }
+    return best;
+}
+
 static void accept_new(netserver *n) {
     for (;;) {
         int fd = accept(n->listenFd, NULL, NULL), i;
         if (fd < 0) return;
         for (i = 0; i < MAX_CLIENTS; i++) if (!n->c[i].inUse) break;
-        if (i == MAX_CLIENTS) { close(fd); continue; } /* nothing sane to do but refuse */
+        if (i == MAX_CLIENTS) {
+            int victim = oldest_evictable(n);
+            if (victim < 0) { close(fd); continue; }  /* only the session is left; keep it */
+            drop_client(&n->c[victim]);
+            i = victim;
+        }
         set_nonblocking(fd);
         memset(&n->c[i], 0, sizeof n->c[i]);
         n->c[i].inUse = 1;
         n->c[i].fd = fd;
         n->c[i].d = n->d;
+        n->c[i].acceptedAt = now_seconds();
+        n->c[i].lastRead = n->c[i].acceptedAt;
     }
 }
 
@@ -304,6 +369,7 @@ static void read_client(client *cl) {
         uint8_t chunk[16384];
         ssize_t r = read(cl->fd, chunk, sizeof chunk);
         if (r > 0) {
+            cl->lastRead = now_seconds();
             if (cl->upgraded) {
                 ws_feed(&cl->ws, chunk, (size_t)r);
                 if (cl->ws.closing || cl->ws.closed) return;
@@ -346,6 +412,22 @@ void net_poll(netserver *n, int timeoutMs) {
         if (!cl->inUse) continue;
         if (pf[i].revents & (POLLIN | POLLHUP | POLLERR)) read_client(cl);
     }
+    /* Reap connections that are not going anywhere. Without this a handful of preconnected
+     * sockets that never send a request hold their slots for ever, and the display stops
+     * answering — which looks from a browser exactly like it is down. */
+    {
+        double t = now_seconds();
+        for (i = 0; i < MAX_CLIENTS; i++) {
+            client *cl = &n->c[i];
+            if (!cl->inUse) continue;
+            if (!cl->upgraded) {
+                if (t - cl->acceptedAt > HTTP_IDLE_SECONDS) drop_client(cl);
+            } else if (n->d->conn != &cl->ws) {
+                if (t - cl->lastRead > WS_IDLE_SECONDS) drop_client(cl);
+            }
+        }
+    }
+
     /* Flush after dispatching, so replies produced by this cycle's messages go out in it. */
     for (i = 0; i < MAX_CLIENTS; i++) {
         client *cl = &n->c[i];

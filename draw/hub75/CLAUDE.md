@@ -367,6 +367,39 @@ It only corrupts anything when two messages arrive in one read — which at 60 H
 case, and which no test that feeds one frame at a time will ever produce. It showed up as
 "malformed JSON" on a message that was perfectly well formed.
 
+**macOS Local Network permission is per browser, and denying it looks exactly like a CORS bug.**
+On macOS 15 and later an app must be granted Privacy & Security → Local Network before it can
+reach another device on the LAN. Firefox without it fails every request to the display —
+`.local` name, IPv4 literal, IPv6 literal, `fetch` and WebSocket alike — and limut reports
+`CORS request did not succeed, status code (null)`, which is nothing to do with CORS. Chrome and
+Terminal had been granted it, so curl, Node and every automated check here passed throughout.
+
+Two things identify it in seconds, and both matter because the error message points the wrong
+way. **The failure takes 1-2 ms**, far less than a round trip to a LAN host, so nothing was ever
+sent — a genuine connection problem takes at least a ping time. And **`mode: 'no-cors'` fails
+too**, which no header problem can cause. Requests to `localhost` and to the machine's own LAN
+address still succeed, because neither is another device; testing only those is what makes it
+look host-specific. The permission takes effect when the browser restarts.
+
+**A display that only serves one connection at a time is not a display a browser can talk to.**
+Browsers open speculative connections they may never use; Firefox preconnects several per origin
+and holds them. The first version had eight client slots, no idle timeout, and refused new
+connections when the table was full — so **eight idle sockets that sent nothing made the display
+completely unreachable**, permanently, until it was restarted. curl, Chrome and every automated
+check here use one connection at a time and all passed against it. The symptom in the browser is
+`CORS request did not succeed, status code (null)`, which points at headers and is nothing to do
+with them: a null status means nothing answered. The fix is three things, and it needed all
+three — more slots, reaping connections that never complete a request, and evicting the oldest
+idle connection rather than refusing the new one when full.
+
+**The display's listening socket has to be dual stack, and testing in one browser will not tell
+you.** avahi publishes both an A and an AAAA record for `hub75-01.local`, so it resolves to both
+and a browser may prefer either. An IPv4-only bind works perfectly in Chrome and fails in Firefox
+with `CORS request did not succeed, status code (null)` — a message that reads as a header
+problem when nothing is listening on the address it tried. Every automated check passed against
+the broken build because they all went over IPv4. One `AF_INET6` socket with `IPV6_V6ONLY` off
+serves both families, and the daemon now says which it bound in its startup line.
+
 **Nothing that forks belongs on the 60 Hz loop.** `stat.throttled` came from
 `vcgencmd get_throttled`, and that fork every ten seconds showed up as a 21 ms `renderMs` spike,
 30× the normal frame. The same undervoltage signal is a plain sysfs read from the
