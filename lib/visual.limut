@@ -113,4 +113,5 @@ set turb2 = {in:id, scale:4, seed:0} ->
 //   px=fbm2>>cospal
 //   px=length>>cospal{#05a}
 // Note it wants a single value in: px=cospal bare runs red off x and green off y, ie a plaid.
+// The args are colours, so hsv and lab work too: cospal{{h:[]n}} turns the phase through the hues.
 set cospal = {in,d:#012,c:1,b:1/2,a:1/2} -> (a+b*cos{6.28318*(c*in+d)})

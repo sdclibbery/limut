@@ -2,7 +2,7 @@
 define(function(require) {
   let {addNodeFunction} = require('play/nodes/node-var')
   let addVarFunction = require('predefined-vars').addVarFunction
-  let {makeShaderNode,passthroughShaderNode,implicitInputNode,isShaderNode,channelNames,components,unwrapValue} = require('draw/visualsynth/shader-node')
+  let {makeShaderNode,passthroughShaderNode,implicitInputNode,isShaderNode,channelNames,components,unwrapValue,isConvertedColour} = require('draw/visualsynth/shader-node')
   let texture = require('draw/texture')
   let webcam = require('draw/webcam')
   let {lutTexture,resolveSize,defaultSizes} = require('draw/visualsynth/lut')
@@ -30,9 +30,15 @@ define(function(require) {
 
   // Which of the 4 channels a param names, or undefined when it names none (a plain number, or
   // anything we can't read channels off), meaning it applies to all four.
+  //
+  // An hsv or lab colour names r, g and b however few of its own components are given, and alpha
+  // only when it says so — so set{{h:1/3}} leaves alpha alone exactly as set{#f00} does. It has to
+  // be answered before the channel table, since its s and v are channel names in their own right
+  // and {h:1/3,s:1/2,v:1} would otherwise mask x and y instead. toVec4 uses the same discriminator.
   let channelMask = (v) => {
     v = unwrapValue(v)
     if (typeof v !== 'object' || v === null) { return undefined }
+    if (isConvertedColour(v)) { return [true, true, true, v.a !== undefined] }
     let mask = channelNames.map(names => names.some(n => v[n] !== undefined))
     return mask.some(m => m) ? mask : undefined
   }
@@ -337,6 +343,21 @@ define(function(require) {
   ctx = mockCtx()
   node(set, {value:{g:1,a:1}}).build('v0', ctx) // #.f. is 3 digit, so it forces alpha too
   assert(['vec4((v0).x, u_vs0.y, (v0).z, u_vs0.w)'], ctx.statements)
+
+  // An hsv or lab colour names r, g and b whatever its own keys are: s and v are its saturation
+  // and value, not the x and y channels, and alpha is left alone unless it says otherwise
+  ctx = mockCtx()
+  node(set, {value:{h:1/3}}).build('v0', ctx)
+  assert(['vec4(u_vs0.x, u_vs0.y, u_vs0.z, (v0).w)'], ctx.statements)
+  ctx = mockCtx()
+  node(set, {value:{h:1/3,s:1/2,v:1}}).build('v0', ctx)
+  assert(['vec4(u_vs0.x, u_vs0.y, u_vs0.z, (v0).w)'], ctx.statements)
+  ctx = mockCtx()
+  node(set, {value:{h:1/3,a:1/2}}).build('v0', ctx)
+  assert(['vec4(u_vs0.x, u_vs0.y, u_vs0.z, u_vs0.w)'], ctx.statements)
+  ctx = mockCtx()
+  node(mul, {value:{labh:0}}).build('v0', ctx)
+  assert(['vec4((v0).x * u_vs0.x, (v0).y * u_vs0.y, (v0).z * u_vs0.z, (v0).w)'], ctx.statements)
 
   ctx = mockCtx()
   node(set, {value:ast}).build('v0', ctx)

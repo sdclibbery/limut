@@ -17,7 +17,8 @@ dlead vel should control initial attack spike, lower velocity = less spike; and 
 get live working from OBS
  ??? Is it possible to configure OBS to delay its audio stream by a fixed amount, to compensate for the webcam delay??
 visual nodes...
- Really want hsv conversion. Or better still, anything that takes a vec4 to implicitly convert h labh etcetc eg cospal{{h:[]n}}
+ hsv/lab as a value is done (toVec4 + channelMask convert h/labh, eg cospal{{h:[]n}}). Still to do: hsv as an
+  operation on the incoming pixel - set{h:..}, add{h:..}, channels{h:..} and in.h reads - which needs rgb2hsv/hsv2rgb GLSL helpers
  kal as a function
  More pals. Sinpal, powpal, fmbpal... Also twinkle pals, recol pals etc
  loop, parallel, series - and use for octave param in perlin etc?

@@ -1,6 +1,7 @@
 'use strict'
 define(function(require) {
   let {getCallTree,setCallTree,clearCallTree} = require('player/callstack')
+  let {colour} = require('draw/colour')
 
   // A shader node is a GLSL-emitting build step in a visual synth chain. Unlike audio nodes
   // (which eagerly construct a Web Audio graph), shader nodes are composed and only emit
@@ -141,13 +142,31 @@ define(function(require) {
     return v
   }
 
+  // Is this value a colour written in a space that needs converting — hsv or lab? Exactly the
+  // discriminator draw/colour.js uses, so a colour reaching a uniform (cospal{{h:[]n}}) and one
+  // reaching a lookup texture (tex1d{{x}->{h:x}}) can never disagree about what it means.
+  // Deliberately not colour.js's isColour, which is also true of a plain {r:..}: rgb needs no
+  // conversion and is read straight off the channel table below.
+  let isConvertedColour = (v) => {
+    v = unwrapValue(v)
+    return typeof v === 'object' && v !== null && (v.h !== undefined || v.labh !== undefined)
+  }
+
   // Convert an evaluated uniform value to vec4 components. Reuses a scratch array: callers
   // must consume the result (eg gl.uniform4fv) before the next call.
   let scratch = new Float32Array(4)
+  let colourDefaults = {r:0, g:0, b:0, a:1} // Only the alpha is ever reached: r/g/b are read from v when given
   let toVec4 = (v) => {
     v = unwrapValue(v)
     if (typeof v === 'number') {
       scratch[0] = v; scratch[1] = v; scratch[2] = v; scratch[3] = v
+      return scratch
+    }
+    // An hsv or lab colour is converted before the channel table is consulted, because s and v are
+    // themselves channel names (stpq's s is x, uv's v is y) and would otherwise win.
+    if (isConvertedColour(v)) {
+      let ar = colour(v, colourDefaults, 'visualsynth-uniform') // Its own shared array: copy it out
+      scratch[0] = ar[0]; scratch[1] = ar[1]; scratch[2] = ar[2]; scratch[3] = ar[3]
       return scratch
     }
     if (typeof v === 'object' && v !== null) {
@@ -308,6 +327,15 @@ define(function(require) {
   assert([1,0,0,1], Array.from(toVec4({x:1,u:5}))) // xyzw wins over the aliases
   assert([3,3,3,3], Array.from(toVec4({value:3, _nextSegment:1}))) // timevar segment wrapper unwraps
   assert([7,7,7,7], Array.from(toVec4({value:{value:7}}))) // nested wrappers unwrap
+  // hsv and lab colours convert to rgb, matching draw/colour.js (whose own tests pin these values)
+  assert([1,0,0,1], Array.from(toVec4({h:0})))
+  assert([0,1,0,1], Array.from(toVec4({h:1/3})))
+  assert([0,1/2,0,1], Array.from(toVec4({h:1/3,v:1/2}))) // v is the value, not the y channel
+  assert([1/2,1,1/2,1], Array.from(toVec4({h:1/3,s:1/2}))) // s is the saturation, not the x channel
+  assert([0,1,0,1/2], Array.from(toVec4({h:1/3,a:1/2}))) // alpha still means alpha
+  assert([0,1,1/2,1], Array.from(toVec4({h:1/3,b:1/2}))) // an explicit rgb component overrides
+  assert([0,1,0,1], Array.from(toVec4({h:1/3,_nextSegment:1}))) // colour-merged segment shape
+  assert([0.958,-0.167,0.079,1], Array.from(toVec4({labh:0})).map(x => Math.round(x*1000)/1000))
   assert([1,1,1,1], Array.from(toVec4('nonsense'))) // fallback is neutral
   assert([1,1,1,1], Array.from(toVec4(undefined)))
 
@@ -366,5 +394,6 @@ define(function(require) {
     components: components,
     swizzleShaderNode: swizzleShaderNode,
     unwrapValue: unwrapValue,
+    isConvertedColour: isConvertedColour,
   }
 })
