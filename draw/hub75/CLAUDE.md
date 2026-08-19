@@ -324,6 +324,72 @@ listener, or the host's 250 ms retry reconnects to the display that is about to 
 sits contentedly on a socket nothing is serving. And `/connected/` matches `disconnected`, which
 made an assertion pass for the wrong reason; match `: connected` instead.
 
+## Pi renderer (the display end)
+
+Built 2026-08-19, in `pi/`: one C binary, `limut-hub75`, that serves the protocol, renders the
+shader on the V3D GPU at panel resolution, and hands the pixels to an output stage. Running on
+`hub75-01` as a systemd service. See `pi/README.md`; only the things worth knowing from outside
+are here.
+
+**C, built natively on the Pi.** The protocol was shaped to keep a C display small and it did:
+the RFC 6455 server is ~200 lines, and SHA-1, SHA-256, base64 and JSON are vendored rather than
+linked so the build line stays as short as `tools/egl-probe.c`'s. Cross compiling was rejected —
+a sysroot to keep in sync buys nothing when C compiles in seconds on the board.
+
+**One thread, the render inline, no queues.** Drain every readable byte, dispatch it, then draw
+whatever survived. Draining fully before drawing is what makes §12.1's last-write-wins free: a
+frame superseded before it was drawn is never queued, only counted.
+
+**The GLES half of `render.c` compiles out where there is no EGL/GBM**, so the whole daemon runs
+and is testable on a Mac with nothing drawn. That is not a curiosity — it is how the protocol
+side was built and debugged before it ever reached the board.
+
+Two HTTP routes exist for testing and are documented as outside protocol v1: `/frame.raw` (the
+last frame as it left the output stage — dimmer and gamma applied, i.e. what the panels would
+show) and `/debug` (the internal state `mock/display.js` exposes as `main.display`, field for
+field).
+
+### Things found while building it
+
+**`mock/selftest.js` gained `--endpoint`, and it is the conformance suite.** The mock was written
+as a *reference display*; that pays off here, because the same 63 assertions now run against the
+C daemon over the network. Making that work needed no new assertions, only a snapshot of `/debug`
+refreshed on every await — which is why `/debug` exists at all. Two blocks differ: `--fail-compile`
+is replaced by a shader that genuinely fails (a better test), and the frame-drop assertion is
+split, for a real reason. **The mock consumes at most one frame per simulated 60 Hz tick; a real
+display renders on arrival, so at a 60 Hz host rate it legitimately drops nothing.** The
+invariant that holds for both, and the one that actually matters, is that every accepted packet
+is drawn or counted as dropped — never silently queued.
+
+**A websocket read buffer must be consumed *after* the message is dispatched, not before.** The
+payload points into the buffer, and consuming shifts the remainder down over exactly that region.
+It only corrupts anything when two messages arrive in one read — which at 60 Hz is the normal
+case, and which no test that feeds one frame at a time will ever produce. It showed up as
+"malformed JSON" on a message that was perfectly well formed.
+
+**Nothing that forks belongs on the 60 Hz loop.** `stat.throttled` came from
+`vcgencmd get_throttled`, and that fork every ten seconds showed up as a 21 ms `renderMs` spike,
+30× the normal frame. The same undervoltage signal is a plain sysfs read from the
+`raspberrypi-hwmon` driver — `/sys/class/hwmon/hwmonN/in0_lcrit_alarm`, where `name` is
+`rpi_volt` — latched in the daemon into vcgencmd's own bits (`0x1` now, `0x10000` has occurred).
+`renderMs` max went from 21.70 to 0.67.
+
+### Measured on the board, 2026-08-19
+
+128x64, a shader with an 8-iteration per-pixel loop, driven at 60 Hz for 20 s
+(`node draw/hub75/pi/perf.js`):
+
+| | |
+|---|---|
+| `renderMs` | mean 0.64, max 0.67 — render, readback and output stage together |
+| fps | 49 drawn of 59 sent; the other 10 are superseded arrivals, not overload |
+| temp | 42 C, no heatsink |
+| `throttled` | `0x0` |
+
+**Readback is not the bottleneck and a PBO ring would buy nothing.** A synchronous `glReadPixels`
+costs well under a millisecond at this size, so pipelining a frame behind would cost 16 ms of
+latency for no gain. Revisit only if a much larger panel changes that.
+
 ## Status
 
 Render node is up and validated. The Pi 4B boots headless, joins WiFi, is reachable as
@@ -342,23 +408,41 @@ The **limut host side is built and verified end to end** against the mock (`host
 lut, compiles the program, binds the layer and holds a 60Hz uniform stream, and recovers from a
 dropped socket with a `have` round trip rather than a re-upload.
 
-Not started: any Pi renderer code, the Colorlight output stage, and the panel mapping. No language
-chosen for the Pi side yet, though the protocol was shaped to keep a C implementation small.
+The **Pi renderer is built and running** (`pi/`, and the section above). `hub75-01` serves the
+protocol as a systemd service, advertises `_limut-hub75._tcp` over avahi, and renders limut's
+shaders on the V3D GPU. Verified 2026-08-19, in four layers:
+
+- 78 unit checks in `pi/selftest.c`, passing on both the Mac and the Pi
+- the mock's own 63 assertions still pass, and the same suite passes against the C daemon over
+  the network (`mock/selftest.js --endpoint hub75-01.local:7575`)
+- **pixel parity with the browser**: `pi/pixel-check.js` renders the same shader in headless
+  Chrome's WebGL2 and on the Pi and compares. Plain, `tex1d` and `tex3d` chains all match with a
+  worst channel difference of 1, at 128x64 and again at 256x48 to cover both sides of the aspect
+  softening branch
+- the real limut app in a real browser, `display='hub75-01.local:7575'`, uploads the lut,
+  compiles the program, binds the layer and holds a 60 Hz uniform stream with `dim` live as a
+  timevar (`pi/app-check.js`, 10 assertions on what the display observed — the only check that
+  puts the real host and the real display together; everything else covers one link)
+
+Not started: **the Colorlight output stage** and the panel mapping. The output backend interface,
+`CAP_NET_RAW` in the systemd unit and the `eth0`-unmanaged configuration are all in place, so it
+is a single file to fill in when the card and panels arrive.
 
 ## Open questions
 
-- Language and runtime for the Pi renderer.
-- Headless rendering path details: EGL on a GBM render node vs. surfaceless, and the readback
-  strategy — PBO-based asynchronous `glReadPixels` (pipelined a frame behind) is the expected
-  approach, but it needs measuring.
-- Whether limut's shaders really do run unmodified on Mesa `v3d`, or whether there are gaps
-  between WebGL2's GLSL ES 3.00 dialect and native GLES 3.1 that need a compatibility pass.
-- Whether the Pi can sustain render + readback + Colorlight output at 60Hz for the target
-  panel resolution, and what degrades first if it cannot.
-- Frame pacing: the protocol has the display render on packet arrival, self-pacing to the host's
-  rAF. That needs revisiting once the Colorlight output stage exists and has its own cadence.
-- Gamma and colour: the dimmer is specified as a linear multiply applied pre-gamma, but the gamma
-  curve itself belongs to the output stage and is not designed yet.
+- **The Colorlight protocol itself**: frame packets, row addressing, colour depth, and getting
+  raw ethernet frames out at 60 Hz. Nothing is known about it yet and nothing in the repo
+  describes it. The seam it plugs into is ready.
+- Whether the 5A-75B's own flashed configuration can express the panel layout, which is the
+  assumption `pi/` is built on — the Pi sends a rectangular image and does no mapping. If it
+  cannot, mapping becomes a pixel permutation in `pi/output.c`.
+- Whether render + readback + **Colorlight output** still holds 60 Hz. The first two do
+  comfortably (0.64 ms at 128x64); the third is unmeasured because it does not exist.
+- Frame pacing: the display renders on packet arrival, self-pacing to the host's rAF. That needs
+  revisiting once the output stage has its own cadence.
+- The gamma curve for the panels. The mechanism is in place — a 256-entry table in the output
+  stage, applied after the dimmer, `--gamma` on the command line, default 2.2 — but the right
+  value is a thing to find by eye once panels exist.
 - Time sync: how the Pi's frame cadence relates to limut's metronome/beat clock. The frame packet
   carries `beat` and `hostTime` so this can be worked out later without a framing change.
 - Live texture sources: `webcam{}` is local-only and unsupported in protocol v1. Streaming it (or
@@ -377,3 +461,13 @@ chosen for the Pi side yet, though the protocol was shaped to keep a C implement
   unmodified browser page, verified against headless Chrome. No relay process, no WebRTC, no
   Electron requirement. The one constraint: serving limut over `https` would make `ws://`
   unreachable.
+- *Language and runtime for the Pi renderer* — **C, built natively on the board.** See the Pi
+  renderer section.
+- *Headless rendering path, and the readback strategy* — EGL on the GBM render node with
+  `EGL_NO_SURFACE`, exactly as `tools/egl-probe.c` proved, and a plain synchronous
+  `glReadPixels`. **A PBO ring is not needed**: the whole render-plus-readback is 0.64 ms at
+  128x64, so pipelining would cost 16 ms of latency for nothing.
+- *Whether limut's shaders really run unmodified on Mesa `v3d`* — **yes, pixel for pixel.**
+  `pi/pixel-check.js` renders the same source in a browser's WebGL2 and on the Pi and compares;
+  plain, `tex1d` and `tex3d` chains match with a worst channel difference of 1 (which is texel
+  centre rounding, not a dialect gap). No compatibility pass is needed.

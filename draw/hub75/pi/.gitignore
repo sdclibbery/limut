@@ -1,0 +1,5 @@
+# build products; deploy.sh builds these on the Pi and the Makefile builds them here
+limut-hub75
+selftest
+egl-probe
+*.o

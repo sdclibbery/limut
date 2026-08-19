@@ -1,0 +1,128 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>limut HUB75 pixel check</title>
+<!--
+  Renders a fragment shader under the PROTOCOL.md §13 contract in WebGL2 and posts the pixels
+  back, so the same shader can be rendered on the Pi and the two compared pixel for pixel.
+
+  Deliberately standalone — no limut, no require.js. The question this answers is narrow: does
+  Mesa v3d on the Pi produce the same image as the browser's WebGL2 for the same source, the same
+  geometry and the same textures? Pulling the whole app in would add a hundred ways for the two
+  sides to differ that have nothing to do with §13.
+-->
+<body style="background:#111;color:#ccc;font:14px system-ui">
+<canvas id="c" style="image-rendering:pixelated;width:512px"></canvas>
+<pre id="log"></pre>
+<script>
+let log = (s) => { document.getElementById('log').textContent += s + '\n' }
+let fail = (s) => { log('ERROR ' + s); post({ error: s }) }
+let post = (body) => fetch('/result', {
+  method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+})
+
+// §13: byte for byte common.vtxShader from draw/shadercommon.js
+let VTX = `#version 300 es
+in vec2 posIn;
+in vec2 fragCoordIn;
+out vec2 fragCoord;
+void main() { gl_Position = vec4(posIn, 0, 1); fragCoord = fragCoordIn; }
+`
+
+let compile = (gl, type, src) => {
+  let s = gl.createShader(type)
+  gl.shaderSource(s, src)
+  gl.compileShader(s)
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { throw new Error(gl.getShaderInfoLog(s)) }
+  return s
+}
+
+let run = async () => {
+  let job = await (await fetch('/job')).json()
+  let canvas = document.getElementById('c')
+  canvas.width = job.w
+  canvas.height = job.h
+  // preserveDrawingBuffer, or readPixels after a composite returns an empty buffer
+  let gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true, antialias: false, alpha: false })
+  if (!gl) { return fail('no webgl2') }
+  log(`${gl.getParameter(gl.VERSION)}\n${gl.getParameter(gl.RENDERER)}`)
+
+  let prog = gl.createProgram()
+  try {
+    gl.attachShader(prog, compile(gl, gl.VERTEX_SHADER, VTX))
+    gl.attachShader(prog, compile(gl, gl.FRAGMENT_SHADER, job.frag))
+  } catch (e) { return fail('compile: ' + e.message) }
+  gl.bindAttribLocation(prog, 0, 'posIn')
+  gl.bindAttribLocation(prog, 1, 'fragCoordIn')
+  gl.linkProgram(prog)
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { return fail('link: ' + gl.getProgramInfoLog(prog)) }
+  gl.useProgram(prog)
+
+  // The aspect softening from verts() in draw/sprite.js, and the same y-up pairing
+  let har = job.w / job.h, ihar = 1
+  if (har > 2 || har < 1 / 2) { har = Math.sqrt(har); ihar = 1 / har }
+  let v = new Float32Array([
+    -1, -1, -har, -ihar,   1, -1,  har, -ihar,  -1,  1, -har,  ihar,
+    -1,  1, -har,  ihar,   1, -1,  har, -ihar,   1,  1,  har,  ihar,
+  ])
+  let vbo = gl.createBuffer()
+  gl.bindBuffer(gl.ARRAY_BUFFER, vbo)
+  gl.bufferData(gl.ARRAY_BUFFER, v, gl.STATIC_DRAW)
+  gl.enableVertexAttribArray(0)
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 16, 0)
+  gl.enableVertexAttribArray(1)
+  gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 16, 8)
+
+  ;(job.uniforms || []).forEach((u, i) => {
+    gl.uniform4f(gl.getUniformLocation(prog, 'u_vs' + i), u[0], u[1], u[2], u[3])
+  })
+
+  ;(job.textures || []).forEach((t, i) => {
+    let bytes = Uint8Array.from(atob(t.data), ch => ch.charCodeAt(0))
+    let is3d = t.dims === 3
+    let target = is3d ? gl.TEXTURE_3D : gl.TEXTURE_2D
+    let tex = gl.createTexture()
+    gl.activeTexture(gl.TEXTURE0 + i)
+    gl.bindTexture(target, tex)
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1)
+    if (is3d) {
+      gl.texImage3D(target, 0, gl.RGBA8, t.size, t.size, t.size, 0, gl.RGBA, gl.UNSIGNED_BYTE, bytes)
+      gl.texParameteri(target, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE)
+    } else {
+      // §6.1: a 1d lut is uploaded as a size x 1 2D texture, there being no 1D textures in GLES
+      let h = t.dims === 1 ? 1 : t.size
+      gl.texImage2D(target, 0, gl.RGBA8, t.size, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, bytes)
+    }
+    gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+    gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+    gl.texParameteri(target, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+    gl.texParameteri(target, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+    gl.uniform1i(gl.getUniformLocation(prog, 'u_vstex' + i), i)
+    // §13: a lut MUST report extents (0,0) — lut.js gives lut textures no width/height, and the
+    // tex node's generated code guards on u_vsex.y > 0.0
+    gl.uniform2f(gl.getUniformLocation(prog, 'u_vsex' + i), 0, 0)
+  })
+
+  gl.disable(gl.BLEND)
+  gl.viewport(0, 0, job.w, job.h)
+  gl.clearColor(0, 0, 0, 1)
+  gl.clear(gl.COLOR_BUFFER_BIT)
+  gl.drawArrays(gl.TRIANGLES, 0, 6)
+
+  let px = new Uint8Array(job.w * job.h * 4)
+  gl.readPixels(0, 0, job.w, job.h, gl.RGBA, gl.UNSIGNED_BYTE, px)
+  // readPixels is bottom row first; the display's output is top row first
+  let flipped = new Uint8Array(px.length)
+  let stride = job.w * 4
+  for (let y = 0; y < job.h; y++) {
+    flipped.set(px.subarray((job.h - 1 - y) * stride, (job.h - y) * stride), y * stride)
+  }
+  let s = ''
+  for (let i = 0; i < flipped.length; i += 4096) {
+    s += String.fromCharCode.apply(null, flipped.subarray(i, i + 4096))
+  }
+  log('rendered ' + job.w + 'x' + job.h)
+  await post({ pixels: btoa(s), renderer: gl.getParameter(gl.RENDERER) })
+}
+
+run().catch(e => fail(String(e && e.stack || e)))
+</script>

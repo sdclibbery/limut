@@ -442,7 +442,18 @@ only a small subset of WebSocket. See `draw/hub75/mock/README.md`.
 `draw/hub75/host/` is the **host** side, in limut itself. `draw/hub75/mock/host-check.js` drives it
 in a real browser against the mock and asserts on what the display observed.
 
-`draw/hub75/codec.js` is the binary packet codec of §12, shared by both: dual AMD/CommonJS so the
-byte layout lives in exactly one place.
+`draw/hub75/pi/` is the **real display**: a C daemon for the Raspberry Pi that serves this
+protocol and renders on the GPU. `mock/selftest.js --endpoint host:port` runs the same
+conformance suite against it that it runs against the mock.
 
-Not yet implemented anywhere: the Pi renderer, and `kind:"image"` assets on the host side.
+`draw/hub75/codec.js` is the binary packet codec of §12, shared by the host and the mock: dual
+AMD/CommonJS so the byte layout lives in exactly one place. `pi/codec.c` restates it in C, and
+`pi/selftest.c` pins that restatement against the numbers in §12 rather than against `codec.js`.
+
+Two HTTP routes on the Pi daemon are **outside this protocol** and exist only for testing:
+`GET /frame.raw` returns the last frame as it left the output stage (dimmer and gamma applied)
+as raw RGBA8 with `X-Width`/`X-Height` headers, and `GET /debug` returns the display's internal
+state as JSON. Neither is required of a conforming display.
+
+Not yet implemented anywhere: `kind:"image"` assets, at either end. The Colorlight output stage
+below the Pi renderer is also outstanding, but that is below this protocol, not part of it.

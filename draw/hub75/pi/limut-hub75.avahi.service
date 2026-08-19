@@ -1,0 +1,19 @@
+<?xml version="1.0" standalone='no'?>
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<!--
+  PROTOCOL.md §4. A browser cannot browse mDNS, so this is not what limut uses to find the
+  display — it resolves <name>.local directly. This exists so the display is discoverable by
+  anything that can browse, and so `avahi-browse -rt _limut-hub75._tcp` on the dev machine
+  answers "is it up and what size is it" without a session.
+-->
+<service-group>
+  <name replace-wildcards="yes">%h</name>
+  <service>
+    <type>_limut-hub75._tcp</type>
+    <port>7575</port>
+    <txt-record>proto=1</txt-record>
+    <txt-record>name=hub75-01</txt-record>
+    <txt-record>w=128</txt-record>
+    <txt-record>h=64</txt-record>
+  </service>
+</service-group>

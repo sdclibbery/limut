@@ -1,0 +1,5 @@
+# Arguments for the limut HUB75 display. Installed to /etc/default/limut-hub75.
+#
+# --size must match the panel array as the 5A-75B is configured to drive it.
+# --gamma 1 is what draw/hub75/pi/pixel-check.js needs; 2.2 is the running value.
+HUB75_ARGS=--name hub75-01 --size 128x64 --output raw --gamma 2.2

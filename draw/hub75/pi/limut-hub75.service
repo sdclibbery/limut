@@ -1,0 +1,27 @@
+# systemd unit for the limut HUB75 display. Installed by install.sh.
+[Unit]
+Description=limut HUB75 display
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=pi
+# The DRM render node is root:render, and /dev/dri/card0 is root:video. Both groups are needed
+# for a headless GL context on the v3d driver.
+SupplementaryGroups=video render
+EnvironmentFile=/etc/default/limut-hub75
+ExecStart=/home/pi/limut-hub75/limut-hub75 $HUB75_ARGS
+Restart=always
+RestartSec=2
+# For the Colorlight output stage, which sends raw layer-2 frames on eth0. Granted through the
+# unit rather than setcap on the binary, so a rebuild never silently loses it — and the daemon
+# still runs as `pi` rather than root.
+AmbientCapabilities=CAP_NET_RAW
+CapabilityBoundingSet=CAP_NET_RAW
+NoNewPrivileges=yes
+# Sustained 60Hz: a scheduling delay shows up as a dropped frame, so ask for a little priority.
+Nice=-5
+
+[Install]
+WantedBy=multi-user.target
