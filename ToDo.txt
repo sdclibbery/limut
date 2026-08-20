@@ -17,9 +17,18 @@ dlead vel should control initial attack spike, lower velocity = less spike; and 
 get live working from OBS
  ??? Is it possible to configure OBS to delay its audio stream by a fixed amount, to compensate for the webcam delay??
 visual nodes...
+ !index.html fbm docs still say "There is no loop construct in a px chain"; predates parallel{} and loop{}
+ ?loop{} that accumulates something other than what it carries, eg loop{{i}->chain, n, sum:{v}->expr}
+  parallel{} sums but doesn't chain, multitap{} chains and sums but unrolls, loop{} chains but carries one value
+  so a fold that totals f(p) while carrying p has to ride the total in a spare channel, which any whole-vector op in the body wipes
+ ?should mul/add/set params be px chains in their own right, as channels{} args are? mul{pxhash} would then mean mul{pxhash{id}}
+  but it changes what every existing param means
+ rot2/mat2 lib function: a 2x2 matrix on xy for rotate/shear/skew, spelt out as four products in one set{} today
+  and use in sdf if needed
+ uodate sdf to use -x instead of 0-x
+ kal as a function
  ?how come there isn't a turb3?
  ?why does fbm3 (with time in z) move in a jerky way? Is that expected?
- kal as a function
  palette function where you just give it a list of colours
  visual lib functions for old style visual params (monochrome, pixellate, rotate, mirror, vhs etc etc)
  voronoi
@@ -29,6 +38,7 @@ visual nodes...
  ?hsl etc conversions?
  3d stuff?
  ?support for piecewise as shader code not textures?
+ ?no time uniform in a generated px shader, so `time` in a chain costs a JS param eval per frame
  hsv as an operation on the incoming pixel - set{h:..}, add{h:..}, channels{h:..} and in.h reads - which needs rgb2hsv/hsv2rgb GLSL helpers
 ?set bpm can have target time? eg set bpm={140,by;1000}
 grain should have offset param, would allow more interesting effects; granular delays etc
