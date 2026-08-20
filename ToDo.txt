@@ -17,11 +17,10 @@ dlead vel should control initial attack spike, lower velocity = less spike; and 
 get live working from OBS
  ??? Is it possible to configure OBS to delay its audio stream by a fixed amount, to compensate for the webcam delay??
 visual nodes...
- hsv/lab as a value is done (toVec4 + channelMask convert h/labh, eg cospal{{h:[]n}}). Still to do: hsv as an
-  operation on the incoming pixel - set{h:..}, add{h:..}, channels{h:..} and in.h reads - which needs rgb2hsv/hsv2rgb GLSL helpers
+ ?how come there isn't a turb3?
+ ?why does fbm3 (with time in z) move in a jerky way? Is that expected?
  kal as a function
- More pals. Sinpal, powpal, fmbpal... Also twinkle pals, recol pals etc
- loop, parallel, series - and use for octave param in perlin etc?
+ palette function where you just give it a list of colours
  visual lib functions for old style visual params (monochrome, pixellate, rotate, mirror, vhs etc etc)
  voronoi
  ? {tex,#124} should do split/join like in audio chain??
@@ -29,6 +28,8 @@ visual nodes...
  ?render buffers to generate read from, eg px=tex{buffer{mul{1.01}>>webcam>>set{#...a},clear:false}} for temporal zoom-blur??
  ?hsl etc conversions?
  3d stuff?
+ ?support for piecewise as shader code not textures?
+ hsv as an operation on the incoming pixel - set{h:..}, add{h:..}, channels{h:..} and in.h reads - which needs rgb2hsv/hsv2rgb GLSL helpers
 ?set bpm can have target time? eg set bpm={140,by;1000}
 grain should have offset param, would allow more interesting effects; granular delays etc
 Multiband compressor
@@ -884,5 +885,15 @@ Nothing was missing to make this possible, but two things were needed to make it
   statements and 196 uniforms, up against the 224 vec4 GLES3 floor; with it, 176 and 72.
 - The maths nodes gained fract, clamp, smoothstep, sqrt, exp, pow, length, cross, normalize and
   the two argument atan.
-There is still no loop in a chain, so the octaves are written out as four terms (see loop/parallel/
-series above).
+DONE, loop/series/parallel/multitap take px chains as well as audio chains, so a stage can be
+repeated. series/parallel/multitap unroll (the index is a plain number, so a repeat can differ in
+any way); loop compiles to a real GLSL for loop, so the body is emitted once whatever the count and
+its index is a value in the shader. fbm2/fbm3/turb2 are now parallel{} octave sums:
+w visualsynth, px=loop{mul{2}>>fract, 4}
+w visualsynth, px=loop{{i}->mul{2}>>add{i/8}, 4}
+w visualsynth, px=series{{i}->add{x:i/8}, 4}>>tex{'favicon-32x32.png'}
+w visualsynth, px=parallel{{i}->noise2{scale:4*(2^i)}*(8/(2^i)), 4}/15 // ie fbm2
+w visualsynth, px=multitap{{i}->noise2{scale:2^i}*(1/(i+1)), 3}/2
+One thing this needed: a repeat's index goes into its call context as the callsite id, since a px
+chain's uniforms are re-evaluated per frame against the renderer's single event, long after the
+per-repeat events are gone, and the ASTs are shared by every repeat.

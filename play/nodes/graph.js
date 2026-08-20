@@ -7,6 +7,8 @@ define(function(require) {
   let {connect,isConnectable} = require('play/nodes/connect')
   let connectOp = require('expression/connectOp')
   let {mixShaderNode} = require('draw/visualsynth/shader-mix')
+  let {isShaderNode,constShaderNode,passthroughShaderNode} = require('draw/visualsynth/shader-node')
+  let {seriesShaderNode,parallelShaderNode,multitapShaderNode,loopIndexNode,loopShaderNode} = require('draw/visualsynth/shader-repeat')
   require('play/nodes/mocks')
   require('play/nodes/convolver')
   require('play/nodes/source')
@@ -42,8 +44,47 @@ define(function(require) {
   addNodeFunction('thru', idnode)
   addNodeFunction('dry', idnode)
 
+  // A px chain compiles to a real GLSL for loop instead of an audio feedback loop: the body is
+  // emitted once and iterated, its output feeding back into its input. Dispatched on what the body
+  // came back as, the same rule mix{} uses, so audio is untouched.
+  //
+  // The body's index has to be a value in the shader rather than a javascript number, so a user
+  // defined function has to be called with a node — but calling it that way before we know this is
+  // visual would change what an audio loop{} does with a lambda. So the probe in loop{} below stays
+  // exactly as it was (evalParamEvent calls a lambda with no arguments at all), and only once that
+  // says visual is the lambda called again with the index: directly, so memoisation cannot hand back
+  // the probe's result, and on an event of its own, as series does. Nothing real is wasted — a
+  // shader node is a pure description, and tex{}'s texture acquisition, the one event time side
+  // effect in the system, is cached.
+  let visualLoop = (callback, isLambda, probe, args, e, b) => {
+    let idx, body = probe
+    if (isLambda) {
+      idx = loopIndexNode()
+      let ev = Object.create(Object.getPrototypeOf(e), Object.getOwnPropertyDescriptors(e)) // Its own event, so the probe's memoised values can't leak in; clone descriptors so non-enumerable getters from the fx-chain event survive
+      body = callback(ev, b, evalParamFrame, {value:idx})
+    }
+    if (!isShaderNode(body)) { return undefined }
+    let count = Math.floor(evalMainParamEvent(args, 'count', evalMainParamEvent(args, 'value1', 2)))
+    if (typeof count !== 'number' || isNaN(count)) { throw `loop: count must be numeric` }
+    if (count < 1) { return passthroughShaderNode() }
+    return loopShaderNode(body, count, idx)
+  }
+
   let loop = (args,e,b,_,er) => {
-    let mainChain = evalParamEvent(args['value'], e)
+    let callback = args['value']
+    let isLambda = typeof callback === 'function' && callback.isUserFunction
+    let mainChain, probeError
+    try {
+      mainChain = evalParamEvent(callback, e)
+    } catch (err) {
+      if (!isLambda) { throw err }
+      probeError = err // A body written for a visual loop need not survive being called with no index; the visual call is the real one
+    }
+    if (isShaderNode(mainChain) || probeError !== undefined) {
+      let visual = visualLoop(callback, isLambda, mainChain, args, e, b)
+      if (visual !== undefined) { return visual }
+      if (probeError !== undefined) { throw probeError } // Not visual after all: the probe's failure was real
+    }
     if (!isConnectable(mainChain)) { mainChain = vars.all().gain({value:args['value']}, e,b) }
     let unevalledFeedback = args['feedback'] || args['value1']
     let feedbackChain = evalParamEvent(unevalledFeedback, e)
@@ -66,9 +107,52 @@ define(function(require) {
   }
   addNodeFunction('loop', loop)
 
+  // series, parallel and multitap all repeat one chain, differing only in how the repeats are put
+  // together. Each repeat is built the same way: a user defined function is called with the repeat
+  // index on an event of its own, so per function memoisation cannot collapse every repeat to
+  // repeat 0 (descriptors cloned so non-enumerable getters from the fx-chain event survive);
+  // anything else is evaluated afresh, since each repeat needs its own nodes. perFrame re-runs the
+  // call every frame, for a body that turned out to be an amplitude rather than a chain.
+  //
+  // The repeat index also goes into the call context as its callsite id, which is what tells the
+  // repeats apart in the memo key (getCallTreeString, player/callstack.js). The event of its own
+  // covers the build, where every repeat has one; it cannot cover a *px chain*, whose uniforms are
+  // re-evaluated every frame against the renderer's single event, long after these have gone. Their
+  // ASTs are the one parse instance shared by all the repeats, so without this every octave of
+  // parallel{{i}->noise2{scale:scale*(2^i)}, 4} reads back repeat 0's scale. Separated so nesting
+  // cannot spell two different index paths the same way.
+  let repeatChain = (callback, isLambda, e, b) => (i) => {
+    if (!isLambda) {
+      return {chain: callback === undefined ? undefined : evalParamFrame(callback, e,b, {doNotMemoise:true})} // Must get new nodes for every repeat
+    }
+    let ev = Object.create(Object.getPrototypeOf(e), Object.getOwnPropertyDescriptors(e))
+    let repeatArgs = () => ({value:i, __functionContext:'repeat'+i+';'})
+    return {chain: callback(ev, b, evalParamFrame, repeatArgs()), perFrame: (e2,b2,er2) => callback(ev, b2, er2, repeatArgs())}
+  }
+
+  // The repeats of a px chain. Repeat 0 has already been built, and the caller only gets here
+  // because it came back a visual node: deciding on what was built rather than guessing is what
+  // keeps an audio chain from being evaluated speculatively (which would eagerly construct Web Audio
+  // nodes), and it means nothing is built twice.
+  //
+  // A user defined function is called once per repeat, so each really can differ. Anything else is
+  // one node reused for every repeat, which is safe because a shader node's build is a pure string
+  // emitter and it keeps the repeats sharing one uniform rather than taking one each — uniforms are
+  // the scarce resource in a generated shader. A repeat whose body evaluated to a plain value
+  // rather than a chain becomes an animated uniform wrapped from the call itself, so it still
+  // updates per frame: the visual mirror of the gain wrap the audio paths use.
+  let visualChains = (first, chainFor, isLambda, count) => {
+    let chains = []
+    for (let i = 0; i < count; i++) {
+      let repeat = (i === 0 || !isLambda) ? first : chainFor(i)
+      chains.push(isShaderNode(repeat.chain) ? repeat.chain : constShaderNode(repeat.perFrame))
+    }
+    return chains
+  }
+
   // series{chain, count} : repeat the chain count times in series. The chain may be a
   // user defined function given the repeat index (eg {i}->lpf{600*(i+1)}) so each
-  // repeat can differ.
+  // repeat can differ. On a px chain the repeats are composed into the shader instead.
   let series = (args,e,b,_,er) => {
     let count = evalMainParamEvent(args, 'count', evalMainParamEvent(args, 'value1', 2))
     if (typeof count !== 'number') { throw `series: count ${count} must numeric` }
@@ -76,21 +160,18 @@ define(function(require) {
     if (count === 0) { return idnode(args,e,b) }
     let callback = args['value']
     let isLambda = typeof callback === 'function' && callback.isUserFunction
+    let chainFor = repeatChain(callback, isLambda, e, b)
+    let first = chainFor(0)
+    if (isShaderNode(first.chain)) { return seriesShaderNode(visualChains(first, chainFor, isLambda, count)) }
     let node
     for (let i = 0; i<count; i++) {
-      let chain
-      if (isLambda) {
-        let ev = Object.create(Object.getPrototypeOf(e), Object.getOwnPropertyDescriptors(e)) // Distinct event so per-function memoisation doesn't collapse every repeat to repeat 0; clone descriptors so non-enumerable getters from the fx-chain event survive
-        chain = callback(ev, b, evalParamFrame, {value:i})
-        if (!isConnectable(chain)) {
-          // The body evaluated to an amplitude, not a node chain. Hand the lambda itself to
-          // gain as its value param (reusing the per-repeat ev so memoisation stays isolated)
-          // so a frame-varying body gets per-frame updates - same pattern as parallel below
-          let repeatGain = (e2,b2,er2) => callback(ev, b2, er2, {value:i})
-          chain = vars.all().gain({value:repeatGain}, e,b)
-        }
-      } else {
-        chain = evalParamFrame(callback, e,b, {doNotMemoise:true}) // Must get new nodes for every repeat
+      let repeat = i === 0 ? first : chainFor(i)
+      let chain = repeat.chain
+      if (isLambda && !isConnectable(chain)) {
+        // The body evaluated to an amplitude, not a node chain. Hand the lambda itself to
+        // gain as its value param (reusing the per-repeat ev so memoisation stays isolated)
+        // so a frame-varying body gets per-frame updates - same pattern as parallel below
+        chain = vars.all().gain({value:repeat.perFrame}, e,b)
       }
       if (node === undefined) { node = chain }
       else { node = connectOp(node, chain, e,b,er) }
@@ -108,22 +189,19 @@ define(function(require) {
     if (count < 1) { return idnode(args,e,b) }
     let callback = args['value'] || args['chain']
     let isLambda = typeof callback === 'function' && callback.isUserFunction
+    let chainFor = repeatChain(callback, isLambda, e, b)
+    let first = chainFor(0)
+    if (isShaderNode(first.chain)) { return multitapShaderNode(visualChains(first, chainFor, isLambda, count)) }
     let node
     let taps = {}
     for (let i = 0; i < count; i++) {
-      let chain
-      if (isLambda) {
-        let ev = Object.create(Object.getPrototypeOf(e), Object.getOwnPropertyDescriptors(e)) // Distinct event so per-function memoisation doesn't collapse every stage to stage 0; clone descriptors so non-enumerable getters from the fx-chain event survive
-        chain = callback(ev, b, evalParamFrame, {value:i})
-        if (!isConnectable(chain)) {
-          // The body evaluated to an amplitude, not a node chain. Hand the lambda itself to
-          // gain as its value param (reusing the per-stage ev so memoisation stays isolated)
-          // so a frame-varying body gets per-frame updates - same pattern as series above
-          let stageGain = (e2,b2,er2) => callback(ev, b2, er2, {value:i})
-          chain = vars.all().gain({value:stageGain}, e,b)
-        }
-      } else if (callback !== undefined) {
-        chain = evalParamFrame(callback, e,b, {doNotMemoise:true}) // Must get new nodes for every stage
+      let repeat = i === 0 ? first : chainFor(i)
+      let chain = repeat.chain
+      if (isLambda && !isConnectable(chain)) {
+        // The body evaluated to an amplitude, not a node chain. Hand the lambda itself to
+        // gain as its value param (reusing the per-stage ev so memoisation stays isolated)
+        // so a frame-varying body gets per-frame updates - same pattern as series above
+        chain = vars.all().gain({value:repeat.perFrame}, e,b)
       }
       if (!isConnectable(chain)) {
         chain = (chain === undefined) ? idnode(args,e,b) : vars.all().gain({value:chain}, e,b)
@@ -155,21 +233,18 @@ define(function(require) {
     if (count < 1) { return idnode(args,e,b) }
     let callback = args['value'] || args['chain']
     let isLambda = typeof callback === 'function' && callback.isUserFunction
+    let chainFor = repeatChain(callback, isLambda, e, b)
+    let first = chainFor(0)
+    if (isShaderNode(first.chain)) { return parallelShaderNode(visualChains(first, chainFor, isLambda, count)) }
     let result = {}
     for (let i = 0; i < count; i++) {
-      let proc
-      if (isLambda) {
-        let ev = Object.create(Object.getPrototypeOf(e), Object.getOwnPropertyDescriptors(e)) // Distinct event so per-function memoisation doesn't collapse every copy to copy 0; clone descriptors so non-enumerable getters from the fx-chain event survive
-        proc = callback(ev, b, evalParamFrame, {value:i})
-        if (!isConnectable(proc)) {
-          // The body evaluated to an amplitude, not a node chain. Hand the lambda itself to
-          // gain as its value param (reusing the per-copy ev so memoisation stays isolated)
-          // so a frame-varying body gets per-frame updates - same pattern as series above
-          let copyGain = (e2,b2,er2) => callback(ev, b2, er2, {value:i})
-          proc = vars.all().gain({value:copyGain}, e,b)
-        }
-      } else if (callback !== undefined) {
-        proc = evalParamFrame(callback, e,b, {doNotMemoise:true}) // Must get new nodes for every copy
+      let repeat = i === 0 ? first : chainFor(i)
+      let proc = repeat.chain
+      if (isLambda && !isConnectable(proc)) {
+        // The body evaluated to an amplitude, not a node chain. Hand the lambda itself to
+        // gain as its value param (reusing the per-copy ev so memoisation stays isolated)
+        // so a frame-varying body gets per-frame updates - same pattern as series above
+        proc = vars.all().gain({value:repeat.perFrame}, e,b)
       }
       if (!isConnectable(proc)) {
         proc = (proc === undefined) ? idnode(args,e,b) : vars.all().gain({value:proc}, e,b)
@@ -352,6 +427,70 @@ define(function(require) {
   assert(true, mixNode.isShaderNode)
   let mixAudio = mix({value:mtMock('wet'), value1:1/2}, mixEvent, 0, undefined, er)
   assert(true, isConnectable(mixAudio.value) && isConnectable(mixAudio.value1)) // dry and wet parts
+
+  // series, parallel and multitap on a px chain: dispatched on what repeat 0 came back as, and the
+  // repeats compiled into one shader rather than wired into an audio graph
+  let {makeContext} = require('draw/visualsynth/codegen')
+  let vNode = (tag) => ({isShaderNode:true, build:(input,ctx) => ctx.addStatement(`${tag}(${input})`)})
+  let vEvent = () => ({count:0, _destructor:require('play/destructor')()})
+  let vCalls = []
+  let vCb = (e,b,erFn,a) => { vCalls.push(a.value); return vNode('r'+a.value) }
+  vCb.isUserFunction = true
+  let vBuild = (node) => { let ctx = makeContext(); ctx.out = node.build(ctx.rootInput, ctx); return ctx.statements }
+
+  let vSeries = series({value:vCb, value1:3}, vEvent(), 0, undefined, er)
+  assert(true, isShaderNode(vSeries))
+  assert([0,1,2], vCalls) // The lambda is called once per repeat, with the repeat index
+  assert(['vec4 v1 = r0(v0);', 'vec4 v2 = r1(v1);', 'vec4 v3 = r2(v2);'], vBuild(vSeries)) // Each repeat consumes the last
+
+  vCalls = []
+  let vPar = parallel({value:vCb, value1:3}, vEvent(), 0, undefined, er)
+  assert(true, isShaderNode(vPar)) // A shader node, not the {value,value1} map audio gets
+  assert([0,1,2], vCalls)
+  assert(['vec4 v1 = r0(v0);', 'vec4 v2 = r1(v0);', 'vec4 v3 = r2(v0);', 'vec4 v4 = v1 + v2 + v3;'], vBuild(vPar))
+
+  vCalls = []
+  let vMt = multitap({value:vCb, value1:3}, vEvent(), 0, undefined, er)
+  assert(true, isShaderNode(vMt))
+  assert(['vec4 v1 = r0(v0);', 'vec4 v2 = r1(v1);', 'vec4 v3 = r2(v2);', 'vec4 v4 = v1 + v2 + v3;'], vBuild(vMt))
+
+  // A body that isn't a user defined function is one node reused for every repeat: build is a pure
+  // emitter, so the repeats differ by their input alone and share one uniform rather than taking one each
+  assert(['vec4 v1 = a(v0);', 'vec4 v2 = a(v1);', 'vec4 v3 = a(v2);'],
+         vBuild(series({value:vNode('a'), value1:3}, vEvent(), 0, undefined, er)))
+
+  // A repeat whose body evaluated to a plain value rather than a chain becomes an animated uniform
+  let mixedCb = (e,b,erFn,a) => a.value === 0 ? vNode('r0') : 2
+  mixedCb.isUserFunction = true
+  assert(['vec4 v1 = r0(v0);', 'vec4 v2 = u_vs0;', 'vec4 v3 = v1 + v2;'],
+         vBuild(parallel({value:mixedCb, value1:2}, vEvent(), 0, undefined, er)))
+
+  // loop on a px chain is a real GLSL for loop: the body is emitted once, however big the count
+  let loopCalls = []
+  let loopCb = (e,b,erFn,a) => { loopCalls.push(a === undefined ? 'probe' : a.value); return vNode('b') }
+  loopCb.isUserFunction = true
+  let vLoop = loop({value:loopCb, value1:4}, vEvent(), 0, undefined, er)
+  assert(true, isShaderNode(vLoop))
+  assert(2, loopCalls.length) // Probed with no index at all, then called for real with one
+  assert('probe', loopCalls[0])
+  assert(true, isShaderNode(loopCalls[1])) // The index is a value in the shader, not a javascript number
+  assert(['vec4 v1 = v0;', 'for (int l_i0 = 0; l_i0 < 4; l_i0++) {', '  vec4 v2 = b(v1);', '  v1 = v2;', '}'], vBuild(vLoop))
+
+  // A loop body that isn't a user defined function needs no second call, and gets no index
+  let vLoop2 = loop({value:vNode('b'), value1:2}, vEvent(), 0, undefined, er)
+  assert(['vec4 v1 = v0;', 'for (int l_i0 = 0; l_i0 < 2; l_i0++) {', '  vec4 v2 = b(v1);', '  v1 = v2;', '}'], vBuild(vLoop2))
+
+  // A visual loop with no iterations passes the value through, rather than dropping out of the
+  // visual domain the way the audio idnode would
+  assert(true, isShaderNode(loop({value:vNode('b'), value1:0}, vEvent(), 0, undefined, er)))
+
+  // An audio loop{} is untouched: a lambda body is called once, with no index, exactly as before
+  let audioCalls = []
+  let audioCb = (e,b,erFn,a) => { audioCalls.push(a); return system.audio.createGain() }
+  audioCb.isUserFunction = true
+  let aLoop = loop({value:audioCb, value1:system.audio.createGain()}, vEvent(), 0, undefined, er)
+  assert([undefined], audioCalls)
+  assert(true, aLoop instanceof AudioNode)
 
   console.log('Graph tests complete')
   }

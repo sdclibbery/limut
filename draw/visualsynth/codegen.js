@@ -25,6 +25,35 @@ define(function(require) {
       return name
     }
     ctx.addRaw = (stmt) => { ctx.statements.push(stmt) }
+    // A real GLSL for loop (loop{} in a px chain, see shader-repeat.js) needs its body's statements
+    // wrapped in a block rather than landing in main() alongside everything else. Statements emitted
+    // while fn runs are captured and handed back for the caller to indent into the block.
+    //
+    // ctx.built is saved and restored around it, deep copied because its values are Maps: outer
+    // entries stay visible inside the block, which is right (an outer vN is in scope in a nested
+    // block), but an entry made *inside* must not survive it, or a later build would reuse a
+    // variable that has gone out of scope. nextVar keeps counting across the block, so every
+    // generated name is still unique and still comes from a counter: the source must stay
+    // deterministic, since the program cache is keyed on it.
+    ctx.captureBlock = (fn) => {
+      let outerStatements = ctx.statements
+      let outerBuilt = ctx.built
+      ctx.statements = []
+      ctx.built = new Map(Array.from(outerBuilt, ([node, byInput]) => [node, new Map(byInput)]))
+      let out, statements
+      try {
+        out = fn()
+      } finally {
+        statements = ctx.statements
+        ctx.statements = outerStatements
+        ctx.built = outerBuilt
+      }
+      return {out: out, statements: statements}
+    }
+    // The counter variable of a for loop. Same l_ prefix as the helper functions, keeping it clear
+    // of the generated vN/u_vsN/uvN names.
+    let nextLoopVar = 0
+    ctx.loopVar = () => 'l_i' + (nextLoopVar++)
     ctx.addUniform = (ast) => {
       let name = 'u_vs' + ctx.uniforms.length
       // The call tree current during this node's build is the one the AST was written in, so keep
@@ -226,6 +255,56 @@ void main() {
   assert(true, mathsBuilt.source.includes('vec4 v3 = texture(u_vstex0, (v2).xy);'))
   assert(true, mathsBuilt.uniforms[0].ast === toAst) // raw AST, so the precision stays animatable
   assert(true, mathsBuilt.source === buildSource(mathsChain).source) // byte-identical: cache key
+
+  // captureBlock: statements emitted while it runs are captured for the caller to wrap in a block,
+  // rather than landing in main() (see loopShaderNode in shader-repeat.js)
+  let blockCtx = makeContext()
+  blockCtx.addStatement('outer')
+  let block = blockCtx.captureBlock(() => blockCtx.addStatement('inner'))
+  assert('v2', block.out)
+  assert(['vec4 v2 = inner;'], block.statements) // Captured, not in main
+  assert(['vec4 v1 = outer;'], blockCtx.statements) // main is untouched by it
+  assert('v3', blockCtx.addStatement('after')) // The variable counter carries on across the block
+
+  // The emit-once map is restored afterwards, so a node built inside the block is emitted again
+  // outside it: its variable has gone out of scope by then. Entries made before it stay visible.
+  let blockNode = makeShaderNode((input, ctx) => ctx.addStatement(`b(${input})`))
+  blockCtx = makeContext()
+  blockNode.build('v0', blockCtx)
+  blockCtx.captureBlock(() => { blockNode.build('v0', blockCtx); blockNode.build('v9', blockCtx) })
+  blockNode.build('v9', blockCtx)
+  assert(['vec4 v1 = b(v0);', 'vec4 v3 = b(v9);'], blockCtx.statements) // v0 reused inside, v9 not reused after
+  assert(1, blockCtx.built.size)
+
+  blockCtx = makeContext() // It restores even when the build throws
+  try { blockCtx.captureBlock(() => { throw 'x' }) } catch (err) {}
+  blockCtx.addStatement('after')
+  assert(['vec4 v1 = after;'], blockCtx.statements)
+
+  // Loop counter names come from a counter of their own, so they stay deterministic
+  let loopCtx = makeContext()
+  assert(['l_i0', 'l_i1'], [loopCtx.loopVar(), loopCtx.loopVar()])
+  assert('l_i0', makeContext().loopVar()) // Per context, like every other generated name
+
+  // A whole shader with a block in it, shaped like px=loop{mul{2}, 4}. The loop node itself lives
+  // in shader-repeat.js; it is written out here rather than required, to keep this file's tests
+  // free of a circular dependency on it (its own tests build on makeContext).
+  let loopNode = (body, count) => makeShaderNode((input, ctx) => {
+    let acc = ctx.addStatement(input)
+    let name = ctx.loopVar()
+    let inner = ctx.captureBlock(() => body.build(acc, ctx))
+    ctx.addRaw(`for (int ${name} = 0; ${name} < ${count}; ${name}++) {`)
+    inner.statements.forEach(st => ctx.addRaw('  ' + st))
+    ctx.addRaw(`  ${acc} = ${inner.out};`)
+    ctx.addRaw('}')
+    return acc
+  })
+  let looped = composeShaderNodes(loopNode(mulNode(ast), 4), texNode(stubTex))
+  let loopBuilt = buildSource(looped)
+  assert(true, loopBuilt.source.includes('  vec4 v1 = v0;\n  for (int l_i0 = 0; l_i0 < 4; l_i0++) {\n    vec4 v2 = v1 * u_vs0;\n    v1 = v2;\n  }'))
+  assert(true, loopBuilt.source.includes('vec4 v3 = texture(u_vstex0, (v1).xy);')) // The chain carries on from the accumulator
+  assert(1, loopBuilt.uniforms.length) // The body is emitted once, so its uniform is registered once
+  assert(true, loopBuilt.source === buildSource(looped).source) // still byte-identical: cache key
 
   console.log('Visual synth codegen tests complete')
   }

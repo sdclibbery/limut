@@ -79,30 +79,20 @@ set perlin3 = {in:id, scale:4, seed:0} -> clamp{ perlin3s{in, scale, seed}*3/4 +
 
 //// Octave noise
 // Four octaves of value noise, each at twice the frequency and half the amplitude, normalised back
-// to 0 to 1. There is no loop in a px chain, so the octaves are written out; add or drop terms (and
-// fix up the divisor, which is their weights summed) for more or fewer.
+// to 0 to 1. parallel{} builds one copy of its chain per octave and sums them, which is what an
+// octave sum is; the octave index is an ordinary number here, since parallel unrolls, so 2^i is a
+// per copy constant. Change the 4 for more or fewer octaves (and the divisor, which is 2^octaves-1,
+// their weights summed).
 set fbm2 = {in:id, scale:4, seed:0} ->
-  ( noise2{in, scale,   seed}*8
-  + noise2{in, scale*2, seed}*4
-  + noise2{in, scale*4, seed}*2
-  + noise2{in, scale*8, seed}
-  )/15
+  parallel{{i} -> noise2{in, scale*(2^i), seed}*(8/(2^i)), 4}/15
 
 set fbm3 = {in:id, scale:4, seed:0} ->
-  ( noise3{in, scale,   seed}*8
-  + noise3{in, scale*2, seed}*4
-  + noise3{in, scale*4, seed}*2
-  + noise3{in, scale*8, seed}
-  )/15
+  parallel{{i} -> noise3{in, scale*(2^i), seed}*(8/(2^i)), 4}/15
 
 // Turbulence: the same sum over the absolute value of each signed octave, giving the creased,
 // billowy look that suits smoke and marble
 set turb2 = {in:id, scale:4, seed:0} ->
-  ( abs{noise2{in, scale,   seed}*2-1}*8
-  + abs{noise2{in, scale*2, seed}*2-1}*4
-  + abs{noise2{in, scale*4, seed}*2-1}*2
-  + abs{noise2{in, scale*8, seed}*2-1}
-  )/15
+  parallel{{i} -> abs{noise2{in, scale*(2^i), seed}*2-1}*(8/(2^i)), 4}/15
 
 //// Colour
 // Cosine palette from Inigo Quilez: a single value in becomes a cycling colour out. a is the level
