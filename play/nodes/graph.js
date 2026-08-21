@@ -8,7 +8,7 @@ define(function(require) {
   let connectOp = require('expression/connectOp')
   let {mixShaderNode} = require('draw/visualsynth/shader-mix')
   let {isShaderNode,constShaderNode,passthroughShaderNode} = require('draw/visualsynth/shader-node')
-  let {seriesShaderNode,parallelShaderNode,multitapShaderNode,loopIndexNode,loopShaderNode} = require('draw/visualsynth/shader-repeat')
+  let {seriesShaderNode,parallelShaderNode,multitapShaderNode,loopIndexNode,loopShaderNode,zeroShaderNode} = require('draw/visualsynth/shader-repeat')
   require('play/nodes/mocks')
   require('play/nodes/convolver')
   require('play/nodes/source')
@@ -56,18 +56,43 @@ define(function(require) {
   // the probe's result, and on an event of its own, as series does. Nothing real is wasted — a
   // shader node is a pure description, and tex{}'s texture acquisition, the one event time side
   // effect in the system, is cached.
+  //
+  // sum: is a fold alongside the carried value: a chain of its own whose result is totalled over the
+  // iterations, which is what the loop then hands on. It is resolved exactly as the body is, so one
+  // rule covers both — a lambda is called, anything else is evaluated as a chain expression (so a
+  // bare call head needs an explicit id>>, as it does for the body) and a result that is not a node
+  // becomes an animated uniform, the same wrap visualChains uses. Its lambda takes the value first
+  // and the index second, unlike the body's: the body *is* the chain, so its value flows implicitly,
+  // where the sum is an expression of that value and wants to name it.
+  let sumChain = (args, idx, e, b) => {
+    let callback = args['sum']
+    if (callback === undefined) { return undefined }
+    if (typeof callback !== 'function' || !callback.isUserFunction) {
+      let chain = evalParamEvent(callback, e)
+      return isShaderNode(chain) ? chain : constShaderNode(callback)
+    }
+    let ev = Object.create(Object.getPrototypeOf(e), Object.getOwnPropertyDescriptors(e))
+    // Its own callsite id, so a lambda used as both body and sum keeps two sets of uniforms in the
+    // per frame memo key (getCallTreeString) rather than collapsing onto one - see repeatChain below
+    let sumArgs = () => ({value:passthroughShaderNode(), value1:idx, __functionContext:'sum;'})
+    let chain = callback(ev, b, evalParamFrame, sumArgs())
+    return isShaderNode(chain) ? chain : constShaderNode((e2,b2,er2) => callback(ev, b2, er2, sumArgs()))
+  }
+
   let visualLoop = (callback, isLambda, probe, args, e, b) => {
     let idx, body = probe
+    let sumIsLambda = typeof args['sum'] === 'function' && args['sum'].isUserFunction
+    if (isLambda || sumIsLambda) { idx = loopIndexNode() } // One index node, so body and sum share the one counter
     if (isLambda) {
-      idx = loopIndexNode()
       let ev = Object.create(Object.getPrototypeOf(e), Object.getOwnPropertyDescriptors(e)) // Its own event, so the probe's memoised values can't leak in; clone descriptors so non-enumerable getters from the fx-chain event survive
       body = callback(ev, b, evalParamFrame, {value:idx})
     }
     if (!isShaderNode(body)) { return undefined }
     let count = Math.floor(evalMainParamEvent(args, 'count', evalMainParamEvent(args, 'value1', 2)))
     if (typeof count !== 'number' || isNaN(count)) { throw `loop: count must be numeric` }
-    if (count < 1) { return passthroughShaderNode() }
-    return loopShaderNode(body, count, idx)
+    let sum = sumChain(args, idx, e, b)
+    if (count < 1) { return sum === undefined ? passthroughShaderNode() : zeroShaderNode() } // A fold over no terms is zero
+    return loopShaderNode(body, count, idx, sum)
   }
 
   let loop = (args,e,b,_,er) => {
@@ -349,6 +374,31 @@ define(function(require) {
   sCb2.isUserFunction = true
   series({value:sCb2, value1:2}, {_destructor:require('play/destructor')()}, 0, undefined, er)
   assert(true, sEvents[0] !== sEvents[1])
+
+  // loop with a sum: the sum lambda is called with the value first and the index second, and the
+  // whole thing comes back as a shader node rather than an audio graph
+  let lNode = (tag) => require('draw/visualsynth/shader-node').makeShaderNode((input, ctx) => ctx.addStatement(`${tag}(${input})`))
+  let lSumArgs
+  let lCb = (e,b,erFn,a) => lNode('a')
+  lCb.isUserFunction = true
+  let lSumCb = (e,b,erFn,a) => { lSumArgs = a; return lNode('f') }
+  lSumCb.isUserFunction = true
+  let lRes = loop({value:lCb, value1:3, sum:lSumCb}, {_destructor:require('play/destructor')()}, 0, undefined, er)
+  assert(true, isShaderNode(lRes))
+  assert(true, isShaderNode(lSumArgs.value)) // the carried value, as a passthrough node
+  assert(true, lSumArgs.value1 !== undefined && lSumArgs.value1._loopIndexBox !== undefined) // the loop index
+  let lCtx = require('draw/visualsynth/codegen').makeContext()
+  lCtx.out = lRes.build(lCtx.rootInput, lCtx)
+  assert([
+    'vec4 v1 = v0;',
+    'vec4 v2 = vec4(0.0);',
+    'for (int l_i0 = 0; l_i0 < 3; l_i0++) {',
+    '  vec4 v3 = f(v1);',
+    '  vec4 v4 = a(v1);',
+    '  v2 += v3;',
+    '  v1 = v4;',
+    '}'], lCtx.statements) // The sum leads the block: it is taken before the body advances the carried value
+  assert('v2', lCtx.out) // the total, not the carried value
 
   // parallel: a user defined function chain is invoked once per copy with the copy index,
   // and the result is a {value,value1,...} map that connect() treats as parallel.

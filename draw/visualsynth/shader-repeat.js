@@ -12,6 +12,8 @@ define(function(require) {
   //   multitap{{i}->chain, n}  ->  chained like series, but every stage's output summed
   //   loop{{i}->chain, n}      ->  a real GLSL for loop: the body emitted once, its output fed back
   //                                into its input each iteration
+  //   loop{chain, n, sum:f}    ->  the same loop with a second accumulator: f of the carried value
+  //                                totalled over the iterations, and that total handed on
   //
   // series, parallel and multitap are unrolled, so their index is an ordinary javascript number and
   // each repeat may differ in any way at all. loop rolls, so the body is emitted once whatever the
@@ -54,29 +56,51 @@ define(function(require) {
     return node
   }
 
+  // A fold over no terms at all: what a summing loop of zero iterations comes to.
+  let zeroShaderNode = () => {
+    return makeShaderNode((input, ctx) => ctx.addStatement('vec4(0.0)'))
+  }
+
   // A real GLSL for loop. The value flowing in becomes a mutable accumulator declared before the
   // loop; each iteration builds the body from it and assigns the body's output back, so the chain
   // feeds back into itself the way an audio loop{} does. The count is baked in as a literal: it is
   // structural (it settles at event time and is part of the generated source, ie the cache key)
   // rather than an animatable uniform.
-  let loopShaderNode = (body, count, indexNode) => {
+  //
+  // A sum chain gives it a *second* accumulator: a total, declared alongside the carried value and
+  // added to once per iteration, which becomes what the loop hands on. That is the one thing the
+  // carried value cannot do for itself, since it is a single vec4 and any whole-vector op in the
+  // body wipes out anything riding in a spare channel of it. The sum is built from the carried
+  // value *before* the body advances it, so the first term is the value as it arrives and an octave
+  // sum lines up with parallel{} term for term; the price is that the last body application is dead.
+  //
+  // Both are built inside one captureBlock, the sum first so its statements lead the block. The +=
+  // sits after all of them rather than interleaved: the body only ever assigns to fresh vNs, so acc
+  // does not move until the write-back at the end of the block, and one block keeps sum and body
+  // sharing the emit-once memo.
+  let loopShaderNode = (body, count, indexNode, sum) => {
     return makeShaderNode((input, ctx) => {
       let acc = ctx.addStatement(input) // The loop carried value: declared outside, assigned inside
+      let total = sum !== undefined ? ctx.addStatement('vec4(0.0)') : undefined
       let name = ctx.loopVar()
       let box = indexNode !== undefined ? indexNode._loopIndexBox : undefined
       let saved = box !== undefined ? box.name : undefined
       if (box !== undefined) { box.name = name }
-      let block
+      let block, sumOut
       try {
-        block = ctx.captureBlock(() => body.build(acc, ctx))
+        block = ctx.captureBlock(() => {
+          if (sum !== undefined) { sumOut = sum.build(acc, ctx) }
+          return body.build(acc, ctx)
+        })
       } finally {
         if (box !== undefined) { box.name = saved }
       }
       ctx.addRaw(`for (int ${name} = 0; ${name} < ${count}; ${name}++) {`)
       block.statements.forEach(s => ctx.addRaw('  ' + s))
+      if (total !== undefined) { ctx.addRaw(`  ${total} += ${sumOut};`) }
       ctx.addRaw(`  ${acc} = ${block.out};`)
       ctx.addRaw(`}`)
-      return acc
+      return total !== undefined ? total : acc
     })
   }
 
@@ -153,6 +177,72 @@ define(function(require) {
     '  v1 = v2;',
     '}'], nested.statements) // The outer loop's counter is allocated first, and the inner sees both
 
+  // loop with a sum: a second accumulator, totalled before the body advances the carried value
+  let sm = statements(loopShaderNode(node('a'), 3, undefined, node('f')))
+  assert([
+    'vec4 v1 = v0;',
+    'vec4 v2 = vec4(0.0);',
+    'for (int l_i0 = 0; l_i0 < 3; l_i0++) {',
+    '  vec4 v3 = f(v1);',
+    '  vec4 v4 = a(v1);',
+    '  v2 += v3;',
+    '  v1 = v4;',
+    '}'], sm.statements)
+  assert('v2', sm.out) // The total is what the rest of the chain sees, not the carried value
+
+  // loop with a sum: body and sum share one index, and its box is restored afterwards
+  let si = loopIndexNode()
+  let sBody = composeShaderNodes(si, node('a'))
+  let sSum = composeShaderNodes(si, node('f'))
+  let sl = statements(loopShaderNode(sBody, 2, si, sSum))
+  assert([
+    'vec4 v1 = v0;',
+    'vec4 v2 = vec4(0.0);',
+    'for (int l_i0 = 0; l_i0 < 2; l_i0++) {',
+    '  vec4 v3 = vec4(float(l_i0));',
+    '  vec4 v4 = f(v3);',
+    '  vec4 v5 = a(v3);',
+    '  v2 += v4;',
+    '  v1 = v5;',
+    '}'], sl.statements) // The index emits once: sum and body share the emit-once memo within the block
+  assert(undefined, si._loopIndexBox.name)
+
+  // loop with a sum: the index may be used by the sum alone, and still gets its counter's name
+  let so = loopIndexNode()
+  let sl2 = statements(loopShaderNode(node('a'), 2, so, composeShaderNodes(so, node('f'))))
+  assert([
+    'vec4 v1 = v0;',
+    'vec4 v2 = vec4(0.0);',
+    'for (int l_i0 = 0; l_i0 < 2; l_i0++) {',
+    '  vec4 v3 = vec4(float(l_i0));',
+    '  vec4 v4 = f(v3);',
+    '  vec4 v5 = a(v1);',
+    '  v2 += v4;',
+    '  v1 = v5;',
+    '}'], sl2.statements)
+
+  // loop with a sum: nests, each loop with its own counter and its own pair of accumulators
+  let sn = statements(loopShaderNode(loopShaderNode(node('a'), 2, undefined, node('f')), 3, undefined, node('g')))
+  assert([
+    'vec4 v1 = v0;',
+    'vec4 v2 = vec4(0.0);',
+    'for (int l_i0 = 0; l_i0 < 3; l_i0++) {',
+    '  vec4 v3 = g(v1);',
+    '  vec4 v4 = v1;',
+    '  vec4 v5 = vec4(0.0);',
+    '  for (int l_i1 = 0; l_i1 < 2; l_i1++) {',
+    '    vec4 v6 = f(v4);',
+    '    vec4 v7 = a(v4);',
+    '    v5 += v6;',
+    '    v4 = v7;',
+    '  }',
+    '  v2 += v3;',
+    '  v1 = v5;',
+    '}'], sn.statements) // The inner loop's total is what the outer body hands back
+
+  // a fold over no iterations at all is zero, not the value that arrived
+  assert(['vec4 v1 = vec4(0.0);'], statements(zeroShaderNode()).statements)
+
   // A node built inside the loop body is not reused outside it: its variable is out of scope there
   let shared = node('a')
   let ctx = makeContext()
@@ -185,5 +275,6 @@ define(function(require) {
     multitapShaderNode: multitapShaderNode,
     loopIndexNode: loopIndexNode,
     loopShaderNode: loopShaderNode,
+    zeroShaderNode: zeroShaderNode,
   }
 })

@@ -17,12 +17,10 @@ dlead vel should control initial attack spike, lower velocity = less spike; and 
 get live working from OBS
  ??? Is it possible to configure OBS to delay its audio stream by a fixed amount, to compensate for the webcam delay??
 visual nodes...
- ?loop{} that accumulates something other than what it carries, eg loop{{i}->chain, n, sum:{v}->expr}
-  parallel{} sums but doesn't chain, multitap{} chains and sums but unrolls, loop{} chains but carries one value
-  so a fold that totals f(p) while carrying p has to ride the total in a spare channel, which any whole-vector op in the body wipes
  rot2/mat2 lib function: a 2x2 matrix on xy for rotate/shear/skew, spelt out as four products in one set{} today
   and use in sdf if needed
- uodate sdf to use -x instead of 0-x
+ update sdf to use -x instead of 0-x
+ Want to be able to"let" an intermediate pipeline value, and refer to it later; Eg px=sdstar>>let{'foo'}>>tex{webcam}>>mul{foo}
  kal as a function
  ?how come there isn't a turb3?
  ?why does fbm3 (with time in z) move in a jerky way? Is that expected?
@@ -899,6 +897,19 @@ w visualsynth, px=loop{mul{2}>>fract, 4}
 w visualsynth, px=loop{{i}->mul{2}>>add{i/8}, 4}
 w visualsynth, px=series{{i}->add{x:i/8}, 4}>>tex{'favicon-32x32.png'}
 w visualsynth, px=parallel{{i}->noise2{scale:4*(2^i)}*(8/(2^i)), 4}/15 // ie fbm2
+
+DONE, loop{} takes a sum: fold alongside the value it carries. The chain carries one value as
+before, but sum: is totalled over the iterations and that total is what the loop hands on - the one
+thing the carried value cannot do for itself, since it is a single vec4 and any whole-vector op in
+the body wipes out anything riding in a spare channel of it. The sum is taken BEFORE each step, so
+its first term is the value as it arrives and it lines up with parallel{} term for term:
+w visualsynth, px=loop{mul{2}, 4, sum:{v,i}->noise2{v}*(8/(2^i))}/15 // pixel identical to fbm2
+w visualsynth, px=loop{mul{2}, 4, sum:{v}->v*v}/4
+with the noise body written into the shader once rather than four times. Its function takes the
+value first and the index second, unlike the body's: the body IS the chain, so its value flows in
+implicitly, where the sum is an expression of that value and wants to name it. Either arg may be
+left off, and anything that is not a function is a chain fed the carried value, as the body is.
+min:/max: folds would be the same mechanism with another identity, if they are ever wanted.
 
 DONE, a mul/add/set param is a px chain in its own right, as a channels{} arg is, so a call there
 that has not been given a value takes the incoming pixel:
