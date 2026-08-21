@@ -1,6 +1,6 @@
-// This library includes smooth noise for visualsynth px chains, built entirely out of the shader
-// nodes: pxhash for the randomness, floor/fract for the lattice, smoothstep for the fade curve and
-// mix for the interpolation. Nothing here is implemented in javascript.
+// This library includes smooth noise and 2d transforms for visualsynth px chains, built entirely
+// out of the shader nodes: pxhash for the randomness, floor/fract for the lattice, smoothstep for
+// the fade curve and mix for the interpolation. Nothing here is implemented in javascript.
 //
 // pxhash gives an independent random value per pixel, ie white noise. Smooth noise instead hashes
 // the corners of a lattice cell and interpolates between them, so neighbouring pixels get
@@ -105,3 +105,30 @@ set turb2 = {in:id, scale:4, seed:0} ->
 // Note it wants a single value in: px=cospal bare runs red off x and green off y, ie a plaid.
 // The args are colours, so hsv and lab work too: cospal{{h:[]n}} turns the phase through the hues.
 set cospal = {in,d:#012,c:1,b:1/2,a:1/2} -> (a+b*cos{6.28318*(c*in+d)})
+
+//// Transforms
+// A 2x2 matrix on the xy of the incoming value, leaving z and w alone: the cross channel transform
+// that mul{} (a diagonal) cannot do, ie rotate, shear, skew and reflect. Translate and scale are
+// already add{} and mul{}.
+//   x' = xx*x + xy*y
+//   y' = yx*x + yy*y
+// It is the identity by default, so each argument is a departure from it: mat2{xy:1/2} is a pure
+// shear along x, mat2{xx:0,xy:1,yx:1,yy:0} swaps the axes.
+//   px=mat2{xy:1/2}>>sdbox{b:{x:1/2,y:1/4}}>>sdfill
+// The channel expressions read id rather than in, because a set{} param is built from the input
+// set{} itself sees, which the `in >>` has already made in's output; reading in there would apply
+// it a second time. The `in >>` (the same shape as sdflat) is what keeps z and w coming from the
+// point rather than from whatever the chain happens to be carrying, which is what makes the
+// function work when it is called on a point directly instead of being piped one.
+set mat2 = {in:id, xx:1, xy:0, yx:0, yy:1} ->
+  in >> set{x: id.x*xx + id.y*xy, y: id.x*yx + id.y*yy}
+
+// Rotate xy about the origin, in turns rather than radians: rot2{1/4} is a right angle and
+// rot2{[0:1]l8} spins once every 8 beats. The sense matches the rotate standard visual param, ie
+// the picture turns anticlockwise; what is being rotated is the coordinate going in, so the matrix
+// is the inverse of the picture's own rotation. The coordinates are isotropic (the frame is wider
+// than it is tall, but in the same units both ways), so this is a true rotation with no aspect
+// correction to do.
+//   px=rot2{[0:1]l8}>>tex{webcam{}}
+set rot2 = {in:id, a:0} ->
+  mat2{in, cos{6.28318*a}, sin{6.28318*a}, -sin{6.28318*a}, cos{6.28318*a}}

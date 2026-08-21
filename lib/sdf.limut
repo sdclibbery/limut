@@ -1,3 +1,5 @@
+include 'lib/visual.limut'
+
 // 2d signed distance fields for visualsynth px chains, converted into limut DSL from the GLSL on
 // Inigo Quilez's page: https://iquilezles.org/articles/distfunctions2d/
 //
@@ -84,12 +86,13 @@ set sdsegment = {in:id, ax:-1/2, ay:0, bx:1/2, by:0} ->
   sdsegment1{sdflat{in} - {x:ax, y:ay, w:0}, {x:bx-ax, y:by-ay, w:0}}
 
 // Equilateral triangle of radius r, pointing up. Mirror in x, then fold the remaining half about
-// the 60 degree line so that one edge stands for all three, then slide along that edge.
-// 1.7320508 is the square root of 3.
+// the 60 degree line so that one edge stands for all three, then slide along that edge. The fold is
+// a reflection, so it is a mat2 like any other 2x2. 1.7320508 is the square root of 3 and
+// 0.866025404 is half of it.
 set sdtriangle0 = {p, r} -> sdvec{abs{p.x} - r, p.y + r/1.7320508}
 set sdtriangle2 = {p, r} -> sdval{-length{sdvec{p.x - clamp{p.x, -2*r, 0}, p.y}} * sgn{p.y}}
 set sdtriangle1 = {q, r} -> sdtriangle2{
-  q.x + 1.7320508*q.y > 0 ?? sdvec{(q.x - 1.7320508*q.y)/2, (-1.7320508*q.x - q.y)/2} ?: q,
+  q.x + 1.7320508*q.y > 0 ?? mat2{q, 1/2, -0.866025404, -0.866025404, -1/2} ?: q,
   r
 }
 set sdtriangle = {in:id, r:1/2} -> sdtriangle1{sdtriangle0{sdflat{in}, r}, r}

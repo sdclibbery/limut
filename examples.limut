@@ -5640,8 +5640,8 @@ section drop {
 // w visualsynth, px=floor{[]n/3}>>tex{webcam}
 // w visualsynth, px=abs{sin{id*4-time}%1/4}*4>>mix{id>>dot{#824},[]n^2/3}
 // w visualsynth, px=set{id.vu}>>tex{webcam}
-// set rotate = {in,a} -> set{u:in.u*cos{a}-in.v*sin{a}, v:in.u*sin{a}+in.v*cos{a}}
-// w visualsynth, px=id>>rotate{time/16}>>tex{webcam}
+// w visualsynth, px=rot2{time/16}>>tex{webcam} // rot2 from lib/visual.limut, in turns
+// w visualsynth, px=mat2{xy:[0:1]l8}>>tex{webcam} // and the general 2x2: shear, skew, reflect
 // w visualsynth, px=tex{webcam}>>tex1d{{x}->{labh:x.r},size:16}
 // w visualsynth, px=tex{webcam}>>tex{webcam}
 // w visualsynth, px=id>>set{u:1/2}>>tex{webcam}
