@@ -64,16 +64,29 @@ define(function(require) {
   // program cache is keyed on that source, and every px param is seeded now (player/params.js).
   // Marked so >> knows it is the chain input and may withhold it from a call that can build a node
   // without it (see connectOp).
-  let implicitInputNode = () => {
+  // paramSeed marks the seed of an arg resolved as a chain of its own (a mul/add/set param), which
+  // >> seeds more cautiously than it seeds a chain — see connectOp. It sits on the seed rather than
+  // riding the eval options so it applies to exactly that one decision: a chain written out inside
+  // the arg (mul{id>>floor{1/8}}) makes its own seed and gets the ordinary rules.
+  let implicitInputNode = (paramSeed) => {
     let node = makeShaderNode((input, ctx) => input)
     node._implicitInput = true
+    if (paramSeed === true) { node._paramSeed = true }
     return node
   }
 
   // Wraps a non-node >> operand. Takes the raw unevaluated AST (mirroring connectOp's
   // gain{value:l} wrap) so the value becomes a per-frame animated uniform.
-  let constShaderNode = (rawAst) => {
-    return makeShaderNode((input, ctx) => ctx.addStatement(ctx.addUniform(rawAst)))
+  //
+  // Marked, as implicitInputNode is, because the mark is the only way to tell a value that is
+  // genuinely visual from one that only became a node because >> wrapped it. A caller resolving an
+  // arg as a chain of its own (draw/visualsynth/nodes.js) needs that distinction, and needs the
+  // evaluated value too — a param's channel keys are read off it — so carry that along as well.
+  let constShaderNode = (rawAst, value) => {
+    let node = makeShaderNode((input, ctx) => ctx.addStatement(ctx.addUniform(rawAst)))
+    node._constWrapped = true
+    node._constValue = value
+    return node
   }
 
   // A function of N operands, each {raw, value}, emitted as one statement: an operand that is

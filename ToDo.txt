@@ -17,12 +17,9 @@ dlead vel should control initial attack spike, lower velocity = less spike; and 
 get live working from OBS
  ??? Is it possible to configure OBS to delay its audio stream by a fixed amount, to compensate for the webcam delay??
 visual nodes...
- !index.html fbm docs still say "There is no loop construct in a px chain"; predates parallel{} and loop{}
  ?loop{} that accumulates something other than what it carries, eg loop{{i}->chain, n, sum:{v}->expr}
   parallel{} sums but doesn't chain, multitap{} chains and sums but unrolls, loop{} chains but carries one value
   so a fold that totals f(p) while carrying p has to ride the total in a spare channel, which any whole-vector op in the body wipes
- ?should mul/add/set params be px chains in their own right, as channels{} args are? mul{pxhash} would then mean mul{pxhash{id}}
-  but it changes what every existing param means
  rot2/mat2 lib function: a 2x2 matrix on xy for rotate/shear/skew, spelt out as four products in one set{} today
   and use in sdf if needed
  uodate sdf to use -x instead of 0-x
@@ -874,8 +871,7 @@ w visualsynth, px=channels{r:id^2, b:1-id}
 
 DONE, pxhash{} is a per pixel vector hash: random rgb keyed on the incoming value, keeping its
 alpha, with an optional seed (fixed field with none, animate it for moving noise). pxhashf{} is the
-same with a cheaper sine based hash, whose pattern varies by GPU driver. Note a param is not piped,
-so pxhash needs the value handing to it there (mul{pxhash{id}}, not mul{pxhash}):
+same with a cheaper sine based hash, whose pattern varies by GPU driver:
 w visualsynth, px=pxhash
 w visualsynth, px=floor{1/8}>>pxhash // blocky noise
 w visualsynth, px=pxhash{seed:[]l} // TV static
@@ -903,6 +899,19 @@ w visualsynth, px=loop{mul{2}>>fract, 4}
 w visualsynth, px=loop{{i}->mul{2}>>add{i/8}, 4}
 w visualsynth, px=series{{i}->add{x:i/8}, 4}>>tex{'favicon-32x32.png'}
 w visualsynth, px=parallel{{i}->noise2{scale:4*(2^i)}*(8/(2^i)), 4}/15 // ie fbm2
+
+DONE, a mul/add/set param is a px chain in its own right, as a channels{} arg is, so a call there
+that has not been given a value takes the incoming pixel:
+w visualsynth, px=tex{webcam{}}>>mul{pxhash} // and mul{sin}, mul{length}, mul{noise2{scale:8}}
+A param seeds by a stricter rule than a chain head does though: a call that WAS given a value keeps
+it, so mul{sin{time}} stays the animated scalar it reads as, where the chain rule would take the
+pixel and drop the time. Same for mul{floor{1/8}}, and for mul{rand} (an aggregator's positional
+args are a set to pick from rather than a value slot). Say it explicitly for the other reading:
+w visualsynth, px=tex{webcam{}}>>mul{floor{id,1/8}} // or mul{id>>floor{1/8}}
+So channels{floor{1/8}} floors the channel where mul{floor{1/8}} is a scalar: two rules, and that
+asymmetry is the price of an animated number in a param slot still reading as one. Channel masks
+and every other existing param generate byte identical shader source (checked by diffing the
+generated GLSL for a corpus of ~70 px expressions before and after).
 w visualsynth, px=multitap{{i}->noise2{scale:2^i}*(1/(i+1)), 3}/2
 One thing this needed: a repeat's index goes into its call context as the callsite id, since a px
 chain's uniforms are re-evaluated per frame against the renderer's single event, long after the

@@ -61,6 +61,30 @@ define(function(require) {
     return false
   }
 
+  // A param slot seeds more cautiously than a chain does. A chain hands the value to the call at its
+  // head and shifts that call's own args up (px=floor{1/8} is floor{id,1/8}); a param only fills a
+  // value the call was not given, so mul{sin{time}} stays the animated scalar it reads as, where
+  // mul{pxhash} stops being one flat colour for the whole quad. Two rules rather than one because a
+  // chain is written to be piped into and a param is not: mul{floor{1/8}} would otherwise silently
+  // drop the 1/8. Off unless the caller asks for it (paramChain in draw/visualsynth/nodes.js).
+  let paramSeedRefused = (el, r) => {
+    if (el._paramSeed !== true) { return false }
+    // A call given a value of its own keeps it, so an ordinary animated scalar param still reads as
+    // one: mul{sin{time}} is the sine of the time, where a chain head would take the pixel value and
+    // shift time along to sin's second argument, silently dropping it.
+    if (r.ownArgs !== undefined && r.ownArgs !== null && r.ownArgs.value !== undefined) { return true }
+    // An aggregator's positional args are a set to pick from rather than a value slot, so seeding
+    // one hands the value straight back: mul{rand} stays one random value for the whole quad, as
+    // it reads. In a chain the incoming value really is one of the set (px=length>>min{1/2}).
+    let target = vars.get(r._name)
+    return typeof target === 'function' && target._isAggregator === true
+  }
+
+  // Is this call already holding what it needs, so the chain seed should be withheld from it?
+  // The param rules are asked first: hasShaderNodeArg evaluates the callsite's args, which is worth
+  // avoiding when the answer is already known.
+  let seedNotWanted = (el, r, e,b, evalRecurse) => paramSeedRefused(el, r) || hasShaderNodeArg(r, e,b, evalRecurse)
+
   let connectOp = (l,r, e,b,evalRecurse) => {
     if (l === undefined) { return r }
     if (r === undefined) { return l }
@@ -90,7 +114,7 @@ define(function(require) {
       // forms still mean what they say (abs{sin{id*4}}, dot{tex{'a.png'},#3b1}). A call with no node
       // of its own (floor{[]n}, pixellate{40}, a bare swap) takes the incoming value as its first
       // argument, which is what makes `px=X` mean `px=id>>X`.
-      if (piping && el._implicitInput && hasShaderNodeArg(r, e,b, evalRecurse)) {
+      if (piping && el._implicitInput && seedNotWanted(el, r, e,b, evalRecurse)) {
         return callWithPipedArg(r, undefined, e,b, evalRecurse)
       }
       let v = callWithPipedArg(r, piping ? passthroughShaderNode() : el, e,b, evalRecurse)
@@ -107,15 +131,18 @@ define(function(require) {
       // head === r is the plain call above; a head that isn't a call (a number, or `id` itself in
       // `id/2+floor{1/8}`) wants nothing, which is what keeps that form adding a constant.
       if (head !== r && isPipeTarget(head)
-          && !(el._implicitInput && hasShaderNodeArg(head, e,b, evalRecurse))) {
+          && !(el._implicitInput && seedNotWanted(el, head, e,b, evalRecurse))) {
         let saved = head.args
         head.args = passthroughShaderNode()
         let v = evalRecurse(r, e,b)
         head.args = saved
         // A head that isn't shader aware (eg `px=rand+1/2`) gives back a plain value: wrap the raw
         // AST as a uniform, as the compose branch below would have done, rather than dropping out
-        // of the visual domain altogether.
-        return composeShaderNodes(el, isShaderNode(v) ? v : constShaderNode(r))
+        // of the visual domain altogether. Composing the seed onto it would only hide the wrap
+        // (see below), so hand the wrap straight back.
+        if (isShaderNode(v)) { return composeShaderNodes(el, v) }
+        if (el._implicitInput) { return constShaderNode(r, v) }
+        return composeShaderNodes(el, constShaderNode(r, v))
       }
     }
     let er = evalRecurse(r, e,b)
@@ -127,10 +154,15 @@ define(function(require) {
       // composing. Composing would wrap it in an ordinary node, and `id>>id>>abs{sin{id*4}}` (ie an
       // explicit id on a param that is seeded anyway) would then force the input into abs and drop
       // its argument. Only for a node: `id>>#f00` still wraps the colour into a uniform.
-      if (isShaderNode(el) && el._implicitInput && isShaderNode(er)) { return er }
+      // The seed emits no statement, so composing it onto the right hand side is identity: hand
+      // that side back as it stands instead. For a node this also stops `id>>id>>abs{sin{id*4}}`
+      // (ie an explicit id on a param that is seeded anyway) forcing the input into abs and dropping
+      // its argument; for a non-node it keeps the const wrap visible, which is how an arg resolved
+      // as a chain of its own tells a real visual from a value >> merely wrapped (see nodes.js).
+      if (isShaderNode(el) && el._implicitInput) { return isShaderNode(er) ? er : constShaderNode(r, er) }
       return composeShaderNodes(
-        isShaderNode(el) ? el : constShaderNode(l),
-        isShaderNode(er) ? er : constShaderNode(r)
+        isShaderNode(el) ? el : constShaderNode(l, el),
+        isShaderNode(er) ? er : constShaderNode(r, er)
       )
     }
     let composite = Object.create(getAudioNodeProto()) // Create object that satisfies instanceof AudioNode
@@ -211,6 +243,7 @@ define(function(require) {
   vars.all().gain = savedGain
 
   // Shader nodes: >> composes GLSL emitters instead of wiring audio
+  let {implicitInputNode} = require('draw/visualsynth/shader-node')
   let mockShaderNode = (tag) => ({isShaderNode: true, build: (input, ctx) => { ctx.statements.push(tag); return input }})
   let mockCtx = () => ({statements: [], uniforms: [], addStatement: function(x) { this.statements.push(x); return 'v1' }, addUniform: function(ast) { this.uniforms.push(ast); return 'u_vs0' }})
   let sn
@@ -227,6 +260,17 @@ define(function(require) {
   sctx = mockCtx()
   sn.build('v0', sctx)
   assert([rawAst], sctx.uniforms) // raw AST registered as uniform, not the evaluated 0.5
+  // The chain seed emits nothing, so composing it onto the right hand side is identity: the wrap is
+  // handed back as it stands rather than composed, which is what keeps its mark reachable. That mark,
+  // and the evaluated value it carries, is how an arg resolved as a chain of its own
+  // (draw/visualsynth/nodes.js) tells a real visual from a value >> merely wrapped, and reads a
+  // param's channel keys off it without evaluating it a second time. The source is unchanged.
+  sn = connectOp(implicitInputNode(), rawAst, {},0, v => v === rawAst ? 0.5 : v)
+  assert([true, 0.5], [sn._constWrapped, sn._constValue])
+  sctx = mockCtx()
+  sn.build('v0', sctx)
+  assert([rawAst], sctx.uniforms)
+  assert(['u_vs0'], sctx.statements)
 
   // Pipe: >> feeds the left side into a non-node call as its first argument
   let {varLookup} = require('expression/parse-var')
@@ -269,7 +313,6 @@ define(function(require) {
 
   // The implicit chain seed (the id node, at the head of every px chain) is offered to the call
   // rather than forced on it: a call already holding a visual node of its own keeps its arguments
-  let {implicitInputNode} = require('draw/visualsynth/shader-node')
   let calls
   vars.all().mockpipe = (args) => { calls.push(args); return mockShaderNode('b') }
   vars.all().mockpipe.isVarFunction = true
@@ -299,6 +342,37 @@ define(function(require) {
   lambda.isUserFunction = true
   connectOp(implicitInputNode(), mockLookup({value: lambda}), {},0, evalParamFrame)
   assert(true, isShaderNode(calls[0].value)) // Piped: a lambda is not a node, so the input is wanted
+
+  // A param seed (an arg of mul/add/set, resolved as a chain of its own) seeds more cautiously than
+  // a chain does: a call that was given a value of its own keeps it, so `mul{sin{time}}` stays the
+  // animated scalar it reads as rather than becoming the sine of the pixel with time dropped.
+  calls = []
+  lk = mockLookup({value:3})
+  sn = connectOp(implicitInputNode(true), lk, {},0, evalParamFrame)
+  assert(true, isShaderNode(sn))
+  assert([3, undefined], [calls[0].value, calls[0].value1]) // Not piped, and its args don't shift
+  assert(undefined, lk.args)
+
+  calls = [] // A named arg leaves the value slot free, so `mul{pxhash{seed:2}}` is still seeded
+  lk = mockLookup({seed:2})
+  connectOp(implicitInputNode(true), lk, {},0, evalParamFrame)
+  assert([true, 2], [isShaderNode(calls[0].value), calls[0].seed])
+
+  calls = [] // And a bare call is seeded, which is the whole point: `mul{pxhash}` is per pixel
+  connectOp(implicitInputNode(true), mockLookup({}), {},0, evalParamFrame)
+  assert(true, isShaderNode(calls[0].value))
+
+  // An aggregator's positional args are a set to pick from rather than a value slot, so seeding one
+  // would just hand the value straight back: `mul{rand}` stays one value for the whole quad. Only
+  // in a param slot — in a chain the incoming value really is one of the set (px=length>>min{1/2}).
+  vars.all().mockpipe._isAggregator = true
+  calls = []
+  connectOp(implicitInputNode(true), mockLookup({}), {},0, evalParamFrame)
+  assert(undefined, calls[0].value) // Not seeded
+  calls = []
+  connectOp(implicitInputNode(), mockLookup({}), {},0, evalParamFrame)
+  assert(true, isShaderNode(calls[0].value)) // A chain seed still is
+  delete vars.all().mockpipe._isAggregator
 
   // >> binds looser than arithmetic, so `px=floor{[]n}+1/2` arrives here as a whole expression. The
   // call at its head takes the incoming value just as it would in `floor{[]n}>>add{1/2}`.

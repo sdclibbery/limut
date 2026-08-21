@@ -58,7 +58,10 @@ define(function(require) {
     let nodes = new Map()
     let resolve = (ast) => {
       if (!evalled.has(ast)) {
-        let value = (typeof ast === 'object' && ast !== null) ? ast : evalRecurse(ast, e, b)
+        // An object is already the value: a colour or map literal (whose keys are the mask, read
+        // with no evaluation at all) or a node handed straight in. Anything else is an expression,
+        // and so a px chain in its own right.
+        let value = (typeof ast === 'object' && ast !== null) ? ast : paramChain(ast, e, b, evalRecurse, true)
         evalled.set(ast, value)
         if (isShaderNode(value)) { nodes.set(ast, value) }
       }
@@ -166,6 +169,22 @@ define(function(require) {
     return er
   }
 
+  // Resolve an arg as a px chain in its own right: hand it to >> from the chain seed, exactly as
+  // player/params.js seeds a px param, so every rule px already has holds inside the arg too — a
+  // bare call or a user defined function takes the value, `floor{1/8}+1/2` feeds its head, and a
+  // plain value stays a plain value. Gives back the node, or, for an arg that was not visual at
+  // all, the value it evaluated to: >> wraps such a value into a uniform node, and the mark on that
+  // wrapper (shader-node.js) is what tells the two apart.
+  //
+  // paramSlot marks the seed for the stricter rule >> uses on a mul/add/set param, where a call that
+  // was given a value of its own keeps it (see connectOp.js); a channels{} arg is a chain like any
+  // other. The mark is on the seed, so a chain written out inside the arg is unaffected by it.
+  let paramChain = (ast, e, b, evalRecurse, paramSlot) => {
+    let v = connectOp(implicitInputNode(paramSlot), ast, e, b, unmemoised(evalRecurse))
+    if (!isShaderNode(v)) { return v } // A piped call that was not shader aware at all (mul{time})
+    return v._constWrapped === true ? v._constValue : v
+  }
+
   // Each arg is a px chain in its own right, fed that one channel: it is resolved by handing it to
   // >> from the chain seed, exactly as player/params.js seeds a px param, so every rule px already
   // has holds inside the arg too — `sin{id*2}` keeps its argument, a bare `sin` or a user defined
@@ -174,7 +193,7 @@ define(function(require) {
   // which the build then treats as a uniform so it still animates.
   let channelChain = (ast, e, b, evalRecurse) => {
     if (ast === undefined) { return undefined }
-    let v = connectOp(implicitInputNode(), ast, e, b, unmemoised(evalRecurse))
+    let v = paramChain(ast, e, b, evalRecurse)
     return isShaderNode(v) ? v : undefined
   }
 
@@ -495,8 +514,7 @@ define(function(require) {
   assert(pxSource('channels{g:sin{id}}'), pxSource('channels{value1:sin{id}}')) // Same slot either way
 
   src = pxSource('channels{1/2}') // Not visual: the raw expression becomes a uniform, so it still animates
-  assert(true, /vec4 v\d+ = u_vs0;/.test(src))
-  assert(true, /vec4\(\(v\d+\)\.x, \(v0\)\.y, \(v0\)\.z, \(v0\)\.w\)/.test(src))
+  assert(true, /vec4\(u_vs0\.x, \(v0\)\.y, \(v0\)\.z, \(v0\)\.w\)/.test(src)) // Read straight off the uniform
   assert(false, src.includes('sin(')) // Nothing else compiled in
 
   assert(pxSource('set{}'), pxSource('channels{}')) // No args at all: straight through, as set{} is
@@ -563,17 +581,32 @@ define(function(require) {
   assert(1, declarations(src, 'l_pxhash'))
   assert(1, declarations(src, 'l_pxhashf'))
 
-  // As a param it must be given the value explicitly (params are not piped, unlike a chain), so
-  // mul{pxhash{id}} is a per pixel multiply where the bare mul{pxhash} is just a constant
-  src = pxSource('mul{pxhash{id}}')
-  assert(true, src.includes('vec4 v1 = vec4(l_pxhash(v0, vec4(0.0)).rgb, (v0).a);') && src.includes('vec4 v2 = v0 * (v1);'))
-  assert(false, pxSource('mul{pxhash}').includes('l_pxhash')) // Evaluates as a scalar: one value for the whole quad
+  // A param is a px chain in its own right, so a call that was not given a value of its own takes
+  // the incoming one: the bare mul{pxhash} is the per pixel multiply, and so are the two spellings
+  // that had to say so explicitly. A named arg leaves the value slot free, so seeding it is right.
+  assert(true, pxSource('mul{pxhash{id}}').includes('vec4 v1 = vec4(l_pxhash(v0, vec4(0.0)).rgb, (v0).a);'))
+  assert(true, pxSource('mul{pxhash}').includes('l_pxhash('))
+  assert(true, pxSource('mul{pxhash{seed:2}}').includes('l_pxhash('))
+  assert(true, pxSource('mul{id>>pxhash}').includes('l_pxhash('))
+  assert(true, pxSource('mul{sin}').includes('sin(')) // Any shader aware call, not just the node ones
+  assert(true, pxSource('mul{id>>floor{1/8}}').includes('floor('))
+  assert(true, pxSource('mul{floor{id,1/8}}').includes('floor('))
+
+  // But a call that was given a value keeps it, so an ordinary animated scalar param still reads as
+  // one: sin{time} is the sine of the time, not of the pixel. That is where a param slot parts
+  // company with a chain head, which would take the value and shift time along to sin's second arg.
+  src = pxSource('mul{sin{time}}')
+  assert(false, src.includes('sin(')) // Evaluated, and the raw AST registered as a uniform
+  assert(true, src.includes('vec4 v1 = v0 * u_vs0;'))
+  assert(pxSource('mul{floor{1/8}}'), src) // Same for anything else with its value slot filled
+  assert(pxSource('mul{rand}'), src) // And a call that isn't shader aware at all
 
   // A channels{} arg is a px chain in its own right, so a bare pxhash does take the channel there
   src = pxSource('channels{a:pxhash}')
   assert(true, src.includes('vec4 v1 = vec4((v0).w);') && src.includes('l_pxhash(v2, vec4(0.0))'))
 
   assert(pxSource('pxhash{seed:2}'), pxSource('pxhash{seed:2}')) // Deterministic: the program cache is keyed on the source
+
 
   console.log('Visual synth nodes tests complete')
   }
