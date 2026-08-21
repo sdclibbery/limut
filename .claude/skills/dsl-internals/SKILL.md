@@ -23,6 +23,32 @@ Defined in `expression/operators.js`. Lower number = tighter binding (evaluated 
 
 So `(1+osc.saw>>gain)*0.003` parses as `((1+(osc.saw))>>gain)*0.003` — `.` first, then `+`, then `>>`, then `*`.
 
+## Unary minus
+
+There **is** one, so write `-x` rather than `0-x` (`lib/sdf.limut` was rewritten off the latter). It
+is not a real prefix operator: where a value is expected (start of an expression, of a `{}` argument,
+or just after another operator) `parse-expression.js` pushes `-1` and `*` into the operator list, so
+`-x` is `-1 * x` and binds at `*`'s precedence 4. Being at 4 rather than tighter than everything is
+almost never visible, since `.` `|` `^` all bind tighter and so stay inside the negation.
+
+The exception is when the `-` is followed by a **digit**: `parse-expression.js:136` skips the unary
+branch and lets `parse-number.js` absorb the sign into the literal (it also absorbs a following `/`,
+so `-1/2` is the fraction -0.5, not `-1` divided by 2). That makes `^` the one place the two spellings
+disagree, because the sign then sits inside the power's base:
+
+| | |
+|---|---|
+| `-2^2` = **4** | sign absorbed into the literal: `(-2)^2` |
+| `-two^2` = **-4** | unary branch: `-1 * (two^2)` |
+| `0-2^2` = **-4** | plain subtraction |
+
+Only when a value is expected: with a value already parsed, `-` is matched as the binary operator
+first, so `a-2` is a subtraction and only `a - -2` reaches the number literal.
+
+On the shader path a negation is a uniform and a `*` statement like any other binary op
+(`shaderNodeOps`, `binaryShaderNode`) — GLSL's own unary `-` is never emitted, so `-x` and `0-x` cost
+exactly the same there.
+
 ## `>>` as a pipe
 
 `>>` means "feed the left into the right": a wire when the right side is a node function, an argument otherwise. `expression/connectOp.js` decides from the **unevaluated** RHS, before evaluating it — so there is no double evaluation and no memoisation trap (`evalParamValueWithMemoisation` would hand back the un-piped result for a second call at the same beat).

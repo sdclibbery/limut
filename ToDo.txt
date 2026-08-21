@@ -17,8 +17,7 @@ dlead vel should control initial attack spike, lower velocity = less spike; and 
 get live working from OBS
  ??? Is it possible to configure OBS to delay its audio stream by a fixed amount, to compensate for the webcam delay??
 visual nodes...
- rot2/mat2 lib function: a 2x2 matrix on xy for rotate/shear/skew, spelt out as four products in one set{} today
-  and use in sdf if needed
+ rot2/mat2 lib function: a 2x2 matrix on xy for rotate/shear/skew, spelt out as four products in one set{} today, and use in sdf if needed
  update sdf to use -x instead of 0-x
  Want to be able to"let" an intermediate pipeline value, and refer to it later; Eg px=sdstar>>let{'foo'}>>tex{webcam}>>mul{foo}
  kal as a function

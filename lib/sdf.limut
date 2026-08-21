@@ -62,7 +62,7 @@ set sdabsx = {p} -> sdvec{abs{p.x}, p.y}
 
 // The shared ending of the regular polygons: slide along the flat edge (half width hx, at height
 // ry) and take the distance from wherever on it we end up
-set sdtrim = {p, hx, ry} -> sdlensy{sdvec{p.x - clamp{p.x, 0-hx, hx}, p.y - ry}}
+set sdtrim = {p, hx, ry} -> sdlensy{sdvec{p.x - clamp{p.x, -hx, hx}, p.y - ry}}
 
 //// Shapes
 // All of them take the incoming px value as their first argument, so they pipe like any other
@@ -87,9 +87,9 @@ set sdsegment = {in:id, ax:-1/2, ay:0, bx:1/2, by:0} ->
 // the 60 degree line so that one edge stands for all three, then slide along that edge.
 // 1.7320508 is the square root of 3.
 set sdtriangle0 = {p, r} -> sdvec{abs{p.x} - r, p.y + r/1.7320508}
-set sdtriangle2 = {p, r} -> sdval{0 - length{sdvec{p.x - clamp{p.x, 0-2*r, 0}, p.y}} * sgn{p.y}}
+set sdtriangle2 = {p, r} -> sdval{-length{sdvec{p.x - clamp{p.x, -2*r, 0}, p.y}} * sgn{p.y}}
 set sdtriangle1 = {q, r} -> sdtriangle2{
-  q.x + 1.7320508*q.y > 0 ?? sdvec{(q.x - 1.7320508*q.y)/2, (0 - 1.7320508*q.x - q.y)/2} ?: q,
+  q.x + 1.7320508*q.y > 0 ?? sdvec{(q.x - 1.7320508*q.y)/2, (-1.7320508*q.x - q.y)/2} ?: q,
   r
 }
 set sdtriangle = {in:id, r:1/2} -> sdtriangle1{sdtriangle0{sdflat{in}, r}, r}
@@ -114,7 +114,7 @@ set sdpentagon = {in:id, r:1/2} -> sdtrim{sdfold{
 // plain numbers their sines and cosines are worked out once rather than per pixel.
 set sdstarbn = {l, bn} -> sdvec{l*cos{bn}, l*abs{sin{bn}}}
 set sdstar0 = {p, an} -> sdstarbn{length{p}, (atan{p.x, p.y} % (2*an)) - an}
-set sdstar2 = {p, ecs, hi} -> sdlensx{p + ecs*clamp{0 - dot{p, ecs}, 0, hi}}
+set sdstar2 = {p, ecs, hi} -> sdlensx{p + ecs*clamp{-dot{p, ecs}, 0, hi}}
 set sdstar1 = {p, r, an, en} -> sdstar2{
   sdstar0{p, an} - {x:r*cos{an}, y:r*sin{an}, w:0},
   {x:cos{en}, y:sin{en}, w:0},
@@ -138,7 +138,7 @@ set sdheart = {in:id, r:1/2} -> sdheart1{sdabsx{sdflat{in}}*(3/5)/r + {y:3/5, w:
 // Mirror into one quadrant and then swap x and y so that only one arm has to be measured.
 set sdcross3 = {w, k, r} -> sdval{sgn{k} * length{max{w, 0}} + r}
 set sdcross2 = {p, q, thick, r} -> sdcross3{
-  max{q.y, q.x} > 0 ?? q ?: sdvec{thick - p.x, 0 - max{q.y, q.x}},
+  max{q.y, q.x} > 0 ?? q ?: sdvec{thick - p.x, -max{q.y, q.x}},
   max{q.y, q.x},
   r
 }
@@ -173,7 +173,7 @@ set sdround = {d, r:1/16} -> d - r
 set sdannular = {d, w:1/32} -> abs{d} - w
 
 // Cut shape b out of shape a
-set sdsub = {a, b} -> max{a, 0-b}
+set sdsub = {a, b} -> max{a, -b}
 
 // Union with a smooth blend of width k, so the two shapes flow into each other rather than
 // crossing. The distance is only approximate near the join, but it looks like liquid.
@@ -187,18 +187,18 @@ set sdblend = {a, b, k:1/8} ->
 // piped one (sdcircle{}>>sdfill). soft is the width of the antialiasing ramp.
 
 // Fill the inside with col, the outside with bg
-set sdfill = {d, col:#fff, bg:#000, soft:0.01} -> mix{col, bg, smoothstep{d, 0-soft, soft}}
+set sdfill = {d, col:#fff, bg:#000, soft:0.01} -> mix{col, bg, smoothstep{d, -soft, soft}}
 
 // Draw the edge only, w either side of it
 set sdstroke = {d, w:0.01, col:#fff, bg:#000, soft:0.01} ->
-  mix{col, bg, smoothstep{abs{d} - w, 0-soft, soft}}
+  mix{col, bg, smoothstep{abs{d} - w, -soft, soft}}
 
 // Inigo Quilez's own way of showing a distance field: one colour inside and another outside, both
 // fading with distance and banded with concentric stripes, and the zero isoline picked out in
 // white. Worth reaching for while building a shape, since it shows the whole field rather than
 // just where it changes sign. k is how fast the fade is, n how many bands.
 set sdbands = {d, outside:#e93, inside:#adf, k:6, n:150, soft:0.01} -> mix{
-  mix{outside, inside, sdstep{0-d}} * (1 - exp{0 - k*abs{d}}) * (0.8 + 0.2*cos{n*d}),
+  mix{outside, inside, sdstep{-d}} * (1 - exp{-k*abs{d}}) * (0.8 + 0.2*cos{n*d}),
   #fff,
   1 - smoothstep{abs{d}, 0, soft}
 }
