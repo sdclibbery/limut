@@ -10,8 +10,7 @@
 // All of them take the incoming px value as their first argument, so they pipe:
 //   v1 visualsynth, px=noise2{scale:16}
 //   v1 visualsynth, px=fbm2>>tex1d{{x}->{labh:x}}
-// Note two plain user function calls back to back (px=noise2>>colourise) evaluates the head as a
-// scalar; put a node function or an explicit id>> between them.
+//   v1 visualsynth, px=noise2>>cospal{#05a}
 
 //// Shared machinery
 // Only the channels a noise is over may vary: the rest are forced flat so a lattice point hashes

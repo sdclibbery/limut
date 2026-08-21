@@ -156,8 +156,8 @@ and `px=noise2>>cospal{#05a}` byte-identical to both the `id>>` and the nested s
 like any other segment. What is still real is the **piped vs direct-call** difference for a body
 using `mix{}`'s implicit dry: `px=monochrome{pixellate{id,40},1/2}` differs from the piped form
 (163503 bytes over a 756×469 canvas), because a direct call takes its dry from `v0` rather than from
-the incoming value — that is the `mix{}` rule above, not a piping failure. The same stale warning is
-still in the user docs at `index.html:1515` and in `lib/visual.limut`'s header comment.
+the incoming value — that is the `mix{}` rule above, not a piping failure. The stale warning has been
+removed from the user docs (`index.html`'s Visual Library section and `lib/visual.limut`'s header).
 
 A param slot seeds by a stricter rule than a chain head (see the `>>` seam), so a call that was given a value of its own is left alone there: `mul{floor{1/8}}` is still a scalar, and wanting the pixel in it means saying so (`mul{floor{id,1/8}}`, or `mul{id>>floor{1/8}}`). That asymmetry is deliberate and was the user's call — a param that reads as an animated number must stay one — but it is two rules rather than one, and the difference shows up in `channels{floor{1/8}}` flooring the channel where `mul{floor{1/8}}` does not.
 
