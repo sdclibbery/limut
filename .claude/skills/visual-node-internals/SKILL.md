@@ -144,7 +144,7 @@ Runs **once per visual event** (via `sprite.create`, `draw/sprite.js`). Flow: `e
 
 ## Known limitations (PoC scope, deliberate)
 
-`pal{}`; smooth noise/perlin nodes (`pxhash` is a per-pixel hash, not value noise); chords inside px args (placeholders keep them from crashing, results unspecified); no program-cache eviction (matches shadertoy). Only a plain var-lookup callsite is piped — or the head of an arithmetic expression or of a nested chain, which reaches inside a parenthesised one too (`id >> (floor{1/8}*2)`) — but never a lambda literal. A function that ignores its input and builds a node from scalar args (`set stripes = {n} -> tex1d{{x}->x*n}`) gets the seed shifted into its first arg — same as writing `id>>stripes{8}` explicitly.
+Smooth noise/perlin nodes (`pxhash` is a per-pixel hash, not value noise); chords inside px args (placeholders keep them from crashing, results unspecified); no program-cache eviction (matches shadertoy). Only a plain var-lookup callsite is piped — or the head of an arithmetic expression or of a nested chain, which reaches inside a parenthesised one too (`id >> (floor{1/8}*2)`) — but never a lambda literal. A function that ignores its input and builds a node from scalar args (`set stripes = {n} -> tex1d{{x}->x*n}`) gets the seed shifted into its first arg — same as writing `id>>stripes{8}` explicitly.
 
 **Plain calls back to back do pipe** — the older note here claiming a second plain call straight
 after another one (`px=pixellate{40}>>monochrome{1/2}`, no node function or operator in between)

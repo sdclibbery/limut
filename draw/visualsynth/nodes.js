@@ -269,6 +269,49 @@ define(function(require) {
   addNodeFunction('tex2d', tex2d)
   addNodeFunction('tex3d', tex3d)
 
+  // A colour ramp from a list of stops: the incoming value picks a point along them, evenly spaced
+  // over 0 to 1 and mixed linearly between, so px=sdstar>>pal{0,#408,red,1} runs black, purple, red,
+  // white. It reads one channel (x, ie r) of the incoming value, as tex1d does, so a distance or a
+  // noise field — a single number splatted across all four — pipes straight in.
+  //
+  // Only the number of stops is structural: it is baked into the source as a literal, so different
+  // stop counts are different programs. Every stop is a uniform, which is the difference from tex1d:
+  // nothing is frozen into a texture, so the colours stay live and can be animated.
+  //
+  // Each positional arg is a stop: value, value1, value2, … Each is a px chain in its own right,
+  // resolved the way a mul/add/set param is, so a stop may be a node (pal{0,tex{'mask.png'},1}) while
+  // a call with a value of its own (pal{0,rand,1}) keeps it rather than being handed the pixel.
+  let palStops = (args, e, b, evalRecurse) => {
+    let stops = []
+    for (let i = 0; args['value'+(i||'')] !== undefined; i++) {
+      let ast = args['value'+(i||'')]
+      // A colour or map literal is already the value; anything else is an expression to resolve
+      let value = (typeof ast === 'object' && ast !== null) ? ast : paramChain(ast, e, b, evalRecurse, true)
+      stops.push({ ast: ast, node: isShaderNode(value) ? value : undefined })
+    }
+    return stops
+  }
+  let pal = (args, e, b, state, evalRecurse) => {
+    let stops = palStops(args, e, b, evalRecurse)
+    return makeShaderNode((input, ctx) => {
+      // A node stop builds from the same input pal itself sees; anything else becomes a uniform
+      // from its raw AST, so it is re-evaluated per frame
+      let stopExpr = (s) => s.node !== undefined ? `(${s.node.build(input, ctx)})` : ctx.addUniform(s.ast)
+      if (stops.length === 0) { return ctx.addStatement(input) } // No stops: nothing to look up
+      if (stops.length === 1) { return ctx.addStatement(stopExpr(stops[0])) } // One stop: flat colour
+      let n = stops.length
+      // Stop k fades in over t running k-1 to k, so with t spanning 0 to n-1 each segment is its own
+      // mix and the ends clamp flat
+      let t = ctx.addStatement(`vec4(clamp((${input}).x, 0.0, 1.0) * ${(n-1).toFixed(1)})`)
+      let out = stopExpr(stops[0])
+      for (let k = 1; k < n; k++) {
+        out = ctx.addStatement(`mix(${out}, ${stopExpr(stops[k])}, clamp(${t} - ${(k-1).toFixed(1)}, 0.0, 1.0))`)
+      }
+      return out
+    })
+  }
+  addNodeFunction('pal', pal)
+
   // Texture source for tex{}: webcam{'label'} or webcam{2}, with optional width/height
   let webcamSource = (args, e, b) => {
     let device = args.value !== undefined ? args.value : args.device
@@ -464,6 +507,52 @@ define(function(require) {
   assert(buildLut(8), buildLut(8))
   assert(true, buildLut(8) !== buildLut(16))
 
+  // pal{}: a ramp of evenly spaced colour stops. Only the count is structural — it is baked in as
+  // the scale on t and the offset on each segment — so the stops themselves stay uniforms and can
+  // animate, which is the difference from a lut.
+  ctx = mockCtx()
+  assert('v2', node(pal, {value:0, value1:1}).build('v0', ctx))
+  assert([
+    'vec4(clamp((v0).x, 0.0, 1.0) * 1.0)',
+    'mix(u_vs0, u_vs1, clamp(v1 - 0.0, 0.0, 1.0))',
+  ], ctx.statements)
+  assert([0, 1], ctx.uniforms) // Each stop keeps its own raw AST, so it is re-evalled per frame
+
+  // Four stops: three segments, t spanning 0 to 3, each stop faded in over one of them
+  ctx = mockCtx()
+  node(pal, {value:0, value1:{r:1}, value2:{g:1}, value3:1}).build('v0', ctx)
+  assert([
+    'vec4(clamp((v0).x, 0.0, 1.0) * 3.0)',
+    'mix(u_vs0, u_vs1, clamp(v1 - 0.0, 0.0, 1.0))',
+    'mix(v2, u_vs2, clamp(v1 - 1.0, 0.0, 1.0))',
+    'mix(v3, u_vs3, clamp(v1 - 2.0, 0.0, 1.0))',
+  ], ctx.statements)
+
+  // One stop is a flat colour, and no stops at all passes the value through: neither needs a t
+  ctx = mockCtx()
+  assert('v1', node(pal, {value:{r:1}}).build('v0', ctx))
+  assert(['u_vs0'], ctx.statements)
+  ctx = mockCtx()
+  assert('v1', node(pal, {}).build('v0', ctx))
+  assert(['v0'], ctx.statements)
+
+  // A stop may be a node, and it builds from the same input pal itself sees rather than chaining
+  ctx = mockCtx()
+  node(pal, {value:0, value1:swapUV(), value2:1}).build('v0', ctx)
+  assert([
+    'vec4(clamp((v0).x, 0.0, 1.0) * 2.0)',
+    'v0', // The pass-through the swizzle reads: the node stop sees v0, the same input pal does
+    'vec4((v2).y, (v2).x, (v2).z, (v2).w)',
+    'mix(u_vs0, (v3), clamp(v1 - 0.0, 0.0, 1.0))',
+    'mix(v4, u_vs1, clamp(v1 - 1.0, 0.0, 1.0))',
+  ], ctx.statements)
+  assert([0, 1], ctx.uniforms)
+
+  // Deterministic, and a different stop count is a different program: the cache is keyed on it
+  let buildPal = (args) => { let c = mockCtx(); node(pal, args).build('v0', c); return c.statements.join('') }
+  assert(buildPal({value:0, value1:{r:1}, value2:1}), buildPal({value:0, value1:{r:1}, value2:1}))
+  assert(true, buildPal({value:0, value1:1}) !== buildPal({value:0, value1:{r:1}, value2:1}))
+
   // End to end: an arithmetic expression compiles to the same shader as the >> form it reads like,
   // because the call at its head takes the incoming pixel value (expressionHead in connectOp.js).
   // Both spellings are parsed and evalled here exactly as a px param is, seed and all.
@@ -606,6 +695,21 @@ define(function(require) {
   assert(true, src.includes('vec4 v1 = vec4((v0).w);') && src.includes('l_pxhash(v2, vec4(0.0))'))
 
   assert(pxSource('pxhash{seed:2}'), pxSource('pxhash{seed:2}')) // Deterministic: the program cache is keyed on the source
+
+  // pal{} end to end. It is a node function, so >> composes it and the ramp reads the value coming
+  // down the chain rather than an argument of its own.
+  src = pxSource('pal{0,#408,red,1}')
+  assert(true, src.includes('vec4 v1 = vec4(clamp((v0).x, 0.0, 1.0) * 3.0);'))
+  assert(3, (src.match(/mix\(/g) || []).length) // One segment per gap between stops
+  assert(4, (src.match(/uniform vec4 u_vs\d+;/g) || []).length) // One uniform per stop, so they animate
+  // Which is what makes two ramps of the same length share a program: only the count is in the source
+  assert(pxSource('pal{#f00,#00f}'), pxSource('pal{#0f0,#ff0}'))
+  assert(true, pxSource('pal{#f00,#00f}') !== pxSource('pal{#f00,#0f0,#00f}'))
+  // Piped, the ramp reads what the chain gives it, not the raw coordinate
+  src = pxSource('sin>>pal{0,1}')
+  assert(false, src.includes('clamp((v0).x'))
+  assert(true, /clamp\(\(v\d+\)\.x, 0\.0, 1\.0\) \* 1\.0/.test(src))
+
 
 
   console.log('Visual synth nodes tests complete')
