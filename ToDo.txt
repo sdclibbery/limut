@@ -12,20 +12,16 @@ Hub75 display
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-dlead vel should control initial attack spike, lower velocity = less spike; and also tie drive to vel
 !get live working from OBS
  ??? Is it possible to configure OBS to delay its audio stream by a fixed amount, to compensate for the webcam delay??
 !superbass weird on keyboard on electron, not on firefox, superosc missing on most notes?
 visual nodes...
- palette function where you just give it a list of colours
-  !!! Claude needs to finish its session
- Need to be able to switch shader parts on a timevar; eg px=fbm2>>[cospal,pal{0,red,1}]t4@f
-  I guess the best way then is to represent the timevar in the shader?
- Want to be able to "let" an intermediate pipeline value, and refer to it later; Eg px=sdstar>>let{'foo'}>>tex{webcam}>>mul{foo}
  kal as a function
+ Want to be able to "let" an intermediate pipeline value, and refer to it later; Eg px=sdstar>>let{'foo'}>>tex{webcam}>>mul{foo}
  ?how come there isn't a turb3?
  ?why does fbm3 (with time in z) move in a jerky way? It seems to move to a new configuration, then pause there etc. Is that expected? eg px=set{z:time/16}>>fbm3
- visual lib functions for old style visual params (monochrome, pixellate, rotate, mirror, vhs etc etc)
+ ?Want to be able to switch shader parts on a timevar; eg px=fbm2>>[cospal,pal{0,red,1}]t4@f - cant do this with audio nodes; how important is it?
+ visual lib functions for old style visual params (monochrome, pixellate, rotate, mirror, vhs etc etc) - vhs needs split into uv and rgb parts...
  voronoi
  ? {tex,#124} should do split/join like in audio chain??
  ?bitwise ops
