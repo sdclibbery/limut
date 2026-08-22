@@ -16,21 +16,24 @@ Hub75 display
  ??? Is it possible to configure OBS to delay its audio stream by a fixed amount, to compensate for the webcam delay??
 !superbass weird on keyboard on electron, not on firefox, superosc missing on most notes?
 visual nodes...
- kal as a function
  Want to be able to "let" an intermediate pipeline value, and refer to it later; Eg px=sdstar>>let{'foo'}>>tex{webcam}>>mul{foo}
+  Should work for audio chains too; eg fx=let{'foo'}>>reverb>>pan{'foo'}
+  And should be able to let a completely separete chain or (scalar value); eg px=fmb2>>let{'wc',[]n^2}>>cospal{wc,wc} or px=fmb2>>let{'wc',uv>>tex{webcam}}>>cospal{wc,wc}
+ kal as a function
+ something undefined should render flat black not flat white
  ?how come there isn't a turb3?
  ?why does fbm3 (with time in z) move in a jerky way? It seems to move to a new configuration, then pause there etc. Is that expected? eg px=set{z:time/16}>>fbm3
- ?Want to be able to switch shader parts on a timevar; eg px=fbm2>>[cospal,pal{0,red,1}]t4@f - cant do this with audio nodes; how important is it?
- visual lib functions for old style visual params (monochrome, pixellate, rotate, mirror, vhs etc etc) - vhs needs split into uv and rgb parts...
  voronoi
- ? {tex,#124} should do split/join like in audio chain??
  ?bitwise ops
  ?render buffers to generate read from, eg px=tex{buffer{mul{1.01}>>webcam>>set{#...a},clear:false}} for temporal zoom-blur??
- ?hsl etc conversions?
+ ?visual lib functions for old style visual params (monochrome, pixellate, rotate, mirror, vhs etc etc) - vhs needs split into uv and rgb parts...
  3d stuff?
  ?support for piecewise as shader code not textures?
  ?no time uniform in a generated px shader, so `time` in a chain costs a JS param eval per frame
- hsv as an operation on the incoming pixel - set{h:..}, add{h:..}, channels{h:..} and in.h reads - which needs rgb2hsv/hsv2rgb GLSL helpers
+ ?hsv as an operation on the incoming pixel - set{h:..}, add{h:..}, channels{h:..} and in.h reads - which needs rgb2hsv/hsv2rgb GLSL helpers
+ ?hsl etc conversions?
+ ???Want to be able to switch shader parts on a timevar; eg px=fbm2>>[cospal,pal{0,red,1}]t4@f - cant do this with audio nodes; how important is it really?
+ ???{tex,#124} should do split/join like in audio chain??
 ?set bpm can have target time? eg set bpm={140,by;1000}
 grain should have offset param, would allow more interesting effects; granular delays etc
 Multiband compressor
@@ -894,18 +897,26 @@ w visualsynth, px=loop{{i}->mul{2}>>add{i/8}, 4}
 w visualsynth, px=series{{i}->add{x:i/8}, 4}>>tex{'favicon-32x32.png'}
 w visualsynth, px=parallel{{i}->noise2{scale:4*(2^i)}*(8/(2^i)), 4}/15 // ie fbm2
 
-DONE, loop{} takes a sum: fold alongside the value it carries. The chain carries one value as
-before, but sum: is totalled over the iterations and that total is what the loop hands on - the one
+DONE, loop{} takes a map:/fold: pair, a generic fold running alongside the value it carries. The
+chain carries one value as before, but map: turns every value the loop passes through into a term,
+fold: combines them (a sum when it is left off) and the total is what the loop hands on - the one
 thing the carried value cannot do for itself, since it is a single vec4 and any whole-vector op in
-the body wipes out anything riding in a spare channel of it. The sum is taken BEFORE each step, so
-its first term is the value as it arrives and it lines up with parallel{} term for term:
-w visualsynth, px=loop{mul{2}, 4, sum:{v,i}->noise2{v}*(8/(2^i))}/15 // pixel identical to fbm2
-w visualsynth, px=loop{mul{2}, 4, sum:{v}->v*v}/4
-with the noise body written into the shader once rather than four times. Its function takes the
-value first and the index second, unlike the body's: the body IS the chain, so its value flows in
-implicitly, where the sum is an expression of that value and wants to name it. Either arg may be
-left off, and anything that is not a function is a chain fed the carried value, as the body is.
-min:/max: folds would be the same mechanism with another identity, if they are ever wanted.
+the body wipes out anything riding in a spare channel of it. The total is SEEDED WITH THE FIRST
+TERM, the value as it arrives before any step, so count steps give count+1 terms, one at every value
+the loop visits: nothing is dead (the old sum: took its term before the body, leaving the last body
+application unused), there is no before/after to pick, and there is no identity to supply since a
+fold over a non-empty run of terms needs none.
+w visualsynth, px=loop{mul{2}, 3, map:{v,i}->noise2{v}*(8/(2^i))}/15 // pixel identical to fbm2
+w visualsynth, px=loop{mul{2}, 4, map:{v}->v*v}/4
+w visualsynth, px=loop{rot2{1/8}>>add{x:1/4}, 6, map:id>>length, fold:{a,v}->min{a,v}}
+w visualsynth, px=loop{mul{2}, 4, map:{v}->v*v, fold:{a,v}->a*v}
+with the noise body written into the shader once rather than four times (map: is written twice, once
+for the seed and once inside the loop, which is the whole cost of the seeding rule). Their functions
+name the value, unlike the body's: the body IS the chain, so its value flows in implicitly, where
+map is an expression of that value ({v,i}) and fold one of the total and the term ({a,v,i}).
+Trailing args may be left off, and anything that is not a function is a chain fed the value, as the
+body is. The body's index is unchanged (0..count-1); a term's index says which value of the run it
+came from, so the seed's is 0 and the term after step i is i+1.
 
 DONE, a mul/add/set param is a px chain in its own right, as a channels{} arg is, so a call there
 that has not been given a value takes the incoming pixel:

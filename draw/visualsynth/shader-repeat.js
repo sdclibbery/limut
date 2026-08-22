@@ -12,8 +12,8 @@ define(function(require) {
   //   multitap{{i}->chain, n}  ->  chained like series, but every stage's output summed
   //   loop{{i}->chain, n}      ->  a real GLSL for loop: the body emitted once, its output fed back
   //                                into its input each iteration
-  //   loop{chain, n, sum:f}    ->  the same loop with a second accumulator: f of the carried value
-  //                                totalled over the iterations, and that total handed on
+  //   loop{chain, n, map:f, fold:g}
+  //                            ->  the same loop with a fold running alongside the carried value
   //
   // series, parallel and multitap are unrolled, so their index is an ordinary javascript number and
   // each repeat may differ in any way at all. loop rolls, so the body is emitted once whatever the
@@ -42,23 +42,32 @@ define(function(require) {
     })
   }
 
-  // The loop's iteration index, as a value in the chain. Splatted across all four components, the
-  // same convention a single channel read (in.v) uses, so it behaves as a scalar in arithmetic.
+  // A loop index, as a value in the chain. Splatted across all four components, the same convention
+  // a single channel read (in.v) uses, so it behaves as a scalar in arithmetic.
   //
-  // The counter's name comes from a ctx counter during the build walk, but the node itself is made
-  // at event time, when the body lambda is called — so the name arrives through a box the loop
-  // fills in around the body's build. Builds are one depth-first walk with nothing interleaved, so
-  // a nested loop simply saves and restores its own box in turn.
+  // The box holds a GLSL *expression* rather than a bare counter name, because the two indices a
+  // folding loop hands out differ: the body's is the counter itself, where a fold term's is one
+  // past it (the term taken after body application i belongs to value i+1 of the trajectory) and is
+  // the literal 0 for the seed term built before the loop. The expression only exists during the
+  // build walk, but the node itself is made at event time, when the lambda is called — so it
+  // arrives through the box. Builds are one depth-first walk with nothing interleaved, so a nested
+  // loop simply saves and restores its own box in turn.
   let loopIndexNode = () => {
-    let box = {name: undefined}
-    let node = makeShaderNode((input, ctx) => ctx.addStatement(`vec4(float(${box.name}))`))
+    let box = {expr: undefined}
+    let node = makeShaderNode((input, ctx) => ctx.addStatement(`vec4(float(${box.expr}))`))
     node._loopIndexBox = box
     return node
   }
 
-  // A fold over no terms at all: what a summing loop of zero iterations comes to.
-  let zeroShaderNode = () => {
-    return makeShaderNode((input, ctx) => ctx.addStatement('vec4(0.0)'))
+  // The fold's accumulator, as a value a combiner can name (fold:{a,v}->min{a,v}). Emits no
+  // statement and hands its variable straight back, which is safe for the same reason
+  // implicitInputNode is: a build input is always a plain variable name, never a compound
+  // expression. The name arrives through a box, as a loop index's expression does.
+  let loopAccNode = () => {
+    let box = {name: undefined}
+    let node = makeShaderNode((input, ctx) => box.name)
+    node._loopAccBox = box
+    return node
   }
 
   // A real GLSL for loop. The value flowing in becomes a mutable accumulator declared before the
@@ -67,39 +76,69 @@ define(function(require) {
   // structural (it settles at event time and is part of the generated source, ie the cache key)
   // rather than an animatable uniform.
   //
-  // A sum chain gives it a *second* accumulator: a total, declared alongside the carried value and
-  // added to once per iteration, which becomes what the loop hands on. That is the one thing the
-  // carried value cannot do for itself, since it is a single vec4 and any whole-vector op in the
-  // body wipes out anything riding in a spare channel of it. The sum is built from the carried
-  // value *before* the body advances it, so the first term is the value as it arrives and an octave
-  // sum lines up with parallel{} term for term; the price is that the last body application is dead.
+  // fold gives it a *second* accumulator: a running total declared alongside the carried value,
+  // which becomes what the loop hands on. That is the one thing the carried value cannot do for
+  // itself, since it is a single vec4 and any whole-vector op in the body wipes out anything riding
+  // in a spare channel of it. {map, combine, accNode, termIndex}:
   //
-  // Both are built inside one captureBlock, the sum first so its statements lead the block. The +=
-  // sits after all of them rather than interleaved: the body only ever assigns to fresh vNs, so acc
-  // does not move until the write-back at the end of the block, and one block keeps sum and body
-  // sharing the emit-once memo.
-  let loopShaderNode = (body, count, indexNode, sum) => {
+  //   map      each value the loop passes through, mapped to a term of the fold. Absent, the term
+  //            is the value itself.
+  //   combine  how a term joins the total. Absent, the total is a sum (+=).
+  //
+  // The total is *seeded with the first term* — map of the value as it arrives, before any body
+  // application — and then folds in map of the body's output once per iteration. So count body
+  // applications give count+1 terms, one at every value the loop visits: nothing is dead (the old
+  // sum: took its term before the body, which left the last body application unused), and there is
+  // no identity to supply, since a reduce over a non-empty sequence needs none.
+  //
+  // The seed is built in a captureBlock of its own purely to isolate its memo: it and the body see
+  // different index expressions, so a node reached with the same input in both must emit twice
+  // rather than collapsing onto one variable. Its statements are then spliced straight out, since
+  // they belong outside the loop. The fold assignment and the write-back to the carried value are
+  // emitted inside the block, in place, so a combiner's statements sit between the term and the
+  // assignment that reads them.
+  let loopShaderNode = (body, count, bodyIndex, fold) => {
+    let map = fold !== undefined ? fold.map : undefined
+    let combine = fold !== undefined ? fold.combine : undefined
+    let bodyBox = bodyIndex !== undefined ? bodyIndex._loopIndexBox : undefined
+    let termBox = fold !== undefined && fold.termIndex !== undefined ? fold.termIndex._loopIndexBox : undefined
+    let accBox = fold !== undefined && fold.accNode !== undefined ? fold.accNode._loopAccBox : undefined
     return makeShaderNode((input, ctx) => {
       let acc = ctx.addStatement(input) // The loop carried value: declared outside, assigned inside
-      let total = sum !== undefined ? ctx.addStatement('vec4(0.0)') : undefined
-      let name = ctx.loopVar()
-      let box = indexNode !== undefined ? indexNode._loopIndexBox : undefined
-      let saved = box !== undefined ? box.name : undefined
-      if (box !== undefined) { box.name = name }
-      let block, sumOut
+      let savedBody = bodyBox !== undefined ? bodyBox.expr : undefined
+      let savedTerm = termBox !== undefined ? termBox.expr : undefined
+      let savedAcc = accBox !== undefined ? accBox.name : undefined
+      let termAt = (v) => map === undefined ? v : map.build(v, ctx)
+      let total
       try {
-        block = ctx.captureBlock(() => {
-          if (sum !== undefined) { sumOut = sum.build(acc, ctx) }
-          return body.build(acc, ctx)
-        })
+        if (fold !== undefined) {
+          if (termBox !== undefined) { termBox.expr = '0' } // The seed term is the value before the loop
+          let seed = ctx.captureBlock(() => termAt(acc))
+          seed.statements.forEach(s => ctx.addRaw(s))
+          total = ctx.addStatement(seed.out)
+          if (accBox !== undefined) { accBox.name = total }
+        }
+        if (count >= 1) {
+          let name = ctx.loopVar()
+          if (bodyBox !== undefined) { bodyBox.expr = name }
+          if (termBox !== undefined) { termBox.expr = name + ' + 1' }
+          let block = ctx.captureBlock(() => {
+            let out = body.build(acc, ctx)
+            if (fold !== undefined) {
+              let term = termAt(out)
+              ctx.addRaw(combine === undefined ? `${total} += ${term};` : `${total} = ${combine.build(term, ctx)};`)
+            }
+            ctx.addRaw(`${acc} = ${out};`)
+          })
+          ctx.addRaw(`for (int ${name} = 0; ${name} < ${count}; ${name}++) {`)
+          block.statements.forEach(s => ctx.addRaw('  ' + s))
+          ctx.addRaw(`}`)
+        }
       } finally {
-        if (box !== undefined) { box.name = saved }
+        if (bodyBox !== undefined) { bodyBox.expr = savedBody }
+        if (termBox !== undefined) { termBox.expr = savedTerm }
+        if (accBox !== undefined) { accBox.name = savedAcc }
       }
-      ctx.addRaw(`for (int ${name} = 0; ${name} < ${count}; ${name}++) {`)
-      block.statements.forEach(s => ctx.addRaw('  ' + s))
-      if (total !== undefined) { ctx.addRaw(`  ${total} += ${sumOut};`) }
-      ctx.addRaw(`  ${acc} = ${block.out};`)
-      ctx.addRaw(`}`)
       return total !== undefined ? total : acc
     })
   }
@@ -148,7 +187,7 @@ define(function(require) {
     '}'], l.statements)
   assert('v1', l.out) // The accumulator is what the rest of the chain sees
 
-  // loop: the index is a value in the body, named after the counter of the loop it belongs to
+  // loop: the body's index is the counter itself, named after the loop it belongs to
   let ix = loopIndexNode()
   let body = composeShaderNodes(ix, node('a'))
   let li = statements(loopShaderNode(body, 4, ix))
@@ -159,7 +198,7 @@ define(function(require) {
     '  vec4 v3 = a(v2);',
     '  v1 = v3;',
     '}'], li.statements)
-  assert(undefined, ix._loopIndexBox.name) // Restored afterwards
+  assert(undefined, ix._loopIndexBox.expr) // Restored afterwards
 
   // loop: nested loops each get their own counter and their own index
   let inner = loopIndexNode()
@@ -177,71 +216,131 @@ define(function(require) {
     '  v1 = v2;',
     '}'], nested.statements) // The outer loop's counter is allocated first, and the inner sees both
 
-  // loop with a sum: a second accumulator, totalled before the body advances the carried value
-  let sm = statements(loopShaderNode(node('a'), 3, undefined, node('f')))
+  // loop with a map: the total is seeded with the first term, before the loop, and a term is taken
+  // from the body's output every iteration - count+1 terms in all, and no dead body application
+  let fm = statements(loopShaderNode(node('a'), 3, undefined, {map: node('f')}))
   assert([
     'vec4 v1 = v0;',
-    'vec4 v2 = vec4(0.0);',
+    'vec4 v2 = f(v1);',
+    'vec4 v3 = v2;',
     'for (int l_i0 = 0; l_i0 < 3; l_i0++) {',
-    '  vec4 v3 = f(v1);',
     '  vec4 v4 = a(v1);',
-    '  v2 += v3;',
+    '  vec4 v5 = f(v4);',
+    '  v3 += v5;',
     '  v1 = v4;',
-    '}'], sm.statements)
-  assert('v2', sm.out) // The total is what the rest of the chain sees, not the carried value
+    '}'], fm.statements)
+  assert('v3', fm.out) // The total is what the rest of the chain sees, not the carried value
 
-  // loop with a sum: body and sum share one index, and its box is restored afterwards
-  let si = loopIndexNode()
-  let sBody = composeShaderNodes(si, node('a'))
-  let sSum = composeShaderNodes(si, node('f'))
-  let sl = statements(loopShaderNode(sBody, 2, si, sSum))
+  // loop with a combiner: it builds from the term and reads the total through the accumulator node,
+  // and its statements land between the term and the assignment that consumes them
+  let an = loopAccNode()
+  let combine = makeShaderNode((input, ctx) => ctx.addStatement(`h(${an.build(input, ctx)}, ${input})`))
+  let fc = statements(loopShaderNode(node('a'), 2, undefined, {map: node('f'), combine: combine, accNode: an}))
   assert([
     'vec4 v1 = v0;',
-    'vec4 v2 = vec4(0.0);',
+    'vec4 v2 = f(v1);',
+    'vec4 v3 = v2;',
     'for (int l_i0 = 0; l_i0 < 2; l_i0++) {',
-    '  vec4 v3 = vec4(float(l_i0));',
-    '  vec4 v4 = f(v3);',
-    '  vec4 v5 = a(v3);',
-    '  v2 += v4;',
-    '  v1 = v5;',
-    '}'], sl.statements) // The index emits once: sum and body share the emit-once memo within the block
-  assert(undefined, si._loopIndexBox.name)
+    '  vec4 v4 = a(v1);',
+    '  vec4 v5 = f(v4);',
+    '  vec4 v6 = h(v3, v5);',
+    '  v3 = v6;',
+    '  v1 = v4;',
+    '}'], fc.statements)
+  assert(undefined, an._loopAccBox.name) // Restored afterwards
 
-  // loop with a sum: the index may be used by the sum alone, and still gets its counter's name
-  let so = loopIndexNode()
-  let sl2 = statements(loopShaderNode(node('a'), 2, so, composeShaderNodes(so, node('f'))))
+  // loop with a fold but no map: the term is the carried value itself
   assert([
     'vec4 v1 = v0;',
-    'vec4 v2 = vec4(0.0);',
+    'vec4 v2 = v1;',
     'for (int l_i0 = 0; l_i0 < 2; l_i0++) {',
-    '  vec4 v3 = vec4(float(l_i0));',
-    '  vec4 v4 = f(v3);',
+    '  vec4 v3 = a(v1);',
+    '  v2 += v3;',
+    '  v1 = v3;',
+    '}'], statements(loopShaderNode(node('a'), 2, undefined, {})).statements)
+
+  // loop: the term's index is 0 for the seed and one past the counter inside the loop, so it names
+  // which value of the trajectory the term came from
+  let ti = loopIndexNode()
+  let ft = statements(loopShaderNode(node('a'), 2, undefined, {map: composeShaderNodes(ti, node('f')), termIndex: ti}))
+  assert([
+    'vec4 v1 = v0;',
+    'vec4 v2 = vec4(float(0));',
+    'vec4 v3 = f(v2);',
+    'vec4 v4 = v3;',
+    'for (int l_i0 = 0; l_i0 < 2; l_i0++) {',
     '  vec4 v5 = a(v1);',
-    '  v2 += v4;',
+    '  vec4 v6 = vec4(float(l_i0 + 1));',
+    '  vec4 v7 = f(v6);',
+    '  v4 += v7;',
     '  v1 = v5;',
-    '}'], sl2.statements)
+    '}'], ft.statements)
+  assert(undefined, ti._loopIndexBox.expr) // Restored afterwards
 
-  // loop with a sum: nests, each loop with its own counter and its own pair of accumulators
-  let sn = statements(loopShaderNode(loopShaderNode(node('a'), 2, undefined, node('f')), 3, undefined, node('g')))
+  // loop: the body's index and the term's are separate nodes, so the body's stays zero based
+  let bi2 = loopIndexNode()
+  let ti2 = loopIndexNode()
   assert([
     'vec4 v1 = v0;',
-    'vec4 v2 = vec4(0.0);',
-    'for (int l_i0 = 0; l_i0 < 3; l_i0++) {',
-    '  vec4 v3 = g(v1);',
+    'vec4 v2 = vec4(float(0));',
+    'vec4 v3 = f(v2);',
+    'vec4 v4 = v3;',
+    'for (int l_i0 = 0; l_i0 < 2; l_i0++) {',
+    '  vec4 v5 = vec4(float(l_i0));',
+    '  vec4 v6 = a(v5);',
+    '  vec4 v7 = vec4(float(l_i0 + 1));',
+    '  vec4 v8 = f(v7);',
+    '  v4 += v8;',
+    '  v1 = v6;',
+    '}'], statements(loopShaderNode(composeShaderNodes(bi2, node('a')), 2, bi2,
+      {map: composeShaderNodes(ti2, node('f')), termIndex: ti2})).statements)
+
+  // loop: the seed's build cannot share a memo with the body's, or a node that reaches the same
+  // input in both (here the index, read off the root) would collapse onto one variable and the term
+  // inside the loop would read the seed's index
+  let ti3 = loopIndexNode()
+  let rootMap = makeShaderNode((input, ctx) => ctx.addStatement(`f(${ti3.build(ctx.rootInput, ctx)})`))
+  assert([
+    'vec4 v1 = v0;',
+    'vec4 v2 = vec4(float(0));',
+    'vec4 v3 = f(v2);',
+    'vec4 v4 = v3;',
+    'for (int l_i0 = 0; l_i0 < 1; l_i0++) {',
+    '  vec4 v5 = a(v1);',
+    '  vec4 v6 = vec4(float(l_i0 + 1));',
+    '  vec4 v7 = f(v6);',
+    '  v4 += v7;',
+    '  v1 = v5;',
+    '}'], statements(loopShaderNode(node('a'), 1, undefined, {map: rootMap, termIndex: ti3})).statements)
+
+  // loop with a fold: nests, each loop with its own counter and its own pair of accumulators
+  let fn = statements(loopShaderNode(loopShaderNode(node('a'), 2, undefined, {map: node('f')}), 2, undefined, {map: node('g')}))
+  assert([
+    'vec4 v1 = v0;',
+    'vec4 v2 = g(v1);',
+    'vec4 v3 = v2;',
+    'for (int l_i0 = 0; l_i0 < 2; l_i0++) {',
     '  vec4 v4 = v1;',
-    '  vec4 v5 = vec4(0.0);',
+    '  vec4 v5 = f(v4);',
+    '  vec4 v6 = v5;',
     '  for (int l_i1 = 0; l_i1 < 2; l_i1++) {',
-    '    vec4 v6 = f(v4);',
     '    vec4 v7 = a(v4);',
-    '    v5 += v6;',
+    '    vec4 v8 = f(v7);',
+    '    v6 += v8;',
     '    v4 = v7;',
     '  }',
-    '  v2 += v3;',
-    '  v1 = v5;',
-    '}'], sn.statements) // The inner loop's total is what the outer body hands back
+    '  vec4 v9 = g(v6);',
+    '  v3 += v9;',
+    '  v1 = v6;',
+    '}'], fn.statements) // The inner loop's total is what the outer body hands back
 
-  // a fold over no iterations at all is zero, not the value that arrived
-  assert(['vec4 v1 = vec4(0.0);'], statements(zeroShaderNode()).statements)
+  // no iterations at all: with a fold, just the seed term; without one, the value passes through
+  let f0 = statements(loopShaderNode(node('a'), 0, undefined, {map: node('f')}))
+  assert(['vec4 v1 = v0;', 'vec4 v2 = f(v1);', 'vec4 v3 = v2;'], f0.statements)
+  assert('v3', f0.out)
+  let z0 = statements(loopShaderNode(node('a'), 0))
+  assert(['vec4 v1 = v0;'], z0.statements)
+  assert('v1', z0.out)
 
   // A node built inside the loop body is not reused outside it: its variable is out of scope there
   let shared = node('a')
@@ -274,7 +373,7 @@ define(function(require) {
     parallelShaderNode: parallelShaderNode,
     multitapShaderNode: multitapShaderNode,
     loopIndexNode: loopIndexNode,
+    loopAccNode: loopAccNode,
     loopShaderNode: loopShaderNode,
-    zeroShaderNode: zeroShaderNode,
   }
 })

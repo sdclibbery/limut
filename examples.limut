@@ -5664,7 +5664,7 @@ section drop {
 // w visualsynth, px=mul{[1:2]l4}>>tex{'favicon-32x32.png'}
 // w visualsynth, px=mul{[0:2]l1@f}
 // w visualsynth, px=mul{[2:!2,0]e@s}
-// w visualsynth, px=set{v:id.v-time,z:time/2}/2>>fbm3^3*2>>mul{1/2-uv.v/2}>>pal{0,red*3/4,yellow,1} // Fire
+// w visualsynth, px=set{v:id.v-time,z:time/3}>>fbm3{scale:3/2}^3*2>>mul{1/2-uv.v/2}>>pal{0,red*3/4,yellow,1} // Fire
 // w visualsynth, px=add{x:[]n/2,y:[]n/2}>>sdstar{r:[]n}>>(id>0 ?? 1/3+id/4 ?: -id*6)>>cospal{}
 // w visualsynth, px=1-sdcirclewave{tb:[]n*1.2,ra:[]n/2}^1/8>>cospal{#012,0.8,-1,0}
 // w visualsynth, px=sdblend{sdheart{r:[]n/2},add{x:[]n/2,y:[]n/2}>>sdstar{r:[]n*2/3}-0.02,0.1}>>sdstroke
