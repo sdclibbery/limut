@@ -37,8 +37,11 @@ system.latency = () => {
 // most expensive things Limut can put on the audio thread, and unlike native nodes
 // their cost scales with their params (superosc `unison` especially), so knowing
 // how many are sounding is the difference between guessing and knowing when a set
-// starts glitching. Incremented at construction and decremented on stop() by the
-// shared shim in play/worklet-lifecycle.js.
+// starts glitching. Incremented at construction and decremented when the processor
+// itself reports that it has terminated (it posts back from process() just before
+// returning false) - not when stop() is called, which only writes an AudioParam the
+// render thread may not act on for another quantum, or ever. See the shared shim in
+// play/worklet-lifecycle.js.
 //
 // This is a proxy, and deliberately so: there is no way to measure audio thread
 // load or dropouts from JS. AudioContext.renderCapacity - the API meant for exactly

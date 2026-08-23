@@ -12,28 +12,6 @@ Hub75 display
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-DONE worklet node leaks permanently if its synth body throws before the destructor registration
- Fixed Aug 2026, all three parts: the processors now test the stop param BEFORE start (so a node
- stopped before it ever started terminates instead of rendering forever) with a 60s unstarted-sample
- backstop for one that is never stopped either; and superosc/pwm/chaos register with the destructor
- IMMEDIATELY after construction, before any param evaluation, in both the synths and the node
- functions. The start()/stop() shim and voice counting were extracted to play/worklet-lifecycle.js
- (pwm-source now exposes a factory like the other two); the guard stays inline in the three source
- strings so the worklet-dsp node harness can still read them verbatim -- keep the copies identical
- Guard proven in node for all three processors (stopped-before-started dies on block 1; unstarted
- dies at 60.0s; started stays alive), and measured before/after in the app with a synth body that
- throws mid-build (p1 superosc E..E., sync=0/0): master leaked one permanently rendering worklet
- per event (voices 3,6,9,13,16,19, still 19 after the player was removed), fixed build sits at 0-1
- and returns to 0. Normal superosc/pwm/chaos playback unchanged (analyser peak identical)
- Open question left over: does this also explain "superosc missing on most notes" below? A
- construction exception still loses the note, it just no longer leaks a worklet
- NOTE: stop()-then-disconnect() in the same tick is FINE, verified at 6000 nodes -- do not "fix" it
-!system.voiceCount cannot detect that leak, it lies
- It decrements in the JS stop() shim, not on real termination, so a stopped-but-never-started node
- makes limutAudio.stats().workletVoices read 0 while its processor runs forever (measured)
- Narrower since the fix above (such a node now terminates, and the count tracks it), but still the
- wrong mechanism: decrement on actual termination instead (processor posts back before returning
- false), so the readout means what its comment in play/system.js claims
 !filterInPlace corrupts the array if the predicate throws (array-in-place.js:16-26)
  arr.length = j is the last statement, so a throw skips it: nothing is removed AND already-compacted
  entries are duplicated. Proven in node: [a,b,c,d,e] -> [a,c,c,d,e]
@@ -86,6 +64,7 @@ Multiband effect that does spectral side chain ducking
  ?Pick sounded a bit out of tune too, had to increase decay? Is this at lower octaves?
  ALSO: Trance needs a param to soften the pluckiness: maybe attack as well as decay? Or decay affects both?
    att=this.decay^2*100ms  works pretty well??
+Multiple audiocontexts, set context='foo' on a player. Allows audio rendering to be split over multiple cores
 Envelope follower duck
 Multiband ducks
 ? Chebyshev shaper

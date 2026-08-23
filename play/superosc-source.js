@@ -570,9 +570,16 @@ class SuperOsc extends AudioWorkletProcessor {
     // is stopped before it is ever started must still terminate, or its process()
     // runs forever and the node is never collected. The unstarted budget is the
     // backstop for a node that is never stopped either - it renders silence for up
-    // to 60s (far beyond any scheduling lookahead) and then dies.
-    if (parameters.stop[0] > 0.5) { return false }
-    if (parameters.start[0] < 0.5) { this.unstartedSamples = (this.unstartedSamples || 0) + 128; return this.unstartedSamples < 60 * sampleRate }
+    // to 60s (far beyond any scheduling lookahead) and then dies. Every path that
+    // returns false posts 'terminated' back to the node first: that message, not the
+    // JS stop() call, is what decrements the voice count, so the count only comes
+    // down when the render thread has really dropped this processor.
+    if (parameters.stop[0] > 0.5) { this.port.postMessage('terminated'); return false }
+    if (parameters.start[0] < 0.5) {
+      this.unstartedSamples = (this.unstartedSamples || 0) + 128;
+      if (this.unstartedSamples < 60 * sampleRate) { return true }
+      this.port.postMessage('terminated'); return false
+    }
 
     const output = outputs[0];
     // An a-rate param arrives as either a length-1 array (one value for the whole

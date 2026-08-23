@@ -66,6 +66,9 @@ returns `false`. Two rules follow, and both are already implemented — don't un
   processor source strings (they must stay self-contained for the `worklet-dsp` Node
   harness, which reads them as raw text) — keep the copies identical, and see the comment
   in `play/worklet-lifecycle.js`.
+- **Every path that returns `false` posts `'terminated'` back to the node first**, and the
+  shim decrements `system.voiceCount()` on that message rather than in `stop()` — the
+  count means "still on the audio thread", so only the render thread can retire it.
 
 Both were broken until Aug 2026: with `stop` checked second, one permanently rendering
 worklet leaked per event whenever a synth body threw between construction and `start()`
@@ -80,11 +83,14 @@ Other facts, still true:
   `process()` on a disconnected worklet until it returns false. Don't "fix" this.
 - Stop scheduled *before* a future start terminates the node at the stop (the guard's
   order); a stop scheduled *after* the start behaves normally.
-- `system.voiceCount()` decrements inside the JS `stop()` shim, not on real termination,
-  so it is a proxy: it now tracks the fixed lifecycle closely, but a node that is never
-  stopped at all stays counted after the 60s backstop kills it (over-reporting, the safe
-  direction). For a definitive census use `queryObjects(AudioWorkletNode)` in DevTools or
-  a `FinalizationRegistry` harness (see `verifier-audio-wiring`).
+- `system.voiceCount()` decrements when the processor reports its own termination (the
+  `'terminated'` port message, posted just before `process()` returns `false`), so it
+  tracks what the render thread is really running — including the cases `stop()` cannot
+  see: the quantum before the processor reads the param, and a node stopped while the
+  context is suspended, which never terminates at all. It lags real termination by that
+  quantum plus the port hop. For a definitive census of *node objects* (as opposed to live
+  processors) use `queryObjects(AudioWorkletNode)` in DevTools or a `FinalizationRegistry`
+  harness (see `verifier-audio-wiring`).
 
 ## Expression operator precedence
 
@@ -244,8 +250,8 @@ Do not go looking for an audio-load or underrun metric — there isn't one, and 
 - **`currentTime` and `getOutputTimestamp()` both track the output device buffer**, and stay flat even when the audio thread is deliberately driven past its deadline. Their difference is just the fixed device buffer (~20ms), not a headroom signal.
 - **Electron's `app.getAppMetrics()`** does expose real CPU, but AudioWorklets run in the *renderer* process (the Audio Service process only does device I/O), so it conflates the audio thread with the main thread and the WebGL work.
 
-What exists instead: `system.voiceCount()` / `limutAudio.stats()` — a live count of worklet voices (superosc, chaos, pwm), incremented at construction and decremented on `stop()`. Those are the expensive things on the audio thread, so the count plus a known per-voice cost is the usable proxy. Measure per-voice cost offline with the `worklet-dsp` skill.
+What exists instead: `system.voiceCount()` / `limutAudio.stats()` — a live count of worklet voices (superosc, chaos, pwm), incremented at construction and decremented when the processor itself reports termination. Those are the expensive things on the audio thread, so the count plus a known per-voice cost is the usable proxy. Measure per-voice cost offline with the `worklet-dsp` skill.
 
-**Caveat:** the counter decrements in the JS `stop()` shim, not on real processor termination, so it is a proxy for what the audio thread is actually running rather than a measurement of it — see "AudioWorkletNode termination" above for what it does and doesn't prove.
+**Caveat:** it is still a count of voices, not a load measurement — cost per voice varies hugely (superosc `unison` especially) — and it lags a real termination by a render quantum plus the port hop. See "AudioWorkletNode termination" above.
 
 **The UI readout labelled "Timing" is a main-thread meter, not an audio one.** It is `beatLatency` in `main.js` — wall-clock jitter between beat firings — and beats fire from the `requestAnimationFrame` loop, so heavy visuals or a busy machine turn it red while the synths are fine. It was labelled "Audio" until Aug 2026 and the docs described it as an audio-health indicator, which it has never been. A real render underrun produces *no* change in it.

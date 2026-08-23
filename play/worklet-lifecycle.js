@@ -18,8 +18,8 @@ define(function (require) {
   //    worklet-dsp skill), so it must stay self-contained - no interpolation from
   //    here. It is therefore repeated in the three sources, and must read:
   //
-  //      if (parameters.stop[0] > 0.5) { return false }
-  //      if (parameters.start[0] < 0.5) { this.unstartedSamples = ... }
+  //      if (parameters.stop[0] > 0.5) { this.port.postMessage('terminated'); return false }
+  //      if (parameters.start[0] < 0.5) { ...budget...; postMessage('terminated'); return false }
   //
   //    stop is tested BEFORE start on purpose. A node that is stopped before it is
   //    ever started - eg a synth body that throws between construction and
@@ -34,15 +34,34 @@ define(function (require) {
   // as a live voice for system.voiceCount(). Counting from construction (not from
   // start()) is deliberate: an unstopped worklet is the expensive thing, so it
   // should be visible in the count even if it never starts.
+  //
+  // The count comes down when the PROCESSOR says it is done - it posts 'terminated'
+  // from process() immediately before returning false - and not when stop() is
+  // called. stop() only writes an AudioParam: the render thread may not read it for
+  // another quantum, a node stopped while the context is suspended never terminates
+  // at all, and (before the guard fix above) a stopped-but-never-started node kept
+  // rendering forever. Decrementing in stop() made all of those read as free while
+  // they were still on the audio thread, which is exactly the thing this count
+  // exists to catch. The tradeoff is that the readout lags real termination by a
+  // render quantum plus the port hop, which for a voice count is nothing.
+  //
+  // The listener goes on with addEventListener rather than port.onmessage so that
+  // any later main-thread code that wants to talk to the processor (assigning
+  // node.port.onmessage) cannot silently unhook the voice count; addEventListener
+  // needs the explicit port.start().
   let workletLifecycle = (node, audio = system.audio) => {
     system.voiceStarted()
-    let stopped = false
+    let counted = true
+    node.port.addEventListener('message', (e) => {
+      if (e.data !== 'terminated') { return }
+      if (counted) { counted = false; system.voiceStopped() }
+    })
+    node.port.start()
     node.start = (time = audio.currentTime) => {
       node.parameters.get('start').setValueAtTime(1, time)
     }
     node.stop = (time = audio.currentTime) => {
       node.parameters.get('stop').setValueAtTime(1, time)
-      if (!stopped) { stopped = true; system.voiceStopped() }
     }
     return node
   }
@@ -56,8 +75,12 @@ define(function (require) {
     }
     let fakeNode = () => {
       let writes = []
+      let listeners = []
       return {
         writes,
+        // Send what the processor sends: the node only hears it via the port.
+        fromProcessor: (data) => listeners.forEach(l => l({data})),
+        port: { addEventListener: (name,l) => listeners.push(l), start: () => {} },
         parameters: { get: (name) => ({ setValueAtTime: (v,t) => writes.push([name,v,t]) }) },
       }
     }
@@ -72,16 +95,29 @@ define(function (require) {
     assert('start,1,7', n.writes[1].join(','), 'start defaults to now')
     n.stop(5)
     assert('stop,1,5', n.writes[2].join(','), 'stop gates the stop param at the given time')
-    assert(baseVoices, system.voiceCount(), 'stop decrements the voice count')
+    assert(baseVoices+1, system.voiceCount(), 'stop alone does not decrement: the processor is still rendering')
     n.stop() // A node can be stopped twice (eg destructor after an explicit stop)
-    assert(baseVoices, system.voiceCount(), 'a second stop does not double-decrement')
+    n.fromProcessor('terminated')
+    assert(baseVoices, system.voiceCount(), 'termination decrements the voice count')
+    n.fromProcessor('terminated')
+    assert(baseVoices, system.voiceCount(), 'a repeated termination message does not double-decrement')
 
-    // A node that is never started still counts, and is still stoppable: the processor
+    // A node that is never started still counts until it terminates: the processor
     // guard tests stop before start so it terminates rather than rendering forever.
     let unstarted = workletLifecycle(fakeNode(), fakeAudio)
     assert(baseVoices+1, system.voiceCount(), 'unstarted node is counted')
     unstarted.stop()
-    assert(baseVoices, system.voiceCount(), 'unstarted node can be stopped')
+    assert(baseVoices+1, system.voiceCount(), 'unstarted node still counts until its processor terminates')
+    unstarted.fromProcessor('terminated')
+    assert(baseVoices, system.voiceCount(), 'unstarted node decrements on termination')
+
+    // Other port traffic (superosc gets its wavetable this way) must not be
+    // mistaken for a termination.
+    let chatty = workletLifecycle(fakeNode(), fakeAudio)
+    chatty.fromProcessor({ wave: null })
+    assert(baseVoices+1, system.voiceCount(), 'a non-termination message leaves the count alone')
+    chatty.fromProcessor('terminated')
+    assert(baseVoices, system.voiceCount(), 'termination after other traffic still decrements')
 
     console.log('Worklet lifecycle tests complete')
   }
