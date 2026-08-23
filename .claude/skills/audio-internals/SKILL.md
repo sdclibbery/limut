@@ -48,30 +48,43 @@ different rules.
 
 ### AudioWorkletNode termination (`superosc`, `chaos`, `pwm`)
 
-These are not native sources and `stop()` does not stop them. The factories' `stop()` shim
-only writes 1 to a `stop` AudioParam (e.g. `play/superosc-source.js:837-840`); the node
-only dies when **the render thread runs `process()` again and observes it**, at which point
-`process()` returns `false` (`play/superosc-source.js:564-568`). Consequences:
+These are not native sources and `stop()` does not stop them. The shared `stop()` shim in
+`play/worklet-lifecycle.js` only writes 1 to a `stop` AudioParam; the node only dies when
+**the render thread runs `process()` again and observes it**, at which point `process()`
+returns `false`. Two rules follow, and both are already implemented — don't undo either:
 
-- **A worklet node that is never `start()`ed never terminates and is never collected.**
-  The guard checks `start` before `stop` and returns `true` unconditionally when unstarted,
-  so the node renders forever. Measured Aug 2026, Chrome 148 and Electron 36: 20/20
-  survival, permanently.
-- Therefore **register the node with the destructor immediately after construction**, not
-  at the end of the synth body. In `play/synth/superosc.js` the `_destructor.stop(vco)`
-  call is the last line, with ~8 `evalMainParamFrame` calls and a `getBuffer` before it —
-  anything throwing in that window leaks a permanently-rendering worklet, and the player
-  error is swallowed by the per-player try/catch in `main.js`.
+- **Register the node with the destructor immediately after construction**, before any
+  param evaluation. An unstopped worklet renders forever, so it must not depend on the
+  rest of the synth body not throwing (the player error is swallowed by the per-player
+  try/catch in `main.js`, so such a leak is silent). Sites: `play/synth/superosc.js`,
+  `play/synth/pwm.js`, and the `superosc`/`chaos` node functions in `play/nodes/source.js`.
+- **The `process()` lifecycle guard tests `stop` before `start`**, so a node stopped
+  before it was ever started terminates instead of sitting in the unstarted branch
+  rendering forever. Backing it up, the unstarted branch only stays alive for 60s of
+  samples (`this.unstartedSamples`), far beyond any scheduling lookahead, so a node that
+  is never started *or* stopped still dies. The guard is duplicated verbatim in the three
+  processor source strings (they must stay self-contained for the `worklet-dsp` Node
+  harness, which reads them as raw text) — keep the copies identical, and see the comment
+  in `play/worklet-lifecycle.js`.
+
+Both were broken until Aug 2026: with `stop` checked second, one permanently rendering
+worklet leaked per event whenever a synth body threw between construction and `start()`
+(measured in-app with `p1 superosc E..E., sync=0/0`: voice count 3, 6, 9, 13, 16, 19, and
+still 19 after the player was removed; fixed build stays at 0–1). If you touch either rule,
+re-run that A/B — it is the cheapest proof available.
+
+Other facts, still true:
+
 - Disconnecting in the same tick as `stop()` is **fine** — verified in both engines, at up
   to 6,000 nodes in 10s, including when disconnected synchronously. Blink keeps calling
   `process()` on a disconnected worklet until it returns false. Don't "fix" this.
-- Stop scheduled *before* a future start self-heals (start fires, then the stop check
-  runs). Stopped-but-never-started does not.
-
-`system.voiceCount()` **cannot detect this class of leak.** It decrements inside the JS
-`stop()` shim, so a stopped-but-never-started node makes the counter read 0 while its
-processor runs forever. Trust `queryObjects(AudioWorkletNode)` in DevTools, or a
-`FinalizationRegistry` census in a harness (see `verifier-audio-wiring`), not the counter.
+- Stop scheduled *before* a future start terminates the node at the stop (the guard's
+  order); a stop scheduled *after* the start behaves normally.
+- `system.voiceCount()` decrements inside the JS `stop()` shim, not on real termination,
+  so it is a proxy: it now tracks the fixed lifecycle closely, but a node that is never
+  stopped at all stays counted after the 60s backstop kills it (over-reporting, the safe
+  direction). For a definitive census use `queryObjects(AudioWorkletNode)` in DevTools or
+  a `FinalizationRegistry` harness (see `verifier-audio-wiring`).
 
 ## Expression operator precedence
 
@@ -233,6 +246,6 @@ Do not go looking for an audio-load or underrun metric — there isn't one, and 
 
 What exists instead: `system.voiceCount()` / `limutAudio.stats()` — a live count of worklet voices (superosc, chaos, pwm), incremented at construction and decremented on `stop()`. Those are the expensive things on the audio thread, so the count plus a known per-voice cost is the usable proxy. Measure per-voice cost offline with the `worklet-dsp` skill.
 
-**Caveat (measured Aug 2026):** the counter decrements in the JS `stop()` shim, not on real processor termination, so it reads 0 while stopped-but-never-started worklets render forever. A zero voice count is *not* evidence of no worklet leak — see "AudioWorkletNode termination" above.
+**Caveat:** the counter decrements in the JS `stop()` shim, not on real processor termination, so it is a proxy for what the audio thread is actually running rather than a measurement of it — see "AudioWorkletNode termination" above for what it does and doesn't prove.
 
 **The UI readout labelled "Timing" is a main-thread meter, not an audio one.** It is `beatLatency` in `main.js` — wall-clock jitter between beat firings — and beats fire from the `requestAnimationFrame` loop, so heavy visuals or a busy machine turn it red while the synths are fine. It was labelled "Audio" until Aug 2026 and the docs described it as an audio-health indicator, which it has never been. A real render underrun produces *no* change in it.

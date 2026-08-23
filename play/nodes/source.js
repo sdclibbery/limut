@@ -52,6 +52,11 @@ define(function(require) {
     let unison = evalMainParamEvent(params, 'unison', 1)
     let pan = evalSubParamEvent(params, 'unison', 'pan', 0.5)
     let node = createSuperOsc(Math.round(unison) >= 2 && pan !== 0 ? 2 : 1)
+    // Register with the destructor FIRST: a worklet only terminates when its process()
+    // observes the stop param, so anything throwing between construction and
+    // registration (an eval below, or getBuffer) would leak a permanently rendering
+    // node. See play/worklet-lifecycle.js.
+    if (e && e._destructor) { e._destructor.stop(node) } else { node.stop() }
     // frequency: the default positional param sets it (like osc), else the `freq` param. Its the
     // key thats picked, not the value, so units (superosc{55Hz}), connectables
     // (superosc{110+chaos{2}*40}) and timevars all work.
@@ -95,7 +100,6 @@ define(function(require) {
     evalSubParamFrame(node.parameters.get('unisonAmp'), params, 'unison', 'amp', 1)
     evalSubParamFrame(node.parameters.get('unisonPan'), params, 'unison', 'pan', 0.5)
     node.start(e._time)
-    if (e && e._destructor) { e._destructor.stop(node) } else { node.stop() }
     return node
   }
   addNodeFunction('superosc', superosc)
@@ -153,6 +157,9 @@ define(function(require) {
     let params = combineParams(args, e)
     let seed = evalMainParamEvent(params, 'seed', 0)
     let node = createChaos(seed)
+    // Register with the destructor FIRST, as for superosc above: an unstopped worklet
+    // renders forever, so it must not depend on the evals below not throwing.
+    if (e && e._destructor) { e._destructor.stop(node) } else { node.stop() }
     // freq: default positional `value` sets it (like osc), else the `freq` param; in Hz. Its the
     // key thats picked, not the value, so units (chaos{6Hz}), connectables and timevars all work.
     evalMainParamFrame(node.parameters.get('freq'), params, positionalParamKey(args, 'freq'), 440, 'hz')
@@ -168,7 +175,6 @@ define(function(require) {
     evalMainParamFrame(node.parameters.get('chaos'), params, 'chaos', 0.5)
     evalMainParamFrame(node.parameters.get('smooth'), params, 'smooth', 0)
     node.start(e._time)
-    if (e && e._destructor) { e._destructor.stop(node) } else { node.stop() }
     return node
   }
   addNodeFunction('chaos', chaos)

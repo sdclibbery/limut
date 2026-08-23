@@ -3,6 +3,8 @@ define(function (require) {
   if (!window.AudioWorkletNode) { return ()=>{} }
 
   let system = require('play/system')
+  // start()/stop() shim and voice counting, shared with superosc-source and pwm-source
+  let workletLifecycle = require('play/worklet-lifecycle')
 
   // Chaos oscillator worklet: a bank of strange attractors / chaotic maps that emit a
   // deterministic-but-non-repeating signal, usable as both a control-rate LFO and an
@@ -101,8 +103,15 @@ class ChaosOsc extends AudioWorkletProcessor {
   }
 
   process(inputs, outputs, parameters) {
-    if (parameters.start[0] < 0.5) { return true }
+    // Lifecycle guard, shared by the three worklet oscillators - keep the three
+    // copies identical, and see play/worklet-lifecycle.js for why it lives inline
+    // rather than being interpolated in. stop is tested BEFORE start: a node that
+    // is stopped before it is ever started must still terminate, or its process()
+    // runs forever and the node is never collected. The unstarted budget is the
+    // backstop for a node that is never stopped either - it renders silence for up
+    // to 60s (far beyond any scheduling lookahead) and then dies.
     if (parameters.stop[0] > 0.5) { return false }
+    if (parameters.start[0] < 0.5) { this.unstartedSamples = (this.unstartedSamples || 0) + 128; return this.unstartedSamples < 60 * sampleRate }
 
     const output = outputs[0];
     const algo = parameters.algo[0] | 0;
@@ -168,14 +177,7 @@ registerProcessor('chaos', ChaosOsc);
   // is baked in at construction (via processorOptions) so instances diverge.
   let factory = (seed = 0, audio = system.audio) => {
     let node = new AudioWorkletNode(audio, "chaos", { outputChannelCount: [1], processorOptions: { seed } })
-    system.voiceStarted() // counted for system.voiceCount(); see superosc-source.js
-    let stopped = false
-    node.start = (time = audio.currentTime) => { node.parameters.get('start').setValueAtTime(1, time) }
-    node.stop  = (time = audio.currentTime) => {
-      node.parameters.get('stop').setValueAtTime(1, time)
-      if (!stopped) { stopped = true; system.voiceStopped() }
-    }
-    return node
+    return workletLifecycle(node, audio) // start()/stop() gates on the start/stop params, plus the voice count
   }
   factory.CHAOS_TYPES = CHAOS_TYPES
   return factory

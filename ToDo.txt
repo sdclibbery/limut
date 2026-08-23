@@ -12,39 +12,28 @@ Hub75 display
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!build section alwyas ends up with audio dropouts?????? Even with no superosc, and nothing in the section????
- Note: see line 5683 for the original code from the jam, transcribed from video
- Investigated Aug 2026, NOT root-caused. What was measured and RULED OUT, so it isnt redone:
-  Idle floor is <1%, so a 20-30% post-Stop residue is real, not baseline
-  Not the fx mix chains: only 9 nodes reachable from destination after Stop (console graph walk)
-  Not the gain pool: limutNodePool acquisitions and releases balance exactly
-  Not a worklet leak in the normal path: FinalizationRegistry census in BOTH Chrome 148 and
-   Electron 36 shows 0 survivors from 6144 superosc nodes in 10s, with churn, long sus, @f
-   params, fx chains, unison, and enough load to skip beats
-  The "3952 live AudioWorkletNodes" from queryObjects was an artifact of the tracking tool
-   holding strong refs -- queryObjects counts anything retained, instrumentation included
-  Remaining real observation: capacity settles to idle at 500bpm with no worklets, but does
-   NOT settle with a superosc. Next experiment to separate the two readings: play superosc
-   for 10s vs 2min, Stop, compare settled floor. Same floor = worklets raise the context
-   baseline (not a leak, dropouts are honest overload). Floor scales with play time = real
-   accumulation the FinalizationRegistry cannot see.
-!worklet node leaks permanently if its synth body throws before the destructor registration
- PROVEN Aug 2026 (Chrome 148 + Electron 36): a superosc/chaos/pwm node that is never start()ed
- never terminates and is never GCd -- 20/20 survival, rendering forever. process() checks the
- start param BEFORE the stop param and returns true unconditionally when unstarted
- (play/superosc-source.js:564-568, chaos-source.js:104-105, pwm-source.js:128-129)
- In play/synth/superosc.js the _destructor.stop(vco) is the LAST line, with ~8 evalMainParamFrame
- calls and a getBuffer between it and createSuperOsc() -- anything throwing in that window leaks
- a permanently rendering worklet, and main.js swallows the player error. Same shape in pwm.js
- Probably related: "superosc missing on most notes" below -- construction exceptions would do both
- Fixes: register the node with the destructor IMMEDIATELY after construction; reorder the guard so
- stop is tested before start; add a backstop so an unstarted node self-terminates after N quanta
+DONE worklet node leaks permanently if its synth body throws before the destructor registration
+ Fixed Aug 2026, all three parts: the processors now test the stop param BEFORE start (so a node
+ stopped before it ever started terminates instead of rendering forever) with a 60s unstarted-sample
+ backstop for one that is never stopped either; and superosc/pwm/chaos register with the destructor
+ IMMEDIATELY after construction, before any param evaluation, in both the synths and the node
+ functions. The start()/stop() shim and voice counting were extracted to play/worklet-lifecycle.js
+ (pwm-source now exposes a factory like the other two); the guard stays inline in the three source
+ strings so the worklet-dsp node harness can still read them verbatim -- keep the copies identical
+ Guard proven in node for all three processors (stopped-before-started dies on block 1; unstarted
+ dies at 60.0s; started stays alive), and measured before/after in the app with a synth body that
+ throws mid-build (p1 superosc E..E., sync=0/0): master leaked one permanently rendering worklet
+ per event (voices 3,6,9,13,16,19, still 19 after the player was removed), fixed build sits at 0-1
+ and returns to 0. Normal superosc/pwm/chaos playback unchanged (analyser peak identical)
+ Open question left over: does this also explain "superosc missing on most notes" below? A
+ construction exception still loses the note, it just no longer leaks a worklet
  NOTE: stop()-then-disconnect() in the same tick is FINE, verified at 6000 nodes -- do not "fix" it
 !system.voiceCount cannot detect that leak, it lies
  It decrements in the JS stop() shim, not on real termination, so a stopped-but-never-started node
  makes limutAudio.stats().workletVoices read 0 while its processor runs forever (measured)
- Decrement on actual termination instead (processor posts back before returning false), so the
- readout means what its comment in play/system.js claims
+ Narrower since the fix above (such a node now terminates, and the count tracks it), but still the
+ wrong mechanism: decrement on actual termination instead (processor posts back before returning
+ false), so the readout means what its comment in play/system.js claims
 !filterInPlace corrupts the array if the predicate throws (array-in-place.js:16-26)
  arr.length = j is the last statement, so a throw skips it: nothing is removed AND already-compacted
  entries are duplicated. Proven in node: [a,b,c,d,e] -> [a,c,c,d,e]
@@ -60,6 +49,7 @@ Hub75 display
 ?fxMixChain cache key can fragment: roomHpf and reverbHpf are quantised to step 1, ie one whole
  freeverb+convolver chain per Hz (play/effects/fxMixChain.js:35,39). A swept room={...,hpf:[100:2000]l}
  would mint hundreds. Found by reading, never reproduced -- quantise those to something coarser
+!Got dropouts during jam: see line 5683 in examples for the original code. Investigate
 !Sometimes on first run, the master fx chain does not work
 !get live working from OBS
  ??? Is it possible to configure OBS to delay its audio stream by a fixed amount, to compensate for the webcam delay??

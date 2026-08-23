@@ -3,6 +3,8 @@ define(function (require) {
   if (!window.AudioWorkletNode) { return ()=>{} }
 
   let system = require('play/system')
+  // start()/stop() shim and voice counting, shared with superosc-source and chaos-source
+  let workletLifecycle = require('play/worklet-lifecycle')
 
  /* From  https://github.com/skratchdot/web-audio-api-v2-issue-7/blob/master/public/pulse-oscillator.js */
 
@@ -125,8 +127,15 @@ class PwmOscillator extends AudioWorkletProcessor {
   }
 
   process(inputs, outputs, parameters) {
-    if (parameters.start[0] < 0.5) { return true }
+    // Lifecycle guard, shared by the three worklet oscillators - keep the three
+    // copies identical, and see play/worklet-lifecycle.js for why it lives inline
+    // rather than being interpolated in. stop is tested BEFORE start: a node that
+    // is stopped before it is ever started must still terminate, or its process()
+    // runs forever and the node is never collected. The unstarted budget is the
+    // backstop for a node that is never stopped either - it renders silence for up
+    // to 60s (far beyond any scheduling lookahead) and then dies.
     if (parameters.stop[0] > 0.5) { return false }
+    if (parameters.start[0] < 0.5) { this.unstartedSamples = (this.unstartedSamples || 0) + 128; return this.unstartedSamples < 60 * sampleRate }
 
     const output = outputs[0];
     // An a-rate param arrives as either a length-1 array (constant for the block)
@@ -174,4 +183,14 @@ class PwmOscillator extends AudioWorkletProcessor {
 registerProcessor('pwm-oscillator', PwmOscillator);
 `
 system.audio.audioWorklet.addModule("data:text/javascript;charset=utf-8,"+encodeURIComponent(source))
+
+  // Factory: build a pwm AudioWorkletNode that behaves like a normal OscillatorNode,
+  // exposing start(time)/stop(time) that gate the underlying start/stop params -
+  // mirroring the superosc and chaos factories so callers never have to shim it
+  // themselves (a raw AudioWorkletNode has no stop(), and one that is never stopped
+  // renders forever).
+  return (audio = system.audio) => {
+    let node = new AudioWorkletNode(audio, "pwm-oscillator")
+    return workletLifecycle(node, audio)
+  }
 })

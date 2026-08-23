@@ -5,6 +5,8 @@ define(function (require) {
   // (below) precomputes the per-frame integral table there and posts it to the
   // worklet, which only consumes it.
   const { buildWavetableCached } = require('play/wavetable')
+  // start()/stop() shim and voice counting, shared with chaos-source and pwm-source
+  let workletLifecycle = require('play/worklet-lifecycle')
 
   // Per-voice frequency multipliers for `n` unison voices detuned by max
   // frequency ratio `ratio`, spread evenly (geometrically, ie by pitch) each
@@ -562,10 +564,15 @@ class SuperOsc extends AudioWorkletProcessor {
   }
 
   process(inputs, outputs, parameters) {
-    // not started yet: stay alive, output silence
-    if (parameters.start[0] < 0.5) { return true }
-    // stopped: output silence and let the node be garbage collected
+    // Lifecycle guard, shared by the three worklet oscillators - keep the three
+    // copies identical, and see play/worklet-lifecycle.js for why it lives inline
+    // rather than being interpolated in. stop is tested BEFORE start: a node that
+    // is stopped before it is ever started must still terminate, or its process()
+    // runs forever and the node is never collected. The unstarted budget is the
+    // backstop for a node that is never stopped either - it renders silence for up
+    // to 60s (far beyond any scheduling lookahead) and then dies.
     if (parameters.stop[0] > 0.5) { return false }
+    if (parameters.start[0] < 0.5) { this.unstartedSamples = (this.unstartedSamples || 0) + 128; return this.unstartedSamples < 60 * sampleRate }
 
     const output = outputs[0];
     // An a-rate param arrives as either a length-1 array (one value for the whole
@@ -826,18 +833,7 @@ registerProcessor('superosc', SuperOsc);
     // note actually renders a stereo unison `pan` spread, and 1 otherwise so the
     // downstream fx chain stays mono (cheaper) when there's nothing to pan.
     let node = new AudioWorkletNode(audio, "superosc", { outputChannelCount: [channels] })
-    // Count this voice for system.voiceCount() from construction until it is
-    // stopped: an unstopped worklet keeps rendering, so counting from construction
-    // (not from start()) makes that leak visible rather than hiding it.
-    system.voiceStarted()
-    let stopped = false
-    node.start = (time = audio.currentTime) => {
-      node.parameters.get('start').setValueAtTime(1, time)
-    }
-    node.stop = (time = audio.currentTime) => {
-      node.parameters.get('stop').setValueAtTime(1, time)
-      if (!stopped) { stopped = true; system.voiceStopped() }
-    }
+    workletLifecycle(node, audio) // start()/stop() gates on the start/stop params, plus the voice count
     // Set the wavetable from a Float32Array of sample data (eg an AudioBuffer's
     // channel-0 data), sliced into `count` single-cycle frames (default 64, the
     // wt64 standard). The per-frame integrals are precomputed here (off the audio
