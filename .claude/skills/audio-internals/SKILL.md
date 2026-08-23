@@ -43,6 +43,36 @@ if (e && e._destructor) { e._destructor.disconnect(node) }
 
 `node.stop()` with no argument stops at `currentTime`. If called before `start()` fires (e.g. if `start()` was scheduled in the future), the node produces no audio — safe and correct.
 
+That holds for **native** source nodes. AudioWorklet sources are a third category with
+different rules.
+
+### AudioWorkletNode termination (`superosc`, `chaos`, `pwm`)
+
+These are not native sources and `stop()` does not stop them. The factories' `stop()` shim
+only writes 1 to a `stop` AudioParam (e.g. `play/superosc-source.js:837-840`); the node
+only dies when **the render thread runs `process()` again and observes it**, at which point
+`process()` returns `false` (`play/superosc-source.js:564-568`). Consequences:
+
+- **A worklet node that is never `start()`ed never terminates and is never collected.**
+  The guard checks `start` before `stop` and returns `true` unconditionally when unstarted,
+  so the node renders forever. Measured Aug 2026, Chrome 148 and Electron 36: 20/20
+  survival, permanently.
+- Therefore **register the node with the destructor immediately after construction**, not
+  at the end of the synth body. In `play/synth/superosc.js` the `_destructor.stop(vco)`
+  call is the last line, with ~8 `evalMainParamFrame` calls and a `getBuffer` before it —
+  anything throwing in that window leaks a permanently-rendering worklet, and the player
+  error is swallowed by the per-player try/catch in `main.js`.
+- Disconnecting in the same tick as `stop()` is **fine** — verified in both engines, at up
+  to 6,000 nodes in 10s, including when disconnected synchronously. Blink keeps calling
+  `process()` on a disconnected worklet until it returns false. Don't "fix" this.
+- Stop scheduled *before* a future start self-heals (start fires, then the stop check
+  runs). Stopped-but-never-started does not.
+
+`system.voiceCount()` **cannot detect this class of leak.** It decrements inside the JS
+`stop()` shim, so a stopped-but-never-started node makes the counter read 0 while its
+processor runs forever. Trust `queryObjects(AudioWorkletNode)` in DevTools, or a
+`FinalizationRegistry` census in a harness (see `verifier-audio-wiring`), not the counter.
+
 ## Expression operator precedence
 
 Defined in `expression/operators.js`. Lower number = tighter binding (evaluated first):
@@ -202,5 +232,7 @@ Do not go looking for an audio-load or underrun metric — there isn't one, and 
 - **Electron's `app.getAppMetrics()`** does expose real CPU, but AudioWorklets run in the *renderer* process (the Audio Service process only does device I/O), so it conflates the audio thread with the main thread and the WebGL work.
 
 What exists instead: `system.voiceCount()` / `limutAudio.stats()` — a live count of worklet voices (superosc, chaos, pwm), incremented at construction and decremented on `stop()`. Those are the expensive things on the audio thread, so the count plus a known per-voice cost is the usable proxy. Measure per-voice cost offline with the `worklet-dsp` skill.
+
+**Caveat (measured Aug 2026):** the counter decrements in the JS `stop()` shim, not on real processor termination, so it reads 0 while stopped-but-never-started worklets render forever. A zero voice count is *not* evidence of no worklet leak — see "AudioWorkletNode termination" above.
 
 **The UI readout labelled "Timing" is a main-thread meter, not an audio one.** It is `beatLatency` in `main.js` — wall-clock jitter between beat firings — and beats fire from the `requestAnimationFrame` loop, so heavy visuals or a busy machine turn it red while the synths are fine. It was labelled "Audio" until Aug 2026 and the docs described it as an audio-health indicator, which it has never been. A real render underrun produces *no* change in it.

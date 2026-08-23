@@ -161,6 +161,100 @@ grep "INFO:CONSOLE" /tmp/verify.log | sed -E 's|.*CONSOLE[^"]*"||; s|", source:.
 
 `--autoplay-policy=no-user-gesture-required` is required — without it `system.audio.state` is `suspended` and the metronome never advances.
 
+## Hunting node leaks (liveness, not wiring)
+
+"Is this node still alive / still rendering?" is a different question from "is it wired
+right", and the wiring probes above answer it badly. Rules learned the hard way:
+
+**Never hold tracked nodes in a strong `Map`/array.** A tracker that keeps references
+*is* the leak while it runs, and worse, it silently poisons DevTools `queryObjects()` in
+the real app — `queryObjects` returns anything retained by any reference, including the
+instrumentation's. A session was spent chasing "3,952 leaked AudioWorkletNodes" that were
+3,952 nodes held alive by the tracking Map. If the number you get back exactly equals the
+number ever created, suspect your own tracker before believing the leak.
+
+Track liveness with `WeakRef` + `FinalizationRegistry` instead:
+
+```js
+window.__wl = { created: 0, collected: 0 }
+const reg = new FinalizationRegistry(() => { window.__wl.collected++ })
+// ... reg.register(node, 1) at construction; survivors = created - collected
+```
+
+Run Chrome with `--js-flags=--expose-gc` and force collection properly — one `gc()` is not
+enough, and FinalizationRegistry callbacks arrive asynchronously after it:
+
+```js
+for (let i = 0; i < 5; i++) { if (globalThis.gc) globalThis.gc(); await sleep(300) }
+```
+
+**Render capacity is not measurable here.** `AudioContext.renderCapacity` has never
+shipped unflagged (see the comment at `play/system.js:36-50`), so audio-thread load can
+only be read from the user's DevTools WebAudio panel. Node *liveness* is fully measurable
+headlessly, so split the question: measure liveness yourself, ask the user for capacity.
+Always get the **idle floor** (fresh page, Go with an empty editor) before calling any
+capacity reading anomalous.
+
+**Reverse-BFS from `destination` must be seeded from `system.vcaMainAmp`.** If you patch
+`AudioNode.prototype.connect` from the console, the static tail
+(`vcaMainAmp -> limiter -> destination`, wired at `play/system.js` module-load time) was
+connected before your patch, so `destination` has zero recorded incoming edges and the
+walk returns 0 no matter what is playing. Get the module via the AMD global
+`requirejs('play/system')` — in Electron, bare `require` may be Node's.
+
+**An edge map built from connect/disconnect is a live snapshot, not a history.**
+`disconnect` removes edges, so a tiny post-Stop edge count is expected and healthy. Keep
+cumulative creation counts as a separate tally, and never read a creation histogram as a
+liveness measure.
+
+**Patching a constructor loses its name.** `window.AudioWorkletNode = class extends X {}`
+gives `constructor.name === ''` (named evaluation does not apply to member-expression
+assignment), so instrumented nodes tally under an empty-string key. Use a named class:
+`class TrackedAudioWorkletNode extends X {}`.
+
+**AudioWorklet termination is the special case.** A native source dies on `stop()`. A
+worklet node only dies when the render thread runs `process()` again and sees the `stop`
+param — so it must be `start()`ed, and the `stop` param must actually be set. Verified in
+both Chrome 148 and Electron 36: a node that is started and stopped is always collected,
+even when disconnected in the same tick and even at 6,000 nodes in 10s. A node that is
+**never started leaks permanently** (100% survival), because the not-yet-started guard
+returns `true` forever. When testing a synth's teardown, cover: start+stop, never-started,
+stopped-but-never-started, and stop-scheduled-before-start.
+
+## Testing under Electron, not just Chrome
+
+Some limut bugs are Electron-only (the ToDo records a superosc/keyboard oddity that
+appears in Electron but not Firefox). Electron 36 ships a much older Chromium than a
+current Chrome, so verify both before concluding an environment is clean. Drop a throwaway
+main next to the real one and point it at the same harness URL:
+
+```js
+const {app, BrowserWindow} = require('electron')
+app.commandLine.appendSwitch('disable-renderer-backgrounding')
+app.commandLine.appendSwitch('enable-exclusive-audio')          // mirror electron-main.js
+app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required')
+app.commandLine.appendSwitch('js-flags', '--expose-gc')
+app.on('ready', () => {
+  const w = new BrowserWindow({ show: false })
+  w.webContents.on('console-message', (...a) => {         // E36: (e, level, msg, line, src)
+    const m = (a[1] && typeof a[1] === 'object' && 'message' in a[1]) ? a[1].message : a[2]
+    if (typeof m === 'string' && m.startsWith('VERIFY:')) { console.log(m) }
+  })
+  w.loadURL('http://localhost:8000/verify-thing.html')
+})
+```
+
+Run with `node_modules/.bin/electron verify-electron-main.js` (check the installed version
+with `--version`; it can lag `package.json`). Delete the file afterwards with the harness.
+
+## Editing a harness file
+
+Build the harness with a single heredoc `cat > file <<'EOF'`. Patching it afterwards with
+`str.split(marker)[0]` truncation is how you lose helper functions defined after the
+marker — `;(async () => {` in particular matches the tick loop first. Rewrite the whole
+file instead.
+
+
 ## Before/after evidence
 
 For maximum confidence, add a one-line `console.log('DIAG: …', value)` at the decision site you're checking (e.g. just after `evalParamEvent` in `player-fx.js`), run the harness against the unfixed code, then again against the fixed code. The DIAG line shows what the evaluator actually returned, which is the load-bearing question — the probe just shows the downstream effect. Strip the DIAG before committing.
