@@ -13,6 +13,7 @@ Hub75 display
 =================================================================================================================================
 =================================================================================================================================
 !build section alwyas ends up with audio dropouts?????? Even with no superosc, and nothing in the section????
+ Note: see line 5683 for the original code from the jam, transcribed from video
  Investigated Aug 2026, NOT root-caused. What was measured and RULED OUT, so it isnt redone:
   Idle floor is <1%, so a 20-30% post-Stop residue is real, not baseline
   Not the fx mix chains: only 9 nodes reachable from destination after Stop (console graph walk)
@@ -59,8 +60,6 @@ Hub75 display
 ?fxMixChain cache key can fragment: roomHpf and reverbHpf are quantised to step 1, ie one whole
  freeverb+convolver chain per Hz (play/effects/fxMixChain.js:35,39). A swept room={...,hpf:[100:2000]l}
  would mint hundreds. Found by reading, never reproduced -- quantise those to something coarser
- !!!!!!!!!! Checkout Claudes plan to fix worklet termination
-  AND TEST afterwards, make sure render capacity returns to idle floor...!
 !Sometimes on first run, the master fx chain does not work
 !get live working from OBS
  ??? Is it possible to configure OBS to delay its audio stream by a fixed amount, to compensate for the webcam delay??
