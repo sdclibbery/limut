@@ -12,30 +12,12 @@ Hub75 display
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!filterInPlace corrupts the array if the predicate throws (array-in-place.js:16-26)
- arr.length = j is the last statement, so a throw skips it: nothing is removed AND already-compacted
- entries are duplicated. Proven in node: [a,b,c,d,e] -> [a,c,c,d,e]
- Matters because system.frame runs the per-frame audio callbacks through it, and eval-audio-params
- throws a string on a NaN param (play/eval-audio-params.js:111-114). One throwing callback would
- duplicate entries in system.active every frame and block all removals
- Not the dropout cause (no NaN errors were in the console) but its a landmine. Wrap the predicate,
- or use a try/finally so the truncation always runs
-!fxMixChain.disconnectAll() is dead code, so Stop does not disconnect the mix chains
- It sets c.connected = false and NOTHING in the repo ever reads connected (play/effects/fxMixChain.js:68-70)
- window.stop() calls it (editor-codemirror.js:102), so freeverb comb loops and reverb convolvers keep
- rendering until their own TTL timer fires. Should destroyChain() each one and clear its timeout
-?fxMixChain cache key can fragment: roomHpf and reverbHpf are quantised to step 1, ie one whole
- freeverb+convolver chain per Hz (play/effects/fxMixChain.js:35,39). A swept room={...,hpf:[100:2000]l}
- would mint hundreds. Found by reading, never reproduced -- quantise those to something coarser
 !Got dropouts during jam: see line 5683 in examples for the original code. Investigate
-!Sometimes on first run, the master fx chain does not work
+!Sometimes on first run, the master fx chain does not work ? sometimes when stop just after starting?
 !get live working from OBS
  ??? Is it possible to configure OBS to delay its audio stream by a fixed amount, to compensate for the webcam delay??
-!superbass weird on keyboard on electron, not on firefox, superosc missing on most notes?
+!superbass weird on keyboard on electron, not on firefox, superosc missing on some notes? keyboard only
 visual nodes...
- Want to be able to "let" an intermediate pipeline value, and refer to it later; Eg px=sdstar>>let{'foo'}>>tex{webcam}>>mul{foo}
-  Should work for audio chains too; eg fx=let{'foo'}>>reverb>>pan{'foo'}
-  And should be able to let a completely separete chain or (scalar value); eg px=fmb2>>let{'wc',[]n^2}>>cospal{wc,wc} or px=fmb2>>let{'wc',uv>>tex{webcam}}>>cospal{wc,wc}
  kal as a function
  something undefined should render flat black not flat white
  ?how come there isn't a turb3?

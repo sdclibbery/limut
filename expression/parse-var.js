@@ -112,6 +112,15 @@ define(function(require) {
     let thisCallsiteId = 'cs' + callsiteId++
     if (interval === undefined && typeof vars.get(key) === 'function') { interval = vars.get(key).interval }
     let parseVarLookup = (event,b, evalRecurse, modifiers) => {
+      // A live `let` binding is the innermost scope, so it shadows vars and builtins for the rest of
+      // the chain (expression/let-node.js). Bindings hang off the event because that is the object
+      // whose lifetime matches a chain's: a persistent fx chain re-reads its params every frame,
+      // long after the chain was built. Handed back as it stands — a bound shader node or AudioNode
+      // must not be walked by the eval below.
+      if (event !== undefined && event !== null && event._lets !== undefined) {
+        let bound = event._lets[key]
+        if (bound !== undefined) { return bound }
+      }
       let vr
       if (parseVarLookup.namespace) { // Get the var using a namespace
         let ns = vars.get(parseVarLookup.namespace)

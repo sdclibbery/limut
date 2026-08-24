@@ -2,6 +2,7 @@
 define(function(require) {
   require('polyfills')
   require('play/nodes/nodes')
+  require('expression/let-node') // Registers `let`, which works in both audio and visual chains
   require('functions/time')
   require('functions/rand')
   require('functions/aggregators')

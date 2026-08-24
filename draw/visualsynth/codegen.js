@@ -13,6 +13,7 @@ define(function(require) {
       functions: [], // {name, source} GLSL helper declarations, emitted before main
       notReady: false, // a texture source isn't available yet (eg webcam pre-enumeration)
       built: new Map(), // node -> Map(input -> varName): emit each node once, see makeShaderNode
+      lets: {}, // name -> the GLSL variable holding a let bound value, filled during the build walk
     }
     // v0 is the implicit uv seed: the value the whole chain starts with. It is a local of main()
     // and every generated statement lands in main(), so it stays in scope for the whole shader —
@@ -32,14 +33,17 @@ define(function(require) {
     // ctx.built is saved and restored around it, deep copied because its values are Maps: outer
     // entries stay visible inside the block, which is right (an outer vN is in scope in a nested
     // block), but an entry made *inside* must not survive it, or a later build would reuse a
-    // variable that has gone out of scope. nextVar keeps counting across the block, so every
-    // generated name is still unique and still comes from a counter: the source must stay
-    // deterministic, since the program cache is keyed on it.
+    // variable that has gone out of scope. ctx.lets is copied for exactly the same reason: a
+    // let{} inside the body names a variable that goes out of scope at the closing brace.
+    // nextVar keeps counting across the block, so every generated name is still unique and still
+    // comes from a counter: the source must stay deterministic, since the program cache is keyed on it.
     ctx.captureBlock = (fn) => {
       let outerStatements = ctx.statements
       let outerBuilt = ctx.built
+      let outerLets = ctx.lets
       ctx.statements = []
       ctx.built = new Map(Array.from(outerBuilt, ([node, byInput]) => [node, new Map(byInput)]))
+      ctx.lets = Object.assign({}, outerLets)
       let out, statements
       try {
         out = fn()
@@ -47,6 +51,7 @@ define(function(require) {
         statements = ctx.statements
         ctx.statements = outerStatements
         ctx.built = outerBuilt
+        ctx.lets = outerLets
       }
       return {out: out, statements: statements}
     }
