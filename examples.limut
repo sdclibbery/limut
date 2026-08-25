@@ -5707,3 +5707,16 @@ section drop {
 }, length=64
 
 
+// v visualsynth, px=topolar>>floor{1/32}>>frompolar>>kal{shape:3}^3>>rot2{time/16}
+// v visualsynth, px=kal^3>>rot2{time/16}
+// v visualsynth, px=rot2{time/16}>>kal{shape:[]n8+time/4}^3>>pal{0,red,1,blue,0}^3
+// v visualsynth, px=kal{shape:[]n8+3}^3>>pal{0,red,yellow,0}
+// v visualsynth, px=mul{1/8}>>add{1/8}%1/8>>kal>>cospal{#012}^16
+// v visualsynth, px=sdstar>>let{'foo'}>>tex{webcam}>>mul{1-foo}
+// a ping, fx=let{'foo'}>>reverb>>panner{foo}, sus=1/8
+// v visualsynth, px=fbm2>>let{'wc',[]n^2}>>cospal{wc*#48a,wc}
+// v visualsynth, px=fbm2>>let{'wc',uv>>tex{webcam}}>>cospal{wc,wc}
+// w visualsynth, px=loop{set{u:id.v,v:id.u}>>mul{2}+time/4, 4, map:{v,i}->add{perlin1{i+time}/4}>>tex{webcam}>>cospal, fold:{a,v}->a*v+a/2}
+// w visualsynth, px=set{z:sin{time+id.u*id.v}}>>loop{set{u:id.v,v:id.u}>>mul{1.2}+time/2, 2, map:{v,i}->(sin{v*8}+cos{v*2})*(8/(2^i))}/15
+
+

@@ -18,15 +18,15 @@ Hub75 display
  ??? Is it possible to configure OBS to delay its audio stream by a fixed amount, to compensate for the webcam delay??
 !superbass weird on keyboard on electron, not on firefox, superosc missing on some notes? keyboard only
 visual nodes...
- something undefined should render flat black not flat white
- If loop main function is not supplied, it should default to id; eg px=loop{map:{v,i}->sin{v*i},4}
- method that takes a px chain, and does a shephard tone thing with perpetually zooming into two copies of the chain
  ?how come there isn't a turb3?
  ?why does fbm3 (with time in z) move in a jerky way? It seems to move to a new configuration, then pause there etc. Is that expected? eg px=set{z:time/16}>>fbm3
  voronoi
  ?bitwise ops
  ?render buffers to generate read from, eg px=tex{buffer{mul{1.01}>>webcam>>set{#...a},clear:false}} for temporal zoom-blur??
  ?visual lib functions for old style visual params (monochrome, pixellate, rotate, mirror, vhs etc etc) - vhs needs split into uv and rgb parts...
+ something undefined should render flat black not flat white
+ If loop main function is not supplied, it should default to id; eg px=loop{map:{v,i}->sin{v*i},4}
+ method that takes a px chain, and does a shephard tone thing with perpetually zooming into two copies of the chain
  3d stuff?
  ?support for piecewise as shader code not textures?
  ?no time uniform in a generated px shader, so `time` in a chain costs a JS param eval per frame
