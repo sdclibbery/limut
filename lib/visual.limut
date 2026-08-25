@@ -133,6 +133,29 @@ set mat2 = {in:id, xx:1, xy:0, yx:0, yy:1} ->
 set rot2 = {in:id, a:0} ->
   mat2{in, cos{6.28318*a}, sin{6.28318*a}, -sin{6.28318*a}, cos{6.28318*a}}
 
+// Polar coordinates: topolar puts the radius in x and the angle in y, frompolar reads them back
+// out, and z and w are carried through untouched by both. The angle is in turns, as rot2's is, and
+// comes out of atan in -1/2 to 1/2, ie zero along +x and the seam along -x; fract{} shifts that
+// into 0 to 1 if a texture or palette wants it. Radius is in the same units as the coordinate, so
+// 1 is half the frame height.
+//   px=topolar>>cospal      // colour by radius
+//   px=topolar>>set{y:0}>>frompolar>>tex{webcam{}}
+// The pair is its own inverse (frompolar{topolar{p}} is p), so the useful shape is to go out, do
+// something to the radius or the angle, and come back:
+//   px=topolar>>add{y:id.x/4}>>frompolar>>sdbox{b:{x:1,y:1/8}}>>sdfill   // twist, more with radius
+//   px=topolar>>set{y:floor{id.y*8}/8}>>frompolar>>tex{webcam{}}          // eight pie slices
+// As with mat2, the channel expressions read id rather than in: a set{} param is built from the
+// input set{} itself sees, which the `in >>` has already made in's output, so reading in there
+// would apply it a second time. The `in >>` is also what keeps z and w coming from the point when
+// the function is called on a coordinate directly rather than being piped one.
+// The radius is the 2d one, hence the explicit sum rather than length{}, which is over xyz. At the
+// exact origin the angle is undefined (GLSL's atan(0,0) is), the one pixel where that matters.
+set topolar = {in:id} ->
+  in >> set{x: sqrt{id.x*id.x + id.y*id.y}, y: atan{id.y, id.x}/6.28318}
+
+set frompolar = {in:id} ->
+  in >> set{x: id.x*cos{6.28318*id.y}, y: id.x*sin{6.28318*id.y}}
+
 //// Patterns
 // The pattern generation from the kal visual (shader/kaleidoscope.frag, itself from
 // https://www.shadertoy.com/view/Xd2Bzw), converted into DSL: the plane is folded into the unit
