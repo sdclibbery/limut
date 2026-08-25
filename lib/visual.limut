@@ -1,6 +1,7 @@
-// This library includes smooth noise and 2d transforms for visualsynth px chains, built entirely
-// out of the shader nodes: pxhash for the randomness, floor/fract for the lattice, smoothstep for
-// the fade curve and mix for the interpolation. Nothing here is implemented in javascript.
+// This library includes smooth noise, 2d transforms and a kaleidoscope pattern for visualsynth px
+// chains, built entirely out of the shader nodes: pxhash for the randomness, floor/fract for the
+// lattice, smoothstep for the fade curve, mix for the interpolation and parallel/loop for the
+// repetition. Nothing here is implemented in javascript.
 //
 // pxhash gives an independent random value per pixel, ie white noise. Smooth noise instead hashes
 // the corners of a lattice cell and interpolates between them, so neighbouring pixels get
@@ -131,3 +132,42 @@ set mat2 = {in:id, xx:1, xy:0, yx:0, yy:1} ->
 //   px=rot2{[0:1]l8}>>tex{webcam{}}
 set rot2 = {in:id, a:0} ->
   mat2{in, cos{6.28318*a}, sin{6.28318*a}, -sin{6.28318*a}, cos{6.28318*a}}
+
+//// Patterns
+// The pattern generation from the kal visual (shader/kaleidoscope.frag, itself from
+// https://www.shadertoy.com/view/Xd2Bzw), converted into DSL: the plane is folded into the unit
+// square, turned a little, and folded again, n times over, with the glow either side of the y
+// axis accumulated at every level. The per level tint the original mixes in is left out, so this
+// gives back a single value in all four channels and colours like any other field.
+// The sum runs well past 1 over much of the frame at the default glow, which is what the original
+// does too (its palette clamps it); thin the filaments with a smaller glow, or scale it down.
+//   px=kal{glow:1/3}
+//   px=kal{glow:1/2}/2>>pal{#012,#28a,#fff}
+//   px=kal{n:6}/3>>cospal{#05a}
+
+// The turn: a 2x2 whose entries are cosines of one angle at three phases, the leading diagonal
+// sharing one. They are passed on to a helper rather than written out because there is nowhere in
+// an expression to put a local, which is also why the shared angle k is an argument of kalturn.
+// The original builds the matrix with GLSL's mat2(vec4), which is column major, so its second
+// component is the top right entry (xy) and its third the bottom left (yx), not the other way up.
+set kalturn2 = {q, ca, cb, cc} -> mat2{q, ca, cb, cc, ca}
+set kalturn = {q, k, shape} -> kalturn2{q, cos{k+0.78}, cos{k+5.46}, cos{k+0.78*(3+shape)}}
+
+// One level: mirror tile the plane into the unit square with a triangle wave, then turn it. The
+// angle winds up as i*i, so each level turns faster than the last, which is what stops the levels
+// from staying locked together.
+set kalstep = {p, i, t, shape} -> kalturn{abs{2*fract{p-1/2}-1}, t/100*i*i, shape}
+
+// The glow at one level: a filament along y=0 falling off exponentially either side, so what
+// accumulates over the levels is a web of them. glow widens and brightens it. The original's 0.4
+// overall gain is folded in here, since scaling every term scales the sum.
+set kalline = {p, glow} -> exp{-abs{p.y}*5/(2/5+3/5*glow)}*2/5
+
+// n levels, with a line taken at each. The loop carries the folded point and the fold sums the
+// lines, which is the one thing the carried value cannot do for itself. sgn{i} drops the seed
+// term: the fold seeds itself from the value as it arrives, before any step, where the original
+// takes its first line after the first fold. The coordinate is handed to kalstep explicitly
+// rather than piped into it, because >> withholds the chain value from a call whose own args
+// already hold a visual node, and the loop index is one.
+set kal = {in:id, t:time/2, shape:0, glow:1, n:8} ->
+  in/4 >> loop{{i} -> kalstep{id, i+1/2, t, shape}, n, map:{v,i} -> sgn{i}*kalline{v, glow}}

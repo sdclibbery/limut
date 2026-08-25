@@ -18,8 +18,9 @@ Hub75 display
  ??? Is it possible to configure OBS to delay its audio stream by a fixed amount, to compensate for the webcam delay??
 !superbass weird on keyboard on electron, not on firefox, superosc missing on some notes? keyboard only
 visual nodes...
- kal as a function
+ to/from polar coordinates
  something undefined should render flat black not flat white
+ If loop main function is not supplied, it should default to id; eg px=loop{map:{v,i}->sin{v*i},4}
  ?how come there isn't a turb3?
  ?why does fbm3 (with time in z) move in a jerky way? It seems to move to a new configuration, then pause there etc. Is that expected? eg px=set{z:time/16}>>fbm3
  voronoi
