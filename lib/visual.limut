@@ -90,9 +90,13 @@ set fbm3 = {in:id, scale:4, seed:0} ->
   parallel{{i} -> noise3{in, scale*(2^i), seed}*(8/(2^i)), 4}/15
 
 // Turbulence: the same sum over the absolute value of each signed octave, giving the creased,
-// billowy look that suits smoke and marble
+// billowy look that suits smoke and marble. turb3 is over noise3 as fbm3 is, so it animates
+// through the incoming z rather than only scrolling past
 set turb2 = {in:id, scale:4, seed:0} ->
   parallel{{i} -> abs{noise2{in, scale*(2^i), seed}*2-1}*(8/(2^i)), 4}/15
+
+set turb3 = {in:id, scale:4, seed:0} ->
+  parallel{{i} -> abs{noise3{in, scale*(2^i), seed}*2-1}*(8/(2^i)), 4}/15
 
 //// Colour
 // Cosine palette from Inigo Quilez: a single value in becomes a cycling colour out. a is the level

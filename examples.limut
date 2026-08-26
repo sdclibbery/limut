@@ -5719,4 +5719,6 @@ section drop {
 // w visualsynth, px=loop{set{u:id.v,v:id.u}>>mul{2}+time/4, 4, map:{v,i}->add{perlin1{i+time}/4}>>tex{webcam}>>cospal, fold:{a,v}->a*v+a/2}
 // w visualsynth, px=set{z:sin{time+id.u*id.v}}>>loop{set{u:id.v,v:id.u}>>mul{1.2}+time/2, 2, map:{v,i}->(sin{v*8}+cos{v*2})*(8/(2^i))}/15
 
+// w visualsynth, px=set{v:id.v-time,z:time/3}>>(turb3{scale:1}+fbm3{scale:3/2})^3>>mul{1/2-uv.v/2}>>pal{0,red*3/4,yellow,1} // Fire
+
 
