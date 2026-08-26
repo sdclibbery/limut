@@ -1,11 +1,14 @@
 const {app, BrowserWindow} = require('electron')
+const path = require('path')
+const audioLoad = require('./electron-audio-load')
 
 app.commandLine.appendSwitch('disable-serial-blocklist')
 app.commandLine.appendSwitch('disable-renderer-backgrounding')
 app.commandLine.appendSwitch('enable-exclusive-audio');
 
 app.on('ready', () => {
-  mainWindow = new BrowserWindow({width: 1280, height: 800})
+  mainWindow = new BrowserWindow({width: 1280, height: 800, webPreferences: {preload: path.join(__dirname, 'preload.js')}})
+  audioLoad.start(mainWindow)
   mainWindow.webContents.session.on('select-serial-port', (event, portList, webContents, callback) => {
     event.preventDefault()
     console.log('Available serial ports:', portList)

@@ -18,9 +18,8 @@ Hub75 display
  ??? Is it possible to configure OBS to delay its audio stream by a fixed amount, to compensate for the webcam delay??
 !superbass weird on keyboard on electron, not on firefox, superosc missing on some notes? keyboard only
 visual nodes...
- ?how come there isn't a turb3?
  ?why does fbm3 (with time in z) move in a jerky way? It seems to move to a new configuration, then pause there etc. Is that expected? eg px=set{z:time/16}>>fbm3
- voronoi
+ voronoi, result should be like an sdf to the voronoi edges (or centres)
  ?bitwise ops
  ?render buffers to generate read from, eg px=tex{buffer{mul{1.01}>>webcam>>set{#...a},clear:false}} for temporal zoom-blur??
  ?visual lib functions for old style visual params (monochrome, pixellate, rotate, mirror, vhs etc etc) - vhs needs split into uv and rgb parts...

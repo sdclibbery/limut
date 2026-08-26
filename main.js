@@ -123,6 +123,8 @@ define(function(require) {
   let vuMeterL = document.getElementById('vu-meter-l')
   let vuMeterR = document.getElementById('vu-meter-r')
   let limiterReadout = document.getElementById('compressor-readout')
+  let audioReadout = document.getElementById('audio-readout')
+  let audioReadoutHolder = document.getElementById('audio-readout-holder')
   let beatLatencyReadout = document.getElementById('beat-latency-readout')
   let visualReadout = document.getElementById('visual-readout')
   let beatReadout = document.getElementById('beat-readout')
@@ -253,9 +255,21 @@ define(function(require) {
     limiterReadout.style.backgroundColor = readoutColor(-system.limiterReduction(), 0, 10)
     if (!!beat || tickCount % 20 == 0) {
       // Beat scheduling jitter. Labelled "Timing", not "Audio": beats fire from this
-      // rAF loop, so this measures the main thread keeping up, not the audio thread.
+      // rAF loop, so this measures the main thread keeping up, not the audio thread -
+      // that is the separate Audio meter below, which only exists under Electron.
       beatLatencyReadout.style.backgroundColor = readoutColor(beatLatency, 0, 0.05)
       visualReadout.style.backgroundColor = readoutColor(drawSystem.latency(), 0.02, 0.1)
+      // Audio thread load; only ever a reading under Electron, so the meter is hidden
+      // entirely rather than sitting there grey in the browser
+      let audioLoad = system.audioLoad()
+      audioReadoutHolder.style.display = audioLoad ? 'inline' : 'none'
+      if (audioLoad) {
+        audioReadout.style.backgroundColor = readoutColor(audioLoad.renderCapacity, 0.3, 0.9)
+        let jitter = Math.sqrt(Math.max(0, audioLoad.callbackIntervalVariance))
+        audioReadout.title = `render capacity ${Math.round(audioLoad.renderCapacity*100)}%`
+          + `, callback ${(audioLoad.callbackIntervalMean*1000).toFixed(1)}ms +/-${(jitter*1000).toFixed(1)}ms`
+          + `, ${system.voiceCount()} worklet voices`
+      }
     }
     requestAnimationFrame(tick)
   }

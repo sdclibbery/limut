@@ -43,29 +43,44 @@ system.latency = () => {
 // render thread may not act on for another quantum, or ever. See the shared shim in
 // play/worklet-lifecycle.js.
 //
-// This is a proxy, and deliberately so: there is no way to measure audio thread
-// load or dropouts from JS. AudioContext.renderCapacity - the API meant for exactly
-// this - has never shipped unflagged (checked against Chrome 151 and Electron 36:
-// absent from AudioContext.prototype in both). AudioWorkletGlobalScope has no
+// This is a proxy, and in the browser build it is the only one available: no web API
+// measures audio thread load or dropouts. AudioContext.renderCapacity - the API meant
+// for exactly this - has never shipped unflagged (checked against Chrome 151 and
+// Electron 36: absent from AudioContext.prototype in both, and the blink interface is
+// not even present in Electron's bundled Chromium). AudioWorkletGlobalScope has no
 // performance.now(), so a monitor worklet cannot time itself either, and both
 // currentTime and getOutputTimestamp() track the output device buffer and stay flat
 // even when the audio thread is deliberately driven past its deadline. So the beat
 // latency readout (labelled "Timing" in the UI) measures the MAIN thread, and the
-// voice count below is the honest handle on the audio thread. Revisit if
-// renderCapacity ever ships.
+// voice count below is the honest handle on the audio thread in a browser.
+//
+// Electron gets the real number: Chromium computes render capacity for the DevTools
+// WebAudio tab and exposes it over the DevTools protocol, which the Electron main
+// process can speak to its own renderer. See system.audioLoad() below.
 let voices = 0
 system.voiceStarted = () => { voices += 1 }
 system.voiceStopped = () => { voices -= 1 }
 system.voiceCount = () => voices
 
+// Audio thread load, as a fraction of the render budget used per callback: the same
+// number as the DevTools WebAudio tab's "render capacity". Electron only - polled by
+// electron-audio-load.js and handed over by preload.js - so null means "no reading":
+// the browser build, or nothing polled yet, or a poll that failed.
+// Also carries callbackIntervalMean/Variance (seconds) for the audio callback itself.
+system.audioLoad = () => window.limutElectron ? window.limutElectron.audioLoad() : null
+
 // Console handle for checking the audio thread mid-set, like window.limutNodePool.
 window.limutAudio = {
-  stats: () => ({
-    workletVoices: voices,
-    sampleRate: system.audio.sampleRate,
-    baseLatency: system.audio.baseLatency,
-    outputLatency: system.audio.outputLatency,
-  }),
+  stats: () => {
+    let load = system.audioLoad()
+    return {
+      workletVoices: voices,
+      renderCapacity: load ? load.renderCapacity : undefined,
+      sampleRate: system.audio.sampleRate,
+      baseLatency: system.audio.baseLatency,
+      outputLatency: system.audio.outputLatency,
+    }
+  },
 }
 
 system.vcaMainAmp = system.audio.createGain()
@@ -157,6 +172,27 @@ system.vcaMainAmp.connect(system.limiter)
 system.limiter.connect(system.analyser)
 system.limiter.connect(system.meterSplitter)
 system.limiter.connect(system.audio.destination)
+
+// TESTS //
+if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+  let assert = (expected, actual, msg) => {
+    if (expected !== actual) { console.trace(`Assertion failed ${msg||''}.\n>>Expected: ${expected}\n>>Actual:   ${actual}`) }
+  }
+  let saved = window.limutElectron
+  try {
+    delete window.limutElectron
+    assert(null, system.audioLoad(), 'no audio load reading without the Electron bridge')
+    window.limutElectron = { audioLoad: () => ({renderCapacity: 0.25}) }
+    assert(0.25, system.audioLoad().renderCapacity, 'audio load comes through the Electron bridge')
+    assert(0.25, window.limutAudio.stats().renderCapacity, 'stats reports the render capacity when available')
+    window.limutElectron = { audioLoad: () => null }
+    assert(null, system.audioLoad(), 'bridge with no reading yet gives null')
+    assert(undefined, window.limutAudio.stats().renderCapacity, 'stats omits the render capacity with no reading')
+  } finally {
+    if (saved === undefined) { delete window.limutElectron } else { window.limutElectron = saved }
+  }
+  console.log('Audio system tests complete')
+}
 
 return system
 })
