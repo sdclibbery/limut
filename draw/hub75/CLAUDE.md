@@ -461,6 +461,17 @@ Not started: **the Colorlight output stage** and the panel mapping. The output b
 `CAP_NET_RAW` in the systemd unit and the `eth0`-unmanaged configuration are all in place, so it
 is a single file to fill in when the card and panels arrive.
 
+## Alternative render nodes
+
+`esp32/README.md` is a **feasibility analysis only, nothing built**: could an ESP32-S3 be a
+lightweight render node driving addressable LEDs instead of panels? Short answer — the S3 has no GPU
+and no path to one, but our generated GLSL is a machine-generated subset (all `vec4`, ~28 builtins,
+straight-line SSA) small enough to compile on-device into a bytecode VM run once per LED. The
+protocol needs no change at all, since the host is geometry-blind and `display` is a free-form
+string, and 60-70% of `pi/` ports straight across. Expect **500-1000 LEDs at 60 fps** for a typical
+chain. Read it before starting any such work; it ends with the two measurements that should be taken
+before committing.
+
 ## Open questions
 
 - **The Colorlight protocol itself**: frame packets, row addressing, colour depth, and getting
