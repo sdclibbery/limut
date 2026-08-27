@@ -79,7 +79,7 @@ define((require) => {
   let sectionBlockStartRegex = /^\s*section\s+([_a-zA-Z]\w*)\s*\{\s*$/i
   let sectionBlockEndRegex = /^\s*\}/
 
-  let parseCommand = async (lines, i, url) => {
+  let parseCommand = async (lines, i, url, parseCode) => {
     let line = lines[i]
     if (line === '') { return i }
     if (line.startsWith('//') === '') { return i }
@@ -115,14 +115,44 @@ define((require) => {
     return i
   }
 
-  let parseCode = async (code, url) => {
-    let lines
-    lines = parseLinesAndComments(code)
-    for (let i = 0; i<lines.length; i++) {
+  // A code update can be superseded part way through - a second Ctrl+Enter, or a stop - while it is
+  // suspended on an include fetch. Each update takes a generation; once that moves on, the older parse
+  // abandons rather than carrying on writing into state that has since been torn down or replaced.
+  let updateGeneration = 0
+  let cancelUpdate = () => {
+    updateGeneration++
+    players.updating = false // Nothing left to wait for; don't leave continuous players held off forever
+  }
+
+  let makeParseCode = (gen) => {
+    let parse = async (code, url) => {
+      let lines
+      lines = parseLinesAndComments(code)
+      for (let i = 0; i<lines.length; i++) {
+        if (gen !== undefined && gen !== updateGeneration) { return } // Superseded by a newer update, or cancelled
+        try {
+          i = await parseCommand(lines, i, url, parse) // Will skip lines that were accumulated
+        } catch (e) {
+          consoleOut('🔴 Parse error: ' + e)
+          console.log(e)
+        }
+      }
+    }
+    return parse
+  }
+  let parseCode = makeParseCode(undefined) // Ungated; used for the startup preset loads and the tests
+
+  // Buses are the only continuous player type, and they were held off for the duration of the update.
+  // Start them here rather than leaving it to the next beat: a bus input is only wired through to its
+  // output inside start(), so anything routed into an unstarted bus is dropped.
+  let startContinuousPlayers = () => {
+    for (let id in players.instances) { // Insertion order, so the reserved buses (parsed first) start first
+      let player = players.instances[id]
+      if (!player || !player.startIfPending) { continue }
       try {
-        i = await parseCommand(lines, i, url) // Will skip lines that were accumulated
+        player.startIfPending()
       } catch (e) {
-        consoleOut('🔴 Parse error: ' + e)
+        consoleOut('🔴 Run Error from player '+id+': ' + e)
         console.log(e)
       }
     }
@@ -132,6 +162,9 @@ define((require) => {
   let updateCode = async (code, options = {}) => {
     system.resume()
     if (!options.auto) { latestCode = code } // Remember for automatic reruns on section change
+    let gen = ++updateGeneration // Supersedes any update still parsing, so it stops writing into this one's state
+    let parse = makeParseCode(gen)
+    players.updating = true // Hold continuous players off until every override in the code has been parsed
     players.gc_reset()
     sections.gc_reset()
     sections.resetDefault() // Baseline default each update; a `section default` line then redefines it
@@ -147,11 +180,16 @@ define((require) => {
     }
     sections.suppressForce = !!options.auto // set section.active/next lines must not refire on automatic reruns
     try {
-      await parseCode(mainBus())
-      await parseCode(code)
+      await parse(mainBus())
+      await parse(code)
     } finally {
       sections.suppressForce = false
+      // Safe to clear here even though the overrides are not final yet: everything from this point to
+      // startContinuousPlayers() below is synchronous, so no beat can land in between. Doing it in the
+      // finally means an unexpected throw can't leave every bus held off for good.
+      if (gen === updateGeneration) { players.updating = false }
     }
+    if (gen !== updateGeneration) { return } // Superseded mid parse; whoever bumped the generation owns the state now
     players.gc_sweep()
     sections.gc_sweep()
     sliders.gc_sweep()
@@ -160,6 +198,7 @@ define((require) => {
     // wildcards (which only ever match players) have already been resolved; and after gc_sweep, so
     // only surviving sections are considered.
     players.overrides = sections.extractOverrides(players.overrides, id => !!players.getById(id))
+    startContinuousPlayers() // Overrides are final; buses may latch them now
   }
 
   // Rerun the last code after the active section changed, so section-scoped lines
@@ -435,6 +474,7 @@ define((require) => {
   return {
     parseCode:parseCode,
     updateCode:updateCode,
+    cancelUpdate:cancelUpdate,
     rerunForSectionChange:rerunForSectionChange,
   }
 })

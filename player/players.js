@@ -5,6 +5,7 @@ define(function(require) {
   let players = {
     instances: {},
     overrides: {},
+    updating: false, // True while updateCode is parsing; continuous players must not latch their overrides yet
   }
 
   players.gc_reset = () => {
@@ -37,6 +38,9 @@ define(function(require) {
     let preserved = {}
     reservedBuses.forEach(id => { if (players.instances[id]) { preserved[id] = players.instances[id] } }) // Preserve reserved buses so they can be cleaned up when recreated on code update
     players.instances = preserved
+    // A preserved bus that never took a beat must not start now: overrides are about to be cleared, so it
+    // would latch a params set with no fx and mix dry to the output for the rest of the run
+    Object.values(preserved).forEach(p => { if (p.cancelStart) { p.cancelStart() } })
     players.overrides = {}
   }
 
@@ -117,6 +121,21 @@ define(function(require) {
     testOverrideWildcard(['p1','p2','r1','main'], {'main':{foo:1}}, {main:{foo:1}})
     testOverrideWildcard(['p1','silent'], {'*':{foo:1}}, {p1:{foo:1}}) // silent is a reserved bus, excluded from wildcards
     testOverrideWildcard(['p1','silent'], {'silent':{foo:1}}, {silent:{foo:1}}) // but an explicit override still applies
+
+    // stopAll destroys ordinary players, preserves the reserved buses, and cancels any start they
+    // hadn't taken yet - otherwise a preserved bus latches the just-cleared overrides on the next beat
+    let stopCalls = []
+    players.instances = {
+      p1: { destroy: () => stopCalls.push('p1 destroyed') },
+      main: { cancelStart: () => stopCalls.push('main cancelled') },
+    }
+    players.overrides = { main: {fx:1} }
+    players.stopAll()
+    assert(['p1 destroyed','main cancelled'], stopCalls)
+    assert(['main'], Object.keys(players.instances))
+    assert({}, players.overrides)
+    assert(false, players.updating)
+    players.instances = {}
 
     players.instances = { pp: 5 }
     assert(5, players.getById('pp'))

@@ -2,7 +2,7 @@
 define(function(require) {
   let system = require('play/system')
   let players = require('player/players')
-  let {updateCode} = require('update-code')
+  let {updateCode,cancelUpdate} = require('update-code')
   let consoleOut = require('console')
   let fxMixChain = require('play/effects/fxMixChain')
 
@@ -99,6 +99,7 @@ define(function(require) {
   }
   window.stop = () => {
     system.resume()
+    cancelUpdate() // An update still parsing (blocked on an include fetch) must not write into the state we are about to tear down
     fxMixChain.disconnectAll()
     players.stopAll()
     consoleOut('> Stop all players')

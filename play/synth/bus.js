@@ -48,6 +48,7 @@ define((require) => {
       if (bus._fx !== undefined) { bus._fx.destroy() }
       bus._fx = createPlayerFxChain(params, bus.id === 'main')
       setTimeout(()=> { // Pause until last moment before connecting to avoid loud blare with parallel delay feedbacks
+        if (!bus._fx) { return } // createPlayerFxChain bails out when the destination bus is missing
         bus.output.connect(bus._fx.chainInput)
       }, (params._time - system.timeNow()) * 1000 - 1)
     } else {

@@ -13,7 +13,6 @@ Hub75 display
 =================================================================================================================================
 =================================================================================================================================
 !Got dropouts during jam: see line 5683 in examples for the original code. Investigate
-!Sometimes on first run, the master fx chain does not work ? sometimes when stop just after starting?
 !get live working from OBS
  ??? Is it possible to configure OBS to delay its audio stream by a fixed amount, to compensate for the webcam delay??
 !superbass weird on keyboard on electron, not on firefox, superosc missing on some notes? keyboard only

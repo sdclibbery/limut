@@ -15,8 +15,11 @@ define(function(require) {
     player.events = transferEvents
 
     player.getEventsForBeat = () => []
+    // A continuous player reads its overrides exactly once, and the params it latches decide its whole
+    // topology (for a bus, whether it has an fx chain at all). So it must not latch while a code update
+    // is still parsing, or while a stop is clearing the overrides out from under it.
     let started = false
-    player.play = () => {
+    let latchAndStart = () => {
       if (started) { return }
       let overrides = players.overrides[playerId] || {}
       params = applyOverrides(params, overrides)
@@ -24,6 +27,12 @@ define(function(require) {
       player.start(params)
       started = true
     }
+    player.play = () => {
+      if (players.updating) { return } // startIfPending starts it as soon as the update has finished parsing
+      latchAndStart()
+    }
+    player.startIfPending = latchAndStart // Called at the end of a code update, so it is live before the next beat
+    player.cancelStart = () => { started = true } // Abandon a start that never happened (on stop); a no-op if already started
     player.currentEvent = () => [params]
 
     return player
