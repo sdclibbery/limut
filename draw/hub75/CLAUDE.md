@@ -423,6 +423,297 @@ serves both families, and the daemon now says which it bound in its startup line
 costs well under a millisecond at this size, so pipelining a frame behind would cost 16 ms of
 latency for no gain. Revisit only if a much larger panel changes that.
 
+## Panels
+
+| | |
+|---|---|
+| Column / data driver | **ICN2037BP** — Chipone, 16-channel constant current sink, dual latch |
+| Row / scan driver | **RUC7258E** — Ruichips, 8-channel line driver, internal 3-to-8 decoder, 2.8 A, SOP-16 |
+| Label | `P5(2121)-3264-16S-M5` |
+| Pitch / LED | 5 mm, SMD2121 (indoor) |
+| Module | 64 x 32 pixels, 320 x 160 mm |
+| Scan | 1/16 |
+| Chip counts | 24 x ICN2037BP, 4 x RUC7258E per module — both confirmed on the board |
+| Array | one module on J1 so far; it lands at canvas cell 17 (panel space x=1088, y=0) |
+| Colour order | **bgr**, established on the bench |
+
+**This is the easy case, and it is worth knowing why.** Both chips are of the plain generation:
+the ICN2037BP is a shift register, latch and constant current sink with no internal PWM engine and
+no configuration registers, and the RUC7258E is a multiplexer with no configuration at all. Nothing
+on the panel needs an initialisation sequence, unlike the S-PWM generation (ICN2053, FM6353,
+MBI5153), which does and which has to be told about explicitly. A panel like this is what a
+receiving card's generic settings are for.
+
+**How to read the chip counts, correctly.** Both counts check out against the label, but only once
+the row rule is right — the obvious version of it is wrong and is worth writing down so it is not
+re-derived wrongly later:
+
+- **Row chips × 8 = the number of physical rows, i.e. the panel height — not the scan rate.** Every
+  row needs its own switch whatever the scan is: at 1/16 on a 32-high panel, rows *k* and *k+16*
+  are lit together, so all 32 rows are switched, not 16. 4 × RUC7258E × 8 = 32 = the panel height.
+- **The scan rate comes from the column drivers instead.** Each ICN2037BP sinks 16 channels. 24 of
+  them is 384 channels, and 384 / 64 columns = 6 channels per column = R1G1B1 **and** R2G2B2, so
+  two halves are driven at once and the scan is height / 2 = **1/16**. Twelve chips would have
+  meant one data group and 1/32.
+
+Both counts therefore agree with `3264-16S`, and each was derived independently of the label.
+
+Do **not** read the trouble reports around these part numbers in `hzeller/rpi-rgb-led-matrix` and
+`ESP32-HUB75-MatrixPanel-DMA` as trouble here. Those libraries bit-bang HUB75 timing from a CPU
+and have to reproduce the scan themselves; the 5A-75B does the scanning and PWM in its FPGA, which
+is the entire reason for using one. Different problem class.
+
+The colour order is a property of the PCB wiring rather than of either chip, so it stays an
+empirical question whatever the datasheets say.
+
+### What the 5A-75B will take
+
+From Colorlight's own datasheet (`Datasheet_Colorlight_5A_75B_Receiving_Card_V1_0`, spec V8.3.1):
+
+| | |
+|---|---|
+| Control area | **normal chips 128 x 1024**, PWM chips 192 x 1024, Shixin chips 162 x 1024 |
+| Scan | up to 1/128 |
+| Per module | any rows and columns within 13312 pixels |
+| Data groups | up to 16 parallel (8 HUB75 ports, J1–J8, two groups each) |
+| HUB75 signals | RD1 BD1 RD2 BD2 data, A B C D E scan, CLK LAT OE control |
+
+**The ICN2037BP is a "normal chip"**, so the ceiling that applies here is **128 x 1024**, not the
+192 x 1024 that the marketing copy quotes. In 64 x 32 modules that is 16 across by 4 down — 64
+modules, 8 modules per port. Nowhere near binding for anything this project will build, and each
+module's 2048 pixels is far inside the 13312 per-module limit.
+
+Note the daemon's existing default of `--size 128x64` is exactly a 2 x 2 array of these modules,
+which is 640 x 320 mm of panel.
+
+**Power is the constraint that actually bites, and it is not on the card.** Budget on the order of
+20 W — about 4 A at 5 V — per module at full white, and check it against the module's own label
+rather than that figure: a 2 x 2 array at full brightness is then a ~16 A 5 V supply, which is a
+real power supply with real wiring, entirely separate from the Pi's. `--brightness` and `dim`
+between them keep the average far below this, but the supply has to survive a white frame.
+
+## Colorlight output stage
+
+Built 2026-08-28: `pi/output_colorlight.c` fills the seam, and `tools/colorlight-probe.c` is the
+safe way to ask a card what it is. **Neither has met a card yet** — everything below is the wire
+format as documented by other people, implemented and unit tested, and waiting to be corrected by
+hardware.
+
+**The offset convention is the thing to get right first.** Colorlight puts the packet type in the
+*first* byte of the ethertype field and treats the *second* as the first byte of data. What a
+sniffer calls "ethertype 0x5500" is really type 0x55, `d[0] = 0x00`. Both the probe and the output
+stage write offsets as `d[n]` where `d = frame + 13`, the same convention the upstream reverse
+engineering uses, so the two can be compared without an off-by-one. Harald Kubota's write-up
+numbers from frame byte 14 instead, which is where an apparent contradiction between the two
+sources usually turns out to be a shifted index rather than a disagreement.
+
+| type | | |
+|---|---|---|
+| `0x07` | discover | 284 byte frame, `d[3]` = which receiver is being asked for |
+| `0x08` | reply | 1070 bytes: `d[0]=0x05` marks a 5A, `d[2:3]` firmware, `d[21:24]` cabinet size, `d[38:41]` packets received, `d[46:49]` uptime |
+| `0x55` | pixel data | `d[0:1]` row, `d[2:3]` first pixel, `d[4:5]` count, `d[6]=0x08`, `d[7]=0x88`, then 3 bytes per pixel |
+| `0x01` | display/sync | 112 bytes, `d[0]=0x07` (a PC, not a sender card), `d[22]` and `d[25:27]` brightness, `d[23]=0x05`. Latches the rows just sent |
+| `0x0A` | brightness | 77 bytes, `d[0:2]` brightness |
+
+**497 pixels per packet** is not arbitrary: 3 bytes per pixel plus the 8 byte data header reaches
+a 1500 byte MTU exactly there, so a row wider than that is split and `d[2:3]`/`d[4:5]` exist for
+precisely that case.
+
+**The packet building is deliberately portable and the sending half is not**, the same split
+`render.c` makes around EGL. So `output_colorlight.c` compiles on a Mac, `test_colorlight()` in
+`pi/selftest.c` covers the byte layouts there (39 of the suite's 117 checks), and only
+`--output colorlight` itself needs Linux. The offsets in the test are written out longhand,
+independently of the implementation, so that a change to either shows up as a failure rather than
+as two files agreeing about the wrong thing.
+
+**`--test-pattern bars|grid` brings the panels up with no host, no shader and no socket.** It sets
+the starting pattern that the protocol's `pattern` message could otherwise only reach over a
+WebSocket — which is the wrong dependency to have during a first power-on. The pattern still goes
+through the dimmer and gamma like anything else (§9).
+
+Per frame the 60 Hz path is a memcpy per row into pre-built packets and one `sendmmsg`: headers,
+iovecs and `mmsghdr`s are all filled once at open, since only the pixel bytes change.
+
+### Verified against the real card, 2026-08-29
+
+First contact with the actual 5A-75B, over `eth0` on `hub75-01`, no panels attached. The card is
+**firmware 10.16, receiver 0**, and answers a discover in **59 microseconds**.
+
+What the hardware settled:
+
+- **The discover/reply exchange works exactly as implemented.** Frame sizes 284 out and 1070 back,
+  MACs and type bytes as documented.
+- **Our pixel, sync and brightness packets are byte-correct on the wire.** Captured and read back
+  frame by frame: a row packet reads `3f 00 00 00 80 08 88 ff ff ff …` — row 63, pixel offset 0,
+  count 128, the two constants, then pixels — and the sync packet carries `28 05 00 28 28 28`, i.e.
+  brightness 40 at `d[22]`, the constant `0x05` at `d[23]`, and the three per-channel values.
+- **The card accepts our pixel traffic.** `d[41]`, the low byte of FPP's packet counter, moved from
+  0 the moment frames were sent. It does not advance one-per-frame, so what it counts is still
+  open — but it responds to our traffic, which is the part that mattered.
+- **`d[46:49]` is the uptime, confirmed exactly**: across a run that took about 5 s of wall clock,
+  it advanced from 470368 to 476179 ms, a difference of 5811.
+- **The receiver-number disagreement is resolved in FPP's favour.** `d[85]` reads 0, matching the
+  receiver we asked for; Harald's `d[63]` reads a constant `0xba` and is not a receiver number.
+
+Found by dumping the whole reply before and after sending frames and diffing it — worth repeating
+for any other field, because it distinguishes a counter from a constant with no guessing.
+
+**The geometry field is right, and doubting it cost time.** `d[21:24]` reads `05 00 02 00`, which
+FPP's decode turns into **1280 x 512** — and that is exactly the canvas the card wants. It was
+dismissed here as "almost certainly wrong" because it is five times the 128 x 1024 the datasheet
+gives for normal chips; that reasoning was wrong. The datasheet figure is what the card can
+usefully *drive*, not what it will *accept* as a canvas. Sending 1280 x 512 is what first lit the
+panel. Believe this field.
+
+### The card as found, and how to drive it
+
+Established on the bench 2026-08-29, one P5 64x32 module on J1:
+
+| | |
+|---|---|
+| Canvas | **1280 x 512** as reported, i.e. 1280 x 256 in panel space |
+| Scan configured | **1/32**, against panels that are **1/16** — the central problem |
+| Colour order | **bgr** — we send red, the panel lights blue |
+| Panel position | cell **17** of the `map` grid: panel space x=1088, y=0 |
+
+Which makes the working command:
+
+```sh
+limut-hub75 --output colorlight --iface eth0 \
+    --size 64x32 --canvas 1280x256 --offset 1088,0 \
+    --row-map 2 --panel-rows 32 --color-order bgr
+```
+
+**The scan mismatch, and why it is fixable in software.** The card drives 32 scan addresses on
+A-E; a 1/16 panel decodes only A-D, so addresses *k* and *k+16* select the same physical row and
+two canvas rows are **superimposed** on it — not swapped, added. Worked out from the `bands` test
+(below), physical row *p* receives canvas rows *p* and *p+16* for p<16, and *p+16* and *p+32*
+above. So each panel eats 64 canvas rows to show 32 physical ones, and the fix is to put content
+in one row of each colliding pair and transmit the other black. That is `--row-map 2`, and the
+group size is the **physical panel height**, not the height being rendered — getting that wrong
+produces a fix that changes nothing, because the blacked-out rows land outside the panel.
+
+**Brightness must lead every frame.** FPP's notes call the duplicate brightness packet "possibly
+unnecessary", which read as licence to send it once at open. The card disagrees: sent once, the
+panel showed a single flash as the daemon started and then stayed dark for good. LEDVISION and FPP
+both put it at the head of every frame, and so must we.
+
+**Row packets must go out in canvas order, and the whole canvas must go every frame.** This is the
+single most expensive thing learned here, because the obvious optimisations all fail and they fail
+*gradually*, which makes them look like hardware faults:
+
+- Sending only the packets whose pixels changed, and letting the card hold the rest: **black panel**.
+- Sending those plus a rolling slice of the unchanged remainder, so everything is refreshed once a
+  second: **horizontal glitching a few times a second**.
+- Sending everything, but with the live packets reordered to the front: **still broken**.
+- Sending everything, in strict canvas row order: **correct**.
+
+The card is not a frame buffer that can be patched. It wants a whole frame, in order, per sync.
+The reordering was the actual fault in all three broken cases — the middle one merely reordered
+less. Note the failure is not a crash or an error; the link stays clean, `tx_errors` and
+`tx_dropped` stay at zero, and the card keeps acknowledging packets throughout.
+
+**The transmit queue has to be deepened, or a full canvas silently loses about a third of itself.**
+One frame is 1538 packets in a single `sendmmsg`, and the default `txqueuelen` on `eth0` is 1000.
+The overflow shows up only as `/sys/class/net/eth0/statistics/tx_dropped` climbing — nothing fails,
+no error is returned, and at 60 Hz it can even look fine, because a row missed by one frame is
+resent by the next. `ip link set dev eth0 txqueuelen 8000` fixes it; the systemd unit now does this
+before starting.
+
+Measured at 1280x512, 60 Hz, one panel, with the queue deepened:
+
+| | |
+|---|---|
+| rate | 92,443 packets/s, **120 MB/s** |
+| drops | 0 |
+| frame gap | median 16.67 ms, p99 17.11, max 17.13 |
+
+**120 MB/s is essentially the whole gigabit link**, for 2048 visible pixels, because the canvas is
+twenty times wider than the panel. It works and it is stable, but there is no headroom: a second
+panel is free (it is already inside the same canvas), while raising the frame rate or the canvas
+size is not. The way out is a smaller canvas, which means configuring the card — the first thing in
+this whole project that would actually be improved by LEDVISION, and it is an optimisation rather
+than a necessity.
+
+### The patterns, and why each exists
+
+`patterns.c` grew during this bring-up, and the additions are not decoration — each answers a
+question the previous one could not:
+
+| | |
+|---|---|
+| `bars`, `grid` | the originals: colour channels, and panel seams |
+| `white`/`red`/`green`/`blue` | flat fields. A patterned test says nothing when only part of a wall lights; a flat field is the same everywhere, so what comes back is about the panel rather than about where in the canvas the panel sits. `white` is what first proved the card drives the panel at all |
+| `map` | numbers every 64x32 cell of the canvas. A lit panel then states its own position — one look instead of a nine-step bisection |
+| `bands` | **the one that cracked it.** 16-row bands of red/green/blue/black, repeating every 64 rows. Under superposition the colours *add*, so the result names the offset: red-then-green means rows land 1:1, yellow-then-blue means rows 16 apart collide, magenta-then-green means 32 apart |
+| `rowid` | each row spells its index in binary. Sound in principle, useless in practice: a 9-bit code per row cannot be read off a photograph of a 32-row panel at an angle. **Encode a diagnostic's answer as colour, not as data**, whenever a human eye is the sensor |
+
+### What actually went wrong, in order
+
+Worth keeping, because three of the five wrong turns cost more than the real faults did:
+
+1. `pkill -f limut-hub75` and `pkill -f "output colorlight"` **match the shell running them**, since the pattern appears in that shell's own command line. This silently killed a backgrounded daemon and an entire diagnostic sweep. Use `pkill -x`.
+2. Counting `tcpdump` output lines is not a packet rate; it gave a figure 11x too high. `/sys/class/net/*/statistics/tx_packets` is exact and free.
+3. `make` builds the daemon, not `selftest` — a stale test binary reported the old check count after new checks were added. `make selftest`.
+4. The sync packet looks absent in a capture filtered on the string `ethertype`, because type `0x0107` is 263, below 1500, so tcpdump reads it as an 802.3 length. Every other Colorlight type is above 1500 and shows normally.
+5. A card that has just been powered does not answer discovery for the first minute or so, on a link that is already up at 1000 Mb/s.
+
+### Two traps worth knowing
+
+**tcpdump hides the sync packet.** Its type is `0x0107` = 263, which is below 1500, so tcpdump
+reads the field as an 802.3 *length* rather than an ethertype and prints the frame as
+`802.3, length N: LLC, dsap Null …`. Filtering a capture on the string `ethertype` therefore drops
+every sync packet and makes a working output stage look like it never latches. The pixel (`0x5500`),
+discover (`0x0700`), reply (`0x0805`) and brightness (`0x0aXX`) types are all above 1500 and show
+normally, which makes the gap look meaningful when it is not.
+
+**A card that has just been powered does not answer.** The first probe after power-on returned
+nothing on a link that was already up at 1000 Mb/s; a minute later the same command worked every
+time. Give it a moment before concluding anything is wrong.
+
+**A test pattern free-runs.** `display_draw` only runs when a frame arrived or something changed,
+so with no host a pattern would be drawn once and then never again — and a receiving card that
+stops being fed blanks. `--pattern-fps` (default 60) re-sends on the daemon's own clock;
+`--pattern-fps 0` restores the draw-once behaviour.
+
+### Configuring the card, given no Windows machine
+
+The card needs a *receiving-card configuration* — panel scan, driver chip, chaining — before it
+will show a sane picture, and the only supported way to write one is LEDVISION, which is
+Windows-only. Three facts shape what to do about it:
+
+- **The configuration lives in the card's flash and is written once.** After that the card runs
+  standalone and every sender, ours included, only ever sends frames. So LEDVISION is needed at
+  most one afternoon, ever, for this card and this panel layout.
+- **The card may already be usable.** Cards ship configured for something. `colorlight-probe`
+  reads back the geometry the card believes in, at zero risk, and `--test-pattern bars` then says
+  whether that belief matches the panels. Do both before assuming Windows is needed.
+- **Sending a configuration cannot brick the card; a firmware upgrade can.** A wrong configuration
+  is a garbage picture and a resend. The only brick path in LEDVISION is its receiving-card
+  *firmware upgrade*, which this project has no reason to touch — the stock firmware is exactly
+  what `pi/` targets. The real risk of a wrong scan configuration is to the *panels*, which can be
+  driven hotter than intended, so configure at low brightness and do not leave a garbled pattern
+  running.
+
+If a configuration does turn out to be needed, LEDVISION under emulated x86 Windows in UTM with a
+USB-ethernet dongle passed through is the least-hardware route (Windows-on-ARM would emulate the
+app but cannot load an x86 kernel driver, if LEDVISION installs one). The raw-frame path can be
+proved before the card is involved: cable the VM to the Pi's `eth0`, run `tcpdump -e -i eth0 not
+ip`, and click LEDVISION's receiver search — a type `0x07` broadcast arriving means the whole VM
+path works.
+
+**Capture that session.** FPP's notes name the packet types LEDVISION uses when writing a
+configuration — `0x10`, `0x11` (save config), `0x18`, `0x1F`, `0x26`, `0x31`, `0x32`, `0x76` — and
+nothing documents their contents. A pcap of one working LEDVISION run is therefore the
+prerequisite for ever configuring a card from the Pi, not an alternative to it.
+
+The escape hatch, if the card cannot be configured at all, is to replace the gateware
+(`dgym/receiver75`, `q3k/chubby75`): our own bitstream and protocol, panel mapping in our source.
+It costs an FT232H, soldering to the unpopulated JTAG pads, and a rewrite of this output stage.
+Less risky than it sounds — the ECP5's JTAG is in silicon rather than in the SPI flash, so dump
+the original flash first and load experiments into SRAM, where a power cycle restores the stock
+card.
+
 ## Status
 
 Render node is up and validated. The Pi 4B boots headless, joins WiFi, is reachable as
@@ -457,9 +748,16 @@ shaders on the V3D GPU. Verified 2026-08-19, in four layers:
   timevar (`pi/app-check.js`, 10 assertions on what the display observed — the only check that
   puts the real host and the real display together; everything else covers one link)
 
-Not started: **the Colorlight output stage** and the panel mapping. The output backend interface,
-`CAP_NET_RAW` in the systemd unit and the `eth0`-unmanaged configuration are all in place, so it
-is a single file to fill in when the card and panels arrive.
+The **Colorlight output stage drives a real panel** (`pi/output_colorlight.c`, and the sections
+above). Verified 2026-08-29 on a P5 64x32 module: correct colour, correct geometry, a legible test
+pattern, 33 packets per frame at 60 Hz with zero transmit errors, and 120 passing unit checks
+covering the byte layouts. **Panel mapping turned out not to be the card's job after all** — the
+card is configured for 1/32 scan against 1/16 panels, and `--row-map 2` inverts that in the output
+stage, exactly the fallback `output.h` reserved. Configuring the card with LEDVISION has therefore
+not been needed at any point.
+
+Still open: driving more than one panel, and whether a limut shader rather than a test pattern
+holds 60 Hz through this path (`pi/perf.js` has never been run at panel resolution).
 
 ## Alternative render nodes
 
@@ -474,14 +772,19 @@ before committing.
 
 ## Open questions
 
-- **The Colorlight protocol itself**: frame packets, row addressing, colour depth, and getting
-  raw ethernet frames out at 60 Hz. Nothing is known about it yet and nothing in the repo
-  describes it. The seam it plugs into is ready.
+- **Does the Colorlight implementation actually work?** The frame, sync and brightness packets are
+  written and unit tested from other people's documentation of the format; none of it has been
+  near a card. First power-on is the test.
+- **Configuring the card**, if its factory configuration does not match the panels — see
+  Configuring the card above. Nothing documents the config-write packets, and a pcap of a
+  LEDVISION session is the only realistic way in.
 - Whether the 5A-75B's own flashed configuration can express the panel layout, which is the
   assumption `pi/` is built on — the Pi sends a rectangular image and does no mapping. If it
   cannot, mapping becomes a pixel permutation in `pi/output.c`.
 - Whether render + readback + **Colorlight output** still holds 60 Hz. The first two do
-  comfortably (0.64 ms at 128x64); the third is unmeasured because it does not exist.
+  comfortably (0.64 ms at 128x64); the third is written but unmeasured. At 128x64 it is 64
+  packets and one `sendmmsg` per frame, so the expectation is that it disappears into the noise —
+  but that is an expectation, not a measurement. Re-run `pi/perf.js` once panels exist.
 - Frame pacing: the display renders on packet arrival, self-pacing to the host's rAF. That needs
   revisiting once the output stage has its own cadence.
 - The gamma curve for the panels. The mechanism is in place — a 256-entry table in the output

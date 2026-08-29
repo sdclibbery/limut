@@ -5722,3 +5722,24 @@ section drop {
 // w visualsynth, px=set{v:id.v-time,z:time/3}>>(turb3{scale:1}+fbm3{scale:3/2})^3>>mul{1/2-uv.v/2}>>pal{0,red*3/4,yellow,1} // Fire
 
 
+// Ruin and Resonance
+include 'personal/everything.limut'
+dg dmx, channel=63, lights={0:8/64}
+ds dmxstrip, channel=(33,43,53), mode='tri', control=[]n17, smooth=main.pulse/2-this.voice/16, back=#200, fore=#004*l.pulse.0
+dw2 dmxwash, channel=(1,8,15,22), fore=#200*pk.pulse.0+#100*[]n19
+w visualsynth, px=mul{3/4}>>floor{1/200 + pk.pulse.0 /30}>>tex{webcam{['5mp':24,'2mp':8]t}}
+set bpm=101
+set scale='phrygian'
+set main fx=stanh>>compress*+4db>>hpf{10+4000*gp.rt}
+set !p* add+=[0,1]t32
+// pkk perc x..., sample=3, vel=1/2
+// pk perc x.<.m.>..v.., vel=1/2
+// pp perc f..u..o.. crop 31 + i, vel=1/4, rate=1/4, room
+bs supersweep, vel*=smooth{1-gp.rsu,1/4}+1/3, fx>>=mix{duck}
+// b2 sweep 0., add=[0:5]r, dur=8, fx=airverb, addc=wow, vel*=1-gp.rsr
+// n noise, dur=2, pan=[-1,1]l13@f/2, fx=bpf{500+1000*[]n17,q:8}*3>>mix{airverb}*[]n19, vel=1-gp.rsl
+// d darkpad (049), fx=airverb, vel*=1-gp.rsd
+l oxy gamepad lt:vel, fx=mix{airverb}>>mix{duck}, oct=2, addc=wow
+l2 blues keyboard, fx=mix{airverb,3/4}, addc+=wow*2
+
+

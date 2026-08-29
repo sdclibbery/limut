@@ -24,7 +24,8 @@ static void build_gamma(output_t *o) {
 }
 
 int output_open(output_t *o, const char *backend, int w, int h, float gamma,
-                char *err, size_t errCap) {
+                const output_opts *opts, char *err, size_t errCap) {
+    int colorlight = 0;
     memset(o, 0, sizeof *o);
     snprintf(o->backend, sizeof o->backend, "%s", backend ? backend : "null");
     o->w = w;
@@ -37,6 +38,7 @@ int output_open(output_t *o, const char *backend, int w, int h, float gamma,
     else if (!strcmp(o->backend, "colorlight")) {
         o->write = output_colorlight_write;
         o->shutdown = output_colorlight_shutdown;
+        colorlight = 1;
     }
     else { snprintf(err, errCap, "unknown output backend '%s'", o->backend); return -1; }
 
@@ -47,6 +49,14 @@ int output_open(output_t *o, const char *backend, int w, int h, float gamma,
     {
         size_t i, n = (size_t)w * h;
         for (i = 0; i < n; i++) o->pixels[i * 4 + 3] = 255;
+    }
+
+    /* Last, so that a backend that fails to open does so with the frame buffer already in place
+     * and output_close able to free it. */
+    if (colorlight && output_colorlight_open(o, opts, err, errCap) < 0) {
+        free(o->pixels);
+        o->pixels = NULL;
+        return -1;
     }
     return 0;
 }

@@ -10,6 +10,7 @@
 #include "codec.h"
 #include "glsl.h"
 #include "json.h"
+#include "output.h"
 #include "sha1.h"
 #include "sha256.h"
 #include "ws.h"
@@ -427,6 +428,116 @@ static void test_ws(void) {
     ws_dispose(&c);
 }
 
+
+/* The Colorlight wire format. Offsets are written out longhand here, independently of
+ * output_colorlight.c, so that a change to either side shows up as a failure rather than as two
+ * files agreeing with each other about the wrong thing. d[n] is frame byte 13+n. */
+static void test_colorlight(void) {
+    unsigned char pkt[2048];
+    int idx[3];
+
+    /* colour order */
+    ck("rgb is the identity order",
+       colorlight_order("rgb", idx) == 0 && idx[0] == 0 && idx[1] == 1 && idx[2] == 2);
+    ck("bgr reverses", colorlight_order("bgr", idx) == 0 && idx[0] == 2 && idx[1] == 1 && idx[2] == 0);
+    ck("grb", colorlight_order("grb", idx) == 0 && idx[0] == 1 && idx[1] == 0 && idx[2] == 2);
+    ck("upper case is accepted", colorlight_order("BGR", idx) == 0 && idx[0] == 2);
+    ck("NULL means rgb", colorlight_order(NULL, idx) == 0 && idx[0] == 0 && idx[2] == 2);
+    ck("a repeated channel is rejected", colorlight_order("rrg", idx) < 0);
+    ck("an unknown channel is rejected", colorlight_order("xyz", idx) < 0);
+    ck("a short order is rejected", colorlight_order("rg", idx) < 0);
+
+    /* how a row is split into packets */
+    ck("a 128 pixel row is one packet", colorlight_packets_per_row(128) == 1);
+    ck("497 pixels still fit in one packet", colorlight_packets_per_row(497) == 1);
+    ck("498 pixels need two", colorlight_packets_per_row(498) == 2);
+    ck("994 pixels need two", colorlight_packets_per_row(994) == 2);
+    ck("995 pixels need three", colorlight_packets_per_row(995) == 3);
+    ck("a zero width row needs none", colorlight_packets_per_row(0) == 0);
+
+    /* pixel packet header */
+    {
+        size_t n = colorlight_pixel_header(pkt, 300, 497, 128);
+        const unsigned char *d = pkt + 13;
+        ck("pixel packet goes to the card's fixed MAC",
+           !memcmp(pkt, "\x11\x22\x33\x44\x55\x66", 6));
+        ck("pixel packet comes from 22:22:33:44:55:66",
+           !memcmp(pkt + 6, "\x22\x22\x33\x44\x55\x66", 6));
+        ck("pixel packet type 0x55 is in the ethertype's high byte", pkt[12] == 0x55);
+        ck("row 300 splits into d[0]=1 d[1]=44", d[0] == 1 && d[1] == 44);
+        ck("pixel offset 497 splits into d[2]=1 d[3]=241", d[2] == 1 && d[3] == 241);
+        ck("pixel count 128 splits into d[4]=0 d[5]=128", d[4] == 0 && d[5] == 128);
+        ck("the two constants are 0x08 and 0x88", d[6] == 0x08 && d[7] == 0x88);
+        ck("header is 21 bytes and the frame is 21 + 3 per pixel", n == 21 + 128 * 3);
+    }
+
+    /* a full width packet must still fit inside a 1500 byte MTU */
+    {
+        size_t n = colorlight_pixel_header(pkt, 0, 0, CL_MAX_PIXELS_PER_PACKET);
+        ck("a maximum packet is exactly one MTU of payload", n - 14 == 1498 && n <= 1512);
+    }
+
+    /* pixels: RGBA in, three bytes out, alpha dropped */
+    {
+        static const uint8_t rgba[] = { 10, 20, 30, 255,  40, 50, 60, 0 };
+        colorlight_pixel_header(pkt, 0, 0, 2);
+        memset(pkt + 21, 0xee, 8);
+        colorlight_order("rgb", idx);
+        colorlight_pixels(pkt, 0, rgba, 2, idx);
+        ck("rgb pixels are copied in order",
+           pkt[21] == 10 && pkt[22] == 20 && pkt[23] == 30 &&
+           pkt[24] == 40 && pkt[25] == 50 && pkt[26] == 60);
+        ck("alpha is dropped rather than sent", pkt[27] == 0xee);
+
+        colorlight_order("bgr", idx);
+        colorlight_pixels(pkt, 0, rgba, 2, idx);
+        ck("bgr swaps red and blue",
+           pkt[21] == 30 && pkt[22] == 20 && pkt[23] == 10 &&
+           pkt[24] == 60 && pkt[25] == 50 && pkt[26] == 40);
+
+        /* placing a render inside a larger canvas: pixels land further into the packet and
+           everything before them is left alone */
+        colorlight_pixel_header(pkt, 0, 0, 8);
+        memset(pkt + 21, 0, 24);
+        colorlight_order("rgb", idx);
+        colorlight_pixels(pkt, 5, rgba, 2, idx);
+        ck("a destination offset leaves earlier pixels black",
+           pkt[21] == 0 && pkt[35] == 0);
+        ck("a destination offset writes at 3 bytes per pixel",
+           pkt[36] == 10 && pkt[37] == 20 && pkt[38] == 30 &&
+           pkt[39] == 40 && pkt[40] == 50 && pkt[41] == 60);
+        ck("a destination offset leaves later pixels black", pkt[42] == 0);
+    }
+
+    /* sync / display packet */
+    {
+        size_t n = colorlight_sync(pkt, 200);
+        const unsigned char *d = pkt + 13;
+        ck("sync packet is 112 bytes", n == 112);
+        ck("sync packet type 0x01", pkt[12] == 0x01);
+        ck("d[0]=0x07 marks a PC rather than a sender card", d[0] == 0x07);
+        ck("d[22] carries brightness", d[22] == 200);
+        ck("d[23] is the constant 0x05", d[23] == 0x05);
+        ck("d[25..27] carry per channel brightness", d[25] == 200 && d[26] == 200 && d[27] == 200);
+        ck("d[24] is left alone", d[24] == 0);
+
+        colorlight_sync(pkt, 999);
+        ck("brightness above 255 clamps", d[22] == 255);
+        colorlight_sync(pkt, -5);
+        ck("brightness below 0 clamps", d[22] == 0);
+    }
+
+    /* brightness packet */
+    {
+        size_t n = colorlight_brightness(pkt, 128);
+        const unsigned char *d = pkt + 13;
+        ck("brightness packet is 77 bytes", n == 77);
+        ck("brightness packet type 0x0A", pkt[12] == 0x0A);
+        ck("d[0..2] all carry brightness", d[0] == 128 && d[1] == 128 && d[2] == 128);
+        ck("d[3] onwards is zero", d[3] == 0 && d[4] == 0);
+    }
+}
+
 int main(void) {
     printf("== limut HUB75 display selftest ==\n");
     test_hashes();
@@ -434,6 +545,7 @@ int main(void) {
     test_codec();
     test_glsl();
     test_ws();
+    test_colorlight();
     printf("%s: %d checks, %d failure%s\n",
            failures ? "FAILED" : "ALL PASSED", checks, failures, failures == 1 ? "" : "s");
     return failures ? 1 : 0;

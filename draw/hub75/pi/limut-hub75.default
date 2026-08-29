@@ -2,4 +2,8 @@
 #
 # --size must match the panel array as the 5A-75B is configured to drive it.
 # --gamma 1 is what draw/hub75/pi/pixel-check.js needs; 2.2 is the running value.
+#
+# --output stays `raw` until the Colorlight stage has been seen to light real panels. Switch it to
+# `--output colorlight` (adding --iface, --color-order and --brightness if the defaults are wrong)
+# once draw/hub75/pi/README.md's bring-up steps pass. The unit already grants CAP_NET_RAW.
 HUB75_ARGS=--name hub75-01 --size 128x64 --output raw --gamma 2.2

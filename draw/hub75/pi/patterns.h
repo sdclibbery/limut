@@ -5,7 +5,13 @@
 
 #include <stdint.h>
 
-enum { PATTERN_OFF = 0, PATTERN_BARS = 1, PATTERN_GRID = 2 };
+enum { PATTERN_OFF = 0, PATTERN_BARS = 1, PATTERN_GRID = 2,
+       PATTERN_WHITE = 3, PATTERN_RED = 4, PATTERN_GREEN = 5, PATTERN_BLUE = 6,
+       PATTERN_MAP = 7, PATTERN_ROWID = 8, PATTERN_BANDS = 9 };
+
+/* The cell size PATTERN_MAP numbers in. One module of the panels in use — see ../CLAUDE.md. */
+#define PATTERN_CELL_W 64
+#define PATTERN_CELL_H 32
 
 /* -1 if `s` is not a pattern name. */
 int  pattern_by_name(const char *s);

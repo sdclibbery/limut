@@ -32,6 +32,7 @@ visual nodes...
  ?hsl etc conversions?
  ???Want to be able to switch shader parts on a timevar; eg px=fbm2>>[cospal,pal{0,red,1}]t4@f - cant do this with audio nodes; how important is it really?
  ???{tex,#124} should do split/join like in audio chain??
+Multiple audiocontexts, set context='foo' on a player. Allows audio rendering to be split over multiple cores
 ?set bpm can have target time? eg set bpm={140,by;1000}
 grain should have offset param, would allow more interesting effects; granular delays etc
 Multiband compressor
@@ -45,7 +46,6 @@ Multiband effect that does spectral side chain ducking
  ?Pick sounded a bit out of tune too, had to increase decay? Is this at lower octaves?
  ALSO: Trance needs a param to soften the pluckiness: maybe attack as well as decay? Or decay affects both?
    att=this.decay^2*100ms  works pretty well??
-Multiple audiocontexts, set context='foo' on a player. Allows audio rendering to be split over multiple cores
 Envelope follower duck
 Multiband ducks
 ? Chebyshev shaper

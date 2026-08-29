@@ -6,6 +6,7 @@
 #
 #   sh deploy.sh              copy, build, run the selftest
 #   sh deploy.sh run          the above, then run the daemon in the foreground
+#   sh deploy.sh probe        the above, then look for a Colorlight card on the Pi's eth0
 #   sh deploy.sh restart      the above, then restart the systemd service
 #   sh deploy.sh install      the above, then install and start it as a systemd service
 #
@@ -30,12 +31,14 @@ $SSH "$HOST" "mkdir -p $(dirname $DIR)/tools"
 rsync -az -e "$SSH" "$SRC/../tools/" "$HOST:$(dirname $DIR)/tools/"
 
 echo "==> building"
-$SSH "$HOST" "cd $DIR && make -s clean && make -s all selftest"
+$SSH "$HOST" "cd $DIR && make -s clean && make -s all selftest colorlight-probe"
 
 echo "==> selftest"
 $SSH "$HOST" "cd $DIR && ./selftest"
 
 case "$1" in
+  probe)   shift; echo "==> probing eth0 for a Colorlight card (read only)"
+           $SSH -t "$HOST" "cd $DIR && sudo ./colorlight-probe $*" ;;
   run)     echo "==> running"; $SSH -t "$HOST" "cd $DIR && ./limut-hub75 $ARGS" ;;
   install) echo "==> installing the service"; $SSH "$HOST" "cd $DIR && sudo sh install.sh" ;;
   restart) echo "==> restarting service"; $SSH "$HOST" "sudo systemctl restart limut-hub75 && sleep 1 && systemctl --no-pager -l status limut-hub75 | head -20" ;;

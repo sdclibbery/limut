@@ -17,6 +17,9 @@ RestartSec=2
 # For the Colorlight output stage, which sends raw layer-2 frames on eth0. Granted through the
 # unit rather than setcap on the binary, so a rebuild never silently loses it — and the daemon
 # still runs as `pi` rather than root.
+# One frame is over 1500 packets in a single sendmmsg; the default queue of 1000 silently drops
+# the overflow. '+' runs this as root, which setting a queue length needs.
+ExecStartPre=+/usr/sbin/ip link set dev eth0 txqueuelen 8000
 AmbientCapabilities=CAP_NET_RAW
 CapabilityBoundingSet=CAP_NET_RAW
 NoNewPrivileges=yes

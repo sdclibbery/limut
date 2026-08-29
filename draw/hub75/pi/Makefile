@@ -47,5 +47,10 @@ test: selftest
 egl-probe: ../tools/egl-probe.c
 	$(CC) $(CFLAGS) -o $@ ../tools/egl-probe.c -lEGL -lGLESv2 -lgbm
 
+# Read-only first contact with a Colorlight 5A-75B: what it is, and what geometry it is
+# configured for. Linux only — it needs AF_PACKET. See ../CLAUDE.md and README.md.
+colorlight-probe: ../tools/colorlight-probe.c
+	$(CC) $(CFLAGS) -o $@ ../tools/colorlight-probe.c
+
 clean:
-	rm -f $(BIN) selftest egl-probe
+	rm -f $(BIN) selftest egl-probe colorlight-probe

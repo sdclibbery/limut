@@ -41,6 +41,10 @@ Pi while compiling cleanly on macOS.
 | `--size WxH` | panel resolution |
 | `--node PATH` | DRM render node (default `/dev/dri/renderD128`) |
 | `--output` | `null` \| `raw` \| `colorlight` |
+| `--iface NAME` | colorlight: interface the card is cabled to (default `eth0`) |
+| `--color-order ORD` | colorlight: byte order the panels want, eg `bgr` (default `rgb`) |
+| `--brightness N` | colorlight: the card's own panel brightness, 0-255 (default 255) |
+| `--test-pattern` | `off` \| `bars` \| `grid`, shown until a host binds a layer |
 | `--gamma G` | output gamma, applied after the dimmer. **Use `1` for `pixel-check.js`** |
 | `--no-gpu` | do not open a renderer even if one is available |
 | `--verbose`, `-v` | log every message instead of a one line status |
@@ -190,3 +194,49 @@ host gains it.
 **PBO readback.** A synchronous `glReadPixels` costs 0.64 ms at 128x64, so pipelining a frame
 behind would buy nothing and cost 16 ms of latency. Worth revisiting only if a much larger panel
 makes it the bottleneck.
+
+## Bringing up the panels
+
+The order matters: each step needs only the ones before it, so a failure says where the problem
+is rather than that there is one.
+
+**1. Ask the card what it is.** Read-only — nothing is written to the card, whatever it prints.
+
+```sh
+gcc -O2 -o colorlight-probe ../tools/colorlight-probe.c
+sudo ./colorlight-probe -i eth0          # -f for the whole reply, -t to wait longer
+```
+
+It reports link state first, because an unpowered card and a dead cable look exactly like a card
+that is not answering. Then, for each receiver that replies: firmware, the cabinet geometry the
+card is *currently configured for*, uptime and packet counts, over a hex dump of the raw reply.
+**Believe the dump over the decode** — every offset in it comes from other people's reverse
+engineering and none has been checked against a real card. See `../CLAUDE.md`.
+
+The geometry it reports is the answer to "does this card need configuring with LEDVISION at all?"
+
+**2. Drive the panels with no host.** No shader, no browser, no socket. The working invocation for
+the card and panels in hand — see `../CLAUDE.md` for where every number comes from:
+
+```sh
+sudo ./limut-hub75 --output colorlight --iface eth0 \
+     --size 64x32 --canvas 1280x256 --offset 1088,0 \
+     --row-map 2 --panel-rows 32 --color-order bgr \
+     --test-pattern bars --brightness 100
+```
+
+On an unknown card, work up to that: `--test-pattern white` first (does anything light at all?),
+then `bands` (do canvas rows superimpose, and how far apart?), then `map` (which cell is this
+panel?). Each answers one question and none needs a measurement more precise than naming a colour.
+
+Start dim. A wrong scan configuration drives rows for longer than intended, which is a heating
+problem for the panels — not for the card, which cannot be harmed by anything here.
+
+`bars` says whether colour and geometry are right; `grid` says whether panel boundaries and chain
+order are. If the pixels are right but in the wrong places, the layout is the problem; if they are
+noise, the card's configuration is.
+
+**3. Then the real thing** — `node app-check.js`, the whole chain from the browser to the panels.
+
+If step 2 does not produce a correct picture, `../CLAUDE.md` has the options for configuring the
+card, including what to do without a Windows machine.
