@@ -219,11 +219,17 @@ The geometry it reports is the answer to "does this card need configuring with L
 the card and panels in hand — see `../CLAUDE.md` for where every number comes from:
 
 ```sh
+sudo ip link set dev eth0 txqueuelen 8000     # once; the systemd unit does this itself
 sudo ./limut-hub75 --output colorlight --iface eth0 \
      --size 64x32 --canvas 1280x256 --offset 1088,0 \
      --row-map 2 --panel-rows 32 --color-order bgr \
      --test-pattern bars --brightness 100
 ```
+
+Two things that look like optimisations and are not: the whole canvas must be sent **every frame,
+in canvas row order** (patching only what changed gives a black panel, and reordering the stream
+gives horizontal glitching), and the transmit queue must be deepened or a third of each frame is
+silently dropped. Both are in `../CLAUDE.md`.
 
 On an unknown card, work up to that: `--test-pattern white` first (does anything light at all?),
 then `bands` (do canvas rows superimpose, and how far apart?), then `map` (which cell is this

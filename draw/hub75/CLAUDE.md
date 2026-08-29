@@ -756,8 +756,28 @@ card is configured for 1/32 scan against 1/16 panels, and `--row-map 2` inverts 
 stage, exactly the fallback `output.h` reserved. Configuring the card with LEDVISION has therefore
 not been needed at any point.
 
-Still open: driving more than one panel, and whether a limut shader rather than a test pattern
-holds 60 Hz through this path (`pi/perf.js` has never been run at panel resolution).
+**A limut visual reached the panel on 2026-08-29** — the whole chain, browser to LEDs: a
+visualsynth `px` chain compiled in the browser, shipped over the WebSocket, rendered on the Pi's
+V3D at 64x32 and clocked out of the Colorlight onto the wall. `display='hub75-01'`, layer bound,
+46 fps sustained.
+
+**Three things will each silently swallow a bound visual**, and all three were in play at once the
+first time it was tried, so it is worth checking them in this order when a panel stays dark while
+limut says it is connected:
+
+- `--output raw` — renders the frame and discards it. This is the installed default until someone
+  changes `/etc/default/limut-hub75`, so a freshly installed service *looks* healthy and drives
+  nothing.
+- `--no-gpu` — no renderer, so a bound layer draws nothing. Easy to leave behind after bring-up,
+  because test patterns do not need a GPU and so nothing complains.
+- `--test-pattern` — a pattern **replaces the layer entirely** (§10). A display left with one set
+  will ignore every visual sent to it. `--test-pattern` is deliberately absent from the installed
+  arguments for this reason.
+
+Still open: driving more than one panel, and the frame rate. 46 fps rather than 60 is the canvas,
+not the panel — 655,360 canvas pixels are transmitted to light 2,048 visible ones, which is most
+of a gigabit link. More panels are free; a higher frame rate is not, and the way to it is a
+smaller canvas, i.e. configuring the card.
 
 ## Alternative render nodes
 

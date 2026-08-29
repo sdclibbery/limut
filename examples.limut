@@ -5743,3 +5743,38 @@ l oxy gamepad lt:vel, fx=mix{airverb}>>mix{duck}, oct=2, addc=wow
 l2 blues keyboard, fx=mix{airverb,3/4}, addc+=wow*2
 
 
+// Glitch causing
+include 'personal/everything.limut'
+dg dmx, channel=63, lights={0:8/64}
+ds dmxstrip, channel=(33,43,53), mode='tri', control=[]n17, smooth=main.pulse/2-this.voice/16, back=#200, fore=#004*l.pulse.0
+dw2 dmxwash, channel=(1,8,15,22), fore=#200*pk.pulse.0+#100*[]n19
+w visualsynth, px=mul{3/4}>>floor{1/200 + pk.pulse.0 /30}>>tex{webcam{['5mp':24,'2mp':8]t}}
+// v1 visualsynth, px=mul{sin{}}>>tex1d{{x}->{labh:x}}, display='hub75-01', dim=0.6
+// v visualsynth, px=set{u:sdstar,v:topolar.v}>>frompolar>>(kal/2)^2.3>>pal{0,red,yellow,1}^2, display='hub75-01.local:7575'
+set bpm=140
+set scale='minor'
+set main fx=stanh>>compress*+4db>>hpf{10+4000*gp.rt}
+set p* delay|=[[1,3]r/4:2,():]:_{sx.rtime}
+set !p* add+=[0,1]t32
+section default, length=16
+pk perc x..., sample=3
+ph perc ..n.
+phh perc -, vel=[]n/2, swing=54
+pp perc m.s crop 16, swing=56, vel=1/3
+b acid 000vv77v1 crop 16, vel*=1-gp.lsd, cutoff=gp.lsu, decay=gp.lsr, swing=54, drive={1/2,mix:[1:!,0]e@s}, fx=1/6
+h hollow 049, dur=1/2, vel=1=gp.rsd, fx=mix{airverb}/3
+l dlead gamepad lt:vel, fx=mix{airverb}, addc=wow
+section build {
+	set !p* add=-1
+	set * hpf=10+2000*sx.rise^6
+	f perc u, vel=sx.rise^8, room=1/8, rate=2/3
+  set * add+=[0,1]t4
+  set b dur=1/2
+  set l oct-=1
+}, next=drop
+section drop {
+	set !p* add=[0,4,3,2]:_8{sx.time}
+	pc perc ....*..., vel=1/2
+  set (l,h) oct+=(0,1), fx>>=mix{duck}
+}, length=64
+
