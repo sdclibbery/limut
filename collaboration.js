@@ -136,6 +136,7 @@ define(function (require) {
     conn.on('close', () => {
       connections.delete(conn)
       gamepads.clearPeer(conn.peer)
+      keyboard.clearPeer(conn.peer) // A peer that goes mid note never sends its key up, so release what it left playing
       editor.removePeerCursor(conn.peer)
       peerCursorPositions.delete(conn.peer)
       if (isServer) {

@@ -3,6 +3,7 @@ define(function(require) {
   let midi = require('midi')
   let metronome = require('metronome')
   let {combineOverrides,applyOverrides} = require('player/override-params')
+  let {releaseNotes,allStopped} = require('player/live-notes')
   let scale = require('music/scale')
 
   let midiNoteToOctave = (note) => {
@@ -53,14 +54,8 @@ define(function(require) {
       // Listen to given midi port/channel, create appropriate event and call player.play()
       midi.listen(port, channel, player.id+player._num, (note, velocity) => {
         if (velocity === undefined) { // Note off
-          for (let k in player.events) {
-            let e = player.events[k]
-            if (!!e._noteOff && !e._stopping && e._midiNote === note) { // Skip voices already releasing, else re-triggering _noteOff jumps the gain back up (click) and races the original destroy timeout
-              e._noteOff() // Call note off callback so sustain envelopes can move to release phase
-              e._stopping = true
-            }
-          }
-          if (!!player._shouldUnlisten && (!player.events || player.events.filter(e => !e._stopping).length === 0)) {
+          releaseNotes(player, e => e._midiNote === note)
+          if (!!player._shouldUnlisten && allStopped(player)) {
             midi.stopListening(port, channel, player.id+player._num) // Nothing left playing, cleanup listener
           }
           return
@@ -91,9 +86,13 @@ define(function(require) {
       })
       // Disconnect midi listener on player cleanup
       if (player.destroy !== undefined) { throw `Player ${player.id} already has destroy?!` }
-      player.destroy = () => {
+      player.destroy = (replaced) => {
         player._shouldUnlisten = true
-        if (!!player.events && player.events.length === 0) {
+        // Held notes are only released when the player is really going away (stop all, or its line
+        // deleted): on a code re-run the events are handed to the replacement player, whose listener
+        // still matches the note off, so a note held across the re-run is not cut
+        if (!replaced) { releaseNotes(player) }
+        if (allStopped(player)) {
           midi.stopListening(port, channel, player.id+player._num)
         }
       }

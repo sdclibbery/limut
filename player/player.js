@@ -14,6 +14,8 @@ define((require) => {
   let {evalParamFrame} = require('player/eval-param')
   let {mainParam,mainParamUnits,subParam} = require('player/sub-param')
   let {applyOverrides,applyOverridesInPlace} = require('player/override-params')
+  let {clearCallTree} = require('player/callstack')
+  let consoleOut = require('console')
 
   let swingPushAt = (count, swingPercent, swingPeriod) => {
     let swingBeatFraction = (count % (swingPeriod*2)) / (swingPeriod*2)
@@ -140,7 +142,7 @@ define((require) => {
       player.keepState = {}
       return player
     }
-    if (oldPlayer && oldPlayer.destroy) { oldPlayer.destroy() } // If new player is not continuous, make sure old one still gets destroyed
+    if (oldPlayer && oldPlayer.destroy) { oldPlayer.destroy(true) } // If new player is not continuous, make sure old one still gets destroyed. Replaced, not gone: it hands its events to the player below, so a keyboard/gamepad/midi note held across the update is not cut
     // Normal player
     let player = {
       id: playerId,
@@ -162,7 +164,18 @@ define((require) => {
         .filter(e => e.amp === undefined || typeof e.amp === 'function' || e.amp > 0)
         .forEach(e => {
           e._player = player
-          playerFactory.play(e)
+          try {
+            playerFactory.play(e)
+          } catch (err) {
+            // Caught per event so one bad note doesn't take the rest of the beat (or of a chord) with
+            // it, and because the event never gets registered below: nothing could ever release it, so
+            // whatever the synth had already built would render for the life of the page
+            consoleOut('🔴 Run Error from player '+player.id+': ' + err)
+            console.log(err)
+            if (!!e._destructor) { e._destructor.destroy() }
+            clearCallTree()
+            return
+          }
           e.countToTime = (count) => e.beat.time + (count-e.beat.count)*e.beat.duration
           e.pulse = (ev,b, evalRecurse) => {
             let t = e.countToTime(b)
@@ -723,6 +736,21 @@ define((require) => {
   assertHas({value:'b',add:2,voice:3}, es[3])
   assertHas({value:'c',add:1,voice:0}, es[4]) // Voice here (and below) should really be 4 (and 5), but that's a lot more complicated
   assertHas({value:'c',add:2,voice:1}, es[5])
+
+  { // A synth that throws must not take the other events with it, and must not leak the nodes it had built
+    let destroyed = 0
+    playerTypes.thrower = {play: (e) => {
+      if (e.value !== 'x') { return }
+      e._destructor = {destroy: () => destroyed++}
+      throw 'synth blew up'
+    }, baseParams:{}}
+    p = player('p', 'thrower', 'xo', 'dur=1/2')
+    p.play(p.getEventsForBeat({time:0, count:0, duration:1}))
+    assert(1, p.events.length, 'the events after the throwing one still play')
+    assert('o', p.events[0].value)
+    assert(1, destroyed, 'the throwing events nodes are destroyed')
+    delete playerTypes.thrower
+  }
 
   playerTypes.foo = {play:()=>[], baseParams:{bar:3,amp:1}}
   p = player('p', 'foo', '0')

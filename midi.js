@@ -15,16 +15,46 @@ define(function(require) {
   let midi
   let connecting = false
   let inputs = []
+  let portIndexes = {} // MIDIInput.id -> the port number limut knows it by
   let lastInput
+
+  // A port that disconnects with a note held never sends its note off, so that note would sustain,
+  // and keep rendering, for ever (its envelope only arms its teardown on release - play/envelopes.js).
+  // Release everything sounding on the port instead.
+  let releasePort = (idx) => {
+    let port = inputs[idx]
+    if (!port) { return }
+    for (let channelNumber in port) {
+      let channel = port[channelNumber]
+      let held = channel.notes.slice()
+      channel.notes = []
+      channel.note = {}
+      channel.vel = 0
+      held.forEach(noteNumber => {
+        for (let k in channel.listeners) {
+          channel.listeners[k](noteNumber, undefined) // Note off notified with undefined velocity
+        }
+      })
+    }
+  }
   let connect = () => {
     if (connecting) { return }
     connecting = true
     navigator.requestMIDIAccess().then(
       (midiAccess) => {
         midi = midiAccess
+        midi.onstatechange = (event) => {
+          let port = event.port
+          if (!port || port.type !== 'input' || port.state !== 'disconnected') { return }
+          let idx = portIndexes[port.id]
+          if (idx === undefined) { return }
+          consoleOut(`🟠 MIDI port ${idx} disconnected: ${port.manufacturer} ${port.name}`)
+          releasePort(idx)
+        }
         let ctr = 0
         midi.inputs.forEach((port) => {
           let idx = ctr
+          portIndexes[port.id] = idx
           consoleOut(`🔵 MIDI port ${idx}: ${port.manufacturer} ${port.name}`)
           port.open().then(() => {
             port.onmidimessage = (msg) => {
@@ -124,6 +154,35 @@ define(function(require) {
     if (inputs[portNumber][channelNumber] === undefined) { return }
     let channel = inputs[portNumber][channelNumber]
     delete channel.listeners[id]
+  }
+
+  // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+
+  let assert = (expected, actual, msg) => {
+    if (expected !== actual) { console.trace(`Assertion failed.\n>>Expected: ${expected}\n>>Actual: ${actual}${msg?'\n'+msg:''}`) }
+  }
+
+  { // A disconnecting port releases the notes it left held (its note offs are never coming)
+    let idx = 99
+    inputs[idx] = {0: createinputChannel()}
+    let channel = inputs[idx][0]
+    let calls = []
+    channel.listeners['test'] = (note, velocity) => calls.push([note, velocity])
+    channel.notes.push(60)
+    channel.note[60] = 1
+    channel.vel = 1
+    releasePort(idx)
+    assert(1, calls.length, 'the held note was released')
+    assert('60,', ''+calls[0], 'released with an undefined velocity, like a real note off')
+    assert(0, channel.notes.length)
+    assert(0, channel.vel)
+    releasePort(idx)
+    assert(1, calls.length, 'nothing held, nothing released')
+    delete inputs[idx]
+  }
+
+  console.log('Midi tests complete')
   }
 
   return {

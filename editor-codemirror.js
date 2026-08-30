@@ -5,6 +5,7 @@ define(function(require) {
   let {updateCode,cancelUpdate} = require('update-code')
   let consoleOut = require('console')
   let fxMixChain = require('play/effects/fxMixChain')
+  let envelope = require('play/envelopes')
 
   let editorDiv = document.getElementById('code-codemirror')
   editorDiv.style.display = 'block'
@@ -102,6 +103,7 @@ define(function(require) {
     cancelUpdate() // An update still parsing (blocked on an include fetch) must not write into the state we are about to tear down
     fxMixChain.disconnectAll()
     players.stopAll()
+    envelope.releaseAllLive() // Backstop: any live voice not released by its player's destroy (one whose event was never registered) still stops here
     consoleOut('> Stop all players')
     isRunning = false
     notifyRunState()

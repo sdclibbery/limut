@@ -34,7 +34,9 @@ define(function (require) {
       if (!!n8) { reg(n8) }
     }
     destructor.destroy = () => {
-      destructor.nodesToStop.forEach(n => { n.stop(); n.disconnect() }) // Disconnect sources too so pooled downstream nodes carry no phantom inbound edges
+      // try/catch: stop() throws on a source that was never started (an event whose synth threw
+      // part way through building it), and an unguarded throw here would abandon every node after it
+      destructor.nodesToStop.forEach(n => { try { n.stop() } catch (e) {} ; n.disconnect() }) // Disconnect sources too so pooled downstream nodes carry no phantom inbound edges
       destructor.nodesToDisconnect.forEach((n, i) => {
         if (n.__gen !== destructor.nodesToDisconnectGens[i]) { return } // Node was released and reacquired by a newer owner; not ours any more
         n.disconnect()
@@ -79,6 +81,16 @@ define(function (require) {
   d.destroy() // Second destroy is a no-op
   assert(1, src.stops)
   assert(1, proc.disconnects)
+
+  d = makeDestructor()
+  let unstarted = fakeNode()
+  unstarted.stop = () => { throw 'InvalidStateError' } // A source stopped before it was ever started
+  let after = fakeNode()
+  d.stop(unstarted, after)
+  d.destroy()
+  assert(1, unstarted.disconnects) // Throwing stop still disconnects
+  assert(1, after.stops) // ...and does not abandon the nodes after it
+  assert(1, after.disconnects)
 
   d = makeDestructor(true)
   let reused = fakeNode()

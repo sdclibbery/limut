@@ -2,6 +2,7 @@
 define(function(require) {
   let metronome = require('metronome')
   let {combineOverrides,applyOverrides} = require('player/override-params')
+  let {releaseNotes,allStopped} = require('player/live-notes')
 
   // Map alphabet keys to notes, row by row. Home row starts at 0 (a=0..l=8),
   // top row starts an octave up at 7 (q=7..), bottom row starts at -7 (z=-7..).
@@ -29,6 +30,7 @@ define(function(require) {
   // every active player (so a press broadcasts exactly once) and lets remote peer
   // events be injected via handleRemoteKey.
   let activePlayers = new Set()
+  let heldKeys = new Set() // Local keys currently down, so a key up that never arrives can still be made good
   let keyEventListeners = []
   let onKeyEvent = (cb) => keyEventListeners.push(cb)
 
@@ -44,20 +46,29 @@ define(function(require) {
     if (key === "Shift" || key === "Control" || key === "Alt") { return } // Modifier keys set velocity/sharpen, dont play a note
     if (!localEnabled) { return } // Only play local notes while hovering the keyboard icon
     let noteKey = eventToKey(e)
+    heldKeys.add(noteKey)
     activePlayers.forEach(entry => entry.noteOn(noteKey, ctrlKey, shiftKey, altKey, 'local'))
     keyEventListeners.forEach(cb => cb(noteKey, 'down', ctrlKey, shiftKey, altKey))
   }
-  let globalKeyup = (e) => {
-    if (e.key === "Shift" || e.key === "Control" || e.key === "Alt") { return }
-    let noteKey = eventToKey(e)
+  // Shared by the key up and the blur below, so a note released either way still tells the peers
+  let releaseKey = (noteKey) => {
+    heldKeys.delete(noteKey)
     activePlayers.forEach(entry => entry.noteOff(noteKey, 'local'))
     keyEventListeners.forEach(cb => cb(noteKey, 'up'))
   }
+  let globalKeyup = (e) => {
+    if (e.key === "Shift" || e.key === "Control" || e.key === "Alt") { return }
+    releaseKey(eventToKey(e))
+  }
+  // A key held when the window loses focus (alt tab, or a macOS Cmd combo) never delivers its key up,
+  // so release it here: the note would otherwise sustain, and keep rendering, for ever
+  let globalBlur = () => { Array.from(heldKeys).forEach(releaseKey) }
   let listenersAttached = false
   let ensureListeners = () => {
     if (listenersAttached) { return }
     addEventListener("keydown", globalKeydown)
     addEventListener("keyup", globalKeyup)
+    addEventListener("blur", globalBlur)
     listenersAttached = true
   }
   let removePlayer = (entry) => {
@@ -65,8 +76,15 @@ define(function(require) {
     if (activePlayers.size === 0 && listenersAttached) {
       removeEventListener("keydown", globalKeydown)
       removeEventListener("keyup", globalKeyup)
+      removeEventListener("blur", globalBlur)
       listenersAttached = false
     }
+  }
+
+  // A peer that disconnects mid note never sends its key up, so release everything it was playing
+  let clearPeer = (peerId) => {
+    let prefix = peerId + ':'
+    activePlayers.forEach(entry => releaseNotes(entry.player, e => (''+e._keyboardNote).startsWith(prefix)))
   }
 
   // Apply a remote peer's key event to every active player, namespaced by source
@@ -82,16 +100,9 @@ define(function(require) {
   let keyboardPlayer = (params, player, baseParams) => {
     let entry
     let noteOff = (key, source) => {
-      let noteValue = keyToNote(key)
-      let noteId = source + ':' + noteValue
-      for (let k in player.events) {
-        let e = player.events[k]
-        if (!!e._noteOff && !e._stopping && e._keyboardNote === noteId) { // Skip voices already releasing, else re-triggering _noteOff jumps the gain back up (click) and races the original destroy timeout
-          e._noteOff() // Call note off callback so sustain envelopes can move to release phase
-          e._stopping = true
-        }
-      }
-      if (!!player._shouldUnlisten && (!player.events || player.events.filter(e => !e._stopping).length === 0)) {
+      let noteId = source + ':' + keyToNote(key)
+      releaseNotes(player, e => e._keyboardNote === noteId)
+      if (!!player._shouldUnlisten && allStopped(player)) {
         removePlayer(entry)
       }
     }
@@ -122,16 +133,84 @@ define(function(require) {
       events.forEach(e => { e._noteOff = () => {} }) // Default _noteOff callback does nothing
       player.play(events)
     }
-    entry = {noteOn, noteOff}
+    entry = {noteOn, noteOff, player}
     activePlayers.add(entry)
     ensureListeners()
     if (player.destroy !== undefined) { throw `Player ${player.id} already has destroy?!` }
-    player.destroy = () => {
+    player.destroy = (replaced) => {
       player._shouldUnlisten = true
-      if (!!player.events && player.events.length === 0) {
+      // Held notes are only released when the player is really going away (stop all, or its line
+      // deleted): on a code re-run the events are handed to the replacement player, whose listener
+      // still matches the key up, so a note held across the re-run is not cut
+      if (!replaced) { releaseNotes(player) }
+      if (allStopped(player)) {
         removePlayer(entry)
       }
     }
+  }
+
+  // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+
+  let assert = (expected, actual, msg) => {
+    if (expected !== actual) { console.trace(`Assertion failed.\n>>Expected: ${expected}\n>>Actual: ${actual}${msg?'\n'+msg:''}`) }
+  }
+  let testPlayer = (id) => {
+    let player = {id: id, _num: 0, events: []}
+    player.processEvents = (es) => es
+    player.play = (es) => es.forEach(e => player.events.push(e))
+    return player
+  }
+  let press = (code) => dispatchEvent(new KeyboardEvent('keydown', {code: code}))
+  let liveEvent = (player) => { // Stand in for a live envelope's release, which is what arms its teardown
+    let e = player.events[player.events.length-1]
+    e.released = 0
+    e._noteOff = () => e.released++
+    return e
+  }
+  let wasEnabled = localEnabled
+  setLocalEnabled(true)
+
+  { // A key held when the window loses focus is released: its key up never arrives
+    let player = testPlayer('ktest1')
+    keyboardPlayer({}, player, {})
+    press('KeyA')
+    assert(1, player.events.length, 'key press played a note')
+    let e = liveEvent(player)
+    dispatchEvent(new Event('blur'))
+    assert(1, e.released, 'blur released the held note')
+    dispatchEvent(new KeyboardEvent('keyup', {code: 'KeyA'})) // The key up, if it ever comes, is a no-op
+    assert(1, e.released)
+    player.destroy()
+  }
+
+  { // Destroy releases held notes, but only when the player is really going away
+    let player = testPlayer('ktest2')
+    keyboardPlayer({}, player, {})
+    press('KeyS')
+    let e = liveEvent(player)
+    player.destroy(true) // Replaced by a re-run of its line; the replacement will get the key up
+    assert(0, e.released, 'a replaced player leaves its held notes sounding')
+    player.destroy()
+    assert(1, e.released, 'a destroyed player releases its held notes')
+    dispatchEvent(new KeyboardEvent('keyup', {code: 'KeyS'}))
+  }
+
+  { // A peer that disconnects mid note has its notes released, and only its own
+    let player = testPlayer('ktest3')
+    keyboardPlayer({}, player, {})
+    handleRemoteKey('a', 'down', false, false, false, 'peer1')
+    let peerEvent = liveEvent(player)
+    handleRemoteKey('s', 'down', false, false, false, 'peer2')
+    let otherEvent = liveEvent(player)
+    clearPeer('peer1')
+    assert(1, peerEvent.released, 'the disconnected peer\'s note was released')
+    assert(0, otherEvent.released, 'the other peer\'s note was left alone')
+    player.destroy()
+  }
+
+  setLocalEnabled(wasEnabled)
+  console.log('Keyboard tests complete')
   }
 
   return {
@@ -139,5 +218,6 @@ define(function(require) {
     onKeyEvent: onKeyEvent,
     handleRemoteKey: handleRemoteKey,
     setLocalEnabled: setLocalEnabled,
+    clearPeer: clearPeer,
   }
 })

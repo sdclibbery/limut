@@ -4,6 +4,35 @@ define(function (require) {
   let {evalMainParamEvent,evalMainParamFrame,evalSubParamEvent} = require('play/eval-audio-params')
   let destructor = require('play/destructor')
 
+  // A "live" envelope (keyboard/gamepad/midi) has no note off time at note start, so it holds a
+  // placeholder endTime and can only arm its destroy when the note is released. Every live voice is
+  // registered here so it stays reachable even if it is never released: an input device that fails to
+  // deliver its note off (window blur with a key held, a pad unplugged) would otherwise leave the
+  // voice rendering, and costing audio thread time, for the life of the page.
+  let liveVoices = new Set()
+
+  let scheduleDestroy = (params) => {
+    liveVoices.delete(params)
+    setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
+  }
+
+  // Register a live voice and its release. The release only ever runs once: a second call would
+  // re-ramp the gain from wherever the first release had got to (a click) and race its destroy timer
+  let liveRelease = (params, onRelease) => {
+    liveVoices.add(params)
+    let released = false
+    params._noteOff = () => {
+      if (released) { return }
+      released = true
+      onRelease()
+      scheduleDestroy(params)
+    }
+  }
+
+  let releaseAllLive = () => {
+    Array.from(liveVoices).forEach(params => params._noteOff()) // Each release removes itself from liveVoices
+  }
+
   let fullEnvelope = (params, gainBase) => {
     let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25, 'b'), 'b'))
     dur *= evalMainParamEvent(params, "long", 1)
@@ -24,16 +53,15 @@ define(function (require) {
       vca.gain.linearRampToValueAtTime(gain*susLevel, params._time + attack+decay+sustain)
       vca.gain.linearRampToValueAtTime(0, params._time + attack+decay+sustain+release)
       params.endTime = params._time + attack+decay+sustain+release
-      setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
+      scheduleDestroy(params)
     } else {
       params.endTime = params._time + 1e6
-      params._noteOff = () => {
+      liveRelease(params, () => {
         let releaseTime = Math.max(system.audio.currentTime, params._time + attack+decay+0.001)
         vca.gain.linearRampToValueAtTime(gain*susLevel, releaseTime)
         vca.gain.linearRampToValueAtTime(0, releaseTime+release)
         params.endTime = releaseTime+release
-        setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
-      }
+      })
     }
 
     params._destructor.disconnect(vca)
@@ -57,16 +85,15 @@ define(function (require) {
       vca.gain.linearRampToValueAtTime(gain, params._time + attack+sustain)
       vca.gain.exponentialRampToValueAtTime(0.00001, params._time + attack+sustain+release)
       params.endTime = params._time + attack+sustain+release
-      setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
+      scheduleDestroy(params)
     } else {
       params.endTime = params._time + 1e6
-      params._noteOff = () => {
+      liveRelease(params, () => {
         let relTime = Math.max(system.audio.currentTime, params._time + attack + 0.001)
         vca.gain.setValueAtTime(gain, relTime)
         vca.gain.linearRampToValueAtTime(0.00001, relTime+release)
         params.endTime = relTime+release
-        setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
-      }
+      })
     }
     params._destructor.disconnect(vca)
     return vca
@@ -89,7 +116,7 @@ define(function (require) {
     vca.gain.linearRampToValueAtTime(0, params._time + attack+decay+release)
     params.endTime = params._time + attack+decay+release
     params._destructor.disconnect(vca)
-    setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
+    scheduleDestroy(params)
     return vca
   }
 
@@ -105,7 +132,7 @@ define(function (require) {
     vca.gain.linearRampToValueAtTime(0, params._time + decay)
     params.endTime = params._time + decay
     params._destructor.disconnect(vca)
-    setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
+    scheduleDestroy(params)
     return vca
   }
 
@@ -122,7 +149,7 @@ define(function (require) {
     vca.gain.exponentialRampToValueAtTime(0.0001, params._time + decay)
     params.endTime = params._time + decay
     params._destructor.disconnect(vca)
-    setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
+    scheduleDestroy(params)
     return vca
   }
 
@@ -134,7 +161,7 @@ define(function (require) {
     vca.gain.value = gain
     params._destructor.disconnect(vca)
     params.endTime = params._time + dur
-    setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
+    scheduleDestroy(params)
     return vca
   }
 
@@ -180,15 +207,14 @@ define(function (require) {
     if (sus !== undefined) {
       fadeDownAtTime(vca, gain, params._time + attack+sus, release)
       params.endTime = params._time + attack+sus+release
-      setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
+      scheduleDestroy(params)
     } else {
       params.endTime = params._time + 1e6
-      params._noteOff = () => {
+      liveRelease(params, () => {
         let relTime = Math.max(params._time + attack, system.audio.currentTime) + 0.001
         fadeDownAtTime(vca, gain, relTime, release)
         params.endTime = relTime+release
-        setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
-      }
+      })
     }
     params._destructor.disconnect(vca)
     return vca
@@ -202,11 +228,11 @@ define(function (require) {
     evalMainParamFrame(vca.gain, params, 'envelope', 1, undefined, g => g*gain)
     params.endTime = params._time + dur
     params._destructor.disconnect(vca)
-    setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
+    scheduleDestroy(params)
     return vca
   }
 
-  return (params, gainbase, defaultEnvelope) => {
+  let envelope = (params, gainbase, defaultEnvelope) => {
     params._destructor = destructor(true)
     gainbase *= evalMainParamEvent(params, "loud", 1)
     let envelope = evalMainParamEvent(params, "envelope", defaultEnvelope)
@@ -229,4 +255,52 @@ define(function (require) {
     }
     return env
   }
+  envelope.releaseAllLive = releaseAllLive // Panic: release every live voice, whether or not it is still on a player
+  envelope.liveVoiceCount = () => liveVoices.size
+
+  // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+
+  let assert = (expected, actual, msg) => {
+    if (expected !== actual) { console.trace(`Assertion failed.\n>>Expected: ${expected}\n>>Actual: ${actual}${msg?'\n'+msg:''}`) }
+  }
+  let liveParams = () => { return {_time: system.audio.currentTime, beat: {duration: 1}, dur: 1, _noteOff: () => {}} }
+
+  ;['full','organ','pad','linpad'].forEach(type => {
+    let baseCount = liveVoices.size
+    let params = liveParams()
+    envelope(params, 0.1, type)
+    assert(baseCount+1, liveVoices.size, `${type}: live voice registered`)
+    assert(true, params.endTime > system.audio.currentTime + 1e5, `${type}: endTime is the live placeholder`)
+    params._noteOff()
+    assert(true, params.endTime < system.audio.currentTime + 10, `${type}: release sets a real endTime`)
+    assert(baseCount, liveVoices.size, `${type}: released voice deregistered`)
+    let releasedEndTime = params.endTime
+    params._noteOff() // Second release is a no-op: no re-ramp (which would click) and no second destroy timer
+    assert(releasedEndTime, params.endTime, `${type}: repeated release changes nothing`)
+    assert(baseCount, liveVoices.size, `${type}: repeated release does not deregister anything else`)
+  })
+
+  { // A voice whose note off never arrives is still reachable, and releasing it destroys it
+    let baseCount = liveVoices.size
+    let params = liveParams()
+    envelope(params, 0.1, 'full')
+    assert(baseCount+1, liveVoices.size)
+    releaseAllLive()
+    assert(baseCount, liveVoices.size, 'releaseAllLive releases a voice that was never note-offed')
+    assert(true, params.endTime < system.audio.currentTime + 10, 'releaseAllLive sets a real endTime')
+  }
+
+  { // An envelope with a known length is not live: it arms its own destroy and registers nothing
+    let baseCount = liveVoices.size
+    let params = {_time: system.audio.currentTime, beat: {duration: 1}, dur: 1}
+    envelope(params, 0.1, 'full')
+    assert(baseCount, liveVoices.size, 'a non live envelope is not registered')
+    assert(true, params.endTime < system.audio.currentTime + 10)
+  }
+
+  console.log('Envelope tests complete')
+  }
+
+  return envelope
 })

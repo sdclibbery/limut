@@ -2,6 +2,7 @@
 define(function(require) {
   let metronome = require('metronome')
   let {combineOverrides,applyOverrides} = require('player/override-params')
+  let {releaseNotes,allStopped} = require('player/live-notes')
   let consoleOut = require('console')
 
   let pressThreshold = 0.95 // For analogue button, have to press it this far before it triggers
@@ -41,9 +42,30 @@ define(function(require) {
   }
 
   let gamepads = []
+  // A pad that goes away with a button held (unplugged, or a peer disconnecting) never reports the
+  // release, so the note it started would sustain, and keep rendering, for ever. Release its held
+  // buttons here. The pad state itself stays: the players' listeners live in it. lastButtons is
+  // zeroed rather than cleared so a pad that comes back with the button still down doesn't read as
+  // a fresh press.
+  let isLive = (pad) => !!pad && pad.connected !== false
+  let releaseVanishedPads = (pads) => {
+    gamepads.forEach((gamepad, i) => {
+      if (!gamepad || isLive(pads[i]) || gamepad.lastButtons === undefined) { return }
+      gamepad.lastButtons.forEach((b, buttonIdx) => {
+        if (b <= pressThreshold) { return }
+        for (let id in gamepad.listeners) { gamepad.listeners[id](buttonIdx, undefined) }
+      })
+      gamepad.lastButtons = gamepad.lastButtons.map(() => 0)
+      gamepad.lt = 0
+      gamepad.rt = 0
+    })
+  }
+
   let perFrameUpdate = (now) => {
-    getGamepads().forEach((pad,i) => {
-      if (!pad) { return }
+    let pads = getGamepads()
+    releaseVanishedPads(pads)
+    pads.forEach((pad,i) => {
+      if (!isLive(pad)) { return } // A disconnected pad is handled by releaseVanishedPads, not read here
       if (gamepads[i] === undefined) { // New pad, add it
         gamepads[i] = {
           lastButtons: undefined,
@@ -104,14 +126,8 @@ define(function(require) {
       if (rtParam && buttonIdx === 7) { return } // Ignore right trigger button presses if rtParam
       if (buttonIdx === 10 || buttonIdx === 11) { return } // Ignore stick presses
       if (value === undefined) { // Note off
-        for (let k in player.events) {
-          let e = player.events[k]
-          if (!!e._noteOff && !e._stopping && e._gamepadNote === buttonIdx) { // Skip voices already releasing, else re-triggering _noteOff jumps the gain back up (click) and races the original destroy timeout
-            e._noteOff() // Call note off callback so sustain envelopes can move to release phase
-            e._stopping = true
-          }
-        }
-        if (!!player._shouldUnlisten && (!player.events || player.events.filter(e => !e._stopping).length === 0)) {
+        releaseNotes(player, e => e._gamepadNote === buttonIdx)
+        if (!!player._shouldUnlisten && allStopped(player)) {
           removeListener(padNumber, player.id+player._num) // Nothing left playing, cleanup listener
         }
         return
@@ -156,12 +172,47 @@ define(function(require) {
       player.play(events)
     })
     if (player.destroy !== undefined) { throw `Player ${player.id} already has destroy?!` }
-    player.destroy = () => {
+    player.destroy = (replaced) => {
       player._shouldUnlisten = true
-      if (!!player.events && player.events.length === 0) {
+      // Held notes are only released when the player is really going away (stop all, or its line
+      // deleted): on a code re-run the events are handed to the replacement player, whose listener
+      // still matches the button release, so a note held across the re-run is not cut
+      if (!replaced) { releaseNotes(player) }
+      if (allStopped(player)) {
           removeListener(padNumber, player.id+player._num) // Nothing left playing, cleanup listener
       }
     }
+  }
+
+  // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+
+  let assert = (expected, actual, msg) => {
+    if (expected !== actual) { console.trace(`Assertion failed.\n>>Expected: ${expected}\n>>Actual: ${actual}${msg?'\n'+msg:''}`) }
+  }
+
+  { // A pad that goes away with a button held releases it: no button release is ever reported for it
+    let fakePad = (pressed) => { return {id:'test', mapping:'standard', connected:true, axes:[], buttons:[{value:pressed?1:0},{value:0}]} }
+    let pad = fakePad(false)
+    setRemotePad('testpeer', 0, pad)
+    let idx = getGamepads().indexOf(pad)
+    perFrameUpdate(0) // Pad arrives with nothing pressed
+    let calls = []
+    addListener(idx, 'testlistener', (buttonIdx, value) => calls.push([buttonIdx, value]))
+    setRemotePad('testpeer', 0, fakePad(true))
+    perFrameUpdate(0)
+    assert('0,1', ''+calls[0], 'button press reported')
+    setRemotePad('testpeer', 0, null) // Peer disconnects (or the pad is unplugged) with the button still down
+    perFrameUpdate(0)
+    assert(2, calls.length, 'the vanished pad released its held button')
+    assert('0,', ''+calls[1], 'reported as a release')
+    perFrameUpdate(0)
+    assert(2, calls.length, 'and only once')
+    removeListener(idx, 'testlistener')
+    delete gamepads[idx]
+  }
+
+  console.log('Gamepad tests complete')
   }
 
   return {
