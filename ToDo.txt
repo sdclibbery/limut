@@ -12,7 +12,9 @@ Hub75 display
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
+!!!!!!!!!!!! Reset screensaver and lock screen times!!!!!!!!!!!!
 !Got dropouts during jam: see line 5747 in examples for the original code. Investigate
+ only superosc, happens without wavetable set too
 !get live working from OBS
  ??? Is it possible to configure OBS to delay its audio stream by a fixed amount, to compensate for the webcam delay??
 !superbass weird on keyboard on electron, not on firefox, superosc missing on some notes? keyboard only

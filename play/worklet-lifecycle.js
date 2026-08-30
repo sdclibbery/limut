@@ -52,10 +52,25 @@ define(function (require) {
   let workletLifecycle = (node, audio = system.audio) => {
     system.voiceStarted()
     let counted = true
-    node.port.addEventListener('message', (e) => {
+    let onMessage = (e) => {
       if (e.data !== 'terminated') { return }
       if (counted) { counted = false; system.voiceStopped() }
-    })
+      // Release the port, or the node never leaves the render graph. A started
+      // MessagePort with a live message listener keeps itself alive, and it owns -
+      // and therefore pins - the AudioWorkletNode. A pinned AudioWorkletNode stays
+      // in Chromium's audio graph and is walked every render quantum even though its
+      // processor returned false, so each note costs a small permanent slice of the
+      // render budget. Measured Aug 2026 (CDP WebAudio node census, `p1 superosc 0.,
+      // dur=1/4` at bpm=500): live AudioWorkletNodes grew linearly at exactly the note
+      // rate to 3998 in four minutes and never fell - not even after Ctrl-. - while
+      // live GainNodes stayed flat at 17. Render capacity tracked it linearly, 0.18 ->
+      // 0.76 over 13 minutes, and stayed there with zero voices sounding. The climb
+      // rate was identical for unison=1 and unison=8, and for a 5KB and a 130KB
+      // wavetable, ie it is a fixed per-node cost, not DSP and not the wavetable copy.
+      node.port.removeEventListener('message', onMessage)
+      node.port.close() // postMessage to a closed port is a silent no-op, so a late setWave is safe
+    }
+    node.port.addEventListener('message', onMessage)
     node.port.start()
     node.start = (time = audio.currentTime) => {
       node.parameters.get('start').setValueAtTime(1, time)
@@ -76,13 +91,21 @@ define(function (require) {
     let fakeNode = () => {
       let writes = []
       let listeners = []
-      return {
+      let n = {
         writes,
+        closed: 0,
         // Send what the processor sends: the node only hears it via the port.
-        fromProcessor: (data) => listeners.forEach(l => l({data})),
-        port: { addEventListener: (name,l) => listeners.push(l), start: () => {} },
+        fromProcessor: (data) => listeners.slice().forEach(l => l({data})),
         parameters: { get: (name) => ({ setValueAtTime: (v,t) => writes.push([name,v,t]) }) },
       }
+      n.port = {
+        addEventListener: (name,l) => listeners.push(l),
+        removeEventListener: (name,l) => { let i = listeners.indexOf(l); if (i >= 0) { listeners.splice(i,1) } },
+        start: () => {},
+        close: () => n.closed++,
+        listenerCount: () => listeners.length,
+      }
+      return n
     }
     let fakeAudio = { currentTime: 7 }
 
@@ -99,8 +122,13 @@ define(function (require) {
     n.stop() // A node can be stopped twice (eg destructor after an explicit stop)
     n.fromProcessor('terminated')
     assert(baseVoices, system.voiceCount(), 'termination decrements the voice count')
+    // The port must be released on termination: a started port with a live listener
+    // pins the node in the render graph, where it costs a slice of every quantum.
+    assert(1, n.closed, 'termination closes the port')
+    assert(0, n.port.listenerCount(), 'termination removes the message listener')
     n.fromProcessor('terminated')
     assert(baseVoices, system.voiceCount(), 'a repeated termination message does not double-decrement')
+    assert(1, n.closed, 'a repeated termination does not re-close the port')
 
     // A node that is never started still counts until it terminates: the processor
     // guard tests stop before start so it terminates rather than rendering forever.

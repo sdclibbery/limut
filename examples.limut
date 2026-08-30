@@ -5778,3 +5778,7 @@ section drop {
   set (l,h) oct+=(0,1), fx>>=mix{duck}
 }, length=64
 
+
+// v1 visualsynth, px=mul{sin{}}>>tex1d{{x}->{labh:x}}, display='hub75-01', dim=0.8
+// v visualsynth, px=set{u:sdstar,v:topolar.v}>>frompolar>>(kal{shape:3}/2)^2.3>>pal{0,red,yellow,1}^2, display='hub75-01'
+v1 visualsynth, px=mul{3}>>add{time*4}>>sin^2>>pal{0,red,0,blue,0,1}, display='hub75-01'
