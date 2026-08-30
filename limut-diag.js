@@ -13,6 +13,8 @@
 //   LIMUT_DIAG_CODE=<path>       .limut file to run once the page is up
 //   LIMUT_DIAG_NODES=1           live AudioNode census by type (see the cost note below)
 //   LIMUT_DIAG_STOP=<seconds>    fire window.stop() (ie Ctrl-.) this far into the run
+//   LIMUT_DIAG_GC=1              force garbage collection after the stop, to tell a node that is
+//                                merely uncollected from one that is genuinely stuck in the graph
 //   LIMUT_DIAG_SECS=<seconds>    quit this far into the run
 //
 // eg: LIMUT_DIAG=1 LIMUT_DIAG_CODE=/tmp/a.limut LIMUT_DIAG_NODES=1 LIMUT_DIAG_STOP=120 \
@@ -194,6 +196,18 @@ let start = (app, win) => {
         await wc.executeJavaScript('window.stop()')
         stopped = true
         console.log(`[diag] t=${elapsed().toFixed(0)} window.stop()`)
+        if (process.env.LIMUT_DIAG_GC === '1') {
+          // Over CDP so it works without --js-flags=--expose-gc. A dead node that is simply waiting
+          // for GC still renders and still costs render capacity, so forcing collection here is what
+          // separates "not collected yet" from "collected and still costing".
+          attach()
+          try { await wc.debugger.sendCommand('HeapProfiler.enable') } catch (e) {}
+          for (let i = 0; i < 5; i++) {
+            try { await wc.debugger.sendCommand('HeapProfiler.collectGarbage') } catch (e) {}
+            await new Promise(r => setTimeout(r, 400))
+          }
+          console.log(`[diag] t=${elapsed().toFixed(0)} forced GC`)
+        }
       }, stopAt*1000)
     }
 
