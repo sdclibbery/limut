@@ -8,7 +8,9 @@ app.commandLine.appendSwitch('enable-exclusive-audio');
 
 app.on('ready', () => {
   mainWindow = new BrowserWindow({width: 1280, height: 800, webPreferences: {preload: path.join(__dirname, 'preload.js')}})
-  audioLoad.start(mainWindow)
+  // Audio thread diagnostics replace the load meter for the run; both drive the same debugger
+  if (process.env.LIMUT_DIAG === '1') { require('./limut-diag').start(app, mainWindow) }
+  else { audioLoad.start(mainWindow) }
   mainWindow.webContents.session.on('select-serial-port', (event, portList, webContents, callback) => {
     event.preventDefault()
     console.log('Available serial ports:', portList)

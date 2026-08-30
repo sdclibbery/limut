@@ -2,6 +2,7 @@
 define(function (require) {
   let system = require('play/system')
   let {evalParamEvent} = require('player/eval-param')
+  let {matchInputChannels} = require('play/nodes/channels')
 
   let isNode = v => v instanceof AudioNode
   let isParam = v => v instanceof AudioParam
@@ -63,6 +64,7 @@ define(function (require) {
           throw new Error(`Connect: r ${rv} is not an AudioNode/AudioParam`)
         }
         if (rv.numberOfInputs === 0) { return } // Dont connect to nodes that dont have inputs
+        matchInputChannels(lv, rv) // A stereo source must pin a per-note filter before it renders; see play/nodes/channels.js
         if (rv.passthrough !== undefined) { rv.passthrough(lv) } // Passthrough is for nodes that dont want to create an actual webaudio node
         else {
           if (channel !== undefined) {

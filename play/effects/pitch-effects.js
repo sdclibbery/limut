@@ -67,6 +67,29 @@ define(function (require) {
     params._destructor.disconnect(gain)
   }
 
+  // Base event lookup for the event currently being built. Deliberately a single entry that the
+  // next event overwrites: NO event may hold a reference to another event. Caching the base list on
+  // the event itself (as `_glideBases`) chained every event to the ones before it, so one live event
+  // kept the player's whole history reachable - and with it each note's pitch AudioParam, and so its
+  // oscillator node. Measured Aug 2026: `a acid, dur=1/50` held ~180MB of main thread heap after
+  // three minutes and stalled frames for up to 997ms in GC, against 42MB for the same patch with
+  // glide off. The id serves the same purpose for the retrofit guard below - a number, not a handle.
+  let glideEventId = 0
+  let lookup = {}
+  let baseEventsFor = (params) => {
+    if (lookup.event === params) { return lookup }
+    lookup = {
+      event: params,
+      id: ++glideEventId,
+      // Exclude params itself: whether the event is already on the player depends on where the
+      // synth is called from, and an event must never glide from itself.
+      bases: (params._player && params._player.events)
+        ? params._player.events.filter(e => e !== params && e.voice === params.voice)
+        : [],
+    }
+    return lookup
+  }
+
   let setupGlide = (audioParam, params) => {
     // Register this audioParam so that future glide-target events can retrofit a glide onto it
     if (!params._pitchAudioParams) { params._pitchAudioParams = [] }
@@ -78,15 +101,9 @@ define(function (require) {
     let beatDur = metronome.beatDuration()
     let glideDur = glide * beatDur
 
-    // Look up base events once per event. Cache on params so multiple pitchEffects calls
-    // (e.g. fm ops, multiwave oscillators) share the same base event lookup.
-    let bases = params._glideBases
-    if (bases === undefined) {
-      bases = (params._player && params._player.events)
-        ? params._player.events.filter(e => e.voice === params.voice)
-        : []
-      params._glideBases = bases
-    }
+    // Looked up once per event and shared by that event's other pitchEffects calls (fm ops,
+    // multiwave oscillators)
+    let {bases, id} = baseEventsFor(params)
     if (bases.length === 0 || !params.freq) { return }
 
     let lastBase = bases.reduce((a,b) => (a.endTime >= b.endTime ? a : b))
@@ -97,8 +114,8 @@ define(function (require) {
     // Retrofit glide onto every still-alive base event's audioParams. Guard against
     // double-scheduling if this event has multiple pitchEffects calls (fm ops etc).
     bases.forEach(base => {
-      if (base._glidedToEvent === params) { return }
-      base._glidedToEvent = params
+      if (base._glidedTo === id) { return }
+      base._glidedTo = id
       if (!base.freq || !base._pitchAudioParams) { return }
       base._pitchAudioParams.forEach(baseAp => {
         scheduleGlide(baseAp, params._time, glideDur, base.freq, params.freq, base.freq, glideCurve)
@@ -106,10 +123,54 @@ define(function (require) {
     })
   }
 
-  return (audioParam, params) => {
+  let pitchEffects = (audioParam, params) => {
     setupGlide(audioParam, params)
     setupAddc(audioParam, params)
     setupVib(audioParam, params)
   }
 
+  // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+    let assert = (expected, actual, msg) => {
+      if (expected !== actual) { console.trace(`Assertion failed ${msg||''}.\n>>Expected: ${expected}\n>>Actual:   ${actual}`) }
+    }
+    let mockAp = () => { let ap = {ramps: 0}; ap.setValueAtTime = () => ap.ramps++; ap.linearRampToValueAtTime = () => ap.ramps++; return ap }
+    let player = {events: []}
+    let ev = (freq, endTime) => {
+      let e = {freq: freq, endTime: endTime, voice: 0, _time: 0, _player: player, glide: 1/4}
+      player.events.push(e)
+      return e
+    }
+    // References an event holds to any other event are what leaked the whole note history, so
+    // check for them directly rather than for the names the old code happened to use.
+    let referencesAnEvent = (e, others) => Object.keys(e).some(k => others.includes(e[k])
+      || (Array.isArray(e[k]) && e[k].some(v => others.includes(v))))
+
+    let first = ev(100, 1)
+    let ap1 = mockAp()
+    pitchEffects(ap1, first)
+    assert(0, ap1.ramps, 'the first event has nothing to glide from')
+
+    let second = ev(200, 2)
+    let ap2 = mockAp()
+    pitchEffects(ap2, second)
+    assert(25, ap2.ramps, 'the new event glides from the base events pitch')
+    assert(25, ap1.ramps, 'and the still sounding base event is retrofitted with a glide to the new pitch')
+
+    let ap2b = mockAp() // A second pitchEffects call on the same event (fm ops, multiwave)
+    pitchEffects(ap2b, second)
+    assert(25, ap2b.ramps, 'the events other pitch params glide too')
+    assert(25, ap1.ramps, 'but the base is not retrofitted twice, which would double schedule it')
+
+    assert(false, referencesAnEvent(first, [second]), 'a base event holds no reference to the event that glided from it')
+    assert(false, referencesAnEvent(second, [first]), 'and an event holds no reference to its base events')
+
+    let third = ev(300, 3) // The one entry lookup cache must not pin the previous generation either
+    pitchEffects(mockAp(), third)
+    assert(false, referencesAnEvent(third, [first, second]), 'nor to any earlier event')
+
+    console.log('Pitch effects tests complete')
+  }
+
+  return pitchEffects
 })

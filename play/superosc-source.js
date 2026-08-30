@@ -840,6 +840,7 @@ registerProcessor('superosc', SuperOsc);
     // note actually renders a stereo unison `pan` spread, and 1 otherwise so the
     // downstream fx chain stays mono (cheaper) when there's nothing to pan.
     let node = new AudioWorkletNode(audio, "superosc", { outputChannelCount: [channels] })
+    node._limutChannels = channels // A stereo source must pin any per-note filter it feeds; see play/nodes/channels.js
     workletLifecycle(node, audio) // start()/stop() gates on the start/stop params, plus the voice count
     // Set the wavetable from a Float32Array of sample data (eg an AudioBuffer's
     // channel-0 data), sliced into `count` single-cycle frames (default 64, the
