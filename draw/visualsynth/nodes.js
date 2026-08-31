@@ -652,6 +652,11 @@ define(function(require) {
   userVars['dup4'] = parseExpression('{p}->min{dup2{p*2}, dup2{p/2}}')
   assert(uniformCount(pxSource('dup4{id}')), uniformCount(pxSource('set{v:dup4{id}}')))
   assert(pxSource('set{v:dup4{id}}'), pxSource('set{v:dup4{id}}'))
+  // `let` resolves its bound expression the same way and had the same fault
+  // (expression/let-node.js), so it is covered here too, where the helpers already exist
+  assert(uniformCount(bare), uniformCount(pxSource("let{'a', dup2{id*2}}")))
+  assert(uniformCount(pxSource('dup4{id}')), uniformCount(pxSource("let{'a', dup4{id}}")))
+  assert(pxSource("let{'a', dup2{id*2}}"), pxSource("let{'a', dup2{id*2}}")) // and deterministic
   delete userVars['dup2']
   delete userVars['dup4']
 

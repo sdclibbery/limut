@@ -29,11 +29,27 @@ define(function(require) {
   }
 
   // A lookup's args double as its time modifiers, so evalFunctionWithModifiers has already evalled
-  // every arg once, un-piped, and memoised that on the event. Resolving an arg as a chain of its own
-  // has to opt out of memoisation, or >> gets that earlier value handed back instead of building the
-  // chain. Same protocol as paramChain in draw/visualsynth/nodes.js and the lut sampling in lut.js.
-  let unmemoised = (evalRecurse) => {
-    let options = Object.assign({}, evalRecurse !== undefined ? evalRecurse.options : undefined, {doNotMemoise:true})
+  // every arg once, un-piped, and memoised that on the event. Resolving the bound expression as a
+  // chain of its own must not see those entries, or >> gets that earlier value handed back instead
+  // of building the chain. Same protocol as paramChain in draw/visualsynth/nodes.js.
+  //
+  // The isolation is an event of its own, not {doNotMemoise:true}: doNotMemoise propagates the
+  // whole way down, so every repeated reference inside a user defined function re-evaluates its
+  // subtree and yields a *fresh* node object, which ctx.built cannot dedupe by identity, and the
+  // built chain multiplies with the number of repeated references. `let{'a', f{id*2}}` for an f
+  // naming its argument four times built four times the chain that a bare `f{id*2}` does.
+  let ownEvent = (e) => {
+    if (e === undefined || e === null) { return e }
+    // Bindings are shared rather than copied, so a `let` *inside* the bound expression still lands
+    // on the real event exactly as it did before
+    if (e._lets === undefined) { e._lets = {} }
+    return Object.create(Object.getPrototypeOf(e), Object.getOwnPropertyDescriptors(e))
+  }
+  // With no event there is nothing to isolate and nothing to memoise against - the memo is a
+  // WeakMap keyed on the event - so that case keeps the old doNotMemoise behaviour
+  let memoScoped = (evalRecurse, canMemoise) => {
+    let options = Object.assign({}, evalRecurse !== undefined ? evalRecurse.options : undefined)
+    if (canMemoise) { delete options.doNotMemoise } else { options.doNotMemoise = true }
     let er = (v, e, b, more) => evalParamFrame(v, e, b, more !== undefined ? Object.assign({}, options, more) : options)
     er.options = options // >> reads expandingChords off here
     return er
@@ -96,8 +112,11 @@ define(function(require) {
     // that way — it has to be a pipe target so >> hands it the chain value (see below) — so it does
     // the same thing itself, rather than making a gain node per chord slot and leaking every one.
     if (evalRecurse !== undefined && evalRecurse.options && evalRecurse.options.expandingChords) { return 0 }
-    let er = unmemoised(evalRecurse !== undefined ? evalRecurse : evalParamFrame)
-    let found = args !== undefined && args !== null ? findName(args, e, b, er) : undefined
+    // The bound expression is evaluated against an event of its own; everything that outlives this
+    // call (bindLet, the audio tap gain) still uses the real one
+    let ev = ownEvent(e)
+    let er = memoScoped(evalRecurse !== undefined ? evalRecurse : evalParamFrame, ev !== undefined && ev !== null)
+    let found = args !== undefined && args !== null ? findName(args, ev, b, er) : undefined
     if (found === undefined) {
       warnOnce(`🟠 let needs a name, eg let{'foo'}`)
       return isShaderNode(args && args.value) ? passShaderNode() : vars.all().gain({value:1}, e,b)
@@ -105,7 +124,7 @@ define(function(require) {
     let name = found.name
     let pipedValue = found.slot === 'value1' ? args.value : undefined
     let boundAst = args[found.boundSlot]
-    let boundValue = boundAst !== undefined ? er(boundAst, e, b) : undefined
+    let boundValue = boundAst !== undefined ? er(boundAst, ev, b) : undefined
 
     // Which domain the chain is in, decided without asking connectOp. In a visual chain `let` is
     // always piped — the left hand side is a shader node, so it is never connectable and >> takes
@@ -124,7 +143,7 @@ define(function(require) {
         // to >> from a chain seed, so a bare call takes the pixel value and a plain value becomes an
         // animated uniform. The const wrap is kept rather than unwrapped, which is what makes
         // let{'wc',[]n^2} one uniform evaluated once a frame however many times `wc` is used.
-        bound = isShaderNode(boundValue) ? boundValue : connectOp(implicitInputNode(), boundAst, e, b, er)
+        bound = isShaderNode(boundValue) ? boundValue : connectOp(implicitInputNode(), boundAst, ev, b, er)
         if (!isShaderNode(bound)) { bound = constShaderNode(boundAst, bound) }
       }
       bindLet(e, name, letRefShaderNode(name))
