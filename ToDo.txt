@@ -32,7 +32,7 @@ visual nodes...
  ???Want to be able to switch shader parts on a timevar; eg px=fbm2>>[cospal,pal{0,red,1}]t4@f - cant do this with audio nodes; how important is it really?
  ???{tex,#124} should do split/join like in audio chain??
 Multiple audiocontexts, set context='foo' on a player. Allows audio rendering to be split over multiple cores
-?set bpm can have target time? eg set bpm={140,by;1000}
+?set bpm can have target time? eg set bpm={140,by;1000}; takes a linear step towards the target every beat
 grain should have offset param, would allow more interesting effects; granular delays etc
 Multiband compressor
 Multiband effect that does spectral side chain ducking

@@ -159,11 +159,29 @@ define(function(require) {
   // Every arg of a call is evaluated once before the call itself, by the modifier machinery
   // (evalFunctionWithModifiers in eval-param.js, since a lookup's args double as its time modifiers)
   // — even for a node function, which asked not to have its args evalled. That evaluation is
-  // memoised on the event, so resolving an arg here has to opt out of memoisation, or >> gets that
+  // memoised on the event, so resolving an arg here must not see those entries, or >> gets that
   // earlier un-piped value handed back instead of building the chain: `floor{1/8}+1/2` would compile
-  // to a constant rather than flooring the channel. Same protocol as the lut sampling in lut.js.
-  let unmemoised = (evalRecurse) => {
-    let options = Object.assign({}, evalRecurse.options, {doNotMemoise:true})
+  // to a constant rather than flooring the channel.
+  //
+  // The isolation is an event of its own (the pattern parallel/loop use, play/nodes/graph.js), not
+  // {doNotMemoise:true}. doNotMemoise propagates the whole way down the arg's evaluation, so every
+  // repeated reference inside a user defined function re-evaluates its entire subtree and yields a
+  // *fresh* node object each time; ctx.built dedupes on node identity, so the built chain then
+  // multiplies. sdcirclewave (five nested lambdas, `q` referenced four times in sdcwd, which sdcw1
+  // calls twice) went from 18 uniforms to 120, and its build from 0.65ms to 68ms per event — on the
+  // beat, against a scheduling budget of 10% of a beat, which is what made the audio late. A cloned
+  // event gives the same guarantee (its memo starts empty, so no stale un-piped value can leak in)
+  // while letting repeated references *within* this one resolution share as they normally would.
+  // Repeats that must stay distinct still do: parallel/loop clone their own events per repeat and
+  // spell a callsite id into __functionContext, which the memo key reads via getCallTreeString.
+  // Undefined for a node function called with no event (the direct-call tests below do this).
+  // There is then nothing to isolate and nothing to memoise against - the memo is a WeakMap keyed
+  // on the event - so that case keeps the old doNotMemoise behaviour.
+  let ownEvent = (e) => (e === undefined || e === null) ? e
+    : Object.create(Object.getPrototypeOf(e), Object.getOwnPropertyDescriptors(e))
+  let memoScoped = (evalRecurse, canMemoise) => {
+    let options = Object.assign({}, evalRecurse.options)
+    if (canMemoise) { delete options.doNotMemoise } else { options.doNotMemoise = true }
     let er = (v, e, b, more) => evalParamFrame(v, e, b, more !== undefined ? Object.assign({}, options, more) : options)
     er.options = options // >> reads expandingChords off here
     return er
@@ -180,7 +198,8 @@ define(function(require) {
   // was given a value of its own keeps it (see connectOp.js); a channels{} arg is a chain like any
   // other. The mark is on the seed, so a chain written out inside the arg is unaffected by it.
   let paramChain = (ast, e, b, evalRecurse, paramSlot) => {
-    let v = connectOp(implicitInputNode(paramSlot), ast, e, b, unmemoised(evalRecurse))
+    let ev = ownEvent(e)
+    let v = connectOp(implicitInputNode(paramSlot), ast, ev, b, memoScoped(evalRecurse, ev !== undefined && ev !== null))
     if (!isShaderNode(v)) { return v } // A piped call that was not shader aware at all (mul{time})
     return v._constWrapped === true ? v._constValue : v
   }
@@ -609,6 +628,32 @@ define(function(require) {
   assert(pxSource('set{}'), pxSource('channels{}')) // No args at all: straight through, as set{} is
 
   assert(pxSource('channels{sin{id},g:id^2}'), pxSource('channels{sin{id},g:id^2}')) // Deterministic: the program cache is keyed on the source
+
+  // A param that is a chain of its own must cost exactly what the same chain costs written out
+  // bare. paramChain resolves it in isolation from the modifier machinery's earlier un-piped
+  // evaluation, and that isolation has to be an event of its own, not {doNotMemoise:true}:
+  // doNotMemoise propagates the whole way down, so every reference to a user function's argument
+  // re-evaluates its subtree and hands back a *fresh* node object, which ctx.built cannot dedupe
+  // by identity. The built chain then multiplies with the number of repeated references, which is
+  // invisible in a directly constructed node (every other determinism assertion here) and only
+  // shows through a user defined function. sdcirclewave, five lambdas deep, went from 18 uniforms
+  // to 120 and from 0.65ms to 68ms per event - spent inside the beat scheduling window, which is
+  // what made audio events late.
+  let uniformCount = (source) => (source.match(/^uniform vec4 /gm) || []).length
+  let userVars = require('vars').all()
+  userVars['dup2'] = parseExpression('{q}->min{q.x+q.y, q.x-q.y}') // Names its arg four times
+  assert(4, uniformCount(pxSource('mul{1}>>mul{2}>>mul{3}>>mul{4}'))) // uniformCount itself
+  let bare = pxSource('dup2{id*2}')
+  assert(uniformCount(bare), uniformCount(pxSource('set{v:dup2{id*2}}'))) // As a set param
+  assert(uniformCount(bare), uniformCount(pxSource('mul{dup2{id*2}}'))) // and as a mul param
+  assert(uniformCount(bare), uniformCount(pxSource('add{dup2{id*2}}'))) // and an add param
+  assert(pxSource('set{v:dup2{id*2}}'), pxSource('set{v:dup2{id*2}}')) // Still byte identical: the cache key
+  // Nesting compounds it, so a function calling a function is the case that actually bites
+  userVars['dup4'] = parseExpression('{p}->min{dup2{p*2}, dup2{p/2}}')
+  assert(uniformCount(pxSource('dup4{id}')), uniformCount(pxSource('set{v:dup4{id}}')))
+  assert(pxSource('set{v:dup4{id}}'), pxSource('set{v:dup4{id}}'))
+  delete userVars['dup2']
+  delete userVars['dup4']
 
   // uv: the value the whole chain started with, still reachable once nodes downstream have
   // replaced the value flowing through them. At the head of a chain it is exactly what id is.

@@ -12,6 +12,32 @@ define(function (require) {
 
   let vtxCompiled
   let programs = {} // fragSource -> {shader, uniformLocs}, or null for permanent compile failure
+  let programOrder = [] // insertion order of the keys of `programs`, so the cache can be bounded
+  // A px chain must generate byte identical source every event: the source *is* the program cache
+  // key (codegen.js names everything from counters for exactly this reason), so a chain whose
+  // source moves recompiles a shader per event instead of once. That is a synchronous compile and
+  // link on the main thread, inside the beat scheduling window, which is enough to make audio
+  // events late. It is a silent failure otherwise, so it is checked rather than assumed.
+  // The cap is a backstop for a chain that slips past the check above: it bounds the map and its
+  // (large) source string keys. The GL programs themselves are not deleted, because a sprite built
+  // from an earlier event still holds the shader object and would then useProgram a deleted
+  // program; the warning, not the eviction, is what is meant to stop this happening.
+  let maxPrograms = 64
+  let remember = (source) => {
+    programOrder.push(source)
+    while (programOrder.length > maxPrograms) { delete programs[programOrder.shift()] }
+  }
+  // Keyed on the px AST rather than the player: editing the line reparses it into a new AST object,
+  // so a live edit legitimately generating different source is a new entry rather than a warning.
+  // The same AST giving different source twice is the real fault.
+  let lastSource = new WeakMap()
+  let firstDifference = (a, b) => {
+    let al = a.split('\n'), bl = b.split('\n')
+    for (let i = 0; i < Math.max(al.length, bl.length); i++) {
+      if (al[i] !== bl[i]) { return `line ${i+1}: ${JSON.stringify(al[i])} -> ${JSON.stringify(bl[i])}` }
+    }
+    return 'no line differs (length only)'
+  }
   let warned = {}
   let warnOnce = (msg) => {
     if (warned[msg]) { return }
@@ -36,6 +62,14 @@ define(function (require) {
       return // nothing drawn locally; sprite.js turns a falsy result into a task that removes itself
     }
     hub75.releaseFor(params._player && params._player.id) // eg display= edited back off the line
+    if (params.px !== null && (typeof params.px === 'object' || typeof params.px === 'function')) {
+      let prev = lastSource.get(params.px)
+      if (prev !== undefined && prev !== built.source) {
+        let who = (params._player && params._player.id) || 'visualsynth'
+        warnOnce(`🔴 Visual synth: the px chain for ${who} generates different shader source each event, so it recompiles a shader instead of reusing the cached program. Values that change must reach the shader as uniforms. First difference: ${firstDifference(prev, built.source)}`)
+      }
+      lastSource.set(params.px, built.source)
+    }
     let cached = programs[built.source]
     if (cached === undefined) {
       try {
@@ -55,8 +89,10 @@ define(function (require) {
           uniformLocs: built.uniforms.map(u => system.gl.getUniformLocation(program, u.name)),
         }
         programs[built.source] = cached
+        remember(built.source)
       } catch (e) {
         programs[built.source] = null
+        remember(built.source)
         consoleOut(`🔴 Visual synth shader error: ${e}`)
         return
       }
@@ -68,22 +104,25 @@ define(function (require) {
     if (built.uniforms.length > 0) {
       s.preRender = (state) => {
         system.gl.useProgram(cached.shader.program)
-        built.uniforms.forEach((u, i) => {
-          // Restore the call tree the arg was written in, so an AST from inside a user defined
-          // function (eg the `size` in `set pixellate = {in,size} -> floor{in,to:1/size}`) still
-          // resolves now that the call has long returned
-          let outer = getCallTree()
-          clearCallTree()
-          setCallTree(u.callTree)
-          let v
-          try {
-            v = evalParamFrame(u.ast, params, state.count)
-          } finally {
+        // Each arg is evaluated with the call tree it was written in restored, so an AST from
+        // inside a user defined function (eg the `size` in
+        // `set pixellate = {in,size} -> floor{in,to:1/size}`) still resolves now that the call has
+        // long returned. getCallTree deep copies the whole tree (player/callstack.js), so the
+        // caller's tree is saved once for the loop rather than once per uniform - a chain with a
+        // dozen uniforms was copying it a dozen times every frame. Each iteration still clears
+        // before setting, which is what setCallTree requires and what keeps one arg's frames from
+        // leaking into the next.
+        let outer = getCallTree()
+        try {
+          built.uniforms.forEach((u, i) => {
             clearCallTree()
-            setCallTree(outer)
-          }
-          system.gl.uniform4fv(cached.uniformLocs[i], toVec4(v))
-        })
+            setCallTree(u.callTree)
+            system.gl.uniform4fv(cached.uniformLocs[i], toVec4(evalParamFrame(u.ast, params, state.count)))
+          })
+        } finally {
+          clearCallTree()
+          setCallTree(outer)
+        }
       }
     }
     return s
