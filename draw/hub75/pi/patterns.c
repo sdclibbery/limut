@@ -16,6 +16,7 @@ int pattern_by_name(const char *s) {
     if (!strcmp(s, "map"))   return PATTERN_MAP;
     if (!strcmp(s, "rowid")) return PATTERN_ROWID;
     if (!strcmp(s, "bands")) return PATTERN_BANDS;
+    if (!strcmp(s, "cellid")) return PATTERN_CELLID;
     return -1;
 }
 
@@ -30,6 +31,7 @@ const char *pattern_name(int pattern) {
         case PATTERN_MAP:   return "map";
         case PATTERN_ROWID: return "rowid";
         case PATTERN_BANDS: return "bands";
+        case PATTERN_CELLID: return "cellid";
         default:            return "off";
     }
 }
@@ -145,6 +147,52 @@ void pattern_render(int pattern, int w, int h, uint8_t *rgba) {
                                     int py2 = ty + row * sc + d / sc;
                                     if (px2 < w && py2 < h) px(rgba, w, px2, py2, 255, 255, 255);
                                 }
+                }
+            }
+        }
+        return;
+    }
+
+    if (pattern == PATTERN_CELLID) {
+        /* The same question `map` answers — which canvas cell is this panel showing — but encoded
+         * so a human eye can read it off a panel mounted sideways, at an angle, in a photograph.
+         * `map`'s numerals cannot be: three rotated digits at 4x scale were misread on the first
+         * six-panel wall, which is the same lesson `rowid` taught (see ../CLAUDE.md).
+         *
+         *   fill colour   the cell's COLUMN, cx % 8 through eight well separated colours
+         *   black squares the cell's ROW, cy + 1 of them along the centre line
+         *   black L       the cell's top-left corner, so rotation is unambiguous
+         *
+         * Colour and counting both survive the camera; only the column is ambiguous, and only
+         * modulo 8, which one look at the wall's own geometry resolves. */
+        static const int CELLC[8][3] = {
+            {255,0,0}, {0,255,0}, {0,0,255},    {255,255,0},
+            {255,0,255}, {0,255,255}, {255,255,255}, {96,96,96}
+        };
+        int cellsX = w / PATTERN_CELL_W;
+        int cx, cy, i;
+        if (cellsX < 1) cellsX = 1;
+
+        for (cy = 0; cy * PATTERN_CELL_H < h; cy++) {
+            for (cx = 0; cx < cellsX; cx++) {
+                int ox = cx * PATTERN_CELL_W, oy = cy * PATTERN_CELL_H;
+                const int *c = CELLC[cx % 8];
+
+                for (y = 0; y < PATTERN_CELL_H && oy + y < h; y++)
+                    for (x = 0; x < PATTERN_CELL_W && ox + x < w; x++)
+                        px(rgba, w, ox + x, oy + y, c[0], c[1], c[2]);
+
+                /* the corner mark: two black arms meeting at the cell's top left */
+                for (x = 0; x < 8 && ox + x < w; x++) px(rgba, w, ox + x, oy, 0, 0, 0);
+                for (y = 0; y < 8 && oy + y < h; y++) px(rgba, w, ox, oy + y, 0, 0, 0);
+
+                /* cy + 1 black 4x4 squares, spaced 7 apart from x = 4: eight of them still end at
+                 * x = 57, inside the 64 wide cell. */
+                for (i = 0; i <= cy && i < 8; i++) {
+                    int bx = ox + 4 + i * 7, by = oy + PATTERN_CELL_H / 2 - 2;
+                    for (y = 0; y < 4 && by + y < h; y++)
+                        for (x = 0; x < 4 && bx + x < w; x++)
+                            px(rgba, w, bx + x, by + y, 0, 0, 0);
                 }
             }
         }

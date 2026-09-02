@@ -21,6 +21,12 @@
  * chain itself; and the dimmer and gamma, which output.c has already applied by the time write()
  * is called (PROTOCOL.md §9), so o->pixels is the final image.
  *
+ * Every canvas ROW is sent, in canvas order, on every frame — the card is not a frame buffer that
+ * can be patched, and reordering or omitting rows breaks the picture in ways that look like
+ * hardware faults (../CLAUDE.md has the four experiments). Canvas COLUMNS are a separate question:
+ * --trim-canvas narrows each row packet to the columns the render occupies, using the pixel
+ * packet's own offset and count fields, which is what those fields are for.
+ *
  * The wire format is not documented by Colorlight. It is taken from the protocol notes at the top
  * of FPP's src/channeloutput/ColorLight-5a-75.cpp, cross-checked against Harald Kubota's write-up
  * (hkubota.wordpress.com, 2022-01-31). Read for the format only — no code is taken from FPP,
@@ -39,6 +45,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stddef.h>
 
 /* The card's fixed MAC, and the source MAC LEDVISION and FPP both use. */
 static const unsigned char CARD_MAC[6] = { 0x11, 0x22, 0x33, 0x44, 0x55, 0x66 };
@@ -89,17 +96,23 @@ size_t colorlight_pixel_header(unsigned char *out, int row, int pixOff, int coun
     return (size_t)CL_PIXEL_HEADER + (size_t)count * 3;
 }
 
-void colorlight_pixels(unsigned char *pkt, int dstPixel, const uint8_t *rgba, int count,
-                       const int idx[3]) {
+void colorlight_pixels_step(unsigned char *pkt, int dstPixel, const uint8_t *rgba, int count,
+                            int step, const int idx[3]) {
     unsigned char *p = pkt + CL_PIXEL_HEADER + (size_t)dstPixel * 3;
+    const uint8_t *s = rgba;
     int i;
     for (i = 0; i < count; i++) {
-        const uint8_t *s = rgba + (size_t)i * 4;
         p[0] = s[idx[0]];
         p[1] = s[idx[1]];
         p[2] = s[idx[2]];
         p += 3;
+        s += (ptrdiff_t)step * 4;
     }
+}
+
+void colorlight_pixels(unsigned char *pkt, int dstPixel, const uint8_t *rgba, int count,
+                       const int idx[3]) {
+    colorlight_pixels_step(pkt, dstPixel, rgba, count, 1, idx);
 }
 
 size_t colorlight_sync(unsigned char *out, int brightness) {
@@ -125,6 +138,165 @@ size_t colorlight_brightness(unsigned char *out, int brightness) {
     return (size_t)CL_BRIGHT_FRAME;
 }
 
+/* Where one canvas pixel of `p` reads from in the rendered image, as an index, plus the step to
+ * the next pixel along the canvas row. Each rotation is a constant stride, which is the whole
+ * reason a rotated wall needs no intermediate buffer:
+ *
+ *   rot   0  canvas x runs along a render row          step  +1
+ *   rot  90  canvas x runs UP a render column          step  -renderW
+ *   rot 180  canvas x runs backwards along a row       step  -1
+ *   rot 270  canvas x runs DOWN a render column        step  +renderW
+ *
+ * rot 90 is the case on the bench wall: the panels are mounted rotated 90 degrees anticlockwise,
+ * so panel pixel (px, py) has to be fed the wall pixel (py, w-1-px). */
+static int cl_src(const output_panel *p, int renderW, int px, int py, int *step) {
+    int sx, sy;
+    switch (p->rot) {
+        case 90:  sx = p->srcX + py;                sy = p->srcY + (p->w - 1 - px);
+                  *step = -renderW; break;
+        case 180: sx = p->srcX + (p->w - 1 - px);   sy = p->srcY + (p->h - 1 - py);
+                  *step = -1; break;
+        case 270: sx = p->srcX + (p->h - 1 - py);   sy = p->srcY + px;
+                  *step = renderW; break;
+        default:  sx = p->srcX + px;                sy = p->srcY + py;
+                  *step = 1; break;
+    }
+    return sy * renderW + sx;
+}
+
+int colorlight_plan(int w, int h, const output_opts *opts,
+                    cl_pkt *pkts, int pktCap, cl_seg *segs, int segCap,
+                    int *nPkts, int *nSegs, char *err, size_t errCap) {
+    int rowMap    = (opts && opts->rowMap > 0) ? opts->rowMap : 1;
+    /* The superposition group is set by the PHYSICAL panel, not by how much we are rendering: a
+     * 32 row panel with two data groups decodes 16 addresses, so canvas rows 16 apart collide. */
+    int panelRows = (opts && opts->panelRows > 0) ? opts->panelRows : 32;
+    int half = panelRows / 2, group = panelRows * 2;
+    int cw = (opts && opts->canvasW > 0) ? opts->canvasW : w;
+    int ch = (opts && opts->canvasH > 0) ? opts->canvasH : h;
+    /* No panel map is the single panel case: the whole render, unrotated, at the offset. */
+    output_panel one;
+    const output_panel *panels = (opts && opts->nPanels > 0) ? opts->panels : &one;
+    int nPanels = (opts && opts->nPanels > 0) ? opts->nPanels : 1;
+    int winX, winW, canvasH, perRow, row, part, k, np = 0, ns = 0;
+
+    one.srcX = one.srcY = 0;
+    one.dstX = opts ? opts->offsetX : 0;
+    one.dstY = opts ? opts->offsetY : 0;
+    one.w = w; one.h = h; one.rot = 0;
+
+    if (w <= 0 || h <= 0) { snprintf(err, errCap, "colorlight: bad size %dx%d", w, h); return -1; }
+    if (opts && opts->nPanels > OUTPUT_MAX_PANELS) {
+        snprintf(err, errCap, "colorlight: %d panels is more than the %d this build maps",
+                 opts->nPanels, OUTPUT_MAX_PANELS);
+        return -1;
+    }
+    if (rowMap != 1 && rowMap != 2) {
+        snprintf(err, errCap, "colorlight: --row-map is 1 or 2, not %d", rowMap);
+        return -1;
+    }
+    if (rowMap == 2 && (ch % panelRows)) {
+        snprintf(err, errCap, "colorlight: --row-map 2 needs a canvas height that is a multiple "
+                              "of --panel-rows %d, not %d", panelRows, ch);
+        return -1;
+    }
+
+    /* Every panel must fit the canvas it is placed in and the render it reads from. Getting this
+     * wrong is a read outside the frame buffer, so it is refused rather than clamped. */
+    for (k = 0; k < nPanels; k++) {
+        const output_panel *p = &panels[k];
+        int sw = (p->rot == 90 || p->rot == 270) ? p->h : p->w;
+        int sh = (p->rot == 90 || p->rot == 270) ? p->w : p->h;
+        if (p->rot != 0 && p->rot != 90 && p->rot != 180 && p->rot != 270) {
+            snprintf(err, errCap, "colorlight: panel %d rotation %d is not 0, 90, 180 or 270",
+                     k, p->rot);
+            return -1;
+        }
+        if (p->w <= 0 || p->h <= 0 || p->dstX < 0 || p->dstY < 0 ||
+            p->dstX + p->w > cw || p->dstY + p->h > ch) {
+            snprintf(err, errCap, "colorlight: panel %d, %dx%d at +%d+%d, does not fit the "
+                     "%dx%d canvas", k, p->w, p->h, p->dstX, p->dstY, cw, ch);
+            return -1;
+        }
+        if (p->srcX < 0 || p->srcY < 0 || p->srcX + sw > w || p->srcY + sh > h) {
+            snprintf(err, errCap, "colorlight: panel %d reads %dx%d at +%d+%d, outside the "
+                     "%dx%d render", k, sw, sh, p->srcX, p->srcY, w, h);
+            return -1;
+        }
+    }
+
+    /* The window of canvas columns transmitted: full width, or the columns the panels actually
+     * occupy. Every canvas ROW still goes out, in order — only the dead columns either side are
+     * left off the wire, using the pixel packet's own offset and count fields. */
+    if (opts && opts->trimWidth) {
+        int lo = cw, hi = 0;
+        for (k = 0; k < nPanels; k++) {
+            if (panels[k].dstX < lo) lo = panels[k].dstX;
+            if (panels[k].dstX + panels[k].w > hi) hi = panels[k].dstX + panels[k].w;
+        }
+        winX = lo; winW = hi - lo;
+    } else {
+        winX = 0; winW = cw;
+    }
+    canvasH = ch * rowMap;
+    perRow = colorlight_packets_per_row(winW);
+    if (perRow <= 0) { snprintf(err, errCap, "colorlight: empty canvas window"); return -1; }
+
+    for (row = 0; row < canvasH; row++) {
+        /* Which canvas-space row this transmitted row carries, or -1 for one that must go black.
+         *
+         * With rowMap 2 the card drives twice the scan lines the panel decodes, so canvas rows
+         * `half` apart superimpose. Each panel therefore eats `group` = 2 x panelRows canvas rows
+         * to show panelRows physical ones. Within one group of canvas rows r:
+         *
+         *   r <  half                    -> the panel's upper data group, physical row r
+         *   half <= r < panelRows        -> collides with the above: leave black
+         *   panelRows <= r < +half       -> the lower data group, physical row half + (r - panelRows)
+         *   otherwise                    -> collides: leave black
+         */
+        int prow = row;
+        if (rowMap == 2) {
+            int v = row / group, r = row % group;
+            if (r < half)                                    prow = v * panelRows + r;
+            else if (r >= panelRows && r < panelRows + half) prow = v * panelRows + half + (r - panelRows);
+            else                                             prow = -1;
+        }
+
+        for (part = 0; part < perRow; part++, np++) {
+            int pixOff = winX + part * CL_MAX_PIXELS_PER_PACKET;
+            int len = winX + winW - pixOff;
+            if (len > CL_MAX_PIXELS_PER_PACKET) len = CL_MAX_PIXELS_PER_PACKET;
+            if (np < pktCap) {
+                pkts[np].row = row; pkts[np].pixOff = pixOff; pkts[np].count = len;
+            }
+            if (prow < 0) continue;
+
+            /* One segment per panel this packet crosses. Panels that miss it contribute nothing
+             * and the packet keeps the black its buffer was allocated with. */
+            for (k = 0; k < nPanels; k++) {
+                const output_panel *p = &panels[k];
+                int xs, xe, step;
+                if (prow < p->dstY || prow >= p->dstY + p->h) continue;
+                xs = pixOff > p->dstX ? pixOff : p->dstX;
+                xe = (pixOff + len) < (p->dstX + p->w) ? (pixOff + len) : (p->dstX + p->w);
+                if (xe <= xs) continue;
+                if (ns < segCap) {
+                    segs[ns].pkt     = np;
+                    segs[ns].dstOff  = xs - pixOff;
+                    segs[ns].srcOff  = cl_src(p, w, xs - p->dstX, prow - p->dstY, &step);
+                    segs[ns].srcStep = step;
+                    segs[ns].len     = xe - xs;
+                }
+                ns++;
+            }
+        }
+    }
+
+    *nPkts = np;
+    *nSegs = ns;
+    return 0;
+}
+
 int colorlight_packets_per_row(int width) {
     if (width <= 0) return 0;
     return (width + CL_MAX_PIXELS_PER_PACKET - 1) / CL_MAX_PIXELS_PER_PACKET;
@@ -148,11 +320,10 @@ typedef struct {
     struct sockaddr_ll  to;
     int                 nPkts;    /* pixel packets */
     int                 nMsgs;    /* nPkts + 1: the brightness packet leads every frame */
+    int                 nSegs;    /* pixel runs copied per frame, one per packet per panel */
     size_t              stride;
     unsigned char      *buf;      /* nPkts packets, each `stride` apart, headers written once */
-    int                *srcOff;   /* where in o->pixels each packet's pixels start, or -1 */
-    int                *dstOff;   /* where in the packet those pixels land */
-    int                *copyLen;  /* how many pixels to copy; 0 leaves the packet black */
+    cl_seg             *segs;     /* the only thing the 60 Hz path walks */
     int                *count;    /* pixels the packet declares on the wire */
     /* Message order, fixed at open: [0] brightness, then every packet IN CANVAS ROW ORDER.
      * The order matters — see the note in ../CLAUDE.md. */
@@ -168,8 +339,7 @@ typedef struct {
 static void cl_free(cl_state *s) {
     if (!s) return;
     if (s->fd >= 0) close(s->fd);
-    free(s->buf); free(s->srcOff); free(s->count); free(s->msgs); free(s->iov);
-    free(s->dstOff); free(s->copyLen);
+    free(s->buf); free(s->segs); free(s->count); free(s->msgs); free(s->iov);
     free(s);
 }
 
@@ -213,36 +383,16 @@ int output_colorlight_open(output_t *o, const output_opts *opts, char *err, size
     const char *iface = (opts && opts->iface) ? opts->iface : "eth0";
     const char *order = (opts && opts->colorOrder) ? opts->colorOrder : "rgb";
     int brightness = opts ? opts->brightness : 255;
-    int rowMap = (opts && opts->rowMap > 0) ? opts->rowMap : 1;
-    /* The superposition group is set by the PHYSICAL panel, not by how much we are rendering: a
-     * 32 row panel with two data groups decodes 16 addresses, so canvas rows 16 apart collide. */
-    int panelRows = (opts && opts->panelRows > 0) ? opts->panelRows : 32;
-    int half = panelRows / 2, group = panelRows * 2;
-    int cw = (opts && opts->canvasW > 0) ? opts->canvasW : o->w;
-    int ch = (opts && opts->canvasH > 0) ? opts->canvasH : o->h;
-    int ox = opts ? opts->offsetX : 0, oy = opts ? opts->offsetY : 0;
-    int canvasH = ch * rowMap;
-    int perRow = colorlight_packets_per_row(cw);
-    int chunkPixels = cw < CL_MAX_PIXELS_PER_PACKET ? cw : CL_MAX_PIXELS_PER_PACKET;
+    cl_pkt *pkts = NULL;
     cl_state *s;
     struct ifreq ifr;
-    int row, part, p, i;
+    int nPkts = 0, nSegs = 0, chunkPixels, i;
 
-    if (perRow <= 0 || o->h <= 0) { snprintf(err, errCap, "colorlight: bad size %dx%d", o->w, o->h); return -1; }
-    if (ox < 0 || oy < 0 || ox + o->w > cw || oy + o->h > ch) {
-        snprintf(err, errCap, "colorlight: a %dx%d render at +%d+%d does not fit a %dx%d canvas",
-                 o->w, o->h, ox, oy, cw, ch);
+    /* Ask the planner for the sizes first, then again to fill: all the geometry, and every way it
+     * can be wrong, lives in one portable place that ./selftest covers. */
+    if (colorlight_plan(o->w, o->h, opts, NULL, 0, NULL, 0, &nPkts, &nSegs, err, errCap) < 0)
         return -1;
-    }
-    if (rowMap != 1 && rowMap != 2) {
-        snprintf(err, errCap, "colorlight: --row-map is 1 or 2, not %d", rowMap);
-        return -1;
-    }
-    if (rowMap == 2 && (ch % panelRows)) {
-        snprintf(err, errCap, "colorlight: --row-map 2 needs a canvas height that is a multiple "
-                              "of --panel-rows %d, not %d", panelRows, ch);
-        return -1;
-    }
+    if (nPkts <= 0) { snprintf(err, errCap, "colorlight: nothing to send"); return -1; }
 
     s = (cl_state *)calloc(1, sizeof *s);
     if (!s) { snprintf(err, errCap, "colorlight: out of memory"); return -1; }
@@ -254,18 +404,30 @@ int output_colorlight_open(output_t *o, const output_opts *opts, char *err, size
         return -1;
     }
 
-    s->nPkts = perRow * canvasH;
-    s->nMsgs = s->nPkts + 1;
+    s->nPkts = nPkts;
+    s->nSegs = nSegs;
+    s->nMsgs = nPkts + 1;
+    pkts = (cl_pkt *)calloc((size_t)nPkts, sizeof *pkts);
+    s->segs = (cl_seg *)calloc((size_t)(nSegs ? nSegs : 1), sizeof *s->segs);
+    s->count = (int *)calloc((size_t)nPkts, sizeof *s->count);
+    s->msgs  = (struct mmsghdr *)calloc((size_t)s->nMsgs, sizeof *s->msgs);
+    s->iov   = (struct iovec *)calloc((size_t)s->nMsgs, sizeof *s->iov);
+    if (!pkts || !s->segs || !s->count || !s->msgs || !s->iov) {
+        snprintf(err, errCap, "colorlight: out of memory for %d packets", nPkts);
+        free(pkts);
+        cl_free(s);
+        return -1;
+    }
+    colorlight_plan(o->w, o->h, opts, pkts, nPkts, s->segs, nSegs, &nPkts, &nSegs, err, errCap);
+
+    /* Every packet is allocated at the widest one's size, so a single stride indexes them all. */
+    chunkPixels = 0;
+    for (i = 0; i < nPkts; i++) if (pkts[i].count > chunkPixels) chunkPixels = pkts[i].count;
     s->stride = (size_t)CL_PIXEL_HEADER + (size_t)chunkPixels * 3;
-    s->buf    = (unsigned char *)calloc((size_t)s->nPkts, s->stride);
-    s->srcOff = (int *)calloc((size_t)s->nPkts, sizeof *s->srcOff);
-    s->count  = (int *)calloc((size_t)s->nPkts, sizeof *s->count);
-    s->dstOff = (int *)calloc((size_t)s->nPkts, sizeof *s->dstOff);
-    s->copyLen= (int *)calloc((size_t)s->nPkts, sizeof *s->copyLen);
-    s->msgs   = (struct mmsghdr *)calloc((size_t)s->nMsgs, sizeof *s->msgs);
-    s->iov    = (struct iovec *)calloc((size_t)s->nMsgs, sizeof *s->iov);
-    if (!s->buf || !s->srcOff || !s->count || !s->msgs || !s->iov || !s->dstOff || !s->copyLen) {
-        snprintf(err, errCap, "colorlight: out of memory for %d packets", s->nPkts);
+    s->buf = (unsigned char *)calloc((size_t)nPkts, s->stride);
+    if (!s->buf) {
+        snprintf(err, errCap, "colorlight: out of memory for %d packets", nPkts);
+        free(pkts);
         cl_free(s);
         return -1;
     }
@@ -274,6 +436,7 @@ int output_colorlight_open(output_t *o, const output_opts *opts, char *err, size
     if (s->fd < 0) {
         snprintf(err, errCap, "colorlight: socket(AF_PACKET): %s%s", strerror(errno),
                  errno == EPERM ? " — the unit grants CAP_NET_RAW; a manual run needs sudo" : "");
+        free(pkts);
         cl_free(s);
         return -1;
     }
@@ -282,6 +445,7 @@ int output_colorlight_open(output_t *o, const output_opts *opts, char *err, size
     snprintf(ifr.ifr_name, IFNAMSIZ, "%s", iface);
     if (ioctl(s->fd, SIOCGIFINDEX, &ifr) < 0) {
         snprintf(err, errCap, "colorlight: no interface '%s': %s", iface, strerror(errno));
+        free(pkts);
         cl_free(s);
         return -1;
     }
@@ -291,60 +455,17 @@ int output_colorlight_open(output_t *o, const output_opts *opts, char *err, size
     memcpy(s->to.sll_addr, CARD_MAC, 6);
 
     /* Headers and the scatter/gather tables are written once: per frame only the pixel bytes
-     * change, which keeps the 60 Hz path to a memcpy per row and one sendmmsg.
+     * change, which keeps the 60 Hz path to one strided copy per segment and one sendmmsg.
      *
      * The brightness packet LEADS EVERY FRAME rather than being sent once at open. LEDVISION and
      * FPP both do this, and the card appears to need it: sent once, the panel showed a single
      * flash as the daemon started and then stayed dark. */
-    p = 1;
-    for (row = 0; row < canvasH; row++) {
-        /* Which rendered row feeds this canvas row, or -1 for one that must be left black.
-         *
-         * With rowMap 2 the card drives twice the scan lines the panel decodes, so canvas rows
-         * `half` apart superimpose. Each panel therefore eats `group` = 2 x panelRows canvas rows
-         * to show panelRows physical ones. Within one group of canvas rows r:
-         *
-         *   r <  half                    -> the panel's upper data group, physical row r
-         *   half <= r < panelRows        -> collides with the above: leave black
-         *   panelRows <= r < +half       -> the lower data group, physical row half + (r - panelRows)
-         *   otherwise                    -> collides: leave black
-         */
-        int prow = row, rrow;
-        if (rowMap == 2) {
-            int v = row / group, r = row % group;
-            if (r < half)                                    prow = v * panelRows + r;
-            else if (r >= panelRows && r < panelRows + half) prow = v * panelRows + half + (r - panelRows);
-            else                                             prow = -1;
-        }
-        rrow = (prow < 0) ? -1 : prow - oy;
-        if (rrow < 0 || rrow >= o->h) rrow = -1;
-
-        for (part = 0; part < perRow; part++) {
-            int pixOff = part * CL_MAX_PIXELS_PER_PACKET;
-            int n = cw - pixOff;
-            unsigned char *pkt = s->buf + (size_t)(p - 1) * s->stride;
-            int xs, xe;
-            if (n > CL_MAX_PIXELS_PER_PACKET) n = CL_MAX_PIXELS_PER_PACKET;
-
-            /* Where this packet's slice of the canvas overlaps the rendered image. Packets that
-             * miss it entirely keep the zeroed pixel area calloc gave them and are never touched
-             * again: the header write only covers the first CL_PIXEL_HEADER bytes. */
-            xs = pixOff > ox ? pixOff : ox;
-            xe = (pixOff + n) < (ox + o->w) ? (pixOff + n) : (ox + o->w);
-            if (rrow >= 0 && xe > xs) {
-                s->dstOff[p - 1] = xs - pixOff;
-                s->srcOff[p - 1] = rrow * o->w + (xs - ox);
-                s->copyLen[p - 1] = xe - xs;
-            } else {
-                s->dstOff[p - 1] = 0;
-                s->srcOff[p - 1] = -1;
-                s->copyLen[p - 1] = 0;
-            }
-            s->count[p - 1]  = n;
-            colorlight_pixel_header(pkt, row, pixOff, n);
-            p++;
-        }
+    for (i = 0; i < nPkts; i++) {
+        colorlight_pixel_header(s->buf + (size_t)i * s->stride,
+                                pkts[i].row, pkts[i].pixOff, pkts[i].count);
+        s->count[i] = pkts[i].count;
     }
+    free(pkts);
 
     /* Brightness first, then every packet in canvas row order, and the whole lot goes out on
      * every frame. Sending only the packets whose pixels changed, or spreading the unchanged
@@ -381,10 +502,11 @@ int output_colorlight_write(output_t *o) {
 
     if (!s) return -1;
 
-    for (i = 0; i < s->nPkts; i++)
-        if (s->copyLen[i] > 0)
-            colorlight_pixels(s->buf + (size_t)i * s->stride, s->dstOff[i],
-                              o->pixels + (size_t)s->srcOff[i] * 4, s->copyLen[i], s->idx);
+    for (i = 0; i < s->nSegs; i++) {
+        const cl_seg *g = &s->segs[i];
+        colorlight_pixels_step(s->buf + (size_t)g->pkt * s->stride, g->dstOff,
+                               o->pixels + (size_t)g->srcOff * 4, g->len, g->srcStep, s->idx);
+    }
 
     if (cl_send_batch(s, s->msgs, s->nMsgs) < 0) return -1;
 

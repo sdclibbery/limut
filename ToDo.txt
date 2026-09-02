@@ -16,13 +16,14 @@ Hub75 display
 visual nodes...
  ?Noise methods take time as .z but kal takes it as {t:}; would be nice to be consistent? Prolly nice if noise fns also have time param
  ?why does fbm3 (with time in z) move in a jerky way? It seems to move to a new configuration, then pause there etc. Is that expected? eg px=set{z:time/16}>>fbm3
+ !If loop main function is not supplied, it should default to id; eg px=loop{map:{v,i}->sin{v*i},4}
  !px=set{{h:uv.x}} doesn't work; need col{} function? Or can it be supported?
  voronoi, result should be like an sdf to the voronoi edges (or centres)
- ?bitwise ops
+ !Why is px shader getting recompiled every frame? px should be like fx not like play, it should be built only when it changes?
  ?render buffers to generate read from, eg px=tex{buffer{mul{1.01}>>webcam>>set{#...a},clear:false}} for temporal zoom-blur??
  ?visual lib functions for old style visual params (monochrome, pixellate, rotate, mirror, vhs etc etc) - vhs needs split into uv and rgb parts...
- something undefined should render flat black not flat white
- If loop main function is not supplied, it should default to id; eg px=loop{map:{v,i}->sin{v*i},4}
+ ?bitwise ops
+ ?something undefined should render flat black not flat white
  method that takes a px chain, and does a shephard tone thing with perpetually zooming into two copies of the chain
  3d stuff?
  ?support for piecewise as shader code not textures?

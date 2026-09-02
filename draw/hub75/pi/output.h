@@ -18,6 +18,24 @@
 
 typedef struct output output_t;
 
+/* One panel of the wall: a rectangle of the RENDERED image, where it belongs in the card's
+ * canvas, and the rotation between the two. This is the "pixel permutation in output.c" that
+ * output.h always reserved for a card whose flashed configuration cannot express the wall — and
+ * on the bench card it cannot, twice over: the panels are mounted on their sides, and the ports
+ * land in canvas rows that are nowhere near each other.
+ *
+ * `rot` is applied going render -> canvas, so it UNDOES the mounting: a panel mounted rotated 90
+ * degrees anticlockwise needs rot 90. `w` and `h` are the panel's size in the CANVAS; for rot 90
+ * and 270 the region it reads from the render is h x w. */
+typedef struct {
+    int srcX, srcY;   /* top left of this panel's region in the rendered image  */
+    int dstX, dstY;   /* top left of the panel in canvas panel space            */
+    int w, h;         /* the panel's size in the canvas                         */
+    int rot;          /* 0, 90, 180 or 270                                      */
+} output_panel;
+
+#define OUTPUT_MAX_PANELS 32
+
 /* Backend configuration. Only `colorlight` reads any of it; NULL means all defaults. */
 typedef struct {
     const char *iface;       /* interface the card is cabled to (default "eth0")        */
@@ -34,6 +52,16 @@ typedef struct {
     int         canvasW, canvasH;
     /* Where the rendered image sits inside that canvas. Everything outside it is sent black. */
     int         offsetX, offsetY;
+    /* Send only the canvas COLUMNS the render occupies, instead of every column of every row.
+     * Every canvas row still gets a packet, in order, which is the rule the card actually
+     * enforces (see ../CLAUDE.md) — only the dead columns either side are left out, using the
+     * pixel packet's own offset and count fields. A wall that occupies a small part of a wide
+     * canvas is then a small fraction of the bandwidth. 0 = send full width. */
+    int         trimWidth;
+    /* The wall, panel by panel. Empty means the whole render goes to offsetX,offsetY unrotated,
+     * which is the single-panel case and the behaviour before there was a map. */
+    output_panel panels[OUTPUT_MAX_PANELS];
+    int          nPanels;
 } output_opts;
 
 struct output {
@@ -89,6 +117,41 @@ size_t colorlight_pixel_header(unsigned char *out, int row, int pixOff, int coun
  * much larger canvas without the packets around it being rebuilt. */
 void   colorlight_pixels(unsigned char *pkt, int dstPixel, const uint8_t *rgba, int count,
                          const int idx[3]);
+
+/* As colorlight_pixels, but advancing the source by `step` pixels per output pixel. Every panel
+ * rotation is a constant stride through the rendered image — +/-1 along a row, +/- the render
+ * width down a column — so one strided copy covers all four of them and there is no rotated
+ * intermediate buffer anywhere. */
+void   colorlight_pixels_step(unsigned char *pkt, int dstPixel, const uint8_t *rgba, int count,
+                              int step, const int idx[3]);
+
+/* The frame plan: which packets go out, in what order, and which pixels fill them. The row map,
+ * the column window and the panel map are the subtle part of this backend and they are pure
+ * geometry, so they live here rather than inside the Linux-only open() and are unit tested in
+ * test_colorlight_plan(). */
+typedef struct {
+    int row;      /* canvas row, on the wire                */
+    int pixOff;   /* first canvas column the packet carries  */
+    int count;    /* columns the packet declares             */
+} cl_pkt;
+
+/* One run of pixels copied into one packet. A packet gets one segment per panel it overlaps, and
+ * none at all where the canvas is black — which is most of it. */
+typedef struct {
+    int pkt;      /* index into the packet array                        */
+    int dstOff;   /* first column WITHIN that packet                    */
+    int srcOff;   /* first source pixel, as an index into the w*h render */
+    int srcStep;  /* source pixels to advance per column                */
+    int len;      /* columns to fill                                    */
+} cl_seg;
+
+/* Plans one frame. Packets come out in the order they must be sent — every canvas row, in canvas
+ * order, which is the one thing the card actually enforces. Counts are always written, so a
+ * caller can ask with both caps 0 before allocating; anything beyond a cap is counted but not
+ * stored. Returns 0, or -1 with a reason in `err` if the geometry does not add up. */
+int    colorlight_plan(int w, int h, const output_opts *opts,
+                       cl_pkt *pkts, int pktCap, cl_seg *segs, int segCap,
+                       int *nPkts, int *nSegs, char *err, size_t errCap);
 
 size_t colorlight_sync(unsigned char *out, int brightness);
 size_t colorlight_brightness(unsigned char *out, int brightness);

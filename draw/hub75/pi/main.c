@@ -48,10 +48,23 @@ static const char *USAGE =
     "                      render (default: same as --size)\n"
     "  --offset X,Y        colorlight: where the render sits in that canvas; the rest is sent\n"
     "                      black (default 0,0)\n"
+    "  --trim-canvas       colorlight: send only the canvas columns the render occupies, rather\n"
+    "                      than every column of every row. Every row still goes, in order; the\n"
+    "                      dead columns either side just stop costing bandwidth\n"
+    "  --panel SPEC        colorlight: place one panel of the wall, repeatable. SPEC is\n"
+    "                      SX,SY:DX,DY:WxH:ROT — the panel's top left in the RENDER, its top\n"
+    "                      left in the canvas, its size in the canvas, and the rotation applied\n"
+    "                      going render to canvas, which UNDOES the mounting (a panel mounted\n"
+    "                      90 degrees anticlockwise wants ROT 90). WxH and ROT may be left off:\n"
+    "                      they default to 64x--panel-rows and 0. With no --panel at all the\n"
+    "                      whole render goes to --offset unrotated.\n"
+    "                      A wall the card's own configuration cannot express is built here.\n"
     "  --test-pattern NAME off | bars | grid | white | red | green | blue | map | rowid |\n"
-    "                      bands\n"
+    "                      bands | cellid\n"
     "                      until a host binds a layer. `map` numbers each 64x32 cell of the\n"
-    "                      canvas, so a lit panel says where in the canvas it is wired\n"
+    "                      canvas, so a lit panel says where in the canvas it is wired;\n"
+    "                      `cellid` says the same thing in colour, which reads off a sideways\n"
+    "                      panel where numerals do not\n"
     "  --pattern-fps N     rate to re-send a test pattern at, with no host driving it\n"
     "                      (default 60; 0 sends it once and stops)\n"
     "  --gamma G           output gamma, applied after the dimmer (default 2.2;\n"
@@ -88,6 +101,7 @@ int main(int argc, char **argv) {
     opts.panelRows = 32;
     opts.canvasW = opts.canvasH = 0;
     opts.offsetX = opts.offsetY = 0;
+    opts.trimWidth = 0;
 
     for (i = 1; i < argc; i++) {
         const char *k = argv[i], *v = (i + 1 < argc) ? argv[i + 1] : NULL;
@@ -114,11 +128,30 @@ int main(int argc, char **argv) {
             }
             i++;
         }
+        else if (!strcmp(k, "--trim-canvas")) { opts.trimWidth = 1; }
+        else if (!strcmp(k, "--panel") && v) {
+            output_panel *p;
+            int n;
+            if (opts.nPanels >= OUTPUT_MAX_PANELS) {
+                fprintf(stderr, "🔴 more than %d --panel entries\n", OUTPUT_MAX_PANELS);
+                return 2;
+            }
+            p = &opts.panels[opts.nPanels];
+            p->w = 64; p->h = 0; p->rot = 0;   /* 0: fill in from --panel-rows below */
+            n = sscanf(v, "%d,%d:%d,%d:%dx%d:%d", &p->srcX, &p->srcY, &p->dstX, &p->dstY,
+                       &p->w, &p->h, &p->rot);
+            if (n != 4 && n != 6 && n != 7) {
+                fprintf(stderr, "🔴 --panel wants SX,SY:DX,DY[:WxH[:ROT]], eg 0,0:1088,224:64x32:90\n");
+                return 2;
+            }
+            opts.nPanels++;
+            i++;
+        }
         else if (!strcmp(k, "--pattern-fps") && v) { patternFps = atof(v); i++; }
         else if (!strcmp(k, "--test-pattern") && v) {
             testPattern = pattern_by_name(v);
             if (testPattern < 0) {
-                fprintf(stderr, "🔴 unknown test pattern '%s' — off, bars or grid\n", v);
+                fprintf(stderr, "🔴 unknown test pattern '%s' — see --help\n", v);
                 return 2;
             }
             i++;
@@ -138,6 +171,11 @@ int main(int argc, char **argv) {
             return 2;
         }
     }
+
+    /* --panel-rows may appear after the --panel entries it sizes, so the default height is
+     * resolved once, here, rather than at the moment each --panel was parsed. */
+    for (i = 0; i < opts.nPanels; i++)
+        if (opts.panels[i].h == 0) opts.panels[i].h = opts.panelRows;
 
     /* A write to a socket the peer just closed must not take the process down with it — that is
      * an ordinary event here, not an error. */

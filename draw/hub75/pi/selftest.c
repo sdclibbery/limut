@@ -538,6 +538,188 @@ static void test_colorlight(void) {
     }
 }
 
+/* The frame plan: the row map, the column window and the panel map. Written out longhand and
+ * independently of output_colorlight.c, so a change to either shows up as a failure rather than as
+ * two files agreeing about the wrong thing. The numbers are the bench wall of ../CLAUDE.md: a card
+ * with a 1280x256 panel-space canvas, 1/32 scan against 1/16 panels, panels at canvas x 1024. */
+
+/* The segment covering canvas column `x` of canvas row `row`, or NULL. Searching rather than
+ * indexing keeps the tests independent of how the planner orders or splits its output. */
+static const cl_seg *seg_at(const cl_pkt *pkts, const cl_seg *segs, int nSegs, int row, int x) {
+    int i;
+    for (i = 0; i < nSegs; i++) {
+        const cl_pkt *p = &pkts[segs[i].pkt];
+        int c = x - (p->pixOff + segs[i].dstOff);
+        if (p->row == row && c >= 0 && c < segs[i].len) return &segs[i];
+    }
+    return NULL;
+}
+
+/* Where canvas pixel (x, row) reads from in the render, or -1 if nothing writes it. */
+static int src_at(const cl_pkt *pkts, const cl_seg *segs, int nSegs, int row, int x) {
+    const cl_seg *g = seg_at(pkts, segs, nSegs, row, x);
+    if (!g) return -1;
+    return g->srcOff + (x - (pkts[g->pkt].pixOff + g->dstOff)) * g->srcStep;
+}
+
+static void test_colorlight_plan(void) {
+    char err[256];
+    output_opts o;
+    cl_pkt *pkts;
+    cl_seg *segs;
+    int np, ns, i;
+
+    /* the plain case: no row map, no window, no panel map — one packet per row */
+    memset(&o, 0, sizeof o);
+    ck("a plain plan is accepted",
+       colorlight_plan(64, 32, &o, NULL, 0, NULL, 0, &np, &ns, err, sizeof err) == 0);
+    ck("plain 64x32 is one packet per row", np == 32);
+    ck("plain 64x32 is one segment per packet", ns == 32);
+
+    pkts = (cl_pkt *)calloc((size_t)np, sizeof *pkts);
+    segs = (cl_seg *)calloc((size_t)ns, sizeof *segs);
+    colorlight_plan(64, 32, &o, pkts, np, segs, ns, &np, &ns, err, sizeof err);
+    ck("plain: the first packet is canvas row 0", pkts[0].row == 0 && pkts[0].pixOff == 0 &&
+                                                  pkts[0].count == 64);
+    ck("plain: it carries the whole row", segs[0].dstOff == 0 && segs[0].len == 64);
+    ck("plain: unrotated, so the source walks forwards", segs[0].srcStep == 1);
+    ck("plain: row 0 column 0 is render pixel 0", src_at(pkts, segs, ns, 0, 0) == 0);
+    ck("plain: row 31 column 63 is the last render pixel",
+       src_at(pkts, segs, ns, 31, 63) == 32 * 64 - 1);
+    free(pkts); free(segs);
+
+    /* the bench wall: 64x32 render at +1088+0 inside a 1280x256 canvas, row map 2 */
+    memset(&o, 0, sizeof o);
+    o.canvasW = 1280; o.canvasH = 256; o.offsetX = 1088; o.rowMap = 2; o.panelRows = 32;
+    colorlight_plan(64, 32, &o, NULL, 0, NULL, 0, &np, &ns, err, sizeof err);
+    /* 1280 wide is 3 packets a row (497 + 497 + 286), over 256 * 2 transmitted rows */
+    ck("row map 2 doubles the transmitted rows", np == 3 * 512);
+    ck("only the rendered rows carry pixels", ns == 32);
+
+    pkts = (cl_pkt *)calloc((size_t)np, sizeof *pkts);
+    segs = (cl_seg *)calloc((size_t)ns, sizeof *segs);
+    colorlight_plan(64, 32, &o, pkts, np, segs, ns, &np, &ns, err, sizeof err);
+    ck("full width splits at 497", pkts[0].count == 497 && pkts[1].pixOff == 497 &&
+                                   pkts[2].pixOff == 994 && pkts[2].count == 286);
+    ck("row 0 column 1088 is render pixel 0", src_at(pkts, segs, ns, 0, 1088) == 0);
+    ck("nothing is written left of the render", src_at(pkts, segs, ns, 0, 1087) == -1);
+    ck("nothing is written right of it", src_at(pkts, segs, ns, 0, 1152) == -1);
+    /* rows 16..31 collide with 0..15 under a 1/32 scan and must go out black */
+    for (i = 16; i < 32; i++)
+        ck("row map 2 blacks the colliding upper rows", src_at(pkts, segs, ns, i, 1088) == -1);
+    /* rows 32..47 are the lower data group: physical rows 16..31 */
+    ck("canvas row 32 feeds panel row 16", src_at(pkts, segs, ns, 32, 1088) == 16 * 64);
+    ck("canvas row 47 feeds panel row 31", src_at(pkts, segs, ns, 47, 1088) == 31 * 64);
+    for (i = 48; i < 64; i++)
+        ck("row map 2 blacks the colliding lower rows", src_at(pkts, segs, ns, i, 1088) == -1);
+    ck("rows past the render are sent, but black", pkts[64 * 3].row == 64 &&
+                                                   src_at(pkts, segs, ns, 64, 1088) == -1);
+    ck("the last canvas row is still transmitted", pkts[np - 1].row == 511);
+    free(pkts); free(segs);
+
+    /* the same wall with the column window: one packet per row instead of three */
+    o.trimWidth = 1;
+    colorlight_plan(64, 32, &o, NULL, 0, NULL, 0, &np, &ns, err, sizeof err);
+    ck("trimming a 64 wide render is one packet per row", np == 512);
+
+    pkts = (cl_pkt *)calloc((size_t)np, sizeof *pkts);
+    segs = (cl_seg *)calloc((size_t)ns, sizeof *segs);
+    colorlight_plan(64, 32, &o, pkts, np, segs, ns, &np, &ns, err, sizeof err);
+    ck("trimmed packets declare the render's own columns",
+       pkts[0].pixOff == 1088 && pkts[0].count == 64);
+    ck("trimming does not move a single pixel", src_at(pkts, segs, ns, 0, 1088) == 0 &&
+                                                src_at(pkts, segs, ns, 47, 1151) == 31 * 64 + 63);
+    ck("trimming does not disturb the row map", src_at(pkts, segs, ns, 16, 1088) == -1 &&
+                                                src_at(pkts, segs, ns, 32, 1088) == 16 * 64);
+    ck("every canvas row is still sent", pkts[511].row == 511);
+    free(pkts); free(segs);
+
+    /* a window wider than one packet still splits, from the window's own origin */
+    memset(&o, 0, sizeof o);
+    o.canvasW = 1280; o.canvasH = 32; o.offsetX = 100; o.trimWidth = 1;
+    colorlight_plan(600, 32, &o, NULL, 0, NULL, 0, &np, &ns, err, sizeof err);
+    ck("a 600 wide window is two packets a row", np == 64);
+    pkts = (cl_pkt *)calloc((size_t)np, sizeof *pkts);
+    segs = (cl_seg *)calloc((size_t)ns, sizeof *segs);
+    colorlight_plan(600, 32, &o, pkts, np, segs, ns, &np, &ns, err, sizeof err);
+    ck("the window's first packet starts at the render", pkts[0].pixOff == 100 &&
+                                                         pkts[0].count == 497);
+    ck("the window's second packet continues it", pkts[1].pixOff == 597 && pkts[1].count == 103);
+    ck("a row split across packets is still contiguous in the render",
+       src_at(pkts, segs, ns, 0, 596) == 496 && src_at(pkts, segs, ns, 0, 597) == 497);
+    free(pkts); free(segs);
+
+    /* the wall as actually built: panels mounted 90 degrees anticlockwise, in two canvas rows
+     * nowhere near each other. Render is 64 wide x 128 tall; each panel is 32x64 of it. */
+    memset(&o, 0, sizeof o);
+    o.canvasW = 1280; o.canvasH = 256; o.rowMap = 2; o.panelRows = 32; o.trimWidth = 1;
+    o.nPanels = 4;
+    for (i = 0; i < 4; i++) { o.panels[i].w = 64; o.panels[i].h = 32; o.panels[i].rot = 90; }
+    o.panels[0].srcX = 0;  o.panels[0].srcY = 0;  o.panels[0].dstX = 1088; o.panels[0].dstY = 224;
+    o.panels[1].srcX = 32; o.panels[1].srcY = 0;  o.panels[1].dstX = 1088; o.panels[1].dstY = 0;
+    o.panels[2].srcX = 0;  o.panels[2].srcY = 64; o.panels[2].dstX = 1024; o.panels[2].dstY = 224;
+    o.panels[3].srcX = 32; o.panels[3].srcY = 64; o.panels[3].dstX = 1024; o.panels[3].dstY = 0;
+    ck("the four panel wall plans",
+       colorlight_plan(64, 128, &o, NULL, 0, NULL, 0, &np, &ns, err, sizeof err) == 0);
+    ck("the window spans both panel columns", np == 512);
+    pkts = (cl_pkt *)calloc((size_t)np, sizeof *pkts);
+    segs = (cl_seg *)calloc((size_t)ns, sizeof *segs);
+    colorlight_plan(64, 128, &o, pkts, np, segs, ns, &np, &ns, err, sizeof err);
+    ck("the window is the two columns the panels occupy",
+       pkts[0].pixOff == 1024 && pkts[0].count == 128);
+    /* Panel 0 is wall (0,0)..(31,63) at canvas cell (17,7), rotated 90 anticlockwise on the wall.
+     * Its canvas pixel (px,py) must therefore read wall pixel (py, 63-px), relative to the
+     * panel's own origin — so canvas (1088, 224), the cell's top left, is wall row 63 column 0. */
+    ck("panel 0 top left reads the wall's bottom left",
+       src_at(pkts, segs, ns, 224 * 2, 1088) == 63 * 64 + 0);
+    ck("stepping along the canvas row walks UP a wall column",
+       src_at(pkts, segs, ns, 224 * 2, 1089) == 62 * 64 + 0);
+    ck("the step is minus the render width",
+       seg_at(pkts, segs, ns, 224 * 2, 1088)->srcStep == -64);
+    ck("the far end of the canvas row is the top of the wall column",
+       src_at(pkts, segs, ns, 224 * 2, 1151) == 0 * 64 + 0);
+    /* Panel 1 is wall x 32..63 at canvas cell (17,0): the wall's top RIGHT half. */
+    ck("panel 1 is the other half of the wall's top row",
+       src_at(pkts, segs, ns, 0, 1088) == 63 * 64 + 32);
+    /* Panels 2 and 3 are the wall's second row, wall y 64..127. */
+    ck("panel 2 reads the wall's second row", src_at(pkts, segs, ns, 224 * 2, 1024) == 127 * 64);
+    ck("panel 3 reads the wall's second row, right half",
+       src_at(pkts, segs, ns, 0, 1024) == 127 * 64 + 32);
+    /* Down the canvas cell is across the wall column, the other axis of the rotation. */
+    ck("the next canvas row is the next wall column",
+       src_at(pkts, segs, ns, 224 * 2 + 1, 1088) == 63 * 64 + 1);
+    ck("the row map still blacks the collisions",
+       src_at(pkts, segs, ns, 224 * 2 + 16, 1088) == -1);
+    ck("the lower data group carries the cell's bottom half",
+       src_at(pkts, segs, ns, 224 * 2 + 32, 1088) == 63 * 64 + 16);
+    free(pkts); free(segs);
+
+    /* the geometry that must be refused rather than sent */
+    memset(&o, 0, sizeof o);
+    o.canvasW = 1280; o.canvasH = 256; o.offsetX = 1240;
+    ck("a render hanging off the canvas is refused",
+       colorlight_plan(64, 32, &o, NULL, 0, NULL, 0, &np, &ns, err, sizeof err) < 0);
+    memset(&o, 0, sizeof o);
+    o.rowMap = 3;
+    ck("row map 3 is refused",
+       colorlight_plan(64, 32, &o, NULL, 0, NULL, 0, &np, &ns, err, sizeof err) < 0);
+    memset(&o, 0, sizeof o);
+    o.canvasH = 40; o.rowMap = 2; o.panelRows = 32;
+    ck("row map 2 on a canvas that is not a whole number of panels is refused",
+       colorlight_plan(64, 32, &o, NULL, 0, NULL, 0, &np, &ns, err, sizeof err) < 0);
+    memset(&o, 0, sizeof o);
+    o.canvasW = 1280; o.canvasH = 256; o.nPanels = 1;
+    o.panels[0].w = 64; o.panels[0].h = 32; o.panels[0].rot = 45;
+    ck("a rotation that is not a right angle is refused",
+       colorlight_plan(64, 32, &o, NULL, 0, NULL, 0, &np, &ns, err, sizeof err) < 0);
+    o.panels[0].rot = 90;
+    ck("a rotated panel that would read outside the render is refused",
+       colorlight_plan(64, 32, &o, NULL, 0, NULL, 0, &np, &ns, err, sizeof err) < 0);
+    o.panels[0].rot = 0;
+    ck("the same panel unrotated fits",
+       colorlight_plan(64, 32, &o, NULL, 0, NULL, 0, &np, &ns, err, sizeof err) == 0);
+}
+
 int main(void) {
     printf("== limut HUB75 display selftest ==\n");
     test_hashes();
@@ -546,6 +728,7 @@ int main(void) {
     test_glsl();
     test_ws();
     test_colorlight();
+    test_colorlight_plan();
     printf("%s: %d checks, %d failure%s\n",
            failures ? "FAILED" : "ALL PASSED", checks, failures, failures == 1 ? "" : "s");
     return failures ? 1 : 0;
