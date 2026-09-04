@@ -924,12 +924,19 @@ installed service arguments in `pi/limut-hub75.default` are the verified ones. V
 - the wall itself, by eye, through `white` (does anything light), `cellid` (which canvas cell is
   each module) and `bars` (is the portrait image coherent, and is the colour order right)
 
-`pi/app-check.js` — the browser leg — could not be run here, and **not for a reason in this
-project**: macOS had not granted Google Chrome the Local Network permission, so every request from
-the page fails. The signature is unmistakable once known and is documented in `pi/README.md`: the
-failure takes **3.6 ms**, far less than a round trip, and `mode: 'no-cors'` fails too, which no
-header problem can cause. `curl` and Node reach the display perfectly throughout, which is what
-makes it look like a browser or CORS bug. Grant it in System Settings and restart Chrome.
+`pi/app-check.js` — the browser leg, the real app driving the real display — **passes 11 of 11**,
+but only after a wrong diagnosis worth recording. It first failed every check with `cannot reach
+http://hub75-01.local:7575/info (Failed to fetch)`, which matches this project's own documented
+macOS Local Network signature exactly: the failure takes **3.6 ms**, far less than a round trip,
+and `mode: 'no-cors'` fails too. It was **not** that. **Chrome's resolver does not do mDNS**, so a
+`.local` name that Node, `curl` and the shell all resolve is simply unreachable from the page, and
+it fails with the identical signature.
+
+**The discriminator is to try the IP**, and it should be the first thing tried, before touching
+any permission: `hub75-01.local` failed in 3.6 ms while `192.168.68.58` succeeded in 18.6 ms from
+the same page, in the same browser, in the same run. Fails-fast on both is a permission problem;
+fails-fast on the name only is mDNS. `app-check.js` now resolves the name with `dns.lookup` and
+hands the browser an address, so it works with a `.local` argument or with none.
 
 **Three things will each silently swallow a bound visual**, and all three were in play at once the
 first time it was tried, so it is worth checking them in this order when a panel stays dark while

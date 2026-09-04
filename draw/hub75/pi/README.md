@@ -104,11 +104,23 @@ failure takes 1-2 ms rather than a round trip, and `mode: 'no-cors'` fails too, 
 problem can cause. `localhost` and the machine's own LAN address keep working, because neither is
 another device. Restart the browser after granting it.
 
-**It hits `app-check.js` too, and there it looks like a display fault.** Seen again 2026-09-04
-with Chrome: every check fails with `cannot reach http://hub75-01.local:7575/info (Failed to
-fetch)` while `curl` and `mock/selftest.js --endpoint` reach the same display perfectly. To
-confirm it in one step rather than believing the message, load a page that fetches `/info` and
-time the failure — 3.6 ms, with `mode: 'no-cors'` failing as well, is this and nothing else.
+**But a `.local` name that Chrome cannot resolve looks EXACTLY the same, and is the more likely
+cause.** Chrome's own resolver does not do mDNS, so `hub75-01.local` resolves fine from Node,
+`curl` and the shell and is unreachable from the page — failing in ~3 ms, and failing under
+`mode: 'no-cors'` too, which is the same signature the Local Network denial gives. Diagnosed
+wrongly here on 2026-09-04 for exactly that reason.
+
+**The discriminator is one line: try the IP.** `ping hub75-01.local` for the address, then fetch
+`http://<ip>:7575/info` from the same page.
+
+| name | IP | |
+|---|---|---|
+| fails fast | fails fast | Local Network permission — grant it in System Settings, restart the browser |
+| fails fast | **works** | mDNS. Nothing to grant; use the address |
+
+`app-check.js` resolves the name with `dns.lookup` and hands the browser an address, so it works
+with a `.local` argument or none at all. In the app itself, `display='hub75-01'` becomes
+`hub75-01.local:7575` — if that cannot connect, put the IP in the `display` param instead.
 
 ## Five things worth knowing before touching it
 

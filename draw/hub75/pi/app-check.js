@@ -15,6 +15,7 @@
 // same origin as limut, code seeded through localStorage, the app's own go() called — there is
 // no CDP route, Chrome 148's Runtime.evaluate hangs.
 
+let dns = require('node:dns').promises
 let fs = require('node:fs')
 let http = require('node:http')
 let net = require('node:net')
@@ -54,11 +55,33 @@ let varied = (f) => {
   return false
 }
 
+// Chrome's own resolver does not do mDNS, so a `.local` name resolves perfectly from Node and is
+// unreachable from the page — every check then fails with "Failed to fetch", which reads as the
+// display being down or as a CORS problem and is neither. Resolve it here and hand the browser an
+// address. The tell, if this ever regresses: the fetch fails in ~3 ms rather than a round trip,
+// and the SAME display answers instantly on its IP. See README.md.
+let resolveEndpoint = async (ep) => {
+  let host = ep.replace(/:\d+$/, '').replace(/^\[|\]$/g, '')
+  let port = ep.slice(ep.lastIndexOf(':') + 1)
+  if (/^[\d.]+$/.test(host) || host.includes(':')) return ep   // already an address
+  try {
+    let { address } = await dns.lookup(host)
+    if (address && address !== host) {
+      console.log(`  ${host} -> ${address}  (Chrome's resolver does not do mDNS)`)
+      return `${address}:${port}`
+    }
+  } catch (e) {
+    console.log(`  could not resolve ${host}: ${e.message}`)
+  }
+  return ep
+}
+
 let run = async () => {
   if (!await serverUp()) {
     console.error(`🔴 limut is not being served at ${LIMUT}. Run: sh server.sh`)
     process.exit(2)
   }
+  EP = await resolveEndpoint(EP)
   let info = await (await fetch(`http://${EP}/info`)).json()
   console.log(`${info.name} at ${EP}: ${info.display.w}x${info.display.h}, ${info.gl.renderer}`)
 
