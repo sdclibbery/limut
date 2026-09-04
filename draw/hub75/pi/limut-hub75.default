@@ -1,8 +1,28 @@
 # Arguments for the limut HUB75 display. Installed to /etc/default/limut-hub75.
 #
-# --size must match the panel array as the 5A-75B is configured to drive it.
-# --gamma 1 is what draw/hub75/pi/pixel-check.js needs; 2.2 is the running value.
+# install.sh will NOT overwrite this file once it exists: the wall is a property of the room,
+# not of the checkout. Copy it by hand after changing it here.
+#
+# The wall as built and verified 2026-09-04: six P5 64x32 modules, each mounted rotated 90
+# degrees, in two side-by-side full-height columns of three -- a 64 x 192 portrait wall.
+# See draw/hub75/CLAUDE.md for where every number below comes from.
+#
+#   --size 64x192      what limut renders: the wall in portrait, the right way up
+#   --canvas 1280x512  the card's SCREEN, which LEDVISION did not change. The receiving card
+#                      window is a 192x64 cabinet at the origin, but the card will not latch a
+#                      frame until a whole screen has gone out, so the full height is still sent
+#   --trim-canvas      ...but only the 192 columns the wall occupies. Every row still goes, in
+#                      order, which is the rule the card actually enforces. 514 packets/frame
+#                      instead of 1538: 18 MB/s and a solid 60 fps, against 120 MB/s and 46 fps
+#   --row-map 1        the card scans 1/16, matching the panels. It did NOT before the card was
+#                      reconfigured, when this had to be 2
+#   --panel            each module: its region in the RENDER, its cell in the CANVAS, and rot 90
+#                      to undo the mounting. Derived from the `cellid` pattern, 2026-09-04
+#   --brightness 100   six modules at full white is ~120 W, i.e. 24 A at 5 V. Raise this only
+#                      after checking the supply and the wiring can survive a white frame
+#   --gamma 2.2        the running value; draw/hub75/pi/pixel-check.js needs --gamma 1 instead
+#
+# Deliberately absent, because each silently swallows a visual bound from limut: --output raw,
+# --no-gpu, and --test-pattern (a pattern replaces the layer entirely).
 
-# The bench setup as verified 2026-08-29: one P5 64x32 module on J1, on a card configured for a
-# 1280x512 canvas and 1/32 scan. See draw/hub75/CLAUDE.md for where every number comes from.
-HUB75_ARGS=--name hub75-01 --output colorlight --iface eth0 --size 64x32 --canvas 1280x256 --offset 1088,0 --row-map 2 --panel-rows 32 --color-order bgr --gamma 2.2
+HUB75_ARGS=--name hub75-01 --output colorlight --iface eth0 --size 64x192 --canvas 1280x512 --trim-canvas --row-map 1 --color-order bgr --brightness 100 --gamma 2.2 --panel 0,128:0,0:64x32:90 --panel 0,64:64,0:64x32:90 --panel 0,0:128,0:64x32:90 --panel 32,128:0,32:64x32:90 --panel 32,64:64,32:64x32:90 --panel 32,0:128,32:64x32:90

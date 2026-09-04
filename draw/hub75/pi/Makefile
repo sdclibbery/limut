@@ -52,5 +52,10 @@ egl-probe: ../tools/egl-probe.c
 colorlight-probe: ../tools/colorlight-probe.c
 	$(CC) $(CFLAGS) -o $@ ../tools/colorlight-probe.c
 
+# Writes a receiving-card configuration by replaying one captured from LEDVISION, so the card
+# can be configured from the Pi with no Windows machine. Linux only. See ../LEDVISION-CONFIG.md.
+colorlight-config: ../tools/colorlight-config.c
+	$(CC) $(CFLAGS) -o $@ ../tools/colorlight-config.c
+
 clean:
-	rm -f $(BIN) selftest egl-probe colorlight-probe
+	rm -f $(BIN) selftest egl-probe colorlight-probe colorlight-config

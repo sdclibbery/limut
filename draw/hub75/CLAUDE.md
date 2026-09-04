@@ -469,11 +469,16 @@ empirical question whatever the datasheets say.
 ### The display as built, 2026-09-02
 
 Six modules, wired as **two chains of three**, each **64x32 module mounted rotated 90deg** (so it is
-32 wide x 64 tall in the display), forming two **side-by-side full-height columns** — **J8 drives the
-left column** (x 0-31), **J1 the right column** (x 32-63). That gives a **64 x 192** portrait panel, a
-1:3 aspect ratio, 960 x 480 mm of wall. The two ports are J1 and J8, not adjacent; the card drives two
-of its eight groups and the mapping has to say so rather than assume J1/J2. (Corrected 2026-09-04: the
+32 wide x 64 tall in the display), forming two **side-by-side full-height columns**. That gives a
+**64 x 192** portrait panel, a 1:3 aspect ratio, 960 x 480 mm of wall. (Corrected 2026-09-04: the
 chains are left/right columns, not top/bottom halves as first recorded.)
+
+**The ports are J1 and J2**, not J1 and J8 as recorded here before the card was configured.
+LEDVISION drives a cabinet's data groups on **consecutive** ports and reaching a non-adjacent one
+would mean padding the run with ~12 void groups, so the cabling was moved rather than the config
+contorted — see `LEDVISION-CONFIG.md`. Which physical module ends up in which canvas cell is then
+decided by the cabinet's cascade, not by the port numbers, and is read off the wall with `cellid`
+rather than reasoned about; the answer for this wall is in "The wall as driven, 2026-09-04".
 
 Two consequences worth having written down before the card is configured:
 
@@ -657,6 +662,108 @@ size is not. The way out is a smaller canvas, which means configuring the card �
 this whole project that would actually be improved by LEDVISION, and it is an optimisation rather
 than a necessity.
 
+### The wall as driven, 2026-09-04
+
+The card was reconfigured with LEDVISION on 2026-09-04 (`LEDVISION-CONFIG.md`) and the whole
+64 x 192 portrait wall now runs. What the reconfiguration did and did not change is the thing to
+have straight, because getting it wrong cost most of this bring-up:
+
+| | |
+|---|---|
+| Cabinet | **changed**: a 192 x 64 receiver window, at the canvas **origin** |
+| Scan | **changed**: 1/16, matching the panels, so `--row-map 1` |
+| Screen / canvas | **NOT changed**: still 1280 x 512, and the card will not latch until a whole one has gone out |
+| Colour order | unchanged, `bgr` |
+
+**The card's screen size and its receiver window are separate, and only the window was
+reconfigured.** This is the trap. A 192 x 64 cabinet at the origin looks exactly like "send a
+192 x 64 canvas", and that goes **black** — the card wants a full 1280 x 512 screen per sync
+whatever size window it is showing. Sending the full screen lights the wall; sending only the
+window does not. Two independent things then agreed on the wrong conclusion for a while: the
+discover reply's `d[21:24]` still reads 1280 x 512, and a bare 192 x 64 canvas is dark. Both are
+explained by the screen never having been reconfigured, not by the cabinet write having failed.
+
+`--trim-canvas` is what makes that affordable, and it is **verified on hardware as of 2026-09-04**
+(it had only ever been unit tested). Every canvas row still goes out, in order — the rule the card
+actually enforces — but only the 192 columns the wall occupies:
+
+| | 1280 wide | trimmed to 192 |
+|---|---|---|
+| packets/frame | 1538 | **514** |
+| rate | 120 MB/s, 46 fps | **18 MB/s, a solid 60 fps** |
+
+So the frame rate ceiling that "configuring the card" was supposed to lift is already gone, and
+lifting it did not need the screen size changed after all.
+
+The working command, which is what `pi/limut-hub75.default` now installs:
+
+```sh
+limut-hub75 --output colorlight --iface eth0 \
+    --size 64x192 --canvas 1280x512 --trim-canvas --row-map 1 \
+    --color-order bgr --brightness 100 \
+    --panel 0,128:0,0:64x32:90  --panel 0,64:64,0:64x32:90  --panel 0,0:128,0:64x32:90 \
+    --panel 32,128:0,32:64x32:90 --panel 32,64:64,32:64x32:90 --panel 32,0:128,32:64x32:90
+```
+
+**The panel map, read off the wall with `cellid`.** Colour gives the canvas cell column, the black
+squares its row, and the black L its top-left corner:
+
+| wall module | render region | canvas cell | rot |
+|---|---|---|---|
+| left top | 0,0 | 128,0 | 90 |
+| left middle | 0,64 | 64,0 | 90 |
+| left bottom | 0,128 | 0,0 | 90 |
+| right top | 32,0 | 128,32 | 90 |
+| right middle | 32,64 | 64,32 | 90 |
+| right bottom | 32,128 | 0,32 | 90 |
+
+Note the canvas column runs **bottom to top** of the wall and the canvas row runs **left to
+right** — a consequence of the 90 degree mounting plus the cabinet's own cascade, and not
+something to guess at. `cellid` answered it in one look; `map`'s numerals could not be read at
+all on a sideways panel, which is why `cellid` exists.
+
+### Configuring the card from the Pi: replaying a capture
+
+`tools/extract-config.py` lifts a configuration out of a LEDVISION pcap and
+`tools/colorlight-config.c` replays it onto a card over raw ethernet, so a config can in principle
+be written from the Pi with no Windows machine. **Built and proven correct on the wire 2026-09-04,
+and the card ignores it.** Recorded because the negative result is worth as much as the tool:
+
+- The extractor distinguishes LEDVISION's `Send` (RAM, reversible) from `Save to Receivers`
+  (flash) by a **tail block the plain pushes do not have** — an extra `0x26` run, ~208 `0x06`
+  frames, then 12 `0x19` per-module geometry records. In the captured session that is 2 saves
+  among 12 pushes.
+- The replay was verified by capturing our own transmission on the Pi and diffing it against the
+  pcap: **283 of 283 frames byte-identical**, same MACs (ours already match LEDVISION's), same
+  order, same pacing. The frames are not the problem.
+- Replaying the final save changed nothing. Replaying the **entire 1209 frame control session** —
+  discover, all 12 pushes, both saves, the `0x02`/`0x11` bursts — also changed nothing, in any
+  readable register.
+- **The card answers our reads and ignores our writes**, and never acknowledges a write. It never
+  acknowledged LEDVISION's either, so a write is genuinely open loop and there is no handshake to
+  replay.
+
+Two plausible explanations died on measurement, and are worth not re-running:
+
+- *The missing 60 Hz sync stream.* LEDVISION **stops** it while writing a configuration — 1 sync
+  frame in the 20 s of a save, against 11.5/s across the session. Replaying silently is faithful.
+- *A stale session or unlock that has timed out.* LEDVISION detected the card at t=10 s and
+  configured it successfully at t=2391 s and later, 97 minutes on, with no fresh handshake.
+
+**What is left is that the capture is incomplete.** The tcpdump filter used that day was
+`not ether proto 0x5500 and not ether proto 0x0aff and not ip and not ip6 and not arp`. If any
+part of the configuration write went over **UDP/IP** it was never recorded, and what we replay is
+a convincing-looking remainder that is missing the part that matters. Closing this needs one more
+short VM session captured with **no filter at all**, ideally with a click-by-click log —
+which section 6 of `LEDVISION-CONFIG.md` already names as the missing piece.
+
+**A read primitive fell out of this and is worth keeping.** LEDVISION's `0x06` (memory) and `0x19`
+(register) requests are answered with a `0x09` reply whose `d[0]` is a status, `d[1]` a count and
+`d[2..]` the value — with the rest of the 1070 byte frame left as stale buffer from earlier
+replies, which is easy to misread as data. Replaying those requests from the Pi reads the card's
+stored parameters, stably and reproducibly. That is the instrument that turned "did the write
+land?" from a question needing someone to look at the wall into an automatic before/after diff.
+
 ### The patterns, and why each exists
 
 `patterns.c` grew during this bring-up, and the additions are not decoration — each answers a
@@ -791,6 +898,24 @@ visualsynth `px` chain compiled in the browser, shipped over the WebSocket, rend
 V3D at 64x32 and clocked out of the Colorlight onto the wall. `display='hub75-01'`, layer bound,
 46 fps sustained.
 
+**The whole six-module wall runs, 2026-09-04.** All 64 x 192 of it, in portrait, through the panel
+map and `--trim-canvas`: 514 packets per frame, a solid 60 fps, zero transmit drops, and the
+installed service arguments in `pi/limut-hub75.default` are the verified ones. Verified in layers:
+
+- 198 unit checks in `pi/selftest.c`
+- the mock's own suite against the real daemon over the network: **64 of 64**
+  (`mock/selftest.js --endpoint hub75-01.local:7575`), which compiles a program on the Pi's V3D
+  and holds a uniform stream
+- the wall itself, by eye, through `white` (does anything light), `cellid` (which canvas cell is
+  each module) and `bars` (is the portrait image coherent, and is the colour order right)
+
+`pi/app-check.js` — the browser leg — could not be run here, and **not for a reason in this
+project**: macOS had not granted Google Chrome the Local Network permission, so every request from
+the page fails. The signature is unmistakable once known and is documented in `pi/README.md`: the
+failure takes **3.6 ms**, far less than a round trip, and `mode: 'no-cors'` fails too, which no
+header problem can cause. `curl` and Node reach the display perfectly throughout, which is what
+makes it look like a browser or CORS bug. Grant it in System Settings and restart Chrome.
+
 **Three things will each silently swallow a bound visual**, and all three were in play at once the
 first time it was tried, so it is worth checking them in this order when a panel stays dark while
 limut says it is connected:
@@ -822,17 +947,27 @@ before committing.
 
 ## Open questions
 
-- **Does the Colorlight implementation actually work?** The frame, sync and brightness packets are
-  written and unit tested from other people's documentation of the format; none of it has been
-  near a card. First power-on is the test.
+- ~~**Does the Colorlight implementation actually work?**~~ — **yes, fully, as of 2026-09-04.**
+  The whole six-module 64 x 192 wall runs from it at 60 fps with zero transmit drops, through the
+  panel map and `--trim-canvas`. Both were written blind against other people's documentation and
+  both turned out correct.
+- **Can a configuration be written to the card from the Pi?** Not yet, and not for want of the
+  tooling: `tools/colorlight-config.c` replays a captured configuration byte-for-byte (verified on
+  the wire) and the card ignores it, while answering reads from the same tool. The live hypothesis
+  is that the one capture we have is missing traffic its tcpdump filter excluded — most likely
+  UDP/IP. Needs one more VM session captured with no filter. Not a blocker: the wall runs without
+  it, and the card only ever needs configuring once.
 - ~~**Configuring the card**~~ — **done 2026-09-04.** The card is reconfigured off its factory
   1280×512/1/32 setup to a 192×64/1-16 cabinet via LEDVISION 8.5 in a Mac-hosted Windows VM, and the
   config-write protocol is captured and partly decoded. See `LEDVISION-CONFIG.md`. Remaining: reproduce
   a config *from the Pi* (diff two captures to find the scan/geometry bytes) — a later nicety, not a
   blocker. The immediate follow-on is the limut landscape→portrait rotation (below / in that doc).
-- Whether the 5A-75B's own flashed configuration can express the panel layout, which is the
-  assumption `pi/` is built on — the Pi sends a rectangular image and does no mapping. If it
-  cannot, mapping becomes a pixel permutation in `pi/output.c`.
+- ~~Whether the 5A-75B's own flashed configuration can express the panel layout~~ — **no, and it
+  does not need to.** The modules' 90 degree mounting rotation could not be expressed in
+  LEDVISION 8.5 at all, so the cabinet is defined in the modules' native landscape and the
+  rotation is a `--panel ...:90` entry in the output stage, exactly the pixel permutation
+  `output.h` reserved. It costs nothing: each rotation is a constant stride through the rendered
+  image, so there is no rotated intermediate buffer anywhere.
 - Whether render + readback + **Colorlight output** still holds 60 Hz. The first two do
   comfortably (0.64 ms at 128x64); the third is written but unmeasured. At 128x64 it is 64
   packets and one `sendmmsg` per frame, so the expectation is that it disappears into the noise —

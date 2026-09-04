@@ -104,9 +104,22 @@ Card-side per-module 90° rotation could not be found in LEDVISION 8.5, so the c
 landscape and limut does the landscape→portrait remap. This costs **nothing** at runtime: it's a
 coordinate transform in the shader (same pixel count, ~µs), or at worst a ~12k-entry lookup in the
 output stage — far inside the Pi's measured 0.64 ms/frame budget. The card is a scan-out engine fed a
-raw pixel buffer by the Pi, so any geometry the Pi bakes into that buffer is free. **Still TODO:** in
-`pi/output_colorlight.c`, drop the old `--canvas 1280x256 --row-map 2 --offset 1088,0` args for the
-192×64 cabinet and add the rotation + column/module order, verified with an asymmetric test pattern.
+raw pixel buffer by the Pi, so any geometry the Pi bakes into that buffer is free.
+
+**Done 2026-09-04.** Six `--panel SX,SY:DX,DY:64x32:90` entries, derived by reading the `cellid`
+pattern off the wall, now drive the whole 64×192 portrait display at 60 fps. The map and the full
+command are in `CLAUDE.md` → "The wall as driven, 2026-09-04". Two things that section records and
+that this one got wrong:
+
+- **Only the cabinet was reconfigured, not the screen.** The card's receiver window is now a
+  192×64 cabinet at the origin at 1/16 scan, but its *screen* is still 1280×512 and it will not
+  latch a frame until a whole screen has gone out. Sending a bare 192×64 canvas is **black**.
+  `--trim-canvas` sends every row in order but only the 192 occupied columns, which is 514
+  packets/frame, 18 MB/s and a solid 60 fps — so the bandwidth argument for reconfiguring the
+  screen has evaporated.
+- **The ports are J1 + J2**, and the cascade — not the port numbers — decides which module lands
+  in which canvas cell. On this wall the canvas column runs bottom-to-top of the portrait wall and
+  the canvas row runs left-to-right, which nobody would have guessed.
 
 ---
 
@@ -167,6 +180,43 @@ index and offset maps (`0x32`, `0x76`), and per-module geometry (`0x19`)** — t
 
 **Sync/latch** during any streaming is type `0x01` (`0x0107`, 98-byte 802.3 frames at 60 Hz) — the
 same latch used for pixel data; tcpdump renders it as `802.3, length 98` because `0x0107` < 1500.
+
+### Replaying it from the Pi — built, and the card ignores it
+
+Attempted 2026-09-04, and the negative result is worth as much as the tooling:
+
+- `tools/extract-config.py` pulls a configuration out of this pcap. It tells a `Send` (RAM) from a
+  `Save to Receivers` (flash) by the **tail block only a save emits** — an extra `0x26` run, ~208
+  `0x06` frames, then 12 `0x19` per-module geometry records. This session holds **2 saves among 12
+  pushes**, and the last save is bursts 25–27.
+- `tools/colorlight-config.c` replays one onto the card over raw ethernet, dry-run by default.
+- It works, on our side, exactly. Capturing the Pi's own transmission and diffing it against this
+  pcap gives **283 of 283 frames byte-identical** — same MACs (ours already match LEDVISION's),
+  same order, same pacing.
+- **The card ignores it.** Replaying the final save changed nothing; replaying the entire 1209
+  frame control session changed nothing either, in any readable register. The card answers our
+  *reads* from the same tool, so it is not a reachability problem.
+
+Two tempting explanations are already dead, measured from this capture:
+
+- *The missing 60 Hz sync stream* — LEDVISION **stops** it while writing (1 sync frame in the 20 s
+  of a save, against 11.5/s across the session), so a silent replay is faithful.
+- *A session or unlock that has gone stale* — LEDVISION detected at t=10 s and configured
+  successfully from t=2391 s onward, 97 minutes later, with no fresh handshake.
+
+**The live hypothesis is that this capture is incomplete.** The filter in §5 excludes `ip`, `ip6`
+and `arp`; if any part of the write went over UDP/IP it was never recorded, and what we replay is a
+convincing remainder missing the part that matters. **The next capture should have no filter at
+all** — take the 60 Hz flood and sort it out afterwards — with a click-by-click log alongside it.
+
+### A read primitive, which did come out of this
+
+LEDVISION's `0x06` (memory, address in `d[4:8]`) and `0x19` (register, index at `d[8]`, count at
+`d[12]`) requests are answered by the card with an `0x09` reply: `d[0]` status, `d[1]` count,
+`d[2..]` the value — and **the rest of the 1070 byte frame is stale buffer from earlier replies**,
+which reads convincingly as data and is not. Replaying those requests from the Pi reads the card's
+stored parameters stably and reproducibly, which turns "did that write land?" into an automatic
+before/after diff instead of a question for whoever can see the wall.
 
 ### To go further
 The `0x26` route map and the `0x32`/`0x76` index/offset tables are the parts that encode *this*

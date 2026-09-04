@@ -29,9 +29,12 @@ rsync -az --delete -e "$SSH" \
 # ../tools/egl-probe.c is the board's known-good GPU baseline and the Makefile can build it
 $SSH "$HOST" "mkdir -p $(dirname $DIR)/tools"
 rsync -az -e "$SSH" "$SRC/../tools/" "$HOST:$(dirname $DIR)/tools/"
+# Captured receiving-card configurations, replayed by colorlight-config. Small, and the whole
+# point of them is to be available on the Pi with no Windows machine in the loop.
+rsync -az -e "$SSH" --include '*.clcfg' --exclude '*' "$SRC/../" "$HOST:$DIR/"
 
 echo "==> building"
-$SSH "$HOST" "cd $DIR && make -s clean && make -s all selftest colorlight-probe"
+$SSH "$HOST" "cd $DIR && make -s clean && make -s all selftest colorlight-probe colorlight-config"
 
 echo "==> selftest"
 $SSH "$HOST" "cd $DIR && ./selftest"

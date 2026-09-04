@@ -44,7 +44,14 @@ Pi while compiling cleanly on macOS.
 | `--iface NAME` | colorlight: interface the card is cabled to (default `eth0`) |
 | `--color-order ORD` | colorlight: byte order the panels want, eg `bgr` (default `rgb`) |
 | `--brightness N` | colorlight: the card's own panel brightness, 0-255 (default 255) |
-| `--test-pattern` | `off` \| `bars` \| `grid`, shown until a host binds a layer |
+| `--canvas WxH` | colorlight: the card's whole screen, when it is bigger than what we render |
+| `--offset X,Y` | colorlight: where the render sits in that screen (ignored once `--panel` is used) |
+| `--trim-canvas` | colorlight: send only the canvas columns the wall occupies. Every row still goes, in order |
+| `--row-map N` | colorlight: 2 when the card scans twice the lines the panel decodes |
+| `--panel-rows N` | colorlight: physical rows in one panel, which sets the row-map group |
+| `--panel SPEC` | colorlight: place one panel — `SX,SY:DX,DY:WxH:ROT`. Repeatable |
+| `--test-pattern` | `off` \| `bars` \| `grid` \| `white` \| `map` \| `cellid` \| `bands` \| ..., shown until a host binds a layer |
+| `--pattern-fps N` | rate to re-send a test pattern at, with nothing driving it (default 60) |
 | `--gamma G` | output gamma, applied after the dimmer. **Use `1` for `pixel-check.js`** |
 | `--no-gpu` | do not open a renderer even if one is available |
 | `--verbose`, `-v` | log every message instead of a one line status |
@@ -96,6 +103,12 @@ Without it the browser cannot reach any other device on the LAN, and limut repor
 failure takes 1-2 ms rather than a round trip, and `mode: 'no-cors'` fails too, which no header
 problem can cause. `localhost` and the machine's own LAN address keep working, because neither is
 another device. Restart the browser after granting it.
+
+**It hits `app-check.js` too, and there it looks like a display fault.** Seen again 2026-09-04
+with Chrome: every check fails with `cannot reach http://hub75-01.local:7575/info (Failed to
+fetch)` while `curl` and `mock/selftest.js --endpoint` reach the same display perfectly. To
+confirm it in one step rather than believing the message, load a page that fetches `/info` and
+time the failure — 3.6 ms, with `mode: 'no-cors'` failing as well, is this and nothing else.
 
 ## Five things worth knowing before touching it
 
@@ -178,13 +191,12 @@ both sides of the aspect softening branch.
 
 ## What is not here
 
-**The Colorlight output stage.** `output_colorlight.c` implements the interface and sends
-nothing; the 5A-75B and the panels are not in hand. Everything upstream of it is finished and
-verifiable with `--output raw`. The systemd unit already grants `CAP_NET_RAW`, and `eth0` is
-meant to be left unmanaged with no IP — the card takes raw broadcast frames, so the link just
-needs to be up. Panel *mapping* is expected to be the card's own flashed configuration rather
-than anything here, so the Pi sends a rectangular image; if bring-up shows the card cannot
-express the layout, mapping becomes a pixel permutation in `output.c`.
+**~~The Colorlight output stage.~~** Done, and driving the real wall since 2026-08-29 — the whole
+six-module 64x192 display since 2026-09-04, at 60 fps with zero transmit drops. Panel mapping
+turned out **not** to be the card's job: LEDVISION cannot express the modules' 90 degree mounting
+rotation at all, so it is the `--panel ...:ROT` pixel permutation `output.h` reserved for exactly
+this. Each rotation is a constant stride through the render, so no rotated intermediate buffer
+exists anywhere.
 
 **`kind:"image"` assets**, which are not implemented host side either — `assets.classify` refuses
 them, so nothing can reach here from limut. The announce is rejected with a plain reason rather
@@ -221,10 +233,19 @@ the card and panels in hand — see `../CLAUDE.md` for where every number comes 
 ```sh
 sudo ip link set dev eth0 txqueuelen 8000     # once; the systemd unit does this itself
 sudo ./limut-hub75 --output colorlight --iface eth0 \
-     --size 64x32 --canvas 1280x256 --offset 1088,0 \
-     --row-map 2 --panel-rows 32 --color-order bgr \
-     --test-pattern bars --brightness 100
+     --size 64x192 --canvas 1280x512 --trim-canvas --row-map 1 \
+     --color-order bgr --brightness 100 \
+     --panel 0,128:0,0:64x32:90  --panel 0,64:64,0:64x32:90  --panel 0,0:128,0:64x32:90 \
+     --panel 32,128:0,32:64x32:90 --panel 32,64:64,32:64x32:90 --panel 32,0:128,32:64x32:90 \
+     --test-pattern bars
 ```
+
+That is the six-module 64x192 portrait wall as it actually runs — the same arguments
+`/etc/default/limut-hub75` installs, plus a test pattern. **`--canvas 1280x512` is not a mistake
+even though the card's cabinet is 192x64**: only the receiver window was reconfigured, not the
+card's screen, and it will not latch a frame until a whole screen has gone out. `--trim-canvas`
+then sends only the 192 columns the wall occupies, which is 514 packets a frame rather than 1538.
+See `../CLAUDE.md` for how the panel map was read off the wall.
 
 Two things that look like optimisations and are not: the whole canvas must be sent **every frame,
 in canvas row order** (patching only what changed gives a black panel, and reordering the stream
