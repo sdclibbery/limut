@@ -7,7 +7,11 @@ app.commandLine.appendSwitch('disable-renderer-backgrounding')
 app.commandLine.appendSwitch('enable-exclusive-audio');
 
 app.on('ready', () => {
-  mainWindow = new BrowserWindow({width: 1280, height: 800, webPreferences: {preload: path.join(__dirname, 'preload.js')}})
+  // backgroundThrottling: false because requestAnimationFrame is the send clock for the HUB75
+  // wall (draw/hub75/host) as well as the local canvas -- an occluded window would throttle
+  // the LEDs. The disable-renderer-backgrounding switch above is the process-level half of
+  // the same thing; this is the per-window half that actually governs rAF and timers.
+  mainWindow = new BrowserWindow({width: 1280, height: 800, webPreferences: {preload: path.join(__dirname, 'preload.js'), backgroundThrottling: false}})
   // Audio thread diagnostics replace the load meter for the run; both drive the same debugger
   if (process.env.LIMUT_DIAG === '1') { require('./limut-diag').start(app, mainWindow) }
   else { audioLoad.start(mainWindow) }

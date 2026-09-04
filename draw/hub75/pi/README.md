@@ -89,6 +89,7 @@ which is the specified behaviour rather than a failure — `stat.renderMs` says 
 | `render.c` | EGL/GBM, program compile, lut upload, draw, readback — and the no-GPU stub |
 | `glsl.c` | structural checks on a shader source, with no GL involved |
 | `output.c` | dimmer, gamma, and the backend seam |
+| `pacing.c` | per-second distributions of the four intervals that decide whether the wall looks smooth |
 | `codec.c` `json.c` `sha1.c` `sha256.c` `base64.c` `patterns.c` | the small pieces |
 
 Vendored rather than linked: SHA-1, SHA-256, base64 and the JSON parser. It keeps the build line
@@ -161,6 +162,14 @@ is a silent wrong-picture bug, and only the text check catches it.
 `raspberrypi-hwmon` driver (`in0_lcrit_alarm`), latched here into vcgencmd's own bits. `renderMs`
 max went from 21.70 to 0.67.
 
+**A once-a-second sample of a per-frame value is not a measurement of it.** `renderMs` used to be
+whatever the last frame of the second happened to cost — one frame in fifty. It read a steady
+3.8 ms for months while the true per-second maximum was 23-30 ms, which is most of a frame budget.
+It is now the max over the window, and `pacing.render.mean` is the old sense of the number. The
+same reasoning is why `fps` alone could never show the jerkiness the wall actually had: a whole-
+second count cannot represent a 120 ms freeze followed by a catch-up burst. See `pacing.h`, and
+"Why the wall is jerky" in ../CLAUDE.md.
+
 ## Two HTTP routes that are not part of the protocol
 
 Both exist for testing, and both are documented as outside protocol v1.
@@ -175,7 +184,7 @@ Both exist for testing, and both are documented as outside protocol v1.
 ## Verifying it
 
 ```sh
-make test                                                    # 78 unit checks, no GPU needed
+make test                                                    # 228 unit checks, no GPU needed
 node ../mock/selftest.js                                     # the mock still passes: 63
 node ../mock/selftest.js --endpoint hub75-01.local:7575      # the same suite, this daemon: 64
 node app-check.js hub75-01.local:7575                        # the real app, in a browser, driving it

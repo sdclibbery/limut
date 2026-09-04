@@ -24,7 +24,7 @@ ifeq ($(GLES),1)
   LDLIBS += -lEGL -lGLESv2 -lgbm
 endif
 
-COMMON  = json.c sha1.c sha256.c base64.c codec.c glsl.c ws.c cache.c \
+COMMON  = json.c sha1.c sha256.c base64.c codec.c glsl.c ws.c cache.c pacing.c \
           output.c output_colorlight.c patterns.c render.c
 DAEMON  = main.c net.c session.c
 BIN     = limut-hub75

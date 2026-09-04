@@ -322,13 +322,44 @@ before any shader exists: `bars` (colour bars), `grid` (one-pixel grid, for pane
 About once per second the display sends:
 
 ```json
-{ "type":"stat", "fps":59.9, "rendered":3591, "dropped":4, "renderMs":2.1,
-  "seq":3595, "temp":52.1, "throttled":0 }
+{ "type":"stat", "fps":59.9, "rendered":3591, "dropped":4, "stale":0, "renderMs":2.1,
+  "seq":3595, "temp":52.1, "throttled":0,
+  "pacing":{
+    "host":  {"n":59,"mean":16.7,"max":17.1,"b":[0,59,0,0,0]},
+    "arrive":{"n":59,"mean":16.7,"max":105.7,"b":[16,37,1,1,2]},
+    "draw":  {"n":45,"mean":22.4,"max":124.8,"b":[7,34,1,0,3]},
+    "render":{"n":45,"mean":5.4,"max":23.4,"b":[42,3,0,0,0]},
+    "seqGaps":0, "seqSkipped":0 } }
 ```
 
-`dropped` counts frame packets superseded before they were drawn (§12.1). `throttled` mirrors
-`vcgencmd get_throttled`; a non-zero value here is the undervoltage/thermal signal that cost most
-of the Pi's first bring-up, so it is worth carrying.
+`dropped` counts frame packets superseded before they were drawn (§12.1); `stale` counts those
+discarded for an out-of-order `seq`. `throttled` mirrors `vcgencmd get_throttled`; a non-zero
+value here is the undervoltage/thermal signal that cost most of the Pi's first bring-up, so it is
+worth carrying.
+
+`renderMs` is the **worst** frame of the reporting window, not the last one. It used to be the
+last, which samples one frame in fifty and averages a periodic spike out of existence entirely —
+it read a steady 3.8 ms while the true maximum was 23-30 ms.
+
+**`pacing` is a display-side extension, not required of a conforming display**, and a host MUST
+tolerate its absence. It exists because a display paced entirely by packet arrival cannot be
+debugged from counters alone: `fps` is a whole-second count, so a second containing a 120 ms
+freeze and a catch-up burst still reads 49. Each series carries a sample count, a mean and max in
+milliseconds, and `b`, a distribution over five buckets measured in frame times — **early**
+(< 0.75, i.e. bunched with its neighbour), **on time** (0.75-1.5), **1 late** (1.5-2.5), **2-4
+late** (2.5-5) and **stalled** (>= 5). The four series are:
+
+| | |
+|---|---|
+| `host` | deltas between successive `hostTime` values (§12.1) — the *host's* send cadence, measured with the network taken out of the picture |
+| `arrive` | when each packet was dispatched at the display — what the network delivered |
+| `draw` | intervals between completed draws — what the panels actually showed |
+| `render` | how long each draw took, render and output stage together |
+
+Comparing `host` with `arrive` is the point of it: the same mean with different distributions is
+network jitter, while an irregular `host` is the host's own problem. `seqGaps` counts jumps in
+`seq` and `seqSkipped` the frames they account for; since the transport is reliable, a gap can
+only be the host having skipped a send under its own backpressure rule (§12.1).
 
 ## 12. Binary packets
 

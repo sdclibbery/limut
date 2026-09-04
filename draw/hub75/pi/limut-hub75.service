@@ -20,6 +20,12 @@ RestartSec=2
 # One frame is over 1500 packets in a single sendmmsg; the default queue of 1000 silently drops
 # the overflow. '+' runs this as root, which setting a queue length needs.
 ExecStartPre=+/usr/sbin/ip link set dev eth0 txqueuelen 8000
+# The same sendmmsg charges roughly 0.5-0.7 MB of skb truesize against the socket's send buffer,
+# and the default ceiling is about 208 KB -- so it sleeps mid-frame waiting for room. The daemon
+# is single threaded, so that sleep is time the WebSocket is not drained, and uniform frames are
+# then lost to last-write-wins. The daemon asks for 4 MB; this is what lets it have it, since
+# SO_SNDBUFFORCE would need CAP_NET_ADMIN and CAP_NET_RAW is all this unit grants.
+ExecStartPre=+/usr/sbin/sysctl -q -w net.core.wmem_max=8388608
 AmbientCapabilities=CAP_NET_RAW
 CapabilityBoundingSet=CAP_NET_RAW
 NoNewPrivileges=yes

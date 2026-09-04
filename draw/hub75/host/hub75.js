@@ -196,6 +196,17 @@ define(function (require) {
     })
   }
 
+  // The display's per-second pacing window (pi/pacing.h), as one line. `host` is limut's own send
+  // cadence and `arrive` is what the network delivered, so the two together say which end a jerk
+  // came from; the buckets are early / on time / 1 late / 2-4 late / stalled, in frames.
+  let pacingLine = (p) => {
+    if (!p) { return '' }
+    let one = (name, g) => `${name} ${g.b.join('/')} max ${g.max.toFixed(1)}ms`
+    return `\n  pacing: ${one('host', p.host)} | ${one('arrive', p.arrive)}` +
+      ` | ${one('draw', p.draw)} | render mean ${p.render.mean.toFixed(2)} max ${p.render.max.toFixed(2)}ms` +
+      (p.seqGaps ? ` | host skipped ${p.seqSkipped} in ${p.seqGaps} gaps` : '')
+  }
+
   let status = () => {
     let names = Object.keys(sessions)
     if (names.length === 0) { return consoleOut('hub75: no displays. Try: hub75 connect hub75-01') }
@@ -209,8 +220,10 @@ define(function (require) {
         (d.w ? ` ${d.w}x${d.h}` : '') +
         ` player ${entry ? entry.playerId : '-'}` +
         ` layer ${bound ? bound.progId.slice(0, 8) : '-'}` +
-        ` sent ${s.frames} dim ${s.dim.toFixed(2)} cached ${s.sentIds.size}` +
-        (st ? ` | display ${st.fps}fps drop ${st.dropped} ${st.renderMs}ms temp ${st.temp} throttled ${st.throttled}` : ''))
+        ` sent ${s.frames}${s.skipped ? ' skipped ' + s.skipped : ''}` +
+        ` dim ${s.dim.toFixed(2)} cached ${s.sentIds.size}` +
+        (st ? ` | display ${st.fps}fps drop ${st.dropped} ${st.renderMs}ms temp ${st.temp} throttled ${st.throttled}` : '') +
+        (st ? pacingLine(st.pacing) : ''))
     })
   }
 

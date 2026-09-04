@@ -80,14 +80,21 @@ let run = async () => {
     sent++
   }, 1000 / 60)
 
+  // The display's pacing window (pi/pacing.h). `host` is this driver's own send cadence measured
+  // from hostTime, `arrive` is what the network delivered, and the two together say which end a
+  // jerk came from. Buckets are early / on time / 1 late / 2-4 late / stalled, in frames.
+  let pace = (g) => `${g.b.join('/')} ${g.max.toFixed(0)}ms`
   let lastLen = 0
   let report = setInterval(() => {
     while (lastLen < stats.length) {
       let st = stats[lastLen++]
       let t = ((Date.now() - t0) / 1000).toFixed(0).padStart(4)
+      let p = st.pacing
       console.log(`${t}s ${String(sent).padStart(9)} ${String(st.fps).padStart(13)} ` +
                   `${st.renderMs.toFixed(2).padStart(10)} ${String(st.dropped).padStart(9)} ` +
-                  `${st.temp.toFixed(1).padStart(6)} ${('0x' + st.throttled.toString(16)).padStart(11)}`)
+                  `${st.temp.toFixed(1).padStart(6)} ${('0x' + st.throttled.toString(16)).padStart(11)}` +
+                  (p ? `   host ${pace(p.host)}  arrive ${pace(p.arrive)}  draw ${pace(p.draw)}` +
+                       (p.seqGaps ? `  SKIPPED ${p.seqSkipped}` : '') : ''))
       sent = 0
     }
   }, 250)
@@ -104,7 +111,18 @@ let run = async () => {
     let avg = (a) => a.reduce((s2, v) => s2 + v, 0) / a.length
     console.log(`\nsteady state over ${mid.length}s:`)
     console.log(`  fps       mean ${avg(fps).toFixed(1)}  min ${Math.min(...fps)}  max ${Math.max(...fps)}`)
-    console.log(`  renderMs  mean ${avg(ms).toFixed(2)}  max ${Math.max(...ms).toFixed(2)}`)
+    console.log(`  renderMs  mean ${avg(ms).toFixed(2)}  max ${Math.max(...ms).toFixed(2)}   (per-second maxima)`)
+    if (mid[0].pacing) {
+      let tot = (sel) => mid.reduce((a, x) => a.map((v, i) => v + sel(x).b[i]), [0, 0, 0, 0, 0])
+      let worst = (sel) => Math.max(...mid.map(x => sel(x).max))
+      let line = (name, sel) => console.log(
+        `  ${name.padEnd(9)} ${tot(sel).join('/').padEnd(22)} max ${worst(sel).toFixed(1)}ms`)
+      console.log(`\n  pacing, in frames: early / on time / 1 late / 2-4 late / stalled`)
+      line('host', x => x.pacing.host)
+      line('arrive', x => x.pacing.arrive)
+      line('draw', x => x.pacing.draw)
+      console.log(`  host skipped ${mid.reduce((a, x) => a + x.pacing.seqSkipped, 0)} frames`)
+    }
     console.log(`  dropped   ${mid[mid.length - 1].dropped - mid[0].dropped} over the window`)
     console.log(`  temp      ${mid[mid.length - 1].temp.toFixed(1)}C`)
     console.log(`  throttled 0x${mid[mid.length - 1].throttled.toString(16)}` +

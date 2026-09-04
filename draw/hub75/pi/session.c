@@ -98,6 +98,9 @@ void display_debug_json(display *d, strbuf *b) {
     sb_addf(b, ",\"lastSeq\":%lld,\"sessions\":%d,", d->lastSeq, d->sessions);
     sb_addf(b, "\"stats\":{\"rendered\":%llu,\"dropped\":%llu,\"stale\":%llu,\"fps\":%d},",
             d->rendered, d->dropped, d->stale, d->fps);
+    sb_add(b, "\"pacing\":");
+    pace_set_json(b, &d->paceRpt);
+    sb_add(b, ",");
     if (!d->layerBound) {
         sb_add(b, "\"layer\":null");
     } else {
@@ -137,11 +140,20 @@ void display_info_json(display *d, strbuf *b) {
 
 /* ---- lifecycle ----------------------------------------------------------------------------- */
 
+/* Both the process start and a new session (§5.1) start the pacing windows over: a gap measured
+ * across a reconnect is the reconnect, not the feed. */
+static void pace_init_all(display *d) {
+    pace_set_init(&d->pace);
+    pace_set_init(&d->paceRpt);
+    d->lastHostTime = -1.0;
+}
+
 int display_init(display *d, char *err, size_t errCap) {
     d->dim = 1.0f;
     d->testPattern = PATTERN_OFF;
     d->lastSeq = -1;
     d->needsRedraw = 1;
+    pace_init_all(d);
     cache_init(&d->cache, 64u * 1024 * 1024);
     d->scratch = (uint8_t *)calloc((size_t)d->w * d->h * 4, 1);
     if (!d->scratch) { snprintf(err, errCap, "out of memory for a %dx%d frame", d->w, d->h); return -1; }
@@ -194,6 +206,7 @@ static void handle_hello(display *d, ws_conn *c, const char *s, js_tok *t, int n
             snprintf(d->clientName, sizeof d->clientName, "anonymous");
     }
     d->lastSeq = -1;
+    pace_init_all(d);
     d->pending.active = 0;
     free(d->pending.data);
     d->pending.data = NULL;
@@ -600,6 +613,21 @@ static void handle_frame(display *d, ws_conn *c, const uint8_t *p, size_t n) {
     if (codec_decode_frame(p, n, &f, &err) < 0) { protocol_error(d, c, "%s", err); return; }
     /* Reordering after a reconnect: a packet older than the last one processed is discarded. */
     if ((long long)f.seq <= d->lastSeq) { d->stale++; return; }
+    /* Pacing (pacing.h), recorded before any of the checks below can return: what we want to know
+     * is when the packet arrived, not whether we liked its contents.
+     *
+     * A seq jump over 1 is the host having skipped a send — TCP does not lose packets, so nothing
+     * else can produce a gap. That is the only trace of host/session.js's bufferedAmount skip,
+     * which is silent and uncounted at the other end. */
+    if (d->lastSeq >= 0 && (long long)f.seq > d->lastSeq + 1) {
+        d->pace.seqGaps++;
+        d->pace.seqSkipped += (unsigned)((long long)f.seq - d->lastSeq - 1);
+    }
+    pace_mark(&d->pace.arrive, now_seconds());
+    /* hostTime is the host's audio clock (§12.1) and is otherwise unused on this side. Its deltas
+     * are limut's send cadence measured without the network in the way. */
+    if (d->lastHostTime >= 0.0) pace_add(&d->pace.host, f.hostTime - d->lastHostTime);
+    d->lastHostTime = f.hostTime;
     d->lastSeq = (long long)f.seq;
     if (f.layerCount > 1) {
         protocol_error(d, c, "proto %d allows at most one layer", HUB75_PROTO);
@@ -760,7 +788,11 @@ void display_draw(display *d) {
 
     output_frame(&d->out, d->scratch, d->dim);
     d->rendered++;
-    d->renderMs = (now_seconds() - t0) * 1000.0;
+    {
+        double done = now_seconds();
+        pace_add(&d->pace.render, done - t0);
+        pace_mark(&d->pace.draw, done);
+    }
 }
 
 /* ---- telemetry (§11) -------------------------------------------------------------------------- */
@@ -829,15 +861,26 @@ void display_tick(display *d, double now) {
     d->temp = read_temp();
     d->throttled = read_throttled(d->throttled);
     d->throttledAt = now;
+    /* End the pacing window before anything reads it, and do it whether or not a client is
+     * connected — otherwise a disconnected display accumulates one unbounded window and every
+     * number it later reports covers however long that was. */
+    pace_set_roll(&d->pace, &d->paceRpt);
+    /* The worst frame of the second, not the last one. `renderMs` used to be the latter, which
+     * samples one frame in fifty and averaged periodic spikes out of existence — the exact
+     * failure mode that made this hard to see. `pacing.render.mean` is the old sense of it. */
+    d->renderMs = d->paceRpt.render.max * 1000.0;
     if (!d->conn) return;
 
     sb_init(&b);
     sb_addf(&b, "{\"type\":\"stat\",\"fps\":%d,\"rendered\":%llu,\"dropped\":%llu,",
             d->fps, d->rendered, d->dropped);
+    sb_addf(&b, "\"stale\":%llu,", d->stale);
     sb_add(&b, "\"renderMs\":");
     sb_json_num(&b, d->renderMs);
     sb_addf(&b, ",\"seq\":%lld,", d->lastSeq);
-    sb_add(&b, "\"temp\":");
+    sb_add(&b, "\"pacing\":");
+    pace_set_json(&b, &d->paceRpt);
+    sb_add(&b, ",\"temp\":");
     sb_json_num(&b, d->temp);
     sb_addf(&b, ",\"throttled\":%u}", d->throttled);
     send_json(d->conn, &b);

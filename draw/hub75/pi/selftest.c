@@ -11,6 +11,7 @@
 #include "glsl.h"
 #include "json.h"
 #include "output.h"
+#include "pacing.h"
 #include "sha1.h"
 #include "sha256.h"
 #include "ws.h"
@@ -720,6 +721,91 @@ static void test_colorlight_plan(void) {
        colorlight_plan(64, 32, &o, NULL, 0, NULL, 0, &np, &ns, err, sizeof err) == 0);
 }
 
+
+/* Pacing (pacing.h). The edges are written out here as literal millisecond values rather than in
+ * terms of PACE_EDGE*, so that moving an edge shows up as a failure instead of as two files
+ * quietly agreeing about the new one. One frame at 60 Hz is 16.667 ms. */
+static void test_pacing(void) {
+    pace_stat p;
+    pace_set  live, rpt;
+    strbuf    b;
+
+    /* Bucket edges: 0.75, 1.5, 2.5 and 5 frames, i.e. 12.5, 25, 41.667 and 83.333 ms. */
+    ck("pacing: 0 ms is early",              pace_bucket(0.0) == 0);
+    ck("pacing: 12.4 ms is early",           pace_bucket(0.0124) == 0);
+    ck("pacing: 12.6 ms is on time",         pace_bucket(0.0126) == 1);
+    ck("pacing: one frame is on time",       pace_bucket(1.0 / 60.0) == 1);
+    ck("pacing: 24.9 ms is on time",         pace_bucket(0.0249) == 1);
+    ck("pacing: 25.1 ms is one frame late",  pace_bucket(0.0251) == 2);
+    ck("pacing: two frames is one late",     pace_bucket(2.0 / 60.0) == 2);
+    ck("pacing: 41.5 ms is one frame late",  pace_bucket(0.0415) == 2);
+    ck("pacing: 41.8 ms is a short stall",   pace_bucket(0.0418) == 3);
+    ck("pacing: 83.2 ms is a short stall",   pace_bucket(0.0832) == 3);
+    ck("pacing: 83.4 ms is a stall",         pace_bucket(0.0834) == 4);
+    ck("pacing: 1 s is a stall",             pace_bucket(1.0) == 4);
+
+    /* A fresh stat is empty, and its first mark only establishes a baseline. */
+    pace_init(&p);
+    ck("pacing: a fresh stat has no samples", p.n == 0 && p.max == 0.0);
+    pace_mark(&p, 100.0);
+    ck("pacing: the first mark records nothing", p.n == 0);
+    pace_mark(&p, 100.0 + 1.0 / 60.0);
+    ck("pacing: the second mark records a gap", p.n == 1 && p.bucket[1] == 1);
+    pace_mark(&p, 100.0 + 1.0 / 60.0 + 0.1);
+    ck("pacing: a 100 ms gap is a stall", p.n == 2 && p.bucket[4] == 1);
+    ck("pacing: max is the worst gap", p.max > 0.0999 && p.max < 0.1001);
+    ck("pacing: mean is over both gaps",
+       p.sum / p.n > 0.0583 && p.sum / p.n < 0.0584);
+
+    /* A backwards clock, or a duration a caller never measured, must not corrupt the mean. */
+    pace_add(&p, -1.0);
+    ck("pacing: a negative interval is ignored", p.n == 2);
+
+    /* reset clears the window but keeps `prev`, so the next gap is real rather than measured from
+     * zero — which would otherwise put one spurious stall in every single window. */
+    pace_reset(&p);
+    ck("pacing: reset clears the window", p.n == 0 && p.max == 0.0 && p.bucket[4] == 0);
+    pace_mark(&p, 100.0 + 1.0 / 60.0 + 0.1 + 1.0 / 60.0);
+    ck("pacing: reset keeps the baseline", p.n == 1 && p.bucket[1] == 1);
+
+    /* pace_init, unlike pace_reset, forgets the baseline too. */
+    pace_init(&p);
+    pace_mark(&p, 500.0);
+    ck("pacing: init forgets the baseline", p.n == 0);
+
+    /* A set rolls into the reported copy and starts over. */
+    pace_set_init(&live);
+    pace_set_init(&rpt);
+    pace_add(&live.arrive, 1.0 / 60.0);
+    pace_add(&live.render, 0.004);
+    live.seqGaps = 2;
+    live.seqSkipped = 5;
+    pace_set_roll(&live, &rpt);
+    ck("pacing: roll copies the window", rpt.arrive.n == 1 && rpt.render.n == 1);
+    ck("pacing: roll copies the seq gaps", rpt.seqGaps == 2 && rpt.seqSkipped == 5);
+    ck("pacing: roll clears the live window", live.arrive.n == 0 && live.render.n == 0);
+    ck("pacing: roll clears the live seq gaps", live.seqGaps == 0 && live.seqSkipped == 0);
+
+    /* The JSON is what /debug and `stat` carry, so its shape is part of the contract. */
+    sb_init(&b);
+    pace_json(&b, "arrive", &rpt.arrive);
+    ck("pacing: a series serialises with n, mean, max and buckets",
+       strstr(b.buf, "\"arrive\":{\"n\":1,\"mean\":16.66") != NULL &&
+       strstr(b.buf, "\"b\":[0,1,0,0,0]}") != NULL);
+    sb_free(&b);
+
+    sb_init(&b);
+    pace_set_json(&b, &rpt);
+    ck("pacing: a set serialises all four series",
+       strstr(b.buf, "\"host\":") && strstr(b.buf, "\"arrive\":") &&
+       strstr(b.buf, "\"draw\":") && strstr(b.buf, "\"render\":"));
+    ck("pacing: a set serialises the seq gaps",
+       strstr(b.buf, "\"seqGaps\":2,\"seqSkipped\":5}") != NULL);
+    ck("pacing: an empty series reports a zero mean rather than a NaN",
+       strstr(b.buf, "\"host\":{\"n\":0,\"mean\":0,") != NULL);
+    sb_free(&b);
+}
+
 int main(void) {
     printf("== limut HUB75 display selftest ==\n");
     test_hashes();
@@ -729,6 +815,7 @@ int main(void) {
     test_ws();
     test_colorlight();
     test_colorlight_plan();
+    test_pacing();
     printf("%s: %d checks, %d failure%s\n",
            failures ? "FAILED" : "ALL PASSED", checks, failures, failures == 1 ? "" : "s");
     return failures ? 1 : 0;

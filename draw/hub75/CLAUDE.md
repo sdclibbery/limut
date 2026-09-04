@@ -120,7 +120,11 @@ Install-time setup:
 - `dtoverlay=vc4-kms-v3d` in `/boot/firmware/config.txt` → provides `/dev/dri/card0` and the
   render node `/dev/dri/renderD128`
 - EGL + GBM + GLES development packages; run user in the `video` and `render` groups
-- WiFi as the control/limut link, with power-save disabled so the link does not stall
+- WiFi as the control/limut link, with power-save disabled by the `wifi.powersave = 2` drop-in
+  `install.sh` writes to `/etc/NetworkManager/conf.d/`. **This line used to claim power save was
+  disabled when nothing had ever disabled it** — NetworkManager leaves `802-11-wireless.powersave`
+  at `default`, which is the driver's default of *on*. Turning it off is right, but measured on
+  this wall it is not what was making the display jerky; see "Why the wall is jerky" below
 - `eth0` marked unmanaged in NetworkManager with no DHCP and no IP address — the 5A-75B does
   not speak IP, it takes raw broadcast frames; the link just needs to be up
 - `CAP_NET_RAW` granted to the renderer binary via `setcap`, rather than running it as root
@@ -422,6 +426,118 @@ serves both families, and the daemon now says which it bound in its startup line
 **Readback is not the bottleneck and a PBO ring would buy nothing.** A synchronous `glReadPixels`
 costs well under a millisecond at this size, so pipelining a frame behind would cost 16 ms of
 latency for no gain. Revisit only if a much larger panel changes that.
+
+## Why the wall is jerky: it is the WiFi, and it is not any of our code
+
+Investigated 2026-09-04, prompted by a visual that is smooth on the canvas and jerky on the wall:
+
+```
+v visualsynth, px=add{v:[-1,1]l2@f}>>smoothstep{0,0.1}, display='hub75-01.local:7575', dim=0.5
+```
+
+**The answer: the WiFi link delivers a 60 Hz stream in bursts — roughly two stalls of 100-200 ms
+every second — and §12.1's last-write-wins then collapses each catch-up burst to a single drawn
+frame.** Freeze, jump, freeze. Nothing in limut, in the protocol, in the daemon or in the output
+stage contributes. Three separate measurements say so, and the third is conclusive on its own.
+
+**1. The host's send cadence is perfect.** `pacing.host` is built from the `hostTime` deltas in
+the frame packets themselves, so it measures limut's own clock with the network taken out of the
+picture. Over 18 s: **1015 frames, 1015 of them on time, zero early, zero late.** `seqGaps` is 0,
+so the host's `bufferedAmount` backpressure rule never fired either.
+
+**2. Arrival at the Pi is not.** Same run, same packets, timestamped as they were dispatched:
+
+| | early | on time | 1 late | 2-4 late | **stalled (≥83 ms)** | max |
+|---|---|---|---|---|---|---|
+| `host` | 0 | 1015 | 0 | 0 | **0** | 21 ms |
+| `arrive` | 235 | 728 | 9 | 6 | **37** | **181 ms** |
+
+The two have the *same mean* — 17.7 ms, i.e. 60 Hz — and completely different distributions. That
+is the definition of jitter, and the 235 "early" arrivals are the bunched ones that become dropped
+frames.
+
+**3. The control that settles it.** A plain paced TCP stream, 16 bytes every 16.67 ms, from the
+Mac to a 20-line Python receiver on the Pi — no limut, no daemon, no GPU, no ethernet output:
+
+| | early | on time | 1 late | 2-4 late | stalled | max |
+|---|---|---|---|---|---|---|
+| Mac → Pi over WiFi | 360 | 775 | 18 | 7 | **40** | 197 ms |
+| Pi → Mac over WiFi | 392 | 699 | 65 | 5 | **39** | 115 ms |
+| **Pi → Pi over loopback** | 0 | **1200** | 0 | 0 | **0** | 17.2 ms |
+
+Same script, same board, same rate. Perfect over loopback, broken over the air, and **broken
+equally in both directions** — so it is not one station's receive path. The link itself is
+otherwise excellent: -47 dBm, 5 GHz, 433 Mbit/s, 10 tx failures in 16,285 packets, zero loss. It
+is airtime, not signal. (The subnet is `192.168.68.0/24`, which is eero's default, and a mesh
+backhaul sharing the radio is the obvious suspect — but that was not chased, because the fix does
+not depend on which.)
+
+**What was ruled out, and the wrong turn worth recording.** The first hypothesis here was WiFi
+power save, and it looked extremely strong: it *was* on, `CLAUDE.md` wrongly claimed it was off,
+and the ~100 ms stall cluster matched the DTIM period (beacon 100 ms x DTIM 1) exactly. Turning it
+off changed almost nothing — 49.4 fps against 49.2, 165 drops against 174. **A mechanism that
+explains the symptom, and is genuinely misconfigured, can still not be the cause.** It is off now
+because it should be, not because it fixed anything.
+
+Also ruled out: the daemon's loop (loopback is perfect), the render and output stage
+(`pacing.render` mean 5.35 ms of a 16.7 ms budget), and the host (see 1).
+
+### The fix is a wired link
+
+There is no code fix. The host sends perfectly and the display draws everything that reaches it;
+the frames are late on the air. Options, in order of preference:
+
+- **Wire the limut link.** `eth0` belongs to the Colorlight card and has no IP, so this means
+  either a USB ethernet dongle or the USB-C gadget-mode path already in the open questions
+  (`dwc2` + `g_ether`/NCM), which makes the link an ordinary network interface and needs no
+  protocol change at all. Loopback's 1200/1200 is what a wired link should look like.
+- **Move the Pi onto a less contended AP or band**, if the mesh suspicion is right.
+- **A jitter buffer on the Pi** — draw on the Pi's own clock and select by `hostTime`, which every
+  frame already carries. This is the only software answer, and it was **considered and declined**
+  (2026-09-04): it costs a fixed ~33 ms of latency and puts pacing logic on the hot path. Revisit
+  only if the link cannot be wired.
+
+### The instrumentation, and why the old telemetry could not see any of this
+
+`pi/pacing.h` and `pi/pacing.c` are new, and `/debug` and the 1 Hz `stat` message both carry a
+`pacing` object now. Four series — `host`, `arrive`, `draw`, `render` — each as a per-second count,
+mean, max and a five-bucket distribution in frame times (early / on time / 1 late / 2-4 late /
+stalled). `hub75 status` in the app prints them, and so does `pi/perf.js`.
+
+It needed no protocol change: `seq` and `hostTime` have been in every frame packet since v1 and
+were decoded and then never read. Comparing `host` against `arrive` is the whole diagnosis.
+
+**Two things about the old numbers actively hid this**, and both are worth not reintroducing:
+
+- **`fps` is a whole-second count**, so a second containing a 120 ms freeze and then a catch-up
+  burst still reads 49 and looks merely a bit low. It cannot represent a stall at all.
+- **`renderMs` was the last frame's value**, sampled once a second, i.e. one frame in fifty. It
+  read a steady 3.8 ms throughout while the true per-second maximum was 23-30 ms. It is now the
+  max over the reporting window, and `pacing.render.mean` is the old sense of the number.
+
+Buckets are centred on one frame rather than starting at it (edges 0.75, 1.5, 2.5, 5) so that the
+healthy case sits in the middle of a bucket instead of on a boundary where a microsecond of jitter
+flips it.
+
+### Two loop fixes made at the same time
+
+Both found while reading, both correct regardless of the stutter, neither of them the cause:
+
+- **The Colorlight socket asked the kernel to clone every packet on the machine.**
+  `socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))` registers a *receive* hook, so every packet on
+  every interface in both directions — including our own ~30,000 tx packets/s, via
+  `dev_queue_xmit_nit` — was cloned into a queue nothing ever read. A transmit-only socket wants
+  protocol `0`. (`tools/colorlight-probe.c` genuinely needs `ETH_P_ALL`; it reads replies.)
+- **`sendmmsg` slept mid-frame for want of a send buffer.** One frame is ~0.5-0.7 MB of skb
+  truesize against a default `wmem` of ~208 KB. The daemon is single threaded, so every sleep is
+  time the WebSocket is not drained. It now asks for 4 MB, and the unit raises
+  `net.core.wmem_max` in `ExecStartPre` — `SO_SNDBUFFORCE` would need `CAP_NET_ADMIN` and the unit
+  grants only `CAP_NET_RAW`.
+
+And on the host side, `electron-main.js` now sets `backgroundThrottling: false`: rAF is the send
+clock for the wall as well as the canvas, so an occluded window would throttle the LEDs. The
+`disable-renderer-backgrounding` switch was already there and is the process-level half of the
+same thing; this is the per-window half that actually governs rAF.
 
 ## Panels
 
@@ -917,7 +1033,7 @@ V3D at 64x32 and clocked out of the Colorlight onto the wall. `display='hub75-01
 map and `--trim-canvas`: 514 packets per frame, a solid 60 fps, zero transmit drops, and the
 installed service arguments in `pi/limut-hub75.default` are the verified ones. Verified in layers:
 
-- 198 unit checks in `pi/selftest.c`
+- 198 unit checks in `pi/selftest.c` (228 as of 2026-09-04, with the pacing checks)
 - the mock's own suite against the real daemon over the network: **64 of 64**
   (`mock/selftest.js --endpoint hub75-01.local:7575`), which compiles a program on the Pi's V3D
   and holds a uniform stream
@@ -997,13 +1113,18 @@ before committing.
   comfortably (0.64 ms at 128x64); the third is written but unmeasured. At 128x64 it is 64
   packets and one `sendmmsg` per frame, so the expectation is that it disappears into the noise —
   but that is an expectation, not a measurement. Re-run `pi/perf.js` once panels exist.
-- Frame pacing: the display renders on packet arrival, self-pacing to the host's rAF. That needs
-  revisiting once the output stage has its own cadence.
+- Frame pacing: the display still renders on packet arrival, self-pacing to the host's rAF, and
+  **that is now known to be what makes the wall jerky over WiFi** — see "Why the wall is jerky".
+  The arrival cadence is measured (`pacing.arrive`) rather than assumed. Pacing the draw on the
+  Pi's own clock is the software answer and was **declined** 2026-09-04 in favour of wiring the
+  link; revisit only if it cannot be wired.
 - The gamma curve for the panels. The mechanism is in place — a 256-entry table in the output
   stage, applied after the dimmer, `--gamma` on the command line, default 2.2 — but the right
   value is a thing to find by eye once panels exist.
-- Time sync: how the Pi's frame cadence relates to limut's metronome/beat clock. The frame packet
-  carries `beat` and `hostTime` so this can be worked out later without a framing change.
+- Time sync: how the Pi's frame cadence relates to limut's metronome/beat clock. `hostTime` is no
+  longer merely decoded and ignored — `pacing.host` is built from its deltas, which is what proved
+  the host's send cadence blameless. `beat` is still unused. Any real time sync still needs no
+  framing change.
 - Live texture sources: `webcam{}` is local-only and unsupported in protocol v1. Streaming it (or
   the scope/FFT textures) would need a per-frame texture path that does not exist yet. The host
   refuses to bind a chain containing one.

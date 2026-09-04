@@ -432,13 +432,36 @@ int output_colorlight_open(output_t *o, const output_opts *opts, char *err, size
         return -1;
     }
 
-    s->fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
+    /* Protocol 0, NOT htons(ETH_P_ALL). A non-zero protocol registers a receive hook, and the
+     * kernel then clones every packet on every interface, in both directions, into a queue this
+     * socket never reads — including our own ~30,000 tx packets/s on eth0, via dev_queue_xmit_nit.
+     * That is pure softirq waste on a 1 GB 4B, and it competes with the very softirq draining the
+     * transmit queue. This socket only ever sends. (tools/colorlight-probe.c genuinely needs
+     * ETH_P_ALL, because it reads the card's replies; the output stage does not.) */
+    s->fd = socket(AF_PACKET, SOCK_RAW, 0);
     if (s->fd < 0) {
         snprintf(err, errCap, "colorlight: socket(AF_PACKET): %s%s", strerror(errno),
                  errno == EPERM ? " — the unit grants CAP_NET_RAW; a manual run needs sudo" : "");
         free(pkts);
         cl_free(s);
         return -1;
+    }
+
+    /* One frame is over 500 packets in a single sendmmsg, which charges roughly 0.5-0.7 MB of skb
+     * truesize against the send buffer — against a default wmem of about 208 KB. Without this the
+     * call sleeps in sock_wait_for_wmem two or three times per frame, and because the daemon is
+     * single threaded (net_poll then draw, main.c) every one of those sleeps is time the WebSocket
+     * is not being drained. Uniform packets then pile up and last-write-wins throws them away, so
+     * a transmit-side stall turns directly into dropped frames.
+     *
+     * SO_SNDBUFFORCE first: it ignores net.core.wmem_max, which is 208 KB by default and would
+     * otherwise silently clamp this to a quarter of what is needed. It requires CAP_NET_ADMIN,
+     * which the unit does not grant, so fall back to SO_SNDBUF and let the clamp apply. Neither
+     * failing is fatal — it was working without either, just less smoothly. */
+    {
+        int want = 4 * 1024 * 1024;
+        if (setsockopt(s->fd, SOL_SOCKET, SO_SNDBUFFORCE, &want, sizeof want) < 0)
+            (void)setsockopt(s->fd, SOL_SOCKET, SO_SNDBUF, &want, sizeof want);
     }
 
     memset(&ifr, 0, sizeof ifr);

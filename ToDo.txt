@@ -2,12 +2,12 @@
 =================================================================================================================================
 =================================================================================================================================
 Hub75 display
- Hardware: MacBook/Limut -> wifi -> Raspberry Pi 4B -> ethernet -> 5A-75B -> 6 p5 indoor panels <- 5v 200W PSU
- Need to flash the 5A-75B with a correct setup for the panels, supporting a global dimmer
- DONE Custom protocol design (web socket based) to send shaders, textures, and 60Hz uniform updates from limut to the Pi, and errors back -- draw/hub75/PROTOCOL.md, with a reference display in draw/hub75/mock/
- DONE Limut changes to be able to send a visualsynth to a named Hub75 display instead of the MacBook display using the new protocol -- draw/hub75/host/, the display= and dim= params on visualsynth
- DONE Software for the Pi to receive the new protocol and render with the GPU -- draw/hub75/pi/, a C daemon running as a service on hub75-01; pixel identical to the browser, 0.64ms/frame at 128x64
- Colorlight output stage: framing and raw ethernet from the Pi to the 5A-75B. The only part of the chain still missing; the output backend seam, CAP_NET_RAW and the eth0 config are all in place -- draw/hub75/pi/output_colorlight.c
+ x Hardware: MacBook/Limut -> wifi -> Raspberry Pi 4B -> ethernet -> 5A-75B -> 6 p5 indoor panels <- 5v 200W PSU
+ DONE Jerkiness -- DIAGNOSED, and it is the WiFi, not our code. limut sends 1015 of 1015 frames on time; the air delivers ~2 stalls of 100-200ms per second and last-write-wins collapses each catch-up burst. Proved with a bare TCP stream: perfect over the Pi's loopback (1200/1200), broken equally in both directions over WiFi. See draw/hub75/CLAUDE.md "Why the wall is jerky"
+  New per-second pacing telemetry on the Pi (draw/hub75/pi/pacing.c) -- host/arrive/draw/render, on /debug, the stat message, `hub75 status` and perf.js. No protocol change: seq and hostTime were already in every frame
+  WiFi power save was on and CLAUDE.md wrongly said it was off -- fixed, but it was NOT the cause (49.4fps vs 49.2)
+ THE FIX IS A WIRED LINK: USB ethernet dongle, or the USB-C gadget mode (dwc2 + g_ether/NCM) already planned. eth0 belongs to the Colorlight card. A jitter buffer on the Pi is the only software answer and was declined -- ~33ms of latency on the hot path
+ Maybe get CLaude to try updating the config to the correct display size
  Image textures (tex{'url'}) over the protocol: needs the encoded file bytes fetching host side
 =================================================================================================================================
 =================================================================================================================================

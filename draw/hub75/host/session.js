@@ -60,6 +60,7 @@ define(function (require) {
       retryTimer: null,
       generation: 0,
       frames: 0, // frame packets actually sent, for `hub75 status`
+      skipped: 0, // frames dropped by the backpressure rule below -- see sendFrame
       lastProblem: null,
     }
 
@@ -332,8 +333,10 @@ define(function (require) {
     s.sendFrame = (uniformValues, dim, beat, hostTime) => {
       if (!isOpen()) { return false }
       // §12.1: a frame that had to be queued is stale by the time it lands. Skipping is the correct
-      // behaviour, not a degradation.
-      if (s.ws.bufferedAmount > MAX_BUFFERED) { return false }
+      // behaviour, not a degradation -- but it was also invisible, and a stalled link makes it the
+      // dominant source of missing frames. Counted so `hub75 status` can say so; the display sees
+      // the same thing as a gap in `seq`, which it reports as pacing.seqGaps.
+      if (s.ws.bufferedAmount > MAX_BUFFERED) { s.skipped++; return false }
       s.dim = dim
       let layers = uniformValues === null ? [] : [{id: 0, uniforms: uniformValues}]
       sendBinary(codec.encodeFrame({

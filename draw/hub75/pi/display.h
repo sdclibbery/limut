@@ -10,6 +10,7 @@
 #include "codec.h"
 #include "json.h"
 #include "output.h"
+#include "pacing.h"
 #include "render.h"
 #include "ws.h"
 
@@ -75,6 +76,12 @@ struct display {
     double             renderMs;
     int                fps;
     unsigned long long fpsMark;
+
+    /* Pacing (see pacing.h): the intervals that decide whether the wall looks smooth. `pace` is
+     * the window in progress; `paceRpt` is the last completed second, and is what /debug and the
+     * `stat` message report. Rolled by display_tick alongside `fps`. */
+    pace_set    pace, paceRpt;
+    double      lastHostTime;    /* < 0 before the first frame of a session */
     double             temp;
     unsigned           throttled;
     double             throttledAt;
