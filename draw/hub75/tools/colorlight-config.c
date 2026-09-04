@@ -9,6 +9,12 @@
  * for byte, from the Pi, with no Windows anywhere. Our own MACs already match LEDVISION's
  * (see pi/output_colorlight.c), so what goes on the wire is indistinguishable from the original.
  *
+ * Verifying a write, which is less obvious than it looks: replaying the configuration the card
+ * ALREADY HOLDS changes nothing, so reading back "no change" is equally consistent with the write
+ * having worked and with it having been ignored. That mistake cost a whole session here. To test
+ * this tool rather than the card, write a DIFFERENT configuration and read a parameter back —
+ * `reg 4c` moved 0x1f <-> 0x02 between the two saves in the reference capture, both ways.
+ *
  * Safety, in the order it matters:
  *   - Writing a CONFIGURATION cannot brick the card; only LEDVISION's firmware upgrade can, and
  *     nothing here sends one. A wrong configuration is a garbage picture and a resend.
@@ -239,8 +245,9 @@ int main(int argc, char **argv) {
     printf("\n  writing the card's configuration...\n");
     if (send_all(iface, f, n, quiet) < 0) return 1;
     printf("\n✅ replayed. Check it with: sudo ./colorlight-probe -i %s -t 5000\n", iface);
-    printf("   Then drive the panels and look — the card is the only authority on whether it\n"
-           "   took, and its discover reply does not report the configured geometry.\n");
+    printf("   Then drive the panels and look. Note the discover reply does NOT report the\n"
+           "   configured geometry, and re-reading parameters proves nothing if this was the\n"
+           "   configuration the card already held — that read is a no-op either way.\n");
     return 0;
 #else
     (void)iface; (void)quiet;

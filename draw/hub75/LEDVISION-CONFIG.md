@@ -181,42 +181,57 @@ index and offset maps (`0x32`, `0x76`), and per-module geometry (`0x19`)** — t
 **Sync/latch** during any streaming is type `0x01` (`0x0107`, 98-byte 802.3 frames at 60 Hz) — the
 same latch used for pixel data; tcpdump renders it as `802.3, length 98` because `0x0107` < 1500.
 
-### Replaying it from the Pi — built, and the card ignores it
+### Replaying it from the Pi — this works
 
-Attempted 2026-09-04, and the negative result is worth as much as the tooling:
+**Verified 2026-09-04: a 5A-75B can be configured from the Pi, over raw ethernet, with no Windows
+machine in the loop.** Not by decoding the configuration but by replaying one, which is the whole
+point — LEDVISION already wrote the configuration we want, so the captured bytes *are* the spec.
 
 - `tools/extract-config.py` pulls a configuration out of this pcap. It tells a `Send` (RAM) from a
   `Save to Receivers` (flash) by the **tail block only a save emits** — an extra `0x26` run, ~208
   `0x06` frames, then 12 `0x19` per-module geometry records. This session holds **2 saves among 12
-  pushes**, and the last save is bursts 25–27.
-- `tools/colorlight-config.c` replays one onto the card over raw ethernet, dry-run by default.
-- It works, on our side, exactly. Capturing the Pi's own transmission and diffing it against this
-  pcap gives **283 of 283 frames byte-identical** — same MACs (ours already match LEDVISION's),
-  same order, same pacing.
-- **The card ignores it.** Replaying the final save changed nothing; replaying the entire 1209
-  frame control session changed nothing either, in any readable register. The card answers our
-  *reads* from the same tool, so it is not a reachability problem.
+  pushes**; the last save is bursts 25–27.
+- `tools/colorlight-config.c` replays one onto the card, dry-run by default, `--write` to commit.
+- `colorlight-config-64x192.clcfg` is this wall's configuration, extracted and checked in.
 
-Two tempting explanations are already dead, measured from this capture:
+```sh
+python3 tools/extract-config.py ledvision-config-20260904.pcap --list
+python3 tools/extract-config.py ledvision-config-20260904.pcap -o cfg.clcfg
+sudo ./colorlight-config -i eth0 cfg.clcfg            # dry run
+sudo ./colorlight-config -i eth0 --write cfg.clcfg    # commit
+```
 
-- *The missing 60 Hz sync stream* — LEDVISION **stops** it while writing (1 sync frame in the 20 s
-  of a save, against 11.5/s across the session), so a silent replay is faithful.
-- *A session or unlock that has gone stale* — LEDVISION detected at t=10 s and configured
-  successfully from t=2391 s onward, 97 minutes later, with no fresh handshake.
+**The trap that cost most of a session: replaying the card's own current configuration proves
+nothing.** It is a no-op, and reading back "nothing changed" is equally consistent with the write
+having worked and with it having been ignored. The test with any power is to write a *different*
+configuration and read it back:
 
-**The live hypothesis is that this capture is incomplete.** The filter in §5 excludes `ip`, `ip6`
-and `arp`; if any part of the write went over UDP/IP it was never recorded, and what we replay is a
-convincing remainder missing the part that matters. **The next capture should have no filter at
-all** — take the 60 Hz flood and sort it out afterwards — with a click-by-click log alongside it.
+| | `reg 4c` |
+|---|---|
+| the working config (save 1) | `0x1f` |
+| after writing save 0 | `0x02` |
+| after restoring save 1 | `0x1f` |
 
-### A read primitive, which did come out of this
+Reproducible in both directions. Two other things measured from this capture, worth not
+re-deriving: LEDVISION **stops** its 60 Hz sync stream while writing (1 frame in the 20 s of a
+save, against 11.5/s across the session), and it needs **no fresh handshake** — it detected the
+card at t=10 s and configured it successfully from t=2391 s, 97 minutes later.
 
-LEDVISION's `0x06` (memory, address in `d[4:8]`) and `0x19` (register, index at `d[8]`, count at
-`d[12]`) requests are answered by the card with an `0x09` reply: `d[0]` status, `d[1]` count,
-`d[2..]` the value — and **the rest of the 1070 byte frame is stale buffer from earlier replies**,
-which reads convincingly as data and is not. Replaying those requests from the Pi reads the card's
-stored parameters stably and reproducibly, which turns "did that write land?" into an automatic
-before/after diff instead of a question for whoever can see the wall.
+### The read primitive
+
+LEDVISION's `0x06` (memory, address at `d[4:8]`) and `0x19` (register, index at `d[8]`, count at
+`d[12]`) requests are answered by the card with an `0x09`: `d[0]` status, `d[1]` count, `d[2..]`
+the value — and **the rest of the 1070 byte frame is stale buffer from earlier replies**, which
+reads convincingly as data and is not. Replaying those requests from the Pi reads the card's
+stored parameters, stably and reproducibly, which is what makes a config write checkable without
+anyone looking at the wall.
+
+### What still needs Windows
+
+Only **capturing a configuration that has never been captured**. Applying one no longer does. The
+one thing still out of reach is the card's **screen size**, still 1280×512 because no captured
+session changed it — see `CLAUDE.md` for why that no longer costs anything now `--trim-canvas`
+exists.
 
 ### To go further
 The `0x26` route map and the `0x32`/`0x76` index/offset tables are the parts that encode *this*
