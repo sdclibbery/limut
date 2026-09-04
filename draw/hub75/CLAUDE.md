@@ -434,7 +434,7 @@ latency for no gain. Revisit only if a much larger panel changes that.
 | Module | 64 x 32 pixels, 320 x 160 mm |
 | Scan | 1/16 |
 | Chip counts | 24 x ICN2037BP, 4 x RUC7258E per module — both confirmed on the board |
-| Array | one module on J1 so far; it lands at canvas cell 17 (panel space x=1088, y=0) |
+| Array | **6 modules, 64 x 192 (1:3 portrait)** — each 64x32 module mounted **rotated 90deg** (32w x 64h in the display); two side-by-side columns of 3 stacked modules. **J8 = left column** (x 0-31), **J1 = right column** (x 32-63) |
 | Colour order | **bgr**, established on the bench |
 
 **This is the easy case, and it is worth knowing why.** Both chips are of the plain generation:
@@ -465,6 +465,28 @@ is the entire reason for using one. Different problem class.
 
 The colour order is a property of the PCB wiring rather than of either chip, so it stays an
 empirical question whatever the datasheets say.
+
+### The display as built, 2026-09-02
+
+Six modules, wired as **two chains of three**, each **64x32 module mounted rotated 90deg** (so it is
+32 wide x 64 tall in the display), forming two **side-by-side full-height columns** — **J8 drives the
+left column** (x 0-31), **J1 the right column** (x 32-63). That gives a **64 x 192** portrait panel, a
+1:3 aspect ratio, 960 x 480 mm of wall. The two ports are J1 and J8, not adjacent; the card drives two
+of its eight groups and the mapping has to say so rather than assume J1/J2. (Corrected 2026-09-04: the
+chains are left/right columns, not top/bottom halves as first recorded.)
+
+Two consequences worth having written down before the card is configured:
+
+**This is the number that justifies configuring the card.** 64 x 192 is 12,288 pixels, against the
+655,360 the current 1280 x 512 canvas transmits to light them. At 3 bytes per pixel and 60 Hz that
+is **2.2 MB/s rather than 120 MB/s** — so once the card believes in the real geometry, frame rate
+stops being a bandwidth question at all. It is also far inside the 128 x 1024 normal-chip ceiling,
+so nothing about this array is near the card's limits.
+
+**Power is now a real supply, not an afterthought.** Six modules at roughly 20 W each is **~120 W,
+i.e. 24 A at 5 V** at full white. `--brightness` and `dim` keep the average far below that, but the
+supply and the wiring have to survive a white frame — and `--test-pattern white` produces exactly
+one. Check the figure against the modules' own labels rather than trusting the 20 W estimate.
 
 ### What the 5A-75B will take
 
@@ -678,6 +700,14 @@ stops being fed blanks. `--pattern-fps` (default 60) re-sends on the daemon's ow
 
 ### Configuring the card, given no Windows machine
 
+**Done 2026-09-04 — the card is reconfigured. Full write-up in `LEDVISION-CONFIG.md`** (the procedure,
+the Mac-VM environment, the wrong turns, and the config protocol's wire format decoded from a capture,
+`ledvision-config-20260904.pcap`). Headlines: LEDVISION **8.5** (not 9.x / LEDSetting, which demand a
+sender) in **Net Card** mode with **real WinPcap** (not Npcap), driven from an emulated x86 Windows 10
+in UTM over the USB-C gigabit dongle. The card is now a **192×64 native landscape, 1/16-scan** cabinet,
+four data groups on **J1+J2**; the panels' 90° mounting rotation is left to limut (a free shader
+transform) rather than the card. The old text below is kept for the reasoning that led here.
+
 The card needs a *receiving-card configuration* — panel scan, driver chip, chaining — before it
 will show a sane picture, and the only supported way to write one is LEDVISION, which is
 Windows-only. Three facts shape what to do about it:
@@ -795,9 +825,11 @@ before committing.
 - **Does the Colorlight implementation actually work?** The frame, sync and brightness packets are
   written and unit tested from other people's documentation of the format; none of it has been
   near a card. First power-on is the test.
-- **Configuring the card**, if its factory configuration does not match the panels — see
-  Configuring the card above. Nothing documents the config-write packets, and a pcap of a
-  LEDVISION session is the only realistic way in.
+- ~~**Configuring the card**~~ — **done 2026-09-04.** The card is reconfigured off its factory
+  1280×512/1/32 setup to a 192×64/1-16 cabinet via LEDVISION 8.5 in a Mac-hosted Windows VM, and the
+  config-write protocol is captured and partly decoded. See `LEDVISION-CONFIG.md`. Remaining: reproduce
+  a config *from the Pi* (diff two captures to find the scan/geometry bytes) — a later nicety, not a
+  blocker. The immediate follow-on is the limut landscape→portrait rotation (below / in that doc).
 - Whether the 5A-75B's own flashed configuration can express the panel layout, which is the
   assumption `pi/` is built on — the Pi sends a rectangular image and does no mapping. If it
   cannot, mapping becomes a pixel permutation in `pi/output.c`.
