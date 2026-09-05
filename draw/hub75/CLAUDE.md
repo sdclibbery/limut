@@ -307,8 +307,17 @@ unrelated-looking TypeError. `host/sha256.js` falls back to plain JS instead.
 ### Testing the host side
 
 `mock/host-check.js` drives the *real app in real Chrome* against the mock and asserts on what the
-display observed — 56 assertions over seven scenarios: happy path, compile failure, packet loss,
-reconnect, display restart, live edit, webcam refusal.
+display observed — 60 assertions over eight scenarios: happy path, compile failure, packet loss,
+reconnect, display restart, live edit, comment out, webcam refusal.
+
+**Known failure, pre-dating 2026-09-05 and not yet chased:** the happy path's
+`its uniform list matches the source` fails — the host ships a program declaring **zero** uniforms
+where `u_vs0` is expected, so `mul{sin{}}` is reaching the display as a constant rather than an
+animated uniform. Isolated as pre-existing: `draw/visualsynth*` and `draw/hub75/host/` were last
+touched 2026-08-31 and 2026-09-04, and the failure is byte-identical with the 09-05 mock change
+reverted. Either the host stopped shipping a uniform it used to (which would render animated px
+params static on the wall) or the test's expectation went stale after the 08-31 "px eval fix".
+Worth resolving before trusting this suite as green.
 
 ```sh
 sh server.sh                                  # limut on :8000

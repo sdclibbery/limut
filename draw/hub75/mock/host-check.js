@@ -300,6 +300,30 @@ let scenarioLiveEdit = async () => {
   d.stop()
 }
 
+let scenarioCommentOut = async () => {
+  console.log('\ncomment out: the display is given up when the line is commented, not only on Ctrl-.')
+  let d = display.start({ port: PORT, name: 'hub75-check', w: 128, h: 64, failCompile: null, drop: 0, verbose: false })
+  let seen = instrument(d.display)
+  // The whole scenario is the second edit: the same line, commented out. gc_sweep destroys the
+  // player, and perFrameUpdate is supposed to notice the owner is gone and release the layer.
+  let live = `v1 visualsynth, ${PX}, display='localhost:${PORT}'`
+  let out = `// v1 visualsynth, ${PX}, display='localhost:${PORT}'`
+  let url = `${LIMUT}/draw/hub75/mock/harness.html?code=${encodeURIComponent(live)}` +
+    `&code2=${encodeURIComponent(out)}&runafter2=9000`
+  await runChrome(url, 20).done
+  let x = d.display
+
+  check('a layer was bound while the line was live', seen.counts.layer >= 1,
+    `layer messages=${seen.counts.layer}`)
+  check('the display was told to unlayer', seen.counts.unlayer >= 1,
+    `unlayer messages=${seen.counts.unlayer}`)
+  check('nothing is bound at the end', x.layer === null, JSON.stringify(x.layer))
+  // The session stays up: only the layer goes. dim, test patterns and `hub75 status` all still work
+  check('the session survived', x.session !== null)
+
+  d.stop()
+}
+
 let scenarioWebcam = async () => {
   console.log('\nwebcam: refused rather than bound, because it cannot be shipped')
   let d = display.start({ port: PORT, name: 'hub75-check', w: 128, h: 64, failCompile: null, drop: 0, verbose: false })
@@ -339,6 +363,7 @@ let main = async () => {
     reconnect: scenarioReconnect,
     restart: scenarioRestart,
     edit: scenarioLiveEdit,
+    comment: scenarioCommentOut,
     webcam: scenarioWebcam,
   }
   for (let name in all) {
