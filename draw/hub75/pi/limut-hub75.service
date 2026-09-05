@@ -3,12 +3,8 @@
 Description=limut HUB75 display
 After=network.target
 Wants=network.target
-# The card is reconfigured on every boot (limut-hub75-cardconfig.service) because it does not keep
-# its configuration across a power cycle. That tool refuses to write while anything is streaming to
-# eth0, so the daemon must not start first -- otherwise the wall comes up in the card's old
-# geometry and stays there.
-After=limut-hub75-cardconfig.service
-Wants=limut-hub75-cardconfig.service
+# The receiving card holds its own configuration in flash (set via LEDVISION, 2026-09-05),
+# so there is no boot-time reconfiguration step and no ordering constraint on it.
 
 [Service]
 Type=simple

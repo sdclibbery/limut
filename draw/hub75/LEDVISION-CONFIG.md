@@ -8,6 +8,9 @@ Windows at all.
 Companion artifacts in this folder:
 - `ledvision-config-20260904.pcap` — a full discover → read → config-write capture of a working
   session (the format section below is derived from it).
+- `ledvision-config-20260905.pcap` — the **persisting** configuration: a clean single-session
+  capture (2 pushes + 2 commits), filtered to control traffic (no pixel flood), and the first to
+  include the *Receiver Mapping -> Save to Devices* write. The better reference of the two.
 - `baseline-card-20260903.txt` — the card's factory reply dump, before any changes.
 
 See also `CLAUDE.md` (the offset convention `d[n]`, the pixel/discover/sync packet layouts) and
@@ -63,9 +66,16 @@ means no in-guest packet capture — capture from outside instead; see §5.)
    (3 wide × 2 tall), **Split Style: No Split**.
 5. **Receiver Mapping (Look From Front)** — one receiver card, **Width 192, Height 64**. (The
    Layout-Set arrows there arrange *multiple* cards; with one card they do nothing.)
-6. **Send** (RAM, reversible) → **Screen Test → Grid/White** → observe the panel. Iterate cabinet /
+6. **Send** on **both** tabs (RAM, reversible) — *Receiver Parameters → Send* and *Receiver
+   Mapping → Send* — then **Screen Test → Grid/White** → observe the panel. Iterate cabinet /
    cascade / cabling until all six modules show one coherent (landscape) image.
-7. **Save to Receivers** — flashes it; survives a power cycle.
+7. **Flash BOTH saves, on a gigabit link, or it will not persist.** Confirm `en5` is at
+   `1000baseT` first (`ifconfig en5 | grep media`; a 100 Mb link can report a save OK and not
+   commit it, §3), then *Receiver Parameters → Save to Receivers* **and** *Receiver Mapping →
+   Save to Devices*. These are two separate flash writes — committing only the first (the mistake
+   that cost the 09-04→09-05 gap) leaves the mapping in RAM only.
+8. **Prove it: power-cycle the card, then Screen Test again without re-sending.** A coherent wall
+   means it is genuinely in flash — the only real test. See "resolved 2026-09-05" below.
 
 ### Ports and cabling
 The card drives the cabinet's two module-rows as **two data groups on consecutive ports** — groups
@@ -181,7 +191,29 @@ index and offset maps (`0x32`, `0x76`), and per-module geometry (`0x19`)** — t
 **Sync/latch** during any streaming is type `0x01` (`0x0107`, 98-byte 802.3 frames at 60 Hz) — the
 same latch used for pixel data; tcpdump renders it as `802.3, length 98` because `0x0107` < 1500.
 
-### Replaying it from the Pi — this works
+### The 2026-09-05 capture: a clean two-save session
+
+`ledvision-config-20260905.pcap` is the configuration that persists, and unlike the 12-push 09-04
+capture it is a single clean session — exactly **two full pushes and two commits**
+(`0x18`×2 gamma, `0x17`×2 header, `0x1b`×24 per-unit, `0x26`×49 route, `0x1f`×4, `0x32`×8, `0x76`×2,
+`0x19`×14 geometry, `0x10`×2 commit). Those two pushes are *Save to Receivers* and *Save to Devices*,
+and they emit the **same frame-type mix** — so the mapping/connection data the second one adds is
+encoded **within** these types, not as a new type.
+
+The `0x19` frames read as **per-register writes**: `d[0..3]` a marker (`00 ff ff 85/86/87`), `d[7]`
+a register address, and the bytes after it the value. The geometry lands at register `0x4d`:
+`… 00 4d 00 00 00 0d 28 00 00 00 00 40 00 c0` — `0x0040`=64 and `0x00c0`=192, the cabinet
+dimensions. Searching the whole write burst, **192/64 appear as real geometry and 1280/512 do not
+appear as a field** — the two `0200 0500` hits are adjacent index/value pairs inside the `0x18`
+gamma curve, not a screen dimension. (This is consistent with the empirical result that the screen
+is still 1280×512: the screen size simply is not in this capture at all — see "What still needs
+Windows".)
+
+### Replaying it from the Pi — RAM only, a manual diagnostic
+
+> **This is a RAM write and never persists** (see "resolved 2026-09-05" below), and there is no
+> longer any boot service doing it — the card holds its own flash config now. It remains a useful
+> manual tool for making the wall right on an already-running card, or for protocol work.
 
 **Verified 2026-09-04: a 5A-75B can be configured from the Pi, over raw ethernet, with no Windows
 machine in the loop.** Not by decoding the configuration but by replaying one, which is the whole
@@ -201,81 +233,56 @@ sudo ./colorlight-config -i eth0 cfg.clcfg            # dry run
 sudo ./colorlight-config -i eth0 --write cfg.clcfg    # commit
 ```
 
-### The configuration does NOT survive a power cycle — corrected 2026-09-05
+### The configuration DOES survive a power cycle — resolved 2026-09-05
 
-**"Config writes from the Pi do work" is true of RAM and was never true of flash.** The card came
-up in its pre-2026-09-04 geometry on the first power cycle after being configured, and has done so
-after every power cycle since. Replaying the configuration fixes the wall immediately and it is
-gone again after the next power cut.
+**Superseding the earlier pessimism recorded here: the card now holds its 192×64 configuration in
+flash and comes up correct from a cold boot with nothing replaying it.** Two independent proofs,
+both 2026-09-05:
 
-**This is not a shortcoming of the replay against LEDVISION. There is no evidence the
-configuration was EVER in flash, by any route.** The 09-04 session configured the wall and verified
-it the same day, with no power cycle in between, so a RAM-only configuration would have looked
-exactly as successful. 2026-09-05 was the first power cycle since — and the geometry was gone. The
-capture does contain two save bursts with the documented flash-commit tail, so LEDVISION *sent*
-saves; sending a save and the card committing it are different things, and only the first has ever
-been demonstrated here.
+- **Card-only power cycle** — card on the Mac dongle, no Pi in the loop, no re-send. Power off, back
+  on, and the wall returned coherent within seconds: the card booted its own flashed geometry.
+- **Full cold boot with the boot-replay removed** — Pi and card both power-cycled, the `cardconfig`
+  service gone (below), so nothing could reconfigure the card. The wall came up to a clean idle
+  pattern on its own.
 
-**The `reg 4c` check below does not test persistence.** It proves the card accepted a write into
-its live parameters, which is a genuinely useful thing and remains correct as written — but it is
-a readback in the same power cycle, and it will read back the value whether or not it was
-committed. Nothing in this project has ever tested a configuration across a power cut. That gap is
-what cost 2026-09-05.
+**What made the difference** (the first is proven; the second is the leading hypothesis):
 
-**The boot-time replay DOES NOT WORK, and this is the thing to solve.**
-`pi/limut-hub75-cardconfig.service` replays the configuration on every boot before
-`limut-hub75.service` starts. It runs, it visibly plays back (the sequence can be watched on the
-wall), and it leaves the card **half configured**: the idle pattern's Ls land in the RIGHT corners
-— so the geometry is partly taken — with green lines alongside. Reproduced on every power cycle
-tried, 2026-09-05.
+1. **Both flash saves, not one.** LEDVISION flashes the receiver **parameters** and the **mapping**
+   separately: *Receiver Parameters → Save to Receivers* (cabinet, scan, route) **and** *Receiver
+   Mapping → Save to Devices* (connection/mapping). Only the first had ever been done. Doing both is
+   what made it stick — see §2 steps 6–8.
+2. **A solid gigabit link during the write.** The dongle↔card cable had been renegotiating to 100 Mb
+   (§3), and a flash write over a marginal link can report success without committing. The 09-05
+   saves were done with `en5` confirmed at `1000baseT`.
 
-**The same file, replayed BY HAND minutes later, is perfect every time** — verified twice, with
-`bars` and then with the idle pattern, changing nothing but the content in between. So the
-configuration file is right, the tool is right, and the card accepts it. What is wrong is
-something about doing it at boot.
+**The boot-time replay is removed, not fixed.** `pi/limut-hub75-cardconfig.service` used to replay a
+capture every boot; it half-configured the card (idle Ls in the right corners with green lines
+alongside) while the identical file replayed **by hand** was perfect every time — a boot-vs-by-hand
+mystery that was never solved and no longer needs to be. The service, its `enable`, and the
+renderer's `Wants=`/`After=` on it are all gone (repo and Pi, 2026-09-05). **A plausible reason it
+half-configured, recorded but not proven:** it replayed `colorlight-full-session.clcfg` from the
+**09-04** capture, which predates the *Save to Devices* mapping write — i.e. a structurally
+incomplete configuration.
 
-Ruled out, each by measurement rather than argument:
+**Pi replay (`colorlight-config --write`) writes RAM, never flash.** That is why it was never a
+persistence route: it fixes the wall immediately and is gone at the next power cut. It stays a
+manual diagnostic.
 
-| candidate | why it is not that |
-|---|---|
-| Frames sent before `eth0` had carrier | The unit waits on `/sys/class/net/eth0/carrier`. Tested by taking `eth0` down: it waits rather than failing. An earlier boot DID fail this way and the log said so plainly |
-| The NTP clock step wrecking the pacing | `nanosleep` takes a RELATIVE timespec and is immune to clock steps. The 2m38s in the journal for a 66 s replay is timestamps being restamped, nothing more |
-| Card firmware not ready after power-on | A 15 s settle after carrier was added. It changed nothing |
-| Two senders on the wire | One daemon, `colorlight-config` refuses to write while anything streams, tx rate is exactly one sender's |
-| The Pi being slow | `throttled=0x0`, 1800 MHz, 0 tx errors, 0 drops |
+**Two traps worth not re-learning:**
 
-**The most promising untested idea:** configuring a card that has *just powered on* may not be the
-same operation as reconfiguring one that has been running for minutes. Every successful replay in
-this project has been the latter. If that is the distinction, no amount of settle delay at boot
-will help and the answer has to be a genuine flash commit — which is where LEDVISION comes back
-in, with the crucial step nobody has done: **`Save to Receivers`, then power cycle, then verify.**
+- **Replaying the card's own current configuration proves nothing** — it is a no-op, and "nothing
+  changed" is equally consistent with the write working and with it being ignored. Test a write by
+  writing a *different* config and reading it back: `reg 4c` was `0x1f` for the working config,
+  `0x02` after writing save 0, `0x1f` again after restoring save 1, reproducible both ways. But
+  `reg 4c` is a **same-power-cycle** readback — it proves a write reached live parameters, **not**
+  that it persisted. Persistence is only ever proven by a power cycle.
+- **A full-screen test pattern hides a half-configured card.** `bars`/`cellid`/`white` paint every
+  pixel; use the idle pattern (20 lit pixels) so anything the card adds of its own shows.
 
-Note it needs the **whole session** (`--all`, `colorlight-full-session.clcfg`, 1209 frames), not
-the lone save (283 frames, ~18 s) — but see the caveat: the lone save was tried while the Pi was
-undervolted and throttled to 600 MHz, and that tool paces frames on the wire. "The lone save is
-insufficient" and "the Pi was too slow to pace it" both fit what was seen, and they were conflated
-at the time. Worth retesting now the supply is fixed; it would cut the boot delay to ~18 s.
-
-**Still open:** whether the card's flash is faulty, or whether the commit needs something not
-reproduced from the capture. The route to an answer is a LEDVISION session ending in
-`Save to Receivers`, then **a power cycle, then a verification** — the step that appears never to
-have been done.
-
-**The trap that cost most of a session: replaying the card's own current configuration proves
-nothing.** It is a no-op, and reading back "nothing changed" is equally consistent with the write
-having worked and with it having been ignored. The test with any power is to write a *different*
-configuration and read it back:
-
-| | `reg 4c` |
-|---|---|
-| the working config (save 1) | `0x1f` |
-| after writing save 0 | `0x02` |
-| after restoring save 1 | `0x1f` |
-
-Reproducible in both directions. Two other things measured from this capture, worth not
-re-deriving: LEDVISION **stops** its 60 Hz sync stream while writing (1 frame in the 20 s of a
-save, against 11.5/s across the session), and it needs **no fresh handshake** — it detected the
-card at t=10 s and configured it successfully from t=2391 s, 97 minutes later.
+Two facts measured from the captures, worth not re-deriving: LEDVISION **stops** its 60 Hz sync
+stream while writing (1 frame in the 20 s of a save, vs 11.5/s across the session), and it needs
+**no fresh handshake** — it detected the card at t=10 s and configured it from t=2391 s, 97 minutes
+later.
 
 ### The read primitive
 
@@ -288,10 +295,14 @@ anyone looking at the wall.
 
 ### What still needs Windows
 
-Only **capturing a configuration that has never been captured**. Applying one no longer does. The
-one thing still out of reach is the card's **screen size**, still 1280×512 because no captured
-session changed it — see `CLAUDE.md` for why that no longer costs anything now `--trim-canvas`
-exists.
+Only **capturing a configuration that has never been captured** — applying one is a solved,
+Windows-free operation. The one geometry still out of reach is the card's **screen size**, still
+**1280×512**. *Save to Devices* persisted the 192×64 mapping but **not** the screen dimension:
+re-confirmed empirically 2026-09-05 by driving a bare `--canvas 192x64` (no `--trim-canvas`) — the
+wall went **black** (the card will not latch a sub-screen frame), 66 packets/frame vs 514 trimmed.
+Changing it needs a LEDVISION session that sets the **screen/display size** itself (not the Receiver
+Mapping), captured then replayable. It costs nothing now `--trim-canvas` gets the wall to 60 fps at
+18 MB/s — see `CLAUDE.md`.
 
 ### To go further
 The `0x26` route map and the `0x32`/`0x76` index/offset tables are the parts that encode *this*

@@ -185,29 +185,16 @@ a morning. Use the IDLE pattern (`corners`, four small white Ls, what an unbound
 default): twenty lit pixels against black, so anything the card adds of its own is immediately
 visible. Ls in the right corners with nothing else means the geometry is genuinely correct.
 
-**Then check the card's geometry, which nothing else tests.** The discover reply does not report
-it, so `colorlight-probe` cannot tell you — it looks identical whether the card is configured or
-not. The card **loses its configuration on every power cycle** (see LEDVISION-CONFIG.md);
-`limut-hub75-cardconfig.service` replays it at boot, so if the wall is wrong after a power cut,
-check that unit ran:
+**Then check the card's geometry, which nothing else tests.** The discover reply does not report it,
+so `colorlight-probe` cannot tell you — it looks identical whether the card is configured or not.
 
-```sh
-systemctl status limut-hub75-cardconfig     # must have completed BEFORE limut-hub75 started
-```
-
-**Known broken as of 2026-09-05: the boot-time replay half-configures the card.** It runs, it
-plays back visibly, and the wall comes up with the Ls in the right corners and green lines
-alongside. The workaround until it is solved is to replay it **by hand** once the Pi has been up a
-few minutes, which works every time:
-
-```sh
-sudo systemctl stop limut-hub75
-sudo systemctl restart limut-hub75-cardconfig    # ~66 s, waits for carrier + settle
-sudo systemctl start limut-hub75
-```
-
-See LEDVISION-CONFIG.md for what has been ruled out and what to try next. Do NOT reach for the
-settle delay first — 15 s was already tried and changed nothing.
+The card **holds its configuration in flash and keeps it across a power cycle** (configured properly
+in LEDVISION, 2026-09-05 — see LEDVISION-CONFIG.md), so a cold boot comes up correct on its own with
+nothing replaying it; there is no boot-time card-config step any more. If the wall is wrong after a
+power cut, that is a card needing reconfiguration in LEDVISION, **not** a replay to kick — the
+boot-time replay was tried, half-configured the card, and has been removed. As a stopgap on an
+already-running card, `sudo ./colorlight-config -i eth0 --write <cfg>.clcfg` replays a captured
+config into RAM (gone at the next power cut) — a manual diagnostic only.
 
 To prove what geometry the card is actually holding, drive it with the **pre-reconfiguration**
 command and look. Coherent bars — even rotated, even on part of the wall — mean the card, panels

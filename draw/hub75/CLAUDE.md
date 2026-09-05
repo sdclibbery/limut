@@ -578,7 +578,7 @@ live at once** and each one made the previous fix look like it had not worked. R
 | # | fault | symptom | fix |
 |---|---|---|---|
 | 1 | GPIO power jumper: ~0.8 Ω of **contact** resistance | Pi throttled to 600 MHz, rebooting | soldered the joint |
-| 2 | Card lost its geometry on power cycle | green lines / garbage on the wall | replay the config every boot |
+| 2 | Card lost its geometry on power cycle | green lines / garbage on the wall | replayed every boot as a stopgap — **later removed**; the real fix was flashing the config properly in LEDVISION (2026-09-05, below) |
 | 3 | avahi on `usb0` published an IPv6 **link-local** | Electron could not resolve the name | `ipv6.method disabled` |
 
 Only the third was self-inflicted by this work. The wall's garbage — which looked exactly like the
@@ -639,27 +639,26 @@ almost perfectly. The idle pattern was the first mostly-black thing the wall had
 the green lines it exposed had been there all along. A test that paints every pixel cannot tell you
 whether the card is right; one that paints twenty can.
 
-### Still open: the boot-time card replay half-configures
+### Resolved 2026-09-05: the card holds its config in flash; the boot-replay is gone
 
-`limut-hub75-cardconfig.service` runs at boot, plays back visibly, and leaves the card wrong — Ls
-in the correct corners with green lines alongside. **The identical file replayed by hand minutes
-later is perfect, every time.** See LEDVISION-CONFIG.md for what has been ruled out (carrier,
-clock steps, firmware settle, two senders, a slow Pi) and the leading idea: configuring a
-just-powered-on card may not be the same operation as reconfiguring a running one. Next step is
-LEDVISION with a real `Save to Receivers`, then a power cycle, then a verification.
+The card now keeps its 192×64 configuration across a power cycle and cold-boots correct on its
+own — proven by a card-only power cycle (no Pi in the loop) and by a full cold boot with the replay
+removed. The fix was in LEDVISION, not on the Pi: flash **both** saves — *Receiver Parameters →
+Save to Receivers* **and** *Receiver Mapping → Save to Devices* (the latter never done before) —
+over a confirmed gigabit link. Full account in `LEDVISION-CONFIG.md`.
 
-**Three theories of mine that did not survive, recorded so they are not re-run:**
+So `limut-hub75-cardconfig.service`, which replayed a capture every boot and half-configured the
+card (idle Ls in the right corners, green lines alongside) while the identical file replayed by
+hand was perfect every time, has been **removed entirely** — the unit, its `enable`, and the
+renderer's `Wants=`/`After=` on it, on both the Pi and in the repo. The boot-vs-by-hand mystery was
+never solved and no longer needs to be; a plausible unproven cause is that it replayed the
+**09-04** capture, which predates the *Save to Devices* write and so was structurally incomplete.
 
-- *Stale buffer in the columns `--trim-canvas` never writes.* An untrimmed pass should then have
-  cleared it. Instead the Ls vanished too and the lines stayed.
-- *The NTP clock step at boot wrecked the replay pacing.* `nanosleep` takes a relative timespec and
-  is immune to clock steps; the inflated journal duration is restamping, not slowness.
-- *Link saturation untrimmed.* 114 MB/s against a 125 MB/s ceiling, 0 drops, 0 errors, 60 complete
-  frames a second — and the wall was black anyway.
-
-The method that actually worked, every time it was used: **change one variable against a known-good
-baseline.** Card provably correct, change only the content. That test settled in ninety seconds
-what an hour of mechanism-guessing had not.
+**The method that cracked every real fault here, kept because it is general: change one variable
+against a known-good baseline** — card provably correct, change only the content. It settled in
+ninety seconds what an hour of mechanism-guessing did not. Its corollary is why the idle pattern
+exists: a full-screen pattern (`bars`/`cellid`/`white`) masks a half-configured card, while the
+20-pixel idle pattern exposes anything the card adds of its own.
 
 **Recovery, now that the name is USB-only.** wlan0 stays associated but unadvertised, so
 `hub75-01.local` no longer resolves over WiFi and `deploy.sh` needs the cable in. The way back is
@@ -958,7 +957,7 @@ have straight, because getting it wrong cost most of this bring-up:
 |---|---|
 | Cabinet | **changed**: a 192 x 64 receiver window, at the canvas **origin** |
 | Scan | **changed**: 1/16, matching the panels, so `--row-map 1` |
-| Screen / canvas | **NOT changed**: still 1280 x 512, and the card will not latch until a whole one has gone out |
+| Screen / canvas | **NOT changed**: still 1280 x 512 (re-confirmed 2026-09-05 — a bare 192×64 canvas is black); the card will not latch until a whole screen has gone out |
 | Colour order | unchanged, `bgr` |
 
 **The card's screen size and its receiver window are separate, and only the window was
@@ -1008,12 +1007,13 @@ right** — a consequence of the 90 degree mounting plus the cabinet's own casca
 something to guess at. `cellid` answered it in one look; `map`'s numerals could not be read at
 all on a sideways panel, which is why `cellid` exists.
 
-### Configuring the card from the Pi: replaying a capture
+### Configuring the card from the Pi: replaying a capture (RAM only, manual)
 
-**This works, verified 2026-09-04.** A 5A-75B can be configured from the Pi over raw ethernet, with
-no Windows machine, by replaying a configuration captured from a LEDVISION session — and without
-decoding it, which is the point. The configuration LEDVISION already wrote is the one we want, so
-the bytes are the specification.
+**This works as a RAM write, verified 2026-09-04** — a 5A-75B can be configured from the Pi over raw
+ethernet, no Windows machine, by replaying a captured LEDVISION session without decoding it. But it
+**never persists** (RAM, not flash), so it is now only a **manual diagnostic** — there is no boot
+service doing it (removed 2026-09-05) because the card holds its own flash config. Persistence comes
+from LEDVISION's two flash saves, not from this. The bytes LEDVISION wrote are still the spec.
 
 | | |
 |---|---|
@@ -1059,11 +1059,12 @@ Two things worth not re-deriving, both measured from the capture rather than arg
 - **No fresh handshake is needed.** LEDVISION detected the card at t=10 s and configured it
   successfully from t=2391 s onward, 97 minutes later.
 
-**What is still not reachable this way: the card's screen size.** Only configurations we have
-captured can be replayed, and no captured session changed the screen from 1280 x 512. Getting a
-smaller screen therefore needs one more LEDVISION session — captured, then replayable forever.
-Since `--trim-canvas` already gets the wall to 60 fps at 18 MB/s, this is an optimisation with no
-current motivation.
+**What is still not reachable this way: the card's screen size.** No captured session has changed
+the screen from 1280 x 512 — the 09-05 *Save to Devices* persisted the 192×64 mapping but **not**
+the screen (re-confirmed empirically 2026-09-05: a bare `--canvas 192x64` gives a black wall). A
+smaller screen needs a LEDVISION session that sets the screen/display size itself, captured then
+replayable. Since `--trim-canvas` already gets the wall to 60 fps at 18 MB/s, this is an
+optimisation with no current motivation.
 
 ### The patterns, and why each exists
 
@@ -1120,7 +1121,7 @@ The card needs a *receiving-card configuration* — panel scan, driver chip, cha
 will show a sane picture, and the only supported way to write one is LEDVISION, which is
 Windows-only. Three facts shape what to do about it:
 
-- **The configuration lives in the card's flash and is written once.** After that the card runs
+- **The configuration lives in the card's flash and is written once** (persistence across a power cycle verified 2026-09-05). After that the card runs
   standalone and every sender, ours included, only ever sends frames. So LEDVISION is needed at
   most one afternoon, ever, for this card and this panel layout.
 - **The card may already be usable.** Cards ship configured for something. `colorlight-probe`

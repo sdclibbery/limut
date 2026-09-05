@@ -106,10 +106,11 @@ Three details that are not obvious, each of which cost time:
   the interface sits DOWN and `nmcli device status` says `unmanaged (77: via udev rule)`, however
   correct the connection profile is.
 
-One thing the transport change does **not** cover, recorded here because it looks like a protocol
-fault and is not: the receiving card **loses its geometry on every power cycle**, so the wall comes
-up as garbage while every check above passes. `pi/limut-hub75-cardconfig.service` replays the
-configuration before the daemon starts. See `LEDVISION-CONFIG.md`.
+One thing worth recording because it once looked like a protocol fault and is not: the receiving
+card holds its geometry in **flash** and keeps it across a power cycle, configured properly in
+LEDVISION (2026-09-05). It did not always — a spell where it came up in stale geometry (wall as
+garbage while every check above passed) led to a boot-time replay service, since **removed** now the
+flash config sticks. See `LEDVISION-CONFIG.md`.
 
 Power is worth recording because it is the failure mode that looks like the fix not working. The
 Pi is fed 5 V on **GPIO pins 4 and 6**, not over USB-C, because the laptop-side hub is bus

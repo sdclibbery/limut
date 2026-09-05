@@ -70,12 +70,8 @@ else
   echo "cmdline.txt: dwc2 already in modules-load"
 fi
 
-# The receiving card loses its configuration across a power cycle -- replaying it works, but does
-# not stick, so the Pi reapplies it on every boot before the daemon starts. See the unit's own
-# comment and LEDVISION-CONFIG.md. Costs ~66 s before the wall lights; buys a wall that is right
-# after every power cut with nobody having to remember anything.
-sed -e "s|^ExecStart=.*|ExecStart=$DIR/colorlight-config -i eth0 --write $DIR/colorlight-full-session.clcfg|" \
-    "$DIR/limut-hub75-cardconfig.service" > /etc/systemd/system/limut-hub75-cardconfig.service
+# The receiving card holds its own configuration in flash (set via LEDVISION, 2026-09-05). There
+# is no boot-time card reconfiguration: colorlight-config remains as a manual tool only.
 
 chmod +x "$DIR/usb-gadget.sh"
 sed -e "s|^ExecStart=.*|ExecStart=$DIR/usb-gadget.sh start|" \
@@ -173,7 +169,6 @@ fi
 
 systemctl daemon-reload
 systemctl enable limut-hub75-gadget
-systemctl enable limut-hub75-cardconfig
 systemctl enable limut-hub75
 if [ "$REBOOT_NEEDED" = 0 ]; then
   systemctl restart limut-hub75-gadget || true
