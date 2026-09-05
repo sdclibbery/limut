@@ -443,6 +443,14 @@ bytes.
 
 - **`layerCount: 0` is legal** and is what the host sends when nothing is drawing. This keeps one
   code path on both sides and keeps `dim`, `beat` and `hostTime` live with no content bound.
+- **An empty frame is not a redraw.** A `layerCount: 0` packet carries no picture, so a display
+  MUST NOT re-render for one unless its `dim` differs from the current value — and MUST NOT count
+  it in `stat.dropped`, since nothing was superseded. This matters because the empty stream is not
+  a rare case: it is limut's normal state whenever nothing is bound, which includes every moment
+  after `Ctrl-.` stops the players. A display that redraws for each one does double the work and
+  transmits every frame twice; measured on the wall as a steady 120 fps against an expected 60
+  (2026-09-05). Whatever keeps the panels fed with no content — §10's idle pattern on its own
+  clock — is what should be driving the output in that state.
 - `uniformCount` MUST equal the length of the bound program's `uniforms` array. A mismatch is a
   protocol error — it means the two ends disagree about which program is bound.
 - **Last-write-wins.** If a newer frame packet arrives before the previous one has been drawn, the

@@ -324,7 +324,14 @@ let makeDisplay = (opts) => {
         return protocolError(conn, `frame has ${l.uniformCount} uniforms, program ${d.layer.prog} declares ${prog.uniforms.length}`)
       }
     }
-    d.dim = Math.max(0, Math.min(1, f.dim))
+    let dim = Math.max(0, Math.min(1, f.dim))
+    let dimChanged = dim !== d.dim
+    d.dim = dim
+    // A frame carrying NO layer has no picture in it, only the dimmer, so it is not a reason to
+    // redraw. layerCount 0 is legal (PROTOCOL.md §12.1) and limut streams it at 60Hz with nothing
+    // bound, which is its normal state after Ctrl-. — see pi/session.c for what leaving this in
+    // cost on the real wall.
+    if (f.layerCount === 0 && !dimChanged) { return }
     // Last write wins: an undrawn frame that a newer one supersedes is dropped, not queued
     if (d.frame !== null) { d.stats.dropped++ }
     d.frame = f

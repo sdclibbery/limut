@@ -356,7 +356,8 @@ field).
 ### Things found while building it
 
 **`mock/selftest.js` gained `--endpoint`, and it is the conformance suite.** The mock was written
-as a *reference display*; that pays off here, because the same 63 assertions now run against the
+as a *reference display*; that pays off here, because the same assertions (63, or 66 since
+2026-09-05) now run against the
 C daemon over the network. Making that work needed no new assertions, only a snapshot of `/debug`
 refreshed on every await — which is why `/debug` exists at all. Two blocks differ: `--fail-compile`
 is replaced by a shader that genuinely fails (a better test), and the frame-drop assertion is
@@ -687,6 +688,41 @@ were decoded and then never read. Comparing `host` against `arrive` is the whole
 Buckets are centred on one frame rather than starting at it (edges 0.75, 1.5, 2.5, 5) so that the
 healthy case sits in the middle of a bucket instead of on a boundary where a microsecond of jitter
 flips it.
+
+### An empty frame is not a redraw, 2026-09-05
+
+Found immediately after the canvas change, by reading `pacing` rather than the wall: the daemon was
+drawing a rock steady **120 fps** at idle, 7,933 packets/s, with `pacing.draw` reading
+**`[60 early, 60 on time]`** — the signature of two independent 60 Hz sources rather than one
+doubled clock.
+
+Both sources were legitimate on their own. limut had a session open with **nothing bound** (the
+normal state after `Ctrl-.`), and `host/hub75.js` streams `layerCount: 0` frames at 60 Hz on
+purpose, to keep `dim`, `beat` and `hostTime` live on one code path. Each of those set `haveFrame`
+and drove a redraw. Meanwhile `freeRun` in `main.c` guards only on `!layerBound`, so the idle
+pattern's own clock drove a second 60. Sixty plus sixty.
+
+The fix is one condition in `session.c`: **a frame carrying no layer has no picture in it, so it is
+not a reason to redraw** — only a change of `dim` is, since the dimmer changes what the panels show.
+Written up as a MUST in `PROTOCOL.md` §12.1 and applied to `mock/display.js` too, so the reference
+display and the C daemon still agree. Three checks in `mock/selftest.js` cover it, and they run
+against both.
+
+Worth noting what was *not* done. The obvious fix is to make `freeRun` back off while frames are
+arriving, and that was the first plan. It is the wrong layer: it treats a content-free packet as
+real work and then compensates, where the accurate statement is that the packet was never work.
+Guarding `freeRun` would also have left the same double-draw in place for a bound layer, where
+`freeRun` is already off.
+
+**The bug was always there; the canvas change only made it visible.** At 514 packets a frame the
+output stage took long enough that the loop could not fit two draws into 16.7 ms, so the doubling
+was clipped to 60 and looked correct. Making the output eight times cheaper unclipped it. A latent
+fault held down by a slow path is the third time this project has met that shape.
+
+**And a measurement habit that paid off twice in one evening:** the first reading was `fps 120` with
+`dropped 8`, which looks like a daemon in trouble. `fps` is a whole-second count and says nothing
+about structure; `pacing.draw`'s buckets said "two 60 Hz sources" in one line. The `dropped 8` was
+unrelated and never climbed again — it happened during a `deploy.sh` build pegging all four cores.
 
 ### Two loop fixes made at the same time
 
@@ -1235,7 +1271,7 @@ protocol as a systemd service, advertises `_limut-hub75._tcp` over avahi, and re
 shaders on the V3D GPU. Verified 2026-08-19, in four layers:
 
 - 78 unit checks in `pi/selftest.c`, passing on both the Mac and the Pi
-- the mock's own 63 assertions still pass, and the same suite passes against the C daemon over
+- the mock's own assertions still pass, and the same suite passes against the C daemon over
   the network (`mock/selftest.js --endpoint hub75-01.local:7575`)
 - **pixel parity with the browser**: `pi/pixel-check.js` renders the same shader in headless
   Chrome's WebGL2 and on the Pi and compares. Plain, `tex1d` and `tex3d` chains all match with a
@@ -1267,7 +1303,7 @@ Verified in layers:
 
 - 198 unit checks in `pi/selftest.c` (228 as of 2026-09-04 with the pacing checks; 248 as of
   2026-09-05, which lock the shipping 192x64 canvas to one packet per row)
-- the mock's own suite against the real daemon over the network: **64 of 64**
+- the mock's own suite against the real daemon over the network: **all of it**
   (`mock/selftest.js --endpoint hub75-01.local:7575`), which compiles a program on the Pi's V3D
   and holds a uniform stream
 - the wall itself, by eye, through `white` (does anything light), `cellid` (which canvas cell is

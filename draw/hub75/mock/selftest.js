@@ -379,6 +379,30 @@ let run = async () => {
     eq('the dimmer is clamped', 1, main.display.dim)
   }
   {
+    // An empty frame is not a redraw. limut streams layerCount 0 at 60Hz whenever nothing is
+    // bound (host/hub75.js, keeping dim/beat/hostTime live), so a display that redraws for one
+    // does double the work for no picture. A layer is still bound here, which switches the idle
+    // pattern's free-run clock off and makes `rendered` attributable to these packets alone.
+    // Sequence numbers must stay ahead of every frame sent above, or these are discarded as stale.
+    c.sendBin(codec.encodeFrame({ seq: 30, dim: 1, layers: [] }))
+    await sleep(40)
+    let before = main.display.stats.rendered
+    for (let i = 31; i <= 33; i++) {
+      c.sendBin(codec.encodeFrame({ seq: i, dim: 1, beat: i / 4, hostTime: i / 60, layers: [] }))
+      await sleep(20)
+    }
+    eq('a frame carrying no layer does not redraw', before, main.display.stats.rendered)
+    // ...but the dimmer in one still applies, because it changes what the panels show
+    c.sendBin(codec.encodeFrame({ seq: 34, dim: 0.5, beat: 9, hostTime: 0.6, layers: [] }))
+    await sleep(60)
+    eq('the dimmer in an empty frame still applies', 0.5, main.display.dim)
+    check('an empty frame that changes the dimmer does redraw',
+      main.display.stats.rendered > before,
+      `rendered went ${before} -> ${main.display.stats.rendered}`)
+    c.send({ type: 'dim', v: 1 })
+    await sleep(30)
+  }
+  {
     c.send({ type: 'test', pattern: 'bars' })
     await sleep(20)
     eq('a test pattern can be selected', 'bars', main.display.testPattern)

@@ -645,12 +645,27 @@ static void handle_frame(display *d, ws_conn *c, const uint8_t *p, size_t n) {
             return;
         }
     }
-    d->dim = f.dim < 0.0f ? 0.0f : f.dim > 1.0f ? 1.0f : f.dim;
-    /* Last write wins: an undrawn frame that a newer one supersedes is dropped, not queued. On a
-     * live wall staleness is worse than loss. */
-    if (d->haveFrame) d->dropped++;
-    d->frame = f;
-    d->haveFrame = 1;
+    {
+        float dim = f.dim < 0.0f ? 0.0f : f.dim > 1.0f ? 1.0f : f.dim;
+        int dimChanged = dim != d->dim;
+        d->dim = dim;
+        d->frame = f;
+        /* A frame carrying NO layer has no picture in it — only the dimmer — so redrawing for one
+         * is pure waste. It is not a rare case: layerCount 0 is legal (§12.1) and limut streams it
+         * at 60Hz deliberately, to keep dim, beat and hostTime live with nothing bound (see
+         * host/hub75.js). That is its normal state after Ctrl-. stops the players.
+         *
+         * Left in, it DOUBLES the draw rate whenever such a host is connected: the empty frames
+         * drive one redraw each and the idle pattern's own free-run clock drives another, which
+         * measured as a rock steady 120 fps and 7,933 packets/s on 2026-09-05, with pacing.draw
+         * reading [60 early, 60 on time] — the signature of two independent 60Hz sources. The
+         * card is fed by the free-run clock either way. */
+        if (f.layerCount == 0 && !dimChanged) return;
+        /* Last write wins: an undrawn frame that a newer one supersedes is dropped, not queued. On
+         * a live wall staleness is worse than loss. */
+        if (d->haveFrame) d->dropped++;
+        d->haveFrame = 1;
+    }
 }
 
 /* ---- dispatch ------------------------------------------------------------------------------- */
