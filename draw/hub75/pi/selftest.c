@@ -696,6 +696,48 @@ static void test_colorlight_plan(void) {
        src_at(pkts, segs, ns, 224 * 2 + 32, 1088) == 63 * 64 + 16);
     free(pkts); free(segs);
 
+    /* The wall as it actually ships, from pi/limut-hub75.default: six 64x32 modules each mounted
+     * rotated 90, on a canvas that is simply the wall. There is no card-side "screen" to pad out
+     * to — established 2026-09-05 by measuring what LEDVISION puts on the wire — so this must
+     * come out at ONE packet per canvas row and nothing more. Locked down here because the win is
+     * entirely in the packet count, and a regression would be invisible on the wall. */
+    memset(&o, 0, sizeof o);
+    o.canvasW = 192; o.canvasH = 64; o.rowMap = 1; o.panelRows = 32;
+    o.nPanels = 6;
+    for (i = 0; i < 6; i++) { o.panels[i].w = 64; o.panels[i].h = 32; o.panels[i].rot = 90; }
+    o.panels[0].srcX = 0;  o.panels[0].srcY = 128; o.panels[0].dstX = 0;   o.panels[0].dstY = 0;
+    o.panels[1].srcX = 0;  o.panels[1].srcY = 64;  o.panels[1].dstX = 64;  o.panels[1].dstY = 0;
+    o.panels[2].srcX = 0;  o.panels[2].srcY = 0;   o.panels[2].dstX = 128; o.panels[2].dstY = 0;
+    o.panels[3].srcX = 32; o.panels[3].srcY = 128; o.panels[3].dstX = 0;   o.panels[3].dstY = 32;
+    o.panels[4].srcX = 32; o.panels[4].srcY = 64;  o.panels[4].dstX = 64;  o.panels[4].dstY = 32;
+    o.panels[5].srcX = 32; o.panels[5].srcY = 0;   o.panels[5].dstX = 128; o.panels[5].dstY = 32;
+    ck("the shipping 64x192 wall plans on a 192x64 canvas",
+       colorlight_plan(64, 192, &o, NULL, 0, NULL, 0, &np, &ns, err, sizeof err) == 0);
+    ck("it is one packet per canvas row, 64 in all", np == 64);
+    ck("every canvas pixel is covered by exactly one panel", ns == 192);
+    pkts = (cl_pkt *)calloc((size_t)np, sizeof *pkts);
+    segs = (cl_seg *)calloc((size_t)ns, sizeof *segs);
+    colorlight_plan(64, 192, &o, pkts, np, segs, ns, &np, &ns, err, sizeof err);
+    ck("each packet is the full 192 wide canvas row from column 0",
+       pkts[0].pixOff == 0 && pkts[0].count == 192 && pkts[63].count == 192);
+    ck("the rows go out in canvas order", pkts[0].row == 0 && pkts[63].row == 63);
+    /* Panel 0 is the wall's bottom left module, render (0,128)..(31,191), at canvas cell (0,0)
+     * rotated 90: canvas (0,0) is that region's bottom left, i.e. render row 191 column 0. */
+    ck("canvas origin reads the wall's bottom left corner",
+       src_at(pkts, segs, ns, 0, 0) == 191 * 64 + 0);
+    ck("stepping along the canvas row walks UP the wall",
+       seg_at(pkts, segs, ns, 0, 0)->srcStep == -64);
+    ck("the far end of the first canvas cell is 64 rows up",
+       src_at(pkts, segs, ns, 0, 63) == 128 * 64 + 0);
+    /* The canvas COLUMN runs bottom to top of the portrait wall: cell 2 is the wall's top left. */
+    ck("the third canvas cell is the wall's top left module",
+       src_at(pkts, segs, ns, 0, 128) == 63 * 64 + 0);
+    /* The canvas ROW runs left to right: y 32 is the wall's right hand column. */
+    ck("canvas row 32 is the wall's right hand column",
+       src_at(pkts, segs, ns, 32, 0) == 191 * 64 + 32);
+    ck("rowMap 1 blacks nothing out", src_at(pkts, segs, ns, 16, 0) != -1);
+    free(pkts); free(segs);
+
     /* the geometry that must be refused rather than sent */
     memset(&o, 0, sizeof o);
     o.canvasW = 1280; o.canvasH = 256; o.offsetX = 1240;

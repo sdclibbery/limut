@@ -1265,7 +1265,8 @@ map: a solid 60 fps, zero transmit drops, and the installed service arguments in
 `--trim-canvas` until 2026-09-05, and at **66** since — see "There is no card-side screen size".)
 Verified in layers:
 
-- 198 unit checks in `pi/selftest.c` (228 as of 2026-09-04, with the pacing checks)
+- 198 unit checks in `pi/selftest.c` (228 as of 2026-09-04 with the pacing checks; 248 as of
+  2026-09-05, which lock the shipping 192x64 canvas to one packet per row)
 - the mock's own suite against the real daemon over the network: **64 of 64**
   (`mock/selftest.js --endpoint hub75-01.local:7575`), which compiles a program on the Pi's V3D
   and holds a uniform stream

@@ -44,9 +44,9 @@ Pi while compiling cleanly on macOS.
 | `--iface NAME` | colorlight: interface the card is cabled to (default `eth0`) |
 | `--color-order ORD` | colorlight: byte order the panels want, eg `bgr` (default `rgb`) |
 | `--brightness N` | colorlight: the card's own panel brightness, 0-255 (default 255) |
-| `--canvas WxH` | colorlight: the card's whole screen, when it is bigger than what we render |
-| `--offset X,Y` | colorlight: where the render sits in that screen (ignored once `--panel` is used) |
-| `--trim-canvas` | colorlight: send only the canvas columns the wall occupies. Every row still goes, in order |
+| `--canvas WxH` | colorlight: the canvas sent to the card, when it is bigger than what we render (default: same as `--size`). The card has no screen of its own to match — see `../CLAUDE.md` |
+| `--offset X,Y` | colorlight: where the render sits in that canvas (ignored once `--panel` is used) |
+| `--trim-canvas` | colorlight: send only the canvas columns the wall occupies. Every row still goes, in order. Unused on this wall since 2026-09-05; kept for a card back on a big factory cabinet |
 | `--row-map N` | colorlight: 2 when the card scans twice the lines the panel decodes |
 | `--panel-rows N` | colorlight: physical rows in one panel, which sets the row-map group |
 | `--panel SPEC` | colorlight: place one panel — `SX,SY:DX,DY:WxH:ROT`. Repeatable |
@@ -269,7 +269,7 @@ Both exist for testing, and both are documented as outside protocol v1.
 ## Verifying it
 
 ```sh
-make test                                                    # 228 unit checks, no GPU needed
+make test                                                    # 248 unit checks, no GPU needed
 node ../mock/selftest.js                                     # the mock still passes: 63
 node ../mock/selftest.js --endpoint hub75-01.local:7575      # the same suite, this daemon: 64
 node app-check.js hub75-01.local:7575                        # the real app, in a browser, driving it
@@ -339,7 +339,7 @@ the card and panels in hand — see `../CLAUDE.md` for where every number comes 
 ```sh
 sudo ip link set dev eth0 txqueuelen 8000     # once; the systemd unit does this itself
 sudo ./limut-hub75 --output colorlight --iface eth0 \
-     --size 64x192 --canvas 1280x512 --trim-canvas --row-map 1 \
+     --size 64x192 --canvas 192x64 --row-map 1 \
      --color-order bgr --brightness 100 \
      --panel 0,128:0,0:64x32:90  --panel 0,64:64,0:64x32:90  --panel 0,0:128,0:64x32:90 \
      --panel 32,128:0,32:64x32:90 --panel 32,64:64,32:64x32:90 --panel 32,0:128,32:64x32:90 \
@@ -347,16 +347,21 @@ sudo ./limut-hub75 --output colorlight --iface eth0 \
 ```
 
 That is the six-module 64x192 portrait wall as it actually runs — the same arguments
-`/etc/default/limut-hub75` installs, plus a test pattern. **`--canvas 1280x512` is not a mistake
-even though the card's cabinet is 192x64**: only the receiver window was reconfigured, not the
-card's screen, and it will not latch a frame until a whole screen has gone out. `--trim-canvas`
-then sends only the 192 columns the wall occupies, which is 514 packets a frame rather than 1538.
-See `../CLAUDE.md` for how the panel map was read off the wall.
+`/etc/default/limut-hub75` installs, plus a test pattern. **`--canvas` is just the wall here**:
+the card has no "screen size" of its own that a frame must fill before it will latch, so the
+canvas is whatever we choose to send. 66 packets a frame, 2.3 MB/s.
+
+This used to read `--canvas 1280x512 --trim-canvas`, 514 packets a frame, on the belief that the
+card would not latch until a whole 1280x512 screen had gone out. That was wrong — see
+`../CLAUDE.md` → "There is no card-side screen size", 2026-09-05. `--trim-canvas` still works and
+is still correct; it is simply not needed once the canvas is the wall.
 
 Two things that look like optimisations and are not: the whole canvas must be sent **every frame,
 in canvas row order** (patching only what changed gives a black panel, and reordering the stream
 gives horizontal glitching), and the transmit queue must be deepened or a third of each frame is
-silently dropped. Both are in `../CLAUDE.md`.
+silently dropped. Both are in `../CLAUDE.md`. The second stops biting at 66 packets a frame, but
+leave the queue deep: it is what `--test-pattern` on a big canvas, and any future larger wall,
+still rely on.
 
 On an unknown card, work up to that: `--test-pattern white` first (does anything light at all?),
 then `bands` (do canvas rows superimpose, and how far apart?), then `map` (which cell is this
