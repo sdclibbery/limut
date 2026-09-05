@@ -768,9 +768,9 @@ rather than reasoned about; the answer for this wall is in "The wall as driven, 
 Two consequences worth having written down before the card is configured:
 
 **This is the number that justifies configuring the card.** 64 x 192 is 12,288 pixels, against the
-655,360 the current 1280 x 512 canvas transmits to light them. At 3 bytes per pixel and 60 Hz that
-is **2.2 MB/s rather than 120 MB/s** — so once the card believes in the real geometry, frame rate
-stops being a bandwidth question at all. It is also far inside the 128 x 1024 normal-chip ceiling,
+655,360 an untrimmed 1280 x 512 canvas transmits to light them. At 3 bytes per pixel and 60 Hz that
+is **2.2 MB/s rather than 120 MB/s** — and 2.3 MB/s is exactly what it now measures, since
+2026-09-05, at `--canvas 192x64`. Frame rate is no longer a bandwidth question at all. It is also far inside the 128 x 1024 normal-chip ceiling,
 so nothing about this array is near the card's limits.
 
 **Power is now a real supply, not an afterthought.** Six modules at roughly 20 W each is **~120 W,
@@ -877,13 +877,21 @@ gives for normal chips; that reasoning was wrong. The datasheet figure is what t
 usefully *drive*, not what it will *accept* as a canvas. Sending 1280 x 512 is what first lit the
 panel. Believe this field.
 
+**But it is the CABINET, not a "screen"** — corrected 2026-09-05. It read 1280 x 512 here because
+the *factory cabinet* was 1280 x 512; once the cabinet was reconfigured it reads `00 c0 00 40`,
+i.e. 192 x 64. `colorlight-probe.c` labels it correctly and always did. Every archived reading of
+1280 x 512 comes from a discover taken **before** that session's config write — in
+`ledvision-config-20260905.pcap` the detect is at 16:47:04 and the pushes at 16:55:42 and
+16:56:08, so neither capture contains a post-write detect. This field never described a screen,
+and reading it as one is what produced the "the card wants a 1280 x 512 screen" error below.
+
 ### The card as found, and how to drive it
 
 Established on the bench 2026-08-29, one P5 64x32 module on J1:
 
 | | |
 |---|---|
-| Canvas | **1280 x 512** as reported, i.e. 1280 x 256 in panel space |
+| Cabinet | **1280 x 512** as reported, i.e. 1280 x 256 in panel space — the FACTORY cabinet, not a "screen" (see above) |
 | Scan configured | **1/32**, against panels that are **1/16** — the central problem |
 | Colour order | **bgr** — we send red, the panel lights blue |
 | Panel position | cell **17** of the `map` grid: panel space x=1088, y=0 |
@@ -957,34 +965,40 @@ have straight, because getting it wrong cost most of this bring-up:
 |---|---|
 | Cabinet | **changed**: a 192 x 64 receiver window, at the canvas **origin** |
 | Scan | **changed**: 1/16, matching the panels, so `--row-map 1` |
-| Screen / canvas | **NOT changed**: still 1280 x 512 (re-confirmed 2026-09-05 — a bare 192×64 canvas is black); the card will not latch until a whole screen has gone out |
+| Screen / canvas | **there is no such thing** — corrected 2026-09-05. The card latches on the sync packet, not on having received a whole screen, and the canvas is simply the wall: **192 x 64**. See "There is no card-side screen size" below |
 | Colour order | unchanged, `bgr` |
 
-**The card's screen size and its receiver window are separate, and only the window was
-reconfigured.** This is the trap. A 192 x 64 cabinet at the origin looks exactly like "send a
-192 x 64 canvas", and that goes **black** — the card wants a full 1280 x 512 screen per sync
-whatever size window it is showing. Sending the full screen lights the wall; sending only the
-window does not. Two independent things then agreed on the wrong conclusion for a while: the
-discover reply's `d[21:24]` still reads 1280 x 512, and a bare 192 x 64 canvas is dark. Both are
-explained by the screen never having been reconfigured, not by the cabinet write having failed.
+> **The paragraph that stood here was wrong, and is kept below struck through because the shape of
+> the error is the lesson.** It claimed the card has a screen size separate from its receiver
+> window, that the screen was still 1280 x 512, and that the card would not latch until a whole
+> screen had gone out. None of that is true. See "There is no card-side screen size", 2026-09-05.
 
-`--trim-canvas` is what makes that affordable, and it is **verified on hardware as of 2026-09-04**
-(it had only ever been unit tested). Every canvas row still goes out, in order — the rule the card
-actually enforces — but only the 192 columns the wall occupies:
+~~The card's screen size and its receiver window are separate, and only the window was
+reconfigured. A 192 x 64 cabinet at the origin looks exactly like "send a 192 x 64 canvas", and
+that goes black — the card wants a full 1280 x 512 screen per sync whatever size window it is
+showing. Two independent things agreed: the discover reply's `d[21:24]` still reads 1280 x 512,
+and a bare 192 x 64 canvas is dark.~~
 
-| | 1280 wide | trimmed to 192 |
-|---|---|---|
-| packets/frame | 1538 | **514** |
-| rate | 120 MB/s, 46 fps | **18 MB/s, a solid 60 fps** |
+**Why it was believable:** the two "independent" confirmations were not independent. `d[21:24]`
+is the cabinet field read before a write (above), and the black wall is a real observation with a
+different cause — it was made on 2026-09-05, the day three faults were stacked and the Pi was
+browning out at 600 MHz.
 
-So the frame rate ceiling that "configuring the card" was supposed to lift is already gone, and
-lifting it did not need the screen size changed after all.
+`--trim-canvas` was the workaround for the imaginary screen, and it did work — every canvas row
+still goes out, in order, but only the 192 columns the wall occupies. It is **no longer used**,
+because the canvas is now just the wall. Kept in the daemon as the recovery path for a card that
+has lost its configuration and is back to a big factory cabinet:
+
+| | 1280 wide | trimmed to 192 | **canvas 192x64** |
+|---|---|---|---|
+| packets/frame | 1538 | 514 | **66** |
+| rate | 120 MB/s, 46 fps | 18 MB/s, 60 fps | **2.3 MB/s, 60 fps** |
 
 The working command, which is what `pi/limut-hub75.default` now installs:
 
 ```sh
 limut-hub75 --output colorlight --iface eth0 \
-    --size 64x192 --canvas 1280x512 --trim-canvas --row-map 1 \
+    --size 64x192 --canvas 192x64 --row-map 1 \
     --color-order bgr --brightness 100 \
     --panel 0,128:0,0:64x32:90  --panel 0,64:64,0:64x32:90  --panel 0,0:128,0:64x32:90 \
     --panel 32,128:0,32:64x32:90 --panel 32,64:64,32:64x32:90 --panel 32,0:128,32:64x32:90
@@ -1006,6 +1020,53 @@ Note the canvas column runs **bottom to top** of the wall and the canvas row run
 right** — a consequence of the 90 degree mounting plus the cabinet's own cascade, and not
 something to guess at. `cellid` answered it in one look; `map`'s numerals could not be read at
 all on a sideways panel, which is why `cellid` exists.
+
+### There is no card-side screen size, 2026-09-05
+
+**The card does not have a "screen" that a frame must fill before it will latch.** It latches when
+it is told to, on the `0x01` sync packet. The canvas is whatever the sender chooses to send, and
+for this wall that is simply **192 x 64**: `--canvas 192x64`, no `--trim-canvas`, **66 packets per
+frame and 2.3 MB/s** against the 514 and 18 MB/s that shipped before.
+
+**How it was settled, and the method is the point: watch a known-good sender.** LEDVISION was on
+the wire driving this wall, so instead of reasoning about the card, count what LEDVISION actually
+sends. `tcpdump -i en5 "ether[12] == 0x55 or ether[12] == 0x01"` for five seconds, twice:
+
+| LEDVISION screen | rows on the wire | `d[4:5]` count | frame len | packets/frame | latch |
+|---|---|---|---|---|---|
+| as found (256 x 256) | 0..255 | 256 | 789 | 257 | 20 fps |
+| set to 192 x 64 | **0..63** | **192** | **597** | **64** | **49 fps** |
+
+The wall was correct in both. A sender putting 64 rows on the wire and getting a lit wall is
+proof no 1280 x 512 is required, and it took five seconds to obtain. **The card had been the
+suspect for a week without anyone measuring what already worked.**
+
+**"Screen Size and Count" is a LEDVISION setting, not a card setting.** It lives in its own dialog
+off the main window, not in *LED Screen Settings*, and it has only an Apply — no Save, because
+there is nothing to persist. Apply emitted **zero frames**: the whole session's config-frame count
+was `0x07 x5` and one `0x08` reply, and nothing else — the whole of it is checked in as
+`ledvision-screensize-20260905.pcap`, 6 frames. That is why no capture of a screen-size write
+exists to replay — the write does not exist.
+
+**Measured on the Pi after the change**, `--canvas 192x64`, six modules, 20 s of `perf.js`:
+
+| | 1280x512 --trim-canvas | **192x64** |
+|---|---|---|
+| packets/frame | 514 | **66** |
+| wire | 18 MB/s, 30,943 pkt/s | **2.3 MB/s, 3,973 pkt/s** |
+| `renderMs` mean / max | 1.55 / 3.92 | **0.94 / 0.98** |
+| `arrive` pacing | — | 1/1102/1/0/0 over 1105 frames |
+| fps / dropped / `throttled` | 60 / 0 / `0x0` | 60 / 0 / `0x0` |
+
+Clean across a reboot. **`eth0` transmit drops are zero at *both* sizes** — measured 10 s each way,
+30,891 and 3,966 pkt/s, 0 dropped — so the deepened transmit queue is doing its job and none of
+this is a fix for that.
+
+**The trap that cost the most, and it is a general one: two confirmations that are secretly one.**
+"The screen is 1280 x 512" rested on the discover reply reading 1280 x 512 *and* on a bare 192 x 64
+canvas going black. They look independent. They are not — the first is the cabinet field read
+before a write, and the second was observed on the day three faults were stacked and the Pi was
+browning out at 600 MHz. Neither was evidence about a screen.
 
 ### Configuring the card from the Pi: replaying a capture (RAM only, manual)
 
@@ -1059,12 +1120,10 @@ Two things worth not re-deriving, both measured from the capture rather than arg
 - **No fresh handshake is needed.** LEDVISION detected the card at t=10 s and configured it
   successfully from t=2391 s onward, 97 minutes later.
 
-**What is still not reachable this way: the card's screen size.** No captured session has changed
-the screen from 1280 x 512 — the 09-05 *Save to Devices* persisted the 192×64 mapping but **not**
-the screen (re-confirmed empirically 2026-09-05: a bare `--canvas 192x64` gives a black wall). A
-smaller screen needs a LEDVISION session that sets the screen/display size itself, captured then
-replayable. Since `--trim-canvas` already gets the wall to 60 fps at 18 MB/s, this is an
-optimisation with no current motivation.
+**There is nothing left that this cannot reach.** The "card screen size" that used to be listed
+here as the one Windows-only geometry **does not exist** — see below. Applying a configuration is
+a solved, Windows-free operation; only *capturing a configuration that has never been captured*
+(a different wall, different panels) still needs LEDVISION.
 
 ### The patterns, and why each exists
 
@@ -1201,8 +1260,10 @@ V3D at 64x32 and clocked out of the Colorlight onto the wall. `display='hub75-01
 46 fps sustained.
 
 **The whole six-module wall runs, 2026-09-04.** All 64 x 192 of it, in portrait, through the panel
-map and `--trim-canvas`: 514 packets per frame, a solid 60 fps, zero transmit drops, and the
-installed service arguments in `pi/limut-hub75.default` are the verified ones. Verified in layers:
+map: a solid 60 fps, zero transmit drops, and the installed service arguments in
+`pi/limut-hub75.default` are the verified ones. (It ran at 514 packets per frame through
+`--trim-canvas` until 2026-09-05, and at **66** since — see "There is no card-side screen size".)
+Verified in layers:
 
 - 198 unit checks in `pi/selftest.c` (228 as of 2026-09-04, with the pacing checks)
 - the mock's own suite against the real daemon over the network: **64 of 64**
@@ -1258,8 +1319,8 @@ before committing.
 
 - ~~**Does the Colorlight implementation actually work?**~~ — **yes, fully, as of 2026-09-04.**
   The whole six-module 64 x 192 wall runs from it at 60 fps with zero transmit drops, through the
-  panel map and `--trim-canvas`. Both were written blind against other people's documentation and
-  both turned out correct.
+  panel map, which was written blind against other people's documentation and turned out correct.
+  `--trim-canvas` was too, and is now unused: since 2026-09-05 the canvas is just the wall.
 - ~~**Can a configuration be written to the card from the Pi?**~~ — **yes, verified 2026-09-04.**
   `tools/colorlight-config.c` replays a captured configuration and the card takes it, proven by
   writing a *different* config and reading the change back, both ways. Windows is now needed only

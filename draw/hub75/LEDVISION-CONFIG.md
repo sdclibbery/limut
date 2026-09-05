@@ -1,6 +1,6 @@
 # Configuring the Colorlight 5A-75B with LEDVISION
 
-How the card was reconfigured off its factory setup (1280×512 canvas, 1/32 scan) onto the built
+How the card was reconfigured off its factory setup (1280×512 cabinet, 1/32 scan) onto the built
 64×192 display, using LEDVISION in a Windows VM on a Mac-only setup — and what the config protocol
 looks like on the wire, captured for the eventual goal of configuring a card *from the Pi* with no
 Windows at all.
@@ -11,7 +11,14 @@ Companion artifacts in this folder:
 - `ledvision-config-20260905.pcap` — the **persisting** configuration: a clean single-session
   capture (2 pushes + 2 commits), filtered to control traffic (no pixel flood), and the first to
   include the *Receiver Mapping -> Save to Devices* write. The better reference of the two.
+- `ledvision-screensize-20260905.pcap` — the session that established there is **no card-side
+  screen size**: six frames, five discovers and one reply, being everything LEDVISION sent while
+  its screen setting was changed and applied. A capture whose value is what it does *not* contain.
 - `baseline-card-20260903.txt` — the card's factory reply dump, before any changes.
+- `tools/read-capture.py` — reads any of these: `cabinet` prints the cabinet size out of each
+  `0x08` reply, `bursts` prints the frame-type mix per burst so a config push can be told from a
+  save. This is the tool the 2026-09-05 correction was made with, and run across all three
+  captures in order it is the correction in three lines: `1280 x 512`, `1280 x 512`, `192 x 64`.
 
 See also `CLAUDE.md` (the offset convention `d[n]`, the pixel/discover/sync packet layouts) and
 `tools/colorlight-probe.c` (reads the card's geometry at zero risk).
@@ -75,7 +82,12 @@ means no in-guest packet capture — capture from outside instead; see §5.)
    Save to Devices*. These are two separate flash writes — committing only the first (the mistake
    that cost the 09-04→09-05 gap) leaves the mapping in RAM only.
 8. **Prove it: power-cycle the card, then Screen Test again without re-sending.** A coherent wall
-   means it is genuinely in flash — the only real test. See "resolved 2026-09-05" below.
+   means it is genuinely in flash — the only real test.
+9. **Nothing to do about "screen size".** LEDVISION's own *Screen Size and Count* dialog (off the
+   main window, not *LED Screen Settings*) is a **sender-side** setting: Apply writes nothing to
+   the card, which is why it has no Save. Set it to the wall's real size so LEDVISION stops
+   sending a padded canvas — it is worth doing for LEDVISION's own frame rate, 20 fps to 49 fps
+   here — but it is not part of configuring the card and nothing needs flashing. See "resolved 2026-09-05" below.
 
 ### Ports and cabling
 The card drives the cabinet's two module-rows as **two data groups on consecutive ports** — groups
@@ -94,6 +106,16 @@ BGR, No Split, four data groups on **J1 + J2**. The landscape→portrait 90° ro
 
 ## 3. Wrong turns worth not repeating
 
+- **Replugging the dongle drops it out of UTM's bridge, and the symptom is a dead card.** Found
+  2026-09-05. `en5` is a member of the host bridge `bridge100` alongside the vmnet tap `vmenet0`;
+  unplugging it tears the interface down and macOS does **not** re-add it. LEDVISION then finds no
+  receiver, over a link that reads a perfectly healthy `1000baseT` — the discover frames reach
+  `vmenet0` and stop at the bridge. The tell is `en5`'s `Obytes` sitting at **0** while the guest
+  is plainly transmitting. Check `ifconfig bridge100 | grep member` after **every** cable change;
+  the fix needs no VM restart:
+  ```sh
+  sudo ifconfig bridge100 addm en5
+  ```
 - **A sub-gigabit link mimics config bugs.** The dongle↔card cable renegotiated 1000→100 Mb **twice**,
   just from being handled — and a 100 Mb link produced "top 4 panels black, bottom 2 lit", which
   reads exactly like a bad cabinet config. Reversing the cable end-for-end restored gigabit. Watch
@@ -121,12 +143,12 @@ pattern off the wall, now drive the whole 64×192 portrait display at 60 fps. Th
 command are in `CLAUDE.md` → "The wall as driven, 2026-09-04". Two things that section records and
 that this one got wrong:
 
-- **Only the cabinet was reconfigured, not the screen.** The card's receiver window is now a
-  192×64 cabinet at the origin at 1/16 scan, but its *screen* is still 1280×512 and it will not
-  latch a frame until a whole screen has gone out. Sending a bare 192×64 canvas is **black**.
-  `--trim-canvas` sends every row in order but only the 192 occupied columns, which is 514
-  packets/frame, 18 MB/s and a solid 60 fps — so the bandwidth argument for reconfiguring the
-  screen has evaporated.
+- **The cabinet is the only geometry the card holds.** Its receiver window is a 192×64 cabinet at
+  the origin at 1/16 scan, and that is the whole of it — there is no separate "screen" (corrected
+  2026-09-05; this bullet used to claim there was, and that a bare 192×64 canvas goes black). The
+  Pi now sends `--canvas 192x64`, 66 packets/frame at 2.3 MB/s. `--trim-canvas`, which sent every
+  row but only the 192 occupied columns for 514 packets/frame, is no longer used — it stays as
+  the recovery path for a card back on a big factory cabinet.
 - **The ports are J1 + J2**, and the cascade — not the port numbers — decides which module lands
   in which canvas cell. On this wall the canvas column runs bottom-to-top of the portrait wall and
   the canvas row runs left-to-right, which nobody would have guessed.
@@ -162,7 +184,7 @@ card. Everything below is **observed from the capture** — field *meanings* are
 | type | len | what |
 |---|---|---|
 | `0x07` | 284 | **discover** — asks for a receiver by number (`d[3]`). Sent by the PC. |
-| `0x08` | 1070 | **reply** — `d[0]=0x05` marks a 5A, `d[2:3]` firmware, `d[21:24]` cabinet size, `d[46:49]` uptime. Detailed in `CLAUDE.md`. |
+| `0x08` | 1070 | **reply** — `d[0]=0x05` marks a 5A, `d[2:3]` firmware, `d[21:24]` **cabinet** size, `d[46:49]` uptime. It is the cabinet, exactly as labelled: it read 1280×512 while that was the factory cabinet and reads `00 c0 00 40` = 192×64 since. Every archived 1280×512 reading is a detect taken *before* that session's write. Detailed in `CLAUDE.md`. |
 | `0x09` (`0x0900/0x0901`) | 1070 | **read-back** of receiver parameters (what "Read" pulls). Large; carries the stored config. |
 | `0x11` (`0x1122`) | 284…1308 | request/response pairs during **Detect / Read**; several sizes. |
 | `0x19` | 140 | small geometry record — early bytes hold `0x40`=64 (module width) and neighbours; appears per-module. |
@@ -205,9 +227,10 @@ a register address, and the bytes after it the value. The geometry lands at regi
 `… 00 4d 00 00 00 0d 28 00 00 00 00 40 00 c0` — `0x0040`=64 and `0x00c0`=192, the cabinet
 dimensions. Searching the whole write burst, **192/64 appear as real geometry and 1280/512 do not
 appear as a field** — the two `0200 0500` hits are adjacent index/value pairs inside the `0x18`
-gamma curve, not a screen dimension. (This is consistent with the empirical result that the screen
-is still 1280×512: the screen size simply is not in this capture at all — see "What still needs
-Windows".)
+gamma curve, not a screen dimension. **The reason no screen dimension appears in the capture is
+that there is no such field** — established 2026-09-05, see "What still needs Windows". At the
+time this was read as "the screen simply was not written in this session", which fitted the
+evidence equally well and was wrong.
 
 ### Replaying it from the Pi — RAM only, a manual diagnostic
 
@@ -295,14 +318,33 @@ anyone looking at the wall.
 
 ### What still needs Windows
 
-Only **capturing a configuration that has never been captured** — applying one is a solved,
-Windows-free operation. The one geometry still out of reach is the card's **screen size**, still
-**1280×512**. *Save to Devices* persisted the 192×64 mapping but **not** the screen dimension:
-re-confirmed empirically 2026-09-05 by driving a bare `--canvas 192x64` (no `--trim-canvas`) — the
-wall went **black** (the card will not latch a sub-screen frame), 66 packets/frame vs 514 trimmed.
-Changing it needs a LEDVISION session that sets the **screen/display size** itself (not the Receiver
-Mapping), captured then replayable. It costs nothing now `--trim-canvas` gets the wall to 60 fps at
-18 MB/s — see `CLAUDE.md`.
+Only **capturing a configuration that has never been captured** — a different wall, different
+panels. Applying one is a solved, Windows-free operation.
+
+**The "card screen size" that used to be listed here does not exist**, established 2026-09-05.
+The card has no screen dimension that a frame must fill before it will latch; it latches on the
+`0x01` sync packet, and the canvas is whatever the sender sends. The Pi now runs `--canvas 192x64`
+with no `--trim-canvas`: **66 packets/frame, 2.3 MB/s**, 60 fps, clean across a reboot.
+
+Two things established it, both in minutes once the right question was asked:
+
+- **Count what LEDVISION puts on the wire.** It was driving this wall, so `tcpdump -i en5
+  "ether[12] == 0x55 or ether[12] == 0x01"` for five seconds says what a *known-good* sender
+  sends. As found: rows 0..255, `d[4:5]` count 256, 257 packets/frame, 20 fps. After setting its
+  screen to 192×64: rows **0..63**, count **192**, **64 packets/frame**, 49 fps — wall correct
+  both times. A lit wall from 64 rows is proof no full screen is needed.
+- **"Screen Size and Count" is a LEDVISION setting, not a card setting.** It is in its own dialog
+  off the main window — *not* in *LED Screen Settings*, and no password — and it has only an
+  **Apply**, no Save, because there is nothing to persist. Apply emitted **zero frames**: the whole
+  session's config traffic was `0x07 ×5` plus one `0x08` reply — checked in whole, as 6 frames,
+  in `ledvision-screensize-20260905.pcap`. There is no screen-size write to capture because there
+  is no screen-size write.
+
+**The earlier "black wall at 192×64" observation was real but not evidence about a screen.** It
+was made on 2026-09-05, the day three faults were stacked and the Pi was browning out at 600 MHz.
+Paired with the `d[21:24]` reading below it looked like two independent confirmations; they were
+one, and both were about something else. Full account in `CLAUDE.md` → "There is no card-side
+screen size".
 
 ### To go further
 The `0x26` route map and the `0x32`/`0x76` index/offset tables are the parts that encode *this*

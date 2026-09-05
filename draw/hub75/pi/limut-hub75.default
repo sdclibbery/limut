@@ -8,12 +8,19 @@
 # See draw/hub75/CLAUDE.md for where every number below comes from.
 #
 #   --size 64x192      what limut renders: the wall in portrait, the right way up
-#   --canvas 1280x512  the card's SCREEN, which LEDVISION did not change. The receiving card
-#                      window is a 192x64 cabinet at the origin, but the card will not latch a
-#                      frame until a whole screen has gone out, so the full height is still sent
-#   --trim-canvas      ...but only the 192 columns the wall occupies. Every row still goes, in
-#                      order, which is the rule the card actually enforces. 514 packets/frame
-#                      instead of 1538: 18 MB/s and a solid 60 fps, against 120 MB/s and 46 fps
+#   --canvas 192x64    the canvas sent to the card, which is simply the wall. There is no
+#                      card-side "screen size" to match: the card latches when it is told to, on
+#                      the 0x01 sync packet, not on having received some particular number of
+#                      rows. 66 packets/frame, 2.3 MB/s, a solid 60 fps
+#
+# This used to be `--canvas 1280x512 --trim-canvas` -- 514 packets/frame and 18 MB/s -- on the
+# belief that the card would not latch until a whole 1280x512 screen had gone out. That was
+# wrong, and 2026-09-05 settled it: LEDVISION drives this same wall with a bare 192x64 canvas,
+# 64 packets per frame, measured on the wire. The 1280x512 was the FACTORY CABINET, read back
+# from discover replies taken BEFORE the cabinet was reconfigured. See ../CLAUDE.md.
+#
+# --trim-canvas is no longer used here. It stays in the daemon as the recovery path for a card
+# that has lost its configuration and is back to a big factory cabinet.
 #   --row-map 1        the card scans 1/16, matching the panels. It did NOT before the card was
 #                      reconfigured, when this had to be 2
 #   --panel            each module: its region in the RENDER, its cell in the CANVAS, and rot 90
@@ -25,4 +32,4 @@
 # Deliberately absent, because each silently swallows a visual bound from limut: --output raw,
 # --no-gpu, and --test-pattern (a pattern replaces the layer entirely).
 
-HUB75_ARGS=--name hub75-01 --output colorlight --iface eth0 --size 64x192 --canvas 1280x512 --trim-canvas --row-map 1 --color-order bgr --brightness 100 --gamma 2.2 --panel 0,128:0,0:64x32:90 --panel 0,64:64,0:64x32:90 --panel 0,0:128,0:64x32:90 --panel 32,128:0,32:64x32:90 --panel 32,64:64,32:64x32:90 --panel 32,0:128,32:64x32:90
+HUB75_ARGS=--name hub75-01 --output colorlight --iface eth0 --size 64x192 --canvas 192x64 --row-map 1 --color-order bgr --brightness 100 --gamma 2.2 --panel 0,128:0,0:64x32:90 --panel 0,64:64,0:64x32:90 --panel 0,0:128,0:64x32:90 --panel 32,128:0,32:64x32:90 --panel 32,64:64,32:64x32:90 --panel 32,0:128,32:64x32:90
