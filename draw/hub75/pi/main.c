@@ -65,6 +65,11 @@ static const char *USAGE =
     "                      canvas, so a lit panel says where in the canvas it is wired;\n"
     "                      `cellid` says the same thing in colour, which reads off a sideways\n"
     "                      panel where numerals do not\n"
+    "  --idle-pattern NAME what to show when NOTHING is bound (default corners; off = black).\n"
+    "                      Unlike --test-pattern this YIELDS the moment a visual binds, so it is\n"
+    "                      safe to leave on. Four small white Ls say, from across the room and\n"
+    "                      with no laptop, that the Pi is up, the card is configured and the\n"
+    "                      panel map is right -- which black cannot say at all\n"
     "  --pattern-fps N     rate to re-send a test pattern at, with no host driving it\n"
     "                      (default 60; 0 sends it once and stops)\n"
     "  --gamma G           output gamma, applied after the dimmer (default 2.2;\n"
@@ -80,7 +85,7 @@ int main(int argc, char **argv) {
     char err[512];
     const char *backend = "raw";
     output_opts opts;
-    int noGpu = 0, i, testPattern = PATTERN_OFF;
+    int noGpu = 0, i, testPattern = PATTERN_OFF, idlePattern = PATTERN_CORNERS;
     double patternFps = 60.0, nextPattern;
     double nextTick;
 
@@ -156,6 +161,14 @@ int main(int argc, char **argv) {
             }
             i++;
         }
+        else if (!strcmp(k, "--idle-pattern") && v) {
+            idlePattern = pattern_by_name(v);
+            if (idlePattern < 0) {
+                fprintf(stderr, "🔴 unknown idle pattern '%s' — see --help\n", v);
+                return 2;
+            }
+            i++;
+        }
         else if (!strcmp(k, "--gamma") && v) { d.gamma = (float)atof(v); i++; }
         else if (!strcmp(k, "--no-gpu")) { noGpu = 1; }
         else if (!strcmp(k, "--verbose") || !strcmp(k, "-v")) { d.verbose = 1; }
@@ -207,6 +220,7 @@ int main(int argc, char **argv) {
     /* After display_init, which resets it: a pattern asked for on the command line is the
      * starting state, not a default the protocol cannot then override. */
     d.testPattern = testPattern;
+    d.idlePattern = idlePattern;
     if (net_start(&net, &d, d.port, err, sizeof err) < 0) {
         fprintf(stderr, "🔴 %s\n", err);
         return 1;
@@ -224,8 +238,15 @@ int main(int argc, char **argv) {
         printf(" — %s, %d packets/frame steady, colour order %s, brightness %d",
                opts.iface, output_colorlight_packets(&d.out), opts.colorOrder, opts.brightness);
     printf("\n");
-    if (d.testPattern != PATTERN_OFF)
-        printf("  pattern %s, until a host binds a layer\n", pattern_name(d.testPattern));
+    /* "until a host binds a layer" was wrong and cost real confusion on 2026-09-05: a test
+     * pattern OVERRIDES a bound layer (§10), it does not yield to one. Say so plainly, because a
+     * display left with one set silently ignores every visual sent to it. */
+    if (d.testPattern != PATTERN_OFF) {
+        printf("  pattern %s — OVERRIDES any bound visual until cleared\n",
+               pattern_name(d.testPattern));
+    }
+    printf("  idle    %s, shown when nothing is bound\n", pattern_name(d.idlePattern));
+
     fflush(stdout);
 
     nextTick = now_seconds() + 1.0;
@@ -233,10 +254,14 @@ int main(int argc, char **argv) {
     while (!stopping) {
         double now = now_seconds();
         int timeout = (int)((nextTick - now) * 1000.0);
-        /* A test pattern has nothing driving it: display_draw only runs when a frame arrived or
+        /* A pattern has nothing driving it: display_draw only runs when a frame arrived or
          * something changed, so with no host it would draw once and then go quiet. A receiving
-         * card that stops being fed may blank, so re-send on our own clock instead. */
-        int freeRun = (d.testPattern != PATTERN_OFF && !d.layerBound && patternFps > 0.0);
+         * card that stops being fed may blank, so re-send on our own clock instead.
+         *
+         * This covers the IDLE pattern too, which is the normal state of an unattended wall --
+         * without it the idle Ls would be drawn once at startup and the card left unfed. */
+        int freeRun = patternFps > 0.0 && !d.layerBound &&
+                      (d.testPattern != PATTERN_OFF || d.idlePattern != PATTERN_OFF);
         if (timeout < 0) timeout = 0;
         if (timeout > 1000) timeout = 1000;
         if (freeRun) {
@@ -265,7 +290,9 @@ int main(int argc, char **argv) {
                        d.name, d.w, d.h, d.conn ? d.sessionId : "no session", d.lastSeq,
                        d.fps, d.dropped, (double)d.dim,
                        d.layerBound ? d.layerProg : (d.testPattern != PATTERN_OFF
-                                                     ? pattern_name(d.testPattern) : "-"),
+                                                     ? pattern_name(d.testPattern)
+                                                     : d.idlePattern != PATTERN_OFF
+                                                       ? pattern_name(d.idlePattern) : "-"),
                        d.cache.nAssets, d.cache.nProgs, d.temp);
                 fflush(stdout);
             }

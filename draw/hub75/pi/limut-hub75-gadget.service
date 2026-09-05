@@ -1,0 +1,25 @@
+# The USB-C link to limut. Installed by install.sh; the work is in usb-gadget.sh.
+#
+# Separate from limut-hub75.service on purpose. This is the LINK, and it has to exist before
+# NetworkManager can put an address on usb0 -- whereas the daemon does not care which interface a
+# client arrives on. net.c binds in6addr_any dual stack, so an interface appearing later is
+# already served with no restart. Keeping them apart also means a link problem cannot take the
+# display down, and `systemctl restart limut-hub75` does not renegotiate USB with the laptop.
+[Unit]
+Description=limut HUB75 USB-C ethernet gadget
+Documentation=file:///home/pi/limut-hub75/../PROTOCOL.md
+# configfs is where the gadget is assembled, so it has to be mounted first.
+After=sys-kernel-config.mount systemd-modules-load.service
+Requires=sys-kernel-config.mount
+# usb0 must exist before NetworkManager looks for the `hub75-usb` connection. NM would pick it up
+# on hotplug anyway, but this way the interface is there on the first pass rather than the second.
+Before=NetworkManager.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/home/pi/limut-hub75/usb-gadget.sh start
+ExecStop=/home/pi/limut-hub75/usb-gadget.sh stop
+
+[Install]
+WantedBy=multi-user.target

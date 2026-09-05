@@ -7,7 +7,11 @@
 
 enum { PATTERN_OFF = 0, PATTERN_BARS = 1, PATTERN_GRID = 2,
        PATTERN_WHITE = 3, PATTERN_RED = 4, PATTERN_GREEN = 5, PATTERN_BLUE = 6,
-       PATTERN_MAP = 7, PATTERN_ROWID = 8, PATTERN_BANDS = 9, PATTERN_CELLID = 10 };
+       PATTERN_MAP = 7, PATTERN_ROWID = 8, PATTERN_BANDS = 9, PATTERN_CELLID = 10,
+       PATTERN_CORNERS = 11 };
+
+/* Arm length of PATTERN_CORNERS' L, in pixels, counted along each edge from the corner. */
+#define PATTERN_CORNER_ARM 3
 
 /* The cell size PATTERN_MAP numbers in. One module of the panels in use — see ../CLAUDE.md. */
 #define PATTERN_CELL_W 64

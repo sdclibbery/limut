@@ -17,6 +17,7 @@ int pattern_by_name(const char *s) {
     if (!strcmp(s, "rowid")) return PATTERN_ROWID;
     if (!strcmp(s, "bands")) return PATTERN_BANDS;
     if (!strcmp(s, "cellid")) return PATTERN_CELLID;
+    if (!strcmp(s, "corners")) return PATTERN_CORNERS;
     return -1;
 }
 
@@ -32,6 +33,7 @@ const char *pattern_name(int pattern) {
         case PATTERN_ROWID: return "rowid";
         case PATTERN_BANDS: return "bands";
         case PATTERN_CELLID: return "cellid";
+        case PATTERN_CORNERS: return "corners";
         default:            return "off";
     }
 }
@@ -47,6 +49,8 @@ static void px(uint8_t *rgba, int w, int x, int y, int r, int g, int b) {
     uint8_t *p = rgba + ((size_t)y * w + x) * 4;
     p[0] = (uint8_t)r; p[1] = (uint8_t)g; p[2] = (uint8_t)b; p[3] = 255;
 }
+
+static void render_corners(int w, int h, uint8_t *rgba);
 
 void pattern_render(int pattern, int w, int h, uint8_t *rgba) {
     /* Full-intensity primaries and secondaries: the point of bars is checking that every channel
@@ -199,6 +203,8 @@ void pattern_render(int pattern, int w, int h, uint8_t *rgba) {
         return;
     }
 
+    if (pattern == PATTERN_CORNERS) { render_corners(w, h, rgba); return; }
+
     if (pattern == PATTERN_BARS) {
         for (y = 0; y < h; y++) {
             for (x = 0; x < w; x++) {
@@ -225,5 +231,39 @@ void pattern_render(int pattern, int w, int h, uint8_t *rgba) {
         px(rgba, w, x, y, 255, 0, 0);                       /* top left: red */
         px(rgba, w, w - 1 - x, y, 0, 255, 0);               /* top right: green */
         px(rgba, w, x, h - 1 - y, 0, 0, 255);               /* bottom left: blue */
+    }
+}
+
+/* PATTERN_CORNERS: a small white L in each corner, pointing inwards. This is the IDLE pattern —
+ * what the display shows when nothing is bound (see display_draw) — rather than a test pattern
+ * anyone selects, though it can be selected like any other.
+ *
+ * It exists to answer, from across the room and with no laptop, the question that took a whole
+ * session on 2026-09-05: is the wall dark because nothing is driving it, or because the receiving
+ * card has lost its configuration again? Black says nothing at all. Four crisp Ls, the right way
+ * round and one per corner, say the Pi is up, the card is configured, the panel map is right and
+ * the whole output stage is working — everything except a shader. A card in the wrong geometry
+ * cannot produce them: the arms land in the wrong place, or in the wrong corner, or not at all.
+ *
+ * Deliberately tiny. It sits there whenever the wall is idle, so it has to cost nothing to leave
+ * on: a few pixels draw no meaningful current and will not burn in.
+ */
+static void render_corners(int w, int h, uint8_t *rgba) {
+    int arm = PATTERN_CORNER_ARM, i, cx, cy;
+    /* Each corner as (origin, direction): the L's two arms run inwards from the corner pixel. */
+    const int corner[4][2] = { {0, 0}, {1, 0}, {0, 1}, {1, 1} };   /* right?, bottom? */
+    for (i = 0; i < 4; i++) {
+        int x0 = corner[i][0] ? w - 1 : 0;
+        int y0 = corner[i][1] ? h - 1 : 0;
+        int dx = corner[i][0] ? -1 : 1;
+        int dy = corner[i][1] ? -1 : 1;
+        for (cx = 0; cx < arm; cx++) {
+            int x = x0 + dx * cx;
+            if (x >= 0 && x < w) px(rgba, w, x, y0, 255, 255, 255);
+        }
+        for (cy = 0; cy < arm; cy++) {
+            int y = y0 + dy * cy;
+            if (y >= 0 && y < h) px(rgba, w, x0, y, 255, 255, 255);
+        }
     }
 }

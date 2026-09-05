@@ -778,11 +778,20 @@ void display_draw(display *d) {
                 return;
             }
         } else {
-            /* Nothing to draw: opaque black. Still goes through the output stage, so `dim` and
-             * gamma stay live with no content bound. */
+            /* Nothing bound. Draw the IDLE pattern rather than black -- `corners` by default,
+             * four small white Ls, which say from across the room that the Pi is up, the card is
+             * configured and the panel map is right, all without a laptop. Black says nothing,
+             * and telling "nothing is driving it" from "the card lost its geometry again" by eye
+             * is exactly what cost a session on 2026-09-05. PATTERN_OFF restores plain black.
+             *
+             * This is NOT testPattern: that overrides a bound layer (§10), and a display left
+             * with one set ignores every visual sent to it. This yields the moment a layer binds.
+             * Still goes through the output stage, so `dim` and gamma stay live either way. */
             size_t i2, n = (size_t)d->w * d->h;
             memset(d->scratch, 0, n * 4);
             for (i2 = 0; i2 < n; i2++) d->scratch[i2 * 4 + 3] = 255;
+            if (d->idlePattern != PATTERN_OFF)
+                pattern_render(d->idlePattern, d->w, d->h, d->scratch);
         }
     }
 

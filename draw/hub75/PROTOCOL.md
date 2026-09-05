@@ -69,10 +69,55 @@ display. Recorded here because it is a silent, total failure if it happens.
 
 ### 3.2 USB
 
-The protocol is transport-agnostic above TCP. Running the Pi's USB-C port in gadget mode
-(`dtoverlay=dwc2` with the `g_ether`/NCM function) makes the Pi appear as an ordinary network
-interface on the host machine, over which this protocol runs **unchanged** — same discovery, same
-port, same messages. No protocol accommodation is needed. Pi-side configuration is not yet done.
+The protocol is transport-agnostic above TCP, and **the link is USB, not WiFi** (2026-09-05). The
+Pi's USB-C port runs in gadget mode, so the Pi is an ordinary network interface on the host
+machine and this protocol runs over it **unchanged** — same discovery, same name, same port, same
+messages. Not one byte of the host or the daemon changed to make that true: `net.c` already binds
+`in6addr_any` dual stack, so an interface appearing later is served with no restart.
+
+`eth0` could not be the wired link: it belongs to the Colorlight card as a raw layer-2 sender and
+has no IP. USB-C is the only other port on a Pi 4B that can carry IP — and note the four USB-A
+ports cannot, because they are host ports. Two hosts cabled together never enumerate.
+
+Pi side, all of it installed by `pi/install.sh` (see `pi/usb-gadget.sh`):
+
+| | |
+|---|---|
+| boot | `dtoverlay=dwc2,dr_mode=peripheral` in `config.txt`, `modules-load=dwc2` in `cmdline.txt` |
+| function | CDC **ECM** via configfs, with pinned MACs |
+| address | `10.42.0.1/24` on `usb0`, NetworkManager `shared` — the laptop DHCPs, no config |
+| name | avahi `allow-interfaces=usb0`, so `hub75-01.local` **is** the USB link |
+
+ECM rather than NCM deliberately: macOS supports both natively, but ECM sends one ethernet frame
+per USB transfer where NCM aggregates several, and aggregation is latency — which is the whole
+reason for the change. Throughput is irrelevant here; the uniform stream is a few hundred bytes at
+60 Hz.
+
+Three details that are not obvious, each of which cost time:
+
+- **Pin the gadget MACs.** With a random MAC, macOS mints a *new* network service on every
+  replug, so any per-interface setting is lost and the service order fills with dead entries.
+- **Suppress the DHCP router and DNS options** (`dhcp-option=3`, `dhcp-option=6` in
+  `/etc/NetworkManager/dnsmasq-shared.d/`). NetworkManager's `shared` mode otherwise hands the
+  laptop a default route, and macOS is happy to rank a freshly appeared *wired* service above
+  WiFi — routing the whole laptop through the Pi's WiFi, which is the link being abandoned.
+- **`usb0` is NetworkManager-unmanaged out of the box.** Raspberry Pi OS ships
+  `85-nm-unmanaged.rules`, which assumes the classic dhcpcd Pi Zero recipe. Without an override
+  the interface sits DOWN and `nmcli device status` says `unmanaged (77: via udev rule)`, however
+  correct the connection profile is.
+
+One thing the transport change does **not** cover, recorded here because it looks like a protocol
+fault and is not: the receiving card **loses its geometry on every power cycle**, so the wall comes
+up as garbage while every check above passes. `pi/limut-hub75-cardconfig.service` replays the
+configuration before the daemon starts. See `LEDVISION-CONFIG.md`.
+
+Power is worth recording because it is the failure mode that looks like the fix not working. The
+Pi is fed 5 V on **GPIO pins 4 and 6**, not over USB-C, because the laptop-side hub is bus
+powered: a downstream port budgets 900 mA (500 mA if it budgets by attached speed, and gadget mode
+attaches at USB 2.0 High Speed) against a Pi 4B's ~1 A running and 1.2–1.5 A at boot. Running the
+Pi off such a port *does* boot, and undervolts — and an undervolted Pi throttles, which delays the
+render loop and reads as jitter. The descriptor declares self-powered, 100 mA, so VBUS is used for
+one thing only: letting the gadget see that a host is attached.
 
 ## 4. Discovery
 
@@ -313,9 +358,17 @@ sessions; it is display state, not session state.
 
 ## 10. Test patterns
 
-`{ "type":"test", "pattern":"bars" }` shows a built-in pattern instead of the layer, for bring-up
-before any shader exists: `bars` (colour bars), `grid` (one-pixel grid, for panel mapping), `off`
-(return to normal rendering). The dimmer applies. Patterns are generated entirely by the display.
+`{ "type":"test", "pattern":"bars" }` shows a built-in pattern **instead of** the layer, for
+bring-up before any shader exists: `bars` (colour bars), `grid` (one-pixel grid, for panel
+mapping), `off` (return to normal rendering). The dimmer applies. Patterns are generated entirely
+by the display. Note a test pattern **overrides a bound layer** and keeps doing so until cleared —
+a display left with one set ignores every visual sent to it.
+
+Separately, a display MAY show an **idle pattern** when nothing is bound, in place of black. This
+is display-side policy, not protocol: it is not selectable over the wire, and it yields the moment
+a layer binds, so a host need not know about it. The Pi's default is `corners` — four small white
+Ls — chosen because black cannot distinguish "nothing is driving it" from "the receiving card has
+lost its configuration", and a full-screen pattern masks the latter entirely.
 
 ## 11. Telemetry
 

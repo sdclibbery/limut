@@ -47,6 +47,11 @@ struct display {
 
     float dim;
     int   testPattern;
+
+    /* The IDLE pattern: what is drawn when nothing is bound, instead of black. Distinct from
+     * testPattern, which overrides a bound layer (§10); this one yields to it. PATTERN_OFF
+     * restores the historical opaque black. */
+    int         idlePattern;
     int   needsRedraw;        /* a dim/test/unlayer change with no frames flowing */
 
     /* session (§5) — one at a time */

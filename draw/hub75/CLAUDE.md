@@ -497,6 +497,176 @@ the frames are late on the air. Options, in order of preference:
   (2026-09-04): it costs a fixed ~33 ms of latency and puts pacing logic on the hot path. Revisit
   only if the link cannot be wired.
 
+### Done, 2026-09-05: the link is USB, and the jerkiness is gone
+
+`eth0` could not be the wired link, so the USB-C port became one, exactly as PROTOCOL.md §3.2
+specified. **Nothing in limut or the daemon changed** — not one line of `host/`, `visualsynth.js`,
+`main.js` or the C. `net.c` already binds `in6addr_any` dual stack, `resolveEndpoint()` already
+turns a bare name into `<name>.local`, and avahi now publishes on `usb0` only, so
+`display='hub75-01'` simply *means* the USB link. Setup is `pi/usb-gadget.sh` and `pi/install.sh`.
+
+The link, measured with `ping` before any limut was involved — 200 packets each way:
+
+| | min | avg | max | **stddev** |
+|---|---|---|---|---|
+| USB (`usb0`) | 0.473 | 0.925 | **1.247 ms** | **0.165 ms** |
+| WiFi (`wlan0`) | 10.072 | 25.047 | **106.265 ms** | 25.116 ms |
+
+That 106 ms maximum is the stall described above, reproduced live. **85x better worst case,
+152x less jitter.**
+
+And the thing that actually mattered, `perf.js` over 19 s against the WiFi baseline in the table
+above:
+
+| `arrive` | early | on time | 1 late | 2-4 late | **stalled** | max |
+|---|---|---|---|---|---|---|
+| over WiFi | 235 | 728 | 9 | 6 | **37** | **181 ms** |
+| over USB | **0** | **1052** | **0** | **0** | **0** | **18.9 ms** |
+
+Perfect, and the same shape as the loopback control — which is what "a wired link should look
+like" meant. `dropped` is 0 over the window and `throttled` stays `0x0`.
+
+**The jitter buffer has been removed**, 2026-09-05, on the evidence below and because it never
+removed the jerkiness fully — it could not, since the jerkiness was the air. `--jitter-frames` was
+built after the diagnosis above and lived **only on the Pi's SD card**, across `main.c`,
+`display.h` and `session.c`; it was never committed and never in the working tree. It is gone now:
+the repo was deployed over it, the option is rejected as an unknown argument, and the service args
+no longer carry it.
+
+It was strictly dominated on a wired link. Three `perf.js` runs, same shader, same 20 s:
+
+| | fps mean | fps min | `arrive` | max |
+|---|---|---|---|---|
+| `--jitter-frames 4` | 57.4 | 37 | 78 early / 1008 on time | 24.1 ms |
+| `--jitter-frames 0`, code still in | 55.4 | 38 | 0/1052/0/0/0 | 18.9 ms |
+| **buffer removed** | **59.1** | **59** | **0/1063/0/0/0** | **17.8 ms** |
+
+At 4 frames it cost 67 ms of latency *and* measured worse, because the 2 ms poll it needs to
+present on its own clock perturbs the read cadence. Removing the code recovered the frame rate to
+a solid 60 — both runs with the code present sat at a min of ~37, so that looks real rather than
+noise, though the rebuild and the removal happened together and the mechanism was not isolated.
+
+The lesson worth keeping: **a mechanism that plausibly explains the symptom, and is genuinely
+worth having, can still be the wrong answer** — the same trap as the WiFi power-save wrong turn
+recorded above. Both were reasonable, both were built, neither was the cause.
+
+**Power is the failure mode that impersonates the bug.** The Pi is fed 5 V on GPIO pins 4 and 6;
+the laptop-side hub is bus powered and cannot run it (900 mA budgeted, 1.2-1.5 A wanted at boot).
+It was briefly run that way during the rewire and the evidence is unambiguous: two
+`Undervoltage detected!` events, and `get_throttled` latched `0x50000` (bits 16 and 18 — it *has*
+undervolted and *has* throttled). An undervolted Pi throttles, which delays the render loop, which
+looks exactly like the jitter this whole exercise removed. On GPIO it reads `0x0` on a clean boot
+and holds `0x0` through a ramp to four busy cores with the ARM clock pinned at 1800 MHz.
+
+**The link-local trap, and it cost an afternoon.** Restricting avahi to `usb0` is not enough on
+its own: `usb0`'s only IPv6 address is a link-local, `getaddrinfo` returns the AAAA *first*, and
+`fe80::...` cannot be used by a browser because a URL has nowhere to put the zone id. So Electron
+resolved `hub75-01.local`, got `fe80::75:10ff:fe00:2`, and could not connect — while `curl`,
+`ping`, `dns-sd` and every shell check kept working, because they fall back. The wall showed a
+dashed green line and every test said the display was fine. Over WiFi the AAAA was a ULA
+(`fdd8:...`), globally scoped and usable, which is why this only appeared once the link moved.
+`ipv6.method disabled` on the connection is the fix; `use-ipv6=no` in avahi is **not** sufficient,
+it still registers the record. One-line check: `dns.lookup(name, {all:true})` must return exactly
+one entry, family 4.
+
+### The day the link moved, 2026-09-05: three faults stacked, and how they masked each other
+
+Moving the link to USB took a morning rather than an hour, because **three independent faults were
+live at once** and each one made the previous fix look like it had not worked. Recorded because the
+*shape* of this is the lesson, not the individual bugs.
+
+| # | fault | symptom | fix |
+|---|---|---|---|
+| 1 | GPIO power jumper: ~0.8 Ω of **contact** resistance | Pi throttled to 600 MHz, rebooting | soldered the joint |
+| 2 | Card lost its geometry on power cycle | green lines / garbage on the wall | replay the config every boot |
+| 3 | avahi on `usb0` published an IPv6 **link-local** | Electron could not resolve the name | `ipv6.method disabled` |
+
+Only the third was self-inflicted by this work. The wall's garbage — which looked exactly like the
+USB change having broken something — was fault 2, and predated it.
+
+**What made this expensive: every layer tested green while the wall stayed broken.** The Pi
+rendered the right picture (`/frame.raw` read back as a correct kaleidoscope), transmitted at
+exactly the documented rate (61,686 packets/2 s = 60 fps x 514, `tx_errors 0`), the link was up at
+1000 Mb/s, the card answered discovery and counted packets, and `mock/selftest.js` passed 64/64
+with `app-check.js` 11/11. Every check that existed passed, and the wall showed a green line —
+because the one thing nothing tested was the card's **geometry**, which the discover reply does not
+report.
+
+**The measurement that finally located it** was running the *pre-reconfiguration* command
+(`--size 64x32 --canvas 1280x256 --offset 1088,0 --row-map 2 --panel-rows 32`) and looking. It
+produced coherent colour bars, rotated 90°, on part of the wall. Coherent output is the whole
+finding: the card decodes, the panels light, the ribbon carries data — so the hardware was never
+the problem and the card was simply in its old geometry. Rotated, because the modules are mounted
+rotated and the old single-panel command has no `--panel ...:90` to undo it. Reaching for a known
+*wrong* configuration to prove what the card is holding is worth remembering.
+
+**Undervoltage impersonates every other fault.** A Pi at 600 MHz cannot pace 514 packets a frame,
+so fault 1 plausibly contributed to fault 2's symptom *and* to the first config replay failing.
+`get_throttled` is the cheapest check in this project and should be the first, not the fifth: low
+16 bits are live, high bits latch. `0x50005` is "undervolted right now"; `0x50000` is "was, isn't".
+The tell that it is a **contact** rather than a supply: the busbar measured 5.1 V and the implied
+resistance was ~0.8 Ω, which is contact-resistance territory — a good crimp is milliohms, and you
+would need metres of thin wire to get there. Reseating changed it from *constant* undervoltage to
+*oscillating* every few seconds, which is the signature of a joint making and breaking; soldering
+it gave `throttled=0x0` latched through a sustained four-core stress, which the jumper never
+managed even at boot.
+
+**The bus-powered hub is a weak link.** It vanished from the Mac's USB tree entirely — not just
+the Pi behind it — twice, both times immediately after the Pi lost power, and came back only when
+re-plugged. The likely mechanism (not proven; no over-current entry surfaced in the macOS log) is
+that the Pi's discharged 5 V rail looks like a heavy load on the hub's VBUS and trips its
+over-current latch. A wall that loses its control link whenever the rig is switched off and on is
+not usable for performance: connect the Pi straight to a Mac USB-C port, or use a self-powered hub.
+
+### The idle pattern, and what it immediately found
+
+`--idle-pattern` (default `corners`) draws four small white Ls, one per corner, whenever **nothing
+is bound** — and yields the instant a visual binds. It is deliberately NOT `--test-pattern`, which
+*overrides* a bound layer (`session.c`, the `testPattern != PATTERN_OFF` branch) and so silently
+swallows every visual sent to a display left with one set. The startup banner used to say a test
+pattern ran "until a host binds a layer", which is simply untrue and cost real confusion here; it
+now says it overrides. Nine checks in `selftest.c` cover the shape, the arm direction in each
+corner, that the centre stays dark, and that a typo is rejected rather than silently blanking the
+wall.
+
+It earns its place immediately: **black tells you nothing.** Four crisp Ls in the right corners say
+the Pi is up, the card is configured, the panel map is right and the output stage works — from
+across the room, with no laptop. That is the question that consumed 2026-09-05.
+
+And it found something within minutes of existing. **Every diagnostic used until then was a
+FULL-SCREEN pattern** — `bars`, `cellid`, `white` — and a full screen masks a half-configured card
+almost perfectly. The idle pattern was the first mostly-black thing the wall had ever shown, and
+the green lines it exposed had been there all along. A test that paints every pixel cannot tell you
+whether the card is right; one that paints twenty can.
+
+### Still open: the boot-time card replay half-configures
+
+`limut-hub75-cardconfig.service` runs at boot, plays back visibly, and leaves the card wrong — Ls
+in the correct corners with green lines alongside. **The identical file replayed by hand minutes
+later is perfect, every time.** See LEDVISION-CONFIG.md for what has been ruled out (carrier,
+clock steps, firmware settle, two senders, a slow Pi) and the leading idea: configuring a
+just-powered-on card may not be the same operation as reconfiguring a running one. Next step is
+LEDVISION with a real `Save to Receivers`, then a power cycle, then a verification.
+
+**Three theories of mine that did not survive, recorded so they are not re-run:**
+
+- *Stale buffer in the columns `--trim-canvas` never writes.* An untrimmed pass should then have
+  cleared it. Instead the Ls vanished too and the lines stayed.
+- *The NTP clock step at boot wrecked the replay pacing.* `nanosleep` takes a relative timespec and
+  is immune to clock steps; the inflated journal duration is restamping, not slowness.
+- *Link saturation untrimmed.* 114 MB/s against a 125 MB/s ceiling, 0 drops, 0 errors, 60 complete
+  frames a second — and the wall was black anyway.
+
+The method that actually worked, every time it was used: **change one variable against a known-good
+baseline.** Card provably correct, change only the content. That test settled in ninety seconds
+what an hour of mechanism-guessing had not.
+
+**Recovery, now that the name is USB-only.** wlan0 stays associated but unadvertised, so
+`hub75-01.local` no longer resolves over WiFi and `deploy.sh` needs the cable in. The way back is
+the address: `ssh pi@192.168.68.58`. Give the Pi a DHCP reservation on the router, or a moved
+lease leaves the router's client list as the only way to find it. Full rollback is deleting
+`allow-interfaces=usb0` from `/etc/avahi/avahi-daemon.conf`.
+
 ### The instrumentation, and why the old telemetry could not see any of this
 
 `pi/pacing.h` and `pi/pacing.c` are new, and `/debug` and the 1 Hz `stat` message both carry a
@@ -1132,11 +1302,16 @@ before committing.
   only the GL handle, so the encoded file bytes would have to be fetched separately. The host
   refuses to bind a chain containing one, and `assets.classify` has the seam for it.
 - Physical display size and panel arrangement.
-- USB: the intended path is USB-C gadget mode (`dwc2` + `g_ether`/NCM), which makes the link an
-  ordinary network interface and needs no protocol change. Pi-side configuration is not done.
+- Driving more than one display from one limut, now that the name is pinned to a single USB link.
+  A second wall would need a second interface and a second advertised name.
 
 ## Answered since
 
+- *USB, and what it needs* — **USB-C gadget mode, CDC ECM, and it needs no protocol change at
+  all.** Done 2026-09-05; see "Done: the link is USB" above and PROTOCOL.md §3.2. The question in
+  ToDo.txt was "what usb is needed? 2 or 3 or c?" and the answer is **C**: the four USB-A ports on
+  a Pi 4B are host ports, and two hosts cabled together never enumerate — only the USB-C port has
+  a peripheral-capable controller.
 - *Transport from limut to the Pi, given the browser sandbox* — a plain WebSocket works from an
   unmodified browser page, verified against headless Chrome. No relay process, no WebRTC, no
   Electron requirement. The one constraint: serving limut over `https` would make `ws://`

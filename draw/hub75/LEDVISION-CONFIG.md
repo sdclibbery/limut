@@ -201,6 +201,66 @@ sudo ./colorlight-config -i eth0 cfg.clcfg            # dry run
 sudo ./colorlight-config -i eth0 --write cfg.clcfg    # commit
 ```
 
+### The configuration does NOT survive a power cycle — corrected 2026-09-05
+
+**"Config writes from the Pi do work" is true of RAM and was never true of flash.** The card came
+up in its pre-2026-09-04 geometry on the first power cycle after being configured, and has done so
+after every power cycle since. Replaying the configuration fixes the wall immediately and it is
+gone again after the next power cut.
+
+**This is not a shortcoming of the replay against LEDVISION. There is no evidence the
+configuration was EVER in flash, by any route.** The 09-04 session configured the wall and verified
+it the same day, with no power cycle in between, so a RAM-only configuration would have looked
+exactly as successful. 2026-09-05 was the first power cycle since — and the geometry was gone. The
+capture does contain two save bursts with the documented flash-commit tail, so LEDVISION *sent*
+saves; sending a save and the card committing it are different things, and only the first has ever
+been demonstrated here.
+
+**The `reg 4c` check below does not test persistence.** It proves the card accepted a write into
+its live parameters, which is a genuinely useful thing and remains correct as written — but it is
+a readback in the same power cycle, and it will read back the value whether or not it was
+committed. Nothing in this project has ever tested a configuration across a power cut. That gap is
+what cost 2026-09-05.
+
+**The boot-time replay DOES NOT WORK, and this is the thing to solve.**
+`pi/limut-hub75-cardconfig.service` replays the configuration on every boot before
+`limut-hub75.service` starts. It runs, it visibly plays back (the sequence can be watched on the
+wall), and it leaves the card **half configured**: the idle pattern's Ls land in the RIGHT corners
+— so the geometry is partly taken — with green lines alongside. Reproduced on every power cycle
+tried, 2026-09-05.
+
+**The same file, replayed BY HAND minutes later, is perfect every time** — verified twice, with
+`bars` and then with the idle pattern, changing nothing but the content in between. So the
+configuration file is right, the tool is right, and the card accepts it. What is wrong is
+something about doing it at boot.
+
+Ruled out, each by measurement rather than argument:
+
+| candidate | why it is not that |
+|---|---|
+| Frames sent before `eth0` had carrier | The unit waits on `/sys/class/net/eth0/carrier`. Tested by taking `eth0` down: it waits rather than failing. An earlier boot DID fail this way and the log said so plainly |
+| The NTP clock step wrecking the pacing | `nanosleep` takes a RELATIVE timespec and is immune to clock steps. The 2m38s in the journal for a 66 s replay is timestamps being restamped, nothing more |
+| Card firmware not ready after power-on | A 15 s settle after carrier was added. It changed nothing |
+| Two senders on the wire | One daemon, `colorlight-config` refuses to write while anything streams, tx rate is exactly one sender's |
+| The Pi being slow | `throttled=0x0`, 1800 MHz, 0 tx errors, 0 drops |
+
+**The most promising untested idea:** configuring a card that has *just powered on* may not be the
+same operation as reconfiguring one that has been running for minutes. Every successful replay in
+this project has been the latter. If that is the distinction, no amount of settle delay at boot
+will help and the answer has to be a genuine flash commit — which is where LEDVISION comes back
+in, with the crucial step nobody has done: **`Save to Receivers`, then power cycle, then verify.**
+
+Note it needs the **whole session** (`--all`, `colorlight-full-session.clcfg`, 1209 frames), not
+the lone save (283 frames, ~18 s) — but see the caveat: the lone save was tried while the Pi was
+undervolted and throttled to 600 MHz, and that tool paces frames on the wire. "The lone save is
+insufficient" and "the Pi was too slow to pace it" both fit what was seen, and they were conflated
+at the time. Worth retesting now the supply is fixed; it would cut the boot delay to ~18 s.
+
+**Still open:** whether the card's flash is faulty, or whether the commit needs something not
+reproduced from the capture. The route to an answer is a LEDVISION session ending in
+`Save to Receivers`, then **a power cycle, then a verification** — the step that appears never to
+have been done.
+
 **The trap that cost most of a session: replaying the card's own current configuration proves
 nothing.** It is a no-op, and reading back "nothing changed" is equally consistent with the write
 having worked and with it having been ignored. The test with any power is to write a *different*

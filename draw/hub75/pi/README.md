@@ -123,6 +123,104 @@ wrongly here on 2026-09-04 for exactly that reason.
 with a `.local` argument or none at all. In the app itself, `display='hub75-01'` becomes
 `hub75-01.local:7575` — if that cannot connect, put the IP in the `display` param instead.
 
+**Since the link became USB (2026-09-05) that fallback address is fixed and worth memorising:
+`display='10.42.0.1'`.** It is a static address on a point-to-point cable rather than a DHCP lease
+that can move, so unlike the old WiFi address it will not go stale. Note `dns.lookup` is asked for
+`family: 4` on purpose: over USB avahi answers with an IPv6 link-local *first*, and `fe80::...`
+cannot be handed to a browser — unbracketed it is not a parseable URL, and bracketed it still
+needs a zone id (`%en6`) that no page can use.
+
+## The USB link
+
+**The name must resolve to IPv4 only, and that takes two settings, not one.** The only IPv6
+address a point-to-point `usb0` has is a LINK LOCAL one, and `fe80::...` is useless to a browser:
+a URL has nowhere to put the zone id (`%en6`) that makes a link-local routable. `getaddrinfo`
+returns the AAAA **first**, so Electron and Chrome resolve `hub75-01.local`, get `fe80::`, and
+fail — while `curl`, `ping` and Node's own tools keep working because they fall back, which makes
+the display look healthy from every shell test you try. Over WiFi this never bit: that AAAA was a
+ULA (`fdd8:...`), globally scoped and perfectly usable.
+
+The fix is `ipv6.method disabled` on the `hub75-usb` connection, so there is no link-local to
+publish. Note `use-ipv6=no` in `avahi-daemon.conf` is **not sufficient on its own** — it stops
+avahi *using* the IPv6 transport, but it still logs
+`Registering new address record for fe80::... on usb0.*` and answers with it over IPv4. Check
+with `node -e "require('dns').lookup('hub75-01.local',{all:true},(e,a)=>console.log(a))"`: one
+entry, family 4. Two entries and Electron is about to fail.
+
+The same trap caught `app-check.js`, which is why it asks `dns.lookup` for `family: 4`.
+
+
+`hub75-01.local` **is** the USB link: avahi is restricted to `usb0`, so the name resolves to
+`10.42.0.1` and nothing else. That is what lets `display='hub75-01'` keep working unchanged while
+meaning something completely different underneath. See PROTOCOL.md §3.2, `usb-gadget.sh`.
+
+wlan0 stays associated but unadvertised, as the way back in when the cable is out — by address,
+`ssh pi@192.168.68.58`, since the name no longer answers over WiFi. `deploy.sh` needs the cable.
+
+When the wall is dark and limut cannot connect, in the order that costs least to check:
+
+| symptom | cause |
+|---|---|
+| `ls /sys/class/udc` empty | not in peripheral mode — `dtoverlay=dwc2,dr_mode=peripheral` missing, or no reboot since |
+| `/sys/class/udc/*/state` says `not attached` | the Pi sees no host. Cable, or the hub has dropped off the laptop entirely — check the laptop's USB tree, not the Pi |
+| `usb0` DOWN, `nmcli` says `unmanaged (77: via udev rule)` | Raspberry Pi OS's `85-nm-unmanaged.rules`; needs the `conf.d` override install.sh writes |
+| laptop has a `169.254.x` address | DHCP did not answer in time. `sudo systemctl restart limut-hub75-gadget` re-enumerates and the laptop asks again |
+| laptop's whole internet goes through the Pi | the `dnsmasq-shared.d` drop-in suppressing DHCP options 3 and 6 is missing |
+| the whole hub disappears from the laptop after the Pi loses power | bus-powered hub tripping its over-current latch on the Pi's discharged 5 V rail. Re-plug it; properly, use a self-powered hub or go direct to a laptop USB-C port |
+
+## When the wall shows garbage but every check passes
+
+**Check `vcgencmd get_throttled` FIRST.** It is the cheapest check here and it impersonates every
+other fault: a Pi throttled to 600 MHz cannot pace 514 packets a frame, so undervoltage looks like
+a card fault, a cabling fault and a jitter problem at once. Low 16 bits are live, high bits latch —
+`0x50005` is "undervolted right now", `0x50000` is "was, isn't now", `0x0` is clean. If the busbar
+measures 5 V+ but the Pi undervolts, the loss is a **contact**, not the wire: work out the implied
+resistance (volts dropped / amps drawn); anything near an ohm is a joint, since a good crimp is
+milliohms. Constant undervoltage is an inadequate supply; undervoltage *oscillating* every few
+seconds is a joint making and breaking.
+
+**A full-screen test pattern cannot tell you whether the card is right.** `bars`, `cellid` and
+`white` paint every pixel and mask a half-configured card almost perfectly — that is how 09-05 lost
+a morning. Use the IDLE pattern (`corners`, four small white Ls, what an unbound display shows by
+default): twenty lit pixels against black, so anything the card adds of its own is immediately
+visible. Ls in the right corners with nothing else means the geometry is genuinely correct.
+
+**Then check the card's geometry, which nothing else tests.** The discover reply does not report
+it, so `colorlight-probe` cannot tell you — it looks identical whether the card is configured or
+not. The card **loses its configuration on every power cycle** (see LEDVISION-CONFIG.md);
+`limut-hub75-cardconfig.service` replays it at boot, so if the wall is wrong after a power cut,
+check that unit ran:
+
+```sh
+systemctl status limut-hub75-cardconfig     # must have completed BEFORE limut-hub75 started
+```
+
+**Known broken as of 2026-09-05: the boot-time replay half-configures the card.** It runs, it
+plays back visibly, and the wall comes up with the Ls in the right corners and green lines
+alongside. The workaround until it is solved is to replay it **by hand** once the Pi has been up a
+few minutes, which works every time:
+
+```sh
+sudo systemctl stop limut-hub75
+sudo systemctl restart limut-hub75-cardconfig    # ~66 s, waits for carrier + settle
+sudo systemctl start limut-hub75
+```
+
+See LEDVISION-CONFIG.md for what has been ruled out and what to try next. Do NOT reach for the
+settle delay first — 15 s was already tried and changed nothing.
+
+To prove what geometry the card is actually holding, drive it with the **pre-reconfiguration**
+command and look. Coherent bars — even rotated, even on part of the wall — mean the card, panels
+and ribbon are all fine and only the geometry is stale:
+
+```sh
+sudo ./limut-hub75 --output colorlight --iface eth0 \
+    --size 64x32 --canvas 1280x256 --offset 1088,0 \
+    --row-map 2 --panel-rows 32 --color-order bgr --test-pattern bars
+```
+
+`sudo ./usb-gadget.sh status` prints the UDC, whether the gadget is bound, and the `usb0` address.
+
 ## Five things worth knowing before touching it
 
 **The connection table has to tolerate sockets that never send anything.** A browser opens

@@ -65,7 +65,11 @@ let resolveEndpoint = async (ep) => {
   let port = ep.slice(ep.lastIndexOf(':') + 1)
   if (/^[\d.]+$/.test(host) || host.includes(':')) return ep   // already an address
   try {
-    let { address } = await dns.lookup(host)
+    // family 4 on purpose. Over the USB link avahi answers with an IPv6 link-local FIRST, and
+    // `fe80::...` cannot be handed to a browser: unbracketed it is not even a parseable URL, and
+    // bracketed it still needs a zone id (%en6) that no page can use. The v4 address is always
+    // there and always usable. Over WiFi this never showed, because v4 came back first anyway.
+    let { address } = await dns.lookup(host, {family: 4})
     if (address && address !== host) {
       console.log(`  ${host} -> ${address}  (Chrome's resolver does not do mDNS)`)
       return `${address}:${port}`

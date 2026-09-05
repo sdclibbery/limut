@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "patterns.h"
 #include <string.h>
 
 static int failures = 0, checks = 0;
@@ -725,6 +726,40 @@ static void test_colorlight_plan(void) {
 /* Pacing (pacing.h). The edges are written out here as literal millisecond values rather than in
  * terms of PACE_EDGE*, so that moving an edge shows up as a failure instead of as two files
  * quietly agreeing about the new one. One frame at 60 Hz is 16.667 ms. */
+/* The idle pattern: what an unattended wall shows, so it has to be right without anyone looking.
+ * Checks the shape (an L of the declared arm length in every corner, pointing inwards), that it
+ * is confined to the corners, and that the name round-trips -- a typo in --idle-pattern must be
+ * rejected rather than silently leaving the wall black. */
+static void test_corners(void) {
+    int w = 16, h = 24, arm = PATTERN_CORNER_ARM, lit = 0, x, y;
+    uint8_t *buf = (uint8_t *)malloc((size_t)w * h * 4);
+    ck("corners: name round trips", pattern_by_name("corners") == PATTERN_CORNERS &&
+       !strcmp(pattern_name(PATTERN_CORNERS), "corners"));
+    ck("corners: a typo is rejected, not silently ignored", pattern_by_name("cornerz") == -1);
+
+    pattern_render(PATTERN_CORNERS, w, h, buf);
+    for (y = 0; y < h; y++) for (x = 0; x < w; x++) if (buf[((size_t)y * w + x) * 4]) lit++;
+    /* Four Ls, each 2*arm-1 pixels (the corner pixel is shared by both arms). */
+    ck("corners: exactly four Ls worth of lit pixels", lit == 4 * (2 * arm - 1));
+
+    /* Every corner pixel lit, and both arms running inwards from it. */
+    ck("corners: all four corner pixels lit",
+       buf[0] && buf[((size_t)(w - 1)) * 4] &&
+       buf[((size_t)(h - 1) * w) * 4] && buf[((size_t)(h - 1) * w + w - 1) * 4]);
+    ck("corners: top-left arms run inwards",
+       buf[((size_t)(arm - 1)) * 4] && buf[((size_t)(arm - 1) * w) * 4]);
+    ck("corners: bottom-right arms run inwards",
+       buf[((size_t)(h - 1) * w + w - arm) * 4] &&
+       buf[((size_t)(h - arm) * w + w - 1) * 4]);
+    /* Nothing in the middle: this sits on an idle wall for hours, it must not light the panel. */
+    ck("corners: the centre is dark", !buf[((size_t)(h / 2) * w + w / 2) * 4]);
+    ck("corners: just past the arm is dark", !buf[((size_t)arm) * 4]);
+    /* Alpha is opaque everywhere, like every other pattern -- the output stage reads it. */
+    ck("corners: opaque everywhere", buf[3] == 255 &&
+       buf[((size_t)(h / 2) * w + w / 2) * 4 + 3] == 255);
+    free(buf);
+}
+
 static void test_pacing(void) {
     pace_stat p;
     pace_set  live, rpt;
@@ -816,6 +851,7 @@ int main(void) {
     test_colorlight();
     test_colorlight_plan();
     test_pacing();
+    test_corners();
     printf("%s: %d checks, %d failure%s\n",
            failures ? "FAILED" : "ALL PASSED", checks, failures, failures == 1 ? "" : "s");
     return failures ? 1 : 0;

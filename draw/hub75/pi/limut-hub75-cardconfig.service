@@ -1,0 +1,56 @@
+# Re-apply the receiving card's configuration on every boot, before the display daemon starts.
+#
+# WHY THIS EXISTS: the 5A-75B does not keep the 64x192 configuration across a power cycle.
+# Replaying it makes the wall correct immediately (verified by eye, 2026-09-05), but the setting
+# is gone again after the next power cut -- so the configuration lands in RAM and the flash commit
+# is not happening, whatever LEDVISION's `Save to Receivers` does that we have not reproduced.
+# Rather than leave the wall dependent on someone remembering to run a tool, the Pi reapplies it
+# itself. Replaying a configuration the card already holds is a no-op, so this is safe to run
+# unconditionally on every boot.
+#
+# KNOWN BROKEN, 2026-09-05: this DOES NOT fully work. It runs, it plays back visibly, and the card
+# comes up HALF configured -- the idle Ls land in the right corners with green lines alongside. The
+# identical file replayed by hand minutes later is perfect, every time. Carrier waits, a 15 s
+# settle, clock steps and contention have all been ruled out by measurement; see
+# ../LEDVISION-CONFIG.md. Left enabled because a half-configured card is no worse than an
+# unconfigured one and the unit is where the fix will go.
+#
+# COST: about 66 seconds before the wall lights, on top of the Pi's own boot. That is the price of
+# it being right every time without a human in the loop. If the flash commit is ever solved this
+# unit becomes redundant and can be disabled -- but leaving it enabled costs only the delay.
+[Unit]
+Description=limut HUB75 receiving card configuration
+Documentation=file:///home/pi/limut-hub75/../LEDVISION-CONFIG.md
+After=network.target
+# The card is on eth0 and the tool refuses to write while anything is streaming to it -- it
+# checks the interface's packet rate first. Ordering it before the daemon is what guarantees a
+# quiet wire, rather than hoping the race goes our way.
+Before=limut-hub75.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# WAIT FOR CARRIER. This unit failed its first real boot test (2026-09-05) for want of these two
+# lines: it ran at 13:36:43 and eth0's link came up at 13:36:47, so colorlight-config correctly
+# refused -- "eth0 has no carrier; nothing would reach the card" -- and the wall came up in the
+# card's stale geometry. `After=network.target` is NOT enough: eth0 carries raw layer-2 to the card
+# and has no IP, so NetworkManager leaves it `disconnected` and no network target ever waits for
+# it. Nothing but the carrier file says when the card is actually reachable.
+ExecStartPre=/usr/sbin/ip link set dev eth0 up
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 120); do [ "$(cat /sys/class/net/eth0/carrier 2>/dev/null)" = 1 ] && exit 0; sleep 0.5; done; echo "eth0 carrier never came up after 60s" >&2; exit 1'
+# ...and then WAIT for the card itself. Carrier only says the PHY link is up; the receiving card
+# power-cycles alongside the Pi and its firmware is not ready to accept a configuration for some
+# seconds after that. Replaying too early half-configures it: on 2026-09-05 the boot replay left
+# the wall showing the idle Ls in the RIGHT corners with garbage alongside -- geometry partly
+# taken -- while the identical replay run by hand a minute later was perfect. A card that misses
+# the front of the burst is the only thing that fits. 15 s is a guess with margin, not a measured
+# figure; if a boot ever comes up wrong again, raise it before suspecting anything else.
+ExecStartPre=/bin/sleep 15
+# Raw layer-2 to the card, same as the daemon's output stage.
+ExecStart=/home/pi/limut-hub75/colorlight-config -i eth0 --write /home/pi/limut-hub75/colorlight-full-session.clcfg
+TimeoutStartSec=300
+# A card that will not take its configuration should not stop the display coming up: a wrongly
+# configured wall is still better than no daemon at all, and the journal says what happened.
+SuccessExitStatus=0
+[Install]
+WantedBy=multi-user.target
