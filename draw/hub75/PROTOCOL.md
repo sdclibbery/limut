@@ -280,6 +280,21 @@ A program is **just the compiled shader**. It carries no texture bindings — se
 The display replies `progok` on success, or `error` with `kind:"compile"` or `kind:"link"`
 carrying the driver info log (§8).
 
+**A host MUST NOT treat a layer as bound until the program it names is acknowledged.** There is no
+layer acknowledgement in version 1, so `progok` is the signal, and ordered delivery (§3) does the
+rest: a `layer` sent after an acknowledged `prog` is bound by the time the next frame lands. This
+matters because **the display compiles on receipt and a compile is not instant** — seconds, for a
+large chain — so a host that bound when it *sent* the layer spent that whole window streaming
+frames naming a layer the display had not bound, and might yet refuse. §12.1 makes that a
+session-closing protocol error, which is how a shader the display merely rejected used to arrive
+as an unexplained disconnect (2026-09-06).
+
+The residual gap, and it is a real one: a program the display **already holds** gets no second
+`progok`, and `have` does not say whether it is held as compiled or as failed. A host that has
+forgotten its own failure — a page reload — can therefore still bind optimistically for the one
+frame it takes the display to answer with the cached `error`. A layer acknowledgement in a later
+protocol version is the clean fix.
+
 ### 7.2 Layer
 
 ```json

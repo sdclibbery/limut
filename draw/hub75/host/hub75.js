@@ -220,6 +220,9 @@ define(function (require) {
         (d.w ? ` ${d.w}x${d.h}` : '') +
         ` player ${entry ? entry.playerId : '-'}` +
         ` layer ${bound ? bound.progId.slice(0, 8) : '-'}` +
+        // The shipped size, so "is this chain too big for the wire?" is answerable on demand
+        // rather than only from the one line session.js prints when a program changes
+        (s.progSize ? ` prog ${s.progSize.bytes}b/${s.progSize.uniforms}u` : '') +
         ` sent ${s.frames}${s.skipped ? ' skipped ' + s.skipped : ''}` +
         ` dim ${s.dim.toFixed(2)} cached ${s.sentIds.size}` +
         (st ? ` | display ${st.fps}fps drop ${st.dropped} ${st.renderMs}ms temp ${st.temp} throttled ${st.throttled}` : '') +

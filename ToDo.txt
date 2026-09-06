@@ -2,10 +2,18 @@
 =================================================================================================================================
 =================================================================================================================================
 Hub75 display
- x The "screen size" setting -- DONE 2026-09-05, and there was nothing to set on the card. The card has NO screen size: it latches on the 0x01 sync, not on having received a whole screen, so the canvas is just the wall. Pi now runs --canvas 192x64 with no --trim-canvas: 66 packets/frame and 2.3MB/s, against 514 and 18MB/s; renderMs max 3.92 -> 0.98. Settled by counting what LEDVISION itself puts on the wire (64 rows x 192, wall lit) rather than reasoning about the card. LEDVISION's "Screen Size and Count" is sender-side only -- Apply wrote ZERO frames. The old belief rested on two confirmations that were secretly one: d[21:24] is the CABINET (every archived 1280x512 reading is a detect taken before that session's write), and the "black wall at 192x64" was observed on the day the Pi was browning out at 600MHz. See draw/hub75/CLAUDE.md "There is no card-side screen size"
-  !Every cable change on the Mac dongle needs `ifconfig bridge100 | grep member` re-checked: replugging drops en5 out of UTM's bridge and LEDVISION then finds no card over a healthy 1000baseT link. Tell is en5 Obytes=0. Fix: sudo ifconfig bridge100 addm en5
- Fire px doesnt work; gives a cors error
+ ?Layer acknowledgement in a later protocol version: a program the display already holds gets no
+  second progok and `have` does not say whether it is held as compiled or as failed, so a host that
+  has forgotten its own failure (page reload) can still bind optimistically for one frame
+ !ctx.addUniform (draw/visualsynth/codegen.js) never dedupes, so the fire chain ships 83 vec4 uniforms,
+  32 of them the same constant seed from fbm3's unrolled octaves. Deduping identical constant ASTs would
+  cut the uniform count, the shader size and the per-frame JS eval cost of every px chain. It changes the
+  shader source cache key, so re-run every visualsynth test
  ?There is a per event flash on the browser screen when running a hub75
+  !ONLY in electron not firefox
+ !If reload the page instead of ctrl-. the idle pattern does not come back
+ !if comment out a vosualsynth, it keeps showing on display anyway. Only stops on ctrl-.
+  !ONLY in firefox not electron
  Image textures (tex{'url'}) over the protocol: needs the encoded file bytes fetching host side
 =================================================================================================================================
 =================================================================================================================================

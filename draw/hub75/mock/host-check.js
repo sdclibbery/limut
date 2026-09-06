@@ -175,6 +175,18 @@ let scenarioCompileFailure = async () => {
     lines.some(l => /hub75 .*shader compile error/.test(l)),
     lines.filter(l => /hub75/.test(l)).join('\n          ') || '(no hub75 console output)')
 
+  // The regression these guard. Protocol v1 has no layer acknowledgement, so the host binds
+  // optimistically the moment it sends `layer` -- while the display, which refuses to bind a
+  // program that failed to compile, has not. The next frame packet then names a layer the display
+  // does not have, which §12.1 makes a session closing protocol error. So a shader the display
+  // merely *rejected* became a disconnect, closing the socket on top of the compile log that
+  // explains it and leaving an unexplained connect/disconnect loop as the only visible symptom.
+  // One session, still open, is the whole assertion.
+  check('the compile failure did not close the session', x.sessions === 1 && x.session !== null,
+    `sessions=${x.sessions} session=${x.session === null ? 'closed' : 'open'}`)
+  check('no protocol error was raised', !lines.some(l => /protocol error/.test(l)),
+    lines.filter(l => /hub75/.test(l)).join('\n          '))
+
   d.stop()
 }
 

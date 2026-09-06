@@ -33,6 +33,28 @@ define(function (require) {
     return {host: s, port: port}
   }
 
+  // Why the socket closed. This is the difference between "the display rejected what we sent" and
+  // "the display went away", and it is already on the wire -- but onclose used to ignore it, so a
+  // compile-driven protocol error, a message the display judged too big and the daemon dying all
+  // read as the same bare "disconnected", with the reason nowhere in the console.
+  // 1006 is the important one: the browser synthesises it when no close frame ever arrived, ie the
+  // process died or the link dropped. Every other code here is one the display chose.
+  let closeCodes = {
+    1000: 'closed normally',
+    1001: 'display going away',
+    1002: 'protocol error - the two ends disagree about state',
+    1003: 'unacceptable data',
+    1005: 'no code given',
+    1006: 'no close frame - the display died or the link dropped',
+    1009: 'message too big for the display',
+    1011: 'display internal error',
+  }
+  let closeDetail = (e) => {
+    let code = (e && e.code) || 0
+    let reason = (e && e.reason) ? `, "${e.reason}"` : ''
+    return `${code} ${closeCodes[code] || 'unknown code'}${reason}`
+  }
+
   let makeSession = (name, onError) => {
     let ep = resolveEndpoint(name)
     let s = {
@@ -60,6 +82,8 @@ define(function (require) {
       retryTimer: null,
       generation: 0,
       frames: 0, // frame packets actually sent, for `hub75 status`
+      progSize: null, // {id, bytes, uniforms} of the last program shipped, for `hub75 status`
+      lastSizeReport: 0, // rate limit on the size line below
       skipped: 0, // frames dropped by the backpressure rule below -- see sendFrame
       lastProblem: null,
     }
@@ -88,6 +112,24 @@ define(function (require) {
       }
       s.ws.send(text)
       return true
+    }
+
+    // The one number that answers "is this px chain too big to ship?", which nothing used to say
+    // until the chain was already over the limit. Measured on the *encoded* message, because that
+    // is what MAX_MESSAGE caps: JSON escaping every newline in the shader costs a byte apiece, so
+    // d.source.length reads low. Recorded unconditionally for `hub75 status`; only spoken once a
+    // second, since a chain that regenerates its source every event would otherwise flood the
+    // console at frame rate (draw/visualsynth.js warns about that case in its own words).
+    let reportProgSize = (progId, msg) => {
+      let bytes = JSON.stringify(msg).length
+      s.progSize = {id: progId, bytes: bytes, uniforms: msg.uniforms.length}
+      let pct = Math.round(bytes * 100 / MAX_MESSAGE)
+      let big = bytes * 5 > MAX_MESSAGE * 4 // within a fifth of the cap: worth saying before it trips
+      let now = Date.now()
+      if (!big && now - s.lastSizeReport < 1000) { return }
+      s.lastSizeReport = now
+      say(`${big ? '🟠' : '⚪'} %s: program ${progId.slice(0, 8)} is ${bytes} bytes` +
+        ` (${pct}% of the ${MAX_MESSAGE} byte limit), ${msg.uniforms.length} uniforms`)
     }
 
     let sendBinary = (bytes) => {
@@ -148,7 +190,7 @@ define(function (require) {
           consoleOut(`🔴 hub75 ${name}: bad message from display: ${err}`)
         }
       }
-      ws.onclose = () => {
+      ws.onclose = (e) => {
         if (s.ws !== ws) { return }
         s.ws = null
         s.bound = null // the display may have been restarted; re-bind from scratch on reconnect
@@ -158,7 +200,7 @@ define(function (require) {
         s.pendingBound = null
         s.sentIds.clear() // it may come back restarted; the next `have` establishes the truth
         if (s.pendingHave) { s.pendingHave.resolve([]); s.pendingHave = null }
-        if (s.state === 'open') { say('🟠 %s: disconnected') }
+        if (s.state === 'open') { say(`🟠 %s: disconnected (${closeDetail(e)})`) }
         if (s.state !== 'stopped') { scheduleRetry() }
       }
       ws.onerror = () => {} // onclose always follows, and does the reporting
@@ -183,7 +225,21 @@ define(function (require) {
           break
         }
         case 'assetok': { s.sentIds.add(msg.id); break }
-        case 'progok': { s.sentIds.add(msg.id); break }
+        case 'progok': {
+          s.sentIds.add(msg.id)
+          // Only now is it safe to say we are showing it. The display compiles on receipt, and a
+          // compile is seconds for a big chain - so a host that bound when it *sent* the layer
+          // spent that whole window streaming frames that named a layer the display had not bound
+          // (and might refuse), which §12.1 makes a session closing protocol error. `progok` is
+          // the display saying the program is real; there is no layer ack in v1, but ordered
+          // delivery means a layer that follows an acknowledged program is bound by the time the
+          // next frame lands.
+          if (s.pendingBound !== null && s.pendingBound.progId === msg.id) {
+            s.bound = s.pendingBound
+            s.pendingBound = null
+          }
+          break
+        }
         case 'stat': { s.stat = msg; break }
         case 'error': { onError_(msg); break }
         case 'closed': { onClosed(msg); break }
@@ -196,9 +252,23 @@ define(function (require) {
       let where = msg.id ? ' ' + msg.id.slice(0, 8) : ''
       if (msg.kind === 'compile' || msg.kind === 'link') {
         s.failedProgs.add(msg.id)
+        // The display refuses to bind a layer naming a program that failed to compile, and this
+        // message is the only way it says so - protocol v1 has no layer acknowledgement, so the
+        // host binds optimistically the moment it sends `layer`. Keeping that bind means the very
+        // next frame goes out with a layer the display does not have, which is a session-closing
+        // protocol error (§12.1) - so a shader the display merely *rejected* became a
+        // disconnect, closing the socket on top of the compile log that explains it. Drop the bind
+        // instead: frames then carry no layer, which is legal, and the log below stays readable.
+        if (s.bound !== null && s.bound.progId === msg.id) { s.bound = null }
+        if (s.pendingBound !== null && s.pendingBound.progId === msg.id) { s.pendingBound = null }
+        if (s.afterUploads !== null && s.afterUploads.prog === msg.id) { s.afterUploads = null }
         // Mirrors draw/visualsynth.js setting programs[src] = null: the source cannot start
         // compiling later, so resending it every event would be pure noise
-        consoleOut(`🔴 hub75 ${name}: shader ${msg.kind} error${where}:\n${msg.log}`)
+        // A driver's own log is many lines of GLSL diagnostics and wants its own; ours is one short
+        // sentence and reads better inline than as a two line block in the middle of a set.
+        let log = msg.log || 'no log'
+        let inline = log.indexOf('\n') === -1 && log.length < 120
+        consoleOut(`🔴 hub75 ${name}: shader ${msg.kind} error${where}:${inline ? ' ' : '\n'}${log}`)
       } else if (msg.kind === 'asset') {
         s.sentIds.delete(msg.id)
         consoleOut(`🟠 hub75 ${name}: asset error${where}: ${msg.log}`)
@@ -264,13 +334,19 @@ define(function (require) {
                 s.uploads.push({id: assetIds[i], announce: assets.announce(assetIds[i], a), bytes: a.bytes})
               })
               if (need.has(progId)) {
-                if (!sendJson({type: 'prog', id: progId, frag: d.source, uniforms: d.uniformNames})) { return }
+                let prog = {type: 'prog', id: progId, frag: d.source, uniforms: d.uniformNames}
+                reportProgSize(progId, prog)
+                if (!sendJson(prog)) { return }
               }
               s.afterUploads = {
                 type: 'layer', id: 0, prog: progId,
                 textures: d.textures.map((t, i) => ({unit: i, sampler: t.sampler, asset: assetIds[i]})),
               }
-              s.pendingBound = {key: d.key, progId: progId, uniformCount: d.uniformNames.length}
+              // needsAck only when we are actually sending the program: one the display already
+              // holds was compiled on an earlier visit and will send no second progok, so waiting
+              // for one would leave the layer unbound forever.
+              s.pendingBound = {key: d.key, progId: progId, uniformCount: d.uniformNames.length,
+                                needsAck: need.has(progId)}
               pumpUploads() // send what we can now; the rest goes out over the next frames
             })
         })
@@ -296,9 +372,13 @@ define(function (require) {
         if (c.next >= c.chunks) { s.sending = null } // `assetok` is what records it as cached
       }
       if (s.sending === null && s.uploads.length === 0 && s.afterUploads !== null) {
-        if (sendJson(s.afterUploads)) { s.bound = s.pendingBound }
+        // The layer goes out now - ordered delivery is what makes that safe (§7.2) - but we only
+        // claim to be showing it once the display has acknowledged the program. See `progok`.
+        if (sendJson(s.afterUploads) && s.pendingBound !== null && !s.pendingBound.needsAck) {
+          s.bound = s.pendingBound
+          s.pendingBound = null
+        }
         s.afterUploads = null
-        s.pendingBound = null
       }
     }
 
@@ -348,6 +428,10 @@ define(function (require) {
 
     s.pump = () => pumpUploads()
 
+    // The text message entry point, the same one ws.onmessage feeds. Public so the inline tests
+    // below can drive the state machine without standing up a socket.
+    s.handleText = onText
+
     s.setDim = (v) => {
       s.manualDim = Math.max(0, Math.min(1, v))
       sendJson({type: 'dim', v: s.manualDim}) // §9: works even with no layer bound
@@ -387,12 +471,60 @@ define(function (require) {
   // A trailing colon with no digits is part of the name, not a port
   assert({host: 'wall.local', port: 7575}, resolveEndpoint('wall'))
 
+  // A close code is the only thing that separates "the display rejected what we sent" from "the
+  // display died", so it has to reach the console intact
+  assert('1006 no close frame - the display died or the link dropped', closeDetail({code: 1006, reason: ''}))
+  assert('1002 protocol error - the two ends disagree about state, "protocol"',
+    closeDetail({code: 1002, reason: 'protocol'}))
+  assert('1009 message too big for the display', closeDetail({code: 1009}))
+  assert('4000 unknown code', closeDetail({code: 4000})) // still says the number rather than nothing
+  assert('0 unknown code', closeDetail(undefined)) // onclose with no event at all
+
+  // §8: the display refuses to bind a layer whose program failed to compile, and says so with an
+  // `error` and nothing else. The host must let go of its optimistic bind, or the next frame names
+  // a layer the display does not have -- a session closing protocol error, which would take the
+  // compile log down with it and leave a bare connect/disconnect loop as the only symptom.
+  // Named so the two error lines this deliberately provokes cannot be mistaken, in an otherwise
+  // clean ?test run, for a real display having a real problem. No socket is opened.
+  let sess = makeSession('not-a-real-display')
+  sess.bound = {key: 'k', progId: 'aaaa1111', uniformCount: 3}
+  sess.afterUploads = {type: 'layer', id: 0, prog: 'aaaa1111', textures: []}
+  sess.pendingBound = {key: 'k', progId: 'aaaa1111', uniformCount: 3}
+  sess.handleText({type: 'error', kind: 'compile', id: 'aaaa1111', log: 'test: expected compile failure'})
+  assert(null, sess.bound)
+  assert(null, sess.afterUploads)
+  assert(null, sess.pendingBound)
+  assert(true, sess.failedProgs.has('aaaa1111')) // still permanent for that source
+
+  // §12.1: nothing may be claimed as bound until the display has acknowledged the program. The
+  // display compiles on receipt and a big chain takes seconds; binding on send meant streaming
+  // frames naming a layer the display had not bound yet, which closes the session.
+  let sess2 = makeSession('not-a-real-display')
+  sess2.pendingBound = {key: 'k', progId: 'dddd4444', uniformCount: 2, needsAck: true}
+  assert(null, sess2.bound) // still nothing showing while the display is compiling
+  sess2.handleText({type: 'progok', id: 'dddd4444'})
+  assert({key: 'k', progId: 'dddd4444', uniformCount: 2, needsAck: true}, sess2.bound)
+  assert(null, sess2.pendingBound)
+  assert(true, sess2.sentIds.has('dddd4444'))
+
+  // An ack for something else leaves the pending bind pending
+  sess2.bound = null
+  sess2.pendingBound = {key: 'k', progId: 'eeee5555', uniformCount: 2, needsAck: true}
+  sess2.handleText({type: 'progok', id: 'ffff6666'})
+  assert(null, sess2.bound)
+
+  // ...but a failure for some other program must not unbind what is happily showing
+  sess.bound = {key: 'k2', progId: 'bbbb2222', uniformCount: 1}
+  sess.handleText({type: 'error', kind: 'link', id: 'cccc3333', log: 'test: expected link failure'})
+  assert({key: 'k2', progId: 'bbbb2222', uniformCount: 1}, sess.bound)
+
   console.log('Hub75 session tests complete')
   }
 
   return {
     makeSession: makeSession,
     resolveEndpoint: resolveEndpoint,
+    closeDetail: closeDetail,
     PROTO: PROTO,
     DEFAULT_PORT: DEFAULT_PORT,
     MAX_MESSAGE: MAX_MESSAGE,

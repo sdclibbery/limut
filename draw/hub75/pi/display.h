@@ -7,6 +7,7 @@
 #define HUB75_DISPLAY_H
 
 #include "cache.h"
+#include "compile_guard.h"
 #include "codec.h"
 #include "json.h"
 #include "output.h"
@@ -36,6 +37,8 @@ struct display {
 
     cache     cache;
     renderer *r;              /* NULL when there is no GPU; the daemon still runs */
+    cguard    guard;          /* compiles are tried in a child first, so a driver bug cannot kill us */
+    int       guardReady;     /* the helper answered a probe compile: it is really guarding, not just alive */
     output_t  out;
     int       maxTextureSize; /* what /info advertises and what a lut is checked against */
 

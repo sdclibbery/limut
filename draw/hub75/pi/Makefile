@@ -25,7 +25,7 @@ ifeq ($(GLES),1)
 endif
 
 COMMON  = json.c sha1.c sha256.c base64.c codec.c glsl.c ws.c cache.c pacing.c \
-          output.c output_colorlight.c patterns.c render.c
+          output.c output_colorlight.c patterns.c render.c compile_guard.c
 DAEMON  = main.c net.c session.c
 BIN     = limut-hub75
 

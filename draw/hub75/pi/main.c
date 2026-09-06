@@ -197,6 +197,10 @@ int main(int argc, char **argv) {
     signal(SIGTERM, on_signal);
 
     if (!noGpu) {
+        /* Before render_create, and that ordering is the point: Mesa is not fork-safe, so the
+         * helper must be forked while this process has no GL context of its own. See
+         * compile_guard.h - a shader that crashes the driver used to take the daemon with it. */
+        cguard_start(&d.guard, d.node, d.w, d.h);
         d.r = render_create(d.node, d.w, d.h, err, sizeof err);
         if (!d.r) {
             /* Not fatal: the protocol, the caches, the test patterns and the output stage all
@@ -206,6 +210,22 @@ int main(int argc, char **argv) {
                             "nothing is drawn.\n", err);
         } else {
             d.maxTextureSize = render_max_texture_size(d.r);
+            /* Prove the guard actually works before trusting it, rather than assuming a forked
+             * helper means a guarded compile: it also warms the helper's EGL context, so the first
+             * real program does not pay for it. If the helper cannot compile a shader this
+             * trivial, it will not catch the one that matters, and saying so is the difference
+             * between a guard and a comforting log line. */
+            {
+                static const char *probe =
+                    "#version 300 es\nprecision highp float;\n"
+                    "in vec2 fragCoord;\nout vec4 fragColor;\n"
+                    "void main() { fragColor = vec4(fragCoord, 0.0, 1.0); }\n";
+                char glog[512] = "";
+                int isLink = 0;
+                d.guardReady = cguard_check(&d.guard, probe, &isLink, glog, sizeof glog) == CGUARD_OK;
+                if (!d.guardReady)
+                    fprintf(stderr, "🟡 compile guard not usable: %s\n", glog[0] ? glog : "no reason given");
+            }
         }
     }
 
@@ -232,7 +252,10 @@ int main(int argc, char **argv) {
     printf("  info    http://localhost:%d/info\n", d.port);
     printf("  session ws://localhost:%d/session\n", d.port);
     printf("  frame   http://localhost:%d/frame.raw   (debug, not part of the protocol)\n", d.port);
-    printf("  gl      %s / %s\n", render_gl_version(d.r), render_gl_renderer(d.r));
+    printf("  gl      %s / %s%s\n", render_gl_version(d.r), render_gl_renderer(d.r),
+           d.r ? (d.guardReady ? " — compiles guarded in a child process"
+                               : " — UNGUARDED: a shader that crashes the driver will kill this daemon")
+               : "");
     printf("  output  %s, gamma %g", d.out.backend, (double)d.gamma);
     if (!strcmp(d.out.backend, "colorlight"))
         printf(" — %s, %d packets/frame steady, colour order %s, brightness %d",
@@ -301,6 +324,7 @@ int main(int argc, char **argv) {
 
     printf("\nstopping\n");
     net_stop(&net);
+    cguard_stop(&d.guard);
     display_free(&d);
     return 0;
 }

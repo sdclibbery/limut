@@ -320,6 +320,24 @@ static void handle_prog(display *d, ws_conn *c, const char *s, js_tok *t, int n)
     }
 
     if (d->r) {
+        /* The candidate goes through the child first (compile_guard.h). Mesa's v3d compiler
+         * segfaults on shaders it cannot register allocate instead of returning an error, so
+         * without this a px chain could kill the daemon - and since §8 never got its `error`, the
+         * host resent the same program after every systemd restart, forever.
+         * A crash is reported as kind "compile" like any other rejection: permanent for this
+         * source, which is exactly right and is what breaks that loop. */
+        int guarded = cguard_check(&d->guard, p->frag, &isLink, log, sizeof log);
+        if (guarded == CGUARD_REJECT || guarded == CGUARD_CRASHED) {
+            if (guarded == CGUARD_CRASHED)
+                fprintf(stderr, "🔴 program %s: %s; daemon survived\n", id, d->guard.lastCrash);
+            cache_prog_fail(p, log);
+            p->glBuilt = 1;
+            send_err(d, c, isLink ? "link" : "compile", id, log);
+            return;
+        }
+        /* CGUARD_OK or CGUARD_NONE. OK means the identical call has just succeeded in another
+         * process, so this one will too; NONE means there is no helper and this is the old
+         * unguarded path, which is still better than refusing to draw. */
         if (render_build_program(d->r, p, &isLink) < 0) {
             send_err(d, c, isLink ? "link" : "compile", id, p->log ? p->log : "failed");
             return;

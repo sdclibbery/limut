@@ -53,6 +53,19 @@ define(function (require) {
     }
     let built = buildSource(node)
     if (built.notReady) { return } // eg webcam not enumerated yet; the next event retries
+    // Checked before the display branch below, not after it: a display bound chain recompiles on
+    // the *Pi*, where a moving source means a fresh program id, a fresh upload and a fresh compile
+    // every event - which is worse than the local cost this warning was written for, and was the
+    // one player type the check did not cover.
+    if (params.px !== null && (typeof params.px === 'object' || typeof params.px === 'function')) {
+      let prev = lastSource.get(params.px)
+      if (prev !== undefined && prev !== built.source) {
+        let who = (params._player && params._player.id) || 'visualsynth'
+        warnOnce(`🔴 Visual synth: the px chain for ${who} generates different shader source each event, so it recompiles a shader instead of reusing the cached program. Values that change must reach the shader as uniforms. First difference: ${firstDifference(prev, built.source)}`)
+      }
+      lastSource.set(params.px, built.source)
+    }
+
     // A named display takes the whole chain instead of the canvas. Everything shippable is already
     // in `built` - the generated shader is self contained - so this is a tap on the existing seam
     // rather than a second rendering path. See draw/hub75/PROTOCOL.md.
@@ -62,14 +75,6 @@ define(function (require) {
       return // nothing drawn locally; sprite.js turns a falsy result into a task that removes itself
     }
     hub75.releaseFor(params._player && params._player.id) // eg display= edited back off the line
-    if (params.px !== null && (typeof params.px === 'object' || typeof params.px === 'function')) {
-      let prev = lastSource.get(params.px)
-      if (prev !== undefined && prev !== built.source) {
-        let who = (params._player && params._player.id) || 'visualsynth'
-        warnOnce(`🔴 Visual synth: the px chain for ${who} generates different shader source each event, so it recompiles a shader instead of reusing the cached program. Values that change must reach the shader as uniforms. First difference: ${firstDifference(prev, built.source)}`)
-      }
-      lastSource.set(params.px, built.source)
-    }
     let cached = programs[built.source]
     if (cached === undefined) {
       try {

@@ -7,6 +7,7 @@
  * which is a far better test of it than anything that could be written here.
  */
 #include "base64.h"
+#include "compile_guard.h"
 #include "codec.h"
 #include "glsl.h"
 #include "json.h"
@@ -20,6 +21,9 @@
 #include <stdlib.h>
 #include "patterns.h"
 #include <string.h>
+#include <signal.h>
+#include <unistd.h>
+#include <sys/wait.h>
 
 static int failures = 0, checks = 0;
 
@@ -883,6 +887,81 @@ static void test_pacing(void) {
     sb_free(&b);
 }
 
+
+/* The compile guard. The reason it exists is a driver that CRASHES rather than returning an error,
+ * so the case worth testing is a helper that dies mid-question - and that needs no GPU at all,
+ * which is why it can be checked here rather than only on the board.
+ * On a build with no GLES the helper has no renderer and answers CGUARD_NONE, which is the same
+ * "compile it directly" path a machine with no GPU has always taken. */
+static void test_compile_guard(void) {
+    cguard g;
+    char log[1024];
+    int isLink = 99, r, haveGpu;
+    const char *frag = "#version 300 es\nprecision highp float;\nout vec4 fragColor;\n"
+                       "void main() { fragColor = vec4(1.0); }\n";
+
+    cguard_start(&g, "/dev/dri/renderD128", 64, 64);
+    ck("guard: the helper forks", cguard_active(&g));
+    ck("guard: it is a different process", g.pid > 0 && g.pid != getpid());
+
+    /* A good shader must never be reported as broken. What "good" resolves to depends on the
+     * build: with EGL and a GPU the helper really compiles it and answers OK; without one it has
+     * no renderer and defers, which is the path a GPU-less machine has always taken. Both are
+     * fine and neither is a rejection - that is the invariant worth asserting. */
+    r = cguard_check(&g, frag, &isLink, log, sizeof log);
+    haveGpu = (r == CGUARD_OK);
+    ck("guard: a valid program is not reported as broken", r == CGUARD_OK || r == CGUARD_NONE);
+    ck("guard: a check is counted", g.checks == 1);
+    ck("guard: nothing crashed", g.crashes == 0);
+
+    /* Where there is a real compiler, check it is actually being consulted rather than rubber
+     * stamping: a shader with a genuine syntax error must come back rejected, with the driver's
+     * own words, and must NOT be mistaken for a crash. */
+    if (haveGpu) {
+        const char *bad = "#version 300 es\nprecision highp float;\nout vec4 fragColor;\n"
+                          "void main() { fragColor = this is not glsl; }\n";
+        log[0] = 0;
+        r = cguard_check(&g, bad, &isLink, log, sizeof log);
+        ck("guard: a broken program is rejected", r == CGUARD_REJECT);
+        ck("guard: with the driver's own log", log[0] != 0);
+        ck("guard: a rejection is not a crash", g.crashes == 0);
+        ck("guard: and the helper is still alive", cguard_active(&g));
+    }
+
+    /* An empty source is not something to fork over. */
+    r = cguard_check(&g, "", &isLink, log, sizeof log);
+    ck("guard: an empty program is not asked about", r == CGUARD_NONE);
+
+    /* THE POINT OF THE FILE. A helper killed mid-question is exactly what a SIGSEGV in the
+     * driver looks like from the parent, and it must come back as a reportable answer rather
+     * than taking this process with it. */
+    kill(g.pid, SIGKILL);
+    /* Deliberately NOT reaped here: the guard's own waitpid should find the signal and name it,
+     * which is what turns "the display went quiet" into "the compiler died on this program". */
+    log[0] = 0;
+    isLink = 99;
+    r = cguard_check(&g, frag, &isLink, log, sizeof log);
+    ck("guard: a dead compiler is reported, not fatal", r == CGUARD_CRASHED);
+    /* What crosses the wire is read mid-performance, so it is one short actionable line... */
+    ck("guard: it says what to do about it", strstr(log, "simplify the chain") != NULL);
+    ck("guard: on one line", strchr(log, '\n') == NULL);
+    ck("guard: and briefly", strlen(log) < 80);
+    ck("guard: a crash is not a link error", isLink == 0);
+    /* ...while the diagnosis stays here, where it is wanted later rather than now. */
+    ck("guard: the signal is kept for the daemon's log", strstr(g.lastCrash, "signal 9") != NULL);
+    ck("guard: the crash is counted", g.crashes == 1);
+
+    /* ...and the next program still gets checked, because the helper was replaced. */
+    ck("guard: the helper is respawned", cguard_active(&g));
+    r = cguard_check(&g, frag, &isLink, log, sizeof log);
+    ck("guard: the replacement answers", r == (haveGpu ? CGUARD_OK : CGUARD_NONE));
+
+    cguard_stop(&g);
+    ck("guard: stop leaves it inactive", !cguard_active(&g));
+    ck("guard: and inactive defers rather than crashing", 
+       cguard_check(&g, frag, &isLink, log, sizeof log) == CGUARD_NONE);
+}
+
 int main(void) {
     printf("== limut HUB75 display selftest ==\n");
     test_hashes();
@@ -894,6 +973,7 @@ int main(void) {
     test_colorlight_plan();
     test_pacing();
     test_corners();
+    test_compile_guard();
     printf("%s: %d checks, %d failure%s\n",
            failures ? "FAILED" : "ALL PASSED", checks, failures, failures == 1 ? "" : "s");
     return failures ? 1 : 0;

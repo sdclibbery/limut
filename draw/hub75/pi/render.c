@@ -19,6 +19,7 @@ int render_max_texture_size(renderer *r) { (void)r; return 0; }
 int render_build_program(renderer *r, prog_entry *p, int *isLink) {
     (void)r; (void)p; (void)isLink; return 0;
 }
+void render_release_program(renderer *r, prog_entry *p) { (void)r; (void)p; }
 int render_upload_asset(renderer *r, asset_entry *a, char *err, size_t errCap) {
     (void)r; (void)a; (void)err; (void)errCap; return 0;
 }
@@ -263,6 +264,15 @@ int render_build_program(renderer *r, prog_entry *p, int *isLink) {
     }
     p->ok = 1;
     return 0;
+}
+
+void render_release_program(renderer *r, prog_entry *p) {
+    if (!r) return;
+    if (p->glProg) { glDeleteProgram(p->glProg); p->glProg = 0; }
+    free(p->uniformLoc);
+    p->uniformLoc = NULL;
+    p->glBuilt = 0;
+    p->ok = 0;
 }
 
 int render_upload_asset(renderer *r, asset_entry *a, char *err, size_t errCap) {

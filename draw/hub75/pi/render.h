@@ -32,6 +32,12 @@ int         render_max_texture_size(renderer *r);
  * once per program id and never retried. */
 int  render_build_program(renderer *r, prog_entry *p, int *isLink);
 
+/* Drops the GL program and the location table an entry is holding, leaving the entry safe to
+ * reuse or free. The cache never calls this - a bound layer may still be holding the program, and
+ * bounding the program cache is a separate question - but compile_guard.c's helper throws away
+ * every program it probes, and without this it would accumulate one per live edit. */
+void render_release_program(renderer *r, prog_entry *p);
+
 int  render_upload_asset(renderer *r, asset_entry *a, char *err, size_t errCap);
 void render_release_asset(renderer *r, asset_entry *a);
 

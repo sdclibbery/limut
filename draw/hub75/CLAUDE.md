@@ -289,6 +289,26 @@ WeakMap. The `edit` scenario in `mock/host-check.js` is that exact case end to e
 `.video` inside `update()`, which `draw/sprite.js` calls — and sprite.js never runs for a display
 bound player. Classifying on `.video` reports a webcam as an image.
 
+**A refused layer used to become a disconnect** (fixed 2026-09-06). Protocol v1 has no layer
+acknowledgement, so `host/session.js` binds optimistically the moment it sends `layer` — while the
+display, which refuses to bind a program that failed to compile (`pi/session.c:371`, and identically
+`mock/display.js`), has not. The next frame packet then named a layer the display did not have,
+which §12.1 makes a session-closing protocol error. So a shader the display merely *rejected* closed
+the socket **on top of the compile log that explained it**, and the only visible symptom was an
+unexplained connect/disconnect loop. `onError_` now drops the bind when a compile or link error
+names the bound program; frames go out with no layer, which is legal, and the log stays readable.
+Two assertions in the `compile` scenario of `mock/host-check.js` cover it — they fail against the
+old code with `sessions=2`.
+
+**`ws.onclose` now reports the close code**, because it is the whole diagnosis and it was being
+thrown away. 1006 means no close frame ever arrived — the daemon died or the link dropped — while
+1002 is a protocol error the display chose to send and 1009 is a message it judged too big. All
+three used to print the same bare `🟠 disconnected`. `session.js` also reports each program's
+encoded size and uniform count (rate limited to one line a second), so "is this px chain too big to
+ship?" is answerable by looking rather than by guessing; `hub75 status` carries the same numbers.
+For scale: the four-octave `fbm3` fire chain measures 10,081 wire bytes, 17% of the 60 KB cap, with
+83 uniforms of the 512 allowed — **size is not the constraint anywhere near current chains.**
+
 **The display's cache is asked about, never assumed.** Every layer change sends `have` for the full
 id list rather than filtering by what the host thinks the display holds. Caches survive a session
 change (§5.1) but not a power cycle, and a host that assumed otherwise binds a layer naming a
@@ -307,10 +327,10 @@ unrelated-looking TypeError. `host/sha256.js` falls back to plain JS instead.
 ### Testing the host side
 
 `mock/host-check.js` drives the *real app in real Chrome* against the mock and asserts on what the
-display observed — 60 assertions over eight scenarios: happy path, compile failure, packet loss,
+display observed — 62 assertions over eight scenarios: happy path, compile failure, packet loss,
 reconnect, display restart, live edit, comment out, webcam refusal.
 
-**Known failure, pre-dating 2026-09-05 and not yet chased:** the happy path's
+**Known failure, pre-dating 2026-09-05 and still not chased (confirmed unchanged 2026-09-06):** the happy path's
 `its uniform list matches the source` fails — the host ships a program declaring **zero** uniforms
 where `u_vs0` is expected, so `mul{sin{}}` is reaching the display as a constant rather than an
 animated uniform. Isolated as pre-existing: `draw/visualsynth*` and `draw/hub75/host/` were last
@@ -752,6 +772,82 @@ And on the host side, `electron-main.js` now sets `backgroundThrottling: false`:
 clock for the wall as well as the canvas, so an occluded window would throttle the LEDs. The
 `disable-renderer-backgrounding` switch was already there and is the process-level half of the
 same thing; this is the per-window half that actually governs rAF.
+
+### v3d's shader compiler segfaults, and it takes the daemon with it (2026-09-06)
+
+**A px chain can kill the display, and nothing on either end survives it.** Found with the fire
+shader:
+
+```
+v visualsynth, px=set{v:id.v-time,z:time/3}>>fbm3{scale:3/2}^3*2>>mul{1/2-uv.v/2}>>pal{0,red*3/4,yellow,1}, display='hub75-01'
+```
+
+The journal is unambiguous:
+
+```
+MESA: error: Failed to compile MESA_SHADER_FRAGMENT prog 1/1 with any strategy
+limut-hub75.service: Main process exited, code=killed, status=11/SEGV
+```
+
+"with any strategy" is Mesa having exhausted every register-allocation strategy it has; it then
+**crashes instead of returning a compile error**. `Restart=always` brings the daemon back, limut
+reconnects and resends the same program, and it dies again — eight restarts before it was stopped.
+So the failure never reaches `render.c`'s `GL_COMPILE_STATUS` check and no `error kind:"compile"`
+is ever sent. **The whole error-reporting design assumes a failed compile returns.**
+
+**It is not a size problem, and every number said so.** 10,033 wire bytes (17% of the 60 KB cap),
+83 uniforms of the 512 allowed, 288 lines, one compile with byte-identical source. What v3d cannot
+take is `fbm3`'s four unrolled octaves — **33 `l_pxhash` calls**, each a pcg4d integer hash, in one
+straight-line fragment shader. The V3D 4.2 has far less register file than the desktop GPU that
+compiles the same source in a browser without complaint.
+
+**Verified working alternative:** `fbm3` → `fbm2` — 6,031 bytes, 51 uniforms, 17 hashes. Binds on
+the real wall, 14,600 frames rendered, `pacing` 60/60 on time both host and arrive, zero restarts.
+
+**Fixed the same day, in `pi/compile_guard.c`: the compile is tried in a forked helper first.**
+The helper holds its own GL context and does nothing else; if it dies, the parent survives and
+turns the death into an ordinary `error kind:"compile"` — permanent for that source (§8), so limut
+stops resending it and the crash loop is broken by the same change that contains the crash.
+Verified on the wall: the fire shader now produces one `🔴 shader compile error` in the limut
+console, the session stays open, `NRestarts` stays 0, and a working chain binds immediately after.
+
+**The helper must DRAW, not merely compile and link — and this is the part that is easy to get
+wrong.** The first version compiled and linked in the child, reported the fire shader as
+completely fine, and the parent then died on the next frame one second later. **v3d generates the
+hardware fragment code lazily, at the first draw with the real pipeline state**, so `glLinkProgram`
+succeeding proves almost nothing. The daemon said "compiles guarded in a child process" in its
+banner while guarding nothing. The helper now renders one frame through the program.
+
+**What crosses the wire is one short line.** It is read in the limut console by someone in the
+middle of playing, so it says what is wrong and what to change — `too complex for the GPU's shader
+compiler; simplify the chain` — and nothing else. The signal number and the fact that it was a
+*crash* rather than a rejection go to the daemon's own log (`cguard.lastCrash`), because that is
+diagnosis and diagnosis is not what a live coder needs from a shader that just failed. Three
+checks in `selftest.c` hold the wire message to one line and under 80 characters. The host prints
+a short single-line log inline rather than on its own line; a driver's own multi-line GLSL
+diagnostics still get the block treatment.
+
+Two smaller things the episode settled:
+
+- **The startup probe earns its place.** `main.c` puts a trivial shader through the helper before
+  trusting it, and the banner reports the *result* rather than the fact that a child was forked.
+  A guard that reports its own existence rather than its own function is how the above went
+  unnoticed for a build.
+- **A dead child must not kill the parent through SIGPIPE either.** `write()` to a socket whose
+  peer has died raises it, and `main.c` happening to ignore SIGPIPE would have made this file
+  correct only by luck. It uses `MSG_NOSIGNAL`/`SO_NOSIGPIPE` instead. Found by `selftest.c`,
+  which does not ignore SIGPIPE and died on exactly this.
+
+**And the host no longer binds optimistically** (`host/session.js`): a layer is not treated as
+bound until `progok`, because the display compiles on receipt and the seconds that takes were
+being spent streaming frames that named a layer the display had not bound. See PROTOCOL.md §7.1
+for the rule and for the one residual gap (a cached-failed program gets no second `progok`).
+
+**And the diagnosis only took one run because the close code is now reported.** `1006 no close
+frame - the display died or the link dropped` is what separates "the display rejected it" from
+"the display died"; before 2026-09-06 both printed the same bare `disconnected` and this had been
+an open ToDo entry, mis-filed as a CORS problem, for days. The "cors error" was only ever the
+`/info` probe firing during the two seconds systemd takes to restart.
 
 ## Panels
 
