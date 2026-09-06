@@ -5784,34 +5784,43 @@ section drop {
 v1 visualsynth, px=mul{3}>>add{time*4}>>sin^2>>pal{0,red,0,blue,0,1}, display='hub75-01'
 
 
-// Glitched again like we did last summer
+// Glitched again
 include 'personal/everything.limut'
 dg dmx, channel=63, lights={0:8/64}
 ds dmxstrip, channel=(33,43,53), mode='sine', control=[]n17, smooth=smooth{main.pulse}/2-this.voice/16, back=#200, fore=#284*l.pulse.0+#004*pk.pulse.0
 dw2 dmxwash, channel=(1,8,15,22), fore=#200*pk.pulse.0+#100*[]n19
-w visualsynth, px=mul{3/4}>>floor{1/200 + pk.pulse.0 /30}>>tex{webcam{['5mp':24,'2mp':8]t}}
+w visualsynth, px=mul{3/4}>>floor{1/200 + pk.pulse.0 /30 + pc.pulse.0 /10}>>tex{webcam{['5mp':24,'2mp':8]t}}
 set bpm=124
 set scale='phrygian'
-set main fx=hpf{10+4000*gp.rt}>>stanh>>compress
-pk perc X..., sample=3, sus=1/4
+set main fx=hpf{10+300*gp.rt}>>stanh>>compress
+set * stutter+=4*gp.rt
+set p* delay|=[[1,3]r/4:_2,():_]{sx.rtime}
+pk perc X..., sample=3, sus=1/6
 ph perc ..n., sample=4
-pp perc --=s- crop 16, swing=54, vel*=[]n, room=1/8, pan=[-1,1]/3
-a acid 0070605 crop 16, dur=1/2, accent=[0,1]r
-sb superbass 0071, dur=4, fx=mix{hpf{300}>>airverb}, unison=7
+pp perc --=s- crop 16, swing=54, vel=[]n, room=1/8, pan=[-1,1]/3
+a acid 0070605 crop 16, dur=1/2, accent=[0,1]r, vel=1-gp.lsd, cutoff=[]r
+sb superbass 0071, dur=4, fx=mix{hpf{300}>>airverb}, vel=1-gp.rsd
 l dlead gamepad lt:vel, fx=mix{airverb}
 l2 vox keyboard, fx=tape{1/4}>>darkverb>>mix{airverb}
 section build {
-	set * hpf=10+1000*sx.rise^8, add-=1
-  set sb fx>>=tg
+	set * hpf=10+3000*sx.rise^6, add+=-1
   set a pattern=`00-1`
-  fill perc a, vel=sx.rise^9, room=1/8
+  set sb pattern =`0`
+  fill perc a, vel=sx.rise^9, room=1/8, rate=2/3
+  set pk sus=sx.rise^3
+  set dw2 fore=#004*tg*sx.rise^4
 }, next=drop
 section drop {
 	set * add+=[0,2,4,3]{sx.time}
 	pc perc ....*..., rate=2/3, room=1/8, vel=2/3
-	set l* fx>>=tg, dist=1
+	set l fx>>=tg*+3db, dist=1
+  set l2 fx>>=duck
   set a dur=1/4
+  set sb vel=0
+  set pk sus=1/4
+  set dw2 fore=#600*(1-duck)
 }, length*=2
+
 
 
 // Grid shear
@@ -5846,5 +5855,38 @@ section drop {
   set * add+=[0,2,4,-1]:_{sx.time}
   set (dw2,ds) fore*=tg
 }, length*=2
+
+
+// chill
+include 'personal/everything.limut'
+dg dmx, channel=63, lights={0:8/64}
+ds dmxstrip, channel=(33,43,53), mode='sine', control=[]n17, smooth=smooth{main.pulse}/2-this.voice/16, back=#001, fore=#248*l.pulse.0+#004*pk.pulse.0
+dw2 dmxwash, channel=(1,8,15,22), fore=#001 + #201*l2.pulse.0
+w visualsynth, px=mul{3/4}>>floor{1/200 + pk.pulse.0 /30}>>tex{webcam{['5mp':24,'2mp':8]t}}
+set scale='major'
+set bpm=115
+set root=2
+set main fx=stanh>>compress
+set default length=	32
+set !p* add+=[0,1,4,3]:_8{sx.time}, addc=wow
+// pk impulse, fx=mix{airverb}>>lpf{[600:!,100]e@s}*3
+// ph hiss .0, dur=1/2, sus=1/4
+// cr crackle
+// nf noisefloor
+// b basspluck 0_. crop 6 + 2<1114>, vel=1-gp.lsd, dur=1/2, cutoff=gp.lsr, decay=0.5+gp.lsu
+// k pick 020406 crop 14 + 78, vel=1-gp.rsd, dur=1/2, cutoff=gp.rsr, decay=0.3+gp.rsu
+// s softpad (049), fx=mix{airverb}/2
+// l synlead gamepad lt:vel, fx=mix{airverb}
+// l2 blues keyboard, fx=mix{airverb}
+section alt {
+	set scale='minor'
+	set !p* add+=[0,-1,-2,-3]:_8{sx.time}
+  set b pattern=`024 crop 16`
+  l cyborg gamepad lt:vel, fx=mix{airverb}
+}, length=64
+
+
+// Hub75 friendly fire
+v visualsynth, px=set{v:id.v-time*2}>>fbm2{scale:3/2}^2*2>>mul{1/2-uv.v/5}>>pal{0,1/4,red*3/4,yellow,1}, display='hub75-01'
 
 

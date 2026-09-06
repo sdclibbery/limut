@@ -660,6 +660,40 @@ define(function(require) {
   delete userVars['dup2']
   delete userVars['dup4']
 
+  // A value threaded into many places costs one uniform, not one per reference. Every reference
+  // resolves to the same binding in the same frame (expression/parse-var.js), so they must hold
+  // the same value on every frame, and codegen.js gives them one slot. This is what lib/visual.limut
+  // does with `seed`: the Fire chain registered it 32 times, once per octave per face per hash, and
+  // shipped 83 uniforms where 28 do - each one a declaration in the source, an evalParamFrame every
+  // frame, and 16 bytes a frame on the wire for a display bound chain.
+  userVars['seed1'] = parseExpression('{in:id, s:0} -> pxhash{in, s}')
+  userVars['seed4'] = parseExpression('{in:id, s:0} -> pxhash{in, s} + pxhash{in, s} + pxhash{in, s} + pxhash{in, s}')
+  assert(1, uniformCount(pxSource('seed1')))
+  assert(uniformCount(pxSource('seed1')), uniformCount(pxSource('seed4'))) // Four references, one uniform
+  assert(pxSource('seed4'), pxSource('seed4')) // and still byte identical: the cache key
+  assert(1, uniformCount(pxSource('seed4{2}'))) // However the arg arrives
+  assert(1, uniformCount(pxSource('seed4{time}'))) // An animated one shares too: it is one expression
+
+  // Through parallel, where the repeats are the thing that multiplied it. The index-dependent arg
+  // still gets a uniform per repeat, because each repeat really is a different value.
+  userVars['seedoct'] = parseExpression('{in:id, s:0} -> parallel{{i} -> pxhash{in*(2^i), s}, 4}')
+  assert(5, uniformCount(pxSource('seedoct'))) // One shared seed, plus 2^i once per octave
+  assert(pxSource('seedoct'), pxSource('seedoct'))
+  userVars['seedoct8'] = parseExpression('{in:id, s:0} -> parallel{{i} -> pxhash{in*(2^i), s}, 8}')
+  assert(9, uniformCount(pxSource('seedoct8'))) // Twice the octaves, still one seed
+
+  // The same goes for a literal written once inside a function and reached once per call: it cannot
+  // read the call context, so it means the same thing wherever it turns up. These are the lattice
+  // offsets, 28 of them in the Fire chain for four distinct literals.
+  userVars['off'] = parseExpression('{q:id} -> pxhash{q+{x:1,w:0}}')
+  assert(1, uniformCount(pxSource('off')))
+  assert(2, uniformCount(pxSource('off{id} + off{id*2}'))) // One shared offset, plus the bare 2
+  delete userVars['seed1']
+  delete userVars['seed4']
+  delete userVars['seedoct']
+  delete userVars['seedoct8']
+  delete userVars['off']
+
   // uv: the value the whole chain started with, still reachable once nodes downstream have
   // replaced the value flowing through them. At the head of a chain it is exactly what id is.
   assert(pxSource('uv'), pxSource('id'))

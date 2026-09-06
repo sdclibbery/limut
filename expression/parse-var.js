@@ -33,6 +33,38 @@ define(function(require) {
     return o
   }
 
+  // Where a lookup's value ultimately comes from: the expression bound to it, and the call frame
+  // that expression is evaluated in - resolved by walking the same scope chain the eval path walks,
+  // but without evaluating anything. Two values with the same {ast, context} are the same expression
+  // in the same scope, so they must hold the same value on every frame; the visual synth's codegen
+  // uses that to share one uniform between them (draw/visualsynth/codegen.js), instead of one per
+  // reference. A pass-through binding (an argument bound to its caller's argument, as the noise
+  // library's `seed` is all the way down) resolves to its root in one call, since each hop unwinds
+  // into the scope its expression was written in exactly as the eval path unwinds it.
+  //
+  // Best effort throughout: anything unexpected gives undefined, and the caller then just does not
+  // share. It must never be able to break a build, and it must leave the call stack where it found
+  // it, so each hop unwinds only as far as it actually got.
+  let resolveBindingSource = (value) => {
+    if (typeof value === 'function' && value._bindingSource !== undefined) {
+      let inner = value._bindingSource()
+      if (inner !== undefined) { return inner }
+      return undefined // Its own binding could not be resolved; neither can ours
+    }
+    return {ast: value, context: getCallContext()}
+  }
+  let resolveOutside = (depth, value) => {
+    let n = 0
+    try {
+      while (n < depth) { unPushCallContext(); n++ }
+      return resolveBindingSource(value)
+    } catch (err) {
+      return undefined
+    } finally {
+      if (n > 0) { unPopCallContext(n) }
+    }
+  }
+
   let callsiteId = 0
   let varLookup = (key, args, context, interval, userFunctionArgs, inheritedArgs) => {
     if (!key) { return }
@@ -68,6 +100,19 @@ define(function(require) {
         unPopCallContext()
         return value
       }
+      // The binding this lookup reads, resolved without evaluating it. Mirrors the name-then-
+      // position-then-default order above exactly, so the two can never disagree about which
+      // expression is in play.
+      userFunctionArgumentLookup._bindingSource = () => {
+        let args = getCallContext()
+        if (args === undefined) { return undefined }
+        let value = args[key]
+        if (value === undefined) { value = args['value'+(position || '')] }
+        if (value === undefined) { value = defaultValue }
+        if (value === false) { value = undefined }
+        if (value === undefined) { return undefined }
+        return resolveOutside(1, value)
+      }
       userFunctionArgumentLookup._name = key
       return userFunctionArgumentLookup
     }
@@ -101,6 +146,21 @@ define(function(require) {
         }
         unPopCallContext(depth)
         return value
+      }
+      // As above, walking the call chain by name the way the lookup itself does
+      inheritedLookup._bindingSource = () => {
+        let found = findInCallChainByKey(key)
+        let value, depth
+        if (found !== undefined) {
+          value = found.context[key]
+          depth = found.depth + 1
+        } else {
+          value = defaultValue
+          depth = 1
+        }
+        if (value === false) { value = undefined }
+        if (value === undefined) { return undefined }
+        return resolveOutside(depth, value)
       }
       inheritedLookup._name = key
       return inheritedLookup
@@ -388,6 +448,93 @@ define(function(require) {
   state = {str:'bpm',idx:0}
   p = varLookup(parseVar(state), [])
   assertThrows('main var', () => p(ev(0),0,evalParamFrame))
+
+
+  // _bindingSource: the expression a lookup reads and the frame it is read in, resolved without
+  // evaluating anything. draw/visualsynth/codegen.js keys uniform sharing on it, so it has to
+  // agree with the eval path above about which expression is in play, and leave the call stack
+  // exactly where it found it.
+  let {pushCallContext,popCallContext} = require('player/callstack')
+  let bound = () => 9
+  let outerFrame = {}
+  {
+    let l = varLookup('sd', undefined, {}, undefined, {sd:0}) // A declared arg, default 0
+    let callFrame = {sd:bound}
+    pushCallContext(outerFrame)
+    pushCallContext(callFrame)
+    let src = l._bindingSource()
+    assert(true, src.ast === bound) // The bound expression, uncalled
+    assert(true, src.context === outerFrame) // read in the frame outside the call, where it was written
+    assert(true, getCallContext() === callFrame) // and the stack is put back
+    popCallContext(); popCallContext()
+  }
+  {
+    let l = varLookup('sd', undefined, {}, undefined, {sd:0}) // Found by position, as noiseface{i,f,seed} passes it
+    pushCallContext(outerFrame)
+    pushCallContext({value:bound})
+    assert(true, l._bindingSource().ast === bound)
+    popCallContext(); popCallContext()
+  }
+  {
+    let l = varLookup('sd', undefined, {}, undefined, {sd:7}) // Nothing passed: the declared default
+    pushCallContext(outerFrame)
+    pushCallContext({})
+    assert({ast:7, context:outerFrame}, l._bindingSource())
+    popCallContext(); popCallContext()
+  }
+  {
+    let l = varLookup('sd', undefined, {}, undefined, {sd:false}) // No default either
+    pushCallContext({})
+    assert(undefined, l._bindingSource())
+    popCallContext()
+  }
+  {
+    let l = varLookup('sd', undefined, {}, undefined, {sd:0})
+    assert(undefined, l._bindingSource()) // Outside any call there is no binding to name
+  }
+  {
+    // A pass-through binding resolves to its root in one call: this is the shape lib/visual.limut's
+    // noise stack has, where every `seed` is an arg bound to its caller's arg the whole way down.
+    // Each hop unwinds one frame, so the root expression is named in the scope it was written in.
+    let inner = varLookup('sd', undefined, {}, undefined, {sd:0}) // The innermost function's arg
+    let outer = varLookup('sd', undefined, {}, undefined, {sd:0}) // Its caller's, which binds it
+    pushCallContext(outerFrame) // where the root expression is written
+    pushCallContext({sd:bound}) // the outer call: its sd is bound to that expression
+    pushCallContext({sd:outer}) // the inner call: its sd is bound to the outer call's sd
+    let src = inner._bindingSource()
+    assert(true, src.ast === bound)
+    assert(true, src.context === outerFrame)
+    popCallContext(); popCallContext(); popCallContext()
+  }
+  {
+    // An inherited arg (named by a lambda nested inside the one that declares it) walks the call
+    // chain by name, and unwinds past every frame between, so the expression still resolves in the
+    // scope it was captured in
+    let l = varLookup('sd', undefined, {}, undefined, undefined, {sd:0})
+    pushCallContext(outerFrame)
+    pushCallContext({sd:bound})
+    let between = {i:1} // an enclosed lambda that does not name sd itself
+    pushCallContext(between)
+    let src = l._bindingSource()
+    assert(true, src.ast === bound)
+    assert(true, src.context === outerFrame)
+    assert(true, getCallContext() === between) // and the stack is put back
+    popCallContext(); popCallContext(); popCallContext()
+  }
+  {
+    let l = varLookup('sd', undefined, {}, undefined, undefined, {sd:5}) // Not in the chain: the default
+    pushCallContext(outerFrame)
+    pushCallContext({i:1})
+    assert({ast:5, context:outerFrame}, l._bindingSource())
+    popCallContext(); popCallContext()
+  }
+  {
+    // Unwinding further than there are frames cannot throw and cannot corrupt the stack: sharing is
+    // an optimisation, and giving up on it must never be able to break a build
+    let l = varLookup('sd', undefined, {}, undefined, undefined, {sd:5})
+    assert(undefined, l._bindingSource())
+    assert(undefined, getCallContext())
+  }
 
   console.log('Parse var tests complete')
   }

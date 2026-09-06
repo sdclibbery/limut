@@ -5,10 +5,6 @@ Hub75 display
  ?Layer acknowledgement in a later protocol version: a program the display already holds gets no
   second progok and `have` does not say whether it is held as compiled or as failed, so a host that
   has forgotten its own failure (page reload) can still bind optimistically for one frame
- !ctx.addUniform (draw/visualsynth/codegen.js) never dedupes, so the fire chain ships 83 vec4 uniforms,
-  32 of them the same constant seed from fbm3's unrolled octaves. Deduping identical constant ASTs would
-  cut the uniform count, the shader size and the per-frame JS eval cost of every px chain. It changes the
-  shader source cache key, so re-run every visualsynth test
  ?There is a per event flash on the browser screen when running a hub75
   !ONLY in electron not firefox
  !If reload the page instead of ctrl-. the idle pattern does not come back

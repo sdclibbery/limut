@@ -59,11 +59,67 @@ define(function(require) {
     // of the generated vN/u_vsN/uvN names.
     let nextLoopVar = 0
     ctx.loopVar = () => 'l_i' + (nextLoopVar++)
+    // Two uniform slots may share a name when the expression that feeds them is the same one in the
+    // same scope: it then holds the same value on every frame, animated or not, so a second slot is
+    // pure waste - a `uniform vec4` line in the source, an evalParamFrame every frame
+    // (draw/visualsynth.js), and 16 bytes a frame on the wire for a display bound chain
+    // (draw/hub75/host/hub75.js). Without this the Fire chain (examples.limut) shipped 83 uniforms
+    // where 28 do: 32 of them were the one `seed` that lib/visual.limut's noise stack threads down
+    // into every octave's every face's every hash, and 28 more were four lattice offset literals,
+    // re-registered once per instantiation.
+    //
+    // Deliberately keyed on where a value comes from and NOT on what it evaluates to, and
+    // deliberately not folded into the source as a GLSL literal. Either of those would make the
+    // grouping depend on the numbers, so nudging mul{2} to mul{3} while playing would move the
+    // generated source and force a shader compile on the beat - the exact cost the source-stability
+    // check at the top of draw/visualsynth.js exists to catch. Provenance keying leaves the source
+    // alone under a numeric edit.
+    //
+    // Two things are dedupable:
+    //  - an object literal (a parsed map whose leaves are all numbers or strings). It cannot read
+    //    the call context, so it means the same thing wherever it is reached, and the one parsed
+    //    instance reached N times is keyed by its own identity. This is the lattice offsets.
+    //  - a lookup that can name its binding (expression/parse-var.js), keyed on the {ast, context}
+    //    pair it resolves to. This is `seed`: all 32 resolve to the one default bound in the one
+    //    fbm3 frame. A bare number as the *resolved* root takes part by value - it is a literal, so
+    //    it is constant - but a bare number written directly as a uniform's AST does not, which is
+    //    what keeps mul{2} and add{2} on separate uniforms and out of the churn above.
+    // Anything else gets a slot of its own, exactly as before.
+    let isObjectLiteral = (v) => {
+      if (typeof v !== 'object' || v === null || Array.isArray(v)) { return false }
+      for (let k in v) {
+        let x = v[k]
+        if (typeof x === 'function') { return false }
+        if (typeof x === 'object' && x !== null && !isObjectLiteral(x)) { return false }
+      }
+      return true
+    }
+    // ast -> Map(context -> name). Two levels rather than one composite key, because both halves
+    // are object identities as often as they are values, and `undefined` is a legitimate context
+    // (a binding resolved at the top level, outside any call).
+    let uniformNames = new Map()
+    let uniformKey = (ast) => {
+      if (isObjectLiteral(ast)) { return {ast: ast, context: null} }
+      if (typeof ast === 'function' && ast._bindingSource !== undefined) { return ast._bindingSource() }
+      return undefined
+    }
     ctx.addUniform = (ast) => {
+      // Called from inside a node's build, so the call tree is already the one the AST was written
+      // in - which is exactly the scope the binding has to be resolved in
+      let key = uniformKey(ast)
+      let byContext
+      if (key !== undefined) {
+        byContext = uniformNames.get(key.ast)
+        if (byContext !== undefined && byContext.has(key.context)) { return byContext.get(key.context) }
+      }
       let name = 'u_vs' + ctx.uniforms.length
       // The call tree current during this node's build is the one the AST was written in, so keep
       // it: the per frame eval in draw/visualsynth.js has to restore it to resolve lambda args
       ctx.uniforms.push({name: name, ast: ast, callTree: getCallTree()})
+      if (key !== undefined) {
+        if (byContext === undefined) { byContext = new Map(); uniformNames.set(key.ast, byContext) }
+        byContext.set(key.context, name)
+      }
       return name
     }
     // A GLSL helper function declared before main, for a node whose emitted expression is more than
@@ -310,6 +366,60 @@ void main() {
   assert(true, loopBuilt.source.includes('vec4 v3 = texture(u_vstex0, (v1).xy);')) // The chain carries on from the accumulator
   assert(1, loopBuilt.uniforms.length) // The body is emitted once, so its uniform is registered once
   assert(true, loopBuilt.source === buildSource(looped).source) // still byte-identical: cache key
+
+  // Uniform sharing. Two slots may hold one name when the expression feeding them is the same one
+  // in the same scope, because it then holds the same value on every frame. See addUniform: keyed
+  // on where a value comes from, never on what it evaluates to.
+  let dctx = makeContext()
+  let offset = {x:1, w:0}
+  assert('u_vs0', dctx.addUniform(offset))
+  assert('u_vs0', dctx.addUniform(offset)) // The one parsed literal reached twice costs one slot
+  assert('u_vs1', dctx.addUniform({x:1, w:0})) // A distinct literal of equal value does not: sharing is by identity
+  assert('u_vs2', dctx.addUniform({x:1, y:{z:2}})) // Nested literals count as literal too
+  assert(3, dctx.uniforms.length)
+  assert('u_vs3', dctx.addUniform(2)) // A bare number written straight into a uniform is never shared,
+  assert('u_vs4', dctx.addUniform(2)) // so mul{2}>>add{2} cannot merge and then split again on an edit
+  let notLiteral = {x: () => 1} // An expression inside the map can read the call context
+  assert('u_vs5', dctx.addUniform(notLiteral))
+  assert('u_vs6', dctx.addUniform(notLiteral))
+  assert(7, dctx.uniforms.length)
+  assert(true, dctx.uniforms[0].ast === offset) // The raw AST is still what gets registered
+  assert(true, dctx.uniforms.every((u,i) => u.name === 'u_vs'+i)) // Names still come from the counter
+
+  // A lookup that can name its binding (expression/parse-var.js) is keyed on what it resolves to
+  let lookupTo = (ast, context) => { let f = () => 0; f._bindingSource = () => ({ast:ast, context:context}); return f }
+  let bctx = makeContext()
+  let binding = () => 0
+  let frame = {}
+  assert('u_vs0', bctx.addUniform(lookupTo(binding, frame)))
+  assert('u_vs0', bctx.addUniform(lookupTo(binding, frame))) // Different lookups, one binding: one slot
+  assert('u_vs1', bctx.addUniform(lookupTo(binding, {}))) // The same expression in another frame is another value
+  assert('u_vs2', bctx.addUniform(lookupTo(() => 0, frame))) // and another expression in the same frame
+  assert(3, bctx.uniforms.length)
+  let unresolved = () => 0
+  unresolved._bindingSource = () => undefined
+  assert('u_vs3', bctx.addUniform(unresolved)) // Nothing to name: a slot of its own, as before
+  assert('u_vs4', bctx.addUniform(unresolved))
+
+  // A binding that resolves to a bare number takes part by value - a literal is constant. This is
+  // the case that matters: fbm3's `seed` defaults to 0, and all 32 of its references resolve to
+  // that one default in that one frame.
+  let cctx = makeContext()
+  assert('u_vs0', cctx.addUniform(lookupTo(0, undefined)))
+  assert('u_vs0', cctx.addUniform(lookupTo(0, undefined)))
+  assert('u_vs1', cctx.addUniform(lookupTo(1, undefined)))
+  assert(2, cctx.uniforms.length)
+
+  // Sharing survives a captured block, unlike the emit-once map above it: uniforms are declared at
+  // file scope, so a slot registered inside a loop body is still in scope after the closing brace
+  let lctx = makeContext()
+  let blockOffset = {x:1}
+  lctx.captureBlock(() => lctx.addUniform(blockOffset))
+  assert('u_vs0', lctx.addUniform(blockOffset))
+  assert(1, lctx.uniforms.length)
+
+  // Sharing is per context, like every other generated name
+  assert('u_vs0', makeContext().addUniform(offset))
 
   console.log('Visual synth codegen tests complete')
   }
