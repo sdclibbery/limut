@@ -71,6 +71,7 @@ define(function (require) {
       failedProgs: new Set(), // §8: a compile failure is permanent for that id
       desired: null, // what should be on the display
       bound: null, // what we have told the display to show
+      wantBlank: false, // an `unlayer` that still has to reach the display -- see flushBlank
       seq: 0,
       dim: 1,
       manualDim: 1,
@@ -136,6 +137,21 @@ define(function (require) {
       if (!isOpen()) { return false }
       s.ws.send(bytes)
       return true
+    }
+
+    // "show nothing" is a state the display has to be told about, and it has to be told about it
+    // even when this end has forgotten what it bound. s.bound is host *belief*: onclose clears it
+    // (the display may have restarted) while a display that did not restart is still showing the
+    // layer, and sendJson drops a message silently when the socket is down. Conditioning the
+    // `unlayer` on either of those left a wall lit with a picture whose player was long gone, and
+    // nothing could ever reach it again - `layers[name]` was deleted, so hub75.js's orphan poll was
+    // finished, and reconcile() returns early on a null `desired`, so it never ran either. So the
+    // intent is held until it has actually gone out over an open socket, and retried from `welcome`
+    // and from pump(). It is idempotent: a display with nothing bound ignores it (PROTOCOL.md 7.2).
+    let flushBlank = () => {
+      if (!s.wantBlank) { return }
+      if (!sendJson({type: 'unlayer', id: 0})) { return } // socket down; welcome and pump retry
+      s.wantBlank = false
     }
 
     // ---- connection -------------------------------------------------------------------------
@@ -217,6 +233,7 @@ define(function (require) {
           let d = msg.display || {}
           say(`🟢 %s: connected, ${d.w}x${d.h}, ${(msg.gl || {}).renderer || 'unknown gpu'}`)
           if (s.manualDim !== 1) { sendJson({type: 'dim', v: s.manualDim}) }
+          flushBlank() // before reconcile: establish what should NOT be showing, then bind what should
           reconcile()
           break
         }
@@ -393,6 +410,7 @@ define(function (require) {
     s.setDesired = (desc) => {
       let changed = s.desired === null || s.desired.key !== desc.key
       s.desired = desc
+      s.wantBlank = false // superseded: a layer is wanted again, and a late unlayer would blank it
       if (changed) { reconcile() }
     }
 
@@ -403,7 +421,9 @@ define(function (require) {
       s.sending = null
       s.afterUploads = null
       s.pendingBound = null
-      if (s.bound) { sendJson({type: 'unlayer', id: 0}); s.bound = null }
+      s.bound = null
+      s.wantBlank = true
+      flushBlank()
     }
 
     // Returns the layer the display is actually showing, so the frame packet's uniform count can
@@ -426,7 +446,7 @@ define(function (require) {
       return true
     }
 
-    s.pump = () => pumpUploads()
+    s.pump = () => { flushBlank(); pumpUploads() } // flushBlank first: a blank owed from a closed socket
 
     // The text message entry point, the same one ws.onmessage feeds. Public so the inline tests
     // below can drive the state machine without standing up a socket.
@@ -517,6 +537,58 @@ define(function (require) {
   sess.bound = {key: 'k2', progId: 'bbbb2222', uniformCount: 1}
   sess.handleText({type: 'error', kind: 'link', id: 'cccc3333', log: 'test: expected link failure'})
   assert({key: 'k2', progId: 'bbbb2222', uniformCount: 1}, sess.bound)
+
+  // The wall must be told to blank even when this end has forgotten what it bound. Every one of
+  // these left a lit wall showing a picture whose player was gone, unreachably: hub75.js deletes
+  // layers[name] on release so its orphan poll never fires again, and reconcile() returns early on a
+  // null `desired`, so nothing retried. A fake socket, so nothing is opened.
+  let socket = (state) => { let o = {readyState: state, bufferedAmount: 0, sent: [],
+    send: (t) => o.sent.push(typeof t === 'string' ? JSON.parse(t).type : 'binary')}; return o }
+
+  // s.bound null with the display still showing the layer - which is every session that ever
+  // dropped and came back, since onclose clears it in case the display restarted
+  let sess3 = makeSession('not-a-real-display')
+  sess3.ws = socket(1)
+  sess3.bound = null
+  sess3.clearDesired()
+  assert(['unlayer'], sess3.ws.sent)
+  assert(false, sess3.wantBlank) // delivered, so not owed any more
+
+  // Released while the socket was down: sendJson drops it silently, so the intent has to survive
+  // until the session comes back
+  let sess4 = makeSession('not-a-real-display')
+  sess4.ws = socket(3) // CLOSED
+  sess4.bound = {key: 'k', progId: 'aaaa1111', uniformCount: 1}
+  sess4.clearDesired()
+  assert([], sess4.ws.sent)
+  assert(true, sess4.wantBlank)
+  sess4.ws = socket(1) // reconnected
+  sess4.handleText({type: 'welcome', proto: PROTO, display: {w: 64, h: 64}})
+  assert(['unlayer'], sess4.ws.sent) // and `welcome` is where it goes out, before any rebind
+  assert(false, sess4.wantBlank)
+
+  // pump() is the other retry, so a session that comes back between welcome and the next frame
+  // still blanks
+  let sess5 = makeSession('not-a-real-display')
+  sess5.ws = socket(3)
+  sess5.clearDesired()
+  sess5.ws = socket(1)
+  sess5.pump()
+  assert(['unlayer'], sess5.ws.sent)
+  sess5.pump()
+  assert(['unlayer'], sess5.ws.sent) // once only: not resent every frame for the rest of the run
+
+  // ...and an owed blank must never blank a layer that has since been wanted again. This is the one
+  // way the retry could make things worse: an edit that rebinds while the unlayer is still owed.
+  let sess6 = makeSession('not-a-real-display')
+  sess6.ws = socket(3)
+  sess6.clearDesired()
+  assert(true, sess6.wantBlank)
+  sess6.ws = socket(1)
+  sess6.setDesired({key: 'k2', source: 'x', uniformNames: [], textures: [], assetList: []})
+  assert(false, sess6.wantBlank)
+  sess6.pump()
+  assert([], sess6.ws.sent.filter(t => t === 'unlayer'))
 
   console.log('Hub75 session tests complete')
   }

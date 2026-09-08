@@ -2,14 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 Hub75 display
- ?Layer acknowledgement in a later protocol version: a program the display already holds gets no
-  second progok and `have` does not say whether it is held as compiled or as failed, so a host that
-  has forgotten its own failure (page reload) can still bind optimistically for one frame
- ?There is a per event flash on the browser screen when running a hub75
-  !ONLY in electron not firefox
- !If reload the page instead of ctrl-. the idle pattern does not come back
- !if comment out a vosualsynth, it keeps showing on display anyway. Only stops on ctrl-.
-  !ONLY in firefox not electron
  Image textures (tex{'url'}) over the protocol: needs the encoded file bytes fetching host side
 =================================================================================================================================
 =================================================================================================================================
@@ -18,10 +10,12 @@ Hub75 display
 visual nodes...
  ?Noise methods take time as .z but kal takes it as {t:}; would be nice to be consistent? Prolly nice if noise fns also have time param
  ?why does fbm3 (with time in z) move in a jerky way? It seems to move to a new configuration, then pause there etc. Is that expected? eg px=set{z:time/16}>>fbm3
+ sdsin (approximate only)
+ text display; can render on hub75 pi or have to send texture?
+ voronoi, result should be like an sdf to the voronoi edges (or centres)
+ jpeg and vhs functions; split between uv and rgb?
  !If loop main function is not supplied, it should default to id; eg px=loop{map:{v,i}->sin{v*i},4}
  !px=set{{h:uv.x}} doesn't work; need col{} function? Or can it be supported?
- voronoi, result should be like an sdf to the voronoi edges (or centres)
- !Why is px shader getting recompiled every frame? px should be like fx not like play, it should be built only when it changes?
  ?render buffers to generate read from, eg px=tex{buffer{mul{1.01}>>webcam>>set{#...a},clear:false}} for temporal zoom-blur??
  ?visual lib functions for old style visual params (monochrome, pixellate, rotate, mirror, vhs etc etc) - vhs needs split into uv and rgb parts...
  ?bitwise ops

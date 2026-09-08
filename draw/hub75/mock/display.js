@@ -399,7 +399,11 @@ let makeDisplay = (opts) => {
 // ---- server -------------------------------------------------------------------------------
 
 let start = (opts) => {
-  let d = makeDisplay(opts)
+  // opts.display reuses an existing display rather than making a fresh one, so a scenario can take
+  // the listener away and put it back with the display's state intact - the link dropped, the
+  // display did not. That is a different case from the `restart` scenario's power cycle, and since
+  // the wall's link became a cable it is the common one.
+  let d = opts.display || makeDisplay(opts)
 
   let server = http.createServer((req, res) => {
     let url = (req.url || '').split('?')[0]

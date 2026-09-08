@@ -276,9 +276,71 @@ Four things worth knowing before touching it:
 
 **The host is a tap, not a second renderer.** `buildSource()` in `draw/visualsynth/codegen.js`
 already returns everything shippable — the source, the ordered uniform ASTs, the textures — so
-`draw/visualsynth.js` hands that object straight over and returns nothing. `draw/sprite.js` turns a
-falsy renderer result into a task that removes itself, so no local drawing happens and no code
-there needed changing.
+`draw/visualsynth.js` hands that object straight over and returns nothing.
+
+**A display bound event must stay out of the local render list entirely** — and "it draws nothing"
+is not the same thing, which is what this said until 2026-09-06 and it was a visible bug. The
+original claim was that `draw/sprite.js` turns a falsy renderer result into a task that removes
+itself, so no code there needed changing. True about *drawing*: that task really does draw nothing.
+But `create()` added it to the render list all the same, `draw/render-list.js`'s `isEmpty()` counts
+**queued** tasks, and a task sits queued until its start time — beats fire `0.1*beatDuration` early,
+so ~3 frames at 120bpm. A non-empty render list makes `draw/system.js` clear the canvas to opaque
+black and `main.js` unhide it — full viewport, `background:#000f`, `alpha:false`. So **every event
+of a display bound player blacked the whole limut window for a few frames** while the wall itself
+was perfectly fine. `sprite.js` now returns a named `noRender` sentinel and `create()` returns
+before adding it. The lesson generalises past hub75: an empty render task is not free, because the
+render list's emptiness is what decides whether the canvas is on screen at all.
+
+**A player id is not a player, and the wall paid for the difference.** Fixed 2026-09-08. The symptom
+was "comment out a visualsynth and the wall carries on animating, only Ctrl-. stops it, and only in
+Firefox". All three clauses pointed away from the cause. The real test case was:
+
+```
+v scopefft
+v2 scope, blend='additive', fore=#00f
+// v visualsynth, px=rot2{-1/7}>>sdcirclewave{[]n,[]n}..., display='hub75-01'
+```
+
+**`v scopefft` is a different line and it is never commented out**, so `players.getById('v')` kept
+answering perfectly well - with a scope. `perFrameUpdate`'s orphan check asked only whether
+*something* answered to that id, so it never fired, the layer was never released, and the wall kept a
+picture whose chain no longer existed anywhere in the code. Animating, too, which is what made it look
+like a live player: `evalUniforms` re-evaluates the stored uniform ASTs against the dead event's
+`params` every frame, so a `time` based chain keeps moving with no events at all. `ownsDisplay()` now
+requires the id to name a **visualsynth**, which is the only type that can ever own a layer (setLayer
+is called from `draw/visualsynth.js` and nowhere else). A visualsynth that has merely dropped its
+`display=` is deliberately still left to `releaseFor()` on its next event, so an ordinary re-edit of a
+live display line does not blank the wall for a beat on every Ctrl+Enter.
+
+**The same fault stranded the wall with nothing commented out at all** - editing that line's type from
+`visualsynth` to `scopefft` in place did it too. And **Firefox had nothing to do with any of it**:
+Electron loads `file://`, the browser build `http://localhost:8000`, so they have different
+`localStorage` and were simply running different code. The `idreuse` scenario in `mock/host-check.js`
+is this exact case and fails 2 of its 4 assertions against the old check **in both engines**.
+
+**Reading the state beats reasoning about it, and it took three wrong diagnoses to remember that.**
+The two that failed were "the player is not being swept" (it is - the *id* is reused) and the delivery
+bug below (real, but not this). What settled it in one look was `hub75 status` plus
+`Object.keys(require('player/players').instances)` from the page's own console: `player v` alongside
+`v` present in the registry says "the poll is answering yes" and nothing else does.
+
+**A layer is ended by being told, and `s.bound` must never be what decides whether we tell it.**
+Fixed 2026-09-08 alongside the above, and **not the cause of it** - a separate hole found while
+chasing it. `clearDesired()` sent `unlayer` only `if (s.bound)`, and **`s.bound` is host belief, not
+display truth**: `onclose` clears it in case the display restarted, while a display whose *link*
+dropped is still showing the layer, and `sendJson` drops a message silently with no socket. Nothing
+retried either - `release()` deletes `layers[name]` so the poll is finished, and `reconcile()` returns
+early on a null `desired`. So a release that happened while the link was down could never be
+delivered, ever. A `wantBlank` flag now records the intent and `flushBlank` retries it from `welcome`
+and from `pump()` until it has actually gone out; `setDesired` clears it, so an edit that rebinds
+while a blank is owed cannot be blanked by it afterwards. The `blankafterdrop` scenario covers it and
+fails 3 of 7 against the old code.
+
+**A display bound visualsynth also has a real destructor now** (`player-types.js` ->
+`draw/visualsynth.js` `releasePlayer`, via a new `playerFactory.destroy` hook in `player/player.js`),
+so a removed player gives the wall up in the same synchronous sweep that deletes it and the poll is
+the backstop it was always meant to be. It honours the hook's `replaced` argument: an edit is not a
+removal, and releasing on one would flap the wall.
 
 **Layers are keyed on source *and* texture identity, not on the shader alone.** This is §7.2 made
 concrete: `tex1d{{x}->x}` and `tex1d{{x}->1-x}` generate byte-identical GLSL, so they share a
@@ -326,9 +388,11 @@ unrelated-looking TypeError. `host/sha256.js` falls back to plain JS instead.
 
 ### Testing the host side
 
-`mock/host-check.js` drives the *real app in real Chrome* against the mock and asserts on what the
-display observed — 62 assertions over eight scenarios: happy path, compile failure, packet loss,
-reconnect, display restart, live edit, comment out, webcam refusal.
+`mock/host-check.js` drives the *real app in a real browser* against the mock and asserts on what the
+display observed — ten scenarios: happy path, compile failure, packet loss, reconnect, display
+restart, live edit, comment out, blank after drop, id reuse, webcam refusal. **It runs Chrome by
+default and Firefox with `--firefox`** — worth having, though note the id-reuse bug above was never
+actually engine specific and this file's blind spot was the *code shape* it drove, not the browser.
 
 **Known failure, pre-dating 2026-09-05 and still not chased (confirmed unchanged 2026-09-06):** the happy path's
 `its uniform list matches the source` fails — the host ships a program declaring **zero** uniforms
@@ -340,10 +404,25 @@ params static on the wall) or the test's expectation went stale after the 08-31 
 Worth resolving before trusting this suite as green.
 
 ```sh
-sh server.sh                                  # limut on :8000
-node draw/hub75/mock/host-check.js            # all scenarios
-node draw/hub75/mock/host-check.js edit       # just one
+sh server.sh                                     # limut on :8000
+node draw/hub75/mock/host-check.js               # all scenarios, Chrome
+node draw/hub75/mock/host-check.js edit          # just one
+node draw/hub75/mock/host-check.js comment --firefox   # ...in Firefox
 ```
+
+**A leftover browser silently evicts the next scenario's session**, which then fails with "another
+client took the display" for reasons nothing in it explains — it cost a misread result while the
+id-reuse fix was being written (`hello: 10` in one 24 s run). `p.kill()` is not enough for **either**
+engine: Firefox re-execs itself and Chrome leaves helper processes, and both keep retrying the display
+with `takeover: true` in their `hello`. Both runners now kill the process group and then anything
+holding the run's unique profile path, matching on the profile rather than on the browser name so the
+developer's own browser is untouched. If a scenario ever reports a takeover, run
+`pgrep -f limut-hub75-check` before believing anything else it says.
+
+Two things a Firefox run needs that Chrome takes as flags, both written into the generated profile:
+the autoplay prefs (or the audio clock never starts and no beat ever fires) and
+`media.navigator.streams.fake` (or the webcam scenario tests the "not ready yet" path instead of the
+refusal, and fails three assertions for a reason unrelated to the host).
 
 `mock/harness.html` is how it gets in: limut in a same-origin iframe, code seeded through
 localStorage, the app's own `go()` called. There is no CDP route — Chrome 148's `Runtime.evaluate`

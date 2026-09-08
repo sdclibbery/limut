@@ -45,7 +45,7 @@ define(function (require) {
     consoleOut(msg)
   }
 
-  return (params) => {
+  let visualsynth = (params) => {
     let node = evalParamEvent(params.px, params)
     if (!isShaderNode(node)) {
       warnOnce(`🔴 visualsynth needs px set to a visual node chain, eg px=tex{webcam{}}`)
@@ -72,7 +72,9 @@ define(function (require) {
     let display = evalParamEvent(params.display, params)
     if (display !== undefined) {
       hub75.setLayer(String(display), params, built)
-      return // nothing drawn locally; sprite.js turns a falsy result into a task that removes itself
+      return // Nothing drawn locally; sprite.js keeps a falsy result out of the render list, which
+             // has to be an absence rather than an empty task - a queued task, even one that draws
+             // nothing, unhides and blacks the canvas until it removes itself (draw/sprite.js)
     }
     hub75.releaseFor(params._player && params._player.id) // eg display= edited back off the line
     let cached = programs[built.source]
@@ -132,4 +134,17 @@ define(function (require) {
     }
     return s
   }
+
+  // A display bound player holds its layer on the wall from the moment it is defined until it is
+  // removed, and removal has to be *told*: there are no more events to notice it, and a socket close
+  // does not unbind either (the layer is display state, PROTOCOL.md 7.2). player.js calls this from
+  // the player type's destroy hook, so a commented out line gives the wall up in the same
+  // synchronous sweep that deletes the player rather than leaning on the orphan poll in
+  // draw/hub75/host/hub75.js to notice a frame later. `replaced` means an edit rather than a
+  // removal - the new player is about to bind its own layer, so releasing here would only flap the
+  // wall, and a line edited from display= back to a local visual is already covered by releaseFor
+  // on its next event.
+  visualsynth.releasePlayer = (playerId, replaced) => { if (!replaced) { hub75.releaseFor(playerId) } }
+
+  return visualsynth
 })

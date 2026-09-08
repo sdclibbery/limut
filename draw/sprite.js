@@ -133,6 +133,14 @@ define(function (require) {
   let defVignette = {x:0,y:0}
   let defZoom = {x:1,y:1}
   let defMid = {r:0,g:0,b:0,a:1}
+  // A renderer that returns nothing has nothing to draw - eg a visualsynth bound to a hub75
+  // display, which hands its whole chain to the wall. Named rather than a fresh closure so that
+  // create() below can tell "nothing to draw" from "a task that renders nothing" and keep it out
+  // of the render list entirely. It matters because draw/render-list.js counts queued tasks in
+  // isEmpty(), and a non-empty list unhides the opaque black fullscreen canvas (main.js) and
+  // clears it - so a task that draws nothing blacks the whole window for as long as it is queued,
+  // which is every event of a display bound player.
+  let noRender = () => {}
   let play = (renderer, params) => {
     let s
     if (typeof renderer === 'function') {
@@ -140,7 +148,7 @@ define(function (require) {
     } else {
       s = shaders(renderer)
     }
-    if (!s) { return () => {} }
+    if (!s) { return noRender }
     let startTime = params._time
     if (params._noteOff === undefined) {
       params.endTime = params._time + evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 1, 'b'), 'b') * params.beat.duration
@@ -340,6 +348,7 @@ define(function (require) {
   let create = (renderer) => (params) => {
     let zorder = param(params.zorder, param(params.linenum, 0)/1000)
     let renderTask = play(renderer, params)
+    if (renderTask === noRender) { return } // Nothing to draw: stay out of the render list entirely
     let targetBufferPlayerId = evalMainParamEvent(params, 'buffer')
     let bufferPlayer = players.getById(targetBufferPlayerId)
     if (bufferPlayer && bufferPlayer.buffer) {
@@ -347,6 +356,28 @@ define(function (require) {
     } else {
       system.add(params._time, renderTask, zorder)
     }
+  }
+
+  // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+    let assert = (expected, actual, msg) => {
+      let x = JSON.stringify(expected)
+      let a = JSON.stringify(actual)
+      if (x !== a) { console.trace(`Assertion failed: ${msg}\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
+    }
+    // A renderer with nothing to draw (eg a visualsynth bound to a hub75 display) must not enter
+    // the render list: draw/render-list.js counts queued tasks, and a non-empty list unhides the
+    // black fullscreen canvas (main.js) and clears it, so a queued no-op blacks the whole window
+    // for every frame it sits there.
+    assert(true, system.renderList.isEmpty(), 'render list starts empty')
+    create(() => undefined)({_time: 0})
+    assert(true, system.renderList.isEmpty(), 'a renderer that draws nothing adds no render task')
+    // And the negative above is not passing because create() stopped working
+    create(() => ({}))({_time: 0, beat: {duration: 0.5}})
+    assert(false, system.renderList.isEmpty(), 'a renderer that does draw adds a render task')
+    system.renderList.render({time: 1e9}) // Past endTime, so the task removes itself again
+    assert(true, system.renderList.isEmpty(), 'the test task cleans itself up')
+    console.log('sprite tests complete')
   }
 
   return {

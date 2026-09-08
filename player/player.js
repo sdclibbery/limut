@@ -153,6 +153,10 @@ define((require) => {
       events: transferEvents,
     }
     playerNumber++
+    // A player type may declare its own teardown. players.gc_sweep and players.stopAll both call
+    // destroy() with no argument, so a removed player tears down synchronously; player.js calls it
+    // with `true` above when the player is only being replaced by an edit.
+    if (playerFactory.destroy) { player.destroy = (replaced) => playerFactory.destroy(playerId, replaced) }
     player.play = (es) => {
       if (player.events === undefined) { player.events = [] }
       let timeNow = metronome.timeNow()
@@ -889,6 +893,25 @@ define((require) => {
   assert(0, evalParamFrame(p2.getEventsForBeat({count:0})[0].foo,ev(0,0),0))
   assert(0.581, evalParamFrame(p2.getEventsForBeat({count:0})[0].foo,ev(0,0),1/2))
   delete players.instances.p1
+
+  // A player type may declare teardown, and the argument matters. players.gc_sweep and
+  // players.stopAll call destroy() with nothing, meaning the player is gone; player() above calls
+  // it with true when the player is only being replaced by an edit. draw/visualsynth.js's
+  // releasePlayer leans on exactly that distinction - releasing on an edit would give the hub75 wall
+  // up and immediately rebind it, flapping the display on every keystroke.
+  let destroyCalls = []
+  playerTypes.destroyhooktest = { play: () => {}, destroy: (id, replaced) => destroyCalls.push([id, replaced]) }
+  p = player('dh', 'destroyhooktest', '', '', 0)
+  assert('function', typeof p.destroy)
+  p.destroy()
+  assert([['dh', undefined]], destroyCalls)
+  players.instances.dh = p
+  player('dh', 'destroyhooktest', '', '', 0) // redefining the line replaces rather than removes
+  assert([['dh', undefined], ['dh', true]], destroyCalls)
+  delete players.instances.dh
+  delete playerTypes.destroyhooktest
+  // A type with no teardown gets no destroy, so gc_sweep does not start calling one on every player
+  assert(undefined, player('p', 'play', 'x', '', 0).destroy)
 
   console.log('Player tests complete')
   }

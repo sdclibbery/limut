@@ -48,7 +48,7 @@ define((require) => {
     readout: { play: sprite('readout'), baseParams:{ amp:1, delay:0, rate:1, zoom:1, fore:offWhite, back:offBlack, additive:1 }, _type:'visual' },
     webcam: { play: sprite(webcam), baseParams:{ amp:1, delay:0, rate:1, zoom:1, fore:white, back:white }, _type:'visual' },
     shadertoy: { play: sprite(shadertoy), baseParams:{ amp:1, delay:0, rate:1, zoom:1, fore:white, back:white }, _type:'visual' },
-    visualsynth: { play: sprite(visualsynth), baseParams:{ amp:1, delay:0, rate:1, zoom:1, fore:white, back:white }, _type:'visual' },
+    visualsynth: { play: sprite(visualsynth), destroy: visualsynth.releasePlayer, baseParams:{ amp:1, delay:0, rate:1, zoom:1, fore:white, back:white }, _type:'visual' },
     image: { play: sprite(image), baseParams:{ amp:1, delay:0, rate:1, zoom:1, fore:white, back:transWhite }, _type:'visual' },
     buffer: { play: sprite(buffer), baseParams:{ amp:1, delay:0, rate:1, zoom:1, fore:white, back:transWhite, rez:0.5 }, _type:'visual' },
     text: { play: sprite(image), baseParams:{ amp:1, delay:0, rate:1, zoom:1, fore:white, back:transBlack }, _type:'visual' },

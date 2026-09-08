@@ -19,6 +19,7 @@ let display = require('./display')
 
 let CHROME = process.env.CHROME ||
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+let FIREFOX = process.env.FIREFOX || '/Applications/Firefox.app/Contents/MacOS/firefox'
 let LIMUT = process.env.LIMUT_URL || 'http://localhost:8000'
 let PORT = 7576 // not 7575, so a mock left running for manual work is not disturbed
 
@@ -72,12 +73,19 @@ let runChrome = (url, seconds, extraFlags) => {
     '--no-first-run', '--no-default-browser-check',
     '--user-data-dir=' + profile,
   ].concat(extraFlags || []).concat([url])
-  let p = spawn(CHROME, args, { stdio: ['ignore', 'ignore', 'pipe'] })
+  let p = spawn(CHROME, args, { stdio: ['ignore', 'ignore', 'pipe'], detached: true })
   let log = ''
   p.stderr.on('data', b => { log += b.toString() })
   return {
     done: sleep(seconds * 1000).then(() => {
-      p.kill()
+      // p.kill() alone leaves Chrome's helper processes alive, and a leftover browser keeps retrying
+      // the display with `takeover: true` in its hello - so it silently evicts the *next* scenario's
+      // session, which then fails with "another client took the display" for reasons nothing in that
+      // scenario explains. It cost a misread result here before it was found. Kill the process group,
+      // then anything still holding this run's unique profile path; matching on the profile rather
+      // than on "Chrome" is what keeps the developer's own browser out of it.
+      try { process.kill(-p.pid, 'SIGKILL') } catch (e) { try { p.kill('SIGKILL') } catch (e2) {} }
+      try { require('node:child_process').execFileSync('pkill', ['-f', profile]) } catch (e) {}
       try { require('node:fs').rmSync(profile, {recursive: true, force: true}) } catch (e) {}
       return log
     }),
@@ -85,9 +93,65 @@ let runChrome = (url, seconds, extraFlags) => {
   }
 }
 
-let consoleLines = (log) => log.split('\n')
-  .filter(l => l.indexOf('INFO:CONSOLE') !== -1)
-  .map(l => l.replace(/^.*CONSOLE[^"]*"/, '').replace(/", source:.*$/, ''))
+// The same contract as runChrome, because there is nothing Chrome specific about the contract: the
+// browser is driven by URL alone and every assertion comes from what the *display* observed. It
+// exists because this file having only ever run one engine is what let a Firefox-only failure
+// survive 62 passing assertions - the wall kept a picture whose player had been commented out.
+let runFirefox = (url, seconds) => {
+  let fs = require('node:fs')
+  let profile = `/tmp/limut-hub75-check-ff-${process.pid}-${++runNumber}`
+  fs.mkdirSync(profile, {recursive: true}) // -profile refuses a path that does not exist
+  fs.writeFileSync(profile + '/user.js', [
+    'user_pref("media.autoplay.default", 0);',            // no user gesture headless, so the audio clock
+    'user_pref("media.autoplay.blocking_policy", 0);',    // would never start and no beat would ever fire
+    'user_pref("devtools.console.stdout.content", true);', // console.* to stdout, so consoleLines works
+    'user_pref("browser.shell.checkDefaultBrowser", false);',
+    'user_pref("datareporting.policy.dataSubmissionEnabled", false);',
+    // The prefs equivalent of Chrome's --use-fake-device/ui-for-media-stream, so the webcam scenario
+    // exercises the refusal of a real capture texture here too rather than the "not ready yet" path
+    'user_pref("media.navigator.streams.fake", true);',
+    'user_pref("media.navigator.permission.disabled", true);',
+    '',
+  ].join('\n'))
+  // -no-remote matters: without it this hands the URL to the developer's own running Firefox and
+  // opens a tab there instead of starting a headless one, and the run then measures nothing.
+  // MOZ_HEADLESS rather than --headless, because Firefox re-execs itself and the flag does not
+  // always survive that - and detached, so the whole tree can be killed as a process group below.
+  let p = spawn(FIREFOX, ['-no-remote', '-profile', profile, url],
+    { stdio: ['ignore', 'pipe', 'pipe'], detached: true, env: Object.assign({}, process.env, {MOZ_HEADLESS: '1'}) })
+  let log = ''
+  p.stdout.on('data', b => { log += b.toString() })
+  p.stderr.on('data', b => { log += b.toString() })
+  return {
+    done: sleep(seconds * 1000).then(() => {
+      // p.kill() alone is not enough and the failure is nasty rather than obvious: Firefox re-execs,
+      // so the surviving process keeps retrying the display with backoff, and its `hello` carries
+      // takeover:true - so a leftover browser silently evicts the *next* scenario's session and that
+      // scenario fails with "another client took the display". Kill the group, then anything still
+      // holding this run's unique profile path. Matching on the profile and never on "firefox" is
+      // what keeps the developer's own browser out of it.
+      try { process.kill(-p.pid, 'SIGKILL') } catch (e) { try { p.kill('SIGKILL') } catch (e2) {} }
+      try { require('node:child_process').execFileSync('pkill', ['-f', profile]) } catch (e) {}
+      try { fs.rmSync(profile, {recursive: true, force: true}) } catch (e) {}
+      return log
+    }),
+    proc: p,
+  }
+}
+
+// Chrome wraps each console line in its own logging prefix; Firefox's devtools.console.stdout.content
+// prints it raw. One helper for both, so a scenario reads the same either way.
+let consoleLines = (log) => log.indexOf('INFO:CONSOLE') === -1
+  ? log.split('\n')
+  : log.split('\n')
+    .filter(l => l.indexOf('INFO:CONSOLE') !== -1)
+    .map(l => l.replace(/^.*CONSOLE[^"]*"/, '').replace(/", source:.*$/, ''))
+
+// Which engine the scenarios drive. Firefox is where the comment-out bug showed and Chrome is where
+// every assertion here was written, so both have to be runnable.
+let ENGINE = process.argv.includes('--firefox') ? 'firefox' : 'chrome'
+let run = (url, seconds, extraFlags) => // extraFlags are Chrome's; Firefox's equivalents are prefs above
+  ENGINE === 'firefox' ? runFirefox(url, seconds) : runChrome(url, seconds, extraFlags)
 
 // ---- scenarios -------------------------------------------------------------------------------
 
@@ -99,7 +163,7 @@ let scenarioHappy = async () => {
   let seen = instrument(d.display)
   let code = `v1 visualsynth, ${PX}, display='localhost:${PORT}', dim=[0:1]l`
   let url = `${LIMUT}/draw/hub75/mock/harness.html?code=${encodeURIComponent(code)}`
-  let log = await runChrome(url, 20).done
+  let log = await run(url, 20).done
   let x = d.display
 
   check('a session was opened', x.sessions >= 1, `sessions=${x.sessions}`)
@@ -158,7 +222,7 @@ let scenarioCompileFailure = async () => {
   let seen = instrument(d.display)
   let code = `v1 visualsynth, ${PX}, display='localhost:${PORT}'`
   let url = `${LIMUT}/draw/hub75/mock/harness.html?code=${encodeURIComponent(code)}`
-  let log = await runChrome(url, 20).done
+  let log = await run(url, 20).done
   let x = d.display
 
   check('a session was opened', x.sessions >= 1, `sessions=${x.sessions}`)
@@ -195,7 +259,7 @@ let scenarioPacketLoss = async () => {
   let d = display.start({ port: PORT, name: 'hub75-check', w: 128, h: 64, failCompile: null, drop: 20, verbose: false })
   let code = `v1 visualsynth, ${PX}, display='localhost:${PORT}'`
   let url = `${LIMUT}/draw/hub75/mock/harness.html?code=${encodeURIComponent(code)}`
-  await runChrome(url, 18).done
+  await run(url, 18).done
   let x = d.display
 
   check('a layer is still bound', x.layer !== null)
@@ -211,7 +275,7 @@ let scenarioRestart = async () => {
   let d = display.start({ port: PORT, name: 'hub75-check', w: 128, h: 64, failCompile: null, drop: 0, verbose: false })
   let code = `v1 visualsynth, ${PX}, display='localhost:${PORT}'`
   let url = `${LIMUT}/draw/hub75/mock/harness.html?code=${encodeURIComponent(code)}`
-  let run = runChrome(url, 34)
+  let browser = run(url, 34)
 
   await sleep(15000)
   let boundBefore = d.display.layer !== null
@@ -226,7 +290,7 @@ let scenarioRestart = async () => {
   // A brand new display on the same port: same name, no caches, exactly as a power cycle looks
   let d2 = display.start({ port: PORT, name: 'hub75-check', w: 128, h: 64, failCompile: null, drop: 0, verbose: false })
   let seen2 = instrument(d2.display)
-  let log = await run.done
+  let log = await browser.done
   let x = d2.display
   let lines = consoleLines(log)
 
@@ -256,14 +320,14 @@ let scenarioReconnect = async () => {
   let seen = instrument(d.display)
   let code = `v1 visualsynth, ${PX}, display='localhost:${PORT}'`
   let url = `${LIMUT}/draw/hub75/mock/harness.html?code=${encodeURIComponent(code)}`
-  let run = runChrome(url, 26)
+  let browser = run(url, 26)
 
   // Drop the socket from the display end once the layer is up, leaving the display's caches intact
   await sleep(14000)
   let boundBefore = d.display.layer !== null
   let seqBefore = d.display.lastSeq
   if (d.display.session) { d.display.session.conn.close(1000, 'test disconnect') }
-  await run.done
+  await browser.done
   let x = d.display
 
   check('a layer was bound before the disconnect', boundBefore)
@@ -292,7 +356,7 @@ let scenarioLiveEdit = async () => {
   let two = `v1 visualsynth, px=mul{sin{}}>>tex1d{{x}->1-x}, display='localhost:${PORT}'`
   let url = `${LIMUT}/draw/hub75/mock/harness.html?code=${encodeURIComponent(one)}` +
     `&code2=${encodeURIComponent(two)}&runafter2=9000`
-  await runChrome(url, 26).done
+  await run(url, 26).done
   let x = d.display
 
   check('both luts were uploaded', x.assets.size === 2, `assets=${x.assets.size}`)
@@ -322,7 +386,7 @@ let scenarioCommentOut = async () => {
   let out = `// v1 visualsynth, ${PX}, display='localhost:${PORT}'`
   let url = `${LIMUT}/draw/hub75/mock/harness.html?code=${encodeURIComponent(live)}` +
     `&code2=${encodeURIComponent(out)}&runafter2=9000`
-  await runChrome(url, 20).done
+  await run(url, 20).done
   let x = d.display
 
   check('a layer was bound while the line was live', seen.counts.layer >= 1,
@@ -336,13 +400,87 @@ let scenarioCommentOut = async () => {
   d.stop()
 }
 
+// The comment-out above, but with the link down at the moment it happens. This is the scenario the
+// Firefox bug needed: onclose clears the host's idea of what it bound (the display may have
+// restarted), so a release while disconnected sent no `unlayer` at all - and nothing ever retried it,
+// because release() deletes layers[name] so hub75.js's orphan poll is finished, and reconcile()
+// returns early on a null `desired`. The wall kept a picture whose player was gone for the rest of
+// the session, unreachably. It reproduces in Chrome too, which is the proof the engine was never the
+// mechanism - only which end dropped its socket.
+let scenarioBlankAfterDrop = async () => {
+  console.log('\nblank after drop: a display given up while the link was down is still told about it')
+  let d = display.start({ port: PORT, name: 'hub75-check', w: 128, h: 64, failCompile: null, drop: 0, verbose: false })
+  let seen = instrument(d.display)
+  let live = `v1 visualsynth, ${PX}, display='localhost:${PORT}'`
+  let out = `// v1 visualsynth, ${PX}, display='localhost:${PORT}'`
+  let url = `${LIMUT}/draw/hub75/mock/harness.html?code=${encodeURIComponent(live)}` +
+    `&code2=${encodeURIComponent(out)}&runafter2=17000`
+  let browser = run(url, 36)
+
+  await sleep(14000)
+  let boundBefore = d.display.layer !== null
+  // The listener has to go first, or the host's 250ms retry reconnects and re-binds before the
+  // comment-out lands - which would quietly test the happy path instead of this one
+  d.stop()
+  if (d.display.session) { d.display.session.conn.close(1000, 'link dropped') }
+  await sleep(6000) // the comment-out lands at 17s, with nothing listening to hear about it
+  let boundWhileDown = d.display.layer !== null
+  // The same display, listener back. It still believes a layer is bound, because a socket close does
+  // not unbind - the layer is display state (PROTOCOL.md 7.2)
+  let d2 = display.start({ port: PORT, display: d.display, name: 'hub75-check', w: 128, h: 64,
+                           failCompile: null, drop: 0, verbose: false })
+  await browser.done
+  let x = d2.display
+
+  check('a layer was bound before the link dropped', boundBefore)
+  check('the display still held it while disconnected', boundWhileDown)
+  check('the host reconnected', x.sessions >= 2, `sessions=${x.sessions}`)
+  check('the display was told to unlayer once it could be', seen.counts.unlayer >= 1,
+    `unlayer messages=${seen.counts.unlayer}`)
+  check('nothing is bound at the end', x.layer === null, JSON.stringify(x.layer))
+  check('the session survived', x.session !== null)
+  // and it is said once, not re-sent every frame for the rest of the run
+  check('the blank was not repeated every frame', (seen.counts.unlayer || 0) <= 2,
+    `unlayer messages=${seen.counts.unlayer}`)
+
+  d2.stop()
+}
+
+// The comment-out above, but with the display bound line's id **reused by another live line** - a
+// `v scopefft` beside a commented `v visualsynth, display=...`, which is an entirely ordinary thing
+// to have in a live coding file. The orphan poll asked only whether *something* answered to that id,
+// and the scope answered, so the layer was never released: the wall kept a picture whose chain no
+// longer existed in the code, animating from the dead event's params, until Ctrl-. This is the real
+// reported bug, and it is not browser specific - it reproduces identically in both engines.
+let scenarioIdReuse = async () => {
+  console.log('\nid reuse: a live line inheriting the display bound line\'s id must not keep the layer alive')
+  let d = display.start({ port: PORT, name: 'hub75-check', w: 128, h: 64, failCompile: null, drop: 0, verbose: false })
+  let seen = instrument(d.display)
+  // Order as the user had it: the scope first, so the visualsynth owns the id while it is live
+  let live = `v scopefft\nv2 scope\nv visualsynth, ${PX}, display='localhost:${PORT}'`
+  let out = `v scopefft\nv2 scope\n// v visualsynth, ${PX}, display='localhost:${PORT}'`
+  let url = `${LIMUT}/draw/hub75/mock/harness.html?code=${encodeURIComponent(live)}` +
+    `&code2=${encodeURIComponent(out)}&runafter2=9000`
+  await run(url, 24).done
+  let x = d.display
+
+  check('a layer was bound while the visualsynth line was live', seen.counts.layer >= 1,
+    `layer messages=${seen.counts.layer}`)
+  check('the display was told to unlayer even though the id survived', seen.counts.unlayer >= 1,
+    `unlayer messages=${seen.counts.unlayer}`)
+  check('nothing is bound at the end', x.layer === null, JSON.stringify(x.layer))
+  check('the session survived', x.session !== null)
+
+  d.stop()
+}
+
 let scenarioWebcam = async () => {
   console.log('\nwebcam: refused rather than bound, because it cannot be shipped')
   let d = display.start({ port: PORT, name: 'hub75-check', w: 128, h: 64, failCompile: null, drop: 0, verbose: false })
   let seen = instrument(d.display)
   let code = `v1 visualsynth, px=tex{webcam{}}, display='localhost:${PORT}'`
   let url = `${LIMUT}/draw/hub75/mock/harness.html?code=${encodeURIComponent(code)}`
-  let log = await runChrome(url, 20, [
+  let log = await run(url, 20, [
     '--use-fake-device-for-media-stream', // a real capture texture, so this exercises the refusal
     '--use-fake-ui-for-media-stream',     // rather than the "not ready yet" path
   ]).done
@@ -367,7 +505,7 @@ let main = async () => {
     console.error(`🔴 limut is not being served at ${LIMUT}. Run: sh server.sh`)
     process.exit(2)
   }
-  let only = process.argv[2]
+  let only = process.argv.slice(2).find(a => a.indexOf('--') !== 0) // so --firefox is not read as a scenario name
   let all = {
     happy: scenarioHappy,
     compile: scenarioCompileFailure,
@@ -376,6 +514,8 @@ let main = async () => {
     restart: scenarioRestart,
     edit: scenarioLiveEdit,
     comment: scenarioCommentOut,
+    blankafterdrop: scenarioBlankAfterDrop,
+    idreuse: scenarioIdReuse,
     webcam: scenarioWebcam,
   }
   for (let name in all) {

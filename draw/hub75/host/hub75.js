@@ -111,7 +111,28 @@ define(function (require) {
     if (entry && entry.playerId === playerId) { release(name) }
   }
 
+  // Does the id this layer was bound under still name a player that could own it? **A player id is
+  // not a player**, and this is where that bites: `v visualsynth, display='hub75-01'` commented out
+  // while a live `v scopefft` on another line carries the same id leaves players.getById('v')
+  // answering perfectly well, so a check for mere existence never fires. The wall then keeps a
+  // picture whose chain no longer exists anywhere in the code - and keeps *animating* it, because
+  // the uniforms are re-evaluated from the dead event's params every frame. Only a visualsynth can
+  // own a display layer, since setLayer is called from draw/visualsynth.js and nowhere else, so any
+  // other type under that id means the layer is orphaned. The same fault made a live *edit* from
+  // `v visualsynth, display=...` to `v scopefft` strand the wall just as permanently, with nothing
+  // commented out at all.
+  //
+  // A visualsynth that has merely dropped its `display=` param is deliberately NOT caught here:
+  // releaseFor() ends that one on its next event (draw/visualsynth.js), which is what stops an
+  // ordinary re-edit of a live display line from blanking the wall for a beat on every Ctrl+Enter.
+  let ownsDisplay = (playerId) => {
+    let p = players.getById(playerId)
+    return p !== undefined && String(p.type).toLowerCase() === 'visualsynth'
+  }
+
   let release = (name) => {
+    let entry = layers[name]
+    if (entry) { delete byPlayer[entry.playerId] } // or a player ended by the poll below leaks its mapping
     delete layers[name]
     if (sessions[name]) { sessions[name].clearDesired() }
   }
@@ -159,10 +180,11 @@ define(function (require) {
     for (let name in sessions) {
       let session = sessions[name]
       let entry = layers[name]
-      // The owning player going away - stopped, deleted, or swept by players.gc_sweep - is what
-      // ends a layer. Layer lifetime is per player, not per event (PROTOCOL.md 7.2): the wall holds
-      // its picture between events, and animation comes from the uniform stream.
-      if (entry !== undefined && players.getById(entry.playerId) === undefined) {
+      // The owning player going away - stopped, deleted, swept by players.gc_sweep, or replaced by
+      // something of another type that happens to share its id - is what ends a layer. Layer
+      // lifetime is per player, not per event (PROTOCOL.md 7.2): the wall holds its picture between
+      // events, and animation comes from the uniform stream.
+      if (entry !== undefined && !ownsDisplay(entry.playerId)) {
         release(name)
         entry = undefined
       }
@@ -286,6 +308,96 @@ define(function (require) {
                 layerKey({source: src, textures: [{texture: texB}, {texture: texA}]}))
   // A chain with no textures never collides with one that has them
   assert(false, layerKey({source: src, textures: []}) === one)
+
+  // A player that has gone away must give the display up. Nothing else can: a commented out line
+  // fires no more events, so releaseFor() can never run, and a socket close does not unbind either
+  // (the layer is display state, PROTOCOL.md 7.2). A stub session, injected before setLayer so
+  // getSession finds it and no real socket is ever opened.
+  let stubSession = () => {
+    let o = {desired: null, blanked: 0, frames: 0, manualDim: 1,
+      setDesired: (d) => { o.desired = d }, clearDesired: () => { o.blanked++; o.desired = null },
+      boundLayer: () => null, sendFrame: () => { o.frames++ }, pump: () => {}}
+    return o
+  }
+  let beat = {count: 0, duration: 0.5}
+
+  let sess = stubSession()
+  sessions['not-a-real-display'] = sess
+  let vp = {id: 'vtest', type: 'visualsynth'}
+  players.instances['vtest'] = vp
+  setLayer('not-a-real-display', {_player: vp}, {source: src, uniforms: [], textures: []})
+  assert(true, sess.desired !== null) // bound while the player is alive
+  perFrameUpdate(0, beat)
+  assert(0, sess.blanked) // ...and left alone, frame after frame
+  assert(1, sess.frames)
+  delete players.instances['vtest'] // exactly what gc_sweep does to a commented out line
+  perFrameUpdate(0, beat)
+  assert(1, sess.blanked)
+  perFrameUpdate(0, beat)
+  assert(1, sess.blanked) // and only once - the layer entry is gone, so the poll is finished
+
+  // The deterministic path, which draw/visualsynth.js's releasePlayer uses from the player type's
+  // destroy hook: the same sweep that removes the player gives the wall up, no frame of latency
+  let sess2 = stubSession()
+  sessions['not-a-real-display-2'] = sess2
+  let vp2 = {id: 'vtest2', type: 'visualsynth'}
+  players.instances['vtest2'] = vp2
+  setLayer('not-a-real-display-2', {_player: vp2}, {source: src, uniforms: [], textures: []})
+  releaseFor('vtest2')
+  assert(1, sess2.blanked)
+  releaseFor('vtest2') // idempotent: the mapping went with it
+  assert(1, sess2.blanked)
+  delete players.instances['vtest2']
+  perFrameUpdate(0, beat) // nothing left for the poll to find either
+  assert(1, sess2.blanked)
+
+  // An id is not a player. This is the one that mattered: the display bound line commented out
+  // while another live line on another row carries the same id - `v scopefft` beside a commented
+  // `v visualsynth, display=...` - which is an ordinary thing to have in a live coding file. The old
+  // check asked only whether *something* answered to 'v', so the wall kept a picture whose chain was
+  // gone, animating from the dead event's params, until Ctrl-. Nothing about it is browser specific.
+  let sess3 = stubSession()
+  sessions['not-a-real-display-3'] = sess3
+  let vp3 = {id: 'vtest3', type: 'visualsynth'}
+  players.instances['vtest3'] = vp3
+  setLayer('not-a-real-display-3', {_player: vp3}, {source: src, uniforms: [], textures: []})
+  perFrameUpdate(0, beat)
+  assert(0, sess3.blanked)
+  // gc_sweep replaced the visualsynth with a scope of the same name, rather than removing it
+  players.instances['vtest3'] = {id: 'vtest3', type: 'scopefft'}
+  perFrameUpdate(0, beat)
+  assert(1, sess3.blanked)
+  delete players.instances['vtest3']
+
+  // And the same fault with nothing commented out at all: a live edit of the line's player type
+  let sess4 = stubSession()
+  sessions['not-a-real-display-4'] = sess4
+  let vp4 = {id: 'vtest4', type: 'visualsynth'}
+  players.instances['vtest4'] = vp4
+  setLayer('not-a-real-display-4', {_player: vp4}, {source: src, uniforms: [], textures: []})
+  players.instances['vtest4'] = {id: 'vtest4', type: 'play'} // now an audio player of the same name
+  perFrameUpdate(0, beat)
+  assert(1, sess4.blanked)
+  delete players.instances['vtest4']
+
+  // A visualsynth replaced by another visualsynth is NOT released here: the next event either
+  // re-binds it or, if display= is gone from the line, releaseFor() ends it. Releasing on the
+  // replacement itself would blank the wall for a beat on every Ctrl+Enter of a live display line.
+  let sess5 = stubSession()
+  sessions['not-a-real-display-5'] = sess5
+  let vp5 = {id: 'vtest5', type: 'visualsynth'}
+  players.instances['vtest5'] = vp5
+  setLayer('not-a-real-display-5', {_player: vp5}, {source: src, uniforms: [], textures: []})
+  players.instances['vtest5'] = {id: 'vtest5', type: 'visualsynth'} // re-parsed, a new object
+  perFrameUpdate(0, beat)
+  assert(0, sess5.blanked)
+  delete players.instances['vtest5']
+
+  delete sessions['not-a-real-display']
+  delete sessions['not-a-real-display-2']
+  delete sessions['not-a-real-display-3']
+  delete sessions['not-a-real-display-4']
+  delete sessions['not-a-real-display-5']
 
   console.log('Hub75 host tests complete')
   }
