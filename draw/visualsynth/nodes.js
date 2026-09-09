@@ -331,12 +331,17 @@ define(function(require) {
   }
   addNodeFunction('pal', pal)
 
-  // Texture source for tex{}: webcam{'label'} or webcam{2}, with optional width/height
+  // Texture source for tex{}: webcam{'label'} or webcam{2}, with optional width/height/fps.
+  // The mode params are evaluated rather than passed on as asts, both so they reach getUserMedia as
+  // numbers and so that editing one on a live line reopens the camera in the new mode.
   let webcamSource = (args, e, b) => {
     let device = args.value !== undefined ? args.value : args.device
     return {
       isVisualTextureSource: true,
-      acquire: () => webcam.acquireTexture(device, args.width, args.height),
+      acquire: () => webcam.acquireTexture(device,
+        evalParamFrame(args.width, e, b),
+        evalParamFrame(args.height, e, b),
+        evalParamFrame(args.fps, e, b)),
     }
   }
   addVarFunction('webcam', webcamSource)

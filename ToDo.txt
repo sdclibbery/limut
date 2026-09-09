@@ -1,13 +1,14 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-Hub75 display
- Image textures (tex{'url'}) over the protocol: needs the encoded file bytes fetching host side
-=================================================================================================================================
-=================================================================================================================================
-=================================================================================================================================
+?screen state when recompiling shader
+?camera lag - plan file at ~/.claude/plans/i-have-a-svpro-cuddly-bengio.md keeps the measurement protocol
+!GC pauses?
 !superbass weird on keyboard on electron, not on firefox, superosc missing on some notes? keyboard only
 visual nodes...
+ Shape should be default param on kal
+ Do colour conversion in shader if given a chain Eg set{{h:id.u}}
+ Wobble and ripple with time and size params
  ?Noise methods take time as .z but kal takes it as {t:}; would be nice to be consistent? Prolly nice if noise fns also have time param
  ?why does fbm3 (with time in z) move in a jerky way? It seems to move to a new configuration, then pause there etc. Is that expected? eg px=set{z:time/16}>>fbm3
  sdsin (approximate only)
@@ -83,6 +84,7 @@ electron performance
  !We also seem to be leaking 1 js event listener per beat???
 !Gamepad: when notes are missing (stick clicks, lt: rt: etc) then don't leave gaps in value played
  Full remapping to handle this? What about gp.notes then?
+Hub75 display: Image textures (tex{'url'}) over the protocol: needs the encoded file bytes fetching host side
 
 ==== audio ====
 ? Sting based lead preset

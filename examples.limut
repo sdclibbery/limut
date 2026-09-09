@@ -5890,3 +5890,16 @@ section alt {
 v visualsynth, px=set{v:id.v-time*2}>>fbm2{scale:3/2}^2*2>>mul{1/2-uv.v/5}>>pal{0,1/4,red*3/4,yellow,1}, display='hub75-01'
 
 
+include 'personal/everything.limut'
+dw2 dmxwash, channel=(1,8,15,22), fore=#200*pk.pulse.0+#100*[]n19
+hd visualsynth, px=set{uv.v-sin{uv.u*4*(1+main.pulse)-time*4}*pk.pulse.0*2}>>abs>>pal{2*pc.pulse.0,red,blue*2*bl.pulse.0,l.pulse.0}, display='hub75-01', dim=3/4
+w visualsynth, px=mul{3/4}>>floor{1/200 + pk.pulse.0 /40 + pc.pulse.0 /20}>>tex{webcam{['5mp':24,'2mp':8]t}}
+pk bd909 0...
+ph h909 000o crop 16, vel=[]n, level, swing=54
+pc cp909 ....0...
+pp rs909 0.4 crop 14 + .9, swing=56
+bl lately 0__706050 crop 16, dur=1/4, fx=mix{duck}
+a acid 765 crop 8, vel*=1/3, echo=1/2
+l piano gamepad lt:vel, fx=tape{1/8}>>mix{airverb}
+
+
