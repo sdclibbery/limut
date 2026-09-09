@@ -87,6 +87,7 @@ int main(int argc, char **argv) {
     output_opts opts;
     int noGpu = 0, i, testPattern = PATTERN_OFF, idlePattern = PATTERN_CORNERS;
     double patternFps = 60.0, nextPattern;
+    int holdDue = 0;              /* the hold clock fired; taken only if display_draw drew nothing */
     double nextTick;
 
     memset(&d, 0, sizeof d);
@@ -277,14 +278,30 @@ int main(int argc, char **argv) {
     while (!stopping) {
         double now = now_seconds();
         int timeout = (int)((nextTick - now) * 1000.0);
-        /* A pattern has nothing driving it: display_draw only runs when a frame arrived or
-         * something changed, so with no host it would draw once and then go quiet. A receiving
-         * card that stops being fed may blank, so re-send on our own clock instead.
+        /* One clock, and everything the card is fed between draws hangs off it. display_draw only
+         * runs when a frame arrived or something changed, and the card is fed by nothing else --
+         * there is no output thread and no watchdog below here -- so anything that leaves the loop
+         * with nothing to draw also stops refreshing the panels, and a receiving card that stops
+         * being fed may blank or drift. It has two jobs:
          *
-         * This covers the IDLE pattern too, which is the normal state of an unattended wall --
-         * without it the idle Ls would be drawn once at startup and the card left unfed. */
-        int freeRun = patternFps > 0.0 && !d.layerBound &&
-                      (d.testPattern != PATTERN_OFF || d.idlePattern != PATTERN_OFF);
+         *   nothing bound   re-draw the test or IDLE pattern. The idle case is the normal state of
+         *                   an unattended wall; without it the Ls would be drawn once at startup.
+         *   layer bound     re-send the frame the panels are already showing (display_hold), which
+         *                   is what turns every stall into a frozen picture instead of whatever the
+         *                   card does when starved. It covers a dead or reconnecting session, a host
+         *                   streaming layerCount 0, and a layer held back by session.c for want of a
+         *                   frame that fits it -- the three states a live-coded shader edit passes
+         *                   through, and the reason the wall used to hold a broken frame across one.
+         *
+         * It cannot cover a stall INSIDE the loop, which is what a compile is (compile_guard.h
+         * blocks): no clock in this thread runs while the thread is blocked.
+         *
+         * The hold is taken only when display_draw drew nothing, checked against out.frames below,
+         * so this never doubles up with a real frame -- the failure that read as a rock steady
+         * 120 fps on 2026-09-05. */
+        int freeRun = patternFps > 0.0 &&
+                      (d.layerBound ? d.out.frames > 0
+                                    : (d.testPattern != PATTERN_OFF || d.idlePattern != PATTERN_OFF));
         if (timeout < 0) timeout = 0;
         if (timeout > 1000) timeout = 1000;
         if (freeRun) {
@@ -297,11 +314,16 @@ int main(int argc, char **argv) {
 
         now = now_seconds();
         if (freeRun && now >= nextPattern) {
-            d.needsRedraw = 1;
+            if (d.layerBound) holdDue = 1; else d.needsRedraw = 1;
             nextPattern = now + 1.0 / patternFps;
         }
 
-        display_draw(&d);          /* 2: render whatever survived */
+        {
+            uint64_t before = d.out.frames;
+            display_draw(&d);      /* 2: render whatever survived */
+            if (holdDue && d.out.frames == before) display_hold(&d); /* 2b: keep the card fed */
+            holdDue = 0;
+        }
 
         now = now_seconds();
         if (now >= nextTick) {     /* 3: telemetry */

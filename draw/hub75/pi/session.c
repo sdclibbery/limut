@@ -96,8 +96,14 @@ void display_debug_json(display *d, strbuf *b) {
     sb_add(b, ",\"testPattern\":");
     sb_json_str(b, pattern_name(d->testPattern), strlen(pattern_name(d->testPattern)));
     sb_addf(b, ",\"lastSeq\":%lld,\"sessions\":%d,", d->lastSeq, d->sessions);
-    sb_addf(b, "\"stats\":{\"rendered\":%llu,\"dropped\":%llu,\"stale\":%llu,\"fps\":%d},",
-            d->rendered, d->dropped, d->stale, d->fps);
+    sb_addf(b, "\"stats\":{\"rendered\":%llu,\"held\":%llu,\"dropped\":%llu,\"stale\":%llu,"
+               "\"fps\":%d},",
+            d->rendered, d->held, d->dropped, d->stale, d->fps);
+    sb_add(b, "\"compile\":{\"ms\":");
+    sb_json_num(b, d->compileMs);
+    sb_add(b, ",\"guardMs\":");
+    sb_json_num(b, d->compileGuardMs);
+    sb_add(b, "},");
     sb_add(b, "\"pacing\":");
     pace_set_json(b, &d->paceRpt);
     sb_add(b, ",");
@@ -320,6 +326,15 @@ static void handle_prog(display *d, ws_conn *c, const char *s, js_tok *t, int n)
     }
 
     if (d->r) {
+        /* How long this takes is the one number that decides whether the compile window needs more
+         * work than §7.1's rule. The daemon is single threaded, so every millisecond spent in here
+         * is a millisecond the card is not being fed and no clock in this thread can help: the hold
+         * in main.c covers every OTHER stall, but not a stall inside the loop. Measured rather than
+         * assumed, because the two halves - the guarded child and this process's own compile of the
+         * same source - cost roughly the same, and which of them is worth attacking depends entirely
+         * on how big the total is. Reported on every compile, so it is in the journal next to the
+         * shader that caused it. */
+        double t0 = now_seconds(), tGuard;
         /* The candidate goes through the child first (compile_guard.h). Mesa's v3d compiler
          * segfaults on shaders it cannot register allocate instead of returning an error, so
          * without this a px chain could kill the daemon - and since §8 never got its `error`, the
@@ -327,6 +342,7 @@ static void handle_prog(display *d, ws_conn *c, const char *s, js_tok *t, int n)
          * A crash is reported as kind "compile" like any other rejection: permanent for this
          * source, which is exactly right and is what breaks that loop. */
         int guarded = cguard_check(&d->guard, p->frag, &isLink, log, sizeof log);
+        tGuard = now_seconds();
         if (guarded == CGUARD_REJECT || guarded == CGUARD_CRASHED) {
             if (guarded == CGUARD_CRASHED)
                 fprintf(stderr, "🔴 program %s: %s; daemon survived\n", id, d->guard.lastCrash);
@@ -342,6 +358,11 @@ static void handle_prog(display *d, ws_conn *c, const char *s, js_tok *t, int n)
             send_err(d, c, isLink ? "link" : "compile", id, p->log ? p->log : "failed");
             return;
         }
+        d->compileMs = (now_seconds() - t0) * 1000.0;
+        d->compileGuardMs = (tGuard - t0) * 1000.0;
+        fprintf(stderr, "  compiled %s in %.0fms (%.0fms guarded, %.0fms here) - the card is unfed"
+                        " for that long\n", id, d->compileMs, d->compileGuardMs,
+                d->compileMs - d->compileGuardMs);
     } else {
         p->ok = 1; /* no GPU: the structural checks are all there is */
     }
@@ -461,7 +482,25 @@ static void handle_layer(display *d, ws_conn *c, const char *s, js_tok *t, int n
     snprintf(d->layerProg, sizeof d->layerProg, "%s", progId);
     memcpy(d->layerTex, tex, sizeof tex);
     d->nLayerTex = nTex;
-    d->needsRedraw = 1;
+    /* Redraw on the swap ONLY if the frame being held actually fits the program now bound.
+     * `d->frame` is the last accepted frame packet and its values are positional slots of whichever
+     * program was bound when it arrived (§12.1); drawing a different program from them puts the
+     * surplus uniforms at zero and gives the shared ones a meaning they do not have. On the wall
+     * that is a saturated white frame, latched onto the card and then HELD, because after the swap
+     * nothing feeds the card until a frame of the right shape turns up.
+     *
+     * §7.1 tells a host not to send the layer until its program is acknowledged, which keeps the
+     * two in step - but that is the host's rule and this is the display's own guard against a host
+     * that does not keep it, or one racing a reconnect. Holding the last good picture is the right
+     * answer either way: `unlayer` is how a host asks for black.
+     *
+     * A texture-only rebind keeps the same program and so the same count, so the common live edit
+     * still redraws at once. */
+    if (d->frame.uniformCount == p->nUniforms) {
+        d->needsRedraw = 1;
+    } else {
+        d->haveFrame = 0; /* stale for this program: hold until a frame that fits arrives */
+    }
     vlog(d, "  bound layer 0 to program %s with %d texture(s)", progId, nTex);
 }
 
@@ -803,6 +842,13 @@ void display_draw(display *d) {
                 nTex++;
             }
         }
+        /* The same invariant as handle_layer's, enforced at the point of drawing: a frame's values
+         * are positional slots of the program that was bound when it arrived. A layerCount 0 frame
+         * lands here as uniformCount 0, so without this a redraw forced by `hello` on a reconnect
+         * repaints a live wall from all-zero uniforms - white, held, and with nothing in the log.
+         * render_frame itself stays permissive: compile_guard.c draws deliberately with no uniforms
+         * at all to make v3d generate the fragment code, so the count rule belongs here. */
+        if (p && p->ok && d->r && d->frame.uniformCount != p->nUniforms) { return; }
         if (p && p->ok && d->r) {
             if (render_frame(d->r, p, tex, nTex, d->frame.values, d->frame.uniformCount,
                              d->scratch, err, sizeof err) < 0) {
@@ -835,6 +881,17 @@ void display_draw(display *d) {
         pace_add(&d->pace.render, done - t0);
         pace_mark(&d->pace.draw, done);
     }
+}
+
+void display_hold(display *d) {
+    /* Nothing was drawn this pass and the wall is meant to be showing something, so re-send what it
+     * is already showing. The card is fed by nothing but this loop -- there is no output thread and
+     * no watchdog anywhere below here -- so every reason the loop has to draw nothing is also a
+     * reason the panels stop being refreshed: a session that died, a host streaming layerCount 0, a
+     * layer held back for want of a frame that fits it. `held` is counted separately from `rendered`
+     * because it is not a frame: it is the same frame again, and a wall that is being held rather
+     * than driven is worth being able to see in `stat`. */
+    if (output_resend(&d->out) == 0) d->held++;
 }
 
 /* ---- telemetry (§11) -------------------------------------------------------------------------- */
@@ -917,6 +974,10 @@ void display_tick(display *d, double now) {
     sb_addf(&b, "{\"type\":\"stat\",\"fps\":%d,\"rendered\":%llu,\"dropped\":%llu,",
             d->fps, d->rendered, d->dropped);
     sb_addf(&b, "\"stale\":%llu,", d->stale);
+    /* Frames the card was fed again because the loop had nothing new to draw (display_hold). A
+     * `held` that keeps climbing while `rendered` does not is a wall being frozen rather than
+     * driven, which is otherwise invisible from either end. */
+    sb_addf(&b, "\"held\":%llu,", d->held);
     sb_add(&b, "\"renderMs\":");
     sb_json_num(&b, d->renderMs);
     sb_addf(&b, ",\"seq\":%lld,", d->lastSeq);

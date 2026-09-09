@@ -389,8 +389,8 @@ unrelated-looking TypeError. `host/sha256.js` falls back to plain JS instead.
 ### Testing the host side
 
 `mock/host-check.js` drives the *real app in a real browser* against the mock and asserts on what the
-display observed — ten scenarios: happy path, compile failure, packet loss, reconnect, display
-restart, live edit, comment out, blank after drop, id reuse, webcam refusal. **It runs Chrome by
+display observed — eleven scenarios: happy path, compile failure, packet loss, reconnect, display
+restart, live edit, slow compile, comment out, blank after drop, id reuse, webcam refusal. **It runs Chrome by
 default and Firefox with `--firefox`** — worth having, though note the id-reuse bug above was never
 actually engine specific and this file's blind spot was the *code shape* it drove, not the browser.
 
@@ -927,6 +927,86 @@ frame - the display died or the link dropped` is what separates "the display rej
 "the display died"; before 2026-09-06 both printed the same bare `disconnected` and this had been
 an open ToDo entry, mis-filed as a CORS problem, for days. The "cors error" was only ever the
 `/info` probe firing during the two seconds systemd takes to restart.
+
+### The wall held a white frame across every shader edit (2026-09-09)
+
+**Livecoding a display-bound visual, the wall would stick on a broken picture for a second or two
+after an edit — usually flat white, sometimes a partial render in wrong colours — and then recover
+on its own.** Four separate faults, in a chain, each of which is a bug by itself. What made it hard
+to see is that no single one of them is visible from either end: the host logged a disconnect
+nobody was watching, the daemon logged nothing at all, and the wall was the only place the whole
+thing showed.
+
+1. **The host sent `layer` alongside `prog`** (`host/session.js`, `pumpUploads`). `s.bound` — and
+   with it the uniform count in the frame stream — only advanced on `progok`. The display compiles
+   on receipt and **blocks its entire loop doing it**, so that gap is seconds wide, and across all
+   of it limut was streaming the *old* program's uniforms at a display that had already rebound.
+2. **`handle_layer` redrew unconditionally** (`pi/session.c`), so the daemon drew the **new**
+   program from the retained **old** frame. `render_frame` truncates to `min(count)`, so surplus
+   uniforms of the new program sat at zero and shared slots carried another program's meaning. That
+   is the white frame. Nothing else in the render path can produce one — `render_frame` clears to
+   opaque black — which is what made the render path the wrong place to look.
+3. **The next frame packet closed the session**: its uniform count no longer matched the bound
+   program, which §12.1 makes a protocol error.
+4. **And nothing then fed the card.** `display_on_close` leaves `layerBound` set, so `main.c`'s
+   free-run clock — gated on `!layerBound` — stayed off, and there is no output thread and no
+   watchdog anywhere below `display_draw`. So the garbage frame from step 2 was *held* until the
+   250 ms-backoff reconnect rebound the layer. That is the "for a while", and the reconnect is the
+   "recovers on its own".
+
+**Fixed at all four points**, because each is a hole on its own:
+
+- `host/session.js` holds the `layer` until `progok` (PROTOCOL.md §7.1, now a MUST NOT **send**
+  rather than a MUST NOT bind). This is the one that removes the fault: the old program stays bound
+  and its uniforms stay valid for the whole compile, so the wall keeps showing the old visual, live
+  and animating, right up to the swap. A program the display already holds still binds immediately
+  — it sends no second `progok`, so waiting for one would leave the layer unsent forever, which is
+  what `needsAck` is for.
+- `pi/session.c` redraws on a rebind only when the frame it is holding fits the program now bound,
+  and `display_draw` refuses to draw a bound program from a frame of the wrong shape. That second
+  check matters on its own: a `layerCount: 0` frame lands as `uniformCount 0`, so a redraw forced
+  by `hello` on a reconnect used to repaint a live wall white with nothing in any log.
+- `render_frame` was deliberately **left** permissive. `compile_guard.c` draws with no uniforms at
+  all, on purpose, to make v3d generate the fragment code — so the count rule belongs at the session
+  layer and putting it in the GL primitive would have disabled the compile guard.
+- `main.c`'s clock now has two jobs: redraw the pattern when nothing is bound, and **re-send the
+  last frame** (`display_hold` → `output_resend`) when a layer is bound and the loop drew nothing.
+  That is the general fix for step 4 and covers every other starvation state too — a dead session, a
+  host streaming `layerCount: 0`, a layer waiting for a frame that fits. It is taken only when
+  `display_draw` produced nothing, checked against `out.frames`, so it can never double up with a
+  real frame the way the empty-frame redraw did at 120 fps on 09-05. `stat.held` counts it: a
+  `held` climbing while `rendered` does not is a wall being frozen rather than driven.
+
+**What it cannot cover, and this is the honest limit:** a stall *inside* the loop. A compile is
+exactly that — `cguard_check` blocks — and no clock in a single-threaded daemon runs while the
+thread is blocked. So the compile window itself is still an unfed card. Two things to measure before
+deciding whether that matters: how long a real compile actually takes (worth timing in
+`handle_prog` regardless), and what a starved 5A-75B actually does — stop the daemon with a visual
+up and watch. If it holds, this is a nicety; if it goes white, the guard round-trip wants to be
+asynchronous (the helper is already a separate process, so it is a matter of putting its fd in
+`net_poll`), and even then the parent's own `render_build_program` blocks and the output stage would
+have to leave the main loop. Do not start that before the measurement.
+
+**What each end is tested by.** The host rule is `mock/host-check.js`'s new `slowcompile` scenario
+and two inline `?test` cases in `host/session.js`; the display rule is a check in
+`mock/selftest.js`, which runs against the mock and the real daemon alike (`--endpoint`), and it is
+worth knowing why it is shaped the way it is: it lets the frame be **drawn** first and then rebinds,
+rather than sending frame and layer back to back. The back-to-back version races — a display that
+draws on arrival may legitimately have drawn the frame before the layer lands, and then correct and
+incorrect behaviour are indistinguishable from a frame count. Letting it draw and then asserting the
+rebind adds no second draw tests the faulty line exactly. `output_resend` is covered in
+`pi/selftest.c`.
+
+**Why the suite never caught it.** `mock/host-check.js`'s `edit` scenario uses two chains that
+deliberately **share one program id** — it exists to prove a lut change rebinds when the GLSL does
+not — so the uniform count never varied, and the mock acked instantly, making §7.1's window one
+loopback round trip. The new `slowcompile` scenario fixes both: `display.js --slow-compile MS`
+defers every `progok` while still serving everything else, and the scenario edits between two chains
+of **different** uniform counts, asserting that each `layer` arrives at least a compile-time after
+its `prog`. Run against the pre-fix host it reproduces the fault exactly —
+`🔴 protocol error: frame has 0 uniforms, program 896020e7 declares 1`, then a 1002 disconnect. A
+scenario that cannot fail against the code it was written for is not evidence, so that check is
+worth repeating on any change here.
 
 ## Panels
 

@@ -16,6 +16,7 @@
 let http = require('node:http')
 let { spawn } = require('node:child_process')
 let display = require('./display')
+let codec = require('../codec')
 
 let CHROME = process.env.CHROME ||
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
@@ -43,21 +44,34 @@ let serverUp = () => new Promise(resolve => {
 let instrument = (d) => {
   let counts = {}
   let dims = []
+  // An ordered, timestamped log of everything the display was sent. Counts answer "how many"; this
+  // answers "in what order, and how long apart", which is the only way to see whether the host
+  // waited for an ack before sending what depends on it.
+  let events = []
   let inner = d.handleText
   d.handleText = (conn, text) => {
     try {
-      let t = JSON.parse(text).type
-      counts[t] = (counts[t] || 0) + 1
+      let m = JSON.parse(text)
+      counts[m.type] = (counts[m.type] || 0) + 1
+      events.push({ type: m.type, prog: m.prog || m.id, t: Date.now() })
     } catch (e) {}
     return inner(conn, text)
   }
+  // Uniform counts are read BEFORE the display sees the packet: a count that disagrees with the
+  // bound program closes the session, so by the time the display has finished with it the evidence
+  // of what went wrong is a dead socket and nothing else.
+  let uniformCounts = []
   let innerFrame = d.handleFrame
   d.handleFrame = (conn, bytes) => {
+    try {
+      let f = codec.decodeFrame(bytes)
+      uniformCounts.push(f.layerCount === 1 ? f.layers[0].uniformCount : 0)
+    } catch (e) {}
     let r = innerFrame(conn, bytes)
     dims.push(d.dim)
     return r
   }
-  return { counts, dims }
+  return { counts, dims, events, uniformCounts }
 }
 
 let runNumber = 0
@@ -376,6 +390,69 @@ let scenarioLiveEdit = async () => {
   d.stop()
 }
 
+let scenarioSlowCompile = async () => {
+  console.log('\nslow compile: the layer waits for progok, so the display never rebinds under a stale uniform stream')
+  let SLOW = 2000
+  let d = display.start({ port: PORT, name: 'hub75-check', w: 128, h: 64, failCompile: null,
+                          slowCompile: SLOW, drop: 0, verbose: false })
+  let seen = instrument(d.display)
+  // Two chains with DIFFERENT uniform counts - which is what the `edit` scenario deliberately does
+  // not do, since it exists to prove two chains can share one program. The count is what makes the
+  // window visible: the host's frame stream carries the *bound* program's slots, so if the display
+  // rebinds while the old program is still bound at this end, the very next frame disagrees with it
+  // and §12.1 closes the session. Before that it draws the new program from the old one's values,
+  // which is the white frame the wall then holds for the whole reconnect.
+  let one = `v1 visualsynth, px=mul{sin{}}, display='localhost:${PORT}'`
+  let two = `v1 visualsynth, px=mul{sin{}}>>mul{cos{}}>>mul{sin{2}}, display='localhost:${PORT}'`
+  let url = `${LIMUT}/draw/hub75/mock/harness.html?code=${encodeURIComponent(one)}` +
+    `&code2=${encodeURIComponent(two)}&runafter2=9000`
+  let log = await run(url, 26).done
+  let x = d.display
+
+  let progs = Array.from(x.progs.values())
+  let progIds = Array.from(x.progs.keys()) // insertion order, so [1] is the edited chain
+  check('both chains compiled, as two separate programs', x.progs.size === 2 && progs.every(p => p.ok),
+    JSON.stringify(progs.map(p => ({ ok: p.ok, uniforms: p.uniforms.length, log: p.log }))))
+  // The premise of the whole scenario. If codegen ever makes these two agree, this test silently
+  // stops testing anything, so it is asserted rather than assumed.
+  check('and they declare different uniform counts, which is what opens the window',
+    progs.length === 2 && progs[0].uniforms.length !== progs[1].uniforms.length,
+    JSON.stringify(progs.map(p => p.uniforms.length)))
+
+  // The fix itself: every layer arrives only after the ack for the program it names. With the ack
+  // deferred by SLOW ms, a host that sent the layer alongside the program shows up as a gap of
+  // roughly zero here.
+  let gaps = seen.events.filter(e => e.type === 'layer').map(l => {
+    let p = seen.events.filter(e => e.type === 'prog' && e.prog === l.prog && e.t <= l.t).pop()
+    return p ? l.t - p.t : null
+  })
+  check('two layers were bound, one per chain', seen.counts.layer === 2 && seen.counts.prog === 2,
+    `prog=${seen.counts.prog} layer=${seen.counts.layer}`)
+  check('each layer waited for its program to be acknowledged',
+    gaps.length > 0 && gaps.every(g => g !== null && g >= SLOW * 0.8),
+    `prog->layer gaps ${JSON.stringify(gaps)}ms, deferred ack ${SLOW}ms`)
+
+  // ...and the consequence. A uniform count that disagrees with the bound program is a session
+  // closing protocol error at the display, so a session still open after the swap is the assertion.
+  check('the session survived the swap', x.session !== null)
+  check('the second chain ended up bound', x.layer !== null && x.layer.prog === progIds[1],
+    JSON.stringify({ bound: x.layer && x.layer.prog, expected: progIds[1] }))
+  let counts = Array.from(new Set(seen.uniformCounts))
+  let declared = [0].concat(progs.map(p => p.uniforms.length))
+  check('no frame ever carried a uniform count no program declares',
+    counts.every(c => declared.indexOf(c) !== -1),
+    `frame counts seen ${JSON.stringify(counts)}, programs declare ${JSON.stringify(declared)}`)
+  check('frames kept flowing across the compile', x.lastSeq >= 60, `lastSeq=${x.lastSeq}`)
+
+  let lines = consoleLines(log)
+  check('the host never lost the link', !lines.some(l => /disconnected/.test(l)),
+    lines.filter(l => /hub75/.test(l)).join('\n          '))
+  check('nothing errored in the app', !lines.some(l => /🔴/.test(l)),
+    lines.filter(l => /🔴/.test(l)).join('\n          '))
+
+  d.stop()
+}
+
 let scenarioCommentOut = async () => {
   console.log('\ncomment out: the display is given up when the line is commented, not only on Ctrl-.')
   let d = display.start({ port: PORT, name: 'hub75-check', w: 128, h: 64, failCompile: null, drop: 0, verbose: false })
@@ -513,6 +590,7 @@ let main = async () => {
     reconnect: scenarioReconnect,
     restart: scenarioRestart,
     edit: scenarioLiveEdit,
+    slowcompile: scenarioSlowCompile,
     comment: scenarioCommentOut,
     blankafterdrop: scenarioBlankAfterDrop,
     idreuse: scenarioIdReuse,

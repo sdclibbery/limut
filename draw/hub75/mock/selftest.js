@@ -403,6 +403,41 @@ let run = async () => {
     await sleep(30)
   }
   {
+    // §7.2: a frame's values are positional slots of whichever program was bound when it arrived,
+    // so a rebind must not redraw from the frame the previous program left behind. Against the new
+    // program the surplus uniforms of a longer one read as zero and the shared ones carry someone
+    // else's meaning - a garbage frame, and one the panels then hold, because just after a rebind
+    // is when a display is least likely to draw again soon. On the wall that was a white flash on
+    // every live-coded shader edit, held for a second or two, and it came from a `needsRedraw` set
+    // unconditionally on the swap (2026-09-09).
+    //
+    // The frame is deliberately allowed to be DRAWN first: that draw is legitimate, it fits the
+    // program bound at the time. What must not happen is the display drawing it a second time,
+    // against a program it does not fit. Sending the two back to back instead would race - a
+    // display that draws on arrival may legitimately have drawn it before the layer lands, and
+    // then the two behaviours are indistinguishable from a frame count.
+    let alt = progMsg(['u_vs0']) // one uniform, where the bound program declares two
+    c.send(alt)
+    await c.next()
+    let before = main.display.stats.rendered
+    c.sendBin(codec.encodeFrame({ seq: 40, dim: 1, layers: [{ id: 0, uniforms: [[1, 0, 0, 1], [0, 1, 0, 1]] }] }))
+    await sleep(120)
+    let drawn = main.display.stats.rendered
+    check('a frame fitting the bound program is drawn', drawn > before, `rendered went ${before} -> ${drawn}`)
+    c.send({ type: 'layer', id: 0, prog: alt.id })
+    await sleep(120)
+    eq('a rebind does not redraw from the frame the previous program left behind',
+      drawn, main.display.stats.rendered)
+    c.sendBin(codec.encodeFrame({ seq: 41, dim: 1, layers: [{ id: 0, uniforms: [[1, 1, 1, 1]] }] }))
+    await sleep(120)
+    check('and the next frame that does fit draws normally',
+      main.display.stats.rendered > drawn,
+      `rendered went ${drawn} -> ${main.display.stats.rendered}`)
+    // Put the two-uniform program back, so the checks after this one bind what they expect
+    c.send({ type: 'layer', id: 0, prog: good.id })
+    await sleep(40)
+  }
+  {
     c.send({ type: 'test', pattern: 'bars' })
     await sleep(20)
     eq('a test pattern can be selected', 'bars', main.display.testPattern)

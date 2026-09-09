@@ -44,6 +44,7 @@ AMD/CommonJS so the limut host side (`../host/`) requires the same file.
 | `--name NAME` | display name in `/info` and `welcome` (default `hub75-01`) |
 | `--size WxH` | panel resolution (default 128x64) |
 | `--fail-compile STR` | reject any shader whose source contains `STR`. For exercising the host's compile-error handling — it must surface the log and never resend that program |
+| `--slow-compile MS` | defer every `progok` by `MS` while still serving everything else. The real display blocks its whole loop compiling, for seconds on a big chain; a mock that acks instantly makes §7.1's window one loopback round trip and hides a host that sends its `layer` too early |
 | `--drop PCT` | randomly discard `PCT`% of frame packets. The display must stay up and account for them in `stat` |
 | `--verbose`, `-v` | log every message instead of a one-line status |
 

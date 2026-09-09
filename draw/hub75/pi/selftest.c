@@ -806,6 +806,47 @@ static void test_corners(void) {
     free(buf);
 }
 
+/* The hold path (output_resend). The card is fed by the render loop and by nothing else, so what
+ * the daemon does when the loop has nothing to draw is the whole difference between a wall that
+ * freezes on its last picture and one that shows whatever a starved receiving card shows. */
+static int holdWrites = 0;
+static int count_write(output_t *o) { (void)o; holdWrites++; return 0; }
+
+static void test_output_hold(void) {
+    output_t o;
+    char err[256];
+    uint8_t rgba[4 * 4 * 4];
+    int i;
+    uint8_t before[4 * 4 * 4];
+
+    for (i = 0; i < 4 * 4; i++) {
+        rgba[i * 4 + 0] = 200; rgba[i * 4 + 1] = 100; rgba[i * 4 + 2] = 50; rgba[i * 4 + 3] = 255;
+    }
+    ck("hold: opened", output_open(&o, "null", 4, 4, 1.0f, NULL, err, sizeof err) == 0);
+    o.write = count_write; /* the backend, counted -- "null" discards and would say nothing */
+    holdWrites = 0;
+
+    /* Before anything has been drawn there is nothing to hold, and the freshly calloc'd buffer must
+     * not reach the panels as if it were a picture. */
+    ck("hold: nothing to hold before the first frame", output_resend(&o) == 0 && holdWrites == 0);
+
+    output_frame(&o, rgba, 1.0f);
+    ck("hold: a real frame goes out and counts", holdWrites == 1 && o.frames == 1);
+    memcpy(before, o.pixels, sizeof before);
+
+    ck("hold: the hold reaches the backend", output_resend(&o) == 0 && holdWrites == 2);
+    ck("hold: it is not counted as a frame -- it is the same frame again", o.frames == 1);
+    ck("hold: and it is byte for byte the frame the panels were already showing",
+       memcmp(before, o.pixels, sizeof before) == 0);
+
+    /* Repeatable: this runs on its own clock for as long as the loop has nothing to draw. */
+    output_resend(&o);
+    output_resend(&o);
+    ck("hold: repeats without touching the frame count", holdWrites == 4 && o.frames == 1);
+
+    output_close(&o);
+}
+
 static void test_pacing(void) {
     pace_stat p;
     pace_set  live, rpt;
@@ -971,6 +1012,7 @@ int main(void) {
     test_ws();
     test_colorlight();
     test_colorlight_plan();
+    test_output_hold();
     test_pacing();
     test_corners();
     test_compile_guard();

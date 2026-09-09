@@ -87,6 +87,11 @@ int output_frame(output_t *o, const uint8_t *rgba, float dim) {
     return o->write ? o->write(o) : 0;
 }
 
+int output_resend(output_t *o) {
+    if (o->frames == 0) return 0; /* nothing has ever been drawn, so there is nothing to hold */
+    return o->write ? o->write(o) : 0;
+}
+
 void output_close(output_t *o) {
     if (o->shutdown) o->shutdown(o);
     free(o->pixels);

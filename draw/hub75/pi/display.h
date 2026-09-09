@@ -80,7 +80,11 @@ struct display {
     long long   lastSeq;      /* -1 before the first frame of a session */
 
     /* telemetry (§11) */
-    unsigned long long rendered, dropped, stale;
+    unsigned long long rendered, dropped, stale, held;
+    /* The last program compile, and the part of it spent in the guarded child. The loop is stopped
+     * for the whole of it and the card goes unfed, which is the one stall no clock in this thread
+     * can cover -- see handle_prog and main.c's hold. */
+    double             compileMs, compileGuardMs;
     double             renderMs;
     int                fps;
     unsigned long long fpsMark;
@@ -107,6 +111,10 @@ void display_on_close(display *d, ws_conn *c);
 
 /* Step 2 of the loop: draw the pending frame, if there is one. */
 void display_draw(display *d);
+
+/* Step 2b: nothing was drawn this pass, so re-send what the panels are already showing rather than
+ * leaving the card unfed. See output_resend. */
+void display_hold(display *d);
 
 /* Step 3: once a second, stat and ping. */
 void display_tick(display *d, double now);

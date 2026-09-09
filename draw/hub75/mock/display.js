@@ -23,7 +23,8 @@ let PROTO = 1
 // ---- arguments ----------------------------------------------------------------------------
 
 let parseArgs = (argv) => {
-  let a = { port: 7575, name: 'hub75-01', w: 128, h: 64, failCompile: null, drop: 0, verbose: false }
+  let a = { port: 7575, name: 'hub75-01', w: 128, h: 64, failCompile: null, slowCompile: 0,
+            drop: 0, verbose: false }
   for (let i = 0; i < argv.length; i++) {
     let k = argv[i]
     let v = argv[i + 1]
@@ -35,6 +36,7 @@ let parseArgs = (argv) => {
       a.w = parseInt(m[1], 10); a.h = parseInt(m[2], 10); i++
     }
     else if (k === '--fail-compile') { a.failCompile = v; i++ }
+    else if (k === '--slow-compile') { a.slowCompile = parseInt(v, 10); i++ }
     else if (k === '--drop') { a.drop = parseFloat(v); i++ }
     else if (k === '--verbose' || k === '-v') { a.verbose = true }
     else if (k === '--help' || k === '-h') { a.help = true }
@@ -49,6 +51,7 @@ let usage = `limut HUB75 mock display
   --name NAME         display name reported by /info and welcome (default hub75-01)
   --size WxH          panel resolution (default 128x64)
   --fail-compile STR  reject any shader whose source contains STR, to exercise the error path
+  --slow-compile MS   defer every progok by MS, so §7.1's compile window is wide enough to test
   --drop PCT          randomly discard PCT% of incoming frame packets
   --verbose, -v       log every message instead of a one line status
 `
@@ -217,8 +220,20 @@ let makeDisplay = (opts) => {
           return protocolError(conn, 'bad prog message')
         }
         let entry = d.compile(msg)
-        if (entry.ok) { conn.sendJson({ type: 'progok', id: msg.id }) }
-        else { sendErr(conn, 'compile', msg.id, entry.log) }
+        if (!entry.ok) { sendErr(conn, 'compile', msg.id, entry.log); break }
+        // The real display compiles on receipt and blocks its entire loop doing it -- seconds, for
+        // a big chain (pi/compile_guard.c). A mock that acks instantly makes §7.1's window one
+        // loopback round trip, which is why a host that sent the layer alongside the program passed
+        // here for months and put a white frame on the real wall at every edit. `--slow-compile`
+        // reopens the window: the ack is deferred while everything else is still served, so a host
+        // that binds or sends early has somewhere to go wrong.
+        if (opts.slowCompile > 0) {
+          setTimeout(() => {
+            if (d.session && d.session.conn === conn) { conn.sendJson({ type: 'progok', id: msg.id }) }
+          }, opts.slowCompile)
+        } else {
+          conn.sendJson({ type: 'progok', id: msg.id })
+        }
         break
       }
       case 'layer': {
@@ -235,7 +250,16 @@ let makeDisplay = (opts) => {
         }
         let texProblem = checkTextures(prog.frag, textures)
         if (texProblem) { return protocolError(conn, texProblem) }
+        // §7.2: a frame's uniform values are positional slots of whichever program was bound when
+        // it arrived, so one held across a rebind means nothing to the program now bound - the
+        // surplus uniforms of a longer one read as zero and the shared slots carry someone else's
+        // meaning. Drawing it puts a garbage frame on the panels, and a display is never less likely
+        // to draw again soon than just after a rebind, so the panels then hold it. Drop it and wait
+        // for one that fits; the last good picture stays up.
+        let fits = d.frame === null || d.frame.layerCount === 0 ||
+                   d.frame.layers[0].uniformCount === prog.uniforms.length
         d.layer = { id: msg.id, prog: msg.prog, textures: textures }
+        if (!fits) { d.frame = null }
         break
       }
       case 'unlayer': {
@@ -381,6 +405,13 @@ let makeDisplay = (opts) => {
   // cannot draw faster than its own cadence.
   d.tick = () => {
     if (d.frame === null) { return }
+    // The same rule as the rebind above, at the point of drawing (§7.2). Cheap, and it is the check
+    // that holds if a frame and a layer ever cross.
+    let prog = d.layer && d.progs.get(d.layer.prog)
+    if (d.frame.layerCount === 1 && (!prog || d.frame.layers[0].uniformCount !== prog.uniforms.length)) {
+      d.frame = null
+      return
+    }
     d.frame = null
     d.stats.rendered++
   }
@@ -468,6 +499,7 @@ let start = (opts) => {
     console.log(`  session ws://localhost:${opts.port}/session`)
     console.log(`  shaders ${haveGlslang ? 'checked with glslangValidator' : 'structural checks only (glslangValidator not on PATH)'}`)
     if (opts.failCompile) { console.log(`  injecting compile failures for sources containing ${JSON.stringify(opts.failCompile)}`) }
+    if (opts.slowCompile) { console.log(`  deferring every progok by ${opts.slowCompile}ms`) }
     if (opts.drop) { console.log(`  dropping ${opts.drop}% of frame packets`) }
   })
 

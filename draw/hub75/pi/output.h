@@ -84,6 +84,14 @@ int  output_open(output_t *o, const char *backend, int w, int h, float gamma,
 /* Applies the dimmer and gamma to `rgba` (w*h*4, RGBA8) and hands the result to the backend. */
 int  output_frame(output_t *o, const uint8_t *rgba, float dim);
 
+/* Hands the LAST frame to the backend again, unchanged. A receiving card holds nothing on its own
+ * account, so anything that stops the render loop - a compile, a dead session, a layer held back
+ * for want of a frame that fits it - stops feeding the panels, and what they then show is the
+ * card's business rather than ours. This is how the daemon says "keep showing that": the pixels are
+ * already post dim and post gamma in o->pixels, so it is a re-send and not a re-render. Returns 0,
+ * or the backend's error. Does not count as a frame: nothing new was produced. */
+int  output_resend(output_t *o);
+
 void output_close(output_t *o);
 
 /* output_colorlight.c ----------------------------------------------------------------------- */

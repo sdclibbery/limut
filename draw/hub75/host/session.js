@@ -244,16 +244,20 @@ define(function (require) {
         case 'assetok': { s.sentIds.add(msg.id); break }
         case 'progok': {
           s.sentIds.add(msg.id)
-          // Only now is it safe to say we are showing it. The display compiles on receipt, and a
-          // compile is seconds for a big chain - so a host that bound when it *sent* the layer
-          // spent that whole window streaming frames that named a layer the display had not bound
-          // (and might refuse), which §12.1 makes a session closing protocol error. `progok` is
-          // the display saying the program is real; there is no layer ack in v1, but ordered
-          // delivery means a layer that follows an acknowledged program is bound by the time the
-          // next frame lands.
+          // Only now is it safe to SEND the layer, let alone to say we are showing it. The display
+          // compiles on receipt and blocks its whole loop doing it - seconds for a big chain - so a
+          // layer sent alongside the program rebinds the display in the middle of a window in which
+          // this end is still streaming the *previous* program's uniforms. The moment the two counts
+          // differ that is a session closing protocol error (§12.1), and before it closes the display
+          // has already drawn the new program with the old program's values - the white or
+          // wrong-coloured frame the wall then holds until the reconnect rebinds. Holding the layer
+          // back keeps the old program bound and its uniforms valid for the whole compile, so the
+          // wall stays live on the old visual right up to the swap. There is no layer ack in v1, but
+          // ordered delivery means a layer that follows an acknowledged program is bound by the time
+          // the next frame lands.
           if (s.pendingBound !== null && s.pendingBound.progId === msg.id) {
-            s.bound = s.pendingBound
-            s.pendingBound = null
+            s.pendingBound.needsAck = false
+            pumpUploads() // sends the layer now, or on the frame the asset queue finally drains
           }
           break
         }
@@ -388,10 +392,13 @@ define(function (require) {
         budget--
         if (c.next >= c.chunks) { s.sending = null } // `assetok` is what records it as cached
       }
-      if (s.sending === null && s.uploads.length === 0 && s.afterUploads !== null) {
-        // The layer goes out now - ordered delivery is what makes that safe (§7.2) - but we only
-        // claim to be showing it once the display has acknowledged the program. See `progok`.
-        if (sendJson(s.afterUploads) && s.pendingBound !== null && !s.pendingBound.needsAck) {
+      if (s.sending === null && s.uploads.length === 0 && s.afterUploads !== null &&
+          s.pendingBound !== null && !s.pendingBound.needsAck) {
+        // Two conditions, and both matter: every asset the layer names is cached - ordered delivery
+        // is what makes that safe (§7.2) - and the program it names is compiled. `needsAck` is true
+        // only while we are actually shipping the program; one the display already holds sends no
+        // second `progok`, so waiting for one would leave the layer unsent forever. See `progok`.
+        if (sendJson(s.afterUploads)) {
           s.bound = s.pendingBound
           s.pendingBound = null
         }
@@ -500,6 +507,10 @@ define(function (require) {
   assert('4000 unknown code', closeDetail({code: 4000})) // still says the number rather than nothing
   assert('0 unknown code', closeDetail(undefined)) // onclose with no event at all
 
+  // A fake socket, so none of the tests below open anything
+  let socket = (state) => { let o = {readyState: state, bufferedAmount: 0, sent: [],
+    send: (t) => o.sent.push(typeof t === 'string' ? JSON.parse(t).type : 'binary')}; return o }
+
   // §8: the display refuses to bind a layer whose program failed to compile, and says so with an
   // `error` and nothing else. The host must let go of its optimistic bind, or the next frame names
   // a layer the display does not have -- a session closing protocol error, which would take the
@@ -516,22 +527,44 @@ define(function (require) {
   assert(null, sess.pendingBound)
   assert(true, sess.failedProgs.has('aaaa1111')) // still permanent for that source
 
-  // §12.1: nothing may be claimed as bound until the display has acknowledged the program. The
-  // display compiles on receipt and a big chain takes seconds; binding on send meant streaming
-  // frames naming a layer the display had not bound yet, which closes the session.
+  // §7.1: the layer is not even SENT until the display has acknowledged the program, let alone
+  // claimed as bound. The display compiles on receipt and blocks its loop doing it - seconds for a
+  // big chain - so a layer sent alongside the program rebinds the display in the middle of a window
+  // in which this end is still streaming the previous program's uniforms. The moment the counts
+  // differ that closes the session, and the frame the display draws on the swap comes out of the
+  // old program's values: the white frame the wall then holds until the reconnect.
   let sess2 = makeSession('not-a-real-display')
+  sess2.ws = socket(1)
   sess2.pendingBound = {key: 'k', progId: 'dddd4444', uniformCount: 2, needsAck: true}
-  assert(null, sess2.bound) // still nothing showing while the display is compiling
+  sess2.afterUploads = {type: 'layer', id: 0, prog: 'dddd4444', textures: []}
+  sess2.pump()
+  assert([], sess2.ws.sent) // nothing goes out while the display is still compiling
+  assert(null, sess2.bound)
   sess2.handleText({type: 'progok', id: 'dddd4444'})
-  assert({key: 'k', progId: 'dddd4444', uniformCount: 2, needsAck: true}, sess2.bound)
+  assert(['layer'], sess2.ws.sent) // only now, and the bind lands with it
+  assert({key: 'k', progId: 'dddd4444', uniformCount: 2, needsAck: false}, sess2.bound)
   assert(null, sess2.pendingBound)
+  assert(null, sess2.afterUploads)
   assert(true, sess2.sentIds.has('dddd4444'))
 
-  // An ack for something else leaves the pending bind pending
+  // A program the display already holds sends no second `progok`, so waiting for one would leave
+  // the layer unsent forever: needsAck false goes out on the next pump.
+  let sess2b = makeSession('not-a-real-display')
+  sess2b.ws = socket(1)
+  sess2b.pendingBound = {key: 'k', progId: 'dddd4444', uniformCount: 2, needsAck: false}
+  sess2b.afterUploads = {type: 'layer', id: 0, prog: 'dddd4444', textures: []}
+  sess2b.pump()
+  assert(['layer'], sess2b.ws.sent)
+  assert({key: 'k', progId: 'dddd4444', uniformCount: 2, needsAck: false}, sess2b.bound)
+
+  // An ack for something else leaves the pending bind pending, and sends nothing
   sess2.bound = null
+  sess2.ws = socket(1)
   sess2.pendingBound = {key: 'k', progId: 'eeee5555', uniformCount: 2, needsAck: true}
+  sess2.afterUploads = {type: 'layer', id: 0, prog: 'eeee5555', textures: []}
   sess2.handleText({type: 'progok', id: 'ffff6666'})
   assert(null, sess2.bound)
+  assert([], sess2.ws.sent)
 
   // ...but a failure for some other program must not unbind what is happily showing
   sess.bound = {key: 'k2', progId: 'bbbb2222', uniformCount: 1}
@@ -542,9 +575,6 @@ define(function (require) {
   // these left a lit wall showing a picture whose player was gone, unreachably: hub75.js deletes
   // layers[name] on release so its orphan poll never fires again, and reconcile() returns early on a
   // null `desired`, so nothing retried. A fake socket, so nothing is opened.
-  let socket = (state) => { let o = {readyState: state, bufferedAmount: 0, sent: [],
-    send: (t) => o.sent.push(typeof t === 'string' ? JSON.parse(t).type : 'binary')}; return o }
-
   // s.bound null with the display still showing the layer - which is every session that ever
   // dropped and came back, since onclose clears it in case the display restarted
   let sess3 = makeSession('not-a-real-display')

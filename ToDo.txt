@@ -2,7 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 ?screen state when recompiling shader
-?camera lag - plan file at ~/.claude/plans/i-have-a-svpro-cuddly-bengio.md keeps the measurement protocol
 !GC pauses?
 !superbass weird on keyboard on electron, not on firefox, superosc missing on some notes? keyboard only
 visual nodes...

@@ -280,20 +280,39 @@ A program is **just the compiled shader**. It carries no texture bindings — se
 The display replies `progok` on success, or `error` with `kind:"compile"` or `kind:"link"`
 carrying the driver info log (§8).
 
-**A host MUST NOT treat a layer as bound until the program it names is acknowledged.** There is no
-layer acknowledgement in version 1, so `progok` is the signal, and ordered delivery (§3) does the
-rest: a `layer` sent after an acknowledged `prog` is bound by the time the next frame lands. This
-matters because **the display compiles on receipt and a compile is not instant** — seconds, for a
-large chain — so a host that bound when it *sent* the layer spent that whole window streaming
-frames naming a layer the display had not bound, and might yet refuse. §12.1 makes that a
-session-closing protocol error, which is how a shader the display merely rejected used to arrive
-as an unexplained disconnect (2026-09-06).
+**A host MUST NOT send a `layer` until the program it names is acknowledged**, and MUST NOT treat
+it as bound before that either. There is no layer acknowledgement in version 1, so `progok` is the
+signal, and ordered delivery (§3) does the rest: a `layer` sent after an acknowledged `prog` is
+bound by the time the next frame lands. This matters because **the display compiles on receipt and
+a compile is not instant** — seconds, for a large chain, during which a single-threaded display is
+doing nothing else at all.
+
+Sending the layer alongside the program is what makes that window dangerous, and it is worth being
+precise about why, because the first version of this rule forbade only *binding* early (2026-09-06)
+and that is not enough. The host's frame stream carries the **bound** program's uniforms, so across
+the compile it is still sending the *previous* program's slots. The display, meanwhile, has already
+read the `layer` and rebound. Three things then follow, in order (2026-09-09):
+
+1. the display redraws on the swap using the frame it is holding, which belongs to the old program
+   — surplus uniforms of the new one sit at zero and shared slots carry values that mean something
+   else, so what reaches the panels is a garbage frame, typically saturated white;
+2. the next frame packet's `uniformCount` disagrees with the newly bound program, which §12.1 makes
+   a session-closing protocol error;
+3. nothing feeds the receiving card until the host reconnects and rebinds, so the garbage frame
+   from step 1 is what the wall *holds* for that whole window.
+
+Holding the layer back removes all three: the old program stays bound and its uniforms stay valid
+for the entire compile, so the wall keeps showing the old visual, live and animating, right up to
+the swap. The cost is one round trip on a link where that is well under a millisecond. §7.2 states
+the display's own half of it, because a conforming host is not the only thing a display is ever
+handed.
 
 The residual gap, and it is a real one: a program the display **already holds** gets no second
-`progok`, and `have` does not say whether it is held as compiled or as failed. A host that has
-forgotten its own failure — a page reload — can therefore still bind optimistically for the one
-frame it takes the display to answer with the cached `error`. A layer acknowledgement in a later
-protocol version is the clean fix.
+`progok`, so a host cannot wait for one and must send that layer straight away. `have` does not say
+whether such a program is held as compiled or as failed, so a host that has forgotten its own
+failure — a page reload — can still bind optimistically for the one frame it takes the display to
+answer with the cached `error`. A layer acknowledgement in a later protocol version is the clean
+fix.
 
 ### 7.2 Layer
 
@@ -325,6 +344,17 @@ matches GL itself, where a program object and its sampler bindings are separate 
   Delivery is ordered, so this cannot be a race — the `prog` message would have arrived first. It
   is a host bug, and failing loudly beats showing a wrong picture.
 
+**A display MUST NOT draw a newly bound program from a frame packet that does not fit it.** A
+frame's uniform values are positional slots of whichever program was bound when it arrived (§12.1),
+so a display holding the previous frame across a rebind has values that mean nothing to the program
+now bound: the surplus uniforms of a longer one are left at zero, and the shared slots carry
+something else's meaning. Rendering that puts a garbage frame — typically saturated white — on the
+panels, and since the frame after a rebind is exactly when a display is least likely to be drawing
+again soon, the panels then *hold* it. Wait for a frame of the right shape instead, and keep showing
+the last good one until it arrives. §7.1 is what stops a conforming host from ever creating the
+situation; this is the display's guard against a host that does not, and against the same thing
+arriving across a reconnect. `unlayer` is how a host asks for black; a rebind is not.
+
 **Version 1 supports exactly one layer, `id: 0`.** A `layer` with any other id is a protocol
 error. The frame packet nonetheless carries a layer count so multiple composited layers can be
 added later without a framing change.
@@ -347,6 +377,14 @@ closing. `unlayer` blanks the layer to black.
 | `asset` | hash/size mismatch, bad chunk order, decode failure, or a `layer` referencing an uncached asset | drop the partial asset, leave the layer unchanged | transient: MAY retry the upload |
 | `render` | GL error, incomplete framebuffer, output stage failure | blank or hold last frame | transient; surface to the user |
 | `protocol` | malformed message, message before `hello`, bad layer id | send `error` then close | reconnect with backoff |
+
+**"Hold" means the panels keep being refreshed, not that the display stops sending.** A receiving
+card holds nothing on its own account, and the render loop is usually the only thing feeding it, so
+a display that simply stops drawing also stops driving the panels — and what they show then is the
+card's business rather than the protocol's, which on a 5A-75B is not the last frame. Every row above
+that says hold, and every other state with nothing new to draw (a dead session, a host streaming
+`layerCount: 0`, a layer waiting for a frame that fits it), requires the last frame to keep going
+out on the display's own clock. `stat.held` (§11) is what says that is happening.
 
 The host surfaces these through `consoleOut`, matching limut's existing convention — e.g.
 `🔴 hub75 hub75-01: shader compile error: ...`, alongside the existing
@@ -391,7 +429,7 @@ lost its configuration", and a full-screen pattern masks the latter entirely.
 About once per second the display sends:
 
 ```json
-{ "type":"stat", "fps":59.9, "rendered":3591, "dropped":4, "stale":0, "renderMs":2.1,
+{ "type":"stat", "fps":59.9, "rendered":3591, "held":0, "dropped":4, "stale":0, "renderMs":2.1,
   "seq":3595, "temp":52.1, "throttled":0,
   "pacing":{
     "host":  {"n":59,"mean":16.7,"max":17.1,"b":[0,59,0,0,0]},
@@ -402,7 +440,11 @@ About once per second the display sends:
 ```
 
 `dropped` counts frame packets superseded before they were drawn (§12.1); `stale` counts those
-discarded for an out-of-order `seq`. `throttled` mirrors `vcgencmd get_throttled`; a non-zero
+discarded for an out-of-order `seq`. `held` counts frames the panels were sent again because there
+was nothing new to draw (§8) — a `held` climbing while `rendered` does not is a wall being frozen
+rather than driven, which is otherwise invisible from either end. Like `pacing` it is a display-side
+extension: a display with no output stage of its own has nothing to hold, and a host MUST tolerate
+its absence. `throttled` mirrors `vcgencmd get_throttled`; a non-zero
 value here is the undervoltage/thermal signal that cost most of the Pi's first bring-up, so it is
 worth carrying.
 
