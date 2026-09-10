@@ -2,6 +2,7 @@
 define(function(require) {
   let {getCallTree,setCallTree,clearCallTree} = require('player/callstack')
   let {colour} = require('draw/colour')
+  let {hsv2rgbHelper,lab2rgbHelper} = require('draw/visualsynth/shader-colour')
 
   // A shader node is a GLSL-emitting build step in a visual synth chain. Unlike audio nodes
   // (which eagerly construct a Web Audio graph), shader nodes are composed and only emit
@@ -83,6 +84,8 @@ define(function(require) {
   // arg as a chain of its own (draw/visualsynth/nodes.js) needs that distinction, and needs the
   // evaluated value too — a param's channel keys are read off it — so carry that along as well.
   let constShaderNode = (rawAst, value) => {
+    let asColour = colourShaderNode(rawAst, value) // A map with a chain in it is a node, not a uniform (see below)
+    if (asColour !== undefined) { return asColour }
     let node = makeShaderNode((input, ctx) => ctx.addStatement(ctx.addUniform(rawAst)))
     node._constWrapped = true
     node._constValue = value
@@ -94,7 +97,12 @@ define(function(require) {
   // animated uniform wrapped from its raw AST (same discipline as constShaderNode). Operands
   // resolve left to right so generated names stay deterministic — the program cache key needs it.
   let buildOperands = (operands, input, ctx) => {
-    return operands.map(o => isShaderNode(o.value) ? o.value.build(input, ctx) : ctx.addUniform(o.raw))
+    return operands.map(o => {
+      if (isShaderNode(o.value)) { return o.value.build(input, ctx) }
+      let asColour = colourShaderNode(o.raw, o.value) // eg tex{'a.png'} * {h:id.v}
+      if (asColour !== undefined) { return asColour.build(input, ctx) }
+      return ctx.addUniform(o.raw)
+    })
   }
   // Any GLSL helper functions the emitted expression calls, as {name, source}, are declared before
   // the operands resolve. addFunction dedupes by name, so using the same node twice in a chain
@@ -191,6 +199,70 @@ define(function(require) {
     }
     scratch[0] = 1; scratch[1] = 1; scratch[2] = 1; scratch[3] = 1
     return scratch
+  }
+
+  // Which components of a map are read, and how. The GLSL analogue of toVec4's three cases, and it
+  // has to answer the same way: an hsv or lab colour is converted before the channel table is
+  // consulted, since its s and v are themselves channel names. Gives back the scalar colour
+  // components in a fixed order, then the name each of the four channels is taken from (undefined
+  // for a channel the map does not name), which the emitted source's determinism depends on.
+  let colourPlan = (v) => {
+    if (typeof v !== 'object' || v === null || Array.isArray(v) || isShaderNode(v)) { return undefined }
+    let convert = v.labh !== undefined ? 'lab' : (v.h !== undefined ? 'hsv' : undefined)
+    let scalars = (convert === 'lab' ? ['labh','l','c'] : convert === 'hsv' ? ['h','s','v'] : []).filter(k => v[k] !== undefined)
+    // A converted colour's own components are not channels: {h:1/3,s:1/2} names r, g and b, so s is
+    // its saturation rather than the x channel. Anything else it names is an rgb override, exactly
+    // as it is on the CPU (draw/colour.js), and is read off the channel table as usual.
+    let channels = channelNames.map(names => names.find(n => v[n] !== undefined && !scalars.includes(n)))
+    return { convert: convert, scalars: scalars, channels: channels }
+  }
+
+  // A map whose components are plain values is a uniform, converted by toVec4 each frame, as it
+  // always was. A map with a *chain* in one of its components (px=set{{h:id.u}}) cannot be: the
+  // component is a shader node, so there is nothing for toVec4 to convert. This builds the same
+  // vec4 in GLSL instead — each component either built into the chain or taken from a uniform of
+  // its own raw AST, so the scalar components still animate per frame.
+  //
+  // Undefined when the map has no chain in any component it would read, which is the signal to the
+  // caller to keep the uniform. Given both the raw AST and the evaluated value, since a component
+  // needs its AST to stay animated and its value to say whether it is a node.
+  let colourShaderNode = (rawAst, value) => {
+    let plan = colourPlan(value)
+    if (plan === undefined) { return undefined }
+    let keys = plan.scalars.concat(plan.channels.filter(k => k !== undefined))
+    if (!keys.some(k => isShaderNode(value[k]))) { return undefined }
+    return makeShaderNode((input, ctx) => {
+      if (plan.convert !== undefined) { let h = plan.convert === 'lab' ? lab2rgbHelper : hsv2rgbHelper; ctx.addFunction(h.name, h.source) }
+      // Resolved in plan order (scalar colour components, then channels) so the source is
+      // deterministic: the program cache is keyed on it. A node builds from the same input the map
+      // itself sees; anything else becomes a uniform from its raw AST.
+      let refs = {}
+      let ref = (k) => {
+        if (refs[k] === undefined) {
+          let v = value[k]
+          let raw = (typeof rawAst === 'object' && rawAst !== null && rawAst[k] !== undefined) ? rawAst[k] : v
+          refs[k] = isShaderNode(v) ? `(${v.build(input, ctx)})` : ctx.addUniform(raw)
+        }
+        return refs[k]
+      }
+      // A colour component is a scalar, so it takes x (a single channel read splats across all
+      // four, and a uniform from a number does too); a channel takes its own component, as
+      // emitChannels does in nodes.js.
+      let scalar = (k, def) => plan.scalars.includes(k) ? `${ref(k)}.x` : def
+      plan.scalars.forEach(k => ref(k))
+      let channels = plan.channels.map((k, i) => k === undefined ? undefined : `${ref(k)}.${components[i]}`)
+      let alpha = channels[3] !== undefined ? channels[3] : '1.0' // Absent alpha is opaque, as it is for a uniform
+      if (plan.convert === undefined) {
+        return ctx.addStatement(`vec4(${[0,1,2].map(i => channels[i] !== undefined ? channels[i] : '0.0').concat(alpha).join(', ')})`)
+      }
+      let conv = plan.convert === 'lab'
+        ? `l_lab2rgb(${scalar('l', '0.5')}, ${scalar('c', '1.0')}, ${scalar('labh', '0.0')})`
+        : `l_hsv2rgb(${scalar('h', '0.0')}, ${scalar('s', '1.0')}, ${scalar('v', '1.0')})`
+      let base = ctx.addStatement(`vec4(${conv}, ${alpha})`)
+      if (channels.slice(0, 3).every(c => c === undefined)) { return base }
+      // An explicit r, g or b overrides that component of the converted colour, as on the CPU
+      return ctx.addStatement(`vec4(${[0,1,2].map(i => channels[i] !== undefined ? channels[i] : `(${base}).${components[i]}`).concat(`(${base}).w`).join(', ')})`)
+    })
   }
 
   // TESTS //
@@ -352,6 +424,49 @@ define(function(require) {
   assert([1,1,1,1], Array.from(toVec4('nonsense'))) // fallback is neutral
   assert([1,1,1,1], Array.from(toVec4(undefined)))
 
+  // colourShaderNode: the same conversions in GLSL, for a colour whose components are chains
+  let chanNode = () => makeShaderNode((input, c) => c.addStatement(`vec4((${input}).x)`)) // as id.u builds
+  let numAst = (n) => { let f = () => n; return f }
+
+  assert(undefined, colourShaderNode({h:numAst(1/3)}, {h:1/3})) // No chain in it: stays a uniform
+  assert(undefined, colourShaderNode(undefined, 0.5))
+  assert(undefined, colourShaderNode(undefined, undefined))
+  assert(undefined, colourShaderNode({value:numAst(1)}, {value:chanNode()})) // Nothing it would read
+
+  ctx = mockCtx()
+  let sAst = numAst(1/2)
+  colourShaderNode({h:numAst(0), s:sAst}, {h:chanNode(), s:1/2}).build('v0', ctx)
+  assert(['vec4((v0).x)', 'vec4(l_hsv2rgb((v1).x, u_vs0.x, 1.0), 1.0)'], ctx.statements) // s from a uniform, v defaulted, opaque
+  assert(['l_hsv2rgb'], ctx.functions.map(f => f.name))
+  assert(true, ctx.uniforms[0] === sAst) // raw AST, so the saturation still animates
+
+  ctx = mockCtx() // An explicit rgb component overrides that channel of the converted colour
+  colourShaderNode({h:numAst(0), b:numAst(1/2)}, {h:chanNode(), b:1/2}).build('v0', ctx)
+  assert(['vec4((v0).x)', 'vec4(l_hsv2rgb((v1).x, 1.0, 1.0), 1.0)', 'vec4((v2).x, (v2).y, u_vs0.z, (v2).w)'], ctx.statements)
+
+  ctx = mockCtx() // Alpha is taken as alpha, not as a channel of the colour
+  colourShaderNode({h:numAst(0), a:numAst(1/2)}, {h:chanNode(), a:1/2}).build('v0', ctx)
+  assert(['vec4((v0).x)', 'vec4(l_hsv2rgb((v1).x, 1.0, 1.0), u_vs0.w)'], ctx.statements)
+
+  ctx = mockCtx() // lab, with its own defaults (l 1/2, c 1)
+  colourShaderNode({labh:numAst(0)}, {labh:chanNode()}).build('v0', ctx)
+  assert(['vec4((v0).x)', 'vec4(l_lab2rgb(0.5, 1.0, (v1).x), 1.0)'], ctx.statements)
+  assert(['l_lab2rgb'], ctx.functions.map(f => f.name))
+
+  ctx = mockCtx() // A plain channel map: no conversion, each channel from its own component
+  colourShaderNode({u:numAst(0), v:numAst(1/2)}, {u:chanNode(), v:1/2}).build('v0', ctx)
+  assert(['vec4((v0).x)', 'vec4((v1).x, u_vs0.y, 0.0, 1.0)'], ctx.statements) // absent channels 0, absent alpha 1
+
+  ctx = mockCtx() // >> const wraps a map with a chain in it into the colour node, not a uniform
+  let cw = constShaderNode({h:numAst(0)}, {h:chanNode()})
+  assert(undefined, cw._constWrapped) // genuinely visual: paramChain must not unwrap it
+  cw.build('v0', ctx)
+  assert(['vec4((v0).x)', 'vec4(l_hsv2rgb((v1).x, 1.0, 1.0), 1.0)'], ctx.statements)
+
+  ctx = mockCtx() // and an operand of an operator or maths function is the same
+  buildOperands([{raw:{h:numAst(0)}, value:{h:chanNode()}}], 'v0', ctx)
+  assert(['vec4((v0).x)', 'vec4(l_hsv2rgb((v1).x, 1.0, 1.0), 1.0)'], ctx.statements)
+
   // Channel reads. One channel splats across all four, so it acts as a scalar; several map
   // positionally and leave the channels they don't name alone
   let through = passthroughShaderNode()
@@ -399,6 +514,7 @@ define(function(require) {
     passthroughShaderNode: passthroughShaderNode,
     implicitInputNode: implicitInputNode,
     constShaderNode: constShaderNode,
+    colourShaderNode: colourShaderNode,
     binaryShaderNode: binaryShaderNode,
     naryShaderNode: naryShaderNode,
     naryShaderNodeWithInput: naryShaderNodeWithInput,

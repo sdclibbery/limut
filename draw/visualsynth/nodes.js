@@ -2,7 +2,7 @@
 define(function(require) {
   let {addNodeFunction} = require('play/nodes/node-var')
   let addVarFunction = require('predefined-vars').addVarFunction
-  let {makeShaderNode,passthroughShaderNode,implicitInputNode,isShaderNode,channelNames,components,unwrapValue,isConvertedColour} = require('draw/visualsynth/shader-node')
+  let {makeShaderNode,passthroughShaderNode,implicitInputNode,isShaderNode,channelNames,components,unwrapValue,isConvertedColour,colourShaderNode} = require('draw/visualsynth/shader-node')
   let texture = require('draw/texture')
   let webcam = require('draw/webcam')
   let {lutTexture,resolveSize,defaultSizes} = require('draw/visualsynth/lut')
@@ -43,6 +43,30 @@ define(function(require) {
     return mask.some(m => m) ? mask : undefined
   }
 
+  // A map literal used as a param is normally the value itself: its keys are the mask and the whole
+  // map becomes one uniform, converted by toVec4 each frame. That cannot work once one of its
+  // components is a chain (set{{h:id.u}}), so the map is evaluated — once, at event time, which is
+  // what says whether any component came back a shader node — and built into the shader instead.
+  // A map with nothing to evaluate in it (a colour literal like #f00) skips even that.
+  let couldHoldNode = (map) => Object.keys(map).some(k => typeof map[k] === 'function' || isShaderNode(map[k]))
+  let mapNode = (ast, e, b, evalRecurse) => {
+    if (!couldHoldNode(ast)) { return undefined }
+    return colourShaderNode(ast, evalRecurse(ast, e, b))
+  }
+
+  // A colour given as subparams rather than as a map of its own: h (or labh) is the discriminator,
+  // exactly as it is for a map, and with it there the colour components are the colour's rather
+  // than channels — the s of set{h:1/3,s:1/2} is its saturation, where the s of set{s:1/2} is still
+  // the x channel. Gathered into a map so it takes the same path a positional map does, which is
+  // what makes set{h:1/3,s:1/2} and set{{h:1/3,s:1/2}} generate identical source.
+  let colourSubParamKeys = ['labh','l','c','h','s','v','r','g','b','a']
+  let colourSubParams = (args) => {
+    if (args.h === undefined && args.labh === undefined) { return undefined }
+    let map = {}
+    colourSubParamKeys.forEach(k => { if (args[k] !== undefined) { map[k] = args[k] } })
+    return map
+  }
+
   // Work out where each channel's value comes from: the AST to take the value from, or undefined
   // for 'leave this channel alone'. Args may name channels directly (set{u:1/2}), each of which gets
   // its own uniform so it animates independently, and/or give one positional value (set{#.f..}) whose
@@ -53,7 +77,8 @@ define(function(require) {
   // else keeps its raw AST and so is still re-evaluated per frame. Reading the mask off a colour or
   // map literal needs no evaluation at all, since both parse to a plain object.
   let paramSources = (args, e, b, evalRecurse) => {
-    let positional = args.value
+    let colourArgs = colourSubParams(args)
+    let positional = colourArgs !== undefined ? colourArgs : args.value
     let evalled = new Map()
     let nodes = new Map()
     let resolve = (ast) => {
@@ -61,16 +86,20 @@ define(function(require) {
         // An object is already the value: a colour or map literal (whose keys are the mask, read
         // with no evaluation at all) or a node handed straight in. Anything else is an expression,
         // and so a px chain in its own right.
-        let value = (typeof ast === 'object' && ast !== null) ? ast : paramChain(ast, e, b, evalRecurse, true)
+        let isObject = typeof ast === 'object' && ast !== null
+        let value = isObject ? ast : paramChain(ast, e, b, evalRecurse, true)
         evalled.set(ast, value)
-        if (isShaderNode(value)) { nodes.set(ast, value) }
+        // A node handed straight in is the node; a map may still have one inside it
+        let node = isShaderNode(value) ? value : (isObject ? mapNode(ast, e, b, evalRecurse) : undefined)
+        if (node !== undefined) { nodes.set(ast, node) }
       }
       return evalled.get(ast)
     }
     let mask
     if (positional !== undefined) { mask = channelMask(resolve(positional)) }
     let sources = channelNames.map((names, i) => {
-      let named = names.find(n => args[n] !== undefined)
+      // A colour's own components are the colour's, not channels, so they are not offered here too
+      let named = names.find(n => args[n] !== undefined && (colourArgs === undefined || colourArgs[n] === undefined))
       if (named !== undefined) {
         resolve(args[named]) // Evaluated for its own sake: is this channel's value a visual node?
         return args[named]
@@ -304,8 +333,11 @@ define(function(require) {
     let stops = []
     for (let i = 0; args['value'+(i||'')] !== undefined; i++) {
       let ast = args['value'+(i||'')]
-      // A colour or map literal is already the value; anything else is an expression to resolve
-      let value = (typeof ast === 'object' && ast !== null) ? ast : paramChain(ast, e, b, evalRecurse, true)
+      // A colour or map literal is already the value (though a chain inside it still builds into
+      // the shader); anything else is an expression to resolve
+      let isObject = typeof ast === 'object' && ast !== null
+      let value = !isObject ? paramChain(ast, e, b, evalRecurse, true)
+        : isShaderNode(ast) ? ast : mapNode(ast, e, b, evalRecurse)
       stops.push({ ast: ast, node: isShaderNode(value) ? value : undefined })
     }
     return stops
@@ -355,10 +387,11 @@ define(function(require) {
     if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
   }
   let mockCtx = () => {
-    let ctx = { statements: [], uniforms: [], textures: [], rootInput: 'v0' }
+    let ctx = { statements: [], uniforms: [], textures: [], functions: [], rootInput: 'v0' }
     ctx.addStatement = (expr) => { ctx.statements.push(expr); return 'v' + ctx.statements.length }
     ctx.addUniform = (ast) => { ctx.uniforms.push(ast); return 'u_vs' + (ctx.uniforms.length-1) }
     ctx.addTexture = (tex, sampler) => { ctx.textures.push({texture:tex, sampler:sampler||'sampler2D'}); return 'u_vstex' + (ctx.textures.length-1) }
+    ctx.addFunction = (name, source) => { if (!ctx.functions.some(f => f.name === name)) { ctx.functions.push({name:name, source:source}) } return name }
     return ctx
   }
 
@@ -444,6 +477,34 @@ define(function(require) {
   ctx = mockCtx()
   node(mul, {value:{labh:0}}).build('v0', ctx)
   assert(['vec4((v0).x * u_vs0.x, (v0).y * u_vs0.y, (v0).z * u_vs0.z, (v0).w)'], ctx.statements)
+
+  // A colour with a chain in one of its components is converted in the shader instead of on the
+  // CPU, and still masks the same channels
+  let chanNode = () => makeShaderNode((input, c) => c.addStatement(`vec4((${input}).x)`)) // as id.u builds
+  ctx = mockCtx()
+  node(set, {value:{h:chanNode()}}).build('v0', ctx)
+  assert(['vec4((v0).x)', 'vec4(l_hsv2rgb((v1).x, 1.0, 1.0), 1.0)', 'vec4((v2).x, (v2).y, (v2).z, (v0).w)'], ctx.statements)
+  assert(['l_hsv2rgb'], ctx.functions.map(f => f.name))
+  assert(0, ctx.uniforms.length) // Nothing left for a uniform to carry
+
+  // The subparam spelling means the same thing, and generates the same source
+  ctx = mockCtx()
+  node(set, {h:chanNode()}).build('v0', ctx)
+  assert(['vec4((v0).x)', 'vec4(l_hsv2rgb((v1).x, 1.0, 1.0), 1.0)', 'vec4((v2).x, (v2).y, (v2).z, (v0).w)'], ctx.statements)
+  ctx = mockCtx()
+  node(set, {h:1/3, s:1/2}).build('v0', ctx) // A constant colour still goes through one uniform
+  assert(['vec4(u_vs0.x, u_vs0.y, u_vs0.z, (v0).w)'], ctx.statements)
+  assert([], ctx.functions)
+  ctx = mockCtx()
+  node(mul, {labh:0, l:1/2}).build('v0', ctx)
+  assert(['vec4((v0).x * u_vs0.x, (v0).y * u_vs0.y, (v0).z * u_vs0.z, (v0).w)'], ctx.statements)
+
+  ctx = mockCtx() // Without an h or a labh, s and v are still the x and y channels
+  node(set, {s:1/2}).build('v0', ctx)
+  assert(['vec4(u_vs0.x, (v0).y, (v0).z, (v0).w)'], ctx.statements)
+  ctx = mockCtx() // and a channel that isn't part of the colour still applies on top of one
+  node(set, {h:1/3, w:1/2}).build('v0', ctx)
+  assert(['vec4(u_vs0.x, u_vs0.y, u_vs0.z, u_vs1.w)'], ctx.statements)
 
   ctx = mockCtx()
   node(set, {value:ast}).build('v0', ctx)

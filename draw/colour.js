@@ -2,8 +2,13 @@
 define(function (require) {
   let {subParam} = require('player/sub-param')
 
+  // Hue wraps, so a negative hue is the same colour as its positive equivalent. The wrap has to be
+  // a floor mod: JS's % is the truncated remainder, so h below -5/6 gives a negative k, which the
+  // Math.max flattens to full unsaturated value (white) rather than wrapping round. That matters
+  // now the hue can come from a shader chain (px=set{h:id.u}), where pixel values run -1 to 1;
+  // GLSL's own mod is floor based, so this is also what draw/visualsynth/shader-colour.js emits.
   let hsv2rgb = (ar,h,s,v) => {
-    let f = (n,k=(n+h*6)%6) => v - v*s*Math.max( Math.min(k,4-k,1), 0)
+    let f = (n,k=(((n+h*6)%6)+6)%6) => v - v*s*Math.max( Math.min(k,4-k,1), 0)
     ar[0] = f(5)
     ar[1] = f(3)
     ar[2] = f(1)
@@ -127,6 +132,9 @@ define(function (require) {
     assert([0,1,0,1/2], colour({h:1/3,a:1/2}, white(), 'blah'))
     assert([0,1,1/2,1], colour({h:1/3,b:1/2}, white(), 'blah'))
     assert([0.9582161268492856,-0.16725554410511348,0.07878618934675646,1], colour({labh:0}, white(), 'blah'))
+    assert(colour({h:1/3}, white(), 'blah').slice(), colour({h:-2/3}, white(), 'blah').slice()) // Hue wraps, including well below zero
+    assert(colour({h:0.1}, white(), 'blah').slice(), colour({h:-0.9}, white(), 'blah').slice()) // -0.9 is orange, not white
+    assert(colour({h:1/3}, white(), 'blah').slice(), colour({h:4/3}, white(), 'blah').slice()) // and above one, as it always did
 
     assert(0, colourRgb(0, red(), 'blah'))
     assert([0,1,0,1], colourRgb({g:1}, black(), 'blah'))
