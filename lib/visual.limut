@@ -12,6 +12,7 @@
 //   v1 visualsynth, px=noise2{scale:16}
 //   v1 visualsynth, px=fbm2>>tex1d{{x}->{labh:x}}
 //   v1 visualsynth, px=noise2>>cospal{#05a}
+//   v1 visualsynth, px=fbm2t>>cospal{#036}
 
 //// Shared machinery
 // Only the channels a noise is over may vary: the rest are forced flat so a lattice point hashes
@@ -108,6 +109,22 @@ set turb2 = {in:id, scale:4, seed:0} ->
 
 set turb3 = {in:id, scale:4, seed:0} ->
   parallel{{i} -> abs{noise3at{noiseflat3{in, scale*(2^i)} + octshift{i}, seed}*2-1}*(8/(2^i)), 4}/15
+
+//// Animated over time
+// The 3d noises take their third dimension from the incoming z, so a 2d field that moves in place
+// rather than scrolling past means feeding z from time. These are that, packaged: each is the 3d
+// function with z driven by t, which defaults to time/8, ie one lattice cell every 8 beats at the
+// default scale. Freeze one with t:0, which makes it identical to its 3d namesake with a flat z, or
+// drive t from a timevar or a slider for anything else. t goes in before the scaling, so a larger
+// scale also animates faster, and each fbm octave churns faster than the one below, which is what
+// an octave sum should do.
+//   px=fbm2t>>cospal{#036}
+//   px=noise2t{scale:16, t:time/32}
+set noise2t   = {in:id, scale:4, seed:0, t:time/8} -> noise3{in>>set{z:t}, scale, seed}
+set perlin2t  = {in:id, scale:4, seed:0, t:time/8} -> perlin3{in>>set{z:t}, scale, seed}
+set perlin2st = {in:id, scale:4, seed:0, t:time/8} -> perlin3s{in>>set{z:t}, scale, seed}
+set fbm2t     = {in:id, scale:4, seed:0, t:time/8} -> fbm3{in>>set{z:t}, scale, seed}
+set turb2t    = {in:id, scale:4, seed:0, t:time/8} -> turb3{in>>set{z:t}, scale, seed}
 
 //// Colour
 // Cosine palette from Inigo Quilez: a single value in becomes a cycling colour out. a is the level
