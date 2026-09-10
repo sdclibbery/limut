@@ -83,20 +83,31 @@ set perlin3 = {in:id, scale:4, seed:0} -> clamp{ perlin3s{in, scale, seed}*3/4 +
 // octave sum is; the octave index is an ordinary number here, since parallel unrolls, so 2^i is a
 // per copy constant. Change the 4 for more or fewer octaves (and the divisor, which is 2^octaves-1,
 // their weights summed).
+//
+// Each octave is also shifted half a lattice cell from the one below, which is what octshift is
+// for, and the octaves go through noiseNat/noiseflatN rather than noiseN so the shift lands in
+// scaled lattice space (a plain noise2 call pays nothing for it). Without the shift every octave
+// sits on octave 0's lattice planes, and smoothstep's slope is zero at both ends of a cell, so all
+// four octaves pin their rate of change to zero at the same instant. Scrolling in x or y hides
+// that, since each pixel crosses its lattice line at a different moment, but every pixel shares
+// the same z: animate z and the whole picture stalls once a cell. w stays 0 in the shift because
+// pxhash hashes all four components, so a stray w would be another dimension.
+set octshift = {i} -> {x:i/2, y:i/2, z:i/2, w:0}
+
 set fbm2 = {in:id, scale:4, seed:0} ->
-  parallel{{i} -> noise2{in, scale*(2^i), seed}*(8/(2^i)), 4}/15
+  parallel{{i} -> noise2at{noiseflat2{in, scale*(2^i)} + octshift{i}, seed}*(8/(2^i)), 4}/15
 
 set fbm3 = {in:id, scale:4, seed:0} ->
-  parallel{{i} -> noise3{in, scale*(2^i), seed}*(8/(2^i)), 4}/15
+  parallel{{i} -> noise3at{noiseflat3{in, scale*(2^i)} + octshift{i}, seed}*(8/(2^i)), 4}/15
 
 // Turbulence: the same sum over the absolute value of each signed octave, giving the creased,
 // billowy look that suits smoke and marble. turb3 is over noise3 as fbm3 is, so it animates
 // through the incoming z rather than only scrolling past
 set turb2 = {in:id, scale:4, seed:0} ->
-  parallel{{i} -> abs{noise2{in, scale*(2^i), seed}*2-1}*(8/(2^i)), 4}/15
+  parallel{{i} -> abs{noise2at{noiseflat2{in, scale*(2^i)} + octshift{i}, seed}*2-1}*(8/(2^i)), 4}/15
 
 set turb3 = {in:id, scale:4, seed:0} ->
-  parallel{{i} -> abs{noise3{in, scale*(2^i), seed}*2-1}*(8/(2^i)), 4}/15
+  parallel{{i} -> abs{noise3at{noiseflat3{in, scale*(2^i)} + octshift{i}, seed}*2-1}*(8/(2^i)), 4}/15
 
 //// Colour
 // Cosine palette from Inigo Quilez: a single value in becomes a cycling colour out. a is the level
