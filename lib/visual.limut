@@ -168,6 +168,7 @@ set frompolar = {in:id} ->
 // gives back a single value in all four channels and colours like any other field.
 // The sum runs well past 1 over much of the frame at the default glow, which is what the original
 // does too (its palette clamps it); thin the filaments with a smaller glow, or scale it down.
+// shape comes first, so a bare argument is the note value the kal visual takes: px=kal{5}.
 //   px=kal{glow:1/3}
 //   px=kal{glow:1/2}/2>>pal{#012,#28a,#fff}
 //   px=kal{n:6}/3>>cospal{#05a}
@@ -196,5 +197,7 @@ set kalline = {p, glow} -> exp{-abs{p.y}*5/(2/5+3/5*glow)}*2/5
 // takes its first line after the first fold. The coordinate is handed to kalstep explicitly
 // rather than piped into it, because >> withholds the chain value from a call whose own args
 // already hold a visual node, and the loop index is one.
-set kal = {in:id, t:time/2, shape:0, glow:1, n:8} ->
+// shape is declared first so it is the default positional argument (px=kal{5} is px=kal{shape:5});
+// `in` still takes the piped value wherever it is declared, so px=rot2{1/8}>>kal{5} works too.
+set kal = {shape:0, in:id, t:time/2, glow:1, n:8} ->
   in/4 >> loop{{i} -> kalstep{id, i+1/2, t, shape}, n, map:{v,i} -> sgn{i}*kalline{v, glow}}

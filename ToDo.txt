@@ -1,12 +1,13 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-?screen state when recompiling shader
+!fx=echo{60ms*[1,2]n} fail, also error with ]l4@f
 !GC pauses?
 !superbass weird on keyboard on electron, not on firefox, superosc missing on some notes? keyboard only
 visual nodes...
  Shape should be default param on kal
  Do colour conversion in shader if given a chain Eg set{{h:id.u}}
+ Can set{h:[]n} / add{h:[]n} etc work?
  Wobble and ripple with time and size params
  ?Noise methods take time as .z but kal takes it as {t:}; would be nice to be consistent? Prolly nice if noise fns also have time param
  ?why does fbm3 (with time in z) move in a jerky way? It seems to move to a new configuration, then pause there etc. Is that expected? eg px=set{z:time/16}>>fbm3

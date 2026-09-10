@@ -105,6 +105,13 @@ define(function(require) {
           result.isNormalCallFunction = true
           result.passCallsiteId = true
           result.dontEvalArgs = true
+          // Which positional slot a piped value (`x>>foo{...}`) lands in. By convention that is the
+          // arg called `in`, so a function can declare something else first and have it be the
+          // default positional arg: `set kal = {shape:0, in:id, ...}` makes `kal{5}` mean
+          // `kal{shape:5}` while `rot2{1/8}>>kal{5}` still pipes into `in`. Functions with no `in`
+          // (and every builtin) keep the first slot. See shiftPositionalArgs in parse-var.js.
+          let pipeSlot = argNames.indexOf('in')
+          if (pipeSlot > 0) { result._pipeSlot = pipeSlot }
           result.interval = parseInterval(state) || body.interval
           continue
         }
@@ -2290,6 +2297,21 @@ define(function(require) {
   assert(40, evalParamFrame(parseExpression("4>>pipefn{5}>>pipefn{2}"), e, 0)) // Chained
   assert(60, evalParamFrame(parseExpression("(4>>pipefn{5})+40"), e, 0)) // >> binds looser than arithmetic
   assert(36, evalParamFrame(parseExpression("4>>pipefn{5+4}"), e, 0))
+  delete vars.pipefn
+  // A function declaring `in` somewhere other than first takes the piped value there, leaving its
+  // own first declared arg as the default positional one (lib/visual.limut's kal{shape} works this
+  // way). Positional args from that slot on still shift up.
+  vars.pipefn = parseExpression("{s:0,in:1,d:1}->in*100+s*10+d")
+  assert(101, evalParamFrame(parseExpression("pipefn"), e, 0))
+  assert(151, evalParamFrame(parseExpression("pipefn{5}"), e, 0)) // Bare arg is s, not in
+  assert(151, evalParamFrame(parseExpression("pipefn{s:5}"), e, 0))
+  assert(401, evalParamFrame(parseExpression("4>>pipefn"), e, 0)) // Piped value lands on in
+  assert(401, evalParamFrame(parseExpression("pipefn{in:4}"), e, 0))
+  assert(453, evalParamFrame(parseExpression("4>>pipefn{5,3}"), e, 0)) // s then d: in is skipped
+  assert(453, evalParamFrame(parseExpression("4>>pipefn{5,d:3}"), e, 0))
+  assert(403, evalParamFrame(parseExpression("4>>pipefn{d:3}"), e, 0)) // Fewer positionals than the slot
+  assert(351, evalParamFrame(parseExpression("pipefn{5,3}"), e, 0)) // Not piped: s,in,d in order
+  assert(451, evalParamFrame(parseExpression("(4).pipefn{5}"), e, 0)) // Same via `.`
   delete vars.pipefn
   // Piping into the built in maths functions is tested in functions/maths.js, whose test block
   // applies the predefined vars this one does not have yet

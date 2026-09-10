@@ -23,13 +23,18 @@ define(function(require) {
     return key
   }
 
-  // A piped value (the LHS of `.` or of `>>`) becomes the callee's first positional arg, so any
-  // positional args at the callsite shift up a slot: x>>foo{2} calls foo{x,2}, not foo{x}
-  let shiftPositionalArgs = (o) => {
+  // A piped value (the LHS of `.` or of `>>`) takes one positional slot of the callee, so the
+  // callsite's own positional args from that slot on shift up one: x>>foo{2} calls foo{x,2}, not
+  // foo{x}. The slot is the first one unless the callee is a user defined function that declares an
+  // arg called `in` somewhere else (parse-expression.js sets _pipeSlot), which is how a function can
+  // take something other than the incoming value as its first, default argument: `kal{5}` is
+  // `kal{shape:5}` while `rot2{1/8}>>kal{5}` still pipes the rotated coordinate into kal's `in`.
+  let shiftPositionalArgs = (o, from) => {
+    from = from || 0
     let count = 0
     while (o['value'+(count||'')] !== undefined) { count++ }
-    for (let i=count-1; i>=0; i--) { o['value'+(i+1)] = o['value'+(i||'')] }
-    delete o.value
+    for (let i=count-1; i>=from; i--) { o['value'+(i+1)] = o['value'+(i||'')] }
+    delete o['value'+(from||'')]
     return o
   }
 
@@ -209,10 +214,11 @@ define(function(require) {
           Object.assign(modifiers, evalRecurse(args,event,b))
         }
         let piped = parseVarLookup.args !== undefined
+        let pipeSlot = vr._pipeSlot || 0
         if (modifiers) {
           if (piped) {
-            shiftPositionalArgs(modifiers)
-            modifiers.value = parseVarLookup.args
+            shiftPositionalArgs(modifiers, pipeSlot)
+            modifiers['value'+(pipeSlot||'')] = parseVarLookup.args
           }
         } else {
           modifiers = parseVarLookup.args
@@ -225,7 +231,7 @@ define(function(require) {
           // visual node maths, where a non-node arg becomes a uniform re-evalled every frame.
           // Copy before shifting: the raw map is the parsed AST and must not be mutated. Guarded
           // on non-empty args so an argless call still leaves modifiers empty for the check below.
-          modifiers.__rawArgs = piped ? shiftPositionalArgs(Object.assign({}, args)) : args
+          modifiers.__rawArgs = piped ? shiftPositionalArgs(Object.assign({}, args), pipeSlot) : args
         }
         if (vr.isNormalCallFunction) { // Used by user defined functions which need evalRecurse but not state
           v = vr(event,b, evalRecurse, modifiers)
@@ -343,6 +349,24 @@ define(function(require) {
   p = varLookup(parseVar({str:'foo',idx:0}), {to:4}, {}) // Named args are not shifted
   p.args = 1
   assert([1,4], p(ev(0,0),0,evalParamFrame))
+  delete vars.foo
+
+  // _pipeSlot: a user function declaring `in` somewhere other than first takes the piped value
+  // there, so its own first positional arg is left alone (kal{5} is kal{shape:5})
+  vars.foo = (args) => [args.value, args.value1, args.value2]
+  vars.foo.isVarFunction = true
+  vars.foo._pipeSlot = 1
+  p = varLookup(parseVar({str:'foo',idx:0}), {value:2}, {})
+  p.args = 1
+  assert([2,1,undefined], p(ev(0,0),0,evalParamFrame))
+  p = varLookup(parseVar({str:'foo',idx:0}), {value:2,value1:3}, {}) // Positionals from the slot on shift up
+  p.args = 1
+  assert([2,1,3], p(ev(0,0),0,evalParamFrame))
+  p = varLookup(parseVar({str:'foo',idx:0}), undefined, {}) // Fewer positionals than the slot: nothing to shift
+  p.args = 1
+  assert([undefined,1,undefined], p(ev(0,0),0,evalParamFrame))
+  p = varLookup(parseVar({str:'foo',idx:0}), {value:2,value1:3}, {}) // Not piped: no shift
+  assert([2,3,undefined], p(ev(0,0),0,evalParamFrame))
   delete vars.foo
 
   // wantsRawArgs: the unevalled arg expressions are passed alongside the evalled values
