@@ -63,6 +63,10 @@ define(function(require) {
   // value as it arrives, so count body applications give count+1 terms - one at every value the
   // loop visits, nothing dead, and no identity to supply. See shader-repeat.js for the emitted GLSL.
   //
+  // With a fold the body may be left off altogether - loop{map:{v,i}->sin{v*i}, 4} - since the
+  // interesting loop is then the walk over the index rather than anything the chain does. The body
+  // defaults to the identity and the count moves into the first positional slot; see visualLoop.
+  //
   // Both resolve exactly as the body does, so one rule covers all three - a lambda is called,
   // anything else is evaluated as a chain expression (so a bare call head needs an explicit id>>, as
   // it does for the body) and a result that is not a node becomes an animated uniform, the same wrap
@@ -81,6 +85,10 @@ define(function(require) {
   }
 
   let isUserFunction = (v) => typeof v === 'function' && v.isUserFunction
+
+  // map:/fold: are visual only, so a loop given either is a visual loop whatever is in the body
+  // slot - which is what lets the body be left off (see visualLoop below).
+  let isVisualFold = (args) => args['map'] !== undefined || args['fold'] !== undefined
 
   // The fold half of a visual loop, or undefined when the loop just carries its value. One index
   // node shared by map and fold, so they see the one counter; one accumulator node, which is how a
@@ -108,8 +116,17 @@ define(function(require) {
       let ev = Object.create(Object.getPrototypeOf(e), Object.getOwnPropertyDescriptors(e)) // Its own event, so the probe's memoised values can't leak in; clone descriptors so non-enumerable getters from the fx-chain event survive
       body = callback(ev, b, evalParamFrame, {value:bodyIdx})
     }
+    // With a fold, the body is often not the point: the loop is there to walk the index. So nothing
+    // chain-like in the body slot means the identity, exactly as the audio loop's main chain
+    // defaults to idnode - and then the positional count shifts up into the slot the body would
+    // have taken, since parse-map numbers keyless args independently of named ones (loop{map:f, 4}
+    // parses as {map:f, value:4}). So loop{map:f, 4} is loop{id, 4, map:f}. Only when the body is
+    // not a lambda: a lambda that came back a non-node must still fall through to audio, rather
+    // than having the body it was given quietly thrown away.
+    let identity = !isLambda && !isShaderNode(body) && isVisualFold(args)
+    if (identity) { body = passthroughShaderNode() }
     if (!isShaderNode(body)) { return undefined }
-    let count = Math.floor(evalMainParamEvent(args, 'count', evalMainParamEvent(args, 'value1', 2)))
+    let count = Math.floor(evalMainParamEvent(args, 'count', evalMainParamEvent(args, identity ? 'value' : 'value1', 2)))
     if (typeof count !== 'number' || isNaN(count)) { throw `loop: count must be numeric` }
     return loopShaderNode(body, count, bodyIdx, loopFold(args, e, b))
   }
@@ -124,7 +141,7 @@ define(function(require) {
       if (!isLambda) { throw err }
       probeError = err // A body written for a visual loop need not survive being called with no index; the visual call is the real one
     }
-    if (isShaderNode(mainChain) || probeError !== undefined) {
+    if (isShaderNode(mainChain) || probeError !== undefined || isVisualFold(args)) {
       let visual = visualLoop(callback, isLambda, mainChain, args, e, b)
       if (visual !== undefined) { return visual }
       if (probeError !== undefined) { throw probeError } // Not visual after all: the probe's failure was real
@@ -403,6 +420,8 @@ define(function(require) {
   lCb.isUserFunction = true
   let lMapCb = (e,b,erFn,a) => { lMapArgs = a; return lNode('f') }
   lMapCb.isUserFunction = true
+  let lFoldOnlyCb = (e,b,erFn,a) => lNode('h')
+  lFoldOnlyCb.isUserFunction = true
   let lRes = loop({value:lCb, value1:3, map:lMapCb}, lEvent(), 0, undefined, er)
   assert(true, isShaderNode(lRes))
   assert(true, isShaderNode(lMapArgs.value)) // the value being mapped, as a passthrough node
@@ -436,6 +455,50 @@ define(function(require) {
   lZero.out = loop({value:lCb, value1:0, map:lMapCb}, lEvent(), 0, undefined, er).build(lZero.rootInput, lZero)
   assert(['vec4 v1 = v0;', 'vec4 v2 = f(v1);', 'vec4 v3 = v2;'], lZero.statements)
   assert('v3', lZero.out)
+
+  // loop with a fold and no body at all: the body is the identity, and the positional count shifts
+  // up into the slot the body would have taken (loop{map:f, 3} is loop{id, 3, map:f})
+  let lId = require('draw/visualsynth/codegen').makeContext()
+  let lIdRes = loop({map:lMapCb, value:3}, lEvent(), 0, undefined, er)
+  assert(true, isShaderNode(lIdRes))
+  lId.out = lIdRes.build(lId.rootInput, lId)
+  assert([
+    'vec4 v1 = v0;',
+    'vec4 v2 = f(v1);',
+    'vec4 v3 = v2;',
+    'for (int l_i0 = 0; l_i0 < 3; l_i0++) {',
+    '  vec4 v4 = v1;',
+    '  vec4 v5 = f(v4);',
+    '  v3 += v5;',
+    '  v1 = v4;',
+    '}'], lId.statements) // The 3 was read as the count, not as the body
+  assert('v3', lId.out)
+
+  let lCount = require('draw/visualsynth/codegen').makeContext() // A named count still wins
+  loop({map:lMapCb, count:4}, lEvent(), 0, undefined, er).build(lCount.rootInput, lCount)
+  assert(true, lCount.statements.some(st => st.includes('l_i0 < 4')))
+
+  let lDef = require('draw/visualsynth/codegen').makeContext() // And with neither, the usual default of 2
+  loop({map:lMapCb}, lEvent(), 0, undefined, er).build(lDef.rootInput, lDef)
+  assert(true, lDef.statements.some(st => st.includes('l_i0 < 2')))
+
+  let lFoldOnly = require('draw/visualsynth/codegen').makeContext() // fold: on its own is enough too
+  loop({fold:lFoldOnlyCb, value:3}, lEvent(), 0, undefined, er).build(lFoldOnly.rootInput, lFoldOnly)
+  assert(true, lFoldOnly.statements.some(st => st.includes('l_i0 < 3')))
+
+  // A body that *is* given keeps the count in the second positional, as it always did
+  let lBody = require('draw/visualsynth/codegen').makeContext()
+  loop({value:lNode('b'), value1:3, map:lMapCb}, lEvent(), 0, undefined, er).build(lBody.rootInput, lBody)
+  assert([
+    'vec4 v1 = v0;',
+    'vec4 v2 = f(v1);',
+    'vec4 v3 = v2;',
+    'for (int l_i0 = 0; l_i0 < 3; l_i0++) {',
+    '  vec4 v4 = b(v1);',
+    '  vec4 v5 = f(v4);',
+    '  v3 += v5;',
+    '  v1 = v4;',
+    '}'], lBody.statements)
 
   // parallel: a user defined function chain is invoked once per copy with the copy index,
   // and the result is a {value,value1,...} map that connect() treats as parallel.
