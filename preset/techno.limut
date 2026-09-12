@@ -44,7 +44,7 @@ preset psy multiwave
 preset psybass saw
   , envelope='perc', oct=2, dur=1/4
   , lpf={30+8000*this.cutoff^2*[1:_10ms,1:!720ms*this.decay^2,0]e@s, poles:4, q:3}
-  , fx=duck*+6db
+  , fx=duck
   // Controls
   , cutoff=1/2
   , decay=1/2
