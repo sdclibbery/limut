@@ -67,12 +67,17 @@ define(function(require) {
   // interesting loop is then the walk over the index rather than anything the chain does. The body
   // defaults to the identity and the count moves into the first positional slot; see visualLoop.
   //
-  // Both resolve exactly as the body does, so one rule covers all three - a lambda is called,
+  // until: is an early exit, tested after the body: the loop stops as soon as it is true, so a march
+  // can stop at a hit or at the far plane instead of paying every step. Its lambda is an expression
+  // of the value the body just produced ({v,i}, like map's), and testing after the body rather than
+  // before it is what lets it name a let{} the body bound. See shader-repeat.js.
+  //
+  // All three resolve exactly as the body does, so one rule covers the lot - a lambda is called,
   // anything else is evaluated as a chain expression (so a bare call head needs an explicit id>>, as
   // it does for the body) and a result that is not a node becomes an animated uniform, the same wrap
   // visualChains uses. Their lambdas name what the body's does not: the body *is* the chain, so its
-  // value flows implicitly and its one arg is the index, where map is an expression of the value
-  // ({v,i}) and fold an expression of the total and the term ({a,v,i}).
+  // value flows implicitly and its one arg is the index, where map and until are expressions of the
+  // value ({v,i}) and fold an expression of the total and the term ({a,v,i}).
   let foldArg = (callback, argsFor, e, b) => {
     if (callback === undefined) { return undefined }
     if (typeof callback !== 'function' || !callback.isUserFunction) {
@@ -86,9 +91,9 @@ define(function(require) {
 
   let isUserFunction = (v) => typeof v === 'function' && v.isUserFunction
 
-  // map:/fold: are visual only, so a loop given either is a visual loop whatever is in the body
-  // slot - which is what lets the body be left off (see visualLoop below).
-  let isVisualFold = (args) => args['map'] !== undefined || args['fold'] !== undefined
+  // map:/fold:/until: are visual only, so a loop given any of them is a visual loop whatever is in
+  // the body slot - which is what lets the body be left off (see visualLoop below).
+  let isVisualLoopArg = (args) => args['map'] !== undefined || args['fold'] !== undefined || args['until'] !== undefined
 
   // The fold half of a visual loop, or undefined when the loop just carries its value. One index
   // node shared by map and fold, so they see the one counter; one accumulator node, which is how a
@@ -109,12 +114,32 @@ define(function(require) {
     }
   }
 
-  let visualLoop = (callback, isLambda, probe, args, e, b) => {
+  // The early exit half of a visual loop, or undefined when the loop always runs every iteration.
+  // Its own index node (the value it tests is the one after the step, so shader-repeat.js sets it to
+  // one past the counter) and its own callsite id, for the reason loopFold's two have theirs.
+  let loopUntil = (args, e, b) => {
+    if (args['until'] === undefined) { return undefined }
+    let idx = isUserFunction(args['until']) ? loopIndexNode() : undefined
+    let untilArgs = () => ({value:passthroughShaderNode(), value1:idx, __functionContext:'until;'})
+    return {test: foldArg(args['until'], untilArgs, e, b), index: idx}
+  }
+
+  let visualLoop = (callback, isLambda, probe, args, e, b, letsBeforeProbe) => {
     let bodyIdx, body = probe
+    // map:/fold:/until: resolve against the event the *body* was resolved on - the clone below when
+    // the body is a lambda, and e itself otherwise. let{} bindings hang off the event
+    // (expression/let-node.js), so this is what makes a name the body bound visible to them, and an
+    // until: naming a let{} is the whole reason its test goes after the body rather than before it.
+    let bodyEvent = e
     if (isLambda) {
       bodyIdx = loopIndexNode()
-      let ev = Object.create(Object.getPrototypeOf(e), Object.getOwnPropertyDescriptors(e)) // Its own event, so the probe's memoised values can't leak in; clone descriptors so non-enumerable getters from the fx-chain event survive
-      body = callback(ev, b, evalParamFrame, {value:bodyIdx})
+      bodyEvent = Object.create(Object.getPrototypeOf(e), Object.getOwnPropertyDescriptors(e)) // Its own event, so the probe's memoised values can't leak in; clone descriptors so non-enumerable getters from the fx-chain event survive
+      // and its own let{} bindings, restored to what they were before the probe. The probe called
+      // this same lambda with no arguments, and a let{} in it bound onto the event; the real call
+      // below would then find its own name already bound and read it as that value rather than as a
+      // name ('let needs a name'), so the body's let{} would silently bind nothing.
+      bodyEvent._lets = Object.assign({}, letsBeforeProbe)
+      body = callback(bodyEvent, b, evalParamFrame, {value:bodyIdx})
     }
     // With a fold, the body is often not the point: the loop is there to walk the index. So nothing
     // chain-like in the body slot means the identity, exactly as the audio loop's main chain
@@ -123,26 +148,29 @@ define(function(require) {
     // parses as {map:f, value:4}). So loop{map:f, 4} is loop{id, 4, map:f}. Only when the body is
     // not a lambda: a lambda that came back a non-node must still fall through to audio, rather
     // than having the body it was given quietly thrown away.
-    let identity = !isLambda && !isShaderNode(body) && isVisualFold(args)
+    let identity = !isLambda && !isShaderNode(body) && isVisualLoopArg(args)
     if (identity) { body = passthroughShaderNode() }
     if (!isShaderNode(body)) { return undefined }
     let count = Math.floor(evalMainParamEvent(args, 'count', evalMainParamEvent(args, identity ? 'value' : 'value1', 2, undefined, e), undefined, e))
     if (typeof count !== 'number' || isNaN(count)) { throw `loop: count must be numeric` }
-    return loopShaderNode(body, count, bodyIdx, loopFold(args, e, b))
+    return loopShaderNode(body, count, bodyIdx, loopFold(args, bodyEvent, b), loopUntil(args, bodyEvent, b))
   }
 
   let loop = (args,e,b,_,er) => {
     let callback = args['value']
     let isLambda = typeof callback === 'function' && callback.isUserFunction
     let mainChain, probeError
+    // Taken before the probe because the visual path throws that call away and makes a real one:
+    // see visualLoop, where the body's event gets these back rather than the probe's leftovers.
+    let letsBeforeProbe = isLambda && e !== undefined && e !== null ? Object.assign({}, e._lets) : undefined
     try {
       mainChain = evalParamEvent(callback, e)
     } catch (err) {
       if (!isLambda) { throw err }
       probeError = err // A body written for a visual loop need not survive being called with no index; the visual call is the real one
     }
-    if (isShaderNode(mainChain) || probeError !== undefined || isVisualFold(args)) {
-      let visual = visualLoop(callback, isLambda, mainChain, args, e, b)
+    if (isShaderNode(mainChain) || probeError !== undefined || isVisualLoopArg(args)) {
+      let visual = visualLoop(callback, isLambda, mainChain, args, e, b, letsBeforeProbe)
       if (visual !== undefined) { return visual }
       if (probeError !== undefined) { throw probeError } // Not visual after all: the probe's failure was real
     }
@@ -499,6 +527,61 @@ define(function(require) {
     '  v3 += v5;',
     '  v1 = v4;',
     '}'], lBody.statements)
+
+  // loop with an early exit: until's lambda gets the value the body just produced and its index,
+  // and the test is emitted at the bottom of the block
+  let lUntilArgs
+  let lUntilCb = (e,b,erFn,a) => { lUntilArgs = a; return lNode('c') }
+  lUntilCb.isUserFunction = true
+  let lUntil = require('draw/visualsynth/codegen').makeContext()
+  let lUntilRes = loop({value:lCb, value1:4, until:lUntilCb}, lEvent(), 0, undefined, er)
+  assert(true, isShaderNode(lUntilRes))
+  assert(true, isShaderNode(lUntilArgs.value)) // the value being tested, as a passthrough node
+  assert(true, lUntilArgs.value1 !== undefined && lUntilArgs.value1._loopIndexBox !== undefined) // its index
+  assert('until;', lUntilArgs.__functionContext) // its own callsite id, so its uniforms stay its own
+  lUntil.out = lUntilRes.build(lUntil.rootInput, lUntil)
+  assert([
+    'vec4 v1 = v0;',
+    'for (int l_i0 = 0; l_i0 < 4; l_i0++) {',
+    '  vec4 v2 = a(v1);',
+    '  v1 = v2;',
+    '  vec4 v3 = c(v2);',
+    '  if (any(notEqual(v3, vec4(0.0)))) { break; }',
+    '}'], lUntil.statements)
+  assert('v1', lUntil.out)
+
+  // until: on its own makes it a visual loop, whatever is in the body slot, and a plain chain in it
+  // resolves the way the body does rather than being called
+  let lUntilChain = require('draw/visualsynth/codegen').makeContext()
+  loop({value:lNode('b'), value1:2, until:lNode('c')}, lEvent(), 0, undefined, er).build(lUntilChain.rootInput, lUntilChain)
+  assert([
+    'vec4 v1 = v0;',
+    'for (int l_i0 = 0; l_i0 < 2; l_i0++) {',
+    '  vec4 v2 = b(v1);',
+    '  v1 = v2;',
+    '  vec4 v3 = c(v2);',
+    '  if (any(notEqual(v3, vec4(0.0)))) { break; }',
+    '}'], lUntilChain.statements)
+
+  // An early exit alongside a fold: the break lands after the term has joined the total
+  let lUntilFold = require('draw/visualsynth/codegen').makeContext()
+  loop({value:lCb, value1:2, map:lMapCb, until:lNode('c')}, lEvent(), 0, undefined, er).build(lUntilFold.rootInput, lUntilFold)
+  assert([
+    'vec4 v1 = v0;',
+    'vec4 v2 = f(v1);',
+    'vec4 v3 = v2;',
+    'for (int l_i0 = 0; l_i0 < 2; l_i0++) {',
+    '  vec4 v4 = a(v1);',
+    '  vec4 v5 = f(v4);',
+    '  v3 += v5;',
+    '  v1 = v4;',
+    '  vec4 v6 = c(v4);',
+    '  if (any(notEqual(v6, vec4(0.0)))) { break; }',
+    '}'], lUntilFold.statements)
+
+  // An audio loop is untouched by all of this: no visual only param, so it wires a feedback graph
+  let lAudio = loop({value:system.audio.createGain(), feedback:system.audio.createGain()}, {_destructor:require('play/destructor')()}, 0, undefined, er)
+  assert(true, isConnectable(lAudio))
 
   // parallel: a user defined function chain is invoked once per copy with the copy index,
   // and the result is a {value,value1,...} map that connect() treats as parallel.

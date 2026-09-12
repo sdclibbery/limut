@@ -113,6 +113,36 @@ Three things this needs. **The seed builds in a `captureBlock` of its own**, who
 
 `graph.js`'s `foldArg` resolves both params exactly as the body is resolved, so one rule covers all three, but their lambdas name what the body's does not: `map` takes **value first, index second**, `fold` takes **total, term, index** — the body *is* the chain, so its value flows implicitly, where these are expressions of it. The value each is handed is a `passthroughShaderNode()`, the same thing `connectOp` hands a piped callee, and each gets its own `__functionContext` (`'map;'`, `'fold;'`) so one lambda used in two slots keeps two sets of uniforms in the per-frame memo key. The term index node is created when *either* param is a lambda, since both share one box and so one counter. The cost of the seeding rule is that `map` is emitted twice in the generated source.
 
+`loop{}` also takes an **`until:`** early exit — the first and only branch in the generated shader.
+It is emitted at the *bottom* of the block, after the write-back, as
+`if (any(notEqual(<cond>, vec4(0.0)))) { break; }`; truthiness is `??`'s (any component non-zero),
+collapsed with `any` because a break needs one bool where `??` mixes per component. Three things
+follow from testing after the body rather than before it. The body runs at least once, so zero
+iterations stay the `count: 0` case alone. The condition can name a **`let{}` the body bound** —
+`ctx.lets` is filled during the build walk and `captureBlock` keeps the block's copy live, so
+`loop{{i}->step>>let{d}>>more, 64, until: d < eps}` tests the value at the `let`, not the one the
+body hands on; that was the deciding reason for the post-test. And the condition is built from the
+**body's output variable, not from `acc`** — the same value at that point, but `acc` is one the body
+already built from while it held the *previous* value, so building the test from it would let
+`ctx.built` hand back a stale variable for a node the two have in common (the hazard the seed term's
+`captureBlock` guards against). With a fold the break lands after that step's term has joined the
+total, so terms stay one per visited value and `map:1` counts the steps actually taken.
+
+`graph.js`'s `loopUntil` resolves it through the same `foldArg` as `map`/`fold` (so a bare call head
+needs an explicit `id>>`, as the body does), with its own `loopIndexNode()` — set to `l_iN + 1`, the
+index of the value it tests, as a term's is — and its own `__functionContext:'until;'`. All three now
+resolve against the **event the body was resolved on** (the lambda's clone), because `let{}` bindings
+hang off the event (`expression/let-node.js`); that clone also gets the `_lets` the event had
+*before* the probe, since the probe called the same lambda and a `let{}` whose name is already bound
+reads the name as that value and silently binds nothing. Whether there is an `until` is structural
+(it changes the source, hence the program cache key) exactly as the count is; anything inside the
+condition is an ordinary uniform and still animates. Note a GPU breaks per lockstep group, not per
+pixel — real for a march's large runs of background and near hits, not a per-pixel saving.
+
+**Known, pre-existing**: a `let{}` at the **head** of a `loop{}` body loses its name (`🟠 let needs a
+name`) and the head collapses to a uniform — reproduced on master with no `until:` involved. Any
+other position (piped, ie `…>>let{d}>>…`) is fine. See ToDo.txt.
+
 `lib/visual.limut`'s `fbm2`/`fbm3`/`turb2` are `parallel{}` octave sums, and render pixel-identical to the hand-written four-term versions they replaced.
 
 ## eval-param pass-through (critical)

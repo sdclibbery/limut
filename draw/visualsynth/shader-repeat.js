@@ -14,6 +14,7 @@ define(function(require) {
   //                                into its input each iteration
   //   loop{chain, n, map:f, fold:g}
   //                            ->  the same loop with a fold running alongside the carried value
+  //   loop{chain, n, until:c}  ->  the same loop with an early exit: c is tested after the body
   //
   // series, parallel and multitap are unrolled, so their index is an ordinary javascript number and
   // each repeat may differ in any way at all. loop rolls, so the body is emitted once whatever the
@@ -97,17 +98,33 @@ define(function(require) {
   // they belong outside the loop. The fold assignment and the write-back to the carried value are
   // emitted inside the block, in place, so a combiner's statements sit between the term and the
   // assignment that reads them.
-  let loopShaderNode = (body, count, bodyIndex, fold) => {
+  //
+  // until gives it an early exit: {test, index}, a condition emitted at the *bottom* of the block,
+  // after the write-back, breaking out of the loop when it is true. So the body always runs at
+  // least once and at most count times, and a march can stop at a hit or at the far plane instead
+  // of paying every step. Testing after the body rather than before it is what lets the condition
+  // name the body's let{} bindings, since ctx.lets is filled during the build walk and the block's
+  // copy is still live at that point - so the distance the step just computed can be tested without
+  // stashing it in a spare channel. Truthiness is the one ?? uses (shader-branch.js): any component
+  // non zero is true. With a fold the break lands after that step's term has joined the total, so
+  // the terms stay one at every value the loop visits.
+  //
+  // This is the only branch the generated shader has. A GPU runs fragments in lockstep groups, so
+  // it saves work per group rather than per pixel - which is still most of it for the large
+  // contiguous runs of background and of early hits a march produces.
+  let loopShaderNode = (body, count, bodyIndex, fold, until) => {
     let map = fold !== undefined ? fold.map : undefined
     let combine = fold !== undefined ? fold.combine : undefined
     let bodyBox = bodyIndex !== undefined ? bodyIndex._loopIndexBox : undefined
     let termBox = fold !== undefined && fold.termIndex !== undefined ? fold.termIndex._loopIndexBox : undefined
     let accBox = fold !== undefined && fold.accNode !== undefined ? fold.accNode._loopAccBox : undefined
+    let untilBox = until !== undefined && until.index !== undefined ? until.index._loopIndexBox : undefined
     return makeShaderNode((input, ctx) => {
       let acc = ctx.addStatement(input) // The loop carried value: declared outside, assigned inside
       let savedBody = bodyBox !== undefined ? bodyBox.expr : undefined
       let savedTerm = termBox !== undefined ? termBox.expr : undefined
       let savedAcc = accBox !== undefined ? accBox.name : undefined
+      let savedUntil = untilBox !== undefined ? untilBox.expr : undefined
       let termAt = (v) => map === undefined ? v : map.build(v, ctx)
       let total
       try {
@@ -122,6 +139,7 @@ define(function(require) {
           let name = ctx.loopVar()
           if (bodyBox !== undefined) { bodyBox.expr = name }
           if (termBox !== undefined) { termBox.expr = name + ' + 1' }
+          if (untilBox !== undefined) { untilBox.expr = name + ' + 1' } // The value it tests is the one after this step, as a term's is
           let block = ctx.captureBlock(() => {
             let out = body.build(acc, ctx)
             if (fold !== undefined) {
@@ -129,6 +147,14 @@ define(function(require) {
               ctx.addRaw(combine === undefined ? `${total} += ${term};` : `${total} = ${combine.build(term, ctx)};`)
             }
             ctx.addRaw(`${acc} = ${out};`)
+            if (until !== undefined) {
+              // Built from the body's output rather than from acc: the same value at this point,
+              // but a variable this iteration wrote, where acc is one the body has already built
+              // from while it held the *previous* value. Building the condition from acc would let
+              // the memo (ctx.built) hand back one of those stale variables for a node the two have
+              // in common, which is the same hazard the seed term's captureBlock guards against.
+              ctx.addRaw(`if (any(notEqual(${until.test.build(out, ctx)}, vec4(0.0)))) { break; }`)
+            }
           })
           ctx.addRaw(`for (int ${name} = 0; ${name} < ${count}; ${name}++) {`)
           block.statements.forEach(s => ctx.addRaw('  ' + s))
@@ -138,6 +164,7 @@ define(function(require) {
         if (bodyBox !== undefined) { bodyBox.expr = savedBody }
         if (termBox !== undefined) { termBox.expr = savedTerm }
         if (accBox !== undefined) { accBox.name = savedAcc }
+        if (untilBox !== undefined) { untilBox.expr = savedUntil }
       }
       return total !== undefined ? total : acc
     })
@@ -341,6 +368,96 @@ define(function(require) {
   let z0 = statements(loopShaderNode(node('a'), 0))
   assert(['vec4 v1 = v0;'], z0.statements)
   assert('v1', z0.out)
+
+  // loop with an early exit: the test is emitted at the bottom of the block, after the write-back,
+  // so it reads the value this step produced
+  let u = statements(loopShaderNode(node('a'), 8, undefined, undefined, {test: node('c')}))
+  assert([
+    'vec4 v1 = v0;',
+    'for (int l_i0 = 0; l_i0 < 8; l_i0++) {',
+    '  vec4 v2 = a(v1);',
+    '  v1 = v2;',
+    '  vec4 v3 = c(v2);',
+    '  if (any(notEqual(v3, vec4(0.0)))) { break; }',
+    '}'], u.statements)
+  assert('v1', u.out) // Still the carried value: a break changes when the loop stops, not what it hands on
+
+  // loop with an early exit and a fold: the break lands after the term has joined the total, so the
+  // terms stay one at every value the loop visits
+  let uf = statements(loopShaderNode(node('a'), 4, undefined, {map: node('f')}, {test: node('c')}))
+  assert([
+    'vec4 v1 = v0;',
+    'vec4 v2 = f(v1);',
+    'vec4 v3 = v2;',
+    'for (int l_i0 = 0; l_i0 < 4; l_i0++) {',
+    '  vec4 v4 = a(v1);',
+    '  vec4 v5 = f(v4);',
+    '  v3 += v5;',
+    '  v1 = v4;',
+    '  vec4 v6 = c(v4);',
+    '  if (any(notEqual(v6, vec4(0.0)))) { break; }',
+    '}'], uf.statements)
+  assert('v3', uf.out)
+
+  // loop: the condition's index is one past the counter, naming the value it tests, and is restored
+  let ui = loopIndexNode()
+  let uidx = statements(loopShaderNode(node('a'), 2, undefined, undefined, {test: composeShaderNodes(ui, node('c')), index: ui}))
+  assert([
+    'vec4 v1 = v0;',
+    'for (int l_i0 = 0; l_i0 < 2; l_i0++) {',
+    '  vec4 v2 = a(v1);',
+    '  v1 = v2;',
+    '  vec4 v3 = vec4(float(l_i0 + 1));',
+    '  vec4 v4 = c(v3);',
+    '  if (any(notEqual(v4, vec4(0.0)))) { break; }',
+    '}'], uidx.statements)
+  assert(undefined, ui._loopIndexBox.expr) // Restored afterwards
+
+  // loop: a node the body and the condition have in common emits twice rather than collapsing onto
+  // one variable - the condition builds from the body's output, not from the carried value the body
+  // built from while it still held the previous value
+  let sharedAcc = node('a')
+  assert([
+    'vec4 v1 = v0;',
+    'for (int l_i0 = 0; l_i0 < 2; l_i0++) {',
+    '  vec4 v2 = a(v1);',
+    '  v1 = v2;',
+    '  vec4 v3 = a(v2);',
+    '  if (any(notEqual(v3, vec4(0.0)))) { break; }',
+    '}'], statements(loopShaderNode(sharedAcc, 2, undefined, undefined, {test: sharedAcc})).statements)
+
+  // loop: a let{} bound inside the body is still in scope for the condition, which is the whole
+  // reason the test goes after the body rather than before it
+  let bound = makeShaderNode((input, ctx) => { ctx.lets['d'] = ctx.addStatement(`a(${input})`); return ctx.lets['d'] })
+  let readsLet = makeShaderNode((input, ctx) => ctx.addStatement(`c(${ctx.lets['d']})`))
+  assert([
+    'vec4 v1 = v0;',
+    'for (int l_i0 = 0; l_i0 < 2; l_i0++) {',
+    '  vec4 v2 = a(v1);',
+    '  v1 = v2;',
+    '  vec4 v3 = c(v2);',
+    '  if (any(notEqual(v3, vec4(0.0)))) { break; }',
+    '}'], statements(loopShaderNode(bound, 2, undefined, undefined, {test: readsLet})).statements)
+
+  // loop: nested loops each break out of their own
+  let un = statements(loopShaderNode(loopShaderNode(node('a'), 2, undefined, undefined, {test: node('c')}), 3, undefined, undefined, {test: node('d')}))
+  assert([
+    'vec4 v1 = v0;',
+    'for (int l_i0 = 0; l_i0 < 3; l_i0++) {',
+    '  vec4 v2 = v1;',
+    '  for (int l_i1 = 0; l_i1 < 2; l_i1++) {',
+    '    vec4 v3 = a(v2);',
+    '    v2 = v3;',
+    '    vec4 v4 = c(v3);',
+    '    if (any(notEqual(v4, vec4(0.0)))) { break; }',
+    '  }',
+    '  v1 = v2;',
+    '  vec4 v5 = d(v2);',
+    '  if (any(notEqual(v5, vec4(0.0)))) { break; }',
+    '}'], un.statements)
+
+  // no iterations at all: no loop, so no test either
+  assert(['vec4 v1 = v0;'], statements(loopShaderNode(node('a'), 0, undefined, undefined, {test: node('c')})).statements)
 
   // A node built inside the loop body is not reused outside it: its variable is out of scope there
   let shared = node('a')
