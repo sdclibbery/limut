@@ -9,23 +9,26 @@ define(function (require) {
   let {getCallTree,setCallTree,clearCallTree} = require('player/callstack')
   let {convertUnits} = require('units')
 
-  let evalPerEvent = (params, p, def) => {
+  // `event` is the event to evaluate the expression against, when that is not the map the param is
+  // read from. Node functions read their params out of their raw arg map, which is not an event (no
+  // count, no _time), so anything time varying would otherwise be evalled at beat `undefined`.
+  let evalPerEvent = (params, p, def, event) => {
     let v = params[p]
     if (typeof v !== 'number' && !v) { return def }
-    v =  evalParamEvent(v, params) // Room for optimisation here: only eval objects the specific sub (or main) param thats needed for this call
+    v =  evalParamEvent(v, event !== undefined ? event : params) // Room for optimisation here: only eval objects the specific sub (or main) param thats needed for this call
     if (Array.isArray(v)) { v = v[0] } // Bus chords end up as arrays here so handle it by just picking the first value
     if (typeof v !== 'number' && !v) { return def }
     return v
   }
 
-  let evalMainParamEvent = (params, p, def, requiredUnits) => {
-    let v = evalPerEvent(params, p, def)
+  let evalMainParamEvent = (params, p, def, requiredUnits, event) => {
+    let v = evalPerEvent(params, p, def, event)
     if (typeof v !== 'object') { return v }
     return mainParamUnits(v, requiredUnits, def)
   }
 
-  let evalSubParamEvent = (params, p, subParamName, def, requiredUnits) => {
-    let v = evalPerEvent(params, p, def)
+  let evalSubParamEvent = (params, p, subParamName, def, requiredUnits, event) => {
+    let v = evalPerEvent(params, p, def, event)
     if (typeof v !== 'object') { return def }
     return subParamUnits(v, subParamName, requiredUnits, def)
   }
@@ -214,6 +217,23 @@ define(function (require) {
     assert(2, evalSubParamEvent({foo:()=>{return {value:3,sub:undefined}}}, 'foo', 'sub', 2))
     assert(4, evalSubParamEvent({foo:()=>{return {value:3,sub:()=>4}}}, 'foo', 'sub', 2))
     assert(2, evalSubParamEvent({foo:()=>{return {value:3,sub:()=>undefined}}}, 'foo', 'sub', 2))
+  
+    // Explicit event argument: node functions read their params out of a raw arg map, which is not
+    // an event, so the expression must be evalled against the event that was passed in instead.
+    // Without it a timevar sees beat `undefined` and collapses to 0/NaN (the echo{} max bug).
+    let getBeat = (e,b) => b
+    let getCount = (e,b) => e.count
+    assert(7, evalMainParamEvent({foo:getBeat}, 'foo', 0, undefined, {count:7}))
+    assert(7, evalMainParamEvent({foo:getCount}, 'foo', 0, undefined, {count:7}))
+    assert(0, evalMainParamEvent({foo:getBeat}, 'foo', 0)) // No event given: falls back to the params map (count undefined)
+    assert(7, evalSubParamEvent({foo:{value:0,sub:getBeat}}, 'foo', 'sub', 0, undefined, {count:7}))
+    assert(0, evalSubParamEvent({foo:{value:0,sub:getBeat}}, 'foo', 'sub', 0))
+    // Units still convert when the event comes from the extra arg
+    let savedBeatDuration = metronome.beatDuration()
+    metronome.beatDuration(2)
+    assert(3, evalMainParamEvent({foo:(e,b)=>{return{value:b,_units:'s'}}}, 'foo', 0, 'b', {count:6}))
+    assert(6, evalMainParamEvent({foo:(e,b)=>{return{value:b,_units:'b'}}}, 'foo', 0, 'b', {count:6}))
+    metronome.beatDuration(savedBeatDuration)
   
     let mockAp = () => {
       let calls = []

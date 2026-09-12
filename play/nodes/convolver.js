@@ -48,7 +48,7 @@ define(function(require) {
   let convolver = (args,e,b) => {
     let node = system.audio.createConvolver()
     var rate = system.audio.sampleRate
-    let length = evalMainParamEvent(args, 'length', 1, 's')
+    let length = evalMainParamEvent(args, 'length', 1, 's', e)
     var size = rate * length
 
     var channels = 1

@@ -126,7 +126,7 @@ define(function(require) {
     let identity = !isLambda && !isShaderNode(body) && isVisualFold(args)
     if (identity) { body = passthroughShaderNode() }
     if (!isShaderNode(body)) { return undefined }
-    let count = Math.floor(evalMainParamEvent(args, 'count', evalMainParamEvent(args, identity ? 'value' : 'value1', 2)))
+    let count = Math.floor(evalMainParamEvent(args, 'count', evalMainParamEvent(args, identity ? 'value' : 'value1', 2, undefined, e), undefined, e))
     if (typeof count !== 'number' || isNaN(count)) { throw `loop: count must be numeric` }
     return loopShaderNode(body, count, bodyIdx, loopFold(args, e, b))
   }
@@ -215,7 +215,7 @@ define(function(require) {
   // user defined function given the repeat index (eg {i}->lpf{600*(i+1)}) so each
   // repeat can differ. On a px chain the repeats are composed into the shader instead.
   let series = (args,e,b,_,er) => {
-    let count = evalMainParamEvent(args, 'count', evalMainParamEvent(args, 'value1', 2))
+    let count = evalMainParamEvent(args, 'count', evalMainParamEvent(args, 'value1', 2, undefined, e), undefined, e)
     if (typeof count !== 'number') { throw `series: count ${count} must numeric` }
     if (count < 0) { throw `series: count ${count} must be non-negative` }
     if (count === 0) { return idnode(args,e,b) }
@@ -245,7 +245,7 @@ define(function(require) {
   // tap each stage's output and sum all the taps together as the final output (a tapped
   // line, eg multitap{{i}->echo{1/2}>>gain{0.7^i}, 4} for a decaying multi-tap echo).
   let multitap = (args,e,b,_,er) => {
-    let count = Math.floor(evalMainParamEvent(args, 'count', evalMainParamEvent(args, 'value1', 2)))
+    let count = Math.floor(evalMainParamEvent(args, 'count', evalMainParamEvent(args, 'value1', 2, undefined, e), undefined, e))
     if (typeof count !== 'number' || isNaN(count)) { throw `multitap: count must be numeric` }
     if (count < 1) { return idnode(args,e,b) }
     let callback = args['value'] || args['chain']
@@ -289,7 +289,7 @@ define(function(require) {
   // together. The chain may be a user defined function given the copy index
   // (eg {i}->lpf{600*(i+1)}) so each copy can differ.
   let parallel = (args,e,b,_,er) => {
-    let count = Math.floor(evalMainParamEvent(args, 'count', evalMainParamEvent(args, 'value1', 2)))
+    let count = Math.floor(evalMainParamEvent(args, 'count', evalMainParamEvent(args, 'value1', 2, undefined, e), undefined, e))
     if (typeof count !== 'number' || isNaN(count)) { throw `parallel: count must be numeric` }
     if (count < 1) { return idnode(args,e,b) }
     let callback = args['value'] || args['chain']

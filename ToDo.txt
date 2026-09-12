@@ -1,26 +1,23 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!fx=echo{60ms*[1,2]n} fail, also error with ]l4@f
+!fx=echo{60ms*[1,2]n} fails to actually have the echo, also fx=echo{60ms*[1,2]l4@f} has an error
 !GC pauses?
 !superbass weird on keyboard on electron, not on firefox, superosc missing on some notes? keyboard only
 visual nodes...
+ method that takes a px chain, and does a shephard tone thing with perpetually zooming into two copies of the chain
+ 3d stuff?
  text display; can render on hub75 pi or have to send texture?
  voronoi, result should be like an sdf to the voronoi edges (or centres)? sdvoronoi
  jpeg and vhs functions; split between uv and rgb?
- !px=set{{h:uv.x}} doesn't work; need col{} function? Or can it be supported?
  ?Wobble and ripple with time and size params
  ?render buffers to generate read from, eg px=tex{buffer{mul{1.01}>>webcam>>set{#...a},clear:false}} for temporal zoom-blur??
  ?visual lib functions for old style visual params (monochrome, pixellate, rotate, mirror, vhs etc etc) - vhs needs split into uv and rgb parts...
  ?bitwise ops
  ?something undefined should render flat black not flat white
  ?sdsin/sdsquare/sdsaw/sdtri (may be approximate only)
- method that takes a px chain, and does a shephard tone thing with perpetually zooming into two copies of the chain
- 3d stuff?
  ?support for piecewise as shader code not textures?
  ?no time uniform in a generated px shader, so `time` in a chain costs a JS param eval per frame
- ?hsv as an operation on the incoming pixel - set{h:..}, add{h:..}, channels{h:..} and in.h reads - which needs rgb2hsv/hsv2rgb GLSL helpers
- ?hsl etc conversions?
  ???Want to be able to switch shader parts on a timevar; eg px=fbm2>>[cospal,pal{0,red,1}]t4@f - cant do this with audio nodes; how important is it really?
  ???{tex,#124} should do split/join like in audio chain??
 Multiple audiocontexts, set context='foo' on a player. Allows audio rendering to be split over multiple cores

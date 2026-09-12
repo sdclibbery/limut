@@ -6,6 +6,7 @@ define(function(require) {
   let {evalParamFrame,evalParamEvent} = require('player/eval-param')
   var metronome = require('metronome')
   let {connect,isConnectable} = require('play/nodes/connect')
+  let consoleOut = require('console')
   require('play/nodes/mocks')
   require('play/nodes/convolver')
   require('play/nodes/source')
@@ -22,7 +23,7 @@ define(function(require) {
   let biquad = (args,e,b) => {
     let node = system.audio.createBiquadFilter()
     let params = combineParams(args, e)
-    node.type = evalMainParamEvent(args, 'value', 'lowpass')
+    node.type = evalMainParamEvent(args, 'value', 'lowpass', undefined, e)
     evalMainParamFrame(node.frequency, params, 'freq', 440, 'hz')
     evalMainParamFrame(node.Q, params, 'q', 5)
     evalMainParamFrame(node.gain, params, 'gain', undefined, undefined, x => Math.log10(Math.max(x,1e-6))*20) // Convert to dB for WebAudio
@@ -32,8 +33,8 @@ define(function(require) {
 
   let shaper = (args,e,b) => {
     let node = system.audio.createWaveShaper()
-    let count = evalMainParamEvent(args, 'samples', 257)
-    let oversample = evalMainParamEvent(args, 'oversample', '2x')
+    let count = evalMainParamEvent(args, 'samples', 257, undefined, e)
+    let oversample = evalMainParamEvent(args, 'oversample', '2x', undefined, e)
     let curve = new Float32Array(count)
     if (args.value === undefined) { throw 'No shape function provided to shaper node!' }
     args.value.modifiers = args.value.modifiers || {}
@@ -50,7 +51,14 @@ define(function(require) {
   addNodeFunction('shaper', shaper)
 
   let delay = (args,e,b) => {
-    let maxDelay = Math.max(0.001, evalMainParamEvent(args, 'max', 1, 'b') * metronome.beatDuration())
+    // maxDelayTime is fixed when the DelayNode is built (a Web Audio constraint), so max is sampled
+    // once here even when the delay time itself varies per frame. A max that resolves to ~0 would
+    // silently clamp every delayTime write, so report it rather than quietly building a 1ms line.
+    let max = evalMainParamEvent(args, 'max', 1, 'b', e) * metronome.beatDuration()
+    let maxDelay = Math.max(0.001, max)
+    if (!(max >= 0.001)) {
+      consoleOut(`🟠 Warning: delay max time ${max} is unusable${(e && e._player) ? ' in player '+e._player.id : ''}; using ${maxDelay}s. Set an explicit max, eg delay{.., max:500ms}`)
+    }
     let node = system.audio.createDelay(maxDelay)
     let params = combineParams(args, e)
     evalMainParamFrame(node.delayTime, params, 'value', 1/4, 'b', d => d * metronome.beatDuration())
