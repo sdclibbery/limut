@@ -7,15 +7,18 @@ visual nodes...
   Mostly doable in the DSL as it stands: a px value is a vec4 so xyz is a 3d point with w spare, length/dot/
   cross/normalize are already over xyz, loop{} rolls into a real for so a march emits its body once, let{}
   gives locals, and a scene sdf can be a lambda arg the way multiband{chain:} already is
-   more loop{} accumulators: one carried vec4 plus one fold total is all there is, and a march wants to carry
-    xyz+t AND bring a material id back out
  ?2d sdf lib has comment about no locals; but we have let now, do the comment and/or code need updating?
- !let{} at the HEAD of a loop{} body loses its name: 🟠 let needs a name, and the head collapses to a
-  uniform so the body is wrong too. Reproduced on master, nothing to do with until:. Any other
-  position is fine (add{x:1/8}>>let{d}>>mul{x:2} works, let{d}>>add{x:1/8} does not). The body arg
-  looks to be evaluated twice - once as a lookup's time modifiers, once by loop itself - and the
-  second evaluation reads the now bound name as its value instead of as a name. Matters for the sdf
-  lib, where a march body naturally starts by naming its point
+ !let{'name'} (the tap form, naming the chain value) at the HEAD of a loop{} body: the head collapses
+  to a uniform and the whole loop comes out flat. Diagnosed 2026-09-12 and it is NOT the name: it is
+  the domain. Unpiped and with no bound expression, let has nothing to tell audio from visual by
+  (that decision is isShaderNode of the piped value or of the bound expression), so it returns an
+  identity gain, the body is then an audio chain, and loop builds an audio feedback loop. The
+  🟠 let needs a name that used to come with it was a second symptom, from the audio path evaluating
+  the body again with the name already bound, and is gone now that the name is read off the raw AST.
+  Workaround, and what the docs now say: write id>>let{d}>>... , the same explicit seed a body
+  starting with any plain call needs. let{d, expr} at the head is fine, since the expression settles
+  the domain. Fixing it properly means the body knowing it is visual before the let is evaluated,
+  which the probe-then-recall shape of loop{} does not allow today
  text display; can render on hub75 pi or have to send texture?
  method that takes a px chain, and does a shephard tone thing with perpetually zooming into two copies of the chain
  voronoi, result should be like an sdf to the voronoi edges (or centres)? sdvoronoi

@@ -14,6 +14,12 @@ define(function(require) {
       notReady: false, // a texture source isn't available yet (eg webcam pre-enumeration)
       built: new Map(), // node -> Map(input -> varName): emit each node once, see makeShaderNode
       lets: {}, // name -> the GLSL variable holding a let bound value, filled during the build walk
+      // name -> the GLSL variable of a loop{} carried value (carry:, see shader-repeat.js). A let{}
+      // on one of these names assigns the variable in place rather than naming a new one, which is
+      // what makes it survive an iteration and stay readable after the loop. Saved and restored by a
+      // captured block in lockstep with lets, for the same reason: a carried value declared inside a
+      // block goes out of scope with it.
+      carried: {},
       // key -> the name of the GLSL function declared for that px sub-chain (pxfn{}, see
       // draw/visualsynth/shader-function.js). Deliberately NOT saved and restored by a captured
       // block: a function is declared at file scope, so one first declared inside a loop body is
@@ -40,8 +46,8 @@ define(function(require) {
     // ctx.built is saved and restored around it, deep copied because its values are Maps: outer
     // entries stay visible inside the block, which is right (an outer vN is in scope in a nested
     // block), but an entry made *inside* must not survive it, or a later build would reuse a
-    // variable that has gone out of scope. ctx.lets is copied for exactly the same reason: a
-    // let{} inside the body names a variable that goes out of scope at the closing brace.
+    // variable that has gone out of scope. ctx.lets and ctx.carried are copied for exactly the same
+    // reason: a let{} inside the body names a variable that goes out of scope at the closing brace.
     // nextVar keeps counting across the block, so every generated name is still unique and still
     // comes from a counter: the source must stay deterministic, since the program cache is keyed on it.
     //
@@ -53,9 +59,11 @@ define(function(require) {
       let outerStatements = ctx.statements
       let outerBuilt = ctx.built
       let outerLets = ctx.lets
+      let outerCarried = ctx.carried
       ctx.statements = []
       ctx.built = isolate ? new Map() : new Map(Array.from(outerBuilt, ([node, byInput]) => [node, new Map(byInput)]))
       ctx.lets = isolate ? {} : Object.assign({}, outerLets)
+      ctx.carried = isolate ? {} : Object.assign({}, outerCarried)
       let out, statements
       try {
         out = fn()
@@ -64,6 +72,7 @@ define(function(require) {
         ctx.statements = outerStatements
         ctx.built = outerBuilt
         ctx.lets = outerLets
+        ctx.carried = outerCarried
       }
       return {out: out, statements: statements}
     }
@@ -451,6 +460,20 @@ void main() {
   try { blockCtx.captureBlock(() => { throw 'x' }) } catch (err) {}
   blockCtx.addStatement('after')
   assert(['vec4 v1 = after;'], blockCtx.statements)
+
+  // ctx.carried travels with ctx.lets: a loop{}'s carried names are visible inside a nested block
+  // and go out of scope with the block they were declared in
+  let carryCtx = makeContext()
+  carryCtx.lets.t = 'v1'
+  carryCtx.carried.t = 'v1'
+  carryCtx.captureBlock(() => {
+    assert('v1', carryCtx.carried.t) // An outer carried name is in scope inside the block
+    carryCtx.carried.u = 'v2'
+    carryCtx.lets.u = 'v2'
+  })
+  assert([true, false], [carryCtx.carried.t === 'v1', carryCtx.carried.u !== undefined])
+  carryCtx.captureFunction(() => { assert({}, carryCtx.carried) }) // and a function body sees none of them
+  assert('v1', carryCtx.carried.t)
 
   // captureFunction is captureBlock with the enclosing scope withheld: a function body cannot see
   // main's variables or its let bindings, so it starts with neither rather than with copies

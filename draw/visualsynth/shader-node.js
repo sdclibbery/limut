@@ -28,6 +28,13 @@ define(function(require) {
       let outer = getCallTree()
       clearCallTree()
       setCallTree(callTree)
+      // A build that touches a loop{} carried value (expression/let-node.js) must not be memoised:
+      // the variable it names holds something different after the next assignment to it, so the same
+      // node at the same input genuinely means two different things at two points in the body. The
+      // flag is set by the read and the assignment themselves and propagates outwards here, so a
+      // node containing one is volatile too, and everything else keeps its memo entry as before.
+      let outerVolatile = ctx.volatile
+      ctx.volatile = false
       let out
       try {
         out = build(input, ctx)
@@ -35,7 +42,9 @@ define(function(require) {
         clearCallTree()
         setCallTree(outer)
       }
-      if (ctx.built !== undefined) {
+      let volatile = ctx.volatile
+      ctx.volatile = outerVolatile === true || volatile === true
+      if (ctx.built !== undefined && volatile !== true) {
         if (byInput === undefined) { byInput = new Map(); ctx.built.set(node, byInput) }
         byInput.set(input, out)
       }

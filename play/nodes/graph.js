@@ -72,7 +72,14 @@ define(function(require) {
   // of the value the body just produced ({v,i}, like map's), and testing after the body rather than
   // before it is what lets it name a let{} the body bound. See shader-repeat.js.
   //
-  // All three resolve exactly as the body does, so one rule covers the lot - a lambda is called,
+  // carry: is any number of *named* values carried alongside, declared with their initial values and
+  // assigned by an ordinary let{} in the body, which is also how they are read - during the body, in
+  // until:, and after the loop, since their variables are declared outside it. That is the thing
+  // neither of the other two can do: the carried value is one vec4 and the fold hands its total on
+  // rather than leaving it to be read, where a march wants to step a point and a distance and bring
+  // a material id back out. See loopCarry below and shader-repeat.js.
+  //
+  // All of them resolve exactly as the body does, so one rule covers the lot - a lambda is called,
   // anything else is evaluated as a chain expression (so a bare call head needs an explicit id>>, as
   // it does for the body) and a result that is not a node becomes an animated uniform, the same wrap
   // visualChains uses. Their lambdas name what the body's does not: the body *is* the chain, so its
@@ -91,9 +98,37 @@ define(function(require) {
 
   let isUserFunction = (v) => typeof v === 'function' && v.isUserFunction
 
-  // map:/fold:/until: are visual only, so a loop given any of them is a visual loop whatever is in
-  // the body slot - which is what lets the body be left off (see visualLoop below).
-  let isVisualLoopArg = (args) => args['map'] !== undefined || args['fold'] !== undefined || args['until'] !== undefined
+  // map:/fold:/until:/carry: are visual only, so a loop given any of them is a visual loop whatever
+  // is in the body slot - which is what lets the body be left off (see visualLoop below).
+  let isVisualLoopArg = (args) => args['map'] !== undefined || args['fold'] !== undefined
+    || args['until'] !== undefined || args['carry'] !== undefined
+
+  // carry: declares named values carried alongside the chain value: a map of name to initial value,
+  // which parses to a plain object of raw ASTs (expression/parse-map.js), so both the names and
+  // their expressions are there with nothing evaluated. Each initial value resolves through the same
+  // foldArg as map:/fold:/until:, so one rule still covers the lot, and each gets its own callsite
+  // id for the reason those have theirs.
+  //
+  // Every initial value is resolved *before* any name is bound, so one cannot name another: it would
+  // read a variable that does not exist yet. The names are then bound as ordinary let{} bindings, so
+  // the body assigns them with let{} and the rest of the chain reads them by name with no new
+  // syntax; shader-repeat.js declares the variables and let-node.js does the assigning.
+  let loopCarry = (args, e, b) => {
+    let map = args['carry']
+    if (map === undefined || typeof map !== 'object' || map === null) { return undefined }
+    // Required lazily: let-node.js reaches connectOp, which reaches back here through the node
+    // functions, so resolving it at call time rather than at define time keeps the cycle harmless
+    let {bindLet,letRefShaderNode} = require('expression/let-node')
+    let names = Object.keys(map)
+    if (names.length === 0) { return undefined }
+    let carry = names.map(k => {
+      let name = k.toLowerCase()
+      let carryArgs = () => ({value:passthroughShaderNode(), __functionContext:'carry'+name+';'})
+      return {name: name, init: foldArg(map[k], carryArgs, e, b)}
+    })
+    carry.forEach(c => bindLet(e, c.name, letRefShaderNode(c.name)))
+    return carry
+  }
 
   // The fold half of a visual loop, or undefined when the loop just carries its value. One index
   // node shared by map and fold, so they see the one counter; one accumulator node, which is how a
@@ -124,7 +159,7 @@ define(function(require) {
     return {test: foldArg(args['until'], untilArgs, e, b), index: idx}
   }
 
-  let visualLoop = (callback, isLambda, probe, args, e, b, letsBeforeProbe) => {
+  let visualLoop = (callback, isLambda, probe, args, e, b, letsBeforeProbe, carry) => {
     let bodyIdx, body = probe
     // map:/fold:/until: resolve against the event the *body* was resolved on - the clone below when
     // the body is a lambda, and e itself otherwise. let{} bindings hang off the event
@@ -153,15 +188,20 @@ define(function(require) {
     if (!isShaderNode(body)) { return undefined }
     let count = Math.floor(evalMainParamEvent(args, 'count', evalMainParamEvent(args, identity ? 'value' : 'value1', 2, undefined, e), undefined, e))
     if (typeof count !== 'number' || isNaN(count)) { throw `loop: count must be numeric` }
-    return loopShaderNode(body, count, bodyIdx, loopFold(args, bodyEvent, b), loopUntil(args, bodyEvent, b))
+    return loopShaderNode(body, count, bodyIdx, loopFold(args, bodyEvent, b), loopUntil(args, bodyEvent, b), carry)
   }
 
   let loop = (args,e,b,_,er) => {
     let callback = args['value']
     let isLambda = typeof callback === 'function' && callback.isUserFunction
     let mainChain, probeError
-    // Taken before the probe because the visual path throws that call away and makes a real one:
-    // see visualLoop, where the body's event gets these back rather than the probe's leftovers.
+    // carry: is resolved and its names bound *before* the probe, so a body that is not a lambda -
+    // evaluated by the probe itself, and never again - can read them too. A loop with a carry: is
+    // visual by that alone (isVisualLoopArg), so no audio loop ever gets here.
+    let carry = args['carry'] !== undefined ? loopCarry(args, e, b) : undefined
+    // Taken after that and before the probe, because the visual path throws that call away and makes
+    // a real one: see visualLoop, where the body's event gets these back rather than the probe's
+    // leftovers. The carried names are in them by now, which is what keeps them visible to the body.
     let letsBeforeProbe = isLambda && e !== undefined && e !== null ? Object.assign({}, e._lets) : undefined
     try {
       mainChain = evalParamEvent(callback, e)
@@ -170,7 +210,7 @@ define(function(require) {
       probeError = err // A body written for a visual loop need not survive being called with no index; the visual call is the real one
     }
     if (isShaderNode(mainChain) || probeError !== undefined || isVisualLoopArg(args)) {
-      let visual = visualLoop(callback, isLambda, mainChain, args, e, b, letsBeforeProbe)
+      let visual = visualLoop(callback, isLambda, mainChain, args, e, b, letsBeforeProbe, carry)
       if (visual !== undefined) { return visual }
       if (probeError !== undefined) { throw probeError } // Not visual after all: the probe's failure was real
     }
@@ -562,6 +602,40 @@ define(function(require) {
     '  vec4 v3 = c(v2);',
     '  if (any(notEqual(v3, vec4(0.0)))) { break; }',
     '}'], lUntilChain.statements)
+
+  // carry: the names are bound on the event before the body is resolved, so the body can assign them
+  // with let{} and the rest of the chain can read them; each initial value resolves the way the body
+  // does, with its own callsite id
+  let lCarryArgs, lCarryLets
+  let lCarryInit = (e,b,erFn,a) => { lCarryArgs = a; return lNode('i') }
+  lCarryInit.isUserFunction = true
+  let lCarryBody = (e,b,erFn,a) => { lCarryLets = Object.keys(e._lets || {}); return lNode('a') }
+  lCarryBody.isUserFunction = true
+  let lCarry = require('draw/visualsynth/codegen').makeContext()
+  let lCarryRes = loop({value:lCarryBody, value1:2, carry:{T:lCarryInit, mat:() => 0}}, lEvent(), 0, undefined, er)
+  assert(true, isShaderNode(lCarryRes))
+  assert(['t','mat'], lCarryLets) // bound, lowercased, before the body was called
+  assert(true, isShaderNode(lCarryArgs.value)) // the value arriving at the loop, as a passthrough node
+  assert('carryt;', lCarryArgs.__functionContext) // its own callsite id, so its uniforms stay its own
+  lCarry.out = lCarryRes.build(lCarry.rootInput, lCarry)
+  assert([
+    'vec4 v1 = v0;',
+    'vec4 v2 = i(v1);',
+    'vec4 v3 = v2;',
+    'vec4 v4 = u_vs0;',
+    'vec4 v5 = v4;',
+    'for (int l_i0 = 0; l_i0 < 2; l_i0++) {',
+    '  vec4 v6 = a(v1);',
+    '  v1 = v6;',
+    '}'], lCarry.statements) // Declared outside the loop, in the order written; a plain value is a uniform
+  assert(['v3','v5'], [lCarry.lets.t, lCarry.lets.mat])
+  assert('v1', lCarry.out) // The loop still hands its carried value on; the names are read separately
+
+  // carry: on its own makes it a visual loop, so the body may be left off and the count shifts into
+  // the first positional slot, exactly as it does for map:
+  let lCarryId = require('draw/visualsynth/codegen').makeContext()
+  loop({carry:{t:() => 0}, value:3}, lEvent(), 0, undefined, er).build(lCarryId.rootInput, lCarryId)
+  assert(true, lCarryId.statements.some(st => st.includes('l_i0 < 3')))
 
   // An early exit alongside a fold: the break lands after the term has joined the total
   let lUntilFold = require('draw/visualsynth/codegen').makeContext()

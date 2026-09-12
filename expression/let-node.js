@@ -55,19 +55,31 @@ define(function(require) {
     return er
   }
 
-  // The name is written as a quoted string ('foo') or, since an unbound identifier evaluates to its
-  // own name (parse-var.js), as a bare word. >> shifts positional args up when it pipes, so the name
-  // sits in `value` when the call was not piped and in `value1` when it was: find it by looking for
-  // the first positional arg that is a string rather than by counting. Whatever comes after it is
-  // the expression being bound.
+  // The name is written as a quoted string ('foo') or as a bare word. >> shifts positional args up
+  // when it pipes, so the name sits in `value` when the call was not piped and in `value1` when it
+  // was: find it by looking at the positional args in turn rather than by counting. Whatever comes
+  // after it is the expression being bound.
+  //
+  // A bare word is taken as *written*, off the raw AST (let has dontEvalArgs, so these are the
+  // unevalled parse instances) — the same discipline the `global.` lookup and shaderSwizzle use.
+  // Evaluating it instead, which is what this did, only works while the name is unbound: a bound
+  // name evaluates to its own binding (parse-var.js looks _lets up ahead of everything), never to a
+  // string, so it came back as `🟠 let needs a name`. A loop{} carried value is bound on purpose, so
+  // `let{t, t+d}` would hit that every time; the same reading also settles a name the probe call in
+  // play/nodes/graph.js's loop{} has already bound. The one thing it gives up is `let{nm}` for an nm
+  // holding a string, which named what nm said and now names nm - say `let{'foo'}` for that.
   let nameSlots = ['value', 'value1']
+  let bareName = (a) => typeof a === 'function' && a.isVarLookup && !a.hasOwnArgs && !a.namespace ? a._name : undefined
   let findName = (args, e, b, er) => {
     for (let i = 0; i < nameSlots.length; i++) {
       let slot = nameSlots[i]
       if (args[slot] === undefined) { continue }
-      let v = er(args[slot], e, b)
+      let found = {slot: slot, boundSlot: 'value'+(i+1)}
+      let bare = bareName(args[slot])
       // parseVar lowercases bare names but parseString does not, so `let{'Foo'}` must still answer to `foo`
-      if (typeof v === 'string') { return {slot: slot, name: v.toLowerCase(), boundSlot: 'value'+(i+1)} }
+      if (bare !== undefined) { return Object.assign(found, {name: bare.toLowerCase()}) }
+      let v = er(args[slot], e, b)
+      if (typeof v === 'string') { return Object.assign(found, {name: v.toLowerCase()}) }
     }
     return undefined
   }
@@ -85,10 +97,25 @@ define(function(require) {
   // flowing down the chain at this point and records the GLSL variable holding it. The tap form
   // emits no statement of its own, so a chain with a let in it generates byte-identical source to
   // the same chain without one — the program cache is keyed on that source.
+  //
+  // A name declared in a loop{}'s carry: already *has* a variable, one declared outside the loop
+  // (shader-repeat.js), so this assigns it in place instead of naming a new one. That is the whole
+  // of the carried value: the assignment survives the iteration, and since ctx.lets keeps pointing
+  // at the same variable every read of the name — inside the body, in until:, and after the loop —
+  // names it. Both the assignment and every read of the name set ctx.volatile, which is what keeps
+  // the build memo (ctx.built) from handing back a variable worked out before the assignment - see
+  // makeShaderNode in draw/visualsynth/shader-node.js.
   let letShaderNode = (name, bound) => {
     return makeShaderNode((input, ctx) => {
       if (ctx.lets === undefined) { ctx.lets = {} } // A context that predates ctx.lets (or a test mock)
-      ctx.lets[name] = bound !== undefined ? bound.build(input, ctx) : input
+      let v = bound !== undefined ? bound.build(input, ctx) : input
+      let carried = ctx.carried !== undefined ? ctx.carried[name] : undefined
+      if (carried !== undefined) {
+        ctx.addRaw(`${carried} = ${v};`)
+        ctx.volatile = true // the assignment itself must be emitted wherever it is written
+      } else {
+        ctx.lets[name] = v
+      }
       return input
     })
   }
@@ -100,6 +127,9 @@ define(function(require) {
     return makeShaderNode((input, ctx) => {
       let v = ctx.lets !== undefined ? ctx.lets[name] : undefined
       if (v === undefined) { warnOnce(`🟠 let '${name}' is used before it is set`); return input }
+      // A carried value's variable is assigned in the loop body, so what it holds depends on where
+      // in the body this read happens: nothing that reads one may be memoised. See makeShaderNode.
+      if (ctx.carried !== undefined && ctx.carried[name] !== undefined) { ctx.volatile = true }
       return v
     })
   }
@@ -172,8 +202,9 @@ define(function(require) {
   let {composeShaderNodes} = require('draw/visualsynth/shader-node')
   let {makeContext,buildSource} = require('draw/visualsynth/codegen')
   let mockCtx = () => {
-    let ctx = {statements: [], uniforms: [], lets: {}, built: new Map()}
+    let ctx = {statements: [], raw: [], uniforms: [], lets: {}, carried: {}, built: new Map()}
     ctx.addStatement = (expr) => { ctx.statements.push(expr); return 'v' + ctx.statements.length }
+    ctx.addRaw = (stmt) => { ctx.raw.push(stmt) }
     ctx.addUniform = (ast) => { ctx.uniforms.push(ast); return 'u_vs' + (ctx.uniforms.length-1) }
     return ctx
   }
@@ -225,6 +256,21 @@ define(function(require) {
   assert('v0', ctx.lets.foo)
   assert('v0', e._lets.foo.build('v9', ctx)) // The name gives back what was recorded, whatever it is asked from
 
+  // The name is taken as written off the raw AST, so it is still found when that name is already
+  // bound. Evaluating it, which is what this used to do, gives back the binding rather than a
+  // string: that is what a loop{} carried value needs (let{t, t+d} names a t bound on purpose) and
+  // what used to lose the name of a let{} at the head of a loop{} body, where the probe call has
+  // already bound it
+  let bareAst = (n) => { let f = () => 0; f.isVarLookup = true; f.hasOwnArgs = false; f._name = n; return f }
+  e = {_lets: {foo: 'bound already'}}
+  letNode({value: bareAst('foo'), value1: () => 0.25}, e, 0, {}, evalParamFrame)
+  assert(0.25, e._lets.foo)
+
+  // A quoted name still goes through the string path, and is still lowercased
+  e = {}
+  letNode({value: () => 'Foo', value1: () => 0.25}, e, 0, {}, evalParamFrame)
+  assert(0.25, e._lets.foo)
+
   // A name used before it is set passes its input through rather than breaking the build
   ctx = mockCtx()
   assert('v3', letRefShaderNode('nothingbound').build('v3', ctx))
@@ -269,6 +315,33 @@ define(function(require) {
   ctx.captureBlock(() => { ctx.lets.inner = 'v2'; assert('v1', ctx.lets.outer) })
   assert([true, false], [ctx.lets.outer === 'v1', ctx.lets.inner !== undefined])
 
+  // Visual, a name declared in a loop{}'s carry:: the let assigns that variable in place rather than
+  // naming a new one, so the value survives the iteration, and the name keeps pointing at it
+  e = {}
+  r = letNode({value:passShaderNode(), value1:'t', value2:mockNode('step')}, e, 0, {}, evalParamFrame)
+  ctx = mockCtx()
+  ctx.lets.t = 'v7'
+  ctx.carried.t = 'v7'
+  assert('v0', r.build('v0', ctx)) // The chain value still passes through
+  assert([['step(v0)'], ['v7 = v1;']], [ctx.statements, ctx.raw])
+  assert('v7', ctx.lets.t) // Still the carried variable, not the new one
+  assert(true, ctx.volatile) // and nothing built across the assignment may be memoised
+
+  // The tap form assigns the value flowing past
+  ctx = mockCtx()
+  ctx.lets.t = 'v7'
+  ctx.carried.t = 'v7'
+  letNode({value:passShaderNode(), value1:'t'}, {}, 0, {}, evalParamFrame).build('v3', ctx)
+  assert([[], ['v7 = v3;']], [ctx.statements, ctx.raw])
+
+  // Reading a carried name is volatile too: the variable holds something else after the next
+  // assignment to it, so the read cannot be memoised either
+  ctx = mockCtx()
+  ctx.lets.t = 'v7'
+  ctx.carried.t = 'v7'
+  assert('v7', letRefShaderNode('t').build('v0', ctx))
+  assert(true, ctx.volatile)
+
   // No name: warns and carries the chain on rather than breaking it
   e = {}
   assert(true, isShaderNode(letNode({value:passShaderNode()}, e, 0, {}, evalParamFrame)))
@@ -286,5 +359,7 @@ define(function(require) {
 
   return {
     letNode: letNode,
+    bindLet: bindLet, // play/nodes/graph.js declares a loop{}'s carry: names with these
+    letRefShaderNode: letRefShaderNode,
   }
 })

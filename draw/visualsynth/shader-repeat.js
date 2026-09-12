@@ -15,6 +15,9 @@ define(function(require) {
   //   loop{chain, n, map:f, fold:g}
   //                            ->  the same loop with a fold running alongside the carried value
   //   loop{chain, n, until:c}  ->  the same loop with an early exit: c is tested after the body
+  //   loop{chain, n, carry:{...}}
+  //                            ->  the same loop with named values carried alongside, assigned by a
+  //                                let{} in the body and still in scope after the loop
   //
   // series, parallel and multitap are unrolled, so their index is an ordinary javascript number and
   // each repeat may differ in any way at all. loop rolls, so the body is emitted once whatever the
@@ -112,7 +115,22 @@ define(function(require) {
   // This is the only branch the generated shader has. A GPU runs fragments in lockstep groups, so
   // it saves work per group rather than per pixel - which is still most of it for the large
   // contiguous runs of background and of early hits a march produces.
-  let loopShaderNode = (body, count, bodyIndex, fold, until) => {
+  //
+  // carry gives it any number of *named* accumulators: [{name, init}] in the order they were
+  // declared, each a variable declared before the loop and left in ctx.carried, so a let{} of that
+  // name in the body assigns it in place (expression/let-node.js) rather than naming a new variable
+  // that would go out of scope at the closing brace. That is what a march needs and neither of the
+  // other two can do: the carried value is one vec4 whose spare channels the first whole-vector op
+  // in the body wipes out, and the fold hands its total on rather than leaving it somewhere to be
+  // read - so a point and a distance can be stepped each iteration and a material id picked up at
+  // the hit and read by the shading *after* the loop.
+  //
+  // An init is built from the value arriving at the loop, in a captureBlock whose statements are
+  // spliced straight back out - the fold seed's trick at the same place and for the same reason,
+  // to keep its memo clear of the body's. ctx.lets and ctx.carried are set outside the block, so
+  // both survive it; ctx.carried is restored by the enclosing block in lockstep with ctx.lets, so a
+  // nested loop's carried names do not leak out of the body they were declared in.
+  let loopShaderNode = (body, count, bodyIndex, fold, until, carry) => {
     let map = fold !== undefined ? fold.map : undefined
     let combine = fold !== undefined ? fold.combine : undefined
     let bodyBox = bodyIndex !== undefined ? bodyIndex._loopIndexBox : undefined
@@ -128,6 +146,15 @@ define(function(require) {
       let termAt = (v) => map === undefined ? v : map.build(v, ctx)
       let total
       try {
+        if (carry !== undefined) {
+          carry.forEach(c => {
+            let init = ctx.captureBlock(() => c.init.build(acc, ctx))
+            init.statements.forEach(s => ctx.addRaw(s))
+            let v = ctx.addStatement(init.out)
+            ctx.lets[c.name] = v
+            ctx.carried[c.name] = v
+          })
+        }
         if (fold !== undefined) {
           if (termBox !== undefined) { termBox.expr = '0' } // The seed term is the value before the loop
           let seed = ctx.captureBlock(() => termAt(acc))
@@ -146,7 +173,9 @@ define(function(require) {
               let term = termAt(out)
               ctx.addRaw(combine === undefined ? `${total} += ${term};` : `${total} = ${combine.build(term, ctx)};`)
             }
-            ctx.addRaw(`${acc} = ${out};`)
+            // A body that only assigns carried values (a march step) hands its input straight back,
+            // and `acc = acc;` is noise in the generated source
+            if (out !== acc) { ctx.addRaw(`${acc} = ${out};`) }
             if (until !== undefined) {
               // Built from the body's output rather than from acc: the same value at this point,
               // but a variable this iteration wrote, where acc is one the body has already built
@@ -458,6 +487,121 @@ define(function(require) {
 
   // no iterations at all: no loop, so no test either
   assert(['vec4 v1 = v0;'], statements(loopShaderNode(node('a'), 0, undefined, undefined, {test: node('c')})).statements)
+
+  // loop with carry: the named value is declared before the loop, from the value arriving at it, and
+  // assigned in place inside the block - so it survives the iteration and is still in scope after.
+  // The body here hands its input straight back, as a march step does, so there is no acc write-back
+  let carriedLet = (name, tag) => makeShaderNode((input, ctx) => {
+    let v = ctx.addStatement(`${tag}(${input})`)
+    ctx.addRaw(`${ctx.carried[name]} = ${v};`)
+    ctx.volatile = true
+    return input
+  })
+  let c1 = statements(loopShaderNode(carriedLet('t', 's'), 2, undefined, undefined, undefined, [{name:'t', init: node('i')}]))
+  assert([
+    'vec4 v1 = v0;',
+    'vec4 v2 = i(v1);',
+    'vec4 v3 = v2;',
+    'for (int l_i0 = 0; l_i0 < 2; l_i0++) {',
+    '  vec4 v4 = s(v1);',
+    '  v3 = v4;',
+    '}'], c1.statements)
+  assert('v1', c1.out) // The loop still hands on its carried value; the name is read separately
+  assert('v3', c1.lets.t) // and the name still points at the variable, which is in scope out here
+  assert('v3', c1.carried.t)
+
+  // loop with two carried values: declared in order, each assigned where its let{} sits in the body
+  let c2 = statements(loopShaderNode(composeShaderNodes(carriedLet('p', 's'), carriedLet('t', 'd')), 1,
+    undefined, undefined, undefined, [{name:'p', init: node('i')}, {name:'t', init: node('j')}]))
+  assert([
+    'vec4 v1 = v0;',
+    'vec4 v2 = i(v1);',
+    'vec4 v3 = v2;',
+    'vec4 v4 = j(v1);',
+    'vec4 v5 = v4;',
+    'for (int l_i0 = 0; l_i0 < 1; l_i0++) {',
+    '  vec4 v6 = s(v1);',
+    '  v3 = v6;',
+    '  vec4 v7 = d(v1);',
+    '  v5 = v7;',
+    '}'], c2.statements)
+
+  // loop with carry and a fold: the carried values are declared first, so the fold's seed term can
+  // read one, and the fold still decides what the loop hands on
+  let c3 = statements(loopShaderNode(carriedLet('t', 's'), 2, undefined, {map: node('f')}, undefined, [{name:'t', init: node('i')}]))
+  assert([
+    'vec4 v1 = v0;',
+    'vec4 v2 = i(v1);',
+    'vec4 v3 = v2;',
+    'vec4 v4 = f(v1);',
+    'vec4 v5 = v4;',
+    'for (int l_i0 = 0; l_i0 < 2; l_i0++) {',
+    '  vec4 v6 = s(v1);',
+    '  v3 = v6;',
+    '  vec4 v7 = f(v1);',
+    '  v5 += v7;',
+    '}'], c3.statements)
+  assert('v5', c3.out)
+
+  // loop with carry and an early exit: the condition reads the carried value the body just assigned
+  let readsCarried = makeShaderNode((input, ctx) => ctx.addStatement(`c(${ctx.lets['t']})`))
+  assert([
+    'vec4 v1 = v0;',
+    'vec4 v2 = i(v1);',
+    'vec4 v3 = v2;',
+    'for (int l_i0 = 0; l_i0 < 2; l_i0++) {',
+    '  vec4 v4 = s(v1);',
+    '  v3 = v4;',
+    '  vec4 v5 = c(v3);',
+    '  if (any(notEqual(v5, vec4(0.0)))) { break; }',
+    '}'], statements(loopShaderNode(carriedLet('t', 's'), 2, undefined, undefined, {test: readsCarried},
+      [{name:'t', init: node('i')}])).statements)
+
+  // loop with carry and no iterations at all: the declaration stands, so the name still reads
+  let c0 = statements(loopShaderNode(carriedLet('t', 's'), 0, undefined, undefined, undefined, [{name:'t', init: node('i')}]))
+  assert(['vec4 v1 = v0;', 'vec4 v2 = i(v1);', 'vec4 v3 = v2;'], c0.statements)
+  assert('v3', c0.lets.t)
+
+  // loop with carry: one node reading the carried value, built twice from the same input either side
+  // of an assignment to it, emits twice - the variable holds something else the second time, so the
+  // build memo (which is keyed on node and input alone) must not hand the first result back
+  let fromCarried = makeShaderNode((input, ctx) => {
+    ctx.addStatement(`g(${ctx.lets['t']})`)
+    ctx.volatile = true
+    return input
+  })
+  assert([
+    'vec4 v1 = v0;',
+    'vec4 v2 = i(v1);',
+    'vec4 v3 = v2;',
+    'for (int l_i0 = 0; l_i0 < 1; l_i0++) {',
+    '  vec4 v4 = g(v3);',
+    '  vec4 v5 = s(v1);',
+    '  v3 = v5;',
+    '  vec4 v6 = g(v3);',
+    '}'], statements(loopShaderNode(composeShaderNodes(composeShaderNodes(fromCarried, carriedLet('t', 's')), fromCarried), 1,
+      undefined, undefined, undefined, [{name:'t', init: node('i')}])).statements)
+
+  // nested loops: the inner loop's carried name is declared inside the outer body, so it goes out of
+  // scope with it, where the outer one is still there afterwards
+  let nestedCarry = makeContext()
+  let innerLoop = loopShaderNode(carriedLet('u', 'd'), 1, undefined, undefined, undefined, [{name:'u', init: node('j')}])
+  loopShaderNode(innerLoop, 1, undefined, undefined, undefined, [{name:'t', init: node('i')}]).build(nestedCarry.rootInput, nestedCarry)
+  assert([
+    'vec4 v1 = v0;',
+    'vec4 v2 = i(v1);',
+    'vec4 v3 = v2;',
+    'for (int l_i0 = 0; l_i0 < 1; l_i0++) {',
+    '  vec4 v4 = v1;',
+    '  vec4 v5 = j(v4);',
+    '  vec4 v6 = v5;',
+    '  for (int l_i1 = 0; l_i1 < 1; l_i1++) {',
+    '    vec4 v7 = d(v4);',
+    '    v6 = v7;',
+    '  }',
+    '  v1 = v4;',
+    '}'], nestedCarry.statements)
+  assert(['v3', undefined], [nestedCarry.carried.t, nestedCarry.carried.u])
 
   // A node built inside the loop body is not reused outside it: its variable is out of scope there
   let shared = node('a')

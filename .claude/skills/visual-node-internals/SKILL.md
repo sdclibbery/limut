@@ -139,9 +139,61 @@ reads the name as that value and silently binds nothing. Whether there is an `un
 condition is an ordinary uniform and still animates. Note a GPU breaks per lockstep group, not per
 pixel — real for a march's large runs of background and near hits, not a per-pixel saving.
 
-**Known, pre-existing**: a `let{}` at the **head** of a `loop{}` body loses its name (`🟠 let needs a
-name`) and the head collapses to a uniform — reproduced on master with no `until:` involved. Any
-other position (piped, ie `…>>let{d}>>…`) is fine. See ToDo.txt.
+`loop{}` also takes a **`carry:`** map of named values carried alongside the chain value: `{name:
+start, …}`. Each is a GLSL variable **declared before the loop** and left in `ctx.carried`, so a
+`let{}` of that name in the body assigns it in place (`expression/let-node.js`) instead of naming a
+new variable that the closing brace takes out of scope. It is the third thing a march needs after the
+break and `pxfn`: the carried value is one vec4 whose spare channels the first whole-vector op wipes,
+and the fold *hands its total on* (`return total !== undefined ? total : acc`) rather than leaving it
+to be read — so a point and a distance can be stepped every iteration and a material id picked up at
+the hit and read by the shading **after** the loop. Nothing about the carried value, the fold or the
+`until:` changes, and the loop still returns what it always did.
+
+The whole feature is "a `let{}` name may denote a mutable variable declared outside the loop", so the
+read side (`letRefShaderNode`, `parse-var.js`'s `_lets` lookup) is untouched. Four things it needs:
+
+- **`ctx.carried`** (`codegen.js`), copied and restored by `capture` in **lockstep with `ctx.lets`**,
+  block and isolate paths alike — so a nested loop's carried names go out of scope with the body they
+  were declared in, and a `pxfn{}` body can neither read nor assign one. A carried variable declared
+  *before* a loop is in the outer statements and the outer maps, so it survives the block, which is
+  the point.
+- **The declaration is built in a `captureBlock` whose statements are spliced straight out**, the fold
+  seed's trick at the same place and for the same reason: the init and the body see different index
+  expressions, so a node reaching the same input in both must emit twice rather than collapse.
+- **`ctx.volatile`** (`shader-node.js`). `ctx.built` is keyed on `(node, input variable)` alone, and a
+  carried variable holds something different after each assignment — so a node built from it earlier
+  in the body must not be handed back later. Both the read and the assignment set the flag;
+  `makeShaderNode` clears it around each build, propagates it outwards (so a node *containing* one is
+  volatile too) and skips the memo entry for a volatile build. Precise rather than blunt: nothing that
+  does not touch a carried value loses its memo, so a chain with no `carry:` generates byte-identical
+  source to before. Invalidating `ctx.built` by input name instead does **not** work — a node reads a
+  carried value through `ctx.lets`, not through its input, so the entry to drop is not the one keyed
+  on that variable.
+- **The names are bound before the probe** (`graph.js`'s `loop`): `loopCarry` resolves every initial
+  value through the same `foldArg` as `map:`/`fold:`/`until:` (own `__functionContext` each) and then
+  binds them with `bindLet`, *before* `evalParamEvent` runs the probe and before `letsBeforeProbe` is
+  snapshotted — so a non-lambda body sees them too, and `visualLoop`'s `bodyEvent._lets` reset keeps
+  them while still discarding the probe's own bindings. Every init is resolved before any name is
+  bound, so one cannot name another (it would read a variable that does not exist yet). `carry:` is in
+  `isVisualLoopArg`, so it alone makes a loop visual and the body may be left off.
+
+`${acc} = ${out};` is now emitted only when `out !== acc`: a body that just assigns carried values (a
+march step) hands its input straight back, and the self-assignment is noise.
+
+`let{}`'s **name is read off the raw AST** for a bare word (`isVarLookup && !hasOwnArgs` → `_name`,
+the discipline `shaderSwizzle` and the `global.` lookup use), not by evaluating the arg. It has to be:
+a bound name evaluates to its own binding, never to a string, and a carried name is bound on purpose —
+`let{t, t+d}` would fail with `🟠 let needs a name` every time. Quoted names keep the string path.
+
+**Known, pre-existing**: `let{'name'}` — the *tap* form, naming the chain value — at the **head** of a
+`loop{}` body makes the head collapse to a uniform and the whole loop come out flat. Diagnosed
+2026-09-12: it is **not** the name, it is the domain. Unpiped and with no bound expression, `let` has
+nothing to dispatch on (`visual = isShaderNode(pipedValue) || isShaderNode(boundValue)`), so it returns
+an identity gain, the body is then an audio chain and `loop` builds an audio feedback loop. The
+`🟠 let needs a name` that used to accompany it was a second symptom — the audio path evaluating the
+body again with the name already bound — and is gone with the raw-AST read above. Spell it
+`id>>let{d}>>…`, the same explicit seed any body starting with a plain call needs; `let{d, expr}` at
+the head is fine, since the expression settles the domain. See ToDo.txt.
 
 `lib/visual.limut`'s `fbm2`/`fbm3`/`turb2` are `parallel{}` octave sums, and render pixel-identical to the hand-written four-term versions they replaced. Their octaves each *call* one declared face function rather than inlining one (see `pxfn` below), so the repeats no longer multiply the body.
 
