@@ -154,12 +154,49 @@ define(function(require) {
       }
       return name
     }
+    // Two declarations whose bodies say the same thing are one declaration. The generated names
+    // inside them differ (nextVar counts across the whole build walk, so the second copy of a body
+    // is numbered after the first), so the match is on a canonical form: the declaration's own name
+    // and its own locals - its parameter, its statement variables, its loop counters - renumbered in
+    // order of first appearance. Everything that means something *outside* the body is left exactly
+    // as it is, which is what makes the match safe rather than merely plausible:
+    //  - the seed (ctx.rootInput) is one file scope variable, so two bodies reading it agree;
+    //  - u_vsN/u_vstexN/u_vsexN are value slots, so two bodies only match if they read the same
+    //    slots - which is also why no uniform is orphaned by dropping a duplicate declaration;
+    //  - a nested l_fnN is another declaration, already deduped below this one (addFunction runs
+    //    innermost first), so equal bodies name an equal function.
+    // uvN/arN (tex{}'s locals) are numbered per use and not canonicalised, so two bodies sampling a
+    // texture simply do not match - a dedupe missed, never a wrong one.
+    let canonicalFunction = (name, source) => {
+      let names = {}
+      let canon = source.replace(new RegExp('\\b'+name+'\\b', 'g'), '$self')
+      return canon.replace(/\bl_p\d+\b|\bl_i\d+\b|\bv\d+\b/g, (m) => {
+        if (m === ctx.rootInput) { return m }
+        if (names[m] === undefined) { names[m] = '$' + Object.keys(names).length }
+        return names[m]
+      })
+    }
+    let functionBodies = new Map() // canonical body -> the name it was first declared under
     // A GLSL helper function declared before main, for a node whose emitted expression is more than
     // one line of maths (eg the pxhash hashes). Deduped by name, so a chain using the same node
     // several times declares it once. Names are fixed literals rather than counters, and the l_
     // prefix keeps them clear of the generated vN/u_vsN/uvN names.
-    ctx.addFunction = (name, source) => {
-      if (!ctx.functions.some(f => f.name === name)) { ctx.functions.push({name: name, source: source}) }
+    //
+    // shareBody additionally looks for a declaration that already says this - only pxfn{}
+    // (draw/visualsynth/shader-function.js) asks for that, since its names come from counters and so
+    // cannot collide, where a helper's fixed name already dedupes it and must keep generating the
+    // source it always did. It is what makes a pxfn used once per repeat of a parallel{}/loop{} one
+    // declaration: each repeat resolves its own node (its own event and callsite id, so nothing is
+    // memoised across them) and so asks for its own declaration, of the same body.
+    ctx.addFunction = (name, source, shareBody) => {
+      if (ctx.functions.some(f => f.name === name)) { return name }
+      if (shareBody === true) {
+        let canon = canonicalFunction(name, source)
+        let already = functionBodies.get(canon)
+        if (already !== undefined) { return already }
+        functionBodies.set(canon, name)
+      }
+      ctx.functions.push({name: name, source: source})
       return name
     }
     // Each texture gets its own sampler and its own extents uniform (u_vsexN): one shared
@@ -313,6 +350,40 @@ void main() {
   assert(['l_a','l_b'], two.functions.map(f => f.name))
   assert(true, two.source.indexOf('vec4 l_a(') < two.source.indexOf('vec4 l_b('))
   assert(true, two.source === buildSource(composeShaderNodes(helperNode('l_a'), helperNode('l_b'))).source) // Still byte-identical
+
+  // shareBody: a declaration whose body says the same thing as one already made *is* that
+  // declaration, and its name is what comes back. Only pxfn{} asks for this (shader-function.js),
+  // and it is what collapses one function per repeat of a parallel{}/loop{} into one, since each
+  // repeat resolves a node of its own and so asks for a declaration of its own.
+  let decl = (i, body) => `vec4 l_fn${i}(vec4 l_p${i}) {\n  ${body}\n  return v${i*2+1};\n}`
+  let bodyCtx = makeContext()
+  assert('l_fn0', bodyCtx.addFunction('l_fn0', decl(0, 'vec4 v1 = a(l_p0);'), true))
+  assert('l_fn1', bodyCtx.addFunction('l_fn1', decl(1, 'vec4 v3 = b(l_p1);'), true)) // A different body
+  assert(2, bodyCtx.functions.length)
+  // The same body, numbered differently because nextVar keeps counting: one declaration, and the
+  // first name for both call sites
+  assert('l_fn0', bodyCtx.addFunction('l_fn2', decl(2, 'vec4 v5 = a(l_p2);'), true))
+  assert(2, bodyCtx.functions.length)
+  assert(['l_fn0','l_fn1'], bodyCtx.functions.map(f => f.name))
+  // A uniform slot is a value, not a local, so two bodies reading different slots are different
+  // bodies — which is also why dropping a duplicate can never orphan a uniform
+  assert('l_fn3', bodyCtx.addFunction('l_fn3', decl(3, 'vec4 v7 = a(l_p3) * u_vs0;'), true))
+  assert('l_fn4', bodyCtx.addFunction('l_fn4', decl(4, 'vec4 v9 = a(l_p4) * u_vs1;'), true))
+  assert('l_fn3', bodyCtx.addFunction('l_fn5', decl(5, 'vec4 v11 = a(l_p5) * u_vs0;'), true)) // Same slot: same body
+  // Nor is a nested function's name, where a loop counter is a local like any other
+  assert('l_fn6', bodyCtx.addFunction('l_fn6', decl(6, 'vec4 v13 = l_fn0(l_p6);'), true))
+  assert('l_fn7', bodyCtx.addFunction('l_fn7', decl(7, 'vec4 v15 = l_fn1(l_p7);'), true))
+  assert('l_fn8', bodyCtx.addFunction('l_fn8', decl(8, 'for (int l_i0 = 0; l_i0 < 2; l_i0++) { }\n  vec4 v17 = a(l_p8);'), true))
+  assert('l_fn8', bodyCtx.addFunction('l_fn9', decl(9, 'for (int l_i1 = 0; l_i1 < 2; l_i1++) { }\n  vec4 v19 = a(l_p9);'), true))
+  // The seed is one file scope variable, so two bodies reading it agree about it
+  assert('l_fn10', bodyCtx.addFunction('l_fn10', decl(10, 'vec4 v21 = a(l_p10) + v0;'), true))
+  assert('l_fn10', bodyCtx.addFunction('l_fn11', decl(11, 'vec4 v23 = a(l_p11) + v0;'), true))
+  // A helper asks for none of this: it is deduped by its fixed name alone, so a shader with no
+  // pxfn in it keeps generating exactly the source it always did
+  let helperCtx = makeContext()
+  helperCtx.addFunction('l_a', 'vec4 l_a(vec4 p) { return p; }')
+  assert('l_b', helperCtx.addFunction('l_b', 'vec4 l_b(vec4 p) { return p; }')) // Same body, still declared
+  assert(2, helperCtx.functions.length)
 
   // A chain that declares none has none
   assert(0, buildSource(mulNode(ast)).functions.length)

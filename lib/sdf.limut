@@ -155,9 +155,15 @@ set sdcross = {in:id, arm:1/2, thick:1/6, r:0} -> sdcross1{sdcross0{abs{sdflat{i
 // and the nearer wins.
 set sdcwd = {q, cox, coy, ra} ->
   coy*q.x > cox*q.y ?? length{q - {x:cox, y:coy, w:0}} ?: abs{length{q} - ra}
-set sdcw1 = {p, cox, coy, ra} -> sdval{min{
-  sdcwd{p, cox, coy, ra},
-  sdcwd{sdvec{abs{p.x - cox*2}, coy*2 - p.y}, cox, coy, ra}
+// The two arcs are the same distance taken at two different points, and sdcwd is the biggest chain
+// in here (a ternary, so both branches are compiled, and it names its point four times). pxfn{} makes
+// it a real function in the shader, declared once and called twice, where writing it out twice is two
+// copies of the whole thing. Everything but the point is a plain number, so the function takes the
+// point alone; the node is handed to a helper that uses it twice since there is nowhere for a local.
+set sdcw1 = {p, cox, coy, ra} -> sdcw1h{p, cox, coy, pxfn{{q} -> sdcwd{q, cox, coy, ra}}}
+set sdcw1h = {p, cox, coy, d} -> sdval{min{
+  p >> d,
+  sdvec{abs{p.x - cox*2}, coy*2 - p.y} >> d
 }}
 set sdcw0 = {p, cox, coy, ra} -> sdcw1{sdvec{abs{(p.x % (cox*4)) - cox*2}, p.y}, cox, coy, ra}
 // The wave runs from y=0 up to twice coy, so the coordinate is lifted by coy on the way in to

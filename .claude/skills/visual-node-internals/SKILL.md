@@ -143,7 +143,7 @@ pixel — real for a march's large runs of background and near hits, not a per-p
 name`) and the head collapses to a uniform — reproduced on master with no `until:` involved. Any
 other position (piped, ie `…>>let{d}>>…`) is fine. See ToDo.txt.
 
-`lib/visual.limut`'s `fbm2`/`fbm3`/`turb2` are `parallel{}` octave sums, and render pixel-identical to the hand-written four-term versions they replaced.
+`lib/visual.limut`'s `fbm2`/`fbm3`/`turb2` are `parallel{}` octave sums, and render pixel-identical to the hand-written four-term versions they replaced. Their octaves each *call* one declared face function rather than inlining one (see `pxfn` below), so the repeats no longer multiply the body.
 
 ## A sub-chain as a GLSL function (`draw/visualsynth/shader-function.js`)
 
@@ -160,6 +160,26 @@ uses of a noise-based shape: 13 statements and 4 uniforms against 18 and 7, pixe
   deliberately **not** saved/restored by a captured block: a declaration is at file scope, so one
   first reached inside a `loop{}` body is still callable after the closing brace, exactly as a
   uniform slot is. The ordinary `(node, input)` memo then applies to the *call*.
+- **And one declaration per distinct body**, which is the layer under that: `ctx.addFunction(name,
+  source, shareBody)` (`codegen.js`) hands back the name of a declaration that already says this
+  instead of adding a second copy, and `functionShaderNode` *calls whatever name comes back*. The
+  match is on a canonical form of the body — the declaration's own name and its own locals (`l_pN`,
+  `vN`, `l_iN`) renumbered in order of first appearance, since `nextVar` counts across the whole walk
+  so the second copy of a body is never byte-identical to the first. Left uncanonicalised, on purpose:
+  the seed (`ctx.rootInput`), which is one file scope variable; `u_vsN`/`u_vstexN`/`u_vsexN`, which
+  are *value slots*, so two bodies match only if they read the same slots — which is also why
+  dropping a duplicate can never orphan a uniform; and a nested `l_fnN`, already deduped below this
+  one (`addFunction` runs innermost first), so equal bodies name an equal function. `uvN`/`arN`
+  (`tex{}`'s locals) are numbered per use and not canonicalised, so two bodies sampling a texture
+  simply do not match — a dedupe missed, never a wrong one. Only `pxfn` passes `shareBody`: a helper
+  (`l_pxhash`) is deduped by its fixed name and must keep generating the source it always did.
+  **This is what makes a `pxfn` reached once per repeat of a `parallel{}`/`series{}`/`loop{}` one
+  declaration.** Each repeat clones its event and spells its own callsite id, so nothing is memoised
+  across them and each asks for a declaration of its own; the bodies then agree — or do not, and the
+  reason is always a *value*: a bare number inside the body gets a slot per repeat (`addUniform`
+  shares only object literals and bindings with provenance), so a body carrying one is honestly a
+  declaration per repeat. `lib/visual.limut` shares because everything in its face is either the
+  `seed` binding or a lattice offset literal.
 - **`ctx.captureFunction(fn)`** is `captureBlock` with the enclosing scope withheld: fresh `built`
   and `lets` rather than copies, because a function body cannot see main's variables. `nextVar` still
   counts across it, and both share one `capture` helper. The declaration is added with
@@ -188,11 +208,23 @@ uses of a noise-based shape: 13 statements and 4 uniforms against 18 and 7, pixe
   case called directly with a `passthroughShaderNode()` and a `__functionContext:'pxfn;'`, the way
   `loop{}`'s `map:`/`fold:`/`until:` are. An arg that was not visual at all is handed straight back
   for `>>` to wrap into a uniform.
-- Cost not paid: two *un-memoised* evaluations of the same `pxfn{}` AST (inside a `mul`/`add`/`set`
-  param, where `paramChain` un-memoises) declare the same function twice. Wasteful, not wrong, and
-  stable per event so the source-stability check stays quiet. Whether a real function stops mesa's
-  v3d from segv'ing is untested — it may inline it back; the source-size and uniform wins are the
-  measured ones.
+- Two evaluations of the same `pxfn{}` AST that are *not* memoised into one node (each repeat of a
+  `parallel{}`, or a `mul`/`add`/`set` param, where `paramChain` clones the event) still cost only one
+  declaration now, by the body match above, provided their uniforms are the same slots. Whether a real
+  function stops mesa's v3d from segv'ing is untested — it may inline it back; the source-size and
+  uniform wins are the measured ones.
+
+**Where the lib uses it** (2026-09-12, `noisefacefn` in `lib/visual.limut`, `sdcw1`'s arc, `kal`'s
+line; statements / `l_pxhash` calls, all pixel-identical at 256×256):
+`noise3` 43/8 → 31/4, `fbm2` 99/16 → 44/4, `turb2` 111/16 → 56/4, `fbm3` 182/32 → 71/4,
+`turb3` 194/32 → 83/4, the Fire chain (`turb3`+`fbm3`) 378/64 → 156/8; `kal` 57 statements and 20
+uniforms → 53 and 16; `sdcirclewave` 48/18 → 40/17. Uniform counts are otherwise unchanged — the
+`addUniform` sharing above had already collapsed them. What pxfn cannot reach: `perlinface` takes two
+independent per-pixel arguments (`i` and `d`, and perlin3's upper face needs `d.z-1` where the lower
+needs `d.z`), so no single point-parameterised function serves both faces and perlin stays inlined.
+Note also that `X >> f{arg}` *calls* `f` with the point shifted into its first slot, so a function
+that builds a pxfn must be reached as a bare name (`p>>nf`), which is why the lib passes the node into
+a helper rather than piping into the maker.
 
 ## eval-param pass-through (critical)
 

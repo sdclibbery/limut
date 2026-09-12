@@ -68,9 +68,12 @@ define(function(require) {
         let inner = ctx.captureFunction(() => body.build(f.param, ctx))
         checkScope(inner.statements, [f.param, ctx.rootInput])
         // Declared after the body is captured, so a pxfn nested inside this one — whose own
-        // addFunction ran during the capture — is already declared above it, as GLSL requires
-        ctx.addFunction(f.name, `vec4 ${f.name}(vec4 ${f.param}) {\n  ${inner.statements.join('\n  ')}\n  return ${inner.out};\n}`)
-        name = f.name
+        // addFunction ran during the capture — is already declared above it, as GLSL requires.
+        // shareBody: a declaration that already says this is used instead of a second copy of it,
+        // which is what collapses one pxfn per repeat of a parallel{}/loop{} — each repeat resolves
+        // a node of its own, so the (node, input) memo cannot see across them — into one. The name
+        // that comes back is the one to call, this node's or the earlier one's.
+        name = ctx.addFunction(f.name, `vec4 ${f.name}(vec4 ${f.param}) {\n  ${inner.statements.join('\n  ')}\n  return ${inner.out};\n}`, true)
         if (ctx.pxFunctions !== undefined) { ctx.pxFunctions.set(key, name) }
       }
       // The call is an ordinary statement, so the (node, input) memo applies to it as it does to
@@ -168,6 +171,20 @@ define(function(require) {
   let binds = makeShaderNode((input, c) => { c.lets['d'] = c.addStatement(`a(${input})`); return c.lets['d'] })
   functionShaderNode(binds).build(ctx.rootInput, ctx)
   assert(undefined, ctx.lets['d'])
+
+  // Two nodes with the same body are one declaration: identical bodies share (codegen.js's
+  // shareBody), which is what a parallel{} of the same sub-chain comes down to — each repeat
+  // resolves a node of its own, so the (node, input) memo cannot see across them
+  ctx = makeContext()
+  naryShaderNode((x,y) => `${x} + ${y}`, [{raw:undefined, value:composeShaderNodes(node('p'), functionShaderNode(node('a')))},
+                                          {raw:undefined, value:composeShaderNodes(node('q'), functionShaderNode(node('a')))}]).build(ctx.rootInput, ctx)
+  assert(1, ctx.functions.length)
+  assert(['vec4 v1 = p(v0);', 'vec4 v3 = l_fn0(v1);', 'vec4 v4 = q(v0);', 'vec4 v6 = l_fn0(v4);', 'vec4 v7 = v3 + v6;'], ctx.statements)
+  // Bodies that differ are still two declarations
+  ctx = makeContext()
+  naryShaderNode((x,y) => `${x} + ${y}`, [{raw:undefined, value:functionShaderNode(node('a'))},
+                                          {raw:undefined, value:functionShaderNode(node('b'))}]).build(ctx.rootInput, ctx)
+  assert(['l_fn0','l_fn1'], ctx.functions.map(x => x.name))
 
   // A pxfn first built inside a loop body declares at file scope — a declaration is not block
   // scoped, any more than a uniform slot is — while its call stays inside the block

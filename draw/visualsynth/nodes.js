@@ -938,6 +938,27 @@ define(function(require) {
   assert([18, 38], [stmtCount(wrp), stmtCount(inl)]) // Eight body statements written once rather than four times
   assert([4, 7], [uniformCount(wrp), uniformCount(inl)]) // and its uniforms registered once rather than four times
   assert(wrp, four('wrapped')) // and still byte identical: the cache key
+
+  // Through parallel{}, which is the shape the octave sums in lib/visual.limut have: a repeat
+  // resolves its own event with a callsite id of its own, so nothing is memoised across the repeats
+  // and each one asks for a declaration of its own — and gets the first one back, because the bodies
+  // say the same thing (codegen.js's shareBody). One declaration, one call per octave, against a
+  // whole copy of the body per octave inlined. This is what takes fbm3 from 32 hashes to 4.
+  userVars['wrappedbare'] = parseExpression('pxfn{dup2}')
+  let octaves = (name) => pxSource(`parallel{{i} -> (id*(2^i))>>${name}, 4}`)
+  let inlOct = octaves('dup2'), wrpOct = octaves('wrappedbare')
+  assert(0, fnDecls(inlOct))
+  assert([1, 4], [fnDecls(wrpOct), fnCalls(wrpOct)])
+  // The body itself written once against once per octave, which is the whole point
+  assert([1, 4], [(wrpOct.match(/min\(/g) || []).length, (inlOct.match(/min\(/g) || []).length])
+  assert(true, stmtCount(wrpOct) < stmtCount(inlOct))
+  assert(wrpOct, octaves('wrappedbare')) // and deterministic, as every repeat build must be
+  // A uniform slot is what the bodies must agree about, and a bare number in one is deliberately
+  // *not* shared between repeats (see addUniform) — so a body carrying one is a declaration per
+  // repeat, correctly: those are different values. The lib's noise face shares because everything in
+  // it is either the `seed` binding or a lattice offset literal, both of which do share a slot.
+  assert(4, fnDecls(octaves('wrapped')))
+  delete userVars['wrappedbare']
   delete userVars['inlined']
   delete userVars['wrapped']
   delete userVars['dup2']

@@ -1,7 +1,8 @@
 // This library includes smooth noise, 2d transforms and a kaleidoscope pattern for visualsynth px
 // chains, built entirely out of the shader nodes: pxhash for the randomness, floor/fract for the
-// lattice, smoothstep for the fade curve, mix for the interpolation and parallel/loop for the
-// repetition. Nothing here is implemented in javascript.
+// lattice, smoothstep for the fade curve, mix for the interpolation, parallel/loop for the
+// repetition and pxfn for the one body that is wanted at several points at once. Nothing here is
+// implemented in javascript.
 //
 // pxhash gives an independent random value per pixel, ie white noise. Smooth noise instead hashes
 // the corners of a lattice cell and interpolates between them, so neighbouring pixels get
@@ -51,8 +52,20 @@ set noise1 = {in:id, scale:4, seed:0} -> noise1at{noiseflat1{in, scale}, seed}
 set noise2at = {p, seed} -> noiseface{floor{p}, smoothstep{fract{p}}, seed}
 set noise2 = {in:id, scale:4, seed:0} -> noise2at{noiseflat2{in, scale}, seed}
 
-set noise3lerp = {i, f, seed} -> mix{ noiseface{i, f, seed}, noiseface{i+{z:1,w:0}, f, seed}, f.z }
-set noise3at = {p, seed} -> noise3lerp{floor{p}, smoothstep{fract{p}}, seed}
+// A face of value noise as a real function in the shader rather than another copy of it: pxfn{}
+// declares its body once and calls it wherever the value is wanted, where everything else here is
+// written into the shader again at every use. That is what a face is for, since a face is never
+// wanted only once - the 3d noise below takes one at each end of the z cell, and every octave sum
+// takes one per octave, which between them is where all but four of the hashes in fbm3 used to come
+// from. It is a function of the point alone (the seed is a uniform, in scope inside it), which works
+// because an integer step in z leaves fract{} untouched and moves floor{} by exactly one, so one
+// body serves both faces. There is nowhere to put a local, so whoever wants it twice takes the node
+// as an argument, the way every other intermediate here is passed on - and a pxfn reached once per
+// repeat of a parallel{} is still one declaration, since the bodies say the same thing
+// (draw/visualsynth/codegen.js).
+set noisefacefn = {seed} -> pxfn{{p} -> noiseface{floor{p}, smoothstep{fract{p}}, seed}}
+set noise3lerp = {p, f, nf} -> mix{ p>>nf, p+{z:1,w:0}>>nf, f.z }
+set noise3at = {p, seed} -> noise3lerp{p, smoothstep{fract{p}}, noisefacefn{seed}}
 set noise3 = {in:id, scale:4, seed:0} -> noise3at{noiseflat3{in, scale}, seed}
 
 //// Perlin (gradient) noise
@@ -93,10 +106,15 @@ set perlin3 = {in:id, scale:4, seed:0} -> clamp{ perlin3s{in, scale, seed}*3/4 +
 // that, since each pixel crosses its lattice line at a different moment, but every pixel shares
 // the same z: animate z and the whole picture stalls once a cell. w stays 0 in the shift because
 // pxhash hashes all four components, so a stray w would be another dimension.
+//
+// Each octave takes a face rather than a whole noise, and they all take the *same* face function
+// (noisefacefn above), so the body is in the shader once however many octaves there are: the 2d sums
+// are handed the node, and the 3d ones get it through noise3at, which already works that way.
 set octshift = {i} -> {x:i/2, y:i/2, z:i/2, w:0}
 
-set fbm2 = {in:id, scale:4, seed:0} ->
-  parallel{{i} -> noise2at{noiseflat2{in, scale*(2^i)} + octshift{i}, seed}*(8/(2^i)), 4}/15
+set fbm2h = {in, scale, nf} ->
+  parallel{{i} -> ((noiseflat2{in, scale*(2^i)} + octshift{i}) >> nf)*(8/(2^i)), 4}/15
+set fbm2 = {in:id, scale:4, seed:0} -> fbm2h{in, scale, noisefacefn{seed}}
 
 set fbm3 = {in:id, scale:4, seed:0} ->
   parallel{{i} -> noise3at{noiseflat3{in, scale*(2^i)} + octshift{i}, seed}*(8/(2^i)), 4}/15
@@ -104,8 +122,9 @@ set fbm3 = {in:id, scale:4, seed:0} ->
 // Turbulence: the same sum over the absolute value of each signed octave, giving the creased,
 // billowy look that suits smoke and marble. turb3 is over noise3 as fbm3 is, so it animates
 // through the incoming z rather than only scrolling past
-set turb2 = {in:id, scale:4, seed:0} ->
-  parallel{{i} -> abs{noise2at{noiseflat2{in, scale*(2^i)} + octshift{i}, seed}*2-1}*(8/(2^i)), 4}/15
+set turb2h = {in, scale, nf} ->
+  parallel{{i} -> abs{((noiseflat2{in, scale*(2^i)} + octshift{i}) >> nf)*2-1}*(8/(2^i)), 4}/15
+set turb2 = {in:id, scale:4, seed:0} -> turb2h{in, scale, noisefacefn{seed}}
 
 set turb3 = {in:id, scale:4, seed:0} ->
   parallel{{i} -> abs{noise3at{noiseflat3{in, scale*(2^i)} + octshift{i}, seed}*2-1}*(8/(2^i)), 4}/15
@@ -227,5 +246,11 @@ set kalline = {p, glow} -> exp{-abs{p.y}*5/(2/5+3/5*glow)}*2/5
 // already hold a visual node, and the loop index is one.
 // shape is declared first so it is the default positional argument (px=kal{5} is px=kal{shape:5});
 // `in` still takes the piped value wherever it is declared, so px=rot2{1/8}>>kal{5} works too.
-set kal = {shape:0, in:id, t:time/2, glow:1, n:8} ->
-  in/4 >> loop{{i} -> kalstep{id, i+1/2, t, shape}, n, map:{v,i} -> sgn{i}*kalline{v, glow}}
+// loop{} emits its map twice by design - once for the seed term, once inside the block - so the line
+// is the other sub-chain here that is built at two points, and pxfn{} makes it one declaration called
+// twice. glow is a plain number, so the function is of the value alone; kal hands the node to the
+// helper because there is nowhere to put a local, exactly as noise3at does with its face.
+set kallinefn = {glow} -> pxfn{{p} -> kalline{p, glow}}
+set kalh = {in, t, shape, n, kl} ->
+  in/4 >> loop{{i} -> kalstep{id, i+1/2, t, shape}, n, map:{v,i} -> sgn{i}*(v>>kl)}
+set kal = {shape:0, in:id, t:time/2, glow:1, n:8} -> kalh{in, t, shape, n, kallinefn{glow}}

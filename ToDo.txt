@@ -7,7 +7,6 @@ visual nodes...
   Mostly doable in the DSL as it stands: a px value is a vec4 so xyz is a 3d point with w spare, length/dot/
   cross/normalize are already over xyz, loop{} rolls into a real for so a march emits its body once, let{}
   gives locals, and a scene sdf can be a lambda arg the way multiband{chain:} already is
-   !! Check for any existing lib code where pxfn should be used for cleanup or performance gain
    more loop{} accumulators: one carried vec4 plus one fold total is all there is, and a march wants to carry
     xyz+t AND bring a material id back out
  ?2d sdf lib has comment about no locals; but we have let now, do the comment and/or code need updating?
