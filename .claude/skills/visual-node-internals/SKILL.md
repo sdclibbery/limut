@@ -145,6 +145,55 @@ other position (piped, ie `…>>let{d}>>…`) is fine. See ToDo.txt.
 
 `lib/visual.limut`'s `fbm2`/`fbm3`/`turb2` are `parallel{}` octave sums, and render pixel-identical to the hand-written four-term versions they replaced.
 
+## A sub-chain as a GLSL function (`draw/visualsynth/shader-function.js`)
+
+`pxfn{chain}` is the one place a sub-chain is *not* inlined. Everything else emits into `main()` and
+the `(node, input)` memo only dedupes a node reached again on the **same** input, so a sub-chain used
+at N inputs is written N times — fine for a chain stage, wrong for a scene sdf (once per march step,
+four more for a tetrahedral normal, plus shadows and AO), and the shape that segv'd v3d's register
+allocator on the Pi (`draw/hub75/CLAUDE.md` 2026-09-06). `functionShaderNode(body)` captures the body
+into `vec4 l_fnN(vec4 l_pN) { … return out; }` and emits a *call* at each use site. Measured on four
+uses of a noise-based shape: 13 statements and 4 uniforms against 18 and 7, pixel-identical output.
+
+- **One declaration per node per build walk.** The registry is `ctx.pxFunctions` (an opaque `key`
+  object created by `functionShaderNode`, not the node, so there is no forward reference), and it is
+  deliberately **not** saved/restored by a captured block: a declaration is at file scope, so one
+  first reached inside a `loop{}` body is still callable after the closing brace, exactly as a
+  uniform slot is. The ordinary `(node, input)` memo then applies to the *call*.
+- **`ctx.captureFunction(fn)`** is `captureBlock` with the enclosing scope withheld: fresh `built`
+  and `lets` rather than copies, because a function body cannot see main's variables. `nextVar` still
+  counts across it, and both share one `capture` helper. The declaration is added with
+  `ctx.addFunction` **after** the capture, so a nested `pxfn` (whose own `addFunction` ran during it)
+  is declared above its caller, as GLSL requires. Names come from `ctx.functionName()` →
+  `{name:'l_fnN', param:'l_pN'}`, one counter for the pair.
+- **The seed is hoisted to file scope when — and only when — a function is declared.**
+  `captureFunction` sets `ctx.needsGlobalSeed`, and `buildSource` then emits `vec4 v0;` before the
+  declarations and assigns it as main's first line instead of declaring it there. That is what lets
+  `uv` (which names `ctx.rootInput` from anywhere) reach into a body at any nesting depth. Conditional
+  on purpose: a shader with no `pxfn` generates byte-identical source to before, so the program cache
+  and the hub75 layer keys (`hub75.js`'s `layerKey`, the source text) are undisturbed.
+- **A body sees its parameter, the seed, the uniforms, the samplers and what it declares itself —
+  nothing else**, and that is structural, not laziness: the declaration is made once with fixed
+  parameters, so anything captured would have to be one, and the same sub-chain called from two
+  places with two different environments could not then share it. Two traps are reachable and both
+  are reported rather than silent. An outer `let{}` read gives the existing
+  `🟠 let 'd' is used before it is set` (fresh `ctx.lets`) and passes the value through. An enclosing
+  `loop{}`'s index or fold accumulator is caught by `checkScope`, which scans the captured statements
+  for `vN`/`l_iN` tokens that are neither declared inside nor the parameter nor the seed:
+  `🟠 pxfn{} body refers to l_i0 from outside the function`, followed by the GLSL error it explains.
+  (`uvN`/`arN`, `tex{}`'s locals, match neither pattern.) Recursion is impossible in GLSL.
+- Registration is in `nodes.js`: the arg goes through `paramChain` (so every px rule holds inside it,
+  as for a `channels{}` arg — note that means `pxfn{X}` is seeded and a bare `set scene = X` is not,
+  which is the one asymmetry to remember when comparing the two spellings), with the lambda-literal
+  case called directly with a `passthroughShaderNode()` and a `__functionContext:'pxfn;'`, the way
+  `loop{}`'s `map:`/`fold:`/`until:` are. An arg that was not visual at all is handed straight back
+  for `>>` to wrap into a uniform.
+- Cost not paid: two *un-memoised* evaluations of the same `pxfn{}` AST (inside a `mul`/`add`/`set`
+  param, where `paramChain` un-memoises) declare the same function twice. Wasteful, not wrong, and
+  stable per event so the source-stability check stays quiet. Whether a real function stops mesa's
+  v3d from segv'ing is untested — it may inline it back; the source-size and uniform wins are the
+  measured ones.
+
 ## eval-param pass-through (critical)
 
 `player/eval-param.js` object-walking (the `typeof value === 'object'` branch) **calls every function-valued field** of evaluated objects. Two exemptions exist alongside `AudioNode`: `value.isShaderNode` and `value.isVisualTextureSource`. Any new visual value type that carries function fields (build, acquire, update...) through expression evaluation MUST get the same exemption, or its functions get invoked mid-eval and the object is torn apart. Symptom: "X is not a function" at draw time, or textures acquired prematurely/never.

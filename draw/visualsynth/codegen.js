@@ -14,10 +14,17 @@ define(function(require) {
       notReady: false, // a texture source isn't available yet (eg webcam pre-enumeration)
       built: new Map(), // node -> Map(input -> varName): emit each node once, see makeShaderNode
       lets: {}, // name -> the GLSL variable holding a let bound value, filled during the build walk
+      // key -> the name of the GLSL function declared for that px sub-chain (pxfn{}, see
+      // draw/visualsynth/shader-function.js). Deliberately NOT saved and restored by a captured
+      // block: a function is declared at file scope, so one first declared inside a loop body is
+      // still callable after the closing brace, exactly as a uniform slot is.
+      pxFunctions: new Map(),
     }
-    // v0 is the implicit uv seed: the value the whole chain starts with. It is a local of main()
-    // and every generated statement lands in main(), so it stays in scope for the whole shader —
-    // which is what lets the uv node (nodes.js) name it from anywhere in the chain.
+    // v0 is the implicit uv seed: the value the whole chain starts with. It stays in scope for the
+    // whole shader — which is what lets the uv node (nodes.js) name it from anywhere in the chain.
+    // Ordinarily it is a local of main(), since every generated statement lands in main(); a shader
+    // that declares a px function (pxfn{}) hoists it to file scope instead, because a function body
+    // is a scope of its own and main's locals are not visible in it. See needsGlobalSeed below.
     ctx.rootInput = 'v0'
     let nextVar = 1
     ctx.addStatement = (expr) => {
@@ -37,13 +44,18 @@ define(function(require) {
     // let{} inside the body names a variable that goes out of scope at the closing brace.
     // nextVar keeps counting across the block, so every generated name is still unique and still
     // comes from a counter: the source must stay deterministic, since the program cache is keyed on it.
-    ctx.captureBlock = (fn) => {
+    //
+    // isolate is the difference between a block and a function body (captureFunction below): a
+    // block's enclosing variables are still in scope inside it, where a function's are not, so a
+    // function body starts with an empty built map and no let bindings rather than copies of the
+    // outer ones. Everything else — the capture itself, the restore, the shared nextVar — is the same.
+    let capture = (fn, isolate) => {
       let outerStatements = ctx.statements
       let outerBuilt = ctx.built
       let outerLets = ctx.lets
       ctx.statements = []
-      ctx.built = new Map(Array.from(outerBuilt, ([node, byInput]) => [node, new Map(byInput)]))
-      ctx.lets = Object.assign({}, outerLets)
+      ctx.built = isolate ? new Map() : new Map(Array.from(outerBuilt, ([node, byInput]) => [node, new Map(byInput)]))
+      ctx.lets = isolate ? {} : Object.assign({}, outerLets)
       let out, statements
       try {
         out = fn()
@@ -55,10 +67,30 @@ define(function(require) {
       }
       return {out: out, statements: statements}
     }
+    ctx.captureBlock = (fn) => capture(fn, false)
+    // The body of a real GLSL function (pxfn{} in a px chain, see shader-function.js). Isolated as
+    // above, because a function body cannot see the enclosing scope: a function is declared once
+    // with fixed parameters, so anything it captured would have to be one of them, and the same
+    // sub-chain called from two places with two different environments could not then share a
+    // declaration. What it can still reach is what lives at file scope — uniforms, samplers, the
+    // helper functions, and the seed, which is why declaring one hoists v0 out of main().
+    ctx.captureFunction = (fn) => {
+      ctx.needsGlobalSeed = true
+      return capture(fn, true)
+    }
     // The counter variable of a for loop. Same l_ prefix as the helper functions, keeping it clear
     // of the generated vN/u_vsN/uvN names.
     let nextLoopVar = 0
     ctx.loopVar = () => 'l_i' + (nextLoopVar++)
+    // A declared function and its parameter, both named from one counter so the pair always agree.
+    // Same l_ prefix as the loop counters and the helper functions, keeping them clear of the
+    // generated vN/u_vsN/uvN names, and from a counter for the usual reason: the program cache (and
+    // the source stability check in draw/visualsynth.js) is keyed on the source text.
+    let nextFunction = 0
+    ctx.functionName = () => {
+      let i = nextFunction++
+      return {name: 'l_fn' + i, param: 'l_p' + i}
+    }
     // Two uniform slots may share a name when the expression that feeds them is the same one in the
     // same scope: it then holds the same value on every frame, animated or not, so a second slot is
     // pure waste - a `uniform vec4` line in the source, an evalParamFrame every frame
@@ -149,15 +181,22 @@ define(function(require) {
     // GLSL ES 3.00 has a default precision for sampler2D but not sampler3D, so a 3d lookup
     // texture has to declare one or the shader won't compile
     let sampler3d = ctx.textures.some(t => t.sampler === 'sampler3D')
+    // A px function's body is a scope of its own, so main's locals are not visible in it — and the
+    // seed is one of them, which the uv node names from anywhere in the chain. So a shader that
+    // declares one hoists the seed to file scope, declared before the functions and assigned as
+    // main's first line. Conditional, like the sampler3D precision above: a shader with no function
+    // in it then generates byte-identical source to before, which keeps the program cache and the
+    // hub75 layer keys (draw/hub75/host/hub75.js, keyed on the source text) undisturbed.
+    let globalSeed = ctx.needsGlobalSeed === true
     let source = `#version 300 es
 precision highp float;
 ${sampler3d ? 'precision highp sampler3D;\n' : ''}in vec2 fragCoord;
 out vec4 fragColor;
 ${ctx.uniforms.map(u => `uniform vec4 ${u.name};`).join('\n')}
 ${ctx.textures.map((t,i) => `uniform ${t.sampler} u_vstex${i};\nuniform vec2 u_vsex${i};`).join('\n')}
-${ctx.functions.map(f => f.source).join('\n')}
+${globalSeed ? `vec4 ${ctx.rootInput};\n` : ''}${ctx.functions.map(f => f.source).join('\n')}
 void main() {
-  vec4 ${ctx.rootInput} = vec4(fragCoord, 0.0, 1.0);
+  ${globalSeed ? '' : 'vec4 '}${ctx.rootInput} = vec4(fragCoord, 0.0, 1.0);
   ${ctx.statements.join('\n  ')}
   fragColor = ${out};
 }`
@@ -341,6 +380,53 @@ void main() {
   try { blockCtx.captureBlock(() => { throw 'x' }) } catch (err) {}
   blockCtx.addStatement('after')
   assert(['vec4 v1 = after;'], blockCtx.statements)
+
+  // captureFunction is captureBlock with the enclosing scope withheld: a function body cannot see
+  // main's variables or its let bindings, so it starts with neither rather than with copies
+  let fnCtx = makeContext()
+  fnCtx.addStatement('outer')
+  fnCtx.lets.d = 'v1'
+  blockNode.build('v1', fnCtx)
+  let fnBlock = fnCtx.captureFunction(() => {
+    assert({}, fnCtx.lets) // No outer bindings
+    fnCtx.lets.inner = 'v9'
+    return blockNode.build('v1', fnCtx) // Emitted again: the outer v2 is not in scope in here
+  })
+  assert(['vec4 v3 = b(v1);'], fnBlock.statements)
+  assert(['vec4 v1 = outer;', 'vec4 v2 = b(v1);'], fnCtx.statements) // main is untouched by it
+  assert(['d'], Object.keys(fnCtx.lets)) // and the outer bindings are put back, without the inner one
+  assert('v4', fnCtx.addStatement('after')) // The variable counter carries on across it, as for a block
+  assert(true, fnCtx.needsGlobalSeed) // Declaring a function hoists the seed out of main()
+
+  fnCtx = makeContext() // It restores even when the build throws
+  try { fnCtx.captureFunction(() => { throw 'x' }) } catch (err) {}
+  fnCtx.addStatement('after')
+  assert(['vec4 v1 = after;'], fnCtx.statements)
+
+  // Function and parameter names come from one counter, so the pair always agree, and per context
+  let nameCtx = makeContext()
+  assert([{name:'l_fn0',param:'l_p0'},{name:'l_fn1',param:'l_p1'}], [nameCtx.functionName(), nameCtx.functionName()])
+  assert({name:'l_fn0',param:'l_p0'}, makeContext().functionName())
+
+  // The seed is hoisted to file scope only for a shader that declares a function: a function body
+  // is a scope of its own and main's locals are not visible in it, but every shader without one
+  // must keep generating exactly the source it always did (the program cache and hub75 layer keys)
+  let seedCtx = makeContext()
+  let hoisted = buildSource(makeShaderNode((input, ctx2) => {
+    ctx2.captureFunction(() => 'x')
+    return ctx2.addStatement(`f(${input})`)
+  }))
+  assert(true, hoisted.source.includes('\nvec4 v0;\n')) // Declared before the function declarations
+  assert(true, hoisted.source.includes('void main() {\n  v0 = vec4(fragCoord, 0.0, 1.0);')) // Assigned, not redeclared
+  assert(undefined, seedCtx.needsGlobalSeed) // A context that never declares one never sets it
+  assert(true, buildSource(mulNode(ast)).source.includes('void main() {\n  vec4 v0 = vec4(fragCoord, 0.0, 1.0);'))
+
+  // A function declaration is at file scope, so the registry that dedupes it is not block scoped
+  // (unlike ctx.built and ctx.lets above): one declared inside a loop body is still callable after it
+  let regCtx = makeContext()
+  let regKey = {}
+  regCtx.captureBlock(() => regCtx.pxFunctions.set(regKey, 'l_fn0'))
+  assert('l_fn0', regCtx.pxFunctions.get(regKey))
 
   // Loop counter names come from a counter of their own, so they stay deterministic
   let loopCtx = makeContext()

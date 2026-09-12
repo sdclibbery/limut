@@ -8,6 +8,15 @@ define(function(require) {
   let {lutTexture,resolveSize,defaultSizes} = require('draw/visualsynth/lut')
   let connectOp = require('expression/connectOp')
   let {evalParamFrame} = require('player/eval-param')
+  let {functionShaderNode} = require('draw/visualsynth/shader-function')
+  let consoleOut = require('console')
+
+  let warned = {}
+  let warnOnce = (msg) => {
+    if (warned[msg]) { return }
+    warned[msg] = true
+    consoleOut(msg)
+  }
 
   // The incoming value, passed through unchanged. Every px chain is seeded with it (see
   // player/params.js), so `id` is only needed by name to use the incoming value inside an
@@ -19,8 +28,10 @@ define(function(require) {
 
   // The value the whole chain started with — the pixel coordinate — still available after nodes
   // downstream have replaced the value flowing through them, eg px=perlin2>>mul{y:uv.v}. Emits no
-  // statement: the seed is a local of main() and every generated statement lands in main(), so it
-  // is in scope everywhere, including inside a channels{} arg or a user defined visual function.
+  // statement: the seed is in scope for the whole shader, so it can be named from anywhere in the
+  // chain, including inside a channels{} arg or a user defined visual function. Ordinarily it is a
+  // local of main(), since every generated statement lands there; a shader declaring a px function
+  // (pxfn{}) hoists it to file scope, because a function body cannot see main's locals (codegen.js).
   // Not marked _implicitInput — that flag means 'this is the chain seed and >> may withhold it
   // from a call', where uv is a value in its own right.
   let uv = (args, e, b, state, evalRecurse) => {
@@ -266,6 +277,33 @@ define(function(require) {
     })
   }
   addNodeFunction('channels', channels)
+
+  let isUserFunction = (v) => typeof v === 'function' && v.isUserFunction
+
+  // pxfn{chain} : the sub-chain compiled to a real GLSL function — declared once, called at each
+  // use site — rather than written into the shader again at every one. What it emits and the scope
+  // rules that come with a function body are in draw/visualsynth/shader-function.js.
+  //
+  // The arg is a px chain in its own right, resolved by paramChain exactly as a channels{} arg is,
+  // so every rule px already has holds inside it: a bare call or a named user defined function
+  // takes the incoming value, `floor{1/8}+1/2` feeds its head, a nested >> chain is seeded like any
+  // other. An inline lambda literal is the one thing >> never pipes into, so it is called here with
+  // a pass-through node as its value, the way loop{}'s map:/fold:/until: are (play/nodes/graph.js),
+  // with a callsite id of its own so its uniforms stay its own in the per frame memo key.
+  let pxfn = (args, e, b, state, evalRecurse) => {
+    let ast = args !== undefined && args !== null ? args.value : undefined
+    if (ast === undefined) {
+      warnOnce(`🟠 pxfn needs a chain, eg pxfn{sdsphere{1/2}}`)
+      return implicitInputNode()
+    }
+    let chain = isUserFunction(ast)
+      ? ast(ownEvent(e), b, evalParamFrame, {value:passthroughShaderNode(), __functionContext:'pxfn;'})
+      : paramChain(ast, e, b, evalRecurse)
+    // Not visual at all (pxfn{2}): hand the value back for >> to wrap into a uniform, as paramChain does
+    if (!isShaderNode(chain)) { return chain }
+    return functionShaderNode(chain)
+  }
+  addNodeFunction('pxfn', pxfn)
 
   // Sample a texture at the incoming value's xy. Arg is a url string or a texture source like webcam{}.
   let tex = (args, e, b, state, evalRecurse) => {
@@ -861,6 +899,66 @@ define(function(require) {
   assert(true, /clamp\(\(v\d+\)\.x, 0\.0, 1\.0\) \* 1\.0/.test(src))
 
 
+  // pxfn{} end to end. The sub-chain is written into the shader once as a real GLSL function and
+  // called wherever the value is used, where everything else in the system inlines at every use.
+  let fnDecls = (src) => (src.match(/^vec4 l_fn\d+\(vec4 l_p\d+\) \{$/gm) || []).length
+  let fnCalls = (src, i) => (src.match(new RegExp('l_fn'+(i||0)+'\\(', 'g')) || []).length - 1 // Less its declaration
+  let stmtCount = (src) => (src.match(/vec4 v\d+ = (?!vec4\(fragCoord)/g) || []).length // Less the seed
+
+  src = pxSource('pxfn{mul{2}}')
+  assert(1, fnDecls(src))
+  assert(1, fnCalls(src))
+  assert(true, src.includes('vec4 l_fn0(vec4 l_p0) {\n  vec4 v1 = l_p0 * u_vs0;\n  return v1;\n}')) // The chain, as its body
+  assert(true, src.includes('vec4 v2 = l_fn0(v0);')) // and a call in its place
+  assert(true, src.indexOf('vec4 l_fn0(') < src.indexOf('void main()')) // Declared before it is called
+  assert(pxSource('pxfn{mul{2}}'), pxSource('pxfn{mul{2}}')) // Deterministic: the program cache is keyed on the source
+
+  // The arg is a px chain in its own right, resolved as a channels{} arg is, so a bare call takes
+  // the incoming value and a chain written out inside it is seeded like any other
+  assert(true, pxSource('pxfn{sin}').includes('vec4 v2 = sin(v1);')) // v1 being the pass-through of the parameter
+  assert(true, pxSource('pxfn{floor{1/8}>>add{1/2}}').includes('floor(v1 / u_vs0)'))
+  assert(true, pxSource('pxfn{floor{1/8}+1/2}').includes('floor(v1 / u_vs0)')) // expressionHead reaches in too
+
+  // A named user defined function is piped the value, and an inline lambda literal — the one thing
+  // >> never pipes into — is called with it here instead
+  userVars['half'] = parseExpression('{p}->p*2')
+  assert(1, fnDecls(pxSource('pxfn{half}')))
+  assert(pxSource('pxfn{half}'), pxSource('pxfn{{p}->p*2}'))
+  delete userVars['half']
+
+  // The headline: a sub-chain used at four different inputs is declared once and called four
+  // times, where the inlined spelling writes its whole body out four times over
+  userVars['inlined'] = parseExpression('dup2{id*2}')
+  userVars['wrapped'] = parseExpression('pxfn{dup2{id*2}}')
+  userVars['dup2'] = parseExpression('{q}->min{q.x+q.y, q.x-q.y}')
+  let four = (name) => pxSource(`${name} + (id*2>>${name}) + (id*3>>${name}) + (id*4>>${name})`)
+  let inl = four('inlined'), wrp = four('wrapped')
+  assert(0, fnDecls(inl))
+  assert([1, 4], [fnDecls(wrp), fnCalls(wrp)])
+  assert([18, 38], [stmtCount(wrp), stmtCount(inl)]) // Eight body statements written once rather than four times
+  assert([4, 7], [uniformCount(wrp), uniformCount(inl)]) // and its uniforms registered once rather than four times
+  assert(wrp, four('wrapped')) // and still byte identical: the cache key
+  delete userVars['inlined']
+  delete userVars['wrapped']
+  delete userVars['dup2']
+
+  // uv reaches into a body, which is what the seed being hoisted to file scope is for. Only a
+  // shader that declares a function pays for that: every other one generates what it always did.
+  src = pxSource('pxfn{mul{uv}}')
+  assert(true, src.includes('vec4 v0;\n')) // Declared at file scope
+  assert(true, src.includes('void main() {\n  v0 = vec4(fragCoord, 0.0, 1.0);')) // and assigned, not redeclared
+  assert(true, src.includes('vec4 v1 = l_p0 * (v0);')) // the parameter times the seed
+  assert(false, pxSource('mul{uv}').includes('vec4 v0;\n'))
+  assert(true, pxSource('mul{uv}').includes('vec4 v0 = vec4(fragCoord, 0.0, 1.0);'))
+
+  // An arg that is not visual at all is handed back for >> to wrap into a uniform, as a
+  // mul/add/set param is, rather than becoming a function with nothing in it
+  src = pxSource('pxfn{2}')
+  assert(0, fnDecls(src))
+  assert(true, src.includes('fragColor = v1;') && src.includes('vec4 v1 = u_vs0;'))
+  // and with no arg at all it warns and carries the chain through unchanged
+  assert(true, node(pxfn, {})._implicitInput)
+  assert(true, node(pxfn, undefined)._implicitInput)
 
   console.log('Visual synth nodes tests complete')
   }
