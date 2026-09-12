@@ -41,6 +41,14 @@ preset psy multiwave
   , drive=1/8, delay=1/8, room={1,hpf:500,mix:1/2}, glide=this.dur/10
   , cutoff=[2/3:0]e + [0:1/3]l1/2@s + [0:1/3]l2@s
 
+preset psybass saw
+  , envelope='perc', oct=2, dur=1/4
+  , lpf={30+8000*this.cutoff^2*[1:_10ms,1:!720ms*this.decay^2,0]e@s, poles:4, q:3}
+  , fx=duck*+6db
+  // Controls
+  , cutoff=1/2
+  , decay=1/2
+
 preset sub sine, dur=1/4, sus=1/6, oct=1, envelope='organ', amp*=3, amp*=[1:!400ms,0]e@s, drive={1/32,mix:1/6}
 
 preset growl square, dur=1, oct=2, envelope='percussion', fx=ultracomb>>{dry,flanger>>pingpong>>reverb{2}}*1.3
