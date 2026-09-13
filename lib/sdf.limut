@@ -23,10 +23,12 @@ include 'lib/visual.limut'
 // but px=sdfill{sdcircle{1/2}} reads that 1/2 as the coordinate. Name the arguments, or pass the
 // coordinate yourself (sdcircle{id, 1/2}), wherever a shape is not at the head of a chain.
 //
-// Two things about the shader shape all of this: there is nowhere to put a local variable, so
-// intermediate results are passed on to a helper function instead; and there are no branches, so
-// every `if` in the original becomes the ternary `cond ?? a ?: b`, which compiles to a mix between
-// both results rather than taking one path.
+// Two things about the shader shape all of this: there are no branches, so every `if` in the
+// original becomes the ternary `cond ?? a ?: b`, which compiles to a mix between both results
+// rather than taking one path; and an expression has nowhere to put a local variable, so a value
+// wanted twice is passed on to a helper function instead. let{} does name a value now, and is what
+// the marching in lib/sdf3.limut uses, but a helper is still the clearer way to write a shape whose
+// intermediate is wanted once at each of two points rather than carried along a chain.
 
 //// Machinery
 
@@ -40,7 +42,7 @@ set sdflat = {in} -> in >> set{z:0, w:0}
 
 // Build a 2d point out of two computed values. Each of those arrives splatted across all four
 // channels (as everything here gives back), so the masks pick one channel out of each; this is
-// how a folded coordinate gets put back together without a local variable to hold it.
+// how a folded coordinate gets put back together out of two separately computed halves.
 set sdvec = {a, b} -> {x:1,w:0}*a + {y:1,w:0}*b
 
 // The same value in x and y, ie a scalar to subtract off a point
@@ -159,7 +161,7 @@ set sdcwd = {q, cox, coy, ra} ->
 // in here (a ternary, so both branches are compiled, and it names its point four times). pxfn{} makes
 // it a real function in the shader, declared once and called twice, where writing it out twice is two
 // copies of the whole thing. Everything but the point is a plain number, so the function takes the
-// point alone; the node is handed to a helper that uses it twice since there is nowhere for a local.
+// point alone; the node is handed to a helper that uses it at two different points.
 set sdcw1 = {p, cox, coy, ra} -> sdcw1h{p, cox, coy, pxfn{{q} -> sdcwd{q, cox, coy, ra}}}
 set sdcw1h = {p, cox, coy, d} -> sdval{min{
   p >> d,

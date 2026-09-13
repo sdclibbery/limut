@@ -5719,6 +5719,22 @@ section drop {
 // w visualsynth, px=loop{set{u:id.v,v:id.u}>>mul{2}+time/4, 4, map:{v,i}->add{perlin1{i+time}/4}>>tex{webcam}>>cospal, fold:{a,v}->a*v+a/2}
 // w visualsynth, px=set{z:sin{time+id.u*id.v}}>>loop{set{u:id.v,v:id.u}>>mul{1.2}+time/2, 2, map:{v,i}->(sin{v*8}+cos{v*2})*(8/(2^i))}/15
 
+// 3d sdf, lib/sdf3.limut. The scene is a pxfn so one copy of it serves the march, the normal,
+// the shadow and the occlusion
+// v visualsynth, px=sd3march>>sd3lit
+// set ring = pxfn{{p}->sd3torus{p}}
+// v visualsynth, px=sd3march{ring, yaw:[0:1]l8}>>sd3lit{ring}
+// set scene = pxfn{{p}->min{sd3sphere{p,r:1/2}, sd3plane{p}}}
+// v visualsynth, px=sd3march{scene}>>sd3lit{scene, shadow:sd3shadow{scene}, occ:sd3ao{scene}}
+// set scene = pxfn{{p}->sdblend{sd3sphere{p-{x:1/3,w:0},1/3}, sd3sphere{p+{x:1/3,w:0},1/3}, 1/4}}
+// v visualsynth, px=sd3march{scene, yaw:[0:1]l16}>>sd3lit{scene, col:#4af}
+// set scene = pxfn{{p}->sd3revolve{p, sdheart{r:1/4}, o:1/2}}
+// v visualsynth, px=sd3march{scene, pitch:1/16}>>sd3lit{scene, col:#f46}
+// set scene = pxfn{{p}->sd3sphere{sd3rep{p,3/2}, r:1/2}}
+// v visualsynth, px=sd3march{scene, far:32, yaw:[0:1]l32}>>sd3lit{scene, fog:1/24, bg:#012}
+// set scene = pxfn{{p}->min{sd3box{p,b:1/3}, sd3plane{p}}}
+// v visualsynth, px=sd3march{scene, yaw:[0:1]l8}>>sd3lit{scene, col:#8cf, bg:#012}
+
 // w visualsynth, px=set{v:id.v-time,z:time/3}>>(turb3{scale:1}+fbm3{scale:3/2})^3>>mul{1/2-uv.v/2}>>pal{0,red*3/4,yellow,1} // Fire
 
 
