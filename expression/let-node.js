@@ -14,6 +14,10 @@ define(function(require) {
   //   px=fbm2>>let{'wc',[]n^2}>>cospal{wc,wc}
   //   px=fbm2>>let{'wc',uv>>tex{webcam}}>>cospal{wc,wc}
   //
+  // A pxfn{} is the exception: it is bound as the function it is, rather than as the value it takes
+  // where the let is written, so an sdf3 scene can be declared inline on the line that marches it:
+  //   px=let{'scene',pxfn{sd3torus}}>>sd3march{scene}>>sd3lit{scene}
+  //
   // Bindings hang off the event rather than a scope stack of their own, because the event is the
   // object whose lifetime already matches a chain's: a visual chain's uniforms are re-evaluated
   // against it every frame, and a persistent fx chain (play/player-fx.js) reads its params for the
@@ -166,6 +170,24 @@ define(function(require) {
     let visual = isShaderNode(pipedValue) || isShaderNode(boundValue)
 
     if (visual) {
+      // A pxfn{} is a function of a point, not a value at a point, so it is bound *unbuilt*: every
+      // use site then builds a call of its own, at its own input, exactly as a `set scene = pxfn{}`
+      // name does. Building it here, as every other bound expression is, would name the one value it
+      // takes where the let is written - at the head of a px chain, the slice through z=0 - and a
+      // march would then step through a constant, with a normalize(0) normal. That is what made an
+      // inline sdf3 scene render a flat 2d slice. pxfn{} is the only marker there could be: every
+      // other node is equally a value and a function of its input, and which one is meant is the
+      // user's to say.
+      //
+      // Nothing is emitted and the chain seed is handed back unchanged, so
+      // `px=let{'scene',pxfn{..}}>>sd3march{scene}` builds byte for byte what `px=sd3march{scene}`
+      // does with the same scene held in a var - including >> withholding the seed from a call whose
+      // args already hold a visual node (_implicitInput, see connectOp.js), which is what keeps the
+      // scene out of sd3march's `in`.
+      if (isShaderNode(boundValue) && boundValue._isPxFunction) {
+        bindLet(e, name, boundValue)
+        return implicitInputNode()
+      }
       let bound
       if (boundAst !== undefined) {
         // A bound expression that already evaluated to a node is used as it stands. Anything else is
@@ -201,6 +223,7 @@ define(function(require) {
   }
   let {composeShaderNodes} = require('draw/visualsynth/shader-node')
   let {makeContext,buildSource} = require('draw/visualsynth/codegen')
+  let {functionShaderNode} = require('draw/visualsynth/shader-function')
   let mockCtx = () => {
     let ctx = {statements: [], raw: [], uniforms: [], lets: {}, carried: {}, built: new Map()}
     ctx.addStatement = (expr) => { ctx.statements.push(expr); return 'v' + ctx.statements.length }
@@ -307,6 +330,34 @@ define(function(require) {
   assert(1, (built.source.match(/tex\(v0\)/g) || []).length) // Emitted once
   assert(true, built.source.includes('pal(v1, v1)')) // and read twice from the one variable
   assert(true, built.source === buildSource(composeShaderNodes(def, use)).source) // byte-identical: cache key
+
+  // Visual, binding a pxfn{}: the function itself is bound rather than the value it takes here, so
+  // the name is the node and not a letRefShaderNode naming a variable
+  e = {}
+  let scenefn = functionShaderNode(mockNode('sdf'))
+  r = letNode({value:'scene', value1:scenefn}, e, 0, {}, evalParamFrame)
+  assert(true, e._lets.scene === scenefn)
+  // and the let itself is transparent: it emits nothing and hands the chain seed straight back, so
+  // >> treats the chain exactly as it would with the scene held in a var (connectOp's _implicitInput)
+  assert(true, r._implicitInput === true)
+  ctx = mockCtx()
+  assert('v0', r.build('v0', ctx))
+  assert([[], undefined], [ctx.statements, ctx.lets.scene])
+
+  // End to end, the whole point: the bound name applied at two different points is one declaration
+  // and a call at each. Binding the built value, as every other bound expression is, would give one
+  // call at the let's own input and every use site reading that same variable — for a march, the
+  // slice through the chain head.
+  e = {}
+  let marchfn = functionShaderNode(mockNode('sdf'))
+  let scenedef = letNode({value:'scene', value1:marchfn}, e, 0, {}, evalParamFrame)
+  let sceneref = e._lets.scene
+  let twice = makeShaderNode((input, c) => c.addStatement(`lit(${sceneref.build(input, c)}, ${sceneref.build(c.addStatement(`step(${input})`), c)})`))
+  let builtfn = buildSource(composeShaderNodes(scenedef, twice))
+  assert(1, (builtfn.source.match(/vec4 l_fn0\(vec4 l_p0\)/g) || []).length) // one declaration
+  assert(1, (builtfn.source.match(/sdf\(/g) || []).length) // the body written once, inside it
+  assert(3, (builtfn.source.match(/l_fn0\(/g) || []).length) // the declaration and two calls
+  assert(true, builtfn.source === buildSource(composeShaderNodes(scenedef, twice)).source) // byte-identical: cache key
 
   // ctx.lets is block scoped the way ctx.built is: an entry made inside a loop body names a variable
   // that has gone out of scope by the closing brace, so it must not survive it

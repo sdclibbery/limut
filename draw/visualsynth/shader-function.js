@@ -61,7 +61,7 @@ define(function(require) {
 
   let functionShaderNode = (body) => {
     let key = {} // Identity for the per context declaration registry: one declaration per pxfn per shader
-    return makeShaderNode((input, ctx) => {
+    let node = makeShaderNode((input, ctx) => {
       let name = ctx.pxFunctions !== undefined ? ctx.pxFunctions.get(key) : undefined
       if (name === undefined) {
         let f = ctx.functionName()
@@ -80,6 +80,15 @@ define(function(require) {
       // any other node: the same input twice is one call, a different input is another
       return ctx.addStatement(`${name}(${input})`)
     })
+    // The one node in the system that is a *function of a point* rather than a value at one. Every
+    // other node is both readings at once - it builds at whatever input it is given - and nothing
+    // has to tell them apart, because a chain only ever builds each node where it sits. `let` is
+    // where the two part company: it names the value a bound expression takes at its own position
+    // in the chain, which for a scene sdf would be the slice through the chain head. This flag is
+    // how expression/let-node.js knows to bind the node itself instead, so every use site builds a
+    // call of its own - the same thing a `set scene = pxfn{...}` name does.
+    node._isPxFunction = true
+    return node
   }
 
   // TESTS //
@@ -106,6 +115,10 @@ define(function(require) {
   assert('v2', out)
   assert(['l_fn0'], ctx.functions.map(x => x.name))
   assert('vec4 l_fn0(vec4 l_p0) {\n  vec4 v1 = a(l_p0);\n  return v1;\n}', ctx.functions[0].source)
+
+  // Marked as a function rather than a value: expression/let-node.js binds one of these unbuilt, so
+  // an inline sdf3 scene is applied at every use site rather than named where the let is written
+  assert(true, functionShaderNode(node('a'))._isPxFunction)
 
   // Called at several different inputs: one declaration, one call each. This is the whole point.
   ctx = makeContext()

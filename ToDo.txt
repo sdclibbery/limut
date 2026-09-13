@@ -12,7 +12,17 @@ DONE 3d sdf lib: lib/sdf3.limut, no JS. Shapes, 2d extrude/revolve, combining, a
   scene pxfn is one declaration whatever calls it: the full shadow+ao chain is 5 declarations and 14
   calls, 3 loops, 2 breaks, 348 lines, 77 uniforms - against fbm2's 17 hashes, the yardstick for what
   the pi's v3d could take. Not yet tried on the pi; that is the open question about pxfn{}
- !domain MIRRORING (abs{} on the point) does not work in a 3d sdf scene, and was left out of
+DONE an sdf3 scene can be declared INLINE, on the line that marches it: let{} binds a pxfn{} as the
+  function it is rather than as the value it takes where the let is written (_isPxFunction, set by
+  functionShaderNode and read in let-node.js's visual branch; the let emits nothing and hands the
+  chain seed back, so >> treats the chain exactly as it would with the scene in a var).
+  px=let{'scene',pxfn{sd3torus}}>>sd3march{scene}>>sd3lit{scene,shadow:sd3shadow{scene},occ:sd3ao{scene}}
+  renders byte for byte what the set form does - and generates LESS: one declaration called ten times
+  and 61 uniforms, against the set form's five copies of the body and 69, because the let binds one
+  node where a set name is evaluated afresh at every callsite. Without the pxfn{} the let means what
+  it always did and the march steps through the z=0 slice; there is no way to tell a function of a
+  point from a value at one, so the pxfn{} is the marker and the bare form is left alone
+ ?domain MIRRORING (abs{} on the point) does not work in a 3d sdf scene, and was left out of
   lib/sdf3.limut because of it. px=sd3march{scene:pxfn{{p}->sd3sphere{sd3mirror{p}-{x:1/2,y:1/2,z:1/2,w:0},r:1/4}}}
   written INLINE at both the march and the lit renders eight spheres correctly (4457 lit px, 206
   shades); the identical scene bound with `set scene = pxfn{...}` and passed to both renders nothing
@@ -22,6 +32,9 @@ DONE 3d sdf lib: lib/sdf3.limut, no JS. Shapes, 2d extrude/revolve, combining, a
   suspicion is the one shared pxfn node being reached from the march and from the normal's four
   offset points - something the other point transforms (sd3rep, rot3y) do not provoke, since they
   are continuous where abs{} creases. sd3rep named works fine (127302 px, 676 shades)
+  DOES NOT REPRODUCE 2026-09-13: named (set msc = pxfn{...}), let bound and inline at both callsites
+  all render identically, 206 shades - the figure recorded above for the inline form. Something since
+  fixed it, most likely addFunction's shareBody. Retry the mirroring shapes in the lib
  !per shape MATERIALS in the 3d sdf lib: built, then taken out again, and worth another go. Tagging a
   distance with a material (d>>set{y:m}) works, and so does a union that picks the nearer whole vec4
   (a.x<b.x ?? a ?: b) - the march comes back with the right material per pixel, verified as exactly
