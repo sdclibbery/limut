@@ -250,8 +250,11 @@ set frompolar = {in:id} ->
 //   px=kal{n:6}/3>>cospal{#05a}
 
 // The turn: a 2x2 whose entries are cosines of one angle at three phases, the leading diagonal
-// sharing one. They are passed on to a helper rather than written out because an expression has
-// nowhere to put a local, which is also why the shared angle k is an argument of kalturn.
+// sharing one. The shared cosine is passed on to a helper, whose argument names it, rather than
+// written out twice; the shared angle k is an argument of kalturn for the same reason. A let{}
+// would name it just as well and renders identically, but here it costs rather than saves - 17
+// uniforms and 53 statements against the helper's 16 and 51 - so the helper stays. lib/sdf.limut's
+// header has when the trade goes the other way.
 // The original builds the matrix with GLSL's mat2(vec4), which is column major, so its second
 // component is the top right entry (xy) and its third the bottom left (yx), not the other way up.
 set kalturn2 = {q, ca, cb, cc} -> mat2{q, ca, cb, cc, ca}

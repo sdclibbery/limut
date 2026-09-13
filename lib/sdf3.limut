@@ -56,9 +56,12 @@ include 'lib/sdf.limut'
 // Two things about the shader shape of all this. There are no branches, so every `if` in the
 // original becomes the ternary `cond ?? a ?: b`, which compiles to a mix between both results
 // rather than taking one path - which also means both sides are always worked out. And a value
-// wanted twice has to be named with a let{} or passed on to a helper function, since an expression
-// has nowhere to put one; the marches here use let{} (their values change every iteration, which is
-// exactly what a loop{}'s carry: is for), and the shapes use helpers, as the 2d ones do.
+// wanted twice is either named with a let{} or passed on to a helper function, whose argument names
+// it; an expression on its own has nowhere to put a local, but a chain does, and a let{} is a chain
+// stage. The marches here use let{}, and a carried one at that, since their values change every
+// iteration, which is exactly what a loop{}'s carry: is for. The shapes use helpers, for the reason
+// lib/sdf.limut gives: a helper's argument is already one built value and so costs nothing, where a
+// let{} only pays when an expression rather than a value is what is wanted twice.
 
 //// Machinery
 
@@ -163,9 +166,10 @@ set sd3revolve = {in:id, shape, o:1/2} ->
 // on the distance rather than on the point. Only the ones that are about being in three dimensions
 // are here.
 // There is no per shape material. It was built and then taken out again: tagging a distance and
-// picking the nearer tag both work, but the colouring step does not, because a name the march binds
-// part way along a chain is readable from the body of a later function and not from an argument
-// written at its callsite. See ToDo.txt.
+// picking the nearer tag both work, but the colouring step does not, because a loop{} carry: name
+// the march assigns is readable from the body of a later function and not from an argument written
+// at its callsite. An ordinary let{} name reads fine in either place; it is the carried one that
+// does not. See ToDo.txt.
 
 // Repeat the whole of space on a lattice, so one shape becomes endlessly many. p is the spacing,
 // either a number for all three axes or a vector; every component must be non zero, since the point

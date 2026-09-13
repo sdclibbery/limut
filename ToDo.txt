@@ -3,38 +3,26 @@
 =================================================================================================================================
 !superbass weird on keyboard on electron, not on firefox, superosc missing on some notes? keyboard only
 visual nodes...
-DONE 3d sdf lib: lib/sdf3.limut, no JS. Shapes, 2d extrude/revolve, combining, a march
-  (loop{} with until: and carry:), tetrahedral normals, soft shadows and ao. mat3/rot3x/y/z went into
-  lib/visual.limut beside mat2/rot2, being general transforms rather than sdf machinery.
-  Verified headless: the marched silhouette of a sphere against the analytic sdcircle of the radius the
-  geometry predicts (r*fov/sqrt(9-r*r) for a camera at z=-3) differs in 24 pixels of a 4940 pixel disc,
-  ie the antialiasing ring only; fov 1/2, 1 and 2 give areas in the ratio 1:4:16 as they must. The
-  scene pxfn is one declaration whatever calls it: the full shadow+ao chain is 5 declarations and 14
-  calls, 3 loops, 2 breaks, 348 lines, 77 uniforms - against fbm2's 17 hashes, the yardstick for what
-  the pi's v3d could take. Not yet tried on the pi; that is the open question about pxfn{}
-DONE an sdf3 scene can be declared INLINE, on the line that marches it: let{} binds a pxfn{} as the
-  function it is rather than as the value it takes where the let is written (_isPxFunction, set by
-  functionShaderNode and read in let-node.js's visual branch; the let emits nothing and hands the
-  chain seed back, so >> treats the chain exactly as it would with the scene in a var).
-  px=let{'scene',pxfn{sd3torus}}>>sd3march{scene}>>sd3lit{scene,shadow:sd3shadow{scene},occ:sd3ao{scene}}
-  renders byte for byte what the set form does - and generates LESS: one declaration called ten times
-  and 61 uniforms, against the set form's five copies of the body and 69, because the let binds one
-  node where a set name is evaluated afresh at every callsite. Without the pxfn{} the let means what
-  it always did and the march steps through the z=0 slice; there is no way to tell a function of a
-  point from a value at one, so the pxfn{} is the marker and the bare form is left alone
- ?domain MIRRORING (abs{} on the point) does not work in a 3d sdf scene, and was left out of
-  lib/sdf3.limut because of it. px=sd3march{scene:pxfn{{p}->sd3sphere{sd3mirror{p}-{x:1/2,y:1/2,z:1/2,w:0},r:1/4}}}
-  written INLINE at both the march and the lit renders eight spheres correctly (4457 lit px, 206
-  shades); the identical scene bound with `set scene = pxfn{...}` and passed to both renders nothing
-  at all, and at a radius where something does show it comes out in 2 flat colours, ie with a dead
-  normal. abs{} written out instead of sd3mirror fails the same way, so it is the fold and not the
-  wrapper. Note the named form generates 3 declarations where the inline form generates 2, so the
-  suspicion is the one shared pxfn node being reached from the march and from the normal's four
-  offset points - something the other point transforms (sd3rep, rot3y) do not provoke, since they
-  are continuous where abs{} creases. sd3rep named works fine (127302 px, 676 shades)
-  DOES NOT REPRODUCE 2026-09-13: named (set msc = pxfn{...}), let bound and inline at both callsites
-  all render identically, 206 shades - the figure recorded above for the inline form. Something since
-  fixed it, most likely addFunction's shareBody. Retry the mirroring shapes in the lib
+DONE the sdf libs said an expression has nowhere to put a local, which let{} has made only half true:
+  an expression has none, but a chain does, and a let{} is a chain stage. Measured rather than
+  argued, on lib/sdf.limut through the real parse/build with the picture hashed. A helper costs
+  NOTHING when what it names is already one built value - an argument is evaluated once and every
+  read of it in the body is the same node - which is why most of the shapes keep theirs. A let{}
+  pays when an EXPRESSION is wanted more than once, and then only if the arguments that expression
+  mentions are named too: a let's bound expression is evaluated against an event of its own, so it
+  re-emits whatever it re-mentions. sdblend{sdcircle,sdbox}: helper 18 uniforms/37 statements, a let
+  naming only the blend factor 18/44 (worse), naming the distances too 14/29 - all three the same
+  picture to the byte. Converted sdblend (18/37 -> 14/29, and 77/115 -> 65/115 inside an sd3march
+  scene) and sdcross (13/37 -> 13/31, losing sdcross2 and sdcross3); kalturn in lib/visual.limut
+  measured the other way (16/51 against a let's 17/53) and keeps its helper. Three ways a let inside
+  a function body goes wrong, all seen: without a leading `id>>` the domain falls to audio and the
+  shape renders flat white as soon as an argument is a plain number; a body that has become a chain
+  must not END in a call with positional args, since >> shifts the chain value into it (name them,
+  sdval{v:...}); and piping an ARGUMENT rather than id changes what id means for every argument
+  expression the callsite wrote. Also measured, against ToDo's materials item: a plain let{} name IS
+  readable from a user function's argument at its callsite (byte-identical to the same read from the
+  callee's body and to the node written out) - so whatever kills per shape materials is about a
+  loop{} carry: name specifically, not about let names in args
  !per shape MATERIALS in the 3d sdf lib: built, then taken out again, and worth another go. Tagging a
   distance with a material (d>>set{y:m}) works, and so does a union that picks the nearer whole vec4
   (a.x<b.x ?? a ?: b) - the march comes back with the right material per pixel, verified as exactly
@@ -45,7 +33,11 @@ DONE an sdf3 scene can be declared INLINE, on the line that marches it: let{} bi
   identical expression written in the chain reads both. Wrapping it in another function does not
   help, since that only moves it to another callsite. Suspect the args-double-as-time-modifiers
   early evaluation in evalFunctionWithModifiers, the same thing paramChain passes doNotMemoise for.
-  If that is it, the fix is small and materials come back for free
+  If that is it, the fix is small and materials come back for free.
+  NARROWED 2026-09-13 (see the DONE let{} entry above): a plain let{} name reads from a user
+  function's argument at its callsite perfectly well, byte for byte. So this is about a loop{}
+  carry: name specifically - the volatile one, assigned in the body - and not about let names in
+  args at all
  !a px expression of two CONSTANTS has no visual node in it, so it const folds - and a folded colour
   times a channel map is a value toVec4 cannot read, so it renders FLAT WHITE. Measured 2026-09-13:
   px=#0f0*{x:1,y:1,z:1,w:0} is a white frame, and so is px={x:1,y:1,z:1,w:0} bare, where px=#000*{x:1}
@@ -53,10 +45,6 @@ DONE an sdf3 scene can be declared INLINE, on the line that marches it: let{} bi
   turned every shading branch white and read exactly like a broken ternary. Either toVec4 should read
   a folded map (it reads an unfolded one), or this should say something. Same family as the
   'something undefined should render flat black not flat white' item below
-DONE 2d sdf lib said there was nowhere to put a local, which let{} has made untrue. The comments in
-  lib/sdf.limut, lib/visual.limut and index.html now say what is actually true: a helper is still the
-  clearer way to reach one value at two different points, where let{} is for a value carried along a
-  chain - which is what lib/sdf3.limut's marches use it for
  !let{'name'} (the tap form, naming the chain value) at the HEAD of a loop{} body: the head collapses
   to a uniform and the whole loop comes out flat. Diagnosed 2026-09-12 and it is NOT the name: it is
   the domain. Unpiped and with no bound expression, let has nothing to tell audio from visual by
