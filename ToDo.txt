@@ -3,7 +3,37 @@
 =================================================================================================================================
 !superbass weird on keyboard on electron, not on firefox, superosc missing on some notes? keyboard only
 visual nodes...
-DONE the sdf libs said an expression has nowhere to put a local, which let{} has made only half true:
+DONE 3d FRACTALS in lib/sdf3.limut: sd3menger, sd3sierpinski (the kaleidoscopic IFS at yaw/pitch),
+  sd3mandelbox and sd3mandelbulb, all four ordinary DSL functions built on loop{}'s carry: and
+  until:. A loop{} INSIDE a pxfn{} works and warns nothing - declaredIn already reads
+  `for (int l_iN` as a declaration - so the shape is one scene function with the iteration rolled up
+  inside it, called once per march step. Needed one new maths function: ln (GLSL log), named ln
+  because log is already the debug console function; acos was not needed, atan{y,x} gives the polar
+  angle. sd3march gained step:, a step length multiplier, and at step:1 the default march renders
+  byte-identical to before it existed.
+  Verified by equivalence render at the degenerate count, 0 differing bytes each: sd3menger{n:0} IS
+  sd3box, sd3sierpinski{n:0,r:2} IS sd3sphere{r:2}, sd3mandelbox{n:0} IS sd3sphere{r:0}. And the
+  power 8 bulb's silhouette lies entirely inside a sphere of radius 2 (8721 px in, 0 out). Only
+  checked under swiftshader; nobody has looked at them on a real GPU or on the Pi yet.
+  Two things they taught, both now in the lib's comments. An estimate that never goes NEGATIVE
+  cannot be marched: the Sierpinski attractor has no volume, so length{z}/scale^n creeps up to it
+  and never trips eps - it needs a sphere of radius r subtracted at the end, which is what r is for.
+  And a mandelbox whose b puts the camera inside it renders an EMPTY FRAME rather than a wrong
+  shape, because a field that is nearly zero everywhere means the ray never travels - which is why
+  the default b pairs with the default scale and both are documented together.
+DONE domain MIRRORING with abs{} in a 3d sdf scene: retested 2026-09-14 while doing the fractals
+  and it renders, so the stale comment in lib/sdf3.limut pointing at a deleted ToDo entry is gone and
+  replaced with the spelling that works. px=sd3march{pxfn{{p}->sd3sphere{abs{p}-{x:1/2,y:1/2,z:1/2,
+  w:0}, 1/4}}}>>sd3lit is eight spheres, 3308 px against one pair's 686. No function added for it -
+  abs{} on the point is the whole of it
+ !the march evaluates the scene TWICE per step: once in the body (let{sd3d, scene}) and again for
+  the until: condition, because a let{} binds a pxfn as the FUNCTION it is, so every read of the
+  name is another call at wherever it is read. That is deliberate and it is what makes sd3lit's own
+  hit test exact, but it costs a whole scene evaluation per step - nothing for a sphere, close to
+  double the cost of the whole render for a mandelbulb. Naming the value instead (let{sd3dv, sd3d.x}
+  and testing that) would halve it, at the price of testing the distance BEFORE the step rather than
+  after it. Measure both before changing it; the fractals are what make it worth measuring
+ DONE the sdf libs said an expression has nowhere to put a local, which let{} has made only half true:
   an expression has none, but a chain does, and a let{} is a chain stage. Measured rather than
   argued, on lib/sdf.limut through the real parse/build with the picture hashed. A helper costs
   NOTHING when what it names is already one built value - an argument is evaluated once and every

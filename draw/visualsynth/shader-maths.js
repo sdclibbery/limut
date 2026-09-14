@@ -111,6 +111,7 @@ define(function(require) {
     fract: unary('fract'),
     sqrt: unary('sqrt'),
     exp: unary('exp'),
+    ln: unary('log'), // Named ln because log is taken by the debug console function
     // Unlike the ^ operator this does not clamp the base to zero first, so a negative base with a
     // non integer exponent is undefined in GLSL, as it is in GLSL's own pow
     pow: { emit: (a, b) => `pow(${a}, ${b === undefined ? 'vec4(2.0)' : b})`, operands: optionalSecond('by') },
@@ -200,6 +201,7 @@ define(function(require) {
   assert('fract(v0)', emitted('fract', {value:node}))
   assert('sqrt(v0)', emitted('sqrt', {value:node}))
   assert('exp(v0)', emitted('exp', {value:node}))
+  assert('log(v0)', emitted('ln', {value:node})) // ln is GLSL's log; log itself is the debug function
   assert('atan(v0, u_vs0)', emitted('atan', {value:node, x:1})) // Two argument arctangent
   assert('atan(v0, u_vs0)', emitted('atan', {value:node, value1:1})) // Positional x too, as >>atan{1}
   assert('pow(v0, u_vs0)', emitted('pow', {value:node, by:3}))

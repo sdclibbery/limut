@@ -5919,3 +5919,43 @@ a acid 765 crop 8, vel*=1/3, echo=1/2
 l piano gamepad lt:vel, fx=tape{1/8}>>mix{airverb}
 
 
+// v1 visualsynth, px=let{'scene',pxfn{sd3sphere{sd3rep{id+{y:2,z:time*4%4}+perlin2t/4,4},1},1}}
+// 	>>sd3march{scene,far:40}
+//   >>sd3lit{scene, shadow:sd3shadow{scene},occ:sd3ao{scene}}^1/2
+//   >>pal{{h:time/16},1,0}^2
+
+// v1 visualsynth, px=let{'scene',pxfn{sdblend{sd3octahedron{r:1/2},sd3torus}-[]n}}
+// 	>>sd3march{scene}
+//   >>sd3lit{scene, shadow:sd3shadow{scene},occ:sd3ao{scene},col:#70f}
+
+// v1 visualsynth, px=let{'scene',pxfn{rot3x{time/27}>>sd3torus{[]n+1}}}
+// 	>>sd3march{scene}
+//   >>sd3lit{scene, shadow:sd3shadow{scene},occ:sd3ao{scene},col:#08f}
+
+// set scene = pxfn{{p} -> min{ sd3octahedron{p, r:1/2}, sd3torus{p} }-[]n/2}
+// v1 visualsynth, px=sd3march{scene}>>sd3lit{scene}>>pal{0,red,1}
+
+// set scene = pxfn{{p} -> min{ sd3sphere{p, r:1/2}, sd3plane{p} }}
+// v1 visualsynth, px=sd3march{scene}>>sd3lit{scene, shadow:sd3shadow{scene},occ:sd3ao{scene},col:#08f}
+
+// set scene = pxfn{{p} -> sd3menger{p}}
+// v1 visualsynth, px=sd3march{scene}>>sd3lit{scene, occ:sd3ao{scene}, col:#fa3}
+
+// set scene = pxfn{{p} -> sd3sierpinski{p, yaw:[0:1]l32, pitch:[0:1/4]l24}}
+// v1 visualsynth, px=sd3march{scene, step:1/2, steps:128}>>sd3lit{scene, col:#8cf, fog:1/8}
+
+// set scene = pxfn{{p} -> sd3mandelbox{p}}
+// v1 visualsynth, px=sd3march{scene, steps:96, yaw:[0:1]l64}>>sd3lit{scene, occ:sd3ao{scene}}
+
+// set scene = pxfn{{p} -> sd3mandelbulb{p, power:[2:8]l16}}
+// v1 visualsynth, px=sd3march{scene, step:1/2, steps:128}>>sd3lit{scene, col:#f83, occ:sd3ao{scene}}
+
+v1 visualsynth, px=let{'scene',pxfn{sd3mandelbulb{power:[3,4]n8}}}
+	>>sd3march{scene,steps:96,oz:-1.3,pitch:1/12}
+  >>sd3lit{scene}>>pal{0,red,1}
+
+v1 visualsynth, px=let{'scene',pxfn{sd3mandelbulb{power:[3,8]n8}}}
+	>>sd3march{scene,steps:96,oz:[]n8-1.8,pitch:1/12}
+  >>sd3lit{scene,shadow:sd3shadow{scene}+1/4,occ:sd3ao{scene}}>>pal{0,red,1}
+
+

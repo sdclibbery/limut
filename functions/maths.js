@@ -43,6 +43,9 @@ define(function(require) {
   addMathsFunction('fract', trigWrapper(v => v - Math.floor(v))) // As GLSL fract, so negatives come back positive
   addMathsFunction('sqrt', trigWrapper(Math.sqrt))
   addMathsFunction('exp', trigWrapper(Math.exp))
+  // Natural logarithm. Named ln rather than log because log is already the debug console function
+  // (functions/debug.js). Negative and zero are undefined, as they are in GLSL's log.
+  addMathsFunction('ln', trigWrapper(Math.log))
 
   // atan{y} is the one argument arctangent; atan{y,x} is atan2, ie the angle of the vector x,y
   let atanFunc = (args) => {

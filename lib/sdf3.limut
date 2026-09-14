@@ -160,6 +160,137 @@ set sd3extrude = {in:id, shape, h:1/4} ->
 set sd3revolve = {in:id, shape, o:1/2} ->
   sd3vec{sd3radial{in} - o, in.y, 0} >> shape
 
+//// Fractals
+// A fractal is a shape with no closed form: you get at it by iterating, and what the iteration
+// leaves behind is an estimate of the distance rather than the distance itself. That is exactly
+// what loop{} is for - the body is written into the shader once whatever the count, with carry: for
+// the running values an estimate needs - and it is why these are in a library of ordinary DSL
+// functions at all rather than a shader someone pasted in.
+//
+// Three things are true of all four and worth knowing before the individual ones.
+//
+// The iteration count n is STRUCTURAL, like the march's steps: it is the loop count written into
+// the shader, so it can be changed but not smoothly animated. Everything else here is an ordinary
+// param and animates.
+//
+// The distance is an ESTIMATE, and a march that steps by the whole of it can tunnel through a
+// surface, which shows as banding or as holes in the fine detail. That is what sd3march's step is
+// for: step:1/2 with steps raised to match is the usual fix, and the escape time ones (mandelbulb,
+// mandelbox) want it more than the folding ones (menger, sierpinski), whose fields are sound bounds.
+// Raising eps a little has the same effect more cheaply and rounds off the detail instead.
+//
+// A fractal has detail all the way down, so it is never finished - it is only marched until you run
+// out of steps. Expect these to cost real time: an inner loop at every step of the march, and four
+// more scene calls for the normal. They want to be a pxfn{} even more than an ordinary scene does.
+
+// Menger sponge: a cube with a square hole bored through each face, and the same again in each of
+// the twenty smaller cubes that leaves, n times over. Inigo Quilez's formulation: the sponge is the
+// cube MINUS an endless lattice of crosses at a third the scale each time, and subtracting is max{}
+// of the negated field, which is why the loop's step is a max{}.
+// Everything works in units of b, so the point is divided by it going in and the distance
+// multiplied by it coming out - which keeps the arithmetic of the crosses exactly Quilez's.
+//   px=sd3march{pxfn{{p}->sd3menger{p, n:3}}}>>sd3lit
+set sd3menger1 = {r, s} -> sdval{(min{max{r.x, r.y}, max{r.y, r.z}, max{r.z, r.x}} - 1) / s}
+set sd3menger = {in:id, n:3, b:1/2, scale:3} ->
+  (sd3flat{in}/b) >> let{sd3mp, id}
+    >> sd3box{b:1}
+    >> loop{
+         {i} -> id >> let{sd3ma, (sd3mp*sd3ms) % 2 - 1}
+                   >> let{sd3ms, sd3ms*scale}
+                   >> max{sd3menger1{abs{1 - 3*abs{sd3ma}}, sd3ms}},
+         n,
+         carry:{sd3ms:1}
+       } * b
+
+// Sierpinski tetrahedron, and the kaleidoscopic IFS it generalises to. Three folds mirror space
+// about the diagonal planes, so a point anywhere is brought into one corner of the tetrahedron, and
+// then the whole thing is scaled up about that corner: n of those and the point knows how far it is
+// from a shape made of four copies of itself. The field is exact, which makes this the cheapest of
+// the four and the one that takes a large n happily.
+// yaw and pitch turn the point between the folds and the scaling, in turns like rot2. At zero this
+// is the plain tetrahedron; anything else is a kaleidoscopic IFS, which is where the shapes that
+// look like cathedrals come from, and it is the thing here most worth animating.
+// r is the radius of the sphere the iteration finishes on, measured in the scaled up space, so the
+// real thickness it gives the shape is r/scale^n. It has to be there: the bare fold estimate
+// length{z}/scale^n never goes negative - the attractor itself has no volume - so a march creeps up
+// to it and never registers a hit. Larger r is a fatter, more rounded shape; n does the opposite.
+//   px=sd3march{pxfn{{p}->sd3sierpinski{p, n:10}}}>>sd3lit
+//   px=sd3march{pxfn{{p}->sd3sierpinski{p, n:10, yaw:[0:1]l16}}, step:1/2}>>sd3lit
+set sd3sfold1 = {in:id} -> (in.x + in.y < 0 ?? sd3vec{-in.y, -in.x, in.z} ?: in)
+set sd3sfold2 = {in:id} -> (in.x + in.z < 0 ?? sd3vec{-in.z, in.y, -in.x} ?: in)
+set sd3sfold3 = {in:id} -> (in.y + in.z < 0 ?? sd3vec{in.x, -in.z, -in.y} ?: in)
+set sd3sierpde = {in:id, s, r} -> sdval{length{in} - r} * s
+set sd3sierpinski = {in:id, n:8, scale:2, ox:1, oy:1, oz:1, yaw:0, pitch:0, r:2} ->
+  sd3flat{in}
+    >> loop{
+         {i} -> id >> sd3sfold1 >> sd3sfold2 >> sd3sfold3
+                   >> rot3y{a:yaw} >> rot3x{a:pitch}
+                   >> mul{scale}
+                   >> add{x:0-ox*(scale-1), y:0-oy*(scale-1), z:0-oz*(scale-1)},
+         n
+       }
+    >> sd3sierpde{s:1/(scale^n), r:r}
+
+// Mandelbox: the box fold reflects anything outside the unit cube back in, the sphere fold blows up
+// anything near the middle, and then the whole of space is scaled about the point we started from.
+// dr is the running derivative - how much the scaling has stretched space by so far - and dividing
+// by it turns the distance in the folded space back into a distance here.
+// scale is the knob, and it changes the size of the shape as much as its character: at 2 it is a
+// box of boxes about five units across, at 3 it grows spikes and shrinks, and negative values give
+// the hollow shell with a cross shaped mouth, at about two units across. b is what makes that
+// manageable - the point is divided by it going in and the distance multiplied by it coming out, so
+// b is how big the whole fractal is in the frame. The default pairs with scale:2; a different scale
+// wants a different b (about 1/4 for -3/2, about 1/12 for 3), and getting it wrong shows as an empty
+// frame rather than as a wrong shape, because a camera inside the shape or too close to it marches
+// through a field that is nearly zero everywhere and never gets anywhere.
+//   px=sd3march{pxfn{{p}->sd3mandelbox{p}}, steps:96}>>sd3lit
+//   px=sd3march{pxfn{{p}->sd3mandelbox{p, scale:-3/2, b:1/4}}, steps:96}>>sd3lit
+set sd3boxfold = {in:id} -> clamp{in, -1, 1}*2 - in
+set sd3spherem = {r2, minr2, fixr2} ->
+  (r2 < minr2 ?? fixr2/minr2 ?: (r2 < fixr2 ?? fixr2/r2 ?: 1))
+set sd3mbde = {in:id, dr} -> sdval{length{in}} / abs{dr}
+set sd3mandelbox = {in:id, n:8, scale:2, minr:1/2, fixr:1, b:1/8} ->
+  (sd3flat{in}/b) >> let{sd3xc, id}
+    >> loop{
+         {i} -> id >> sd3boxfold
+                   >> let{sd3xm, sd3spherem{dot{id,id}.x, minr*minr, fixr*fixr}}
+                   >> mul{sd3xm}
+                   >> let{sd3xdr, sd3xdr*sd3xm.x}
+                   >> mul{scale} >> add{sd3xc}
+                   >> let{sd3xdr, sd3xdr*abs{scale} + 1},
+         n,
+         carry:{sd3xdr:1}
+       }
+    >> sd3mbde{dr:sd3xdr.x} >> mul{b}
+
+// Mandelbulb: the Mandelbrot iteration z -> z^power + c, with z a point in space and the power
+// taken in spherical coordinates - raise the radius to the power and multiply both angles by it.
+// The escape time estimate is r*ln{r}/(2*dr), which is why ln exists.
+// The polar axis is y rather than z, so the poles are up and down and the bulb stands the way it
+// does in every picture of one. power is the knob and need not be a whole number; 8 is the familiar
+// shape, 2 is a lumpy blob, and anything animated between them is worth watching.
+// bail is how far out counts as escaped - it only wants to be more than 2 if you raise power a lot.
+//   px=sd3march{pxfn{{p}->sd3mandelbulb{p}}, step:1/2, steps:128}>>sd3lit
+//   px=sd3march{pxfn{{p}->sd3mandelbulb{p, power:[2:8]l16}}, step:1/2, steps:128}>>sd3lit
+set sd3bulb0 = {zr, st, ct, sp, cp} -> sdval{zr} * sd3vec{st*cp, ct, st*sp}
+set sd3bulb1 = {zr, tp, pp} -> sd3bulb0{zr, sin{tp}, cos{tp}, sin{pp}, cos{pp}}
+set sd3bulbstep = {in:id, r, power} ->
+  sd3bulb1{r^power, atan{sd3radial{in}, in.y}*power, atan{in.z, in.x}*power}
+set sd3bulbde1 = {r, dr} -> sdval{r*ln{r}/(dr*2)}
+set sd3bulbde = {in:id, dr} -> sd3bulbde1{max{length{in}, 1/1000000}, dr}
+set sd3mandelbulb = {in:id, n:8, power:8, bail:2} ->
+  sd3flat{in} >> let{sd3bc, id}
+    >> loop{
+         {i} -> id >> let{sd3br, length{id}}
+                   >> let{sd3bdr, power*(sd3br.x^(power-1))*sd3bdr.x + 1}
+                   >> sd3bulbstep{r:sd3br.x, power:power}
+                   >> add{sd3bc},
+         n,
+         carry:{sd3bdr:1},
+         until: sd3br.x > bail
+       }
+    >> sd3bulbde{dr:sd3bdr.x}
+
 //// Combining
 // Union and intersection of two distances are min{} and max{}, and sdround, sdannular, sdsub and
 // sdblend from lib/sdf.limut all work on a 3d distance unchanged, since all of those are arithmetic
@@ -177,8 +308,10 @@ set sd3revolve = {in:id, shape, o:1/2} ->
 //   px=sd3march{scene:pxfn{{p}->sd3sphere{sd3rep{p, 3/2}, r:1/2}}, far:32}>>sd3lit
 set sd3rep = {in:id, p:1} -> sd3flat{in} - p*round{sd3flat{in}/p}
 
-// (Mirroring space into the positive octant with abs{} belongs here too, and is not, because it
-// would not render: see ToDo.txt.)
+// Mirroring space into the positive octant is abs{} on the point and needs nothing of its own, so
+// it is not a function here - one shape becomes eight, one in each octant:
+//   px=sd3march{pxfn{{p}->sd3sphere{abs{p} - {x:1/2,y:1/2,z:1/2,w:0}, 1/4}}}>>sd3lit
+// (This used not to render, which is what the old comment here said. Retested 2026-09-14: it does.)
 
 //// Marching
 // The ray for this pixel: the point on an image plane at z = fov, normalised. A larger fov is a
@@ -207,17 +340,24 @@ set sd3default = pxfn{{p} -> min{sd3sphere{p, 1/2}, sd3plane{p, h:1/2}}}
 // hit and far is where to give up; the loop stops at whichever comes first, which is what keeps a
 // march affordable, since the background and the near hits each come in large runs of pixels.
 //
+// step multiplies the step length. A march is only safe to step by the whole distance when the
+// field really is one: a bound that overestimates near the surface makes the ray tunnel through it,
+// which shows as banding or as holes in a thin shape. The fractals below are the main reason it is
+// here (an escape time estimate is only approximately a distance), and sd3octahedron is another.
+// A value below 1 is slower for the same reach, so raise steps with it.
+//
 // sd3rd is named before the loop so the ray direction is worked out once rather than at every step.
 // The body names the distance before stepping by it, which is a let{} of an expression and so needs
 // no id>> of its own; the one in front is the explicit seed any body starting with a plain call
 // wants. There is no `and` or `or` in a condition - comparisons give 1 or 0, so multiply them for
 // and and add them for or, which is what the two ways of finishing are here.
 set sd3march = {scene:sd3default, in:id, ox:0, oy:0, oz:-3, fov:1, yaw:0, pitch:0,
-                steps:64, eps:1/2000, far:16} ->
+                steps:64, eps:1/2000, far:16, step:1} ->
   in >> let{sd3rd, rot3y{rot3x{sd3dir{id, fov}, pitch}, yaw}}
      >> set{x:ox, y:oy, z:oz, w:0}
      >> loop{
-          {i} -> id >> let{sd3d, scene} >> let{sd3t, sd3t + sd3d.x} >> add{sd3rd*sd3d.x},
+          {i} -> id >> let{sd3d, scene} >> let{sd3dt, sd3d.x*step}
+                    >> let{sd3t, sd3t + sd3dt} >> add{sd3rd*sd3dt},
           steps,
           carry:{sd3d:far, sd3t:0},
           until: (sd3d.x < eps) + (sd3t.x > far)
