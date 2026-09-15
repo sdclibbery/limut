@@ -19,7 +19,7 @@ define(function (require) {
   //    here. It is therefore repeated in the three sources, and must read:
   //
   //      if (parameters.stop[0] > 0.5) { this.port.postMessage('terminated'); return false }
-  //      if (parameters.start[0] < 0.5) { ...budget...; postMessage('terminated'); return false }
+  //      if (!this.started) { ...latch on the LAST start sample, else budget/terminate... }
   //
   //    stop is tested BEFORE start on purpose. A node that is stopped before it is
   //    ever started - eg a synth body that throws between construction and
@@ -27,6 +27,12 @@ define(function (require) {
   //    the unstarted branch and render forever (measured Aug 2026: 20/20 survival,
   //    permanently). The unstarted-sample budget is the backstop for a node that is
   //    never stopped either.
+  //
+  //    start is LATCHED, and read at the last sample of the block rather than the
+  //    first: it is an a-rate param, so a gate written part way through a block leaves
+  //    sample 0 low, and once latched the node keeps rendering even if the param is
+  //    later re-read as low. Together with the value-gating in gate() below, that is
+  //    what makes a start time in the past behave like a native node's.
   const UNSTARTED_LIMIT_SECONDS = 60
 
   // Wrap a freshly constructed worklet node with the OscillatorNode-alike
@@ -72,12 +78,23 @@ define(function (require) {
     }
     node.port.addEventListener('message', onMessage)
     node.port.start()
-    node.start = (time = audio.currentTime) => {
-      node.parameters.get('start').setValueAtTime(1, time)
+    // A time at or before currentTime means "now", the way a native source node's
+    // start(when)/stop(when) is defined ("if when is in the past, start as soon as
+    // possible"). A worklet gate has no such guarantee: setValueAtTime(1, when) with
+    // when inside a block the render thread has already passed is at the mercy of the
+    // engine's AudioParam timeline, and Chromium and Gecko do not agree. That bit the
+    // live players, whose _time is a frame stale and so always slightly in the past
+    // (player/keyboard.js, player/midi.js): a keyboard note would be built, gate its
+    // start param at a past time, never be seen to start, and render exact silence for
+    // the unstarted budget - a whole missing voice, no error. Writing .value instead
+    // sets the param's intrinsic value, which is what an unautomated block reads, so
+    // there is nothing to miss.
+    let gate = (name, time) => {
+      let param = node.parameters.get(name)
+      if (time <= audio.currentTime) { param.value = 1 } else { param.setValueAtTime(1, time) }
     }
-    node.stop = (time = audio.currentTime) => {
-      node.parameters.get('stop').setValueAtTime(1, time)
-    }
+    node.start = (time = audio.currentTime) => gate('start', time)
+    node.stop = (time = audio.currentTime) => gate('stop', time)
     return node
   }
 
@@ -96,7 +113,12 @@ define(function (require) {
         closed: 0,
         // Send what the processor sends: the node only hears it via the port.
         fromProcessor: (data) => listeners.slice().forEach(l => l({data})),
-        parameters: { get: (name) => ({ setValueAtTime: (v,t) => writes.push([name,v,t]) }) },
+        // Records both ways a gate can be written: a scheduled event, and the intrinsic
+        // value (which is how a time in the past is gated - see the gate() comment above).
+        parameters: { get: (name) => ({
+          setValueAtTime: (v,t) => writes.push([name,v,t]),
+          set value(v) { writes.push([name,v,'value']) },
+        }) },
       }
       n.port = {
         addEventListener: (name,l) => listeners.push(l),
@@ -112,12 +134,19 @@ define(function (require) {
     let baseVoices = system.voiceCount()
     let n = workletLifecycle(fakeNode(), fakeAudio)
     assert(baseVoices+1, system.voiceCount(), 'voice counted from construction, not from start')
+    n.start(9)
+    assert('start,1,9', n.writes[0].join(','), 'a start in the future is scheduled at that time')
+    // A time already gone by is gated on the intrinsic value, not scheduled: a past event is
+    // not reliably honoured once the render thread has passed that block, which is what left
+    // live (keyboard/midi) notes silent - their _time is always a frame or so behind.
     n.start(3)
-    assert('start,1,3', n.writes[0].join(','), 'start gates the start param at the given time')
+    assert('start,1,value', n.writes[1].join(','), 'a start in the past gates the value directly')
     n.start()
-    assert('start,1,7', n.writes[1].join(','), 'start defaults to now')
+    assert('start,1,value', n.writes[2].join(','), 'start defaults to now, ie the value')
     n.stop(5)
-    assert('stop,1,5', n.writes[2].join(','), 'stop gates the stop param at the given time')
+    assert('stop,1,value', n.writes[3].join(','), 'stop in the past gates the value directly')
+    n.stop(9)
+    assert('stop,1,9', n.writes[4].join(','), 'a stop in the future is scheduled at that time')
     assert(baseVoices+1, system.voiceCount(), 'stop alone does not decrement: the processor is still rendering')
     n.stop() // A node can be stopped twice (eg destructor after an explicit stop)
     n.fromProcessor('terminated')

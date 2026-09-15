@@ -1,6 +1,7 @@
 'use strict';
 define(function(require) {
   let metronome = require('metronome')
+  let system = require('play/system')
   let {combineOverrides,applyOverrides} = require('player/override-params')
   let {releaseNotes,allStopped} = require('player/live-notes')
 
@@ -109,7 +110,14 @@ define(function(require) {
     let noteOn = (key, ctrlKey, shiftKey, altKey, source) => {
       let noteValue = keyToNote(key)
       if (player._shouldUnlisten) { return } // Dont play any new events if player is being cleaned up!
-      let now = metronome.timeNow()
+      // A live note must be anchored to the real now, not to metronome.timeNow(), which is the
+      // audio clock as sampled by the last animation frame (metronome.update, called from the rAF
+      // tick). A key/midi event arrives BETWEEN frames, so that reading is stale by up to a frame
+      // and puts _time behind audio.currentTime - ie behind the block the render thread is on.
+      // Native source nodes shrug that off (start(when) in the past means start now), but it left
+      // worklet oscillators gating their start param in an already rendered block. No lookahead is
+      // added: a live instrument should stay as immediate as it is.
+      let now = system.timeNow()
       let currentCount = metronome.beatTime(now)
       let lastBeat = metronome.lastBeat()
       let event = {

@@ -114,10 +114,18 @@ class ChaosOsc extends AudioWorkletProcessor {
     // JS stop() call, is what decrements the voice count, so the count only comes
     // down when the render thread has really dropped this processor.
     if (parameters.stop[0] > 0.5) { this.port.postMessage('terminated'); return false }
-    if (parameters.start[0] < 0.5) {
-      this.unstartedSamples = (this.unstartedSamples || 0) + 128;
-      if (this.unstartedSamples < 60 * sampleRate) { return true }
-      this.port.postMessage('terminated'); return false
+    if (!this.started) {
+      // Latch on the LAST sample of the block, not the first. start is an a-rate param, so a
+      // gate written part way through a block leaves sample 0 still low while the rest is high;
+      // reading only sample 0 dropped that block, and a node whose gate landed in an already
+      // rendered block was never seen to start at all.
+      const startGate = parameters.start;
+      if (startGate[startGate.length-1] >= 0.5) { this.started = true }
+      else {
+        this.unstartedSamples = (this.unstartedSamples || 0) + 128;
+        if (this.unstartedSamples < 60 * sampleRate) { return true }
+        this.port.postMessage('terminated'); return false
+      }
     }
 
     const output = outputs[0];

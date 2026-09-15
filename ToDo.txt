@@ -3,29 +3,6 @@
 =================================================================================================================================
 !superbass weird on keyboard on electron, not on firefox, superosc missing on some notes? keyboard only
 visual nodes...
-DONE 3d FRACTALS in lib/sdf3.limut: sd3menger, sd3sierpinski (the kaleidoscopic IFS at yaw/pitch),
-  sd3mandelbox and sd3mandelbulb, all four ordinary DSL functions built on loop{}'s carry: and
-  until:. A loop{} INSIDE a pxfn{} works and warns nothing - declaredIn already reads
-  `for (int l_iN` as a declaration - so the shape is one scene function with the iteration rolled up
-  inside it, called once per march step. Needed one new maths function: ln (GLSL log), named ln
-  because log is already the debug console function; acos was not needed, atan{y,x} gives the polar
-  angle. sd3march gained step:, a step length multiplier, and at step:1 the default march renders
-  byte-identical to before it existed.
-  Verified by equivalence render at the degenerate count, 0 differing bytes each: sd3menger{n:0} IS
-  sd3box, sd3sierpinski{n:0,r:2} IS sd3sphere{r:2}, sd3mandelbox{n:0} IS sd3sphere{r:0}. And the
-  power 8 bulb's silhouette lies entirely inside a sphere of radius 2 (8721 px in, 0 out). Only
-  checked under swiftshader; nobody has looked at them on a real GPU or on the Pi yet.
-  Two things they taught, both now in the lib's comments. An estimate that never goes NEGATIVE
-  cannot be marched: the Sierpinski attractor has no volume, so length{z}/scale^n creeps up to it
-  and never trips eps - it needs a sphere of radius r subtracted at the end, which is what r is for.
-  And a mandelbox whose b puts the camera inside it renders an EMPTY FRAME rather than a wrong
-  shape, because a field that is nearly zero everywhere means the ray never travels - which is why
-  the default b pairs with the default scale and both are documented together.
-DONE domain MIRRORING with abs{} in a 3d sdf scene: retested 2026-09-14 while doing the fractals
-  and it renders, so the stale comment in lib/sdf3.limut pointing at a deleted ToDo entry is gone and
-  replaced with the spelling that works. px=sd3march{pxfn{{p}->sd3sphere{abs{p}-{x:1/2,y:1/2,z:1/2,
-  w:0}, 1/4}}}>>sd3lit is eight spheres, 3308 px against one pair's 686. No function added for it -
-  abs{} on the point is the whole of it
  !the march evaluates the scene TWICE per step: once in the body (let{sd3d, scene}) and again for
   the until: condition, because a let{} binds a pxfn as the FUNCTION it is, so every read of the
   name is another call at wherever it is read. That is deliberate and it is what makes sd3lit's own
@@ -33,26 +10,6 @@ DONE domain MIRRORING with abs{} in a 3d sdf scene: retested 2026-09-14 while do
   double the cost of the whole render for a mandelbulb. Naming the value instead (let{sd3dv, sd3d.x}
   and testing that) would halve it, at the price of testing the distance BEFORE the step rather than
   after it. Measure both before changing it; the fractals are what make it worth measuring
- DONE the sdf libs said an expression has nowhere to put a local, which let{} has made only half true:
-  an expression has none, but a chain does, and a let{} is a chain stage. Measured rather than
-  argued, on lib/sdf.limut through the real parse/build with the picture hashed. A helper costs
-  NOTHING when what it names is already one built value - an argument is evaluated once and every
-  read of it in the body is the same node - which is why most of the shapes keep theirs. A let{}
-  pays when an EXPRESSION is wanted more than once, and then only if the arguments that expression
-  mentions are named too: a let's bound expression is evaluated against an event of its own, so it
-  re-emits whatever it re-mentions. sdblend{sdcircle,sdbox}: helper 18 uniforms/37 statements, a let
-  naming only the blend factor 18/44 (worse), naming the distances too 14/29 - all three the same
-  picture to the byte. Converted sdblend (18/37 -> 14/29, and 77/115 -> 65/115 inside an sd3march
-  scene) and sdcross (13/37 -> 13/31, losing sdcross2 and sdcross3); kalturn in lib/visual.limut
-  measured the other way (16/51 against a let's 17/53) and keeps its helper. Three ways a let inside
-  a function body goes wrong, all seen: without a leading `id>>` the domain falls to audio and the
-  shape renders flat white as soon as an argument is a plain number; a body that has become a chain
-  must not END in a call with positional args, since >> shifts the chain value into it (name them,
-  sdval{v:...}); and piping an ARGUMENT rather than id changes what id means for every argument
-  expression the callsite wrote. Also measured, against ToDo's materials item: a plain let{} name IS
-  readable from a user function's argument at its callsite (byte-identical to the same read from the
-  callee's body and to the node written out) - so whatever kills per shape materials is about a
-  loop{} carry: name specifically, not about let names in args
  !per shape MATERIALS in the 3d sdf lib: built, then taken out again, and worth another go. Tagging a
   distance with a material (d>>set{y:m}) works, and so does a union that picks the nearer whole vec4
   (a.x<b.x ?? a ?: b) - the march comes back with the right material per pixel, verified as exactly
@@ -911,116 +868,3 @@ s=met(1/2).`0070`.crop(8).saw(oct:2).lpf([1000:!100ms,10]e@s,poles:4)*[0.06:!500
 
 As per every time we look at this kind of thing, the conclusion is the current setup is better even if it feels complicated
 
-=========================================
-
-Visual nodes Ideas
-
-DONE, as (>> pipes the lhs in as the first arg, so the input has to be a declared arg):
-set pixellate = {in,size:8} -> floor{in+(0.5/size),to:1/size}
-set monochrome = {in,v:1} -> dot{in,#3b1}*v
-w visualsynth, px=id>>pixellate{40}>>tex{webcam{'5mp'}}>>monochrome{[]l1@f}
-
-w visualsynth, px=mul{[]n4}>>tex{webcam{'5mp'}} // mul multiplies each channel by the scalar or vector param
-
-DONE, lookup textures generated by sampling a limut expression (tex1d/tex2d/tex3d), and any number
-of texture nodes per chain (so tex{}>>tex{} works too):
-w visualsynth, px=tex{webcam{}}>>tex1d{{x}->{labh:x}}
-w visualsynth, px=id>>tex2d{{x,y}->{r:x,g:y}, size:128}
-w visualsynth, px=tex{webcam{}}>>tex3d{{r,g,b}->{r:b,g:g,b:r}}
-
-DONE, channels{} splits into the separate channels, runs an expression of its own on each (each one
-a px chain in its own right, fed that channel), and recombines; channels with no expression pass
-through:
-w visualsynth, px=channels{sin{id*1},sin{id*2},sin{id*3}}
-w visualsynth, px=tex{webcam{}}>>channels{tex1d{{x}->{h:x}}}
-w visualsynth, px=channels{r:id^2, b:1-id}
-
-DONE, pxhash{} is a per pixel vector hash: random rgb keyed on the incoming value, keeping its
-alpha, with an optional seed (fixed field with none, animate it for moving noise). pxhashf{} is the
-same with a cheaper sine based hash, whose pattern varies by GPU driver:
-w visualsynth, px=pxhash
-w visualsynth, px=floor{1/8}>>pxhash // blocky noise
-w visualsynth, px=pxhash{seed:[]l} // TV static
-w visualsynth, px=tex{webcam{}}>>mul{pxhash{id}}
-
-DONE, smooth noise and perlin, written as limut functions rather than js: lib/visual.limut has
-noise1/2/3 (value noise), perlin1/2/3 (gradient noise, with signed perlin1s/2s/3s forms) and the
-octave sums fbm2/fbm3/turb2. scale is how many lattice cells the space is divided into, seed picks
-a different field, and the 3d ones take their third dimension from the incoming z:
-w visualsynth, px=noise2{scale:16}
-w visualsynth, px=perlin2{scale:8}
-w visualsynth, px=fbm2>>tex1d{{x}->{labh:x}}
-w visualsynth, px=fbm3{id>>set{z:[]l8}} // Noise that moves rather than scrolls
-Nothing was missing to make this possible, but two things were needed to make it practical:
-- Shader nodes now emit once per (node, input) rather than once per reference (shader-node.js),
-  so a value used several times costs what using it once costs. Without it fbm3 came to 435
-  statements and 196 uniforms, up against the 224 vec4 GLES3 floor; with it, 176 and 72.
-- The maths nodes gained fract, clamp, smoothstep, sqrt, exp, pow, length, cross, normalize and
-  the two argument atan.
-DONE, loop/series/parallel/multitap take px chains as well as audio chains, so a stage can be
-repeated. series/parallel/multitap unroll (the index is a plain number, so a repeat can differ in
-any way); loop compiles to a real GLSL for loop, so the body is emitted once whatever the count and
-its index is a value in the shader. fbm2/fbm3/turb2 are now parallel{} octave sums:
-w visualsynth, px=loop{mul{2}>>fract, 4}
-w visualsynth, px=loop{{i}->mul{2}>>add{i/8}, 4}
-w visualsynth, px=series{{i}->add{x:i/8}, 4}>>tex{'favicon-32x32.png'}
-w visualsynth, px=parallel{{i}->noise2{scale:4*(2^i)}*(8/(2^i)), 4}/15 // ie fbm2
-
-DONE, loop{} takes an until: early exit, tested after the body: the loop runs the chain and then
-tests the condition, stopping as soon as it is true, so the body runs at least once and at most
-count times. A march can now stop at a hit or at the far plane instead of paying every step. It is
-the first and only branch in a generated shader - everything else, ?? included, is branchless - and
-a GPU breaks per lockstep group rather than per pixel, so the saving is per block of pixels, which
-is still most of it where the background and the near hits come in large runs. Anything non zero in
-the condition is true (?? 's rule, collapsed with any), so comparisons say what you mean; there is no
-and, so multiply for and and add for or. Testing AFTER the body rather than before it is what lets
-the condition name a let{} the body bound, so a value part way through a step can be tested where it
-was worked out. It sits with a fold as it stands - the break lands after that step's term has joined
-the total, so map:1 counts the steps actually taken. Whether there is an until is structural like
-the count; a threshold inside it is an ordinary uniform and still animates:
-w visualsynth, px=loop{mul{2}, 16, until: id>>length > 1}
-w visualsynth, px=loop{add{x:1/8}, 16, until: (id.x < 1) * (id.y < 1/2)}
-w visualsynth, px=loop{add{x:1/8}>>let{d}>>mul{y:2}, 8, until: d.x > 0}
-w visualsynth, px=loop{add{x:1/8}, 16, map:1, until: id.x > 0}/17 // steps taken, as a greyscale
- Verified against the branchless unrolled form of the same thing, byte for byte over the canvas:
- loop{add{x:1/8}, 8, until: id.x > 0} renders exactly what add{x:1/8}>>series{{i}->(id.x > 0 ?? id ?:
- add{x:1/8}), 7} does. A condition that is never true renders exactly what no until does, and one
- that is always true exactly what count 1 does.
-
-DONE, loop{} takes a map:/fold: pair, a generic fold running alongside the value it carries. The
-chain carries one value as before, but map: turns every value the loop passes through into a term,
-fold: combines them (a sum when it is left off) and the total is what the loop hands on - the one
-thing the carried value cannot do for itself, since it is a single vec4 and any whole-vector op in
-the body wipes out anything riding in a spare channel of it. The total is SEEDED WITH THE FIRST
-TERM, the value as it arrives before any step, so count steps give count+1 terms, one at every value
-the loop visits: nothing is dead (the old sum: took its term before the body, leaving the last body
-application unused), there is no before/after to pick, and there is no identity to supply since a
-fold over a non-empty run of terms needs none.
-w visualsynth, px=loop{mul{2}, 3, map:{v,i}->noise2{v}*(8/(2^i))}/15 // pixel identical to fbm2
-w visualsynth, px=loop{mul{2}, 4, map:{v}->v*v}/4
-w visualsynth, px=loop{rot2{1/8}>>add{x:1/4}, 6, map:id>>length, fold:{a,v}->min{a,v}}
-w visualsynth, px=loop{mul{2}, 4, map:{v}->v*v, fold:{a,v}->a*v}
-with the noise body written into the shader once rather than four times (map: is written twice, once
-for the seed and once inside the loop, which is the whole cost of the seeding rule). Their functions
-name the value, unlike the body's: the body IS the chain, so its value flows in implicitly, where
-map is an expression of that value ({v,i}) and fold one of the total and the term ({a,v,i}).
-Trailing args may be left off, and anything that is not a function is a chain fed the value, as the
-body is. The body's index is unchanged (0..count-1); a term's index says which value of the run it
-came from, so the seed's is 0 and the term after step i is i+1.
-
-DONE, a mul/add/set param is a px chain in its own right, as a channels{} arg is, so a call there
-that has not been given a value takes the incoming pixel:
-w visualsynth, px=tex{webcam{}}>>mul{pxhash} // and mul{sin}, mul{length}, mul{noise2{scale:8}}
-A param seeds by a stricter rule than a chain head does though: a call that WAS given a value keeps
-it, so mul{sin{time}} stays the animated scalar it reads as, where the chain rule would take the
-pixel and drop the time. Same for mul{floor{1/8}}, and for mul{rand} (an aggregator's positional
-args are a set to pick from rather than a value slot). Say it explicitly for the other reading:
-w visualsynth, px=tex{webcam{}}>>mul{floor{id,1/8}} // or mul{id>>floor{1/8}}
-So channels{floor{1/8}} floors the channel where mul{floor{1/8}} is a scalar: two rules, and that
-asymmetry is the price of an animated number in a param slot still reading as one. Channel masks
-and every other existing param generate byte identical shader source (checked by diffing the
-generated GLSL for a corpus of ~70 px expressions before and after).
-w visualsynth, px=multitap{{i}->noise2{scale:2^i}*(1/(i+1)), 3}/2
-One thing this needed: a repeat's index goes into its call context as the callsite id, since a px
-chain's uniforms are re-evaluated per frame against the renderer's single event, long after the
-per-repeat events are gone, and the ASTs are shared by every repeat.
