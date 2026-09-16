@@ -41,13 +41,17 @@ preset psy multiwave
   , drive=1/8, delay=1/8, room={1,hpf:500,mix:1/2}, glide=this.dur/10
   , cutoff=[2/3:0]e + [0:1/3]l1/2@s + [0:1/3]l2@s
 
-preset psybass saw
+preset psybass multiwave
   , envelope='perc', oct=2, dur=1/4
-  , lpf={30+8000*this.cutoff^2*[1:_10ms,1:!720ms*this.decay^2,0]e@s, poles:4, q:3}
-  , fx=duck
+  , wave1={'saw'}
+  , wave2={'sine', detune:-12, amp:this.sub}
+  , amp*=2^(1/4) // Undo the multiwave two voice level normalisation, so the saw stays at its old level
+  // The filter floor lifts with the sub level, so the pluck never closes down onto the sub octave
+  , lpf={30+this.freq*this.sub+8000*this.cutoff^2*[1:_10ms,1:!720ms*this.decay^2,0]e@s, poles:4, q:3}
   // Controls
   , cutoff=1/2
   , decay=1/2
+  , sub=1
 
 preset sub sine, dur=1/4, sus=1/6, oct=1, envelope='organ', amp*=3, amp*=[1:!400ms,0]e@s, drive={1/32,mix:1/6}
 
