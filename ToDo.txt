@@ -2,6 +2,7 @@
 =================================================================================================================================
 =================================================================================================================================
 !superbass weird on keyboard on electron, not on firefox, superosc missing on some notes? keyboard only
+ TEST!!!!!!!!!!!
 visual nodes...
  !the march evaluates the scene TWICE per step: once in the body (let{sd3d, scene}) and again for
   the until: condition, because a let{} binds a pxfn as the FUNCTION it is, so every read of the
@@ -55,8 +56,6 @@ visual nodes...
  ?sdsin/sdsquare/sdsaw/sdtri (may be approximate only)
  ?support for piecewise as shader code not textures?
  ?no time uniform in a generated px shader, so `time` in a chain costs a JS param eval per frame
- ???Want to be able to switch shader parts on a timevar; eg px=fbm2>>[cospal,pal{0,red,1}]t4@f - cant do this with audio nodes; how important is it really?
- ???{tex,#124} should do split/join like in audio chain??
 Multiple audiocontexts, set context='foo' on a player. Allows audio rendering to be split over multiple cores
 !GC pauses?
 ?set bpm can have target time? eg set bpm={140,by;1000}; takes a linear step towards the target every beat
