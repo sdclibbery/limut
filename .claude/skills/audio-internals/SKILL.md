@@ -228,12 +228,37 @@ Re-use the same per-copy cloned event (`ev`) inside the wrapper: param memoisati
 
 **The cardinal rule (June 2026 crackle bug): never write an AudioParam — or channel config — on a node that might still be wired.** In Chrome/Electron (not Firefox), a param write like `gain.value = 1` issued in the same JS task *after* `node.disconnect()` can be applied by the render thread one quantum *before* the disconnect — the old signal blasts through at the new value for ~one quantum. At per-event rates that's a nasty crackle. It only needs one live inbound edge: destructor registration order (`envelope()` registers the vca before `filters.js` registers the biquad) means a released vca transiently still has the filter connected into it, carrying the just-stopped oscillator's tail.
 
-Hence the pool's design: `release()` only flags and pushes to a **quarantine**; all resets (`cancelScheduledValues`, `value = 1`, `delete gain.lastTime`, channel config) happen in `flushQuarantine()` (called from the patched `createGain`), and only for nodes whose release is older than `quarantineTime` (0.1s) **on the audio clock** — if `audioCtx.currentTime` advanced, the render thread processed quanta, so the destructor's disconnects are provably applied and the node is unwired. Don't "optimise" the resets back to release time, and don't age the quarantine on wall clock (a stalled render thread would break the guarantee).
+Hence the pool's design: `release()` only flags and pushes to a **quarantine**; all resets (`cancelScheduledValues(0)`, `setValueAtTime(1, 0)`, `delete gain.lastTime`, channel config) happen in `flushQuarantine()` (called from the patched `createGain`), and only for nodes whose release is older than `quarantineTime` (0.1s) **on the audio clock** — if `audioCtx.currentTime` advanced, the render thread processed quanta, so the destructor's disconnects are provably applied and the node is unwired. Don't "optimise" the resets back to release time, and don't age the quarantine on wall clock (a stalled render thread would break the guarantee).
 
 Related facts:
 - `delete n.gain.lastTime` at flush matters: `doPerFrame` (eval-audio-params) stashes `lastTime` on the AudioParam; a stale value on a reused node causes a catch-up `setTargetAtTime` scheduling loop.
 - `cancelScheduledValues(0)` is glitch-safe in Chrome — after cancel the param holds its last computed value (it does *not* snap back to the intrinsic `.value`). Only explicit value writes jump.
-- Nodes acquired from the pool are contract-identical to fresh nodes (gain 1, empty timeline, 2ch/'max'/'speakers') — consumers like `fxMixChain`'s `chain.in`, `choke`, and `mono` rely on default gain 1 without setting it.
+- Nodes acquired from the pool are contract-identical to fresh nodes (gain 1, 2ch/'max'/'speakers') — consumers like `fxMixChain`'s `chain.in`, `choke`, and `mono` rely on default gain 1 without setting it. The timeline is **not** empty, though: it holds exactly one `setValueAtTime(1, 0)` event (see the cardinal rule below), so a consumer that cancels with a `t > 0` will not remove it.
+
+### The other cardinal rule (Sep 2026 superbass-on-keyboard rumble): never `param.value = x` when a timed write follows on the same param
+
+`AudioParam.value` is specified — and in Chromium implemented — as **inserting a `setValueAtTime` at the current time**. So it does not merely set a starting point: it plants an event that outranks any write anchored *earlier*, for the rest of the param's life. Combine that with the fact that **a live note's `_time` is already behind the block the render thread is filling** (see below) and the caller's write is silently discarded, leaving the param on the value the previous writer chose.
+
+That is what the pool's old `n.gain.value = 1` did: a recycled gain kept **1** instead of the `eventpitch` the frequency chain wrote, so a superbass keyboard note's superosc rendered DC — an audible rumble — while the rest of the note played. Measured in Electron at ~2% of notes.
+
+Write the value as a timeline event at time 0 instead. An event at 0 resets just as thoroughly but is before every possible caller write, so it can never outrank one:
+
+```js
+param.cancelScheduledValues(0)
+param.setValueAtTime(1, 0)   // NOT param.value = 1
+```
+
+Verified in Electron on an already-rendering GainNode, caller write at −1/−3/−10ms, 14 reps each — caller's write lost: no reset 0/14, `cancelScheduledValues(0)` alone 0/14, **`cancel` + `value = 1` 14/14**, `value = 1` alone 14/14, `cancelScheduledValues(now)` + `value = 1` 14/14, `cancel` + `setValueAtTime(1, now)` 14/14, **`cancel` + `setValueAtTime(1, 0)` 0/14**. Changing the reset *time* does not help; only avoiding the value setter does.
+
+A bare `.value =` with **no** later timed write on that param is fine, and most of the ones in `play/` are exactly that — one-time construction values on dedicated nodes (`chorus`, `flanger`, `filters`, `system.js` setup), or the fixed (non-varying) branches of `mix`/`echo`. `player-fx.js` `fadeIn` is also safe because it calls `cancelScheduledValues(0)` *after* the setter, which wipes the event. Because the hazard is a *sequence*, grep is not a sufficient audit — detect it at runtime (recipe in the `verifier-audio-wiring` skill). That audit found exactly one other instance, `pitch-effects.js` `setupAddc`, where `csn.offset.value = 0` before `evalMainParamFrame(csn.offset, …)` made `addc` silently do nothing on live notes; fixed the same way.
+
+### Live notes schedule in the past; pattern notes don't
+
+A pattern player fires its beat ~10% of a beat early (`metronome.advance()`) and rebases events onto `beat.time`, so `params._time` is tens of milliseconds in the **future** when nodes are built. A live player (`player/keyboard.js`, `player/midi.js`) builds its event inside the input handler, so `_time` is essentially *now* — and `audio.currentTime` is itself behind the block being rendered. Consequences when touching `play/`:
+
+- Any write anchored at `params._time` may land in an already-rendered block on a live note. That is usually just "one quantum late", and harmless — *unless* something else has planted a later-timed event on that param (above).
+- Native source nodes are immune to a past `start(when)`: the spec defines it as "start as soon as possible". limut's worklet oscillators are **not** — `start()` only gates an AudioParam, so `play/worklet-lifecycle.js` writes `param.value` for a past time and the processors latch `start` off the *last* sample of the block. See "AudioWorkletNode termination" above.
+- Gamepad escapes all of this: its noteOn runs inside the rAF tick (`main.js`), so its clock reading is fresh.
 - A plain player with default `amp` creates **two** pooled gains per event: the envelope vca *and* a `perFrameAmp` vca (default amp evaluates to a function, so `perFrameAmp` always wraps).
 - `?nopool` disables pooling for A/B comparison; `limutNodePool.stats()` (incl. `quarantined`) from the console.
 

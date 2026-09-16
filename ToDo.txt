@@ -1,8 +1,6 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!superbass weird on keyboard on electron, not on firefox, superosc missing on some notes? keyboard only
- TEST!!!!!!!!!!!
 visual nodes...
  !the march evaluates the scene TWICE per step: once in the body (let{sd3d, scene}) and again for
   the until: condition, because a let{} binds a pxfn as the FUNCTION it is, so every read of the

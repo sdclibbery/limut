@@ -25,7 +25,12 @@ define(function (require) {
   let setupAddc = (audioParam, params) => {
     if (params.addc === undefined) { return }
     let csn = system.audio.createConstantSource()
-    csn.offset.value = 0
+    // Zero the default offset of 1 with a timeline event at time 0, not `offset.value = 0`. The
+    // value setter inserts a setValueAtTime at the CURRENT time, which then outranks the write
+    // below whenever that is anchored at a time already gone by - which a live (keyboard/midi)
+    // note's _time always is - leaving addc stuck on 0 for the whole note. Same reason, and same
+    // idiom, as the pooled-gain reset in play/node-pool.js.
+    csn.offset.setValueAtTime(0, 0)
     evalMainParamFrame(csn.offset, params, 'addc', 0, undefined, semisToCents)
     csn.connect(audioParam)
     csn.start(params._time)

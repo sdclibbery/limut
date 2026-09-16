@@ -106,7 +106,7 @@ Drop a file at `verify-<thing>.html` at the repo root, alongside `index.html`. R
    // later: filters.map(f => f.frequency.value)
    ```
 
-   `AudioParam.value` reflects live automation (`setTargetAtTime` etc.), so sampling it twice ~1s apart in real time also proves a per-frame sweep is actually moving. Collected nodes with default param values (e.g. 350 Hz biquads) are orphans built outside the audible chain — treat them as a bug signal (lambda-valued args used to produce one per event via eager modifier evaluation; fixed by `evalModifiers` in player/eval-param.js).
+   `AudioParam.value` reflects live automation (`setTargetAtTime` etc.), so sampling it twice ~1s apart in real time also proves a per-frame sweep is actually moving. **But it lags, so it is not a witness for what just rendered:** the value slot is what the render thread last wrote back, or the last explicit `.value =` write, so within milliseconds of an event starting it can still report the *previous* writer's value. Sampling it right after a note start — worse, taking a max over that window — invents defects that are not there (Sep 2026: it reported a pooled envelope vca at 1.0, i.e. an "833x attack overshoot", while the automation was in fact correct). Sample well after the fact, or measure rendered samples. Collected nodes with default param values (e.g. 350 Hz biquads) are orphans built outside the audible chain — treat them as a bug signal (lambda-valued args used to produce one per event via eager modifier evaluation; fixed by `evalModifiers` in player/eval-param.js).
 
 7. **DSL preludes**: `bpf`, `lpf` and friends are not built in — they're lambdas from `lib/nodes.limut` (loaded by `include`). In a harness, define what you need inline (e.g. `set bpf = {freq, q:1} -> biquad{'bandpass', freq:freq, q:q}`) rather than relying on async `include` timing.
 
@@ -223,10 +223,20 @@ stopped-but-never-started, and stop-scheduled-before-start.
 
 ## Testing under Electron, not just Chrome
 
-Some limut bugs are Electron-only (the ToDo records a superosc/keyboard oddity that
-appears in Electron but not Firefox). Electron 36 ships a much older Chromium than a
-current Chrome, so verify both before concluding an environment is clean. Drop a throwaway
-main next to the real one and point it at the same harness URL:
+Some limut bugs are Electron-only, and Electron ships an older Chromium than a current
+Chrome, so verify both before concluding an environment is clean.
+
+**Timing races involving live notes or the audio device do not reproduce in headless Chrome
+at all.** Chasing the superbass/keyboard rumble (Sep 2026, see the `audio-internals` pooling
+section): headless Chrome came back clean over **255 notes** — chords, randomised press
+timing, 80ms main-thread stalls, six tap tempos — while the same driver in Electron showed
+it at ~2-5% of notes immediately. Headless renders to a null sink whose timing is far
+steadier than a real device, and `outputLatency` differs. So a clean headless run is **not
+evidence** for this class of bug; go to Electron early rather than escalating the stress in
+headless. (Conversely headless *does* now support AudioWorklet — `addModule` plus a
+rendering processor verified — so worklet nodes are exercised there.)
+
+Drop a throwaway main next to the real one and point it at the same harness URL:
 
 ```js
 const {app, BrowserWindow} = require('electron')
@@ -246,6 +256,53 @@ app.on('ready', () => {
 
 Run with `node_modules/.bin/electron verify-electron-main.js` (check the installed version
 with `--version`; it can lag `package.json`). Delete the file afterwards with the harness.
+
+## Instrumenting AudioParam writes (the decisive instrument for param bugs)
+
+When a param ends up holding the wrong value and the graph looks right, stop guessing and
+record every automation write in order. Patch the prototype before the app's modules load
+and stash a log on each param:
+
+```js
+['setValueAtTime','setTargetAtTime','linearRampToValueAtTime','exponentialRampToValueAtTime',
+ 'cancelScheduledValues'].forEach((m) => {
+  const real = AudioParam.prototype[m]
+  AudioParam.prototype[m] = function (...a) {
+    (this.__w = this.__w || []).push(m + '(' + a.join(',') + ')@' + ctx.currentTime.toFixed(4))
+    return real.apply(this, arguments)
+  }
+})
+// and the value setter, which is an event write too - that is the whole point
+const vd = Object.getOwnPropertyDescriptor(AudioParam.prototype, 'value')
+Object.defineProperty(AudioParam.prototype, 'value', { get: vd.get, configurable: true,
+  set (v) { (this.__w = this.__w || []).push('value=' + v + '@' + ctx.currentTime.toFixed(4)); vd.set.call(this, v) } })
+```
+
+Dumping `param.__w` for a misbehaving note shows the ordering immediately — that is what
+exposed a pool reset planting an event that outranked the caller's write. Note the
+`@currentTime` stamp next to each event *time*: a write whose time is **less** than the
+clock at the call is anchored in an already-rendered block, which is the shape to look for.
+
+The same patch turns into a **hazard detector** that audits the whole codebase: stamp the
+param in the `value` setter, clear the stamp in `cancelScheduledValues` when it would remove
+that event, and flag any timed write with `t < stamp`, capturing `new Error().stack`. Then
+exercise a broad spread of presets and fx chains, live and pattern, and read off the call
+sites. That is a sound audit where grep is not, because the hazard is a sequence.
+
+## Driving live players (keyboard / midi) from a harness
+
+- Inject the probe with a `<script>` in **`<head>`, before require.js**, if it must wrap
+  constructors (`AudioWorkletNode`, `AudioNode.prototype.connect`) before app modules run.
+  Appending before `</body>` is fine for a driver that only acts later.
+- Enable local key handling: `require(['player/keyboard'], k => k.setLocalEnabled(true))` —
+  otherwise local presses are gated on the mouse hovering the keyboard icon and nothing plays.
+- Press with `dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyA', bubbles: true}))`;
+  the player reads `event.code`, not `key`. Release with the matching `keyup`.
+- Seed code with `require('update-code').updateCode(src)`, never `CodeMirror.setValue` — the
+  change handler writes `localStorage['limut-code']` and would clobber the user's open set.
+  Load with **`?nosave`** as well (`editor-codemirror.js`), which skips both the localStorage
+  load and the save handler, so the user's set is neither overwritten nor auto-played.
+- `amp=0.02` keeps a long unattended run quiet without affecting any pre-envelope measurement.
 
 ## Editing a harness file
 
