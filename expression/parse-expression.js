@@ -177,7 +177,7 @@ define(function(require) {
       let interval = parseInterval(state)
       let modifiers = parseMap(state)
       interval = interval || parseInterval(state)
-      let v = varLookup(parsed, modifiers, state.context, interval, state.userFunctionArgs, state.inheritedArgs)
+      let v = varLookup(parsed, modifiers, state.context, interval, state.userFunctionArgs, state.inheritedArgs, state)
       if (v !== undefined) {
         result = addModifiers(v, modifiers)
         result.interval = hoistInterval(interval || result.interval, typeof modifiers === 'object' ? Object.values(modifiers) : undefined)

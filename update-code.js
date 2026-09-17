@@ -8,6 +8,7 @@ define((require) => {
   let mainVars = require('main-vars')
   let consoleOut = require('console')
   let sliders = require('functions/sliders')
+  let persistentState = require('expression/persistent-state')
   let predefinedVars = require('predefined-vars')
   let vars = require('vars')
   let mainBus = require('play/main-bus')
@@ -171,6 +172,7 @@ define((require) => {
     mainVars.reset()
     players.overrides = {}
     sliders.gc_reset()
+    persistentState.gc_reset() // accum/smooth/rate state is kept across the re-parse, keyed per param
     vars.clear()
     predefinedVars.apply(vars.all())
     if (options.auto) {
@@ -193,6 +195,7 @@ define((require) => {
     players.gc_sweep()
     sections.gc_sweep()
     sliders.gc_sweep()
+    persistentState.gc_sweep() // Anything whose line has gone away was not marked by this parse
     players.expandOverrides()
     // Route `set <name> ...` lines that name a section onto that section. After expandOverrides, so
     // wildcards (which only ever match players) have already been resolved; and after gc_sweep, so

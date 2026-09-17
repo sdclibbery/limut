@@ -4,6 +4,7 @@ define(function(require) {
   let mainVars = require('main-vars')
   let {evalParamFrame} = require('player/eval-param')
   let {getCallContext,unPushCallContext,unPopCallContext,findInCallChainByKey} = require('player/callstack')
+  let persistentState = require('expression/persistent-state')
 
   let isVarChar = (char) => {
     return (char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || (char == '_')
@@ -71,7 +72,7 @@ define(function(require) {
   }
 
   let callsiteId = 0
-  let varLookup = (key, args, context, interval, userFunctionArgs, inheritedArgs) => {
+  let varLookup = (key, args, context, interval, userFunctionArgs, inheritedArgs, parseState) => {
     if (!key) { return }
 
     // look for static function call; call var immediately if present
@@ -172,7 +173,26 @@ define(function(require) {
     }
 
     // Return a lookup function
-    let state = {} // Create a state store for this parse instance
+    // A state store for this parse instance. A var function that asks to persist (accum/smooth/rate:
+    // see functions/maths.js) instead gets a keyed store that outlives the parse, because every code
+    // update re-parses every line, and a fresh {} here is exactly why accum restarted from zero on
+    // each Ctrl+Enter. The key is the param's context (`v1.time`, built in player/params.js) plus the
+    // position of this call among the persisting calls in that param, so editing the expression
+    // itself keeps the value running while renaming the param starts it over. `keep:'name'` names the
+    // slot explicitly, which is also how two params can share one accumulator. No context (a bare
+    // parseExpression, or preset baseParams) means no key, and so no persistence.
+    let state = {}
+    if (context !== undefined && typeof f === 'function' && f.persistState) {
+      let slot
+      if (typeof args === 'object' && args !== null && typeof args.keep === 'string') {
+        slot = args.keep
+      } else {
+        let ordinal = (parseState && parseState.persistOrdinal) || 0
+        if (parseState) { parseState.persistOrdinal = ordinal + 1 }
+        slot = context + '#' + ordinal
+      }
+      state = persistentState.get(slot)
+    }
     let result
     let thisCallsiteId = 'cs' + callsiteId++
     if (interval === undefined && typeof vars.get(key) === 'function') { interval = vars.get(key).interval }

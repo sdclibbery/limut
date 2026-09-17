@@ -2,35 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 visual nodes...
- !the march evaluates the scene TWICE per step: once in the body (let{sd3d, scene}) and again for
-  the until: condition, because a let{} binds a pxfn as the FUNCTION it is, so every read of the
-  name is another call at wherever it is read. That is deliberate and it is what makes sd3lit's own
-  hit test exact, but it costs a whole scene evaluation per step - nothing for a sphere, close to
-  double the cost of the whole render for a mandelbulb. Naming the value instead (let{sd3dv, sd3d.x}
-  and testing that) would halve it, at the price of testing the distance BEFORE the step rather than
-  after it. Measure both before changing it; the fractals are what make it worth measuring
- !per shape MATERIALS in the 3d sdf lib: built, then taken out again, and worth another go. Tagging a
-  distance with a material (d>>set{y:m}) works, and so does a union that picks the nearer whole vec4
-  (a.x<b.x ?? a ?: b) - the march comes back with the right material per pixel, verified as exactly
-  the sphere's 2176 px against a plane. What does not work is the colouring: a name the march binds
-  part way along the chain (sd3d) reads correctly from the BODY of a later function - which is why
-  sd3lit's own hit test on sd3d.x is exact - but NOT from an argument written at that function's
-  callsite. So px=...>>sd3lit{scene, col:sd3pal{sd3d.y}} reads one material everywhere, where the
-  identical expression written in the chain reads both. Wrapping it in another function does not
-  help, since that only moves it to another callsite. Suspect the args-double-as-time-modifiers
-  early evaluation in evalFunctionWithModifiers, the same thing paramChain passes doNotMemoise for.
-  If that is it, the fix is small and materials come back for free.
-  NARROWED 2026-09-13 (see the DONE let{} entry above): a plain let{} name reads from a user
-  function's argument at its callsite perfectly well, byte for byte. So this is about a loop{}
-  carry: name specifically - the volatile one, assigned in the body - and not about let names in
-  args at all
- !a px expression of two CONSTANTS has no visual node in it, so it const folds - and a folded colour
-  times a channel map is a value toVec4 cannot read, so it renders FLAT WHITE. Measured 2026-09-13:
-  px=#0f0*{x:1,y:1,z:1,w:0} is a white frame, and so is px={x:1,y:1,z:1,w:0} bare, where px=#000*{x:1}
-  is fine. Cost an hour in the sdf3 lib, where an opaque-alpha helper written as colour arithmetic
-  turned every shading branch white and read exactly like a broken ternary. Either toVec4 should read
-  a folded map (it reads an unfolded one), or this should say something. Same family as the
-  'something undefined should render flat black not flat white' item below
  !let{'name'} (the tap form, naming the chain value) at the HEAD of a loop{} body: the head collapses
   to a uniform and the whole loop comes out flat. Diagnosed 2026-09-12 and it is NOT the name: it is
   the domain. Unpiped and with no bound expression, let has nothing to tell audio from visual by
@@ -328,13 +299,29 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 =================================================================================================================================
 =================================================================================================================================
 ==== visual ====
-Nodes for visuals
- Visual synth with a px param that takes a node graph, from xy to rgba
-  Implicit `uv>>` at the start of px
-  v visualsynth, px=zoom{2}>>kal>>pal{[#000:0.5,#800:0.4,#f12:0.1,#fff]}
- Visual node values are 4 component vectors
- Define some visual nodes: sin, cos etc - basically whatever is a builtin glsl function
- Define visual node libs for all existing synths and params
+ 3D stuff
+ !the march evaluates the scene TWICE per step: once in the body (let{sd3d, scene}) and again for
+  the until: condition, because a let{} binds a pxfn as the FUNCTION it is, so every read of the
+  name is another call at wherever it is read. That is deliberate and it is what makes sd3lit's own
+  hit test exact, but it costs a whole scene evaluation per step - nothing for a sphere, close to
+  double the cost of the whole render for a mandelbulb. Naming the value instead (let{sd3dv, sd3d.x}
+  and testing that) would halve it, at the price of testing the distance BEFORE the step rather than
+  after it. Measure both before changing it; the fractals are what make it worth measuring
+ !per shape MATERIALS in the 3d sdf lib: built, then taken out again, and worth another go. Tagging a
+  distance with a material (d>>set{y:m}) works, and so does a union that picks the nearer whole vec4
+  (a.x<b.x ?? a ?: b) - the march comes back with the right material per pixel, verified as exactly
+  the sphere's 2176 px against a plane. What does not work is the colouring: a name the march binds
+  part way along the chain (sd3d) reads correctly from the BODY of a later function - which is why
+  sd3lit's own hit test on sd3d.x is exact - but NOT from an argument written at that function's
+  callsite. So px=...>>sd3lit{scene, col:sd3pal{sd3d.y}} reads one material everywhere, where the
+  identical expression written in the chain reads both. Wrapping it in another function does not
+  help, since that only moves it to another callsite. Suspect the args-double-as-time-modifiers
+  early evaluation in evalFunctionWithModifiers, the same thing paramChain passes doNotMemoise for.
+  If that is it, the fix is small and materials come back for free.
+  NARROWED 2026-09-13 (see the DONE let{} entry above): a plain let{} name reads from a user
+  function's argument at its callsite perfectly well, byte for byte. So this is about a loop{}
+  carry: name specifically - the volatile one, assigned in the body - and not about let names in
+  args at all
 !dmx addL is ugly and confusing...
  consider lights={add:{}} rather than add={} ??? plus={} not add={} ???
 webcam: can choose device if do getUserMedia then enumerateDevices then getUserMedia AGAIN asking for the specific label

@@ -181,6 +181,13 @@ define(function(require) {
     if (fullState.voices === undefined) { fullState.voices = {} }
     if (fullState.voices[e.voice] === undefined) { fullState.voices[e.voice] = {} }
     let state = fullState.voices[e.voice] // Store separate state for each chord voice
+    // The state outlives the parse now (expression/persistent-state.js), so it can meet a beat that
+    // has moved backwards - a metronome sync, a setCount, a restart. Only a forward beat advances
+    // the state below, so without this the accumulator would sit in the future and never move again.
+    if (state.b !== undefined && b < state.b) {
+      state = {}
+      fullState.voices[e.voice] = state
+    }
     if (!state.b || b > state.b) {
       let dt = b - (state.b || b)
       state.b = b
@@ -199,6 +206,7 @@ define(function(require) {
       return state.v
     }
     r.interval = 'frame'
+    r.persistState = true // The running value survives a code update; see expression/persistent-state.js
     return r
   }
 
@@ -225,6 +233,7 @@ define(function(require) {
     return rate || 0
   }
   rateFunc.interval = 'frame'
+  rateFunc.persistState = true // Keeps `last` across a code update, so there is no spurious spike after one
   addVarFunction('rate', rateFunc)
  
   // TESTS //
@@ -365,6 +374,73 @@ define(function(require) {
   assert(1, evalParamFrame(p, ev(0,0), 2))
   assert(3, evalParamFrame(p, ev(0,0), 3))
   assert(4, evalParamFrame(p, ev(0,0), 4))
+
+  // accum keeps its running value across a code update. Every update re-parses every line, so the
+  // state has to be keyed on something that outlives the parse: the param's context plus the
+  // position of the call within it (expression/persistent-state.js).
+  let persistentState = require('expression/persistent-state')
+
+  p = parseExpression('accum{1}', 'tacc.v')
+  assert(0, evalParamFrame(p, ev(0,0), 1))
+  assert(1, evalParamFrame(p, ev(0,0), 2))
+  p = parseExpression('accum{1}', 'tacc.v') // Ctrl+Enter: same param, same slot
+  assert(2, evalParamFrame(p, ev(0,0), 3))
+  p = parseExpression('accum{2}', 'tacc.v') // Editing the expression keeps the slot; only the rate changes
+  assert(4, evalParamFrame(p, ev(0,0), 4))
+
+  // A different param is a different slot
+  p = parseExpression('accum{1}', 'tacc.w')
+  assert(0, evalParamFrame(p, ev(0,0), 4))
+  assert(1, evalParamFrame(p, ev(0,0), 5))
+
+  // No context (a bare parse, or a preset's baseParams): no slot, so a re-parse starts over
+  p = parseExpression('accum{1}')
+  assert(0, evalParamFrame(p, ev(0,0), 6))
+  assert(1, evalParamFrame(p, ev(0,0), 7))
+  p = parseExpression('accum{1}')
+  assert(0, evalParamFrame(p, ev(0,0), 8))
+
+  // Two in one param take separate slots, in the order they are written
+  p = parseExpression('accum{1}+accum{10}', 'tacc.x')
+  assert(0, evalParamFrame(p, ev(0,0), 1))
+  assert(11, evalParamFrame(p, ev(0,0), 2))
+  p = parseExpression('accum{1}+accum{10}', 'tacc.x')
+  assert(22, evalParamFrame(p, ev(0,0), 3))
+
+  // keep: names the slot, so two params can share one accumulator
+  p = parseExpression("accum{1,keep:'tacck'}", 'tacc.y')
+  assert(0, evalParamFrame(p, ev(0,0), 1))
+  assert(1, evalParamFrame(p, ev(0,0), 2))
+  p = parseExpression("accum{1,keep:'tacck'}", 'tacc.z')
+  assert(2, evalParamFrame(p, ev(0,0), 3))
+
+  // rate and smooth persist too; rate keeping `last` is what stops a spurious spike after an update
+  p = parseExpression('rate{[0,4]t1@f}', 'tacc.r')
+  assert(0, evalParamFrame(p, ev(0,0), 1))
+  assert(0, evalParamFrame(p, ev(0,0), 2)) // First real frame: `last` is seeded, so no step from nothing
+  assert(4, evalParamFrame(p, ev(0,0), 3))
+  p = parseExpression('rate{[0,4]t1@f}', 'tacc.r') // Ctrl+Enter
+  assert(-4, evalParamFrame(p, ev(0,0), 4)) // Keeps `last`, so it sees the fall rather than starting over at 0
+
+  // Only a forward beat advances the state, so a beat that moves backwards (a metronome sync, a
+  // restart) has to start the accumulator over rather than leave it stuck in the future
+  p = parseExpression('accum{1}', 'tacc.b')
+  assert(0, evalParamFrame(p, ev(0,0), 10))
+  assert(1, evalParamFrame(p, ev(0,0), 11))
+  assert(0, evalParamFrame(p, ev(0,0), 2))
+  assert(1, evalParamFrame(p, ev(0,0), 3))
+
+  // A param that is no longer in the code is not marked by the update's parse, so it is swept and
+  // starts fresh when it comes back
+  p = parseExpression('accum{1}', 'tacc.g')
+  assert(0, evalParamFrame(p, ev(0,0), 1))
+  assert(1, evalParamFrame(p, ev(0,0), 2))
+  persistentState.gc_reset()
+  parseExpression('accum{1}', 'tacc.h') // This update parsed some other line; tacc.g has gone
+  persistentState.gc_sweep()
+  p = parseExpression('accum{1}', 'tacc.g')
+  assert(0, evalParamFrame(p, ev(0,0), 3))
+  assert(1, evalParamFrame(p, ev(0,0), 4))
 
   assert(0, evalParamFrame(parseExpression('smooth{0}'), ev(0,0), 0))
 

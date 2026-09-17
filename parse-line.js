@@ -94,7 +94,7 @@ define((require) => {
       }
       if (k.match(/^[a-z][a-z0-9_\.]*$/) && !!v) {
         if (mainVars.exists(k)) {
-          let newValue = parseExpression(v, undefined, k)
+          let newValue = parseExpression(v, k)
           if (compoundOp) {
             let op = operators[compoundOp]
             let prev = mainVars.get(k)
@@ -103,7 +103,7 @@ define((require) => {
             mainVars.set(k, newValue) // For main vars any dot is part of the var name, not a namespace
           }
         } else {
-          v = parseExpression(v, undefined, k)
+          v = parseExpression(v, k)
           if (compoundOp) {
             let op = operators[compoundOp]
             let [ns,nsk] = splitOnFirst(k, '.')
