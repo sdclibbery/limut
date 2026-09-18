@@ -2,6 +2,7 @@
 =================================================================================================================================
 =================================================================================================================================
 visual nodes...
+ !kal is kinda boring when shape=2
  !let{'name'} (the tap form, naming the chain value) at the HEAD of a loop{} body: the head collapses
   to a uniform and the whole loop comes out flat. Diagnosed 2026-09-12 and it is NOT the name: it is
   the domain. Unpiped and with no bound expression, let has nothing to tell audio from visual by

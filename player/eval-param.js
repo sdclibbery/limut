@@ -162,6 +162,22 @@ define((require) => {
     return f
   }
 
+  // Which of the two clocks the current evaluation is running on. The event clock (event.count) is
+  // the beat an event is *scheduled* for, and the metronome fires a beat 0.1 of a beat early
+  // (metronome.advance), so it always runs ahead of the frame clock (metronome.beatTime(now)); a
+  // sub-beat pattern step, delay= or swing puts it further ahead still. A running value that
+  // integrates dt (accum/smooth/rate: see functions/maths.js) can only track one of the two, so it
+  // keeps a separate accumulator per phase and needs to know which it is being asked for.
+  // The event phase is sticky: an evalParamFrame nested inside it is still event time work, just
+  // with the beat passed explicitly. Event time graph and shader building does exactly that all
+  // over - draw/visualsynth/nodes.js resolves a param chain, a pxfn body and webcam args that way,
+  // and the audio node functions do the same for their args - and every one of those is asked for
+  // the value at the event's beat, not at the live one. Only evalParamEvent touches the phase (in a
+  // finally, so a throw can't leave it stuck on), which also keeps the far hotter evalParamFrame
+  // free of any of this.
+  let phase = 'frame'
+  let evalPhase = () => phase
+
   let noOptions = {}
   let evalParamFrame = (value, event, beat, options) => {
     if (options !== undefined) {
@@ -173,7 +189,13 @@ define((require) => {
   }
 
   let evalParamEvent = (value, event) => {
-    return evalParamValueWithMemoisation(evalRecurseFull, value, event, event.count, noOptions)
+    let outerPhase = phase
+    phase = 'event'
+    try {
+      return evalParamValueWithMemoisation(evalRecurseFull, value, event, event.count, noOptions)
+    } finally {
+      phase = outerPhase
+    }
   }
 
   // TESTS //
@@ -366,12 +388,30 @@ define((require) => {
     assert(true, received.value === fakeLambda)
   }
 
+  // The eval phase, which accum/smooth/rate key their running value on (functions/maths.js). The
+  // event phase is sticky, because event time building evaluates sub-expressions with
+  // evalParamFrame at the event's beat (draw/visualsynth/nodes.js, the audio node functions) - and
+  // that is still the event's clock, not the live one.
+  {
+    let phaseProbe = (e,b) => evalPhase()
+    let nested = (e,b) => evalParamFrame(phaseProbe, e, b)
+    assert('frame', evalParamFrame(phaseProbe, ev(0), 0))
+    assert('event', evalParamEvent(phaseProbe, ev(0)))
+    assert('frame', evalParamFrame(nested, ev(0), 0))
+    assert('event', evalParamEvent(nested, ev(0)))
+    assert('frame', evalParamFrame(phaseProbe, ev(0), 0)) // restored afterwards
+    let thrower = () => { throw new Error('boom') }
+    try { evalParamEvent(thrower, ev(0)) } catch (e) {}
+    assert('frame', evalParamFrame(phaseProbe, ev(0), 0)) // and restored even when one throws
+  }
+
   console.log('Eval param tests complete')
   }
 
   return {
     evalParamEvent:evalParamEvent,
     evalParamFrame:evalParamFrame,
+    evalPhase:evalPhase,
     evalFunctionWithModifiers:evalFunctionWithModifiers,
   }
 

@@ -4,6 +4,7 @@ define(function(require) {
   let {mainParam,subParam} = require('player/sub-param')
   let {shaderAware} = require('draw/visualsynth/shader-maths')
   let {xmur3} = require('functions/rand')
+  let {evalPhase} = require('player/eval-param')
 
   let argParam = v => mainParam(mainParam(v)) // One for getting the value from args, other for getting the value from the param
 
@@ -178,15 +179,27 @@ define(function(require) {
   addVarFunction('euclid', euclid)
 
   let getVoiceState = (fullState, e,b) => {
+    // Separate state per chord voice, and per eval phase (player/eval-param.js). The two phases run
+    // on different clocks: the event phase is asked for the beat an event is scheduled for, which is
+    // always ahead of the frame phase's live beat. Sharing one accumulator between them means every
+    // event throws the running value into the future and the frames covering the rest of that beat
+    // then arrive backwards, which restarted it (px=kal{accum{1}} reset on every event). Every other
+    // param has in fact always kept them apart, but only by accident: a non-px param's event-phase
+    // eval comes from player/expand-chords.js, which runs before e.voice is assigned, so it landed
+    // in the `undefined` voice. px is excluded from chord expansion and is evalled per event by
+    // draw/visualsynth.js instead, after the voice is set - hence the one param that collided.
+    // The value is unharmed by the split: accum{x} is the integral of x over beats, so both phases
+    // integrate the same thing over the same span.
+    let key = evalPhase() + e.voice
     if (fullState.voices === undefined) { fullState.voices = {} }
-    if (fullState.voices[e.voice] === undefined) { fullState.voices[e.voice] = {} }
-    let state = fullState.voices[e.voice] // Store separate state for each chord voice
+    if (fullState.voices[key] === undefined) { fullState.voices[key] = {} }
+    let state = fullState.voices[key]
     // The state outlives the parse now (expression/persistent-state.js), so it can meet a beat that
     // has moved backwards - a metronome sync, a setCount, a restart. Only a forward beat advances
     // the state below, so without this the accumulator would sit in the future and never move again.
     if (state.b !== undefined && b < state.b) {
       state = {}
-      fullState.voices[e.voice] = state
+      fullState.voices[key] = state
     }
     if (!state.b || b > state.b) {
       let dt = b - (state.b || b)
@@ -246,7 +259,7 @@ define(function(require) {
   }
   require('predefined-vars').apply(require('vars').all())
   let parseExpression = require('expression/parse-expression')
-  let {evalParamFrame} = require('player/eval-param')
+  let {evalParamFrame,evalParamEvent} = require('player/eval-param')
   let ev = (i,c,d,v) => {return{idx:i,count:c,dur:d,_time:c,voice:v}}
   let p
 
@@ -422,13 +435,34 @@ define(function(require) {
   p = parseExpression('rate{[0,4]t1@f}', 'tacc.r') // Ctrl+Enter
   assert(-4, evalParamFrame(p, ev(0,0), 4)) // Keeps `last`, so it sees the fall rather than starting over at 0
 
-  // Only a forward beat advances the state, so a beat that moves backwards (a metronome sync, a
-  // restart) has to start the accumulator over rather than leave it stuck in the future
+  // Only a forward beat advances the state, so a beat that moves backwards within one phase (a
+  // metronome sync, a restart) has to start the accumulator over rather than leave it stuck in the
+  // future
   p = parseExpression('accum{1}', 'tacc.b')
   assert(0, evalParamFrame(p, ev(0,0), 10))
   assert(1, evalParamFrame(p, ev(0,0), 11))
   assert(0, evalParamFrame(p, ev(0,0), 2))
   assert(1, evalParamFrame(p, ev(0,0), 3))
+
+  // The event phase runs on its own clock (the beat an event is scheduled for) and gets its own
+  // accumulator, so it advances per event even for a param that is never evalled per frame
+  p = parseExpression('accum{1}', 'tacc.q')
+  assert(0, evalParamEvent(p, ev(0,1)))
+  assert(1, evalParamEvent(p, ev(0,2)))
+  assert(3, evalParamEvent(p, ev(0,4)))
+
+  // The event clock is always ahead of the frame clock - the metronome fires a beat 0.1 of a beat
+  // early, and a sub-beat pattern step, delay= or swing puts event.count further ahead still. With
+  // one shared accumulator the event eval threw the running value into the future and the very next
+  // frame arrived backwards and restarted it, which is why px=kal{accum{1}} reset on every event.
+  // The frame value must keep running right through an event evalled at a beat ahead of it.
+  p = parseExpression('accum{1}', 'tacc.p')
+  assert(0, evalParamFrame(p, ev(0,0), 10))
+  assert(0.5, evalParamFrame(p, ev(0,0), 10.5))
+  assert(0, evalParamEvent(p, ev(0,11))) // The event phase starts its own accumulator, a beat ahead
+  assert(0.75, evalParamFrame(p, ev(0,0), 10.75)) // ...and the frame value carries on rather than restarting
+  assert(1, evalParamFrame(p, ev(0,0), 11))
+  assert(1, evalParamEvent(p, ev(0,12))) // The event accumulator advanced by its own beat, not the frames'
 
   // A param that is no longer in the code is not marked by the update's parse, so it is swept and
   // starts fresh when it comes back
