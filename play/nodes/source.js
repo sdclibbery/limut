@@ -12,6 +12,7 @@ define(function(require) {
   let {getBuffer} = require('play/samples')
   let {getTtsBuffer} = require('play/tts')
   let {mainParamUnits} = require('player/sub-param')
+  let {tagSource} = require('play/nodes/channels')
   let metronome = require('metronome')
 
   let osc = (args,e,b) => {
@@ -52,6 +53,7 @@ define(function(require) {
     let unison = evalMainParamEvent(params, 'unison', 1)
     let pan = evalSubParamEvent(params, 'unison', 'pan', 0.5)
     let node = createSuperOsc(Math.round(unison) >= 2 && pan !== 0 ? 2 : 1)
+    tagSource(node, e) // A stereo note pins every per-note filter it feeds; see play/nodes/channels.js
     // Register with the destructor FIRST: a worklet only terminates when its process()
     // observes the stop param, so anything throwing between construction and
     // registration (an eval below, or getBuffer) would leak a permanently rendering
@@ -120,6 +122,7 @@ define(function(require) {
   // buffer so repeated events don't phase-lock.
   let noise = (args,e,b) => {
     let node = whiteNoise.white()
+    tagSource(node, e) // The white noise buffer is stereo; see play/nodes/channels.js
     let params = combineParams(args, e)
     evalMainParamFrame(node.playbackRate, params, 'rate', 1)
     node.start(e._time, Math.random()*2)
@@ -193,6 +196,7 @@ define(function(require) {
       if (started || !buffer) { return }
       started = true
       node.buffer = buffer
+      tagSource(node, e) // Width is only knowable once the buffer is here; see play/nodes/channels.js
       node.start(when, startTime)
       if (e && e._destructor) { e._destructor.stop(node) } else { node.stop() }
     }
@@ -272,6 +276,7 @@ define(function(require) {
       if (started || !buffer) { return }
       started = true
       node.buffer = buffer
+      tagSource(node, e) // Width is only knowable once the buffer is here; see play/nodes/channels.js
       node.start(when)
       if (e && e._destructor) { e._destructor.stop(node) }
     }

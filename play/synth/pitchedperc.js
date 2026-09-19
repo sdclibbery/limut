@@ -6,6 +6,7 @@ define(function (require) {
   let {fxMixChain} = require('play/effects/fxMixChain')
   let waveEffects = require('play/effects/wave-effects')
   let whiteNoise = require('play/synth/waveforms/noise').white
+  let {matchInputChannels,tagSource} = require('play/nodes/channels')
   let setWave = require('play/synth/waveforms/set-wave')
   let {getBuffer,getUrl} = require('play/samples')
   let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
@@ -128,9 +129,11 @@ define(function (require) {
     let filter = evalSubParamEvent(params, 'rattle', 'filter', 'lowpass')
     let q = evalSubParamEvent(params, 'rattle', 'q', 18)
     let n = whiteNoise()
+    tagSource(n, params) // The white noise buffer is stereo; see play/nodes/channels.js
     params._destructor.disconnect(n)
     n.playbackRate.value = rate
     let lpf = system.audio.createBiquadFilter()
+    matchInputChannels(n, lpf, params) // The noise buffer is stereo; see play/nodes/channels.js
     params._destructor.disconnect(lpf)
     lpf.type = filter
     lpf.Q.value = q

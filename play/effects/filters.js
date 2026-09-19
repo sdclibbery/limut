@@ -15,7 +15,7 @@ define(function (require) {
     let twoStage = (poles === 4)
     let qModifier = twoStage ? x=>x/2 : undefined
     let filter = system.audio.createBiquadFilter()
-    matchInputChannels(node, filter)
+    matchInputChannels(node, filter, params)
     filter.type = type
     evalMainParamFrame(filter.frequency, params, freqParam, undefined, 'hz')
     evalSubParamFrame(filter.Q, params, freqParam, 'q', defaultResonance, undefined, qModifier)
@@ -24,7 +24,7 @@ define(function (require) {
     if (twoStage) { // Simulate a 4 pole 24 dB/octave filter
       node = filter
       filter = system.audio.createBiquadFilter()
-      matchInputChannels(node, filter)
+      matchInputChannels(node, filter, params)
       filter.type = type
       evalMainParamFrame(filter.frequency, params, freqParam, undefined, 'hz')
       evalSubParamFrame(filter.Q, params, freqParam, 'q', defaultResonance, undefined, qModifier)
@@ -37,7 +37,7 @@ define(function (require) {
   let eq = (params, node, type, gainParam, defaultFreq, defaultQ) => {
     if (!mainParam(params[gainParam], 0)) { return node }
     let filter = system.audio.createBiquadFilter()
-    matchInputChannels(node, filter)
+    matchInputChannels(node, filter, params)
     filter.type = type
     evalMainParamFrame(filter.gain, params, gainParam, undefined, undefined, x => Math.log10(Math.max(x,1e-6))*20) // Convert to dB for WebAudio
     evalSubParamFrame(filter.frequency, params, gainParam, 'freq', defaultFreq, 'hz')
@@ -49,7 +49,7 @@ define(function (require) {
 
   let psf = (params, p, n, f, defaultFreq) => {
     let filter = system.audio.createBiquadFilter()
-    matchInputChannels(n, filter)
+    matchInputChannels(n, filter, params)
     filter.type = 'allpass'
     evalSubParamFrame(filter.frequency, params, p, f, defaultFreq, 'hz')
     evalSubParamFrame(filter.Q, params, p, 'q', 1)

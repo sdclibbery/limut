@@ -18,16 +18,48 @@ define(function (require) {
   // the same stereo source with no filter at all. Pinning the filter's channel count - the fix
   // below - made the stereo case flat and clean too, 0.0097 after stopping.
   //
-  // Only superosc with a stereo unison pan spread is wider than mono, so only it tags itself. A
-  // stereo *sample* into a filter measured clean (an AudioBufferSourceNode knows its width from the
-  // buffer before it ever renders), so nothing here touches that path: an untagged source keeps
-  // today's 'max' behaviour rather than being pinned to a width we would only be guessing at.
-  let outputChannels = (node) => (node && node._limutChannels) || 1
+  // Sep 2026: measured again, and a stereo *sample* is not clean after all - the same climb happens
+  // with no worklet anywhere in the graph. `p1 audiosynth, play={noise{}>>hpf4{1500}}` at bpm=1410
+  // (the white noise buffer is 2 channel) climbed 0.26 -> 0.35 over 90s and sat at 0.37 for the
+  // whole minute after window.stop(), against 0.004 for the same patch with no filter in it. So a
+  // buffer source reports its width from its buffer here, and any per-note filter it feeds is
+  // pinned like a worklet's.
+  //
+  // A source only pins the filters it connects to *directly*, and keytar's does not: its stereo
+  // superosc reaches the player's `hpf` through the merge in play/synth/audiosynth.js, and a
+  // GainNode carries no width tag. So a wide source also tags the *event* (`_limutChannels`), and
+  // every per-note filter built for that event is pinned to it however many gains, mergers or
+  // passthrough nodes sit in between. The cost is that a filter on a mono sub-chain of a stereo
+  // note (keytar's `noise{} >> hpf4{1500}`) is pinned to 2 and up-mixes, which is inaudible - the
+  // note is summed into a stereo bus regardless.
+  let outputChannels = (node) => {
+    if (!node) { return 1 }
+    if (node._limutChannels) { return node._limutChannels }
+    // An AudioBufferSourceNode knows its width from its buffer, before it ever renders
+    if (node.buffer && node.buffer.numberOfChannels > 1) { return node.buffer.numberOfChannels }
+    return 1
+  }
 
-  // Pin `dest` to the width of `source` before they are connected. No-op unless the source is known
-  // to be wider than mono and the destination is a filter, so the common mono path is untouched.
-  let matchInputChannels = (source, dest) => {
-    let channels = outputChannels(source)
+  // The width of the note being built, ie the widest source anything in this event has created.
+  let noteChannels = (params) => (params && params._limutChannels) || 1
+  // Record a source's width on the event. Never narrows: one mono source in a stereo note does not
+  // make the note mono.
+  let tagNoteChannels = (params, channels) => {
+    if (params && channels > noteChannels(params)) { params._limutChannels = channels }
+    return channels
+  }
+  // Tag both the node and its event from whatever the node itself reports, for sources that know
+  // their own width (a buffer source with its buffer already loaded, a stereo worklet).
+  let tagSource = (node, params) => {
+    tagNoteChannels(params, outputChannels(node))
+    return node
+  }
+
+  // Pin `dest` before it is connected, to the wider of the source feeding it and the note being
+  // built. No-op unless that width is known to be wider than mono and the destination is a filter,
+  // so the common mono path is untouched.
+  let matchInputChannels = (source, dest, params) => {
+    let channels = Math.max(outputChannels(source), noteChannels(params))
     if (channels < 2) { return dest }
     if (!(dest instanceof BiquadFilterNode)) { return dest }
     dest.channelCountMode = 'explicit'
@@ -63,8 +95,33 @@ define(function (require) {
     matchInputChannels(stereo, gain)
     assert('max', gain.channelCountMode, 'a non filter destination is left alone')
 
+    let stereoBuffer = system.audio.createBufferSource() // A buffer source reports its buffer's width
+    stereoBuffer.buffer = system.audio.createBuffer(2, 128, system.audio.sampleRate)
+    assert(2, outputChannels(stereoBuffer), 'a stereo buffer source is stereo')
+    let monoBuffer = system.audio.createBufferSource()
+    monoBuffer.buffer = system.audio.createBuffer(1, 128, system.audio.sampleRate)
+    assert(1, outputChannels(monoBuffer), 'a mono buffer source is mono')
+    assert(1, outputChannels(system.audio.createBufferSource()), 'an unloaded buffer source is assumed mono')
+
+    let note = {} // The note's width pins a filter even with nothing tagged upstream of it
+    assert(1, noteChannels(note), 'an untouched note is mono')
+    tagSource(stereoBuffer, note)
+    assert(2, noteChannels(note), 'a stereo source makes the note stereo')
+    tagSource(monoBuffer, note)
+    assert(2, noteChannels(note), 'a mono source never narrows the note')
+    let merged = system.audio.createGain() // Stands in for the audiosynth merge: carries no tag
+    let noteFed = system.audio.createBiquadFilter()
+    matchInputChannels(merged, noteFed, note)
+    assert('explicit', noteFed.channelCountMode, 'the note width pins a filter behind an untagged gain')
+    assert(2, noteFed.channelCount)
+
+    let monoNote = system.audio.createBiquadFilter()
+    matchInputChannels(merged, monoNote, {})
+    assert('max', monoNote.channelCountMode, 'a mono note leaves the filter alone')
+    assert(1, noteChannels(undefined), 'no event at all is mono')
+
     console.log('Node channels tests complete')
   }
 
-  return {outputChannels, matchInputChannels}
+  return {outputChannels, noteChannels, tagNoteChannels, tagSource, matchInputChannels}
 })

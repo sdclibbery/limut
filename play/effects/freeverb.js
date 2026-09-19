@@ -3,6 +3,7 @@ define(function (require) {
   let system = require('play/system');
   let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
   let {mix} = require('play/effects/mix')
+  let {matchInputChannels} = require('play/nodes/channels')
 
   // adapted from: https://raw.githubusercontent.com/mmckegg/freeverb/master/index.js
   // adapted from: https://github.com/TONEnoTONE/Tone.js/blob/master/Tone/effect/Freeverb.js
@@ -35,9 +36,10 @@ define(function (require) {
     return node
   }
 
-  let doHpf = (node, hpf) => {
+  let doHpf = (node, hpf, params) => {
     if (!!hpf) {
       let filter = system.audio.createBiquadFilter()
+      matchInputChannels(node, filter, params) // A widened filter leaks; see play/nodes/channels.js
       filter.type = 'highpass'
       filter.frequency.value = hpf
       filter.Q.value = 5
@@ -48,10 +50,10 @@ define(function (require) {
     }
   }
 
-  let fixedFreeverb = (destructor, room, hpf, node) => {
+  let fixedFreeverb = (destructor, room, hpf, node, params) => {
     room *= 0.7
     if (!room || room < 0.01) { return node }
-    node = doHpf(node, hpf)
+    node = doHpf(node, hpf, params)
     let dampening = 3000
     let resonance = 0.7 + 0.28 * Math.max(Math.min(room, 1), 0)
 
@@ -124,7 +126,7 @@ define(function (require) {
     let room = evalMainParamEvent(params, 'room', 0)
     if (!room) { return node }
     let hpf = evalSubParamEvent(params, 'room', 'hpf', 0, 'hz')
-    let fv = fixedFreeverb(params._destructor, room, hpf, node)
+    let fv = fixedFreeverb(params._destructor, room, hpf, node, params)
     params._destroyWait += room*5
     return mix(params, 'room', node, fv, 1/2)
   }

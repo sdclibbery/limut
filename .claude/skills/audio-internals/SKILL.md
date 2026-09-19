@@ -149,6 +149,48 @@ Contains JS implementations of node functions callable from DSL expressions: `de
 
 The `delay` node function creates a Web Audio `DelayNode` — its `max` parameter sets `maxDelayTime`, which the Web Audio API requires to be in range `(0, 180]`.
 
+## Per-note BiquadFilters leak in Chromium — two rules (`play/nodes/channels.js`)
+
+A per-note filter can leave cost **permanently resident on the audio thread**: render capacity
+climbs with every note and never comes back, not on note end and not on Ctrl-. The node census
+stays clean throughout, so nothing in JS can see it — only render capacity ~60s after
+`window.stop()` (~0.01 is healthy) tells you. Two independent triggers, both measured:
+
+**1. A filter widened after it starts rendering.** A BiquadFilter is created with
+`channelCountMode:'max'`, so a stereo input reconfigures its per-channel state on first render, and
+that reconfiguration is what leaks. Any stereo source does it — a `superosc` with `unison>=2` and a
+non-zero unison `pan`, or any 2-channel buffer (the white noise buffer in
+`play/synth/waveforms/noise.js`, a stereo sample). So:
+
+- **Every per-note BiquadFilter must be pinned before it is connected**, via
+  `matchInputChannels(source, dest, params)`. Existing call sites: `play/effects/filters.js`, the
+  `biquad` node function in `play/nodes/nodes.js` (which covers `lpf`/`hpf4`/`nf`/`apf`/… from
+  `lib/nodes.limut`), `phaser.js`, `reverb.js`, `freeverb.js`, `pitchedperc.js`. A new per-note
+  filter anywhere needs the same call.
+- **Every stereo source must tag its event**, via `tagSource(node, params)` — `play/nodes/source.js`
+  (superosc, noise, sample, tts) and the synths that build buffer sources. The width rides on the
+  *event* (`params._limutChannels`) as well as the node, because a source only pins the filters it
+  feeds directly: the tag dies at any gain, and `play/synth/audiosynth.js` merges every `play={a,b}`
+  chain through a GainNode. A buffer source reports its own width from `node.buffer.numberOfChannels`.
+
+The cost of the event rule is that a filter on a mono sub-chain of a stereo note is pinned to 2 and
+up-mixes; that is deliberate and inaudible.
+
+**2. A biquad in a chain that ends at an AudioParam.** Pinning does *not* help this one, and it has
+nothing to do with channels — `osc{freq:200*(1+(osc.sine{80}>>lpf{1000})/3)}` leaks with every node
+in it mono. The same filter feeding an audio input is clean, and so is the same param chain with a
+DelayNode or with no filter, so it is specific to a biquad in a param subgraph. There is no fix on
+our side (teardown reordering and an extra audio-domain edge both measured no better), so **a
+modulator that wants smoothing must come from a slow source, not a filter** — `noise{rate:1/20}`
+rather than `noise>>lpf{1000}`. `preset/synth.limut`'s `keytar` is the worked example, including the
+RMS matching (`lpf{1000}` q:5 passes 0.34 of white; interpolated slow noise passes 0.82). Full note
+at the `isConnectable(value)` branch in `play/eval-audio-params.js`.
+
+Measure both with `limut-diag.js` (`LIMUT_DIAG=1 LIMUT_DIAG_CODE=<file> LIMUT_DIAG_STOP=180
+LIMUT_DIAG_SECS=240 npm start`), 180s of play at a silly bpm plus 60s stopped, and bisect by
+deleting one node at a time from the patch — the leaks are per-node-per-note, so a one-line repro is
+always reachable.
+
 ## Expression value ranges and Web Audio API constraints
 
 DSL expressions can produce any numeric value, including 0 and negatives. Key examples:
@@ -275,7 +317,10 @@ Do not go looking for an audio-load or underrun metric — there isn't one, and 
 - **`currentTime` and `getOutputTimestamp()` both track the output device buffer**, and stay flat even when the audio thread is deliberately driven past its deadline. Their difference is just the fixed device buffer (~20ms), not a headroom signal.
 - **Electron's `app.getAppMetrics()`** does expose real CPU, but AudioWorklets run in the *renderer* process (the Audio Service process only does device I/O), so it conflates the audio thread with the main thread and the WebGL work.
 
-What exists instead: `system.voiceCount()` / `limutAudio.stats()` — a live count of worklet voices (superosc, chaos, pwm), incremented at construction and decremented when the processor itself reports termination. Those are the expensive things on the audio thread, so the count plus a known per-voice cost is the usable proxy. Measure per-voice cost offline with the `worklet-dsp` skill.
+What exists instead, in two places. Over CDP: `WebAudio.getRealtimeData` does report render
+capacity, which is what the committed `limut-diag.js` harness (`LIMUT_DIAG=1`) and the Electron-only
+"Audio" meter (`electron-audio-load.js`) read — Electron only, and the decisive instrument for the
+resident-cost leaks above. From JS: `system.voiceCount()` / `limutAudio.stats()` — a live count of worklet voices (superosc, chaos, pwm), incremented at construction and decremented when the processor itself reports termination. Those are the expensive things on the audio thread, so the count plus a known per-voice cost is the usable proxy. Measure per-voice cost offline with the `worklet-dsp` skill.
 
 **Caveat:** it is still a count of voices, not a load measurement — cost per voice varies hugely (superosc `unison` especially) — and it lags a real termination by a render quantum plus the port hop. See "AudioWorkletNode termination" above.
 

@@ -541,6 +541,18 @@ Helper functions wrapping node functions (all args can be positional):
 - `shaper.tanh{gain}` / `shaper.atan{gain}` / `shaper.poly{gain}` / `shaper.pow{curve}` / `shaper.asym{gain,bias}` / `shaper.diode{gain,pos,neg}` - waveshapers
 - `compressor{...}` / `limiter{...}` - dynamics
 
+### Don't put a filter in a modulator chain
+
+A filter feeding an **audio** path is free. A filter in a chain that ends at a **param** is not:
+`superosc{freq: eventpitch*(1+(noise>>lpf{1000})/3)}` builds a biquad per note inside a param
+subgraph, and Chromium leaves cost resident on the audio thread for every one of them, so a fast
+line slowly eats the audio thread until it drops out. Nothing in the DSL fixes it.
+
+Smooth a modulator with a **slow source** instead of a filter: `noise{rate:1/20}` is white noise
+band-limited to ~1.1kHz (rate scales the band: 1/50 -> ~440Hz), with no filter in the chain. It is
+louder than the lowpassed version — roughly 2.4x for `lpf{1000}` at the default `q:5` — so scale the
+depth down to match. `keytar` in `preset/synth.limut` is the worked example.
+
 ## Effects Library (`include 'lib/effects.limut'`)
 
 Wet-path effects (wrap in `mix{}` for dry signal):

@@ -5,10 +5,12 @@ define(function (require) {
   let {mainParam} = require('player/sub-param')
   let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
   var metronome = require('metronome')
+  let {matchInputChannels} = require('play/nodes/channels')
 
-  let doHpf = (node, hpf) => {
+  let doHpf = (node, hpf, params) => {
     if (!!hpf) {
       let filter = system.audio.createBiquadFilter()
+      matchInputChannels(node, filter, params) // A widened filter leaks; see play/nodes/channels.js
       filter.type = 'highpass'
       filter.frequency.value = hpf
       filter.Q.value = 5
@@ -52,7 +54,7 @@ define(function (require) {
     let rev = convolutionReverb(duration, curve)
     let boost = system.audio.createGain()
     boost.gain.value = 6 // Boost the wet signal else the whole bus sounds quieter with a reverb in
-    doHpf(node, hpf).connect(rev)
+    doHpf(node, hpf, params).connect(rev)
     rev.connect(boost)
     params._destroyWait += duration
     params._destructor.disconnect(rev, boost)

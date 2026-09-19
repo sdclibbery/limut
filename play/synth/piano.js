@@ -9,6 +9,7 @@ define(function (require) {
   let scale = require('music/scale');
   let perFrameAmp = require('play/effects/perFrameAmp')
   let destructor = require('play/destructor')
+  let {tagSource} = require('play/nodes/channels')
 
   let velLayer = (vel) => {
     // gain compensates for the sample's inherent loudness so amp controls
@@ -28,6 +29,7 @@ define(function (require) {
     let source = system.audio.createBufferSource()
     source.buffer = getBuffer(url)
     source.playbackRate.value = rate
+    tagSource(source, params) // A stereo sample pins every per-note filter it feeds; see play/nodes/channels.js
     waveEffects(params, effects(params, source)).connect(vca)
     source.start(timeOverride || params._time)
     params._destructor.disconnect(source)

@@ -188,12 +188,23 @@ enough, and FinalizationRegistry callbacks arrive asynchronously after it:
 for (let i = 0; i < 5; i++) { if (globalThis.gc) globalThis.gc(); await sleep(300) }
 ```
 
-**Render capacity is not measurable here.** `AudioContext.renderCapacity` has never
-shipped unflagged (see the comment at `play/system.js:36-50`), so audio-thread load can
-only be read from the user's DevTools WebAudio panel. Node *liveness* is fully measurable
-headlessly, so split the question: measure liveness yourself, ask the user for capacity.
-Always get the **idle floor** (fresh page, Go with an empty editor) before calling any
-capacity reading anomalous.
+**Render capacity is not measurable from the page** — `AudioContext.renderCapacity` has
+never shipped unflagged (see the comment at `play/system.js:36-50`) — but it *is*
+measurable over CDP, in Electron, with the committed `limut-diag.js` harness
+(`LIMUT_DIAG=1`, see the `audio-internals` skill and its header comment). Don't ask the
+user to read their DevTools WebAudio panel, and don't conclude a patch is clean from a
+headless Chrome run: run the diag harness. Always get the **idle floor** (fresh page, Go
+with an empty editor) before calling any capacity reading anomalous.
+
+**Liveness and capacity are different questions, and the nastiest leaks only show in the
+second.** Chromium can leave cost permanently resident on the audio thread for a node that
+is properly stopped, disconnected and garbage collected — the node census goes to zero,
+`workletVoices` goes to zero, and render capacity stays up anyway. Two known triggers, both
+per note, both in `play/nodes/channels.js` / `play/eval-audio-params.js`: a filter widened
+by a stereo input after it starts rendering, and a biquad in a chain that ends at an
+AudioParam. **The discriminator is render capacity ~60s after `window.stop()` with an empty
+graph: ~0.01 is healthy, anything above it is resident cost.** A liveness harness cannot
+see either one, so never report "no leak" on liveness evidence alone.
 
 **Reverse-BFS from `destination` must be seeded from `system.vcaMainAmp`.** If you patch
 `AudioNode.prototype.connect` from the console, the static tail

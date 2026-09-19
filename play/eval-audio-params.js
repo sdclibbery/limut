@@ -158,6 +158,17 @@ define(function (require) {
     }
 // console.log('3', value, isConnectable(value))
     if (isConnectable(value)) { // Value is a node chain, just connect it
+      // Known Chromium leak, measured Sep 2026: a *per-note BiquadFilter anywhere in a chain that
+      // ends at an AudioParam* leaves cost permanently resident on the audio thread, the same way a
+      // widened filter does (see play/nodes/channels.js). The same filter feeding an audio input is
+      // clean, and so is the same param chain with a DelayNode or with no filter at all, so this is
+      // specific to a biquad in a param subgraph, not to tail time or to the param connection.
+      // Measured with `p1 audiosynth, dur=1/2, amp=1/32, play={osc{freq:200*(1+(osc.sine{80}>>lpf{1000})/3)}}`
+      // at bpm=1410: render capacity 0.13-0.27 for the whole minute after window.stop() with an
+      // empty graph, against 0.005 for the same patch with the lpf moved into the audio path or
+      // dropped. Nothing here fixes it - reordering the teardown and giving the chain an audio
+      // domain edge both measured no better - so a modulator that wants smoothing is better built
+      // from a slow source (eg noise{rate:1/50}) than from a filter.
       audioParam.value = 0 // Remove any default value so we only get the value from the connection
       connect(value, audioParam, __event._destructor, {dont_disconnect_r:true})
       return

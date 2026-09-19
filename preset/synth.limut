@@ -131,7 +131,7 @@ preset keytar audiosynth, oct=4, dur=1/2,
   play={
     superosc{
       freq: eventpitch
-        * (1 + this.jitter*this.vel*(noise>>lpf{1000})/3)
+        * (1 + this.jitter*this.vel*noise{rate:1/20}/7) // slow noise, not lpf: a biquad feeding a param leaks
         * (1 + this.vibrato*[0:~300ms,1]e@s*osc.sine{5.5Hz}),
       sync: 1 + this.warp*this.vel*4*this.lfo*[0:/20ms,1]e@s + []r@e,
       pwm: this.click*[1:!15ms,0]e@s,

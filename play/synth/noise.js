@@ -7,12 +7,14 @@ define(function (require) {
   let {fxMixChain} = require('play/effects/fxMixChain')
   let scale = require('music/scale');
   let perFrameAmp = require('play/effects/perFrameAmp')
+  let {tagSource} = require('play/nodes/channels')
 
   return (params) => {
     let vca = envelope(params, 0.1, 'pad')
     fxMixChain(params, perFrameAmp(params, vca))
 
     let source = noise.white()
+    tagSource(source, params) // The white noise buffer is stereo; see play/nodes/channels.js
     waveEffects(params, effects(params, source)).connect(vca)
     let freq = scale.paramsToFreq(params, 4)
     source.playbackRate.value = freq / 261.6256

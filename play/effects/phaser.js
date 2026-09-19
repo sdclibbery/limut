@@ -4,6 +4,7 @@ define(function (require) {
   let {evalMainParamFrame} = require('play/eval-audio-params')
   let {mix} = require('play/effects/mix')
   let {mainParam} = require('player/sub-param')
+  let {matchInputChannels} = require('play/nodes/channels')
 
   let makeAllPass = (destructor, freq, q, lfoGain) => {
     let ap = system.audio.createBiquadFilter()
@@ -37,10 +38,12 @@ let phaser = (destructor, params, lfoFreq, node) => {
 
     let ap
     ap = makeAllPass(destructor, 200, 0.7, lfoGain)
+    matchInputChannels(node, ap, params) // A widened filter leaks; see play/nodes/channels.js
     node.connect(ap)
     ap.connect(output)
 
     ap = makeAllPass(destructor, 1700, 0.7, lfoGain)
+    matchInputChannels(node, ap, params)
     node.connect(ap)
     ap.connect(output)
 

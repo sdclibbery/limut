@@ -1,11 +1,13 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-ott needs proper makeup gain adjustment, not just /3 ?
-?keytar lfo should start on the note start? so should use []e not []l, but can it repeat then?
+!Render capacity leak again????
+!hub75 showing vertical tear occasionally, often after code update, repairs itself eventually
+!If swap webcam device with []t, it goes very very choppy
+!Keytar a bit monotonous, needs more lfo variation and vel sensitivity. Also just check tone.
 ?Is it right that accum etc do not reset between events?? Caused glitching on dlead drive mix
  Maybe even a param or separate method?
-?Want a way to respond to the release phase in expressions, eg apply a pitch change starting when the note is released
+?Want a way to respond to the release phase in expressions, eg apply a pitch change starting when the note is released?
  must work for live players too
 visual nodes...
  !kal is kinda boring when shape=2
