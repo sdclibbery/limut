@@ -158,7 +158,9 @@ define(function (require) {
     }
 // console.log('3', value, isConnectable(value))
     if (isConnectable(value)) { // Value is a node chain, just connect it
-      // Known Chromium leak, measured Sep 2026: a *per-note BiquadFilter anywhere in a chain that
+      // Known Chromium leak, measured Sep 2026 on Chromium 136 and still there on 152 (0.09-0.10
+      // resident after the stop, while the channel-widening leak in play/nodes/channels.js is gone
+      // by 152): a *per-note BiquadFilter anywhere in a chain that
       // ends at an AudioParam* leaves cost permanently resident on the audio thread, the same way a
       // widened filter does (see play/nodes/channels.js). The same filter feeding an audio input is
       // clean, and so is the same param chain with a DelayNode or with no filter at all, so this is

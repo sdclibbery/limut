@@ -156,7 +156,7 @@ climbs with every note and never comes back, not on note end and not on Ctrl-. T
 stays clean throughout, so nothing in JS can see it — only render capacity ~60s after
 `window.stop()` (~0.01 is healthy) tells you. Two independent triggers, both measured:
 
-**1. A filter widened after it starts rendering.** A BiquadFilter is created with
+**1. A filter widened after it starts rendering** — *fixed in Chromium 152, still live below it.* A BiquadFilter is created with
 `channelCountMode:'max'`, so a stereo input reconfigures its per-channel state on first render, and
 that reconfiguration is what leaks. Any stereo source does it — a `superosc` with `unison>=2` and a
 non-zero unison `pan`, or any 2-channel buffer (the white noise buffer in
@@ -174,9 +174,12 @@ non-zero unison `pan`, or any 2-channel buffer (the white noise buffer in
   chain through a GainNode. A buffer source reports its own width from `node.buffer.numberOfChannels`.
 
 The cost of the event rule is that a filter on a mono sub-chain of a stereo note is pinned to 2 and
-up-mixes; that is deliberate and inaudible.
+up-mixes; that is deliberate and inaudible. Re-measured Sep 2026 with the whole fix reverted on
+Electron 44 (Chromium 152): both repros are flat and fall to 0.004 after the stop, so Chromium fixed
+this between 136 and 152. The code stays for older browsers — don't delete it on the strength of a
+clean run on a current Chromium, and don't assume trigger 2 went with it.
 
-**2. A biquad in a chain that ends at an AudioParam.** Pinning does *not* help this one, and it has
+**2. A biquad in a chain that ends at an AudioParam** — *still present on Chromium 152.* Pinning does *not* help this one, and it has
 nothing to do with channels — `osc{freq:200*(1+(osc.sine{80}>>lpf{1000})/3)}` leaks with every node
 in it mono. The same filter feeding an audio input is clean, and so is the same param chain with a
 DelayNode or with no filter, so it is specific to a biquad in a param subgraph. There is no fix on

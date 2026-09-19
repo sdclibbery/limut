@@ -25,6 +25,14 @@ define(function (require) {
   // buffer source reports its width from its buffer here, and any per-note filter it feeds is
   // pinned like a worklet's.
   //
+  // **Fixed upstream.** Re-measured Sep 2026 on Electron 44 (Chromium 152) with this whole file's
+  // fix reverted: both repros are then flat and fall to 0.004 after the stop - the bare
+  // `p1 superosc, dur=1/8, lpf=20000, unison=3` one and the `noise{}>>hpf4{1500}` one. So Chromium
+  // fixed the reconfiguration leak somewhere between 136 (Electron 36, where everything above was
+  // measured) and 152. What follows is kept for older browsers, where it is cheap and correct - it
+  // is not dead code until limut stops caring about pre-152 Chromium. The AudioParam leak
+  // documented in play/eval-audio-params.js is a different bug and is NOT fixed in 152.
+  //
   // A source only pins the filters it connects to *directly*, and keytar's does not: its stereo
   // superosc reaches the player's `hpf` through the merge in play/synth/audiosynth.js, and a
   // GainNode carries no width tag. So a wide source also tags the *event* (`_limutChannels`), and
