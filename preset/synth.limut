@@ -122,5 +122,27 @@ preset dlead superosc, oct=2,
   wt=[1:!8000ms,0]e@s/3+[]n2@s/3+[]r@e/3, unison={3,detune:1.006},
   sync=1+this.dist*5*[1:\1000ms,0]e@s, pwm=[-1,1]l4@s*0.9,
   lpf={1000+this.freq+(this.cutoff+this.vel)*3000*[1:!1000ms,0]e@s,q:0},
-  drive={this.dist*2*this.vel*4/3,mix:smooth{this.dist*this.vel*4/3}},
+  drive={this.dist*2*this.vel*4/3,mix:this.dist*this.vel*4/3},
   cutoff=1/2, dist=1/2
+
+// Inspired by Au5 "crispy keytar" lead
+preset keytar audiosynth, oct=4, dur=1/2,
+  envelope='full', att=0, dec=100ms, sus={level:2/4}, rel=30ms,
+  play={
+    superosc{
+      freq: eventpitch
+        * (1 + this.jitter*this.vel*(noise>>lpf{1000})/3)
+        * (1 + this.vibrato*[0:~300ms,1]e@s*osc.sine{5.5Hz}),
+      sync: 1 + this.warp*this.vel*4*this.lfo*[0:/20ms,1]e@s + []r@e,
+      pwm: this.click*[1:!15ms,0]e@s,
+      unison: {3, detune:1.004, pan:1/2}
+    } >> nf{4*eventpitch, q:12},
+    noise{} >> hpf4{1500} * this.click*[1:!20ms,0.05]e@s
+  },
+  hpf={(50+this.cutoff*this.vel*150)*(1+this.warp*this.lfo), q:9, poles:4},
+  fx=disperser{freq:700, q:1/2, stages:16}
+    >> shaper{ {x, g:1+this.crisp*2, n:1/(1+this.crisp*2)} -> sin{x*g*pi}*n }/4
+		>> cabinet{1/4} >> ott{}
+    >> mix{echo{1/8},1/32},
+  lfo=[0,1]l2@s,
+  warp=1, jitter=1/2, vibrato=1/50, click=1/2, cutoff=1/2, crisp=1

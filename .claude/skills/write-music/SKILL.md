@@ -108,6 +108,14 @@ Examples:
 - `[XX]` = two kicks in one beat (double time)
 - `(OH)` = snare and clap together
 
+**A chord in a pattern is written with NO separators** — `(047)`, not `(0,4,7)`. Pattern notes are
+single characters juxtaposed, exactly as `0357` is four notes, so `(047)` is one chord of three.
+Commas belong to *expressions*, where a chord is `(0,4,7)` (see Chords under Expression Syntax) —
+so `add=(0,4,7)` is right and `p1 lead (0,4,7)` is a parse error:
+`Invalid pattern: Missing bracket, expecting )`. Same brackets, different separator rule, and the
+error message does not hint at it. For notes needing more than one character in a pattern, use the
+expression form via `add=` instead.
+
 ### Pattern modifiers
 - `.` = rest (silence)
 - `_` = continuation/tie (extends previous note, NOT rest)
@@ -254,7 +262,8 @@ Basic structure: `value{modifiers}@interval`
 `+`, `-`, `*`, `/`, `%`, `^` (power), `-` (unary minus)
 
 ### Chords
-- `(1,2,4)` - play simultaneously
+- `(1,2,4)` - play simultaneously. This comma form is for **expressions** (eg `add=(0,4,7)`); in a
+  *pattern* the same chord is written without separators, `(047)` — see Brackets in patterns.
 - `|` - concatenate chords: `1|2` = `(1,2)`, `(1,2)|(3,4)` = `(1,2,3,4)`
 
 ### Conditionals

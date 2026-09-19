@@ -167,3 +167,20 @@ set vocoder = {mod, count:16, freq:40, tilt:0.8, boost:pi/2, lo:150, hi:7000} ->
 set vocodethis = {wave:'saw', unison:3, freq:eventpitch@f, tilt:0.3} ->
   parallel{ {i} -> osc{wave, freq:freq*(1+(i-floor{unison/2})*0.01)}, unison }
     >>vocoder{this.player.pre*2, tilt:tilt, count:17}
+
+// Speaker cabinet voicing: the frequency response a guitar/keytar speaker imposes, which is what
+// tames the harsh upper harmonics heavy saturation generates (the job MeldaProduction's MCabinet
+// "flattening" does). Cuts the sub, dips the presence peak around 2.6kHz where fizz collects,
+// lifts the body around 900Hz, and rolls the top off steeply
+set cabinet = {flatten:1} ->
+  hpf4{60 + flatten*60} >>
+  pkf{(-5db)^flatten, freq:2600, q:1} >>
+  pkf{(3db)^flatten, freq:900, q:1/2} >>
+  bwlpf4{12000 - flatten*4000}
+
+// OTT style multiband compression: split into count bands and compress each one hard with a fast
+// attack and release, so the quiet detail in every band comes forward and the sound levels out.
+set ott = {depth:1, count:3, trim:1} -> multiband4{
+  {i,centre} -> compressor{threshold:-30db, ratio:(12db)^depth, attack:2ms, release:60ms, knee:6db},
+  count
+} * trim /3
