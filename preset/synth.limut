@@ -144,5 +144,5 @@ preset keytar audiosynth, oct=4, dur=1/2,
     >> shaper{ {x, g:1+this.crisp*2, n:1/(1+this.crisp*2)} -> sin{x*g*pi}*n }/4
 		>> cabinet{1/4} >> ott{}
     >> mix{echo{1/8},1/32},
-  lfo=[0,1]l2@s,
-  warp=1, jitter=1/2, vibrato=1/50, click=1/2, cutoff=1/2, crisp=1
+  lfo=[1:\1,0:/2,4/5:!8,0.1:_]e@s,
+  warp=1, jitter=1/2, vibrato=1/50, click=1/2, cutoff=1/3+1/4*[]r, crisp=1
