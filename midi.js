@@ -10,6 +10,8 @@ define(function(require) {
     listeners: {},
     notes: [],
     vel: 0,
+    pressure: 0,      // Channel pressure (0xD0): one value for the whole channel
+    notePressure: {}, // Polyphonic key pressure (0xA0): noteNumber -> pressure
   } }
 
   let midi
@@ -31,6 +33,8 @@ define(function(require) {
       channel.notes = []
       channel.note = {}
       channel.vel = 0
+      channel.pressure = 0
+      channel.notePressure = {}
       held.forEach(noteNumber => {
         for (let k in channel.listeners) {
           channel.listeners[k](noteNumber, undefined) // Note off notified with undefined velocity
@@ -69,26 +73,35 @@ define(function(require) {
       if (cmd === 9) { // Note on
         channel.notes.push(noteNumber)
         channel.vel = velocity || 0
+        channel.notePressure[noteNumber] = 0 // A fresh press starts from no pressure
         for (let k in channel.listeners) {
           let listener = channel.listeners[k]
           listener(noteNumber || 0, velocity || 0)
         }
       } else { // Note off
         channel.notes = channel.notes.filter((n) => n !== noteNumber)
-        if (channel.notes.length === 0) { channel.vel = 0 }
+        delete channel.notePressure[noteNumber]
+        if (channel.notes.length === 0) { channel.vel = 0; channel.pressure = 0 }
         for (let k in channel.listeners) {
           let listener = channel.listeners[k]
           listener(noteNumber || 0, undefined) // Note off notified with undefined velocity
         }
       }
     }
-    if (cmd === 13) { // Aftertouch
+    if (cmd === 10) { // Polyphonic key pressure: aftertouch for one note
+      var noteNumber = msg.data[1]
+      var pressure = msg.data[2] / 127
+      channel.notePressure[noteNumber] = pressure || 0
+      if (channel.notes.includes(noteNumber)) { channel.note[noteNumber] = pressure || 0 } // As channel pressure does: the note value follows the pressure once it arrives
+      channel.vel = pressure || 0
+      lastInput = `Port ${idx} Channel ${channelNumber} Key pressure ${noteNumber}`
+    }
+    if (cmd === 13) { // Channel pressure (aftertouch)
       var aftertouch = msg.data[1] / 127
-      for (let n in channel.note) {
-        if (channel.note[n] > 0) {
-          channel.note[n] = aftertouch || 0
-        }
-      }
+      // Driven off the held list, not `channel.note[n] > 0`: pressure that falls to 0 would take
+      // that note out of this loop for good, and it could never be raised again
+      channel.notes.forEach(n => { channel.note[n] = aftertouch || 0 })
+      channel.pressure = aftertouch || 0
       channel.vel = aftertouch || 0
       lastInput = `Port ${idx} Channel ${channelNumber} Aftertouch`
     }
@@ -170,8 +183,20 @@ define(function(require) {
         .map(n => n - 60 - root)
     }
     if (controlId === 'vel') { return channel.vel || 0 }
+    if (controlId === 'press') { return channel.pressure || 0 }
     if (controlId !== undefined && channel.controller[controlId] !== undefined) { return channel.controller[controlId] }
     return channel.note[noteNumber] || 0
+  }
+
+  // Aftertouch for one note, whichever kind the device sends: a device sends polyphonic key
+  // pressure or channel pressure, not both, so the max is simply "whichever arrived".
+  let getPressure = (portNumber, channelNumber, noteNumber) => {
+    if (!midi) { connect() }
+    let port = inputs[portNumber]
+    if (!port) { return 0 }
+    let channel = port[channelNumber]
+    if (!channel) { return 0 }
+    return Math.max(channel.notePressure[noteNumber] || 0, channel.pressure || 0)
   }
 
   let getLastInputString = () => {
@@ -267,6 +292,52 @@ define(function(require) {
     assert(0, getValue(7, 0, 74), 'a port with no input yet')
   }
 
+  { // Aftertouch: stored in its own right, per note, whichever kind the device sends
+    let idx = 5
+    let msg = (...data) => handleMessage(idx, {data: data})
+    msg(0x90, 60, 127) // Two notes held on channel 0
+    msg(0x90, 64, 64)
+    assert(1, getValue(idx, 0, undefined, 60), 'the note on velocity')
+    assert(0, getPressure(idx, 0, 60), 'no pressure until some arrives')
+
+    msg(0xd0, 64) // Channel pressure reaches every held note
+    assert(64/127, getPressure(idx, 0, 60))
+    assert(64/127, getPressure(idx, 0, 64), 'and the other held note')
+    assert(64/127, getValue(idx, 0, 'press'), "midi{'press'}")
+    assert(64/127, getValue(idx, 0, 'vel'), "midi{'vel'} follows the aftertouch")
+    assert(64/127, getValue(idx, 0, undefined, 60), 'so does the note value, as documented')
+
+    msg(0xd0, 0) // Pressure that falls away must be able to come back: the note stays in the loop
+    assert(0, getPressure(idx, 0, 60))
+    msg(0xd0, 127)
+    assert(1, getPressure(idx, 0, 60), 'a note whose pressure reached 0 still tracks')
+
+    msg(0x91, 60, 127) // Polyphonic key pressure, on a channel of its own
+    msg(0x91, 64, 127)
+    msg(0xa1, 60, 32)
+    assert(32/127, getPressure(idx, 1, 60))
+    assert(0, getPressure(idx, 1, 64), 'another held note is untouched by key pressure')
+    assert(0, getValue(idx, 1, 'press'), 'key pressure is not channel pressure')
+    msg(0xd1, 16) // Both kinds at once: whichever is higher is the one that arrived
+    assert(32/127, getPressure(idx, 1, 60))
+    assert(16/127, getPressure(idx, 1, 64))
+
+    msg(0x81, 60, 0) // A released note keeps no key pressure of its own
+    assert(16/127, getPressure(idx, 1, 60), 'only the channel pressure is left, which is still channel wide')
+    msg(0x81, 64, 0)
+    assert(0, getValue(idx, 1, 'press'), 'the last note lifting clears the channel pressure')
+    assert(0, getPressure(idx, 1, 60), 'and now there is nothing left at all')
+    assert(1, getValue(idx, 0, 'press'), 'the other channel is unaffected')
+
+    assert(0, getPressure(99, 0, 60), 'an unknown port')
+    assert(0, getPressure(idx, 9, 60), 'an unknown channel')
+
+    releasePort(idx) // A port that goes away drops its pressure with everything else
+    assert(0, getPressure(idx, 0, 60))
+    assert(0, getValue(idx, 0, 'press'))
+    delete inputs[idx]
+  }
+
   resetPorts()
   midi = realMidi
 
@@ -275,6 +346,7 @@ define(function(require) {
 
   return {
     getValue: getValue,
+    getPressure: getPressure,
     connect: connect,
     getLastInputString: getLastInputString,
     listen: listen,

@@ -1,11 +1,8 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-Setup a midi mapping for the keytar
- Keytar pattern too
-  Does the aftertouch work?
-  And it stays in scale on the white notes
-keytar preset should support addc - and rename it
+Aftertouch doesn't work
+keytar preset should support addc
 !Render capacity leak again????
  Report Chromium bug:
   It's a genuine, current bug and I'd file it. Want me to build the standalone repro — a plain HTML page with no limut
@@ -156,8 +153,6 @@ MediaStreamAudioSourceNode node source function
 Note: Can filter an audio signal down into a control signal that can be used for ducking like this:
  shaper{{x}->abs{x}}>>lpf{10} - This is an envelope follower basically
 midi controller support
- this.vel should update with aftertouch for midi, at the moment you only get the vel at the time of note-on (see percussion pads)
- midi{'vel'} should include aftertouch?
  ?What happens if: midi{[1,2]t4} ??
   Is it worth worrying about? Error at least? Or just support it?
   ?Same for gamepads!

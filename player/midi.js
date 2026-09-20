@@ -103,9 +103,27 @@ define(function(require) {
         if (oct !== undefined) { event.oct = oct } // 'abs' supplies the octave, not the base params
         if (sharp !== undefined) { event.sharp = sharp } // A black note sharpens, over any base param default
         event.vel = velocity // Ignore base params (whose default vel would clobber it) and use the midi supplied velocity
+        // Aftertouch is a separate continuous modulation source, as it is on any synth: vel stays the
+        // latched strike velocity and the live pressure arrives on a param of its own. Set after the
+        // base params, so a preset's press=0 default is overridden, and before the player line's
+        // overrides, so a press= or press*= still composes on top - the same ordering the gamepad
+        // player uses for its lt:/rt: params.
+        let ownEvents
+        let pressure = midi.getPressure(port, channel, note)
+        let press = () => {
+          // Frozen once the voice is releasing: the note off zeroes the device's pressure, and the
+          // release tail must not go with it. _stopping is set on every release path (live-notes.js),
+          // including a code re-run, where the events are handed on to the replacement player.
+          if (!ownEvents || !ownEvents.some(e => e._stopping)) { pressure = midi.getPressure(port, channel, note) }
+          return pressure
+        }
+        press.interval = 'frame' // Carries up through this.press into amp/lpf/..., so they get a per-frame updater
+        press.isNonTemporal = true // External input, so it cannot be re-evaluated at an arbitrary beat
+        event.press = press
         event = applyOverrides(event, params) // A vel= or vel*= on the player line still applies on top
         let events = player.processEvents([event])
         events.forEach(e => { e._noteOff = () => {} }) // Default _noteOff callback does nothing
+        ownEvents = events
         player.play(events)
       })
       // Disconnect midi listener on player cleanup
@@ -189,6 +207,50 @@ define(function(require) {
   // And the percussion mapping is unchanged
   assert('X', note('perc 0', {}, {}, 36, 1).value, 'midi note 36 is a heavy kick')
   assert('-', note('perc 0', {}, {}, 99, 1).value, 'an unmapped percussion note is a hat')
+
+  // Aftertouch arrives as its own live param, leaving the strike velocity on vel alone
+  {
+    let {evalParamFrame} = require('player/eval-param')
+    let realGetPressure = midi.getPressure
+    let stubPressure = 0
+    let play = (id, params) => {
+      let player = testPlayer(id)
+      let captured
+      midi.listen = (port, channel, listenerId, cb) => { captured = cb }
+      midi.stopListening = () => {}
+      midi.getPressure = () => stubPressure
+      midiPlayer('1', params, player, {vel:3/4, press:0})
+      captured(60, 0.25)
+      return player.events[player.events.length-1]
+    }
+    try {
+      let e = play('mtestpress', {})
+      assert(0.25, e.vel, 'vel is still the latched strike velocity')
+      assert('function', typeof e.press, 'press is a live value')
+      assert('frame', e.press.interval, 'evaluated every frame, so this.press reaches the audio params')
+      assert(true, e.press.isNonTemporal, 'external input, so it cannot be evalled at an arbitrary beat')
+      assert(0, e.press(), 'no pressure yet')
+      stubPressure = 1/2
+      assert(1/2, e.press(), 'and it tracks the device')
+      e._stopping = true // As every release path marks it (live-notes.js)
+      stubPressure = 0 // The note off zeroes the device pressure
+      assert(1/2, e.press(), 'a releasing voice holds the pressure it ended on')
+
+      stubPressure = 1/4 // A press= or press*= on the player line still composes with the live value
+      let scaled = play('mtestpress2', {press:newOverride(2, (l,r) => l*r)})
+      assert(1/2, evalParamFrame(scaled.press, scaled, 0))
+      stubPressure = 1/3
+      assert(2/3, evalParamFrame(scaled.press, scaled, 1), 'and stays live')
+      let wrapped = evalParamFrame(scaled.press, scaled, 2, {withInterval:true})
+      assert('frame', wrapped.interval, 'the override keeps the frame interval, so it is still updated per frame')
+      assert(2/3, wrapped.value)
+      assert(1, evalParamFrame(play('mtestpress3', {press:newOverride(1)}).press, {count:0}, 0), 'press= replaces it')
+    } finally {
+      midi.listen = realListen
+      midi.stopListening = realStop
+      midi.getPressure = realGetPressure
+    }
+  }
 
   console.log('Midi player tests complete')
   }

@@ -217,6 +217,21 @@ define(function(require) {
 
     assert(1, lookupOp('this', 'foo', {foo:1},0,er)())
 
+    { // A live event param (the midi player's press, the gamepad player's lt:/rt:) keeps its frame
+      // interval through `this.x` and the arithmetic around it, so a param built on it is
+      // re-evaluated every frame rather than being set once when the note starts (eval-audio-params)
+      let operator = require('expression/eval-operator')
+      let live = () => 0.5
+      live.interval = 'frame'
+      let event = {press: live}
+      let thisPress = (e,b,evalRecurse) => lookupOp('this', 'press', e,b, evalRecurse)
+      assert({value:0.5,interval:'frame'}, evalParamFrame(thisPress, event, 0, {withInterval:true}))
+      let add = (l,r) => l+r
+      assert({value:0.75,interval:'frame'}, evalParamFrame(operator(add, 0.25, thisPress), event, 0, {withInterval:true}))
+      let still = () => 0.5 // Without the frame interval it would be read once and left alone
+      assert(0.5, evalParamFrame(thisPress, {press: still}, 0, {withInterval:true}))
+    }
+
     addVarFunction('foo', (v)=>mainParam(v))
     assert(1, lookupOp(1, 'foo', {},0,er))
     assert(2, lookupOp(2, {value:'foo'}, {},0,er))
