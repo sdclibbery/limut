@@ -10,7 +10,6 @@ define(function (require) {
   let envelope = require('play/envelopes')
   let pitchEffects = require('play/effects/pitch-effects')
   let perFrameAmp = require('play/effects/perFrameAmp')
-  let {tagSource} = require('play/nodes/channels')
 
   return (params) => {
     let rate = evalMainParamEvent(params, 'rate')
@@ -28,7 +27,6 @@ define(function (require) {
       source.playbackRate.value = rate
     }
 
-    tagSource(source, params) // A stereo sample pins every per-note filter it feeds; see play/nodes/channels.js
     params.endTime = params._time + evalMainParamEvent(params, 'dur', 0.1)*params.beat.duration
     let startTime = evalMainParamEvent(params, 'start', 0, 's')
 

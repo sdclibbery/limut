@@ -2,6 +2,10 @@
 =================================================================================================================================
 =================================================================================================================================
 !Render capacity leak again????
+ ??Revert chromium bugfix channel pinning code now??
+ Report Chromium bug:
+  It's a genuine, current bug and I'd file it. Want me to build the standalone repro — a plain HTML page with no limut
+   the osc → biquad → gain →  param loop next to the → audio control, plus the CDP capture procedure — so you can attach it to an issue?
 !hub75 showing vertical tear occasionally, often after code update, repairs itself eventually
 !If swap webcam device with []t, it goes very very choppy
 !Keytar a bit monotonous, needs more lfo variation and vel sensitivity. Also just check tone.

@@ -12,7 +12,6 @@ define(function (require) {
   let {evalMainParamEvent,evalSubParamEvent,evalMainParamFrame,evalSubParamFrame} = require('play/eval-audio-params')
   let perFrameAmp = require('play/effects/perFrameAmp')
   let {getBuffer} = require('play/samples')
-  let {tagSource} = require('play/nodes/channels')
 
   return (params) => {
     let freq = scale.paramsToFreq(params, 4)
@@ -28,7 +27,6 @@ define(function (require) {
     let unison = evalMainParamEvent(params, 'unison', 1)
     let pan = evalSubParamEvent(params, 'unison', 'pan', 0.5)
     let vco = createSuperOsc(Math.round(unison) >= 2 && pan !== 0 ? 2 : 1)
-    tagSource(vco, params) // A stereo note pins every per-note filter it feeds; see play/nodes/channels.js
     // Register the worklet with the destructor FIRST, before evaluating any params.
     // An AudioWorkletNode only terminates when its process() observes the stop param,
     // so anything throwing in the window between construction and registration - one

@@ -149,50 +149,40 @@ Contains JS implementations of node functions callable from DSL expressions: `de
 
 The `delay` node function creates a Web Audio `DelayNode` — its `max` parameter sets `maxDelayTime`, which the Web Audio API requires to be in range `(0, 180]`.
 
-## Per-note BiquadFilters leak in Chromium — two rules (`play/nodes/channels.js`)
+## A per-note biquad in a param chain leaks (Chromium)
 
-A per-note filter can leave cost **permanently resident on the audio thread**: render capacity
-climbs with every note and never comes back, not on note end and not on Ctrl-. The node census
-stays clean throughout, so nothing in JS can see it — only render capacity ~60s after
-`window.stop()` (~0.01 is healthy) tells you. Two independent triggers, both measured:
+A **per-note BiquadFilter anywhere in a chain that ends at an AudioParam** leaves cost permanently
+resident on the audio thread: render capacity climbs with every note and never comes back, not on
+note end and not on Ctrl-. The node census stays clean throughout, so nothing in JS can see it —
+only render capacity ~60s after `window.stop()` (~0.01 is healthy) tells you. Measured Sep 2026 on
+Chromium 136 and **still present on 152**:
 
-**1. A filter widened after it starts rendering** — *fixed in Chromium 152, still live below it.* A BiquadFilter is created with
-`channelCountMode:'max'`, so a stereo input reconfigures its per-channel state on first render, and
-that reconfiguration is what leaks. Any stereo source does it — a `superosc` with `unison>=2` and a
-non-zero unison `pan`, or any 2-channel buffer (the white noise buffer in
-`play/synth/waveforms/noise.js`, a stereo sample). So:
+```
+p1 audiosynth, dur=1/2, amp=1/32, play={osc{freq:200*(1+(osc.sine{80}>>lpf{1000})/3)}}
+```
 
-- **Every per-note BiquadFilter must be pinned before it is connected**, via
-  `matchInputChannels(source, dest, params)`. Existing call sites: `play/effects/filters.js`, the
-  `biquad` node function in `play/nodes/nodes.js` (which covers `lpf`/`hpf4`/`nf`/`apf`/… from
-  `lib/nodes.limut`), `phaser.js`, `reverb.js`, `freeverb.js`, `pitchedperc.js`. A new per-note
-  filter anywhere needs the same call.
-- **Every stereo source must tag its event**, via `tagSource(node, params)` — `play/nodes/source.js`
-  (superosc, noise, sample, tts) and the synths that build buffer sources. The width rides on the
-  *event* (`params._limutChannels`) as well as the node, because a source only pins the filters it
-  feeds directly: the tag dies at any gain, and `play/synth/audiosynth.js` merges every `play={a,b}`
-  chain through a GainNode. A buffer source reports its own width from `node.buffer.numberOfChannels`.
+at `bpm=1410` — 0.09–0.27 after the stop with an empty graph, against 0.005 for the same patch with
+the lpf moved into the audio path or dropped. The same param chain with a DelayNode instead of the
+filter is clean, so it is specific to a biquad in a param subgraph, not tail time and not the param
+connection. Nothing on our side fixes it (teardown reordering and an extra audio-domain edge both
+measured no better), so **a modulator that wants smoothing must come from a slow source, not a
+filter** — `noise{rate:1/20}` rather than `noise>>lpf{1000}`. `keytar` in `preset/synth.limut` is
+the worked example, including the RMS matching (`lpf{1000}` q:5 passes 0.34 of white; interpolated
+slow noise passes 0.82). Full note at the `isConnectable(value)` branch in
+`play/eval-audio-params.js`.
 
-The cost of the event rule is that a filter on a mono sub-chain of a stereo note is pinned to 2 and
-up-mixes; that is deliberate and inaudible. Re-measured Sep 2026 with the whole fix reverted on
-Electron 44 (Chromium 152): both repros are flat and fall to 0.004 after the stop, so Chromium fixed
-this between 136 and 152. The code stays for older browsers — don't delete it on the strength of a
-clean run on a current Chromium, and don't assume trigger 2 went with it.
-
-**2. A biquad in a chain that ends at an AudioParam** — *still present on Chromium 152.* Pinning does *not* help this one, and it has
-nothing to do with channels — `osc{freq:200*(1+(osc.sine{80}>>lpf{1000})/3)}` leaks with every node
-in it mono. The same filter feeding an audio input is clean, and so is the same param chain with a
-DelayNode or with no filter, so it is specific to a biquad in a param subgraph. There is no fix on
-our side (teardown reordering and an extra audio-domain edge both measured no better), so **a
-modulator that wants smoothing must come from a slow source, not a filter** — `noise{rate:1/20}`
-rather than `noise>>lpf{1000}`. `preset/synth.limut`'s `keytar` is the worked example, including the
-RMS matching (`lpf{1000}` q:5 passes 0.34 of white; interpolated slow noise passes 0.82). Full note
-at the `isConnectable(value)` branch in `play/eval-audio-params.js`.
-
-Measure both with `limut-diag.js` (`LIMUT_DIAG=1 LIMUT_DIAG_CODE=<file> LIMUT_DIAG_STOP=180
+Measure with `limut-diag.js` (`LIMUT_DIAG=1 LIMUT_DIAG_CODE=<file> LIMUT_DIAG_STOP=180
 LIMUT_DIAG_SECS=240 npm start`), 180s of play at a silly bpm plus 60s stopped, and bisect by
-deleting one node at a time from the patch — the leaks are per-node-per-note, so a one-line repro is
-always reachable.
+deleting one node at a time — the leak is per-node-per-note, so a one-line repro is always
+reachable.
+
+**A second, related leak existed and is gone.** Until Chromium 152, a per-note BiquadFilter created
+with `channelCountMode:'max'` leaked the same way when a *stereo* source widened it after it started
+rendering (any stereo source: `superosc` with a unison pan spread, the 2-channel white-noise buffer,
+a stereo sample). limut carried a pinning fix for it in `play/nodes/channels.js` from Aug 2026;
+**that code was removed in Sep 2026** once a pre-fix control on Electron 44 (Chromium 152) measured
+flat and fell to 0.004 after the stop, where Chromium 136 climbed and stuck at 0.37. If a capacity
+climb ever turns up again on a pre-152 browser, that is what it is — `git show 6d4ca8b1` has the fix.
 
 ## Expression value ranges and Web Audio API constraints
 

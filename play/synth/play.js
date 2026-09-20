@@ -8,14 +8,12 @@ define(function (require) {
   let {evalMainParamEvent} = require('play/eval-audio-params')
   let perFrameAmp = require('play/effects/perFrameAmp')
   let destructor = require('play/destructor')
-  let {tagSource} = require('play/nodes/channels')
 
   return (params) => {
     let rate = evalMainParamEvent(params, 'rate', 1)
     let source = system.audio.createBufferSource()
     source.buffer = getBuffer(getUrl(params.sound, evalMainParamEvent(params, 'sample', 1)))
     source.playbackRate.value = rate
-    tagSource(source, params) // A stereo sample pins every per-note filter it feeds; see play/nodes/channels.js
     let eventDur = evalMainParamEvent(params, 'sus', 1e10) * params.beat.duration
     let bufferDur =  (source.buffer ? source.buffer.duration : 0.1)
     params.endTime = params._time + Math.min(eventDur, bufferDur)

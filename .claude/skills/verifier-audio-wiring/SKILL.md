@@ -199,10 +199,10 @@ with an empty editor) before calling any capacity reading anomalous.
 **Liveness and capacity are different questions, and the nastiest leaks only show in the
 second.** Chromium can leave cost permanently resident on the audio thread for a node that
 is properly stopped, disconnected and garbage collected — the node census goes to zero,
-`workletVoices` goes to zero, and render capacity stays up anyway. Two known triggers, both
-per note, both in `play/nodes/channels.js` / `play/eval-audio-params.js`: a filter widened
-by a stereo input after it starts rendering, and a biquad in a chain that ends at an
-AudioParam. **The discriminator is render capacity ~60s after `window.stop()` with an empty
+`workletVoices` goes to zero, and render capacity stays up anyway. The live trigger, per note,
+is a biquad in a chain that ends at an AudioParam (see `play/eval-audio-params.js`); a second
+one — a filter widened by a stereo input after it starts rendering — was fixed in Chromium 152
+and its limut workaround has been removed. **The discriminator is render capacity ~60s after `window.stop()` with an empty
 graph: ~0.01 is healthy, anything above it is resident cost.** A liveness harness cannot
 see either one, so never report "no leak" on liveness evidence alone.
 

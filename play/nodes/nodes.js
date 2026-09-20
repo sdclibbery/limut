@@ -6,7 +6,6 @@ define(function(require) {
   let {evalParamFrame,evalParamEvent} = require('player/eval-param')
   var metronome = require('metronome')
   let {connect,isConnectable} = require('play/nodes/connect')
-  let {matchInputChannels} = require('play/nodes/channels')
   let consoleOut = require('console')
   require('play/nodes/mocks')
   require('play/nodes/convolver')
@@ -23,9 +22,6 @@ define(function(require) {
 
   let biquad = (args,e,b) => {
     let node = system.audio.createBiquadFilter()
-    // Pin the width now, from the note being built, rather than leaving it to whatever connects to
-    // it: a filter widened after it starts rendering leaks. See play/nodes/channels.js.
-    matchInputChannels(undefined, node, e)
     let params = combineParams(args, e)
     node.type = evalMainParamEvent(args, 'value', 'lowpass', undefined, e)
     evalMainParamFrame(node.frequency, params, 'freq', 440, 'hz')
