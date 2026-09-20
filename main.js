@@ -10,6 +10,7 @@ define(function(require) {
   require('functions/chord')
   require('functions/sliders')
   require('functions/midi-knob')
+  require('functions/avw2')
   require('functions/gamepad')
   var gamepad = require('player/gamepad')
   require('functions/debug')

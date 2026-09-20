@@ -2,8 +2,8 @@
 =================================================================================================================================
 =================================================================================================================================
 Setup a midi mapping for the keytar
- Automatically create the 'keytar' global if recognised, allowing keytar.bend, keytar.f1, keytar.p1 etc too
  Keytar pattern too
+  Does the aftertouch work?
   And it stays in scale on the white notes
 keytar preset should support addc - and rename it
 !Render capacity leak again????

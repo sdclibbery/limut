@@ -1257,6 +1257,17 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>midi{note:36,channel:9,port:0}</code> Take input from the given note. The value is the velocity then the aftertouch, or 0 if the note is not pressed. The range is 0 to 1.</p>
 <p class='sub'><code>midi{'notes'}</code> Chord of currently playing notes, in chromatic semitones from the currently set root, from middle C. Defaults to port 0 and channel 0.</p>
 <p class='sub'><code>midi{'vel'}</code> Velocity/aftertouch of the current playing notes, from 0 to 1. Defaults to port 0 and channel 0.</p>
+<p><code>avw2</code> Take input from an Alesis Vortex Wireless 2 keytar. The device is recognised by name whenever it is plugged in, so there is no port number to find, and unplugging and replugging it does not need the code re-running. Used on its own, <code>avw2</code> is 1 when the keytar is connected and 0 when it is not, and logs the midi ports, which one the keytar was found on, and the last input received, to help identify controls.</p>
+<p class='sub'><code>avw2.f1</code> Fader 1 on the body, from 0 to 1. <code>f1</code> to <code>f8</code> for the eight faders.</p>
+<p class='sub'><code>avw2.p1</code> Pad 1, from 0 to 1 based on velocity then aftertouch, or 0 when it is not pressed. <code>p1</code> to <code>p8</code> for the eight pads.</p>
+<p class='sub'><code>avw2.s1</code> The slider on the neck, from 0 to 1.</p>
+<p class='sub'><code>avw2.bend</code> The pitch bend wheel, from -1 to +1.</p>
+<p class='sub'><code>avw2.ribbon</code> The touch ribbon on the neck, from 0 to 1. <code>ribbon1</code> and <code>ribbon3</code> for ribbon banks 1 and 3 specifically; <code>ribbon</code> is bank 1.</p>
+<p class='sub'><code>avw2.sus</code> The sustain button, 1 while held and 0 when released.</p>
+<p class='sub'><code>avw2.notes</code> Chord of the keys currently held, in chromatic semitones from the currently set root, from middle C. <code>avw2.vel</code> is their velocity/aftertouch, from 0 to 1.</p>
+<p class='sub'><code>avw2.connected</code> 1 when the keytar is plugged in, 0 when it is not, without logging anything.</p>
+<p class='sub'><code>avw2{14}</code> Take input from control 14 (or note 14 if there is no control 14) on the keytar, wherever it turns out to be. Also <code>avw2{control:14}</code>, <code>avw2{note:36}</code> and <code>avw2{channel:1}</code>. All of the controls above are on channel 0.</p>
+<p class='sub'><code>avw2{'f1', port:2}</code> Read a named control from an explicit port, for when the keytar is not recognised by name.</p>
 <p><code>slider{}</code> Create a new slider control on the page, which can be used for live control of live coded expressions. The value dynamically updates to reflect the current position of the slider control.</p>
 <p class='sub'><code>slider{0.1}</code> Initial value for the slider control when it is first created. Default is 0.</p>
 <p class='sub'><code>slider{name:'Foo'}</code> Name to display with the slider. The name uniquely identifies the slider. Multiple <code>slider</code> usages in the source code with the same name will be treated as all referencing the same slider. Default is a name constructed from the player and param names.</p>
