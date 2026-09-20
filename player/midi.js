@@ -87,7 +87,8 @@ define(function(require) {
         event.sound = event.value
         event = combineOverrides(event, baseParams)
         event.oct = oct // Ignore base params and use the midi supplied octave
-        event = applyOverrides(event, params)
+        event.vel = velocity // Ignore base params (whose default vel would clobber it) and use the midi supplied velocity
+        event = applyOverrides(event, params) // A vel= or vel*= on the player line still applies on top
         let events = player.processEvents([event])
         events.forEach(e => { e._noteOff = () => {} }) // Default _noteOff callback does nothing
         player.play(events)
@@ -104,6 +105,49 @@ define(function(require) {
           midi.stopListening(port, channel, player.id+player._num)
         }
       }
+  }
+
+  // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+
+  let assert = (expected, actual, msg) => {
+    if (expected !== actual) { console.trace(`Assertion failed.\n>>Expected: ${expected}\n>>Actual: ${actual}${msg?'\n'+msg:''}`) }
+  }
+  let {newOverride} = require('player/override-params')
+  let testPlayer = (id) => {
+    let player = {id: id, _num: 0, events: []}
+    player.processEvents = (es) => es
+    player.play = (es) => es.forEach(e => player.events.push(e))
+    return player
+  }
+  // Stub out the midi module so a note can be played without any hardware (and without the real
+  // listen asking for midi access)
+  let realListen = midi.listen, realStop = midi.stopListening
+  let note = (id, params, baseParams, noteNumber, velocity) => {
+    let captured
+    midi.listen = (port, channel, listenerId, cb) => { captured = cb }
+    midi.stopListening = () => {}
+    try {
+      let player = testPlayer(id)
+      midiPlayer('0', params, player, baseParams)
+      captured(noteNumber, velocity)
+      return player.events[player.events.length-1]
+    } finally {
+      midi.listen = realListen
+      midi.stopListening = realStop
+    }
+  }
+
+  // The base params' default vel must not clobber the velocity the note was played at
+  assert(0.25, note('mtest1', {}, {vel:3/4}, 60, 0.25).vel, 'the midi velocity survived the base params')
+  // A vel on the player's own line still applies, on top of the midi velocity
+  assert(0.5, note('mtest2', {vel:newOverride(2, (l,r) => l*r)}, {vel:3/4}, 60, 0.25).vel, 'vel*= scales the midi velocity')
+  assert(1, note('mtest3', {vel:newOverride(1)}, {vel:3/4}, 60, 0.25).vel, 'vel= overrides the midi velocity')
+  // The octave restore is unchanged
+  assert(4, note('mtest4', {}, {vel:3/4, oct:9}, 60, 1).oct, 'the midi note supplies the octave, not the base params')
+  assert(0, note('mtest5', {}, {vel:3/4}, 60, 1).value, 'middle c is chromatic 0')
+
+  console.log('Midi player tests complete')
   }
 
   return midiPlayer
