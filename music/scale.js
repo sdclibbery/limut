@@ -1,6 +1,7 @@
 'use strict';
 define(function (require) {
   let {evalMainParamEvent,evalSubParamEvent} = require('play/eval-audio-params')
+  let {evalParamFrame} = require('player/eval-param')
   let addVarFunction = require('predefined-vars').addVarFunction
 
   let scales = {
@@ -116,8 +117,32 @@ define(function (require) {
     params.freq = freq
     return freq
   }
+  // addc in semitones, at the beat we are being evaluated at. Deliberately evalParamFrame and not
+  // evalMainParamEvent: the latter goes through evalParamEvent, which forces beat = event.count, so
+  // a moving addc would freeze at its note-start value.
+  let addcSemis = (e, b) => {
+    if (!e || e.addc === undefined) { return 0 }
+    let v = evalParamFrame(e.addc, e, b !== undefined ? b : e.count)
+    if (typeof v === 'object' && v !== null && !(v instanceof AudioNode)) { v = v.value }
+    return typeof v === 'number' ? v : 0 // A connectable addc is not expressible as a scalar here
+  }
+
+  // The frequency this event is actually sounding at, addc included. The native synths do NOT come
+  // through here - they call paramsToFreq directly and get addc from pitchEffects on their detune
+  // param - so there is no double application; this is what gives audiosynth presets (keytar,
+  // epiano, superbass...) an addc at all, since audiosynth runs no pitch effects.
   let eventPitchFunc = (args, e,b) => {
-    return scale.paramsToFreq(e, 4)
+    let freq = scale.paramsToFreq(e, 4)
+    if (typeof freq !== 'number') { return freq }
+    let semis = addcSemis(e, b)
+    if (semis) { freq = freq * Math.pow(2, semis/12) }
+    // A time varying addc has to keep moving through the note. Tagging the result 'frame' is what
+    // evalParamPerFrame reads to route the param per frame (play/eval-audio-params.js). Keyed on
+    // addc being an expression, NOT on the offset being non zero: [0:12]e reads 0 at note start,
+    // and a bare number there would get scheduled once and freeze the note at its base pitch.
+    // A constant addc returns a bare number, so nothing pays a per frame cost for it.
+    if (typeof e.addc === 'function') { return {value:freq, interval:'frame'} }
+    return freq
   }
   addVarFunction('eventpitch', eventPitchFunc)
 
@@ -162,6 +187,38 @@ define(function (require) {
   assert(261.6/2, pitchFunc({value:{value:0,"#":-12}}))
   assert(261.6/2, pitchFunc({value:{value:0,"b":12}}))
   assert(261.6/4, pitchFunc({value:{value:0,"b":12},sharp:-12}))
+
+  // eventpitch folds addc in on top of the scale lookup, which is what gives audiosynth presets
+  // (which run no pitch effects) an addc at all
+  let evp = (addc) => { let e = {sound:0, oct:4, count:0}; if (addc !== undefined) { e.addc = addc }; return e }
+
+  assert(261.6, eventPitchFunc({}, evp(), 0))
+  assert('number', typeof eventPitchFunc({}, evp(), 0)) // no addc: a bare number, nothing per frame
+  assert(523.3, eventPitchFunc({}, evp(12), 0))
+  assert(130.8, eventPitchFunc({}, evp(-12), 0))
+  assert(261.6, eventPitchFunc({}, evp(0), 0))
+  assert('number', typeof eventPitchFunc({}, evp(2), 0)) // a constant addc stays a bare number too
+
+  // A time varying addc is evaluated at the beat we are asked for, and the result is tagged 'frame'
+  // so the audio param gets scheduled per frame
+  let bendPerBeat = (e,b) => b*12
+  assert({value:261.6,interval:'frame'}, eventPitchFunc({}, evp(bendPerBeat), 0))
+  assert({value:523.3,interval:'frame'}, eventPitchFunc({}, evp(bendPerBeat), 1))
+  assert({value:130.8,interval:'frame'}, eventPitchFunc({}, evp(bendPerBeat), -1))
+  // ...including when it reads zero at note start ([0:12]e does); a bare number there would be
+  // scheduled once and freeze the note at its base pitch
+  assert('object', typeof eventPitchFunc({}, evp(bendPerBeat), 0))
+
+  // An addc that is not a scalar (undefined, or a connectable node chain) falls back to the base
+  // pitch rather than NaN. It still works on the native synths, where pitchEffects connects it.
+  assert(261.6, eventPitchFunc({}, evp(() => undefined), 0).value)
+  assert(261.6, eventPitchFunc({}, evp(() => { return {notAValue:1} }), 0).value)
+
+  // paramsToFreq must keep caching the UN-bent frequency on the event: setupGlide uses params.freq
+  // as its glide target and the base events' freq as its source
+  let bent = evp(12)
+  assert(523.3, eventPitchFunc({}, bent, 0))
+  assert(261.6, bent.freq)
 
   console.log('Scale tests complete')
   }

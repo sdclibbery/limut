@@ -1,8 +1,9 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-Aftertouch doesn't work
-keytar preset should support addc
+!Some CLaude stuff
+ Cleanup code comments and doc verbosity. Docs dont need to explain how things are impplemented. update skills
+ Claude should not edit ToDo.txt
 !Render capacity leak again????
  Report Chromium bug:
   It's a genuine, current bug and I'd file it. Want me to build the standalone repro — a plain HTML page with no limut
@@ -15,7 +16,6 @@ keytar preset should support addc
 ?Want a way to respond to the release phase in expressions, eg apply a pitch change starting when the note is released?
  must work for live players too
 visual nodes...
- !kal is kinda boring when shape=2
  !let{'name'} (the tap form, naming the chain value) at the HEAD of a loop{} body: the head collapses
   to a uniform and the whole loop comes out flat. Diagnosed 2026-09-12 and it is NOT the name: it is
   the domain. Unpiped and with no bound expression, let has nothing to tell audio from visual by
