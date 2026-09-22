@@ -9,6 +9,7 @@ define(function(require) {
   let connectOp = require('expression/connectOp')
   let {evalParamFrame} = require('player/eval-param')
   let {functionShaderNode} = require('draw/visualsynth/shader-function')
+  let vhsHelpers = require('draw/visualsynth/shader-vhs')
   let consoleOut = require('console')
 
   let warned = {}
@@ -400,6 +401,66 @@ define(function(require) {
     })
   }
   addNodeFunction('pal', pal)
+
+  // The vhs standard visual param for a px chain, which gets no standard processing: vhsuv warps
+  // the coordinate going in, vhsrgb colours what comes out, and vhs{src} is both around a source
+  // chain. The GLSL is in shader-vhs.js. amt (first positional, or named) mixes the effect in as
+  // the param's value does; t is the time it animates by, the beat by default, as the param's is.
+  //   px=vhsuv>>tex{webcam{}}>>vhsrgb
+  //   px=vhs{tex{webcam{}}, 1/2}
+  // vhsrgb has only the colour, so it warps the chain's original coordinate (uv) again to find
+  // the crease and the edge of the tape; vhs{} warps once and hands the same warp to both stages.
+  let beatTime = (e, b) => b
+  beatTime.interval = 'frame'
+  let vhsScalars = (ctx, amtAst, tAst) => {
+    vhsHelpers.warpHelpers.forEach(h => ctx.addFunction(h.name, h.source))
+    return {
+      amt: amtAst === undefined ? '1.0' : `(${ctx.addUniform(amtAst)}).x`,
+      t: `(${ctx.addUniform(tAst === undefined ? beatTime : tAst)}).x`,
+    }
+  }
+  let vhsWarp = (ctx, coord, t) => ctx.addStatement(`l_vhswarp((${coord}).xy, ${t})`)
+  let vhsUvStage = (ctx, input, w, amt) => {
+    ctx.addFunction(vhsHelpers.uvHelper.name, vhsHelpers.uvHelper.source)
+    return ctx.addStatement(`l_vhsuv(${input}, ${w}, ${amt})`)
+  }
+  let vhsRgbStage = (ctx, col, w, coord, amt, t) => {
+    ctx.addFunction(vhsHelpers.rgbHelper.name, vhsHelpers.rgbHelper.source)
+    return ctx.addStatement(`l_vhsrgb(${col}, ${w}, (${coord}).xy, ${amt}, ${t})`)
+  }
+  let vhsAmt = (args, positional) => args[positional] !== undefined ? args[positional] : args.amt
+  let vhsuv = (args, e, b, state, evalRecurse) => {
+    return makeShaderNode((input, ctx) => {
+      let {amt, t} = vhsScalars(ctx, vhsAmt(args, 'value'), args.t)
+      return vhsUvStage(ctx, input, vhsWarp(ctx, input, t), amt)
+    })
+  }
+  addNodeFunction('vhsuv', vhsuv)
+  let vhsrgb = (args, e, b, state, evalRecurse) => {
+    return makeShaderNode((input, ctx) => {
+      let {amt, t} = vhsScalars(ctx, vhsAmt(args, 'value'), args.t)
+      return vhsRgbStage(ctx, input, vhsWarp(ctx, ctx.rootInput, t), ctx.rootInput, amt, t)
+    })
+  }
+  addNodeFunction('vhsrgb', vhsrgb)
+  // The source is a px chain in its own right, resolved as a channels{} arg is, and fed the warped
+  // coordinate; one that is not visual at all is a flat colour, which is still worth the colouring
+  let vhs = (args, e, b, state, evalRecurse) => {
+    let ast = args !== undefined && args !== null ? args.value : undefined
+    if (ast === undefined) {
+      warnOnce(`🟠 vhs needs a source chain, eg vhs{tex{webcam{}}}`)
+      return implicitInputNode()
+    }
+    let src = paramChain(ast, e, b, evalRecurse)
+    return makeShaderNode((input, ctx) => {
+      let {amt, t} = vhsScalars(ctx, vhsAmt(args, 'value1'), args.t)
+      let w = vhsWarp(ctx, input, t)
+      let warped = vhsUvStage(ctx, input, w, amt)
+      let col = isShaderNode(src) ? src.build(warped, ctx) : ctx.addUniform(ast)
+      return vhsRgbStage(ctx, col, w, input, amt, t)
+    })
+  }
+  addNodeFunction('vhs', vhs)
 
   // Texture source for tex{}: webcam{'label'} or webcam{2}, with optional width/height/fps.
   // The mode params are evaluated rather than passed on as asts, both so they reach getUserMedia as
@@ -897,6 +958,30 @@ define(function(require) {
   src = pxSource('sin>>pal{0,1}')
   assert(false, src.includes('clamp((v0).x'))
   assert(true, /clamp\(\(v\d+\)\.x, 0\.0, 1\.0\) \* 1\.0/.test(src))
+
+  // vhs: helper calls, not inlined, so the whole effect is a couple of uniforms. The time is always
+  // one, a defaulted amount is a literal rather than a second one
+  src = pxSource('vhsuv')
+  assert(true, src.includes('vec4 v1 = l_vhswarp((v0).xy, (u_vs0).x);'))
+  assert(true, src.includes('vec4 v2 = l_vhsuv(v0, v1, 1.0);'))
+  assert(1, uniformCount(src))
+  assert(2, uniformCount(pxSource('vhsuv{1/2}')))
+  assert(pxSource('vhsuv{1/2}'), pxSource('vhsuv{amt:1/2}'))
+  assert(pxSource('vhsuv'), pxSource('vhsuv')) // Deterministic: the program cache is keyed on the source
+  // The colour stage warps the chain's original coordinate again, not the colour it is handed
+  src = pxSource('pxhash>>vhsrgb')
+  assert(true, src.includes('vec4 v3 = l_vhswarp((v0).xy, (u_vs0).x);'))
+  assert(true, src.includes('vec4 v4 = l_vhsrgb(v2, v3, (v0).xy, 1.0, (u_vs0).x);'))
+  assert(true, src.includes('fwidth(res)')) // The helpers are declared
+  assert(1, (src.match(/^float l_vhsrand\(/gm) || []).length)
+  // vhs{src}: warp once, feed the warped coordinate to the source, colour with the same warp
+  src = pxSource('vhs{pxhash, 1/2}')
+  assert(true, src.includes('vec4 v1 = l_vhswarp((v0).xy, (u_vs1).x);'))
+  assert(true, src.includes('vec4 v2 = l_vhsuv(v0, v1, (u_vs0).x);'))
+  assert(true, src.includes('vec4 v3 = v2;')) // The source's seed, fed the warped coordinate
+  assert(true, /vec4 v4 = vec4\(l_pxhash\(v3, /.test(src))
+  assert(true, src.includes('vec4 v5 = l_vhsrgb(v4, v1, (v0).xy, (u_vs0).x, (u_vs1).x);'))
+  assert(1, (src.match(/^vec4 l_vhswarp\(/gm) || []).length)
 
 
   // pxfn{} end to end. The sub-chain is written into the shader once as a real GLSL function and

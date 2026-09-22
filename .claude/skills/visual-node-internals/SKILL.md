@@ -278,6 +278,21 @@ Note also that `X >> f{arg}` *calls* `f` with the point shifted into its first s
 that builds a pxfn must be reached as a bare name (`p>>nf`), which is why the lib passes the node into
 a helper rather than piping into the maker.
 
+## Porting a standard-param effect: `vhs{}` (`draw/visualsynth/shader-vhs.js`)
+
+`vhs{chain,amt}`, `vhsuv` and `vhsrgb` port the `vhs` standard param (`shadercommon.js`) as node
+functions in `nodes.js` calling fixed-name `l_vhs*` GLSL helpers (the `pxhash` helper discipline: no
+requires, deduped by `ctx.addFunction`). `vhs{}` computes `l_vhswarp` once and hands it to both
+stages; standalone `vhsrgb` re-warps `ctx.rootInput`. The default `t` is a hand-rolled frame-interval
+AST (`(e,b) => b`), which is the beat, matching the param's `l_realTime` (`state.count`).
+
+It was first written as pure DSL in `lib/visual.limut` and **abandoned**: ~1040 lines and ~420
+uniforms. Every numeric literal in a lib function is a uniform of its own, and a node-valued lambda
+arg referenced inside a `set{}`/`mul{}` param is rebuilt once per channel (params resolve on their own
+event, so the arg's nodes are fresh objects and `ctx.built` cannot dedupe them). An effect that is a
+fixed block of GLSL with a couple of animated scalars belongs in a helper, not the lib. Measured
+equivalences: `vhs{X}` ≡ `vhsuv>>X>>vhsrgb` and `amt:0` ≡ bare `X`, both 0 differing bytes.
+
 ## eval-param pass-through (critical)
 
 `player/eval-param.js` object-walking (the `typeof value === 'object'` branch) **calls every function-valued field** of evaluated objects. Two exemptions exist alongside `AudioNode`: `value.isShaderNode` and `value.isVisualTextureSource`. Any new visual value type that carries function fields (build, acquire, update...) through expression evaluation MUST get the same exemption, or its functions get invoked mid-eval and the object is torn apart. Symptom: "X is not a function" at draw time, or textures acquired prematurely/never.
