@@ -2,7 +2,7 @@
 define(function (require) {
   let system = require('play/system')
   let metronome = require('metronome')
-  let {evalMainParamEvent,evalSubParamEvent,evalMainParamFrame} = require('play/eval-audio-params')
+  let {evalMainParamEvent,evalSubParamEvent,evalMainParamFrame,evalSubParamFrame} = require('play/eval-audio-params')
 
   let semisToCents = (v) => v * 100
 
@@ -42,7 +42,6 @@ define(function (require) {
     if (params.vib === undefined) { return }
     let vibCpb = evalMainParamEvent(params, 'vib', 0, 'cpb')
     if (!vibCpb) { return }
-    let vibdepth = evalSubParamEvent(params, 'vib', 'depth', 0.4)
     let vibdelay = evalSubParamEvent(params, 'vib', 'delay', 1/2, 'b')
     let beatDur = metronome.beatDuration()
 
@@ -50,26 +49,31 @@ define(function (require) {
     osc.type = 'sine'
     osc.frequency.value = vibCpb / beatDur // cpb -> hz
 
-    let gain = system.audio.createGain()
-    let targetCents = vibdepth * 100
+    // Delay fade in and depth are separate gains, so depth can be evaluated per frame
+    let envGain = system.audio.createGain()
     let delaySec = Math.max(0, vibdelay) * beatDur
     if (delaySec < 1e-4) {
-      gain.gain.setValueAtTime(targetCents, params._time)
+      envGain.gain.setValueAtTime(1, params._time)
     } else {
-      gain.gain.setValueAtTime(0, params._time)
+      envGain.gain.setValueAtTime(0, params._time)
       let steps = 16
       for (let i = 1; i <= steps; i++) {
         let lerp = i/steps
-        gain.gain.linearRampToValueAtTime(targetCents * Math.pow(lerp, 8), params._time + lerp*delaySec)
+        envGain.gain.linearRampToValueAtTime(Math.pow(lerp, 8), params._time + lerp*delaySec)
       }
     }
 
-    osc.connect(gain)
-    gain.connect(audioParam)
+    let depthGain = system.audio.createGain()
+    evalSubParamFrame(depthGain.gain, params, 'vib', 'depth', 0.4, undefined, semisToCents)
+
+    osc.connect(envGain)
+    envGain.connect(depthGain)
+    depthGain.connect(audioParam)
     osc.start(params._time)
     params._destructor.stop(osc)
     params._destructor.disconnect(osc)
-    params._destructor.disconnect(gain)
+    params._destructor.disconnect(envGain)
+    params._destructor.disconnect(depthGain)
   }
 
   // Base event lookup for the event currently being built. Deliberately a single entry that the

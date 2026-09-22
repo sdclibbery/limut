@@ -1097,7 +1097,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>sus={level:1/6}</code> Set the amplitude level for sustain. Note the 'sustain' in an ADSR envelope is the level, so it is this value not the main 'sus' value (which is actually the sustain time). Default: 0.8.</p>
 <p><code>vel</code> Event velocity. Default is 3/4. By default velocity controls the event amp (volume) and usually the cutoff or brightness of the sound (where applicable). <code>vel</code> is set per event by the gamepad or midi player, but can also be set or overridden by player params. It is latched when the note starts and does not change while the note sounds; for a midi controller's aftertouch see <code>press</code>.</p>
 <p><code>vib</code> vibrato rate. Default time unit: cycles per beat</p>
-<p class='sub'><code>vib={2,depth:1}</code> vibrato depth in semitones (default 0.4)</p>
+<p class='sub'><code>vib={2,depth:1}</code> vibrato depth in semitones (default 0.4). Evaluated per frame, so eg <code>vib={2,depth:[0:1]e}</code> widens the vibrato over the course of the note</p>
 <p class='sub'><code>vib={2,delay:1}</code> delay time before vibrato starts (default 1/2). Default time units: beats</p>
 <p><code>wave</code> For audio synths that use a waveform, specify which waveform to use, from this list:
   <code>sine</code>, 
