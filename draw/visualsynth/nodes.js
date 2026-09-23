@@ -9,6 +9,7 @@ define(function(require) {
   let connectOp = require('expression/connectOp')
   let {evalParamFrame} = require('player/eval-param')
   let {functionShaderNode} = require('draw/visualsynth/shader-function')
+  let {srgb2linHelper,lin2srgbHelper} = require('draw/visualsynth/shader-colour')
   let consoleOut = require('console')
 
   let warned = {}
@@ -314,7 +315,7 @@ define(function(require) {
   addNodeFunction('tex2d', tex2d)
   addNodeFunction('tex3d', tex3d)
 
-  // A colour ramp: evenly spaced stops, mixed linearly, indexed by the x channel, so
+  // A colour ramp: evenly spaced stops, mixed in linear light, indexed by the x channel, so
   // px=sdstar>>pal{0,#408,red,1} runs black, purple, red, white. The stop count is structural, but
   // each stop is a uniform, so unlike tex1d the colours can animate. Each stop is resolved like a
   // mul/add/set param: it may be a node (pal{0,tex{'mask.png'},1}), while a call with a value of its
@@ -341,14 +342,17 @@ define(function(require) {
       if (stops.length === 0) { return ctx.addStatement(input) } // No stops: nothing to look up
       if (stops.length === 1) { return ctx.addStatement(stopExpr(stops[0])) } // One stop: flat colour
       let n = stops.length
+      ctx.addFunction(srgb2linHelper.name, srgb2linHelper.source)
+      ctx.addFunction(lin2srgbHelper.name, lin2srgbHelper.source)
+      let linExpr = (s) => `l_srgb2lin(${stopExpr(s)})`
       // Stop k fades in over t running k-1 to k, so with t spanning 0 to n-1 each segment is its own
       // mix and the ends clamp flat
       let t = ctx.addStatement(`vec4(clamp((${input}).x, 0.0, 1.0) * ${(n-1).toFixed(1)})`)
-      let out = stopExpr(stops[0])
+      let out = linExpr(stops[0])
       for (let k = 1; k < n; k++) {
-        out = ctx.addStatement(`mix(${out}, ${stopExpr(stops[k])}, clamp(${t} - ${(k-1).toFixed(1)}, 0.0, 1.0))`)
+        out = ctx.addStatement(`mix(${out}, ${linExpr(stops[k])}, clamp(${t} - ${(k-1).toFixed(1)}, 0.0, 1.0))`)
       }
-      return out
+      return ctx.addStatement(`l_lin2srgb(${out})`)
     })
   }
   addNodeFunction('pal', pal)
@@ -586,11 +590,13 @@ define(function(require) {
   // the scale on t and the offset on each segment — so the stops themselves stay uniforms and can
   // animate, which is the difference from a lut.
   ctx = mockCtx()
-  assert('v2', node(pal, {value:0, value1:1}).build('v0', ctx))
+  assert('v3', node(pal, {value:0, value1:1}).build('v0', ctx))
   assert([
     'vec4(clamp((v0).x, 0.0, 1.0) * 1.0)',
-    'mix(u_vs0, u_vs1, clamp(v1 - 0.0, 0.0, 1.0))',
+    'mix(l_srgb2lin(u_vs0), l_srgb2lin(u_vs1), clamp(v1 - 0.0, 0.0, 1.0))',
+    'l_lin2srgb(v2)', // Stops blend in linear light, not in their sRGB encoding
   ], ctx.statements)
+  assert(['l_srgb2lin', 'l_lin2srgb'], ctx.functions.map(f => f.name))
   assert([0, 1], ctx.uniforms) // Each stop keeps its own raw AST, so it is re-evalled per frame
 
   // Four stops: three segments, t spanning 0 to 3, each stop faded in over one of them
@@ -598,15 +604,17 @@ define(function(require) {
   node(pal, {value:0, value1:{r:1}, value2:{g:1}, value3:1}).build('v0', ctx)
   assert([
     'vec4(clamp((v0).x, 0.0, 1.0) * 3.0)',
-    'mix(u_vs0, u_vs1, clamp(v1 - 0.0, 0.0, 1.0))',
-    'mix(v2, u_vs2, clamp(v1 - 1.0, 0.0, 1.0))',
-    'mix(v3, u_vs3, clamp(v1 - 2.0, 0.0, 1.0))',
+    'mix(l_srgb2lin(u_vs0), l_srgb2lin(u_vs1), clamp(v1 - 0.0, 0.0, 1.0))',
+    'mix(v2, l_srgb2lin(u_vs2), clamp(v1 - 1.0, 0.0, 1.0))',
+    'mix(v3, l_srgb2lin(u_vs3), clamp(v1 - 2.0, 0.0, 1.0))',
+    'l_lin2srgb(v4)',
   ], ctx.statements)
 
   // One stop is a flat colour, and no stops at all passes the value through: neither needs a t
   ctx = mockCtx()
   assert('v1', node(pal, {value:{r:1}}).build('v0', ctx))
   assert(['u_vs0'], ctx.statements)
+  assert([], ctx.functions) // A flat colour needs no round trip through linear light
   ctx = mockCtx()
   assert('v1', node(pal, {}).build('v0', ctx))
   assert(['v0'], ctx.statements)
@@ -618,8 +626,9 @@ define(function(require) {
     'vec4(clamp((v0).x, 0.0, 1.0) * 2.0)',
     'v0', // The pass-through the swizzle reads: the node stop sees v0, the same input pal does
     'vec4((v2).y, (v2).x, (v2).z, (v2).w)',
-    'mix(u_vs0, (v3), clamp(v1 - 0.0, 0.0, 1.0))',
-    'mix(v4, u_vs1, clamp(v1 - 1.0, 0.0, 1.0))',
+    'mix(l_srgb2lin(u_vs0), l_srgb2lin((v3)), clamp(v1 - 0.0, 0.0, 1.0))',
+    'mix(v4, l_srgb2lin(u_vs1), clamp(v1 - 1.0, 0.0, 1.0))',
+    'l_lin2srgb(v5)',
   ], ctx.statements)
   assert([0, 1], ctx.uniforms)
 
@@ -831,7 +840,7 @@ define(function(require) {
   // down the chain rather than an argument of its own.
   src = pxSource('pal{0,#408,red,1}')
   assert(true, src.includes('vec4 v1 = vec4(clamp((v0).x, 0.0, 1.0) * 3.0);'))
-  assert(3, (src.match(/mix\(/g) || []).length) // One segment per gap between stops
+  assert(3, (src.match(/vec4 v\d+ = mix\(/g) || []).length) // One segment per gap between stops
   assert(1, (src.match(/uniform vec4 u_vs\d+;/g) || []).length) // Constant stops are literals; red is a lookup, so a uniform
   // A stop that can change is a uniform, so ramps of the same length with animated stops share a program
   assert(pxSource('pal{#f00,[0:1]l4}'), pxSource('pal{#f00,[0:2]l4}'))

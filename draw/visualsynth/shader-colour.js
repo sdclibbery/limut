@@ -39,6 +39,22 @@ define(function(require) {
 }`,
   }
 
+  // sRGB to and from linear light, on rgb only; alpha passes through. max() inside pow as above.
+  let srgb2linHelper = {
+    name: 'l_srgb2lin',
+    source: `vec4 l_srgb2lin(vec4 c) {
+  vec3 lin = mix(c.rgb/12.92, pow((max(c.rgb, 0.0) + 0.055)/1.055, vec3(2.4)), step(vec3(0.04045), c.rgb));
+  return vec4(lin, c.a);
+}`,
+  }
+  let lin2srgbHelper = {
+    name: 'l_lin2srgb',
+    source: `vec4 l_lin2srgb(vec4 c) {
+  vec3 s = mix(12.92*c.rgb, 1.055*pow(max(c.rgb, 0.0), vec3(1.0/2.4)) - 0.055, step(vec3(0.0031308), c.rgb));
+  return vec4(s, c.a);
+}`,
+  }
+
   // The components of a colour written in a space that needs converting. Scalars, not channels: an
   // s is saturation here rather than the x channel, which is why isConvertedColour (shader-node.js)
   // has to answer before the channel table is consulted.
@@ -47,6 +63,8 @@ define(function(require) {
   return {
     hsv2rgbHelper: hsv2rgbHelper,
     lab2rgbHelper: lab2rgbHelper,
+    srgb2linHelper: srgb2linHelper,
+    lin2srgbHelper: lin2srgbHelper,
     scalarColourKeys: scalarColourKeys,
   }
 })
