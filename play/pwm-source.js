@@ -127,16 +127,11 @@ class PwmOscillator extends AudioWorkletProcessor {
   }
 
   process(inputs, outputs, parameters) {
-    // Lifecycle guard, shared by the three worklet oscillators - keep the three
-    // copies identical, and see play/worklet-lifecycle.js for why it lives inline
-    // rather than being interpolated in. stop is tested BEFORE start: a node that
-    // is stopped before it is ever started must still terminate, or its process()
-    // runs forever and the node is never collected. The unstarted budget is the
-    // backstop for a node that is never stopped either - it renders silence for up
-    // to 60s (far beyond any scheduling lookahead) and then dies. Every path that
-    // returns false posts 'terminated' back to the node first: that message, not the
-    // JS stop() call, is what decrements the voice count, so the count only comes
-    // down when the render thread has really dropped this processor.
+    // Lifecycle guard, shared by the three worklet oscillators - keep the three copies identical,
+    // and see play/worklet-lifecycle.js for why it is inline. stop is tested BEFORE start: a node
+    // stopped before it starts must still terminate. The unstarted budget (60s) is the backstop for
+    // a node never stopped. Every exit posts 'terminated' first: that message, not stop(), is what
+    // decrements the voice count.
     if (parameters.stop[0] > 0.5) { this.port.postMessage('terminated'); return false }
     if (!this.started) {
       // Latch on the LAST sample of the block, not the first. start is an a-rate param, so a

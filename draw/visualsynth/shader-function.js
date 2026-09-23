@@ -3,25 +3,14 @@ define(function(require) {
   let consoleOut = require('console')
   let {makeShaderNode} = require('draw/visualsynth/shader-node')
 
-  // pxfn{} : a px sub-chain compiled to a real GLSL function, declared once however many times the
-  // value is used, rather than written into the shader again at every use site.
+  // pxfn{}: a px sub-chain compiled to a real GLSL function, declared once and called at each use.
+  // Everything else inlines, and the (node, input) memo only dedupes the same input, so a scene sdf
+  // used by a march, a normal, shadows and AO would otherwise be emitted many times.
+  // Registration is in nodes.js; this file only emits.
   //
-  // Everything else in the system inlines. A shader node's build appends its statements to main()
-  // and hands back a variable, and the (node, input) memo in shader-node.js only dedupes a node
-  // reached again on the *same* input — so a sub-chain used at N different inputs is emitted N
-  // times. That is what a chain stage wants, but not a scene sdf: once per march step (rolled, so
-  // emitted once), then four more for a tetrahedral normal, plus shadows and AO. ctx.addFunction
-  // was already there for the helper declarations (the pxhash hashes, the colour conversions), so
-  // this is the same seam with the body captured out of the chain rather than written by hand.
-  //
-  // The registration half is in draw/visualsynth/nodes.js; this file only emits, the same split
-  // shader-repeat.js has with play/nodes/graph.js.
-  //
-  // A function body is a scope of its own: it sees its parameter, the seed (which is why declaring
-  // one hoists v0 to file scope, see codegen.js), the uniforms, the samplers and whatever it
-  // declares itself — and nothing of the enclosing scope, because the declaration is made once with
-  // fixed parameters and the same sub-chain called from two places with two different environments
-  // could not then share it. ctx.captureFunction is what enforces that.
+  // A function body sees its parameter, the seed (hoisted to file scope, codegen.js), uniforms,
+  // samplers and its own declarations - nothing of the enclosing scope, since one declaration
+  // serves callers with different environments. ctx.captureFunction enforces that.
   let warned = {}
   let warnOnce = (msg) => {
     if (warned[msg]) { return }
@@ -29,13 +18,10 @@ define(function(require) {
     consoleOut(msg)
   }
 
-  // The two generated name shapes that could name something from an enclosing scope: a statement
-  // variable and a loop counter. (uvN/arN, the locals tex{} emits, match neither — the v is not at
-  // a word boundary — and are always emitted beside their use anyway.) Anything a body refers to
-  // that it did not declare, and that is not its own parameter or the file scope seed, would be a
-  // GLSL compile error with a source dump as the only clue; this turns it into one warning naming
-  // the variable. Reachable today by reading an enclosing loop{}'s index or its fold accumulator
-  // from inside a body.
+  // Generated names that could refer to an enclosing scope: statement variables and loop counters
+  // (tex{}'s uvN/arN match neither). A body referring to one it did not declare would be a GLSL
+  // compile error; this turns it into a warning naming the variable. Reachable by reading an
+  // enclosing loop{}'s index or fold accumulator from inside a body.
   let declaredIn = (statements) => {
     let names = {}
     statements.forEach(st => {
@@ -80,13 +66,8 @@ define(function(require) {
       // any other node: the same input twice is one call, a different input is another
       return ctx.addStatement(`${name}(${input})`)
     })
-    // The one node in the system that is a *function of a point* rather than a value at one. Every
-    // other node is both readings at once - it builds at whatever input it is given - and nothing
-    // has to tell them apart, because a chain only ever builds each node where it sits. `let` is
-    // where the two part company: it names the value a bound expression takes at its own position
-    // in the chain, which for a scene sdf would be the slice through the chain head. This flag is
-    // how expression/let-node.js knows to bind the node itself instead, so every use site builds a
-    // call of its own - the same thing a `set scene = pxfn{...}` name does.
+    // The one node that is a function of a point rather than a value at one. let{} checks this flag
+    // to bind the node itself, so each use site builds its own call (see expression/let-node.js).
     node._isPxFunction = true
     return node
   }
@@ -227,7 +208,7 @@ define(function(require) {
   assert(1, (built.source.match(/vec4 v0/g) || []).length)
 
   // A shader with no function in it is untouched: the seed stays a local of main, so the source
-  // (the program cache key, and the hub75 layer key) is byte-identical to what it always was
+  // (the program cache key, and the hub75 layer key) is unaffected
   let plain = buildSource(node('a'))
   assert(true, plain.source.includes('void main() {\n  vec4 v0 = vec4(fragCoord, 0.0, 1.0);'))
   assert(false, plain.source.includes('vec4 v0;'))

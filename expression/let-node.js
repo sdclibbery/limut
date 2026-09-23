@@ -18,12 +18,10 @@ define(function(require) {
   // where the let is written, so an sdf3 scene can be declared inline on the line that marches it:
   //   px=let{'scene',pxfn{sd3torus}}>>sd3march{scene}>>sd3lit{scene}
   //
-  // Bindings hang off the event rather than a scope stack of their own, because the event is the
-  // object whose lifetime already matches a chain's: a visual chain's uniforms are re-evaluated
-  // against it every frame, and a persistent fx chain (play/player-fx.js) reads its params for the
-  // whole life of the chain, long after it was built. Scope is therefore the whole event: a `let`
-  // is visible anywhere later in that event's params, including inside a user defined function the
-  // chain calls. The read side is in parse-var.js.
+  // Bindings hang off the event, whose lifetime matches a chain's: a visual chain's uniforms are
+  // re-evaluated against it every frame, and a persistent fx chain (play/player-fx.js) reads its
+  // params for its whole life. So a let is visible anywhere later in that event's params, including
+  // inside a user function the chain calls. The read side is in parse-var.js.
 
   let warned = {}
   let warnOnce = (msg) => {
@@ -32,16 +30,9 @@ define(function(require) {
     consoleOut(msg)
   }
 
-  // A lookup's args double as its time modifiers, so evalFunctionWithModifiers has already evalled
-  // every arg once, un-piped, and memoised that on the event. Resolving the bound expression as a
-  // chain of its own must not see those entries, or >> gets that earlier value handed back instead
-  // of building the chain. Same protocol as paramChain in draw/visualsynth/nodes.js.
-  //
-  // The isolation is an event of its own, not {doNotMemoise:true}: doNotMemoise propagates the
-  // whole way down, so every repeated reference inside a user defined function re-evaluates its
-  // subtree and yields a *fresh* node object, which ctx.built cannot dedupe by identity, and the
-  // built chain multiplies with the number of repeated references. `let{'a', f{id*2}}` for an f
-  // naming its argument four times built four times the chain that a bare `f{id*2}` does.
+  // Resolve the bound expression on a cloned event, for the same reason as paramChain in
+  // draw/visualsynth/nodes.js (see ownEvent there): the modifier machinery's un-piped memo must not
+  // leak in, and doNotMemoise would multiply the built chain.
   let ownEvent = (e) => {
     if (e === undefined || e === null) { return e }
     // Bindings are shared rather than copied, so a `let` *inside* the bound expression still lands
@@ -59,19 +50,14 @@ define(function(require) {
     return er
   }
 
-  // The name is written as a quoted string ('foo') or as a bare word. >> shifts positional args up
-  // when it pipes, so the name sits in `value` when the call was not piped and in `value1` when it
-  // was: find it by looking at the positional args in turn rather than by counting. Whatever comes
-  // after it is the expression being bound.
+  // The name is a quoted string ('foo') or a bare word. >> shifts positional args up when it pipes,
+  // so the name is in value or value1: search the positional args rather than counting. Whatever
+  // follows is the bound expression.
   //
-  // A bare word is taken as *written*, off the raw AST (let has dontEvalArgs, so these are the
-  // unevalled parse instances) — the same discipline the `global.` lookup and shaderSwizzle use.
-  // Evaluating it instead, which is what this did, only works while the name is unbound: a bound
-  // name evaluates to its own binding (parse-var.js looks _lets up ahead of everything), never to a
-  // string, so it came back as `🟠 let needs a name`. A loop{} carried value is bound on purpose, so
-  // `let{t, t+d}` would hit that every time; the same reading also settles a name the probe call in
-  // play/nodes/graph.js's loop{} has already bound. The one thing it gives up is `let{nm}` for an nm
-  // holding a string, which named what nm said and now names nm - say `let{'foo'}` for that.
+  // A bare word is taken as written, off the raw AST (let has dontEvalArgs), like the global. lookup
+  // and shaderSwizzle. Evaluating it would fail for a name that is already bound (a loop{} carry,
+  // or a name bound by the loop{} probe call), since it evaluates to its binding. So let{nm} names
+  // nm even if nm holds a string; use let{'foo'} for a literal name.
   let nameSlots = ['value', 'value1']
   let bareName = (a) => typeof a === 'function' && a.isVarLookup && !a.hasOwnArgs && !a.namespace ? a._name : undefined
   let findName = (args, e, b, er) => {
@@ -97,18 +83,13 @@ define(function(require) {
     e._lets[name] = value
   }
 
-  // The definition node, returned into the chain so >> composes it on: its build sees the value
-  // flowing down the chain at this point and records the GLSL variable holding it. The tap form
-  // emits no statement of its own, so a chain with a let in it generates byte-identical source to
-  // the same chain without one — the program cache is keyed on that source.
+  // The definition node, returned into the chain: its build records the GLSL variable holding the
+  // value at this point. The tap form emits no statement.
   //
-  // A name declared in a loop{}'s carry: already *has* a variable, one declared outside the loop
-  // (shader-repeat.js), so this assigns it in place instead of naming a new one. That is the whole
-  // of the carried value: the assignment survives the iteration, and since ctx.lets keeps pointing
-  // at the same variable every read of the name — inside the body, in until:, and after the loop —
-  // names it. Both the assignment and every read of the name set ctx.volatile, which is what keeps
-  // the build memo (ctx.built) from handing back a variable worked out before the assignment - see
-  // makeShaderNode in draw/visualsynth/shader-node.js.
+  // A loop{} carry: name already has a variable declared outside the loop (shader-repeat.js), so
+  // this assigns it in place, and every read of the name - in the body, until: and after the loop -
+  // sees it. Both the assignment and reads set ctx.volatile, which stops ctx.built handing back a
+  // variable computed before the assignment (makeShaderNode, shader-node.js).
   let letShaderNode = (name, bound) => {
     return makeShaderNode((input, ctx) => {
       if (ctx.lets === undefined) { ctx.lets = {} } // A context that predates ctx.lets (or a test mock)
@@ -160,30 +141,18 @@ define(function(require) {
     let boundAst = args[found.boundSlot]
     let boundValue = boundAst !== undefined ? er(boundAst, ev, b) : undefined
 
-    // Which domain the chain is in, decided without asking connectOp. In a visual chain `let` is
-    // always piped — the left hand side is a shader node, so it is never connectable and >> takes
-    // the pipe branch, including at the head of a px param, which player/params.js writes as
-    // `id>>...`. The one exception is a call already holding a visual node of its own, which >>
-    // withholds the seed from (hasShaderNodeArg), and that is exactly the case where the bound
-    // expression is itself visual. In an audio chain `let` is never piped: a connectable left hand
-    // side keeps the wire, and at the head of an fx chain there is no left hand side at all.
+    // Which domain, decided without asking connectOp. In a visual chain let is always piped (the
+    // left side is a shader node, and px params are written id>>...), except for a call already
+    // holding a visual node, which >> withholds the seed from - and then the bound expression is
+    // itself visual. In an audio chain let is never piped.
     let visual = isShaderNode(pipedValue) || isShaderNode(boundValue)
 
     if (visual) {
-      // A pxfn{} is a function of a point, not a value at a point, so it is bound *unbuilt*: every
-      // use site then builds a call of its own, at its own input, exactly as a `set scene = pxfn{}`
-      // name does. Building it here, as every other bound expression is, would name the one value it
-      // takes where the let is written - at the head of a px chain, the slice through z=0 - and a
-      // march would then step through a constant, with a normalize(0) normal. That is what made an
-      // inline sdf3 scene render a flat 2d slice. pxfn{} is the only marker there could be: every
-      // other node is equally a value and a function of its input, and which one is meant is the
-      // user's to say.
-      //
-      // Nothing is emitted and the chain seed is handed back unchanged, so
-      // `px=let{'scene',pxfn{..}}>>sd3march{scene}` builds byte for byte what `px=sd3march{scene}`
-      // does with the same scene held in a var - including >> withholding the seed from a call whose
-      // args already hold a visual node (_implicitInput, see connectOp.js), which is what keeps the
-      // scene out of sd3march's `in`.
+      // A pxfn{} is a function of a point, so it is bound unbuilt and each use site builds its own
+      // call, as a set name would. Building it here would bind its value at this point (for a scene
+      // at the head of a px chain, a constant slice), which a march cannot step through.
+      // Nothing is emitted and the seed passes through unchanged, so >> still withholds the seed
+      // from a call holding a node (connectOp.js), keeping the scene out of sd3march's in.
       if (isShaderNode(boundValue) && boundValue._isPxFunction) {
         bindLet(e, name, boundValue)
         return implicitInputNode()
@@ -279,11 +248,8 @@ define(function(require) {
   assert('v0', ctx.lets.foo)
   assert('v0', e._lets.foo.build('v9', ctx)) // The name gives back what was recorded, whatever it is asked from
 
-  // The name is taken as written off the raw AST, so it is still found when that name is already
-  // bound. Evaluating it, which is what this used to do, gives back the binding rather than a
-  // string: that is what a loop{} carried value needs (let{t, t+d} names a t bound on purpose) and
-  // what used to lose the name of a let{} at the head of a loop{} body, where the probe call has
-  // already bound it
+  // The name is taken as written off the raw AST, so it is still found when already bound (a loop{}
+  // carry, or a let{} at the head of a loop{} body that the probe call has bound)
   let bareAst = (n) => { let f = () => 0; f.isVarLookup = true; f.hasOwnArgs = false; f._name = n; return f }
   e = {_lets: {foo: 'bound already'}}
   letNode({value: bareAst('foo'), value1: () => 0.25}, e, 0, {}, evalParamFrame)

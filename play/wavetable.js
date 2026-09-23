@@ -16,18 +16,11 @@ define(function (require) {
     return { integral, total: acc }
   }
 
-  // Condition each single-cycle frame so it loops cleanly. A purpose-built wt64
-  // file already loops seamlessly, but an ordinary sample (eg Apollo 11 audio)
-  // sliced into frames has an arbitrary value/slope mismatch at each frame's wrap
-  // seam: the audio that really followed data[off+N-1] is discarded and the loop
-  // jumps back to data[off], so the reconstructed slope kinks every cycle -> a
-  // click/buzz at the fundamental (plus aliasing). Returns a NEW Float32Array
-  // (never mutates `data`, which is the shared getChannelData(0) buffer). Each
-  // frame is (1) linearly detrended so its endpoints match, (2) given a cubic seam
-  // bridge that matches value AND slope across the wrap so the looped cycle is
-  // C1-continuous, and (3) DC-removed last (subtracting a constant, which preserves
-  // the detrend/bridge) so the mean is truly ~0. `smooth` (0..1) dry/wet-blends the
-  // conditioned frame against the raw frame.
+  // Condition each single-cycle frame so it loops cleanly. An ordinary sample sliced into frames
+  // has a value/slope mismatch at each wrap seam, which clicks/buzzes at the fundamental. Each frame
+  // is (1) linearly detrended so its endpoints match, (2) given a cubic seam bridge matching value
+  // and slope, and (3) DC-removed last (a constant shift preserves 1 and 2). smooth (0..1)
+  // blends conditioned against raw. Returns a new array: data is the shared getChannelData(0).
   const conditionWave = (data, count, frameLen, smooth) => {
     const N = frameLen
     const out = new Float32Array(count * N)
@@ -70,16 +63,9 @@ define(function (require) {
     return out
   }
 
-  // A wt64-style wavetable file packs `count` single-cycle frames end-to-end in
-  // one buffer (eg 64 frames of 256 samples). Slice the buffer into `count`
-  // equal frames and build buildIntegral's running integral *per frame*: each
-  // frame's segment of `integral` resets to 0 at the frame boundary, and
-  // `totals[f]` is that frame's whole-cycle sum (its integral's per-cycle
-  // increment). frameLen = floor(len/count); any remainder samples are ignored.
-  // count===1 reproduces buildIntegral over the whole buffer (one frame). The
-  // worklet lerps between adjacent frames to morph across the table. `smooth`>0
-  // conditions each frame (see conditionWave) to de-click arbitrary samples; at
-  // smooth===0 (the default) the raw shared buffer is used unchanged.
+  // Slice a wt64-style buffer into count equal frames and build a running integral per frame (reset
+  // at each boundary); totals[f] is the frame's whole-cycle sum. Remainder samples are ignored.
+  // smooth>0 conditions each frame (conditionWave); at 0 the shared buffer is used unchanged.
   const buildWavetable = (data, count, smooth = 0) => {
     count = Math.max(1, Math.floor(count) || 1)
     const frameLen = Math.floor(data.length / count)
@@ -98,13 +84,9 @@ define(function (require) {
     return { wave, integral, totals, frameLen, count }
   }
 
-  // Cache built wavetables by (data buffer identity, frame count, smooth) so a
-  // wavetable used by many notes computes its per-frame integral table once, not
-  // per note. WeakMap-keyed on the sample data (a stable getChannelData(0)
-  // reference, cached per url in play/samples.js) so entries are freed when the
-  // AudioBuffer is collected. `smooth` is quantised to 2dp so automating it can't
-  // grow the cache unboundedly. buildWavetable itself stays uncached (still used
-  // directly by tests).
+  // Cache built wavetables per (data, count, smooth) so a wavetable used by many notes is built
+  // once. WeakMap-keyed on the sample data so entries are freed with the AudioBuffer. smooth is
+  // quantised to 2dp so automating it cannot grow the cache without bound.
   const wavetableCache = new WeakMap() // data -> Map('count:smooth' -> built wavetable)
   const buildWavetableCached = (data, count, smooth = 0) => {
     count = Math.max(1, Math.floor(count) || 1) // normalise to match the cache key + buildWavetable

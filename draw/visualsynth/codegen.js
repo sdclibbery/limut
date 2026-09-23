@@ -34,18 +34,14 @@ define(function(require) {
     // is a scope of its own and main's locals are not visible in it. See needsGlobalSeed below.
     ctx.rootInput = 'v0'
     let nextVar = 1
-    // Common subexpression elimination: a statement whose expression is exactly one already emitted
-    // in scope reuses that variable instead of declaring another. Every generated expression is pure,
-    // so the same text means the same value - unless something it reads has been assigned since,
-    // which addRaw below takes care of. This is what lets a DSL function reach one value by several
-    // routes (a lambda arg read in each channel of a set{}, which resolves to a fresh node object
-    // each time, so ctx.built cannot see it is the same) and still compute it once. It only works
-    // because constants are literals (addUniform below): two copies of a subtree would otherwise
-    // each register uniform slots of their own, and never read the same.
+    // Common subexpression elimination: a statement whose expression text is already emitted in
+    // scope reuses that variable. Generated expressions are pure, so equal text means equal value
+    // unless something it reads has since been assigned (addRaw handles that). This catches values
+    // reached by several routes as distinct node objects, which ctx.built cannot. It relies on
+    // constants being literals (addUniform), since two uniform slots would never read the same.
     //
-    // fresh is for a variable that is going to be assigned to (a loop's carried value, a fold's
-    // total, a carry: value): it must be a variable of its own, never one shared with an expression
-    // that happens to read the same, and nothing else may reuse it later.
+    // fresh is for a variable that will be assigned to (loop carry, fold total): it must never be
+    // shared with or reused by another expression.
     ctx.exprs = new Map() // canonical expression text -> the variable holding it
     // A copy (vec4 v1 = v0;, which a pass-through emits) holds the same value as what it copied, so
     // expressions are looked up with each copy replaced by the variable it is a copy of: otherwise
@@ -89,22 +85,15 @@ define(function(require) {
         }
       }
     }
-    // A real GLSL for loop (loop{} in a px chain, see shader-repeat.js) needs its body's statements
-    // wrapped in a block rather than landing in main() alongside everything else. Statements emitted
-    // while fn runs are captured and handed back for the caller to indent into the block.
+    // Capture the statements emitted while fn runs, for a GLSL loop{} block (shader-repeat.js).
     //
-    // ctx.built is saved and restored around it, deep copied because its values are Maps: outer
-    // entries stay visible inside the block, which is right (an outer vN is in scope in a nested
-    // block), but an entry made *inside* must not survive it, or a later build would reuse a
-    // variable that has gone out of scope. ctx.lets and ctx.carried are copied for exactly the same
-    // reason: a let{} inside the body names a variable that goes out of scope at the closing brace.
-    // nextVar keeps counting across the block, so every generated name is still unique and still
-    // comes from a counter: the source must stay deterministic, since the program cache is keyed on it.
+    // ctx.built, ctx.lets and ctx.carried are deep copied and restored: outer entries stay visible
+    // inside the block, but entries made inside must not outlive it, or a later build would reuse a
+    // variable that is out of scope. nextVar keeps counting so names stay unique and deterministic
+    // (the program cache is keyed on the source).
     //
-    // isolate is the difference between a block and a function body (captureFunction below): a
-    // block's enclosing variables are still in scope inside it, where a function's are not, so a
-    // function body starts with an empty built map and no let bindings rather than copies of the
-    // outer ones. Everything else — the capture itself, the restore, the shared nextVar — is the same.
+    // isolate is for function bodies (captureFunction): they start with nothing built and no lets,
+    // since a function cannot see the enclosing scope.
     let capture = (fn, isolate) => {
       let outerStatements = ctx.statements
       let outerBuilt = ctx.built
@@ -137,12 +126,9 @@ define(function(require) {
       return {out: out, statements: statements}
     }
     ctx.captureBlock = (fn) => capture(fn, false)
-    // The body of a real GLSL function (pxfn{} in a px chain, see shader-function.js). Isolated as
-    // above, because a function body cannot see the enclosing scope: a function is declared once
-    // with fixed parameters, so anything it captured would have to be one of them, and the same
-    // sub-chain called from two places with two different environments could not then share a
-    // declaration. What it can still reach is what lives at file scope — uniforms, samplers, the
-    // helper functions, and the seed, which is why declaring one hoists v0 out of main().
+    // The body of a real GLSL function (pxfn{}, shader-function.js). Isolated because a function is
+    // declared once with fixed parameters, so it cannot capture the caller's scope. It can still
+    // reach file scope - uniforms, samplers, helpers and the seed, which is why this hoists v0.
     ctx.captureFunction = (fn) => {
       ctx.needsGlobalSeed = true
       return capture(fn, true)
@@ -160,35 +146,22 @@ define(function(require) {
       let i = nextFunction++
       return {name: 'l_fn' + i, param: 'l_p' + i}
     }
-    // Two uniform slots may share a name when the expression that feeds them is the same one in the
-    // same scope: it then holds the same value on every frame, animated or not, so a second slot is
-    // pure waste - a `uniform vec4` line in the source, an evalParamFrame every frame
-    // (draw/visualsynth.js), and 16 bytes a frame on the wire for a display bound chain
-    // (draw/hub75/host/hub75.js). Without this the Fire chain (examples.limut) shipped 83 uniforms
-    // where 28 do: 32 of them were the one `seed` that lib/visual.limut's noise stack threads down
-    // into every octave's every face's every hash, and 28 more were four lattice offset literals,
-    // re-registered once per instantiation.
+    // Two uniform slots share a name when fed by the same expression in the same scope, since they
+    // then hold the same value every frame; each slot otherwise costs a uniform, a per-frame
+    // evalParamFrame, and bytes on the wire for a display bound chain (draw/hub75/host/hub75.js).
     //
-    // Keyed on where a value comes from, not on what it evaluates to. A value that is a constant -
-    // a number or a map of them, written directly or reached through bindings - does not get a slot
-    // at all, but is folded into the source as a GLSL literal (glslLiteral below). That was a
-    // decision taken in September 2026, reversing an earlier one: it means nudging mul{2} to mul{3}
-    // while playing now moves the generated source and compiles a new shader (on the Pi, for a
-    // display bound chain), in exchange for chains written in the DSL costing what the same GLSL
-    // would. Literal maths is otherwise one uniform per number, re-evaluated every frame, and a
-    // library function such as a VHS effect ran to hundreds of them. It is also what makes common
-    // subexpressions visible (see addStatement above).
+    // Constants (numbers or maps of them, directly or through bindings) get no slot at all: they are
+    // folded into the source as GLSL literals (glslLiteral). The tradeoff: editing a constant while
+    // playing recompiles the shader, but DSL chains cost what the equivalent GLSL would, and common
+    // subexpressions become visible (addStatement).
     //
-    // Two things are dedupable:
-    //  - an object literal (a parsed map whose leaves are all numbers or strings). It cannot read
-    //    the call context, so it means the same thing wherever it is reached, and the one parsed
-    //    instance reached N times is keyed by its own identity. This is the lattice offsets.
-    //  - a lookup that can name its binding (expression/parse-var.js), keyed on the {ast, context}
-    //    pair it resolves to. This is `seed`: all 32 resolve to the one default bound in the one
-    //    fbm3 frame. A bare number as the *resolved* root takes part by value - it is a literal, so
-    //    it is constant - but a bare number written directly as a uniform's AST does not, which is
-    //    what keeps mul{2} and add{2} on separate uniforms and out of the churn above.
-    // Anything else gets a slot of its own, exactly as before.
+    // Dedupable, keyed on where a value comes from rather than what it evaluates to:
+    //  - an object literal whose leaves are numbers or strings, keyed by identity; it cannot read
+    //    the call context, so it means the same wherever it is reached.
+    //  - a lookup that can name its binding (expression/parse-var.js), keyed on its {ast, context}.
+    //    A bare number as the resolved root takes part by value, but a bare number written directly
+    //    as a uniform's AST does not, keeping mul{2} and add{2} on separate uniforms.
+    // Anything else gets a slot of its own.
     let isObjectLiteral = (v) => {
       if (typeof v !== 'object' || v === null || Array.isArray(v)) { return false }
       for (let k in v) {
@@ -266,19 +239,15 @@ define(function(require) {
       }
       return name
     }
-    // Two declarations whose bodies say the same thing are one declaration. The generated names
-    // inside them differ (nextVar counts across the whole build walk, so the second copy of a body
-    // is numbered after the first), so the match is on a canonical form: the declaration's own name
-    // and its own locals - its parameter, its statement variables, its loop counters - renumbered in
-    // order of first appearance. Everything that means something *outside* the body is left exactly
-    // as it is, which is what makes the match safe rather than merely plausible:
-    //  - the seed (ctx.rootInput) is one file scope variable, so two bodies reading it agree;
-    //  - u_vsN/u_vstexN/u_vsexN are value slots, so two bodies only match if they read the same
-    //    slots - which is also why no uniform is orphaned by dropping a duplicate declaration;
-    //  - a nested l_fnN is another declaration, already deduped below this one (addFunction runs
-    //    innermost first), so equal bodies name an equal function.
-    // uvN/arN (tex{}'s locals) are numbered per use and not canonicalised, so two bodies sampling a
-    // texture simply do not match - a dedupe missed, never a wrong one.
+    // Two declarations whose bodies say the same thing are one declaration. The match is on a
+    // canonical form with the declaration's own name and locals renumbered in order of appearance.
+    // Everything meaningful outside the body is left as is, which makes the match safe:
+    //  - the seed (ctx.rootInput) is one file scope variable;
+    //  - u_vsN/u_vstexN/u_vsexN are value slots, so matching bodies read the same slots and no
+    //    uniform is orphaned;
+    //  - a nested l_fnN is already deduped (innermost first), so equal bodies name equal functions.
+    // uvN/arN (tex{} locals) are not canonicalised, so texture sampling bodies never match: a
+    // missed dedupe, never a wrong one.
     let canonicalFunction = (name, source) => {
       let names = {}
       let canon = source.replace(new RegExp('\\b'+name+'\\b', 'g'), '$self')
@@ -289,17 +258,12 @@ define(function(require) {
       })
     }
     let functionBodies = new Map() // canonical body -> the name it was first declared under
-    // A GLSL helper function declared before main, for a node whose emitted expression is more than
-    // one line of maths (eg the pxhash hashes). Deduped by name, so a chain using the same node
-    // several times declares it once. Names are fixed literals rather than counters, and the l_
-    // prefix keeps them clear of the generated vN/u_vsN/uvN names.
+    // A GLSL helper function declared before main, for a node whose expression needs more than one
+    // line. Deduped by name; names are fixed literals with an l_ prefix to avoid generated names.
     //
-    // shareBody additionally looks for a declaration that already says this - only pxfn{}
-    // (draw/visualsynth/shader-function.js) asks for that, since its names come from counters and so
-    // cannot collide, where a helper's fixed name already dedupes it and must keep generating the
-    // source it always did. It is what makes a pxfn used once per repeat of a parallel{}/loop{} one
-    // declaration: each repeat resolves its own node (its own event and callsite id, so nothing is
-    // memoised across them) and so asks for its own declaration, of the same body.
+    // shareBody also dedupes by body. Only pxfn{} (shader-function.js) uses it: its names come from
+    // counters, so a pxfn used in each repeat of a parallel{}/loop{} would otherwise be declared
+    // once per repeat.
     ctx.addFunction = (name, source, shareBody) => {
       if (ctx.functions.some(f => f.name === name)) { return name }
       if (shareBody === true) {
@@ -330,12 +294,8 @@ define(function(require) {
     // GLSL ES 3.00 has a default precision for sampler2D but not sampler3D, so a 3d lookup
     // texture has to declare one or the shader won't compile
     let sampler3d = ctx.textures.some(t => t.sampler === 'sampler3D')
-    // A px function's body is a scope of its own, so main's locals are not visible in it — and the
-    // seed is one of them, which the uv node names from anywhere in the chain. So a shader that
-    // declares one hoists the seed to file scope, declared before the functions and assigned as
-    // main's first line. Conditional, like the sampler3D precision above: a shader with no function
-    // in it then generates byte-identical source to before, which keeps the program cache and the
-    // hub75 layer keys (draw/hub75/host/hub75.js, keyed on the source text) undisturbed.
+    // A function body cannot see main's locals, including the seed, which the uv node reads from
+    // anywhere. So a shader with a function hoists the seed to file scope.
     let globalSeed = ctx.needsGlobalSeed === true
     let source = `#version 300 es
 precision highp float;

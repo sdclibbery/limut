@@ -34,15 +34,8 @@ define(function(require) {
   }
   addNodeFunction('osc', osc)
 
-  // Audio-worklet wavetable oscillator source node, so a superosc can be wired into an fx chain
-  // like any other source, eg `superosc{440} >> lpf{800}`. `value`/`freq` set the frequency
-  // in Hz and `detune` shifts it in cents, mirroring the native `osc` node. `wavetable` is a
-  // sample URL sliced into `count` single-cycle frames (default 64), and `wt` (0..1) morphs
-  // across them. `pwm` power-warps the phase (2^pwm), skewing the waveform toward its start
-  // or end like a generalised pulse width (0 = off). `unison` layers that many detuned voices (its `detune` subparam is the max
-  // frequency ratio they spread across, its `amp` subparam the centre-to-outer voice
-  // amplitude ratio, and its `pan` subparam the stereo width they spread across). Intended
-  // to grow more functionality over time.
+  // Wavetable oscillator source node (superosc), eg superosc{440} >> lpf{800}. See index.html for
+  // the params.
   let superosc = (args,e,b) => {
     if (!window.AudioWorkletNode) { return }
     let params = combineParams(args, e)
@@ -141,17 +134,9 @@ define(function(require) {
   }
   addNodeFunction('impulse', impulse)
 
-  // Chaos oscillator source node (AudioWorklet): a strange-attractor / chaotic-map
-  // generator emitting a deterministic-but-non-repeating signal, usable as both a
-  // control-rate LFO and an audio-rate modulator - eg `lpf{ 400 + chaos{freq=6}*300 }`
-  // (slow filter wobble) or `osc{ freq= 110 + chaos{110}*40 }` (organic FM). `freq`
-  // (the default positional param, so `chaos{6}`/`chaos{440Hz}` work) sets the evolution
-  // speed in Hz. `type` picks the algorithm (lorenz default, plus rossler, thomas,
-  // logistic, duffing). `chaos` (0..1) is the character macro mapped to each algorithm's
-  // bifurcation parameter (order->chaos). `axis` (x/y/z) selects the output dimension of
-  // the 3D attractors - correlated-but-distinct mod streams. `smooth` (0..1) lowpasses the
-  // output (tames logistic's sample-and-hold steps). `seed` offsets the initial condition
-  // so multiple instances diverge and never phase-lock (organic supersaw stacks).
+  // Chaos oscillator source node, as an LFO or audio-rate modulator, eg lpf{ 400 + chaos{6}*300 }.
+  // chaos (0..1) maps to each algorithm's bifurcation parameter; seed offsets the initial condition
+  // so instances diverge rather than phase-lock. See index.html for the other params.
   let chaos = (args,e,b) => {
     if (!window.AudioWorkletNode) { return }
     let params = combineParams(args, e)
@@ -252,13 +237,9 @@ define(function(require) {
     return opts
   }
 
-  // Text-to-speech source node: synthesizes the given text to an AudioBuffer (cached in
-  // play/tts.js) and plays it through a buffer source, so speech can be wired into an fx
-  // chain like any other source (eg `tts{'hello'} >> lpf{800}`). Unlike `sample` it does
-  // not loop by default. The buffer source can't be re-buffered once started, so we defer
-  // node.start until the buffer exists: cached phrases start exactly on the event, while a
-  // first-use phrase synthesizes in the background and starts (rebased to now) as soon as
-  // its buffer lands, mirroring play/synth/tts.js.
+  // Text-to-speech source node, eg tts{'hello'} >> lpf{800}. A buffer source cannot be re-buffered
+  // once started, so start is deferred until the buffer exists: a cached phrase starts on the event,
+  // a new one starts (rebased to now) once synthesized, as in play/synth/tts.js.
   let tts = (args,e,b) => {
     let node = system.audio.createBufferSource()
     let params = combineParams(args, e)

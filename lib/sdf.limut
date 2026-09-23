@@ -1,114 +1,70 @@
 include 'lib/visual.limut'
 
-// 2d signed distance fields for visualsynth px chains, converted into limut DSL from the GLSL on
-// Inigo Quilez's page: https://iquilezles.org/articles/distfunctions2d/
-//
-// A signed distance field is a function giving, for every pixel, the distance to the nearest edge
-// of a shape: negative inside, zero on the edge, positive outside. That one number is enough to
-// draw the shape (threshold it), outline it (threshold its absolute value), round its corners
-// (subtract), hollow it out, or combine two shapes with min and max. So a shape here is not a
-// picture: it is a distance, and the drawing is a separate step.
+// 2d signed distance fields for visualsynth px chains, from the GLSL at
+// https://iquilezles.org/articles/distfunctions2d/
+// A shape gives a distance (negative inside); drawing it is a separate step.
 //
 //   v1 visualsynth, px=sdcircle{r:1/2}>>sdfill
 //   v1 visualsynth, px=sdstar{r:3/4}>>sdbands
 //   v1 visualsynth, px=min{sdcircle{r:1/3}, sdbox{b:{x:3/4,y:1/8}}}>>sdfill
 //
-// Everything here is an ordinary user defined function built out of the visual nodes; nothing is
-// implemented in javascript. The incoming px coordinate has y up and spans -1 to 1 vertically
-// (and wider than that horizontally, by the aspect ratio), so radii are fractions of half the
-// frame height.
+// Coordinates: y up, -1..1 vertically, so radii are fractions of half the frame height.
 //
-// The incoming value being the first argument means a positional argument only lands where you
-// expect when the call is being piped one: px=sdcircle{1/2} at the head of a chain is a radius,
-// but px=sdfill{sdcircle{1/2}} reads that 1/2 as the coordinate. Name the arguments, or pass the
-// coordinate yourself (sdcircle{id, 1/2}), wherever a shape is not at the head of a chain.
+// The point is the first argument, so a positional argument is only the radius when the call is
+// piped: px=sdcircle{1/2} works, but in px=sdfill{sdcircle{1/2}} the 1/2 is the point. Name the
+// arguments, or pass the point (sdcircle{id, 1/2}), anywhere else.
 //
-// Two things about the shader shape of all this. There are no branches, so every `if` in the
-// original becomes the ternary `cond ?? a ?: b`, which compiles to a mix between both results
-// rather than taking one path.
-//
-// And a value wanted twice is either named with a let{} or passed on to a helper function, whose
-// argument names it. Those are the two ways there are: an expression on its own has nowhere to put
-// a local, but a chain does, and a let{} is a chain stage. Which of them is smaller is a
-// measurement rather than a rule, and both are used below. A helper costs nothing when what it
-// names is already one built value - an argument is evaluated once, and every read of it inside the
-// body is the same node, so the build emits it once - which is why most of the shapes here have
-// one. A let{} pays where an *expression* rather than a value is what is wanted more than once, as
-// in sdblend and sdcross, and then only if the arguments that expression mentions are named too:
-// a let's bound expression is evaluated against an event of its own, so anything it re-mentions is
-// built a second time. Measured on sdblend{sdcircle,sdbox}: the helper spelling is 18 uniforms and
-// 37 statements, a let naming only the blend factor is 18 and 44, and naming the two distances as
-// well is 14 and 29 - all three the same picture to the byte. kalturn in lib/visual.limut is the
-// other way up (16 and 51 against a let's 17 and 53), so it keeps its helper.
-//
-// Two things trip a let{} up inside a function body. Start the body with `id >>`: with no node to
-// decide by, the chain is taken for an audio one, and sdblend{1/4, sdcircle{}} then renders flat
-// white. And once a body is a chain, whatever ends it must not be a call with positional arguments,
-// since >> shifts the chain value into one - name them, as sdcross's sdval{v: ...} does. Piping an
-// argument rather than id (`a >> let{..}`) is a third way to go wrong: it changes what id means for
-// every argument expression the callsite wrote, so the shapes get rebuilt on the wrong point.
+// A value used more than once is named either by passing it to a helper (free when it is already a
+// built value) or with let{} (better when an expression is reused, as in sdblend and sdcross, but
+// only if everything the bound expression mentions is named too, or it gets rebuilt).
+// let{} gotchas inside a function body:
+//   - start the body with `id >>`, or the chain is taken for an audio one (renders flat white)
+//   - the call that ends the chain must use named args, since >> shifts the chain value into a
+//     call with positional ones
+//   - don't pipe an argument (`a >> let{..}`): it changes what id means for the callsite's args
 
 //// Machinery
 
-// A distance is a single number, so every shape ends by splatting one channel across all four,
-// the way length{} and the other maths functions do.
+// Distances are splatted across all four channels, like length{}.
 set sdval = {v} -> v.x
 
-// Flatten the incoming value into a 2d point: z and w have to be zero, since length{} and dot{}
-// work on xyz and the incoming w is 1.
+// z and w must be zero: length{} and dot{} work on xyz and the incoming w is 1.
 set sdflat = {in} -> in >> set{z:0, w:0}
 
-// Build a 2d point out of two computed values. Each of those arrives splatted across all four
-// channels (as everything here gives back), so the masks pick one channel out of each; this is
-// how a folded coordinate gets put back together out of two separately computed halves.
+// Build a 2d point out of two splatted values.
 set sdvec = {a, b} -> {x:1,w:0}*a + {y:1,w:0}*b
 
-// The same value in x and y, ie a scalar to subtract off a point
 set sdbcast = {a} -> {x:1,y:1,w:0}*a
 
-// 0 below zero, 1 above. The shapes use the ternary rather than this, but it is still the way to
-// select between two values without a condition, eg as the t of a mix{}.
+// 0 below zero, 1 above: selects without a condition, eg as the t of a mix{}.
 set sdstep = {v} -> max{sgn{v}, 0}
 
-// The endings the folded shapes share: the distance from the folded corner, signed by which side
-// of the mirror line the point ended up on
+// Distance from the folded corner, signed by side of the mirror line.
 set sdlensx = {p} -> sdval{length{p} * sgn{p.x}}
 set sdlensy = {p} -> sdval{length{p} * sgn{p.y}}
 
-// One mirror fold, about the line through the origin whose normal is n. Reflecting the plane onto
-// itself is what lets one corner's distance stand for all of them.
+// Mirror fold about the line through the origin with normal n.
 set sdfold = {p, n} -> p - n*2*min{dot{p,n}, 0}
 
-// Mirror in x only
 set sdabsx = {p} -> sdvec{abs{p.x}, p.y}
 
-// The shared ending of the regular polygons: slide along the flat edge (half width hx, at height
-// ry) and take the distance from wherever on it we end up
+// Shared ending of the regular polygons: distance to the flat edge of half width hx at height ry.
 set sdtrim = {p, hx, ry} -> sdlensy{sdvec{p.x - clamp{p.x, -hx, hx}, p.y - ry}}
 
 //// Shapes
-// All of them take the incoming px value as their first argument, so they pipe like any other
-// chain segment and can equally be handed a coordinate of their own; eg px=sdcircle{id*2, 1/4}.
+// The point is the first argument, so they pipe or take a point: px=sdcircle{id*2, 1/4}.
 
-// Distance from the origin, less the radius: the simplest field there is
 set sdcircle = {in:id, r:1/2} -> sdval{length{sdflat{in}} - r}
 
-// Box of half extents b. The outside distance is the length of the positive part of |p|-b (which
-// is the corner case as much as the edge case), and the inside distance is the largest of the two
-// negative components; only one of the two terms is ever non zero.
+// b is the half extent.
 set sdbox1 = {d} -> sdval{length{max{d,0}} + min{max{d.x, d.y}, 0}}
 set sdbox = {in:id, b:1/2} -> sdbox1{abs{sdflat{in}} - b}
 
-// Distance to the line from a to b: project the point onto the segment, clamp the projection into
-// the segment, and measure from there
 set sdsegment1 = {pa, ba} -> sdval{length{pa - ba*clamp{dot{pa,ba}/dot{ba,ba}}}}
 set sdsegment = {in:id, ax:-1/2, ay:0, bx:1/2, by:0} ->
   sdsegment1{sdflat{in} - {x:ax, y:ay, w:0}, {x:bx-ax, y:by-ay, w:0}}
 
-// Equilateral triangle of radius r, pointing up. Mirror in x, then fold the remaining half about
-// the 60 degree line so that one edge stands for all three, then slide along that edge. The fold is
-// a reflection, so it is a mat2 like any other 2x2. 1.7320508 is the square root of 3 and
-// 0.866025404 is half of it.
+// Equilateral triangle of radius r, pointing up. 1.7320508 is sqrt(3), 0.866025404 half of it.
 set sdtriangle0 = {p, r} -> sdvec{abs{p.x} - r, p.y + r/1.7320508}
 set sdtriangle2 = {p, r} -> sdval{-length{sdvec{p.x - clamp{p.x, -2*r, 0}, p.y}} * sgn{p.y}}
 set sdtriangle1 = {q, r} -> sdtriangle2{
@@ -117,24 +73,18 @@ set sdtriangle1 = {q, r} -> sdtriangle2{
 }
 set sdtriangle = {in:id, r:1/2} -> sdtriangle1{sdtriangle0{sdflat{in}, r}, r}
 
-// Regular hexagon of inradius r: mirror into one quadrant, one fold, then the shared trim
+// r is the inradius.
 set sdhexagon = {in:id, r:1/2} ->
   sdtrim{sdfold{abs{sdflat{in}}, {x:-0.866025404, y:1/2, w:0}}, 0.577350269*r, r}
 
-// Regular pentagon of inradius r: mirror in x, then two folds. y is flipped on the way in so that
-// it points up; the original has its flat edge at the top, like the hexagon, and mirroring a
-// coordinate leaves the distances it measures untouched.
+// r is the inradius. y is flipped on the way in so it points up.
 set sdpentagon = {in:id, r:1/2} -> sdtrim{sdfold{
   sdfold{sdabsx{sdflat{in}*{x:1, y:-1, w:0}}, {x:-0.809016994, y:0.587785252, w:0}},
   {x:0.809016994, y:0.587785252, w:0}
 }, 0.726542528*r, r}
 
-// Regular star with n points of radius r. This one works in polar coordinates: the angle is folded
-// into one wedge of 180/n degrees, which leaves a single edge to measure from. m controls how deep
-// the points are cut: it runs from 2, where the edges are flat and the shape is a regular n sided
-// polygon, up to n, where the notches reach the middle and the points are needles. It need not be
-// a whole number, and the classic five pointed star is n:5 with m a shade over 3. Since n and m are
-// plain numbers their sines and cosines are worked out once rather than per pixel.
+// Star with n points of radius r. m is the cut depth: 2 is a regular n-gon, n makes needles; it
+// need not be whole (the classic star is n:5, m a shade over 3).
 set sdstarbn = {l, bn} -> sdvec{l*cos{bn}, l*abs{sin{bn}}}
 set sdstar0 = {p, an} -> sdstarbn{length{p}, (atan{p.x, p.y} % (2*an)) - an}
 set sdstar2 = {p, ecs, hi} -> sdlensx{p + ecs*clamp{-dot{p, ecs}, 0, hi}}
@@ -145,10 +95,7 @@ set sdstar1 = {p, r, an, en} -> sdstar2{
 }
 set sdstar = {in:id, r:1/2, n:5, m:10/3} -> sdstar1{sdflat{in}, r, 3.1415927/n, 3.1415927/m}
 
-// Heart of half height r. The original is written in its own unit space with the point of the
-// heart at the origin, so the coordinate is scaled and shifted on the way in and the distance
-// scaled back on the way out. The cleft between the lobes is a corner, which is the branch: above
-// the diagonal the nearest point is that corner, below it is one of the two arcs.
+// Heart of half height r. The original works in its own unit space, hence the scale and shift.
 set sdheart2 = {q} -> sqrt{dot{q - {x:1/4, y:3/4, w:0}}} - 0.35355339
 set sdheart3 = {q} -> sqrt{min{
   dot{q - {y:1, w:0}},
@@ -157,79 +104,58 @@ set sdheart3 = {q} -> sqrt{min{
 set sdheart1 = {p, s} -> sdval{(p.y + p.x > 1 ?? sdheart2{p} ?: sdheart3{p}) * s}
 set sdheart = {in:id, r:1/2} -> sdheart1{sdabsx{sdflat{in}}*(3/5)/r + {y:3/5, w:0}, r*5/3}
 
-// Greek cross with arms of half length arm and half thickness thick, optionally rounded by r.
-// Mirror into one quadrant and then swap x and y so that only one arm has to be measured. The
-// corner offset q and the larger of its two components are each wanted three times, so they are
-// named with let{} rather than passed down through a pair of helpers; the point is named too, for
-// the reason the header gives. 31 statements against the helper spelling's 37, same picture.
-// sdval's argument is named because by here the body is a chain, and >> shifts the chain value
-// into a call whose arguments are all positional.
+// Greek cross: arms of half length arm and half thickness thick, rounded by r.
+// sdval's argument is named because the body is a chain (see the let{} gotchas above).
 set sdcross0 = {p} -> p.y > p.x ?? p.yx ?: p
 set sdcross1 = {p, arm, thick, r} ->
   id >> let{sdcp, p} >> let{sdcq, sdcp - {x:arm, y:thick, w:0}} >> let{sdck, max{sdcq.y, sdcq.x}}
      >> sdval{v: sgn{sdck} * length{max{sdck > 0 ?? sdcq ?: sdvec{thick - sdcp.x, -sdck}, 0}} + r}
 set sdcross = {in:id, arm:1/2, thick:1/6, r:0} -> sdcross1{sdcross0{abs{sdflat{in}}}, arm, thick, r}
 
-// A wave of arcs of radius ra repeating along x, tb setting how much of each circle is used: from
-// nearly 0 (a flat line of shallow scallops), through 1/2 (half circles, ie a proper wave), to 1
-// (whole circles strung together). Each period is measured against two arcs, one from each side,
-// and the nearer wins.
+// Wave of arcs of radius ra along x. tb is how much of each circle is used: near 0 shallow
+// scallops, 1/2 half circles, 1 whole circles.
 set sdcwd = {q, cox, coy, ra} ->
   coy*q.x > cox*q.y ?? length{q - {x:cox, y:coy, w:0}} ?: abs{length{q} - ra}
-// The two arcs are the same distance taken at two different points, and sdcwd is the biggest chain
-// in here (a ternary, so both branches are compiled, and it names its point four times). pxfn{} makes
-// it a real function in the shader, declared once and called twice, where writing it out twice is two
-// copies of the whole thing. Everything but the point is a plain number, so the function takes the
-// point alone; the node is handed to a helper that uses it at two different points.
+// sdcwd is evaluated at two points, so it is a pxfn{} to avoid two copies in the shader.
 set sdcw1 = {p, cox, coy, ra} -> sdcw1h{p, cox, coy, pxfn{{q} -> sdcwd{q, cox, coy, ra}}}
 set sdcw1h = {p, cox, coy, d} -> sdval{min{
   p >> d,
   sdvec{abs{p.x - cox*2}, coy*2 - p.y} >> d
 }}
 set sdcw0 = {p, cox, coy, ra} -> sdcw1{sdvec{abs{(p.x % (cox*4)) - cox*2}, p.y}, cox, coy, ra}
-// The wave runs from y=0 up to twice coy, so the coordinate is lifted by coy on the way in to
-// centre it on the origin like everything else here
+// Lift by coy to centre the wave on the origin.
 set sdcw = {p, ra, a} -> sdcw0{p + {y:ra*cos{a}, w:0}, ra*sin{a}, ra*cos{a}, ra}
 set sdcirclewave = {in:id, tb:1/2, ra:1/4} -> sdcw{sdflat{in}, ra, 2.6179939*max{tb, 0.0001}}
 
 //// Combining
-// Union and intersection are just min{} and max{} of two distances, which work on visual nodes
-// already, so only the ones that are not already spelt are here.
+// Union and intersection are min{} and max{}.
 
-// Round off every corner by r, which also grows the shape by r
+// Round corners by r (also grows the shape by r).
 set sdround = {d, r:1/16} -> d - r
 
-// Hollow the shape out into an outline of half thickness w, keeping it a distance field
+// Outline of half thickness w.
 set sdannular = {d, w:1/32} -> abs{d} - w
 
-// Cut shape b out of shape a
+// Cut b out of a.
 set sdsub = {a, b} -> max{a, -b}
 
-// Union with a smooth blend of width k, so the two shapes flow into each other rather than
-// crossing. The distance is only approximate near the join, but it looks like liquid.
-// The blend factor is wanted three times, so it is named; the two distances are named as well,
-// and that is the half of it that pays, since a let's bound expression re-emits whatever it
-// re-mentions. 14 uniforms and 29 statements against the helper spelling's 18 and 37.
+// Smooth union of width k. Approximate distance near the join.
 set sdblend = {a, b, k:1/8} ->
   id >> let{sdba, a} >> let{sdbb, b} >> let{sdbh, clamp{1/2 + (sdbb-sdba)/(k*2)}}
      >> mix{sdbb, sdba, sdbh} - sdbh*(1 - sdbh)*k
 
 //// Drawing
-// A distance on its own renders as a grey ramp, so these turn one into a picture. They take the
-// distance as their first argument, so they can be called around a shape (sdfill{sdcircle{}}) or
-// piped one (sdcircle{}>>sdfill). soft is the width of the antialiasing ramp.
+// Take the distance first, so either sdfill{sdcircle{}} or sdcircle{}>>sdfill. soft is the
+// antialiasing width.
 
-// Fill the inside with col, the outside with bg
 set sdfill = {d, col:#fff, bg:#000, soft:0.01} -> mix{col, bg, smoothstep{d, -soft, soft}}
 
-// Draw the edge only, w either side of it
+// Edge only, w either side.
 set sdstroke = {d, w:0.01, col:#fff, bg:#000, soft:0.01} ->
   mix{col, bg, smoothstep{abs{d} - w, -soft, soft}}
 
-// Inigo Quilez's own way of showing a distance field: one colour inside and another outside, both
-// fading with distance and banded with concentric stripes, and the zero isoline picked out in
-// white. Worth reaching for while building a shape, since it shows the whole field rather than
-// just where it changes sign. k is how fast the fade is, n how many bands.
+// Inigo Quilez's field visualisation: inside/outside colours, distance fade and bands, white zero
+// line. Useful while building a shape. k is the fade rate, n the band count.
 set sdbands = {d, outside:#e93, inside:#adf, k:6, n:150, soft:0.01} -> mix{
   mix{outside, inside, sdstep{-d}} * (1 - exp{-k*abs{d}}) * (0.8 + 0.2*cos{n*d}),
   #fff,

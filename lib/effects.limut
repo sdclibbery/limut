@@ -1,7 +1,5 @@
 include 'lib/nodes.limut'
 
-// This library includes more complex effect units
-
 set flanger = {control:[0,1]l8@f,feedback:0,lo:0.0005,hi:0.007} ->
   feedback>0
   ?? {delay{0.01,max:0.01},delay{0.01+lo+control^2*(hi-lo),feedback:gain{feedback*0.8},max:0.1}}/2
@@ -15,17 +13,15 @@ set phaser = {control:[0,1]l4@f,lo:300,hi:2600,stages:4,q:1/2} -> {
   }
 }/2
 
-// Linear sawtooth delay ramp for one grain: delayTime ramps between a and b seconds
-// over each period of length seconds with an instantaneous reset, giving an exact
-// playback rate of 1-(b-a)/length. phase (0..1) staggers overlapping grains' resets.
+// Sawtooth delay ramp a to b seconds over each length, with an instant reset: an exact playback
+// rate of 1-(b-a)/length. phase (0..1) staggers overlapping grains' resets.
 set grainramp = {a, b, length, phase} -> [
   (a+(b-a)*phase)*1s :\((1-phase)*length*1s),
   b*1s :\0,
   a*1s :\(phase*length*1s)
 ]t@s
 
-// Smoothstep grain window, exactly zero at the grain's delay reset. Windows at
-// phase p and p+1/2 sum to exactly 1: paired grains crossfade with no amplitude modulation.
+// Smoothstep window, zero at the delay reset. Windows at phase p and p+1/2 sum to exactly 1.
 set grainwindow = {length, phase} ->
   phase<=1/2
   ?? [4*phase^2*(3-4*phase):~((1/2-phase)*length*1s), 1:~(length/2*1s), 0:~(phase*length*1s)]t@s
@@ -82,23 +78,14 @@ set duck = {depth:1, length:0.5, period:1, attack:0.1} -> [
   1:\attack
 ]t@s
 
-// Envelope follower: rectify + smooth the input into a ~0..1 control signal tracking its
-// volume envelope, for driving a gain (sidechain / duck / gate). freq sets the response
-// speed (higher = snappier, lower = smoother). Symmetric smoothing (single speed) — pure
-// WebAudio nodes can't do asymmetric attack/release without a worklet. boost scales the
-// output; the default pi/2 restores a sine's peak level (full-wave rectified average = 2A/pi).
+// Envelope follower: a ~0..1 control signal tracking the input level, for driving a gain.
+// freq is the response speed. Attack and release are symmetric; asymmetric would need a worklet.
+// The default boost of pi/2 restores a sine's peak (the rectified average is 2A/pi).
 set follower = {freq:20, boost:pi/2} -> shaper{ {x} -> abs{x} } >> bwlpf4{freq} >> gain{boost}
 
-// Multiband processing: split into count perceptually even (log-spaced) frequency bands
-// with a complementary (difference-of-lowpasses) crossover, run each band through the chain
-// built by the callback (given the band index and the band's centre frequency), then sum
-// the bands back together. Band i of n passes 20*1000^(i/n) to 20*1000^((i+1)/n) Hz:
-//   band 0   = +LP(hi)              first band, no lower crossover
-//   band i   = +LP(hi) -LP(lo)      middle band
-//   top band = +input  -LP(lo)      last band, passes the input straight on the + path
-// The LP(hi) of band i and the LP(lo) of band i+1 are the same filter fed the same input,
-// so unprocessed bands cancel exactly on summing: multiband{1} (and any uniform processing)
-// is fully transparent, with no crossover dips or level loss, regardless of filter slope.
+// Split into count log-spaced bands from 20Hz to 20kHz, run each through chain{i, centre}, and
+// sum. Bands are differences of lowpasses (top band is input minus lowpass), so adjacent bands
+// share a filter and cancel exactly: uniform processing is fully transparent at any filter slope.
 set multiband = {chain:1, count:3} -> parallel{
   {i} -> (
     i==count-1
@@ -109,9 +96,7 @@ set multiband = {chain:1, count:3} -> parallel{
 }
 set multiband2 = multiband
 
-// 4 pole variant: steeper crossovers, so less bleed between bands. Still complementary
-// (the cancellation between adjacent bands holds regardless of filter slope), so still
-// fully transparent when unprocessed.
+// 4 pole crossovers: less bleed between bands, still transparent.
 set multiband4 = {chain:1, count:3} -> parallel{
   {i} -> (
     i==count-1
@@ -121,40 +106,21 @@ set multiband4 = {chain:1, count:3} -> parallel{
   count
 }
 
-// Lowpass+highpass (bandpass) variant: each band is the input through a lowpass at its
-// upper edge and a highpass at its lower edge. Tighter bands than the complementary split
-// (no out-of-band leakage from the subtraction), but the bands do not sum back to the
-// input exactly: expect some level ripple and phase cancellation around the crossovers.
-// The band range is lo..hi (default 20Hz..20kHz, the edges of hearing, so the lowest
-// band's highpass and the top band's lowpass are effectively transparent); narrow it to
-// pack the same count of bands into a region of interest (eg speech, see vocoder below).
-// The chain callback is given {i, centre, lo, hi}: the band index, its geometric centre,
-// and its lower/upper edges (so callbacks can reuse the exact same edges).
+// Bandpass variant: tighter bands than multiband, but they do not sum back to the input exactly
+// (ripple and phase cancellation at the crossovers). lo..hi is the overall range. The chain is
+// given {i, centre, lo, hi}, the band's own edges, so it can filter something else identically.
 set multibandbp = {chain:1, count:3, lo:20, hi:20000} -> parallel{
   {i} -> bwlpf{lo*(hi/lo)^((i+1)/count)} >> bwhpf{lo*(hi/lo)^(i/count)}
          >> chain{i, lo*(hi/lo)^((i+1/2)/count), lo*(hi/lo)^(i/count), lo*(hi/lo)^((i+1)/count)},
   count
 }
 
-// Vocoder: impose the spectral envelope of a modulator player onto the carrier
-// (the signal in this fx chain). Pass the modulator as a .pre tap, eg
-// vocoder{voice.pre}; route the modulator to the silent bus so it is heard only
-// as the control signal. The carrier should be harmonically rich AND bright
-// (detuned saws, pulse, or noise) so every band has carrier energy to pass.
-// count = number of bands. freq = envelope follower speed (higher = crisper
-// consonants). boost scales the overall level. tilt is pre-emphasis: it lifts
-// the higher bands (by tilt*6 dB/octave above 100Hz) to counteract the natural
-// high-frequency rolloff of most modulators - without it the output just
-// faithfully reproduces a dark modulator and sounds muffled, and adding bands
-// does not help. Raise tilt for brighter/more intelligible speech, tilt:0 for
-// a flat (un-emphasised) vocoder.
-// lo/hi set the band range: it defaults to a speech band (150Hz..7kHz) so the
-// bands pack into the formant/consonant region where speech information lives -
-// the sub-bass below the voiced fundamental and the extreme highs carry little
-// speech and are dropped. Widen to lo:20, hi:20000 for a full-range vocoder.
-// Each band: the carrier band (split out by multibandbp) is gain-modulated by
-// the follower of the modulator's same band, split with the exact same edges
-// (the lo/hi passed into the callback).
+// Vocoder: impose a modulator's spectral envelope on the carrier (this fx chain's signal).
+// Pass the modulator as a .pre tap, eg vocoder{voice.pre}, and route it to the silent bus. The
+// carrier needs to be rich and bright (detuned saws, pulse, noise) so every band has energy.
+// freq is the follower speed (higher = crisper consonants). tilt lifts higher bands by tilt*6dB
+// per octave above 100Hz to counter a dark modulator, which otherwise sounds muffled.
+// lo/hi default to the speech band; use lo:20, hi:20000 for full range.
 set vocoder = {mod, count:16, freq:40, tilt:0.8, boost:pi/2, lo:150, hi:7000} -> multibandbp{
   {i, centre, lo, hi} -> gain{
     mod >> bwlpf{hi} >> bwhpf{lo}
@@ -168,18 +134,15 @@ set vocodethis = {wave:'saw', unison:3, freq:eventpitch@f, tilt:0.3} ->
   parallel{ {i} -> osc{wave, freq:freq*(1+(i-floor{unison/2})*0.01)}, unison }
     >>vocoder{this.player.pre*2, tilt:tilt, count:17}
 
-// Speaker cabinet voicing: the frequency response a guitar/keytar speaker imposes, which is what
-// tames the harsh upper harmonics heavy saturation generates (the job MeldaProduction's MCabinet
-// "flattening" does). Cuts the sub, dips the presence peak around 2.6kHz where fizz collects,
-// lifts the body around 900Hz, and rolls the top off steeply
+// Speaker cabinet voicing, to tame the fizz of heavy saturation: cut the sub, dip 2.6kHz, lift
+// 900Hz, roll off the top.
 set cabinet = {flatten:1} ->
   hpf4{60 + flatten*60} >>
   pkf{(-5db)^flatten, freq:2600, q:1} >>
   pkf{(3db)^flatten, freq:900, q:1/2} >>
   bwlpf4{12000 - flatten*4000}
 
-// OTT style multiband compression: split into count bands and compress each one hard with a fast
-// attack and release, so the quiet detail in every band comes forward and the sound levels out.
+// OTT style multiband compression: hard, fast compression per band.
 set ott = {depth:1, count:3, trim:1} -> multiband4{
   {i,centre} -> compressor{threshold:-30db, ratio:(12db)^depth, attack:2ms, release:60ms, knee:6db},
   count

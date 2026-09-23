@@ -162,19 +162,12 @@ define((require) => {
     return f
   }
 
-  // Which of the two clocks the current evaluation is running on. The event clock (event.count) is
-  // the beat an event is *scheduled* for, and the metronome fires a beat 0.1 of a beat early
-  // (metronome.advance), so it always runs ahead of the frame clock (metronome.beatTime(now)); a
-  // sub-beat pattern step, delay= or swing puts it further ahead still. A running value that
-  // integrates dt (accum/smooth/rate: see functions/maths.js) can only track one of the two, so it
-  // keeps a separate accumulator per phase and needs to know which it is being asked for.
-  // The event phase is sticky: an evalParamFrame nested inside it is still event time work, just
-  // with the beat passed explicitly. Event time graph and shader building does exactly that all
-  // over - draw/visualsynth/nodes.js resolves a param chain, a pxfn body and webcam args that way,
-  // and the audio node functions do the same for their args - and every one of those is asked for
-  // the value at the event's beat, not at the live one. Only evalParamEvent touches the phase (in a
-  // finally, so a throw can't leave it stuck on), which also keeps the far hotter evalParamFrame
-  // free of any of this.
+  // Which clock the current evaluation runs on. The event clock (event.count) is the scheduled
+  // beat, always ahead of the frame clock since the metronome fires early (and delay/swing add more).
+  // Running values that integrate dt (accum/smooth/rate, functions/maths.js) keep one accumulator
+  // per phase. The event phase is sticky: evalParamFrame calls nested in event time building
+  // (param chains, pxfn bodies, node function args) still want the event's beat. Only
+  // evalParamEvent sets it (in a finally), keeping the hot evalParamFrame free of this.
   let phase = 'frame'
   let evalPhase = () => phase
 

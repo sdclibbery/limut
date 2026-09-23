@@ -33,30 +33,15 @@ system.latency = () => {
   return system.audio.outputLatency
 }
 
-// Live count of audio worklet voices (superosc, chaos, pwm). These are by far the
-// most expensive things Limut can put on the audio thread, and unlike native nodes
-// their cost scales with their params (superosc `unison` especially), so knowing
-// how many are sounding is the difference between guessing and knowing when a set
-// starts glitching. Incremented at construction and decremented when the processor
-// itself reports that it has terminated (it posts back from process() just before
-// returning false) - not when stop() is called, which only writes an AudioParam the
-// render thread may not act on for another quantum, or ever. See the shared shim in
-// play/worklet-lifecycle.js.
+// Live count of audio worklet voices (superosc, chaos, pwm), the most expensive things on the audio
+// thread. Decremented when the processor reports termination, not on stop() (see
+// play/worklet-lifecycle.js).
 //
-// This is a proxy, and in the browser build it is the only one available: no web API
-// measures audio thread load or dropouts. AudioContext.renderCapacity - the API meant
-// for exactly this - has never shipped unflagged (checked against Chrome 151 and
-// Electron 36: absent from AudioContext.prototype in both, and the blink interface is
-// not even present in Electron's bundled Chromium). AudioWorkletGlobalScope has no
-// performance.now(), so a monitor worklet cannot time itself either, and both
-// currentTime and getOutputTimestamp() track the output device buffer and stay flat
-// even when the audio thread is deliberately driven past its deadline. So the beat
-// latency readout (labelled "Timing" in the UI) measures the MAIN thread, and the
-// voice count below is the honest handle on the audio thread in a browser.
-//
-// Electron gets the real number: Chromium computes render capacity for the DevTools
-// WebAudio tab and exposes it over the DevTools protocol, which the Electron main
-// process can speak to its own renderer. See system.audioLoad() below.
+// In the browser this is the only audio thread handle available: AudioContext.renderCapacity has
+// not shipped unflagged, worklets have no performance.now(), and currentTime and
+// getOutputTimestamp() stay flat even when the audio thread overruns. So the "Timing" readout
+// measures the main thread. Electron gets real render capacity over the DevTools protocol; see
+// system.audioLoad() below.
 let voices = 0
 system.voiceStarted = () => { voices += 1 }
 system.voiceStopped = () => { voices -= 1 }

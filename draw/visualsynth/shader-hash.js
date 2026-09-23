@@ -1,24 +1,15 @@
 'use strict'
 define(function(require) {
 
-  // GLSL hash functions for the pxhash/pxhashf visual nodes: a well distributed pseudo random vec4
-  // keyed on the incoming pixel value, so every pixel gets its own random number. Deterministic —
-  // the same input and seed always give the same result — which is what makes it a hash rather
-  // than a random generator, and what lets the shader stay a pure function of the pixel.
-  //
-  // Only the GLSL lives here (and the specs that wrap it, in shader-maths.js): no requires, so this
-  // is testable without a GL context, the same discipline as codegen.js.
+  // GLSL hash functions for pxhash/pxhashf: a deterministic, well distributed random vec4 per
+  // input value. No requires, so this is testable without a GL context (as codegen.js).
 
-  // pcg4d, from Jarzynski & Olano, "Hash Functions for GPU Rendering" (JCGT 2020). Four
-  // statistically independent output channels, and being integer only it gives the same answer on
-  // every GPU and does not degrade as the input or seed grows large.
-  //
-  // The seed is xored into the input *bits* rather than added to the input, so it decorrelates the
-  // whole field instead of just translating it. floatBitsToUint is an exact bitcast (and free), so
-  // quantised coordinates (floor{1/8}) and large animated seeds both hash cleanly.
-  //
-  // v must be highp: GLSL ES 3.00 defaults int to mediump in fragment shaders, which is only
-  // guaranteed 16 bits, and the whole hash depends on 32 bit multiply wraparound.
+  // pcg4d, from Jarzynski & Olano, "Hash Functions for GPU Rendering" (JCGT 2020). Integer only, so
+  // it is the same on every GPU and does not degrade for large inputs or seeds.
+  // The seed is xored into the input bits rather than added, so it decorrelates the whole field
+  // rather than translating it.
+  // v must be highp: GLSL ES 3.00 defaults int to mediump (16 bits) in fragment shaders, and the
+  // hash depends on 32 bit multiply wraparound.
   let pcg4dHelper = {
     name: 'l_pxhash',
     source: `vec4 l_pxhash(vec4 p, vec4 s) {
@@ -31,24 +22,12 @@ define(function(require) {
 }`,
   }
 
-  // The classic sin hash: one dot product and one sin, then four different multipliers to get four
-  // channels out of it. Cheaper than pcg4d: measured on an M1 (8 core GPU, ANGLE Metal) at 40.7
-  // against 22.2 G invocations/sec, ie 1.83x, which is 0.20ms against 0.37ms for a full 4K pass.
-  // Both are small enough that the choice rarely matters.
-  //
-  // The large constants are what make it work on *small* inputs: a px chain's value is normally in
-  // -1 to 1, so the dot lands in the tens of radians and sin wraps many times across the quad —
-  // which is exactly the domain the sin hash was designed for. Note that Hoskins' hash44 (the
-  // obvious "hash without sine" choice) is NOT usable here: it mixes purely through fract(), and
-  // multiplies its input by ~0.103 first, so on a -1 to 1 input it never wraps and the output comes
-  // out smooth rather than random — visibly so, as arches rather than static. Scaling the input
-  // does not save it either: the usable window is narrow and it collapses on either side (on a
-  // value already scaled by 1000 it degenerated to 29 distinct colours across a 256x256 render).
-  //
-  // Two things this trades away against pcg4d, and the reason that one is the default:
-  // sin precision varies between drivers and fract(sin(x)*43758) amplifies the difference, so the
-  // pattern is not reproducible from GPU to GPU (it is still noise, just not the same noise); and
-  // as with any float hash the distribution decays once the input or seed grows large.
+  // The classic sin hash: about 1.8x faster than pcg4d, though both are cheap.
+  // The large constants make it work on small inputs (px values are normally -1 to 1). Hoskins'
+  // hash44 is NOT usable here: it scales its input down and mixes only through fract(), so on -1 to
+  // 1 it never wraps and comes out smooth, and no input scaling fixes it reliably.
+  // pcg4d is the default because this one varies between GPUs (driver sin precision, amplified by
+  // the 43758 multiplier) and decays for large inputs or seeds.
   let sinHelper = {
     name: 'l_pxhashf',
     source: `vec4 l_pxhashf(vec4 p, vec4 s) {
@@ -57,13 +36,9 @@ define(function(require) {
 }`,
   }
 
-  // Random rgb, with the incoming alpha kept, the same rule the dot node follows: px=pxhash is
-  // opaque noise, and mul{pxhash} cannot silently make a texture see through. Use channels{a:pxhash}
-  // where a random alpha is actually wanted.
-  //
-  // An absent seed becomes the literal vec4(0.0) rather than a uniform, so an unseeded hash is a
-  // fixed field (and costs no uniform); a seed that is given registers its raw AST as a uniform in
-  // the usual way, so it animates per frame.
+  // Random rgb, keeping the incoming alpha, so mul{pxhash} cannot make a texture see through. Use
+  // channels{a:pxhash} for a random alpha. An absent seed is the literal vec4(0.0), costing no
+  // uniform; a given seed is an animated uniform.
   let hashSpec = (helper) => ({
     emit: (a, s) => `vec4(${helper.name}(${a}, ${s === undefined ? 'vec4(0.0)' : s}).rgb, (${a}).a)`,
     helpers: [helper],

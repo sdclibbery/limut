@@ -158,20 +158,11 @@ define(function (require) {
     }
 // console.log('3', value, isConnectable(value))
     if (isConnectable(value)) { // Value is a node chain, just connect it
-      // Known Chromium leak, measured Sep 2026 on Chromium 136 and still there on 152: a *per-note
-      // BiquadFilter anywhere in a chain that ends at an AudioParam* leaves cost permanently
-      // resident on the audio thread - render capacity climbs with every note and never comes back,
-      // not on note end and not on Ctrl-. The node census stays clean throughout, so only capacity
-      // after window.stop() shows it (~0.01 is healthy).
-      // Measured with `p1 audiosynth, dur=1/2, amp=1/32, play={osc{freq:200*(1+(osc.sine{80}>>lpf{1000})/3)}}`
-      // at bpm=1410: 0.09-0.27 for the whole minute after the stop with an empty graph, against
-      // 0.005 for the same patch with the lpf moved into the audio path or dropped. The same param
-      // chain with a DelayNode instead of the filter is clean too, so this is specific to a biquad
-      // in a param subgraph, not to tail time and not to the param connection itself.
-      // Nothing here fixes it - reordering the teardown and giving the chain an audio domain edge
-      // both measured no better - so a modulator that wants smoothing is better built from a slow
-      // source (eg noise{rate:1/20}) than from a filter. keytar in preset/synth.limut is the
-      // worked example.
+      // Chromium leak (still present in 152): a per-note BiquadFilter anywhere in a chain that ends
+      // at an AudioParam leaves cost permanently resident on the audio thread, visible only as
+      // render capacity after window.stop(); the node census stays clean. A DelayNode is fine, and
+      // teardown changes do not help. So smooth a modulator with a slow source (eg noise{rate:1/20})
+      // rather than a filter; see keytar in preset/synth.limut.
       audioParam.value = 0 // Remove any default value so we only get the value from the connection
       connect(value, audioParam, __event._destructor, {dont_disconnect_r:true})
       return

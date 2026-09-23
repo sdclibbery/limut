@@ -8,26 +8,15 @@ define(function (require) {
   // start()/stop() shim and voice counting, shared with chaos-source and pwm-source
   let workletLifecycle = require('play/worklet-lifecycle')
 
-  // Per-voice frequency multipliers for `n` unison voices detuned by max
-  // frequency ratio `ratio`, spread evenly (geometrically, ie by pitch) each
-  // side of the primary frequency. Voice v gets exponent p in [-1,+1] spread
-  // evenly across the voices, and multiplier ratio^p: the extremes sit at
-  // ratio (top) and 1/ratio (bottom), the centre voice at 1 (the primary).
-  // n===1 gives [1] (no detune). Kept in sync with the same formula inlined in
-  // the worklet's process() (the worklet can't share this module's code).
-  //
-  // The exponents are additionally perturbed by unisonDetuneOffset (below): a
-  // perfectly even (linear) spread makes the inter-voice beat frequencies
-  // commensurate, so the whole stack periodically re-converges in phase — an
-  // audible pulse. The offset takes the interior voices off that grid.
+  // Per-voice frequency multipliers for n unison voices detuned by max ratio: voice v gets
+  // ratio^p, p spread over [-1,+1], so the extremes are ratio and 1/ratio and the centre is 1.
+  // The interior exponents are perturbed by unisonDetuneOffset: an even spread makes the beat
+  // frequencies commensurate, so the stack periodically re-converges in phase (an audible pulse).
+  // Kept in sync with the same formula inlined in the worklet's process().
   const PHI = 0.6180339887498949 // golden-ratio fractional part (low-discrepancy)
   const frac = (x) => x - Math.floor(x)
-  // Small antisymmetric offset added to voice v's detune exponent to break the
-  // even spacing. Zero at the two endpoints and the exact centre voice, and
-  // antisymmetric about the centre (off(n-1-v) === -off(v)), so log-symmetry
-  // (mul[v]*mul[n-1-v]===1) and the documented extremes/centre stay exact; only
-  // interior voices of n>=4 move. Deterministic (no per-note randomness).
-  // Kept in sync with the same formula inlined in the worklet's process().
+  // Antisymmetric about the centre and zero at the ends and centre, so log-symmetry and the
+  // extremes stay exact; only interior voices of n>=4 move. Kept in sync with process().
   const DETUNE_SPREAD = 0.2 // exponent perturbation magnitude, ear-tunable
   const unisonDetuneOffset = (n, v) => {
     const half = (n - 1) / 2
@@ -46,16 +35,8 @@ define(function (require) {
     return mul
   }
 
-  // Per-voice amplitude weights for `n` unison voices, so the centre voice(s)
-  // can be louder or softer than the outer ones. `amp` is the ratio of the
-  // centre voice's amplitude to the outermost voices'; the weight interpolates
-  // linearly by |position| p (p in [-1,+1] as in unisonMuls): amp at the centre
-  // (p=0), 1 at the extremes (|p|=1). For even n no voice sits exactly at the
-  // centre, so the two innermost voices are the loudest (both near amp). amp===1
-  // gives all-ones (the plain unison sum). Loudness is held roughly constant by
-  // scaling the summed voices by 1/sqrt(sum(w^2)) (see unisonGain), which for
-  // amp===1 reduces to the previous 1/sqrt(n). Kept in sync with the same
-  // formula inlined in the worklet's process().
+  // Per-voice amplitude weights: amp at the centre (p=0), 1 at the extremes, linear in |p|.
+  // unisonGain normalises loudness by 1/sqrt(sum(w^2)). Kept in sync with process().
   const unisonAmps = (n, amp) => {
     const w = new Float32Array(n)
     for (let v = 0; v < n; v++) {
@@ -74,16 +55,9 @@ define(function (require) {
     return sumSq > 0 ? 1 / Math.sqrt(sumSq) : 0
   }
 
-  // Per-voice equal-power stereo pan gains for `n` unison voices spread across a
-  // stereo width `pan`. Voice v's pitch position p in [-1,+1] (as in unisonMuls)
-  // maps to a pan position pp = p*pan clamped to [-1,+1], so the outermost voices
-  // sit at ±pan (eg pan=1/2 -> 50% left..50% right) and the centre at 0. An
-  // equal-power law (angle = (pp+1)*PI/4) sets the left/right gains, scaled by
-  // sqrt(2) so a centred voice is exactly 1 in each channel (so pan=0, and
-  // unison=1, leave the output unchanged) while each voice's total power stays
-  // constant as it pans out (l^2+r^2 = 2 for every voice). Returns { l, r }
-  // Float32Arrays. Kept in sync with the same formula inlined in the worklet's
-  // process().
+  // Per-voice equal-power pan gains: outermost voices at ±pan, scaled by sqrt(2) so a centred
+  // voice is exactly 1 per channel (pan=0 or unison=1 leave the output unchanged). Returns { l, r }.
+  // Kept in sync with process().
   const unisonPans = (n, pan) => {
     const l = new Float32Array(n)
     const r = new Float32Array(n)
@@ -282,13 +256,9 @@ define(function (require) {
 
   let system = require('play/system')
 
-  // The audio worklet processor. This runs on the audio thread, so it is
-  // defined as a source string and registered via addModule below.
-  // "superosc" is a wavetable oscillator: its wavetable is a sample buffer
-  // (channel-0 Float32 data) sent in via the message port, sliced into `count`
-  // single-cycle frames. Phase accumulation indexes within one frame; the `wt`
-  // param morphs (lerps) across the frames. It is intended to grow lots more
-  // functionality over time.
+  // The audio worklet processor, as a source string registered via addModule. A wavetable
+  // oscillator: the wavetable arrives over the message port, sliced into count single-cycle
+  // frames, and wt morphs across the frames.
   const source = `
 /* globals sampleRate, registerProcessor, AudioWorkletProcessor */
 
@@ -299,30 +269,13 @@ const DEFAULT_DETUNE = 0;
 // of the fundamental cycle so a fade never overruns the next reset.
 const FADE_SAMPLES_MAX = Math.round(sampleRate * 0.002);
 
-// The wavetable of the processor currently inside process(). The read helpers
-// below are the hottest code in Limut - the innermost one (Ic) runs up to 18 times
-// per voice per sample - so they are defined once here at module scope rather than
-// as closures over process()'s locals, which were rebuilt every 128-sample block
-// and so could not be kept warm by the JIT. Sharing mutable module state like this
-// is safe because process() calls never interleave: the audio thread renders one
-// processor, one block, at a time. Every process() sets these before reading them.
+// The wavetable of the processor currently inside process(). The read helpers below are the
+// hottest code in Limut, so they live at module scope rather than as closures rebuilt every block,
+// which the JIT cannot keep warm. Safe because process() calls never interleave; every process()
+// sets these before reading them.
 //
-// Measured on an M1, per sounding note, as % of one core, for the whole set of
-// optimisations in this file (this hoist, the cached unison tables, direct param
-// indexing, the shared-tap read below, and the in-frame tap fast path in interpI).
-// Web Audio renders on a SINGLE thread, so these are the numbers that matter no
-// matter how many cores the machine has:
-//   unison=15   9.6% -> 4.6% at 65Hz,  9.9% -> 4.6% at 220Hz,  9.7% -> 4.6% at 440Hz
-//   unison=7    4.6% -> 2.2% at 220Hz
-// Output is bit-identical throughout - verified by rendering 20 scenarios (every
-// branch of the per-voice loop, a-rate and constant params, sync/crush/pwm/formant,
-// NaN fallbacks, mono and stereo) through process() before and after and comparing
-// sample by sample.
-//
-// Benchmark these in SEPARATE PROCESSES, one variant per process. Loading two copies
-// of the processor in one process makes the shared p.process(...) call site
-// megamorphic and deoptimises everything, which silently produces garbage numbers
-// (it reported one variant as 30% faster when it was in fact 3% slower).
+// Benchmark in SEPARATE PROCESSES, one variant per process: two copies of the processor in one
+// process make the p.process(...) call site megamorphic, and the numbers are garbage.
 let gWave = null;
 let gIntegral = null;
 let gTotals = null;
@@ -336,20 +289,12 @@ const Ic = (idx, f) => {
   const cyc = Math.floor(idx / gFrameLen);
   return gIntegral[f * gFrameLen + (idx - cyc * gFrameLen)] + cyc * gTotals[f];
 };
-// interpI: Catmull-Rom interpolation of frame f's integral at fractional x,
-// with all taps offset by 'base' to keep magnitudes small (float32 precision).
+// interpI: Catmull-Rom interpolation of frame f's integral at fractional x, with all taps offset
+// by 'base' to keep magnitudes small (float32 precision).
 //
-// The four taps are adjacent, and ~99.5% of the time all four are inside the frame
-// (x0 is always in [0,frameLen), so only i0 at the very ends wraps). Checking that
-// ONCE and then issuing four consecutive loads is worth a lot: -30% on its own,
-// because the run has no control flow or arithmetic between the loads, so they
-// overlap. What does NOT work is pushing the same check down into Ic, so each load
-// is guarded individually - measured 2-10% SLOWER, since the branch delays every
-// load and the extra return path discourages inlining Ic into here. Two earlier
-// attempts to speed up Ic's arithmetic (reciprocal multiply, incremental cycle
-// carry) were also neutral-to-slower. The lesson, three times over: this loop is
-// bound by the scattered integral LOADS, not the arithmetic, so optimise for
-// issuing loads early and contiguously, never for saving an operation.
+// This loop is bound by the scattered integral LOADS, not the arithmetic: check once that all four
+// taps are inside the frame, then issue four contiguous loads. Guarding each load inside Ic is
+// slower, as is saving arithmetic in Ic.
 const interpI = (x, base, f) => {
   const i0 = Math.floor(x);
   const frac = x - i0;
@@ -380,11 +325,8 @@ const readFrame = (f, x0, x1, span) => {
   if (span > 1e-4 || span < -1e-4) {
     const i0 = Math.floor(x0);
     const base = Ic(i0, f);
-    // When the span stays inside one sample of the frame - anything below about
-    // sampleRate/frameLen, so most bass and mid notes - both ends of the box
-    // filter interpolate the SAME four integral taps. Loading them once and
-    // evaluating the cubic at both fractions is the identical arithmetic in the
-    // identical order, for half the (scattered, cache-missing) loads.
+    // A span within one sample of the frame (most bass and mid notes) uses the same four taps at
+    // both ends, so load them once: identical arithmetic, half the loads.
     if (Math.floor(x1) === i0) {
       // Same four adjacent taps, so the same in-frame fast path as interpI (see
       // the comment there for why the check belongs here and not inside Ic).
@@ -459,39 +401,21 @@ class SuperOsc extends AudioWorkletProcessor {
       // wt: morph position across the wavetable's frames, normalised 0..1
       // (0 = first frame, 1 = last frame), lerping between adjacent frames.
       { name: 'wt', defaultValue: 0, minValue: 0, maxValue: 1, automationRate: 'a-rate' },
-      // sync: oscillator hard-sync ratio. 0 disables it (no effect); otherwise
-      // the phase is remapped phase -> (phase * |sync|) % 1 before the wavetable
-      // lookup, so the waveform restarts |sync| times per fundamental cycle.
-      // sync > 0 is the classic hard-sync timbre (a value discontinuity, ie a
-      // click, at the fundamental boundary for non-integer sync). sync < 0 uses
-      // the same ratio magnitude but softens that reset with a short raised-
-      // cosine crossfade (a "soft sync"). Read a-rate so it can be modulated.
+      // sync: hard-sync ratio, 0 disables. The phase is remapped to (phase * |sync|) % 1.
+      // sync < 0 softens the reset with a short raised-cosine crossfade (soft sync).
       { name: 'sync', defaultValue: 0, minValue: -32, maxValue: 32, automationRate: 'a-rate' },
-      // crush: phase quantisation (a "bitcrush" of the phase). 0 disables it (no
-      // effect); otherwise the phase (after any sync remap) is quantised to
-      // crush discrete steps via floor(phase * crush) / crush before the
-      // wavetable lookup, stepping the waveform for a lo-fi/aliased timbre.
-      // Read a-rate so it can be modulated.
+      // crush: phase quantisation, 0 disables.
       { name: 'crush', defaultValue: 0, minValue: 0, maxValue: 12, automationRate: 'a-rate' },
       // pwm: phase power-warp ("generalised PWM"). The phase (after any sync
       // remap) is raised to the power 2^pwm before the wavetable lookup,
       // skewing the waveform toward its start (pwm>0) or end (pwm<0). 0 is a
       // no-op (exponent 2^0 = 1). Read a-rate so it can be modulated.
       { name: 'pwm', defaultValue: 0, minValue: -8, maxValue: 8, automationRate: 'a-rate' },
-      // formant: formant/warp shift (a-rate). 0 disables it (no effect). Otherwise
-      // the waveform is resampled within each fundamental cycle: read at 2^formant
-      // times the rate (wrapped within the cycle, and the box-filter span scaled to
-      // match, like sync) and multiplied by a raised-cosine window over the
-      // fundamental phase. The window forces the signal to zero at every cycle
-      // boundary, so the fundamental period (the pitch) is preserved while the
-      // spectral formants shift up (formant > 0) or down (formant < 0), the way
-      // Serum/Vital formant warp behaves.
+      // formant: 0 disables. Reads each cycle at 2^formant times the rate, windowed by a raised
+      // cosine over the fundamental phase, so the pitch holds while the formants shift.
       { name: 'formant', defaultValue: 0, minValue: -4, maxValue: 4, automationRate: 'a-rate' },
-      // unison: number of detuned voices (1..16) layered together. unisonRatio
-      // is the max frequency ratio the voices are detuned by, spread evenly
-      // (geometrically) each side of the primary freq. Both read k-rate (once
-      // per block, at [0]). unisonRatio's descriptor default is only a fallback;
-      // the synth/node-fn actually set 1.01 when unison>1.
+      // unison: number of detuned voices. unisonRatio is the max detune ratio. Both k-rate. The
+      // unisonRatio default is only a fallback; the synth and node function set it.
       { name: 'unison', defaultValue: 1, minValue: 1, maxValue: 16 },
       { name: 'unisonRatio', defaultValue: 1.01, minValue: 1, maxValue: 4 },
       // unisonAmp: ratio of the centre voice's amplitude to the outermost
@@ -499,11 +423,7 @@ class SuperOsc extends AudioWorkletProcessor {
       // overall loudness is held roughly constant via 1/sqrt(sum w^2). Read
       // k-rate (once per block, at [0]).
       { name: 'unisonAmp', defaultValue: 1, minValue: 0, maxValue: 8 },
-      // unisonPan: stereo width of the voice spread. Voice pitch position p in
-      // [-1,+1] maps to pan position p*pan (clamped to [-1,+1]): the outermost
-      // voices sit at ±pan (eg pan=1/2 -> 50% left..50% right), the centre at 0.
-      // Equal-power law, scaled so a centred voice is 1 in each channel. Read
-      // k-rate (once per block, at [0]).
+      // unisonPan: stereo width of the voice spread, equal-power. k-rate.
       { name: 'unisonPan', defaultValue: 0.5, minValue: -4, maxValue: 4 },
       // start/stop gates, driven by the node's start()/stop() methods
       { name: 'start', defaultValue: 0, minValue: 0, maxValue: 1 },
@@ -513,31 +433,18 @@ class SuperOsc extends AudioWorkletProcessor {
 
   constructor() {
     super();
-    // Per-voice phase (cycles [0,1) within a single frame), one per unison voice
-    // (up to 16). Spread the starting phases around the full cycle with a golden-
-    // ratio low-discrepancy sequence: well-distributed for any voice count (unlike
-    // v/16, which only spreads well near 16 and clustered the first few voices into
-    // a narrow arc, letting them re-converge coherently). A distinct irrational
-    // from the detune offset's PHI keeps phase and detune sequences uncorrelated.
-    // frac(0)=0, so voice 0 starts at 0 and unison=1 is identical to a single osc.
+    // Per-voice phase in cycles. Starting phases follow a golden-ratio sequence so they are
+    // well spread for any voice count; a different irrational from the detune offset's PHI keeps
+    // the two uncorrelated. Voice 0 starts at 0, so unison=1 matches a single oscillator.
     this.phases = new Float32Array(16);
     for (let v = 0; v < 16; v++) { const x = v * 0.7548776662466927; this.phases[v] = x - Math.floor(x); }
-    // Soft-sync (negative sync) per-voice crossfade state. When a fundamental
-    // cycle wraps we arm a short raised-cosine crossfade between the OLD slave
-    // phase (continued past the reset) and the NEW reset slave phase, softening
-    // the hard-sync click. syncFade[v] is the samples remaining in the current
-    // fade (0 = not fading), syncK[v] the length it was armed with, syncOldPh[v]
-    // the continuing old slave-phase accumulator. All default to 0 (not fading).
+    // Soft-sync crossfade state: syncFade[v] is the samples remaining (0 = not fading), syncK[v]
+    // the fade length, syncOldPh[v] the old slave phase continuing past the reset.
     this.syncOldPh = new Float32Array(16);
     this.syncFade = new Float32Array(16);
     this.syncK = new Float32Array(16);
-    // Per-voice unison tables (frequency multiplier, amplitude weight, equal-power
-    // left/right pan gains) plus the summed-loudness gain. These depend only on the
-    // k-rate unison params, which almost never change between blocks, so they are
-    // allocated once here at the 16-voice maximum and rebuilt in process() only when
-    // one of those params actually moves - rather than four Float32Array allocations
-    // per block per node, on the audio thread. last* is what they were last built
-    // for; lastN = -1 forces a build on the first block.
+    // Unison tables, allocated once at the 16-voice maximum and rebuilt only when a k-rate unison
+    // param changes, to avoid allocating on the audio thread. lastN = -1 forces the first build.
     this.mul = new Float32Array(16);
     this.amp = new Float32Array(16);
     this.panL = new Float32Array(16);
@@ -564,16 +471,11 @@ class SuperOsc extends AudioWorkletProcessor {
   }
 
   process(inputs, outputs, parameters) {
-    // Lifecycle guard, shared by the three worklet oscillators - keep the three
-    // copies identical, and see play/worklet-lifecycle.js for why it lives inline
-    // rather than being interpolated in. stop is tested BEFORE start: a node that
-    // is stopped before it is ever started must still terminate, or its process()
-    // runs forever and the node is never collected. The unstarted budget is the
-    // backstop for a node that is never stopped either - it renders silence for up
-    // to 60s (far beyond any scheduling lookahead) and then dies. Every path that
-    // returns false posts 'terminated' back to the node first: that message, not the
-    // JS stop() call, is what decrements the voice count, so the count only comes
-    // down when the render thread has really dropped this processor.
+    // Lifecycle guard, shared by the three worklet oscillators - keep the three copies identical,
+    // and see play/worklet-lifecycle.js for why it is inline. stop is tested BEFORE start: a node
+    // stopped before it starts must still terminate. The unstarted budget (60s) is the backstop for
+    // a node never stopped. Every exit posts 'terminated' first: that message, not stop(), is what
+    // decrements the voice count.
     if (parameters.stop[0] > 0.5) { this.port.postMessage('terminated'); return false }
     if (!this.started) {
       // Latch on the LAST sample of the block, not the first. start is an a-rate param, so a
@@ -590,11 +492,8 @@ class SuperOsc extends AudioWorkletProcessor {
     }
 
     const output = outputs[0];
-    // An a-rate param arrives as either a length-1 array (one value for the whole
-    // block) or a length-128 array (one per sample). Testing that once per block
-    // and indexing directly beats a per-param getter closure twice over: it drops
-    // seven closure allocations per block and turns each per-sample read into a
-    // plain array index instead of an indirect call.
+    // An a-rate param is a length-1 or length-128 array. Testing once per block and indexing
+    // directly avoids per-block closure allocation and an indirect call per sample.
     const pFrequency = parameters.frequency, cFrequency = pFrequency.length === 1;
     const pDetune = parameters.detune, cDetune = pDetune.length === 1;
     const pWt = parameters.wt, cWt = pWt.length === 1;
@@ -636,18 +535,7 @@ class SuperOsc extends AudioWorkletProcessor {
       kLerp = kFr > 0 && kFa < count - 1;
     }
 
-    // Unison: n detuned voices summed together (read k-rate, once per block).
-    // mul[v] is voice v's frequency multiplier, spread geometrically each side
-    // of the primary by max ratio (extremes at ratio and 1/ratio, centre at 1).
-    // amp[v] is voice v's amplitude weight, letting the centre voice(s) be
-    // louder/softer than the outer ones: unisonAmp is the centre-to-outer ratio,
-    // interpolated linearly by pitch position (unisonAmp at centre, 1 at the
-    // extremes). gain = 1/sqrt(sum amp^2) keeps loudness roughly constant; for
-    // unisonAmp=1 that reduces to 1/sqrt(n), and unison=1 stays unchanged.
-    // panL[v]/panR[v] are voice v's equal-power stereo gains: pitch position p
-    // maps to pan position p*unisonPan (clamped to ±1), scaled so a centred voice
-    // is 1 in each channel (so pan=0, and unison=1, stay unchanged) and each
-    // voice's total power (l^2+r^2) is a constant 2 regardless of pan.
+    // Unison: see unisonMuls, unisonAmps and unisonPans above for the formulas, which this inlines.
     let n = Math.round(parameters.unison[0]);
     // Written as !(n >= 1) so a NaN unison (eg a bad param expression) falls back
     // to 1 rather than slipping past both bounds and leaving n === NaN (silent).
@@ -674,11 +562,8 @@ class SuperOsc extends AudioWorkletProcessor {
       const half = (n - 1) / 2;
       for (let v = 0; v < n; v++) {
         const p = n === 1 ? 0 : (2 * v / (n - 1) - 1);
-        // Antisymmetric golden-ratio offset on the detune exponent only: breaks the
-        // even (linear) spacing whose commensurate beats make the unison stack
-        // periodically re-converge in phase (an audible pulse). Zero at the endpoints
-        // and exact centre; only interior voices of n>=4 move. amp/pan keep the
-        // un-perturbed linear p. Kept in sync with unisonDetuneOffset() above.
+        // Detune offset on the detune exponent only; amp/pan use the unperturbed p. Kept in sync
+        // with unisonDetuneOffset() above.
         let off = 0;
         if (v !== 0 && v !== n - 1 && v !== half) {
           const k = Math.min(v, n - 1 - v);
@@ -706,24 +591,14 @@ class SuperOsc extends AudioWorkletProcessor {
 
     const channel0 = output[0];
     for (let i = 0; i < channel0.length; i++) {
-      // Hoist the /sampleRate out of the per-voice loop: with unison this saves
-      // one divide per voice per sample (n divides -> a single divide). mul[0] is
-      // exactly 1 for unison=1, so freqOverSr*mul[0] === freq/sampleRate, keeping
-      // the single-voice output bit-for-bit unchanged. When neither frequency nor
-      // detune is automated this is the same value for all 128 samples, so it (and
-      // its Math.pow) was computed once per block above instead.
+      // /sampleRate hoisted out of the per-voice loop. mul[0] is exactly 1 for unison=1, so the
+      // single-voice output is unchanged.
       const freqOverSr = constFreq ? kFreqOverSr
         : (pFrequency[cFrequency ? 0 : i] * Math.pow(2, pDetune[cDetune ? 0 : i] / 1200)) / sampleRate;
 
-      // Read the wavetable over the exact span each voice's phase sweeps this
-      // sample: a box (moving-average) filter whose width grows with pitch, so
-      // harmonics that would alias at high notes are rolled off automatically.
-      // wt picks a position across the frames (the same for every voice); the
-      // band-limited reads of the two adjacent frames are lerped to morph
-      // between them. The n detuned unison voices (each its own freq and phase)
-      // are summed into the left/right accumulators via their equal-power pan
-      // gains and scaled by gain. Until a wavetable has loaded the output is
-      // silent, but every voice's phase still advances.
+      // Read each voice over the span its phase sweeps this sample: a box filter that widens with
+      // pitch, band-limiting high notes. The two frames either side of wt are lerped. Until a
+      // wavetable loads the output is silent but phases still advance.
       let sampleL = 0, sampleR = 0;
       if (haveWave) {
         // sync: hard-sync ratio. 0 leaves the phase untouched; otherwise the
@@ -731,25 +606,13 @@ class SuperOsc extends AudioWorkletProcessor {
         // is scaled by sync too so the box filter still band-limits the faster
         // (restarting) waveform.
         const sync = cSync ? kSync : pSync[i];
-        // crush: phase quantisation, expressed in bits. 0 leaves the phase
-        // untouched; otherwise the phase (after the sync remap) is quantised to
-        // 2^crush steps for a stepped, lo-fi timbre. Like pwm->pwr, we convert
-        // bits->levels here (crushLevels) and feed that to readWarped, which does
-        // the floor(phase*levels)/levels snap. The read span is left at the true
-        // increment so the box filter still band-limits between the quantised
-        // steps. Constant crush/pwm/formant did this conversion once per block.
+        // crush in bits, converted to 2^crush levels. The read span stays at the true increment
+        // so the box filter still band-limits between the steps.
         const crushLevels = cCrush ? kCrushLevels : (pCrush[i] > 0 ? Math.pow(2, pCrush[i]) : 0);
-        // pwm: phase power-warp. The (post-sync) phase is raised to the power
-        // 2^pwm before the lookup, skewing the waveform toward its start
-        // (pwm>0) or end (pwm<0). pwr>0 acts as the "on" flag; pwm===0 -> pwr 0
-        // -> skip (exponent would be 1). Like crush, the read span is left at
-        // the true increment.
+        // pwm: the phase is raised to 2^pwm; pwr 0 means off.
         const pwr = cPwm ? kPwr : (pPwm[i] !== 0 ? Math.pow(2, pPwm[i]) : 0);
-        // formant: formant/warp shift. 0 leaves the read untouched; otherwise the
-        // read phase is compressed by fmt = 2^formant (wrapped within the cycle,
-        // with the read span scaled to match so the box filter still band-limits
-        // the faster local waveform) and the sample windowed by a raised cosine
-        // over the fundamental phase, shifting the formants while keeping the pitch.
+        // formant: read phase compressed by 2^formant within the cycle, the span scaled to
+        // match, and the sample windowed by a raised cosine over the fundamental phase.
         const fmt = cFormant ? kFmt : (pFormant[i] !== 0 ? Math.pow(2, pFormant[i]) : 0);
         // wt frame pair, hoisted above when wt is constant for the block.
         let fa, fr, lerp;
@@ -802,11 +665,8 @@ class SuperOsc extends AudioWorkletProcessor {
           const wrapped = phases[v] >= 1;
           phases[v] -= (phases[v]) | 0;
           if (wrapped && sync < 0) {
-            // A fundamental cycle just completed: arm the soft-sync crossfade for
-            // the upcoming reset sample. Seed the old-phase accumulator with the
-            // slave phase continued past the reset (phases[v] is the just-wrapped
-            // fundamental phase, so + 1 undoes the wrap), and pick a fade length
-            // of ~2ms capped to a quarter of the fundamental cycle.
+            // A fundamental cycle just completed: arm the soft-sync crossfade. +1 undoes the
+            // wrap to continue the old slave phase; fade ~2ms, capped at a quarter cycle.
             const sm = -sync;
             syncOldPh[v] = ((phases[v] + 1) * sm) % 1;
             const cyc = incV > 0 ? 1 / incV : 0;
@@ -849,12 +709,8 @@ registerProcessor('superosc', SuperOsc);
     // downstream fx chain stays mono (cheaper) when there's nothing to pan.
     let node = new AudioWorkletNode(audio, "superosc", { outputChannelCount: [channels] })
     workletLifecycle(node, audio) // start()/stop() gates on the start/stop params, plus the voice count
-    // Set the wavetable from a Float32Array of sample data (eg an AudioBuffer's
-    // channel-0 data), sliced into `count` single-cycle frames (default 64, the
-    // wt64 standard). The per-frame integrals are precomputed here (off the audio
-    // thread) and sent alongside the raw samples. postMessage is sent without a
-    // transfer list so the arrays are structure-cloned (copied), leaving the
-    // caller's shared buffer intact.
+    // Set the wavetable, sliced into count frames. Integrals are precomputed off the audio thread.
+    // postMessage has no transfer list so the arrays are copied, leaving the caller's buffer intact.
     node.setWave = (data, count = 64, smooth = 0) => {
       let wt = buildWavetableCached(data, count, smooth)
       node.port.postMessage({ wave: wt.wave, integral: wt.integral, totals: wt.totals, frameLen: wt.frameLen, count: wt.count })

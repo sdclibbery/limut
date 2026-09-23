@@ -105,11 +105,9 @@ define(function (require) {
     texture.tex = system.gl.createTexture()
     let video
     let lastUpdateTime
-    // Upload when the camera has a new frame rather than once per rendered frame: at 60Hz rAF with a
-    // 30fps camera half the texImage2D calls were re-uploading a byte identical image, colour
-    // converting the whole frame again on the main thread each time. requestVideoFrameCallback is
-    // only trusted once it has actually fired, so a browser without it - or a video element it does
-    // not run for - falls back to the old per-frame upload rather than freezing.
+    // Upload only when the camera has a new frame, since the camera rate is below rAF and each
+    // upload colour converts on the main thread. requestVideoFrameCallback is only trusted once it
+    // has fired, so without it this falls back to a per-frame upload rather than freezing.
     let newFrame = false
     let useFrameCallback = false
     let generation = 0 // Guards a slow getUserMedia resolving after a newer request has superseded it

@@ -182,17 +182,10 @@ define(function(require) {
   addVarFunction('euclid', euclid)
 
   let getVoiceState = (fullState, e,b) => {
-    // Separate state per chord voice, and per eval phase (player/eval-param.js). The two phases run
-    // on different clocks: the event phase is asked for the beat an event is scheduled for, which is
-    // always ahead of the frame phase's live beat. Sharing one accumulator between them means every
-    // event throws the running value into the future and the frames covering the rest of that beat
-    // then arrive backwards, which restarted it (px=kal{accum{1}} reset on every event). Every other
-    // param has in fact always kept them apart, but only by accident: a non-px param's event-phase
-    // eval comes from player/expand-chords.js, which runs before e.voice is assigned, so it landed
-    // in the `undefined` voice. px is excluded from chord expansion and is evalled per event by
-    // draw/visualsynth.js instead, after the voice is set - hence the one param that collided.
-    // The value is unharmed by the split: accum{x} is the integral of x over beats, so both phases
-    // integrate the same thing over the same span.
+    // Separate state per chord voice, and per eval phase (player/eval-param.js): the event phase
+    // runs ahead of the frame phase, so a shared accumulator would jump forward on every event and
+    // then see frames arrive backwards, resetting it. Both phases integrate the same x over the
+    // same span, so the value is unaffected by the split.
     let key = evalPhase() + e.voice
     if (fullState.voices === undefined) { fullState.voices = {} }
     if (fullState.voices[key] === undefined) { fullState.voices[key] = {} }

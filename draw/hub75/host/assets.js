@@ -6,16 +6,14 @@ define(function (require) {
   // sockets, so it tests inline — the same split draw/visualsynth/lut.js keeps between sampleLut
   // and uploadLut.
   //
-  // Only three texture sources can reach a px chain, and only one of them is shippable today:
+  // Only three texture sources can reach a px chain, and only one is shippable:
   //
   //   tex1d/2d/3d  -> kind 'lut', the raw RGBA8 bytes lut.js sampled. Supported.
-  //   tex{'url'}   -> kind 'image', the *encoded* file bytes. Not in this version: draw/texture.js
-  //                   keeps only the GL handle, so the bytes would have to be fetched separately.
-  //   tex{webcam{}}-> a live capture device. Inherently local; PROTOCOL.md §6 rules it out entirely.
+  //   tex{'url'}   -> kind 'image'. Not supported: draw/texture.js keeps only the GL handle.
+  //   tex{webcam{}}-> a live local device; PROTOCOL.md §6 rules it out.
   //
-  // The two unsupported cases are reported rather than skipped. A layer that silently dropped a
-  // texture would render with whatever was in that unit before, which is exactly the wrong-picture
-  // failure the protocol is built to avoid.
+  // Unsupported textures are reported, not skipped: a silently dropped texture would render
+  // whatever was last in that unit.
   let classify = (t) => {
     if (t === undefined || t === null) { return {unsupported: 'missing'} }
     // A texture with an update() re-uploads itself every frame: it is a live source, and the

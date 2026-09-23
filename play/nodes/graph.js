@@ -44,47 +44,24 @@ define(function(require) {
   addNodeFunction('thru', idnode)
   addNodeFunction('dry', idnode)
 
-  // A px chain compiles to a real GLSL for loop instead of an audio feedback loop: the body is
-  // emitted once and iterated, its output feeding back into its input. Dispatched on what the body
-  // came back as, the same rule mix{} uses, so audio is untouched.
+  // A px chain compiles to a real GLSL for loop: the body is emitted once and iterated. Dispatched
+  // on what the body came back as, like mix{}, so audio is untouched.
   //
-  // The body's index has to be a value in the shader rather than a javascript number, so a user
-  // defined function has to be called with a node — but calling it that way before we know this is
-  // visual would change what an audio loop{} does with a lambda. So the probe in loop{} below stays
-  // exactly as it was (evalParamEvent calls a lambda with no arguments at all), and only once that
-  // says visual is the lambda called again with the index: directly, so memoisation cannot hand back
-  // the probe's result, and on an event of its own, as series does. Nothing real is wasted — a
-  // shader node is a pure description, and tex{}'s texture acquisition, the one event time side
-  // effect in the system, is cached.
+  // The visual body needs its index as a shader value, but calling a lambda that way before knowing
+  // it is visual would change the audio loop{}. So the probe below calls it with no arguments, and
+  // only if that is visual is the lambda called again with the index, on its own event so the memo
+  // cannot hand back the probe's result. Shader nodes are pure, so the probe wastes nothing.
   //
-  // map:/fold: are a fold running alongside the carried value: a second accumulator whose total is
-  // what the loop then hands on. map turns each value the loop passes through into a term, fold
-  // combines the terms (a plain sum when it is left off). The total is seeded with the term for the
-  // value as it arrives, so count body applications give count+1 terms - one at every value the
-  // loop visits, nothing dead, and no identity to supply. See shader-repeat.js for the emitted GLSL.
+  // map:/fold: add a fold whose total is the loop's output: map turns each visited value into a
+  // term, fold combines terms (default sum). With a fold the body may be omitted
+  // (loop{map:{v,i}->sin{v*i}, 4}); see visualLoop.
+  // until: is an early exit tested after the body, so it can name the body's let{} bindings.
+  // carry: declares named values assigned by let{} in the body and readable after the loop.
+  // See shader-repeat.js for the emitted GLSL.
   //
-  // With a fold the body may be left off altogether - loop{map:{v,i}->sin{v*i}, 4} - since the
-  // interesting loop is then the walk over the index rather than anything the chain does. The body
-  // defaults to the identity and the count moves into the first positional slot; see visualLoop.
-  //
-  // until: is an early exit, tested after the body: the loop stops as soon as it is true, so a march
-  // can stop at a hit or at the far plane instead of paying every step. Its lambda is an expression
-  // of the value the body just produced ({v,i}, like map's), and testing after the body rather than
-  // before it is what lets it name a let{} the body bound. See shader-repeat.js.
-  //
-  // carry: is any number of *named* values carried alongside, declared with their initial values and
-  // assigned by an ordinary let{} in the body, which is also how they are read - during the body, in
-  // until:, and after the loop, since their variables are declared outside it. That is the thing
-  // neither of the other two can do: the carried value is one vec4 and the fold hands its total on
-  // rather than leaving it to be read, where a march wants to step a point and a distance and bring
-  // a material id back out. See loopCarry below and shader-repeat.js.
-  //
-  // All of them resolve exactly as the body does, so one rule covers the lot - a lambda is called,
-  // anything else is evaluated as a chain expression (so a bare call head needs an explicit id>>, as
-  // it does for the body) and a result that is not a node becomes an animated uniform, the same wrap
-  // visualChains uses. Their lambdas name what the body's does not: the body *is* the chain, so its
-  // value flows implicitly and its one arg is the index, where map and until are expressions of the
-  // value ({v,i}) and fold an expression of the total and the term ({a,v,i}).
+  // All of them resolve as the body does: a lambda is called; anything else is evaluated as a chain
+  // (so a bare call head needs an explicit id>>); a non-node result becomes an animated uniform.
+  // The body's one arg is the index, map and until take {v,i}, fold takes {a,v,i}.
   let foldArg = (callback, argsFor, e, b) => {
     if (callback === undefined) { return undefined }
     if (typeof callback !== 'function' || !callback.isUserFunction) {
@@ -103,16 +80,9 @@ define(function(require) {
   let isVisualLoopArg = (args) => args['map'] !== undefined || args['fold'] !== undefined
     || args['until'] !== undefined || args['carry'] !== undefined
 
-  // carry: declares named values carried alongside the chain value: a map of name to initial value,
-  // which parses to a plain object of raw ASTs (expression/parse-map.js), so both the names and
-  // their expressions are there with nothing evaluated. Each initial value resolves through the same
-  // foldArg as map:/fold:/until:, so one rule still covers the lot, and each gets its own callsite
-  // id for the reason those have theirs.
-  //
-  // Every initial value is resolved *before* any name is bound, so one cannot name another: it would
-  // read a variable that does not exist yet. The names are then bound as ordinary let{} bindings, so
-  // the body assigns them with let{} and the rest of the chain reads them by name with no new
-  // syntax; shader-repeat.js declares the variables and let-node.js does the assigning.
+  // carry: a map of name to initial value, parsed as raw ASTs (expression/parse-map.js). Each
+  // initial value resolves via foldArg with its own callsite id. All are resolved before any name is
+  // bound, so one cannot refer to another. The names become ordinary let{} bindings.
   let loopCarry = (args, e, b) => {
     let map = args['carry']
     if (map === undefined || typeof map !== 'object' || map === null) { return undefined }
@@ -176,13 +146,9 @@ define(function(require) {
       bodyEvent._lets = Object.assign({}, letsBeforeProbe)
       body = callback(bodyEvent, b, evalParamFrame, {value:bodyIdx})
     }
-    // With a fold, the body is often not the point: the loop is there to walk the index. So nothing
-    // chain-like in the body slot means the identity, exactly as the audio loop's main chain
-    // defaults to idnode - and then the positional count shifts up into the slot the body would
-    // have taken, since parse-map numbers keyless args independently of named ones (loop{map:f, 4}
-    // parses as {map:f, value:4}). So loop{map:f, 4} is loop{id, 4, map:f}. Only when the body is
-    // not a lambda: a lambda that came back a non-node must still fall through to audio, rather
-    // than having the body it was given quietly thrown away.
+  // With a fold and no chain-like body, the body is the identity and the positional count moves
+  // into the body's slot: parse-map numbers keyless args separately, so loop{map:f, 4} parses as
+  // {map:f, value:4}. Not for a lambda body: one that came back a non-node must fall through to audio.
     let identity = !isLambda && !isShaderNode(body) && isVisualLoopArg(args)
     if (identity) { body = passthroughShaderNode() }
     if (!isShaderNode(body)) { return undefined }
@@ -236,20 +202,15 @@ define(function(require) {
   }
   addNodeFunction('loop', loop)
 
-  // series, parallel and multitap all repeat one chain, differing only in how the repeats are put
-  // together. Each repeat is built the same way: a user defined function is called with the repeat
-  // index on an event of its own, so per function memoisation cannot collapse every repeat to
-  // repeat 0 (descriptors cloned so non-enumerable getters from the fx-chain event survive);
-  // anything else is evaluated afresh, since each repeat needs its own nodes. perFrame re-runs the
-  // call every frame, for a body that turned out to be an amplitude rather than a chain.
+  // Each repeat of series/parallel/multitap: a user defined function is called with the index on an
+  // event of its own, so memoisation cannot collapse every repeat to repeat 0 (descriptors are cloned
+  // so getters from the fx-chain event survive); anything else is evaluated afresh. perFrame re-runs
+  // the call every frame, for a body that turned out to be an amplitude.
   //
-  // The repeat index also goes into the call context as its callsite id, which is what tells the
-  // repeats apart in the memo key (getCallTreeString, player/callstack.js). The event of its own
-  // covers the build, where every repeat has one; it cannot cover a *px chain*, whose uniforms are
-  // re-evaluated every frame against the renderer's single event, long after these have gone. Their
-  // ASTs are the one parse instance shared by all the repeats, so without this every octave of
-  // parallel{{i}->noise2{scale:scale*(2^i)}, 4} reads back repeat 0's scale. Separated so nesting
-  // cannot spell two different index paths the same way.
+  // The index is also the callsite id in the call context, which separates the repeats in the memo
+  // key (getCallTreeString, player/callstack.js). This matters for px chains, whose uniforms are
+  // re-evaluated every frame against one shared event and one shared AST: without it every octave
+  // of parallel{{i}->noise2{scale:scale*(2^i)}, 4} reads repeat 0's scale.
   let repeatChain = (callback, isLambda, e, b) => (i) => {
     if (!isLambda) {
       return {chain: callback === undefined ? undefined : evalParamFrame(callback, e,b, {doNotMemoise:true})} // Must get new nodes for every repeat
@@ -259,17 +220,10 @@ define(function(require) {
     return {chain: callback(ev, b, evalParamFrame, repeatArgs()), perFrame: (e2,b2,er2) => callback(ev, b2, er2, repeatArgs())}
   }
 
-  // The repeats of a px chain. Repeat 0 has already been built, and the caller only gets here
-  // because it came back a visual node: deciding on what was built rather than guessing is what
-  // keeps an audio chain from being evaluated speculatively (which would eagerly construct Web Audio
-  // nodes), and it means nothing is built twice.
-  //
-  // A user defined function is called once per repeat, so each really can differ. Anything else is
-  // one node reused for every repeat, which is safe because a shader node's build is a pure string
-  // emitter and it keeps the repeats sharing one uniform rather than taking one each — uniforms are
-  // the scarce resource in a generated shader. A repeat whose body evaluated to a plain value
-  // rather than a chain becomes an animated uniform wrapped from the call itself, so it still
-  // updates per frame: the visual mirror of the gain wrap the audio paths use.
+  // The repeats of a px chain; repeat 0 is already built and was visual. Deciding on what was built
+  // avoids speculatively constructing Web Audio nodes. A user defined function is called per repeat;
+  // anything else is one node reused, since shader node builds are pure and sharing saves uniforms.
+  // A plain value becomes an animated uniform so it still updates per frame.
   let visualChains = (first, chainFor, isLambda, count) => {
     let chains = []
     for (let i = 0; i < count; i++) {

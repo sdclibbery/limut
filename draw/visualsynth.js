@@ -13,15 +13,11 @@ define(function (require) {
   let vtxCompiled
   let programs = {} // fragSource -> {shader, uniformLocs}, or null for permanent compile failure
   let programOrder = [] // insertion order of the keys of `programs`, so the cache can be bounded
-  // A px chain must generate byte identical source every event: the source *is* the program cache
-  // key (codegen.js names everything from counters for exactly this reason), so a chain whose
-  // source moves recompiles a shader per event instead of once. That is a synchronous compile and
-  // link on the main thread, inside the beat scheduling window, which is enough to make audio
-  // events late. It is a silent failure otherwise, so it is checked rather than assumed.
-  // The cap is a backstop for a chain that slips past the check above: it bounds the map and its
-  // (large) source string keys. The GL programs themselves are not deleted, because a sprite built
-  // from an earlier event still holds the shader object and would then useProgram a deleted
-  // program; the warning, not the eviction, is what is meant to stop this happening.
+  // A px chain must generate identical source every event: the source is the program cache key, so
+  // a chain whose source moves recompiles per event, synchronously on the main thread inside the
+  // beat scheduling window, making audio late. It fails silently, so it is checked.
+  // The cap is a backstop that bounds the map's (large) keys. The GL programs are not deleted,
+  // because a sprite from an earlier event may still hold one.
   let maxPrograms = 64
   let remember = (source) => {
     programOrder.push(source)
@@ -111,14 +107,9 @@ define(function (require) {
     if (built.uniforms.length > 0) {
       s.preRender = (state) => {
         system.gl.useProgram(cached.shader.program)
-        // Each arg is evaluated with the call tree it was written in restored, so an AST from
-        // inside a user defined function (eg the `size` in
-        // `set pixellate = {in,size} -> floor{in,to:1/size}`) still resolves now that the call has
-        // long returned. getCallTree deep copies the whole tree (player/callstack.js), so the
-        // caller's tree is saved once for the loop rather than once per uniform - a chain with a
-        // dozen uniforms was copying it a dozen times every frame. Each iteration still clears
-        // before setting, which is what setCallTree requires and what keeps one arg's frames from
-        // leaking into the next.
+        // Each arg is evaluated with the call tree it was written in restored, so an AST from inside
+        // a user defined function still resolves. getCallTree deep copies, so save the outer tree
+        // once rather than per uniform. setCallTree requires clearing before each set.
         let outer = getCallTree()
         try {
           built.uniforms.forEach((u, i) => {
@@ -135,15 +126,10 @@ define(function (require) {
     return s
   }
 
-  // A display bound player holds its layer on the wall from the moment it is defined until it is
-  // removed, and removal has to be *told*: there are no more events to notice it, and a socket close
-  // does not unbind either (the layer is display state, PROTOCOL.md 7.2). player.js calls this from
-  // the player type's destroy hook, so a commented out line gives the wall up in the same
-  // synchronous sweep that deletes the player rather than leaning on the orphan poll in
-  // draw/hub75/host/hub75.js to notice a frame later. `replaced` means an edit rather than a
-  // removal - the new player is about to bind its own layer, so releasing here would only flap the
-  // wall, and a line edited from display= back to a local visual is already covered by releaseFor
-  // on its next event.
+  // A display bound player holds its wall layer until told to release it: there are no more events,
+  // and a socket close does not unbind (PROTOCOL.md 7.2). Called from the player type's destroy hook.
+  // replaced means an edit, not a removal: the new player is about to bind its own layer, so
+  // releasing would flicker the wall; an edit away from display= is handled by releaseFor.
   visualsynth.releasePlayer = (playerId, replaced) => { if (!replaced) { hub75.releaseFor(playerId) } }
 
   return visualsynth

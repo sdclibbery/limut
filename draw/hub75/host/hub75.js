@@ -111,20 +111,13 @@ define(function (require) {
     if (entry && entry.playerId === playerId) { release(name) }
   }
 
-  // Does the id this layer was bound under still name a player that could own it? **A player id is
-  // not a player**, and this is where that bites: `v visualsynth, display='hub75-01'` commented out
-  // while a live `v scopefft` on another line carries the same id leaves players.getById('v')
-  // answering perfectly well, so a check for mere existence never fires. The wall then keeps a
-  // picture whose chain no longer exists anywhere in the code - and keeps *animating* it, because
-  // the uniforms are re-evaluated from the dead event's params every frame. Only a visualsynth can
-  // own a display layer, since setLayer is called from draw/visualsynth.js and nowhere else, so any
-  // other type under that id means the layer is orphaned. The same fault made a live *edit* from
-  // `v visualsynth, display=...` to `v scopefft` strand the wall just as permanently, with nothing
-  // commented out at all.
-  //
-  // A visualsynth that has merely dropped its `display=` param is deliberately NOT caught here:
-  // releaseFor() ends that one on its next event (draw/visualsynth.js), which is what stops an
-  // ordinary re-edit of a live display line from blanking the wall for a beat on every Ctrl+Enter.
+  // Does the id this layer was bound under still name a player that could own it? A player id is
+  // not a player: if a display visualsynth is removed or edited into another type while a player
+  // of another type holds the same id, a mere existence check passes and the wall keeps animating a
+  // dead chain. Only a visualsynth can own a layer (setLayer is only called from
+  // draw/visualsynth.js), so any other type means orphaned.
+  // A visualsynth that has only dropped display= is NOT caught here: releaseFor() handles it on its
+  // next event, so re-editing a live display line does not blank the wall for a beat.
   let ownsDisplay = (playerId) => {
     let p = players.getById(playerId)
     return p !== undefined && String(p.type).toLowerCase() === 'visualsynth'

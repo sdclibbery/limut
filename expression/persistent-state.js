@@ -1,11 +1,8 @@
 'use strict'
 define(function(require) {
   // State for a stateful var function (accum/smooth/rate) that must outlive the parse it was
-  // created in. Every code update re-parses every line (update-code.js), so the per parse instance
-  // state object in parse-var.js is thrown away and remade on each Ctrl+Enter - which is why accum
-  // used to restart from zero every time anything in the buffer was edited. Keyed state lives here
-  // instead, and is mark/swept per update exactly as sliders are: parsing a line marks the keys it
-  // uses, and a line that has gone away leaves its keys unmarked, so they are swept.
+  // created in, since every code update re-parses every line. Mark/swept per update like sliders:
+  // parsing a line marks the keys it uses, and unmarked keys are swept.
   let store = {}
 
   let get = (key) => {

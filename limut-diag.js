@@ -2,12 +2,8 @@
 // electron-audio-load.js for the run (both drive the same debugger, and the load meter's polite
 // burst pattern is the opposite of what a diagnostic wants).
 //
-// This exists because the audio thread is otherwise unobservable from the page: renderCapacity is
-// Electron-only (see play/system.js) and nothing in the Web Audio API says how many nodes are
-// actually in the render graph. Two leaks have now been found by watching that node count grow -
-// a started MessagePort pinning its AudioWorkletNode (play/worklet-lifecycle.js), and glide
-// retaining every event forever (play/effects/pitch-effects.js) - so the instrument is worth
-// keeping rather than rebuilding from scratch each time.
+// The audio thread is otherwise unobservable from the page: renderCapacity is Electron-only (see
+// play/system.js) and no Web Audio API reports how many nodes are in the render graph.
 //
 //   LIMUT_DIAG=1                 enable, replacing the normal audio load meter
 //   LIMUT_DIAG_CODE=<path>       .limut file to run once the page is up
@@ -20,11 +16,10 @@
 // eg: LIMUT_DIAG=1 LIMUT_DIAG_CODE=/tmp/a.limut LIMUT_DIAG_NODES=1 LIMUT_DIAG_STOP=120 \
 //     LIMUT_DIAG_SECS=180 npm start
 //
-// The census needs the WebAudio domain enabled for the whole run, which makes Chromium trace every
-// node and param created, connected and destroyed - one IPC message each, and Limut builds a lot of
-// nodes per beat. That perturbs what is being measured, so capacity figures from a census run read
-// slightly high; compare census runs with census runs. getRealtimeData only answers while the
-// domain is enabled, hence the burst when the census is off.
+// The census enables the WebAudio domain for the whole run, which traces every node and param
+// event over IPC. That perturbs the measurement, so capacity figures read slightly high; compare
+// census runs only with census runs. getRealtimeData only answers while the domain is enabled,
+// hence the burst when the census is off.
 
 const SAMPLE_MS = 250
 const REPORT_EVERY = 40 // samples, ie 10s

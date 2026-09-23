@@ -1,38 +1,30 @@
-// This library includes smooth noise, 2d transforms, a kaleidoscope pattern and a VHS effect for
-// visualsynth px chains, built entirely out of the shader nodes: pxhash for the randomness,
-// floor/fract for the lattice, smoothstep for the fade curve, mix for the interpolation,
-// parallel/loop for the repetition and pxfn for the one body that is wanted at several points at
-// once. Nothing here is implemented in javascript.
+// Smooth noise, 2d/3d transforms, kaleidoscope patterns and a VHS effect for visualsynth px chains.
 //
-// pxhash gives an independent random value per pixel, ie white noise. Smooth noise instead hashes
-// the corners of a lattice cell and interpolates between them, so neighbouring pixels get
-// neighbouring values. Value noise interpolates the corner values themselves; perlin (gradient)
-// noise interpolates a random gradient at each corner, which looks less blocky and is signed.
+// Value noise interpolates hashed lattice corner values; perlin (gradient) noise interpolates
+// hashed corner gradients, so it is less blocky and signed.
 //
-// All of them take the incoming px value as their first argument, so they pipe:
+// All take the incoming px value as their first argument, so they pipe:
 //   v1 visualsynth, px=noise2{scale:16}
 //   v1 visualsynth, px=fbm2>>tex1d{{x}->{labh:x}}
 //   v1 visualsynth, px=noise2>>cospal{#05a}
 //   v1 visualsynth, px=fbm2t>>cospal{#036}
 
 //// Shared machinery
-// Only the channels a noise is over may vary: the rest are forced flat so a lattice point hashes
-// the same all the way along them. w is forced to zero everywhere, since pxhash hashes all four
-// components and the incoming w is 1, which scaling would otherwise turn into a stray dimension.
+// Channels the noise is not over are forced flat so the lattice hashes the same along them. w is
+// always forced to zero: pxhash hashes all four components and the incoming w is 1.
 set noiseflat1 = {in, scale} -> in*scale >> set{y:0, z:0, w:0}
 set noiseflat2 = {in, scale} -> in*scale >> set{z:0, w:0}
 set noiseflat3 = {in, scale} -> in*scale >> set{w:0}
 
-// One square of value noise: bilinear between the four corner hashes of lattice cell i, using the
-// already faded fractional position f. The offsets carry w:0 because an absent alpha reads as 1.
+// Bilinear value noise over lattice cell i, f the faded fraction. Offsets carry w:0 because an
+// absent alpha reads as 1.
 set noiseface = {i, f, seed} -> mix{
   mix{ pxhash{i, seed}.x,               pxhash{i+{x:1,w:0}, seed}.x,     f.x },
   mix{ pxhash{i+{y:1,w:0}, seed}.x,     pxhash{i+{x:1,y:1,w:0}, seed}.x, f.x },
   f.y
 }
 
-// One corner's gradient contribution: a random vector in -1 to 1 dotted with the offset from that
-// corner. dot works on xyz, and the unused dimensions are flat, so one definition covers 1d/2d/3d.
+// One corner's gradient contribution. Unused dimensions are flat, so this serves 1d/2d/3d.
 set perlingrad = {i, d, o, seed} -> dot{ pxhash{i+o, seed}*2-1, d-o }
 
 set perlinface = {i, d, f, seed} -> mix{
@@ -42,9 +34,8 @@ set perlinface = {i, d, f, seed} -> mix{
 }
 
 //// Value noise, 0 to 1
-// scale is how many lattice cells the coordinate space is divided into. noise3 takes its third
-// dimension from the incoming z, which is zero unless you put something there: drive it off a
-// timevar for noise that moves rather than one that scrolls, eg px=noise3{id>>set{z:[]l8}}
+// scale is the lattice cells per unit. noise3 takes its third dimension from the incoming z; drive
+// it from a timevar for noise that evolves rather than scrolls, eg px=noise3{id>>set{z:[]l8}}
 set noise1lerp = {i, f, seed} -> mix{ pxhash{i, seed}.x, pxhash{i+{x:1,w:0}, seed}.x, f.x }
 set noise1at = {p, seed} -> noise1lerp{floor{p}, smoothstep{fract{p}}, seed}
 set noise1 = {in:id, scale:4, seed:0} -> noise1at{noiseflat1{in, scale}, seed}
@@ -52,25 +43,17 @@ set noise1 = {in:id, scale:4, seed:0} -> noise1at{noiseflat1{in, scale}, seed}
 set noise2at = {p, seed} -> noiseface{floor{p}, smoothstep{fract{p}}, seed}
 set noise2 = {in:id, scale:4, seed:0} -> noise2at{noiseflat2{in, scale}, seed}
 
-// A face of value noise as a real function in the shader rather than another copy of it: pxfn{}
-// declares its body once and calls it wherever the value is wanted, where everything else here is
-// written into the shader again at every use. That is what a face is for, since a face is never
-// wanted only once - the 3d noise below takes one at each end of the z cell, and every octave sum
-// takes one per octave, which between them is where all but four of the hashes in fbm3 used to come
-// from. It is a function of the point alone (the seed is a uniform, in scope inside it), which works
-// because an integer step in z leaves fract{} untouched and moves floor{} by exactly one, so one
-// body serves both faces. Whoever wants it at two points takes the node as an argument, the way
-// every other intermediate here is passed on - and a pxfn reached once per
-// repeat of a parallel{} is still one declaration, since the bodies say the same thing
-// (draw/visualsynth/codegen.js).
+// A value noise face as a pxfn{}, so it is one function in the shader however many times it is
+// used (twice per 3d noise, once per octave). One body serves both z faces because an integer step
+// in z leaves fract{} unchanged. Callers take the node as an argument and apply it at each point.
 set noisefacefn = {seed} -> pxfn{{p} -> noiseface{floor{p}, smoothstep{fract{p}}, seed}}
 set noise3lerp = {p, f, nf} -> mix{ p>>nf, p+{z:1,w:0}>>nf, f.z }
 set noise3at = {p, seed} -> noise3lerp{p, smoothstep{fract{p}}, noisefacefn{seed}}
 set noise3 = {in:id, scale:4, seed:0} -> noise3at{noiseflat3{in, scale}, seed}
 
 //// Perlin (gradient) noise
-// The s versions are signed, roughly -1 to 1, which is what displacing a coordinate wants. The
-// plain ones are shifted and clamped into 0 to 1 so they compose like everything else.
+// The s versions are signed, roughly -1 to 1, for displacing coordinates. The plain ones are
+// shifted and clamped into 0 to 1.
 set perlin1d = {i, d, seed} -> mix{ perlingrad{i, d, {w:0}, seed}, perlingrad{i, d, {x:1,w:0}, seed}, smoothstep{d}.x }
 set perlin1at = {p, seed} -> perlin1d{floor{p}, fract{p}, seed}
 set perlin1s = {in:id, scale:4, seed:0} -> perlin1at{noiseflat1{in, scale}, seed}
@@ -92,24 +75,12 @@ set perlin3s = {in:id, scale:4, seed:0} -> perlin3at{noiseflat3{in, scale}, seed
 set perlin3 = {in:id, scale:4, seed:0} -> clamp{ perlin3s{in, scale, seed}*3/4 + 1/2 }
 
 //// Octave noise
-// Four octaves of value noise, each at twice the frequency and half the amplitude, normalised back
-// to 0 to 1. parallel{} builds one copy of its chain per octave and sums them, which is what an
-// octave sum is; the octave index is an ordinary number here, since parallel unrolls, so 2^i is a
-// per copy constant. Change the 4 for more or fewer octaves (and the divisor, which is 2^octaves-1,
-// their weights summed).
+// Four octaves, each double the frequency and half the amplitude. To change the octave count,
+// change the 4 and the divisor (2^octaves-1).
 //
-// Each octave is also shifted half a lattice cell from the one below, which is what octshift is
-// for, and the octaves go through noiseNat/noiseflatN rather than noiseN so the shift lands in
-// scaled lattice space (a plain noise2 call pays nothing for it). Without the shift every octave
-// sits on octave 0's lattice planes, and smoothstep's slope is zero at both ends of a cell, so all
-// four octaves pin their rate of change to zero at the same instant. Scrolling in x or y hides
-// that, since each pixel crosses its lattice line at a different moment, but every pixel shares
-// the same z: animate z and the whole picture stalls once a cell. w stays 0 in the shift because
-// pxhash hashes all four components, so a stray w would be another dimension.
-//
-// Each octave takes a face rather than a whole noise, and they all take the *same* face function
-// (noisefacefn above), so the body is in the shader once however many octaves there are: the 2d sums
-// are handed the node, and the 3d ones get it through noise3at, which already works that way.
+// Each octave is offset half a lattice cell (octshift) in scaled lattice space. Without it every
+// octave shares lattice planes, and since smoothstep's slope is zero at cell edges, animating z
+// makes the whole picture stall once per cell.
 set octshift = {i} -> {x:i/2, y:i/2, z:i/2, w:0}
 
 set fbm2h = {in, scale, nf} ->
@@ -119,9 +90,7 @@ set fbm2 = {in:id, scale:4, seed:0} -> fbm2h{in, scale, noisefacefn{seed}}
 set fbm3 = {in:id, scale:4, seed:0} ->
   parallel{{i} -> noise3at{noiseflat3{in, scale*(2^i)} + octshift{i}, seed}*(8/(2^i)), 4}/15
 
-// Turbulence: the same sum over the absolute value of each signed octave, giving the creased,
-// billowy look that suits smoke and marble. turb3 is over noise3 as fbm3 is, so it animates
-// through the incoming z rather than only scrolling past
+// Turbulence: the octave sum of absolute signed noise; creased and billowy, for smoke and marble.
 set turb2h = {in, scale, nf} ->
   parallel{{i} -> abs{((noiseflat2{in, scale*(2^i)} + octshift{i}) >> nf)*2-1}*(8/(2^i)), 4}/15
 set turb2 = {in:id, scale:4, seed:0} -> turb2h{in, scale, noisefacefn{seed}}
@@ -130,13 +99,8 @@ set turb3 = {in:id, scale:4, seed:0} ->
   parallel{{i} -> abs{noise3at{noiseflat3{in, scale*(2^i)} + octshift{i}, seed}*2-1}*(8/(2^i)), 4}/15
 
 //// Animated over time
-// The 3d noises take their third dimension from the incoming z, so a 2d field that moves in place
-// rather than scrolling past means feeding z from time. These are that, packaged: each is the 3d
-// function with z driven by t, which defaults to time/8, ie one lattice cell every 8 beats at the
-// default scale. Freeze one with t:0, which makes it identical to its 3d namesake with a flat z, or
-// drive t from a timevar or a slider for anything else. t goes in before the scaling, so a larger
-// scale also animates faster, and each fbm octave churns faster than the one below, which is what
-// an octave sum should do.
+// The 3d noises with z driven by t (default time/8: one lattice cell per 8 beats at scale 4).
+// t is applied before scaling, so larger scales animate faster.
 //   px=fbm2t>>cospal{#036}
 //   px=noise2t{scale:16, t:time/32}
 set noise2t   = {in:id, scale:4, seed:0, t:time/8} -> noise3{in>>set{z:t}, scale, seed}
@@ -146,52 +110,31 @@ set fbm2t     = {in:id, scale:4, seed:0, t:time/8} -> fbm3{in>>set{z:t}, scale, 
 set turb2t    = {in:id, scale:4, seed:0, t:time/8} -> turb3{in>>set{z:t}, scale, seed}
 
 //// Colour
-// Cosine palette from Inigo Quilez: a single value in becomes a cycling colour out. a is the level
-// the colours swing about, b how far they swing, c how many cycles the incoming 0 to 1 covers and d
-// the phase; they are colours rather than numbers, so each channel gets its own cosine, and it is
-// the phase spread between them that makes it a palette rather than a grey ramp. The args are in
-// reverse order after in, so the phase is the first positional: cospal{#05a} is the full rainbow.
+// Inigo Quilez's cosine palette: a is the centre level, b the swing, c the cycles over 0 to 1 and
+// d the per channel phase. Args are reversed so the phase is the first positional.
 //   px=fbm2>>cospal
 //   px=length>>cospal{#05a}
-// Note it wants a single value in: px=cospal bare runs red off x and green off y, ie a plaid.
-// The args are colours, so hsv and lab work too: cospal{{h:[]n}} turns the phase through the hues.
+// Wants a single value in: bare px=cospal runs red off x and green off y.
 set cospal = {in,d:#012,c:1,b:1/2,a:1/2} -> (a+b*cos{6.28318*(c*in+d)})
 
 //// Transforms
-// A 2x2 matrix on the xy of the incoming value, leaving z and w alone: the cross channel transform
-// that mul{} (a diagonal) cannot do, ie rotate, shear, skew and reflect. Translate and scale are
-// already add{} and mul{}.
+// 2x2 matrix on xy, leaving z and w alone; identity by default.
 //   x' = xx*x + xy*y
 //   y' = yx*x + yy*y
-// It is the identity by default, so each argument is a departure from it: mat2{xy:1/2} is a pure
-// shear along x, mat2{xx:0,xy:1,yx:1,yy:0} swaps the axes.
 //   px=mat2{xy:1/2}>>sdbox{b:{x:1/2,y:1/4}}>>sdfill
-// The channel expressions read id rather than in, because a set{} param is built from the input
-// set{} itself sees, which the `in >>` has already made in's output; reading in there would apply
-// it a second time. The `in >>` (the same shape as sdflat) is what keeps z and w coming from the
-// point rather than from whatever the chain happens to be carrying, which is what makes the
-// function work when it is called on a point directly instead of being piped one.
+// The set{} channels must read id, not in: set{} params are built from set{}'s own input, which
+// is already in, so reading in would apply it twice. The `in >>` keeps z and w from the point
+// when called directly rather than piped. The same applies to mat3, topolar and frompolar.
 set mat2 = {in:id, xx:1, xy:0, yx:0, yy:1} ->
   in >> set{x: id.x*xx + id.y*xy, y: id.x*yx + id.y*yy}
 
-// Rotate xy about the origin, in turns rather than radians: rot2{1/4} is a right angle and
-// rot2{[0:1]l8} spins once every 8 beats. The sense matches the rotate standard visual param, ie
-// the picture turns anticlockwise; what is being rotated is the coordinate going in, so the matrix
-// is the inverse of the picture's own rotation. The coordinates are isotropic (the frame is wider
-// than it is tall, but in the same units both ways), so this is a true rotation with no aspect
-// correction to do.
+// Rotate xy, in turns: rot2{1/4} is a right angle. Rotates the coordinate, so the picture turns
+// anticlockwise, matching the rotate param.
 //   px=rot2{[0:1]l8}>>tex{webcam{}}
 set rot2 = {in:id, a:0} ->
   mat2{in, cos{6.28318*a}, sin{6.28318*a}, -sin{6.28318*a}, cos{6.28318*a}}
 
-// The 3x3 on the xyz, leaving w alone: what mat2 is for a plane, for a volume. It is the identity
-// by default like mat2, so each argument is a departure from it, and the same two rules apply -
-// the channel expressions read id rather than in (a set{} param is built from the input set{}
-// itself sees, which the `in >>` has already made in's output), and the `in >>` is what keeps w
-// coming from the point when the function is handed a coordinate directly rather than piped one.
-//   x' = xx*x + xy*y + xz*z,  and so on for y' and z'
-// A rotation about an arbitrary axis is this; the three about the axes are below, since those are
-// what a scene is usually posed with.
+// 3x3 matrix on xyz, leaving w alone; identity by default. See mat2 for why it reads id.
 set mat3 = {in:id, xx:1, xy:0, xz:0, yx:0, yy:1, yz:0, zx:0, zy:0, zz:1} ->
   in >> set{
     x: id.x*xx + id.y*xy + id.z*xz,
@@ -199,10 +142,7 @@ set mat3 = {in:id, xx:1, xy:0, xz:0, yx:0, yy:1, yz:0, zx:0, zy:0, zz:1} ->
     z: id.x*zx + id.y*zy + id.z*zz
   }
 
-// Rotate about each axis, in turns as rot2 is: rot3y{1/4} is a quarter turn about the y axis, and
-// rot3y{[0:1]l8} spins once every 8 beats. rot3z leaves z alone and so does exactly what rot2 does,
-// and is here for the set of them rather than because it is different. As with rot2 the coordinate
-// is what turns, so a shape after one of these turns the other way.
+// Rotate about each axis, in turns. These rotate the coordinate, so shapes turn the other way.
 //   px=sd3march{scene:pxfn{{q}->sd3box{rot3y{q,[0:1]l8}, b:1/2}}}>>sd3lit
 set rot3x = {in:id, a:0} ->
   mat3{in, yy:cos{6.28318*a}, yz:sin{6.28318*a}, zy:-sin{6.28318*a}, zz:cos{6.28318*a}}
@@ -213,23 +153,12 @@ set rot3y = {in:id, a:0} ->
 set rot3z = {in:id, a:0} ->
   mat3{in, xx:cos{6.28318*a}, xy:sin{6.28318*a}, yx:-sin{6.28318*a}, yy:cos{6.28318*a}}
 
-// Polar coordinates: topolar puts the radius in x and the angle in y, frompolar reads them back
-// out, and z and w are carried through untouched by both. The angle is in turns, as rot2's is, and
-// comes out of atan in -1/2 to 1/2, ie zero along +x and the seam along -x; fract{} shifts that
-// into 0 to 1 if a texture or palette wants it. Radius is in the same units as the coordinate, so
-// 1 is half the frame height.
-//   px=topolar>>cospal      // colour by radius
-//   px=topolar>>set{y:0}>>frompolar>>tex{webcam{}}
-// The pair is its own inverse (frompolar{topolar{p}} is p), so the useful shape is to go out, do
-// something to the radius or the angle, and come back:
-//   px=topolar>>add{y:id.x/4}>>frompolar>>sdbox{b:{x:1,y:1/8}}>>sdfill   // twist, more with radius
-//   px=topolar>>set{y:floor{id.y*8}/8}>>frompolar>>tex{webcam{}}          // eight pie slices
-// As with mat2, the channel expressions read id rather than in: a set{} param is built from the
-// input set{} itself sees, which the `in >>` has already made in's output, so reading in there
-// would apply it a second time. The `in >>` is also what keeps z and w coming from the point when
-// the function is called on a coordinate directly rather than being piped one.
-// The radius is the 2d one, hence the explicit sum rather than length{}, which is over xyz. At the
-// exact origin the angle is undefined (GLSL's atan(0,0) is), the one pixel where that matters.
+// Polar coordinates: topolar puts radius in x and angle in y (in turns, -1/2 to 1/2, seam along
+// -x; use fract{} for 0 to 1). frompolar is the inverse. See mat2 for why they read id.
+//   px=topolar>>cospal
+//   px=topolar>>add{y:id.x/4}>>frompolar>>sdbox{b:{x:1,y:1/8}}>>sdfill   // twist
+//   px=topolar>>set{y:floor{id.y*8}/8}>>frompolar>>tex{webcam{}}          // pie slices
+// The radius is 2d, hence not length{}, which is over xyz.
 set topolar = {in:id} ->
   in >> set{x: sqrt{id.x*id.x + id.y*id.y}, y: atan{id.y, id.x}/6.28318}
 
@@ -237,101 +166,49 @@ set frompolar = {in:id} ->
   in >> set{x: id.x*cos{6.28318*id.y}, y: id.x*sin{6.28318*id.y}}
 
 //// Patterns
-// The pattern generation from the kal visual (shader/kaleidoscope.frag, itself from
-// https://www.shadertoy.com/view/Xd2Bzw), converted into DSL: the plane is folded into the unit
-// square, turned a little, and folded again, n times over, with the glow either side of the y
-// axis accumulated at every level. The per level tint the original mixes in is left out, so this
-// gives back a single value in all four channels and colours like any other field.
-// The sum runs well past 1 over much of the frame at the default glow, which is what the original
-// does too (its palette clamps it); thin the filaments with a smaller glow, or scale it down.
-// shape comes first, so a bare argument is the note value the kal visual takes: px=kal{5}.
-// shape near 2 washes the frame to flat white, as the visual does; kal2 below is the same
-// pattern with a shape that cannot, and is the one to sweep.
+// The kal visual's pattern (shader/kaleidoscope.frag, from https://www.shadertoy.com/view/Xd2Bzw),
+// without the per level tint, so it gives a single value. It runs well past 1 at the default glow.
+// shape is first, so px=kal{5} works as for the kal visual. Shape near 2 washes to white; use kal2
+// to sweep shape.
 //   px=kal{glow:1/3}
 //   px=kal{glow:1/2}/2>>pal{#012,#28a,#fff}
 //   px=kal{n:6}/3>>cospal{#05a}
 
-// The turn: a 2x2 whose entries are cosines of one angle at three phases, the leading diagonal
-// sharing one. The shared cosine is passed on to a helper, whose argument names it, rather than
-// written out twice; the shared angle k is an argument of kalturn for the same reason. A let{}
-// would name it just as well and renders identically, but here it costs rather than saves - 17
-// uniforms and 53 statements against the helper's 16 and 51 - so the helper stays. lib/sdf.limut's
-// header has when the trade goes the other way.
-// The original builds the matrix with GLSL's mat2(vec4), which is column major, so its second
-// component is the top right entry (xy) and its third the bottom left (yx), not the other way up.
+// The original uses GLSL mat2(vec4), which is column major: its second component is xy, its
+// third yx.
 set kalturn2 = {q, ca, cb, cc} -> mat2{q, ca, cb, cc, ca}
 set kalturn = {q, k, shape} -> kalturn2{q, cos{k+0.78}, cos{k+5.46}, cos{k+0.78*(3+shape)}}
 
-// One level: mirror tile the plane into the unit square with a triangle wave, then turn it. The
-// angle winds up as i*i, so each level turns faster than the last, which is what stops the levels
-// from staying locked together.
+// Mirror tile into the unit square, then turn. The i*i angle stops the levels locking together.
 set kalstep = {p, i, t, shape} -> kalturn{abs{2*fract{p-1/2}-1}, t/100*i*i, shape}
 
-// The glow at one level: a filament along y=0 falling off exponentially either side, so what
-// accumulates over the levels is a web of them. glow widens and brightens it. The original's 0.4
-// overall gain is folded in here, since scaling every term scales the sum.
+// A filament along y=0, falling off exponentially. Includes the original's 0.4 gain.
 set kalline = {p, glow} -> exp{-abs{p.y}*5/(2/5+3/5*glow)}*2/5
 
-// n levels, with a line taken at each. The loop carries the folded point and the fold sums the
-// lines, which is the one thing the carried value cannot do for itself. sgn{i} drops the seed
-// term: the fold seeds itself from the value as it arrives, before any step, where the original
-// takes its first line after the first fold. The coordinate is handed to kalstep explicitly
-// rather than piped into it, because >> withholds the chain value from a call whose own args
-// already hold a visual node, and the loop index is one.
-// shape is declared first so it is the default positional argument (px=kal{5} is px=kal{shape:5});
-// `in` still takes the piped value wherever it is declared, so px=rot2{1/8}>>kal{5} works too.
-// loop{} emits its map twice by design - once for the seed term, once inside the block - so the line
-// is the other sub-chain here that is built at two points, and pxfn{} makes it one declaration called
-// twice. glow is a plain number, so the function is of the value alone; kal hands the node to the
-// helper, exactly as noise3at does with its face.
+// sgn{i} drops the fold's seed term, since the original takes its first line after the first fold.
+// The point is passed to kalstep rather than piped because >> does not pipe into a call whose args
+// already hold a node (the loop index). kalline is a pxfn{} because loop{} emits its map twice.
 set kallinefn = {glow} -> pxfn{{p} -> kalline{p, glow}}
 set kalh = {in, t, shape, n, kl} ->
   in/4 >> loop{{i} -> kalstep{id, i+1/2, t, shape}, n, map:{v,i} -> sgn{i}*(v>>kl)}
 set kal = {shape:0, in:id, t:time/2, glow:1, n:8} -> kalh{in, t, shape, n, kallinefn{glow}}
 
-//// kal2: the same pattern, with a shape that cannot break it
-// kal's shape moves one entry of the turn matrix, and every way of doing that is degenerate
-// somewhere, because the matrix is what decides whether the fold preserves area:
-//   - Half a turn from the entry above it, the bottom row is a fixed (-1,1) at every level and
-//     time. kalline reads y alone, so every level measures the same near zero quantity and glows
-//     nearly everywhere: the frame washes to flat white. That is kal at shape near 2.03, where the
-//     contrast of the clamped field measures 0.007 against 0.22 elsewhere.
-//   - Turning the row away from square instead makes the matrix singular at some shape. Area then
-//     contracts about a hundredfold per level and at some times the whole screen falls into the
-//     origin, which is a fixed point of the map since the fold sends 0 to 0, and the origin glows
-//     maximally at every level. White again, but only at some times - and only at large ones, which
-//     is why it is worth stating: shape 2 renders fine at t=470 and pure white at t=475.
-// So kal2 leaves the matrix at kal's shape 0 phases, where it is within 0.978 to 1.021 of a
-// rotation, and gives shape two knobs that cannot reach it. Measured over shape -2 to 12 at 45
-// times out to t=6000, the worst contrast anywhere is 0.0437, against the 0.0514 that shape 0
-// itself has at its worst: no shape is worse than the default.
-// kal2 at shape 0 is kal at shape 0, exactly - both knobs are identities there.
+//// kal2: kal with a shape that is safe to sweep
+// kal's shape changes one matrix entry, which degenerates somewhere: near 2 the frame washes white,
+// and making the matrix non-rotational instead lets it go singular, collapsing the frame to white
+// at some (large) times. kal2 keeps the matrix at kal's shape 0 (close to a rotation) and gives
+// shape two knobs that cannot degenerate. kal2 at shape 0 is exactly kal at shape 0.
 //   px=kal2{2, glow:1/3}
 //   px=kal2{[0:8]l32, glow:1/2}/2>>pal{#012,#28a,#fff}
 set kal2turn = {q, k} -> mat2{q, cos{k+0.78}, cos{k+5.46}, cos{k+2.34}, cos{k+0.78}}
 
-// Knob one: shape offsets each level's turn by a further 0.78*shape. Not a disguised time offset,
-// since time's term is quadratic in the level and this one is linear.
-//
-// The fold stays exactly as kal has it, and must. abs{} makes the triangle wave EVEN in each
-// coordinate, so negating x or y leaves the whole chain untouched - that is where the picture's
-// mirror symmetry comes from. Do not translate inside the fract: shifting where the tiling falls
-// is otherwise a good knob for shape (it cannot change a Jacobian, and it decorrelates the shapes,
-// mean pairwise correlation 0.109 against 0.153), but tri{p+c} is even about -c, so every level
-// gets its own centre, the pattern drifts off the origin and the symmetry goes. Measured mirror
-// error 0.262 against 0.000. Tried and rejected, as were three even variants that do keep the
-// symmetry - the same offset added AFTER the fold, a per level fold scale tri{p*s}/s, and both -
-// none of which beat the plain fold on density spread against distinctness (0.127/0.139,
-// 0.146/0.192, 0.133/0.233 against plain's 0.144/0.153).
+// Knob one: shape adds 0.78*shape*i to each level's turn.
+// Do not offset inside the fract: the fold's evenness is what gives the mirror symmetry, and an
+// offset moves each level's centre off the origin.
 set kal2step = {p, i, t, shape} -> kal2turn{abs{2*fract{p-1/2}-1}, t/100*i*i + 0.78*shape*i}
 
-// Knob two: how much each level counts towards the sum. This is what makes the shapes differ in
-// density rather than being one web rearranged - without it the spread of frame brightness across
-// shape is 0.113, with it 0.142, against kal's own 0.165. Weighting can only take away, so it
-// cannot wash the frame out; what it can do is dim every level at once, which happens when the per
-// level phase step reaches a whole turn. Hence i*i and not i: with a linear phase, shape near 8.06
-// steps 2pi per level, every weight lands on cos = -1 together and the frame goes black (measured
-// contrast 0.0016). Squared, no shape lines them all up.
+// Knob two: per level weighting, so shapes differ in density. The phase must be i*i not i: linear,
+// shape near 8.06 puts every weight at cos = -1 together and the frame goes black.
 set kal2weight = {shape, i} -> 1/2 + cos{0.78*shape*i*i}/2
 set kal2h = {in, t, shape, n, kl} ->
   in/4 >> loop{{i} -> kal2step{id, i+1/2, t, shape}, n,
@@ -339,24 +216,18 @@ set kal2h = {in, t, shape, n, kl} ->
 set kal2 = {shape:0, in:id, t:time/2, glow:1, n:8} -> kal2h{in, t, shape, n, kallinefn{glow}}
 
 //// VHS
-// The vhs standard visual param (draw/shadercommon.js), for px chains, which get no standard
-// processing. It is two stages either side of the source: vhsuv warps the coordinate going in (tape
-// crease, tape wobble, switching noise along the bottom) and vhsrgb colours what comes out (edge
-// smear, blanking where the warp ran off the tape, row flicker, a yiq colour shift, scanlines,
-// chroma wobble). vhs{src} is both around a source chain, which it feeds the warped coordinate.
-// amt mixes the effect in, as the param's value does, and t is the time it animates by.
+// The vhs standard visual param (draw/shadercommon.js) for px chains. vhsuv warps the coordinate
+// going in, vhsrgb colours what comes out, and vhs{src} wraps a source with both. amt mixes the
+// effect in, t is the time it animates by.
 //   px=vhs{tex{webcam{}}}
 //   px=vhs{tex{webcam{}}, 1/2, t:time*2}
 //   px=vhsuv>>tex{webcam{}}>>vhsrgb
-// vhsrgb has only the colour, so it warps the chain's original coordinate (uv) again to find the
-// crease and the tape edge; vhs{} warps once and hands the same warp to both stages.
+// vhsrgb alone re-derives the warp from uv; vhs{} computes it once for both stages.
 //
-// Three things about how it is written. t goes in as set{t}, a node rather than a number, so the
-// maths on it is done in the shader: a number would make every t*10 and t/2 a param of its own.
-// The warp is named wp, not w, since the crease phase is read off its w channel. And vhs{} passes
-// id to vhsuvh rather than piping it: a call with a node among its args is not piped the chain seed.
-// The param's switching noise never reaches its colour stage (a shadowed local in the original),
-// so it does not here either.
+// t is passed as set{t} so its maths runs in the shader rather than making each t expression a
+// separate param. The warp is called wp, not w, since its w channel holds the crease phase.
+// vhs{} passes id to vhsuvh rather than piping, since a call with a node arg is not piped.
+// As in the original, the switching noise does not reach the colour stage.
 set vhsrand = {a, b} -> fract{sin{a*12.9898 + b*78.233}*43758.5453}
 set vhsrow = {c} -> c.y/2 + 1/2
 set vhscrease = {row, t} -> clamp{(sin{row*8 - t*3.14*0.6} - 0.92)*vhsrand{t/2, t/2}, 0, 0.01}*10

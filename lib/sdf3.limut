@@ -1,194 +1,103 @@
 include 'lib/sdf.limut'
 
-// 3d signed distance fields and a raymarcher for visualsynth px chains, converted into limut DSL
-// from the GLSL on Inigo Quilez's page: https://iquilezles.org/articles/distfunctions/
-//
-// A 3d distance field is the same idea as the 2d ones in lib/sdf.limut - a number per point giving
-// the distance to the nearest surface, negative inside - but of a point in space rather than on the
-// plane, so it describes a solid. Turning one into a picture is a bigger step than thresholding it:
-// a ray is fired into the scene for every pixel and walked along until it lands on a surface, which
-// is what sd3march does. That works because a distance field says how far it is safe to step.
+// 3d signed distance fields and a raymarcher for visualsynth px chains, from the GLSL at
+// https://iquilezles.org/articles/distfunctions/
 //
 //   v1 visualsynth, px=sd3march>>sd3lit
 //   set ring = pxfn{{p}->sd3torus{p}}
 //   v1 visualsynth, px=sd3march{ring, yaw:[0:1]l8}>>sd3lit{ring}
-//
-// Everything here is an ordinary user defined function built out of the visual nodes; nothing is
-// implemented in javascript. It includes lib/sdf.limut, so the 2d shapes, the combining operators
-// they share (sdround, sdannular, sdsub, sdblend) and the whole Visual Library come with it.
-//
-// The scene wants to be a pxfn{}, ie a real function in the generated shader. A march calls it once
-// per step, the surface normal calls it four more times, and a shadow or an occlusion term calls it
-// again at every one of their steps; without pxfn{} each of those is another copy of the whole
-// scene written into the shader, which is what exhausts a small GPU's register allocator. With it
-// there is one copy and many calls:
-//
-//   set scene = pxfn{{p} -> min{ sd3sphere{p, r:1/2}, sd3plane{p} }}
-//   v1 visualsynth, px=sd3march{scene}>>sd3lit{scene}
-//
-// Or declared inline with let{}, on the line that marches it. A pxfn{} is the one thing let binds as
-// the function it is rather than as the value it takes where the let is written, so the name reaches
-// every use site the way a `set` name does - and it is the tighter of the two spellings, since it is
-// one node shared by all of them rather than one worked out afresh at each: measured on sd3torus,
-// one declaration called ten times against the set form's five copies, 61 uniforms against 69, and
-// the two render identically to the byte. Without the pxfn{} the let means what it always does, the
-// value at that point in the chain - for a scene, the slice through the chain head, which the march
-// then steps through as a constant.
-//
 //   v1 visualsynth, px=let{'scene', pxfn{sd3torus}}>>sd3march{scene}>>sd3lit{scene}
 //
-// The scene is declared first on every function that takes one, so it is the argument a bare name
-// goes to, the way shape is on kal; `in` still takes the piped value wherever it is declared. That
-// matters here more than usual, because a call whose own args already hold a visual node is not
-// piped the chain value at all - so with `in` declared first, px=sd3march{scene} would have put the
-// scene in `in` and marched the default.
+// A scene should be a pxfn{}: the march, the normal, shadows and occlusion each call it many times,
+// and without pxfn{} every call is another full copy of the scene in the shader. let{} of a pxfn{}
+// binds the function itself, so it works everywhere a `set` name would.
 //
-// A scene is a function of the point alone: a pxfn{} body sees its argument, uv, and the animated
-// params, but not a let{} from outside it nor the index of a loop{} it sits inside. Animating one
-// is therefore fine - a timevar in a scene is a param like any other - but anything positional has
-// to arrive through the point.
+// The scene is declared first on every function that takes one, so a bare argument lands there.
+// With `in` first, px=sd3march{scene} would put the scene in `in`, since a call whose args already
+// hold a visual node is not piped the chain value.
 //
-// The coordinate system is the px one carried into three dimensions: y is up, x is right, and the
-// frame spans -1 to 1 vertically (wider horizontally, by the aspect ratio). z goes away from the
-// viewer, so the default camera sits at z=-3 and looks toward the origin. Distances and radii are
-// in those same units throughout.
+// A pxfn{} body sees its argument, uv and animated params, but not an outer let{} or loop index, so
+// anything positional has to arrive through the point.
 //
-// Two things about the shader shape of all this. There are no branches, so every `if` in the
-// original becomes the ternary `cond ?? a ?: b`, which compiles to a mix between both results
-// rather than taking one path - which also means both sides are always worked out. And a value
-// wanted twice is either named with a let{} or passed on to a helper function, whose argument names
-// it; an expression on its own has nowhere to put a local, but a chain does, and a let{} is a chain
-// stage. The marches here use let{}, and a carried one at that, since their values change every
-// iteration, which is exactly what a loop{}'s carry: is for. The shapes use helpers, for the reason
-// lib/sdf.limut gives: a helper's argument is already one built value and so costs nothing, where a
-// let{} only pays when an expression rather than a value is what is wanted twice.
+// Coordinates: y up, x right, -1..1 vertically, z away from the viewer; the default camera is at
+// z=-3 looking at the origin.
 
 //// Machinery
 
-// A 3d point: w has to be zero, since length, dot and cross work on xyz and the incoming w is 1,
-// and a stray w would survive every translate to turn up in the next length.
+// w must be zero: length, dot and cross work on xyz, the incoming w is 1, and a stray w survives
+// translates to reappear in the next length.
 set sd3flat = {in} -> in >> set{w:0}
 
-// Build a 3d point out of three computed values. Each of those arrives splatted across all four
-// channels (as every distance here does), so the masks pick one channel out of each.
+// Build a 3d point out of three splatted values, taking one channel from each.
 set sd3vec = {a, b, c} -> {x:1,w:0}*a + {y:1,w:0}*b + {z:1,w:0}*c
 
-// Force a colour opaque. Shading multiplies a colour by a brightness, and a brightness is a single
-// value in all four channels, so without this the alpha comes out dimmed along with the rest.
-// It is a chain stage rather than the colour arithmetic it looks like it could be, because that
-// arithmetic on two constants has no visual node in it: the whole thing const folds, and a folded
-// colour times a channel map is a value toVec4 cannot read, so it comes back as the flat white
-// fallback (measured 2026-09-13: px=#0f0*{x:1,y:1,z:1,w:0} is a white frame). set{} is a real node,
-// so it works whatever it is handed - which is the general rule here, and the reason sd3vec and the
-// masks below are only ever used on values that already have a node in them.
+// Force a colour opaque, since multiplying by a splatted brightness dims alpha too. This must be a
+// set{} rather than colour arithmetic: arithmetic on two constants const folds to a value toVec4
+// cannot read, which renders as flat white. For the same reason sd3vec and the masks are only used
+// on values that already contain a node.
 set sd3opaque = {in:id} -> in >> set{w:1}
 
-// Reflect a direction about a unit normal. GLSL has reflect() as an intrinsic; the px maths
-// functions do not, and it is one line.
 set sd3reflect = {i, n} -> i - n*2*dot{i,n}
 
-// The 2d radial distance from the y axis, ie how far out from the middle a point is. Several of the
-// shapes below are a 2d shape taken in that radius and y, which is what makes them solids of
-// revolution. It is spelt out rather than using length{} because length{} is over xyz.
+// 2d distance from the y axis, for solids of revolution. Spelt out because length{} is over xyz.
 set sd3radial = {p} -> length{sd3vec{p.x, p.z, 0}}
 
 //// Shapes
-// All of them take the incoming px value as their first argument, so they pipe like any other chain
-// segment and can equally be handed a point of their own - which is what a scene does:
-// pxfn{{p} -> sd3sphere{p, r:1/2}}. As in the 2d library, a positional argument only lands where you
-// expect when the call is being piped one, so name them anywhere else.
+// All take the point as their first argument, so they pipe or can be handed a point:
+// pxfn{{p} -> sd3sphere{p, r:1/2}}. Name the other arguments when the call is not being piped.
 
-// Distance from the origin, less the radius: the simplest field there is, and exact everywhere.
 set sd3sphere = {in:id, r:1/2} -> sdval{length{sd3flat{in}} - r}
 
-// Box of half extents b, ie b is the distance from the middle to a face, not the width. A plain
-// number gives a cube; a vector gives a cuboid. The outside distance is the length of the positive
-// part of |p|-b (which covers the corner and edge cases as much as the face case) and the inside
-// distance is the largest of the three negative components; only one of the two terms is ever
-// non zero.
+// b is the half extent (centre to face); a number gives a cube, a vector a cuboid.
 set sd3box1 = {q} -> sdval{length{max{q,0}} + min{max{q.x, q.y, q.z}, 0}}
 set sd3box = {in:id, b:1/2} -> sd3box1{abs{sd3flat{in}} - b}
 
-// Torus lying in the xz plane: r is the radius of the ring measured to the middle of the tube, t
-// the radius of the tube itself. The radial distance less r, paired with y, is a 2d point whose
-// length is the distance from the ring.
+// Torus in the xz plane: r is the ring radius to the tube centre, t the tube radius.
 set sd3torus1 = {q, t} -> sdval{length{q} - t}
 set sd3torus = {in:id, r:1/2, t:1/8} ->
   sd3torus1{sd3vec{sd3radial{in} - r, in.y, 0}, t}
 
-// Capsule: a line from a to b with a radius around it, ie a cylinder with hemispherical ends.
-// Project the point onto the segment, clamp the projection into it, and measure from there.
+// Line segment a to b with radius r.
 set sd3capsule1 = {pa, ba, r} -> sdval{length{pa - ba*clamp{dot{pa,ba}/dot{ba,ba}}} - r}
 set sd3capsule = {in:id, ax:0, ay:-1/2, az:0, bx:0, by:1/2, bz:0, r:1/4} ->
   sd3capsule1{sd3flat{in} - {x:ax, y:ay, z:az, w:0}, {x:bx-ax, y:by-ay, z:bz-az, w:0}, r}
 
-// Cylinder of radius r and half height h, standing on the y axis with flat ends. The radius and y
-// make a 2d point, and the rest is the 2d box of half extents r,h taken on it.
+// Radius r, half height h, standing on the y axis.
 set sd3cyl1 = {d} -> sdval{min{max{d.x, d.y}, 0} + length{max{d, 0}}}
 set sd3cylinder = {in:id, r:1/2, h:1/2} ->
   sd3cyl1{abs{sd3vec{sd3radial{in}, in.y, 0}} - {x:r, y:h, w:0}}
 
-// Half space below the plane through the origin with unit normal nx,ny,nz, lifted by h. The default
-// is the ground: a floor at y = -h. The normal must be a unit vector, since the distance is measured
-// along it.
+// Half space below the plane with unit normal nx,ny,nz, lifted by h. Default: a floor at y = -h.
 set sd3plane = {in:id, nx:0, ny:1, nz:0, h:1/2} ->
   sdval{dot{sd3flat{in}, {x:nx, y:ny, z:nz, w:0}} + h}
 
-// Octahedron of radius r (the distance from the middle to a point). This is Inigo Quilez's bound
-// rather than his exact field: it is correct on the surface and never overestimates, so a march
-// lands in the right place, but it is not a true distance away from it - which shows if you round
-// or blend it. 0.57735027 is one over the square root of 3.
+// Radius r, centre to vertex. A bound, not an exact distance: fine to march, but rounding or
+// blending it shows the error. 0.57735027 is 1/sqrt(3).
 set sd3octahedron = {in:id, r:1/2} ->
   sdval{(abs{in.x} + abs{in.y} + abs{in.z} - r) * 0.57735027}
 
 //// Shapes from 2d ones
-// These two make a solid out of any field from lib/sdf.limut, which is the cheapest way to get a
-// shape that is not in the list above. The 2d shape is a chain of its own, so it is passed in as an
-// argument and reached as a bare name (sdstar{r:1/2} works, since its own `in` defaults to whatever
-// arrives); pxfn{} around it is worth it only if the same shape is used more than once.
+// shape is any lib/sdf.limut field, passed as a bare name (sdstar{r:1/2} works).
 
-// Extrude a 2d shape along z into a prism of half thickness h. The 2d field is taken in xy.
+// Extrude a 2d shape (taken in xy) along z, half thickness h.
 //   px=sd3march{scene:pxfn{{p}->sd3extrude{p, sdstar{r:1/2}, h:1/8}}}>>sd3lit
 set sd3extrude1 = {w} -> sdval{min{max{w.x, w.y}, 0} + length{max{w, 0}}}
 set sd3extrude = {in:id, shape, h:1/4} ->
   sd3extrude1{sd3vec{sd3vec{in.x, in.y, 0} >> shape, abs{in.z} - h, 0}}
 
-// Revolve a 2d shape about the y axis, o being how far out from the axis the shape's own origin is
-// placed. The 2d field is taken in the radial distance and y, so sd3revolve with a circle is a
-// torus and with a box is a tube.
+// Revolve a 2d shape about the y axis, its origin placed o out from the axis.
 //   px=sd3march{scene:pxfn{{p}->sd3revolve{p, sdheart{r:1/3}, o:1/2}}}>>sd3lit
 set sd3revolve = {in:id, shape, o:1/2} ->
   sd3vec{sd3radial{in} - o, in.y, 0} >> shape
 
 //// Fractals
-// A fractal is a shape with no closed form: you get at it by iterating, and what the iteration
-// leaves behind is an estimate of the distance rather than the distance itself. That is exactly
-// what loop{} is for - the body is written into the shader once whatever the count, with carry: for
-// the running values an estimate needs - and it is why these are in a library of ordinary DSL
-// functions at all rather than a shader someone pasted in.
-//
-// Three things are true of all four and worth knowing before the individual ones.
-//
-// The iteration count n is STRUCTURAL, like the march's steps: it is the loop count written into
-// the shader, so it can be changed but not smoothly animated. Everything else here is an ordinary
-// param and animates.
-//
-// The distance is an ESTIMATE, and a march that steps by the whole of it can tunnel through a
-// surface, which shows as banding or as holes in the fine detail. That is what sd3march's step is
-// for: step:1/2 with steps raised to match is the usual fix, and the escape time ones (mandelbulb,
-// mandelbox) want it more than the folding ones (menger, sierpinski), whose fields are sound bounds.
-// Raising eps a little has the same effect more cheaply and rounds off the detail instead.
-//
-// A fractal has detail all the way down, so it is never finished - it is only marched until you run
-// out of steps. Expect these to cost real time: an inner loop at every step of the march, and four
-// more scene calls for the normal. They want to be a pxfn{} even more than an ordinary scene does.
+// n is structural (the loop count in the shader): it can be changed but not smoothly animated.
+// The distances are estimates, so a march can tunnel through detail, showing as banding or holes:
+// use sd3march's step:1/2 with more steps, or raise eps. mandelbulb and mandelbox need this more
+// than menger and sierpinski. These are expensive; always wrap them in pxfn{}.
 
-// Menger sponge: a cube with a square hole bored through each face, and the same again in each of
-// the twenty smaller cubes that leaves, n times over. Inigo Quilez's formulation: the sponge is the
-// cube MINUS an endless lattice of crosses at a third the scale each time, and subtracting is max{}
-// of the negated field, which is why the loop's step is a max{}.
-// Everything works in units of b, so the point is divided by it going in and the distance
-// multiplied by it coming out - which keeps the arithmetic of the crosses exactly Quilez's.
+// Menger sponge: a cube minus a lattice of crosses at a third the scale each iteration.
+// Works in units of b so the cross arithmetic stays as in the original.
 //   px=sd3march{pxfn{{p}->sd3menger{p, n:3}}}>>sd3lit
 set sd3menger1 = {r, s} -> sdval{(min{max{r.x, r.y}, max{r.y, r.z}, max{r.z, r.x}} - 1) / s}
 set sd3menger = {in:id, n:3, b:1/2, scale:3} ->
@@ -202,18 +111,10 @@ set sd3menger = {in:id, n:3, b:1/2, scale:3} ->
          carry:{sd3ms:1}
        } * b
 
-// Sierpinski tetrahedron, and the kaleidoscopic IFS it generalises to. Three folds mirror space
-// about the diagonal planes, so a point anywhere is brought into one corner of the tetrahedron, and
-// then the whole thing is scaled up about that corner: n of those and the point knows how far it is
-// from a shape made of four copies of itself. The field is exact, which makes this the cheapest of
-// the four and the one that takes a large n happily.
-// yaw and pitch turn the point between the folds and the scaling, in turns like rot2. At zero this
-// is the plain tetrahedron; anything else is a kaleidoscopic IFS, which is where the shapes that
-// look like cathedrals come from, and it is the thing here most worth animating.
-// r is the radius of the sphere the iteration finishes on, measured in the scaled up space, so the
-// real thickness it gives the shape is r/scale^n. It has to be there: the bare fold estimate
-// length{z}/scale^n never goes negative - the attractor itself has no volume - so a march creeps up
-// to it and never registers a hit. Larger r is a fatter, more rounded shape; n does the opposite.
+// Sierpinski tetrahedron / kaleidoscopic IFS. yaw and pitch (in turns) rotate between the folds
+// and the scaling; nonzero gives the IFS shapes, and is the thing most worth animating.
+// r is the radius of the final sphere in scaled space (real thickness r/scale^n). It is required:
+// without it the estimate never goes negative and the march never registers a hit.
 //   px=sd3march{pxfn{{p}->sd3sierpinski{p, n:10}}}>>sd3lit
 //   px=sd3march{pxfn{{p}->sd3sierpinski{p, n:10, yaw:[0:1]l16}}, step:1/2}>>sd3lit
 set sd3sfold1 = {in:id} -> (in.x + in.y < 0 ?? sd3vec{-in.y, -in.x, in.z} ?: in)
@@ -231,18 +132,10 @@ set sd3sierpinski = {in:id, n:8, scale:2, ox:1, oy:1, oz:1, yaw:0, pitch:0, r:2}
        }
     >> sd3sierpde{s:1/(scale^n), r:r}
 
-// Mandelbox: the box fold reflects anything outside the unit cube back in, the sphere fold blows up
-// anything near the middle, and then the whole of space is scaled about the point we started from.
-// dr is the running derivative - how much the scaling has stretched space by so far - and dividing
-// by it turns the distance in the folded space back into a distance here.
-// scale is the knob, and it changes the size of the shape as much as its character: at 2 it is a
-// box of boxes about five units across, at 3 it grows spikes and shrinks, and negative values give
-// the hollow shell with a cross shaped mouth, at about two units across. b is what makes that
-// manageable - the point is divided by it going in and the distance multiplied by it coming out, so
-// b is how big the whole fractal is in the frame. The default pairs with scale:2; a different scale
-// wants a different b (about 1/4 for -3/2, about 1/12 for 3), and getting it wrong shows as an empty
-// frame rather than as a wrong shape, because a camera inside the shape or too close to it marches
-// through a field that is nearly zero everywhere and never gets anywhere.
+// Mandelbox: box fold, sphere fold, scale. dr is the running derivative.
+// scale changes the size as much as the character, so b (overall size) must be matched to it:
+// 1/8 for scale:2, about 1/4 for -3/2, about 1/12 for 3. A wrong b gives an empty frame, since the
+// camera ends up inside or too close to the shape.
 //   px=sd3march{pxfn{{p}->sd3mandelbox{p}}, steps:96}>>sd3lit
 //   px=sd3march{pxfn{{p}->sd3mandelbox{p, scale:-3/2, b:1/4}}, steps:96}>>sd3lit
 set sd3boxfold = {in:id} -> clamp{in, -1, 1}*2 - in
@@ -263,13 +156,8 @@ set sd3mandelbox = {in:id, n:8, scale:2, minr:1/2, fixr:1, b:1/8} ->
        }
     >> sd3mbde{dr:sd3xdr.x} >> mul{b}
 
-// Mandelbulb: the Mandelbrot iteration z -> z^power + c, with z a point in space and the power
-// taken in spherical coordinates - raise the radius to the power and multiply both angles by it.
-// The escape time estimate is r*ln{r}/(2*dr), which is why ln exists.
-// The polar axis is y rather than z, so the poles are up and down and the bulb stands the way it
-// does in every picture of one. power is the knob and need not be a whole number; 8 is the familiar
-// shape, 2 is a lumpy blob, and anything animated between them is worth watching.
-// bail is how far out counts as escaped - it only wants to be more than 2 if you raise power a lot.
+// Mandelbulb: z -> z^power + c in spherical coordinates, polar axis y so the bulb stands upright.
+// power need not be whole (8 is the classic shape, 2 a blob). bail only needs raising for large power.
 //   px=sd3march{pxfn{{p}->sd3mandelbulb{p}}, step:1/2, steps:128}>>sd3lit
 //   px=sd3march{pxfn{{p}->sd3mandelbulb{p, power:[2:8]l16}}, step:1/2, steps:128}>>sd3lit
 set sd3bulb0 = {zr, st, ct, sp, cp} -> sdval{zr} * sd3vec{st*cp, ct, st*sp}
@@ -292,65 +180,28 @@ set sd3mandelbulb = {in:id, n:8, power:8, bail:2} ->
     >> sd3bulbde{dr:sd3bdr.x}
 
 //// Combining
-// Union and intersection of two distances are min{} and max{}, and sdround, sdannular, sdsub and
-// sdblend from lib/sdf.limut all work on a 3d distance unchanged, since all of those are arithmetic
-// on the distance rather than on the point. Only the ones that are about being in three dimensions
-// are here.
-// There is no per shape material. It was built and then taken out again: tagging a distance and
-// picking the nearer tag both work, but the colouring step does not, because a loop{} carry: name
-// the march assigns is readable from the body of a later function and not from an argument written
-// at its callsite. An ordinary let{} name reads fine in either place; it is the carried one that
-// does not. See ToDo.txt.
+// min{}/max{} and lib/sdf.limut's sdround, sdannular, sdsub, sdblend all work on 3d distances.
+// Mirroring into the positive octant is just abs{} on the point:
+//   px=sd3march{pxfn{{p}->sd3sphere{abs{p} - {x:1/2,y:1/2,z:1/2,w:0}, 1/4}}}>>sd3lit
 
-// Repeat the whole of space on a lattice, so one shape becomes endlessly many. p is the spacing,
-// either a number for all three axes or a vector; every component must be non zero, since the point
-// is divided by it.
+// Repeat space on a lattice of spacing p (number or vector; no zero components).
 //   px=sd3march{scene:pxfn{{p}->sd3sphere{sd3rep{p, 3/2}, r:1/2}}, far:32}>>sd3lit
 set sd3rep = {in:id, p:1} -> sd3flat{in} - p*round{sd3flat{in}/p}
 
-// Mirroring space into the positive octant is abs{} on the point and needs nothing of its own, so
-// it is not a function here - one shape becomes eight, one in each octant:
-//   px=sd3march{pxfn{{p}->sd3sphere{abs{p} - {x:1/2,y:1/2,z:1/2,w:0}, 1/4}}}>>sd3lit
-// (This used not to render, which is what the old comment here said. Retested 2026-09-14: it does.)
-
 //// Marching
-// The ray for this pixel: the point on an image plane at z = fov, normalised. A larger fov is a
-// longer lens, ie a narrower field of view and less perspective.
+// Ray through the image plane at z = fov; larger fov is a longer lens.
 set sd3dir = {in:id, fov:1} -> normalize{sd3vec{in.x, in.y, fov}}
 
-// The default scene, so that px=sd3march>>sd3lit is a picture rather than an error: a sphere on a
-// floor. It is a pxfn{} for the reason the header gives, and everything it needs is written inside
-// it because it takes no arguments.
+// Default scene, so px=sd3march>>sd3lit shows something: a sphere on a floor.
 set sd3default = pxfn{{p} -> min{sd3sphere{p, 1/2}, sd3plane{p, h:1/2}}}
 
-// Walk a ray from the camera into the scene until it lands on a surface. The point the ray reached
-// is what comes out, so the shading after it works on a point in space; what happened on the way is
-// read back by name afterwards - sd3d is the scene's last result, ie the distance in x; sd3t is how
-// far the ray travelled, for depth and fog; and sd3n is the surface normal where it stopped, which
-// is what everything about light needs.
-// The normal is worked out here, once, rather than by each of the shading functions separately -
-// they would each want the same one, and it is four more calls of the scene every time. The cost is
-// that a render wanting no light at all still asks for it; the four calls have no other effect, so
-// a shader compiler is free to drop them, but they are in the generated source either way.
-// sd3lit reads all three, and so can anything of your own.
-//
-// The camera sits at ox,oy,oz and looks along +z, turned by pitch then yaw, both in turns like
-// rot2. steps is how many times the ray may step and is structural - it is the loop count written
-// into the shader, so it can be changed but not smoothly animated. eps is how close counts as a
-// hit and far is where to give up; the loop stops at whichever comes first, which is what keeps a
-// march affordable, since the background and the near hits each come in large runs of pixels.
-//
-// step multiplies the step length. A march is only safe to step by the whole distance when the
-// field really is one: a bound that overestimates near the surface makes the ray tunnel through it,
-// which shows as banding or as holes in a thin shape. The fractals below are the main reason it is
-// here (an escape time estimate is only approximately a distance), and sd3octahedron is another.
-// A value below 1 is slower for the same reach, so raise steps with it.
-//
-// sd3rd is named before the loop so the ray direction is worked out once rather than at every step.
-// The body names the distance before stepping by it, which is a let{} of an expression and so needs
-// no id>> of its own; the one in front is the explicit seed any body starting with a plain call
-// wants. There is no `and` or `or` in a condition - comparisons give 1 or 0, so multiply them for
-// and and add them for or, which is what the two ways of finishing are here.
+// March a ray from the camera until it hits the scene. Outputs the hit point, and leaves named
+// values for shading: sd3d (last distance, in x), sd3t (distance travelled) and sd3n (normal).
+// The normal is computed here once so the shading functions can share it.
+// Camera at ox,oy,oz looking along +z, turned by pitch then yaw (in turns). steps is structural.
+// eps is the hit threshold, far the give-up distance. step scales each step: below 1 for fields
+// that overestimate (fractals, sd3octahedron), with steps raised to match.
+// Conditions have no and/or: multiply comparisons for and, add them for or.
 set sd3march = {scene:sd3default, in:id, ox:0, oy:0, oz:-3, fov:1, yaw:0, pitch:0,
                 steps:64, eps:1/2000, far:16, step:1} ->
   in >> let{sd3rd, rot3y{rot3x{sd3dir{id, fov}, pitch}, yaw}}
@@ -365,12 +216,8 @@ set sd3march = {scene:sd3default, in:id, ox:0, oy:0, oz:-3, fov:1, yaw:0, pitch:
      >> let{sd3n, sd3nrm{scene, id}}
 
 //// Shading
-// The surface normal is the direction the field increases in fastest, ie its gradient. It is taken
-// as four samples around the point, at the corners of a tetrahedron - the fewest that span three
-// dimensions - which is four more calls of the scene and the main reason a scene wants to be a
-// pxfn{}. h is how far apart the samples are: too small and it is noise, too large and it rounds
-// off every edge. sd3march calls this once and leaves the answer in sd3n, so the shading functions
-// below take no normal of their own; call it directly only for a normal somewhere else.
+// Surface normal from four tetrahedral samples of the scene. h is the sample spacing: too small is
+// noisy, too large rounds edges. sd3march already leaves this in sd3n.
 set sd3tet = {e, p, scene, h} -> e * ((p + e*h) >> scene).x
 set sd3nrm = {scene:sd3default, in:id, h:1/2000} -> normalize{
     sd3tet{{x:1,y:-1,z:-1,w:0}, in, scene, h}
@@ -379,18 +226,10 @@ set sd3nrm = {scene:sd3default, in:id, h:1/2000} -> normalize{
   + sd3tet{{x:1,y:1,z:1,w:0}, in, scene, h}
 }
 
-// A unit vector toward the light, shared by the shading functions so that one set of lx, ly, lz
-// means the same thing to all of them
 set sd3lightdir = {lx, ly, lz} -> normalize{{x:lx, y:ly, z:lz, w:0}}
 
-// How much of the light reaches this point: march a second ray from the surface toward the light
-// and see whether anything is in the way, giving 1 in full light and 0 in full shadow. k is the
-// softness - the edge is blurred by the closest the ray came to something relative to how far it
-// had gone, so a smaller k is a softer edge and a large one is nearly hard. Starting a little way
-// along the normal is what stops the surface from shadowing itself.
-// It is the same shape as sd3march with one more thing carried: sd3sr, the darkest it got. The loop
-// hands on its point as always, so the answer is read back off the name afterwards, which is all
-// sd3shadow1 is for.
+// Soft shadow, 1 lit to 0 shadowed: march toward the light from just off the surface. Smaller k is
+// a softer edge. The result is carried in sd3sr and read back by sd3shadow1.
 //   px=sd3march{scene}>>sd3lit{scene, shadow:sd3shadow{scene}}
 set sd3shadow1 = {in} -> clamp{sd3sr}
 set sd3shadow = {scene:sd3default, in:id, lx:1/2, ly:1, lz:-1/2,
@@ -407,24 +246,16 @@ set sd3shadow = {scene:sd3default, in:id, lx:1/2, ly:1, lz:-1/2,
        }
     >> sd3shadow1
 
-// Ambient occlusion: how much of the sky this point can see, approximated by asking how much nearer
-// the surface is than it would be on an open plane, at a few points out along the normal. Nothing
-// is carried from one sample to the next, so this is a fold rather than a march - a loop{} with
-// only a map:, whose terms are summed. steps of 4 gives 5 samples, since a fold takes a term at
-// every value the loop visits, the seed included.
+// Ambient occlusion from samples along the normal. steps:4 gives 5 samples (the fold includes the seed).
 //   px=sd3march{scene}>>sd3lit{scene, occ:sd3ao{scene}}
 set sd3aostep = {i, in, n, scene, hstep, falloff} ->
   (hstep*(i+1) - ((in + n*hstep*(i+1)) >> scene).x) * (falloff^i)
 set sd3ao = {scene:sd3default, in:id, steps:4, hstep:1/32, falloff:0.95, k:3} ->
   clamp{1 - k*loop{map:{v,i} -> sd3aostep{i, sd3flat{in}, sd3n, scene, hstep, falloff}, steps}}
 
-// Turn the point a march landed on into a colour. It reads sd3d, sd3t and sd3n, the names sd3march
-// leaves behind, so it goes after one; there is nothing for it to shade before the march. A miss is
-// the background, a hit is the surface colour lit by one light plus an ambient term, and fog fades
-// the whole thing toward the background with distance (0, the default, is none).
-// shadow and occ are plain multipliers on the two terms, so the cheap picture really is cheap: both
-// sides of a ternary are always compiled, so an "off" flag would not have saved anything, where a
-// multiplier of 1 costs nothing. Pass sd3shadow and sd3ao into them for the expensive one.
+// Shade the result of sd3march: one light plus ambient, bg on a miss, fog toward bg (0 = none).
+// shadow and occ are multipliers rather than on/off flags because both sides of a ternary are
+// always compiled; pass sd3shadow / sd3ao for the expensive version.
 //   px=sd3march{scene}>>sd3lit{scene}
 //   px=sd3march{scene}>>sd3lit{scene, shadow:sd3shadow{scene}, occ:sd3ao{scene}}
 set sd3lit = {scene:sd3default, in:id, lx:1/2, ly:1, lz:-1/2, col:#fff, bg:#123,

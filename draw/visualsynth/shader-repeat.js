@@ -19,10 +19,9 @@ define(function(require) {
   //                            ->  the same loop with named values carried alongside, assigned by a
   //                                let{} in the body and still in scope after the loop
   //
-  // series, parallel and multitap are unrolled, so their index is an ordinary javascript number and
-  // each repeat may differ in any way at all. loop rolls, so the body is emitted once whatever the
-  // count is (which is what makes a big count affordable) and its index is a value in the shader:
-  // usable in shader expressions, but not for anything structural.
+  // series, parallel and multitap are unrolled, so their index is a javascript number and repeats
+  // may differ structurally. loop emits its body once, so its index is a shader value: usable in
+  // expressions, but not for anything structural.
 
   // Repeat the chain, each one consuming the last: exactly what >> does, so it is the same compose.
   let seriesShaderNode = (chains) => {
@@ -46,16 +45,11 @@ define(function(require) {
     })
   }
 
-  // A loop index, as a value in the chain. Splatted across all four components, the same convention
-  // a single channel read (in.v) uses, so it behaves as a scalar in arithmetic.
-  //
-  // The box holds a GLSL *expression* rather than a bare counter name, because the two indices a
-  // folding loop hands out differ: the body's is the counter itself, where a fold term's is one
-  // past it (the term taken after body application i belongs to value i+1 of the trajectory) and is
-  // the literal 0 for the seed term built before the loop. The expression only exists during the
-  // build walk, but the node itself is made at event time, when the lambda is called — so it
-  // arrives through the box. Builds are one depth-first walk with nothing interleaved, so a nested
-  // loop simply saves and restores its own box in turn.
+  // A loop index, splatted across all four components so it acts as a scalar.
+  // The box holds a GLSL expression rather than a counter name because the indices differ: the
+  // body's is the counter, a fold term's is counter+1, and the seed term's is literal 0. The node
+  // is made at event time but the expression only exists during the build walk, hence the box.
+  // Builds are one depth-first walk, so a nested loop saves and restores its own box.
   let loopIndexNode = () => {
     let box = {expr: undefined}
     let node = makeShaderNode((input, ctx) => ctx.addStatement(`vec4(float(${box.expr}))`))
@@ -74,62 +68,32 @@ define(function(require) {
     return node
   }
 
-  // A real GLSL for loop. The value flowing in becomes a mutable accumulator declared before the
-  // loop; each iteration builds the body from it and assigns the body's output back, so the chain
-  // feeds back into itself the way an audio loop{} does. The count is baked in as a literal: it is
-  // structural (it settles at event time and is part of the generated source, ie the cache key)
-  // rather than an animatable uniform.
+  // A real GLSL for loop. The incoming value becomes a mutable accumulator; each iteration builds
+  // the body from it and assigns the output back. The count is a literal: structural, part of the
+  // generated source and so the cache key.
   //
-  // fold gives it a *second* accumulator: a running total declared alongside the carried value,
-  // which becomes what the loop hands on. That is the one thing the carried value cannot do for
-  // itself, since it is a single vec4 and any whole-vector op in the body wipes out anything riding
-  // in a spare channel of it. {map, combine, accNode, termIndex}:
+  // fold adds a running total, which becomes the loop's output. The carried value cannot hold it,
+  // since any whole-vector op in the body wipes out spare channels. {map, combine, accNode, termIndex}:
+  //   map      value -> term. Absent, the term is the value.
+  //   combine  how a term joins the total. Absent, +=.
+  // The total is seeded with map of the incoming value, then folds in one term per iteration, so
+  // count iterations give count+1 terms and no identity is needed.
   //
-  //   map      each value the loop passes through, mapped to a term of the fold. Absent, the term
-  //            is the value itself.
-  //   combine  how a term joins the total. Absent, the total is a sum (+=).
+  // The seed is built in its own captureBlock purely to isolate its memo (it sees a different index
+  // expression from the body), then its statements are spliced out to sit before the loop. The fold
+  // assignment and write-back are emitted in place inside the block, so a combiner's statements sit
+  // between the term and the assignment that reads them.
   //
-  // The total is *seeded with the first term* — map of the value as it arrives, before any body
-  // application — and then folds in map of the body's output once per iteration. So count body
-  // applications give count+1 terms, one at every value the loop visits: nothing is dead (the old
-  // sum: took its term before the body, which left the last body application unused), and there is
-  // no identity to supply, since a reduce over a non-empty sequence needs none.
+  // until: {test, index}, tested at the bottom of the block after the write-back, so the body runs
+  // 1..count times. Testing after the body lets the condition read the body's let{} bindings.
+  // Truthiness is as ?? (any component non zero). This is the only branch the generated shader has;
+  // it pays off because GPUs run fragments in lockstep groups and marches produce large coherent runs.
   //
-  // The seed is built in a captureBlock of its own purely to isolate its memo: it and the body see
-  // different index expressions, so a node reached with the same input in both must emit twice
-  // rather than collapsing onto one variable. Its statements are then spliced straight out, since
-  // they belong outside the loop. The fold assignment and the write-back to the carried value are
-  // emitted inside the block, in place, so a combiner's statements sit between the term and the
-  // assignment that reads them.
-  //
-  // until gives it an early exit: {test, index}, a condition emitted at the *bottom* of the block,
-  // after the write-back, breaking out of the loop when it is true. So the body always runs at
-  // least once and at most count times, and a march can stop at a hit or at the far plane instead
-  // of paying every step. Testing after the body rather than before it is what lets the condition
-  // name the body's let{} bindings, since ctx.lets is filled during the build walk and the block's
-  // copy is still live at that point - so the distance the step just computed can be tested without
-  // stashing it in a spare channel. Truthiness is the one ?? uses (shader-branch.js): any component
-  // non zero is true. With a fold the break lands after that step's term has joined the total, so
-  // the terms stay one at every value the loop visits.
-  //
-  // This is the only branch the generated shader has. A GPU runs fragments in lockstep groups, so
-  // it saves work per group rather than per pixel - which is still most of it for the large
-  // contiguous runs of background and of early hits a march produces.
-  //
-  // carry gives it any number of *named* accumulators: [{name, init}] in the order they were
-  // declared, each a variable declared before the loop and left in ctx.carried, so a let{} of that
-  // name in the body assigns it in place (expression/let-node.js) rather than naming a new variable
-  // that would go out of scope at the closing brace. That is what a march needs and neither of the
-  // other two can do: the carried value is one vec4 whose spare channels the first whole-vector op
-  // in the body wipes out, and the fold hands its total on rather than leaving it somewhere to be
-  // read - so a point and a distance can be stepped each iteration and a material id picked up at
-  // the hit and read by the shading *after* the loop.
-  //
-  // An init is built from the value arriving at the loop, in a captureBlock whose statements are
-  // spliced straight back out - the fold seed's trick at the same place and for the same reason,
-  // to keep its memo clear of the body's. ctx.lets and ctx.carried are set outside the block, so
-  // both survive it; ctx.carried is restored by the enclosing block in lockstep with ctx.lets, so a
-  // nested loop's carried names do not leak out of the body they were declared in.
+  // carry: [{name, init}], named accumulators declared before the loop and left in ctx.carried, so
+  // a let{} of that name in the body assigns in place (expression/let-node.js) and the value is
+  // still readable after the loop. Each init is built from the incoming value in its own
+  // captureBlock, as the fold seed is. ctx.carried is restored in lockstep with ctx.lets, so a nested
+  // loop's names do not leak out.
   let loopShaderNode = (body, count, bodyIndex, fold, until, carry) => {
     let map = fold !== undefined ? fold.map : undefined
     let combine = fold !== undefined ? fold.combine : undefined

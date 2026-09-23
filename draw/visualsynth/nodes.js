@@ -26,26 +26,19 @@ define(function(require) {
   }
   addNodeFunction('id', id)
 
-  // The value the whole chain started with — the pixel coordinate — still available after nodes
-  // downstream have replaced the value flowing through them, eg px=perlin2>>mul{y:uv.v}. Emits no
-  // statement: the seed is in scope for the whole shader, so it can be named from anywhere in the
-  // chain, including inside a channels{} arg or a user defined visual function. Ordinarily it is a
-  // local of main(), since every generated statement lands there; a shader declaring a px function
-  // (pxfn{}) hoists it to file scope, because a function body cannot see main's locals (codegen.js).
-  // Not marked _implicitInput — that flag means 'this is the chain seed and >> may withhold it
-  // from a call', where uv is a value in its own right.
+  // The chain's original value (the pixel coordinate), readable anywhere downstream, eg
+  // px=perlin2>>mul{y:uv.v}. Emits no statement since the seed is always in scope. Not marked
+  // _implicitInput: that flag means 'this is the chain seed and >> may withhold it from a call',
+  // where uv is a value in its own right.
   let uv = (args, e, b, state, evalRecurse) => {
     return makeShaderNode((input, ctx) => ctx.rootInput)
   }
   addNodeFunction('uv', uv)
 
-  // Which of the 4 channels a param names, or undefined when it names none (a plain number, or
-  // anything we can't read channels off), meaning it applies to all four.
-  //
-  // An hsv or lab colour names r, g and b however few of its own components are given, and alpha
-  // only when it says so — so set{{h:1/3}} leaves alpha alone exactly as set{#f00} does. It has to
-  // be answered before the channel table, since its s and v are channel names in their own right
-  // and {h:1/3,s:1/2,v:1} would otherwise mask x and y instead. toVec4 uses the same discriminator.
+  // Which of the 4 channels a param names, or undefined for all four.
+  // An hsv or lab colour names r, g and b, and alpha only if given, so set{{h:1/3}} leaves alpha
+  // alone. It is checked before the channel table because s and v are also channel names.
+  // toVec4 uses the same discriminator.
   let channelMask = (v) => {
     v = unwrapValue(v)
     if (typeof v !== 'object' || v === null) { return undefined }
@@ -78,15 +71,11 @@ define(function(require) {
     return map
   }
 
-  // Work out where each channel's value comes from: the AST to take the value from, or undefined
-  // for 'leave this channel alone'. Args may name channels directly (set{u:1/2}), each of which gets
-  // its own uniform so it animates independently, and/or give one positional value (set{#.f..}) whose
-  // channel keys say which channels it touches. A named channel wins over the positional one.
-  //
-  // Only the *structure* is settled here, at event time. Each distinct arg is evaluated once, so a
-  // param that turns out to be a visual node (set{u:in.v}) can be built into the chain; everything
-  // else keeps its raw AST and so is still re-evaluated per frame. Reading the mask off a colour or
-  // map literal needs no evaluation at all, since both parse to a plain object.
+  // Where each channel's value comes from: an AST, or undefined to leave the channel alone. Named
+  // channels (set{u:1/2}) each get their own uniform; a positional value (set{#.f..}) touches the
+  // channels its keys name. A named channel wins.
+  // Only the structure is settled here, at event time: an arg that is a visual node is built into
+  // the chain, everything else keeps its AST and is re-evaluated per frame.
   let paramSources = (args, e, b, evalRecurse) => {
     let colourArgs = colourSubParams(args)
     let positional = colourArgs !== undefined ? colourArgs : args.value
@@ -196,27 +185,16 @@ define(function(require) {
     return args['value'+(i||'')]
   })
 
-  // Every arg of a call is evaluated once before the call itself, by the modifier machinery
-  // (evalFunctionWithModifiers in eval-param.js, since a lookup's args double as its time modifiers)
-  // — even for a node function, which asked not to have its args evalled. That evaluation is
-  // memoised on the event, so resolving an arg here must not see those entries, or >> gets that
-  // earlier un-piped value handed back instead of building the chain: `floor{1/8}+1/2` would compile
-  // to a constant rather than flooring the channel.
+  // The modifier machinery (evalFunctionWithModifiers in eval-param.js) evaluates every arg of a
+  // call once before the call, even for a node function, and memoises it on the event. Resolving an
+  // arg here must not see that memo, or >> gets the un-piped value back: floor{1/8}+1/2 would
+  // compile to a constant.
   //
-  // The isolation is an event of its own (the pattern parallel/loop use, play/nodes/graph.js), not
-  // {doNotMemoise:true}. doNotMemoise propagates the whole way down the arg's evaluation, so every
-  // repeated reference inside a user defined function re-evaluates its entire subtree and yields a
-  // *fresh* node object each time; ctx.built dedupes on node identity, so the built chain then
-  // multiplies. sdcirclewave (five nested lambdas, `q` referenced four times in sdcwd, which sdcw1
-  // calls twice) went from 18 uniforms to 120, and its build from 0.65ms to 68ms per event — on the
-  // beat, against a scheduling budget of 10% of a beat, which is what made the audio late. A cloned
-  // event gives the same guarantee (its memo starts empty, so no stale un-piped value can leak in)
-  // while letting repeated references *within* this one resolution share as they normally would.
-  // Repeats that must stay distinct still do: parallel/loop clone their own events per repeat and
-  // spell a callsite id into __functionContext, which the memo key reads via getCallTreeString.
-  // Undefined for a node function called with no event (the direct-call tests below do this).
-  // There is then nothing to isolate and nothing to memoise against - the memo is a WeakMap keyed
-  // on the event - so that case keeps the old doNotMemoise behaviour.
+  // So args resolve on a cloned event, whose memo starts empty. Not {doNotMemoise:true}: that
+  // propagates all the way down, so every repeated reference in a user function yields a fresh node
+  // object, ctx.built cannot dedupe by identity, and the built chain multiplies (sdcirclewave: 7x
+  // the uniforms, 100x the build time, enough to make audio late).
+  // e is undefined for a direct call with no event (the tests below); there is nothing to isolate.
   let ownEvent = (e) => (e === undefined || e === null) ? e
     : Object.create(Object.getPrototypeOf(e), Object.getOwnPropertyDescriptors(e))
   let memoScoped = (evalRecurse, canMemoise) => {
@@ -227,16 +205,11 @@ define(function(require) {
     return er
   }
 
-  // Resolve an arg as a px chain in its own right: hand it to >> from the chain seed, exactly as
-  // player/params.js seeds a px param, so every rule px already has holds inside the arg too — a
-  // bare call or a user defined function takes the value, `floor{1/8}+1/2` feeds its head, and a
-  // plain value stays a plain value. Gives back the node, or, for an arg that was not visual at
-  // all, the value it evaluated to: >> wraps such a value into a uniform node, and the mark on that
-  // wrapper (shader-node.js) is what tells the two apart.
-  //
-  // paramSlot marks the seed for the stricter rule >> uses on a mul/add/set param, where a call that
-  // was given a value of its own keeps it (see connectOp.js); a channels{} arg is a chain like any
-  // other. The mark is on the seed, so a chain written out inside the arg is unaffected by it.
+  // Resolve an arg as a px chain in its own right, seeded exactly as player/params.js seeds a px
+  // param, so all the usual px rules hold inside it. Returns the node, or the plain value for a
+  // non-visual arg (told apart by the mark >> puts on its uniform wrapper, shader-node.js).
+  // paramSlot marks the seed for the stricter mul/add/set param rule in connectOp.js, where a call
+  // given a value of its own keeps it.
   let paramChain = (ast, e, b, evalRecurse, paramSlot) => {
     let ev = ownEvent(e)
     let v = connectOp(implicitInputNode(paramSlot), ast, ev, b, memoScoped(evalRecurse, ev !== undefined && ev !== null))
@@ -244,12 +217,8 @@ define(function(require) {
     return v._constWrapped === true ? v._constValue : v
   }
 
-  // Each arg is a px chain in its own right, fed that one channel: it is resolved by handing it to
-  // >> from the chain seed, exactly as player/params.js seeds a px param, so every rule px already
-  // has holds inside the arg too — `sin{id*2}` keeps its argument, a bare `sin` or a user defined
-  // function takes the channel implicitly, `floor{1/8}+1/2` feeds its head, and a plain value
-  // becomes an animated uniform. Gives undefined for an arg that isn't visual at all (channels{rand}),
-  // which the build then treats as a uniform so it still animates.
+  // Each arg is a px chain fed that one channel, resolved as in paramChain. Undefined for a
+  // non-visual arg (channels{rand}), which the build treats as an animated uniform.
   let channelChain = (ast, e, b, evalRecurse) => {
     if (ast === undefined) { return undefined }
     let v = paramChain(ast, e, b, evalRecurse)
@@ -280,16 +249,10 @@ define(function(require) {
 
   let isUserFunction = (v) => typeof v === 'function' && v.isUserFunction
 
-  // pxfn{chain} : the sub-chain compiled to a real GLSL function — declared once, called at each
-  // use site — rather than written into the shader again at every one. What it emits and the scope
-  // rules that come with a function body are in draw/visualsynth/shader-function.js.
-  //
-  // The arg is a px chain in its own right, resolved by paramChain exactly as a channels{} arg is,
-  // so every rule px already has holds inside it: a bare call or a named user defined function
-  // takes the incoming value, `floor{1/8}+1/2` feeds its head, a nested >> chain is seeded like any
-  // other. An inline lambda literal is the one thing >> never pipes into, so it is called here with
-  // a pass-through node as its value, the way loop{}'s map:/fold:/until: are (play/nodes/graph.js),
-  // with a callsite id of its own so its uniforms stay its own in the per frame memo key.
+  // pxfn{chain}: the sub-chain compiled to a real GLSL function, declared once and called at each
+  // use (see shader-function.js). The arg is resolved by paramChain. An inline lambda literal is the
+  // one thing >> never pipes into, so it is called here with a pass-through node, as loop{}'s map:
+  // etc are (play/nodes/graph.js), with its own callsite id so its uniforms stay its own.
   let pxfn = (args, e, b, state, evalRecurse) => {
     let ast = args !== undefined && args !== null ? args.value : undefined
     if (ast === undefined) {
@@ -327,13 +290,9 @@ define(function(require) {
   }
   addNodeFunction('tex', tex)
 
-  // Look the incoming value up in a texture generated by sampling a limut expression over the unit
-  // domain: tex1d on the x (ie r) channel, tex2d on xy, tex3d on xyz. Colour in, colour out, so
-  // px=tex{webcam{}}>>tex1d{{x}->{labh:x}} recolours the camera through a lab hue sweep.
-  //
-  // The size is structural: settled at event time and baked into the source as a literal, so
-  // different sizes are simply different programs and the source stays deterministic. Each axis
-  // maps onto texel centres so the expression's 0 and 1 land exactly on the first and last texel.
+  // Look the incoming value up in a texture generated by sampling an expression over the unit
+  // domain: tex1d on x, tex2d on xy, tex3d on xyz. The size is structural (a literal in the source).
+  // Coordinates map onto texel centres so 0 and 1 land exactly on the first and last texel.
   let lookupExpr = (input, channel, size) => `(clamp((${input}).${channel}, 0.0, 1.0)*${(size-1).toFixed(1)} + 0.5)/${size.toFixed(1)}`
   let lutNode = (t, dims, size) => {
     return makeShaderNode((input, ctx) => {
@@ -355,18 +314,11 @@ define(function(require) {
   addNodeFunction('tex2d', tex2d)
   addNodeFunction('tex3d', tex3d)
 
-  // A colour ramp from a list of stops: the incoming value picks a point along them, evenly spaced
-  // over 0 to 1 and mixed linearly between, so px=sdstar>>pal{0,#408,red,1} runs black, purple, red,
-  // white. It reads one channel (x, ie r) of the incoming value, as tex1d does, so a distance or a
-  // noise field — a single number splatted across all four — pipes straight in.
-  //
-  // Only the number of stops is structural: it is baked into the source as a literal, so different
-  // stop counts are different programs. Every stop is a uniform, which is the difference from tex1d:
-  // nothing is frozen into a texture, so the colours stay live and can be animated.
-  //
-  // Each positional arg is a stop: value, value1, value2, … Each is a px chain in its own right,
-  // resolved the way a mul/add/set param is, so a stop may be a node (pal{0,tex{'mask.png'},1}) while
-  // a call with a value of its own (pal{0,rand,1}) keeps it rather than being handed the pixel.
+  // A colour ramp: evenly spaced stops, mixed linearly, indexed by the x channel, so
+  // px=sdstar>>pal{0,#408,red,1} runs black, purple, red, white. The stop count is structural, but
+  // each stop is a uniform, so unlike tex1d the colours can animate. Each stop is resolved like a
+  // mul/add/set param: it may be a node (pal{0,tex{'mask.png'},1}), while a call with a value of its
+  // own (pal{0,rand,1}) keeps it.
   let palStops = (args, e, b, evalRecurse) => {
     let stops = []
     for (let i = 0; args['value'+(i||'')] !== undefined; i++) {
@@ -560,10 +512,10 @@ define(function(require) {
   // add/mul leave the channels their param doesn't name alone
   ctx = mockCtx()
   node(add, {value:{x:0.1}}).build('v0', ctx)
-  assert(['vec4((v0).x + u_vs0.x, (v0).y, (v0).z, (v0).w)'], ctx.statements) // Not alpha, which used to get the +1 default
+  assert(['vec4((v0).x + u_vs0.x, (v0).y, (v0).z, (v0).w)'], ctx.statements) // Not alpha
   ctx = mockCtx()
   node(mul, {value:{x:2}}).build('v0', ctx)
-  assert(['vec4((v0).x * u_vs0.x, (v0).y, (v0).z, (v0).w)'], ctx.statements) // Not y and z, which used to be zeroed
+  assert(['vec4((v0).x * u_vs0.x, (v0).y, (v0).z, (v0).w)'], ctx.statements) // y and z untouched
   ctx = mockCtx()
   node(add, {u:ast}).build('v0', ctx)
   assert(['vec4((v0).x + u_vs0.x, (v0).y, (v0).z, (v0).w)'], ctx.statements)
@@ -734,16 +686,8 @@ define(function(require) {
 
   assert(pxSource('channels{sin{id},g:id^2}'), pxSource('channels{sin{id},g:id^2}')) // Deterministic: the program cache is keyed on the source
 
-  // A param that is a chain of its own must cost exactly what the same chain costs written out
-  // bare. paramChain resolves it in isolation from the modifier machinery's earlier un-piped
-  // evaluation, and that isolation has to be an event of its own, not {doNotMemoise:true}:
-  // doNotMemoise propagates the whole way down, so every reference to a user function's argument
-  // re-evaluates its subtree and hands back a *fresh* node object, which ctx.built cannot dedupe
-  // by identity. The built chain then multiplies with the number of repeated references, which is
-  // invisible in a directly constructed node (every other determinism assertion here) and only
-  // shows through a user defined function. sdcirclewave, five lambdas deep, went from 18 uniforms
-  // to 120 and from 0.65ms to 68ms per event - spent inside the beat scheduling window, which is
-  // what made audio events late.
+  // A param that is a chain must cost what the same chain costs written bare. This only shows
+  // through a user defined function with repeated references (see ownEvent).
   let uniformCount = (source) => (source.match(/^uniform vec4 /gm) || []).length
   let userVars = require('vars').all()
   userVars['dup2'] = parseExpression('{q}->min{q.x+q.y, q.x-q.y}') // Names its arg four times
@@ -766,12 +710,7 @@ define(function(require) {
   delete userVars['dup2']
   delete userVars['dup4']
 
-  // A value threaded into many places costs one uniform, not one per reference. Every reference
-  // resolves to the same binding in the same frame (expression/parse-var.js), so they must hold
-  // the same value on every frame, and codegen.js gives them one slot. This is what lib/visual.limut
-  // does with `seed`: the Fire chain registered it 32 times, once per octave per face per hash, and
-  // shipped 83 uniforms where 28 do - each one a declaration in the source, an evalParamFrame every
-  // frame, and 16 bytes a frame on the wire for a display bound chain.
+  // A value threaded into many places costs one uniform, not one per reference (codegen.js).
   userVars['seed1'] = parseExpression('{in:id, s:0} -> pxhash{in, s}')
   userVars['seed4'] = parseExpression('{in:id, s:0} -> pxhash{in, s} + pxhash{in, s} + pxhash{in, s} + pxhash{in, s}')
   assert(0, uniformCount(pxSource('seed1'))) // A constant default is a literal, however deep it is threaded

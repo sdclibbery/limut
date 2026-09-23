@@ -77,12 +77,9 @@ define(function (require) {
   }
 
   // Base event lookup for the event currently being built. Deliberately a single entry that the
-  // next event overwrites: NO event may hold a reference to another event. Caching the base list on
-  // the event itself (as `_glideBases`) chained every event to the ones before it, so one live event
-  // kept the player's whole history reachable - and with it each note's pitch AudioParam, and so its
-  // oscillator node. Measured Aug 2026: `a acid, dur=1/50` held ~180MB of main thread heap after
-  // three minutes and stalled frames for up to 997ms in GC, against 42MB for the same patch with
-  // glide off. The id serves the same purpose for the retrofit guard below - a number, not a handle.
+  // next event overwrites: NO event may hold a reference to another event, or one live event keeps
+  // the player's whole history (and its audio nodes) reachable. The id serves the retrofit guard
+  // below - a number, not a handle.
   let glideEventId = 0
   let lookup = {}
   let baseEventsFor = (params) => {

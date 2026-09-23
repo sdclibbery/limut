@@ -8,17 +8,14 @@ define(function(require) {
   // (which eagerly construct a Web Audio graph), shader nodes are composed and only emit
   // code when the whole px chain is built into a single fragment shader.
   //
-  // The call tree is snapshotted here, at creation, and put back for the build: a node created
-  // inside a user defined function (set pixellate = {in,size} -> ...) registers uniforms whose
-  // ASTs mention that function's args, and both the build and the per frame uniform eval happen
-  // long after the call returned. Same trick as doPerFrame in play/eval-audio-params.js.
+  // The call tree is snapshotted at creation and restored for the build: a node made inside a user
+  // function registers uniforms whose ASTs mention that function's args, and the build and per
+  // frame eval happen after the call returned. Same trick as doPerFrame in play/eval-audio-params.js.
   //
-  // Each node emits once per (node, input): the same node object reached twice — a lambda arg used
-  // several times, as smooth noise does with its coordinate — would otherwise re-emit its whole
-  // subtree and allocate a fresh uniform for every duplicated constant, which is what makes an
-  // octave noise run out of uniforms. Safe because build is contractually a pure string emitter,
-  // and keying on the input keeps channels{} (one node built from four different inputs) intact.
-  // ctx.built is per build walk (codegen.js), so nothing survives between shaders.
+  // Each node emits once per (node, input): a node reached twice (a lambda arg used several times)
+  // would otherwise re-emit its subtree and allocate duplicate uniforms. Safe because build is a
+  // pure string emitter; keying on input keeps channels{} (one node, four inputs) intact.
+  // ctx.built is per build walk (codegen.js).
   let makeShaderNode = (build) => {
     let callTree = getCallTree()
     let node
@@ -32,7 +29,7 @@ define(function(require) {
       // the variable it names holds something different after the next assignment to it, so the same
       // node at the same input genuinely means two different things at two points in the body. The
       // flag is set by the read and the assignment themselves and propagates outwards here, so a
-      // node containing one is volatile too, and everything else keeps its memo entry as before.
+      // node containing one is volatile too, and everything else keeps its memo entry.
       let outerVolatile = ctx.volatile
       ctx.volatile = false
       let out
@@ -69,15 +66,11 @@ define(function(require) {
     return makeShaderNode((input, ctx) => ctx.addStatement(input))
   }
 
-  // The seed at the head of a px chain (the id node): the incoming value with nothing done to it.
-  // Emits no statement, so a seeded chain generates byte-identical source to an unseeded one — the
-  // program cache is keyed on that source, and every px param is seeded now (player/params.js).
-  // Marked so >> knows it is the chain input and may withhold it from a call that can build a node
-  // without it (see connectOp).
-  // paramSeed marks the seed of an arg resolved as a chain of its own (a mul/add/set param), which
-  // >> seeds more cautiously than it seeds a chain — see connectOp. It sits on the seed rather than
-  // riding the eval options so it applies to exactly that one decision: a chain written out inside
-  // the arg (mul{id>>floor{1/8}}) makes its own seed and gets the ordinary rules.
+  // The seed at the head of a px chain (the id node). Emits no statement. Marked so >> knows it is
+  // the chain input and may withhold it from a call that can build a node without it (connectOp).
+  // paramSeed marks the seed of a mul/add/set param resolved as a chain, which >> seeds more
+  // cautiously. It is on the seed rather than the eval options so it only affects that decision: a
+  // chain written inside the arg (mul{id>>floor{1/8}}) makes its own seed.
   let implicitInputNode = (paramSeed) => {
     let node = makeShaderNode((input, ctx) => input)
     node._implicitInput = true
@@ -85,13 +78,10 @@ define(function(require) {
     return node
   }
 
-  // Wraps a non-node >> operand. Takes the raw unevaluated AST (mirroring connectOp's
-  // gain{value:l} wrap) so the value becomes a per-frame animated uniform.
-  //
-  // Marked, as implicitInputNode is, because the mark is the only way to tell a value that is
-  // genuinely visual from one that only became a node because >> wrapped it. A caller resolving an
-  // arg as a chain of its own (draw/visualsynth/nodes.js) needs that distinction, and needs the
-  // evaluated value too — a param's channel keys are read off it — so carry that along as well.
+  // Wraps a non-node >> operand from its raw AST, so it becomes a per-frame animated uniform
+  // (mirroring connectOp's gain{value:l} wrap). Marked so a caller resolving an arg as a chain
+  // (nodes.js) can tell a genuinely visual value from a wrapped one; carries the evaluated value
+  // too, since a param's channel keys are read off it.
   let constShaderNode = (rawAst, value) => {
     let asColour = colourShaderNode(rawAst, value) // A map with a chain in it is a node, not a uniform (see below)
     if (asColour !== undefined) { return asColour }
@@ -226,15 +216,10 @@ define(function(require) {
     return { convert: convert, scalars: scalars, channels: channels }
   }
 
-  // A map whose components are plain values is a uniform, converted by toVec4 each frame, as it
-  // always was. A map with a *chain* in one of its components (px=set{{h:id.u}}) cannot be: the
-  // component is a shader node, so there is nothing for toVec4 to convert. This builds the same
-  // vec4 in GLSL instead — each component either built into the chain or taken from a uniform of
-  // its own raw AST, so the scalar components still animate per frame.
-  //
-  // Undefined when the map has no chain in any component it would read, which is the signal to the
-  // caller to keep the uniform. Given both the raw AST and the evaluated value, since a component
-  // needs its AST to stay animated and its value to say whether it is a node.
+  // A map with a chain in a component (px=set{{h:id.u}}) cannot be a uniform, since toVec4 cannot
+  // convert a shader node. This builds the vec4 in GLSL instead, each component either built into
+  // the chain or a uniform of its own AST so it still animates. Undefined when no component the map
+  // reads is a chain, telling the caller to keep the uniform.
   let colourShaderNode = (rawAst, value) => {
     let plan = colourPlan(value)
     if (plan === undefined) { return undefined }

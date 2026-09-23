@@ -21,20 +21,12 @@ define(function (require) {
       while (pool.quarantine.length > 0 && now - pool.quarantine[0].t >= pool.quarantineTime) {
         let n = pool.quarantine.shift().n
         n.gain.cancelScheduledValues(0)
-        // Reset as a timeline event at time 0, NOT `n.gain.value = 1`. The value setter is
-        // specified - and in Chromium implemented - as inserting a setValueAtTime at the CURRENT
-        // time, which then sorts after any write the next owner makes at a time that has already
-        // gone by, and wins from that point on for the life of the note. That is not hypothetical:
-        // a live (keyboard/midi) note's _time is behind the block the render thread is filling, so
-        // the `eventpitch *` gain of a superbass note was left on this reset value - 1 instead of
-        // 130.81 - and the superosc rendered DC, audible as a rumble, while the rest of the note
-        // played (measured in Electron, 7 of 120 notes). An event at time 0 is before every
-        // possible caller write, so it resets the node just as thoroughly but can never outrank
-        // one. Verified in Electron against the alternatives: `value = 1` and
-        // `setValueAtTime(1, now)` both lose the caller's write 14/14 at -1ms, -3ms and -10ms;
-        // `setValueAtTime(1, 0)` loses it 0/14.
-        // Envelopes never hit this because they call cancelScheduledValues(0) themselves, which
-        // wiped the poisoned event; the node-function gains (play/nodes/nodes.js) do not.
+        // Reset as a timeline event at time 0, NOT n.gain.value = 1. The value setter inserts a
+        // setValueAtTime at the CURRENT time, which outranks any write the next owner makes at a
+        // time already passed - and a live (keyboard/midi) note's _time is always slightly behind,
+        // so its gain would stay at this reset value for the whole note. An event at time 0
+        // precedes every possible caller write. Envelopes avoid this via cancelScheduledValues(0);
+        // the node-function gains (play/nodes/nodes.js) do not.
         n.gain.setValueAtTime(1, 0)
         delete n.gain.lastTime // Stashed by doPerFrame in eval-audio-params; stale values cause a catch-up scheduling loop
         n.channelCount = 2

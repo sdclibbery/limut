@@ -44,14 +44,10 @@ define(function(require) {
     return evalRecurse(v, e,b)
   }
 
-  // Was this call already handed a visual node of its own? That is what says whether it wants the
-  // chain input as well: `abs{sin{id*4}}` and `dot{tex{'a.png'},#3b1}` have their operand already,
-  // where `floor{[]n}`, `pixellate{40}` and a bare `swap` do not. Asking the call itself (does it
-  // return a node?) does not work — a function whose body is a node function, eg
-  // `set rot = {in,a} -> set{u:...}`, returns one however little sense its arguments made.
-  // Args are evalled in the caller's context, which is where they are written, and memoisation
-  // makes the call itself see the same values. Lambda args are left alone: calling one bare here
-  // would evaluate its body with no call context (see evalModifiers in eval-param.js).
+  // Was this call already handed a visual node of its own? That decides whether it wants the chain
+  // input too: abs{sin{id*4}} has its operand, floor{[]n} does not. Asking whether the call returns
+  // a node does not work, since a function whose body is a node function always does.
+  // Lambda args are skipped: calling one bare would evaluate it with no call context.
   let hasShaderNodeArg = (r, e,b, evalRecurse) => {
     for (let k in r.ownArgs) {
       let arg = r.ownArgs[k]
@@ -150,15 +146,10 @@ define(function(require) {
     // wiring audio. A non-node operand becomes an animated uniform, wrapped from its raw AST
     // (mirroring the gain{value:l} wrap below).
     if (isShaderNode(el) || isShaderNode(er)) {
-      // The chain seed does nothing to what follows it, so hand that back as it stands rather than
-      // composing. Composing would wrap it in an ordinary node, and `id>>id>>abs{sin{id*4}}` (ie an
-      // explicit id on a param that is seeded anyway) would then force the input into abs and drop
-      // its argument. Only for a node: `id>>#f00` still wraps the colour into a uniform.
       // The seed emits no statement, so composing it onto the right hand side is identity: hand
-      // that side back as it stands instead. For a node this also stops `id>>id>>abs{sin{id*4}}`
-      // (ie an explicit id on a param that is seeded anyway) forcing the input into abs and dropping
-      // its argument; for a non-node it keeps the const wrap visible, which is how an arg resolved
-      // as a chain of its own tells a real visual from a value >> merely wrapped (see nodes.js).
+      // that side back as it stands. For a node this stops id>>id>>abs{sin{id*4}} forcing the input
+      // into abs; for a non-node it keeps the const wrap visible, which is how an arg resolved as a
+      // chain tells a real visual from a wrapped value (see nodes.js).
       if (isShaderNode(el) && el._implicitInput) { return isShaderNode(er) ? er : constShaderNode(r, er) }
       return composeShaderNodes(
         isShaderNode(el) ? el : constShaderNode(l, el),

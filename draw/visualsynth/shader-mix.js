@@ -11,13 +11,10 @@ define(function(require) {
   //   mix{wet,t}   ->  mix(input, wet, t)    dry is whatever flows down the chain, as for audio
   //   mix{wet}     ->  mix(input, wet, 0.5)  same default mix as the audio node
   //
-  // mix is a node function, so >> composes it rather than piping into it and its input really is
-  // the chain value at that point. Inside a user defined function it works too, because a piped
-  // call is composed onto the chain rather than restarted from the raw coordinate (see the pipe
-  // branch of expression/connectOp.js): set monochrome = {in,v:1} -> mix{dot{in,#3b1},v}
+  // mix is a node function, so >> composes it and its input is the chain value at that point,
+  // including inside a user defined function: set monochrome = {in,v:1} -> mix{dot{in,#3b1},v}
   //
-  // Operands carry their raw unevalled AST alongside the evalled value, so a non-node operand
-  // becomes a uniform re-evalled every frame rather than a constant frozen at event time.
+  // Operands carry their raw AST, so a non-node operand becomes a per-frame uniform.
 
   let mixShaderNode = (params, evalledValue, e) => {
     // Only take the visual path when a node is really there. The main arg is already evalled by the

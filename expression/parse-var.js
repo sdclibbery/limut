@@ -39,18 +39,12 @@ define(function(require) {
     return o
   }
 
-  // Where a lookup's value ultimately comes from: the expression bound to it, and the call frame
-  // that expression is evaluated in - resolved by walking the same scope chain the eval path walks,
-  // but without evaluating anything. Two values with the same {ast, context} are the same expression
-  // in the same scope, so they must hold the same value on every frame; the visual synth's codegen
-  // uses that to share one uniform between them (draw/visualsynth/codegen.js), instead of one per
-  // reference. A pass-through binding (an argument bound to its caller's argument, as the noise
-  // library's `seed` is all the way down) resolves to its root in one call, since each hop unwinds
-  // into the scope its expression was written in exactly as the eval path unwinds it.
-  //
-  // Best effort throughout: anything unexpected gives undefined, and the caller then just does not
-  // share. It must never be able to break a build, and it must leave the call stack where it found
-  // it, so each hop unwinds only as far as it actually got.
+  // Where a lookup's value ultimately comes from: the bound expression and the call frame it is
+  // evaluated in, found by walking the eval path's scope chain without evaluating. Equal
+  // {ast, context} means equal value every frame, so codegen.js shares one uniform between them.
+  // Pass-through bindings (like the noise library's seed) resolve to their root.
+  // Best effort: anything unexpected gives undefined (no sharing). It must never break a build and
+  // must leave the call stack as it found it.
   let resolveBindingSource = (value) => {
     if (typeof value === 'function' && value._bindingSource !== undefined) {
       let inner = value._bindingSource()
@@ -173,14 +167,11 @@ define(function(require) {
     }
 
     // Return a lookup function
-    // A state store for this parse instance. A var function that asks to persist (accum/smooth/rate:
-    // see functions/maths.js) instead gets a keyed store that outlives the parse, because every code
-    // update re-parses every line, and a fresh {} here is exactly why accum restarted from zero on
-    // each Ctrl+Enter. The key is the param's context (`v1.time`, built in player/params.js) plus the
-    // position of this call among the persisting calls in that param, so editing the expression
-    // itself keeps the value running while renaming the param starts it over. `keep:'name'` names the
-    // slot explicitly, which is also how two params can share one accumulator. No context (a bare
-    // parseExpression, or preset baseParams) means no key, and so no persistence.
+    // A var function that persists (accum/smooth/rate, functions/maths.js) gets a keyed store that
+    // outlives the parse, since every code update re-parses every line. The key is the param's
+    // context (v1.time, player/params.js) plus the call's position among persisting calls in that
+    // param, so editing the expression keeps the value but renaming the param resets it.
+    // keep:'name' names the slot explicitly, letting two params share one. No context, no persistence.
     let state = {}
     if (context !== undefined && typeof f === 'function' && f.persistState) {
       let slot

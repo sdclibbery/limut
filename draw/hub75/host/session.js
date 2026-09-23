@@ -33,10 +33,7 @@ define(function (require) {
     return {host: s, port: port}
   }
 
-  // Why the socket closed. This is the difference between "the display rejected what we sent" and
-  // "the display went away", and it is already on the wire -- but onclose used to ignore it, so a
-  // compile-driven protocol error, a message the display judged too big and the daemon dying all
-  // read as the same bare "disconnected", with the reason nowhere in the console.
+  // Why the socket closed: tells "the display rejected what we sent" from "the display went away".
   // 1006 is the important one: the browser synthesises it when no close frame ever arrived, ie the
   // process died or the link dropped. Every other code here is one the display chose.
   let closeCodes = {
@@ -115,12 +112,9 @@ define(function (require) {
       return true
     }
 
-    // The one number that answers "is this px chain too big to ship?", which nothing used to say
-    // until the chain was already over the limit. Measured on the *encoded* message, because that
-    // is what MAX_MESSAGE caps: JSON escaping every newline in the shader costs a byte apiece, so
-    // d.source.length reads low. Recorded unconditionally for `hub75 status`; only spoken once a
-    // second, since a chain that regenerates its source every event would otherwise flood the
-    // console at frame rate (draw/visualsynth.js warns about that case in its own words).
+    // Is this px chain too big to ship? Measured on the encoded message, since that is what
+    // MAX_MESSAGE caps and JSON escaping makes d.source.length read low. Recorded always for
+    // `hub75 status`, logged at most once a second in case a chain regenerates its source every event.
     let reportProgSize = (progId, msg) => {
       let bytes = JSON.stringify(msg).length
       s.progSize = {id: progId, bytes: bytes, uniforms: msg.uniforms.length}
@@ -139,15 +133,11 @@ define(function (require) {
       return true
     }
 
-    // "show nothing" is a state the display has to be told about, and it has to be told about it
-    // even when this end has forgotten what it bound. s.bound is host *belief*: onclose clears it
-    // (the display may have restarted) while a display that did not restart is still showing the
-    // layer, and sendJson drops a message silently when the socket is down. Conditioning the
-    // `unlayer` on either of those left a wall lit with a picture whose player was long gone, and
-    // nothing could ever reach it again - `layers[name]` was deleted, so hub75.js's orphan poll was
-    // finished, and reconcile() returns early on a null `desired`, so it never ran either. So the
-    // intent is held until it has actually gone out over an open socket, and retried from `welcome`
-    // and from pump(). It is idempotent: a display with nothing bound ignores it (PROTOCOL.md 7.2).
+    // The display must be told to show nothing even when this end has forgotten what it bound:
+    // s.bound is only host belief (onclose clears it, and sendJson silently drops messages while
+    // the socket is down), and nothing else would ever clear a stale layer. So the blank is held
+    // until actually sent over an open socket, retried from welcome and pump(). Idempotent
+    // (PROTOCOL.md 7.2).
     let flushBlank = () => {
       if (!s.wantBlank) { return }
       if (!sendJson({type: 'unlayer', id: 0})) { return } // socket down; welcome and pump retry
@@ -244,17 +234,11 @@ define(function (require) {
         case 'assetok': { s.sentIds.add(msg.id); break }
         case 'progok': {
           s.sentIds.add(msg.id)
-          // Only now is it safe to SEND the layer, let alone to say we are showing it. The display
-          // compiles on receipt and blocks its whole loop doing it - seconds for a big chain - so a
-          // layer sent alongside the program rebinds the display in the middle of a window in which
-          // this end is still streaming the *previous* program's uniforms. The moment the two counts
-          // differ that is a session closing protocol error (§12.1), and before it closes the display
-          // has already drawn the new program with the old program's values - the white or
-          // wrong-coloured frame the wall then holds until the reconnect rebinds. Holding the layer
-          // back keeps the old program bound and its uniforms valid for the whole compile, so the
-          // wall stays live on the old visual right up to the swap. There is no layer ack in v1, but
-          // ordered delivery means a layer that follows an acknowledged program is bound by the time
-          // the next frame lands.
+          // Only now is it safe to send the layer. The display blocks while compiling (seconds for a
+          // big chain), so a layer sent with the program would rebind it while this end still
+          // streams the previous program's uniforms: a count mismatch, which is a protocol error
+          // (§12.1) and a wrong frame on the wall. Holding the layer keeps the old visual live until
+          // the swap; ordered delivery means it is bound before the next frame lands.
           if (s.pendingBound !== null && s.pendingBound.progId === msg.id) {
             s.pendingBound.needsAck = false
             pumpUploads() // sends the layer now, or on the frame the asset queue finally drains
@@ -273,13 +257,10 @@ define(function (require) {
       let where = msg.id ? ' ' + msg.id.slice(0, 8) : ''
       if (msg.kind === 'compile' || msg.kind === 'link') {
         s.failedProgs.add(msg.id)
-        // The display refuses to bind a layer naming a program that failed to compile, and this
-        // message is the only way it says so - protocol v1 has no layer acknowledgement, so the
-        // host binds optimistically the moment it sends `layer`. Keeping that bind means the very
-        // next frame goes out with a layer the display does not have, which is a session-closing
-        // protocol error (§12.1) - so a shader the display merely *rejected* became a
-        // disconnect, closing the socket on top of the compile log that explains it. Drop the bind
-        // instead: frames then carry no layer, which is legal, and the log below stays readable.
+        // This is the display's only rejection of a layer (v1 has no layer ack, so the host binds
+        // optimistically). Keeping the bind would make the next frame name a layer the display does
+        // not have, a session-closing protocol error (§12.1). Dropping it is legal and keeps the
+        // compile log readable.
         if (s.bound !== null && s.bound.progId === msg.id) { s.bound = null }
         if (s.pendingBound !== null && s.pendingBound.progId === msg.id) { s.pendingBound = null }
         if (s.afterUploads !== null && s.afterUploads.prog === msg.id) { s.afterUploads = null }

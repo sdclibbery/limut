@@ -10,18 +10,15 @@ define(function(require) {
   //   cond ?? a ?: b   ->  mix(b, a, cond)         a where cond is true, b where it is false
   //   cond ?? a        ->  mix(input, a, cond)     the false side is whatever flows down the chain
   //
-  // A shader has no branches, so both sides are always evaluated — unlike the scalar operators,
-  // which short circuit. The condition is tested per component with notEqual against zero, so it
-  // matches limut's scalar truthiness (any non zero value is true, negative included) and a
-  // comparison, which already gives 1.0/0.0 per channel, passes straight through. That also means
-  // the choice is made per channel: `#f00 ?? a ?: b` takes a for red and b for the rest.
+  // Both sides are always evaluated, unlike the scalar operators. The condition is per component
+  // (notEqual against zero), matching limut's truthiness, so #f00 ?? a ?: b takes a for red and b
+  // for the rest.
   //
-  // Else-if chains work because parsing is left associative: `c1??a ?: c2??b ?: c` arrives as
-  // `((c1??a) ?: (c2??b)) ?: c`, so a branch carries a list of clauses rather than a single pair,
-  // and ?: concatenates when its right hand side is itself a branch with no else of its own.
+  // Else-if chains: parsing is left associative, so c1??a ?: c2??b ?: c arrives as
+  // ((c1??a) ?: (c2??b)) ?: c; a branch carries a list of clauses, and ?: concatenates when its
+  // right hand side is a branch with no else.
   //
-  // Operands carry their raw unevalled AST alongside the evalled value, so a non-node operand
-  // becomes a uniform re-evalled every frame rather than a constant frozen at event time.
+  // Operands carry their raw AST, so a non-node operand becomes a per-frame uniform.
 
   let isShaderBranch = (v) => isShaderNode(v) && v._shaderBranch !== undefined
   // A branch that has not been given its false side yet, ie one that ?: can still extend
