@@ -41,8 +41,17 @@ define(function (require) {
     priming.getTracks().forEach(t => t.stop())
     if (firstTime) {
       firstTime = false
-      videoDevices.forEach((device,idx) => { consoleOut(`: Found Webcam: ${idx}: ${device.label}`) })
+      let dflt = defaultDeviceIdx(videoDevices)
+      videoDevices.forEach((device,idx) => { consoleOut(`: Found Webcam: ${idx}: ${device.label}${idx === dflt ? ' (default)' : ''}`) })
     }
+  }
+
+  // With no device asked for, skip virtual cameras: the browser's enumeration order is not ours to
+  // rely on, and an OBS Virtual Camera listed first would otherwise win, feeding limut its own output.
+  // An explicit index still reaches any device.
+  let defaultDeviceIdx = (devices) => {
+    let idx = devices.findIndex(d => d.label && !/virtual|obs/i.test(d.label))
+    return idx === -1 ? 0 : idx
   }
 
   let defaultWidth = 640
@@ -153,12 +162,13 @@ define(function (require) {
 
   let webcamTextures = {}
   let resolveDeviceIdx = (device) => {
-    let deviceIdx = device || 0
+    if (device === undefined || device === '') { return defaultDeviceIdx(videoDevices) }
+    let deviceIdx = device
     if (typeof deviceIdx === 'string') {
       let deviceLabel = deviceIdx
       deviceIdx = videoDevices.findIndex(d => d.label.toLowerCase().includes(deviceLabel.toLowerCase()))
       if (deviceIdx === -1) {
-        deviceIdx = 0
+        deviceIdx = defaultDeviceIdx(videoDevices)
         if (webcamTextures[deviceIdx] === undefined) {
           consoleOut(`🟠 Unable to find webcam with label containing ${deviceLabel}`)
         }
@@ -189,7 +199,7 @@ define(function (require) {
       getDevices()
       return
     }
-    let deviceIdx = resolveDeviceIdx(evalParamEvent(params.device, params) || 0)
+    let deviceIdx = resolveDeviceIdx(evalParamEvent(params.device, params))
     if (devices[deviceIdx] === undefined) {
       devices[deviceIdx] = {}
       let device = devices[deviceIdx]
@@ -219,5 +229,21 @@ define(function (require) {
     return devices[deviceIdx].shader
   }
   renderer.acquireTexture = acquireTexture
+
+  // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+    let assert = (expected, actual) => {
+      if (expected !== actual) { console.trace(`Assertion failed.\n>>Expected:\n  ${expected}\n>>Actual:\n  ${actual}`) }
+    }
+    let devs = (...labels) => labels.map(label => ({label}))
+    assert(1, defaultDeviceIdx(devs('OBS Virtual Camera', 'FaceTime HD Camera')))
+    assert(0, defaultDeviceIdx(devs('FaceTime HD Camera', 'OBS Virtual Camera')))
+    assert(2, defaultDeviceIdx(devs('OBS Virtual Camera', 'Some Virtual Cam', 'USB 5MP Camera')))
+    assert(0, defaultDeviceIdx(devs('OBS Virtual Camera')))
+    assert(0, defaultDeviceIdx(devs('', '')))
+    assert(0, defaultDeviceIdx([]))
+    console.log('Webcam tests complete')
+  }
+
   return renderer
 })
