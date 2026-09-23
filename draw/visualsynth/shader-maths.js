@@ -125,6 +125,8 @@ define(function(require) {
     normalize: normalize,
     pxhash: hash(pcg4dHelper),
     pxhashf: hash(sinHelper),
+    // Screen space derivative: how much the value changes from one pixel to the next, ie its edges
+    pxfwidth: unary('fwidth'),
   }
 
   let hasShaderNode = (args) => {
@@ -207,6 +209,7 @@ define(function(require) {
   assert('pow(v0, u_vs0)', emitted('pow', {value:node, by:3}))
   assert('pow(v0, u_vs0)', emitted('pow', {value:node, value1:3}))
   assert('pow(v0, vec4(2.0))', emitted('pow', {value:node})) // Squaring by default
+  assert('fwidth(v0)', emitted('pxfwidth', {value:node}))
 
   // The lo/hi pair: literals when neither was given, so the plain fade curve costs no uniforms
   assert('clamp(v0, vec4(0.0), vec4(1.0))', emitted('clamp', {value:node}))

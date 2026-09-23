@@ -138,7 +138,7 @@ define(function(require) {
     let accBox = fold !== undefined && fold.accNode !== undefined ? fold.accNode._loopAccBox : undefined
     let untilBox = until !== undefined && until.index !== undefined ? until.index._loopIndexBox : undefined
     return makeShaderNode((input, ctx) => {
-      let acc = ctx.addStatement(input) // The loop carried value: declared outside, assigned inside
+      let acc = ctx.addStatement(input, true) // The loop carried value: declared outside, assigned inside, so fresh
       let savedBody = bodyBox !== undefined ? bodyBox.expr : undefined
       let savedTerm = termBox !== undefined ? termBox.expr : undefined
       let savedAcc = accBox !== undefined ? accBox.name : undefined
@@ -150,7 +150,7 @@ define(function(require) {
           carry.forEach(c => {
             let init = ctx.captureBlock(() => c.init.build(acc, ctx))
             init.statements.forEach(s => ctx.addRaw(s))
-            let v = ctx.addStatement(init.out)
+            let v = ctx.addStatement(init.out, true) // Assigned by a let{} in the body, so fresh
             ctx.lets[c.name] = v
             ctx.carried[c.name] = v
           })
@@ -159,7 +159,7 @@ define(function(require) {
           if (termBox !== undefined) { termBox.expr = '0' } // The seed term is the value before the loop
           let seed = ctx.captureBlock(() => termAt(acc))
           seed.statements.forEach(s => ctx.addRaw(s))
-          total = ctx.addStatement(seed.out)
+          total = ctx.addStatement(seed.out, true) // Folded into each iteration, so fresh
           if (accBox !== undefined) { accBox.name = total }
         }
         if (count >= 1) {

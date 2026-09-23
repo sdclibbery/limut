@@ -1,6 +1,7 @@
 'use strict'
 define(function(require) {
-  let {getCallTree} = require('player/callstack')
+  let {getCallTree,getCallTreeString} = require('player/callstack')
+  let {toVec4} = require('draw/visualsynth/shader-node')
 
   // Builds the fragment shader source for a visual synth px chain. All generated names come
   // from per-context counters assigned during a single left-to-right build walk, so the same
@@ -33,12 +34,61 @@ define(function(require) {
     // is a scope of its own and main's locals are not visible in it. See needsGlobalSeed below.
     ctx.rootInput = 'v0'
     let nextVar = 1
-    ctx.addStatement = (expr) => {
+    // Common subexpression elimination: a statement whose expression is exactly one already emitted
+    // in scope reuses that variable instead of declaring another. Every generated expression is pure,
+    // so the same text means the same value - unless something it reads has been assigned since,
+    // which addRaw below takes care of. This is what lets a DSL function reach one value by several
+    // routes (a lambda arg read in each channel of a set{}, which resolves to a fresh node object
+    // each time, so ctx.built cannot see it is the same) and still compute it once. It only works
+    // because constants are literals (addUniform below): two copies of a subtree would otherwise
+    // each register uniform slots of their own, and never read the same.
+    //
+    // fresh is for a variable that is going to be assigned to (a loop's carried value, a fold's
+    // total, a carry: value): it must be a variable of its own, never one shared with an expression
+    // that happens to read the same, and nothing else may reuse it later.
+    ctx.exprs = new Map() // canonical expression text -> the variable holding it
+    // A copy (vec4 v1 = v0;, which a pass-through emits) holds the same value as what it copied, so
+    // expressions are looked up with each copy replaced by the variable it is a copy of: otherwise
+    // everything computed from v1 would miss everything computed from v0. The copy itself is still
+    // emitted, which keeps the source of a chain with no repeats in it exactly what it always was.
+    ctx.aliases = new Map() // copy -> the variable it is a copy of
+    let identifier = /\b[A-Za-z_]\w*\b/g
+    let canonical = (expr) => expr.replace(identifier, (id) => ctx.aliases.has(id) ? ctx.aliases.get(id) : id)
+    ctx.addStatement = (expr, fresh) => {
+      let key = canonical(expr)
+      if (!fresh) {
+        let existing = ctx.exprs.get(key)
+        if (existing !== undefined) { return existing }
+      }
       let name = 'v' + (nextVar++)
       ctx.statements.push(`vec4 ${name} = ${expr};`)
+      if (!fresh) {
+        if (/^[A-Za-z_]\w*$/.test(key)) { ctx.aliases.set(name, key) }
+        else { ctx.exprs.set(key, name) }
+      }
       return name
     }
-    ctx.addRaw = (stmt) => { ctx.statements.push(stmt) }
+    // A raw statement may assign to a variable (a loop write-back, a fold, a carried let), after
+    // which any remembered expression reading it no longer holds what the same text would now
+    // compute, and a copy of it or by it no longer holds the same value, so those are forgotten.
+    // Declarations match too (vec2 uv0 = ...), harmlessly: nothing remembered can read a variable
+    // that is only now being declared.
+    let assigned = /\b([A-Za-z_]\w*)(?:\.\w+)?\s*[-+*\/]?=(?!=)/g
+    ctx.addRaw = (stmt) => {
+      ctx.statements.push(stmt)
+      let m
+      assigned.lastIndex = 0
+      while ((m = assigned.exec(stmt)) !== null) {
+        let target = m[1]
+        let reads = new RegExp('\\b' + target + '\\b')
+        for (let [key, name] of ctx.exprs) {
+          if (name === target || reads.test(key)) { ctx.exprs.delete(key) }
+        }
+        for (let [copy, of] of ctx.aliases) {
+          if (copy === target || of === target) { ctx.aliases.delete(copy) }
+        }
+      }
+    }
     // A real GLSL for loop (loop{} in a px chain, see shader-repeat.js) needs its body's statements
     // wrapped in a block rather than landing in main() alongside everything else. Statements emitted
     // while fn runs are captured and handed back for the caller to indent into the block.
@@ -60,7 +110,15 @@ define(function(require) {
       let outerBuilt = ctx.built
       let outerLets = ctx.lets
       let outerCarried = ctx.carried
+      let outerExprs = ctx.exprs
+      let outerAliases = ctx.aliases
       ctx.statements = []
+      // Remembered expressions never carry into a block, even one that can see the enclosing scope.
+      // A loop body runs again after its own write-backs, so an outer variable computed from the
+      // carried value's *first* value is not what the same text means on the second iteration.
+      // The same goes for a copy: it may be of a value the body goes on to assign.
+      ctx.exprs = new Map()
+      ctx.aliases = new Map()
       ctx.built = isolate ? new Map() : new Map(Array.from(outerBuilt, ([node, byInput]) => [node, new Map(byInput)]))
       ctx.lets = isolate ? {} : Object.assign({}, outerLets)
       ctx.carried = isolate ? {} : Object.assign({}, outerCarried)
@@ -73,6 +131,8 @@ define(function(require) {
         ctx.built = outerBuilt
         ctx.lets = outerLets
         ctx.carried = outerCarried
+        ctx.exprs = outerExprs
+        ctx.aliases = outerAliases
       }
       return {out: out, statements: statements}
     }
@@ -109,12 +169,15 @@ define(function(require) {
     // into every octave's every face's every hash, and 28 more were four lattice offset literals,
     // re-registered once per instantiation.
     //
-    // Deliberately keyed on where a value comes from and NOT on what it evaluates to, and
-    // deliberately not folded into the source as a GLSL literal. Either of those would make the
-    // grouping depend on the numbers, so nudging mul{2} to mul{3} while playing would move the
-    // generated source and force a shader compile on the beat - the exact cost the source-stability
-    // check at the top of draw/visualsynth.js exists to catch. Provenance keying leaves the source
-    // alone under a numeric edit.
+    // Keyed on where a value comes from, not on what it evaluates to. A value that is a constant -
+    // a number or a map of them, written directly or reached through bindings - does not get a slot
+    // at all, but is folded into the source as a GLSL literal (glslLiteral below). That was a
+    // decision taken in September 2026, reversing an earlier one: it means nudging mul{2} to mul{3}
+    // while playing now moves the generated source and compiles a new shader (on the Pi, for a
+    // display bound chain), in exchange for chains written in the DSL costing what the same GLSL
+    // would. Literal maths is otherwise one uniform per number, re-evaluated every frame, and a
+    // library function such as a VHS effect ran to hundreds of them. It is also what makes common
+    // subexpressions visible (see addStatement above).
     //
     // Two things are dedupable:
     //  - an object literal (a parsed map whose leaves are all numbers or strings). It cannot read
@@ -139,15 +202,55 @@ define(function(require) {
     // are object identities as often as they are values, and `undefined` is a legitimate context
     // (a binding resolved at the top level, outside any call).
     let uniformNames = new Map()
+    // A constant as the GLSL literal toVec4 would have made of it each frame, or undefined for
+    // anything that could change: only a number, or a map of nothing but numbers and strings, can't.
+    // A float literal needs a point or an exponent in GLSL; a non-finite value has no literal at all
+    // and stays a uniform. The literal rounds to the same float32 the uniform upload did.
+    let glslFloat = (n) => {
+      let s = String(n)
+      return /[.eE]/.test(s) ? s : s + '.0'
+    }
+    // toVec4 hands back float32s (a Float32Array), whose exact decimal expansion is long and
+    // meaningless (0.2 comes back as 0.20000000298023224): print the shortest decimal that rounds
+    // to the same float32 instead, which is exactly what the uniform upload would have sent
+    let glslFloat32 = (n) => {
+      for (let p = 1; p <= 9; p++) {
+        let s = n.toPrecision(p)
+        if (Math.fround(parseFloat(s)) === n) { return glslFloat(parseFloat(s)) }
+      }
+      return glslFloat(n)
+    }
+    let glslLiteral = (ast) => {
+      if (typeof ast === 'number') {
+        return isFinite(ast) ? `vec4(${glslFloat(ast)})` : undefined
+      }
+      if (!isObjectLiteral(ast)) { return undefined }
+      let v = Array.from(toVec4(ast))
+      if (!v.every(isFinite)) { return undefined }
+      if (v.every(x => x === v[0])) { return `vec4(${glslFloat32(v[0])})` }
+      return `vec4(${v.map(glslFloat32).join(', ')})`
+    }
     let uniformKey = (ast) => {
       if (isObjectLiteral(ast)) { return {ast: ast, context: null} }
-      if (typeof ast === 'function' && ast._bindingSource !== undefined) { return ast._bindingSource() }
+      if (typeof ast === 'function' && ast._bindingSource !== undefined) {
+        let source = ast._bindingSource()
+        if (source !== undefined) { return source }
+      }
+      // Any other expression reached again in the same call tree: the per frame eval memoises on
+      // exactly that pair (the AST's identity and getCallTreeString, player/eval-param.js), so the
+      // two already evaluate to one value every frame, and giving them one slot changes nothing but
+      // the source. It matters for common subexpressions: a subtree built twice (a lambda arg read
+      // in two channels of a set{}) only reads the same text if its uniforms have the same names.
+      if (typeof ast === 'function') { return {ast: ast, context: 'tree:' + getCallTreeString()} }
       return undefined
     }
     ctx.addUniform = (ast) => {
       // Called from inside a node's build, so the call tree is already the one the AST was written
       // in - which is exactly the scope the binding has to be resolved in
       let key = uniformKey(ast)
+      let literal = glslLiteral(ast)
+      if (literal === undefined && key !== undefined) { literal = glslLiteral(key.ast) }
+      if (literal !== undefined) { return literal }
       let byContext
       if (key !== undefined) {
         byContext = uniformNames.get(key.ast)
@@ -303,6 +406,50 @@ void main() {
   assert(1, reused.uniforms.length)
   assert(true, reused.source.includes('vec4 v2 = v1 + v1;'))
 
+  // Constants are GLSL literals, not uniforms: a number, or a map of numbers
+  let litCtx = makeContext()
+  assert('vec4(2.0)', litCtx.addUniform(2))
+  assert('vec4(0.5)', litCtx.addUniform(1/2))
+  assert('vec4(-0.1)', litCtx.addUniform(-0.1))
+  assert('vec4(1e-7)', litCtx.addUniform(1e-7))
+  assert('vec4(1.0, 0.0, 0.0, 1.0)', litCtx.addUniform({r:1,g:0,b:0,a:1}))
+  assert('vec4(0.5)', litCtx.addUniform({x:0.5,y:0.5,z:0.5,w:0.5}))
+  assert('vec4(0.2, 0.2, 0.2, 0.0)', litCtx.addUniform({r:0.2,g:0.2,b:0.2,a:0})) // Not 0.20000000298023224: the float32 it rounds to, shortest
+  assert(0, litCtx.uniforms.length)
+  assert('u_vs0', litCtx.addUniform(Infinity)) // No literal for it
+  assert('u_vs1', litCtx.addUniform(ast)) // Anything that could change stays a uniform
+
+  // Common subexpressions: the same expression in scope is the same variable
+  let cseCtx = makeContext()
+  assert('v1', cseCtx.addStatement('sin(v0)'))
+  assert('v1', cseCtx.addStatement('sin(v0)'))
+  assert('v2', cseCtx.addStatement('sin(v0)', true)) // Fresh: a variable of its own, to be assigned
+  assert('v1', cseCtx.addStatement('sin(v0)')) // and never reused
+  assert('v3', cseCtx.addStatement('cos(v2)'))
+  cseCtx.addRaw('v2 = v1;') // Assigning v2 forgets what was computed from it
+  assert('v4', cseCtx.addStatement('cos(v2)'))
+  assert('v1', cseCtx.addStatement('sin(v0)')) // but nothing else
+  cseCtx.addRaw('v0.x += 1.0;') // A swizzled or compound assignment counts too
+  assert('v5', cseCtx.addStatement('sin(v0)'))
+  // A copy is the value it copied, so an expression of the copy is the same expression
+  let actx = makeContext()
+  assert('v1', actx.addStatement('v0')) // The copy is still emitted
+  assert('v2', actx.addStatement('sin(v0)'))
+  assert('v2', actx.addStatement('sin(v1)'))
+  actx.addRaw('v1 = v2;') // until either is assigned
+  assert('v3', actx.addStatement('sin(v1)'))
+  // A block remembers nothing from outside it (a loop body runs again after its write-backs), and
+  // nothing from inside it survives it
+  let cseBlock = cseCtx.captureBlock(() => cseCtx.addStatement('sin(v0)'))
+  assert('v6', cseBlock.out)
+  assert('v5', cseCtx.addStatement('sin(v0)'))
+  assert(true, cseCtx.statements.every(st => !st.includes('v6')))
+  // Two copies of a subtree with constants in them now read the same, and collapse
+  let dupe = () => binaryShaderNode((a,b) => `${a} * ${b}`, undefined, makeShaderNode((i, c) => c.addStatement(`sin(${i})`)), 3, 3)
+  let dupes = buildSource(binaryShaderNode((a,b) => `${a} + ${b}`, undefined, dupe(), undefined, dupe()))
+  assert(true, dupes.source.includes('vec4 v3 = v2 + v2;'))
+  assert(0, dupes.uniforms.length)
+
   // Undefined texture flags notReady
   let notReady = buildSource(texNode(undefined))
   assert(true, notReady.notReady)
@@ -416,11 +563,10 @@ void main() {
   let arithBuilt = buildSource(arith)
   assert(true, arithBuilt.source.includes('vec4 v1 = v0 * u_vs0;'))
   assert(true, arithBuilt.source.includes('vec4 v2 = v1 / u_vs1;'))
-  assert(true, arithBuilt.source.includes('vec4 v3 = v2 + u_vs2;'))
+  assert(true, arithBuilt.source.includes('vec4 v3 = v2 + vec4(0.0, 0.5, 0.0, 1.0);')) // A constant colour is a literal
   assert(true, arithBuilt.source.includes('fragColor = v3;'))
-  assert(3, arithBuilt.uniforms.length)
+  assert(2, arithBuilt.uniforms.length)
   assert(true, arithBuilt.uniforms[1].ast === twoAst) // raw ASTs, re-evaluated per frame
-  assert(true, arithBuilt.uniforms[2].ast === colAst)
   assert(true, arithBuilt.source === buildSource(arith).source) // still byte-identical: cache key
 
   // Maths functions, shaped like px=id>>floor{1/40}>>tex{...}
@@ -531,7 +677,7 @@ void main() {
   // in shader-repeat.js; it is written out here rather than required, to keep this file's tests
   // free of a circular dependency on it (its own tests build on makeContext).
   let loopNode = (body, count) => makeShaderNode((input, ctx) => {
-    let acc = ctx.addStatement(input)
+    let acc = ctx.addStatement(input, true)
     let name = ctx.loopVar()
     let inner = ctx.captureBlock(() => body.build(acc, ctx))
     ctx.addRaw(`for (int ${name} = 0; ${name} < ${count}; ${name}++) {`)
@@ -549,21 +695,19 @@ void main() {
 
   // Uniform sharing. Two slots may hold one name when the expression feeding them is the same one
   // in the same scope, because it then holds the same value on every frame. See addUniform: keyed
-  // on where a value comes from, never on what it evaluates to.
+  // on where a value comes from, never on what it evaluates to. A constant never takes a slot at
+  // all: it is a literal (tested above).
   let dctx = makeContext()
   let offset = {x:1, w:0}
-  assert('u_vs0', dctx.addUniform(offset))
-  assert('u_vs0', dctx.addUniform(offset)) // The one parsed literal reached twice costs one slot
-  assert('u_vs1', dctx.addUniform({x:1, w:0})) // A distinct literal of equal value does not: sharing is by identity
-  assert('u_vs2', dctx.addUniform({x:1, y:{z:2}})) // Nested literals count as literal too
-  assert(3, dctx.uniforms.length)
-  assert('u_vs3', dctx.addUniform(2)) // A bare number written straight into a uniform is never shared,
-  assert('u_vs4', dctx.addUniform(2)) // so mul{2}>>add{2} cannot merge and then split again on an edit
+  assert('vec4(1.0, 0.0, 0.0, 0.0)', dctx.addUniform(offset))
+  assert('vec4(1.0, 0.0, 0.0, 0.0)', dctx.addUniform({x:1, w:0})) // Equal literals are equal source
+  assert('vec4(2.0)', dctx.addUniform(2))
+  assert(0, dctx.uniforms.length)
   let notLiteral = {x: () => 1} // An expression inside the map can read the call context
-  assert('u_vs5', dctx.addUniform(notLiteral))
-  assert('u_vs6', dctx.addUniform(notLiteral))
-  assert(7, dctx.uniforms.length)
-  assert(true, dctx.uniforms[0].ast === offset) // The raw AST is still what gets registered
+  assert('u_vs0', dctx.addUniform(notLiteral))
+  assert('u_vs1', dctx.addUniform(notLiteral))
+  assert(2, dctx.uniforms.length)
+  assert(true, dctx.uniforms[0].ast === notLiteral) // The raw AST is still what gets registered
   assert(true, dctx.uniforms.every((u,i) => u.name === 'u_vs'+i)) // Names still come from the counter
 
   // A lookup that can name its binding (expression/parse-var.js) is keyed on what it resolves to
@@ -578,28 +722,28 @@ void main() {
   assert(3, bctx.uniforms.length)
   let unresolved = () => 0
   unresolved._bindingSource = () => undefined
-  assert('u_vs3', bctx.addUniform(unresolved)) // Nothing to name: a slot of its own, as before
-  assert('u_vs4', bctx.addUniform(unresolved))
+  assert('u_vs3', bctx.addUniform(unresolved)) // Nothing to name: keyed on the expression and the call tree instead
+  assert('u_vs3', bctx.addUniform(unresolved)) // which is the pair the per frame eval memoises on, so one slot
+  assert('u_vs4', bctx.addUniform(() => 0)) // Another expression is another slot
 
-  // A binding that resolves to a bare number takes part by value - a literal is constant. This is
-  // the case that matters: fbm3's `seed` defaults to 0, and all 32 of its references resolve to
-  // that one default in that one frame.
+  // A binding that resolves to a constant is that constant: fbm3's `seed` defaults to 0, and all 32
+  // of its references are the literal
   let cctx = makeContext()
-  assert('u_vs0', cctx.addUniform(lookupTo(0, undefined)))
-  assert('u_vs0', cctx.addUniform(lookupTo(0, undefined)))
-  assert('u_vs1', cctx.addUniform(lookupTo(1, undefined)))
-  assert(2, cctx.uniforms.length)
+  assert('vec4(0.0)', cctx.addUniform(lookupTo(0, undefined)))
+  assert('vec4(1.0)', cctx.addUniform(lookupTo(1, undefined)))
+  assert('vec4(1.0, 0.0, 0.0, 1.0)', cctx.addUniform(lookupTo({r:1,g:0,b:0,a:1}, undefined)))
+  assert(0, cctx.uniforms.length)
 
   // Sharing survives a captured block, unlike the emit-once map above it: uniforms are declared at
   // file scope, so a slot registered inside a loop body is still in scope after the closing brace
   let lctx = makeContext()
-  let blockOffset = {x:1}
-  lctx.captureBlock(() => lctx.addUniform(blockOffset))
-  assert('u_vs0', lctx.addUniform(blockOffset))
+  let blockBinding = lookupTo(binding, frame)
+  lctx.captureBlock(() => lctx.addUniform(blockBinding))
+  assert('u_vs0', lctx.addUniform(blockBinding))
   assert(1, lctx.uniforms.length)
 
   // Sharing is per context, like every other generated name
-  assert('u_vs0', makeContext().addUniform(offset))
+  assert('u_vs0', makeContext().addUniform(notLiteral))
 
   console.log('Visual synth codegen tests complete')
   }

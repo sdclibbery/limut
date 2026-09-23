@@ -1,8 +1,8 @@
-// This library includes smooth noise, 2d transforms and a kaleidoscope pattern for visualsynth px
-// chains, built entirely out of the shader nodes: pxhash for the randomness, floor/fract for the
-// lattice, smoothstep for the fade curve, mix for the interpolation, parallel/loop for the
-// repetition and pxfn for the one body that is wanted at several points at once. Nothing here is
-// implemented in javascript.
+// This library includes smooth noise, 2d transforms, a kaleidoscope pattern and a VHS effect for
+// visualsynth px chains, built entirely out of the shader nodes: pxhash for the randomness,
+// floor/fract for the lattice, smoothstep for the fade curve, mix for the interpolation,
+// parallel/loop for the repetition and pxfn for the one body that is wanted at several points at
+// once. Nothing here is implemented in javascript.
 //
 // pxhash gives an independent random value per pixel, ie white noise. Smooth noise instead hashes
 // the corners of a lattice cell and interpolates between them, so neighbouring pixels get
@@ -337,3 +337,64 @@ set kal2h = {in, t, shape, n, kl} ->
   in/4 >> loop{{i} -> kal2step{id, i+1/2, t, shape}, n,
     map:{v,i} -> sgn{i}*(v>>kl)*kal2weight{shape, i-1/2}}
 set kal2 = {shape:0, in:id, t:time/2, glow:1, n:8} -> kal2h{in, t, shape, n, kallinefn{glow}}
+
+//// VHS
+// The vhs standard visual param (draw/shadercommon.js), for px chains, which get no standard
+// processing. It is two stages either side of the source: vhsuv warps the coordinate going in (tape
+// crease, tape wobble, switching noise along the bottom) and vhsrgb colours what comes out (edge
+// smear, blanking where the warp ran off the tape, row flicker, a yiq colour shift, scanlines,
+// chroma wobble). vhs{src} is both around a source chain, which it feeds the warped coordinate.
+// amt mixes the effect in, as the param's value does, and t is the time it animates by.
+//   px=vhs{tex{webcam{}}}
+//   px=vhs{tex{webcam{}}, 1/2, t:time*2}
+//   px=vhsuv>>tex{webcam{}}>>vhsrgb
+// vhsrgb has only the colour, so it warps the chain's original coordinate (uv) again to find the
+// crease and the tape edge; vhs{} warps once and hands the same warp to both stages.
+//
+// Three things about how it is written. t goes in as set{t}, a node rather than a number, so the
+// maths on it is done in the shader: a number would make every t*10 and t/2 a param of its own.
+// The warp is named wp, not w, since the crease phase is read off its w channel. And vhs{} passes
+// id to vhsuvh rather than piping it: a call with a node among its args is not piped the chain seed.
+// The param's switching noise never reaches its colour stage (a shadowed local in the original),
+// so it does not here either.
+set vhsrand = {a, b} -> fract{sin{a*12.9898 + b*78.233}*43758.5453}
+set vhsrow = {c} -> c.y/2 + 1/2
+set vhscrease = {row, t} -> clamp{(sin{row*8 - t*3.14*0.6} - 0.92)*vhsrand{t/2, t/2}, 0, 0.01}*10
+// The warp in 0 to 1 coordinates: x and y, then the crease offset in z and crease phase in w
+set vhswarpi = {c, row, t, tcn, tc, r, sn} -> set{
+  x: c.x/2 + 1/2 - tcn + (vhsrand{row, t} - 1/2)*0.005 + (r - 1/2)*0.01
+    + sn*(vhsrand{(row + sn*0.3)*100, t*10} - 1/2)*0.2,
+  y: row + sn*0.3, z: tcn, w: tc}
+set vhswarph = {c, row, t, tc, r, sn} -> vhswarpi{c, row, t, max{r - 1/2, 0}*1.5*tc, tc, r, sn}
+set vhswarpr = {c, row, t} ->
+  vhswarph{c, row, t, vhscrease{row, t}, vhsrand{row*100, t*10}, 1 - smoothstep{row, 0, 0.04}}
+set vhswarp = {c, t} -> vhswarpr{c, vhsrow{c}, t}
+
+set vhsuvh = {in, wp, amt} -> in >> set{x: mix{id.x, wp.x*2 - 1, amt}, y: mix{id.y, wp.y*2 - 1, amt}}
+set vhsuv = {in:id, amt:1, t:time} -> vhsuvh{in, vhswarp{in, set{t}}, amt}
+
+set vhsinside = {wp} -> (wp.x - wp.z*1.5 >= -0.2)*(wp.x <= 1.2)
+set vhsflicker = {row, t} -> 1 + clamp{vhsrand{0, row + t*0.2}*0.6 - 0.25, 0, 0.1}
+set vhsgain = {in, k} -> in >> mul{r:k, g:k, b:k}
+set vhsyiq = {in} -> in >> set{
+  x: id.x*0.299 + id.y*0.587 + id.z*0.114,
+  y: id.x*0.596 - id.y*0.274 - id.z*0.322,
+  z: id.x*0.211 - id.y*0.523 + id.z*0.312}
+// Scanlines on luma, 120 across the height; chroma wobble on i and q
+set vhsyiqfx = {in, row, t} -> in >> set{
+  x: (id.x*0.9 + 0.1)*sin{row*6.28*120}*sin{row*6.28*120}*1.2,
+  y: id.y*1.1 - 0.1 + sin{row*3.21 - t*0.79}*0.03,
+  z: id.z*1.5 + sin{row*5.33 + t*0.83}*0.03}
+set vhsfromyiq = {in} -> in >> set{
+  x: id.x + id.y*0.956 + id.z*0.621,
+  y: id.x - id.y*0.272 - id.z*0.647,
+  z: id.x - id.y*1.106 + id.z*1.703}
+set vhsrgbh = {in, row, wp, amt, t} -> mix{clamp{in},
+  in >> mix{id, pxfwidth{id}, {r:0.2, g:0.2, b:0.2, a:0}}
+    >> vhsgain{(1 - wp.w)*vhsinside{wp}*vhsflicker{row, t}}
+    >> vhsyiq >> vhsyiqfx{row, t} >> vhsfromyiq,
+  amt}
+set vhsrgb = {in:id, amt:1, t:time} -> vhsrgbh{in, vhsrow{uv}, vhswarp{uv, set{t}}, amt, set{t}}
+
+set vhsh = {src, wp, amt, t} -> vhsuvh{id, wp, amt} >> src >> vhsrgbh{vhsrow{uv}, wp, amt, t}
+set vhs = {src, amt:1, t:time} -> vhsh{src, vhswarp{uv, set{t}}, amt, set{t}}

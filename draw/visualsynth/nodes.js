@@ -9,7 +9,6 @@ define(function(require) {
   let connectOp = require('expression/connectOp')
   let {evalParamFrame} = require('player/eval-param')
   let {functionShaderNode} = require('draw/visualsynth/shader-function')
-  let vhsHelpers = require('draw/visualsynth/shader-vhs')
   let consoleOut = require('console')
 
   let warned = {}
@@ -402,66 +401,6 @@ define(function(require) {
   }
   addNodeFunction('pal', pal)
 
-  // The vhs standard visual param for a px chain, which gets no standard processing: vhsuv warps
-  // the coordinate going in, vhsrgb colours what comes out, and vhs{src} is both around a source
-  // chain. The GLSL is in shader-vhs.js. amt (first positional, or named) mixes the effect in as
-  // the param's value does; t is the time it animates by, the beat by default, as the param's is.
-  //   px=vhsuv>>tex{webcam{}}>>vhsrgb
-  //   px=vhs{tex{webcam{}}, 1/2}
-  // vhsrgb has only the colour, so it warps the chain's original coordinate (uv) again to find
-  // the crease and the edge of the tape; vhs{} warps once and hands the same warp to both stages.
-  let beatTime = (e, b) => b
-  beatTime.interval = 'frame'
-  let vhsScalars = (ctx, amtAst, tAst) => {
-    vhsHelpers.warpHelpers.forEach(h => ctx.addFunction(h.name, h.source))
-    return {
-      amt: amtAst === undefined ? '1.0' : `(${ctx.addUniform(amtAst)}).x`,
-      t: `(${ctx.addUniform(tAst === undefined ? beatTime : tAst)}).x`,
-    }
-  }
-  let vhsWarp = (ctx, coord, t) => ctx.addStatement(`l_vhswarp((${coord}).xy, ${t})`)
-  let vhsUvStage = (ctx, input, w, amt) => {
-    ctx.addFunction(vhsHelpers.uvHelper.name, vhsHelpers.uvHelper.source)
-    return ctx.addStatement(`l_vhsuv(${input}, ${w}, ${amt})`)
-  }
-  let vhsRgbStage = (ctx, col, w, coord, amt, t) => {
-    ctx.addFunction(vhsHelpers.rgbHelper.name, vhsHelpers.rgbHelper.source)
-    return ctx.addStatement(`l_vhsrgb(${col}, ${w}, (${coord}).xy, ${amt}, ${t})`)
-  }
-  let vhsAmt = (args, positional) => args[positional] !== undefined ? args[positional] : args.amt
-  let vhsuv = (args, e, b, state, evalRecurse) => {
-    return makeShaderNode((input, ctx) => {
-      let {amt, t} = vhsScalars(ctx, vhsAmt(args, 'value'), args.t)
-      return vhsUvStage(ctx, input, vhsWarp(ctx, input, t), amt)
-    })
-  }
-  addNodeFunction('vhsuv', vhsuv)
-  let vhsrgb = (args, e, b, state, evalRecurse) => {
-    return makeShaderNode((input, ctx) => {
-      let {amt, t} = vhsScalars(ctx, vhsAmt(args, 'value'), args.t)
-      return vhsRgbStage(ctx, input, vhsWarp(ctx, ctx.rootInput, t), ctx.rootInput, amt, t)
-    })
-  }
-  addNodeFunction('vhsrgb', vhsrgb)
-  // The source is a px chain in its own right, resolved as a channels{} arg is, and fed the warped
-  // coordinate; one that is not visual at all is a flat colour, which is still worth the colouring
-  let vhs = (args, e, b, state, evalRecurse) => {
-    let ast = args !== undefined && args !== null ? args.value : undefined
-    if (ast === undefined) {
-      warnOnce(`🟠 vhs needs a source chain, eg vhs{tex{webcam{}}}`)
-      return implicitInputNode()
-    }
-    let src = paramChain(ast, e, b, evalRecurse)
-    return makeShaderNode((input, ctx) => {
-      let {amt, t} = vhsScalars(ctx, vhsAmt(args, 'value1'), args.t)
-      let w = vhsWarp(ctx, input, t)
-      let warped = vhsUvStage(ctx, input, w, amt)
-      let col = isShaderNode(src) ? src.build(warped, ctx) : ctx.addUniform(ast)
-      return vhsRgbStage(ctx, col, w, input, amt, t)
-    })
-  }
-  addNodeFunction('vhs', vhs)
-
   // Texture source for tex{}: webcam{'label'} or webcam{2}, with optional width/height/fps.
   // The mode params are evaluated rather than passed on as asts, both so they reach getUserMedia as
   // numbers and so that editing one on a live line reopens the camera in the new mode.
@@ -786,8 +725,9 @@ define(function(require) {
   assert(true, /vec4\(\(v0\)\.x, \(v\d+\)\.y, \(v0\)\.z, \(v0\)\.w\)/.test(src))
   assert(pxSource('channels{g:sin{id}}'), pxSource('channels{value1:sin{id}}')) // Same slot either way
 
-  src = pxSource('channels{1/2}') // Not visual: the raw expression becomes a uniform, so it still animates
-  assert(true, /vec4\(u_vs0\.x, \(v0\)\.y, \(v0\)\.z, \(v0\)\.w\)/.test(src)) // Read straight off the uniform
+  src = pxSource('channels{1/2}') // Not visual: a constant is a literal
+  assert(true, /vec4\(vec4\(0\.5\)\.x, \(v0\)\.y, \(v0\)\.z, \(v0\)\.w\)/.test(src))
+  assert(true, /vec4\(u_vs0\.x, \(v0\)\.y, \(v0\)\.z, \(v0\)\.w\)/.test(pxSource('channels{time}'))) // and anything else is a uniform, so it still animates
   assert(false, src.includes('sin(')) // Nothing else compiled in
 
   assert(pxSource('set{}'), pxSource('channels{}')) // No args at all: straight through, as set{} is
@@ -807,7 +747,8 @@ define(function(require) {
   let uniformCount = (source) => (source.match(/^uniform vec4 /gm) || []).length
   let userVars = require('vars').all()
   userVars['dup2'] = parseExpression('{q}->min{q.x+q.y, q.x-q.y}') // Names its arg four times
-  assert(4, uniformCount(pxSource('mul{1}>>mul{2}>>mul{3}>>mul{4}'))) // uniformCount itself
+  assert(4, uniformCount(pxSource('mul{time}>>mul{time*2}>>mul{time*3}>>mul{time*4}'))) // uniformCount itself
+  assert(0, uniformCount(pxSource('mul{1}>>mul{2}>>mul{3}>>mul{4}'))) // Constants are literals, not uniforms
   let bare = pxSource('dup2{id*2}')
   assert(uniformCount(bare), uniformCount(pxSource('set{v:dup2{id*2}}'))) // As a set param
   assert(uniformCount(bare), uniformCount(pxSource('mul{dup2{id*2}}'))) // and as a mul param
@@ -833,26 +774,27 @@ define(function(require) {
   // frame, and 16 bytes a frame on the wire for a display bound chain.
   userVars['seed1'] = parseExpression('{in:id, s:0} -> pxhash{in, s}')
   userVars['seed4'] = parseExpression('{in:id, s:0} -> pxhash{in, s} + pxhash{in, s} + pxhash{in, s} + pxhash{in, s}')
-  assert(1, uniformCount(pxSource('seed1')))
-  assert(uniformCount(pxSource('seed1')), uniformCount(pxSource('seed4'))) // Four references, one uniform
+  assert(0, uniformCount(pxSource('seed1'))) // A constant default is a literal, however deep it is threaded
+  assert(0, uniformCount(pxSource('seed4')))
   assert(pxSource('seed4'), pxSource('seed4')) // and still byte identical: the cache key
-  assert(1, uniformCount(pxSource('seed4{2}'))) // However the arg arrives
+  assert(0, uniformCount(pxSource('seed4{2}'))) // However the arg arrives
+  assert(1, uniformCount(pxSource('seed1{time}')))
   assert(1, uniformCount(pxSource('seed4{time}'))) // An animated one shares too: it is one expression
 
   // Through parallel, where the repeats are the thing that multiplied it. The index-dependent arg
-  // still gets a uniform per repeat, because each repeat really is a different value.
-  userVars['seedoct'] = parseExpression('{in:id, s:0} -> parallel{{i} -> pxhash{in*(2^i), s}, 4}')
+  // still gets a uniform per repeat: 2^i is an expression rather than a constant, so it is not folded.
+  userVars['seedoct'] = parseExpression('{in:id, s:time} -> parallel{{i} -> pxhash{in*(2^i), s}, 4}')
   assert(5, uniformCount(pxSource('seedoct'))) // One shared seed, plus 2^i once per octave
   assert(pxSource('seedoct'), pxSource('seedoct'))
-  userVars['seedoct8'] = parseExpression('{in:id, s:0} -> parallel{{i} -> pxhash{in*(2^i), s}, 8}')
+  userVars['seedoct8'] = parseExpression('{in:id, s:time} -> parallel{{i} -> pxhash{in*(2^i), s}, 8}')
   assert(9, uniformCount(pxSource('seedoct8'))) // Twice the octaves, still one seed
 
   // The same goes for a literal written once inside a function and reached once per call: it cannot
   // read the call context, so it means the same thing wherever it turns up. These are the lattice
   // offsets, 28 of them in the Fire chain for four distinct literals.
   userVars['off'] = parseExpression('{q:id} -> pxhash{q+{x:1,w:0}}')
-  assert(1, uniformCount(pxSource('off')))
-  assert(2, uniformCount(pxSource('off{id} + off{id*2}'))) // One shared offset, plus the bare 2
+  assert(0, uniformCount(pxSource('off'))) // Now a literal outright
+  assert(0, uniformCount(pxSource('off{id} + off{id*2}')))
   delete userVars['seed1']
   delete userVars['seed4']
   delete userVars['seedoct']
@@ -865,7 +807,7 @@ define(function(require) {
   assert(true, pxSource('uv').includes('fragColor = v0;')) // And neither emits anything at all
 
   src = pxSource('mul{2}>>mul{y:uv.v}') // The coordinates, not the multiplied value
-  assert(true, src.includes('vec4 v1 = v0 * u_vs0;'))
+  assert(true, src.includes('vec4 v1 = v0 * vec4(2.0);'))
   assert(true, src.includes('vec4 v2 = vec4((v0).y);')) // Read off the seed
   assert(false, src.includes('vec4((v1).y);')) // Not off what is coming down the chain
   assert(true, src.includes('vec4 v3 = vec4((v1).x, (v1).y * (v2).y, (v1).z, (v1).w);'))
@@ -895,16 +837,17 @@ define(function(require) {
   // the incoming value directly
   assert(true, pxSource('pxhash{id}').includes('vec4 v1 = vec4(l_pxhash(v0, vec4(0.0)).rgb, (v0).a);'))
   src = pxSource('pxhash{id*3}') // And it can hash an expression of the incoming value
-  assert(true, src.includes('vec4 v1 = v0 * u_vs0;') && src.includes('l_pxhash(v1, vec4(0.0))'))
+  assert(true, src.includes('vec4 v1 = v0 * vec4(3.0);') && src.includes('l_pxhash(v1, vec4(0.0))'))
 
   // Quantise the coordinates first for blocky noise: the floor comes before the hash. Compared
   // within main, since the helper's own declaration necessarily comes before all of it
   let body = (s) => s.slice(s.indexOf('void main()'))
   src = body(pxSource('floor{1/8}>>pxhash'))
-  assert(true, src.indexOf('floor(v1 / u_vs0)') < src.indexOf('l_pxhash('))
+  assert(true, src.indexOf('floor(v1 / vec4(0.125))') < src.indexOf('l_pxhash('))
 
-  // A seed becomes a uniform, so it animates; with none the shader gets a literal instead
-  assert(true, pxSource('pxhash{seed:2}').includes('l_pxhash(v1, u_vs0)'))
+  // An animated seed becomes a uniform; a constant one, or none, is a literal
+  assert(true, pxSource('pxhash{seed:time}').includes('l_pxhash(v1, u_vs0)'))
+  assert(true, pxSource('pxhash{seed:2}').includes('l_pxhash(v1, vec4(2.0))'))
   assert(pxSource('pxhash{seed:2}'), pxSource('id>>pxhash{2}')) // Named or second positional: same slot
   assert(true, pxSource('pxhash') !== pxSource('pxhash{seed:2}'))
 
@@ -950,38 +893,16 @@ define(function(require) {
   src = pxSource('pal{0,#408,red,1}')
   assert(true, src.includes('vec4 v1 = vec4(clamp((v0).x, 0.0, 1.0) * 3.0);'))
   assert(3, (src.match(/mix\(/g) || []).length) // One segment per gap between stops
-  assert(4, (src.match(/uniform vec4 u_vs\d+;/g) || []).length) // One uniform per stop, so they animate
-  // Which is what makes two ramps of the same length share a program: only the count is in the source
-  assert(pxSource('pal{#f00,#00f}'), pxSource('pal{#0f0,#ff0}'))
+  assert(1, (src.match(/uniform vec4 u_vs\d+;/g) || []).length) // Constant stops are literals; red is a lookup, so a uniform
+  // A stop that can change is a uniform, so ramps of the same length with animated stops share a program
+  assert(pxSource('pal{#f00,[0:1]l4}'), pxSource('pal{#f00,[0:2]l4}'))
+  assert(true, pxSource('pal{#f00,#00f}') !== pxSource('pal{#0f0,#ff0}')) // where constant stops are in the source
   assert(true, pxSource('pal{#f00,#00f}') !== pxSource('pal{#f00,#0f0,#00f}'))
   // Piped, the ramp reads what the chain gives it, not the raw coordinate
   src = pxSource('sin>>pal{0,1}')
   assert(false, src.includes('clamp((v0).x'))
   assert(true, /clamp\(\(v\d+\)\.x, 0\.0, 1\.0\) \* 1\.0/.test(src))
 
-  // vhs: helper calls, not inlined, so the whole effect is a couple of uniforms. The time is always
-  // one, a defaulted amount is a literal rather than a second one
-  src = pxSource('vhsuv')
-  assert(true, src.includes('vec4 v1 = l_vhswarp((v0).xy, (u_vs0).x);'))
-  assert(true, src.includes('vec4 v2 = l_vhsuv(v0, v1, 1.0);'))
-  assert(1, uniformCount(src))
-  assert(2, uniformCount(pxSource('vhsuv{1/2}')))
-  assert(pxSource('vhsuv{1/2}'), pxSource('vhsuv{amt:1/2}'))
-  assert(pxSource('vhsuv'), pxSource('vhsuv')) // Deterministic: the program cache is keyed on the source
-  // The colour stage warps the chain's original coordinate again, not the colour it is handed
-  src = pxSource('pxhash>>vhsrgb')
-  assert(true, src.includes('vec4 v3 = l_vhswarp((v0).xy, (u_vs0).x);'))
-  assert(true, src.includes('vec4 v4 = l_vhsrgb(v2, v3, (v0).xy, 1.0, (u_vs0).x);'))
-  assert(true, src.includes('fwidth(res)')) // The helpers are declared
-  assert(1, (src.match(/^float l_vhsrand\(/gm) || []).length)
-  // vhs{src}: warp once, feed the warped coordinate to the source, colour with the same warp
-  src = pxSource('vhs{pxhash, 1/2}')
-  assert(true, src.includes('vec4 v1 = l_vhswarp((v0).xy, (u_vs1).x);'))
-  assert(true, src.includes('vec4 v2 = l_vhsuv(v0, v1, (u_vs0).x);'))
-  assert(true, src.includes('vec4 v3 = v2;')) // The source's seed, fed the warped coordinate
-  assert(true, /vec4 v4 = vec4\(l_pxhash\(v3, /.test(src))
-  assert(true, src.includes('vec4 v5 = l_vhsrgb(v4, v1, (v0).xy, (u_vs0).x, (u_vs1).x);'))
-  assert(1, (src.match(/^vec4 l_vhswarp\(/gm) || []).length)
 
 
   // pxfn{} end to end. The sub-chain is written into the shader once as a real GLSL function and
@@ -993,7 +914,7 @@ define(function(require) {
   src = pxSource('pxfn{mul{2}}')
   assert(1, fnDecls(src))
   assert(1, fnCalls(src))
-  assert(true, src.includes('vec4 l_fn0(vec4 l_p0) {\n  vec4 v1 = l_p0 * u_vs0;\n  return v1;\n}')) // The chain, as its body
+  assert(true, src.includes('vec4 l_fn0(vec4 l_p0) {\n  vec4 v1 = l_p0 * vec4(2.0);\n  return v1;\n}')) // The chain, as its body
   assert(true, src.includes('vec4 v2 = l_fn0(v0);')) // and a call in its place
   assert(true, src.indexOf('vec4 l_fn0(') < src.indexOf('void main()')) // Declared before it is called
   assert(pxSource('pxfn{mul{2}}'), pxSource('pxfn{mul{2}}')) // Deterministic: the program cache is keyed on the source
@@ -1001,8 +922,8 @@ define(function(require) {
   // The arg is a px chain in its own right, resolved as a channels{} arg is, so a bare call takes
   // the incoming value and a chain written out inside it is seeded like any other
   assert(true, pxSource('pxfn{sin}').includes('vec4 v2 = sin(v1);')) // v1 being the pass-through of the parameter
-  assert(true, pxSource('pxfn{floor{1/8}>>add{1/2}}').includes('floor(v1 / u_vs0)'))
-  assert(true, pxSource('pxfn{floor{1/8}+1/2}').includes('floor(v1 / u_vs0)')) // expressionHead reaches in too
+  assert(true, pxSource('pxfn{floor{1/8}>>add{1/2}}').includes('floor(v1 / vec4(0.125))'))
+  assert(true, pxSource('pxfn{floor{1/8}+1/2}').includes('floor(v1 / vec4(0.125))')) // expressionHead reaches in too
 
   // A named user defined function is piped the value, and an inline lambda literal — the one thing
   // >> never pipes into — is called with it here instead
@@ -1020,8 +941,8 @@ define(function(require) {
   let inl = four('inlined'), wrp = four('wrapped')
   assert(0, fnDecls(inl))
   assert([1, 4], [fnDecls(wrp), fnCalls(wrp)])
-  assert([18, 38], [stmtCount(wrp), stmtCount(inl)]) // Eight body statements written once rather than four times
-  assert([4, 7], [uniformCount(wrp), uniformCount(inl)]) // and its uniforms registered once rather than four times
+  assert([16, 29], [stmtCount(wrp), stmtCount(inl)]) // The body written once rather than four times
+  assert([0, 0], [uniformCount(wrp), uniformCount(inl)]) // Its constants are literals either way
   assert(wrp, four('wrapped')) // and still byte identical: the cache key
 
   // Through parallel{}, which is the shape the octave sums in lib/visual.limut have: a repeat
@@ -1038,11 +959,9 @@ define(function(require) {
   assert([1, 4], [(wrpOct.match(/min\(/g) || []).length, (inlOct.match(/min\(/g) || []).length])
   assert(true, stmtCount(wrpOct) < stmtCount(inlOct))
   assert(wrpOct, octaves('wrappedbare')) // and deterministic, as every repeat build must be
-  // A uniform slot is what the bodies must agree about, and a bare number in one is deliberately
-  // *not* shared between repeats (see addUniform) — so a body carrying one is a declaration per
-  // repeat, correctly: those are different values. The lib's noise face shares because everything in
-  // it is either the `seed` binding or a lattice offset literal, both of which do share a slot.
-  assert(4, fnDecls(octaves('wrapped')))
+  // The bodies must agree about their uniform slots, and a constant is a literal, so a body carrying
+  // one shares too. A body reading a value that really differs per repeat still cannot.
+  assert(1, fnDecls(octaves('wrapped')))
   delete userVars['wrappedbare']
   delete userVars['inlined']
   delete userVars['wrapped']

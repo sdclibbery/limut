@@ -148,6 +148,9 @@ define(function(require) {
   }
   addMathsFunction('pxhash', scalarHash)
   addMathsFunction('pxhashf', scalarHash)
+  // pxfwidth is for visual nodes: the screen space derivative of the value. A plain number does not
+  // vary across the screen, so off a visual node it is zero
+  addMathsFunction('pxfwidth', trigWrapper(v => 0))
 
   let euclid = (args, e) => {
     let k = Math.floor(argParam(args, 1)) // Distribute k beats...
@@ -353,6 +356,7 @@ define(function(require) {
   assert(true, scalarOf('pxhashf{3}') === scalarOf('pxhash{3}')) // The algorithms only differ in the shader
   assert(true, scalarOf('(3).pxhash') === scalarOf('pxhash{3}')) // Final result, so postfix gives the value
   assert(true, scalarOf('3>>pxhash') === scalarOf('pxhash{3}'))
+  assert(0, scalarOf('pxfwidth{3}'))
 
   assert(2, evalParamFrame(parseExpression('ceil{1.5}'), ev(0,0), 0))
   assert(-1, evalParamFrame(parseExpression('ceil{-1.5}'), ev(0,0), 0))

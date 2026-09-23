@@ -53,7 +53,36 @@ The seed variable is named by `ctx.rootInput` (`'v0'`), which is what backs the 
 
 **Determinism is cache correctness.** All generated names (`vN`, `u_vsN`, `u_vstexN`, and per-tex locals `uvN`/`arN`) come from per-context counters during the single build walk, so the same px expression yields byte-identical source. The compiled-program cache in `draw/visualsynth.js` is keyed on that source text. If you add a node type, derive every generated name from ctx counters — never from anything non-deterministic (object identity, Math.random, wall time), or identical expressions stop sharing programs (renderer runs once per event, so that means a compile per event).
 
-Context helpers: `addStatement(expr)` emits `vec4 vN = expr;` and returns `vN`; `addRaw(stmt)` for non-vec4 lines; `addUniform(rawAst)` → `u_vsN`; `addTexture(texObjOrUndefined, sampler)` → `u_vstexN` (undefined sets `ctx.notReady`; `sampler` defaults `'sampler2D'`, and `ctx.textures` holds `{texture, sampler}` entries). Codegen is GL-free on purpose — its tests run without a GL context.
+Context helpers: `addStatement(expr, fresh)` emits `vec4 vN = expr;` and returns `vN`; `addRaw(stmt)` for non-vec4 lines; `addUniform(rawAst)` → `u_vsN`, or a GLSL literal for a constant; `addTexture(texObjOrUndefined, sampler)` → `u_vstexN` (undefined sets `ctx.notReady`; `sampler` defaults `'sampler2D'`, and `ctx.textures` holds `{texture, sampler}` entries). Codegen is GL-free on purpose — its tests run without a GL context.
+
+**Constants are literals** (September 2026, reversing an earlier decision). `addUniform` returns
+`vec4(2.0)` rather than a slot when the AST is a number, a map of numbers (converted through
+`toVec4`, printed as the shortest decimal that rounds to the same float32), or a binding that
+`_bindingSource` resolves to one — so a lambda arg defaulted or passed a constant is a literal however
+deep it is threaded. The cost, accepted by the user: a numeric edit on a playing line changes the
+source and compiles a new shader (on the Pi, for a display-bound chain). Anything that could change —
+a timevar, `time`, an expression over a lambda arg like `t*10` — stays a uniform. Parse-time folding
+(`eval-operator.js`'s `operator` returns `op(l,r)` for two primitives) is what makes `1/2` arrive as a
+number. A non-literal expression is also shared by `(AST identity, getCallTreeString())`, which is
+exactly the per-frame eval memo key, so sharing it changes no value.
+
+**Common subexpressions.** `addStatement` keeps `ctx.exprs` (canonical text → variable) and hands
+back an existing variable for text it has already emitted in scope. Copies (`vec4 v1 = v0;`, which
+pass-throughs emit) are recorded in `ctx.aliases` and resolved in the lookup key, so an expression of
+the copy matches the same expression of the original; the copy statement is still emitted, which kept
+existing sources unchanged. This is what makes DSL functions cheap: a node-valued lambda arg read in
+several places (each channel of a `set{}` param resolves on its own event, so each read is a *fresh
+node object* and `ctx.built` cannot see it) now emits identical text and collapses. It only works
+because constants are literals and repeated expressions share uniform names — otherwise two copies of
+a subtree read different `u_vsN` and never match. Three rules keep it sound:
+- **`fresh`** for any variable that will be assigned (`shader-repeat.js`'s loop accumulator, fold
+  total, and `carry:` values): never reused and never registered. A new node that declares a
+  variable and later assigns it must pass it too.
+- **`addRaw` invalidates** entries and aliases that read, or are, any variable a raw statement
+  assigns (`x = `, `x.y += `, … — declarations match too, harmlessly).
+- **Blocks start empty**: `capture` resets `exprs` and `aliases` for both loop bodies and function
+  bodies and restores them after. A loop body runs again after its write-backs, so an outer variable
+  computed from the carried value's first value is not what the same text means on iteration two.
 
 ## The `>>` seam (`expression/connectOp.js`)
 
@@ -228,10 +257,8 @@ uses of a noise-based shape: 13 statements and 4 uniforms against 18 and 7, pixe
   **This is what makes a `pxfn` reached once per repeat of a `parallel{}`/`series{}`/`loop{}` one
   declaration.** Each repeat clones its event and spells its own callsite id, so nothing is memoised
   across them and each asks for a declaration of its own; the bodies then agree — or do not, and the
-  reason is always a *value*: a bare number inside the body gets a slot per repeat (`addUniform`
-  shares only object literals and bindings with provenance), so a body carrying one is honestly a
-  declaration per repeat. `lib/visual.limut` shares because everything in its face is either the
-  `seed` binding or a lattice offset literal.
+  reason is always a *value*: a constant is a literal, so it matches; an expression that differs per
+  repeat (of the repeat index, say) is a uniform per repeat and honestly a declaration per repeat.
 - **`ctx.captureFunction(fn)`** is `captureBlock` with the enclosing scope withheld: fresh `built`
   and `lets` rather than copies, because a function body cannot see main's variables. `nextVar` still
   counts across it, and both share one `capture` helper. The declaration is added with
@@ -278,20 +305,25 @@ Note also that `X >> f{arg}` *calls* `f` with the point shifted into its first s
 that builds a pxfn must be reached as a bare name (`p>>nf`), which is why the lib passes the node into
 a helper rather than piping into the maker.
 
-## Porting a standard-param effect: `vhs{}` (`draw/visualsynth/shader-vhs.js`)
+## Writing an effect in the DSL: `vhs` (`lib/visual.limut`)
 
-`vhs{chain,amt}`, `vhsuv` and `vhsrgb` port the `vhs` standard param (`shadercommon.js`) as node
-functions in `nodes.js` calling fixed-name `l_vhs*` GLSL helpers (the `pxhash` helper discipline: no
-requires, deduped by `ctx.addFunction`). `vhs{}` computes `l_vhswarp` once and hands it to both
-stages; standalone `vhsrgb` re-warps `ctx.rootInput`. The default `t` is a hand-rolled frame-interval
-AST (`(e,b) => b`), which is the beat, matching the param's `l_realTime` (`state.count`).
-
-It was first written as pure DSL in `lib/visual.limut` and **abandoned**: ~1040 lines and ~420
-uniforms. Every numeric literal in a lib function is a uniform of its own, and a node-valued lambda
-arg referenced inside a `set{}`/`mul{}` param is rebuilt once per channel (params resolve on their own
-event, so the arg's nodes are fresh objects and `ctx.built` cannot dedupe them). An effect that is a
-fixed block of GLSL with a couple of animated scalars belongs in a helper, not the lib. Measured
-equivalences: `vhs{X}` ≡ `vhsuv>>X>>vhsrgb` and `amt:0` ≡ bare `X`, both 0 differing bytes.
+`vhs`, `vhsuv` and `vhsrgb` port the `vhs` standard param (`shadercommon.js`) as lib DSL. A first
+DSL attempt came to ~1040 lines and ~420 uniforms, which is what drove the literal folding and CSE
+above; briefly it was a JS node with GLSL helpers instead. Now 166 statements and 1 uniform (the
+time), rendering identically to that JS version except in ~10 rows where the float-sensitive
+`fract(sin(x)*43758)` hash rounds differently (byte-identical at t=3001.7). Lessons for the next one:
+- **Make a scalar that feeds maths a node**: `set{t}`. As a number, every `t*10`, `t/2` is evaluated
+  in JS as a uniform of its own, keyed per call tree, so the same maths from two stages never matches.
+  As a node it is GLSL, and `t` itself is one binding-shared uniform.
+- **Compute a shared value once and pass the node** (`vhs{}` passes one warp to both stages).
+- **Don't name an arg after a channel you read off it**: an arg `w` with `w.w` did not read the
+  channel (it came out a uniform), silently dropping the crease darkening; named `wp` it works. Seen
+  in the generated GLSL, root cause not investigated — it contradicts the swizzle note above (`in.x`
+  inside a lambda with an arg `x`), so the difference is presumably that the LHS has the name too.
+- **`id >> f{node, …}` does not pipe**: the chain seed is withheld from a call with a node among its
+  args, so the positional args shift. Pass `id` explicitly (`f{id, node, …}`).
+- Verify by rendering against a reference byte for byte, and dump the GLSL: a lone `u_vsN` where a
+  subtree should be means something evaluated to a scalar.
 
 ## eval-param pass-through (critical)
 
@@ -362,7 +394,7 @@ Watch for the trap the old note ended with if you ever hook this any deeper: an 
 - Codegen and shader-node logic are pure string/JS — inline `?test` blocks in `shader-node.js`, `codegen.js`, plus shader-delegation tests in `connectOp.js` and pass-through tests in `eval-param.js`. Run via the `headless-tests` skill.
 - Actual rendering: drive the real app headlessly (the "Driving the whole app" harness in the `headless-tests` skill, needs `--use-angle=swiftshader --enable-unsafe-swiftshader`). `tex{'favicon-32x32.png'}` is the camera-free texture path; check the in-app console (`#console` textarea) for `🔴` and that the canvas is `display: block`.
 - **A px naming an undefined var does not error — it renders flat white.** `>>` const-wraps a non-node operand into a uniform, and `toVec4`'s fallback for a value it cannot read is `[1,1,1,1]`. So `px=noise2{scale:4}` with no `include 'lib/visual.limut'` is a white canvas, and one *inside* an expression (`noise2{v}/(2^i)`) collapses that whole subexpression to a single `u_vsN`, which can read as any flat colour. Dump the generated GLSL before believing a rendering bug: a lone uniform where a subtree should be means the name never resolved, not that the codegen is wrong. Anything from `lib/` needs its include in the driver, ahead of the line that uses it.
-- **To see the generated GLSL from the running app**, patch `WebGL2RenderingContext.prototype.shaderSource` in the driver and keep the sources containing `fragCoord` — the program cache is not reachable from outside `draw/visualsynth.js`, and this catches exactly what was compiled. Log it a line at a time with a fixed prefix; a multi-line `console.log` arrives as separate CONSOLE records, so a `grep` over the captured log drops the body of it otherwise. **An empty dump usually means a cache hit, not a failure to compile**: the program cache is keyed on the source text, and the values of animated args are uniforms rather than literals, so two px expressions that differ only in those values generate byte-identical source and the second never calls `shaderSource` at all. Measured: `px=mul{1/2}>>tex{…}` compiles, `px=mul{1/3}>>tex{…}` straight after it compiles nothing, `px=add{1/3}>>tex{…}` compiles again. So dump the shader for the *first* px of a given shape in a run, or vary something structural (a different node, a different channel mask) when you need a fresh compile.
+- **To see the generated GLSL from the running app**, patch `WebGL2RenderingContext.prototype.shaderSource` in the driver and keep the sources containing `fragCoord` — the program cache is not reachable from outside `draw/visualsynth.js`, and this catches exactly what was compiled. Log it a line at a time with a fixed prefix; a multi-line `console.log` arrives as separate CONSOLE records, so a `grep` over the captured log drops the body of it otherwise. **An empty dump usually means a cache hit, not a failure to compile**: the program cache is keyed on the source text, so two px expressions that generate the same source compile once. Constants are literals now, so `mul{1/2}` and `mul{1/3}` do differ; animated values are still uniforms, so `mul{[0:1]l4}` and `mul{[0:2]l4}` do not. Dump the shader for the *first* px of a given shape in a run. A cache hit is also a cheap proof that two spellings generate identical source.
 - **The strongest check for a repetition or codegen change is an equivalence render**: build the same picture two ways and compare the buffers byte for byte (`loop{}` with a fold against `parallel{}`, `fbm2` against its hand-written form, an explicit `fold:{a,v}->a+v` against the default sum). `differingBytes=0` over the whole canvas is a far better signal than eyeballing a mean, and it catches an off-by-one in the fold order that still looks plausible. The webcam path cannot be tested headlessly — ask the user to check in a real browser.
 - GLSL compile errors: `draw/system.js` `loadShader` includes `getShaderInfoLog` in its thrown string, which the renderer surfaces as `🔴 Visual synth shader error: ...` in the in-app console (once — then cached as permanent failure). Full source dump goes to devtools via console.error.
 - A deliberate breakage test: make a node emit invalid GLSL, confirm the 🔴 reaches the in-app console and doesn't spam per event.
