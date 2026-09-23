@@ -1,6 +1,14 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
+avw2 fixes
+ stuck notes; actually just gets stuck altogether, not just notes
+ want to be able to avw2.press
+ swap to root from a
+ check octave buttons work
+get rid of webcam frame display
+!If swap webcam device with []t, it goes very very choppy. Also, now defaults to obs cam
+!hub75 showing vertical tear occasionally, I think it happens after code update, repairs itself eventually
 !Some CLaude stuff
  Cleanup code comments and doc verbosity. Docs dont need to explain how things are impplemented. update skills
  Claude should not edit ToDo.txt
@@ -8,8 +16,6 @@
  Report Chromium bug:
   It's a genuine, current bug and I'd file it. Want me to build the standalone repro — a plain HTML page with no limut
    the osc → biquad → gain →  param loop next to the → audio control, plus the CDP capture procedure — so you can attach it to an issue?
-!hub75 showing vertical tear occasionally, I think it happens after code update, repairs itself eventually
-!If swap webcam device with []t, it goes very very choppy
 !Keytar a bit monotonous, needs more lfo variation and vel sensitivity. Also just check tone.
 ?Is it right that accum etc do not reset between events?? Caused glitching on dlead drive mix
  Maybe even a param or separate method?

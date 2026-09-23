@@ -104,26 +104,6 @@ define(function (require) {
     let newFrame = false
     let useFrameCallback = false
     let generation = 0 // Guards a slow getUserMedia resolving after a newer request has superseded it
-    let frames = 0
-    let measureStart = 0
-    let reportedFps = 0
-
-    // Report the frame rate actually being delivered, because getSettings can simply be wrong: a
-    // camera that advertises 30fps hands over 20 when auto exposure lengthens the integration time
-    // to suit a dim room, and every one of those missing frames is latency. Resolution does not
-    // change it, so a rate well under the claimed one means the room, not the mode. Only spoken up
-    // for when it changes, so it is quiet once settled but tracks the light going up or down.
-    let measure = () => {
-      if (measureStart === 0) { measureStart = performance.now(); return }
-      if (++frames < 60) { return }
-      let fps = frames/((performance.now() - measureStart)/1000)
-      if (Math.abs(fps - reportedFps) > 1) {
-        reportedFps = fps
-        consoleOut(`: Webcam delivering ${fps.toFixed(1)}fps`)
-      }
-      frames = 0
-      measureStart = performance.now()
-    }
 
     // Open, or reopen, the stream. The texture object itself is stable across a reconfigure, so
     // anything already holding it - a compiled visualsynth program's texture list, a cached sprite
@@ -138,9 +118,6 @@ define(function (require) {
       video = undefined
       newFrame = false
       useFrameCallback = false
-      frames = 0
-      measureStart = 0
-      reportedFps = 0
       accessWebcam(deviceIdx, width, height, fps).then(v => {
         if (gen !== generation) { closeVideo(v); return } // Superseded while we were waiting
         video = v
@@ -149,7 +126,6 @@ define(function (require) {
             if (gen !== generation) { return }
             newFrame = true
             useFrameCallback = true
-            measure()
             v.requestVideoFrameCallback(onFrame)
           }
           v.requestVideoFrameCallback(onFrame)
