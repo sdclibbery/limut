@@ -71,6 +71,19 @@ For audio-graph wiring changes (fx chains, connectable construction, node-functi
 
 User-facing DSL docs live in `index.html` (the in-app reference panel). When you add, change, or remove a DSL feature — new params, subparams, player types, expression syntax, etc. — update the matching section in `index.html` so the docs stay in sync with the code.
 
+Docs are for a live coder mid-performance, so keep them concise:
+- `<code>signature</code>` with defaults, one sentence on what it does, and one short example.
+- Then only what a user needs to know and wouldn't guess: gotchas that change what they write (precedence, which params can't animate, positional-arg traps, required includes, silent failure modes).
+- No implementation details (how it compiles or is built, internal node/shader structure), no rationale for design choices, no change history ("previously…", "now…", "used to…"), no benchmark figures, no repeating a rule already explained elsewhere. Link to that section instead.
+
+## ToDo.txt
+
+`ToDo.txt` is maintained by the user. Don't edit it unless specifically asked to.
+
+## Code comments
+
+Keep comments to a minimum. Only comment genuine gotchas or non-obvious things: a constraint, a workaround, or a reason the code can't be written the obvious way. Don't narrate what the code does, don't record history or how a bug was found, and don't write essays. The same applies to comments in `.limut` library files.
+
 ## DSL Reference
 
 ### Line types
