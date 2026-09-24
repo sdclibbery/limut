@@ -2,10 +2,9 @@
 =================================================================================================================================
 =================================================================================================================================
 studio fixes:
- stuck notes; actually just gets stuck altogether, not just notes
- want to be able to avw2.press
+ stuck notes; actually just gets stuck altogether, not just notes - just the cable??
  swap to root from a
- check octave buttons work
+ want to be able to avw2.press
  If swap webcam device with []t, it goes very very choppy
  hub75 showing vertical tear occasionally, I think it happens after code update, repairs itself eventually
 !Render capacity leak again????

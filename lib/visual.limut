@@ -269,3 +269,60 @@ set vhsrgb = {in:id, amt:1, t:time} -> vhsrgbh{in, vhsrow{uv}, vhswarp{uv, set{t
 
 set vhsh = {src, wp, amt, t} -> vhsuvh{id, wp, amt} >> src >> vhsrgbh{vhsrow{uv}, wp, amt, t}
 set vhs = {src, amt:1, t:time} -> vhsh{src, vhswarp{uv, set{t}}, amt, set{t}}
+
+//// Synthwave
+// A synthwave scene: sky, stars, striped sun, wireframe mountains and a scrolling neon grid. The
+// horizon is y=0. t is passed as set{t}, as for vhs.
+//   px=synthwave
+//   px=synthwave{pulse:kd.pulse, hills:1/4+bass.pulse/8}
+set swflat = {v} -> v >> set{z:0, w:0}
+
+// Antialiased line fw*w wide where v is zero. swgrid takes fwidth of v itself, since the fract wrap
+// would read as a line otherwise.
+set swaa = {v, fw, w} -> 1 - clamp{abs{v}/(fw*w)}
+set swline = {v, w} -> swaa{v, pxfwidth{v}, w}
+set swgrid = {v, w} -> swaa{fract{v - 1/2} - 1/2, pxfwidth{v}, w}
+
+set swstar = {hs, f, t} ->
+  (hs.x > 0.985) * (1 - smoothstep{length{swflat{f}}, 0.05, 0.3}) * (1/2 + sin{t*3 + hs.y*6.28}/2)
+set swstars = {p, t} -> swstar{pxhash{floor{p*50}, 3}, fract{p*50} - 1/2, t}
+set swskycol = {p} -> clamp{p.y*1.2} >> pal{#f4a, #a3c, #427, #113, #012}
+
+// v is -1 at the bottom of the sun, 1 at the top. The cut bands are centred in each period so both
+// edges antialias.
+set swstripes = {v, t} -> smoothstep{abs{fract{v*7 + t/4} - 1/2},
+  -v*0.6 - 0.02 - pxfwidth{v*7}, -v*0.6 - 0.02 + pxfwidth{v*7}}
+set swsunmask = {d, v, t} -> (1 - smoothstep{d, -pxfwidth{d}, pxfwidth{d}}) * swstripes{v, t}
+set swsunmix = {bg, d, v, t, pulse, glow} ->
+  mix{bg, (v/2 + 1/2) >> pal{#f06, #f60, #fe4}, swsunmask{d, v, t}}
+  + #f26*exp{-max{d, 0}*6}*(glow/2 + pulse)*(d > 0)
+set swsunover = {bg, q, t, pulse, glow, sun} -> swsunmix{bg, length{q} - sun, q.y/sun, t, pulse, glow}
+set swsky = {p, t, pulse, glow, sun} -> swsunover{
+  swskycol{p} + swstars{p, t}*smoothstep{p.y, 0.1, 0.5},
+  swflat{p} - {y:sun*3/5, w:0}, t, pulse, glow, sun}
+
+set swridge = {p, hills} ->
+  hills*(noise1{p, 3, 11}*0.6 + (1 - abs{perlin1s{p, 7, 12}})*0.4)*(0.2 + 0.8*smoothstep{abs{p.x}, 0.1, 0.9})
+set swcontours = {p, ridge} -> max{swline{p.y - ridge*2/3, 1}, swline{p.y - ridge/3, 1}}
+set swmountains = {p, ridge, bg, glow} ->
+  mix{bg, #103 + #3cf*swcontours{p, ridge}*glow/2, (p.y < ridge)*(p.y > 0)}
+  + #f3e*swline{p.y - ridge, 2}*glow*(p.y > 0)
+
+// z is the distance along the floor. t scrolls it one line per beat.
+set swfloorz = {p, z, t, pulse, glow} ->
+  #102 + #f2a*exp{p.y*10}*(1/2 + pulse/2)
+  + #f3d*max{swgrid{p.x*z*2, 1.5}, swgrid{z*2 + t, 1.5}}*(glow + pulse)*(1 - exp{p.y*12})
+set swfloor = {p, t, pulse, glow} -> swfloorz{p, 1/max{-p.y, 0.001}, t, pulse, glow}
+
+set swscene = {p, t, pulse, glow, sun, hills} -> swmountains{p, swridge{p, hills},
+  p.y > 0 ?? swsky{p, t, pulse, glow, sun} ?: swfloor{p, t, pulse, glow}, glow}
+
+// Hue rotation about the grey axis; s is sin/sqrt(3).
+set swhuek = {in, c, s} -> mat3{in,
+  c + (1-c)/3, (1-c)/3 - s, (1-c)/3 + s,
+  (1-c)/3 + s, c + (1-c)/3, (1-c)/3 - s,
+  (1-c)/3 - s, (1-c)/3 + s, c + (1-c)/3}
+set swhue = {in, a} -> swhuek{in, cos{6.28318*a}, sin{6.28318*a}*0.57735}
+
+set synthwave = {in:id, t:time, pulse:0, glow:1, sun:0.35, hills:0.3, hue:0} ->
+  swhue{swscene{in, set{t}, pulse, glow, sun, hills}, hue} >> set{a:1}

@@ -14,9 +14,10 @@ define(function(require) {
     return note % 12
   }
 
-  let middleC = 60
-  let whiteDegree = [0,0,1,1,2,3,3,4,4,5,5,6] // Chromatic index -> degree of the white note at or below it
-  let whiteSharp  = [0,1,0,1,0,0,1,0,1,0,1,0] // ...and whether it is the black note just above that white one
+  // Degree 0 is A, not C, so the black key below the root (G#) can play a minor key's leading note
+  let degreeZero = 57 // The A below middle C
+  let whiteDegree = [0,0,1,2,2,3,3,4,5,5,6,6] // Semitones above A -> degree of the white note at or below it
+  let whiteSharp  = [0,1,0,0,1,0,1,0,0,1,0,1] // ...and whether it is the black note just above that white one
 
   let applyMapping = (event, note, mapping) => {
     if (mapping === 'perc') {
@@ -31,10 +32,10 @@ define(function(require) {
       event.value = chromatic
       event.scale = 'chromatic' // Force to chromatic scale
     } else { // 'scale': white notes play the scale degrees, black notes sharpen them
-      // Degrees run on continuously, so the C above middle C is degree 7 and degreeToFreq does the
+      // Degrees run on continuously, so the A above is degree 7 and degreeToFreq does the
       // octave wrapping itself (just as the keyboard player's rows do). Neither oct nor scale is
       // set, so the player's own oct=/scale= and the preset base params still apply.
-      let offset = note - middleC
+      let offset = note - degreeZero
       let octave = Math.floor(offset/12)
       let chromatic = offset - octave*12
       event.value = octave*7 + whiteDegree[chromatic]
@@ -178,25 +179,29 @@ define(function(require) {
   assert(0.5, note('0', {vel:newOverride(2, (l,r) => l*r)}, {vel:3/4}, 60, 0.25).vel, 'vel*= scales the midi velocity')
   assert(1, note('0', {vel:newOverride(1)}, {vel:3/4}, 60, 0.25).vel, 'vel= overrides the midi velocity')
 
-  // Default mapping: the white notes are the scale degrees, from degree 0 at the central C
-  assert(0, note('0', {}, {}, 60, 1).value, 'middle c is degree 0')
-  assert(undefined, note('0', {}, {}, 60, 1).sharp, 'a white note is not sharpened')
-  assert(undefined, note('0', {}, {}, 60, 1).scale, 'the scale is left as the player has it')
-  assert(1, note('0', {}, {}, 62, 1).value, 'd is degree 1')
-  assert(6, note('0', {}, {}, 71, 1).value, 'b is degree 6')
-  assert(7, note('0', {}, {}, 72, 1).value, 'the c above is degree 7')
-  assert(-2, note('0', {}, {}, 57, 1).value, 'the a below is degree -2')
-  assert(-7, note('0', {}, {}, 48, 1).value, 'the c below is degree -7')
+  // Default mapping: the white notes are the scale degrees, from degree 0 at the A below middle C
+  assert(0, note('0', {}, {}, 57, 1).value, 'the a below middle c is degree 0')
+  assert(undefined, note('0', {}, {}, 57, 1).sharp, 'a white note is not sharpened')
+  assert(undefined, note('0', {}, {}, 57, 1).scale, 'the scale is left as the player has it')
+  assert(1, note('0', {}, {}, 59, 1).value, 'b is degree 1')
+  assert(2, note('0', {}, {}, 60, 1).value, 'middle c is degree 2')
+  assert(6, note('0', {}, {}, 67, 1).value, 'g is degree 6')
+  assert(7, note('0', {}, {}, 69, 1).value, 'the a above is degree 7')
+  assert(-1, note('0', {}, {}, 55, 1).value, 'the g below is degree -1')
+  assert(-7, note('0', {}, {}, 45, 1).value, 'the a below is degree -7')
   // Black notes sharpen the white note below them
-  assert(0, note('0', {}, {}, 61, 1).value, 'c sharp plays c...')
-  assert(1, note('0', {}, {}, 61, 1).sharp, '...sharpened a semitone')
-  assert(-2, note('0', {}, {}, 58, 1).value, 'a sharp below middle c plays that a...')
+  assert(-1, note('0', {}, {}, 56, 1).value, 'g sharp below the root plays that g...')
+  assert(1, note('0', {}, {}, 56, 1).sharp, '...sharpened a semitone: the leading note')
+  assert(0, note('0', {}, {}, 58, 1).value, 'a sharp plays a...')
   assert(1, note('0', {}, {}, 58, 1).sharp, '...sharpened a semitone')
+  assert(2, note('0', {}, {}, 61, 1).value, 'c sharp plays c...')
+  assert(1, note('0', {}, {}, 61, 1).sharp, '...sharpened a semitone')
+  assert(undefined, note('0', {}, {}, 60, 1).sharp, 'c, straight after b, is not a black note')
   assert(1, note('0', {}, {sharp:0}, 61, 1).sharp, 'a base param sharp does not clobber a black note')
   assert(2, note('0', {sharp:newOverride(2)}, {}, 61, 1).sharp, 'sharp= on the player line still wins')
   // The midi note no longer supplies the octave, so the player's own oct applies
-  assert(9, note('0', {}, {oct:9}, 60, 1).oct, 'the base params supply the octave')
-  assert(undefined, note('0', {}, {}, 60, 1).oct, 'no octave is forced onto the event')
+  assert(9, note('0', {}, {oct:9}, 57, 1).oct, 'the base params supply the octave')
+  assert(undefined, note('0', {}, {}, 57, 1).oct, 'no octave is forced onto the event')
 
   // The absolute chromatic mapping is still there under 'abs'
   assert(0, note('abs 0', {}, {vel:3/4}, 60, 1).value, 'middle c is chromatic 0')
