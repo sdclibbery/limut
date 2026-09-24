@@ -3,10 +3,10 @@
 =================================================================================================================================
 studio fixes:
  stuck notes; actually just gets stuck altogether, not just notes - just the cable??
- swap to root from a
- want to be able to avw2.press
- If swap webcam device with []t, it goes very very choppy
- hub75 showing vertical tear occasionally, I think it happens after code update, repairs itself eventually
+ swap to root from a - done - needs checking
+ want to be able to avw2.press - done - needs checking
+ If swap webcam device with []t, it goes very very choppy - needs doing in the studio
+ hub75 showing vertical tear occasionally, I think it happens after code update, repairs itself eventually - ???
 !Render capacity leak again????
  Report Chromium bug:
   It's a genuine, current bug and I'd file it. Want me to build the standalone repro — a plain HTML page with no limut

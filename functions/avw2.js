@@ -19,6 +19,7 @@ define(function(require) {
     // No tilt: the accelerometer sends controller 1, the same as the ribbon, so it is not its own control
     notes: {control:'notes'}, // Chord of the keys currently held
     vel: {control:'vel'},
+    press: {control:'press'},
     connected: {special:'connected'}, // 1 when the keytar is plugged in, 0 when it is not
   }
   for (let i = 1; i <= 8; i++) {
@@ -119,6 +120,8 @@ define(function(require) {
     assert('getValue,3,0,bend,', lastCall())
     newAvw2({value:'s1'})()
     assert('getValue,3,0,7,', lastCall(), 'the neck slider is controller 7')
+    newAvw2({value:'press'})()
+    assert('getValue,3,0,press,', lastCall())
     newAvw2({value:'sus'})()
     assert('getValue,3,0,64,', lastCall())
     newAvw2({value:'ribbon'})()

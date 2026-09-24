@@ -183,7 +183,9 @@ define(function(require) {
         .map(n => n - 60 - root)
     }
     if (controlId === 'vel') { return channel.vel || 0 }
-    if (controlId === 'press') { return channel.pressure || 0 }
+    if (controlId === 'press') {
+      return (channel.notes || []).reduce((m, n) => Math.max(m, channel.notePressure[n] || 0), channel.pressure || 0)
+    }
     if (controlId !== undefined && channel.controller[controlId] !== undefined) { return channel.controller[controlId] }
     return channel.note[noteNumber] || 0
   }
@@ -317,13 +319,15 @@ define(function(require) {
     msg(0xa1, 60, 32)
     assert(32/127, getPressure(idx, 1, 60))
     assert(0, getPressure(idx, 1, 64), 'another held note is untouched by key pressure')
-    assert(0, getValue(idx, 1, 'press'), 'key pressure is not channel pressure')
+    assert(32/127, getValue(idx, 1, 'press'), "midi{'press'} reads key pressure too")
     msg(0xd1, 16) // Both kinds at once: whichever is higher is the one that arrived
     assert(32/127, getPressure(idx, 1, 60))
     assert(16/127, getPressure(idx, 1, 64))
+    assert(32/127, getValue(idx, 1, 'press'), 'the highest pressure of any held key')
 
     msg(0x81, 60, 0) // A released note keeps no key pressure of its own
     assert(16/127, getPressure(idx, 1, 60), 'only the channel pressure is left, which is still channel wide')
+    assert(16/127, getValue(idx, 1, 'press'))
     msg(0x81, 64, 0)
     assert(0, getValue(idx, 1, 'press'), 'the last note lifting clears the channel pressure')
     assert(0, getPressure(idx, 1, 60), 'and now there is nothing left at all')

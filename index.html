@@ -530,7 +530,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>gamepad rt:echo</code> Use the right trigger (assumed to be analogue) to control the given param (echo in the example). When the <code>rt:</code> arg is used, the right trigger will not play a note itself.</p>
 <p class='sub'><code>gamepad nodpad</code> On some controllers the dpad can be in the way of the sticks. Using 'nodpad' will disable the dpad input.</p>
 <p><code>midi</code> Generate notes from a midi controller rather than a pattern. White notes map to scale degrees from degree 0 at the A below middle C (so white notes are always in key), black notes sharpen the white note below, so the G# below A gives a minor key's leading note. The A above is degree 7; <code>oct</code> shifts the keyboard. <code>this.vel</code> is the note velocity, 0 to 1.</p>
-<p class='sub'><code>this.press</code> Aftertouch (channel or polyphonic), 0 to 1, updated live while the note is held, separate from <code>vel</code>: eg <code>l dlead midi 1, lpf=1000+this.press*4000</code>. It holds its last value through the release.</p>
+<p class='sub'><code>this.press</code> Aftertouch (channel or polyphonic), 0 to 1, updated live while the note is held, separate from <code>vel</code>: eg <code>l dlead midi 1, lpf=1000+this.press*4000</code>. It holds its last value through the release. Where there is no note event (fx, visuals), use <code>avw2.press</code>.</p>
 <p class='sub'><code>midi 9</code> use input from midi channel 9 (default is 0)</p>
 <p class='sub'><code>midi 9 1</code> use input from midi channel 9 on port (device) 1 (default is 0)</p>
 <p class='sub'><code>midi abs 9 0</code> use input from midi channel 9 port 0 and map it absolutely: the player is set to a chromatic scale and the note value and oct are such that the keyboard note played is the same note played in limut, ignoring the current scale and key</p>
@@ -1243,7 +1243,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>midi{note:36,channel:9,port:0}</code> Take input from the given note. The value is the velocity then the aftertouch, or 0 if the note is not pressed. The range is 0 to 1.</p>
 <p class='sub'><code>midi{'notes'}</code> Chord of currently playing notes, in chromatic semitones from the currently set root, from middle C. Defaults to port 0 and channel 0.</p>
 <p class='sub'><code>midi{'vel'}</code> Velocity/aftertouch of the current playing notes, from 0 to 1. Defaults to port 0 and channel 0.</p>
-<p class='sub'><code>midi{'press'}</code> Channel aftertouch pressure, from 0 to 1, and 0 when nothing is held. Defaults to port 0 and channel 0.</p>
+<p class='sub'><code>midi{'press'}</code> Aftertouch pressure (channel or polyphonic) of the keys held, from 0 to 1, and 0 when nothing is held. Defaults to port 0 and channel 0.</p>
 <p><code>avw2</code> Input from an Alesis Vortex Wireless 2 keytar, recognised by name whenever plugged in (no port needed, no re-run on replug). On its own it is 1 when connected, 0 otherwise, and logs midi ports and the last input to help identify controls.</p>
 <p class='sub'><code>avw2.f1</code> Fader 1 on the body, from 0 to 1. <code>f1</code> to <code>f8</code> for the eight faders.</p>
 <p class='sub'><code>avw2.p1</code> Pad 1, from 0 to 1 based on velocity then aftertouch, or 0 when it is not pressed. <code>p1</code> to <code>p8</code> for the eight pads.</p>
@@ -1252,6 +1252,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>avw2.ribbon</code> The touch ribbon on the neck, from 0 to 1. <code>ribbon1</code> and <code>ribbon3</code> for ribbon banks 1 and 3 specifically; <code>ribbon</code> is bank 1.</p>
 <p class='sub'><code>avw2.sus</code> The sustain button, 1 while held and 0 when released.</p>
 <p class='sub'><code>avw2.notes</code> Chord of the keys currently held, in chromatic semitones from the currently set root, from middle C. <code>avw2.vel</code> is their velocity/aftertouch, from 0 to 1.</p>
+<p class='sub'><code>avw2.press</code> Aftertouch of the keys held, from 0 to 1: eg <code>fx=lpf{400+avw2.press*4000}</code>. One value for the whole keytar that drops to 0 as the last key lifts, so unlike <code>this.press</code> it does not hold through a release tail.</p>
 <p class='sub'><code>avw2.connected</code> 1 when the keytar is plugged in, 0 when it is not, without logging anything.</p>
 <p class='sub'><code>avw2{14}</code> Take input from control 14 (or note 14 if there is no control 14) on the keytar, wherever it turns out to be. Also <code>avw2{control:14}</code>, <code>avw2{note:36}</code> and <code>avw2{channel:1}</code>. All of the controls above are on channel 0.</p>
 <p class='sub'><code>avw2{'f1', port:2}</code> Read a named control from an explicit port, for when the keytar is not recognised by name.</p>
