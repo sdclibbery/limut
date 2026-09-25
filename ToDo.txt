@@ -3,7 +3,6 @@
 =================================================================================================================================
 Ask Claude about making a gated reverb effect for a gated snare sound
  ?use in play80s?
-Flaky module loading?
 Want to control lfo speed for chorus
 Glide for keytar
 Get static burst when play keyboard player into tape{}
