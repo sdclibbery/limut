@@ -60,6 +60,17 @@ set reverb = {length:1b,curve:3} -> convolver{
   length:length
 }
 
+// Nonlinear "gated" reverb: a flat dense tail that chops off abruptly. rise>0 swells the tail
+// before the cut. fade is the chop length as a fraction of length.
+set gatedverb = {length:1/4b, fade:0.05, rise:0, hpf:200} -> bwhpf{hpf} >> convolver{
+  env: {
+    l:{x,f:fade,r:rise} -> (x<1-f ?? 1+r*x ?: (1-x)/f*(1+r)),
+    r:{x,f:fade,r:rise} -> (x<1-f ?? 1+r*x ?: (1-x)/f*(1+r)),
+    step:64
+  },
+  length:length
+}
+
 set echo = {time:1/8b,feedback:0.7,max} -> delay{time,feedback:feedback,max:max??max?:time*2}
 
 set pingpong = {time:1/4b,feedback:0.7} -> panner{1}>>delay{time,feedback:flipper*feedback}

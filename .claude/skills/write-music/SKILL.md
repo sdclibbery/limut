@@ -555,7 +555,7 @@ depth down to match. `keytar` in `preset/synth.limut` is the worked example.
 
 ## Effects Library (`include 'lib/effects.limut'`)
 
-Wet-path effects (wrap in `mix{}` for dry signal):
+Wet-path effects (wrap in `mix{}` for dry signal, eg `fx=mix{gatedverb,3/4}`; don't write `{dry, fx*0.7}`):
 
 - `echo{time:1/8b,feedback:0.7,max}` - echo with feedback and dry path
 - `pingpong{time:1/4b,feedback:0.7}` - stereo ping-pong delay
@@ -564,6 +564,7 @@ Wet-path effects (wrap in `mix{}` for dry signal):
 - `phaser{control:[0,1]l4@f,lo:300Hz,hi:2600Hz,stages:4,q:1/2}` - phaser
 - `shifter{ratio,length:0.03}` - pitch shifter
 - `shimmer{ratio:2,length:2s}` - shimmer reverb
+- `gatedverb{length:1/4b,fade:0.05,rise:0,hpf:200}` - 80s gated reverb for snares/toms
 - `tape{wow:1,cut:-10db}` - cassette tape effect
 - `airverb{delay:1/2b}` - airy reverb with flanger and stereo pingpong
 - `grain{ratio,length:0.03,phase:0}` - granular resynthesis grain
