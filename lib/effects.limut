@@ -5,6 +5,18 @@ set flanger = {control:[0,1]l8@f,feedback:0,lo:0.0005,hi:0.007} ->
   ?? {delay{0.01,max:0.01},delay{0.01+lo+control^2*(hi-lo),feedback:gain{feedback*0.8},max:0.1}}/2
   ?: {dry,delay{lo+control^2*(hi-lo),max:0.1}}/2
 
+// Times are raw seconds: the delay time is a connected signal, so units are not converted.
+set chorus = {rate:0.62, time:0.0025, depth:0.002, voices:3, spread:3/4, wobble:0.0003, wrate:6.67} ->
+  parallel{ {i} ->
+    delay{
+      time + lfo{rate, lo:-depth, hi:depth, phase:i/voices} + (wobble>0 ?? osc{'sine', wrate}*wobble ?: 0),
+      max:50ms
+    } >> panner{voices>1 ?? spread*(2*i/(voices-1)-1) ?: 0},
+  voices } * (2/voices)^(1/2)
+
+set ensemble = {rate:0.5, time:0.0035, depth:0.0018} ->
+  chorus{rate:rate, time:time, depth:depth, voices:2, spread:1, wobble:0}
+
 set phaser = {control:[0,1]l4@f,lo:300,hi:2600,stages:4,q:1/2} -> {
   dry,
   series{
