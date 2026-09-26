@@ -1,6 +1,6 @@
 include 'lib/effects.limut'
 
-preset perc play, dur=1/4, choke=this.player, drive=1/64
+preset perc play, dur=1/4, choke=this.player, drive={1/64,mix:1/4}
 
 preset bd pitchedperc,
 	dur=1/4, // Default duration; 16th notes like a 909 sequencer
