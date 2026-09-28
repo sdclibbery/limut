@@ -10,7 +10,7 @@ define(function(require) {
   // Everything the keytar sends, on midi channel 0 (which the Alesis editor calls "Channel 1").
   // Reprogrammed the keytar in the preset editor? This table is the only thing to change.
   let controls = {
-    s1: {control:7}, // Volume slider on the neck
+    s1: {control:7, default:1}, // Volume slider on the neck: full until it is first moved
     bend: {control:'bend'},
     ribbon: {control:1}, // Touch ribbon, bank 1
     ribbon1: {control:1},
@@ -48,6 +48,7 @@ define(function(require) {
     let controlId = args.control
     let noteNumber = args.note
     let special = mapped !== undefined ? mapped.special : undefined
+    let dflt = mapped !== undefined ? mapped.default : undefined
     if (mapped !== undefined) {
       if (mapped.control !== undefined) { controlId = mapped.control }
       if (mapped.note !== undefined) { noteNumber = mapped.note }
@@ -70,8 +71,8 @@ define(function(require) {
         lastLog = log
       }
       if (isBare || special === 'connected') { return portNumber === undefined ? 0 : 1 }
-      if (portNumber === undefined) { return 0 }
-      return midi.getValue(portNumber, channelNumber, controlId, noteNumber)
+      if (portNumber === undefined) { return dflt || 0 }
+      return midi.getValue(portNumber, channelNumber, controlId, noteNumber, dflt)
     }
     avw2Value.isNonTemporal = true
     avw2Value.interval = 'frame'
@@ -100,7 +101,7 @@ define(function(require) {
   let fakeMidi = (foundPort) => {
     calls = []
     midi.findPort = (matcher) => { calls.push(['findPort', ''+matcher]); return foundPort }
-    midi.getValue = (p,c,id,note) => { calls.push(['getValue', p, c, id, note]); return 0.5 }
+    midi.getValue = (p,c,id,note,dflt) => { calls.push(['getValue', p, c, id, note, dflt]); return 0.5 }
     midi.getPorts = () => []
     midi.getLastInputString = () => undefined
   }
@@ -109,39 +110,39 @@ define(function(require) {
   { // A named control reads the control number the keytar is mapped to, on its own port
     fakeMidi(3)
     assert(0.5, newAvw2({value:'f1'})())
-    assert('getValue,3,0,14,', lastCall(), 'fader 1 is controller 14')
+    assert('getValue,3,0,14,,', lastCall(), 'fader 1 is controller 14')
     newAvw2({value:'f8'})()
-    assert('getValue,3,0,21,', lastCall(), 'fader 8 is controller 21')
+    assert('getValue,3,0,21,,', lastCall(), 'fader 8 is controller 21')
     newAvw2({value:'p3'})()
-    assert('getValue,3,0,,38', lastCall(), 'pad 3 is note 38')
+    assert('getValue,3,0,,38,', lastCall(), 'pad 3 is note 38')
     newAvw2({value:'p8'})()
-    assert('getValue,3,0,,43', lastCall(), 'pad 8 is note 43')
+    assert('getValue,3,0,,43,', lastCall(), 'pad 8 is note 43')
     newAvw2({value:'bend'})()
-    assert('getValue,3,0,bend,', lastCall())
+    assert('getValue,3,0,bend,,', lastCall())
     newAvw2({value:'s1'})()
-    assert('getValue,3,0,7,', lastCall(), 'the neck slider is controller 7')
+    assert('getValue,3,0,7,,1', lastCall(), 'the neck slider is controller 7, and reads full until moved')
     newAvw2({value:'press'})()
-    assert('getValue,3,0,press,', lastCall())
+    assert('getValue,3,0,press,,', lastCall())
     newAvw2({value:'sus'})()
-    assert('getValue,3,0,64,', lastCall())
+    assert('getValue,3,0,64,,', lastCall())
     newAvw2({value:'ribbon'})()
-    assert('getValue,3,0,1,', lastCall())
+    assert('getValue,3,0,1,,', lastCall())
     newAvw2({value:'ribbon3'})()
-    assert('getValue,3,0,22,', lastCall())
+    assert('getValue,3,0,22,,', lastCall())
     assert('findPort,vortex', ''+calls[0], 'the port is found by device name')
   }
 
   { // Explicit args: a raw control number, an explicit note, channel and port
     fakeMidi(3)
     newAvw2({value:14})()
-    assert('getValue,3,0,14,14', lastCall(), 'a bare number is a control or note number, as for midi{}')
+    assert('getValue,3,0,14,14,', lastCall(), 'a bare number is a control or note number, as for midi{}')
     newAvw2({control:70, channel:9})()
-    assert('getValue,3,9,70,', lastCall())
+    assert('getValue,3,9,70,,', lastCall())
     newAvw2({note:36})()
-    assert('getValue,3,0,,36', lastCall())
+    assert('getValue,3,0,,36,', lastCall())
     fakeMidi(3)
     newAvw2({value:'f1', port:5})()
-    assert('getValue,5,0,14,', lastCall(), 'an explicit port overrides the auto detection')
+    assert('getValue,5,0,14,,', lastCall(), 'an explicit port overrides the auto detection')
     assert(0, calls.filter(c => c[0] === 'findPort').length, 'and does not go looking for the device')
   }
 
@@ -150,6 +151,7 @@ define(function(require) {
     assert(0, newAvw2({value:'f1'})())
     assert(0, newAvw2({value:'p1'})())
     assert(0, newAvw2({value:'connected'})())
+    assert(1, newAvw2({value:'s1'})(), 'the neck slider reads full with no keytar')
     assert(0, calls.filter(c => c[0] === 'getValue').length, 'nothing is read from a port that is not there')
     fakeMidi(2)
     assert(1, newAvw2({value:'connected'})())
@@ -170,4 +172,6 @@ define(function(require) {
 
   console.log('Avw2 tests complete')
   }
+
+  return { deviceNames: deviceNames, controls: controls }
 })

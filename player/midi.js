@@ -6,6 +6,7 @@ define(function(require) {
   let {combineOverrides,applyOverrides} = require('player/override-params')
   let {releaseNotes,allStopped} = require('player/live-notes')
   let scale = require('music/scale')
+  let avw2 = require('functions/avw2')
 
   let midiNoteToOctave = (note) => {
     return Math.floor(note / 12) - 1
@@ -43,35 +44,26 @@ define(function(require) {
     }
   }
 
-  let midiPlayer = (patternStr, params, player, baseParams) => {
-      // parse pattern string to get port/channel
-      let patternArgs = patternStr.split(/\s+/)
-      let mapping = 'scale'
-      let port, channel
-      patternArgs = patternArgs
-        .map(arg => arg.trim())
-        .filter(arg => arg !== '')
-        .map(arg => !isNaN(parseInt(arg,10)) ? parseInt(arg,10) : arg)
-      if (typeof patternArgs[0] === 'string')  {
-        mapping = patternArgs[0]
-        patternArgs = patternArgs.slice(1)
-      }
-      if (patternArgs.length === 1) {
-        port = 0
-        channel = parseInt(patternArgs[0], 10) || 0
-      } else if (patternArgs.length === 2) {
-        channel = parseInt(patternArgs[0], 10) || 0
-        port = parseInt(patternArgs[1], 10) || 0
-      } else {
-        port = 0
-        channel = 0
-      }
-      // Listen to given midi port/channel, create appropriate event and call player.play()
-      midi.listen(port, channel, player.id+player._num, (note, velocity) => {
+  let parseArgs = (patternStr) => {
+    let args = patternStr.split(/\s+/)
+      .map(arg => arg.trim())
+      .filter(arg => arg !== '')
+      .map(arg => !isNaN(parseInt(arg,10)) ? parseInt(arg,10) : arg)
+    let mapping = 'scale'
+    if (typeof args[0] === 'string')  {
+      mapping = args[0]
+      args = args.slice(1)
+    }
+    return { mapping: mapping, args: args }
+  }
+
+  // listen(cb) must call cb(note, velocity, port), with an undefined velocity for a note off
+  let livePlayer = (mapping, channel, params, player, baseParams, listen, stopListening, strikeVel) => {
+      listen((note, velocity, port) => {
         if (velocity === undefined) { // Note off
           releaseNotes(player, e => e._midiNote === note)
           if (!!player._shouldUnlisten && allStopped(player)) {
-            midi.stopListening(port, channel, player.id+player._num) // Nothing left playing, cleanup listener
+            stopListening() // Nothing left playing, cleanup listener
           }
           return
         }
@@ -90,7 +82,7 @@ define(function(require) {
           _midiNote: note,
           value: 0,
           dur: 1,
-          vel: velocity,
+          vel: strikeVel(velocity, port),
           _time: now,
           count: currentCount,
           idx: lastBeat.count,
@@ -103,7 +95,7 @@ define(function(require) {
         event = combineOverrides(event, baseParams)
         if (oct !== undefined) { event.oct = oct } // 'abs' supplies the octave, not the base params
         if (sharp !== undefined) { event.sharp = sharp } // A black note sharpens, over any base param default
-        event.vel = velocity // Ignore base params (whose default vel would clobber it) and use the midi supplied velocity
+        event.vel = strikeVel(velocity, port) // Ignore base params (whose default vel would clobber it) and use the midi supplied velocity
         // Aftertouch is a separate continuous modulation source, as it is on any synth: vel stays the
         // latched strike velocity and the live pressure arrives on a param of its own. Set after the
         // base params, so a preset's press=0 default is overridden, and before the player line's
@@ -136,9 +128,45 @@ define(function(require) {
         // still matches the note off, so a note held across the re-run is not cut
         if (!replaced) { releaseNotes(player) }
         if (allStopped(player)) {
-          midi.stopListening(port, channel, player.id+player._num)
+          stopListening()
         }
       }
+  }
+
+
+  let midiPlayer = (patternStr, params, player, baseParams) => {
+    let {mapping, args} = parseArgs(patternStr)
+    let port = 0, channel = 0
+    if (args.length === 1) {
+      channel = parseInt(args[0], 10) || 0
+    } else if (args.length === 2) {
+      channel = parseInt(args[0], 10) || 0
+      port = parseInt(args[1], 10) || 0
+    }
+    let id = player.id+player._num
+    livePlayer(mapping, channel, params, player, baseParams,
+      (cb) => midi.listen(port, channel, id, (note, velocity) => cb(note, velocity, port)),
+      () => midi.stopListening(port, channel, id),
+      (velocity) => velocity)
+  }
+
+  // The keytar, found by name wherever it is plugged in. The softest strike still sounds at half vel,
+  // and the neck slider scales vel live, so it reaches held notes too
+  let avw2Player = (patternStr, params, player, baseParams) => {
+    let {mapping, args} = parseArgs(patternStr)
+    let channel = parseInt(args[0], 10) || 0
+    let id = player.id+player._num
+    let slider = avw2.controls.s1
+    livePlayer(mapping, channel, params, player, baseParams,
+      (cb) => midi.listenDevice(avw2.deviceNames, channel, id, cb),
+      () => midi.stopListeningDevice(id),
+      (velocity, port) => {
+        let strike = 1/2 + velocity/2
+        let vel = () => strike * midi.getValue(port, channel, slider.control, undefined, slider.default)
+        vel.interval = 'frame'
+        vel.isNonTemporal = true
+        return vel
+      })
   }
 
   // TESTS //
@@ -257,8 +285,39 @@ define(function(require) {
     }
   }
 
+  { // The keytar player: a floor under the velocity, scaled live by the neck slider
+    let {evalParamFrame} = require('player/eval-param')
+    let real = {listenDevice: midi.listenDevice, stopListeningDevice: midi.stopListeningDevice, getValue: midi.getValue}
+    let slider
+    let play = (id, params, velocity) => {
+      let player = testPlayer(id)
+      let captured
+      midi.listenDevice = (matcher, channel, listenerId, cb) => { captured = cb }
+      midi.stopListeningDevice = () => {}
+      midi.getValue = (port, channel, control, note, dflt) => slider === undefined ? dflt : slider
+      avw2Player('', params, player, {vel:3/4, press:0})
+      captured(60, velocity, 2)
+      return player.events[player.events.length-1]
+    }
+    try {
+      slider = undefined
+      assert(1/2, play('atest1', {}, 0).vel(), 'the softest strike is half vel')
+      assert(1, play('atest2', {}, 1).vel(), 'the hardest is full')
+      let e = play('atest3', {}, 1/2)
+      assert(3/4, e.vel(), 'linear in between, and the unmoved slider reads full')
+      assert('frame', e.vel.interval, 'evaluated every frame')
+      assert(true, e.vel.isNonTemporal)
+      slider = 1/2
+      assert(3/8, e.vel(), 'the slider scales a held note')
+      assert(3/4, evalParamFrame(play('atest4', {vel:newOverride(2, (l,r) => l*r)}, 1/2).vel, {count:0}, 0), 'vel*= still applies')
+      assert(1, evalParamFrame(play('atest5', {vel:newOverride(1)}, 1/2).vel, {count:0}, 0), 'vel= replaces it')
+    } finally {
+      Object.assign(midi, real)
+    }
+  }
+
   console.log('Midi player tests complete')
   }
 
-  return midiPlayer
+  return { midiPlayer: midiPlayer, avw2Player: avw2Player }
 })

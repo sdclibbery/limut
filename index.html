@@ -535,6 +535,8 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>midi 9 1</code> use input from midi channel 9 on port (device) 1 (default is 0)</p>
 <p class='sub'><code>midi abs 9 0</code> use input from midi channel 9 port 0 and map it absolutely: the player is set to a chromatic scale and the note value and oct are such that the keyboard note played is the same note played in limut, ignoring the current scale and key</p>
 <p class='sub'><code>midi perc 9 0</code> use input from midi channel 9 port 0 and treat it as percussion, so instead of mapping to a note scale value, map to limut percussion samples. For example, midi note 36 (Bass drum 1) maps to 'X' (Heavy kick)</p>
+<p><code>avw2</code> Play from the Alesis Vortex Wireless 2 keytar, found by name wherever it is plugged in (no port needed). Notes map as for <code>midi</code>, and <code>avw2 abs</code>, <code>avw2 perc</code> and <code>avw2 9</code> (channel) work the same way. eg <code>l keytar avw2</code></p>
+<p class='sub'><code>this.vel</code> The softest strike gives vel 1/2 and the hardest 1, times the neck slider (<code>avw2.s1</code>). The slider applies live to held notes as well, so it works as a tremolo. <code>vel*=</code> and <code>vel=</code> on the player line still apply on top.</p>
 <p><code>keyboard</code> Use <code>keyboard</code> to generate notes from your computer keyboard rather than a pattern. Hover the mouse over the <code>⌨️</code> icon in the UI to enable playing; notes only play from local key presses while the mouse is over the icon. Keys map to scale degrees by row: the home row <code>asdfghjkl</code> plays degrees 0 to 8, the top row <code>qwertyuiop</code> starts an octave up at degree 7, and the bottom row <code>zxcvbnm</code> starts at degree -7.</p>
 <p class='sub'><code>Ctrl</code> Hold Control while pressing a key for half velocity.</p>
 <p class='sub'><code>Shift</code> Hold Shift while pressing a key for full velocity.</p>
@@ -1247,7 +1249,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>avw2</code> Input from an Alesis Vortex Wireless 2 keytar, recognised by name whenever plugged in (no port needed, no re-run on replug). On its own it is 1 when connected, 0 otherwise, and logs midi ports and the last input to help identify controls.</p>
 <p class='sub'><code>avw2.f1</code> Fader 1 on the body, from 0 to 1. <code>f1</code> to <code>f8</code> for the eight faders.</p>
 <p class='sub'><code>avw2.p1</code> Pad 1, from 0 to 1 based on velocity then aftertouch, or 0 when it is not pressed. <code>p1</code> to <code>p8</code> for the eight pads.</p>
-<p class='sub'><code>avw2.s1</code> The slider on the neck, from 0 to 1.</p>
+<p class='sub'><code>avw2.s1</code> The slider on the neck, from 0 to 1. Reads 1 until it is first moved.</p>
 <p class='sub'><code>avw2.bend</code> The pitch bend wheel, from -1 to +1.</p>
 <p class='sub'><code>avw2.ribbon</code> The touch ribbon on the neck, from 0 to 1. <code>ribbon1</code> and <code>ribbon3</code> for ribbon banks 1 and 3 specifically; <code>ribbon</code> is bank 1.</p>
 <p class='sub'><code>avw2.sus</code> The sustain button, 1 while held and 0 when released.</p>

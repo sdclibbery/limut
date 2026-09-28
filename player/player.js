@@ -7,7 +7,7 @@ define((require) => {
   let standardPlayer = require('player/standard')
   let continuousPlayer = require('player/continuous')
   var followPlayer = require('player/follow')
-  var midiPlayer = require('player/midi')
+  var {midiPlayer, avw2Player} = require('player/midi')
   var {gamepadPlayer} = require('player/gamepad')
   var {keyboardPlayer} = require('player/keyboard')
   var expandChords = require('player/expand-chords')
@@ -214,6 +214,10 @@ define((require) => {
       let params = parseParams(paramsStr, playerId)
       player.getEventsForBeatBase = () => [] // Cannot predict events for the next beat so nothing here
       midiPlayer(patternStr.slice(4).trim(), params, player, playerFactory.baseParams)
+    } else if (patternStr.startsWith('avw2')) { // Keytar player
+      let params = parseParams(paramsStr, playerId)
+      player.getEventsForBeatBase = () => [] // Cannot predict events for the next beat so nothing here
+      avw2Player(patternStr.slice(4).trim(), params, player, playerFactory.baseParams)
     } else if (patternStr.startsWith('gamepad')) { // Gamepad player
       let params = parseParams(paramsStr, playerId)
       player.getEventsForBeatBase = () => [] // Cannot predict events for the next beat so nothing here

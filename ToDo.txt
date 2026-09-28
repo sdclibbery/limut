@@ -1,9 +1,15 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-?try out chorus effects
-Glide for keytar
-Get static burst when play keyboard player into tape{}
+!!Try out midi vel mapping
+!Keytar
+  A bit monotonous, needs more lfo variation and vel sensitivity
+  Also just check tone
+  Also, needs release
+  And more controllable things?
+  Also can it support glide?
+Clean up midi{'vel'} - it has aftertouch baked in; does it even make sense as a thing anyway?
+Get static burst when play keyboard player into tape{} , and other times too?? Had one from keytar into airverb?
 studio fixes:
  stuck notes; actually just gets stuck altogether, not just notes - just the cable??
  swap to root from a - done - needs checking
@@ -14,7 +20,6 @@ studio fixes:
  Report Chromium bug:
   It's a genuine, current bug and I'd file it. Want me to build the standalone repro — a plain HTML page with no limut
    the osc → biquad → gain →  param loop next to the → audio control, plus the CDP capture procedure — so you can attach it to an issue?
-!Keytar a bit monotonous, needs more lfo variation and vel sensitivity. Also just check tone.
 ?Is it right that accum etc do not reset between events?? Caused glitching on dlead drive mix
  Maybe even a param or separate method?
 ?Want a way to respond to the release phase in expressions, eg apply a pitch change starting when the note is released?

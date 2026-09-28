@@ -119,6 +119,7 @@ define(function(require) {
     portInfo[idx] = { id: port.id, name: port.name, manufacturer: port.manufacturer, connected: true }
     consoleOut(`🔵 MIDI port ${idx}: ${port.manufacturer} ${port.name}`)
     port.open().then(() => { port.onmidimessage = (msg) => handleMessage(idx, msg) })
+    for (let id in deviceListeners) { attachDevice(id) }
     return idx
   }
 
@@ -170,12 +171,14 @@ define(function(require) {
     return portInfo.map(i => i && Object.assign({}, i))
   }
 
-  let getValue = (portNumber, channelNumber, controlId, noteNumber) => {
+  // dflt is for a control that has not sent anything yet, eg a volume slider that should read full until moved
+  let getValue = (portNumber, channelNumber, controlId, noteNumber, dflt) => {
     if (!midi) { connect() }
+    dflt = dflt || 0
     let port = inputs[portNumber]
-    if (!port) { return 0 }
+    if (!port) { return dflt }
     let channel = port[channelNumber]
-    if (!channel) { return 0 }
+    if (!channel) { return dflt }
     if (controlId === 'bend') { return channel.bend || 0 }
     if (controlId === 'notes') {
       let root = scale.root || 0
@@ -187,7 +190,8 @@ define(function(require) {
       return (channel.notes || []).reduce((m, n) => Math.max(m, channel.notePressure[n] || 0), channel.pressure || 0)
     }
     if (controlId !== undefined && channel.controller[controlId] !== undefined) { return channel.controller[controlId] }
-    return channel.note[noteNumber] || 0
+    let noteValue = channel.note[noteNumber]
+    return noteValue !== undefined ? noteValue : dflt
   }
 
   // Aftertouch for one note, whichever kind the device sends: a device sends polyphonic key
@@ -219,6 +223,29 @@ define(function(require) {
     if (inputs[portNumber][channelNumber] === undefined) { return }
     let channel = inputs[portNumber][channelNumber]
     delete channel.listeners[id]
+  }
+
+  // Listen to a device recognised by name. It may not have a port yet (not plugged in, or midi access
+  // still resolving), so the listener waits and attaches when the port registers. The port number is
+  // passed to the callback as a third arg. A port keeps its number across a replug, so attaching once is enough.
+  let deviceListeners = {}
+  let attachDevice = (id) => {
+    let l = deviceListeners[id]
+    if (l.port !== undefined) { return }
+    let idx = findPort(l.matcher)
+    if (idx === undefined) { return }
+    l.port = idx
+    listen(idx, l.channel, id, (note, velocity) => l.callback(note, velocity, idx))
+  }
+  let listenDevice = (matcher, channelNumber, id, callback) => {
+    deviceListeners[id] = { matcher: matcher, channel: channelNumber, callback: callback }
+    attachDevice(id)
+  }
+  let stopListeningDevice = (id) => {
+    let l = deviceListeners[id]
+    if (!l) { return }
+    if (l.port !== undefined) { midIgnore(l.port, l.channel, id) }
+    delete deviceListeners[id]
   }
 
   // TESTS //
@@ -342,6 +369,34 @@ define(function(require) {
     delete inputs[idx]
   }
 
+  { // A control that has sent nothing reads its default
+    handleMessage(1, {data: [0xb0, 7, 64]})
+    assert(64/127, getValue(1, 0, 7, undefined, 1), 'a control that has sent reads its value')
+    assert(1, getValue(1, 0, 8, undefined, 1), 'one that has not reads the default')
+    assert(0, getValue(1, 0, 8), 'which is 0 unless given')
+    assert(1, getValue(7, 0, 8, undefined, 1), 'as it does on a port with no input yet')
+  }
+
+  { // A device listener waits for its device to turn up, then hears its notes
+    let calls = []
+    listenDevice('launchkey', 0, 'dtest', (note, velocity, port) => calls.push([note, velocity, port]))
+    let idx = registerPort(stubPort('c', 'Launchkey 49', 'Novation'))
+    handleMessage(idx, {data: [0x90, 60, 127]})
+    assert(`60,1,${idx}`, ''+calls[0], 'the note arrived, with the port it came on')
+    stopListeningDevice('dtest')
+    handleMessage(idx, {data: [0x80, 60, 0]})
+    assert(1, calls.length, 'nothing is heard after stopping')
+
+    listenDevice('launchkey', 0, 'dtest2', (note, velocity) => calls.push([note, velocity]))
+    handleMessage(idx, {data: [0x90, 62, 127]})
+    assert(2, calls.length, 'a device already plugged in attaches straight away')
+    stopListeningDevice('dtest2')
+
+    listenDevice('seaboard', 0, 'dtest3', () => {})
+    stopListeningDevice('dtest3')
+    assert(undefined, deviceListeners['dtest3'], 'a listener still waiting can be stopped')
+  }
+
   resetPorts()
   midi = realMidi
 
@@ -355,6 +410,8 @@ define(function(require) {
     getLastInputString: getLastInputString,
     listen: listen,
     stopListening: midIgnore,
+    listenDevice: listenDevice,
+    stopListeningDevice: stopListeningDevice,
     registerPort: registerPort,
     findPort: findPort,
     getPorts: getPorts,
