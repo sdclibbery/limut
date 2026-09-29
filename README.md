@@ -44,6 +44,10 @@ Limut's audio files have been copied from FoxDot (https://github.com/Qirky/FoxDo
     Many samples have been obtained from http://freesound.org and have been placed in the public domain via the Creative Commons 0 License: http://creativecommons.org/publicdomain/zero/1.0/ - thank you to the original creators
     Other samples have come from the Dirt Sample Engine which is part of the TidalCycles live coding language created by Yaxu - another huge amount of thanks.
 
+The piano samples (`sample/salamander`) are from the Salamander Grand Piano V3 by Alexander Holm, licensed under Creative Commons Attribution 3.0: https://creativecommons.org/licenses/by/3.0/
+
+The guitar samples (`sample/guitar`) are from FreePats FSBS Electric Guitar Direct (http://freepats.zenvoid.org/ElectricGuitar/clean-electric-guitar.html), published under the Creative Commons CC0 1.0 public domain dedication.
+
 If you feel I've used a sample where I shouldn't have, please get in touch!
 
 # Waveforms

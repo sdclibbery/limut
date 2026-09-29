@@ -146,3 +146,8 @@ preset keytar audiosynth, oct=4, dur=1/2,
     >> mix{echo{1/8},1/32},
   lfo=[1:\1,0:/2,4/5:!8,0.1:_]e@s,
   warp=1, jitter=1/2, vibrato=1/50, click=1/2, cutoff=1/3+1/4*[]r, crisp=1
+
+// Sampled DI guitar through a drive and cabinet; needs include 'lib/effects.limut'
+preset cleangtr guitar, drive=1/32, fx=cabinet{1/2}, room=1/2
+preset crunchgtr guitar, drive={1/8,gain:2}, fx=cabinet{}, room=1/4
+preset leadgtr guitar, drive={1/2,gain:4}, fx=cabinet{} >> mix{echo{3/8},1/4}, room=1

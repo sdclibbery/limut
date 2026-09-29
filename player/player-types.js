@@ -14,6 +14,7 @@ define((require) => {
   let io808 = require('play/synth/io808')
   let sample = require('play/synth/sample')
   let piano = require('play/synth/piano')
+  let guitar = require('play/synth/guitar')
   let noise = require('play/synth/noise')
   let pwm = require('play/synth/pwm')
   let superosc = require('play/synth/superosc')
@@ -86,6 +87,7 @@ define((require) => {
     sample: { play: sample, baseParams:{ vel:3/4, press:0, amp:parseExpression('this.vel'), delay:0, oct:4 }, _type:'audio' },
     speak: { play: tts, baseParams:{ vel:3/4, press:0, amp:parseExpression('this.vel'), delay:0, oct:4, text:'hello' }, _type:'audio' },
     piano: { play: piano, baseParams:{ vel:3/4, press:0, amp:parseExpression('this.vel'), delay:0, oct:4 }, _type:'audio' },
+    guitar: { play: guitar, baseParams:{ vel:3/4, press:0, amp:parseExpression('this.vel'), delay:0, oct:3 }, _type:'audio' },
     pwm: { play: pwm, baseParams:{ vel:3/4, press:0, amp:parseExpression('this.vel'), delay:0, oct:4, pwm:0.5 }, _type:'audio' },
     superosc: { play: superosc, baseParams:{ vel:3/4, press:0, amp:parseExpression('this.vel'), delay:0, oct:4 }, _type:'audio' },
     wave: { play: wave, baseParams:{ vel:3/4, press:0, amp:parseExpression('this.vel'), delay:0, oct:4 }, _type:'audio' },
