@@ -781,7 +781,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>tune=55</code> Base frequency for the kick in Hz. Usually this should be between about 45 and 65 Hz. The pitch{} function can be used to calculate specific frequencies for tuning the kick to the current key; for example <code>tune=pitch{0,oct:2}</code></p>
 <p><code>bell</code> FM generated bell preset</p>
 <p><code>crackle</code> Crackly crackle sounds.</p>
-<p><code>cleangtr</code>, <code>crunchgtr</code>, <code>leadgtr</code> Clean, crunchy and lead presets for the <code>guitar</code> synth. Need <code>include 'lib/effects.limut'</code> for <code>cabinet</code> and echo.</p>
+<p><code>cleangtr</code>, <code>leadgtr</code>, <code>fuzzgtr</code> Clean, lead and fuzz presets for the <code>guitar</code> synth. Need <code>include 'lib/effects.limut'</code> for their saturation and <code>cabinet</code>.</p>
 <p><code>dbass</code> Detuned saw bass preset - multiple sawtooth waves slightly out of tune for a fuller sound</p>
 <p><code>dbd</code> Disperser kick drum preset based on impulse. A short impulse is fed through a disperser (allpass filter chain) to produce a deep dub-style boom kick. Uses params:</p>
 <p class='sub'><code>freq=45</code> Base frequency for the kick in Hz. Sets both the disperser resonance and an hpf cutoff. Default time units: hz.</p>
