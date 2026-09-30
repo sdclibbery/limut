@@ -48,6 +48,8 @@ The piano samples (`sample/salamander`) are from the Salamander Grand Piano V3 b
 
 The guitar samples (`sample/guitar`) are from FreePats FSBS Electric Guitar Direct (http://freepats.zenvoid.org/ElectricGuitar/clean-electric-guitar.html), published under the Creative Commons CC0 1.0 public domain dedication.
 
+The guitar release and muted string noises (`sample/guitar/noise`) are from Karoryfer Samples Shinyguitar (https://github.com/sfzinstruments/karoryfer.shinyguitar), CC0 1.0.
+
 If you feel I've used a sample where I shouldn't have, please get in touch!
 
 # Waveforms

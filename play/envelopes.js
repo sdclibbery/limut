@@ -13,7 +13,7 @@ define(function (require) {
 
   let scheduleDestroy = (params) => {
     liveVoices.delete(params)
-    setTimeout(() => params._destructor.destroy(), 100+(params.endTime - system.audio.currentTime)*1000)
+    setTimeout(() => params._destructor.destroy(), 100+((params._tail || 0) + params.endTime - system.audio.currentTime)*1000)
   }
 
   // Register a live voice and its release. The release only ever runs once: a second call would
@@ -84,6 +84,7 @@ define(function (require) {
     if (sustain !== undefined) {
       vca.gain.linearRampToValueAtTime(gain, params._time + attack+sustain)
       vca.gain.exponentialRampToValueAtTime(0.00001, params._time + attack+sustain+release)
+      params._releaseTime = params._time + attack+sustain
       params.endTime = params._time + attack+sustain+release
       scheduleDestroy(params)
     } else {
@@ -92,6 +93,7 @@ define(function (require) {
         let relTime = Math.max(system.audio.currentTime, params._time + attack + 0.001)
         vca.gain.setValueAtTime(gain, relTime)
         vca.gain.linearRampToValueAtTime(0.00001, relTime+release)
+        params._releaseTime = relTime
         params.endTime = relTime+release
       })
     }
