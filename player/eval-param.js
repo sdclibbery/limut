@@ -38,13 +38,15 @@ define((require) => {
     if (override !== undefined) { return override }
     let originalCount = event.count
     event.count = results.modCount
-    let resultWrapper = value(event, results.modBeat, (v,e,b,o) => { // Pass an evalRecurse that cancels the modifiers
+    let er = (v,e,b,o) => { // Pass an evalRecurse that cancels the modifiers
       let oldEc = e.count
       e.count = originalCount
       let result = evalRecurse(v, e, beat,o)
       e.count = oldEc
       return result
-    }, mods)
+    }
+    er.options = evalRecurse.options // Without this, a node built inside a var function can't see expandingChords and builds for real
+    let resultWrapper = value(event, results.modBeat, er, mods)
     event.count = originalCount
     return resultWrapper
   }
@@ -281,6 +283,12 @@ define((require) => {
   let constWithMods = () => 1
   constWithMods.modifiers = {}
   assert(1, evalParamFrame(constWithMods, ev(0), 1))
+
+  let seenExpanding
+  let seesOptions = (e,b,er) => { seenExpanding = er.options && er.options.expandingChords; return 1 }
+  seesOptions.modifiers = {}
+  evalParamFrame(seesOptions, ev(0), 0, {expandingChords:true})
+  assert(true, seenExpanding)
 
   let ovrs = (...vs) => {
     let r = {}

@@ -165,6 +165,33 @@ set cabinet = {flatten:1} ->
   pkf{(3db)^flatten, freq:900, q:1/2} >>
   bwlpf4{12000 - flatten*4000}
 
+// Drive core for fuzz and autofuzz. Shaper curves are fixed once built, so amount works through
+// the gains and filters around them, which keeps it animatable. Node params can't call {}
+// functions, hence the ternaries. The make-up gain is fitted to hold a saw's loudness level.
+set fzcore = {amount} ->
+  pkf{(6db)^((amount-0.4)^2<1/16 ?? 1-16*(amount-0.4)^2 ?: 0), freq:720, q:1/2} >>
+  gain{10^(5*amount-2)/4} >> shaper{ {x} -> tanh{4*x+0.2} - tanh{0.2}, samples:4097, oversample:'4x' } >>
+  gain{10^(1.2*(amount>1/2 ?? 2*amount-1 ?: 0))/4} >>
+  shaper{ {x} -> x/(1+(x/(x>=0 ?? 0.5 ?: 0.7))^6)^(1/6), samples:4097, oversample:'4x' } >>
+  bwhpf{30} >>
+  pkf{(-8db)^(amount>1/2 ?? 2*amount-1 ?: 0), freq:800, q:1/2} >>
+  bwlpf{20000*(1/5)^amount} >>
+  gain{
+    (10^(5.24-10*amount) + 10^(0.6-4.8*(amount>1/2 ?? 2*amount-1 ?: 0)) + 0.62)^(1/2)
+    * 10^(-0.08*((amount-0.4)^2<1/16 ?? 1-16*(amount-0.4)^2 ?: 0) + 0.075*(amount>1/2 ?? (2*amount-1)^2 ?: 0))
+  }
+
+// level is the input level the make-up gain is matched to: a typical single synth note.
+set fuzz = {amount:1/2, level:1/24} -> gain{1/level} >> fzcore{amount} >> gain{level}
+
+// Divides by the input's envelope before the drive and multiplies it back after, so the fuzz is
+// the same at any input level. Normalises to half the envelope, the level fzcore is fitted at.
+// Below -60dBFS the envelope is no longer boosted. max{} gives NaN in a shaper here, hence the ternary.
+set autofuzz = {amount:1/2, freq:20} ->
+  let{fzin} >> let{fzenv, fzin >> follower{freq}} >>
+  gain{fzenv >> gain{2} >> shaper{ {x} -> (x>1/500 ?? 1/x ?: 500), samples:4097, oversample:'none' }} >>
+  fzcore{amount} >> gain{fzenv >> gain{2}}
+
 // OTT style multiband compression: hard, fast compression per band.
 set ott = {depth:1, count:3, trim:1} -> multiband4{
   {i,centre} -> compressor{threshold:-30db, ratio:(12db)^depth, attack:2ms, release:60ms, knee:6db},

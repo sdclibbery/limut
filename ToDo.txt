@@ -2,6 +2,9 @@
 =================================================================================================================================
 =================================================================================================================================
 !!Try out midi vel mapping
+! max{x, 1/500} inside a shaper function gives NaN, so I used a ternary instead.
+! let{n, expr} still builds its expression twice when the chain is created, leaving one idle follower per autofuzz chain.
+! The form let{n, follower{}}, with no input named, errors. I used let{in}>>let{n, in>>follower{}} instead.
 !Keytar
   A bit monotonous, needs more lfo variation and vel sensitivity
   Also just check tone
