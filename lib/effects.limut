@@ -186,10 +186,10 @@ set fuzz = {amount:1/2, level:1/24} -> gain{1/level} >> fzcore{amount} >> gain{l
 
 // Divides by the input's envelope before the drive and multiplies it back after, so the fuzz is
 // the same at any input level. Normalises to half the envelope, the level fzcore is fitted at.
-// Below -60dBFS the envelope is no longer boosted. max{} gives NaN in a shaper here, hence the ternary.
+// Below -60dBFS the envelope is no longer boosted.
 set autofuzz = {amount:1/2, freq:20} ->
-  let{fzin} >> let{fzenv, fzin >> follower{freq}} >>
-  gain{fzenv >> gain{2} >> shaper{ {x} -> (x>1/500 ?? 1/x ?: 500), samples:4097, oversample:'none' }} >>
+  let{fzenv, follower{freq}} >>
+  gain{fzenv >> gain{2} >> shaper{ {x} -> 1/max{x,1/500}, samples:4097, oversample:'none' }} >>
   fzcore{amount} >> gain{fzenv >> gain{2}}
 
 // OTT style multiband compression: hard, fast compression per band.

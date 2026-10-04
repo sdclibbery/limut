@@ -48,10 +48,16 @@ Drop a file at `verify-<thing>.html` at the repo root, alongside `index.html`. R
 
    The `update-code` module exports `{parseCode, updateCode}` — it is **not** the function itself, so grab `const updateCode = uc.updateCode` (a bare `updateCode(src)` on the module object throws `updateCode is not a function`).
 
+   Also load the builtin DSL functions that `main.js` requires. Without `functions/aggregators`, `max{}`/`min{}`
+   fall through to the strings `'max'`/`'min'`, so an expression like `1/max{x,1/500}` comes out NaN. That looks
+   exactly like a real bug but is only the harness.
+
    ```js
    require(['update-code', 'player/players', 'play/system', 'metronome', 'play/main-bus',
             'play/nodes/nodes', 'play/nodes/graph', 'play/effects/effects',
-            'expression/connectableOps', 'expression/connectOp'], (uc, players, system, metronome) => {
+            'expression/connectableOps', 'expression/connectOp',
+            'functions/time', 'functions/rand', 'functions/aggregators', 'functions/maths',
+            'functions/chord', 'predefined-var-defs'], (uc, players, system, metronome) => {
      const updateCode = uc.updateCode; … });
    ```
 

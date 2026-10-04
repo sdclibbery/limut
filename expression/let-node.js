@@ -4,6 +4,7 @@ define(function(require) {
   let addVarFunction = require('predefined-vars').addVarFunction
   let consoleOut = require('console')
   let connectOp = require('expression/connectOp')
+  let {connect,isConnectable} = require('play/nodes/connect')
   let {evalParamFrame} = require('player/eval-param')
   let {makeShaderNode,isShaderNode,implicitInputNode,constShaderNode} = require('draw/visualsynth/shader-node')
 
@@ -119,6 +120,9 @@ define(function(require) {
     })
   }
 
+  let isBareCall = (ast, e) => typeof ast === 'function' && ast.isVarLookup && !ast.namespace
+    && typeof vars.get(ast._name) === 'function' && !(e && e._lets && e._lets[ast._name] !== undefined)
+
   let passShaderNode = () => makeShaderNode((input, ctx) => input)
 
   let letNode = (args, e, b, state, evalRecurse) => {
@@ -176,6 +180,9 @@ define(function(require) {
     // straight to the AudioParam, play/eval-audio-params.js). Teardown needs nothing extra: connect()
     // registers the gain with the owning destructor as it is wired in.
     let node = vars.all().gain({value:1}, e,b)
+    // A bare call (let{env, follower{}}) takes the chain at this point, as it would after >>. Only a
+    // bare call: in let{env, in>>follower{}} the input is already named, and feeding it too would double it.
+    if (isBareCall(boundAst, e) && isConnectable(boundValue)) { connect(node, boundValue, e && e._destructor) }
     bindLet(e, name, boundValue !== undefined ? boundValue : node)
     return node
   }
@@ -204,7 +211,7 @@ define(function(require) {
   let audioNodeProto = Object.getPrototypeOf(Object.getPrototypeOf(require('play/system').audio.createGain()))
   let mockAn = () => {
     let an = Object.create(audioNodeProto)
-    an.connect = () => {}
+    an.connect = (d) => { an.connectedTo = d }
     an.disconnect = () => {}
     Object.defineProperty(an, "numberOfInputs", { get() { return 1 } })
     return an
@@ -231,6 +238,26 @@ define(function(require) {
   r = letNode({value:'foo', value1:bound}, e, 0, {}, evalParamFrame)
   assert(true, r instanceof AudioNode && r !== bound)
   assert(true, e._lets.foo === bound)
+
+  // Audio, two arg form with a bare call: the chain at this point feeds it, as >> would
+  let callAst = (n, v) => { let f = () => v; f.isVarLookup = true; f._name = n; return f }
+  vars.all().letmockfn = () => 0
+  let fed = mockAn()
+  e = {}
+  r = letNode({value:'env', value1:callAst('letmockfn', fed)}, e, 0, {}, evalParamFrame)
+  assert([true, true], [e._lets.env === fed, r.connectedTo === fed])
+  // but not when the input is already named, nor a let name, nor a call giving a scalar
+  let pipedAst = () => fed
+  e = {}
+  r = letNode({value:'env', value1:pipedAst}, e, 0, {}, evalParamFrame)
+  assert(undefined, r.connectedTo)
+  e = {_lets: {letmockfn: fed}}
+  r = letNode({value:'env', value1:callAst('letmockfn', fed)}, e, 0, {}, evalParamFrame)
+  assert(undefined, r.connectedTo)
+  e = {}
+  r = letNode({value:'env', value1:callAst('letmockfn', 0.5)}, e, 0, {}, evalParamFrame)
+  assert([0.5, undefined], [e._lets.env, r.connectedTo])
+  delete vars.all().letmockfn
 
   // Audio, two arg form with a scalar
   e = {}
