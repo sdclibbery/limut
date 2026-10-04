@@ -187,6 +187,7 @@ define(function(require) {
     return node
   }
   letNode.dontEvalArgs = true // The bound expression must reach us as a raw AST so we choose when to eval it
+  letNode.dontEvalModifiers = true // A call's args double as its modifiers, which would build the bound expression un-piped first
   addVarFunction('let', letNode)
 
   // TESTS //
@@ -258,6 +259,22 @@ define(function(require) {
   r = letNode({value:'env', value1:callAst('letmockfn', 0.5)}, e, 0, {}, evalParamFrame)
   assert([0.5, undefined], [e._lets.env, r.connectedTo])
   delete vars.all().letmockfn
+
+  // Reached through the modifier machinery, as >> and param eval call it: the bound expression is built once
+  let {evalFunctionWithModifiers} = require('player/eval-param')
+  let builds = 0
+  let countingAst = () => { builds++; return mockAn() }
+  let letArgs = {value:'env', value1:countingAst}
+  let letCall = (ev,bt,er) => letNode(letArgs, ev, bt, {}, er)
+  letCall.isVarLookup = true
+  letCall._name = 'let'
+  letCall.modifiers = letArgs
+  let savedLet = vars.get('let')
+  vars.set('let', letNode) // predefined vars are not applied yet while modules load
+  e = {}
+  evalFunctionWithModifiers(letCall, e, 0, evalParamFrame)
+  assert(1, builds)
+  if (savedLet === undefined) { delete vars.all().let } else { vars.set('let', savedLet) }
 
   // Audio, two arg form with a scalar
   e = {}

@@ -2,6 +2,7 @@
 define((require) => {
   let {overrideKey,applyModifiers} = require('expression/time-modifiers')
   let {getCallTreeString} = require('player/callstack')
+  let vars = require('vars')
 
   let expandObjectChords = (o) => {
     for (let k in o) {
@@ -71,11 +72,17 @@ define((require) => {
     return mods
   }
 
+  let skipsModifiers = (value) => {
+    if (!value.isVarLookup || value.namespace) { return false }
+    let target = vars.get(value._name)
+    return typeof target === 'function' && !!target.dontEvalModifiers
+  }
+
   let evalFunctionWithModifiers = (value, event, beat, evalRecurse) => {
     if (shouldForcePerEvent(value)) { // Force per event if explicitly called for
       beat = event.count
     }
-    if (typeof value.modifiers !== 'object') {
+    if (typeof value.modifiers !== 'object' || skipsModifiers(value)) {
       return value(event, beat, evalRecurse) // No modifiers
     }
     let mods = evalModifiers(value.modifiers, event, beat, evalRecurse)

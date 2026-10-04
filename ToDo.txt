@@ -1,7 +1,6 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!let{n, expr} still builds its expression twice when the chain is created, leaving one idle follower per autofuzz chain.
 !Get static burst when play keyboard player into tape{} , and other times too?? Had one from keytar into airverb?
 !Keytar
   A bit monotonous, needs more lfo variation and vel sensitivity
