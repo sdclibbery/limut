@@ -5997,3 +5997,48 @@ section speech {
 }, length=8
 
 
+// v visualsynth, px=kal2{uv}^2
+// v visualsynth, px=kal2{uv/4+time/16}>>kal2{uv}^3
+// v visualsynth, px=kal2{uv>>abs+id/16-time/6}^2>>pal{0,id,1,1}
+// v visualsynth, px=kal2{uv>>abs+id/16-time/6}^2>>pal{0,red,1}^3/2
+// v visualsynth, px=kal{uv>>abs+id/16-time/6}^3>>pal{0,red,1,mul{1/4}>>kal2{uv}^2}
+
+
+include 'personal/everything.limut'
+dw dmxwash, channel=(1,8,15,22), fore=#002*pk.pulse.0
+v visualsynth, px=kal2{uv+l.pulse.0*time/32+kal*ph.pulse.0}, display='hub75-01', dim=0.8
+w visualsynth, px=mul{1-[pk.vel.0 /16:!1,0]e@s}>>tex{webcam{['5mp','2mp']t16}}
+
+
+// Dark Jam
+set bpm=131
+set main fx=stanh
+set !p* add+=[0:_16,2:_8,1:_8]{sx.time}
+set scale='phrygian'
+set p* delay|=[[1,3]r/4:_2,():_]{sx.rtime}
+set default length=16
+pk perc x..., sample=3, fx=stanh{3/2}
+// pkk perc .x.
+// ph perc ..-., sample=3
+// phh perc .-n-, swing=54, vel*=[]n, pan=[-1,1]/4
+// pp perc fur crop 14 + ol, swing=54, rate=1/4, vel=1/6, room=1/8, fx>>=mix{fuzz,[]n}
+bs sub .000
+// b psybass, fx>>=duck*+3db
+// s sting 0.7.605 crop 14 + 98, vel=avw2.f8, fx=mix{airverb}, cutoff=avw2.f7, oct+=[0,1]r, low=-12db
+// dp darkpad (049), vel/=1, fx=mix{airverb}
+// c croak, fx=darkverb>>tg
+l guitar avw2 1, addc=7*avw2.bend+2*this.press, fx=fuzz{avw2.f1}>>cabinet>>mix{darkverb,avw2.f2}>>mix{tg,avw2.f3}>>mix{airverb}*avw2.s1*+6db
+l2 vox keyboard, fx=mix{airverb}*+9db
+section build {
+	set !p* add-=1
+	set (pkk,phh,ph,pp) vel=0
+  c chant, fx=darkverb
+  f perc u, room=1/4, vel*=sx.rise^4, rate=2/3
+	bl blare 0008, dur=8, fx=darkverb*-4db
+  set dw fore=#300*dp.pulse.0
+}, length:32, next=drop
+section drop {
+	ps perc ....O..., sample=3, room=1/2, amp*=2/3, rate=3/4
+}, length=64
+
+

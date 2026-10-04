@@ -154,7 +154,7 @@ define(function(require) {
   // and the neck slider scales vel live, so it reaches held notes too
   let avw2Player = (patternStr, params, player, baseParams) => {
     let {mapping, args} = parseArgs(patternStr)
-    let channel = parseInt(args[0], 10) || 0
+    let channel = typeof args[0] === 'number' ? args[0] : avw2.keyChannel
     let id = player.id+player._num
     let slider = avw2.controls.s1
     livePlayer(mapping, channel, params, player, baseParams,
@@ -162,7 +162,7 @@ define(function(require) {
       () => midi.stopListeningDevice(id),
       (velocity, port) => {
         let strike = 1/2 + velocity/2
-        let vel = () => strike * midi.getValue(port, channel, slider.control, undefined, slider.default)
+        let vel = () => strike * midi.getValue(port, avw2.controlChannel, slider.control, undefined, slider.default)
         vel.interval = 'frame'
         vel.isNonTemporal = true
         return vel
@@ -288,14 +288,14 @@ define(function(require) {
   { // The keytar player: a floor under the velocity, scaled live by the neck slider
     let {evalParamFrame} = require('player/eval-param')
     let real = {listenDevice: midi.listenDevice, stopListeningDevice: midi.stopListeningDevice, getValue: midi.getValue}
-    let slider
-    let play = (id, params, velocity) => {
+    let slider, listenChannel, sliderChannel
+    let play = (id, params, velocity, patternStr) => {
       let player = testPlayer(id)
       let captured
-      midi.listenDevice = (matcher, channel, listenerId, cb) => { captured = cb }
+      midi.listenDevice = (matcher, channel, listenerId, cb) => { captured = cb; listenChannel = channel }
       midi.stopListeningDevice = () => {}
-      midi.getValue = (port, channel, control, note, dflt) => slider === undefined ? dflt : slider
-      avw2Player('', params, player, {vel:3/4, press:0})
+      midi.getValue = (port, channel, control, note, dflt) => { sliderChannel = channel; return slider === undefined ? dflt : slider }
+      avw2Player(patternStr || '', params, player, {vel:3/4, press:0})
       captured(60, velocity, 2)
       return player.events[player.events.length-1]
     }
@@ -311,6 +311,14 @@ define(function(require) {
       assert(3/8, e.vel(), 'the slider scales a held note')
       assert(3/4, evalParamFrame(play('atest4', {vel:newOverride(2, (l,r) => l*r)}, 1/2).vel, {count:0}, 0), 'vel*= still applies')
       assert(1, evalParamFrame(play('atest5', {vel:newOverride(1)}, 1/2).vel, {count:0}, 0), 'vel= replaces it')
+      play('atest6', {}, 1)
+      assert(1, listenChannel, 'the keys are on channel 1 by default')
+      play('atest7', {}, 1, '0')
+      assert(0, listenChannel, 'avw2 0 picks channel 0')
+      play('atest8', {}, 1, 'abs 5')
+      assert(5, listenChannel, 'a channel after the mapping')
+      play('atest9', {}, 1, '5').vel()
+      assert(0, sliderChannel, 'the slider is read on the control channel, whatever the key channel')
     } finally {
       Object.assign(midi, real)
     }

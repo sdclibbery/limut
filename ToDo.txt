@@ -1,10 +1,14 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!!Try out midi vel mapping
-! max{x, 1/500} inside a shaper function gives NaN, so I used a ternary instead.
-! let{n, expr} still builds its expression twice when the chain is created, leaving one idle follower per autofuzz chain.
-! The form let{n, follower{}}, with no input named, errors. I used let{in}>>let{n, in>>follower{}} instead.
+Studio issues:
+ s1 auto vel not working!!
+ If swap webcam device with []t, it goes very very choppy - needs doing in the studio
+ hub75 showing vertical tear occasionally, I think it happens after code update, repairs itself eventually - ???
+!max{x, 1/500} inside a shaper function gives NaN, so I used a ternary instead.
+!let{n, expr} still builds its expression twice when the chain is created, leaving one idle follower per autofuzz chain.
+!The form let{n, follower{}}, with no input named, errors. I used let{in}>>let{n, in>>follower{}} instead.
+!Get static burst when play keyboard player into tape{} , and other times too?? Had one from keytar into airverb?
 !Keytar
   A bit monotonous, needs more lfo variation and vel sensitivity
   Also just check tone
@@ -12,13 +16,6 @@
   And more controllable things?
   Also can it support glide?
 Clean up midi{'vel'} - it has aftertouch baked in; does it even make sense as a thing anyway?
-Get static burst when play keyboard player into tape{} , and other times too?? Had one from keytar into airverb?
-studio fixes:
- stuck notes; actually just gets stuck altogether, not just notes - just the cable??
- swap to root from a - done - needs checking
- want to be able to avw2.press - done - needs checking
- If swap webcam device with []t, it goes very very choppy - needs doing in the studio
- hub75 showing vertical tear occasionally, I think it happens after code update, repairs itself eventually - ???
 !Render capacity leak again????
  Report Chromium bug:
   It's a genuine, current bug and I'd file it. Want me to build the standalone repro — a plain HTML page with no limut

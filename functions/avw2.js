@@ -7,7 +7,11 @@ define(function(require) {
   // The Alesis Vortex Wireless 2 keytar, however it turns up: over USB, or via its wireless receiver
   let deviceNames = ['vortex']
 
-  // Everything the keytar sends, on midi channel 0 (which the Alesis editor calls "Channel 1").
+  // The keys play on channel 1; the pads and every control are on channel 0
+  let keyChannel = 1
+  let controlChannel = 0
+
+  // Everything the keytar sends besides its keys, on controlChannel (which the Alesis editor calls "Channel 1").
   // Reprogrammed the keytar in the preset editor? This table is the only thing to change.
   let controls = {
     s1: {control:7, default:1}, // Volume slider on the neck: full until it is first moved
@@ -56,7 +60,7 @@ define(function(require) {
       controlId = args.value // avw2{14}: a raw control (or note) number, like midi{14} but on its port
       noteNumber = args.value
     }
-    let channelNumber = args.channel !== undefined ? args.channel : 0
+    let channelNumber = args.channel !== undefined ? args.channel : controlChannel
     let portOverride = args.port
     // With no args at all, report what is plugged in and what it last sent, to help identify controls
     let isBare = special === undefined && controlId === undefined && noteNumber === undefined && portOverride === undefined
@@ -173,5 +177,5 @@ define(function(require) {
   console.log('Avw2 tests complete')
   }
 
-  return { deviceNames: deviceNames, controls: controls }
+  return { deviceNames: deviceNames, controls: controls, keyChannel: keyChannel, controlChannel: controlChannel }
 })
