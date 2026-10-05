@@ -1621,6 +1621,12 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>sdcross{in, arm:1/2, thick:1/6, r:0}</code> Greek cross (a plus sign) with arms of half length <code>arm</code> and half thickness <code>thick</code>. <code>r</code> rounds the corners, inner ones included, without growing the shape.</p>
 <p><code>sdcirclewave{in, tb:1/2, ra:1/4}</code> An endless wave of circular arcs of radius <code>ra</code> along <code>x</code>; <code>tb</code> is how much of each circle is used (1/2 is half circles). A line, so give it <code>sdround</code>: <code>px=sdcirclewave{tb:[0:1]l8}&gt;&gt;sdround{1/64}&gt;&gt;sdfill</code>.</p>
 <p class='sub'>To move a shape, shift the coordinate going in, which moves it the opposite way: <code>px=add{x:1/2}&gt;&gt;sdcircle{r:1/4}&gt;&gt;sdfill</code> moves it left. Use <code>rot2</code> and <code>mat2</code> to rotate and shear.</p>
+<h6>Voronoi</h6>
+<p>Moving voronoi cells. All three take <code>{in, scale:4, seed:0, t:time/8, jitter:1}</code>: <code>scale</code> is cells per unit, each cell's point orbits once per <code>t</code> step of 1 (<code>t:0</code> freezes), <code>jitter</code> is how far points wander from the cell centre.</p>
+<p><code>sdvoronoi</code> Distance to the nearest cell edge, 0 on the edge: <code>px=sdvoronoi{scale:6}&gt;&gt;sdannular{1/96}&gt;&gt;sdfill{#0ff}</code>.</p>
+<p><code>sdvorcentre</code> Distance to the cell's point: <code>px=sdvorcentre&gt;&gt;sdround{1/16}&gt;&gt;sdfill</code>.</p>
+<p><code>vorcell</code> A random 0 to 1 value per cell: <code>px=vorcell{scale:6}&gt;&gt;cospal{#05a}</code>.</p>
+<p class='sub'><code>jitter</code> above 1 gives wrong distances. Each call does its own search, so two in one chain cost twice as much.</p>
 <h6>Combining</h6>
 <p>Union and intersection are <code>min{}</code> and <code>max{}</code>: <code>px=min{sdcircle{r:1/3}, sdbox{b:{x:3/4,y:1/8}}}&gt;&gt;sdfill</code>. These take the distance first, so they pipe.</p>
 <p><code>sdround{d, r:1/16}</code> Round off every corner by <code>r</code>. It also grows the shape by <code>r</code> in every direction, which is what turns a line into a stroke of that half width.</p>

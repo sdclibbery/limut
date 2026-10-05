@@ -10,10 +10,14 @@ define(function(require) {
   // rather than translating it.
   // v must be highp: GLSL ES 3.00 defaults int to mediump (16 bits) in fragment shaders, and the
   // hash depends on 32 bit multiply wraparound.
+  // -0.0 is turned into 0.0 in the bits, as the two would otherwise hash differently and drivers
+  // disagree on which one a sum like 0.0 + -0.0 gives (Firefox on macOS keeps the -0.0).
   let pcg4dHelper = {
     name: 'l_pxhash',
     source: `vec4 l_pxhash(vec4 p, vec4 s) {
   highp uvec4 v = floatBitsToUint(p) ^ floatBitsToUint(s);
+  v ^= uvec4(equal(floatBitsToUint(p), uvec4(0x80000000u))) << 31u;
+  v ^= uvec4(equal(floatBitsToUint(s), uvec4(0x80000000u))) << 31u;
   v = v*1664525u + 1013904223u;
   v.x += v.y*v.w; v.y += v.z*v.x; v.z += v.x*v.y; v.w += v.y*v.z;
   v ^= v >> 16u;

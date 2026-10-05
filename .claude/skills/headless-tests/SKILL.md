@@ -118,6 +118,22 @@ grep "CONSOLE" /tmp/verify.log | sed -E 's|.*CONSOLE[^"]*"||; s|", source:.*||'
 - Watch for a harness that stops including what a chain needs: a missing `lib/sdf.limut` makes `sd…` names resolve to nothing, and the shader collapses to a handful of statements with no error.
 - Delete `verify-app.html` / `verify-driver.js` afterwards; they are verification artifacts, not part of the diff.
 
+## Measuring per-frame allocation (GC work)
+
+- **`--js-flags=--trace-gc` doesn't work here.** The renderer's stdout is buffered and lost when Chrome is killed, and `--single-process` crashes.
+- **Sampling `performance.memory` across the whole running app is too noisy.** Per-beat work and irregular headless rAF pacing dominate, so two runs of identical code differ by more than a real change.
+- **What works:** launch with `--enable-precise-memory-info`, then from a driver (whole-app recipe above) call the per-frame entry points directly in a loop with an advancing beat. Record the `usedJSHeapSize` delta per call and take the **median**, which ignores calls that land on a GC. It is stable to the byte across runs. Entry points:
+  - `require('draw/system').renderList.render({time, count: beat + i/1000, dt, spectrum, pulse})`
+  - `require('play/system').frame(now + i/60, beat + i/(60*beatDuration))`. Step at least 1/60 s, the audio update step, or nothing is evaluated.
+  - `evalParamFrame(parseExpression(src), event, beat + i/1000)` for one expression.
+
+  An empty callback measures about 16 B, which is the noise floor.
+- **Compare before/after** using the worktree-on-8001 recipe above, with the same driver in both trees.
+- **V8 gotchas:**
+  - `Map.prototype.clear()` allocates a new table.
+  - Number-to-string conversion (eg putting a beat in a key) is a real per-call cost.
+  - A double that escapes a function gets boxed as a heap number, so tens of bytes per evaluation is an unavoidable floor.
+
 ## When adding behaviour
 
 Write or update an inline test alongside the code whenever it's reasonably testable — the inline test blocks are cheap to extend and catch regressions early. There is no separate test runner.

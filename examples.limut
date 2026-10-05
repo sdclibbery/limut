@@ -6042,3 +6042,10 @@ section drop {
 }, length=64
 
 
+// v visualsynth, px=sdvoronoi{scale:4}*4>>cospal
+// v visualsynth, px=sdvorcentre^2*12>>pal{0,red,1}^2
+// v visualsynth, px=sdvoronoi*8>>pal{0,{h:uv>>vorcell},1}^2
+// v visualsynth, px=mul{1/2}>>kal{1-vorcell*2}^3-1/2>>pal{0,red,1}
+// v visualsynth, px=sdvoronoi{scale:1+sdvoronoi*8}*2>>cospal
+
+

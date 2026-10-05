@@ -127,6 +127,50 @@ set sdcw0 = {p, cox, coy, ra} -> sdcw1{sdvec{abs{(p.x % (cox*4)) - cox*2}, p.y},
 set sdcw = {p, ra, a} -> sdcw0{p + {y:ra*cos{a}, w:0}, ra*sin{a}, ra*cos{a}, ra}
 set sdcirclewave = {in:id, tb:1/2, ra:1/4} -> sdcw{sdflat{in}, ra, 2.6179939*max{tb, 0.0001}}
 
+//// Voronoi
+// Inigo Quilez's exact border distance (https://iquilezles.org/articles/voronoilines/). Each
+// cell's point orbits inside its cell; jitter above 1 lets points leave their cell, which the 3x3
+// and 5x5 searches do not cover.
+//   px=sdvoronoi{scale:6}>>sdannular{1/64}>>sdfill
+//   px=vorcell{scale:6}>>cospal{#05a}
+
+set vorpt = {c, seed, t, jitter} -> sdflat{1/2 + jitter/2*sin{6.28318*(t + pxhash{c, seed})}}
+
+// Loop index to an offset on a w by w grid centred on zero.
+set vorofs = {i, w} -> sdvec{i%w - (w-1)/2, floor{(i+1/2)/w} - (w-1)/2}
+
+// Vector from the point to the moving point of cell offset g.
+set vorr = {g, seed, t, jitter} -> g + vorpt{vorn+g, seed, t, jitter} - vorf
+
+// x,y: vector to the point, z: its squared distance, w: the loop index it came from.
+set vorpack = {r, i} -> sdvec{r.x, r.y} + {z:1,w:0}*dot{r} + {w:1}*i
+
+// Binds vorn (the cell), vorf (the point within it) and vornr (the nearest point, packed). Shared
+// values are let{} names because a node passed into a loop body is rebuilt there.
+set vornear = {in, scale, seed, t, jitter} ->
+  id >> let{vorp, noiseflat2{in, scale}} >> let{vorn, floor{vorp}} >> let{vorf, fract{vorp}}
+     >> let{vornr, loop{
+          map:{v,i} -> vorpack{vorr{vorofs{i,3}, seed, t, jitter}, i}, 8,
+          fold:{a,v} -> (v.z < a.z ?? v ?: a)
+        }}
+
+// Not normalize{}: both sides of ?? are always computed, and a NaN survives the mix.
+set voredgeterm = {r, mr} ->
+  (dot{r-mr} < 1/100000 ?? 8 ?: dot{(mr+r)/2, r-mr} / max{length{r-mr}, 1/1000})
+
+set sdvoronoi = {in:id, scale:4, seed:0, t:time/8, jitter:1} -> sdval{
+  vornear{in, scale, seed, t, jitter}
+    >> let{vormb, vorofs{vornr.w, 3}} >> let{vormr, sdvec{vornr.x, vornr.y}}
+    >> loop{
+         map:{v,i} -> voredgeterm{vorr{vormb + vorofs{i,5}, seed, t, jitter}, vormr}, 24,
+         fold:{a,v} -> min{a,v}
+       }
+} / scale
+set sdvorcentre = {in:id, scale:4, seed:0, t:time/8, jitter:1} ->
+  vornear{in, scale, seed, t, jitter} >> set{vornr.z} >> sqrt >> mul{1/scale}
+set vorcell = {in:id, scale:4, seed:0, t:time/8, jitter:1} ->
+  vornear{in, scale, seed, t, jitter} >> set{pxhash{vorn + vorofs{vornr.w, 3}, seed}.z}
+
 //// Combining
 // Union and intersection are min{} and max{}.
 
