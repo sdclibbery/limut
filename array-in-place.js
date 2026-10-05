@@ -3,25 +3,29 @@ define((require) => {
 
   let move = (from, to, predicate) => {
     let fromIdx = 0
-    from.forEach((e, i) => { 
+    let n = from.length
+    for (let i = 0; i < n; i++) {
+      let e = from[i]
       if (!predicate(e, i, from)) {
         if (i!==fromIdx) { from[fromIdx] = e }
         fromIdx++
       } else {
         to.push(e)
       }
-    })
+    }
     from.length = fromIdx
   }
 
   let filterInPlace = (arr, predicate) => {
     let j = 0
-    arr.forEach((e, i) => { 
+    let n = arr.length
+    for (let i = 0; i < n; i++) {
+      let e = arr[i]
       if (predicate(e, i, arr)) {
         if (i!==j) { arr[j] = e }
         j++
       }
-    })
+    }
     arr.length = j
     return arr
   }

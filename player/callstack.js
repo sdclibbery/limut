@@ -17,7 +17,9 @@ define((require) => {
 
   let popCallContext = () => {
     if (root.current === root) { throw `Cant pop, already at root` }
-    root.current.parent.children = root.current.parent.children.filter((child) => child !== root.current)
+    let children = root.current.parent.children
+    if (children[children.length-1] === root.current) { children.pop() }
+    else { root.current.parent.children = children.filter((child) => child !== root.current) }
     root.current = root.current.parent
   }
 
@@ -88,6 +90,8 @@ define((require) => {
     } while (node !== undefined)
     return result
   }
+
+  let isCallTreeEmpty = () => root.children.length === 0 && root.current === root && root.context === undefined
 
   let setCallTree = (tree) => {
     if (root.children.length > 0) { throw `Cant set call tree, current call tree is not empty` }
@@ -209,6 +213,30 @@ define((require) => {
     popCallContext()
     popCallContext()
 
+    // Popping a child that is not the last one removes just that child
+    pushCallContext('cc1')
+    pushCallContext('cc2a')
+    let cc2a = root.current
+    unPushCallContext()
+    pushCallContext('cc2b')
+    unPushCallContext()
+    root.current = cc2a
+    popCallContext()
+    assert(['cc2b'], root.current.children.map(c => c.context))
+    unPopCallContext()
+    popCallContext()
+    popCallContext()
+
+    // Empty only with nothing pushed
+    assert(true, isCallTreeEmpty())
+    pushCallContext('cc1')
+    assert(false, isCallTreeEmpty())
+    popCallContext()
+    assert(true, isCallTreeEmpty())
+    setCallTree(getCallTree())
+    assert(true, isCallTreeEmpty())
+    clearCallTree()
+
     // Should be cleared back to root by the end of all tests
     assert(true, root.current === root)
 
@@ -225,6 +253,7 @@ define((require) => {
     getCallTree: getCallTree,
     setCallTree: setCallTree,
     clearCallTree: clearCallTree,
+    isCallTreeEmpty: isCallTreeEmpty,
     getCallTreeString: getCallTreeString
   }
 

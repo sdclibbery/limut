@@ -9,15 +9,17 @@ define(function(require) {
 
   // What the row should show: every defined section, which one is playing, and which is queued.
   // Kept apart from the DOM so it can be diffed (to avoid rebuilding buttons every frame) and tested.
+  let isActive = (section) => section === sections.active
+  // pendingActive counts as queued too, so a shift-click reads back immediately rather than
+  // waiting for the next beat to apply it
+  let isQueued = (section) => section === sections.next || section === sections.pendingActive
   let buttonState = () => {
     return Object.keys(sections.instances).map(name => {
       let section = sections.instances[name]
       return {
         name: name,
-        active: section === sections.active,
-        // pendingActive counts as queued too, so a shift-click reads back immediately rather than
-        // waiting for the next beat to apply it
-        queued: section === sections.next || section === sections.pendingActive,
+        active: isActive(section),
+        queued: isQueued(section),
       }
     })
   }
@@ -25,7 +27,18 @@ define(function(require) {
   let container
   let buttons = {} // name -> element, for the currently rendered set
   let renderedNames
-  let renderedKey
+  let shownNames = [] // what update() last showed, compared each frame without allocating
+  let shownFlags = []
+  let flags = (active, queued) => (active ? 1 : 0) + (queued ? 2 : 0)
+  let unchanged = () => {
+    let i = 0
+    for (let name in sections.instances) {
+      let section = sections.instances[name]
+      if (shownNames[i] !== name || shownFlags[i] !== flags(isActive(section), isQueued(section))) { return false }
+      i++
+    }
+    return i === shownNames.length
+  }
 
   let makeButton = (name) => {
     let button = document.createElement('button')
@@ -49,8 +62,11 @@ define(function(require) {
   let update = () => {
     if (!container) { container = document.getElementById('section-buttons') }
     if (!container) { return } // Not the full page (eg a test harness); nothing to render into
+    if (unchanged()) { return }
     let state = buttonState()
-    let names = state.map(s => s.name).join(',')
+    shownNames = state.map(s => s.name)
+    shownFlags = state.map(s => flags(s.active, s.queued))
+    let names = shownNames.join(',')
     if (names !== renderedNames) {
       container.innerHTML = ''
       buttons = {}
@@ -59,17 +75,13 @@ define(function(require) {
         container.appendChild(buttons[s.name])
       }
       renderedNames = names
-      renderedKey = undefined
       // Nothing worth showing until there is a section other than the built in default
       container.classList.toggle('closed', state.length <= 1)
     }
-    let key = state.map(s => `${s.active?'*':''}${s.queued?'>':''}`).join(',')
-    if (key === renderedKey) { return }
     for (let s of state) {
       buttons[s.name].classList.toggle('active', s.active)
       buttons[s.name].classList.toggle('queued', s.queued)
     }
-    renderedKey = key
   }
 
   // TESTS //
@@ -113,6 +125,25 @@ define(function(require) {
       {name:'b', active:false, queued:true},
       {name:'c', active:false, queued:false},
     ], buttonState())
+
+    // The per frame check spots any change in the sections or their state
+    let savedShown = [shownNames, shownFlags]
+    let show = () => {
+      shownNames = buttonState().map(s => s.name)
+      shownFlags = buttonState().map(s => flags(s.active, s.queued))
+    }
+    show()
+    assert(true, unchanged())
+    sections.next = c
+    assert(false, unchanged())
+    show()
+    assert(true, unchanged())
+    sections.instances = { a: a, b: b }
+    assert(false, unchanged())
+    show()
+    sections.instances = { a: a, b: b, c: c }
+    assert(false, unchanged())
+    ;[shownNames, shownFlags] = savedShown
 
     sections.instances = savedInstances
     sections.active = savedActive

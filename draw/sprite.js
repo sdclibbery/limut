@@ -289,13 +289,14 @@ define(function (require) {
       jpeg[2] = jpeg[1]/har // keep macroblocks square on screen
       gl.uniform4fv(s.jpegUnif, jpeg)
       if (s.textureUnif) {
-        s.textureUnif.forEach((tu,i) => {
+        for (let i = 0; i < s.textureUnif.length; i++) {
+          let tu = s.textureUnif[i]
           // s.textures gives a different texture per slot (visual synth chains with several
           // texture nodes); every other shader has the one s.texture for all of them
           let t = (s.textures && s.textures[i]) || s.texture || (text !== undefined ? textTexture(text) : texture(url))
           if (t.update) { t.update(state) }
           let target = t.target || gl.TEXTURE_2D // A generated 3d lookup texture is TEXTURE_3D
-          gl.activeTexture(gl['TEXTURE'+i])
+          gl.activeTexture(gl.TEXTURE0 + i)
           gl.bindTexture(target, t.tex)
           gl.uniform1i(tu, i)
           gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
@@ -313,7 +314,7 @@ define(function (require) {
             gl.uniform2fv(extentsUnif, extents)
           }
           if (t.params) { t.params() }
-        })
+        }
       }
       if (fore[3] >= 0.9999 && back[3] >= 0.9999 && mid[3] >= 0.9999 && additive == 0 && vignette == 0 && blend === undefined) {
         gl.disable(gl.BLEND)

@@ -20,6 +20,11 @@ define((require) => {
     return [o]
   }
 
+  let hasChordField = (o) => {
+    for (let k in o) { if (Array.isArray(o[k])) { return true } }
+    return false
+  }
+
   let wrapWithInterval = (v, value) => {
     if (value.interval === 'frame' && typeof v !== 'object') {
       v = {value:v, interval:value.interval} // Wrap to provide interval
@@ -118,11 +123,44 @@ define((require) => {
          result[k] = evalRecurse(value[k], event, beat)
        }
       }
+      if (!hasChordField(result)) { return result }
       let r = expandObjectChords(result) // and hoist chords up
-      r = r.length === 1 ? r[0] : r
-      return r
+      return r.length === 1 ? r[0] : r
     } else {
       return value
+    }
+  }
+
+  // Memo per (value, event) holds just two beats: the event's own, kept while the event lasts (it is
+  // what freezes an @e slider or midi value), and the latest other one. Keeping every beat would
+  // grow the memo by an entry per frame for as long as the event lives. Each slot holds its first
+  // key inline, as nearly every lookup has the same (empty) key and a Map costs an allocation per reset.
+  let newSlot = () => ({beat: undefined, key: undefined, result: undefined, more: undefined})
+  let memoSlot = (value, event, beat) => {
+    if (value.__memo_event === undefined) { value.__memo_event = new WeakMap() }
+    let memo = value.__memo_event.get(event)
+    if (memo === undefined) {
+      memo = {event: newSlot(), frame: newSlot()}
+      value.__memo_event.set(event, memo)
+    }
+    let slot = beat === event.count ? memo.event : memo.frame
+    if (slot.beat !== beat) {
+      slot.beat = beat
+      slot.key = undefined
+      slot.result = undefined
+      slot.more = undefined
+    }
+    return slot
+  }
+  let memoHas = (slot, key) => slot.key === key || (slot.more !== undefined && slot.more.has(key))
+  let memoGet = (slot, key) => slot.key === key ? slot.result : slot.more.get(key)
+  let memoSet = (slot, key, result) => {
+    if (slot.key === undefined || slot.key === key) {
+      slot.key = key
+      slot.result = result
+    } else {
+      if (slot.more === undefined) { slot.more = new Map() }
+      slot.more.set(key, result)
     }
   }
 
@@ -131,35 +169,31 @@ define((require) => {
     if (typeof value === 'function' && value.isNonTemporal && shouldForcePerEvent(value)) { // static var functions include user input like slider, midi, gamepad etc which can't be forced per event just by forcing the beat time to the event time when evalling. So force them here too by memoising.
       beat = event.count
     }
-    let memoKey
-    if (!options.doNotMemoise) {
+    let memo, memoKey
+    if (typeof value === 'function' && !options.doNotMemoise) {
       memoKey = ''
       for (let k in options) { if (options[k]) { memoKey += k } }
-      memoKey += beat
       let callTreeString = getCallTreeString()
       if (callTreeString) { memoKey += callTreeString }
-      if (typeof value === 'function' && value.__memo_event && value.__memo_event.has(event) && value.__memo_event.get(event).hasOwnProperty(memoKey)) {
-        return value.__memo_event.get(event)[memoKey] // Return memoised result
-      }
+      memo = memoSlot(value, event, beat)
+      if (memoHas(memo, memoKey)) { return memoGet(memo, memoKey) }
     }
     let result = evalParamValue(evalRecurse, value, event, beat, options)
     if (typeof result === 'object' && result._finalResult) { // If result is final and hasn't been unwrapped, do it now
       result = result.value
     }
-    if (typeof value === 'function' && !options.doNotMemoise) { // Set memoised result
-      if (value.__memo_event === undefined) { value.__memo_event = new WeakMap() }
-      if (!value.__memo_event.has(event)) { value.__memo_event.set(event, {}) }
-      value.__memo_event.get(event)[memoKey] = result
-    }
+    if (memo !== undefined) { memoSet(memo, memoKey, result) }
     return result
   }
 
   let evalRecurseFull = (value, event, beat, options) => {
-    options = options || {}
+    if (options === undefined) { return evalParamValueWithMemoisation(evalRecurseFull, value, event, beat, noOptions) }
     return evalParamValueWithMemoisation(evalRecurseWithOptions(evalRecurseFull, options), value, event, beat, options)
   }
 
+  let withOptionsCache = new WeakMap() // f only ever closes over options, so one per options object will do
   let evalRecurseWithOptions = (er, options) => {
+    if (er === evalRecurseFull && withOptionsCache.has(options)) { return withOptionsCache.get(options) }
     let f = (v,e,b, moreOptions) => {
       if (typeof moreOptions === 'object') {
         if (typeof options === 'object') { Object.assign(options, moreOptions) }
@@ -168,6 +202,7 @@ define((require) => {
       return er(v,e,b,options)
     }
     f.options = options // expose mode (eg expandingChords) to raw operators like >>
+    if (er === evalRecurseFull) { withOptionsCache.set(options, f) }
     return f
   }
 
@@ -180,7 +215,7 @@ define((require) => {
   let phase = 'frame'
   let evalPhase = () => phase
 
-  let noOptions = {}
+  let noOptions = Object.freeze({})
   let evalParamFrame = (value, event, beat, options) => {
     if (options !== undefined) {
       let er = evalRecurseWithOptions(evalRecurseFull, options)
@@ -412,6 +447,47 @@ define((require) => {
     try { evalParamEvent(thrower, ev(0)) } catch (e) {}
     assert('frame', evalParamFrame(phaseProbe, ev(0), 0)) // and restored even when one throws
   }
+
+  { // Memo holds the event's own beat for the event's life, and only the latest other beat
+    let calls = 0
+    let counted = (e,b) => { calls++; return b }
+    let e = ev(3)
+    assert(3, evalParamFrame(counted, e, 3))
+    for (let b = 3.1; b < 5; b += 0.1) { evalParamFrame(counted, e, b) }
+    let memo = counted.__memo_event.get(e)
+    assert(3, memo.event.beat)
+    assert(true, memo.frame.beat > 4.8)
+    assert(undefined, memo.frame.more)
+    calls = 0
+    evalParamFrame(counted, e, 3)
+    assert(0, calls) // event beat still memoised
+    evalParamFrame(counted, e, 7)
+    evalParamFrame(counted, e, 7)
+    assert(1, calls) // and the current frame beat
+    evalParamFrame(counted, e, 8, {withInterval:true})
+    assert(2, calls) // options are part of the key
+  }
+  { // A per event live input value stays frozen for the event, however often frames read it
+    let live = 1
+    let slider = () => live
+    slider.isNonTemporal = true
+    slider.interval = 'event'
+    let e = ev(2)
+    assert(1, evalParamFrame(slider, e, 2.5))
+    live = 2
+    assert(1, evalParamFrame(slider, e, 2.6))
+    assert(1, evalParamEvent(slider, e))
+    assert(2, evalParamFrame(slider, ev(3), 3.1)) // a new event reads the new value
+  }
+  { // Nested evaluation sees options passed in at the top, with or without them
+    let seen = []
+    let inner = (e,b,er) => { seen.push(!!(er.options && er.options.expandingChords)); return 1 }
+    let outer = (e,b,er) => er(inner, e, b)
+    evalParamFrame(outer, ev(0), 0, {expandingChords:true})
+    evalParamFrame(outer, ev(1), 1)
+    assert([true,false], seen)
+  }
+  assert({x:1,y:2}, evalParamFrame({x:()=>1,y:2}, ev(0), 0)) // No chord field: the object itself, not wrapped
 
   console.log('Eval param tests complete')
   }

@@ -20,16 +20,21 @@ define(function(require) {
     let lo = vs[0] || 0
     let hi = vs[1] || lo+1
     let time = timeFn(sectionRelative)
+    let builtLo, builtHi, built
     let result = (e,b,evalRecurse) => {
       let elo = evalRecurse(lo, e,b)
       let ehi = evalRecurse(hi, e,b)
+      if (built !== undefined && elo === builtLo && ehi === builtHi) { return built }
       if (!Number.isInteger(elo)) { consoleOut(`🟠 Warning: Time var low value ${elo} is not an integer`) }
       if (!Number.isInteger(ehi)) { consoleOut(`🟠 Warning: Time var high value ${ehi} is not an integer`) }
       let vs = Array.from({length: ehi-elo+1}, (_, i) => i + elo)
       if (!Array.isArray(ds)) { ds = [ds] }
       let is = vs.map(() => step)
       let ss = vs.map((_,i) => ds[i % ds.length])
-      return piecewise(vs, is, ss, time, options)
+      builtLo = elo
+      builtHi = ehi
+      built = piecewise(vs, is, ss, time, options)
+      return built
     }
     return result
   }
@@ -111,6 +116,16 @@ define(function(require) {
     assert(evalParamFrame(plainTV,ev(0),1), evalParamFrame(relTV,ev(0),5))
     let relRange = rangeTimeVar([0,3],1,{},true)
     assert(evalParamFrame(rangeTimeVar([0,3],1,{}),ev(0),1), evalParamFrame(relRange,ev(0),5))
+
+    { // A range only rebuilds when its ends change
+      let hi = 3
+      let range = rangeTimeVar([0,()=>hi],1,{})
+      assert(2, evalParamFrame(range,ev(0),2))
+      assert(2, evalParamFrame(range,ev(0),6))
+      hi = 5
+      assert(5, evalParamFrame(range,ev(0),5))
+      assert(0, evalParamFrame(range,ev(0),6))
+    }
 
     // A sub-beat negative section-relative time (draw clock lags activeStartBeat at a boundary)
     // clamps to 0 -> first list element, instead of the modulo wrapping onto the last (bug: read 4)

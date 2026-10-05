@@ -68,21 +68,39 @@ define(function(require) {
   let to255 = (x) => Math.min(Math.max(Math.floor(x*256), 0), 255)
   let to100 = (x) => Math.min(Math.max(Math.floor(x*100), 0), 100)
   let scaled = (x, lo, hi) => (Math.max(x,lo)-lo)/(hi-lo)
-  let readoutColor = (x, lo, hi) => {
-    let c = scaled(x, lo, hi)
-    if (c > 1) {
-      return `rgb(255,0,${to255(Math.cos((c-1)*1.57))})`
+  // Indicators update every frame, so they only write a style when its quantised value changes
+  let readoutColor = (style) => {
+    let last
+    return (x, lo, hi) => {
+      let c = scaled(x, lo, hi)
+      let r = 255, g = 0, b = 0
+      if (c > 1) {
+        b = to255(Math.cos((c-1)*1.57))
+      } else {
+        r = to255(Math.sin(c*1.57))
+        g = to255(Math.cos(c*1.57))
+      }
+      let key = (r*256 + g)*256 + b
+      if (key === last) { return }
+      last = key
+      style.backgroundColor = `rgb(${r},${g},${b})`
     }
-    return `rgb(${to255(Math.sin(c*1.57))},${to255(Math.cos(c*1.57))},0)`
   }
-  let vuMeterStyle = (style, x, lo, hi) => {
-    let c = scaled(x, lo, hi)
-    if (c > 1) {
-      style.background = `rgb(255,0,${to255(Math.cos((c-1)*1.57))})`
-    } else {
-      style.background = `linear-gradient(to right, #0f0, #ff0 3em, #f00 4em)`
+  let vuMeter = (style) => {
+    let lastOver, lastWidth
+    return (x, lo, hi) => {
+      let c = scaled(x, lo, hi)
+      let over = c > 1 ? to255(Math.cos((c-1)*1.57)) : -1
+      if (over !== lastOver) {
+        lastOver = over
+        style.background = over >= 0 ? `rgb(255,0,${over})` : `linear-gradient(to right, #0f0, #ff0 3em, #f00 4em)`
+      }
+      let width = to100(c)
+      if (width !== lastWidth) {
+        lastWidth = width
+        style.width = `${width}%`
+      }
     }
-    style.width = `${to100(c)}%`
   }
 
   // fullscreen
@@ -121,13 +139,14 @@ define(function(require) {
   }
 
   // Update
-  let vuMeterL = document.getElementById('vu-meter-l')
-  let vuMeterR = document.getElementById('vu-meter-r')
-  let limiterReadout = document.getElementById('compressor-readout')
+  let vuMeterL = vuMeter(document.getElementById('vu-meter-l').style)
+  let vuMeterR = vuMeter(document.getElementById('vu-meter-r').style)
+  let limiterReadout = readoutColor(document.getElementById('compressor-readout').style)
   let audioReadout = document.getElementById('audio-readout')
+  let audioReadoutColor = readoutColor(audioReadout.style)
   let audioReadoutHolder = document.getElementById('audio-readout-holder')
-  let beatLatencyReadout = document.getElementById('beat-latency-readout')
-  let visualReadout = document.getElementById('visual-readout')
+  let beatLatencyReadout = readoutColor(document.getElementById('beat-latency-readout').style)
+  let visualReadout = readoutColor(document.getElementById('visual-readout').style)
   let beatReadout = document.getElementById('beat-readout')
   let sectionReadout = document.getElementById('section-readout')
   let clock = document.getElementById('clock')
@@ -251,21 +270,21 @@ define(function(require) {
       clearCallTree()
     }
     sectionButtons.update() // Per frame (not per beat) so new sections and clicks show immediately; diffs internally
-    vuMeterStyle(vuMeterL.style, system.meter('L'), -30, 0)
-    vuMeterStyle(vuMeterR.style, system.meter('R'), -30, 0)
-    limiterReadout.style.backgroundColor = readoutColor(-system.limiterReduction(), 0, 10)
+    vuMeterL(system.meter('L'), -30, 0)
+    vuMeterR(system.meter('R'), -30, 0)
+    limiterReadout(-system.limiterReduction(), 0, 10)
     if (!!beat || tickCount % 20 == 0) {
       // Beat scheduling jitter. Labelled "Timing", not "Audio": beats fire from this
       // rAF loop, so this measures the main thread keeping up, not the audio thread -
       // that is the separate Audio meter below, which only exists under Electron.
-      beatLatencyReadout.style.backgroundColor = readoutColor(beatLatency, 0, 0.05)
-      visualReadout.style.backgroundColor = readoutColor(drawSystem.latency(), 0.02, 0.1)
+      beatLatencyReadout(beatLatency, 0, 0.05)
+      visualReadout(drawSystem.latency(), 0.02, 0.1)
       // Audio thread load; only ever a reading under Electron, so the meter is hidden
       // entirely rather than sitting there grey in the browser
       let audioLoad = system.audioLoad()
       audioReadoutHolder.style.display = audioLoad ? 'inline' : 'none'
       if (audioLoad) {
-        audioReadout.style.backgroundColor = readoutColor(audioLoad.renderCapacity, 0.3, 0.9)
+        audioReadoutColor(audioLoad.renderCapacity, 0.3, 0.9)
         let jitter = Math.sqrt(Math.max(0, audioLoad.callbackIntervalVariance))
         audioReadout.title = `render capacity ${Math.round(audioLoad.renderCapacity*100)}%`
           + `, callback ${(audioLoad.callbackIntervalMean*1000).toFixed(1)}ms +/-${(jitter*1000).toFixed(1)}ms`

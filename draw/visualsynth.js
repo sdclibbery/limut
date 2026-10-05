@@ -6,7 +6,7 @@ define(function (require) {
   let {evalParamEvent, evalParamFrame} = require('player/eval-param')
   let {buildSource} = require('draw/visualsynth/codegen')
   let {isShaderNode, toVec4} = require('draw/visualsynth/shader-node')
-  let {getCallTree, setCallTree, clearCallTree} = require('player/callstack')
+  let {getCallTree, setCallTree, clearCallTree, isCallTreeEmpty} = require('player/callstack')
   let hub75 = require('draw/hub75/host/hub75')
   require('draw/visualsynth/nodes') // Register mul/tex/webcam var functions at startup
 
@@ -109,17 +109,19 @@ define(function (require) {
         system.gl.useProgram(cached.shader.program)
         // Each arg is evaluated with the call tree it was written in restored, so an AST from inside
         // a user defined function still resolves. getCallTree deep copies, so save the outer tree
-        // once rather than per uniform. setCallTree requires clearing before each set.
-        let outer = getCallTree()
+        // once rather than per uniform, and not at all when it is empty, as it is in the render
+        // loop. setCallTree requires clearing before each set.
+        let outer = isCallTreeEmpty() ? undefined : getCallTree()
         try {
-          built.uniforms.forEach((u, i) => {
+          for (let i = 0; i < built.uniforms.length; i++) {
+            let u = built.uniforms[i]
             clearCallTree()
             setCallTree(u.callTree)
             system.gl.uniform4fv(cached.uniformLocs[i], toVec4(evalParamFrame(u.ast, params, state.count)))
-          })
+          }
         } finally {
           clearCallTree()
-          setCallTree(outer)
+          if (outer !== undefined) { setCallTree(outer) }
         }
       }
     }

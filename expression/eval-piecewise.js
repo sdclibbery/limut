@@ -15,17 +15,28 @@ define(function(require) {
     )
   }
 
-  let indexer = (ss, {clamp, normalise}, pieceParam, e,b) => {
+  let sizesOf = (ss, normalise, e,b) => {
     let ess = ss.map(s => units(evalParamFrame(s, e,b), 'b'))
     let totalSize = ess.reduce((a,x) => a+x, 0)
     if (normalise) {
       ess = ess.map(s => s/totalSize)
       totalSize = 1
     }
+    return {ess: ess, totalSize: totalSize}
+  }
+
+  let indexed = {piece: 0, next: undefined} // Reused: the one caller reads it straight away
+  let index = (piece, next) => {
+    indexed.piece = piece
+    indexed.next = next
+    return indexed
+  }
+  let indexer = (sizes, {clamp}, pieceParam) => {
+    let {ess, totalSize} = sizes
     if (!Number.isFinite(totalSize)) { throw `invalid piecewise totalSize: ${totalSize}` }
     if (clamp) {
-      if (pieceParam < 0) { return { piece: 0, next: ess[0] } }
-      if (pieceParam >= totalSize) { return { piece: ess.length-1 } }
+      if (pieceParam < 0) { return index(0, ess[0]) }
+      if (pieceParam >= totalSize) { return index(ess.length-1, undefined) }
     }
     let repeatStart = Math.floor(pieceParam/totalSize) * totalSize
     let pMod = (pieceParam%totalSize + totalSize) % totalSize
@@ -33,14 +44,11 @@ define(function(require) {
     for (let i=0; i<ess.length; i++) {
       let s = ess[i]
       if (pMod < pos+s) {
-        return {
-          piece: i + (pMod - pos)/s,
-          next: repeatStart + pos + s
-        }
+        return index(i + (pMod - pos)/s, repeatStart + pos + s)
       }
       pos += s
     }
-    return { piece: 0, next: ess[0] }
+    return index(0, ess[0])
   }
 
   let setSegment = (v, segmentWrapper, is, idx, next, nextSegmentMapper,e,b) => {
@@ -71,6 +79,7 @@ define(function(require) {
     if (ss.length !== vs.length) { throw `ss.length ${ss} !== vs.length ${vs}` }
     if (options === undefined) { options = emptyOptions }
     let segmentWrapper = {}
+    let constSizes = ss.every(s => typeof s === 'number') ? sizesOf(ss, options.normalise) : undefined
     let piecewiseResult = (e,b, evalRecurse, modifiers) => {
       if (modifiers && modifiers.seed !== undefined) {
         if (!p.modifiers) { p.modifiers = {} }
@@ -84,7 +93,7 @@ define(function(require) {
         consoleOut(`🟠 Warning invalid piecewise piece param: ${p} ${b} ${pieceParam}`)
         return 0
       }
-      let {piece,next} = indexer(ss, options, pieceParam, e,b) // "piece" integer part is an index into the segments; fractional part is the interpolator between segments
+      let {piece,next} = indexer(constSizes || sizesOf(ss, options.normalise, e,b), options, pieceParam) // "piece" integer part is an index into the segments; fractional part is the interpolator between segments
       let idx = Math.floor(piece)
       let l = vs[idx % vs.length]
       let r = vs[(idx+1) % vs.length]
@@ -264,6 +273,13 @@ define(function(require) {
     assert(1, evalParamFrame(pw,ev(0,0,2),0))
     assert(2, evalParamFrame(pw,ev(0,0,2),1/2))
     assert(1, evalParamFrame(pw,ev(0,0,2),1))
+    { // Sizes evaluated each time agree with the precomputed constant ones
+      let evalled = piecewise([1,2,3], [lin,lin,lin], [()=>1,()=>2,()=>1], getb, {normalise:true,clamp:true})
+      let consts = piecewise([1,2,3], [lin,lin,lin], [1,2,1], getb, {normalise:true,clamp:true})
+      for (let b = -0.5; b <= 1.5; b += 0.125) {
+        assert(evalParamFrame(evalled,ev(0,0,2),b), evalParamFrame(consts,ev(0,0,2),b), `b ${b}`)
+      }
+    }
 
     pw = piecewise([0,2], [step,step], [(e,b)=>1+b%3,(e,b)=>1], getb, {})
     assert(0, evalParamFrame(pw,ev(0,0,1),0))

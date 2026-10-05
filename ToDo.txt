@@ -1,7 +1,23 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!Get static burst when play keyboard player into tape{} , and other times too?? Had one from keytar into airverb?
+visual nodes...
+ function that takes a px chain, and does a shephard tone thing with perpetually zooming into two copies of the chain
+ voronoi, result should be like an sdf to the voronoi edges (or centres)? sdvoronoi
+ jpeg functions; split between uv and rgb
+ ?Wobble and ripple with time and size params
+ ?render buffers to generate read from, eg px=tex{buffer{mul{1.01}>>webcam>>set{#...a},clear:false}} for temporal zoom-blur??
+ ?visual lib functions for old style visual params (monochrome, pixellate, rotate, mirror, vhs etc etc) - vhs needs split into uv and rgb parts...
+ ?bitwise ops
+ ?something undefined should render flat black not flat white
+ ?sdsin/sdsquare/sdsaw/sdtri (may be approximate only)
+ ?support for piecewise as shader code not textures?
+ ?no time uniform in a generated px shader, so `time` in a chain costs a JS param eval per frame
+?Want a way to respond to the release phase in expressions, eg apply a pitch change starting when the note is released?
+ must work for live players too
+Multiple audiocontexts, set context='foo' on a player. Allows audio rendering to be split over multiple cores
+?set bpm can have target time? eg set bpm={140,by;1000}; takes a linear step towards the target every beat
+grain should have offset param, would allow more interesting effects; granular delays etc
 !Keytar
   A bit monotonous, needs more lfo variation and vel sensitivity
   Also just check tone
@@ -13,39 +29,6 @@ Clean up midi{'vel'} - it has aftertouch baked in; does it even make sense as a 
  Report Chromium bug:
   It's a genuine, current bug and I'd file it. Want me to build the standalone repro — a plain HTML page with no limut
    the osc → biquad → gain →  param loop next to the → audio control, plus the CDP capture procedure — so you can attach it to an issue?
-?Is it right that accum etc do not reset between events?? Caused glitching on dlead drive mix
- Maybe even a param or separate method?
-?Want a way to respond to the release phase in expressions, eg apply a pitch change starting when the note is released?
- must work for live players too
-visual nodes...
- !let{'name'} (the tap form, naming the chain value) at the HEAD of a loop{} body: the head collapses
-  to a uniform and the whole loop comes out flat. Diagnosed 2026-09-12 and it is NOT the name: it is
-  the domain. Unpiped and with no bound expression, let has nothing to tell audio from visual by
-  (that decision is isShaderNode of the piped value or of the bound expression), so it returns an
-  identity gain, the body is then an audio chain, and loop builds an audio feedback loop. The
-  🟠 let needs a name that used to come with it was a second symptom, from the audio path evaluating
-  the body again with the name already bound, and is gone now that the name is read off the raw AST.
-  Workaround, and what the docs now say: write id>>let{d}>>... , the same explicit seed a body
-  starting with any plain call needs. let{d, expr} at the head is fine, since the expression settles
-  the domain. Fixing it properly means the body knowing it is visual before the let is evaluated,
-  which the probe-then-recall shape of loop{} does not allow today
- text display; can render on hub75 pi or have to send texture?
- method that takes a px chain, and does a shephard tone thing with perpetually zooming into two copies of the chain
- voronoi, result should be like an sdf to the voronoi edges (or centres)? sdvoronoi
- jpeg and vhs functions; split between uv and rgb?
- ?Wobble and ripple with time and size params
- ?render buffers to generate read from, eg px=tex{buffer{mul{1.01}>>webcam>>set{#...a},clear:false}} for temporal zoom-blur??
- ?visual lib functions for old style visual params (monochrome, pixellate, rotate, mirror, vhs etc etc) - vhs needs split into uv and rgb parts...
- ?bitwise ops
- ?something undefined should render flat black not flat white
- ?sdsin/sdsquare/sdsaw/sdtri (may be approximate only)
- ?support for piecewise as shader code not textures?
- ?no time uniform in a generated px shader, so `time` in a chain costs a JS param eval per frame
-Multiple audiocontexts, set context='foo' on a player. Allows audio rendering to be split over multiple cores
-!GC pauses?
-?set bpm can have target time? eg set bpm={140,by;1000}; takes a linear step towards the target every beat
-grain should have offset param, would allow more interesting effects; granular delays etc
-Multiband compressor
 Multiband effect that does spectral side chain ducking
  Eg I have a lead that sometimes can't be heard over an arp. I want to duck the arp spectrally based on the lead
 !dbd is weak?

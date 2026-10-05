@@ -16,11 +16,13 @@ system.add = (startTime, update) => {
 }
 
 let state = {}
+let started = (q) => state.time > q.t
+let update = (a) => a.update(state)
 system.frame = (time, count) => {
-  move(system.queued, system.active, ({t}) => time > t)
   state.count = count
   state.time = time
-  filterInPlace(system.active, ({update}) => update(state))
+  move(system.queued, system.active, started)
+  filterInPlace(system.active, update)
 }
 
 system.resume = () => system.audio.resume()
@@ -83,14 +85,28 @@ system.analyser = system.audio.createAnalyser()
 system.analyser.fftSize = 1024
 let analyserBufferLength = system.analyser.frequencyBinCount
 const spectrumData = new Uint8Array(analyserBufferLength)
-let chunk = (data, reducer, init) =>  data.reduce((a,b) => reducer(a,b), init) / 255
+let binMin = (lo, hi) => {
+  let v = 1e6
+  for (let i = lo; i < hi; i++) { v = Math.min(v, spectrumData[i]) }
+  return v / 255
+}
+let binSum = (lo, hi) => {
+  let v = 0
+  for (let i = lo; i < hi; i++) { v += spectrumData[i] }
+  return v / 255
+}
+let binMax = (lo, hi) => {
+  let v = 0
+  for (let i = lo; i < hi; i++) { v = Math.max(v, spectrumData[i]) }
+  return v / 255
+}
 const spec = []
 system.spectrum = () => {
   system.analyser.getByteFrequencyData(spectrumData)
-  spec[0] = chunk(spectrumData.slice(0,4), Math.min, 1e6)
-  spec[1] = chunk(spectrumData.slice(4,8), Math.min, 1e6)
-  spec[2] = chunk(spectrumData.slice(8,12), (a,b)=>a+b, 0)/4
-  spec[3] = chunk(spectrumData.slice(12), Math.max,0)
+  spec[0] = binMin(0, 4)
+  spec[1] = binMin(4, 8)
+  spec[2] = binSum(8, 12)/4
+  spec[3] = binMax(12, spectrumData.length)
   return spec
 }
 const scopeData = new Float32Array(system.analyser.fftSize)
@@ -113,9 +129,11 @@ system.analyserR = system.audio.createAnalyser()
 system.analyserR.smoothingTimeConstant = 1
 system.analyserR.fftSize = 128
 system.meterSplitter.connect(system.analyserR, 1)
+const meterDataL = new Float32Array(system.analyserL.fftSize)
+const meterDataR = new Float32Array(system.analyserR.fftSize)
 system.meter = (channel) => {
   let analyser = channel === 'L' ? system.analyserL : system.analyserR
-  const meterData = new Float32Array(analyser.fftSize)
+  const meterData = channel === 'L' ? meterDataL : meterDataR
   analyser.getFloatTimeDomainData(meterData)
   let peakInstantaneousPower = 0
   for (let i = 0; i < analyser.fftSize; i++) {
@@ -163,6 +181,14 @@ if ((new URLSearchParams(window.location.search)).get('test') !== null) {
   let assert = (expected, actual, msg) => {
     if (expected !== actual) { console.trace(`Assertion failed ${msg||''}.\n>>Expected: ${expected}\n>>Actual:   ${actual}`) }
   }
+  spectrumData.fill(0)
+  spectrumData.set([10,20,30,40, 50,60,70,80, 255,255,0,0, 3,200,7])
+  assert(10/255, binMin(0, 4), 'spectrum band min')
+  assert(50/255, binMin(4, 8), 'spectrum band min')
+  assert(510/255, binSum(8, 12), 'spectrum band sum')
+  assert(200/255, binMax(12, spectrumData.length), 'spectrum band max')
+  spectrumData.fill(0)
+
   let saved = window.limutElectron
   try {
     delete window.limutElectron
