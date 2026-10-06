@@ -3,7 +3,7 @@
 =================================================================================================================================
 visual nodes...
  function that takes a px chain, and does a shephard tone thing with perpetually zooming into two copies of the chain
- voronoi, result should be like an sdf to the voronoi edges (or centres)? sdvoronoi
+ vorctr function that gives offset to the centre point of the nearest voronoi cell
  jpeg functions; split between uv and rgb
  ?Wobble and ripple with time and size params
  ?render buffers to generate read from, eg px=tex{buffer{mul{1.01}>>webcam>>set{#...a},clear:false}} for temporal zoom-blur??
@@ -40,7 +40,6 @@ Multiband effect that does spectral side chain ducking
  ALSO: Trance needs a param to soften the pluckiness: maybe attack as well as decay? Or decay affects both?
    att=this.decay^2*100ms  works pretty well??
 Envelope follower duck
-Multiband ducks
 ? Chebyshev shaper
 ?Granular synth?
 ?pattern operators are expression operators, default pattern is parsed as an expression
@@ -50,15 +49,12 @@ Multiband ducks
  // l supersaw 001236, fx=vocoder{tts{'take your place'}}*8, oct=2, dur=1/2
 ?multitap should have second callback for chain to use on each tap before they get summed together
  ?OR, one callback but it can return a pair of chains somehow?
-!! darkverb with stanh>>..>>stanh failed with gamepad, didn't play anything on win laptop
 Claude fable suggested good default mastering chain; try it out:
  set main amp=1.4, hpf={24,q:-3}, low={0.5dB,freq:120}, high={1dB,freq:8000}, drive=1/64, compress={2.5,threshold:-14dB,knee:12dB,att:0.05,rel:0.2}
   NOTE for heavy four-on-the-floor material the 50 ms attack with 0.2 s release can pump audibly if you push amp hard — raise rel to ~0.3 or back off amp if you hear it
  IF its good, can it be a preset somehow??
 Should be able to write actual unit tests in limut for limut functions? How would this work?
 Support just intonation etc
-gp0, gp1 etc as well as just gp
-Dmxstrip presets...
 !! Doesnt work properly:  fx=tilt{+10db*[-1,1]l4@f}  but this works:   fx=tilt{[-10db,+10db]l4@f}
  THIS is because +10db is immediately converted to a scalar, then multiplied by -1/+1 which is invalid for the filter
  Only real solution is to change the whole way units work - and for dB thats much more complicated because non linear (but worth it??)
@@ -74,16 +70,10 @@ electron performance
  game mode https://g.co/gemini/share/2d402c47eda2
   Info.plist file. The key is LSApplicationCategoryType, and its value should be set to public.app-category.games
   BrowserWindow.setFullScreen(true) for fullscreen
- Perf/glitch issue from thrashing audionodes? Try keeping a pool of nodes, and/or a pool of voices??
-  Need to experiment and see if it makes any difference
-  Audionode creation is definitely high on the per-beat profile now...
  !We also seem to be leaking 1 js event listener per beat???
-!Gamepad: when notes are missing (stick clicks, lt: rt: etc) then don't leave gaps in value played
- Full remapping to handle this? What about gp.notes then?
 Hub75 display: Image textures (tex{'url'}) over the protocol: needs the encoded file bytes fetching host side
 
 ==== audio ====
-? Sting based lead preset
 ? Granular base preset using audiosynth, allowing playing of notes
  ? Maybe practice by making a playable blips preset??
 !! If reference this. params inside an fx chain, have to stop and restart the player for them to update :-(
@@ -95,10 +85,6 @@ WebAudio node graphs as first class values
  mono{}
  ?Consistent units for node functions? Should all be s/hz not b so osc/lfo make sense? Or support lfo{hi:1b} ??
   Or should all take same default units as params for consistency?
- !slider doesn't work with fx nodes
-  ?Fixed now??
-  ?What about with buses?
-  ?What about other functions, eg smooth?
  ! a audiosynth, play={osc,osc}  TypeError: waveEffects(...).connect is not a function
  ?Dont recreate fx chain if the param string hasnt changed?
  !evalMainParamFrame (and what it calls) should use the REAL event, not the params object
@@ -125,10 +111,6 @@ WebAudio node graphs as first class values
 !set lpf2 = lpf etc does not work!!! I think the args do not get passed in anymore??
  I guess there is an extra parse-var in there; can it be short circuited at parse time??
   Sounds dangerous; this should really work anyway, shouldn't it?
-Salamander Piano upgrades
- More pitches?
- Velocity
- Make sure addc works - it currently doesn't
 ? echo{} delay time default to 3/4?
 ! echo param has unnecessary limit on min delay due to the fx chain quantisation!
 ?human param for perc preset, applies some slight vel, rate, delay variations
@@ -296,7 +278,7 @@ FM wood synth - https://www.youtube.com/watch?v=dXo_493fEpU
 =================================================================================================================================
 =================================================================================================================================
 ==== visual ====
- 3D stuff
+3D stuff
  !the march evaluates the scene TWICE per step: once in the body (let{sd3d, scene}) and again for
   the until: condition, because a let{} binds a pxfn as the FUNCTION it is, so every read of the
   name is another call at wherever it is read. That is deliberate and it is what makes sd3lit's own
@@ -326,10 +308,6 @@ webcam: can choose device if do getUserMedia then enumerateDevices then getUserM
  Check performance in various scenarios: cpu load; try with different resolutions
 !Buffer freezes on code update
 ?Chromatic aberration hack  col.rgb += dFdx(col.rgb)*vec3(3,0,-3);
-?Proper detailed gradients, not just fore/mid/back
- ?Based on user defined functions populating a lookup texture? or piecewise translating into gradient segments?
- ?recol=fmb that leaves all pixels white but with fb set, to allow recolouring with fore/mid/back. check it for webcam/image etc too
- ?Shader palettes from https://github.com/Erkaman/glsl-cos-palette
 ?A visual synth routed to a buffer should not play at all if the buffer is not there?
  Right now, it works except the synth pauses..??
 Would be nice for buffer feedback to keep playing until its finished when do StopAll?
@@ -347,11 +325,6 @@ Filter param for all texture based synths (including buffer feedback)
 Generative visual synth
  Complementary colours?
  Shapes? Noise? NN Dreams?
-Digital JPEG corruption filter param - https://www.shadertoy.com/view/Md2GDw
- Takes square blocks and maps them to adjacent parts of the image, or colours them randomly green or gray or pixellated
- Main param value determines the amount of corruption
- Subparam for block scale
- Subparam for extremity of effect within corrupted blocks?
 Make buffer param work per frame
  !!This fails at the moment because the synths are added to only one buffers renderList, and its done per event not per frame
 Can set texture repeat for text and image etc synths? Subparam or not?
