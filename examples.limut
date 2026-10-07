@@ -6042,10 +6042,12 @@ section drop {
 }, length=64
 
 
-// v visualsynth, px=sdvoronoi{scale:4}*4>>cospal
-// v visualsynth, px=sdvorcentre^2*12>>pal{0,red,1}^2
-// v visualsynth, px=sdvoronoi*8>>pal{0,{h:uv>>vorcell},1}^2
-// v visualsynth, px=mul{1/2}>>kal{1-vorcell*2}^3-1/2>>pal{0,red,1}
-// v visualsynth, px=sdvoronoi{scale:1+sdvoronoi*8}*2>>cospal
+// v visualsynth, px=droste{tex{webcam}}
+// v visualsynth, px=zoomer{tex{webcam}}
+// v visualsynth, px=droste{sdvoronoi*4>>cospal}
+// v visualsynth, px=zoomer{sdvoronoi*4>>cospal}
+// v visualsynth, px=droste{turb2t>>cospal, soft:1/4}
+// v visualsynth, px=droste{kal2{uv>>dot/8}*0.85}^3>>pal{0,red,1}
+// v visualsynth, px=id/4>>zoomer{kal2{uv>>dot/8}*0.85}+time/8>>cospal{uv/4}
 
 

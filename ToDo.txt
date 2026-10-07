@@ -2,7 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 visual nodes...
- function that takes a px chain, and does a shephard tone thing with perpetually zooming into two copies of the chain
  vorctr function that gives offset to the centre point of the nearest voronoi cell
  jpeg functions; split between uv and rgb
  ?Wobble and ripple with time and size params

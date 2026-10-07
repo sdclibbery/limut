@@ -218,18 +218,20 @@ set kal2 = {shape:0, in:id, t:time/2, glow:1, n:8} -> kal2h{in, t, shape, n, kal
 //// Perpetual zoom
 // Zoom into src forever, like a Shepard tone. t is the zoom in powers of scale, so every whole t
 // is the same picture.
-//   px=droste{noise2>>cospal{#05a}, soft:1/4}
+//   px=droste{noise2>>cospal{#05a}}
 //   px=zoomer{kal{glow:1/3}/2>>pal{#012,#28a,#fff}}
 // The weight is 1 at g=0 and 0 by g=soft, which keeps the ring seam continuous. Blends are done
 // in src^gamma, so gamma 2 approximates linear light; negative channels clamp to 0.
+// droster mixes two norms, which is still a norm, so any round gives nested rings.
 set zoomxy = {in, z} -> in >> mul{x:z, y:z}
 set drostemix = {qa, g, scale, soft, gamma, sf} ->
   mix{(zoomxy{qa, scale} >> sf)^gamma, (qa >> sf)^gamma, smoothstep{clamp{g/max{soft, 0.001}}}}^(1/gamma)
 set drosteh = {in, r, g, lns, soft, gamma, sf} ->
   drostemix{zoomxy{in, exp{(g-1)*lns}/r}, g, exp{lns}, soft, gamma, sf}
 set drosteg = {in, r, lns, f, soft, gamma, sf} -> drosteh{in, r, fract{ln{r}/lns - f}, lns, soft, gamma, sf}
-set droste = {src, scale:2, t:time/4, soft:0, gamma:2, in:id} ->
-  drosteg{in, max{abs{in.x}, abs{in.y}, 0.000001}, ln{scale}, fract{t}, soft, gamma, pxfn{src}}
+set droster = {in, round} -> max{mix{max{abs{in.x}, abs{in.y}}, sqrt{in.x*in.x + in.y*in.y}, round}, 0.000001}
+set droste = {src, scale:2, t:time/4, soft:1/4, gamma:2, round:1, in:id} ->
+  drosteg{in, droster{in, round}, ln{scale}, fract{t}, soft, gamma, pxfn{src}}
 
 // The raised sine weights sum to 1 for n of 2 or more.
 set zoomerh = {in, scale, n, f, gamma, sf} ->
