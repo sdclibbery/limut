@@ -1,11 +1,10 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
+pxprev support for hub75
 visual nodes...
  vorctr function that gives offset to the centre point of the nearest voronoi cell
- jpeg functions; split between uv and rgb
  ?Wobble and ripple with time and size params
- ?render buffers to generate read from, eg px=tex{buffer{mul{1.01}>>webcam>>set{#...a},clear:false}} for temporal zoom-blur??
  ?visual lib functions for old style visual params (monochrome, pixellate, rotate, mirror, vhs etc etc) - vhs needs split into uv and rgb parts...
  ?bitwise ops
  ?something undefined should render flat black not flat white

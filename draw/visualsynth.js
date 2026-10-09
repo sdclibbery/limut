@@ -8,6 +8,7 @@ define(function (require) {
   let {isShaderNode, toVec4} = require('draw/visualsynth/shader-node')
   let {getCallTree, setCallTree, clearCallTree, isCallTreeEmpty} = require('player/callstack')
   let hub75 = require('draw/hub75/host/hub75')
+  let feedback = require('draw/visualsynth/feedback')
   require('draw/visualsynth/nodes') // Register mul/tex/webcam var functions at startup
 
   let vtxCompiled
@@ -66,6 +67,11 @@ define(function (require) {
     // in `built` - the generated shader is self contained - so this is a tap on the existing seam
     // rather than a second rendering path. See draw/hub75/PROTOCOL.md.
     let display = evalParamEvent(params.display, params)
+    let feedbackSlot = built.textures.findIndex(t => t.texture === feedback.marker)
+    if (display !== undefined && feedbackSlot >= 0) {
+      warnOnce(`🔴 Visual synth: pxprev is not supported with display=`)
+      return
+    }
     if (display !== undefined) {
       hub75.setLayer(String(display), params, built)
       return // Nothing drawn locally; sprite.js keeps a falsy result out of the render list, which
@@ -87,6 +93,7 @@ define(function (require) {
         common.getCommonUniforms(shader)
         shader.textureUnif = built.textures.map((t,i) => system.gl.getUniformLocation(program, 'u_vstex'+i))
         shader.extentsUnifs = built.textures.map((t,i) => system.gl.getUniformLocation(program, 'u_vsex'+i)) // Per texture, so several can coexist. Null for a texture whose extents nothing reads (eg a lut)
+        if (feedbackSlot >= 0) { shader.feedbackBoundsUnif = system.gl.getUniformLocation(program, 'u_vsfb') }
         cached = {
           shader: shader,
           uniformLocs: built.uniforms.map(u => system.gl.getUniformLocation(program, u.name)),
@@ -104,6 +111,11 @@ define(function (require) {
     // Per-event wrapper over the shared compiled program: textures and uniform ASTs are per event
     let s = Object.create(cached.shader)
     if (built.textures.length > 0) { s.textures = built.textures.map(t => t.texture) } // sprite.js binds each to its own slot
+    if (feedbackSlot >= 0) {
+      let fb = feedback.forPlayer(params._player)
+      s.textures[feedbackSlot] = fb.read
+      s.feedback = feedback.attach(fb, cached.shader)
+    }
     if (built.uniforms.length > 0) {
       s.preRender = (state) => {
         system.gl.useProgram(cached.shader.program)

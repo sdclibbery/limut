@@ -358,6 +358,21 @@ Runs **once per visual event** (via `sprite.create`, `draw/sprite.js`). Flow: `e
 - **Per-frame animated uniforms**: `s.preRender(state)` (the hook sprite.js calls before each draw) does `gl.useProgram` then, per uniform, restores that uniform's captured call tree, `evalParamFrame(u.ast, params, state.count)` → `toVec4` → `gl.uniform4fv`. This is the visual analogue of `play/eval-audio-params.js` per-frame scheduling; see "Call context in uniforms" above.
 - Texture binding rides `sprite.js`, **per slot**: it takes `s.textures[i]` when present (falling back to the single `s.texture`/url every other shader uses), binds `t.target || gl.TEXTURE_2D`, and writes that texture's own extents uniform from `s.extentsUnifs[i]`. Any number of texture nodes per chain therefore works. Two things that loop depends on: it runs *after* `t.update(state)`, which is when a webcam texture first learns its `width`/`height` (so extents cannot move into `preRender`, which runs too early); and a texture with no `width`/`height` — a lut — simply gets no extents written, which is right, since only `tex{}`'s aspect correction reads them.
 
+## Self-feedback: `pxprev` (`draw/visualsynth/feedback.js`)
+
+`pxprev` samples the player's own previous frame at the incoming xy, still within one generated
+shader. The build walk stays GL- and player-free: the node adds `feedback.marker` as a texture (one
+slot however many uses) plus the `l_pxprev` helper, which declares `uniform vec4 u_vsfb` (the quad's
+fragCoord bounds lo.xy/hi.xy). The renderer finds the marker slot, swaps in a getter over the
+player's read target (`player.pxFeedback`, so history survives events and edits), and attaches two
+`sprite.js` hooks: `prepare` sizes the target pair to the quad's pixels, flips once per frame
+(overlapping events share it), and retargets the vertices to fill the target; `pass` draws the px
+there with blend off and leaves a copy program current on the real quad, so sprite's own blend and
+`buffer=` routing apply to the copy. Targets are RGBA16F when `EXT_color_buffer_float` exists,
+because 8 bits stalls a per-frame decay around 16/255. Refused with `display=` (the Pi has no
+target pair). Verified by the fixed point of `uv>>pxprev>>mix{gradient,1/2}` matching the gradient
+rendered directly (max diff 1/255, also with `loc`), which also catches a flipped history.
+
 ## Known limitations (PoC scope, deliberate)
 
 Smooth noise/perlin nodes (`pxhash` is a per-pixel hash, not value noise); chords inside px args (placeholders keep them from crashing, results unspecified); no program-cache eviction (matches shadertoy). Only a plain var-lookup callsite is piped — or the head of an arithmetic expression or of a nested chain, which reaches inside a parenthesised one too (`id >> (floor{1/8}*2)`) — but never a lambda literal. A function that ignores its input and builds a node from scalar args (`set stripes = {n} -> tex1d{{x}->x*n}`) gets the seed shifted into its first arg — same as writing `id>>stripes{8}` explicitly.

@@ -257,6 +257,9 @@ define(function (require) {
       let har = system.cw / system.ch
       if (buffer) { har = buffer.target.width / buffer.target.height }
       let vtxData = verts(loc, window, har, !params.isBufferFeedback) // Never mess with aspect ratio for feedback as it would break the effect
+      if (s.feedback) {
+        s.feedback.prepare(state, vtxData, buffer ? buffer.target.width : system.cw, buffer ? buffer.target.height : system.ch)
+      }
       system.loadVertexAttrib(s.posBuf, s.posAttr, vtxData.vtx, 2)
       system.loadVertexAttrib(s.fragCoordBuf, s.fragCoordAttr, vtxData.tex, 2)
       let gl = system.gl
@@ -316,6 +319,7 @@ define(function (require) {
           if (t.params) { t.params() }
         }
       }
+      if (s.feedback) { s.feedback.pass() } // Draws into the feedback target, leaving the copy to the quad for the draw below
       if (fore[3] >= 0.9999 && back[3] >= 0.9999 && mid[3] >= 0.9999 && additive == 0 && vignette == 0 && blend === undefined) {
         gl.disable(gl.BLEND)
       } else {
