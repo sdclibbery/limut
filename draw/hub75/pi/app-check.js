@@ -39,10 +39,14 @@ let serverUp = () => new Promise(resolve => {
   req.setTimeout(2000, () => { req.destroy(); resolve(false) })
 })
 
-let debug = async () => (await fetch(`http://${EP}/debug`)).json()
+// Matches the opt-in check in pi/net.c: unset on both ends, this is a no-op; set on the display,
+// every caller of /debug and /frame.raw has to send it too.
+let authHeaders = process.env.HUB75_TOKEN ? { 'X-Hub75-Token': process.env.HUB75_TOKEN } : {}
+
+let debug = async () => (await fetch(`http://${EP}/debug`, { headers: authHeaders })).json()
 
 let frame = async () => {
-  let res = await fetch(`http://${EP}/frame.raw`)
+  let res = await fetch(`http://${EP}/frame.raw`, { headers: authHeaders })
   return { w: +res.headers.get('x-width'), h: +res.headers.get('x-height'),
            px: Buffer.from(await res.arrayBuffer()) }
 }

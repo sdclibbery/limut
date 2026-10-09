@@ -134,6 +134,24 @@ static void serve_debug(client *cl) {
     sb_free(&h);
 }
 
+/* Opt-in bearer-token check for the debug/frame routes (PROTOCOL.md does not require them, and
+ * they are the ones that leak display state and pixel content). HUB75_TOKEN unset keeps today's
+ * behaviour so existing deployments and dev tools are not broken by default; setting it on the
+ * display requires every caller of /debug and /frame.raw to send a matching header. */
+static int auth_ok(const char *req, size_t headLen) {
+    const char *tok = getenv("HUB75_TOKEN");
+    size_t gotLen = 0;
+    const char *got;
+    if (!tok || !tok[0]) return 1;
+    got = header(req, headLen, "x-hub75-token", &gotLen);
+    return got && gotLen == strlen(tok) && !memcmp(got, tok, gotLen);
+}
+
+static void serve_401(client *cl) {
+    static const char *r = "HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n";
+    write_all(cl->fd, r, strlen(r));
+}
+
 static void serve_404(client *cl) {
     static const char *body = "{\"error\":\"not found\"}\n";
     strbuf h;
@@ -222,8 +240,16 @@ static int handle_http(client *cl) {
     }
 
     if (pathLen == 5 && !memcmp(path, "/info", 5)) { serve_info(cl); return 1; }
-    if (pathLen == 10 && !memcmp(path, "/frame.raw", 10)) { serve_frame(cl); return 1; }
-    if (pathLen == 6 && !memcmp(path, "/debug", 6)) { serve_debug(cl); return 1; }
+    if (pathLen == 10 && !memcmp(path, "/frame.raw", 10)) {
+        if (!auth_ok(req, (size_t)(headEnd - req))) { serve_401(cl); return 1; }
+        serve_frame(cl);
+        return 1;
+    }
+    if (pathLen == 6 && !memcmp(path, "/debug", 6)) {
+        if (!auth_ok(req, (size_t)(headEnd - req))) { serve_401(cl); return 1; }
+        serve_debug(cl);
+        return 1;
+    }
     if (pathLen == 8 && !memcmp(path, "/session", 8)) {
         size_t upLen = 0, keyLen = 0;
         const char *up = header(req, (size_t)(headEnd - req), "upgrade", &upLen);
