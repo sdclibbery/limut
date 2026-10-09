@@ -1,4 +1,4 @@
-// Smooth noise, 2d/3d transforms, kaleidoscope patterns, perpetual zoom and a VHS effect for visualsynth px chains.
+// Smooth noise, 2d/3d transforms, kaleidoscope patterns, perpetual zoom, fractals and a VHS effect for visualsynth px chains.
 //
 // Value noise interpolates hashed lattice corner values; perlin (gradient) noise interpolates
 // hashed corner gradients, so it is less blocky and signed.
@@ -238,6 +238,59 @@ set zoomerh = {in, scale, n, f, gamma, sf} ->
   parallel{{i} -> (zoomxy{in, scale^(n/2-i-f)} >> sf)^gamma*(sin{3.14159*(i+f)/n}^2*2/n), n}^(1/gamma)
 set zoomer = {src, scale:2, n:4, t:time/4, gamma:2, in:id} ->
   zoomerh{in, scale, n, fract{t}, gamma, pxfn{src}}
+
+//// Fractals
+// Escape time fractals: pxjulia and pxmandel, with a choice of formula and of colouring. And the
+// Kaliset, a cheap fold and invert fractal.
+//   px=pxjulia>>cospal{#05a}
+//   px=pxmandel>>pal{#000,#08f,#fff}
+//   px=pxjulia{trap:1}>>cospal{#05a}
+//   px=pxkali>>cospal{#05a}
+// Complex numbers are x (real) and y (imaginary).
+set pxcpolar = {r, a} -> {x: r*cos{6.28318*a}, y: r*sin{6.28318*a}, w:0}
+set pxcsq = {in:id} -> in >> set{x: id.x*id.x - id.y*id.y, y: 2*id.x*id.y}
+set pxcpow = {in:id, k:2} -> in >> set{
+  x: length{id}^k*cos{k*atan{id.y, id.x}},
+  y: length{id}^k*sin{k*atan{id.y, id.x}}}
+// k and form are tested once per event, so the plain square only costs the cheap version.
+set pxzpow = {in:id, k:2} -> (k == 2 ?? pxcsq{in} ?: pxcpow{in, k})
+// form 1 (the burning ship) is conjugated so the ship is upright with y up.
+set pxzform = {form, k} ->
+  form == 1 ?? pxfn{{z} -> pxzpow{abs{z}, k} >> set{y: -id.y}}
+  ?: form == 2 ?? pxfn{{z} -> pxzpow{z, k} >> set{y: -id.y}}
+  ?: pxfn{{z} -> pxzpow{z, k}}
+
+set pxescsmooth = {z, bail, k} ->
+  dot{z} > bail*bail ?? 1 - exp{(ln{ln{max{length{z}, bail}}/ln{bail}}/ln{k} - fzn)/16} ?: 0
+set pxescout = {z, trap, bail, k} ->
+  trap == 1 ?? fztp ?: trap == 2 ?? fztx ?: trap == 3 ?? fztc ?: pxescsmooth{z, bail, k}
+
+// c is a chain fed z0, so c:id makes it the point, for the Mandelbrot set.
+set pxescape = {z0, c, f, n, p, bail, k, trap, tp, tr} ->
+  z0 >> loop{
+      {i} -> id >> let{fzo, id}
+                >> let{fzz, (fzo >> f) + fzc + fzp*p}
+                >> let{fzp, fzo} >> let{fzn, fzn + 1}
+                >> let{fztp, min{fztp, length{fzz - tp}}}
+                >> let{fztx, min{fztx, min{abs{fzz.x}, abs{fzz.y}}}}
+                >> let{fztc, min{fztc, abs{length{fzz} - tr}}}
+                >> fzz,
+      n,
+      carry:{fzc:c, fzp:0, fzn:0, fztp:1000, fztx:1000, fztc:1000},
+      until: dot{fzz} > bail*bail
+    } >> pxescout{trap, bail, k} >> set{a:1}
+
+// zoom and at frame the view. A transform goes in in: or piped in, and lands before them.
+// The default c sweeps the part of the 0.7885 circle that gives connected sets.
+set pxjulia = {c:pxcpolar{0.7885, 1/2 + sin{time/16}/5}, in:id, zoom:1, at:{x:0,y:0}, form:0, k:2, trap:0, tp:{x:0,y:0}, tr:1/2, p:0, n:64, bail:16} ->
+  pxescape{in*3/2/zoom + at, c, pxzform{form, k}, n, p, bail, k, trap, tp, tr}
+set pxmandel = {in:id, zoom:1, at:{x:-1/2,y:0}, form:0, k:2, trap:0, tp:{x:0,y:0}, tr:1/2, p:0, n:64, bail:16} ->
+  pxescape{in*5/4/zoom + at, id, pxzform{form, k}, n, p, bail, k, trap, tp, tr}
+
+set pxkali = {c:{x:1/2 + sin{time/16}/10, y:1/2 + cos{time/20}/10}, in:id, zoom:1, at:{x:0,y:0}, n:12, k:3} ->
+  in*2/zoom + at
+    >> loop{abs{id}/max{dot{id}, 0.0001} - c, n, map:id>>length, fold:{a,v} -> min{a,v}}
+    >> mul{-k} >> exp >> set{a:1}
 
 //// VHS
 // The vhs standard visual param (draw/shadercommon.js) for px chains. vhsuv warps the coordinate

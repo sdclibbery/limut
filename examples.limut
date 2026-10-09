@@ -6050,4 +6050,8 @@ section drop {
 // v visualsynth, px=droste{kal2{uv>>dot/8}*0.85}^3>>pal{0,red,1}
 // v visualsynth, px=id/4>>zoomer{kal2{uv>>dot/8}*0.85}+time/8>>cospal{uv/4}
 
+// v visualsynth, px=pxmandel>>cospal{#024+time/4}
+// v visualsynth, px=pxjulia>>cospal{uv/3}
+// v visualsynth, px=zoomer{pxkali}>>cospal{uv/4}
+// v visualsynth, px=zoomer{pxjulia{uv}}>>pal{0,red,1,1}^2//>>cospal{uv>>rot2{time/16}/4}
 
