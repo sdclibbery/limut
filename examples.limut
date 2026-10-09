@@ -6054,4 +6054,5 @@ section drop {
 // v visualsynth, px=pxjulia>>cospal{uv/3}
 // v visualsynth, px=zoomer{pxkali}>>cospal{uv/4}
 // v visualsynth, px=zoomer{pxjulia{uv}}>>pal{0,red,1,1}^2//>>cospal{uv>>rot2{time/16}/4}
+// v visualsynth, px=jpeg{tex{webcam}}
 

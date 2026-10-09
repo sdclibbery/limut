@@ -347,6 +347,57 @@ set vhsrgb = {in:id, amt:1, t:time} -> vhsrgbh{in, vhsrow{uv}, vhswarp{uv, set{t
 set vhsh = {src, wp, amt, t} -> vhsuvh{id, wp, amt} >> src >> vhsrgbh{vhsrow{uv}, wp, amt, t}
 set vhs = {src, amt:1, t:time} -> vhsh{src, vhswarp{uv, set{t}}, amt, set{t}}
 
+//// JPEG
+// The jpeg standard visual param for px chains, split like vhs. size counts macroblocks down the
+// height, where the param counts them across the width.
+//   px=jpeg{tex{webcam{}}}
+//   px=jpeguv{size:16}>>tex{webcam{}}>>jpegrgb{size:16}
+// The block state jst carries the displacement in x and y, the dct ringing in z and the corruption
+// in w, so jpeg{} computes it once for both stages.
+set jpegrand = {p, k, a, b} -> vhsrand{p.x*k + a, p.y*k + b}
+set jpeggrid = {c, size, te} -> set{
+  x: (c.x/2 + 1/2 + (jpegrand{te, 0.21, 0.7, 0.7} - 1/2)*8/size)*size,
+  y: (c.y/2 + 1/2 + (jpegrand{te, 0.17, 9.1, 9.1} - 1/2)*8/size)*size,
+  z: 0, w: 0}
+set jpegspeed = {cell, te} -> 4^(1 - floor{jpegrand{cell, 0.043, te*0.07, 1.9}*3})
+set jpegscale = {cell, tq} -> 2^(floor{jpegrand{cell, 0.037, tq*0.011, 5.3}*3} - 1)
+set jpegbasis = {bl, k, a, b} -> 1 + floor{jpegrand{bl, k, a, b}*3}
+set jpegring = {bl, tc} ->
+  floor{cos{tc.x*3.1416*jpegbasis{bl, 0.073, 2.4, 9.2}}*cos{tc.y*3.1416*jpegbasis{bl, 0.073, 7.7, 1.3}}*3 + 1/2}/3
+    *max{jpegrand{bl, 0.051, 4.9, 3.3} - 0.6, 0}
+set jpegstd = {bl, ib, sc, act, amt, tq, cr} -> set{
+  x: (jpegrand{bl, 1, tq, 1.7} - 1/2)*0.25*amt*cr/sc,
+  y: (jpegrand{bl, 1, 3.1, tq} - 1/2)*0.25*amt*cr/sc,
+  z: jpegring{bl, (floor{ib*8} + 1/2)/8}*0.6*amt*(0.25 + 0.75*act),
+  w: cr}
+set jpegsti = {bl, ib, sc, act, amt, tq, hit} -> jpegstd{bl, ib, sc, act, amt, tq, hit*jpegrand{bl, 0.029, tq*0.23, tq*0.41}}
+set jpegstb = {cell, te, tq, sc, bl, ib, act, amt} -> jpegsti{bl, ib, sc, act, amt, tq,
+  (jpegrand{cell, 0.031, tq*0.13, te*0.29} < act*amt)*(jpegrand{bl, 0.017, tq*0.37, tq*0.53} < 0.7)}
+set jpegstg = {cell, te, tq, sc, gs, act, amt} -> jpegstb{cell, te, tq, sc, floor{gs}, fract{gs}, act, amt}
+set jpegsts = {gr, cell, te, tq, sp, sc, amt} -> jpegstg{cell, te, tq, sc, gr*sc, vhsrand{tq*0.117, sp + 3.7}^2, amt}
+set jpegstq = {gr, cell, te, tq, sp, amt} -> jpegsts{gr, cell, te, tq, sp, jpegscale{cell, tq}, amt}
+set jpegstp = {gr, cell, te, t, sp, amt} -> jpegstq{gr, cell, te, floor{t*sp}, sp, amt}
+set jpegstc = {gr, cell, te, t, amt} -> jpegstp{gr, cell, te, t, jpegspeed{cell, te}, amt}
+set jpegstr = {gr, te, t, amt} -> jpegstc{gr, floor{gr/4}, te, t, amt}
+set jpegste = {c, size, amt, t, te} -> jpegstr{jpeggrid{c, size, te}, te, t, amt}
+set jpegst = {c, size, amt, t} -> jpegste{c, size, amt, t, floor{t*0.13}}
+
+set jpeguvh = {in, jst} -> in >> set{x: id.x - jst.x*2, y: id.y - jst.y*2}
+set jpeguv = {in:id, amt:1, size:8, t:time} -> jpeguvh{in, jpegst{in, size, amt, set{t}}}
+
+set jpegquant = {v, n} -> floor{v*n + 1/2}/n
+set jpegrgbh = {in, jst, amt} -> in >> vhsyiq >> set{x: id.x + jst.z} >> set{
+    x: jpegquant{id.x, 64 - 50*amt}, y: jpegquant{id.y, 32 - 25*amt}, z: jpegquant{id.z, 32 - 25*amt}}
+  >> set{
+    x: id.x + (jst.w > 0)*(clamp{id.x + (jst.w - 1/2)*0.6*amt} - id.x),
+    y: id.y + (jst.w > 0)*amt*(id.z - id.y),
+    z: id.z + (jst.w > 0)*amt*(-id.y - id.z)}
+  >> vhsfromyiq
+set jpegrgb = {in:id, amt:1, size:8, t:time} -> jpegrgbh{in, jpegst{uv, size, amt, set{t}}, amt}
+
+set jpegh = {src, jst, amt} -> jpeguvh{id, jst} >> src >> jpegrgbh{jst, amt}
+set jpeg = {src, amt:1, size:8, t:time} -> jpegh{src, jpegst{uv, size, amt, set{t}}, amt}
+
 //// Synthwave
 // A synthwave scene: sky, stars, striped sun, wireframe mountains and a scrolling neon grid. The
 // horizon is y=0. t is passed as set{t}, as for vhs.
