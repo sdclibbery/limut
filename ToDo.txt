@@ -1,7 +1,9 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-pxprev support for hub75
+!bs sub, fx>>=duck>>stanh{4}*-16db - this worked, but something like this failed until fx string edit bs sub, fx>>=duck+[1/2:1]n4>>stanh{4}*-16db
+hub75 preset
+fire or flames function
 visual nodes...
  vorctr function that gives offset to the centre point of the nearest voronoi cell
  ?Wobble and ripple with time and size params

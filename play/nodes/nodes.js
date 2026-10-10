@@ -24,7 +24,7 @@ define(function(require) {
     let node = system.audio.createBiquadFilter()
     let params = combineParams(args, e)
     node.type = evalMainParamEvent(args, 'value', 'lowpass', undefined, e)
-    evalMainParamFrame(node.frequency, params, 'freq', 440, 'hz')
+    evalMainParamFrame(node.frequency, params, 'freq', 440, 'hz', f => Math.max(f, 10)) // Moving the cutoff near 0Hz makes a biquad blow up
     evalMainParamFrame(node.Q, params, 'q', 5)
     evalMainParamFrame(node.gain, params, 'gain', undefined, undefined, x => Math.log10(Math.max(x,1e-6))*20) // Convert to dB for WebAudio
     return node

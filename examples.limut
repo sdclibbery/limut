@@ -6061,3 +6061,38 @@ section drop {
 // v visualsynth, px=rot2{time/8}>>kal2{uv/3}^2>>pal{0,red,1}>>mix{uv>>mul{0.99}>>pxprev, 0.8+[]l1/4@f*0.2}
 
 
+// Algorithmic Unhinged
+include 'personal/everything.limut'
+dw dmxwash, channel=(1,8,15,22), fore={h:[0.3:0.7]l1/2@f,v:pk.pulse.0 /8}
+v visualsynth, display='hub75-01', dim=0.8, px=id/3>>(
+    (add{v:1/2}>>kal2{1+pc.pulse.0}*#f1a*2*pk.pulse.0^2)
+    +(add{v:-1/2}>>kal2{time}*#580*4*ba.pulse.0^2)
+    +(kal2{uv/4}*#48f*2*l.pulse.0*tg^2)
+  )^2
+w visualsynth, px=mul{1-[pk.vel.0 /16:!1,0]e@s}>>tex{webcam{['5mp','2mp']t16}}*(uv.u>4/3??0?:1)
+set bpm=145
+set main fx=stanh{3}
+set scale='phrygian'
+set p* delay|=[[1,3]r/4:_2,():_]{sx.rtime}
+set default length=16
+// pk perc x..., sample=3
+// ph perc ..:., vel*=-3db
+// phh perc -.= crop 16, swing=54, vel=[]n, pan=[-1,1]/3
+// bs sub, fx>>=duck>>stanh{4}*-16db
+// ba acid 0__7_7_6410_7475, sus*=[3,2,4]/8, cutoff=avw2.f8*2, fx>>=fuzz{avw2.f7}>>mix{hpf{300}>>airverb}*+6db
+k pick 02670486, decay=1, fx>>=fuzz{1/2*[]n8}*+6db, vel=slider, cutoff=[]n11*2, swing=52
+l dlead avw2, addc=avw2.bend*7, dist=avw2.f1, fx>>=fuzz{avw2.f1}>>mix{darkverb,avw2.f2}>>mix{pingpong{1/2},1/4}>>mix{tg,this.press}*-3db, vel+=this.press/2
+l2 softkeys keyboard, addc=wow, fx=fuzz>>darkverb>>pingpong/2, glide=1/8
+section build {
+	set !p* add+=-1
+	set (pk,phh,pc) vel=0
+  set ba pattern=`0_`
+  set k vel=3/4, pattern=`007`
+	set main hpf=10+1800*sx.rise^6
+  f perc u, vel=sx.rise^8, rate=1/2, room=1/2
+}, next=drop
+section drop {
+	set !p* add+=[0:_16,1:_8,-1:_8]{sx.time}
+  set k vel=3/4*[]n7
+	pc play80s ..O., sample=3, vel=1/3
+}, length=64

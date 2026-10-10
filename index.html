@@ -956,7 +956,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>bits</code> bit crush effect; value is number of bits. 1 bit is very distorted to (eg) 32 bits is relatively clean. 0 disables the effect.</p>
 <p class='sub'><code>bits={12,gain:2}</code> Input gain; gain amp to apply to the signal before bits is applied</p>
 <p class='sub'><code>bits={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
-<p><code>bpf</code> Band pass filter frequency. Default time units: Hertz.</p>
+<p><code>bpf</code> Band pass filter frequency. Never goes below 10Hz. Default time units: Hertz.</p>
 <p class='sub'><code>bpf={400,q:20}</code> Band pass filter resonance. Default: 1.</p>
 <p class='sub'><code>bpf={400,poles:4}</code> Filter poles. Default is a 2 pole filter giving 12 dB/octave. Alternatively, specify 4 for a Moog-like 4 pole filter giving 24 dB/octave.</p>
 <p><code>bpf1</code> Multiple, parallel bandpass filters are available using params <code>bpf1</code>, <code>bpf2</code> etc.</p>
@@ -994,19 +994,19 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>glide={1/3,curve:4}</code> glide curve. Zero means no curve, or a linear frequency change. Positive curve means the frequency moves quickly to the target, then slows down as it approaches. Default is 1.</p>
 <p><code>high</code> High shelf gain. Eg <code>high=-6dB</code> will act like a gain of 1/2 for the high frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
 <p class='sub'><code>high={-8db,freq:400}</code> High shelf cutoff frequency. Default: 1100Hz. Default units: Hertz</p>
-<p><code>hpf</code> High pass filter frequency. Default time units: Hertz</p>
+<p><code>hpf</code> High pass filter frequency. Never goes below 10Hz. Default time units: Hertz</p>
 <p class='sub'><code>hpf={400,q:20}</code> High pass filter resonance. Default: 5.</p>
 <p class='sub'><code>hpf={400,poles:4}</code> Filter poles. Default is a 2 pole filter giving 12 dB/octave. Alternatively, specify 4 for a Moog-like 4 pole filter giving 24 dB/octave.</p>
 <p><code>low</code> Low shelf gain. Eg <code>low=-6dB</code> will act like a gain of 1/2 for the low frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
 <p class='sub'><code>low={-8db,freq:400}</code> Low shelf cutoff frequency. Default: 200Hz. Default units: Hertz</p>
-<p><code>lpf</code> Low pass filter frequency. Default time units: Hertz</p>
+<p><code>lpf</code> Low pass filter frequency. Never goes below 10Hz. Default time units: Hertz</p>
 <p class='sub'><code>lpf={400,q:20}</code> Low pass filter resonance. 10 is approximately the transition where resonance starts to kick in. Default: 5.</p>
 <p class='sub'><code>lpf={400,poles:4}</code> Filter poles. Default is a 2 pole filter giving 12 dB/octave. Alternatively, specify 4 for a Moog-like 4 pole filter giving 24 dB/octave.</p>
 <p><code>mid</code> Mid gain. Eg <code>mid=-6dB</code> will act like a gain of 1/2 for the mid frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
 <p class='sub'><code>mid={-8db,freq:400}</code> Mid cutoff frequency. Default: 600Hz. Default units: Hertz</p>
 <p class='sub'><code>mid={-8db,q:10}</code> Mid q defines the width of the mid frequency band; low q is wide. Default: 5</p>
 <p><code>mono</code> Force a signal to mono: the input signal appears equally in both left and right channels</p>
-<p><code>nf</code> Notch filter frequency. Default time units: Hertz</p>
+<p><code>nf</code> Notch filter frequency. Never goes below 10Hz. Default time units: Hertz</p>
 <p class='sub'><code>nf={400,q:20}</code> Notch filter resonance. Default: 1.</p>
 <p><code>noisify</code> noisify: distort the signal into noise</p>
 <p class='sub'><code>noisify={12,gain:2}</code> Input gain; gain amp to apply to the signal before noisify is applied</p>
@@ -1329,7 +1329,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 </div>
 <h4 onclick="toggleAccordion('accordion-node-functions')" class="accordion"> Node Functions</h4>
 <div id="accordion-node-functions" class="closed">
-<p><code>biquad{'lowpass',freq:440Hz,q:5,gain}</code> Create a biquad filter node of type 'lowpass', 'highpass', 'bandpass', 'notch', 'lowshelf', 'highshelf' or 'peaking'.</p>
+<p><code>biquad{'lowpass',freq:440Hz,q:5,gain}</code> Create a biquad filter node of type 'lowpass', 'highpass', 'bandpass', 'notch', 'lowshelf', 'highshelf' or 'peaking'. freq never goes below 10Hz.</p>
 <p><code>chaos{freq:440, type:lorenz, chaos:0.5, axis:x, smooth:0, seed:0}</code> Chaos oscillator source node: a deterministic but non-repeating signal, roughly &minus;1 to 1. Works as an LFO or an audio-rate modulator: <code>lpf{ 400 + chaos{freq:6}*300 }</code> is a non-repeating filter wobble, <code>osc{ freq: 110 + chaos{110}*40 }</code> organic FM. Uses an AudioWorklet, so costs more audio render capacity.</p>
 <p class='sub'><code>freq=440</code> Evolution speed in Hz (so <code>chaos{6}</code> or <code>chaos{440Hz}</code> both work), spanning slow LFO rates up through audio rate. <code>value</code>/<code>freq</code> both set it.</p>
 <p class='sub'><code>type=lorenz</code> Algorithm: <code>lorenz</code> (dwells in two lobes, then jumps), <code>rossler</code> (gentle spiral with occasional spikes), <code>thomas</code> (very smooth, a safe slow-drift LFO), <code>logistic</code> (stepped sample-and-hold at <code>freq</code> steps per second), <code>duffing</code> (tonal, gritty at audio rate).</p>

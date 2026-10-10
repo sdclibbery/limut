@@ -13,9 +13,10 @@ define(function (require) {
     let poles = evalSubParamEvent(params, freqParam, 'poles', 2)
     let twoStage = (poles === 4)
     let qModifier = twoStage ? x=>x/2 : undefined
+    let freqFloor = f => Math.max(f, 10) // Moving the cutoff near 0Hz makes a biquad blow up
     let filter = system.audio.createBiquadFilter()
     filter.type = type
-    evalMainParamFrame(filter.frequency, params, freqParam, undefined, 'hz')
+    evalMainParamFrame(filter.frequency, params, freqParam, undefined, 'hz', freqFloor)
     evalSubParamFrame(filter.Q, params, freqParam, 'q', defaultResonance, undefined, qModifier)
     node.connect(filter)
     params._destructor.disconnect(filter, node)
@@ -23,7 +24,7 @@ define(function (require) {
       node = filter
       filter = system.audio.createBiquadFilter()
       filter.type = type
-      evalMainParamFrame(filter.frequency, params, freqParam, undefined, 'hz')
+      evalMainParamFrame(filter.frequency, params, freqParam, undefined, 'hz', freqFloor)
       evalSubParamFrame(filter.Q, params, freqParam, 'q', defaultResonance, undefined, qModifier)
       node.connect(filter)
       params._destructor.disconnect(filter, node)
