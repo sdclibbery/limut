@@ -110,7 +110,7 @@ static void helper_loop(int fd, const char *node, int w, int h) {
             if (render_build_program(r, &p, &isLink) < 0) {
                 status = isLink ? REPLY_LINK : REPLY_COMPILE;
                 log = p.log ? p.log : "the driver rejected it and gave no log";
-            } else if (render_frame(r, &p, NULL, 0, NULL, 0, rgba, err, sizeof err) < 0) {
+            } else if (render_frame(r, &p, NULL, 0, -1, NULL, 0, rgba, err, sizeof err) < 0) {
                 /* A GL error at draw time is still "this program does not work here", and the
                  * caller wants that as a compile failure rather than as a broken picture. */
                 status = REPLY_COMPILE;

@@ -76,6 +76,12 @@ static void send_closed(ws_conn *c, const char *reason) {
     sb_free(&b);
 }
 
+/* What this display supports beyond proto 1 (§4). A host must not send a feedback texture to a
+ * display that does not list it. */
+static void features_json(strbuf *b) {
+    sb_add(b, ",\"features\":[\"feedback\"]");
+}
+
 static void gl_json(display *d, strbuf *b) {
     const char *v = render_gl_version(d->r), *rn = render_gl_renderer(d->r);
     sb_add(b, "{\"version\":");
@@ -117,8 +123,12 @@ void display_debug_json(display *d, strbuf *b) {
             const char *samp = d->layerTex[i].sampler == 3 ? "sampler3D" : "sampler2D";
             sb_addf(b, "%s{\"unit\":%d,\"sampler\":", i ? "," : "", d->layerTex[i].unit);
             sb_json_str(b, samp, strlen(samp));
-            sb_add(b, ",\"asset\":");
-            sb_json_str(b, d->layerTex[i].asset, strlen(d->layerTex[i].asset));
+            if (d->layerTex[i].feedback) {
+                sb_add(b, ",\"feedback\":true");
+            } else {
+                sb_add(b, ",\"asset\":");
+                sb_json_str(b, d->layerTex[i].asset, strlen(d->layerTex[i].asset));
+            }
             sb_add(b, "}");
         }
         sb_add(b, "]}");
@@ -141,6 +151,7 @@ void display_info_json(display *d, strbuf *b) {
     sb_json_str(b, d->name, strlen(d->name));
     sb_addf(b, ",\"display\":{\"w\":%d,\"h\":%d},\"gl\":", d->w, d->h);
     gl_json(d, b);
+    features_json(b);
     sb_addf(b, ",\"busy\":%s}", d->conn ? "true" : "false");
 }
 
@@ -224,6 +235,7 @@ static void handle_hello(display *d, ws_conn *c, const char *s, js_tok *t, int n
     sb_json_str(&b, d->name, strlen(d->name));
     sb_addf(&b, ",\"display\":{\"w\":%d,\"h\":%d},\"gl\":", d->w, d->h);
     gl_json(d, &b);
+    features_json(&b);
     sb_add(&b, "}");
     send_json(c, &b);
     sb_free(&b);
@@ -389,7 +401,7 @@ static void handle_layer(display *d, ws_conn *c, const char *s, js_tok *t, int n
     prog_entry *p;
     layer_tex tex[MAX_LAYER_TEX];
     int bound[MAX_LAYER_TEX];
-    int nTex = 0, i;
+    int nTex = 0, nFeedback = 0, i;
 
     if ((int)js_num(s, t, idTok, -1) != 0) {
         protocol_error(d, c, "proto %d supports layer 0 only, got %d",
@@ -439,6 +451,21 @@ static void handle_layer(display *d, ws_conn *c, const char *s, js_tok *t, int n
         tex[unit].unit = unit;
         tex[unit].sampler = !strcmp(sampler, "sampler3D") ? 3 : 2;
         bound[unit] = tex[unit].sampler;
+        {
+            int fbTok = js_get(s, t, n, e, "feedback");
+            tex[unit].feedback = fbTok >= 0 && t[fbTok].type == JS_TRUE;
+        }
+        if (tex[unit].feedback) {
+            if (++nFeedback > 1) {
+                protocol_error(d, c, "a layer may bind at most one feedback texture");
+                return;
+            }
+            if (tex[unit].sampler != 2) {
+                protocol_error(d, c, "a feedback texture must be a sampler2D");
+                return;
+            }
+            continue;
+        }
         if (js_str(s, t, js_get(s, t, n, e, "asset"), tex[unit].asset, 17) < 0) {
             protocol_error(d, c, "texture unit %d names no asset", unit);
             return;
@@ -450,7 +477,7 @@ static void handle_layer(display *d, ws_conn *c, const char *s, js_tok *t, int n
         char missing[448]; /* sized so the message below cannot truncate */
         size_t used = 0;
         for (i = 0; i < nTex; i++) {
-            if (cache_asset(&d->cache, tex[i].asset)) continue;
+            if (tex[i].feedback || cache_asset(&d->cache, tex[i].asset)) continue;
             used += (size_t)snprintf(missing + used, used < sizeof missing ? sizeof missing - used : 0,
                                      "%s%s", used ? ", " : "", tex[i].asset);
         }
@@ -470,7 +497,9 @@ static void handle_layer(display *d, ws_conn *c, const char *s, js_tok *t, int n
 
     if (d->r) {
         for (i = 0; i < nTex; i++) {
-            asset_entry *a = cache_asset(&d->cache, tex[i].asset);
+            asset_entry *a;
+            if (tex[i].feedback) continue;
+            a = cache_asset(&d->cache, tex[i].asset);
             if (render_upload_asset(d->r, a, msg, sizeof msg) < 0) {
                 send_err(d, c, "asset", tex[i].asset, msg);
                 return;
@@ -778,6 +807,7 @@ void display_on_text(display *d, ws_conn *c, const char *text, size_t n) {
             d->layerBound = 0;
             d->nLayerTex = 0;
             d->needsRedraw = 1;
+            render_reset_feedback(d->r); /* a later layer must not start from this one's history */
         }
     } else if (!strcmp(type, "dim")) {
         double v = js_num(text, t, js_get(text, t, count, 0, "v"), 1);
@@ -834,9 +864,10 @@ void display_draw(display *d) {
     } else {
         prog_entry *p = d->layerBound ? cache_prog(&d->cache, d->layerProg) : NULL;
         asset_entry *tex[MAX_LAYER_TEX];
-        int i, nTex = 0;
+        int i, nTex = 0, feedbackUnit = -1;
         if (p && p->ok && d->r) {
             for (i = 0; i < d->nLayerTex; i++) {
+                if (d->layerTex[i].feedback) { tex[i] = NULL; feedbackUnit = i; nTex++; continue; }
                 tex[i] = cache_asset(&d->cache, d->layerTex[i].asset);
                 if (!tex[i]) { p = NULL; break; }
                 nTex++;
@@ -850,7 +881,7 @@ void display_draw(display *d) {
          * at all to make v3d generate the fragment code, so the count rule belongs here. */
         if (p && p->ok && d->r && d->frame.uniformCount != p->nUniforms) { return; }
         if (p && p->ok && d->r) {
-            if (render_frame(d->r, p, tex, nTex, d->frame.values, d->frame.uniformCount,
+            if (render_frame(d->r, p, tex, nTex, feedbackUnit, d->frame.values, d->frame.uniformCount,
                              d->scratch, err, sizeof err) < 0) {
                 /* §8: a render error holds the last frame rather than blanking mid-show. */
                 if (d->conn) send_err(d, d->conn, "render", NULL, err);

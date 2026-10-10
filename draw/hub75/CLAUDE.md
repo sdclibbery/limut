@@ -1605,6 +1605,47 @@ not the panel — 655,360 canvas pixels are transmitted to light 2,048 visible o
 of a gigabit link. More panels are free; a higher frame rate is not, and the way to it is a
 smaller canvas, i.e. configuring the card.
 
+### pxprev on the wall, 2026-10-10
+
+`pxprev` (a px chain reading its own previous frame) ships as a layer texture with
+`"feedback":true` and no asset (PROTOCOL.md §7.2), sent only to a display listing it in
+`features`. The Pi keeps two panel-size RGBA16F targets (`render.c`; the banner says which format
+it got), draws into one while sampling the other, copies the result into the RGBA8 framebuffer for
+readback, and sets `u_vsfb` itself. Verified on the wall: `uv>>pxprev>>mix{gradient,1/2}` settles
+to within 2/255 of the gradient drawn directly, and an accumulation climbs and saturates.
+
+Two things found on the way. **From this Mac every `hub75-01.local` lookup takes 5 s**, so
+`mock/selftest.js --endpoint hub75-01.local:7575` looks hung (it fetches `/debug` after every
+message); use `--endpoint 10.42.0.1:7575`. And **`an empty frame that changes the dimmer does redraw`
+fails against the real daemon at HEAD before this change too** (`rendered` unchanged): the 09-09
+guard in `display_draw` refuses a frame of 0 uniforms while a layer is bound, which is also the
+frame a dim-only change arrives in. Not yet resolved.
+
+### Streamed visuals tore and stuttered: the sync packet overtook its rows, 2026-10-10
+
+**Symptom:** a streamed visual was jerky on the wall while every stage reported smooth: limut sent
+an evenly advancing beat at 60 Hz (from Firefox as well as Chrome), the Pi received and rendered
+every frame, and `/frame.raw` changed on every poll. The fault was below all of that, on the wire.
+
+**Cause:** the card latches a frame on its `0x01` sync packet, and the sync was arriving **before
+the last rows of its own frame**: about one streamed frame in three latched with up to 11 of its
+64 rows still holding the previous frame. A `tcpdump` of eth0, rebuilding frames between syncs,
+shows it directly (0 short frames idle, 112 of 348 streaming). Two things on eth0 did it: it has
+five tx queues with no XPS, so rows and sync (different type bytes, so different flow hashes) went
+out on different hardware queues; and the default `fq_codel` treats each lone sync as a new
+"sparse flow" and sends it ahead of the backlogged rows. **Fixed in the unit file:** every CPU
+steered to tx-0, and a plain `pfifo` root. Verified: 292 of 292 frames complete, 60.2 syncs/s.
+
+**What exposed it** was the hold clock (09-09): it checked only the current loop pass for a new
+frame, and since the clock is not in phase with arriving frames, a streamed layer went to the card
+at 120 fps, each frame followed a few ms later by a copy of itself, which is the backlog the sync
+jumped. Idle patterns are paced one frame per tick and never tore. `main.c` now holds only after
+1.5 frame periods with no new frame drawn: `held` stays 0 while streaming and still runs at 60 Hz
+in a real stall.
+
+**`fq_codel` and multi-queue are wrong for any ordered layer-2 protocol.** Check `tc qdisc show
+dev eth0` reads `pfifo` and `tx-0/xps_cpus` reads `f` before believing anything else about tearing.
+
 ## Alternative render nodes
 
 `esp32/README.md` is a **feasibility analysis only, nothing built**: could an ESP32-S3 be a

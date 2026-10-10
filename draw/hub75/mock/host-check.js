@@ -575,6 +575,51 @@ let scenarioWebcam = async () => {
   d.stop()
 }
 
+let scenarioFeedback = async () => {
+  console.log('\nfeedback: a pxprev chain binds a history texture that names no asset')
+  let code = `v1 visualsynth, px=uv>>pxprev>>mix{uv>>mul{1/2}>>add{1/2}>>set{b:0,a:1}, 1/2}, display='localhost:${PORT}'`
+  let url = `${LIMUT}/draw/hub75/mock/harness.html?code=${encodeURIComponent(code)}`
+
+  let d = display.start({ port: PORT, name: 'hub75-check', w: 128, h: 64, failCompile: null, drop: 0, verbose: false })
+  let seen = instrument(d.display)
+  let log = await run(url, 20).done
+  let x = d.display
+  check('a session was opened', x.sessions >= 1, `sessions=${x.sessions}`)
+  check('no asset was uploaded', x.assets.size === 0, `assets=${x.assets.size}`)
+  let prog = Array.from(x.progs.values())[0]
+  check('one program was sent and it compiled', x.progs.size === 1 && prog.ok,
+    JSON.stringify(Array.from(x.progs.values()).map(p => ({ ok: p.ok, log: p.log }))))
+  if (prog) {
+    check('the source samples the history and declares its bounds',
+      prog.frag.indexOf('uniform sampler2D u_vstex0;') !== -1 && prog.frag.indexOf('uniform vec4 u_vsfb;') !== -1)
+  }
+  check('the layer binds unit 0 as feedback',
+    x.layer !== null && JSON.stringify(x.layer.textures) === JSON.stringify([{ unit: 0, sampler: 'sampler2D', feedback: true }]),
+    JSON.stringify(x.layer))
+  check('frames were consumed', x.stats.rendered > 30, `rendered=${x.stats.rendered}`)
+  check('the session survived the whole stream', x.session !== null)
+  check('the layer was bound once', seen.counts.layer === 1, `layer messages=${seen.counts.layer}`)
+  let lines = consoleLines(log)
+  check('nothing errored in the app', !lines.some(l => /🔴/.test(l)),
+    lines.filter(l => /🔴/.test(l)).join('\n          '))
+  d.stop()
+  await sleep(500)
+
+  console.log('\nfeedback: refused, not sent, by a display that does not list the feature')
+  d = display.start({ port: PORT, name: 'hub75-check', w: 128, h: 64, failCompile: null, drop: 0, noFeedback: true, verbose: false })
+  seen = instrument(d.display)
+  log = await run(url, 20).done
+  x = d.display
+  check('a session was opened anyway', x.sessions >= 1, `sessions=${x.sessions}`)
+  check('no program was sent', seen.counts.prog === undefined, `prog messages=${seen.counts.prog}`)
+  check('no layer was bound', x.layer === null, JSON.stringify(x.layer))
+  check('the session was never closed by a protocol error', x.sessions === 1, `sessions=${x.sessions}`)
+  lines = consoleLines(log)
+  check('the host said why', lines.some(l => /hub75 .*does not support pxprev/.test(l)),
+    lines.filter(l => /hub75/.test(l)).join('\n          ') || '(no hub75 console output)')
+  d.stop()
+}
+
 // ---- main ------------------------------------------------------------------------------------
 
 let main = async () => {
@@ -595,6 +640,7 @@ let main = async () => {
     blankafterdrop: scenarioBlankAfterDrop,
     idreuse: scenarioIdReuse,
     webcam: scenarioWebcam,
+    feedback: scenarioFeedback,
   }
   for (let name in all) {
     if (only && only !== name) { continue }

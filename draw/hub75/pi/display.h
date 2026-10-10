@@ -21,6 +21,7 @@
 typedef struct {
     int  unit;
     int  sampler;      /* 2 or 3 */
+    int  feedback;     /* the layer's own previous frame (§7.2): names no asset */
     char asset[17];
 } layer_tex;
 

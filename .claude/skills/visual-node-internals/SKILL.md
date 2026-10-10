@@ -369,8 +369,8 @@ player's read target (`player.pxFeedback`, so history survives events and edits)
 (overlapping events share it), and retargets the vertices to fill the target; `pass` draws the px
 there with blend off and leaves a copy program current on the real quad, so sprite's own blend and
 `buffer=` routing apply to the copy. Targets are RGBA16F when `EXT_color_buffer_float` exists,
-because 8 bits stalls a per-frame decay around 16/255. Refused with `display=` (the Pi has no
-target pair). Verified by the fixed point of `uv>>pxprev>>mix{gradient,1/2}` matching the gradient
+because 8 bits stalls a per-frame decay around 16/255. On a `display=` the marker becomes a
+`{feedback:true}` layer texture and the Pi keeps its own pair (PROTOCOL.md §7.2). Verified by the fixed point of `uv>>pxprev>>mix{gradient,1/2}` matching the gradient
 rendered directly (max diff 1/255, also with `loc`), which also catches a flipped history.
 
 ## Known limitations (PoC scope, deliberate)

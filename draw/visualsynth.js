@@ -68,10 +68,6 @@ define(function (require) {
     // rather than a second rendering path. See draw/hub75/PROTOCOL.md.
     let display = evalParamEvent(params.display, params)
     let feedbackSlot = built.textures.findIndex(t => t.texture === feedback.marker)
-    if (display !== undefined && feedbackSlot >= 0) {
-      warnOnce(`🔴 Visual synth: pxprev is not supported with display=`)
-      return
-    }
     if (display !== undefined) {
       hub75.setLayer(String(display), params, built)
       return // Nothing drawn locally; sprite.js keeps a falsy result out of the render list, which

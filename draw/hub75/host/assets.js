@@ -11,11 +11,13 @@ define(function (require) {
   //   tex1d/2d/3d  -> kind 'lut', the raw RGBA8 bytes lut.js sampled. Supported.
   //   tex{'url'}   -> kind 'image'. Not supported: draw/texture.js keeps only the GL handle.
   //   tex{webcam{}}-> a live local device; PROTOCOL.md §6 rules it out.
+  //   pxprev       -> kind 'feedback', the layer's own previous frame, held on the display (§7.2).
   //
   // Unsupported textures are reported, not skipped: a silently dropped texture would render
   // whatever was last in that unit.
   let classify = (t) => {
     if (t === undefined || t === null) { return {unsupported: 'missing'} }
+    if (t.isFeedbackMarker) { return {kind: 'feedback'} }
     // A texture with an update() re-uploads itself every frame: it is a live source, and the
     // protocol has no per frame texture path. Today that means only webcam. Note it is update()
     // and not .video that identifies one: draw/webcam.js attaches the video element inside
@@ -77,6 +79,9 @@ define(function (require) {
   assert('webcam', classify({tex:{}, update: () => {}, video:{}, width:640, height:480}).unsupported)
   // A live source stays unshippable even if it somehow also carried bytes
   assert('webcam', classify({tex:{}, update: () => {}, data:new Uint8Array(4), dims:1, size:1}).unsupported)
+
+  // pxprev's placeholder carries no bytes: the display holds the history itself
+  assert({kind:'feedback'}, classify({isFeedbackMarker: true}))
 
   // Chunk maths (§6.2): the boundaries are where an off by one shows as a hash mismatch
   assert(1, chunkCount(0))

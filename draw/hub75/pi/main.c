@@ -88,6 +88,7 @@ int main(int argc, char **argv) {
     int noGpu = 0, i, testPattern = PATTERN_OFF, idlePattern = PATTERN_CORNERS;
     double patternFps = 60.0, nextPattern;
     int holdDue = 0;              /* the hold clock fired; taken only if display_draw drew nothing */
+    double lastFrame = 0.0;       /* when the card was last sent a newly drawn frame */
     double nextTick;
 
     memset(&d, 0, sizeof d);
@@ -257,6 +258,7 @@ int main(int argc, char **argv) {
            d.r ? (d.guardReady ? " — compiles guarded in a child process"
                                : " — UNGUARDED: a shader that crashes the driver will kill this daemon")
                : "");
+    if (d.r) printf("  pxprev  history %s\n", render_feedback_format(d.r));
     printf("  output  %s, gamma %g", d.out.backend, (double)d.gamma);
     if (!strcmp(d.out.backend, "colorlight"))
         printf(" — %s, %d packets/frame steady, colour order %s, brightness %d",
@@ -296,9 +298,10 @@ int main(int argc, char **argv) {
          * It cannot cover a stall INSIDE the loop, which is what a compile is (compile_guard.h
          * blocks): no clock in this thread runs while the thread is blocked.
          *
-         * The hold is taken only when display_draw drew nothing, checked against out.frames below,
-         * so this never doubles up with a real frame -- the failure that read as a rock steady
-         * 120 fps on 2026-09-05. */
+         * The hold is taken only when a frame and a half has passed with no new frame drawn. Checking
+         * just this pass is not enough: the clock is not in phase with arriving frames, so nearly
+         * every tick lands in a pass with no new frame, and a streamed layer went out at 120 fps,
+         * each frame followed a few ms later by a copy of itself (2026-10-10). */
         int freeRun = patternFps > 0.0 &&
                       (d.layerBound ? d.out.frames > 0
                                     : (d.testPattern != PATTERN_OFF || d.idlePattern != PATTERN_OFF));
@@ -321,7 +324,10 @@ int main(int argc, char **argv) {
         {
             uint64_t before = d.out.frames;
             display_draw(&d);      /* 2: render whatever survived */
-            if (holdDue && d.out.frames == before) display_hold(&d); /* 2b: keep the card fed */
+            now = now_seconds();
+            if (d.out.frames != before) lastFrame = now;
+            if (holdDue && d.out.frames == before && now - lastFrame >= 1.5 / patternFps)
+                display_hold(&d);  /* 2b: keep the card fed */
             holdDue = 0;
         }
 

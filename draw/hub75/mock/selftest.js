@@ -108,12 +108,12 @@ let sleep = async (ms) => { await new Promise(r => setTimeout(r, ms)); await ref
 // ---- fixtures -----------------------------------------------------------------------------
 
 // A realistic generated shader: exactly the shape draw/visualsynth/codegen.js emits
-let fragFor = (uniformNames, texNames) => `#version 300 es
+let fragFor = (uniformNames, texNames, samplers) => `#version 300 es
 precision highp float;
-in vec2 fragCoord;
+${(samplers || []).includes('sampler3D') ? 'precision highp sampler3D;\n' : ''}in vec2 fragCoord;
 out vec4 fragColor;
 ${uniformNames.map(n => `uniform vec4 ${n};`).join('\n')}
-${(texNames || []).map((n, i) => `uniform sampler2D ${n};\nuniform vec2 u_vsex${i};`).join('\n')}
+${(texNames || []).map((n, i) => `uniform ${(samplers || [])[i] || 'sampler2D'} ${n};\nuniform vec2 u_vsex${i};`).join('\n')}
 void main() {
   vec4 v0 = vec4(fragCoord, 0.0, 1.0);
   vec4 v1 = ${uniformNames.length ? `v0 * ${uniformNames[0]}` : 'v0'};
@@ -122,7 +122,7 @@ void main() {
 
 let progMsg = (uniformNames, samplers) => {
   let texNames = (samplers || []).map((s, i) => 'u_vstex' + i)
-  let frag = fragFor(uniformNames, texNames)
+  let frag = fragFor(uniformNames, texNames, samplers)
   return { type: 'prog', id: hash(Buffer.from(frag, 'utf8')), frag: frag, uniforms: uniformNames }
 }
 
@@ -173,6 +173,7 @@ let run = async () => {
     eq('/info sets CORS, without which a browser probe fails opaquely',
       '*', res.headers.get('access-control-allow-origin'))
     eq('/info reports not busy before any session', false, info.busy)
+    check('/info lists the feedback feature', (info.features || []).includes('feedback'), JSON.stringify(info.features))
     eq('unknown path 404s', 404, (await fetch(url('/nope'))).status)
   }
 
@@ -184,6 +185,7 @@ let run = async () => {
       { type: c.welcome.type, proto: c.welcome.proto, name: c.welcome.name, display: c.welcome.display })
     check('welcome carries a session id', typeof c.welcome.session === 'string')
     check('welcome reports GL capabilities', typeof c.welcome.gl.maxTextureSize === 'number')
+    check('welcome lists the feedback feature', (c.welcome.features || []).includes('feedback'), JSON.stringify(c.welcome.features))
     let info = await (await fetch(url('/info'))).json()
     eq('/info reports busy while a session is open', true, info.busy)
     c.close()
@@ -317,6 +319,33 @@ let run = async () => {
     c.send({ type: 'have', ids: [] })
     await c.next()
     eq('the same program can be rebound with a different texture', lut3d, main.display.layer.textures[0].asset)
+
+    // pxprev: the layer's own previous frame, held by the display, so the entry names no asset
+    c.send({ type: 'layer', id: 0, prog: texProg.id, textures: [{ unit: 0, sampler: 'sampler2D', feedback: true }] })
+    c.send({ type: 'have', ids: [] })
+    eq('a layer binding a feedback texture is accepted', 'have', (await c.next()).type)
+    eq('and the layer records it as feedback', true, main.display.layer.textures[0].feedback)
+
+    let twoTex = progMsg([], ['sampler2D', 'sampler2D'])
+    c.send(twoTex)
+    await c.next()
+    c.send({ type: 'layer', id: 0, prog: twoTex.id, textures: [
+      { unit: 0, sampler: 'sampler2D', feedback: true }, { unit: 1, sampler: 'sampler2D', feedback: true }] })
+    let mf = await c.next()
+    check('two feedback textures on one layer is a protocol error',
+      mf.kind === 'protocol' && /one feedback/.test(mf.log), JSON.stringify(mf))
+    await c.next() // the close
+    c = await hello(EP, { takeover: true })
+
+    let tex3 = progMsg([], ['sampler3D'])
+    c.send(tex3)
+    await c.next()
+    c.send({ type: 'layer', id: 0, prog: tex3.id, textures: [{ unit: 0, sampler: 'sampler3D', feedback: true }] })
+    let m3 = await c.next()
+    check('a sampler3D feedback texture is a protocol error',
+      m3.kind === 'protocol' && /sampler2D/.test(m3.log), JSON.stringify(m3))
+    await c.next() // the close
+    c = await hello(EP, { takeover: true })
 
     c.send({ type: 'layer', id: 0, prog: texProg.id, textures: [] })
     let m2 = await c.next()

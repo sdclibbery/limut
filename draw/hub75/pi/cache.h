@@ -41,6 +41,7 @@ typedef struct {
     int      glBuilt;      /* 1 once a real compile has been attempted */
     int     *uniformLoc;   /* parallel to uniforms */
     int      texLoc[16], exLoc[16];
+    int      fbLoc;        /* u_vsfb, the quad bounds pxprev maps through; -1 when unused */
     int      nTextures;
 } prog_entry;
 

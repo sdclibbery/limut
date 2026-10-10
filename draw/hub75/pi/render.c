@@ -24,12 +24,14 @@ int render_upload_asset(renderer *r, asset_entry *a, char *err, size_t errCap) {
     (void)r; (void)a; (void)err; (void)errCap; return 0;
 }
 void render_release_asset(renderer *r, asset_entry *a) { (void)r; (void)a; }
-int render_frame(renderer *r, prog_entry *p, asset_entry *const *tex, int nTex,
+int render_frame(renderer *r, prog_entry *p, asset_entry *const *tex, int nTex, int feedbackUnit,
                  const float *values, int nUniforms, uint8_t *rgba, char *err, size_t errCap) {
-    (void)r; (void)p; (void)tex; (void)nTex; (void)values; (void)nUniforms; (void)rgba;
-    (void)err; (void)errCap;
+    (void)r; (void)p; (void)tex; (void)nTex; (void)feedbackUnit; (void)values; (void)nUniforms;
+    (void)rgba; (void)err; (void)errCap;
     return 0;
 }
+void render_reset_feedback(renderer *r) { (void)r; }
+const char *render_feedback_format(renderer *r) { (void)r; return "none"; }
 
 #else
 
@@ -65,6 +67,15 @@ struct renderer {
     char               rendererName[128];
     int                maxTextureSize;
     uint8_t           *readBuf;   /* glReadPixels lands here, bottom row first */
+
+    /* pxprev (§7.2): two panel-size targets, drawn into alternately, created on first use. The
+     * current one is copied into colorTex for readback, since a float target cannot be read back
+     * as bytes. */
+    float              bounds[4]; /* the quad's fragCoord range: -har, -ihar, har, ihar */
+    GLuint             fbTex[2], fbFbo[2];
+    int                fbCur, fbReady, fbHalf;
+    GLuint             copyProg;
+    GLint              copyImg, copyBounds;
 };
 
 static GLuint compile_shader(GLenum type, const char *src, char *log, size_t logCap) {
@@ -94,6 +105,7 @@ static void build_geometry(renderer *r) {
     /* Aspect softening: a HUB75 wall is easily 4:1, and without this the image is unusably
      * stretched. Straight out of draw/sprite.js. */
     if (har > 2.0f || har < 0.5f) { har = sqrtf(har); ihar = 1.0f / har; }
+    r->bounds[0] = -har; r->bounds[1] = -ihar; r->bounds[2] = har; r->bounds[3] = ihar;
 
 #define VERT(px, py, tx, ty) do { \
         v[i++] = (px); v[i++] = (py); v[i++] = (tx); v[i++] = (ty); \
@@ -115,6 +127,89 @@ static void build_geometry(renderer *r) {
     glVertexAttribPointer(ATTR_POS, 2, GL_FLOAT, GL_FALSE, 16, (void *)0);
     glEnableVertexAttribArray(ATTR_FRAGCOORD);
     glVertexAttribPointer(ATTR_FRAGCOORD, 2, GL_FLOAT, GL_FALSE, 16, (void *)8);
+}
+
+static const char *COPY_SHADER =
+    "#version 300 es\n"
+    "precision highp float;\n"
+    "in vec2 fragCoord;\n"
+    "out vec4 fragColor;\n"
+    "uniform sampler2D u_img;\n"
+    "uniform vec4 u_bounds;\n"
+    "void main() { fragColor = texture(u_img, (fragCoord - u_bounds.xy) / (u_bounds.zw - u_bounds.xy)); }\n";
+
+/* Not fatal if it fails: only a feedback layer needs it, and render_frame reports that. */
+static void build_copy_program(renderer *r) {
+    GLint linked = 0;
+    GLuint fs = compile_shader(GL_FRAGMENT_SHADER, COPY_SHADER, NULL, 0);
+    if (!fs) return;
+    r->copyProg = glCreateProgram();
+    glAttachShader(r->copyProg, r->vtx);
+    glAttachShader(r->copyProg, fs);
+    glBindAttribLocation(r->copyProg, ATTR_POS, "posIn");
+    glBindAttribLocation(r->copyProg, ATTR_FRAGCOORD, "fragCoordIn");
+    glLinkProgram(r->copyProg);
+    glDeleteShader(fs);
+    glGetProgramiv(r->copyProg, GL_LINK_STATUS, &linked);
+    if (!linked) { glDeleteProgram(r->copyProg); r->copyProg = 0; return; }
+    r->copyImg = glGetUniformLocation(r->copyProg, "u_img");
+    r->copyBounds = glGetUniformLocation(r->copyProg, "u_bounds");
+}
+
+static void clear_feedback(renderer *r) {
+    int k;
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    for (k = 0; k < 2; k++) {
+        glBindFramebuffer(GL_FRAMEBUFFER, r->fbFbo[k]);
+        glClear(GL_COLOR_BUFFER_BIT);
+    }
+}
+
+static void delete_feedback(renderer *r) {
+    glDeleteFramebuffers(2, r->fbFbo);
+    glDeleteTextures(2, r->fbTex);
+    r->fbFbo[0] = r->fbFbo[1] = r->fbTex[0] = r->fbTex[1] = 0;
+}
+
+static int ensure_feedback(renderer *r) {
+    int k;
+    if (r->fbReady) return 0;
+    for (;;) {
+        int complete = 1;
+        glGenTextures(2, r->fbTex);
+        glGenFramebuffers(2, r->fbFbo);
+        for (k = 0; k < 2; k++) {
+            glBindTexture(GL_TEXTURE_2D, r->fbTex[k]);
+            if (r->fbHalf)
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, r->w, r->h, 0, GL_RGBA, GL_HALF_FLOAT, NULL);
+            else
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, r->w, r->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glBindFramebuffer(GL_FRAMEBUFFER, r->fbFbo[k]);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, r->fbTex[k], 0);
+            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) complete = 0;
+        }
+        if (complete) break;
+        delete_feedback(r);
+        if (!r->fbHalf) return -1;
+        r->fbHalf = 0; /* advertised but not renderable after all: fall back to 8 bits */
+    }
+    clear_feedback(r);
+    r->fbCur = 0;
+    r->fbReady = 1;
+    return 0;
+}
+
+void render_reset_feedback(renderer *r) {
+    if (r && r->fbReady) clear_feedback(r);
+}
+
+const char *render_feedback_format(renderer *r) {
+    if (!r) return "none";
+    return r->fbHalf ? "RGBA16F" : "RGBA8";
 }
 
 renderer *render_create(const char *node, int w, int h, char *err, size_t errCap) {
@@ -182,6 +277,15 @@ renderer *render_create(const char *node, int w, int h, char *err, size_t errCap
 
     r->vtx = compile_shader(GL_VERTEX_SHADER, VTX_SHADER, log, sizeof log);
     if (!r->vtx) { snprintf(err, errCap, "the constant vertex shader failed to compile: %s", log); goto fail; }
+
+    build_copy_program(r);
+    {
+        /* 8 bits stalls a per-frame decay around 16/255, leaving a permanent ghost; half float
+         * does not. Renderable RGBA16F needs one of these on GLES 3.0. */
+        const char *ext = (const char *)glGetString(GL_EXTENSIONS);
+        r->fbHalf = ext && (strstr(ext, "GL_EXT_color_buffer_float") ||
+                            strstr(ext, "GL_EXT_color_buffer_half_float"));
+    }
 
     r->readBuf = (uint8_t *)malloc((size_t)w * h * 4);
     if (!r->readBuf) { snprintf(err, errCap, "out of memory for the readback buffer"); goto fail; }
@@ -262,6 +366,7 @@ int render_build_program(renderer *r, prog_entry *p, int *isLink) {
         p->texLoc[i] = glGetUniformLocation(prog, n1);
         p->exLoc[i] = glGetUniformLocation(prog, n2);
     }
+    p->fbLoc = glGetUniformLocation(prog, "u_vsfb");
     p->ok = 1;
     return 0;
 }
@@ -330,13 +435,22 @@ void render_release_asset(renderer *r, asset_entry *a) {
     if (a->glTex) { glDeleteTextures(1, &a->glTex); a->glTex = 0; }
 }
 
-int render_frame(renderer *r, prog_entry *p, asset_entry *const *tex, int nTex,
+int render_frame(renderer *r, prog_entry *p, asset_entry *const *tex, int nTex, int feedbackUnit,
                  const float *values, int nUniforms, uint8_t *rgba, char *err, size_t errCap) {
     int i, y;
     size_t stride;
 
     if (!r) return 0;
-    glBindFramebuffer(GL_FRAMEBUFFER, r->fbo);
+    if (feedbackUnit >= 0) {
+        if (!r->copyProg || ensure_feedback(r) < 0) {
+            snprintf(err, errCap, "pxprev is unavailable: the history target could not be created");
+            return -1;
+        }
+        r->fbCur = 1 - r->fbCur;
+        glBindFramebuffer(GL_FRAMEBUFFER, r->fbFbo[r->fbCur]);
+    } else {
+        glBindFramebuffer(GL_FRAMEBUFFER, r->fbo);
+    }
     glViewport(0, 0, r->w, r->h);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -349,10 +463,29 @@ int render_frame(renderer *r, prog_entry *p, asset_entry *const *tex, int nTex,
         for (i = 0; i < nTex && i < 16; i++) {
             asset_entry *a = tex[i];
             glActiveTexture((GLenum)(GL_TEXTURE0 + i));
+            if (i == feedbackUnit) {
+                glBindTexture(GL_TEXTURE_2D, r->fbTex[1 - r->fbCur]); /* the frame before this one */
+                glUniform1i(p->texLoc[i], i);
+                glUniform2f(p->exLoc[i], 0.0f, 0.0f);
+                continue;
+            }
+            if (!a) continue;
             glBindTexture(a->glIs3d ? GL_TEXTURE_3D : GL_TEXTURE_2D, a->glTex);
             glUniform1i(p->texLoc[i], i);
             glUniform2f(p->exLoc[i], (float)a->glW, (float)a->glH);
         }
+        if (feedbackUnit >= 0) glUniform4fv(p->fbLoc, 1, r->bounds);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+
+    if (feedbackUnit >= 0) {
+        glBindFramebuffer(GL_FRAMEBUFFER, r->fbo);
+        glUseProgram(r->copyProg);
+        glBindVertexArray(r->vao);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, r->fbTex[r->fbCur]);
+        glUniform1i(r->copyImg, 0);
+        glUniform4fv(r->copyBounds, 1, r->bounds);
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
 

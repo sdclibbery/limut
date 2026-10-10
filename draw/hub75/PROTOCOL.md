@@ -146,9 +146,14 @@ an opaque CORS error and discovery appears broken for no visible reason.
   "name": "hub75-01",
   "display": { "w": 128, "h": 64 },
   "gl": { "version": "OpenGL ES 3.1 Mesa 26.2.0", "renderer": "V3D 4.2.14.0", "maxTextureSize": 4096 },
+  "features": ["feedback"],
   "busy": false
 }
 ```
+
+`features` lists what a display supports beyond the base protocol, and is absent on a display that
+predates it. `"feedback"` means it accepts feedback textures (§7.2); a host MUST NOT send one to a
+display that does not list it.
 
 Enumerating every display on the network ("show me what's out there") needs real mDNS browsing and
 therefore a Node or Electron helper process. Not part of version 1; the host works from names.
@@ -166,7 +171,8 @@ Client opens `/session` and sends `hello`. The display replies `welcome` or `clo
 ```json
 { "type": "welcome", "proto": 1, "session": "s3", "name": "hub75-01",
   "display": { "w": 128, "h": 64 },
-  "gl": { "version": "...", "renderer": "...", "maxTextureSize": 4096 } }
+  "gl": { "version": "...", "renderer": "...", "maxTextureSize": 4096 },
+  "features": ["feedback"] }
 ```
 
 - A client MUST send `hello` first. Any other message before `hello` is a protocol error.
@@ -337,6 +343,13 @@ matches GL itself, where a program object and its sampler bindings are separate 
   in the source. Units MUST be dense from 0.
 - Every referenced `asset` MUST already be cached, or the display replies `error` with
   `kind:"asset"` and leaves the layer unchanged.
+- A **feedback texture** names no asset: `{"unit":0, "sampler":"sampler2D", "feedback":true}`
+  binds the layer's own previous rendered frame, which is what `pxprev` samples. At most one per
+  layer, and it MUST be a `sampler2D`; either violation is a protocol error. The display sets the
+  program's `uniform vec4 u_vsfb` to the quad's fragCoord bounds `(-har, -ihar, har, ihar)` after
+  §13's aspect softening; like `u_vsex` it is not on the wire. The history starts transparent
+  black, advances once per drawn frame, survives a rebind (so a live edit keeps its trails), and
+  is cleared by `unlayer`. Only sent to a display listing `"feedback"` in `features` (§4).
 - The number and sampler types of the bound textures MUST match the sampler declarations in the
   program's source. A mismatch is a protocol error: it means the two ends disagree about what the
   shader is.
@@ -566,6 +579,12 @@ window: a HUB75 wall is easily 4:1 or wider, and without it the image is unusabl
 on the wire. For a `lut` asset it MUST be left at `(0,0)`: `lut.js` deliberately gives lut textures
 no `width`/`height` so no aspect correction is applied, and the `tex` node's generated code guards
 on `u_vsex.y > 0.0`.
+
+**Feedback history** — two panel-size targets drawn into alternately, `RGBA16F` where
+`EXT_color_buffer_float` or `EXT_color_buffer_half_float` allows, else `RGBA8`, with `LINEAR` and
+`CLAMP_TO_EDGE` like any texture. The drawn target is copied to the RGBA8 framebuffer for readback.
+8 bits stalls a per-frame decay around 16/255 and leaves a permanent ghost, which is why half float
+is preferred; half float in turn stalls a very slow approach to 1.0 about 1% short.
 
 **Framebuffer** — render at exactly the panel resolution. Clear to opaque black. No blending in
 version 1 (single layer over black). Colour output is RGBA8; the dimmer and gamma are applied by

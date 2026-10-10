@@ -219,7 +219,7 @@ define(function (require) {
           s.state = 'open'
           s.backoff = BACKOFF_MIN
           s.lastProblem = null
-          s.info = {proto: msg.proto, name: msg.name, display: msg.display, gl: msg.gl}
+          s.info = {proto: msg.proto, name: msg.name, display: msg.display, gl: msg.gl, features: msg.features}
           let d = msg.display || {}
           say(`🟢 %s: connected, ${d.w}x${d.h}, ${(msg.gl || {}).renderer || 'unknown gpu'}`)
           if (s.manualDim !== 1) { sendJson({type: 'dim', v: s.manualDim}) }
@@ -312,8 +312,15 @@ define(function (require) {
       if (!d || !isOpen()) { return Promise.resolve() }
       if (s.bound && s.bound.key === d.key) { return Promise.resolve() } // already showing it
       let stale = () => gen !== s.generation || s.desired !== d || !isOpen()
+      // A feedback entry has no bytes: the display keeps the history itself (§7.2). One that does
+      // not list the feature would close the session on it, so it is never sent one.
+      let isFeedback = (a) => a.kind === 'feedback'
+      if (d.assetList.some(isFeedback) && !((s.info && s.info.features) || []).includes('feedback')) {
+        problem(`🟠 hub75 ${name}: this display does not support pxprev; update it`)
+        return Promise.resolve()
+      }
 
-      return Promise.all([sha256id(utf8(d.source))].concat(d.assetList.map(a => sha256id(a.bytes))))
+      return Promise.all([sha256id(utf8(d.source))].concat(d.assetList.map(a => isFeedback(a) ? undefined : sha256id(a.bytes))))
         .then(ids => {
           if (stale()) { return }
           let progId = ids[0]
@@ -324,7 +331,7 @@ define(function (require) {
           // assumed otherwise would bind a layer naming a program the display never received -
           // which is a protocol error that closes the session, so it would reconnect into the same
           // wrong assumption forever. The round trip is two 16 character ids, once per layer change.
-          return askHave([progId].concat(assetIds))
+          return askHave([progId].concat(assetIds.filter(id => id !== undefined)))
             .then(missing => {
               if (stale()) { return }
               let need = new Set(missing)
@@ -332,7 +339,7 @@ define(function (require) {
               // one socket, so the layer cannot arrive before what it references.
               s.uploads = []
               d.assetList.forEach((a, i) => {
-                if (!need.has(assetIds[i])) { return }
+                if (isFeedback(a) || !need.has(assetIds[i])) { return }
                 s.uploads.push({id: assetIds[i], announce: assets.announce(assetIds[i], a), bytes: a.bytes})
               })
               if (need.has(progId)) {
@@ -342,7 +349,9 @@ define(function (require) {
               }
               s.afterUploads = {
                 type: 'layer', id: 0, prog: progId,
-                textures: d.textures.map((t, i) => ({unit: i, sampler: t.sampler, asset: assetIds[i]})),
+                textures: d.textures.map((t, i) => isFeedback(d.assetList[i])
+                  ? {unit: i, sampler: t.sampler, feedback: true}
+                  : {unit: i, sampler: t.sampler, asset: assetIds[i]}),
               }
               // needsAck only when we are actually sending the program: one the display already
               // holds was compiled on an earlier visit and will send no second progok, so waiting
@@ -600,6 +609,15 @@ define(function (require) {
   assert(false, sess6.wantBlank)
   sess6.pump()
   assert([], sess6.ws.sent.filter(t => t === 'unlayer'))
+
+  // A pxprev chain is never sent to a display that does not list the feedback feature: an older
+  // display reads the entry as a texture naming no asset, a session closing protocol error
+  let sess7 = makeSession('not-a-real-display')
+  sess7.ws = socket(1)
+  sess7.info = {features: []}
+  sess7.setDesired({key: 'k3', source: 'x', uniformNames: [], textures: [{sampler: 'sampler2D'}], assetList: [{kind: 'feedback'}]})
+  assert([], sess7.ws.sent)
+  assert(true, /does not support pxprev/.test(sess7.lastProblem))
 
   console.log('Hub75 session tests complete')
   }

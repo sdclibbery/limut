@@ -28,6 +28,13 @@ ExecStartPre=+/usr/sbin/ip link set dev eth0 txqueuelen 8000
 # then lost to last-write-wins. The daemon asks for 4 MB; this is what lets it have it, since
 # SO_SNDBUFFORCE would need CAP_NET_ADMIN and CAP_NET_RAW is all this unit grants.
 ExecStartPre=+/usr/sbin/sysctl -q -w net.core.wmem_max=8388608
+# The card latches a frame on its sync packet, so the sync must not overtake that frame's rows.
+# With eth0's defaults it did, tearing a third of streamed frames: the row and sync packets have
+# different type bytes, so they hashed onto different transmit queues, and fq_codel let the lone
+# sync jump ahead of the backlogged rows as a "sparse flow". One queue (every CPU steered to tx-0)
+# and a plain FIFO keep the wire order the order they were sent in.
+ExecStartPre=+/bin/sh -c 'echo f > /sys/class/net/eth0/queues/tx-0/xps_cpus'
+ExecStartPre=+/usr/sbin/tc qdisc replace dev eth0 root pfifo limit 10000
 AmbientCapabilities=CAP_NET_RAW
 CapabilityBoundingSet=CAP_NET_RAW
 NoNewPrivileges=yes

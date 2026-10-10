@@ -24,7 +24,7 @@ let PROTO = 1
 
 let parseArgs = (argv) => {
   let a = { port: 7575, name: 'hub75-01', w: 128, h: 64, failCompile: null, slowCompile: 0,
-            drop: 0, verbose: false }
+            drop: 0, noFeedback: false, verbose: false }
   for (let i = 0; i < argv.length; i++) {
     let k = argv[i]
     let v = argv[i + 1]
@@ -38,6 +38,7 @@ let parseArgs = (argv) => {
     else if (k === '--fail-compile') { a.failCompile = v; i++ }
     else if (k === '--slow-compile') { a.slowCompile = parseInt(v, 10); i++ }
     else if (k === '--drop') { a.drop = parseFloat(v); i++ }
+    else if (k === '--no-feedback') { a.noFeedback = true }
     else if (k === '--verbose' || k === '-v') { a.verbose = true }
     else if (k === '--help' || k === '-h') { a.help = true }
     else { throw new Error('unknown argument ' + k) }
@@ -53,6 +54,7 @@ let usage = `limut HUB75 mock display
   --fail-compile STR  reject any shader whose source contains STR, to exercise the error path
   --slow-compile MS   defer every progok by MS, so §7.1's compile window is wide enough to test
   --drop PCT          randomly discard PCT% of incoming frame packets
+  --no-feedback       leave 'feedback' out of features, as a display older than it does
   --verbose, -v       log every message instead of a one line status
 `
 
@@ -151,6 +153,7 @@ let makeDisplay = (opts) => {
     proto: PROTO,
     name: opts.name,
     display: { w: opts.w, h: opts.h },
+    features: opts.noFeedback ? [] : ['feedback'],
     gl: {
       version: 'mock (node ' + process.versions.node + ' on ' + os.platform() + ')',
       renderer: haveGlslang ? 'mock display, glslangValidator available' : 'mock display, structural checks only',
@@ -244,7 +247,16 @@ let makeDisplay = (opts) => {
         if (!prog) { return protocolError(conn, `layer names program ${msg.prog}, which was never sent`) }
         if (!prog.ok) { return sendErr(conn, 'compile', msg.prog, prog.log) }
         let textures = msg.textures || []
-        let missing = textures.filter(t => !d.assets.has(t.asset))
+        // §7.2: a feedback entry is the layer's own previous frame, so it names no asset
+        let feedback = textures.filter(t => t.feedback === true)
+        if (feedback.length > 0 && opts.noFeedback) {
+          return protocolError(conn, 'texture unit ' + feedback[0].unit + ' names no asset')
+        }
+        if (feedback.length > 1) { return protocolError(conn, 'a layer may bind at most one feedback texture') }
+        if (feedback.length === 1 && (feedback[0].sampler || 'sampler2D') !== 'sampler2D') {
+          return protocolError(conn, 'a feedback texture must be a sampler2D')
+        }
+        let missing = textures.filter(t => t.feedback !== true && !d.assets.has(t.asset))
         if (missing.length) {
           return sendErr(conn, 'asset', msg.prog, 'layer needs assets not in the cache: ' + missing.map(t => t.asset).join(', '))
         }
@@ -312,6 +324,7 @@ let makeDisplay = (opts) => {
       session: d.session.id,
       name: opts.name,
       display: { w: opts.w, h: opts.h },
+      features: d.info().features,
       gl: d.info().gl,
     })
     log(`  session ${d.session.id} opened by ${d.session.name}`)

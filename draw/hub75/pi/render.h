@@ -41,8 +41,16 @@ void render_release_program(renderer *r, prog_entry *p);
 int  render_upload_asset(renderer *r, asset_entry *a, char *err, size_t errCap);
 void render_release_asset(renderer *r, asset_entry *a);
 
-/* Draws the bound layer and reads it back into `rgba` (w*h*4), top row first. */
-int  render_frame(renderer *r, prog_entry *p, asset_entry *const *tex, int nTex,
+/* Draws the bound layer and reads it back into `rgba` (w*h*4), top row first. feedbackUnit is
+ * the texture unit sampling the layer's own previous frame (§7.2), whose tex[] entry is NULL, or
+ * -1 for none. */
+int  render_frame(renderer *r, prog_entry *p, asset_entry *const *tex, int nTex, int feedbackUnit,
                   const float *values, int nUniforms, uint8_t *rgba, char *err, size_t errCap);
+
+/* Clears the feedback history to transparent black, so a later layer starts clean. */
+void render_reset_feedback(renderer *r);
+
+/* What the feedback history is stored as: "RGBA16F", "RGBA8", or "none" with no GPU. */
+const char *render_feedback_format(renderer *r);
 
 #endif
