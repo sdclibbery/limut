@@ -1,6 +1,10 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
+px julia etc should just be julia. And whatever rule claude has about naming px functions should be dropped
+?Do want visuals to respond to individual event hits; how about pk.hash.0 ? Or is follow player and []r@e better? 
+Do want to allow multiple players from one limut instance to use the hub75 and blend together
+pattern brackets to allow eg (094 crop 7 + 1) crop 30 + 98
 visual nodes...
  vorctr function that gives offset to the centre point of the nearest voronoi cell
  ?Wobble and ripple with time and size params

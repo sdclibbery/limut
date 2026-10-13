@@ -6056,6 +6056,7 @@ section drop {
 // v visualsynth, px=zoomer{pxjulia{uv}}>>pal{0,red,1,1}^2//>>cospal{uv>>rot2{time/16}/4}
 
 // v visualsynth, px=jpeg{tex{webcam}}
+// v visualsynth, px=arc{jag:[0:1]l16}>>pal{#000,#36f,#fff}
 
 // v visualsynth, px=tex{webcam{}}>>mix{uv>>pxprev, 0.9}
 // v visualsynth, px=rot2{time/8}>>kal2{uv/3}^2>>pal{0,red,1}>>mix{uv>>mul{0.99}>>pxprev, 0.8+[]l1/4@f*0.2}
@@ -6096,3 +6097,10 @@ section drop {
   set k vel=3/4*[]n7
 	pc play80s ..O., sample=3, vel=1/3
 }, length=64
+
+
+// v visualsynth, px=arc{jag:1/4}>>pal{0,red,orange,yellow,1}
+// v visualsynth, px=arc{[2:!,0]e,flicker:2}>>pal{0,blue,1}
+// v visualsynth, px=arc{3*pk.pulse.0^2,flicker:2}>>pal{0,blue,1}
+
+
