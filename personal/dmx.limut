@@ -67,3 +67,9 @@ preset dvoice2 dmxstrip, back=#28f, fore=#100, mode='midfizzle', control=(1/8+sm
 
 // Solid (10): whole strip flashes off->fore each beat, height scaled by note level
 preset dstrobe dmxstrip, mode=10, palette='obf', control=this.input, smooth=1, back=#404, fore=#fff
+
+
+//
+// Hub75 presets
+//
+preset hub75 visualsynth, display='hub75-01', dim=0.8
