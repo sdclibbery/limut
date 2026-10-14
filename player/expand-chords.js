@@ -38,28 +38,94 @@ define((require) => {
     return [event]
   }
 
+  // The voices of a chord all get _voiceKeys: the keys whose values differ between them, which is
+  // what lets a reader (readsVoiceKeys) tell whether something evaluated for one voice holds for all.
+  // A space separated string, not an array: an array valued field of an event is a chord to anything
+  // that evaluates the event.
+  let tagVoiceKeys = (voices) => {
+    if (voices.length < 2) { return }
+    let first = voices[0]
+    let keys = ['voice']
+    let differs = (k) => k !== 'voice' && k !== '_voiceKeys' && !keys.includes(k) && voices.some(v => v[k] !== first[k])
+    voices.forEach(v => { for (let k in v) { if (differs(k)) { keys.push(k) } } })
+    let tag = keys.join(' ')
+    voices.forEach(v => { v._voiceKeys = tag })
+  }
+
   let expandChords = (es) => {
     let voice = 0
     let lastTime = -1
-    return es.flatMap(e => {
+    let voices = []
+    let result = es.flatMap(e => {
       if (e._time !== lastTime) { // Group pattern events by start time. Not really correct, but doing it properly requires adding a lot of complexity to pattern parsing to specify chord groups
+        tagVoiceKeys(voices)
+        voices = []
         voice = 0
         lastTime = e._time
       }
       let exp = multiplyEvents(e)
       exp.forEach(e => {
         e.voice = voice++
+        voices.push(e)
       })
       return exp
     })
+    tagVoiceKeys(voices)
+    return result
+  }
+
+  // Calls fn and reports whether it read any key that differs between event's chord voices. The
+  // keys are watched with accessors for the duration only; a descriptor clone of the event made
+  // meanwhile keeps reading through them, and its writes stay its own.
+  let watching = 0
+  let readsVoiceKeys = (event, fn) => {
+    if (event._voiceKeys === undefined) { return {result: fn(), read: false} }
+    watching++
+    let keys = event._voiceKeys.split(' ')
+    let read = false
+    let saved = keys.map(k => Object.getOwnPropertyDescriptor(event, k))
+    let watched = saved.map(d => d === undefined || 'value' in d) // An existing accessor is left be
+    let values = saved.map(d => d !== undefined ? d.value : undefined)
+    keys.forEach((k, i) => {
+      if (!watched[i]) { return }
+      Object.defineProperty(event, k, {
+        configurable: true,
+        enumerable: saved[i] !== undefined && saved[i].enumerable,
+        get() { read = true; return values[i] },
+        set(v) {
+          if (this === event) { values[i] = v }
+          else { Object.defineProperty(this, k, {value: v, writable: true, enumerable: true, configurable: true}) }
+        },
+      })
+    })
+    try {
+      let result = fn()
+      return {result: result, read: read}
+    } finally {
+      watching--
+      keys.forEach((k, i) => {
+        if (!watched[i]) { return }
+        if (saved[i] === undefined && values[i] === undefined) { delete event[k] }
+        else { Object.defineProperty(event, k, {value: values[i], writable: true, enumerable: true, configurable: true}) }
+      })
+    }
+  }
+
+  // Object.assign(target, event), except that while readsVoiceKeys is watching, the watched keys are
+  // copied as the accessors they are rather than read: copying a whole event is not reading a voice's
+  // value, and later reads through the copy still count.
+  let assignEvent = (target, event) => {
+    if (watching > 0 && event._voiceKeys !== undefined) { return Object.defineProperties(target, Object.getOwnPropertyDescriptors(event)) }
+    return Object.assign(target, event)
   }
 
   // TESTS //
   if ((new URLSearchParams(window.location.search)).get('test') !== null) {
 
     let assert = (expected, actual, msg) => {
-      let x = JSON.stringify(expected, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
-      let a = JSON.stringify(actual, (k,v) => (typeof v == 'number') ? (v+0.0001).toFixed(2) : v)
+      let replacer = (k,v) => k === '_voiceKeys' ? undefined : (typeof v == 'number') ? (v+0.0001).toFixed(2) : v // _voiceKeys has tests of its own below
+      let x = JSON.stringify(expected, replacer)
+      let a = JSON.stringify(actual, replacer)
       if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}${msg?'\n'+msg:''}`) }
     }
     let assertHas = (expected, actual) => {
@@ -168,8 +234,46 @@ define((require) => {
     assertHas({voice:0,value:'e'}, evalParamFrame(p[4],b))
     assertHas({voice:1,value:'f'}, evalParamFrame(p[5],b))
 
+    // The voices of a chord carry the keys that differ between them; a lone event carries none
+    assert(undefined, expandChords([{x:1}])[0]._voiceKeys)
+    p = expandChords([{x:[1,2],y:3}])
+    assert('voice x', p[0]._voiceKeys)
+    assert('voice x', p[1]._voiceKeys)
+    p = expandChords([{value:0,dur:1,_time:0},{value:4,dur:1,_time:0},{value:0,_time:1}]) // pattern chord (04) then a lone 0
+    assert('voice value', p[0]._voiceKeys)
+    assert(undefined, p[2]._voiceKeys)
+    p = expandChords([{value:0,_time:0},{value:0,_time:0,amp:2}]) // a key only one voice has
+    assert('voice amp', p[0]._voiceKeys)
+
+    // readsVoiceKeys reports a read of any of them, and leaves the event as it was
+    p = expandChords([{value:0,dur:1,_time:0},{value:4,dur:1,_time:0}])
+    let rv = readsVoiceKeys
+    assert({result:1, read:false}, rv(p[0], () => p[0].dur))
+    assert({result:0, read:true}, rv(p[0], () => p[0].value))
+    assert({result:0, read:true}, rv(p[0], () => p[0].voice))
+    assert({result:4, read:true}, rv(p[1], () => Object.assign({}, p[1]).value))
+    let clone = (e) => Object.create(Object.getPrototypeOf(e), Object.getOwnPropertyDescriptors(e))
+    assert({result:0, read:true}, rv(p[0], () => clone(p[0]).value))
+    assert({result:3, read:false}, rv(p[0], () => { let c = clone(p[0]); c.value = 3; return c.value }))
+    assert(0, p[0].value) // A clone's write stays the clone's
+    rv(p[0], () => { p[0].value = 7 })
+    assert(7, p[0].value) // The event's own write sticks
+    assert({value:7, writable:true, enumerable:true, configurable:true}, Object.getOwnPropertyDescriptor(p[0], 'value'))
+    p = expandChords([{value:0,_time:0},{value:0,_time:0,amp:2}])
+    assert({result:undefined, read:true}, rv(p[0], () => p[0].amp)) // Reading a key this voice lacks still counts
+    assert(false, 'amp' in p[0])
+    assert({result:5, read:false}, rv({x:5}, () => 5)) // Not a chord: nothing to watch
+
+    // Copying a watched event is not a read, but reading the copy is
+    p = expandChords([{value:0,dur:1,_time:0},{value:4,dur:1,_time:0}])
+    assert({result:1, read:false}, rv(p[0], () => assignEvent({}, p[0]).dur))
+    assert({result:0, read:true}, rv(p[0], () => assignEvent({}, p[0]).value))
+    assert({value:0, writable:true, enumerable:true, configurable:true}, Object.getOwnPropertyDescriptor(assignEvent({}, p[0]), 'value')) // Plain outside a watch
+
   console.log('Expand chords tests complete')
   }
 
+  expandChords.readsVoiceKeys = readsVoiceKeys
+  expandChords.assignEvent = assignEvent
   return expandChords
 })

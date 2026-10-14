@@ -65,20 +65,29 @@ define((require) => {
     return undefined
   }
 
-  let deepCopyCallTree = (realRoot, copyRoot, realNode, copyNode, copyParent) => {
-    if (realNode.context !== undefined) { copyNode.context = realNode.context }
-    copyNode.children = realNode.children.map((child) => {
-      let childCopy = {}
-      deepCopyCallTree(realRoot, copyRoot, child, childCopy, copyNode)
-      return childCopy
-    })
-    if (copyParent !== undefined) { copyNode.parent = copyParent }
-    if (realRoot.current === realNode) { copyRoot.current = copyNode }
-  }
+  // Only the path from the root to the current frame is copied: that is all a restored tree is read
+  // through (the chain walks go up via parent, and unPush/unPop pairs come back down the same path),
+  // and a frame's context and parent never change once it is pushed.
   let getCallTree = () => {
-    let copy = {}
-    deepCopyCallTree(root, copy, root, copy, undefined)
-    return copy
+    let copy
+    let below
+    for (let node = root.current; node !== undefined; node = node.parent) {
+      let nodeCopy = { children: below === undefined ? [] : [below] }
+      if (node.context !== undefined) { nodeCopy.context = node.context }
+      if (below !== undefined) { below.parent = nodeCopy }
+      if (copy === undefined) { copy = nodeCopy }
+      below = nodeCopy
+    }
+    below.current = copy
+    return below
+  }
+
+  // Install a tree and hand back the one it replaced, for a caller that puts that one back itself.
+  // Nothing can reach the replaced tree while it is out, so unlike getCallTree it needs no copy.
+  let swapCallTree = (tree) => {
+    let outer = root
+    root = tree
+    return outer
   }
 
   let getCallTreeString = () => {
@@ -185,6 +194,31 @@ define((require) => {
     assert(true, root.children[0].parent === root)
     clearCallTree()
 
+    // A copy is of the current path only, and a restored one reads and navigates as the original did
+    pushCallContext({a:1, __functionContext:'f1;'})
+    pushCallContext({b:2, __functionContext:'f2a;'})
+    unPushCallContext()
+    pushCallContext({b:3, __functionContext:'f2b;'}) // A sibling of the unpushed frame
+    let path = getCallTree()
+    assert(1, path.children.length)
+    assert(1, path.children[0].children.length)
+    assert(3, path.current.context.b)
+    let liveString = getCallTreeString()
+    popCallContext()
+    unPopCallContext() // Back onto f2a
+    popCallContext()
+    popCallContext()
+    let live = swapCallTree(path)
+    assert(liveString, getCallTreeString())
+    assert(1, findInCallChainByKey('a').context.a)
+    unPushCallContext()
+    unPopCallContext()
+    assert(3, getCallContext().b)
+    pushCallContext({c:4})
+    popCallContext()
+    assert(true, swapCallTree(live) === path)
+    assert(true, isCallTreeEmpty())
+
     // findInCallChainByKey finds the nearest frame holding `key` and reports depth
     pushCallContext({a: 1})
     pushCallContext({b: 2})
@@ -251,6 +285,7 @@ define((require) => {
     unPopCallContext: unPopCallContext,
     findInCallChainByKey: findInCallChainByKey,
     getCallTree: getCallTree,
+    swapCallTree: swapCallTree,
     setCallTree: setCallTree,
     clearCallTree: clearCallTree,
     isCallTreeEmpty: isCallTreeEmpty,

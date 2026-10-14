@@ -4,6 +4,7 @@ define(function (require) {
   let common = require('draw/shadercommon')
   let consoleOut = require('console')
   let {evalParamEvent, evalParamFrame} = require('player/eval-param')
+  let {readsVoiceKeys} = require('player/expand-chords')
   let {buildSource} = require('draw/visualsynth/codegen')
   let {isShaderNode, toVec4} = require('draw/visualsynth/shader-node')
   let {getCallTree, setCallTree, clearCallTree, isCallTreeEmpty} = require('player/callstack')
@@ -42,13 +43,33 @@ define(function (require) {
     consoleOut(msg)
   }
 
-  let visualsynth = (params) => {
-    let node = evalParamEvent(params.px, params)
-    if (!isShaderNode(node)) {
+  // The voices of a chord share one build: they have the same px AST and start time, and building is
+  // most of an event's cost, all of it inside the beat scheduling window. Not when the build read
+  // anything that differs per voice (readsVoiceKeys), since it would then be the first voice's alone.
+  // Each voice still gets its own preRender, so per frame uniforms are evaluated per voice.
+  let sharedBuilds = new WeakMap() // px AST -> {time, count, built}
+  let buildFor = (params) => {
+    let keyed = params.px !== null && (typeof params.px === 'object' || typeof params.px === 'function')
+    let shared = keyed ? sharedBuilds.get(params.px) : undefined
+    if (shared !== undefined && shared.time === params._time && shared.count === params.count) { return shared.built }
+    let {result: built, read} = readsVoiceKeys(params, () => {
+      let node = evalParamEvent(params.px, params)
+      return isShaderNode(node) ? buildSource(node) : undefined
+    })
+    if (built === undefined) {
       warnOnce(`🔴 visualsynth needs px set to a visual node chain, eg px=tex{webcam{}}`)
       return
     }
-    let built = buildSource(node)
+    if (keyed) {
+      if (!read && !built.notReady) { sharedBuilds.set(params.px, {time: params._time, count: params.count, built: built}) }
+      else { sharedBuilds.delete(params.px) }
+    }
+    return built
+  }
+
+  let visualsynth = (params) => {
+    let built = buildFor(params)
+    if (built === undefined) { return }
     if (built.notReady) { return } // eg webcam not enumerated yet; the next event retries
     // Checked before the display branch below, not after it: a display bound chain recompiles on
     // the *Pi*, where a moving source means a fresh program id, a fresh upload and a fresh compile

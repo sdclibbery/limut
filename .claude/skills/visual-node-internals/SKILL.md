@@ -353,6 +353,15 @@ Visual nodes register via the **audio** `addNodeFunction` (`play/nodes/node-var.
 
 Runs **once per visual event** (via `sprite.create`, `draw/sprite.js`). Flow: `evalParamEvent(params.px, params)` → shader node → `buildSource` → program cache lookup by source → per-event `s = Object.create(cached.shader)` carrying `s.textures` and `s.preRender`.
 
+- **The voices of a chord share one build** (`buildFor`, keyed on px AST + `_time` + `count`): the
+  build runs inside the beat scheduling window, and `v visualsynth (000000), px=arc` was six ~1.7 ms
+  builds per beat. `expandChords` tags each voice with `_voiceKeys` (the keys whose values differ
+  across the chord, as a space separated string: an array field on an event is a chord to anything
+  that evaluates it), and `readsVoiceKeys` turns those keys into recording accessors for the first
+  voice's build only; any read skips the share, so no reader needs to opt in. A **whole-event copy**
+  during the build would read every key and defeat sharing: copy with `assignEvent`
+  (`combineParams` does) or a descriptor clone, never `Object.assign({}, e)`. Each voice keeps its
+  own `preRender`, so per-frame uniforms stay per voice.
 - Program cache is 3-state like shadertoy: `undefined` = not compiled, object = compiled, `null` = permanent failure (never retried, prevents per-event error spam).
 - `common.getCommonUniforms(shader)` is still called — it sets up the quad buffers/attrs (`posBuf`/`posAttr`/`fragCoordBuf`/`fragCoordAttr`) that sprite.js needs. Its ~30 uniform locations come back null against the generated shader; `gl.uniform*` with a null location is a silent no-op, which is why sprite.js's standard per-frame writes are harmless. `shader.textureUnif` is overridden to the `u_vstexN` locations (empty array when no textures — prevents sprite.js loading the default favicon texture).
 - **Per-frame animated uniforms**: `s.preRender(state)` (the hook sprite.js calls before each draw) does `gl.useProgram` then, per uniform, restores that uniform's captured call tree, `evalParamFrame(u.ast, params, state.count)` → `toVec4` → `gl.uniform4fv`. This is the visual analogue of `play/eval-audio-params.js` per-frame scheduling; see "Call context in uniforms" above.

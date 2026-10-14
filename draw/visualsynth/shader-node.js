@@ -1,6 +1,6 @@
 'use strict'
 define(function(require) {
-  let {getCallTree,setCallTree,clearCallTree} = require('player/callstack')
+  let {getCallTree,swapCallTree} = require('player/callstack')
   let {colour} = require('draw/colour')
   let {hsv2rgbHelper,lab2rgbHelper} = require('draw/visualsynth/shader-colour')
 
@@ -22,9 +22,7 @@ define(function(require) {
     let buildInCallContext = (input, ctx) => {
       let byInput = ctx.built !== undefined ? ctx.built.get(node) : undefined
       if (byInput !== undefined && byInput.has(input)) { return byInput.get(input) }
-      let outer = getCallTree()
-      clearCallTree()
-      setCallTree(callTree)
+      let outer = swapCallTree(callTree)
       // A build that touches a loop{} carried value (expression/let-node.js) must not be memoised:
       // the variable it names holds something different after the next assignment to it, so the same
       // node at the same input genuinely means two different things at two points in the body. The
@@ -36,8 +34,7 @@ define(function(require) {
       try {
         out = build(input, ctx)
       } finally {
-        clearCallTree()
-        setCallTree(outer)
+        swapCallTree(outer)
       }
       let volatile = ctx.volatile
       ctx.volatile = outerVolatile === true || volatile === true

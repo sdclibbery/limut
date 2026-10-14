@@ -1,6 +1,7 @@
 'use strict'
 define(function(require) {
   let addVarFunction = require('predefined-vars').addVarFunction
+  let {assignEvent} = require('player/expand-chords')
 
   let addNodeFunction = (k, v) => {
     v.dontEvalArgs = true
@@ -9,8 +10,8 @@ define(function(require) {
   }
 
   let combineParams = (args, e) => {
-    let params = {}
-    Object.assign(params, e, args)
+    let params = assignEvent({}, e)
+    Object.assign(params, args)
     params.value = args.value // Do not take "value" from the event, it will be set to the pattern value which we won't want
     params.__event = e // For eval audio params to access the 'real' event
     return params
