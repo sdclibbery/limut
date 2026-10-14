@@ -462,20 +462,33 @@ set synthwave = {in:id, t:time, pulse:0, glow:1, sun:0.35, hills:0.3, hue:0} ->
 //   px=arc>>pal{#000,#36f,#fff}
 //   px=arc{t:floor{time*4}*7, jag:1}>>pal{#000,#a8f,#fff}
 //   px=arc{kd.pulse}>>pal{#000,#36f,#fff}
-// z stays 0, since perlingrad dots all four channels.
-set arcoct = {p, k, seed} -> perlin2at{p*(2^k) + {x:k*0.37, y:k*0.61, w:0}, seed}
-set arcfbmg = {p, g, seed} -> parallel{{k} -> arcoct{p, k, seed}*(g^k), 4}/(1 + g + g*g + g*g*g)
+// Strands run three at a time, one per rgb lane: every strand samples the same lattice point, so
+// one pxhash gives each its own gradient, a third of the hashing of one perlin per strand.
+set arcgrad = {h, d} -> (h*2-1)*d.x + (fract{h*64}*2-1)*d.y
+set arcface = {i, d, f, s} -> mix{
+  mix{ arcgrad{pxhash{i, s}, d}, arcgrad{pxhash{i+{x:1,w:0}, s}, d-{x:1,w:0}}, f.x },
+  mix{ arcgrad{pxhash{i+{y:1,w:0}, s}, d-{y:1,w:0}}, arcgrad{pxhash{i+{x:1,y:1,w:0}, s}, d-{x:1,y:1,w:0}}, f.x },
+  f.y }
+set arcoct = {q, s} -> arcface{floor{q}, fract{q}, smoothstep{fract{q}}, s}
+set arcfbm = {p, g, s} -> parallel{{k} -> arcoct{p*(2^k) + {x:k*0.37, y:k*0.61, w:0}, s}*(g^k), 4}/(1 + g + g*g + g*g*g)
 set arcglow = {dist, w, glow} -> exp{-dist/w} + glow*(w*4/(dist + w*4))^2
 // Distance to the curve x=off(y) is |f|/|grad f|; fwidth estimates the gradient, so steep
 // stretches keep their thickness. That only holds near the curve, so it fades out to |f|.
 set arcdistr = {f, r, w} -> f*mix{r, 1, smoothstep{f, 0, w*8}}
 set arcdist = {f, x, w} -> arcdistr{abs{f}, pxfwidth{x}/max{pxfwidth{f}, 0.000001}, w}
-set arcstrandw = {in, i, t, jag, w, glow} -> arcglow{
-  arcdist{in.x - 0.6*arcfbmg{in >> set{x: t, y: id.y*(1.5 + 1.5*jag), z: 0, w: 0}, jag*3/4, i}, in.x, w},
-  w, glow}/(1 + i)
-set arcstrand = {in, i, t, jag, width, glow} -> arcstrandw{in, i, t, jag, width/(1 + i), glow}
+// Strand index in each lane of group j. Kept as scalar j plus a constant map: a map literal
+// holding the loop index renders black inside loop{}. n stays bare in the weight so a constant n
+// is a literal and the GPU drops the unused lanes; n+1 there would be a uniform.
+set arclanes = {j} -> 3*j + {x:0, y:1, z:2, w:3}
+set arcgroupw = {in, p, j, n, jag, glow, w} -> dot{
+  arcglow{arcdist{in.x - 0.6*arcfbm{p, jag*3/4, j}, in.x, w}, w, glow},
+  clamp{n - arclanes{j}}/(1 + arclanes{j})}.x
+set arcgroup = {in, p, j, n, jag, glow, width} -> arcgroupw{in, p, j, n, jag, glow, width/(1 + arclanes{j})}
+// A loop{} rather than parallel{}: unrolled groups overlap in the GPU and run far slower than n
+// strands each on their own.
 set arch = {in, t, n, jag, power, glow, flicker} ->
-  parallel{{i} -> arcstrand{in, i, t, jag, max{power, 0.0001}/100, glow}, n}
+  loop{map:{v, j} -> arcgroup{in, in >> set{x: t, y: id.y*(1.5 + 1.5*jag), z: 0, w: 0}, j, n, jag, glow,
+    max{power, 0.0001}/100}, ceil{n/3}-1}
     *power*(1 - flicker*vhsrand{floor{t*16}, 0.3})
 set arc = {in:id, power:1, t:time*3, n:3, jag:1/2, glow:1, flicker:1/2} ->
   arch{in, set{t}, n, jag, power, glow, flicker}

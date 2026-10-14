@@ -1,11 +1,21 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-px julia etc should just be julia. And whatever rule claude has about naming px functions should be dropped
+!Slows down on when t plays
+ T trance (049), due=2, Sus= 1/4
+ V visual synth, px=arc
+ Same with kal but not as much
+!Operator issues
+ px=arc + rot2{1/4}>>arc should work
+ px=arc + UV>>rot2{1/4}>>arc should definitely work
+ BUT fx=echo*2>>reverb must also work
+ ?? Need a function to blend px chains?
+pxjulia etc should just be julia. And whatever rule claude has about naming px functions should be dropped
 ?Do want visuals to respond to individual event hits; how about pk.hash.0 ? Or is follow player and []r@e better? 
 Do want to allow multiple players from one limut instance to use the hub75 and blend together
 pattern brackets to allow eg (094 crop 7 + 1) crop 30 + 98
 visual nodes...
+ Plasma, bolt presets
  vorctr function that gives offset to the centre point of the nearest voronoi cell
  ?Wobble and ripple with time and size params
  ?visual lib functions for old style visual params (monochrome, pixellate, rotate, mirror, vhs etc etc) - vhs needs split into uv and rgb parts...
