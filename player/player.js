@@ -139,6 +139,7 @@ define((require) => {
       let player = continuousPlayer(playerFactory, paramsStr, playerId, playerFactory.baseParams, transferFxChain, transferEvents)
       player.id = playerId
       player.type = playerType
+      player.baseType = playerFactory._base || playerType.toLowerCase()
       player.keepState = {}
       return player
     }
@@ -148,6 +149,7 @@ define((require) => {
       id: playerId,
       _num: playerNumber,
       type: playerType,
+      baseType: playerFactory._base || playerType.toLowerCase(),
       keepState: {},
       _fx: transferFxChain,
       events: transferEvents,

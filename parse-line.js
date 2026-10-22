@@ -158,11 +158,11 @@ define((require) => {
         let typeUrl = url.toLowerCase().replace('.limut','')
         if (!type.includes(typeUrl)) { type = type + (typeUrl ? ' ' + typeUrl : '') }
       }
-      playerTypes[presetName] = {
-        play: playerTypes[baseType].play,
-        create: playerTypes[baseType].create,
-        _type: type
-      }
+      // A preset player's type is the preset's name; _base names the built in type it resolves to
+      playerTypes[presetName] = Object.assign({}, playerTypes[baseType], {
+        _type: type,
+        _base: playerTypes[baseType]._base || baseType,
+      })
       let baseBaseParams = playerTypes[baseType].baseParams || {}
       playerTypes[presetName].baseParams = applyOverrides(baseBaseParams, parseParams(params))
       return
@@ -701,6 +701,21 @@ define((require) => {
   assert(1/2, players.instances.lp.getEventsForBeat({count:0})[0].dur)
   delete players.instances.lp
   delete playerTypes.myp
+
+  // A preset keeps its base type's whole definition, eg a destroy hook, through presets of presets
+  parseLine('preset myvs visualsynth, dim=0.8')
+  parseLine('preset myvs2 myvs')
+  assert(playerTypes.visualsynth.destroy, playerTypes.myvs2.destroy)
+  parseLine('vs myvs2')
+  assert('myvs2', players.instances.vs.type)
+  assert('visualsynth', players.instances.vs.baseType)
+  assert('function', typeof players.instances.vs.destroy)
+  delete players.instances.vs
+  delete playerTypes.myvs2
+  delete playerTypes.myvs
+  parseLine('pl play 0')
+  assert('play', players.instances.pl.baseType)
+  delete players.instances.pl
 
   parseLine('preset myro readout, add=4')
   parseLine('preset myro2 myro')

@@ -126,7 +126,7 @@ define(function (require) {
   // next event, so re-editing a live display line does not blank the wall for a beat.
   let ownsDisplay = (playerId) => {
     let p = players.getById(playerId)
-    return p !== undefined && String(p.type).toLowerCase() === 'visualsynth'
+    return p !== undefined && p.baseType === 'visualsynth' // not p.type: a preset player's type is the preset name
   }
 
   let release = (name) => {
@@ -322,7 +322,7 @@ define(function (require) {
 
   let sess = stubSession()
   sessions['not-a-real-display'] = sess
-  let vp = {id: 'vtest', type: 'visualsynth'}
+  let vp = {id: 'vtest', type: 'visualsynth', baseType: 'visualsynth'}
   players.instances['vtest'] = vp
   setLayer('not-a-real-display', {_player: vp}, {source: src, uniforms: [], textures: []})
   assert(true, sess.desired !== null) // bound while the player is alive
@@ -339,7 +339,7 @@ define(function (require) {
   // destroy hook: the same sweep that removes the player gives the wall up, no frame of latency
   let sess2 = stubSession()
   sessions['not-a-real-display-2'] = sess2
-  let vp2 = {id: 'vtest2', type: 'visualsynth'}
+  let vp2 = {id: 'vtest2', type: 'visualsynth', baseType: 'visualsynth'}
   players.instances['vtest2'] = vp2
   setLayer('not-a-real-display-2', {_player: vp2}, {source: src, uniforms: [], textures: []})
   releaseFor('vtest2')
@@ -357,13 +357,13 @@ define(function (require) {
   // gone, animating from the dead event's params, until Ctrl-. Nothing about it is browser specific.
   let sess3 = stubSession()
   sessions['not-a-real-display-3'] = sess3
-  let vp3 = {id: 'vtest3', type: 'visualsynth'}
+  let vp3 = {id: 'vtest3', type: 'visualsynth', baseType: 'visualsynth'}
   players.instances['vtest3'] = vp3
   setLayer('not-a-real-display-3', {_player: vp3}, {source: src, uniforms: [], textures: []})
   perFrameUpdate(0, beat)
   assert(0, sess3.blanked)
   // gc_sweep replaced the visualsynth with a scope of the same name, rather than removing it
-  players.instances['vtest3'] = {id: 'vtest3', type: 'scopefft'}
+  players.instances['vtest3'] = {id: 'vtest3', type: 'scopefft', baseType: 'scopefft'}
   perFrameUpdate(0, beat)
   assert(1, sess3.blanked)
   delete players.instances['vtest3']
@@ -371,10 +371,10 @@ define(function (require) {
   // And the same fault with nothing commented out at all: a live edit of the line's player type
   let sess4 = stubSession()
   sessions['not-a-real-display-4'] = sess4
-  let vp4 = {id: 'vtest4', type: 'visualsynth'}
+  let vp4 = {id: 'vtest4', type: 'visualsynth', baseType: 'visualsynth'}
   players.instances['vtest4'] = vp4
   setLayer('not-a-real-display-4', {_player: vp4}, {source: src, uniforms: [], textures: []})
-  players.instances['vtest4'] = {id: 'vtest4', type: 'play'} // now an audio player of the same name
+  players.instances['vtest4'] = {id: 'vtest4', type: 'play', baseType: 'play'} // now an audio player of the same name
   perFrameUpdate(0, beat)
   assert(1, sess4.blanked)
   delete players.instances['vtest4']
@@ -384,15 +384,27 @@ define(function (require) {
   // replacement itself would blank the wall for a beat on every Ctrl+Enter of a live display line.
   let sess5 = stubSession()
   sessions['not-a-real-display-5'] = sess5
-  let vp5 = {id: 'vtest5', type: 'visualsynth'}
+  let vp5 = {id: 'vtest5', type: 'visualsynth', baseType: 'visualsynth'}
   players.instances['vtest5'] = vp5
   setLayer('not-a-real-display-5', {_player: vp5}, {source: src, uniforms: [], textures: []})
-  players.instances['vtest5'] = {id: 'vtest5', type: 'visualsynth'} // re-parsed, a new object
+  players.instances['vtest5'] = {id: 'vtest5', type: 'visualsynth', baseType: 'visualsynth'} // re-parsed, a new object
   perFrameUpdate(0, beat)
   assert(0, sess5.blanked)
   delete players.instances['vtest5']
 
+  // A player made from a preset of visualsynth: its type is the preset's name
+  let sess6 = stubSession()
+  sessions['not-a-real-display-6'] = sess6
+  let vp6 = {id: 'vtest6', type: 'myhub', baseType: 'visualsynth'}
+  players.instances['vtest6'] = vp6
+  setLayer('not-a-real-display-6', {_player: vp6}, {source: src, uniforms: [], textures: []})
+  perFrameUpdate(0, beat)
+  assert(0, sess6.blanked)
+  assert(true, sess6.desired !== null)
+  delete players.instances['vtest6']
+
   delete sessions['not-a-real-display']
+  delete sessions['not-a-real-display-6']
   delete sessions['not-a-real-display-2']
   delete sessions['not-a-real-display-3']
   delete sessions['not-a-real-display-4']
