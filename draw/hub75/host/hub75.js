@@ -78,6 +78,12 @@ define(function (require) {
       warnOnce(`🟠 hub75 ${name}: not sending ${playerId}: ${assets.unsupportedReason[bad.unsupported]}`)
       return
     }
+    // The display renders to one target, so the record output would be dropped and pxprev would
+    // silently read the shown frame instead
+    if (built.records) {
+      warnOnce(`🟠 hub75 ${name}: not sending ${playerId}: pxrec does not work on a display yet`)
+      return
+    }
 
     let key = layerKey(built)
     let entry = layers[name]

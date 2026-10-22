@@ -1,20 +1,30 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!Slows down on when t plays
- T trance (049), due=2, Sus= 1/4
- V visual synth, px=arc
- Same with kal but not as much
+fog/cloud function
+ does not have control of when pxprev takes its snapshot yet
+ does not work on the pi yet
+pxjulia etc should just be julia. And whatever rule claude has about naming px functions should be dropped
+Setup colours on avw2 faders and buttons
+!hub75 preset doesnt work, connects but never sends shader apparently
+!fx=fuzz{[1,0]e} is broken, get nasty glitch at event start; @s also broken in a different way
+!very slow on any arc shader change on the pi
+Should be able to "list wt64" in console to get list of wavetable samples
+ Also want to be able to list docs for a thing in the console - eg: man fog
+!Problem drop in sub level 4
+ acid had an issue but that was separate; also were massively compressing
+ Still have something though. drop itself is hitting the limiter; ph is hitting the limiter even in default
+ KEEP experimenting
 !Operator issues
  px=arc + rot2{1/4}>>arc should work
  px=arc + UV>>rot2{1/4}>>arc should definitely work
  BUT fx=echo*2>>reverb must also work
  ?? Need a function to blend px chains?
-pxjulia etc should just be julia. And whatever rule claude has about naming px functions should be dropped
 ?Do want visuals to respond to individual event hits; how about pk.hash.0 ? Or is follow player and []r@e better? 
 Do want to allow multiple players from one limut instance to use the hub75 and blend together
 pattern brackets to allow eg (094 crop 7 + 1) crop 30 + 98
 visual nodes...
+ ?arc perf: Still have on beat problem with short dur; Undo the chord thing, and look at better ways of triggering the synth instead
  Plasma, bolt presets
  vorctr function that gives offset to the centre point of the nearest voronoi cell
  ?Wobble and ripple with time and size params

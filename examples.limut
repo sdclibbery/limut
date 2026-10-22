@@ -6104,3 +6104,51 @@ section drop {
 // v visualsynth, px=arc{3*pk.pulse.0^2,flicker:2}>>pal{0,blue,1}
 
 
+// Sub Level 4
+include 'personal/everything.limut'
+dw dmxwash, channel=(1,8,15,22), fore=#00f*smooth{main.pulse,12}/16
+v visualsynth, display='hub75-01', dim=0.75, arcy=1@f, px=
+	(uv/4>>kal2{t:time*[0.001,0]e@s}^3>>pal{#0aa*ba.pulse.0,#00f*pk.pulse.0,pc.pulse.0,1/2*l2.pulse.0,0}*3/2)+
+	(uv>>arc{l.pulse.0*2,t:this.arcy@f*time/150*l.freq.0,flicker:avw2.press*2}
+  	>>pal{0,#fd8+#08f*avw2.bend.0,1}^2/3*this.arcy@f)
+w visualsynth, px=mul{1-[pk.vel.0 /16:!1,0]e@s}>>tex{webcam{['5mp','2mp']t16}}*(uv.u>4/3??0?:1)
+set bpm=108
+set main fx=stanh{2}>>compress*+3db
+set scale='phrygian'
+set p* delay|=[[1,3]r/4:_2,():_]{sx.rtime}
+set default length=16
+// pk perc x..., sample=3
+// pp1 perc nox crop 16, swing=54, vel=[]n/2, pan=-1/3
+// pp2 perc w-s crop 8, swing=54, vel=[]n/2, pan=1/3
+// ph perc -nt crop 14 + kk, swing=54, vel=3/4, pan=[-1,1]/2, room=1/8
+// pc play80s ..O., vel=1/4
+// ba acid 0.0.2.0.-11.0.0.8, fx=fuzz{avw2.f8}*+3db, delay=(0,{1/2,oct:4,sus:avw2.f7/4}), swing=54
+l vox avw2, addc=avw2.bend*7, fx=mix{airverb,1/4}>>fuzz{this.vel^1/2}, wt=this.press
+l2 softkeys keyboard, addc=wow, fx=mix{airverb}
+s softpad (049), addc=wow, fx=darkverb/6
+section build {
+	set * add+=-1
+	set dw fore=#101
+	set (pp1,pp2,pc) vel=0
+  set (ba,l) fx=airverb
+  set v arcy=1/2@f
+  set main hpf=800*sx.rise^6, fx>>=mix{flanger,sx.rise^2}
+  fill perc u, rate=2/3, vel=sx.rise^6
+}, next=drop
+section drop {
+	set dw fore=[red,blue]t1/4@f/16
+	set * add+=[2,1,4,0]t8
+	set pc vel=3/4
+  set l fx>>=mix{tg}
+  set v px*=tg
+}, length=64
+
+
+// ZScran shredding important setup
+set bpm=101
+set main fx=stanh{2}>>compress*+3db
+set scale='minor'
+set !p* add+=[0,2,1,4]t8
+px=(uv>>arc{l.pulse.0*2,t:this.arcy@f*time/150*l.freq.0,flicker:avw2.press*2}
+l cyborg avw2, addc=avw2.bend*7+this.bend*2, fx=mix{airverb,1/4}>>fuzz{avw2.f1}>>mix{tg,1/3}
+

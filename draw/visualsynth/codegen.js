@@ -297,19 +297,22 @@ define(function(require) {
     // A function body cannot see main's locals, including the seed, which the uv node reads from
     // anywhere. So a shader with a function hoists the seed to file scope.
     let globalSeed = ctx.needsGlobalSeed === true
+    // pxrec: a second output for the feedback history. File scope, so a pxrec inside a loop or a
+    // pxfn body can still set it; with more than one output each needs a location.
+    let records = ctx.records === true
     let source = `#version 300 es
 precision highp float;
 ${sampler3d ? 'precision highp sampler3D;\n' : ''}in vec2 fragCoord;
-out vec4 fragColor;
+${records ? 'layout(location = 0) out vec4 fragColor;\nlayout(location = 1) out vec4 fragRecord;\nvec4 l_rec = vec4(0.0);' : 'out vec4 fragColor;'}
 ${ctx.uniforms.map(u => `uniform vec4 ${u.name};`).join('\n')}
 ${ctx.textures.map((t,i) => `uniform ${t.sampler} u_vstex${i};\nuniform vec2 u_vsex${i};`).join('\n')}
 ${globalSeed ? `vec4 ${ctx.rootInput};\n` : ''}${ctx.functions.map(f => f.source).join('\n')}
 void main() {
   ${globalSeed ? '' : 'vec4 '}${ctx.rootInput} = vec4(fragCoord, 0.0, 1.0);
   ${ctx.statements.join('\n  ')}
-  fragColor = ${out};
+  fragColor = ${out};${records ? '\n  fragRecord = l_rec;' : ''}
 }`
-    return { source: source, uniforms: ctx.uniforms, textures: ctx.textures, functions: ctx.functions, notReady: ctx.notReady }
+    return { source: source, uniforms: ctx.uniforms, textures: ctx.textures, functions: ctx.functions, notReady: ctx.notReady, records: records }
   }
 
   // TESTS //

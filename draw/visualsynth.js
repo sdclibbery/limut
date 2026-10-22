@@ -130,6 +130,10 @@ define(function (require) {
     if (built.textures.length > 0) { s.textures = built.textures.map(t => t.texture) } // sprite.js binds each to its own slot
     if (feedbackSlot >= 0) {
       let fb = feedback.forPlayer(params._player)
+      let pyramidSlot = built.textures.findIndex(t => t.texture === feedback.pyramidMarker)
+      fb.mips = pyramidSlot >= 0
+      fb.records = built.records
+      if (fb.mips) { s.textures[pyramidSlot] = fb.pyramidRead }
       s.textures[feedbackSlot] = fb.read
       s.feedback = feedback.attach(fb, cached.shader)
     }

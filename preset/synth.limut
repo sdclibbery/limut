@@ -108,12 +108,12 @@ preset superbass audiosynth, dur=1/4, oct=3, envelope='full', rel=3/4, dec=1/4, 
 preset supersweep audiosynth, envelope='pad', oct=1, dur=4,
   play=superosc{eventpitch, unison:{6,detune:1.02}, formant:[0.99,1.01]n19}>>lpf{800+8000*[]n23^3,q:10}>>mix{hpf{1000}>>airverb}
 
-preset acid superosc, dur=1/4, oct=(2+this.u-this.d), glide=20ms+this.s*50ms, att=0,
+preset acid superosc, dur=1/4, oct=(2+this.u-this.d), glide=20ms+this.s*50ms, envelope='perc',
 	wavetable={'sample/wt64/VIRUS_SA.WAV'},
   wt=[0.45,0.65]l7@s, sync=1+this.accent*this.fenv/2, unison=3,
   lpf={100+this.freq+(0.45+this.cutoff*0.8)^2*this.fenv*6000, poles:4, q:this.resonance*18},
   fenv=[1:!(200ms+1000ms*(this.decay*2+this.accent)/2),0]e@s*(1+this.vel+this.accent)/3,
-  decay=1/2, cutoff=[]l8@s, accent=this.a, resonance=1/4+this.cutoff/4
+  decay=1/2, cutoff=[]l8@s, accent=this.a, resonance=1/4+this.cutoff/2
 
 preset dlead superosc, oct=2,
 	envelope='full', att=(1-this.vel*4/3)*1/3, dec=1/4, sus={level:2/3}, rel=1/4,
