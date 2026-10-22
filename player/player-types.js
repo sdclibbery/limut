@@ -100,13 +100,38 @@ define((require) => {
   }
 
   let consoleOut = require('console')
+  let sampleFolders
+  let loadSampleFolders = (cb) => {
+    if (sampleFolders) { cb(sampleFolders); return }
+    let request = new XMLHttpRequest()
+    request.open('GET', 'sample/index.json', true)
+    request.onload = () => {
+      try { sampleFolders = JSON.parse(request.responseText) } catch (e) { sampleFolders = {} }
+      cb(sampleFolders)
+    }
+    request.onerror = () => cb({})
+    request.send()
+  }
   consoleOut.addCommand('list', (args) => {
+    loadSampleFolders((folders) => {
+      if (args.length === 0) {
+        listTypes(args)
+        let names = Object.keys(folders)
+        if (names.length > 0) { consoleOut('[samples] ' + names.join(', ')) }
+      } else if (Object.hasOwn(folders, args[0])) {
+        consoleOut('[sample/' + args[0] + '] ' + folders[args[0]].join(', '))
+      } else {
+        listTypes(args)
+      }
+    })
+  })
+  let listTypes = (args) => {
     let filtered = Object.keys(playerTypes).filter(name => args.length === 0 || (playerTypes[name]._type && playerTypes[name]._type.includes(args[0])))
     let groups = [...new Set(filtered.map(name => playerTypes[name]._type))].sort()
     groups.forEach((group) => {
       consoleOut('[' + group + '] ' + filtered.filter(name => playerTypes[name]._type === group).sort().join(', '))
     })
-  })
+  }
 
   return playerTypes
 })
