@@ -27,6 +27,7 @@ define(function(require) {
   let sections = require('section/sections')
   let sectionButtons = require('section/section-buttons')
   let consoleOut = require('console')
+  require('man')
   let collaboration = require('collaboration')
   let keyboard = require('player/keyboard')
   let editor = require('editor-codemirror')

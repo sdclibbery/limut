@@ -1,16 +1,12 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-fog/cloud function
- does not have control of when pxprev takes its snapshot yet
- does not work on the pi yet
+fog/cloud function: does not work on the pi yet
 pxjulia etc should just be julia. And whatever rule claude has about naming px functions should be dropped
 Setup colours on avw2 faders and buttons
 !hub75 preset doesnt work, connects but never sends shader apparently
 !fx=fuzz{[1,0]e} is broken, get nasty glitch at event start; @s also broken in a different way
 !very slow on any arc shader change on the pi
-Should be able to "list wt64" in console to get list of wavetable samples
- Also want to be able to list docs for a thing in the console - eg: man fog
 !Problem drop in sub level 4
  acid had an issue but that was separate; also were massively compressing
  Still have something though. drop itself is hitting the limiter; ph is hitting the limiter even in default
