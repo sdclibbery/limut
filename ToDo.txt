@@ -2,9 +2,7 @@
 =================================================================================================================================
 =================================================================================================================================
 fog/cloud function: does not work on the pi yet
-pxjulia etc should just be julia. And whatever rule claude has about naming px functions should be dropped
 Setup colours on avw2 faders and buttons
-!hub75 preset doesnt work, connects but never sends shader apparently
 !fx=fuzz{[1,0]e} is broken, get nasty glitch at event start; @s also broken in a different way
 !very slow on any arc shader change on the pi
 !Problem drop in sub level 4

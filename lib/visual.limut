@@ -241,12 +241,12 @@ set zoomer = {src, scale:2, n:4, t:time/4, gamma:2, in:id} ->
   zoomerh{in, scale, n, fract{t}, gamma, pxfn{src}}
 
 //// Fractals
-// Escape time fractals: pxjulia and pxmandel, with a choice of formula and of colouring. And the
+// Escape time fractals: julia and mandel, with a choice of formula and of colouring. And the
 // Kaliset, a cheap fold and invert fractal.
-//   px=pxjulia>>cospal{#05a}
-//   px=pxmandel>>pal{#000,#08f,#fff}
-//   px=pxjulia{trap:1}>>cospal{#05a}
-//   px=pxkali>>cospal{#05a}
+//   px=julia>>cospal{#05a}
+//   px=mandel>>pal{#000,#08f,#fff}
+//   px=julia{trap:1}>>cospal{#05a}
+//   px=kali>>cospal{#05a}
 // Complex numbers are x (real) and y (imaginary).
 set pxcpolar = {r, a} -> {x: r*cos{6.28318*a}, y: r*sin{6.28318*a}, w:0}
 set pxcsq = {in:id} -> in >> set{x: id.x*id.x - id.y*id.y, y: 2*id.x*id.y}
@@ -283,12 +283,12 @@ set pxescape = {z0, c, f, n, p, bail, k, trap, tp, tr} ->
 
 // zoom and at frame the view. A transform goes in in: or piped in, and lands before them.
 // The default c sweeps the part of the 0.7885 circle that gives connected sets.
-set pxjulia = {c:pxcpolar{0.7885, 1/2 + sin{time/16}/5}, in:id, zoom:1, at:{x:0,y:0}, form:0, k:2, trap:0, tp:{x:0,y:0}, tr:1/2, p:0, n:64, bail:16} ->
+set julia = {c:pxcpolar{0.7885, 1/2 + sin{time/16}/5}, in:id, zoom:1, at:{x:0,y:0}, form:0, k:2, trap:0, tp:{x:0,y:0}, tr:1/2, p:0, n:64, bail:16} ->
   pxescape{in*3/2/zoom + at, c, pxzform{form, k}, n, p, bail, k, trap, tp, tr}
-set pxmandel = {in:id, zoom:1, at:{x:-1/2,y:0}, form:0, k:2, trap:0, tp:{x:0,y:0}, tr:1/2, p:0, n:64, bail:16} ->
+set mandel = {in:id, zoom:1, at:{x:-1/2,y:0}, form:0, k:2, trap:0, tp:{x:0,y:0}, tr:1/2, p:0, n:64, bail:16} ->
   pxescape{in*5/4/zoom + at, id, pxzform{form, k}, n, p, bail, k, trap, tp, tr}
 
-set pxkali = {c:{x:1/2 + sin{time/16}/10, y:1/2 + cos{time/20}/10}, in:id, zoom:1, at:{x:0,y:0}, n:12, k:3} ->
+set kali = {c:{x:1/2 + sin{time/16}/10, y:1/2 + cos{time/20}/10}, in:id, zoom:1, at:{x:0,y:0}, n:12, k:3} ->
   in*2/zoom + at
     >> loop{abs{id}/max{dot{id}, 0.0001} - c, n, map:id>>length, fold:{a,v} -> min{a,v}}
     >> mul{-k} >> exp >> set{a:1}
@@ -339,7 +339,7 @@ set vhsfromyiq = {in} -> in >> set{
   y: id.x - id.y*0.272 - id.z*0.647,
   z: id.x - id.y*1.106 + id.z*1.703}
 set vhsrgbh = {in, row, wp, amt, t} -> mix{clamp{in},
-  in >> mix{id, pxfwidth{id}, {r:0.2, g:0.2, b:0.2, a:0}}
+  in >> mix{id, fwidth{id}, {r:0.2, g:0.2, b:0.2, a:0}}
     >> vhsgain{(1 - wp.w)*vhsinside{wp}*vhsflicker{row, t}}
     >> vhsyiq >> vhsyiqfx{row, t} >> vhsfromyiq,
   amt}
@@ -409,8 +409,8 @@ set swflat = {v} -> v >> set{z:0, w:0}
 // Antialiased line fw*w wide where v is zero. swgrid takes fwidth of v itself, since the fract wrap
 // would read as a line otherwise.
 set swaa = {v, fw, w} -> 1 - clamp{abs{v}/(fw*w)}
-set swline = {v, w} -> swaa{v, pxfwidth{v}, w}
-set swgrid = {v, w} -> swaa{fract{v - 1/2} - 1/2, pxfwidth{v}, w}
+set swline = {v, w} -> swaa{v, fwidth{v}, w}
+set swgrid = {v, w} -> swaa{fract{v - 1/2} - 1/2, fwidth{v}, w}
 
 set swstar = {hs, f, t} ->
   (hs.x > 0.985) * (1 - smoothstep{length{swflat{f}}, 0.05, 0.3}) * (1/2 + sin{t*3 + hs.y*6.28}/2)
@@ -420,8 +420,8 @@ set swskycol = {p} -> clamp{p.y*1.2} >> pal{#f4a, #a3c, #427, #113, #012}
 // v is -1 at the bottom of the sun, 1 at the top. The cut bands are centred in each period so both
 // edges antialias.
 set swstripes = {v, t} -> smoothstep{abs{fract{v*7 + t/4} - 1/2},
-  -v*0.6 - 0.02 - pxfwidth{v*7}, -v*0.6 - 0.02 + pxfwidth{v*7}}
-set swsunmask = {d, v, t} -> (1 - smoothstep{d, -pxfwidth{d}, pxfwidth{d}}) * swstripes{v, t}
+  -v*0.6 - 0.02 - fwidth{v*7}, -v*0.6 - 0.02 + fwidth{v*7}}
+set swsunmask = {d, v, t} -> (1 - smoothstep{d, -fwidth{d}, fwidth{d}}) * swstripes{v, t}
 set swsunmix = {bg, d, v, t, pulse, glow} ->
   mix{bg, (v/2 + 1/2) >> pal{#f06, #f60, #fe4}, swsunmask{d, v, t}}
   + #f26*exp{-max{d, 0}*6}*(glow/2 + pulse)*(d > 0)
@@ -475,7 +475,7 @@ set arcglow = {dist, w, glow} -> exp{-dist/w} + glow*(w*4/(dist + w*4))^2
 // Distance to the curve x=off(y) is |f|/|grad f|; fwidth estimates the gradient, so steep
 // stretches keep their thickness. That only holds near the curve, so it fades out to |f|.
 set arcdistr = {f, r, w} -> f*mix{r, 1, smoothstep{f, 0, w*8}}
-set arcdist = {f, x, w} -> arcdistr{abs{f}, pxfwidth{x}/max{pxfwidth{f}, 0.000001}, w}
+set arcdist = {f, x, w} -> arcdistr{abs{f}, fwidth{x}/max{fwidth{f}, 0.000001}, w}
 // Strand index in each lane of group j. Kept as scalar j plus a constant map: a map literal
 // holding the loop index renders black inside loop{}. n stays bare in the weight so a constant n
 // is a literal and the GPU drops the unused lanes; n+1 there would be a uniform.
