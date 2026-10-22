@@ -500,5 +500,5 @@ set fogdensity = {t, scale, cover} ->
   smoothstep{fbm2t{uv >> add{{x:t}}, scale, 0, t}.x, lo:3/4-cover/2, hi:1-cover/2}
 set foglight = {blur} -> (uv>>pxprev{blur:blur}) + 2*(uv>>pxprev{blur:blur*2}) + 4*(uv>>pxprev{blur:blur*4}) + 8*(uv>>pxprev{blur:blur*8})
 set fogmix = {in, d, light, bright} -> in*(1 - d/4) + light*d*bright
-set fog = {in, amount:1/2, scale:1, cover:3/4, blur:1/32, bright:1, t:time/16} ->
+set fog = {in, amount:1/2, scale:1, cover:3/4, blur:1/32, bright:1, t:time/6} ->
   fogmix{in>>pxrec, fogdensity{set{t}, scale, cover}*amount, foglight{blur}, bright}
