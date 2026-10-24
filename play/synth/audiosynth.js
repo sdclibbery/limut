@@ -9,7 +9,7 @@ define(function (require) {
   let system = require('play/system')
 
   return (params) => {
-    let vca = envelope(params, 0.06, 'none')
+    let vca = envelope(params, 0.06, 'organ')
     let playChain = evalParamEvent(params.play, params) // Get the Audionode chain for this event
     if (playChain !== undefined && !(playChain instanceof AudioNode)) { // {osc1,osc2} map syntax yields a plain object with AudioNode values — merge into one node
       let merger = system.audio.createGain()

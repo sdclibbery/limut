@@ -6152,3 +6152,13 @@ set !p* add+=[0,2,1,4]t8
 px=(uv>>arc{l.pulse.0*2,t:this.arcy@f*time/150*l.freq.0,flicker:avw2.press*2}
 l cyborg avw2, addc=avw2.bend*7+this.bend*2, fx=mix{airverb,1/4}>>fuzz{avw2.f1}>>mix{tg,1/3}
 
+
+// Halloween prep
+set bpm=110
+set scale='halfwhole'
+set root=2
+m machine
+v vambi, fx=darkverb
+b bell keyboard, fx=mix{reverb{3}>>airverb}, oct-=1, rel=2
+l sine avw2, addc=avw2.bend*12, vel*=1+this.press, fx=mix{pingpong}>>mix{airverb}, envelope='organ'
+
