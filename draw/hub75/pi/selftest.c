@@ -13,6 +13,7 @@
 #include "json.h"
 #include "output.h"
 #include "pacing.h"
+#include "render.h"
 #include "sha1.h"
 #include "sha256.h"
 #include "ws.h"
@@ -255,6 +256,27 @@ static void test_glsl(void) {
     /* A name that merely starts with u_vs is not a slot. */
     ck("ignores lookalike names",
        glsl_declared_uniforms("uniform vec4 u_vsX;\n", names, 8) == 0);
+    /* pxrec's second output, exactly as draw/visualsynth/codegen.js emits it */
+    ck("finds a location 1 output",
+       glsl_records("layout(location = 0) out vec4 fragColor;\nlayout(location = 1) out vec4 fragRecord;\n") == 1);
+    ck("tolerates odd whitespace in a layout", glsl_records("layout ( location=1 )\nout vec4 r;") == 1);
+    ck("a location 0 output alone is not a record",
+       glsl_records("layout(location = 0) out vec4 fragColor;\nout vec4 x;") == 0);
+    ck("a plain fragColor is not a record", glsl_records("out vec4 fragColor;\n") == 0);
+    ck("location 10 is not location 1", glsl_records("layout(location = 10) out vec4 r;") == 0);
+}
+
+/* The pyramid's level sizes must match draw/visualsynth/feedback.js createPyramid exactly. */
+static void test_pyramid(void) {
+    int lw[RENDER_MAX_PYRAMID], lh[RENDER_MAX_PYRAMID], n;
+    n = render_pyramid_levels(64, 192, lw, lh, RENDER_MAX_PYRAMID);
+    ck("64x192 makes 7 levels", n == 7);
+    ck("its level 0 is 32x96", lw[0] == 32 && lh[0] == 96);
+    ck("its level 5 is 1x3", lw[5] == 1 && lh[5] == 3);
+    ck("its level 6 is 1x1", lw[6] == 1 && lh[6] == 1);
+    n = render_pyramid_levels(1200, 813, lw, lh, RENDER_MAX_PYRAMID);
+    ck("1200x813 pads level 0 to 608x416", n == 10 && lw[0] == 608 && lh[0] == 416);
+    ck("a level count past the cap is refused", render_pyramid_levels(64, 192, lw, lh, 3) < 0);
 }
 
 /* Feeds a client-masked frame in, the way a browser would send it. */
@@ -1009,6 +1031,7 @@ int main(void) {
     test_json();
     test_codec();
     test_glsl();
+    test_pyramid();
     test_ws();
     test_colorlight();
     test_colorlight_plan();

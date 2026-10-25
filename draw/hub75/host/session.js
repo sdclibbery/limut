@@ -314,9 +314,16 @@ define(function (require) {
       let stale = () => gen !== s.generation || s.desired !== d || !isOpen()
       // A feedback entry has no bytes: the display keeps the history itself (§7.2). One that does
       // not list the feature would close the session on it, so it is never sent one.
-      let isFeedback = (a) => a.kind === 'feedback'
-      if (d.assetList.some(isFeedback) && !((s.info && s.info.features) || []).includes('feedback')) {
-        problem(`🟠 hub75 ${name}: this display does not support pxprev; update it`)
+      let isFeedback = (a) => a.kind === 'feedback' || a.kind === 'feedbackpyramid'
+      let features = (s.info && s.info.features) || []
+      let lacks = (needed, feature, what) => {
+        if (!needed || features.includes(feature)) { return false }
+        problem(`🟠 hub75 ${name}: this display does not support ${what}; update it`)
+        return true
+      }
+      if (lacks(d.assetList.some(isFeedback), 'feedback', 'pxprev') ||
+          lacks(d.assetList.some(a => a.kind === 'feedbackpyramid'), 'feedbackblur', 'pxprev{blur:}') ||
+          lacks(d.records, 'record', 'pxrec')) {
         return Promise.resolve()
       }
 
@@ -350,7 +357,7 @@ define(function (require) {
               s.afterUploads = {
                 type: 'layer', id: 0, prog: progId,
                 textures: d.textures.map((t, i) => isFeedback(d.assetList[i])
-                  ? {unit: i, sampler: t.sampler, feedback: true}
+                  ? {unit: i, sampler: t.sampler, feedback: d.assetList[i].kind === 'feedbackpyramid' ? 'pyramid' : true}
                   : {unit: i, sampler: t.sampler, asset: assetIds[i]}),
               }
               // needsAck only when we are actually sending the program: one the display already
@@ -403,7 +410,7 @@ define(function (require) {
       if (s.state === 'idle') { connect() }
     }
 
-    // desc: {key, source, uniformNames, textures:[{sampler}], assetList:[{kind,dims,size,bytes}], live}
+    // desc: {key, source, uniformNames, textures:[{sampler}], assetList:[{kind,dims,size,bytes}], records}
     s.setDesired = (desc) => {
       let changed = s.desired === null || s.desired.key !== desc.key
       s.desired = desc
@@ -618,6 +625,21 @@ define(function (require) {
   sess7.setDesired({key: 'k3', source: 'x', uniformNames: [], textures: [{sampler: 'sampler2D'}], assetList: [{kind: 'feedback'}]})
   assert([], sess7.ws.sent)
   assert(true, /does not support pxprev/.test(sess7.lastProblem))
+
+  // ...and likewise the blur pyramid and the pxrec output, each behind its own feature
+  let sess8 = makeSession('not-a-real-display')
+  sess8.ws = socket(1)
+  sess8.info = {features: ['feedback']}
+  sess8.setDesired({key: 'k4', source: 'x', uniformNames: [], textures: [{sampler: 'sampler2D'}, {sampler: 'sampler2D'}],
+    assetList: [{kind: 'feedback'}, {kind: 'feedbackpyramid'}]})
+  assert([], sess8.ws.sent)
+  assert(true, /does not support pxprev\{blur:\}/.test(sess8.lastProblem))
+  let sess9 = makeSession('not-a-real-display')
+  sess9.ws = socket(1)
+  sess9.info = {features: ['feedback', 'feedbackblur']}
+  sess9.setDesired({key: 'k5', source: 'x', uniformNames: [], textures: [{sampler: 'sampler2D'}], assetList: [{kind: 'feedback'}], records: true})
+  assert([], sess9.ws.sent)
+  assert(true, /does not support pxrec/.test(sess9.lastProblem))
 
   console.log('Hub75 session tests complete')
   }

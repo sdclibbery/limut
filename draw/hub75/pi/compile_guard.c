@@ -107,10 +107,14 @@ static void helper_loop(int fd, const char *node, int w, int h) {
             p.frag = frag;
             /* nUniforms 0: the uniform list is checked structurally by glsl_check_program before
              * this is ever called, and a location lookup cannot be what crashes the compiler. */
+            /* A pxprev program draws into the half float history, and a pxrec one into two
+             * targets at once. v3d generates its fragment code per render target setup, so the
+             * probe draws through the same setup: a feedback unit is passed, though nothing is
+             * bound to it. */
             if (render_build_program(r, &p, &isLink) < 0) {
                 status = isLink ? REPLY_LINK : REPLY_COMPILE;
                 log = p.log ? p.log : "the driver rejected it and gave no log";
-            } else if (render_frame(r, &p, NULL, 0, -1, NULL, 0, rgba, err, sizeof err) < 0) {
+            } else if (render_frame(r, &p, NULL, 0, p.fbLoc >= 0 ? 0 : -1, -1, NULL, 0, rgba, err, sizeof err) < 0) {
                 /* A GL error at draw time is still "this program does not work here", and the
                  * caller wants that as a compile failure rather than as a broken picture. */
                 status = REPLY_COMPILE;

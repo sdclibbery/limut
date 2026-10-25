@@ -230,3 +230,23 @@ int glsl_check_textures(const char *frag, const int bound[], int nBound, char *e
     }
     return 0;
 }
+
+int glsl_records(const char *frag) {
+    const char *p = frag;
+    for (;;) {
+        const char *q = find_kw(frag, p, "layout");
+        if (!q) return 0;
+        p = q + 6;
+        q = skip_ws(p);
+        if (*q != '(') continue;
+        q = kw(skip_ws(q + 1), "location");
+        if (!q) continue;
+        q = skip_ws(q);
+        if (*q != '=') continue;
+        q = kw(skip_ws(q + 1), "1");
+        if (!q) continue;
+        q = skip_ws(q);
+        if (*q != ')') continue;
+        if (kw(skip_ws(q + 1), "out")) return 1;
+    }
+}

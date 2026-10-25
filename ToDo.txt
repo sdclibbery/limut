@@ -2,7 +2,10 @@
 =================================================================================================================================
 =================================================================================================================================
 fog/cloud function: does not work on the pi yet
-Setup colours on avw2 faders and buttons
+?px function that looks like the scene is reflecting off wet ground? With rain falling and splashing too???
+?arc perf: Still have on beat problem with short dur; Undo the chord thing, and look at better ways of triggering the synth instead
+ !very slow on any arc shader change on the pi
+Plasma, bolt presets?
 !fx=fuzz{[1,0]e} is broken, get nasty glitch at event start; @s also broken in a different way
 !Operator issues
  px=arc + rot2{1/4}>>arc should work
@@ -11,31 +14,15 @@ Setup colours on avw2 faders and buttons
  ?? Need a function to blend px chains?
 ?Do want visuals to respond to individual event hits; how about pk.hash.0 ? Or is follow player and []r@e better? 
  Way to trigger an event from a player?
+ ?Want a way to respond to the release phase in expressions, eg apply a pitch change starting when the note is released?
+  must work for live players too
 Do want to allow multiple players from one limut instance to use the hub75 and blend together
 pattern brackets to allow eg (094 crop 7 + 1) crop 30 + 98
-visual nodes...
- ?arc perf: Still have on beat problem with short dur; Undo the chord thing, and look at better ways of triggering the synth instead
-  !very slow on any arc shader change on the pi
- Plasma, bolt presets?
- vorctr function that gives offset to the centre point of the nearest voronoi cell
- ?Wobble and ripple with time and size params
- ?visual lib functions for old style visual params (monochrome, pixellate, rotate, mirror, vhs etc etc) - vhs needs split into uv and rgb parts...
- ?bitwise ops
- ?something undefined should render flat black not flat white
- ?sdsin/sdsquare/sdsaw/sdtri (may be approximate only)
- ?support for piecewise as shader code not textures?
- ?no time uniform in a generated px shader, so `time` in a chain costs a JS param eval per frame
-?Want a way to respond to the release phase in expressions, eg apply a pitch change starting when the note is released?
- must work for live players too
+?sdsin/sdsquare/sdsaw/sdtri (may be approximate only)
+?support for piecewise as shader code not textures?
 Multiple audiocontexts, set context='foo' on a player. Allows audio rendering to be split over multiple cores
 ?set bpm can have target time? eg set bpm={140,by;1000}; takes a linear step towards the target every beat
 grain should have offset param, would allow more interesting effects; granular delays etc
-!Keytar
-  A bit monotonous, needs more lfo variation and vel sensitivity
-  Also just check tone
-  Also, needs release
-  And more controllable things?
-  Also can it support glide?
 Clean up midi{'vel'} - it has aftertouch baked in; does it even make sense as a thing anyway?
 !Render capacity leak again????
  Report Chromium bug:

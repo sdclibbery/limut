@@ -76,10 +76,10 @@ static void send_closed(ws_conn *c, const char *reason) {
     sb_free(&b);
 }
 
-/* What this display supports beyond proto 1 (§4). A host must not send a feedback texture to a
- * display that does not list it. */
+/* What this display supports beyond proto 1 (§4). A host must not send a feedback texture, a
+ * feedback pyramid or a recording program to a display that does not list it. */
 static void features_json(strbuf *b) {
-    sb_add(b, ",\"features\":[\"feedback\"]");
+    sb_add(b, ",\"features\":[\"feedback\",\"feedbackblur\",\"record\"]");
 }
 
 static void gl_json(display *d, strbuf *b) {
@@ -123,7 +123,9 @@ void display_debug_json(display *d, strbuf *b) {
             const char *samp = d->layerTex[i].sampler == 3 ? "sampler3D" : "sampler2D";
             sb_addf(b, "%s{\"unit\":%d,\"sampler\":", i ? "," : "", d->layerTex[i].unit);
             sb_json_str(b, samp, strlen(samp));
-            if (d->layerTex[i].feedback) {
+            if (d->layerTex[i].feedback == FEEDBACK_PYRAMID) {
+                sb_add(b, ",\"feedback\":\"pyramid\"");
+            } else if (d->layerTex[i].feedback) {
                 sb_add(b, ",\"feedback\":true");
             } else {
                 sb_add(b, ",\"asset\":");
@@ -401,7 +403,7 @@ static void handle_layer(display *d, ws_conn *c, const char *s, js_tok *t, int n
     prog_entry *p;
     layer_tex tex[MAX_LAYER_TEX];
     int bound[MAX_LAYER_TEX];
-    int nTex = 0, nFeedback = 0, i;
+    int nTex = 0, nFeedback = 0, nPyramid = 0, i;
 
     if ((int)js_num(s, t, idTok, -1) != 0) {
         protocol_error(d, c, "proto %d supports layer 0 only, got %d",
@@ -453,11 +455,17 @@ static void handle_layer(display *d, ws_conn *c, const char *s, js_tok *t, int n
         bound[unit] = tex[unit].sampler;
         {
             int fbTok = js_get(s, t, n, e, "feedback");
-            tex[unit].feedback = fbTok >= 0 && t[fbTok].type == JS_TRUE;
+            tex[unit].feedback = fbTok < 0 ? FEEDBACK_NONE
+                               : t[fbTok].type == JS_TRUE ? FEEDBACK_HISTORY
+                               : js_streq(s, t, fbTok, "pyramid") ? FEEDBACK_PYRAMID : FEEDBACK_NONE;
         }
         if (tex[unit].feedback) {
-            if (++nFeedback > 1) {
+            if (tex[unit].feedback == FEEDBACK_HISTORY && ++nFeedback > 1) {
                 protocol_error(d, c, "a layer may bind at most one feedback texture");
+                return;
+            }
+            if (tex[unit].feedback == FEEDBACK_PYRAMID && ++nPyramid > 1) {
+                protocol_error(d, c, "a layer may bind at most one feedback pyramid");
                 return;
             }
             if (tex[unit].sampler != 2) {
@@ -470,6 +478,11 @@ static void handle_layer(display *d, ws_conn *c, const char *s, js_tok *t, int n
             protocol_error(d, c, "texture unit %d names no asset", unit);
             return;
         }
+    }
+
+    if (nPyramid && !nFeedback) {
+        protocol_error(d, c, "a feedback pyramid needs a feedback texture on the same layer");
+        return;
     }
 
     /* Every referenced asset MUST already be cached (§7.2). */
@@ -864,10 +877,15 @@ void display_draw(display *d) {
     } else {
         prog_entry *p = d->layerBound ? cache_prog(&d->cache, d->layerProg) : NULL;
         asset_entry *tex[MAX_LAYER_TEX];
-        int i, nTex = 0, feedbackUnit = -1;
+        int i, nTex = 0, feedbackUnit = -1, pyramidUnit = -1;
         if (p && p->ok && d->r) {
             for (i = 0; i < d->nLayerTex; i++) {
-                if (d->layerTex[i].feedback) { tex[i] = NULL; feedbackUnit = i; nTex++; continue; }
+                if (d->layerTex[i].feedback) {
+                    if (d->layerTex[i].feedback == FEEDBACK_PYRAMID) pyramidUnit = i; else feedbackUnit = i;
+                    tex[i] = NULL;
+                    nTex++;
+                    continue;
+                }
                 tex[i] = cache_asset(&d->cache, d->layerTex[i].asset);
                 if (!tex[i]) { p = NULL; break; }
                 nTex++;
@@ -881,7 +899,7 @@ void display_draw(display *d) {
          * at all to make v3d generate the fragment code, so the count rule belongs here. */
         if (p && p->ok && d->r && d->frame.uniformCount != p->nUniforms) { return; }
         if (p && p->ok && d->r) {
-            if (render_frame(d->r, p, tex, nTex, feedbackUnit, d->frame.values, d->frame.uniformCount,
+            if (render_frame(d->r, p, tex, nTex, feedbackUnit, pyramidUnit, d->frame.values, d->frame.uniformCount,
                              d->scratch, err, sizeof err) < 0) {
                 /* §8: a render error holds the last frame rather than blanking mid-show. */
                 if (d->conn) send_err(d, d->conn, "render", NULL, err);

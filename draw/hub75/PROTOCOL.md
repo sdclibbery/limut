@@ -146,14 +146,15 @@ an opaque CORS error and discovery appears broken for no visible reason.
   "name": "hub75-01",
   "display": { "w": 128, "h": 64 },
   "gl": { "version": "OpenGL ES 3.1 Mesa 26.2.0", "renderer": "V3D 4.2.14.0", "maxTextureSize": 4096 },
-  "features": ["feedback"],
+  "features": ["feedback", "feedbackblur", "record"],
   "busy": false
 }
 ```
 
 `features` lists what a display supports beyond the base protocol, and is absent on a display that
-predates it. `"feedback"` means it accepts feedback textures (§7.2); a host MUST NOT send one to a
-display that does not list it.
+predates it. `"feedback"` means it accepts feedback textures (§7.2), `"feedbackblur"` feedback
+pyramids, and `"record"` programs with a record output; a host MUST NOT send any of them to a
+display that does not list the matching feature.
 
 Enumerating every display on the network ("show me what's out there") needs real mDNS browsing and
 therefore a Node or Electron helper process. Not part of version 1; the host works from names.
@@ -172,7 +173,7 @@ Client opens `/session` and sends `hello`. The display replies `welcome` or `clo
 { "type": "welcome", "proto": 1, "session": "s3", "name": "hub75-01",
   "display": { "w": 128, "h": 64 },
   "gl": { "version": "...", "renderer": "...", "maxTextureSize": 4096 },
-  "features": ["feedback"] }
+  "features": ["feedback", "feedbackblur", "record"] }
 ```
 
 - A client MUST send `hello` first. Any other message before `hello` is a protocol error.
@@ -350,6 +351,14 @@ matches GL itself, where a program object and its sampler bindings are separate 
   §13's aspect softening; like `u_vsex` it is not on the wire. The history starts transparent
   black, advances once per drawn frame, survives a rebind (so a live edit keeps its trails), and
   is cleared by `unlayer`. Only sent to a display listing `"feedback"` in `features` (§4).
+- A **feedback pyramid** `{"unit":1, "sampler":"sampler2D", "feedback":"pyramid"}` binds a blur
+  pyramid of that same history, which is what `pxprev{blur:}` samples with `textureLod`. At most one
+  per layer, it MUST be a `sampler2D`, and the layer MUST also bind a feedback texture; any violation
+  is a protocol error. Only sent to a display listing `"feedbackblur"` (§4).
+- A program declaring an output at `layout(location = 1)` (`pxrec`'s `fragRecord`) is a **recording
+  program**: on a layer with a feedback texture, location 0 is what is shown and location 1 is what
+  the history receives. The display reads this from the source; it is not on the wire. Without a
+  feedback texture location 1 is discarded. Only sent to a display listing `"record"` (§4).
 - The number and sampler types of the bound textures MUST match the sampler declarations in the
   program's source. A mismatch is a protocol error: it means the two ends disagree about what the
   shader is.
@@ -584,7 +593,16 @@ on `u_vsex.y > 0.0`.
 `EXT_color_buffer_float` or `EXT_color_buffer_half_float` allows, else `RGBA8`, with `LINEAR` and
 `CLAMP_TO_EDGE` like any texture. The drawn target is copied to the RGBA8 framebuffer for readback.
 8 bits stalls a per-frame decay around 16/255 and leaves a permanent ghost, which is why half float
-is preferred; half float in turn stalls a very slow approach to 1.0 about 1% short.
+is preferred; half float in turn stalls a very slow approach to 1.0 about 1% short. A recording
+program draws its shown output into a third panel-size target of the same format, copied out the
+same way.
+
+**Feedback pyramid** — rebuilt once per drawn frame from the previous history, in the history's
+format, exactly as `draw/visualsynth/feedback.js` builds it: level 0 is `ceil(w/64)*32` x
+`ceil(h/64)*32` (each texel covering 2x2 history pixels, the excess clamped to the edge), each
+further level halves to a minimum of 1, down to 1x1. A level that is exactly half the one above is
+the mean of four bilinear taps at ±0.75 texels; any other is a tent filter as wide as the stride,
+normalised by its weight. Sampled `LINEAR_MIPMAP_LINEAR`, `CLAMP_TO_EDGE`; `u_vsex` stays `(0,0)`.
 
 **Framebuffer** — render at exactly the panel resolution. Clear to opaque black. No blending in
 version 1 (single layer over black). Colour output is RGBA8; the dimmer and gamma are applied by

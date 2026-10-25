@@ -1,7 +1,20 @@
 #include "render.h"
+#include "glsl.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+int render_pyramid_levels(int w, int h, int lw[], int lh[], int max) {
+    int w0 = (w + 63) / 64 * 32, h0 = (h + 63) / 64 * 32;
+    int big = w0 > h0 ? w0 : h0, count = 0, l;
+    while (big >> count) count++; /* floor(log2(big)) + 1 */
+    if (count > max) return -1;
+    for (l = 0; l < count; l++) {
+        lw[l] = (w0 >> l) > 0 ? w0 >> l : 1;
+        lh[l] = (h0 >> l) > 0 ? h0 >> l : 1;
+    }
+    return count;
+}
 
 #ifndef HUB75_GLES
 
@@ -25,9 +38,10 @@ int render_upload_asset(renderer *r, asset_entry *a, char *err, size_t errCap) {
 }
 void render_release_asset(renderer *r, asset_entry *a) { (void)r; (void)a; }
 int render_frame(renderer *r, prog_entry *p, asset_entry *const *tex, int nTex, int feedbackUnit,
-                 const float *values, int nUniforms, uint8_t *rgba, char *err, size_t errCap) {
-    (void)r; (void)p; (void)tex; (void)nTex; (void)feedbackUnit; (void)values; (void)nUniforms;
-    (void)rgba; (void)err; (void)errCap;
+                 int pyramidUnit, const float *values, int nUniforms, uint8_t *rgba,
+                 char *err, size_t errCap) {
+    (void)r; (void)p; (void)tex; (void)nTex; (void)feedbackUnit; (void)pyramidUnit; (void)values;
+    (void)nUniforms; (void)rgba; (void)err; (void)errCap;
     return 0;
 }
 void render_reset_feedback(renderer *r) { (void)r; }
@@ -76,6 +90,16 @@ struct renderer {
     int                fbCur, fbReady, fbHalf;
     GLuint             copyProg;
     GLint              copyImg, copyBounds;
+
+    /* pxrec: the shown frame goes to dispTex, the record to the history, both in one draw. */
+    GLuint             dispTex, recFbo[2];
+    int                recReady;
+
+    /* pxprev{blur:}: a pyramid of the previous history, rebuilt each frame (draw/visualsynth/feedback.js). */
+    GLuint             pyrTex, pyrFbo[RENDER_MAX_PYRAMID];
+    int                pyrW[RENDER_MAX_PYRAMID], pyrH[RENDER_MAX_PYRAMID], pyrLevels, pyrReady;
+    GLuint             downProg;
+    GLint              downSrc, downDst, downExact;
 };
 
 static GLuint compile_shader(GLenum type, const char *src, char *log, size_t logCap) {
@@ -138,22 +162,158 @@ static const char *COPY_SHADER =
     "uniform vec4 u_bounds;\n"
     "void main() { fragColor = texture(u_img, (fragCoord - u_bounds.xy) / (u_bounds.zw - u_bounds.xy)); }\n";
 
-/* Not fatal if it fails: only a feedback layer needs it, and render_frame reports that. */
-static void build_copy_program(renderer *r) {
+/* downSource from draw/visualsynth/feedback.js, byte for byte apart from the C quoting. */
+static const char *DOWN_SHADER =
+    "#version 300 es\n"
+    "precision highp float;\n"
+    "out vec4 fragColor;\n"
+    "uniform sampler2D u_src;\n"
+    "uniform vec2 u_dst;\n"
+    "uniform bool u_exact;\n"
+    "void main() {\n"
+    "  vec2 size = vec2(textureSize(u_src, 0));\n"
+    "  if (u_exact) {\n"
+    "    vec2 p = gl_FragCoord.xy * 2.0;\n"
+    "    fragColor = 0.25 * (texture(u_src, (p + vec2(-0.75, -0.75)) / size) + texture(u_src, (p + vec2(0.75, -0.75)) / size)\n"
+    "      + texture(u_src, (p + vec2(-0.75, 0.75)) / size) + texture(u_src, (p + vec2(0.75, 0.75)) / size));\n"
+    "    return;\n"
+    "  }\n"
+    "  vec2 s = size / u_dst;\n"
+    "  vec2 c = gl_FragCoord.xy * s;\n"
+    "  ivec2 lo = ivec2(ceil(c - s - 0.5));\n"
+    "  ivec2 hi = ivec2(floor(c + s - 0.5));\n"
+    "  ivec2 top = ivec2(size) - 1;\n"
+    "  vec4 sum = vec4(0.0);\n"
+    "  float total = 0.0;\n"
+    "  for (int y = lo.y; y <= hi.y; y++) {\n"
+    "    for (int x = lo.x; x <= hi.x; x++) {\n"
+    "      vec2 w = max(1.0 - abs(vec2(x, y) + 0.5 - c) / s, 0.0);\n"
+    "      float k = w.x * w.y;\n"
+    "      sum += k * texelFetch(u_src, clamp(ivec2(x, y), ivec2(0), top), 0);\n"
+    "      total += k;\n"
+    "    }\n"
+    "  }\n"
+    "  fragColor = sum / total;\n"
+    "}\n";
+
+/* Not fatal if it fails: only a feedback layer needs these, and render_frame reports that. */
+static GLuint build_aux_program(renderer *r, const char *src) {
     GLint linked = 0;
-    GLuint fs = compile_shader(GL_FRAGMENT_SHADER, COPY_SHADER, NULL, 0);
-    if (!fs) return;
-    r->copyProg = glCreateProgram();
-    glAttachShader(r->copyProg, r->vtx);
-    glAttachShader(r->copyProg, fs);
-    glBindAttribLocation(r->copyProg, ATTR_POS, "posIn");
-    glBindAttribLocation(r->copyProg, ATTR_FRAGCOORD, "fragCoordIn");
-    glLinkProgram(r->copyProg);
+    GLuint prog, fs = compile_shader(GL_FRAGMENT_SHADER, src, NULL, 0);
+    if (!fs) return 0;
+    prog = glCreateProgram();
+    glAttachShader(prog, r->vtx);
+    glAttachShader(prog, fs);
+    glBindAttribLocation(prog, ATTR_POS, "posIn");
+    glBindAttribLocation(prog, ATTR_FRAGCOORD, "fragCoordIn");
+    glLinkProgram(prog);
     glDeleteShader(fs);
-    glGetProgramiv(r->copyProg, GL_LINK_STATUS, &linked);
-    if (!linked) { glDeleteProgram(r->copyProg); r->copyProg = 0; return; }
-    r->copyImg = glGetUniformLocation(r->copyProg, "u_img");
-    r->copyBounds = glGetUniformLocation(r->copyProg, "u_bounds");
+    glGetProgramiv(prog, GL_LINK_STATUS, &linked);
+    if (!linked) { glDeleteProgram(prog); return 0; }
+    return prog;
+}
+
+static void build_copy_program(renderer *r) {
+    r->copyProg = build_aux_program(r, COPY_SHADER);
+    if (r->copyProg) {
+        r->copyImg = glGetUniformLocation(r->copyProg, "u_img");
+        r->copyBounds = glGetUniformLocation(r->copyProg, "u_bounds");
+    }
+    r->downProg = build_aux_program(r, DOWN_SHADER);
+    if (r->downProg) {
+        r->downSrc = glGetUniformLocation(r->downProg, "u_src");
+        r->downDst = glGetUniformLocation(r->downProg, "u_dst");
+        r->downExact = glGetUniformLocation(r->downProg, "u_exact");
+    }
+}
+
+static void set_filter(GLint minFilter, int base, int max) {
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, base);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, max);
+}
+
+/* Called after ensure_feedback, so fbHalf has settled on what is actually renderable. */
+static int ensure_records(renderer *r) {
+    int k, complete = 1;
+    GLenum bufs[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+    if (r->recReady) return 0;
+    glGenTextures(1, &r->dispTex);
+    glBindTexture(GL_TEXTURE_2D, r->dispTex);
+    if (r->fbHalf)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, r->w, r->h, 0, GL_RGBA, GL_HALF_FLOAT, NULL);
+    else
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, r->w, r->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    set_filter(GL_LINEAR, 0, 0);
+    glGenFramebuffers(2, r->recFbo);
+    for (k = 0; k < 2; k++) {
+        glBindFramebuffer(GL_FRAMEBUFFER, r->recFbo[k]);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, r->dispTex, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, r->fbTex[k], 0);
+        glDrawBuffers(2, bufs);
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) complete = 0;
+    }
+    if (!complete) {
+        glDeleteFramebuffers(2, r->recFbo);
+        glDeleteTextures(1, &r->dispTex);
+        r->recFbo[0] = r->recFbo[1] = r->dispTex = 0;
+        return -1;
+    }
+    r->recReady = 1;
+    return 0;
+}
+
+static int ensure_pyramid(renderer *r) {
+    int l, complete = 1;
+    if (r->pyrReady) return 0;
+    r->pyrLevels = render_pyramid_levels(r->w, r->h, r->pyrW, r->pyrH, RENDER_MAX_PYRAMID);
+    if (r->pyrLevels < 0) return -1;
+    glGenTextures(1, &r->pyrTex);
+    glBindTexture(GL_TEXTURE_2D, r->pyrTex);
+    glTexStorage2D(GL_TEXTURE_2D, r->pyrLevels, r->fbHalf ? GL_RGBA16F : GL_RGBA8, r->pyrW[0], r->pyrH[0]);
+    glGenFramebuffers(r->pyrLevels, r->pyrFbo);
+    for (l = 0; l < r->pyrLevels; l++) {
+        glBindFramebuffer(GL_FRAMEBUFFER, r->pyrFbo[l]);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, r->pyrTex, l);
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) complete = 0;
+    }
+    if (!complete) {
+        glDeleteFramebuffers(r->pyrLevels, r->pyrFbo);
+        glDeleteTextures(1, &r->pyrTex);
+        r->pyrTex = 0;
+        return -1;
+    }
+    r->pyrReady = 1;
+    return 0;
+}
+
+/* Each level is a tent filtered reduction of the one above, the tent as wide as the stride; see
+ * feedback.js for why a fixed footprint pulses. Sampling one level while drawing into the next is
+ * only legal with the sampled range clamped away from the attachment. */
+static void build_pyramid(renderer *r, GLuint src) {
+    int l, last = r->pyrLevels - 1;
+    glUseProgram(r->downProg);
+    glBindVertexArray(r->vao);
+    glActiveTexture(GL_TEXTURE0);
+    glUniform1i(r->downSrc, 0);
+    glBindTexture(GL_TEXTURE_2D, src);
+    for (l = 0; l < r->pyrLevels; l++) {
+        int exact = l == 0 || (r->pyrW[l-1] == 2 * r->pyrW[l] && r->pyrH[l-1] == 2 * r->pyrH[l]);
+        if (l > 0) {
+            glBindTexture(GL_TEXTURE_2D, r->pyrTex);
+            set_filter(GL_LINEAR, l - 1, l - 1);
+        }
+        glUniform1i(r->downExact, exact);
+        glUniform2f(r->downDst, (float)r->pyrW[l], (float)r->pyrH[l]);
+        glBindFramebuffer(GL_FRAMEBUFFER, r->pyrFbo[l]);
+        glViewport(0, 0, r->pyrW[l], r->pyrH[l]);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+    glBindTexture(GL_TEXTURE_2D, r->pyrTex);
+    set_filter(GL_LINEAR_MIPMAP_LINEAR, 0, last);
 }
 
 static void clear_feedback(renderer *r) {
@@ -367,6 +527,7 @@ int render_build_program(renderer *r, prog_entry *p, int *isLink) {
         p->exLoc[i] = glGetUniformLocation(prog, n2);
     }
     p->fbLoc = glGetUniformLocation(prog, "u_vsfb");
+    p->records = glsl_records(p->frag);
     p->ok = 1;
     return 0;
 }
@@ -436,18 +597,30 @@ void render_release_asset(renderer *r, asset_entry *a) {
 }
 
 int render_frame(renderer *r, prog_entry *p, asset_entry *const *tex, int nTex, int feedbackUnit,
-                 const float *values, int nUniforms, uint8_t *rgba, char *err, size_t errCap) {
+                 int pyramidUnit, const float *values, int nUniforms, uint8_t *rgba,
+                 char *err, size_t errCap) {
     int i, y;
+    int records = feedbackUnit >= 0 && p && p->ok && p->records;
     size_t stride;
 
     if (!r) return 0;
+    if (feedbackUnit < 0) pyramidUnit = -1; /* a pyramid of no history; the host never sends one */
     if (feedbackUnit >= 0) {
         if (!r->copyProg || ensure_feedback(r) < 0) {
             snprintf(err, errCap, "pxprev is unavailable: the history target could not be created");
             return -1;
         }
+        if (records && ensure_records(r) < 0) {
+            snprintf(err, errCap, "pxrec is unavailable: its render targets could not be created");
+            return -1;
+        }
+        if (pyramidUnit >= 0 && (!r->downProg || ensure_pyramid(r) < 0)) {
+            snprintf(err, errCap, "pxprev{blur:} is unavailable: the blur pyramid could not be created");
+            return -1;
+        }
         r->fbCur = 1 - r->fbCur;
-        glBindFramebuffer(GL_FRAMEBUFFER, r->fbFbo[r->fbCur]);
+        if (pyramidUnit >= 0) build_pyramid(r, r->fbTex[1 - r->fbCur]);
+        glBindFramebuffer(GL_FRAMEBUFFER, records ? r->recFbo[r->fbCur] : r->fbFbo[r->fbCur]);
     } else {
         glBindFramebuffer(GL_FRAMEBUFFER, r->fbo);
     }
@@ -463,8 +636,9 @@ int render_frame(renderer *r, prog_entry *p, asset_entry *const *tex, int nTex, 
         for (i = 0; i < nTex && i < 16; i++) {
             asset_entry *a = tex[i];
             glActiveTexture((GLenum)(GL_TEXTURE0 + i));
-            if (i == feedbackUnit) {
-                glBindTexture(GL_TEXTURE_2D, r->fbTex[1 - r->fbCur]); /* the frame before this one */
+            if (i == feedbackUnit || i == pyramidUnit) {
+                /* the frame before this one, or its pyramid */
+                glBindTexture(GL_TEXTURE_2D, i == feedbackUnit ? r->fbTex[1 - r->fbCur] : r->pyrTex);
                 glUniform1i(p->texLoc[i], i);
                 glUniform2f(p->exLoc[i], 0.0f, 0.0f);
                 continue;
@@ -483,7 +657,7 @@ int render_frame(renderer *r, prog_entry *p, asset_entry *const *tex, int nTex, 
         glUseProgram(r->copyProg);
         glBindVertexArray(r->vao);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, r->fbTex[r->fbCur]);
+        glBindTexture(GL_TEXTURE_2D, records ? r->dispTex : r->fbTex[r->fbCur]);
         glUniform1i(r->copyImg, 0);
         glUniform4fv(r->copyBounds, 1, r->bounds);
         glDrawArrays(GL_TRIANGLES, 0, 6);

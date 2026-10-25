@@ -42,6 +42,7 @@ typedef struct {
     int     *uniformLoc;   /* parallel to uniforms */
     int      texLoc[16], exLoc[16];
     int      fbLoc;        /* u_vsfb, the quad bounds pxprev maps through; -1 when unused */
+    int      records;      /* declares pxrec's location 1 output (§7.2) */
     int      nTextures;
 } prog_entry;
 

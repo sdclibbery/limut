@@ -42,10 +42,18 @@ int  render_upload_asset(renderer *r, asset_entry *a, char *err, size_t errCap);
 void render_release_asset(renderer *r, asset_entry *a);
 
 /* Draws the bound layer and reads it back into `rgba` (w*h*4), top row first. feedbackUnit is
- * the texture unit sampling the layer's own previous frame (§7.2), whose tex[] entry is NULL, or
- * -1 for none. */
+ * the texture unit sampling the layer's own previous frame (§7.2) and pyramidUnit the one sampling
+ * a blur pyramid of it; their tex[] entries are NULL, and either is -1 for none. A program with a
+ * record output (p->records) draws it into the history instead of the shown frame. */
 int  render_frame(renderer *r, prog_entry *p, asset_entry *const *tex, int nTex, int feedbackUnit,
-                  const float *values, int nUniforms, uint8_t *rgba, char *err, size_t errCap);
+                  int pyramidUnit, const float *values, int nUniforms, uint8_t *rgba,
+                  char *err, size_t errCap);
+
+/* The blur pyramid's level sizes for a w x h panel, as draw/visualsynth/feedback.js builds them:
+ * level 0 padded to multiples of 32 at half size, so the first six levels halve exactly. Returns
+ * the level count, or -1 if it would exceed max. Pure, so it tests without a GPU. */
+#define RENDER_MAX_PYRAMID 16
+int  render_pyramid_levels(int w, int h, int lw[], int lh[], int max);
 
 /* Clears the feedback history to transparent black, so a later layer starts clean. */
 void render_reset_feedback(renderer *r);

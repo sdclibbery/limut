@@ -620,6 +620,44 @@ let scenarioFeedback = async () => {
   d.stop()
 }
 
+let scenarioFog = async () => {
+  console.log('\nfog: pxrec and pxprev{blur:} bind the history and its pyramid, naming no asset')
+  let code = `include 'lib/visual.limut'\nv1 visualsynth, px=uv>>mul{1/2}>>fog, display='localhost:${PORT}'`
+  let url = `${LIMUT}/draw/hub75/mock/harness.html?code=${encodeURIComponent(code)}`
+
+  let d = display.start({ port: PORT, name: 'hub75-check', w: 128, h: 64, failCompile: null, drop: 0, verbose: false })
+  let seen = instrument(d.display)
+  let log = await run(url, 20).done
+  let x = d.display
+  let prog = Array.from(x.progs.values())[0]
+  check('one program was sent and it compiled', x.progs.size === 1 && prog.ok,
+    JSON.stringify(Array.from(x.progs.values()).map(p => ({ ok: p.ok, log: p.log }))))
+  if (prog) { check('the source declares the record output', prog.frag.indexOf('layout(location = 1) out vec4 fragRecord;') !== -1) }
+  let units = x.layer ? x.layer.textures.filter(t => t.feedback !== undefined) : []
+  check('the layer binds one history and one pyramid',
+    units.length === 2 && units.filter(t => t.feedback === true).length === 1 && units.filter(t => t.feedback === 'pyramid').length === 1,
+    JSON.stringify(x.layer))
+  check('frames were consumed', x.stats.rendered > 30, `rendered=${x.stats.rendered}`)
+  check('the layer was bound once', seen.counts.layer === 1, `layer messages=${seen.counts.layer}`)
+  let lines = consoleLines(log)
+  check('nothing errored in the app', !lines.some(l => /🔴|🟠/.test(l)),
+    lines.filter(l => /🔴|🟠/.test(l)).join('\n          '))
+  d.stop()
+  await sleep(500)
+
+  console.log('\nfog: refused, not sent, by a display without feedbackblur')
+  d = display.start({ port: PORT, name: 'hub75-check', w: 128, h: 64, failCompile: null, drop: 0, noFeedbackBlur: true, verbose: false })
+  seen = instrument(d.display)
+  log = await run(url, 20).done
+  x = d.display
+  check('no program was sent', seen.counts.prog === undefined, `prog messages=${seen.counts.prog}`)
+  check('the session was never closed by a protocol error', x.sessions === 1, `sessions=${x.sessions}`)
+  lines = consoleLines(log)
+  check('the host said why', lines.some(l => /hub75 .*does not support pxprev\{blur:\}/.test(l)),
+    lines.filter(l => /hub75/.test(l)).join('\n          ') || '(no hub75 console output)')
+  d.stop()
+}
+
 // ---- main ------------------------------------------------------------------------------------
 
 let main = async () => {
@@ -641,6 +679,7 @@ let main = async () => {
     idreuse: scenarioIdReuse,
     webcam: scenarioWebcam,
     feedback: scenarioFeedback,
+    fog: scenarioFog,
   }
   for (let name in all) {
     if (only && only !== name) { continue }

@@ -1621,6 +1621,22 @@ fails against the real daemon at HEAD before this change too** (`rendered` uncha
 guard in `display_draw` refuses a frame of 0 uniforms while a layer is bound, which is also the
 frame a dim-only change arrives in. Not yet resolved.
 
+### pxprev{blur:} and pxrec on the wall, 2026-10-25
+
+So `fog{}` runs on the wall. Two new features, `feedbackblur` and `record` (PROTOCOL.md §4, §7.2,
+§13). The pyramid is `feedback.js`'s hand-built one restated in `render.c` (same level sizes, same
+down shader), and a recording program draws into a display target plus the history in one MRT pass.
+The display decides "records" from the source's `layout(location = 1)`, not from a wire field.
+The compile guard now draws a pxprev/pxrec program through the same target setup as the real draw,
+since v3d generates fragment code per render target configuration.
+
+Verified on a second daemon instance (`--port 7576 --output raw --gamma 1`, so `/frame.raw` is
+linear) driven by the real app: `pxrec` + `pxprev{blur:0}` reproduces the recorded input within
+1/255; a blurred dot conserves energy within 2% up to blur 0.06 and within 1.4% across positions,
+centroid unmoved. `renderMs` at 64x192: arc 1.9, arc>>pxprev{blur:} 3.2, **arc>>fog 4.5**, 60 fps.
+Running a second instance alongside the service is a cheap way to get linear numbers without
+touching the wall.
+
 ### Streamed visuals tore and stuttered: the sync packet overtook its rows, 2026-10-10
 
 **Symptom:** a streamed visual was jerky on the wall while every stage reported smooth: limut sent

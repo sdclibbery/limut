@@ -30,4 +30,8 @@ int glsl_check_program(const char *frag, char *const *uniforms, int nUniforms,
 /* 0 if the layer's bound sampler kinds match the source's declarations. `bound[u]` is 2 or 3. */
 int glsl_check_textures(const char *frag, const int bound[], int nBound, char *err, size_t errCap);
 
+/* 1 if the source declares an output at `layout(location = 1)`: pxrec's record output, which the
+ * feedback history takes in place of the shown frame (§7.2). */
+int glsl_records(const char *frag);
+
 #endif

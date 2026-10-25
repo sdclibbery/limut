@@ -174,6 +174,8 @@ let run = async () => {
       '*', res.headers.get('access-control-allow-origin'))
     eq('/info reports not busy before any session', false, info.busy)
     check('/info lists the feedback feature', (info.features || []).includes('feedback'), JSON.stringify(info.features))
+    check('/info lists the feedbackblur and record features',
+      ['feedbackblur', 'record'].every(f => (info.features || []).includes(f)), JSON.stringify(info.features))
     eq('unknown path 404s', 404, (await fetch(url('/nope'))).status)
   }
 
@@ -334,6 +336,32 @@ let run = async () => {
     let mf = await c.next()
     check('two feedback textures on one layer is a protocol error',
       mf.kind === 'protocol' && /one feedback/.test(mf.log), JSON.stringify(mf))
+    await c.next() // the close
+    c = await hello(EP, { takeover: true })
+
+    // pxprev{blur:}: a blur pyramid of the same history, alongside the plain feedback entry
+    c.send(twoTex)
+    await c.next()
+    c.send({ type: 'layer', id: 0, prog: twoTex.id, textures: [
+      { unit: 0, sampler: 'sampler2D', feedback: true }, { unit: 1, sampler: 'sampler2D', feedback: 'pyramid' }] })
+    c.send({ type: 'have', ids: [] })
+    eq('a layer binding feedback and its pyramid is accepted', 'have', (await c.next()).type)
+    eq('and the layer records the pyramid', 'pyramid', main.display.layer.textures[1].feedback)
+    c.send({ type: 'layer', id: 0, prog: twoTex.id, textures: [
+      { unit: 0, sampler: 'sampler2D', asset: lut2d }, { unit: 1, sampler: 'sampler2D', feedback: 'pyramid' }] })
+    let mp = await c.next()
+    check('a pyramid with no feedback texture is a protocol error',
+      mp.kind === 'protocol' && /pyramid needs a feedback/.test(mp.log), JSON.stringify(mp))
+    await c.next() // the close
+    c = await hello(EP, { takeover: true })
+    let threeTex = progMsg([], ['sampler2D', 'sampler2D', 'sampler2D'])
+    c.send(threeTex)
+    await c.next()
+    c.send({ type: 'layer', id: 0, prog: threeTex.id, textures: [{ unit: 0, sampler: 'sampler2D', feedback: true },
+      { unit: 1, sampler: 'sampler2D', feedback: 'pyramid' }, { unit: 2, sampler: 'sampler2D', feedback: 'pyramid' }] })
+    let mp2 = await c.next()
+    check('two pyramids on one layer is a protocol error',
+      mp2.kind === 'protocol' && /one feedback pyramid/.test(mp2.log), JSON.stringify(mp2))
     await c.next() // the close
     c = await hello(EP, { takeover: true })
 

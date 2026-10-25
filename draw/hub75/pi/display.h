@@ -18,10 +18,12 @@
 #define HUB75_PROTO   1
 #define MAX_LAYER_TEX 16
 
+enum { FEEDBACK_NONE = 0, FEEDBACK_HISTORY = 1, FEEDBACK_PYRAMID = 2 };
+
 typedef struct {
     int  unit;
     int  sampler;      /* 2 or 3 */
-    int  feedback;     /* the layer's own previous frame (§7.2): names no asset */
+    int  feedback;     /* FEEDBACK_*: the layer's own previous frame or its blur pyramid (§7.2), naming no asset */
     char asset[17];
 } layer_tex;
 

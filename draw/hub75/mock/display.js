@@ -24,7 +24,7 @@ let PROTO = 1
 
 let parseArgs = (argv) => {
   let a = { port: 7575, name: 'hub75-01', w: 128, h: 64, failCompile: null, slowCompile: 0,
-            drop: 0, noFeedback: false, verbose: false }
+            drop: 0, noFeedback: false, noFeedbackBlur: false, noRecord: false, verbose: false }
   for (let i = 0; i < argv.length; i++) {
     let k = argv[i]
     let v = argv[i + 1]
@@ -39,6 +39,8 @@ let parseArgs = (argv) => {
     else if (k === '--slow-compile') { a.slowCompile = parseInt(v, 10); i++ }
     else if (k === '--drop') { a.drop = parseFloat(v); i++ }
     else if (k === '--no-feedback') { a.noFeedback = true }
+    else if (k === '--no-feedback-blur') { a.noFeedbackBlur = true }
+    else if (k === '--no-record') { a.noRecord = true }
     else if (k === '--verbose' || k === '-v') { a.verbose = true }
     else if (k === '--help' || k === '-h') { a.help = true }
     else { throw new Error('unknown argument ' + k) }
@@ -55,6 +57,8 @@ let usage = `limut HUB75 mock display
   --slow-compile MS   defer every progok by MS, so §7.1's compile window is wide enough to test
   --drop PCT          randomly discard PCT% of incoming frame packets
   --no-feedback       leave 'feedback' out of features, as a display older than it does
+  --no-feedback-blur  leave 'feedbackblur' out of features
+  --no-record         leave 'record' out of features
   --verbose, -v       log every message instead of a one line status
 `
 
@@ -153,7 +157,8 @@ let makeDisplay = (opts) => {
     proto: PROTO,
     name: opts.name,
     display: { w: opts.w, h: opts.h },
-    features: opts.noFeedback ? [] : ['feedback'],
+    features: [['feedback', opts.noFeedback], ['feedbackblur', opts.noFeedback || opts.noFeedbackBlur],
+               ['record', opts.noFeedback || opts.noRecord]].filter(f => !f[1]).map(f => f[0]),
     gl: {
       version: 'mock (node ' + process.versions.node + ' on ' + os.platform() + ')',
       renderer: haveGlslang ? 'mock display, glslangValidator available' : 'mock display, structural checks only',
@@ -247,16 +252,26 @@ let makeDisplay = (opts) => {
         if (!prog) { return protocolError(conn, `layer names program ${msg.prog}, which was never sent`) }
         if (!prog.ok) { return sendErr(conn, 'compile', msg.prog, prog.log) }
         let textures = msg.textures || []
-        // §7.2: a feedback entry is the layer's own previous frame, so it names no asset
+        // §7.2: a feedback entry is the layer's own previous frame, or a blur pyramid of it, so it
+        // names no asset
         let feedback = textures.filter(t => t.feedback === true)
+        let pyramid = textures.filter(t => t.feedback === 'pyramid')
         if (feedback.length > 0 && opts.noFeedback) {
           return protocolError(conn, 'texture unit ' + feedback[0].unit + ' names no asset')
         }
+        if (pyramid.length > 0 && (opts.noFeedback || opts.noFeedbackBlur)) {
+          return protocolError(conn, 'texture unit ' + pyramid[0].unit + ' names no asset')
+        }
         if (feedback.length > 1) { return protocolError(conn, 'a layer may bind at most one feedback texture') }
-        if (feedback.length === 1 && (feedback[0].sampler || 'sampler2D') !== 'sampler2D') {
+        if (pyramid.length > 1) { return protocolError(conn, 'a layer may bind at most one feedback pyramid') }
+        if (pyramid.length === 1 && feedback.length === 0) {
+          return protocolError(conn, 'a feedback pyramid needs a feedback texture on the same layer')
+        }
+        if (feedback.concat(pyramid).some(t => (t.sampler || 'sampler2D') !== 'sampler2D')) {
           return protocolError(conn, 'a feedback texture must be a sampler2D')
         }
-        let missing = textures.filter(t => t.feedback !== true && !d.assets.has(t.asset))
+        let isFeedback = (t) => t.feedback === true || t.feedback === 'pyramid'
+        let missing = textures.filter(t => !isFeedback(t) && !d.assets.has(t.asset))
         if (missing.length) {
           return sendErr(conn, 'asset', msg.prog, 'layer needs assets not in the cache: ' + missing.map(t => t.asset).join(', '))
         }
