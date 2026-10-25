@@ -1,5 +1,5 @@
 // Smooth noise, 2d/3d transforms, kaleidoscope patterns, perpetual zoom, fractals, VHS and JPEG
-// effects, synthwave and lightning for visualsynth px chains.
+// effects, synthwave, lightning, fog, wet ground and rain for visualsynth px chains.
 //
 // Value noise interpolates hashed lattice corner values; perlin (gradient) noise interpolates
 // hashed corner gradients, so it is less blocky and signed.
@@ -502,3 +502,72 @@ set foglight = {blur} -> (uv>>pxprev{blur:blur}) + 2*(uv>>pxprev{blur:blur*2}) +
 set fogmix = {in, d, light, bright} -> in*(1 - d/4) + light*d*bright
 set fog = {in, amount:1/2, scale:1, cover:3/4, blur:1/32, bright:1, t:time/6} ->
   fogmix{in>>pxrec, fogdensity{set{t}, scale, cover}*amount, foglight{blur}, bright}
+
+//// Wet ground and rain
+// The ground is everything below the horizon y=h, receding to it. wet replaces it; rain draws over
+// whatever is there, so px=arc>>wet{amount:0}>>rain is rain on a dark ground. wet and rain share h,
+// drops, rate and t, so the rain splashes where the puddles ripple. Both pxrec their input, and only
+// the first pxrec in a chain records, so in px=arc>>wet>>rain>>fog every stage is lit by arc alone.
+//   px=arc>>wet
+//   px=arc>>wet>>rain>>fog
+set wetbelow = {h} -> smoothstep{h - uv.y, 0, fwidth{uv.y}}
+set wetz = {h} -> 1/max{h - uv.y, 1/1000}
+set wetground = {dz} -> uv >> set{x: id.x*dz, y: dz, z: 0, w: 0}
+
+// One splash per ground cell, every 1/rate beats: xy pushes the ripple outward, z is the ring and w
+// the flash as the drop lands. t is wrapped by a whole number, so it never jumps.
+set rainringk = {x, a, fw} -> exp{0 - x*x}*(1 - a)*(1 - a)*clamp{2 - fw*16}
+set rainring = {d, a, r} -> rainringk{(d - a*r)/(1/64 + fwidth{d}), a, fwidth{d}}
+set rainsplashv = {v, d, a, r} -> v/max{d, 1/1000}*rainring{d, a, r} + {z:1,w:0}*rainring{d, a, r}
+  + {w:1}*(1 - smoothstep{d, 0, 1/16})*(1 - smoothstep{a, 0, 1/8})*clamp{2 - fwidth{d}*16}
+set rainsplashh = {v, hs, t} -> rainsplashv{v, length{v}.x, fract{t + hs.z}.x, 1/8 + fract{hs.z*7}.x/6}
+set rainsplash = {g, t} -> rainsplashh{swflat{fract{g} - 1/4 - pxhash{floor{g}, 5}/2}, pxhash{floor{g}, 5}, t}
+
+set wetmaskn = {n, puddles, far} -> mix{smoothstep{n, 0.94 - puddles*0.9, 0.96 - puddles*0.9}, puddles, far}
+set wetmask = {g, scale, puddles} -> wetmaskn{fbm2{g, scale*2}.x, puddles, clamp{fwidth{g.y}*scale}}
+set wettap = {p, dy, rough} -> p >> set{y: id.y - dy} >> pxprev{blur: rough}
+set wetstreak = {p, rough, s} -> (wettap{p, 0, rough} + wettap{p, s/24, rough}*3/4
+  + wettap{p, s/12, rough}/2 + wettap{p, s/8, rough}/4)*2/5
+set wetrp = {sp, dz, ripple, h} -> (uv >> set{y: 2*h - id.y}) + swflat{sp}*ripple/(dz*16)
+// Between the puddles: the reflection scattered by the surface grain (more up and down than across,
+// as tarmac smears lights toward you), a speckled albedo, and a wide diffuse glow of the light.
+set wettilt = {g, seed} -> perlin2s{g, 6, seed}.x + perlin2s{g, 40, seed + 1}.x/3
+set wetjit = {rp, g, dz, grain} -> rp >> set{x: id.x + wettilt{g, 1}*grain/(dz*24),
+  y: id.y + wettilt{g, 3}*grain/(dz*8)}
+set wetspeck = {g, grain} -> 1 - grain/4 + noise2{g, 64, 5}.x*grain/2
+set wetglow = {rp} -> (rp >> pxprev{blur: 1/16}) + 2*(rp >> pxprev{blur: 1/8}) + 4*(rp >> pxprev{blur: 1/4})
+set wetdamp = {rp, g, dz, rough, streak, diffuse, grain} ->
+  wetstreak{wetjit{rp, g, dz, grain}, rough, streak}*wetspeck{g, grain}*2/3 + wetglow{rp}*diffuse/12
+set wetrefl = {rp, m, damp} -> mix{damp, rp >> pxprev, m}
+set wetfres = {h} -> 1/4 + exp{(uv.y - h)*4}*3/4
+set weth = {in, below, refl, amount, h} -> mix{in, refl*wetfres{h}*amount, below}
+set wetgrr = {in, g, dz, m, rp, amount, rough, streak, diffuse, grain, h} -> weth{in, wetbelow{h},
+  wetrefl{rp, m, wetdamp{rp, g, dz, rough, streak, diffuse, grain}}, amount, h}
+set wetgr = {in, g, dz, m, amount, rough, streak, ripple, diffuse, grain, drops, h, t} ->
+  wetgrr{in, g, dz, m, wetrp{rainsplash{g*drops, t}*m, dz*drops, ripple, h}, amount, rough, streak, diffuse, grain, h}
+set wet = {in, amount:1, puddles:0.4, scale:1, rough:1/32, streak:1, ripple:1, diffuse:1, grain:2, drops:4, rate:1, h:-0.45, t:time} ->
+  wetgr{in>>pxrec, wetground{wetz{h}}, wetz{h}, wetmask{wetground{wetz{h}}, scale, puddles},
+    amount, rough, streak, ripple, diffuse, grain, drops, h, set{fract{t*rate/256}*256}}
+
+// Three layers of streaks, nearer ones bigger, faster and brighter, each ending at its own ground
+// line. k is the layer's distance, 1 nearest.
+set rainline = {dx, wd} -> clamp{1 - dx/(wd + fwidth{uv.x})}*wd/(wd + fwidth{uv.x})
+set raindrop = {f, hs, k, density, gy} -> rainline{abs{f.x - 1/5 - hs.y*3/5}/(16*k), 1/(300*k)}
+  * (f.y > hs.z/2) * (1 - clamp{(f.y - hs.z/2)*2})
+  * (hs.x < density) * (uv.y > gy) / k
+set rainlayerq = {k, tw, wind} -> uv >> set{x: (id.x + id.y*wind)*16*k, y: (id.y + tw*3/k)*2*k, z: 0, w: 0}
+set rainlayerh = {q, k, density, h} -> raindrop{fract{q}, pxhash{floor{q} + k*7, 9}, k, density,
+  h - (h + 6/5)/k + pxhash{floor{q}, 10}.x/(10*k)}
+set rainlayer = {i, tw, wind, density, h} -> rainlayerh{rainlayerq{1 + i, tw, wind}, 1 + i, density, h}
+set rainsplashlit = {sp} -> sp.z + sp.w*2
+set rainsplashn = {g, t, amount} -> rainsplashlit{rainsplash{g, t}}*(pxhash{floor{g}, 6}.x < amount)
+// Splashes on the ground catch the light the wet ground reflects there, not the light at the pixel.
+set rainglintp = {p, blur} -> (p >> pxprev{blur: blur}) + 2*(p >> pxprev{blur: blur*4}) + 4*(p >> pxprev{blur: blur*8})
+set rainglint = {h, blur} -> rainglintp{uv >> set{y: 2*h - id.y}, blur}
+set rainh = {in, layers, splash, light, glint, bright} ->
+  in + layers*(1/16 + light*bright/8) + splash*glint*bright/2
+set rain = {in, amount:1, density:1/2, wind:1/8, speed:1, bright:1, splash:1/4, blur:1/32, drops:4, rate:1, h:-0.45, t:time} ->
+  rainh{in>>pxrec,
+    loop{map:{v,i} -> rainlayer{i, set{fract{t*speed/1024}*1024}, wind, density*amount, h}, 2},
+    rainsplashn{wetground{wetz{h}}*drops, set{fract{t*rate/256}*256}, amount}*wetbelow{h}*splash,
+    foglight{blur}, rainglint{h, blur}, bright}

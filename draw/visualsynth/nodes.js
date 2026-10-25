@@ -310,8 +310,11 @@ define(function(require) {
   }
   addNodeFunction('pxprev', pxprev)
 
-  // What pxprev reads back next frame: the value at this point in the chain rather than the output
+  // What pxprev reads back next frame: the value at this point in the chain rather than the output.
+  // Only the first pxrec records, so lit effects chained after one another all light from the scene
+  // rather than from each other's output, which would feed back.
   let pxrec = (args, e, b, state, evalRecurse) => makeShaderNode((input, ctx) => {
+    if (ctx.records) { return input }
     ctx.records = true
     ctx.addRaw(`l_rec = ${input};`)
     return input
@@ -1001,6 +1004,10 @@ define(function(require) {
   assert(true, pxSource('uv>>mul{2}>>add{1}').includes('\nout vec4 fragColor;'))
   // and it can be set from inside a function body, since l_rec is at file scope
   assert(true, pxSource('pxfn{mul{2}>>pxrec}').includes('l_rec = v'))
+  // only the first in the chain records
+  src = pxSource('uv>>mul{2}>>pxrec>>add{1}>>pxrec>>add{3}')
+  assert(1, src.match(/l_rec = v[0-9]/g).length)
+  assert(true, src.includes('l_rec = v1;'))
 
   console.log('Visual synth nodes tests complete')
   }

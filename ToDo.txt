@@ -1,7 +1,6 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-fog/cloud function: does not work on the pi yet
 ?px function that looks like the scene is reflecting off wet ground? With rain falling and splashing too???
 ?arc perf: Still have on beat problem with short dur; Undo the chord thing, and look at better ways of triggering the synth instead
  !very slow on any arc shader change on the pi
