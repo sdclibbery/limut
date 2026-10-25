@@ -6163,12 +6163,12 @@ b bell keyboard, fx=mix{reverb{3}>>airverb}, oct-=1, rel=2
 l sine avw2, addc=avw2.bend*12, vel*=1+this.press, fx=mix{pingpong}>>mix{airverb}, envelope='organ'
 
 
-// v visualsynth, px=tex{webcam}>>pal{0,0,0,0,#097,0,0,#a0f,0}>>wet>>rain>>fog{1/16}
-// v visualsynth, px=julia^2>>pal{0,rainbow,1}>>wet//>>rain>>fog{1/16}
-// v visualsynth, px=rot2{time/32}>>sdcirclewave{tb:[]n2,ra:[]n1}*8>>pal{0,#a0f,0,#097,0}>>wet>>rain>>fog
+// v visualsynth, px=tex{webcam}>>pal{0,0,0,0,#097,0,0,#a0f,0}>>puddles>>rain>>fog{1/16}
+// v visualsynth, px=julia^2>>pal{0,rainbow,1}>>puddles//>>rain>>fog{1/16}
+// v visualsynth, px=rot2{time/32}>>sdcirclewave{tb:[]n2,ra:[]n1}*8>>pal{0,#a0f,0,#097,0}>>puddles>>rain>>fog
 // v visualsynth, px=julia^2>>pal{0,rainbow,1}>>rain
-// v visualsynth, px=julia^2>>pal{0,rainbow,1}>>wet>>rain{1/4}>>fog{1/16}
-// v visualsynth, px=julia>>pal{0,rainbow,1}^2>>wet>>rain>>fog{1/16}
-// v visualsynth, px=arc{flicker:1}>>pal{0,#008,#008,#0ff,1}^2>>wet{h:-0.45}>>rain>>fog
+// v visualsynth, px=julia^2>>pal{0,rainbow,1}>>puddles>>rain{1/4}>>fog{1/16}
+// v visualsynth, px=julia>>pal{0,rainbow,1}^2>>puddles>>rain>>fog{1/16}
+// v visualsynth, px=arc{flicker:1}>>pal{0,#008,#008,#0ff,1}^2>>puddles{h:-0.45}>>rain>>fog
 
 
