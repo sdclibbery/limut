@@ -148,9 +148,11 @@ define(function(require) {
   }
   addMathsFunction('pxhash', scalarHash)
   addMathsFunction('pxhashf', scalarHash)
-  // fwidth is for visual nodes: the screen space derivative of the value. A plain number does not
-  // vary across the screen, so off a visual node it is zero
+  // fwidth, dfdx and dfdy are for visual nodes: screen space derivatives of the value. A plain
+  // number does not vary across the screen, so off a visual node they are zero
   addMathsFunction('fwidth', trigWrapper(v => 0))
+  addMathsFunction('dfdx', trigWrapper(v => 0))
+  addMathsFunction('dfdy', trigWrapper(v => 0))
 
   let euclid = (args, e) => {
     let k = Math.floor(argParam(args, 1)) // Distribute k beats...
@@ -350,6 +352,8 @@ define(function(require) {
   assert(true, scalarOf('(3).pxhash') === scalarOf('pxhash{3}')) // Final result, so postfix gives the value
   assert(true, scalarOf('3>>pxhash') === scalarOf('pxhash{3}'))
   assert(0, scalarOf('fwidth{3}'))
+  assert(0, scalarOf('dfdx{3}'))
+  assert(0, scalarOf('dfdy{3}'))
 
   assert(2, evalParamFrame(parseExpression('ceil{1.5}'), ev(0,0), 0))
   assert(-1, evalParamFrame(parseExpression('ceil{-1.5}'), ev(0,0), 0))

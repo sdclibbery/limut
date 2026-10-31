@@ -1,5 +1,5 @@
 // Smooth noise, 2d/3d transforms, kaleidoscope patterns, perpetual zoom, fractals, VHS and JPEG
-// effects, synthwave, lightning, fog, wet ground and rain for visualsynth px chains.
+// effects, synthwave, lightning, foil, fog, wet ground and rain for visualsynth px chains.
 //
 // Value noise interpolates hashed lattice corner values; perlin (gradient) noise interpolates
 // hashed corner gradients, so it is less blocky and signed.
@@ -492,6 +492,53 @@ set arch = {in, t, n, jag, power, glow, flicker} ->
     *power*(1 - flicker*vhsrand{floor{t*16}, 0.3})
 set arc = {in:id, power:1, t:time*3, n:3, jag:1/2, glow:1, flicker:1/2} ->
   arch{in, set{t}, n, jag, power, glow, flicker}
+
+//// Foil
+// Au5's Horizon Foils: banded ribbons of domain warped noise on black, on two flat sheets receding
+// to a vertical horizon line, stretched along the depth so they stream out of the vanishing point. A single value, 0 on the black and 1 on a ribbon's core: colour it after.
+//   px=foil>>pal{#000,#40f,#f0f,#0ff,#fff}
+//   px=rot2{a:1/8}>>foil{bands:16, width:1/4}>>pal{#000,#40f,#f0f,#0ff,#fff}
+// The noise is vector valued: each channel of the corner hashes interpolates on its own, so one
+// fbm gives a whole warp offset.
+set foilface = {i, f, seed} -> mix{
+  mix{ pxhash{i, seed},           pxhash{i+{x:1,w:0}, seed},     f.x },
+  mix{ pxhash{i+{y:1,w:0}, seed}, pxhash{i+{x:1,y:1,w:0}, seed}, f.x },
+  f.y }
+set foilfacefn = {seed} -> pxfn{{q} -> foilface{floor{q}, smoothstep{fract{q}}, seed}}
+set foillerp = {q, f, nf} -> mix{ q>>nf, q+{z:1,w:0}>>nf, f.z }
+set foiloct = {q, nf} -> foillerp{q, smoothstep{fract{q}}, nf}
+// q.w is the base octave's lattice cells per pixel. An octave fades to the mean before it is finer
+// than a pixel, so the horizon goes smooth rather than sparkling.
+set foilfbmfn = {nf} -> pxfn{{q} -> parallel{{i} ->
+  mix{1/2, foiloct{(q >> set{w:0})*(2^i) + octshift{i}, nf}, clamp{2 - q.w*(2^i)*4}}*(8/(2^i)), 4}/15}
+
+// Sideways on, the sheets are at y=1 and y=-1. y in the noise keeps them apart, and morph moves along it so the
+// bands change shape in place.
+set foilwallh = {in, dep, side, t, morph, scale, stretch} -> in >> set{x: id.x*dep*scale, y: side*8 + morph,
+  z: (dep/stretch + t)*scale, w: (fwidth{dep}/stretch + fwidth{id.x*dep})*scale}
+set foilwall = {in, t, morph, scale, stretch} ->
+  foilwallh{in, 1/max{abs{in.y}, 1/1000}, sign{in.y}, t, morph, scale, stretch}
+// The wall point is a carry: read directly in the body it would be rebuilt from the loop's value.
+set foilwarp = {pt, ff, warp, n} ->
+  pt >> loop{{i} -> foilpt + ((id >> ff) - 1/2)*warp >> set{w: foilpt.w}, n, carry:{foilpt:id}}
+// The field is a pxfn so each read of it is a call: a loop reached twice is emitted twice. It gives
+// the field in x and the cells per pixel in y.
+set foilfieldfn = {t, morph, scale, stretch, warp, n, ff} -> pxfn{{p} ->
+  foilwarp{foilwall{p, t, morph, scale, stretch}, ff, warp, n} >> let{foilq} >> ff >> set{y: foilq.w}}
+
+// Contour bands of the field, kept only where it is high, so the ribbons nest inside blobs. Toward
+// the horizon, where the detail is finer than a pixel, it fades to a haze that is brightest at the
+// vanishing point.
+set foilribbon = {g, fw, wd} -> clamp{1 - abs{fract{g} - 1/2}/(wd + fw)}*wd/(wd + fw)
+set foilmask = {fv, bands, cover} -> smoothstep{fv, 0.6 - cover/5, 0.6 - cover/5 + 1/bands}
+set foilshape = {fv, lod, in, bands, width, cover, glow} ->
+  mix{foilribbon{fv*bands, fwidth{fv*bands}, width/2}*foilmask{fv, bands, cover},
+    cover*glow/(1 + abs{in.x}*8), clamp{lod*2 - 1/2}}
+  + exp{-abs{in.y}*64}*glow/(1 + abs{in.x}*8)
+set foilh = {in, fl, bands, width, cover, glow} -> foilshape{fl.x, fl.y, in, bands, width, cover, glow} >> set{a:1}
+set foilhf = {in, hf, bands, width, cover, glow} -> foilh{in, in >> hf, bands, width, cover, glow}
+set foil = {in:id, t:time/12, morph:time/20, scale:3/2, stretch:6, bands:24, width:1/4, cover:[1/4:3/4]l16@f, warp:3/2, n:2, glow:1/2} ->
+  foilhf{in >> set{x: id.y, y: id.x}, foilfieldfn{set{t}, set{morph}, scale, stretch, warp, n, foilfbmfn{foilfacefn{3}}}, bands, width, cover, glow}
 
 //// Fog
 // Drifting fog over whatever is piped in, lit by it: px=arc>>fog. The light is last frame's input

@@ -6171,4 +6171,8 @@ l sine avw2, addc=avw2.bend*12, vel*=1+this.press, fx=mix{pingpong}>>mix{airverb
 // v visualsynth, px=julia>>pal{0,rainbow,1}^2>>puddles>>rain>>fog{1/16}
 // v visualsynth, px=arc{flicker:1}>>pal{0,#008,#008,#0ff,1}^2>>puddles{h:-0.45}>>rain>>fog
 
+// v visualsynth, px=foil>>pal{0,#20a,blue,neonpink,1}
+// v visualsynth, px=foil^1/4>>pal{0,#20a,blue,0,neonpink,1}
+// v visualsynth, px=foil{time}>>pal{0,{h:uv/3+1/2+(id+time/16)%2/3},1}^2
+// v visualsynth, px=foil{[]n/6+time/4}>>pal{0,{h:(uv.u/6+id/3-time/16)%0.45+0.6,s:1-id^2}}
 

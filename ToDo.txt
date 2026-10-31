@@ -1,9 +1,11 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-?px function that looks like the scene is reflecting off wet ground? With rain falling and splashing too???
+Reverb ducked against dry signal; Make generic dry ducker if possible??
 ?arc perf: Still have on beat problem with short dur; Undo the chord thing, and look at better ways of triggering the synth instead
  !very slow on any arc shader change on the pi
+ Compile shaders in the background on the Pi
+ Compile in the background locally, using Chrome's KHR_parallel_shader_compile extension
 Plasma, bolt presets?
 !fx=fuzz{[1,0]e} is broken, get nasty glitch at event start; @s also broken in a different way
 !Operator issues
