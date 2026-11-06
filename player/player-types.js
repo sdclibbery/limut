@@ -112,25 +112,52 @@ define((require) => {
     request.onerror = () => cb({})
     request.send()
   }
+  let listLines = (types, folders, query) => {
+    let q = (query || '').toLowerCase()
+    let lines = []
+    let filtered = Object.keys(types).filter(name => !q || name.includes(q) || (types[name]._type && types[name]._type.includes(q)))
+    let groups = [...new Set(filtered.map(name => types[name]._type))].sort()
+    groups.forEach((group) => {
+      lines.push('[' + group + '] ' + filtered.filter(name => types[name]._type === group).sort().join(', '))
+    })
+    let names = Object.keys(folders)
+    if (!q) {
+      if (names.length > 0) { lines.push('[samples] ' + names.join(', ')) }
+      return lines
+    }
+    names.forEach(folder => {
+      let files = folder.toLowerCase().includes(q) ? folders[folder] : folders[folder].filter(f => f.toLowerCase().includes(q))
+      if (files.length > 0) { lines.push('[sample/' + folder + '] ' + files.join(', ')) }
+    })
+    return lines
+  }
   consoleOut.addCommand('list', (args) => {
     loadSampleFolders((folders) => {
-      if (args.length === 0) {
-        listTypes(args)
-        let names = Object.keys(folders)
-        if (names.length > 0) { consoleOut('[samples] ' + names.join(', ')) }
-      } else if (Object.hasOwn(folders, args[0])) {
-        consoleOut('[sample/' + args[0] + '] ' + folders[args[0]].join(', '))
-      } else {
-        listTypes(args)
-      }
+      let lines = listLines(playerTypes, folders, args[0])
+      if (lines.length === 0) { consoleOut(`Nothing matches '${args[0]}'`) }
+      lines.forEach(l => consoleOut(l))
     })
   })
-  let listTypes = (args) => {
-    let filtered = Object.keys(playerTypes).filter(name => args.length === 0 || (playerTypes[name]._type && playerTypes[name]._type.includes(args[0])))
-    let groups = [...new Set(filtered.map(name => playerTypes[name]._type))].sort()
-    groups.forEach((group) => {
-      consoleOut('[' + group + '] ' + filtered.filter(name => playerTypes[name]._type === group).sort().join(', '))
-    })
+
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+    let assert = (expected, actual) => {
+      let x = JSON.stringify(expected), a = JSON.stringify(actual)
+      if (x !== a) { console.trace(`Assertion failed.\n>>Expected:\n  ${x}\n>>Actual:\n  ${a}`) }
+    }
+    let types = {
+      wave: { _type:'audio' }, play: { _type:'audio' }, swirl: { _type:'visual' },
+      h909: { _type:'audio drums' }, bd909: { _type:'audio drums' }, lead: { _type:'audio synths' },
+    }
+    let folders = { '909': ['hh.wav', 'limut909bd.wav'], wt64: ['SUPERSAW.WAV', 'SINE.WAV'] }
+    assert(['[audio] play, wave', '[audio drums] bd909, h909', '[audio synths] lead', '[visual] swirl', '[samples] 909, wt64'], listLines(types, folders))
+    assert(['[audio drums] h909'], listLines(types, folders, 'h909'))
+    assert(['[audio drums] bd909, h909', '[sample/909] hh.wav, limut909bd.wav'], listLines(types, folders, '909'))
+    assert(['[audio drums] bd909, h909'], listLines(types, folders, 'drums'))
+    assert(['[sample/wt64] SUPERSAW.WAV, SINE.WAV'], listLines(types, folders, 'wt64'))
+    assert(['[sample/wt64] SUPERSAW.WAV'], listLines(types, folders, 'saw'))
+    assert(['[audio drums] h909'], listLines(types, folders, 'H909'))
+    assert([], listLines(types, folders, 'zzz'))
+    console.log('Player types tests complete')
   }
 
   return playerTypes
