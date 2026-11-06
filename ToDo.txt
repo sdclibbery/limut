@@ -1,7 +1,6 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-Want to be able to eg list 909
 Would be nice to write eg fog{t+: main.pulse} Or maybe += not +:
 Reverb ducked against dry signal; Make generic dry ducker if possible??
 ?arc perf: Still have on beat problem with short dur; Undo the chord thing, and look at better ways of triggering the synth instead

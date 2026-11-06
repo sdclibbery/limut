@@ -72,6 +72,35 @@
     textarea#console {
       font-size: 1em;
       color: #808080;
+      caret-color: transparent;
+      margin-bottom: 0;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    #console-prompt {
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+      font-family: courier, mono, monospace;
+      color: #80b0ff;
+      font-size: 1em;
+      border: 2px solid #60606080;
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      margin-top: 0;
+      padding: 0 4px;
+    }
+    #console-input {
+      flex: 1;
+      min-width: 0;
+      font-family: courier, mono, monospace;
+      font-size: 1em;
+      color: #e0e0e0;
+      background: transparent;
+      border: none;
+      outline: none;
+      text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+      caret-color: #80b0ff;
     }
     button {
       width:1.5em;
@@ -275,7 +304,8 @@
     </div>
   </div>
   <div id="code-codemirror" class="widget code" style="display:none;"></div>
-  <textarea id="console" class="widget" rows="5"></textarea>
+  <textarea id="console" class="widget" rows="5" readonly tabindex="-1"></textarea>
+  <div id="console-prompt" class="widget"><span>&gt;</span><input id="console-input" spellcheck="false" autocomplete="off" autocapitalize="off"></div>
 <div class="info">
 <h4 onclick="toggleAccordion('accordion-examples')" class="accordion"> Examples</h4>
 <div id="accordion-examples" class="closed">
@@ -377,7 +407,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 </div>
 <h4 onclick="toggleAccordion('accordion-console')" class="accordion"> Console</h4>
 <div id="accordion-console" class="closed">
-  <p>The console is the text window below the main code editing area. Use the console to see information, warnings and command output. Type a command and press enter to execute it.</p>
+  <p>The console is the text window below the main code editing area. Use the console to see information, warnings and command output. Type a command on the line at the bottom of the console and press enter. Up/down arrows recall previous commands.</p>
   <p><code>list</code> List all player base types, including presets, grouped by player base type and the include file that defined the preset</p>
   <p><code>list 909</code> List player types and presets whose name or group contains the given text, plus matching sample folders and sample files (eg <code>list h909</code>, <code>list drums</code>, <code>list saw</code>). A matching folder lists all its files; use a file as eg <code>wavetable='sample/wt64/MS2K.WAV'</code></p>
   <p><code>man fog</code> Show the reference docs for a name: a player type, param, function or library function. eg <code>man lpf</code></p>
