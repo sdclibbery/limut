@@ -201,6 +201,14 @@
     :fullscreen > .code { flex: 1; max-height: calc(100% + 100px); }
     :fullscreen > .info { display: none; }
     :fullscreen > .warn { display: none; }
+    .inline-slider {
+      width: 6em;
+      height: 0.8em;
+      margin: 0 0.3em;
+      vertical-align: middle;
+      cursor: ew-resize;
+      touch-action: none;
+    }
   </style>
   <link rel="stylesheet" href="codemirror/codemirror.css">
   <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -1269,10 +1277,10 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>avw2.connected</code> 1 when the keytar is plugged in, 0 when it is not, without logging anything.</p>
 <p class='sub'><code>avw2{14}</code> Take input from control 14 (or note 14 if there is no control 14) on the keytar, wherever it turns out to be. Also <code>avw2{control:14}</code>, <code>avw2{note:36}</code> and <code>avw2{channel:1}</code>. All of the controls above are on channel 0.</p>
 <p class='sub'><code>avw2{'f1', port:2}</code> Read a named control from an explicit port, for when the keytar is not recognised by name.</p>
-<p><code>slider{}</code> Create a new slider control on the page, which can be used for live control of live coded expressions. The value dynamically updates to reflect the current position of the slider control.</p>
-<p class='sub'><code>slider{0.1}</code> Initial value for the slider control when it is first created. Default is 0.</p>
-<p class='sub'><code>slider{name:'Foo'}</code> Name to display with the slider. The name uniquely identifies the slider. Multiple <code>slider</code> usages in the source code with the same name will be treated as all referencing the same slider. Default is a name constructed from the player and param names.</p>
-<p class='sub'><code>slider{min:-5, max:5}</code> Minimum and maximum values when the slider is at the ends of its travel. Defaults are min:0 max:1.</p>
+<p><code>slider{}</code> A slider control for live control of an expression. After Ctrl+Enter it appears inline in the code, just before the value. Dragging it changes the value live without rerunning the code, and writes the new value into the code. Example: <code>lpf=slider{500, min:100, max:4000}</code></p>
+<p class='sub'><code>slider{0.1}</code> The value. Edit it and rerun to move the slider. Default is min.</p>
+<p class='sub'><code>slider{name:'Foo'}</code> Sliders with the same name share a value. Sliders in included files can't show inline, so they appear in the panel at the top of the page labelled with this name. Default name is built from the player and param names.</p>
+<p class='sub'><code>slider{min:-5, max:5}</code> Minimum and maximum values when the slider is at the ends of its travel. Defaults are min:0 max:1. A second positional value is the max: <code>slider{0, 8}</code>.</p>
 <p class='sub'><code>slider{curve:2}</code> Curve to apply to the values. Positive values give greater change in value towards the lower end of travel. Default is 0.</p>
 </div>
 <h4 onclick="toggleAccordion('accordion-functions')" class="accordion"> Functions</h4>

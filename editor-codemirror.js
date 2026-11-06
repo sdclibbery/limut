@@ -6,6 +6,8 @@ define(function(require) {
   let consoleOut = require('console')
   let fxMixChain = require('play/effects/fxMixChain')
   let envelope = require('play/envelopes')
+  let sliders = require('functions/sliders')
+  let {findSliders,injectInlineIds,formatValue} = require('inline-sliders')
 
   let editorDiv = document.getElementById('code-codemirror')
   editorDiv.style.display = 'block'
@@ -80,6 +82,99 @@ define(function(require) {
     if (existing) { existing.clear() }
     peerCursors.delete(peerId)
   }
+  let inlineWidgets = []
+  let clearInlineWidgets = () => {
+    inlineWidgets.forEach(w => { w.bookmark.clear(); w.mark.clear() })
+    inlineWidgets = []
+  }
+  // A bookmark only goes when a deletion spans it, so remove a widget once its call is edited away
+  editor.on('changes', () => {
+    for (let i = inlineWidgets.length-1; i >= 0; i--) {
+      let w = inlineWidgets[i]
+      let pos = w.bookmark.find()
+      if (pos && /\bslider\s*\{$/.test(editor.getLine(pos.line).slice(0, pos.ch))) { continue }
+      w.bookmark.clear()
+      w.mark.clear()
+      inlineWidgets.splice(i, 1)
+    }
+  })
+  let writeLiteral = (w, value) => {
+    let range = w.mark.find()
+    if (!range) { return }
+    let text = String(value)
+    let from = range.from || range
+    let to = range.to || range
+    let needsComma = !w.hasValue && !w.empty
+    editor.replaceRange(text + (needsComma ? ', ' : ''), from, to, '+slider')
+    if (needsComma) {
+      w.mark.clear()
+      w.mark = editor.markText(from, {line:from.line, ch:from.ch+text.length}, { inclusiveLeft:true, inclusiveRight:true, clearWhenEmpty:false })
+      w.hasValue = true
+    }
+  }
+  let buildInlineWidgets = (sites) => {
+    clearInlineWidgets()
+    sites.forEach((site, n) => {
+      let input = document.createElement('input')
+      input.type = 'range'
+      input.min = 0
+      input.max = 1000
+      input.className = 'inline-slider'
+      input.style.display = 'none'
+      let w = {
+        n: n,
+        input: input,
+        hasValue: site.hasValue,
+        empty: site.empty,
+        mark: editor.markText(editor.posFromIndex(site.valueFrom), editor.posFromIndex(site.valueTo), { inclusiveLeft:true, inclusiveRight:true, clearWhenEmpty:false }),
+        bookmark: editor.setBookmark(editor.posFromIndex(site.valueFrom), { widget: input }), // Before the number, so it doesn't move as the number's width changes
+      }
+      let apply = () => {
+        let slider = sliders.getInlineSlider(n)
+        if (!slider) { return }
+        let value = formatValue(sliders.sliderFromInput(slider, parseFloat(input.value)))
+        sliders.setInlineValue(slider, value)
+        writeLiteral(w, value)
+      }
+      input.oninput = apply
+      // Writing the literal makes CodeMirror redraw the line, detaching the input, which kills a native
+      // range drag. So drag by hand with document listeners, which survive the redraw.
+      let setFromX = (x) => {
+        let rect = input.getBoundingClientRect()
+        if (rect.width <= 0) { return }
+        input.value = Math.round(1000 * Math.min(Math.max((x - rect.left) / rect.width, 0), 1))
+        apply()
+      }
+      input.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0) { return }
+        e.preventDefault()
+        input.focus()
+        setFromX(e.clientX)
+        let move = (e) => setFromX(e.clientX)
+        let up = () => {
+          document.removeEventListener('pointermove', move)
+          document.removeEventListener('pointerup', up)
+          document.removeEventListener('pointercancel', up)
+        }
+        document.addEventListener('pointermove', move)
+        document.addEventListener('pointerup', up)
+        document.addEventListener('pointercancel', up)
+      })
+      inlineWidgets.push(w)
+    })
+  }
+  // After every update, including section reruns: a slider in a section block only exists while its section is active
+  sliders.onSweep(() => {
+    inlineWidgets.forEach(w => {
+      let slider = sliders.getInlineSlider(w.n)
+      if (!slider) { w.input.style.display = 'none'; return }
+      let update = () => { w.input.value = sliders.inputFromSlider(slider, slider.value) }
+      slider.updateWidget = update // Peers get the literal through the collab text delta, so only the widget moves
+      update()
+      w.input.style.display = ''
+    })
+  })
+
   let ctrlCode = (event, keys) => {
     if (event.isComposing || event.keyCode === 229) { return false }
     return ((event.ctrlKey || event.metaKey) && (keys.includes(event.keyCode) || keys.includes(event.key)))
@@ -109,7 +204,10 @@ define(function(require) {
     notifyRunState()
   }
   window.go = () => {
-    updateCode(editor.getValue())
+    let code = editor.getValue()
+    let sites = findSliders(code)
+    buildInlineWidgets(sites)
+    updateCode(injectInlineIds(code, sites))
     if (editor.getValue().trim() !== '') {
       editorDiv.style.backgroundColor = '#d9d9d980'
       setTimeout(() => editorDiv.style.backgroundColor = 'transparent', 150)

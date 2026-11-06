@@ -172,6 +172,7 @@ define((require) => {
     mainVars.reset()
     players.overrides = {}
     sliders.gc_reset()
+    sliders.setAutoRerun(!!options.auto)
     persistentState.gc_reset() // accum/smooth/rate state is kept across the re-parse, keyed per param
     vars.clear()
     predefinedVars.apply(vars.all())
