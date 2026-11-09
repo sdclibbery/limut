@@ -6176,3 +6176,68 @@ l sine avw2, addc=avw2.bend*12, vel*=1+this.press, fx=mix{pingpong}>>mix{airverb
 // v visualsynth, px=foil{time}>>pal{0,{h:uv/3+1/2+(id+time/16)%2/3},1}^2
 // v visualsynth, px=foil{[]n/6+time/4}>>pal{0,{h:(uv.u/6+id/3-time/16)%0.45+0.6,s:1-id^2}}
 
+
+// Synthetic Soul
+include 'personal/everything.limut'
+dw dmxwash, channel=(1,8,15,22), fore={h:-0.2+0.05*l.addc.0,v:smooth{main.pulse*tg,16}/4}
+v hub75, dim=0.75, px=set{u:uv.u/(1+main.pulse*2)}>>arc{glow:2+8*pkk.pulse.0,flicker:4*l.pulse.0}/2>>pal{0,{h:0.1*l.addc.0},tg}
+w visualsynth, px=mul{1-[pk.vel.0 /16:!1,0]e@s}>>tex{webcam{['5mp','2mp']t16}}*(uv.u>4/3??0?:1)
+set bpm=135
+set main fx=stanh*+3db
+set scale='minor'
+set p* delay|=[[1,3]r/4:_2,():_]{sx.rtime}
+set default length=16
+// pk perc x..., sample=3, fx=stanh{2}
+// ph perc --n-, fx=mix{duck}*-3db, swing=54, pan=[1,1]/4, room=0.2
+// pr rs909 ..0.4 crop 16, swing=54, room=1/4
+// bs sub ..00, fx=stanh, swing=54
+// b psybass 0 * 15 + 2, fx=mix{duck,2/3}*2, swing=52
+c chime 049 crop 6 + 86, vel=slider{0}/2, fx=mix{airverb}>>mix{duck}>>flanger, dur=1/4, pan=[-1,1]/2
+l cyborg avw2, addc=avw2.bend*7+this.press*2, fx=mix{airverb,1/4}>>fuzz{1/3}>>phaser*-3db, vel+=tg/4
+l2 vox keyboard, glide=1, oct+=1, fx=mix{airverb,2/3}*-3db
+section break {
+	set !p* add+=sx.time<16 ?? -1 ?: -2
+	set main hpf=800*sx.rise^6
+  set (ph,bs,b) vel=0
+  l sine, vel=0
+  l2 softpad avw2, addc=avw2.bend*7+this.press*2, fx=mix{airverb}>>mix{shifter{smooth{[1/2,1,2]r1/2@f,1/6}},1/3}
+  set c dur=1/2, fx=airverb>>mix{tg,sx.rise^2}
+  set dw fore=#204*sx.rise^4
+  fill perc u, swing=52, vel=sx.rise^7, room=1/4
+}, next=drop, length=24
+section drop {
+	set !p* add+=[4,2,1,0]:_4{sx.time}
+	pc perc ....(*hO)..., fx=stanh>>mix{airverb,1/3}*-3db
+	l cyborg avw2, addc=avw2.bend*7+this.press*2, fx=mix{airverb,1/4}>>fuzz{1}, vel+=tg/4
+  set dw fore=#80f*tg/16
+  set (t,c) vel=0
+}, length=64
+
+
+// Hollow Drops
+include 'personal/everything.limut'
+dw dmxwash, channel=(1,8,15,22), fore={h:-0.4+0.01*l.addc.0+0.01*l.value,v:l.pulse.mean/8}
+v hub75, dim=0.75, px=set{u:uv.u/(1+main.pulse*2)}>>arc{glow:2+8*pkk.pulse.0,flicker:4*l.pulse.0}/2>>pal{0,{h:0.1*l.addc.0},tg}
+w visualsynth, px=mul{1-[pk.vel.0 /16:!1,0]e@s}>>tex{webcam{['5mp','2mp']t16}}*(uv.u>4/3??0?:1)>>rain>>fog{1/16}
+set bpm=110
+set scale='minor'
+set main fx=stanh*+5db
+set !p* add+=[0:24,-2:8]t
+r crackle, pan=[-1:1]r, vel*=2, room, dur/=2
+// p perc x.s., vel*=+3db
+// ph play80s n[.-]*-, swing=52, vel=1/2, sample=3, pan=[-1,1]/4
+// pp play80s monthly, dur=3/4, fx=mix{pingpong{1/2}}>>mix{airverb}/2, vel*=[]r
+// b psybass .0, dur=1/2
+// bl lately ..0.7. crop 16, dur=1/4, mid=+20db, swing=52
+// d softpad (049), oct-=1, dur=[3,3,2]/2, fx=mix{airverb,2/3}*+3db, sus=1/7
+v hub75, px=rot2{time/64}>>julia>>pal{0,#0af,1}>>puddles>>rain>>fog{1/16}^2
+l piano avw2, fx=tape{this.press}>>mix{pingpong,1/3}>>mix{airverb,1/3}*-6db, addc=wow
+section other {
+	set !p* add+=[1:16,3:8,-1:8]t
+	set (p,l) vel=0
+	l2 audiosynth avw2, play=noise>>bpf{eventpitch,q:40}, fx=mix{pingpong}>>mix{airverb}*16, 
+  	envelope='full', att=1/8, dec=1/8, rel=1/6, sus={level:1/3}, oct+=1, addc=avw2.bend*7+this.press.2
+}, length=64
+section drop {
+	set (p*,b*) vel=0
+}, length=16

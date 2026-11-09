@@ -1,19 +1,24 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-Would be nice to write eg fog{t+: main.pulse} Or maybe += not +:
+Do want []x for section relative chords
+!Segmented values in fx chain only work on first event, eg p ping, fx=gain{[1,0]e@s}, oct=3
+Clean up midi{'vel'} - it has aftertouch baked in; does it even make sense as a thing anyway?
+!Audioparam to NaN in Synthetic Soul; why? Also error does not say which player or param
+ Cant recreate, must be from avw2??
+???Should there be a monophonic synth type with a combined play/FX chain that can handle event data, and then event data is completely banned in FX chains???
+Explore drops
+Would be nice to write eg fog{t+: main.pulse}
 Reverb ducked against dry signal; Make generic dry ducker if possible??
 ?arc perf: Still have on beat problem with short dur; Undo the chord thing, and look at better ways of triggering the synth instead
  !very slow on any arc shader change on the pi
  Compile shaders in the background on the Pi
  Compile in the background locally, using Chrome's KHR_parallel_shader_compile extension
-Plasma, bolt presets?
-!fx=fuzz{[1,0]e} is broken, get nasty glitch at event start; @s also broken in a different way
 !Operator issues
- px=arc + rot2{1/4}>>arc should work
- px=arc + UV>>rot2{1/4}>>arc should definitely work
+ px=arc + rot2{1/4}>>arc should work?
+ px=arc + UV>>rot2{1/4}>>arc should definitely work?
  BUT fx=echo*2>>reverb must also work
- ?? Need a function to blend px chains?
+ ?? Need function(s) to blend px chains?
 ?Do want visuals to respond to individual event hits; how about pk.hash.0 ? Or is follow player and []r@e better? 
  Way to trigger an event from a player?
  ?Want a way to respond to the release phase in expressions, eg apply a pitch change starting when the note is released?
@@ -25,7 +30,6 @@ pattern brackets to allow eg (094 crop 7 + 1) crop 30 + 98
 Multiple audiocontexts, set context='foo' on a player. Allows audio rendering to be split over multiple cores
 ?set bpm can have target time? eg set bpm={140,by;1000}; takes a linear step towards the target every beat
 grain should have offset param, would allow more interesting effects; granular delays etc
-Clean up midi{'vel'} - it has aftertouch baked in; does it even make sense as a thing anyway?
 !Render capacity leak again????
  Report Chromium bug:
   It's a genuine, current bug and I'd file it. Want me to build the standalone repro — a plain HTML page with no limut
