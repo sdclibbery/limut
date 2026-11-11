@@ -51,6 +51,14 @@ define(function(require) {
       state.expect = 'operator' // The only thing that can follow a literal is an operator to act on it
       break;
     case 'operator':
+      if (keyword(state, 'on')) {
+        let tokStart = state.idx
+        while (state.idx < state.str.length && !isWhitespace(state.str[state.idx])) { state.idx++ }
+        let tok = state.str.slice(tokStart, state.idx).toLowerCase()
+        if (tok === 'sx.start' || tok === 'section.start') { state.anchor = 'sectionStart' }
+        else { throw `Invalid pattern: unknown anchor '${tok}'` }
+        return parseElement(state) // Anchor is a whole-pattern modifier, not a tree element
+      }
       for (let idx in operators) {
         let op = operators[idx]
         if (keyword(state, op.keyword)) {
@@ -106,6 +114,7 @@ define(function(require) {
     }
     let result = precedenceTree(elements)
     result.playFromStart = playFromStart
+    result.anchor = state.anchor
     return result
   }
 
@@ -138,6 +147,15 @@ define(function(require) {
     assertThrows('Invalid pattern: bad expression', () => parsePattern(st('01 loop foo')))
     assertThrows('Invalid pattern: missing operator', () => parsePattern(st(' loop +')))
     assertThrows('Invalid pattern: Continuation "_" not valid at start of literal', () => parsePattern(st('01 + _3')))
+
+    assert('sectionStart', parsePattern(st('01 on sx.start loop 1')).anchor)
+    assert('sectionStart', parsePattern(st('01 loop 1 on sx.start')).anchor)
+    assert('sectionStart', parsePattern(st('01 on SECTION.start')).anchor)
+    assert(undefined, parsePattern(st('01 loop 1')).anchor)
+    assert(undefined, parsePattern(st('`01 on sx.start`')).anchor)
+    assertThrows("Invalid pattern: unknown anchor 'foo.start'", () => parsePattern(st('01 on foo.start')))
+    assertThrows("Invalid pattern: unknown anchor ''", () => parsePattern(st('01 on')))
+    assertThrows('Invalid pattern: missing operator', () => parsePattern(st('on sx.start')))
 
     console.log("Pattern parse tests complete")
   }

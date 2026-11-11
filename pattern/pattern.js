@@ -3,6 +3,7 @@ define(function(require) {
   let param = require('player/default-param')
   let parsePattern = require('pattern/parse-pattern.js')
   let {initTimingContext,stepToCount} = require('pattern/timing.js')
+  let sections = require('section/sections')
 
   let expandDefaultFlags = (event) => {
     let sh = event['#'] || 0
@@ -28,18 +29,27 @@ define(function(require) {
     }
     let pattern = parsePattern(state)
     let tc = {}
+    let firstInit = true
     let result = (count) => {
       let dur = param(result.params.dur, 1)
+      let origin = 0
+      if (pattern.anchor === 'sectionStart') {
+        origin = sections.runStartBeat
+        if (tc.origin !== origin) { tc = {origin:origin} }
+      }
+      let rel = Math.max(0, count - origin)
       if (!tc.inited) {
         tc.inited = true
-        initTimingContext(tc, count, pattern, dur, pattern.playFromStart)
+        initTimingContext(tc, rel, pattern, dur, firstInit && pattern.playFromStart)
+        firstInit = false
         if (pattern.start) {
           pattern.start() // Tell the pattern TC init is complete and from now on, it'll be real operation
         }
       }
-      return stepToCount(count, dur, pattern, tc)
+      return stepToCount(rel, dur, pattern, tc)
               .filter(({value}) => value !== undefined) // Discard rests
               .map(event => {
+                event.count += origin
                 expandDefaultFlags(event)
                 for (let k in result.params) {
                   if (k != '_time' && k != 'value' && k != 'dur' && k != 'pattern') {
@@ -573,6 +583,46 @@ define(function(require) {
     assertSameWhenStartLater(() => root('01 loop 1000', {dur:0.17}))
     assertSameWhenStartLater(() => root('0 loop 1000', {dur:3.17}))
     assertSameWhenStartLater(() => root('01 loop 1000', {dur:3.17}))
+
+    { // on sx.start: pattern time counts from sections.runStartBeat and restarts when it changes
+      let savedStart = sections.runStartBeat
+      sections.runStartBeat = 4
+      p = root('X on sx.start loop 1', {})
+      assert([{value:'X',dur:1,_time:0,count:4,idx:0}], p(4))
+      assert([], p(5))
+      assert([], p(6))
+      sections.runStartBeat = 8
+      assert([{value:'X',dur:1,_time:0,count:8,idx:0}], p(8))
+      assert([], p(9))
+
+      sections.runStartBeat = 3
+      p = root('12 on sx.start', {})
+      assert([{value:1,dur:1,_time:0,count:3,idx:0}], p(3))
+      assert([{value:2,dur:1,_time:0,count:4,idx:1}], p(4))
+      assert([{value:1,dur:1,_time:0,count:5,idx:0}], p(5))
+
+      sections.runStartBeat = 2
+      p = root('12 loop 1 on sx.start', {dur:1/4})
+      assert([{value:1,dur:1/4,_time:0,count:2,idx:0},{value:2,dur:1/4,_time:1/4,count:2.25,idx:1}], p(2))
+      assert([], p(3))
+
+      sections.runStartBeat = 0
+      p = root('X on sx.start loop 1', {}) // Created mid-run: like plain loop, the current loop still plays
+      assert([{value:'X',dur:1,_time:0,count:5,idx:5}], p(5))
+      assert([], p(6))
+      sections.runStartBeat = 7
+      assert([{value:'X',dur:1,_time:0,count:7,idx:0}], p(7))
+
+      sections.runStartBeat = 0
+      p = root('now X on sx.start loop 1', {}) // now: plays immediately the first time
+      assert([{value:'X',dur:1,_time:0,count:5,idx:0}], p(5))
+      assert([], p(6))
+      sections.runStartBeat = 7
+      assert([{value:'X',dur:1,_time:0,count:7,idx:0}], p(7))
+      assert([], p(8))
+
+      sections.runStartBeat = savedStart
+    }
     assertSameWhenStartLater(() => root('01 + 23', {dur:3.17}))
 
     console.log("Pattern root tests complete")
