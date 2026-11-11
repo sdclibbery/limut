@@ -360,10 +360,10 @@ define(function(require) {
   assert('frame', parseExpression('[10:!1,[1,2]l1@f]e@s').interval) // the reported e@s form
 
   { // Section-relative timevars: the 'x' suffix (either side of the type letter) indexes from the
-    // start of the current section (sections.activeStartBeat) instead of from metronome time zero.
+    // start of the current section run (sections.runStartBeat) instead of from metronome time zero.
     let sections = require('section/sections')
-    let savedStart = sections.activeStartBeat
-    sections.activeStartBeat = 4
+    let savedStart = sections.runStartBeat
+    sections.runStartBeat = 4
     // [10,20]tx at the section start (beat 4) reads like plain [10,20]t at beat 0, and beat 5 like beat 1
     assert(evalParamFrame(parseExpression('[10,20]t1@f'),ev(0),0), evalParamFrame(parseExpression('[10,20]tx1@f'),ev(0),4))
     assert(evalParamFrame(parseExpression('[10,20]t1@f'),ev(0),1), evalParamFrame(parseExpression('[10,20]tx1@f'),ev(0),5))
@@ -381,7 +381,7 @@ define(function(require) {
     let nz = parseExpression('[1,2]n1'); nz.modifiers = {seed:1}
     let nzx = parseExpression('[1,2]nx1'); nzx.modifiers = {seed:1}
     assert(evalParamFrame(nz,ev(0),0), evalParamFrame(nzx,ev(0),4))
-    sections.activeStartBeat = savedStart
+    sections.runStartBeat = savedStart
   }
 
   p = parseExpression('[-1:1]t1')

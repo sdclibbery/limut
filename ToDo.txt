@@ -1,7 +1,8 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-Do want []x for section relative chords
+Want to be able to:  t perc O on sx end  Or  t perc # on sx start
+Want to add an audio node that creates a global var with a value that tracks the audio at that point. Can use for ducking etc
 !Segmented values in fx chain only work on first event, eg p ping, fx=gain{[1,0]e@s}, oct=3
 Clean up midi{'vel'} - it has aftertouch baked in; does it even make sense as a thing anyway?
 !Audioparam to NaN in Synthetic Soul; why? Also error does not say which player or param

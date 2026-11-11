@@ -10,10 +10,10 @@ define(function(require) {
   let step = () => 0
   let linear = (i) => i
 
-  // `x` (sectionRelative) counts time from the start of the current section instead of from
-  // metronome time zero, so the random/noise sequence restarts at each section boundary. Clamped
+  // `x` (sectionRelative) counts time from when the active section started its run (repeats of the
+  // same section don't restart it), so the sequence restarts on each section change. Clamped
   // to >=0 so the sub-beat negative transient at a section boundary doesn't glitch the sequence.
-  let beatFn = (sectionRelative) => sectionRelative ? (b) => Math.max(0, b - sections.activeStartBeat) : (b) => b
+  let beatFn = (sectionRelative) => sectionRelative ? (b) => Math.max(0, b - sections.runStartBeat) : (b) => b
 
   let parseRangedRandom = (vs, is, ss, sectionRelative) => {
     let state = {} // Create a state store for this parse instance
@@ -202,10 +202,10 @@ define(function(require) {
     p.modifiers = {seed:1}
     assertIsCloseEveryTime((i)=>p(ev(i/11),i/11,evalParamFrame))
 
-    // Section-relative (x suffix): index from sections.activeStartBeat, not beat 0
+    // Section-relative (x suffix): index from sections.runStartBeat, not beat 0
     let sections = require('section/sections')
-    let savedStart = sections.activeStartBeat
-    sections.activeStartBeat = 4
+    let savedStart = sections.runStartBeat
+    sections.runStartBeat = 4
     // Noise
     let plainN = simpleNoise([], 1); plainN.modifiers = {seed:1}
     let relN = simpleNoise([], 1, true); relN.modifiers = {seed:1}
@@ -222,7 +222,7 @@ define(function(require) {
     assert(evalParamFrame(relN,ev(4),4), evalParamFrame(relN,ev(3.9),3.9))
     assert(evalParamFrame(relR,ev(4),4), evalParamFrame(relR,ev(3.9),3.9))
     assert(evalParamFrame(relRR,ev(4),4), evalParamFrame(relRR,ev(3.9),3.9))
-    sections.activeStartBeat = savedStart
+    sections.runStartBeat = savedStart
 
     console.log('Eval random tests complete')
   }

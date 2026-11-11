@@ -9,12 +9,11 @@ define(function(require) {
   let linear = (i) => i
   linear.segmentPower = 1
 
-  // The time value used to index a timevar. `x` (sectionRelative) counts from the start of the
-  // current section (b - sections.activeStartBeat) instead of from metronome time zero. Clamped
-  // to >=0 so the sub-beat negative transient at a section boundary (activeStartBeat snaps to the
-  // integer beat, which fires ~0.1 beat ahead of the fractional draw clock) doesn't wrap the
-  // piecewise index onto the last list element.
-  let timeFn = (sectionRelative) => sectionRelative ? (e,b) => Math.max(0, b - sections.activeStartBeat) : (e,b) => b
+  // `x` (sectionRelative) counts from when the active section started its run (repeats of the same
+  // section don't restart it). Clamped to >=0 so the sub-beat negative transient at a section
+  // boundary (runStartBeat snaps to the integer beat, which fires ~0.1 beat ahead of the fractional
+  // draw clock) doesn't wrap the piecewise index onto the last list element.
+  let timeFn = (sectionRelative) => sectionRelative ? (e,b) => Math.max(0, b - sections.runStartBeat) : (e,b) => b
 
   let rangeTimeVar = (vs, ds, options, sectionRelative) => {
     let lo = vs[0] || 0
@@ -104,14 +103,14 @@ define(function(require) {
     assert(2.5, val(evalParamFrame(eventTimeVar([1,2,3],u3,u3,undefined,true),ev(0,1), 0.75)))
     assert(3, evalParamFrame(eventTimeVar([1,2,3],u3,u3,undefined,true),ev(0,1), 1))
 
-    // Section-relative timevars (x suffix): index from sections.activeStartBeat, not beat 0
-    let savedStart = sections.activeStartBeat
+    // Section-relative timevars (x suffix): index from sections.runStartBeat, not beat 0
+    let savedStart = sections.runStartBeat
     let plainTV = timeVar([10,20],u2,u2,1,step,{})
     let relTV = timeVar([10,20],u2,u2,1,step,{},true)
-    sections.activeStartBeat = 0
+    sections.runStartBeat = 0
     assert(evalParamFrame(plainTV,ev(0),0), evalParamFrame(relTV,ev(0),0))
     assert(evalParamFrame(plainTV,ev(0),1), evalParamFrame(relTV,ev(0),1))
-    sections.activeStartBeat = 4
+    sections.runStartBeat = 4
     assert(evalParamFrame(plainTV,ev(0),0), evalParamFrame(relTV,ev(0),4)) // section start reads as beat 0
     assert(evalParamFrame(plainTV,ev(0),1), evalParamFrame(relTV,ev(0),5))
     let relRange = rangeTimeVar([0,3],1,{},true)
@@ -127,16 +126,16 @@ define(function(require) {
       assert(0, evalParamFrame(range,ev(0),6))
     }
 
-    // A sub-beat negative section-relative time (draw clock lags activeStartBeat at a boundary)
+    // A sub-beat negative section-relative time (draw clock lags runStartBeat at a boundary)
     // clamps to 0 -> first list element, instead of the modulo wrapping onto the last (bug: read 4)
     let u4=[undefined,undefined,undefined,undefined]
     let stepTV = timeVar([1,2,3,4],u4,u4,2,step,{},true)
-    sections.activeStartBeat = 4
+    sections.runStartBeat = 4
     assert(1, evalParamFrame(stepTV,ev(0),3.9)) // just before the boundary catches up: clamped, not 4
     assert(1, evalParamFrame(stepTV,ev(0),4))   // section start
     assert(1, evalParamFrame(stepTV,ev(0),4.1)) // just after
     assert(2, evalParamFrame(stepTV,ev(0),6))   // second step within the 4-beat window
-    sections.activeStartBeat = savedStart
+    sections.runStartBeat = savedStart
 
     console.log('Eval timevar tests complete')
   }

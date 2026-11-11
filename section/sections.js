@@ -114,6 +114,7 @@ define(function(require) {
   sections.next = undefined
   sections.pendingActive = undefined
   sections.activeStartBeat = 0
+  sections.runStartBeat = 0 // Start of the current run of the active section: unlike activeStartBeat, not reset by repeats
   sections.activeCount = 0 // Number of times the active section has finished (reaches .length); resets to 0 when a section becomes active
   sections.hasBlocks = false // True if the latest parsed code contains any section { ... } block; gates auto reruns on section change
   sections.suppressForce = false // Set during automatic section-change reruns so set section.active/next lines in the code don't refire
@@ -212,6 +213,7 @@ define(function(require) {
       sections.active = sections.pendingActive
       sections.pendingActive = undefined
       sections.activeStartBeat = beatCount // Always restart from now
+      if (sections.active !== previous) { sections.runStartBeat = beatCount }
       sections.activeCount = 0             // Reset the repeat counter on becoming active
       sections.resolveActiveParams(sections.active, beatCount)
       sections.applyNext(sections.active, beatCount)
@@ -221,6 +223,7 @@ define(function(require) {
       // First run — start the default section
       sections.active = sections.default
       sections.activeStartBeat = beatCount
+      sections.runStartBeat = beatCount
       sections.activeCount = 0
       sections.resolveActiveParams(sections.active, beatCount)
       sections.applyNext(sections.active, beatCount)
@@ -240,6 +243,7 @@ define(function(require) {
       sections.next = undefined
       sections.active = next
       sections.activeStartBeat = beatCount
+      if (next !== ended) { sections.runStartBeat = beatCount }
       sections.activeCount = 0 // New section becomes active
       sections.resolveActiveParams(sections.active, beatCount)
       sections.applyNext(sections.active, beatCount)
@@ -352,6 +356,7 @@ define(function(require) {
     assert(true, readopted)                     // reports a change so section-scoped code reruns
     assert(true, sections.active === sections.default)
     assert(20, sections.activeStartBeat)        // fresh start from the current beat
+    assert(20, sections.runStartBeat)
 
     // The default section is never swept, even when left unmarked
     sections.instances = { default: sections.makeDefault() }
@@ -495,6 +500,7 @@ define(function(require) {
     assert(true, sections.update(0))
     assert(true, sections.active === sections.default)
     assert(0, sections.activeStartBeat)
+    assert(0, sections.runStartBeat)
 
     // Not yet ended (default length 3); no change
     assert(false, sections.update(3))
@@ -506,6 +512,7 @@ define(function(require) {
     assert(false, selfAdvanceChanged) // default -> default is not a change
     assert(true, sections.active === sections.default)
     assert(32, sections.activeStartBeat)
+    assert(0, sections.runStartBeat) // the run carries on through a same-section advance
 
     // Switch to next, next consumed; reports a change
     let b = { name: 'b', length: 8 }
@@ -514,6 +521,7 @@ define(function(require) {
     assert('b', sections.active.name)
     assert(undefined, sections.next)
     assert(64, sections.activeStartBeat)
+    assert(64, sections.runStartBeat) // a different section starts a new run
 
     // Next ends -> back to default; reports a change
     assert(true, sections.update(72))
@@ -535,6 +543,7 @@ define(function(require) {
     assert(true, sections.update(80))
     assert(true, sections.active === b)
     assert(80, sections.activeStartBeat)
+    assert(80, sections.runStartBeat)
     assert(undefined, sections.pendingActive)
 
     // Pending force wins over the boundary-advance path
@@ -542,6 +551,7 @@ define(function(require) {
     let forceSameChanged = sections.update(200) // Well past b's length (8), yet pending force applies, not advancement
     assert(true, sections.active === b)
     assert(200, sections.activeStartBeat) // Restarted from now, not advanced away
+    assert(80, sections.runStartBeat) // but the run is not restarted
     assert(false, forceSameChanged) // Forcing the already-active section is not a change
 
     // suppressForce no-ops forceActive/forceNext (used during automatic section-change reruns)
@@ -650,6 +660,7 @@ define(function(require) {
     assert(1, sections.activeCount)
     assert(true, sections.next === after) // next preserved across repeats
     assert(8, sections.activeStartBeat)   // replayed from the top
+    assert(0, sections.runStartBeat)      // but the run carries on through repeats
 
     // 2nd finish -> count 2, still repeating
     assert(false, sections.update(16))
@@ -662,6 +673,7 @@ define(function(require) {
     assert(true, sections.active === after)
     assert(0, sections.activeCount)
     assert(undefined, sections.next)      // next consumed on the final advance
+    assert(24, sections.runStartBeat)
 
     // count standard param reads activeCount when active, 0 when inactive
     let cs = { name:'cs', length:8 }
