@@ -41,6 +41,10 @@ define(function(require) {
 
   let parseElement = (state) => {
     let result
+    if (state.expect === 'once') { // Implicit count for 'once'; before the eof check as 'once' is often last
+      state.expect = 'operator'
+      return 1
+    }
     eatWhitespace(state)
     if (state.str[state.idx] === undefined) { return undefined }
     let startIdx = state.idx
@@ -60,6 +64,14 @@ define(function(require) {
         if (state.anchor) { throw `Invalid pattern: only one of 'on' or 'to' allowed` }
         state.anchor = anchorKw === 'on' ? 'sectionStart' : 'sectionEnd'
         return parseElement(state) // Anchor is a whole-pattern modifier, not a tree element
+      }
+      if (keyword(state, 'now')) {
+        state.playFromStart = true
+        return parseElement(state)
+      }
+      if (keyword(state, 'once')) {
+        state.expect = 'once'
+        return Object.assign({}, operators.find(op => op.keyword === 'loop'), {src:'once'})
       }
       for (let idx in operators) {
         let op = operators[idx]
@@ -106,7 +118,7 @@ define(function(require) {
   }
 
   let parsePattern = (state) => {
-    let playFromStart = keyword(state, 'now')
+    state.playFromStart = keyword(state, 'now')
     state.expect = 'literal'
     let elements = []
     let element = parseElement(state)
@@ -115,7 +127,7 @@ define(function(require) {
       element = parseElement(state)
     }
     let result = precedenceTree(elements)
-    result.playFromStart = playFromStart
+    result.playFromStart = !!state.playFromStart
     result.anchor = state.anchor
     return result
   }
@@ -162,6 +174,18 @@ define(function(require) {
     assertThrows("Invalid pattern: unknown anchor ''", () => parsePattern(st('01 on')))
     assertThrows("Invalid pattern: only one of 'on' or 'to' allowed", () => parsePattern(st('01 on sx to sx')))
     assertThrows('Invalid pattern: missing operator', () => parsePattern(st('on sx')))
+
+    assert('sectionEnd', parsePattern(st('01 to sx once')).anchor)
+    assert('sectionEnd', parsePattern(st('01 ONCE to sx')).anchor)
+    assert('sectionStart', parsePattern(st('01 on sx once')).anchor)
+    assertThrows('Invalid pattern: missing operator', () => parsePattern(st('01 once 2')))
+
+    assert(true, parsePattern(st('now 01')).playFromStart)
+    assert(true, parsePattern(st('01 once now')).playFromStart)
+    assert(true, parsePattern(st('01 now once')).playFromStart)
+    assert(true, parsePattern(st('01 NOW')).playFromStart)
+    assert(false, parsePattern(st('01 once')).playFromStart)
+    assert(false, parsePattern(st('`01 now`')).playFromStart)
 
     console.log("Pattern parse tests complete")
   }
