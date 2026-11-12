@@ -5,7 +5,7 @@
 //   keyword   - set / preset / include / follow / gp / section
 //   property  - parameter / field names (`name=`, or `name:` inside a { } map)
 //   pattern   - the pattern literal of a player line (the note/sample/drum sequence),
-//               but not the pattern operators (crop, loop, +, *) or their arguments
+//               but not the pattern operators (crop, loop, once, now, on/to sx, +, *) or their arguments
 // See index.html for the DSL reference; colours are the classes defined in codemirror.css.
 
 (function(mod) {
@@ -76,6 +76,11 @@ CodeMirror.defineMode("limut", function() {
     if (ch == "/" && stream.match(/^\/\*/)) { state.tokenize = tokenBlockComment; return tokenBlockComment(stream, state); }
 
     // Pattern operators / source keywords render as ordinary identifiers, not literals
+    if (state.patExpect == "operator") { // Only valid after a literal, so a literal `on` or `once` stays a pattern
+      var opKw = stream.match(/^(on|to|once|now)(?=\s|,|$)/i);
+      if (opKw) { state.patExpect = /^(on|to)$/i.test(opKw[0]) ? "anchor" : "operator"; return "identifier"; }
+    }
+    if (state.patExpect == "anchor") { state.patExpect = "operator"; stream.match(/^[^\s,]+/); return "identifier"; }
     var kw = stream.match(/^(crop|loop|follow|now)\b/i);
     if (kw) { state.patExpect = /^now$/i.test(kw[0]) ? "literal" : "expression"; return "identifier"; }
     if (state.patExpect == "operator") {
@@ -258,6 +263,17 @@ if (typeof window !== 'undefined' && (new URLSearchParams(window.location.search
   assert(['#e000'], colours("v readout 0, add=#e000.r"));
   assert(['#f00'], colours("v1 blank, fore=#f00.mix{1/2}"));
   assert(['#ff0000'], colours("v1 blank, fore=#ff0000.r"));
+
+  // Pattern operators and section anchors are not part of the pattern literal
+  assert(['Xxn'], tokensOfStyle("p perc Xxn to sx once", "pattern"));
+  assert(['perc','to','sx','once'], tokensOfStyle("p perc Xxn to sx once", "identifier"));
+  assert(['X'], tokensOfStyle("p perc X on SECTION loop 1, amp=2", "pattern"));
+  assert(['perc','on','SECTION','loop'], tokensOfStyle("p perc X on SECTION loop 1, amp=2", "identifier"));
+  assert(['01'], tokensOfStyle("p play 01 once now", "pattern"));
+  assert(['play','once','now'], tokensOfStyle("p play 01 once now", "identifier"));
+  assert(['01'], tokensOfStyle("p play now 01 once", "pattern"));
+  assert(['on','23'], tokensOfStyle("p play on + 23", "pattern")); // A literal `on` is a pattern
+  assert(['`01 on sx`'], tokensOfStyle("p play `01 on sx`", "pattern"));
 
   console.log('Editor mode tests complete');
 }
