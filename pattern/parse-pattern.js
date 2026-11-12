@@ -51,12 +51,14 @@ define(function(require) {
       state.expect = 'operator' // The only thing that can follow a literal is an operator to act on it
       break;
     case 'operator':
-      if (keyword(state, 'on')) {
+      let anchorKw = ['on','to'].find(kw => keyword(state, kw))
+      if (anchorKw) {
         let tokStart = state.idx
         while (state.idx < state.str.length && !isWhitespace(state.str[state.idx])) { state.idx++ }
         let tok = state.str.slice(tokStart, state.idx).toLowerCase()
-        if (tok === 'sx.start' || tok === 'section.start') { state.anchor = 'sectionStart' }
-        else { throw `Invalid pattern: unknown anchor '${tok}'` }
+        if (tok !== 'sx' && tok !== 'section') { throw `Invalid pattern: unknown anchor '${tok}'` }
+        if (state.anchor) { throw `Invalid pattern: only one of 'on' or 'to' allowed` }
+        state.anchor = anchorKw === 'on' ? 'sectionStart' : 'sectionEnd'
         return parseElement(state) // Anchor is a whole-pattern modifier, not a tree element
       }
       for (let idx in operators) {
@@ -148,14 +150,18 @@ define(function(require) {
     assertThrows('Invalid pattern: missing operator', () => parsePattern(st(' loop +')))
     assertThrows('Invalid pattern: Continuation "_" not valid at start of literal', () => parsePattern(st('01 + _3')))
 
-    assert('sectionStart', parsePattern(st('01 on sx.start loop 1')).anchor)
-    assert('sectionStart', parsePattern(st('01 loop 1 on sx.start')).anchor)
-    assert('sectionStart', parsePattern(st('01 on SECTION.start')).anchor)
+    assert('sectionStart', parsePattern(st('01 on sx loop 1')).anchor)
+    assert('sectionStart', parsePattern(st('01 loop 1 on sx')).anchor)
+    assert('sectionStart', parsePattern(st('01 on SECTION')).anchor)
+    assert('sectionEnd', parsePattern(st('01 to sx loop 1')).anchor)
+    assert('sectionEnd', parsePattern(st('01 loop 1 to Sx')).anchor)
     assert(undefined, parsePattern(st('01 loop 1')).anchor)
-    assert(undefined, parsePattern(st('`01 on sx.start`')).anchor)
-    assertThrows("Invalid pattern: unknown anchor 'foo.start'", () => parsePattern(st('01 on foo.start')))
+    assert(undefined, parsePattern(st('`01 on sx`')).anchor)
+    assertThrows("Invalid pattern: unknown anchor 'sx.start'", () => parsePattern(st('01 on sx.start')))
+    assertThrows("Invalid pattern: unknown anchor 'foo'", () => parsePattern(st('01 to foo')))
     assertThrows("Invalid pattern: unknown anchor ''", () => parsePattern(st('01 on')))
-    assertThrows('Invalid pattern: missing operator', () => parsePattern(st('on sx.start')))
+    assertThrows("Invalid pattern: only one of 'on' or 'to' allowed", () => parsePattern(st('01 on sx to sx')))
+    assertThrows('Invalid pattern: missing operator', () => parsePattern(st('on sx')))
 
     console.log("Pattern parse tests complete")
   }

@@ -30,6 +30,32 @@ define(function(require) {
     tc.patternLength = count
   }
 
+  // Total length of a pattern that runs out (eg via loop), else the length of its first pass
+  let patternTotalLength = (pattern, dur) => {
+    pattern.reset(0)
+    let count = 0
+    let idx = 0
+    let passLength
+    for (let steps = 0; steps < 1024; steps++) {
+      let duration = mainParamUnits(evalParamFrame(dur, {idx: idx, count: count}, count), 'b', 1)
+      if (duration <= 0) { throw 'Zero duration' }
+      let chord = pattern.next()
+      if (chord === undefined) {
+        if (passLength === undefined) { passLength = count }
+        pattern.loop()
+        chord = pattern.next()
+        if (chord === undefined) {
+          pattern.reset(0)
+          return {finite:true, total:count}
+        }
+      }
+      if (chord.some(e => e.value !== undefined)) { idx++ }
+      count += duration * chord.toSorted((a,b) => a.dur - b.dur)[0].dur
+    }
+    pattern.reset(0)
+    return {finite:false, passLength: passLength !== undefined ? passLength : count}
+  }
+
   let toPreviousStart = (pattern, count, dur, tc) => {
     tc.patternCount = 0
     tc.idx = 0
@@ -105,5 +131,6 @@ define(function(require) {
   return {
     initTimingContext: initTimingContext,
     stepToCount: stepToCount,
+    patternTotalLength: patternTotalLength,
   }
 });

@@ -1,8 +1,12 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-Want to be able to:  t perc Xxn on sx.start loop1
- ? Also run at end of section??
+Want to be able to:  t perc Xxn on sx loop1
+ ? Also run up to end of section `Xxn to sx loop 1`??
+ ? Also `once` which means `loop 1`
+ ? Also by named section only, eg `Xxn on sx drop once`
+  ? Is this even necessary? Can be done by placing the things inside the sections anyway?
+!Get rid of tooltips on section buttons and keyboard button
 Want to add an audio node that creates a global var with a value that tracks the audio at that point. Can use for ducking etc
 !Segmented values in fx chain only work on first event, eg p ping, fx=gain{[1,0]e@s}, oct=3
 Clean up midi{'vel'} - it has aftertouch baked in; does it even make sense as a thing anyway?

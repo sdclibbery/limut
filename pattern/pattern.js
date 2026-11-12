@@ -2,7 +2,7 @@
 define(function(require) {
   let param = require('player/default-param')
   let parsePattern = require('pattern/parse-pattern.js')
-  let {initTimingContext,stepToCount} = require('pattern/timing.js')
+  let {initTimingContext,stepToCount,patternTotalLength} = require('pattern/timing.js')
   let sections = require('section/sections')
 
   let expandDefaultFlags = (event) => {
@@ -30,24 +30,42 @@ define(function(require) {
     let pattern = parsePattern(state)
     let tc = {}
     let firstInit = true
+    let lengthInfo, lengthDur
     let result = (count) => {
       let dur = param(result.params.dur, 1)
       let origin = 0
+      let end = Infinity
       if (pattern.anchor === 'sectionStart') {
         origin = sections.runStartBeat
         if (tc.origin !== origin) { tc = {origin:origin} }
+      } else if (pattern.anchor === 'sectionEnd') {
+        end = sections.runEndBeat(count)
+        if (end === undefined) { tc = {}; return [] }
+        if (lengthInfo === undefined || lengthDur !== dur) {
+          lengthDur = dur
+          lengthInfo = patternTotalLength(pattern, dur)
+        }
+        if (lengthInfo.finite) { origin = end - lengthInfo.total }
+        else {
+          let pl = lengthInfo.passLength
+          origin = end - pl*Math.ceil((end - sections.runStartBeat)/pl)
+        }
+        if (tc.origin !== origin) { tc = {origin:origin} }
       }
-      let rel = Math.max(0, count - origin)
+      let rel = count - origin
+      if (pattern.anchor !== 'sectionEnd') { rel = Math.max(0, rel) }
+      if (rel <= -1) { return [] }
       if (!tc.inited) {
         tc.inited = true
-        initTimingContext(tc, rel, pattern, dur, firstInit && pattern.playFromStart)
+        // A fractional origin inside this beat inits as a start from step 0
+        initTimingContext(tc, Math.max(0, rel), pattern, dur, firstInit && pattern.playFromStart && pattern.anchor !== 'sectionEnd')
         firstInit = false
         if (pattern.start) {
           pattern.start() // Tell the pattern TC init is complete and from now on, it'll be real operation
         }
       }
       return stepToCount(rel, dur, pattern, tc)
-              .filter(({value}) => value !== undefined) // Discard rests
+              .filter(({value,_time}) => value !== undefined && rel + _time + origin < end - 1e-9) // Discard rests, and anything past a to sx end
               .map(event => {
                 event.count += origin
                 expandDefaultFlags(event)
@@ -584,10 +602,10 @@ define(function(require) {
     assertSameWhenStartLater(() => root('0 loop 1000', {dur:3.17}))
     assertSameWhenStartLater(() => root('01 loop 1000', {dur:3.17}))
 
-    { // on sx.start: pattern time counts from sections.runStartBeat and restarts when it changes
+    { // on sx: pattern time counts from sections.runStartBeat and restarts when it changes
       let savedStart = sections.runStartBeat
       sections.runStartBeat = 4
-      p = root('X on sx.start loop 1', {})
+      p = root('X on sx loop 1', {})
       assert([{value:'X',dur:1,_time:0,count:4,idx:0}], p(4))
       assert([], p(5))
       assert([], p(6))
@@ -596,31 +614,76 @@ define(function(require) {
       assert([], p(9))
 
       sections.runStartBeat = 3
-      p = root('12 on sx.start', {})
+      p = root('12 on sx', {})
       assert([{value:1,dur:1,_time:0,count:3,idx:0}], p(3))
       assert([{value:2,dur:1,_time:0,count:4,idx:1}], p(4))
       assert([{value:1,dur:1,_time:0,count:5,idx:0}], p(5))
 
       sections.runStartBeat = 2
-      p = root('12 loop 1 on sx.start', {dur:1/4})
+      p = root('12 loop 1 on sx', {dur:1/4})
       assert([{value:1,dur:1/4,_time:0,count:2,idx:0},{value:2,dur:1/4,_time:1/4,count:2.25,idx:1}], p(2))
       assert([], p(3))
 
       sections.runStartBeat = 0
-      p = root('X on sx.start loop 1', {}) // Created mid-run: like plain loop, the current loop still plays
+      p = root('X on sx loop 1', {}) // Created mid-run: like plain loop, the current loop still plays
       assert([{value:'X',dur:1,_time:0,count:5,idx:5}], p(5))
       assert([], p(6))
       sections.runStartBeat = 7
       assert([{value:'X',dur:1,_time:0,count:7,idx:0}], p(7))
 
       sections.runStartBeat = 0
-      p = root('now X on sx.start loop 1', {}) // now: plays immediately the first time
+      p = root('now X on sx loop 1', {}) // now: plays immediately the first time
       assert([{value:'X',dur:1,_time:0,count:5,idx:0}], p(5))
       assert([], p(6))
       sections.runStartBeat = 7
       assert([{value:'X',dur:1,_time:0,count:7,idx:0}], p(7))
       assert([], p(8))
 
+      sections.runStartBeat = savedStart
+    }
+    { // to sx: the pattern is timed to finish at sections.runEndBeat
+      let savedEnd = sections.runEndBeat
+      let savedStart = sections.runStartBeat
+      let end = 8
+      sections.runEndBeat = () => end
+      p = root('X to sx loop 1', {})
+      assert([], p(5))
+      assert([], p(6))
+      assert([{value:'X',dur:1,_time:0,count:7,idx:0}], p(7))
+      assert([], p(8))
+      end = 12 // end moves: re-anchors
+      assert([], p(10))
+      assert([{value:'X',dur:1,_time:0,count:11,idx:0}], p(11))
+
+      end = 8
+      p = root('12 loop 1 to sx', {})
+      assert([{value:1,dur:1,_time:0,count:6,idx:0}], p(6))
+      assert([{value:2,dur:1,_time:0,count:7,idx:1}], p(7))
+
+      p = root('12 loop 1 to sx', {dur:1/4}) // origin falls inside a beat
+      assert([], p(6))
+      assert([{value:1,dur:1/4,_time:0.5,count:7.5,idx:0},{value:2,dur:1/4,_time:0.75,count:7.75,idx:1}], p(7))
+
+      end = undefined // run end unknown (followed by itself): silent
+      p = root('X to sx loop 1', {})
+      assert([], p(3))
+
+      end = 8
+      p = root('1234 loop 1 to sx', {}) // Longer than the run (6..8): only the tail plays
+      assert([{value:3,dur:1,_time:0,count:6,idx:2}], p(6))
+      assert([{value:4,dur:1,_time:0,count:7,idx:3}], p(7))
+
+      p = root('X loop 2 to sx', {}) // Created mid-run: never spills past the end
+      assert([{value:'X',dur:1,_time:0,count:7,idx:1}], p(7))
+      assert([], p(8))
+      assert([], p(9))
+
+      sections.runStartBeat = 0 // No loop: phase aligned so a pass ends at the end
+      assert([{value:2,dur:1,_time:0,count:7,idx:1}], root('12 to sx', {})(7))
+      assert([{value:2,dur:1,_time:0,count:0,idx:1}], root('123 to sx', {})(0))
+      assert([{value:3,dur:1,_time:0,count:7,idx:2}], root('123 to sx', {})(7))
+
+      sections.runEndBeat = savedEnd
       sections.runStartBeat = savedStart
     }
     assertSameWhenStartLater(() => root('01 + 23', {dur:3.17}))

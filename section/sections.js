@@ -56,6 +56,18 @@ define(function(require) {
   sections.getLength = (section, beatCount) => numericParam(section, 'length', beatCount)
   sections.getRepeat = (section, beatCount) => numericParam(section, 'repeat', beatCount)
 
+  // Beat the current run of the active section will end, or undefined if it is followed by itself.
+  // Lengths are ceiled because update() only switches on an integer beat.
+  sections.runEndBeat = (beatCount) => {
+    let a = sections.active
+    if (!a || (sections.next || sections.default) === a) { return undefined }
+    let len = sections.getLength(a, beatCount)
+    if (typeof len !== 'number' || !(len > 0)) { return undefined }
+    let repeat = sections.getRepeat(a, beatCount)
+    let remaining = repeat !== undefined ? Math.max(1, repeat - sections.activeCount) : 1
+    return sections.activeStartBeat + Math.ceil(len)*remaining
+  }
+
   // Route the `set <name> param=value` overrides that name a section onto that section, returning
   // those that stay with players. A player of the same name always wins, and the section/sx keyword
   // wins over a same-named player — both matching the lookup precedence in lookupOp. playerExists is
@@ -653,6 +665,7 @@ define(function(require) {
     assert(true, sections.active === rep)
     assert(0, sections.activeCount)
     sections.next = after // queue what follows the final repeat
+    assert(24, sections.runEndBeat(0)) // run ends after the final repeat
 
     // 1st finish -> count 1, repeats (still active, next not consumed, no change reported, restart)
     assert(false, sections.update(8))
@@ -661,12 +674,14 @@ define(function(require) {
     assert(true, sections.next === after) // next preserved across repeats
     assert(8, sections.activeStartBeat)   // replayed from the top
     assert(0, sections.runStartBeat)      // but the run carries on through repeats
+    assert(24, sections.runEndBeat(8))
 
     // 2nd finish -> count 2, still repeating
     assert(false, sections.update(16))
     assert(true, sections.active === rep)
     assert(2, sections.activeCount)
     assert(true, sections.next === after)
+    assert(24, sections.runEndBeat(16))
 
     // 3rd finish -> count reaches repeat, advances to next; counter resets for the new section
     assert(true, sections.update(24))
@@ -674,6 +689,15 @@ define(function(require) {
     assert(0, sections.activeCount)
     assert(undefined, sections.next)      // next consumed on the final advance
     assert(24, sections.runStartBeat)
+    assert(32, sections.runEndBeat(24))   // followed by default
+    sections.next = after
+    assert(undefined, sections.runEndBeat(24)) // followed by itself: the run doesn't end
+    sections.next = undefined
+    let frac = { name:'frac', length:7.5 }
+    sections.active = frac
+    sections.activeStartBeat = 2; sections.activeCount = 0
+    assert(10, sections.runEndBeat(2)) // fractional length: the switch happens on the next integer beat
+    sections.active = after
 
     // count standard param reads activeCount when active, 0 when inactive
     let cs = { name:'cs', length:8 }
