@@ -43,7 +43,6 @@ define(function(require) {
   let makeButton = (name) => {
     let button = document.createElement('button')
     button.innerText = name
-    button.title = `Click to queue '${name}' as the next section; shift-click to switch to it now`
     button.addEventListener('mousedown', (event) => {
       event.preventDefault() // Keep focus (and the caret) in the editor
       if (event.shiftKey) {
