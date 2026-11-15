@@ -56,10 +56,40 @@ define(function(require) {
     }
   }
 
+  let isPlainObject = (v) => typeof v === 'object' && v !== null && !(v instanceof AudioNode) && !v.isShaderNode && !v.isVisualTextureSource
+
+  // Never mutate base: preset baseParams are shared between events
+  let withSubParam = (base, sub, override) => {
+    if (Array.isArray(base)) { return base.map(b => withSubParam(b, sub, override)) }
+    if (typeof base === 'function') { // Might evaluate to a number or a map, so merge after evaluation
+      let f = (e,b,er) => withSubParam(er(base,e,b), sub, override)
+      if (base.interval) { f.interval = base.interval }
+      return f
+    }
+    let result
+    if (base === undefined) { result = {} }
+    else if (isPlainObject(base)) { result = Object.assign({}, base) }
+    else { result = {value: base} }
+    let dot = sub.indexOf('.')
+    if (dot > 0) {
+      let head = sub.slice(0, dot)
+      result[head] = withSubParam(result[head], sub.slice(dot+1), override)
+    } else {
+      result[sub] = applyOverride(result, sub, override)
+    }
+    return result
+  }
+
   let applyOverridesInPlace = (params, overrides) => {
     for (let k in overrides) {
       if (k === '_time' || k === 'value') { continue } // Do not override these values
-      params[k] = applyOverride(params, k, overrides[k])
+      let dot = k.indexOf('.')
+      if (dot > 0) {
+        let base = k.slice(0, dot)
+        params[base] = withSubParam(params[base], k.slice(dot+1), overrides[k])
+      } else {
+        params[k] = applyOverride(params, k, overrides[k])
+      }
     }
   }
 
@@ -156,6 +186,26 @@ define(function(require) {
   assert({_fxString:'3',fx:3}, applyOverrides({}, {fx:newOverride(3,opAdd,'3')}))
   assert({fx:5,_fxString:'2+3'}, applyOverrides({fx:2}, {fx:newOverride(3,opAdd,'3')}))
   assert({fx:5,_fxString:'2+3'}, applyOverrides({fx:2,_fxString:'2'}, {fx:newOverride(3,opAdd,'3')}))
+
+  // Dotted subparam overrides
+  assert({lpf:{value:300,q:10}}, applyOverrides({lpf:{value:300,q:5}}, {'lpf.q':newOverride(10)}))
+  assert({lpf:{value:300,q:15}}, applyOverrides({lpf:{value:300,q:10}}, {'lpf.q':newOverride(5,opAdd)}))
+  assert({lpf:{value:300,q:10}}, applyOverrides({lpf:300}, {'lpf.q':10}))
+  assert({lpf:{q:10}}, applyOverrides({}, {'lpf.q':newOverride(10)}))
+  assert({lpf:[{value:300,q:10},{value:600,q:10}]}, applyOverrides({lpf:[300,600]}, {'lpf.q':newOverride(10)}))
+  assert({a:{value:1,b:{x:1,c:2}}}, applyOverrides({a:{value:1,b:{x:1}}}, {'a.b.c':newOverride(2)}))
+  assert({a:{b:{value:3,c:2}}}, applyOverrides({a:{b:3}}, {'a.b.c':newOverride(2)}))
+  let sharedBase = {value:300,q:5}
+  let dotted = applyOverrides({lpf:sharedBase}, {'lpf.q':newOverride(10)})
+  assert({value:300,q:5}, sharedBase)
+  assert(undefined, dotted['lpf.q'])
+  assert({x:{value:3,q:10}}, evalParam(applyOverrides({x:()=>3}, {'x.q':newOverride(10)}), {}, 0))
+  assert({x:{h:1,v:1/2}}, evalParam(applyOverrides({x:()=>({h:1,v:1})}, {'x.v':newOverride(1/2)}), {}, 0))
+  assert({x:{h:1,v:3/2}}, evalParam(applyOverrides({x:()=>({h:1,v:1})}, {'x.v':newOverride(1/2,opAdd)}), {}, 0))
+  let fi = () => 3
+  fi.interval = 'frame'
+  assert('frame', applyOverrides({x:fi}, {'x.q':newOverride(10)}).x.interval)
+  assert({lpf:300}, applyOverrides({}, {'lpf.q':newOverride(10), lpf:newOverride(300)}))
 
   console.log('Override params tests complete')
   }

@@ -138,7 +138,6 @@ define((require) => {
         playerIds = [identifierWithWildcards(state)]
       }
       let params = parseParams(state.str.slice(state.idx).trim(), undefined, playerIds.join(','))
-      for (let k in params) { if (k.includes('.')) { throw 'Invalid param name '+k } }
       playerIds.forEach(playerId => {
         players.overrides[playerId] = combineOverrides(players.overrides[playerId] || {}, params)
       })
@@ -492,6 +491,14 @@ define((require) => {
   parseLine('set p lpf=300')
   assert(2, players.overrides.p.amp)
   assert(300, players.overrides.p.lpf)
+  delete players.overrides.p
+
+  parseLine('set p lpf.q=10')
+  parseLine('set p lpf.q+=5')
+  assert({lpf:{value:300,q:15}}, applyOverrides({lpf:300}, players.overrides.p))
+  delete players.overrides.p
+  parseLine('set p lpf.q+=5')
+  assert({lpf:{value:300,q:10}}, applyOverrides({lpf:{value:300,q:5}}, players.overrides.p))
   delete players.overrides.p
 
   parseLine('set p* add=2')

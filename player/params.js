@@ -194,6 +194,16 @@ define(function(require) {
   e = ev(); e._destructor = require('play/destructor')()
   assert('mockaudionode>>mockaudionode', evalParamFrame(applyOverrides({}, parseParams('fx=mockaudionode,fx>>=mockaudionode'))._fxString, e,0))
 
+  assert({lpf:{value:300,q:10}}, applyOverrides({}, parseParams('lpf=300, lpf.q=10')))
+  assert({fore:{h:1,v:0.5}}, applyOverrides({}, parseParams('fore={h:1}, fore.v=1/2')))
+  assert({lpf:{value:300,q:15}}, applyOverrides({}, parseParams('lpf={300,q:10}, lpf.q+=5')))
+  assert({lpf:{value:300,q:15}}, applyOverrides({}, parseParams('lpf={300,q:10}, lpf.q += 5')))
+  assert({lpf:300}, applyOverrides({}, parseParams('lpf.q=10, lpf=300')))
+  assert({lpf:{value:300,q:20}}, applyOverrides({lpf:{value:300,q:5}}, parseParams('lpf.q=10, lpf.q*=2')))
+  assert({lpf:{value:400,q:5}}, applyOverrides({lpf:{value:300,q:5}}, parseParams('lpf.value+=100')))
+  assert({value:300,q:10}, evalParamFrame(applyOverrides({}, parseParams('lpf=[300,400]t1, lpf.q=10')).lpf, ev(0,0), 0))
+  assert({value:400,q:10}, evalParamFrame(applyOverrides({}, parseParams('lpf=[300,400]t1, lpf.q=10')).lpf, ev(1,1), 1))
+
   console.log("Params tests complete")
   }
   

@@ -468,13 +468,14 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>id</code> Identifier for the player, so it can be referred to from other players etc. Must contain only alphanumeric characters from the basic Latin alphabet or underscore, and must not start with a digit. No player can be named <code>set</code>, <code>preset</code>, <code>section</code> or <code>sx</code> as those are reserved keywords.</p>
 <p><code>synth</code> Name of the audio or visual synth to use; eg <code>piano</code></p>
 <p><code>pattern</code> Pattern of notes to play. Specifies the notes or sounds to play, and when to play them. Ends at the first comma; it can also be supplied (or overridden) as the <code>pattern</code> param instead, eg <code>p ping 0, pattern=`0246`</code>. A <code>pattern</code> param given by a preset is only a default, overridden by the pattern on the player line</p>
-<p><code>params</code> Comma separated list of params (eg <code>amp=1/2</code>) that affect how the player plays; see 'Value Syntax' and 'Params' sections below</p>
+<p><code>params</code> Comma separated list of params (eg <code>amp=1/2</code>) that affect how the player plays; see 'Value Syntax' and 'Params' sections below. Modification (<code>amp+=1</code>) and subparam (<code>lpf.q=10</code>) overrides work here too; see 'Overriding player params'.</p>
 <h5>Overriding player params:</h5>
 <p>Basic structure: <code>set id params</code></p>
 <p>A set overrides command begins when <code>set </code> begins a new line. The id and params may follow on subsequent lines.</p>
 <p><code>id</code> Player to override. Can be a list (<code>set (kd,sd) amp=0</code>), a wildcard (<code>set p* ...</code>, <code>set * ...</code>), or an exclusion (<code>set !p ...</code> for all players except p). It can also be a section name, or <code>section</code> / <code>sx</code>; see 'Overriding section params' below.</p>
 <p><code>params</code> Comma separated list of params (eg <code>amp=1/2</code>) that affect how the player plays; see 'Value Syntax' and 'Params' sections below</p>
 <p class='sub'><code>modification overrides</code> params can be defined using operators to modify existing values rather than override them; eg <code>add+=2</code> will increase the add parameter by an additional 2 on top of what it was already set to.</p>
+<p class='sub'><code>subparam overrides</code> <code>lpf.q=10</code> sets one subparam and keeps the rest of the param, on a player line or in <code>set</code>, with modification operators too; eg <code>s saw 0, lpf=300, lpf.q=10</code>, <code>set s lpf.q+=5</code>, <code>r readout, fore={h:time}, fore.v=1/2</code>. Params apply left to right, so a later whole-param assignment (eg <code>lpf=300</code> after <code>lpf.q=10</code>) replaces it.</p>
 <h5>Setting global vars:</h5>
 <p>Basic structure: <code>set var = value</code></p>
 <p>A set global var command begins when <code>set </code> begins a new line. The var and value may follow on subsequent lines.</p>
