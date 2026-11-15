@@ -12,6 +12,10 @@ Open `http://localhost:8000` in a browser. URL params:
 - `?test` — run in-browser unit tests (output in browser console)
 - `?nopool` — disable GainNode pooling (`play/node-pool.js`) for A/B comparison; pool stats via `limutNodePool.stats()` in the console
 
+## Publishing
+
+When the user says "publish" (or "commit and publish": commit first), run `sh publish.sh` without asking. It pushes limut, then bumps the `limut` submodule in `../sdclibbery.github.io` and pushes that.
+
 ## Module System
 
 Uses AMD modules via bundled `require.js`. All modules use `define(function(require) { ... })`. There is no bundler, transpiler, or npm build step — plain ES6+ JS is served directly. The only npm dependency is Electron (for the optional desktop build).

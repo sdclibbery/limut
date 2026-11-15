@@ -1,19 +1,14 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-Want to be able to:  t perc Xxn on sx loop1
- ? Also run up to end of section `Xxn to sx loop 1`??
- ? Also `once` which means `loop 1`
- ?Syntax colouring for new pattern operators on, to, once, sx
-!Get rid of tooltips on section buttons and keyboard button
-Want to add an audio node that creates a global var with a value that tracks the audio at that point. Can use for ducking etc
 !Segmented values in fx chain only work on first event, eg p ping, fx=gain{[1,0]e@s}, oct=3
-Clean up midi{'vel'} - it has aftertouch baked in; does it even make sense as a thing anyway?
 !Audioparam to NaN in Synthetic Soul; why? Also error does not say which player or param
  Cant recreate, must be from avw2??
+?set bpm can have target time? eg set bpm={140,by;1000}; takes a linear step towards the target every beat
+ Or generic []{by:512} or something? now replaces with current time in source?
 ???Should there be a monophonic synth type with a combined play/FX chain that can handle event data, and then event data is completely banned in FX chains???
-Explore drops
 Would be nice to write eg fog{t+: main.pulse}
+Want to add an audio node that creates a global var with a value that tracks the audio at that point. Can use for ducking etc
 Reverb ducked against dry signal; Make generic dry ducker if possible??
 ?arc perf: Still have on beat problem with short dur; Undo the chord thing, and look at better ways of triggering the synth instead
  !very slow on any arc shader change on the pi
@@ -33,7 +28,6 @@ pattern brackets to allow eg (094 crop 7 + 1) crop 30 + 98
 ?sdsin/sdsquare/sdsaw/sdtri (may be approximate only)
 ?support for piecewise as shader code not textures?
 Multiple audiocontexts, set context='foo' on a player. Allows audio rendering to be split over multiple cores
-?set bpm can have target time? eg set bpm={140,by;1000}; takes a linear step towards the target every beat
 grain should have offset param, would allow more interesting effects; granular delays etc
 !Render capacity leak again????
  Report Chromium bug:
