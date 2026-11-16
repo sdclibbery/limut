@@ -160,9 +160,11 @@ define(function (require) {
     dur *= evalMainParamEvent(params, "long", 1)
     let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     let vca = system.audio.createGain()
-    vca.gain.value = gain
+    params.endTime = params._time + dur * params.beat.duration
+    vca.gain.cancelScheduledValues(0)
+    vca.gain.setValueAtTime(gain, 0)
+    vca.gain.setValueAtTime(0, params.endTime) // The voice is only destroyed some time after endTime
     params._destructor.disconnect(vca)
-    params.endTime = params._time + dur
     scheduleDestroy(params)
     return vca
   }
@@ -228,7 +230,7 @@ define(function (require) {
     let gain = Math.max(0.0001, gainBase * (typeof params.amp === 'number' ? params.amp : 1))
     let vca = system.audio.createGain()
     evalMainParamFrame(vca.gain, params, 'envelope', 1, undefined, g => g*gain)
-    params.endTime = params._time + dur
+    params.endTime = params._time + dur * params.beat.duration
     params._destructor.disconnect(vca)
     scheduleDestroy(params)
     return vca
@@ -299,6 +301,17 @@ define(function (require) {
     envelope(params, 0.1, 'full')
     assert(baseCount, liveVoices.size, 'a non live envelope is not registered')
     assert(true, params.endTime < system.audio.currentTime + 10)
+  }
+
+  ;['none', 'full', 'organ'].forEach(type => { // dur and sus are in beats, endTime in seconds
+    let params = {_time: system.audio.currentTime, beat: {duration: 1/2}, dur: 1, sus: 1, att: 0, dec: 0, rel: 0}
+    envelope(params, 0.1, type)
+    assert(true, Math.abs(params.endTime - (params._time + 1/2)) < 1e-6, `${type}: endTime is dur in seconds; got ${params.endTime-params._time}`)
+  })
+  { // custom envelope expression
+    let params = {_time: system.audio.currentTime, beat: {duration: 1/2}, dur: 1, envelope: 1}
+    envelope(params, 0.1, 'full')
+    assert(true, Math.abs(params.endTime - (params._time + 1/2)) < 1e-6, `custom: endTime is dur in seconds; got ${params.endTime-params._time}`)
   }
 
   console.log('Envelope tests complete')

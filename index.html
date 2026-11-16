@@ -1029,7 +1029,17 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>echo</code> Echo time delay. Default time unit: beats.</p>
 <p class='sub'><code>echo={1,feedback:0.8}</code> Echo feedback gain, 0 to 1, default 0.35. Higher value means the echo persists for longer.</p>
 <p class='sub'><code>echo={1,max:2}</code> Echo max time delay. Only valid for bus echo. The bus echo time can be varied, but cannot be larger than this. Defaults to either 1 beat, or the initial value of the delay time, whichever is larger. Default time unit: beats.</p>
-<p><code>envelope</code> Envelope type: <code>'full'</code> (ADSR), <code>'simple'</code> (ADR), <code>'organ'</code> (ASR at full volume), <code>'pad'</code> (cosine crossfade, constant volume across consecutive notes), <code>'linpad'</code> (linear crossfade, better when consecutive events are phase identical), <code>'percussion'</code> (instant attack, release only). Or an expression, eg <code>envelope=[1:!300ms,0]e@s</code></p>
+<p><code>envelope</code> Amplitude envelope type, eg <code>envelope='simple'</code>. Default depends on the synth: <code>'full'</code> for <code>wave</code>, <code>superosc</code>, <code>fm</code>, <code>pwm</code>, <code>multiwave</code>; <code>'organ'</code> for <code>sample</code>, <code>audiosynth</code>, <code>guitar</code>; <code>'pad'</code> for <code>noise</code>; <code>'linpad'</code> for <code>external</code>. <code>play</code>, <code>io808</code> and <code>pitchedperc</code> have their own envelopes and ignore it. An unknown name gives <code>'full'</code>. Below, <code>dur</code> means <code>sus</code> if set, else <code>dur</code>, times <code>long</code>.</p>
+<p class='sub'><code>'full'</code> ADSR: <code>att</code> (default 0.09), <code>dec</code> (0.08&times;dur), hold at <code>sus={level:0.8}</code> until <code>sus</code> ends, then <code>rel</code> (0.1&times;dur).</p>
+<p class='sub'><code>'simple'</code> ADR: <code>att</code> (0.09), <code>dec</code> (0.08&times;dur) to <code>sus={level:0.8}</code>, then straight into <code>rel</code> (default dur). No sustain hold, so the note length is set by <code>att</code>+<code>dec</code>+<code>rel</code>.</p>
+<p class='sub'><code>'organ'</code> <code>att</code> (0.01) to full volume, hold for dur, then exponential <code>rel</code> (0.1). <code>dec</code> and <code>sus={level}</code> are ignored.</p>
+<p class='sub'><code>'pad'</code> Cosine fade in over <code>att</code> and out over <code>rel</code> (both default dur), so consecutive notes crossfade at constant volume.</p>
+<p class='sub'><code>'linpad'</code> As <code>'pad'</code> with linear fades; better when consecutive events are phase identical.</p>
+<p class='sub'><code>'percussion'</code> (or <code>'perc'</code>) Instant attack, linear decay over <code>dec</code>, else <code>rel</code>, else dur.</p>
+<p class='sub'><code>'exp'</code> As <code>'percussion'</code> with an exponential decay.</p>
+<p class='sub'><code>'none'</code> Constant volume for dur, no shaping; clicks unless the sound shapes itself.</p>
+<p class='sub'><code>envelope=[1:!300ms,0]e@s</code> An expression is a gain multiplier over the note, evaluated per frame (or per segment with <code>@s</code>). <code>att</code>/<code>dec</code>/<code>rel</code> are ignored and the note is cut off at the end of dur, so fit the shape inside it.</p>
+<p class='sub'>On <code>midi</code>, <code>keyboard</code> and <code>gamepad</code> players, <code>'full'</code>, <code>'organ'</code>, <code>'pad'</code> and <code>'linpad'</code> sustain until note off, then release; the others play for their fixed length regardless.</p>
 <p><code>flanger</code> LFO frequency for flanger effect. Default time units: cycles per beat.</p>
 <p class='sub'><code>flanger={1/3,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>fold</code> distort the signal by boosting then folding the overdriven part of the waveform</p>
@@ -1042,6 +1052,8 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>hpf</code> High pass filter frequency. Never goes below 10Hz. Default time units: Hertz</p>
 <p class='sub'><code>hpf={400,q:20}</code> High pass filter resonance. Default: 5.</p>
 <p class='sub'><code>hpf={400,poles:4}</code> Filter poles. Default is a 2 pole filter giving 12 dB/octave. Alternatively, specify 4 for a Moog-like 4 pole filter giving 24 dB/octave.</p>
+<p><code>long</code> Note length multiplier for the envelope, default 1. Set by the <code>=</code> and <code>!</code> pattern flags.</p>
+<p><code>loud</code> Gain multiplier, default 1. Set by the <code>^</code> and <code>v</code> pattern flags.</p>
 <p><code>low</code> Low shelf gain. Eg <code>low=-6dB</code> will act like a gain of 1/2 for the low frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
 <p class='sub'><code>low={-8db,freq:400}</code> Low shelf cutoff frequency. Default: 200Hz. Default units: Hertz</p>
 <p><code>lpf</code> Low pass filter frequency. Never goes below 10Hz. Default time units: Hertz</p>
@@ -1129,7 +1141,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>suck={12,gain:2}</code> Input gain; gain amp to apply to the signal before suck is applied</p>
 <p class='sub'><code>suck={1,mix:1/4}</code> Mix subparam controls dry/wet mix. 0 for dry only, 1 for wet only. default: 1</p>
 <p><code>sus</code> Sustain time. Note the 'sustain' in an ADSR envelope sets the sustain level, however this param sets the sustain time. The default is time required after attack and decay to take the note to the end of the duration. Default time units: beats.</p>
-<p class='sub'><code>sus={level:1/6}</code> Set the amplitude level for sustain. Note the 'sustain' in an ADSR envelope is the level, so it is this value not the main 'sus' value (which is actually the sustain time). Default: 0.8.</p>
+<p class='sub'><code>sus={level:1/6}</code> Set the amplitude level for sustain, for <code>envelope='full'</code> and <code>'simple'</code>. Note the 'sustain' in an ADSR envelope is the level, so it is this value not the main 'sus' value (which is actually the sustain time). Default: 0.8.</p>
 <p><code>vel</code> Event velocity, default 3/4. Controls amp and usually brightness. Set by midi or gamepad players, or by params. Fixed when the note starts; for aftertouch see <code>press</code>.</p>
 <p><code>vib</code> vibrato rate. Default time unit: cycles per beat</p>
 <p class='sub'><code>vib={2,depth:1}</code> vibrato depth in semitones (default 0.4). Evaluated per frame, so eg <code>vib={2,depth:[0:1]e}</code> widens the vibrato over the course of the note</p>
