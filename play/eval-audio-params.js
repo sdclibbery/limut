@@ -56,23 +56,49 @@ define(function (require) {
     }
   }
 
+  // A persistent fx chain is built once, so event-relative segments (eg [1,0]e@s) would only cover
+  // the first event: restart the segment builder against each new player event as it is scheduled.
+  let eventViewKeys = ['count','_time','dur','endTime','beat','idx','value']
+  let chainRetrigger = (audioParam, evalAgainst, chainEvent, subParamName, def, requiredUnits, mod) => {
+    let lastAnchor = chainEvent._time
+    return (advance) => {
+      chainEvent._chainEventsFrom(lastAnchor).forEach(e => {
+        let view = Object.create(chainEvent)
+        eventViewKeys.forEach(k => Object.defineProperty(view, k, {value:e[k]}))
+        // Segments are committed whole, so the previous envelope may run past this event's start: cut it there.
+        // cancelAndHoldAtTime would be exact but Firefox lacks it.
+        let vOld = advance.valueAt(e.count)
+        audioParam.cancelScheduledValues(e._time)
+        if (typeof vOld === 'number') {
+          audioParam.linearRampToValueAtTime(typeof mod === 'function' ? mod(vOld) : vOld, e._time)
+        }
+        advance = segmentedAudioParam(audioParam, evalAgainst(view), view, subParamName, def, requiredUnits, mod, true)
+        lastAnchor = e._time
+      })
+      return advance
+    }
+  }
+
   let updateStep = 1/60
   let doPerFrame = (audioParam, __event, params, p, isParamSegmented, def, requiredUnits, subParamName, mod) => {
     let initial = true // When evalling from this callstack, no need to set the call tree
     let args = getCallTree() // Remember the entire call tree at this point so it can be used for the per frame update
-    let evalAt = (count) => {
+    let evalAgainst = (ev) => (count) => {
       if (!initial) { setCallTree(args) } // Use call tree if this involves a user defined function
-      let v =  evalParamFrame(params[p], __event, count)
+      let v =  evalParamFrame(params[p], ev, count)
       if (!initial) { clearCallTree() }
       return v
     }
+    let evalAt = evalAgainst(__event)
     let perFrame // The actual per frame callback
     if (isParamSegmented) {
 // console.log('segmented', params.player, p, subParamName)
       let segmentLookahead = 1/15 // seconds of audio-time to schedule ahead
       let advance = segmentedAudioParam(audioParam, evalAt, __event, subParamName, def, requiredUnits, mod)
       advance(__event._time + segmentLookahead) // Build initial segments
+      let retrigger = (__event && __event._chainEventsFrom) ? chainRetrigger(audioParam, evalAgainst, __event, subParamName, def, requiredUnits, mod) : undefined
       perFrame = (state) => {
+        if (retrigger) { advance = retrigger(advance) }
         advance(state.time + segmentLookahead)
         if (__event) {
           let endTime = __event.chainEndTime ? __event.chainEndTime : __event.endTime
@@ -357,6 +383,22 @@ define(function (require) {
       ['setValueAtTime', 16,0], ['setValueAtTime', 16,2],
       ['linearRampToValueAtTime', 18,4], ['setValueAtTime',18,4]
     ], ap)
+
+    // persistent fx chain: event-relative segments restart on each new player event
+    let chainEvs = []
+    pf = []
+    let chainEv = {foo:e, _perFrame:pf, count:1, dur:4, _time:2, endTime:10, chainEndTime:1e10, beat:{count:1,time:2,duration:2},
+      _chainEventsFrom:(t) => chainEvs.filter(ev => ev._time > t)}
+    ap = mockAp(); evalMainParamFrame(ap, chainEv, 'foo', 3, 'hz', (v) => v * 2)
+    pf[0]({time:3})
+    assertApCalls([ ['setValueAtTime', 16,0], ['setValueAtTime', 16,2], ['linearRampToValueAtTime', 18,4] ], ap)
+    chainEvs.push({count:5, dur:4, _time:10, endTime:18, beat:{count:5,time:10,duration:2}})
+    ap.calls.length = 0
+    pf[0]({time:5}) // E2 known ahead of its start
+    assertApCalls([ ['cancelScheduledValues', 10], ['linearRampToValueAtTime', 18,10], ['setValueAtTime', 16,10] ], ap)
+    ap.calls.length = 0
+    pf[0]({time:20})
+    assertApCalls([ ['setValueAtTime', 16,10], ['linearRampToValueAtTime', 18,12], ['setValueAtTime', 18,12] ], ap)
 
     // function returns segmented value with units
     e = eventTimeVar([s(8),s(9)], u2, u2, 1, true)

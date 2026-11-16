@@ -114,6 +114,13 @@ define((require) => {
       })
     })
 
+    params._chainEventsFrom = (t) => { // Player events starting after t, in time order; a chord collapses to its last event
+      let player = players.getById(params.player)
+      if (!player || !player.events) { return [] }
+      let es = player.events.filter(e => e._time > t + 1e-6).sort((a,b) => a._time - b._time)
+      return es.filter((e,i) => i === es.length-1 || es[i+1]._time > e._time + 1e-6)
+    }
+
     // Destruction
     fx.destroy = () => {
       fadeOut(fx.fadeOutGain, fx.cleanup, fx.destroyWait+3)

@@ -109,7 +109,7 @@ define(function (require) {
   }
 
   let epsilon = 1e-5 // Apply an epsilon for the initial value
-  let segmentedAudioParam = (audioParam, evalAt, params, subP, def, requiredUnits, mod) => { // !! ASSUME mod IS LINEAR
+  let segmentedAudioParam = (audioParam, evalAt, params, subP, def, requiredUnits, mod, initialAtStart) => { // !! ASSUME mod IS LINEAR
     let segmentState = {}
     segmentState.getParamAtTime = (count) => getParamValue(evalParamPerFrame(evalAt, count, undefined), subP)
     segmentState.getValueFromParam = (param) => getValue(param, def, requiredUnits)
@@ -134,7 +134,7 @@ define(function (require) {
     segmentState.nextValue = segmentState.currentValue
     segmentState.segmentPower = segmentState.param._segmentPower
     segmentState.nextSegment = segmentState.param._nextSegment
-    addSegment(audioParam, 'setValueAtTime', segmentState.currentValue, mod, 0) // Initial value
+    addSegment(audioParam, 'setValueAtTime', segmentState.currentValue, mod, initialAtStart ? startTime : 0) // Initial value
     let dur
     let endTime = params.chainEndTime ? params.chainEndTime : params.endTime
     if (endTime) { // Duration from envelope-set endTime
@@ -143,7 +143,7 @@ define(function (require) {
       dur = params.dur || 1
     }
     let endCount = startCount + dur
-    return (upToAudioTime) => { // Build segments incrementally up to given audio time (undefined = build all)
+    let advance = (upToAudioTime) => { // Build segments incrementally up to given audio time (undefined = build all)
       // Pivot the count<->time mapping on the live beat (params.beat is a live getter for persistent
       // fx/bus chains, a frozen object for scheduled events), re-read each call, instead of a frozen
       // construction anchor. This keeps both tempo AND phase locked to the metronome across bpm changes
@@ -161,6 +161,8 @@ define(function (require) {
       segmentStepper(segmentState, Math.min(upToCount, endCount))
       return !!segmentState.nextSegment && segmentState.count <= endCount
     }
+    advance.valueAt = segmentState.getValueAtTime
+    return advance
   }
 
   // TESTS //

@@ -1,7 +1,8 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!Segmented values in fx chain only work on first event, eg p ping, fx=gain{[1,0]e@s}, oct=3
+!p supersaw, fx=shifter{[1]t@s} gives "count is readonly"
+!Make sure all envelope cases are documented
 !Audioparam to NaN in Synthetic Soul; why? Also error does not say which player or param
  Cant recreate, must be from avw2??
 ?set bpm can have target time? eg set bpm={140,by;1000}; takes a linear step towards the target every beat
