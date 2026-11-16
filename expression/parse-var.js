@@ -65,9 +65,32 @@ define(function(require) {
     }
   }
 
+  // `{t+:x}` at a callsite arrives keyed 't+' (parse-map.js) and means t's default + x. Built as an
+  // ordinary operator node, cached per call context so it keeps one identity for memoisation.
+  let argOps = ['>>','+','-','*','/','%','^']
+  let argOpKeys = (key) => argOps.map(op => key+op)
+  let combineArgOp = (cache, args, opKey, key, defaultValue, argOperator) => {
+    let byArgs = cache.get(args)
+    if (byArgs === undefined) { byArgs = {}; cache.set(args, byArgs) }
+    let combined = byArgs[opKey]
+    if (combined === undefined) {
+      let value = args[opKey]
+      combined = (defaultValue === false || defaultValue === undefined || !argOperator) ? value
+        : argOperator(opKey.slice(key.length), defaultValue, value)
+      byArgs[opKey] = combined
+    }
+    return combined
+  }
+  let findArgOp = (args, opKeys) => {
+    for (let i = 0; i < opKeys.length; i++) {
+      if (args[opKeys[i]] !== undefined) { return opKeys[i] }
+    }
+  }
+
   let callsiteId = 0
   let varLookup = (key, args, context, interval, userFunctionArgs, inheritedArgs, parseState) => {
     if (!key) { return }
+    let argOperator = parseState && parseState.argOperator // Passed in: operators.js would be a circular dependency
 
     // look for static function call; call var immediately if present
     let f = vars.get(key)
@@ -83,10 +106,16 @@ define(function(require) {
         if (k === key) { position = i }
       })
       let argCallsiteId = 'cs' + callsiteId++
+      let opKeys = argOpKeys(key)
+      let opCache = new WeakMap()
       let userFunctionArgumentLookup = (e,b,er,mods) => {
         let args = getCallContext()
         if (args === undefined) { return undefined }
         let value = args[key] // Get arg by direct lookup by name
+        if (value === undefined) {
+          let opKey = findArgOp(args, opKeys)
+          if (opKey !== undefined) { value = combineArgOp(opCache, args, opKey, key, defaultValue, argOperator) }
+        }
         if (value === undefined) { value = args['value'+(position || '')] } // Get arg by position
         if (value === undefined) { value = defaultValue } // If no arg passed in, use default value from prototype
         if (value === false) { value = undefined } // No default arg either
@@ -107,6 +136,10 @@ define(function(require) {
         let args = getCallContext()
         if (args === undefined) { return undefined }
         let value = args[key]
+        if (value === undefined) {
+          let opKey = findArgOp(args, opKeys)
+          if (opKey !== undefined) { value = combineArgOp(opCache, args, opKey, key, defaultValue, argOperator) }
+        }
         if (value === undefined) { value = args['value'+(position || '')] }
         if (value === undefined) { value = defaultValue }
         if (value === false) { value = undefined }
@@ -123,11 +156,14 @@ define(function(require) {
     if (inheritedArgs !== undefined && inheritedArgs[key] !== undefined) {
       let defaultValue = inheritedArgs[key]
       let inheritedCallsiteId = 'cs' + callsiteId++
+      let opKeys = argOpKeys(key)
+      let opCache = new WeakMap()
       let inheritedLookup = (e,b,er,mods) => {
-        let found = findInCallChainByKey(key)
+        let found = findInCallChainByKey(key, opKeys)
         let value, depth
         if (found !== undefined) {
-          value = found.context[key]
+          value = found.key === key ? found.context[key]
+            : combineArgOp(opCache, found.context, found.key, key, defaultValue, argOperator)
           depth = found.depth + 1
         } else {
           value = defaultValue
@@ -149,10 +185,11 @@ define(function(require) {
       }
       // As above, walking the call chain by name the way the lookup itself does
       inheritedLookup._bindingSource = () => {
-        let found = findInCallChainByKey(key)
+        let found = findInCallChainByKey(key, opKeys)
         let value, depth
         if (found !== undefined) {
-          value = found.context[key]
+          value = found.key === key ? found.context[key]
+            : combineArgOp(opCache, found.context, found.key, key, defaultValue, argOperator)
           depth = found.depth + 1
         } else {
           value = defaultValue

@@ -48,16 +48,28 @@ define((require) => {
   // a defined value at `key`. Returns a shared scratch result {context, depth}
   // on hit, or undefined on miss. The scratch object is reused — callers must
   // read it synchronously before any other call to findInCallChainByKey.
-  let _findScratch = { context: undefined, depth: 0 }
-  let findInCallChainByKey = (key) => {
+  let _findScratch = { context: undefined, depth: 0, key: undefined }
+  // altKeys: further keys that also count as a hit, checked per frame after `key`; the one that
+  // hit is reported as `key` on the result.
+  let findInCallChainByKey = (key, altKeys) => {
     let node = root.current
     let depth = 0
     while (node !== root) {
       let ctx = node.context
-      if (ctx !== undefined && ctx[key] !== undefined) {
-        _findScratch.context = ctx
-        _findScratch.depth = depth
-        return _findScratch
+      if (ctx !== undefined) {
+        let hit
+        if (ctx[key] !== undefined) { hit = key }
+        else if (altKeys !== undefined) {
+          for (let i = 0; i < altKeys.length; i++) {
+            if (ctx[altKeys[i]] !== undefined) { hit = altKeys[i]; break }
+          }
+        }
+        if (hit !== undefined) {
+          _findScratch.context = ctx
+          _findScratch.depth = depth
+          _findScratch.key = hit
+          return _findScratch
+        }
       }
       node = node.parent
       depth += 1

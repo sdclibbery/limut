@@ -20,10 +20,24 @@ define(function(require) {
     return result
   }
 
+  // `{t+:x}` keys the entry 't+': a user function combines it with t's default (parse-var.js).
+  // '/' needs no handling here: it is already a key character.
+  let argOperator = (state) => {
+    let str = state.str, idx = state.idx
+    for (let op of ['>>','+','-','*','%','^']) {
+      if (str.startsWith(op, idx) && str.charAt(idx+op.length) === ':') {
+        state.idx += op.length
+        return op
+      }
+    }
+    return ''
+  }
+
   let parseMapEntry = (state, _mapValueIndex, keys, values) => {
     eatWhitespace(state)
     let tryState = Object.assign({}, state)
     let k = key(tryState)
+    if (k !== '') { k += argOperator(tryState) }
     eatWhitespace(tryState)
     if (k === '' || tryState.str.charAt(tryState.idx) !== ':') {
       // Try parse as keyless value instead
@@ -113,6 +127,7 @@ define(function(require) {
   assert({'0.5':1}, parseMap({str:'{0.5:1}',idx:0,expression:number}))
   assert({'1/2':1}, parseMap({str:'{1/2:1}',idx:0,expression:number}))
   assert({'-':1}, parseMap({str:"{'-':1}",idx:0,expression:number}))
+  assert({'a+':1,'b>>':2,'c/':3,'d':4}, parseMap({str:'{a+:1, b>>:2, c/:3, d:4}',idx:0,expression:number}))
   
   console.log('Parse map tests complete')
   }

@@ -6,6 +6,7 @@ define(function(require) {
   let eatWhitespace = require('expression/eat-whitespace')
   let operatorTree = require('expression/parse-operator')
   let {operators} = require('expression/operators')
+  let evalOperator = require('expression/eval-operator')
   let {parseVar,varLookup} = require('expression/parse-var')
   let {hoistInterval,parseInterval} = require('expression/intervals')
   let addModifiers = require('expression/time-modifiers').addModifiers
@@ -192,6 +193,8 @@ define(function(require) {
     return result
   }
 
+  let argOperator = (op, l, r) => evalOperator(operators[op], l, r)
+
   let parseExpression = (v, context) => {
     if (v == '' || v == undefined) { return }
     v = v.trim()
@@ -199,6 +202,7 @@ define(function(require) {
       str: v,
       idx: 0,
       expression: expression, // Must make this available through state to avoid circular dependencies
+      argOperator: argOperator,
       context: context,
     }
     let result = expression(state)
@@ -2137,6 +2141,28 @@ define(function(require) {
   delete vars.foo
   delete vars.foo2
   delete vars.foo3
+
+  // key<op>:value combines with the declared default instead of replacing it
+  vars.foo = parseExpression('{x,q:5}->x+q')
+  assert(9, evalParamFrame(parseExpression('foo{1,q+:3}'), ev(), 0))
+  assert(16, evalParamFrame(parseExpression('foo{1,q*:3}'), ev(), 0))
+  assert(3, evalParamFrame(parseExpression('foo{1,q-:3}'), ev(), 0))
+  assert(11, evalParamFrame(parseExpression('foo{1, q/:1/2}'), ev(), 0))
+  assert(26, evalParamFrame(parseExpression('foo{1,q^:2}'), ev(), 0))
+  assert(4, evalParamFrame(parseExpression('foo{1,q:3}'), ev(), 0))
+  assert(4, evalParamFrame(parseExpression('foo{1,q:3,q+:10}'), ev(), 0)) // plain key wins
+  vars.foo2 = parseExpression('foo')
+  assert(9, evalParamFrame(parseExpression('foo2{1,q+:3}'), ev(), 0)) // through an alias
+  vars.foo = parseExpression('{x,q}->x+q')
+  assert(4, evalParamFrame(parseExpression('foo{1,q+:3}'), ev(), 0)) // no default: just the value
+  vars.foo = parseExpression('{x,q:5}->({i}->i+q){x}')
+  assert(9, evalParamFrame(parseExpression('foo{1,q+:3}'), ev(), 0)) // read as an inherited arg
+  vars.foo = parseExpression('{q:5}->q')
+  vars.foo2 = parseExpression('{q:2}->foo{q+:q}')
+  assert(7, evalParamFrame(parseExpression('foo2{}'), ev(), 0)) // the value reads the caller's scope
+  assert(8, evalParamFrame(parseExpression('foo2{q+:1}'), ev(), 0))
+  delete vars.foo
+  delete vars.foo2
 
   { // A lambda-valued arg must not be called bare by the eager modifier evaluation: its body should run exactly once, for the real call
     let probeCalls = 0

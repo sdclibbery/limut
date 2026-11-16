@@ -723,6 +723,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>add{3,4}</code> Call with multiple positional arguments. Returns 7.</p>
 <p><code>add{x:3,y:4}</code> Call with named arguments. Order does not matter; <code>add{y:4,x:3}</code> gives the same result.</p>
 <p><code>add{3,y:4}</code> Positional and named arguments can be mixed.</p>
+<p><code>lpf{500, q+:2}</code> Adjust a default instead of replacing it: <code>name&lt;op&gt;:value</code> applies <code>default &lt;op&gt; value</code>, so this uses q 7. Works with <code>+ - * / % ^ &gt;&gt;</code>. Eg <code>arc&gt;&gt;fog{t+:main.pulse}</code>. Named arguments only, and only on user functions; with no default it is just the value.</p>
 <p><code>hello{}</code> No-argument calls can optionally include the {}</p>
 <p><code>hello</code> A user function can still be called without an arg list.</p>
 <h5>Piping with &gt;&gt;</h5>
