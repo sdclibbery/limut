@@ -1,14 +1,12 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-!p supersaw, fx=shifter{[1]t@s} gives "count is readonly"
-!Make sure all envelope cases are documented
+Would be nice to write eg fog{t+: main.pulse}
 !Audioparam to NaN in Synthetic Soul; why? Also error does not say which player or param
  Cant recreate, must be from avw2??
 ?set bpm can have target time? eg set bpm={140,by;1000}; takes a linear step towards the target every beat
  Or generic []{by:512} or something? now replaces with current time in source?
 ???Should there be a monophonic synth type with a combined play/FX chain that can handle event data, and then event data is completely banned in FX chains???
-Would be nice to write eg fog{t+: main.pulse}
 Want to add an audio node that creates a global var with a value that tracks the audio at that point. Can use for ducking etc
 Reverb ducked against dry signal; Make generic dry ducker if possible??
 ?arc perf: Still have on beat problem with short dur; Undo the chord thing, and look at better ways of triggering the synth instead

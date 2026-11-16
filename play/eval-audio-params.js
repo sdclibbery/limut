@@ -64,7 +64,7 @@ define(function (require) {
     return (advance) => {
       chainEvent._chainEventsFrom(lastAnchor).forEach(e => {
         let view = Object.create(chainEvent)
-        eventViewKeys.forEach(k => Object.defineProperty(view, k, {value:e[k]}))
+        eventViewKeys.forEach(k => Object.defineProperty(view, k, {value:e[k], writable:true, enumerable:true, configurable:true}))
         // Segments are committed whole, so the previous envelope may run past this event's start: cut it there.
         // cancelAndHoldAtTime would be exact but Firefox lacks it.
         let vOld = advance.valueAt(e.count)
@@ -399,6 +399,17 @@ define(function (require) {
     ap.calls.length = 0
     pf[0]({time:20})
     assertApCalls([ ['setValueAtTime', 16,10], ['linearRampToValueAtTime', 18,12], ['setValueAtTime', 18,12] ], ap)
+    // evaluating a modified function param writes event.count on the retriggered view
+    let ew = Object.assign((ev,...args) => { ev.count = ev.count; return e(ev,...args) }, e)
+    chainEvs = []
+    pf = []
+    chainEv = Object.assign({}, chainEv, {foo:ew, _perFrame:pf, _chainEventsFrom:(t) => chainEvs.filter(ev => ev._time > t)})
+    ap = mockAp(); evalMainParamFrame(ap, chainEv, 'foo', 3, 'hz', (v) => v * 2)
+    pf[0]({time:3})
+    chainEvs.push({count:5, dur:4, _time:10, endTime:18, beat:{count:5,time:10,duration:2}})
+    ap.calls.length = 0
+    pf[0]({time:20})
+    assertApCalls([ ['cancelScheduledValues', 10], ['linearRampToValueAtTime', 18,10], ['setValueAtTime', 16,10], ['setValueAtTime', 16,10], ['linearRampToValueAtTime', 18,12], ['setValueAtTime', 18,12] ], ap)
 
     // function returns segmented value with units
     e = eventTimeVar([s(8),s(9)], u2, u2, 1, true)
