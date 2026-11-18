@@ -60,11 +60,12 @@ static const char *USAGE =
     "                      whole render goes to --offset unrotated.\n"
     "                      A wall the card's own configuration cannot express is built here.\n"
     "  --test-pattern NAME off | bars | grid | white | red | green | blue | map | rowid |\n"
-    "                      bands | cellid\n"
+    "                      bands | cellid | ramp\n"
     "                      until a host binds a layer. `map` numbers each 64x32 cell of the\n"
     "                      canvas, so a lit panel says where in the canvas it is wired;\n"
     "                      `cellid` says the same thing in colour, which reads off a sideways\n"
-    "                      panel where numerals do not\n"
+    "                      panel where numerals do not; `ramp` is grey steps for\n"
+    "                      setting --gamma by eye\n"
     "  --idle-pattern NAME what to show when NOTHING is bound (default corners; off = black).\n"
     "                      Unlike --test-pattern this YIELDS the moment a visual binds, so it is\n"
     "                      safe to leave on. Four small white Ls say, from across the room and\n"
@@ -72,8 +73,12 @@ static const char *USAGE =
     "                      panel map is right -- which black cannot say at all\n"
     "  --pattern-fps N     rate to re-send a test pattern at, with no host driving it\n"
     "                      (default 60; 0 sends it once and stops)\n"
-    "  --gamma G           output gamma, applied after the dimmer (default 2.2;\n"
-    "                      use 1 for pixel comparisons against the browser)\n"
+    "  --gamma G           output gamma (default 2.2; use 1 for pixel comparisons against\n"
+    "                      the browser)\n"
+    "  --level L           ceiling on linear light, 0-1, applied after gamma with dim (default\n"
+    "                      1). Use this rather than --brightness to limit power: the card's\n"
+    "                      brightness drops the darkest levels, this dithers them\n"
+    "  --no-dither         round to 8 bits instead of dithering\n"
     "  --no-gpu            do not open a renderer, even if one is available\n"
     "  --verbose, -v       log every message instead of a one line status\n"
     "\n"
@@ -85,6 +90,8 @@ int main(int argc, char **argv) {
     char err[512];
     const char *backend = "raw";
     output_opts opts;
+    float level;
+    int noDither = 0;
     int noGpu = 0, i, testPattern = PATTERN_OFF, idlePattern = PATTERN_CORNERS;
     double patternFps = 60.0, nextPattern;
     int holdDue = 0;              /* the hold clock fired; taken only if display_draw drew nothing */
@@ -98,6 +105,7 @@ int main(int argc, char **argv) {
     d.w = 128;
     d.h = 64;
     d.gamma = 2.2f;
+    level = 1.0f;
     d.maxTextureSize = 4096;
 
     memset(&opts, 0, sizeof opts);
@@ -172,6 +180,8 @@ int main(int argc, char **argv) {
             i++;
         }
         else if (!strcmp(k, "--gamma") && v) { d.gamma = (float)atof(v); i++; }
+        else if (!strcmp(k, "--level") && v) { level = (float)atof(v); i++; }
+        else if (!strcmp(k, "--no-dither")) { noDither = 1; }
         else if (!strcmp(k, "--no-gpu")) { noGpu = 1; }
         else if (!strcmp(k, "--verbose") || !strcmp(k, "-v")) { d.verbose = 1; }
         else if (!strcmp(k, "--help") || !strcmp(k, "-h")) { fputs(USAGE, stdout); return 0; }
@@ -231,10 +241,11 @@ int main(int argc, char **argv) {
         }
     }
 
-    if (output_open(&d.out, backend, d.w, d.h, d.gamma, &opts, err, sizeof err) < 0) {
+    if (output_open(&d.out, backend, d.w, d.h, d.gamma, level, &opts, err, sizeof err) < 0) {
         fprintf(stderr, "🔴 %s\n", err);
         return 1;
     }
+    if (noDither) d.out.dither = 0;
     if (display_init(&d, err, sizeof err) < 0) {
         fprintf(stderr, "🔴 %s\n", err);
         return 1;
@@ -259,7 +270,8 @@ int main(int argc, char **argv) {
                                : " — UNGUARDED: a shader that crashes the driver will kill this daemon")
                : "");
     if (d.r) printf("  pxprev  history %s\n", render_feedback_format(d.r));
-    printf("  output  %s, gamma %g", d.out.backend, (double)d.gamma);
+    printf("  output  %s, gamma %g, level %g%s", d.out.backend, (double)d.gamma,
+           (double)d.out.level, d.out.dither ? ", dithered" : "");
     if (!strcmp(d.out.backend, "colorlight"))
         printf(" — %s, %d packets/frame steady, colour order %s, brightness %d",
                opts.iface, output_colorlight_packets(&d.out), opts.colorOrder, opts.brightness);

@@ -18,6 +18,7 @@ int pattern_by_name(const char *s) {
     if (!strcmp(s, "bands")) return PATTERN_BANDS;
     if (!strcmp(s, "cellid")) return PATTERN_CELLID;
     if (!strcmp(s, "corners")) return PATTERN_CORNERS;
+    if (!strcmp(s, "ramp")) return PATTERN_RAMP;
     return -1;
 }
 
@@ -34,6 +35,7 @@ const char *pattern_name(int pattern) {
         case PATTERN_BANDS: return "bands";
         case PATTERN_CELLID: return "cellid";
         case PATTERN_CORNERS: return "corners";
+        case PATTERN_RAMP:  return "ramp";
         default:            return "off";
     }
 }
@@ -204,6 +206,24 @@ void pattern_render(int pattern, int w, int h, uint8_t *rgba) {
     }
 
     if (pattern == PATTERN_CORNERS) { render_corners(w, h, rgba); return; }
+
+    if (pattern == PATTERN_RAMP) {
+        /* Grey steps for judging the output gamma by eye: with the right curve they look evenly
+         * spaced. Steps run along the longer axis; one half of the shorter axis steps 0..255, the
+         * other steps 0..30 to show where the shadows clip to black. Values are pre-gamma, the
+         * same bytes a browser would show for the same ramp. */
+        int along = h >= w ? h : w, across = h >= w ? w : h;
+        for (y = 0; y < h; y++) {
+            for (x = 0; x < w; x++) {
+                int a = h >= w ? y : x, c = h >= w ? x : y;
+                int step = (int)((long)a * PATTERN_RAMP_STEPS / (along > 0 ? along : 1));
+                int v = (c < across / 2 ? PATTERN_RAMP_COARSE : PATTERN_RAMP_FINE) * step;
+                if (v > 255) v = 255;
+                px(rgba, w, x, y, v, v, v);
+            }
+        }
+        return;
+    }
 
     if (pattern == PATTERN_BARS) {
         for (y = 0; y < h; y++) {

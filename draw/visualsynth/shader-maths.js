@@ -2,6 +2,7 @@
 define(function(require) {
   let {isShaderNode,naryShaderNode} = require('draw/visualsynth/shader-node')
   let {pcg4dHelper,sinHelper,hashSpec} = require('draw/visualsynth/shader-hash')
+  let {srgb2linHelper,lin2srgbHelper} = require('draw/visualsynth/shader-colour')
 
   // The maths functions work on visual nodes as well as numbers: when an argument is a shader node
   // the call compiles to GLSL instead of evaluating, the same dispatch the arithmetic operators use
@@ -129,6 +130,8 @@ define(function(require) {
     fwidth: unary('fwidth'),
     dfdx: unary('dFdx'),
     dfdy: unary('dFdy'),
+    lin: { emit: (a) => `${srgb2linHelper.name}(${a})`, operands: mainOperand, helpers: [srgb2linHelper] },
+    srgb: { emit: (a) => `${lin2srgbHelper.name}(${a})`, operands: mainOperand, helpers: [lin2srgbHelper] },
   }
 
   let hasShaderNode = (args) => {
@@ -190,6 +193,8 @@ define(function(require) {
   assert('floor(v0 + 0.5)', emitted('round', {value:node}))
   assert('floor(v0 / u_vs0 + 0.5) * u_vs0', emitted('round', {value:node, to:1/2}))
   assert('abs(v0)', emitted('abs', {value:node}))
+  assert('l_srgb2lin(v0)', emitted('lin', {value:node}))
+  assert('l_lin2srgb(v0)', emitted('srgb', {value:node}))
   assert('sign(v0)', emitted('sgn', {value:node}))
   assert('sign(v0)', emitted('sign', {value:node}))
   assert('sin(v0)', emitted('sin', {value:node}))

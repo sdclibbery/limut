@@ -682,6 +682,10 @@ define(function(require) {
   // than identical: what matters is that sin is applied to the incoming value (v1, the pass-through
   // of v0 that any piped call is handed) rather than being called with nothing
   assert(true, pxSource('sin*#0f0').includes('sin(v1)'))
+  // lin/srgb pipe bare and nest, and declare their helper once
+  assert(true, pxSource('lin').includes('l_srgb2lin(v1)'))
+  assert(1, pxSource('srgb{lin{id}+lin{uv}}').split('vec4 l_srgb2lin(').length - 1)
+  assert(true, pxSource('srgb{lin{id}+lin{uv}}').includes('l_lin2srgb('))
 
   // A chain nested inside another one is seeded like any other, so the call at its head takes the
   // incoming value (expressionHead walks >> too). Bracketing a chain changes nothing.

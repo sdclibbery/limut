@@ -14,16 +14,22 @@ static int write_raw(output_t *o) { (void)o; return 0; }
 
 /* ---- lifecycle --------------------------------------------------------------------------- */
 
+/* 16-bit linear light. An 8-bit table at 2.2 sends inputs 0-14 to 0, and the card can show
+ * those levels, so the curve keeps its precision until the dither in output_frame. */
 static void build_gamma(output_t *o) {
     int i;
     for (i = 0; i < 256; i++) {
         double v = pow((double)i / 255.0, (double)o->gamma);
-        int q = (int)(v * 255.0 + 0.5);
-        o->glut[i] = (uint8_t)(q < 0 ? 0 : q > 255 ? 255 : q);
+        int q = (int)(v * 65535.0 + 0.5);
+        o->glut[i] = (uint16_t)(q < 0 ? 0 : q > 65535 ? 65535 : q);
     }
 }
 
-int output_open(output_t *o, const char *backend, int w, int h, float gamma,
+/* 4x4 ordered dither thresholds, centred in each sixteenth of the 16-bit step to 8 bits. A static
+ * spatial pattern rather than a temporal one, so nothing can flicker. */
+static const int BAYER4[4][4] = { {0, 8, 2, 10}, {12, 4, 14, 6}, {3, 11, 1, 9}, {15, 7, 13, 5} };
+
+int output_open(output_t *o, const char *backend, int w, int h, float gamma, float level,
                 const output_opts *opts, char *err, size_t errCap) {
     int colorlight = 0;
     memset(o, 0, sizeof *o);
@@ -31,6 +37,8 @@ int output_open(output_t *o, const char *backend, int w, int h, float gamma,
     o->w = w;
     o->h = h;
     o->gamma = (gamma > 0.0f) ? gamma : 1.0f;
+    o->level = (level > 0.0f && level < 1.0f) ? level : 1.0f;
+    o->dither = 1;
     build_gamma(o);
 
     if      (!strcmp(o->backend, "null"))       o->write = write_null;
@@ -62,26 +70,29 @@ int output_open(output_t *o, const char *backend, int w, int h, float gamma,
 }
 
 int output_frame(output_t *o, const uint8_t *rgba, float dim) {
-    size_t i, n = (size_t)o->w * o->h;
-    int scale;
+    int x, y, scale;
 
     if (dim < 0.0f) dim = 0.0f;
     if (dim > 1.0f) dim = 1.0f;
-    /* 8.8 fixed point: the dimmer multiply runs over every pixel of every frame, and this keeps
-     * it to a multiply and a shift rather than a float round trip. */
-    scale = (int)(dim * 256.0f + 0.5f);
+    /* dim and level scale linear light, AFTER gamma (§9). 1.8 fixed point keeps the per pixel
+     * work to integer multiplies and shifts. */
+    scale = (int)(dim * o->level * 256.0f + 0.5f);
 
-    for (i = 0; i < n; i++) {
-        const uint8_t *s = rgba + i * 4;
-        uint8_t *d = o->pixels + i * 4;
-        int r = (s[0] * scale) >> 8;
-        int g = (s[1] * scale) >> 8;
-        int b = (s[2] * scale) >> 8;
-        /* dim is linear and applied BEFORE gamma (§9) */
-        d[0] = o->glut[r > 255 ? 255 : r];
-        d[1] = o->glut[g > 255 ? 255 : g];
-        d[2] = o->glut[b > 255 ? 255 : b];
-        d[3] = 255;
+    for (y = 0; y < o->h; y++) {
+        for (x = 0; x < o->w; x++) {
+            size_t i = (size_t)y * o->w + x;
+            const uint8_t *s = rgba + i * 4;
+            uint8_t *d = o->pixels + i * 4;
+            /* v*255 + t over 65536: exact for 0 and full scale, and the identity at gamma 1,
+             * dim 1, since every t exceeds the 255 the /65536 loses. */
+            int t = o->dither ? BAYER4[y & 3][x & 3] * 4096 + 2048 : 32768;
+            int c;
+            for (c = 0; c < 3; c++) {
+                int v = (o->glut[s[c]] * scale) >> 8;
+                d[c] = (uint8_t)((v * 255 + t) >> 16);
+            }
+            d[3] = 255;
+        }
     }
     o->frames++;
     return o->write ? o->write(o) : 0;

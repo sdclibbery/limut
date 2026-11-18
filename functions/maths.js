@@ -153,6 +153,11 @@ define(function(require) {
   addMathsFunction('fwidth', trigWrapper(v => 0))
   addMathsFunction('dfdx', trigWrapper(v => 0))
   addMathsFunction('dfdy', trigWrapper(v => 0))
+  // sRGB transfer, matching l_srgb2lin/l_lin2srgb in draw/visualsynth/shader-colour.js
+  let srgb2lin = v => v <= 0.04045 ? v/12.92 : Math.pow((Math.max(v, 0) + 0.055)/1.055, 2.4)
+  let lin2srgb = v => v <= 0.0031308 ? 12.92*v : 1.055*Math.pow(Math.max(v, 0), 1/2.4) - 0.055
+  addMathsFunction('lin', trigWrapper(srgb2lin))
+  addMathsFunction('srgb', trigWrapper(lin2srgb))
 
   let euclid = (args, e) => {
     let k = Math.floor(argParam(args, 1)) // Distribute k beats...
@@ -352,6 +357,9 @@ define(function(require) {
   assert(true, scalarOf('(3).pxhash') === scalarOf('pxhash{3}')) // Final result, so postfix gives the value
   assert(true, scalarOf('3>>pxhash') === scalarOf('pxhash{3}'))
   assert(0, scalarOf('fwidth{3}'))
+  assert(0.214, Math.round(scalarOf('lin{1/2}')*1000)/1000)
+  assert(0.5, Math.round(scalarOf('srgb{lin{1/2}}')*1e6)/1e6)
+  assert(1, scalarOf('lin{1}'))
   assert(0, scalarOf('dfdx{3}'))
   assert(0, scalarOf('dfdy{3}'))
 

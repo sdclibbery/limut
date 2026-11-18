@@ -1,6 +1,11 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
+Problems with slider on Chrome (chrome only???)
+ Number didnt appeah on first run til slider was moved, then cursor was wrong
+ Cursor is wrong if the line of code with the slider runs onto the next on-screen line
+Review of colour/gamma handling
+Ask for review of units and non linearity in limut audio, across gains, frequencies, effects, midi etc taking inputs and outputs into account
 Want to add an audio node that creates a global var with a value that tracks the audio at that point. Can use for ducking etc
 Reverb ducked against dry signal; Make generic dry ducker if possible??
 ?set bpm can have target time? eg set bpm={140,by;1000}; takes a linear step towards the target every beat

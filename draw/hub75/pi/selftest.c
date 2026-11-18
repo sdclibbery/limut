@@ -19,6 +19,7 @@
 #include "ws.h"
 
 #include <stdio.h>
+#include <math.h>
 #include <stdlib.h>
 #include "patterns.h"
 #include <string.h>
@@ -798,6 +799,67 @@ static void test_colorlight_plan(void) {
  * Checks the shape (an L of the declared arm length in every corner, pointing inwards), that it
  * is confined to the corners, and that the name round-trips -- a typo in --idle-pattern must be
  * rejected rather than silently leaving the wall black. */
+/* The gamma ramp: coarse half spans 0..255, fine half 0..30, along the longer axis whichever way
+ * round the render is. */
+static void test_ramp(void) {
+    int w = 8, h = 32, x, y;
+    uint8_t *buf = (uint8_t *)malloc((size_t)w * h * 4);
+    ck("ramp: name round trips", pattern_by_name("ramp") == PATTERN_RAMP &&
+       !strcmp(pattern_name(PATTERN_RAMP), "ramp"));
+    pattern_render(PATTERN_RAMP, w, h, buf);
+    ck("ramp: coarse starts black", buf[0] == 0);
+    ck("ramp: coarse ends white", buf[((size_t)(h - 1) * w) * 4] == 255);
+    ck("ramp: fine ends at 30", buf[((size_t)(h - 1) * w + w - 1) * 4] == 30);
+    ck("ramp: steps along the longer axis",
+       buf[((size_t)2 * w) * 4] == 17 && buf[((size_t)2 * w + w - 1) * 4] == 2);
+    for (y = 0; y < h; y++) for (x = 0; x < w; x++) {
+        uint8_t *p = buf + ((size_t)y * w + x) * 4;
+        if (p[0] != p[1] || p[1] != p[2] || p[3] != 255) { ck("ramp: grey and opaque", 0); y = h; break; }
+    }
+    pattern_render(PATTERN_RAMP, h, w, buf);
+    ck("ramp: landscape steps along x", buf[((size_t)2) * 4] == 17 && buf[((size_t)(w - 1) * h + 2) * 4] == 2);
+    free(buf);
+}
+
+/* The output stage: gamma at 16 bits, dim and level in linear light after it, dithered to 8. */
+static int out_mean(output_t *o, int v, float dim) {
+    uint8_t rgba[16 * 16 * 4];
+    long sum = 0;
+    int i;
+    for (i = 0; i < 16 * 16; i++) { rgba[i*4] = rgba[i*4+1] = rgba[i*4+2] = (uint8_t)v; rgba[i*4+3] = 255; }
+    output_frame(o, rgba, dim);
+    for (i = 0; i < 16 * 16; i++) sum += o->pixels[i * 4];
+    return (int)((sum * 1000) / (16 * 16)); /* mean output, in thousandths of a level */
+}
+static void test_output_levels(void) {
+    output_t o;
+    char err[256];
+    int v, exact = 1;
+    ck("levels: opened at gamma 1", output_open(&o, "null", 16, 16, 1.0f, 1.0f, NULL, err, sizeof err) == 0);
+    for (v = 0; v < 256; v++) if (out_mean(&o, v, 1.0f) != v * 1000) exact = 0;
+    ck("levels: gamma 1, dim 1 is the identity, dithered or not", exact);
+    output_close(&o);
+
+    output_open(&o, "null", 16, 16, 2.2f, 1.0f, NULL, err, sizeof err);
+    ck("levels: black stays black", out_mean(&o, 0, 1.0f) == 0);
+    ck("levels: white stays white", out_mean(&o, 255, 1.0f) == 255000);
+    /* 8/255 at 2.2 is 0.1% of full light: rounding sends it to 0, the dither keeps its average */
+    ck("levels: a deep shadow survives the dither", out_mean(&o, 8, 1.0f) > 0);
+    ck("levels: and its mean is the true light, to a sixteenth",
+       abs(out_mean(&o, 30, 1.0f) - (int)(pow(30/255.0, 2.2) * 255000)) <= 1000/16 + 1);
+    o.dither = 0;
+    ck("levels: undithered, it rounds to black as an 8-bit table did", out_mean(&o, 8, 1.0f) == 0);
+    o.dither = 1;
+    /* dim is linear light: half dim halves the output, rather than halving the input */
+    ck("levels: dim halves the light", abs(out_mean(&o, 255, 0.5f) - 127500) <= 1000);
+    output_close(&o);
+
+    output_open(&o, "null", 16, 16, 2.2f, 0.5f, NULL, err, sizeof err);
+    ck("levels: level is a ceiling on light", abs(out_mean(&o, 255, 1.0f) - 127500) <= 1000);
+    ck("levels: and multiplies with dim", abs(out_mean(&o, 255, 0.5f) - 63750) <= 1000);
+    output_close(&o);
+}
+
 static void test_corners(void) {
     int w = 16, h = 24, arm = PATTERN_CORNER_ARM, lit = 0, x, y;
     uint8_t *buf = (uint8_t *)malloc((size_t)w * h * 4);
@@ -844,7 +906,7 @@ static void test_output_hold(void) {
     for (i = 0; i < 4 * 4; i++) {
         rgba[i * 4 + 0] = 200; rgba[i * 4 + 1] = 100; rgba[i * 4 + 2] = 50; rgba[i * 4 + 3] = 255;
     }
-    ck("hold: opened", output_open(&o, "null", 4, 4, 1.0f, NULL, err, sizeof err) == 0);
+    ck("hold: opened", output_open(&o, "null", 4, 4, 1.0f, 1.0f, NULL, err, sizeof err) == 0);
     o.write = count_write; /* the backend, counted -- "null" discards and would say nothing */
     holdWrites = 0;
 
@@ -1038,6 +1100,8 @@ int main(void) {
     test_output_hold();
     test_pacing();
     test_corners();
+    test_ramp();
+    test_output_levels();
     test_compile_guard();
     printf("%s: %d checks, %d failure%s\n",
            failures ? "FAILED" : "ALL PASSED", checks, failures, failures == 1 ? "" : "s");

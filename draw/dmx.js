@@ -17,15 +17,15 @@ define(function (require) {
   let numberArray = [0]
   let values = []
   let black = {r:0,g:0,b:0,a:1}
-  let convertValues = (v) => {
+  let convertValues = (v, gamma) => {
     v = unwrapSegment(v)
     if (Array.isArray(v)) { return v.filter(av => typeof av === 'number') }
     if (typeof v === 'object') {
       let col = colourRgb(v, black, 'lights')
       if (Array.isArray(col)) {
-        values[0] = col[0]
-        values[1] = col[1]
-        values[2] = col[2]
+        values[0] = gamma === 1 ? col[0] : Math.pow(Math.max(col[0], 0), gamma)
+        values[1] = gamma === 1 ? col[1] : Math.pow(Math.max(col[1], 0), gamma)
+        values[2] = gamma === 1 ? col[2] : Math.pow(Math.max(col[2], 0), gamma)
         return values
       }
       if (typeof v.value === 'number') { values[0] = v.value }
@@ -42,12 +42,12 @@ define(function (require) {
     return []
   }
 
-  let applyParam = (value, baseChannel, blend) => {
+  let applyParam = (value, baseChannel, blend, gamma) => {
     if (!value) { return }
     value = unwrapSegment(value)
     if (typeof value === 'object') {
       if (isColour(value)) { // param is just a colour
-        convertValues(value).forEach((v, valueIdx) => {
+        convertValues(value, gamma).forEach((v, valueIdx) => {
           blendChannel(baseChannel + valueIdx, v, blend)
         })
         return
@@ -55,14 +55,14 @@ define(function (require) {
       let cumulativeChannel = 0
       for (let key in value) {
         if (key.startsWith('value')) { // Treat as an array; assign channels on a cumulative basis
-          convertValues(value[key]).forEach((v, valueIdx) => { // If evalled was a colour or something, write all values
+          convertValues(value[key], gamma).forEach((v, valueIdx) => { // If evalled was a colour or something, write all values
             blendChannel(cumulativeChannel + baseChannel, v, blend) // Base channel is 1-based, so channel becomes an absolute 1-based dmx channel number after this
             cumulativeChannel += 1
           })
         } else {
           let channel = parseInt(key) // Specific numeric keys
           if (isNaN(channel)) { continue }
-          convertValues(value[key]).forEach((v, valueIdx) => { // If evalled was a colour or something, write all values
+          convertValues(value[key], gamma).forEach((v, valueIdx) => { // If evalled was a colour or something, write all values
             blendChannel(channel + valueIdx + baseChannel, v, blend) // Base channel is 1-based, so channel becomes an absolute 1-based dmx channel number after this
             cumulativeChannel = channel + valueIdx
           })
@@ -88,6 +88,10 @@ define(function (require) {
     // Plain values pass through unchanged
     assert(0.7, unwrapSegment(0.7))
     assert({r:1,g:0}, unwrapSegment({r:1,g:0}))
+    // gamma applies to colour channels only, never to plain numbers
+    assert([0.25,1,0], convertValues({r:0.5,g:1,b:0}, 2).slice(0,3))
+    assert([0.5,1,0], convertValues({r:0.5,g:1,b:0}, 1).slice(0,3))
+    assert([0.5], convertValues(0.5, 2))
     console.log('DMX tests complete')
   }
 
@@ -104,13 +108,15 @@ define(function (require) {
     addRenderer(params._time, ({time, count}) => {
       if (time > params.endTime) { return false }
       let baseChannel = evalParamFrame(params.channel, params, count) || 1 // Base channel offset: dmx is 1-based
-      applyParam(evalParamFrame(params.lights, params, count), baseChannel, 'add')
-      applyParam(evalParamFrame(params.addl, params, count), baseChannel, 'add')
-      applyParam(evalParamFrame(params.sub, params, count), baseChannel, 'sub')
-      applyParam(evalParamFrame(params.set, params, count), baseChannel, 'set')
-      applyParam(evalParamFrame(params.mul, params, count), baseChannel, 'mul')
-      applyParam(evalParamFrame(params.min, params, count), baseChannel, 'min')
-      applyParam(evalParamFrame(params.max, params, count), baseChannel, 'max')
+      let gamma = evalParamFrame(params.gamma, params, count)
+      if (typeof gamma !== 'number' || !(gamma > 0)) { gamma = 1 }
+      applyParam(evalParamFrame(params.lights, params, count), baseChannel, 'add', gamma)
+      applyParam(evalParamFrame(params.addl, params, count), baseChannel, 'add', gamma)
+      applyParam(evalParamFrame(params.sub, params, count), baseChannel, 'sub', gamma)
+      applyParam(evalParamFrame(params.set, params, count), baseChannel, 'set', gamma)
+      applyParam(evalParamFrame(params.mul, params, count), baseChannel, 'mul', gamma)
+      applyParam(evalParamFrame(params.min, params, count), baseChannel, 'min', gamma)
+      applyParam(evalParamFrame(params.max, params, count), baseChannel, 'max', gamma)
       return true
     }, zOrder)
   }

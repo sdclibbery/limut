@@ -143,7 +143,7 @@ core 1 — render task                                                    ← NE
   per LED: seed v0 from coord table, run bytecode, write RGB
   vec4 float32 register file, ~40 opcodes, computed-goto dispatch, all in IRAM
   LUT-approximated sin/cos/pow/log/exp/atan
-  dimmer (linear, pre-gamma) + 256-entry gamma LUT                      ← port pi/output.c
+  16-bit gamma LUT, dimmer on linear light, dither                       ← port pi/output.c
 
 LED output                                                              ← NEW, ~200 lines
   WS2812 via FastLED parallel I2S (up to 24 lanes on S3), DMA double-buffered

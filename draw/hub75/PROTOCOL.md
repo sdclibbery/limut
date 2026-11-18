@@ -427,8 +427,8 @@ limut expression — means `dim=[0:1]l` fades the whole wall as a timevar.
 The `dim` **message** (§5.3) exists for the case where no frames are flowing (no layer bound, host
 paused, bring-up test pattern). Both paths set the same value; the most recent one wins.
 
-Semantics: a linear multiply applied to the rendered RGB **before** gamma / PWM encoding in the
-output stage. It therefore works even when the shader is broken, no layer is bound, or a test
+Semantics: a multiply of linear light, applied **after** gamma in the output stage, so `dim=0.5`
+is half the light. It therefore works even when the shader is broken, no layer is bound, or a test
 pattern is showing. Values outside `0..1` are clamped. The value is held across frames and across
 sessions; it is display state, not session state.
 

@@ -25,11 +25,14 @@
 #                      reconfigured, when this had to be 2
 #   --panel            each module: its region in the RENDER, its cell in the CANVAS, and rot 90
 #                      to undo the mounting. Derived from the `cellid` pattern, 2026-09-04
-#   --brightness 100   six modules at full white is ~120 W, i.e. 24 A at 5 V. Raise this only
+#   --brightness 255   the card's own brightness. Anything lower drops the darkest levels
+#   --level 0.39       the power cap, in linear light: the same peak as the old --brightness 100.
+#                      Six modules at full white is ~120 W, i.e. 24 A at 5 V. Raise this only
 #                      after checking the supply and the wiring can survive a white frame
-#   --gamma 2.2        the running value; draw/hub75/pi/pixel-check.js needs --gamma 1 instead
+#   --gamma 2.2        the panels are roughly linear, checked with --test-pattern ramp
+#                      2026-11-18; draw/hub75/pi/pixel-check.js needs --gamma 1 instead
 #
 # Deliberately absent, because each silently swallows a visual bound from limut: --output raw,
 # --no-gpu, and --test-pattern (a pattern replaces the layer entirely).
 
-HUB75_ARGS=--name hub75-01 --output colorlight --iface eth0 --size 64x192 --canvas 192x64 --row-map 1 --color-order bgr --brightness 100 --gamma 2.2 --panel 0,128:0,0:64x32:90 --panel 0,64:64,0:64x32:90 --panel 0,0:128,0:64x32:90 --panel 32,128:0,32:64x32:90 --panel 32,64:64,32:64x32:90 --panel 32,0:128,32:64x32:90
+HUB75_ARGS=--name hub75-01 --output colorlight --iface eth0 --size 64x192 --canvas 192x64 --row-map 1 --color-order bgr --brightness 255 --level 0.39 --gamma 2.2 --panel 0,128:0,0:64x32:90 --panel 0,64:64,0:64x32:90 --panel 0,0:128,0:64x32:90 --panel 32,128:0,32:64x32:90 --panel 32,64:64,32:64x32:90 --panel 32,0:128,32:64x32:90

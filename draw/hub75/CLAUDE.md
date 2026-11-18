@@ -243,7 +243,7 @@ Shape of it:
 | Setup vs. frames | JSON text frames for control, binary for the 60Hz uniform packets and asset chunks, on the same socket. Assets are chunked at 16 KB and interleaved so a 1 MB image cannot stall the uniform stream |
 | Caching | programs and textures are content-addressed by SHA-256, so a reconnect costs a `have` round trip rather than a re-upload |
 | Errors | typed `error` messages (`compile`/`link`/`asset`/`render`/`protocol`) carrying the driver info log. Compile failures are **permanent** for that source hash, mirroring `draw/visualsynth.js` setting `programs[src] = null` |
-| Dimmer | an `f32` in every frame packet (so `dim=[0:1]l` works as a timevar), plus a `dim` message for when no frames are flowing. Applied pre-gamma in the output stage, so it works even with a broken or absent shader |
+| Dimmer | an `f32` in every frame packet (so `dim=[0:1]l` works as a timevar), plus a `dim` message for when no frames are flowing. Applied to linear light after gamma in the output stage, so it works even with a broken or absent shader |
 | Frame pacing | last-write-wins: a frame superseded before it was drawn is dropped, not queued. Same decoupling `draw/dmx-worker.js` already does for DMX |
 
 ### Two things worth remembering
@@ -1708,9 +1708,13 @@ before committing.
   The arrival cadence is measured (`pacing.arrive`) rather than assumed. Pacing the draw on the
   Pi's own clock is the software answer and was **declined** 2026-09-04 in favour of wiring the
   link; revisit only if it cannot be wired.
-- The gamma curve for the panels. The mechanism is in place — a 256-entry table in the output
-  stage, applied after the dimmer, `--gamma` on the command line, default 2.2 — but the right
-  value is a thing to find by eye once panels exist.
+- The gamma curve for the panels, checked by eye with `--test-pattern ramp` on 2026-11-18. The
+  card is roughly linear, so the 2.2 belongs on the Pi. The card's own `--brightness` drops the
+  darkest levels (at 100, an input of 2 never lit; at 255 it does), so the card runs at 255 and
+  power is capped by `--level` instead. The output stage keeps the curve at 16 bits, applies
+  `dim` and `--level` to linear light after it, and ordered-dithers to 8 bits; an 8-bit table at
+  2.2 had sent inputs 0–14 to black. Still to judge by eye: the dithered darks, and the exact
+  gamma for a dark room.
 - Time sync: how the Pi's frame cadence relates to limut's metronome/beat clock. `hostTime` is no
   longer merely decoded and ignored — `pacing.host` is built from its deltas, which is what proved
   the host's send cadence blameless. `beat` is still unused. Any real time sync still needs no

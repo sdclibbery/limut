@@ -68,7 +68,9 @@ struct output {
     char     backend[16];
     int      w, h;
     float    gamma;
-    uint8_t  glut[256];
+    float    level;        /* ceiling on linear light, with dim: 1 = the card's full output */
+    int      dither;       /* 0 rounds instead, for exact comparisons */
+    uint16_t glut[256];    /* 16-bit linear light */
     uint8_t *pixels;       /* post dim, post gamma: exactly what the panels would show */
     uint64_t frames;
     int    (*write)(output_t *o);
@@ -78,10 +80,11 @@ struct output {
 
 /* `backend` is one of the names above; `opts` may be NULL. Returns 0, or -1 with a reason in
  * `err`. */
-int  output_open(output_t *o, const char *backend, int w, int h, float gamma,
+int  output_open(output_t *o, const char *backend, int w, int h, float gamma, float level,
                  const output_opts *opts, char *err, size_t errCap);
 
-/* Applies the dimmer and gamma to `rgba` (w*h*4, RGBA8) and hands the result to the backend. */
+/* Applies gamma, then dim * level in linear light, dithered to 8 bits, to `rgba` (w*h*4, RGBA8)
+ * and hands the result to the backend. */
 int  output_frame(output_t *o, const uint8_t *rgba, float dim);
 
 /* Hands the LAST frame to the backend again, unchanged. A receiving card holds nothing on its own

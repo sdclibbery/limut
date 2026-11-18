@@ -4,10 +4,10 @@
 
 preset dmxsimwash gradient, loc={w:3/2,h:3/2}, blend='additive', channel=1, vignette={2,cutoff:1/4},
   dimmer=dmx{this.channel+0}, strobe=[0:_3/4,1:_1/4]{time * dmx{this.channel+4}*8},
-  fore={ r:dmx{this.channel+1}*this.dimmer+this.strobe, g:dmx{this.channel+2}*this.dimmer+this.strobe, b:dmx{this.channel+3}*this.dimmer+this.strobe}, back=this.fore
+  gamma=2.2, fore={ r:(dmx{this.channel+1}*this.dimmer)^(1/this.gamma)+this.strobe, g:(dmx{this.channel+2}*this.dimmer)^(1/this.gamma)+this.strobe, b:(dmx{this.channel+3}*this.dimmer)^(1/this.gamma)+this.strobe}, back=this.fore
 
 preset dmxwash dmx, lights={0:this.dimmer, 1:this.fore, 4:this.strobe, 5:0, 6:0},
-	dimmer=1, fore=rainbow, strobe=0
+	dimmer=1, fore=rainbow, strobe=0, gamma=2.2
 
 
 //
