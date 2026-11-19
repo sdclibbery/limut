@@ -167,11 +167,15 @@ define(function(require) {
   sliders.onSweep(() => {
     inlineWidgets.forEach(w => {
       let slider = sliders.getInlineSlider(w.n)
-      if (!slider) { w.input.style.display = 'none'; return }
+      let display = slider ? '' : 'none'
+      if (w.input.style.display !== display) {
+        w.input.style.display = display
+        w.bookmark.changed() // CodeMirror caches the line's measurements; without this the cursor and clicks land on stale positions
+      }
+      if (!slider) { return }
       let update = () => { w.input.value = sliders.inputFromSlider(slider, slider.value) }
       slider.updateWidget = update // Peers get the literal through the collab text delta, so only the widget moves
       update()
-      w.input.style.display = ''
     })
   })
 
