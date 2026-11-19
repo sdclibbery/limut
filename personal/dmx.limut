@@ -72,4 +72,4 @@ preset dstrobe dmxstrip, mode=10, palette='obf', control=this.input, smooth=1, b
 //
 // Hub75 presets
 //
-preset hub75 visualsynth, display='hub75-01', dim=0.8
+preset hub75 visualsynth, display='hub75-01', dim=0.39

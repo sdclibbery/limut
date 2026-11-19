@@ -1711,7 +1711,8 @@ before committing.
 - The gamma curve for the panels, checked by eye with `--test-pattern ramp` on 2026-11-18. The
   card is roughly linear, so the 2.2 belongs on the Pi. The card's own `--brightness` drops the
   darkest levels (at 100, an input of 2 never lit; at 255 it does), so the card runs at 255 and
-  power is capped by `--level` instead. The output stage keeps the curve at 16 bits, applies
+  the wall at full output; the everyday power cap is `dim=0.39` in the `hub75` preset
+  (`personal/dmx.limut`), with `--level` available as a hard cap on the Pi. The output stage keeps the curve at 16 bits, applies
   `dim` and `--level` to linear light after it, and ordered-dithers to 8 bits; an 8-bit table at
   2.2 had sent inputs 0–14 to black. Still to judge by eye: the dithered darks, and the exact
   gamma for a dark room.
