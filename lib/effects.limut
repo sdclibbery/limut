@@ -194,6 +194,6 @@ set autofuzz = {amount:1/2, freq:20} ->
 
 // OTT style multiband compression: hard, fast compression per band.
 set ott = {depth:1, count:3, trim:1} -> multiband4{
-  {i,centre} -> compressor{threshold:-30db, ratio:(12db)^depth, attack:2ms, release:60ms, knee:6db},
+  {i,centre} -> compressor{threshold:-30db, ratio:12*depth, attack:2ms, release:60ms, knee:6db},
   count
 } * trim /3

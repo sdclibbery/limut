@@ -361,10 +361,12 @@ define(function(require) {
     if (interval === undefined && mixValue >= 0.9999) { // wet only
       return wetChain
     }
-    // Actual mix, equivalent to:  { gain{cos{mix*pi/2}}, wet>>gain{sin{mix*pi/2}} }
+    // Equal power by default; law:'sum' keeps amplitudes summing to 1, as play/effects/mix.js does
+    let law = evalParamEvent(params.law, e)
+    let dryLaw = law === 'sum' ? (mix => 1 - Math.sin(mix * Math.PI/2)) : (mix => Math.cos(mix * Math.PI/2))
     let dryGain = system.audio.createGain()
     let wetGain = system.audio.createGain()
-    evalMainParamFrame(dryGain.gain, params, mixParam, 1/2, undefined, mix => Math.cos(mix * Math.PI/2))
+    evalMainParamFrame(dryGain.gain, params, mixParam, 1/2, undefined, dryLaw)
     evalMainParamFrame(wetGain.gain, params, mixParam, 1/2, undefined, mix => Math.sin(mix * Math.PI/2))
     return { // Add
       value: dryGain, // Dry part
@@ -753,6 +755,28 @@ define(function(require) {
   assert([undefined], audioCalls)
   assert(true, aLoop instanceof AudioNode)
 
+  { // mix law: equal power by default, law:'sum' makes dry and wet amplitudes sum to 1
+    let dryAt = (law) => {
+      let realCreate = system.audio.createGain
+      let gains = []
+      system.audio.createGain = () => {
+        let g = realCreate.call(system.audio)
+        let rec = {}
+        g.gain.setValueAtTime = (v) => { rec.v = v }
+        gains.push(rec)
+        return g
+      }
+      try {
+        mix({value:realCreate.call(system.audio), value1:1/4, law:law}, {_destructor:require('play/destructor')(), _time:0, count:0}, 0, undefined, er)
+      } finally {
+        system.audio.createGain = realCreate
+      }
+      return gains[0].v
+    }
+    let near = (x, y) => Math.abs(x-y) < 1e-6
+    assert(true, near(Math.cos(Math.PI/8), dryAt(undefined)))
+    assert(true, near(1 - Math.sin(Math.PI/8), dryAt('sum')))
+  }
   console.log('Graph tests complete')
   }
 })

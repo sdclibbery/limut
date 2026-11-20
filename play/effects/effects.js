@@ -37,7 +37,7 @@ define(function (require) {
     node.connect(gain)
     params._destructor.stop(lfo)
     params._destructor.disconnect(gain, lfo, node)
-    return mix(params, 'ring', node, gain, 1)
+    return mix(params, 'ring', node, gain, 1, 'power')
   }
 
   let mono = (params, node) => {

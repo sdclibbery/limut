@@ -137,7 +137,7 @@ system.meter = (channel) => {
   analyser.getFloatTimeDomainData(meterData)
   let peakInstantaneousPower = 0
   for (let i = 0; i < analyser.fftSize; i++) {
-    const power = (meterData[i]*2) ** 2
+    const power = meterData[i] ** 2
     peakInstantaneousPower = Math.max(power, peakInstantaneousPower)
   }
   const peakInstantaneousPowerDecibels = 10 * Math.log10(peakInstantaneousPower)

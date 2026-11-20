@@ -126,7 +126,7 @@ define(function (require) {
     let hpf = evalSubParamEvent(params, 'room', 'hpf', 0, 'hz')
     let fv = fixedFreeverb(params._destructor, room, hpf, node)
     params._destroyWait += room*5
-    return mix(params, 'room', node, fv, 1/2)
+    return mix(params, 'room', node, fv, 3/4, 'power')
   }
 
   return {

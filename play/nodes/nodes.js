@@ -82,12 +82,14 @@ define(function(require) {
   }
   addNodeFunction('panner', panner)
 
+  let toDb = x => Math.log10(Math.max(x,1e-6))*20 // limut gains are linear, WebAudio wants dB
+
   let compress = (args,e,b) => {
     let node = system.audio.createDynamicsCompressor()
     let params = combineParams(args, e)
-    evalMainParamFrame(node.ratio, params, 'ratio', 0, undefined, x => Math.log10(Math.max(x,1e-6))*20) // Convert to dB for webaudio
-    evalMainParamFrame(node.threshold, params, 'threshold', 1/316, undefined, x => Math.log10(Math.max(x,1e-6))*20) // Convert to dB for webaudio
-    evalMainParamFrame(node.knee, params, 'knee', 100, undefined, x => Math.log10(Math.max(x,1e-6))*20) // Convert to dB for webaudio
+    evalMainParamFrame(node.ratio, params, 'ratio', 1) // A plain ratio, not a gain
+    evalMainParamFrame(node.threshold, params, 'threshold', 1/316, undefined, toDb)
+    evalMainParamFrame(node.knee, params, 'knee', 100, undefined, toDb)
     evalMainParamFrame(node.attack, params, 'attack', 0.01, 's')
     evalMainParamFrame(node.release, params, 'release', 0.25, 's')
     return node
@@ -115,4 +117,38 @@ define(function(require) {
     return composite
   }
   addNodeFunction('flipper', flipper)
+
+  // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+    let assert = (expected, actual, msg) => {
+      if (Math.abs(expected - actual) > 0.01) { console.trace(`Assertion failed ${msg||''}.\n>>Expected: ${expected}\n>>Actual:   ${actual}`) }
+    }
+    let written = (audioParam) => { // The last value scheduled on a param; .value lags in a context that isn't rendering
+      let v
+      audioParam.setValueAtTime = (x) => { v = x }
+      return () => v
+    }
+    let realCreate = system.audio.createDynamicsCompressor
+    let probes
+    system.audio.createDynamicsCompressor = () => {
+      let node = realCreate.call(system.audio)
+      probes = {ratio:written(node.ratio), threshold:written(node.threshold), knee:written(node.knee)}
+      return node
+    }
+    try {
+      let e = {_destructor:require('play/destructor')(), _time:0, count:0}
+      compress({}, e, 0)
+      assert(1, probes.ratio(), 'default ratio 1:1')
+      assert(-50, probes.threshold(), 'default threshold -50dB')
+      assert(40, probes.knee(), 'default knee 40dB')
+      compress({ratio:4, threshold:Math.pow(10,-20/20), knee:Math.pow(10,6/20)}, e, 0)
+      assert(4, probes.ratio(), 'ratio is a plain ratio')
+      assert(-20, probes.threshold(), 'threshold written as -20dB')
+      assert(6, probes.knee(), 'knee written as 6dB')
+      e._destructor.destroy()
+    } finally {
+      system.audio.createDynamicsCompressor = realCreate
+    }
+    console.log('Nodes tests complete')
+  }
 })

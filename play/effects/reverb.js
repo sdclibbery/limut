@@ -56,7 +56,7 @@ define(function (require) {
     rev.connect(boost)
     params._destroyWait += duration
     params._destructor.disconnect(rev, boost)
-    return mix(params, 'reverb', node, boost, 1/3)
+    return mix(params, 'reverb', node, boost, 1/2, 'power')
   }
 
   let fixedReverb = (destructor, duration, curve, hpf, node) => {

@@ -33,11 +33,11 @@ define(function (require) {
       echoFeedback: quantise(Math.min(evalSubParamEvent(params, 'echo', 'feedback', 0.35), 0.95), 20),
       room: quantise(evalMainParamEvent(params, 'room', 0), 16),
       roomHpf: quantise(evalSubParamEvent(params, 'room', 'hpf', 0, 'hz'), 1),
-      roomMix: quantise(evalSubParamEvent(params, 'room', 'mix', 1/2), 16),
+      roomMix: quantise(evalSubParamEvent(params, 'room', 'mix', 3/4), 16),
       reverb: quantise(evalMainParamEvent(params, 'reverb', 0, 'b') * params.beat.duration, 16),
       reverbCurve: quantise(evalSubParamEvent(params, 'reverb', 'curve', 3), 16),
       reverbHpf: quantise(evalSubParamEvent(params, 'reverb', 'hpf', 0, 'hz'), 1),
-      reverbMix: quantise(evalSubParamEvent(params, 'reverb', 'mix', 1/3), 16),
+      reverbMix: quantise(evalSubParamEvent(params, 'reverb', 'mix', 1/2), 16),
       output: output,
     }
   }
@@ -58,8 +58,8 @@ define(function (require) {
     node = fixedMix(c.destructor, c.params.phaserMix, node, fixedPhaser(c.destructor, c.params.phaserRate, node))
     node = fixedMix(c.destructor, c.params.flangerMix, node, fixedFlanger(c.destructor, c.params.flangerRate, node))
     node = fixedEcho(c.destructor, c.params.echoDelay, c.params.echoFeedback, node)
-    node = fixedMix(c.destructor, c.params.roomMix, node, fixedFreeverb(c.destructor, c.params.room, c.params.roomHpf, node))
-    node = fixedMix(c.destructor, c.params.reverbMix, node, fixedReverb(c.destructor, c.params.reverb, c.params.reverbCurve, c.params.reverbHpf, node))
+    node = fixedMix(c.destructor, c.params.roomMix, node, fixedFreeverb(c.destructor, c.params.room, c.params.roomHpf, node), 'power')
+    node = fixedMix(c.destructor, c.params.reverbMix, node, fixedReverb(c.destructor, c.params.reverb, c.params.reverbCurve, c.params.reverbHpf, node), 'power')
     c.out = node
     c.destructor.disconnect(c.out)
     return c

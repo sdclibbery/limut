@@ -6,19 +6,18 @@ define(function (require) {
 
   let semisToCents = (v) => v * 100
 
-  // Ramp detune from baseFreq to targetFreq, scheduled in cents relative to refFreq.
-  // Freq is linearly interpolated then log2'd, so approximate with multiple linearRamps.
+  // Ramp detune from baseFreq to targetFreq, scheduled in cents relative to refFreq. Interpolated in
+  // pitch so a glide up has the same shape as the same interval down; the curve needs several ramps.
   let scheduleGlide = (audioParam, startTime, glideDur, baseFreq, targetFreq, refFreq, glideCurve) => {
     let curvePower = 1/(glideCurve+1)
     let steps = 24
-    let startCents = 12 * Math.log2(baseFreq / refFreq) * 100
+    let startCents = 1200 * Math.log2(baseFreq / refFreq)
+    let endCents = 1200 * Math.log2(targetFreq / refFreq)
     audioParam.setValueAtTime(startCents, startTime)
     for (let i = 1; i <= steps; i++) {
       let lerp = i/steps
       let appliedLerp = Math.pow(lerp, curvePower)
-      let glideFreq = targetFreq*appliedLerp + baseFreq*(1-appliedLerp)
-      let cents = 12 * Math.log2(glideFreq / refFreq) * 100
-      audioParam.linearRampToValueAtTime(cents, startTime + lerp*glideDur)
+      audioParam.linearRampToValueAtTime(startCents + (endCents - startCents)*appliedLerp, startTime + lerp*glideDur)
     }
   }
 
@@ -151,6 +150,17 @@ define(function (require) {
     // check for them directly rather than for the names the old code happened to use.
     let referencesAnEvent = (e, others) => Object.keys(e).some(k => others.includes(e[k])
       || (Array.isArray(e[k]) && e[k].some(v => others.includes(v))))
+
+    { // An interval up and the same interval down move the same distance in pitch at every point
+      let record = () => { let ap = {pts: []}; ap.setValueAtTime = (v) => ap.pts.push(v); ap.linearRampToValueAtTime = (v) => ap.pts.push(v); return ap }
+      let up = record(), down = record()
+      scheduleGlide(up, 0, 1, 220, 440, 440, 1)
+      scheduleGlide(down, 0, 1, 440, 220, 220, 1)
+      let near = (x, y) => Math.abs(x - y) < 1e-9
+      assert(true, near(-1200, up.pts[0]) && near(0, up.pts[24]), 'glide up runs an octave below the target to the target')
+      assert(true, up.pts.every((c, i) => near(c + 1200, -(down.pts[i] - 1200))), 'glide up and down are mirror images in pitch')
+      assert(true, near(-1200 + 1200*Math.SQRT1_2, up.pts[12]), 'default curve covers sqrt(1/2) of the interval at half time')
+    }
 
     let first = ev(100, 1)
     let ap1 = mockAp()

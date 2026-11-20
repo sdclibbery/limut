@@ -92,7 +92,7 @@ define(function (require) {
       liveRelease(params, () => {
         let relTime = Math.max(system.audio.currentTime, params._time + attack + 0.001)
         vca.gain.setValueAtTime(gain, relTime)
-        vca.gain.linearRampToValueAtTime(0.00001, relTime+release)
+        vca.gain.exponentialRampToValueAtTime(0.00001, relTime+release)
         params._releaseTime = relTime
         params.endTime = relTime+release
       })
@@ -284,6 +284,28 @@ define(function (require) {
     assert(releasedEndTime, params.endTime, `${type}: repeated release changes nothing`)
     assert(baseCount, liveVoices.size, `${type}: repeated release does not deregister anything else`)
   })
+
+  { // organ releases exponentially whether the note is scheduled or live
+    let lastRamp = (params) => {
+      let realCreate = system.audio.createGain
+      let ramps = []
+      system.audio.createGain = () => {
+        let g = realCreate.call(system.audio)
+        g.gain.linearRampToValueAtTime = () => ramps.push('linear')
+        g.gain.exponentialRampToValueAtTime = () => ramps.push('exponential')
+        return g
+      }
+      try {
+        envelope(params, 0.1, 'organ')
+        if (params._noteOff) { params._noteOff() }
+      } finally {
+        system.audio.createGain = realCreate
+      }
+      return ramps[ramps.length-1]
+    }
+    assert('exponential', lastRamp({_time: system.audio.currentTime, beat: {duration: 1}, dur: 1}), 'organ scheduled release')
+    assert('exponential', lastRamp(liveParams()), 'organ live release')
+  }
 
   { // A voice whose note off never arrives is still reachable, and releasing it destroys it
     let baseCount = liveVoices.size

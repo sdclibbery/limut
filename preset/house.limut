@@ -18,7 +18,7 @@ preset oreese multiwave
   , wave1={'saw',detune:-this.detune*(this.freq/180)^3/2,amp:1}
   , wave2={'saw',detune:this.detune*(this.freq/180)^3/2,amp:1}
   , lpf={100+1100*this.vel*this.cutoff^3,q:9,poles:4}
-  , reverb={1,hpf:300,mix:1/8}
+  , reverb={1,hpf:300,mix:0.15}
   , detune=2/3
   , cutoff=1/2
 
@@ -29,7 +29,7 @@ preset reese multiwave
   , wave3={'saw',detune:-1/4*this.detune,amp:1/2}
   , wave4={'tri',detune:-12,amp:1}
   , lpf={100+1900*this.vel*this.cutoff^3,q:9,poles:4}
-  , reverb={1,hpf:300,mix:1/8}
+  , reverb={1,hpf:300,mix:0.15}
   , detune=2/3
   , cutoff=1/2
 

@@ -13,14 +13,16 @@ define(function (require) {
     return gain
   }
 
+  let toDb = x => Math.log10(Math.max(x,1e-6))*20 // limut gains are linear, WebAudio wants dB
+
   let compressor = (params, node) => {
     let compress = evalMainParamEvent(params, 'compress', 0)
     if (!compress) { return node }
     node = inputGain(params, 'compress', node)
     let compressor = system.audio.createDynamicsCompressor()
     compressor.ratio.value = compress
-    compressor.threshold.value = evalSubParamEvent(params, 'compress', 'threshold', -50, x => Math.log10(Math.max(x,1e-6))*20) // Convert to dB for WebAudio
-    compressor.knee.value = evalSubParamEvent(params, 'compress', 'knee', 40, x => Math.log10(Math.max(x,1e-6))*20) // Convert to dB for WebAudio
+    compressor.threshold.value = toDb(evalSubParamEvent(params, 'compress', 'threshold', 1/316))
+    compressor.knee.value = toDb(evalSubParamEvent(params, 'compress', 'knee', 100))
     compressor.attack.value = evalSubParamEvent(params, 'compress', 'att', 0.01, 's')
     compressor.release.value = evalSubParamEvent(params, 'compress', 'rel', 0.25, 's')
     node.connect(compressor)
@@ -72,7 +74,7 @@ define(function (require) {
     return (3 + a) * x * Math.PI * 0.333 / (Math.PI + a * Math.abs(x));
   }
 
-  return (params, node) => {
+  let waveEffects = (params, node) => {
     node = shapeEffect(params, 'noisify', node, 16383, noisify, '4x')
     node = shapeEffect(params, 'bits', node, 255, (x, b) => Math.pow(Math.round(Math.pow(x,1/2)*b)/b,2))
     node = shapeEffect(params, 'fold', node, 255, fold)
@@ -83,4 +85,28 @@ define(function (require) {
     node = compressor(params, node)
     return node
   }
+
+  // TESTS //
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+    let assert = (expected, actual, msg) => {
+      if (Math.abs(expected - actual) > 0.01) { console.trace(`Assertion failed ${msg||''}.\n>>Expected: ${expected}\n>>Actual:   ${actual}`) }
+    }
+    let destructor = require('play/destructor')
+    let compressed = (compress) => {
+      let params = {compress:compress, _destructor:destructor(), _time:0, count:0}
+      let node = compressor(params, system.audio.createGain())
+      params._destructor.destroy()
+      return node
+    }
+    let c = compressed(4)
+    assert(4, c.ratio.value, 'ratio is a plain ratio')
+    assert(-50, c.threshold.value, 'default threshold -50dB')
+    assert(40, c.knee.value, 'default knee 40dB')
+    c = compressed({value:2.5, threshold:Math.pow(10,-14/20), knee:Math.pow(10,12/20)})
+    assert(-14, c.threshold.value, 'threshold written as -14dB')
+    assert(12, c.knee.value, 'knee written as 12dB')
+    console.log('Wave effects tests complete')
+  }
+
+  return waveEffects
 })

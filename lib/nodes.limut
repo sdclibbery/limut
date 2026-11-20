@@ -64,9 +64,9 @@ set shaper.drive = {amount:1/2} -> shaper{ {x,a:amount*100} -> (3 + a) * x * (pi
 set drive = {amount:1/2} -> shaper{ {x,a:amount*100} -> (3 + a) * x * (pi/3) / (pi + a * abs(x)) }
 
 //// Dynamics
-set compressor = {threshold:-50db, ratio:3db, attack:1ms, release:50ms, knee:2db} -> compress{
+set compressor = {threshold:-50db, ratio:3, attack:1ms, release:50ms, knee:2db} -> compress{
   threshold:threshold, attack:attack, release:release, knee:knee, ratio:ratio
 }
-set limiter = {threshold:0db, attack:0, release:50ms, knee:0db, ratio:20db} -> compress{
+set limiter = {threshold:0db, attack:0, release:50ms, knee:0db, ratio:20} -> compress{
   threshold:threshold, attack:attack, release:release, knee:knee, ratio:ratio
 }
