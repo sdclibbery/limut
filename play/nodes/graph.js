@@ -759,17 +759,21 @@ define(function(require) {
     let dryAt = (law) => {
       let realCreate = system.audio.createGain
       let gains = []
+      let patched = []
       system.audio.createGain = () => {
         let g = realCreate.call(system.audio)
         let rec = {}
         g.gain.setValueAtTime = (v) => { rec.v = v }
         gains.push(rec)
+        patched.push(g)
         return g
       }
       try {
         mix({value:realCreate.call(system.audio), value1:1/4, law:law}, {_destructor:require('play/destructor')(), _time:0, count:0}, 0, undefined, er)
       } finally {
         system.audio.createGain = realCreate
+        // The node goes back into the GainNode pool, so a leftover override would break the next real note to get it
+        patched.forEach(g => { delete g.gain.setValueAtTime })
       }
       return gains[0].v
     }

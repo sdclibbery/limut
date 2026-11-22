@@ -1060,6 +1060,7 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p><code>low</code> Low shelf gain. Eg <code>low=-6dB</code> will act like a gain of 1/2 for the low frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>
 <p class='sub'><code>low={-8db,freq:400}</code> Low shelf cutoff frequency. Default: 200Hz. Default units: Hertz</p>
 <p><code>lpf</code> Low pass filter frequency. Never goes below 10Hz. Default time units: Hertz</p>
+<p class='sub'><code>lpf=200*2^(5*this.cutoff)</code> Write a swept or controlled frequency (lpf, hpf etc) as a base times <code>2^</code>octaves, or <code>lo*(hi/lo)^x</code> for a 0 to 1 control, so equal steps of the control are equal steps in pitch: <code>lpf=100*30^[]l8@s</code>. Combine controls (cutoff, envelope, velocity) by adding octaves inside the exponent. <code>2^(5*x)</code> needs the brackets; <code>30^x</code> does not.</p>
 <p class='sub'><code>lpf={400,q:20}</code> Low pass filter resonance, in dB: the boost at the cutoff, so -3 is flat (Butterworth). Default: 5.</p>
 <p class='sub'><code>lpf={400,poles:4}</code> Filter poles. Default is a 2 pole filter giving 12 dB/octave. Alternatively, specify 4 for a Moog-like 4 pole filter giving 24 dB/octave.</p>
 <p><code>mid</code> Mid gain. Eg <code>mid=-6dB</code> will act like a gain of 1/2 for the mid frequencies. Must specify the value with the <code>dB</code> unit, or use a relative gain value instead.</p>

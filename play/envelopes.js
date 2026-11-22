@@ -289,10 +289,12 @@ define(function (require) {
     let lastRamp = (params) => {
       let realCreate = system.audio.createGain
       let ramps = []
+      let patched = []
       system.audio.createGain = () => {
         let g = realCreate.call(system.audio)
         g.gain.linearRampToValueAtTime = () => ramps.push('linear')
         g.gain.exponentialRampToValueAtTime = () => ramps.push('exponential')
+        patched.push(g)
         return g
       }
       try {
@@ -300,6 +302,8 @@ define(function (require) {
         if (params._noteOff) { params._noteOff() }
       } finally {
         system.audio.createGain = realCreate
+        // The node goes back into the GainNode pool, so a leftover override would silence the next real note to get it
+        patched.forEach(g => { delete g.gain.linearRampToValueAtTime; delete g.gain.exponentialRampToValueAtTime })
       }
       return ramps[ramps.length-1]
     }

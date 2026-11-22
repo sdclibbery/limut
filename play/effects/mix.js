@@ -18,6 +18,7 @@ define(function (require) {
 
   let fixedMix = (destructor, mix, dry, wet, law) => {
     law = law || 'sum'
+    if (wet === dry) { return dry } // Effect is off: mixing a node with itself would boost it under the power law
     if (mix <= 0.01) { return dry }
     if (mix >= 1) { return wet }
     let dryGainNode = system.audio.createGain()
@@ -34,6 +35,7 @@ define(function (require) {
   let mix = (params, p, dry, wet, def, law) => {
     if (def === undefined) { def = 1 }
     law = law || 'sum'
+    if (wet === dry) { return dry } // Effect is off: mixing a node with itself would boost it under the power law
     if (fixedPerFrame(params, p, 'mix', def)) {
       let mix = evalSubParamEvent(params, p, 'mix', def)
       let outNode = fixedMix(params._destructor, mix, dry, wet, law)
@@ -70,6 +72,8 @@ define(function (require) {
     ;[d, w] = levels('power', 1/2)
     ;[od, ow] = levels('sum', 1/3)
     assert(ow/od, w/d, 'reverb default 1/2 power keeps the old 1/3 sum balance')
+    let node = system.audio.createGain()
+    assert(1, fixedMix(null, 3/4, node, node, 'power') === node ? 1 : 0, 'an effect that is off (wet is the dry node) passes the dry through unmixed')
     console.log('Mix tests complete')
   }
 
