@@ -33,6 +33,27 @@ define(function (require) {
     Array.from(liveVoices).forEach(params => params._noteOff()) // Each release removes itself from liveVoices
   }
 
+  // Analogue style: segments fall evenly in dB. A ramp to 0 goes exponentially to floorDb below its
+  // start, reaching it a few ms before the segment ends, then linearly to 0, since an exponential
+  // ramp can never reach 0. The floor is relative to the note so the shape doesn't depend on its gain
+  let fadeTail = 0.005
+  let fadeOut = (param, from, time, duration, floorDb) => {
+    let tail = Math.min(fadeTail, duration/2)
+    param.exponentialRampToValueAtTime(Math.max(from*Math.pow(10, -floorDb/20), 1e-9), time+duration-tail)
+    param.linearRampToValueAtTime(0, time+duration)
+  }
+  let decayTo = (param, from, to, time, duration) => {
+    if (to >= from/100) {
+      param.exponentialRampToValueAtTime(to, time+duration)
+    } else {
+      param.exponentialRampToValueAtTime(from/100, time+duration-Math.min(fadeTail, duration/2))
+      param.linearRampToValueAtTime(to, time+duration)
+    }
+  }
+  // Linear amplitude decays used to reach -40dB at 99% of their time, so ending there keeps a note's length
+  let adsrFloorDb = 40
+  let expFloorDb = 60
+
   let fullEnvelope = (params, gainBase) => {
     let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25, 'b'), 'b'))
     dur *= evalMainParamEvent(params, "long", 1)
@@ -48,10 +69,10 @@ define(function (require) {
     vca.gain.setValueAtTime(0, 0)
     vca.gain.setValueAtTime(0, params._time)
     vca.gain.linearRampToValueAtTime(gain, params._time + attack)
-    vca.gain.linearRampToValueAtTime(gain*susLevel, params._time + attack+decay)
+    decayTo(vca.gain, gain, gain*susLevel, params._time + attack, decay)
     if (sustain !== undefined) {
       vca.gain.linearRampToValueAtTime(gain*susLevel, params._time + attack+decay+sustain)
-      vca.gain.linearRampToValueAtTime(0, params._time + attack+decay+sustain+release)
+      fadeOut(vca.gain, gain*susLevel, params._time + attack+decay+sustain, release, adsrFloorDb)
       params.endTime = params._time + attack+decay+sustain+release
       scheduleDestroy(params)
     } else {
@@ -59,7 +80,7 @@ define(function (require) {
       liveRelease(params, () => {
         let releaseTime = Math.max(system.audio.currentTime, params._time + attack+decay+0.001)
         vca.gain.linearRampToValueAtTime(gain*susLevel, releaseTime)
-        vca.gain.linearRampToValueAtTime(0, releaseTime+release)
+        fadeOut(vca.gain, gain*susLevel, releaseTime, release, adsrFloorDb)
         params.endTime = releaseTime+release
       })
     }
@@ -83,7 +104,7 @@ define(function (require) {
     vca.gain.linearRampToValueAtTime(gain, params._time + attack)
     if (sustain !== undefined) {
       vca.gain.linearRampToValueAtTime(gain, params._time + attack+sustain)
-      vca.gain.exponentialRampToValueAtTime(0.00001, params._time + attack+sustain+release)
+      fadeOut(vca.gain, gain, params._time + attack+sustain, release, expFloorDb)
       params._releaseTime = params._time + attack+sustain
       params.endTime = params._time + attack+sustain+release
       scheduleDestroy(params)
@@ -92,7 +113,7 @@ define(function (require) {
       liveRelease(params, () => {
         let relTime = Math.max(system.audio.currentTime, params._time + attack + 0.001)
         vca.gain.setValueAtTime(gain, relTime)
-        vca.gain.exponentialRampToValueAtTime(0.00001, relTime+release)
+        fadeOut(vca.gain, gain, relTime, release, expFloorDb)
         params._releaseTime = relTime
         params.endTime = relTime+release
       })
@@ -114,8 +135,8 @@ define(function (require) {
     vca.gain.setValueAtTime(0, 0)
     vca.gain.setValueAtTime(0, params._time)
     vca.gain.linearRampToValueAtTime(gain, params._time + attack)
-    vca.gain.linearRampToValueAtTime(gain*susLevel, params._time + attack+decay)
-    vca.gain.linearRampToValueAtTime(0, params._time + attack+decay+release)
+    decayTo(vca.gain, gain, gain*susLevel, params._time + attack, decay)
+    fadeOut(vca.gain, gain*susLevel, params._time + attack+decay, release, adsrFloorDb)
     params.endTime = params._time + attack+decay+release
     params._destructor.disconnect(vca)
     scheduleDestroy(params)
@@ -131,7 +152,7 @@ define(function (require) {
     vca.gain.cancelScheduledValues(0)
     vca.gain.setValueAtTime(0, 0)
     vca.gain.setValueAtTime(gain, params._time)
-    vca.gain.linearRampToValueAtTime(0, params._time + decay)
+    fadeOut(vca.gain, gain, params._time, decay, adsrFloorDb)
     params.endTime = params._time + decay
     params._destructor.disconnect(vca)
     scheduleDestroy(params)
@@ -147,8 +168,9 @@ define(function (require) {
     vca.gain.cancelScheduledValues(0)
     vca.gain.setValueAtTime(0, 0)
     vca.gain.setValueAtTime(0, params._time)
-    vca.gain.linearRampToValueAtTime(gain, params._time+0.001) // 1ms attack
-    vca.gain.exponentialRampToValueAtTime(0.0001, params._time + decay)
+    let attack = Math.min(0.001, decay/2)
+    vca.gain.linearRampToValueAtTime(gain, params._time+attack)
+    fadeOut(vca.gain, gain, params._time+attack, decay-attack, expFloorDb)
     params.endTime = params._time + decay
     params._destructor.disconnect(vca)
     scheduleDestroy(params)
@@ -285,30 +307,61 @@ define(function (require) {
     assert(baseCount, liveVoices.size, `${type}: repeated release does not deregister anything else`)
   })
 
-  { // organ releases exponentially whether the note is scheduled or live
-    let lastRamp = (params) => {
+  { // Releases fall evenly in dB to a floor relative to the note, then fade linearly to 0 at endTime
+    let record = (params, type) => {
       let realCreate = system.audio.createGain
-      let ramps = []
+      let calls = []
       let patched = []
       system.audio.createGain = () => {
         let g = realCreate.call(system.audio)
-        g.gain.linearRampToValueAtTime = () => ramps.push('linear')
-        g.gain.exponentialRampToValueAtTime = () => ramps.push('exponential')
+        g.gain.linearRampToValueAtTime = (v,t) => calls.push(['linear',v,t])
+        g.gain.exponentialRampToValueAtTime = (v,t) => calls.push(['exponential',v,t])
         patched.push(g)
         return g
       }
       try {
-        envelope(params, 0.1, 'organ')
+        envelope(params, 0.1, type)
         if (params._noteOff) { params._noteOff() }
       } finally {
         system.audio.createGain = realCreate
         // The node goes back into the GainNode pool, so a leftover override would silence the next real note to get it
         patched.forEach(g => { delete g.gain.linearRampToValueAtTime; delete g.gain.exponentialRampToValueAtTime })
       }
-      return ramps[ramps.length-1]
+      return calls
     }
-    assert('exponential', lastRamp({_time: system.audio.currentTime, beat: {duration: 1}, dur: 1}), 'organ scheduled release')
-    assert('exponential', lastRamp(liveParams()), 'organ live release')
+    let near = (a, b) => Math.abs(a-b) < 1e-9
+    let checkRelease = (type, params, from, floorDb) => {
+      let calls = record(params, type)
+      let last = calls[calls.length-1]
+      let exp = calls[calls.length-2]
+      assert('linear', last[0], `${type}: ends with a linear fade`)
+      assert(0, last[1], `${type}: fades to 0`)
+      assert(true, near(last[2], params.endTime), `${type}: fade ends at endTime`)
+      assert('exponential', exp[0], `${type}: release is exponential`)
+      assert(true, near(exp[1], from*Math.pow(10, -floorDb/20)), `${type}: release floor ${floorDb}dB below its start; got ${exp[1]/from}`)
+    }
+    let scheduled = (extra) => Object.assign({_time: system.audio.currentTime, beat: {duration: 1}, dur: 1}, extra)
+    let live = (extra) => Object.assign(liveParams(), extra)
+    ;[1, 4].forEach(amp => {
+      checkRelease('organ', scheduled({amp:amp}), 0.1*amp, 60)
+      checkRelease('organ', live({amp:amp}), 0.1*amp, 60)
+      checkRelease('exp', scheduled({amp:amp}), 0.1*amp, 60)
+      checkRelease('perc', scheduled({amp:amp}), 0.1*amp, 40)
+      checkRelease('full', scheduled({amp:amp}), 0.1*amp*0.8, 40)
+      checkRelease('full', live({amp:amp}), 0.1*amp*0.8, 40)
+      checkRelease('simple', scheduled({amp:amp}), 0.1*amp*0.8, 40)
+    })
+    { // decay to a zero sustain level can't be exponential all the way
+      let calls = record(scheduled({sus:{value:1,level:0}, att:0, dec:1/2}), 'full')
+      let zeroAt = calls.findIndex(c => c[1] === 0)
+      assert('exponential', calls[zeroAt-1][0], 'full: decay to 0 is exponential first')
+      assert(true, near(calls[zeroAt-1][1], 0.001), `full: decay to 0 goes to -40dB first; got ${calls[zeroAt-1][1]}`)
+    }
+    { // a zero length segment schedules nothing before the segment start
+      let params = scheduled({att:0, dec:0, rel:0, sus:1})
+      let calls = record(params, 'full')
+      assert(true, calls.every(c => c[2] >= params._time), 'full: zero length segments stay in order')
+    }
   }
 
   { // A voice whose note off never arrives is still reachable, and releasing it destroys it
