@@ -1,7 +1,6 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-Frequency interpolation linearity for filetr cutoffs etc
 Built in envelope linearity issues
 Check if any visual px shaders need to do blending in linear space with the new helpers
 Want to add an audio node that creates a global var with a value that tracks the audio at that point. Can use for ducking etc
@@ -36,12 +35,6 @@ Multiband effect that does spectral side chain ducking
  Eg I have a lead that sometimes can't be heard over an arp. I want to duck the arp spectrally based on the lead
 !dbd is weak?
 ? duckp player .pre based sidechain duck using envelope follower
-!Trance can sound out of tune
- toscale{} function: takes a Freq and quantises to a scale, default to current global scale/root. Try using it for trance cutoff
-  This probably isn't the problem. The problem is probably short decay times
- ?Pick sounded a bit out of tune too, had to increase decay? Is this at lower octaves?
- ALSO: Trance needs a param to soften the pluckiness: maybe attack as well as decay? Or decay affects both?
-   att=this.decay^2*100ms  works pretty well??
 Envelope follower duck
 ? Chebyshev shaper
 ?Granular synth?
