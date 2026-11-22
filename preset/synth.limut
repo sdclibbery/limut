@@ -1,4 +1,4 @@
-preset prophet pwm, oct=3, lpf={[1000+8000*this.cutoff*this.vel:!4,this.freq*2]e@s,q:this.resonance},
+preset prophet pwm, oct=3, lpf={[2100*2^(2.5*this.cutoff*this.vel):!4,this.freq*2]e@s,q:this.resonance},
   pwm=[0.5,0.9,0.5,0.1,0.5,0.9,0.5,0.1]e1,
   cutoff=1/2, resonance=0.4
 
@@ -70,7 +70,7 @@ preset xylo fm, envelope='simple', oct=4, sus=(this.dur,3/2).max, // frequencies
   op4={ratio:5.19,target:3,wave:'saw',depth:0.8,att:0.01,rel:0.1},
   op5={ratio:5.19,target:3,wave:'saw',depth:0.015},
 
-preset crackle impulse, dur=[120ms:400ms]r, amp*=[3/16:8/16]r^2, bpf={[300:9000]r,q:[0.2:2]r}
+preset crackle impulse, dur=[120ms:400ms]r, amp*=[3/16:8/16]r^2, bpf={300*30^[]r,q:[0.2:2]r}
 
 preset noisefloor noise, lpf=[600:800]n8, amp*=1/8
 
@@ -106,12 +106,12 @@ preset superbass audiosynth, dur=1/4, oct=3, envelope='full', rel=3/4, dec=1/4, 
   play={osc.tri{eventpitch/2}*3/2,superosc{freq:eventpitch*(1+chaos{3.71Hz}*0.007+chaos{3.64Hz}*0.007),unison:15}}
 
 preset supersweep audiosynth, envelope='pad', oct=1, dur=4,
-  play=superosc{eventpitch, unison:{6,detune:1.02}, formant:[0.99,1.01]n19}>>lpf{800+8000*[]n23^3,q:10}>>mix{hpf{1000}>>airverb}
+  play=superosc{eventpitch, unison:{6,detune:1.02}, formant:[0.99,1.01]n19}>>lpf{800*11^[]n23,q:10}>>mix{hpf{1000}>>airverb}
 
 preset acid superosc, dur=1/4, oct=(2+this.u-this.d), glide=20ms+this.s*50ms, envelope='perc',
 	wavetable={'sample/wt64/VIRUS_SA.WAV'},
   wt=[0.45,0.65]l7@s, sync=1+this.accent*this.fenv/2, unison=3,
-  lpf={100+this.freq+(0.45+this.cutoff*0.8)^2*this.fenv*6000, poles:4, q:this.resonance*18},
+  lpf={100+this.freq+1200*2^(3*this.cutoff)*this.fenv, poles:4, q:this.resonance*18},
   fenv=[1:!(200ms+1000ms*(this.decay*2+this.accent)/2),0]e@s*(1+this.vel+this.accent)/3,
   decay=1/2, cutoff=[]l8@s, accent=this.a, resonance=1/4+this.cutoff/2
 
@@ -121,7 +121,7 @@ preset dlead superosc, oct=2,
   wavetable={'sample/wt64/VIRUS_SA.WAV'},
   wt=[1:!8000ms,0]e@s/3+[]n2@s/3+[]r@e/3, unison={3,detune:1.006},
   sync=1+this.dist*5*[1:\1000ms,0]e@s, pwm=[-1,1]l4@s*0.9,
-  lpf={1000+this.freq+(this.cutoff+this.vel)*3000*[1:!1000ms,0]e@s,q:0},
+  lpf={1000+this.freq+1600*2^(this.cutoff+this.vel)*[1:!1000ms,0]e@s,q:0},
   drive={this.dist*2*this.vel*4/3,mix:this.dist*this.vel*4/3},
   cutoff=1/2, dist=1/2
 
