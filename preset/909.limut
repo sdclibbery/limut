@@ -15,12 +15,12 @@ preset bd909 pitchedperc
 	, body={ 1 + this.accent
     , wave:'tri'
     , att:10ms, dec:200ms+1800ms*this.decay
-    , freq:47, boost:120, pitchatt:4ms, pitchdec:10ms+200ms*this.tune
+    , freq:55, boost:120, pitchatt:4ms, pitchdec:110ms*4^(this.tune-1/2)
     , saturation:0.85
   }
   , rattle={ 3*(this.attack*3 + this.accent)
     , dec:400ms
-    , freq:47, boost:153, pitchatt:4ms, pitchdec:10ms+200ms*this.tune
+    , freq:55, boost:153, pitchatt:4ms, pitchdec:110ms*4^(this.tune-1/2)
   }
 
 preset h909 sample
@@ -50,7 +50,7 @@ preset cc909 sample
   , accent=(this.value+this.add)/7
   // Sample synth params
   , dur=1/4, sus=this.decay, choke=this.player
-  , rate=3/4+this.tune/2
+  , rate=(5/3)^(this.tune-1/2)
   , envelope='organ'
   , amp*=(this.level+this.accent)*0.6
 
@@ -64,7 +64,7 @@ preset rc909 sample
   , accent=(this.value+this.add)/7
   // Sample synth params
   , dur=1/4, sus=this.decay, choke=this.player
-  , rate=3/4+this.tune/2
+  , rate=(5/3)^(this.tune-1/2)
   , envelope='organ'
   , amp*=(this.level+this.accent)*0.2
 
@@ -84,13 +84,13 @@ preset sd909 pitchedperc
 	, body={ 1 + this.accent
     , wave:'tri'
     , att:10ms, dec:260ms
-    , freq:110+177*this.tune, boost:100, pitchatt:4ms, pitchdec:40ms
+    , freq:198.5*2^(this.tune-1/2), boost:100, pitchatt:4ms, pitchdec:40ms
     , saturation:0.85
   }
 	, body2={ 1/2 + this.accent/2
     , wave:'tri'
     , att:10ms, dec:260ms
-    , freq:139+107*this.tune, boost:133, pitchatt:4ms, pitchdec:40ms
+    , freq:192.5*2^(this.tune-1/2), boost:133, pitchatt:4ms, pitchdec:40ms
     , saturation:0.85
   }
   , rattle={ 3/2*(this.snappy + this.accent)
@@ -107,7 +107,7 @@ preset t909 pitchedperc
   , decay=1/2
   // Derived params
   , accent=(this.value+this.add)/9
-  , freq=(80 - 25*this.l + 35*this.h)*2/3 * (1+this.tune)
+  , freq=(80 - 25*this.l + 35*this.h) * 2^(this.tune-1/2)
   // Pitched Perc params
 	, click= 0
   , hit= 0
@@ -147,7 +147,7 @@ preset bds909 sample, dur=1/4
 	, sample='sample/909/limut909bd.wav'
   // Sample synth params
 	, sus=1/8+1/2*this.decay, choke=this.player
-  , rate=1 + 1/3*(this.tune-1/2)
+  , rate=1.4^(this.tune-1/2)
   , envelope='organ', att=0
 	, amp*=3 * this.level * (1 + this.accent + this.attack)
 	, mid=0.2 + 1.6*this.attack
@@ -208,7 +208,7 @@ preset ts909 sample
   , decay=1/2
   // Derived params
   , accent=(this.value+this.add)/9
-  , freq=(80 - 25*this.l + 35*this.h)*2/3 * (1+this.tune)
+  , freq=(80 - 25*this.l + 35*this.h) * 2^(this.tune-1/2)
 
 preset rss909 sample
 	, sample='sample/909/limut909rs.wav'

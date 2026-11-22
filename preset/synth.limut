@@ -110,7 +110,7 @@ preset supersweep audiosynth, envelope='pad', oct=1, dur=4,
 
 preset acid superosc, dur=1/4, oct=(2+this.u-this.d), glide=20ms+this.s*50ms, envelope='perc',
 	wavetable={'sample/wt64/VIRUS_SA.WAV'},
-  wt=[0.45,0.65]l7@s, sync=1+this.accent*this.fenv/2, unison=3,
+  wt=[0.45,0.65]l7@s, sync=(3/2)^(this.accent*this.fenv), unison=3,
   lpf={100+this.freq+1200*2^(3*this.cutoff)*this.fenv, poles:4, q:this.resonance*18},
   fenv=[1:!(200ms+1000ms*(this.decay*2+this.accent)/2),0]e@s*(1+this.vel+this.accent)/3,
   decay=1/2, cutoff=[]l8@s, accent=this.a, resonance=1/4+this.cutoff/2
@@ -120,7 +120,7 @@ preset dlead superosc, oct=2,
   addc=wow/2+[1:!200ms,0]e@s, glide=100ms, vib={2.7,delay:1s,depth:0.2},
   wavetable={'sample/wt64/VIRUS_SA.WAV'},
   wt=[1:!8000ms,0]e@s/3+[]n2@s/3+[]r@e/3, unison={3,detune:1.006},
-  sync=1+this.dist*5*[1:\1000ms,0]e@s, pwm=[-1,1]l4@s*0.9,
+  sync=6^(this.dist*[1:\1000ms,0]e@s), pwm=[-1,1]l4@s*0.9,
   lpf={1000+this.freq+1600*2^(this.cutoff+this.vel)*[1:!1000ms,0]e@s,q:0},
   drive={this.dist*2*this.vel*4/3,mix:this.dist*this.vel*4/3},
   cutoff=1/2, dist=1/2
@@ -133,13 +133,13 @@ preset keytar audiosynth, oct=4, dur=1/2,
       freq: eventpitch
         * (1 + this.jitter*this.vel*noise{rate:1/20}/7) // slow noise, not lpf: a biquad feeding a param leaks
         * (1 + this.vibrato*[0:~300ms,1]e@s*osc.sine{5.5Hz}),
-      sync: 1 + this.warp*this.vel*4*this.lfo*[0:/20ms,1]e@s + []r@e,
+      sync: 5^(this.warp*this.vel*this.lfo*[0:/20ms,1]e@s) * 2^[]r@e,
       pwm: this.click*[1:!15ms,0]e@s,
       unison: {3, detune:1.004, pan:1/2}
     } >> nf{4*eventpitch, q:12},
     noise{} >> hpf4{1500} * this.click*[1:!20ms,0.05]e@s
   },
-  hpf={(50+this.cutoff*this.vel*150)*(1+this.warp*this.lfo), q:9, poles:4},
+  hpf={71*2^(1.5*this.cutoff*this.vel + this.warp*this.lfo), q:9, poles:4},
   fx=disperser{freq:700, q:1/2, stages:16}
     >> shaper{ {x, g:1+this.crisp*2, n:1/(1+this.crisp*2)} -> sin{x*g*pi}*n }/4
 		>> cabinet{1/4} >> ott{}
