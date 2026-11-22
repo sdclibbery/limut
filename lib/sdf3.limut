@@ -254,6 +254,7 @@ set sd3ao = {scene:sd3default, in:id, steps:4, hstep:1/32, falloff:0.95, k:3} ->
   clamp{1 - k*loop{map:{v,i} -> sd3aostep{i, sd3flat{in}, sd3n, scene, hstep, falloff}, steps}}
 
 // Shade the result of sd3march: one light plus ambient, bg on a miss, fog toward bg (0 = none).
+// Lit in linear light.
 // shadow and occ are multipliers rather than on/off flags because both sides of a ternary are
 // always compiled; pass sd3shadow / sd3ao for the expensive version.
 //   px=sd3march{scene}>>sd3lit{scene}
@@ -261,10 +262,10 @@ set sd3ao = {scene:sd3default, in:id, steps:4, hstep:1/32, falloff:0.95, k:3} ->
 set sd3lit = {scene:sd3default, in:id, lx:1/2, ly:1, lz:-1/2, col:#fff, bg:#123,
               amb:1/5, shadow:1, occ:1, eps:1/500, fog:0} ->
   ( sd3d.x < eps
-    ?? mix{
-         col * (amb*occ + shadow*max{dot{sd3n, sd3lightdir{lx, ly, lz}}, 0}),
-         bg,
+    ?? srgb{mix{
+         lin{col} * (amb*occ + shadow*max{dot{sd3n, sd3lightdir{lx, ly, lz}}, 0}),
+         lin{bg},
          clamp{sd3t*fog}
-       }
+       }}
     ?: bg
   ) >> set{w:1}

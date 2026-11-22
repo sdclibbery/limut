@@ -99,7 +99,7 @@ struct renderer {
     GLuint             pyrTex, pyrFbo[RENDER_MAX_PYRAMID];
     int                pyrW[RENDER_MAX_PYRAMID], pyrH[RENDER_MAX_PYRAMID], pyrLevels, pyrReady;
     GLuint             downProg;
-    GLint              downSrc, downDst, downExact;
+    GLint              downSrc, downDst, downExact, downTolin;
 };
 
 static GLuint compile_shader(GLenum type, const char *src, char *log, size_t logCap) {
@@ -170,6 +170,11 @@ static const char *DOWN_SHADER =
     "uniform sampler2D u_src;\n"
     "uniform vec2 u_dst;\n"
     "uniform bool u_exact;\n"
+    "uniform bool u_tolin;\n"
+    "vec4 l_srgb2lin(vec4 c) {\n"
+    "  vec3 lin = mix(c.rgb/12.92, pow((max(c.rgb, 0.0) + 0.055)/1.055, vec3(2.4)), step(vec3(0.04045), c.rgb));\n"
+    "  return vec4(lin, c.a);\n"
+    "}\n"
     "void main() {\n"
     "  vec2 size = vec2(textureSize(u_src, 0));\n"
     "  if (u_exact) {\n"
@@ -189,7 +194,8 @@ static const char *DOWN_SHADER =
     "    for (int x = lo.x; x <= hi.x; x++) {\n"
     "      vec2 w = max(1.0 - abs(vec2(x, y) + 0.5 - c) / s, 0.0);\n"
     "      float k = w.x * w.y;\n"
-    "      sum += k * texelFetch(u_src, clamp(ivec2(x, y), ivec2(0), top), 0);\n"
+    "      vec4 t = texelFetch(u_src, clamp(ivec2(x, y), ivec2(0), top), 0);\n"
+    "      sum += k * (u_tolin ? l_srgb2lin(t) : t);\n"
     "      total += k;\n"
     "    }\n"
     "  }\n"
@@ -224,6 +230,7 @@ static void build_copy_program(renderer *r) {
         r->downSrc = glGetUniformLocation(r->downProg, "u_src");
         r->downDst = glGetUniformLocation(r->downProg, "u_dst");
         r->downExact = glGetUniformLocation(r->downProg, "u_exact");
+        r->downTolin = glGetUniformLocation(r->downProg, "u_tolin");
     }
 }
 
@@ -301,12 +308,13 @@ static void build_pyramid(renderer *r, GLuint src) {
     glUniform1i(r->downSrc, 0);
     glBindTexture(GL_TEXTURE_2D, src);
     for (l = 0; l < r->pyrLevels; l++) {
-        int exact = l == 0 || (r->pyrW[l-1] == 2 * r->pyrW[l] && r->pyrH[l-1] == 2 * r->pyrH[l]);
+        int exact = l > 0 && r->pyrW[l-1] == 2 * r->pyrW[l] && r->pyrH[l-1] == 2 * r->pyrH[l];
         if (l > 0) {
             glBindTexture(GL_TEXTURE_2D, r->pyrTex);
             set_filter(GL_LINEAR, l - 1, l - 1);
         }
         glUniform1i(r->downExact, exact);
+        glUniform1i(r->downTolin, l == 0);
         glUniform2f(r->downDst, (float)r->pyrW[l], (float)r->pyrH[l]);
         glBindFramebuffer(GL_FRAMEBUFFER, r->pyrFbo[l]);
         glViewport(0, 0, r->pyrW[l], r->pyrH[l]);

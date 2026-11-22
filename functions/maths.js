@@ -156,8 +156,17 @@ define(function(require) {
   // sRGB transfer, matching l_srgb2lin/l_lin2srgb in draw/visualsynth/shader-colour.js
   let srgb2lin = v => v <= 0.04045 ? v/12.92 : Math.pow((Math.max(v, 0) + 0.055)/1.055, 2.4)
   let lin2srgb = v => v <= 0.0031308 ? 12.92*v : 1.055*Math.pow(Math.max(v, 0), 1/2.4) - 0.055
-  addMathsFunction('lin', trigWrapper(srgb2lin))
-  addMathsFunction('srgb', trigWrapper(lin2srgb))
+  let colourWrapper = (fn) => (args) => {
+    let v = mainParam(args)
+    if (typeof v === 'object' && v !== null && v.value !== undefined) { v = mainParam(v) }
+    if (typeof v === 'number') { return {value:fn(v),_finalResult:true} }
+    if (typeof v !== 'object' || v === null) { return {value:fn(0),_finalResult:true} }
+    let out = {}
+    for (let k in v) { out[k] = (k === 'a' || k === 'w' || typeof v[k] !== 'number') ? v[k] : fn(v[k]) }
+    return {value:out,_finalResult:true}
+  }
+  addMathsFunction('lin', colourWrapper(srgb2lin))
+  addMathsFunction('srgb', colourWrapper(lin2srgb))
 
   let euclid = (args, e) => {
     let k = Math.floor(argParam(args, 1)) // Distribute k beats...
@@ -360,6 +369,12 @@ define(function(require) {
   assert(0.214, Math.round(scalarOf('lin{1/2}')*1000)/1000)
   assert(0.5, Math.round(scalarOf('srgb{lin{1/2}}')*1e6)/1e6)
   assert(1, scalarOf('lin{1}'))
+  let linGrey = scalarOf('lin{#8888}')
+  assert(0.246, Math.round(linGrey.r*1000)/1000)
+  assert(linGrey.r, linGrey.b)
+  assert(0.533, Math.round(linGrey.a*1000)/1000) // Alpha passes through
+  assert(0.5, Math.round(scalarOf('srgb{lin{{x:1/2,w:1/4}}}').x*1e6)/1e6)
+  assert(0.25, scalarOf('srgb{{x:1/2,w:1/4}}').w)
   assert(0, scalarOf('dfdx{3}'))
   assert(0, scalarOf('dfdy{3}'))
 

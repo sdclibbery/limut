@@ -1,7 +1,6 @@
 =================================================================================================================================
 =================================================================================================================================
 =================================================================================================================================
-Built in envelope linearity issues
 Check if any visual px shaders need to do blending in linear space with the new helpers
 Want to add an audio node that creates a global var with a value that tracks the audio at that point. Can use for ducking etc
 Wavetable filter like filtertable by kilohearts

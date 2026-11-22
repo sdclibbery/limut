@@ -2,6 +2,7 @@
 define(function(require) {
   let system = require('draw/system')
   let common = require('draw/shadercommon')
+  let {srgb2linHelper} = require('draw/visualsynth/shader-colour')
 
   // Stands in for the previous frame's texture during the build walk: codegen stays GL free and
   // player free, and the renderer swaps in the real texture for this slot
@@ -17,26 +18,30 @@ vec4 l_pxprev(sampler2D s, vec4 p) {
 }` }
 
   // r is a radius as a fraction of the frame height. The pyramid's level 0 is half size, so below
-  // that it fades in from the sharp history, which makes blur:0 exactly pxprev. Needs helper's u_vsfb.
+  // that it fades in from the sharp history, which makes blur:0 exactly pxprev. The pyramid holds
+  // linear light, so a blur keeps a light's energy. Needs helper's u_vsfb, l_srgb2lin and l_lin2srgb.
   let lodHelper = { name: 'l_pxprevlod', source: `vec4 l_pxprevlod(sampler2D s, sampler2D m, vec4 p, float r) {
   vec2 c = (p.xy - u_vsfb.xy) / (u_vsfb.zw - u_vsfb.xy);
   vec2 cm = c * vec2(textureSize(s, 0)) / (2.0 * vec2(textureSize(m, 0)));
   float lod = log2(max(2.0 * r * float(textureSize(s, 0).y), 1.0));
-  vec4 v = lod < 1.0 ? mix(texture(s, c), textureLod(m, cm, 0.0), lod) : textureLod(m, cm, lod - 1.0);
-  return all(equal(c, clamp(c, 0.0, 1.0))) ? v : vec4(0.0);
+  vec4 v = lod < 1.0 ? mix(l_srgb2lin(texture(s, c)), textureLod(m, cm, 0.0), lod) : textureLod(m, cm, lod - 1.0);
+  return all(equal(c, clamp(c, 0.0, 1.0))) ? l_lin2srgb(v) : vec4(0.0);
 }` }
 
   // Each pyramid level is a tent filtered reduction of the one above, the tent as wide as the
   // stride. Any narrower or fixed footprint (generateMipmap's 2x2 box, a dual filter's taps) weights
   // texels unevenly when a level is not exactly half the one above, so a small light's glow pulses
   // as it moves. Level 0 is padded so the first levels do halve exactly, where the tent is four
-  // bilinear taps; the small levels below that take the general loop.
+  // bilinear taps; the small levels below that take the general loop. Level 0 converts the history
+  // to linear light texel by texel, so it takes the loop too: bilinear taps would average in sRGB.
   let downSource = `#version 300 es
 precision highp float;
 out vec4 fragColor;
 uniform sampler2D u_src;
 uniform vec2 u_dst;
 uniform bool u_exact;
+uniform bool u_tolin;
+${srgb2linHelper.source}
 void main() {
   vec2 size = vec2(textureSize(u_src, 0));
   if (u_exact) {
@@ -56,7 +61,8 @@ void main() {
     for (int x = lo.x; x <= hi.x; x++) {
       vec2 w = max(1.0 - abs(vec2(x, y) + 0.5 - c) / s, 0.0);
       float k = w.x * w.y;
-      sum += k * texelFetch(u_src, clamp(ivec2(x, y), ivec2(0), top), 0);
+      vec4 t = texelFetch(u_src, clamp(ivec2(x, y), ivec2(0), top), 0);
+      sum += k * (u_tolin ? l_srgb2lin(t) : t);
       total += k;
     }
   }
@@ -105,6 +111,7 @@ void main() {
       srcUnif: gl.getUniformLocation(program, 'u_src'),
       dstUnif: gl.getUniformLocation(program, 'u_dst'),
       exactUnif: gl.getUniformLocation(program, 'u_exact'),
+      tolinUnif: gl.getUniformLocation(program, 'u_tolin'),
     }
     return downShader
   }
@@ -180,7 +187,8 @@ void main() {
         setFilter(gl, l-1, l-1)
       }
       let above = p.levels[l-1]
-      gl.uniform1i(d.exactUnif, l === 0 || (above.width === 2*level.width && above.height === 2*level.height) ? 1 : 0)
+      gl.uniform1i(d.exactUnif, l > 0 && above.width === 2*level.width && above.height === 2*level.height ? 1 : 0)
+      gl.uniform1i(d.tolinUnif, l === 0 ? 1 : 0)
       gl.uniform2f(d.dstUnif, level.width, level.height)
       gl.bindFramebuffer(gl.FRAMEBUFFER, level.framebuffer)
       gl.viewport(0, 0, level.width, level.height)
@@ -284,6 +292,17 @@ void main() {
         gl.uniform4fv(c.boundsUnif, bounds)
       },
     }
+  }
+
+  if ((new URLSearchParams(window.location.search)).get('test') !== null) {
+    let assert = (expected, actual) => {
+      if (actual !== expected) { console.trace(`Assertion failed.\n>>Expected:\n  ${expected}\n>>Actual:\n  ${actual}`) }
+    }
+    assert(true, downSource.includes('sum += k * (u_tolin ? l_srgb2lin(t) : t);'))
+    assert(true, downSource.includes('vec4 l_srgb2lin('))
+    assert(true, lodHelper.source.includes('mix(l_srgb2lin(texture(s, c))'))
+    assert(true, lodHelper.source.includes('? l_lin2srgb(v) :'))
+    console.log('Feedback tests complete')
   }
 
   return {
