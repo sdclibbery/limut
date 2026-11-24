@@ -37,8 +37,8 @@ define(function (require) {
   // start, reaching it a few ms before the segment ends, then linearly to 0, since an exponential
   // ramp can never reach 0. The floor is relative to the note so the shape doesn't depend on its gain
   let fadeTail = 0.005
-  let fadeOut = (param, from, time, duration, floorDb) => {
-    let tail = Math.min(fadeTail, duration/2)
+  let fadeOut = (param, from, time, duration, floorDb, tail) => {
+    tail = Math.min(Math.max(tail || 0, fadeTail), duration/2)
     param.exponentialRampToValueAtTime(Math.max(from*Math.pow(10, -floorDb/20), 1e-9), time+duration-tail)
     param.linearRampToValueAtTime(0, time+duration)
   }
@@ -53,6 +53,9 @@ define(function (require) {
   // Linear amplitude decays used to reach -40dB at 99% of their time, so ending there keeps a note's length
   let adsrFloorDb = 40
   let expFloorDb = 60
+  // Pluck: a slow decay cut off by a gate-style release, so most of the note stays loud
+  let percFloorDb = 12
+  let percRelease = 0.1
 
   let fullEnvelope = (params, gainBase) => {
     let dur = Math.max(0.01, evalMainParamEvent(params, 'sus', evalMainParamEvent(params, 'dur', 0.25, 'b'), 'b'))
@@ -152,7 +155,7 @@ define(function (require) {
     vca.gain.cancelScheduledValues(0)
     vca.gain.setValueAtTime(0, 0)
     vca.gain.setValueAtTime(gain, params._time)
-    fadeOut(vca.gain, gain, params._time, decay, adsrFloorDb)
+    fadeOut(vca.gain, gain, params._time, decay, percFloorDb, decay*percRelease)
     params.endTime = params._time + decay
     params._destructor.disconnect(vca)
     scheduleDestroy(params)
@@ -272,6 +275,7 @@ define(function (require) {
         case 'linpad': env = padEnvelope(params, gainbase, 'linear'); break
         case 'percussion': env = percussionEnvelope(params, gainbase); break
         case 'perc': env = percussionEnvelope(params, gainbase); break
+        case 'pluck': env = percussionEnvelope(params, gainbase); break
         case 'exp': env = exponentialPercussionEnvelope(params, gainbase); break
         case 'none': env = noneEnvelope(params, gainbase); break
         default: env = fullEnvelope(params, gainbase); break
@@ -346,11 +350,18 @@ define(function (require) {
       checkRelease('organ', scheduled({amp:amp}), 0.1*amp, 60)
       checkRelease('organ', live({amp:amp}), 0.1*amp, 60)
       checkRelease('exp', scheduled({amp:amp}), 0.1*amp, 60)
-      checkRelease('perc', scheduled({amp:amp}), 0.1*amp, 40)
+      checkRelease('perc', scheduled({amp:amp}), 0.1*amp, 12)
+      checkRelease('pluck', scheduled({amp:amp}), 0.1*amp, 12)
       checkRelease('full', scheduled({amp:amp}), 0.1*amp*0.8, 40)
       checkRelease('full', live({amp:amp}), 0.1*amp*0.8, 40)
       checkRelease('simple', scheduled({amp:amp}), 0.1*amp*0.8, 40)
     })
+    { // pluck gate release is the last tenth of the note
+      let params = scheduled({dec:1})
+      let calls = record(params, 'pluck')
+      let exp = calls[calls.length-2]
+      assert(true, near(exp[2], params.endTime - 0.1), `pluck: release starts a tenth from the end; got ${params.endTime-exp[2]}`)
+    }
     { // decay to a zero sustain level can't be exponential all the way
       let calls = record(scheduled({sus:{value:1,level:0}, att:0, dec:1/2}), 'full')
       let zeroAt = calls.findIndex(c => c[1] === 0)

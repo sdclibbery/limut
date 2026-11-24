@@ -42,7 +42,7 @@ preset psy multiwave
   , cutoff=[2/3:0]e + [0:1/3]l1/2@s + [0:1/3]l2@s
 
 preset psybass multiwave
-  , envelope='perc', oct=2, dur=1/4
+  , envelope='pluck', oct=2, dur=1/4
   , wave1={'saw'}
   , wave2={'sine', detune:-12, amp:this.sub}
   , amp*=2^(1/4) // Undo the multiwave two voice level normalisation, so the saw stays at its old level

@@ -108,7 +108,7 @@ preset superbass audiosynth, dur=1/4, oct=3, envelope='full', rel=3/4, dec=1/4, 
 preset supersweep audiosynth, envelope='pad', oct=1, dur=4,
   play=superosc{eventpitch, unison:{6,detune:1.02}, formant:[0.99,1.01]n19}>>lpf{800*11^[]n23,q:10}>>mix{hpf{1000}>>airverb}
 
-preset acid superosc, dur=1/4, oct=(2+this.u-this.d), glide=20ms+this.s*50ms, envelope='perc',
+preset acid superosc, dur=1/4, oct=(2+this.u-this.d), glide=20ms+this.s*50ms, envelope='pluck',
 	wavetable={'sample/wt64/VIRUS_SA.WAV'},
   wt=[0.45,0.65]l7@s, sync=(3/2)^(this.accent*this.fenv), unison=3,
   lpf={100+this.freq+1200*2^(3*this.cutoff)*this.fenv, poles:4, q:this.resonance*18},

@@ -1038,8 +1038,8 @@ b tb303 `0a2u2b0d 0u0a2d3 00u0a0d 0da4ua5a6u`, cutoff=[1/4:1]n3, resonance=0.8, 
 <p class='sub'><code>'organ'</code> <code>att</code> (0.01) to full volume, hold for dur, then <code>rel</code> (0.1) falling evenly in dB to &minus;60&nbsp;dB. <code>dec</code> and <code>sus={level}</code> are ignored.</p>
 <p class='sub'><code>'pad'</code> Cosine fade in over <code>att</code> and out over <code>rel</code> (both default dur), so consecutive notes crossfade at constant volume.</p>
 <p class='sub'><code>'linpad'</code> As <code>'pad'</code> with linear fades; better when consecutive events are phase identical.</p>
-<p class='sub'><code>'percussion'</code> (or <code>'perc'</code>) Instant attack, then a decay falling evenly in dB to &minus;40&nbsp;dB over <code>dec</code>, else <code>rel</code>, else dur.</p>
-<p class='sub'><code>'exp'</code> As <code>'percussion'</code> with a 1&nbsp;ms attack and a deeper decay, to &minus;60&nbsp;dB.</p>
+<p class='sub'><code>'pluck'</code> (or <code>'perc'</code>, <code>'percussion'</code>) Instant attack, a slow decay falling evenly in dB to &minus;12&nbsp;dB, then a quick fade to 0 over the last tenth. Length is <code>dec</code>, else <code>rel</code>, else dur. For basses and plucked leads.</p>
+<p class='sub'><code>'exp'</code> 1&nbsp;ms attack, then a decay falling evenly in dB to &minus;60&nbsp;dB, so it rings out like a drum hit. Length as <code>'pluck'</code>.</p>
 <p class='sub'><code>'none'</code> Constant volume for dur, no shaping; clicks unless the sound shapes itself.</p>
 <p class='sub'><code>envelope=[1:!300ms,0]e@s</code> An expression is a gain multiplier over the note, evaluated per frame (or per segment with <code>@s</code>). <code>att</code>/<code>dec</code>/<code>rel</code> are ignored and the note is cut off at the end of dur, so fit the shape inside it.</p>
 <p class='sub'>On <code>midi</code>, <code>keyboard</code> and <code>gamepad</code> players, <code>'full'</code>, <code>'organ'</code>, <code>'pad'</code> and <code>'linpad'</code> sustain until note off, then release; the others play for their fixed length regardless.</p>
