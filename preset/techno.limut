@@ -46,7 +46,7 @@ preset psybass multiwave
   , envelope='pluck', oct=2, dur=1/4
   , wave1={'saw'}
   , wave2={'sine', detune:-12, amp:this.sub}
-  , amp*=2^(1/4) // Undo the multiwave two voice level normalisation, so the saw stays at its old level
+  , amp*=2
   // Filter floor stays above the fundamental: a fast sweep down past it bends the pitch flat
   , lpf={30+2*this.freq+500*2^(4*this.cutoff)*[1:_10ms,1:!720ms*this.decay^2,0]e@s, poles:4, q:3}
   // Controls
