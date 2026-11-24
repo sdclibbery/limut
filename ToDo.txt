@@ -2,7 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 !!!NEED TO DEPLOY TO THE HUB75 PI!!!
-!If slider has focus, there's no way out with just keyboard
 Want to add an audio node that creates a global var with a value that tracks the audio at that point. Can use for ducking etc
 Wavetable filter like filtertable by kilohearts
 Reverb ducked against dry signal; Make generic dry ducker if possible??
