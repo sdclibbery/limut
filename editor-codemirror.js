@@ -160,6 +160,20 @@ define(function(require) {
         document.addEventListener('pointerup', up)
         document.addEventListener('pointercancel', up)
       })
+      input.addEventListener('keydown', (e) => {
+        let step = {ArrowLeft:-10, ArrowRight:10, ArrowDown:-50, ArrowUp:50}[e.key]
+        if (step) {
+          e.preventDefault()
+          input.value = Math.min(Math.max(parseFloat(input.value) + step, 0), 1000)
+          apply()
+          return
+        }
+        if (e.key !== 'Escape') { return }
+        e.preventDefault()
+        let range = w.mark.find()
+        editor.focus()
+        if (range) { editor.setCursor(range.to) }
+      })
       inlineWidgets.push(w)
     })
   }
