@@ -2,7 +2,6 @@
 =================================================================================================================================
 =================================================================================================================================
 Want to add an audio node that creates a global var with a value that tracks the audio at that point. Can use for ducking etc
-Wavetable filter like filtertable by kilohearts
 Reverb ducked against dry signal; Make generic dry ducker if possible??
 ?set bpm can have target time? eg set bpm={140,by;1000}; takes a linear step towards the target every beat
  Or generic []{by:512} or something? now replaces with current time in source?
@@ -20,6 +19,7 @@ Reverb ducked against dry signal; Make generic dry ducker if possible??
  ?Want a way to respond to the release phase in expressions, eg apply a pitch change starting when the note is released?
   must work for live players too
 Do want to allow multiple players from one limut instance to use the hub75 and blend together
+Wavetable filter like filtertable by kilohearts
 pattern brackets to allow eg (094 crop 7 + 1) crop 30 + 98
 ?sdsin/sdsquare/sdsaw/sdtri (may be approximate only)
 ?support for piecewise as shader code not textures?

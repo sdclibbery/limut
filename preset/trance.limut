@@ -20,6 +20,6 @@ preset trance multiwave
   // Effects
   , reverb={2,curve:2,hpf:250,mix:0.35}
   // Coontrol params - some default to LFO sweeps
-  , decay=[1:0]l16
-  , cutoff=[0.05:1]l8
+  , cutoff=sx.rise^2
+  , decay=this.cutoff
   , detune=0.5
